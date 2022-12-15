@@ -1,0 +1,9 @@
+#ifndef __TOMATO_VERSION_H__
+#define __TOMATO_VERSION_H__
+#define TOMATO_MAJOR		"2022"
+#define TOMATO_MINOR		"6"
+#define TOMATO_BUILD		"006"
+#define	TOMATO_BUILDTIME	"Thu, 26 Jan 2018 01:01:01 +0100"
+#define TOMATO_VERSION		"2022.6.001 -my_build- K26ARM USB AIO-64K"
+#define TOMATO_SHORTVER		"2022.6"
+#endif

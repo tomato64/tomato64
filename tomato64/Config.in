@@ -1,1 +1,2 @@
 source "$BR2_EXTERNAL_TOMATO64_PATH/package/tinc11/Config.in"
+source "$BR2_EXTERNAL_TOMATO64_PATH/package/libshared/Config.in"
