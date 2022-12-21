@@ -1,0 +1,4 @@
+config BR2_PACKAGE_LIBNVRAM
+	bool "libnvram"
+	help
+	  libnvram retrives and stored key-value pairs for router configuration
