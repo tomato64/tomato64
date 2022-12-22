@@ -1,0 +1,6 @@
+config BR2_PACKAGE_RC
+	bool "rc"
+	select BR2_PACKAGE_LIBNVRAM
+	select BR2_PACKAGE_LIBSHARED
+	help
+	  rc is the init process for Tomato.
