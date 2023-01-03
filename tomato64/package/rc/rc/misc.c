@@ -17,6 +17,7 @@
 #include <wlutils.h>
 #include <dirent.h>
 #include <sys/wait.h>
+#include <linux/limits.h>
 
 #define MAX_XSTART_ARGC 16
 

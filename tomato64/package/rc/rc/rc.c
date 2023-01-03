@@ -196,9 +196,9 @@ typedef struct {
 } applets_t;
 
 static const applets_t applets[] = {
-#ifdef TCONFIG_BCMARM
-	{ "preinit",			init_main			},
-#endif
+// #ifdef TCONFIG_BCMARM
+// 	{ "preinit",			init_main			},
+// #endif
 	{ "init",			init_main			},
 	{ "console",			console_main			},
 	{ "rc",				rc_main				},
@@ -220,20 +220,20 @@ static const applets_t applets[] = {
 	{ "listen",			listen_main			},
 	{ "service",			service_main			},
 	{ "sched",			sched_main			},
-#ifdef TCONFIG_BCMARM
-	{ "mtd-write",			mtd_write_main_old		},
-	{ "mtd-erase",			mtd_unlock_erase_main_old	},
-	{ "mtd-unlock",			mtd_unlock_erase_main_old	},
-#else
-	{ "mtd-write",			mtd_write_main			},
-	{ "mtd-erase",			mtd_unlock_erase_main		},
-	{ "mtd-unlock",			mtd_unlock_erase_main		},
-#endif
-	{ "buttons",			buttons_main			},
-#if defined(TCONFIG_BCMARM) || defined(TCONFIG_BLINK)
-	{ "blink",			blink_main			},
-	{ "blink_br",			blink_br_main			},
-#endif
+// #ifdef TCONFIG_BCMARM
+// 	{ "mtd-write",			mtd_write_main_old		},
+// 	{ "mtd-erase",			mtd_unlock_erase_main_old	},
+// 	{ "mtd-unlock",			mtd_unlock_erase_main_old	},
+// #else
+// 	{ "mtd-write",			mtd_write_main			},
+// 	{ "mtd-erase",			mtd_unlock_erase_main		},
+// 	{ "mtd-unlock",			mtd_unlock_erase_main		},
+// #endif
+//	{ "buttons",			buttons_main			},
+// #if defined(TCONFIG_BCMARM) || defined(TCONFIG_BLINK)
+// 	{ "blink",			blink_main			},
+// 	{ "blink_br",			blink_br_main			},
+// #endif
 #ifdef TCONFIG_FANCTRL
 	{ "phy_tempsense",		phy_tempsense_main		},
 #endif
@@ -267,12 +267,12 @@ static const applets_t applets[] = {
 	{NULL, NULL}
 };
 
-#ifdef TCONFIG_BCMARM
-void erase_nvram(void)
-{
-	eval("mtd-erase2", "nvram");
-}
-#endif
+// #ifdef TCONFIG_BCMARM
+// void erase_nvram(void)
+// {
+// 	eval("mtd-erase2", "nvram");
+// }
+// #endif
 
 int main(int argc, char **argv)
 {
@@ -348,38 +348,38 @@ int main(int argc, char **argv)
 		}
 	}
 
-#ifdef TCONFIG_BCMARM
-	if (!strcmp(base, "nvram_erase")) {
-		erase_nvram();
-		return 0;
-	}
-	/* mtd-erase2 [device] */
-	else if (!strcmp(base, "mtd-erase2")) {
-		if (argv[1] && ((!strcmp(argv[1], "boot")) ||
-				(!strcmp(argv[1], "linux")) ||
-				(!strcmp(argv[1], "linux2")) ||
-				(!strcmp(argv[1], "rootfs")) ||
-				(!strcmp(argv[1], "rootfs2")) ||
-				(!strcmp(argv[1], "brcmnand")) ||
-				(!strcmp(argv[1], "nvram")) ||
-				(!strcmp(argv[1], "crash")))) {
-			return mtd_erase(argv[1]);
-		}
-		else {
-			fprintf(stderr, "usage: mtd-erase2 [device]\n");
-			return EINVAL;
-		}
-	}
-	/* mtd-write2 [path] [device] */
-	else if (!strcmp(base, "mtd-write2")) {
-		if (argc >= 3)
-			return mtd_write(argv[1], argv[2]);
-		else {
-			fprintf(stderr, "usage: mtd-write2 [path] [device]\n");
-			return EINVAL;
-		}
-	}
-#endif
+// #ifdef TCONFIG_BCMARM
+// 	if (!strcmp(base, "nvram_erase")) {
+// 		erase_nvram();
+// 		return 0;
+// 	}
+// 	/* mtd-erase2 [device] */
+// 	else if (!strcmp(base, "mtd-erase2")) {
+// 		if (argv[1] && ((!strcmp(argv[1], "boot")) ||
+// 				(!strcmp(argv[1], "linux")) ||
+// 				(!strcmp(argv[1], "linux2")) ||
+// 				(!strcmp(argv[1], "rootfs")) ||
+// 				(!strcmp(argv[1], "rootfs2")) ||
+// 				(!strcmp(argv[1], "brcmnand")) ||
+// 				(!strcmp(argv[1], "nvram")) ||
+// 				(!strcmp(argv[1], "crash")))) {
+// 			return mtd_erase(argv[1]);
+// 		}
+// 		else {
+// 			fprintf(stderr, "usage: mtd-erase2 [device]\n");
+// 			return EINVAL;
+// 		}
+// 	}
+// 	/* mtd-write2 [path] [device] */
+// 	else if (!strcmp(base, "mtd-write2")) {
+// 		if (argc >= 3)
+// 			return mtd_write(argv[1], argv[2]);
+// 		else {
+// 			fprintf(stderr, "usage: mtd-write2 [path] [device]\n");
+// 			return EINVAL;
+// 		}
+// 	}
+// #endif
 
 	printf("Unknown applet: %s\n", base);
 	return 0;

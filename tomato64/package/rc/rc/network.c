@@ -593,9 +593,9 @@ static void wl_driver_mode_update(void)
 			char mode_str[128];
 			char *mode = "NIC";
 
-#ifdef TCONFIG_DHDAP
-			mode = dhd_probe(ifname) ? "NIC" : "DGL";
-#endif
+// #ifdef TCONFIG_DHDAP
+// 			mode = dhd_probe(ifname) ? "NIC" : "DGL";
+// #endif
 
 			if (!wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit))) {
 				maxunit = (unit > maxunit) ? unit : maxunit + 1;
@@ -615,9 +615,9 @@ static void wl_driver_mode_update(void)
 			char mode_str[128];
 			char *mode = "NIC";
 
-#ifdef TCONFIG_DHDAP
-			mode = dhd_probe(ifname) ? "NIC" : "DGL";
-#endif
+// #ifdef TCONFIG_DHDAP
+// 			mode = dhd_probe(ifname) ? "NIC" : "DGL";
+// #endif
 
 			if (!wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit))) {
 				sprintf(mode_str, "wlradio_dmode_%d", i);
@@ -1088,12 +1088,12 @@ void start_lan_wl(void)
 									wl_iovar_set(ifname, "wet_host_ipv4", &wh, sizeof(wet_host_t));
 								}
 #else /* (!defined(TCONFIG_BCM7) && defined(TCONFIG_BCMSMP)) || defined(TCONFIG_BCM714) */
-#ifdef TCONFIG_DHDAP
-								is_dhd = !dhd_probe(ifname);
-								if (is_dhd)
-									dhd_iovar_setint(ifname, "wet_host_ipv4", ip);
-								else
-#endif /* TCONFIG_DHDAP */
+// #ifdef TCONFIG_DHDAP
+// 								is_dhd = !dhd_probe(ifname);
+// 								if (is_dhd)
+// 									dhd_iovar_setint(ifname, "wet_host_ipv4", ip);
+// 								else
+// #endif /* TCONFIG_DHDAP */
 									wl_iovar_setint(ifname, "wet_host_ipv4", ip);
 #endif /* (!defined(TCONFIG_BCM7) && defined(TCONFIG_BCMSMP)) || defined(TCONFIG_BCM714) */
 							}
@@ -1644,22 +1644,22 @@ void start_lan(void)
 									wl_iovar_set(ifname, "wet_host_ipv4", &wh, sizeof(wet_host_t)); /* set ip */
 								}
 #else /* (!defined(TCONFIG_BCM7) && defined(TCONFIG_BCMSMP)) || defined(TCONFIG_BCM714) */
-#ifdef TCONFIG_DHDAP
-								is_dhd = !dhd_probe(ifname);
-								if (is_dhd) {
-									char macbuf[sizeof("wet_host_mac") + 1 + ETHER_ADDR_LEN];
-									dhd_iovar_setbuf(ifname, "wet_host_mac", ifr.ifr_hwaddr.sa_data, ETHER_ADDR_LEN , macbuf, sizeof(macbuf)); /* set mac */
-								}
-								else
-#endif /* TCONFIG_DHDAP */
+// #ifdef TCONFIG_DHDAP
+// 								is_dhd = !dhd_probe(ifname);
+// 								if (is_dhd) {
+// 									char macbuf[sizeof("wet_host_mac") + 1 + ETHER_ADDR_LEN];
+// 									dhd_iovar_setbuf(ifname, "wet_host_mac", ifr.ifr_hwaddr.sa_data, ETHER_ADDR_LEN , macbuf, sizeof(macbuf)); /* set mac */
+// 								}
+// 								else
+// #endif /* TCONFIG_DHDAP */
 									wl_iovar_set(ifname, "wet_host_mac", ifr.ifr_hwaddr.sa_data, ETHER_ADDR_LEN); /* set mac */
-#ifdef TCONFIG_DHDAP
-								is_dhd = !dhd_probe(ifname);
-								if (is_dhd) {
-									dhd_iovar_setint(ifname, "wet_host_ipv4", ip); /* set ip */
-								}
-								else
-#endif /* TCONFIG_DHDAP */
+// #ifdef TCONFIG_DHDAP
+// 								is_dhd = !dhd_probe(ifname);
+// 								if (is_dhd) {
+// 									dhd_iovar_setint(ifname, "wet_host_ipv4", ip); /* set ip */
+// 								}
+// 								else
+// #endif /* TCONFIG_DHDAP */
 									wl_iovar_setint(ifname, "wet_host_ipv4", ip); /* set ip */
 #endif /* (!defined(TCONFIG_BCM7) && defined(TCONFIG_BCMSMP)) || defined(TCONFIG_BCM714) */
 							}
@@ -1961,9 +1961,9 @@ void hotplug_net(void)
 
 	logmsg(LOG_DEBUG, "*** %s: INTERFACE=%s ACTION=%s", __FUNCTION__, interface, action);
 
-#ifdef TCONFIG_BCMWL6
-	psta = wl_wlif_is_psta(interface);
-#endif
+// #ifdef TCONFIG_BCMWL6
+// 	psta = wl_wlif_is_psta(interface);
+// #endif
 
 	if (((strncmp(interface, "wds", 3) == 0)
 #ifdef TCONFIG_BCMWL6

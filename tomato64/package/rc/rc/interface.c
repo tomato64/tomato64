@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
-#include <error.h>
+//#include <error.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/ioctl.h>

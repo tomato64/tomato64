@@ -86,15 +86,15 @@ void start_jffs2(void)
 		return;
 	}
 
-	if (nvram_match("jffs2_format", "1")) {
-		nvram_set("jffs2_format", "0");
-		nvram_commit_x();
-		if (mtd_erase(JFFS2_PARTITION)) {
-			error("formatting");
-			return;
-		}
-		format = 1;
-	}
+	// if (nvram_match("jffs2_format", "1")) {
+	// 	nvram_set("jffs2_format", "0");
+	// 	nvram_commit_x();
+	// 	if (mtd_erase(JFFS2_PARTITION)) {
+	// 		error("formatting");
+	// 		return;
+	// 	}
+	// 	format = 1;
+	// }
 
 	memset(s, 0, 256);
 	snprintf(s, sizeof(s), "%d", size);
@@ -120,29 +120,29 @@ void start_jffs2(void)
 		return;
 	}
 
-	if (!mtd_unlock(JFFS2_PARTITION)) {
-		error("unlocking");
-		return;
-	}
+	// if (!mtd_unlock(JFFS2_PARTITION)) {
+	// 	error("unlocking");
+	// 	return;
+	// }
 
 	modprobe(JFFS_NAME);
 
 	memset(s, 0, 256);
 	snprintf(s, sizeof(s), MTD_BLKDEV(%d), part);
 
-	if (mount(s, "/jffs", JFFS_NAME, MS_NOATIME, "") != 0) {
-		if (mtd_erase(JFFS2_PARTITION)) {
-			error("formatting");
-			return;
-		}
-		format = 1;
+	// if (mount(s, "/jffs", JFFS_NAME, MS_NOATIME, "") != 0) {
+	// 	if (mtd_erase(JFFS2_PARTITION)) {
+	// 		error("formatting");
+	// 		return;
+	// 	}
+	// 	format = 1;
 
-		if (mount(s, "/jffs", JFFS_NAME, MS_NOATIME, "") != 0) {
-			modprobe_r(JFFS_NAME);
-			error("mounting 2nd time");
-			return;
-		}
-	}
+	// 	if (mount(s, "/jffs", JFFS_NAME, MS_NOATIME, "") != 0) {
+	// 		modprobe_r(JFFS_NAME);
+	// 		error("mounting 2nd time");
+	// 		return;
+	// 	}
+	// }
 
 #ifdef TEST_INTEGRITY
 	int test;

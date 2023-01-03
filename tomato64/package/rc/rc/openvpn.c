@@ -15,6 +15,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #define OVPN_CLIENT_BASEIF	10
 #define OVPN_SERVER_BASEIF	20

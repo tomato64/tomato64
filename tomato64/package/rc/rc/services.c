@@ -48,6 +48,7 @@
 #include <mntent.h>
 #include <dirent.h>
 #include <linux/version.h>
+#include <sys/stat.h>
 
 #define ADBLOCK_EXE		"/usr/sbin/adblock"
 #define DNSMASQ_CONF		"/etc/dnsmasq.conf"
@@ -2358,7 +2359,7 @@ static void start_media_server(int force)
 	unsigned char ea[ETHER_ADDR_LEN];
 	char serial[18], uuid[37];
 	char *buf, *p, *q;
-	char *path, *restrict;
+	char *path, *restricted;
 
 	/* only if enabled or forced */
 	if (!nvram_get_int("ms_enable") && force == 0)
@@ -2428,11 +2429,11 @@ static void start_media_server(int force)
 				/* path<restrict[A|V|P|] */
 				p = buf;
 				while ((q = strsep(&p, ">")) != NULL) {
-					if ((vstrsep(q, "<", &path, &restrict) < 1) || (!path) || (!*path))
+					if ((vstrsep(q, "<", &path, &restricted) < 1) || (!path) || (!*path))
 						continue;
 
 					fprintf(f, "media_dir=%s%s%s\n",
-						restrict ? : "", (restrict && *restrict) ? "," : "", path);
+						restricted ? : "", (restricted && *restricted) ? "," : "", path);
 				}
 				free(buf);
 			}
