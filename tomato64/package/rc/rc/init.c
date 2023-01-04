@@ -33,9 +33,9 @@
 #include <wlutils.h>
 #include <bcmdevs.h>
 #include <sys/sysmacros.h>
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
-#include <bcmparams.h>
-#endif
+// #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+// #include <bcmparams.h>
+// #endif
 
 #ifndef WL_BSS_INFO_VERSION
 #error WL_BSS_INFO_VERSION
@@ -47,13 +47,13 @@
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"init_debug"
 
-#ifdef TCONFIG_BCMARM
-extern struct nvram_tuple router_defaults[];
-#ifdef TCONFIG_AC3200
-extern struct nvram_tuple bcm4360ac_defaults[];
-extern struct nvram_tuple r8000_params[];
-#endif /* TCONFIG_AC3200 */
-#endif /* TCONFIG_BCMARM */
+// #ifdef TCONFIG_BCMARM
+// extern struct nvram_tuple router_defaults[];
+// #ifdef TCONFIG_AC3200
+// extern struct nvram_tuple bcm4360ac_defaults[];
+// extern struct nvram_tuple r8000_params[];
+// #endif /* TCONFIG_AC3200 */
+// #endif /* TCONFIG_BCMARM */
 int restore_defaults_fb = 0;
 
 
@@ -89,13 +89,13 @@ static char *defenv[] = {
 
 static void restore_defaults(void)
 {
-#ifdef TCONFIG_BCMARM
-	struct nvram_tuple *t;
-#endif
+// #ifdef TCONFIG_BCMARM
+// 	struct nvram_tuple *t;
+// #endif
 	int restore_defaults = 0;
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
-	struct sysinfo info;
-#endif
+// #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+// 	struct sysinfo info;
+// #endif
 
 	/* Restore defaults if told to or OS has changed */
 	if (!restore_defaults)
@@ -107,71 +107,71 @@ static void restore_defaults(void)
 	restore_defaults_fb = restore_defaults;
 
 	/* Restore defaults if necessary */
-#ifdef TCONFIG_BCMARM
-	for (t = router_defaults; t->name; t++) {
-		if (restore_defaults || !nvram_get(t->name)) {
-			nvram_set(t->name, t->value);
-		}
-	}
-#else
-	eval("nvram", "defaults", "--initcheck");
-#endif
+// #ifdef TCONFIG_BCMARM
+// 	for (t = router_defaults; t->name; t++) {
+// 		if (restore_defaults || !nvram_get(t->name)) {
+// 			nvram_set(t->name, t->value);
+// 		}
+// 	}
+// #else
+// 	eval("nvram", "defaults", "--initcheck");
+// #endif
 
 	nvram_set("os_name", "linux");
 	nvram_set("os_version", tomato_version);
 	nvram_set("os_date", tomato_buildtime);
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
-	/* Adjust et and wl thresh value after reset (for wifi-driver and et_linux.c) */
-	if (restore_defaults) {
-		memset(&info, 0, sizeof(struct sysinfo));
-		sysinfo(&info);
-		if (info.totalram <= (TOMATO_RAM_LOW_END * 1024)) { /* Router with less than 50 MB RAM */
-			/* Set to 512 as long as onboard memory <= 50 MB RAM */
-			nvram_set("wl_txq_thresh", "512");
-			nvram_set("et_txq_thresh", "512");
-#ifdef TCONFIG_USBAP
-			nvram_set("wl_rpcq_rxthresh", "512");
-#endif
-		}
-		else if (info.totalram <= (TOMATO_RAM_MID_END * 1024)) { /* Router with less than 100 MB RAM */
-			nvram_set("wl_txq_thresh", "1024");
-			nvram_set("et_txq_thresh", "1536");
-#ifdef TCONFIG_USBAP
-			nvram_set("wl_rpcq_rxthresh", "1024");
-#endif
-		}
-		else { /* Router with more than 100 MB RAM */
-			nvram_set("wl_txq_thresh", "1024");
-			nvram_set("et_txq_thresh", "3300");
-#ifdef TCONFIG_USBAP
-			nvram_set("wl_rpcq_rxthresh", "1024");
-#endif
-		}
-	}
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+// #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+// 	/* Adjust et and wl thresh value after reset (for wifi-driver and et_linux.c) */
+// 	if (restore_defaults) {
+// 		memset(&info, 0, sizeof(struct sysinfo));
+// 		sysinfo(&info);
+// 		if (info.totalram <= (TOMATO_RAM_LOW_END * 1024)) { /* Router with less than 50 MB RAM */
+// 			/* Set to 512 as long as onboard memory <= 50 MB RAM */
+// 			nvram_set("wl_txq_thresh", "512");
+// 			nvram_set("et_txq_thresh", "512");
+// #ifdef TCONFIG_USBAP
+// 			nvram_set("wl_rpcq_rxthresh", "512");
+// #endif
+// 		}
+// 		else if (info.totalram <= (TOMATO_RAM_MID_END * 1024)) { /* Router with less than 100 MB RAM */
+// 			nvram_set("wl_txq_thresh", "1024");
+// 			nvram_set("et_txq_thresh", "1536");
+// #ifdef TCONFIG_USBAP
+// 			nvram_set("wl_rpcq_rxthresh", "1024");
+// #endif
+// 		}
+// 		else { /* Router with more than 100 MB RAM */
+// 			nvram_set("wl_txq_thresh", "1024");
+// 			nvram_set("et_txq_thresh", "3300");
+// #ifdef TCONFIG_USBAP
+// 			nvram_set("wl_rpcq_rxthresh", "1024");
+// #endif
+// 		}
+// 	}
+// #endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
 }
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
-static void set_defaults(struct nvram_tuple *t, char *strprefix)
-{
-	char buf[256];
+// #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+// static void set_defaults(struct nvram_tuple *t, char *strprefix)
+// {
+// 	char buf[256];
 
-	/* Restore defaults */
-	dbg("*** Restoring default NVRAM vars ...\n");
+// 	/* Restore defaults */
+// 	dbg("*** Restoring default NVRAM vars ...\n");
 
-	while (t->name) {
-		if ((!strprefix) || (!(*strprefix)))
-			nvram_set(t->name, t->value);
-		else {
-			memset(buf, 0, sizeof(buf));
-			snprintf(buf, sizeof(buf), strprefix, t->name);
-			nvram_set(buf, t->value);
-		}
-		t++;
-	}
-}
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+// 	while (t->name) {
+// 		if ((!strprefix) || (!(*strprefix)))
+// 			nvram_set(t->name, t->value);
+// 		else {
+// 			memset(buf, 0, sizeof(buf));
+// 			snprintf(buf, sizeof(buf), strprefix, t->name);
+// 			nvram_set(buf, t->value);
+// 		}
+// 		t++;
+// 	}
+// }
+// #endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
 
 // #ifdef CONFIG_BCMWL6A
 // /* assign none-exist value */
@@ -486,159 +486,159 @@ static int check_nv(const char *name, const char *value)
 	return 0;
 }
 
-#ifndef TCONFIG_BCMARM
-static void nvram_cleanup_5g_dummy_values(void) {
-	/* misc - clean-up nvram (remove dummy values for not used second wl interface [5 GHz] ) */
-	/* save nvram space & fix saving country / rev settings (GUI: advanced-wireless.asp) */
-	nvram_unset("pci/1/1/aa5g");
-	nvram_unset("pci/1/1/ag1");
-	nvram_unset("pci/1/1/antswctl2g");
-	nvram_unset("pci/1/1/antswctl5g");
-	nvram_unset("pci/1/1/antswitch");
-	nvram_unset("pci/1/1/boardflags2");
-	nvram_unset("pci/1/1/boardflags");
-	nvram_unset("pci/1/1/bw40po");
-	nvram_unset("pci/1/1/bwduppo");
-	nvram_unset("pci/1/1/ccode");
-	nvram_unset("pci/1/1/cddpo");
-	nvram_unset("pci/1/1/devid");
-	nvram_unset("pci/1/1/extpagain5g");
-	nvram_unset("pci/1/1/itt5ga0");
-	nvram_unset("pci/1/1/itt5ga1");
-	nvram_unset("pci/1/1/ledbh0");
-	nvram_unset("pci/1/1/ledbh1");
-	nvram_unset("pci/1/1/ledbh2");
-	nvram_unset("pci/1/1/ledbh3");
-	nvram_unset("pci/1/1/leddc");
-	nvram_unset("pci/1/1/macaddr");
-	nvram_unset("pci/1/1/maxp5ga0");
-	nvram_unset("pci/1/1/maxp5ga1");
-	nvram_unset("pci/1/1/maxp5gha0");
-	nvram_unset("pci/1/1/maxp5gha1");
-	nvram_unset("pci/1/1/maxp5gla0");
-	nvram_unset("pci/1/1/maxp5gla1");
-	nvram_unset("pci/1/1/pa5ghw0a0");
-	nvram_unset("pci/1/1/pa5ghw0a1");
-	nvram_unset("pci/1/1/pa5ghw1a0");
-	nvram_unset("pci/1/1/pa5ghw1a1");
-	nvram_unset("pci/1/1/pa5ghw2a0");
-	nvram_unset("pci/1/1/pa5ghw2a1");
-	nvram_unset("pci/1/1/pa5glw0a0");
-	nvram_unset("pci/1/1/pa5glw0a1");
-	nvram_unset("pci/1/1/pa5glw1a0");
-	nvram_unset("pci/1/1/pa5glw1a1");
-	nvram_unset("pci/1/1/pa5glw2a0");
-	nvram_unset("pci/1/1/pa5glw2a1");
-	nvram_unset("pci/1/1/pa5gw0a0");
-	nvram_unset("pci/1/1/pa5gw0a1");
-	nvram_unset("pci/1/1/pa5gw1a0");
-	nvram_unset("pci/1/1/pa5gw1a1");
-	nvram_unset("pci/1/1/pa5gw2a0");
-	nvram_unset("pci/1/1/pa5gw2a1");
-	nvram_unset("pci/1/1/pdetrange5g");
-	nvram_unset("pci/1/1/regrev");
-	nvram_unset("pci/1/1/rxchain");
-	nvram_unset("pci/1/1/sromrev");
-	nvram_unset("pci/1/1/stbcpo");
-	nvram_unset("pci/1/1/triso5g");
-	nvram_unset("pci/1/1/tssipos5g");
-	nvram_unset("pci/1/1/txchain");
-}
+// #ifndef TCONFIG_BCMARM
+// static void nvram_cleanup_5g_dummy_values(void) {
+// 	/* misc - clean-up nvram (remove dummy values for not used second wl interface [5 GHz] ) */
+// 	/* save nvram space & fix saving country / rev settings (GUI: advanced-wireless.asp) */
+// 	nvram_unset("pci/1/1/aa5g");
+// 	nvram_unset("pci/1/1/ag1");
+// 	nvram_unset("pci/1/1/antswctl2g");
+// 	nvram_unset("pci/1/1/antswctl5g");
+// 	nvram_unset("pci/1/1/antswitch");
+// 	nvram_unset("pci/1/1/boardflags2");
+// 	nvram_unset("pci/1/1/boardflags");
+// 	nvram_unset("pci/1/1/bw40po");
+// 	nvram_unset("pci/1/1/bwduppo");
+// 	nvram_unset("pci/1/1/ccode");
+// 	nvram_unset("pci/1/1/cddpo");
+// 	nvram_unset("pci/1/1/devid");
+// 	nvram_unset("pci/1/1/extpagain5g");
+// 	nvram_unset("pci/1/1/itt5ga0");
+// 	nvram_unset("pci/1/1/itt5ga1");
+// 	nvram_unset("pci/1/1/ledbh0");
+// 	nvram_unset("pci/1/1/ledbh1");
+// 	nvram_unset("pci/1/1/ledbh2");
+// 	nvram_unset("pci/1/1/ledbh3");
+// 	nvram_unset("pci/1/1/leddc");
+// 	nvram_unset("pci/1/1/macaddr");
+// 	nvram_unset("pci/1/1/maxp5ga0");
+// 	nvram_unset("pci/1/1/maxp5ga1");
+// 	nvram_unset("pci/1/1/maxp5gha0");
+// 	nvram_unset("pci/1/1/maxp5gha1");
+// 	nvram_unset("pci/1/1/maxp5gla0");
+// 	nvram_unset("pci/1/1/maxp5gla1");
+// 	nvram_unset("pci/1/1/pa5ghw0a0");
+// 	nvram_unset("pci/1/1/pa5ghw0a1");
+// 	nvram_unset("pci/1/1/pa5ghw1a0");
+// 	nvram_unset("pci/1/1/pa5ghw1a1");
+// 	nvram_unset("pci/1/1/pa5ghw2a0");
+// 	nvram_unset("pci/1/1/pa5ghw2a1");
+// 	nvram_unset("pci/1/1/pa5glw0a0");
+// 	nvram_unset("pci/1/1/pa5glw0a1");
+// 	nvram_unset("pci/1/1/pa5glw1a0");
+// 	nvram_unset("pci/1/1/pa5glw1a1");
+// 	nvram_unset("pci/1/1/pa5glw2a0");
+// 	nvram_unset("pci/1/1/pa5glw2a1");
+// 	nvram_unset("pci/1/1/pa5gw0a0");
+// 	nvram_unset("pci/1/1/pa5gw0a1");
+// 	nvram_unset("pci/1/1/pa5gw1a0");
+// 	nvram_unset("pci/1/1/pa5gw1a1");
+// 	nvram_unset("pci/1/1/pa5gw2a0");
+// 	nvram_unset("pci/1/1/pa5gw2a1");
+// 	nvram_unset("pci/1/1/pdetrange5g");
+// 	nvram_unset("pci/1/1/regrev");
+// 	nvram_unset("pci/1/1/rxchain");
+// 	nvram_unset("pci/1/1/sromrev");
+// 	nvram_unset("pci/1/1/stbcpo");
+// 	nvram_unset("pci/1/1/triso5g");
+// 	nvram_unset("pci/1/1/tssipos5g");
+// 	nvram_unset("pci/1/1/txchain");
+// }
 
-static int invalid_mac(const char *mac)
-{
-	if ((!mac) || (!(*mac)) || (strncasecmp(mac, "00:90:4c", 8) == 0))
-		return 1;
+// static int invalid_mac(const char *mac)
+// {
+// 	if ((!mac) || (!(*mac)) || (strncasecmp(mac, "00:90:4c", 8) == 0))
+// 		return 1;
 
-	int i = 0, s = 0;
-	while (*mac) {
-		if (isxdigit(*mac)) {
-			i++;
-		}
-		else if (*mac == ':') {
-			if ((i == 0) || (i / 2 - 1 != s))
-				break;
-			++s;
-		}
-		else {
-			s = -1;
-		}
-		++mac;
-	}
+// 	int i = 0, s = 0;
+// 	while (*mac) {
+// 		if (isxdigit(*mac)) {
+// 			i++;
+// 		}
+// 		else if (*mac == ':') {
+// 			if ((i == 0) || (i / 2 - 1 != s))
+// 				break;
+// 			++s;
+// 		}
+// 		else {
+// 			s = -1;
+// 		}
+// 		++mac;
+// 	}
 
-	return !(i == 12 && s == 5);
-}
+// 	return !(i == 12 && s == 5);
+// }
 
-static int get_mac_from_mt0(unsigned long address)
-{
-	FILE *fp;
-	char m[6], s[18];
+// static int get_mac_from_mt0(unsigned long address)
+// {
+// 	FILE *fp;
+// 	char m[6], s[18];
 
-	snprintf(s, sizeof(s), MTD_DEV(%dro), 0);
-	if ((fp = fopen(s, "rb"))) {
-		fseek(fp, address, SEEK_SET);
-		fread(m, sizeof(m), 1, fp);
-		fclose(fp);
-		snprintf(s, sizeof(s), "%02X:%02X:%02X:%02X:%02X:%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
+// 	snprintf(s, sizeof(s), MTD_DEV(%dro), 0);
+// 	if ((fp = fopen(s, "rb"))) {
+// 		fseek(fp, address, SEEK_SET);
+// 		fread(m, sizeof(m), 1, fp);
+// 		fclose(fp);
+// 		snprintf(s, sizeof(s), "%02X:%02X:%02X:%02X:%02X:%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
 
-		if (!invalid_mac(s)) {
-			nvram_set("et0macaddr", s);
-			return 0;
-		}
-	}
-	else {
-		return -(errno);
-	}
+// 		if (!invalid_mac(s)) {
+// 			nvram_set("et0macaddr", s);
+// 			return 0;
+// 		}
+// 	}
+// 	else {
+// 		return -(errno);
+// 	}
 
-	return -EINVAL;
-}
+// 	return -EINVAL;
+// }
 
-static int find_dir320_mac_addr(void)
-{
-	FILE *fp;
-	char *buffer, s[18];
-	int i, part, size, found = 0;
+// static int find_dir320_mac_addr(void)
+// {
+// 	FILE *fp;
+// 	char *buffer, s[18];
+// 	int i, part, size, found = 0;
 
-	if (!mtd_getinfo("board_data", &part, &size))
-		goto out;
-	snprintf(s, sizeof(s), MTD_DEV(%dro), part);
+// 	if (!mtd_getinfo("board_data", &part, &size))
+// 		goto out;
+// 	snprintf(s, sizeof(s), MTD_DEV(%dro), part);
 
-	if ((fp = fopen(s, "rb"))) {
-		buffer = malloc(size);
-		memset(buffer, 0, size);
-		fread(buffer, size, 1, fp);
-		if (!memcmp(buffer, "RGCFG1", 6)) {
-			for (i = 6; i < size - 24; i++) {
-				if (!memcmp(buffer + i, "lanmac=", 7)) {
-					memcpy(s, buffer + i + 7, 17);
-					s[17] = 0;
-					nvram_set("et0macaddr", s);
-					found = 1;
-				}
-				else if (!memcmp(buffer + i, "wanmac=", 7)) {
-					memcpy(s, buffer + i + 7, 17);
-					s[17] = 0;
-					nvram_set("il0macaddr", s);
-					if (!found) {
-						inc_mac(s, -1);
-						nvram_set("et0macaddr", s);
-					}
-					found = 1;
-				}
-			}
-		}
-		free(buffer);
-		fclose(fp);
-	}
-out:
-	if (!found) {
-		strlcpy(s, nvram_safe_get("wl0_hwaddr"), sizeof(s));
-		inc_mac(s, -2);
-		nvram_set("et0macaddr", s);
-	}
-	return 1;
-}
-#endif /* !TCONFIG_BCMARM */
+// 	if ((fp = fopen(s, "rb"))) {
+// 		buffer = malloc(size);
+// 		memset(buffer, 0, size);
+// 		fread(buffer, size, 1, fp);
+// 		if (!memcmp(buffer, "RGCFG1", 6)) {
+// 			for (i = 6; i < size - 24; i++) {
+// 				if (!memcmp(buffer + i, "lanmac=", 7)) {
+// 					memcpy(s, buffer + i + 7, 17);
+// 					s[17] = 0;
+// 					nvram_set("et0macaddr", s);
+// 					found = 1;
+// 				}
+// 				else if (!memcmp(buffer + i, "wanmac=", 7)) {
+// 					memcpy(s, buffer + i + 7, 17);
+// 					s[17] = 0;
+// 					nvram_set("il0macaddr", s);
+// 					if (!found) {
+// 						inc_mac(s, -1);
+// 						nvram_set("et0macaddr", s);
+// 					}
+// 					found = 1;
+// 				}
+// 			}
+// 		}
+// 		free(buffer);
+// 		fclose(fp);
+// 	}
+// out:
+// 	if (!found) {
+// 		strlcpy(s, nvram_safe_get("wl0_hwaddr"), sizeof(s));
+// 		inc_mac(s, -2);
+// 		nvram_set("et0macaddr", s);
+// 	}
+// 	return 1;
+// }
+// #endif /* !TCONFIG_BCMARM */
 
 
 static void init_lan_hwaddr(void)
@@ -693,34 +693,34 @@ static int init_vlan_ports(void)
 	int dirty = 0;
 	int model = get_model();
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
-	char vlanports[] = "vlanXXXXports";
-	char vlanhw[] = "vlanXXXXhwname";
-	char vlanvid[] = "vlanXXXXvid";
-	char nvvalue[8] = { 0 };
-	int num;
-	const char *ports, *hwname, *vid;
+// #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+// 	char vlanports[] = "vlanXXXXports";
+// 	char vlanhw[] = "vlanXXXXhwname";
+// 	char vlanvid[] = "vlanXXXXvid";
+// 	char nvvalue[8] = { 0 };
+// 	int num;
+// 	const char *ports, *hwname, *vid;
 
-	/* FreshTomato: check and prepare nvram VLAN values before we start (vlan mapping) */
-	for (num = 0; num < TOMATO_VLANNUM; num ++) {
-		/* get vlan infos from nvram */
-		snprintf(vlanports, sizeof(vlanports), "vlan%dports", num);
-		snprintf(vlanhw, sizeof(vlanhw), "vlan%dhwname", num);
-		snprintf(vlanvid, sizeof(vlanvid), "vlan%dvid", num);
+// 	/* FreshTomato: check and prepare nvram VLAN values before we start (vlan mapping) */
+// 	for (num = 0; num < TOMATO_VLANNUM; num ++) {
+// 		/* get vlan infos from nvram */
+// 		snprintf(vlanports, sizeof(vlanports), "vlan%dports", num);
+// 		snprintf(vlanhw, sizeof(vlanhw), "vlan%dhwname", num);
+// 		snprintf(vlanvid, sizeof(vlanvid), "vlan%dvid", num);
 
-		hwname = nvram_get(vlanhw);
-		ports = nvram_get(vlanports);
+// 		hwname = nvram_get(vlanhw);
+// 		ports = nvram_get(vlanports);
 
-		/* check if we use vlanX */
-		if ((hwname && strlen(hwname)) || (ports && strlen(ports))) {
-			vid = nvram_get(vlanvid);
-			if ((vid == NULL) || (vid && !strlen(vid))) { /* create nvram vlanXvid if missing, we need it! (default ex. Vlan 4 --> Vid 4) */
-				snprintf(nvvalue, sizeof(nvvalue), "%d", num);
-				nvram_set(vlanvid, nvvalue);
-			}
-		}
-	}
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+// 		/* check if we use vlanX */
+// 		if ((hwname && strlen(hwname)) || (ports && strlen(ports))) {
+// 			vid = nvram_get(vlanvid);
+// 			if ((vid == NULL) || (vid && !strlen(vid))) { /* create nvram vlanXvid if missing, we need it! (default ex. Vlan 4 --> Vid 4) */
+// 				snprintf(nvvalue, sizeof(nvvalue), "%d", num);
+// 				nvram_set(vlanvid, nvvalue);
+// 			}
+// 		}
+// 	}
+// #endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
 
 	switch (model) {
 
@@ -1032,10 +1032,10 @@ static void check_bootnv(void)
 {
 	int dirty;
 	int model;
-#ifndef TCONFIG_BCMARM
-	int hardware;
-	char mac[18];
-#endif
+// #ifndef TCONFIG_BCMARM
+// 	int hardware;
+// 	char mac[18];
+// #endif
 
 	model = get_model();
 	dirty = check_nv("wl0_leddc", "0x640000") | check_nv("wl1_leddc", "0x640000");
@@ -1634,17 +1634,17 @@ static void check_bootnv(void)
 
 	dirty |= init_vlan_ports();
 
-	if (dirty) {
-		nvram_commit();
+//	if (dirty) {
+//		nvram_commit();
 
-#ifndef TCONFIG_BCMARM
-REBOOT: /* do a simple reboot */
-#endif
-		sync();
-		dbg("*** Reboot after check NV params / set VLANS...\n");
-		reboot(RB_AUTOBOOT);
-		exit(0);
-	}
+// #ifndef TCONFIG_BCMARM
+// REBOOT: /* do a simple reboot */
+// #endif
+//		sync();
+//		dbg("*** Reboot after check NV params / set VLANS...\n");
+//		reboot(RB_AUTOBOOT);
+//		exit(0);
+//	}
 }
 
 static int init_nvram(void)
@@ -10238,11 +10238,11 @@ static int init_nvram(void)
 	nvram_unset("sch_c2_last");
 	nvram_unset("sch_c3_last");
 
-#ifndef TCONFIG_BCMARM
-	nvram_set("brau_state", "");
-	if ((features & SUP_BRAU) == 0)
-		nvram_set("script_brau", "");
-#endif
+// #ifndef TCONFIG_BCMARM
+// 	nvram_set("brau_state", "");
+// 	if ((features & SUP_BRAU) == 0)
+// 		nvram_set("script_brau", "");
+// #endif
 	if ((features & SUP_SES) == 0)
 		nvram_set("sesx_script", "");
 	if ((features & SUP_1000ET) == 0)
@@ -10257,38 +10257,38 @@ static int init_nvram(void)
 	return 0;
 }
 
-#ifndef TCONFIG_BCMARM
-/* Get the special files from nvram and copy them to disc.
- * These were files saved with "nvram setfile2nvram <filename>".
- * Better hope that they were saved with full pathname.
- */
-static void load_files_from_nvram(void)
-{
-	char *name, *cp;
-	int ar_loaded = 0;
-	char buf[NVRAM_SPACE];
+// #ifndef TCONFIG_BCMARM
+// /* Get the special files from nvram and copy them to disc.
+//  * These were files saved with "nvram setfile2nvram <filename>".
+//  * Better hope that they were saved with full pathname.
+//  */
+// static void load_files_from_nvram(void)
+// {
+// 	char *name, *cp;
+// 	int ar_loaded = 0;
+// 	char buf[NVRAM_SPACE];
 
-	if (nvram_getall(buf, sizeof(buf)) != 0)
-		return;
+// 	if (nvram_getall(buf, sizeof(buf)) != 0)
+// 		return;
 
-	for (name = buf; *name; name += strlen(name) + 1) {
-		if (strncmp(name, "FILE:", 5) == 0) { /* this special name marks a file to get */
-			if ((cp = strchr(name, '=')) == NULL)
-				continue;
+// 	for (name = buf; *name; name += strlen(name) + 1) {
+// 		if (strncmp(name, "FILE:", 5) == 0) { /* this special name marks a file to get */
+// 			if ((cp = strchr(name, '=')) == NULL)
+// 				continue;
 
-			*cp = 0;
-			logmsg(LOG_INFO, "Loading file '%s' from nvram", name + 5);
-			nvram_nvram2file(name, name + 5);
+// 			*cp = 0;
+// 			logmsg(LOG_INFO, "Loading file '%s' from nvram", name + 5);
+// 			nvram_nvram2file(name, name + 5);
 
-			if (memcmp(".autorun", cp - 8, 9) == 0) 
-				++ar_loaded;
-		}
-	}
-	/* start any autorun files that may have been loaded into one of the standard places. */
-	if (ar_loaded != 0)
-		run_nvscript(".autorun", NULL, 3);
-}
-#endif
+// 			if (memcmp(".autorun", cp - 8, 9) == 0) 
+// 				++ar_loaded;
+// 		}
+// 	}
+// 	/* start any autorun files that may have been loaded into one of the standard places. */
+// 	if (ar_loaded != 0)
+// 		run_nvscript(".autorun", NULL, 3);
+// }
+// #endif
 
 static inline void set_jumbo_frame(void)
 {
@@ -10300,12 +10300,12 @@ static inline void set_jumbo_frame(void)
 	 * 0x01 REG_JUMBO_CTRL (Port Mask (bit i == port i enabled), bit 24 == GigE always enabled)
 	 * 0x05 REG_JUMBO_SIZE
 	 */
-#ifdef TCONFIG_BCMARM
-	eval("et", "robowr", "0x40", "0x01", enable ? "0x010001ff" : "0x00", "4"); /* set enable flag for arm (32 bit) */
-#else
-	/* at mips branch we set the enable flag arleady at bcmrobo.c --> so nothing to do here right now */
-	//eval("et", "robowr", "0x40", "0x01", enable ? "0x1f" : "0x00"); /* set enable flag for mips */
-#endif
+// #ifdef TCONFIG_BCMARM
+// 	eval("et", "robowr", "0x40", "0x01", enable ? "0x010001ff" : "0x00", "4"); /* set enable flag for arm (32 bit) */
+// #else
+// 	/* at mips branch we set the enable flag arleady at bcmrobo.c --> so nothing to do here right now */
+// 	//eval("et", "robowr", "0x40", "0x01", enable ? "0x1f" : "0x00"); /* set enable flag for mips */
+// #endif
 	if (enable) {
 		eval("et", "robowr", "0x40", "0x05", nvram_safe_get("jumbo_frame_size")); /* set the packet size */
 	}
@@ -10321,11 +10321,11 @@ static inline void set_kernel_panic(void)
 static inline void set_kernel_memory(void)
 {
 	f_write_string("/proc/sys/vm/overcommit_memory", "2", 0, 0); /* Linux kernel will not overcommit memory */
-#ifdef TCONFIG_BCMARM
-	f_write_string("/proc/sys/vm/overcommit_ratio", "75", 0, 0); /* allow userspace to commit up to 75% of total memory */
-#else
-	f_write_string("/proc/sys/vm/overcommit_ratio", "100", 0, 0); /* allow userspace to commit up to 100% of total memory */
-#endif
+// #ifdef TCONFIG_BCMARM
+// 	f_write_string("/proc/sys/vm/overcommit_ratio", "75", 0, 0); /* allow userspace to commit up to 75% of total memory */
+// #else
+// 	f_write_string("/proc/sys/vm/overcommit_ratio", "100", 0, 0); /* allow userspace to commit up to 100% of total memory */
+// #endif
 }
 
 #ifdef TCONFIG_USB
@@ -10344,14 +10344,14 @@ static inline void tune_min_free_kbytes(void)
 	else if (info.totalram >= (TOMATO_RAM_LOW_END * 1024)) { /* Router with 64 MB RAM */
 		f_write_string("/proc/sys/vm/min_free_kbytes", "8192", 0, 0); /* 8 MByte */
 	}
-#ifndef TCONFIG_BCMARM
-	else if (info.totalram >= (TOMATO_RAM_VLOW_END * 1024)) {
-		/* If we have 32MB+ RAM, tune min_free_kbytes
-		 * to reduce page allocation failure errors.
-		 */
-		f_write_string("/proc/sys/vm/min_free_kbytes", "1024", 0, 0); /* 1 MByte */
-	}
-#endif
+// #ifndef TCONFIG_BCMARM
+// 	else if (info.totalram >= (TOMATO_RAM_VLOW_END * 1024)) {
+// 		/* If we have 32MB+ RAM, tune min_free_kbytes
+// 		 * to reduce page allocation failure errors.
+// 		 */
+// 		f_write_string("/proc/sys/vm/min_free_kbytes", "1024", 0, 0); /* 1 MByte */
+// 	}
+// #endif
 }
 #endif /* TCONFIG_USB */
 
@@ -10498,33 +10498,33 @@ static void sysinit(void)
 		modprobe("bcm_nat");
 #endif
 
-#if defined(TCONFIG_BCMARM) && defined(TCONFIG_USB)
-	/* check samba enabled ? */
-	if (nvram_get_int("smbd_enable")) {
-		nvram_set("txworkq", "1"); /* set txworkq to 1, see et/sys/et_linux.c */
-	}
-	else {
-		nvram_unset("txworkq");
-	}
-#endif /* TCONFIG_BCMARM && TCONFIG_USB */
+// #if defined(TCONFIG_BCMARM) && defined(TCONFIG_USB)
+// 	/* check samba enabled ? */
+// 	if (nvram_get_int("smbd_enable")) {
+// 		nvram_set("txworkq", "1"); /* set txworkq to 1, see et/sys/et_linux.c */
+// 	}
+// 	else {
+// 		nvram_unset("txworkq");
+// 	}
+// #endif /* TCONFIG_BCMARM && TCONFIG_USB */
 
 #ifdef TCONFIG_EMF
 	modprobe("emf");
 	modprobe("igs");
 #endif
 
-#ifdef TCONFIG_BCMARM
-	modprobe("et");
-#else
-	switch (check_hw_type()) {
-	case HW_BCM4785:
-		modprobe("bcm57xx");
-		break;
-	default:
-		modprobe("et");
-		break;
-	}
-#endif /* TCONFIG_BCMARM */
+// #ifdef TCONFIG_BCMARM
+// 	modprobe("et");
+// #else
+// 	switch (check_hw_type()) {
+// 	case HW_BCM4785:
+// 		modprobe("bcm57xx");
+// 		break;
+// 	default:
+// 		modprobe("et");
+// 		break;
+// 	}
+// #endif /* TCONFIG_BCMARM */
 
 	restore_defaults(); /* restore defaults if necessary */
 	init_nvram();
@@ -10558,14 +10558,14 @@ static void sysinit(void)
 
 	eval("buttons");
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
-#ifdef TCONFIG_BCMARM
-	/* stealth mode */
-	if (nvram_match("stealth_mode", "0")) /* start blink_br only if stealth mode is off */
-#endif
-		/* enable LED for LAN / Bridge */
-		eval("blink_br");
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+// #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+// #ifdef TCONFIG_BCMARM
+// 	/* stealth mode */
+// 	if (nvram_match("stealth_mode", "0")) /* start blink_br only if stealth mode is off */
+// #endif
+// 		/* enable LED for LAN / Bridge */
+// 		eval("blink_br");
+// #endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
 
 	if (!noconsole)
 		xstart("console");
@@ -10691,9 +10691,9 @@ int init_main(int argc, char *argv[])
 			stop_syslog();
 			start_syslog();
 
-#ifndef TCONFIG_BCMARM
-			load_files_from_nvram();
-#endif
+// #ifndef TCONFIG_BCMARM
+// 			load_files_from_nvram();
+// #endif
 
 			int fd = -1;
 			fd = file_lock("usb"); /* hold off automount processing */
@@ -10758,29 +10758,29 @@ int init_main(int argc, char *argv[])
 
 			led(LED_DIAG, LED_OFF);
 
-#ifndef TCONFIG_BCMARM
-			switch(get_model()) {
-#ifdef TCONFIG_BLINK /* RTN/RTAC */
-				case MODEL_WTR54GS:
-					gpio_write(1 << 2, 1); /* clear power light blinking */
-					break;
-				case MODEL_WNDR3400:
-				case MODEL_WNDR3700v3:
-				case MODEL_WNDR4000:
-					led(LED_WHITE, LED_ON);
-					led(LED_AOSS, LED_ON);
-					break;
-				case MODEL_R6300V1:
-					gpio_write(1 << 1, 0); /* turn on left half of LOGO light */
-					gpio_write(1 << 9, 0); /* turn on right half of LOGO light */
-					gpio_write(1 << 2, 0); /* turn on power light (green) */
-					break;
-#endif /* TCONFIG_BLINK */
-				case MODEL_E4200:
-					led(LED_DIAG, LED_ON); /* turn on cisco LOGO light (again) */
-					break;
-			}
-#endif /* !TCONFIG_BCMARM */
+// #ifndef TCONFIG_BCMARM
+// 			switch(get_model()) {
+// #ifdef TCONFIG_BLINK /* RTN/RTAC */
+// 				case MODEL_WTR54GS:
+// 					gpio_write(1 << 2, 1); /* clear power light blinking */
+// 					break;
+// 				case MODEL_WNDR3400:
+// 				case MODEL_WNDR3700v3:
+// 				case MODEL_WNDR4000:
+// 					led(LED_WHITE, LED_ON);
+// 					led(LED_AOSS, LED_ON);
+// 					break;
+// 				case MODEL_R6300V1:
+// 					gpio_write(1 << 1, 0); /* turn on left half of LOGO light */
+// 					gpio_write(1 << 9, 0); /* turn on right half of LOGO light */
+// 					gpio_write(1 << 2, 0); /* turn on power light (green) */
+// 					break;
+// #endif /* TCONFIG_BLINK */
+// 				case MODEL_E4200:
+// 					led(LED_DIAG, LED_ON); /* turn on cisco LOGO light (again) */
+// 					break;
+// 			}
+// #endif /* !TCONFIG_BCMARM */
 
 			notice_set("sysup", "");
 			break;
