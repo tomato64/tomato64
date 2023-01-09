@@ -431,19 +431,19 @@ static void shutdn(int rb)
 	eval("umount", "-f", "/jffs");
 	sleep(1);
 
-	if (rb != -1) {
-		led(LED_WLAN, LED_OFF);
-		if (rb == 0) {
-			for (i = 4; i > 0; --i) {
-				led(LED_DMZ, LED_ON);
-				led(LED_WHITE, LED_ON);
-				usleep(250000);
-				led(LED_DMZ, LED_OFF);
-				led(LED_WHITE, LED_OFF);
-				usleep(250000);
-			}
-		}
-	}
+//	if (rb != -1) {
+//		led(LED_WLAN, LED_OFF);
+//		if (rb == 0) {
+//			for (i = 4; i > 0; --i) {
+//				led(LED_DMZ, LED_ON);
+//				led(LED_WHITE, LED_ON);
+//				usleep(250000);
+//				led(LED_DMZ, LED_OFF);
+//				led(LED_WHITE, LED_OFF);
+//				usleep(250000);
+//			}
+//		}
+//	}
 
 	reboot(rb ? RB_AUTOBOOT : RB_HALT_SYSTEM);
 
@@ -1037,8 +1037,8 @@ static void check_bootnv(void)
 // 	char mac[18];
 // #endif
 
-	model = get_model();
-	dirty = check_nv("wl0_leddc", "0x640000") | check_nv("wl1_leddc", "0x640000");
+//	model = get_model();
+//	dirty = check_nv("wl0_leddc", "0x640000") | check_nv("wl1_leddc", "0x640000");
 
 	switch (model) {
 
@@ -10290,9 +10290,9 @@ static int init_nvram(void)
 // }
 // #endif
 
-static inline void set_jumbo_frame(void)
-{
-	int enable = nvram_get_int("jumbo_frame_enable");
+//static inline void set_jumbo_frame(void)
+//{
+//	int enable = nvram_get_int("jumbo_frame_enable");
 
 	/*
 	 * 0x40 JUMBO frame page
@@ -10306,10 +10306,10 @@ static inline void set_jumbo_frame(void)
 // 	/* at mips branch we set the enable flag arleady at bcmrobo.c --> so nothing to do here right now */
 // 	//eval("et", "robowr", "0x40", "0x01", enable ? "0x1f" : "0x00"); /* set enable flag for mips */
 // #endif
-	if (enable) {
-		eval("et", "robowr", "0x40", "0x05", nvram_safe_get("jumbo_frame_size")); /* set the packet size */
-	}
-}
+//	if (enable) {
+//		eval("et", "robowr", "0x40", "0x05", nvram_safe_get("jumbo_frame_size")); /* set the packet size */
+//	}
+//}
 
 static inline void set_kernel_panic(void)
 {
@@ -10529,7 +10529,7 @@ static void sysinit(void)
 	restore_defaults(); /* restore defaults if necessary */
 	init_nvram();
 
-	set_jumbo_frame(); /* enable or disable jumbo_frame and set jumbo frame size */
+//	set_jumbo_frame(); /* enable or disable jumbo_frame and set jumbo frame size */
 
 	/* load after init_nvram */
 #if defined(TCONFIG_USBAP) || defined(TCONFIG_DHDAP)
@@ -10571,12 +10571,12 @@ static void sysinit(void)
 		xstart("console");
 
 	/* startup LED setup, see GUI (admin-buttons.asp) */
-	i = nvram_get_int("sesx_led");
-	led(LED_AMBER, (i & 1) != 0);
-	led(LED_WHITE, (i & 2) != 0);
-	led(LED_AOSS, (i & 4) != 0);
-	led(LED_BRIDGE, (i & 8) != 0);
-	led(LED_DIAG, LED_ON);
+//	i = nvram_get_int("sesx_led");
+//	led(LED_AMBER, (i & 1) != 0);
+//	led(LED_WHITE, (i & 2) != 0);
+//	led(LED_AOSS, (i & 4) != 0);
+//	led(LED_BRIDGE, (i & 8) != 0);
+//	led(LED_DIAG, LED_ON);
 }
 
 int init_main(int argc, char *argv[])
