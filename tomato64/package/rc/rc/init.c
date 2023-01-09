@@ -10611,13 +10611,13 @@ int init_main(int argc, char *argv[])
 			nvram_set("bwl_enable", "0");
 	}
 
-#ifdef TCONFIG_BCMNAT
-	/* disable BWL when bcm_nat is ON */
-	if (nvram_invmatch("bcmnat_disable", "1")) {
-		if (nvram_get_int("bwl_enable"))
-			nvram_set("bwl_enable", "0");
-	}
-#endif
+//#ifdef TCONFIG_BCMNAT
+//	/* disable BWL when bcm_nat is ON */
+//	if (nvram_invmatch("bcmnat_disable", "1")) {
+//		if (nvram_get_int("bwl_enable"))
+//			nvram_set("bwl_enable", "0");
+//	}
+//#endif
 
 	/* reset ntp status */
 	nvram_set("ntp_ready", "0");
@@ -10626,7 +10626,7 @@ int init_main(int argc, char *argv[])
 	nvram_set("g_upgrade", "0");
 	nvram_set("g_reboot", "0");
 
-	start_jffs2();
+//	start_jffs2();
 
 	/* set unique system id */
 	if (!f_exists("/etc/machine-id"))
