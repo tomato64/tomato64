@@ -24,6 +24,6 @@ linux-update-defconfig: .configure
 	@touch $@
 
 .extract:
-	tar xvJf src/buildroot-2022.11.tar.xz -C src/
-	mv src/buildroot-2022.11 src/buildroot
+	tar xvJf src/buildroot-git.tar.xz -C src/
+	mv src/buildroot-git src/buildroot
 	@touch $@

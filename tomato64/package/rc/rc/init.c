@@ -10249,10 +10249,10 @@ static int init_nvram(void)
 		nvram_set("jumbo_frame_enable", "0");
 
 	/* compatibility with old versions */
-	if (nvram_match("wl_net_mode", "disabled")) {
-		nvram_set("wl_radio", "0");
-		nvram_set("wl_net_mode", "mixed");
-	}
+//	if (nvram_match("wl_net_mode", "disabled")) {
+//		nvram_set("wl_radio", "0");
+//		nvram_set("wl_net_mode", "mixed");
+//	}
 
 	return 0;
 }
