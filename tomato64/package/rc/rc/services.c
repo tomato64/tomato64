@@ -171,10 +171,6 @@ void start_dnsmasq()
 	if (serialize_restart("dnsmasq", 1))
 		return;
 
-// debug lance
-	printf("Return 1?\n" );
-	sleep(5);
-
 	/* check wireless ethernet bridge (wet) after stop_dnsmasq() */
 //	if (foreach_wif(1, NULL, is_wet)) {
 //		logmsg(LOG_INFO, "Starting dnsmasq for wireless ethernet bridge mode");
@@ -191,10 +187,20 @@ void start_dnsmasq()
 // 	}
 // #endif /* TCONFIG_BCMWL6 */
 
+// debug lance
+        printf("before\n" );
+        sleep(5);
+
 	if ((f = fopen(DNSMASQ_CONF, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, DNSMASQ_CONF);
+		printf("returning\n" );
+		sleep(5);
 		return;
 	}
+
+// debug lance
+        printf("after\n" );
+        sleep(5);
 
 	if (((nv = nvram_get("wan_domain")) != NULL) || ((nv = nvram_get("wan_get_domain")) != NULL)) {
 		if (*nv)
@@ -660,25 +666,25 @@ void start_dnsmasq()
 	eval("dnsmasq", "-c", "4096", "--log-async");
 
 // debug lance
-	printf("Attempting to start DSNMASQ\n" );
-	sleep(5);
-               FILE *fp;
-               char path[1035];
+//	printf("Attempting to start DSNMASQ\n" );
+//	sleep(5);
+//               FILE *fp;
+//               char path[1035];
 
                /* Open the command for reading. */
-               fp = popen("dnsmasq -c 4096 --log-async", "r");
-               if (fp == NULL) {
-                       printf("Failed to run command\n" );
-                       exit(1);
-               }
+//               fp = popen("dnsmasq -c 4096 --log-async", "r");
+//               if (fp == NULL) {
+//                       printf("Failed to run command\n" );
+//                       exit(1);
+//               }
 
-               /* Read the output a line at a time - output it. */
-               while (fgets(path, sizeof(path), fp) != NULL) {
-                       printf("%s", path);
-               }
+//               /* Read the output a line at a time - output it. */
+//               while (fgets(path, sizeof(path), fp) != NULL) {
+//                       printf("%s", path);
+//               }
                /* close */
-               pclose(fp);
-               sleep(5);
+//               pclose(fp);
+//               sleep(5);
 
 	if (!nvram_contains_word("debug_norestart", "dnsmasq"))
 		pid_dnsmasq = -2;

@@ -10400,6 +10400,8 @@ static void sysinit(void)
 	mknod("/dev/pts/0", S_IRWXU|S_IFCHR, makedev(136, 0));
 	mknod("/dev/pts/1", S_IRWXU|S_IFCHR, makedev(136, 1));
 	mount("devpts", "/dev/pts", "devpts", MS_MGC_VAL, NULL);
+// Mount filesystem rw for now.
+	eval("mount", "-o", "remount,rw", "/");
 
 	if (console_init())
 		noconsole = 1;
