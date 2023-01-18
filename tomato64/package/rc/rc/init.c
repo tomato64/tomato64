@@ -10493,10 +10493,10 @@ static void sysinit(void)
 	if (nvram_invmatch("ctf_disable", "1"))
 		modprobe("ctf");
 
-#ifdef TCONFIG_BCMNAT
-	if (nvram_invmatch("bcmnat_disable", "1"))
-		modprobe("bcm_nat");
-#endif
+//#ifdef TCONFIG_BCMNAT
+//	if (nvram_invmatch("bcmnat_disable", "1"))
+//		modprobe("bcm_nat");
+//#endif
 
 // #if defined(TCONFIG_BCMARM) && defined(TCONFIG_USB)
 // 	/* check samba enabled ? */

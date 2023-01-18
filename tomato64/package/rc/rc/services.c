@@ -132,6 +132,11 @@ void start_dnsmasq_wet()
 
 void start_dnsmasq()
 {
+
+// debug lance
+	printf("Starting DSNMASQ\n" );
+	sleep(5);
+
 	FILE *f, *hf;
 	const char *nv;
 	const char *router_ip;
@@ -166,21 +171,25 @@ void start_dnsmasq()
 	if (serialize_restart("dnsmasq", 1))
 		return;
 
-	/* check wireless ethernet bridge (wet) after stop_dnsmasq() */
-	if (foreach_wif(1, NULL, is_wet)) {
-		logmsg(LOG_INFO, "Starting dnsmasq for wireless ethernet bridge mode");
-		start_dnsmasq_wet();
-		return;
-	}
+// debug lance
+	printf("Return 1?\n" );
+	sleep(5);
 
-#ifdef TCONFIG_BCMWL6
-	/* check media bridge (psta) after stop_dnsmasq() */
-	if (foreach_wif(1, NULL, is_psta)) {
-		logmsg(LOG_INFO, "Starting dnsmasq for media bridge mode");
-		start_dnsmasq_wet();
-		return;
-	}
-#endif /* TCONFIG_BCMWL6 */
+	/* check wireless ethernet bridge (wet) after stop_dnsmasq() */
+//	if (foreach_wif(1, NULL, is_wet)) {
+//		logmsg(LOG_INFO, "Starting dnsmasq for wireless ethernet bridge mode");
+//		start_dnsmasq_wet();
+//		return;
+//	}
+
+// #ifdef TCONFIG_BCMWL6
+// 	/* check media bridge (psta) after stop_dnsmasq() */
+// 	if (foreach_wif(1, NULL, is_psta)) {
+// 		logmsg(LOG_INFO, "Starting dnsmasq for media bridge mode");
+// 		start_dnsmasq_wet();
+// 		return;
+// 	}
+// #endif /* TCONFIG_BCMWL6 */
 
 	if ((f = fopen(DNSMASQ_CONF, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, DNSMASQ_CONF);
@@ -221,6 +230,10 @@ void start_dnsmasq()
 	if (nvram_get_int("dns_fwd_local") != 1)
 		fprintf(f, "bogus-priv\n"			/* don't forward private reverse lookups upstream */
 		           "domain-needed\n");			/* don't forward plain name queries upstream */
+
+// debug lance
+	printf("Make it here?\n" );
+	sleep(5);
 
 #ifdef TCONFIG_DNSCRYPT
 	if (nvram_get_int("dnscrypt_proxy"))
@@ -645,6 +658,27 @@ void start_dnsmasq()
 
 	/* default to some values we like, but allow the user to override them */
 	eval("dnsmasq", "-c", "4096", "--log-async");
+
+// debug lance
+	printf("Attempting to start DSNMASQ\n" );
+	sleep(5);
+               FILE *fp;
+               char path[1035];
+
+               /* Open the command for reading. */
+               fp = popen("dnsmasq -c 4096 --log-async", "r");
+               if (fp == NULL) {
+                       printf("Failed to run command\n" );
+                       exit(1);
+               }
+
+               /* Read the output a line at a time - output it. */
+               while (fgets(path, sizeof(path), fp) != NULL) {
+                       printf("%s", path);
+               }
+               /* close */
+               pclose(fp);
+               sleep(5);
 
 	if (!nvram_contains_word("debug_norestart", "dnsmasq"))
 		pid_dnsmasq = -2;
@@ -2560,11 +2594,37 @@ void check_services(void)
 		_check(pid_dnsmasq, "dnsmasq", start_dnsmasq);
 		_check(pid_crond, "crond", start_cron);
 		_check(pid_igmp, "igmpproxy", start_igmp_proxy);
+
+
+// debug lance
+		FILE *fp;
+		char path[1035];
+
+		/* Open the command for reading. */
+		fp = popen("ps aux", "r");
+		if (fp == NULL) {
+			printf("Failed to run command\n" );
+			exit(1);
+		}
+
+		/* Read the output a line at a time - output it. */
+		while (fgets(path, sizeof(path), fp) != NULL) {
+			printf("%s", path);
+		}
+		/* close */
+		pclose(fp);
+		sleep(5);
 	}
 }
 
 void start_services(void)
 {
+
+// debug lance
+	printf("Starting Services\n" );
+	sleep(5);
+
+
 	static int once = 1;
 
 	if (once) {
