@@ -10390,7 +10390,7 @@ static void sysinit(void)
 
 	mount("proc", "/proc", "proc", 0, NULL);
 	mount("tmpfs", "/tmp", "tmpfs", 0, NULL);
-	mount("devfs", "/dev", "tmpfs", MS_MGC_VAL | MS_NOATIME, NULL);
+//	mount("devfs", "/dev", "tmpfs", MS_MGC_VAL | MS_NOATIME, NULL);
 	mknod("/dev/null", S_IFCHR | 0666, makedev(1, 3));
 	mknod("/dev/console", S_IFCHR | 0600, makedev(5, 1));
 	mount("sysfs", "/sys", "sysfs", MS_MGC_VAL, NULL);
@@ -10402,6 +10402,9 @@ static void sysinit(void)
 	mount("devpts", "/dev/pts", "devpts", MS_MGC_VAL, NULL);
 // Mount filesystem rw for now.
 	eval("mount", "-o", "remount,rw", "/");
+//	eval("mknod", "-m", "0666", "/dev/random", "c", "1", "8");
+//	eval("mknod", "-m", "0666", "/dev/urandom", "c", "1", "9");
+//	chown root:root /dev/random /dev/urando
 
 	if (console_init())
 		noconsole = 1;

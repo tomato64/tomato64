@@ -187,20 +187,12 @@ void start_dnsmasq()
 // 	}
 // #endif /* TCONFIG_BCMWL6 */
 
-// debug lance
-        printf("before\n" );
-        sleep(5);
-
 	if ((f = fopen(DNSMASQ_CONF, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, DNSMASQ_CONF);
 		printf("returning\n" );
 		sleep(5);
 		return;
 	}
-
-// debug lance
-        printf("after\n" );
-        sleep(5);
 
 	if (((nv = nvram_get("wan_domain")) != NULL) || ((nv = nvram_get("wan_get_domain")) != NULL)) {
 		if (*nv)
@@ -236,10 +228,6 @@ void start_dnsmasq()
 	if (nvram_get_int("dns_fwd_local") != 1)
 		fprintf(f, "bogus-priv\n"			/* don't forward private reverse lookups upstream */
 		           "domain-needed\n");			/* don't forward plain name queries upstream */
-
-// debug lance
-	printf("Make it here?\n" );
-	sleep(5);
 
 #ifdef TCONFIG_DNSCRYPT
 	if (nvram_get_int("dnscrypt_proxy"))
@@ -664,27 +652,6 @@ void start_dnsmasq()
 
 	/* default to some values we like, but allow the user to override them */
 	eval("dnsmasq", "-c", "4096", "--log-async");
-
-// debug lance
-	printf("Attempting to start DSNMASQ\n" );
-	sleep(5);
-               FILE *fp;
-               char path[1035];
-
-               /* Open the command for reading. */
-               fp = popen("dnsmasq -c 4096 --log-async", "r");
-               if (fp == NULL) {
-                       printf("Failed to run command\n" );
-                       exit(1);
-               }
-
-               /* Read the output a line at a time - output it. */
-               while (fgets(path, sizeof(path), fp) != NULL) {
-                       printf("%s", path);
-               }
-               /* close */
-               pclose(fp);
-               sleep(5);
 
 	if (!nvram_contains_word("debug_norestart", "dnsmasq"))
 		pid_dnsmasq = -2;

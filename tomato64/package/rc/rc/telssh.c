@@ -165,6 +165,30 @@ void start_sshd(void)
 		logmsg(LOG_ERR, "starting dropbear failed - check configuration ...");
 		stop_sshd();
 	}
+                       printf("dropbear _eval got return of %d\n", ret);
+			sleep(5);
+
+// debug lance
+//        printf("Attempting to start dropbear\n" );
+//        sleep(5);
+//               FILE *fp;
+//               char path[1035];
+
+               /* Open the command for reading. */
+//               fp = popen("dropbear -p 22", "r");
+//               if (fp == NULL) {
+//                       printf("Failed to run command\n" );
+//                       exit(1);
+//               }
+
+               /* Read the output a line at a time - output it. */
+//               while (fgets(path, sizeof(path), fp) != NULL) {
+//                       printf("%s", path);
+//               }
+               /* close */
+//               pclose(fp);
+//               sleep(5);
+
 }
 
 void stop_sshd(void)
