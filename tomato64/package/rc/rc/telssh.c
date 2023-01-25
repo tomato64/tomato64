@@ -117,9 +117,18 @@ static inline int check_host_key(const char *ktype, const char *nvname, const ch
 void start_sshd(void)
 {
 	int dirty = 0;
-//	char *argv[11];
 	int argc, ret;
 	char *p;
+
+        char *argv[] = { "dropbear",
+                "-p", nvram_safe_get("sshd_port"),      /* -p [address:]port */
+                "-R",
+                NULL, NULL,     /* -p remote port */
+                NULL,           /* -s */
+                NULL,           /* -a */
+                NULL, NULL,     /* -W receive_window_buffer */
+                NULL };         /* NULL Termination */
+        argc = 4;
 
 	if (serialize_restart("dropbear", 1))
 		return;
@@ -134,21 +143,6 @@ void start_sshd(void)
 	dirty |= check_host_key("ed25519", "sshd_ed25519",  telsshdir"/dropbear_ed25519_host_key");
 	if (dirty)
 		nvram_commit_x();
-
-	char *argv[] = { "dropbear",
-		"-p", nvram_safe_get("sshd_port"),	/* -p [address:]port */
-		"-R",
-		NULL, NULL,	/* -p remote port */
-		NULL,		/* -s */
-		NULL,		/* -a */
-		NULL, NULL,	/* -W receive_window_buffer */
-		NULL };		/* NULL Termination */
-	argc = 4;
-
-//	argv[0] = "dropbear";
-//	argv[1] = "-p";
-//	argv[2] = nvram_safe_get("sshd_port");
-//	argv[3] = "-R";
 
 	if (nvram_get_int("sshd_remote") && nvram_invmatch("sshd_rport", nvram_safe_get("sshd_port"))) {
 		argv[argc++] = "-p";
@@ -173,7 +167,6 @@ void start_sshd(void)
 // debug lance
 	printf("starting dropbear\n");
 	sleep(1);
-//	char *argv[] = { "dropbear", "-p", "69", "-R", "-p", "6969", "-s", "-a", NULL };
 
         for (int i = 0; i < 11; i++){
                 printf("%s, ", argv[i]);
@@ -187,28 +180,6 @@ void start_sshd(void)
                 printf("dropbear start error\n");
 		sleep(1);
 	}
-
-// debug lance
-//        printf("Attempting to start dropbear\n" );
-//        sleep(5);
-//               FILE *fp;
-//               char path[1035];
-
-               /* Open the command for reading. */
-//               fp = popen("dropbear -p 22", "r");
-//               if (fp == NULL) {
-//                       printf("Failed to run command\n" );
-//                       exit(1);
-//               }
-
-               /* Read the output a line at a time - output it. */
-//               while (fgets(path, sizeof(path), fp) != NULL) {
-//                       printf("%s", path);
-//               }
-               /* close */
-//               pclose(fp);
-//               sleep(5);
-
 }
 
 void stop_sshd(void)
