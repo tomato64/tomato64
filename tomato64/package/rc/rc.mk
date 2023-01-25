@@ -9,7 +9,7 @@ RC_SITE = $(BR2_EXTERNAL_TOMATO64_PATH)/package/rc/rc
 RC_SITE_METHOD = local
 RC_INSTALL_STAGING = YES
 RC_LICENSE = tomato
-RC_DEPENDENCIES = libshared libnvram
+RC_DEPENDENCIES = libnvram libshared
 
 define RC_BUILD_CMDS
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)

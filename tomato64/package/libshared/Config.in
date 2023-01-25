@@ -1,5 +1,6 @@
 config BR2_PACKAGE_LIBSHARED
 	bool "libshared"
+	select BR2_PACKAGE_LIBNVRAM
 	select BR2_PACKAGE_BUSYBOX
 	help
 	  libshared is a helper library for rc.
