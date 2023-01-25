@@ -244,6 +244,10 @@ int _eval(char *const argv[], const char *path, int timeout, int *ppid)
 	//char *cpu0_argv[32] = { "taskset", "-c", "0"};
 	//char *cpu1_argv[32] = { "taskset", "-c", "1"};
 
+// debug lance
+	printf("starting _eval\n");
+	sleep(1);
+
 	if (!ppid) {
 		// block SIGCHLD
 		sigemptyset(&set);

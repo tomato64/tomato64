@@ -10726,6 +10726,21 @@ int init_main(int argc, char *argv[])
 			start_lan();
 			start_arpbind();
 			mwan_state_files();
+
+
+// debug lance
+
+//        char *argv[] = { "dropbear", "-p", "22", "-R", NULL };
+
+//	#define telsshdir               "/etc/dropbear"
+//#define sshkeysdir		"/root/.ssh"
+
+ //       mkdir(telsshdir, 0777);
+//	mkdir(sshkeysdir, 0700);
+
+//        int ret = _eval(argv, NULL, 0, NULL);
+
+
 			start_services();
 
 			if (restore_defaults_fb /*|| nvram_match("wireless_restart_req", "1")*/) {
