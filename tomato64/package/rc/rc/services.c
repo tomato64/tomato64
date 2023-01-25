@@ -2154,10 +2154,16 @@ void set_tz(void)
 
 void start_ntpd(void)
 {
+// debug lance
+	printf("Starting ntpd");
+	sleep(1);	
+
 	FILE *f;
 	char *servers, *ptr;
-	int servers_len = 0, ntp_updates_int = 0, index = 3, ret;
-	char *ntpd_argv[] = { "/usr/sbin/ntpd", "-t", "-N", NULL, NULL, NULL, NULL, NULL, NULL }; /* -ddddddd -q -S /sbin/ntpd_synced -l */
+//	int servers_len = 0, ntp_updates_int = 0, index = 3, ret;
+	int servers_len = 0, ntp_updates_int = 0, index = 2, ret;
+//	char *ntpd_argv[] = { "/usr/sbin/ntpd", "-t", "-N", NULL, NULL, NULL, NULL, NULL, NULL }; /* -ddddddd -q -S /sbin/ntpd_synced -l */
+	char *ntpd_argv[] = { "/usr/sbin/ntpd", "-N", NULL, NULL, NULL, NULL, NULL, NULL }; /* -ddddddd -q -S /sbin/ntpd_synced -l */
 	pid_t pid;
 
 	if (serialize_restart("ntpd", 1))
@@ -2167,6 +2173,9 @@ void start_ntpd(void)
 
 	if ((nvram_get_int("dnscrypt_proxy")) || (nvram_get_int("stubby_proxy")))
 		eval("ntp2ip");
+
+// debug lance
+	printf("made it past ntp2ip");
 
 	/* this is the nvram var defining how the server should be run / how often to sync */
 	ntp_updates_int = nvram_get_int("ntp_updates");
@@ -2216,6 +2225,16 @@ void start_ntpd(void)
 			if (nvram_get_int("ntpd_enable")) /* enable local NTP server */
 				ntpd_argv[index++] = "-l";
 		}
+
+// debug lance
+        printf("Attmpting starting ntpd\n");
+        sleep(1);
+
+        for (int i = 0; i < 8; i++){
+                printf("%s, ", ntpd_argv[i]);
+        }
+        printf("\n");
+        sleep(5);
 
 		ret = _eval(ntpd_argv, NULL, 0, &pid);
 		if (ret)

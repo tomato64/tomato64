@@ -10402,9 +10402,6 @@ static void sysinit(void)
 	mount("devpts", "/dev/pts", "devpts", MS_MGC_VAL, NULL);
 // Mount filesystem rw for now.
 	eval("mount", "-o", "remount,rw", "/");
-//	eval("mknod", "-m", "0666", "/dev/random", "c", "1", "8");
-//	eval("mknod", "-m", "0666", "/dev/urandom", "c", "1", "9");
-//	chown root:root /dev/random /dev/urando
 
 	if (console_init())
 		noconsole = 1;
@@ -10726,21 +10723,7 @@ int init_main(int argc, char *argv[])
 			start_lan();
 			start_arpbind();
 			mwan_state_files();
-
-
-// debug lance
-
-//        char *argv[] = { "dropbear", "-p", "22", "-R", NULL };
-
-//	#define telsshdir               "/etc/dropbear"
-//#define sshkeysdir		"/root/.ssh"
-
- //       mkdir(telsshdir, 0777);
-//	mkdir(sshkeysdir, 0700);
-
-//        int ret = _eval(argv, NULL, 0, NULL);
-
-
+//			start_ntpd(); // debug can remove
 			start_services();
 
 			if (restore_defaults_fb /*|| nvram_match("wireless_restart_req", "1")*/) {
