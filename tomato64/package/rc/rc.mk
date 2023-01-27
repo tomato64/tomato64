@@ -22,7 +22,7 @@ endef
 define RC_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/rc $(TARGET_DIR)/sbin
 #	ln -sf rc $(TARGET_DIR)/sbin/init
-#	ln -sf rc $(TARGET_DIR)/sbin/console
+	ln -sf rc $(TARGET_DIR)/sbin/console
 	ln -sf rc $(TARGET_DIR)/sbin/hotplug
 	ln -sf rc $(TARGET_DIR)/sbin/service
 	ln -sf rc $(TARGET_DIR)/sbin/buttons
@@ -32,8 +32,8 @@ define RC_INSTALL_TARGET_CMDS
 	ln -sf rc $(TARGET_DIR)/sbin/rcheck
 	ln -sf rc $(TARGET_DIR)/sbin/radio
 	ln -sf rc $(TARGET_DIR)/sbin/led
-#	ln -sf rc $(TARGET_DIR)/sbin/reboot
-#	ln -sf rc $(TARGET_DIR)/sbin/halt
+	ln -sf rc $(TARGET_DIR)/sbin/reboot
+	ln -sf rc $(TARGET_DIR)/sbin/halt
 	ln -sf rc $(TARGET_DIR)/sbin/redial
 	ln -sf rc $(TARGET_DIR)/sbin/mwanroute
 	ln -sf rc $(TARGET_DIR)/sbin/gpio

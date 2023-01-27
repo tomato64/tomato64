@@ -19,5 +19,6 @@ config BR2_PACKAGE_RC
 	select BR2_PACKAGE_TRACEROUTE
 	select BR2_PACKAGE_LIBCURL
 	select BR2_PACKAGE_LIBCURL_CURL
+	select BR2_PACKAGE_TINC11
 	help
 	  rc is the init process for Tomato.
