@@ -1,4 +1,5 @@
 config BR2_PACKAGE_RSTATS
 	bool "Bandwidth Monitoring"
+	select BR2_PACKAGE_LIBSHARED
 	help
 	  MOnitors all bandwidth going through the router.

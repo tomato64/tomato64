@@ -1,4 +1,5 @@
 config BR2_PACKAGE_WANUPTIME
 	bool "wanuptime"
+	select BR2_PACKAGE_LIBSHARED
 	help
 	  Gives WAN uptime in seconds.
