@@ -1,0 +1,4 @@
+config BR2_PACKAGE_WANUPTIME
+	bool "wanuptime"
+	help
+	  Gives WAN uptime in seconds.
