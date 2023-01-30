@@ -1,0 +1,4 @@
+config BR2_PACKAGE_RSTATS
+	bool "Bandwidth Monitoring"
+	help
+	  MOnitors all bandwidth going through the router.
