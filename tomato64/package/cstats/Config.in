@@ -1,0 +1,4 @@
+config BR2_PACKAGE_CSTATS
+	bool "IPTraffic"
+	help
+	  MOnitors bandwidth by IP.
