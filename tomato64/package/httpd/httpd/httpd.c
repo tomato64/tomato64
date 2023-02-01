@@ -62,15 +62,17 @@
 #include <arpa/inet.h>
 #include <getopt.h>
 #include <sys/wait.h>
-#include <error.h>
-#include <sys/signal.h>
+//#include <error.h>
+#include <signal.h>
 #include <netinet/tcp.h>
 #include <sys/stat.h>
+#include <limits.h>
 
 #include <wlutils.h>
 #include "tomato.h"
 #ifdef TCONFIG_HTTPS
-#include "../mssl/mssl.h"
+//#include "../mssl/mssl.h"
+#include "mssl.h"
 #define HTTPS_CRT_VER		"1"
 #endif
 

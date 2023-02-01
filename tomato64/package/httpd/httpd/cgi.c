@@ -14,9 +14,11 @@
 
 #include "tomato.h"
 
-#ifndef __USE_GNU
+#if defined(__GLIBC__) || defined(__UCLIBC__)
 #define __USE_GNU
-#endif
+#else
+#define _GNU_SOURCE	//musl
+#endif	/* ! (__GLIBC__ || __UCLIBC__) */
 #include <search.h>
 
 /* needed by logmsg() */
@@ -25,7 +27,8 @@
 
 
 /* CGI hash table */
-static struct hsearch_data htab = { .table = NULL };
+//static struct hsearch_data htab = { .table = NULL };
+static struct hsearch_data htab;
 
 static void unescape(char *s)
 {
@@ -84,7 +87,11 @@ char *webcgi_get(const char *name)
 {
 	ENTRY e, *ep;
 
+#if !(defined(__GLIBC__) || defined(__UBLIBC__))
+	if (!htab.__tab)
+#else
 	if (!htab.table)
+#endif
 		return NULL;
 
 	e.key = (char *)name;
@@ -99,7 +106,11 @@ void webcgi_set(char *name, char *value)
 {
 	ENTRY e, *ep;
 
+#if !(defined(__GLIBC__) || defined(__UBLIBC__))
+	if (!htab.__tab)
+#else
 	if (!htab.table)
+#endif
 		hcreate_r(16, &htab);
 
 	e.key = name;
@@ -118,7 +129,11 @@ void webcgi_init(char *query)
 	int nel;
 	char *q, *end, *name, *value;
 
+#if !(defined(__GLIBC__) || defined(__UBLIBC__))
+	if (htab.__tab)
+#else
 	if (htab.table)
+#endif
 		hdestroy_r(&htab);
 	if (query == NULL)
 		return;

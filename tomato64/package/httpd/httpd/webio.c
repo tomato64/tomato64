@@ -7,7 +7,8 @@
 
 
 #include "tomato.h"
-#include "../mssl/mssl.h"
+//#include "../mssl/mssl.h"
+#include "mssl.h"
 #include <errno.h>
 #include <stdarg.h>
 
