@@ -1,0 +1,6 @@
+config BR2_PACKAGE_HTTPD
+	bool "Tomato httpd Server"
+	select BR2_PACKAGE_LIBSHARED
+	select BR2_PACKAGE_LIBMSSL
+	help
+	  Tomaato httpd Server
