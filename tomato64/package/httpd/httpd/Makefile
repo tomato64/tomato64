@@ -10,7 +10,7 @@ ALL_CPPFLAGS += $(CPPFLAGS)
 ALL_CFLAGS = -fPIC -g
 ALL_CFLAGS += $(CFLAGS)
 
-ALL_LDFLAGS = -fPIC -lmssl -lshared -lnvram -lssl -lcrypto
+ALL_LDFLAGS = -fPIC -lmssl -lshared -lnvram -lssl -lcrypto -lmssl
 ALL_LDFLAGS += $(LDFLAGS)
 
 ifeq ($(TOMATO_EXPERIMENTAL),1)

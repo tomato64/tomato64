@@ -16,12 +16,12 @@ define LIBMSSL_BUILD_CMDS
 endef
 
 define LIBMSSL_INSTALL_STAGING_CMDS
-	$(INSTALL) -D -m 0755 $(@D)/libmssl.so $(STAGING_DIR)/bin
+	$(INSTALL) -D -m 0755 $(@D)/libmssl.so $(STAGING_DIR)/lib
 	$(INSTALL) -D -m 0644 $(@D)/mssl.h  $(STAGING_DIR)/usr/include
 endef
 
 define LIBMSSL_INSTALL_TARGET_CMDS
-	$(INSTALL) -D -m 0755 $(@D)/libmssl.so $(TARGET_DIR)/bin
+	$(INSTALL) -D -m 0755 $(@D)/libmssl.so $(TARGET_DIR)/lib
 endef
 
 $(eval $(generic-package))
