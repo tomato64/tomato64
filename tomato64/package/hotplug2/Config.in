@@ -1,0 +1,5 @@
+config BR2_PACKAGE_HOTPLUG2
+	bool "hotplug2"
+	select BR2_PACKAGE_UDEVTRIGGER
+	help
+	  Tomato uevent helper
