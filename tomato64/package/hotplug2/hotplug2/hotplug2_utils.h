@@ -9,7 +9,12 @@
 #ifndef HOTPLUG2_UTILS_H
 #define HOTPLUG2_UTILS_H 1
 
+#include "mem_utils.h"
 #include "hotplug2.h"
+
+#ifdef HND_ROUTER
+#define inline  
+#endif
 
 #define NETLINK_UNDEFINED	0
 #define NETLINK_CONNECT		1

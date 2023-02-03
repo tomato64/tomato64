@@ -27,6 +27,10 @@
 #include "../parser_utils.h"
 #include "../filemap_utils.h"
 
+#ifdef HND_ROUTER
+#define inline  
+#endif
+
 #define JUMP_TO_NEXT	{ free(line); free(module); continue; }
 
 #define PRINT_WILDCARD(prefix, format, variable, any) \

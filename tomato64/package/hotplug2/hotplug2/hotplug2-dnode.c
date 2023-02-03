@@ -30,6 +30,10 @@
 #include "hotplug2_utils.h"
 #include "parser_utils.h"
 
+#ifdef HND_ROUTER
+#define inline  
+#endif
+
 #define MODALIAS_MAX_LEN		1024
 
 #ifndef KEY_MIN_INTERESTING

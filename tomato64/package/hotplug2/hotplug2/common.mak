@@ -1,7 +1,10 @@
 # vim:set sw=8 nosta:
 
-CFLAGS=-Os -DHAVE_RULES -Wall -g -Wextra $(EXTRACFLAGS)
-LDFLAGS=-g
+ALL_CFLAGS = -fpic -Os -DHAVE_RULES -Wall -g -Wextra $(EXTRACFLAGS) -DQCAMUSL -DHND_ROUTER
+ALL_CFLAGS += $(CFLAGS)
+
+ALL_LDFLAGS = -g -fpic
+ALL_LDFLAGS += $(LDFLAGS)
 
 INSTALL=install -c -m 644
 INSTALL_BIN=install -c -m 755
@@ -11,7 +14,7 @@ INSTALL_DIR=install -d
 .PHONY: all clean dep install install-recursive clean-recursive \
 	dep-recursive all-recursive
 
-MAKEDEP=-$(CC) $(CFLAGS) -MM $(wildcard *.c *.cc) > .depend
+MAKEDEP=-$(CC) $(ALL_CFLAGS) -MM $(wildcard *.c *.cc) > .depend
 dep: dep-recursive
 	$(MAKEDEP)
 .depend:
@@ -33,3 +36,7 @@ all-recursive:
 install: all install-recursive
 install-recursive:
 	@for i in $(SUBDIRS); do $(MAKE) -C $$i install; done
+
+%.o: %.c
+	@echo " [hotplug] CC $@"
+	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ -c $<

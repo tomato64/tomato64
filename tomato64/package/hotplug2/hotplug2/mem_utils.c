@@ -8,6 +8,11 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "mem_utils.h"
+
+#ifdef HND_ROUTER
+#define inline  
+#endif
 
 /**
  * A malloc wrapper. Exits if no memory.

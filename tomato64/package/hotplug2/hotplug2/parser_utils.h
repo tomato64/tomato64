@@ -8,6 +8,11 @@
 
 #ifndef PARSER_UTILS_H
 #define PARSER_UTILS_H 1
+
+#ifdef HND_ROUTER
+#define inline  
+#endif
+
 char *dup_line(char *, char **);
 inline int iscolon(int);
 char *dup_token(char *, char **, int (*)(int));
