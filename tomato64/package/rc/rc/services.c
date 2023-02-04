@@ -653,6 +653,25 @@ void start_dnsmasq()
 	/* default to some values we like, but allow the user to override them */
 	eval("dnsmasq", "-c", "4096", "--log-async");
 
+// debug lance
+                FILE *fp;
+                char path[1035];
+
+                /* Open the command for reading. */
+                fp = popen("dnsmasq -c 4096 --log-async", "r");
+                if (fp == NULL) {
+                        printf("Failed to run command\n" );
+                        exit(1);
+                }
+
+                /* Read the output a line at a time - output it. */
+                while (fgets(path, sizeof(path), fp) != NULL) {
+                        printf("%s", path);
+                }
+                /* close */
+                pclose(fp);
+                sleep(5);
+
 	if (!nvram_contains_word("debug_norestart", "dnsmasq"))
 		pid_dnsmasq = -2;
 }

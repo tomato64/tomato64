@@ -10390,7 +10390,7 @@ static void sysinit(void)
 
 	mount("proc", "/proc", "proc", 0, NULL);
 	mount("tmpfs", "/tmp", "tmpfs", 0, NULL);
-//	mount("devfs", "/dev", "tmpfs", MS_MGC_VAL | MS_NOATIME, NULL);
+	mount("devfs", "/dev", "tmpfs", MS_MGC_VAL | MS_NOATIME, NULL);
 	mknod("/dev/null", S_IFCHR | 0666, makedev(1, 3));
 	mknod("/dev/console", S_IFCHR | 0600, makedev(5, 1));
 	mount("sysfs", "/sys", "sysfs", MS_MGC_VAL, NULL);
@@ -10471,8 +10471,12 @@ static void sysinit(void)
 		putenv(defenv[i]);
 	}
 
+	printf("starting hotplug\n");
 	eval("hotplug2", "--coldplug");
+//	eval("gdb", "--args", "hotplug2", "--coldplug");
+	printf("continue hotplug\n");
 	start_hotplug2();
+	printf("ending hotplug\n");
 
 	if (!noconsole) {
 		printf("\n\nHit ENTER for console...\n\n");
