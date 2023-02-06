@@ -807,6 +807,11 @@ void store_wan_if_to_nvram(char *prefix)
 
 void start_wan_if(char *prefix)
 {
+
+// debug lance
+        printf("Starting WAN\n" );
+        sleep(5);
+
 	int wan_proto;
 	char *wan_ifname;
 	char *nvp;

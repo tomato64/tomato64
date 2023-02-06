@@ -104,12 +104,12 @@ typedef u_int8_t u8;
 void restart_wl(void);
 void stop_lan_wl(void);
 void start_lan_wl(void);
-#ifdef TCONFIG_BCMWL6
+//#ifdef TCONFIG_BCMWL6
 //int wl_sta_prepare(void);
 //void wl_sta_start(void);
 //void wl_sta_stop(void);
-int wl_send_dif_event(const char *ifname, uint32 event);
-#endif
+//int wl_send_dif_event(const char *ifname, uint32 event);
+//#endif
 
 enum {
 	RADIO_OFF = 0,
@@ -1101,9 +1101,9 @@ void start_lan_wl(void)
 
 						sta |= (strcmp(mode, "sta") == 0);
 						if ((strcmp(mode, "ap") != 0) && (strcmp(mode, "wet") != 0)
-#ifdef TCONFIG_BCMWL6
-						    && (strcmp(mode, "psta") != 0)
-#endif
+//#ifdef TCONFIG_BCMWL6
+//						    && (strcmp(mode, "psta") != 0)
+//#endif
 						)
 							continue;
 					}
@@ -1137,9 +1137,9 @@ void stop_wireless(void) {
 }
 
 void start_wireless(void) {
-#ifdef TCONFIG_BCMWL6
-	int ret = 0;
-#endif
+//#ifdef TCONFIG_BCMWL6
+//	int ret = 0;
+//#endif
 	char prefix[] = "wanXX";
 
 // #ifdef TCONFIG_BCMWL6
@@ -1151,9 +1151,9 @@ void start_wireless(void) {
 	restart_wl();
 
 	if (1 &&
-#ifdef TCONFIG_BCMWL6
-	    ret &&
-#endif
+//#ifdef TCONFIG_BCMWL6
+//	    ret &&
+//#endif
 	    get_sta_wan_prefix(prefix)) { /* wl client up again */
 		logmsg(LOG_INFO, "wireless client WAN: starting %s (WL up)", prefix);
 		start_wan_if(prefix);
@@ -1596,9 +1596,9 @@ void start_lan(void)
 					/* set the logical bridge address to that of the first interface OR Media Bridge interface address! */
 					strlcpy(ifr.ifr_name, lan_ifname, IFNAMSIZ);
 					if ((!hwaddrset) ||
-#ifdef TCONFIG_BCMWL6
-					    (is_psta_client(unit, subunit)) ||
-#endif
+//#ifdef TCONFIG_BCMWL6
+//					    (is_psta_client(unit, subunit)) ||
+//#endif
 					    (ioctl(sfd, SIOCGIFHWADDR, &ifr) == 0 && memcmp(ifr.ifr_hwaddr.sa_data, "\0\0\0\0\0\0", ETHER_ADDR_LEN) == 0)) {
 						strlcpy(ifr.ifr_name, ifname, IFNAMSIZ);
 						if (ioctl(sfd, SIOCGIFHWADDR, &ifr) == 0) {
@@ -1667,9 +1667,9 @@ void start_lan(void)
 
 						sta |= (strcmp(mode, "sta") == 0);
 						if ((strcmp(mode, "ap") != 0) && (strcmp(mode, "wet") != 0)
-#ifdef TCONFIG_BCMWL6
-						    && (strcmp(mode, "psta") != 0)
-#endif
+//#ifdef TCONFIG_BCMWL6
+//						    && (strcmp(mode, "psta") != 0)
+//#endif
 						)
 							continue;
 					}

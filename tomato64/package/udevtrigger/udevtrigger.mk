@@ -15,11 +15,11 @@ define UDEVTRIGGER_BUILD_CMDS
 endef
 
 define UDEVTRIGGER_INSTALL_STAGING_CMDS
-	$(INSTALL) -D -m 0755 $(@D)/udevtrigger $(STAGING_DIR)/sbin
+	$(INSTALL) -D -m 0500 $(@D)/udevtrigger $(STAGING_DIR)/sbin
 endef
 
 define UDEVTRIGGER_INSTALL_TARGET_CMDS
-	$(INSTALL) -D -m 0755 $(@D)/udevtrigger $(TARGET_DIR)/sbin
+	$(INSTALL) -D -m 0500 $(@D)/udevtrigger $(TARGET_DIR)/sbin
 endef
 
 $(eval $(generic-package))

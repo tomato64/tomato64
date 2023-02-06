@@ -10390,7 +10390,7 @@ static void sysinit(void)
 
 	mount("proc", "/proc", "proc", 0, NULL);
 	mount("tmpfs", "/tmp", "tmpfs", 0, NULL);
-	mount("devfs", "/dev", "tmpfs", MS_MGC_VAL | MS_NOATIME, NULL);
+//	mount("devfs", "/dev", "tmpfs", MS_MGC_VAL | MS_NOATIME, NULL);
 	mknod("/dev/null", S_IFCHR | 0666, makedev(1, 3));
 	mknod("/dev/console", S_IFCHR | 0600, makedev(5, 1));
 	mount("sysfs", "/sys", "sysfs", MS_MGC_VAL, NULL);
@@ -10471,12 +10471,8 @@ static void sysinit(void)
 		putenv(defenv[i]);
 	}
 
-	printf("starting hotplug\n");
-	eval("hotplug2", "--coldplug");
-//	eval("gdb", "--args", "hotplug2", "--coldplug");
-	printf("continue hotplug\n");
+//	eval("hotplug2", "--no-persistent", "--coldplug");
 	start_hotplug2();
-	printf("ending hotplug\n");
 
 	if (!noconsole) {
 		printf("\n\nHit ENTER for console...\n\n");
@@ -10538,9 +10534,9 @@ static void sysinit(void)
 //	set_jumbo_frame(); /* enable or disable jumbo_frame and set jumbo frame size */
 
 	/* load after init_nvram */
-#if defined(TCONFIG_USBAP) || defined(TCONFIG_DHDAP)
-	load_wl(); /* for non-USBAP/sdk6 see function start_lan() */
-#endif
+//#if defined(TCONFIG_USBAP) || defined(TCONFIG_DHDAP)
+//	load_wl(); /* for non-USBAP/sdk6 see function start_lan() */
+//#endif
 
 	//config_loopback(); /* see function start_lan() */
 
@@ -10673,9 +10669,9 @@ int init_main(int argc, char *argv[])
 #ifdef TCONFIG_USB
 				remove_storage_main(1);
 				stop_usb();
-#ifndef TCONFIG_USBAP
-				remove_usb_module();
-#endif
+//#ifndef TCONFIG_USBAP
+//				remove_usb_module();
+//#endif
 #endif /* TCONFIG_USB */
 				remove_conntrack();
 				stop_jffs2();

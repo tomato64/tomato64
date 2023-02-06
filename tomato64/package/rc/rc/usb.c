@@ -169,27 +169,27 @@ void start_usb(void)
 		i = do_led(LED_USB, LED_PROBE);
 		if (i != 255) {
 
-#ifdef TCONFIG_BCMARM
-			do_led(LED_USB, LED_OFF); /* turn off USB LED */
-		}
+//#ifdef TCONFIG_BCMARM
+//			do_led(LED_USB, LED_OFF); /* turn off USB LED */
+//		}
 
-		i = 255; /* reset to 255 */
-		/* check USB3 LED */
-		i = do_led(LED_USB3, LED_PROBE);
-		if (i != 255) {
-			do_led(LED_USB3, LED_OFF); /* turn off USB3 LED */
+//		i = 255; /* reset to 255 */
+//		/* check USB3 LED */
+//		i = do_led(LED_USB3, LED_PROBE);
+//		if (i != 255) {
+//			do_led(LED_USB3, LED_OFF); /* turn off USB3 LED */
 
-#elif defined(CONFIG_BCMWL6) || defined(TCONFIG_BLINK) /* TCONFIG_BCMARM */
+//#elif defined(CONFIG_BCMWL6) || defined(TCONFIG_BLINK) /* TCONFIG_BCMARM */
 			/* Remove legacy approach in the code here - rather, use do_led() function, which is designed to do this
 			 * The reason for changing this... some HW (like Netgear WNDR4000) don't work with direct GPIO write -> use do_led()!
 			 */
-			do_led(LED_USB, LED_OFF); /* turn off USB LED */
-#else
-			modprobe("ledtrig-usbdev");
-			modprobe("leds-usb");
-			sprintf(param, "%d", i);
-			f_write_string("/proc/leds-usb/gpio_pin", param, 0, 0);
-#endif /* TCONFIG_BCMARM */
+//			do_led(LED_USB, LED_OFF); /* turn off USB LED */
+//#else
+//			modprobe("ledtrig-usbdev");
+//			modprobe("leds-usb");
+//			sprintf(param, "%d", i);
+//			f_write_string("/proc/leds-usb/gpio_pin", param, 0, 0);
+//#endif /* TCONFIG_BCMARM */
 		}
 
 #ifdef TCONFIG_USBAP
