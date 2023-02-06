@@ -10383,6 +10383,7 @@ static void sysinit(void)
 	static int noconsole = 0;
 	static const time_t tm = 0;
 	unsigned int i;
+	int r, retry = 0;
 	DIR *d;
 	struct dirent *de;
 	char s[256];
@@ -10472,6 +10473,13 @@ static void sysinit(void)
 	}
 
 //	eval("hotplug2", "--no-persistent", "--coldplug");
+
+	do {
+		r = eval("mdev", "-s");
+		if (r || retry)
+			_dprintf("mdev coldplug terminated. (ret %d retry %d)\n", r, retry);
+	} while (r && retry++ < 10);
+
 	start_hotplug2();
 
 	if (!noconsole) {
