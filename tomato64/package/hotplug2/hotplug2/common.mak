@@ -1,6 +1,7 @@
 # vim:set sw=8 nosta:
 
-ALL_CFLAGS = -fpic -Os -DHAVE_RULES -Wall -g -Wextra $(EXTRACFLAGS) -DQCAMUSL -DHND_ROUTER
+#ALL_CFLAGS = -fpic -Os -DHAVE_RULES -Wall -g -Wextra $(EXTRACFLAGS) -DQCAMUSL -DHND_ROUTER
+ALL_CFLAGS = -fpic -Os -DHAVE_RULES -Wall -g -Wextra $(EXTRACFLAGS)
 ALL_CFLAGS += $(CFLAGS)
 
 ALL_LDFLAGS = -g -fpic

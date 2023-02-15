@@ -10472,13 +10472,13 @@ static void sysinit(void)
 		putenv(defenv[i]);
 	}
 
-//	eval("hotplug2", "--no-persistent", "--coldplug");
+	eval("udevtrigger");
 
-	do {
-		r = eval("mdev", "-s");
-		if (r || retry)
-			_dprintf("mdev coldplug terminated. (ret %d retry %d)\n", r, retry);
-	} while (r && retry++ < 10);
+//	do {
+//		r = eval("mdev", "-s");
+//		if (r || retry)
+//			_dprintf("mdev coldplug terminated. (ret %d retry %d)\n", r, retry);
+//	} while (r && retry++ < 10);
 
 	start_hotplug2();
 

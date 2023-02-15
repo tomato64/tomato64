@@ -1478,15 +1478,15 @@ void start_lan(void)
 	char *iftmp;
 	char nv[64];
 
-#ifndef TCONFIG_BCM714
-#ifdef TCONFIG_DHDAP
-	int is_dhd;
-#endif
-#endif
+//#ifndef TCONFIG_BCM714
+//#ifdef TCONFIG_DHDAP
+//	int is_dhd;
+//#endif
+//#endif
 
-#if !defined(TCONFIG_DHDAP) && !defined(TCONFIG_USBAP) /* load driver at init.c for USBAP/sdk7 */
-	load_wl(); /* lets go! */
-#endif
+//#if !defined(TCONFIG_DHDAP) && !defined(TCONFIG_USBAP) /* load driver at init.c for USBAP/sdk7 */
+//	load_wl(); /* lets go! */
+//#endif
 
 //#ifdef TCONFIG_BCMARM
 //	wlconf_pre(); /* prepare a few wifi things */
