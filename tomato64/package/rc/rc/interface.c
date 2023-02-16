@@ -48,6 +48,12 @@
 
 int _ifconfig(const char *name, int flags, const char *addr, const char *netmask, const char *dstaddr, int mtu)
 {
+
+// debug lance
+	printf("ifconfig %s %04x %s %s %s %d\n", name, flags, addr, netmask, dstaddr, mtu);
+        sleep(1);
+
+
 	int s;
 	struct ifreq ifr;
 	struct in_addr in_addr, in_netmask, in_broadaddr;
@@ -239,20 +245,12 @@ void start_vlan(void)
 //	if ((strtoul(nvram_safe_get("boardflags"), NULL, 0) & BFL_ENETVLAN) == 0)
 //		return;
 
-	printf("vlan 1\n");
-	sleep(1);
-
 	/* set vlan i/f name to style "vlan<ID>" */
 	eval("vconfig", "set_name_type", "VLAN_PLUS_VID_NO_PAD");
-
-	printf("vlan 2\n");
-	sleep(1);
 
 	/* create vlan interfaces */
 	if ((s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
 		return;
-
-	printf("vlan 3\n");
 
 	for (i = 0; i < TOMATO_VLANNUM; i ++) {
 		char nvvar_name[16];
@@ -270,9 +268,12 @@ void start_vlan(void)
 			continue;
 
 		ether_atoe(hwaddr, ea);
+
+		printf("%s\n", ea);
+		printf("vlan%dhwname, %smacaddr\n", i, hwname);
+		sleep(1);
+
 		/* find the interface name to which the address is assigned */
-	printf("vlan 4\n");
-	sleep(1);
 		for (j = 1; j <= DEV_NUMIFS; j ++) {
 		printf("%d\n",j);
 			ifr.ifr_ifindex = j;
@@ -285,16 +286,10 @@ void start_vlan(void)
 			if (!bcmp(ifr.ifr_hwaddr.sa_data, ea, ETHER_ADDR_LEN))
 				break;
 		}
-	printf("vlan 5\n");
-	sleep(1);
 		if (j > DEV_NUMIFS)
 			continue;
-	printf("vlan 6\n");
-	sleep(1);
 		if (ioctl(s, SIOCGIFFLAGS, &ifr))
 			continue;
-	printf("vlan 7\n");
-	sleep(1);
 		if (!(ifr.ifr_flags & IFF_UP))
 			ifconfig(ifr.ifr_name, IFUP, 0, 0);
 
