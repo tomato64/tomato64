@@ -307,7 +307,10 @@ void start_vlan(void)
 		/* create the VLAN interface */
 		snprintf(vlan_id, sizeof(vlan_id), "%d", vid_map);
 
-		eval("vconfig", "add", ifr.ifr_name, vlan_id);
+//		eval("vconfig", "add", ifr.ifr_name, vlan_id);
+		char vlanname[8];
+		snprintf(vlanname, sizeof(vlanname), "vlan%d", i);
+		eval("ip", "link", "add", "link", ifr.ifr_name, "name", vlanname, "type", "vlan", "id", vlan_id);
 
 		/* setup ingress map (vlan->priority => skb->priority) */
 		snprintf(vlan_id, sizeof(vlan_id), "vlan%d", vid_map);

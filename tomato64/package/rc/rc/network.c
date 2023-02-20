@@ -1562,17 +1562,17 @@ void start_lan(void)
 					unit = -1; subunit = -1;
 
 					/* ignore disabled wl vifs */
-					if (strncmp(ifname, "wl", 2) == 0 && strchr(ifname, '.')) {
-						snprintf(nv, sizeof(nv) - 1, "%s_bss_enabled", ifname);
-						if (!nvram_get_int(nv))
-							continue;
-						if (get_ifname_unit(ifname, &unit, &subunit) < 0)
-							continue;
+//					if (strncmp(ifname, "wl", 2) == 0 && strchr(ifname, '.')) {
+//						snprintf(nv, sizeof(nv) - 1, "%s_bss_enabled", ifname);
+//						if (!nvram_get_int(nv))
+//							continue;
+//						if (get_ifname_unit(ifname, &unit, &subunit) < 0)
+//							continue;
 
-						set_wlmac(0, unit, subunit, NULL);
-					}
-					else
-						wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit));
+//						set_wlmac(0, unit, subunit, NULL);
+//					}
+//					else
+//						wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit));
 
 					/* vlan ID mapping */
 					if (strncmp(ifname, "vlan", 4) == 0) {

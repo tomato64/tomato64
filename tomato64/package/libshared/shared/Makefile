@@ -15,12 +15,12 @@ OBJS = shutils.o wl.o wl_linux.o linux_timer.o defaults.o id.o misc.o \
        led.o version.o base64.o files.o strings.o process.o nvparse.o usb.o
 
 OBJS += \
-$(BASE_DIR)/build/busybox-1.35.0/util-linux/volume_id/ext.o \
-$(BASE_DIR)/build/busybox-1.35.0/util-linux/volume_id/util.o \
-$(BASE_DIR)/build/busybox-1.35.0/util-linux/volume_id/fat.o \
-$(BASE_DIR)/build/busybox-1.35.0/util-linux/volume_id/ntfs.o \
-$(BASE_DIR)/build/busybox-1.35.0/util-linux/volume_id/exfat.o \
-$(BASE_DIR)/build/busybox-1.35.0/util-linux/volume_id/linux_swap.o
+$(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/ext.o \
+$(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/util.o \
+$(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/fat.o \
+$(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/ntfs.o \
+$(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/exfat.o \
+$(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/linux_swap.o
 
 all: libshared.so libshared.a
 
