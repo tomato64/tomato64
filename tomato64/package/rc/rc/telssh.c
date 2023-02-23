@@ -166,13 +166,13 @@ void start_sshd(void)
 
 // debug lance
 	printf("starting dropbear\n");
-	sleep(1);
+//	sleep(1);
 
-        for (int i = 0; i < 11; i++){
-                printf("%s, ", argv[i]);
-        }
-	printf("\n");
-	sleep(5);
+//        for (int i = 0; i < 11; i++){
+//                printf("%s, ", argv[i]);
+//        }
+//	printf("\n");
+//	sleep(5);
 	ret = _eval(argv, NULL, 0, NULL);
 	if (ret) {
 		logmsg(LOG_ERR, "starting dropbear failed - check configuration ...");
