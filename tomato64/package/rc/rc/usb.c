@@ -46,7 +46,7 @@
 #define USBOHCI_MOD	"ohci-hcd"
 #define USBUHCI_MOD	"uhci-hcd"
 #define USBPRINTER_MOD	"usblp"
-#define SCSI_WAIT_MOD	"scsi_wait_scan"
+#define SCSI_WAIT_MOD	"scsi_scan_async"
 #define USBFS		"usbfs"
 
 #ifndef MNT_DETACH

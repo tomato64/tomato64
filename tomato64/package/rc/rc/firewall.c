@@ -1315,8 +1315,9 @@ static void filter_forward(void)
 	ip6t_write("-A FORWARD -m rt --rt-type 0 -j DROP\n");
 #endif
 
-	if (nvram_match("cstats_enable", "1"))
-		ipt_account();
+//	disable for now. Don't have this kernel module
+//	if (nvram_match("cstats_enable", "1"))
+//		ipt_account();
 
 	for (i = 0; i < BRIDGE_COUNT; i++) {
 		if ((strcmp(lanface[i], "") != 0) || (i == 0))

@@ -269,7 +269,7 @@ void start_vlan(void)
 
 		ether_atoe(hwaddr, ea);
 
-		printf("%s\n", ea);
+//		printf("%s\n", ea);
 		printf("vlan%dhwname, %smacaddr\n", i, hwname);
 		sleep(1);
 

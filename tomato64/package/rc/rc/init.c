@@ -10472,10 +10472,11 @@ static void sysinit(void)
 		putenv(defenv[i]);
 	}
 
-	eval("udevtrigger");
+//	eval("udevtrigger");
+	eval("/etc/init.d/S10mdev", "start");
 
 //	do {
-//		r = eval("mdev", "-s");
+//		r = eval("/etc/init.d/S10mdev", "start");
 //		if (r || retry)
 //			_dprintf("mdev coldplug terminated. (ret %d retry %d)\n", r, retry);
 //	} while (r && retry++ < 10);
