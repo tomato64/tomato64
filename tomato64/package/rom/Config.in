@@ -1,0 +1,4 @@
+config BR2_PACKAGE_ROM
+	bool "rom"
+	help
+	  Populates /etc
