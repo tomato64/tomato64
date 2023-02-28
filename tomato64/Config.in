@@ -1,4 +1,5 @@
 source "$BR2_EXTERNAL_TOMATO64_PATH/package/rc/Config.in"
+source "$BR2_EXTERNAL_TOMATO64_PATH/package/skeleton-init-rc/Config.in"
 source "$BR2_EXTERNAL_TOMATO64_PATH/package/httpd/Config.in"
 source "$BR2_EXTERNAL_TOMATO64_PATH/package/rstats/Config.in"
 source "$BR2_EXTERNAL_TOMATO64_PATH/package/cstats/Config.in"
