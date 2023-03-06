@@ -1,0 +1,5 @@
+config BR2_PACKAGE_NVRAM
+	bool "nvram userspace"
+	select BR2_PACKAGE_LIBNVRAM
+	help
+	  userspace nvram cli command
