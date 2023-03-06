@@ -124,8 +124,8 @@ static void sem_lock() {
             endmntent(mnt);
         }
 
-        PRINT_MSG("%s\n", "Triggering NVRAM initialization!");
-        nvram_init();
+//        PRINT_MSG("%s\n", "Triggering NVRAM initialization!");
+//        nvram_init();
     }
 
 cont:
@@ -179,11 +179,11 @@ int nvram_init(void) {
 
     sem_lock();
 
-    if (mount("tmpfs", MOUNT_POINT, "tmpfs", MS_NOEXEC | MS_NOSUID | MS_SYNCHRONOUS, "") == -1) {
-        sem_unlock();
-        PRINT_MSG("Unable to mount tmpfs on mount point %s!\n", MOUNT_POINT);
-        return E_FAILURE;
-    }
+//    if (mount("tmpfs", MOUNT_POINT, "tmpfs", MS_NOEXEC | MS_NOSUID | MS_SYNCHRONOUS, "") == -1) {
+//        sem_unlock();
+//        PRINT_MSG("Unable to mount tmpfs on mount point %s!\n", MOUNT_POINT);
+//        return E_FAILURE;
+//    }
 
     // Checked by certain Ralink routers
     if ((f = fopen("/var/run/nvramd.pid", "w+")) == NULL) {
@@ -195,7 +195,7 @@ int nvram_init(void) {
 
     sem_unlock();
 
-    return nvram_set_default();
+//    return nvram_set_default();
 }
 
 int nvram_reset(void) {
@@ -206,7 +206,7 @@ int nvram_reset(void) {
         return E_FAILURE;
     }
 
-    return nvram_set_default();
+//    return nvram_set_default();
 }
 
 int nvram_clear(void) {
