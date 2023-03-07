@@ -482,7 +482,8 @@ int nvram_getall(char *buf, size_t len) {
             return E_FAILURE;
         }
 
-        if (!(ret = fread(temp, sizeof(*temp), BUFFER_SIZE, f))) {
+        ret = fread(temp, sizeof(*temp), BUFFER_SIZE, f);
+        if (ferror(f)) {
             fclose(f);
             closedir(dir);
             sem_unlock();
