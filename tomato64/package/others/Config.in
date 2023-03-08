@@ -1,0 +1,4 @@
+config BR2_PACKAGE_OTHERS
+	bool "others"
+	help
+	  A bunch of bash script programs

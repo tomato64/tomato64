@@ -1,0 +1,130 @@
+#!/bin/sh
+#
+# Written By KAD, modified by Shibby
+# Dynamic Link Aggregation Setup
+#
+# changes/fixes: 2022 by pedro
+#
+
+
+ADD1=$1
+ADD2=$2
+BR=$3
+
+Help() {
+	echo -e "----  Link Aggregation Help Menu ----\n"
+	echo -e "Dynamically enable Link Aggregation using 802.3ad"
+	echo -e "802.3ad requires a Switch/PC/NAS which..."
+	echo -e "also supports 802.3ad to function correctly"
+	echo -e "\nUsage: linkagg <vlan> <vlan> <bridge>"
+	echo -e "Example: linkagg vlan3 vlan4 br0"
+	echo -e "\nOnly 2 ports are currently supported"
+	echo -e "Please create 2 vlans, one port for one vlan"
+	echo -e "\n--- Special Flags ---\n"
+	echo -e "Help: -h or --help"
+	echo -e "Status: -s or --status"
+	exit
+}
+
+# Set all needed bonding parameters
+Create_Bond() {
+	# Insert bonding module and set parameters (802.3ad, 100ms MII link monitoring)
+	modprobe bonding
+	# 802.3ad mode
+	echo 802.3ad > /sys/class/net/bond0/bonding/mode
+	# LACPDUs every 1 sec
+	echo fast > /sys/class/net/bond0/bonding/lacp_rate
+	# Bring up bond
+	ip link set bond0 up
+	# 50msec MII link monitoring
+	echo 50 > /sys/class/net/bond0/bonding/miimon
+	# enslave vlans to bond
+	echo +${ADD1} > /sys/class/net/bond0/bonding/slaves
+	echo +${ADD2} > /sys/class/net/bond0/bonding/slaves
+	# Bridge the bond allowing AP access
+	brctl addif $BR bond0
+	echo -e "\nBond Created Successfully\n"
+}
+
+# Status Checker
+Check_Bond_Status() {
+	Check1=$(ip link show | grep bond0: | cut -d '<' -f 2 | cut -d ',' -f 4)
+	[ "$Check1" != "UP" ] && {
+		Check1=NONE
+		Error1="Status : bond0 not UP"
+	}
+	CHECKVLAN1=$(cat /sys/class/net/bond0/bonding/slaves | cut -d ' ' -f 1)
+	CHECKVLAN2=$(cat /sys/class/net/bond0/bonding/slaves | cut -d ' ' -f 2)
+	[ "$CHECKVLAN1" = "" ] || [ "$CHECKVLAN1" = NULL ] && {
+		CHECKVLAN1=NONE
+		PORT1=NONE
+		Check2=NONE
+		Error2="Status : Slave 1 does not exist"
+	} || {
+		Check2=$(ip link show | grep "$CHECKVLAN1" | cut -d '<' -f 2 | grep -o ,UP, | grep -o UP)
+		if [ "$Check2" != "UP" ]; then
+			PORT1=NONE
+			Check2=Down
+			Error3="Status : Slave 1 not UP"
+		elif [ "$Check2" = "UP" ]; then
+			PORT1=$(robocfg show | grep "$CHECKVLAN1" | cut -d ':' -f 3 | sed -e "s/^ //" | cut -d ' ' -f 1)
+		fi
+	}
+	[ "$CHECKVLAN2" = "" ] || [ "$CHECKVLAN2" = NULL ]] && {
+		CHECKVLAN2=NONE
+		PORT2=NONE
+		Check3=NONE
+		Error4="Status : Slave 2 does not exist"
+	} || {
+		Check3=$(ip link show | grep "$CHECKVLAN2" | cut -d '<' -f 2 | grep -o ,UP, | grep -o UP)
+		if [ "$Check3" != "UP" ]; then
+			PORT2=NONE
+			Check3=Down
+			Error5="Status : Slave 2 not UP"
+		elif [ "$Check3" = "UP" ]; then
+			PORT2=$(robocfg show | grep "$CHECKVLAN2" | cut -d ':' -f 3 | sed -e "s/^ //" | cut -d ' ' -f 1)
+		fi
+	}
+	CHECKBR=$(brctl show | grep bond0 | awk {'printf $1'} | wc -w)
+	[ "$CHECKBR" == "0" ] && {
+		BRIDGED=NONE
+		Error6="Status : bond0 not part of br0 - no WAN Access"
+	} || {
+		BRIDGED=$(brctl show | grep bond0 | awk {'printf $1'})
+	}
+	echo -e "\n--- Bond Status ---\n"
+	echo -e "Bond Status: bond0 $Check1"
+	echo -e "Bridge to WAN Status: Member of $BRIDGED"
+	echo -e "Slave 1 Status: vlan=$CHECKVLAN1 Link=$Check2 Port=$PORT1"
+	echo -e "Slave 2 Status: vlan=$CHECKVLAN2 Link=$Check3 Port=$PORT2\n"
+	echo -e "\n--- Bond Errors ---"
+	echo "$Error1"
+	echo "$Error2"
+	echo "$Error3"
+	echo "$Error4"
+	echo "$Error5"
+	echo "$Error6"
+	exit
+}
+
+# Status Check Flag
+if [ "$1" = "-s" ] || [ "$1" = "--status" ]; then
+	Check_Bond_Status
+
+# Enable Help Menu
+elif [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+	Help
+
+# We need equal 3 arguments (2 VLANs and bridge)
+elif [ "$#" -lt "3" ] || [ "$#" -gt "3" ]]; then
+	echo -e "\nError : Incorrect Number of Arguments\n"
+	Help
+
+# The Ports Must not be the same
+elif [ "$1" = "$2" ]; then
+	echo -e "\nError : VLAN Entries Must Be Unique\n"
+	Help
+else
+# Create Bond
+	Create_Bond
+fi

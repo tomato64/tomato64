@@ -1,0 +1,334 @@
+#!/bin/sh
+
+#
+# Copyright (C) 2015 shibby
+#
+# changes/fixes: 2018 - 2022 by pedro
+#
+
+
+PID=$$
+PIDFILE="/var/run/watchdog.pid"
+IPLISTFILE="/tmp/watchdog.iplist"
+MWAN=$(nvram get mwan_num)
+IPLIST=""
+MWANTABLE="wan"
+
+i=1
+while [ $i -le $MWAN ]; do
+	[ "$i" -gt 1 ] && MWANTABLE="$MWANTABLE wan$i"
+	i=$((i+1))
+done
+
+LOGS="logger -t watchdog[$PID]"
+[ "$(nvram get mwan_debug)" -gt 0 ] && DEBUG="logger -p DEBUG -t watchdog[$PID]" || DEBUG="echo"
+
+timeout() {
+	local cmd_pid sleep_pid retval
+	(shift; "$@") &
+	cmd_pid=$!
+	(sleep "$1"; kill "$cmd_pid" 2>/dev/null) &
+	sleep_pid=$!
+	wait "$cmd_pid"
+	retval=$?
+	kill "$sleep_pid" 2>/dev/null
+	return "$retval"
+}
+
+findHost() {
+	local host ip
+	local dst=$(nvram get mwan_ckdst)
+	local hostlist=$(echo $dst | sed 's/,/ /')
+
+	for host in $hostlist; do
+		echo $host | grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+[a-zA-Z]{2,6}' && {
+			ip=$(nslookup $host 2>/dev/null | tail +5 | grep -v :: | awk '{print $3}' | tail -1)
+			IPLIST="${IPLIST} $ip"
+		} || IPLIST="${IPLIST} $host"
+	done
+
+	echo "$IPLIST" > $IPLISTFILE # because we're in subshell
+}
+
+dhcpFix() {
+	dhcpc-release $PREFIX
+	sleep 1
+	dhcpc-renew $PREFIX
+}
+
+watchdogRun() {
+	for PREFIX in $MWANTABLE; do
+		IFACE=$(nvram get "$PREFIX"_iface)
+		ISPPPD=$([ -f /tmp/ppp/pppd$PREFIX ] && echo 1 || echo 0)
+		WEIGHT=$(nvram get "$PREFIX"_weight)
+		METHOD=$(nvram get "$PREFIX"_ckmtd)
+		PROTO=$(nvram get "$PREFIX"_proto)
+		DEMAND=$(nvram get "$PREFIX"_ppp_demand)
+		RESULT=0
+		PREFIX_MWAN=$PREFIX
+		PREFIX_LOG="WAN"$(echo $PREFIX"0" | cut -c 4- | tr '[234]' '[123]' | cut -c -1)
+		STATE_FILE="/var/lib/misc/"$PREFIX"_state"
+
+		[ "$(nvram get "$PREFIX"_ck_pause)" -eq 1 ] && {
+			$DEBUG "Watchdog paused for $PREFIX_LOG - skipping ..."
+			continue
+		}
+
+		[ "$PROTO" != "disabled" ] && {
+			[ "$(nvram get mwan_debug)" -gt 0 ] && {
+				ISUP=$(wanuptime "$PREFIX")
+				ISGW=$(ip route | grep $IFACE | grep -v link | wc -l)
+				$DEBUG "prefix=$PREFIX_LOG, iface=$IFACE, uptime=$ISUP, ISGW=$ISGW, WEIGHT=$WEIGHT"
+			}
+
+			[ "$PROTO" == "dhcp" -a $(ifconfig $IFACE | grep inet | grep -Eo '((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' | grep -v '0.0.0.0' | wc -l) -eq 0 ] && { dhcpFix $PREFIX; sleep 3; }
+
+			[ "$PROTO" != "lte" ] && {
+				[ $(ifconfig $IFACE | grep inet | grep -Eo '((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' | grep -v '0.0.0.0' | wc -l) -eq 0 ] && { 
+					$DEBUG "$PREFIX doesn't have an IP address. Skipping..."
+					echo "0" > $STATE_FILE
+					continue
+				}
+			}
+
+			DEFAULT_ROUTE_FRAGMENT=$(ip route | grep default | cut -d' ' -f2-)
+			GATEWAY_FRAGMENT="via $(nvram get "$PREFIX"_gateway)"
+			[ "$ISPPPD" -eq 1 ] && GATEWAY_FRAGMENT=""
+			for IP in $IPLIST; do
+				[ ! -z "$DEFAULT_ROUTE_FRAGMENT" ] && {
+					ROUTE_EXEC="ip route add $IP $DEFAULT_ROUTE_FRAGMENT"
+					$DEBUG $ROUTE_EXEC
+					$ROUTE_EXEC
+				}
+				ROUTE_EXEC="ip route add $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000"
+				$DEBUG $ROUTE_EXEC
+				$ROUTE_EXEC
+			done
+
+			$DEBUG "start test for: $IFACE ..."
+			if [ "$METHOD" -eq 1 ]; then
+				ckping
+			elif [ "$METHOD" -eq 2 ]; then
+				cktracert
+			else
+				ckcurl
+			fi
+
+			for IP in $IPLIST; do
+				[ ! -z "$DEFAULT_ROUTE_FRAGMENT" ] && {
+					ROUTE_EXEC="ip route del $IP $DEFAULT_ROUTE_FRAGMENT"
+					$DEBUG $ROUTE_EXEC
+					$ROUTE_EXEC
+				}
+				ROUTE_EXEC="ip route del $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000"
+				$DEBUG $ROUTE_EXEC
+				$ROUTE_EXEC
+			done
+
+			# wan is down
+			[ "$RESULT" -eq 0 ] && {
+				[ "$PROTO" == "lte" ] && {
+					$LOGS "Connection $PREFIX_LOG DOWN - Reconnecting ..."
+					echo "0" > $STATE_FILE
+					switch4g $PREFIX
+				} || {
+					[ "$PREFIX" == "wan" -a "$MWAN" -gt 1 ] && PREFIX_MWAN="wan1" # "wan" means restart all WANs, but we only want restart one
+
+					[ "$(nvram get action_service)" == "wan-restart" -o "$(nvram get action_service)" == $PREFIX_MWAN"-restart" -o "$(nvram get action_service)" == "wan-restart-c" -o "$(nvram get action_service)" == $PREFIX_MWAN"-restart-c" ] && {
+						$LOGS "Connection $PREFIX_LOG DOWN - Reconnect is already in progress ..."
+					} || {
+						echo "0" > $STATE_FILE
+
+						if [ "$PROTO" == "pppoe" -o "$PROTO" == "pptp" -o "$PROTO" == "l2tp" -o "$PROTO" == "ppp3g" ] && [ "$DEMAND" -eq 1 -a "$ISPPPD" -eq 0 ]; then
+							$LOGS "Killing orphaned connect-on-demand listen process ..."
+							LISTEN_PID=$(ps | grep [l]isten | grep $PREFIX | awk '{print $1}' | head -n1)
+							[ -n $LISTEN_PID ] && {
+								kill -9 $LISTEN_PID
+								$LOGS "Killed $LISTEN_PID"
+							} || {
+								$LOGS "Connect-on-demand listen not running"
+							}
+
+							$LOGS "Connection $PREFIX_LOG DOWN - Reconnecting ..."
+							service $PREFIX_MWAN restart
+						else
+							$LOGS "Connection $PREFIX_LOG DOWN - Reconnect will be handled by another process ..."
+						fi
+					}
+				}
+			} || {
+				[ "$PROTO" == "dhcp" -a "$(cat $STATE_FILE)" -eq 0 ] && { # connected + DHCP + previous status - disconnected? release/renew
+					dhcpFix
+				}
+				$DEBUG "Connection $PREFIX_LOG is functioning"
+				echo "1" > $STATE_FILE
+			}
+		}
+	done
+}
+
+cktracert() {
+	local RXBYTES1 RXBYTES2 IP
+
+	for IP in $IPLIST; do
+		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes)
+		# we need only send/receive few packages to be sure if connection works
+		traceroute -i $IFACE -n -w 1 -m 4 -q 1 -z 1 $IP > /dev/null 2>&1
+		usleep 200
+		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes)
+		[ "$RXBYTES2" -gt "$RXBYTES1" ] && { RESULT=1; break; }
+	done
+
+	[ "$RESULT" -gt 0 ] && $DEBUG "tracert test result for: $IFACE - OK" || $DEBUG "tracert test result for: $IFACE - FAILED!"
+}
+
+ckping() {
+	local IP
+	local i=0
+
+	for IP in $IPLIST; do
+		i=$((i+1))
+		# "0" means 100% loss - not receive any package
+		ping -c $((i+1)) -A -W $((i+2)) -q -I $IFACE $IP >/dev/null && RESULT=$((RESULT+1))
+
+		[ "$RESULT" -gt 0 ] && break
+	done
+
+	[ "$RESULT" -gt 0 ] && $DEBUG "ping test result for: $IFACE - OK" || $DEBUG "ping test result for: $IFACE - FAILED!"
+}
+
+ckcurl() {
+	local IP
+	local i=0
+
+	for IP in $IPLIST; do
+		i=$((i+1))
+		curl $IP --interface $IFACE --connect-timeout $((i+3)) -ksfI -o /dev/null && RESULT=$((RESULT+1))
+		[ "$RESULT" -gt 0 ] && break
+
+		sleep $i
+	done
+
+	[ "$RESULT" -gt 0 ] && $DEBUG "curl test result for: $IFACE - OK" || $DEBUG "curl test result for: $IFACE - FAILED!"
+}
+
+watchdogAdd() {
+	local CKTIME=$(nvram get mwan_cktime)
+	local MINS=$((CKTIME/60))
+
+	[ "$MINS" -gt 0 ] && {
+		cru l | grep watchdogJob >/dev/null || cru a watchdogJob "*/$MINS * * * * /usr/sbin/watchdog"
+	}
+}
+
+watchdogDel() {
+	cru l | grep watchdogJob >/dev/null && cru d watchdogJob
+}
+
+mwanJob() {
+	cru l | grep mwanJob >/dev/null && cru d mwanJob || cru a mwanJob "*/1 * * * * /usr/sbin/watchdog alive"
+}
+
+mwanAlive() {
+	[ "$MWAN" -gt 1 ] && {
+		ps | grep -q [m]wanroute && $DEBUG "mwanroute is running" || {
+			$LOGS "mwanroute not found, I'll try to recover it"
+			nohup mwanroute &
+		}
+	}
+}
+
+checkPid() {
+	local PIDNO
+
+	[ -f $PIDFILE ] && {
+		PIDNO=$(cat $PIDFILE)
+		cat "/proc/$PIDNO/cmdline" > /dev/null 2>&1
+
+		[ $? -eq 0 ] && {
+			$LOGS "Another process in action - Exiting ..."
+			exit 0
+		} || {
+			# Process not found assume not running
+			echo $PID > $PIDFILE
+			[ $? -ne 0 ] && {
+				$LOGS "Could not create PID file"
+				exit 0
+			}
+		}
+	} || {
+		echo $PID > $PIDFILE
+		[ $? -ne 0 ] && {
+			$LOGS "Could not create PID file"
+			exit 0
+		}
+	}
+}
+
+checkPidSwitch() {
+	local SPREFIX
+
+	for SPREFIX in $MWANTABLE; do
+		[ -f /var/run/switch3g_$SPREFIX.pid ] && {
+			[ "$(ps | grep [s]witch3g | wc -l)" -eq 0 ] && {
+				# pid file exists but process doesn't
+				rm /var/run/switch3g_$SPREFIX.pid
+			} || {
+				$LOGS "Switch3g ($SPREFIX) script in action - Exiting ..."
+				rm -f $PIDFILE > /dev/null 2>&1
+				exit 0
+			}
+		}
+
+		[ -f /var/run/switch4g_$SPREFIX.pid ] && {
+			[ "$(ps | grep [s]witch4g | wc -l)" -eq 0 ] && {
+				# pid file exists but process doesn't
+				rm /var/run/switch4g_$SPREFIX.pid
+			} || {
+				$LOGS "Switch4g ($SPREFIX) script in action - Exiting ..."
+				rm -f $PIDFILE > /dev/null 2>&1
+				exit 0
+			}
+		}
+	done
+}
+
+
+###################################################
+
+
+if [ "$1" == "add" ]; then
+	watchdogAdd
+	mwanJob
+elif [ "$1" == "del" ]; then
+	watchdogDel
+elif [ "$1" == "alive" ]; then
+	mwanAlive
+elif [ "$(nvram get g_upgrade)" != "1" -a "$(nvram get g_reboot)" != "1" ]; then
+	checkPid
+
+	checkPidSwitch
+
+	mwanJob
+
+	# run with a 10 sec timeout to not hang
+	timeout 10 findHost
+	[ -f $IPLISTFILE ] && IPLIST=$(cat $IPLISTFILE)
+	[ -z "$IPLIST" ] && IPLIST="8.8.8.8" # resilient IP if the list is empty
+
+	for IP in $IPLIST; do
+		for dns in $(nvram show 2>/dev/null | grep -E ^wan.?_dns= | cut -f2 -d= | tr "\n" " " | grep -Ev ^$); do
+			[ $dns == $IP ] && BADIPLIST="${BADIPLIST} $IP"
+		done
+	done
+	[[ ! -v ${BADIPLIST} ]] && {
+		IIPLIST=$(echo $IPLIST | tr " " "\n" | for i in $BADIPLIST; do grep -v $i; done | tr "\n" " " | tr -s ' ')
+		IPLIST=$IIPLIST
+	}
+
+	watchdogRun
+
+	[ -f $IPLISTFILE ] && rm $IPLISTFILE
+fi
+
+rm -f $PIDFILE > /dev/null 2>&1

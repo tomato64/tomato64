@@ -1,0 +1,137 @@
+#!/bin/sh
+
+#
+# v1.00 Shibby 2013
+# v1.01 Fix memory leak + cosmetics - pedro 2019 - 2021
+# v2.05 [Command line operation, custom URL, local storage] + GUI integration added - rs232 2019
+# v3.02 Changed default URLs and added URL redundancy/randomisation  - rs232 06/2021
+#
+
+PID=$$
+LOCK="/tmp/ttb.lock"
+DIR="/www/ext"
+LOGS="logger -s -t TTB[$PID]"
+SUBDIR="TomatoThemeBase"
+URL_ORIG="http://ttb.mooo.com http://ttb.ath.cx http://ttb.ddnsfree.com"
+URI=""
+# STUBBYNO-BEGIN
+WGET="/usr/bin/wget --no-check-certificate"
+# STUBBYNO-END
+# STUBBY-BEGIN
+WGET="/usr/bin/wget"
+# STUBBY-END
+
+ttbexit() {
+	rm $LOCK >/dev/null 2>&1
+	exit $1
+}
+
+ttbshuf() {
+	awk 'BEGIN {srand(); OFMT="%.17f"} {print rand(), $0}' "$@" | sort -k1,3n | cut -d ' ' -f2-;
+}
+
+ttbdownload() {
+	ls -l /www/ext/ | grep "\->" | cut -d" " -f 27 | while read file; do
+		rm $DIR/$file  >/dev/null 2>&1
+	done
+	rm $DIR2/*  >/dev/null 2>&1
+	echo $(nvram get ttb_url | tr ' ' '\n' | ttbshuf ) | tr ' ' '\n' | sed 's/\/$//' |
+	while read l; do
+		$WGET -U "Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/88.0" -T 10 -t 1 $l/$TTB.zip -O $DIR2/$TTB.zip >/dev/null 2>&1 && echo $l && break
+	done
+	unzip -p $DIR2/$TTB.zip >/dev/null 2>&1 && {
+		cru d ttbDL
+	} || {
+		cru a ttbDL "*/5 * * * * /usr/sbin/ttb"
+		$LOGS "ERROR - Cannot download Online theme. Will try again soon..."
+		ttbexit 1
+	}
+}
+
+ttbextract() {
+	rm $DIR/*.css $DIR/*.zip $DIR/*.png $DIR/*.gif $DIR/*.jpg  >/dev/null 2>&1
+	unzip -o $DIR2/$TTB.zip -d $DIR2/ >/dev/null 2>&1
+	ls -1 $DIR2 | grep -v .zip | grep -v .list |
+	(
+	while read line; do
+		ln -s $DIR2/$line $DIR/$line
+	done
+	)
+	$LOGS "INFO - The theme [ $TTB ] has been successfully applied"
+}
+
+# check if another script in action
+[ -f $LOCK ] && {
+	$LOGS "WARNING - Another process in action - exiting"
+	exit 1
+}
+
+# check if set to online
+[ ! "$(nvram get web_css)" == "online" ] && {
+	$LOGS "WARNING - The NVRAM variable [ web_css ] was not set to [ online ] - exiting"
+	exit 1
+}
+
+[ -z "$(nvram get ttb_url)" ] && {
+	URL="$URL_ORIG"
+	nvram set ttb_url="$URL_ORIG"
+	nvram commit
+} || {
+	[ "$(nvram get ttb_url)" == "http://www.tomatothemebase.eu/wp-content/uploads" ] && nvram set ttb_url="$URL_ORIG"
+	URL=$(echo $(nvram get ttb_url) | sed 's/\/$//')
+}
+
+if [ -n "$2" ]; then
+	DIR2=$(echo $2 | sed 's/\/$//')
+	DIR2=$DIR2/$SUBDIR
+	nvram set ttb_loc="$2"
+	nvram commit
+elif [ ! -n "$(nvram get ttb_loc)" ]; then
+	$LOGS "INFO - The NVRAM variable ttb_loc not set. I don't know where to save the theme will keep it in RAM"
+	DIR2="/tmp/$SUBDIR"
+else
+	DIR2=$(echo $(nvram get ttb_loc) | sed 's/\/$//')
+	DIR2=$DIR2/$SUBDIR
+fi
+
+[ -d $DIR2 ] || mkdir $DIR2
+touch $LOCK
+
+[ -n "$1" ] && {
+	if [ $1 == "help" ]; then
+		echo -e "\nNOTE: This is to be used for troubleshooting, always prefer the tomato GUI whenever possible.\n\n	TTB 3.02 - usage\n\nttb	<no parameter>		- execute TTB based on NVRAM settings\n	help			- Shows this info\n	list			- Display list of available themes, this uses a themes.txt from the defined URL.\n	<theme name>		- Download, sets the theme name and sets NVRAM variables\n	<theme name> <folder>	- Download, sets the theme name, stores locally and sets NVRAM variables\n\n"
+		ttbexit 0
+	elif [ $1 == "list" ]; then
+		echo $(nvram get ttb_url | tr ' ' '\n' | ttbshuf ) | tr ' ' '\n' | sed 's/\/$//' |
+		while read l; do
+			( $WGET -U "Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/88.0" -T 6 -t 1 -q -O - $l/themes.txt | more ) && break
+		done
+		ttbexit 0
+	else
+		TTB=$1
+		nvram set ttb_css="$1"
+		nvram commit
+	fi
+} || {
+	TTB=$(nvram get ttb_css)
+	[ -z $TTB ] && {
+		$LOGS "ERROR - Using TTB but the ttb_css nvram variable meant to contain the theme name is empty - exiting"
+		ttbexit 1
+	}
+}
+
+[ -f $DIR2/$TTB.css ] && {
+	$LOGS "INFO - Installing theme [ $TTB ] from the local storage [ $DIR2 ]"
+	ttbextract $DIR2
+} || {
+	URI=$(ttbdownload $DIR2)
+	[[ $(echo $URL_ORIG | grep $URI >/dev/null 2>&1 | wc -l) -ne 1 ]] && {
+		SOURCE="user defined url [ $URI ]"
+	} || {
+		SOURCE="internally defined site [ $URI ]"
+	}
+	$LOGS "INFO - Downloaded theme [ $TTB ] from $SOURCE and stored it locally in [ $DIR2 ]"
+	ttbextract $DIR2
+}
+
+ttbexit 0

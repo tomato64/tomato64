@@ -1,0 +1,17 @@
+#!/bin/sh
+
+a=$(cat /proc/cpuinfo | grep BogoMIPS | head -1 | awk {' print $3'} | awk '{printf "%0.1f %s\n", $1/100}' | awk '{printf "%s\n", $1*50}')
+
+b=$(cat /proc/cpuinfo | grep processor | wc -l)
+
+[ $b -le "1" ] && {
+	c="single"
+} || {
+	c="dual"
+}
+
+d=$(cat /proc/dmu/temperature | head -1 | awk '{ print substr($4,1,length($4)-2)}')
+[ ! $d ] && d="--"
+
+echo "cpu MHz : $a MHz ($c" > /tmp/sysinfo-helper
+echo "cpu Temp : $d" >> /tmp/sysinfo-helper

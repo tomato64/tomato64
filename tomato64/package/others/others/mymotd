@@ -1,0 +1,156 @@
+#!/bin/sh
+#
+# Supplementary MOTD script with information about the network / router settings
+#
+# Version 0.6 written by Monter, modified by Shibby, additions by tsynik, changes by pedro
+#
+
+# only if enable
+[ "$(/bin/nvram get sshd_motd)" -eq 1 ] && {
+	[ "$1" == "init" ] && {
+		sed -i "/mymotd/d" /root/.profile
+		/bin/echo "/usr/sbin/mymotd" >> /root/.profile
+	} || {
+		mask2cidr() {
+			nbits=0
+			IFS=.
+			for dec in $1 ; do
+				case $dec in
+					255) let nbits+=8;;
+					254) let nbits+=7;;
+					252) let nbits+=6;;
+					248) let nbits+=5;;
+					240) let nbits+=4;;
+					224) let nbits+=3;;
+					192) let nbits+=2;;
+					128) let nbits+=1;;
+					0);;
+					*) /bin/echo "Error: $dec is not recognized"; exit 1
+				esac
+			done
+			/bin/echo "$nbits"
+		}
+
+		NV() {
+			/bin/nvram get "$1"
+		}
+
+		WANPROTO=$(NV wan_proto)
+		WANPDHCP=$(NV wan_pptp_dhcp)
+		[ "$WANPDHCP" -eq 1 ] && [ "$WANPROTO" == "pppoe" ] || [ "$WANPROTO" == "pptp" ] || [ "$WANPROTO" == "l2tp" ] && WANIP="ppp_get_ip" || WANIP="ipaddr"
+
+		WAN2PROTO=$(NV wan2_proto)
+		WAN2PDHCP=$(NV wan2_pptp_dhcp)
+		[ "$WAN2PDHCP" -eq 1 ] && [ "$WAN2PROTO" == "pppoe" ] || [ "$WAN2PROTO" == "pptp" ] || [ "$WAN2PROTO" == "l2tp" ] && WAN2IP="ppp_get_ip" || WAN2IP="ipaddr"
+
+		[ ! "$WANPROTO" == "disabled" ] && WAN1=$(NV wan_$WANIP | /bin/grep -v "0.0.0.0" | /usr/bin/wc -w)
+		[ ! "$WAN2PROTO" == "disabled" ] && WAN2=$(NV wan2_$WAN2IP | /bin/grep -v "0.0.0.0" | /usr/bin/wc -w)
+
+		[ "$(/bin/nvram show | /bin/grep 'wan3_' | /usr/bin/wc -l)" -gt 0 ] && {
+			MULTIWAN=1
+			WAN3PROTO=$(NV wan3_proto)
+			WAN3PDHCP=$(NV wan3_pptp_dhcp)
+			[ "$WAN3PDHCP" -eq 1 ] && [ "$WAN3PROTO" == "pppoe" ] || [ "$WAN3PROTO" == "pptp" ] || [ "$WANP3ROTO" == "l2tp" ] && WAN3IP="ppp_get_ip" || WAN3IP="ipaddr"
+
+			WAN4PROTO=$(NV wan4_proto)
+			WAN4PDHCP=$(NV wan4_pptp_dhcp)
+			[ "$WAN4PDHCP" -eq 1 ] && [ "$WAN4PROTO" == "pppoe" ] || [ "$WAN4PROTO" == "pptp" ] || [ "$WAN4PROTO" == "l2tp" ] && WAN4IP="ppp_get_ip" || WAN4IP="ipaddr"
+
+			[ ! "$WAN3PROTO" == "disabled" ] && WAN3=$(NV wan3_$WAN3IP | /bin/grep -v "0.0.0.0" | /usr/bin/wc -w)
+			[ ! "$WAN4PROTO" == "disabled" ] && WAN4=$(NV wan4_$WAN4IP | /bin/grep -v "0.0.0.0" | /usr/bin/wc -w)
+		} || {
+			MULTIWAN=0
+		}
+
+		/bin/echo -e "\033[1;34m ======================================================== \033[0m"
+		/bin/echo -e "\033[1;32m Welcome to the $(NV t_model_name) [$(NV router_name)]\033[0m"
+		/bin/echo -e "\033[1;31m Date: $(/bin/date | awk '{print $1 " " $2 " " $3 " " $6}')\033[0m"
+		/bin/echo -e "\033[1;31m Time:$(/usr/bin/uptime | /bin/sed -e 's/,  load/\n Load/')\033[0m"
+
+		[ "$(NV t_cafree)" -eq 1 ] && {
+			/usr/bin/awk '/MemTotal:/{total=$2} /MemFree:/{free=$2} /Buffers:/{buffers=$2} /^Cached:/{cached=$2} END{ \
+				printf " Mem usage: %0.1f", ((total-free-buffers-cached)*100/total); printf "%c", 37; \
+				printf " (used %0.2f", (total-free-buffers-cached)/1024; printf " of %0.2f", total/1024; printf " MB)\n"; }' /proc/meminfo
+
+			[ "$(cat /proc/meminfo | /bin/grep SwapTotal | /usr/bin/awk '{ print $2 }')" -eq 0 ] || {
+				/usr/bin/awk '/SwapTotal:/{stotal=$2} /SwapFree:/{sfree=$2} /SwapCached:/{scached=$2} END{ \
+					printf " Swap usage: %0.1f", ((stotal-sfree-scached)*100/stotal); printf "%c", 37; \
+					printf " (used %0.2f", (stotal-sfree-scached)/1024; printf " of %0.2f", stotal/1024; printf " MB)\n"; }' /proc/meminfo
+			}
+		} || {
+			/usr/bin/awk '/MemTotal:/{total=$2} /MemFree:/{free=$2} END{ \
+				printf " Mem : used %0.1f", ((total-free)*100/total); printf "%c", 37; \
+				printf " (%0.2f", (total-free)/1024; printf " of %0.2f", total/1024; printf " MB)\n"; }' /proc/meminfo
+
+			[ "$(cat /proc/meminfo | /bin/grep SwapTotal | /usr/bin/awk '{ print $2 }')" -eq 0 ] || {
+				/usr/bin/awk '/SwapTotal:/{stotal=$2} /SwapFree:/{sfree=$2} END{ \
+					printf " Swap usage: %0.1f", ((stotal-sfree)*100/stotal); printf "%c", 37; \
+					printf " (used %0.2f", (stotal-sfree)/1024; printf " of %0.2f", stotal/1024; printf " MB)\n"; }' /proc/meminfo
+			}
+		}
+
+		[ "$WAN1" == "1" ] && {
+			[ "$WANPDHCP" -eq 1 ] && [ "$WANPROTO" == "pppoe" ] || [ "$WANPROTO" == "pptp" ] || [ "$WANPROTO" == "l2tp" ] && WAN1_NUMBITS="32" || WAN1_NUMBITS=$(mask2cidr $(NV wan_netmask))
+			/bin/echo " WAN : $(NV wan_$WANIP)/$WAN1_NUMBITS @ $(NV wan_hwaddr)"
+		}
+		[ "$WAN2" == "1" ] && {
+			[ "$WAN2PDHCP" -eq 1 ] && [ "$WAN2PROTO" == "pppoe" ] || [ "$WAN2PROTO" == "pptp" ] || [ "$WAN2PROTO" == "l2tp" ] && WAN2_NUMBITS="32" || WAN2_NUMBITS=$(mask2cidr $(NV wan2_netmask))
+			/bin/echo " WAN2: $(NV wan2_$WAN2IP)/$WAN2_NUMBITS @ $(NV wan2_hwaddr)"
+		}
+		[ "$MULTIWAN" -eq 1 ] && {
+			[ "$WAN3" == "1" ] && {
+				[ "$WAN3PDHCP" -eq 1 ] && [ "$WAN3PROTO" == "pppoe" ] || [ "$WAN3PROTO" == "pptp" ] || [ "$WAN3PROTO" == "l2tp" ] && WAN3_NUMBITS="32" || WAN3_NUMBITS=$(mask2cidr $(NV wan3_netmask))
+				/bin/echo " WAN3: $(NV wan3_$WAN3IP)/$WAN3_NUMBITS @ $(NV wan3_hwaddr)"
+			}
+			[ "$WAN4" == "1" ] && {
+				[ "$WAN4PDHCP" -eq 1 ] && [ "$WAN4PROTO" == "pppoe" ] || [ "$WAN4PROTO" == "pptp" ] || [ "$WAN4PROTO" == "l2tp" ] && WAN4_NUMBITS="32" || WAN4_NUMBITS=$(mask2cidr $(NV wan4_netmask))
+				/bin/echo " WAN4: $(NV wan4_$WAN4IP)/$WAN4_NUMBITS @ $(NV wan4_hwaddr)"
+			}
+		}
+
+		/bin/echo " LAN1: $(NV lan_ipaddr)/$(mask2cidr $(NV lan_netmask)) @ DHCP: $(NV dhcpd_startip) - $(NV dhcpd_endip)"
+		[ "$(NV lan1_ipaddr | /usr/bin/wc -w)" -eq 1 ] && {
+			LAN1_NUMBITS=$(mask2cidr $(NV lan1_netmask))
+			/bin/echo " LAN2: $(NV lan1_ipaddr)/$LAN1_NUMBITS @ DHCP: $(NV dhcpd1_startip) - $(NV dhcpd1_endip)";
+		}
+		[ "$(NV lan2_ipaddr | /usr/bin/wc -w)" -eq 1 ] && {
+			LAN2_NUMBITS=$(mask2cidr $(NV lan2_netmask))
+			/bin/echo " LAN3: $(NV lan2_ipaddr)/$LAN2_NUMBITS @ DHCP: $(NV dhcpd2_startip) - $(NV dhcpd2_endip)";
+		}
+		[ "$(NV lan3_ipaddr | /usr/bin/wc -w)" -eq 1 ] && {
+			LAN3_NUMBITS=$(mask2cidr $(NV lan3_netmask))
+			/bin/echo " LAN4: $(NV lan3_ipaddr)/$LAN3_NUMBITS @ DHCP: $(NV dhcpd3_startip) - $(NV dhcpd3_endip)";
+		}
+
+		GETCH=$(NV wl0_channel)
+		[ "$GETCH" -eq 0 ] && CH="auto" || CH=$GETCH
+		[ "$(NV wl0_nband)" == 2 ] && BAND="2.4GHz" || BAND="5GHz"
+		[ "$(NV wl0_radio)" == 1 ] && /bin/echo " WL0 : $BAND @ $(NV wl0_ssid) @ channel: $(NV wl0_country)$CH @ $(NV wl0_hwaddr)"
+		[ "$(NV landevs | /bin/grep wl1 | /usr/bin/wc -l)" -eq 1 ] && {
+			GETCH=$(NV wl1_channel)
+			[ "$GETCH" -eq 0 ] && CH="auto" || CH=$GETCH
+			[ "$(NV wl1_nband)" == 2 ] && BAND="2.4GHz" || BAND="5GHz"
+			[ "$(NV wl1_radio)" == 1 ] && /bin/echo " WL1 : $BAND @ $(NV wl1_ssid) @ channel: $(NV wl1_country)$CH @ $(NV wl1_hwaddr)"
+		}
+		[ "$(NV landevs | /bin/grep wl2 | /usr/bin/wc -l)" -eq 1 ] && {
+			GETCH=$(NV wl2_channel)
+			[ "$GETCH" -eq 0 ] && CH="auto" || CH=$GETCH
+			[ "$(NV wl2_nband)" == 2 ] && BAND="2.4GHz" || BAND="5GHz"
+			[ "$(NV wl2_radio)" == 1 ] && /bin/echo " WL2 : $BAND @ $(NV wl2_ssid) @ channel: $(NV wl2_country)$CH @ $(NV wl2_hwaddr)"
+		}
+# BCMARMNO-BEGIN
+		STHMD_ISENABLED=$(/usr/sbin/cru l | /bin/grep "perm_on" | /usr/bin/wc -l)
+		STHMD_SCHON=$(/usr/sbin/cru l | /bin/grep "stealthsheduleon" | /usr/bin/awk '{ print $2" "$1 }')
+		STHMD_SCHOFF=$(/usr/sbin/cru l | /bin/grep "stealthsheduleoff" | /usr/bin/awk '{ print $2" "$1 }')
+		STHMD_SCHONC=$(/bin/echo $STHMD_SCHON | /usr/bin/wc -c)
+		STHMD_SCHOFFC=$(/bin/echo $STHMD_SCHOFF | /usr/bin/wc -c)
+		[ $STHMD_ISENABLED -gt 0 -o $STHMD_SCHONC -gt 1 -o $STHMD_SCHOFFC -gt 1 ] && {
+			/bin/echo " -------------------------------------------------------- "
+			[ $STHMD_ISENABLED -gt 0 ] && /bin/echo " Detected the presence of stealthMode which is now active"
+			[ $STHMD_SCHONC -gt 1 -a $STHMD_SCHOFFC -gt 1 ] && /bin/echo -e "  stealthMode Scheduled mode is currently active and is\n       set for sunset at $( /bin/echo $STHMD_SCHON | /usr/bin/awk '{$1=sprintf("%02d", $1);$2=sprintf("%02d", $2); print $1":"$2 }' ) and sunrise at $( /bin/echo $STHMD_SCHOFF | /usr/bin/awk '{$1=sprintf("%02d", $1);$2=sprintf("%02d", $2); print $1":"$2 }' )"
+		}
+# BCMARMNO-END
+		/bin/echo -e "\033[1;34m ======================================================== \033[0m"
+		/bin/echo ""
+	}
+}

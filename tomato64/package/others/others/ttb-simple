@@ -1,0 +1,65 @@
+#!/bin/sh
+
+#
+# v1.00 Shibby 2013
+# v1.01 Fix memory leak + cosmetics - pedro 2019
+# v1.02 rs232 06/2021
+#
+
+[ ! "$(nvram get web_css)" == "online" ] && exit 0
+
+PID=$$
+LOCK="/tmp/ttb.lock"
+DIR="/www/ext"
+LOGS="logger -t TTB[$PID]"
+URL_ORIG="http://ttb.mooo.com http://ttb.ath.cx http://ttb.ddnsfree.com"
+# STUBBYNO-BEGIN
+WGET="/usr/bin/wget --no-check-certificate"
+# STUBBYNO-END
+# STUBBY-BEGIN
+WGET="/usr/bin/wget"
+# STUBBY-END
+
+ttbshuf() {
+	awk 'BEGIN {srand(); OFMT="%.17f"} {print rand(), $0}' "$@" | sort -k1,3n | cut -d ' ' -f2-;
+}
+
+# script in action
+[ -f $LOCK ] && {
+	$LOGS "Another process in action - exiting"
+	exit 0
+} || {
+	touch $LOCK
+	TTB=$(nvram get ttb_css)
+
+	# no skin
+	[ ! -f $DIR/$TTB.css ] && {
+		# no skin but zip with skin is available
+		[ -f $DIR/$TTB.zip ] && {
+			unzip -o $DIR/$TTB.zip -d $DIR/
+			$LOGS "Online theme [ $TTB ] has been applied"
+			cru d ttbDL
+		# no skin either zip
+		} || {
+			rm $DIR/*.css $DIR/*.zip $DIR/*.png $DIR/*.gif $DIR/*.jpg >/dev/null 2>&1
+			echo $URL_ORIG | tr ' ' '\n' | ttbshuf | tr ' ' '\n' | sed 's/\/$//' |
+			while read l; do
+				$WGET -U "Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/88.0" -T 10 -t 1 $l/$TTB.zip -O $DIR/$TTB.zip >/dev/null 2>&1 && echo $l && break
+			done
+			sleep 1
+
+			# zip downloaded
+			[ -f $DIR/$TTB.zip ] && {
+				unzip -o $DIR/$TTB.zip -d $DIR/
+				$LOGS "Online theme [ $TTB ] has been downloaded and applied"
+				cru d ttbDL
+			# can't download zip!!
+			} || {
+				$LOGS "Cannot download Online theme. Will try again soon ..."
+				cru a ttbDL "*/5 * * * * /usr/sbin/ttb"
+			}
+		}
+	}
+
+	rm $LOCK
+}

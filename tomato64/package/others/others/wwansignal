@@ -1,0 +1,364 @@
+#!/bin/sh
+
+#
+# Copyright (C) 2015 shibby
+#
+# - changes/fixes
+# Copyright (C) 2018 - 2021 by pedro
+#
+
+
+PREFIX="$1"
+
+PID=$$
+MODE=$(nvram get "$PREFIX"_proto)
+DEVNR=$(nvram get "$PREFIX"_modem_dev)
+MTYPE=$(nvram get "$PREFIX"_modem_type)
+WANIP=$(nvram get "$PREFIX"_gateway)
+LOGS="logger -t wwansignal[$PID]"
+
+HILINK_IP=$(nvram get "$PREFIX"_hilink_ip)
+if ! [ -z "$HILINK_IP" ]  && [ "$HILINK_IP" != "0.0.0.0" ]; then
+	MODE=lte
+	MTYPE=hilink
+	WANIP=$HILINK_IP
+fi
+
+[ -z "$PREFIX" ] && {
+	echo "usage: wwansignal INTERFACE [-stdout]"
+	exit 0
+}
+
+[[ "$2" == "-stdout" ]] && {
+	LOGS="echo "
+}
+
+
+signal3g() {
+	local CSQ RSSI i
+	local DIAGSFILE="/tmp/switch3g_$PREFIX.diags"
+	local SDEVNR=$(nvram get "$PREFIX"_modem_dev)
+
+	[ -z "$SDEVNR" ] && {
+		DEVALL=$(cat "$DIAGSFILE")
+	} || {
+		DEVALL="$SDEVNR $(cat "$DIAGSFILE" | sed "s~"$SDEVNR"~~")"
+	}
+
+	for i in $DEVALL; do	# find working interface
+		CSQ=$(gcom -d "$i" -s /etc/gcom/getstrength.gcom 2>/dev/null | tr -d '\r')
+		[ "$(echo "$CSQ" | grep OK | wc -l)" -eq 0 ] && {
+			sleep 1
+		} || {
+			break
+		}
+	done
+	nvram set "$PREFIX"_modem_dev="$i"
+
+	CSQ=$(echo "$CSQ" | grep "CSQ:" | cut -d " " -f2 | cut -d "," -f1)
+	RSSI=$((-113+CSQ*2))
+	$LOGS "MODEM Signal Strength: RSSI $RSSI dBm"
+}
+
+signal4g() {
+	local HCSQ SPEED VALUE CERSSI LOCINFO MCC RSSI RSRP LAC CID SINR ECIO RSRQ CQI1 CQI2 BAND BBAND="" i
+	local DIAGSFILE="/tmp/switch4g_$PREFIX.diags"
+
+	if [ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ]; then
+		DEVALL="$DEVNR $(cat "$DIAGSFILE" | sed "s~"$DEVNR"~~")"
+
+		for i in $DEVALL; do	# find working interface
+			HCSQ=$(MODE="AT^HCSQ?" gcom -d "$i" -s /etc/gcom/setverbose.gcom | grep "HCSQ:" | tr -d '\r')
+			[ -z "$HCSQ" ] && {
+				sleep 1
+			} || {
+				break
+			}
+		done
+		nvram set "$PREFIX"_modem_dev="$i"
+		DEVNR="$i"
+
+		SPEED=$(echo "$HCSQ" | cut -d "," -f1 | cut -d '"' -f2)
+
+		OPERATOR="$(MODE="AT+COPS?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom | grep "COPS" | tr -d '\r' | tr -d ' ' | cut -d ',' -f 3)"
+		$LOGS "MODEM Current Operator: $OPERATOR"
+
+		case "$SPEED" in
+			"LTE")
+				VALUE=$(echo "$HCSQ" | cut -d "," -f2)
+				RSSI=$(awk "BEGIN {print -120+$VALUE}")
+				VALUE=$(echo $HCSQ | cut -d "," -f3)
+				RSRP=$(awk "BEGIN {print -140+$VALUE}")
+				VALUE=$(echo $HCSQ | cut -d "," -f4)
+				SINR=$(awk "BEGIN {print -20+$VALUE*0.2}")
+				VALUE=$(echo $HCSQ | cut -d "," -f5)
+				RSRQ=$(awk "BEGIN {print -19.5+$VALUE*0.5}")
+
+				CERSSI=$(MODE="AT^CERSSI?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom | grep "CERSSI:" | tr -d '\r')
+				[ -n "$CERSSI" ] && {
+					CQI1=$(echo "$CERSSI" | cut -d "," -f10)
+					CQI2=$(echo "$CERSSI" | cut -d "," -f11)
+				}
+
+				HFREQINFO=$(MODE="AT^HFREQINFO?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom | grep "HFREQINFO:" | tr -d '\r')
+				[ -n "$HFREQINFO" ] && {
+					BAND=$(echo "$HFREQINFO" | cut -d "," -f3)
+					VALUE=$(echo "$HFREQINFO" | cut -d "," -f6)
+					DOWNWIDTH=$(awk "BEGIN {print $VALUE/1000}")
+					VALUE=$(echo "$HFREQINFO" | cut -d "," -f5)
+					DOWNFREQ=$(awk "BEGIN {print $VALUE/10}")
+					VALUE=$(echo "$HFREQINFO" | cut -d "," -f9)
+					UPWIDTH=$(awk "BEGIN {print $VALUE/1000}")
+					VALUE=$(echo "$HFREQINFO" | cut -d "," -f8)
+					UPFREQ=$(awk "BEGIN {print $VALUE/10}")
+
+					case "$BAND" in
+					     "1")  BBAND="B1 (2100 MHz)" ;;
+					     "3")  BBAND="B3 (1800 MHz)" ;;
+					     "7")  BBAND="B7 (2600 MHz)" ;;
+					     "8")  BBAND="B8 (900 MHz)" ;;
+					     "13") BBAND="B13 (750 MHz)" ;;
+					     "17") BBAND="B17 (700 MHz)" ;;
+					     "20") BBAND="B20 (800 MHz)" ;;
+					     "38") BBAND="B38 (2600 MHz TDD)" ;;
+					     "40") BBAND="B40 (2300 MHz TDD)" ;;
+					     "41") BBAND="B41 (2500 MHz TDD)" ;;
+					     *)    BBAND="unknown"       ;;
+					esac
+				}
+
+				LOCINFO=$(MODE="AT^LOCINFO?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom | grep "LOCINFO:" | tr -d '\r')
+				[ -n "$LOCINFO" ] && {
+					MCCMNC=$(echo "$LOCINFO" | cut -d "," -f1 | cut -d ':' -f2)
+					LAC=$(echo "$LOCINFO" | cut -d "," -f2)
+					CID=$(echo "$LOCINFO" | cut -d "," -f3)
+					CELL=$(echo "$LOCINFO" | cut -d "," -f4)
+				}
+
+				$LOGS "MODEM Current Mode: $SPEED"
+				[ -n "$CERSSI" ] && {
+					$LOGS "MODEM Signal Strength: RSSI $RSSI dBm, RSRP $RSRP dBm, RSRQ $RSRQ dB, SINR $SINR dB, CQI1 $CQI1, CQI2 $CQI2"
+				} || {
+					$LOGS "MODEM Signal Strength: RSSI $RSSI dBm, RSRP $RSRP dBm, RSRQ $RSRQ dB, SINR $SINR dB"
+				}
+				[ -n "$HFREQINFO" ] && $LOGS "MODEM Carrier: $BBAND, Downlink FQ $DOWNFREQ MHz, Uplink FQ $UPFREQ MHz, Downlink BW $DOWNWIDTH MHz, Uplink BW $UPWIDTH MHz"
+				[ -n "$LOCINFO" ] && $LOGS "MODEM BTS: MCCMNC $MCCMNC, LAC $LAC ($(printf "%d" $LAC)), CID $CID ($(printf "%d" $CID)), Cell ID $CELL ($(printf "%d" $CELL))"
+			;;
+			"WCDMA")
+				VALUE=$(echo "$HCSQ" | cut -d "," -f2)
+				RSSI=$(awk "BEGIN {print -120+$VALUE}")
+				VALUE=$(echo "$HCSQ" | cut -d "," -f3)
+				RSRP=$(awk "BEGIN {print -120+$VALUE}")
+				VALUE=$(echo "$HCSQ" | cut -d "," -f4)
+				ECIO=$(awk "BEGIN {print -32+$VALUE*0.5}")
+
+				LOCINFO=$(MODE="AT^LOCINFO?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom | grep "LOCINFO:" | tr -d '\r')
+				[ -n "$LOCINFO" ] && {
+					MCCMNC=$(echo "$LOCINFO" | cut -d "," -f1 | cut -d ':' -f2)
+					LAC=$(echo "$LOCINFO" | cut -d "," -f2)
+					CID=$(echo "$LOCINFO" | cut -d "," -f3)
+					CELL=$(echo "$LOCINFO" | cut -d "," -f4)
+				}
+				$LOGS "MODEM Current Mode: $SPEED"
+				$LOGS "MODEM Signal Strength: RSSI $RSSI dBm, RSSP $RSRP dBm, ECIO $ECIO dB"
+				[ -n "$LOCINFO" ] && $LOGS "MODEM BTS: MCCMNC $MCCMNC, LAC $LAC ($(printf "%d" $LAC)), CID $CID ($(printf "%d" $CID)), Cell ID $CELL ($(printf "%d" $CELL))"
+			;;
+			"GSM")
+				VALUE=$(echo "$HCSQ" | cut -d "," -f2)
+				RSSI=$(awk "BEGIN {print -120+$VALUE}")
+				$LOGS "MODEM Current Mode: $SPEED"
+				$LOGS "MODEM Signal Strength: RSSI $RSSI dBm"
+			;;
+			*)
+				$LOGS "MODEM Current Mode: unknown"
+				$LOGS "MODEM Signal Strength: no data"
+			;;
+		esac
+
+	elif [ "$MTYPE" == "qmi_wwan" ]; then
+		SIGNAL=$(uqmiCall "--get-signal-info")
+		SPEED=$(echo "$SIGNAL" | cut -d '"' -f4)
+		MCC=$(uqmiCall "--get-serving-system")
+		MCCMNC=$(echo "$MCC" | cut -d "," -f2 | cut -d ":" -f2)$(printf "%02d" $(echo "$MCC" | cut -d "," -f3 | cut -d ":" -f2))
+
+		case "$SPEED" in
+			"lte")
+				RSSI=$(echo "$SIGNAL" | cut -d "," -f2 | cut -d ":" -f2)
+				RSRQ=$(echo "$SIGNAL" | cut -d "," -f3 | cut -d ":" -f2)
+				RSRP=$(echo "$SIGNAL" | cut -d "," -f4 | cut -d ":" -f2)
+				SINR=$(echo "$SIGNAL" | cut -d ":" -f6 | cut -d "}" -f1)
+				$LOGS "MODEM Current Mode: LTE"
+				$LOGS "MODEM Signal Strength: RSSI $RSSI dBm, RSRP $RSRP dBm, RSRQ $RSRQ dB, SINR $SINR dB"
+				$LOGS "MODEM BTS: MCCMNC $MCCMNC"
+			;;
+			"wcdma" | "umts")
+				RSSI=$(echo "$SIGNAL" | cut -d "," -f2 | cut -d ":" -f2)
+				ECIO=$(echo "$SIGNAL" | cut -d ":" -f4 | cut -d "}" -f1)
+				$LOGS "MODEM Current Mode: $(echo $SPEED | tr '[a-z]' '[A-Z]')"
+				$LOGS "MODEM Signal Strength: RSSI $RSSI dBm, ECIO $ECIO dB"
+				$LOGS "MODEM BTS: MCCMNC $MCCMNC"
+			;;
+			"gsm")
+				RSSI=$(echo "$SIGNAL" | cut -d ":" -f3 | cut -d "}" -f1)
+				$LOGS "MODEM Current Mode: GSM"
+				$LOGS "MODEM Signal Strength: RSSI $RSSI dBm"
+				$LOGS "MODEM BTS: MCCMNC $MCCMNC"
+			;;
+			*)
+				$LOGS "MODEM Current Mode: unknown"
+				$LOGS "MODEM Signal Strength: no data"
+			;;
+		esac
+
+	elif [ "$MTYPE" == "hilink" ]; then	# use huawei hilink api (for moded ie. E3372)
+# TODO: Auth
+		local BTS NET PCI
+		local URLHOME="http://$WANIP/html/home.html" URLAPI1="http://$WANIP/api/device/signal"
+		local URLAPI2="http://$WANIP/api/net/signal-para" URLAPI3="http://$WANIP/api/net/net-mode" URLAPI4="http://$WANIP/api/net/current-plmn"
+		local FCURL="/usr/sbin/curl" COOKIEFILE="/tmp/4g_"$PREFIX".apicookie"
+
+		SIGNAL=$($FCURL -sf -m 5 "$URLAPI1" -b $COOKIEFILE)
+
+		[ "$(echo "$SIGNAL" | grep "<code>125002</code>" | wc -l)" -ne 0 ] && {		# repeat needed
+			$FCURL -sf -m 5 "$URLHOME" -c $COOKIEFILE > /dev/null
+			SIGNAL=$($FCURL -sf -m 5 "$URLAPI1" -b $COOKIEFILE)
+		}
+		BTS=$($FCURL -sf -m 5 "$URLAPI2" -b $COOKIEFILE)
+		NET=$($FCURL -sf -m 5 "$URLAPI3" -b $COOKIEFILE)
+		MCC=$($FCURL -sf -m 5 "$URLAPI4" -b $COOKIEFILE)
+
+		[ "$(echo "$SIGNAL" | grep "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" | wc -l)" -gt 0 ] && {
+			RSSI=$(echo "$SIGNAL" | grep "<rssi>" | cut -d '>' -f2 | cut -d 'd' -f1)
+			CELL=$(echo "$SIGNAL" | grep "<cell_id>" | cut -d '>' -f2 | cut -d '<' -f1)
+			MCCMNC=$(echo "$MCC" | grep "<Numeric>" | cut -d '>' -f2 | cut -d '<' -f1)
+			SPEED=$(echo "$NET" | grep "<NetworkMode>" | cut -d '>' -f2 | cut -d '<' -f1)
+			[ -n "$MCCMNC" ] || SPEED=""
+
+			SINR=$(echo "$SIGNAL" | grep "<sinr>" | cut -d '>' -f2 | cut -d 'd' -f1)
+			[ "$SPEED" == "0302" -o "$SPEED" == "0301" -o "$SPEED" == "00" ] && {
+				[ -n "$SINR" ] && {
+					SPEED="03"
+				} || {
+					SPEED="02"
+				}
+			}
+
+			[ "$SPEED" == "0201" -o "$SPEED" == "02" ] && {
+				SPEED="02"
+			}
+
+			case "$SPEED" in
+				"03")
+					RSRP=$(echo "$SIGNAL" | grep "<rsrp>" | cut -d '>' -f2 | cut -d 'd' -f1)
+					RSRQ=$(echo "$SIGNAL" | grep "<rsrq>" | cut -d '>' -f2 | cut -d 'd' -f1)
+					PCI=$(echo "$SIGNAL" | grep "<pci>" | cut -d '>' -f2 | cut -d '<' -f1)
+					LAC=$(echo "$BTS" | grep "<Lac>" | cut -d '>' -f2 | cut -d '<' -f1)
+					LAC=${LAC:-0}
+					BAND=$(echo "$NET" | grep "<LTEBand>" | cut -d '>' -f2 | cut -d '<' -f1)
+
+					case "$BAND" in
+					     "1")          BBAND="B1 (2100 MHz)" ;;
+					     "4")          BBAND="B3 (1800 MHz)" ;;
+					     "40")         BBAND="B7 (2600 MHz)" ;;
+					     "80")         BBAND="B8 (900 MHz)"  ;;
+					     "80000")      BBAND="B20 (800 MHz)" ;;
+					     "2000000000") BBAND="B38 (2600 MHz TDD)" ;;
+					     "8000000000") BBAND="B40 (2300 MHz TDD)" ;;
+					     "800C5")      BBAND="B1, 3, 7, 8, 20"    ;;
+					     "800D5")      BBAND="B1, 3, 5, 7, 8, 20" ;;
+					     "7FFFFFFFFFFFFFFF") BBAND="All available";;
+					     *)            BBAND="unknown"       ;;
+					esac
+
+					$LOGS "MODEM Current Mode: LTE"
+					[ -n "$RSSI" ] && $LOGS "MODEM Signal Strength: RSSI $RSSI dBm, RSRP $RSRP dBm, RSRQ $RSRQ dB, SINR $SINR dB"
+					[ -n "$CELL" ] && $LOGS "MODEM BTS: MCCMNC $MCCMNC, LAC 0x$(printf "%X" $LAC) ($LAC), PCI 0x$(printf "%X" $PCI) ($PCI), Cell ID 0x$(printf "%X" $CELL) ($CELL)"
+					$LOGS "MODEM Band(s): $BBAND"
+				;;
+				"02")
+					ECIO=$(echo "$SIGNAL" | grep "<ecio>" | cut -d '>' -f2 | cut -d 'd' -f1)
+					RSCP=$(echo "$SIGNAL" | grep "<rscp>" | cut -d '>' -f2 | cut -d 'd' -f1)
+
+					$LOGS "MODEM Current Mode: UMTS"
+					[ -n "$RSSI" ] && $LOGS "MODEM Signal Strength: RSSI $RSSI dBm, RSCP $RSCP dBm, ECIO $ECIO dB"
+					[ -n "$CELL" ] && $LOGS "MODEM BTS: MCCMNC $MCCMNC, Cell ID 0x$(printf "%X" $CELL) ($CELL)"
+				;;
+				"01")
+					$LOGS "MODEM Current Mode: GSM"
+					$LOGS "MODEM Signal Strength: RSSI $RSSI dBm"
+					[ -n "$CELL" ] && $LOGS "MODEM BTS: MCCMNC $MCCMNC, Cell ID 0x$(printf "%X" $CELL) ($CELL)"
+				;;
+				*)
+					$LOGS "MODEM Current Mode: unknown"
+					$LOGS "MODEM Signal Strength: no data"
+				;;
+			esac
+		}
+	fi
+}
+
+checkPid() {
+	local PIDNO
+
+	[ -f $PIDFILE ] && {
+		PIDNO=$(cat $PIDFILE)
+		cat "/proc/$PIDNO/cmdline" > /dev/null 2>&1
+
+		[ $? -eq 0 ] && {
+			$LOGS "MODEM - another process in action - exiting"
+			exit 0
+		}
+	}
+}
+
+uqmiCall() {
+	# for now, it's the only way to prevent uqmi hangups on two different calls at the same time and on the same device: https://forum.openwrt.org/viewtopic.php?id=63559
+	local COUNT=1 COMMAND="$1" IS_ITCONN="$2"
+	[[ -z $IS_ITCONN ]] && IS_ITCONN=0
+
+	# wait for another uqmi process to exit...
+	while [ "$COUNT" -lt 5 ]; do
+		[ "$(ps | grep [u]qmi | grep "$DEVNR" | wc -l)" -eq 0 ] && {
+			[ "$IS_ITCONN" -eq 1 ] && {
+				uqmi -s -d "$DEVNR" $COMMAND \
+					${APN:+--apn "$APN"} \
+					${PROFILE:+--profile $PROFILE} \
+					${AUTH:+--auth-type $AUTH} \
+					${USERNAME:+--username $USERNAME} \
+					${PASSWORD:+--password $PASSWORD} \
+					${AUTOCONNECT:+--autoconnect}
+				return
+			} || {
+				uqmi -s -d "$DEVNR" $COMMAND
+				return
+			}
+		}
+		COUNT=$((COUNT+1))
+		sleep 1
+	done
+
+	$LOGS "MODEM - another uqmi process in action (hang up?) - exiting ..."
+	rm -f $PIDFILE > /dev/null 2>&1
+	exit 0
+}
+
+
+###################################################
+
+
+if [ "$MODE" == "ppp3g" ]; then
+	$LOGS "MODEM Type: 3G"
+	PIDFILE="/var/run/switch3g_$PREFIX.pid"
+	checkPid
+	signal3g
+elif [ "$MODE" == "lte" ]; then
+	$LOGS "MODEM Type: "$MTYPE
+	PIDFILE="/var/run/switch4g_$PREFIX.pid"
+	checkPid
+	signal4g
+else
+	$LOGS "Warning, $PREFIX not in 3G/LTE mode. Aborting ..."
+	exit 0
+fi
+
+rm -f $PIDFILE > /dev/null 2>&1

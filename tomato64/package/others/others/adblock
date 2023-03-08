@@ -1,0 +1,165 @@
+#!/bin/sh
+
+# Author: Shibby
+# Inspired by qrs from OpenLinksys
+# Source: https://openlinksys.info/forum/viewthread.php?thread_id=18549&rowstart=20#post_149346
+# Tuned by: pedro and AndreDVJ
+
+PID=$$
+PREFIX="/tmp/adblock"
+mkdir -p $PREFIX
+
+ENABLE=$(nvram get adblock_enable)
+WORK1="$PREFIX/hosts.work1"
+WORK2="$PREFIX/hosts.work2"
+CHK_FILE="$PREFIX/adblock.time"
+FINAL="/etc/dnsmasq.adblock"
+# STUBBYNO-BEGIN
+WGET="/usr/bin/wget --no-check-certificate -T 15"
+# STUBBYNO-END
+# STUBBY-BEGIN
+WGET="/usr/bin/wget -T 15"
+# STUBBY-END
+
+BLACKLIST=$(nvram get adblock_blacklist)
+WHITELIST=$(nvram get adblock_whitelist)
+CUSTOM=$(nvram get adblock_blacklist_custom)
+
+LOGS="logger -p INFO -t adblock[$PID]"
+
+download() {
+	# example: Yes<http://url1>No<http://URL2>Yes<http://URL3>
+	COUNT=1
+	ENTRIES=0
+	COUNT_CUSTOM=0
+
+	# fix race condition on wan-up
+	[ "$1" -ne "1" ] && sleep 30
+
+	$LOGS "prepare to download ..."
+
+	# clean-up first
+	rm -rf $PREFIX/*
+	rm -f $FINAL
+
+	for i in $(echo $BLACKLIST | tr " " "_" | tr ">" "\n"); do
+		ENBL=$(echo $i | cut -d "<" -f1)
+		URL=$(echo $i | cut -d "<" -f2)
+
+		[ "$ENBL" -eq "1" ] && {
+			$LOGS "[$COUNT] downloading blacklist - $URL"
+			$WGET "$URL" -O $PREFIX/_host$COUNT >/dev/null 2>&1
+
+			[ ! -f "$PREFIX/_host$COUNT" ] && {
+				$LOGS "... [$COUNT] download error! Please check URL"
+			} || {
+				ENTRIES=$(cat $PREFIX/_host$COUNT | wc -l)
+				$LOGS "... [$COUNT] found $ENTRIES entries"
+			}
+			COUNT=$((COUNT+1))
+		} || {
+			$LOGS "skip disabled blacklist - $URL"
+		}
+	done
+
+	# add custom blacklist
+	[ "$(echo "$CUSTOM" | wc -w)" -ne "0" ] && {
+		$LOGS "add custom hosts to blacklist"
+		echo "# custom blacklist" > $PREFIX/_host.custom
+		for i in $CUSTOM; do
+			echo "127.0.0.1 $i" >> $PREFIX/_host.custom
+			COUNT_CUSTOM=$((COUNT_CUSTOM+1))
+		done
+	}
+
+	$LOGS "parsing lists - this may take a while ..."
+
+	# merge files, remove lines with unwanted chars
+	cat $PREFIX/_host* | sed 's/\r$//;/^[ \t]*#/d;/[\t ][[:alnum:]\._-]*$/!d' > $WORK1 && rm $PREFIX/_host*
+
+	# omit lines without at least two columns
+	mv $WORK1 $WORK2 && cat $WORK2 | awk 'NF>=2' > $WORK1 && rm $WORK2
+
+	# set the IP URL layout
+	mv $WORK1 $WORK2 && cat $WORK2 | awk '{ print $1 " " $2 }' > $WORK1 && rm $WORK2
+
+	# change one to the other
+	mv $WORK1 $WORK2 && sed 's/127.0.0.1/0.0.0.0/g' $WORK2 > $WORK1 && rm $WORK2
+	mv $WORK1 $WORK2 && cat $WORK2 | grep -e '^0.0.0.0' > $WORK1 && rm $WORK2
+
+	# remove duplicates
+	mv $WORK1 $WORK2 && cat $WORK2 | sort -u > $WORK1 && rm $WORK2
+
+	# remove selected pages from the whitelist
+	[ "$(echo "$WHITELIST" | wc -w)" -ne "0" ] && {
+		$LOGS "remove whitelisted hosts from blacklist"
+		for i in $WHITELIST; do
+			sed -i $WORK1 -e "/$i/d"
+		done
+	}
+
+	# change format for dnsmasq
+	# example: address=/badurl.com/#
+	cat $WORK1 | awk {'printf "address=/"$2"/#\n"'} > $FINAL
+
+	# clean-up
+	rm -rf $PREFIX/*
+
+	[ -f "$FINAL" -a "$ENTRIES" -gt 0 ] || [ "$COUNT_CUSTOM" -ne 0 ] && {
+		# count entries
+		COUNT=$(($COUNT_CUSTOM+$(cat $FINAL | wc -l)))
+		$LOGS "activated - $COUNT entries"
+		touch "$CHK_FILE"
+		cru d adblockDL
+	} || {
+		# for some reason we cannot download at least 1 blacklist
+		# so we will try in 5 mins once again
+		cru a adblockDL "*/5 * * * * /usr/sbin/adblock"
+		$LOGS "No internet, will try again in 5 minutes"
+	}
+}
+
+cronAdd() {
+	[ "$(cru l | grep adblockJob | wc -l)" -eq "0" ] && {
+		MINS=$(($RANDOM % 59))
+		$LOGS "add cron job"
+		cru a adblockJob "$MINS 2 * * * /usr/sbin/adblock"
+	}
+}
+
+cronDel() {
+	[ "$(cru l | grep adblockJob | wc -l)" -eq "1" ] && {
+		$LOGS "remove cron job"
+		cru d adblockJob
+	}
+}
+
+[ "$1" == "stop" ] && {
+	$LOGS "stopped"
+	cronDel
+} || {
+	[ "$ENABLE" -eq "1" ] && {
+		[ "$1" == "update" ] && {
+			download 1
+		} || {
+			# do not download blacklists, if they're already successfully downloaded in less than 2 hours
+			[ -f "$CHK_FILE" -a -s "$FINAL" ] && {
+				TIME_FILE=$(date -r "$CHK_FILE" +%s)
+				TIME_2HRS=$(($(date +%s)-7200))
+
+				[ "$TIME_FILE" -lt "$TIME_2HRS" ] && {
+					download 0
+				} || {
+					COUNT=$(cat $FINAL | wc -l)
+					$LOGS "blacklists already downloaded (less than 2 hours ago), activated - $COUNT entries"
+					cru d adblockDL
+				}
+			} || {
+				download 0
+			}
+		}
+		cronAdd
+	}
+}
+
+service dnsmasq restart
