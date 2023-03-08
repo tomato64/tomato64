@@ -1,0 +1,4 @@
+config BR2_PACKAGE_WWW
+	bool "www"
+	help
+	  Tomato web pages

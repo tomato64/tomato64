@@ -1,0 +1,81 @@
+@import url('at.css');
+
+:root {
+	--tomato-background: #111111;
+	--tomato-panel-background: #202020;
+	--tomato-container-background: #0a0a0a;
+	--tomato-color: #c6c6c6;
+	--tomato-accent-color: #be2424;
+	--tomato-shadow-color: 255, 255, 255;
+	--tomato-controls-border: 1px solid var(--tomato-container-background);
+	--tomato-controls-border-radius: 4px;
+	--tomato-controls-size: 20px;
+}
+
+td#navi a.indent1[href*=about]:hover:after {
+	content: 'AdvaFresh theme by tsg2k2@github, dark version by pedro';
+	left: -236px;
+}
+
+img[src^="rp"] {
+	filter: grayscale(1) invert(1) brightness(3) contrast(.7);
+}
+
+.loglevel-1 {
+	background: #8f3d00 !important;
+}
+
+.loglevel-2 {
+	background: #705200 !important;
+}
+
+.loglevel-3 {
+	background: #87624c !important;
+}
+
+.loglevel-4 {
+	background: #856375 !important;
+}
+
+.loglevel-5 {
+	background: #48756f !important;
+}
+
+.loglevel-6 {
+	background: #62797f !important;
+}
+
+.loglevel-7 {
+	background: #687e53 !important;
+}
+
+.loglevel-8 {
+	background: #81833b !important;
+}
+
+/* SVG */
+#svg text {
+	fill: #c9c9c9;
+}
+
+.svg-line {
+	stroke: #505050;
+}
+
+.svg-line.a {
+	stroke: #303030;
+}
+
+.svg-tickH {
+	fill: #e9e9e9;
+}
+
+.svg-textback,
+.svg-textback-vertical {
+	fill: #111111;
+	opacity: 0.6;
+}
+
+.svg-rect {
+	fill: #232323;
+}

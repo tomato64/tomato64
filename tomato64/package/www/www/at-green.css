@@ -1,0 +1,13 @@
+@import url('at.css');
+
+:root {
+	--tomato-background: #2b323a;
+	--tomato-panel-background: #fff;
+	--tomato-container-background: #f0f1f4;
+	--tomato-color: #76838f;
+	--tomato-accent-color: #27ae60;
+	--tomato-shadow-color: 150, 150, 150;
+	--tomato-controls-border: 1px solid var(--tomato-container-background);
+	--tomato-controls-border-radius: 4px;
+	--tomato-controls-size: 20px;
+}

@@ -1,16 +1,16 @@
 ################################################################################
 #
-# others
+# www
 #
 ################################################################################
 
-OTHERS_VERSION = 1.0
-OTHERS_SITE = $(BR2_EXTERNAL_TOMATO64_PATH)/package/others/others
-OTHERS_SITE_METHOD = local
-OTHERS_INSTALL_STAGING = YES
-OTHERS_LICENSE = tomato
+WWW_VERSION = 1.0
+WWW_SITE = $(BR2_EXTERNAL_TOMATO64_PATH)/package/www/www
+WWW_SITE_METHOD = local
+WWW_INSTALL_STAGING = YES
+WWW_LICENSE = tomato
 
-define OTHERS_BUILD_CMDS
+define WWW_BUILD_CMDS
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) install
 endef
 
