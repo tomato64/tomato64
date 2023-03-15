@@ -1,3 +1,5 @@
+BUILDROOT_VERSION = 2023.02
+
 default: .configure
 	make -C src/buildroot
 
@@ -9,8 +11,8 @@ distclean:
 	@touch $@
 
 .extract:
-	tar xvJf src/buildroot-git.tar.xz -C src/
-	mv src/buildroot-git src/buildroot
+	tar xvJf src/buildroot-$(BUILDROOT_VERSION).tar.xz -C src/
+	mv src/buildroot-$(BUILDROOT_VERSION) src/buildroot
 	@touch $@
 
 .DEFAULT:
