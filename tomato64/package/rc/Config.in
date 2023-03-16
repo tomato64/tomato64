@@ -1,4 +1,4 @@
-config BR2_PACKAGE_RC
+menuconfig BR2_PACKAGE_RC
 	bool "rc"
 	select BR2_PACKAGE_LIBNVRAM
 	select BR2_PACKAGE_NVRAM
@@ -24,12 +24,104 @@ config BR2_PACKAGE_RC
 	select BR2_PACKAGE_EBTABLES
 	select BR2_PACKAGE_BRIDGE_UTILS
 	select BR2_PACKAGE_HOTPLUG2
-	select BR2_PACKAGE_OPENVPN
-	select BR2_PACKAGE_OPENVPN_LZO
-	select BR2_PACKAGE_OPENVPN_LZ4
 	select BR2_PACKAGE_TRACEROUTE
 	select BR2_PACKAGE_LIBCURL
 	select BR2_PACKAGE_LIBCURL_CURL
-	select BR2_PACKAGE_TINC11
 	help
 	  rc is the init process for Tomato.
+
+if BR2_PACKAGE_RC
+
+config BR2_PACKAGE_RC_BT
+	bool "Enable Bittorrent"
+	default y
+	select BR2_PACKAGE_TRANSMISSION
+	select BR2_PACKAGE_TRANSMISSION_UTP
+	select BR2_PACKAGE_TRANSMISSION_CLI
+	select BR2_PACKAGE_TRANSMISSION_DAEMON
+
+config BR2_PACKAGE_RC_CIFS
+	bool "Enable CIFS"
+	default y
+
+config BR2_PACKAGE_RC_DDNS
+	bool "Enable DDNS"
+	default y
+
+config BR2_PACKAGE_RC_DNSSEC
+	bool "Enable DNSSEC"
+	default y
+
+config BR2_PACKAGE_RC_FTP
+	bool "Enable FTP"
+	default y
+
+config BR2_PACKAGE_RC_HTTPS
+	bool "Enable HTTPS"
+	default y
+
+config BR2_PACKAGE_RC_IPV6
+	bool "Enable IPv6"
+	default y
+
+config BR2_PACKAGE_RC_MDNS
+	bool "Enable MDNS"
+	default y
+
+config BR2_PACKAGE_RC_MULTIWAN
+	bool "Enable MultiWan"
+	default y
+
+config BR2_PACKAGE_RC_NFS
+	bool "Enable NFS"
+	default y
+
+config BR2_PACKAGE_RC_NGINX
+	bool "Enable NGINX"
+	default y
+
+config BR2_PACKAGE_RC_NOCAT
+	bool "Enable NOCAT"
+	default y
+
+config BR2_PACKAGE_RC_OPENVPN
+	bool "Enable OpenVPN"
+	default y
+	select BR2_PACKAGE_OPENVPN
+	select BR2_PACKAGE_OPENVPN_LZO
+	select BR2_PACKAGE_OPENVPN_LZ4
+
+config BR2_PACKAGE_RC_PPTPD
+	bool "Enable PPTP"
+	default y
+
+config BR2_PACKAGE_RC_SAMBA
+	bool "Enable Samba"
+	default y
+
+config BR2_PACKAGE_RC_SNMP
+	bool "Enable SNMP"
+	default y
+
+config BR2_PACKAGE_RC_STUBBY
+	bool "Enable Stubby"
+	default y
+
+config BR2_PACKAGE_RC_TINC
+	bool "Enable Tinc VPN"
+	default y
+	select BR2_PACKAGE_TINC11
+
+config BR2_PACKAGE_RC_TOR
+	bool "Enable Tor"
+	default y
+
+config BR2_PACKAGE_RC_UPS
+	bool "Enable UPS"
+	default y
+
+config BR2_PACKAGE_RC_USB
+	bool "Enable USB"
+	default y
+
+endif

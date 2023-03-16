@@ -6,78 +6,18 @@ ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/common/
 ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/bcmwifi/include
 ALL_CPPFLAGS += $(CPPFLAGS)
 
-TCONFIG_USB=y
-TCONFIG_DDNS=y
-TCONFIG_CIFS=y
-TCONFIG_JFFS2=y
-TCONFIG_SAMBASRV=y
-TCONFIG_FTP=y
-TCONFIG_OPENVPN=y
-TCONFIG_TINC=y
-TCONFIG_PPTPD=y
-TCONFIG_NOCAT=y
-TCONFIG_NGINX=y
-TCONFIG_BT=y
-TCONFIG_NFS=y
-TCONFIG_SNMP=y
-TCONFIG_UPS=y
-TCONFIG_TOR=y
-TCONFIG_STUBBY=y
-TCONFIG_MULTIWAN=y
-TCONFIG_HTTPS=y
-TCONFIG_IPV6=y
-TCONFIG_DNSSEC=y
-TCONFIG_MDNS=y
-
-#-DTCONFIG_USBAP -DTCONFIG_ZEBRA
-
 ALL_CFLAGS = -fPIC
 ALL_CFLAGS += $(CFLAGS)
 
 ALL_LDFLAGS = -fPIC -lshared -lnvram
 ALL_LDFLAGS += $(LDFLAGS)
 
-#CFLAGS += -I. -I$(TOP)/shared -I$(SRCBASE)/include -idirafter$(LINUXDIR)/include
-#CFLAGS += -ffunction-sections -fdata-sections
-
-#ifeq ($(TCONFIG_DPSTA),y)
-#CFLAGS += -I$(TOP)/dpsta
-#endif
-
-#ifeq ($(TCONFIG_BCMARM),y)
-#LDFLAGS = -L$(TOP)/nvram${BCMEX} -lnvram -L$(TOP)/shared -lshared -lcrypt -L$(TOP)/libbcmcrypto -lbcmcrypto
-#CFLAGS += -I$(SRCBASE)/shared/bcmwifi/include -DHAVE_TYPE_FLOAT
-#CFLAGS += -I$(SRCBASE)/common/include
-#LDFLAGS += -L$(TOP)/libbcm -lbcm
-#LDFLAGS += -lgcc_s
-#else
-#LDFLAGS = -L$(TOP)/nvram -lnvram -L$(TOP)/shared -lshared -lcrypt
-#endif
-
-#LDFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
-#ifeq ($(STATIC),1)
-#LDFLAGS += -static
-#endif
-
-#ifeq ($(TCONFIG_BCMARM),y)
-#LDFLAGS += $(EXTRA_LDFLAGS)
-#endif
-
-#ifeq ($(TCONFIG_BCMSMP),y)
-#CFLAGS += -DSMP
-#endif
-
-#ifeq ($(TOMATO_EXPERIMENTAL),1)
-#CFLAGS += -DDEBUG_LOGMSG
-#endif
-
 OBJS := rc.o init.o interface.o network.o wan.o services.o dhcp.o \
         firewall.o ppp.o telssh.o wnas.o \
         listen.o redial.o led.o qos.o forward.o misc.o \
         restrict.o gpio.o sched.o \
         bwlimit.o arpbind.o \
-        tomatoanon.o \
-	samba.o usb.o jffs2.o cifs.o snmp.o pptpd.o pptp_client.o ddns.o ftpd.o tinc.o openvpn.o blink.o
+        tomatoanon.o
 
 #buttons.o mtd.o
 
@@ -180,9 +120,6 @@ all: rc
 rc: $(OBJS)
 	@echo " [rc] CC $@"
 	@$(CC) -zmuldefs $(ALL_CPPFLAGS) $(ALL_CFLAGS) $(ALL_LDFLAGS) -o $@ $^
-
-#	$(SIZECHECK)
-#	$(CPTMP)
 
 install: all
 	@echo "[rc] Installing..."

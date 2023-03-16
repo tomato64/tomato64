@@ -11,6 +11,90 @@ RC_INSTALL_STAGING = YES
 RC_LICENSE = tomato
 RC_DEPENDENCIES = libnvram libshared
 
+ifeq ($(BR2_PACKAGE_RC_BT),y)
+export TCONFIG_BT=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_CIFS),y)
+export TCONFIG_CIFS=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_DDNS),y)
+export TCONFIG_DDNS=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_DNSSEC),y)
+export TCONFIG_DNSSEC=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_FTP),y)
+export TCONFIG_FTP=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_HTTPS),y)
+export TCONFIG_HTTPS=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_IPV6),y)
+export TCONFIG_IPV6=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_MDNS),y)
+export TCONFIG_MDNS=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_MULTIWAN),y)
+export TCONFIG_MULTIWAN=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_NFS),y)
+export TCONFIG_NFS=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_NGINX),y)
+export TCONFIG_NGINX=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_NOCAT),y)
+export TCONFIG_NOCAT=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_OPENVPN),y)
+export TCONFIG_OPENVPN=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_PPTPD),y)
+export TCONFIG_PPTPD=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_SAMBA),y)
+export TCONFIG_SAMBASRV=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_SNMP),y)
+export TCONFIG_SNMP=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_STUBBY),y)
+export TCONFIG_STUBBY=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_TINC),y)
+export TCONFIG_TINC=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_TOR),y)
+export TCONFIG_TOR=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_UPS),y)
+export TCONFIG_UPS=y
+endif
+
+ifeq ($(BR2_PACKAGE_RC_USB),y)
+export TCONFIG_USB=y
+endif
+
 define RC_BUILD_CMDS
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)
 endef
