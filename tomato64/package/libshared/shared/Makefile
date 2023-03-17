@@ -45,3 +45,8 @@ clean:
 %.o: %.c
 	@echo " [shared] CC $@"
 	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ -c $<
+
+genconfig:
+	./gen_tomato_config.h.sh
+
+.PHONY: genconfig
