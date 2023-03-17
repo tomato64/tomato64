@@ -34,3 +34,8 @@ ln -sf tmp/mnt $TARGET_DIR/mnt
 ln -sf tmp/var $TARGET_DIR/var
 
 ln -sf rc $TARGET_DIR/sbin/init
+
+# To make buildroot genimage happy
+touch $TARGET_DIR/tmp/etc/group
+touch $TARGET_DIR/tmp/etc/passwd
+touch $TARGET_DIR/tmp/etc/shadow
