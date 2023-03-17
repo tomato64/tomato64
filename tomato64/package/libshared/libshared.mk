@@ -147,6 +147,7 @@ endef
 
 define LIBSHARED_INSTALL_STAGING_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/libshared.so $(STAGING_DIR)/usr/lib
+	$(INSTALL) -D -m 0644 $(@D)/tomato_config.h $(STAGING_DIR)/usr/include
 endef
 
 define LIBSHARED_INSTALL_TARGET_CMDS
