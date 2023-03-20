@@ -79,6 +79,10 @@ ifeq ($(BR2_PACKAGE_RC_SNMP),y)
 export TCONFIG_SNMP=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_SSH),y)
+export TCONFIG_SSH=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_STUBBY),y)
 export TCONFIG_STUBBY=y
 endif

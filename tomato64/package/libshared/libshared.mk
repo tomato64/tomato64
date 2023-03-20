@@ -79,6 +79,10 @@ ifeq ($(BR2_PACKAGE_RC_SNMP),y)
 export TCONFIG_SNMP=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_SSH),y)
+export TCONFIG_SSH=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_STUBBY),y)
 export TCONFIG_STUBBY=y
 endif
@@ -102,7 +106,6 @@ endif
 export TCONFIG_OPTIMIZE_SHARED_LIBS=y
 export TCONFIG_L2TP=y
 export TCONFIG_PPTP=y
-export TCONFIG_SSH=y
 export TCONFIG_JFFS2=y
 export TCONFIG_L7=y
 export TCONFIG_L7PAT=y
