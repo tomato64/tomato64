@@ -1,0 +1,17 @@
+diff -Naur dnscrypt-proxy-1.9.5.orig/configure.ac dnscrypt-proxy-1.9.5/configure.ac
+--- dnscrypt-proxy-1.9.5.orig/configure.ac	2023-03-20 11:56:09.898099889 -0600
++++ dnscrypt-proxy-1.9.5/configure.ac	2023-03-20 11:57:06.881940006 -0600
+@@ -246,13 +246,6 @@
+ 
+ AC_SUBST([PROBES_SOURCE])
+ 
+-AS_IF([test -d /usr/local/include], [
+-  CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+-])
+-AS_IF([test -d /usr/local/lib], [
+-  LDFLAGS="$LDFLAGS -L/usr/local/lib"
+-])
+-
+ AS_IF([test -d /usr/local/opt/libressl/include], [
+   CPPFLAGS="$CPPFLAGS -I/usr/local/opt/libressl/include"
+ ], [

@@ -23,6 +23,10 @@ ifeq ($(BR2_PACKAGE_RC_DDNS),y)
 export TCONFIG_DDNS=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_DNSCRYPT),y)
+export TCONFIG_DNSCRYPT=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_DNSSEC),y)
 export TCONFIG_DNSSEC=y
 endif
@@ -115,7 +119,6 @@ export TCONFIG_BBT=y
 export TCONFIG_TR_EXTRAS=y
 export TCONFIG_HFS=y
 export TCONFIG_NANO=y
-export TCONFIG_DNSCRYPT=y
 export TCONFIG_NVRAM_64K=y
 export TCONFIG_AIO=y
 export TCONFIG_CTF=y

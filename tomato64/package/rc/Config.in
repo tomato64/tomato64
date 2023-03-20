@@ -48,6 +48,11 @@ config BR2_PACKAGE_RC_DDNS
 	bool "Enable DDNS"
 	default y
 
+config BR2_PACKAGE_RC_DNSCRYPT
+	bool "Enable DNSCRYPT"
+	default y
+	select BR2_PACKAGE_DNSCRYPT_PROXY
+
 config BR2_PACKAGE_RC_DNSSEC
 	bool "Enable DNSSEC"
 	default y

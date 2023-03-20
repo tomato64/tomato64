@@ -1,0 +1,4 @@
+# Locally calculated after checking pgp signature
+sha256  64021fabb7d5bab0baf681796d90ecd2095fb81381e6fb317a532039025a9399  dnscrypt-proxy-1.9.5.tar.gz
+sha256  9649e73bbd1956911fd2c8033bf39f915e3be3ae8e78c5c279b75d83cf101343  COPYING
+sha256  ee11a214a39b8d067d3ac43fb5d57d4721cbe5c2895d3dfd2512d82436cd7f8a  README
