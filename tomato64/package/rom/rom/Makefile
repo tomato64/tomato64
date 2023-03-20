@@ -2,13 +2,6 @@ SHELL := /bin/bash
 
 INSTALLDIR=$(TARGET_DIR)
 
-TCONFIG_STUBBY = y
-TCONFIG_IPV6 = y
-TCONFIG_HTTPS = y
-TCONFIG_DNSSEC = y
-TCONFIG_DNSCRYPT = y
-
-
 all:
 	@echo "" >rom/etc/motd
 	@echo "" >>rom/etc/motd
