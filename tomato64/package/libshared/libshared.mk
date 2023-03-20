@@ -31,6 +31,10 @@ ifeq ($(BR2_PACKAGE_RC_DNSSEC),y)
 export TCONFIG_DNSSEC=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_EBTABLES),y)
+export TCONFIG_EBTABLES=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_FTP),y)
 export TCONFIG_FTP=y
 endif
@@ -112,7 +116,6 @@ export TCONFIG_L7PAT=y
 export TCONFIG_LZO=y
 export TCONFIG_WIREGUARD=y
 export TCONFIG_ZFS=y
-export TCONFIG_EBTABLES=y
 export TCONFIG_EMF=y
 export TCONFIG_MEDIA_SERVER=y
 export TCONFIG_FTP_SSL=y
