@@ -102,6 +102,12 @@ config BR2_PACKAGE_RC_PPTPD
 	bool "Enable PPTP"
 	default y
 
+config BR2_PACKAGE_RC_PROXY
+	bool "Enable udpxy and igmpproxy"
+	default y
+	select BR2_PACKAGE_UDPXY
+	select BR2_PACKAGE_IGMPPROXY
+
 config BR2_PACKAGE_RC_SAMBA
 	bool "Enable Samba"
 	default y

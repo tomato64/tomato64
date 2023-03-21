@@ -62,6 +62,10 @@ ifeq ($(BR2_PACKAGE_RC_PPTPD),y)
 export TCONFIG_PPTPD=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_PROXY),y)
+export TCONFIG_PROXY=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_SAMBA),y)
 export TCONFIG_SAMBASRV=y
 endif
@@ -134,4 +138,3 @@ export TCONFIG_BONDING=y
 export TCONFIG_CONNTRACK_TOOL=y
 export TCONFIG_IRQBALANCE=y
 export TCONFIG_TRXKEY=y
-export TCONFIG_PROXY=y
