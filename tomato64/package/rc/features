@@ -38,6 +38,10 @@ ifeq ($(BR2_PACKAGE_RC_MDNS),y)
 export TCONFIG_MDNS=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_MEDIA_SERVER),y)
+export TCONFIG_MEDIA_SERVER=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_MULTIWAN),y)
 export TCONFIG_MULTIWAN=y
 endif
@@ -108,7 +112,6 @@ export TCONFIG_LZO=y
 export TCONFIG_WIREGUARD=y
 export TCONFIG_ZFS=y
 export TCONFIG_EMF=y
-export TCONFIG_MEDIA_SERVER=y
 export TCONFIG_FTP_SSL=y
 export TCONFIG_USB_EXTRAS=y
 export TCONFIG_NTFS=y
