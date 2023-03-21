@@ -17,5 +17,4 @@ ifeq ($(BR2_TOOLCHAIN_SUPPORTS_PIE),)
 DNSCRYPT_PROXY_CONF_OPTS += --disable-pie
 endif
 
-DNSCRYPT_PROXY_CONF_OPTS += --enable-static
 $(eval $(autotools-package))
