@@ -391,8 +391,10 @@ int nvram_get_buf(const char *key, char *buf, size_t sz) {
         return E_FAILURE;
     }
 
-    if (fgets(buf, sz, f) != buf) {
-        buf[0] = '\0';
+    buf[0] = '\0';
+    char tmp[sz];
+    while(fgets(tmp, sz, f)) {
+        strncat (buf, tmp, sz);
     }
     fclose(f);
     sem_unlock();
