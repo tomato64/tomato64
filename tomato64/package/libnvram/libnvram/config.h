@@ -4,9 +4,9 @@
 // Determines whether debugging information should be printed to stderr.
 #define DEBUG               1
 // Determines the size of the internal buffer, used for manipulating and storing key values, etc.
-#define BUFFER_SIZE         256
+#define BUFFER_SIZE         2048
 // Determines the size of the "emulated" NVRAM, used by nvram_get_nvramspace().
-#define NVRAM_SIZE          2048
+#define NVRAM_SIZE          1048576
 // Determines the maximum size of the user-supplied output buffer when a length is not supplied.
 #define USER_BUFFER_SIZE    64
 // Determines the unique separator character (as string) used for the list implementation. Do not use "\0".
