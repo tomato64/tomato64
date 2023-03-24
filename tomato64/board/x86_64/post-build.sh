@@ -34,6 +34,7 @@ ln -sf tmp/mnt $TARGET_DIR/mnt
 ln -sf tmp/var $TARGET_DIR/var
 
 ln -sf rc $TARGET_DIR/sbin/init
+ln -sf /lib/ld-musl-x86_64.so.1 $TARGET_DIR/usr/bin/ldd
 
 # To make buildroot genimage happy
 touch $TARGET_DIR/tmp/etc/group
