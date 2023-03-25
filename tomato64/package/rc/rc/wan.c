@@ -826,8 +826,8 @@ void start_wan_if(char *prefix)
 
 	do_connect_file(1, prefix);
 
-//	Don't go chaning mac addresses on us.
-//	store_wan_if_to_nvram(prefix);
+//	Needs some looking at
+	store_wan_if_to_nvram(prefix);
 
 	/* Setup WAN interface name */
 	wan_ifname = nvram_safe_get(strcat_r(prefix, "_ifname", tmp));
