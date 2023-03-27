@@ -106,6 +106,10 @@ ifeq ($(BR2_PACKAGE_RC_USB),y)
 export TCONFIG_USB=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_WIREGUARD),y)
+export TCONFIG_WIREGUARD=y
+endif
+
 export TCONFIG_ROAM=y
 export TCONFIG_OPTIMIZE_SHARED_LIBS=y
 export TCONFIG_L2TP=y
@@ -114,7 +118,6 @@ export TCONFIG_JFFS2=y
 export TCONFIG_L7=y
 export TCONFIG_L7PAT=y
 export TCONFIG_LZO=y
-export TCONFIG_WIREGUARD=y
 export TCONFIG_ZFS=y
 export TCONFIG_EMF=y
 export TCONFIG_FTP_SSL=y

@@ -171,4 +171,8 @@ config BR2_PACKAGE_RC_USB
 	bool "Enable USB"
 	default y
 
+config BR2_PACKAGE_RC_WIREGUARD
+	bool "Enable Wireguard"
+	default y
+
 endif
