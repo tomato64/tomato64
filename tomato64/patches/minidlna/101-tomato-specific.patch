@@ -1,0 +1,280 @@
+--- minidlna/minidlna.c
++++ minidlna/minidlna.c
+@@ -335,7 +335,7 @@ open_db(sqlite3 **sq3)
+ 	sql_exec(db, "pragma page_size = 4096");
+ 	sql_exec(db, "pragma journal_mode = OFF");
+ 	sql_exec(db, "pragma synchronous = OFF;");
+-	sql_exec(db, "pragma default_cache_size = 8192;");
++	sql_exec(db, "pragma default_cache_size = 1024;");
+ 
+ 	return new_db;
+ }
+@@ -965,7 +965,7 @@ init(int argc, char **argv)
+ 		}
+ 	}
+ 
+-	if (runtime_vars.port <= 0)
++	if (runtime_vars.port < 0)
+ 	{
+ 		printf("Usage:\n\t"
+ 			"%s [-d] [-v] [-f config_file] [-p port]\n"
+@@ -1020,6 +1020,7 @@
+ 		pid = process_daemonize();
+ 		if (access(db_path, F_OK) != 0)
+ 			make_dir(db_path, S_ISVTX|S_IRWXU|S_IRWXG|S_IRWXO);
++		unlink("/var/notice/dlna");
+ 	}
+ 	if (log_init(log_level) < 0)
+ 		DPRINTF(E_FATAL, L_GENERAL, "Failed to open log file '%s/" LOGFILE_NAME "': %s\n",
+@@ -1157,7 +1158,7 @@
+ 	smonitor = OpenAndConfMonitorSocket();
+ 	if (smonitor > 0)
+ 	{
+-		monev = (struct event ){ .fd = smonitor, .rdwr = EVENT_READ, .process = ProcessMonitorEvent };
++		monev = (struct event ){ .fd = smonitor, .rdwr = EVENT_READ, { beaconev.process = ProcessMonitorEvent } };
+ 		event_module.add(&monev);
+ 	}
+ 
+@@ -1171,7 +1172,7 @@
+ 	}
+ 	else
+ 	{
+-		ssdpev = (struct event ){ .fd = sssdp, .rdwr = EVENT_READ, .process = ProcessSSDPRequest };
++		ssdpev = (struct event ){ .fd = sssdp, .rdwr = EVENT_READ, { beaconev.process = ProcessSSDPRequest } };
+ 		event_module.add(&ssdpev);
+ 	}
+ 
+@@ -1176,11 +1177,21 @@
+ 	}
+ 
+ 	/* open socket for HTTP connections. */
+-	shttpl = OpenAndConfHTTPSocket(runtime_vars.port);
++	shttpl = OpenAndConfHTTPSocket((runtime_vars.port > 0) ? runtime_vars.port : 0);
+ 	if (shttpl < 0)
+ 		DPRINTF(E_FATAL, L_GENERAL, "Failed to open socket for HTTP. EXITING\n");
++
++	if (runtime_vars.port <= 0) {
++		struct sockaddr_in sockinfo;
++		socklen_t len = sizeof(struct sockaddr_in);
++		if (getsockname(shttpl, (struct sockaddr *)&sockinfo, &len) < 0) {
++			DPRINTF(E_FATAL, L_GENERAL, "getsockname(): %s. EXITING\n", strerror(errno));
++		}
++		runtime_vars.port = ntohs(sockinfo.sin_port);
++	}
++
+ 	DPRINTF(E_WARN, L_GENERAL, "HTTP listening on port %d\n", runtime_vars.port);
+-	httpev = (struct event ){ .fd = shttpl, .rdwr = EVENT_READ, .process = ProcessListen };
++	httpev = (struct event ){ .fd = shttpl, .rdwr = EVENT_READ, {beaconev.process = ProcessListen} };
+ 	event_module.add(&httpev);
+ 
+ 	if (gettimeofday(&timeofday, 0) < 0)
+@@ -1205,7 +1216,7 @@
+ 			if(sbeacon < 0)
+ 				DPRINTF(E_FATAL, L_GENERAL, "Failed to open sockets for sending Tivo beacon notify "
+ 					"messages. EXITING\n");
+-			beaconev = (struct event ){ .fd = sbeacon, .rdwr = EVENT_READ, .process = ProcessTiVoBeacon };
++			beaconev = (struct event ){ .fd = sbeacon, .rdwr = EVENT_READ, { beaconev.process = ProcessTiVoBeacon } };
+ 			event_module.add(&beaconev);
+ 			tivo_bcast.sin_family = AF_INET;
+ 			tivo_bcast.sin_addr.s_addr = htonl(getBcastAddress());
+--- minidlna/monitor_inotify.c
++++ minidlna/monitor_inotify.c
+@@ -332,7 +332,13 @@
+ 				{
+ 					DPRINTF(E_DEBUG, L_INOTIFY,  "The directory %s was %s.\n",
+ 						path_buf, (event->mask & IN_MOVED_TO ? "moved here" : "created"));
+-					monitor_insert_directory(pollfds[0].fd, esc_name, path_buf);
++					/* Tomato */
++					begin_scan();
++					sleep(5);
++					if (wait_for_mount(path_buf) >= 0)
++						monitor_insert_directory(pollfds[0].fd, esc_name, path_buf);
++					end_scan();
++					/* Tomato end */
+ 				}
+ 				else if ( (event->mask & (IN_CLOSE_WRITE|IN_MOVED_TO|IN_CREATE)) &&
+ 				          (lstat(path_buf, &st) == 0) )
+--- minidlna/scanner.c
++++ minidlna/scanner.c
+@@ -27,6 +27,7 @@
+ #include <sys/stat.h>
+ #include <sys/time.h>
+ #include <sys/resource.h>
++#include <sys/statfs.h>
+ 
+ #include "config.h"
+ 
+@@ -66,6 +67,36 @@
+ 	char name[256];
+ };
+ 
++/* Tomato */
++static int
++is_external_path(const char * path)
++{
++	struct statfs sf;
++
++	if (statfs(path, &sf) == 0) {
++		/* if it returns squashfs or tmpfs type, assume it's not mounted */
++		return (sf.f_type != 0x73717368 && sf.f_type != 0x1021994);
++	}
++	else
++		return -1;
++}
++
++/* This could be a directory in tmpfs.
++ * Mounting a USB drive on this directory can take some time,
++ * so let's wait up to 5 seconds and hope that mount will complete.
++ * If not, just proceed with scanning - after all we may not mount
++ * anything on this directory.
++ */
++int
++wait_for_mount(const char * path)
++{
++	int r, n = 50;
++	while (((r = is_external_path(path)) == 0) && (n-- > 0)) {
++		usleep(100 * 1000);
++	}
++	return r;
++}
++
+ int64_t
+ get_next_available_id(const char *table, const char *parentID)
+ {
+@@ -728,6 +759,9 @@
+ 	static long long unsigned int fileno = 0;
+ 	enum file_types type;
+ 
++	if (wait_for_mount(dir) < 0)
++		return;
++
+ 	DPRINTF(parent?E_INFO:E_WARN, L_SCANNER, _("Scanning %s\n"), dir);
+ 	switch( dir_types )
+ 	{
+@@ -907,6 +941,7 @@
+ 	if( GETFLAG(RESCAN_MASK) )
+ 		return start_rescan();
+ 
++	begin_scan(); /* Tomato */
+ 	for( media_path = media_dirs; media_path != NULL; media_path = media_path->next )
+ 	{
+ 		int64_t id;
+@@ -929,6 +964,8 @@
+ 		ScanDirectory(media_path->path, parent, media_path->types);
+ 		sql_exec(db, "INSERT into SETTINGS values (%Q, %Q)", "media_dir", media_path->path);
+ 	}
++	end_scan(); /* Tomato */
++
+ 	/* Create this index after scanning, so it doesn't slow down the scanning process.
+ 	 * This index is very useful for large libraries used with an XBox360 (or any
+ 	 * client that uses UPnPSearch on large containers). */
+--- minidlna/scanner.h
++++ minidlna/scanner.h
+@@ -83,4 +83,7 @@
+ void
+ start_scanner();
+ 
++int
++wait_for_mount(const char * path); /* Tomato */
++
+ #endif
+--- minidlna/testupnpdescgen.c
++++ minidlna/testupnpdescgen.c
+@@ -31,7 +31,11 @@
+ #include <string.h>
+ 
+ #include "config.h"
++#include "getifaddr.h"
+ #include "upnpdescgen.h"
++#include "minidlnapath.h"
++#include "upnpglobalvars.h"
++
+ 
+ char uuidvalue[] = "uuid:12345678-0000-0000-0000-00000000abcd";
+ char friendly_name[] = "localhost: system_type";
+--- minidlna/upnpevents.c
++++ minidlna/upnpevents.c
+@@ -230,6 +230,7 @@
+ upnp_event_create_notify(struct subscriber *sub)
+ {
+ 	struct upnp_event_notify * obj;
++	struct event evt;
+ 	int flags, s, i;
+ 	const char *p;
+ 	unsigned short port;
+@@ -294,7 +295,7 @@
+ 	       obj->addrstr, port, obj->path);
+ 	obj->state = EConnecting;
+ 	obj->ev = (struct event ){ .fd = s, .rdwr = EVENT_WRITE,
+-		.process = upnp_event_process_notify, .data = obj };
++		{evt.process = upnp_event_process_notify}, .data = obj };
+ 	event_module.add(&obj->ev);
+ 	if(connect(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+ 		if(errno != EINPROGRESS && errno != EWOULDBLOCK) {
+--- minidlna/upnphttp.c
++++ minidlna/upnphttp.c
+@@ -108,13 +108,14 @@
+ New_upnphttp(int s)
+ {
+ 	struct upnphttp * ret;
++	struct event evt;
+ 	if(s<0)
+ 		return NULL;
+ 	ret = (struct upnphttp *)malloc(sizeof(struct upnphttp));
+ 	if(ret == NULL)
+ 		return NULL;
+ 	memset(ret, 0, sizeof(struct upnphttp));
+-	ret->ev = (struct event ){ .fd = s, .rdwr = EVENT_READ, .process = Process_upnphttp, .data = ret };
++	ret->ev = (struct event ){ .fd = s, .rdwr = EVENT_READ, {evt.process = Process_upnphttp}, .data = ret };
+ 	event_module.add(&ret->ev);
+ 	return ret;
+ }
+--- minidlna/utils.c
++++ minidlna/utils.c
+@@ -576,3 +576,35 @@
+ 		t1->tv_usec -= 1000000;
+ 	}
+ }
++
++void
++begin_scan()
++{
++	FILE *flag;
++
++#ifdef READYNAS
++	flag = fopen("/ramfs/.upnp-av_scan", "w");
++	if (flag)
++		fclose(flag);
++#else
++	mkdir("/var/notice", 0755);
++	flag = fopen("/var/notice/dlna", "w");
++	if (flag) {
++		fprintf(flag, "Scan in progress");
++		fclose(flag);
++	}
++#endif
++}
++
++void
++end_scan()
++{
++#ifdef READYNAS
++	if (access("/ramfs/.rescan_done", F_OK) == 0)
++		system("/bin/sh /ramfs/.rescan_done");
++
++	unlink("/ramfs/.upnp-av_scan");
++#else
++	unlink("/var/notice/dlna");
++#endif
++}
+--- minidlna/utils.h
++++ minidlna/utils.h
+@@ -109,4 +109,8 @@
+ 	    ((tvp)->tv_usec cmp (uvp)->tv_usec) :			\
+ 	    ((tvp)->tv_sec cmp (uvp)->tv_sec))
+ 
++/* Tomato */
++void begin_scan();
++void end_scan();
++
+ #endif
