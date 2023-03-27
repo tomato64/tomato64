@@ -92,7 +92,7 @@ config BR2_PACKAGE_RC_MDNS
 config BR2_PACKAGE_RC_MEDIA_SERVER
 	bool "Enable Media Server"
 	default y
-	select BR2_PACKAGE_MINIDLNA
+	select BR2_PACKAGE_MINIDLNA_TOMATO
 
 config BR2_PACKAGE_RC_MULTIWAN
 	bool "Enable MultiWan"

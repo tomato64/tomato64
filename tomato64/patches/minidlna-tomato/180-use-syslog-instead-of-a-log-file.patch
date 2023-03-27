@@ -1,0 +1,135 @@
+--- minidlna/log.c
++++ minidlna/log.c
+@@ -19,11 +19,16 @@
+  */
+ #include "config.h"
+ 
++#define SYSLOG
++
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <stdarg.h>
+ #include <string.h>
+ #include <time.h>
++#ifdef SYSLOG
++#include <syslog.h>
++#endif
+ 
+ #include "upnpglobalvars.h"
+ #include "log.h"
+@@ -56,6 +61,18 @@
+ 	0
+ };
+ 
++#ifdef SYSLOG
++int level_prio[] = {
++	LOG_NOTICE,				// E_OFF
++	LOG_CRIT,				// E_FATAL
++	LOG_ERR,				// E_ERROR
++	LOG_WARNING,				// E_WARN
++	LOG_INFO,				// E_INFO
++	LOG_DEBUG,				// E_DEBUG
++	0
++};
++#endif
++
+ void
+ log_close(void)
+ {
+@@ -68,11 +85,13 @@
+ {
+ 	if (log_path[0] && log_fp)
+ 	{
++#ifdef SYSLOG
+ 		char logfile[1048];
+ 		snprintf(logfile, sizeof(logfile), "%s/" LOGFILE_NAME, log_path);
+ 		fclose(log_fp);
+ 		log_fp = fopen(logfile, "a");
+ 		DPRINTF(E_INFO, L_GENERAL, "Reopened log file\n");
++#endif
+ 	}
+ }
+ 
+@@ -97,7 +116,9 @@
+ log_init(const char *debug)
+ {
+ 	int i;
++#ifndef SYSLOG
+ 	FILE *fp = NULL;
++#endif
+ 
+ 	int level = find_matching_name(debug, level_name);
+ 	int default_log_level = (level == -1) ? _default_log_level : level;
+@@ -135,6 +156,19 @@
+ 		}
+ 	}
+ 
++#ifdef SYSLOG
++	int openlog_option;
++
++	openlog_option = LOG_PID | LOG_CONS;
++	if (!log_path[0])
++		openlog_option |= LOG_PERROR;	/* also log on stderr */
++	openlog("minidlna", openlog_option, LOG_DAEMON);
++
++	if (log_path[0]) {
++		/* speed things up and ignore LOG_INFO and LOG_DEBUG */
++		setlogmask(LOG_UPTO(LOG_NOTICE));
++	}
++#else
+ 	if (log_path[0])
+ 	{
+ 		char logfile[1048];
+@@ -143,6 +177,7 @@
+ 			return -1;
+ 	}
+ 	log_fp = fp;
++#endif
+ 
+ 	return 0;
+ }
+@@ -151,10 +186,14 @@
+ log_err(int level, enum _log_facility facility, char *fname, int lineno, char *fmt, ...)
+ {
+ 	va_list ap;
++#ifdef SYSLOG
++	char *errbuf;
++#endif
+ 
+ 	if (level && level>log_level[facility] && level>E_FATAL)
+ 		return;
+ 
++#ifndef SYSLOG
+ 	if (!log_fp)
+ 		log_fp = stdout;
+ 
+@@ -174,17 +213,29 @@
+ 		fprintf(log_fp, "%s:%d: %s: ", fname, lineno, level_name[level]);
+ 	else
+ 		fprintf(log_fp, "%s:%d: ", fname, lineno);
++#endif
+ 
+ 	// user log
+ 	va_start(ap, fmt);
++#ifndef SYSLOG
+ 	if (vfprintf(log_fp, fmt, ap) == -1)
++#else
++	if (vasprintf(&errbuf, fmt, ap) == -1)
++#endif
+ 	{
+ 		va_end(ap);
+ 		return;
+ 	}
+ 	va_end(ap);
+ 
++#ifdef SYSLOG
++	if (log_level[facility] < E_DEBUG)
++		syslog(level_prio[level], errbuf);
++	else
++		syslog(level_prio[level], "%s:%d: %s", fname, lineno, errbuf);
++#else
+ 	fflush(log_fp);
++#endif
+ 
+ 	if (level==E_FATAL)
+ 		exit(-1);
