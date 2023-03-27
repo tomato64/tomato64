@@ -46,6 +46,9 @@ clean:
 	@echo " [shared] CC $@"
 	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ -c $<
 
+genversion:
+	./gen_tomato_version.h.sh
+
 genconfig:
 	./gen_tomato_config.h.sh
 

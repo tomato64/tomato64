@@ -12,6 +12,7 @@ LIBSHARED_LICENSE = tomato
 LIBSHARED_DEPENDENCIES = libnvram busybox
 
 define LIBSHARED_BUILD_CMDS
+	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) genversion
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) genconfig
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) libshared.so
 endef
