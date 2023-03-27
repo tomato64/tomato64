@@ -34,6 +34,10 @@ ifeq ($(BR2_PACKAGE_RC_IPV6),y)
 export TCONFIG_IPV6=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_IRQBALANCE),y)
+export TCONFIG_IRQBALANCE=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_MDNS),y)
 export TCONFIG_MDNS=y
 endif
@@ -140,5 +144,4 @@ export TCONFIG_TERMLIB=y
 export TCONFIG_ADVTHEMES=y
 export TCONFIG_BONDING=y
 export TCONFIG_CONNTRACK_TOOL=y
-export TCONFIG_IRQBALANCE=y
 export TCONFIG_TRXKEY=y
