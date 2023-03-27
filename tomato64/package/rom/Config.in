@@ -1,4 +1,5 @@
 config BR2_PACKAGE_ROM
 	bool "rom"
+	select BR2_PACKAGE_LIBSHARED
 	help
 	  Populates /etc

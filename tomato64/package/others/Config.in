@@ -1,4 +1,5 @@
 config BR2_PACKAGE_OTHERS
 	bool "others"
+	select BR2_PACKAGE_LIBSHARED
 	help
 	  A bunch of bash script programs

@@ -1,5 +1,6 @@
 config BR2_PACKAGE_NVRAM
 	bool "nvram cli"
+	select BR2_PACKAGE_LIBSHARED
 	select BR2_PACKAGE_LIBNVRAM
 	help
 	  userspace nvram cli command

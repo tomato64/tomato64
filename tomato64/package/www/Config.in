@@ -1,4 +1,5 @@
 config BR2_PACKAGE_WWW
 	bool "www"
+	select BR2_PACKAGE_LIBSHARED
 	help
 	  Tomato web pages
