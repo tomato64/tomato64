@@ -1,0 +1,169 @@
+diff --git pppd/chat/chat.c pppd/chat/chat.c
+index 1639b3e..183009e 100644
+--- pppd/chat/chat.c
++++ pppd/chat/chat.c
+@@ -178,8 +178,9 @@ struct termios saved_tty_parameters;
+ 
+ char *abort_string[MAX_ABORTS], *fail_reason = (char *)0,
+ 	fail_buffer[50];
+-int n_aborts = 0, abort_next = 0, timeout_next = 0, echo_next = 0;
++int n_aborts = 0, abort_next = 0, timeout_next = 0, echo_next = 0, hex_next = 0;
+ int clear_abort_next = 0;
++int hex = -1;
+ 
+ char *report_string[MAX_REPORTS] ;
+ char  report_buffer[256] ;
+@@ -567,7 +568,7 @@ void set_tty_parameters(void)
+     saved_tty_parameters = t;
+     have_tty_parameters  = 1;
+ 
+-    t.c_iflag     |= IGNBRK | ISTRIP | IGNPAR;
++    t.c_iflag     |= IGNBRK | IGNPAR;
+     t.c_oflag      = 0;
+     t.c_lflag      = 0;
+     t.c_cc[VERASE] =
+@@ -919,6 +920,11 @@ void chat_expect (char *s)
+ 	return;
+     }
+ 
++    if (strcmp(s, "HEX") == 0) {
++	++hex_next;
++	return;
++    }
++
+ /*
+  * Fetch the expect and reply string.
+  */
+@@ -1126,6 +1132,12 @@ void chat_send (register char *s)
+ 
+ 	return;
+     }
++    
++    if (hex_next) {
++	hex_next = 0;
++	hex = (strcmp(s, "ON") == 0);
++	return;
++    }
+ 
+     /*
+      * The syntax @filename means read the string to send from the
+@@ -1182,7 +1194,7 @@ int get_char(void)
+ 
+     switch (status) {
+     case 1:
+-	return ((int)c & 0x7F);
++	return ((int)c & 0xFF);
+ 
+     default:
+ 	msgf("warning: read() on stdin returned %d", status);
+@@ -1374,7 +1386,9 @@ int get_string(register char *string)
+ 	}
+ 
+ 	if (Verbose) {
+-	   if (c == '\n')
++	   if ((hex == 2) || (hex == 0))
++	       fprintf(stderr, "%.2X", c);
++	   else if (c == '\n')
+ 	       fputc( '\n', stderr );
+ 	   else if (c != '\r')
+ 	       fprintf( stderr, "%s", character(c) );
+@@ -1420,6 +1434,10 @@ int get_string(register char *string)
+ 
+ 	    alarm(0);
+ 	    alarmed = 0;
++	    if (hex == 1)
++	      hex = 2;
++	    if (hex == 0)
++	      hex = -1;
+ 	    return (1);
+ 	}
+ 
+diff --git pppd/pppd/auth.c pppd/pppd/auth.c
+index 00246d0..354f2ee 100644
+--- pppd/pppd/auth.c
++++ pppd/pppd/auth.c
+@@ -598,6 +598,9 @@ link_required(int unit)
+  */
+ void start_link(int unit)
+ {
++    /* we are called via link_terminated, must be ignored */
++    if (phase == PHASE_DISCONNECT)
++	return;
+     status = EXIT_CONNECT_FAILED;
+     new_phase(PHASE_SERIALCONN);
+ 
+@@ -2388,7 +2391,8 @@ auth_script(char *script)
+     argv[3] = user_name;
+     argv[4] = devnam;
+     argv[5] = strspeed;
+-    argv[6] = NULL;
++    argv[6] = ipparam;
++    argv[7] = NULL;
+ 
+     auth_script_pid = run_program(script, argv, 0, auth_script_done, NULL, 0);
+ }
+diff --git pppd/pppd/plugins/pppol2tp/pppol2tp.c pppd/pppd/plugins/pppol2tp/pppol2tp.c
+index 1be0ad2..97ea85d 100644
+--- pppd/pppd/plugins/pppol2tp/pppol2tp.c
++++ pppd/pppd/plugins/pppol2tp/pppol2tp.c
+@@ -117,14 +117,8 @@ static option_t pppol2tp_options[] = {
+ 
+ static int setdevname_pppol2tp(char **argv)
+ {
+-	union {
+-		char buffer[128];
+-		struct sockaddr pppol2tp;
+-	} s;
+-	int len = sizeof(s);
+-	char **a;
+-	int tmp;
+-	int tmp_len = sizeof(tmp);
++	struct sockaddr_pppol2tp sax;
++	int len = sizeof(sax);
+ 
+ 	if (device_got_set)
+ 		return 0;
+@@ -132,21 +126,21 @@ static int setdevname_pppol2tp(char **argv)
+ 	if (!int_option(*argv, &pppol2tp_fd))
+ 		return 0;
+ 
+-	if(getsockname(pppol2tp_fd, (struct sockaddr *)&s, &len) < 0) {
++	if(getsockname(pppol2tp_fd, (struct sockaddr *)&sax, &len) < 0) {
+ 		fatal("Given FD for PPPoL2TP socket invalid (%s)",
+ 		      strerror(errno));
+ 	}
+-	if(s.pppol2tp.sa_family != AF_PPPOX) {
+-		fatal("Socket of not a PPPoX socket");
++	if(sax.sa_family != AF_PPPOX || sax.sa_protocol != PX_PROTO_OL2TP) {
++		fatal("Socket is not a PPPoL2TP socket");
+ 	}
+ 
+ 	/* Do a test getsockopt() to ensure that the kernel has the necessary
+ 	 * feature available.
+-	 */
++	 * driver returns -ENOTCONN until session established!
+ 	if (getsockopt(pppol2tp_fd, SOL_PPPOL2TP, PPPOL2TP_SO_DEBUG,
+ 		       &tmp, &tmp_len) < 0) {
+ 		fatal("PPPoL2TP kernel driver not installed");
+-	}
++	} */
+ 
+ 	pppol2tp_fd_str = strdup(*argv);
+ 	if (pppol2tp_fd_str == NULL)
+@@ -179,10 +173,16 @@ static int setdevname_pppol2tp(char **argv)
+ 
+ static int connect_pppol2tp(void)
+ {
++	struct sockaddr_pppol2tp sax;
++	int len = sizeof(sax);
++
+ 	if(pppol2tp_fd == -1) {
+ 		fatal("No PPPoL2TP FD specified");
+ 	}
+ 
++	getsockname(pppol2tp_fd, (struct sockaddr *)&sax, &len);
++	sprintf(ppp_devnam,"l2tp (%s)",inet_ntoa(sax.pppol2tp.addr.sin_addr));
++
+ 	return pppol2tp_fd;
+ }
+ 

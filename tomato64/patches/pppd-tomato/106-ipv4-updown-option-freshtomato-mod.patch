@@ -1,0 +1,103 @@
+diff --git pppd/pppd/ipcp.c pppd/pppd/ipcp.c
+index 302ca40..013801b 100644
+--- pppd/pppd/ipcp.c
++++ pppd/pppd/ipcp.c
+@@ -94,6 +94,9 @@ static int ipcp_is_open;		/* haven't called np_finished() */
+ static bool ask_for_local;		/* request our address from peer */
+ static char vj_value[8];		/* string form of vj option value */
+ static char netmask_str[20];		/* string form of netmask value */
++static char path_ipup[MAXPATHLEN] = _PATH_IPUP; /* pathname of ip-up script */
++static char path_ipdown[MAXPATHLEN] = _PATH_IPDOWN; /* pathname of ip-down script */
++static char path_ippreup[MAXPATHLEN] = _PATH_IPPREUP; /* pathname of ip-pre-up script */
+ 
+ /*
+  * Callbacks for fsm code.  (CI = Configuration Information)
+@@ -238,6 +241,16 @@ static option_t ipcp_option_list[] = {
+       "set local and remote IP addresses",
+       OPT_NOARG | OPT_A2PRINTER, (void *) &printipaddr },
+ 
++    { "ip-up-script", o_string, &path_ipup,
++      "Set pathname of ip-up script",
++      OPT_PRIV|OPT_STATIC, NULL, MAXPATHLEN },
++    { "ip-down-script", o_string, &path_ipdown,
++      "Set pathname of ip-down script",
++      OPT_PRIV|OPT_STATIC, NULL, MAXPATHLEN },
++    { "ip-pre-up-script", o_string, &path_ippreup,
++      "Set pathname of ip-pre-up script",
++      OPT_PRIV|OPT_STATIC, NULL, MAXPATHLEN },
++
+     { NULL }
+ };
+ 
+@@ -1719,7 +1732,7 @@ ip_demand_conf(int u)
+     }
+     if (!sifaddr(u, wo->ouraddr, wo->hisaddr, GetMask(wo->ouraddr)))
+ 	return 0;
+-    ipcp_script(_PATH_IPPREUP, 1);
++    ipcp_script(path_ippreup, 1);
+     if (!sifup(u))
+ 	return 0;
+     if (!sifnpmode(u, PPP_IP, NPMODE_QUEUE))
+@@ -1871,7 +1884,7 @@ ipcp_up(fsm *f)
+ 	ifindex = if_nametoindex(ifname);
+ 
+ 	/* run the pre-up script, if any, and wait for it to finish */
+-	ipcp_script(_PATH_IPPREUP, 1);
++	ipcp_script(path_ippreup, 1);
+ 
+ 	/* check if preup script renamed the interface */
+ 	if (!if_indextoname(ifindex, ifname)) {
+diff --git pppd/pppd/main.c pppd/pppd/main.c
+index 87a5d29..71398de 100644
+--- pppd/pppd/main.c
++++ pppd/pppd/main.c
+@@ -293,9 +293,6 @@ main(int argc, char *argv[])
+     struct protent *protp;
+     char numbuf[16];
+ 
+-    strlcpy(path_ipup, _PATH_IPUP, sizeof(path_ipup));
+-    strlcpy(path_ipdown, _PATH_IPDOWN, sizeof(path_ipdown));
+-
+     link_stats_valid = 0;
+     new_phase(PHASE_INITIALIZE);
+ 
+diff --git pppd/pppd/options.c pppd/pppd/options.c
+index afc62b6..a4d5d6d 100644
+--- pppd/pppd/options.c
++++ pppd/pppd/options.c
+@@ -117,8 +117,6 @@ bool	tune_kernel;		/* may alter kernel settings */
+ int	connect_delay = 1000;	/* wait this many ms after connect script */
+ int	req_unit = -1;		/* requested interface unit */
+ int	req_minunit = -1;	/* requested minimal interface unit */
+-char	path_ipup[MAXPATHLEN];	/* pathname of ip-up script */
+-char	path_ipdown[MAXPATHLEN];/* pathname of ip-down script */
+ char	req_ifname[MAXIFNAMELEN];	/* requested interface name */
+ bool	multilink = 0;		/* Enable multilink operation */
+ char	*bundle_name = NULL;	/* bundle name for multilink */
+@@ -322,13 +320,6 @@ option_t general_options[] = {
+       "Metric to use for the default route (Linux only; -1 for default behavior)",
+       OPT_PRIV|OPT_LLIMIT|OPT_INITONLY, NULL, 0, -1 },
+ 
+-    { "ip-up-script", o_string, path_ipup,
+-      "Set pathname of ip-up script",
+-      OPT_PRIV|OPT_STATIC, NULL, MAXPATHLEN },
+-    { "ip-down-script", o_string, path_ipdown,
+-      "Set pathname of ip-down script",
+-      OPT_PRIV|OPT_STATIC, NULL, MAXPATHLEN },
+-
+ #ifdef HAVE_MULTILINK
+     { "multilink", o_bool, &multilink,
+       "Enable multilink operation", OPT_PRIO | 1 },
+diff --git pppd/pppd/pppd.h pppd/pppd/pppd.h
+index 65b4e8b..e06eca2 100644
+--- pppd/pppd/pppd.h
++++ pppd/pppd/pppd.h
+@@ -328,8 +328,6 @@ extern int	connect_delay;	/* Time to delay after connect script */
+ extern int	max_data_rate;	/* max bytes/sec through charshunt */
+ extern int	req_unit;	/* interface unit number to use */
+ extern int	req_minunit;	/* interface minimal unit number to use */
+-extern char	path_ipup[MAXPATHLEN]; /* pathname of ip-up script */
+-extern char	path_ipdown[MAXPATHLEN]; /* pathname of ip-down script */
+ extern char	req_ifname[MAXIFNAMELEN]; /* interface name to use */
+ extern bool	multilink;	/* enable multilink operation */
+ extern bool	noendpoint;	/* don't send or accept endpt. discrim. */

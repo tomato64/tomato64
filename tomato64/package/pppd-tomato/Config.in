@@ -1,0 +1,14 @@
+config BR2_PACKAGE_PPPD_TOMATO
+	bool "pppd"
+	depends on !BR2_STATIC_LIBS
+	depends on BR2_USE_MMU
+	select BR2_PACKAGE_OPENSSL if BR2_TOOLCHAIN_USES_GLIBC
+	select BR2_PACKAGE_LIBOPENSSL_ENABLE_DES if BR2_PACKAGE_LIBOPENSSL
+	help
+	  An implementation of the Point-to-point protocol.
+
+	  http://www.samba.org/ppp/
+
+comment "pppd needs a toolchain w/ dynamic library"
+	depends on BR2_STATIC_LIBS
+	depends on BR2_USE_MMU

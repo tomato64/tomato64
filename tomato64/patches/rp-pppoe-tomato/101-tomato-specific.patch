@@ -1,0 +1,88 @@
+--- rp-pppoe/src/discovery.c
++++ rp-pppoe/src/discovery.c
+@@ -44,9 +44,9 @@ static char const RCSID[] =
+ #include <signal.h>
+ 
+ #ifdef PLUGIN
+-#include "pppd/pppd.h"
+-#include "pppd/fsm.h"
+-#include "pppd/lcp.h"
++#include "../../pppd/pppd/pppd.h"
++#include "../../pppd/pppd/fsm.h"
++#include "../../pppd/pppd/lcp.h"
+ #else
+ int persist = 0;
+ #endif
+--- rp-pppoe/src/plugin.c
++++ rp-pppoe/src/plugin.c
+@@ -61,16 +61,19 @@ static char const RCSID[] =
+ #define _ROOT_PATH ""
+ #endif
+ 
+-#define _PATH_ETHOPT         _ROOT_PATH "/etc/ppp/options."
++#define _PATH_ETHOPT         _ROOT_PATH "/ppp/options."
+ 
+ char pppd_version[] = VERSION;
+ 
+ static int seen_devnam[2] = {0, 0};
+ static char *pppoe_reqd_mac = NULL;
+ 
+ /* From sys-linux.c in pppd -- MUST FIX THIS! */
+ extern int new_style_driver;
+ 
++/* Supplied by pppd */
++extern int debug;
++
+ char *pppd_pppoe_service = NULL;
+ static char *acName = NULL;
+ static char *existingSession = NULL;
+@@ -271,7 +274,7 @@ PPPOESendConfig(int mtu,
+     struct ifreq ifr;
+ 
+     if (mtu > MAX_PPPOE_MTU) {
+-	warn("Couldn't increase MTU to %d", mtu);
++	if (debug) warn("Couldn't increase MTU to %d", mtu);
+ 	mtu = MAX_PPPOE_MTU;
+     }
+     sock = socket(AF_INET, SOCK_DGRAM, 0);
+@@ -295,7 +298,7 @@ PPPOERecvConfig(int mru,
+ 		int pcomp,
+ 		int accomp)
+ {
+-    if (mru > MAX_PPPOE_MTU) {
++    if (mru > MAX_PPPOE_MTU && debug) {
+ 	warn("Couldn't increase MRU to %d", mru);
+     }
+ }
+--- rp-pppoe/src/pppoe-server.c
++++ rp-pppoe/src/pppoe-server.c
+@@ -2081,12 +2081,12 @@ startPPPDLinuxKernelMode(ClientSession *
+     argv[c++] = "default-asyncmap";
+     if (PassUnitOptionToPPPD) {
+ 	argv[c++] = "unit";
+-	sprintf(buffer, "%u", (unsigned int) (ntohs(session->sess) - 1 - SessOffset));
++	sprintf(buffer, "%u", (unsigned int) (ntohs(session->sess) - 1));
+ 	argv[c++] = buffer;
+     }
+     if (session->requested_mtu > 1492) {
+ 	sprintf(buffer, "%u", (unsigned int) session->requested_mtu);
+ 	argv[c++] = "mru";
+ 	argv[c++] = buffer;
+ 	argv[c++] = "mtu";
+ 	argv[c++] = buffer;
+--- rp-pppoe/src/relay.c
++++ rp-pppoe/src/relay.c
+@@ -960,10 +960,11 @@ relayHandlePADT(PPPoEInterface const *if
+     SessionHash *sh;
+     PPPoESession *ses;
+ 
+-    /* Destination address must be interface's MAC address */
+-    if (memcmp(packet->ethHdr.h_dest, iface->mac, ETH_ALEN)) {
++    /* Ignore PADT packets whose destination address isn't ours */
++    if (!(packet->ethHdr.h_dest[0] & 0xfe) &&
++         memcmp(packet->ethHdr.h_dest, iface->mac, ETH_ALEN)) {
+ 	return;
+     }
+ 
+     sh = findSession(packet->ethHdr.h_source, packet->session);
+     if (!sh) {

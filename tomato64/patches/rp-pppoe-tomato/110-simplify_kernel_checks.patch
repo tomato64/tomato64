@@ -1,0 +1,33 @@
+pppd: Remove runtime kernel checks
+
+On embedded system distributions the required kernel features for pppd are
+more or less guaranteed to be present, so there is not much point in
+performing runtime checks, it just increases the binary size.
+
+This patch removes the runtime kernel feature checks.
+
+Signed-off-by: Jo-Philipp Wich <jo@mein.io>
+
+--- rp-pppoe/src/plugin.c
++++ rp-pppoe/src/plugin.c
+@@ -68,9 +68,6 @@
+ static int seen_devnam[2] = {0, 0};
+ static char *pppoe_reqd_mac = NULL;
+ 
+-/* From sys-linux.c in pppd -- MUST FIX THIS! */
+-extern int new_style_driver;
+-
+ /* Supplied by pppd */
+ extern int debug;
+ 
+@@ -469,10 +466,6 @@
+ void
+ plugin_init(void)
+ {
+-    if (!ppp_available() && !new_style_driver) {
+-	fatal("Linux kernel does not support PPPoE -- are you running 2.4.x?");
+-    }
+-
+     add_options(Options);
+ 
+     info("RP-PPPoE plugin version %s compiled against pppd %s",

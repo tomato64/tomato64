@@ -1,0 +1,78 @@
+diff --git pppd/chat/Makefile.linux pppd/chat/Makefile.linux
+index 407cc12..3fa1d9b 100644
+--- pppd/chat/Makefile.linux
++++ pppd/chat/Makefile.linux
+@@ -12,7 +12,7 @@ CDEF3=	-UNO_SLEEP			# Use the usleep function
+ CDEF4=	-DFNDELAY=O_NDELAY		# Old name value
+ CDEFS=	$(CDEF1) $(CDEF2) $(CDEF3) $(CDEF4)
+ 
+-CFLAGS=	$(COPTS) $(CDEFS)
++CFLAGS=	$(COPTS) $(CDEFS) $(EXTRACFLAGS)
+ 
+ INSTALL= install
+ 
+diff --git pppd/pppd/plugins/Makefile.linux pppd/pppd/plugins/Makefile.linux
+index 6403e3d..24b6781 100644
+--- pppd/pppd/plugins/Makefile.linux
++++ pppd/pppd/plugins/Makefile.linux
+@@ -7,7 +7,7 @@ BINDIR = $(DESTDIR)/sbin
+ MANDIR = $(DESTDIR)/share/man/man8
+ LIBDIR = $(DESTDIR)/lib/pppd/$(VERSION)
+ 
+-CFLAGS	= $(COPTS) -I.. -I../../include -fPIC
++CFLAGS	= $(COPTS) -I.. -I../../include -fPIC $(EXTRACFLAGS)
+ LDFLAGS_SHARED	= -shared
+ INSTALL	= install
+ 
+diff --git pppd/pppd/plugins/pppoatm/Makefile.linux pppd/pppd/plugins/pppoatm/Makefile.linux
+index d3a8086..81cf32b 100644
+--- pppd/pppd/plugins/pppoatm/Makefile.linux
++++ pppd/pppd/plugins/pppoatm/Makefile.linux
+@@ -8,7 +8,7 @@ LIBDIR = $(DESTDIR)/lib/pppd/$(VERSION)
+ 
+ VERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../../patchlevel.h)
+ 
+-CFLAGS	= $(COPTS) -I../.. -I../../../include -fPIC
++CFLAGS	= $(COPTS) -I../.. -I../../../include -fPIC $(EXTRACFLAGS)
+ LDFLAGS_SHARED	= -shared
+ INSTALL	= install
+ 
+diff --git pppd/pppd/plugins/pppoe/Makefile.linux pppd/pppd/plugins/pppoe/Makefile.linux
+index c415ce3..f28fb50 100644
+--- pppd/pppd/plugins/pppoe/Makefile.linux
++++ pppd/pppd/plugins/pppoe/Makefile.linux
+@@ -25,7 +25,7 @@ PPPDVERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../../patchlevel.h)
+ INSTALL	= install
+ LN_S	= ln -sf
+ 
+-CFLAGS=$(COPTS) -I../../../include
++CFLAGS=$(COPTS) -I../../../include $(EXTRACFLAGS)
+ all: pppoe.so pppoe-discovery
+ 
+ pppoe-discovery: pppoe-discovery.o debug.o
+diff --git pppd/pppd/plugins/pppol2tp/Makefile.linux pppd/pppd/plugins/pppol2tp/Makefile.linux
+index 1aa1c0b..e29b4b3 100644
+--- pppd/pppd/plugins/pppol2tp/Makefile.linux
++++ pppd/pppd/plugins/pppol2tp/Makefile.linux
+@@ -8,7 +8,7 @@ LIBDIR = $(DESTDIR)/lib/pppd/$(VERSION)
+ 
+ VERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../../patchlevel.h)
+ 
+-CFLAGS	= $(COPTS) -I. -I../.. -I../../../include -fPIC
++CFLAGS	= $(COPTS) -I. -I../.. -I../../../include -fPIC $(EXTRACFLAGS)
+ LDFLAGS_SHARED	= -shared
+ INSTALL	= install
+ 
+diff --git pppd/pppd/plugins/radius/Makefile.linux pppd/pppd/plugins/radius/Makefile.linux
+index 489aef2..bd21f02 100644
+--- pppd/pppd/plugins/radius/Makefile.linux
++++ pppd/pppd/plugins/radius/Makefile.linux
+@@ -16,7 +16,7 @@ VERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../../patchlevel.h)
+ INSTALL	= install
+ 
+ PLUGIN=radius.so radattr.so radrealms.so
+-CFLAGS = $(COPTS) -I. -I../.. -I../../../include -fPIC -DRC_LOG_FACILITY=LOG_DAEMON
++CFLAGS = $(COPTS) -I. -I../.. -I../../../include -fPIC -DRC_LOG_FACILITY=LOG_DAEMON $(EXTRACFLAGS)
+ 
+ # Uncomment the next line to include support for Microsoft's
+ # MS-CHAP authentication protocol.

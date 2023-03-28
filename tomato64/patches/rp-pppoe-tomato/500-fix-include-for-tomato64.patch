@@ -1,0 +1,16 @@
+diff -Naur rp-pppoe-3.15.orig/src/discovery.c rp-pppoe-3.15/src/discovery.c
+--- rp-pppoe-3.15.orig/src/discovery.c	2023-03-29 10:41:17.779507861 -0600
++++ rp-pppoe-3.15/src/discovery.c	2023-03-29 10:41:46.855469657 -0600
+@@ -44,9 +44,9 @@
+ #include <signal.h>
+ 
+ #ifdef PLUGIN
+-#include "../../pppd/pppd/pppd.h"
+-#include "../../pppd/pppd/fsm.h"
+-#include "../../pppd/pppd/lcp.h"
++#include "pppd/pppd.h"
++#include "pppd/fsm.h"
++#include "pppd/lcp.h"
+ #else
+ int persist = 0;
+ #endif

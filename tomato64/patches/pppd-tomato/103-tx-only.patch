@@ -1,0 +1,50 @@
+diff --git pppd/pppd/auth.c pppd/pppd/auth.c
+index b1271c4..00246d0 100644
+--- pppd/pppd/auth.c
++++ pppd/pppd/auth.c
+@@ -1243,6 +1243,10 @@ check_idle(void *arg)
+     if (idle_time_hook != 0) {
+ 	tlim = idle_time_hook(&idle);
+     } else {
++	/* replace itime with idle.xmit_idle for only outgoing traffic is counted */
++	if (tx_only) 
++		itime = idle.xmit_idle;
++	else
+ 	itime = MIN(idle.xmit_idle, idle.recv_idle);
+ 	tlim = idle_time_limit - itime;
+     }
+diff --git pppd/pppd/options.c pppd/pppd/options.c
+index 048fc41..afc62b6 100644
+--- pppd/pppd/options.c
++++ pppd/pppd/options.c
+@@ -77,6 +77,7 @@
+ #if defined(ultrix) || defined(NeXT)
+ char *strdup(char *);
+ #endif
++bool tx_only;			/* idle time counting on tx traffic */
+ 
+ 
+ struct option_value {
+@@ -368,6 +369,10 @@ option_t general_options[] = {
+       "Check for traffic limit every N seconds", OPT_PRIO | OPT_LLIMIT | 1 },
+ #endif
+ 
++    /* add for tx_only option */
++    { "tx_only", o_bool, &tx_only,
++      "set idle time counting on tx_only or not", 1 },
++
+     { NULL }
+ };
+ 
+diff --git pppd/pppd/pppd.h pppd/pppd/pppd.h
+index 195a4a9..65b4e8b 100644
+--- pppd/pppd/pppd.h
++++ pppd/pppd/pppd.h
+@@ -215,6 +215,7 @@ struct notifier {
+  * Global variables.
+  */
+ 
++extern bool tx_only;			/* idle time counting on tx traffic */
+ extern int	got_sigterm;	/* SIGINT or SIGTERM was received */
+ extern int	hungup;		/* Physical layer has disconnected */
+ extern int	ifunit;		/* Interface unit number */

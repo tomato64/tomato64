@@ -1,0 +1,22 @@
+diff --git pppd/pppd/sys-linux.c pppd/pppd/sys-linux.c
+index 9e12800..bbbdc92 100644
+--- pppd/pppd/sys-linux.c
++++ pppd/pppd/sys-linux.c
+@@ -3018,7 +3018,7 @@ int sif6addr (int unit, eui64_t our_eui64, eui64_t his_eui64)
+ 	return 0;
+     }
+ 
+-    if (kernel_version >= KVERSION(2,1,16)) {
++    if (kernel_version >= KVERSION(2,6,38)) {
+         /* Set remote peer address (and route for it) */
+         IN6_LLADDR_FROM_EUI64(remote_addr, his_eui64);
+         if (!append_peer_ipv6_address(ifr.ifr_ifindex, &ifr6.ifr6_addr, &remote_addr)) {
+@@ -3027,7 +3027,7 @@ int sif6addr (int unit, eui64_t our_eui64, eui64_t his_eui64)
+         }
+     }
+ 
+-    if (kernel_version < KVERSION(2,1,16)) {
++    if (kernel_version < KVERSION(2,6,38)) {
+         /* Route to remote host */
+         memset(&rt6, 0, sizeof(rt6));
+         IN6_LLADDR_FROM_EUI64(rt6.rtmsg_dst, his_eui64);

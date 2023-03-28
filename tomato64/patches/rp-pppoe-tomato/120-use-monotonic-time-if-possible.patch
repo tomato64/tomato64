@@ -1,0 +1,118 @@
+--- rp-pppoe/src/common.c
++++ rp-pppoe/src/common.c
+@@ -36,6 +36,10 @@
+ #include <unistd.h>
+ #endif
+ 
++#ifdef HAVE_SYS_TIME_H
++#include <sys/time.h>
++#endif
++
+ #include <sys/types.h>
+ #include <pwd.h>
+ 
+@@ -658,3 +662,40 @@
+     return src - orig_src - 1;
+ }
+ #endif
++
++/********************************************************************
++ *
++ * get_time - Get current time, monotonic if possible.
++ */
++#ifdef HAVE_SYS_TIME_H
++int
++get_time(struct timeval *tv)
++{
++/* Old glibc (< 2.3.4) does define CLOCK_MONOTONIC, but kernel may have it.
++ * Runtime checking makes it safe. */
++#ifndef CLOCK_MONOTONIC
++#define CLOCK_MONOTONIC 1
++#endif
++    static int monotonic = -1;
++    struct timespec ts;
++    int ret;
++
++    if (monotonic) {
++	ret = clock_gettime(CLOCK_MONOTONIC, &ts);
++	if (ret == 0) {
++	    monotonic = 1;
++	    if (tv) {
++		tv->tv_sec = ts.tv_sec;
++		tv->tv_usec = ts.tv_nsec / 1000;
++	    }
++	    return ret;
++	} else if (monotonic > 0)
++	    return ret;
++
++	monotonic = 0;
++	syslog(LOG_ERR, "Couldn't use monotonic clock source: %m");
++    }
++
++    return gettimeofday(tv, NULL);
++}
++#endif
+--- rp-pppoe/src/discovery.c
++++ rp-pppoe/src/discovery.c
+@@ -63,9 +63,15 @@
+ {
+     struct timeval now;
+ 
++#ifdef HAVE_SYS_TIME_H
++    if (get_time(&now) < 0) {
++	fatalSys("get_time (time_left)");
++    }
++#else
+     if (gettimeofday(&now, NULL) < 0) {
+ 	fatalSys("gettimeofday (time_left)");
+     }
++#endif
+     tv->tv_sec = expire_at->tv_sec - now.tv_sec;
+     tv->tv_usec = expire_at->tv_usec - now.tv_usec;
+     if (tv->tv_usec < 0) {
+@@ -429,9 +435,15 @@
+     conn->seenMaxPayload = 0;
+ #endif
+ 
++#ifdef HAVE_SYS_TIME_H
++    if (get_time(&expire_at) < 0) {
++	fatalSys("get_time (waitForPADO)");
++    }
++#else
+     if (gettimeofday(&expire_at, NULL) < 0) {
+-	fatalSys("gettimeofday (waitForPADO)");
++	fatalSys("gettimeofday  (waitForPADO)");
+     }
++#endif
+     expire_at.tv_sec += timeout;
+ 
+     do {
+@@ -651,9 +663,15 @@
+     PPPoEPacket packet;
+     int len;
+ 
++#ifdef HAVE_SYS_TIME_H
++    if (get_time(&expire_at) < 0) {
++	fatalSys("get_time (waitForPADS)");
++    }
++#else
+     if (gettimeofday(&expire_at, NULL) < 0) {
+ 	fatalSys("gettimeofday (waitForPADS)");
+     }
++#endif
+     expire_at.tv_sec += timeout;
+ 
+     do {
+--- rp-pppoe/src/pppoe.h
++++ rp-pppoe/src/pppoe.h
+@@ -338,6 +338,10 @@
+ void discovery(PPPoEConnection *conn);
+ unsigned char *findTag(PPPoEPacket *packet, UINT16_t tagType,
+ 		       PPPoETag *tag);
++#ifdef HAVE_SYS_TIME_H
++struct timeval;
++int get_time(struct timeval *tv);
++#endif
+ 
+ #ifndef HAVE_STRLCPY
+ size_t strlcpy(char *dst, const char *src, size_t size);

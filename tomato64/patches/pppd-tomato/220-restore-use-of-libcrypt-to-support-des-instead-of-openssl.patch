@@ -1,0 +1,78 @@
+diff --git pppd/pppd/Makefile.linux pppd/pppd/Makefile.linux
+index 6d62dc4..1fb2c43 100644
+--- pppd/pppd/Makefile.linux
++++ pppd/pppd/Makefile.linux
+@@ -36,10 +36,10 @@ endif
+ 
+ LIBS = -lrt
+ 
+-# Uncomment the next line to include support for Microsoft's
++# Uncomment the next 2 lines to include support for Microsoft's
+ # MS-CHAP authentication protocol.  Also, edit plugins/radius/Makefile.linux.
+ CHAPMS=y
+-#USE_CRYPT=y
++USE_CRYPT=y
+ # Don't use MSLANMAN unless you really know what you're doing.
+ #MSLANMAN=y
+ # Uncomment the next line to include support for MPPE.  CHAPMS (above) must
+@@ -155,8 +155,7 @@ endif
+ 
+ ifdef NEEDDES
+ ifndef USE_CRYPT
+-CFLAGS   += -I$(shell $(CC) --print-sysroot)/usr/include/openssl
+-NEEDCRYPTOLIB = y
++LIBS     += -ldes $(LIBS)
+ else
+ CFLAGS   += -DUSE_CRYPT=1
+ endif
+diff --git pppd/pppd/pppcrypt.c pppd/pppd/pppcrypt.c
+index 193f8fd..3120528 100644
+--- pppd/pppd/pppcrypt.c
++++ pppd/pppd/pppcrypt.c
+@@ -62,7 +62,7 @@ MakeKey(u_char *key, u_char *des_key)
+ 	des_key[7] = Get7Bits(key, 49);
+ 
+ #ifndef USE_CRYPT
+-	DES_set_odd_parity((DES_cblock *)des_key);
++	des_set_odd_parity((des_cblock *)des_key);
+ #endif
+ }
+ 
+@@ -147,30 +147,30 @@ DesDecrypt(u_char *cipher, u_char *clear)
+ }
+ 
+ #else /* USE_CRYPT */
+-static DES_key_schedule	key_schedule;
++static des_key_schedule	key_schedule;
+ 
+ bool
+ DesSetkey(u_char *key)
+ {
+-	DES_cblock des_key;
++	des_cblock des_key;
+ 	MakeKey(key, des_key);
+-	DES_set_key(&des_key, &key_schedule);
++	des_set_key(&des_key, key_schedule);
+ 	return (1);
+ }
+ 
+ bool
+ DesEncrypt(u_char *clear, u_char *cipher)
+ {
+-	DES_ecb_encrypt((DES_cblock *)clear, (DES_cblock *)cipher,
+-	    &key_schedule, 1);
++	des_ecb_encrypt((des_cblock *)clear, (des_cblock *)cipher,
++	    key_schedule, 1);
+ 	return (1);
+ }
+ 
+ bool
+ DesDecrypt(u_char *cipher, u_char *clear)
+ {
+-	DES_ecb_encrypt((DES_cblock *)cipher, (DES_cblock *)clear,
+-	    &key_schedule, 0);
++	des_ecb_encrypt((des_cblock *)cipher, (des_cblock *)clear,
++	    key_schedule, 0);
+ 	return (1);
+ }
+ 
