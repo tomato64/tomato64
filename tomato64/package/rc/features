@@ -1,3 +1,6 @@
+# HAVE_TOMATO is used in some patches.
+export HAVE_TOMATO=y
+
 ifeq ($(BR2_PACKAGE_RC_BT),y)
 export TCONFIG_BT=y
 endif
