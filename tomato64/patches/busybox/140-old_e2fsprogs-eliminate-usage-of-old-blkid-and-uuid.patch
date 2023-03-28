@@ -1,0 +1,344 @@
+--- busybox/include/libbb.h
++++ busybox/include/libbb.h
+@@ -1108,6 +1108,10 @@
+ 
+ /* Generate a UUID */
+ void generate_uuid(uint8_t *buf) FAST_FUNC;
++/* expand UUID to human readable format */
++char *unparse_uuid(const uint8_t *uu, char *out) FAST_FUNC;
++/* parse UUID */
++int parse_uuid(const char *in, uint8_t *uuid) FAST_FUNC;
+ 
+ /* Last element is marked by mult == 0 */
+ struct suffix_mult {
+--- busybox/include/volume_id.h
++++ busybox/include/volume_id.h
+@@ -20,12 +20,14 @@
+ 
+ char *get_devname_from_label(const char *spec);
+ char *get_devname_from_uuid(const char *spec);
++char *get_devname_from_device(dev_t dev);
+ void display_uuid_cache(int scan_devices);
+ 
+ /* Returns:
+- * 0: no UUID= or LABEL= prefix found
+- * 1: UUID= or LABEL= prefix found. In this case,
+- *    *fsname is replaced if device with such UUID or LABEL is found
++ * 0 : no UUID= or LABEL= prefix found
++ * 1 : UUID= or LABEL= prefix found. In this case,
++ *     *fsname is replaced if device with such UUID or LABEL is found
++ * -2: UUID= or LABEL= prefixes cannot be resolved
+  */
+ int resolve_mount_spec(char **fsname);
+-int add_to_uuid_cache(const char *device);
++int add_to_uuid_cache(const char *device, dev_t devno);
+--- busybox/libbb/xfuncs.c
++++ busybox/libbb/xfuncs.c
+@@ -433,3 +433,49 @@
+ {
+ 	_exit(EXIT_SUCCESS);
+ }
++
++char * FAST_FUNC unparse_uuid(const uint8_t *uu, char *out)
++{
++	char uuid_string[32];
++
++	bin2hex(uuid_string, (char *)uu, 16);
++	/* f.e. UUID=dfd9c173-be52-4d27-99a5-c34c6c2ff55f */
++	sprintf(out, "%.8s-%.4s-%.4s-%.4s-%.12s",
++                uuid_string,
++                uuid_string+8,
++                uuid_string+8+4,
++                uuid_string+8+4+4,
++                uuid_string+8+4+4+4
++	);
++	return out;
++}
++
++static unsigned char fromhex(char c)
++{
++	if (isdigit(c))
++		return (c - '0');
++	return ((c|0x20) - 'a' + 10);
++}
++
++/* Parse & verify UUID string */
++int FAST_FUNC parse_uuid(const char *s, uint8_t *uuid)
++{
++	int i;
++
++	if (strlen(s) != 36 || s[8] != '-' || s[13] != '-'
++	 || s[18] != '-' || s[23] != '-'
++	) {
++		return -1;
++	}
++	for (i = 0; i < 16; i++) {
++		if (*s == '-')
++			s++;
++		if (!isxdigit(s[0]) || !isxdigit(s[1]))
++			return -2;
++		uuid[i] = ((fromhex(s[0]) << 4) | fromhex(s[1]));
++		s += 2;
++	}
++
++	return 0;
++}
++
+--- busybox/util-linux/mkswap.c
++++ busybox/util-linux/mkswap.c
+@@ -148,17 +148,9 @@
+ 	hdr->last_page = (uoff_t)len / pagesize;
+ 
+ 	if (ENABLE_FEATURE_MKSWAP_UUID) {
+-		char uuid_string[32];
++		char uuid_string[37];
+ 		generate_uuid((void*)hdr->sws_uuid);
+-		bin2hex(uuid_string, hdr->sws_uuid, 16);
+-		/* f.e. UUID=dfd9c173-be52-4d27-99a5-c34c6c2ff55f */
+-		printf("UUID=%.8s"  "-%.4s-%.4s-%.4s-%.12s\n",
+-			uuid_string,
+-			uuid_string+8,
+-			uuid_string+8+4,
+-			uuid_string+8+4+4,
+-			uuid_string+8+4+4+4
+-		);
++		printf("UUID=%s\n", unparse_uuid((uint8_t *)hdr->sws_uuid, uuid_string));
+ 	}
+ 	safe_strncpy(hdr->sws_volume, label, 16);
+ 
+--- busybox/util-linux/volume_id/get_devname.c
++++ busybox/util-linux/volume_id/get_devname.c
+@@ -21,7 +21,7 @@
+ 
+ static struct uuidCache_s {
+ 	struct uuidCache_s *next;
+-//	int major, minor;
++	dev_t devno;
+ 	char *device;
+ 	char *label;
+ 	char *uc_uuid; /* prefix makes it easier to grep for */
+@@ -31,8 +31,8 @@
+ #if !ENABLE_FEATURE_BLKID_TYPE
+ #define get_label_uuid(fd, label, uuid, type) \
+ 	get_label_uuid(fd, label, uuid)
+-#define uuidcache_addentry(device, label, uuid, type) \
+-	uuidcache_addentry(device, label, uuid)
++#define uuidcache_addentry(device, devno, label, uuid, type) \
++	uuidcache_addentry(device, devno, label, uuid)
+ #endif
+ 
+ /* Returns !0 on error.
+@@ -77,7 +77,7 @@
+ 
+ /* NB: we take ownership of (malloc'ed) label and uuid */
+ static void
+-uuidcache_addentry(char *device, /*int major, int minor,*/ char *label, char *uuid, const char *type)
++uuidcache_addentry(char *device, dev_t devno, char *label, char *uuid, const char *type)
+ {
+ 	struct uuidCache_s *last;
+ 
+@@ -90,8 +90,7 @@
+ 		last = last->next;
+ 	}
+ 	/*last->next = NULL; - xzalloc did it*/
+-//	last->major = major;
+-//	last->minor = minor;
++	last->devno = devno;
+ 	last->device = device;
+ 	last->label = label;
+ 	last->uc_uuid = uuid;
+@@ -122,7 +121,7 @@
+ 	if (major(statbuf->st_rdev) == 2)
+ 		return TRUE;
+ 
+-	add_to_uuid_cache(device);
++	add_to_uuid_cache(device, statbuf->st_rdev);
+ 
+ 	return TRUE;
+ }
+@@ -157,10 +156,10 @@
+ 
+ #define UUID   1
+ #define VOL    2
++#define DEVNO  3
+ 
+-#ifdef UNUSED
+ static char *
+-get_spec_by_x(int n, const char *t, int *majorPtr, int *minorPtr)
++get_spec_by_x(int n, const char *t, dev_t *devnoPtr)
+ {
+ 	struct uuidCache_s *uc;
+ 
+@@ -168,65 +167,28 @@
+ 	while (uc) {
+ 		switch (n) {
+ 		case UUID:
+-			if (strcmp(t, uc->uc_uuid) == 0) {
+-				*majorPtr = uc->major;
+-				*minorPtr = uc->minor;
+-				return uc->device;
+-			}
++			/* case of hex numbers doesn't matter */
++			if (strcasecmp(t, uc->uc_uuid) == 0)
++				goto found;
+ 			break;
+ 		case VOL:
+-			if (strcmp(t, uc->label) == 0) {
+-				*majorPtr = uc->major;
+-				*minorPtr = uc->minor;
+-				return uc->device;
+-			}
++			if (uc->label[0] && strcmp(t, uc->label) == 0)
++				goto found;
++			break;
++		case DEVNO:
++			if (uc->devno == (*devnoPtr))
++				goto found;
+ 			break;
+ 		}
+ 		uc = uc->next;
+ 	}
+ 	return NULL;
+-}
+-
+-static unsigned char
+-fromhex(char c)
+-{
+-	if (isdigit(c))
+-		return (c - '0');
+-	return ((c|0x20) - 'a' + 10);
+-}
+-
+-static char *
+-get_spec_by_uuid(const char *s, int *major, int *minor)
+-{
+-	unsigned char uuid[16];
+-	int i;
+-
+-	if (strlen(s) != 36 || s[8] != '-' || s[13] != '-'
+-	 || s[18] != '-' || s[23] != '-'
+-	) {
+-		goto bad_uuid;
+-	}
+-	for (i = 0; i < 16; i++) {
+-		if (*s == '-')
+-			s++;
+-		if (!isxdigit(s[0]) || !isxdigit(s[1]))
+-			goto bad_uuid;
+-		uuid[i] = ((fromhex(s[0]) << 4) | fromhex(s[1]));
+-		s += 2;
+-	}
+-	return get_spec_by_x(UUID, (char *)uuid, major, minor);
+-
+- bad_uuid:
+-	fprintf(stderr, _("mount: bad UUID"));
+-	return 0;
+-}
+ 
+-static char *
+-get_spec_by_volume_label(const char *s, int *major, int *minor)
+-{
+-	return get_spec_by_x(VOL, s, major, minor);
++found:
++	if (devnoPtr)
++		*devnoPtr = uc->devno;
++	return xstrdup(uc->device);
+ }
+-#endif // UNUSED
+ 
+ /* Used by blkid */
+ void display_uuid_cache(int scan_devices)
+@@ -249,7 +211,7 @@
+ 	}
+ }
+ 
+-int add_to_uuid_cache(const char *device)
++int add_to_uuid_cache(const char *device, dev_t devno)
+ {
+ 	char *uuid = uuid; /* for compiler */
+ 	char *label = label;
+@@ -265,57 +227,47 @@
+ 	/* get_label_uuid() closes fd in all cases (success & failure) */
+ 	if (get_label_uuid(fd, &label, &uuid, &type) == 0) {
+ 		/* uuidcache_addentry() takes ownership of all four params */
+-		uuidcache_addentry(xstrdup(device), /*ma, mi,*/ label, uuid, type);
++		uuidcache_addentry(xstrdup(device), devno, label, uuid, type);
+ 		return 1;
+ 	}
+ 	return 0;
+ }
+ 
+ 
+-/* Used by mount and findfs */
++/* Used by mount and findfs & old_e2fsprogs */
+ 
+ char *get_devname_from_label(const char *spec)
+ {
+-	struct uuidCache_s *uc;
+-
+-	uc = uuidcache_init(/*scan_devices:*/ 1);
+-	while (uc) {
+-		if (uc->label[0] && strcmp(spec, uc->label) == 0) {
+-			return xstrdup(uc->device);
+-		}
+-		uc = uc->next;
+-	}
+-	return NULL;
++	return get_spec_by_x(VOL, spec, NULL);
+ }
+ 
+ char *get_devname_from_uuid(const char *spec)
+ {
+-	struct uuidCache_s *uc;
++	return get_spec_by_x(UUID, spec, NULL);
++}
+ 
+-	uc = uuidcache_init(/*scan_devices:*/ 1);
+-	while (uc) {
+-		/* case of hex numbers doesn't matter */
+-		if (strcasecmp(spec, uc->uc_uuid) == 0) {
+-			return xstrdup(uc->device);
+-		}
+-		uc = uc->next;
+-	}
+-	return NULL;
++char *get_devname_from_device(dev_t dev)
++{
++	return get_spec_by_x(DEVNO, NULL, &dev);
+ }
+ 
+ int resolve_mount_spec(char **fsname)
+ {
+-	char *tmp = *fsname;
++	char *tmp = NULL;
+ 
+ 	if (is_prefixed_with(*fsname, "UUID="))
+ 		tmp = get_devname_from_uuid(*fsname + 5);
+ 	else if (is_prefixed_with(*fsname, "LABEL="))
+ 		tmp = get_devname_from_label(*fsname + 6);
+ 
+-	if (tmp == *fsname)
++	else {
++		*fsname = xstrdup(*fsname);
+ 		return 0; /* no UUID= or LABEL= prefix found */
++	}
+ 
+-	if (tmp)
+-		*fsname = tmp;
++	if (!tmp)
++		return -2;	/* device defined by UUID= or LABEL= wasn't found */
++
++	*fsname = tmp;
+ 	return 1;
+ }
+--- busybox/util-linux/blkid.c
++++ busybox/util-linux/blkid.c
+@@ -39,7 +39,7 @@
+ 
+ 	while (*++argv) {
+ 		/* Note: bogus device names don't cause any error messages */
+-		add_to_uuid_cache(*argv);
++		add_to_uuid_cache(*argv, 0);
+ 		scan_devices = 0;
+ 	}
+ 

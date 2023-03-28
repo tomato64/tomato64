@@ -1,0 +1,114 @@
+--- busybox/networking/udhcp/common.h
++++ busybox/networking/udhcp/common.h
+@@ -371,7 +371,7 @@
+ int udhcp_sp_read(void) FAST_FUNC;
+ 
+ int udhcp_read_interface(const char *interface,
+-		int *ifindex, uint32_t *nip, uint8_t *mac) FAST_FUNC;
++		int *ifindex, uint32_t *nip, uint8_t *mac, uint16_t *mtu) FAST_FUNC;
+ 
+ int udhcp_listen_socket(/*uint32_t ip,*/ int port, const char *inf) FAST_FUNC;
+ 
+--- busybox/networking/udhcp/dhcpc.c
++++ busybox/networking/udhcp/dhcpc.c
+@@ -620,7 +620,10 @@
+ {
+ 	int i, end, len;
+ 
+-	udhcp_add_simple_option(packet, DHCP_MAX_SIZE, htons(IP_UDP_DHCP_SIZE));
++	len = sizeof(struct ip_udp_dhcp_packet);
++	if (client_data.client_mtu == 0 ||
++	    client_data.client_mtu > len)
++		udhcp_add_simple_option(packet, DHCP_MAX_SIZE, htons(len));
+ 
+ 	/* Add a "param req" option with the list of options we'd like to have
+ 	 * from stubborn DHCP servers. Pull the data from the struct in common.c.
+@@ -1344,7 +1347,8 @@
+ 	if (udhcp_read_interface(client_data.interface,
+ 			&client_data.ifindex,
+ 			NULL,
+-			client_data.client_mac)
++			client_data.client_mac,
++			&client_data.client_mtu)
+ 	) {
+ 		return 1;
+ 	}
+@@ -1433,7 +1437,8 @@
+ 			if (udhcp_read_interface(client_data.interface,
+ 					&client_data.ifindex,
+ 					NULL,
+-					client_data.client_mac)
++					client_data.client_mac,
++					&client_data.client_mtu)
+ 			) {
+ 				goto ret0; /* iface is gone? */
+ 			}
+--- busybox/networking/udhcp/dhcpc.h
++++ busybox/networking/udhcp/dhcpc.h
+@@ -9,6 +9,7 @@
+ 
+ struct client_data_t {
+ 	uint8_t client_mac[6];          /* Our mac address */
++	uint16_t client_mtu;            /* Our mtu */
+ 	IF_FEATURE_UDHCP_PORT(uint16_t port;)
+ 	int ifindex;                    /* Index number of the interface to use */
+ 	uint32_t xid;
+--- busybox/networking/udhcp/dhcpd.c
++++ busybox/networking/udhcp/dhcpd.c
+@@ -958,7 +958,8 @@
+ 	if (udhcp_read_interface(server_data.interface,
+ 			&server_data.ifindex,
+ 			(server_data.server_nip == 0 ? &server_data.server_nip : NULL),
+-			server_data.server_mac)
++			server_data.server_mac,
++			NULL)
+ 	) {
+ 		retval = 1;
+ 		goto ret;
+--- busybox/networking/udhcp/dhcprelay.c
++++ busybox/networking/udhcp/dhcprelay.c
+@@ -294,7 +294,7 @@
+ 	max_socket = init_sockets(iface_list, num_sockets, fds);
+ 
+ 	/* Get our IP on server_iface */
+-	if (udhcp_read_interface(argv[2], NULL, &our_nip, NULL))
++	if (udhcp_read_interface(argv[2], NULL, &our_nip, NULL, NULL))
+ 		return 1;
+ 
+ 	/* Main loop */
+@@ -381,7 +381,7 @@
+ //   of the 'giaddr' field does not match one of the relay agent's
+ //   directly-connected logical interfaces, the BOOTREPLY message MUST be
+ //   silently discarded.
+-				if (udhcp_read_interface(iface_list[i], NULL, &dhcp_msg.gateway_nip, NULL)) {
++				if (udhcp_read_interface(iface_list[i], NULL, &dhcp_msg.gateway_nip, NULL, NULL)) {
+ 					/* Fall back to our IP on server iface */
+ // this makes more sense!
+ 					dhcp_msg.gateway_nip = our_nip;
+--- busybox/networking/udhcp/socket.c
++++ busybox/networking/udhcp/socket.c
+@@ -25,7 +25,7 @@
+ #include "common.h"
+ #include <net/if.h>
+ 
+-int FAST_FUNC udhcp_read_interface(const char *interface, int *ifindex, uint32_t *nip, uint8_t *mac)
++int FAST_FUNC udhcp_read_interface(const char *interface, int *ifindex, uint32_t *nip, uint8_t *mac, uint16_t *mtu)
+ {
+ 	/* char buffer instead of bona-fide struct avoids aliasing warning */
+ 	char ifr_buf[sizeof(struct ifreq)];
+@@ -70,6 +70,15 @@
+ 			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+ 	}
+ 
++	if (mtu) {
++		if (ioctl_or_warn(fd, SIOCGIFMTU, ifr) != 0) {
++			close(fd);
++			return -1;
++		}
++		log1("Adapter mtu %d", ifr->ifr_mtu);
++		*mtu = ifr->ifr_mtu;
++	}
++
+ 	close(fd);
+ 	return 0;
+ }

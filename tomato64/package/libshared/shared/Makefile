@@ -16,7 +16,7 @@ OBJS = shutils.o wl.o wl_linux.o linux_timer.o defaults.o id.o misc.o \
 
 OBJS += \
 $(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/ext.o \
-$(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/util.o \
+$(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/util2.o \
 $(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/fat.o \
 $(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/ntfs.o \
 $(BASE_DIR)/build/busybox-1.36.0/util-linux/volume_id/exfat.o \

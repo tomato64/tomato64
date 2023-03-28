@@ -1,0 +1,83 @@
+--- busybox/modutils/modprobe.c
++++ busybox/modutils/modprobe.c
+@@ -449,7 +449,7 @@
+ 		if (option_mask32 & OPT_REMOVE) {
+ 			/* modprobe -r */
+ 			if (m2->flags & MODULE_FLAG_LOADED) {
+-				rc = bb_delete_module(m2->modname, O_EXCL);
++				rc = bb_delete_module(m2->modname, O_NONBLOCK | O_EXCL);
+ 				if (rc) {
+ 					if (first) {
+ 						bb_perror_msg("can't unload module '%s'",
+--- busybox/networking/udhcp/dhcpc.c
++++ busybox/networking/udhcp/dhcpc.c
+@@ -125,7 +126,7 @@
+ 	[OPTION_IP              ] = sizeof("255.255.255.255 "),
+ 	[OPTION_IP_PAIR         ] = sizeof("255.255.255.255 ") * 2,
+ 	[OPTION_STATIC_ROUTES   ] = sizeof("255.255.255.255/32 255.255.255.255 "),
+-	[OPTION_6RD             ] = sizeof("132 128 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff 255.255.255.255 "),
++	[OPTION_6RD             ] = sizeof("132 128 FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF 255.255.255.255 "),
+ 	[OPTION_STRING          ] = 1,
+ 	[OPTION_STRING_HOST     ] = 1,
+ #if ENABLE_FEATURE_UDHCP_RFC3397
+--- busybox/libbb/bb_strtonum.c
++++ busybox/libbb/bb_strtonum.c
+@@ -61,7 +61,8 @@
+ 
+ 	/* strtoul("  -4200000000") returns 94967296, errno 0 (!) */
+ 	/* I don't think that this is right. Preventing this... */
+-	if (!isalnum(arg[0])) return ret_ERANGE();
++	char first = (arg[0] != '-' ? arg[0] : arg[1]);
++	if (!isalnum(first)) return ret_ERANGE();
+ 
+ 	/* not 100% correct for lib func, but convenient for the caller */
+ 	errno = 0;
+--- busybox/util-linux/volume_id/util2.c
++++ busybox/util-linux/volume_id/util2.c
+@@ -0,0 +1,11 @@
++/* util.c is now split apart, for the benefit of Tomato.  So it can
++ * pull in just enough busybox code to read disc labels, without
++ * dragging in other un-needed stuff.
++ * It would be better if Tomato could use "busybox.so", but busybox
++ * can't currently build a shared .so configuration.
++ */
++
++//kbuild:lib-$(CONFIG_VOLUMEID) += util2.o
++
++#define UTIL2
++#include "util.c"
+--- busybox/util-linux/volume_id/util.c
++++ busybox/util-linux/volume_id/util.c
+@@ -20,6 +20,7 @@
+ 
+ #include "volume_id_internal.h"
+ 
++#ifdef UTIL2
+ void volume_id_set_unicode16(char *str, size_t len, const uint8_t *buf, enum endian endianess, size_t count)
+ {
+ 	unsigned i, j;
+@@ -57,7 +58,9 @@
+ 	}
+ 	str[j] = '\0';
+ }
++#endif
+ 
++#ifndef UTIL2
+ #ifdef UNUSED
+ static const char *usage_to_string(enum volume_id_usage usage_id)
+ {
+@@ -112,6 +115,9 @@
+ }
+ #endif
+ 
++#endif
++#ifdef UTIL2
++
+ void volume_id_set_label_string(struct volume_id *id, const uint8_t *buf, size_t count)
+ {
+ 	unsigned i;
+@@ -263,3 +269,4 @@
+ 	id->seekbuf_len = 0;
+ 	id->seekbuf_off = 0; /* paranoia */
+ }
++#endif

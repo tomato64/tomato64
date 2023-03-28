@@ -1,0 +1,55 @@
+--- busybox/sysklogd/klogd.c
++++ busybox/sysklogd/klogd.c
+@@ -146,7 +146,7 @@
+ 
+ #endif
+ 
+-#define log_buffer bb_common_bufsiz1
++char log_buffer[7 * 1024 + 1];	/* big enough not to lose msgs at bootup */
+ enum {
+ 	KLOGD_LOGBUF_SIZE = COMMON_BUFSIZE,
+ 	OPT_LEVEL      = (1 << 0),
+@@ -173,6 +173,7 @@
+ 	char *opt_c;
+ 	int opt;
+ 	int used;
++	unsigned int cnt;
+ 
+ 	setup_common_bufsiz();
+ 
+@@ -233,10 +234,12 @@
+ 	write_pidfile_std_path_and_ext("klogd");
+ 
+ 	used = 0;
++	cnt = 0;
+ 	while (!bb_got_signal) {
+ 		int n;
+ 		int priority;
+ 		char *start;
++		char *eor;
+ 
+ 		start = log_buffer + used;
+ 		n = klogd_read(start, KLOGD_LOGBUF_SIZE-1 - used);
+@@ -247,6 +250,7 @@
+ 			break;
+ 		}
+ 		start[n] = '\0';
++		eor = &start[n];
+ 
+ 		/* Process each newline-terminated line in the buffer */
+ 		start = log_buffer;
+@@ -283,8 +287,13 @@
+ 				}
+ 			}
+ 			/* Log (only non-empty lines) */
+-			if (*start)
++			if (*start) {
+ 				syslog(priority, "%s", start);
++				/* give syslog time to catch up */
++				++cnt;
++				if ((cnt & 0x07) == 0 && (cnt < 300 || (eor - start) > 200))
++					usleep(50 * 1000);
++			}
+ 
+ 			if (!newline)
+ 				break;

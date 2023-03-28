@@ -1,6 +1,6 @@
 --- busybox/networking/udhcp/common.h
 +++ busybox/networking/udhcp/common.h
-@@ -74,6 +74,8 @@
+@@ -88,6 +88,8 @@
  	char c[IP_UDP_DHCP_SIZE == 576 ? 1 : -1];
  };
  
@@ -51,7 +51,7 @@
  #if ENABLE_UDHCPC || ENABLE_UDHCPD
  void FAST_FUNC udhcp_init_header(struct dhcp_packet *packet, char type)
  {
-@@ -152,7 +154,9 @@
+@@ -153,7 +155,9 @@
  	 * Thus, we retain enough padding to not go below 300 BOOTP bytes.
  	 * Some devices have filters which drop DHCP packets shorter than that.
  	 */
@@ -62,7 +62,7 @@
  	if (padding > DHCP_SIZE - 300)
  		padding = DHCP_SIZE - 300;
  
-@@ -240,7 +244,7 @@
+@@ -241,7 +245,7 @@
  	}
  
  	udhcp_dump_packet(dhcp_pkt);

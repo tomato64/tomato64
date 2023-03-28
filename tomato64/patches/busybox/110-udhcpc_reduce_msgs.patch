@@ -1,0 +1,19 @@
+--- busybox/networking/udhcp/dhcpc.c
++++ busybox/networking/udhcp/dhcpc.c
+@@ -725,6 +725,7 @@
+ static NOINLINE int send_discover(uint32_t requested)
+ {
+ 	struct dhcp_packet packet;
++	static int msgs = 0;
+ 
+ 	/* Fill in: op, htype, hlen, cookie, chaddr fields,
+ 	 * xid field, message type option:
+@@ -739,7 +740,8 @@
+ 	 */
+ 	add_client_options(&packet);
+ 
++	if (msgs++ < 3)
+ 	bb_simple_info_msg("broadcasting discover");
+ 	return raw_bcast_from_client_data_ifindex(&packet, INADDR_ANY);
+ }
+ 
