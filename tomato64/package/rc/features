@@ -41,6 +41,10 @@ ifeq ($(BR2_PACKAGE_RC_IRQBALANCE),y)
 export TCONFIG_IRQBALANCE=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_L2TP),y)
+export TCONFIG_L2TP=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_MDNS),y)
 export TCONFIG_MDNS=y
 endif
@@ -115,7 +119,6 @@ endif
 
 export TCONFIG_ROAM=y
 export TCONFIG_OPTIMIZE_SHARED_LIBS=y
-export TCONFIG_L2TP=y
 export TCONFIG_PPTP=y
 export TCONFIG_JFFS2=y
 export TCONFIG_L7=y

@@ -86,6 +86,11 @@ config BR2_PACKAGE_RC_IRQBALANCE
 	default y
 	select BR2_PACKAGE_IRQBALANCE
 
+config BR2_PACKAGE_RC_L2TP
+	bool "Enable L2TP"
+	default y
+	select BR2_PACKAGE_XL2TP
+
 config BR2_PACKAGE_RC_MDNS
 	bool "Enable MDNS"
 	default y
