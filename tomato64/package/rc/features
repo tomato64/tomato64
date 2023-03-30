@@ -73,6 +73,10 @@ ifeq ($(BR2_PACKAGE_RC_OPENVPN),y)
 export TCONFIG_OPENVPN=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_PPTP),y)
+export TCONFIG_PPTP=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_PPTPD),y)
 export TCONFIG_PPTPD=y
 endif
@@ -119,7 +123,6 @@ endif
 
 export TCONFIG_ROAM=y
 export TCONFIG_OPTIMIZE_SHARED_LIBS=y
-export TCONFIG_PPTP=y
 export TCONFIG_JFFS2=y
 export TCONFIG_L7=y
 export TCONFIG_L7PAT=y

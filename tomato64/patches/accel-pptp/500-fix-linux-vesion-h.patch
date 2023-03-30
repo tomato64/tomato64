@@ -1,0 +1,12 @@
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/configure accel-pptp-0.8.5/pppd_plugin/configure
+--- accel-pptp-0.8.5.orig/pppd_plugin/configure	2023-03-30 12:35:49.716292795 -0600
++++ accel-pptp-0.8.5/pppd_plugin/configure	2023-03-30 12:36:25.532264485 -0600
+@@ -19424,7 +19424,7 @@
+ { echo "$as_me:$LINENO: checking for linux kernel herders" >&5
+ echo $ECHO_N "checking for linux kernel herders... $ECHO_C" >&6; }
+ if test -n "${KDIR}"; then
+-    if test -f ${KDIR}/include/linux/version.h; then
++    if test -f ${KDIR}/include/generated/uapi/linux/version.h; then
+ 	header=${KDIR}/include
+     else
+ 	{ echo "$as_me:$LINENO: result: not found" >&5

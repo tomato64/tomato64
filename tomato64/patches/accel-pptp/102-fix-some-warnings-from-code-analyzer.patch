@@ -1,0 +1,45 @@
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/dirutil.c accel-pptp-0.8.5/pppd_plugin/src/dirutil.c
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/dirutil.c	2023-03-30 11:04:24.032171932 -0600
++++ accel-pptp-0.8.5/pppd_plugin/src/dirutil.c	2023-03-30 11:05:55.956296702 -0600
+@@ -37,7 +37,7 @@
+  * stripslash("/") returns "/";
+  */
+ char *stripslash(char *pathname) {
+-    int len = strlen(pathname);
++    size_t len = strlen(pathname);
+     while (len > 1 && pathname[len - 1] == '/')
+         pathname[--len] = '\0';
+     return pathname;
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/pptp.c accel-pptp-0.8.5/pppd_plugin/src/pptp.c
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/pptp.c	2023-03-30 11:05:23.364255480 -0600
++++ accel-pptp-0.8.5/pppd_plugin/src/pptp.c	2023-03-30 11:06:09.328312717 -0600
+@@ -81,7 +81,7 @@
+ 
+ //static struct in_addr get_ip_address(char *name);
+ static int open_callmgr(int call_id,struct in_addr inetaddr, char *phonenr,int window);
+-static void launch_callmgr(int call_is,struct in_addr inetaddr, char *phonenr,int window);
++static void launch_callmgr(int call_id, struct in_addr inetaddr, char *phonenr, int window);
+ static int get_call_id(int sock, pid_t gre, pid_t pppd, u_int16_t *peer_call_id);
+ 
+ static int route_add(const struct in_addr inetaddr, struct rtentry *rt);
+@@ -341,7 +341,7 @@
+     /* don't bother with network byte order, because pid's are meaningless
+      * outside the local host.
+      */
+-    int rc;
++    ssize_t rc;
+     rc = write(sock, &gre, sizeof(gre));
+     if (rc != sizeof(gre))
+         return -1;
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/vector.c accel-pptp-0.8.5/pppd_plugin/src/vector.c
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/vector.c	2023-03-30 11:04:24.032171932 -0600
++++ accel-pptp-0.8.5/pppd_plugin/src/vector.c	2023-03-30 11:06:16.288320855 -0600
+@@ -81,7 +81,7 @@
+ #ifdef VECTOR_DEBUG
+     assert(v->key_max < key);
+ #endif
+-    if (!(v->size < v->alloc)) {
++    if (v->size >= v->alloc) {
+         void *tmp = realloc(v->item, sizeof(*(v->item)) * 2 * v->alloc);
+         if (tmp != NULL) {
+             v->alloc *= 2;

@@ -123,8 +123,13 @@ config BR2_PACKAGE_RC_OPENVPN
 	select BR2_PACKAGE_OPENVPN_LZO
 	select BR2_PACKAGE_OPENVPN_LZ4
 
-config BR2_PACKAGE_RC_PPTPD
+config BR2_PACKAGE_RC_PPTP
 	bool "Enable PPTP"
+	default y
+	select BR2_PACKAGE_ACCEL_PPTP
+
+config BR2_PACKAGE_RC_PPTPD
+	bool "Enable PPTPD"
 	default y
 
 config BR2_PACKAGE_RC_PROXY

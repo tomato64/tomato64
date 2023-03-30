@@ -1,0 +1,750 @@
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/config.h.in accel-pptp-0.8.5/pppd_plugin/config.h.in
+--- accel-pptp-0.8.5.orig/pppd_plugin/config.h.in	2023-03-30 13:25:35.694954660 -0600
++++ accel-pptp-0.8.5/pppd_plugin/config.h.in	2023-03-30 13:26:11.670941017 -0600
+@@ -58,4 +58,4 @@
+ #undef STDC_HEADERS
+ 
+ /* Version number of package */
+-#undef VERSION
++#undef PLUGINVERSION
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/configure accel-pptp-0.8.5/pppd_plugin/configure
+--- accel-pptp-0.8.5.orig/pppd_plugin/configure	2023-03-30 13:25:35.694954660 -0600
++++ accel-pptp-0.8.5/pppd_plugin/configure	2023-03-30 13:26:11.674941016 -0600
+@@ -2245,7 +2245,7 @@
+ 
+ 
+ cat >>confdefs.h <<_ACEOF
+-#define VERSION "$VERSION"
++#define PLUGINVERSION "$VERSION"
+ _ACEOF
+ 
+ # Some tools Automake needs.
+@@ -19460,29 +19460,42 @@
+ 
+ 
+ 
+-CFLAGS="${CFLAGS} -I. -I${header}"
++CFLAGS="${CFLAGS} -I."
+ 
+ { echo "$as_me:$LINENO: checking for pppd" >&5
+ echo $ECHO_N "checking for pppd... $ECHO_C" >&6; }
+-pppd=`which pppd 2>&1`
+-if test $? -eq 1; then
+-    pppd=""
+-    for path in /usr/sbin /usr/local/sbin /usr/bin /usr/local/bin /sbin; do
+-	if test -x ${path}/pppd; then
+-	    pppd=${path}/pppd
+-	    break;
+-        fi
+-    done
+-fi
++if test -n "${PPPDIR}"; then
++    if test -f ${PPPDIR}/pppd/patchlevel.h; then
++	pppd=${PPPDIR}/pppd
++    else
++	{ echo "$as_me:$LINENO: result: not found" >&5
++echo "${ECHO_T}not found" >&6; }
++        { { echo "$as_me:$LINENO: error: Could not find pppd" >&5
++echo "$as_me: error: Could not find pppd" >&2;}
++   { (exit 1); exit 1; }; }
++    fi
++    pppd_ver=`cat ${pppd}/patchlevel.h | awk '/VERSION/ {gsub(/"/,"",$3);print $3}'`
++else
++    pppd=`which pppd 2>&1`
++    if test $? -eq 1; then
++	pppd=""
++	for path in /usr/sbin /usr/local/sbin /usr/bin /usr/local/bin /sbin; do
++	    if test -x ${path}/pppd; then
++		pppd=${path}/pppd
++		break;
++	    fi
++	done
++    fi
+ 
+-if test -z "${pppd}"; then
+-    { echo "$as_me:$LINENO: result: not found" >&5
++    if test -z "${pppd}"; then
++	{ echo "$as_me:$LINENO: result: not found" >&5
+ echo "${ECHO_T}not found" >&6; }
+-    { { echo "$as_me:$LINENO: error: Could not find pppd" >&5
++	{ { echo "$as_me:$LINENO: error: Could not find pppd" >&5
+ echo "$as_me: error: Could not find pppd" >&2;}
+    { (exit 1); exit 1; }; }
++    fi
++    pppd_ver=`${pppd} --version 2>&1 | grep version | sed 's/pppd version //'`
+ fi
+-pppd_ver=`${pppd} --version 2>&1 | grep version | sed 's/pppd version //'`
+ { echo "$as_me:$LINENO: result: $pppd ($pppd_ver)" >&5
+ echo "${ECHO_T}$pppd ($pppd_ver)" >&6; }
+ cat >>confdefs.h <<_ACEOF
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/inststr.c accel-pptp-0.8.5/pppd_plugin/src/inststr.c
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/inststr.c	1969-12-31 17:00:00.000000000 -0700
++++ accel-pptp-0.8.5/pppd_plugin/src/inststr.c	2023-03-30 13:26:11.674941016 -0600
+@@ -0,0 +1,73 @@
++/* inststr.c ... stolen from bdupdate.c, which stole it from perl 4.
++ *               Theft by C. Scott Ananian <cananian@alumni.princeton.edu>
++ *               Modified similarly to perl 5.8.3's alignment-checking code
++8                by Paul Howarth <paul@city-fan.org>
++ *
++ * $Id: inststr.c,v 1.3 2004/06/08 23:40:14 quozl Exp $
++ */
++
++#include <string.h>
++
++#define PTRSIZE sizeof(void *)
++typedef unsigned long UL;
++
++void
++inststr(int argc, char **argv, char **environ, char *src)
++{
++    if (strlen(src) <= strlen(argv[0])) {
++        char *ptr;
++
++        for (ptr = argv[0]; *ptr; *(ptr++) = '\0');
++
++        strcpy(argv[0], src);
++    }
++    else {
++        /* Stolen from the source to perl 4.036 (assigning to $0) */
++        /* Modified to allow for aligned array members, assuming  */
++        /* no system has something bizarre like the argv[]        */
++        /* interleaved with some other data. Also allow for argv  */
++        /* array having higher numbered elements lower in memory  */
++        /* than lower numbered elements.                          */
++        char *ptr, *ptr2;
++        int count;
++        UL mask = ~(UL)(PTRSIZE == 4 ? 3 : PTRSIZE == 8 ? 7 : PTRSIZE == 16 ? 15 : 0);
++        int aligned = (mask < ~(UL)0) && (((UL)(argv[0]) & mask) == (UL)(argv[0]));
++        ptr = argv[0] + strlen(argv[0]);
++        if (argv[argc - 1] >= argv[1]) {
++            /* argv pointers in ascending memory order */
++            for (count = 1; count < argc; count++) {
++                if (argv[count] == ptr + 1
++                    ||
++                    (aligned && argv[count] > ptr && argv[count] <= (char *)((UL)(ptr + PTRSIZE) & mask))
++                   ) {
++                    ptr = argv[count] + strlen(argv[count]);
++                }
++            }
++        }
++        else {
++            /* sometimes the argv pointers go down in memory rather than up */
++            for (count = argc - 1; count > 0; count--) {
++                if (argv[count] == ptr + 1
++                    ||
++                    (aligned && argv[count] > ptr && argv[count] <= (char *)((UL)(ptr + PTRSIZE) & mask))
++                   ) {
++                    ptr = argv[count] + strlen(argv[count]);
++                }
++            }
++        }
++        for (count = 0; environ[count]; count++) {
++            if (environ[count] == ptr + 1
++                ||
++                (aligned && environ[count] > ptr && environ[count] <= (char *)((UL)(ptr + PTRSIZE) & mask))
++               ) {
++                   ptr = environ[count] + strlen(environ[count]);
++            }
++        }
++        count = 0;
++        for (ptr2 = argv[0]; ptr2 <= ptr; ptr2++) {
++            *ptr2 = '\0';
++            count++;
++        }
++        strncpy(argv[0], src, count);
++    }
++}
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/inststr.h accel-pptp-0.8.5/pppd_plugin/src/inststr.h
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/inststr.h	1969-12-31 17:00:00.000000000 -0700
++++ accel-pptp-0.8.5/pppd_plugin/src/inststr.h	2023-03-30 13:26:11.678941014 -0600
+@@ -0,0 +1,6 @@
++/* inststr.h ..... change argv[0].
++ *
++ * $Id: inststr.h,v 1.1.1.1 2000/12/23 08:19:51 scott Exp $
++ */
++
++void inststr(int argc, char **argv, char **envp, char *src);
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/Makefile.am accel-pptp-0.8.5/pppd_plugin/src/Makefile.am
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/Makefile.am	2023-03-30 13:25:35.694954660 -0600
++++ accel-pptp-0.8.5/pppd_plugin/src/Makefile.am	2023-03-30 13:26:11.674941016 -0600
+@@ -4,10 +4,10 @@
+ 
+ # the library search path.
+ lib_LTLIBRARIES = pptp.la
+-pptp_la_LDFLAGS = -module
++pptp_la_LDFLAGS = -module -avoid-version
+ pptp_la_SOURCES = pptp.c pptp_callmgr.c pptp_ctrl.c util.c vector.c \
+-	dirutil.c pptp_quirks.c orckit_quirks.c
++	dirutil.c pptp_quirks.c orckit_quirks.c inststr.c
+ noinst_HEADERS = pptp_callmgr.h pptp_ctrl.h util.h vector.h pptp_options.h \
+-		dirutil.h pptp_quirks.h orckit_quirks.h if_pppox.h
++		dirutil.h pptp_quirks.h orckit_quirks.h inststr.h
+ AM_CFLAGS = -Wall
+ man_MANS = pppd-pptp.8
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/Makefile.in accel-pptp-0.8.5/pppd_plugin/src/Makefile.in
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/Makefile.in	2023-03-30 13:25:35.694954660 -0600
++++ accel-pptp-0.8.5/pppd_plugin/src/Makefile.in	2023-03-30 13:26:11.674941016 -0600
+@@ -58,7 +58,7 @@
+ LTLIBRARIES = $(lib_LTLIBRARIES)
+ pptp_la_LIBADD =
+ am_pptp_la_OBJECTS = pptp.lo pptp_callmgr.lo pptp_ctrl.lo util.lo \
+-	vector.lo dirutil.lo pptp_quirks.lo orckit_quirks.lo
++	vector.lo dirutil.lo pptp_quirks.lo orckit_quirks.lo inststr.lo
+ pptp_la_OBJECTS = $(am_pptp_la_OBJECTS)
+ DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+@@ -188,12 +188,12 @@
+ 
+ # the library search path.
+ lib_LTLIBRARIES = pptp.la
+-pptp_la_LDFLAGS = -module
++pptp_la_LDFLAGS = -module -avoid-version
+ pptp_la_SOURCES = pptp.c pptp_callmgr.c pptp_ctrl.c util.c vector.c \
+-	dirutil.c pptp_quirks.c orckit_quirks.c
++	dirutil.c pptp_quirks.c orckit_quirks.c inststr.c
+ 
+ noinst_HEADERS = pptp_callmgr.h pptp_ctrl.h util.h vector.h pptp_options.h \
+-		dirutil.h pptp_quirks.h orckit_quirks.h if_pppox.h
++		dirutil.h pptp_quirks.h orckit_quirks.h inststr.h
+ 
+ AM_CFLAGS = -Wall
+ man_MANS = pppd-pptp.8
+@@ -267,6 +267,7 @@
+ 	-rm -f *.tab.c
+ 
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dirutil.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/inststr.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orckit_quirks.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pptp.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pptp_callmgr.Plo@am__quote@
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/pptp.c accel-pptp-0.8.5/pppd_plugin/src/pptp.c
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/pptp.c	2023-03-30 13:25:35.694954660 -0600
++++ accel-pptp-0.8.5/pppd_plugin/src/pptp.c	2023-03-30 13:26:11.674941016 -0600
+@@ -48,12 +48,17 @@
+ #include "pptp_callmgr.h"
+ #include <net/if.h>
+ #include <net/ethernet.h>
+-#include "if_pppox.h"
++#include <linux/if_pppox.h>
++#include "inststr.h"
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
++#include <net/route.h>
++#include <features.h>
++#include <resolv.h>
+ 
++#define sin_addr(s) (((struct sockaddr_in *)(s))->sin_addr)
+ 
+ extern char** environ;
+ 
+@@ -66,7 +71,9 @@
+ char *pptp_phone = NULL;
+ int pptp_sock=-1;
+ int pptp_timeout=100000;
++int log_level = 0;
+ struct in_addr localbind = { INADDR_NONE };
++struct rtentry rt;
+ 
+ static int callmgr_sock;
+ static int pptp_fd;
+@@ -77,6 +84,9 @@
+ static void launch_callmgr(int call_is,struct in_addr inetaddr, char *phonenr,int window);
+ static int get_call_id(int sock, pid_t gre, pid_t pppd, u_int16_t *peer_call_id);
+ 
++static int route_add(const struct in_addr inetaddr, struct rtentry *rt);
++//static int route_del(struct rtentry *rt);
++
+ //static int pptp_devname_hook(char *cmd, char **argv, int doit);
+ static option_t Options[] =
+ {
+@@ -88,6 +98,8 @@
+       "PPTP socket" },
+     { "pptp_phone", o_string, &pptp_phone,
+       "PPTP Phone number" },
++    { "loglevel", o_int, &log_level,
++      "debugging level (0=low, 1=default, 2=high)"},
+     { NULL }
+ };
+ 
+@@ -123,6 +135,12 @@
+ 	struct sockaddr_pppox src_addr,dst_addr;
+ 	struct hostent *hostinfo;
+ 
++#if !defined(__UCLIBC__) \
++ || (__UCLIBC_MAJOR__ == 0 \
++ && (__UCLIBC_MINOR__ < 9 || (__UCLIBC_MINOR__ == 9 && __UCLIBC_SUBLEVEL__ < 31)))
++	/* force ns refresh from resolv.conf with uClibc pre-0.9.31 */
++	res_init();
++#endif
+ 	hostinfo=gethostbyname(pptp_server);
+   if (!hostinfo)
+ 	{
+@@ -130,6 +148,10 @@
+ 		return -1;
+ 	}
+ 	dst_addr.sa_addr.pptp.sin_addr=*(struct in_addr*)hostinfo->h_addr;
++
++ 	memset(&rt, 0, sizeof(rt));
++ 	route_add(dst_addr.sa_addr.pptp.sin_addr, &rt);
++
+ 	{
+ 		int sock;
+ 		struct sockaddr_in addr;
+@@ -177,18 +199,21 @@
+ 	getsockname(pptp_fd,(struct sockaddr*)&src_addr,&len);
+ 	call_ID=src_addr.sa_addr.pptp.call_id;
+ 
+-  do {
+         /*
+          * Open connection to call manager (Launch call manager if necessary.)
+          */
+-        callmgr_sock = open_callmgr(src_addr.sa_addr.pptp.call_id,dst_addr.sa_addr.pptp.sin_addr, pptp_phone,50);
+-	if (callmgr_sock<0)
+-	{
+-		close(pptp_fd);
+-		return -1;
+-        }
+-        /* Exchange PIDs, get call ID */
+-    } while (get_call_id(callmgr_sock, getpid(), getpid(), &dst_addr.sa_addr.pptp.call_id) < 0);
++	callmgr_sock = -1;
++	do {
++		if (callmgr_sock >= 0)
++    			close(callmgr_sock);
++		callmgr_sock = open_callmgr(src_addr.sa_addr.pptp.call_id, dst_addr.sa_addr.pptp.sin_addr, pptp_phone, 50);
++		if (callmgr_sock < 0)
++		{
++			close(pptp_fd);
++			return -1;
++		}
++	/* Exchange PIDs, get call ID */
++	} while (get_call_id(callmgr_sock, getpid(), getpid(), &dst_addr.sa_addr.pptp.call_id) < 0);
+ 
+ 	if (connect(pptp_fd,(struct sockaddr*)&dst_addr,sizeof(dst_addr)))
+ 	{
+@@ -218,6 +243,7 @@
+ {
+ 	if (pptp_server) close(callmgr_sock);
+ 	close(pptp_fd);
++	//route_del(&rt); // don't delete, as otherwise it would try to use pppX in demand mode
+ }
+ 
+ static int open_callmgr(int call_id,struct in_addr inetaddr, char *phonenr,int window)
+@@ -259,6 +285,8 @@
+                 }
+                 default: /* parent */
+                     waitpid(pid, &status, 0);
++                    if (WIFEXITED(status))
++                        status = WEXITSTATUS(status);
+                     if (status!= 0)
+ 		    {
+ 			close(fd);
+@@ -277,17 +305,30 @@
+ }
+ 
+ /*** call the call manager main ***********************************************/
+-static void launch_callmgr(int call_id,struct in_addr inetaddr, char *phonenr,int window)
++static void launch_callmgr(int call_id, struct in_addr inetaddr, char *phonenr, int window)
+ {
+-			char win[10];
+-			char call[10];
+-      char *my_argv[9] = { "pptp", inet_ntoa(inetaddr), "--call_id",call,"--phone",phonenr,"--window",win,NULL };
+-      char buf[128];
+-      sprintf(win,"%u",window);
+-      sprintf(call,"%u",call_id);
+-      snprintf(buf, sizeof(buf), "pptp: call manager for %s", my_argv[1]);
+-      //inststr(argc, argv, envp, buf);
+-      exit(callmgr_main(8, my_argv, environ));
++	char win[10];
++	char call[10];
++	char *my_argv[9] = { "pptp", inet_ntoa(inetaddr), "--call_id", call, "--phone", phonenr, "--window", win, NULL };
++	char buf[128];
++	int argc = 0;
++	char **argv = environ;
++
++	sprintf(win, "%u", window);
++	sprintf(call, "%u", call_id);
++	snprintf(buf, sizeof(buf), "pptp: call manager for %s", my_argv[1]);
++
++	if (argv && *argv)
++		argv--;
++	if (argv && *argv == NULL && progname)
++	do {
++		argv--;
++		argc++;
++	} while (argv && *argv && *argv > progname);
++	if (argv && *argv == progname)
++		inststr(argc, argv, environ, buf);
++
++	exit(callmgr_main(8, my_argv, environ));
+ }
+ 
+ /*** exchange data with the call manager  *************************************/
+@@ -328,17 +369,108 @@
+ 
+ void plugin_init(void)
+ {
+-    /*if (!ppp_available() && !new_style_driver)
+-    {
+-				fatal("Linux kernel does not support PPP -- are you running 2.4.x?");
+-    }*/
++#if 0
++    if (!ppp_available() && !new_style_driver)
++	fatal("Kernel doesn't support ppp_generic - needed for PPTP");
++#endif
+ 
+     add_options(Options);
+ 
+     info("PPTP plugin version %s compiled for pppd-%s, linux-%s",
+-	 VERSION, PPPD_VERSION,KERNELVERSION);
++	 PLUGINVERSION, PPPD_VERSION, KERNELVERSION);
+ 
+     the_channel = &pptp_channel;
+     modem = 0;
+ }
+ 
++static int
++route_ctrl(int ctrl, struct rtentry *rt)
++{
++	int s;
++
++	/* Open a raw socket to the kernel */
++	if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ||	ioctl(s, ctrl, rt) < 0)
++		warn("route_ctrl: %s", strerror(errno));
++	else errno = 0;
++
++	close(s);
++	return errno;
++}
++/*
++static int
++route_del(struct rtentry *rt)
++{
++	if (rt->rt_dev) {
++		route_ctrl(SIOCDELRT, rt);
++		free(rt->rt_dev), rt->rt_dev = NULL;
++	}
++
++	return 0;
++}
++*/
++static int
++route_add(const struct in_addr inetaddr, struct rtentry *rt)
++{
++	char buf[256], dev[64];
++	int metric, flags;
++	u_int32_t dest, mask;
++
++	FILE *f = fopen("/proc/net/route", "r");
++	if (f == NULL) {
++		warn("/proc/net/route: %s", strerror(errno));
++		return -1;
++	}
++
++	while (fgets(buf, sizeof(buf), f)) {
++		if (sscanf(buf, "%63s %x %x %X %*s %*s %d %x", dev, &dest,
++		    &sin_addr(&rt->rt_gateway).s_addr, &flags, &metric, &mask) != 6)
++			continue;
++		if ((flags & RTF_UP) == RTF_UP && (inetaddr.s_addr & mask) == dest &&
++		    (dest || strncmp(dev, "ppp", 3)) /* avoid default via pppX to avoid on-demand loops*/)
++		{
++			rt->rt_metric = metric;
++			rt->rt_gateway.sa_family = AF_INET;
++			break;
++		}
++	}
++
++	fclose(f);
++
++	/* check for no route */
++	if (rt->rt_gateway.sa_family != AF_INET) {
++		/* warn("route_add: no route to host"); */
++		return -1;
++	}
++
++	/* check for existing route to this host, 
++	add if missing based on the existing routes */
++	if (flags & RTF_HOST) {
++		/* warn("route_add: not adding existing route"); */
++		return -1;
++	}
++
++	sin_addr(&rt->rt_dst) = inetaddr;
++	rt->rt_dst.sa_family = AF_INET;
++
++	sin_addr(&rt->rt_genmask).s_addr = INADDR_BROADCAST;
++	rt->rt_genmask.sa_family = AF_INET;
++
++	rt->rt_flags = RTF_UP | RTF_HOST;
++	if (flags & RTF_GATEWAY)
++		rt->rt_flags |= RTF_GATEWAY;
++
++	rt->rt_metric++;
++	rt->rt_dev = strdup(dev);
++
++	if (!rt->rt_dev) {
++		warn("route_add: no memory");
++		return -1;
++	}
++
++	if (!route_ctrl(SIOCADDRT, rt))
++		return 0;
++
++	free(rt->rt_dev), rt->rt_dev = NULL;
++
++	return -1;
++}
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/pptp_callmgr.c accel-pptp-0.8.5/pppd_plugin/src/pptp_callmgr.c
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/pptp_callmgr.c	2023-03-30 13:25:35.694954660 -0600
++++ accel-pptp-0.8.5/pppd_plugin/src/pptp_callmgr.c	2023-03-30 13:26:11.674941016 -0600
+@@ -178,6 +178,8 @@
+     do {
+         int rc;
+         fd_set read_set = call_set, write_set;
++        if (pptp_conn_dead(conn))
++            break;
+         FD_ZERO (&write_set);
+         if (pptp_conn_established(conn)) {
+ 	  FD_SET (unix_sock, &read_set);
+@@ -305,6 +307,7 @@
+ 	}
+         /* with extreme prejudice */
+         pptp_conn_destroy(conn);
++        pptp_conn_free(conn);
+         vector_destroy(call_list);
+     }
+ cleanup:
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/pptp_ctrl.c accel-pptp-0.8.5/pppd_plugin/src/pptp_ctrl.c
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/pptp_ctrl.c	2023-03-30 13:25:35.694954660 -0600
++++ accel-pptp-0.8.5/pppd_plugin/src/pptp_ctrl.c	2023-03-30 13:26:11.674941016 -0600
+@@ -9,6 +9,7 @@
+ #include <sys/types.h>
+ #include <sys/socket.h>
+ #include <netinet/in.h>
++#include <netinet/tcp.h>
+ #include <unistd.h>
+ #include <stdlib.h>
+ #include <assert.h>
+@@ -59,7 +60,7 @@
+     int inet_sock;
+     /* Connection States */
+     enum {
+-        CONN_IDLE, CONN_WAIT_CTL_REPLY, CONN_WAIT_STOP_REPLY, CONN_ESTABLISHED
++        CONN_IDLE, CONN_WAIT_CTL_REPLY, CONN_WAIT_STOP_REPLY, CONN_ESTABLISHED, CONN_DEAD
+     } conn_state; /* on startup: CONN_IDLE */
+     /* Keep-alive states */
+     enum {
+@@ -258,6 +259,7 @@
+ PPTP_CONN * pptp_conn_open(int inet_sock, int isclient, pptp_conn_cb callback)
+ {
+     PPTP_CONN *conn;
++    int on = 1;
+     /* Allocate structure */
+     if ((conn = malloc(sizeof(*conn))) == NULL) return NULL;
+     if ((conn->call = vector_create()) == NULL) { free(conn); return NULL; }
+@@ -282,6 +284,9 @@
+     }
+     /* Make this socket non-blocking. */
+     fcntl(conn->inet_sock, F_SETFL, O_NONBLOCK);
++    /* Disable nagle */
++    setsockopt(conn->inet_sock, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
++
+     /* Request connection from server, if this is a client */
+     if (isclient) {
+         struct pptp_start_ctrl_conn packet = {
+@@ -318,6 +323,10 @@
+   return (conn->conn_state == CONN_ESTABLISHED);
+ }
+ 
++int pptp_conn_dead(PPTP_CONN *conn) {
++  return (conn->conn_state == CONN_DEAD);
++}
++
+ /* This currently *only* works for client call requests.
+  * We need to do something else to allocate calls for incoming requests.
+  */
+@@ -392,9 +401,10 @@
+     /* don't check state against WAIT_DISCONNECT... allow multiple disconnect
+      * requests to be made.
+      */
+-    pptp_send_ctrl_packet(conn, &rqst, sizeof(rqst));
+-    pptp_reset_timer();
+-    call->state.pns = PNS_WAIT_DISCONNECT;
++    if (pptp_send_ctrl_packet(conn, &rqst, sizeof(rqst))) {
++        pptp_reset_timer();
++        call->state.pns = PNS_WAIT_DISCONNECT;
++    }
+     /* call structure will be freed when we have confirmation of disconnect. */
+ }
+ 
+@@ -420,24 +430,27 @@
+     int i;
+     assert(conn && conn->call);
+     /* avoid repeated close attempts */
+-    if (conn->conn_state == CONN_IDLE || conn->conn_state == CONN_WAIT_STOP_REPLY)
++    if (pptp_conn_dead(conn) ||
++        conn->conn_state == CONN_IDLE || conn->conn_state == CONN_WAIT_STOP_REPLY)
+         return;
+     /* close open calls, if any */
+     for (i = 0; i < vector_size(conn->call); i++)
+         pptp_call_close(conn, vector_get_Nth(conn->call, i));
+     /* now close connection */
+     log("Closing PPTP connection");
+-    pptp_send_ctrl_packet(conn, &rqst, sizeof(rqst));
+-    pptp_reset_timer(); /* wait 60 seconds for reply */
+-    conn->conn_state = CONN_WAIT_STOP_REPLY;
+-    return;
++    if (pptp_send_ctrl_packet(conn, &rqst, sizeof(rqst))) {
++        pptp_reset_timer(); /* wait 60 seconds for reply */
++        conn->conn_state = CONN_WAIT_STOP_REPLY;
++    }
+ }
+ 
+ /*** this is a hard close *****************************************************/
+ void pptp_conn_destroy(PPTP_CONN * conn)
+ {
+     int i;
+-    assert(conn != NULL); assert(conn->call != NULL);
++    assert(conn && conn->call);
++    if (pptp_conn_dead(conn))
++        return;
+     /* destroy all open calls */
+     for (i = 0; i < vector_size(conn->call); i++)
+         pptp_call_destroy(conn, vector_get_Nth(conn->call, i));
+@@ -447,6 +460,12 @@
+     close(conn->inet_sock);
+     /* deallocate */
+     vector_destroy(conn->call);
++    conn->conn_state = CONN_DEAD;
++}
++
++void pptp_conn_free(PPTP_CONN * conn)
++{
++    assert(conn != NULL);
+     free(conn);
+ }
+ 
+@@ -718,8 +737,8 @@
+                     reply.version = packet->version;
+                     /* protocol version not supported */
+                     reply.result_code = hton8(5);
+-                    pptp_send_ctrl_packet(conn, &reply, sizeof(reply));
+-                    pptp_reset_timer(); /* give sender a chance for a retry */
++                    if (pptp_send_ctrl_packet(conn, &reply, sizeof(reply)))
++                        pptp_reset_timer(); /* give sender a chance for a retry */
+                 } else { /* same or greater version */
+                     if (pptp_send_ctrl_packet(conn, &reply, sizeof(reply))) {
+                         conn->conn_state = CONN_ESTABLISHED;
+@@ -826,8 +845,8 @@
+                 hton8(1), hton8(PPTP_GENERAL_ERROR_NONE), 0
+             };
+             logecho( PPTP_ECHO_RQST);
+-            pptp_send_ctrl_packet(conn, &reply, sizeof(reply));
+-            pptp_reset_timer();
++            if (pptp_send_ctrl_packet(conn, &reply, sizeof(reply)))
++                pptp_reset_timer();
+             break;
+         }
+             /* ----------- OUTGOING CALL MESSAGES ------------ */
+@@ -913,9 +932,10 @@
+                 vector_search(conn->call, ntoh16(packet->call_id), &call);
+                 if (call->callback != NULL)
+                     call->callback(conn, call, CALL_CLOSE_RQST);
+-                pptp_send_ctrl_packet(conn, &reply, sizeof(reply));
+-                pptp_call_destroy(conn, call);
+-                log("Call closed (RQST) (call id %d)", (int) call->call_id);
++                if (pptp_send_ctrl_packet(conn, &reply, sizeof(reply))) {
++                    pptp_call_destroy(conn, call);
++                    log("Call closed (RQST) (call id %d)", (int) call->call_id);
++                }
+             }
+             break;
+         }
+@@ -1036,11 +1056,15 @@
+     int i;
+     /* "Keep Alives and Timers, 1": check connection state */
+     if (global.conn->conn_state != CONN_ESTABLISHED) {
+-        if (global.conn->conn_state == CONN_WAIT_STOP_REPLY)
++        if (pptp_conn_dead(global.conn))
++            return;
++        if (global.conn->conn_state == CONN_WAIT_STOP_REPLY) {
+             /* hard close. */
+             pptp_conn_destroy(global.conn);
+-        else /* soft close */
+-            pptp_conn_close(global.conn, PPTP_STOP_NONE);
++            return;
++        }
++        /* soft close */
++        pptp_conn_close(global.conn, PPTP_STOP_NONE);
+     }
+     /* "Keep Alives and Timers, 2": check echo status */
+     if (global.conn->ka_state == KA_OUTSTANDING) {
+@@ -1050,8 +1074,8 @@
+     } else { /* ka_state == NONE */ /* send keep-alive */
+         struct pptp_echo_rqst rqst = {
+             PPTP_HEADER_CTRL(PPTP_ECHO_RQST), hton32(global.conn->ka_id) };
+-        pptp_send_ctrl_packet(global.conn, &rqst, sizeof(rqst));
+-        global.conn->ka_state = KA_OUTSTANDING;
++        if (pptp_send_ctrl_packet(global.conn, &rqst, sizeof(rqst)))
++            global.conn->ka_state = KA_OUTSTANDING;
+     }
+     /* check incoming/outgoing call states for !IDLE && !ESTABLISHED */
+     for (i = 0; i < vector_size(global.conn->call); i++) {
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/pptp_ctrl.h accel-pptp-0.8.5/pppd_plugin/src/pptp_ctrl.h
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/pptp_ctrl.h	2023-03-30 13:25:35.694954660 -0600
++++ accel-pptp-0.8.5/pppd_plugin/src/pptp_ctrl.h	2023-03-30 13:26:11.674941016 -0600
+@@ -28,6 +28,7 @@
+ PPTP_CALL * pptp_call_open(PPTP_CONN * conn, int call_id,
+ 			   pptp_call_cb callback, char *phonenr,int window);
+ int pptp_conn_established(PPTP_CONN * conn);
++int pptp_conn_dead(PPTP_CONN *conn);
+ /* soft close.  Will callback on completion. */
+ void pptp_call_close(PPTP_CONN * conn, PPTP_CALL * call);
+ /* hard close. */
+@@ -36,6 +37,7 @@
+ void pptp_conn_close(PPTP_CONN * conn, u_int8_t close_reason);
+ /* hard close */
+ void pptp_conn_destroy(PPTP_CONN * conn);
++void pptp_conn_free(PPTP_CONN * conn);
+ 
+ /* Add file descriptors used by pptp to fd_set. */
+ void pptp_fd_set(PPTP_CONN * conn, fd_set * read_set, fd_set * write_set, int *max_fd);
+diff -Naur accel-pptp-0.8.5.orig/pppd_plugin/src/util.c accel-pptp-0.8.5/pppd_plugin/src/util.c
+--- accel-pptp-0.8.5.orig/pppd_plugin/src/util.c	2023-03-30 13:25:35.694954660 -0600
++++ accel-pptp-0.8.5/pppd_plugin/src/util.c	2023-03-30 13:26:11.674941016 -0600
+@@ -26,8 +26,7 @@
+ char buf[256], string[256];				\
+ va_start(ap, format);					\
+ vsnprintf(buf, sizeof(buf), format, ap);		\
+-snprintf(string, sizeof(string), "%s %s[%s:%s:%d]: %s",	\
+-	 log_string, label, func, file, line, buf);	\
++snprintf(string, sizeof(string), "%s", buf);		\
+ va_end(ap)
+ 
+ /*** open log *****************************************************************/
+@@ -44,20 +43,18 @@
+ /*** print a message to syslog ************************************************/
+ void _log(const char *func, const char *file, int line, const char *format, ...)
+ {
+-    MAKE_STRING("log");
+-    open_log();
+-    syslog(LOG_NOTICE, "%s", string);
+-    close_log();
++    if (log_level > 0) {
++	MAKE_STRING("log");
++	syslog(LOG_NOTICE, "%s", string);
++    }
+ }
+ 
+ /*** print a warning to syslog ************************************************/
+ void _warn(const char *func, const char *file, int line, const char *format, ...)
+ {
+     MAKE_STRING("warn");
+-    open_log();
+     fprintf(stderr, "%s\n", string);
+     syslog(LOG_WARNING, "%s", string);
+-    close_log();
+ }
+ 
+ /*** print a fatal warning to syslog and exit *********************************/
