@@ -29,6 +29,10 @@ ifeq ($(BR2_PACKAGE_RC_FTP),y)
 export TCONFIG_FTP=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_FTPS),y)
+export TCONFIG_FTP_SSL=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_HTTPS),y)
 export TCONFIG_HTTPS=y
 endif
@@ -129,7 +133,6 @@ export TCONFIG_L7PAT=y
 export TCONFIG_LZO=y
 export TCONFIG_ZFS=y
 export TCONFIG_EMF=y
-export TCONFIG_FTP_SSL=y
 export TCONFIG_USB_EXTRAS=y
 export TCONFIG_NTFS=y
 export TCONFIG_BBT=y

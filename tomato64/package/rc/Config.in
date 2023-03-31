@@ -72,6 +72,14 @@ config BR2_PACKAGE_RC_EBTABLES
 config BR2_PACKAGE_RC_FTP
 	bool "Enable FTP"
 	default y
+	select BR2_PACKAGE_VSFTPD_TOMATO
+
+if BR2_PACKAGE_RC_FTP
+config BR2_PACKAGE_RC_FTPS
+	bool "Enable FTPS"
+	default y
+	select BR2_PACKAGE_OPENSSL
+endif
 
 config BR2_PACKAGE_RC_HTTPS
 	bool "Enable HTTPS"

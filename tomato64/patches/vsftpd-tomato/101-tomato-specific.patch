@@ -1,0 +1,157 @@
+diff -Naur vsftpd-3.0.5.orig/builddefs.h vsftpd-3.0.5/builddefs.h
+--- vsftpd-3.0.5.orig/builddefs.h	2023-03-31 10:58:16.298578389 -0600
++++ vsftpd-3.0.5/builddefs.h	2023-03-31 10:58:33.270586512 -0600
+@@ -1,10 +1,17 @@
+ #ifndef VSF_BUILDDEFS_H
+ #define VSF_BUILDDEFS_H
+ 
++#include <tomato_config.h>
++
+ #undef VSF_BUILD_TCPWRAPPERS
+-#define VSF_BUILD_PAM
+-#undef VSF_BUILD_SSL
++#undef VSF_BUILD_PAM
+ #define VSF_BUILD_UTMPX
+ 
++#ifdef TCONFIG_FTP_SSL
++	#define VSF_BUILD_SSL
++#else
++	#undef VSF_BUILD_SSL
++#endif
++
+ #endif /* VSF_BUILDDEFS_H */
+ 
+diff -Naur vsftpd-3.0.5.orig/parseconf.c vsftpd-3.0.5/parseconf.c
+--- vsftpd-3.0.5.orig/parseconf.c	2023-03-31 10:58:16.298578389 -0600
++++ vsftpd-3.0.5/parseconf.c	2023-03-31 10:58:33.270586512 -0600
+@@ -36,6 +36,7 @@
+   { "anon_upload_enable", &tunable_anon_upload_enable },
+   { "anon_mkdir_write_enable", &tunable_anon_mkdir_write_enable },
+   { "anon_other_write_enable", &tunable_anon_other_write_enable },
++  { "anon_allow_writable_root", &tunable_anon_allow_writable_root },
+   { "chown_uploads", &tunable_chown_uploads },
+   { "connect_from_port_20", &tunable_connect_from_port_20 },
+   { "xferlog_enable", &tunable_xferlog_enable },
+@@ -183,6 +184,7 @@
+   { "ca_certs_file", &tunable_ca_certs_file },
+   { "ssl_sni_hostname", &tunable_ssl_sni_hostname },
+   { "cmds_denied", &tunable_cmds_denied },
++  { "passwd_file", &tunable_passwd_file },
+   { 0, 0 }
+ };
+ 
+diff -Naur vsftpd-3.0.5.orig/secutil.c vsftpd-3.0.5/secutil.c
+--- vsftpd-3.0.5.orig/secutil.c	2023-03-31 10:58:16.294578387 -0600
++++ vsftpd-3.0.5/secutil.c	2023-03-31 10:58:33.270586512 -0600
+@@ -129,16 +129,17 @@
+   {
+     vsf_sysutil_set_no_procs();
+   }
+-  /* Misconfiguration check: don't ever chroot() to a directory writable by
+-   * the current user.
+-   */
+-  if ((options & VSF_SECUTIL_OPTION_CHROOT) &&
+-      !(options & VSF_SECUTIL_OPTION_ALLOW_WRITEABLE_ROOT))
+-  {
+-    if (vsf_sysutil_write_access("/"))
+-    {
+-      die("vsftpd: refusing to run with writable root inside chroot()");
+-    }
+-  }
++// check removed (for now) as tomato lacks of other users then root
++//  /* Misconfiguration check: don't ever chroot() to a directory writable by
++//   * the current user.
++//   */
++//  if ((options & VSF_SECUTIL_OPTION_CHROOT) &&
++//      !(options & VSF_SECUTIL_OPTION_ALLOW_WRITEABLE_ROOT))
++//  {
++//    if (vsf_sysutil_write_access("/"))
++//    {
++//      die("vsftpd: refusing to run with writable root inside chroot()");
++//    }
++//  }
+ }
+ 
+diff -Naur vsftpd-3.0.5.orig/ssl.c vsftpd-3.0.5/ssl.c
+--- vsftpd-3.0.5.orig/ssl.c	2023-03-31 10:58:16.298578389 -0600
++++ vsftpd-3.0.5/ssl.c	2023-03-31 10:58:33.270586512 -0600
+@@ -28,6 +28,7 @@
+ #include <openssl/err.h>
+ #include <openssl/rand.h>
+ #include <openssl/bio.h>
++#include <openssl/ec.h>
+ #include <errno.h>
+ #include <limits.h>
+ 
+diff -Naur vsftpd-3.0.5.orig/tunables.c vsftpd-3.0.5/tunables.c
+--- vsftpd-3.0.5.orig/tunables.c	2023-03-31 10:58:16.298578389 -0600
++++ vsftpd-3.0.5/tunables.c	2023-03-31 10:58:33.270586512 -0600
+@@ -17,6 +17,7 @@
+ int tunable_anon_upload_enable;
+ int tunable_anon_mkdir_write_enable;
+ int tunable_anon_other_write_enable;
++int tunable_anon_allow_writable_root;
+ int tunable_chown_uploads;
+ int tunable_connect_from_port_20;
+ int tunable_xferlog_enable;
+@@ -146,6 +147,7 @@
+ const char* tunable_dsa_private_key_file;
+ const char* tunable_ca_certs_file;
+ const char* tunable_ssl_sni_hostname;
++const char* tunable_passwd_file;
+ 
+ static void install_str_setting(const char* p_value, const char** p_storage);
+ 
+@@ -161,6 +163,7 @@
+   tunable_anon_upload_enable = 0;
+   tunable_anon_mkdir_write_enable = 0;
+   tunable_anon_other_write_enable = 0;
++  tunable_anon_allow_writable_root = 0;
+   tunable_chown_uploads = 0;
+   tunable_connect_from_port_20 = 0;
+   tunable_xferlog_enable = 0;
+@@ -261,7 +264,7 @@
+   /* -rw------- */
+   tunable_chown_upload_mode = 0600;
+ 
+-  install_str_setting("/usr/share/empty", &tunable_secure_chroot_dir);
++  install_str_setting("/var/run/vsftpd", &tunable_secure_chroot_dir);
+   install_str_setting("ftp", &tunable_ftp_username);
+   install_str_setting("root", &tunable_chown_username);
+   install_str_setting("/var/log/xferlog", &tunable_xferlog_file);
+@@ -288,7 +291,7 @@
+   install_str_setting(0, &tunable_user_sub_token);
+   install_str_setting("/etc/vsftpd.email_passwords",
+                       &tunable_email_password_file);
+-  install_str_setting("/usr/share/ssl/certs/vsftpd.pem",
++  install_str_setting("/var/run/vsftpd/vsftpd.pem",
+                       &tunable_rsa_cert_file);
+   install_str_setting(0, &tunable_dsa_cert_file);
+   install_str_setting("ECDHE-RSA-AES256-GCM-SHA384", &tunable_ssl_ciphers);
+@@ -296,6 +299,7 @@
+   install_str_setting(0, &tunable_dsa_private_key_file);
+   install_str_setting(0, &tunable_ca_certs_file);
+   install_str_setting(0, &tunable_ssl_sni_hostname);
++  install_str_setting(0, &tunable_passwd_file);
+ }
+ 
+ void
+diff -Naur vsftpd-3.0.5.orig/tunables.h vsftpd-3.0.5/tunables.h
+--- vsftpd-3.0.5.orig/tunables.h	2023-03-31 10:58:16.298578389 -0600
++++ vsftpd-3.0.5/tunables.h	2023-03-31 10:58:33.270586512 -0600
+@@ -18,6 +18,7 @@
+ extern int tunable_anon_upload_enable;        /* Enable STOR for anon users */
+ extern int tunable_anon_mkdir_write_enable;   /* MKD for anon */
+ extern int tunable_anon_other_write_enable;   /* APPE DELE RMD RNFR for anon */
++extern int tunable_anon_allow_writable_root;  /* allow writable / for anon */
+ extern int tunable_chown_uploads;             /* chown() anon uploaded files */
+ extern int tunable_connect_from_port_20;      /* PORT connects from port 20 */
+ extern int tunable_xferlog_enable;            /* Log transfers to a file */
+@@ -149,6 +150,7 @@
+ extern const char* tunable_ca_certs_file;
+ extern const char* tunable_ssl_sni_hostname;
+ extern const char* tunable_cmds_denied;
++extern const char* tunable_passwd_file;
+ 
+ #endif /* VSF_TUNABLES_H */
+ 
