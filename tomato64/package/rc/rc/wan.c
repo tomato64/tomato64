@@ -810,7 +810,7 @@ void start_wan_if(char *prefix)
 
 // debug lance
         printf("Starting WAN Interface\n" );
-        sleep(5);
+//        sleep(5);
 
 	int wan_proto;
 	char *wan_ifname;
@@ -1002,7 +1002,7 @@ void start_wan(void)
 
 // debug lance
         printf("Starting WAN\n" );
-        sleep(5);
+//        sleep(5);
 
 	int mwan_num;
 	int wan_unit;
@@ -1120,7 +1120,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 
 // debug lance
         printf("Starting WAN Done\n" );
-        sleep(5);
+//        sleep(5);
 
 	int proto;
 	int n;

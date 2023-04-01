@@ -237,7 +237,7 @@ int _eval(char *const argv[], const char *path, int timeout, int *ppid)
                 printf("%s ", argv[i]);
         }
         printf("\n");
-        sleep(1);
+//        sleep(1);
 
 
 	sigset_t set, sigmask;

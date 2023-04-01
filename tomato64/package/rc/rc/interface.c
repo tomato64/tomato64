@@ -51,7 +51,7 @@ int _ifconfig(const char *name, int flags, const char *addr, const char *netmask
 
 // debug lance
 	printf("ifconfig %s %04x %s %s %s %d\n", name, flags, addr, netmask, dstaddr, mtu);
-        sleep(1);
+//        sleep(1);
 
 
 	int s;
@@ -231,7 +231,7 @@ void start_vlan(void)
 
 // debug lance
 	printf("Starting vlan\n");
-	sleep(5);
+//	sleep(5);
 
 	int s;
 	struct ifreq ifr;
@@ -271,7 +271,7 @@ void start_vlan(void)
 
 //		printf("%s\n", ea);
 		printf("vlan%dhwname, %smacaddr\n", i, hwname);
-		sleep(1);
+//		sleep(1);
 
 		/* find the interface name to which the address is assigned */
 		for (j = 1; j <= DEV_NUMIFS; j ++) {

@@ -132,11 +132,6 @@ void start_dnsmasq_wet()
 
 void start_dnsmasq()
 {
-
-// debug lance
-	printf("Starting DSNMASQ\n" );
-	sleep(5);
-
 	FILE *f, *hf;
 	const char *nv;
 	const char *router_ip;
@@ -189,8 +184,6 @@ void start_dnsmasq()
 
 	if ((f = fopen(DNSMASQ_CONF, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, DNSMASQ_CONF);
-		printf("returning\n" );
-		sleep(5);
 		return;
 	}
 
@@ -652,25 +645,6 @@ void start_dnsmasq()
 
 	/* default to some values we like, but allow the user to override them */
 	eval("dnsmasq", "-c", "4096", "--log-async");
-
-// debug lance
-//                FILE *fp;
-//                char path[1035];
-
-                /* Open the command for reading. */
-//                fp = popen("dnsmasq -c 4096 --log-async", "r");
-//                if (fp == NULL) {
-//                        printf("Failed to run command\n" );
-//                        exit(1);
-//                }
-
-                /* Read the output a line at a time - output it. */
-//                while (fgets(path, sizeof(path), fp) != NULL) {
-//                        printf("%s", path);
-//                }
-                /* close */
-//                pclose(fp);
-//                sleep(5);
 
 	if (!nvram_contains_word("debug_norestart", "dnsmasq"))
 		pid_dnsmasq = -2;
@@ -2173,16 +2147,10 @@ void set_tz(void)
 
 void start_ntpd(void)
 {
-// debug lance
-	printf("Starting ntpd");
-	sleep(1);	
-
 	FILE *f;
 	char *servers, *ptr;
-//	int servers_len = 0, ntp_updates_int = 0, index = 3, ret;
-	int servers_len = 0, ntp_updates_int = 0, index = 2, ret;
-//	char *ntpd_argv[] = { "/usr/sbin/ntpd", "-t", "-N", NULL, NULL, NULL, NULL, NULL, NULL }; /* -ddddddd -q -S /sbin/ntpd_synced -l */
-	char *ntpd_argv[] = { "/usr/sbin/ntpd", "-N", NULL, NULL, NULL, NULL, NULL, NULL }; /* -ddddddd -q -S /sbin/ntpd_synced -l */
+	int servers_len = 0, ntp_updates_int = 0, index = 3, ret;
+	char *ntpd_argv[] = { "/usr/sbin/ntpd", "-t", "-N", NULL, NULL, NULL, NULL, NULL, NULL }; /* -ddddddd -q -S /sbin/ntpd_synced -l */
 	pid_t pid;
 
 	if (serialize_restart("ntpd", 1))
@@ -2192,9 +2160,6 @@ void start_ntpd(void)
 
 	if ((nvram_get_int("dnscrypt_proxy")) || (nvram_get_int("stubby_proxy")))
 		eval("ntp2ip");
-
-// debug lance
-	printf("made it past ntp2ip");
 
 	/* this is the nvram var defining how the server should be run / how often to sync */
 	ntp_updates_int = nvram_get_int("ntp_updates");
@@ -2244,16 +2209,6 @@ void start_ntpd(void)
 			if (nvram_get_int("ntpd_enable")) /* enable local NTP server */
 				ntpd_argv[index++] = "-l";
 		}
-
-// debug lance
-        printf("Attmpting starting ntpd\n");
-        sleep(1);
-
-        for (int i = 0; i < 8; i++){
-                printf("%s, ", ntpd_argv[i]);
-        }
-        printf("\n");
-        sleep(5);
 
 		ret = _eval(ntpd_argv, NULL, 0, &pid);
 		if (ret)
@@ -2605,37 +2560,11 @@ void check_services(void)
 		_check(pid_dnsmasq, "dnsmasq", start_dnsmasq);
 		_check(pid_crond, "crond", start_cron);
 		_check(pid_igmp, "igmpproxy", start_igmp_proxy);
-
-
-// debug lance
-//		FILE *fp;
-//		char path[1035];
-
-		/* Open the command for reading. */
-//		fp = popen("ps aux", "r");
-//		if (fp == NULL) {
-//			printf("Failed to run command\n" );
-//			exit(1);
-//		}
-
-		/* Read the output a line at a time - output it. */
-//		while (fgets(path, sizeof(path), fp) != NULL) {
-//			printf("%s", path);
-//		}
-		/* close */
-//		pclose(fp);
-//		sleep(5);
 	}
 }
 
 void start_services(void)
 {
-
-// debug lance
-	printf("Starting Services\n" );
-	sleep(5);
-
-
 	static int once = 1;
 
 	if (once) {
