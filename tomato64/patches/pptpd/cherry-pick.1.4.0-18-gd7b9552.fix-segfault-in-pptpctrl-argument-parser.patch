@@ -1,0 +1,60 @@
+Subject: Fix segfault in pptpctrl argument parser
+Origin: 1.4.0-18-gd7b9552
+Upstream-Author: Christoph Biedl <sourceforge.bnwi@manchmal.in-ulm.de>
+Date: Fri Jul 8 14:03:18 2016 +1000
+
+    it's easily possible to trigger a segfault in pptpctrl:
+    
+    This happened when triggering a bug in pptpmanager I am currently
+    working on. The check for (argc < 7) isn't sufficient, my suggested
+    fix adds a check to any GETARG_* invocation.
+    
+    Signed-off-by: James Cameron <quozl@laptop.org>
+
+--- a/pptpctrl.c
++++ b/pptpctrl.c
+@@ -92,19 +92,29 @@
+ #define OUR_NB_MODE O_NDELAY
+ #endif
+ 
++void usage()
++{
++        fprintf(stderr, "pptpctrl: insufficient arguments, see man pptpctrl\n");
++        exit(2);
++}
++
+ /* read a command line argument, a flag alone */
+ #define GETARG_INT(X) \
++        if (arg >= argc) usage() ; \
+         X = atoi(argv[arg++])
+ 
+ /* read a command line argument, a string alone */
+ #define GETARG_STRING(X) \
++        if (arg >= argc) usage() ; \
+         X = strdup(argv[arg++])
+ 
+ /* read a command line argument, a presence flag followed by string */
+ #define GETARG_VALUE(X) \
+-        if(atoi(argv[arg++]) != 0) \
++        if (arg >= argc) usage() ; \
++        if (atoi(argv[arg++]) != 0) { \
++                if (arg >= argc) usage() ; \
+                 strlcpy(X, argv[arg++], sizeof(X)); \
+-        else \
++        } else \
+                 *X = '\0'
+ 
+ int main(int argc, char **argv)
+@@ -122,10 +132,8 @@
+         gargv = argv;
+ 
+         /* fail if argument count invalid */
+-        if (argc < 7) {
+-                fprintf(stderr, "pptpctrl: insufficient arguments, see man pptpctrl\n");
+-                exit(2);
+-        }
++        if (argc < 7)
++                usage();
+ 
+         /* open a connection to the syslog daemon */
+         openlog("pptpd", LOG_PID, PPTP_FACILITY);

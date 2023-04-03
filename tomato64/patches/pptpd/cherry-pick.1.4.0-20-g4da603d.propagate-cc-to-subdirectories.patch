@@ -1,0 +1,27 @@
+Subject: Propagate CC to subdirectories
+Origin: 1.4.0-20-g4da603d
+Upstream-Author: Helmut Grohne <helmut@subdivi.de>
+Date: Wed Jan 3 06:37:56 2018 +1100
+Bug-Debian: https://bugs.debian.org/886160
+
+    pptpd fails to cross build from source, because it fails to propagate CC
+    to plugins/Makefile. It is correctly detected by configure and correctly
+    forwarded to Makefile.am, but fails being forwarded to plugins/Makefile.
+
+    After making that forwarding explicit, pptpd cross builds successfully.
+
+    Fixes Debian #886160.
+
+    Signed-off-by: James Cameron <quozl@laptop.org>
+
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -54,7 +54,7 @@
+ subdirs = plugins
+ 
+ all-local:
+-	for d in $(subdirs); do $(MAKE) $(MFLAGS) -C $$d all; done
++	for d in $(subdirs); do $(MAKE) $(MFLAGS) 'CC=$(CC)' -C $$d all; done
+ 
+ install-exec-local:
+ 	for d in $(subdirs); do $(MAKE) $(MFLAGS) -C $$d prefix=$(prefix) DESTDIR=$(DESTDIR) install; done

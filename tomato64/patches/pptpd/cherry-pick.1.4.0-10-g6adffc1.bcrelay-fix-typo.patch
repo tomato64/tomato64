@@ -1,0 +1,19 @@
+Subject: Bcrelay: fix typo
+Origin: 1.4.0-10-g6adffc1
+Upstream-Author: James Cameron <quozl@laptop.org>
+Date: Thu Oct 16 08:08:13 2014 +1100
+
+    Reported-by: Christoph Biedl <sourceforge.bnwi@manchmal.in-ulm.de>
+    Signed-off-by: James Cameron <quozl@laptop.org>
+
+--- a/bcrelay.8
++++ b/bcrelay.8
+@@ -7,7 +7,7 @@
+ .SH DESCRIPTION
+ .B bcrelay
+ simply plays as a broadcast repeater. When \fBbcrelay\fR receives packets
+-from the incomming interface, it will then relay them to the outgoing
++from the incoming interface, it will then relay them to the outgoing
+ interface.
+ .LP
+ .SH OPTIONS

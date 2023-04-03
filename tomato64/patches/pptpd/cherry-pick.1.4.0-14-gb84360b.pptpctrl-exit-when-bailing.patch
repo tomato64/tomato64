@@ -1,0 +1,24 @@
+Subject: Pptpctrl: exit when bailing
+Origin: 1.4.0-14-gb84360b
+Upstream-Author: James Cameron <quozl@laptop.org>
+Date: Sat Oct 18 15:08:00 2014 +1100
+
+    Commit 0770455 in 2004 removed the call to exit, and so now pptpctrl
+    continues instead of terminating.
+    
+    http://sourceforge.net/p/poptop/bugs/51/
+    
+    Reported-by: Gavin Wan <gavin-wan-nd@users.sf.net>
+    Signed-off-by: James Cameron <quozl@laptop.org>
+
+--- a/pptpctrl.c
++++ b/pptpctrl.c
+@@ -545,6 +545,8 @@
+ 
+         if (pptpctrl_debug)
+                 syslog(LOG_DEBUG, "CTRL: Exiting now");
++
++        exit((GET_VALUE(PAC, call_id_pair) == htons(-1)) ? 0 : 1);
+ }
+ 
+ /*

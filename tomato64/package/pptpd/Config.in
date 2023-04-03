@@ -1,0 +1,5 @@
+config BR2_PACKAGE_PPTPD
+	bool "pptpd"
+	select BR2_PACKAGE_PPPD_TOMATO
+	help
+	  PPTPD Server

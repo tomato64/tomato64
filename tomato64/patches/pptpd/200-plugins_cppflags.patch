@@ -1,0 +1,18 @@
+diff -Naur pptpd-1.4.0.orig/plugins/Makefile pptpd-1.4.0/plugins/Makefile
+--- pptpd-1.4.0.orig/plugins/Makefile	2023-04-03 12:05:57.434795420 -0600
++++ pptpd-1.4.0/plugins/Makefile	2023-04-03 12:06:41.758733951 -0600
+@@ -16,7 +16,7 @@
+ all:	$(PLUGINS)
+ 
+ %.so: %.c
+-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $^ $(LDADD)
++	$(CC) -o $@ $(LDFLAGS) $(CPPFLAGS) $(CFLAGS) $^ $(LDADD)
+ 
+ LIBDIR	?= $(DESTDIR)$(prefix)/lib/pptpd
+ 
+@@ -31,4 +31,4 @@
+ 	rm -f *.o *.so *.a
+ 
+ depend:
+-	$(CPP) -M $(CFLAGS) *.c >.depend
++	$(CPP) -M $(CPPFLAGS) $(CFLAGS) *.c >.depend

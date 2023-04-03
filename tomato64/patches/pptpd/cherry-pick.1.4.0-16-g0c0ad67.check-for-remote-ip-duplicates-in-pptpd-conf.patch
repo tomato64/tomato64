@@ -1,0 +1,33 @@
+Subject: Check for remote IP duplicates in pptpd.conf
+Origin: 1.4.0-16-g0c0ad67
+Upstream-Author: Christoph Biedl <sourceforge.bnwi@manchmal.in-ulm.de>
+Date: Fri Jul 8 13:51:42 2016 +1000
+
+    At the moment, pptpd will happily process lines like
+    
+    	remoteip 192.168.0.234-234,192.168.0.234,192.168.0.234
+    
+    and afterwards state "MGR: Maximum of 3 connections available". While
+    technically true, I guess this is never by intention but will result in
+    interesting behaviour.  [...]
+    
+    The patch below worked for me.
+    
+    Signed-off-by: James Cameron <quozl@laptop.org>
+
+--- a/pptpmanager.c
++++ b/pptpmanager.c
+@@ -136,6 +136,13 @@
+ void slot_set_remote(int i, char *ip)
+ {
+   struct slot *slot = &slots[i];
++  int j;
++  for (j = 0; j < slot_count; j++) {
++    if (!slots[j].remote || strcmp(slots[j].remote, ip))
++      continue;
++    syslog(LOG_ERR, "MGR: Remote IP address %s in config is a duplicate!", ip);
++    exit(1);
++  }
+   if (slot->remote) free(slot->remote);
+   slot->remote = strdup(ip);
+ }

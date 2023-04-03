@@ -139,6 +139,7 @@ config BR2_PACKAGE_RC_PPTP
 config BR2_PACKAGE_RC_PPTPD
 	bool "Enable PPTPD"
 	default y
+	select BR2_PACKAGE_PPTPD
 
 config BR2_PACKAGE_RC_PROXY
 	bool "Enable udpxy and igmpproxy"
