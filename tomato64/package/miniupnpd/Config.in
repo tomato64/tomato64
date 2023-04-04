@@ -1,0 +1,4 @@
+config BR2_PACKAGE_MINIUPNPD
+	bool "miniupnpd"
+	help
+	  miniupnpd daemon
