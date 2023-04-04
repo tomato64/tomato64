@@ -14,6 +14,8 @@ LIBSHARED_DEPENDENCIES = libnvram busybox
 define LIBSHARED_BUILD_CMDS
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) genversion
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) genconfig
+
+	BUSYBOX_DIR=$(BUSYBOX_DIR) \
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) libshared.so
 endef
 
