@@ -173,6 +173,7 @@ config BR2_PACKAGE_RC_TINC
 config BR2_PACKAGE_RC_TOR
 	bool "Enable Tor"
 	default y
+	select BR2_PACKAGE_TOR
 
 config BR2_PACKAGE_RC_UPS
 	bool "Enable UPS"
