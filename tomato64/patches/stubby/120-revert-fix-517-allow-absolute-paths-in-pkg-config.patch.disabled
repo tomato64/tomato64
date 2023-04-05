@@ -1,0 +1,23 @@
+--- getdns/CMakeLists.txt
++++ getdns/CMakeLists.txt
+@@ -1060,8 +1060,6 @@
+ endforeach()
+ 
+ set(prefix ${CMAKE_INSTALL_PREFIX})
+-cmake_path(APPEND libdir_for_pc_file "\${prefix}" "${CMAKE_INSTALL_LIBDIR}")
+-cmake_path(APPEND includedir_for_pc_file "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
+ configure_file(getdns.pc.in getdns.pc @ONLY)
+ 
+ # Installing.
+--- getdns/getdns.pc.in
++++ getdns/getdns.pc.in
+@@ -1,7 +1,7 @@
+ prefix=@prefix@
+ exec_prefix=${prefix}
+-libdir=@libdir_for_pc_file@
+-includedir=@includedir_for_pc_file@
++libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
++includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+ 
+ Name: getdns
+ Version: @GETDNS_VERSION@

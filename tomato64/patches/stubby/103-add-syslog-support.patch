@@ -1,0 +1,50 @@
+--- getdns/stubby/src/log.c
++++ getdns/stubby/src/log.c
+@@ -64,6 +64,8 @@
+         gmtime_s(&tm, &tsec);
+ #else
+ 	if (level > log_level) return;
++	if (use_syslog)
++		(void) vsyslog(level, fmt, ap);
+         gettimeofday(&tv, NULL);
+         gmtime_r(&tv.tv_sec, &tm);
+ #endif
+--- getdns/stubby/src/log.h
++++ getdns/stubby/src/log.h
+@@ -34,6 +34,11 @@
+ #include <getdns/getdns.h>
+ #include <getdns/getdns_extra.h>
+ 
++#if !defined(STUBBY_ON_WINDOWS) && !defined(GETDNS_ON_WINDOWS)
++#include <syslog.h>
++extern int use_syslog;
++#endif
++
+ typedef void(*stubby_verror_t)(getdns_loglevel_type level, const char *fmt, va_list ap);
+ typedef void(*stubby_vlog_t)(void *userarg, uint64_t system,
+                              getdns_loglevel_type level,
+--- getdns/stubby/src/stubby.c
++++ getdns/stubby/src/stubby.c
+@@ -54,6 +54,10 @@
+ #define STUBBYPIDFILE RUNSTATEDIR"/stubby.pid"
+ #endif
+ 
++#if !defined(STUBBY_ON_WINDOWS) && !defined(GETDNS_ON_WINDOWS)
++int use_syslog = 0;
++#endif
++
+ void
+ print_usage(FILE *out)
+ {
+@@ -183,6 +187,11 @@
+ 		log_connections = 1;
+ 		log_level = config_log_level;
+ 	}
++#if !defined(STUBBY_ON_WINDOWS) && !defined(GETDNS_ON_WINDOWS)
++	use_syslog = log_connections || !run_in_foreground;
++	if (use_syslog)
++		openlog(STUBBY_PACKAGE, LOG_PID, LOG_DAEMON);
++#endif
+ 	stubby_log(NULL,GETDNS_LOG_UPSTREAM_STATS, GETDNS_LOG_INFO,
+ 		   "Stubby version: %s", STUBBY_PACKAGE_STRING);
+ 

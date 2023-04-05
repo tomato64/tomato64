@@ -1,0 +1,5 @@
+config BR2_PACKAGE_STUBBY
+	bool "stubby"
+	select BR2_PACKAGE_LIBYAML
+	help
+	  Stubby

@@ -165,6 +165,7 @@ config BR2_PACKAGE_RC_SSH
 config BR2_PACKAGE_RC_STUBBY
 	bool "Enable Stubby"
 	default y
+	select BR2_PACKAGE_STUBBY
 
 config BR2_PACKAGE_RC_TINC
 	bool "Enable Tinc VPN"

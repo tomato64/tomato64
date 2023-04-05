@@ -1,0 +1,13 @@
+--- getdns/CMakeLists.txt
++++ getdns/CMakeLists.txt
+@@ -1177,3 +1177,10 @@
+     COMMENT "Generating Doxygen docs.")
+   add_custom_target(doc ALL DEPENDS doc/html/index.html)
+ endif ()
++
++include(CheckCCompilerFlag)
++check_c_compiler_flag(-Wno-builtin-macro-redefined SUPPORT_C_WNO_BUILTIN_MACRO_REDEFINED)
++if (SUPPORT_C_WNO_BUILTIN_MACRO_REDEFINED)
++  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-builtin-macro-redefined")
++endif (SUPPORT_C_WNO_BUILTIN_MACRO_REDEFINED)
++set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D'__FILE__=\"$(subst $(realpath ${CMAKE_SOURCE_DIR})/,,$(abspath $<))\"'")
