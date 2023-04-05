@@ -155,6 +155,7 @@ config BR2_PACKAGE_RC_SAMBA
 config BR2_PACKAGE_RC_SNMP
 	bool "Enable SNMP"
 	default y
+	select BR2_PACKAGE_NETSNMP_TOMATO
 
 config BR2_PACKAGE_RC_SSH
 	bool "Enable SSH"
