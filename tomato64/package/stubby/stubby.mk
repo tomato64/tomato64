@@ -8,7 +8,7 @@ STUBBY_VERSION = 1.7.3
 STUBBY_SOURCE = getdns-$(STUBBY_VERSION).tar.gz
 STUBBY_SITE = https://getdnsapi.net/releases/getdns-1-7-3
 STUBBY_LICENSE = nlet
-STUBBY_DEPENDENCIES = libyaml
+STUBBY_DEPENDENCIES = libyaml openssl
 
 STUBBY_CONF_OPTS =	-DENABLE_STATIC=TRUE \
 			-DENABLE_SHARED=FALSE \
