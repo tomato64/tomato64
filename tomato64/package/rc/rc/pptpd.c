@@ -217,7 +217,6 @@ void start_pptpd(int force)
 	else
 		fprintf(fp, "require-mppe-128\n");
 
-	// just get it working for now.
 	fprintf(fp, "chapms-strip-domain\n"
 	            "chap-secrets "PPTPD_SECRETS"\n"
 	            "ip-up-script "PPTPD_UP_SCRIPT"\n"
