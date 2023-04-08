@@ -167,20 +167,22 @@ void start_dnsmasq()
 		return;
 
 	/* check wireless ethernet bridge (wet) after stop_dnsmasq() */
-//	if (foreach_wif(1, NULL, is_wet)) {
-//		logmsg(LOG_INFO, "Starting dnsmasq for wireless ethernet bridge mode");
-//		start_dnsmasq_wet();
-//		return;
-//	}
+#ifndef TOMATO64
+	if (foreach_wif(1, NULL, is_wet)) {
+		logmsg(LOG_INFO, "Starting dnsmasq for wireless ethernet bridge mode");
+		start_dnsmasq_wet();
+		return;
+	}
 
-// #ifdef TCONFIG_BCMWL6
-// 	/* check media bridge (psta) after stop_dnsmasq() */
-// 	if (foreach_wif(1, NULL, is_psta)) {
-// 		logmsg(LOG_INFO, "Starting dnsmasq for media bridge mode");
-// 		start_dnsmasq_wet();
-// 		return;
-// 	}
-// #endif /* TCONFIG_BCMWL6 */
+#ifdef TCONFIG_BCMWL6
+	/* check media bridge (psta) after stop_dnsmasq() */
+	if (foreach_wif(1, NULL, is_psta)) {
+		logmsg(LOG_INFO, "Starting dnsmasq for media bridge mode");
+		start_dnsmasq_wet();
+		return;
+	}
+#endif /* TCONFIG_BCMWL6 */
+#endif /* TOMATO64 */
 
 	if ((f = fopen(DNSMASQ_CONF, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, DNSMASQ_CONF);
