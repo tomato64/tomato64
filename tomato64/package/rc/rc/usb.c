@@ -169,27 +169,29 @@ void start_usb(void)
 		i = do_led(LED_USB, LED_PROBE);
 		if (i != 255) {
 
-//#ifdef TCONFIG_BCMARM
-//			do_led(LED_USB, LED_OFF); /* turn off USB LED */
-//		}
+#ifndef TOMATO64
+#ifdef TCONFIG_BCMARM
+			do_led(LED_USB, LED_OFF); /* turn off USB LED */
+		}
 
-//		i = 255; /* reset to 255 */
-//		/* check USB3 LED */
-//		i = do_led(LED_USB3, LED_PROBE);
-//		if (i != 255) {
-//			do_led(LED_USB3, LED_OFF); /* turn off USB3 LED */
+		i = 255; /* reset to 255 */
+		/* check USB3 LED */
+		i = do_led(LED_USB3, LED_PROBE);
+		if (i != 255) {
+			do_led(LED_USB3, LED_OFF); /* turn off USB3 LED */
 
-//#elif defined(CONFIG_BCMWL6) || defined(TCONFIG_BLINK) /* TCONFIG_BCMARM */
+#elif defined(CONFIG_BCMWL6) || defined(TCONFIG_BLINK) /* TCONFIG_BCMARM */
 			/* Remove legacy approach in the code here - rather, use do_led() function, which is designed to do this
 			 * The reason for changing this... some HW (like Netgear WNDR4000) don't work with direct GPIO write -> use do_led()!
 			 */
-//			do_led(LED_USB, LED_OFF); /* turn off USB LED */
-//#else
-//			modprobe("ledtrig-usbdev");
-//			modprobe("leds-usb");
-//			sprintf(param, "%d", i);
-//			f_write_string("/proc/leds-usb/gpio_pin", param, 0, 0);
-//#endif /* TCONFIG_BCMARM */
+			do_led(LED_USB, LED_OFF); /* turn off USB LED */
+#else
+			modprobe("ledtrig-usbdev");
+			modprobe("leds-usb");
+			sprintf(param, "%d", i);
+			f_write_string("/proc/leds-usb/gpio_pin", param, 0, 0);
+#endif /* TCONFIG_BCMARM */
+#endif /* TOMATO64 */
 		}
 
 #ifdef TCONFIG_USBAP
@@ -1089,97 +1091,99 @@ static inline void usbled_proc(char *device, int add)
 	DIR *usb4 = NULL;
 #endif
 
-// #ifdef TCONFIG_BCMARM
-// 	/* check if there are two LEDs for USB and USB3, see LED table at shared/led.c */
-// 	if (do_led(LED_USB, LED_PROBE) != 255 && do_led(LED_USB3, LED_PROBE) != 255) {
-// 		if (device != NULL) {
-// 			strncpy(param, device, sizeof(param));
-// 			if ((p = strchr(param, ':')) != NULL)
-// 				*p = 0;
+#ifndef TOMATO64
+#ifdef TCONFIG_BCMARM
+	/* check if there are two LEDs for USB and USB3, see LED table at shared/led.c */
+	if (do_led(LED_USB, LED_PROBE) != 255 && do_led(LED_USB3, LED_PROBE) != 255) {
+		if (device != NULL) {
+			strncpy(param, device, sizeof(param));
+			if ((p = strchr(param, ':')) != NULL)
+				*p = 0;
 
-// 			/* verify if we need to ignore this device (i.e. an internal SD/MMC slot ) */
-// 			p = nvram_safe_get("usb_noled");
-// 			if (strcmp(p, param) == 0)
-// 				return;
-// 		}
+			/* verify if we need to ignore this device (i.e. an internal SD/MMC slot ) */
+			p = nvram_safe_get("usb_noled");
+			if (strcmp(p, param) == 0)
+				return;
+		}
 
-// 		/* get router model */
-// 		int model = get_model();
+		/* get router model */
+		int model = get_model();
 
-// 		switch(model) {
-// 		case MODEL_RTN18U:
-// 		case MODEL_RTAC56U:
-// 		case MODEL_DSLAC68U:
-// 		case MODEL_RTAC68U:
-// 		case MODEL_RTAC68UV3:
-// 		case MODEL_RTAC1900P:
-// #ifdef TCONFIG_BCM714
-// 		case MODEL_RTAC3100:
-// 		case MODEL_RTAC88U:
-// #ifdef TCONFIG_AC5300
-// 		case MODEL_RTAC5300:
-// #endif
-// #endif /* TCONFIG_BCM714 */
-// 		case MODEL_R6400:
-// 		case MODEL_R6400v2:
-// 		case MODEL_R6700v1:
-// 		case MODEL_R6700v3:
-// 		case MODEL_R6900:
-// 		case MODEL_R7000:
-// 		case MODEL_XR300:
-// #ifdef TCONFIG_AC3200
-// 		case MODEL_R8000:
-// #endif
-// 		case MODEL_F9K1113v2_20X0:
-// 		case MODEL_F9K1113v2:
-// 			/* switch usb2 --> usb1 and usb4 --> usb3 */
-// 			usb2 = opendir ("/sys/bus/usb/devices/2-1:1.0"); /* Example RT-N18U: port 1 gpio 14 for USB3 */
-// 			usb1 = opendir ("/sys/bus/usb/devices/2-2:1.0"); /* Example RT-N18U: port 2 gpio 3 */
-// 			usb4 = opendir ("/sys/bus/usb/devices/1-1:1.0");
-// 			usb3 = opendir ("/sys/bus/usb/devices/1-2:1.0");
-// 			break;
-// 		default:
-// 			/* default - keep it in place (for the future), if there is a router with a different setup/config!
-// 			   Right now all router have USB3 connected to port 1 */
-// 			usb1 = opendir ("/sys/bus/usb/devices/2-1:1.0");
-// 			usb2 = opendir ("/sys/bus/usb/devices/2-2:1.0");
-// 			usb3 = opendir ("/sys/bus/usb/devices/1-1:1.0");
-// 			usb4 = opendir ("/sys/bus/usb/devices/1-2:1.0");
-// 			break;
-// 		}
+		switch(model) {
+		case MODEL_RTN18U:
+		case MODEL_RTAC56U:
+		case MODEL_DSLAC68U:
+		case MODEL_RTAC68U:
+		case MODEL_RTAC68UV3:
+		case MODEL_RTAC1900P:
+#ifdef TCONFIG_BCM714
+		case MODEL_RTAC3100:
+		case MODEL_RTAC88U:
+#ifdef TCONFIG_AC5300
+		case MODEL_RTAC5300:
+#endif
+#endif /* TCONFIG_BCM714 */
+		case MODEL_R6400:
+		case MODEL_R6400v2:
+		case MODEL_R6700v1:
+		case MODEL_R6700v3:
+		case MODEL_R6900:
+		case MODEL_R7000:
+		case MODEL_XR300:
+#ifdef TCONFIG_AC3200
+		case MODEL_R8000:
+#endif
+		case MODEL_F9K1113v2_20X0:
+		case MODEL_F9K1113v2:
+			/* switch usb2 --> usb1 and usb4 --> usb3 */
+			usb2 = opendir ("/sys/bus/usb/devices/2-1:1.0"); /* Example RT-N18U: port 1 gpio 14 for USB3 */
+			usb1 = opendir ("/sys/bus/usb/devices/2-2:1.0"); /* Example RT-N18U: port 2 gpio 3 */
+			usb4 = opendir ("/sys/bus/usb/devices/1-1:1.0");
+			usb3 = opendir ("/sys/bus/usb/devices/1-2:1.0");
+			break;
+		default:
+			/* default - keep it in place (for the future), if there is a router with a different setup/config!
+			   Right now all router have USB3 connected to port 1 */
+			usb1 = opendir ("/sys/bus/usb/devices/2-1:1.0");
+			usb2 = opendir ("/sys/bus/usb/devices/2-2:1.0");
+			usb3 = opendir ("/sys/bus/usb/devices/1-1:1.0");
+			usb4 = opendir ("/sys/bus/usb/devices/1-2:1.0");
+			break;
+		}
 
-// 		if (add) {
-// 			if (usb1 != NULL) {
-// 				do_led(LED_USB, LED_ON); /* USB LED On! */
-// 				(void) closedir (usb1);
-// 				usb1 = NULL;
-// 			}
-// 			if (usb3 != NULL) {
-// 				do_led(LED_USB, LED_ON); /* USB LED On! */
-// 				(void) closedir (usb3);
-// 				usb3 = NULL;
-// 			}
-// 			if (usb2 != NULL) {
-// 				do_led(LED_USB3, LED_ON); /* USB3 LED On! */
-// 				(void) closedir (usb2);
-// 				usb2 = NULL;
-// 			}
-// 			if (usb4 != NULL) {
-// 				do_led(LED_USB3, LED_ON); /* USB3 LED On! */
-// 				(void) closedir (usb4);
-// 				usb4 = NULL;
-// 			}
-// 		}
-// 		else {
-// 			if (usb1 == NULL && usb3 == NULL)
-// 				do_led(LED_USB, LED_OFF); /* USB LED Off! */
+		if (add) {
+			if (usb1 != NULL) {
+				do_led(LED_USB, LED_ON); /* USB LED On! */
+				(void) closedir (usb1);
+				usb1 = NULL;
+			}
+			if (usb3 != NULL) {
+				do_led(LED_USB, LED_ON); /* USB LED On! */
+				(void) closedir (usb3);
+				usb3 = NULL;
+			}
+			if (usb2 != NULL) {
+				do_led(LED_USB3, LED_ON); /* USB3 LED On! */
+				(void) closedir (usb2);
+				usb2 = NULL;
+			}
+			if (usb4 != NULL) {
+				do_led(LED_USB3, LED_ON); /* USB3 LED On! */
+				(void) closedir (usb4);
+				usb4 = NULL;
+			}
+		}
+		else {
+			if (usb1 == NULL && usb3 == NULL)
+				do_led(LED_USB, LED_OFF); /* USB LED Off! */
 
-// 			if (usb2 == NULL && usb4 == NULL)
-// 				do_led(LED_USB3, LED_OFF); /* USB3 LED Off! */
-// 		}
-// 	}
-// 	else
-// #endif /* TCONFIG_BCMARM */
+			if (usb2 == NULL && usb4 == NULL)
+				do_led(LED_USB3, LED_OFF); /* USB3 LED Off! */
+		}
+	}
+	else
+#endif /* TCONFIG_BCMARM */
+#endif /* TOMATO64 */
 	/* only one LED for USB */
 	     if (do_led(LED_USB, LED_PROBE) != 255) {
 #if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)

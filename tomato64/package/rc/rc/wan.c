@@ -807,11 +807,6 @@ void store_wan_if_to_nvram(char *prefix)
 
 void start_wan_if(char *prefix)
 {
-
-// debug lance
-        printf("Starting WAN Interface\n" );
-//        sleep(5);
-
 	int wan_proto;
 	char *wan_ifname;
 	char *nvp;
@@ -826,7 +821,6 @@ void start_wan_if(char *prefix)
 
 	do_connect_file(1, prefix);
 
-//	Needs some looking at
 	store_wan_if_to_nvram(prefix);
 
 	/* Setup WAN interface name */
@@ -999,11 +993,6 @@ void start_wan_if(char *prefix)
 
 void start_wan(void)
 {
-
-// debug lance
-        printf("Starting WAN\n" );
-//        sleep(5);
-
 	int mwan_num;
 	int wan_unit;
 	char prefix[] = "wanXX";
@@ -1117,11 +1106,6 @@ void stop_wan6(void)
  */
 void start_wan_done(char *wan_ifname, char *prefix)
 {
-
-// debug lance
-        printf("Starting WAN Done\n" );
-//        sleep(5);
-
 	int proto;
 	int n;
 	char *gw;
