@@ -7,6 +7,7 @@ ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/bcmwifi
 ALL_CPPFLAGS += $(CPPFLAGS)
 
 ALL_CFLAGS = -fPIC
+ALL_CFLAGS += -DTOMATO64
 ALL_CFLAGS += $(CFLAGS)
 
 ALL_LDFLAGS = -fPIC -lshared -lnvram
