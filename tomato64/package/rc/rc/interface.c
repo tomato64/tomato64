@@ -19,7 +19,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
-//#include <error.h>
+#ifndef TOMATO64
+#include <error.h>
+#endif /* TOMATO64 */
 #include <string.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -48,12 +50,6 @@
 
 int _ifconfig(const char *name, int flags, const char *addr, const char *netmask, const char *dstaddr, int mtu)
 {
-
-// debug lance
-	printf("ifconfig %s %04x %s %s %s %d\n", name, flags, addr, netmask, dstaddr, mtu);
-//        sleep(1);
-
-
 	int s;
 	struct ifreq ifr;
 	struct in_addr in_addr, in_netmask, in_broadaddr;
@@ -228,22 +224,19 @@ int ipv6_mapaddr4(struct in6_addr *addr6, int ip6len, struct in_addr *addr4, int
 /* configure/start vlan interface(s) based on nvram settings */
 void start_vlan(void)
 {
-
-// debug lance
-	printf("Starting vlan\n");
-//	sleep(5);
-
 	int s;
 	struct ifreq ifr;
 	int i, j;
 	unsigned char ea[ETHER_ADDR_LEN];
 
-//#if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
-//	int vlan0tag = nvram_get_int("vlan0tag");
-//#endif
+#ifndef TOMATO64
+#if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
+	int vlan0tag = nvram_get_int("vlan0tag");
+#endif
 
-//	if ((strtoul(nvram_safe_get("boardflags"), NULL, 0) & BFL_ENETVLAN) == 0)
-//		return;
+	if ((strtoul(nvram_safe_get("boardflags"), NULL, 0) & BFL_ENETVLAN) == 0)
+		return;
+#endif /* TOMATO64 */
 
 	/* set vlan i/f name to style "vlan<ID>" */
 	eval("vconfig", "set_name_type", "VLAN_PLUS_VID_NO_PAD");
@@ -268,14 +261,8 @@ void start_vlan(void)
 			continue;
 
 		ether_atoe(hwaddr, ea);
-
-//		printf("%s\n", ea);
-		printf("vlan%dhwname, %smacaddr\n", i, hwname);
-//		sleep(1);
-
 		/* find the interface name to which the address is assigned */
 		for (j = 1; j <= DEV_NUMIFS; j ++) {
-		printf("%d\n",j);
 			ifr.ifr_ifindex = j;
 			if (ioctl(s, SIOCGIFNAME, &ifr))
 				continue;
@@ -297,20 +284,27 @@ void start_vlan(void)
 		snprintf(nvvar_name, sizeof(nvvar_name), "vlan%dvid", i);
 		vid_map = nvram_get_int(nvvar_name);
 		if ((vid_map < 1) || (vid_map > 4094)) {
-//#if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
-//			vid_map = vlan0tag | i;
-//#else
+#ifndef TOMATO64
+#if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
+			vid_map = vlan0tag | i;
+#else
 			vid_map = i;
-#//endif
+#endif
+#else /* TOMATO64 */
+			vid_map = i;
+#endif /* TOMATO64 */
 		}
 
 		/* create the VLAN interface */
 		snprintf(vlan_id, sizeof(vlan_id), "%d", vid_map);
 
-//		eval("vconfig", "add", ifr.ifr_name, vlan_id);
+#ifndef TOMATO64
+		eval("vconfig", "add", ifr.ifr_name, vlan_id);
+#else
 		char vlanname[8];
 		snprintf(vlanname, sizeof(vlanname), "vlan%d", i);
 		eval("ip", "link", "add", "link", ifr.ifr_name, "name", vlanname, "type", "vlan", "id", vlan_id);
+#endif /* TOMATO64 */
 
 		/* setup ingress map (vlan->priority => skb->priority) */
 		snprintf(vlan_id, sizeof(vlan_id), "vlan%d", vid_map);
@@ -332,9 +326,11 @@ void stop_vlan(void)
 	char nvvar_name[16];
 	char vlan_id[16];
 	char *hwname;
-//#if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
-//	int vlan0tag = nvram_get_int("vlan0tag");
-//#endif
+#ifndef TOMATO64
+#if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
+	int vlan0tag = nvram_get_int("vlan0tag");
+#endif
+#endif /* TOMATO64 */
 
 	if ((strtoul(nvram_safe_get("boardflags"), NULL, 0) & BFL_ENETVLAN) == 0)
 		return;
@@ -349,11 +345,15 @@ void stop_vlan(void)
 		snprintf(nvvar_name, sizeof(nvvar_name), "vlan%dvid", i);
 		vid_map = nvram_get_int(nvvar_name);
 		if ((vid_map < 1) || (vid_map > 4094)) {
-//#if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
-//			vid_map = vlan0tag | i;
-//#else
+#ifndef TOMATO64
+#if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
+			vid_map = vlan0tag | i;
+#else
 			vid_map = i;
-//#endif
+#endif
+#else
+			vid_map = i;
+#endif /* TOMATO64 */
 		}
 
 		/* remove the VLAN interface */
