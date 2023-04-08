@@ -117,18 +117,9 @@ static inline int check_host_key(const char *ktype, const char *nvname, const ch
 void start_sshd(void)
 {
 	int dirty = 0;
+	char *argv[11];
 	int argc, ret;
 	char *p;
-
-        char *argv[] = { "dropbear",
-                "-p", nvram_safe_get("sshd_port"),      /* -p [address:]port */
-                "-R",
-                NULL, NULL,     /* -p remote port */
-                NULL,           /* -s */
-                NULL,           /* -a */
-                NULL, NULL,     /* -W receive_window_buffer */
-                NULL };         /* NULL Termination */
-        argc = 4;
 
 	if (serialize_restart("dropbear", 1))
 		return;
@@ -143,6 +134,11 @@ void start_sshd(void)
 	dirty |= check_host_key("ed25519", "sshd_ed25519",  telsshdir"/dropbear_ed25519_host_key");
 	if (dirty)
 		nvram_commit_x();
+
+	argv[0] = "dropbear";
+	argv[1] = "-p";
+	argv[2] = nvram_safe_get("sshd_port");
+	argc = 3;
 
 	if (nvram_get_int("sshd_remote") && nvram_invmatch("sshd_rport", nvram_safe_get("sshd_port"))) {
 		argv[argc++] = "-p";
@@ -162,30 +158,17 @@ void start_sshd(void)
 		argv[argc++] = p;
 	}
 
-//	argv[argc] = NULL;
+	argv[argc] = NULL;
 
-// debug lance
-	printf("starting dropbear\n");
-//	sleep(1);
-
-//        for (int i = 0; i < 11; i++){
-//                printf("%s, ", argv[i]);
-//        }
-//	printf("\n");
-//	sleep(5);
 	ret = _eval(argv, NULL, 0, NULL);
 	if (ret) {
 		logmsg(LOG_ERR, "starting dropbear failed - check configuration ...");
 		stop_sshd();
-                printf("dropbear start error\n");
-		sleep(1);
 	}
 }
 
 void stop_sshd(void)
 {
-	printf("stopping sshd\n");
-	sleep(1);
 	if (serialize_restart("dropbear", 0))
 		return;
 
@@ -195,8 +178,6 @@ void stop_sshd(void)
 
 void start_telnetd(void)
 {
-	printf("starting telnet\n");
-	sleep(1);
 	int ret;
 	char *argv[] = { "telnetd", "-p", nvram_safe_get("telnetd_port"), NULL };
 
@@ -209,7 +190,6 @@ void start_telnetd(void)
 	if (ret) {
 		logmsg(LOG_ERR, "starting telnetd failed - check configuration ...");
 		stop_telnetd();
-                printf("telnet start error\n");
 	}
 	else
 		logmsg(LOG_INFO, "telnetd is started");
@@ -217,8 +197,6 @@ void start_telnetd(void)
 
 void stop_telnetd(void)
 {
-	printf("stopping telnet");
-	sleep(1);
 	if (serialize_restart("telnetd", 0))
 		return;
 
