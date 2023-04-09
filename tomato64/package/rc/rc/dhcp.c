@@ -163,10 +163,6 @@ static int deconfig(char *ifname, char *prefix)
 
 static int bound(char *ifname, int renew, char *prefix)
 {
-
-// debug lance
-	printf("bound %s ,%d, %s\n", ifname, renew, prefix);
-
 	char tmp [32];
 	char *netmask, *dns, *gw;
 	int wan_proto = get_wanx_proto(prefix);
@@ -338,9 +334,6 @@ int dhcpc_event_main(int argc, char **argv)
 	char *ifname;
 	ifname = getenv("interface");
 	char prefix[] = "wanXX";
-
-// debug lance
-	printf("udhcpc received %s %s\n",ifname, argv[1]);
 
 	if (nvram_match("wan_ifname", ifname))
 		strcpy(prefix, "wan");
@@ -522,10 +515,6 @@ static int deconfig_lan(void)
 
 static int bound_lan(void)
 {
-
-// debug lance
-	printf("udhcpc bound method requested\n");
-
 	char *lan_ifname = safe_getenv("interface");
 	char *value;
 
