@@ -1,0 +1,12 @@
+diff -Naur vsftpd-3.0.5.orig/tunables.c vsftpd-3.0.5/tunables.c
+--- vsftpd-3.0.5.orig/tunables.c	2023-04-13 10:15:07.956867233 -0600
++++ vsftpd-3.0.5/tunables.c	2023-04-13 10:15:24.652894358 -0600
+@@ -233,7 +233,7 @@
+   tunable_isolate_network = 1;
+   tunable_ftp_enable = 1;
+   tunable_http_enable = 0;
+-  tunable_seccomp_sandbox = 1;
++  tunable_seccomp_sandbox = 0;
+   tunable_allow_writeable_chroot = 0;
+ 
+   tunable_accept_timeout = 60;
