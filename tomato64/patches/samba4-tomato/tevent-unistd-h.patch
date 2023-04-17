@@ -1,0 +1,11 @@
+diff -Naur samba-4.15.12.orig/lib/tevent/tevent.h samba-4.15.12/lib/tevent/tevent.h
+--- samba-4.15.12.orig/lib/tevent/tevent.h	2023-04-17 14:40:47.293403359 -0600
++++ samba-4.15.12/lib/tevent/tevent.h	2023-04-17 14:40:56.813404475 -0600
+@@ -28,6 +28,7 @@
+ #ifndef __TEVENT_H__
+ #define __TEVENT_H__
+ 
++#include <unistd.h>
+ #include <stdint.h>
+ #include <talloc.h>
+ #include <sys/time.h>

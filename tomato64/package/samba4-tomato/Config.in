@@ -1,0 +1,27 @@
+comment "samba4 needs a uClibc or glibc toolchain w/ wchar, dynamic library, NPTL"
+	depends on BR2_TOOLCHAIN_HAS_SYNC_4
+	depends on !BR2_USE_WCHAR \
+		|| BR2_STATIC_LIBS || !BR2_TOOLCHAIN_HAS_THREADS_NPTL
+	depends on BR2_USE_MMU
+
+config BR2_PACKAGE_SAMBA4_TOMATO
+	bool "samba4"
+	depends on BR2_USE_MMU # fork()
+	depends on BR2_USE_WCHAR # python
+	depends on BR2_TOOLCHAIN_HAS_THREADS_NPTL # python -> libffi
+	depends on !BR2_STATIC_LIBS # cmocka, python, gnutls
+	depends on !BR2_nios2 # binary too large, relocations don't fit
+	depends on BR2_TOOLCHAIN_HAS_SYNC_4
+	select BR2_PACKAGE_CMOCKA
+	select BR2_PACKAGE_E2FSPROGS
+	select BR2_PACKAGE_GNUTLS
+	select BR2_PACKAGE_LIBICONV if !BR2_ENABLE_LOCALE
+	select BR2_PACKAGE_LIBTIRPC if !BR2_TOOLCHAIN_HAS_NATIVE_RPC
+	select BR2_PACKAGE_POPT
+	select BR2_PACKAGE_ZLIB
+	help
+	  Provides secure, stable and fast file and print services
+	  for all clients using the SMB/CIFS protocol, such as all
+	  versions of DOS, Windows, OS/2, Linux and many others.
+
+	  http://www.samba.org/

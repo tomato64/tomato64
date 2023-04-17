@@ -151,6 +151,7 @@ config BR2_PACKAGE_RC_PROXY
 config BR2_PACKAGE_RC_SAMBA
 	bool "Enable Samba"
 	default y
+	select BR2_PACKAGE_SAMBA4_TOMATO
 
 config BR2_PACKAGE_RC_SNMP
 	bool "Enable SNMP"
