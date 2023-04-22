@@ -123,7 +123,13 @@ define SAMBA4_TOMATO_CONFIGURE_CMDS
 		./buildtools/bin/waf configure \
 			--prefix=/usr \
 			--sysconfdir=/etc \
+			--with-configdir=/etc \
+			--with-logdir=/var/log \
 			--localstatedir=/var \
+			--with-piddir=/var/run/samba \
+			--with-privatedir=/etc/samba \
+			--with-lockdir=/var/lock \
+			--with-logfilebase=/var/log \
 			--with-libiconv=$(STAGING_DIR)/usr \
 			--enable-fhs \
 			--cross-compile \

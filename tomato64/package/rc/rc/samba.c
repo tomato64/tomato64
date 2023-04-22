@@ -26,6 +26,9 @@
 
 #define samba_dir		"/etc/samba"
 #define samba_var_dir		"/var/run/samba"
+#ifdef TOMATO64
+#define samba_cache_dir		"/var/cache/samba"
+#endif /* TOMATO64 */
 #define samba_configfile	"/etc/smb.conf"
 
 /* needed by logmsg() */
@@ -311,6 +314,9 @@ void start_samba(int force)
 
 	mkdir_if_none(samba_var_dir);
 	mkdir_if_none(samba_dir);
+#ifdef TOMATO64
+	mkdir_if_none(samba_cache_dir);
+#endif /* TOMATO64 */
 
 	/* write smbpasswd */
 	eval("smbpasswd", "nobody", "\"\"");

@@ -152,6 +152,7 @@ config BR2_PACKAGE_RC_SAMBA
 	bool "Enable Samba"
 	default y
 	select BR2_PACKAGE_SAMBA4_TOMATO
+	select BR2_PACKAGE_WSDD2
 
 config BR2_PACKAGE_RC_SNMP
 	bool "Enable SNMP"

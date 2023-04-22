@@ -14,6 +14,8 @@ else
     cp -f "$TARGET_DIR/lib/grub/i386-pc/boot.img" "$BINARIES_DIR"
 fi
 
+
+# Tomato64 will create and populate these directories on boot
 rm -rf \
 $TARGET_DIR/etc \
 $TARGET_DIR/home \
@@ -21,20 +23,27 @@ $TARGET_DIR/mnt \
 $TARGET_DIR/root \
 $TARGET_DIR/var
 
+# Need for some hook scripts
 mkdir -p \
 $TARGET_DIR/tmp/etc \
 $TARGET_DIR/tmp/home/root \
 $TARGET_DIR/tmp/mnt \
 $TARGET_DIR/tmp/var
 
+# Create symbolic links to the tmp tmpfs.
 ln -sf tmp/etc $TARGET_DIR/etc
 ln -sf tmp/home $TARGET_DIR/home
 ln -sf tmp/home/root $TARGET_DIR/root
 ln -sf tmp/mnt $TARGET_DIR/mnt
 ln -sf tmp/var $TARGET_DIR/var
 
+# symlink init process to rc. Need to disable init in busybox and verify the rc package does it instead.
 ln -sf rc $TARGET_DIR/sbin/init
+
+# create ldd symlink
 ln -sf /lib/ld-musl-x86_64.so.1 $TARGET_DIR/usr/bin/ldd
+
+# symlink openssl since Tomato expects it in a non-standard place
 ln -sf /usr/bin/openssl $TARGET_DIR/usr/sbin/openssl
 
 # To make buildroot genimage happy
