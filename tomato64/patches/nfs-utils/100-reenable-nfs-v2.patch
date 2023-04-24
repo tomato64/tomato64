@@ -1,0 +1,207 @@
+diff -Naur nfs-utils-2.6.3.orig/nfs.conf nfs-utils-2.6.3/nfs.conf
+--- nfs-utils-2.6.3.orig/nfs.conf	2023-04-25 10:57:55.641449115 -0600
++++ nfs-utils-2.6.3/nfs.conf	2023-04-25 10:58:10.169462082 -0600
+@@ -72,6 +72,7 @@
+ # lease-time=90
+ # udp=n
+ # tcp=y
++# vers2=n
+ # vers3=y
+ # vers4=y
+ # vers4.0=y
+diff -Naur nfs-utils-2.6.3.orig/utils/mount/configfile.c nfs-utils-2.6.3/utils/mount/configfile.c
+--- nfs-utils-2.6.3.orig/utils/mount/configfile.c	2023-04-25 10:57:55.633449107 -0600
++++ nfs-utils-2.6.3/utils/mount/configfile.c	2023-04-25 10:58:21.889472395 -0600
+@@ -71,7 +71,7 @@
+ int mnt_alias_sz = (sizeof(mnt_alias_tab)/sizeof(mnt_alias_tab[0]));
+ 
+ static const char *version_keys[] = {
+-	"v3", "v4", "vers", "nfsvers", "minorversion", NULL
++	"v2", "v3", "v4", "vers", "nfsvers", "minorversion", NULL
+ };
+ 
+ static int strict;
+diff -Naur nfs-utils-2.6.3.orig/utils/mount/mount.nfs.man nfs-utils-2.6.3/utils/mount/mount.nfs.man
+--- nfs-utils-2.6.3.orig/utils/mount/mount.nfs.man	2023-04-25 10:57:55.633449107 -0600
++++ nfs-utils-2.6.3/utils/mount/mount.nfs.man	2023-04-25 10:58:16.809467943 -0600
+@@ -27,7 +27,7 @@
+ .BR mount.nfs4
+ must be used for mounting NFSv4 file systems while
+ .BR mount.nfs
+-must be used for NFSv3.
++must be used for NFSv3 and v2.
+ 
+ .SH OPTIONS
+ .TP
+diff -Naur nfs-utils-2.6.3.orig/utils/mount/network.c nfs-utils-2.6.3/utils/mount/network.c
+--- nfs-utils-2.6.3.orig/utils/mount/network.c	2023-04-25 10:57:55.633449107 -0600
++++ nfs-utils-2.6.3/utils/mount/network.c	2023-04-25 10:58:21.889472395 -0600
+@@ -97,7 +97,7 @@
+ };
+ 
+ static const char *nfs_version_opttbl[] = {
+-	"v2", /* no longer supported */
++	"v2",
+ 	"v3",
+ 	"v4",
+ 	"vers",
+@@ -1275,7 +1275,7 @@
+ 	else if (found < 0)
+ 		return 1;
+ 	else if (found <= 2 ) {
+-		/* v3, v4 */
++		/* v2, v3, v4 */
+ 		version_val = version_key + 1;
+ 		version->v_mode = V_SPECIFIC;
+ 	} else if (found > 2 ) {
+diff -Naur nfs-utils-2.6.3.orig/utils/mount/nfs.man nfs-utils-2.6.3/utils/mount/nfs.man
+--- nfs-utils-2.6.3.orig/utils/mount/nfs.man	2023-04-25 10:57:55.633449107 -0600
++++ nfs-utils-2.6.3/utils/mount/nfs.man	2023-04-25 10:58:16.809467943 -0600
+@@ -12,7 +12,7 @@
+ to allow file sharing between systems residing
+ on a local area network.
+ Depending on kernel configuration, the Linux NFS client may
+-support NFS versions 3, 4.0, 4.1, or 4.2.
++support NFS versions 2, 3, 4.0, 4.1, or 4.2.
+ .P
+ The
+ .BR mount (8)
+@@ -986,6 +986,11 @@
+ .BR nfsmount.conf(5)
+ for details.
+ .SH EXAMPLES
++To mount an export using NFS version 2,
++use the
++.B nfs
++file system type and specify the
++.B nfsvers=2
+ mount option.
+ To mount using NFS version 3,
+ use the
+@@ -1012,6 +1017,13 @@
+ 	server:/export	/mnt	nfs	defaults	0 0
+ .fi
+ .P
++Here is an example from an /etc/fstab file for an NFS version 2 mount over UDP.
++.P
++.nf
++.ta 8n +16n +6n +6n +30n
++	server:/export	/mnt	nfs	nfsvers=2,proto=udp	0 0
++.fi
++.P
+ This example shows how to mount using NFS version 4 over TCP
+ with Kerberos 5 mutual authentication.
+ .P
+@@ -1104,7 +1116,7 @@
+ can safely be allowed to default to the largest values supported by
+ both client and server, independent of the network's MTU size.
+ .SS "Using the mountproto mount option"
+-This section applies only to NFS version 3 mounts
++This section applies only to NFS version 2 and version 3 mounts
+ since NFS version 4 does not use a separate protocol for mount
+ requests.
+ .P
+@@ -1507,7 +1519,7 @@
+ mount option.
+ .SS "Using file locks with NFS"
+ The Network Lock Manager protocol is a separate sideband protocol
+-used to manage file locks in NFS version 3.
++used to manage file locks in NFS version 2 and version 3.
+ To support lock recovery after a client or server reboot,
+ a second sideband protocol --
+ known as the Network Status Manager protocol --
+@@ -1927,6 +1939,8 @@
+ .br
+ RFC 793 for the TCP specification.
+ .br
++RFC 1094 for the NFS version 2 specification.
++.br
+ RFC 1813 for the NFS version 3 specification.
+ .br
+ RFC 1832 for the XDR specification.
+diff -Naur nfs-utils-2.6.3.orig/utils/mount/nfsmount.conf nfs-utils-2.6.3/utils/mount/nfsmount.conf
+--- nfs-utils-2.6.3.orig/utils/mount/nfsmount.conf	2023-04-25 10:57:55.633449107 -0600
++++ nfs-utils-2.6.3/utils/mount/nfsmount.conf	2023-04-25 10:58:21.889472395 -0600
+@@ -28,7 +28,7 @@
+ # This statically named section defines global mount 
+ # options that can be applied on all NFS mount.
+ #
+-# Protocol Version [3,4]
++# Protocol Version [2,3,4]
+ # This defines the default protocol version which will
+ # be used to start the negotiation with the server.
+ # Defaultvers=4
+diff -Naur nfs-utils-2.6.3.orig/utils/mount/stropts.c nfs-utils-2.6.3/utils/mount/stropts.c
+--- nfs-utils-2.6.3.orig/utils/mount/stropts.c	2023-04-25 10:57:55.633449107 -0600
++++ nfs-utils-2.6.3/utils/mount/stropts.c	2023-04-25 10:58:21.889472395 -0600
+@@ -357,7 +357,6 @@
+ 
+ static int nfs_set_version(struct nfsmount_info *mi)
+ {
+-
+ 	if (!nfs_nfs_version(mi->type, mi->options, &mi->version))
+ 		return 0;
+ 
+@@ -1019,6 +1018,7 @@
+ 	}
+ 
+ 	switch (mi->version.major) {
++		case 2:
+ 		case 3:
+ 			result = nfs_try_mount_v3v2(mi, FALSE);
+ 			break;
+@@ -1249,14 +1249,6 @@
+ 	if (!nfs_validate_options(mi))
+ 		return EX_FAIL;
+ 
+-	/* 
+-	 * NFS v2 has been deprecated
+-	 */
+-	if (mi->version.major == 2) {
+-		mount_error(mi->spec, mi->node, EOPNOTSUPP);
+-		return EX_FAIL;
+-	}
+-
+ 	/*
+ 	 * Avoid retry and negotiation logic when remounting
+ 	 */
+diff -Naur nfs-utils-2.6.3.orig/utils/nfsd/nfsd.c nfs-utils-2.6.3/utils/nfsd/nfsd.c
+--- nfs-utils-2.6.3.orig/utils/nfsd/nfsd.c	2023-04-25 10:57:55.633449107 -0600
++++ nfs-utils-2.6.3/utils/nfsd/nfsd.c	2023-04-25 10:58:10.169462082 -0600
+@@ -233,6 +233,7 @@
+ 				}
+ 				/* FALLTHRU */
+ 			case 3:
++			case 2:
+ 				NFSCTL_VERUNSET(versbits, c);
+ 				break;
+ 			default:
+@@ -257,6 +258,7 @@
+ 					minorvers = minorversset = minormask;
+ 				/* FALLTHRU */
+ 			case 3:
++			case 2:
+ 				NFSCTL_VERSET(versbits, c);
+ 				break;
+ 			default:
+diff -Naur nfs-utils-2.6.3.orig/utils/nfsd/nfsd.man nfs-utils-2.6.3/utils/nfsd/nfsd.man
+--- nfs-utils-2.6.3.orig/utils/nfsd/nfsd.man	2023-04-25 10:57:55.633449107 -0600
++++ nfs-utils-2.6.3/utils/nfsd/nfsd.man	2023-04-25 10:58:10.169462082 -0600
+@@ -65,7 +65,7 @@
+ .B rpc.nfsd
+ does not offer certain versions of NFS. The current version of
+ .B rpc.nfsd
+-can support major NFS versions 3,4 and the minor versions 4.0, 4.1 and 4.2.
++can support major NFS versions 2,3,4 and the minor versions 4.0, 4.1 and 4.2.
+ .TP
+ .B \-s " or " \-\-syslog
+ By default,
+@@ -92,7 +92,7 @@
+ .B rpc.nfsd
+ offer certain versions of NFS. The current version of
+ .B rpc.nfsd
+-can support major NFS versions 3,4 and the minor versions 4.0, 4.1 and 4.2.
++can support major NFS versions 2,3,4 and the minor versions 4.0, 4.1 and 4.2.
+ .TP
+ .B \-L " or " \-\-lease-time seconds
+ Set the lease-time used for NFSv4.  This corresponds to how often

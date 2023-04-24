@@ -116,6 +116,8 @@ config BR2_PACKAGE_RC_MULTIWAN
 config BR2_PACKAGE_RC_NFS
 	bool "Enable NFS"
 	default y
+	select BR2_PACKAGE_NFS_UTILS
+	select BR2_PACKAGE_NFS_UTILS_RPC_NFSD
 
 config BR2_PACKAGE_RC_NGINX
 	bool "Enable NGINX"

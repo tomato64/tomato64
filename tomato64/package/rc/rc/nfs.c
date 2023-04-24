@@ -38,6 +38,7 @@ void start_nfs(void)
 	}
 
 	/* create directories/files */
+#ifndef TOMATO64
 	mkdir_if_none("/var/lib");
 	mkdir_if_none("/var/lib/nfs");
 	mkdir_if_none("/var/lib/nfs/sm");
@@ -49,6 +50,18 @@ void start_nfs(void)
 	close(creat("/var/lib/nfs/etab", 0644));
 	close(creat("/var/lib/nfs/xtab", 0644));
 	close(creat("/var/lib/nfs/rmtab", 0644));
+#else
+        mkdir_if_none("/run/nfs");
+        mkdir_if_none("/run/nfs/sm");
+        mkdir_if_none("/run/nfs/v4recovery");
+
+        unlink("/run/nfs/etab");
+        unlink("/run/nfs/xtab");
+        unlink("/run/nfs/rmtab");
+        close(creat("/run/nfs/etab", 0644));
+        close(creat("/run/nfs/xtab", 0644));
+        close(creat("/run/nfs/rmtab", 0644));
+#endif /* TOMATO64 */
 
 	/* (re-)create /etc/exports */
 	if (stat(NFS_EXPORT, &st_buf) == 0)
@@ -82,8 +95,13 @@ void start_nfs(void)
 	threads = nvram_get_int("nfsd_threads");
 	snprintf(numthreads, sizeof(numthreads), "%d", (threads ? : 2)); /* default to 2 threads */
 
+#ifndef TOMATO64
 	if (pidof("portmap") < 0)
 		eval("/usr/sbin/portmap");
+#else
+	if (pidof("rpcbind") < 0)
+		eval("/usr/sbin/rpcbind");
+#endif /* TOMATO64 */
 
 	eval("/usr/sbin/statd");
 

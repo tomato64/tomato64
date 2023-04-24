@@ -23,7 +23,7 @@ $TARGET_DIR/mnt \
 $TARGET_DIR/root \
 $TARGET_DIR/var
 
-# Need for some hook scripts
+# Needed for some hook scripts
 mkdir -p \
 $TARGET_DIR/tmp/etc \
 $TARGET_DIR/tmp/home/root \
@@ -45,6 +45,11 @@ ln -sf /lib/ld-musl-x86_64.so.1 $TARGET_DIR/usr/bin/ldd
 
 # symlink openssl since Tomato expects it in a non-standard place
 ln -sf /usr/bin/openssl $TARGET_DIR/usr/sbin/openssl
+
+# Symlinks for nfs-utils binaries
+ln -sf rpc.statd $TARGET_DIR/usr/sbin/statd
+ln -sf rpc.nfsd $TARGET_DIR/usr/sbin/nfsd
+ln -sf rpc.mountd $TARGET_DIR/usr/sbin/mountd
 
 # To make buildroot genimage happy
 touch $TARGET_DIR/tmp/etc/group
