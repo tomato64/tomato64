@@ -4,11 +4,10 @@
 #
 ################################################################################
 
-LIBNVRAM_VERSION = 1.0
-LIBNVRAM_SITE = $(BR2_EXTERNAL_TOMATO64_PATH)/package/libnvram/libnvram
-LIBNVRAM_SITE_METHOD = local
+LIBNVRAM_VERSION = 153a64ae0b8c35ee6f01c07dfaaf63129086ee67
+LIBNVRAM_SITE = $(call github,tomato64,libnvram,$(LIBNVRAM_VERSION))
 LIBNVRAM_INSTALL_STAGING = YES
-LIBNVRAM_LICENSE = tomato
+LIBNVRAM_LICENSE = MIT
 
 define LIBNVRAM_BUILD_CMDS
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) libnvram.so

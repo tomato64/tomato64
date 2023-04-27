@@ -1,0 +1,104 @@
+diff -Naur libnvram.orig/config.h libnvram/config.h
+--- libnvram.orig/config.h	2023-04-27 07:56:50.322767439 -0600
++++ libnvram/config.h	2023-04-27 07:56:41.830774718 -0600
+@@ -4,9 +4,9 @@
+ // Determines whether debugging information should be printed to stderr.
+ #define DEBUG               1
+ // Determines the size of the internal buffer, used for manipulating and storing key values, etc.
+-#define BUFFER_SIZE         256
++#define BUFFER_SIZE         2048
+ // Determines the size of the "emulated" NVRAM, used by nvram_get_nvramspace().
+-#define NVRAM_SIZE          2048
++#define NVRAM_SIZE          1048576
+ // Determines the maximum size of the user-supplied output buffer when a length is not supplied.
+ #define USER_BUFFER_SIZE    64
+ // Determines the unique separator character (as string) used for the list implementation. Do not use "\0".
+@@ -18,9 +18,9 @@
+ // Timeout for the semaphore
+ #define IPC_TIMEOUT         1000
+ // Mount point of the base NVRAM implementation.
+-#define MOUNT_POINT         "/firmadyne/libnvram/"
++#define MOUNT_POINT         "/nvram/"
+ // Location of NVRAM override values that are copied into the base NVRAM implementation.
+-#define OVERRIDE_POINT      "/firmadyne/libnvram.override/"
++#define OVERRIDE_POINT      "/nvram.override/"
+ 
+ // Define the semantics for success and failure error codes.
+ #define E_FAILURE  0
+diff -Naur libnvram.orig/Makefile libnvram/Makefile
+--- libnvram.orig/Makefile	2023-04-27 07:56:50.322767439 -0600
++++ libnvram/Makefile	2023-04-27 07:56:41.830774718 -0600
+@@ -1,5 +1,9 @@
+-CFLAGS=-O2 -fPIC -Wall
+-LDFLAGS=-shared -nostdlib
++ALL_CFLAGS = -O2 -fPIC -Wall
++ALL_LDFLAGS = -shared
++
++ALL_CFLAGS += $(CFLAGS)
++ALL_LDFLAGS += $(LDFLAGS)
++
+ 
+ OBJECTS=$(SOURCES:.c=.o)
+ SOURCES=nvram.c
+@@ -8,10 +12,10 @@
+ all: $(SOURCES) $(TARGET)
+ 
+ $(TARGET): $(OBJECTS)
+-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
++	$(CC) $(ALL_CFLAGS) $(ALL_LDFLAGS) $(OBJECTS) -o $@
+ 
+ .c.o:
+-	$(CC) -c $(CFLAGS) $< -o $@
++	$(CC) -c $(ALL_CFLAGS) $< -o $@
+ 
+ clean:
+ 	rm -f *.o libnvram.so test
+diff -Naur libnvram.orig/nvram.c libnvram/nvram.c
+--- libnvram.orig/nvram.c	2023-04-27 07:56:50.326767435 -0600
++++ libnvram/nvram.c	2023-04-27 07:56:41.830774718 -0600
+@@ -124,8 +124,8 @@
+             endmntent(mnt);
+         }
+ 
+-        PRINT_MSG("%s\n", "Triggering NVRAM initialization!");
+-        nvram_init();
++//        PRINT_MSG("%s\n", "Triggering NVRAM initialization!");
++//        nvram_init();
+     }
+ 
+ cont:
+@@ -179,11 +179,11 @@
+ 
+     sem_lock();
+ 
+-    if (mount("tmpfs", MOUNT_POINT, "tmpfs", MS_NOEXEC | MS_NOSUID | MS_SYNCHRONOUS, "") == -1) {
+-        sem_unlock();
+-        PRINT_MSG("Unable to mount tmpfs on mount point %s!\n", MOUNT_POINT);
+-        return E_FAILURE;
+-    }
++//    if (mount("tmpfs", MOUNT_POINT, "tmpfs", MS_NOEXEC | MS_NOSUID | MS_SYNCHRONOUS, "") == -1) {
++//        sem_unlock();
++//        PRINT_MSG("Unable to mount tmpfs on mount point %s!\n", MOUNT_POINT);
++//        return E_FAILURE;
++//    }
+ 
+     // Checked by certain Ralink routers
+     if ((f = fopen("/var/run/nvramd.pid", "w+")) == NULL) {
+@@ -195,7 +195,7 @@
+ 
+     sem_unlock();
+ 
+-    return nvram_set_default();
++//    return nvram_set_default();
+ }
+ 
+ int nvram_reset(void) {
+@@ -206,7 +206,7 @@
+         return E_FAILURE;
+     }
+ 
+-    return nvram_set_default();
++//    return nvram_set_default();
+ }
+ 
+ int nvram_clear(void) {
