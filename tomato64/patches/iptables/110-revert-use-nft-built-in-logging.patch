@@ -1,0 +1,96 @@
+--- iptables-1.8.x/extensions/libxt_NFLOG.c
++++ iptables-1.8.x/extensions/libxt_NFLOG.c
+@@ -5,7 +5,6 @@
+ #include <getopt.h>
+ #include <xtables.h>
+ 
+-#include <linux/netfilter/nf_log.h>
+ #include <linux/netfilter/x_tables.h>
+ #include <linux/netfilter/xt_NFLOG.h>
+ 
+@@ -54,8 +53,6 @@
+ 
+ static void NFLOG_parse(struct xt_option_call *cb)
+ {
+-	char *nf_log_prefix = cb->udata;
+-
+ 	xtables_option_parse(cb);
+ 	switch (cb->entry->id) {
+ 	case O_PREFIX:
+@@ -63,7 +60,6 @@
+ 			xtables_error(PARAMETER_PROBLEM,
+ 				   "Newlines not allowed in --log-prefix");
+ 
+-		snprintf(nf_log_prefix, NF_LOG_PREFIXLEN, "%s", cb->arg);
+ 		break;
+ 	}
+ }
+@@ -154,7 +150,6 @@
+ 	.save		= NFLOG_save,
+ 	.x6_options	= NFLOG_opts,
+ 	.xlate		= NFLOG_xlate,
+-	.udata_size	= NF_LOG_PREFIXLEN
+ };
+ 
+ void _init(void)
+--- iptables-1.8.x/iptables/nft.c
++++ iptables-1.8.x/iptables/nft.c
+@@ -39,7 +39,6 @@
+ #include <linux/netfilter/nf_tables_compat.h>
+ 
+ #include <linux/netfilter/xt_limit.h>
+-#include <linux/netfilter/xt_NFLOG.h>
+ #include <linux/netfilter/xt_mark.h>
+ 
+ #include <libmnl/libmnl.h>
+@@ -1572,8 +1571,6 @@
+ 			ret = add_verdict(r, NF_DROP);
+ 		else if (strcmp(cs->jumpto, XTC_LABEL_RETURN) == 0)
+ 			ret = add_verdict(r, NFT_RETURN);
+-		else if (strcmp(cs->jumpto, "NFLOG") == 0)
+-			ret = add_log(r, cs);
+ 		else
+ 			ret = add_target(r, cs->target->t);
+ 	} else if (strlen(cs->jumpto) > 0) {
+@@ -1586,31 +1583,6 @@
+ 	return ret;
+ }
+ 
+-int add_log(struct nftnl_rule *r, struct iptables_command_state *cs)
+-{
+-	struct nftnl_expr *expr;
+-	struct xt_nflog_info *info = (struct xt_nflog_info *)cs->target->t->data;
+-
+-	expr = nftnl_expr_alloc("log");
+-	if (!expr)
+-		return -ENOMEM;
+-
+-	if (info->prefix[0] != '\0')
+-		nftnl_expr_set_str(expr, NFTNL_EXPR_LOG_PREFIX,
+-				   cs->target->udata);
+-
+-	nftnl_expr_set_u16(expr, NFTNL_EXPR_LOG_GROUP, info->group);
+-	if (info->flags & XT_NFLOG_F_COPY_LEN)
+-		nftnl_expr_set_u32(expr, NFTNL_EXPR_LOG_SNAPLEN,
+-				   info->len);
+-	if (info->threshold)
+-		nftnl_expr_set_u16(expr, NFTNL_EXPR_LOG_QTHRESHOLD,
+-				   info->threshold);
+-
+-	nftnl_rule_add_expr(r, expr);
+-	return 0;
+-}
+-
+ static void nft_rule_print_debug(struct nft_handle *h,
+ 				 struct nftnl_rule *r, struct nlmsghdr *nlh)
+ {
+--- iptables-1.8.x/iptables/nft.h
++++ iptables-1.8.x/iptables/nft.h
+@@ -195,7 +195,6 @@
+ int add_target(struct nftnl_rule *r, struct xt_entry_target *t);
+ int add_jumpto(struct nftnl_rule *r, const char *name, int verdict);
+ int add_action(struct nftnl_rule *r, struct iptables_command_state *cs, bool goto_set);
+-int add_log(struct nftnl_rule *r, struct iptables_command_state *cs);
+ char *get_comment(const void *data, uint32_t data_len);
+ 
+ enum nft_rule_print {

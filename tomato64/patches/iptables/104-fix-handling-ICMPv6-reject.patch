@@ -1,0 +1,16 @@
+--- iptables-1.8.x/extensions/libip6t_REJECT.c
++++ iptables-1.8.x/extensions/libip6t_REJECT.c
+@@ -61,6 +61,13 @@ static const struct reject_names reject_
+ 		"ICMPv6 policy fail",
+ 		"policy-fail",
+ 	},
++#if 1	/* compat */
++	[IP6T_ICMP6_POLICY_FAIL] = {
++		"icmp6-src-addr-policy", "src-addr-policy",
++		"ICMPv6 src addr fails ingress/egress policy",
++		"src-addr-policy",
++	},
++#endif
+ 	[IP6T_ICMP6_REJECT_ROUTE] = {
+ 		"icmp6-reject-route", "reject-route",
+ 		"ICMPv6 reject route",

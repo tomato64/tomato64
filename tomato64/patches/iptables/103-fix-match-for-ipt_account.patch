@@ -1,0 +1,26 @@
+--- iptables-1.8.x/libiptc/libiptc.c
++++ iptables-1.8.x/libiptc/libiptc.c
+@@ -1887,6 +1887,7 @@
+ {
+ 	const STRUCT_ENTRY_MATCH *b;
+ 	unsigned int i;
++	int compare_size = 0;
+ 
+ 	/* Offset of b is the same as a. */
+ 	b = (void *)b_elems + ((unsigned char *)a - a_elems);
+@@ -1897,9 +1898,14 @@
+ 	if (strcmp(a->u.user.name, b->u.user.name) != 0)
+ 		return 1;
+ 
++	if (!strcmp(a->u.user.name, "account"))
++		compare_size = a->u.match_size - 8;	/* hack for ipt_account, don't compare table stats */
++	else
++		compare_size = a->u.match_size;
++
+ 	*maskptr += ALIGN(sizeof(*a));
+ 
+-	for (i = 0; i < a->u.match_size - ALIGN(sizeof(*a)); i++)
++	for (i = 0; i < compare_size - ALIGN(sizeof(*a)); i++)
+ 		if (((a->data[i] ^ b->data[i]) & (*maskptr)[i]) != 0)
+ 			return 1;
+ 	*maskptr += i;
