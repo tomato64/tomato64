@@ -8,7 +8,7 @@ ALL_CPPFLAGS += $(CPPFLAGS)
 ALL_CFLAGS = -fPIC
 ALL_CFLAGS += $(CFLAGS)
 
-ALL_LDFLAGS = -fPIC -lnvram -lshared
+ALL_LDFLAGS = -fPIC -lshared -lnvram
 ALL_LDFLAGS += $(LDFLAGS)
 
 ifeq ($(TOMATO_EXPERIMENTAL),1)
