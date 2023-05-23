@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -e
+
+if [ "`nvram get set_macs`" == '1' ]
+then
+	for i in `ls /sys/class/net/`;
+	do
+		if [[ "$i" == "eth"* ]]; then
+			nvram set ${i}macaddr=$(cat /sys/class/net/${i}/address | tr '[:lower:]' '[:upper:]')
+		fi
+	done
+
+	for i in wan_hwaddr wan_mac;
+	do
+		nvram set ${i}=`ifconfig eth0 | grep -o -E ..:..:..:..:..:..`
+	done
+
+	nvram set lan_hwaddr=`ifconfig eth1 | grep -o -E ..:..:..:..:..:..`
+	nvram set set_macs=1
+fi

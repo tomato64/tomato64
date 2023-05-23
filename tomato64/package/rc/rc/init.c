@@ -10524,6 +10524,7 @@ static void sysinit(void)
 	eval("hotplug2", "--coldplug");
 #else
 	eval("/etc/init.d/S10mdev", "start");
+	eval("/usr/bin/set_macs");
 #endif /* TOMATO64 */
 
 	start_hotplug2();

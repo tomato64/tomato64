@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -e
+
+if [ -z "$1" ]
+then
+	echo "Missing argument"
+else
+	for i in wan_ifnameX wan_ifname wandevs wan_iface wan_ifnames;
+	do
+		nvram set ${i}=$1
+	done
+
+	for i in wan_hwaddr wan_mac;
+	do
+		nvram set ${i}=`ifconfig $1 | grep -o -E ..:..:..:..:..:..`
+	done
+fi

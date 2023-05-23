@@ -790,11 +790,13 @@ void store_wan_if_to_nvram(char *prefix)
 		 * wan4 --> et0 mac +19
 		 * Info: sync GUI def-mac - see www/advanced-mac.asp
 		 */
+#ifndef TOMATO64
 		if ((nvvar == NULL) ||
 		    (nvvar && !strlen(nvvar))) {
 			create_wanx_mac(prefix, (wan_unit + 15));
 		}
 		set_mac(p, tmp, (wan_unit + 15));
+#endif /* TOMATO64 */
 	}
 	else { /* Wireless client as wan */
 		w = nvram_safe_get(strcat_r(prefix, "_sta", tmp));
