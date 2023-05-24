@@ -2126,14 +2126,24 @@ void start_udpxy(void)
 			if (ret1 && ret2) {
 				memset(buffer2, 0, sizeof(buffer2));
 				snprintf(buffer2, sizeof(buffer2), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+#ifdef TOMATO64
+				eval("udpxy", "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-a", nvram_safe_get(buffer2), "-m", buffer, (nvram_get_int("udpxy_stats") ? "-S" : ""));
+#else
 				eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-a", nvram_safe_get(buffer2), "-m", buffer);
+#endif /* TOMATO64 */
 				bind_lan = 1;
 				break; /* start udpxy only once and only for one lanX */
 			}
 		}
 		/* address/interface to listen on: default = 0.0.0.0 */
 		if (!bind_lan)
+		{
+#ifdef TOMATO64
+			eval("udpxy", "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-m", buffer, (nvram_get_int("udpxy_stats") ? "-S" : ""));
+#else
 			eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-m", buffer);
+#endif /* TOMATO64 */
+		}
 	}
 }
 
