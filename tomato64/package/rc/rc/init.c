@@ -10525,6 +10525,7 @@ static void sysinit(void)
 #else
 	eval("/etc/init.d/S10mdev", "start");
 	eval("/usr/bin/set_macs");
+	eval("/usr/bin/fudge_time");
 #endif /* TOMATO64 */
 
 	start_hotplug2();
