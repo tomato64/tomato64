@@ -10217,6 +10217,7 @@ static int init_nvram(void)
 	wl_defaults(); /* check and align wifi values */
 #endif
 
+#ifndef TOMATO64
 	if (name) {
 		nvram_set("t_fix1", name);
 		if (ver && strcmp(ver, "")) {
@@ -10231,6 +10232,9 @@ static int init_nvram(void)
 		s[64] = 0;
 	}
 	nvram_set("t_model_name", s);
+#else
+	nvram_set("t_model_name", "x86_64");
+#endif /* TOMATO64 */
 #ifndef CONFIG_BCMWL6A
 	nvram_set("pa0maxpwr", "400"); /* allow Tx power up tp 400 mW, needed for ND only */
 #endif
