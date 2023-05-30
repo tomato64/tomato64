@@ -31,7 +31,7 @@ function verifyFields(focused, quiet) {
 	var ok = 1;
 
 	var txt1 = ' option is not allowed here.';
-	var txt2 = ' You can set it in FreshTomato GUI';
+	var txt2 = ' You can set it in Tomato64 GUI';
 
 	var b = E('_f_tor_solve_only').checked;
 	var o = (E('_tor_iface').value == 'custom');
@@ -143,7 +143,7 @@ function init() {
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">FreshTomato</div>
+	<div class="title">Tomato64</div>
 	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>

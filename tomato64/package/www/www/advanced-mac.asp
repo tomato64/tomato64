@@ -46,7 +46,7 @@ function defmac(which) {
 /* MULTIWAN-END */
 	else {
 /* REMOVE-BEGIN
-// align to wlconf setup AND FreshTomato initial mac setup
+// align to wlconf setup AND Tomato64 initial mac setup
 REMOVE-END */
 		var unit, subunit, t, v;
 		unit = which.substr(2, 1) * 1;
@@ -175,7 +175,7 @@ function init() {
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">FreshTomato</div>
+	<div class="title">Tomato64</div>
 	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>

@@ -27,9 +27,9 @@ cp -L /etc/ssl/openssl.cnf $OPENSSLCNF
 echo "0.commonName=CN" >> $OPENSSLCNF
 echo "0.commonName_value=$LANIP" >> $OPENSSLCNF
 echo "0.organizationName=O" >> $OPENSSLCNF
-echo "0.organizationName_value=FreshTomato" >> $OPENSSLCNF
+echo "0.organizationName_value=Tomato64" >> $OPENSSLCNF
 echo "0.organizationalUnitName=OU" >> $OPENSSLCNF
-echo "0.organizationalUnitName_value=FreshTomato Team" >> $OPENSSLCNF
+echo "0.organizationalUnitName_value=Tomato64 Team" >> $OPENSSLCNF
 echo "0.emailAddress=E" >> $OPENSSLCNF
 echo "0.emailAddress_value=root@localhost" >> $OPENSSLCNF
 

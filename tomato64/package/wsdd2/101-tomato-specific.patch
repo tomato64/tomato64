@@ -17,13 +17,13 @@
 +	const char *key, *_default;
 +	char *value;
 +} bootinfo[] = {
-+	{ .key	= "vendor:",	._default = "FRESHTOMATO"},
-+	{ .key	= "model:",	._default = "FreshTomato"},
++	{ .key	= "vendor:",	._default = "TOMATO64"},
++	{ .key	= "model:",	._default = "Tomato64"},
 +	{ .key	= "serial:",	._default = "0"},
-+	{ .key	= "sku:",	._default = "FreshTomato router"},
-+	{ .key	= "vendorurl:",	._default = "https://freshtomato.org"},
-+	{ .key	= "modelurl:",	._default = "https://freshtomato.org"},
-+	{ .key	= "presentationurl:",	._default = "http://freshtomato.org"},
++	{ .key	= "sku:",	._default = "Tomato64 router"},
++	{ .key	= "vendorurl:",	._default = "https://tomato64.org"},
++	{ .key	= "modelurl:",	._default = "https://tomato64.org"},
++	{ .key	= "presentationurl:",	._default = "https://tomato64.org"},
 +	{}
 +};
 +#endif /* TOMATO */
@@ -35,7 +35,7 @@
  	const char resp_hdr_fmt[] =
  		"HTTP/1.1 %s\r\n"
 +#ifdef TOMATO
-+		"Server: FreshTomato WSD Server\r\n"
++		"Server: Tomato64 WSD Server\r\n"
 +#else
  		"Server: NETGEAR WSD Server\r\n"
 +#endif

@@ -103,7 +103,7 @@ keyUsage = digitalSignature, keyEncipherment
 extendedKeyUsage = clientAuth
 
 # This will be displayed in Netscape's comment listbox.
-nsComment = "FreshTomato Generated Client Certificate"
+nsComment = "Tomato64 Generated Client Certificate"
 
 # PKIX recommendations harmless if included in all certificates.
 subjectKeyIdentifier = hash
@@ -167,7 +167,7 @@ basicConstraints = CA:true
 [ server_cert ]
 basicConstraints=CA:FALSE
 nsCertType              = server
-nsComment               = "FreshTomato Generated Server Certificate"
+nsComment               = "Tomato64 Generated Server Certificate"
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid,issuer:always
 extendedKeyUsage        = serverAuth

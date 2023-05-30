@@ -29,7 +29,7 @@ void start_snmp(void)
 		            "syscontact %s <%s>\n"
 		            "rocommunity %s\n"
 		            "extend device /bin/echo \"%s\"\n"
-		            "extend version /bin/echo \"FreshTomato %s\"\n",
+		            "extend version /bin/echo \"Tomato64 %s\"\n",
 		            nvram_get_int("snmp_port"),
 		            nvram_safe_get("snmp_location"),
 		            nvram_safe_get("snmp_contact"),

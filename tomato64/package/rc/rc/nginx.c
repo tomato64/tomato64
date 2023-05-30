@@ -16,7 +16,7 @@
 #include "rc.h"
 
 #define nginxbin			"nginx"				/* process name */
-#define nginxname			"freshtomato.local"		/* server name */
+#define nginxname			"tomato64.local"		/* server name */
 #define nginxlogdir			"/var/log/nginx"		/* log directory */
 #define nginxlibdir			"/var/lib/nginx"		/* lib directory */
 #define nginxdir			"/etc/nginx"			/* directory to write config files */

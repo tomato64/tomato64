@@ -674,7 +674,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "ddnsx_refresh",		"28"				, 0 },
 
 /* basic-ident */
-	{ "router_name",		"FreshTomato"			, 0 },
+	{ "router_name",		"Tomato64"			, 0 },
 	{ "wan_hostname",		"unknown"			, 0 },
 	{ "wan_domain",			""				, 0 },
 
@@ -1522,7 +1522,7 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TCONFIG_NOCAT
 	{ "NC_enable",			"0"				, 0 },	/* enable NoCatSplash */
 	{ "NC_Verbosity",		"2"				, 0 },
-	{ "NC_GatewayName",		"FreshTomato Captive Portal"	, 0 },
+	{ "NC_GatewayName",		"Tomato64 Captive Portal"	, 0 },
 	{ "NC_GatewayPort",		"5280"				, 0 },
 	{ "NC_GatewayMode",		"Open"				, 0 },
 	{ "NC_DocumentRoot",		"/tmp/splashd"			, 0 },
@@ -1545,7 +1545,7 @@ struct nvram_tuple router_defaults[] = {
 	{"nginx_docroot",		"/www"				, 0 },	/* path for server files */
 	{"nginx_port",			"85"				, 0 },	/* port to listen */
 	{"nginx_remote",		"0"				, 0 },	/* open port from WAN site */
-	{"nginx_fqdn",			"FreshTomato"			, 0 },	/* server name */
+	{"nginx_fqdn",			"Tomato64"			, 0 },	/* server name */
 	{"nginx_upload",		"100"				, 0 },	/* upload file size limit */
 	{"nginx_priority",		"10"				, 0 },	/* server priority = worker_priority */
 	{"nginx_custom",		""				, 0 },	/* additional lines for nginx.conf */

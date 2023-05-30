@@ -95,7 +95,7 @@ function init() {
 <body onload="init()">
 <table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">FreshTomato</div>
+	<div class="title">Tomato64</div>
 	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>
@@ -108,7 +108,7 @@ function init() {
 <div class="section">
 	<div>
 		<script>
-			W('<input type="text" size="60" maxlength="128" id="backup-name" onchange="backupNameChanged()" value="FreshTomato_'+('<% version(); %>'.replace(/\./g, '_'))+'~m'+nvram.lan_hwaddr.replace(/:/g, '').substring(6, 12)+'~'+nvram.t_model_name.replace(/\/| /g, '_')+'~'+now.getFullYear()+('0'+(now.getMonth()+1)).slice(-2)+('0'+now.getDate()).slice(-2)+'">');
+			W('<input type="text" size="60" maxlength="128" id="backup-name" onchange="backupNameChanged()" value="Tomato64_'+('<% version(); %>'.replace(/\./g, '_'))+'~m'+nvram.lan_hwaddr.replace(/:/g, '').substring(6, 12)+'~'+nvram.t_model_name.replace(/\/| /g, '_')+'~'+now.getFullYear()+('0'+(now.getMonth()+1)).slice(-2)+('0'+now.getDate()).slice(-2)+'">');
 		</script>
 		<div style="display:inline">.cfg &nbsp;
 			<input type="button" name="f_backup_button" id="backup-button" onclick="backupButton()" value="Backup">

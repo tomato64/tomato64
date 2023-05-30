@@ -249,7 +249,7 @@ void start_ftpd(int force)
 	}
 #endif /* TCONFIG_HTTPS */
 
-	fprintf(fp, "ftpd_banner=Welcome to FreshTomato %s FTP service.\n"
+	fprintf(fp, "ftpd_banner=Welcome to Tomato64 %s FTP service.\n"
 	            "%s\n",
 	            nvram_safe_get("os_version"),
 	            nvram_safe_get("ftp_custom"));

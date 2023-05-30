@@ -282,7 +282,7 @@ endif
 ifeq ($(TOMATO_EXPERIMENTAL),1)
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp); do \
-		sed -e "s,<div class=\"title\">FreshTomato</div>,<div class=\"title\">FreshTomato <small class=\"betaver\"><i>(beta)</i></small></div>," $$F > $$F.tmp; \
+		sed -e "s,<div class=\"title\">Tomato64</div>,<div class=\"title\">Tomato64 <small class=\"betaver\"><i>(beta)</i></small></div>," $$F > $$F.tmp; \
 		mv $$F.tmp $$F; \
 	done
 endif

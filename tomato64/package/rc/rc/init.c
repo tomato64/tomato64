@@ -379,7 +379,7 @@ static pid_t run_shell(int timeout, int nowait)
 
 		/* Reopen console */
 		console_init();
-		printf("\n\nFreshTomato %s\n\n", tomato_version);
+		printf("\n\nTomato64 %s\n\n", tomato_version);
 
 		/* Now run it. The new program will take over this PID,
 		 * so nothing further in init.c should be run. */
@@ -10765,7 +10765,7 @@ int init_main(int argc, char *argv[])
 			/* SIGHUP (RESTART) falls through */
 
 			//nvram_set("wireless_restart_req", "1"); /* restart wifi twice to make sure all is working ok! not needed right now M_ars */
-			logmsg(LOG_INFO, "FreshTomato RESTART ...");
+			logmsg(LOG_INFO, "Tomato64 RESTART ...");
 
 		case SIGUSR2: /* START */
 			stop_syslog();
@@ -10806,7 +10806,7 @@ int init_main(int argc, char *argv[])
 			start_services();
 
 			if (restore_defaults_fb /*|| nvram_match("wireless_restart_req", "1")*/) {
-				logmsg(LOG_INFO, "%s: FreshTomato WiFi restarting ... (restore defaults)", nvram_safe_get("t_model_name"));
+				logmsg(LOG_INFO, "%s: Tomato64 WiFi restarting ... (restore defaults)", nvram_safe_get("t_model_name"));
 				restore_defaults_fb = 0; /* reset */
 				//nvram_set("wireless_restart_req", "0");
 				restart_wireless();
@@ -10816,7 +10816,7 @@ int init_main(int argc, char *argv[])
 
 				/* If a virtual SSID is disabled, it requires two initialisations */
 				if (foreach_wif(1, NULL, disabled_wl)) {
-					logmsg(LOG_INFO, "%s: FreshTomato WiFi restarting ... (virtual SSID disabled)", nvram_safe_get("t_model_name"));
+					logmsg(LOG_INFO, "%s: Tomato64 WiFi restarting ... (virtual SSID disabled)", nvram_safe_get("t_model_name"));
 					restart_wireless();
 				}
 			}
@@ -10836,7 +10836,7 @@ int init_main(int argc, char *argv[])
 				start_nas();
 			}
 
-			logmsg(LOG_INFO, "%s: FreshTomato %s", nvram_safe_get("t_model_name"), tomato_version);
+			logmsg(LOG_INFO, "%s: Tomato64 %s", nvram_safe_get("t_model_name"), tomato_version);
 
 			led(LED_DIAG, LED_OFF);
 

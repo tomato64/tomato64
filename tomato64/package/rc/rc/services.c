@@ -1550,9 +1550,9 @@ void start_upnp(void)
 	           "system_uptime=yes\n"
 	           "friendly_name=%s"" Router\n"
 	           "model_name=%s\n"
-	           "model_url=https://freshtomato.org/\n"
-	           "manufacturer_name=FreshTomato Firmware\n"
-	           "manufacturer_url=https://freshtomato.org/\n"
+	           "model_url=https://tomato64.org/\n"
+	           "manufacturer_name=Tomato64 Firmware\n"
+	           "manufacturer_url=https://tomato64.org/\n"
 	           "\n",
 	           get_wanface("wan"),
 	           upnp_port,
@@ -2429,7 +2429,7 @@ static void start_media_server(int force)
 			           "model_number=%s\n\n",
 			           strlen(msi) ? msi : nvram_safe_get("lan_ifname"),
 			           (port < 0) || (port >= 0xffff) ? 0 : port,
-			           nvram_get("router_name") ? : "FreshTomato",
+			           nvram_get("router_name") ? : "Tomato64",
 			           dbdir ? : "/var/run/minidlna",
 			           nvram_get_int("ms_tivo") ? "yes" : "no",
 			           nvram_get_int("ms_stdlna") ? "yes" : "no",

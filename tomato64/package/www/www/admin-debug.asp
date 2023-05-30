@@ -95,7 +95,7 @@ function init() {
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">FreshTomato</div>
+	<div class="title">Tomato64</div>
 	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>
@@ -176,7 +176,7 @@ function init() {
 		<li><b>Enable segfault logging</b> - When enabled if a program crashes due to segfault, extensive messages are logged</li>
 		<li><b>Count cache memory and buffers as free memory</b> - Notoriously Linux counts buffer and cache as used RAM. Enableing this will consider cache and buffer as unallocated RAM </li>
 		<li><b>Avoid displaying LAN to router connections</b> - Do not consider connections between LAN and router in CONNTRACK table</li>
-		<li><b>Set "no-cache" in httpd header</b> - This will essentially tell your browser not to cache FreshTomato pages</li>
+		<li><b>Set "no-cache" in httpd header</b> - This will essentially tell your browser not to cache Tomato64 pages</li>
 		<li><b>Kernel printk log level</b> - This sets klogd (kernel logging) minimum logging level.</li>
 	</ul>
 	<br>

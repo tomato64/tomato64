@@ -272,7 +272,7 @@ function anon_update() {
 	if (update == 'no' || update == '' || !update)
 		return 0;
 
-	var code = '<div class="section-title">!! Attention !!<\/div><div class="section-centered">New version of FreshTomato '+update+' is now available. <a class="new_window" href="https://freshtomato.org/">Click here to download<\/a>.<\/div>';
+	var code = '<div class="section-title">!! Attention !!<\/div><div class="section-centered">New version of Tomato64 '+update+' is now available. <a class="new_window" href="https://tomato64.org/">Click here to download<\/a>.<\/div>';
 	E('status-nversion').style.display = 'block';
 	E('status-nversion').innerHTML = code;
 }
@@ -441,7 +441,7 @@ function init() {
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">FreshTomato</div>
+	<div class="title">Tomato64</div>
 	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>

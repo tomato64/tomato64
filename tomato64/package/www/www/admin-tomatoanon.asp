@@ -51,7 +51,7 @@ function init() {
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">FreshTomato</div>
+	<div class="title">Tomato64</div>
 	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>
@@ -82,7 +82,7 @@ function init() {
 		- Router model, ex: Asus RT-AC3200<br>
 		- Tomato version installed, ex: 2019.3 K26ARM USB<br>
 		- Builtype, ex: AIO-64K<br>
-		- Tomato MOD, ex: FreshTomato<br>
+		- Tomato MOD, ex: Tomato64<br>
 		- Uptime of your router, ex: 7 days
 	</div>
 </div>
@@ -101,7 +101,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">FreshTomato Update Notification System</div>
+<div class="section-title">Tomato64 Update Notification System</div>
 <div class="section">
 	<script>
 		createFieldTable('', [
@@ -109,7 +109,7 @@ function init() {
 		]);
 	</script>
 	<ul>
-		<li>When a new version of FreshTomato is available, you will be notified on the status-overview page.</li>
+		<li>When a new version of Tomato64 is available, you will be notified on the status-overview page.</li>
 	</ul>
 </div>
 

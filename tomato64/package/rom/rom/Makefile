@@ -5,8 +5,7 @@ INSTALLDIR=$(TARGET_DIR)
 all:
 	@echo "" >rom/etc/motd
 	@echo "" >>rom/etc/motd
-#	@echo "FreshTomato `cat ../shared/tomato_version`" >>rom/etc/motd
-	@echo "Tomato64 x86_64" >>rom/etc/motd
+	@echo "Tomato64 x86_64 `cat $(BR2_EXTERNAL_TOMATO64_PATH)/version` " >>rom/etc/motd
 
 clean:
 	rm -f rom/etc/motd

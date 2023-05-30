@@ -35,7 +35,7 @@ WGET="/usr/bin/wget"
 	[ "$ANON_ENABLED" -eq 1 ] && {
 
 ############################
-		MOD=FreshTomato
+		MOD=Tomato64
 ############################
 
 		# Detect Version and Buildtype
@@ -52,7 +52,7 @@ WGET="/usr/bin/wget"
 			VER_MAJ=$(echo $VER | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
 			VER_MNR=$(echo $VER | awk '{print $1}' | cut -d "." -f2 | sed 's/[^0-9]*//g')
 
-			RESCHK=$($WGET -O- "http://freshtomato.org/version.txt")
+			RESCHK=$($WGET -O- "https://tomato64.org/version.txt")
 
 			CHKVER_MAJ=$(echo $RESCHK | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
 			ISMNR=$(echo $RESCHK | grep "\." | wc -l)

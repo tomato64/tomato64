@@ -138,7 +138,7 @@ function verifyFields(focused, quiet) {
 	for (var i = 0; i < searchArray.length; i++) {
 		var regex = new RegExp('"'+searchArray[i]+'":', 'g');
 		if (s.value.search(regex) !== -1) {
-			ferror.set(s, 'The "'+searchArray[i]+'" option is not allowed here. You can set it in FreshTomato GUI', quiet || !ok);
+			ferror.set(s, 'The "'+searchArray[i]+'" option is not allowed here. You can set it in Tomato64 GUI', quiet || !ok);
 			ok = 0;
 		}
 	}
@@ -214,7 +214,7 @@ function init() {
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
 <tr><td colspan="2" id="header">
-<div class="title">FreshTomato</div>
+<div class="title">Tomato64</div>
 <div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>

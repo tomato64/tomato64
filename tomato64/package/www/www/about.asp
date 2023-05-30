@@ -29,7 +29,7 @@ function init() {
 <body onload="init()">
 <table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">FreshTomato</div>
+	<div class="title">Tomato64</div>
 	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>
@@ -39,13 +39,13 @@ function init() {
 <!-- / / / -->
 
 <div class="about">
-	<b>FreshTomato Firmware <% version(1); %></b><br>
+	<b>Tomato64 Firmware <% version(1); %></b><br>
 	<br>
 	Linux kernel <% version(2); %> and Broadcom Wireless Driver <% version(3); %><br>
 	<br>
-	<b>FreshTomato project page: </b><a href="https://freshtomato.org" class="new_window"> https://freshtomato.org</a><br>
+	<b>Tomato64 project page: </b><a href="https://tomato64.org" class="new_window"> https://tomato64.org</a><br>
 	<b>Forums about Tomato</b> - EN: <a href="https://www.linksysinfo.org/index.php?forums/tomato-firmware.33/" class="new_window">https://linksysinfo.org</a> PL: <a href="https://openlinksys.info" class="new_window">https://openlinksys.info</a><br>
-	<b>Source code: </b><a href="https://bitbucket.org/pedro311/freshtomato-arm" class="new_window"> https://bitbucket.org</a><br>
+	<b>Source code: </b><a href="https://github.com/tomato64/tomato64" class="new_window">https://github.com/tomato64/tomato64</a><br>
 	<br>
 	<hr>
 	<br>
@@ -222,12 +222,12 @@ function init() {
 	<br>
 
 	<hr>
-	<br><b>FreshTomato-ARM - is an alternative, customized version, forked off from Tomato-ARM by Shibby</b>
+	<br><b>Tomato64-ARM - is an alternative, customized version, forked off from FreshTomato by Pedro</b>
 	<br>
-	Copyright (C) 2016-2022 by Pedro
+	Copyright (C) 2022-2023 by Lance Fredrickson
 	<br>
 	<br>
-	Built on <% build_time(); %> by Pedro
+	Built on <% build_time(); %> by Lance Fredrickson
 	<br>
 	<br>
 	<br>

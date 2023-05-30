@@ -54,7 +54,7 @@ static void start_wsdd(void)
 
 	snprintf(serial, sizeof(serial), "%02x%02x%02x%02x%02x%02x", ea[0], ea[1], ea[2], ea[3], ea[4], ea[5]);
 
-	snprintf(bootparms, sizeof(bootparms), "sku:%s,serial:%s", (nvram_get("odmpid") ? : "FreshTomato"), serial);
+	snprintf(bootparms, sizeof(bootparms), "sku:%s,serial:%s", (nvram_get("odmpid") ? : "Tomato64"), serial);
 
 	/* (-i: no multi-interface binds atm) */
 	eval("wsdd2", "-d", "-w", "-i", nvram_safe_get("lan_ifname"), "-b", bootparms);
@@ -180,7 +180,7 @@ void start_samba(int force)
 	            strlen(si) ? si : nvram_safe_get("lan_ifname"),
 	            nvram_get("smbd_wgroup") ? : "WORKGROUP",
 	            nvram_safe_get("lan_hostname"),
-	            nvram_get("router_name") ? : "FreshTomato",
+	            nvram_get("router_name") ? : "Tomato64",
 	            mode == 2 ? "" : "map to guest = Bad User",
 	            mode == 2 ? "no" : "yes"); /* guest ok */
 

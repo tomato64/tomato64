@@ -871,7 +871,7 @@ function init() {
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">FreshTomato</div>
+	<div class="title">Tomato64</div>
 	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>
@@ -1015,7 +1015,7 @@ function init() {
 		<i>Other relevant notes/hints:</i><br>
 		<ul>
 			<li>You should probably cross check things on <a href="basic-network.asp">Basic/Network</a> and <a href="advanced-wlanvifs.asp">Advanced/Virtual Wireless</a></li>
-			<li>Be mindful some FreshTomato releases might use VID 0 as default others VID 1.</li>
+			<li>Be mindful some Tomato64 releases might use VID 0 as default others VID 1.</li>
 			<li>One VID <i>must</i> be assigned to the WAN bridge.</li>
 			<script>
 				W('<li>One VID <i>must<\/i> be selected as the default VLAN.<\/li>\n');

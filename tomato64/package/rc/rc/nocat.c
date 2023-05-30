@@ -71,7 +71,7 @@ void build_nocat_conf(void)
 	fprintf(fp, "Verbosity\t%s\n", p);
 
 	if ((p = nvram_get("NC_GatewayName")) == NULL)
-		p = "FreshTomato Portal";
+		p = "Tomato64 Portal";
 	fprintf(fp, "GatewayName\t%s\n", p);
 
 	if ((p = nvram_get("NC_GatewayPort")) == NULL)
@@ -201,7 +201,7 @@ void start_nocat(void)
 	            "	$LOGGER \"Captive Portal halted (0), other process starting\"\n"
 	            "	exit\n"
 	            "fi\n"
-	            "echo \"FRESHTOMATO\" > $LOCK_FILE\n"
+	            "echo \"TOMATO64\" > $LOCK_FILE\n"
 	            "sleep 20\n"
 	            "$LOGGER \"Captive Portal Splash Daemon started\"\n"
 	            "echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse\n"

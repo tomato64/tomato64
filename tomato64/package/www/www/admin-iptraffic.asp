@@ -215,7 +215,7 @@ function init() {
 <body onload="init()">
 <table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">FreshTomato</div>
+	<div class="title">Tomato64</div>
 	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>
@@ -285,7 +285,7 @@ REMOVE-END */
 <div class="section" id="backup-section">
 	<div>
 		<script>
-			W('<input type="text" size="40" maxlength="64" id="backup-name" name="backup_name" onchange="backupNameChanged()" value="FreshTomato_cstats_'+nvram.lan_hwaddr.replace(/:/g, '').toLowerCase()+'">');
+			W('<input type="text" size="40" maxlength="64" id="backup-name" name="backup_name" onchange="backupNameChanged()" value="Tomato64_cstats_'+nvram.lan_hwaddr.replace(/:/g, '').toLowerCase()+'">');
 		</script>
 		<div style="display:inline">.gz &nbsp;
 			<input type="button" name="f_backup_button" id="backup-button" onclick="backupButton()" value="Backup">
