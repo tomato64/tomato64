@@ -1607,7 +1607,9 @@ static void filter_log(void)
 		limit[0] = 0;
 
 #ifdef TCONFIG_IPV6
+#ifndef TOMATO64
 	modprobe("ip6t_LOG");
+#endif /* TOMATO64 */
 #endif
 	if ((*chain_in_drop == 'l') || (*chain_out_drop == 'l'))
 		ip46t_write(":logdrop - [0:0]\n"
@@ -2021,7 +2023,9 @@ int start_firewall(void)
 		simple_unlock("firewall");
 		return 0;
 	}
+#ifndef TOMATO64
 	modprobe("nf_conntrack_ipv6");
+#endif /* TOMATO64 */
 	modprobe("ip6t_REJECT");
 #endif
 
@@ -2125,8 +2129,10 @@ int start_firewall(void)
 	led(LED_DMZ, dmz_dst(NULL));
 
 #ifdef TCONFIG_IPV6
+#ifndef TOMATO64
 	modprobe_r("nf_conntrack_ipv6");
 	modprobe_r("ip6t_LOG");
+#endif /* TOMATO64 */
 	modprobe_r("ip6t_REJECT");
 #endif
 
