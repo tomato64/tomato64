@@ -1,0 +1,40 @@
+--- spawn-fcgi/src/spawn-fcgi.c
++++ spawn-fcgi/src/spawn-fcgi.c
+@@ -385,11 +385,11 @@ static int find_user_group(const char *u
+ 			}
+ 			my_uid = my_pwd->pw_uid;
+ 
+-			if (my_uid == 0) {
++/*			if (my_uid == 0) {
+ 				fprintf(stderr, "spawn-fcgi: I will not set uid to 0\n");
+ 				return -1;
+ 			}
+-
++*/
+ 			if (username) *username = user;
+ 		} else {
+ 			my_pwd = getpwuid(my_uid);
+@@ -407,19 +407,19 @@ static int find_user_group(const char *u
+ 			}
+ 			my_gid = my_grp->gr_gid;
+ 
+-			if (my_gid == 0) {
++/*			if (my_gid == 0) {
+ 				fprintf(stderr, "spawn-fcgi: I will not set gid to 0\n");
+ 				return -1;
+ 			}
+-		}
++*/		}
+ 	} else if (my_pwd) {
+ 		my_gid = my_pwd->pw_gid;
+ 
+-		if (my_gid == 0) {
++/*		if (my_gid == 0) {
+ 			fprintf(stderr, "spawn-fcgi: I will not set gid to 0\n");
+ 			return -1;
+ 		}
+-	}
++*/	}
+ 
+ 	*uid = my_uid;
+ 	*gid = my_gid;

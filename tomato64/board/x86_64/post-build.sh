@@ -51,6 +51,11 @@ ln -sf rpc.statd $TARGET_DIR/usr/sbin/statd
 ln -sf rpc.nfsd $TARGET_DIR/usr/sbin/nfsd
 ln -sf rpc.mountd $TARGET_DIR/usr/sbin/mountd
 
+# PHP symlinks
+ln -sf /usr/bin/php $TARGET_DIR/usr/sbin/php-cli
+ln -sf /usr/bin/php-cgi $TARGET_DIR/usr/sbin/php-cgi
+ln -sf /usr/bin/php-cgi $TARGET_DIR/usr/sbin/php-fcgi
+
 # To make buildroot genimage happy
 touch $TARGET_DIR/tmp/etc/group
 touch $TARGET_DIR/tmp/etc/passwd
