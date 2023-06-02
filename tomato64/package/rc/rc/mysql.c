@@ -147,6 +147,13 @@ void start_mysql(int force)
 	else
 		snprintf(full_tmpdir, sizeof(full_tmpdir), "%s/%s", ppr, ptmpdir);
 
+#ifdef TOMATO64
+	snprintf(full_datadir, sizeof(full_datadir), "%s", pdatadir);
+	snprintf(full_tmpdir, sizeof(full_tmpdir), "%s", ptmpdir);
+	mkdir_if_none(full_datadir);
+	mkdir_if_none(full_tmpdir);
+#endif /* TOMATO64 */
+
 	mkdir_if_none(mysql_etc_dir);
 
 	/* config file */
