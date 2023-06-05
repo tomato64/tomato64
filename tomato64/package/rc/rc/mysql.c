@@ -358,7 +358,7 @@ void start_mysql(int force)
 	}
 
 	eval("mkdir", "-p", nginx_docroot);
-	eval("cp", "-p" "/www/adminer.php", nginx_docroot);
+	eval("cp", "-p", "/www/adminer.php", nginx_docroot);
 	sleep(1);
 
 END:
