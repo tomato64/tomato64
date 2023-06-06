@@ -1,0 +1,93 @@
+diff -Naur dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/addrconf.c dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/addrconf.c
+--- dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/addrconf.c	2023-06-07 06:56:27.013782264 -0600
++++ dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/addrconf.c	2023-06-07 07:00:25.193512480 -0600
+@@ -59,6 +59,7 @@
+ #include "timer.h"
+ #include "dhcp6c_ia.h"
+ #include "prefixconf.h"
++#include <time.h>
+ 
+ TAILQ_HEAD(statefuladdr_list, statefuladdr);
+ struct iactl_na {
+diff -Naur dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/auth.h dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/auth.h
+--- dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/auth.h	2023-06-07 06:44:14.954639853 -0600
++++ dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/auth.h	2023-06-07 06:45:13.214568857 -0600
+@@ -29,6 +29,8 @@
+  * SUCH DAMAGE.
+  */
+ 
++#include<sys/cdefs.h>
++
+ #ifdef __sun__
+ #define	__P(x)	x
+ #ifndef	U_INT32_T_DEFINED
+diff -Naur dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/config.h dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/config.h
+--- dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/config.h	2023-06-07 06:44:14.954639853 -0600
++++ dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/config.h	2023-06-07 06:45:13.214568857 -0600
+@@ -32,6 +32,8 @@
+ #ifndef	_CONFIG_H_
+ #define	_CONFIG_H_
+ 
++#include<sys/cdefs.h>
++
+ /* definitions of tail-queue types */
+ TAILQ_HEAD(ia_conflist, ia_conf);
+ TAILQ_HEAD(pifc_list, prefix_ifconf);
+diff -Naur dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/dhcp6relay.c dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/dhcp6relay.c
+--- dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/dhcp6relay.c	2023-06-07 06:44:14.958639848 -0600
++++ dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/dhcp6relay.c	2023-06-07 07:25:51.027248107 -0600
+@@ -32,7 +32,7 @@
+ #include <sys/socket.h>
+ #include <sys/queue.h>
+ #include <sys/uio.h>
+-#include <sys/signal.h>
++#include <signal.h>
+ 
+ #include <net/if.h>
+ #ifdef __FreeBSD__
+diff -Naur dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/Makefile.in dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/Makefile.in
+--- dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/Makefile.in	2023-06-07 06:44:14.954639853 -0600
++++ dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/Makefile.in	2023-06-07 06:47:45.798385942 -0600
+@@ -29,7 +29,7 @@
+ # $KAME: Makefile.in,v 1.45 2005/10/16 16:25:38 suz Exp $
+ #
+ 
+-include ../common.mak
++#include ../common.mak
+ 
+ prefix=	@prefix@
+ srcdir=	@srcdir@
+diff -Naur dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/missing/arc4random.h dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/missing/arc4random.h
+--- dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/missing/arc4random.h	2023-06-07 06:44:14.958639848 -0600
++++ dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/missing/arc4random.h	2023-06-07 06:44:59.122585964 -0600
+@@ -29,6 +29,8 @@
+  * SUCH DAMAGE.
+  */
+ 
++#include<sys/cdefs.h>
++
+ #ifdef __sun__
+ #define	__P(x)	x
+ typedef uint32_t u_int32_t;
+diff -Naur dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/prefixconf.c dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/prefixconf.c
+--- dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/prefixconf.c	2023-06-07 06:44:14.958639848 -0600
++++ dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/prefixconf.c	2023-06-07 06:49:56.062232555 -0600
+@@ -59,6 +59,7 @@
+ #include "timer.h"
+ #include "dhcp6c_ia.h"
+ #include "prefixconf.h"
++#include <time.h>
+ 
+ #ifdef TOMATO
+ #include <bcmnvram.h>
+diff -Naur dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/timer.c dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/timer.c
+--- dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7.orig/timer.c	2023-06-07 06:44:14.958639848 -0600
++++ dhcpv6-a183c2a9a7eba5b2e77525af7738b2af854ebfc7/timer.c	2023-06-07 06:50:20.886203564 -0600
+@@ -28,6 +28,7 @@
+  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  * SUCH DAMAGE.
+  */
++#include <time.h>
+ #include <sys/types.h>
+ #include <sys/time.h>
+ #include <sys/socket.h>

@@ -1,0 +1,6 @@
+config BR2_PACKAGE_DHCPV6_TOMATO
+	bool "dhcpv6"
+	select BR2_PACKAGE_LIBSHARED
+	select BR2_PACKAGE_LIBNVRAM
+	help
+	  dhcpv6 client for toamto firmware

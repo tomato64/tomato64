@@ -92,6 +92,7 @@ config BR2_PACKAGE_RC_HTTPS
 config BR2_PACKAGE_RC_IPV6
 	bool "Enable IPv6"
 	default y
+	select BR2_PACKAGE_DHCPV6_TOMATO
 
 config BR2_PACKAGE_RC_IRQBALANCE
 	bool "Enable IRQBALANCE"
