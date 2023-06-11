@@ -1643,14 +1643,13 @@ void start_lan(void)
 						if (sscanf(ifname, "vlan%d", &vid) == 1) {
 							snprintf(tmp, sizeof(tmp), "vlan%dvid", vid);
 							vid_map = nvram_get_int(tmp);
-#ifndef TOMATO64
 #if !defined(TCONFIG_BLINK) && !defined(TCONFIG_BCMARM) /* RT only */
 							if ((vid_map < 1) || (vid_map > 4094)) vid_map = vlan0tag | vid;
 #else
-#endif /* TOMATO64 */
  							if ((vid_map < 1) || (vid_map > 4094)) vid_map = vid;
-#ifndef TOMATO64
 #endif
+#ifndef TOMATO64
+ 							if ((vid_map < 1) || (vid_map > 4094)) vid_map = vid;
 #endif /* TOMATO64 */
 							snprintf(tmp, sizeof(tmp), "vlan%d", vid_map);
 							ifname = tmp;

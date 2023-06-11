@@ -290,7 +290,8 @@ void start_vlan(void)
 #else
 			vid_map = i;
 #endif
-#else /* TOMATO64 */
+#endif /* TOMATO64 */
+#ifdef TOMATO64
 			vid_map = i;
 #endif /* TOMATO64 */
 		}
@@ -298,13 +299,7 @@ void start_vlan(void)
 		/* create the VLAN interface */
 		snprintf(vlan_id, sizeof(vlan_id), "%d", vid_map);
 
-#ifndef TOMATO64
 		eval("vconfig", "add", ifr.ifr_name, vlan_id);
-#else
-		char vlanname[8];
-		snprintf(vlanname, sizeof(vlanname), "vlan%d", i);
-		eval("ip", "link", "add", "link", ifr.ifr_name, "name", vlanname, "type", "vlan", "id", vlan_id);
-#endif /* TOMATO64 */
 
 		/* setup ingress map (vlan->priority => skb->priority) */
 		snprintf(vlan_id, sizeof(vlan_id), "vlan%d", vid_map);

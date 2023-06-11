@@ -2,7 +2,7 @@
 
 set -e
 
-if [ "`nvram get set_macs`" == '1' ]
+if [ "`nvram get set_macs`" == '0' ]
 then
 	for i in `ls /sys/class/net/`;
 	do
