@@ -1,0 +1,79 @@
+diff --git a/Makefile b/Makefile
+index 6028647..02e184c 100755
+--- a/Makefile
++++ b/Makefile
+@@ -23,57 +23,23 @@
+ #
+ #
+ 
+-LIB     = -L/usr/local/lib
+-INC     = -I/usr/local/include
+-EXE	= /usr/local/bin
+-MAN     = /usr/share/man/man1
+-CPROG	= comgt
+-SCRIPTPATH = /etc/comgt/
+-SCRIPTSRC = ./scripts/
+-BIN     = $(CPROG) 
+-MANP	= comgt.1 sigmon.1
++ALL_CPPFLAGS = -fPIC
++ALL_CPPFLAGS += $(CPPFLAGS)
+ 
+-CFLAGS  = -c
+-LDFLAGS =
++ALL_CFLAGS = -fPIC
++ALL_CFLAGS += $(CFLAGS)
+ 
+-all: $(BIN)
++ALL_LDFLAGS = -fPIC
++ALL_LDFLAGS += $(LDFLAGS)
+ 
+-install:
+-	chmod a-w $(BIN)
+-	chmod u+rw $(BIN)
+-	chmod a+x $(BIN)
+-	cp $(BIN) $(EXE)
+-	chmod a-wx $(MANP)
+-	chmod u+rw $(MANP)
+-	chmod a+r $(MANP)
+-	cp $(MANP) $(MAN)
+-	-mkdir $(SCRIPTPATH)
+-	chmod a-w $(SCRIPTPATH)
+-	chmod u+rw $(SCRIPTPATH)
+-	chmod a+x $(SCRIPTPATH)
+-	cp -f $(SCRIPTSRC)* $(SCRIPTPATH)
+-	chmod a-w $(SCRIPTPATH)*
+-	chmod u+rw $(SCRIPTPATH)*
+-	chmod a+x $(SCRIPTPATH)*
++OBJS = comgt.o
+ 
++all: comgt
+ 
++comgt: $(OBJS)
++	@echo " [comgt] CC -o $@"
++	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ $(OBJS) $(ALL_LDFLAGS)
+ 
+-
+-uninstall:
+-	cd $(EXE); rm $(BIN)
+-	cd $(MAN); rm $(MANP)
+-	-rm -r $(SCRIPTPATH)
+-
+-clean:
+-	-rm *.o 
+-	-rm $(CPROG) 
+-	-rm *~
+-	-rm $(SCRIPTSRC)*~
+-
+-
+-comgt: comgt.o
+-	cc comgt.o $(LDFLAGS) -o comgt
+-
+-comgt.o: comgt.c comgt.h
+-	cc comgt.c $(CFLAGS) 
+-
++%.o: %.c
++	@echo " [comgt] CC $@"
++	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ -c $<
+-- 
+2.20.1
+

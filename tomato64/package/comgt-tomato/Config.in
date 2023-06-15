@@ -1,0 +1,4 @@
+config BR2_PACKAGE_COMGT_TOMATO
+	bool "gcom"
+	help
+	  comgt is a scripting language interpreter useful for establishing communications on serial lines and through PCMCIA modems as well as GPRS and 3G datacards.
