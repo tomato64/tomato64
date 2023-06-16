@@ -271,6 +271,7 @@ config BR2_PACKAGE_RC_UPS
 config BR2_PACKAGE_RC_USB
 	bool "Enable USB"
 	default y
+	select BR2_PACKAGE_P910ND
 	select BR2_PACKAGE_COMGT_TOMATO
 	select BR2_PACKAGE_UQMI
 

@@ -1,0 +1,12 @@
+diff -Naur p910nd-0.97.orig/p910nd.c p910nd-0.97/p910nd.c
+--- p910nd-0.97.orig/p910nd.c	2023-06-16 13:57:05.850038713 -0600
++++ p910nd-0.97/p910nd.c	2023-06-16 13:57:23.706015343 -0600
+@@ -137,7 +137,7 @@
+ #ifdef		LOCKFILE_DIR
+ #define		LOCKFILE	LOCKFILE_DIR "/p910%cd"
+ #else
+-#define		LOCKFILE	"/var/lock/subsys/p910%cd"
++#define		LOCKFILE	"/var/lock/p910%cd"
+ #endif
+ #ifndef		PRINTERFILE
+ #define         PRINTERFILE     "/dev/lp%c"
