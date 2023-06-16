@@ -1,5 +1,5 @@
 config BR2_PACKAGE_HTTPD
-	bool "Tomato httpd Server"
+	bool "tomato httpd server"
 	select BR2_PACKAGE_LIBSHARED
 	select BR2_PACKAGE_LIBMSSL
 	help

@@ -1,5 +1,5 @@
 config BR2_PACKAGE_CSTATS
-	bool "IPTraffic"
+	bool "iptraffic"
 	select BR2_PACKAGE_LIBSHARED
 	help
 	  MOnitors bandwidth by IP.
