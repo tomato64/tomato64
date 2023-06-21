@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-SAMBA4_TOMATO_VERSION = 4.15.12
+SAMBA4_TOMATO_VERSION = 4.18.2
 SAMBA4_TOMATO_SITE = https://download.samba.org/pub/samba/stable
 SAMBA4_TOMATO_SOURCE = samba-$(SAMBA4_TOMATO_VERSION).tar.gz
 SAMBA4_TOMATO_INSTALL_STAGING = YES
@@ -120,7 +120,7 @@ define SAMBA4_TOMATO_CONFIGURE_CMDS
 		PERL="$(HOST_DIR)/bin/perl" \
 		$(TARGET_CONFIGURE_OPTS) \
 		$(SAMBA4_TOMATO_CONF_ENV) \
-		./buildtools/bin/waf configure \
+		./configure \
 			--prefix=/usr \
 			--sysconfdir=/etc \
 			--with-configdir=/etc \
@@ -144,6 +144,7 @@ define SAMBA4_TOMATO_CONFIGURE_CMDS
 			--without-ldb-lmdb \
 			--disable-glusterfs \
 			--with-cluster-support \
+			--without-libunwind \
 			--bundled-libraries='!asn1_compile,!compile_et' \
 			--with-shared-modules=$(subst $(space),$(comma),$(strip $(SAMBA4_TOMATO_SHARED_MODULES))) \
 			$(SAMBA4_TOMATO_CONF_OPTS) \

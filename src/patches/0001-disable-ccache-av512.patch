@@ -1,0 +1,13 @@
+diff -Naur buildroot-2023.05.orig/package/ccache/ccache.mk buildroot-2023.05/package/ccache/ccache.mk
+--- buildroot-2023.05.orig/package/ccache/ccache.mk	2023-06-21 08:26:46.769656847 -0600
++++ buildroot-2023.05/package/ccache/ccache.mk	2023-06-21 08:27:11.157772396 -0600
+@@ -16,7 +16,8 @@
+ 	-UCMAKE_C_COMPILER_LAUNCHER \
+ 	-UCMAKE_CXX_COMPILER_LAUNCHER \
+ 	-DZSTD_FROM_INTERNET=OFF \
+-	-DHIREDIS_FROM_INTERNET=OFF
++	-DHIREDIS_FROM_INTERNET=OFF \
++	-DHAVE_C_AVX512=no
+ 
+ # Patch host-ccache as follows:
+ #  - Use BR_CACHE_DIR instead of CCACHE_DIR, because CCACHE_DIR
