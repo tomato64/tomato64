@@ -1,0 +1,5 @@
+#!/bin/sh
+
+if [ -c /dev/vport1p1 ]; then
+	qemu-ga -m virtio-serial -p /dev/vport1p1 -l /var/log/qemu-ga.log -d
+fi

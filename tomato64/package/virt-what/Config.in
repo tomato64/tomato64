@@ -1,0 +1,4 @@
+config BR2_PACKAGE_VIRT_WHAT
+	bool "virt-what"
+	help
+	  detect if we are running in a virtual machine

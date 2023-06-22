@@ -10530,6 +10530,7 @@ static void sysinit(void)
 	eval("/etc/init.d/S10mdev", "start");
 	eval("/usr/bin/set_macs");
 	eval("/usr/bin/fudge_time");
+	eval("/usr/bin/start_qemu_guest");
 #endif /* TOMATO64 */
 
 	start_hotplug2();
