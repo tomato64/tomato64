@@ -23,7 +23,7 @@ endef
 
 define RC_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/rc $(TARGET_DIR)/sbin
-#	ln -sf rc $(TARGET_DIR)/sbin/init
+	ln -sf rc $(TARGET_DIR)/sbin/init
 	ln -sf rc $(TARGET_DIR)/sbin/console
 	ln -sf rc $(TARGET_DIR)/sbin/hotplug
 	ln -sf rc $(TARGET_DIR)/sbin/service

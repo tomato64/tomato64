@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ "$1" = "-r" ] || [ "$2" = "-r" ]; then
+	/sbin/reboot
+else
+	/sbin/halt
+fi

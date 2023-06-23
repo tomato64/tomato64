@@ -463,7 +463,11 @@ static void shutdn(int rb)
 	}
 #endif /* TOMATO64 */
 
+#ifdef TOMATO64
+	reboot(rb ? RB_AUTOBOOT : RB_POWER_OFF);
+#else
 	reboot(rb ? RB_AUTOBOOT : RB_HALT_SYSTEM);
+#endif /* TOMATO64 */
 
 	do {
 		sleep(1);

@@ -24,9 +24,6 @@ ln -sf tmp/home/root $TARGET_DIR/root
 ln -sf tmp/mnt $TARGET_DIR/mnt
 ln -sf tmp/var $TARGET_DIR/var
 
-# symlink init process to rc. Need to disable init in busybox and verify the rc package does it instead.
-ln -sf rc $TARGET_DIR/sbin/init
-
 # create ldd symlink
 ln -sf /lib/ld-musl-x86_64.so.1 $TARGET_DIR/usr/bin/ldd
 
