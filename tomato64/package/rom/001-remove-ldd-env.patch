@@ -1,0 +1,14 @@
+diff -Naur rom.orig/rom/etc/profile rom/rom/etc/profile
+--- rom.orig/rom/etc/profile	2023-06-24 10:24:16.603289602 -0600
++++ rom/rom/etc/profile	2023-06-24 10:24:45.947264571 -0600
+@@ -4,10 +4,6 @@
+ alias l='ls -lFA'
+ alias ll='ls -lF'
+ 
+-ldd() {
+-	LD_TRACE_LOADED_OBJECTS=1 $*;
+-}
+-
+ [ -f /jffs/etc/profile ] && . /jffs/etc/profile
+ [ -f /opt/etc/profile ] && . /opt/etc/profile
+ 
