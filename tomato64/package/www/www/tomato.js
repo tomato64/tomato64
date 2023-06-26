@@ -2519,6 +2519,7 @@ function navi() {
 			['Weekly',			'weekly.asp'],
 			['Monthly',			'monthly.asp']
 			] ],
+/* TOMATO64-BEGIN */
 		['IP Traffic',			'ipt', 0, [
 			['Real-Time',			'realtime.asp'],
 			['Last 24 Hours',		'24.asp'],
@@ -2527,11 +2528,14 @@ function navi() {
 			['Daily',			'daily.asp'],
 			['Monthly',			'monthly.asp']
 			] ],
+/* TOMATO64-END */
 		['Tools', 			'tools', 0, [
 			['Ping',			'ping.asp'],
 			['Traceroute',			'trace.asp'],
 			['System Commands',		'shell.asp'],
+/* TOMATO64-BEGIN */
 			['Wireless Survey',		'survey.asp'],
+/* TOMATO64-END */
 /* QRCODE-BEGIN */
 			['WiFi QR Codes',		'qr.asp'],
 /* QRCODE-END */
@@ -2548,8 +2552,11 @@ function navi() {
 			['Identification',		'ident.asp'],
 			['Time',			'time.asp'],
 			['DDNS',			'ddns.asp'],
-			['DHCP Reservation',		'static.asp'],
-			['Wireless Filter',		'wfilter.asp'] ] ],
+			['DHCP Reservation',		'static.asp']
+/* TOMATO64-BEGIN */
+			,['Wireless Filter',		'wfilter.asp']
+/* TOMATO64-END */
+									 ] ],
 		['Advanced', 			'advanced', 0, [
 			['Conntrack/Netfilter',		'ctnf.asp'],
 			['DHCP/DNS',			'dhcpdns.asp'],
@@ -2564,10 +2571,15 @@ function navi() {
 /* TOR-BEGIN */
 			['TOR Project',			'tor.asp'],
 /* TOR-END */
+/* TOMATO64-BEGIN */
 			['VLAN',			'vlan.asp'],
-			['LAN Access',			'access.asp'],
-			['Virtual Wireless',		'wlanvifs.asp'],
-			['Wireless',			'wireless.asp'] ] ],
+/* TOMATO64-END */
+			['LAN Access',			'access.asp']
+/* TOMATO64-BEGIN */
+			,['Virtual Wireless',		'wlanvifs.asp'],
+			['Wireless',			'wireless.asp']
+/* TOMATO64-END */
+									 ] ],
 		['Port Forwarding', 		'forward', 0, [
 			['Basic',			'basic.asp'],
 /* IPV6-BEGIN */
@@ -2636,8 +2648,10 @@ function navi() {
 			['Admin Access',		'access.asp'],
 			['TomatoAnon',			'tomatoanon.asp'],
 			['Bandwidth Monitoring',	'bwm.asp'],
+/* TOMATO64-BEGIN */
 			['IP Traffic Monitoring',	'iptraffic.asp'],
 			['Buttons/LED',			'buttons.asp'],
+/* TOMATO64-END */
 /* CIFS-BEGIN */
 			['CIFS Client',			'cifs.asp'],
 /* CIFS-END */
@@ -2654,8 +2668,11 @@ function navi() {
 /* SNMP-END */
 			['Logging',			'log.asp'],
 			['Scheduler',			'sched.asp'],
-			['Scripts',			'scripts.asp'],
-			['Upgrade',			'upgrade.asp'] ] ],
+			['Scripts',			'scripts.asp']
+/* TOMATO64-BEGIN */
+			,['Upgrade',			'upgrade.asp']
+/* TOMATO64-END */
+									 ] ],
 		null,
 		['About',			'about.asp'],
 		['Reboot...',			'javascript:reboot()'],

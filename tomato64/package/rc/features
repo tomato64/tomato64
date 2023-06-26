@@ -1,5 +1,6 @@
 # HAVE_TOMATO is used in some patches.
 export HAVE_TOMATO=y
+export TCONFIG_TOMATO64=y
 
 ifeq ($(BR2_PACKAGE_RC_BT),y)
 export TCONFIG_BT=y
@@ -127,7 +128,7 @@ endif
 
 export TCONFIG_ROAM=y
 export TCONFIG_OPTIMIZE_SHARED_LIBS=y
-export TCONFIG_JFFS2=y
+export TCONFIG_JFFS2=n
 export TCONFIG_L7=y
 export TCONFIG_L7PAT=y
 export TCONFIG_LZO=y
@@ -141,7 +142,7 @@ export TCONFIG_HFS=y
 export TCONFIG_NANO=y
 export TCONFIG_NVRAM_64K=y
 export TCONFIG_AIO=y
-export TCONFIG_CTF=y
+export TCONFIG_CTF=n
 export TCONFIG_NAND=y
 export TCONFIG_UFSDA=y
 export TCONFIG_BCMARM=y
@@ -153,7 +154,7 @@ export TCONFIG_GROCTRL=y
 export TCONFIG_BCMBSD=y
 export TCONFIG_OPENSSL11=y
 export TCONFIG_IPERF=y
-export TCONFIG_QRCODE=y
+export TCONFIG_QRCODE=n
 export TCONFIG_KEYGEN=y
 export TCONFIG_TERMLIB=y
 export TCONFIG_ADVTHEMES=y

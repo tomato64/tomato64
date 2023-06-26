@@ -431,6 +431,13 @@ ifneq ($(TCONFIG_PROXY),y)
 	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/PROXY-BEGIN/,/PROXY-END/d"
 endif
 
+# Exclude features not supported Tomato64
+ifeq ($(TCONFIG_TOMATO64),y)
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+endif
+
 # clean up
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.jsz *.html); do \
@@ -487,6 +494,7 @@ endif
 		-e "/BCMARMNO-BEGIN/d"	-e "/BCMARMNO-END/d" \
 		-e "/RTNPLUS-BEGIN/d"	-e "/RTNPLUS-END/d" \
 		-e "/PROXY-BEGIN/d"	-e "/PROXY-END/d" \
+		-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 		|| true; \
 	done
 
