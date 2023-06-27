@@ -63,6 +63,7 @@ config BR2_PACKAGE_RC_CIFS
 config BR2_PACKAGE_RC_DDNS
 	bool "Enable DDNS"
 	default y
+	select BR2_PACKAGE_MDU
 
 config BR2_PACKAGE_RC_DNSCRYPT
 	bool "Enable DNSCRYPT"
