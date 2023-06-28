@@ -1921,7 +1921,6 @@ function init() {
 
 <!-- / / / -->
 
-/* TOMATO64-BEGIN */
 <div class="section-title" id="section-eth">Ethernet Ports State - Configuration</div>
 <div class="section">
 <script>
@@ -1932,7 +1931,6 @@ function init() {
 	]);
 </script>
 </div>
-/* TOMATO64-END */
 
 <!-- BSD-BEGIN -->
 
