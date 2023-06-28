@@ -285,4 +285,9 @@ config BR2_PACKAGE_RC_WIREGUARD
 	bool "Enable Wireguard"
 	default y
 
+config BR2_PACKAGE_RC_ZFS
+	bool "Enable ZFS"
+	default y
+	select BR2_PACKAGE_ZFS_TOMATO
+
 endif
