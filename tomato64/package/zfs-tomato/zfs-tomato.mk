@@ -23,7 +23,9 @@ ZFS_TOMATO_CONF_OPTS = \
 	--with-linux=$(LINUX_DIR) \
 	--with-linux-obj=$(LINUX_DIR) \
 	--disable-rpath \
-	--disable-sysvinit
+	--disable-sysvinit \
+	--enable-static \
+	--disable-shared
 
 ifeq ($(BR2_PACKAGE_LIBTIRPC),y)
 ZFS_TOMATO_DEPENDENCIES += libtirpc
@@ -86,6 +88,17 @@ define ZFS_TOMATO_LINUX_CONFIG_FIXUPS
 	$(call KCONFIG_ENABLE_OPT,CONFIG_CRYPTO_DEFLATE)
 	$(call KCONFIG_ENABLE_OPT,CONFIG_ZLIB_DEFLATE)
 	$(call KCONFIG_ENABLE_OPT,CONFIG_ZLIB_INFLATE)
+endef
+
+define ZFS_TOMATO_INSTALL_TARGET_CMDS
+	cd $(ZFS_TOMATO_DIR)/module && \
+	make -C $(LINUX_DIR) M="$$PWD" modules_install \
+	INSTALL_MOD_PATH=$(TARGET_DIR) \
+	INSTALL_MOD_DIR=extra \
+	KERNELRELEASE=$(LINUX_VERSION)
+
+	$(INSTALL) -D $(@D)/cmd/zfs/zfs $(TARGET_DIR)/usr/sbin
+	$(INSTALL) -D $(@D)/cmd/zpool/zpool $(TARGET_DIR)/usr/sbin
 endef
 
 # ZFS autotools will compile the kernel modules, so there is not needed to execute
