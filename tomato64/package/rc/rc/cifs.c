@@ -70,6 +70,7 @@ int mount_cifs_main(int argc, char *argv[])
 						}
 					}
 
+#ifndef TOMATO64
 					j = snprintf(opt, sizeof(opt), "sep=<unc=%s", unc);
 					if (*user)
 						j += sprintf(opt + j, "<user=%s", user);
@@ -83,11 +84,31 @@ int mount_cifs_main(int argc, char *argv[])
 						j += sprintf(opt + j, "<sec=%s", sec);
 					if (*custom)
 						j += sprintf(opt + j, "<%s", custom);
+#else
+					j = snprintf(opt, sizeof(opt), "vers=1.0");
+					if (*user)
+						j += sprintf(opt + j, ",user=%s", user);
+					if (*pass)
+						j += sprintf(opt + j, ",pass=%s", pass);
+					if (*dom)
+						j += sprintf(opt + j, ",dom=%s", dom);
+					if (*servern)
+						j += sprintf(opt + j, ",servern=%s", servern);
+					if (*sec)
+						j += sprintf(opt + j, ",sec=%s", sec);
+					if (*custom)
+						j += sprintf(opt + j, ",%s", custom);
+#endif /* TOMATO64 */
 
 					snprintf(mpath, sizeof(mpath), "/cifs%d", i);
 					umount(mpath);
+#ifndef TOMATO64
 					if (mount("-", mpath, "cifs", MS_NOATIME|MS_NODIRATIME, opt) != 0)
 						continue;
+#else
+					if (mount(unc, mpath, "cifs", MS_NOATIME|MS_NODIRATIME, opt) != 0)
+						continue;
+#endif /* TOMATO64 */
 
 					done[i] = 1;
 					if (try > 12)
