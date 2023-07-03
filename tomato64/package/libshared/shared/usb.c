@@ -21,6 +21,7 @@
 #include <arpa/inet.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
+#include <limits.h>
 
 #include <bcmnvram.h>
 #include <bcmdevs.h>
@@ -99,6 +100,93 @@ int is_no_partition(const char *discname)
 	return (count == 1);
 }
 
+#ifdef TOMATO64
+int exec_for_host(int host, int obsolete, uint flags, host_exec func)
+{
+	DIR *usb_dev_disc;
+	char ptname[32];/* Will be: discDN_PN	 					*/
+	char dsname[16];/* Will be: discDN	 					*/
+	int host_no;	/* SCSI controller/host # */
+	struct dirent *dp;
+	FILE *prt_fp;
+	int siz;
+	char line[256];
+	int result = 0;
+	int len;
+	int ret;
+	char hostbuf[16], device_path[PATH_MAX], linkbuf[PATH_MAX], *h;
+
+	_dprintf("exec_for_host(%d, %d, %d, %p)\n", host, obsolete, flags, func);
+	if (!func)
+		return 0;
+
+	flags |= EFH_1ST_HOST;
+
+	/* /sys/bus/scsi/devices/X:X:X:X/block:sdX doesn't exist in kernel 3.0
+	 * 1. Enumerate sub-directory, DIR, of /sys/block.
+	 * 2. Skip ., .., loop*, mtdblock*, ram*, etc.
+	 * 3. read DIR/device link. Check whether X:X:X:X exist. e.g.
+	 *    56U: ../../devices/platform/rt3xxx-ehci/usb1/1-1/1-1:1.0/host1/target1:0:0/1:0:0:0
+	 *    65U: ../../devices/pci0000:00/0000:00:00.0/0000:01:00.0/usb1/1-2/1-2:1.0/host1/target1:0:0/1:0:0:0
+	 * 4. If yes, DIR would be sda, sdb, etc.
+	 * 5. Search DIR in /proc/partitions.
+	 */
+	snprintf(hostbuf, sizeof(hostbuf), "%d:", host);
+	if (!(usb_dev_disc = opendir("/sys/block")))
+		return 0;
+	while ((dp = readdir(usb_dev_disc))) {
+		if (!strncmp(dp->d_name, "loop", 4) ||
+		    !strncmp(dp->d_name, "mtdblock", 8) ||
+		    !strncmp(dp->d_name, "ram", 3) ||
+		    !strcmp(dp->d_name, ".") ||
+		    !strcmp(dp->d_name, "..")
+		   )
+			continue;
+
+		snprintf(device_path, sizeof(device_path), "/sys/block/%s", dp->d_name);
+		len = readlink(device_path, linkbuf, sizeof(linkbuf) - 1);
+		if (len == -1) {
+			snprintf(device_path, sizeof(device_path), "/sys/block/%s/device", dp->d_name);
+			len = readlink(device_path, linkbuf, sizeof(linkbuf) - 1);
+			if (len == -1)
+				continue;
+		}
+		linkbuf[len] = '\0';
+
+		h = strstr(linkbuf, "/host");
+		if (!h)	continue;
+		if ((ret = sscanf(h, "/host%*d/target%*d:%*d:%*d/%d:%*d:%*d:%*d", &host_no)) != 1) {
+			_dprintf("%s(): sscanf can't distinguish host_no from [%s]. ret %d\n", __func__, linkbuf, ret);
+			continue;
+		}
+		if (host >= 0 && host != host_no)
+			continue;
+		snprintf(dsname, sizeof(dsname), dp->d_name);
+		siz = strlen(dsname);
+		flags |= EFH_1ST_DISC;
+		if (!(prt_fp = fopen("/proc/partitions", "r")))
+			continue;
+		while (fgets(line, sizeof(line) - 2, prt_fp)) {
+			if (sscanf(line, " %*s %*s %*s %s", ptname) != 1)
+				continue;
+
+			if (!strncmp(ptname, dsname, siz)) {
+				if (!strcmp(ptname, dsname) && !is_no_partition(dsname))
+					continue;
+				snprintf(line, sizeof(line), "/dev/%s", ptname);
+				result = (*func)(line, host_no, dsname, ptname, flags) || result;
+				flags &= ~(EFH_1ST_HOST | EFH_1ST_DISC);
+			}
+		}
+		fclose(prt_fp);
+	}
+	closedir(usb_dev_disc);
+
+	return result;
+}
+
+#else
+
 int exec_for_host(int host, int obsolete, uint flags, host_exec func)
 {
 	DIR *usb_dev_disc;
@@ -160,6 +248,7 @@ int exec_for_host(int host, int obsolete, uint flags, host_exec func)
 
 	return result;
 }
+#endif /* TOMATO64 */
 
 /* Concept taken from the e2fsprogs/ismounted.c.
  * Find wherever 'file' (actually: device) is mounted.
