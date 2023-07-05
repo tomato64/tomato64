@@ -284,6 +284,7 @@ config BR2_PACKAGE_RC_USB
 config BR2_PACKAGE_RC_WIREGUARD
 	bool "Enable Wireguard"
 	default y
+	select BR2_PACKAGE_WIREGUARD_TOOLS
 
 config BR2_PACKAGE_RC_ZFS
 	bool "Enable ZFS"
