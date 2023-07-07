@@ -796,6 +796,8 @@ void store_wan_if_to_nvram(char *prefix)
 			create_wanx_mac(prefix, (wan_unit + 15));
 		}
 		set_mac(p, tmp, (wan_unit + 15));
+#else
+		set_mac(p, tmp, 0);
 #endif /* TOMATO64 */
 	}
 	else { /* Wireless client as wan */
