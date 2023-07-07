@@ -263,7 +263,7 @@ void start_ftpd(int force)
 	}
 
 	if ((user = nvram_safe_get("http_username")) && (!*user))
-		user = "admin";
+		user = "root";
 	if ((pass = nvram_safe_get("http_passwd")) && (!*pass))
 		pass = "admin";
 
