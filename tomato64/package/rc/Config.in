@@ -95,6 +95,11 @@ config BR2_PACKAGE_RC_HTTPS
 	bool "Enable HTTPS"
 	default y
 
+config BR2_PACKAGE_RC_IPERF
+	bool "Enable IPERF"
+	default y
+	select BR2_PACKAGE_IPERF3
+
 config BR2_PACKAGE_RC_IPV6
 	bool "Enable IPv6"
 	default y

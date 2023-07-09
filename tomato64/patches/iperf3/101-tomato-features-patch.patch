@@ -1,0 +1,163 @@
+--- iperf/src/iperf.h
++++ iperf/src/iperf.h
+@@ -296,6 +296,8 @@
+     char     *logfile;				/* --logfile option */
+     FILE     *outfile;
+ 
++    char     *intervalFile;			/* --logfile option */
++
+     int       ctrl_sck;
+     int       mapped_v4;
+     int       listener;
+--- iperf/src/iperf_api.c
++++ iperf/src/iperf_api.c
+@@ -1084,6 +1084,7 @@
+ #endif
+ 	{"pidfile", required_argument, NULL, 'I'},
+ 	{"logfile", required_argument, NULL, OPT_LOGFILE},
++	{"intervalfile", required_argument, NULL, OPT_INTERVAL_LOG},
+ 	{"forceflush", no_argument, NULL, OPT_FORCEFLUSH},
+ 	{"get-server-output", no_argument, NULL, OPT_GET_SERVER_OUTPUT},
+ 	{"udp-counters-64bit", no_argument, NULL, OPT_UDP_COUNTERS_64BIT},
+@@ -1128,7 +1129,7 @@
+     char *client_username = NULL, *client_rsa_public_key = NULL, *server_rsa_private_key = NULL;
+ #endif /* HAVE_SSL */
+ 
+-    while ((flag = getopt_long(argc, argv, "p:f:i:D1VJvsc:ub:t:n:k:l:P:Rw:B:M:N46S:L:ZO:F:A:T:C:dI:hX:", longopts, NULL)) != -1) {
++    while ((flag = getopt_long(argc, argv, "p:f:i:D1VJvsc:ub:t:n:k:l:P:Rw:B:M:N46S:L:ZO:F:A:T:C:dI:hX:j:", longopts, NULL)) != -1) {
+         switch (flag) {
+             case 'p':
+ 		portno = atoi(optarg);
+@@ -1530,6 +1531,9 @@
+ 	    case OPT_LOGFILE:
+ 		test->logfile = strdup(optarg);
+ 		break;
++	    case OPT_INTERVAL_LOG:
++		test->intervalFile = strdup(optarg);
++		break;
+ 	    case OPT_FORCEFLUSH:
+ 		test->forceflush = 1;
+ 		break;
+@@ -3288,6 +3292,44 @@
+     }
+ }
+ 
++static void iperf_print_intermediate_currentRun(struct iperf_test *test) {
++  struct iperf_stream *sp = NULL;
++  FILE *fp;
++  int arrSize;
++  char buffer[128];
++  iperf_size_t bytes_sent, total_sent = 0;
++  iperf_size_t bytes_received, total_received = 0;
++
++  if (test->intervalFile != NULL) {
++    fp = fopen(test->intervalFile, "w");
++    if (fp == NULL) {
++      iperf_err(test, "Cannot open interval file %s for writing!", test->intervalFile);
++      return;
++    }
++    arrSize = cJSON_GetArraySize(test->json_intervals);
++    cJSON *copy = cJSON_Duplicate(cJSON_GetArrayItem(test->json_intervals, arrSize - 1 ), cJSON_True);
++    if (test->role == 'c') {
++      cJSON_AddItemToObject(copy, "mode", cJSON_CreateString("Client receiving"));
++      sprintf(buffer, "%s:%d", test->server_hostname, test->server_port);
++      cJSON_AddItemToObject(copy, "connectedEndpoint", cJSON_CreateString(buffer));
++    } else {
++      cJSON_AddItemToObject(copy, "mode", cJSON_CreateString("Server Receiving"));
++    }
++    sp = SLIST_FIRST(&test->streams);
++    SLIST_FOREACH(sp, &test->streams, streams) {
++      bytes_sent = sp->result->bytes_sent - sp->result->bytes_sent_omit;
++      bytes_received = sp->result->bytes_received;
++      total_sent += bytes_sent;
++      total_received += bytes_received;
++    }
++    cJSON_AddItemToObject(copy, "sum_sent", iperf_json_printf("bytes: %d", (int64_t) total_sent));
++    cJSON_AddItemToObject(copy, "sum_received", iperf_json_printf("bytes: %d", (int64_t) total_received));
++    fputs(cJSON_Print(copy), fp);
++    fclose(fp);
++    cJSON_free(copy);
++  }
++}
++
+ /**
+  * Print intermediate results during a test (interval report).
+  * Uses print_interval_results to print the results for each stream,
+@@ -4052,6 +4094,7 @@
+         case STREAM_RUNNING:
+             /* print interval results for each stream */
+             iperf_print_intermediate(test);
++            iperf_print_intermediate_currentRun(test);
+             break;
+         case TEST_END:
+         case DISPLAY_RESULTS:
+@@ -4643,6 +4686,18 @@
+     return 0;
+ }
+ 
++/* Get rid of a interval file, return -1 on error. */
++int
++iperf_delete_interval(struct iperf_test *test)
++{
++    if (test->intervalFile) {
++	if (unlink(test->intervalFile) < 0) {
++	    return -1;
++	}
++    }
++    return 0;
++}
++
+ int
+ iperf_json_start(struct iperf_test *test)
+ {
+--- iperf/src/iperf_api.h
++++ iperf/src/iperf_api.h
+@@ -90,6 +90,7 @@
+ #define OPT_DONT_FRAGMENT 26
+ #define OPT_RCV_TIMEOUT 27
+ #define OPT_SND_TIMEOUT 28
++#define OPT_INTERVAL_LOG 29
+ 
+ /* states */
+ #define TEST_START 1
+@@ -347,6 +348,7 @@
+ int iperf_create_pidfile(struct iperf_test *);
+ int iperf_delete_pidfile(struct iperf_test *);
+ void iperf_check_total_rate(struct iperf_test *, iperf_size_t);
++int iperf_delete_interval(struct iperf_test *);
+ 
+ /* JSON output routines. */
+ int iperf_json_start(struct iperf_test *);
+--- iperf/src/iperf_error.c
++++ iperf/src/iperf_error.c
+@@ -115,6 +115,8 @@
+     va_end(argp);
+     if (test)
+         iperf_delete_pidfile(test);
++    if (test->intervalFile)
++        iperf_delete_interval(test);
+     exit(1);
+ }
+ 
+diff --git iperf/src/iperf_locale.c iperf/src/iperf_locale.c
+index 115adf2..698705b 100644
+--- iperf/src/iperf_locale.c
++++ iperf/src/iperf_locale.c
+@@ -115,6 +115,7 @@
+                            "  -V, --verbose             more detailed output\n"
+                            "  -J, --json                output in JSON format\n"
+                            "  --logfile f               send output to a log file\n"
++                           "  --intervalfile f          interval file to report current progress\n"
+                            "  --forceflush              force flushing output at every interval\n"
+                            "  --timestamps<=format>     emit a timestamp at the start of each output line\n"
+                            "                            (optional \"=\" and format string as per strftime(3))\n"
+--- iperf/src/main.c
++++ iperf/src/main.c
+@@ -189,6 +189,7 @@
+             break;
+     }
+ 
++    iperf_delete_interval(test);
+     iperf_catch_sigend(SIG_DFL);
+     signal(SIGPIPE, SIG_DFL);
+

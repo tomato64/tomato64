@@ -43,6 +43,9 @@ ln -sf /usr/bin/php $TARGET_DIR/usr/sbin/php-cli
 ln -sf /usr/bin/php-cgi $TARGET_DIR/usr/sbin/php-cgi
 ln -sf /usr/bin/php-cgi $TARGET_DIR/usr/sbin/php-fcgi
 
+# iperf symlink
+ln -sf iperf3 $TARGET_DIR/usr/bin/iperf
+
 # To make buildroot genimage happy
 touch $TARGET_DIR/tmp/etc/group
 touch $TARGET_DIR/tmp/etc/passwd

@@ -38,6 +38,10 @@ ifeq ($(BR2_PACKAGE_RC_HTTPS),y)
 export TCONFIG_HTTPS=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_IPERF),y)
+export TCONFIG_IPERF=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_IPV6),y)
 export TCONFIG_IPV6=y
 endif
@@ -156,7 +160,6 @@ export TCONFIG_DPSTA=y
 export TCONFIG_GROCTRL=y
 export TCONFIG_BCMBSD=n
 export TCONFIG_OPENSSL11=y
-export TCONFIG_IPERF=y
 export TCONFIG_QRCODE=n
 export TCONFIG_KEYGEN=y
 export TCONFIG_TERMLIB=y
