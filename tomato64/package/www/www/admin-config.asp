@@ -148,12 +148,14 @@ function init() {
 
 <!-- / / / -->
 
+/* TOMATO64-REMOVE-BEGIN */
 <div class="section-title"></div>
 <div class="section">
 	<script>
 		createFieldTable('', [ { title: 'Total / Free NVRAM:', text: scaleSize(nvstat.size)+' / '+scaleSize(nvstat.free)+' <small>('+(free_mem).toFixed(2)+'%)<\/small>' } ]);
 	</script>
 </div>
+/* TOMATO64-REMOVE-END */
 
 <!-- / / / -->
 
