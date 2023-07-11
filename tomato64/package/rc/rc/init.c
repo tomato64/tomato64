@@ -10535,6 +10535,7 @@ static void sysinit(void)
 	eval("/usr/bin/set_macs");
 	eval("/usr/bin/fudge_time");
 	eval("/usr/bin/start_qemu_guest");
+	eval("/usr/bin/start_ttyd");
 #endif /* TOMATO64 */
 
 	start_hotplug2();
