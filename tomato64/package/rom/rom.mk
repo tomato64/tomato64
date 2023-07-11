@@ -12,6 +12,7 @@ ROM_LICENSE = tomato
 ROM_DEPENDENCIES = libshared
 
 define ROM_BUILD_CMDS
+	patch -d $(@D) -p1 < $(BR2_EXTERNAL_TOMATO64_PATH)/package/rom/001-remove-ldd-env.patch 
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) install
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) all
 endef
