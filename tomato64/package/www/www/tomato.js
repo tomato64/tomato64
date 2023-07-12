@@ -2571,9 +2571,7 @@ function navi() {
 /* TOR-BEGIN */
 			['TOR Project',			'tor.asp'],
 /* TOR-END */
-/* TOMATO64-REMOVE-BEGIN */
 			['VLAN',			'vlan.asp'],
-/* TOMATO64-REMOVE-END */
 			['LAN Access',			'access.asp']
 /* TOMATO64-REMOVE-BEGIN */
 			,['Virtual Wireless',		'wlanvifs.asp'],

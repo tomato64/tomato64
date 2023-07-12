@@ -437,7 +437,12 @@ static const nvset_t nvset_list[] = {
 	{ "lan_ifname",			V_LENGTH(0, 5)			},
 
 	{ "lan1_ifname",		V_LENGTH(0, 5)			},
+#ifndef TOMATO64
 	{ "lan1_ifnames",		V_TEXT(0, 64)			},
+#else
+	{ "lan1_ifnames",		V_TEXT(0, 100)			},
+	{ "lan1_ifnames_vlan",		V_TEXT(0, 8)			},
+#endif /* TOMATO64 */
 	{ "lan1_ipaddr",		V_LENGTH(0, 15)			},
 	{ "lan1_netmask",		V_LENGTH(0, 15)			},
 	{ "lan1_proto",			V_LENGTH(0, 6)			},
@@ -447,7 +452,12 @@ static const nvset_t nvset_list[] = {
 	{ "dhcp1_lease",		V_LENGTH(0, 5)			},
 
 	{ "lan2_ifname",		V_LENGTH(0, 5)			},
+#ifndef TOMATO64
 	{ "lan2_ifnames",		V_TEXT(0, 64)			},
+#else
+	{ "lan2_ifnames",		V_TEXT(0, 100)			},
+	{ "lan2_ifnames_vlan",		V_TEXT(0, 8)			},
+#endif /* TOMATO64 */
 	{ "lan2_ipaddr",		V_LENGTH(0, 15)			},
 	{ "lan2_netmask",		V_LENGTH(0, 15)			},
 	{ "lan2_proto",			V_LENGTH(0, 6)			},
@@ -457,7 +467,12 @@ static const nvset_t nvset_list[] = {
 	{ "dhcp2_lease",		V_LENGTH(0, 5)			},
 
 	{ "lan3_ifname",		V_LENGTH(0, 5)			},
+#ifndef TOMATO64
 	{ "lan3_ifnames",		V_TEXT(0, 64)			},
+#else
+	{ "lan3_ifnames",		V_TEXT(0, 100)			},
+	{ "lan3_ifnames_vlan",		V_TEXT(0, 8)			},
+#endif /* TOMATO64 */
 	{ "lan3_ipaddr",		V_LENGTH(0, 15)			},
 	{ "lan3_netmask",		V_LENGTH(0, 15)			},
 	{ "lan3_proto",			V_LENGTH(0, 6)			},
@@ -692,6 +707,7 @@ static const nvset_t nvset_list[] = {
 	{ "vlan13ports",		V_TEXT(0, 17)			},
 	{ "vlan14ports",		V_TEXT(0, 17)			},
 	{ "vlan15ports",		V_TEXT(0, 17)			},
+#ifndef TOMATO64
 	{ "vlan0hwname",		V_TEXT(0, 8)			},
 	{ "vlan1hwname",		V_TEXT(0, 8)			},
 	{ "vlan2hwname",		V_TEXT(0, 8)			},
@@ -708,11 +724,38 @@ static const nvset_t nvset_list[] = {
 	{ "vlan13hwname",		V_TEXT(0, 8)			},
 	{ "vlan14hwname",		V_TEXT(0, 8)			},
 	{ "vlan15hwname",		V_TEXT(0, 8)			},
+#else
+	{ "vlan0hwname",		V_TEXT(0, 100)			},
+	{ "vlan1hwname",		V_TEXT(0, 100)			},
+	{ "vlan2hwname",		V_TEXT(0, 100)			},
+	{ "vlan3hwname",		V_TEXT(0, 100)			},
+	{ "vlan4hwname",		V_TEXT(0, 100)			},
+	{ "vlan5hwname",		V_TEXT(0, 100)			},
+	{ "vlan6hwname",		V_TEXT(0, 100)			},
+	{ "vlan7hwname",		V_TEXT(0, 100)			},
+	{ "vlan8hwname",		V_TEXT(0, 100)			},
+	{ "vlan9hwname",		V_TEXT(0, 100)			},
+	{ "vlan10hwname",		V_TEXT(0, 100)			},
+	{ "vlan11hwname",		V_TEXT(0, 100)			},
+	{ "vlan12hwname",		V_TEXT(0, 100)			},
+	{ "vlan13hwname",		V_TEXT(0, 100)			},
+	{ "vlan14hwname",		V_TEXT(0, 100)			},
+	{ "vlan15hwname",		V_TEXT(0, 100)			},
+	{ "wan_ifnameX_vlan",		V_TEXT(0, 8)			},
+	{ "wan2_ifnameX_vlan",		V_TEXT(0, 8)			},
+	{ "wan3_ifnameX_vlan",		V_TEXT(0, 8)			},
+	{ "wan4_ifnameX_vlan",		V_TEXT(0, 8)			},
+#endif /* TOMATO64 */
 	{ "wan_ifnameX",		V_TEXT(0, 8)			},
 	{ "wan2_ifnameX",		V_TEXT(0, 8)			},
 	{ "wan3_ifnameX",		V_TEXT(0, 8)			},
 	{ "wan4_ifnameX",		V_TEXT(0, 8)			},
+#ifndef TOMATO64
 	{ "lan_ifnames",		V_TEXT(0, 64)			},
+#else
+	{ "lan_ifnames",		V_TEXT(0, 100)			},
+	{ "lan_ifnames_vlan",		V_TEXT(0, 8)			},
+#endif /* TOMATO64 */
 	{ "manual_boot_nv",		V_01				},
 #ifndef TCONFIG_BCMARM
 	{ "trunk_vlan_so",		V_01				},

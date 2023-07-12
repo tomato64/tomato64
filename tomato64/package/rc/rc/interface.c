@@ -251,11 +251,23 @@ void start_vlan(void)
 		char *hwname, *hwaddr;
 		char prio[8];
 		int vid_map;
+#ifdef TOMATO64
+		char *hwnames, *p;
+		char iface_name[16];
+#endif /* TOMATO64 */
 
 		/* get the address of the EMAC on which the VLAN sits */
 		snprintf(nvvar_name, sizeof(nvvar_name), "vlan%dhwname", i);
+#ifndef TOMATO64
 		if (!(hwname = nvram_get(nvvar_name)))
 			continue;
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+		if (!(hwnames = nvram_get(nvvar_name)))
+			continue;
+		p = hwnames;
+		while ((hwname = strsep(&p, " ")) != NULL) {
+#endif /* TOMATO64 */
 		snprintf(nvvar_name, sizeof(nvvar_name), "%smacaddr", hwname);
 		if (!(hwaddr = nvram_get(nvvar_name)))
 			continue;
@@ -299,7 +311,13 @@ void start_vlan(void)
 		/* create the VLAN interface */
 		snprintf(vlan_id, sizeof(vlan_id), "%d", vid_map);
 
+#ifndef TOMATO64
 		eval("vconfig", "add", ifr.ifr_name, vlan_id);
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+		snprintf(iface_name, sizeof(iface_name), "%s.%s", ifr.ifr_name, vlan_id);
+		eval("ip", "link", "add", "link", ifr.ifr_name, "name", iface_name, "type", "vlan", "id", vlan_id);
+#endif /* TOMATO64 */
 
 		/* setup ingress map (vlan->priority => skb->priority) */
 		snprintf(vlan_id, sizeof(vlan_id), "vlan%d", vid_map);
@@ -308,6 +326,9 @@ void start_vlan(void)
 
 			eval("vconfig", "set_ingress_map", vlan_id, prio, prio);
 		}
+#ifdef TOMATO64
+		}
+#endif /* TOMATO64 */
 	}
 
 	close(s);

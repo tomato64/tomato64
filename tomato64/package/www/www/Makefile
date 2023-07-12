@@ -436,7 +436,10 @@ ifeq ($(TCONFIG_TOMATO64),y)
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/admin-config.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
+else
+	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 endif
 
 # clean up
@@ -496,6 +499,7 @@ endif
 		-e "/RTNPLUS-BEGIN/d"	-e "/RTNPLUS-END/d" \
 		-e "/PROXY-BEGIN/d"	-e "/PROXY-END/d" \
 		-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
+		-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
 		|| true; \
 	done
 
