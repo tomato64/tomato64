@@ -92,11 +92,17 @@ int get_cpuinfo(char *system_type, char *cpu_model, char *bogomips, char *cpuclk
 
 		strcpy(value, next);
 		trim(value);
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 		if (strncmp_ex(title, "Processor") == 0) {
 #else
 		if (strncmp_ex(title, "system type") == 0) {
 #endif
+#endif /* TOMATO64 */
+
+#ifdef TOMATO64
+		if (strncmp_ex(title, "vendor_id") == 0) {
+#endif /* TOMATO64 */
 			okcount++;
 #ifndef TCONFIG_BCMARM
 			if (strncmp_ex(value, "Broadcom BCM5354") == 0)
@@ -105,13 +111,26 @@ int get_cpuinfo(char *system_type, char *cpu_model, char *bogomips, char *cpuclk
 #endif
 				strcpy(system_type, value);
 		}
+#ifndef TOMATO64
 		if (strncmp_ex(title, "cpu model") == 0) {
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+		if (strncmp_ex(title, "model name") == 0) {
+#endif /* TOMATO64 */
 			okcount++;
 			strcpy(cpu_model, value);
 		}
+#ifndef TOMATO64
 		if (strncmp_ex(title, "BogoMIPS") == 0) {
+#else
+		if (strncmp_ex(title, "cpu MHz") == 0) {
+#endif /* TOMATO64 */
 			okcount++;
+#ifndef TOMATO64
 			strcpy(bogomips, value);
+#else
+			snprintf(bogomips, sizeof(bogomips), "%s", value);
+#endif /* TOMATO64 */
 		}
 #ifndef TCONFIG_BCMARM
 		if (strncmp_ex(title, "cpu MHz") == 0) {

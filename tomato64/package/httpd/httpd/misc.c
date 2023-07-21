@@ -595,7 +595,8 @@ void asp_sysinfo(int argc, char **argv)
 	char wl_tempsense[128];
 #endif
 
-#ifdef TCONFIG_BCMARM
+//#ifdef TCONFIG_BCMARM
+#ifdef TOMATO64
 	char sa[64];
 	FILE *a;
 	char *e = NULL;
@@ -637,7 +638,8 @@ void asp_sysinfo(int argc, char **argv)
 	           "\tcpumodel: '%s',\n"
 	           "\tbogomips: '%s',\n"
 	           "\tcpuclk: '%s',\n"
-#ifdef TCONFIG_BCMARM
+//#ifdef TCONFIG_BCMARM
+#ifdef TOMATO64
 	           "\tcputemp: '%s',\n"
 #endif
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
@@ -657,7 +659,8 @@ void asp_sysinfo(int argc, char **argv)
 	           cpu_model,
 	           bogomips,
 	           cpuclk,
-#ifdef TCONFIG_BCMARM
+//#ifdef TCONFIG_BCMARM
+#ifdef TOMATO64
 	           cputemp,
 #endif
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
