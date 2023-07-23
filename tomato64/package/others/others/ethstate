@@ -13,7 +13,8 @@ do
 				echo -n "Port $p: " >> /tmp/ethernet.state
 			fi
 
-			echo $(ethtool eth$p | grep "Speed:" | awk '{print $2}' | sed 's,Mb\/s,FD,g') >> /tmp/ethernet.state
+			Duplex=$(ethtool eth$p | grep "Duplex:" | awk '{print $2'})
+			echo $(ethtool eth$p | grep "Speed:" | awk '{print $2}' | sed 's,Mb\/s,'"${Duplex:0:1}"'D,g') >> /tmp/ethernet.state
 		else
 			echo "Port $p: DOWN" >> /tmp/ethernet.state
 		fi
