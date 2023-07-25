@@ -213,6 +213,12 @@ config BR2_PACKAGE_RC_NOCAT
 	bool "Enable NOCAT"
 	default y
 
+config BR2_PACKAGE_RC_NTFS
+	bool "Enable NTFS"
+	default y
+	select BR2_PACKAGE_NTFS_3G
+	select BR2_PACKAGE_NTFS_3G_NTFSPROGS
+
 config BR2_PACKAGE_RC_OPENVPN
 	bool "Enable OpenVPN"
 	default y

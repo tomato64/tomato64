@@ -78,6 +78,10 @@ ifeq ($(BR2_PACKAGE_RC_NOCAT),y)
 export TCONFIG_NOCAT=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_NTFS),y)
+export TCONFIG_NTFS=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_OPENVPN),y)
 export TCONFIG_OPENVPN=y
 endif
@@ -142,7 +146,6 @@ export TCONFIG_L7PAT=y
 export TCONFIG_LZO=y
 export TCONFIG_EMF=y
 export TCONFIG_USB_EXTRAS=y
-export TCONFIG_NTFS=y
 export TCONFIG_BBT=y
 export TCONFIG_TR_EXTRAS=y
 export TCONFIG_HFS=y
@@ -151,7 +154,7 @@ export TCONFIG_NVRAM_64K=y
 export TCONFIG_AIO=y
 export TCONFIG_CTF=n
 export TCONFIG_NAND=y
-export TCONFIG_UFSDA=y
+export TCONFIG_UFSDA=n
 export TCONFIG_BCMARM=y
 export TCONFIG_BCMWL6=y
 export TCONFIG_BCMWL6A=y

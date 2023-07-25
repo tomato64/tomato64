@@ -243,7 +243,9 @@ function verifyFields(focused, quiet) {
 /* UPS-END */
 /* NTFS-BEGIN */
 	E('_f_ntfs').disabled = b || a;
+/* TOMATO64-REMOVE-BEGIN */
 	E('_usb_ntfs_driver').disabled = b || a || !E('_f_ntfs').checked;
+/* TOMATO64-REMOVE-END */
 /* NTFS-END */
 /* HFS-BEGIN */
 	E('_f_hfs').disabled = b || a;
@@ -404,6 +406,7 @@ function submit_complete() {
 					,{ suffix: '&nbsp; ZFS &nbsp;', name: 'f_zfs', type: 'checkbox', value: nvram.usb_fs_zfs == 1 }
 /* ZFS-END */
 				] },
+/* TOMATO64-REMOVE-BEGIN */
 /* NTFS-BEGIN */
 				{ title: 'NTFS Driver', indent: 2, name: 'usb_ntfs_driver', type: 'select', options: [
 					['ntfs3g','Open NTFS-3G driver'],
@@ -415,6 +418,7 @@ function submit_complete() {
 /* PARAGON-END */
 				], value: nvram.usb_ntfs_driver },
 /* NTFS-END */
+/* TOMATO64-REMOVE-END */
 /* HFS-BEGIN */
 				{ title: 'HFS/HFS+ Driver', indent: 2, name: 'usb_hfs_driver', type: 'select', options: [
 					['kernel','Open HFS/HFS+ driver'],

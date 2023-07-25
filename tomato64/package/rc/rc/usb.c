@@ -708,6 +708,7 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 				sprintf(options + strlen(options), ",noatime,nodev" + (options[0] ? 0 : 1));
 				if (nvram_get_int("usb_fs_ntfs")) {
 #ifdef TCONFIG_BCMARM
+#ifndef TOMATO64
 					if (nvram_match("usb_ntfs_driver", "ntfs3g"))
 						ret = eval("ntfs-3g", "-o", options, mnt_dev, mnt_dir);
 #if defined(TCONFIG_UFSDA) || defined(TCONFIG_UFSDN)
@@ -718,6 +719,8 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 					else if (nvram_match("usb_ntfs_driver", "tuxera"))
 						ret = eval("mount", "-t", "tntfs", "-o", options, mnt_dev, mnt_dir);
 #endif
+#endif /* TOMATO64 */
+					ret = eval("mount", "-t", "ntfs3", "-o", options, mnt_dev, mnt_dir);
 #else /* TCONFIG_BCMARM */
 #ifdef TCONFIG_UFSD
 					ret = eval("mount", "-t", "ufsd", "-o", options, "-o", "force", mnt_dev, mnt_dir);
