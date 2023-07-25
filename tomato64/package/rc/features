@@ -66,6 +66,10 @@ ifeq ($(BR2_PACKAGE_RC_MULTIWAN),y)
 export TCONFIG_MULTIWAN=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_NANO),y)
+export TCONFIG_NANO=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_NFS),y)
 export TCONFIG_NFS=y
 endif
@@ -149,7 +153,6 @@ export TCONFIG_USB_EXTRAS=y
 export TCONFIG_BBT=y
 export TCONFIG_TR_EXTRAS=y
 export TCONFIG_HFS=y
-export TCONFIG_NANO=y
 export TCONFIG_NVRAM_64K=y
 export TCONFIG_AIO=y
 export TCONFIG_CTF=n

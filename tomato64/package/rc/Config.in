@@ -42,7 +42,6 @@ menuconfig BR2_PACKAGE_RC
 	select BR2_PACKAGE_VIRT_WHAT
 	select BR2_PACKAGE_TTYD
 	select BR2_PACKAGE_ETHTOOL
-	select BR2_PACKAGE_NANO
 	select BR2_PACKAGE_HOST_DOSFSTOOLS
 	select BR2_PACKAGE_HOST_GENIMAGE
 	select BR2_PACKAGE_HOST_MTOOLS
@@ -131,6 +130,11 @@ config BR2_PACKAGE_RC_MEDIA_SERVER
 config BR2_PACKAGE_RC_MULTIWAN
 	bool "Enable MultiWan"
 	default y
+
+config BR2_PACKAGE_RC_NANO
+	bool "Enable Nano"
+	default y
+	select BR2_PACKAGE_NANO
 
 config BR2_PACKAGE_RC_NFS
 	bool "Enable NFS"
