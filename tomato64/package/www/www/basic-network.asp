@@ -403,7 +403,9 @@ function verifyFields(focused, quiet) {
 
 	n = E('_f_lan_state').checked;
 	E('_f_lan_desc').disabled = !n;
+/* TOMATO64-REMOVE-BEGIN */
 	E('_f_lan_invert').disabled = !n;
+/* TOMATO64-REMOVE-END */
 
 	var mwan = E('_mwan_num');
 	if (mwan.options[(mwan.selectedIndex)].disabled)
@@ -486,7 +488,12 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_band'] = 1;
 			vis['_wan'+u+'_modem_roam'] = 1;
 /* USB-END */
+/* TOMATO64-REMOVE-BEGIN */
 			vis['_wan'+u+'_sta'] = 1;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			vis['_wan'+u+'_sta'] = 0;
+/* TOMATO64-END */
 			vis['_f_wan'+u+'_dns_1'] = 1;
 			vis['_f_wan'+u+'_dns_2'] = 1;
 			vis['_wan'+u+'_dns_auto'] = 1;
@@ -1551,7 +1558,9 @@ function save() {
 
 	fom.lan_state.value = fom.f_lan_state.checked ? 1 : 0;
 	fom.lan_desc.value = fom.f_lan_desc.checked ? 1 : 0;
+/* TOMATO64-REMOVE-BEGIN */
 	fom.lan_invert.value = fom.f_lan_invert.checked ? 1 : 0;
+/* TOMATO64-REMOVE-END */
 /* BSD-BEGIN */
 	fom.smart_connect_x.value = fom.f_smart_connect_x.checked ? 1 : 0;
 /* BSD-END */
@@ -1753,7 +1762,9 @@ function init() {
 <input type="hidden" name="lan_dhcp">
 <input type="hidden" name="lan_state">
 <input type="hidden" name="lan_desc">
+/* TOMATO64-REMOVE-BEGIN */
 <input type="hidden" name="lan_invert">
+/* TOMATO64-REMOVE-END */
 <!-- BSD-BEGIN -->
 <input type="hidden" name="smart_connect_x">
 <!-- BSD-END -->
@@ -1927,7 +1938,9 @@ function init() {
 	createFieldTable('', [
 		{ title: 'Enable Ports State', name: 'f_lan_state', type: 'checkbox', value: (nvram.lan_state == 1) },
 		{ title: 'Show Speed Info', indent: 2, name: 'f_lan_desc', type: 'checkbox', value: (nvram.lan_desc == 1) },
+/* TOMATO64-REMOVE-BEGIN */
 		{ title: 'Invert Ports Order', indent: 2, name: 'f_lan_invert', type: 'checkbox', value: (nvram.lan_invert == 1) }
+/* TOMATO64-REMOVE-END */
 	]);
 </script>
 </div>
