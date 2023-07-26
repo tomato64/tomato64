@@ -202,6 +202,24 @@ void asp_psup(int argc, char **argv)
 		web_printf("%d", pidof(argv[0]) > 0);
 }
 
+#ifdef TOMATO64
+int get_cpucount()
+{
+	FILE *fd;
+	char buff[10];
+
+	system("/usr/bin/nproc > /tmp/cpucount");
+	fd = fopen("/tmp/cpucount", "r");
+	fgets(buff, sizeof(buff), fd);
+	if (strcmp(buff, "") != 0){
+		return atoi(buff);
+	}
+	else {
+		return 0;
+	}
+}
+#endif /* TOMATO64 */
+
 static int get_memory(meminfo_t *m)
 {
 	FILE *f;
@@ -645,6 +663,9 @@ void asp_sysinfo(int argc, char **argv)
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	           "\twlsense: '%s',\n"
 #endif
+#ifdef TOMATO64
+	           "\tcpucount: '%d',\n"
+#endif /* TOMATO64 */
 	           "\tcfeversion: '%s'",
 	           si.uptime,
 	           reltime(s, si.uptime),
@@ -666,6 +687,9 @@ void asp_sysinfo(int argc, char **argv)
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	           wl_tempsense,
 #endif
+#ifdef TOMATO64
+		  get_cpucount(),
+#endif /* TOMATO64 */
 	           cfe_version);
 
 #ifdef TCONFIG_BCMARM

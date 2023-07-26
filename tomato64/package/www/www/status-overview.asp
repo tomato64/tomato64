@@ -509,6 +509,7 @@ function init() {
 		{ title: 'Chipset', text: stats.systemtype },
 /* TOMATO64-BEGIN */
 		{ title: 'CPU', text: stats.cpumodel },
+		{ title: 'CPU Cores', text: stats.cpucount },
 /* TOMATO64-END */
 		{ title: 'CPU Frequency', text: stats.cpumhz, suffix: ' <small>(dual-core)<\/small>' },
 /* TOMATO64-REMOVE-BEGIN */

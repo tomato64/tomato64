@@ -48,6 +48,7 @@ stats.cputemp = sysinfo.cputemp+'°';
 stats.systemtype = sysinfo.systemtype;
 /* TOMATO64-BEGIN */
 stats.cpumodel = sysinfo.cpumodel;
+stats.cpucount = sysinfo.cpucount;
 /* TOMATO64-END */
 stats.cfeversion = sysinfo.cfeversion;
 stats.cpuload = ((sysinfo.loads[0] / 65536.0).toFixed(2)+'<small> / </small> '+(sysinfo.loads[1] / 65536.0).toFixed(2)+'<small> / </small>'+(sysinfo.loads[2] / 65536.0).toFixed(2));
