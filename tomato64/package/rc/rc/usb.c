@@ -720,7 +720,9 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 						ret = eval("mount", "-t", "tntfs", "-o", options, mnt_dev, mnt_dir);
 #endif
 #endif /* TOMATO64 */
+#ifdef TOMATO64
 					ret = eval("mount", "-t", "ntfs3", "-o", options, mnt_dev, mnt_dir);
+#endif /* TOMATO64 */
 #else /* TCONFIG_BCMARM */
 #ifdef TCONFIG_UFSD
 					ret = eval("mount", "-t", "ufsd", "-o", options, "-o", "force", mnt_dev, mnt_dir);
