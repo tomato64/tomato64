@@ -970,6 +970,9 @@ void asp_statfs(int argc, char **argv)
 #if defined(TCONFIG_BCMARM) || defined(TCONFIG_BLINK)
 	    || (sf.f_type == 0x71736873)
 #endif
+#ifdef TOMATO64
+	    || (sf.f_type != 0xff534d42)
+#endif /* TOMATO64 */
 	) {
 		mnt = 0;
 		memset(&sf, 0, sizeof(sf));
