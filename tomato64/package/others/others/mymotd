@@ -122,6 +122,7 @@
 			/bin/echo " LAN4: $(NV lan3_ipaddr)/$LAN3_NUMBITS @ DHCP: $(NV dhcpd3_startip) - $(NV dhcpd3_endip)";
 		}
 
+# TOMATO64-REMOVE-BEGIN
 		GETCH=$(NV wl0_channel)
 		[ "$GETCH" -eq 0 ] && CH="auto" || CH=$GETCH
 		[ "$(NV wl0_nband)" == 2 ] && BAND="2.4GHz" || BAND="5GHz"
@@ -150,6 +151,7 @@
 			[ $STHMD_SCHONC -gt 1 -a $STHMD_SCHOFFC -gt 1 ] && /bin/echo -e "  stealthMode Scheduled mode is currently active and is\n       set for sunset at $( /bin/echo $STHMD_SCHON | /usr/bin/awk '{$1=sprintf("%02d", $1);$2=sprintf("%02d", $2); print $1":"$2 }' ) and sunrise at $( /bin/echo $STHMD_SCHOFF | /usr/bin/awk '{$1=sprintf("%02d", $1);$2=sprintf("%02d", $2); print $1":"$2 }' )"
 		}
 # BCMARMNO-END
+# TOMATO64-REMOVE-END
 		/bin/echo -e "\033[1;34m ======================================================== \033[0m"
 		/bin/echo ""
 	}

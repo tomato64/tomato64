@@ -83,6 +83,7 @@ ifneq ($(TCONFIG_BCMARM),y)
 	sed -i $(INSTALLDIR)/usr/sbin/mymotd -e "/BCMARM-BEGIN/,/BCMARM-END/d"
 else
 	sed -i $(INSTALLDIR)/usr/sbin/mymotd -e "/BCMARMNO-BEGIN/,/BCMARMNO-END/d"
+	sed -i $(INSTALLDIR)/usr/sbin/mymotd -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 endif
 
 # sysinfo-helper
