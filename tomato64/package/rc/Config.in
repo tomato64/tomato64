@@ -309,4 +309,9 @@ config BR2_PACKAGE_RC_ZFS
 	default y
 	select BR2_PACKAGE_ZFS_TOMATO
 
+comment "Debugging"
+
+config BR2_PACKAGE_RC_DEBUG
+	bool "Enable Debug to Console"
+	default y
 endif

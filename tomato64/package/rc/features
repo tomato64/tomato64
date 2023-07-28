@@ -142,6 +142,10 @@ ifeq ($(BR2_PACKAGE_RC_ZFS),y)
 export TCONFIG_ZFS=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_DEBUG),y)
+export DEBUG_NOISY=y
+endif
+
 export TCONFIG_ROAM=y
 export TCONFIG_OPTIMIZE_SHARED_LIBS=y
 export TCONFIG_JFFS2=n

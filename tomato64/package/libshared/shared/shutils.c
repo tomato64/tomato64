@@ -52,7 +52,9 @@
 
 /* Linux specific headers */
 #ifdef linux
-//#include <error.h>
+#ifndef TOMATO64
+#include <error.h>
+#endif /* TOMATO64 */
 #include <termios.h>
 #include <sys/time.h>
 //#include <net/ethernet.h>
@@ -231,15 +233,6 @@ waitfor(int fd, int timeout)
  */
 int _eval(char *const argv[], const char *path, int timeout, int *ppid)
 {
-
-// debug lance
-	for (int i = 0; argv[i]; ++i){
-                printf("%s ", argv[i]);
-        }
-        printf("\n");
-//        sleep(1);
-
-
 	sigset_t set, sigmask;
 	sighandler_t chld = SIG_IGN;
 	pid_t pid, w;
@@ -252,10 +245,6 @@ int _eval(char *const argv[], const char *path, int timeout, int *ppid)
 	char s[256];
 	//char *cpu0_argv[32] = { "taskset", "-c", "0"};
 	//char *cpu1_argv[32] = { "taskset", "-c", "1"};
-
-// debug lance
-//	printf("starting _eval\n");
-//	sleep(1);
 
 	if (!ppid) {
 		// block SIGCHLD
