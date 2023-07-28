@@ -444,8 +444,10 @@ static void shutdn(int rb)
 	sleep(1);
 	sync();
 
+#ifndef TOMATO64
 	eval("umount", "-f", "/jffs");
 	sleep(1);
+#endif /* TOMATO64 */
 
 #ifndef TOMATO64
 	if (rb != -1) {
@@ -10261,7 +10263,9 @@ static int init_nvram(void)
 	nvram_set("wan_get_domain", "");
 	nvram_set("wan_ppp_get_ip", "0.0.0.0");
 	nvram_set("action_service", "");
+#ifndef TOMATO64
 	nvram_set("jffs2_format", "0");
+#endif /* TOMATO64 */
 	nvram_set("rrules_radio", "-1");
 	nvram_unset("https_crt_gen");
 	nvram_unset("log_wmclear");
@@ -10758,7 +10762,9 @@ int init_main(int argc, char *argv[])
 #endif /* TOMATO64 */
 #endif /* TCONFIG_USB */
 				remove_conntrack();
+#ifndef TOMATO64
 				stop_jffs2();
+#endif /* TOMATO64 */
 
 				shutdn(state == SIGTERM /* REBOOT */);
 				sync(); sync(); sync();
