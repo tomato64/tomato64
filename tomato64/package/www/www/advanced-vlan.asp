@@ -1082,7 +1082,7 @@ function init() {
 	<div class="section-title">VLAN Wireless</div>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-	<div class="section-title hidden="hidden"">VLAN Wireless</div>
+	<div class="section-title" hidden="hidden">VLAN Wireless</div>
 /* TOMATO64-END */
 	<div class="section">
 		<script>
