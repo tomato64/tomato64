@@ -1236,6 +1236,8 @@ static const nvset_t nvset_list[] = {
 	{ "ms_stdlna",			V_01				},
 	{ "ms_rescan",			V_01				},
 	{ "ms_sas",			V_01				},
+	{ "ms_autoscan",		V_01				},
+	{ "ms_custom",			V_TEXT(0, 4096)			},
 #endif
 
 /* qos */

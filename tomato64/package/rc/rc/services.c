@@ -2365,10 +2365,11 @@ static void start_media_server(int force)
 	char *dbdir;
 	char *argv[] = { "minidlna", "-f", "/etc/minidlna.conf", "-r", NULL, NULL };
 	static int once = 1;
-	int ret, index = 4;
+	int ret, index = 4, i;
 	char *msi;
 	unsigned char ea[ETHER_ADDR_LEN];
-	char serial[18], uuid[37];
+	char serial[18], uuident[37];
+	char buffer[32], buffer2[8], buffer3[32];
 	char *buf, *p, *q;
 	char *path, *restricted;
 
@@ -2409,7 +2410,24 @@ static void start_media_server(int force)
 				f_read("/dev/urandom", ea, sizeof(ea));
 
 			snprintf(serial, sizeof(serial), "%02x:%02x:%02x:%02x:%02x:%02x", ea[0], ea[1], ea[2], ea[3], ea[4], ea[5]);
-			snprintf(uuid, sizeof(uuid), "4d696e69-444c-164e-9d41-%02x%02x%02x%02x%02x%02x", ea[0], ea[1], ea[2], ea[3], ea[4], ea[5]);
+			snprintf(uuident, sizeof(uuident), "4d696e69-444c-164e-9d41-%02x%02x%02x%02x%02x%02x", ea[0], ea[1], ea[2], ea[3], ea[4], ea[5]);
+
+			if (strlen(msi)) {
+				memset(buffer3, 0, sizeof(buffer3)); /* reset */
+				for (i = 0; i < BRIDGE_COUNT; i++) {
+					memset(buffer, 0, sizeof(buffer)); /* reset */
+					snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+					memset(buffer2, 0, sizeof(buffer2)); /* reset */
+					snprintf(buffer2, sizeof(buffer2), "br%d", i);
+					if ((strlen(nvram_safe_get(buffer)) > 0) && (strstr(msi, buffer2) != NULL)) { /* bridge is up & present in 'ms_ifname' */
+						if (strlen(buffer3) > 0)
+							strcat(buffer3, ",");
+
+						strcat(buffer3, buffer2);
+					}
+				}
+				msi = buffer3;
+			}
 
 			fprintf(f, "network_interface=%s\n"
 			           "port=%d\n"
@@ -2418,7 +2436,7 @@ static void start_media_server(int force)
 			           "enable_tivo=%s\n"
 			           "strict_dlna=%s\n"
 			           "presentation_url=http%s://%s:%s/nas-media.asp\n"
-			           "inotify=yes\n"
+			           "inotify=%s\n"
 			           "notify_interval=600\n"
 			           "album_art_names=Cover.jpg/cover.jpg/AlbumArtSmall.jpg/albumartsmall.jpg/AlbumArt.jpg/albumart.jpg/Album.jpg/album.jpg/Folder.jpg/folder.jpg/Thumb.jpg/thumb.jpg\n"
 			           "log_dir=/var/log\n"
@@ -2426,14 +2444,20 @@ static void start_media_server(int force)
 			           "serial=%s\n"
 			           "uuid=%s\n"
 			           "model_name=Windows Media Connect compatible (MiniDLNA)\n"
-			           "model_number=%s\n\n",
+			           "model_number=%s\n\n"
+			           "# Custom config\n"
+			           "%s\n",
 			           strlen(msi) ? msi : nvram_safe_get("lan_ifname"),
-			           (port < 0) || (port >= 0xffff) ? 0 : port,
+			           (port < 0) || (port >= 0xffff) ? 0 : port, /* 0 - means random port (feature applied as minidlna patch) */
 			           dbdir ? : "/var/run/minidlna",
 			           nvram_get_int("ms_tivo") ? "yes" : "no",
 			           nvram_get_int("ms_stdlna") ? "yes" : "no",
 			           https ? "s" : "", nvram_safe_get("lan_ipaddr"), nvram_safe_get(https ? "https_lanport" : "http_lanport"),
-			           serial, uuid, nvram_safe_get("os_version"));
+			           nvram_get_int("ms_autoscan") ? "yes" : "no",
+			           serial,
+			           uuident,
+			           nvram_safe_get("os_version"),
+			           nvram_safe_get("ms_custom"));
 
 			/* media directories */
 			if ((buf = strdup(nvram_safe_get("ms_dirs"))) && (*buf)) {

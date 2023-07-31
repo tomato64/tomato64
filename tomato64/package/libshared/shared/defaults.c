@@ -1180,6 +1180,8 @@ struct nvram_tuple router_defaults[] = {
 	{ "ms_tivo",			"0"				, 0 },
 	{ "ms_stdlna",			"0"				, 0 },
 	{ "ms_sas",			"0"				, 0 },
+	{ "ms_autoscan",		"1"				, 0 },
+	{ "ms_custom",			""				, 0 },
 #endif /* TCONFIG_MEDIA_SERVER */
 
 /* admin-sch */

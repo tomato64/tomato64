@@ -19,12 +19,13 @@
 
 <script>
 
-//	<% nvram("ms_enable,ms_port,ms_dirs,ms_dbdir,ms_ifname,ms_tivo,ms_stdlna,ms_sas,cifs1,cifs2,jffs2_on,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan_ipaddr"); %>
+//	<% nvram("ms_enable,ms_port,ms_dirs,ms_dbdir,ms_ifname,ms_tivo,ms_stdlna,ms_sas,ms_autoscan,ms_custom,cifs1,cifs2,jffs2_on,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan_ipaddr,lan1_ipaddr,lan2_ipaddr,lan3_ipaddr"); %>
 
 var changed = 0;
 var reinit = 0;
 var serviceType = 'minidlna';
-var mediatypes = [['','All Media Files'],['A','Audio only'],['V','Video only'],['P','Images only']];
+var mediatypes = [['','All Media Files'],['A','Audio only'],['V','Video only'],['P','Images only'],['PV','Images and Video']];
+var http_if = '', http_port = 0;
 
 var msg = new TomatoGrid();
 
@@ -120,18 +121,20 @@ function verifyFields(focused, quiet) {
 		reinit = 1;
 
 	var ok = 1;
-	var b, v;
-	var eLoc, eUser;
+	var b, v, i, n, eLoc, eUser, once = 1;
 
-	var bridge1 = E('_ms_ifname');
-	if (nvram.lan_ifname.length < 1)
-		bridge1.options[0].disabled = 1;
-	if (nvram.lan1_ifname.length < 1)
-		bridge1.options[1].disabled = 1;
-	if (nvram.lan2_ifname.length < 1)
-		bridge1.options[2].disabled = 1;
-	if (nvram.lan3_ifname.length < 1)
-		bridge1.options[3].disabled = 1;
+	for (i = 0; i <= MAX_BRIDGE_ID; ++i) {
+		n = (i == 0 ? '' : i.toString());
+		E('_f_ms_lan'+i).disabled = (eval('nvram.lan'+n+'_ifname.length') < 1);
+		if (eval('nvram.lan'+n+'_ifname.length') < 1)
+			E('_f_ms_lan'+i).checked = 0;
+		else if (E('_f_ms_lan'+i).checked && once) {
+			http_if = eval('nvram.lan'+n+'_ipaddr');
+			once = 0;
+		}
+	}
+
+	http_port = E('_ms_port').value;
 
 	eLoc = E('_f_loc');
 	eUser = E('_f_user');
@@ -151,7 +154,7 @@ function verifyFields(focused, quiet) {
 /* JFFS2-BEGIN */
 	else if (v == '/jffs/dlna') {
 		if (nvram.jffs2_on != '1') {
-			ferror.set(eLoc, 'JFFS is not enabled.', quiet || !ok);
+			ferror.set(eLoc, 'JFFS is not enabled', quiet || !ok);
 			ok = 0;
 		}
 		else
@@ -160,6 +163,9 @@ function verifyFields(focused, quiet) {
 /* JFFS2-END */
 
 	if (!v_range('_ms_port', quiet || !ok, 0, 65535))
+		ok = 0;
+
+	if (!v_length('_ms_custom', quiet || !ok, 0, 4096))
 		ok = 0;
 
 	return ok;
@@ -197,7 +203,14 @@ function save(nomsg) {
 	fom.ms_stdlna.value = fom._f_ms_stdlna.checked ? 1 : 0;
 	fom.ms_rescan.value = fom._f_ms_rescan.checked ? 1 : 0;
 	fom.ms_sas.value = fom._f_ms_sas.checked ? 1 : 0;
+	fom.ms_autoscan.value = fom._f_ms_autoscan.checked ? 1 : 0;
 	fom._nofootermsg.value = (nomsg ? 1 : 0);
+
+	var ms_ifnames = '';
+	for (var i = 0; i <= MAX_BRIDGE_ID; ++i)
+		E('_f_ms_lan'+i.toString()).checked ? ms_ifnames += (ms_ifnames == '' ? '' : ',')+'br'+i.toString() : '';
+
+	fom.ms_ifname.value = ms_ifnames;
 
 	var s = fom._f_loc.value;
 	fom.ms_dbdir.value = (s == '*user') ? fom._f_user.value : s;
@@ -248,12 +261,14 @@ function init() {
 <input type="hidden" name="_service" value="">
 <input type="hidden" name="_nofootermsg">
 <input type="hidden" name="ms_enable">
+<input type="hidden" name="ms_ifname">
 <input type="hidden" name="ms_dirs">
 <input type="hidden" name="ms_dbdir">
 <input type="hidden" name="ms_tivo">
 <input type="hidden" name="ms_stdlna">
 <input type="hidden" name="ms_rescan">
 <input type="hidden" name="ms_sas">
+<input type="hidden" name="ms_autoscan">
 
 <!-- / / / -->
 
@@ -262,7 +277,7 @@ function init() {
 	<div class="fields">
 		<span id="_minidlna_notice"></span>
 		<input type="button" id="_minidlna_button" value="">
-		<input type="button" id="_minidlna_status" value="Open status page in new tab" class="new_window" onclick="window.open('http://'+nvram.lan_ipaddr+':'+nvram.ms_port+'')">
+		<input type="button" id="_minidlna_status" value="Open status page in new tab" class="new_window" onclick="window.open('http://'+http_if+':'+http_port+'')">
 		&nbsp; <img src="spin.gif" alt="" id="spin">
 	</div>
 </div>
@@ -284,10 +299,20 @@ function init() {
 			break;
 		}
 
+		var lan_arr = nvram.ms_ifname.split(',');
+		var ms_lan = [0,0,0,0];
+		for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+			if (lan_arr[i] == 'br'+i.toString())
+				ms_lan[i] = 1;
+		}
+
 		createFieldTable('', [
 			{ title: 'Enable on Start', name: 'f_ms_enable', type: 'checkbox', value: nvram.ms_enable == 1 },
-			{ title: 'Listen on', indent: 2, name: 'ms_ifname', type: 'select', options: [['br0','LAN0 (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)']], value: nvram.ms_ifname, suffix: ' <small>* default<\/small> ' },
-			{ title: 'Port', indent: 2, name: 'ms_port', type: 'text', maxlen: 5, size: 6, value: nvram.ms_port, suffix: ' <small>range: 0 - 65535; default (random) set 0<\/small>' },
+				{ title: 'LAN0', name: 'f_ms_lan0', type: 'checkbox', value: ms_lan[0] == 1 },
+				{ title: 'LAN1', name: 'f_ms_lan1', type: 'checkbox', value: ms_lan[1] == 1 },
+				{ title: 'LAN2', name: 'f_ms_lan2', type: 'checkbox', value: ms_lan[2] == 1 },
+				{ title: 'LAN3', name: 'f_ms_lan3', type: 'checkbox', value: ms_lan[3] == 1 },
+			{ title: 'Port', name: 'ms_port', type: 'text', maxlen: 5, size: 6, value: nvram.ms_port, suffix: ' <small>range: 0 - 65535; default (random) set 0<\/small>' },
 			{ title: 'Database Location', multi: [
 				{ name: 'f_loc', type: 'select', options: [['','RAM (Temporary)'],
 /* JFFS2-BEGIN */
@@ -296,11 +321,13 @@ function init() {
 					['*user','Custom Path']], value: loc },
 				{ name: 'f_user', type: 'text', maxlen: 256, size: 60, value: nvram.ms_dbdir }
 			] },
-			{ title: 'Scan Media at Startup*', indent: 2, name: 'f_ms_sas', type: 'checkbox', value: nvram.ms_sas == 1, hidden: 1 },
-			{ title: 'Rescan on the next run*', indent: 2, name: 'f_ms_rescan', type: 'checkbox', value: 0 },
+				{ title: 'Scan Media at Startup*', indent: 2, name: 'f_ms_sas', type: 'checkbox', value: nvram.ms_sas == 1, hidden: 1 },
+				{ title: 'Rescan on the next run*', indent: 2, name: 'f_ms_rescan', type: 'checkbox', value: 0 },
+				{ title: 'Auto scan media', indent: 2, name: 'f_ms_autoscan', type: 'checkbox', value: nvram.ms_autoscan == 1, suffix: ' <small>(10 minutes interval)<\/small>' },
 			null,
 			{ title: 'TiVo Support', name: 'f_ms_tivo', type: 'checkbox', value: nvram.ms_tivo == 1 },
-			{ title: 'Strictly adhere to DLNA standards', name: 'f_ms_stdlna', type: 'checkbox', value: nvram.ms_stdlna == 1 }
+			{ title: 'Strictly adhere to DLNA standards', name: 'f_ms_stdlna', type: 'checkbox', value: nvram.ms_stdlna == 1 },
+			{ title: 'Custom configuration', name: 'ms_custom', type: 'textarea', value: nvram.ms_custom }
 		]);
 	</script>
 
@@ -316,8 +343,16 @@ function init() {
 <div class="section-title">Media Directories</div>
 <div class="section">
 	<div class="tomato-grid" id="ms-grid"></div>
+</div>
 
-	<small>To exclude a given subdirectory from the scan, place a file with the name <i>.minidlnaignore</i> in it.</small>
+<!-- / / / -->
+
+<div class="section-title">Notes</div>
+<div class="section">
+	<ul>
+		<li>To exclude a given subdirectory from the scan, place a file with the name <i>.minidlnaignore</i> in it.</li>
+		<li>You can use your own custom config file (/etc/minidlna.alt).</li>
+	</ul>
 </div>
 
 <!-- / / / -->
