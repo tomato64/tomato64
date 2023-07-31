@@ -2176,7 +2176,7 @@ TomatoRefresh.prototype = {
 
 function genStdTimeList(id, zero, min) {
 	var b = [];
-	var t = [0.5,1,2,3,4,5,10,15,30,60,120,180,240,300,10*60,15*60,20*60,30*60];
+	var t = [1,2,3,4,5,6,7,8,9,10,12,15,20,25,30,45,60];
 	var i, v;
 
 	if (min >= 0) {
