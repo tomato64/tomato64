@@ -2200,7 +2200,7 @@ function genStdTimeList(id, zero, min) {
 function genStdRefresh(spin, min, exec) {
 	W('<div style="text-align:right">');
 	if (spin) W('<img src="spin.gif" id="refresh-spinner" alt=""> ');
-	genStdTimeList('refresh-time', 'Refresh Every', min);
+	genStdTimeList('refresh-time', 'One off', min);
 	W('<input type="button" value="Refresh" onclick="' + (exec ? exec : 'refreshClick()') + '" id="refresh-button"></div>');
 }
 
