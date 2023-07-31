@@ -721,6 +721,7 @@ struct nvram_tuple router_defaults[] = {
 #endif
 	{ "adblock_blacklist_custom",	""				, 0 },
 	{ "adblock_whitelist",		""				, 0 },
+	{ "adblock_logs",		""				, 3 },
 	{ "adblock_limit",		""				, 0 },
 	{ "adblock_path",		""				, 0 },
 #endif /* TCONFIG_HTTPS */
