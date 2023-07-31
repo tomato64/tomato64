@@ -450,6 +450,10 @@ function init() {
 		<div class="tomato-grid" id="log-table-header"></div>
 		<div class="tomato-grid" id="log-table" onscroll="onTableScroll();"></div>
 
+			<span class="log-clear">
+				&raquo; <a href="javascript:scrollToBottom()">Scroll to bottom</a>
+			</span>
+			
 		<div id="log-refresh-time"></div>
 
 		<div class="log-clear log-viewlast">
