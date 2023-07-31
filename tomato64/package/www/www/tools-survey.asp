@@ -228,7 +228,7 @@ function init() {
 		<img src="spin.gif" alt="" id="refresh-spinner">
 		<script>
 			genStdTimeList('expire-time', 'Expire After', 0);
-			genStdTimeList('refresh-time', 'Refresh Every', 0);
+			genStdTimeList('refresh-time', 'One off', 0);
 		</script>
 		<input type="button" value="Refresh" onclick="ref.toggle()" id="refresh-button">
 	</div>
