@@ -2414,22 +2414,22 @@ static void start_media_server(int force)
 
 			fprintf(f, "network_interface=%s\n"
 			           "port=%d\n"
-			           "friendly_name=%s\n"
+			           "friendly_name=Tomato64 DLNA Server\n"
 			           "db_dir=%s/.db\n"
 			           "enable_tivo=%s\n"
 			           "strict_dlna=%s\n"
 			           "presentation_url=http%s://%s:%s/nas-media.asp\n"
 			           "inotify=yes\n"
 			           "notify_interval=600\n"
-			           "album_art_names=Cover.jpg/cover.jpg/Album.jpg/album.jpg/Folder.jpg/folder.jpg/Thumb.jpg/thumb.jpg\n"
+			           "album_art_names=Cover.jpg/cover.jpg/AlbumArtSmall.jpg/albumartsmall.jpg/AlbumArt.jpg/albumart.jpg/Album.jpg/album.jpg/Folder.jpg/folder.jpg/Thumb.jpg/thumb.jpg\n"
 			           "log_dir=/var/log\n"
 			           "log_level=general,artwork,database,inotify,scanner,metadata,http,ssdp,tivo=warn\n"
 			           "serial=%s\n"
 			           "uuid=%s\n"
+			           "model_name=Windows Media Connect compatible (MiniDLNA)\n"
 			           "model_number=%s\n\n",
 			           strlen(msi) ? msi : nvram_safe_get("lan_ifname"),
 			           (port < 0) || (port >= 0xffff) ? 0 : port,
-			           nvram_get("router_name") ? : "Tomato64",
 			           dbdir ? : "/var/run/minidlna",
 			           nvram_get_int("ms_tivo") ? "yes" : "no",
 			           nvram_get_int("ms_stdlna") ? "yes" : "no",
