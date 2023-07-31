@@ -1,9 +1,10 @@
 /*
-
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 #include "tomato.h"
 
@@ -95,9 +96,12 @@ int readall(FILE *in, char **dataptr, size_t *sizeptr)
 
 static int logok(void)
 {
-	if (nvram_match("log_file", "1")) return 1;
+	if (nvram_match("log_file", "1"))
+		return 1;
+
 	resmsg_set("Internal logging disabled");
 	redirect("error.asp");
+
 	return 0;
 }
 
@@ -112,12 +116,13 @@ void get_logfilename(char *lfn)
 	if (f_read_string("/etc/syslogd.cfg", cfg, sizeof(cfg)) > 0) {
 		if ((p = strchr(cfg, '\n')))
 			*p = 0;
-		strtok(cfg, " \t");	// skip rotsize
-		strtok(NULL, " \t");	// Skip backup cnt
+
+		strtok(cfg, " \t");	/* skip rotsize */
+		strtok(NULL, " \t");	/* skip backup cnt */
 		if ((p = strtok(NULL, " \t")) && (*p == '/')) {
-			// check if we can write to the file
+			/* check if we can write to the file */
 			if (f_write(p, cfg, 0, FW_APPEND, 0) >= 0) {
-				nv = p; // nv is the configured log filename
+				nv = p;	/* nv is the configured log filename */
 			}
 		}
 	}
@@ -127,19 +132,31 @@ void get_logfilename(char *lfn)
 
 void wo_viewlog(char *url)
 {
-	char *p;
-	char *c;
+	char *p, *c, *w;
 	char s[128];
 	char t[128];
-	int n;
+	int logLines;
 	char lfn[256];
 
 	if (!logok())
 		return;
 
 	get_logfilename(lfn);
+
+	if ((w = webcgi_get("which")) == NULL)
+		return;
+
+	if (strcmp(w, "all") == 0)
+		logLines = MAX_LOG_LINES;
+	else if ((logLines = atoi(w)) <= 0)
+		return;
+	else if ((logLines = atoi(w)) > MAX_LOG_LINES)
+		logLines = MAX_LOG_LINES;
+
+	send_header(200, NULL, mime_plain, 0);
+
+	/* show filtered */
 	if ((p = webcgi_get("find")) != NULL) {
-			send_header(200, NULL, mime_plain, 0);
 			if (strlen(p) > 64)
 				return;
 
@@ -163,21 +180,12 @@ void wo_viewlog(char *url)
 					++p;
 			}
 			*c = 0;
-			snprintf(s, sizeof(s), "grep -ih \"%s\" $(ls -1rv %s %s.* 2>/dev/null) 2>/dev/null", t, lfn, lfn);
-			web_pipecmd(s, WOF_NONE);
-			return;
+			snprintf(s, sizeof(s), "grep -ih \"%s\" $(ls -1rv %s %s.* 2>/dev/null) 2>/dev/null | tail -n %d", t, lfn, lfn, logLines);
 	}
+	/* show all */
+	else
+		snprintf(s, sizeof(s), "cat $(ls -1rv %s %s.* 2>/dev/null) | tail -n %d", lfn, lfn, logLines);
 
-	if ((p = webcgi_get("which")) == NULL)
-		return;
-
-	if (strcmp(p, "all") == 0)
-		n = MAX_LOG_LINES;
-	else if ((n = atoi(p)) <= 0)
-		return;
-
-	send_header(200, NULL, mime_plain, 0);
-	snprintf(s, sizeof(s), "cat $(ls -1rv %s %s.* 2>/dev/null) | tail -n %d", lfn, lfn, n);
 	web_pipecmd(s, WOF_NONE);
 }
 
@@ -191,13 +199,18 @@ void asp_showsyslog(int argc, char **argv)
 		return;
 
 	get_logfilename(lfn);
-	if (argc > 1)
-		logLines = atoi(argv[1]);
+
+	if (argc > 1) {
+		if ((logLines = atoi(argv[1])) <= 0)
+			return;
+		else if ((logLines = atoi(argv[1])) > MAX_LOG_LINES)
+			logLines = MAX_LOG_LINES;
+	}
 
 	asp_time(0, 0); /* get current time and print in the first line */
 	web_puts("\n");
 
-	snprintf(s, sizeof(s), "cat $(ls -1rv %s %s.*) | tail -n %d", lfn, lfn, logLines);
+	snprintf(s, sizeof(s), "cat $(ls -1rv %s %s.* 2>/dev/null) | tail -n %d", lfn, lfn, logLines);
 	web_pipecmd(s, WOF_NONE);
 }
 
@@ -279,9 +292,12 @@ void wo_webmon(char *url)
 
 static int webmon_ok(int searches)
 {
-	if (nvram_get_int("log_wm") && nvram_get_int(searches ? "log_wmsmax" : "log_wmdmax") > 0) return 1;
+	if (nvram_get_int("log_wm") && nvram_get_int(searches ? "log_wmsmax" : "log_wmdmax") > 0)
+		return 1;
+
 	resmsg_set("Web Monitoring disabled");
 	redirect("error.asp");
+
 	return 0;
 }
 
@@ -291,19 +307,24 @@ void wo_syslog(char *url)
 	char s[128];
 
 	get_logfilename(lfn);
+
 	if (strncmp(url, "webmon_", 7) == 0) {
-		// web monitor
+		/* web monitor */
 		char file[64];
 		snprintf(file, sizeof(file), "/proc/%s", url);
-		if (!webmon_ok(strstr(url, "searches") != NULL)) return;
+		if (!webmon_ok(strstr(url, "searches") != NULL))
+			return;
+
 		send_header(200, NULL, mime_binary, 0);
 		do_file(file);
 	}
 	else {
-		// syslog
-		if (!logok()) return;
+		/* syslog */
+		if (!logok())
+			return;
+
 		send_header(200, NULL, mime_binary, 0);
-		snprintf(s, sizeof(s), "cat $(ls -1rv %s %s.*)", lfn, lfn);
+		snprintf(s, sizeof(s), "cat $(ls -1rv %s %s.* 2>/dev/null)", lfn, lfn);
 		web_pipecmd(s, WOF_NONE);
 	}
 }
