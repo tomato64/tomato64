@@ -146,9 +146,18 @@ void start_bittorrent(int force)
 	            "\"speed-limit-up-enabled\": %s,\n"
 	            "\"speed-limit-down\": %s,\n"
 	            "\"speed-limit-up\": %s,\n"
-	            "\"rpc-enabled\": %s,\n"
-	            "\"rpc-bind-address\": \"0.0.0.0\",\n"
-	            "\"rpc-port\": %s,\n"
+	            "\"rpc-enabled\": %s,\n",
+	            nvram_safe_get( "bt_port"),
+	            pc,
+	            pd,
+	            nvram_safe_get("bt_dl"),
+	            nvram_safe_get("bt_ul"),
+	            pb);
+
+	if (strstr(nvram_safe_get("bt_custom"), "bind") == NULL) /* only add bind if it's not already added in custom config */
+		fprintf(fp, "\"rpc-bind-address\": \"0.0.0.0\",\n");
+
+	fprintf(fp, "\"rpc-port\": %s,\n"
 	            "\"rpc-whitelist\": \"*\",\n"
 	            "\"rpc-whitelist-enabled\": %s,\n"
 	            "\"rpc-host-whitelist\": \"*\",\n"
@@ -181,12 +190,6 @@ void start_bittorrent(int force)
 	            "%s%s"
 	            "\"rpc-authentication-required\": %s\n"
 	            "}\n",
-	            nvram_safe_get( "bt_port"),
-	            pc,
-	            pd,
-	            nvram_safe_get("bt_dl"),
-	            nvram_safe_get("bt_ul"),
-	            pb,
 	            nvram_safe_get("bt_port_gui"),
 	            whitelistEnabled,
 	            whitelistEnabled,
