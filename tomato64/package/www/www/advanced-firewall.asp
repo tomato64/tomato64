@@ -288,6 +288,7 @@ function init() {
 		<li><b>LAN0 / LAN1 / LAN2 / LAN3</b> - Add interface br0 / br1 / br2 / br3 to igmp.conf (Ex.: phyint br0 downstream ratelimit 0 threshold 1).</li>
 		<li><b>Enable quickleave</b> - Send a Leave IGMP message upstream as soon as it receives a Leave message for any downstream interface.</li>
 		<li><b>Custom configuration</b> - Use custom config for IGMP proxy instead of tomato default config. You must define one (or more) upstream interface(s) and one or more downstream interfaces. Refer to the <a href="https://github.com/pali/igmpproxy/blob/master/igmpproxy.conf" class="new_window">IGMP proxy example configuration</a> and <a href="https://github.com/pali/igmpproxy/commit/b55e0125c79fc9dbc95c6d6ab1121570f0c6f80f" class="new_window">IGMP proxy commit b55e0125c79fc9d</a> for details.</li>
+		<li><b>Note</b> - You can use your own custom config file (/etc/igmp.alt).</li>
 		<li><b>Other hints</b> - For error messages please check the <a href="status-log.asp">log file</a>.</li>
 		<li><b>Hidden settings (only optional)</b> - To define sources for multicasting and IGMP data you can use NVRAM variable <b>multicast_altnet_1</b>, <b>multicast_altnet_2</b> and <b>multicast_altnet_3</b> without using a (complete) custom configuration. Format: a.b.c.d/n (Example: 10.0.0.0/16).</li>
 	</ul>
