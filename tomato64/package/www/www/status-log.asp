@@ -480,7 +480,7 @@ function init() {
 	<div class="log-controls">
 		<span id="footer-msg2" style="display:none">Highlighted row copied to clipboard.</span>
 		<img src="spin.gif" alt="" id="refresh-spinner">
-		<script>genStdTimeList('refresh-time', 'Refresh Every', 0);</script>
+		<script>genStdTimeList('refresh-time', 'One off', 0);</script>
 		<input type="button" value="Refresh" onclick="ref.toggle()" id="refresh-button">
 	</div>
 </div>
