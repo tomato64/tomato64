@@ -160,7 +160,7 @@ void start_samba(int force)
 	            " min receivefile size = 16384\n"
 	            " workgroup = %s\n"
 	            " netbios name = %s\n"
-	            " server string = %s\n"
+	            " server string = Tomato64 Samba Server\n"
 	            " dos charset = ASCII\n"
 	            " unix charset = UTF8\n"
 	            " display charset = UTF8\n"
@@ -180,7 +180,6 @@ void start_samba(int force)
 	            strlen(si) ? si : nvram_safe_get("lan_ifname"),
 	            nvram_get("smbd_wgroup") ? : "WORKGROUP",
 	            nvram_safe_get("lan_hostname"),
-	            nvram_get("router_name") ? : "Tomato64",
 	            mode == 2 ? "" : "map to guest = Bad User",
 	            mode == 2 ? "no" : "yes"); /* guest ok */
 
