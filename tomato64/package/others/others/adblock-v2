@@ -680,7 +680,7 @@ Ram Used/Cache/Buffer / Total = <b>${rampu}% ~ $(echo $ramu | number)</b>/$(echo
 <div class=\"progress-bar\" style=\"background-color:#74CDC1;width: ${rampb}%\"></div></div><br>
 Dnsmasq running = $(echo $([ -f "/var/run/dnsmasq.pid" ] && echo "<b>Yes 🆗</b>" || echo "<b>no ⛔</b>"))<br>
 Dnsmasq restarts today = $(echo "<b> $restarts </b>")<br>
-Dnsmasq owner = $(ps | grep -q '[d]nsmasq.*async$' && [ $(ps | grep '[d]nsmasq.*async$' | awk '{print $2}') == "root" ] && echo "<b>root ️⛔<b> <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" || echo "<b>nobody 🆗</b>" )</li>
+Dnsmasq owner = $(ps | grep -q '[d]nsmasq.*async$' && [ $(ps | grep '[d]nsmasq.*async$' | awk '{print $2}') == "root" ] && echo "<b>root ️⛔<b> <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" || echo "<b>nobody 🆗</b>" )<br>
 Dnsmasq restart time = $([ -f $DNS_TIME ] && echo \<b\>$(cat $DNS_TIME)\</b\> || echo "<b>N/A"\</b\>)<br>
 Adblock calls today = <b>$(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep "Kick off" | wc -l )</b><br>
 Adblock config loaded = $(echo $(cat /etc/dnsmasq.conf | grep conf-file=/etc/dnsmasq.adblock >/dev/null 2>&1 && echo "<b>Yes 🆗</b>" || echo "<b>No ⛔</b>"))<br>
