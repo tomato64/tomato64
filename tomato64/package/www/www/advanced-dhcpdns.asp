@@ -19,7 +19,7 @@
 
 <script>
 
-//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,dhcpd_dmdns,dns_addget,dhcpd_gwmode,dns_intcpt,dhcpd_slt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_static_only,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe"); %>
+//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,dhcpd_dmdns,dns_addget,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_static_only,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe"); %>
 
 var cprefix = 'advanced_dhcpdns';
 var height = 0;
@@ -132,12 +132,7 @@ function verifyFields(focused, quiet) {
 		PR(b).style.display = (c ? 'table-row' : 'none');
 	}
 
-	v = (E('_f_dhcpd_sltsel').value == 1);
-	elem.display('_dhcpd_sltman', v);
-
 	if (!v_range('_f_dnsmasq_edns_size', quiet, 512, 4096))
-		return 0;
-	if ((v) && (!v_range('_f_dhcpd_slt', quiet, 1, 43200)))
 		return 0;
 	if (!v_length('_dnsmasq_custom', quiet, 0, 4096))
 		return 0;
@@ -227,10 +222,8 @@ function save() {
 		return;
 
 	var fom = E('t_fom');
-	var a = fom._f_dhcpd_sltsel.value;
 
 	fom.dhcpd_dmdns.value = fom._f_dhcpd_dmdns.checked ? 1 : 0;
-	fom.dhcpd_slt.value = (a != 1) ? a : fom._f_dhcpd_slt.value;
 	fom.dhcpd_gwmode.value = fom._f_dhcpd_gwmode.checked ? 1 : 0;
 	fom.dhcpc_minpkt.value = fom._f_dhcpc_minpkt.checked ? 1 : 0;
 	fom.dhcpd_static_only.value = fom._f_dhcpd_static_only.checked ? 1 : 0;
@@ -416,7 +409,6 @@ function init() {
 <input type="hidden" name="_nextpage" value="advanced-dhcpdns.asp">
 <input type="hidden" name="_service">
 <input type="hidden" name="dhcpd_dmdns">
-<input type="hidden" name="dhcpd_slt">
 <input type="hidden" name="dhcpc_minpkt">
 <input type="hidden" name="dhcpd_static_only">
 <input type="hidden" name="dhcpd_gwmode">
@@ -579,9 +571,6 @@ function init() {
 			{ title: 'Resolve .onion using Tor<br>(<a href="advanced-tor.asp" class="new_window">enable/start Tor first<\/a>)', name: 'f_dnsmasq_onion_support', type: 'checkbox', suffix: ' <small>note: disables \'DNS Rebind protection\'<\/small>', value: nvram.dnsmasq_onion_support == 1 },
 /* TOR-END */
 			{ title: 'Maximum active DHCP leases', name: 'dhcpd_lmax', type: 'text', maxlen: 5, size: 8, value: nvram.dhcpd_lmax },
-			{ title: 'Static lease time', multi: [
-				{ name: 'f_dhcpd_sltsel', type: 'select', options: [[0,'Same as normal lease time'],[-1,'"Infinite"'],[1,'Custom']], value: (nvram.dhcpd_slt < 1) ? nvram.dhcpd_slt : 1 },
-				{ name: 'f_dhcpd_slt', type: 'text', maxlen: 5, size: 8, prefix: '<span id="_dhcpd_sltman"> ', suffix: ' <i>(minutes)<\/i><\/span>', value: (nvram.dhcpd_slt >= 1) ? nvram.dhcpd_slt : 3600 } ] },
 /* IPV6-BEGIN */
 			{ title: 'Announce IPv6 on LAN (SLAAC)', name: 'f_ipv6_radvd', type: 'checkbox', value: nvram.ipv6_radvd == 1 },
 			{ title: 'Announce IPv6 on LAN (DHCP)', name: 'f_ipv6_dhcpd', type: 'checkbox', value: nvram.ipv6_dhcpd == 1 },

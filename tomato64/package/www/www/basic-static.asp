@@ -22,7 +22,7 @@
 
 <script>
 
-//	<% nvram("lan_ipaddr,lan_netmask,dhcpd_static,dhcpd_static_only,cstats_include"); %>
+//	<% nvram("lan_ipaddr,lan_netmask,dhcpd_static,cstats_include,dhcpd_slt"); %>
 
 var cprefix = 'basic_static';
 
@@ -287,6 +287,14 @@ REMOVE-END */
 }
 
 function verifyFields(focused, quiet) {
+	var v;
+
+	v = (E('_f_dhcpd_sltsel').value == 1);
+	elem.display('_dhcpd_sltman', v);
+
+	if ((v) && (!v_range('_f_dhcpd_slt', quiet, 1, 43200)))
+		return 0;
+
 	return 1;
 }
 
@@ -311,8 +319,10 @@ function save() {
 	}
 
 	var fom = E('t_fom');
+	var a = fom._f_dhcpd_sltsel.value;
+
+	fom.dhcpd_slt.value = (a != 1) ? a : fom._f_dhcpd_slt.value;
 	fom.dhcpd_static.value = sdhcp;
-	fom.dhcpd_static_only.value = fom._f_dhcpd_static_only.checked ? 1 : 0;
 	fom.cstats_include.value = ipt;
 	form.submit(fom, 1);
 }
@@ -343,7 +353,7 @@ function init() {
 <input type="hidden" name="_nextpage" value="basic-static.asp">
 <input type="hidden" name="_service" value="arpbind-restart,cstats-restart,dnsmasq-restart">
 <input type="hidden" name="dhcpd_static">
-<input type="hidden" name="dhcpd_static_only">
+<input type="hidden" name="dhcpd_slt">
 <input type="hidden" name="cstats_include">
 
 <!-- / / / -->
@@ -358,7 +368,11 @@ function init() {
 <div class="section-title">Options</div>
 <div class="section">
 	<script>
-		createFieldTable('', [ { title: 'Ignore DHCP requests from unknown devices', name: 'f_dhcpd_static_only', type: 'checkbox', value: nvram.dhcpd_static_only == '1' } ]);
+		createFieldTable('', [
+			{ title: 'Static lease time', multi: [
+				{ name: 'f_dhcpd_sltsel', type: 'select', options: [[0,'Same as normal lease time'],[-1,'"Infinite"'],[1,'Custom']], value: (nvram.dhcpd_slt < 1) ? nvram.dhcpd_slt : 1 },
+				{ name: 'f_dhcpd_slt', type: 'text', maxlen: 5, size: 8, prefix: '<span id="_dhcpd_sltman"> ', suffix: ' <i>(minutes)<\/i><\/span>', value: (nvram.dhcpd_slt >= 1) ? nvram.dhcpd_slt : 3600 } ] }
+		]);
 	</script>
 </div>
 
@@ -380,7 +394,7 @@ function init() {
 				<li><small>To specify multiple hostnames for a device, separate them with spaces (not available when IP address is empty).</small></li>
 				<li><small>To enable/enforce static ARP binding for a particular device, it must have only one MAC associated with that particular IP address (i.e. you can't have two MAC addresses linked to the same hostname/device in the table above).</small></li>
 				<li><small>When ARP binding is enabled for a particular MAC/IP address pair, that device will always be shown as "active" in the <a href="tools-wol.asp">Wake On LAN</a> table.</small></li>
-				<li><small>See also the <a href="advanced-dhcpdns.asp">Advanced DHCP/DNS</a> settings page for more DHCP-related configuration options.</small></li>
+				<li><small>See also the <a href="advanced-dhcpdns.asp">Advanced DHCP/DNS/TFTP</a> settings page for more DHCP-related configuration options.</small></li>
 			</ul>
 		</li>
 	</ul>
