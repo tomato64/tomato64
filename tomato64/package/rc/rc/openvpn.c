@@ -575,8 +575,6 @@ void start_ovpn_client(int unit)
 	            "verb 3\n"
 	            "status-version 2\n"
 	            "status status 10\n" /* Update status file every 10 sec */
-	            "pull-filter ignore \"ifconfig-ipv6\"\n" /* IPv6 currently not supported */
-	            "pull-filter ignore \"route-ipv6\"\n\n"
 	            "# Custom Configuration\n"
 	            "%s",
 	            getNVRAMVar("vpn_client%d_custom", unit));
