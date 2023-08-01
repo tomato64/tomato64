@@ -347,6 +347,9 @@ struct nvram_tuple router_defaults[] = {
 	/* Wireless parameters */
 	{ "wl_ifname",			""				, 0 },	/* Interface name */
 	{ "wl_hwaddr",			""				, 0 },	/* MAC address */
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+	{ "wl_clap_hwaddr",		""				, 0 },	/* ap mac addr for the FT client (sta/psta/wet) to connect to (default "empty" / not needed) */
+#endif
 	{ "wl_phytype",			"n"				, 0 },	/* Current wireless band ("a" (5 GHz), "b" (2.4 GHz), or "g" (2.4 GHz)) */
 	{ "wl_corerev",			""				, 0 },	/* Current core revision */
 	{ "wl_phytypes",		""				, 0 },	/* List of supported wireless bands (e.g. "ga") */

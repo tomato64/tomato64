@@ -790,6 +790,9 @@ static const nvset_t nvset_list[] = {
 #endif
 	{ "wl_macaddr",			V_LENGTH(0, 17)			},
 	{ "wl_hwaddr",			V_LENGTH(0, 17)			},
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+	{ "wl_clap_hwaddr",		V_LENGTH(0, 17)			},	/* ap mac addr for the FT client (sta/psta/wet) to connect to (default "empty" / not needed) */
+#endif
 
 /* advanced-routing */
 	{ "routes_static",		V_LENGTH(0, 2048)		},

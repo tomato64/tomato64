@@ -2242,6 +2242,9 @@ static int radio_join(int idx, int unit, int subunit, void *param)
 	char s[32], f[64];
 	char ifname[16];
 	char *amode, sec[16];
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+	char clap_hwaddr[32];
+#endif
 
 	int *unit_filter = param;
 	if (*unit_filter >= 0 && *unit_filter != unit)
@@ -2284,6 +2287,9 @@ static int radio_join(int idx, int unit, int subunit, void *param)
 					break;
 
 				snprintf(sec, sizeof(sec), "%s", nvram_safe_get(wl_nvname("akm", unit, subunit)));
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+				snprintf(clap_hwaddr, sizeof(clap_hwaddr), "%s", nvram_safe_get(wl_nvname("clap_hwaddr", unit, subunit))); /* get ap mac addr for the FT client to connect to */
+#endif
 
 				if (strstr(sec, "psk2"))
 					amode = "wpa2psk";
@@ -2298,7 +2304,12 @@ static int radio_join(int idx, int unit, int subunit, void *param)
 				else
 					amode = "open";
 
-				eval("wl", "-i", ifname, "join", nvram_safe_get(wl_nvname("ssid", unit, subunit)), "imode", "bss", "amode", amode);
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+				if (strlen(clap_hwaddr) >= 17) /* BSSID=MAC (xx:xx:xx:xx:xx:xx) to scan and join */
+					eval("wl", "-i", ifname, "join", nvram_safe_get(wl_nvname("ssid", unit, subunit)), "imode", "bss", "amode", amode, "-b", clap_hwaddr);
+				else /* default case */
+#endif
+					eval("wl", "-i", ifname, "join", nvram_safe_get(wl_nvname("ssid", unit, subunit)), "imode", "bss", "amode", amode);
 
 				stacheck = STACHECK_DISCONNECT;
 			}
