@@ -1,5 +1,5 @@
 #!/bin/sh
-
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 # Author: Shibby
 # Inspired by qrs from OpenLinksys
 # Source: https://openlinksys.info/forum/viewthread.php?thread_id=18549&rowstart=20#post_149346
