@@ -306,9 +306,9 @@ function init() {
 					value: nvram['wl'+u+'_wme_apsd'] },
 				{ title: 'Wireless Multicast Forwarding', name: 'wl'+u+'_wmf_bss_enable', type: 'select', options: [['0','Disable *'],['1','Enable']],
 					value: nvram['wl'+u+'_wmf_bss_enable'] },
-				{ title: 'Turbo QAM (Requires Wireless Network Mode set to Auto)', name: 'wl'+u+'_turbo_qam', type: 'select', options: [['0','Disable'],['1','Enable *']
+				{ title: 'Modulation Scheme (Requires Wireless Network Mode set to Auto)', name: 'wl'+u+'_turbo_qam', type: 'select', options: [['0','Up to MCS 7 (802.11n)'],['1','Up to MCS 9 (TurboQAM/256-QAM) *']
 /* BCMWL714-BEGIN */
-																			,['2','Nitro QAM']
+																			,['2','Up to MCS 11 (NitroQAM/1024-QAM)']
 /* BCMWL714-END */
 																		       ],
 					value: nvram['wl'+u+'_turbo_qam'], hidden: (!acwave2 && ((nvram['wl'+u+'_phytype'] != 'v') || (nvram['wl'+u+'_nband'] == 1))) },
