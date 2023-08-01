@@ -1,5 +1,5 @@
 #!/bin/sh
-
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #cleaning
 sed -i /tmp/etc/hosts  -e "/ntp2ip/d"
 
