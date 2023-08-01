@@ -1,4 +1,5 @@
 #!/bin/sh
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 # Network discovery script v1.7 - ARM and MIPS R2 - 06/2021 - rs232
 #------------------------------------------------------
 #    FreshTomato Network Discovery - usage
