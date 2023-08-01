@@ -377,7 +377,7 @@ function save() {
 		form.submit(fom, 1);
 
 		if (fom.dnsmasq_safe.value == 1)
-			alert('dnsmasq wystartowal w trybie safe, bo bledy w konfigu!');
+			alert('Dnsmasq Custom configuration contains a disruptive syntax error.\nThe Custom configuration is now excluded to allow dnsmasq to operate');
 
 	waitforme = 0; /* now you can leave the page... */
 	}, 5500);
@@ -614,10 +614,10 @@ function init() {
 		createFieldTable('', [
 			{ title: 'Enable TFTP', name: 'f_dnsmasq_tftp', type: 'checkbox', value: nvram.dnsmasq_tftp == 1 },
 				{ title: 'TFTP root path', indent: 2, name: 'dnsmasq_tftp_path', type: 'text', maxlen: 128, size: 90, placeholder: '/mnt/sda1', value: nvram.dnsmasq_tftp_path },
-				{ title: 'PXE support on LAN0', indent: 2, name: 'f_dnsmasq_pxelan0', type: 'checkbox', value: nvram.dnsmasq_pxelan0 == 1 },
-				{ title: 'PXE support on LAN1', indent: 2, name: 'f_dnsmasq_pxelan1', type: 'checkbox', value: nvram.dnsmasq_pxelan1 == 1 },
-				{ title: 'PXE support on LAN2', indent: 2, name: 'f_dnsmasq_pxelan2', type: 'checkbox', value: nvram.dnsmasq_pxelan2 == 1 },
-				{ title: 'PXE support on LAN3', indent: 2, name: 'f_dnsmasq_pxelan3', type: 'checkbox', value: nvram.dnsmasq_pxelan3 == 1 }
+				{ title: 'PXE on LAN0 (br0)', indent: 2, name: 'f_dnsmasq_pxelan0', type: 'checkbox', value: nvram.dnsmasq_pxelan0 == 1 },
+				{ title: 'PXE on LAN1 (br1)', indent: 2, name: 'f_dnsmasq_pxelan1', type: 'checkbox', value: nvram.dnsmasq_pxelan1 == 1 },
+				{ title: 'PXE on LAN2 (br2)', indent: 2, name: 'f_dnsmasq_pxelan2', type: 'checkbox', value: nvram.dnsmasq_pxelan2 == 1 },
+				{ title: 'PXE on LAN3 (br3)', indent: 2, name: 'f_dnsmasq_pxelan3', type: 'checkbox', value: nvram.dnsmasq_pxelan3 == 1 }
 		]);
 	</script>
 </div>

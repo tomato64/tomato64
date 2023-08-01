@@ -648,6 +648,8 @@ void start_dnsmasq()
 		fprintf(f, "%s\n", nvram_safe_get("dnsmasq_custom"));
 		fappend(f, "/etc/dnsmasq.custom");
 	}
+	else
+		logmsg(LOG_WARNING, "Warning! Dnsmasq Custom configuration contains a disruptive syntax error. The Custom configuration is now excluded to allow dnsmasq to operate");
 
 	fappend(f, "/etc/dnsmasq.ipset");
 
