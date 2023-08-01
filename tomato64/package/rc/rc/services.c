@@ -76,7 +76,7 @@ static const struct itimerval pop_tv = { {0, 0}, {0, 500 * 1000} };
 static const struct itimerval zombie_tv = { {0, 0}, {307, 0} };
 static const char dmhosts[] = "/etc/hosts.dnsmasq";
 static const char dmresolv[] = "/etc/resolv.dnsmasq";
-static pid_t pid_dnsmasq = -1;
+//static pid_t pid_dnsmasq = -1;
 static pid_t pid_crond = -1;
 static pid_t pid_hotplug2 = -1;
 static pid_t pid_igmp = -1;
@@ -102,7 +102,8 @@ void start_dnsmasq_wet()
 	           "min-port=%u\n"				/* min port used for random src port */
 	           "no-negcache\n"				/* disable negative caching */
 	           "bind-dynamic\n",
-		dmresolv, 4096);
+	           dmresolv,
+	           4096);
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
 		char bridge[2] = "0";
@@ -624,9 +625,30 @@ void start_dnsmasq()
 #endif /* TCONFIG_IPV6 */
 
 	fprintf(f, "edns-packet-max=%d\n", nvram_get_int("dnsmasq_edns_size"));
-	fprintf(f, "%s\n", nvram_safe_get("dnsmasq_custom"));
 
-	fappend(f, "/etc/dnsmasq.custom");
+#ifdef TCONFIG_USB_EXTRAS
+	if (nvram_get_int("dnsmasq_tftp")) {
+		fprintf(f, "enable-tftp\n"
+		           "tftp-no-fail\n"
+		           "tftp-root=%s\n",
+		           nvram_safe_get("dnsmasq_tftp_path"));
+
+		if (nvram_get_int("dnsmasq_pxelan0") && strlen(nvram_safe_get("lan_ifname")) > 0)
+			fprintf(f, "dhcp-boot=pxelinux.0,,%s\n", nvram_safe_get("lan_ipaddr"));
+		if (nvram_get_int("dnsmasq_pxelan1") && strlen(nvram_safe_get("lan1_ifname")) > 0)
+			fprintf(f, "dhcp-boot=pxelinux.0,,%s\n", nvram_safe_get("lan1_ipaddr"));
+		if (nvram_get_int("dnsmasq_pxelan2") && strlen(nvram_safe_get("lan2_ifname")) > 0)
+			fprintf(f, "dhcp-boot=pxelinux.0,,%s\n", nvram_safe_get("lan2_ipaddr"));
+		if (nvram_get_int("dnsmasq_pxelan3") && strlen(nvram_safe_get("lan3_ifname")) > 0)
+			fprintf(f, "dhcp-boot=pxelinux.0,,%s\n", nvram_safe_get("lan3_ipaddr"));
+	}
+#endif /* TCONFIG_USB_EXTRAS */
+
+	if (!nvram_get_int("dnsmasq_safe")) {
+		fprintf(f, "%s\n", nvram_safe_get("dnsmasq_custom"));
+		fappend(f, "/etc/dnsmasq.custom");
+	}
+
 	fappend(f, "/etc/dnsmasq.ipset");
 
 	fclose(f);
@@ -648,8 +670,8 @@ void start_dnsmasq()
 	/* default to some values we like, but allow the user to override them */
 	eval("dnsmasq", "-c", "4096", "--log-async");
 
-	if (!nvram_contains_word("debug_norestart", "dnsmasq"))
-		pid_dnsmasq = -2;
+//	if (!nvram_contains_word("debug_norestart", "dnsmasq"))
+//		pid_dnsmasq = -2;
 }
 
 void stop_dnsmasq(void)
@@ -657,7 +679,7 @@ void stop_dnsmasq(void)
 	if (serialize_restart("dnsmasq", 0))
 		return;
 
-	pid_dnsmasq = -1;
+//	pid_dnsmasq = -1;
 
 	unlink(RESOLV_CONF);
 	symlink(dmresolv, RESOLV_CONF);
@@ -2592,7 +2614,7 @@ void check_services(void)
 	/* do not restart if upgrading/rebooting */
 	if (!nvram_get_int("g_upgrade") && !nvram_get_int("g_reboot")) {
 		_check(pid_hotplug2, "hotplug2", start_hotplug2);
-		_check(pid_dnsmasq, "dnsmasq", start_dnsmasq);
+//		_check(pid_dnsmasq, "dnsmasq", start_dnsmasq);
 		_check(pid_crond, "crond", start_cron);
 		_check(pid_igmp, "igmpproxy", start_igmp_proxy);
 	}

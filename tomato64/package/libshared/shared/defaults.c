@@ -770,8 +770,17 @@ struct nvram_tuple router_defaults[] = {
 	{ "dnsmasq_q",			"0"				, 0 },	/* Bit0=quiet-dhcp, 1=dhcp6, 2=ra */
 	{ "dnsmasq_gen_names",		"0"				, 0 },
 	{ "dnsmasq_edns_size",		"1280"				, 0 },	/* dnsmasq EDNS packet size */
+	{ "dnsmasq_safe",		"0"				, 0 },	/* should dnsmasq starts in safe mode? (without custom config and /etc/dnsmasq.custom file */
 #ifdef TCONFIG_TOR
 	{ "dnsmasq_onion_support",	"0"				, 0 },
+#endif
+#ifdef TCONFIG_USB_EXTRAS
+	{ "dnsmasq_tftp",		"0"				, 0 },
+	{ "dnsmasq_tftp_path",		""				, 0 },
+	{ "dnsmasq_pxelan0",		"0"				, 0 },
+	{ "dnsmasq_pxelan1",		"0"				, 0 },
+	{ "dnsmasq_pxelan2",		"0"				, 0 },
+	{ "dnsmasq_pxelan3",		"0"				, 0 },
 #endif
 #ifdef TCONFIG_MDNS
 	{ "mdns_enable",		"0"				, 0 },

@@ -11,7 +11,7 @@
 <head>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
-<title>[<% ident(); %>] Advanced: DHCP / DNS</title>
+<title>[<% ident(); %>] Advanced: DHCP / DNS / TFTP</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
 <script src="isup.jsz"></script>
@@ -19,10 +19,11 @@
 
 <script>
 
-//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,dhcpd_dmdns,dns_addget,dhcpd_gwmode,dns_intcpt,dhcpd_slt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_static_only,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
+//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,dhcpd_dmdns,dns_addget,dhcpd_gwmode,dns_intcpt,dhcpd_slt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_static_only,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe"); %>
 
 var cprefix = 'advanced_dhcpdns';
 var height = 0;
+var waitforme = 0;
 
 /* STUBBY-BEGIN */
 var up_servers_arr = [<% stubby_presets("dot"); %>];
@@ -55,8 +56,15 @@ function resizeTxt() {
 	this.style.height = (this.scrollHeight < height ? height : this.scrollHeight)+'px';
 }
 
+function mayClose(event) {
+	if (waitforme != 0) {
+		event.preventDefault();
+		event.returnValue = '';
+	}
+}
+
 function verifyFields(focused, quiet) {
-	var vis = { }, v;
+	var vis = { }, v, a, b, c, i;
 
 /* STUBBY-BEGIN */
 /* DNSCRYPT-BEGIN */
@@ -106,10 +114,20 @@ function verifyFields(focused, quiet) {
 	else
 		E('_f_dns_norebind').disabled = 0;
 /* TOR-END */
+/* TFTP-BEGIN */
+	v = E('_f_dnsmasq_tftp').checked;
+	vis._dnsmasq_tftp_path = v;
+	vis._f_dnsmasq_pxelan0 = v;
+	vis._f_dnsmasq_pxelan1 = v;
+	vis._f_dnsmasq_pxelan2 = v;
+	vis._f_dnsmasq_pxelan3 = v;
 
-	for (var a in vis) {
-		var b = E(a);
-		var c = vis[a];
+	if (v && !v_length('_dnsmasq_tftp_path', quiet, 0, 128))
+		return 0;
+/* TFTP-END */
+	for (i in vis) {
+		var b = E(i);
+		var c = vis[i];
 		b.disabled = (c != 1);
 		PR(b).style.display = (c ? 'table-row' : 'none');
 	}
@@ -139,7 +157,7 @@ function verifyFields(focused, quiet) {
 	var reg = /^_upstream_active_/;
 	var els = document.getElementsByTagName('input');
 	var suff = ' in imported upstream servers file';
-	for (var i = els.length; i--;) {
+	for (i = els.length; i--;) {
 		if (reg.test(els[i].id) && !els[i].disabled) {
 			var id = els[i].id.replace(reg, '');
 
@@ -185,6 +203,17 @@ function verifyFields(focused, quiet) {
 		return 0;
 	}
 /* STUBBY-END */
+/* TFTP-BEGIN */
+	v = E('_f_dnsmasq_tftp').checked;
+	if (v) {
+		for (i = 0; i <= MAX_BRIDGE_ID; ++i) {
+			a = (i == 0 ? '' : i.toString());
+			E('_f_dnsmasq_pxelan'+i).disabled = (eval('nvram.lan'+a+'_ifname.length') < 1);
+			if (eval('nvram.lan'+a+'_ifname.length') < 1)
+				E('_f_dnsmasq_pxelan'+i).checked = 0;
+		}
+	}
+/* TFTP-END */
 
 	/* IP address, blank -> 0.0.0.0 */
 	if (!v_dns('_wan_wins', quiet))
@@ -248,6 +277,10 @@ function save() {
 	fom.dnscrypt_manual.value = fom.f_dnscrypt_manual.checked ? 1 : 0;
 	fom.dnscrypt_ephemeral_keys.value = fom.f_dnscrypt_ephemeral_keys.checked ? 1 : 0;
 /* DNSCRYPT-END */
+/* MDNS-BEGIN */
+	fom.mdns_enable.value = fom._f_mdns_enable.checked ? 1 : 0;
+	fom.mdns_reflector.value = fom._f_mdns_reflector.checked ? 1 : 0;
+/* MDNS-END */
 /* STUBBY-BEGIN */
 	fom.stubby_proxy.value = fom.f_stubby_proxy.checked ? 1 : 0;
 	fom.stubby_force_tls13.value = fom._f_stubby_force_tls13.checked ? 1 : 0;
@@ -278,68 +311,90 @@ function save() {
 	if (stubby_list.length)
 		fom.stubby_resolvers.value = stubby_list;
 /* STUBBY-END */
+/* TFTP-BEGIN */
+	fom.dnsmasq_tftp.value = fom._f_dnsmasq_tftp.checked ? 1 : 0;
+	fom.dnsmasq_pxelan0.value = fom._f_dnsmasq_pxelan0.checked ? 1 : 0;
+	fom.dnsmasq_pxelan1.value = fom._f_dnsmasq_pxelan1.checked ? 1 : 0;
+	fom.dnsmasq_pxelan2.value = fom._f_dnsmasq_pxelan2.checked ? 1 : 0;
+	fom.dnsmasq_pxelan3.value = fom._f_dnsmasq_pxelan3.checked ? 1 : 0;
+/* TFTP-END */
 
-	if ((fom.dhcpc_minpkt.value != nvram.dhcpc_minpkt) || (fom.dhcpc_custom.value != nvram.dhcpc_custom)) {
-		nvram.dhcpc_minpkt = fom.dhcpc_minpkt.value;
-		nvram.dhcpc_custom = fom.dhcpc_custom.value;
-		fom._service.value = '*'; /* special case: restart all */
-	}
-	else
-		fom._service.value = 'dnsmasq-restart'; /* always restart dnsmasq */
+	/* check configuration of dnsmasq first */
+	waitforme = 1; /* prevent user to leave the page */
+	fom.dnsmasq_safe.value = 0;
+	fom._service.value = 'dnsmasq-restart';
+	form.submit(fom, 1);
 
-	if (fom.dns_intcpt.value != nvram.dns_intcpt) {
-		nvram.dns_intcpt = fom.dns_intcpt.value;
-		if (fom._service.value != '*')
-			fom._service.value += ',firewall-restart'; /* special case: restart FW */
-	}
+	/* timeout of 5.5 seconds should be enough also for slower routers. I hope... */
+	setTimeout(() => {
 
-	if (fom.wan_wins.value != nvram.wan_wins) { /* special case: restart vpnservers/pptpd if up */
-		nvram.wan_wins = fom.wan_wins.value;
+		if (!isup.dnsmasq)  /* if not up, use safe mode */
+			fom.dnsmasq_safe.value = 1;
 
-		if (fom._service.value != '*') {
+		if ((fom.dhcpc_minpkt.value != nvram.dhcpc_minpkt) || (fom.dhcpc_custom.value != nvram.dhcpc_custom)) {
+			nvram.dhcpc_minpkt = fom.dhcpc_minpkt.value;
+			nvram.dhcpc_custom = fom.dhcpc_custom.value;
+			fom._service.value = '*'; /* special case: restart all */
+		}
+		else if (fom.dnsmasq_safe.value == 1) {
+			fom._service.value = 'dnsmasq-restart'; /* start dnsmasq if safe mode is set */
+		}
+
+		if (fom.dns_intcpt.value != nvram.dns_intcpt) {
+			nvram.dns_intcpt = fom.dns_intcpt.value;
+			if (fom._service.value != '*')
+				fom._service.value += ',firewall-restart'; /* special case: restart FW */
+		}
+
+		if (fom.wan_wins.value != nvram.wan_wins) { /* special case: restart vpnservers/pptpd if up */
+			nvram.wan_wins = fom.wan_wins.value;
+			if (fom._service.value != '*') {
 /* OPENVPN-BEGIN */
-			if (isup.vpnserver1)
-				fom._service.value += ',vpnserver1-restart';
-			if (isup.vpnserver2)
-				fom._service.value += ',vpnserver2-restart';
+				if (isup.vpnserver1)
+					fom._service.value += ',vpnserver1-restart';
+				if (isup.vpnserver2)
+					fom._service.value += ',vpnserver2-restart';
 /* OPENVPN-END */
 /* PPTPD-BEGIN */
-			if (isup.pptpd)
-				fom._service.value += ',pptpd-restart';
+				if (isup.pptpd)
+					fom._service.value += ',pptpd-restart';
 /* PPTPD-END */
+			}
 		}
-	}
-
 /* MDNS-BEGIN */
-	fom.mdns_enable.value = fom._f_mdns_enable.checked ? 1 : 0;
-	fom.mdns_reflector.value = fom._f_mdns_reflector.checked ? 1 : 0;
-
-	if ((fom.mdns_enable.value != nvram.mdns_enable) || (fom.mdns_reflector.value != nvram.mdns_reflector)) {
-		nvram.mdns_enable = fom.mdns_enable.value;
-		nvram.mdns_reflector = fom.mdns_reflector.value;
-		if (fom._service.value != '*') {
-			if (fom.mdns_enable.value == 1)
-				fom._service.value += ',mdns-restart'; /* special case: re/start avahi */
-			else
-				fom._service.value += ',mdns-stop'; /* special case: stop avahi */
+		if ((fom.mdns_enable.value != nvram.mdns_enable) || (fom.mdns_reflector.value != nvram.mdns_reflector)) {
+			nvram.mdns_enable = fom.mdns_enable.value;
+			nvram.mdns_reflector = fom.mdns_reflector.value;
+			if (fom._service.value != '*') {
+				if (fom.mdns_enable.value == 1)
+					fom._service.value += ',mdns-restart'; /* special case: re/start avahi */
+				else
+					fom._service.value += ',mdns-stop'; /* special case: stop avahi */
+			}
 		}
-	}
 /* MDNS-END */
 
-	form.submit(fom, 1);
+		form.submit(fom, 1);
+
+		if (fom.dnsmasq_safe.value == 1)
+			alert('dnsmasq wystartowal w trybie safe, bo bledy w konfigu!');
+
+	waitforme = 0; /* now you can leave the page... */
+	}, 5500);
 }
 
 function init() {
 	var c;
 	if (((c = cookie.get(cprefix + '_notes_vis')) != null) && (c == '1'))
-		toggleVisibility(cprefix, "notes");
+		toggleVisibility(cprefix, 'notes');
 
 	var e = E('_dnsmasq_custom');
 	height = getComputedStyle(e).height.slice(0, -2);
 	e.setAttribute('style', 'height:'+(e.scrollHeight)+'px');
 	addEvent(e, 'input', resizeTxt);
+	addEvent(window, 'beforeunload', mayClose);
 
-	up.initPage(250, 5);
+	up.initPage(250, 1);
 	eventHandler();
 }
 </script>
@@ -359,7 +414,7 @@ function init() {
 <!-- / / / -->
 
 <input type="hidden" name="_nextpage" value="advanced-dhcpdns.asp">
-<input type="hidden" name="_service" value="">
+<input type="hidden" name="_service">
 <input type="hidden" name="dhcpd_dmdns">
 <input type="hidden" name="dhcpd_slt">
 <input type="hidden" name="dhcpc_minpkt">
@@ -401,6 +456,14 @@ function init() {
 <input type="hidden" name="mdns_enable">
 <input type="hidden" name="mdns_reflector">
 <!-- MDNS-END -->
+<!-- TFTP-BEGIN -->
+<input type="hidden" name="dnsmasq_tftp">
+<input type="hidden" name="dnsmasq_pxelan0">
+<input type="hidden" name="dnsmasq_pxelan1">
+<input type="hidden" name="dnsmasq_pxelan2">
+<input type="hidden" name="dnsmasq_pxelan3">
+<!-- TFTP-END -->
+<input type="hidden" name="dnsmasq_safe">
 
 <!-- / / / -->
 
@@ -532,11 +595,40 @@ function init() {
 /* IPV6-END */
 			{ title: 'Prevent client auto DoH', name: 'f_dns_priv_override', type: 'checkbox', value: nvram.dns_priv_override == 1 },
 			{ title: 'Enable DNS Rebind protection', name: 'f_dns_norebind', type: 'checkbox', suffix: ' <small>note: disabled when \'Resolve .onion using Tor\' is checked<\/small>', value: nvram.dns_norebind == 1 },
-			{ title: 'Forward local domain queries to upstream DNS', name: 'f_dns_fwd_local', type: 'checkbox', value: nvram.dns_fwd_local == 1 },
+			{ title: 'Forward local domain queries to upstream DNS', name: 'f_dns_fwd_local', type: 'checkbox', value: nvram.dns_fwd_local == 1 }
 /* MDNS-BEGIN */
+			,
 			{ title: 'Enable multicast DNS<br>(Avahi mDNS)', name: 'f_mdns_enable', type: 'checkbox', value: nvram.mdns_enable == 1 },
-				{ title: 'Enable reflector', indent: 2, name: 'f_mdns_reflector', type: 'checkbox', value: nvram.mdns_reflector == 1 },
+				{ title: 'Enable reflector', indent: 2, name: 'f_mdns_reflector', type: 'checkbox', value: nvram.mdns_reflector == 1 }
 /* MDNS-END */
+		]);
+	</script>
+</div>
+
+<!-- / / / -->
+
+<!-- TFTP-BEGIN -->
+<div class="section-title">TFTP Server</div>
+<div class="section">
+	<script>
+		createFieldTable('', [
+			{ title: 'Enable TFTP', name: 'f_dnsmasq_tftp', type: 'checkbox', value: nvram.dnsmasq_tftp == 1 },
+				{ title: 'TFTP root path', indent: 2, name: 'dnsmasq_tftp_path', type: 'text', maxlen: 128, size: 90, placeholder: '/mnt/sda1', value: nvram.dnsmasq_tftp_path },
+				{ title: 'PXE support on LAN0', indent: 2, name: 'f_dnsmasq_pxelan0', type: 'checkbox', value: nvram.dnsmasq_pxelan0 == 1 },
+				{ title: 'PXE support on LAN1', indent: 2, name: 'f_dnsmasq_pxelan1', type: 'checkbox', value: nvram.dnsmasq_pxelan1 == 1 },
+				{ title: 'PXE support on LAN2', indent: 2, name: 'f_dnsmasq_pxelan2', type: 'checkbox', value: nvram.dnsmasq_pxelan2 == 1 },
+				{ title: 'PXE support on LAN3', indent: 2, name: 'f_dnsmasq_pxelan3', type: 'checkbox', value: nvram.dnsmasq_pxelan3 == 1 }
+		]);
+	</script>
+</div>
+<!-- TFTP-END -->
+
+<!-- / / / -->
+
+<div class="section-title">Custom Configuration</div>
+<div class="section">
+	<script>
+		createFieldTable('', [
 			{ title: '<a href="http://www.thekelleys.org.uk/" class="new_window">Dnsmasq<\/a><br>Custom configuration', name: 'dnsmasq_custom', type: 'textarea', value: nvram.dnsmasq_custom }
 		]);
 	</script>
@@ -577,7 +669,7 @@ function init() {
 		<li><b>Prevent client auto DoH</b> - Some clients like Firefox or Windows' Discovery of Designated Resolver support can automatically switch to DNS over HTTPS, bypassing your preferred DNS servers. This option may prevent that.</li>
 		<li><b>Enable DNS Rebind protection</b> - Enabling this will protect your LAN against DNS rebind attacks, however it will prevent upstream DNS servers from resolving queries to any non-routable IP (for example, 192.168.1.1).</li>
 <!-- MDNS-BEGIN -->
-		<li><b>Enable multicast DNS (Avahi mDNS)</b> - You will probably also like to add some <a href="advanced-access.asp">LAN access rules</a> (by default all communications between bridges is blocked) and/or use <a href="admin-scripts.asp">Firewall script</a> to add your own rules, ie. (br0 = private network, br1 = IOT): <i>iptables -I FORWARD -i br0 -o br+ -j ACCEPT</i> and <i>iptables -I INPUT -i br1 -p udp --dport 5353 -j ACCEPT</i>. Alternative config file is available (/etc/avahi/avahi-daemon_alt.conf).</li>
+		<li><b>Enable multicast DNS (Avahi mDNS)</b> - You will probably also want to add some <a href="advanced-access.asp">LAN access rules</a> (by default all communication between bridges is blocked) and/or use <a href="admin-scripts.asp">Firewall script</a> to add your own rules, ie. (br0 = private network, br1 = IOT): <i>iptables -I FORWARD -i br0 -o br+ -j ACCEPT</i> and <i>iptables -I INPUT -i br1 -p udp --dport 5353 -j ACCEPT</i>. Alternative config file is available (/etc/avahi/avahi-daemon_alt.conf).</li>
 <!-- MDNS-END -->
 		<li><b>Custom configuration</b> - Extra options to be added to the Dnsmasq configuration file.</li>
 	</ul>

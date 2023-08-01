@@ -616,8 +616,17 @@ static const nvset_t nvset_list[] = {
 	{ "dnsmasq_q",			V_RANGE(0, 7)			},	/* bitfield quiet bit0=dhcp, 1=dhcp6, 2=ra */
 	{ "dnsmasq_gen_names",		V_01				},	/* generate a name for DHCP clients which do not otherwise have one */
 	{ "dnsmasq_edns_size",		V_RANGE(512, 4096)		},	/* dnsmasq EDNS packet size (default 1280) */
+	{ "dnsmasq_safe",		V_01				},	/* should dnsmasq starts in safe mode? (without custom config and /etc/dnsmasq.custom file */
 #ifdef TCONFIG_TOR
 	{ "dnsmasq_onion_support",	V_01				},
+#endif
+#ifdef TCONFIG_USB_EXTRAS
+	{ "dnsmasq_tftp",		V_01				},
+	{ "dnsmasq_tftp_path",		V_TEXT(0, 128)			},
+	{ "dnsmasq_pxelan0",		V_01				},
+	{ "dnsmasq_pxelan1",		V_01				},
+	{ "dnsmasq_pxelan2",		V_01				},
+	{ "dnsmasq_pxelan3",		V_01				},
 #endif
 #ifdef TCONFIG_MDNS
 	{ "mdns_enable",		V_01				},
