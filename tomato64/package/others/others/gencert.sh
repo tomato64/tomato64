@@ -1,5 +1,5 @@
 #!/bin/sh
-
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 PID=$$
 PIDFILE="/var/run/gencert.pid"
 WAITTIMER=0
