@@ -44,9 +44,9 @@ dl $URL/rc.func /opt/etc/init.d/rc.func
 dl $URL/rc.unslung /opt/etc/init.d/rc.unslung x
 
 echo "Info: Basic packages installation..."
-opkg update
-opkg install ldconfig findutils
-ldconfig > /dev/null 2>&1
+/opt/bin/opkg update
+/opt/bin/opkg install ldconfig findutils
+/opt/sbin/ldconfig > /dev/null 2>&1
 [ -f /etc/TZ ] && ln -sf /etc/TZ /opt/etc/TZ
 
 cat << EOF
