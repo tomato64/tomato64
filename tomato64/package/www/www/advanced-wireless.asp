@@ -338,36 +338,19 @@ function init() {
 <div class="section" id="sesdiv_notes" style="display:none">
 	<i>Country / Region and Country Rev EXAMPLES:</i><br>
 	<ul>
-		<li><b>CY / 4</b> - Country: CY (Cyprus) AND Country Rev: 4</li>
-		<li><b>CZ / 4</b> - Country: CZ (Czech Republic) AND Country Rev: 4</li>
-		<li><b>EU / 13</b> - Country: EU (Europe) AND Country Rev: 13</li>
-		<li><b>EU / 33</b> - Country: EU (Europe) AND Country Rev: 33</li>
-		<li><b>EU / 53</b> - Country: EU (Europe) AND Country Rev: 53</li>
-		<li><b>EU / 78</b> - Country: EU (Europe) AND Country Rev: 78</li>
-		<li><b>DE / 7</b> - Country: DE (Germany) AND Country Rev: 7</li>
-		<li><b>PL / 4</b> - Country: PL (Poland) AND Country Rev: 4</li>
-		<li><b>FR / 5</b> - Country: FR (France) AND Country Rev: 5</li>
-		<li><b>GB / 6</b> - Country: GB (Great Britain) AND Country Rev: 6</li>
-		<li><b>FI / 4</b> - Country: FI (Finland) AND Country Rev: 4</li>
-		<li><b>HU / 4</b> - Country: HU (Hungary) AND Country Rev: 4</li>
-		<li><b>ES / 4</b> - Country: ES (Spain) AND Country Rev: 4</li>
-		<li><b>IT / 4</b> - Country: IT (Italy) AND Country Rev: 4</li>
-		<li><b>US / 0</b> - Country: US (USA) AND Country Rev: 0</li>
-		<li><b>Q2 / 96</b> - Country: Q2 (USA) AND Country Rev: 96</li>
-		<li><b>CA / 223</b> - Country: CA (Canada) AND Country Rev: 223</li>
-		<li><b>BR / 17</b> - Country: BR (Brazil) AND Country Rev: 17</li>
-		<li><b>BR / 20</b> - Country: BR (Brazil) AND Country Rev: 20</li>
-		<li><b>RU / 50</b> - Country: RU (Russia) AND Country Rev: 50</li>
-		<li><b>CN / 38</b> - Country: CN (China) AND Country Rev: 38</li>
-		<li><b>CN / 224</b> - Country: CN (China) AND Country Rev: 224</li>
-		<li><b>AU / 43</b> - Country: AU (Australia) AND Country Rev: 43</li>
-		<li><b>AU / 44</b> - Country: AU (Australia) AND Country Rev: 44</li>
+		<li><b>EU / 13</b> - Country: EU (Europe) AND Country Rev: 13 (Asus default setup for Germany and SDK6 router RT-N18U, RT-AC56U, RT-AC68U C1)</li>
+		<li><b>EU / 33</b> - Country: EU (Europe) AND Country Rev: 33 (Asus default setup for Germany and SDK6 router RT-AC66U_B1)</li>
+		<li><b>US / 0</b> - Country: US (USA) AND Country Rev: 0 (Asus default setup for USA and SDK6 router RT-AC68U A1/A2)</li>
+		<li><b>Q2 / 96</b> - Country: Q2 (USA) AND Country Rev: 96 (Asus default setup for USA and SDK7 router RT-AC3200)</li>
+		<li><b>Q2 / 33</b> - Country: Q2 (USA) AND Country Rev: 33 (Asus default setup for USA and SDK6 router RT-AC68U C1)</li>
+		<li><b>Q2 / 40</b> - Country: Q2 (USA) AND Country Rev: 40 (Asus default setup for USA and SDK6 router RT-AC68U B1/B2)</li>
+		<li><b>Q2 / 61</b> - Country: Q2 (USA) AND Country Rev: 61 (Asus default setup for USA and SDK6 router RT-AC66U_B1 / RT-AC1750_B1)</li>
 		<li><b>SG / 12</b> - Country: SG (Singapore) AND Country Rev: 12 (default *)</li>
 	</ul>
 
 	<i>Further Notes:</i><br>
 	<ul>
-		<li>Please select the same country code and rev for all wireless interfaces</li>
+		<li>Please select the same country code and rev for all wireless interfaces and have a look at the <a href="https://wiki.freshtomato.org/doku.php/advanced-wireless#country_region" class="new_window">FT Wiki</a></li>
 	  	<li>Country code AND rev define the possible channel list, power and other regulations</li>
 		<li>Leave default values if you are not sure what you are doing!</li>
 		<li>Info: wireless driver supports ~2000 combinations</li>
