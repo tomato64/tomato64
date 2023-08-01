@@ -5,7 +5,7 @@
 # Version: 0.11
 # Authors: Monter, Shibby, hasIPv6
 #
-
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 # configuration
 VERSION="v0.11"
 # /configuration
