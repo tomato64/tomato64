@@ -379,13 +379,15 @@ END:
 
 void stop_mysql(void)
 {
+	pid_t pid;
 	char pbi[128], buf[512];
 	int m = atoi(nvram_safe_get("mysql_sleep")) + 70;
 
 	if (serialize_restart("mysqld", 0))
 		return;
 
-	logmsg(LOG_INFO, "terminating mysqld ...");
+	if ((pid = pidof("mysqld")) > 0)
+		logmsg(LOG_INFO, "terminating mysqld ...");
 
 	/* wait for child of start_mysql to finish (if any) */
 	memset(buf, 0, sizeof(buf));
@@ -409,7 +411,8 @@ void stop_mysql(void)
 
 	killall_and_waitfor("mysqld", 10, 80);
 
-	logmsg(LOG_INFO, "mysqld stopped");
+	if (pid > 0)
+		logmsg(LOG_INFO, "mysqld stopped");
 
 	/* clean-up */
 	system("/bin/rm -f "mysql_pid);
