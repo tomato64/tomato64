@@ -1,5 +1,5 @@
 #!/bin/sh
-
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 ###############################
 # Copyright (C) 2012/2013 shibby
 # Changes for new versioning: 2018 - 2021 by pedro
