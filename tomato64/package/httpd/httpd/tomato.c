@@ -1365,7 +1365,7 @@ static const nvset_t nvset_list[] = {
 	{ "bt_lpd",			V_01				},
 	{ "bt_utp",			V_01				},
 	{ "bt_blocklist",		V_01				},
-	{ "bt_blocklist_url",		V_LENGTH(0, 80)			},
+	{ "bt_blocklist_url",		V_LENGTH(0, 256)		},
 	{ "bt_sleep",			V_RANGE(1, 60)			},
 	{ "bt_check_time",		V_RANGE(0, 55)			},
 	{ "bt_dl_queue_enable",		V_01				},

@@ -364,7 +364,7 @@ function init() {
 				{ name: 'bt_settings_custom', type: 'text', maxlen: 60, size: 40, value: nvram.bt_settings_custom } ] },
 			{ title: 'Blocklist', multi: [
 				{ name: 'f_bt_blocklist', type: 'checkbox', value: nvram.bt_blocklist == 1, suffix: ' ' },
-				{ name: 'bt_blocklist_url', type: 'text', maxlen: 80, size: 60, value: nvram.bt_blocklist_url } ] },
+				{ name: 'bt_blocklist_url', type: 'text', maxlen: 256, size: 60, value: nvram.bt_blocklist_url } ] },
 			{ title: 'Custom Log File Path', multi: [
 				{ name: 'f_bt_log', type: 'checkbox', value: nvram.bt_log == 1, suffix: ' ' },
 				{ name: 'bt_log_path', type: 'text', maxlen: 80, size: 60, value: nvram.bt_log_path, suffix: ' /transmission.log' } ] },
