@@ -373,5 +373,6 @@ void run_ftpd_firewall_script(void)
 		fclose(fp);
 		logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, vsftpd_fw_script);
 		eval(vsftpd_fw_script);
+		fix_chain_in_drop();
 	}
 }

@@ -364,5 +364,6 @@ void run_bt_firewall_script(void)
 		fclose(fp);
 		logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, tr_fw_script);
 		eval(tr_fw_script);
+		fix_chain_in_drop();
 	}
 }

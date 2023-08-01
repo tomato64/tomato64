@@ -379,5 +379,6 @@ void run_pptpd_firewall_script(void)
 		fclose(fp);
 		logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, PPTPD_FW_SCRIPT);
 		eval(PPTPD_FW_SCRIPT);
+		fix_chain_in_drop();
 	}
 }

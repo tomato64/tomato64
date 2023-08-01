@@ -1289,10 +1289,6 @@ static void filter_input(void)
 	pptp_client_firewall("INPUT", "", ipt_write);
 #endif
 
-	/* if logging */
-	if (*chain_in_drop == 'l')
-		ipt_write("-A INPUT -j %s\n", chain_in_drop);
-
 	/* NTP server LAN & WAN */
 	if (nvram_get_int("ntpd_enable") == 2)
 		ipt_write("-A INPUT -p udp -m udp --dport 123 -j %s\n", chain_in_accept);
@@ -1739,10 +1735,6 @@ static void filter6_input(void)
 		p = c + 1;
 	} while (*p);
 
-	/* if logging */
-	if (*chain_in_drop == 'l')
-		ip6t_write( "-A INPUT -j %s\n", chain_in_drop);
-
 	/* default policy: DROP */
 }
 #endif /* TCONFIG_IPV6 */
@@ -2178,6 +2170,8 @@ int start_firewall(void)
 #ifdef TCONFIG_TINC
 	run_tinc_firewall_script();
 #endif
+
+	fix_chain_in_drop();
 
 	run_nvscript("script_fire", NULL, 1);
 

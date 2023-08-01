@@ -414,5 +414,6 @@ void run_nginx_firewall_script(void)
 		fclose(fp);
 		logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, nginx_fw_script);
 		eval(nginx_fw_script);
+		fix_chain_in_drop();
 	}
 }

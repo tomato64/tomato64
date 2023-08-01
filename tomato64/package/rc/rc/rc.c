@@ -95,6 +95,26 @@ void chains_log_detection(void)
 	//if (nvram_match("nf_drop_reset", "1")) chain_out_drop = chain_out_reject;
 }
 
+void fix_chain_in_drop(void)
+{
+	char buf[8];
+
+	chains_log_detection();
+
+	/* if logging - readd the logdrop rule at the end of the INPUT chain */
+	if (*chain_in_drop == 'l') {
+		memset(buf, 0, sizeof(buf)); /* reset */
+		snprintf(buf, sizeof(buf), "%s", chain_in_drop);
+
+		eval("iptables", "-D", "INPUT", "-j", buf);
+		eval("iptables", "-A", "INPUT", "-j", buf);
+#ifdef TCONFIG_IPV6
+		eval("ip6tables", "-D", "INPUT", "-j", buf);
+		eval("ip6tables", "-A", "INPUT", "-j", buf);
+#endif
+	}
+}
+
 /* copy env to nvram
  * returns 1 if new/changed, 0 if not changed/no env
  */
