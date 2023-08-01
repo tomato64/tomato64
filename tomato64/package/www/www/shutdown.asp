@@ -17,11 +17,11 @@ No part of this file may be used without permission.
 var n = 31;
 function tick() {
 	if (--n > 0) {
-		document.getElementById("sptime").innerHTML = n;
+		document.getElementById('sptime').innerHTML = n;
 		setTimeout(tick, 1000);
 	}
 	else {
-		document.getElementById("msg").innerHTML = "You can now unplug the router.";
+		document.getElementById('msg').innerHTML = 'You can now unplug the router.';
 	}
 }
 </script>
@@ -32,7 +32,7 @@ function tick() {
 	<div class="wrapper1">
 		<div class="wrapper2">
 			<div class="info-centered">
-				<div id="msg">Please wait while the router shuts down... &nbsp;<div id="sptime"></div></div>
+				<div id="msg">Please wait while the router halts... &nbsp;<div id="sptime"></div></div>
 			</div>
 		</div>
 	</div>
