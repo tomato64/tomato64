@@ -845,7 +845,9 @@ static const nvset_t nvset_list[] = {
 #endif
 #endif /* TCONFIG_BCMARM || CONFIG_BCMWL6 || TCONFIG_BLINK */
 	{ "wl_btc_mode",		V_RANGE(0, 2)			},	/* BT Coexistence Mode: 0 (disable), 1 (enable), 2 (preemption) */
+#if !defined(CONFIG_BCMWL6) /* only mips RT AND RT-N */
 	{ "wl_afterburner",		V_LENGTH(2, 4)			},	/* off, on, auto */
+#endif
 	{ "wl_auth",			V_01				},
 	{ "wl_rateset",			V_LENGTH(2, 7)			},	/* all, default, 12 */
 	{ "wl_rate",			V_RANGE(0, 54 * 1000 * 1000)	},

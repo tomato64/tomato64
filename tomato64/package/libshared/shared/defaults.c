@@ -392,7 +392,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "wl_net_mode",		"mixed"				, 0 },	/* Wireless mode (mixed|g-only|b-only|disable) */
 	{ "wl_gmode",			"1"				, 0 },	/* 54g mode */
 	{ "wl_gmode_protection",	"off"				, 0 },	/* 802.11g RTS/CTS protection (off|auto) */
+#if !defined(CONFIG_BCMWL6) /* only mips RT AND RT-N */
 	{ "wl_afterburner",		"off"				, 0 },	/* AfterBurner */
+#endif
 	{ "wl_frameburst",		"off"				, 0 },	/* BRCM Frambursting mode (off|on) */
 	{ "wl_wme",			"auto"				, 0 },	/* WME mode (auto|off|on) */
 	{ "wl_antdiv",			"-1"				, 0 },	/* Antenna Diversity (-1|0|1|3) */
