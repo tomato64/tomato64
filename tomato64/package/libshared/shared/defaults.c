@@ -548,6 +548,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "wl_trf_mgmt_rssi_policy", 	"0"				, 0 },	/* Disable RSSI (default) */
 #endif /* TRAFFIC_MGMT */
 #ifdef TCONFIG_BCMARM
+	{ "wl_psta_inact", 		"0"				, 0 },	/* (Media Bridge) PSTA inactivity timer (wl driver default is: 600 for SDK6 / SDK7 / SDK714) */
 	{ "wl_atf",			"0"				, 0 },	/* Air Time Fairness support on = 1, off = 0 (default: off) */
 	{ "wl_turbo_qam",		"1"				, 0 },	/* turbo qam on = 1 , off = 0 */
 	{ "wl_txbf",			"1"				, 0 },	/* Explicit Beamforming on = 1 , off = 0 (default: on) */

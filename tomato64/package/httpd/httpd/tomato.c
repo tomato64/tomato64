@@ -890,6 +890,7 @@ static const nvset_t nvset_list[] = {
 	{ "wl_wmf_ucast_upnp",		V_01				},	/* Disable Converting upnp to ucast (default) */
 	{ "wl_wmf_igmpq_filter",	V_01				},	/* Disable igmp query filter */
 #endif /* TCONFIG_EMF */
+	{ "wl_psta_inact",		V_RANGE(0, 3600)		},	/* (Media Bridge) PSTA inactivity timer (wl driver default is: 600 for SDK6 / SDK7 / SDK714) */
 	{ "wl_atf",			V_01				},	/* Air Time Fairness support on = 1, off = 0 */
 	{ "wl_turbo_qam",		V_RANGE(0, 2)			},	/* turbo qam on = 1 , off = 0, nitro qam = 2 */
 	{ "wl_txbf",			V_01				},	/* Explicit Beamforming on = 1 , off = 0 (default: on) */
