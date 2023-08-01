@@ -1,5 +1,5 @@
 #!/bin/sh
-
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 # v1.00 Shibby 2013
 # v1.01 Fix memory leak + cosmetics - pedro 2019 - 2021
