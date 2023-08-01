@@ -82,7 +82,7 @@
 +	*value = '\0';
 +	*parm = '\0';
 +
-+	if (!(fp = fopen("/etc/smb.conf", "r"))) {
++	if (!(fp = fopen("/etc/samba/smb.conf", "r"))) {
 +		DEBUG(0, W, __FUNCTION__ ": can't access smb.conf");
 +		return strdup(_default);
 +	}
