@@ -19,7 +19,7 @@
 
 <script>
 
-//	<% nvram("smbd_enable,smbd_user,smbd_passwd,smbd_wgroup,smbd_cpage,smbd_ifnames,smbd_custom,smbd_master,smbd_wins,smbd_shares,smbd_autoshare,smbd_protocol,wan_wins,gro_disable"); %>
+//	<% nvram("smbd_enable,smbd_user,smbd_passwd,smbd_wgroup,smbd_cpage,smbd_ifnames,smbd_custom,smbd_master,smbd_wins,smbd_shares,smbd_autoshare,smbd_protocol,wan_wins,gro_disable,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
 
 var cprefix = 'nas_samba';
 var changed = 0;
@@ -139,7 +139,14 @@ function verifyFields(focused, quiet) {
 	if (focused)
 		changed = 1;
 
-	var a, b;
+	var a, b, i;
+
+	for (i = 0; i <= MAX_BRIDGE_ID; ++i) {
+		n = (i == 0 ? '' : i.toString());
+		E('_f_smbd_lan'+i).disabled = (eval('nvram.lan'+n+'_ifname.length') < 1);
+		if (eval('nvram.lan'+n+'_ifname.length') < 1)
+			E('_f_smbd_lan'+i).checked = 0;
+	}
 
 	a = E('_smbd_enable').value;
 
@@ -148,7 +155,6 @@ function verifyFields(focused, quiet) {
 	E('_f_smbd_wins').disabled = (nvram.wan_wins != '' && nvram.wan_wins != '0.0.0.0');
 	if (a == 0) E('_f_gro_disable').checked = true; /* disable gro (default) if smbd off */
 
-	if (a != 0 && !v_length('_smbd_ifnames', quiet, 0, 50)) return 0;
 	if (a != 0 && !v_length('_smbd_custom', quiet, 0, 2048)) return 0;
 
 	if (a == 2) {
@@ -196,6 +202,12 @@ function save(nomsg) {
 	fom.smbd_protocol.value = (fom._smbd_proto_1.checked ? 0 : (fom._smbd_proto_2.checked ? 1 : 2));
 	fom._nofootermsg.value = (nomsg ? 1 : 0);
 
+	var smbd_ifnames = '';
+	for (var i = 0; i <= MAX_BRIDGE_ID; ++i)
+		E('_f_smbd_lan'+i.toString()).checked ? smbd_ifnames += (smbd_ifnames == '' ? '' : ' ')+'br'+i.toString() : '';
+
+	fom.smbd_ifnames.value = smbd_ifnames;
+
 	form.submit(fom, 1);
 
 	changed = 0;
@@ -238,6 +250,7 @@ function init() {
 <input type="hidden" name="smbd_wins">
 <input type="hidden" name="smbd_shares">
 <input type="hidden" name="smbd_protocol">
+<input type="hidden" name="smbd_ifnames">
 <input type="hidden" name="gro_disable">
 
 <!-- / / / -->
@@ -256,36 +269,37 @@ function init() {
 <div class="section-title">Samba File Sharing</div>
 <div class="section">
 	<script>
+		var lan_arr = nvram.smbd_ifnames.split(' ');
+		var smbd_lan = [0,0,0,0];
+		for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+			if (lan_arr[i] == 'br'+i.toString())
+				smbd_lan[i] = 1;
+		}
+
 		createFieldTable('', [
-			{ title: 'Enable on Start', name: 'smbd_enable', type: 'select',
-				options: [['0', 'No'],['1', 'Yes, no Authentication'],['2', 'Yes, Authentication required']],
-				value: nvram.smbd_enable },
-			{ title: 'Username', indent: 2, name: 'smbd_user', type: 'text', maxlen: 50, size: 32,
-				value: nvram.smbd_user },
-			{ title: 'Password', indent: 2, name: 'smbd_passwd', type: 'password', maxlen: 50, size: 32, peekaboo: 1,
-				value: nvram.smbd_passwd },
+			{ title: 'Enable on Start', name: 'smbd_enable', type: 'select', options: [['0', 'No'],['1', 'Yes, no Authentication'],['2', 'Yes, Authentication required']], value: nvram.smbd_enable },
+			{ title: 'Username', indent: 2, name: 'smbd_user', type: 'text', maxlen: 50, size: 32, value: nvram.smbd_user },
+			{ title: 'Password', indent: 2, name: 'smbd_passwd', type: 'password', maxlen: 50, size: 32, peekaboo: 1, value: nvram.smbd_passwd },
 			null,
+			{ title: 'LAN0', name: 'f_smbd_lan0', type: 'checkbox', value: smbd_lan[0] == 1 },
+			{ title: 'LAN1', name: 'f_smbd_lan1', type: 'checkbox', value: smbd_lan[1] == 1 },
+			{ title: 'LAN2', name: 'f_smbd_lan2', type: 'checkbox', value: smbd_lan[2] == 1 },
+			{ title: 'LAN3', name: 'f_smbd_lan3', type: 'checkbox', value: smbd_lan[3] == 1 },
 			{ title: 'Samba protocol version', multi: [
-				{suffix: '&nbsp; SMBv1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', name: '_smbd_protocol', id: '_smbd_proto_1', type: 'radio', value: nvram.smbd_protocol == '0' },
-				{suffix: '&nbsp; SMBv2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', name: '_smbd_protocol', id: '_smbd_proto_2', type: 'radio', value: nvram.smbd_protocol == '1' },
-				{suffix: '&nbsp; SMBv1 + SMBv2', name: '_smbd_protocol', id: '_smbd_proto_3', type: 'radio', value: nvram.smbd_protocol == '2' } ]},
-			{ title: 'Disable GRO', name: 'f_gro_disable', type: 'checkbox', value: nvram.gro_disable == '1', suffix: ' <small>default: GRO off (checked)<\/small>' },
-			{ title: 'Workgroup Name', name: 'smbd_wgroup', type: 'text', maxlen: 15, size: 32,
-				value: nvram.smbd_wgroup },
+				{suffix: '&nbsp; SMBv1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', name: '_smbd_protocol', id: '_smbd_proto_1', type: 'radio', value: nvram.smbd_protocol == 0 },
+				{suffix: '&nbsp; SMBv2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', name: '_smbd_protocol', id: '_smbd_proto_2', type: 'radio', value: nvram.smbd_protocol == 1 },
+				{suffix: '&nbsp; SMBv1 + SMBv2', name: '_smbd_protocol', id: '_smbd_proto_3', type: 'radio', value: nvram.smbd_protocol == 2 } ]},
+			{ title: 'Disable GRO', name: 'f_gro_disable', type: 'checkbox', value: nvram.gro_disable == 1, suffix: ' <small>default: GRO off (checked)<\/small>' },
+			{ title: 'Workgroup Name', name: 'smbd_wgroup', type: 'text', maxlen: 15, size: 32, value: nvram.smbd_wgroup },
 			{ title: 'Client Codepage', name: 'smbd_cpage', type: 'select',
 				options: [['', 'Unspecified'],['437', '437 (United States, Canada)'],['850', '850 (Western Europe)'],['852', '852 (Central / Eastern Europe)'],['866', '866 (Cyrillic / Russian)']
-				,['932', '932 (Japanese)'],['936', '936 (Simplified Chinese)'],['949', '949 (Korean)'],['950', '950 (Traditional Chinese / Big5)']
-				],
-				suffix: ' <small>run cmd.exe and type chcp to see the current code page<\/small>',
-				value: nvram.smbd_cpage },
-			{ title: 'Network Interfaces', name: 'smbd_ifnames', type: 'text', maxlen: 50, size: 32, value: nvram.smbd_ifnames },
-			{ title: 'Samba<br>Custom Configuration', name: 'smbd_custom', type: 'textarea', value: nvram.smbd_custom },
-			{ title: 'Auto-share all USB Partitions', name: 'smbd_autoshare', type: 'select',
-				options: [['0', 'Disabled'],['1', 'Read Only'],['2', 'Read / Write'],['3', 'Hidden Read / Write']],
-				value: nvram.smbd_autoshare },
+				         ,['932', '932 (Japanese)'],['936', '936 (Simplified Chinese)'],['949', '949 (Korean)'],['950', '950 (Traditional Chinese / Big5)']],
+				suffix: ' <small>run cmd.exe and type chcp to see the current code page<\/small>', value: nvram.smbd_cpage },
+			{ title: 'Custom Configuration', name: 'smbd_custom', type: 'textarea', value: nvram.smbd_custom },
+			{ title: 'Auto-share all USB Partitions', name: 'smbd_autoshare', type: 'select', options: [['0', 'Disabled'],['1', 'Read Only'],['2', 'Read / Write'],['3', 'Hidden Read / Write']], value: nvram.smbd_autoshare },
 			{ title: 'Options', multi: [
 				{ suffix: '&nbsp; Master Browser &nbsp;&nbsp;&nbsp;', name: 'f_smbd_master', type: 'checkbox', value: nvram.smbd_master == 1 },
-				{ suffix: '&nbsp; WINS Server &nbsp;',	name: 'f_smbd_wins', type: 'checkbox', value: (nvram.smbd_wins == 1) && (nvram.wan_wins == '' || nvram.wan_wins == '0.0.0.0') }
+				{ suffix: '&nbsp; WINS Server &nbsp;', name: 'f_smbd_wins', type: 'checkbox', value: (nvram.smbd_wins == 1) && (nvram.wan_wins == '' || nvram.wan_wins == '0.0.0.0') }
 			] }
 		]);
 	</script>
@@ -305,10 +319,10 @@ function init() {
 <div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
-		<li><b>Network Interfaces</b> - Space-delimited list of router interface names Samba will bind to.
+		<li><b>LAN0, LAN1, LAN2, LAN3</b> - list of router interface names Samba will bind to.
 			<ul>
-				<li>If empty, <i>interfaces = <% nv("lan_ifname"); %></i> will be used instead.</li>
-				<li>The <i>bind interfaces only = yes</i> directive is always set.</li>
+				<li>You can override these bindings, using ie. <i>'interfaces = eth1'</i> in custom configuration.</li>
+				<li>The <i>'bind interfaces only = yes'</i> directive is always set.</li>
 				<li>Refer to the <a href="https://www.samba.org/samba/docs/man/manpages-3/smb.conf.5.html" class="new_window">Samba documentation</a> for details.</li>
 			</ul>
 		</li>

@@ -122,8 +122,8 @@ define SAMBA4_TOMATO_CONFIGURE_CMDS
 		$(SAMBA4_TOMATO_CONF_ENV) \
 		./configure \
 			--prefix=/usr \
-			--sysconfdir=/etc \
-			--with-configdir=/etc \
+			--sysconfdir=/etc/samba \
+			--with-configdir=/etc/samba \
 			--with-logdir=/var/log \
 			--localstatedir=/var \
 			--with-piddir=/var/run/samba \

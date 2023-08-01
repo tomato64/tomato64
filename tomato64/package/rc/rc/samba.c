@@ -26,10 +26,10 @@
 
 #define samba_dir		"/etc/samba"
 #define samba_var_dir		"/var/run/samba"
+#define samba_configfile	samba_dir"/smb.conf"
 #ifdef TOMATO64
 #define samba_cache_dir		"/var/cache/samba"
 #endif /* TOMATO64 */
-#define samba_configfile	"/etc/smb.conf"
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE		DISABLE_SYSLOG_OSM
@@ -87,10 +87,10 @@ static void enable_gro(int interval)
 	lan_ifnames = nvram_safe_get("lan_ifnames");
 	foreach(lan_ifname, lan_ifnames, next) {
 		if (!strncmp(lan_ifname, "vlan", 4)) {
-			memset(path, 0, 64);
-			sprintf(path, ">>/proc/net/vlan/%s", lan_ifname);
-			memset(parm, 0, 32);
-			sprintf(parm, "-gro %d", interval);
+			memset(path, 0, sizeof(path));
+			snprintf(path, sizeof(path), ">>/proc/net/vlan/%s", lan_ifname);
+			memset(parm, 0, sizeof(parm));
+			snprintf(parm, sizeof(parm), "-gro %d", interval);
 			argv[1] = parm;
 			_eval(argv, path, 0, NULL);
 		}
@@ -110,13 +110,17 @@ void start_samba(int force)
 	char *buf;
 	char *p, *q;
 	char *name, *path, *comment, *writeable, *hidden;
-	int cnt = 0;
+	int cnt = 0, i;
 	char *smbd_user;
 	int ret1 = 0, ret2 = 0;
+	char buffer[32], buffer2[8], buffer3[32];
 #if defined(TCONFIG_BCMARM) && defined(TCONFIG_BCMSMP)
 	int cpu_num = sysconf(_SC_NPROCESSORS_CONF);
 	int taskset_ret = -1;
 #endif
+#ifdef TOMATO64
+	char cmd[256];
+#endif /* TOMATO64 */
 
 	/* only if enabled or forced and lan_hostname is set */
 	mode = nvram_get_int("smbd_enable");
@@ -130,6 +134,12 @@ void start_samba(int force)
 
 	if (serialize_restart("smbd", 1))
 		return;
+
+	mkdir_if_none(samba_var_dir);
+	mkdir_if_none(samba_dir);
+#ifdef TOMATO64
+	mkdir_if_none(samba_cache_dir);
+#endif /* TOMATO64 */
 
 	if ((fp = fopen(samba_configfile, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, samba_configfile);
@@ -150,10 +160,31 @@ void start_samba(int force)
 #endif
 
 	si = nvram_safe_get("smbd_ifnames");
+	if (strlen(si)) {
+		memset(buffer3, 0, sizeof(buffer3)); /* reset */
+		for (i = 0; i < BRIDGE_COUNT; i++) {
+			memset(buffer, 0, sizeof(buffer)); /* reset */
+			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+			memset(buffer2, 0, sizeof(buffer2)); /* reset */
+			snprintf(buffer2, sizeof(buffer2), "br%d", i);
+			if ((strlen(nvram_safe_get(buffer)) > 0) && (strstr(si, buffer2) != NULL)) { /* bridge is up & present in 'smbd_ifnames' */
+				if (strlen(buffer3) > 0)
+					strcat(buffer3, " ");
 
-	fprintf(fp, "[global]\n"
-	            " interfaces = %s\n"
-	            " bind interfaces only = yes\n"
+				strcat(buffer3, buffer2);
+			}
+		}
+		si = buffer3;
+	}
+
+	fprintf(fp, "[global]\n");
+
+	nv = nvram_safe_get("smbd_custom");
+	/* add interfaces options unless overriden by the user */
+	if (strstr(nv, "interfaces") == NULL)
+		fprintf(fp, " interfaces = %s\n", strlen(si) ? si : nvram_safe_get("lan_ifname"));
+
+	fprintf(fp, " bind interfaces only = yes\n"
 	            " enable core files = no\n"
 	            " deadtime = 30\n"
 	            " smb encrypt = disabled\n"
@@ -177,7 +208,6 @@ void start_samba(int force)
 	            " encrypt passwords = yes\n"
 	            " preserve case = yes\n"
 	            " short preserve case = yes\n",
-	            strlen(si) ? si : nvram_safe_get("lan_ifname"),
 	            nvram_get("smbd_wgroup") ? : "WORKGROUP",
 	            nvram_safe_get("lan_hostname"),
 	            mode == 2 ? "" : "map to guest = Bad User",
@@ -213,6 +243,7 @@ void start_samba(int force)
 		fprintf(fp, " max protocol = NT1\n");
 	else
 		fprintf(fp, " max protocol = SMB2\n");
+
 	if (nvram_get_int("smbd_protocol") == 1)
 		fprintf(fp, " min protocol = SMB2\n");
 
@@ -226,8 +257,8 @@ void start_samba(int force)
 
 	nv = nvram_safe_get("smbd_cpage");
 	if (*nv) {
-		memset(nlsmod, 0, 16);
-		sprintf(nlsmod, "nls_cp%s", nv);
+		memset(nlsmod, 0, sizeof(nlsmod));
+		snprintf(nlsmod, sizeof(nlsmod), "nls_cp%s", nv);
 
 		nv = nvram_safe_get("smbd_nlsmod");
 		if ((*nv) && (strcmp(nv, nlsmod) != 0))
@@ -301,31 +332,33 @@ void start_samba(int force)
 	if (dir)
 		closedir(dir);
 
-	if (cnt == 0) {
+	if (cnt == 0)
 		/* by default share MOUNT_ROOT as read-only */
 		fprintf(fp, "\n[share]\n"
 		            " path = %s\n"
 		            " writable = no\n",
 		            MOUNT_ROOT);
-	}
 
 	fclose(fp);
 
-	mkdir_if_none(samba_var_dir);
-	mkdir_if_none(samba_dir);
-#ifdef TOMATO64
-	mkdir_if_none(samba_cache_dir);
-#endif /* TOMATO64 */
-
 	/* write smbpasswd */
+#ifdef TOMATO64
+	system("printf \"\\n\\n\" | smbpasswd -a -s nobody");
+#else
 	eval("smbpasswd", "nobody", "\"\"");
+#endif /* TOMATO64 */
 
 	if (mode == 2) {
 		smbd_user = nvram_safe_get("smbd_user");
 		if ((!*smbd_user) || (!strcmp(smbd_user, "root")))
 			smbd_user = "nas";
 
+#ifdef TOMATO64
+		snprintf(cmd, sizeof(cmd), "printf \"%s\n%s\n\" | smbpasswd -a -s %s", nvram_safe_get("smbd_passwd"), nvram_safe_get("smbd_passwd"), smbd_user);
+		system(cmd);
+#else
 		eval("smbpasswd", smbd_user, nvram_safe_get("smbd_passwd"));
+#endif /* TOMATO64 */
 	}
 
 	kill_samba(SIGHUP);
@@ -371,7 +404,12 @@ void stop_samba(void)
 	unlink("/var/log/log.nmbd");
 	eval("rm", "-rf", "/var/nmbd");
 	eval("rm", "-rf", "/var/log/cores");
-	eval("rm", "-rf", "/var/run/samba");
+	eval("rm", "-rf", samba_dir);
+	eval("rm", "-rf", samba_var_dir);
+#ifdef TOMATO64
+	eval("rm", "-rf", samba_cache_dir);
+#endif /* TOMATO64 */
+
 #if defined(TCONFIG_BCMARM) && defined(TCONFIG_GROCTRL)
 	enable_gro(0);
 #endif
