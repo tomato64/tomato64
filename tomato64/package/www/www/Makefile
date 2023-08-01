@@ -370,6 +370,16 @@ ifneq ($(TCONFIG_IPERF),y)
 	sed -i $(INSTALLDIR)/www/about.asp -e "/IPERF-BEGIN/,/IPERF-END/d"
 endif
 
+
+# Only include Adblock v2 if it is required (not for MIPS R1)
+ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_MIPSR2)),y)
+	rm -f $(INSTALLDIR)/www/advanced-adblock-v1.asp
+	mv $(INSTALLDIR)/www/advanced-adblock-v2.asp $(INSTALLDIR)/www/advanced-adblock.asp || true
+else
+	rm -f $(INSTALLDIR)/www/advanced-adblock-v2.asp
+	mv $(INSTALLDIR)/www/advanced-adblock-v1.asp $(INSTALLDIR)/www/advanced-adblock.asp || true
+endif
+
 # Only include the https option if it is compiled in
 ifneq ($(TCONFIG_HTTPS),y)
 	rm -f $(INSTALLDIR)/www/advanced-adblock.asp
