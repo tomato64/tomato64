@@ -1,5 +1,5 @@
 #!/bin/sh
-
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 unset LD_LIBRARY_PATH
 unset LD_PRELOAD
 # STUBBYNO-BEGIN
