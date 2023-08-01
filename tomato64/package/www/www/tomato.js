@@ -1113,7 +1113,7 @@ function _v_hostname(e, h, quiet, required, multi, delim, cidr) {
 		if (s.length > 0) {
 			if (cidr && i == v.length-1)
 				re = /^[a-zA-Z0-9](([a-zA-Z0-9\-]{0,61})[a-zA-Z0-9]){0,1}(\/\d{1,3})?$/;
-			if (s.search(re) == -1 || s.search(/^\d+$/) != -1) {
+			if (s.search(re) == -1) {
 				ferror.set(e, 'Invalid hostname. Only "A-Z 0-9" and "-" in the middle are allowed (up to 63 characters).', quiet);
 				return null;
 			}
