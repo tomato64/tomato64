@@ -1,7 +1,7 @@
 #!/bin/sh
 # Optware pre-installation script, Leon Kos 2006-2008
 # Broadcom ARM support - Shibby 2014
-
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 # BCMARM-BEGIN
 REPOSITORY=http://ipkg.nslu2-linux.org/feeds/optware/mbwe-bluering/cross/stable
 # BCMARM-END
