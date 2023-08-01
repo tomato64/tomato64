@@ -317,11 +317,14 @@ void start_bittorrent(int force)
 
 void stop_bittorrent(void)
 {
+	pid_t pid;
 	char buf[16];
 	int m = atoi(nvram_safe_get("bt_sleep")) + 10;
 
 	if (serialize_restart("transmission-da", 0))
 		return;
+
+	pid = pidof("transmission-da");
 
 	/* wait for child of start_bittorrent to finish (if any) */
 	memset(buf, 0, sizeof(buf));
@@ -334,7 +337,8 @@ void stop_bittorrent(void)
 
 	killall_and_waitfor("transmission-da", 10, 50);
 
-	logmsg(LOG_INFO, "transmission-daemon stopped");
+	if (pid > 0)
+		logmsg(LOG_INFO, "transmission-daemon stopped");
 
 	run_del_firewall_script(tr_fw_script, tr_fw_del_script);
 
