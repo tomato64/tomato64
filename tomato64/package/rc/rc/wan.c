@@ -1243,6 +1243,10 @@ void start_wan_done(char *wan_ifname, char *prefix)
 			start_igmp_proxy();
 			start_udpxy();
 		}
+		if (nvram_get_int("ntp_ready") && !first_ntp_sync) {
+			stop_httpd();
+			start_httpd();
+		}
 	}
 
 	if (nvram_get_int("ntp_ready") && !first_ntp_sync) {
