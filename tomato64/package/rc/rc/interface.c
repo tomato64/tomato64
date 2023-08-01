@@ -68,16 +68,20 @@ int _ifconfig(const char *name, int flags, const char *addr, const char *netmask
 	
 	/* set interface flags */
 	ifr.ifr_flags = flags;
-	if (ioctl(s, SIOCSIFFLAGS, &ifr) < 0)
+	if (ioctl(s, SIOCSIFFLAGS, &ifr) < 0) {
+		logerr(__FUNCTION__, __LINE__, name);
 		goto error;
+	}
 	
 	/* set IP address */
 	if (addr) {
 		inet_aton(addr, &in_addr);
 		sin_addr(&ifr.ifr_addr).s_addr = in_addr.s_addr;
 		ifr.ifr_addr.sa_family = AF_INET;
-		if (ioctl(s, SIOCSIFADDR, &ifr) < 0)
+		if (ioctl(s, SIOCSIFADDR, &ifr) < 0) {
+			logerr(__FUNCTION__, __LINE__, name);
 			goto error;
+		}
 	}
 
 	/* set IP netmask and broadcast */
@@ -85,14 +89,18 @@ int _ifconfig(const char *name, int flags, const char *addr, const char *netmask
 		inet_aton(netmask, &in_netmask);
 		sin_addr(&ifr.ifr_netmask).s_addr = in_netmask.s_addr;
 		ifr.ifr_netmask.sa_family = AF_INET;
-		if (ioctl(s, SIOCSIFNETMASK, &ifr) < 0)
+		if (ioctl(s, SIOCSIFNETMASK, &ifr) < 0) {
+			logerr(__FUNCTION__, __LINE__, name);
 			goto error;
+		}
 
 		in_broadaddr.s_addr = (in_addr.s_addr & in_netmask.s_addr) | ~in_netmask.s_addr;
 		sin_addr(&ifr.ifr_broadaddr).s_addr = in_broadaddr.s_addr;
 		ifr.ifr_broadaddr.sa_family = AF_INET;
-		if (ioctl(s, SIOCSIFBRDADDR, &ifr) < 0)
+		if (ioctl(s, SIOCSIFBRDADDR, &ifr) < 0) {
+			logerr(__FUNCTION__, __LINE__, name);
 			goto error;
+		}
 	}
 
 	/* set dst or P-t-P IP address */
@@ -100,22 +108,25 @@ int _ifconfig(const char *name, int flags, const char *addr, const char *netmask
 		inet_aton(dstaddr, &in_addr);
 		sin_addr(&ifr.ifr_dstaddr).s_addr = in_addr.s_addr;
 		ifr.ifr_dstaddr.sa_family = AF_INET;
-		if (ioctl(s, SIOCSIFDSTADDR, &ifr) < 0)
+		if (ioctl(s, SIOCSIFDSTADDR, &ifr) < 0) {
+			logerr(__FUNCTION__, __LINE__, name);
 			goto error;
+		}
 	}
 
 	/* set MTU */
 	if (mtu > 0) {
 		ifr.ifr_mtu = mtu;
-		if (ioctl(s, SIOCSIFMTU, &ifr) < 0)
+		if (ioctl(s, SIOCSIFMTU, &ifr) < 0) {
+			logerr(__FUNCTION__, __LINE__, name);
 			goto error;
+		}
 	}
 
 	close(s);
 	return 0;
 
 error:
-	logerr(__FUNCTION__, __LINE__, name);
 	close(s);
 
 	return errno;
