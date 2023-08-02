@@ -73,7 +73,7 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 
 	/* Generate options file */
 	char ppp_optfile[256];
-	memset(ppp_optfile, 0, 256);
+	memset(ppp_optfile, 0, sizeof(ppp_optfile));
 	sprintf(ppp_optfile, "/tmp/ppp/%s_options", prefix);
 	if ((fp = fopen(ppp_optfile, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, ppp_optfile);
@@ -156,7 +156,7 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 	case WP_PPP3G: ;
 		/* Generate chat file */
 		char ppp3g_chatfile[256];
-		memset(ppp3g_chatfile, 0, 256);
+		memset(ppp3g_chatfile, 0, sizeof(ppp3g_chatfile));
 		sprintf(ppp3g_chatfile, "/tmp/ppp/%s_connect.chat", prefix);
 
 		if ((cfp = fopen(ppp3g_chatfile, "w")) == NULL) {
@@ -264,15 +264,15 @@ static void stop_ppp(char *prefix)
 {
 	char buffer[64];
 
-	memset(buffer, 0, 64);
+	memset(buffer, 0, sizeof(buffer));
 	sprintf(buffer, "/tmp/ppp/%s_link", prefix);
 	unlink(buffer);
 	/* Fix switching wan type from UI error (stale options file) */
-	memset(buffer, 0, 64);
+	memset(buffer, 0, sizeof(buffer));
 	sprintf(buffer, "/tmp/ppp/%s_options", prefix);
 	unlink(buffer);
 
-	memset(buffer, 0, 64);
+	memset(buffer, 0, sizeof(buffer));
 	sprintf(buffer, "pppd%s", prefix);
 
 	/* Race condition on start_pppoe in ip-up on boot, primary pp(poe/tp) wan will not reach start_wan_done on secondary ppp(oe/3g) start */
@@ -311,10 +311,10 @@ static void run_pppd(char *prefix)
 	char pppd_path[256];
 	char ppp_optfile[256];
 
-	memset(pppd_path, 0, 256);
+	memset(pppd_path, 0, sizeof(pppd_path));
 	sprintf(pppd_path, "/tmp/ppp/pppd%s", prefix);
 
-	memset(ppp_optfile, 0, 256);
+	memset(ppp_optfile, 0, sizeof(ppp_optfile));
 	sprintf(ppp_optfile, "/tmp/ppp/%s_options", prefix);
 
 	symlink("/usr/sbin/pppd", pppd_path);
@@ -544,7 +544,7 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 	};
 
 	/* Generate XL2TPD configuration file */
-	memset(xl2tp_file, 0, 256);
+	memset(xl2tp_file, 0, sizeof(xl2tp_file));
 	sprintf(xl2tp_file, "/etc/xl2tpd.conf");
  	if ((fp = fopen(xl2tp_file, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, xl2tp_file);
@@ -565,7 +565,7 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 		if (!strcmp(nvram_safe_get(strcat_r(names[i], "_proto", tmp)), "l2tp")) {
 			demand = nvram_get_int(strcat_r(names[i], "_ppp_demand", tmp));
 			char ppp_optfile[256];
-			memset(ppp_optfile, 0, 256);
+			memset(ppp_optfile, 0, sizeof(ppp_optfile));
 			sprintf(ppp_optfile, "/tmp/ppp/%s_options", names[i]);
 			fprintf(fp, "[lac %s]\n"
 			            "lns = %s\n"
@@ -586,7 +586,7 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 			            nvram_get_int("debug_ppp") ? "yes" : "no",
 			            nvram_safe_get(strcat_r(names[i], "_xl2tpd_custom", tmp)));
 
-			memset(xl2tp_file, 0, 256);
+			memset(xl2tp_file, 0, sizeof(xl2tp_file));
 			sprintf(xl2tp_file, "/etc/%s_xl2tpd.custom", names[i]);
 			fappend(fp, xl2tp_file);
 		}
@@ -602,9 +602,9 @@ inline void stop_l2tp(char *prefix)
 	char l2tp_file[64];
 	char dconnects[64];
 
-	memset(l2tp_file, 0, 64);
+	memset(l2tp_file, 0, sizeof(l2tp_file));
 	sprintf(l2tp_file, "/var/run/l2tp-control");
-	memset(dconnects, 0, 64);
+	memset(dconnects, 0, sizeof(dconnects));
 	sprintf(dconnects, "d %s", prefix);
 	f_write_string(l2tp_file, dconnects, 0, 0);	/* Disconnect current session first */
 	sleep(1);					/* Wait ip-down scripts to finish graceful */
@@ -663,15 +663,15 @@ void force_to_dial(char *prefix)
 	char connects[64];
 	char dgw[64];
 
-	memset(dgw, 0, 64);
+	memset(dgw, 0, sizeof(dgw));
 	sprintf(dgw, "10.112.112.%d", 111 + get_wan_unit(prefix)); /* 10.112.112.112-115 for ppp0-3 */
 	sleep(1);
 
 	switch (get_wanx_proto(prefix)) {
 	case WP_L2TP:
-		memset(l2tp_file, 0, 64);
+		memset(l2tp_file, 0, sizeof(l2tp_file));
 		sprintf(l2tp_file, "/var/run/l2tp-control");
-		memset(connects, 0, 64);
+		memset(connects, 0, sizeof(connects));
 		sprintf(connects, "c %s", prefix);
 		f_write_string(l2tp_file, connects, 0, 0);
 		break;
@@ -883,7 +883,7 @@ void start_wan_if(char *prefix)
 		else if (mtu < 576)
 			mtu = 576;
 	}
-	memset(buf, 0, 128);
+	memset(buf, 0, sizeof(buf));
 	sprintf(buf, "%d", mtu);
 	nvram_set(strcat_r(prefix, "_mtu", tmp), buf);
 	nvram_set(strcat_r(prefix, "_run_mtu", tmp), buf);
@@ -1130,7 +1130,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
 		mwan_num = 1;
 
-	memset(wantime_file, 0, 64);
+	memset(wantime_file, 0, sizeof(wantime_file));
 	sprintf(wantime_file, "/var/lib/misc/%s_time", prefix);
 	f_write(wantime_file, &si.uptime, sizeof(si.uptime), 0, 0);
 
@@ -1205,10 +1205,10 @@ void start_wan_done(char *wan_ifname, char *prefix)
 	 */
 	get_wan_prefix(nvram_get_int("wan_primary"), pw); /* Get current primary wan name */
 	if (!check_wanup(pw)) { /* If primary wan offline, set current as primary */
-		memset(tmp, 0, 100);
+		memset(tmp, 0, sizeof(tmp));
 		sprintf(tmp, "%d", get_wan_unit(prefix));
 		nvram_set("wan_primary", tmp);
-		memset(pw, 0, 6);
+		memset(pw, 0, sizeof(pw));
 		strncpy(pw, prefix, sizeof(pw));
 	}
 
@@ -1247,7 +1247,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 			stop_httpd();
 			start_httpd();
 		}
-	}
+	} /* is_primary */
 
 	if (nvram_get_int("ntp_ready") && !first_ntp_sync) {
 		stop_sched();
@@ -1256,7 +1256,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 
 	if (wanup) {
 		char wan_unit_str[16];
-		memset(wan_unit_str, 0, 16);
+		memset(wan_unit_str, 0, sizeof(wan_unit_str));
 		sprintf(wan_unit_str, "%d", get_wan_unit(prefix));
 
 		notice_set(prefix, "");
@@ -1314,7 +1314,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 		stop_upnp();
 		start_upnp();
 		start_bwlimit();
-	}
+	} /* is_primary */
 
 	mwan_table_add(prefix);
 	mwan_load_balance();
@@ -1374,7 +1374,7 @@ void stop_wan_if(char *prefix)
 	foreach(name, nvram_safe_get(strcat_r(prefix, "_ifnames", tmp)), next)
 		ifconfig(name, 0, "0.0.0.0", NULL);
 
-	memset(wannotice_file, 0, 64);
+	memset(wannotice_file, 0, sizeof(wannotice_file));
 	sprintf(wannotice_file, "/var/notice/%s", prefix);
 	unlink(wannotice_file);
 
