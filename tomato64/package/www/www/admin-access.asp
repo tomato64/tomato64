@@ -187,25 +187,27 @@ function verifyFields(focused, quiet) {
 
 	a = E('_f_rmgt_sip');
 	if ((a.value.length) && (!_v_iptaddr(a, quiet || !ok, 15, 1, 1)))
-		return 0;
+		ok = 0;
 
 	ferror.clear(a);
 
 	if (!v_range('_f_limit_hit', quiet || !ok, 1, 19))
-		return 0;
+		ok = 0;
 	if (!v_range('_f_limit_sec', quiet || !ok, 3, 3600))
-		return 0;
+		ok = 0;
 
 	a = E('_set_password_1');
 	b = E('_set_password_2');
-	a.value = a.value.trim();
-	b.value = b.value.trim();
 	if (a.value != b.value) {
 		ferror.set(b, 'Both passwords must match', quiet || !ok);
 		ok = 0;
 	}
 	else if (a.value == '') {
 		ferror.set(a, 'Password must not be empty', quiet || !ok);
+		ok = 0;
+	}
+	else if (a.value.length > 60) {
+		ferror.set(a, 'Password cannot be longer than 60 characters', quiet || !ok);
 		ok = 0;
 	}
 	else {
@@ -429,11 +431,11 @@ function init() {
 /* HTTPS-END */
 				        1) : 0 },
 				{ title: 'Port', indent: 2, name: 'http_wanport', type: 'text', maxlen: 5, size: 7, value:  fixPort(nvram.http_wanport, 8080) },
-				{ title: 'Port Protection', indent: 2, name: 'f_http_wanport_bfm', type: 'checkbox', suffix: '&nbsp;<small>(enable brute force mitigation rule)<\/small>', value: nvram.http_wanport_bfm == 1 },
+				{ title: 'Port Protection', indent: 2, name: 'f_http_wanport_bfm', type: 'checkbox', suffix: '&nbsp;<small>enable brute force mitigation rule<\/small>', value: nvram.http_wanport_bfm == 1 },
 /* HTTPS-BEGIN */
 			null,
 			{ title: 'SSL Certificate', rid: 'row_sslcert' },
-				{ title: 'Common Name (CN)', indent: 2, name: 'https_crt_cn', type: 'text', maxlen: 64, size: 40, suffix: '&nbsp;<small>(optional; space separated)<\/small>', value: nvram.https_crt_cn },
+				{ title: 'Common Name (CN)', indent: 2, name: 'https_crt_cn', type: 'text', maxlen: 64, size: 40, suffix: '&nbsp;<small>optional; space separated<\/small>', value: nvram.https_crt_cn },
 				{ title: 'Regenerate', indent: 2, name: 'f_https_crt_gen', type: 'checkbox', value: 0 },
 				{ title: 'Save In NVRAM', indent: 2, name: 'f_https_crt_save', type: 'checkbox', value: nvram.https_crt_save == 1 },
 /* HTTPS-END */
@@ -444,12 +446,12 @@ function init() {
 				options: [['default','Default'],['usbred','USB Red'],['red','Tomato'],['black','Black'],['blue','Blue'],['bluegreen','Blue &amp; Green (Lighter)'],['bluegreen2','Blue &amp; Green (Darker)'],
 					  ['brown','Brown'],['cyan','Cyan'],['olive','Olive'],['pumpkin','Pumpkin'],['asus','Asus RT-N16'],['rtn66u','Asus RT-N66U'],['asusred','Asus Red'],['linksysred','Linksys Red'],
 					  ['at-dark','Advanced Dark'],['at-red','Advanced Red'],['at-blue','Advanced Blue'],['at-green','Advanced Green'],
-					  ['ext/custom','Custom (ext/custom.css)'], ['online', 'Online from TTB (TomatoThemeBase)']], suffix: '&nbsp;<small id="web_css_warn">(requires a modern browser)<\/small>', value: nvram.web_css },
-				{ title: 'Dynamic BW/IPT charts', indent: 2, name: 'f_web_adv_scripts', type: 'checkbox', suffix: '&nbsp;<small>(JS based, supported only by modern browsers)<\/small>', value: nvram.web_adv_scripts == 1 },
+					  ['ext/custom','Custom (ext/custom.css)'], ['online', 'Online from TTB (TomatoThemeBase)']], suffix: '&nbsp;<small id="web_css_warn">requires a modern browser<\/small>', value: nvram.web_css },
+				{ title: 'Dynamic BW/IPT charts', indent: 2, name: 'f_web_adv_scripts', type: 'checkbox', suffix: '&nbsp;<small>JS based, supported only by modern browsers<\/small>', value: nvram.web_adv_scripts == 1 },
 				{ title: 'TTB theme name', indent: 2, name: 'ttb_css', type: 'text', maxlen: 25, size: 35, suffix: '&nbsp;<small>TTB theme <a href="https://freshtomato.org/tomatothemebase/wp-content/uploads/themes.txt" class="new_window">list<\/a> and full <a href="https://freshtomato.org/tomatothemebase/" class="new_window">gallery<\/a><\/small>', value: nvram.ttb_css },
 /* USB-BEGIN */
-				{ title: 'TTB save folder', indent: 2, name: 'ttb_loc', type: 'text', maxlen: 35, size: 35, suffix: '&nbsp;/TomatoThemeBase <small>(optional)<\/small>', value: nvram.ttb_loc },
-				{ title: 'TTB URL', indent: 2, name: 'ttb_url', type: 'text', maxlen: 128, size: 70, suffix: '&nbsp;<small>(space separated)<\/small>', value: nvram.ttb_url },
+				{ title: 'TTB save folder', indent: 2, name: 'ttb_loc', type: 'text', maxlen: 35, size: 35, suffix: '&nbsp;/TomatoThemeBase <small>optional<\/small>', value: nvram.ttb_loc },
+				{ title: 'TTB URL', indent: 2, name: 'ttb_url', type: 'text', maxlen: 128, size: 70, suffix: '&nbsp;<small>space separated<\/small>', value: nvram.ttb_url },
 /* USB-END */
 			null,
 			{ title: 'Open Menus' }
@@ -501,7 +503,7 @@ function init() {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'Allowed Remote<br>IP Address', name: 'f_rmgt_sip', type: 'text', maxlen: 512, size: 64, suffix: '<br>&nbsp;<small>(optional; ex: "1.1.1.1", "1.1.1.0/24", "1.1.1.1 - 2.2.2.2" or "me.example.com")<\/small>', value: nvram.rmgt_sip },
+			{ title: 'Allowed Remote<br>IP Address', name: 'f_rmgt_sip', type: 'text', maxlen: 512, size: 64, suffix: '<br>&nbsp;<small>optional; ex: "1.1.1.1", "1.1.1.0/24", "1.1.1.1 - 2.2.2.2" or "me.example.com"<\/small>', value: nvram.rmgt_sip },
 			{ title: 'Limit Connection Attempts', multi: [
 				{ suffix: '&nbsp; SSH &nbsp; / &nbsp;', name: 'f_limit_ssh', type: 'checkbox', value: (shlimit[0] & 1) != 0 },
 				{ suffix: '&nbsp; Telnet &nbsp;', name: 'f_limit_telnet', type: 'checkbox', value: (shlimit[0] & 2) != 0 }
@@ -520,10 +522,10 @@ function init() {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'Username', name: 'http_username', type: 'text', maxlen: 20, value: nvram.http_username, suffix: '&nbsp;<small>(empty field means "root")<\/small>' },
+			{ title: 'Username', name: 'http_username', type: 'text', maxlen: 20, value: nvram.http_username, suffix: '&nbsp;<small>empty field means "root"<\/small>' },
 			null,
-			{ title: 'Password', name: 'set_password_1', type: 'password', maxlen: 60, value: '**********' },
-				{ title: '<i>(re-enter to confirm)<\/i>', indent: 2, name: 'set_password_2', type: 'password', maxlen: 60, value: '**********' }
+			{ title: 'Password', name: 'set_password_1', type: 'password', maxlen: 60, value: '**********', suffix: '&nbsp;<small>Note: max. 60 characters<\/small>' },
+			{ title: '<i>Re-enter to confirm<\/i>', name: 'set_password_2', type: 'password', maxlen: 60, value: '**********' }
 		]);
 	</script>
 </div>
