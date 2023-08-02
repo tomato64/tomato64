@@ -19,7 +19,7 @@
 
 <script>
 
-//	<% nvram("ddnsx0,ddnsx1,ddnsx_refresh,ddnsx_save"); %>
+//	<% nvram("ddnsx0,ddnsx1,ddnsx_refresh,ddnsx_save,ddnsx_cktime"); %>
 
 /* REMOVE-BEGIN
 
@@ -156,20 +156,29 @@ function findDNS(wan_dns, wan_get_dns, dns_addget) {
 
 function verifyFields(focused, quiet) {
 	var i;
-	var data, r, e;
+	var data, b, e, r = 1;
 	var op;
 	var enabled;
-	var b;
 
 	b = E('_f_ddnsx_ip').value == 'custom';
+	e = E('_f_ddnsx_ip');
 	elem.display(PR('_f_custom_ip'), b);
-
 	if ((b) && (!v_ip('_f_custom_ip', quiet)))
-		return 0;
-	if (!v_range('_ddnsx_refresh', quiet, 0, 90))
-		return 0;
+		r = 0;
+	else
+		ferror.clear(e);
 
-	r = 1;
+	if (!v_range('_ddnsx_refresh', quiet, 0, 90))
+		r = 0;
+
+	b = (E('_f_ddnsx_ip').value.indexOf('@') != -1);
+	e = E('_f_ddnsx_cktime');
+	e.disabled = !b;
+	if ((b) && !v_range('_f_ddnsx_cktime', quiet, 5, 99999))
+		r = 0;
+	else
+		ferror.clear(e);
+
 	for (i = 0; i < clients_num; ++i) {
 		data = services[E('_f_service'+i).selectedIndex] || services[0];
 		enabled = (data[0] != '');
@@ -421,6 +430,7 @@ function init() {
 <input type="hidden" name="wan_dns" value="" disabled="disabled">
 <input type="hidden" name="ddnsx_ip" value="">
 <input type="hidden" name="ddnsx_save" value="">
+<input type="hidden" name="ddnsx_cktime" value="">
 
 <!-- / / / -->
 
@@ -431,11 +441,14 @@ function init() {
 		var a = (s != '') && (s != 'wan') && (s != 'wan2') && (s != 'wan3') && (s != 'wan4') && (s.indexOf('@') != 0) && (s != '0.0.0.0') && (s != '10.1.1.1');
 
 		createFieldTable('', [
-			{ title: 'IP address', name: 'f_ddnsx_ip', type: 'select', options: [['wan','Use WAN0 IP Address'],['wan2','Use WAN1 IP Address' ],
+			{ title: 'IP address', multi: [
+				{ name: 'f_ddnsx_ip', type: 'select', options: [['wan','Use WAN0 IP Address'],['wan2','Use WAN1 IP Address' ],
 /* MULTIWAN-BEGIN */
 					['wan3','Use WAN2 IP Address' ],['wan4','Use WAN3 IP Address' ],
 /* MULTIWAN-END */
-					['@','Use External IP Address Checker (every 10 minutes)'],['0.0.0.0','Offline (0.0.0.0)'],['10.1.1.1','Offline (10.1.1.1)'],['custom','Custom IP Address...']], value: (a ? 'custom' : ddnsx_ip_nvram) },
+					['@','External IP address checker - every:'],['0.0.0.0','Offline (0.0.0.0)'],['10.1.1.1','Offline (10.1.1.1)'],['custom','Custom IP Address...']], value: (a ? 'custom' : ddnsx_ip_nvram) },
+
+				{ name: 'f_ddnsx_cktime', type: 'text', maxlen: 5, size: 6, suffix: '<small> minutes; range: 5 - 99999, default: 10<\/small>', value: nvram.ddnsx_cktime } ] },
 				{ title: 'Custom IP address', indent: 2, name: 'f_custom_ip', type: 'text', maxlen: 15, size: 20, value: (a ? ddnsx_ip_nvram : ''), hidden: !a },
 			{ title: 'Auto refresh every', name: 'ddnsx_refresh', type: 'text', maxlen: 8, size: 8, suffix: '<small> days (0 - disable)<\/small>', value: fixInt(nvram.ddnsx_refresh, 0, 90, 28) }
 		]);

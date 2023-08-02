@@ -186,6 +186,7 @@ static const nvset_t nvset_list[] = {
 	{ "ddnsx_ip",			V_LENGTH(0, 32)			},
 	{ "ddnsx_save",			V_01				},
 	{ "ddnsx_refresh",		V_RANGE(0, 365)			},
+	{ "ddnsx_cktime",		V_RANGE(5, 99999)		},
 
 /* basic-network */
 	/* WAN */

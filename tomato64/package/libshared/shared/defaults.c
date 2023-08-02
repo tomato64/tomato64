@@ -804,6 +804,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "ddnsx1_cache",		""				, 0 },
 	{ "ddnsx_save",			"1"				, 0 },
 	{ "ddnsx_refresh",		"28"				, 0 },
+	{ "ddnsx_cktime",		"10"				, 0 },
 
 /* basic-ident */
 	{ "router_name",		"Tomato64"			, 0 },

@@ -74,25 +74,6 @@ int f_argc = -1;
 
 static void save_cookie(void);
 
-/* this should be in nvram so you can add/edit/remove checkers, but we have so little nvram it's impossible... */
-static char services[][3][23] = { /* remember: the number in the third square bracket must be (len + 1) of the longest string */
-/*	  service name			service hostname		path */
-	{ "ipify.org",			"api.ipify.org",		"/"	},	/* txt */
-	{ "amazonaws.com",		"checkip.amazonaws.com",	"/"	},	/* txt */
-	{ "dyndns.org",			"checkip.dyndns.org",		"/"	},	/* "<html><head><title>Current IP Check</title></head><body>Current IP Address: 1.2.3.4</body></html>" */
-	{ "corz.org",			"corz.org",			"/ip"	},	/* txt */
-	{ "trackip.net",		"trackip.net",			"/ip"	},	/* txt */
-	{ "changeip.com",		"ip.changeip.com",		"/"	},	/* "1.2.3.4\n<!--IPADDR=1.2.3.4-->" */
-	{ "ifconfig.co",		"ifconfig.co",			"/ip"	},	/* txt */
-	{ "ident.me",			"ident.me",			"/"	},	/* txt */
-	{ "eth0.me",			"eth0.me",			"/"	},	/* txt */
-	{ "myexternalip.com",		"myexternalip.com",		"/raw"	},	/* txt */
-	{ "tyk.nu",			"ip.tyk.nu",			"/"	},	/* txt */
-	{ "wgetip.com",			"wgetip.com",			"/"	},	/* txt? */
-	{ "ipecho.net",			"ipecho.net",			"/plain"},	/* txt? */
-	{ "ifconfig.me",		"ifconfig.me",			"/ip"	},	/* txt */
-	{ "icanhazip.com",		"icanhazip.com",		"/"	},	/* txt */
-};
 
 static void trimamp(char *s)
 {
@@ -172,7 +153,6 @@ static const char *get_option_required(const char *name)
 	if ((p = get_option(name)) != NULL)
 		return p;
 
-	logmsg(LOG_ERR, "Required option --%s is missing.", name);
 	fprintf(stderr, "Required option --%s is missing.\n", name);
 
 	exit(2);
@@ -194,7 +174,6 @@ static int get_option_onoff(const char *name, int def)
 	if ((strcmp(p, "off") == 0) || (strcmp(p, "0") == 0))
 		return 0;
 
-	logmsg(LOG_ERR, "--%s requires the value off/on or 0/1.\n", name);
 	fprintf(stderr, "--%s requires the value off/on or 0/1.\n", name);
 
 	exit(2);
@@ -261,19 +240,19 @@ static int curl_dump(CURL *handle, curl_infotype type, char *data, size_t size, 
 
 	switch (type) {
 		case CURLINFO_HEADER_OUT:
-			prefix = "=> H ";
+			prefix = ">H ";
 			break;
 		case CURLINFO_DATA_OUT:
-			prefix = "=> D ";
+			prefix = ">D ";
 			break;
 		case CURLINFO_HEADER_IN:
-			prefix = "<= H ";
+			prefix = "<H ";
 			break;
 		case CURLINFO_DATA_IN:
-			prefix = "<= D ";
+			prefix = "<D ";
 			break;
 		case CURLINFO_TEXT:
-			prefix = "== I ";
+			prefix = "=I ";
 			is_info = 1;
 			break;
 		default:
@@ -325,12 +304,12 @@ static void curl_setup()
 		error("libcurl initialization failure.");
 
 #ifndef TCONFIG_STUBBY
-	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
+	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0);
 #endif
-	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
-	curl_easy_setopt(curl_handle, CURLOPT_MAXREDIRS, 5L);
-	curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT, 10L);
-	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 10L);
+	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1);
+	curl_easy_setopt(curl_handle, CURLOPT_MAXREDIRS, 20);
+	curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT, 10);
+	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 10);
 
 	if ((dump = get_dump_name()) != NULL) {
 		curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
@@ -513,7 +492,6 @@ static int _http_req(int ssl, const char *host, int port, const char *request, c
 
 static int http_req(int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body)
 {
-	logmsg(LOG_DEBUG, "*** %s: IN host=[%s] query=[%s] header=[%s] auth=[%d] data=[%s] req=[%s]", __FUNCTION__, host, query, header, auth, data, req);
 #ifdef USE_LIBCURL
 	struct curl_slist *headers = NULL;
 	char url[HALF_BLOB];
@@ -563,7 +541,7 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 	}
 	else {
 		curl_easy_setopt(curl_handle, CURLOPT_READDATA, NULL);
-		curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, 0L);
+		curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, 0);
 		curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 0L);
 	}
 
@@ -622,31 +600,30 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 	if (n > (BLOB_SIZE - 512)) /* just don't go over 512 below... */
 		return -1;
 
-	snprintf(blob, BLOB_SIZE, "%s %s %s\r\nHost: %s\r\nUser-Agent: " AGENT "\r\nCache-Control: no-cache\r\n", req, query, httpv, host);
-
+	sprintf(blob, "%s %s %s\r\nHost: %s\r\nUser-Agent: " AGENT "\r\nCache-Control: no-cache\r\n", req, query, httpv, host);
 	if (auth) {
 		memset(a, 0, sizeof(a));
-		snprintf(a, sizeof(a), "%s:%s", get_option_required("user"), get_option_required("pass"));
-
+		sprintf(a, "%s:%s", get_option_required("user"), get_option_required("pass"));
 		n = base64_encode((const char *) a, b, strlen(a));
 		b[n] = 0;
-		snprintf(blob + strlen(blob), BLOB_SIZE - strlen(blob), "Authorization: Basic %s\r\n", b);
+		sprintf(blob + strlen(blob), "Authorization: Basic %s\r\n", b);
 	}
 	if ((header) && ((n = strlen(header)) > 0)) {
-		strlcat(blob, header, BLOB_SIZE);
+		strcat(blob, header);
 		if (header[n - 1] != '\n')
-			strlcat(blob, "\r\n", BLOB_SIZE);
+			strcat(blob, "\r\n");
 	}
 	if (data)
-		snprintf(blob + strlen(blob), BLOB_SIZE - strlen(blob), "Content-Length: %d\r\n", strlen(data));
+		sprintf(blob + strlen(blob), "Content-Length: %d\r\n", strlen(data));
 
-	strlcat(blob, "\r\n", BLOB_SIZE);
+	strcat(blob, "\r\n");
 
 	if (data)
-		strlcat(blob, data, BLOB_SIZE);
+		strcat(blob, data);
+
+	logmsg(LOG_DEBUG, "*** %s: blob=[%s]", __FUNCTION__, blob);
 
 	port = ssl ? 443 : 80;
-	memset(a, 0, sizeof(a));
 	strlcpy(a, host, sizeof(a));
 	if ((p = strrchr(a, ':')) != NULL) {
 		*p = 0;
@@ -656,8 +633,6 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 
 	if ((p = strdup(blob)) == NULL)
 		return -1;
-
-	logmsg(LOG_DEBUG, "*** %s: host=[%s] port=[%d] request=[%s] ssl=[%d] buffer=[%s]", __FUNCTION__, a, port, p, ssl, blob);
 
 	n = _http_req(ssl, a, port, p, blob, BLOB_SIZE, body);
 	free(p);
@@ -702,71 +677,96 @@ const char *get_address(int required)
 	char cache_name[64];
 	static char addr[16];
 	long ut, et;
-	int rows, service_num, n;
 
-	/* addr is present in the config */
 	if ((c = get_option("addr")) != NULL) {
 		/* do not use custom IP address, run IP checker */
 		if (*c == '@') {
-			ut = get_uptime();
+			++c;
+			if ((*c != 0) && (strlen(c) < 20)) {
+				ut = get_uptime();
 
-			d = get_option_required("addrcache");
-			strlcpy(cache_name, d, sizeof(cache_name));
+				d = get_option("addrcache");
+				strlcpy(cache_name, d, sizeof(cache_name));
 
-			if (read_tmaddr(cache_name, &et, addr)) {
-				if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE)) {
-					logmsg(LOG_DEBUG, "*** %s: Using cached address %s from %s. Expires in %ld seconds", __FUNCTION__, addr, cache_name, (et - ut));
-					return addr;
+				if (read_tmaddr(cache_name, &et, addr)) {
+					if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE)) {
+						logmsg(LOG_DEBUG, "*** %s: Using cached address %s from %s. Expires in %ld seconds", __FUNCTION__, addr, cache_name, (et - ut));
+						return addr;
+					}
+				}
+
+				/* main IP checker */
+				if (strcmp(c, "dyndns") == 0) {
+					if ((wget(0, 1, "checkip.dyndns.org:8245", "/", NULL, 0, &body) != 200) && (wget(0, 1, "checkip.dyndns.org", "/", NULL, 0, &body) != 200)) {
+						/* "<html><head><title>Current IP Check</title></head><body>Current IP Address: 1.2.3.4</body></html>" */
+						error(M_ERROR_GET_IP " (dyndns)");
+					}
+				}
+				/* other IP checkers - see/add/remove: rc/ddns.c */
+				else if (strcmp(c, "zoneedit") == 0) {
+					if (wget(0, 1, "dynamic.zoneedit.com", "/checkip.html", NULL, 0, &body) != 200) {
+						/* "1.2.3.4" */
+						error(M_ERROR_GET_IP " (zoneedit)");
+					}
+				}
+				else if (strcmp(c, "noip") == 0) {
+					if ((wget(0, 1, "ip1.dynupdate.no-ip.com:8245", "/", NULL, 0, &body) != 200) && (wget(0, 1, "ip1.dynupdate.no-ip.com", "/", NULL, 0, &body) != 200)) {
+						/* "1.2.3.4" */
+						error(M_ERROR_GET_IP " (noip)");
+					}
+				}
+				else if (strcmp(c, "dnsomatic") == 0) {
+					if (wget(0, 1, "myip.dnsomatic.com", "/", NULL, 0, &body) != 200) {
+						/* "1.2.3.4" */
+						error(M_ERROR_GET_IP " (dnsomatic)");
+					}
+				}
+				else if (strcmp(c, "pairdomains") == 0) {
+					if (wget(0, 1, "myip.pairnic.com", "/", NULL, 0, &body) != 200) { /* myip.pairdomains.com redirects to https */
+						/* "Current IP Address: 1.2.3.4" */
+						error(M_ERROR_GET_IP " (pairdomains)");
+					}
+				}
+				else if (strcmp(c, "changeip") == 0) {
+					if (wget(0, 1, "ip.changeip.com", "/", NULL, 0, &body) != 200) {
+						/* "1.2.3.4\n<!--IPADDR=1.2.3.4-->" */
+						error(M_ERROR_GET_IP " (changeip)");
+					}
+				}
+
+				logmsg(LOG_DEBUG, "*** %s: external IP checker - '%s'", __FUNCTION__, c);
+
+				if ((p = strstr(body, "Address:")) != NULL) /* dyndns, pairdomains */
+					p += 8;
+				else /* zoneedit, noip, dnsomatic, changeip */
+					p = body;
+
+				while (*p == ' ')
+					++p;
+
+				q = p;
+
+				while (((*q >= '0') && (*q <= '9')) || (*q == '.'))
+					++q;
+
+				memset(addr, 0, sizeof(addr)); /* reset */
+				strncpy(addr, p, (q - p));
+				q = NULL;
+
+				/* write to cache if addr is OK */
+				if ((ia.s_addr = inet_addr(addr)) != INADDR_NONE) {
+					q = inet_ntoa(ia);
+					memset(s, 0, sizeof(s));
+					sprintf(s, "%ld,%s", ut + DDNS_IP_CACHE, q);
+					f_write_string(cache_name, s, 0, 0);
+
+					logmsg(LOG_DEBUG, "*** %s: saved '%s'", __FUNCTION__, s);
+					return q;
 				}
 			}
 
-			logmsg(LOG_DEBUG, "*** %s: running External IP address checker ...", __FUNCTION__);
-
-			rows = sizeof(services) / sizeof(services[0]);
-			n = 5; /* try 5 times on different checkers, if no response it means (probably) WAN is down - wait */
-			while (n-- > 0) {
-				srand(time(0));
-				service_num = (rand() % (rows));
-				if (wget(0, 1, services[service_num][1], services[service_num][2], NULL, 0, &body) == 200) {
-
-					if ((p = strstr(body, "Address:")) != NULL) /* dyndns */
-						p += 8;
-					else /* the rest */
-						p = body;
-
-					/* sanitize */
-					while (*p == ' ')
-						++p;
-
-					q = p;
-
-					while (((*q >= '0') && (*q <= '9')) || (*q == '.'))
-						++q;
-
-					memset(addr, 0, sizeof(addr)); /* reset */
-					strncpy(addr, p, (q - p));
-					q = NULL;
-
-					/* write to cache if addr is OK */
-					if ((ia.s_addr = inet_addr(addr)) != INADDR_NONE) {
-						q = inet_ntoa(ia);
-						memset(s, 0, sizeof(s));
-						snprintf(s, sizeof(s), "%ld,%s", ut + DDNS_IP_CACHE, q);
-						f_write_string(cache_name, s, 0, 0);
-
-						logmsg(LOG_DEBUG, "*** %s: used %s service; time,address (%s) saved to %s", __FUNCTION__, services[service_num][0], s, cache_name);
-						return q;
-					}
-				}
-				else {
-					if (n == 0) {
-						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP, __FUNCTION__);
-						error(M_ERROR_GET_IP);
-					}
-					else
-						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s) - trying another one ...", __FUNCTION__, services[service_num][0]);
-				}
-			}
+			logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP, __FUNCTION__);
+			error(M_ERROR_GET_IP);
 		}
 		return c;
 	}
@@ -779,7 +779,7 @@ static void append_addr_option(char *buffer, const char *format)
 	const char *c;
 
 	if ((c = get_address(0)) != NULL)
-		snprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), format, c);
+		sprintf(buffer + strlen(buffer), format, c);
 }
 
 /*
@@ -816,26 +816,26 @@ static void update_dua(const char *type, int ssl, const char *server, const char
 
 	/* +opt */
 	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "%s?", path ? path : get_option_required("path"));
+	sprintf(query, "%s?", path ? path : get_option_required("path"));
 
 	/* +opt */
 	if (type)
-		snprintf(query + strlen(query), sizeof(query) - strlen(query), "system=%s&", type);
+		sprintf(query + strlen(query), "system=%s&", type);
 
 	/* +opt */
 	p = reqhost ? get_option_required("host") : get_option("host");
 	if (p)
-		snprintf(query + strlen(query), sizeof(query) - strlen(query), "hostname=%s&", p);
+		sprintf(query + strlen(query), "hostname=%s&", p);
 
 	/* +opt */
 	if (((p = get_option("mx")) != NULL) && (*p))
-		snprintf(query + strlen(query), sizeof(query) - strlen(query), "mx=%s&backmx=%s&", p, (get_option_onoff("backmx", 0)) ? "YES" : "NO");
+		sprintf(query + strlen(query), "mx=%s&backmx=%s&", p, (get_option_onoff("backmx", 0)) ? "YES" : "NO");
 
 	/* +opt */
 	append_addr_option(query, "myip=%s&");
 
 	if (get_option_onoff("wildcard", 0))
-		strlcat(query, "wildcard=ON", sizeof(query));
+		strcat(query, "wildcard=ON");
 
 	trimamp(query);
 
@@ -950,7 +950,7 @@ static void update_namecheap(int ssl)
 
 	/* +opt +opt +opt */
 	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "/update?host=%s&domain=%s&password=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
+	sprintf(query, "/update?host=%s&domain=%s&password=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
 
 	/* +opt */
 	append_addr_option(query, "&ip=%s");
@@ -1032,7 +1032,7 @@ static void update_enom(int ssl)
 
 	/* +opt +opt +opt */
 	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "/interface.asp?Command=SetDNSHost&HostName=%s&Zone=%s&DomainPassword=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
+	sprintf(query, "/interface.asp?Command=SetDNSHost&HostName=%s&Zone=%s&DomainPassword=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
 
 	/* +opt */
 	append_addr_option(query, "&Address=%s");
@@ -1088,7 +1088,7 @@ static void update_dnsexit(int ssl)
 
 	/* +opt +opt +opt */
 	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "/RemoteUpdate.sv?login=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
+	sprintf(query, "/RemoteUpdate.sv?login=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
 
 	/* +opt */
 	append_addr_option(query, "&myip=%s");
@@ -1133,7 +1133,7 @@ static void update_ieserver(int ssl)
 
 	/* +opt +opt */
 	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "/cgi-bin/dip.cgi?username=%s&domain=%s&password=%s&updatehost=1", get_option_required("user"), get_option_required("host"), get_option_required("pass"));
+	sprintf(query, "/cgi-bin/dip.cgi?username=%s&domain=%s&password=%s&updatehost=1", get_option_required("user"), get_option_required("host"), get_option_required("pass"));
 
 	r = wget(ssl, 0, "ieserver.net", query, NULL, 0, &body);
 	if (r == 200) {
@@ -1171,7 +1171,7 @@ static void update_dyns(int ssl)
 
 	/* +opt +opt +opt */
 	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "/postscript011.php?username=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
+	sprintf(query, "/postscript011.php?username=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
 
 	/* +opt */
 	append_addr_option(query, "&ip=%s");
@@ -1243,7 +1243,7 @@ static void update_zoneedit(int ssl)
 
 	/* +opt */
 	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "/auth/dynamic.html?host=%s", get_option_required("host"));
+	sprintf(query, "/auth/dynamic.html?host=%s", get_option_required("host"));
 
 	/* +opt */
 	append_addr_option(query, "&dnsto=%s");
@@ -1311,7 +1311,7 @@ static void update_afraid(int ssl)
 
 	/* +opt */
 	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "/dynamic/update.php?%s", get_option_required("ahash"));
+	sprintf(query, "/dynamic/update.php?%s", get_option_required("ahash"));
 
 	/* +opt */
 	append_addr_option(query, "&address=%s");
@@ -1525,7 +1525,7 @@ static void update_duckdns(int ssl)
 	char query[2048];
 
 	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "/update?domains=%s&token=%s", get_option_required("host"), get_option_required("ahash"));
+	sprintf(query, "/update?domains=%s&token=%s", get_option_required("host"), get_option_required("ahash"));
 
 	append_addr_option(query, "&ip=%s");
 
@@ -1555,7 +1555,7 @@ static void update_wget(void)
 
 	/* https://user:pass@domain:port/path?query */
 
-	strlcpy(url, get_option_required("url"), sizeof(url));
+	strcpy(url, get_option_required("url"));
 	https = 0;
 	host = url + 7;
 	if (strncasecmp(url, "https://", 8) == 0) {
@@ -1568,13 +1568,13 @@ static void update_wget(void)
 	if ((p = strchr(host, '/')) == NULL)
 		error(M_INVALID_PARAM__S, "url");
 
-	strlcpy(path, p, sizeof(path));
+	strcpy(path, p);
 	*p = 0;
 
 	if ((c = strstr(path, "@IP")) != NULL) {
-		strlcpy(s, c + 3, sizeof(s));
-		strlcpy(c, get_address(1), sizeof(c));
-		strlcat(c, s, sizeof(c));
+		strcpy(s, c + 3);
+		strcpy(c, get_address(1));
+		strcat(c, s);
 	}
 
 	logmsg(LOG_DEBUG, "*** %s: host: %s, path: %s", __FUNCTION__, host, path);
@@ -1656,7 +1656,7 @@ static void save_cookie(void)
 	}
 
 	memset(s, 0, sizeof(s));
-	snprintf(s, sizeof(s), "%ld,%s", now, c);
+	sprintf(s, "%ld,%s", now, c);
 	f_write_string(cookie, s, FW_NEWLINE, 0);
 
 	logmsg(LOG_DEBUG, "*** %s: cookie=%s", __FUNCTION__, s);
