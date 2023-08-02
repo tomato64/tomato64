@@ -136,17 +136,9 @@ void start_jffs2(void)
 
 #ifndef TOMATO64
 	if (mount(s, "/jffs", JFFS_NAME, MS_NOATIME, "") != 0) {
-		if (mtd_erase(JFFS2_PARTITION)) {
-			error("formatting");
-			return;
-		}
-		format = 1;
-
-		if (mount(s, "/jffs", JFFS_NAME, MS_NOATIME, "") != 0) {
-			modprobe_r(JFFS_NAME);
-			error("mounting 2nd time");
-			return;
-		}
+		modprobe_r(JFFS_NAME);
+		error("mounting");
+		return;
 	}
 #endif /* TOMATO64 */
 
