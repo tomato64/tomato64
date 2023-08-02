@@ -109,8 +109,10 @@ void fix_chain_in_drop(void)
 		eval("iptables", "-D", "INPUT", "-j", buf);
 		eval("iptables", "-A", "INPUT", "-j", buf);
 #ifdef TCONFIG_IPV6
-		eval("ip6tables", "-D", "INPUT", "-j", buf);
-		eval("ip6tables", "-A", "INPUT", "-j", buf);
+		if (ipv6_enabled()) {
+			eval("ip6tables", "-D", "INPUT", "-j", buf);
+			eval("ip6tables", "-A", "INPUT", "-j", buf);
+		}
 #endif
 	}
 }
