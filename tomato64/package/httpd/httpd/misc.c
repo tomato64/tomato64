@@ -610,7 +610,7 @@ void asp_sysinfo(int argc, char **argv)
 	char cfe_version[16];
 
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
-	char wl_tempsense[128];
+	char wl_tempsense[256];
 #endif
 
 //#ifdef TCONFIG_BCMARM

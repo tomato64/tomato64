@@ -1491,7 +1491,7 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 	unsigned *cur_temp;
 	int  ret = 0, len, i;
 
-	strcpy(buf, "");
+	memset(buf, 0, buf_sz); /* reset */
 	if ((lan_ifnames = strdup(nvram_safe_get("wl_ifnames"))) != NULL) {
 		p = lan_ifnames;
 		while ((ifname = strsep(&p, " ")) != NULL) {
@@ -1559,7 +1559,7 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 
 			if ((strlen(tempC) > 0) && (strlen(band) > 0)) {
 				if ((strcmp(tempC, "--") != 0) || (strcmp(band, "--") != 0))
-					snprintf(buf, buf_sz, "%s: %s - %s&#176;C&nbsp;/&nbsp;%s&#176;F&nbsp;&nbsp;&nbsp;&nbsp;", ifname, band, tempC, tempF);
+					snprintf(buf + strlen(buf), buf_sz - strlen(buf), "%s: %s - %s&#176;C&nbsp;/&nbsp;%s&#176;F&nbsp;&nbsp;&nbsp;&nbsp;", ifname, band, tempC, tempF);
 			}
 		}
 		free(lan_ifnames);
