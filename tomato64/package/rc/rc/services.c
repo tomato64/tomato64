@@ -469,8 +469,15 @@ void start_dnsmasq()
 		}
 	}
 
-	if (nvram_get_int("dhcpd_static_only"))
-		fprintf(f, "dhcp-ignore=tag:!known\n");
+	/* ignore DHCP requests from unknown devices for given LAN */
+	if (nvram_get_int("dhcpd_ostatic"))
+		fprintf(f, "dhcp-ignore=tag:br0,tag:!known\n");
+	if (nvram_get_int("dhcpd1_ostatic"))
+		fprintf(f, "dhcp-ignore=tag:br1,tag:!known\n");
+	if (nvram_get_int("dhcpd2_ostatic"))
+		fprintf(f, "dhcp-ignore=tag:br2,tag:!known\n");
+	if (nvram_get_int("dhcpd3_ostatic"))
+		fprintf(f, "dhcp-ignore=tag:br3,tag:!known\n");
 
 	if ((n = nvram_get_int("dnsmasq_q"))) { /* process quiet flags */
 		if (n & 1)

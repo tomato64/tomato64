@@ -177,7 +177,6 @@ static const nvset_t nvset_list[] = {
 
 /* basic-static */
 	{ "dhcpd_static",		V_LENGTH(0, 108*251)		},	/* 108 (max chars per entry) x 250 entries */
-	{ "dhcpd_static_only",		V_01				},
 
 /* basic-ddns */
 	{ "ddnsx0",			V_LENGTH(0, 2048)		},
@@ -384,6 +383,7 @@ static const nvset_t nvset_list[] = {
 	{ "lan_proto",			V_WORD				},	/* static, dhcp */
 	{ "dhcpd_startip",		V_LENGTH(0, 15)			},
 	{ "dhcpd_endip",		V_LENGTH(0, 15)			},
+	{ "dhcpd_ostatic",		V_01				},	/* ignore DHCP requests from unknown devices on LAN0 */
 	{ "dhcp_lease",			V_LENGTH(0, 5)			},
 	{ "dhcp_moveip",		V_RANGE(0, 2)			},	/* GUI helper for automatic IP change */
 	{ "wan_wins",			V_IP				},
@@ -449,6 +449,7 @@ static const nvset_t nvset_list[] = {
 	{ "lan1_stp",			V_LENGTH(0, 1)			},
 	{ "dhcpd1_startip",		V_LENGTH(0, 15)			},
 	{ "dhcpd1_endip",		V_LENGTH(0, 15)			},
+	{ "dhcpd1_ostatic",		V_01				},	/* ignore DHCP requests from unknown devices on LAN1 */
 	{ "dhcp1_lease",		V_LENGTH(0, 5)			},
 
 	{ "lan2_ifname",		V_LENGTH(0, 5)			},
@@ -464,6 +465,7 @@ static const nvset_t nvset_list[] = {
 	{ "lan2_stp",			V_LENGTH(0, 1)			},
 	{ "dhcpd2_startip",		V_LENGTH(0, 15)			},
 	{ "dhcpd2_endip",		V_LENGTH(0, 15)			},
+	{ "dhcpd2_ostatic",		V_01				},	/* ignore DHCP requests from unknown devices on LAN2 */
 	{ "dhcp2_lease",		V_LENGTH(0, 5)			},
 
 	{ "lan3_ifname",		V_LENGTH(0, 5)			},
@@ -479,6 +481,7 @@ static const nvset_t nvset_list[] = {
 	{ "lan3_stp",			V_LENGTH(0, 1)			},
 	{ "dhcpd3_startip",		V_LENGTH(0, 15)			},
 	{ "dhcpd3_endip",		V_LENGTH(0, 15)			},
+	{ "dhcpd3_ostatic",		V_01				},	/* ignore DHCP requests from unknown devices on LAN3 */
 	{ "dhcp3_lease",		V_LENGTH(0, 5)			},
 
 	/* Wireless */
