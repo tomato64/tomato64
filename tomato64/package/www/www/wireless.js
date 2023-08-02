@@ -95,6 +95,18 @@ function refreshChannels(uidx) {
 
 			ghz[uidx] = [];
 			max_channel[uidx] = 0;
+
+			/* sort wl driver result for GUI: provide ascending control channel list (wl driver result is sorted by Control Channel Location (LL, LU, UL, UU) */
+			wl_channels.sort((ch1, ch2) => {
+				if (ch1[0] > ch2[0]) {
+					return 1;
+				}
+				if (ch1[0] < ch2[0]) {
+					return -1;
+				}
+				return 0;
+			});
+
 			for (i = 0; i < wl_channels.length; ++i) {
 				ghz[uidx].push([wl_channels[i][0] + '',
 					(wl_channels[i][0]) ? ((wl_channels[i][1]) ? wl_channels[i][0] + ' - ' + (wl_channels[i][1] / 1000.0).toFixed(3) + ' GHz' : wl_channels[i][0] + '') : 'Auto']);

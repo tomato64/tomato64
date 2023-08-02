@@ -678,7 +678,10 @@ function init() {
 			{ title: 'SSID', text: nvram['wl'+u+'_ssid'] },
 			{ title: 'Broadcast', text: (nvram['wl'+u+'_closed'] == 0) ? 'Enabled' : '<b>Disabled<\/b>', ignore: (nvram['wl'+u+'_mode'] != 'ap') },
 			{ title: 'Security', text: sec },
-			{ title: 'Channel', rid: 'channel'+uidx, text: stats.channel[uidx], ignore: (wl_sunit(uidx) >= 0) },
+			{ title: 'Control Channel', rid: 'channel'+uidx, text: stats.channel[uidx], ignore: (wl_sunit(uidx) >= 0) },
+/* RTNPLUS-BEGIN */
+			{ title: 'Control Channel Location', rid: 'ctrlsb'+uidx, text: wlstats[uidx].ctrlsb, ignore: ((!nphy) || (wl_sunit(uidx) >= 0)) },
+/* RTNPLUS-END */
 			{ title: 'Channel Width', rid: 'nbw'+uidx, text: wlstats[uidx].nbw, ignore: ((!nphy) || (wl_sunit(uidx) >= 0)) },
 			{ title: 'Interference Level', rid: 'interference'+uidx, text: stats.interference[uidx], ignore: (wl_sunit(uidx) >= 0) },
 			{ title: 'Rate', rid: 'rate'+uidx, text: wlstats[uidx].rate, ignore: (wl_sunit(uidx) >= 0) },

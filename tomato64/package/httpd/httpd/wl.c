@@ -183,6 +183,72 @@ cntry_name_t cntry_names[] = {
 {NULL,			NULL}
 };
 
+#ifdef CONFIG_BCMWL6
+static const uint8 wf_chspec_bw_mhz[] = {5, 10, 20, 40, 80, 160, 160};
+
+#define WF_NUM_BW \
+	(sizeof(wf_chspec_bw_mhz)/sizeof(uint8))
+
+/* convert bandwidth from chanspec to MHz */
+static uint bw_chspec_to_mhz(chanspec_t chspec)
+{
+	uint bw;
+
+	bw = (chspec & WL_CHANSPEC_BW_MASK) >> WL_CHANSPEC_BW_SHIFT;
+	return (bw >= WF_NUM_BW ? 0 : wf_chspec_bw_mhz[bw]);
+}
+
+/*
+ * bw in MHz, return the channel count from the center channel to the
+ * the channel at the edge of the band
+ */
+static int center_chan_to_edge(uint bw)
+{
+	/* edge channels separated by BW - 10MHz on each side
+	 * delta from cf to edge is half of that,
+	 * MHz to channel num conversion is 5MHz/channel
+	 */
+	return (((bw - 20) / 2) / 5);
+}
+
+/*
+ * return channel number of the low edge of the band
+ * given the center channel and BW
+ */
+static int channel_low_edge(uint center_ch, uint bw)
+{
+	return (center_ch - center_chan_to_edge(bw));
+}
+
+/* return control channel given center channel and side band */
+static int channel_to_ctl_chan(uint center_ch, uint bw, uint sb)
+{
+	return (channel_low_edge(center_ch, bw) + sb * 4);
+}
+
+/*
+ * This function returns the channel number that control traffic is being sent on
+ */
+static int chspec_ctlchan(chanspec_t chspec)
+{
+	uint center_chan;
+	uint bw_mhz;
+	uint sb;
+
+	/* Is there a sideband ? */
+	if (CHSPEC_IS20(chspec)) {
+		return CHSPEC_CHANNEL(chspec);
+	} else {
+		sb = CHSPEC_CTL_SB(chspec) >> WL_CHANSPEC_CTL_SB_SHIFT;
+
+		bw_mhz = bw_chspec_to_mhz(chspec);
+		center_chan = CHSPEC_CHANNEL(chspec) >> WL_CHANSPEC_CHAN_SHIFT;
+
+		return (channel_to_ctl_chan(center_chan, bw_mhz, sb));
+	}
+}
+#endif /* CONFIG_BCMWL6 */
+
 static void check_wl_unit(const char *unitarg)
 {
 	char ifname[12], *wlunit;
@@ -598,12 +664,7 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 			apinfos[0].ctl_ch = apinfos[0].channel;
 #ifdef CONFIG_BCMWL6
 			chanspec = bssi->chanspec;
-			ctr_channel = CHSPEC_CHANNEL(chanspec);
-			if (CHSPEC_IS40(chanspec))
-				ctr_channel = ctr_channel + (CHSPEC_SB_LOWER(chanspec) ? -2 : 2);
-			else if (CHSPEC_IS80(chanspec))
-				ctr_channel += (((chanspec & WL_CHANSPEC_CTL_SB_MASK) == WL_CHANSPEC_CTL_SB_LLU) ? -2 : -6 ); /* upper is actually LLU */
-
+			ctr_channel = chspec_ctlchan(chanspec);
 			apinfos[0].ctl_ch = ctr_channel; /* use calculated value */
 #endif
 		}
@@ -929,19 +990,41 @@ static int print_wlstats(int idx, int unit, int subunit, void *param)
 			nbw = nvram_get_int(wl_nvname("nbw", unit, 0));
 		}
 		else {
+#ifdef CONFIG_BCMWL6
+			channel = chspec_ctlchan(chanspec);
+
+			switch (CHSPEC_CTL_SB(chanspec)) {
+			case WL_CHANSPEC_CTL_SB_LL:
+				ctrlsb = CHSPEC_IS40(chanspec) ? "lower" : "LL";
+				break;
+			case WL_CHANSPEC_CTL_SB_LU:
+				ctrlsb = CHSPEC_IS40(chanspec) ? "upper" : "LU";
+				break;
+			case WL_CHANSPEC_CTL_SB_UL:
+				ctrlsb = "UL";
+				break;
+			case WL_CHANSPEC_CTL_SB_UU:
+				ctrlsb = "UU";
+				break;
+			default:
+				ctrlsb = "none";
+				break;
+			}
+
+			/* case 20 MHz (align to SDK5 code) */
+			if (CHSPEC_IS20(chanspec))
+				ctrlsb = "none";
+
+			nbw = CHSPEC_IS80(chanspec) ? 80 : (CHSPEC_IS40(chanspec) ? 40 : 20);
+#else /* SDK5  - keep (good) "old" way */
 			channel = CHSPEC_CHANNEL(chanspec);
+
 			if (CHSPEC_IS40(chanspec))
 				channel = channel + (CHSPEC_SB_LOWER(chanspec) ? -2 : 2);
-#ifdef CONFIG_BCMWL6
-			else if (CHSPEC_IS80(chanspec))
-				channel += (((chanspec & WL_CHANSPEC_CTL_SB_MASK) == WL_CHANSPEC_CTL_SB_LLU) ? -2 : -6); /* upper is actually LLU */
 
-			ctrlsb = (chanspec & WL_CHANSPEC_CTL_SB_MASK) == WL_CHANSPEC_CTL_SB_LOWER ? "lower" : ((chanspec & WL_CHANSPEC_CTL_SB_MASK) == WL_CHANSPEC_CTL_SB_LLU ? "upper" : "none");
-			nbw = CHSPEC_IS80(chanspec) ? 80 : (CHSPEC_IS40(chanspec) ? 40 : 20);
-#else
 			ctrlsb = CHSPEC_SB_LOWER(chanspec) ? "lower" : (CHSPEC_SB_UPPER(chanspec) ? "upper" : "none");
 			nbw = CHSPEC_IS40(chanspec) ? 40 : 20;
-#endif
+#endif /* CONFIG_BCMWL6 */
 		}
 	}
 	else {
@@ -995,76 +1078,10 @@ static void web_print_wlchan(uint chan, int band)
 		web_printf(",[%d, 0]", chan);
 }
 
-#ifdef TCONFIG_BCM714
-static const uint8 wf_chspec_bw_mhz[] = {5, 10, 20, 40, 80, 160, 160};
-
-#define WF_NUM_BW \
-	(sizeof(wf_chspec_bw_mhz)/sizeof(uint8))
-
-/* convert bandwidth from chanspec to MHz */
-static uint bw_chspec_to_mhz(chanspec_t chspec)
-{
-	uint bw;
-
-	bw = (chspec & WL_CHANSPEC_BW_MASK) >> WL_CHANSPEC_BW_SHIFT;
-	return (bw >= WF_NUM_BW ? 0 : wf_chspec_bw_mhz[bw]);
-}
-
-/* 
- * bw in MHz, return the channel count from the center channel to the
- * the channel at the edge of the band
- */
-static int center_chan_to_edge(uint bw)
-{
-	/* edge channels separated by BW - 10MHz on each side
-	 * delta from cf to edge is half of that,
-	 * MHz to channel num conversion is 5MHz/channel
-	 */
-	return (((bw - 20) / 2) / 5);
-}
-
-/* 
- * return channel number of the low edge of the band
- * given the center channel and BW
- */
-static int channel_low_edge(uint center_ch, uint bw)
-{
-	return (center_ch - center_chan_to_edge(bw));
-}
-
-/* return control channel given center channel and side band */
-static int channel_to_ctl_chan(uint center_ch, uint bw, uint sb)
-{
-	return (channel_low_edge(center_ch, bw) + sb * 4);
-}
-
-/*
- * This function returns the channel number that control traffic is being sent on
- */
-static int chspec_ctlchan(chanspec_t chspec)
-{
-	uint center_chan;
-	uint bw_mhz;
-	uint sb;
-
-	/* Is there a sideband ? */
-	if (CHSPEC_IS20(chspec)) {
-		return CHSPEC_CHANNEL(chspec);
-	} else {
-		sb = CHSPEC_CTL_SB(chspec) >> WL_CHANSPEC_CTL_SB_SHIFT;
-
-		bw_mhz = bw_chspec_to_mhz(chspec);
-		center_chan = CHSPEC_CHANNEL(chspec) >> WL_CHANSPEC_CHAN_SHIFT;
-
-		return (channel_to_ctl_chan(center_chan, bw_mhz, sb));
-	}
-}
-#endif /* TCONFIG_BCM714 */
-
 static int _wlchanspecs(char *ifname, char *country, int band, int bw, int ctrlsb)
 {
 	chanspec_t c = 0;
-#ifndef TCONFIG_BCM714
+#ifndef CONFIG_BCMWL6
 	chanspec_t *chanspec;
 	int buflen;
 #endif
@@ -1075,7 +1092,7 @@ static int _wlchanspecs(char *ifname, char *country, int band, int bw, int ctrls
 	if (!buf)
 		return 0;
 
-#ifdef TCONFIG_BCM714
+#ifdef CONFIG_BCMWL6
 	memset(buf, 0, WLC_IOCTL_MAXLEN);
 	if (wl_iovar_getbuf(ifname, "chanspecs", &c, sizeof(chanspec_t), buf, WLC_IOCTL_MAXLEN) < 0) {
 		free((void *)buf);
@@ -1097,9 +1114,22 @@ static int _wlchanspecs(char *ifname, char *country, int band, int bw, int ctrls
 			continue;
 		}
 
-		/* filter the list (only upper or lower - no support for the other ones yet ... ) for 40 MHz BW and up! */
-		if ((bw >= 40) && CHSPEC_CTL_SB(c) != ctrlsb) {
+		/* filter the list (only "upper" or "lower") for 40 MHz BW */
+		if ((bw == 40) && CHSPEC_CTL_SB(c) != ctrlsb) {
 			continue;
+		}
+		/* filter the list (keep it easy --> make two groups "upper" (LU + UU) and "lower" (LL + UL)) for 80 MHz BW */
+		else if ((bw == 80)) {
+			if ((ctrlsb == WL_CHANSPEC_CTL_SB_UPPER) && /* user selected "upper" (LU) */
+			    ((CHSPEC_CTL_SB(c) == WL_CHANSPEC_CTL_SB_LL) || /* skip */
+			     (CHSPEC_CTL_SB(c) == WL_CHANSPEC_CTL_SB_UL))) { /* skip */
+				continue;
+			}
+			else if ((ctrlsb == WL_CHANSPEC_CTL_SB_LOWER) && /* user selected "lower" (LL) */
+				 ((CHSPEC_CTL_SB(c) == WL_CHANSPEC_CTL_SB_LU) || /* skip */
+				  (CHSPEC_CTL_SB(c) == WL_CHANSPEC_CTL_SB_UU))) { /* skip */
+				continue;
+			}
 		}
 		
 		if ((bw == 80)) {
@@ -1124,7 +1154,8 @@ static int _wlchanspecs(char *ifname, char *country, int band, int bw, int ctrls
 			}
 		}
 	}	
-#else /* SDK5 + SDK6.37 + SDK7 - keep "old" way for now! */
+#else /* SDK5  - keep (good) "old" way */
+/* NOTE: leave SDK6 code in place just for documenatation */
 	strcpy(buf, "chanspecs");
 	buflen = strlen(buf) + 1;
 
@@ -1173,7 +1204,7 @@ static int _wlchanspecs(char *ifname, char *country, int band, int bw, int ctrls
 		web_print_wlchan(chan, band);
 		count++;
 	}
-#endif /* TCONFIG_BCM714 */
+#endif /* CONFIG_BCMWL6 */
 
 	free((void *)buf);
 
