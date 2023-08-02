@@ -177,17 +177,19 @@ void asp_ctcount(int argc, char **argv)
 		fclose(f);
 	}
 
+	s[0] = '\0';
+
 	if (mode == 0) {
 		p = s;
 		for (i = 0; i < 12; ++i) {
-			p += sprintf(p, ",%d", count[i]);
+			p += snprintf(p, sizeof(s) - (p - s), ",%d", count[i]);
 		}
 		web_printf("\nconntrack = [%d%s];\n", count[12], s);
 	}
 	else {
 		p = s;
 		for (i = 1; i < 11; ++i) {
-			p += sprintf(p, ",%d", count[i]);
+			p += snprintf(p, sizeof(s) - (p - s), ",%d", count[i]);
 		}
 		web_printf("\nnfmarks = [%d%s];\n", count[0], s);
 	}

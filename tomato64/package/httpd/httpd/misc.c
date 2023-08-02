@@ -104,7 +104,7 @@ char *unix_string(const char *s)
 }
 
 /* # days, ##:##:## */
-char *reltime(char *buf, time_t t)
+char *reltime(time_t t, char *buf, const size_t buf_sz)
 {
 	int days;
 	int m;
@@ -112,7 +112,7 @@ char *reltime(char *buf, time_t t)
 	if (t < 0) t = 0;
 	days = t / 86400;
 	m = t / 60;
-	sprintf(buf, "%d day%s, %02d:%02d:%02d", days, ((days==1) ? "" : "s"), ((m / 60) % 24), (m % 60), (int)(t % 60));
+	snprintf(buf, buf_sz, "%d day%s, %02d:%02d:%02d", days, ((days==1) ? "" : "s"), ((m / 60) % 24), (m % 60), (int)(t % 60));
 
 	return buf;
 }
@@ -628,7 +628,7 @@ void asp_sysinfo(int argc, char **argv)
 #endif
 
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
-	get_wl_tempsense(wl_tempsense);
+	get_wl_tempsense(wl_tempsense, sizeof(wl_tempsense));
 #endif
 
 	get_cfeversion(cfe_version);
@@ -668,7 +668,7 @@ void asp_sysinfo(int argc, char **argv)
 #endif /* TOMATO64 */
 	           "\tcfeversion: '%s'",
 	           si.uptime,
-	           reltime(s, si.uptime),
+	           reltime(si.uptime, s, sizeof(s)),
 	           si.loads[0], si.loads[1], si.loads[2],
 	           mem.total, mem.free,
 	           mem.buffers, mem.cached,
@@ -938,7 +938,7 @@ void asp_link_uptime(int argc, char **argv)
 	buf[1] = 0;
 	if (check_wanup(prefix)) {
 		uptime = check_wanup_time(prefix); /* get wanX uptime */
-		reltime(buf, uptime);
+		reltime(uptime, buf, sizeof(buf));
 	}
 	web_puts(buf);
 }
@@ -1076,9 +1076,9 @@ void asp_dns(int argc, char **argv)
 	dns = get_dns(prefix); /* static buffer */
 	strcpy(s, "[");
 	for (i = 0 ; i < dns->count; ++i)
-		snprintf(s + strlen(s), sizeof(s), "%s'%s:%u'", i ? "," : "", inet_ntoa(dns->dns[i].addr), dns->dns[i].port);
+		snprintf(s + strlen(s), sizeof(s) - strlen(s), "%s'%s:%u'", i ? "," : "", inet_ntoa(dns->dns[i].addr), dns->dns[i].port);
 
-	strcat(s, "]");
+	strlcat(s, "]", sizeof(s));
 	web_puts(s);
 }
 

@@ -39,7 +39,7 @@ void asp_dhcpc_time(int argc, char **argv)
 				exp = n - si.uptime;
 			}
 		}
-		web_puts(reltime(buf, exp));
+		web_puts(reltime(exp, buf, sizeof(buf)));
 	}
 }
 

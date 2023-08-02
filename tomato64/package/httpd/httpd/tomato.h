@@ -37,7 +37,7 @@ extern void exec_service(const char *action);
 extern void wi_generic(char *url, int len, char *boundary);
 extern void common_redirect(void);
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
-extern char* get_wl_tempsense(char *);
+extern char* get_wl_tempsense(char *buf, const size_t buf_sz);
 #endif
 #ifdef TCONFIG_BCMARM
 extern int get_cpuinfo(char *system_type, char *cpu_model, char *bogomips, char *cpuclk, char *cputemp);
@@ -58,7 +58,7 @@ extern void asp_nvstat(int argc, char **argv);
 extern char *js_string(const char *s);
 extern char *html_string(const char *s);
 extern char *unix_string(const char *s);
-extern char *reltime(char *buf, time_t t);
+extern char *reltime(time_t t, char *buf, const size_t buf_sz);
 extern int get_client_info(char *mac, char *ifname);
 extern int resolve_addr(const char *ip, char *host);
 

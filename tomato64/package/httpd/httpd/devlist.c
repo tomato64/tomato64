@@ -242,7 +242,7 @@ wl_ifname,wl_mode,wl_radio,wl_nband,wl_wds_enable"
 					continue;
 
 				host = js_string((hostname[0] == '*') ? "" : hostname);
-				web_printf("%c['%s','%s','%s','%s']", comma, (host ? host : ""), ip, mac, ((expires == 0) ? "non-expiring" : reltime(buf, expires)));
+				web_printf("%c['%s','%s','%s','%s']", comma, (host ? host : ""), ip, mac, ((expires == 0) ? "non-expiring" : reltime(expires, buf, sizeof(buf))));
 				free(host);
 				comma = ',';
 			}
