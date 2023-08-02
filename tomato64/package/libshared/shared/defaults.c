@@ -82,6 +82,26 @@ struct nvram_tuple snmp_defaults[] = {
 };
 #endif /* TCONFIG_SNMP */
 
+struct nvram_tuple upnp_defaults[] = {
+	{ "upnp_secure",		"1"				, 0 },
+	{ "upnp_port",			"0"				, 0 },
+	{ "upnp_ssdp_interval",		"60"				, 0 },	/* SSDP interval */
+	{ "upnp_mnp",			"0"				, 0 },
+	{ "upnp_custom",		""				, 0 },
+	{ "upnp_lan",			""				, 0 },
+	{ "upnp_lan1",			""				, 0 },
+	{ "upnp_lan2",			""				, 0 },
+	{ "upnp_lan3",			""				, 0 },
+	{ "upnp_clean",			"1"				, 0 },	/* 0:Disable 1:Enable */
+	{ "upnp_clean_interval",	"600"				, 0 },	/* Cleaning interval in seconds */
+	{ "upnp_clean_threshold",	"20"				, 0 },	/* Threshold for cleaning unused rules */
+#if 0	/* disabled for miniupnpd */
+	{ "upnp_max_age",		"180"				, 0 },	/* Max age */
+	{ "upnp_config",		"0"				, 0 },
+#endif
+	{ 0, 0, 0 }
+};
+
 struct nvram_tuple router_defaults[] = {
 	{ "restore_defaults",		"0"				, 0 },	/* Set to 0 to not restore defaults on boot */
 
@@ -911,19 +931,7 @@ struct nvram_tuple router_defaults[] = {
 
 /* forward-upnp */
 	{ "upnp_enable",		"0"				, 0 },
-	{ "upnp_secure",		"1"				, 0 },
-	{ "upnp_port",			"0"				, 0 },
-	{ "upnp_ssdp_interval",		"60"				, 0 },	/* SSDP interval */
-	{ "upnp_mnp",			"0"				, 0 },
-	{ "upnp_custom",		""				, 0 },
-
-	{ "upnp_clean",			"1"				, 0 },	/* 0:Disable 1:Enable */
-	{ "upnp_clean_interval",	"600"				, 0 },	/* Cleaning interval in seconds */
-	{ "upnp_clean_threshold",	"20"				, 0 },	/* Threshold for cleaning unused rules */
-#if 0	/* disabled for miniupnpd */
-	{ "upnp_max_age",		"180"				, 0 },	/* Max age */
-	{ "upnp_config",		"0"				, 0 },
-#endif
+	/* all other upnp_xyz variables, see upnp_defaults */
 
 /* qos */
 	{ "qos_enable",			"0"				, 0 },

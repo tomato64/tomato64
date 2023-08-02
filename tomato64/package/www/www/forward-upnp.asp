@@ -28,6 +28,69 @@
 
 var upnp = new TomatoRefresh('upnp.jsx?_http_id=<% nv(http_id); %>', '', 30);
 
+nvram.upnp_enable = fixInt(nvram.upnp_enable, 0, 3, 0);
+
+var xob = null;
+
+function _upnpNvramAdd() {
+	form.submitHidden('service.cgi', { _service: 'upnp_nvram-start', _sleep: 1 });
+}
+
+function upnpNvramAdd() {
+	var sb, cb, msg;
+
+	/* short check for upnp nvram var. If OK - nothing to do! */
+	if ((nvram.upnp_secure.length > 0) &&
+	    (nvram.upnp_clean.length > 0))
+		return;
+
+	/* check already enabled? - nothing to do! */
+	if (nvram.upnp_enable > 0)
+		return;
+
+	E('_f_enable_upnp').disabled = 1;
+	E('_f_enable_natpmp').disabled = 1;
+	if ((sb = E('save-button')) != null) sb.disabled = 1;
+	if ((cb = E('cancel-button')) != null) cb.disabled = 1;
+
+	if (!confirm("Add UPNP to nvram?"))
+		return;
+
+	if (xob)
+		return;
+
+	if ((xob = new XmlHttp()) == null) {
+		_upnpNvramAdd();
+		return;
+	}
+
+	if ((msg = E('footer-msg')) != null) {
+		msg.innerHTML = 'adding nvram values...';
+		msg.style.display = 'inline';
+	}
+
+	xob.onCompleted = function(text, xml) {
+		if (msg) {
+			msg.innerHTML = 'nvram ready';
+		}
+		setTimeout(
+			function() {
+				E('_f_enable_upnp').disabled = 0;
+				E('_f_enable_natpmp').disabled = 0;
+				if (sb) sb.disabled = 0;
+				if (cb) cb.disabled = 0;
+				if (msg) msg.style.display = 'none';
+				setTimeout(reloadPage, 1000);
+		}, 5000);
+		xob = null;
+	}
+	xob.onError = function() {
+		_upnpNvramAdd();
+	}
+
+	xob.post('service.cgi', '_service=upnp_nvram-start'+'&'+'_sleep=1'+'&'+'_ajax=1');
+}
+
 upnp.refresh = function(text) {
 	try {
 		eval(text);
@@ -36,8 +99,6 @@ upnp.refresh = function(text) {
 	}
 	refresh();
 }
-
-nvram.upnp_enable = fixInt(nvram.upnp_enable, 0, 3, 0);
 
 function show() {
 	if (!isup.miniupnpd) {
@@ -227,6 +288,7 @@ function earlyInit() {
 }
 
 function init() {
+	upnpNvramAdd();
 	ug.recolor();
 	up.initPage(250, 5);
 	upnp.initPage(250, 30);
@@ -293,6 +355,13 @@ function init() {
 			{ title: 'Miniupnpd<\/a><br>Custom configuration', name: 'upnp_custom', type: 'textarea', value: nvram.upnp_custom }
 		]);
 	</script>
+</div>
+
+<div class="section-title">Notes</div>
+<div class="section">
+	<ul>
+		<li><b>NVRAM</b> - If UPnP has been enabled, nvram values will be added. Nvram values will be removed after reboot in case UPnP will be disabled.</li>
+	</ul>
 </div>
 
 <!-- / / / -->

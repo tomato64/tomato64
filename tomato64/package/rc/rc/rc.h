@@ -314,6 +314,8 @@ extern void del_ftp_defaults(void);
 extern void add_snmp_defaults(void);
 extern void del_snmp_defaults(void);
 #endif /* TCONFIG_SNMP */
+extern void add_upnp_defaults(void);
+extern void del_upnp_defaults(void);
 
 /* usb.c */
 #ifdef TCONFIG_USB

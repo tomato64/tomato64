@@ -82,6 +82,9 @@ extern struct nvram_tuple ftp_defaults[];
 #if defined(TCONFIG_SNMP) && defined(TCONFIG_BCMARM)
 extern struct nvram_tuple snmp_defaults[];
 #endif /* TCONFIG_SNMP && TCONFIG_BCMARM */
+#ifdef TCONFIG_BCMARM
+extern struct nvram_tuple upnp_defaults[];
+#endif /* TCONFIG_BCMARM */
 
 /* Pop an alarm to recheck pids in 500 msec */
 static const struct itimerval pop_tv = { {0, 0}, {0, 500 * 1000} };
@@ -228,6 +231,38 @@ void del_snmp_defaults(void)
 #endif /* TCONFIG_BCMARM */
 }
 #endif /* TCONFIG_SNMP */
+
+void add_upnp_defaults(void)
+{
+#ifdef TCONFIG_BCMARM
+	struct nvram_tuple *t;
+
+	/* Restore defaults if necessary */
+	for (t = upnp_defaults; t->name; t++) {
+		if (!nvram_get(t->name)) { /* check existence */
+			nvram_set(t->name, t->value);
+		}
+	}
+#else
+	eval("nvram", "upnp_defaults", "--add");
+#endif /* TCONFIG_BCMARM */
+}
+
+void del_upnp_defaults(void)
+{
+#ifdef TCONFIG_BCMARM
+	if (nvram_match("upnp_enable", "0")) {
+		struct nvram_tuple *t;
+
+		/* remove defaults if NOT necessary (only keep "xyz_enable" nv var.) */
+		for (t = upnp_defaults; t->name; t++) {
+			nvram_unset(t->name);
+		}
+	}
+#else
+	eval("nvram", "upnp_defaults", "--del");
+#endif /* TCONFIG_BCMARM */
+}
 
 void start_dnsmasq_wet()
 {
@@ -1678,6 +1713,8 @@ void start_upnp(void)
 	if (enable == 0)
 		return;
 
+	add_upnp_defaults(); /* backup: check nvram! */
+
 	mkdir(UPNP_DIR, 0777);
 
 	/* alternative configuration file */
@@ -2985,6 +3022,12 @@ TOP:
 		goto CLEAR;
 	}
 #endif /* TCONFIG_SNMP */
+
+	if (strcmp(service, "upnp_nvram") == 0) {
+		if (act_stop) del_upnp_defaults();
+		if (act_start) add_upnp_defaults();
+		goto CLEAR;
+	}
 
 	if (strcmp(service, "dhcpc_wan") == 0) {
 		if (act_stop) stop_dhcpc("wan");
