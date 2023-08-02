@@ -106,7 +106,7 @@ static int logok(void)
 }
 
 /* Figure out & return the logfile name. */
-void get_logfilename(char *lfn)
+void get_logfilename(char *lfn, size_t buf_sz)
 {
 	char *p;
 	char cfg[256];
@@ -127,7 +127,7 @@ void get_logfilename(char *lfn)
 		}
 	}
 	if (lfn)
-		strcpy(lfn, nv);
+		strlcpy(lfn, nv, buf_sz);
 }
 
 void wo_viewlog(char *url)
@@ -141,7 +141,7 @@ void wo_viewlog(char *url)
 	if (!logok())
 		return;
 
-	get_logfilename(lfn);
+	get_logfilename(lfn, sizeof(lfn));
 
 	if ((w = webcgi_get("which")) == NULL)
 		return;
@@ -198,7 +198,7 @@ void asp_showsyslog(int argc, char **argv)
 	if (!logok())
 		return;
 
-	get_logfilename(lfn);
+	get_logfilename(lfn, sizeof(lfn));
 
 	if (argc > 1) {
 		if ((logLines = atoi(argv[1])) <= 0)
@@ -306,7 +306,7 @@ void wo_syslog(char *url)
 	char lfn[256];
 	char s[128];
 
-	get_logfilename(lfn);
+	get_logfilename(lfn, sizeof(lfn));
 
 	if (strncmp(url, "webmon_", 7) == 0) {
 		/* web monitor */

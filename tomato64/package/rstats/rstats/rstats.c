@@ -715,7 +715,7 @@ static void calc(void)
 
 		if (sp_rtd->wan_unit > 0 && nvram_get_int("ntp_ready")) { /* Skip if this is not a primary wan interface or the time&date is not set yet */
 			if (get_wanx_proto(prefix) == WP_DISABLED) {
-				if (!sp_rtd->from_ifaceX || (nvram_get_int(strcat_r(prefix, "_islan", sbuf)) == 0)) {
+				if (!sp_rtd->from_ifaceX || (nvram_get_int(strlcat_r(prefix, "_islan", sbuf, sizeof(sbuf))) == 0)) {
 					continue;
 				}
 			}

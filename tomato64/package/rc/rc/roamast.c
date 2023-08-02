@@ -160,7 +160,7 @@ void rast_init_bssinfo(void)
 		}
 		else {
 			snprintf(bssinfo[idx].prefix, sizeof(bssinfo[idx].prefix), "wl%d_", unit);
-			bssinfo[idx].user_low_rssi = nvram_get_int(strcat_r(bssinfo[idx].prefix, "user_rssi", usr_rssi));
+			bssinfo[idx].user_low_rssi = nvram_get_int(strlcat_r(bssinfo[idx].prefix, "user_rssi", usr_rssi, sizeof(usr_rssi)));
 		}
 		idx++;
 	}
@@ -580,7 +580,7 @@ static void rast_watchdog(int sig)
 
 			if (vidx > 0) {
 				sprintf(prefix, "wl%d.%d", idx, vidx);
-				if (!nvram_match(strcat_r(prefix, "_bss_enabled", tmp), "1"))
+				if (!nvram_match(strlcat_r(prefix, "_bss_enabled", tmp, sizeof(tmp)), "1"))
 					continue;
 			}
 

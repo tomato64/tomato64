@@ -67,8 +67,8 @@ int ipup_main(int argc, char **argv)
 	if ((!wan_ifname) || (!*wan_ifname))
 		return -1;
 
-	nvram_set(strcat_r(prefix, "_iface", tmp), wan_ifname); /* ppp# */
-	nvram_set(strcat_r(prefix, "_pppd_pid", tmp), safe_getenv("PPPD_PID"));	
+	nvram_set(strlcat_r(prefix, "_iface", tmp, sizeof(tmp)), wan_ifname); /* ppp# */
+	nvram_set(strlcat_r(prefix, "_pppd_pid", tmp, sizeof(tmp)), safe_getenv("PPPD_PID"));
 
 	/* ipup receives six arguments:
 	 *   <interface name>  <tty device>  <speed> <local IP address> <remote IP address> <ipparam>
@@ -79,7 +79,7 @@ int ipup_main(int argc, char **argv)
 	f_write_string(ppplink_file, argv[1], 0, 0);
 
 	if ((p = getenv("IPREMOTE"))) {
-		nvram_set(strcat_r(prefix, "_gateway_get", tmp), p);
+		nvram_set(strlcat_r(prefix, "_gateway_get", tmp, sizeof(tmp)), p);
 		logmsg(LOG_DEBUG, "*** %s: set %s_gateway_get=%s", __FUNCTION__, prefix, p);
 	}
 
@@ -90,25 +90,25 @@ int ipup_main(int argc, char **argv)
 			case WP_PPPOE:
 			case WP_PPP3G:
 				if ((proto == WP_PPPOE) && using_dhcpc(prefix)) /* PPPoE with DHCP MAN */
-					nvram_set(strcat_r(prefix, "_ipaddr_buf", tmp), nvram_safe_get(strcat_r(prefix, "_ppp_get_ip", tmp)));
+					nvram_set(strlcat_r(prefix, "_ipaddr_buf", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_ppp_get_ip", tmp, sizeof(tmp))));
 				else { /* PPPoE / 3G */
-					nvram_set(strcat_r(prefix, "_ipaddr_buf", tmp), nvram_safe_get(strcat_r(prefix, "_ipaddr", tmp)));
-					nvram_set(strcat_r(prefix, "_ipaddr", tmp), value);
+					nvram_set(strlcat_r(prefix, "_ipaddr_buf", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_ipaddr", tmp, sizeof(tmp))));
+					nvram_set(strlcat_r(prefix, "_ipaddr", tmp, sizeof(tmp)), value);
 				}
 				break;
 			case WP_PPTP:
 			case WP_L2TP:
-				nvram_set(strcat_r(prefix, "_ipaddr_buf", tmp), nvram_safe_get(strcat_r(prefix, "_ppp_get_ip", tmp)));
+				nvram_set(strlcat_r(prefix, "_ipaddr_buf", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_ppp_get_ip", tmp, sizeof(tmp))));
 				break;
 		}
 
 		/* set netmask in nvram only if not already set (MAN) */
-		if (nvram_match(strcat_r(prefix, "_netmask", tmp), "0.0.0.0"))
-			nvram_set(strcat_r(prefix, "_netmask", tmp), "255.255.255.255");
+		if (nvram_match(strlcat_r(prefix, "_netmask", tmp, sizeof(tmp)), "0.0.0.0"))
+			nvram_set(strlcat_r(prefix, "_netmask", tmp, sizeof(tmp)), "255.255.255.255");
 
-		if (!nvram_match(strcat_r(prefix, "_ppp_get_ip", tmp), value)) {
+		if (!nvram_match(strlcat_r(prefix, "_ppp_get_ip", tmp, sizeof(tmp)), value)) {
 			ifconfig(wan_ifname, IFUP, "0.0.0.0", NULL);
-			nvram_set(strcat_r(prefix, "_ppp_get_ip", tmp), value);
+			nvram_set(strlcat_r(prefix, "_ppp_get_ip", tmp, sizeof(tmp)), value);
 		}
 
 		_ifconfig(wan_ifname, IFUP, value, "255.255.255.255", (p && (*p)) ? p : NULL, 0);
@@ -122,14 +122,14 @@ int ipup_main(int argc, char **argv)
 			strlcat(buf, " ", sizeof(buf));
 		strlcat(buf, p, sizeof(buf));
 	}
-	nvram_set(strcat_r(prefix, "_get_dns", tmp), buf);
+	nvram_set(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp)), buf);
 
 	if ((value = getenv("AC_NAME")))
-		nvram_set(strcat_r(prefix, "_ppp_get_ac", tmp), value);
+		nvram_set(strlcat_r(prefix, "_ppp_get_ac", tmp, sizeof(tmp)), value);
 	if ((value = getenv("SRV_NAME")))
-		nvram_set(strcat_r(prefix, "_ppp_get_srv", tmp), value);
+		nvram_set(strlcat_r(prefix, "_ppp_get_srv", tmp, sizeof(tmp)), value);
 	if ((value = getenv("MTU")))
-		nvram_set(strcat_r(prefix, "_run_mtu", tmp), value);
+		nvram_set(strlcat_r(prefix, "_run_mtu", tmp, sizeof(tmp)), value);
 
 	logmsg(LOG_DEBUG, "*** OUT %s: to start_wan_done, ifname=%s prefix=%s ...", __FUNCTION__, wan_ifname, prefix);
 	start_wan_done(wan_ifname, prefix);
@@ -167,55 +167,55 @@ int ipdown_main(int argc, char **argv)
 
 	if ((proto == WP_L2TP) || (proto == WP_PPTP)) {
 		/* clear dns from the resolv.conf */
-		nvram_set(strcat_r(prefix, "_get_dns", tmp), "");
+		nvram_set(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp)), "");
 		dns_to_resolv();
 
 		if (proto == WP_L2TP) {
-			if (inet_pton(AF_INET, nvram_safe_get(strcat_r(prefix, "_l2tp_server_ip", tmp)), &(ipaddr.s_addr))) {
-				route_del(nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), 0, nvram_safe_get(strcat_r(prefix, "_l2tp_server_ip", tmp)), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)), "255.255.255.255"); /* fixed routing problem in Israel */
-				logmsg(LOG_DEBUG, "*** %s: route_del(%s, 0, %s, %s, 255.255.255.255)", __FUNCTION__, nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), nvram_safe_get(strcat_r(prefix, "_l2tp_server_ip", tmp)), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)));
+			if (inet_pton(AF_INET, nvram_safe_get(strlcat_r(prefix, "_l2tp_server_ip", tmp, sizeof(tmp))), &(ipaddr.s_addr))) {
+				route_del(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, nvram_safe_get(strlcat_r(prefix, "_l2tp_server_ip", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))), "255.255.255.255"); /* fixed routing problem in Israel */
+				logmsg(LOG_DEBUG, "*** %s: route_del(%s, 0, %s, %s, 255.255.255.255)", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_l2tp_server_ip", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
 			}
 		}
 
 		if (proto == WP_PPTP) {
-			if (inet_pton(AF_INET, nvram_safe_get(strcat_r(prefix, "_pptp_server_ip", tmp)), &(ipaddr.s_addr))) {
-				route_del(nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), 0, nvram_safe_get(strcat_r(prefix, "_pptp_server_ip", tmp)), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)), "255.255.255.255");
-				logmsg(LOG_DEBUG, "*** %s: route_del(%s, 0, %s, %s, 255.255.255.255)", __FUNCTION__, nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), nvram_safe_get(strcat_r(prefix, "_pptp_server_ip", tmp)), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)));
+			if (inet_pton(AF_INET, nvram_safe_get(strlcat_r(prefix, "_pptp_server_ip", tmp, sizeof(tmp))), &(ipaddr.s_addr))) {
+				route_del(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, nvram_safe_get(strlcat_r(prefix, "_pptp_server_ip", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))), "255.255.255.255");
+				logmsg(LOG_DEBUG, "*** %s: route_del(%s, 0, %s, %s, 255.255.255.255)", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_pptp_server_ip", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
 			}
 		}
 
-		if (!nvram_get_int(strcat_r(prefix, "_ppp_demand", tmp))) { /* don't setup temp gateway for demand connections */
+		if (!nvram_get_int(strlcat_r(prefix, "_ppp_demand", tmp, sizeof(tmp)))) { /* don't setup temp gateway for demand connections */
 			/* restore the default gateway for WAN interface */
-			nvram_set(strcat_r(prefix, "_gateway_get", tmp), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)));
-			logmsg(LOG_DEBUG, "*** %s: restore default gateway: nvram_set(%s_gateway_get, %s)", __FUNCTION__, prefix, nvram_safe_get(strcat_r(prefix, "_gateway", tmp)));
+			nvram_set(strlcat_r(prefix, "_gateway_get", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
+			logmsg(LOG_DEBUG, "*** %s: restore default gateway: nvram_set(%s_gateway_get, %s)", __FUNCTION__, prefix, nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
 
 			if (mwan_num == 1) {
 				/* set default route to gateway if specified */
-				route_del(nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), 0, "0.0.0.0", nvram_safe_get(strcat_r(prefix, "_gateway", tmp)), "0.0.0.0");
-				route_add(nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), 0, "0.0.0.0", nvram_safe_get(strcat_r(prefix, "_gateway", tmp)), "0.0.0.0");
-				logmsg(LOG_DEBUG, "*** %s: route_add(%s, 0, 0.0.0.0, %s, 0.0.0.0)", __FUNCTION__, nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)));
+				route_del(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, "0.0.0.0", nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))), "0.0.0.0");
+				route_add(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, "0.0.0.0", nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))), "0.0.0.0");
+				logmsg(LOG_DEBUG, "*** %s: route_add(%s, 0, 0.0.0.0, %s, 0.0.0.0)", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
 			}
 		}
 
 		/* unset received DNS entries (BAD for PPTP/L2TP here, it needs DNS on reconnect!) */
-		//nvram_set(strcat_r(prefix, "_get_dns", tmp), "");
+		//nvram_set(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp)), "");
 	}
 
 	/* don't kill all, only this wan listener!
 	 * normally listen quits as link established
 	 * and only one instance will run for a wan
 	 */
-	if (nvram_get_int(strcat_r(prefix, "_ppp_demand", tmp)))
+	if (nvram_get_int(strlcat_r(prefix, "_ppp_demand", tmp, sizeof(tmp))))
 		eval("listen", nvram_safe_get("lan_ifname"), prefix);
 
 	mwan_load_balance();
 
 	/* unset netmask in nvram only if equal to 255.255.255.255 (no MAN) */
-	if (nvram_match(strcat_r(prefix, "_netmask", tmp), "255.255.255.255"))
-		nvram_set(strcat_r(prefix, "_netmask", tmp), "0.0.0.0");
+	if (nvram_match(strlcat_r(prefix, "_netmask", tmp, sizeof(tmp)), "255.255.255.255"))
+		nvram_set(strlcat_r(prefix, "_netmask", tmp, sizeof(tmp)), "0.0.0.0");
 
 	/* don't clear active interface from nvram on disconnect. iface mandatory for mwan load balance */
-	nvram_set(strcat_r(prefix, "_pppd_pid", tmp),"");
+	nvram_set(strlcat_r(prefix, "_pppd_pid", tmp, sizeof(tmp)),"");
 
 	/* WAN LED control */
 	wan_led_off(prefix);
@@ -254,8 +254,8 @@ int ip6up_main(int argc, char **argv)
 		return -1;
 
 	/* check nvram wan_iface for case "none" (re-connect) or NUL */
-	if (nvram_match(strcat_r(prefix, "_iface", tmp), "none") || nvram_match(strcat_r(prefix, "_iface", tmp), ""))
-		nvram_set(strcat_r(prefix, "_iface", tmp), wan_ifname); /* set interface pppX in case ipup_main() not yet (or later) called */
+	if (nvram_match(strlcat_r(prefix, "_iface", tmp, sizeof(tmp)), "none") || nvram_match(strlcat_r(prefix, "_iface", tmp, sizeof(tmp)), ""))
+		nvram_set(strlcat_r(prefix, "_iface", tmp, sizeof(tmp)), wan_ifname); /* set interface pppX in case ipup_main() not yet (or later) called */
 
 	if ((value = getenv("LLREMOTE")))
 		nvram_set("ipv6_llremote", value); /* set ipv6 llremote address */

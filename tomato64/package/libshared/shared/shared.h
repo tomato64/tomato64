@@ -65,13 +65,6 @@
 #define _dprintf(args...)	do { } while(0)
 #endif
 
-static inline char *strlcat_r(const char *s1, const char *s2, char *buf, const size_t buf_len)
-{
-	strlcpy(buf, s1, buf_len);
-	strlcat(buf, s2, buf_len);
-	return buf;
-}
-
 /* version.c */
 extern const char *tomato_version;
 extern const char *tomato_buildtime;

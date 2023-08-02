@@ -485,19 +485,19 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 	if (wds && wds_wsec)
 		strncpy(info->ssid, wds_ssid, MAX_SSID_LEN);
 	else {
-		value = nvram_safe_get(strcat_r(wl_prefix, "ssid", comb));
+		value = nvram_safe_get(strlcat_r(wl_prefix, "ssid", comb, sizeof(comb)));
 		strncpy(info->ssid, value, MAX_SSID_LEN);
 	}
 	/* auth */
-	if (nvram_match(strcat_r(wl_prefix, "auth", comb), "1"))
+	if (nvram_match(strlcat_r(wl_prefix, "auth", comb, sizeof(comb)), "1"))
 		info->auth = 1;
 	/* nas auth mode */
-	value = nvram_safe_get(strcat_r(wl_prefix, "auth_mode", comb));
+	value = nvram_safe_get(strlcat_r(wl_prefix, "auth_mode", comb, sizeof(comb)));
 	info->akm = !strcmp(value, "radius") ? WLIFU_AUTH_RADIUS : 0;
 	if (wds && wds_wsec)
 		akms = wds_akms;
 	else
-		akms = nvram_safe_get(strcat_r(wl_prefix, "akm", comb));
+		akms = nvram_safe_get(strlcat_r(wl_prefix, "akm", comb, sizeof(comb)));
 	foreach(akm, akms, akmnext) {
 		if (!strcmp(akm, "wpa"))
 			info->akm |= WPA_AUTH_UNSPECIFIED;
@@ -509,12 +509,12 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 			info->akm |= WPA2_AUTH_PSK;
 	}
 	/* wsec encryption */
-	value = nvram_safe_get(strcat_r(wl_prefix, "wep", comb));
+	value = nvram_safe_get(strlcat_r(wl_prefix, "wep", comb, sizeof(comb)));
 	info->wsec = !strcmp(value, "enabled") ? WEP_ENABLED : 0;
 	if (wds && wds_wsec)
 		value = wds_crypto;
 	else
-		value = nvram_safe_get(strcat_r(wl_prefix, "crypto", comb));
+		value = nvram_safe_get(strlcat_r(wl_prefix, "crypto", comb, sizeof(comb)));
 	if (CHECK_NAS(info->akm)) {
 		if (!strcmp(value, "tkip"))
 			info->wsec |= TKIP_ENABLED;
@@ -524,8 +524,8 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 			info->wsec |= TKIP_ENABLED|AES_ENABLED;
 	}
 	/* nas role setting, may overwrite later in wds case */
-	value = nvram_safe_get(strcat_r(wl_prefix, "mode", comb));
-	infra = nvram_safe_get(strcat_r(wl_prefix, "infra", comb));
+	value = nvram_safe_get(strlcat_r(wl_prefix, "mode", comb, sizeof(comb)));
+	infra = nvram_safe_get(strlcat_r(wl_prefix, "infra", comb, sizeof(comb)));
 	if (!strcmp(value, "ap")) {
 		info->flags |= WLIFU_WSEC_AUTH;
 	}
@@ -596,53 +596,53 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 			info->psk[MAX_USER_KEY_LEN] = 0;
 		}
 		else {
-			value = nvram_safe_get(strcat_r(wl_prefix, "wpa_psk", comb));
+			value = nvram_safe_get(strlcat_r(wl_prefix, "wpa_psk", comb, sizeof(comb)));
 			strncpy((char *)info->psk, value, MAX_USER_KEY_LEN);
 			info->psk[MAX_USER_KEY_LEN] = 0;
 		}
 	}
 	/* user-supplied radius server secret */
 	if (CHECK_RADIUS(info->akm))
-		info->secret = nvram_safe_get(strcat_r(wl_prefix, "radius_key", comb));
+		info->secret = nvram_safe_get(strlcat_r(wl_prefix, "radius_key", comb, sizeof(comb)));
 	/* AP specific settings */
-	value = nvram_safe_get(strcat_r(wl_prefix, "mode", comb));
+	value = nvram_safe_get(strlcat_r(wl_prefix, "mode", comb, sizeof(comb)));
 	if (!strcmp(value, "ap")) {
 		/* gtk rekey interval */
 		if (CHECK_NAS(info->akm)) {
-			value = nvram_safe_get(strcat_r(wl_prefix, "wpa_gtk_rekey", comb));
+			value = nvram_safe_get(strlcat_r(wl_prefix, "wpa_gtk_rekey", comb, sizeof(comb)));
 			info->gtk_rekey_secs = (int)strtoul(value, NULL, 0);
 		}
 		/* wep key */
 		if (info->wsec & WEP_ENABLED) {
 			/* key index */
-			value = nvram_safe_get(strcat_r(wl_prefix, "key", comb));
+			value = nvram_safe_get(strlcat_r(wl_prefix, "key", comb, sizeof(comb)));
 			info->wep_index = (int)strtoul(value, NULL, 0);
 			/* key */
-			sprintf(key, "key%s", nvram_safe_get(strcat_r(wl_prefix, "key", comb)));
-			info->wep_key = nvram_safe_get(strcat_r(wl_prefix, key, comb));
+			sprintf(key, "key%s", nvram_safe_get(strlcat_r(wl_prefix, "key", comb, sizeof(comb))));
+			info->wep_key = nvram_safe_get(strlcat_r(wl_prefix, key, comb, sizeof(comb)));
 		}
 		/* radius server host/port */
 		if (CHECK_RADIUS(info->akm)) {
 			/* update radius server address */
-			info->radius_addr = nvram_safe_get(strcat_r(wl_prefix, "radius_ipaddr",
-			                                            comb));
-			value = nvram_safe_get(strcat_r(wl_prefix, "radius_port", comb));
+			info->radius_addr = nvram_safe_get(strlcat_r(wl_prefix, "radius_ipaddr",
+			                                            comb, sizeof(comb)));
+			value = nvram_safe_get(strlcat_r(wl_prefix, "radius_port", comb, sizeof(comb)));
 			info->radius_port = htons((int)strtoul(value, NULL, 0));
 			/* 802.1x session timeout/pmk cache duration */
-			value = nvram_safe_get(strcat_r(wl_prefix, "net_reauth", comb));
+			value = nvram_safe_get(strlcat_r(wl_prefix, "net_reauth", comb, sizeof(comb)));
 			info->ssn_to = (int)strtoul(value, NULL, 0);
 		}
 	}
 	/* preauth */
-	value = nvram_safe_get(strcat_r(wl_prefix, "preauth", comb));
+	value = nvram_safe_get(strlcat_r(wl_prefix, "preauth", comb, sizeof(comb)));
 	info->preauth = (int)strtoul(value, NULL, 0);
 
 	/* verbose */
-	value = nvram_safe_get(strcat_r(wl_prefix, "nas_dbg", comb));
+	value = nvram_safe_get(strlcat_r(wl_prefix, "nas_dbg", comb, sizeof(comb)));
 	info->debug = (int)strtoul(value, NULL, 0);
 
 	/* get mfp setting */
-	info->mfp = atoi(nvram_safe_get(strcat_r(wl_prefix, "mfp", comb)));
+	info->mfp = atoi(nvram_safe_get(strlcat_r(wl_prefix, "mfp", comb, sizeof(comb))));
 
 	return WLIFU_WSEC_SUCCESS;
 }
