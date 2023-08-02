@@ -29,6 +29,7 @@ Cloudflare 1 (family),1.1.1.3,,family.cloudflare-dns.com,,IPv4
 Cloudflare 2 (family),1.0.0.3,,family.cloudflare-dns.com,,IPv4
 Cloudflare 1 (security),1.1.1.2,,security.cloudflare-dns.com,,IPv4
 Cloudflare 2 (security),1.0.0.2,,security.cloudflare-dns.com,,IPv4
+Getdnsapi,185.49.141.37,,getdnsapi.net,foxZRnIh9gZpWnl+zEiKa0EJ2rdCGroMWm02gaxSc9Q=,IPv4
 Google 1,8.8.8.8,,dns.google,,IPv4
 Google 2,8.8.4.4,,dns.google,,IPv4
 Mullvad,194.242.2.2,,doh.mullvad.net,,IPv4
