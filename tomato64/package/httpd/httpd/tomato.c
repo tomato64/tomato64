@@ -892,6 +892,9 @@ static const nvset_t nvset_list[] = {
 #ifdef CONFIG_BCMWL6
 	{ "wl_mitigation_ac",		V_RANGE(0, 7)			},	/* AC Interference Mitigation Mode (bit mask (3 bits), values from 0 to 7) */
 #endif
+#ifdef TCONFIG_BCMARM
+	{ "wl_optimizexbox",		V_01				},	/* Optimize WiFi packet for Xbox; wl driver default setting: ldpc_cap is set to 1 (optimizexbox = 0) */
+#endif
 	{ "wl_nmode_protection",	V_WORD,				},	/* off, auto */
 	{ "wl_nmcsidx",			V_RANGE(-2, 32),		},	/* -2 - 32 */
 	{ "wl_obss_coex",		V_01				},

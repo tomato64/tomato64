@@ -486,6 +486,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "wl_mitigation",		"0"				, 0 },	/* Non-AC Interference Mitigation Mode (0|1|2|3|4) */
 #ifdef TCONFIG_BCMARM
 	{ "wl_mitigation_ac",		"0"				, 0 },	/* AC Interference Mitigation Mode (bit mask (3 bits), values from 0 to 7); 0 == disabled */
+	{ "wl_optimizexbox",		"0"				, 0 },	/* Optimize WiFi packet for Xbox; wl driver default setting: ldpc_cap is set to 1 (optimizexbox = 0) */
 #endif
 	{ "wl_passphrase",		""				, 0 },	/* Passphrase */
 	{ "wl_wep_bit",			"128"				, 0 },	/* WEP encryption [64 | 128] */
