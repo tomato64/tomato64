@@ -1,12 +1,10 @@
 #!/bin/sh
-#
 # Adblock (a.k.a. DNS-filtering) FreshTomato GUI back-end
-#
-ver="v2.71u - 03/23" # rs232
+ver="v2.72 - 04/23" # rs232
 PID=$$
 pidfile="/var/run/adblock.pid"
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
-
+pre=$(date +%s)
 alias only="sed -e 's/^[ \t]*//' | grep -Ev '^($|#|!)'"
 
 hashblack() {
@@ -21,7 +19,6 @@ hashwhite() {
 	echo $hw | tr " " "\n" | grep -Ev '^($|#|!)'
 }
 
-pre=$(date +%s)
 [ $(nvram get adblock_logs | wc -c) -gt 0 ] && { LOGL=$(nvram get adblock_logs); } || { LOGL=3; }
 alias logo='logger -p NOTICE -t adblock[$PID]'
 [ $LOGL -ge 7 ] && alias logd='logger -p DEBUG -t adblock[$PID]' || alias logd=':'
@@ -32,11 +29,11 @@ alias logo='logger -p NOTICE -t adblock[$PID]'
 ( [ $LOGL -eq 7 ] && [ $# -eq 0 ] ) || ( [ $LOGL -eq 7 ] && [ $1 == update -o $1 == start ] ) && { exec 2>/tmp/adblock.debug.output.${pre} ; set -x; echo "Running in trace mode: /tmp/adblock.debug.output.${pre}"; } || set -
 DNS_TIME="/tmp/dnsmasq.time"
 
-dnsrestart() { time -o $DNS_TIME -f'%e's service dnsmasq restart &>/dev/null && { [ ${LOGL} -ge 6 -a -f ${DNS_TIME} ] && { logi "dnsmasq restart time = $(cat $DNS_TIME)" ;} ;} }
+dnsrestart() { pr=$(cat /proc/uptime | cut -f1 -d' ') ; service dnsmasq restart &>/dev/null && { echo $(cat /proc/uptime | cut -f1 -d ' ' ) $pr | awk '{print $1 - $2 "s"}' > ${DNS_TIME} ; [ ${LOGL} -ge 6 -a -f ${DNS_TIME} ] && { sleep 1; logi "dnsmasq restart time = $(cat $DNS_TIME)" ;} ;} ;}
 
 ( [ -f $pidfile ] && [ $# -eq 0 -o $1 == start -o $1 == update ] ) && {
-	# If the pidfile is older than 90 min this is very likely and issue = remove it.
-	[ $((($(date +%s) - $(date -r ${pidfile} +%s))/60)) -gt 90 ] && {
+	# If the pidfile is older than $hold min this is very likely and issue = remove it.
+	[ $((($(date +%s) - $(date -r ${pidfile} +%s))/60)) -gt $hold ] && {
 		rm -f $pidfile
 		for process in $(ps | grep [a]dblock | grep -v "status\|$PID" | awk '{print $1}'); do (kill -9 $process) &>/dev/null ; done
 		dnsrestart
@@ -55,9 +52,10 @@ alias yget="wget --no-check-certificate -T 15 $Q -U \"$USERAGENT\" --header \"Ca
 alias domain="sed 's/[#!].*//' | grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+[a-zA-Z]{2,6}'| grep -vEi '\.gif$|\.jpe?g$|\.png$|\.jsp?$|\.css$|\.ico$|\.aspx?$|\.php$|\.cer$|\.cfm$|\.cgi$|\.x?html?$|\.py$|\.rss$|\.vb$|\.sh$|\.json$'"
 alias notin="grep -Ev '^#.*|^!.*|^::|^\s*?$|^([a-f0-9:]+:+)+[a-f0-9]+'"
 alias number="sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'"
+hold=30
 [ $(nvram get adblock_path | wc -c) -gt 0 ] && {
 	nvram get adblock_path | grep -Eq '^/jffs' && logw "Custom path is pointing to JFFS, this is not ideal. Consider using alternative storages like USB/CIFS/etc."
-	DPATH=$(echo $(echo $(nvram get adblock_path) | sed 's/\/$//')/adblock); mkdir -p "$DPATH"; } || DPATH="/etc"
+	DPATH="$(nvram get adblock_path | sed 's/\/$//')/adblock" ; mkdir -p "$DPATH"; } || DPATH="/etc"
 
 sizeLimit=$(nvram get adblock_limit)
 setlimit() {
@@ -97,6 +95,7 @@ yellow="\033[48;2;33m"
 latest=0
 current=$(echo $ver | cut -c-6)
 UURL="https://bitbucket.org/rs232-/freshtomato-arm/downloads/adblock.rs232"
+extra="$(nvram get adblock_path | sed 's/\/$//')/adblock.extra" ; [ -s "$extra" ] && { [ $(ls -l $extra | cut -c4,7,10) != "xxx" ] && { chmod +x $extra ;} ; . "$extra"; }
 
 checkList() { # 0=fetch_local / 1=download / 2=issues / 3=duplicated
 	urinameh=$(echo "${4}".header)
@@ -201,7 +200,7 @@ download() {
 				grep -qxvFf /tmp/adblock.nowb /tmp/adblock.thenb && {
 					restb=1
 					} || {
-					# Something added? Is so process in swift-run
+					# Something added? Is so process in quick-run
 						grep -qxvFf /tmp/adblock.thenb /tmp/adblock.nowb && {
 							# for i in $(grep -xvFf /tmp/adblock.thenb /tmp/adblock.nowb); do sed -i "1s/^/local=\/$i\/\n/" $FINAL; done
 							restb=2
@@ -216,7 +215,7 @@ download() {
 				grep -qxvFf /tmp/adblock.noww /tmp/adblock.thenw && {
 					restw=1
 					} || {
-					# Something added? Is so process in swift-run
+					# Something added? Is so process in quick-run
 						grep -qxvFf /tmp/adblock.thenw /tmp/adblock.noww && {
 							restw=2
 						}
@@ -238,14 +237,14 @@ download() {
 	elif [ $restb -eq 2 -o $restw -eq 2 ]; then
 		[ $restb -eq 2 ] && {
 			for i in $(grep -xvFf /tmp/adblock.thenb /tmp/adblock.nowb); do
-				logi "Addition in the blacklist_custom detected. Executing swift-run."
-				echo "Addition in the blacklist_custom detected. Executing swift-run."
+				logi "Addition in the blacklist_custom detected. Executing quick-run."
+				echo "Addition in the blacklist_custom detected. Executing quick-run."
 				grep -q "/$i/" $FINAL || echo "local=/$i/" >> $FINAL; done
 			}
 		[ $restw -eq 2 ] && {
 			for i in $(grep -xvFf /tmp/adblock.thenw /tmp/adblock.noww); do
-				logi "Addition in the whitelist detected. Executing swift-run."
-				echo "Addition in the whitelist detected. Executing swift-run."
+				logi "Addition in the whitelist detected. Executing quick-run."
+				echo "Addition in the whitelist detected. Executing quick-run."
 				sed -i "/local=\/$i\//d" $FINAL; done
 			}
 		rm -f ${VRFY}
@@ -275,6 +274,10 @@ download() {
 				logi "[$COUNT][$URL] The list is already updated. No download needed. Loading from storage."
 			elif [ $listresult -eq 0 -a $ramresult -eq 1 ]; then
 				logw "[$COUNT][$URL] The list is already updated, but checkRam() failed. Skipping..."
+				erroradd
+				continue
+			elif [ $listresult -eq 1 -a $ramresult -eq 1 ]; then
+				logw "[$COUNT][$URL] The would require a download, but checkRam() failed. Skipping..."
 				erroradd
 				continue
 			elif [ $listresult -eq 2 ]; then
@@ -666,7 +669,7 @@ if [ "$1" == "status" ]; then
   │                                                   │
   ├───── Dnsmasq ─────────────────────────────────────┤
 
-          Running = $(echo $([ -f "/var/run/dnsmasq.pid" ] && echo "yes" || echo "${red}no${black}"))
+          Running = $([ -f "/var/run/dnsmasq.pid" ] && echo "yes" || echo "${red}no${black}")
             Owner = $([ $(ps | grep '[d]nsmasq.*async$' | awk '{print $2}') == "root" ] && echo "${red}root${black}" || echo "nobody" )
    Restarts today = $(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep -E '.*dnsmasq\[.*exiting' | wc -l )
      Restart time = $([ -f $DNS_TIME ] && cat $DNS_TIME || echo "N/A")
@@ -677,32 +680,32 @@ if [ "$1" == "status" ]; then
       Calls today = $(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep "Kick off" | wc -l )
          Activity = $([ -f ${pidfile} ] && { [ -f ${VRFY} ] && echo "${white}Checking...${black}" || echo "${white}Running...${black}" ;} || echo "Idle" )
        Last trace = $([ $LOGL -eq 7 -a $(ls -1tr /tmp/adblock.debug.output.* 2>/dev/null | tail -1 | wc -l ) -gt 0 ] && echo $(ls -1tr /tmp/adblock.debug.output.* | tail -1) )
-        Hold-time = $([ -s $CHK_FILE -a -s $FINAL ] && { HOLD_LEFT=$(( 30 - ($(date +%s) - $(date -r "$FINAL" +%s)) /60 )) ; [ "$HOLD_LEFT" -le 30 -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $(cat ${CHK_FILE} | grep md5black | grep -Eo ^[a-zA-Z0-9]{32}) ] && echo -e "${white}On${black} ~ ${HOLD_LEFT}min left" || echo "off" ;} || echo "off" )
+        Hold-time = $([ -s $CHK_FILE -a -s $FINAL ] && { HOLD_LEFT=$(( ${hold} - ($(date +%s) - $(date -r "$FINAL" +%s)) /60 )) ; [ "$HOLD_LEFT" -le ${hold} -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $(cat ${CHK_FILE} | grep md5black | grep -Eo ^[a-zA-Z0-9]{32}) ] && echo -e "${white}On${black} ~ ${HOLD_LEFT}min left" || echo "off" ;} || echo "off" )
 
   ├──── Blockfile ────────────────────────────────────┤"
 	if [ -s "$FINAL" ]; then echo -e "
             State = Loaded
       Destination = $DPATH
-       References = $(echo $(wc -l < $FINAL| number ) Domains)
-        File size = $(echo $(wc -c < $FINAL| number ) Bytes)
-     Maximum size = $(echo $(echo $max) Bytes)
-        File date = $(echo $(ls -lah $FINAL | awk '{print $8" on "$7" "$6}'))
+       References = $(wc -l < $FINAL| number ) Domains
+        File size = $(wc -c < $FINAL| number ) Bytes
+     Maximum size = $(echo $max) Bytes
+        File date = $(ls -lah $FINAL | awk '{print $8" on "$7" "$6}')
    "
 	elif [ -s "$UNLOADED" ]; then echo -e "
             State = ${grey}Parked${black}
       Destination = $DPATH
-       References = $(echo $(wc -l < $UNLOADED| number) Domains)
-        File size = $(echo $(ls -l $UNLOADED | awk '{ print $5}' | number ) Bytes)
-     Maximum size = $(echo $(echo $max) Bytes)
-        File date = $(echo $(ls -lah $UNLOADED | awk '{print $8" on "$7" "$6}'))
+       References = $(wc -l < $UNLOADED| number) Domains
+        File size = $(ls -l $UNLOADED | awk '{ print $5}' | number ) Bytes
+     Maximum size = $max Bytes
+        File date = $(ls -lah $UNLOADED | awk '{print $8" on "$7" "$6}')
    "
 	elif [ -f "$TM" ]; then echo -e "
             State = ${white}Loading...${black}
       Destination = $DPATH
-       References = $(echo $(wc -l < $TM| number) Domains)
-        File size = $(echo $(ls -l $TM | awk '{ print $5}' | number ) Bytes)
-     Maximum size = $(echo $(echo $max) Bytes)
-        File date = $(echo $(ls -lah $TM | awk '{print $8" on "$7" "$6}'))
+       References = $(wc -l < $TM| number) Domains
+        File size = $(ls -l $TM | awk '{ print $5}' | number ) Bytes
+     Maximum size = $max Bytes
+        File date = $(ls -lah $TM | awk '{print $8" on "$7" "$6}')
    "
 	fi
 	echo "  └───────────────────────────────────────────────────┘
@@ -720,7 +723,7 @@ elif [ "$1" == "status-gui" ]; then
 	rampb=$(( $ramb * 100 / $ramt ))
 	echo -e "Version: ${ver:0:6}<br>
 System Load = $(cat /proc/loadavg | awk '{print "<b>"$1" / "$2" / "$3"</b>"}')<br>
-Ram Used/Cache/Buffer / Total = <b>${rampu}% ~ $(echo $ramu | number)</b>/$(echo $ramc | number)/$(echo $ramb | number)<b> / $(echo $ramt | number) Bytes</b><br>
+Ram Used/Cache/Buffer / Total = <b>${rampu}% ~ $(echo $ramu | number)</b>/$(echo $ramc | number)/$(echo $ramb | number)<b> / $(echo $ramt | number) KBytes</b><br>
 <div class=\"progress-container\" style=\"width:400px;float:left;display:flex;flex:1\">
 <div class=\"progress-bar\" style=\"background-color:#005691;width: ${rampu}%\"></div>
 <div class=\"progress-bar\" style=\"background-color:#CDA5F3;width: ${rampc}%\"></div>
@@ -745,7 +748,7 @@ Blockfile size/limit = <b>${filp}% ~ $(wc -c < $FINAL| number) / $(echo $max | n
 <div class=\"progress-wrapper\"><div class=\"progress-container\" style=\"width:400px\"><div class=\"progress-bar\" style=\"background-color:#005691;width: ${filp}%\"></div></div></div><br>"
 	}
 	[ $LOGL -eq 7 ] && { echo -e "✏️ Running in trace mode" ; [ $(ls -1tr /tmp/adblock.debug.output.* 2>/dev/null | tail -1 | wc -l) -gt 0 ] && { echo ", output redirected to <code>$(ls -1tr /tmp/adblock.debug.output.* | tail -1)</code><br>"; } ;}
-	[ -s $CHK_FILE -a -s $FINAL ] && { HOLD_LEFT=$(( 30 - ($(date +%s) - $(date -r "$FINAL" +%s)) /60 )) ; [ "$HOLD_LEFT" -le 30 -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $(cat ${CHK_FILE} | grep md5black | grep -Eo ^[a-zA-Z0-9]{32}) ] && echo -e "⏲️ 30min hold-time is active. ${HOLD_LEFT}min left<br>" ;}
+	[ -s $CHK_FILE -a -s $FINAL ] && { HOLD_LEFT=$(( $hold - ($(date +%s) - $(date -r "$FINAL" +%s)) /60 )) ; [ "$HOLD_LEFT" -le $hold -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $(cat ${CHK_FILE} | grep md5black | grep -Eo ^[a-zA-Z0-9]{32}) ] && echo -e "⏲️ ${hold}min hold-time is active. ${HOLD_LEFT}min left<br>" ;}
 	exit
 elif [ "$1" == "reset" ]; then
 	nvram unset adblock_limit
@@ -889,24 +892,23 @@ elif [ "$1" == "snapshot" ]; then
 elif [ "$1" == "update" -o "$1" == "start" -o $# -eq 0 ]; then
 	if [ "$ENABLE" -eq "1" ]; then {
 		[ ! -f $pidfile ] && echo $PID > $pidfile
-#		while [ $(cut -f1 -d. /proc/uptime) -lt 90 ]; do sleep 5; done
 		while [ $(date +%Y) -lt 2022 ]; do { sleep 5; pre=$(date +%s); } done
 		[ -s "$FINAL" ] && {
-			HOLD_LEFT=$(( 30 - ($(date +%s) - $(date -r "$FINAL" +%s)) /60))
-			[ "$HOLD_LEFT" -lt 30 -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { grep 'md5black' "${CHK_FILE}" | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $(hashwhite | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { cat ${CHK_FILE} | grep md5white | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $( [ -s ${ADHEAD} ] && { cat ${ADHEAD} | grep -Ev ' 0$' | wc -l; } || echo 1 ) -eq 0 ]  && {
-				logw "The last update was performed less then 30min ago (${HOLD_LEFT}min left) and no modification to the config have been detected since. Skipping script execution for now..."
-				echo "The last update was performed less then 30min ago (${HOLD_LEFT}min left) and no modification to the config have been detected since. Skipping script execution for now..."
+			HOLD_LEFT=$(( $hold - ($(date +%s) - $(date -r "$FINAL" +%s)) /60))
+			[ "$HOLD_LEFT" -lt $hold -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { grep 'md5black' "${CHK_FILE}" | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $(hashwhite | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { cat ${CHK_FILE} | grep md5white | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $( [ -s ${ADHEAD} ] && { cat ${ADHEAD} | grep -Ev ' 0$' | wc -l; } || echo 1 ) -eq 0 ]  && {
+				logw "The last update was performed less then ${hold}min ago (${HOLD_LEFT}min left) and no modification to the config have been detected since. Skipping script execution for now..."
+				echo "The last update was performed less then ${hold}min ago (${HOLD_LEFT}min left) and no modification to the config have been detected since. Skipping script execution for now..."
 				adExit 5
 			}
 		}
 		# Tweak kernel parameter for memory allocation
 		[ $(cat /proc/sys/vm/overcommit_ratio) -le 90 ] && echo 90 > /proc/sys/vm/overcommit_ratio
 		setlimit
-		days=$(( 60 * 60 * 24 * 15 )) # 15 days
+		days=$(( 60 * 60 * 24 * 15 )) #15 days
 		[ $DPATH != '/etc' ] && {
 			el=$(echo "$BLACKLIST" | grep -Ev '^$' | tr " " "_" | tr ">" "\n" | grep ^1 | cut -d "<" -f2 | sed -e 's/_$//' -e 's/^[ \t]*//' | while read line; do echo $line | md5sum | awk '{print $1}' ;done)
 			ls -1 $DPATH | grep -v "adblock\|$el" | while read line; do
-			[ $(echo $(($(date +%s) - $days))) -gt $(date -r $DPATH/$line +%s) ] && {
+			[ $(($(date +%s) - $days)) -gt $(date -r $DPATH/$line +%s) ] && {
 				rm -fr $DPATH/$line &>/dev/null
 				logi "Removing unused (and 15+ days old) file $DPATH/$line"
 			}

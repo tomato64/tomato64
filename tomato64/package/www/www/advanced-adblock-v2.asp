@@ -2,7 +2,7 @@
 <!--
 	Tomato GUI
 	Copyright (C) 2007-2022 FreshTomato
-	ver="v2.71u - 01/23" # rs232
+	ver="v2.72 - 01/23" # rs232
 	https://www.freshtomato.org/
 	For use with Tomato Firmware only.
 	No part of this file may be used without permission.
@@ -253,13 +253,13 @@ function earlyInit() {
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
 		<li><b>Enable</b> - Used to activate/deactivate the adblock function. When enable is set the script runs after a save, a manual Load/Update, it autostart at boot and set autoupdate to run daily at a random time between 3am and 6am (excluding mins 59,00,01).</li>
-		<li><b>Filter-file size limit</b> - Defined in Bytes, it's an automatically calculated hard limit for the dnsmasq.adblock file. This limit can be overwritten manually. Removing the number and saving will trigger an internal calculation performed at the next run.</li>
+		<li><b>Blockfile size limit</b> - Defined in Bytes, it's an automatically calculated hard limit for the dnsmasq.adblock file. This limit can be overwritten manually. Removing the number and saving will trigger an internal calculation performed at the next run.</li>
 		<li><b>Custom path</b> - Optional, allows to save the potentially large adblock files on permanent storage like USB/CIFS/etc. This indirectly also means lower RAM usage and additional list control to avoid downloads/processing when not necessary.</li>
 		<li><b>Blacklist URL & List-of-lists</b> - Supported blacklist can come in multiple format. as long as they are text and with maximum one domain reference per line. Empty lines and lines starting with "#" or "!" are always ignored. A particular note on the List-of-lists format where the content of the defined list contains references to external URLs e.g.<br><code>[https://provider.com/badaddresses.txt] --> containing a list of URLs</code>.</li>
 		<li><b>Blacklist Custom</b> - Optional, space or newline separated: domain1.com domain2.com domain3.com. It also accepts external files as a source e.g. <code>/mnt/usb/blacklist</code>, with one domain per line. Prepending a '+' to the domain will force a removal of all the child domains from the blocklist file keeping only the custom defined one (blocking all its subdomains).</li>
 		<li><b>Whitelist</b> - Optional, space or newline separated: domain1.com domain2.com domain3.com. It also accepts external files as a source e.g. <code>/mnt/usb/whitelist</code>, with one domain per line. Please note by default given a domain, any of its subdomains will be whitelisted. To have a domain strictly whitelisted (subdomains blocked) prepend a <B>%</B> to the domain.</li>
 		<li><b>Files</b> - Do not defined your custom files within the adblock folder as this is periodically cleaned up
-		<li><b>Caution</b> - Configuring large blocklists in adblock is not ideal. Add one list at the time and monitor the RAM usage. There are multiple protections in place but the most important is to trim down your final blocklist if too many resources are needed, this is reflected in the <code>Filter-file size limit</code> field</li>
+		<li><b>Caution</b> - Configuring large blocklists in adblock is not ideal. Add one list at the time and monitor the RAM usage. There are multiple protections in place but the most important is to trim down your final blocklist if too many resources are needed, this is reflected in the <code>Blockfile size limit</code> field</li>
 		<li><b>Hold-time</b> - There's a 30 min hold-time between consecutive updates to avoid false positive calls. This can be manually overridden performing an unload + update</li>
 </ul>
 </div>
