@@ -38,5 +38,3 @@ Quad9 2,149.112.112.112,,dns.quad9.net,,IPv4
 
 # IPv4 (port 443)
 Neutopia,89.234.186.112,443,dns.neutopia.org,wTeXHM8aczvhRSi0cv2qOXkXInoDU+2C+M8MpRyT3OI=,IPv4
-Surfnet/Sinodun 1,145.100.185.15,443,dnsovertls.sinodun.com,62lKu9HsDVbyiPenApnc4sfmSYTHOVfFgL3pyB+cBL4=,IPv4
-Surfnet/Sinodun 2,145.100.185.16,443,dnsovertls1.sinodun.com,cE2ecALeE5B+urJhDrJlVFmf38cJLAvqekONvjvpqUA=,IPv4
