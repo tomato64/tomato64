@@ -6,21 +6,19 @@
  */
 
 
-#include <epivers.h>
-#include <typedefs.h>
-#include <string.h>
-#include <ctype.h>
-#include <bcmnvram.h>
-#include <wlioctl.h>
-#include <stdio.h>
-#include <shared.h>
-#include <shutils.h>
-
-#define XSTR(s) STR(s)
-#define STR(s) #s
-
 #include <tomato_config.h>
 #include "tomato_profile.h"
+#include <string.h>
+#ifdef TCONFIG_BCMARM
+#include <stdio.h>
+#include <ctype.h>
+#include <wlioctl.h>
+#include <shared.h>
+#include <shutils.h>
+#include <bcmnvram.h>
+#else
+#include "defaults.h"
+#endif
 
 struct nvram_tuple rstats_defaults[] = {
 	{ "rstats_path",		""				, 0 },
@@ -162,8 +160,10 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan_dns",			""				, 0 },	/* x.x.x.x x.x.x.x ... */
 	{ "wan_dns_auto",		"1"				, 0 },	/* wan auto dns to 1 after reset */
 	{ "wan_weight",			"1"				, 0 },
+#ifdef TCONFIG_USB
 	{ "wan_hilink_ip",		"0.0.0.0"			, 0 },
 	{ "wan_status_script",		"0"				, 0 },
+#endif
 	{ "wan_ckmtd",			"2"				, 0 },
 	{ "wan_ck_pause",		"0"				, 0 },	/* skip watchdog for this wan 0|1 */
 
@@ -179,8 +179,10 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan2_iface",			""				, 0 },
 	{ "wan2_ifname",		""				, 0 },
 	{ "wan2_ifnameX",		NULL				, 0 },	/* real wan if; see wan.c:start_wan */
+#ifdef TCONFIG_USB
 	{ "wan2_hilink_ip",		"0.0.0.0"			, 0 },
 	{ "wan2_status_script",		"0"				, 0 },
+#endif
 	{ "wan2_ckmtd",			"2"				, 0 },
 	{ "wan2_ck_pause",		"0"				, 0 },	/* skip watchdog for this wan 0|1 */
 
@@ -197,8 +199,10 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan3_iface",			""				, 0 },
 	{ "wan3_ifname",		""				, 0 },
 	{ "wan3_ifnameX",		NULL				, 0 },	/* real wan if; see wan.c:start_wan */
+#ifdef TCONFIG_USB
 	{ "wan3_hilink_ip",		"0.0.0.0"			, 0 },
 	{ "wan3_status_script",		"0"				, 0 },
+#endif
 	{ "wan3_ckmtd",			"2"				, 0 },
 	{ "wan3_ck_pause",		"0"				, 0 },	/* skip watchdog for this wan 0|1 */
 
@@ -214,8 +218,10 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan4_iface",			""				, 0 },
 	{ "wan4_ifname",		""				, 0 },
 	{ "wan4_ifnameX",		NULL				, 0 },	/* real wan if; see wan.c:start_wan */
+#ifdef TCONFIG_USB
 	{ "wan4_hilink_ip",		"0.0.0.0"			, 0 },
 	{ "wan4_status_script",		"0"				, 0 },
+#endif
 	{ "wan4_ckmtd",			"2"				, 0 },
 	{ "wan4_ck_pause",		"0"				, 0 },	/* skip watchdog for this wan 0|1 */
 #endif /* TCONFIG_MULTIWAN */
@@ -381,7 +387,6 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan4_ppp_service",		""				, 0 },	/* PPPoE service name */
 	{ "wan4_ppp_custom",		""				, 0 },	/* PPPD additional options */
 	{ "wan4_ppp_mlppp",		"0"				, 0 },	/* PPPoE single line MLPPP */
-	{ "wan4_ppp_mlppp",		"0"				, 0 },	/* PPPoE single line MLPPP */
 	{ "wan4_pppoe_lei",		"10"				, 0 },
 	{ "wan4_pppoe_lef",		"5"				, 0 },
 #endif /* TCONFIG_MULTIWAN */
@@ -433,7 +438,11 @@ struct nvram_tuple router_defaults[] = {
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	{ "wl_clap_hwaddr",		""				, 0 },	/* ap mac addr for the FT client (sta/psta/wet) to connect to (default "empty" / not needed) */
 #endif
+#ifdef TCONFIG_BCMARM
 	{ "wl_phytype",			"n"				, 0 },	/* Current wireless band ("a" (5 GHz), "b" (2.4 GHz), or "g" (2.4 GHz)) */
+#else
+	{ "wl_phytype",			"b"				, 0 },	/* Current wireless band ("a" (5 GHz), "b" (2.4 GHz), or "g" (2.4 GHz)) */
+#endif
 	{ "wl_corerev",			""				, 0 },	/* Current core revision */
 	{ "wl_phytypes",		""				, 0 },	/* List of supported wireless bands (e.g. "ga") */
 	{ "wl_radioids",		""				, 0 },	/* List of radio IDs */
@@ -446,7 +455,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "wl1_ssid",			"FreshTomato50"			, 0 },
 #endif
 	{ "wl_country_code",		""				, 0 },	/* Country (default obtained from driver) */
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	{ "wl_country_rev", 		""				, 0 },	/* Regrev Code (default obtained from driver) */
+#endif
 	{ "wl_radio",			"1"				, 0 },	/* Enable (1) or disable (0) radio */
 	{ "wl1_radio",			"1"				, 0 },	/* Enable (1) or disable (0) radio */
 #ifdef TCONFIG_AC3200
@@ -455,7 +466,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "wl_closed",			"0"				, 0 },	/* Closed (hidden) network */
 	{ "wl_ap_isolate",		"0"				, 0 },	/* AP isolate mode */
 	{ "wl_mode",			"ap"				, 0 },	/* AP mode (ap|sta|wds) */
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	{ "wl_lazywds",			"0"				, 0 },	/* Enable "lazy" WDS mode (0|1) */
+#else
+	{ "wl_lazywds",			"1"				, 0 },	/* Enable "lazy" WDS mode (0|1) */
+#endif
 	{ "wl_wds",			""				, 0 },	/* xx:xx:xx:xx:xx:xx ... */
 	{ "wl_wds_timeout",		"1"				, 0 },	/* WDS link detection interval defualt 1 sec */
 	{ "wl_wep",			"disabled"			, 0 },	/* WEP data encryption (enabled|disabled) */
@@ -466,7 +481,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "wl_key3",			""				, 0 },	/* 5/13 char ASCII or 10/26 char hex */
 	{ "wl_key4",			""				, 0 },	/* 5/13 char ASCII or 10/26 char hex */
 	{ "wl_channel",			"6"				, 0 },	/* Channel number */
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	{ "wl_assoc_retry_max", 	"3"				, 0 },	/* Non-zero limit for association retries */
+#else
+	{ "wl1_channel",		"0"				, 0 },
+#endif
 	{ "wl_rate",			"0"				, 0 },	/* Rate (bps, 0 for auto) */
 	{ "wl_mrate",			"0"				, 0 },	/* Mcast Rate (bps, 0 for auto) */
 	{ "wl_rateset",			"default"			, 0 },	/* "default" or "all" or "12" */
@@ -483,6 +502,9 @@ struct nvram_tuple router_defaults[] = {
 #endif
 	{ "wl_frameburst",		"off"				, 0 },	/* BRCM Frambursting mode (off|on) */
 	{ "wl_wme",			"auto"				, 0 },	/* WME mode (auto|off|on) */
+#ifndef TCONFIG_BCMARM
+	{ "wl1_wme",			"auto"				, 0 },	/* WME mode (auto|off|on) */
+#endif
 	{ "wl_antdiv",			"-1"				, 0 },	/* Antenna Diversity (-1|0|1|3) */
 	{ "wl_infra",			"1"				, 0 },	/* Network Type (BSS/IBSS) */
 	{ "wl_btc_mode",		"0"				, 0 },	/* BT Coexistence Mode */
@@ -538,8 +560,10 @@ struct nvram_tuple router_defaults[] = {
 	{ "wl_wme_txp_vo",		"7 3 4 2 0"			, 0 },	/* WME AC_VO Tx parameters */
 
 	{ "wl_unit",			"0"				, 0 },	/* Last configured interface */
+#ifdef TCONFIG_BCMARM
 	{ "wl_subunit",			"-1"				, 0 },
 	{ "wl_vifnames", 		""				, 0 },	/* Virtual Interface Names */
+#endif
 	{ "wl_mac_deny",		""				, 0 },	/* filter MAC */
 
 	{ "wl_leddc",			"0x640000"			, 0 },	/* 100% duty cycle for LED on router (WLAN LED fix for some routers) */
@@ -555,17 +579,23 @@ struct nvram_tuple router_defaults[] = {
 #endif
 	{ "wl_nmcsidx",			"-1"				, 0 },	/* MCS Index for N - rate */
 	{ "wl_nreqd",			"0"				, 0 },	/* Require 802.11n support */
+#ifdef TCONFIG_BCMARM
 	{ "wl_vreqd",			"1"				, 0 },	/* Require 802.11ac support */
+#endif
 	{ "wl_nbw",			"40"				, 0 },	/* BW: 20 / 40 MHz */
 	{ "wl_nbw_cap",			"1"				, 0 },	/* BW: def 20inB and 40inA */
 	{ "wl_mimo_preamble",		"mm"				, 0 },	/* 802.11n Preamble: mm/gf/auto/gfbcm */
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	{ "wl_nctrlsb",			"lower"				, 0 },	/* N-CTRL SB (none/lower/upper) */
+#else
+	{ "wl_nctrlsb",			"upper"				, 0 },	/* N-CTRL SB (none/lower/upper) */
+#endif
 	{ "wl_nmode_protection",	"off"				, 0 },	/* 802.11n RTS/CTS protection (off|auto) */
 	{ "wl_rxstreams",		"0"				, 0 },	/* 802.11n Rx Streams, 0 is invalid, WLCONF will change it to a radio appropriate default */
 	{ "wl_txstreams",		"0"				, 0 },	/* 802.11n Tx Streams 0, 0 is invalid, WLCONF will change it to a radio appropriate default */
 	{ "wl_dfs_preism",		"60"				, 0 },	/* 802.11H pre network CAC time */
 	{ "wl_dfs_postism",		"60"				, 0 },	/* 802.11H In Service Monitoring CAC time */
-#ifndef TCONFIG_BCMARM /* following radar thrs params are not valid and not complete for SDK6.37 (and up) */
+#ifndef CONFIG_BCMWL6 /* following radar thrs params are not valid and not complete for SDK6 (and up) */
 	{ "wl_radarthrs",		"1 0x6c0 0x6e0 0x6bc 0x6e0 0x6ac 0x6cc 0x6bc 0x6e0" , 0 },	/* Radar thrs params format: version thresh0_20 thresh1_20 thresh0_40 thresh1_40 */
 #endif
 	{ "wl_bcn_rotate",		"1"				, 0 },	/* Beacon rotation */
@@ -582,12 +612,15 @@ struct nvram_tuple router_defaults[] = {
 	{ "emf_uffp_entry",		""				, 0 },	/* Unreg frames forwarding ports */
 	{ "emf_rtport_entry",		""				, 0 },	/* IGMP frames forwarding ports */
 	{ "emf_enable",			"0"				, 0 },	/* Disable EMF by default */
+#ifdef TCONFIG_BCMARM
 	{ "wl_igs",			"0"				, 0 },	/* BCM: wl_wmf_bss_enable */
 	{ "wl_wmf_ucigmp_query", 	"0"				, 0 },	/* Disable Converting IGMP Query to ucast (default) */
 	{ "wl_wmf_mdata_sendup", 	"0"				, 0 },	/* Disable Sending Multicast Data to host (default) */
 	{ "wl_wmf_ucast_upnp", 		"0"				, 0 },	/* Disable Converting upnp to ucast (default) */
 	{ "wl_wmf_igmpq_filter", 	"0"				, 0 },	/* Disable igmp query filter */
+#endif
 #endif /* TCONFIG_EMF */
+
 #ifdef CONFIG_BCMWL5
 	/* AMPDU */
 	{ "wl_ampdu",			"auto"				, 0 },	/* Default AMPDU setting */
@@ -606,26 +639,34 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TCONFIG_BCMARM
 	{ "rast_idlrt",			"2"				, 0 },	/* roaming assistant: idle rate (Kbps) - default: 2 */
 #endif
-#endif
+#endif /* TCONFIG_ROAM */
 	{ "wl_rxchain_pwrsave_enable",	"0"				, 0 },	/* Rxchain powersave enable */
 	{ "wl_rxchain_pwrsave_quiet_time","1800"			, 0 },	/* Quiet time for power save */
 	{ "wl_rxchain_pwrsave_pps",	"10"				, 0 },	/* Packets per second threshold for power save */
-	{ "wl_rxchain_pwrsave_stas_assoc_check", "1"			, 0 },	/* STAs associated before powersave */
 	{ "wl_radio_pwrsave_enable",	"0"				, 0 },	/* Radio powersave enable */
 	{ "wl_radio_pwrsave_quiet_time","1800"				, 0 },	/* Quiet time for power save */
 	{ "wl_radio_pwrsave_pps",	"10"				, 0 },	/* Packets per second threshold for power save */
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+	{ "wl_rxchain_pwrsave_stas_assoc_check", "1"			, 0 },	/* STAs associated before powersave */
 	{ "wl_radio_pwrsave_level",	"0"				, 0 },	/* Radio power save level */
 	{ "wl_radio_pwrsave_stas_assoc_check", "1"			, 0 },	/* STAs associated before powersave */
 	{ "acs_mode", 			"legacy"			, 0 },	/* Legacy mode if ACS is enabled */
 	{ "acs_2g_ch_no_restrict", 	"1"				, 0 },	/* 0: only pick from channel 1, 6, 11 */
 	{ "acs_no_restrict_align", 	"1"				, 0 },	/* 0: only aligned chanspec(few) can be picked (non-20Hz) */
+#else
+	{ "wl_radio_pwrsave_on_time",	"50"				, 0 },	// Radio on time for power save
+#endif
 	/* misc */
 	{ "wl_wmf_bss_enable",		"0"				, 0 },	/* Wireless Multicast Forwarding Enable/Disable */
 	{ "wl_rifs_advert",		"auto"				, 0 },	/* RIFS mode advertisement */
 	{ "wl_stbc_tx",			"auto"				, 0 },	/* Default STBC TX setting */
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	{ "wl_stbc_rx", 		"1"				, 0 },	/* Default STBC RX setting */
+#endif
 	{ "wl_mcast_regen_bss_enable",	"1"				, 0 },	/* MCAST REGEN Enable/Disable */
 #endif /* CONFIG_BCMWL5 */
+
+#ifdef TCONFIG_BCMARM
 #ifdef TCONFIG_BCMWL6
 	{ "wl_ack_ratio",		"0"				, 0 },
 	{ "wl_ampdu_mpdu",		"0"				, 0 },
@@ -636,7 +677,6 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TRAFFIC_MGMT_RSSI_POLICY
 	{ "wl_trf_mgmt_rssi_policy", 	"0"				, 0 },	/* Disable RSSI (default) */
 #endif /* TRAFFIC_MGMT */
-#ifdef TCONFIG_BCMARM
 	{ "wl_psta_inact", 		"0"				, 0 },	/* (Media Bridge) PSTA inactivity timer (wl driver default is: 600 for SDK6 / SDK7 / SDK714) */
 	{ "wl_atf",			"0"				, 0 },	/* Air Time Fairness support on = 1, off = 0 (default: off) */
 	{ "wl_turbo_qam",		"1"				, 0 },	/* turbo qam on = 1 , off = 0 */
@@ -645,11 +685,10 @@ struct nvram_tuple router_defaults[] = {
 	{ "wl_txbf_bfe_cap",		"1"				, 0 },	/* for Explicit Beamforming on = 1 , off = 0 (default: on - sync with wl_txbf), 2 for mu-mimo case */
 #ifdef TCONFIG_BCM714
 	{ "wl_mu_features", 		"0"				, 0 },	/* mu_features=0x8000 when mu-mimo enabled */
-	{ "wl_mumimo", 			"0"				, 0 },	/* mumimo on = 1, off = 0 */	
+	{ "wl_mumimo", 			"0"				, 0 },	/* mumimo on = 1, off = 0 */
 #endif /* TCONFIG_BCM714 */
 	{ "wl_itxbf",			"1"				, 0 },	/* Universal/Implicit Beamforming on = 1 , off = 0 (default: on) */
 	{ "wl_txbf_imp",		"1"				, 0 },	/* for Universal/Implicit Beamforming on = 1 , off = 0 (default: on - sync with wl_itxbf) */
-#endif
 #endif /* TCONFIG_BCMWL6 */
 #ifdef TCONFIG_BCMBSD
 	{ "bsd_role", 		 	"3"				, 0 },	/* Band Steer Daemon; 0:Disable, 1:Primary, 2:Helper, 3:Standalone */
@@ -708,6 +747,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "wl_probresp_mf",		"0"				, 0 },	/* MAC filter based probe response */
 #endif
 	{ "wl_probresp_sw",		"0"				, 0 },	/* SW probe response - ON (1) or Off (0) ==> turn On with wireless band steering otherwise Off (default 0) */
+#endif /* TCONFIG_BCMARM */
 
 	{ "wan_ppp_get_ip",		""				, 0 },	/* IP Address assigned by PPTP/L2TP server */
 
@@ -746,14 +786,16 @@ struct nvram_tuple router_defaults[] = {
 	{ "env_path",			""				, 0 },
 	{ "manual_boot_nv",		"0"				, 0 },
 	{ "t_fix1",			""				, 0 },
+
 /* GMAC3 variables */
 #ifdef TCONFIG_BCM714
 	{ "stop_gmac3",			"1"				, 0 },	/* disable gmac3 (blackbox!) - variant 1 */
 	{ "stop_gmac3_new",		"1"				, 0 },	/* disable gmac3 (blackbox!) - variant 2 */
-	{ "disable_gmac3_force",	"1"				, 0 },	/* disable gmac3 (blackbox!) - variant 3 */	
+	{ "disable_gmac3_force",	"1"				, 0 },	/* disable gmac3 (blackbox!) - variant 3 */
 	{ "gmac3_enable",		"0"				, 0 },
 	{ "bhdr_enable",		"0"				, 0 },
 #endif /* TCONFIG_BCM714 */
+
 /* basic-ddns */
 	{ "ddnsx0",			""				, 0 },
 	{ "ddnsx1",			""				, 0 },
@@ -905,10 +947,40 @@ struct nvram_tuple router_defaults[] = {
 	{ "routes_static",		""				, 0 },
 	{ "dhcp_routes",		"1"				, 0 },
 	{ "force_igmpv2",		"0"				, 0 },
+#ifdef TCONFIG_ZEBRA
+	{ "dr_setting",			"0"				, 0 },	/* [ Disable | WAN | LAN | Both ] */
+	{ "dr_lan_tx",			"0"				, 0 },	/* Dynamic-Routing LAN out */
+	{ "dr_lan_rx",			"0"				, 0 },	/* Dynamic-Routing LAN in */
+	{ "dr_lan1_tx",			"0"				, 0 },	/* Dynamic-Routing LAN out */
+	{ "dr_lan1_rx",			"0"				, 0 },	/* Dynamic-Routing LAN in */
+	{ "dr_lan2_tx",			"0"				, 0 },	/* Dynamic-Routing LAN out */
+	{ "dr_lan2_rx",			"0"				, 0 },	/* Dynamic-Routing LAN in */
+	{ "dr_lan3_tx",			"0"				, 0 },	/* Dynamic-Routing LAN out */
+	{ "dr_lan3_rx",			"0"				, 0 },	/* Dynamic-Routing LAN in */
+	{ "dr_wan_tx",			"0"				, 0 },	/* Dynamic-Routing WAN out */
+	{ "dr_wan_rx",			"0"				, 0 },	/* Dynamic-Routing WAN in */
+	{ "dr_wan2_tx",			"0"				, 0 },	/* Dynamic-Routing WAN out */
+	{ "dr_wan2_rx",			"0"				, 0 },	/* Dynamic-Routing WAN in */
+#ifdef TCONFIG_MULTIWAN
+	{ "dr_wan3_tx",			"0"				, 0 },	/* Dynamic-Routing WAN out */
+	{ "dr_wan3_rx",			"0"				, 0 },	/* Dynamic-Routing WAN in */
+	{ "dr_wan4_tx",			"0"				, 0 },	/* Dynamic-Routing WAN out */
+	{ "dr_wan4_rx",			"0"				, 0 },	/* Dynamic-Routing WAN in */
+#endif
+#endif /* TCONFIG_ZEBRA */
+
+#ifndef TCONFIG_BCMARM
+/* advanced-vlan */
+	{ "trunk_vlan_so",		"0"				, 0 },	/* VLAN trunk support override */
+#endif
 
 /* advanced-wireless */
 	{ "wl_txant",			"3"				, 0 },
+#ifdef TCONFIG_BCMARM
 	{ "wl_txpwr",			"0"				, 0 },
+#else
+	{ "wl_txpwr",			"42"				, 0 },
+#endif
 #if defined(TCONFIG_AC3200) && !defined(TCONFIG_BCM714)
 	{ "wl_maxassoc",		"32"				, 0 },	/* SDK7: 32 for DHD (default); wlconf will check wireless driver maxassoc tuneable value */
 	{ "wl_bss_maxassoc",		"32"				, 0 },
@@ -919,7 +991,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "wl_distance",		""				, 0 },
 
 /* forward-* */
-#ifdef TCONFIG_NVRAM_32K
+#if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE)
 	{ "portforward",		""				, 0 },
 	{ "trigforward",		""				, 0 },
 #else
@@ -940,37 +1012,47 @@ struct nvram_tuple router_defaults[] = {
 
 /* qos */
 	{ "qos_enable",			"0"				, 0 },
+#ifdef TCONFIG_BCMARM
 	{ "qos_mode",			"1"				, 0 }, /* 1 = HTB + Leaf Qdisc, 2 = CAKE SQM */
+	{ "qos_classify",		"1"				, 0 },
+	{ "qos_pfifo",			"3"				, 0 },	/* Set FQ_Codel Default Qdisc Scheduler */
+	{ "qos_cake_prio_mode",		"0"				, 0 },
+	{ "qos_cake_wash",		"0"				, 0 },
+#endif
 	{ "qos_ack",			"0"				, 0 },
 	{ "qos_syn",			"1"				, 0 },
 	{ "qos_fin",			"1"				, 0 },
 	{ "qos_rst",			"1"				, 0 },
 	{ "qos_udp",			"0"				, 0 },
 	{ "qos_icmp",			"1"				, 0 },
-	{ "qos_classify",		"1"				, 0 },
-	{ "qos_pfifo",			"3"				, 0 },	/* Set FQ_Codel Default Qdisc Scheduler */
-	{ "qos_cake_prio_mode",		"0"				, 0 },
-	{ "qos_cake_wash",		"0"				, 0 },
 	{ "qos_reset",			"1"				, 0 },
 	{ "wan_qos_obw",		"700"				, 0 },
 	{ "wan_qos_ibw",		"16000"				, 0 },
+#ifdef TCONFIG_BCMARM
 	{ "wan_qos_encap",		"0"				, 0 },
+#endif
 	{ "wan_qos_overhead",		"0"				, 0 },
 	{ "wan2_qos_obw",		"700"				, 0 },
 	{ "wan2_qos_ibw",		"16000"				, 0 },
+#ifdef TCONFIG_BCMARM
 	{ "wan2_qos_encap",		"0"				, 0 },
+#endif
 	{ "wan2_qos_overhead",		"0"				, 0 },
 #ifdef TCONFIG_MULTIWAN
 	{ "wan3_qos_obw",		"700"				, 0 },
 	{ "wan3_qos_ibw",		"16000"				, 0 },
+#ifdef TCONFIG_BCMARM
 	{ "wan3_qos_encap",		"0"				, 0 },
+#endif
 	{ "wan3_qos_overhead",		"0"				, 0 },
 	{ "wan4_qos_obw",		"700"				, 0 },
 	{ "wan4_qos_ibw",		"16000"				, 0 },
+#ifdef TCONFIG_BCMARM
 	{ "wan4_qos_encap",		"0"				, 0 },
+#endif
 	{ "wan4_qos_overhead",		"0"				, 0 },
 #endif /* TCONFIG_MULTIWAN */
-#ifdef TCONFIG_NVRAM_32K
+#if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE)
 	{ "qos_orules",			"0<<-1<d<53<0<<0:10<<0<DNS"	, 0 },
 #else
 	{ "qos_orules",			"0<<-1<d<53<0<<0:10<<0<DNS>0<<-1<d<37<0<<0:10<<0<Time>0<<17<d<123<0<<0:10<<0<NTP>0<<-1<d<3455<0<<0:10<<0<RSVP>0<<-1<d<9<0<<0:50<<3<SCTP, Discard>0<<-1<x<135,2101,2103,2105<0<<<<3<RPC (Microsoft)>0<<17<d<3544<0<<<<-1<Teredo Tunnel>0<<6<x<22,2222<0<<<<2<SSH>0<<6<d<23,992<0<<<<2<Telnet>0<<6<s<80,5938,8080,2222<0<<<<2<Remote Access>0<<-1<x<3389<0<<<<2<Remote Assistance>0<<-1<x<1220,6970:7170,8554<0<<<<4<Quicktime/RealAudio>0<<-1<x<554,5004,5005<0<<<<4<RTP, RTSP>0<<-1<x<1755<0<<<<4<MMS (Microsoft)>0<<-1<d<3478,3479,5060:5063<0<<<<1<SIP, Sipgate Stun Services>0<<-1<s<53,88,3074<0<<<<1<Xbox Live>0<<6<d<1718:1720<0<<<<1<H323>0<<-1<d<4380,27000:27050,11031,11235:11335,11999,2300:2400,6073,28800:29100,47624<0<<<<1<Various Games>0<<-1<d<1493,1502,1503,1542,1863,1963,3389,5061,5190:5193,7001<0<<<<5<MSGR1 - Windows Live>0<<-1<d<1071:1074,1455,1638,1644,5000:5010,5050,5100,5101,5150,8000:8002<0<<<<5<MSGR2 - Yahoo>0<<-1<d<194,1720,1730:1732,5220:5223,5298,6660:6669,22555<0<<<<5<MSGR3 - Additional>0<<-1<d<19294:19310<0<<<<5<Google+ & Voice>0<<6<d<6005,6006<0<<<<5<Camfrog>0<<-1<x<6571,6891:6901<0<<<<5<WLM File/Webcam>0<<-1<x<29613<0<<<<5<Skype incoming>0<<6<x<4244,5242<0<<<<1<Viber TCP>0<<17<x<5243,9785<0<<<<1<Viber UDP>0<<17<x<3478:3497,16384:16387,16393:16402<0<<<<5<Apple Facetime/Game Center>0<<6<d<443<0<<0:512<<3<HTTPS>0<<6<d<443<0<<512:<<5<HTTPS>0<<17<d<443<0<<0:512<<3<QUIC>0<<17<d<443<0<<512:<<5<QUIC>0<<-1<a<<0<skypetoskype<<<1<Skype to Skype>0<<-1<a<<0<skypeout<<<-1<Skype Phone (deprecated)>0<<-1<a<<0<youtube-2012<<<4<YouTube 2012 (Youtube)>0<<-1<a<<0<httpvideo<<<4<HTTP Video (Youtube)>0<<-1<a<<0<flash<<<4<Flash Video (Youtube)>0<<-1<a<<0<rtp<<<4<RTP>0<<-1<a<<0<rtmp<<<4<RTMP>0<<-1<a<<0<shoutcast<<<4<Shoutcast>0<<-2<a<<0<rtmpt<<<4<RTMPT (RTMP over HTTP)>0<<-1<a<<0<irc<<<5<IRC>0<<6<d<80,8080<0<<0:512<<3<HTTP, HTTP Proxy>0<<6<d<80,8080<0<<512:<<7<HTTP, HTTP Proxy File Transfers>0<<6<d<20,21,989,990<0<<<<7<FTP>0<<6<d<25,587,465,2525<0<<<<6<SMTP, Submission Mail>0<<6<d<110,995<0<<<<6<POP3 Mail>0<<6<d<119,563<0<<<<7<NNTP News & Downloads>0<<6<d<143,220,585,993<0<<<<6<IMAP Mail>0<<17<d<1:65535<0<<<<8<P2P (uTP, UDP)" , 0 },
@@ -989,7 +1071,7 @@ struct nvram_tuple router_defaults[] = {
 
 /* access restrictions */
 	{ "rruleN",			"0"				, 0 },
-#ifdef TCONFIG_NVRAM_32K
+#if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE)
 	{ "rrule0",			""				, 0 },
 #else
 	{ "rrule0",			"0|1320|300|31|||word text\n^begins-with.domain.\n.ends-with.net$\n^www.exact-domain.net$|0|example" , 0 },
@@ -1000,25 +1082,31 @@ struct nvram_tuple router_defaults[] = {
 	{ "http_username",		""				, 0 },	/* Username */
 	{ "http_passwd",		"admin"				, 0 },	/* Password */
 	{ "remote_management",		"0"				, 0 },	/* Remote Management [1|0] */
-	{ "remote_mgt_https",		"0"				, 0 },	/* Remote Management use https [1|0] */
-	{ "remote_upgrade",		"1"				, 0 },	/* allow remote upgrade [1|0] - for brave guys */
-	{ "http_wanport_bfm",		"0"				, 0 },	/* enable/disable brute force mitigation rule for WAN port */
 	{ "http_wanport",		"8080"				, 0 },	/* WAN port to listen on */
 	{ "http_lanport",		"80"				, 0 },	/* LAN port to listen on */
-	{ "https_lanport",		"443"				, 0 },	/* LAN port to listen on */
 	{ "http_enable",		"1"				, 0 },	/* HTTP server enable/disable */
+	{ "remote_upgrade",		"1"				, 0 },	/* allow remote upgrade [1|0] - for brave guys */
+	{ "http_wanport_bfm",		"0"				, 0 },	/* enable/disable brute force mitigation rule for WAN port */
+#ifdef TCONFIG_HTTPS
+	{ "remote_mgt_https",		"0"				, 0 },	/* Remote Management use https [1|0] */
+	{ "https_lanport",		"443"				, 0 },	/* LAN port to listen on */
 	{ "https_enable",		"0"				, 0 },	/* HTTPS server enable/disable */
 	{ "https_crt_save",		"0"				, 0 },
 	{ "https_crt_cn",		""				, 0 },
 	{ "https_crt_file",		""				, 0 },
-	{ "https_crt",			""				, 0 },
+	{ "https_crt_gen",		""				, 0 },
+#endif
 	{ "web_wl_filter",		"0"				, 0 },	/* Allow/Deny Wireless Access Web */
 	{ "web_css",			"default"			, 0 },
+#ifdef TCONFIG_ADVTHEMES
 	{ "web_adv_scripts",		"0"				, 0 },	/* load JS resize chart script */
+#endif
 	{ "web_dir",			"default"			, 0 },	/* jffs, opt, tmp or default (/www) */
 	{ "ttb_css",			"example"			, 0 },	/* Tomato Themes Base - default theme name */
+#ifdef TCONFIG_USB
 	{ "ttb_loc",			""				, 0 },	/* Tomato Themes Base - default files location */
 	{ "ttb_url",			"http://ttb.mooo.com http://ttb.ath.cx http://ttb.ddnsfree.com", 0 },	/* Tomato Themes Base - default URL */
+#endif
 	{ "web_svg",			"1"				, 0 },
 	{ "telnetd_eas",		"1"				, 0 },
 	{ "telnetd_port",		"23"				, 0 },
@@ -1050,10 +1138,14 @@ struct nvram_tuple router_defaults[] = {
 	/* all other cstats_xyz variables, see cstats_defaults */
 
 /* advanced-buttons */
+#ifdef TCONFIG_BCMARM
 	{ "stealth_mode",		"0"				, 0 },
 	{ "stealth_iled",		"0"				, 0 },
-	{ "sesx_led",			"12"				, 0 },	/* enable LEDs at startup: bit 0 = LED_AMBER, bit 1 = LED_WHITE, bit 2 = LED_AOSS, bit 3 = LED_BRIDGE; Default: LED_AOSS + LED_Bridge turned On */
 	{ "blink_wl",			"1"				, 0 },	/* enable blink by default (for wifi) */
+	{ "sesx_led",			"12"				, 0 },	/* enable LEDs at startup: bit 0 = LED_AMBER, bit 1 = LED_WHITE, bit 2 = LED_AOSS, bit 3 = LED_BRIDGE; Default: LED_AOSS + LED_Bridge turned On */
+#else
+	{ "sesx_led",			"0"				, 0 },
+#endif
 	{ "sesx_b0",			"1"				, 0 },
 	{ "sesx_b1",			"4"				, 0 },
 	{ "sesx_b2",			"4"				, 0 },
@@ -1062,6 +1154,9 @@ struct nvram_tuple router_defaults[] = {
 		"[ $1 -ge 20 ] && telnetd -p 233 -l /bin/sh\n"
 	, 0 },
 #ifndef TCONFIG_BCMARM
+#if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "script_brau",		""				},
+#else
 	{ "script_brau",
 		"if [ ! -e /tmp/switch-start ]; then\n"
 		"  # do something at startup\n"
@@ -1075,8 +1170,9 @@ struct nvram_tuple router_defaults[] = {
 		"  # do something\n"
 		"  led bridge off\n"
 		"fi\n"
-	, 0 },
+	},
 #endif
+#endif /* !TCONFIG_BCMARM */
 
 /* admin-log */
 	{ "log_remote",			"0"				, 0 },
@@ -1138,7 +1234,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "usb_uhci",			"0"				, 0 },
 	{ "usb_ohci",			"0"				, 0 },
 	{ "usb_usb2",			"1"				, 0 },
+#ifdef TCONFIG_BCMARM
 	{ "usb_usb3",			"1"				, 0 },
+#endif
 #ifdef TCONFIG_MICROSD
 	{ "usb_mmc",			"-1"				, 0 },
 #endif
@@ -1149,11 +1247,16 @@ struct nvram_tuple router_defaults[] = {
 	{ "usb_ext_opt",		""				, 0 },
 	{ "usb_fat_opt",		""				, 0 },
 	{ "usb_ntfs_opt",		""				, 0 },
-	{ "usb_fs_ext4",		"1"				, 0 },
-	{ "usb_fs_fat",			"1"				, 0 },
+#ifdef TCONFIG_BCMARM
 	{ "usb_fs_exfat",		"0"				, 0 },
+	{ "usb_fs_ext4",		"1"				, 0 },
+#else
+	{ "usb_fs_ext3",		"1"				, 0 },
+#endif
+	{ "usb_fs_fat",			"1"				, 0 },
 #ifdef TCONFIG_NTFS
 	{ "usb_fs_ntfs",		"1"				, 0 },
+#ifdef TCONFIG_BCMARM
 #ifdef TCONFIG_TUXERA
 	{ "usb_ntfs_driver",		"tuxera"			, 0 },
 #elif defined(TCONFIG_UFSD)
@@ -1161,14 +1264,17 @@ struct nvram_tuple router_defaults[] = {
 #else
 	{ "usb_ntfs_driver",		"ntfs3g"			, 0 },
 #endif
+#endif /* TCONFIG_BCMARM */
 #endif /* TCONFIG_NTFS */
 #ifdef TCONFIG_HFS
 	{ "usb_fs_hfs",			"0"				, 0 },
+#ifdef TCONFIG_BCMARM
 #ifdef TCONFIG_TUXERA_HFS
 	{ "usb_hfs_driver",		"tuxera"			, 0 },
 #else
 	{ "usb_hfs_driver",		"kernel"			, 0 },
 #endif
+#endif /* TCONFIG_BCMARM */
 #endif /* TCONFIG_HFS */
 #ifdef TCONFIG_ZFS
 	{ "usb_fs_zfs",			"0"				, 0 },
@@ -1215,9 +1321,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "smbd_user",			"nas"				, 0 },
 	{ "smbd_passwd",		""				, 0 },
 	{ "smbd_ifnames",		"br0"				, 0 },
-	{ "smbd_protocol",		"2"				, 0 }, /* 0 - SMB1, 1 - SMB2, 2 - SMB1+SMB2 (default) */
+	{ "smbd_protocol",		"2"				, 0 },	/* 0 - SMB1, 1 - SMB2, 2 - SMB1+SMB2 (default) */
 #ifdef TCONFIG_GROCTRL
-	{ "gro_disable",		"1"				, 0 }, /* GRO enalbe - 0 ; disable - 1 (default) */
+	{ "gro_disable",		"1"				, 0 },	/* GRO enalbe - 0 ; disable - 1 (default) */
 #endif
 #endif /* TCONFIG_SAMBASRV */
 
@@ -1234,6 +1340,19 @@ struct nvram_tuple router_defaults[] = {
 	{ "ms_autoscan",		"1"				, 0 },
 	{ "ms_custom",			""				, 0 },
 #endif /* TCONFIG_MEDIA_SERVER */
+
+#ifdef TCONFIG_SDHC
+/* admin-sdhc */
+	{ "mmc_on",			"0"				, 0 },
+	{ "mmc_cs",			"7"				, 0 },
+	{ "mmc_clk",			"3"				, 0 },
+	{ "mmc_din",			"2"				, 0 },
+	{ "mmc_dout",			"4"				, 0 },
+	{ "mmc_fs_partition",		"1"				, 0 },
+	{ "mmc_fs_type",		"ext2"				, 0 },
+	{ "mmc_exec_mount",		""				, 0 },
+	{ "mmc_exec_umount",		""				, 0 },
+#endif
 
 /* admin-sch */
 	{ "sch_rboot",			""				, 0 },
@@ -1272,10 +1391,18 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_server1_proto",		"udp"				, 0 },
 	{ "vpn_server1_port",		"1194"				, 0 },
 	{ "vpn_server1_firewall",	"auto"				, 0 },
+#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
+	{ "vpn_server1_crypt",		"secret"			, 0 },
+#else
 	{ "vpn_server1_crypt",		"tls"				, 0 },
+#endif
 	{ "vpn_server1_comp",		"-1"				, 0 },
 	{ "vpn_server1_cipher",		"AES-128-CBC"			, 0 },
+#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
+	{ "vpn_server1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+#else
 	{ "vpn_server1_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+#endif
 	{ "vpn_server1_digest",		"default"			, 0 },
 	{ "vpn_server1_dhcp",		"1"				, 0 },
 	{ "vpn_server1_r1",		"192.168.1.50"			, 0 },
@@ -1312,10 +1439,18 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_server2_proto",		"udp"				, 0 },
 	{ "vpn_server2_port",		"1195"				, 0 },
 	{ "vpn_server2_firewall",	"auto"				, 0 },
+#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
+	{ "vpn_server2_crypt",		"secret"			, 0 },
+#else
 	{ "vpn_server2_crypt",		"tls"				, 0 },
+#endif
 	{ "vpn_server2_comp",		"-1"				, 0 },
 	{ "vpn_server2_cipher",		"AES-128-CBC"			, 0 },
+#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
+	{ "vpn_server2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+#else
 	{ "vpn_server2_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+#endif
 	{ "vpn_server2_digest",		"default"			, 0 },
 	{ "vpn_server2_dhcp",		"1"				, 0 },
 	{ "vpn_server2_r1",		"192.168.1.50"			, 0 },
@@ -1361,7 +1496,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_client1_crypt",		"tls"				, 0 },
 	{ "vpn_client1_comp",		"-1"				, 0 },
 	{ "vpn_client1_cipher",		"default"			, 0 },
+#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
+	{ "vpn_client1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+#else
 	{ "vpn_client1_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+#endif
 	{ "vpn_client1_digest",		"default"			, 0 },
 	{ "vpn_client1_local",		"10.8.0.2"			, 0 },
 	{ "vpn_client1_remote",		"10.8.0.1"			, 0 },
@@ -1394,7 +1533,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_client2_crypt",		"tls"				, 0 },
 	{ "vpn_client2_comp",		"-1"				, 0 },
 	{ "vpn_client2_cipher",		"default"			, 0 },
+#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
+	{ "vpn_client2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+#else
 	{ "vpn_client2_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+#endif
 	{ "vpn_client2_digest",		"default"			, 0 },
 	{ "vpn_client2_local",		"10.9.0.2"			, 0 },
 	{ "vpn_client2_remote",		"10.9.0.1"			, 0 },
@@ -1414,6 +1557,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_client2_routing_val",	""				, 0 },
 	{ "vpn_client2_fw",		"1"				, 0 },
 	{ "vpn_client2_tlsvername",	"0"				, 0 },
+#ifdef TCONFIG_BCMARM
 	{ "vpn_client3_poll",		"0"				, 0 },
 	{ "vpn_client3_if",		"tun"				, 0 },
 	{ "vpn_client3_bridge",		"1"				, 0 },
@@ -1427,7 +1571,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_client3_crypt",		"tls"				, 0 },
 	{ "vpn_client3_comp",		"-1"				, 0 },
 	{ "vpn_client3_cipher",		"default"			, 0 },
+#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
+	{ "vpn_client3_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+#else
 	{ "vpn_client3_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+#endif
 	{ "vpn_client3_digest",		"default"			, 0 },
 	{ "vpn_client3_local",		"10.10.0.2"			, 0 },
 	{ "vpn_client3_remote",		"10.10.0.1"			, 0 },
@@ -1447,6 +1595,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_client3_routing_val",	""				, 0 },
 	{ "vpn_client3_fw",		"1"				, 0 },
 	{ "vpn_client3_tlsvername",	"0"				, 0 },
+#endif /* TCONFIG_BCMARM */
 #endif /* TCONFIG_OPENVPN */
 
 #ifdef TCONFIG_PPTPD
@@ -1598,7 +1747,7 @@ struct nvram_tuple router_defaults[] = {
 	{"nginx_keepconf",		"0"				, 0 },	/* Enable/disable keep configuration files unmodified in /etc/nginx */
 	{"nginx_docroot",		"/www"				, 0 },	/* path for server files */
 	{"nginx_port",			"85"				, 0 },	/* port to listen */
-	{"nginx_remote",		"0"				, 0 },	/* open port from WAN site */
+	{"nginx_remote",		"0"				, 0 },	/* open port from WAN side */
 	{"nginx_fqdn",			"Tomato64"			, 0 },	/* server name */
 	{"nginx_upload",		"100"				, 0 },	/* upload file size limit */
 	{"nginx_priority",		"10"				, 0 },	/* server priority = worker_priority */
@@ -1653,616 +1802,10 @@ struct nvram_tuple router_defaults[] = {
 	{ "tor_ports",			"80"				, 0 },
 	{ "tor_ports_custom",		"80,443,8080:8880"		, 0 },
 #endif /* TCONFIG_TOR */
-
-	{ 0, 0, 0}
-};
-
-#ifdef TCONFIG_BCMWL6
-
-#ifndef TCONFIG_BCMARM
-struct nvram_tuple bcm4360ac_defaults[] = {
-	{ "pci/2/1/aa2g",		"0"				, 0 },
-	{ "pci/2/1/aa5g",		"7"				, 0 },
-	{ "pci/2/1/aga0",		"0"				, 0 },
-	{ "pci/2/1/aga1",		"0"				, 0 },
-	{ "pci/2/1/aga2",		"0"				, 0 },
-	{ "pci/2/1/agbg0",		"133"				, 0 },
-	{ "pci/2/1/agbg1",		"133"				, 0 },
-	{ "pci/2/1/agbg2",		"133"				, 0 },
-	{ "pci/2/1/antswitch",		"0"				, 0 },
-	{ "pci/2/1/cckbw202gpo",	"0"				, 0 },
-	{ "pci/2/1/cckbw20ul2gpo",	"0"				, 0 },
-	{ "pci/2/1/dot11agofdmhrbw202gpo","0"				, 0 },
-	{ "pci/2/1/femctrl",		"3"				, 0 },
-	{ "pci/2/1/papdcap2g",		"0"				, 0 },
-	{ "pci/2/1/tworangetssi2g",	"0"				, 0 },
-	{ "pci/2/1/pdgain2g",		"4"				, 0 },
-	{ "pci/2/1/epagain2g",		"0"				, 0 },
-	{ "pci/2/1/tssiposslope2g",	"1"				, 0 },
-	{ "pci/2/1/gainctrlsph",	"0"				, 0 },
-	{ "pci/2/1/papdcap5g",		"0"				, 0 },
-	{ "pci/2/1/tworangetssi5g",	"0"				, 0 },
-	{ "pci/2/1/pdgain5g",		"4"				, 0 },
-	{ "pci/2/1/epagain5g",		"0"				, 0 },
-	{ "pci/2/1/tssiposslope5g",	"1"				, 0 },
-	{ "pci/2/1/maxp2ga0",		"76"				, 0 },
-	{ "pci/2/1/maxp2ga1",		"76"				, 0 },
-	{ "pci/2/1/maxp2ga2",		"76"				, 0 },
-	{ "pci/2/1/mcsbw202gpo",	"0"				, 0 },
-	{ "pci/2/1/mcsbw402gpo",	"0"				, 0 },
-	{ "pci/2/1/measpower",		"0x7f"				, 0 },
-	{ "pci/2/1/measpower1",		"0x7f"				, 0 },
-	{ "pci/2/1/measpower2",		"0x7f"				, 0 },
-	{ "pci/2/1/noiselvl2ga0",	"31"				, 0 },
-	{ "pci/2/1/noiselvl2ga1",	"31"				, 0 },
-	{ "pci/2/1/noiselvl2ga2",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gha0",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gha1",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gha2",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gla0",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gla1",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gla2",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gma0",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gma1",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gma2",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gua0",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gua1",	"31"				, 0 },
-	{ "pci/2/1/noiselvl5gua2",	"31"				, 0 },
-	{ "pci/2/1/ofdmlrbw202gpo",	"0"				, 0 },
-	{ "pci/2/1/pa2ga0",		"0xfe72,0x14c0,0xfac7"		, 0 },
-	{ "pci/2/1/pa2ga1",		"0xfe80,0x1472,0xfabc"		, 0 },
-	{ "pci/2/1/pa2ga2",		"0xfe82,0x14bf,0xfad9"		, 0 },
-	{ "pci/2/1/pcieingress_war",	"15"				, 0 },
-	{ "pci/2/1/phycal_tempdelta",	"255"				, 0 },
-	{ "pci/2/1/rawtempsense",	"0x1ff"				, 0 },
-	{ "pci/2/1/rxchain",		"7"				, 0 },
-	{ "pci/2/1/rxgainerr2g",	"0xffff"			, 0 },
-	{ "pci/2/1/rxgainerr5g",	"0xffff,0xffff,0xffff,0xffff"	, 0 },
-	{ "pci/2/1/rxgains2gelnagaina0",	"0"			, 0 },
-	{ "pci/2/1/rxgains2gelnagaina1",	"0"			, 0 },
-	{ "pci/2/1/rxgains2gelnagaina2",	"0"			, 0 },
-	{ "pci/2/1/rxgains2gtrelnabypa0",	"0"			, 0 },
-	{ "pci/2/1/rxgains2gtrelnabypa1",	"0"			, 0 },
-	{ "pci/2/1/rxgains2gtrelnabypa2",	"0"			, 0 },
-	{ "pci/2/1/rxgains2gtrisoa0",	"0"				, 0 },
-	{ "pci/2/1/rxgains2gtrisoa1",	"0"				, 0 },
-	{ "pci/2/1/rxgains2gtrisoa2",	"0"				, 0 },
-	{ "pci/2/1/sar2g",		"18"				, 0 },
-	{ "pci/2/1/sar5g",		"15"				, 0 },
-	{ "pci/2/1/sromrev",		"11"				, 0 },
-	{ "pci/2/1/subband5gver",	"0x4"				, 0 },
-	{ "pci/2/1/tempcorrx",		"0x3f"				, 0 },
-	{ "pci/2/1/tempoffset",		"255"				, 0 },
-	{ "pci/2/1/temps_hysteresis",	"15"				, 0 },
-	{ "pci/2/1/temps_period",	"15"				, 0 },
-	{ "pci/2/1/tempsense_option",	"0x3"				, 0 },
-	{ "pci/2/1/tempsense_slope",	"0xff"				, 0 },
-	{ "pci/2/1/tempthresh",		"255"				, 0 },
-	{ "pci/2/1/txchain",		"7"				, 0 },
-	{ "pci/2/1/ledbh0",		"2"				, 0 },
-	{ "pci/2/1/ledbh1",		"5"				, 0 },
-	{ "pci/2/1/ledbh2",		"4"				, 0 },
-	{ "pci/2/1/ledbh3",		"11"				, 0 },
-	{ "pci/2/1/ledbh10",		"7"				, 0 },
-
-	{ 0, 0, 0 }
-};
-#elif defined(TCONFIG_AC3200)
-struct nvram_tuple bcm4360ac_defaults[] = {
-	{ "devpath1",			"pcie/1/4"			, 0 },
-	{ "1:devpath1",			"sb/1/"				, 0 },
-	{ "1:boardrev",			"0x1421"			, 0 },
-	{ "1:boardvendor",		"0x14e4"			, 0 },
-	{ "1:devid",			"0x43bb"			, 0 },
-	{ "1:sromrev",			"11"				, 0 },
-	{ "1:boardflags",		"0x20001000"			, 0 },
-	{ "1:boardflags2",		"0x00100002"			, 0 },
-	{ "1:venvid",			"0x14e4"			, 0 },
-	{ "1:boardflags3",		"0x4000005"			, 0 },
-	{ "1:aa2g",			"7"				, 0 },
-	{ "1:agbg0",			"0x0"				, 0 },
-	{ "1:agbg1",			"0x0"				, 0 },
-	{ "1:agbg2",			"0x0"				, 0 },
-	{ "1:txchain",			"7"				, 0 },
-	{ "1:rxchain",			"7"				, 0 },
-	{ "1:antswitch",		"0"				, 0 },
-	{ "1:femctrl",			"3"				, 0 },
-	{ "1:tssiposslope2g",		"1"				, 0 },
-	{ "1:epagain2g",		"0"				, 0 },
-	{ "1:pdgain2g",			"21"				, 0 },
-	{ "1:tworangetssi2g",		"0"				, 0 },
-	{ "1:papdcap2g",		"0"				, 0 },
-	{ "1:gainctrlsph",		"0"				, 0 },
-	{ "1:tempthresh",		"120"				, 0 },
-	{ "1:tempoffset",		"255"				, 0 },
-	{ "1:rawtempsense",		"0x1ff"				, 0 },
-	{ "1:tempsense_slope",		"0xff"				, 0 },
-	{ "1:tempcorrx",		"0x3f"				, 0 },
-	{ "1:tempsense_option",		"0x3"				, 0 },
-	{ "1:xtalfreq",			"40000"				, 0 },
-	{ "1:phycal_tempdelta",		"15"				, 0 },
-	{ "1:temps_period",		"5"				, 0 },
-	{ "1:temps_hysteresis",		"5"				, 0 },
-	{ "1:pdoffset2g40ma0",		"15"				, 0 },
-	{ "1:pdoffset2g40ma1",		"15"				, 0 },
-	{ "1:pdoffset2g40ma2",		"15"				, 0 },
-	{ "1:pdoffset2g40mvalid",	"1"				, 0 },
-	{ "1:pdoffset40ma0",		"0"				, 0 },
-	{ "1:pdoffset40ma1",		"0"				, 0 },
-	{ "1:pdoffset40ma2",		"0"				, 0 },
-	{ "1:pdoffset80ma0",		"0"				, 0 },
-	{ "1:pdoffset80ma1",		"0"				, 0 },
-	{ "1:pdoffset80ma2",		"0"				, 0 },
-	{ "1:cckbw202gpo",		"0"				, 0 },
-	{ "1:cckbw20ul2gpo",		"0"				, 0 },
-	{ "1:dot11agofdmhrbw202gpo",	"0x2000"			, 0 },
-	{ "1:ofdmlrbw202gpo",		"0"				, 0 },
-	{ "1:dot11agduphrpo",		"0"				, 0 },
-	{ "1:dot11agduplrpo",		"0"				, 0 },
-	{ "1:maxp2ga0",			"102"				, 0 },
-	{ "1:rxgains2gelnagaina0",	"4"				, 0 },
-	{ "1:rxgains2gtrisoa0",		"7"				, 0 },
-	{ "1:rxgains2gtrelnabypa0",	"1"				, 0 },
-	{ "1:maxp2ga1",			"102"				, 0 },
-	{ "1:rxgains2gelnagaina1",	"4"				, 0 },
-	{ "1:rxgains2gtrisoa1",		"7"				, 0 },
-	{ "1:rxgains2gtrelnabypa1",	"1"				, 0 },
-	{ "1:maxp2ga2",			"102"				, 0 },
-	{ "1:rxgains2gelnagaina2",	"4"				, 0 },
-	{ "1:rxgains2gtrisoa2",		"7"				, 0 },
-	{ "1:rxgains2gtrelnabypa2",	"1"				, 0 },
-	{ "1:ledbh10",			"7"				, 0 },
-	{ "devpath0",			"pcie/1/3"			, 0 },
-	{ "0:devpath0",			"sb/1/"				, 0 },
-	{ "0:boardrev",			"0x1421"			, 0 },
-	{ "0:boardvendor",		"0x14e4"			, 0 },
-	{ "0:devid",			"0x43bc"			, 0 },
-	{ "0:sromrev",			"11"				, 0 },
-	{ "0:boardflags",		"0x30040000"			, 0 },
-	{ "0:boardflags2",		"0x00220102"			, 0 },
-	{ "0:venid",			"0x14e4"			, 0 },
-	{ "0:boardflags3",		"0x0"				, 0 },
-	{ "0:aa5g",			"7"				, 0 },
-	{ "0:aga0",			"0x0"				, 0 },
-	{ "0:aga1",			"0x0"				, 0 },
-	{ "0:aga2",			"0x0"				, 0 },
-	{ "0:txchain",			"7"				, 0 },
-	{ "0:rxchain",			"7"				, 0 },
-	{ "0:antswitch",		"0"				, 0 },
-	{ "0:femctrl",			"3"				, 0 },
-	{ "0:tssiposslope5g",		"1"				, 0 },
-	{ "0:epagain5g",		"0"				, 0 },
-	{ "0:pdgain5g",			"4"				, 0 },
-	{ "0:tworangetssi5g",		"0"				, 0 },
-	{ "0:papdcap5g",		"0"				, 0 },
-	{ "0:gainctrlsph",		"0"				, 0 },
-	{ "0:tempthresh",		"125"				, 0 },
-	{ "0:tempoffset",		"255"				, 0 },
-	{ "0:rawtempsense",		"0x1ff"				, 0 },
-	{ "0:tempsense_slope",		"0xff"				, 0 },
-	{ "0:tempcorrx",		"0x3f"				, 0 },
-	{ "0:tempsense_option",		"0x3"				, 0 },
-	{ "0:xtalfreq",			"40000"				, 0 },
-	{ "0:phycal_tempdelta",		"15"				, 0 },
-	{ "0:temps_period",		"5"				, 0 },
-	{ "0:temps_hysteresis",		"5"				, 0 },
-	{ "0:pdoffset40ma0",		"4369"				, 0 },
-	{ "0:pdoffset40ma1",		"4369"				, 0 },
-	{ "0:pdoffset40ma2",		"4369"				, 0 },
-	{ "0:pdoffset80ma0",		"0"				, 0 },
-	{ "0:pdoffset80ma1",		"0"				, 0 },
-	{ "0:pdoffset80ma2",		"0"				, 0 },
-	{ "0:subband5gver",		"0x4"				, 0 },
-	{ "0:mcsbw1605glpo",		"0"				, 0 },
-	{ "0:mcsbw1605gmpo",		"0"				, 0 },
-	{ "0:mcsbw1605ghpo",		"0"				, 0 },
-	{ "0:mcslr5glpo",		"0"				, 0 },
-	{ "0:mcslr5gmpo",		"0"				, 0 },
-	{ "0:mcslr5ghpo",		"0"				, 0 },
-	{ "0:dot11agduphrpo",		"0"				, 0 },
-	{ "0:dot11agduplrpo",		"0"				, 0 },
-	{ "0:rxgains5gmelnagaina0",	"2"				, 0 },
-	{ "0:rxgains5gmtrisoa0",	"5"				, 0 },
-	{ "0:rxgains5gmtrelnabypa0",	"1"				, 0 },
-	{ "0:rxgains5ghelnagaina0",	"2"				, 0 },
-	{ "0:rxgains5ghtrisoa0",	"5"				, 0 },
-	{ "0:rxgains5ghtrelnabypa0",	"1"				, 0 },
-	{ "0:rxgains5gelnagaina0",	"2"				, 0 },
-	{ "0:rxgains5gtrisoa0",		"5"				, 0 },
-	{ "0:rxgains5gtrelnabypa0",	"1"				, 0 },
-	{ "0:maxp5ga0",			"94,94,90,90"			, 0 },
-	{ "0:rxgains5gmelnagaina1",	"2"				, 0 },
-	{ "0:rxgains5gmtrisoa1",	"5"				, 0 },
-	{ "0:rxgains5gmtrelnabypa1",	"1"				, 0 },
-	{ "0:rxgains5ghelnagaina1",	"2"				, 0 },
-	{ "0:rxgains5ghtrisoa1",	"5"				, 0 },
-	{ "0:rxgains5ghtrelnabypa1",	"1"				, 0 },
-	{ "0:rxgains5gelnagaina1",	"2"				, 0 },
-	{ "0:rxgains5gtrisoa1",		"5"				, 0 },
-	{ "0:rxgains5gtrelnabypa1",	"1"				, 0 },
-	{ "0:maxp5ga1",			"94,94,90,90"			, 0 },
-	{ "0:rxgains5gmelnagaina2",	"2"				, 0 },
-	{ "0:rxgains5gmtrisoa2",	"5"				, 0 },
-	{ "0:rxgains5gmtrelnabypa2",	"1"				, 0 },
-	{ "0:rxgains5ghelnagaina2",	"2"				, 0 },
-	{ "0:rxgains5ghtrisoa2",	"5"				, 0 },
-	{ "0:rxgains5ghtrelnabypa2",	"1"				, 0 },
-	{ "0:rxgains5gelnagaina2",	"2"				, 0 },
-	{ "0:rxgains5gtrisoa2",		"5"				, 0 },
-	{ "0:rxgains5gtrelnabypa2",	"1"				, 0 },
-	{ "0:maxp5ga2",			"94,94,90,90"			, 0 },
-	{ "0:ledbh10",			"7"				, 0 },
-	{ "devpath2",			"pcie/2/1"			, 0 },
-	{ "2:devpath2",			"sb/1/"				, 0 },
-	{ "2:boardrev",			"0x1421"			, 0 },
-	{ "2:boardvendor",		"0x14e4"			, 0 },
-	{ "2:devid",			"0x43bc"			, 0 },
-	{ "2:sromrev",			"11"				, 0 },
-	{ "2:boardflags",		"0x30040000"			, 0 },
-	{ "2:boardflags2",		"0x00220102"			, 0 },
-	{ "2:venid",			"0x14e4"			, 0 },
-	{ "2:boardflags3",		"0x0"				, 0 },
-	{ "2:aa5g",			"7"				, 0 },
-	{ "2:aga0",			"0x0"				, 0 },
-	{ "2:aga1",			"0x0"				, 0 },
-	{ "2:aga2",			"0x0"				, 0 },
-	{ "2:txchain",			"7"				, 0 },
-	{ "2:rxchain",			"7"				, 0 },
-	{ "2:antswitch",		"0"				, 0 },
-	{ "2:femctrl",			"3"				, 0 },
-	{ "2:tssiposslope5g",		"1"				, 0 },
-	{ "2:epagain5g",		"0"				, 0 },
-	{ "2:pdgain5g",			"4"				, 0 },
-	{ "2:tworangetssi5g",		"0"				, 0 },
-	{ "2:papdcap5g",		"0"				, 0 },
-	{ "2:gainctrlsph",		"0"				, 0 },
-	{ "2:tempthresh",		"120"				, 0 },
-	{ "2:tempoffset",		"255"				, 0 },
-	{ "2:rawtempsense",		"0x1ff"				, 0 },
-	{ "2:tempsense_slope",		"0xff"				, 0 },
-	{ "2:tempcorrx",		"0x3f"				, 0 },
-	{ "2:tempsense_option",		"0x3"				, 0 },
-	{ "2:xtalfreq",			"40000"				, 0 },
-	{ "2:phycal_tempdelta",		"15"				, 0 },
-	{ "2:temps_period",		"5"				, 0 },
-	{ "2:temps_hysteresis",		"5"				, 0 },
-	{ "2:pdoffset40ma0",		"4369"				, 0 },
-	{ "2:pdoffset40ma1",		"4369"				, 0 },
-	{ "2:pdoffset40ma2",		"4369"				, 0 },
-	{ "2:pdoffset80ma0",		"0"				, 0 },
-	{ "2:pdoffset80ma1",		"0"				, 0 },
-	{ "2:pdoffset80ma2",		"0"				, 0 },
-	{ "2:subband5gver",		"0x4"				, 0 },
-	{ "2:mcsbw1605glpo",		"0"				, 0 },
-	{ "2:mcsbw1605gmpo",		"0"				, 0 },
-	{ "2:mcsbw1605ghpo",		"0"				, 0 },
-	{ "2:mcslr5glpo",		"0"				, 0 },
-	{ "2:mcslr5gmpo",		"0"				, 0 },
-	{ "2:mcslr5ghpo",		"0"				, 0 },
-	{ "2:dot11agduphrpo",		"0"				, 0 },
-	{ "2:dot11agduplrpo",		"0"				, 0 },
-	{ "2:rxgains5gmelnagaina0",	"2"				, 0 },
-	{ "2:rxgains5gmtrisoa0",	"5"				, 0 },
-	{ "2:rxgains5gmtrelnabypa0",	"1"				, 0 },
-	{ "2:rxgains5ghelnagaina0",	"2"				, 0 },
-	{ "2:rxgains5ghtrisoa0",	"5"				, 0 },
-	{ "2:rxgains5ghtrelnabypa0",	"1"				, 0 },
-	{ "2:rxgains5gelnagaina0",	"2"				, 0 },
-	{ "2:rxgains5gtrisoa0",		"5"				, 0 },
-	{ "2:rxgains5gtrelnabypa0",	"1"				, 0 },
-	{ "2:maxp5ga0",			"90,90,106,106"			, 0 },
-	{ "2:rxgains5gmelnagaina1",	"2"				, 0 },
-	{ "2:rxgains5gmtrisoa1",	"5"				, 0 },
-	{ "2:rxgains5gmtrelnabypa1",	"1"				, 0 },
-	{ "2:rxgains5ghelnagaina1",	"2"				, 0 },
-	{ "2:rxgains5ghtrisoa1",	"5"				, 0 },
-	{ "2:rxgains5ghtrelnabypa1",	"1"				, 0 },
-	{ "2:rxgains5gelnagaina1",	"2"				, 0 },
-	{ "2:rxgains5gtrisoa1",		"5"				, 0 },
-	{ "2:rxgains5gtrelnabypa1",	"1"				, 0 },
-	{ "2:maxp5ga1",			"90,90,106,106"			, 0 },
-	{ "2:rxgains5gmelnagaina2",	"2"				, 0 },
-	{ "2:rxgains5gmtrisoa2",	"5"				, 0 },
-	{ "2:rxgains5gmtrelnabypa2",	"1"				, 0 },
-	{ "2:rxgains5ghelnagaina2",	"2"				, 0 },
-	{ "2:rxgains5ghtrisoa2",	"5"				, 0 },
-	{ "2:rxgains5ghtrelnabypa2",	"1"				, 0 },
-	{ "2:rxgains5gelnagaina2",	"2"				, 0 },
-	{ "2:rxgains5gtrisoa2",		"5"				, 0 },
-	{ "2:rxgains5gtrelnabypa2",	"1"				, 0 },
-	{ "2:maxp5ga2",			"90,90,106,106"			, 0 },
-	{ "2:ledbh10",			"7"				, 0 },
-
 	{ 0, 0, 0 }
 };
 
-struct nvram_tuple r8000_params[] = {
-	{ "0:aa5g",			"7"				, 0 },
-	{ "0:aga0",			"0x0"				, 0 },
-	{ "0:aga1",			"0x0"				, 0 },
-	{ "0:aga2",			"0x0"				, 0 },
-	{ "0:antswitch",		"0"				, 0 },
-	{ "0:boardflags",		"0x30008000"			, 0 },
-	{ "0:boardflags2",		"0x2"				, 0 },
-	{ "0:boardflags3",		"0x1"				, 0 },
-	{ "0:boardrev",			"0x1421"			, 0 },
-	{ "0:boardvendor",		"0x14e4"			, 0 },
-	{ "0:deadman_to",		"720000000"			, 0 },
-	{ "0:devid",			"0x43BC"			, 0 },
-	{ "0:devpath0",			"sb/1/"				, 0 },
-	{ "0:disband5grp",		"0x7"				, 0 },
-	{ "0:dot11agduphrpo",		"0"				, 0 },
-	{ "0:dot11agduplrpo",		"0"				, 0 },
-	{ "0:epagain5g",		"0"				, 0 },
-	{ "0:femctrl",			"6"				, 0 },
-	{ "0:gainctrlsph",		"0"				, 0 },
-	{ "0:maxp5ga0",			"98,98,98,98"			, 0 },
-	{ "0:maxp5ga1",			"98,98,98,98"			, 0 },
-	{ "0:maxp5ga2",			"98,98,98,98"			, 0 },
-	{ "0:mcsbw1605ghpo",		"0"				, 0 },
-	{ "0:mcsbw1605glpo",		"0"				, 0 },
-	{ "0:mcsbw1605gmpo",		"0"				, 0 },
-	{ "0:mcsbw205ghpo",		"0x76434200"			, 0 },
-	{ "0:mcsbw205glpo",		"0"				, 0 },
-	{ "0:mcsbw205gmpo",		"0"				, 0 },
-	{ "0:mcsbw405ghpo",		"0x76434222"			, 0 },
-	{ "0:mcsbw405glpo",		"0"				, 0 },
-	{ "0:mcsbw405gmpo",		"0"				, 0 },
-	{ "0:mcsbw805ghpo",		"0x76434222"			, 0 },
-	{ "0:mcsbw805glpo",		"0"				, 0 },
-	{ "0:mcsbw805gmpo",		"0"				, 0 },
-	{ "0:mcslr5ghpo",		"0"				, 0 },
-	{ "0:mcslr5glpo",		"0"				, 0 },
-	{ "0:mcslr5gmpo",		"0"				, 0 },
-	{ "0:pa5ga0",			"0xff25,0x156d,0xfd52,0xff27,0x1750,0xfd12,0xff33,0x1ca2,0xfc95,0xff40,0x1c48,0xfcb3", 0 },
-	{ "0:pa5ga1",			"0xff28,0x1519,0xfd57,0xff31,0x169f,0xfd34,0xff2f,0x1bb3,0xfcad,0xff41,0x1d31,0xfc9f", 0 },
-	{ "0:pa5ga2",			"0xff29,0x1543,0xfd5b,0xff2a,0x16f7,0xfd23,0xff27,0x1a50,0xfccd,0xff40,0x1cc1,0xfc95", 0 },
-	{ "0:papdcap5g",		"0"				, 0 },
-	{ "0:pdgain5g",			"4"				, 0 },
-	{ "0:pdoffset40ma0",		"0"				, 0 },
-	{ "0:pdoffset40ma1",		"0"				, 0 },
-	{ "0:pdoffset40ma2",		"0"				, 0 },
-	{ "0:pdoffset80ma0",		"0"				, 0 },
-	{ "0:pdoffset80ma1",		"0"				, 0 },
-	{ "0:pdoffset80ma2",		"0"				, 0 },
-	{ "0:phycal_tempdelta",		"15"				, 0 },
-	{ "0:pwr_scale_1db",		"1"				, 0 },
-	{ "0:rawtempsense",		"0x1ff"				, 0 },
-	{ "0:rpcal5gb0",		"0"				, 0 },
-	{ "0:rpcal5gb1",		"0"				, 0 },
-	{ "0:rpcal5gb2",		"0xb53e"			, 0 },
-	{ "0:rpcal5gb3",		"0"				, 0 },
-	{ "0:rxchain",			"7"				, 0 },
-	{ "0:rxgainerr5ga0",		"63,63,63,63"			, 0 },
-	{ "0:rxgainerr5ga1",		"31,31,31,31"			, 0 },
-	{ "0:rxgainerr5ga2",		"31,31,31,31"			, 0 },
-	{ "0:rxgains5gelnagaina0",	"1"				, 0 },
-	{ "0:rxgains5gelnagaina1",	"1"				, 0 },
-	{ "0:rxgains5gelnagaina2",	"1"				, 0 },
-	{ "0:rxgains5ghelnagaina0",	"1"				, 0 },
-	{ "0:rxgains5ghelnagaina1",	"1"				, 0 },
-	{ "0:rxgains5ghelnagaina2",	"1"				, 0 },
-	{ "0:rxgains5ghtrelnabypa0",	"1"				, 0 },
-	{ "0:rxgains5ghtrelnabypa1",	"1"				, 0 },
-	{ "0:rxgains5ghtrelnabypa2",	"1"				, 0 },
-	{ "0:rxgains5ghtrisoa0",	"6"				, 0 },
-	{ "0:rxgains5ghtrisoa1",	"6"				, 0 },
-	{ "0:rxgains5ghtrisoa2",	"6"				, 0 },
-	{ "0:rxgains5gmelnagaina0",	"1"				, 0 },
-	{ "0:rxgains5gmelnagaina1",	"1"				, 0 },
-	{ "0:rxgains5gmelnagaina2",	"1"				, 0 },
-	{ "0:rxgains5gmtrelnabypa0",	"1"				, 0 },
-	{ "0:rxgains5gmtrelnabypa1",	"1"				, 0 },
-	{ "0:rxgains5gmtrelnabypa2",	"1"				, 0 },
-	{ "0:rxgains5gmtrisoa0",	"6"				, 0 },
-	{ "0:rxgains5gmtrisoa1",	"6"				, 0 },
-	{ "0:rxgains5gmtrisoa2",	"6"				, 0 },
-	{ "0:rxgains5gtrelnabypa0",	"1"				, 0 },
-	{ "0:rxgains5gtrelnabypa1",	"1"				, 0 },
-	{ "0:rxgains5gtrelnabypa2",	"1"				, 0 },
-	{ "0:rxgains5gtrisoa0",		"6"				, 0 },
-	{ "0:rxgains5gtrisoa1",		"6"				, 0 },
-	{ "0:rxgains5gtrisoa2",		"6"				, 0 },
-	{ "0:sromrev",			"11"				, 0 },
-	{ "0:subband5gver",		"0x4"				, 0 },
-	{ "0:tempcorrx",		"0x3f"				, 0 },
-	{ "0:tempoffset",		"255"				, 0 },
-	{ "0:tempsense_option",		"0x3"				, 0 },
-	{ "0:tempsense_slope",		"0xff"				, 0 },
-	{ "0:temps_hysteresis",		"5"				, 0 },
-	{ "0:temps_period",		"5"				, 0 },
-	{ "0:tempthresh",		"120"				, 0 },
-	{ "0:tssiposslope5g",		"1"				, 0 },
-	{ "0:tworangetssi5g",		"0"				, 0 },
-	{ "0:txchain",			"7"				, 0 },
-	{ "0:venid",			"0x14e4"			, 0 },
-	{ "0:watchdog",			"3000"				, 0 },
-	{ "0:xtalfreq",			"40000"				, 0 },
-	{ "1:aa2g",			"7"				, 0 },
-	{ "1:agbg0",			"0x0"				, 0 },
-	{ "1:agbg1",			"0x0"				, 0 },
-	{ "1:agbg2",			"0x0"				, 0 },
-	{ "1:antswitch",		"0"				, 0 },
-	{ "1:boardflags",		"0x1000"			, 0 },
-	{ "1:boardflags2",		"0x2"				, 0 },
-	{ "1:boardflags3",		"0x4000001"			, 0 },
-	{ "1:boardrev",			"0x1421"			, 0 },
-	{ "1:boardvendor",		"0x14e4"			, 0 },
-	{ "1:cckbw202gpo",		"0"				, 0 },
-	{ "1:cckbw20ul2gpo",		"0"				, 0 },
-	{ "1:deadman_to",		"720000000"			, 0 },
-	{ "1:devid",			"0x43BB"			, 0 },
-	{ "1:devpath1",			"sb/1/"				, 0 },
-	{ "1:dot11agduphrpo",		"0"				, 0 },
-	{ "1:dot11agduplrpo",		"0"				, 0 },
-	{ "1:dot11agofdmhrbw202gpo",	"0"				, 0 },
-	{ "1:epagain2g",		"0"				, 0 },
-	{ "1:femctrl",			"6"				, 0 },
-	{ "1:gainctrlsph",		"0"				, 0 },
-	{ "1:maxp2ga0",			"58"				, 0 },
-	{ "1:maxp2ga1",			"58"				, 0 },
-	{ "1:maxp2ga2",			"58"				, 0 },
-	{ "1:mcsbw202gpo",		"0"				, 0 },
-	{ "1:mcsbw402gpo",		"0"				, 0 },
-	{ "1:ofdmlrbw202gpo",		"0"				, 0 },
-	{ "1:pa2ga0",			"0xff40,0x1b2a,0xfcd0"		, 0 },
-	{ "1:pa2ga1",			"0xff45,0x1b83,0xfcd2"		, 0 },
-	{ "1:pa2ga2",			"0xff3a,0x1b35,0xfcc2"		, 0 },
-	{ "1:papdcap2g",		"0"				, 0 },
-	{ "1:pdgain2g",			"21"				, 0 },
-	{ "1:pdoffset2g40ma0",		"15"				, 0 },
-	{ "1:pdoffset2g40ma1",		"15"				, 0 },
-	{ "1:pdoffset2g40ma2",		"15"				, 0 },
-	{ "1:pdoffset2g40mvalid",	"1"				, 0 },
-	{ "1:pdoffset40ma0",		"0"				, 0 },
-	{ "1:pdoffset40ma1",		"0"				, 0 },
-	{ "1:pdoffset40ma2",		"0"				, 0 },
-	{ "1:pdoffset80ma0",		"0"				, 0 },
-	{ "1:pdoffset80ma1",		"0"				, 0 },
-	{ "1:pdoffset80ma2",		"0"				, 0 },
-	{ "1:phycal_tempdelta",		"15"				, 0 },
-	{ "1:pwr_scale_1db",		"1"				, 0 },
-	{ "1:rawtempsense",		"0x1ff"				, 0 },
-	{ "1:rpcal2g",			"0x2a06"			, 0 },
-	{ "1:rxchain",			"7"				, 0 },
-	{ "1:rxgainerr2ga0",		"7"				, 0 },
-	{ "1:rxgainerr2ga1",		"2"				, 0 },
-	{ "1:rxgainerr2ga2",		"0"				, 0 },
-	{ "1:rxgains2gelnagaina0",	"2"				, 0 },
-	{ "1:rxgains2gelnagaina1",	"2"				, 0 },
-	{ "1:rxgains2gelnagaina2",	"2"				, 0 },
-	{ "1:rxgains2gtrelnabypa0",	"1"				, 0 },
-	{ "1:rxgains2gtrelnabypa1",	"1"				, 0 },
-	{ "1:rxgains2gtrelnabypa2",	"1"				, 0 },
-	{ "1:rxgains2gtrisoa0",		"6"				, 0 },
-	{ "1:rxgains2gtrisoa1",		"6"				, 0 },
-	{ "1:rxgains2gtrisoa2",		"6"				, 0 },
-	{ "1:sromrev",			"11"				, 0 },
-	{ "1:tempcorrx",		"0x3f"				, 0 },
-	{ "1:tempoffset",		"255"				, 0 },
-	{ "1:tempsense_option",		"0x3"				, 0 },
-	{ "1:tempsense_slope",		"0xff"				, 0 },
-	{ "1:temps_hysteresis",		"5"				, 0 },
-	{ "1:temps_period",		"5"				, 0 },
-	{ "1:tempthresh",		"120"				, 0 },
-	{ "1:tssiposslope2g",		"1"				, 0 },
-	{ "1:tworangetssi2g",		"0"				, 0 },
-	{ "1:txchain",			"7"				, 0 },
-	{ "1:venvid",			"0x14e4"			, 0 },
-	{ "1:watchdog",			"10000"				, 0 },
-	{ "1:xtalfreq",			"40000"				, 0 },
-	{ "2:aa5g",			"7"				, 0 },
-	{ "2:aga0",			"0x0"				, 0 },
-	{ "2:aga1",			"0x0"				, 0 },
-	{ "2:aga2",			"0x0"				, 0 },
-	{ "2:antswitch",		"0"				, 0 },
-	{ "2:boardflags",		"0x10000000"			, 0 },
-	{ "2:boardflags2",		"0x2"				, 0 },
-	{ "2:boardflags3",		"0x2"				, 0 },
-	{ "2:boardrev",			"0x1421"			, 0 },
-	{ "2:boardvendor",		"0x14e4"			, 0 },
-	{ "2:deadman_to",		"720000000"			, 0 },
-	{ "2:devid",			"0x43BC"			, 0 },
-	{ "2:devpath2",			"sb/1/"				, 0 },
-	{ "2:disband5grp",		"0x18"				, 0 },
-	{ "2:dot11agduphrpo",		"0x4444"			, 0 },
-	{ "2:dot11agduplrpo",		"0x4444"			, 0 },
-	{ "2:epagain5g",		"0"				, 0 },
-	{ "2:femctrl",			"6"				, 0 },
-	{ "2:gainctrlsph",		"0"				, 0 },
-	{ "2:maxp5ga0",			"74,74,74,74"			, 0 },
-	{ "2:maxp5ga1",			"74,74,74,74"			, 0 },
-	{ "2:maxp5ga2",			"74,74,74,74"			, 0 },
-	{ "2:mcsbw1605ghpo",		"0"				, 0 },
-	{ "2:mcsbw1605glpo",		"0"				, 0 },
-	{ "2:mcsbw1605gmpo",		"0"				, 0 },
-	{ "2:mcsbw205ghpo",		"0"				, 0 },
-	{ "2:mcsbw205glpo",		"0x43224444"			, 0 },
-	{ "2:mcsbw205gmpo",		"0x43224444"			, 0 },
-	{ "2:mcsbw405ghpo",		"0"				, 0 },
-	{ "2:mcsbw405glpo",		"0x43211111"			, 0 },
-	{ "2:mcsbw405gmpo",		"0x43223333"			, 0 },
-	{ "2:mcsbw805ghpo",		"0"				, 0 },
-	{ "2:mcsbw805glpo",		"0x43211111"			, 0 },
-	{ "2:mcsbw805gmpo",		"0x43212222"			, 0 },
-	{ "2:mcslr5ghpo",		"0"				, 0 },
-	{ "2:mcslr5glpo",		"0"				, 0 },
-	{ "2:mcslr5gmpo",		"0"				, 0 },
-	{ "2:pa5ga0",			"0xff25,0x156d,0xfd52,0xff27,0x1750,0xfd12,0xff33,0x1ca2,0xfc95,0xff40,0x1c48,0xfcb3", 0 },
-	{ "2:pa5ga1",			"0xff28,0x1519,0xfd57,0xff31,0x169f,0xfd34,0xff2f,0x1bb3,0xfcad,0xff41,0x1d31,0xfc9f", 0 },
-	{ "2:pa5ga2",			"0xff29,0x1543,0xfd5b,0xff2a,0x16f7,0xfd23,0xff27,0x1a50,0xfccd,0xff40,0x1cc1,0xfc95", 0 },
-	{ "2:papdcap5g",		"0"				, 0 },
-	{ "2:pdgain5g",			"19"				, 0 },
-	{ "2:pdoffset40ma0",		"0x5444"			, 0 },
-	{ "2:pdoffset40ma1",		"0x5444"			, 0 },
-	{ "2:pdoffset40ma2",		"0x5344"			, 0 },
-	{ "2:pdoffset80ma0",		"0x2111"			, 0 },
-	{ "2:pdoffset80ma1",		"0x0111"			, 0 },
-	{ "2:pdoffset80ma2",		"0x2111"			, 0 },
-	{ "2:phycal_tempdelta",		"15"				, 0 },
-	{ "2:pwr_scale_1db",		"1"				, 0 },
-	{ "2:rawtempsense",		"0x1ff"				, 0 },
-	{ "2:rpcal5gb0",		"0x4053"			, 0 },
-	{ "2:rpcal5gb1",		"0x4b51"			, 0 },
-	{ "2:rpcal5gb2",		"0"				, 0 },
-	{ "2:rpcal5gb3",		"0"				, 0 },
-	{ "2:rxchain",			"7"				, 0 },
-	{ "2:rxgainerr5ga0",		"-2,63,63,63"			, 0 },
-	{ "2:rxgainerr5ga1",		"-2,31,31,31"			, 0 },
-	{ "2:rxgainerr5ga2",		"-5,31,31,31"			, 0 },
-	{ "2:rxgains5gelnagaina0",	"1"				, 0 },
-	{ "2:rxgains5gelnagaina1",	"1"				, 0 },
-	{ "2:rxgains5gelnagaina2",	"1"				, 0 },
-	{ "2:rxgains5ghelnagaina0",	"1"				, 0 },
-	{ "2:rxgains5ghelnagaina1",	"1"				, 0 },
-	{ "2:rxgains5ghelnagaina2",	"1"				, 0 },
-	{ "2:rxgains5ghtrelnabypa0",	"1"				, 0 },
-	{ "2:rxgains5ghtrelnabypa1",	"1"				, 0 },
-	{ "2:rxgains5ghtrelnabypa2",	"1"				, 0 },
-	{ "2:rxgains5ghtrisoa0",	"6"				, 0 },
-	{ "2:rxgains5ghtrisoa1",	"6"				, 0 },
-	{ "2:rxgains5ghtrisoa2",	"6"				, 0 },
-	{ "2:rxgains5gmelnagaina0",	"1"				, 0 },
-	{ "2:rxgains5gmelnagaina1",	"1"				, 0 },
-	{ "2:rxgains5gmelnagaina2",	"1"				, 0 },
-	{ "2:rxgains5gmtrelnabypa0",	"1"				, 0 },
-	{ "2:rxgains5gmtrelnabypa1",	"1"				, 0 },
-	{ "2:rxgains5gmtrelnabypa2",	"1"				, 0 },
-	{ "2:rxgains5gmtrisoa0",	"6"				, 0 },
-	{ "2:rxgains5gmtrisoa1",	"6"				, 0 },
-	{ "2:rxgains5gmtrisoa2",	"6"				, 0 },
-	{ "2:rxgains5gtrelnabypa0",	"1"				, 0 },
-	{ "2:rxgains5gtrelnabypa1",	"1"				, 0 },
-	{ "2:rxgains5gtrelnabypa2",	"1"				, 0 },
-	{ "2:rxgains5gtrisoa0",		"6"				, 0 },
-	{ "2:rxgains5gtrisoa1",		"6"				, 0 },
-	{ "2:rxgains5gtrisoa2",		"6"				, 0 },
-	{ "2:sromrev",			"11"				, 0 },
-	{ "2:subband5gver",		"0x4"				, 0 },
-	{ "2:tempcorrx",		"0x3f"				, 0 },
-	{ "2:tempoffset",		"255"				, 0 },
-	{ "2:tempsense_option",		"0x3"				, 0 },
-	{ "2:tempsense_slope",		"0xff"				, 0 },
-	{ "2:temps_hysteresis",		"5"				, 0 },
-	{ "2:temps_period",		"5"				, 0 },
-	{ "2:tempthresh",		"120"				, 0 },
-	{ "2:tssiposslope5g",		"1"				, 0 },
-	{ "2:tworangetssi5g",		"0"				, 0 },
-	{ "2:txchain",			"7"				, 0 },
-	{ "2:venid",			"0x14e4"			, 0 },
-	{ "2:watchdog",			"3000"				, 0 },
-	{ "2:xtalfreq",			"40000"				, 0 },
-
-	{ 0, 0, 0 }
-};
-#else
-struct nvram_tuple bcm4360ac_defaults[] = {
-	{ "0:ledbh10",			"7"				, 0 },
-	{ "1:ledbh10",			"7"				, 0 },
-	{ 0, 0, 0 }
-};
-#endif /* !TCONFIG_BCMARM */
-
+#ifdef TCONFIG_BCMARM
 /* Translates from, for example, wl0_ (or wl0.1_) to wl_ */
 /* Only single digits are currently supported */
 static void fix_name(const char *name, char *fixed_name)
@@ -2355,4 +1898,30 @@ void nvram_restore_var(char *prefix, char *name)
 		}
 	}
 }
-#endif /* TCONFIG_BCMWL6 */
+
+#else /* TCONFIG_BCMARM */
+/* MIPS */
+const defaults_t if_generic[] = {
+	{ "lan_ifname",			"br0"				},
+	{ "lan_ifnames",		"eth0 eth2 eth3 eth4"		},
+	{ "wan_ifname",			"eth1"				},
+	{ "wan_ifnames",		"eth1"				},
+
+	{ NULL, NULL }
+};
+
+const defaults_t if_vlan[] = {
+	{ "lan_ifname",			"br0"				},
+	{ "lan_ifnames",		"vlan0 eth1 eth2 eth3"		},
+	{ "lan1_ifname",		""				},
+	{ "lan1_ifnames",		""				},
+	{ "lan2_ifname",		""				},
+	{ "lan2_ifnames",		""				},
+	{ "lan3_ifname",		""				},
+	{ "lan3_ifnames",		""				},
+	{ "wan_ifname",			"vlan1"				},
+	{ "wan_ifnames",		"vlan1"				},
+
+	{ NULL, NULL }
+};
+#endif /* TCONFIG_BCMARM */
