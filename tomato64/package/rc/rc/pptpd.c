@@ -324,11 +324,14 @@ void start_pptpd(int force)
 void stop_pptpd(void)
 {
 	FILE *fp;
-	int ppppid, n;
+	pid_t pid, ppppid;
+	int n;
 	char line[128];
 
 	if (serialize_restart("pptpd", 0))
 		return;
+
+	pid = pidof("pptpd");
 
 	eval("cp", PPTPD_CONNECTED, PPTPD_SHUTDOWN);
 
@@ -348,7 +351,9 @@ void stop_pptpd(void)
 
 	killall_tk_period_wait("pptpd", 50);
 	killall_tk_period_wait("bcrelay", 50);
-	logmsg(LOG_INFO, "pptpd is stopped");
+
+	if (pid > 0)
+		logmsg(LOG_INFO, "pptpd is stopped");
 
 	run_del_firewall_script(PPTPD_FW_SCRIPT, PPTPD_FW_DEL_SCRIPT);
 
