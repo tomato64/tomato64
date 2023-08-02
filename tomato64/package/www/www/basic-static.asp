@@ -327,6 +327,11 @@ function save() {
 	form.submit(fom, 1);
 }
 
+function earlyInit() {
+	sg.setup();
+	verifyFields(null, 1);
+}
+
 function init() {
 	var c;
 	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
@@ -411,6 +416,6 @@ function init() {
 </td></tr>
 </table>
 </form>
-<script>sg.setup();</script>
+<script>earlyInit();</script>
 </body>
 </html>
