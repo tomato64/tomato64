@@ -30,6 +30,11 @@ void asp_ddnsx(int argc, char **argv)
 	web_printf("\nddnsx4_ip = '%s';", get_wanip("wan4"));
 #endif
 
+	web_printf("\nddnsx_ip_nvram = '%s';", nvram_safe_get("ddnsx_ip"));
+	web_printf("\nwan_dns_nvram = '%s';", nvram_safe_get("wan_dns"));
+	web_printf("\nwan_get_dns_nvram = '%s';", nvram_safe_get("wan_get_dns"));
+	web_printf("\ndns_addget_nvram = '%s';", nvram_safe_get("dns_addget"));
+
 	web_puts("\nddnsx_msg = [");
 
 	for (i = 0; i < 2; ++i) {
@@ -66,5 +71,6 @@ void asp_ddnsx(int argc, char **argv)
 			web_putj(q);
 		}
 	}
+
 	web_puts("'];\n");
 }

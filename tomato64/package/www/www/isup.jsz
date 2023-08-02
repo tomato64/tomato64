@@ -1,5 +1,7 @@
 //	<% etherstates(); %>
 
+//	<% ddnsx(); %>
+
 isup = {};
 
 isup.time = '<% time(); %>';

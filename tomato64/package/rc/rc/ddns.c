@@ -202,7 +202,7 @@ static void update(int num, int *dirty, int force)
 	if (!nvram_match(cache_nv, s)) {
 		nvram_set(cache_nv, s);
 		if (nvram_get_int("ddnsx_save") && (strstr(serv, "dyndns") == 0))
-				*dirty = 1;
+			*dirty = 1;
 	}
 
 	n = 28;
@@ -244,7 +244,7 @@ SCHED:
 				n = 30;
 
 			memset(s, 0, sizeof(s));
-			snprintf(s, sizeof(s), "\n#RETRY %d %d\n", n, errors); /* should be localized in basic-ddns.asp */
+			snprintf(s, sizeof(s), "#RETRY %d %d", n, errors); /* should be localized in basic-ddns.asp */
 			f_write_string(msg_fn, s, FW_APPEND, 0);
 			logmsg(LOG_DEBUG, "*** %s: msg='retry n=%d errors=%d'", __FUNCTION__, n, errors);
 		}
