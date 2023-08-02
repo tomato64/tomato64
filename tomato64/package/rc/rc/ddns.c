@@ -140,7 +140,7 @@ static void update(int num, int *dirty, int force)
 	           "ahash %s\n"
 	           "msg %s\n"
 	           "cookie %s\n"
-	           "addrcache extip\n"
+	           "addrcache extip%d\n"
 	           "",
 	           user,
 	           pass,
@@ -152,10 +152,11 @@ static void update(int num, int *dirty, int force)
 	           cust,
 	           cust,
 	           msg_fn,
-	           cache_fn);
+	           cache_fn,
+	           num);
 
 	if (nvram_get_int("debug_ddns"))
-		fprintf(f, "dump /tmp/mdu-%s.txt\n", serv);
+		fprintf(f, "dump /tmp/mdu%d-%s.txt\n", num, serv);
 
 	fclose(f);
 
