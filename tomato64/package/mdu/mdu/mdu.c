@@ -240,19 +240,19 @@ static int curl_dump(CURL *handle, curl_infotype type, char *data, size_t size, 
 
 	switch (type) {
 		case CURLINFO_HEADER_OUT:
-			prefix = ">H ";
+			prefix = "=> H ";
 			break;
 		case CURLINFO_DATA_OUT:
-			prefix = ">D ";
+			prefix = "=> D ";
 			break;
 		case CURLINFO_HEADER_IN:
-			prefix = "<H ";
+			prefix = "<= H ";
 			break;
 		case CURLINFO_DATA_IN:
-			prefix = "<D ";
+			prefix = "<= D ";
 			break;
 		case CURLINFO_TEXT:
-			prefix = "=I ";
+			prefix = "== I ";
 			is_info = 1;
 			break;
 		default:
@@ -304,12 +304,12 @@ static void curl_setup()
 		error("libcurl initialization failure.");
 
 #ifndef TCONFIG_STUBBY
-	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0);
+	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
-	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1);
-	curl_easy_setopt(curl_handle, CURLOPT_MAXREDIRS, 20);
-	curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT, 10);
-	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 10);
+	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
+	curl_easy_setopt(curl_handle, CURLOPT_MAXREDIRS, 5L);
+	curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT, 10L);
+	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 10L);
 
 	if ((dump = get_dump_name()) != NULL) {
 		curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
@@ -541,7 +541,7 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 	}
 	else {
 		curl_easy_setopt(curl_handle, CURLOPT_READDATA, NULL);
-		curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, 0);
+		curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, 0L);
 		curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 0L);
 	}
 
