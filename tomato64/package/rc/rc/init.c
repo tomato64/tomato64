@@ -10853,6 +10853,9 @@ int init_main(int argc, char *argv[])
 				add_remove_usbhost("-1", 1);
 #endif
 
+			/* enable watchdog and other services */
+			nvram_set("g_reboot", "0");
+
 			log_segfault();
 			create_passwd();
 			init_lan_hwaddr();
@@ -10881,9 +10884,6 @@ int init_main(int argc, char *argv[])
 			 * last one as ssh telnet httpd samba etc can fail to load until start_wan_done
 			 */
 			start_wan();
-
-			/* enable watchdog */
-			nvram_set("g_reboot", "0");
 
 			if (wds_enable()) {
 				/* Restart NAS one more time - for some reason without
