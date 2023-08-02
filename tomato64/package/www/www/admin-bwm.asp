@@ -20,6 +20,65 @@
 
 //	<% nvram("rstats_enable,rstats_path,rstats_stime,rstats_offset,rstats_exclude,rstats_sshut,lan_hwaddr,cifs1,cifs2,jffs2_on,rstats_bak"); %>
 
+var xob = null;
+
+function _rstatsNvramAdd() {
+	form.submitHidden('service.cgi', { _service: 'rstats_nvram-start', _sleep: 1 });
+}
+
+function rstatsNvramAdd() {
+	var sb, cb, msg;
+
+	/* short check for rstats nvram var. If OK - nothing to do! */
+	if ((nvram.rstats_stime.length > 0) &&
+	    (nvram.rstats_offset.length > 0))
+		return;
+
+	/* check already enabled? - nothing to do! */
+	if (nvram.rstats_enable > 0)
+		return;
+
+	E('_f_rstats_enable').disabled = 1;
+	if ((sb = E('save-button')) != null) sb.disabled = 1;
+	if ((cb = E('cancel-button')) != null) cb.disabled = 1;
+
+	if (!confirm("Add Bandwidth Monitoring to nvram?"))
+		return;
+
+	if (xob)
+		return;
+
+	if ((xob = new XmlHttp()) == null) {
+		_rstatsNvramAdd();
+		return;
+	}
+
+	if ((msg = E('footer-msg')) != null) {
+		msg.innerHTML = 'adding nvram values...';
+		msg.style.display = 'inline';
+	}
+
+	xob.onCompleted = function(text, xml) {
+		if (msg) {
+			msg.innerHTML = 'nvram ready';
+		}
+		setTimeout(
+			function() {
+				E('_f_rstats_enable').disabled = 0;
+				if (sb) sb.disabled = 0;
+				if (cb) cb.disabled = 0;
+				if (msg) msg.style.display = 'none';
+				setTimeout(reloadPage, 1000);
+		}, 5000);
+		xob = null;
+	}
+	xob.onError = function() {
+		_rstatsNvramAdd();
+	}
+
+	xob.post('service.cgi', '_service=rstats_nvram-start'+'&'+'_sleep=1'+'&'+'_ajax=1');
+}
+
 function backupNameChanged() {
 	if (location.href.match(/^(http.+?\/.+\/)/))
 		E('backup-link').href = RegExp.$1+'stats/'+fixFile(E('backup-name').value)+'.gz?_http_id='+nvram.http_id+'&_what=bwm';
@@ -182,6 +241,7 @@ function save() {
 }
 
 function init() {
+	rstatsNvramAdd();
 	backupNameChanged();
 }
 </script>
@@ -271,6 +331,15 @@ function init() {
 			<input type="button" name="f_restore_button" id="restore-button" value="Restore" onclick="restoreButton()">
 		</div>
 	</form>
+</div>
+
+<!-- / / / -->
+
+<div class="section-title">Notes</div>
+<div class="section">
+	<ul>
+		<li><b>NVRAM</b> - If Bandwidth Monitoring has been enabled, nvram values will be added. Nvram values will be removed after reboot in case Bandwidth Monitoring will be disabled.</li>
+	</ul>
 </div>
 
 <!-- / / / -->

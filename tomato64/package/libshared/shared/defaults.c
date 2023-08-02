@@ -22,6 +22,16 @@
 #include <tomato_config.h>
 #include "tomato_profile.h"
 
+struct nvram_tuple rstats_defaults[] = {
+	{ "rstats_path",		""				, 0 },
+	{ "rstats_stime",		"48"				, 0 },
+	{ "rstats_offset",		"1"				, 0 },
+	{ "rstats_data",		""				, 0 },
+	{ "rstats_exclude",		""				, 0 },
+	{ "rstats_sshut",		"1"				, 0 },
+	{ "rstats_bak",			"0"				, 0 },
+	{ 0, 0, 0 }
+};
 
 struct nvram_tuple router_defaults[] = {
 	{ "restore_defaults",		"0"				, 0 },	/* Set to 0 to not restore defaults on boot */
@@ -971,13 +981,7 @@ struct nvram_tuple router_defaults[] = {
 
 /* admin-bwm */
 	{ "rstats_enable",		"1"				, 0 },
-	{ "rstats_path",		""				, 0 },
-	{ "rstats_stime",		"48"				, 0 },
-	{ "rstats_offset",		"1"				, 0 },
-	{ "rstats_data",		""				, 0 },
-	{ "rstats_exclude",		""				, 0 },
-	{ "rstats_sshut",		"1"				, 0 },
-	{ "rstats_bak",			"0"				, 0 },
+	/* all other rstats_xyz variables, see rstats_defaults */
 
 /* admin-ipt */
 	{ "cstats_enable",		"0"				, 0 },

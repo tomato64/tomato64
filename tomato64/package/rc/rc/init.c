@@ -10638,7 +10638,8 @@ static void sysinit(void)
 #endif /* TCONFIG_BCMARM */
 #endif /* TOMATO64 */
 
-	restore_defaults(); /* restore defaults if necessary */
+	restore_defaults(); /* restore (basic) defaults if necessary */
+	del_rstats_defaults(); /* remove rstats nvram values if feature is disabled! */
 	init_nvram();
 
 #ifndef TOMATO64

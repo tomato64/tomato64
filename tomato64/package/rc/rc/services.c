@@ -70,6 +70,10 @@
 #define LOGMSG_DISABLE		DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG		"services_debug"
 
+#ifdef TCONFIG_BCMARM
+extern struct nvram_tuple rstats_defaults[];
+#endif /* TCONFIG_BCMARM */
+
 /* Pop an alarm to recheck pids in 500 msec */
 static const struct itimerval pop_tv = { {0, 0}, {0, 500 * 1000} };
 /* Pop an alarm to reap zombies */
@@ -84,6 +88,37 @@ static pid_t pid_igmp = -1;
 static pid_t pid_phy_tempsense = -1;
 #endif
 
+void add_rstats_defaults(void)
+{
+#ifdef TCONFIG_BCMARM
+	struct nvram_tuple *t;
+
+	/* Restore defaults if necessary */
+	for (t = rstats_defaults; t->name; t++) {
+		if (!nvram_get(t->name)) { /* check existence */
+			nvram_set(t->name, t->value);
+		}
+	}
+#else
+	eval("nvram", "rstats_defaults", "--add");
+#endif /* TCONFIG_BCMARM */
+}
+
+void del_rstats_defaults(void)
+{
+#ifdef TCONFIG_BCMARM
+	if (nvram_match("rstats_enable", "0")) {
+		struct nvram_tuple *t;
+
+		/* remove defaults if NOT necessary (only keep "xyz_enable" nv var.) */
+		for (t = rstats_defaults; t->name; t++) {
+			nvram_unset(t->name);
+		}
+	}
+#else
+	eval("nvram", "rstats_defaults", "--del");
+#endif /* TCONFIG_BCMARM */
+}
 
 void start_dnsmasq_wet()
 {
@@ -2329,6 +2364,7 @@ static void stop_rstats(void)
 static void start_rstats(int new)
 {
 	if (nvram_get_int("rstats_enable")) {
+		add_rstats_defaults(); /* backup: check nvram! */
 		stop_rstats();
 		if (new)
 			xstart("rstats", "--new");
@@ -2811,6 +2847,12 @@ TOP:
 	act_stop  = action & A_STOP;
 
 	user = (modifier != NULL && *modifier == 'c');
+
+	if (strcmp(service, "rstats_nvram") == 0) {
+		if (act_stop) del_rstats_defaults();
+		if (act_start) add_rstats_defaults();
+		goto CLEAR;
+	}
 
 	if (strcmp(service, "dhcpc_wan") == 0) {
 		if (act_stop) stop_dhcpc("wan");
