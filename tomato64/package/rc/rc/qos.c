@@ -390,14 +390,12 @@ void ipt_qos(void)
 #endif /* TCONFIG_MULTIWAN */
 
 #ifdef TCONFIG_IPV6
-	if (ipv6_enabled()) {
-		if (*wan6face)
-			ip6t_write("-A FORWARD -o %s -j QOSO\n"
-			           "-A OUTPUT -o %s -p icmpv6 -j RETURN\n"
-			           "-A OUTPUT -o %s -j QOSO\n"
-			           "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n"
-			           ,wan6face, wan6face, wan6face, wan6face);
-	}
+	if (*wan6face)
+		ip6t_write("-A FORWARD -o %s -j QOSO\n"
+		           "-A OUTPUT -o %s -p icmpv6 -j RETURN\n"
+		           "-A OUTPUT -o %s -j QOSO\n"
+		           "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n"
+		           ,wan6face, wan6face, wan6face, wan6face);
 #endif /* TCONFIG_IPV6 */
 
 	inuse |= (1 << i) | 1; /* default and highest are always built */
@@ -504,17 +502,15 @@ void ipt_qos(void)
 #endif /* !TCONFIG_BCMARM */
 
 #ifdef TCONFIG_IPV6
-			if (ipv6_enabled()) {
-				if (*wan6face) {
-					ip6t_write("-A PREROUTING -i %s -j CONNMARK --restore-mark --mask 0xf\n", wan6face);
+			if (*wan6face) {
+				ip6t_write("-A PREROUTING -i %s -j CONNMARK --restore-mark --mask 0xf\n", wan6face);
 #ifndef TCONFIG_BCMARM
-					qosDevNumStr = 0;
-					if (nvram_get_int("qos_udp"))
-							ip6t_write("-A PREROUTING -i %s -p tcp -j IMQ --todev %d\n", wan6face, qosDevNumStr); /* pass only tcp */
-					else
-							ip6t_write("-A PREROUTING -i %s -j IMQ --todev %d\n", wan6face, qosDevNumStr); /* pass everything thru ingress */
+				qosDevNumStr = 0;
+				if (nvram_get_int("qos_udp"))
+						ip6t_write("-A PREROUTING -i %s -p tcp -j IMQ --todev %d\n", wan6face, qosDevNumStr); /* pass only tcp */
+				else
+						ip6t_write("-A PREROUTING -i %s -j IMQ --todev %d\n", wan6face, qosDevNumStr); /* pass everything thru ingress */
 #endif /* !TCONFIG_BCMARM */
-				}
 			}
 #endif /* TCONFIG_IPV6 */
 			break;
@@ -773,9 +769,8 @@ void start_qos(char *prefix)
 			           x, (i + 1), x);
 
 #ifdef TCONFIG_IPV6
-			if (ipv6_enabled())
-				fprintf(f, "\t$TFA parent 1: prio %d protocol ipv6 handle %d/0xf fw flowid 1:%d\n",
-				           x + 100, (i + 1), x);
+			fprintf(f, "\t$TFA parent 1: prio %d protocol ipv6 handle %d/0xf fw flowid 1:%d\n",
+			           x + 100, (i + 1), x);
 #endif
 		}
 	}
@@ -916,8 +911,7 @@ void start_qos(char *prefix)
 			           classid, classid,
 			           classid, priority, classid);
 #ifdef TCONFIG_IPV6
-			if (ipv6_enabled())
-				fprintf(f, "\t$TFA_QOS parent 1: prio %u protocol ipv6 handle %u/0xf fw flowid 1:%u\n", (classid + 100), priority, classid);
+			fprintf(f, "\t$TFA_QOS parent 1: prio %u protocol ipv6 handle %u/0xf fw flowid 1:%u\n", (classid + 100), priority, classid);
 #endif
 		} /* for */
 	}
@@ -942,8 +936,7 @@ void start_qos(char *prefix)
 #ifdef TCONFIG_BCMARM
 	fprintf(f, "\n\t$TFA parent ffff: protocol ip prio 10 u32 match ip %s action mirred egress redirect dev $QOS_DEV\n", (nvram_get_int("qos_udp") ? "protocol 6 0xff" : "dst 0.0.0.0/0"));
 #ifdef TCONFIG_IPV6
-	if (ipv6_enabled())
-		fprintf(f, "\t$TFA parent ffff: protocol ipv6 prio 11 u32 match ip6 %s action mirred egress redirect dev $QOS_DEV\n", (nvram_get_int("qos_udp") ? "protocol 6 0xff" : "dst ::/0"));
+	fprintf(f, "\t$TFA parent ffff: protocol ipv6 prio 11 u32 match ip6 %s action mirred egress redirect dev $QOS_DEV\n", (nvram_get_int("qos_udp") ? "protocol 6 0xff" : "dst ::/0"));
 #endif
 #endif /* TCONFIG_BCMARM */
 
@@ -973,8 +966,7 @@ void start_qos(char *prefix)
 #ifdef TCONFIG_BCMARM
 	fprintf(f, "\ttc filter del dev $WAN_DEV parent ffff: protocol ip prio 10 u32 match ip %s action mirred egress redirect dev $QOS_DEV 2>/dev/null\n", (nvram_get_int("qos_udp") ? "protocol 6 0xff" : "dst 0.0.0.0/0"));
 #ifdef TCONFIG_IPV6
-	if (ipv6_enabled())
-		fprintf(f, "\ttc filter del dev $WAN_DEV parent ffff: protocol ipv6 prio 11 u32 match ip6 %s action mirred egress redirect dev $QOS_DEV 2>/dev/null\n", (nvram_get_int("qos_udp") ? "protocol 6 0xff" : "dst ::/0"));
+	fprintf(f, "\ttc filter del dev $WAN_DEV parent ffff: protocol ipv6 prio 11 u32 match ip6 %s action mirred egress redirect dev $QOS_DEV 2>/dev/null\n", (nvram_get_int("qos_udp") ? "protocol 6 0xff" : "dst ::/0"));
 #endif
 #endif /* TCONFIG_BCMARM */
 

@@ -78,9 +78,8 @@ static void build_ftpd_firewall_script(void)
 		fprintf(p, "iptables -A INPUT -p tcp --dport %s -m state --state NEW -j ftplimit\n",
 		           nvram_safe_get("ftp_port"));
 #ifdef TCONFIG_IPV6
-		if (ipv6_enabled())
-			fprintf(p, "ip6tables -A INPUT -p tcp --dport %s -m state --state NEW -j ftplimit\n",
-			           nvram_safe_get("ftp_port"));
+		fprintf(p, "ip6tables -A INPUT -p tcp --dport %s -m state --state NEW -j ftplimit\n",
+		           nvram_safe_get("ftp_port"));
 #endif
 	}
 
@@ -95,10 +94,9 @@ static void build_ftpd_firewall_script(void)
 			fprintf(p, "iptables -A INPUT -p tcp %s --dport %s -j %s\n",
 			           s, nvram_safe_get("ftp_port"), chain_in_accept);
 #ifdef TCONFIG_IPV6
-		if (ipv6_enabled())
-			if (ip6t_source(u, s, "ftp", "remote access"))
-				fprintf(p, "ip6tables -A INPUT -p tcp %s --dport %s -j %s\n",
-				           s, nvram_safe_get("ftp_port"), chain_in_accept);
+		if (ip6t_source(u, s, "ftp", "remote access"))
+			fprintf(p, "ip6tables -A INPUT -p tcp %s --dport %s -j %s\n",
+			           s, nvram_safe_get("ftp_port"), chain_in_accept);
 #endif
 		if (!c)
 			break;

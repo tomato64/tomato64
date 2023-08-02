@@ -146,16 +146,14 @@ int rcheck_main(int argc, char *argv[])
 
 #ifdef TCONFIG_IPV6
 #ifndef TCONFIG_BCM_ARM
+			/* disable web for ip6tables (ARM) - FIXME */
+			r6 = eval("ip6tables", "-D", "restrict", "-j", buf);
 			if (ipv6_enabled()) {
-				/* disable web for ip6tables (ARM) - FIXME */
-				r6 = eval("ip6tables", "-D", "restrict", "-j", buf);
-				if (ipv6_enabled()) {
-					if (insch)
-						/* ignore error above (if any) */
-						r6 = eval("ip6tables", "-A", "restrict", "-j", buf);
+				if (insch)
+					/* ignore error above (if any) */
+					r6 = eval("ip6tables", "-A", "restrict", "-j", buf);
 
-					r |= r6;
-				}
+				r |= r6;
 			}
 #endif
 #endif /* TCONFIG_IPV6 */
@@ -252,10 +250,8 @@ void ipt_restrictions(void)
 
 			ip46t_write(":restrict - [0:0]\n");
 #ifdef TCONFIG_IPV6
-			if (ipv6_enabled()) {
-				if (*wan6face)
-					ip6t_write("-A FORWARD -o %s -j restrict\n", wan6face);
-			}
+			if (*wan6face)
+				ip6t_write("-A FORWARD -o %s -j restrict\n", wan6face);
 #endif
 			for (n = 0; n < wanfaces.count; ++n) {
 				if (*(wanfaces.iface[n].name))
