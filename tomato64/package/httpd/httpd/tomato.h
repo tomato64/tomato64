@@ -164,8 +164,6 @@ extern void asp_showsyslog(int argc, char **argv);
 
 /* ddns.c */
 extern void asp_ddnsx(int argc, char **argv);
-extern void asp_ddnsx_ip(int argc, char **argv);
-extern void asp_ddnsx_msg(int argc, char **argv);
 
 /* upgrade.c */
 extern void prepare_upgrade(void);

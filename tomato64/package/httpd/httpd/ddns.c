@@ -1,9 +1,11 @@
 /*
+ *
+ * Tomato Firmware
+ * Copyright (C) 2007-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
 
 #include "tomato.h"
 
@@ -15,8 +17,8 @@ void asp_ddnsx(int argc, char **argv)
 {
 	char *p, *q;
 	int i;
-	char s[256];
-	char m[256];
+	char s[64];
+	char m[128];
 	char name[64];
 	time_t tt;
 	struct stat st;
@@ -28,12 +30,12 @@ void asp_ddnsx(int argc, char **argv)
 	web_printf("\nddnsx4_ip = '%s';", get_wanip("wan4"));
 #endif
 
-	web_printf("\nddnsx_msg = [");
+	web_puts("\nddnsx_msg = [");
 
 	for (i = 0; i < 2; ++i) {
 		web_puts(i ? "','" : "'");
 		snprintf(name, sizeof(name), "/var/lib/mdu/ddnsx%d.msg", i);
-		f_read_string(name, m, sizeof(m));	// null term'd even on error
+		f_read_string(name, m, sizeof(m)); /* null term'd even on error */
 		if (m[0] != 0) {
 			if ((stat(name, &st) == 0) && (st.st_mtime > Y2K)) {
 				strftime(s, sizeof(s), "%a, %d %b %Y %H:%M:%S %z: ", localtime(&st.st_mtime));
@@ -50,9 +52,13 @@ void asp_ddnsx(int argc, char **argv)
 		snprintf(name, sizeof(name), "ddnsx%d", i);
 		if (!nvram_match(name, "")) {
 			snprintf(name, sizeof(name), "ddnsx%d_cache", i);
-			if ((p = nvram_get(name)) == NULL) continue;
+			if ((p = nvram_get(name)) == NULL)
+				continue;
+
 			tt = strtoul(p, &q, 10);
-			if (*q++ != ',') continue;
+			if (*q++ != ',')
+				continue;
+
 			if (tt > Y2K) {
 				strftime(s, sizeof(s), "%a, %d %b %Y %H:%M:%S %z: ", localtime(&tt));
 				web_puts(s);
@@ -61,11 +67,4 @@ void asp_ddnsx(int argc, char **argv)
 		}
 	}
 	web_puts("'];\n");
-}
-
-void asp_ddnsx_ip(int argc, char **argv)
-{
-	char prefix[] = "wan";
-
-	web_puts(get_wanip(prefix));
 }
