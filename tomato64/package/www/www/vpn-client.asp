@@ -299,6 +299,7 @@ function verifyFields(focused, quiet) {
 		elem.display(E('client_'+t+'_cn'), (auth == 'tls') && (E('_vpn_'+t+'_tlsvername').value > 0));
 
 		var keyHelp = E(t+'-keyhelp');
+		keyHelp.className = 'new_window';
 		switch (auth) {
 		case 'tls':
 			keyHelp.href = helpURL['TLSKeys'];
@@ -400,6 +401,7 @@ function earlyInit() {
 
 function init() {
 	up.initPage(250, 5);
+	eventHandler();
 }
 </script>
 </head>
