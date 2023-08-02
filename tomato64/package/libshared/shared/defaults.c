@@ -70,6 +70,18 @@ struct nvram_tuple ftp_defaults[] = {
 };
 #endif /* TCONFIG_FTP */
 
+#ifdef TCONFIG_SNMP
+struct nvram_tuple snmp_defaults[] = {
+	{ "snmp_port",			"161"				, 0 },
+	{ "snmp_remote",		"0"				, 0 },
+	{ "snmp_remote_sip",		""				, 0 },
+	{ "snmp_location",		"router"			, 0 },
+	{ "snmp_contact",		"admin@tomato"			, 0 },
+	{ "snmp_ro",			"rocommunity"			, 0 },
+	{ 0, 0, 0 }
+};
+#endif /* TCONFIG_SNMP */
+
 struct nvram_tuple router_defaults[] = {
 	{ "restore_defaults",		"0"				, 0 },	/* Set to 0 to not restore defaults on boot */
 
@@ -1173,12 +1185,7 @@ struct nvram_tuple router_defaults[] = {
 
 #ifdef TCONFIG_SNMP
 	{ "snmp_enable",		"0"				, 0 },
-	{ "snmp_port",			"161"				, 0 },
-	{ "snmp_remote",		"0"				, 0 },
-	{ "snmp_remote_sip",		""				, 0 },
-	{ "snmp_location",		"router"			, 0 },
-	{ "snmp_contact",		"admin@tomato"			, 0 },
-	{ "snmp_ro",			"rocommunity"			, 0 },
+	/* all other snmp_xyz variables, see snmp_defaults */
 #endif /* TCONFIG_SNMP */
 
 #ifdef TCONFIG_SAMBASRV

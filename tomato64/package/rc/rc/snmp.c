@@ -19,6 +19,8 @@ void start_snmp(void)
 
 	/*  only if enabled... */
 	if (nvram_match("snmp_enable", "1")) {
+		add_snmp_defaults(); /* backup: check nvram! */
+
 		/* writing data to file */
 		if (!(fp = fopen(SNMP_CONF, "w"))) {
 			logerr(__FUNCTION__, __LINE__, SNMP_CONF);

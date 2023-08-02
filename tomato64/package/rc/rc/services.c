@@ -79,6 +79,9 @@ extern struct nvram_tuple cstats_defaults[];
 #if defined(TCONFIG_FTP) && defined(TCONFIG_BCMARM)
 extern struct nvram_tuple ftp_defaults[];
 #endif /* TCONFIG_FTP && TCONFIG_BCMARM */
+#if defined(TCONFIG_SNMP) && defined(TCONFIG_BCMARM)
+extern struct nvram_tuple snmp_defaults[];
+#endif /* TCONFIG_SNMP && TCONFIG_BCMARM */
 
 /* Pop an alarm to recheck pids in 500 msec */
 static const struct itimerval pop_tv = { {0, 0}, {0, 500 * 1000} };
@@ -191,6 +194,40 @@ void del_ftp_defaults(void)
 #endif /* TCONFIG_BCMARM */
 }
 #endif /* TCONFIG_FTP */
+
+#ifdef TCONFIG_SNMP
+void add_snmp_defaults(void)
+{
+#ifdef TCONFIG_BCMARM
+	struct nvram_tuple *t;
+
+	/* Restore defaults if necessary */
+	for (t = snmp_defaults; t->name; t++) {
+		if (!nvram_get(t->name)) { /* check existence */
+			nvram_set(t->name, t->value);
+		}
+	}
+#else
+	eval("nvram", "snmp_defaults", "--add");
+#endif /* TCONFIG_BCMARM */
+}
+
+void del_snmp_defaults(void)
+{
+#ifdef TCONFIG_BCMARM
+	if (nvram_match("snmp_enable", "0")) {
+		struct nvram_tuple *t;
+
+		/* remove defaults if NOT necessary (only keep "xyz_enable" nv var.) */
+		for (t = snmp_defaults; t->name; t++) {
+			nvram_unset(t->name);
+		}
+	}
+#else
+	eval("nvram", "snmp_defaults", "--del");
+#endif /* TCONFIG_BCMARM */
+}
+#endif /* TCONFIG_SNMP */
 
 void start_dnsmasq_wet()
 {
@@ -2940,6 +2977,14 @@ TOP:
 		goto CLEAR;
 	}
 #endif /* TCONFIG_FTP */
+
+#ifdef TCONFIG_SNMP
+	if (strcmp(service, "snmp_nvram") == 0) {
+		if (act_stop) del_snmp_defaults();
+		if (act_start) add_snmp_defaults();
+		goto CLEAR;
+	}
+#endif /* TCONFIG_SNMP */
 
 	if (strcmp(service, "dhcpc_wan") == 0) {
 		if (act_stop) stop_dhcpc("wan");

@@ -19,6 +19,65 @@
 
 //	<% nvram("snmp_enable,snmp_port,snmp_remote,snmp_remote_sip,snmp_location,snmp_contact,snmp_ro"); %>
 
+var xob = null;
+
+function _snmpNvramAdd() {
+	form.submitHidden('service.cgi', { _service: 'snmp_nvram-start', _sleep: 1 });
+}
+
+function snmpNvramAdd() {
+	var sb, cb, msg;
+
+	/* short check for snmp nvram var. If OK - nothing to do! */
+	if ((nvram.snmp_port.length > 0) &&
+	    (nvram.snmp_remote.length > 0))
+		return;
+
+	/* check already enabled? - nothing to do! */
+	if (nvram.snmp_enable > 0)
+		return;
+
+	E('_f_snmp_enable').disabled = 1;
+	if ((sb = E('save-button')) != null) sb.disabled = 1;
+	if ((cb = E('cancel-button')) != null) cb.disabled = 1;
+
+	if (!confirm("Add SNMP to nvram?"))
+		return;
+
+	if (xob)
+		return;
+
+	if ((xob = new XmlHttp()) == null) {
+		_snmpNvramAdd();
+		return;
+	}
+
+	if ((msg = E('footer-msg')) != null) {
+		msg.innerHTML = 'adding nvram values...';
+		msg.style.display = 'inline';
+	}
+
+	xob.onCompleted = function(text, xml) {
+		if (msg) {
+			msg.innerHTML = 'nvram ready';
+		}
+		setTimeout(
+			function() {
+				E('_f_snmp_enable').disabled = 0;
+				if (sb) sb.disabled = 0;
+				if (cb) cb.disabled = 0;
+				if (msg) msg.style.display = 'none';
+				setTimeout(reloadPage, 1000);
+		}, 5000);
+		xob = null;
+	}
+	xob.onError = function() {
+		_snmpNvramAdd();
+	}
+
+	xob.post('service.cgi', '_service=snmp_nvram-start'+'&'+'_sleep=1'+'&'+'_ajax=1');
+}
+
 function verifyFields(focused, quiet) {
 	var ok = 1;
 
@@ -52,6 +111,7 @@ function save() {
 }
 
 function init() {
+	snmpNvramAdd();
 }
 </script>
 </head>
@@ -92,6 +152,13 @@ function init() {
 				{ title: 'RO Community', indent: 2, name: 'snmp_ro', type: 'text', maxlen: 40, size: 64, value: nvram.snmp_ro }
 		]);
 	</script>
+</div>
+
+<div class="section-title">Notes</div>
+<div class="section">
+	<ul>
+		<li><b>NVRAM</b> - If SNMP has been enabled, nvram values will be added. Nvram values will be removed after reboot in case SNMP will be disabled.</li>
+	</ul>
 </div>
 
 <!-- / / / -->

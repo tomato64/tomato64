@@ -10644,6 +10644,9 @@ static void sysinit(void)
 #ifdef TCONFIG_FTP
 	del_ftp_defaults(); /* remove ftp nvram values if feature is disabled! */
 #endif /* TCONFIG_FTP */
+#ifdef TCONFIG_SNMP
+	del_snmp_defaults(); /* remove snmp nvram values if feature is disabled! */
+#endif /* TCONFIG_SNMP */
 	init_nvram();
 
 #ifndef TOMATO64
