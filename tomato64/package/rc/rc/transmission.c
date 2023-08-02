@@ -66,6 +66,13 @@ static void build_tr_firewall(void)
 	           "iptables -A INPUT -p udp --dport %s -j %s\n",
 	            nvram_safe_get("bt_port"), chain_in_accept,
 	            nvram_safe_get("bt_port"), chain_in_accept);
+#ifdef TCONFIG_IPV6
+	if (ipv6_enabled())
+		fprintf(p, "ip6tables -A INPUT -p tcp --dport %s -j %s\n"
+		           "ip6tables -A INPUT -p udp --dport %s -j %s\n",
+		           nvram_safe_get("bt_port"), chain_in_accept,
+		           nvram_safe_get("bt_port"), chain_in_accept);
+#endif
 
 	/* GUI WAN access */
 	if (nvram_get_int("bt_rpc_wan"))
