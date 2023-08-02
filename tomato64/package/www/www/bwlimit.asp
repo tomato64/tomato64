@@ -22,7 +22,7 @@
 
 <script>
 
-//	<% nvram("bwl_enable,wan_qos_ibw,wan_qos_obw,bwl_rules,lan_ipaddr,lan_netmask,bwl_br0_enable,bwl_br0_dlr,bwl_br0_dlc,bwl_br0_ulr,bwl_br0_ulc,bwl_br0_udp,bwl_br0_tcp,bwl_br0_prio,bwl_br1_enable,bwl_br1_dlc,bwl_br1_dlr,bwl_br1_ulc,bwl_br1_ulr,bwl_br1_prio,bwl_br2_enable,bwl_br2_dlc,bwl_br2_dlr,bwl_br2_ulc,bwl_br2_ulr,bwl_br2_prio,bwl_br3_enable,bwl_br3_dlc,bwl_br3_dlr,bwl_br3_ulc,bwl_br3_ulr,bwl_br3_prio,ctf_disable,bcmnat_disable"); %>
+//	<% nvram("bwl_enable,wan_qos_ibw,wan_qos_obw,bwl_rules,lan_ipaddr,lan_netmask,bwl_br0_enable,bwl_br0_dlr,bwl_br0_dlc,bwl_br0_ulr,bwl_br0_ulc,bwl_br0_udp,bwl_br0_tcp,bwl_br0_prio,bwl_br1_enable,bwl_br1_dlc,bwl_br1_dlr,bwl_br1_ulc,bwl_br1_ulr,bwl_br1_prio,bwl_br2_enable,bwl_br2_dlc,bwl_br2_dlr,bwl_br2_ulc,bwl_br2_ulr,bwl_br2_prio,bwl_br3_enable,bwl_br3_dlc,bwl_br3_dlr,bwl_br3_ulc,bwl_br3_ulr,bwl_br3_prio,ctf_disable,bcmnat_disable,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
 
 var class_prio = [['0','Highest'],['1','High'],['2','Normal'],['3','Low'],['4','Lowest']];
 var class_tcp = [['0','nolimit']];
@@ -195,17 +195,27 @@ bwlg.verifyFields = function(row, quiet) {
 
 function verifyFields(focused, quiet) {
 	var a = !E('_f_bwl_enable').checked;
+
+	E('_wan_qos_ibw').disabled = a;
+	E('_wan_qos_obw').disabled = a;
+	E('_f_bwl_br0_enable').disabled = (a || (nvram.lan_ifname.length < 1));
+	E('_f_bwl_br1_enable').disabled = (a || (nvram.lan1_ifname.length < 1));
+	E('_f_bwl_br2_enable').disabled = (a || (nvram.lan2_ifname.length < 1));
+	E('_f_bwl_br3_enable').disabled = (a || (nvram.lan3_ifname.length < 1));
+
+	if (nvram.lan_ifname.length < 1)
+		E('_f_bwl_br0_enable').checked = 0;
+	if (nvram.lan1_ifname.length < 1)
+		E('_f_bwl_br1_enable').checked = 0;
+	if (nvram.lan2_ifname.length < 1)
+		E('_f_bwl_br2_enable').checked = 0;
+	if (nvram.lan3_ifname.length < 1)
+		E('_f_bwl_br3_enable').checked = 0;
+
 	var b = !E('_f_bwl_br0_enable').checked;
 	var b1 = !E('_f_bwl_br1_enable').checked;
 	var b2 = !E('_f_bwl_br2_enable').checked;
 	var b3 = !E('_f_bwl_br3_enable').checked;
-
-	E('_wan_qos_ibw').disabled = a;
-	E('_wan_qos_obw').disabled = a;
-	E('_f_bwl_br0_enable').disabled = a;
-	E('_f_bwl_br1_enable').disabled = a;
-	E('_f_bwl_br2_enable').disabled = a;
-	E('_f_bwl_br3_enable').disabled = a;
 
 	E('_bwl_br0_dlr').disabled = b || a;
 	E('_bwl_br0_dlc').disabled = b || a;
