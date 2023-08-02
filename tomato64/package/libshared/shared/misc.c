@@ -717,11 +717,13 @@ const dns_list_t *get_dns(char *prefix)
 
 	dns.count = 0;
 
-	if (nvram_get_int(strlcat_r(prefix, "_dns_auto", tmp, sizeof(tmp)))) {
+	memset(s, 0, sizeof(s)); /* reset */
+	if (nvram_get_int(strlcat_r(prefix, "_dns_auto", tmp, sizeof(tmp))))
 		snprintf(s, sizeof(s), " %s", nvram_safe_get(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp))));
-	}
 	else {
 		strlcpy(s, nvram_safe_get(strlcat_r(prefix, "_dns", tmp, sizeof(tmp))), sizeof(s));
+		if (nvram_get_int("dns_addget")) /* add received DNS servers to the static DNS server list */
+			snprintf(s + strlen(s), sizeof(s) - strlen(s), " %s", nvram_safe_get(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp))));
 	}
 
 	n = sscanf(s, "%21s %21s %21s %21s %21s %21s %21s", d[0], d[1], d[2], d[3], d[4], d[5], d[6]);
