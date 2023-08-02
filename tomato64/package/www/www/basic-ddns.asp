@@ -281,6 +281,7 @@ function save() {
 	fom = E('t_fom');
 	fom.ddnsx_save.value = (nvram.ddnsx_save == 1 ? 1 : 0);
 	fom.ddnsx_ip.value = (fom._f_ddnsx_ip.value == 'custom' ? fom._f_custom_ip.value : fom._f_ddnsx_ip.value);
+	fom.ddnsx_cktime.value = fom._f_ddnsx_cktime.value;
 
 	setopendns = -1;
 	for (i = 0; i < clients_num; ++i) {
