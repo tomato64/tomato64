@@ -2,25 +2,27 @@
 #
 # Adblock (a.k.a. DNS-filtering) FreshTomato GUI back-end
 #
-ver="v2.71e - 02/23" # rs232
+ver="v2.71u - 03/23" # rs232
 PID=$$
 pidfile="/var/run/adblock.pid"
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+
+alias only="sed -e 's/^[ \t]*//' | grep -Ev '^($|#|!)'"
 
 hashblack() {
-	hb="=B+ $(nvram get adblock_blacklist) $(nvram get adblock_enable) $(nvram get adblock_path) $(nvram get adblock_limit) =BC+ $(nvram get adblock_blacklist_custom) =BCF+"
-	for i in $(nvram get adblock_blacklist_custom | grep -E ^/ ); do hb="$hb $(cat ${i})"; done
+	hb="=B+ $(nvram get adblock_blacklist) $(nvram get adblock_enable) $(nvram get adblock_path) $(nvram get adblock_limit) =BC+ $(nvram get adblock_blacklist_custom | only ) =BCF+"
+	for i in $(nvram get adblock_blacklist_custom | only | grep -E ^/ ); do hb="$hb $(cat ${i} | only )"; done
 	echo $hb | tr " " "\n" | grep -Ev '^($|#|!)'
 }
 
 hashwhite() {
-	hw="=W+ $(nvram get adblock_whitelist) =WF+"
-	for i in $(nvram get adblock_whitelist | grep -E ^/ ); do hw="$hw $(cat ${i})"; done
+	hw="=W+ $(nvram get adblock_whitelist | only ) =WF+"
+	for i in $(nvram get adblock_whitelist | only | grep -E ^/ ); do hw="$hw $(cat ${i} | only)"; done
 	echo $hw | tr " " "\n" | grep -Ev '^($|#|!)'
 }
 
 pre=$(date +%s)
 [ $(nvram get adblock_logs | wc -c) -gt 0 ] && { LOGL=$(nvram get adblock_logs); } || { LOGL=3; }
-alias logo='logger -p NOTICE -t adblock[$PID]'
 alias logo='logger -p NOTICE -t adblock[$PID]'
 [ $LOGL -ge 7 ] && alias logd='logger -p DEBUG -t adblock[$PID]' || alias logd=':'
 [ $LOGL -ge 6 ] && alias logi='logger -p INFO -t adblock[$PID]' || alias logi=':'
@@ -47,14 +49,15 @@ dnsrestart() { time -o $DNS_TIME -f'%e's service dnsmasq restart &>/dev/null && 
 ( ls -1tr /tmp/adblock.debug.output.* | head -n -10 | while read file; do rm -f $file; done ) 2>/dev/null # Keep maximum 10 debug files
 
 USERAGENT="Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/109.0"
+[ $LOGL -eq 7 ] && Q=" " || Q="-q"
+alias yget="wget --no-check-certificate -T 15 $Q -U \"$USERAGENT\" --header \"Cache-Control: no-cache\""
 
-[ $LOGL -eq 7 ] && alias yget="/usr/bin/wget --no-check-certificate -T 15 -U \"$USERAGENT\" --header \"Cache-Control: no-cache\"" || alias yget="/usr/bin/wget --no-check-certificate -T 15 -q -U \"$USERAGENT\" --header \"Cache-Control: no-cache\""
-
-alias domain="grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+[a-zA-Z]{2,6}'| grep -vEi '\.gif$|\.jpe?g$|\.png$|\.jsp?$|\.css$|\.ico$|\.aspx?$|\.php$|\.cer$|\.cfm$|\.cgi$|\.x?html?$|\.jsp$|\.py$|\.rss$|\.vb$|\.sh$|\.json$'"
+alias domain="sed 's/[#!].*//' | grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+[a-zA-Z]{2,6}'| grep -vEi '\.gif$|\.jpe?g$|\.png$|\.jsp?$|\.css$|\.ico$|\.aspx?$|\.php$|\.cer$|\.cfm$|\.cgi$|\.x?html?$|\.py$|\.rss$|\.vb$|\.sh$|\.json$'"
 alias notin="grep -Ev '^#.*|^!.*|^::|^\s*?$|^([a-f0-9:]+:+)+[a-f0-9]+'"
 alias number="sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'"
-
-[ $(nvram get adblock_path | wc -c) -gt 0 ] && { DPATH=$(echo $(echo $(nvram get adblock_path) | sed 's/\/$//')/adblock); mkdir -p "$DPATH"; } || DPATH="/etc"
+[ $(nvram get adblock_path | wc -c) -gt 0 ] && {
+	nvram get adblock_path | grep -Eq '^/jffs' && logw "Custom path is pointing to JFFS, this is not ideal. Consider using alternative storages like USB/CIFS/etc."
+	DPATH=$(echo $(echo $(nvram get adblock_path) | sed 's/\/$//')/adblock); mkdir -p "$DPATH"; } || DPATH="/etc"
 
 sizeLimit=$(nvram get adblock_limit)
 setlimit() {
@@ -77,8 +80,8 @@ CHK_FILE="/tmp/adblock.time"
 RTN=0
 alias rtn='[ $RTN -ne 255 ] && { echo $RTN ; return; }'
 BLACKLIST=$(nvram get adblock_blacklist)
-WHITELIST=$(nvram get adblock_whitelist)
-CUSTOM=$(nvram get adblock_blacklist_custom)
+WHITELIST=$(nvram get adblock_whitelist | only )
+CUSTOM=$(nvram get adblock_blacklist_custom | only )
 TRIMPERC=5
 ADHELPER="/tmp/adblock.helper"; touch ${ADHELPER}
 ADHEAD="/tmp/adblock.headers"; touch ${ADHEAD}
@@ -90,6 +93,10 @@ red="\033[0;41m"
 white="\033[1;37m"
 grey="\033[0;5;238m"
 green="\033[48;2;32m"
+yellow="\033[48;2;33m"
+latest=0
+current=$(echo $ver | cut -c-6)
+UURL="https://bitbucket.org/rs232-/freshtomato-arm/downloads/adblock.rs232"
 
 checkList() { # 0=fetch_local / 1=download / 2=issues / 3=duplicated
 	urinameh=$(echo "${4}".header)
@@ -126,7 +133,7 @@ checkList() { # 0=fetch_local / 1=download / 2=issues / 3=duplicated
 	# If ETag is inconclusive look for Last-modified
 	logd "[$1] checkList(H) - Last-Modified"
 	grep -q 'Last-Modified' < "$PREFIX/${urinameh}" && {
-		[[ $(grep -i 'Last-Modified' < "$PREFIX/${urinameh}" | awk '{print $3" "$4" "$5" "$6}') != $(grep -i 'Last-Modified' < "$D/${urinameh}" | awk '{print $3" "$4" "$5" "$6}') ]] && { logd "[$1] checkList(H1) = Last modified confirmed the list has been modified -> Forcing download"; RTN=1; } || { RTN=255; }
+		[ "$(grep -i 'Last-Modified' < "$PREFIX/${urinameh}" | awk '{print $3" "$4" "$5" "$6}')" != "$(grep -i 'Last-Modified' < "$D/${urinameh}" | awk '{print $3" "$4" "$5" "$6}')" ] && { logd "[$1] checkList(H1) = Last modified confirmed the list has been modified -> Forcing download"; RTN=1; } || { RTN=255; }
 		rtn
 	}
 	# Else download
@@ -142,14 +149,14 @@ checkRam() {
 	listSize=$( [ -s "$PREFIX/${urinameh}" ] && { grep -Evi 'Content-Length: 0$'  "$PREFIX/${urinameh}" | grep -i 'Content-Length' | awk '{print $2}' ; } ) # in Bytes
 	[ -z $listSize ] && listSize=0
 	logd "[$1] checkRam(X) - list header content assessment"
-	[ $listSize -eq 0 ] && { logd "[$1] chackRam(X0) = The list headers don't provide enough info to perform a proper check. Skipping the checkRam() and proceed"; RTN=0; } || RTN=255
+	[ $listSize -eq 0 ] && { logd "[$1] checkRam(X0) = The list headers don't provide enough info to perform a proper check. Skipping the checkRam() and proceed"; RTN=0; } || RTN=255
 	rtn
 	logd "[$1] checkRam(Y) - listSize Vs sizeLimit"
-	[ -f $TM ] && { [ $(( ( $(echo $(wc -c < $TM)) + $listSize ) * (100 + 15) / 100 )) -lt $sizeLimit ] && RTN=255 || { logd "[$1] checkRam(Y1) = listSize Vs sizeLimit = Low confidence this list would fit within the sizeLimit. Skipping it..."; RTN=1; } ; } # 15% extra is allowed
+	[ -f $TM ] && { [ $(( ( $(echo $(wc -c < $TM)) + $listSize ) * (100 + 20) / 100 )) -lt $sizeLimit ] && RTN=255 || { loge "[$1] checkRam(Y1) = listSize Vs sizeLimit = Low confidence this list would fit within the sizeLimit. Skipping it..."; RTN=1; } ; } # 20% extra is allowed
 	rtn
 	logd "[$1] checkRam(Z) - listSize Vs free RAM"
 	[ -z ${listSize} ] && { logd "[$1] checkRam(Z1) - Header Content Lenght missing, unable to conclude negatively, proceed"; RTN=1; } || {
-		[ $(( $freeram )) -gt $(( $listSize / 100 )) ] && { logd "[$1] checkRam(Z0) = The list should fit in RAM, proceeding"; RTN=0; } || { logd "[$1] checkRam(Z1) = Low confidence this list would fit in the free RAM. Skipping it..."; RTN=1; }
+		[ $(( $freeram )) -gt $(( $listSize / 100 )) ] && { logd "[$1] checkRam(Z0) = The list should fit in RAM, proceeding"; RTN=0; } || { loge "[$1] checkRam(Z1) = Low confidence this list would fit in the free RAM. Skipping it..."; RTN=1; }
 		rtn
 	}
 }
@@ -243,7 +250,7 @@ download() {
 			}
 		rm -f ${VRFY}
 		rm -f /tmp/adblock.now* /tmp/adblock.then* 2>/dev/null
-		safeDnsmasqRestart
+		safeDnsmasqRestart 0
 		echo "$(hashblack | md5sum | awk '{print $1}') md5black" > $CHK_FILE
 		echo "$(hashwhite | md5sum | awk '{print $1}') md5white" >> $CHK_FILE
 		hashblack >> $CHK_FILE
@@ -286,7 +293,7 @@ download() {
 			fi
 
 			[ ! -f "$DPATH/${uriname}.list" -a ! -f "$PREFIX/${uriname}.list" ] && {
-				loge "[$COUNT][$URL] List error! Please check the file/URL"
+				loge "[$COUNT][$URL] This list was not downloaded. Skipping..."
 				erroradd
 			} || {
 				grep -q -E '^https?://' "$D/${uriname}.list" && {
@@ -315,7 +322,7 @@ download() {
 							logw "[$COUNT][$SUBLIST][$u] It appears like this (sub)list is a duplicate. Skipping..."
 							continue
 						elif [ $listresult -eq 1 -a $ramresult -eq 0 ]; then
-							logi "[$COUNT][$SUBLIST][$u] ree RAM check passed."
+							logi "[$COUNT][$SUBLIST][$u] Free RAM check passed."
 							echo "$u\n" >> $PREFIX/white.url
 							logi "[$COUNT][$SUBLIST][$u] The (sub)list is being downloaded."
 							yget "$u" -O "$PREFIX/${urinamed}.list" && [ $DPATH != '/etc' ] && { cp -f "$PREFIX/${urinamed}.header" "$D" ; mv -f "$PREFIX/${urinamed}.list" "$D"; }
@@ -354,7 +361,7 @@ download() {
 	done
 
 	# CUSTOM BLACKLIST
-	[ ! -z ${CUSTOM+1} ] && {
+	[ $(echo $CUSTOM | wc -c) -gt 2 ] && {
 		[ -f $TM1 ] && rm -f $TM1
 		echo $CUSTOM | tr " " "\n" | grep -Ev '^($|#|!)' | while read i; do
 			echo "$i" | grep -Eq '^/.*' && {
@@ -377,7 +384,7 @@ download() {
 	# WHITELISTING
 
 	# Hardcoded whitelisting:
-	logd "Whitelisting domains used in other parts of FreshTomato"
+	logi "Whitelisting domains used in other parts of FreshTomato"
 	# System domains:
 	subsed="freshtomato.org groov.pl linksysinfo.org"
 	# TTB
@@ -402,7 +409,7 @@ download() {
 	for i in $(nvram get mwan_ckdst | tr "," "\n" | domain); do subsed="$subsed ${i}"; done
 
 	# Whitelist domains from list providers defined
-	logd "Whitelisting domains defined in Blacklist URL"
+	logi "Whitelisting domains defined in Blacklist URL"
 	for i in $(echo $BLACKLIST | tr "<" "\n" | grep -E 'https?' | grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+[a-zA-Z]{2,6}\s*/\s*' | tr "/" " "); do
 		subsed="$subsed ${i}"
 	done
@@ -417,13 +424,15 @@ download() {
 
 	# User-defined whitelisting:
 	[ -f $TM1 ] && rm $TM1
-	logd "Whitelisting user-defined domains"
-	# Individual domains
-	[ ! -z ${WHITELIST+1} ] && for i in $(echo "$WHITELIST" | tr " " "\n" | grep -Ev '^($|#|!)' | grep -Ev '^/'); do subsed="$subsed ${i}"; done
-	# User defined whitelist file
-	[ ! -z ${WHITELIST+1} ] && for i in $(echo "$WHITELIST" | tr " " "\n" | grep -Ev '^($|#|!)' | grep -E '^/'); do if [[ -f ${i} ]]; then while IFS= read -r dom || [ -n "$dom" ]; do printf '%s\n' "$dom"; done < $i | grep -Ev '^($|#|!)' | tr -d "\r"  >> $TM1 ; else loge "The defined whitelist file $i is not accessible"; erroradd ;fi done
-	[ -s $TM1 ] && for i in $(cat $TM1); do subsed="$subsed ${i}"; done
-
+	[ $(echo $WHITELIST | wc -c) -gt 2 ] && {
+		logi "Whitelisting user-defined domains"
+		# Individual domains
+		[ ! -z ${WHITELIST+1} ] && for i in $(echo "$WHITELIST" | tr " " "\n" | grep -Ev '^($|#|!)' | grep -Ev '^/'); do subsed="$subsed ${i}"; done
+		# User defined whitelist file
+		[ ! -z ${WHITELIST+1} ] && for i in $(echo "$WHITELIST" | tr " " "\n" | grep -Ev '^($|#|!)' | grep -E '^/'); do if [[ -f ${i} ]]; then while IFS= read -r dom || [ -n "$dom" ]; do printf '%s\n' "$dom"; done < $i | grep -Ev '^($|#|!)' | tr -d "\r"  >> $TM1 ; else loge "The defined whitelist file $i is not accessible"; erroradd ;fi done
+		[ -s $TM1 ] && for i in $(cat $TM1); do subsed="$subsed ${i}"; done
+	}
+	
 	# Remove references to localhost
 	subsed="$subsed ^localhost" # localhost to be fixed, used to be: "^address=\/localhost\/.*"
 	[ $LOGL -eq 7 ] && echo $subsed >/tmp/adblock.subsed
@@ -441,7 +450,7 @@ download() {
 
 	# DE-DUPLICATION
 	logn "Removing duplicates"
-	pred=$(wc -c < $TM)
+	pred=$(wc -l < $TM)
 	[ $DPATH != '/etc' ] && {
 		# Let's use external storage to halve the RAM needed for deduplication
 		mv -f $TM $D
@@ -451,8 +460,8 @@ download() {
 		# No external storage available? No problem we'll use what we have
 		awk '!seen[$0]++' $TM > $TM1 && mv -f $TM1 $TM
 	}
-	logi "Deduplication efficiency = $(echo $(( ( $pred - $(wc -c < $TM)) * 100 / $pred ))%)"
-
+	redun=$(($pred - $(wc -l < $TM) ))
+	logi "Deduplication efficiency = $(printf "%.2f" $(( 10**2 * $redun * 100 / $pred ))e-2)"%" / $redun lines removed."
 	# Applying sizeLimit
 	# Trim down to the hard limit (trim from the top) the adblock file
 	[ $(wc -c < $TM) -gt $sizeLimit	] && {
@@ -479,22 +488,27 @@ download() {
 
 parsefile() {
 	[ -n "$4" ] && S="[$4]"
-	if [ $(head -50 "$1" | notin | grep -iE '<html>|<head>|<body' | wc -l ) -gt 0 ]; then
+	if [ $(notin "$1" | head -500 | grep -iE '<html|<head|<body' | wc -l ) -gt 0 ]; then
 		# Skip loop if CheckHTML is matched
-		loge "[$3]$S[$2] Content not understood (HTML?). Skipping..."
+		loge "[$3]$S[$2] List content not understood (HTML?). Skipping..."
 		erroradd
 		continue
-	elif [ $(head -50 $1 | notin | grep -E '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$' | wc -l ) -gt 0 ]; then
+	elif [ $(notin "$1" | head -500 | grep -iE '^\[.*]' | wc -l ) -gt 0 ]; then
+		# Skip loop if Content is in Easylist/Adblock-Plus format
+		loge "[$3]$S[$2] Detected Easylist format (unsupported). Skipping..."
+		erroradd
+		continue
+	elif [ $(notin "$1" | head -500 | grep -E '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$' | wc -l ) -gt 0 ]; then
 		# Skip loop if IP-only is matched
-		loge "[$3]$S[$2] Content not understood (IP-only?). Skipping..."
+		loge "[$3]$S[$2] List content not understood (IP-only?). Skipping..."
 		erroradd
 		continue
-	elif [ $(head -50 $1 | notin | domain | wc -l ) -gt 0 ]; then
+	elif [ $(notin "$1" | head -500 | domain | wc -l ) -gt 0 ]; then
 		# Extract domains only
 		logi "[$3]$S[$2] Extracting domains..."
 		notin $1 | domain >> $TM
 	else
-		loge "[$3]$S[$2] Content not understood (unknown data). Skipping..."
+		loge "[$3]$S[$2] List content not understood (unknown data). Skipping..."
 		erroradd
 	fi
 }
@@ -527,10 +541,10 @@ safeDnsmasqRestart() {
 		logi "Checking $FINAL syntax"
 		# Case A = $FINAL syntax issue detected, log and exclude adblock until next reboot
 		[ -s $FINAL ] && {
-			dnsmasq --test -C $FINAL 2>/dev/null && logd "No syntax errors found in $FINAL" || {
+			dnsmasq --test -C $FINAL &>/tmp/adblock.dnsmasq.test && logi "No syntax errors found in $FINAL" || {
 				nvram set adblock_enable=0
 				dnsrestart
-				loge "Syntax error found in $FINAL. DNS-filtering has been temporarily excluded from /etc/dnsmasq.conf to prevent dnsmasq issues."
+				loge "Syntax error found in $FINAL. Adblock has been temporarily excluded from /etc/dnsmasq.conf to prevent dnsmasq issues. More information on this error can be found in /tmp/adblock.dnsmasq.test"
 				erroradd
 				return 1
 			}
@@ -573,11 +587,43 @@ safeDnsmasqRestart() {
 	} || logi "safeDnsmasqRestart() completed smoothly with $FINAL = $(wc -l < $FINAL|number) lines in $(wc -c < $FINAL|number) Bytes."; return
 }
 
+upgrade_check() {
+	latest=$(yget -q -O - "$UURL" | grep -E '^ver=' | cut -c6-11)
+	echo "$latest"
+}
+
+upgrade() {
+	latest=$(upgrade_check)
+	[[ "$latest" != "$current" ]] && {
+		logo "New version detected. Upgrading..."
+		cat <<EOF > /tmp/upgrade_dblck.sh
+#!/bin/sh
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+USERAGENT="Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/109.0"
+alias yget="wget --no-check-certificate -T 15 -q -U \"$USERAGENT\" --header \"Cache-Control: no-cache\""
+adblock stop
+mount | grep -q /usr/sbin/adblock && umount /usr/sbin/adblock
+[ -s "/tmp/new_adblock" ] && rm -f "/tmp/new_adblock" &>/dev/null
+yget "$UURL" -O- | tr -d "\r" > /tmp/new_adblock
+chmod +x /tmp/new_adblock
+mount --bind /tmp/new_adblock /usr/sbin/adblock
+echo "Upgrade completed. Now restarting from scratch..."
+adblock clear
+adblock update
+EOF
+		chmod +x /tmp/upgrade_dblck.sh
+		exec /tmp/upgrade_dblck.sh
+	}
+}
+
 adExit() {
 	rm -rf $PREFIX/*
 	rm -f $pidfile
 	if [ $1 -eq 0 ]; then
-		[ $DPATH != '/etc' ] && rm -f /etc/dnsmasq.adblock ; ln -s $FINAL /etc/dnsmasq.adblock 2>/dev/null
+		[ $DPATH != '/etc' ] && {
+			rm -f /etc/dnsmasq.adblock
+			ln -s $FINAL /etc/dnsmasq.adblock 2>/dev/null
+		}
 		safeDnsmasqRestart $1
 	elif [ $1 -eq 1 ]; then
 		[ -s $FINAL ] && mv -f $FINAL $UNLOADED
@@ -593,7 +639,7 @@ adExit() {
 		dnsrestart
 	fi
 	[ $ERRCOUNT -gt 0 ] && logo "$ERRCOUNT error/s were experienced."
-	runtime=$(date -d@$(( $(date +%s) - $pre)) -u +%H"h "%M"m "%Ss) > $ADHELPER
+	runtime=$(date -d@$(( $(date +%s) - $pre)) -u +%H"h "%M"m "%Ss)
 	echo "errors: ${ERRCOUNT}" > $ADHELPER
 	echo "runtime: ${runtime}" >> $ADHELPER
 	logo "Exiting $@ - Execution time: ${runtime}"
@@ -604,7 +650,7 @@ adExit() {
 
 # Skip execution (and stop adblock if running) if internal DNS is disabled
 [ $(nvram get dhcpd_dmdns) -eq 0 -a $ENABLE -eq 1 ] && {
-	loge "Internal dns is disabled! Adblock/DNS-filtering is enabled but cannot run. Exiting..."
+	loge "Internal DNS is disabled! Adblock/DNS-filtering is enabled but cannot run. Exiting..."
 	echo "Internal DNS is disabled! Adblock/DNS-filtering is enabled but cannot run. Exiting..."
 	erroradd
 	cronDel
@@ -624,11 +670,11 @@ if [ "$1" == "status" ]; then
             Owner = $([ $(ps | grep '[d]nsmasq.*async$' | awk '{print $2}') == "root" ] && echo "${red}root${black}" || echo "nobody" )
    Restarts today = $(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep -E '.*dnsmasq\[.*exiting' | wc -l )
      Restart time = $([ -f $DNS_TIME ] && cat $DNS_TIME || echo "N/A")
-          Adblock = $(echo $(cat /etc/dnsmasq.conf | grep conf-file=/etc/dnsmasq.adblock >/dev/null 2>&1 && echo "yes" || echo "${red}no${black}"))
+   Mapped adblock = $(grep -q 'conf-file=/etc/dnsmasq.adblock' /etc/dnsmasq.conf && echo "yes" || echo "${red}no${black}")
 
   ├────── Adblock ────────────────────────────────────┤
 
-      Calls today = $(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep "[α]" | wc -l )
+      Calls today = $(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep "Kick off" | wc -l )
          Activity = $([ -f ${pidfile} ] && { [ -f ${VRFY} ] && echo "${white}Checking...${black}" || echo "${white}Running...${black}" ;} || echo "Idle" )
        Last trace = $([ $LOGL -eq 7 -a $(ls -1tr /tmp/adblock.debug.output.* 2>/dev/null | tail -1 | wc -l ) -gt 0 ] && echo $(ls -1tr /tmp/adblock.debug.output.* | tail -1) )
         Hold-time = $([ -s $CHK_FILE -a -s $FINAL ] && { HOLD_LEFT=$(( 30 - ($(date +%s) - $(date -r "$FINAL" +%s)) /60 )) ; [ "$HOLD_LEFT" -le 30 -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $(cat ${CHK_FILE} | grep md5black | grep -Eo ^[a-zA-Z0-9]{32}) ] && echo -e "${white}On${black} ~ ${HOLD_LEFT}min left" || echo "off" ;} || echo "off" )
@@ -665,14 +711,15 @@ if [ "$1" == "status" ]; then
 elif [ "$1" == "status-gui" ]; then
 	restarts=$(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep -E '.*dnsmasq\[.*exiting' | wc -l )
 	[ ! -z $sizeLimit ] && max=$(echo $sizeLimit | number ) || max="Calculated at the next run"
-	ramt=$(cat /proc/meminfo | grep MemTotal: | awk '{print $2}')
+	ramt=$(grep 'MemTotal:' /proc/meminfo | awk '{print $2}')
 	ramu=$(free | grep buffer | awk '{print $3}')
-	ramc=$(cat /proc/meminfo | grep -E ^Cached: | awk '{print $2}')
-	ramb=$(cat /proc/meminfo | grep Buffers: | awk '{print $2}')
+	ramc=$(grep -E '^Cached:' /proc/meminfo | awk '{print $2}')
+	ramb=$(grep 'Buffers:' /proc/meminfo | awk '{print $2}')
 	rampu=$(( $ramu * 100 / $ramt ))
 	rampc=$(( $ramc * 100 / $ramt ))
 	rampb=$(( $ramb * 100 / $ramt ))
-	echo -e "System Load = $(cat /proc/loadavg | awk '{print "<b>"$1" / "$2" / "$3"</b>"}')<br>
+	echo -e "Version: ${ver:0:6}<br>
+System Load = $(cat /proc/loadavg | awk '{print "<b>"$1" / "$2" / "$3"</b>"}')<br>
 Ram Used/Cache/Buffer / Total = <b>${rampu}% ~ $(echo $ramu | number)</b>/$(echo $ramc | number)/$(echo $ramb | number)<b> / $(echo $ramt | number) Bytes</b><br>
 <div class=\"progress-container\" style=\"width:400px;float:left;display:flex;flex:1\">
 <div class=\"progress-bar\" style=\"background-color:#005691;width: ${rampu}%\"></div>
@@ -680,21 +727,21 @@ Ram Used/Cache/Buffer / Total = <b>${rampu}% ~ $(echo $ramu | number)</b>/$(echo
 <div class=\"progress-bar\" style=\"background-color:#74CDC1;width: ${rampb}%\"></div></div><br>
 Dnsmasq running = $(echo $([ -f "/var/run/dnsmasq.pid" ] && echo "<b>Yes 🆗</b>" || echo "<b>no ⛔</b>"))<br>
 Dnsmasq restarts today = $(echo "<b> $restarts </b>")<br>
-Dnsmasq owner = $(ps | grep -q '[d]nsmasq.*async$' && [ $(ps | grep '[d]nsmasq.*async$' | awk '{print $2}') == "root" ] && echo "<b>root ️⛔<b> <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" || echo "<b>nobody 🆗</b>" )<br>
+Dnsmasq owner = $(ps | grep -q '[d]nsmasq.*async$' && [ $(ps | grep '[d]nsmasq.*async$' | awk '{print $2}') == "root" ] && echo "<b>root ️⛔</b> <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" || echo "<b>nobody 🆗</b>" )<br>
 Dnsmasq restart time = $([ -f $DNS_TIME ] && echo \<b\>$(cat $DNS_TIME)\</b\> || echo "<b>N/A"\</b\>)<br>
 Adblock calls today = <b>$(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep "Kick off" | wc -l )</b><br>
-Adblock config loaded = $(echo $(cat /etc/dnsmasq.conf | grep conf-file=/etc/dnsmasq.adblock >/dev/null 2>&1 && echo "<b>Yes 🆗</b>" || echo "<b>No ⛔</b>"))<br>
-Adblock script activity = $(echo $([ -f "/var/run/adblock.pid" ] && { [ -f ${VRFY} ] && echo "👁️ <b>Checking...<img src=\"spin.gif\" heigh=\"8px\" width=\"8px\"></b><br>" || echo "🌀 <b>Loading... $([ -s $TM ] && { wc -l < $TM | number ;}) domains / $([ -s $TM ] && { wc -c < $TM | number ;} ) Bytes <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\"></b>" ;} || echo "<b>idle</b>"))<br>"
-	[ -s "$FINAL" -a $(cat /etc/dnsmasq.conf | grep conf-file=/etc/dnsmasq.adblock | wc -l) -eq 1 ] && {
+Adblock config loaded = $(echo $(grep -q 'conf-file=/etc/dnsmasq.adblock' /etc/dnsmasq.conf && echo "<b>Yes 🆗</b>" || echo "<b>No ⛔</b>"))<br>
+Adblock script activity = $(echo $([ -f "/var/run/adblock.pid" ] && { [ -f ${VRFY} ] && echo "👁️ <b>Checking...<img src=\"spin.gif\" heigh=\"8px\" width=\"8px\"></b>" || echo "🌀 <b>Loading... $([ -s $TM ] && { wc -l < $TM | number ;}) domains / $([ -s $TM ] && { wc -c < $TM | number ;} ) Bytes <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\"></b>" ;} || echo "<b>idle</b>"))<br>"
+	[ -s "$FINAL" -a $(grep 'conf-file=/etc/dnsmasq.adblock' /etc/dnsmasq.conf | wc -l) -eq 1 ] && {
 		filp=$(($(wc -c < $FINAL) * 100 / $([ $(echo $sizeLimit | wc -c 2>/dev/null ) -gt 0 ] && echo $sizeLimit || echo 99999999)))
-		lre=$(cat $ADHELPER 2>/dev/null | grep error | awk '{print $2}')
+		lre=$(grep 'error' $ADHELPER | awk '{print $2}')
 		echo "Last run errors = <b>$lre"
 		[ $lre -gt 0 ] && echo " ⚠️"
-echo -e "</b><br>
-Last run processing time = <b>$(cat $ADHELPER 2>/dev/null | grep runtime | cut -d: -f2)</b><br>
-Adblock file references = $(echo \<b\>$(wc -l < $FINAL| number) Domains\</b\> )<br>
-Adblock file date = $(echo \<b\>$(ls -lah $FINAL | awk '{print $8" on "$7" "$6}'))</b><br>
-Adblock file size/limit = <b>${filp}% ~ $(wc -c < $FINAL| number) / $(echo $max | number) Bytes</b><br>
+		echo -e "</b><br>
+Last run processing time = <b>$(grep 'runtime' $ADHELPER | cut -d: -f2)</b><br>
+Blockfile references = $(echo \<b\>$(wc -l < $FINAL| number) Domains\</b\> )<br>
+Blockfile date = $(echo \<b\>$(ls -lah $FINAL | awk '{print $8" on "$7" "$6}'))</b><br>
+Blockfile size/limit = <b>${filp}% ~ $(wc -c < $FINAL| number) / $(echo $max | number) Bytes</b><br>
 <div class=\"progress-wrapper\"><div class=\"progress-container\" style=\"width:400px\"><div class=\"progress-bar\" style=\"background-color:#005691;width: ${filp}%\"></div></div></div><br>"
 	}
 	[ $LOGL -eq 7 ] && { echo -e "✏️ Running in trace mode" ; [ $(ls -1tr /tmp/adblock.debug.output.* 2>/dev/null | tail -1 | wc -l) -gt 0 ] && { echo ", output redirected to <code>$(ls -1tr /tmp/adblock.debug.output.* | tail -1)</code><br>"; } ;}
@@ -708,20 +755,20 @@ elif [ "$1" == "clear" -o "$1" == "clean" ]; then
 	logi "Clearing up all the file relevant to Adblock/DNS-filtering from the filesystem."
 	echo "Clearing up all the file relevant to Adblock/DNS-Filtering from the filesystem."
 	adExit 4
-	elif [ "$1" == "test" ]; then
-		[ $# -eq 2 -a $(echo $2 | domain | wc -l) -gt 0 ] && {
+elif [ "$1" == "test" ]; then
+	[ $# -eq 2 -a $(echo $2 | domain | wc -l) -gt 0 ] && {
 		dom=$(echo $2 | domain)
-int=$(nslookup $dom 127.0.0.1 2>/dev/null | grep -A999 ^$ | grep Address || echo "${grey}Unresolvable")
-ext=$(nslookup $dom 1.1.1.1 2>/dev/null | grep -A999 ^$ | grep Address || echo "${grey}Unresolvable")
-[ "$ext" != "${grey}Unresolvable" -a "$int" == "${grey}Unresolvable" ] && int=$(echo "${red}Blocked")
-if [ $(grep -E "^server=/(\.)?$dom/" $FINAL | wc -l ) -gt 0 ]; then
-blo="${green}$(grep -E "^server=/(\.)?$dom/" $FINAL)"
-elif [ $(grep -E "^local=/(\.)?$dom/" $FINAL | wc -l ) -gt 0 ]; then
-blo="${red}$(grep -E "^local=/(\.)?$dom/" $FINAL)"
-else
-blo="${grey}Not found"
-fi
-			echo -en "
+		int=$(nslookup $dom 127.0.0.1 2>/dev/null | grep -A999 ^$ | grep Address || echo "${grey}Unresolvable")
+		ext=$(nslookup $dom 1.1.1.1 2>/dev/null | grep -A999 ^$ | grep Address || echo "${grey}Unresolvable")
+		[ "$ext" != "${grey}Unresolvable" -a "$int" == "${grey}Unresolvable" ] && int=$(echo "${red}Blocked")
+		if [ $(grep -E "^server=/(\.)?$dom/" $FINAL | wc -l ) -gt 0 ]; then
+			blo="${green}$(grep -E "^server=/(\.)?$dom/" $FINAL)"
+		elif [ $(grep -E "^local=/(\.)?$dom/" $FINAL | wc -l ) -gt 0 ]; then
+			blo="${red}$(grep -E "^local=/(\.)?$dom/" $FINAL)"
+		else
+			blo="${grey}Not found"
+		fi
+		echo -en "
 ─────────────────────────────────── adblock test ──
 ── dnsmasq answer ─────────────────────────────────${green}
 $int${black}
@@ -731,9 +778,9 @@ $ext${black}
 $blo${black}
 ───────────────────────────────────────────────────
 "
-echo -e "───────────────────────────────── test completed ──
+		echo -e "───────────────────────────────── test completed ──
 "
-	} || echo -e "Please provide an indivudual domain to be tested e.g.: ${white}adblock test example.com${black}"; exit	
+	} || echo -e "Please provide an indivudual domain to be tested e.g.: ${white}adblock test example.com${black}"; exit
 elif [ "$1" == "help" ]; then
 	echo -e "
   ┌────────────────── FreshTomato ────────────────────┐
@@ -750,6 +797,7 @@ elif [ "$1" == "help" ]; then
   │     ${white}start${black}  Same as no parameter: will load        │
   │      ${white}stop${black}  Will unload the script                 │
   │    ${white}update${black}  Update lists while script is running   │
+  │   ${white}upgrade${black}  Upgrades the script to latest version  │
   │                                                   │
   │      ${white}test  example.com${black} Verify domain resolution   │
   │                                                   │  
@@ -764,7 +812,20 @@ elif [ "$1" == "help" ]; then
   └───────────────────────────────────────────────────┘
   "
 	exit
-elif [ "$1" == "trace" ] ; then
+elif [ "$1" == "upgrade" ]; then
+	[ $# -eq 2 ] && { [ $2 == "silent" ] && {
+		upgrade
+		logi "Silent upgrade running..."
+		exit
+	}; }
+	latest=$(upgrade_check)
+	[[ "$latest" != "$current" ]] && {
+		echo -e "Current script version: ${yellow}$current${black} / Latest version: ${green}$latest${black}"
+		read -n1 -p ""$'Do you want to perform an upgrade?\ny/n\n' -s ans
+		[ $ans == "y" ] && upgrade || exit
+	} || echo -e "Already on the latest version = ${white}$latest${black}"
+	exit
+elif [ "$1" == "trace" ]; then
 	[ $(ls -1t /tmp/adblock.debug.output.* 2>/dev/null | wc -l ) -gt 0 ] && {
 		echo $(ls -1t /tmp/adblock.debug.output.* | head -n 1)
 		read -n1 -p "press c for cat | l for less | m for more | n for nano | v for vi | any other key to quit"$'\n' -s ans
@@ -828,18 +889,29 @@ elif [ "$1" == "snapshot" ]; then
 elif [ "$1" == "update" -o "$1" == "start" -o $# -eq 0 ]; then
 	if [ "$ENABLE" -eq "1" ]; then {
 		[ ! -f $pidfile ] && echo $PID > $pidfile
-		while [ $(cut -f1 -d. /proc/uptime) -lt 90 ]; do sleep 5; done
+#		while [ $(cut -f1 -d. /proc/uptime) -lt 90 ]; do sleep 5; done
+		while [ $(date +%Y) -lt 2022 ]; do { sleep 5; pre=$(date +%s); } done
 		[ -s "$FINAL" ] && {
 			HOLD_LEFT=$(( 30 - ($(date +%s) - $(date -r "$FINAL" +%s)) /60))
-				[ "$HOLD_LEFT" -lt 30 -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { cat ${CHK_FILE} | grep md5black | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $(hashwhite | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { cat ${CHK_FILE} | grep md5white | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $( [ -s ${ADHEAD} ] && { cat ${ADHEAD} | grep -Ev ' 0$' | wc -l; } || echo 1 ) -eq 0 ]  && {
+			[ "$HOLD_LEFT" -lt 30 -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { grep 'md5black' "${CHK_FILE}" | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $(hashwhite | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { cat ${CHK_FILE} | grep md5white | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $( [ -s ${ADHEAD} ] && { cat ${ADHEAD} | grep -Ev ' 0$' | wc -l; } || echo 1 ) -eq 0 ]  && {
 				logw "The last update was performed less then 30min ago (${HOLD_LEFT}min left) and no modification to the config have been detected since. Skipping script execution for now..."
 				echo "The last update was performed less then 30min ago (${HOLD_LEFT}min left) and no modification to the config have been detected since. Skipping script execution for now..."
 				adExit 5
-				}
+			}
 		}
 		# Tweak kernel parameter for memory allocation
 		[ $(cat /proc/sys/vm/overcommit_ratio) -le 90 ] && echo 90 > /proc/sys/vm/overcommit_ratio
 		setlimit
+		days=$(( 60 * 60 * 24 * 15 )) # 15 days
+		[ $DPATH != '/etc' ] && {
+			el=$(echo "$BLACKLIST" | grep -Ev '^$' | tr " " "_" | tr ">" "\n" | grep ^1 | cut -d "<" -f2 | sed -e 's/_$//' -e 's/^[ \t]*//' | while read line; do echo $line | md5sum | awk '{print $1}' ;done)
+			ls -1 $DPATH | grep -v "adblock\|$el" | while read line; do
+			[ $(echo $(($(date +%s) - $days))) -gt $(date -r $DPATH/$line +%s) ] && {
+				rm -fr $DPATH/$line &>/dev/null
+				logi "Removing unused (and 15+ days old) file $DPATH/$line"
+			}
+			done
+		}
 		[ "$1" == "update" ] && {
 			logn "Updating lists"
 			rm -f ${UNLOADED}

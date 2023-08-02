@@ -2,7 +2,7 @@
 <!--
 	Tomato GUI
 	Copyright (C) 2007-2022 FreshTomato
-	ver="v2.71 - 01/23" # rs232
+	ver="v2.71u - 01/23" # rs232
 	https://www.freshtomato.org/
 	For use with Tomato Firmware only.
 	No part of this file may be used without permission.
@@ -227,7 +227,7 @@ function earlyInit() {
 	<table cellspacing="1" cellpadding="2" border="0">
 	<tr><td>Controls -</td><td>Status -</td></tr>
 	<tr><td>&nbsp;</td>
-	<th rowspan="10" valign="top" style="text-align:left;padding-left:30px;padding-top:5px;font-size:9px;width:100%;border:1px solid #aaaaaa"><div id="status"></div></th></tr>
+	<th rowspan="10" valign="top" style="text-align:left;padding-left:30px;padding-top:5px;font-size:9px;width:100%;border:1px solid #aaaaaa"><div id="status"><wbr></div></th></tr>
 	<td><input type="button" style="width:130px" value="▶️ Load " id="adblock-start" onclick="adblockMe('start');"></td></tr>
 	<tr><td><input type="button" style="width:130px" value="⏏️ Unload" id="adblock-stop" onclick="adblockMe('stop');"></td></tr>
 	<tr><td><input type="button" style="width:130px" value="🔄 Update" id="adblock-update" onclick="adblockMe('update');"></td></tr>
@@ -252,7 +252,7 @@ function earlyInit() {
 <div class="section-title">Notes <small><i><a href='javascript:toggleVisibility(cprefix,"notes");'><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
-		<li><b>Enable</b> - Used to activate/deactivate the adblock function. When enable is set the script runs after a save, a manual Load/Update, it autostart at boot and set autoupdate to run randomly between 04:00 and 05:59 AM every day</li>
+		<li><b>Enable</b> - Used to activate/deactivate the adblock function. When enable is set the script runs after a save, a manual Load/Update, it autostart at boot and set autoupdate to run daily at a random time between 3am and 6am (excluding mins 59,00,01).</li>
 		<li><b>Filter-file size limit</b> - Defined in Bytes, it's an automatically calculated hard limit for the dnsmasq.adblock file. This limit can be overwritten manually. Removing the number and saving will trigger an internal calculation performed at the next run.</li>
 		<li><b>Custom path</b> - Optional, allows to save the potentially large adblock files on permanent storage like USB/CIFS/etc. This indirectly also means lower RAM usage and additional list control to avoid downloads/processing when not necessary.</li>
 		<li><b>Blacklist URL & List-of-lists</b> - Supported blacklist can come in multiple format. as long as they are text and with maximum one domain reference per line. Empty lines and lines starting with "#" or "!" are always ignored. A particular note on the List-of-lists format where the content of the defined list contains references to external URLs e.g.<br><code>[https://provider.com/badaddresses.txt] --> containing a list of URLs</code>.</li>
