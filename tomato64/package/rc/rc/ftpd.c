@@ -128,6 +128,10 @@ void start_ftpd(int force)
 	if (serialize_restart("vsftpd", 1))
 		return;
 
+	/* only if enabled */
+	if (nvram_get_int("ftp_enable"))
+		add_ftp_defaults(); /* backup: check nvram! */
+
 	mkdir_if_none(vsftpd_users);
 	mkdir_if_none(vsftpd_run);
 

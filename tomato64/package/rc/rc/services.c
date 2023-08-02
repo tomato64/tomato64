@@ -76,6 +76,9 @@ extern struct nvram_tuple rstats_defaults[];
 #ifdef TCONFIG_BCMARM
 extern struct nvram_tuple cstats_defaults[];
 #endif /* TCONFIG_BCMARM */
+#if defined(TCONFIG_FTP) && defined(TCONFIG_BCMARM)
+extern struct nvram_tuple ftp_defaults[];
+#endif /* TCONFIG_FTP && TCONFIG_BCMARM */
 
 /* Pop an alarm to recheck pids in 500 msec */
 static const struct itimerval pop_tv = { {0, 0}, {0, 500 * 1000} };
@@ -154,6 +157,40 @@ void del_cstats_defaults(void)
 	eval("nvram", "cstats_defaults", "--del");
 #endif /* TCONFIG_BCMARM */
 }
+
+#ifdef TCONFIG_FTP
+void add_ftp_defaults(void)
+{
+#ifdef TCONFIG_BCMARM
+	struct nvram_tuple *t;
+
+	/* Restore defaults if necessary */
+	for (t = ftp_defaults; t->name; t++) {
+		if (!nvram_get(t->name)) { /* check existence */
+			nvram_set(t->name, t->value);
+		}
+	}
+#else
+	eval("nvram", "ftp_defaults", "--add");
+#endif /* TCONFIG_BCMARM */
+}
+
+void del_ftp_defaults(void)
+{
+#ifdef TCONFIG_BCMARM
+	if (nvram_match("ftp_enable", "0")) {
+		struct nvram_tuple *t;
+
+		/* remove defaults if NOT necessary (only keep "xyz_enable" nv var.) */
+		for (t = ftp_defaults; t->name; t++) {
+			nvram_unset(t->name);
+		}
+	}
+#else
+	eval("nvram", "ftp_defaults", "--del");
+#endif /* TCONFIG_BCMARM */
+}
+#endif /* TCONFIG_FTP */
 
 void start_dnsmasq_wet()
 {
@@ -2895,6 +2932,14 @@ TOP:
 		if (act_start) add_cstats_defaults();
 		goto CLEAR;
 	}
+
+#ifdef TCONFIG_FTP
+	if (strcmp(service, "ftp_nvram") == 0) {
+		if (act_stop) del_ftp_defaults();
+		if (act_start) add_ftp_defaults();
+		goto CLEAR;
+	}
+#endif /* TCONFIG_FTP */
 
 	if (strcmp(service, "dhcpc_wan") == 0) {
 		if (act_stop) stop_dhcpc("wan");

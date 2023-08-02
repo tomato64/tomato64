@@ -306,6 +306,10 @@ extern void add_rstats_defaults(void);
 extern void del_rstats_defaults(void);
 extern void add_cstats_defaults(void);
 extern void del_cstats_defaults(void);
+#ifdef TCONFIG_FTP
+extern void add_ftp_defaults(void);
+extern void del_ftp_defaults(void);
+#endif /* TCONFIG_FTP */
 
 /* usb.c */
 #ifdef TCONFIG_USB

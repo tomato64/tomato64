@@ -10641,6 +10641,9 @@ static void sysinit(void)
 	restore_defaults(); /* restore (basic) defaults if necessary */
 	del_rstats_defaults(); /* remove rstats nvram values if feature is disabled! */
 	del_cstats_defaults(); /* remove cstats nvram values if feature is disabled! */
+#ifdef TCONFIG_FTP
+	del_ftp_defaults(); /* remove ftp nvram values if feature is disabled! */
+#endif /* TCONFIG_FTP */
 	init_nvram();
 
 #ifndef TOMATO64

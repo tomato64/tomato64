@@ -46,6 +46,30 @@ struct nvram_tuple cstats_defaults[] = {
 	{ 0, 0, 0 }
 };
 
+#ifdef TCONFIG_FTP
+struct nvram_tuple ftp_defaults[] = {
+	{ "ftp_super",			"0"				, 0 },
+	{ "ftp_anonymous",		"0"				, 0 },
+	{ "ftp_dirlist",		"0"				, 0 },
+	{ "ftp_port",			"21"				, 0 },
+	{ "ftp_max",			"0"				, 0 },
+	{ "ftp_ipmax",			"0"				, 0 },
+	{ "ftp_staytimeout",		"300"				, 0 },
+	{ "ftp_rate",			"0"				, 0 },
+	{ "ftp_anonrate",		"0"				, 0 },
+	{ "ftp_anonroot",		""				, 0 },
+	{ "ftp_pubroot",		""				, 0 },
+	{ "ftp_pvtroot",		""				, 0 },
+	{ "ftp_users",			""				, 0 },
+	{ "ftp_custom",			""				, 0 },
+	{ "ftp_sip",			""				, 0 },	/* wan ftp access: source ip address(es) */
+	{ "ftp_limit",			"0,3,60"			, 0 },
+	{ "ftp_tls",			"0"				, 0 },
+	{ "log_ftp",			"0"				, 0 },
+	{ 0, 0, 0 }
+};
+#endif /* TCONFIG_FTP */
+
 struct nvram_tuple router_defaults[] = {
 	{ "restore_defaults",		"0"				, 0 },	/* Set to 0 to not restore defaults on boot */
 
@@ -1144,24 +1168,7 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TCONFIG_FTP
 /* nas-ftp */
 	{ "ftp_enable",			"0"				, 0 },
-	{ "ftp_super",			"0"				, 0 },
-	{ "ftp_anonymous",		"0"				, 0 },
-	{ "ftp_dirlist",		"0"				, 0 },
-	{ "ftp_port",			"21"				, 0 },
-	{ "ftp_max",			"0"				, 0 },
-	{ "ftp_ipmax",			"0"				, 0 },
-	{ "ftp_staytimeout",		"300"				, 0 },
-	{ "ftp_rate",			"0"				, 0 },
-	{ "ftp_anonrate",		"0"				, 0 },
-	{ "ftp_anonroot",		""				, 0 },
-	{ "ftp_pubroot",		""				, 0 },
-	{ "ftp_pvtroot",		""				, 0 },
-	{ "ftp_users",			""				, 0 },
-	{ "ftp_custom",			""				, 0 },
-	{ "ftp_sip",			""				, 0 },	/* wan ftp access: source ip address(es) */
-	{ "ftp_limit",			"0,3,60"			, 0 },
-	{ "ftp_tls",			"0"				, 0 },
-	{ "log_ftp",			"0"				, 0 },
+	/* all other ftp_xyz variables, see ftp_defaults */
 #endif /* TCONFIG_FTP */
 
 #ifdef TCONFIG_SNMP

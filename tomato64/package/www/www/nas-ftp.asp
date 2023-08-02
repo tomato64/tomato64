@@ -23,6 +23,7 @@
 
 var changed = 0;
 var serviceType = 'ftpd';
+var xob = null;
 
 ftplimit = nvram.ftp_limit.split(',');
 if (ftplimit.length != 3) ftplimit = [0,3,60];
@@ -217,7 +218,65 @@ function earlyInit() {
 	verifyFields(null, 1);
 }
 
+function _ftpNvramAdd() {
+	form.submitHidden('service.cgi', { _service: 'ftp_nvram-start', _sleep: 1 });
+}
+
+function ftpNvramAdd() {
+	var sb, cb, msg;
+
+	/* short check for ftp nvram var. If OK - nothing to do! */
+	if ((nvram.ftp_port.length > 0) &&
+	    (nvram.ftp_max.length > 0))
+		return;
+
+	/* check already enabled? - nothing to do! */
+	if (nvram.ftp_enable > 0)
+		return;
+
+	E('_ftp_enable').disabled = 1;
+	if ((sb = E('save-button')) != null) sb.disabled = 1;
+	if ((cb = E('cancel-button')) != null) cb.disabled = 1;
+
+	if (!confirm("Add FTP Server to nvram?"))
+		return;
+
+	if (xob)
+		return;
+
+	if ((xob = new XmlHttp()) == null) {
+		_ftpNvramAdd();
+		return;
+	}
+
+	if ((msg = E('footer-msg')) != null) {
+		msg.innerHTML = 'adding nvram values...';
+		msg.style.display = 'inline';
+	}
+
+	xob.onCompleted = function(text, xml) {
+		if (msg) {
+			msg.innerHTML = 'nvram ready';
+		}
+		setTimeout(
+			function() {
+				E('_ftp_enable').disabled = 0;
+				if (sb) sb.disabled = 0;
+				if (cb) cb.disabled = 0;
+				if (msg) msg.style.display = 'none';
+				setTimeout(reloadPage, 1000);
+		}, 5000);
+		xob = null;
+	}
+	xob.onError = function() {
+		_ftpNvramAdd();
+	}
+
+	xob.post('service.cgi', '_service=ftp_nvram-start'+'&'+'_sleep=1'+'&'+'_ajax=1');
+}
+
 function init() {
+	ftpNvramAdd();
 	eventHandler();
 	up.initPage(250, 5);
 }
@@ -338,7 +397,8 @@ function init() {
 <div class="section-title">Notes</div>
 <div class="section">
 	<ul>
-		<li>Don't use the same username as when logging into the web panel - it will be rejected until you select <br>'Allow Admin Login' (with all the consequences).</li>
+		<li><b>Generally</b> - Don't use the same username as when logging into the web panel - it will be rejected until you select <br>'Allow Admin Login' (with all the consequences).</li>
+		<li><b>NVRAM</b> - If FTP Server has been enabled, nvram values will be added. Nvram values will be removed after reboot in case FTP Server will be disabled.</li>
 	</ul>
 </div>
 
