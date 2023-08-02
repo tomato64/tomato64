@@ -2,7 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2022 pedro
+ * Fixes/updates (C) 2018 - 2023 pedro
  *
  */
 
@@ -109,8 +109,10 @@ void fix_chain_in_drop(void)
 		eval("iptables", "-D", "INPUT", "-j", buf);
 		eval("iptables", "-A", "INPUT", "-j", buf);
 #ifdef TCONFIG_IPV6
-		eval("ip6tables", "-D", "INPUT", "-j", buf);
-		eval("ip6tables", "-A", "INPUT", "-j", buf);
+		if (ipv6_enabled()) {
+			eval("ip6tables", "-D", "INPUT", "-j", buf);
+			eval("ip6tables", "-A", "INPUT", "-j", buf);
+		}
 #endif
 	}
 }
@@ -352,7 +354,7 @@ int main(int argc, char **argv)
 
 		realpath(argv[0], tmp);
 		if ((strncmp(tmp, "/tmp/", 5) != 0) && (argc < 32)) {
-			memset(tmp, 0, 256);
+			memset(tmp, 0, sizeof(tmp));
 			sprintf(tmp, "%s%s", "/tmp/", base);
 			if (f_exists(tmp)) {
 				cprintf("[rc] override: %s\n", tmp);

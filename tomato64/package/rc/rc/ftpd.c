@@ -2,7 +2,7 @@
  * ftpd.c
  *
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2022 pedro
+ * Fixes/updates (C) 2018 - 2023 pedro
  *
  */
 
@@ -78,8 +78,9 @@ static void build_ftpd_firewall_script(void)
 		fprintf(p, "iptables -A INPUT -p tcp --dport %s -m state --state NEW -j ftplimit\n",
 		           nvram_safe_get("ftp_port"));
 #ifdef TCONFIG_IPV6
-		fprintf(p, "ip6tables -A INPUT -p tcp --dport %s -m state --state NEW -j ftplimit\n",
-		           nvram_safe_get("ftp_port"));
+		if (ipv6_enabled())
+			fprintf(p, "ip6tables -A INPUT -p tcp --dport %s -m state --state NEW -j ftplimit\n",
+			           nvram_safe_get("ftp_port"));
 #endif
 	}
 
@@ -94,7 +95,7 @@ static void build_ftpd_firewall_script(void)
 			fprintf(p, "iptables -A INPUT -p tcp %s --dport %s -j %s\n",
 			           s, nvram_safe_get("ftp_port"), chain_in_accept);
 #ifdef TCONFIG_IPV6
-		if (ip6t_source(u, s, "ftp", "remote access"))
+		if (ipv6_enabled() && ip6t_source(u, s, "ftp", "remote access"))
 			fprintf(p, "ip6tables -A INPUT -p tcp %s --dport %s -j %s\n",
 			           s, nvram_safe_get("ftp_port"), chain_in_accept);
 #endif

@@ -2,6 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
  *
  */
 
@@ -145,7 +146,8 @@ void ipt_qos(void)
 	 * that also doesn't have a size group. If it has a size group, processing needs to continue
 	 * to allow the mark to get cleared after the max bytes have been sent/received by QOSSIZE chain
 	 */
-	ip46t_write(":QOSO - [0:0]\n"
+	ip46t_write(ipv6_enabled,
+	            ":QOSO - [0:0]\n"
 	            "-A QOSO -m connmark --mark 0/0xff000 -m connmark ! --mark 0/0xf -j RETURN\n");
 
 #ifdef TCONFIG_BCMARM
@@ -212,7 +214,7 @@ void ipt_qos(void)
 
 		v4v6_ok = IPT_V4;
 #ifdef TCONFIG_IPV6
-		if (ipv6_enabled())
+		if (ipv6_enabled)
 			v4v6_ok |= IPT_V6;
 #endif
 
@@ -229,7 +231,7 @@ void ipt_qos(void)
 		}
 
 		/* IPP2P/Layer7 */
-		memset(app, 0, 256);
+		memset(app, 0, sizeof(app));
 		if (ipt_ipp2p(ipp2p, app))
 			v4v6_ok &= ~IPT_V6;
 		else
@@ -241,7 +243,7 @@ void ipt_qos(void)
 		}
 
 		/* dscp */
-		memset(s, 0, 32);
+		memset(s, 0, sizeof(s));
 		if (ipt_dscp(dscp, s))
 			strcat(saddr, s);
 
@@ -260,7 +262,8 @@ void ipt_qos(void)
 					sprintf(saddr + strlen(saddr), "%lu:%lu", min * 1024, (max * 1024) - 1);
 					if (!sizegroup) {
 						/* create table of connbytes sizes, pass appropriate connections there and only continue processing them if mark was wiped */
-						ip46t_write(":QOSSIZE - [0:0]\n"
+						ip46t_write(ipv6_enabled,
+						            ":QOSSIZE - [0:0]\n"
 						            "-I QOSO 2 -m connmark ! --mark 0/0xff000 -j QOSSIZE\n"
 						            "-I QOSO 3 -m connmark ! --mark 0/0xff000 -m connmark ! --mark 0xff000/0xff000 -j RETURN\n");
 					}
@@ -270,10 +273,10 @@ void ipt_qos(void)
 						/* Clear the QoS mark to allow the packet to be reclassified. Note: the last used size group will remain left behind so that
 						 * we can match on it in the next rule and return from the chain
 						 */
-						ip46t_flagged_write(v4v6_ok, "-A QOSSIZE -m connmark --mark 0x%x/0xff000 -m connbytes --connbytes-mode bytes --connbytes-dir both "
-						                             "--connbytes %lu: -j CONNMARK --set-mark 0xff000/0xff00f\n", (sizegroup << 12), (max * 1024));
-						ip46t_flagged_write(v4v6_ok, "-A QOSSIZE -m connmark --mark 0xff000/0xff000 -m connbytes --connbytes-mode bytes --connbytes-dir both "
-						                             "--connbytes %lu: -j RETURN\n", (max * 1024));
+						ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A QOSSIZE -m connmark --mark 0x%x/0xff000 -m connbytes --connbytes-mode bytes --connbytes-dir both "
+						                    "--connbytes %lu: -j CONNMARK --set-mark 0xff000/0xff00f\n", (sizegroup << 12), (max * 1024));
+						ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A QOSSIZE -m connmark --mark 0xff000/0xff000 -m connbytes --connbytes-mode bytes --connbytes-dir both "
+						                    "--connbytes %lu: -j RETURN\n", (max * 1024));
 					}
 					else
 						class_flag = sizegroup << 12;
@@ -318,22 +321,22 @@ void ipt_qos(void)
 					sport[0] = 0;
 
 				if (proto_num != 6) {
-					ip46t_flagged_write(v4v6_ok, "-A %s -p %s %s %s %s", chain, "udp", sport, saddr, end);
-					ip46t_flagged_write(v4v6_ok, "-A %s -p %s %s %s -j RETURN\n", chain, "udp", sport, saddr);
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s %s", chain, "udp", sport, saddr, end);
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s -j RETURN\n", chain, "udp", sport, saddr);
 				}
 				if (proto_num != 17) {
-					ip46t_flagged_write(v4v6_ok, "-A %s -p %s %s %s %s", chain, "tcp", sport, saddr, end);
-					ip46t_flagged_write(v4v6_ok, "-A %s -p %s %s %s -j RETURN\n", chain, "tcp", sport, saddr);
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s %s", chain, "tcp", sport, saddr, end);
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s -j RETURN\n", chain, "tcp", sport, saddr);
 				}
 			}
 			else {
-				ip46t_flagged_write(v4v6_ok, "-A %s -p %d %s %s", chain, proto_num, saddr, end);
-				ip46t_flagged_write(v4v6_ok, "-A %s -p %d %s -j RETURN\n", chain, proto_num, saddr);
+				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %d %s %s", chain, proto_num, saddr, end);
+				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %d %s -j RETURN\n", chain, proto_num, saddr);
 			}
 		}
 		else { /* any protocol */
-			ip46t_flagged_write(v4v6_ok, "-A %s %s %s", chain, saddr, end);
-			ip46t_flagged_write(v4v6_ok, "-A %s %s -j RETURN\n", chain, saddr);
+			ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s %s", chain, saddr, end);
+			ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s -j RETURN\n", chain, saddr);
 		}
 	}
 	free(buf);
@@ -347,8 +350,8 @@ void ipt_qos(void)
 
 	class_num = i + 1;
 	class_num |= class_flag;
-	ip46t_write("-A QOSO -j CONNMARK --set-mark 0x%x/0xff00f\n", class_num);
-	ip46t_write("-A QOSO -j RETURN\n");
+	ip46t_write(ipv6_enabled, "-A QOSO -j CONNMARK --set-mark 0x%x/0xff00f\n", class_num);
+	ip46t_write(ipv6_enabled, "-A QOSO -j RETURN\n");
 
 	wan2_up = check_wanup("wan2");
 #ifdef TCONFIG_MULTIWAN
@@ -390,7 +393,7 @@ void ipt_qos(void)
 #endif /* TCONFIG_MULTIWAN */
 
 #ifdef TCONFIG_IPV6
-	if (*wan6face)
+	if (ipv6_enabled && *wan6face)
 		ip6t_write("-A FORWARD -o %s -j QOSO\n"
 		           "-A OUTPUT -o %s -p icmpv6 -j RETURN\n"
 		           "-A OUTPUT -o %s -j QOSO\n"
@@ -399,7 +402,7 @@ void ipt_qos(void)
 #endif /* TCONFIG_IPV6 */
 
 	inuse |= (1 << i) | 1; /* default and highest are always built */
-	memset(s, 0, 32);
+	memset(s, 0, sizeof(s));
 	sprintf(s, "%d", inuse);
 	nvram_set("qos_inuse", s);
 
@@ -502,7 +505,7 @@ void ipt_qos(void)
 #endif /* !TCONFIG_BCMARM */
 
 #ifdef TCONFIG_IPV6
-			if (*wan6face) {
+			if (ipv6_enabled && *wan6face) {
 				ip6t_write("-A PREROUTING -i %s -j CONNMARK --restore-mark --mask 0xf\n", wan6face);
 #ifndef TCONFIG_BCMARM
 				qosDevNumStr = 0;
@@ -556,11 +559,11 @@ void start_qos(char *prefix)
 	x = nvram_get_int("ne_vegas");
 	if (x) {
 		char alpha[10], beta[10], gamma[10];
-		memset(alpha, 0, 10);
+		memset(alpha, 0, sizeof(alpha));
 		sprintf(alpha, "alpha=%d", nvram_get_int("ne_valpha"));
-		memset(beta, 0, 10);
+		memset(beta, 0, sizeof(beta));
 		sprintf(beta, "beta=%d", nvram_get_int("ne_vbeta"));
-		memset(gamma, 0, 10);
+		memset(gamma, 0, sizeof(gamma));
 		sprintf(gamma, "gamma=%d", nvram_get_int("ne_vgamma"));
 		modprobe("tcp_vegas", alpha, beta, gamma);
 		f_write_procsysnet("ipv4/tcp_congestion_control", "vegas");

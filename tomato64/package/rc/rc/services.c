@@ -28,11 +28,12 @@
 
 */
 /*
-
-	Modified for Tomato Firmware
-	Portions, Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Modified for Tomato Firmware
+ * Portions, Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -1873,7 +1874,7 @@ void stop_cron(void)
 	killall_tk_period_wait("crond", 50);
 }
 
-void start_hotplug2()
+void start_hotplug2(void)
 {
 	stop_hotplug2();
 
@@ -3293,7 +3294,7 @@ TOP:
 
 	if (strcmp(service, "hotplug") == 0) {
 		if (act_stop) stop_hotplug2();
-		if (act_start) start_hotplug2(1);
+		if (act_start) start_hotplug2();
 		goto CLEAR;
 	}
 

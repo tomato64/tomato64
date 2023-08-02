@@ -165,7 +165,7 @@ extern void start_wan6(const char *wan_ifname);
 extern void stop_wan6(void);
 #endif
 extern void stop_wan_if(char *prefix);
-extern void stop_wan();
+extern void stop_wan(void);
 extern void force_to_dial(char *prefix);
 extern void do_wan_routes(char *ifname, int metric, int add, char *prefix);
 extern void preset_wan(char *ifname, char *gw, char *netmask, char *prefix);
@@ -284,7 +284,7 @@ extern void restart_nas_services(int stop, int start);
 #else
 #define restart_nas_services(args...) do { } while(0)
 #endif /* TCONFIG_USB */
-extern void start_hotplug2();
+extern void start_hotplug2(void);
 extern void stop_hotplug2(void);
 #ifdef TCONFIG_IPV6
 extern void start_ipv6_tunnel(void);
@@ -357,24 +357,16 @@ extern char wan6face[];
 extern char lan_cclass[];
 extern char **layer7_in;
 extern void enable_ip_forward(void);
+extern int ipv6_enabled;
 extern void ipt_write(const char *format, ...);
-extern void ip6t_write(const char *format, ...);
 #ifdef TCONFIG_IPV6
-#define ip46t_write(args...) do { ipt_write(args); ip6t_write(args); } while(0)
-#define ip46t_flagged_write(do_ip46t, args...) do { if (do_ip46t & IPT_V4) ipt_write(args); if (do_ip46t & IPT_V6) ip6t_write(args); } while(0)
-#define ip46t_cond_write(do_ip6t, args...) do { if (do_ip6t) ip6t_write(args); else ipt_write(args); } while(0)
-#ifdef TCONFIG_BCMARM
-#define ipt_flagged_write(do_ip46t, args...) do { if (do_ip46t & IPT_V4) ipt_write(args); if (do_ip46t & IPT_V6) ip6t_write(args); } while(0)
-#define ipt_cond_write(do_ip6t, args...) do { if (do_ip6t) ip6t_write(args); else ipt_write(args); } while(0)
-#endif /* TCONFIG_BCMARM */
+extern void ip6t_write(const char *format, ...);
+#define ip6t_source(s, src, categ, name) ipt_addr(src, 128, s, "src", IPT_V6, 0, categ, name)
+#define ip46t_write(do_ipv6t, args...) do { ipt_write(args); if (do_ipv6t) ip6t_write(args); } while(0)
+#define ip46t_flagged_write(do_ipv6t, do_ip46t, args...) do { if (do_ip46t & IPT_V4) ipt_write(args); if (do_ipv6t && (do_ip46t & IPT_V6)) ip6t_write(args); } while(0)
 #else /* !TCONFIG_IPV6 */
-#define ip46t_write ipt_write
-#define ip46t_flagged_write(do_ip46t, args...) do { if (do_ip46t & IPT_V4) ipt_write(args); } while(0)
-#define ip46t_cond_write(do_ip6t, args...) ipt_write(args)
-#ifdef TCONFIG_BCMARM
-#define ipt_flagged_write(do_ip46t, args...) do { if (do_ip46t & IPT_V4) ipt_write(args); } while(0)
-#define ipt_cond_write(do_ip6t, args...) ipt_write(args)
-#endif /* TCONFIG_BCMARM */
+#define ip46t_write(do_ipv6t, args...) do { ipt_write(args); } while(0)
+#define ip46t_flagged_write(do_ipv6t, do_ip46t, args...) do { if (do_ip46t & IPT_V4) ipt_write(args); } while(0)
 #endif /* TCONFIG_IPV6 */
 extern void ipt_log_unresolved(const char *addr, const char *addrtype, const char *categ, const char *name);
 extern int ipt_addr(char *addr, int maxlen, const char *s, const char *dir, int af, int strict, const char *categ, const char *name);
@@ -383,7 +375,6 @@ extern int ipt_ipp2p(const char *v, char *opt);
 extern int ipt_layer7(const char *v, char *opt);
 #define ipt_source_strict(s, src, categ, name) ipt_addr(src, 64, s, "src", IPT_V4, 1, categ, name)
 #define ipt_source(s, src, categ, name) ipt_addr(src, 64, s, "src", IPT_V4, 0, categ, name)
-#define ip6t_source(s, src, categ, name) ipt_addr(src, 128, s, "src", IPT_V6, 0, categ, name)
 extern int start_firewall(void);
 extern int stop_firewall(void);
 #ifdef DEBUG_IPTFILE
@@ -396,7 +387,6 @@ extern void log_segfault(void);
 /* forward.c */
 extern void ipt_forward(ipt_table_t table);
 extern void ipt_triggered(ipt_table_t table);
-
 #ifdef TCONFIG_IPV6
 extern void ip6t_forward(void);
 #endif
@@ -541,14 +531,14 @@ extern void run_bt_firewall_script(void);
 
 /* nfs.c */
 #ifdef TCONFIG_NFS
-extern void start_nfs();
-extern void stop_nfs();
+extern void start_nfs(void);
+extern void stop_nfs(void);
 #endif
 
 /* snmp.c */
 #ifdef TCONFIG_SNMP
-extern void start_snmp();
-extern void stop_snmp();
+extern void start_snmp(void);
+extern void stop_snmp(void);
 #endif
 
 /* tor.c */
@@ -559,8 +549,8 @@ extern void stop_tor(void);
 
 /* apcupsd.c */
 #ifdef TCONFIG_UPS
-extern void start_ups();
-extern void stop_ups();
+extern void start_ups(void);
+extern void stop_ups(void);
 #endif
 
 /* pptpd.c */
@@ -577,10 +567,10 @@ extern void start_ovpn_client(int clientNum);
 extern void stop_ovpn_client(int clientNum);
 extern void start_ovpn_server(int serverNum);
 extern void stop_ovpn_server(int serverNum);
-extern void start_ovpn_eas();
-extern void stop_ovpn_eas();
-extern void stop_ovpn_all();
-extern void run_ovpn_firewall_scripts();
+extern void start_ovpn_eas(void);
+extern void stop_ovpn_eas(void);
+extern void stop_ovpn_all(void);
+extern void run_ovpn_firewall_scripts(void);
 extern void write_ovpn_dnsmasq_config(FILE*);
 extern int write_ovpn_resolv(FILE*);
 #endif
@@ -609,8 +599,8 @@ extern void stop_mmc(void);
 
 /* nocat.c */
 #ifdef TCONFIG_NOCAT
-extern void start_nocat();
-extern void stop_nocat();
+extern void start_nocat(void);
+extern void stop_nocat(void);
 #endif
 
 /* nginx.c */
@@ -626,8 +616,8 @@ extern void stop_mysql(void);
 #endif /* TCONFIG_NGINX */
 
 /* tomatoanon.c */
-extern void start_tomatoanon();
-extern void stop_tomatoanon();
+extern void start_tomatoanon(void);
+extern void stop_tomatoanon(void);
 
 /* roamast.c */
 #ifdef TCONFIG_ROAM

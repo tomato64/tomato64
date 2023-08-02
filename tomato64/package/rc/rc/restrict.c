@@ -1,9 +1,10 @@
 /*
-
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 #include "rc.h"
 
@@ -59,13 +60,10 @@ int rcheck_main(int argc, char *argv[])
 {
 	char buf[256];
 	char *p;
-	int sched_begin;
-	int sched_end;
-	int sched_dow;
+	int sched_begin, sched_end, sched_dow;
 	time_t now;
 	struct tm *tms;
-	int now_dow;
-	int now_mins;
+	int now_dow, now_mins;
 	int n;
 	int nrule;
 	char comp;
@@ -74,13 +72,15 @@ int rcheck_main(int argc, char *argv[])
 	int count;
 	int radio;
 	int r;
+#ifndef TCONFIG_BCMARM
 #ifdef TCONFIG_IPV6
 	int r6;
+#endif
 #endif
 	int ipt_active;
 
 	if (!nvram_contains_word("log_events", "acre"))
-		setlogmask(LOG_MASK(LOG_EMERG));	/* can't set to 0 */
+		setlogmask(LOG_MASK(LOG_EMERG)); /* can't set to 0 */
 
 	simple_lock("restrictions");
 
@@ -103,7 +103,7 @@ int rcheck_main(int argc, char *argv[])
 	count = 0;
 	radio = foreach_wif(0, NULL, radio_on) ? -1 : -2;
 	for (nrule = 0; nrule < MAX_NRULES; ++nrule) {
-		memset(buf, 0, 256);
+		memset(buf, 0, sizeof(buf));
 		sprintf(buf, "rrule%d", nrule);
 		if ((p = nvram_get(buf)) == NULL)
 			continue;
@@ -136,7 +136,7 @@ int rcheck_main(int argc, char *argv[])
 				radio = !insch;
 		}
 		else {
-			memset(buf, 0, 256);
+			memset(buf, 0, sizeof(buf));
 			sprintf(buf, "r%s%02d", (comp != '|') ? "dev" : "res", nrule);
 
 			r = eval("iptables", "-D", "restrict", "-j", buf);
@@ -144,10 +144,11 @@ int rcheck_main(int argc, char *argv[])
 				/* ignore error above (if any) */
 				r = eval("iptables", "-A", "restrict", "-j", buf);
 
+/* disable restrictions for ip6tables (ARM) - FIXME */
+#ifndef TCONFIG_BCMARM
 #ifdef TCONFIG_IPV6
-#ifndef TCONFIG_BCM_ARM
-			/* disable web for ip6tables (ARM) - FIXME */
 			r6 = eval("ip6tables", "-D", "restrict", "-j", buf);
+
 			if (ipv6_enabled()) {
 				if (insch)
 					/* ignore error above (if any) */
@@ -155,8 +156,8 @@ int rcheck_main(int argc, char *argv[])
 
 				r |= r6;
 			}
-#endif
 #endif /* TCONFIG_IPV6 */
+#endif /* TCONFIG_BCMARM */
 
 			if (r != 0) {
 				syslog(LOG_ERR, "Iptables: %sactivating chain \"%s\" failed. Retrying in 15 minutes.", insch ? "" : "de", buf);
@@ -170,7 +171,7 @@ int rcheck_main(int argc, char *argv[])
 			activated &= ~n;
 	}
 
-	memset(buf, 0, 256);
+	memset(buf, 0, sizeof(buf));
 	sprintf(buf, "%llx", activated);
 	nvram_set("rrules_activated", buf);
 
@@ -191,6 +192,7 @@ int rcheck_main(int argc, char *argv[])
 	allow_fastnat("restrictions", (ipt_active == 0));
 	try_enabling_fastnat();
 	simple_unlock("restrictions");
+
 	return 0;
 }
 
@@ -226,7 +228,7 @@ void ipt_restrictions(void)
 	unsched_restrictions();
 
 	for (nrule = 0; nrule < MAX_NRULES; ++nrule) {
-		memset(buf, 0, 8192);
+		memset(buf, 0, sizeof(buf));
 		sprintf(buf, "rrule%d", nrule);
 		if ((p = nvram_get(buf)) == NULL)
 			continue;
@@ -248,23 +250,24 @@ void ipt_restrictions(void)
 		if (first) {
 			first = 0;
 
-			ip46t_write(":restrict - [0:0]\n");
+			ip46t_write(ipv6_enabled, ":restrict - [0:0]\n");
 #ifdef TCONFIG_IPV6
-			if (*wan6face)
-				ip6t_write("-A FORWARD -o %s -j restrict\n", wan6face);
+			if (ipv6_enabled && *wan6face)
+					ip6t_write("-A FORWARD -o %s -j restrict\n", wan6face);
 #endif
 			for (n = 0; n < wanfaces.count; ++n) {
 				if (*(wanfaces.iface[n].name))
 					ipt_write("-A FORWARD -o %s -j restrict\n", wanfaces.iface[n].name);
 			}
 			/* Only mess with DNS requests that are coming in on INPUT for both UDP and TCP */
-			ip46t_write("-I INPUT 1 ! -i lo -p udp --dport 53 -j restrict\n"
+			ip46t_write(ipv6_enabled,
+			            "-I INPUT 1 ! -i lo -p udp --dport 53 -j restrict\n"
 			            "-I INPUT 1 ! -i lo -p tcp --dport 53 -j restrict\n");
 		}
 
-		memset(reschain, 0, 32);
+		memset(reschain, 0, sizeof(reschain));
 		sprintf(reschain, "rres%02d", nrule);
-		ip46t_write(":%s - [0:0]\n", reschain);
+		ip46t_write(ipv6_enabled, ":%s - [0:0]\n", reschain);
 
 		blockall = 1;
 
@@ -276,7 +279,7 @@ void ipt_restrictions(void)
 				continue;
 
 			/* p2p, layer7 */
-			memset(app, 0, 256);
+			memset(app, 0, sizeof(app));
 			if (!ipt_ipp2p(ipp2p, app)) {
 				if (ipt_layer7(layer7, app) == -1)
 					continue;
@@ -301,7 +304,7 @@ void ipt_restrictions(void)
 			proto = atoi(pproto);
 			if (proto <= -2) {
 				/* shortcut if any proto+any port */
-				ip46t_flagged_write(v4v6_ok, "-A %s %s %s -j %s\n", reschain, iptaddr, app, chain_out_drop);
+				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s %s -j %s\n", reschain, iptaddr, app, chain_out_drop);
 				continue;
 			}
 			else if ((proto == 6) || (proto == 17) || (proto == -1)) {
@@ -317,12 +320,12 @@ void ipt_restrictions(void)
 					ports[0] = 0;
 
 				if (proto != 17)
-					ip46t_flagged_write(v4v6_ok, "-A %s -p tcp %s %s %s -j %s\n", reschain, ports, iptaddr, app, chain_out_drop);
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p tcp %s %s %s -j %s\n", reschain, ports, iptaddr, app, chain_out_drop);
 				if (proto != 6)
-					ip46t_flagged_write(v4v6_ok, "-A %s -p udp %s %s %s -j %s\n", reschain, ports, iptaddr, app, chain_out_drop);
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p udp %s %s %s -j %s\n", reschain, ports, iptaddr, app, chain_out_drop);
 			}
 			else {
-				ip46t_flagged_write(v4v6_ok, "-A %s -p %d %s %s -j %s\n", reschain, proto, iptaddr, app, chain_out_drop);
+				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %d %s %s -j %s\n", reschain, proto, iptaddr, app, chain_out_drop);
 			}
 		}
 
@@ -344,7 +347,7 @@ void ipt_restrictions(void)
 			else
 				p = NULL;
 
-			ip46t_write("-A %s -p tcp -m web --hore \"%s\" -j %s\n", reschain, http, chain_out_reject);
+			ip46t_write(ipv6_enabled, "-A %s -p tcp -m web --hore \"%s\" -j %s\n", reschain, http, chain_out_reject);
 			need_web = 1;
 			blockall = 0;
 			if (p == NULL)
@@ -362,24 +365,24 @@ void ipt_restrictions(void)
 			strcat(app, ".class$ .jar$");
 
 		if (app[0]) {
-			ip46t_write("-A %s -p tcp -m multiport --dports %s -m web --path \"%s\" -j %s\n", reschain, nvram_safe_get("rrulewp"), app, chain_out_reject);
+			ip46t_write(ipv6_enabled, "-A %s -p tcp -m multiport --dports %s -m web --path \"%s\" -j %s\n", reschain, nvram_safe_get("rrulewp"), app, chain_out_reject);
 			need_web = 1;
 			blockall = 0;
 		}
 
 		if (*comps) {
-			memset(nextchain, 0, 32);
+			memset(nextchain, 0, sizeof(nextchain));
 			if (blockall) {
-				ip46t_write("-X %s\n", reschain);	/* chain not needed */
+				ip46t_write(ipv6_enabled, "-X %s\n", reschain);	/* chain not needed */
 				sprintf(nextchain, "-j %s", chain_out_drop);
 			}
 			else
 				sprintf(nextchain, "-g %s", reschain);
 
 			ex = 0;
-			memset(devchain, 0, 32);
+			memset(devchain, 0, sizeof(devchain));
 			sprintf(devchain, "rdev%02d", nrule);
-			ip46t_write(":%s - [0:0]\n", devchain);
+			ip46t_write(ipv6_enabled, ":%s - [0:0]\n", devchain);
 
 			while ((q = strsep(&comps, ">")) != NULL) {
 				if (*q == 0)
@@ -400,14 +403,14 @@ void ipt_restrictions(void)
 					if (!v4v6_ok)
 						continue;
 				}
-				ip46t_flagged_write(v4v6_ok, "-A %s %s %s\n", devchain, iptaddr, ex ? "-j RETURN" : nextchain);
+				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s %s\n", devchain, iptaddr, ex ? "-j RETURN" : nextchain);
 			}
 
 			if (ex)
-				ip46t_write("-A %s %s\n", devchain, nextchain);
+				ip46t_write(ipv6_enabled, "-A %s %s\n", devchain, nextchain);
 		}
 		else if (blockall)
-			ip46t_write("-A %s -j %s\n", reschain, chain_out_drop);
+			ip46t_write(ipv6_enabled, "-A %s -j %s\n", reschain, chain_out_drop);
 	}
 
 	nvram_set("rrules_activated", "0");
