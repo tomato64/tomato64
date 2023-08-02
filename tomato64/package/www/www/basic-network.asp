@@ -427,7 +427,7 @@ function verifyFields(focused, quiet) {
 	}
 
 	for (uidx = 0; uidx < wl_ifaces.length; ++uidx) {
-		if (wl_sunit(uidx)<0) {
+		if (wl_sunit(uidx) < 0) {
 			u = wl_unit(uidx);
 			if (focused == E('_f_wl'+u+'_nband')) {
 				refreshNetModes(uidx);
@@ -623,7 +623,7 @@ function verifyFields(focused, quiet) {
 
 	var wl_vis = [];
 	for (uidx = 0; uidx < wl_ifaces.length; ++uidx) {
-		if (wl_sunit(uidx)<0) {
+		if (wl_sunit(uidx) < 0) {
 			a = {
 				_f_wl_radio: 1,
 				_f_wl_mode: 1,
@@ -654,7 +654,7 @@ function verifyFields(focused, quiet) {
 				_wl_key3: 1,
 				_wl_key4: 1,
 /* RTNPLUS-BEGIN */
-				_f_wl_clap_hwaddr: 0,
+				_f_wl_clap_hwaddr: 1,
 /* RTNPLUS-END */
 				_f_wl_lazywds: 1,
 				_f_wl_wds_0: 1
@@ -667,11 +667,11 @@ function verifyFields(focused, quiet) {
 		if (wl_sunit(uidx) < 0) {
 			wmode = E('_f_wl'+wl_unit(uidx)+'_mode').value;
 
-			if ((wmode == 'wet') ||
+			if ((wmode == 'wet')
 /* BCMWL6-BEGIN */
-			    (wmode == 'psta') ||
+			    || (wmode == 'psta')
 /* BCMWL6-END */
-			    0) {
+			   ) {
 				E('_mwan_num').value = 1;
 				E('_mwan_cktime').value = 0;
 				elem.display('mwan-title', 'mwan-section', 0);
@@ -977,7 +977,10 @@ function verifyFields(focused, quiet) {
 				/* wl_vis[uidx]._wl_nbw_cap = 0; */
 				vis['_wan_modem_ipaddr'] = 0;
 /* RTNPLUS-BEGIN */
-				wl_vis[uidx]._f_wl_clap_hwaddr = 1; /* show it for sta, psta, wet */
+				if (!E('_f_wl'+u+'_radio').checked) /* WL is disabled */
+					wl_vis[uidx]._f_wl_clap_hwaddr = 2;
+				else
+					wl_vis[uidx]._f_wl_clap_hwaddr = 1; /* show it for sta, psta, wet */
 /* RTNPLUS-END */
 				wl_vis[uidx]._f_wl_lazywds = 0;
 				wl_vis[uidx]._f_wl_wds_0 = 0;
@@ -985,6 +988,9 @@ function verifyFields(focused, quiet) {
 			default:
 				wl_vis[uidx]._f_wl_lazywds = 0;
 				wl_vis[uidx]._f_wl_wds_0 = 0;
+/* RTNPLUS-BEGIN */
+				wl_vis[uidx]._f_wl_clap_hwaddr = 0;
+/* RTNPLUS-END */
 				break;
 			}
 
@@ -1009,7 +1015,7 @@ function verifyFields(focused, quiet) {
 				wl_vis[uidx]._wl_crypto = 0;
 				wl_vis[uidx]._wl_wpa_psk = 0;
 				break;
-			default:	/* wpaX */
+			default: /* wpaX */
 				wl_vis[uidx]._wl_wep_bit = 0;
 				if (sm2.indexOf('personal') != -1) {
 					wl_vis[uidx]._wl_radius_key = 0;
@@ -1174,11 +1180,11 @@ REMOVE-END */
 			ferror.clear(a);
 			b = E('_f_wl'+u+'_mode');
 			ferror.clear(b);
-			if ((wmode == 'sta') || (wmode == 'wet') ||
+			if ((wmode == 'sta') || (wmode == 'wet')
 /* BCMWL6-BEGIN */
-			    (wmode == 'psta') ||
+			    || (wmode == 'psta')
 /* BCMWL6-END */
-			    0) {
+			   ) {
 				++wlclnt;
 				if (wlclnt > 1) {
 					ferror.set(b, 'Only one wireless interface can be configured in client mode.', quiet || !ok);
@@ -1265,11 +1271,11 @@ REMOVE-END */
 			a = E('_f_wl'+u+'_clap_hwaddr');
 			ferror.clear(a);
 
-			if ((wmode == 'sta') || (wmode == 'wet') ||
+			if ((wmode == 'sta') || (wmode == 'wet')
 /* BCMWL6-BEGIN */
-			    (wmode == 'psta') ||
+			    || (wmode == 'psta')
 /* BCMWL6-END */
-			    0) {
+			   ) {
 				if (a.value.length > 16) {
 					if (!v_mac(a, quiet))
 						ok = 0;
@@ -1282,7 +1288,6 @@ REMOVE-END */
 					/* nothing to do so far! - empty string (default) */
 				}
 			}
-
 		}
 	}
 /* RTNPLUS-END */
@@ -1459,17 +1464,15 @@ function save() {
 			u = wl_unit(uidx);
 			wmode = E('_f_wl'+u+'_mode').value;
 
-			if ((wmode == 'sta') || (wmode == 'wet') ||
+			if ((wmode == 'sta') || (wmode == 'wet')
 /* BCMWL6-BEGIN */
-			    (wmode == 'psta') ||
+			    || (wmode == 'psta')
 /* BCMWL6-END */
-			    0) {
+			   ) {
 				E('_wl'+u+'_clap_hwaddr').value = E('_f_wl'+u+'_clap_hwaddr').value;
 			}
-			else {
+			else
 				E('_wl'+u+'_clap_hwaddr').value = ''; /* clean up! */
-			}
-
 		}
 	}
 /* RTNPLUS-END */
@@ -1488,11 +1491,11 @@ function save() {
 			else
 				E('_wl'+u+'_mode').value = wmode;
 
-			if ((wmode == 'wet') ||
+			if ((wmode == 'wet')
 /* BCMWL6-BEGIN */
-			    (wmode == 'psta') ||
+			    || (wmode == 'psta')
 /* BCMWL6-END */
-			    0) {
+			   ) {
 				for (wan_uidx = 1; wan_uidx <= maxwan_num; ++wan_uidx) {
 					d = (wan_uidx > 1) ? wan_uidx : '';
 					E('_wan'+d+'_proto').disabled = 0;
@@ -2108,11 +2111,9 @@ function init() {
 						suffix: '<input type="radio" onchange="verifyFields(this,1)" onclick="verifyFields(this,1)" name="f_wl'+u+'_wepidx" id="_f_wl'+u+'_wepidx_'+i+'" value="'+i+'"'+((eval('nvram.wl'+u+'_key') == i) ? ' checked="checked">' : '>'),
 						value: nvram['wl'+u+'_key'+i] });
 			}
-
 /* RTNPLUS-BEGIN */
-			f.push(null, { title: 'AP MAC Address to connect', name: 'f_wl'+u+'_clap_hwaddr', type: 'text', maxlen: 17, size: 20, value: eval('nvram.wl'+u+'_clap_hwaddr'), suffix: ' <small>(usually empty/not needed)<\/small>' } );
+			f.push(null, { title: 'AP MAC Address to connect', name: 'f_wl'+u+'_clap_hwaddr', type: 'text', maxlen: 17, size: 20, value: nvram['wl'+u+'_clap_hwaddr'], suffix: ' <small>(usually empty/not needed)<\/small>' } );
 /* RTNPLUS-END */
-
 			f.push(null, { title: 'WDS', name: 'f_wl'+u+'_lazywds', type: 'select', options: [['0','Link With...'],['1','Automatic']], value: nvram['wl'+u+'_lazywds'] } );
 
 			var wds = eval('nvram.wl'+u+'_wds').split(/\s+/);
