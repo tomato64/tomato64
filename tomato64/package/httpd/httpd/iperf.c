@@ -9,8 +9,6 @@
 #include "httpd.h"
 #include <sys/stat.h>
 
-#define DEBUG_NOISY
-
 #include <shared.h>
 
 /*
