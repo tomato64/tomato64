@@ -304,6 +304,8 @@ extern void stop_mdns(void);
 #endif /* TCONFIG_MDNS */
 extern void add_rstats_defaults(void);
 extern void del_rstats_defaults(void);
+extern void add_cstats_defaults(void);
+extern void del_cstats_defaults(void);
 
 /* usb.c */
 #ifdef TCONFIG_USB

@@ -33,6 +33,19 @@ struct nvram_tuple rstats_defaults[] = {
 	{ 0, 0, 0 }
 };
 
+struct nvram_tuple cstats_defaults[] = {
+	{ "cstats_path",		""				, 0 },
+	{ "cstats_stime",		"48"				, 0 },
+	{ "cstats_offset",		"1"				, 0 },
+	{ "cstats_labels",		"0"				, 0 },
+	{ "cstats_exclude",		""				, 0 },
+	{ "cstats_include",		""				, 0 },
+	{ "cstats_all",			"1"				, 0 },
+	{ "cstats_sshut",		"1"				, 0 },
+	{ "cstats_bak",			"0"				, 0 },
+	{ 0, 0, 0 }
+};
+
 struct nvram_tuple router_defaults[] = {
 	{ "restore_defaults",		"0"				, 0 },	/* Set to 0 to not restore defaults on boot */
 
@@ -985,15 +998,7 @@ struct nvram_tuple router_defaults[] = {
 
 /* admin-ipt */
 	{ "cstats_enable",		"0"				, 0 },
-	{ "cstats_path",		""				, 0 },
-	{ "cstats_stime",		"48"				, 0 },
-	{ "cstats_offset",		"1"				, 0 },
-	{ "cstats_labels",		"0"				, 0 },
-	{ "cstats_exclude",		""				, 0 },
-	{ "cstats_include",		""				, 0 },
-	{ "cstats_all",			"1"				, 0 },
-	{ "cstats_sshut",		"1"				, 0 },
-	{ "cstats_bak",			"0"				, 0 },
+	/* all other cstats_xyz variables, see cstats_defaults */
 
 /* advanced-buttons */
 	{ "stealth_mode",		"0"				, 0 },

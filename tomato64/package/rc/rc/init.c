@@ -10640,6 +10640,7 @@ static void sysinit(void)
 
 	restore_defaults(); /* restore (basic) defaults if necessary */
 	del_rstats_defaults(); /* remove rstats nvram values if feature is disabled! */
+	del_cstats_defaults(); /* remove cstats nvram values if feature is disabled! */
 	init_nvram();
 
 #ifndef TOMATO64

@@ -20,6 +20,66 @@
 
 //	<% nvram("cstats_enable,cstats_path,cstats_stime,cstats_offset,cstats_exclude,cstats_include,cstats_sshut,lan_hwaddr,cifs1,cifs2,jffs2_on,cstats_bak,cstats_all,cstats_labels"); %>
 
+
+var xob = null;
+
+function _cstatsNvramAdd() {
+	form.submitHidden('service.cgi', { _service: 'cstats_nvram-start', _sleep: 1 });
+}
+
+function cstatsNvramAdd() {
+	var sb, cb, msg;
+
+	/* short check for cstats nvram var. If OK - nothing to do! */
+	if ((nvram.cstats_stime.length > 0) &&
+	    (nvram.cstats_offset.length > 0))
+		return;
+
+	/* check already enabled? - nothing to do! */
+	if (nvram.cstats_enable > 0)
+		return;
+
+	E('_f_cstats_enable').disabled = 1;
+	if ((sb = E('save-button')) != null) sb.disabled = 1;
+	if ((cb = E('cancel-button')) != null) cb.disabled = 1;
+
+	if (!confirm("Add IP Traffic to nvram?"))
+		return;
+
+	if (xob)
+		return;
+
+	if ((xob = new XmlHttp()) == null) {
+		_cstatsNvramAdd();
+		return;
+	}
+
+	if ((msg = E('footer-msg')) != null) {
+		msg.innerHTML = 'adding nvram values...';
+		msg.style.display = 'inline';
+	}
+
+	xob.onCompleted = function(text, xml) {
+		if (msg) {
+			msg.innerHTML = 'nvram ready';
+		}
+		setTimeout(
+			function() {
+				E('_f_cstats_enable').disabled = 0;
+				if (sb) sb.disabled = 0;
+				if (cb) cb.disabled = 0;
+				if (msg) msg.style.display = 'none';
+				setTimeout(reloadPage, 1000);
+		}, 5000);
+		xob = null;
+	}
+	xob.onError = function() {
+		_cstatsNvramAdd();
+	}
+
+	xob.post('service.cgi', '_service=cstats_nvram-start'+'&'+'_sleep=1'+'&'+'_ajax=1');
+}
+
 function fix(name) {
 	var i;
 	if (((i = name.lastIndexOf('/')) > 0) || ((i = name.lastIndexOf('\\')) > 0))
@@ -207,6 +267,7 @@ function save() {
 }
 
 function init() {
+	cstatsNvramAdd();
 	backupNameChanged();
 }
 </script>
@@ -304,6 +365,15 @@ REMOVE-END */
 			<input type="button" name="f_restore_button" id="restore-button" value="Restore" onclick="restoreButton()">
 		</div>
 	</form>
+</div>
+
+<!-- / / / -->
+
+<div class="section-title">Notes</div>
+<div class="section">
+	<ul>
+		<li><b>NVRAM</b> - If IP Traffic Monitoring has been enabled, nvram values will be added. Nvram values will be removed after reboot in case IP Traffic Monitoring will be disabled.</li>
+	</ul>
 </div>
 
 <!-- / / / -->

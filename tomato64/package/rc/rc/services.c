@@ -73,6 +73,9 @@
 #ifdef TCONFIG_BCMARM
 extern struct nvram_tuple rstats_defaults[];
 #endif /* TCONFIG_BCMARM */
+#ifdef TCONFIG_BCMARM
+extern struct nvram_tuple cstats_defaults[];
+#endif /* TCONFIG_BCMARM */
 
 /* Pop an alarm to recheck pids in 500 msec */
 static const struct itimerval pop_tv = { {0, 0}, {0, 500 * 1000} };
@@ -117,6 +120,38 @@ void del_rstats_defaults(void)
 	}
 #else
 	eval("nvram", "rstats_defaults", "--del");
+#endif /* TCONFIG_BCMARM */
+}
+
+void add_cstats_defaults(void)
+{
+#ifdef TCONFIG_BCMARM
+	struct nvram_tuple *t;
+
+	/* Restore defaults if necessary */
+	for (t = cstats_defaults; t->name; t++) {
+		if (!nvram_get(t->name)) { /* check existence */
+			nvram_set(t->name, t->value);
+		}
+	}
+#else
+	eval("nvram", "cstats_defaults", "--add");
+#endif /* TCONFIG_BCMARM */
+}
+
+void del_cstats_defaults(void)
+{
+#ifdef TCONFIG_BCMARM
+	if (nvram_match("cstats_enable", "0")) {
+		struct nvram_tuple *t;
+
+		/* remove defaults if NOT necessary (only keep "xyz_enable" nv var.) */
+		for (t = cstats_defaults; t->name; t++) {
+			nvram_unset(t->name);
+		}
+	}
+#else
+	eval("nvram", "cstats_defaults", "--del");
 #endif /* TCONFIG_BCMARM */
 }
 
@@ -2406,6 +2441,7 @@ static void stop_cstats(void)
 static void start_cstats(int new)
 {
 	if (nvram_get_int("cstats_enable")) {
+		add_cstats_defaults(); /* backup: check nvram! */
 		stop_cstats();
 		if (new)
 			xstart("cstats", "--new");
@@ -2851,6 +2887,12 @@ TOP:
 	if (strcmp(service, "rstats_nvram") == 0) {
 		if (act_stop) del_rstats_defaults();
 		if (act_start) add_rstats_defaults();
+		goto CLEAR;
+	}
+
+	if (strcmp(service, "cstats_nvram") == 0) {
+		if (act_stop) del_cstats_defaults();
+		if (act_start) add_cstats_defaults();
 		goto CLEAR;
 	}
 
