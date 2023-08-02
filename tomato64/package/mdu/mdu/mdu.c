@@ -74,6 +74,25 @@ int f_argc = -1;
 
 static void save_cookie(void);
 
+/* this should be in nvram so you can add/edit/remove checkers, but we have so little nvram it's impossible... */
+static char services[][5][23] = { /* remember: the number in the third square bracket must be (len + 1) of the longest string */
+/*	  service name			service hostname		path */
+	{ "ipify.org",			"api.ipify.org",		"/"	},	/* txt */
+	{ "amazonaws.com",		"checkip.amazonaws.com",	"/"	},	/* txt */
+	{ "dyndns.org",			"checkip.dyndns.org",		"/"	},	/* "<html><head><title>Current IP Check</title></head><body>Current IP Address: 1.2.3.4</body></html>" */
+	{ "corz.org",			"corz.org",			"/ip"	},	/* txt */
+	{ "trackip.net",		"trackip.net",			"/ip"	},	/* txt */
+	{ "changeip.com",		"ip.changeip.com",		"/"	},	/* "1.2.3.4\n<!--IPADDR=1.2.3.4-->" */
+	{ "ifconfig.co",		"ifconfig.co",			"/ip"	},	/* txt */
+	{ "ident.me",			"ident.me",			"/"	},	/* txt */
+	{ "eth0.me",			"eth0.me",			"/"	},	/* txt */
+	{ "myexternalip.com",		"myexternalip.com",		"/raw"	},	/* txt */
+	{ "tyk.nu",			"ip.tyk.nu",			"/"	},	/* txt */
+	{ "wgetip.com",			"wgetip.com",			"/"	},	/* txt? */
+	{ "ipecho.net",			"ipecho.net",			"/plain"},	/* txt? */
+	{ "ifconfig.me",		"ifconfig.me",			"/ip"	},	/* txt */
+	{ "icanhazip.com",		"icanhazip.com",		"/"	},	/* txt */
+};
 
 static void trimamp(char *s)
 {
@@ -153,6 +172,7 @@ static const char *get_option_required(const char *name)
 	if ((p = get_option(name)) != NULL)
 		return p;
 
+	logmsg(LOG_ERR, "Required option --%s is missing.", name);
 	fprintf(stderr, "Required option --%s is missing.\n", name);
 
 	exit(2);
@@ -174,6 +194,7 @@ static int get_option_onoff(const char *name, int def)
 	if ((strcmp(p, "off") == 0) || (strcmp(p, "0") == 0))
 		return 0;
 
+	logmsg(LOG_ERR, "--%s requires the value off/on or 0/1.\n", name);
 	fprintf(stderr, "--%s requires the value off/on or 0/1.\n", name);
 
 	exit(2);
@@ -681,96 +702,71 @@ const char *get_address(int required)
 	char cache_name[64];
 	static char addr[16];
 	long ut, et;
+	int rows, service_num, n;
 
+	/* addr is present in the config */
 	if ((c = get_option("addr")) != NULL) {
 		/* do not use custom IP address, run IP checker */
 		if (*c == '@') {
-			++c;
-			if ((*c != 0) && (strlen(c) < 20)) {
-				ut = get_uptime();
+			ut = get_uptime();
 
-				d = get_option("addrcache");
-				strlcpy(cache_name, d, sizeof(cache_name));
+			d = get_option_required("addrcache");
+			strlcpy(cache_name, d, sizeof(cache_name));
 
-				if (read_tmaddr(cache_name, &et, addr)) {
-					if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE)) {
-						logmsg(LOG_DEBUG, "*** %s: Using cached address %s from %s. Expires in %ld seconds", __FUNCTION__, addr, cache_name, (et - ut));
-						return addr;
-					}
-				}
-
-				/* main IP checker */
-				if (strcmp(c, "dyndns") == 0) {
-					if ((wget(0, 1, "checkip.dyndns.org:8245", "/", NULL, 0, &body) != 200) && (wget(0, 1, "checkip.dyndns.org", "/", NULL, 0, &body) != 200)) {
-						/* "<html><head><title>Current IP Check</title></head><body>Current IP Address: 1.2.3.4</body></html>" */
-						error(M_ERROR_GET_IP " (dyndns)");
-					}
-				}
-				/* other IP checkers - see/add/remove: rc/ddns.c */
-				else if (strcmp(c, "zoneedit") == 0) {
-					if (wget(0, 1, "dynamic.zoneedit.com", "/checkip.html", NULL, 0, &body) != 200) {
-						/* "1.2.3.4" */
-						error(M_ERROR_GET_IP " (zoneedit)");
-					}
-				}
-				else if (strcmp(c, "noip") == 0) {
-					if ((wget(0, 1, "ip1.dynupdate.no-ip.com:8245", "/", NULL, 0, &body) != 200) && (wget(0, 1, "ip1.dynupdate.no-ip.com", "/", NULL, 0, &body) != 200)) {
-						/* "1.2.3.4" */
-						error(M_ERROR_GET_IP " (noip)");
-					}
-				}
-				else if (strcmp(c, "dnsomatic") == 0) {
-					if (wget(0, 1, "myip.dnsomatic.com", "/", NULL, 0, &body) != 200) {
-						/* "1.2.3.4" */
-						error(M_ERROR_GET_IP " (dnsomatic)");
-					}
-				}
-				else if (strcmp(c, "pairdomains") == 0) {
-					if (wget(0, 1, "myip.pairnic.com", "/", NULL, 0, &body) != 200) { /* myip.pairdomains.com redirects to https */
-						/* "Current IP Address: 1.2.3.4" */
-						error(M_ERROR_GET_IP " (pairdomains)");
-					}
-				}
-				else if (strcmp(c, "changeip") == 0) {
-					if (wget(0, 1, "ip.changeip.com", "/", NULL, 0, &body) != 200) {
-						/* "1.2.3.4\n<!--IPADDR=1.2.3.4-->" */
-						error(M_ERROR_GET_IP " (changeip)");
-					}
-				}
-
-				logmsg(LOG_DEBUG, "*** %s: external IP checker - '%s'", __FUNCTION__, c);
-
-				if ((p = strstr(body, "Address:")) != NULL) /* dyndns, pairdomains */
-					p += 8;
-				else /* zoneedit, noip, dnsomatic, changeip */
-					p = body;
-
-				while (*p == ' ')
-					++p;
-
-				q = p;
-
-				while (((*q >= '0') && (*q <= '9')) || (*q == '.'))
-					++q;
-
-				memset(addr, 0, sizeof(addr)); /* reset */
-				strncpy(addr, p, (q - p));
-				q = NULL;
-
-				/* write to cache if addr is OK */
-				if ((ia.s_addr = inet_addr(addr)) != INADDR_NONE) {
-					q = inet_ntoa(ia);
-					memset(s, 0, sizeof(s));
-					snprintf(s, sizeof(s), "%ld,%s", ut + DDNS_IP_CACHE, q);
-					f_write_string(cache_name, s, 0, 0);
-
-					logmsg(LOG_DEBUG, "*** %s: saved '%s'", __FUNCTION__, s);
-					return q;
+			if (read_tmaddr(cache_name, &et, addr)) {
+				if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE)) {
+					logmsg(LOG_DEBUG, "*** %s: Using cached address %s from %s. Expires in %ld seconds", __FUNCTION__, addr, cache_name, (et - ut));
+					return addr;
 				}
 			}
 
-			logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP, __FUNCTION__);
-			error(M_ERROR_GET_IP);
+			logmsg(LOG_DEBUG, "*** %s: running External IP address checker ...", __FUNCTION__);
+
+			rows = sizeof(services) / sizeof(services[0]);
+			n = 5; /* try 5 times on different checkers, if no response it means (probably) WAN is down - wait */
+			while (n-- > 0) {
+				srand(time(0));
+				service_num = (rand() % (rows));
+				if (wget(0, 1, services[service_num][1], services[service_num][2], NULL, 0, &body) == 200) {
+
+					if ((p = strstr(body, "Address:")) != NULL) /* dyndns */
+						p += 8;
+					else /* the rest */
+						p = body;
+
+					/* sanitize */
+					while (*p == ' ')
+						++p;
+
+					q = p;
+
+					while (((*q >= '0') && (*q <= '9')) || (*q == '.'))
+						++q;
+
+					memset(addr, 0, sizeof(addr)); /* reset */
+					strncpy(addr, p, (q - p));
+					q = NULL;
+
+					/* write to cache if addr is OK */
+					if ((ia.s_addr = inet_addr(addr)) != INADDR_NONE) {
+						q = inet_ntoa(ia);
+						memset(s, 0, sizeof(s));
+						snprintf(s, sizeof(s), "%ld,%s", ut + DDNS_IP_CACHE, q);
+						f_write_string(cache_name, s, 0, 0);
+
+						logmsg(LOG_DEBUG, "*** %s: used %s service; time,address (%s) saved to %s", __FUNCTION__, services[service_num][0], s, cache_name);
+						return q;
+					}
+				}
+				else {
+					if (n == 0) {
+						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP, __FUNCTION__);
+						error(M_ERROR_GET_IP);
+					}
+					else
+						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s) - trying another one ...", __FUNCTION__, services[service_num][0]);
+				}
+			}
 		}
 		return c;
 	}

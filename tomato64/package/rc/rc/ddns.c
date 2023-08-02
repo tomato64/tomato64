@@ -105,15 +105,7 @@ static void update(int num, int *dirty, int force)
 		}
 	}
 
-	if (ip[0] == '@') {
-		if ((strcmp(serv, "zoneedit") == 0) || (strcmp(serv, "noip") == 0) || (strcmp(serv, "dnsomatic") == 0) || (strcmp(serv, "pairdomains") == 0) || (strcmp(serv, "changeip") == 0))
-			strcpy(ip + 1, serv);
-		else
-			strcpy(ip + 1, "dyndns");
-
-		logmsg(LOG_DEBUG, "*** %s: CHECKER ip: %s", __FUNCTION__, ip);
-	}
-	else if (inet_addr(ip) == (in_addr_t) - 1) {
+	if ((ip[0] != '@') && (inet_addr(ip) == (in_addr_t) - 1)) {
 		strcpy(ip, get_wanip(prefix));
 		logmsg(LOG_DEBUG, "*** %s: inet_addr ip: %s", __FUNCTION__, ip);
 	}
@@ -203,7 +195,7 @@ static void update(int num, int *dirty, int force)
 	if (*p != ',')
 		goto CLEANUP;
 
-	if (!nvram_match(cache_nv, s)) {
+	if (!nvram_match(cache_nv, s)) { /* nvram cache is different than this in file */
 		nvram_set(cache_nv, s);
 		if (nvram_get_int("ddnsx_save") && (strstr(serv, "dyndns") == 0))
 			*dirty = 1;
@@ -289,7 +281,7 @@ int ddns_update_main(int argc, char **argv)
 	else if ((argc == 2) || (argc == 3)) {
 		num = atoi(argv[1]);
 		if ((num == 0) || (num == 1))
-			update(num, &dirty, (argc == 3) && (strcmp(argv[2], "force") == 0));
+			update(num, &dirty, ((argc == 3) && (strcmp(argv[2], "force") == 0)));
 	}
 	if (dirty)
 		nvram_commit_x();
