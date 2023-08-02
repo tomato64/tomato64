@@ -227,6 +227,7 @@ function save() {
 
 t = hostname (top)
 u = username/password
+p = password
 h = hostname
 c = custom url
 w = wildcard
@@ -243,6 +244,23 @@ REMOVE-END */
 
 			if ((op.u) || (op.p))
 				s.push(fom['_f_user'+i].value+':'+fom['_f_pass'+i].value);
+			else if (services[E('_f_service'+i).selectedIndex][0] == 'custom') { /* for custom, add (if any) username and pass from the url to auth it with wget */
+				a = E('_f_cust'+i);
+				b = a.value.trim();
+
+				if (b.indexOf('@') != -1) {
+					a = b.split('//');
+					b = a[1].split('@');
+					a = b[0].split(':');
+
+					if (a[0] && a[1])
+						s.push(a[0]+':'+a[1]);
+					else
+						s.push('');
+				}
+				else
+					s.push('');
+			}
 			else
 				s.push('');
 
