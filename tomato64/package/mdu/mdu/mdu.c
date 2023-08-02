@@ -75,7 +75,7 @@ int f_argc = -1;
 static void save_cookie(void);
 
 /* this should be in nvram so you can add/edit/remove checkers, but we have so little nvram it's impossible... */
-static char services[][5][23] = { /* remember: the number in the third square bracket must be (len + 1) of the longest string */
+static char services[][3][23] = { /* remember: the number in the third square bracket must be (len + 1) of the longest string */
 /*	  service name			service hostname		path */
 	{ "ipify.org",			"api.ipify.org",		"/"	},	/* txt */
 	{ "amazonaws.com",		"checkip.amazonaws.com",	"/"	},	/* txt */
