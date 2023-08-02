@@ -1,9 +1,10 @@
 /*
-
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -48,7 +49,7 @@ static void update(int num, int *dirty, int force)
 	else
 		strlcpy(prefix, "wan", sizeof(prefix));
 
-	logmsg(LOG_DEBUG, "*** %s", __FUNCTION__);
+	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
 
 	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "ddns%d", num);
@@ -110,7 +111,7 @@ static void update(int num, int *dirty, int force)
 		else
 			strcpy(ip + 1, "dyndns");
 	}
-	else if (inet_addr(ip) == (in_addr_t) -1)
+	else if (inet_addr(ip) == (in_addr_t) - 1)
 		strcpy(ip, get_wanip(prefix));
 
 	memset(cache_fn, 0, sizeof(cache_nv));
@@ -159,7 +160,7 @@ static void update(int num, int *dirty, int force)
 	fclose(f);
 
 	exitcode = eval("mdu", "--service", serv, "--conf", conf_fn);
-	logmsg(LOG_DEBUG, "*** %s: mdu exitcode=%d", __FUNCTION__, exitcode);
+	logmsg(LOG_DEBUG, "*** %s: mdu --service %s --conf %s; exitcode=%d", __FUNCTION__, serv, conf_fn, exitcode);
 
 	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "%s_errors", ddnsx);
@@ -261,7 +262,7 @@ SCHED:
 	}
 
 CLEANUP:
-	logmsg(LOG_DEBUG, "*** %s: CLEANUP", __FUNCTION__);
+	logmsg(LOG_DEBUG, "*** %s: OUT", __FUNCTION__);
 	simple_unlock("ddns");
 }
 
@@ -292,9 +293,9 @@ int ddns_update_main(int argc, char **argv)
 
 void start_ddns(void)
 {
-	logmsg(LOG_DEBUG, "*** %s", __FUNCTION__);
-
 	stop_ddns();
+
+	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
 
 	/* cleanup */
 	simple_unlock("ddns");
@@ -306,7 +307,7 @@ void start_ddns(void)
 
 void stop_ddns(void)
 {
-	logmsg(LOG_DEBUG, "*** %s", __FUNCTION__);
+	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
 
 	eval("cru", "d", "ddns0");
 	eval("cru", "d", "ddns1");

@@ -1235,7 +1235,6 @@ void start_wan_done(char *wan_ifname, char *prefix)
 
 		if ((wanup) || (proto == WP_DISABLED)) {
 			if (nvram_get_int("ntp_ready") && !first_ntp_sync) {
-				stop_ddns();
 				start_ddns();
 			}
 			stop_igmp_proxy();
