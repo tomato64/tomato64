@@ -363,6 +363,7 @@ void stop_ftpd(void)
 	/* clean-up */
 	unlink(vsftpd_passwd);
 	unlink(vsftpd_conf);
+	eval("rm", "-rf", vsftpd_fw_script);
 	eval("rm", "-rf", vsftpd_users);
 }
 
