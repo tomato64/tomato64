@@ -396,8 +396,9 @@ void stop_nginx(void)
 
 	run_del_firewall_script(nginx_fw_script, nginx_fw_del_script);
 
+	eval("rm", "-rf", nginx_fw_script);
 	if (!nvram_get_int("nginx_keepconf"))
-		system("/bin/rm -rf "nginxdir);
+		eval("rm", "-rf", nginxdir);
 	if (f_exists(nginxpid))
 		unlink(nginxpid);
 }
