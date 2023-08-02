@@ -1295,7 +1295,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 		}
 #endif
 
-		if (wanup) {
+		if ((wanup) || (proto == WP_DISABLED)) {
 #ifdef TCONFIG_OPENVPN
 			if (nvram_get_int("ntp_ready") && !first_ntp_sync)
 				start_ovpn_eas();
