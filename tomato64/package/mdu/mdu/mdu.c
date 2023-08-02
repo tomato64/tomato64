@@ -492,6 +492,7 @@ static int _http_req(int ssl, const char *host, int port, const char *request, c
 
 static int http_req(int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body)
 {
+	logmsg(LOG_DEBUG, "*** %s: IN host=[%s] query=[%s] header=[%s] auth=[%d] data=[%s] req=[%s]", __FUNCTION__, host, query, header, auth, data, req);
 #ifdef USE_LIBCURL
 	struct curl_slist *headers = NULL;
 	char url[HALF_BLOB];
@@ -600,30 +601,31 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 	if (n > (BLOB_SIZE - 512)) /* just don't go over 512 below... */
 		return -1;
 
-	sprintf(blob, "%s %s %s\r\nHost: %s\r\nUser-Agent: " AGENT "\r\nCache-Control: no-cache\r\n", req, query, httpv, host);
+	snprintf(blob, BLOB_SIZE, "%s %s %s\r\nHost: %s\r\nUser-Agent: " AGENT "\r\nCache-Control: no-cache\r\n", req, query, httpv, host);
+
 	if (auth) {
 		memset(a, 0, sizeof(a));
-		sprintf(a, "%s:%s", get_option_required("user"), get_option_required("pass"));
+		snprintf(a, sizeof(a), "%s:%s", get_option_required("user"), get_option_required("pass"));
+
 		n = base64_encode((const char *) a, b, strlen(a));
 		b[n] = 0;
-		sprintf(blob + strlen(blob), "Authorization: Basic %s\r\n", b);
+		snprintf(blob + strlen(blob), BLOB_SIZE - strlen(blob), "Authorization: Basic %s\r\n", b);
 	}
 	if ((header) && ((n = strlen(header)) > 0)) {
-		strcat(blob, header);
+		strlcat(blob, header, BLOB_SIZE);
 		if (header[n - 1] != '\n')
-			strcat(blob, "\r\n");
+			strlcat(blob, "\r\n", BLOB_SIZE);
 	}
 	if (data)
-		sprintf(blob + strlen(blob), "Content-Length: %d\r\n", strlen(data));
+		snprintf(blob + strlen(blob), BLOB_SIZE - strlen(blob), "Content-Length: %d\r\n", strlen(data));
 
-	strcat(blob, "\r\n");
+	strlcat(blob, "\r\n", BLOB_SIZE);
 
 	if (data)
-		strcat(blob, data);
-
-	logmsg(LOG_DEBUG, "*** %s: blob=[%s]", __FUNCTION__, blob);
+		strlcat(blob, data, BLOB_SIZE);
 
 	port = ssl ? 443 : 80;
+	memset(a, 0, sizeof(a));
 	strlcpy(a, host, sizeof(a));
 	if ((p = strrchr(a, ':')) != NULL) {
 		*p = 0;
@@ -633,6 +635,8 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 
 	if ((p = strdup(blob)) == NULL)
 		return -1;
+
+	logmsg(LOG_DEBUG, "*** %s: host=[%s] port=[%d] request=[%s] ssl=[%d] buffer=[%s]", __FUNCTION__, a, port, p, ssl, blob);
 
 	n = _http_req(ssl, a, port, p, blob, BLOB_SIZE, body);
 	free(p);
@@ -757,7 +761,7 @@ const char *get_address(int required)
 				if ((ia.s_addr = inet_addr(addr)) != INADDR_NONE) {
 					q = inet_ntoa(ia);
 					memset(s, 0, sizeof(s));
-					sprintf(s, "%ld,%s", ut + DDNS_IP_CACHE, q);
+					snprintf(s, sizeof(s), "%ld,%s", ut + DDNS_IP_CACHE, q);
 					f_write_string(cache_name, s, 0, 0);
 
 					logmsg(LOG_DEBUG, "*** %s: saved '%s'", __FUNCTION__, s);
@@ -779,7 +783,7 @@ static void append_addr_option(char *buffer, const char *format)
 	const char *c;
 
 	if ((c = get_address(0)) != NULL)
-		sprintf(buffer + strlen(buffer), format, c);
+		snprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), format, c);
 }
 
 /*
@@ -816,26 +820,26 @@ static void update_dua(const char *type, int ssl, const char *server, const char
 
 	/* +opt */
 	memset(query, 0, sizeof(query));
-	sprintf(query, "%s?", path ? path : get_option_required("path"));
+	snprintf(query, sizeof(query), "%s?", path ? path : get_option_required("path"));
 
 	/* +opt */
 	if (type)
-		sprintf(query + strlen(query), "system=%s&", type);
+		snprintf(query + strlen(query), sizeof(query) - strlen(query), "system=%s&", type);
 
 	/* +opt */
 	p = reqhost ? get_option_required("host") : get_option("host");
 	if (p)
-		sprintf(query + strlen(query), "hostname=%s&", p);
+		snprintf(query + strlen(query), sizeof(query) - strlen(query), "hostname=%s&", p);
 
 	/* +opt */
 	if (((p = get_option("mx")) != NULL) && (*p))
-		sprintf(query + strlen(query), "mx=%s&backmx=%s&", p, (get_option_onoff("backmx", 0)) ? "YES" : "NO");
+		snprintf(query + strlen(query), sizeof(query) - strlen(query), "mx=%s&backmx=%s&", p, (get_option_onoff("backmx", 0)) ? "YES" : "NO");
 
 	/* +opt */
 	append_addr_option(query, "myip=%s&");
 
 	if (get_option_onoff("wildcard", 0))
-		strcat(query, "wildcard=ON");
+		strlcat(query, "wildcard=ON", sizeof(query));
 
 	trimamp(query);
 
@@ -950,7 +954,7 @@ static void update_namecheap(int ssl)
 
 	/* +opt +opt +opt */
 	memset(query, 0, sizeof(query));
-	sprintf(query, "/update?host=%s&domain=%s&password=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
+	snprintf(query, sizeof(query), "/update?host=%s&domain=%s&password=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
 
 	/* +opt */
 	append_addr_option(query, "&ip=%s");
@@ -1032,7 +1036,7 @@ static void update_enom(int ssl)
 
 	/* +opt +opt +opt */
 	memset(query, 0, sizeof(query));
-	sprintf(query, "/interface.asp?Command=SetDNSHost&HostName=%s&Zone=%s&DomainPassword=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
+	snprintf(query, sizeof(query), "/interface.asp?Command=SetDNSHost&HostName=%s&Zone=%s&DomainPassword=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
 
 	/* +opt */
 	append_addr_option(query, "&Address=%s");
@@ -1088,7 +1092,7 @@ static void update_dnsexit(int ssl)
 
 	/* +opt +opt +opt */
 	memset(query, 0, sizeof(query));
-	sprintf(query, "/RemoteUpdate.sv?login=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
+	snprintf(query, sizeof(query), "/RemoteUpdate.sv?login=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
 
 	/* +opt */
 	append_addr_option(query, "&myip=%s");
@@ -1133,7 +1137,7 @@ static void update_ieserver(int ssl)
 
 	/* +opt +opt */
 	memset(query, 0, sizeof(query));
-	sprintf(query, "/cgi-bin/dip.cgi?username=%s&domain=%s&password=%s&updatehost=1", get_option_required("user"), get_option_required("host"), get_option_required("pass"));
+	snprintf(query, sizeof(query), "/cgi-bin/dip.cgi?username=%s&domain=%s&password=%s&updatehost=1", get_option_required("user"), get_option_required("host"), get_option_required("pass"));
 
 	r = wget(ssl, 0, "ieserver.net", query, NULL, 0, &body);
 	if (r == 200) {
@@ -1171,7 +1175,7 @@ static void update_dyns(int ssl)
 
 	/* +opt +opt +opt */
 	memset(query, 0, sizeof(query));
-	sprintf(query, "/postscript011.php?username=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
+	snprintf(query, sizeof(query), "/postscript011.php?username=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
 
 	/* +opt */
 	append_addr_option(query, "&ip=%s");
@@ -1243,7 +1247,7 @@ static void update_zoneedit(int ssl)
 
 	/* +opt */
 	memset(query, 0, sizeof(query));
-	sprintf(query, "/auth/dynamic.html?host=%s", get_option_required("host"));
+	snprintf(query, sizeof(query), "/auth/dynamic.html?host=%s", get_option_required("host"));
 
 	/* +opt */
 	append_addr_option(query, "&dnsto=%s");
@@ -1311,7 +1315,7 @@ static void update_afraid(int ssl)
 
 	/* +opt */
 	memset(query, 0, sizeof(query));
-	sprintf(query, "/dynamic/update.php?%s", get_option_required("ahash"));
+	snprintf(query, sizeof(query), "/dynamic/update.php?%s", get_option_required("ahash"));
 
 	/* +opt */
 	append_addr_option(query, "&address=%s");
@@ -1525,7 +1529,7 @@ static void update_duckdns(int ssl)
 	char query[2048];
 
 	memset(query, 0, sizeof(query));
-	sprintf(query, "/update?domains=%s&token=%s", get_option_required("host"), get_option_required("ahash"));
+	snprintf(query, sizeof(query), "/update?domains=%s&token=%s", get_option_required("host"), get_option_required("ahash"));
 
 	append_addr_option(query, "&ip=%s");
 
@@ -1555,7 +1559,7 @@ static void update_wget(void)
 
 	/* https://user:pass@domain:port/path?query */
 
-	strcpy(url, get_option_required("url"));
+	strlcpy(url, get_option_required("url"), sizeof(url));
 	https = 0;
 	host = url + 7;
 	if (strncasecmp(url, "https://", 8) == 0) {
@@ -1568,13 +1572,13 @@ static void update_wget(void)
 	if ((p = strchr(host, '/')) == NULL)
 		error(M_INVALID_PARAM__S, "url");
 
-	strcpy(path, p);
+	strlcpy(path, p, sizeof(path));
 	*p = 0;
 
 	if ((c = strstr(path, "@IP")) != NULL) {
-		strcpy(s, c + 3);
-		strcpy(c, get_address(1));
-		strcat(c, s);
+		strlcpy(s, c + 3, sizeof(s));
+		strlcpy(c, get_address(1), sizeof(c));
+		strlcat(c, s, sizeof(c));
 	}
 
 	logmsg(LOG_DEBUG, "*** %s: host: %s, path: %s", __FUNCTION__, host, path);
@@ -1656,7 +1660,7 @@ static void save_cookie(void)
 	}
 
 	memset(s, 0, sizeof(s));
-	sprintf(s, "%ld,%s", now, c);
+	snprintf(s, sizeof(s), "%ld,%s", now, c);
 	f_write_string(cookie, s, FW_NEWLINE, 0);
 
 	logmsg(LOG_DEBUG, "*** %s: cookie=%s", __FUNCTION__, s);
