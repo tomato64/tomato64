@@ -427,7 +427,7 @@ static void handle_request(void)
 	/* initialize variables */
 	header_sent = 0;
 	authorization = boundary = useragent = NULL;
-	bzero(line, sizeof(line));
+	memset(line, 0, sizeof(line));
 
 	/* parse the first line of the request */
 	if (!web_getline(line, sizeof(line))) {

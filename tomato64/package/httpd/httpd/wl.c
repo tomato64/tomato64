@@ -1502,9 +1502,9 @@ char* get_wl_tempsense(char *buf)
 			if ((*ifname == 0) || (strncasecmp(ifname, "eth",3) != 0))
 				continue;
 
-			bzero(s, sizeof(s));
-			bzero(tempC, sizeof(tempC));
-			bzero(tempF, sizeof(tempF));
+			memset(s, 0, sizeof(s));
+			memset(tempC, 0, sizeof(tempC));
+			memset(tempF, 0, sizeof(tempF));
 			strcpy(s, "phy_tempsense");
 			if ((ret = wl_ioctl(ifname, WLC_GET_VAR, s, sizeof(s))) == 0) {
 				cur_temp = (unsigned int*) s;
@@ -1523,8 +1523,8 @@ char* get_wl_tempsense(char *buf)
 			}
 
 			/* get band of ifname */
-			bzero(s, sizeof(s));
-			bzero(band, sizeof(band));
+			memset(s, 0, sizeof(s));
+			memset(band, 0, sizeof(band));
 			int bandlist[WLC_BAND_ALL];
 			if (wl_ioctl(ifname, WLC_GET_BANDLIST, bandlist, sizeof(bandlist)) == 0) {
 				if (bandlist[0] == 0)
