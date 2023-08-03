@@ -431,7 +431,6 @@ function init() {
 /* HTTPS-END */
 				        1) : 0 },
 				{ title: 'Port', indent: 2, name: 'http_wanport', type: 'text', maxlen: 5, size: 7, value:  fixPort(nvram.http_wanport, 8080) },
-				{ title: 'Port Protection', indent: 2, name: 'f_http_wanport_bfm', type: 'checkbox', suffix: '&nbsp;<small>enable brute force mitigation rule<\/small>', value: nvram.http_wanport_bfm == 1 },
 /* HTTPS-BEGIN */
 			null,
 			{ title: 'SSL Certificate', rid: 'row_sslcert' },
@@ -504,6 +503,7 @@ function init() {
 	<script>
 		createFieldTable('', [
 			{ title: 'Allowed Remote<br>IP Address', name: 'f_rmgt_sip', type: 'text', maxlen: 512, size: 64, suffix: '<br>&nbsp;<small>optional; ex: "1.1.1.1", "1.1.1.0/24", "1.1.1.1 - 2.2.2.2" or "me.example.com"<\/small>', value: nvram.rmgt_sip },
+			{ title: 'Remote Web Port Protection', name: 'f_http_wanport_bfm', type: 'checkbox', suffix: '&nbsp;<small>enable brute force mitigation rule<\/small>', value: nvram.http_wanport_bfm == 1 },
 			{ title: 'Limit Connection Attempts', multi: [
 				{ suffix: '&nbsp; SSH &nbsp; / &nbsp;', name: 'f_limit_ssh', type: 'checkbox', value: (shlimit[0] & 1) != 0 },
 				{ suffix: '&nbsp; Telnet &nbsp;', name: 'f_limit_telnet', type: 'checkbox', value: (shlimit[0] & 2) != 0 }
