@@ -932,6 +932,7 @@ void start_dnscrypt(void)
 	const static char *dnscrypt_resolv_alt = "/etc/dnscrypt-resolvers-alt.csv";
 	char dnscrypt_local[30];
 	char *dnscrypt_ekeys;
+	char *edns1, *edns2;
 
 	if (!nvram_get_int("dnscrypt_proxy"))
 		return;
@@ -941,7 +942,10 @@ void start_dnscrypt(void)
 
 	memset(dnscrypt_local, 0, sizeof(dnscrypt_local));
 	snprintf(dnscrypt_local, sizeof(dnscrypt_local), "127.0.0.1:%s", nvram_safe_get("dnscrypt_port"));
+
 	dnscrypt_ekeys = nvram_get_int("dnscrypt_ephemeral_keys") ? "-E" : "";
+	edns1 = nvram_get_int("dnsmasq_edns_size") < 1252 ? "-e" : ""; /* in case of EDNS packet size is set lower than 1252 in dnsmasq, set it also for dnscrypt-proxy */
+	edns2 = nvram_get_int("dnsmasq_edns_size") < 1252 ? nvram_safe_get("dnsmasq_edns_size") : "";
 
 	if (nvram_get_int("dnscrypt_manual"))
 		eval("dnscrypt-proxy", "-d", dnscrypt_ekeys,
@@ -949,30 +953,34 @@ void start_dnscrypt(void)
 		     "-m", nvram_safe_get("dnscrypt_log"),
 		     "-N", nvram_safe_get("dnscrypt_provider_name"),
 		     "-k", nvram_safe_get("dnscrypt_provider_key"),
-		     "-r", nvram_safe_get("dnscrypt_resolver_address"));
+		     "-r", nvram_safe_get("dnscrypt_resolver_address"),
+		     edns1, edns2);
 	else
 		eval("dnscrypt-proxy", "-d", dnscrypt_ekeys,
 		     "-a", dnscrypt_local,
 		     "-m", nvram_safe_get("dnscrypt_log"),
 		     "-R", nvram_safe_get("dnscrypt_resolver"),
+		     edns1, edns2,
 		     "-L", f_exists(dnscrypt_resolv_alt) ? (char *) dnscrypt_resolv_alt : (char *) dnscrypt_resolv);
 #ifdef TCONFIG_IPV6
-	memset(dnscrypt_local, 0, sizeof(dnscrypt_local));
-	snprintf(dnscrypt_local, sizeof(dnscrypt_local), "::1:%s", nvram_safe_get("dnscrypt_port"));
+	if (get_ipv6_service()) { /* when ipv6 enabled */
+		memset(dnscrypt_local, 0, sizeof(dnscrypt_local));
+		snprintf(dnscrypt_local, sizeof(dnscrypt_local), "::1:%s", nvram_safe_get("dnscrypt_port"));
 
-	if (get_ipv6_service() != *("NULL")) { /* when ipv6 enabled */
 		if (nvram_get_int("dnscrypt_manual"))
 			eval("dnscrypt-proxy", "-d", dnscrypt_ekeys,
 			     "-a", dnscrypt_local,
 			     "-m", nvram_safe_get("dnscrypt_log"),
 			     "-N", nvram_safe_get("dnscrypt_provider_name"),
 			     "-k", nvram_safe_get("dnscrypt_provider_key"),
-			     "-r", nvram_safe_get("dnscrypt_resolver_address"));
+			     "-r", nvram_safe_get("dnscrypt_resolver_address"),
+			     edns1, edns2);
 		else
 			eval("dnscrypt-proxy", "-d", dnscrypt_ekeys,
 			     "-a", dnscrypt_local,
 			     "-m", nvram_safe_get("dnscrypt_log"),
 			     "-R", nvram_safe_get("dnscrypt_resolver"),
+			     edns1, edns2,
 			     "-L", f_exists(dnscrypt_resolv_alt) ? (char *) dnscrypt_resolv_alt : (char *) dnscrypt_resolv);
 	}
 #endif
@@ -1051,7 +1059,7 @@ void start_stubby(void)
 	            nvram_get_int("stubby_force_tls13") ? "GETDNS_TLS1_3" : "GETDNS_TLS1_2",
 	            nvram_safe_get("stubby_port"));
 #ifdef TCONFIG_IPV6
-	if (get_ipv6_service() != *("NULL")) /* when ipv6 enabled */
+	if (get_ipv6_service()) /* when ipv6 enabled */
 		fprintf(fp, "  - 0::1@%s\n", nvram_safe_get("stubby_port"));
 #endif
 	/* upstreams */
