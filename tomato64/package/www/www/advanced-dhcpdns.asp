@@ -90,7 +90,7 @@ function verifyFields(focused, quiet) {
 	vis._stubby_priority = v;
 	vis._stubby_log = v;
 	vis._stubby_port = v;
-	vis._stubby_servers = v;
+	vis._stubby_servers = v && E('_f_stubby_show_hide').checked;
 	vis._f_stubby_force_tls13 = v;
 	vis._dnssec_enable = v;
 	vis._dnssec_method_1 = (v && E('_dnssec_enable').checked);
@@ -98,6 +98,8 @@ function verifyFields(focused, quiet) {
 	if (E('_dnssec_method_0') != null)
 		if (!E('_dnssec_method_0').checked)
 			E('_dnssec_method_0').checked = !v;
+
+	PR(E('_f_stubby_show_hide')).style.display = (v ? 'table-row' : 'none');;
 /* STUBBY-END */
 /* DNSSEC-BEGIN */
 	vis._dnssec_enable = 1;
@@ -412,7 +414,7 @@ function save() {
 
 function init() {
 	var c;
-	if (((c = cookie.get(cprefix + '_notes_vis')) != null) && (c == '1'))
+	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
 		toggleVisibility(cprefix, 'notes');
 
 	var e = E('_dnsmasq_custom');
@@ -536,7 +538,8 @@ function init() {
 		]);
 /* STUBBY-BEGIN */
 		createFieldTable('noopen,noclose', [
-			{ title: 'Use Stubby', name: 'f_stubby_proxy', type: 'checkbox', value: nvram.stubby_proxy == 1 }
+			{ title: 'Use Stubby', name: 'f_stubby_proxy', type: 'checkbox', value: nvram.stubby_proxy == 1 },
+			{ title: 'Show/Hide Servers', indent: 2, name: 'f_stubby_show_hide', type: 'checkbox', value: 0 }
 		]);
 
 		W('<tr><td class="title indent2">Upstream resolvers<br> (max. 8)<\/td><td class="content" id="_stubby_servers"><table class="tomato-grid" id="stubby-grid">');
