@@ -1,14 +1,14 @@
 #!/bin/sh
 # Adblock (a.k.a. DNS-filtering) FreshTomato GUI back-end
-ver="v2.72 - 04/23" # rs232
+ver="v2.72b - 04/23" # rs232
 PID=$$
 pidfile="/var/run/adblock.pid"
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 pre=$(date +%s)
-alias only="sed -e 's/^[ \t]*//' | grep -Ev '^($|#|!)'"
+alias only="sed -e 's/^[ \t]*//' | grep -Ev '^($|#|!)' | sort"
 
 hashblack() {
-	hb="=B+ $(nvram get adblock_blacklist) $(nvram get adblock_enable) $(nvram get adblock_path) $(nvram get adblock_limit) =BC+ $(nvram get adblock_blacklist_custom | only ) =BCF+"
+	hb="=B+ $(nvram get adblock_blacklist | tr '>' '\n' | grep -E ^1 | cut -d/ -f3- | sort | cut -f1 -d'<') $(nvram get adblock_enable) $(nvram get adblock_path) $(nvram get adblock_limit) =BC+ $(nvram get adblock_blacklist_custom | only ) =BCF+"
 	for i in $(nvram get adblock_blacklist_custom | only | grep -E ^/ ); do hb="$hb $(cat ${i} | only )"; done
 	echo $hb | tr " " "\n" | grep -Ev '^($|#|!)'
 }
@@ -301,7 +301,7 @@ download() {
 			} || {
 				grep -q -E '^https?://' "$D/${uriname}.list" && {
 					# List of lists
-					logn "[$COUNT][$URL] List-of-lists (List of URLs) format >> Parsing..."
+					logn "[$COUNT][$URL] Group-of-lists (List of URLs) format >> Parsing..."
 					grep -E '^https?://' "$D/${uriname}.list" | awk '{print $1}'| while read u; do
 						SUBLIST=$((SUBLIST+1))
 						urinamed=$(echo "$u" | md5sum | awk '{print $1}')
@@ -417,9 +417,9 @@ download() {
 		subsed="$subsed ${i}"
 	done
 
-	# Whitelist domains defined in list-of-lists content
+	# Whitelist domains defined in Group-of-lists content
 	[[ -f $PREFIX/white.url ]] && {
-		logd "Whitelisting domains found in list-of-lists URLs"
+		logd "Whitelisting domains found in Group-of-lists URLs"
 		for i in $(grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+[a-zA-Z]{2,6}\s*/\s*' $PREFIX/white.url | tr "/" " "); do
 			subsed="$subsed ${i}"
 		done
