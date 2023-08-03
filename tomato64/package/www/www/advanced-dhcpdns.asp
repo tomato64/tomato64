@@ -19,7 +19,7 @@
 
 <script>
 
-//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,dhcpd_dmdns,dns_addget,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe"); %>
+//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dns_addget,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe"); %>
 
 var cprefix = 'advanced_dhcpdns';
 var height = 0;
@@ -141,6 +141,16 @@ function verifyFields(focused, quiet) {
 /* IPV6-BEGIN */
 	if (!v_range('_f_ipv6_lease_time', quiet, 1, 720))
 		return 0;
+
+	var enable_ipv6_dns_lan = (E('_f_ipv6_radvd').checked || E('_f_ipv6_dhcpd').checked) ? 1 : 0;
+
+	a = ['_f_ipv6_dns1_lan', '_f_ipv6_dns2_lan']; /* optional IPv6 DNS Server address */
+	for (i = a.length - 1; i >= 0; --i) {
+		E(a[i]).disabled = !enable_ipv6_dns_lan;
+
+		if (enable_ipv6_dns_lan && (E(a[i]).value.length > 0) && (!v_ipv6_addr(a[i], quiet)))
+			return 0;
+	}
 /* IPV6-END */
 	if (!v_length('_dhcpc_custom', quiet, 0, 256))
 		return 0;
@@ -223,6 +233,18 @@ function verifyFields(focused, quiet) {
 	return 1;
 }
 
+function joinIPv6Addr(a) {
+	var r, i, s;
+
+	r = [];
+	for (i = 0; i < a.length; ++i) {
+		s = CompressIPv6Address(a[i]);
+		if ((s) && (s != '')) r.push(s);
+	}
+
+	return r.join(' ');
+}
+
 function save() {
 	if (!verifyFields(null, 0))
 		return;
@@ -252,6 +274,7 @@ function save() {
 	fom.ipv6_dhcpd.value = fom._f_ipv6_dhcpd.checked ? 1 : 0;
 	fom.ipv6_fast_ra.value = fom._f_ipv6_fast_ra.checked ? 1 : 0;
 	fom.ipv6_lease_time.value = fom._f_ipv6_lease_time.value;
+	fom.ipv6_dns_lan.value = (fom._f_ipv6_radvd.checked || fom._f_ipv6_dhcpd.checked) ? joinIPv6Addr([fom._f_ipv6_dns1_lan.value, fom._f_ipv6_dns2_lan.value]) : '';
 /* IPV6-END */
 	fom.dnsmasq_q.value = 0;
 	if (fom.f_dnsmasq_q4.checked)
@@ -434,6 +457,7 @@ function init() {
 <input type="hidden" name="ipv6_dhcpd">
 <input type="hidden" name="ipv6_fast_ra">
 <input type="hidden" name="ipv6_lease_time">
+<input type="hidden" name="ipv6_dns_lan">
 <!-- IPV6-END -->
 <input type="hidden" name="dnsmasq_q">
 <input type="hidden" name="dnsmasq_debug">
@@ -571,6 +595,8 @@ function init() {
 <div class="section-title">DHCP / DNS Server (LAN)</div>
 <div class="section">
 	<script>
+		dns_ip6 = nvram.ipv6_dns_lan.split(/\s+/);
+
 		createFieldTable('', [
 			{ title: 'Use internal DNS', name: 'f_dhcpd_dmdns', type: 'checkbox', value: nvram.dhcpd_dmdns == 1 },
 				{ title: 'Debug Mode', indent: 2, name: 'f_dnsmasq_debug', type: 'checkbox', value: nvram.dnsmasq_debug == 1 },
@@ -592,6 +618,8 @@ function init() {
 			{ title: 'Announce IPv6 on LAN (DHCP)', name: 'f_ipv6_dhcpd', type: 'checkbox', value: nvram.ipv6_dhcpd == 1 },
 			{ title: 'Fast RA mode', name: 'f_ipv6_fast_ra', type: 'checkbox', value: nvram.ipv6_fast_ra == 1 },
 			{ title: 'DHCP IPv6 lease time', name: 'f_ipv6_lease_time', type: 'text', maxlen: 3, size: 8, suffix: ' <small>(in hours)<\/small>', value: nvram.ipv6_lease_time || 12, hidden: nvram.ipv6_service == 'native-pd' },
+			{ title: 'IPv6 DNS Server', name: 'f_ipv6_dns1_lan', type: 'text', maxlen: 40, size: 42, value: dns_ip6[0] || '', suffix: ' <small>(optional; usually empty)<\/small>' },
+			{ title: '',                name: 'f_ipv6_dns2_lan', type: 'text', maxlen: 40, size: 42, value: dns_ip6[1] || '', suffix: ' <small>(optional; usually empty)<\/small>' },
 /* IPV6-END */
 			{ title: 'Mute dhcpv4 logging', name: 'f_dnsmasq_q4', type: 'checkbox', value: (nvram.dnsmasq_q & 1) },
 /* IPV6-BEGIN */
@@ -670,6 +698,7 @@ function init() {
 		<li><b>Static lease time</b> - Absolute maximum amount of time allowed for any DHCP lease to be valid.</li>
 <!-- IPV6-BEGIN -->
 		<li><b>Fast RA mode</b> - Forces dnsmasq to be always in frequent RA mode. (Recommendation: enable also "Mute RA logging" option)</li>
+		<li><b>IPv6 DNS Server</b> - Send DHCPv6 option6 dns-server (RDNSS). (Default (empty) will use the global address of the router if SLAAC and/or DHCPv6 is enabled!)</li>
 <!-- IPV6-END -->
 		<li><b>Prevent client auto DoH</b> - Some clients like Firefox or Windows' Discovery of Designated Resolver support can automatically switch to DNS over HTTPS, bypassing your preferred DNS servers. This option may prevent that.</li>
 		<li><b>Enable DNS Rebind protection</b> - Enabling this will protect your LAN against DNS rebind attacks, however it will prevent upstream DNS servers from resolving queries to any non-routable IP (for example, 192.168.1.1).</li>

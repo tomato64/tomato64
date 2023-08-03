@@ -14,4 +14,6 @@
 #define ONEMONTH_LIFETIME	(30 * 24 * 60 * 60)
 #define INFINITE_LIFETIME 	0xffffffff
 
+#define MAX_DNS6_SERVER_LAN	2
+
 #endif /* _ipv6_shared_h_ */

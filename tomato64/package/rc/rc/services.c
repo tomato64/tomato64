@@ -806,8 +806,32 @@ void start_dnsmasq()
 
 		/* check for SLAAC and/or DHCPv6 */
 		if ((nvram_get_int("ipv6_radvd")) || (nvram_get_int("ipv6_dhcpd"))) {
-			/* DNS server */
-			fprintf(f, "dhcp-option=option6:dns-server,%s\n", "[::]"); /* use global address */
+			char dns6[MAX_DNS6_SERVER_LAN][INET6_ADDRSTRLEN] = {{0}, {0}};
+			char word[INET6_ADDRSTRLEN], *next;
+			struct in6_addr addr;
+			int cntdns = 0;
+
+			/* first check DNS servers (DNS1 + DNS2) via GUI (advanced-dhcpdns.asp)
+			 * and verify that this is a valid IPv6 address
+			 */
+			foreach (word, nvram_safe_get("ipv6_dns_lan"), next) {
+				if ((cntdns < MAX_DNS6_SERVER_LAN) && (inet_pton(AF_INET6, word, &addr) == 1)) {
+					strncpy(dns6[cntdns], ipv6_address(word), INET6_ADDRSTRLEN-1);
+					dns6[cntdns][INET6_ADDRSTRLEN-1] = '\0';
+					cntdns++;
+				}
+			}
+
+			if (cntdns == 2) {
+				fprintf(f, "dhcp-option=option6:dns-server,[%s],[%s]\n", dns6[0], dns6[1]); /* take FT user DNS1 + DNS2 address */
+			}
+			else if (cntdns == 1) {
+				fprintf(f, "dhcp-option=option6:dns-server,[%s]\n", dns6[0]); /* take FT user DNS1 address */
+			}
+			/* Default - No DNS server via GUI (advanced-dhcpdns.asp) */
+			else {
+				fprintf(f, "dhcp-option=option6:dns-server,%s\n", "[::]"); /* use global address */
+			}
 		}
 
 		/* SNTP & NTP server */
