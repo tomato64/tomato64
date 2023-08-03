@@ -233,6 +233,7 @@ function verifyFields(focused, quiet) {
 	return 1;
 }
 
+/* IPV6-BEGIN */
 function joinIPv6Addr(a) {
 	var r, i, s;
 
@@ -244,6 +245,7 @@ function joinIPv6Addr(a) {
 
 	return r.join(' ');
 }
+/* IPV6-END */
 
 function save() {
 	if (!verifyFields(null, 0))
