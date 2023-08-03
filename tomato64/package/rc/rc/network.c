@@ -713,6 +713,9 @@ void load_wl()
 
 }
 #else
+/* Speed up here and use DEV_NUMIFS_SPEED_UP_7 instead of DEV_NUMIFS */
+#define DEV_NUMIFS_SPEED_UP_7		16
+
 void load_wl(void)
 {
 #ifdef TCONFIG_DHDAP
@@ -722,7 +725,7 @@ void load_wl(void)
 	char instance_base[128];
 
 	/* Search for existing wl devices and the max unit number used */
-	for (i = 1; i <= DEV_NUMIFS; i++) {
+	for (i = 1; i <= DEV_NUMIFS_SPEED_UP_7 /* DEV_NUMIFS */; i++) {
 		snprintf(ifname, sizeof(ifname), "eth%d", i);
 		if (!wl_probe(ifname)) {
 			if (!wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit))) {
