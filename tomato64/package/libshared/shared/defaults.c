@@ -1224,7 +1224,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "jffs2_auto_unmount",		"0"				, 0 },	/* automatically unmount JFFS2 during FW upgrade */
 
 /* admin-tomatoanon */
-	{ "tomatoanon_enable",		"-1"				, 0 },
+	{ "tomatoanon_enable",		"0"				, 0 },
 	{ "tomatoanon_answer",		"0"				, 0 },
 	{ "tomatoanon_id",		""				, 0 },
 	{ "tomatoanon_notify",		"1"				, 0 },
