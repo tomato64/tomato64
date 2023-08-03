@@ -10793,6 +10793,11 @@ static int init_nvram(void)
 			nvram_set("wl0_nband", "1"); /* no "standard" wl config --> 5G first */
 			nvram_set("wl1_nband", "2"); /* 2,4G */
 		}
+		/* special case Xiaomi MiWiFi */
+		else if (!strcmp(name, "MiWiFi")) {
+			nvram_set("wl0_nband", "1"); /* no "standard" wl config --> 5G first */
+			nvram_set("wl1_nband", "2"); /* 2,4G */
+		}
 	}
 #endif
 
