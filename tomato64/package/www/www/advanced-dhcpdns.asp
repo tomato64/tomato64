@@ -108,14 +108,6 @@ function verifyFields(focused, quiet) {
 /* MDNS-BEGIN */
 	E('_f_mdns_reflector').disabled = !E('_f_mdns_enable').checked;
 /* MDNS-END */
-/* TOR-BEGIN */
-	if (E('_f_dnsmasq_onion_support').checked) { /* disable/uncheck 'DNS Rebind protection' when onion support is enabled */
-		E('_f_dns_norebind').disabled = 1;
-		E('_f_dns_norebind').checked = 0;
-	}
-	else
-		E('_f_dns_norebind').disabled = 0;
-/* TOR-END */
 /* TFTP-BEGIN */
 	v = E('_f_dnsmasq_tftp').checked;
 	vis._dnsmasq_tftp_path = v;
@@ -127,12 +119,34 @@ function verifyFields(focused, quiet) {
 	if (v && !v_length('_dnsmasq_tftp_path', quiet, 0, 128))
 		return 0;
 /* TFTP-END */
+/* IPV6-BEGIN */
+	v = !nvram.ipv6_service == '';
+	vis._f_ipv6_dhcpd = v;
+	vis._f_ipv6_radvd = v;
+	vis._f_ipv6_lease_time = v;
+	vis._f_ipv6_fast_ra = v;
+	vis._f_dnsmasq_qr = v;
+	vis._f_dnsmasq_q6 = v;
+/* IPV6-END */
+
 	for (i in vis) {
 		var b = E(i);
 		var c = vis[i];
 		b.disabled = (c != 1);
 		PR(b).style.display = (c ? 'table-row' : 'none');
 	}
+
+/* TOR-BEGIN */
+	a = !E('_f_dhcpd_dmdns').checked;
+	if (E('_f_dnsmasq_onion_support').checked) { /* disable/uncheck 'DNS Rebind protection' when onion support is enabled */
+		E('_f_dns_norebind').disabled = 1;
+		E('_f_dns_norebind').checked = 0;
+	}
+	else
+		E('_f_dns_norebind').disabled = a;
+
+	E('_f_dnsmasq_onion_support').disabled = a;
+/* TOR-END */
 
 	if (!v_range('_f_dnsmasq_edns_size', quiet, 512, 4096))
 		return 0;
