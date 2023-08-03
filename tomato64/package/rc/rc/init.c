@@ -10780,6 +10780,15 @@ static int init_nvram(void)
 
 #ifdef CONFIG_BCMWL6A
 	wl_defaults(); /* check and align wifi values */
+
+	/* adjust wl_defaults() (which is using nvram router_defaults) - last correction before we go on! */
+	if (name) {
+		/* special case Linksys EA6200 */
+		if (!strcmp(name, "EA6200")) {
+			nvram_set("wl0_nband", "1"); /* no "standard" wl config --> 5G first */
+			nvram_set("wl1_nband", "2"); /* 2,4G */
+		}
+	}
 #endif
 
 #ifndef TOMATO64
