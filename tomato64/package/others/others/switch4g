@@ -427,7 +427,7 @@ switchMode() {
 			[ "$DVDP" -eq 1 ] && {
 				# in some cases it needs more time
 				COUNT=1
-				while [ "$COUNT" -lt 5 ]; do
+				while [ "$COUNT" -lt 10 ]; do
 					sleep 1
 					[ -s $PATHDEV/bNumInterfaces ] && {
 						IFN_BEFORE=$(cat "$PATHDEV"/bNumInterfaces)
@@ -442,7 +442,7 @@ switchMode() {
 
 				# need few seconds before modem will be detected once again after switch
 				COUNT=1
-				while [ "$COUNT" -lt 15 ]; do
+				while [ "$COUNT" -lt 20 ]; do
 					sleep 1
 					[ -s $PATHDEV/bNumInterfaces ] && {
 						[ "$(cat "$PATHDEV"/bNumInterfaces)" -gt "$IFN_BEFORE" ] && break
