@@ -2742,7 +2742,7 @@ function navi() {
 }
 
 function createFieldTable(flags, desc) {
-	var common, i, n, name, id, fields, placeholder, f, a, buf2, id1, tr;
+	var common, i, n, name, id, fields, placeholder, onclick, f, a, buf2, id1, tr;
 	var buf = [];
 
 	if (flags.indexOf('noopen') == -1) buf.push('<table class="fields">');
@@ -2794,6 +2794,7 @@ function createFieldTable(flags, desc) {
 			if (f.attrib) common += ' '+f.attrib;
 			name = f.name ? (' name="'+f.name+'"') : '';
 			placeholder = f.placeholder ? (' placeholder="'+f.placeholder+'"') : '';
+			onclick = f.onclick ? (';'+f.onclick+'') : '';
 
 			switch (f.type) {
 				case 'checkbox':
