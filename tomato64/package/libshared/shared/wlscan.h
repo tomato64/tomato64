@@ -129,7 +129,11 @@ struct bss_ie_hdr {
 	unsigned char oui[3];
 } bss_ie;
 
+#ifdef TCONFIG_BCMWL6
+#define MAX_NUMBER_OF_APINFO	128
+#else
 #define MAX_NUMBER_OF_APINFO	64
+#endif /* TCONFIG_BCMWL6 */
 
 struct apinfo
 {
@@ -145,6 +149,12 @@ struct apinfo
 	int status;
 	int NetworkType;
 } apinfos[MAX_NUMBER_OF_APINFO];
+
+struct apinfo_ext
+{
+	int RSSI;
+	unsigned int chanspec;
+} apinfos_ext[MAX_NUMBER_OF_APINFO];
 
 #define WIF "eth1"
 #ifdef TCONFIG_BCMWL6

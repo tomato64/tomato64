@@ -647,46 +647,57 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 	NDIS_802_11_NETWORK_TYPE NetWorkType;
 	unsigned char *bssidp;
 	unsigned char rate;
+	unsigned int ap_count = 0;
 
 	bssi = &results->bss_info[0];
 	for (i = 0; i < results->count; ++i) {
 
+		/* check SSID len and limit to 32 */
+		if (bssi->SSID_len > 32/* || bssi->SSID_len == 0 */) {
+			bssi = (wl_bss_info_t*)((uint8*)bssi + bssi->length); /* next one! */
+			continue;
+		}
+
 		bssidp = (unsigned char *)&bssi->BSSID;
 		snprintf(macstr, sizeof(macstr), "%02X:%02X:%02X:%02X:%02X:%02X", (unsigned char)bssidp[0], (unsigned char)bssidp[1], (unsigned char)bssidp[2], (unsigned char)bssidp[3], (unsigned char)bssidp[4], (unsigned char)bssidp[5]);
 
-		strcpy(apinfos[0].BSSID, macstr);
-		memset(apinfos[0].SSID, 0x0, 33);
-		memcpy(apinfos[0].SSID, bssi->SSID, bssi->SSID_len);
-		apinfos[0].channel = (uint8)(bssi->chanspec & WL_CHANSPEC_CHAN_MASK);
+		strlcpy(apinfos[ap_count].BSSID, macstr, sizeof(apinfos[ap_count].BSSID));
+		memset(apinfos[ap_count].SSID, 0x0, 33);
+		memcpy(apinfos[ap_count].SSID, bssi->SSID, bssi->SSID_len);
+		apinfos[ap_count].channel = (uint8)(bssi->chanspec & WL_CHANSPEC_CHAN_MASK);
 
 		if (bssi->ctl_ch == 0) /* check control channel number; if 0 calc/replace it --> backup! */
 		{
-			apinfos[0].ctl_ch = apinfos[0].channel;
+			apinfos[ap_count].ctl_ch = apinfos[ap_count].channel;
 #ifdef CONFIG_BCMWL6
 			chanspec = bssi->chanspec;
 			ctr_channel = chspec_ctlchan(chanspec);
-			apinfos[0].ctl_ch = ctr_channel; /* use calculated value */
+			apinfos[ap_count].ctl_ch = ctr_channel; /* use calculated value */
 #endif
 		}
 		else { /* default */
-			apinfos[0].ctl_ch = bssi->ctl_ch; /* get control channel number */
+			apinfos[ap_count].ctl_ch = bssi->ctl_ch; /* get control channel number */
 		}
 
+		/* add/copy extended infos for FreshTomato */
+		apinfos_ext[ap_count].RSSI = bssi->RSSI;
+		apinfos_ext[ap_count].chanspec = bssi->chanspec;
+
 		if (bssi->RSSI >= -50)
-			apinfos[0].RSSI_Quality = 100;
+			apinfos[ap_count].RSSI_Quality = 100;
 		else if (bssi->RSSI >= -80)	/* between -50 ~ -80dbm */
-			apinfos[0].RSSI_Quality = (int)(24 + ((bssi->RSSI + 80) * 26)/10);
+			apinfos[ap_count].RSSI_Quality = (int)(24 + ((bssi->RSSI + 80) * 26)/10);
 		else if (bssi->RSSI >= -90)	/* between -80 ~ -90dbm */
-			apinfos[0].RSSI_Quality = (int)(((bssi->RSSI + 90) * 26)/10);
+			apinfos[ap_count].RSSI_Quality = (int)(((bssi->RSSI + 90) * 26)/10);
 		else				/* < -84 dbm */
-			apinfos[0].RSSI_Quality = 0;
+			apinfos[ap_count].RSSI_Quality = 0;
 
 		if ((bssi->capability & 0x10) == 0x10)
-			apinfos[0].wep = 1;
+			apinfos[ap_count].wep = 1;
 		else
-			apinfos[0].wep = 0;
+			apinfos[ap_count].wep = 0;
 
-		apinfos[0].wpa = 0;
+		apinfos[ap_count].wpa = 0;
 
 		NetWorkType = Ndis802_11DS;
 		if ((uint8)(bssi->chanspec & WL_CHANSPEC_CHAN_MASK) <= 14) {
@@ -716,7 +727,7 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 				NetWorkType = Ndis802_11OFDM24_N;
 		}
 
-		apinfos[0].NetworkType = NetWorkType;
+		apinfos[ap_count].NetworkType = NetWorkType;
 
 		ie = (struct bss_ie_hdr *) ((unsigned char *) bssi + bssi->ie_offset);
 		for (left = bssi->ie_length; left > 0; /* look for RSN IE first */
@@ -725,8 +736,8 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 			if (ie->elem_id != DOT11_MNG_RSN_ID)
 				continue;
 
-			if (wpa_parse_wpa_ie(&ie->elem_id, ie->len + 2, &apinfos[0].wid) == 0) {
-				apinfos[0].wpa = 1;
+			if (wpa_parse_wpa_ie(&ie->elem_id, ie->len + 2, &apinfos[ap_count].wid) == 0) {
+				apinfos[ap_count].wpa = 1;
 				goto next_info;
 			}
 		}
@@ -738,100 +749,115 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 			if (ie->elem_id != DOT11_MNG_WPA_ID)
 				continue;
 
-			if (wpa_parse_wpa_ie(&ie->elem_id, ie->len + 2, &apinfos[0].wid) == 0) {
-				apinfos[0].wpa = 1;
+			if (wpa_parse_wpa_ie(&ie->elem_id, ie->len + 2, &apinfos[ap_count].wid) == 0) {
+				apinfos[ap_count].wpa = 1;
 				break;
 			}
 		}
 
 next_info:
+		ap_count++;
+
+		if (ap_count >= MAX_NUMBER_OF_APINFO)
+			break;
+
+		bssi = (wl_bss_info_t*)((uint8*)bssi + bssi->length); /* next one! */
+	}
+
+	/* check if we can stop here - nothing found? */
+	if (ap_count == 0) {
+		free(results);
+		/* no APs found */
+		return 0;
+	}
+
+	/* prepare the list for GUI */
+	for (i = 0; i < ap_count; ++i) {
 #ifdef CONFIG_BCMWL6
-		if (CHSPEC_IS8080(bssi->chanspec))
+		if (CHSPEC_IS8080(apinfos_ext[i].chanspec))
 			chan_bw = 8080;
-		else if (CHSPEC_IS160(bssi->chanspec))
+		else if (CHSPEC_IS160(apinfos_ext[i].chanspec))
 			chan_bw = 160;
-		else if (CHSPEC_IS80(bssi->chanspec))
+		else if (CHSPEC_IS80(apinfos_ext[i].chanspec))
 			chan_bw = 80;
-		else if (CHSPEC_IS40(bssi->chanspec))
+		else if (CHSPEC_IS40(apinfos_ext[i].chanspec))
 			chan_bw = 40;
-		else if (CHSPEC_IS20(bssi->chanspec))
+		else if (CHSPEC_IS20(apinfos_ext[i].chanspec))
 			chan_bw = 20;
 		else
 			chan_bw = 10;
 #else /* for SDK5 */
-		if (CHSPEC_IS40(bssi->chanspec))
+		if (CHSPEC_IS40(apinfos_ext[i].chanspec))
 			chan_bw = 40;
-		else if (CHSPEC_IS20(bssi->chanspec))
+		else if (CHSPEC_IS20(apinfos_ext[i].chanspec))
 			chan_bw = 20;
 		else
 			chan_bw = 10;
 #endif
 		/* note: provide/use control channel and not the actual channel because we use it for wireless survey and scan button at basic-network.asp */
 		web_printf("%c['%s','%s',%d,%d,%d,%d,", rp->comma,
-		           apinfos[0].BSSID, apinfos[0].SSID, bssi->RSSI, apinfos[0].ctl_ch,
-		           chan_bw, apinfos[0].RSSI_Quality);
+		           apinfos[i].BSSID, apinfos[i].SSID, apinfos_ext[i].RSSI, apinfos[i].ctl_ch,
+		           chan_bw, apinfos[i].RSSI_Quality);
 		rp->comma = ',';
 
-		if ((apinfos[0].NetworkType == Ndis802_11FH) || (apinfos[0].NetworkType == Ndis802_11DS))
+		if ((apinfos[i].NetworkType == Ndis802_11FH) || (apinfos[i].NetworkType == Ndis802_11DS))
 				web_printf("'%s',", "11b");
-		else if (apinfos[0].NetworkType == Ndis802_11OFDM5)
+		else if (apinfos[i].NetworkType == Ndis802_11OFDM5)
 				web_printf("'%s',", "11a");
-		else if (apinfos[0].NetworkType == Ndis802_11OFDM5_VHT)
+		else if (apinfos[i].NetworkType == Ndis802_11OFDM5_VHT)
 				web_printf("'%s',", "11ac");
-		else if (apinfos[0].NetworkType == Ndis802_11OFDM5_N)
+		else if (apinfos[i].NetworkType == Ndis802_11OFDM5_N)
 				web_printf("'%s',", "11a/n");
-		else if (apinfos[0].NetworkType == Ndis802_11OFDM24)
+		else if (apinfos[i].NetworkType == Ndis802_11OFDM24)
 				web_printf("'%s',", "11b/g");
-		else if (apinfos[0].NetworkType == Ndis802_11OFDM24_N)
+		else if (apinfos[i].NetworkType == Ndis802_11OFDM24_N)
 				web_printf("'%s',", "11b/g/n");
 		else
 				web_printf("'%s',", "unknown");
 
-		if (apinfos[0].wpa == 1) {
-			if (apinfos[0].wid.key_mgmt == WPA_KEY_MGMT_IEEE8021X_)
+		if (apinfos[i].wpa == 1) {
+			if (apinfos[i].wid.key_mgmt == WPA_KEY_MGMT_IEEE8021X_)
 				web_printf("'%s',", "WPA-Enterprise");
-			else if (apinfos[0].wid.key_mgmt == WPA_KEY_MGMT_IEEE8021X2_)
+			else if (apinfos[i].wid.key_mgmt == WPA_KEY_MGMT_IEEE8021X2_)
 				web_printf("'%s',", "WPA2-Enterprise");
-			else if (apinfos[0].wid.key_mgmt == WPA_KEY_MGMT_PSK_)
+			else if (apinfos[i].wid.key_mgmt == WPA_KEY_MGMT_PSK_)
 				web_printf("'%s',", "WPA-Personal");
-			else if (apinfos[0].wid.key_mgmt == WPA_KEY_MGMT_PSK2_)
+			else if (apinfos[i].wid.key_mgmt == WPA_KEY_MGMT_PSK2_)
 				web_printf("'%s',", "WPA2-Personal");
-			else if (apinfos[0].wid.key_mgmt == WPA_KEY_MGMT_NONE_)
+			else if (apinfos[i].wid.key_mgmt == WPA_KEY_MGMT_NONE_)
 				web_printf("'%s',", "NONE");
-			else if (apinfos[0].wid.key_mgmt == WPA_KEY_MGMT_IEEE8021X_NO_WPA_)
+			else if (apinfos[i].wid.key_mgmt == WPA_KEY_MGMT_IEEE8021X_NO_WPA_)
 				web_printf("'%s',", "IEEE 802.1X");
 			else
 				web_printf("'%s',", "Unknown");
 		}
-		else if (apinfos[0].wep == 1)
+		else if (apinfos[i].wep == 1)
 			web_printf("'%s',", "Unknown");
 		else
 			web_printf("'%s',", "Open System");
 
-		if (apinfos[0].wpa == 1) {
-			if (apinfos[0].wid.pairwise_cipher == WPA_CIPHER_NONE_)
+		if (apinfos[i].wpa == 1) {
+			if (apinfos[i].wid.pairwise_cipher == WPA_CIPHER_NONE_)
 				web_printf("'%s',", "NONE");
-			else if (apinfos[0].wid.pairwise_cipher == WPA_CIPHER_WEP40_)
+			else if (apinfos[i].wid.pairwise_cipher == WPA_CIPHER_WEP40_)
 				web_printf("'%s',", "WEP");
-			else if (apinfos[0].wid.pairwise_cipher == WPA_CIPHER_WEP104_)
+			else if (apinfos[i].wid.pairwise_cipher == WPA_CIPHER_WEP104_)
 				web_printf("'%s',", "WEP");
-			else if (apinfos[0].wid.pairwise_cipher == WPA_CIPHER_TKIP_)
+			else if (apinfos[i].wid.pairwise_cipher == WPA_CIPHER_TKIP_)
 				web_printf("'%s',", "TKIP");
-			else if (apinfos[0].wid.pairwise_cipher == WPA_CIPHER_CCMP_)
+			else if (apinfos[i].wid.pairwise_cipher == WPA_CIPHER_CCMP_)
 				web_printf("'%s',", "AES");
-			else if (apinfos[0].wid.pairwise_cipher == (WPA_CIPHER_TKIP_ | WPA_CIPHER_CCMP_))
+			else if (apinfos[i].wid.pairwise_cipher == (WPA_CIPHER_TKIP_ | WPA_CIPHER_CCMP_))
 				web_printf("'%s',", "TKIP+AES");
 			else
 				web_printf("'%s',", "Unknown");
 		}
-		else if (apinfos[0].wep == 1)
+		else if (apinfos[i].wep == 1)
 			web_printf("'%s',", "WEP");
 		else
 			web_printf("'%s',", "NONE");
 
-		web_printf("'%s']", CHSPEC_IS2G(bssi->chanspec) ? "2.4" : "5");
-
-		bssi = (wl_bss_info_t*)((uint8*)bssi + bssi->length);
+		web_printf("'%s']", CHSPEC_IS2G(apinfos_ext[i].chanspec) ? "2.4" : "5");
 	}
 	free(results);
 
