@@ -225,8 +225,9 @@ void start_usb(void)
 		 * Note that PCI driver has to be loaded before USB hotplug event.
 		 * see load_wl() at init.c for USBAP
 		 */
-		#define DEV_NUMIFS 8
-		for (j = 1; j <= DEV_NUMIFS; j++) {
+		/* Speed up here and use DEV_NUMIFS_SPEED_UP_USBAP instead of DEV_NUMIFS */
+		#define DEV_NUMIFS_SPEED_UP_USBAP 	8
+		for (j = 1; j <= DEV_NUMIFS_SPEED_UP_USBAP /* DEV_NUMIFS */; j++) {
 			sprintf(ifname, "eth%d", j);
 			if (!wl_probe(ifname)) {
 				if (!wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit))) {
