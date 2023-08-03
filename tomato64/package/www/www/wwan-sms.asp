@@ -27,7 +27,7 @@ var wwansms = '';
 var wannum_selection = cookie.get('wwansms_selection') || 1;
 var wwansms_error;
 
-var ref = new TomatoRefresh('wwansms.cgi', 'mwan_num='+wannum_selection, 15, 'wwan_sms_refresh');
+var ref = new TomatoRefresh('wwansms.cgi', 'mwan_num='+wannum_selection, 10, 'wwan_sms_refresh');
 
 ref.refresh = function(text) {
 	try {
@@ -35,18 +35,20 @@ ref.refresh = function(text) {
 	}
 	catch (ex) {
 	}
+	smsGrid.removeAllData();
 	smsGrid.populate();
+	smsGrid.resort();
 }
 
 var smsGrid = new TomatoGrid();
 
 smsGrid.setup = function() {
 	this.init('sms-grid',['sort','delete']);
-	this.headerSet(['ID','State','Date','Sender','Message']);
+	this.headerSet(['ID','State','Sender','Date','Message']);
 }
 
 smsGrid.populate = function() {
-	var error_div, buf, i, pduparseRegex, match;
+	var error_div, buf, i, parseRegex, match;
 
 	/* Removing hasn't been done, wait until it finishes */
 	if (sms_remover)
@@ -61,10 +63,18 @@ smsGrid.populate = function() {
 		error_div.style.display = 'none';
 		buf = wwansms.split('\n');
 
-		this.removeAllData();
 		for (i = 0; i < buf.length; ++i) {
-			pduparseRegex = /^ID\:\s([0-9]+)\s\[(.*)\]\[(.*)\]\[(.*)\]\:\s(.*)$/g;
-			match = pduparseRegex.exec(buf[i]);
+			parseRegex = /^\+CMGL\:\s([0-9]+),"(.*)","(.*)",,"(.*)"$/g;
+
+			match = parseRegex.exec(buf[i]);
+
+			if (match && match.length == 5) {
+				++i;
+				if (buf[i].length > 160)
+					match[5] = "chunked...";
+				else
+					match[5] = buf[i];
+			}
 
 			if (match && match.length == 6)
 				this.insertData(-1, match.slice(1));
@@ -73,6 +83,25 @@ smsGrid.populate = function() {
 
 	wwansms = '';
 }
+
+smsGrid.sortCompare = function(a, b) {
+	var col = this.sortColumn;
+	var da = a.getRowData();
+	var db = b.getRowData();
+	var r;
+
+	switch (col) {
+		case 0:
+			r = cmpInt(da[col], db[col]);
+		break;
+		default:
+			r = cmpText(da[col], db[col]);
+		break;
+	}
+
+	return this.sortAscending ? r : -r;
+}
+
 
 smsGrid.rpDel = function(e) {
 	var smsToRemove = PR(e)._data[0];
@@ -111,11 +140,12 @@ function verifyFields(focused, quiet) {
 function init() {
 	E('sec-title').innerHTML = 'WWAN SMS list for modem '+wannum_selection;
 
-	ref.initPage(250, 15);
-	if (!ref.running)
+	ref.initPage(250, 10);
+	if (!ref.running) {
 		ref.once = 1;
-
-	ref.start();
+		ref.start();
+	}
+	smsGrid.sort(0);
 }
 </script>
 
@@ -144,7 +174,7 @@ function init() {
 <!-- / / / -->
 
 <div id="footer">
-	<script>genStdRefresh(1,15,'ref.toggle()');</script>
+	<script>genStdRefresh(1,10,'ref.toggle()');</script>
 </div>
 
 </td></tr>

@@ -1,4 +1,0 @@
-config BR2_PACKAGE_PDUREADER
-	bool "pdureader"
-	help
-	  Reader and parser of 2/3/4G modems SMS storage.

@@ -10,8 +10,8 @@
 void wo_wwansignal(char *url)
 {
 	char wancmd[32];
-
 	int desired_wan = atoi(webcgi_safeget("mwan_num", "1"));
+
 	if (desired_wan == 1)
 		snprintf(wancmd, sizeof(wancmd), "wwansignal wan -stdout");
 	else
@@ -50,17 +50,18 @@ static char* getModemDiagPort(const char *wannum)
 
 void wo_wwansms(char *url)
 {
-	char smscmd[64];
+	char smscmd[72];
 	char wannum[8];
 	char *wwan_devId = NULL;
-
 	int desired_wan = atoi(webcgi_safeget("mwan_num", "1"));
+
 	snprintf(wannum, sizeof(wannum), "wan%c", (desired_wan == 1 ? '\0' : (char)desired_wan + 48));
 
 	wwan_devId = getModemDiagPort(wannum);
 
 	if (wwan_devId != NULL) {
-		snprintf(smscmd, sizeof(smscmd), "gcom -d %s -s /etc/gcom/getsmses.gcom | pdureader", wwan_devId);
+		snprintf(smscmd, sizeof(smscmd), "gcom -d %s -s /etc/gcom/getsmses_plain.gcom", wwan_devId);
+
 		web_puts("\n");
 		web_puts("\nwwansms = '");
 		web_pipecmd(smscmd, WOF_JAVASCRIPT);
@@ -70,13 +71,12 @@ void wo_wwansms(char *url)
 
 void wo_wwansms_delete(char *url)
 {
-	const char *smsToRemove_str = webcgi_safeget("sms_num", "");
-	const char *desired_wan_str = webcgi_safeget("mwan_num", "");
 	char smscmd[150];
-	char wannum[5];
+	char wannum[8];
 	char *wwan_devId = NULL;
 	int desired_wan;
-	int smsToRemove;
+	const char *smsToRemove_str = webcgi_safeget("sms_num", "");
+	const char *desired_wan_str = webcgi_safeget("mwan_num", "");
 
 	if (!*smsToRemove_str) {
 		web_puts("\nwwansms_error = 'sms_num is empty!'");
@@ -88,11 +88,12 @@ void wo_wwansms_delete(char *url)
 	}
 	desired_wan = atoi(desired_wan_str);
 	snprintf(wannum, sizeof(wannum), "wan%c", (desired_wan == 1 ? '\0' : (char)desired_wan + 48));
-	smsToRemove = atoi(smsToRemove_str);
 
 	wwan_devId = getModemDiagPort(wannum);
+
 	if (wwan_devId != NULL) {
-		snprintf(smscmd, sizeof(smscmd), "MODE=\"AT+CMGD=%d\" gcom -d %s -s /etc/gcom/setverbose.gcom", smsToRemove, wwan_devId);
+		snprintf(smscmd, sizeof(smscmd), "MODE=\"AT+CMGD=%d\" gcom -d %s -s /etc/gcom/setverbose.gcom", atoi(smsToRemove_str), wwan_devId);
+
 		web_puts("\n");
 		web_puts("\nwwansms_delete = '");
 		web_pipecmd(smscmd, WOF_JAVASCRIPT);

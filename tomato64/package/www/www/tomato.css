@@ -727,7 +727,6 @@ table.tomato-grid.vpn-status-table {
 #wlif-grid .co4,
 #wlif-grid .co6,
 #wlif-grid .centered,
-#sms-grid .header .co5,
 #survey-grid .co5,
 #survey-grid .co6,
 #survey-grid .co7,
@@ -783,13 +782,16 @@ div[id$="_users"] .co2 {
 	text-align: center;
 }
 
-#sms-grid .co2,
-#sms-grid .co4 {
-	width: 120px;
+#sms-grid .co2 {
+	width: 70px;
 }
 
 #sms-grid .co3 {
-	width: 80px;
+	width: 120px;
+}
+
+#sms-grid .co4 {
+	width: 150px;
 }
 
 #lan-grid .co1,
