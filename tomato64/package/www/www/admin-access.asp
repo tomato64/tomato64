@@ -502,15 +502,15 @@ function init() {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'Allowed Remote<br>IP Address', name: 'f_rmgt_sip', type: 'text', maxlen: 512, size: 64, suffix: '<br>&nbsp;<small>optional; ex: "1.1.1.1", "1.1.1.0/24", "1.1.1.1 - 2.2.2.2" or "me.example.com"<\/small>', value: nvram.rmgt_sip },
+			{ title: 'Allowed Remote<br>IP Address', name: 'f_rmgt_sip', type: 'text', maxlen: 512, size: 64, placeholder: 'optional', suffix: '<br>&nbsp;<small>eg: 1.2.3.4, 1.2.3.4/24, 1.2.3.4 - 1.2.3.255, me.example.com - comma separated<\/small>', value: nvram.rmgt_sip },
 			{ title: 'Remote Web Port Protection', name: 'f_http_wanport_bfm', type: 'checkbox', suffix: '&nbsp;<small>enable brute force mitigation rule<\/small>', value: nvram.http_wanport_bfm == 1 },
 			{ title: 'Limit Connection Attempts', multi: [
 				{ suffix: '&nbsp; SSH &nbsp; / &nbsp;', name: 'f_limit_ssh', type: 'checkbox', value: (shlimit[0] & 1) != 0 },
 				{ suffix: '&nbsp; Telnet &nbsp;', name: 'f_limit_telnet', type: 'checkbox', value: (shlimit[0] & 2) != 0 }
 			] },
 				{ title: '', indent: 2, multi: [
-					{ name: 'f_limit_hit', type: 'text', maxlen: 4, size: 6, suffix: '&nbsp; every &nbsp;', value: shlimit[1] },
-					{ name: 'f_limit_sec', type: 'text', maxlen: 4, size: 6, suffix: '&nbsp; seconds', value: shlimit[2] }
+					{ name: 'f_limit_hit', type: 'text', maxlen: 2, size: 2, suffix: '&nbsp; within &nbsp;', value: shlimit[1] },
+					{ name: 'f_limit_sec', type: 'text', maxlen: 4, size: 4, suffix: '&nbsp; seconds', value: shlimit[2] }
 			] }
 		]);
 	</script>
