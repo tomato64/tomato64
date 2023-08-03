@@ -20,11 +20,11 @@ No part of this file may be used without permission.
 
 //	<% nvram("pbr_rules"); %>
 
-var class1 =  [[1,'WAN0'],[2,'WAN1']
+var class1 = [[1,'WAN0'],[2,'WAN1']
 /* MULTIWAN-BEGIN */
-		,[3,'WAN2'],[4,'WAN3']
+             ,[3,'WAN2'],[4,'WAN3']
 /* MULTIWAN-END */
-		];
+             ];
 
 function getOUTifdesc(outif) {
 	var i;
@@ -49,9 +49,9 @@ pbr.dataToView = function(data) {
 		else
 			b.push('All');
 	}
-	else {
+	else
 		b.push('All');
-	}
+
 	if (data[5] != '0') {
 		if (data[6] != '') {
 			switch (data[5]) {
@@ -66,13 +66,12 @@ pbr.dataToView = function(data) {
 				break;
 			}
 		}
-		else {
+		else
 			c.push('All');
-		}
+
 	}
-	else {
+	else
 		c.push('All');
-	}
 
 	if (data[1] >= -1) {
 		if (data[1] == -1) a.push('TCP/UDP');
@@ -85,12 +84,16 @@ pbr.dataToView = function(data) {
 			if (data[7] != '') c.push('Port: ' + data[7].replace(/:/g, '-'));
 		}
 	}
-	else {
+	else
 		a.push('All');
-	}
+
 	d.push(getOUTifdesc(data[8] * 1));
 
-	return [(data[0] != '0') ? 'On' : 'Off', a.join('<br>'), b.join('<br>'), c.join('<br>'), d.join('<br>'), escapeHTML(data[9])];
+	return [(data[0] != '0') ? 'On' : 'Off',a.join('<br>'),b.join('<br>'),c.join('<br>'),d.join('<br>'),escapeHTML(data[9])];
+}
+
+pbr.dataToFieldValues = function (data) {
+	return [(data[0] != 0) ? 'checked' : '',data[1],data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9] ];
 }
 
 pbr.fieldValuesToData = function(row) {
@@ -137,9 +140,8 @@ pbr._disableNewEditor = pbr.disableNewEditor;
 
 pbr.disableNewEditor = function(disable) {
 	pbr._disableNewEditor(disable);
-	if (!disable) {
+	if (!disable)
 		this.enDiFields(this.newEditor);
-	}
 }
 
 pbr.enDiFields = function(row) {
@@ -169,9 +171,9 @@ pbr.verifyFields = function(row, quiet) {
 		if (!v_iptip(f[3], quiet))
 			return 0;
 	}
-	else if ((a == 2) && (!v_mac(f[3], quiet))) {
+	else if ((a == 2) && (!v_mac(f[3], quiet)))
 		return 0;
-	}
+
 	/* valid sport & dport */
 	b = f[1].selectedIndex;
 	if ((b > 0) && (b <= 3) && (f[4].value != '') && (!v_iptport(f[4], quiet))) return 0;
@@ -213,7 +215,7 @@ pbr.setup = function() {
 		{ type: 'select', options: class1, vtop: 1 },
 		{ type: 'text', maxlen: 32, vtop: 1 }
 	]);
-	this.headerSet(['On', 'Protocol', 'Source Address', 'Destination Address', 'Select WAN', 'Description']);
+	this.headerSet(['On','Protocol','Source Address','Destination Address','Select WAN','Description']);
 
 	/* Enable(0) < SAddrType(1) < SAddrValue(2) < ProtoType(3) < PortValue(4) < DAddrType(5) < DAddrValue(6) < ProtoType(7) <PortValue(8) < WANx(9) < Desc(10) */
 	a = nvram.pbr_rules.split('>');
