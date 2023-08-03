@@ -93,8 +93,8 @@ function init() {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'Do you know what TomatoAnon does?', name: 'tomatoanon_answer', type: 'select', options: [ ['0','No, I don\'t. Have to read all information, before I will make a choice'], ['1','Yes, I do and want to make a choice'] ], value: nvram.tomatoanon_answer, suffix: ' '},
-			{ title: 'Do you want to enable TomatoAnon?', name: 'tomatoanon_enable', type: 'select', options: [ ['-1','I\'m not sure right now'], ['1','Yes, I\'m sure I do'], ['0','No, I definitely won\'t enable it'] ], value: nvram.tomatoanon_enable, suffix: ' '}
+			{ title: 'Do you know what TomatoAnon does?', name: 'tomatoanon_answer', type: 'select', options: [['0','No, I don\'t. Have to read all information, before I will make a choice'],['1','Yes, I do and want to make a choice']], value: nvram.tomatoanon_answer },
+			{ title: 'TomatoAnon enable', name: 'tomatoanon_enable', type: 'select', options: [['-1','No'],['1','Yes']], value: nvram.tomatoanon_enable }
 		]);
 	</script>
 </div>
@@ -104,9 +104,7 @@ function init() {
 <div class="section-title">Tomato64 Update Notification System</div>
 <div class="section">
 	<script>
-		createFieldTable('', [
-			{ title: 'Enable', name: 'f_tomatoanon_notify', type: 'checkbox', value: nvram.tomatoanon_notify == '1' }
-		]);
+		createFieldTable('', [ { title: 'Enable', name: 'f_tomatoanon_notify', type: 'checkbox', value: nvram.tomatoanon_notify == 1 } ]);
 	</script>
 	<ul>
 		<li>When a new version of Tomato64 is available, you will be notified on the status-overview page.</li>
