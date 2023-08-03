@@ -10788,6 +10788,11 @@ static int init_nvram(void)
 			nvram_set("wl0_nband", "1"); /* no "standard" wl config --> 5G first */
 			nvram_set("wl1_nband", "2"); /* 2,4G */
 		}
+		/* special case Belkin F9K1113v2 */
+		else if (!strcmp(name, "F9K1113v2")) {
+			nvram_set("wl0_nband", "1"); /* no "standard" wl config --> 5G first */
+			nvram_set("wl1_nband", "2"); /* 2,4G */
+		}
 	}
 #endif
 
