@@ -18,9 +18,10 @@
 
 <script>
 
-//	<% nvram("rstats_enable,rstats_path,rstats_stime,rstats_offset,rstats_exclude,rstats_sshut,lan_hwaddr,cifs1,cifs2,jffs2_on,rstats_bak"); %>
+//	<% nvram("rstats_enable,rstats_path,rstats_stime,rstats_offset,rstats_exclude,rstats_sshut,lan_hwaddr,cifs1,cifs2,jffs2_on,rstats_bak,t_model_name"); %>
 
 var xob = null;
+const now = new Date();
 
 function _rstatsNvramAdd() {
 	form.submitHidden('service.cgi', { _service: 'rstats_nvram-start', _sleep: 1 });
@@ -312,7 +313,7 @@ function init() {
 <div class="section" id="backup-section">
 	<div>
 		<script>
-			W('<input type="text" size="40" maxlength="64" id="backup-name" name="backup_name" onchange="backupNameChanged()" value="Tomato64_rstats_'+nvram.lan_hwaddr.replace(/:/g, '').toLowerCase()+'">');
+			W('<input type="text" size="60" maxlength="128" id="backup-name" name="backup_name" onchange="backupNameChanged()" value="Tomato64_rstats_'+('<% version(); %>'.replace(/\./g, '_'))+'~m'+nvram.lan_hwaddr.replace(/:/g, '').substring(6, 12)+'~'+nvram.t_model_name.replace(/\/| /g, '_')+'~'+now.getFullYear()+('0'+(now.getMonth()+1)).slice(-2)+('0'+now.getDate()).slice(-2)+'">');
 		</script>
 		<div style="display:inline">.gz &nbsp;
 			<input type="button" name="f_backup_button" id="backup-button" onclick="backupButton()" value="Backup">
