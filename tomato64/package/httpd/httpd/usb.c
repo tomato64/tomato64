@@ -1,9 +1,11 @@
 /*
-
-	Tomato Firmware
-	USB Support
-
-*/
+ *
+ * Tomato Firmware
+ * USB Support
+ *
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 #include "tomato.h"
 
@@ -53,7 +55,7 @@ int is_partition_mounted(char *dev_name, int host_num, char *dsc_name, char *pt_
 
 	type = find_label_or_uuid(dev_name, the_label, NULL);
 	if (*the_label == 0) {
-		strncpy(the_label, pt_name, sizeof(the_label));
+		strlcpy(the_label, pt_name, sizeof(the_label));
 	}
 
 	if (flags & EFH_PRINT) {
@@ -162,8 +164,8 @@ void asp_usbdevices(int argc, char **argv)
 					p = strstr(line, "  Vendor: ");
 					p1 = strstr(line + 10 + 8, " Model: ");
 					if (p && p1) {
-						strncpy(g_usb_vendor, p + 10, 8);
-						strncpy(g_usb_product, p1 + 8, 16);
+						strlcpy(g_usb_vendor, p + 10, 8);
+						strlcpy(g_usb_product, p1 + 8, 16);
 						js_vend = js_string(g_usb_vendor);
 						js_prod = js_string(g_usb_product);
 						web_printf("%s['Storage','%d','%s','%s','', [", i ? "," : "",
@@ -213,20 +215,20 @@ void asp_usbdevices(int argc, char **argv)
 						else if (strstr(line, "Vendor")) {
 							tmp = strtok(line, " ");
 							tmp = strtok(NULL, "\n");
-							strncpy(g_usb_vendor, tmp, sizeof(g_usb_vendor) - 1);
+							strlcpy(g_usb_vendor, tmp, sizeof(g_usb_vendor) - 1);
 							tmp = NULL;
 						}
 						else if (strstr(line, "Product")) {
 							tmp = strtok(line, " ");
 							tmp = strtok(NULL, "\n");
-							strncpy(g_usb_product, tmp, sizeof(g_usb_product) - 1);
+							strlcpy(g_usb_product, tmp, sizeof(g_usb_product) - 1);
 							tmp = NULL;
 						}
 						else if (strstr(line, "Serial Number")) {
 							tmp = strtok(line, " ");
 							tmp = strtok(NULL, " ");
 							tmp = strtok(NULL, "\n");
-							strncpy(g_usb_serial, tmp, sizeof(g_usb_serial) - 1);
+							strlcpy(g_usb_serial, tmp, sizeof(g_usb_serial) - 1);
 							tmp = NULL;
 						}
 					}
@@ -274,13 +276,13 @@ void asp_usbdevices(int argc, char **argv)
 				if (strstr(line, "Manufacturer")) {
 					tmp = strtok(line, "=");
 					tmp = strtok(NULL, "\n");
-					strncpy(g_usb_vendor, tmp, sizeof(g_usb_vendor) - 1);
+					strlcpy(g_usb_vendor, tmp, sizeof(g_usb_vendor) - 1);
 					tmp = NULL;
 				}
 				else if (strstr(line, "Model")) {
 					tmp = strtok(line, "=");
 					tmp = strtok(NULL, "\n");
-					strncpy(g_usb_product, tmp, sizeof(g_usb_product) - 1);
+					strlcpy(g_usb_product, tmp, sizeof(g_usb_product) - 1);
 					tmp = NULL;
 				}
 			}

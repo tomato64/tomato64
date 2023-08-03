@@ -1,28 +1,30 @@
 /*
+ *
+ * IPTraffic monitoring extensions for Tomato
+ * Copyright (C) 2011-2012 Augusto Bott
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 
-	IPTraffic monitoring extensions for Tomato
-	Copyright (C) 2011-2012 Augusto Bott
 
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-
-	This program is free software; you can redistribute it and/or
-	modify it under the terms of the GNU General Public License
-	as published by the Free Software Foundation; either version 2
-	of the License, or (at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-*/
-
+#include "tomato.h"
+#include "shared.h"
 
 #include <arpa/inet.h>
-#include <tomato.h>
-#include <shared.h>
 #include "iptraffic.h"
 
 
@@ -58,11 +60,11 @@ void asp_iptraffic(int argc, char **argv) {
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		snprintf(name, sizeof(name), "/proc/net/ipt_account/lan%s", bridge);
 
-		if ((a = fopen(name, "r")) == NULL)
+		if (!(a = fopen(name, "r")))
 			continue;
 
 		fgets(sa, sizeof(sa), a); /* network */
@@ -74,7 +76,7 @@ void asp_iptraffic(int argc, char **argv) {
 				continue;
 
 			if ((tx_bytes > 0) || (rx_bytes > 0)) {
-				strncpy(tmp.ipaddr, ip, INET_ADDRSTRLEN);
+				strlcpy(tmp.ipaddr, ip, INET_ADDRSTRLEN);
 				ptr = TREE_FIND(&tree, _Node, linkage, &tmp);
 				if (!ptr) {
 					ct_tcp = 0;
@@ -97,6 +99,7 @@ void asp_iptraffic(int argc, char **argv) {
 }
 
 void iptraffic_conntrack_init() {
+	const char conntrack[] = "/proc/net/ip_conntrack";
 	unsigned int a_time, a_proto;
 	char a_src[INET_ADDRSTRLEN];
 	char a_dst[INET_ADDRSTRLEN];
@@ -122,17 +125,17 @@ void iptraffic_conntrack_init() {
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
-		memset(sa, 0, 256);
+		memset(sa, 0, sizeof(sa));
 		snprintf(sa, sizeof(sa), "lan%s_ifname", bridge);
 
 		if (strcmp(nvram_safe_get(sa), "") != 0) {
-			memset(sa, 0, 256);
+			memset(sa, 0, sizeof(sa));
 			snprintf(sa, sizeof(sa), "lan%s_ipaddr", bridge);
 			rip[br] = inet_addr(nvram_safe_get(sa));
 
-			memset(sa, 0, 256);
+			memset(sa, 0, sizeof(sa));
 			snprintf(sa, sizeof(sa), "lan%s_netmask", bridge);
 			mask[br] = inet_addr(nvram_safe_get(sa));
 			lan[br] = rip[br] & mask[br];
@@ -144,9 +147,7 @@ void iptraffic_conntrack_init() {
 		}
 	}
 
-	const char conntrack[] = "/proc/net/ip_conntrack";
-
-	if ((a = fopen(conntrack, "r")) == NULL)
+	if (!(a = fopen(conntrack, "r")))
 		return;
 
 	ctvbuf(a); /* if possible, read in one go */
@@ -185,7 +186,7 @@ void iptraffic_conntrack_init() {
 			if (skip == 1)
 				continue;
 
-			strncpy(tmp.ipaddr, ipaddr, INET_ADDRSTRLEN);
+			strlcpy(tmp.ipaddr, ipaddr, INET_ADDRSTRLEN);
 			ptr = TREE_FIND(&tree, _Node, linkage, &tmp);
 
 			if (!ptr) {

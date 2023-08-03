@@ -3,6 +3,8 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
  */
 
 
@@ -54,7 +56,7 @@ void asp_arplist(int argc, char **argv)
 
 	web_puts("\narplist = [");
 	comma = ' ';
-	if ((f = fopen("/proc/net/arp", "r")) != NULL) {
+	if ((f = fopen("/proc/net/arp", "r"))) {
 		while (fgets(s, sizeof(s), f)) {
 			if (sscanf(s, "%15s %*s 0x%X %17s %*s %16s", ip, &flags, mac, dev) != 4)
 				continue;
@@ -66,7 +68,7 @@ void asp_arplist(int argc, char **argv)
 				continue;
 
 			if ((resolve_addr(ip, host) != 0) || (strcmp(ip, host) == 0))
-				strcpy(host, "");
+				memset(host, 0, sizeof(host));
 
 			if ((c = strchr(host, '.')) != NULL)
 				*c = 0;
@@ -102,6 +104,7 @@ static int get_wds_ifname(const struct ether_addr *ea, char *ifname)
 		}
 		close(sd);
 	}
+
 	return 0;
 }
 
@@ -136,7 +139,7 @@ static int get_wl_clients(int idx, int unit, int subunit, void *param)
 						continue;
 
 					memset(&sti, 0, sizeof(sti)); /* reset */
-					strcpy((char *)&sti, "sta_info"); /* sta_info */
+					strlcpy((char *)&sti, "sta_info", sizeof(sti)); /* sta_info */
 					memcpy((char *)&sti + 9, &(mlist->ea[i]), sizeof(struct ether_addr)); /* sta_info0<mac> */
 					if (wl_ioctl(wlif, WLC_GET_VAR, &sti, sizeof(sti)) != 0)
 						continue;
@@ -235,7 +238,7 @@ wl_ifname,wl_mode,wl_radio,wl_nband,wl_wds_enable"
 			f_wait_notexists(lease_file_tmp, 5);
 		}
 
-		if ((f = fopen(lease_file, "r")) != NULL) {
+		if ((f = fopen(lease_file, "r"))) {
 			comma = ' ';
 			while (fgets(buf, sizeof(buf), f)) {
 				if (sscanf(buf, "%lu %17s %39s %255s", &expires, mac, ip, hostname) != 4)

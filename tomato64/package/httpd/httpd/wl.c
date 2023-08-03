@@ -3,6 +3,8 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
  */
 
 
@@ -236,9 +238,9 @@ static int chspec_ctlchan(chanspec_t chspec)
 	uint sb;
 
 	/* Is there a sideband ? */
-	if (CHSPEC_IS20(chspec)) {
+	if (CHSPEC_IS20(chspec))
 		return CHSPEC_CHANNEL(chspec);
-	} else {
+	else {
 		sb = CHSPEC_CTL_SB(chspec) >> WL_CHANSPEC_CTL_SB_SHIFT;
 
 		bw_mhz = bw_chspec_to_mhz(chspec);
@@ -666,8 +668,7 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 		memcpy(apinfos[ap_count].SSID, bssi->SSID, bssi->SSID_len);
 		apinfos[ap_count].channel = (uint8)(bssi->chanspec & WL_CHANSPEC_CHAN_MASK);
 
-		if (bssi->ctl_ch == 0) /* check control channel number; if 0 calc/replace it --> backup! */
-		{
+		if (bssi->ctl_ch == 0) { /* check control channel number; if 0 calc/replace it --> backup! */
 			apinfos[ap_count].ctl_ch = apinfos[ap_count].channel;
 #ifdef CONFIG_BCMWL6
 			chanspec = bssi->chanspec;
@@ -675,9 +676,8 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 			apinfos[ap_count].ctl_ch = ctr_channel; /* use calculated value */
 #endif
 		}
-		else { /* default */
+		else /* default */
 			apinfos[ap_count].ctl_ch = bssi->ctl_ch; /* get control channel number */
-		}
 
 		/* add/copy extended infos for FreshTomato */
 		apinfos_ext[ap_count].RSSI = bssi->RSSI;
@@ -1182,7 +1182,7 @@ static int _wlchanspecs(char *ifname, char *country, int band, int bw, int ctrls
 	}	
 #else /* SDK5  - keep (good) "old" way */
 /* NOTE: leave SDK6 code in place just for documenatation */
-	strcpy(buf, "chanspecs");
+	strlcpy(buf, "chanspecs", WLC_IOCTL_MAXLEN);
 	buflen = strlen(buf) + 1;
 
 	c |= (band == WLC_BAND_5G) ? WL_CHANSPEC_BAND_5G : WL_CHANSPEC_BAND_2G;
@@ -1195,7 +1195,7 @@ static int _wlchanspecs(char *ifname, char *country, int band, int bw, int ctrls
 	chanspec = (chanspec_t *)(buf + buflen);
 	*chanspec = c;
 	buflen += (sizeof(chanspec_t));
-	strncpy(buf + buflen, country, WLC_CNTRY_BUF_SZ);
+	strlcpy(buf + buflen, country, WLC_CNTRY_BUF_SZ);
 	buflen += WLC_CNTRY_BUF_SZ;
 
 	/* add list */
@@ -1245,7 +1245,7 @@ static void _wlchannels(char *ifname, char *country, int band)
 	cic = (wl_channels_in_country_t *)malloc(WLC_IOCTL_MAXLEN);
 	if (cic) {
 		cic->buflen = WLC_IOCTL_MAXLEN;
-		strcpy(cic->country_abbrev, country);
+		strlcpy(cic->country_abbrev, country, sizeof(cic->country_abbrev));
 		cic->band = band;
 
 		if (wl_ioctl(ifname, WLC_GET_CHANNELS_IN_COUNTRY, cic, cic->buflen) == 0) {
@@ -1415,7 +1415,7 @@ static int print_wif(int idx, int unit, int subunit, void *param)
 		logmsg(LOG_ERR, "[%s %d]: error opening socket %m\n", __FUNCTION__, __LINE__);
 
 	if (sfd >= 0) {
-		strcpy(ifr.ifr_name, nvram_safe_get(wl_nvname("ifname", unit, subunit)));
+		strlcpy(ifr.ifr_name, nvram_safe_get(wl_nvname("ifname", unit, subunit)), sizeof(ifr.ifr_name));
 		if (ioctl(sfd, SIOCGIFFLAGS, &ifr) == 0)
 			if (ifr.ifr_flags & (IFF_UP | IFF_RUNNING))
 				up = 1;
@@ -1531,21 +1531,21 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 			memset(s, 0, sizeof(s));
 			memset(tempC, 0, sizeof(tempC));
 			memset(tempF, 0, sizeof(tempF));
-			strcpy(s, "phy_tempsense");
+			strlcpy(s, "phy_tempsense", sizeof(s));
 			if ((ret = wl_ioctl(ifname, WLC_GET_VAR, s, sizeof(s))) == 0) {
 				cur_temp = (unsigned int*) s;
 				snprintf(tempC, sizeof(tempC), "%d", *cur_temp / 2 + 20);
 
 				if ((atoi(tempC) <=0) || (atoi(tempC)>= 120)) {
-					strcpy(tempC, "--");
-					strcpy(tempF, "--");
+					strlcpy(tempC, "--", sizeof(tempC));
+					strlcpy(tempF, "--", sizeof(tempF));
 				}
 				else
 					snprintf(tempF, sizeof(tempF), "%d", mround((*cur_temp / 2 + 20) * 1.8 + 32));
 			}
 			else {
-				strcpy(tempC, "--");
-				strcpy(tempF, "--");
+				strlcpy(tempC, "--", sizeof(tempC));
+				strlcpy(tempF, "--", sizeof(tempF));
 			}
 
 			/* get band of ifname */
@@ -1554,7 +1554,7 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 			int bandlist[WLC_BAND_ALL];
 			if (wl_ioctl(ifname, WLC_GET_BANDLIST, bandlist, sizeof(bandlist)) == 0) {
 				if (bandlist[0] == 0)
-					strcpy(band, "--");
+					strlcpy(band, "--", sizeof(band));
 				else {
 					b5G = 0;
 					b2G = 0;
@@ -1571,17 +1571,17 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 						}
 					}
 					if (b5G == 1 && b2G == 1)
-						strcpy(band, "2.4G/5G");
+						strlcpy(band, "2.4G/5G", sizeof(band));
 					else if (b5G == 0 && b2G == 1)
-						strcpy(band, "2.4G");
+						strlcpy(band, "2.4G", sizeof(band));
 					else if (b5G == 1 && b2G == 0)
-						strcpy(band, "5G");
+						strlcpy(band, "5G", sizeof(band));
 					else /* b5G == 0 && b2G == 0 */
-						strcpy(band, "--");
+						strlcpy(band, "--", sizeof(band));
 				}
 			}
 			else
-				strcpy(band,"--");
+				strlcpy(band, "--", sizeof(band));
 
 			if ((strlen(tempC) > 0) && (strlen(band) > 0)) {
 				if ((strcmp(tempC, "--") != 0) || (strcmp(band, "--") != 0))
@@ -1596,7 +1596,7 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 		buf[len - 24] = '\0';
 
 	if (len == 0)
-		strcpy(buf, "--");
+		strlcpy(buf, "--", buf_sz);
 	else
 		trimstr(buf);
 

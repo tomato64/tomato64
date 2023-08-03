@@ -3,6 +3,8 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
  */
 
 
@@ -145,7 +147,7 @@ fe80::201:2ff:fe3:405 dev br0 lladdr 00:01:02:03:04:05 REACHABLE
 	}
 #endif
 
-	if ((f = popen(s, "r")) != NULL) {
+	if ((f = popen(s, "r"))) {
 		while (fgets(s, sizeof(s), f)) {
 			if (sscanf(s, "%*s dev %16s lladdr %17s %*s", ifname, mac) == 2) {
 				pclose(f);
@@ -202,24 +204,6 @@ void asp_psup(int argc, char **argv)
 		web_printf("%d", pidof(argv[0]) > 0);
 }
 
-#ifdef TOMATO64
-int get_cpucount()
-{
-	FILE *fd;
-	char buff[10];
-
-	system("/usr/bin/nproc > /tmp/cpucount");
-	fd = fopen("/tmp/cpucount", "r");
-	fgets(buff, sizeof(buff), fd);
-	if (strcmp(buff, "") != 0){
-		return atoi(buff);
-	}
-	else {
-		return 0;
-	}
-}
-#endif /* TOMATO64 */
-
 static int get_memory(meminfo_t *m)
 {
 	FILE *f;
@@ -227,7 +211,7 @@ static int get_memory(meminfo_t *m)
 	int ok = 0;
 
 	memset(m, 0, sizeof(*m));
-	if ((f = fopen("/proc/meminfo", "r")) != NULL) {
+	if ((f = fopen("/proc/meminfo", "r"))) {
 		while (fgets(s, sizeof(s), f)) {
 			if (strncmp(s, "MemTotal:", 9) == 0) {
 				m->total = strtoul(s + 12, NULL, 10) * 1024;
@@ -266,7 +250,7 @@ static int get_memory(meminfo_t *m)
 	return 1;
 }
 
-static char* get_cfeversion(char *buf)
+static char* get_cfeversion(char *buf, const size_t buf_sz)
 {
 	FILE *f;
 	char s[16] = "";
@@ -275,24 +259,22 @@ static char* get_cfeversion(char *buf)
 	char *cfe_version = nvram_get("cfe_version"); /* Ex.: Netgear R7000 cfe_version=v1.0.22 ; for FT mips and arm */
 	char *bl_version = nvram_get("bl_version"); /* Ex.: Asus RT-N18U bl_version=2.0.0.9 ; for FT mips and arm */
 
-	strcpy(buf, "");
+	memset(buf, 0, buf_sz);
 
 	/* check nvram first to speed up */
 	/* Asus */
 	if (bl_version != NULL) {
 		len = strlen(bl_version);
-		strncpy(s, bl_version, sizeof(s)-1);
-		s[sizeof(s)-1] = '\0';
+		strlcpy(s, bl_version, sizeof(s));
 	}
 	/* Netgear */
 	else if (cfe_version != NULL) {
 		len = strlen(cfe_version);
-		strncpy(s, cfe_version, sizeof(s)-1);
-		s[sizeof(s)-1] = '\0';
+		strlcpy(s, cfe_version, sizeof(s));
 	}
 	else {
 		/* get ASUS Bootloader version */
-		if ((netgear == NULL) && ((f = popen("strings /dev/mtd0ro | grep bl_version | cut -d '=' -f2", "r")) != NULL)) {
+		if ((netgear == NULL) && ((f = popen("strings /dev/mtd0ro | grep bl_version | cut -d '=' -f2", "r")))) {
 			if (fgets(s, 15, f) != NULL)
 				len = strlen(s);
 
@@ -301,7 +283,7 @@ static char* get_cfeversion(char *buf)
 
 		if (len == 0 && netgear != NULL && !strncmp(netgear, "U12H", 4)) { /* check for netgear router to speed up here! */
 			/* get NETGEAR CFE version */
-			if ((f = popen("strings /dev/mtd1ro | grep cfe_version | cut -d '=' -f2", "r")) != NULL) {
+			if ((f = popen("strings /dev/mtd1ro | grep cfe_version | cut -d '=' -f2", "r"))) {
 				if (fgets(s, 15, f) != NULL)
 					len = strlen(s);
 
@@ -311,9 +293,9 @@ static char* get_cfeversion(char *buf)
 	}
 
 	if (len == 0)
-		strcpy(buf, "--");
+		strlcpy(buf, "--", buf_sz);
 	else {
-		strcpy(buf, s);
+		strlcpy(buf, s, buf_sz);
 		buf[strcspn(buf, "\n")] = 0;
 	}
 
@@ -340,7 +322,7 @@ static void print_ipv6_infos(void) /* show IPv6 DUID and addresses: wan, dns, la
 		return;
 
 	/* DUID */
-	if ((fp = fopen(TOMATO_DUID_GUI, "r")) != NULL) {
+	if ((fp = fopen(TOMATO_DUID_GUI, "r"))) {
 		fgets(line, sizeof(line), fp);
 		web_printf("\tip6_duid: '%s',\n", line);
 		fclose(fp);
@@ -355,7 +337,7 @@ static void print_ipv6_infos(void) /* show IPv6 DUID and addresses: wan, dns, la
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		memset(buffer2, 0, sizeof(buffer2));
 		snprintf(buffer2, sizeof(buffer2), "lan%s_ipaddr", bridge);
@@ -468,7 +450,7 @@ mtd1: 007d0000 00010000 "linux"
 	char partname[17];
 	int found = 0;
 
-	if ((f = fopen("/proc/mtd", "r")) != NULL) {
+	if ((f = fopen("/proc/mtd", "r"))) {
 		while (fgets(s, sizeof(s), f)) {
 			if (sscanf(s, "%*s %X %*s %16s", &size, partname) != 2)
 				continue;
@@ -514,7 +496,7 @@ void asp_jiffies(int argc, char **argv)
 	char *f= NULL;
 
 	const char procstat[] = "/proc/stat";
-	if ((a = fopen(procstat, "r")) != NULL) {
+	if ((a = fopen(procstat, "r"))) {
 		fgets(sa, sizeof(sa), a);
 
 		e = sa;
@@ -543,7 +525,7 @@ void asp_etherstates(int argc, char **argv)
 
 		system("/usr/sbin/ethstate");
 		n = 0;
-		if ((f = fopen("/tmp/ethernet.state", "r")) != NULL) {
+		if ((f = fopen("/tmp/ethernet.state", "r"))) {
 			while (fgets(s, sizeof(s), f)) {
 				if (sscanf(s, "Port 0: %s", b) == 1)
 					a = "port0";
@@ -579,7 +561,7 @@ void asp_anonupdate(int argc, char **argv)
 		web_puts("\nanonupdate = {");
 
 		n = 0;
-		if ((f = fopen("/tmp/anon.version", "r")) != NULL) {
+		if ((f = fopen("/tmp/anon.version", "r"))) {
 			while (fgets(s, sizeof(s), f)) {
 				if (sscanf(s, "have_update=%s", b) == 1)
 					a = "update";
@@ -604,34 +586,30 @@ void asp_sysinfo(int argc, char **argv)
 	meminfo_t mem;
 
 	char system_type[64];
-	char cpu_model[64];
-	char bogomips[8];
-	char cpuclk[8];
+	char cpuclk[32];
 	char cfe_version[16];
-
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	char wl_tempsense[256];
 #endif
 
-//#ifdef TCONFIG_BCMARM
-#ifdef TOMATO64
+#ifdef TCONFIG_BCMARM
+	char cputemp[8];
 	char sa[64];
 	FILE *a;
 	char *e = NULL;
 	char *f= NULL;
 	const char procstat[] = "/proc/stat";
-	char cputemp[8];
 
-	get_cpuinfo(system_type, cpu_model, bogomips, cpuclk, cputemp);
+	get_cpuinfo(system_type, sizeof(system_type), cpuclk, sizeof(cpuclk), cputemp, sizeof(cputemp));
 #else
-	get_cpuinfo(system_type, cpu_model, bogomips, cpuclk);
+	get_cpuinfo(system_type, sizeof(system_type), cpuclk, sizeof(cpuclk));
 #endif
 
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	get_wl_tempsense(wl_tempsense, sizeof(wl_tempsense));
 #endif
 
-	get_cfeversion(cfe_version);
+	get_cfeversion(cfe_version, sizeof(cfe_version));
 
 	web_puts("\nsysinfo = {\n");
 
@@ -653,19 +631,13 @@ void asp_sysinfo(int argc, char **argv)
 	           "\tprocs: %d,\n"
 	           "\tflashsize: %d,\n"
 	           "\tsystemtype: '%s',\n"
-	           "\tcpumodel: '%s',\n"
-	           "\tbogomips: '%s',\n"
 	           "\tcpuclk: '%s',\n"
-//#ifdef TCONFIG_BCMARM
-#ifdef TOMATO64
+#ifdef TCONFIG_BCMARM
 	           "\tcputemp: '%s',\n"
 #endif
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	           "\twlsense: '%s',\n"
 #endif
-#ifdef TOMATO64
-	           "\tcpucount: '%d',\n"
-#endif /* TOMATO64 */
 	           "\tcfeversion: '%s'",
 	           si.uptime,
 	           reltime(si.uptime, s, sizeof(s)),
@@ -677,23 +649,17 @@ void asp_sysinfo(int argc, char **argv)
 	           si.procs,
 	           get_flashsize(),
 	           system_type,
-	           cpu_model,
-	           bogomips,
 	           cpuclk,
-//#ifdef TCONFIG_BCMARM
-#ifdef TOMATO64
+#ifdef TCONFIG_BCMARM
 	           cputemp,
 #endif
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	           wl_tempsense,
 #endif
-#ifdef TOMATO64
-		  get_cpucount(),
-#endif /* TOMATO64 */
 	           cfe_version);
 
 #ifdef TCONFIG_BCMARM
-	if ((a = fopen(procstat, "r")) != NULL) {
+	if ((a = fopen(procstat, "r"))) {
 		fgets(sa, sizeof(sa), a);
 		e = sa;
 		if ((e = strchr(sa, ' ')) != NULL)
@@ -727,7 +693,7 @@ void asp_activeroutes(int argc, char **argv)
 
 	web_puts("\nactiveroutes = [");
 	n = 0;
-	if ((f = fopen("/proc/net/route", "r")) != NULL) {
+	if ((f = fopen("/proc/net/route", "r"))) {
 		while (fgets(s, sizeof(s), f)) {
 			if (sscanf(s, "%16s%lx%lx%lx%*s%*s%u%lx", dev, &dest, &gateway, &flags, &metric, &mask) != 6)
 				continue;
@@ -736,20 +702,20 @@ void asp_activeroutes(int argc, char **argv)
 
 			if (dest != 0) {
 				ia.s_addr = dest;
-				strcpy(s_dest, inet_ntoa(ia));
+				strlcpy(s_dest, inet_ntoa(ia), sizeof(s_dest));
 			}
 			else
-				strcpy(s_dest, "default");
+				strlcpy(s_dest, "default", sizeof(s_dest));
 
 			if (gateway != 0) {
 				ia.s_addr = gateway;
-				strcpy(s_gateway, inet_ntoa(ia));
+				strlcpy(s_gateway, inet_ntoa(ia), sizeof(s_gateway));
 			}
 			else
-				strcpy(s_gateway, "*");
+				strlcpy(s_gateway, "*", sizeof(s_gateway));
 
 			ia.s_addr = mask;
-			strcpy(s_mask, inet_ntoa(ia));
+			strlcpy(s_mask, inet_ntoa(ia), sizeof(s_mask));
 			web_printf("%s['%s','%s','%s','%s',%u]", n ? "," : "", dev, s_dest, s_gateway, s_mask, metric);
 			++n;
 		}
@@ -762,7 +728,7 @@ void asp_activeroutes(int argc, char **argv)
 	struct sockaddr_in6 snaddr6;
 	char addr6[40], nhop6[40];
 
-	if ((ipv6_enabled()) && (f = fopen("/proc/net/ipv6_route", "r")) != NULL) {
+	if ((ipv6_enabled()) && ((f = fopen("/proc/net/ipv6_route", "r")))) {
 		while (fgets(s, sizeof(s), f)) {
 			if (sscanf(s, "%32s%x%*s%*s%32s%x%*s%*s%lx%s\n", addr6x + 14, &pxlen, addr6x + 40 + 7, &metric, &flags, dev) != 6)
 				continue;
@@ -788,13 +754,13 @@ void asp_activeroutes(int argc, char **argv)
 
 			inet_pton(AF_INET6, addr6x, (struct sockaddr *) &snaddr6.sin6_addr);
 			if (IN6_IS_ADDR_UNSPECIFIED(&snaddr6.sin6_addr))
-				strcpy(addr6, "default");
+				strlcpy(addr6, "default", sizeof(addr6));
 			else
 				inet_ntop(AF_INET6, &snaddr6.sin6_addr, addr6, sizeof(addr6));
 
 			inet_pton(AF_INET6, addr6x + 40, (struct sockaddr *) &snaddr6.sin6_addr);
 			if (IN6_IS_ADDR_UNSPECIFIED(&snaddr6.sin6_addr))
-				strcpy(nhop6, "*");
+				strlcpy(nhop6, "*", sizeof(nhop6));
 			else
 				inet_ntop(AF_INET6, &snaddr6.sin6_addr, nhop6, sizeof(nhop6));
 
@@ -843,7 +809,7 @@ void asp_mmcid(int argc, char **argv) {
 
 	web_puts("\nmmcid = {");
 	n = 0;
-	if ((f = fopen("/proc/mmc/status", "r")) != NULL) {
+	if ((f = fopen("/proc/mmc/status", "r"))) {
 		while (fgets(s, sizeof(s), f)) {
 			size = 1;
 			if (sscanf(s, "Card Type      : %16s", b) == 1)
@@ -887,9 +853,9 @@ void asp_wanup(int argc, char **argv)
 	char prefix[] = "wanXX";
 
 	if (argc > 0)
-		strcpy(prefix, argv[0]);
+		strlcpy(prefix, argv[0], sizeof(prefix));
 	else
-		strcpy(prefix, "wan");
+		strlcpy(prefix, "wan", sizeof(prefix));
 
 	web_puts(check_wanup(prefix) ? "1" : "0");
 }
@@ -902,9 +868,9 @@ void asp_wanstatus(int argc, char **argv)
 	char wanconn_file[64];
 
 	if (argc > 0)
-		strcpy(prefix, argv[0]);
+		strlcpy(prefix, argv[0], sizeof(prefix));
 	else
-		strcpy(prefix, "wan");
+		strlcpy(prefix, "wan", sizeof(prefix));
 
 	memset(renew_file, 0, 64);
 	snprintf(renew_file, sizeof(renew_file), "/var/lib/misc/%s_dhcpc.renewing", prefix);
@@ -930,9 +896,9 @@ void asp_link_uptime(int argc, char **argv)
 	char prefix[] = "wanXX";
 
 	if (argc > 0)
-		strcpy(prefix, argv[0]);
+		strlcpy(prefix, argv[0], sizeof(prefix));
 	else
-		strcpy(prefix, "wan");
+		strlcpy(prefix, "wan", sizeof(prefix));
 
 	buf[0] = '-';
 	buf[1] = 0;
@@ -982,9 +948,6 @@ void asp_statfs(int argc, char **argv)
 #if defined(TCONFIG_BCMARM) || defined(TCONFIG_BLINK)
 	    || (sf.f_type == 0x71736873)
 #endif
-#ifdef TOMATO64
-	    || (sf.f_type != 0xff534d42)
-#endif /* TOMATO64 */
 	) {
 		mnt = 0;
 		memset(&sf, 0, sizeof(sf));
@@ -1069,12 +1032,13 @@ void asp_dns(int argc, char **argv)
 	char prefix[] = "wanXX";
 
 	if (argc > 0)
-		strcpy(prefix, argv[0]);
+		strlcpy(prefix, argv[0], sizeof(prefix));
 	else
-		strcpy(prefix, "wan");
+		strlcpy(prefix, "wan", sizeof(prefix));
 
 	dns = get_dns(prefix); /* static buffer */
-	strcpy(s, "[");
+	memset(s, 0, sizeof(s));
+	strlcpy(s, "[", sizeof(s));
 	for (i = 0 ; i < dns->count; ++i)
 		snprintf(s + strlen(s), sizeof(s) - strlen(s), "%s'%s:%u'", i ? "," : "", inet_ntoa(dns->dns[i].addr), dns->dns[i].port);
 

@@ -41,7 +41,7 @@ Node *Node_new(char *ipaddr) {
 	Node *self;
 	if ((self = malloc(sizeof(Node))) != NULL) {
 		memset(self, 0, sizeof(Node));
-		strncpy(self->ipaddr, ipaddr, INET_ADDRSTRLEN);
+		strlcpy(self->ipaddr, ipaddr, INET_ADDRSTRLEN);
 		self->tcp_conn = 0;
 		self->udp_conn = 0;
 		//_dprintf("%s: new node ip=%s, sizeof(Node)=%d (bytes)\n", __FUNCTION__, self->ipaddr, sizeof(Node));

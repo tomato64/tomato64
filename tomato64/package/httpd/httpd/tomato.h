@@ -3,6 +3,8 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
  */
 
 
@@ -40,11 +42,10 @@ extern void common_redirect(void);
 extern char* get_wl_tempsense(char *buf, const size_t buf_sz);
 #endif
 #ifdef TCONFIG_BCMARM
-extern int get_cpuinfo(char *system_type, char *cpu_model, char *bogomips, char *cpuclk, char *cputemp);
+extern void get_cpuinfo(char *system_type, const size_t buf1_sz, char *cpuclk, const size_t buf2_sz, char *cputemp, const size_t buf3_sz);
 #else
-extern int get_cpuinfo(char *system_type, char *cpu_model, char *bogomips, char *cpuclk);
+extern void get_cpuinfo(char *system_type, const size_t buf1_sz, char *cpuclk, const size_t buf2_sz);
 #endif
-
 extern void resmsg_set(const char *msg);
 extern int resmsg_fread(const char *fname);
 

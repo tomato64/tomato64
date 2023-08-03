@@ -1,15 +1,19 @@
 /*
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
 
 #include "tomato.h"
 
 #include <sys/sysinfo.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
 
 void asp_dhcpc_time(int argc, char **argv)
 {
@@ -20,10 +24,10 @@ void asp_dhcpc_time(int argc, char **argv)
 	char buf[32];
 	char prefix[] = "wanXX";
 
-	if(argc > 0){
-		strcpy(prefix, argv[0]); } 
-	else{
-		strcpy(prefix, "wan"); }
+	if (argc > 0)
+		strlcpy(prefix, argv[0], sizeof(prefix));
+	else
+		strlcpy(prefix, "wan", sizeof(prefix));
 
 	char expires_file[256];
 	memset(expires_file, 0, 256);
@@ -47,18 +51,18 @@ void wo_dhcpc(char *url)
 {
 	char *p;
 	char *argv[] = { NULL, NULL, NULL };
-	int pid;
+	pid_t pid;
 
 	if ((p = webcgi_get("exec")) != NULL) {
-		if (strcmp(p, "release") == 0){
+		if (strcmp(p, "release") == 0)
 			argv[0] = "dhcpc-release";
-		}
-		else if (strcmp(p, "renew") == 0){
+		else if (strcmp(p, "renew") == 0)
 			argv[0] = "dhcpc-renew";
-		}
+
 		argv[1] = webcgi_get("prefix");
 		_eval(argv, NULL, 0, &pid);
 	}
+
 	common_redirect();
 }
 
@@ -66,10 +70,10 @@ void wo_dhcpd(char *url)
 {
 	char *p, *w, *m;
 	char *argv[5];
-	int pid;
+	pid_t pid;
 
 	if ((p = webcgi_get("remove")) != NULL) {
-		f_write_string("/var/tmp/dhcp/delete", p, FW_CREATE|FW_NEWLINE, 0666);
+		f_write_string("/var/tmp/dhcp/delete", p, FW_CREATE | FW_NEWLINE, 0666);
 		killall("dnsmasq", SIGUSR2);
 		f_wait_notexists("/var/tmp/dhcp/delete", 5);
 	}
@@ -82,5 +86,6 @@ void wo_dhcpd(char *url)
 		argv[4] = m;
 		_eval(argv, NULL, 0, &pid);
 	}
+
 	web_puts("{}");
 }

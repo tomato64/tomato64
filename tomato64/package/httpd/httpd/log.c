@@ -244,7 +244,7 @@ static void webmon_list(char *name, int webmon, int resolve, unsigned int maxcou
 						if (start > data)
 							start += 1;
 
-						strncpy(line, start, length);
+						strlcpy(line, start, length);
 						line[length] = '\0';
 						if (sscanf(line, "%lu\t%s\t%s", &time, ip, val) != 3)
 							continue;

@@ -2,6 +2,8 @@
  *
  * Tomato Firmware
  *
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
  */
 
 
@@ -72,101 +74,70 @@ int strncmp_ex(char *str1, char *str2)
 }
 
 #ifdef TCONFIG_BCMARM
-int get_cpuinfo(char *system_type, char *cpu_model, char *bogomips, char *cpuclk, char *cputemp)
+void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpuclk, const size_t buf_cpuclk_sz, char *cputemp, const size_t buf_cputemp_sz)
 #else
-int get_cpuinfo(char *system_type, char *cpu_model, char *bogomips, char *cpuclk)
+void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpuclk, const size_t buf_cpuclk_sz)
 #endif
 {
 	FILE *fd;
 	char *next;
 	char buff[1024];
 	char title[128], value[512];
-	int okcount = 0;
 
-	fd = fopen("/proc/cpuinfo", "r");
-	while (fgets(buff, sizeof(buff), fd)) {
-		next = buff;
-		strcpy(title, strsep(&next, ":"));
-		if (next == NULL)
-			continue;
+	memset(buff, 0, sizeof(buff));
+	if ((fd = fopen("/proc/cpuinfo", "r"))) {
+		while (fgets(buff, sizeof(buff), fd)) {
+			next = buff;
+			memset(title, 0, sizeof(title));
+			strlcpy(title, strsep(&next, ":"), sizeof(title));
+			if (next == NULL)
+				continue;
 
-		strcpy(value, next);
-		trim(value);
-#ifndef TOMATO64
+			memset(value, 0, sizeof(value));
+			strlcpy(value, next, sizeof(value));
+			trim(value);
 #ifdef TCONFIG_BCMARM
-		if (strncmp_ex(title, "Processor") == 0) {
+			if (strncmp_ex(title, "Processor") == 0) {
 #else
-		if (strncmp_ex(title, "system type") == 0) {
+			if (strncmp_ex(title, "system type") == 0) {
 #endif
-#endif /* TOMATO64 */
-
-#ifdef TOMATO64
-		if (strncmp_ex(title, "vendor_id") == 0) {
-#endif /* TOMATO64 */
-			okcount++;
 #ifndef TCONFIG_BCMARM
-			if (strncmp_ex(value, "Broadcom BCM5354") == 0)
-				strcpy(system_type, "Broadcom BCM5354");
-			else
+				if (strncmp_ex(value, "Broadcom BCM5354") == 0)
+					strlcpy(system_type, "Broadcom BCM5354", buf_system_type_sz);
+				else
 #endif
-				strcpy(system_type, value);
-		}
-#ifndef TOMATO64
-		if (strncmp_ex(title, "cpu model") == 0) {
-#endif /* TOMATO64 */
-#ifdef TOMATO64
-		if (strncmp_ex(title, "model name") == 0) {
-#endif /* TOMATO64 */
-			okcount++;
-			strcpy(cpu_model, value);
-		}
-#ifndef TOMATO64
-		if (strncmp_ex(title, "BogoMIPS") == 0) {
-#else
-		if (strncmp_ex(title, "cpu MHz") == 0) {
-#endif /* TOMATO64 */
-			okcount++;
-#ifndef TOMATO64
-			strcpy(bogomips, value);
-#else
-			snprintf(bogomips, sizeof(bogomips), "%s", value);
-#endif /* TOMATO64 */
-		}
+					strlcpy(system_type, value, buf_system_type_sz);
+			}
 #ifndef TCONFIG_BCMARM
-		if (strncmp_ex(title, "cpu MHz") == 0) {
-			okcount++;
-			strcpy(cpuclk, value);
-		}
+			if (strncmp_ex(title, "cpu MHz") == 0)
+				strlcpy(cpuclk, value, buf_cpuclk_sz);
 #endif
+		}
+		fclose(fd);
 	}
 
 #ifdef TCONFIG_BCMARM
+	memset(buff, 0, sizeof(buff));
 	system("/usr/sbin/sysinfo-helper");
-	fd = fopen("/tmp/sysinfo-helper", "r");
-	while (fgets(buff, sizeof(buff), fd)) {
-		next = buff;
-		strcpy(title, strsep(&next, ":"));
-		if (next == NULL)
-			continue;
+	if ((fd = fopen("/tmp/sysinfo-helper", "r"))) {
+		while (fgets(buff, sizeof(buff), fd)) {
+			next = buff;
+			memset(title, 0, sizeof(title));
+			strlcpy(title, strsep(&next, ":"), sizeof(title));
+			if (next == NULL)
+				continue;
 
-		strcpy(value, next);
-		trim(value);
-		if (strncmp_ex(title, "cpu MHz") == 0) {
-			okcount++;
-			strcpy(cpuclk, value);
+			memset(value, 0, sizeof(value));
+			strlcpy(value, next, sizeof(value));
+			trim(value);
+			if (strncmp_ex(title, "cpu MHz") == 0)
+					strlcpy(cpuclk, value, buf_cpuclk_sz);
+
+			if (strncmp_ex(title, "cpu Temp") == 0)
+				strlcpy(cputemp, value, buf_cputemp_sz);
 		}
-		if (strncmp_ex(title, "cpu Temp") == 0) {
-			okcount++;
-			strcpy(cputemp, value);
-		}
+		fclose(fd);
 	}
-	fclose(fd);
-
-	return (okcount == 4);
-#else
-	fclose(fd);
-
-	return (okcount == 3);
 #endif
 }
 
@@ -214,17 +185,17 @@ static void get_occupy (struct occupy *o)
 	unsigned int n;
 	char buff[1024];
 
-	fd = fopen("/proc/stat", "r");
-	fgets(buff, sizeof(buff), fd);
-
-	for (n = 0; n < cpu_num; n++) {
+	if ((fd = fopen("/proc/stat", "r"))) {
 		fgets(buff, sizeof(buff), fd);
-#ifdef TCONFIG_BCMARM
-		sscanf(buff, "%s %u %u %u %u %u %u %u", o[n].name, &o[n].user, &o[n].nice, &o[n].system, &o[n].idle, &o[n].io, &o[n].irq, &o[n].sirq);
-#else
-		sscanf(buff, "%s %u %u %u %u", o[n].name, &o[n].user, &o[n].nice, &o[n].system, &o[n].idle);
-#endif
-	}
 
-	fclose(fd);
+		for (n = 0; n < cpu_num; n++) {
+			fgets(buff, sizeof(buff), fd);
+#ifdef TCONFIG_BCMARM
+			sscanf(buff, "%s %u %u %u %u %u %u %u", o[n].name, &o[n].user, &o[n].nice, &o[n].system, &o[n].idle, &o[n].io, &o[n].irq, &o[n].sirq);
+#else
+			sscanf(buff, "%s %u %u %u %u", o[n].name, &o[n].user, &o[n].nice, &o[n].system, &o[n].idle);
+#endif
+		}
+		fclose(fd);
+	}
 }

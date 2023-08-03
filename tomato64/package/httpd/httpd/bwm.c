@@ -1,9 +1,11 @@
 /*
-
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "tomato.h"
@@ -153,7 +155,7 @@ void asp_netdev(int argc, char **argv)
 	exclude = nvram_safe_get("rstats_exclude");
 
 	web_puts("\n\nnetdev={");
-	if ((f = fopen("/proc/net/dev", "r")) != NULL) {
+	if ((f = fopen("/proc/net/dev", "r"))) {
 		fgets(buf, sizeof(buf), f); /* header */
 		fgets(buf, sizeof(buf), f); /* " */
 		comma = ' ';
@@ -176,7 +178,7 @@ void asp_netdev(int argc, char **argv)
 
 			/* skip down interfaces */
 			if (sfd >= 0) {
-				strcpy(ifr.ifr_name, ifname);
+				strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 				if (ioctl(sfd, SIOCGIFFLAGS, &ifr) != 0)
 					continue;
 				if ((ifr.ifr_flags & IFF_UP) == 0)
@@ -227,11 +229,11 @@ void asp_iptmon(int argc, char **argv) {
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		snprintf(name, sizeof(name), "/proc/net/ipt_account/lan%s", bridge);
 
-		if ((a = fopen(name, "r")) == NULL)
+		if (!(a = fopen(name, "r")))
 			continue;
 
 		if (!wholenetstatsline)
