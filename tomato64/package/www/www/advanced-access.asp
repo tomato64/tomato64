@@ -27,21 +27,21 @@ var la = new TomatoGrid();
 la.setup = function() {
 	this.init('la-grid', 'sort', 50, [
 	{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-	{ type: 'select', options: [[0, 'LAN0 (br0)'],[1, 'LAN1 (br1)'],[2, 'LAN2 (br2)'],[3, 'LAN3 (br3)']], prefix: '<div class="centered">', suffix: '<\/div>' },
+	{ type: 'select', options: [[0,'LAN0 (br0)'],[1,'LAN1 (br1)'],[2,'LAN2 (br2)'],[3,'LAN3 (br3)']], prefix: '<div class="centered">', suffix: '<\/div>' },
 	{ type: 'text', maxlen: 32 },
-	{ type: 'select', options: [[0, 'LAN0 (br0)'],[1, 'LAN1 (br1)'],[2, 'LAN2 (br2)'],[3, 'LAN3 (br3)']], prefix: '<div class="centered">', suffix: '<\/div>' },
+	{ type: 'select', options: [[0,'LAN0 (br0)'],[1,'LAN1 (br1)'],[2,'LAN2 (br2)'],[3,'LAN3 (br3)']], prefix: '<div class="centered">', suffix: '<\/div>' },
 	{ type: 'text', maxlen: 32 },
 	{ type: 'text', maxlen: 32 }]);
-	this.headerSet(['On', 'Src', 'Src Address', 'Dst', 'Dst Address', 'Description']);
+	this.headerSet(['On','Src','Src Address','Dst','Dst Address','Description']);
 
 	var r = nvram.lan_access.split('>');
 	for (var i = 0; i < r.length; ++i) {
-		if(r[i].length) {
+		if (r[i].length) {
 			var l = r[i].split('<');
 			l[0] *= 1;
 			l[1] *= 1;
 			l[3] *= 1;
-			la.insertData(-1, [ l[0], l[1], l[2], l[3], l[4], l[5] ] );
+			la.insertData(-1, [ l[0],l[1],l[2],l[3],l[4],l[5] ] );
 		}
 	}
 
@@ -57,18 +57,18 @@ la.sortCompare = function(a, b) {
 	var r;
 
 	switch (col) {
-	case 2:	// src
-	case 4:	// dst
-		r = cmpIP(da[col], db[col]);
-	break;
-	case 0:	// on
-	case 1: // src br
-	case 3:	// dst br
-		r = cmpInt(da[col], db[col]);
-	break;
-	default:
-		r = cmpText(da[col], db[col]);
-	break;
+		case 2: /* src */
+		case 4: /* dst */
+			r = cmpIP(da[col], db[col]);
+		break;
+		case 0: /* on */
+		case 1: /* src br */
+		case 3: /* dst br */
+			r = cmpInt(da[col], db[col]);
+		break;
+		default:
+			r = cmpText(da[col], db[col]);
+		break;
 	}
 
 	return this.sortAscending ? r : -r;
@@ -81,19 +81,17 @@ la.resetNewEditor = function() {
 	f[4].value='';
 	f[5].value='';
 	var total=0;
-	for (var i=0; i<= MAX_BRIDGE_ID; i++) {
+	for (var i = 0; i <= MAX_BRIDGE_ID; i++) {
 		var j = (i == 0) ? '' : i.toString();
-		if (nvram['lan' + j + '_ifname'].length < 1) {
-			f[1].options[i].disabled=true;
-			f[3].options[i].disabled=true;
-		} else {
+		if (nvram['lan'+j+'_ifname'].length < 1) {
+			f[1].options[i].disabled = 1;
+			f[3].options[i].disabled = 1;
+		} else
 			++total;
-		}
 	}
-	if((f[1].selectedIndex == f[3].selectedIndex) && (total > 1)) {
-		while (f[1].selectedIndex == f[3].selectedIndex) {
-			f[3].selectedIndex = (f[3].selectedIndex%(MAX_BRIDGE_ID+1)+1);
-		}
+	if ((f[1].selectedIndex == f[3].selectedIndex) && (total > 1)) {
+		while (f[1].selectedIndex == f[3].selectedIndex)
+			f[3].selectedIndex = (f[3].selectedIndex%(MAX_BRIDGE_ID + 1) + 1);
 	}
 	ferror.clearAll(fields.getAll(this.newEditor));
 }
@@ -101,15 +99,15 @@ la.resetNewEditor = function() {
 la.verifyFields = function(row, quiet) {
 	var f = fields.getAll(row);
 
-	for (var i=0; i<= MAX_BRIDGE_ID; i++) {
+	for (var i = 0; i <= MAX_BRIDGE_ID; i++) {
 		var j = (i == 0) ? '' : i.toString();
-		if (nvram['lan' + j + '_ifname'].length < 1) {
-			f[1].options[i].disabled=true;
-			f[3].options[i].disabled=true;
+		if (nvram['lan'+j+'_ifname'].length < 1) {
+			f[1].options[i].disabled = 1;
+			f[3].options[i].disabled = 1;
 		}
 	}
 
-	if(f[1].selectedIndex == f[3].selectedIndex) {
+	if (f[1].selectedIndex == f[3].selectedIndex) {
 		var m = 'Source and Destination interfaces must be different';
 		ferror.set(f[1], m, quiet);
 		ferror.set(f[3], m, quiet);
@@ -134,31 +132,16 @@ la.verifyFields = function(row, quiet) {
 }
 
 la.dataToView = function(data) {
-	return [(data[0] != 0) ? 'On' : '',
-			['LAN0', 'LAN1', 'LAN2', 'LAN3'][data[1]],
-			data[2],
-			['LAN0', 'LAN1', 'LAN2', 'LAN3'][data[3]],
-			data[4],
-			data[5] ];
+	return [(data[0] != 0) ? 'On' : 'Off', ['LAN0','LAN1','LAN2','LAN3'][data[1]],data[2],['LAN0','LAN1','LAN2','LAN3'][data[3]],data[4],data[5] ];
 }
 
 la.dataToFieldValues = function (data) {
-	return [(data[0] != 0) ? 'checked' : '',
-			data[1],
-			data[2],
-			data[3],
-			data[4],
-			data[5] ];
+	return [(data[0] != 0) ? 'checked' : '',data[1],data[2],data[3],data[4],data[5] ];
 }
 
 la.fieldValuesToData = function(row) {
 	var f = fields.getAll(row);
-	return [f[0].checked ? 1 : 0,
-			f[1].selectedIndex,
-			f[2].value,
-			f[3].selectedIndex,
-			f[4].value,
-			f[5].value ];
+	return [f[0].checked ? 1 : 0,f[1].selectedIndex,f[2].value,f[3].selectedIndex,f[4].value,f[5].value ];
 }
 
 function save() {
@@ -170,19 +153,18 @@ function save() {
 
 	var s = '';
 	for (var i = 0; i < ladata.length; ++i) {
-		s += ladata[i].join('<') + '>';
+		s += ladata[i].join('<')+'>';
 	}
 	fom.lan_access.value = s;
 
-	form.submit(fom, 0);
+	form.submit(fom, 1);
 }
 
 function init() {
 	la.setup();
 	var c;
-	if (((c = cookie.get(cprefix + '_notes_vis')) != null) && (c == '1')) {
-		toggleVisibility(cprefix, "notes");
-	}
+	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
+		toggleVisibility(cprefix, 'notes');
 }
 </script>
 </head>
@@ -201,7 +183,6 @@ function init() {
 <!-- / / / -->
 
 <input type="hidden" name="_nextpage" value="advanced-access.asp">
-<input type="hidden" name="_nextwait" value="10">
 <input type="hidden" name="_service" value="firewall-restart">
 <input type="hidden" name="lan_access">
 
