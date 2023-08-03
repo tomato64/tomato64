@@ -441,9 +441,8 @@ function submit_complete() {
 /* ZFS-BEGIN */
 				{ title: 'ZFS Custom Mounting', indent: 2, name: 'zfs_mount_script', type: 'textarea', value: nvram.zfs_mount_script },
 /* ZFS-END */
+				{ title: 'HDD Spindown', indent: 2, name: 'f_idle_enable', type: 'checkbox', suffix: '&nbsp; <small>Spin down each HDD when idle. No need to use with flash drive.<\/small>', value: nvram.idle_enable == 1 },
 			null,
-			{ title: 'HDD Spindown', name: 'f_idle_enable', type: 'checkbox',
-				suffix: '&nbsp; <small>Spin down each HDD when idle. No need to use with flash drive.<\/small>', value: nvram.idle_enable == 1 },
 			{ title: '3G/4G Modem Support', name: 'f_usb_3g', type: 'checkbox',
 				suffix: '&nbsp; <small>Before disconnecting Modem from USB port, remember to uncheck box. If modem used usbserial module, you have to reboot router before unplug modem.<\/small>', value: nvram.usb_3g == 1 },
 /* UPS-BEGIN */
