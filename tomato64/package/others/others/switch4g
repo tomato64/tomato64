@@ -5,7 +5,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 # - changes/fixes
 # - add support for rndis protocol
-# Copyright (C) 2018 - 2021 by pedro
+# Copyright (C) 2018 - 2023 by pedro
 #
 
 
@@ -520,7 +520,7 @@ isDiag() {
 
 searchDiag() {
 	DEVNR=""
-	local TTYS=""
+	local TTYS="" UQMIRET="" UQMIPID="" n
 	local PATHDEV
 
 	[ -z "$DEVICENAME" ] && DEVICENAME=$(ls -d /sys/class/net/$WAN/device/driver/*[0-9-:\.] | tr "\n" " " | sed -e "s/.*\/\//.*/g" -e "s/.*\///g" -e "s/:.*//g")
@@ -566,7 +566,7 @@ searchDiag() {
 		}
 
 		[ -n "$TTYS" ] && {
-			$LOGS "4G MODEM ready - DIAG(s) found ("$TTYS")"
+			$LOGS "4G MODEM ready - DIAG(s) found ($TTYS)"
 			echo $TTYS > $DIAGSFILE
 			DEVNR=$(echo "$TTYS" | cut -d " " -f1)
 			nvram set "$PREFIX"_modem_dev="$DEVNR"
@@ -577,12 +577,36 @@ searchDiag() {
 		TTYS=$(ls -d $PATHDIAG/$DEVICENAME/${DEVICENAME}*/usb:cdc-wdm?* 2>/dev/null | sed -e "s/.*\/\//.*/g" -e "s/.*://g")
 
 		[ -n "$TTYS" ] && {
-			TTYS="/dev/$TTYS"
-			$LOGS "4G MODEM ready - DIAG found ("$TTYS")"
-			echo $TTYS > $DIAGSFILE
-			DEVNR="$TTYS"
-			nvram set "$PREFIX"_modem_dev="$TTYS"
-			nvram set "$PREFIX"_modem_devicename="$DEVICENAME"
+			$LOGS "4G MODEM - DIAG(s) found ($TTYS)"
+
+			for n in $TTYS; do
+				DEVNR="/dev/$n"
+				uqmiCall "--get-capabilities" 2 # in background
+				sleep 2
+				UQMIPID=$(ps | grep [g]et-capabilities | cut -d ' ' -f1)
+				[ -n "$UQMIPID" ] && { # hangs?
+					DEVNR=""
+					kill -9 $UQMIPID
+					sleep 1
+				} || { # it works
+					UQMIRET=$(uqmiCall "--get-capabilities")
+
+					$LOGS "**** 4G MODEM - UQMIRET: $UQMIRET" # TEMP
+
+					case "$UQMIRET" in # final check
+					     *data_service*) break ;;
+					esac
+				}
+			done
+
+			TTYS=""
+			[ -n "$DEVNR" ] && {
+				TTYS="$DEVNR"
+				echo $TTYS > $DIAGSFILE
+				$LOGS "4G MODEM ready - working DIAG is ($TTYS)"
+				nvram set "$PREFIX"_modem_dev="$TTYS"
+				nvram set "$PREFIX"_modem_devicename="$DEVICENAME"
+			}
 		}
 	fi
 
@@ -590,10 +614,10 @@ searchDiag() {
 		[ "$(NV mwan_cktime)" -gt 0 ] && {
 			watchdog add
 			modemReset
-			wayOut "4G MODEM - DIAG not found - watchdog enabled"
+			wayOut "4G MODEM - DIAG(s) not found - watchdog enabled"
 		} || {
 			watchdog del
-			wayOut "4G MODEM - DIAG not found - connection process terminated!"
+			wayOut "4G MODEM - DIAG(s) not found - connection process terminated!"
 		}
 	}
 }
@@ -716,13 +740,14 @@ checkPid() {
 
 uqmiCall() {
 	# for now, it's the only way to prevent uqmi hangups on two different calls at the same time and on the same device: https://forum.openwrt.org/viewtopic.php?id=63559
-	local COUNT=1 COMMAND="$1" IS_ITCONN="$2"
-	[[ -z $IS_ITCONN ]] && IS_ITCONN=0
+	# OPTION: 1 - connect, 2 - background, no option - normal use
+	local COUNT=1 COMMAND="$1" OPTION="$2"
+	[[ -z $OPTION ]] && OPTION=0
 
 	# wait for another uqmi process to exit...
-	while [ "$COUNT" -lt 5 ]; do
+	while [ "$COUNT" -lt 7 ]; do
 		[ "$(ps | grep [u]qmi | grep "$DEVNR" | wc -l)" -eq 0 ] && {
-			[ "$IS_ITCONN" -eq 1 ] && {
+			if [ "$OPTION" -eq 1 ]; then
 				uqmi -s -d "$DEVNR" $COMMAND \
 					${APN:+--apn "$APN"} \
 					${PROFILE:+--profile $PROFILE} \
@@ -731,10 +756,13 @@ uqmiCall() {
 					${PASSWORD:+--password $PASSWORD} \
 					${AUTOCONNECT:+--autoconnect}
 				return
-			} || {
+			elif [ "$OPTION" -eq 2 ]; then
+				uqmi -s -d "$DEVNR" $COMMAND 1> /dev/null &
+				return
+			else
 				uqmi -s -d "$DEVNR" $COMMAND
 				return
-			}
+			fi
 		}
 		COUNT=$((COUNT+1))
 		sleep 1
