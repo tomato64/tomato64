@@ -571,6 +571,8 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 		curl_easy_setopt(curl_handle, CURLOPT_POST, 1L);
 	else if (!strcmp(req, "GET"))
 		curl_easy_setopt(curl_handle, CURLOPT_HTTPGET, 1L);
+	else if (!strcmp(req, "PUT"))
+		curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 1L);
 
 	for (trys = 4; trys > 0; --trys) {
 		r = curl_easy_perform(curl_handle);
@@ -622,7 +624,10 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 	if (n > (BLOB_SIZE - 512)) /* just don't go over 512 below... */
 		return -1;
 
-	snprintf(blob, BLOB_SIZE, "%s %s %s\r\nHost: %s\r\nUser-Agent: " AGENT "\r\nCache-Control: no-cache\r\n", req, query, httpv, host);
+	if (header)
+		snprintf(blob, BLOB_SIZE, "%s %s %s\r\nHost: %s\r\n", req, query, httpv, host);
+	else
+		snprintf(blob, BLOB_SIZE, "%s %s %s\r\nHost: %s\r\nUser-Agent: " AGENT "\r\nCache-Control: no-cache\r\n", req, query, httpv, host);
 
 	if (auth) {
 		memset(a, 0, sizeof(a));
@@ -1453,7 +1458,7 @@ static void update_cloudflare(int ssl)
 	char data[QUARTER_BLOB];
 
 	/* +opt */
-	snprintf(header, HALF_BLOB, "User-Agent: " AGENT "\r\nAuthorization: Bearer %s\r\nContent-Type: application/json\r\n", get_option_required("pass"));
+	snprintf(header, HALF_BLOB, "User-Agent: " AGENT "\r\nAuthorization: Bearer %s\r\nContent-Type: application/json\r\nCache-Control: no-cache", get_option_required("pass"));
 
 	zone = get_option_required("url");
 	host = get_option_required("host");
@@ -1466,10 +1471,8 @@ static void update_cloudflare(int ssl)
 	addr = get_address(1);
 	prox = get_option_onoff("wildcard", 0);
 	if (r == 1) {
-		if (get_option_onoff("backmx", 0)) {
-			//req = "POST";
+		if (get_option_onoff("backmx", 0))
 			snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records", zone);
-		}
 		else
 			error(M_INVALID_HOST);
 	}
@@ -1509,6 +1512,7 @@ static void update_cloudflare(int ssl)
 
 	r = http_req(ssl, 1, "api.cloudflare.com", req, query, header, 0, data, &body);
 	r = cloudflare_errorcheck(r, req, body);
+
 	if (r != 0)
 		error(M_UNKNOWN_ERROR__D, r);
 
