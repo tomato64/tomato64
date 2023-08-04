@@ -270,14 +270,15 @@ static int bound(char *ifname, int renew, char *prefix)
 static int renew(char *ifname, char *prefix)
 {
 	char *a;
-	int changed = 0, routes_changed = 0;
+	int changed = 0, changed_dns = 0, routes_changed = 0;
 	int wan_proto = get_wanx_proto(prefix);
-	char tmp[32];
+	char tmp[32], tmp2[32];
 
 	logmsg(LOG_DEBUG, "*** %s: interface=%s, wan_prefix=%s", __FUNCTION__, ifname, prefix);
 
 	do_renew_file(0, prefix);
 
+	/* check IP/Gateway/Netmask - change/new ? */
 	if ((env2nv("ip", strlcat_r(prefix, "_ipaddr", tmp, sizeof(tmp)))) ||
 	    (env2nv_gateway(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp)))) ||
 	    (wan_proto == WP_LTE && env2nv("subnet", strlcat_r(prefix, "_netmask", tmp, sizeof(tmp)))) ||
@@ -289,41 +290,49 @@ static int renew(char *ifname, char *prefix)
 	}
 
 	if ((wan_proto == WP_DHCP) || (wan_proto == WP_LTE)) {
-		changed |= env2nv("domain", strlcat_r(prefix, "_get_domain", tmp, sizeof(tmp)));
-		changed |= env2nv("dns", strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp)));
+		changed |= env2nv("domain", strlcat_r(prefix, "_get_domain", tmp, sizeof(tmp))); /* check Domain - change/new ? */
+		changed_dns |= env2nv("dns", strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp))); /* check DNS - change/new ? */
 	}
 
-	nvram_set(strlcat_r(prefix, "_routes1_save", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_routes1", tmp, sizeof(tmp))));
-	nvram_set(strlcat_r(prefix, "_routes2_save", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_routes2", tmp, sizeof(tmp))));
+	nvram_set(strlcat_r(prefix, "_routes1_save", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_routes1", tmp2, sizeof(tmp2)))); /* backup */
+	nvram_set(strlcat_r(prefix, "_routes2_save", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_routes2", tmp2, sizeof(tmp2))));
 
 	/* Classless Static Routes (option 121) or MS Classless Static Routes (option 249) */
 	if (getenv("staticroutes"))
-		routes_changed |= env2nv("staticroutes", strlcat_r(prefix, "_routes1_save", tmp, sizeof(tmp)));
+		routes_changed |= env2nv("staticroutes", strlcat_r(prefix, "_routes1_save", tmp, sizeof(tmp))); /* check for changes */
 	else
 		routes_changed |= env2nv("msstaticroutes", strlcat_r(prefix, "_routes1_save", tmp, sizeof(tmp)));
 	/* Static Routes (option 33) */
 	routes_changed |= env2nv("routes", strlcat_r(prefix, "_routes2_save", tmp, sizeof(tmp)));
-
-	changed |= routes_changed;
 
 	if ((a = getenv("lease")) != NULL) {
 		nvram_set(strlcat_r(prefix, "_lease", tmp, sizeof(tmp)), a);
 		expires(atoi(a), prefix);
 	}
 
-	if (changed) {
+	if (changed) { /* changed - part 1 of 2 */
 		set_host_domain_name();
 		stop_dnsmasq();
+	}
+
+	if (changed_dns) {
+		logmsg(LOG_DEBUG, "*** %s: DNS changed", __FUNCTION__);
+		dns_to_resolv(); /* dynamic update */
+	}
+
+	if (changed) { /* changed - part 2 of 2 */
+		logmsg(LOG_DEBUG, "*** %s: Domain changed", __FUNCTION__);
 		start_dnsmasq();
 	}
 
 	if (routes_changed) {
-		do_wan_routes(ifname, 0, 0, prefix);
-		nvram_set(strlcat_r(prefix, "_routes1", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_routes1_save", tmp, sizeof(tmp))));
-		nvram_set(strlcat_r(prefix, "_routes2", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_routes2_save", tmp, sizeof(tmp))));
-		do_wan_routes(ifname, 0, 1, prefix);
+		do_wan_routes(ifname, 0, 0, prefix); /* route delete old */
+		nvram_set(strlcat_r(prefix, "_routes1", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_routes1_save", tmp2, sizeof(tmp2)))); /* save changes and prepare for route add */
+		nvram_set(strlcat_r(prefix, "_routes2", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_routes2_save", tmp2, sizeof(tmp2))));
+		do_wan_routes(ifname, 0, 1, prefix); /* route add new */
 	}
-	nvram_unset(strlcat_r(prefix, "_routes1_save", tmp, sizeof(tmp)));
+
+	nvram_unset(strlcat_r(prefix, "_routes1_save", tmp, sizeof(tmp))); /* remove backup */
 	nvram_unset(strlcat_r(prefix, "_routes2_save", tmp, sizeof(tmp)));
 
 	return 0;
