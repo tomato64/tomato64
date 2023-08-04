@@ -96,11 +96,16 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 			memset(value, 0, sizeof(value));
 			strlcpy(value, next, sizeof(value));
 			trim(value);
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 			if (strncmp_ex(title, "Processor") == 0) {
 #else
 			if (strncmp_ex(title, "system type") == 0) {
 #endif
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+			if (strncmp_ex(title, "vendor_id") == 0) {
+#endif /* TOMATO64 */
 #ifndef TCONFIG_BCMARM
 				if (strncmp_ex(value, "Broadcom BCM5354") == 0)
 					strlcpy(system_type, "Broadcom BCM5354", buf_system_type_sz);
@@ -112,6 +117,10 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 			if (strncmp_ex(title, "cpu MHz") == 0)
 				strlcpy(cpuclk, value, buf_cpuclk_sz);
 #endif
+#ifdef TOMATO64
+			if (strncmp_ex(title, "cpu MHz") == 0)
+				strlcpy(cpuclk, value, buf_cpuclk_sz);
+#endif /* TOMATO64 */
 		}
 		fclose(fd);
 	}
@@ -130,8 +139,10 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 			memset(value, 0, sizeof(value));
 			strlcpy(value, next, sizeof(value));
 			trim(value);
+#ifndef TOMATO64
 			if (strncmp_ex(title, "cpu MHz") == 0)
 					strlcpy(cpuclk, value, buf_cpuclk_sz);
+#endif /* TOMATO64 */
 
 			if (strncmp_ex(title, "cpu Temp") == 0)
 				strlcpy(cputemp, value, buf_cputemp_sz);
@@ -140,6 +151,52 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 	}
 #endif
 }
+
+#ifdef TOMATO64
+void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
+{
+	FILE *fd;
+	char *next;
+	char buff[1024];
+	char title[128], value[512];
+
+	memset(buff, 0, sizeof(buff));
+	if ((fd = fopen("/proc/cpuinfo", "r"))) {
+		while (fgets(buff, sizeof(buff), fd)) {
+			next = buff;
+			memset(title, 0, sizeof(title));
+			strlcpy(title, strsep(&next, ":"), sizeof(title));
+			if (next == NULL)
+				continue;
+
+			memset(value, 0, sizeof(value));
+			strlcpy(value, next, sizeof(value));
+			trim(value);
+
+			if (strncmp_ex(title, "model name") == 0) {
+				strlcpy(cpumodel, value, buf_cpumodel_sz);
+			}
+		}
+		fclose(fd);
+	}
+}
+
+int get_cpucount()
+{
+	FILE *fd;
+	char buff[10];
+
+	system("/usr/bin/nproc > /tmp/cpucount");
+	fd = fopen("/tmp/cpucount", "r");
+	fgets(buff, sizeof(buff), fd);
+	if (strcmp(buff, "") != 0){
+		return atoi(buff);
+	}
+	else {
+		return 0;
+	}
+}
+#endif /* TOMATO64 */
 
 float get_cpupercent()
 {

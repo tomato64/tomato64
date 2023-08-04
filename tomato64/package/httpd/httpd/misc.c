@@ -585,6 +585,9 @@ void asp_sysinfo(int argc, char **argv)
 	char s[64];
 	meminfo_t mem;
 
+#ifdef TOMATO64
+	char cpu_model[64];
+#endif /* TOMATO64 */
 	char system_type[64];
 	char cpuclk[32];
 	char cfe_version[16];
@@ -604,6 +607,11 @@ void asp_sysinfo(int argc, char **argv)
 #else
 	get_cpuinfo(system_type, sizeof(system_type), cpuclk, sizeof(cpuclk));
 #endif
+
+#ifdef TOMATO64
+	get_cpumodel(cpu_model, sizeof(cpu_model));
+#endif /* TOMATO64 */
+
 
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	get_wl_tempsense(wl_tempsense, sizeof(wl_tempsense));
@@ -638,6 +646,10 @@ void asp_sysinfo(int argc, char **argv)
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	           "\twlsense: '%s',\n"
 #endif
+#ifdef TOMATO64
+	           "\tcpumodel: '%s',\n"
+	           "\tcpucount: '%d',\n"
+#endif /* TOMATO64 */
 	           "\tcfeversion: '%s'",
 	           si.uptime,
 	           reltime(si.uptime, s, sizeof(s)),
@@ -656,6 +668,10 @@ void asp_sysinfo(int argc, char **argv)
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	           wl_tempsense,
 #endif
+#ifdef TOMATO64
+	           cpu_model,
+	           get_cpucount(),
+#endif /* TOMATO64 */
 	           cfe_version);
 
 #ifdef TCONFIG_BCMARM

@@ -46,6 +46,10 @@ extern void get_cpuinfo(char *system_type, const size_t buf1_sz, char *cpuclk, c
 #else
 extern void get_cpuinfo(char *system_type, const size_t buf1_sz, char *cpuclk, const size_t buf2_sz);
 #endif
+#ifdef TOMATO64
+extern void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz);
+extern int get_cpucount();
+#endif /* TOMATO64 */
 extern void resmsg_set(const char *msg);
 extern int resmsg_fread(const char *fname);
 
