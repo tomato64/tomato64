@@ -163,7 +163,7 @@ function verifyFields(focused, quiet) {
 	a = ['_f_ipv6_dns1_lan', '_f_ipv6_dns2_lan']; /* optional IPv6 DNS Server address */
 	for (i = a.length - 1; i >= 0; --i) {
 		E(a[i]).disabled = !enable_ipv6_dns_lan;
-		PR(E(a[i])).style.display = (enable_ipv6_dns_lan ? 'table-row' : 'none');
+		PR(E(a[i])).style.display = ((enable_ipv6_dns_lan && (!nvram.ipv6_service == '')) ? 'table-row' : 'none');
 
 		if (enable_ipv6_dns_lan && (E(a[i]).value.length > 0) && (!v_ipv6_addr(a[i], quiet)))
 			return 0;
