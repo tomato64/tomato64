@@ -700,7 +700,7 @@ static void _do_wan_routes(char *ifname, char *nvname, int metric, int add)
 		char *ipaddr, *gateway, *nmask;
 
 		ipaddr = nmask = strsep(&tmp, " ");
-		strcpy(netmask, "255.255.255.255");
+		strlcpy(netmask, "255.255.255.255", sizeof(netmask));
 
 		if (nmask) {
 			ipaddr = strsep(&nmask, "/");
@@ -708,7 +708,7 @@ static void _do_wan_routes(char *ifname, char *nvname, int metric, int add)
 				bits = strtol(nmask, &nmask, 10);
 				if (bits >= 1 && bits <= 32) {
 					mask.s_addr = htonl(0xffffffff << (32 - bits));
-					strcpy(netmask, inet_ntoa(mask));
+					strlcpy(netmask, inet_ntoa(mask), sizeof(netmask));
 				}
 			}
 		}
@@ -901,10 +901,10 @@ void start_wan_if(char *prefix)
 		logmsg(LOG_INFO, "Try to increase WAN MTU up to 1500 for ISPs that support RFC 4638");
 
 		/* set parent device --> should be "eth0" */
-		strncpy(ifv.device1, wan_ifname, IFNAMSIZ);
+		strlcpy(ifv.device1, wan_ifname, IFNAMSIZ);
 		ifv.cmd = GET_VLAN_REALDEV_NAME_CMD;
 		if (ioctl(sd, SIOCGIFVLAN, &ifv) >= 0) {
-			strncpy(ifr.ifr_name, ifv.u.device2, IFNAMSIZ);
+			strlcpy(ifr.ifr_name, ifv.u.device2, IFNAMSIZ);
 			ifr.ifr_mtu = mtu + 8;
 
 			if (ioctl(sd, SIOCSIFMTU, &ifr)) {
@@ -916,7 +916,7 @@ void start_wan_if(char *prefix)
 		}
 
 		/* set wan device --> for example "vlan7" */
-		strncpy(ifr.ifr_name, wan_ifname, IFNAMSIZ);
+		strlcpy(ifr.ifr_name, wan_ifname, IFNAMSIZ);
 		ifr.ifr_mtu = mtu + 8;
 		if (ioctl(sd, SIOCSIFMTU, &ifr)) {
 			logerr(__FUNCTION__, __LINE__, wan_ifname);
@@ -1209,7 +1209,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 		sprintf(tmp, "%d", get_wan_unit(prefix));
 		nvram_set("wan_primary", tmp);
 		memset(pw, 0, sizeof(pw));
-		strncpy(pw, prefix, sizeof(pw));
+		strlcpy(pw, prefix, sizeof(pw));
 	}
 
 	wanup = check_wanup(prefix); /* is wan up? */

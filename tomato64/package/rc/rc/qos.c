@@ -30,44 +30,44 @@ const char disabled_classification_rules[] = "0<<-2<a<<0<<<<0<Default";
 void prep_qosstr(char *prefix)
 {
 	if (!strcmp(prefix, "wan")) {
-		strcpy(qosfn, "/etc/wan_qos");
+		strlcpy(qosfn, "/etc/wan_qos", sizeof(qosfn));
 		qos_wan_num = 1;
 		qos_rate_start_index = 0;
 #ifdef TCONFIG_BCMARM
-		strcpy(qosdev, "ifb0");
+		strlcpy(qosdev, "ifb0", sizeof(qosdev));
 #else
-		strcpy(qosdev, "imq0");
+		strlcpy(qosdev, "imq0", sizeof(qosdev));
 #endif
 	}
 	else if (!strcmp(prefix, "wan2")) {
-		strcpy(qosfn, "/etc/wan2_qos");
+		strlcpy(qosfn, "/etc/wan2_qos", sizeof(qosfn));
 		qos_wan_num = 2;
 		qos_rate_start_index = 10;
 #ifdef TCONFIG_BCMARM
-		strcpy(qosdev, "ifb1");
+		strlcpy(qosdev, "ifb1", sizeof(qosdev));
 #else
-		strcpy(qosdev, "imq1");
+		strlcpy(qosdev, "imq1", sizeof(qosdev));
 #endif
 	}
 #ifdef TCONFIG_MULTIWAN
 	else if (!strcmp(prefix, "wan3")) {
-		strcpy(qosfn, "/etc/wan3_qos");
+		strlcpy(qosfn, "/etc/wan3_qos", sizeof(qosfn));
 		qos_wan_num = 3;
 		qos_rate_start_index = 20;
 #ifdef TCONFIG_BCMARM
-		strcpy(qosdev, "ifb2");
+		strlcpy(qosdev, "ifb2", sizeof(qosdev));
 #else
-		strcpy(qosdev, "imq2");
+		strlcpy(qosdev, "imq2", sizeof(qosdev));
 #endif
 	}
 	else if (!strcmp(prefix, "wan4")) {
-		strcpy(qosfn, "/etc/wan4_qos");
+		strlcpy(qosfn, "/etc/wan4_qos", sizeof(qosfn));
 		qos_wan_num = 4;
 		qos_rate_start_index = 30;
 #ifdef TCONFIG_BCMARM
-		strcpy(qosdev, "ifb3");
+		strlcpy(qosdev, "ifb3", sizeof(qosdev));
 #else
-		strcpy(qosdev, "imq3");
+		strlcpy(qosdev, "imq3", sizeof(qosdev));
 #endif
 	}
 #endif /* TCONFIG_MULTIWAN */
@@ -232,7 +232,7 @@ void ipt_qos(void)
 
 		/* IPP2P/Layer7 */
 		memset(app, 0, sizeof(app));
-		if (ipt_ipp2p(ipp2p, app))
+		if (ipt_ipp2p(ipp2p, app, sizeof(app)))
 			v4v6_ok &= ~IPT_V6;
 		else
 			ipt_layer7(layer7, app);

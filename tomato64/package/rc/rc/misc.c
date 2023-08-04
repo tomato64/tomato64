@@ -207,7 +207,7 @@ void run_nvscript(const char *nv, const char *arg1, int wtime)
 	int check_dirs = 1;
 
 	if (nv[0] == '.')
-		strcpy(s, nv);
+		strlcpy(s, nv, sizeof(s));
 	else {
 		script = nvram_get(nv);
 
@@ -235,7 +235,7 @@ void run_nvscript(const char *nv, const char *arg1, int wtime)
 		else if (strncmp("sesx_", nv, 5) == 0)
 			s[5] = 0;
 		else if (strncmp("script_", nv, 7) == 0)
-			strcpy(&s[1], &nv[7]);
+			strlcpy(&s[1], &nv[7], sizeof(s));
 	}
 
 	if (nvram_match("userfiles_disable", "1"))
@@ -508,7 +508,7 @@ void set_mac(const char *ifname, const char *nvname, int plus)
 		return;
 	}
 
-	strcpy(ifr.ifr_name, ifname);
+	strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
 	up = 0;
 	if (ioctl(sfd, SIOCGIFFLAGS, &ifr) == 0) {

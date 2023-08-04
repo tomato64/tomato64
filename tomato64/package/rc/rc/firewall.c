@@ -161,7 +161,7 @@ void log_segfault(void)
 	f_write_string("/proc/sys/kernel/print-fatal-signals", (nvram_get_int("debug_logsegfault") ? "1" : "0"), 0, 0);
 }
 
-static int dmz_dst(char *s)
+static int dmz_dst(char *s, const size_t buf_sz)
 {
 	struct in_addr ia;
 	char *p;
@@ -176,25 +176,25 @@ static int dmz_dst(char *s)
 		return 0;
 
 	if (s)
-		strcpy(s, p);
+		strlcpy(s, p, buf_sz);
 
 	return 1;
 }
 
-void lan_ip(char *buffer, char *ret)
+void lan_ip(char *buffer, char *ret, const size_t buf_sz)
 {
 	char *nv, *p;
 	char s[32];
 
 	if ((nv = nvram_get(buffer)) != NULL) {
-		strcpy(s, nv);
+		strlcpy(s, nv, sizeof(s));
 		if ((p = strrchr(s, '.')) != NULL) {
 			*p = 0;
-			strcpy(ret, s);
+			strlcpy(ret, s, buf_sz);
 		}
 	}
 	else
-		strcpy(ret, "");
+		memset(ret, 0, buf_sz);
 }
 
 void ipt_log_unresolved(const char *addr, const char *addrtype, const char *categ, const char *name)
@@ -318,7 +318,7 @@ int ipt_dscp(const char *v, char *opt)
 	return 1;
 }
 
-int ipt_ipp2p(const char *v, char *opt)
+int ipt_ipp2p(const char *v, char *opt, const size_t buf_sz)
 {
 	int n = atoi(v);
 
@@ -327,7 +327,7 @@ int ipt_ipp2p(const char *v, char *opt)
 		return 0;
 	}
 
-	strcpy(opt, " -m ipp2p ");
+	strlcpy(opt, " -m ipp2p ", buf_sz);
 	if ((n & 0xFFF) == 0xFFF)
 		strcat(opt, "--ipp2p");
 	else {
@@ -477,7 +477,7 @@ static void ipt_account(void) {
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
 
@@ -1040,7 +1040,7 @@ static void nat_table(void)
 #endif
 	) {
 		memset(dst, 0, sizeof(dst));
-		if (dmz_dst(dst)) {
+		if (dmz_dst(dst, sizeof(dst))) {
 			strlcpy(t, nvram_safe_get("dmz_sip"), sizeof(t));
 			p = t;
 			do {
@@ -1423,7 +1423,7 @@ static void filter_forward(void)
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
 		if (strncmp(nvram_safe_get(lanN_ifname), "br", 2) == 0) {
@@ -1438,7 +1438,7 @@ static void filter_forward(void)
 				if (br2 != 0)
 					bridge2[0] += br2;
 				else
-					strcpy(bridge2, "");
+					memset(bridge2, 0, sizeof(bridge2));
 
 				snprintf(lanN_ifname2, sizeof(lanN_ifname2), "lan%s_ifname", bridge2);
 
@@ -1522,7 +1522,7 @@ static void filter_forward(void)
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
 		if (strncmp(nvram_safe_get(lanN_ifname), "br", 2) == 0)
@@ -1563,14 +1563,14 @@ static void filter_forward(void)
 			ip6t_forward();
 #endif
 		memset(dst, 0, sizeof(dst));
-		if (dmz_dst(dst)) {
+		if (dmz_dst(dst, sizeof(dst))) {
 			memset(dmz_ifname, 0, sizeof(dmz_ifname));
 			for (i = 0; i < BRIDGE_COUNT; i++) {
 				if (strcmp(lanface[i], "") != 0) { /* LAN is enabled */
 					memset(buffer, 0, sizeof(buffer));
 					snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
-					lan_ip(buffer, dmz1);
-					lan_ip("dmz_ipaddr", dmz2);
+					lan_ip(buffer, dmz1, sizeof(dmz1));
+					lan_ip("dmz_ipaddr", dmz2, sizeof(dmz2));
 
 					if (strcmp(dmz1, dmz2) == 0 && strcmp(lanface[i], "") != 0) {
 						strlcpy(dmz_ifname, lanface[i], sizeof(dmz_ifname));
@@ -2141,7 +2141,7 @@ int start_firewall(void)
 	sched_restrictions();
 	enable_ip_forward();
 
-	led(LED_DMZ, dmz_dst(NULL));
+	led(LED_DMZ, dmz_dst(NULL, 0));
 
 #ifdef TCONFIG_IPV6
 #ifndef TOMATO64

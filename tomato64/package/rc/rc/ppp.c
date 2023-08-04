@@ -61,7 +61,7 @@ int ipup_main(int argc, char **argv)
 	logmsg(LOG_DEBUG, "*** IN %s: IFNAME=%s DEVICE=%s LINKNAME=%s IPREMOTE=%s IPLOCAL=%s DNS1=%s DNS2=%s", __FUNCTION__, getenv("IFNAME"), getenv("DEVICE"), getenv("LINKNAME"), getenv("IPREMOTE"), getenv("IPLOCAL"), getenv("DNS1"), getenv("DNS2"));
 
 	wan_ifname = safe_getenv("IFNAME");
-	strcpy(prefix, safe_getenv("LINKNAME"));
+	strlcpy(prefix, safe_getenv("LINKNAME"), sizeof(prefix));
 	logmsg(LOG_DEBUG, "*** %s: wan_ifname = %s, prefix = %s.", __FUNCTION__, wan_ifname, prefix);
 
 	if ((!wan_ifname) || (!*wan_ifname))
@@ -156,7 +156,7 @@ int ipdown_main(int argc, char **argv)
 	if (!wait_action_idle(10))
 		return -1;
 
-	strcpy(prefix, safe_getenv("LINKNAME"));
+	strlcpy(prefix, safe_getenv("LINKNAME"), sizeof(prefix));
 
 	memset(ppplink_file, 0, 32);
 	sprintf(ppplink_file, "/tmp/ppp/%s_link", prefix);
@@ -247,7 +247,7 @@ int ip6up_main(int argc, char **argv)
 		return -1;
 
 	wan_ifname = safe_getenv("IFNAME");
-	strcpy(prefix, safe_getenv("LINKNAME"));
+	strlcpy(prefix, safe_getenv("LINKNAME"), sizeof(prefix));
 	logmsg(LOG_DEBUG, "*** %s: wan_ifname = %s, prefix = %s.", __FUNCTION__, wan_ifname, prefix);
 
 	if ((!wan_ifname) || (!*wan_ifname))
@@ -292,7 +292,7 @@ int pppevent_main(int argc, char **argv)
 	char prefix[] = "wanXX";
 	char ppplog_file[32];
 
-	strcpy(prefix, safe_getenv("LINKNAME"));
+	strlcpy(prefix, safe_getenv("LINKNAME"), sizeof(prefix));
 	int i;
 
 	for (i = 1; i < argc; ++i) {

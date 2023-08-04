@@ -823,15 +823,15 @@ void restart_wl(void)
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
-		strcpy(tmp, "lan");
+		strlcpy(tmp, "lan", sizeof(tmp));
 		strlcat(tmp, bridge, sizeof(tmp));
 		strlcat(tmp, "_ifname", sizeof(tmp));
 		lan_ifname = nvram_safe_get(tmp);
 
 		if (strncmp(lan_ifname, "br", 2) == 0) {
-			strcpy(tmp, "lan");
+			strlcpy(tmp, "lan", sizeof(tmp));
 			strlcat(tmp, bridge, sizeof(tmp));
 			strlcat(tmp, "_ifnames", sizeof(tmp));
 
@@ -980,14 +980,14 @@ void stop_lan_wl(void)
 		if (br !=0 )
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
-		strcpy(tmp, "lan");
+		strlcpy(tmp, "lan", sizeof(tmp));
 		strlcat(tmp, bridge, sizeof(tmp));
 		strlcat(tmp, "_ifname", sizeof(tmp));
 		lan_ifname = nvram_safe_get(tmp);
 
-		strcpy(tmp, "lan");
+		strlcpy(tmp, "lan", sizeof(tmp));
 		strlcat(tmp, bridge, sizeof(tmp));
 		strlcat(tmp, "_ifnames", sizeof(tmp));
 		if ((wl_ifnames = strdup(nvram_safe_get(tmp))) != NULL) {
@@ -1055,9 +1055,9 @@ void start_lan_wl(void)
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
-		strcpy(tmp, "lan");
+		strlcpy(tmp, "lan", sizeof(tmp));
 		strlcat(tmp, bridge, sizeof(tmp));
 		strlcat(tmp, "_ifname", sizeof(tmp));
 		lan_ifname = nvram_safe_get(tmp);
@@ -1071,12 +1071,12 @@ void start_lan_wl(void)
 			}
 #endif
 #endif /* TOMATO64 */
-			strcpy(tmp, "lan");
+			strlcpy(tmp, "lan", sizeof(tmp));
 			strlcat(tmp, bridge, sizeof(tmp));
 			strlcat(tmp, "_ipaddr", sizeof(tmp));
 			inet_aton(nvram_safe_get(tmp), (struct in_addr *)&ip);
 
-			strcpy(tmp, "lan");
+			strlcpy(tmp, "lan", sizeof(tmp));
 			strlcat(tmp, bridge, sizeof(tmp));
 			strlcat(tmp, "_ifnames", sizeof(tmp));
 
@@ -1173,7 +1173,7 @@ void stop_wireless(void) {
 	char prefix[] = "wanXX";
 
 	stop_nas();
-	if (get_sta_wan_prefix(prefix)) { /* wl client will be down */
+	if (get_sta_wan_prefix(prefix, sizeof(prefix))) { /* wl client will be down */
 		logmsg(LOG_INFO, "wireless client WAN: stopping %s (WL down)", prefix);
 		stop_wan_if(prefix);
 	}
@@ -1209,7 +1209,7 @@ void start_wireless(void) {
 	    ret &&
 #endif
 #endif /* TOMATO64 */
-	    get_sta_wan_prefix(prefix)) { /* wl client up again */
+	    get_sta_wan_prefix(prefix, sizeof(prefix))) { /* wl client up again */
 		logmsg(LOG_INFO, "wireless client WAN: starting %s (WL up)", prefix);
 		start_wan_if(prefix);
 		sleep(5);
@@ -1583,12 +1583,12 @@ void start_lan(void)
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		if ((sfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
 			return;
 
-		strcpy(tmp, "lan");
+		strlcpy(tmp, "lan", sizeof(tmp));
 		strlcat(tmp, bridge, sizeof(tmp));
 		strlcat(tmp, "_ifname", sizeof(tmp));
 		lan_ifname = strdup(nvram_safe_get(tmp));
@@ -1598,7 +1598,7 @@ void start_lan(void)
 
 			eval("brctl", "addbr", lan_ifname);
 			eval("brctl", "setfd", lan_ifname, "0");
-			strcpy(tmp, "lan");
+			strlcpy(tmp, "lan", sizeof(tmp));
 			strlcat(tmp, bridge, sizeof(tmp));
 			strlcat(tmp, "_stp", sizeof(tmp));
 			eval("brctl", "stp", lan_ifname, nvram_safe_get(tmp));
@@ -1612,7 +1612,7 @@ void start_lan(void)
 #endif
 #endif /* TOMATO64 */
 
-			strcpy(tmp, "lan");
+			strlcpy(tmp, "lan", sizeof(tmp));
 			strlcat(tmp, bridge, sizeof(tmp));
 			strlcat(tmp, "_ipaddr", sizeof(tmp));
 			inet_aton(nvram_safe_get(tmp), (struct in_addr *)&ip);
@@ -1620,7 +1620,7 @@ void start_lan(void)
 			hwaddrset = 0;
 			sta = 0;
 
-			strcpy(tmp, "lan");
+			strlcpy(tmp, "lan", sizeof(tmp));
 			strlcat(tmp, bridge, sizeof(tmp));
 			strlcat(tmp, "_ifnames", sizeof(tmp));
 			if ((lan_ifnames = strdup(nvram_safe_get(tmp))) != NULL) {
@@ -1786,7 +1786,7 @@ void start_lan(void)
 
 		/* Get current LAN hardware address */
 		strlcpy(ifr.ifr_name, lan_ifname, IFNAMSIZ);
-		strcpy(tmp, "lan");
+		strlcpy(tmp, "lan", sizeof(tmp));
 		strlcat(tmp, bridge, sizeof(tmp));
 		strlcat(tmp, "_hwaddr", sizeof(tmp));
 		if (ioctl(sfd, SIOCGIFHWADDR, &ifr) == 0) {
@@ -1799,10 +1799,10 @@ void start_lan(void)
 		set_et_qos_mode();
 
 		/* bring up and configure LAN interface */
-		strcpy(tmp, "lan");
+		strlcpy(tmp, "lan", sizeof(tmp));
 		strlcat(tmp, bridge, sizeof(tmp));
 		strlcat(tmp, "_ipaddr", sizeof(tmp));
-		strcpy(tmp2, "lan");
+		strlcpy(tmp2, "lan", sizeof(tmp2));
 		strlcat(tmp2, bridge, sizeof(tmp2));
 		strlcat(tmp2, "_netmask", sizeof(tmp2));
 		ifconfig(lan_ifname, IFUP | IFF_ALLMULTI, nvram_safe_get(tmp), nvram_safe_get(tmp2));
@@ -1874,16 +1874,16 @@ void stop_lan(void)
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
-		strcpy(tmp, "lan");
+		strlcpy(tmp, "lan", sizeof(tmp));
 		strlcat(tmp, bridge, sizeof(tmp));
 		strlcat(tmp, "_ifname", sizeof(tmp));
 		lan_ifname = nvram_safe_get(tmp);
 		ifconfig(lan_ifname, 0, NULL, NULL);
 
 		if (strncmp(lan_ifname, "br", 2) == 0) {
-			strcpy(tmp, "lan");
+			strlcpy(tmp, "lan", sizeof(tmp));
 			strlcat(tmp, bridge, sizeof(tmp));
 			strlcat(tmp, "_ifnames", sizeof(tmp));
 			if ((lan_ifnames = strdup(nvram_safe_get(tmp))) != NULL) {
@@ -2145,7 +2145,7 @@ int wl_send_dif_event(const char *ifname, uint32 event)
 	/* Init the message contents to send to eapd. Specify the interface
 	 * and the event that occured on the interface.
 	 */
-	strncpy(data, ifname, IFNAMSIZ);
+	strlcpy(data, ifname, IFNAMSIZ);
 	*(uint32 *)(data + IFNAMSIZ) = event;
 	len = IFNAMSIZ + sizeof(uint32);
 

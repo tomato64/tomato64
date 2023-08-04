@@ -171,7 +171,7 @@ extern void do_wan_routes(char *ifname, int metric, int add, char *prefix);
 extern void preset_wan(char *ifname, char *gw, char *netmask, char *prefix);
 
 /* mwan.c */
-extern int get_sta_wan_prefix(char *sPrefix);
+extern int get_sta_wan_prefix(char *sPrefix, const size_t buf_sz);
 extern void get_wan_info(char *sPrefix);
 extern void mwan_table_add(char *sPrefix);
 extern void mwan_table_del(char *sPrefix);
@@ -371,7 +371,7 @@ extern void ip6t_write(const char *format, ...);
 extern void ipt_log_unresolved(const char *addr, const char *addrtype, const char *categ, const char *name);
 extern int ipt_addr(char *addr, int maxlen, const char *s, const char *dir, int af, int strict, const char *categ, const char *name);
 extern int ipt_dscp(const char *v, char *opt);
-extern int ipt_ipp2p(const char *v, char *opt);
+extern int ipt_ipp2p(const char *v, char *opt, const size_t buf_sz);
 extern int ipt_layer7(const char *v, char *opt);
 #define ipt_source_strict(s, src, categ, name) ipt_addr(src, 64, s, "src", IPT_V4, 1, categ, name)
 #define ipt_source(s, src, categ, name) ipt_addr(src, 64, s, "src", IPT_V4, 0, categ, name)

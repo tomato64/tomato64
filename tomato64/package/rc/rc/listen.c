@@ -85,7 +85,7 @@ static int read_interface(const char *interface, int *ifindex, unsigned char *ma
 
 	r = -1;
 	ifr.ifr_addr.sa_family = AF_INET;
-	strcpy(ifr.ifr_name, interface);
+	strlcpy(ifr.ifr_name, interface, sizeof(ifr.ifr_name));
 
 	if (ioctl(fd, SIOCGIFINDEX, &ifr) == 0) {
 		*ifindex = ifr.ifr_ifindex;
@@ -328,7 +328,7 @@ int listen_main(int argc, char *argv[])
 		usage_exit(argv[0], "<interface> <wanN>");
 
 	interface = argv[1];
-	strcpy(prefix, argv[2]);
+	strlcpy(prefix, argv[2], sizeof(prefix));
 
 	printf("Starting listen on %s ...", interface);
 

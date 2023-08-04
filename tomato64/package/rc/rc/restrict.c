@@ -235,7 +235,7 @@ void ipt_restrictions(void)
 		if (strlen(p) >= sizeof(buf))
 			continue;
 
-		strcpy(buf, p);
+		strlcpy(buf, p, sizeof(buf));
 
 		/* q = 0/1, p = time (ignored), http file match */
 		if ((vstrsep(buf, "|", &q, &p, &p, &p, &comps, &matches, &http, &p) < 8) || (*q != '1'))
@@ -280,7 +280,7 @@ void ipt_restrictions(void)
 
 			/* p2p, layer7 */
 			memset(app, 0, sizeof(app));
-			if (!ipt_ipp2p(ipp2p, app)) {
+			if (!ipt_ipp2p(ipp2p, app, sizeof(app))) {
 				if (ipt_layer7(layer7, app) == -1)
 					continue;
 			}
@@ -360,7 +360,7 @@ void ipt_restrictions(void)
 		if (http_file & 1)
 			strcat(app, ".ocx$ .cab$ ");
 		if (http_file & 2)
-			strcpy(app, ".swf$ ");
+			strlcpy(app, ".swf$ ", sizeof(app));
 		if (http_file & 4)
 			strcat(app, ".class$ .jar$");
 

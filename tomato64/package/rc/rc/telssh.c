@@ -28,7 +28,7 @@ void create_passwd(void)
 	char *smbd_user;
 #endif
 
-	strcpy(salt, "$1$");
+	strlcpy(salt, "$1$", sizeof(salt));
 	f_read("/dev/urandom", s, 6);
 	base64_encode(s, salt + 3, 6);
 	salt[3 + 8] = 0;

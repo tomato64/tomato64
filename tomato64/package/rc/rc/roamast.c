@@ -140,12 +140,12 @@ void rast_init_bssinfo(void)
 #endif
 
 	foreach(ifname, nvram_safe_get("wl_ifnames"), next) {
-		strncpy(bssinfo[idx].wlif_name, ifname, 32);
+		strlcpy(bssinfo[idx].wlif_name, ifname, 32);
 		bssinfo[idx].user_low_rssi = 0;
 #ifdef TCONFIG_BCMARM
 		bssinfo[idx].idle_rate = rate;
 #endif
-		strncpy(bssinfo[idx].prefix, "", 32);
+		strlcpy(bssinfo[idx].prefix, "", 32);
 		for (idxList=0; idxList < MAX_SUBIF_NUM; idxList++) bssinfo[idx].assoclist[idxList] = NULL;
 
 		int ret, unit;
@@ -283,7 +283,7 @@ void rast_deauth_sta(int bssidx, int vifidx, rast_sta_info_t *sta)
 	if (vifidx > 0)
 		sprintf(wlif_name, "wl%d.%d", bssidx, vifidx);
 	else
-		strcpy(wlif_name, bssinfo[bssidx].wlif_name);
+		strlcpy(wlif_name, bssinfo[bssidx].wlif_name, sizeof(wlif_name));
 
 #if 0
 	RAST_INFO("DEAUTHENTICATE ["MACF"] from %s\n", ETHER_TO_MACF(sta->addr), wlif_name);
@@ -406,10 +406,10 @@ void rast_retrieve_bs_data(int bssidx, int vifidx)
 	if (vifidx > 0)
 		sprintf(wlif_name, "wl%d.%d", bssidx, vifidx);
 	else
-		strcpy(wlif_name, bssinfo[bssidx].wlif_name);
+		strlcpy(wlif_name, bssinfo[bssidx].wlif_name, sizeof(wlif_name));
 
 	memset(ioctl_buf, 0, sizeof(ioctl_buf));
-	strcpy(ioctl_buf, "bs_data");
+	strlcpy(ioctl_buf, "bs_data", sizeof(ioctl_buf));
 	ret = wl_ioctl(wlif_name, WLC_GET_VAR, ioctl_buf, sizeof(ioctl_buf));
 	if (ret < 0) {
 		return;
@@ -485,7 +485,7 @@ void rast_update_sta_info(int bssidx, int vifidx)
 	if (vifidx > 0)
 		sprintf(wlif_name, "wl%d.%d", bssidx, vifidx);
 	else
-		strcpy(wlif_name, bssinfo[bssidx].wlif_name);
+		strlcpy(wlif_name, bssinfo[bssidx].wlif_name, sizeof(wlif_name));
 
 	mac_list_size = sizeof(mac_list->count) + MAX_STA_COUNT * sizeof(struct ether_addr);
 	mac_list = malloc(mac_list_size);
@@ -496,7 +496,7 @@ void rast_update_sta_info(int bssidx, int vifidx)
 	memset(mac_list, 0, mac_list_size);
 
 	/* query authentication sta list */
-	strcpy((char*) mac_list, "authe_sta_list");
+	strlcpy((char*) mac_list, "authe_sta_list", sizeof(mac_list));
 	if (wl_ioctl(wlif_name, WLC_GET_VAR, mac_list, mac_list_size))
 		goto exit;
 

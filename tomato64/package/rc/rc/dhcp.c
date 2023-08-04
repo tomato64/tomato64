@@ -345,25 +345,25 @@ int dhcpc_event_main(int argc, char **argv)
 	char prefix[] = "wanXX";
 
 	if (nvram_match("wan_ifname", ifname))
-		strcpy(prefix, "wan");
+		strlcpy(prefix, "wan", sizeof(prefix));
 	else if (nvram_match("wan_iface", ifname))
-		strcpy(prefix, "wan");
+		strlcpy(prefix, "wan", sizeof(prefix));
 	else if (nvram_match("wan2_ifname", ifname))
-		strcpy(prefix, "wan2");
+		strlcpy(prefix, "wan2", sizeof(prefix));
 	else if (nvram_match("wan2_iface", ifname))
-		strcpy(prefix, "wan2");
+		strlcpy(prefix, "wan2", sizeof(prefix));
 #ifdef TCONFIG_MULTIWAN
 	else if (nvram_match("wan3_ifname", ifname))
-		strcpy(prefix, "wan3");
+		strlcpy(prefix, "wan3", sizeof(prefix));
 	else if (nvram_match("wan3_iface", ifname))
-		strcpy(prefix, "wan3");
+		strlcpy(prefix, "wan3", sizeof(prefix));
 	else if (nvram_match("wan4_ifname", ifname))
-		strcpy(prefix, "wan4");
+		strlcpy(prefix, "wan4", sizeof(prefix));
 	else if (nvram_match("wan4_iface", ifname))
-		strcpy(prefix, "wan4");
+		strlcpy(prefix, "wan4", sizeof(prefix));
 #endif
 	else
-		strcpy(prefix, "wan");
+		strlcpy(prefix, "wan", sizeof(prefix));
 
 	if (!wait_action_idle(10))
 		return 0;
@@ -388,9 +388,9 @@ int dhcpc_release_main(int argc, char **argv)
 	char pid_file[64];
 
 	if (argc > 1)
-		strcpy(prefix, argv[1]);
+		strlcpy(prefix, argv[1], sizeof(prefix));
 	else
-		strcpy(prefix, "wan");
+		strlcpy(prefix, "wan", sizeof(prefix));
 
 	logmsg(LOG_DEBUG, "*** %s: argc=%d wan_prefix=%s", __FUNCTION__, argc, prefix);
 
@@ -422,9 +422,9 @@ int dhcpc_renew_main(int argc, char **argv)
 	char pid_file[64];
 
 	if (argc > 1)
-		strcpy(prefix, argv[1]);
+		strlcpy(prefix, argv[1], sizeof(prefix));
 	else
-		strcpy(prefix, "wan");
+		strlcpy(prefix, "wan", sizeof(prefix));
 
 	logmsg(LOG_DEBUG, "*** %s: argc=%d wan_prefix=%s", __FUNCTION__, argc, prefix);
 
@@ -644,7 +644,7 @@ void start_dhcpc_lan(void)
 
 	memset(tmp, 0, sizeof(tmp));
 	if (nvram_invmatch("wan_hostname", "")) {
-		strcpy(tmp, "-x hostname:");
+		strlcpy(tmp, "-x hostname:", sizeof(tmp));
 		strcat(tmp, nvram_safe_get("wan_hostname"));
 	}
 
@@ -701,7 +701,7 @@ void start_dhcpc(char *prefix)
 
 	memset(tmp, 0, sizeof(tmp));
 	if (nvram_invmatch("wan_hostname", "")) {
-		strcpy(tmp, "-x hostname:");
+		strlcpy(tmp, "-x hostname:", sizeof(tmp));
 		strcat(tmp, nvram_safe_get("wan_hostname"));
 	}
 

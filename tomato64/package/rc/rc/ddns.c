@@ -106,7 +106,7 @@ static void update(int num, int *dirty, int force)
 	}
 
 	if ((ip[0] != '@') && (inet_addr(ip) == (in_addr_t) - 1)) {
-		strcpy(ip, get_wanip(prefix));
+		strlcpy(ip, get_wanip(prefix), sizeof(ip));
 		logmsg(LOG_DEBUG, "*** %s: inet_addr ip: %s", __FUNCTION__, ip);
 	}
 

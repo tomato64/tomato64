@@ -30,7 +30,7 @@ static const char *leaf_qdisc = "sfq perturb 10";
 #define IP_RANGE	2
 
 
-void address_checker (int *address_type, char *ipaddr_old, char *ipaddr)
+void address_checker(int *address_type, char *ipaddr_old, char *ipaddr, const size_t buf_sz)
 {
 	char *second_part, *last_dot;
 	int length_to_minus, length_to_dot;
@@ -41,15 +41,16 @@ void address_checker (int *address_type, char *ipaddr_old, char *ipaddr)
 		*address_type = IP_RANGE;
 		if (strchr(second_part + 1, '.') != NULL)
 			/* long notation */
-			strcpy(ipaddr, ipaddr_old);
+			strlcpy(ipaddr, ipaddr_old, buf_sz);
 		else {
 			/* short notation */
 			last_dot = strrchr(ipaddr_old, '.');
 			length_to_minus = second_part - ipaddr_old;
 			length_to_dot = last_dot - ipaddr_old;
-			strncpy(ipaddr, ipaddr_old, length_to_minus + 1);
-			strncpy(ipaddr + length_to_minus + 1, ipaddr, length_to_dot + 1);
-			strcpy(ipaddr + length_to_minus + length_to_dot + 2, second_part + 1); 
+
+			strlcpy(ipaddr, ipaddr_old, length_to_minus + 2);
+			strlcpy(ipaddr + length_to_minus + 1, ipaddr, length_to_dot + 2);
+			strlcpy(ipaddr + length_to_minus + length_to_dot + 2, second_part + 1, buf_sz - length_to_minus - length_to_dot - 2);
 		}
 	}
 	else {
@@ -61,7 +62,7 @@ void address_checker (int *address_type, char *ipaddr_old, char *ipaddr)
 			/* MAC ADDRESS */
 			*address_type = MAC_ADDRESS;
 
-		strcpy(ipaddr, ipaddr_old);
+		strlcpy(ipaddr, ipaddr_old, buf_sz);
 	}
 }
 
@@ -75,7 +76,7 @@ void ipt_bwlimit(int chain)
 	char seq[32];			/* mark number */
 	int iSeq = 1;
 	char *ipaddr_old;
-	char ipaddr[30];		/* ip address */
+	char ipaddr[32];		/* ip address */
 	char *dlrate, *dlceil;		/* guaranteed rate & maximum rate for download */
 	char *ulrate, *ulceil;		/* guaranteed rate & maximum rate for upload */
 	char *priority;			/* priority */
@@ -180,7 +181,7 @@ void ipt_bwlimit(int chain)
 		if ((p = strsep(&g, ">")) == NULL)
 			break;
 
-		strcpy(p1, p);
+		strlcpy(p1, p, sizeof(p1));
 		i = vstrsep(p, "<", &enabled, &ipaddr_old, &dlrate, &dlceil, &ulrate, &ulceil, &priority, &tcplimit, &udplimit, &description);
 		if (i < 10) {
 			i = vstrsep(p1, "<", &ipaddr_old, &dlrate, &dlceil, &ulrate, &ulceil, &priority, &tcplimit, &udplimit); /* compat */
@@ -196,13 +197,13 @@ void ipt_bwlimit(int chain)
 		if (!strcmp(ipaddr_old, ""))
 			continue;
 		
-		address_checker(&address_type, ipaddr_old, ipaddr);
+		address_checker(&address_type, ipaddr_old, ipaddr, sizeof(ipaddr));
 		memset(seq, 0, sizeof(seq));
 		sprintf(seq, "0x%x/0xff00000", iSeq << 20);
 		iSeq++;
 
 		if (!strcmp(dlceil, ""))
-			strcpy(dlceil, dlrate);
+			*dlceil = *dlrate;
 
 		if (strcmp(dlrate, "") && strcmp(dlceil, "")) {
 			if (chain == 1) {
@@ -213,14 +214,14 @@ void ipt_bwlimit(int chain)
 					case MAC_ADDRESS:
 						break;
 					case IP_RANGE:
-						ipt_write("-A POSTROUTING ! -s %s/%s -m iprange --dst-range  %s -j MARK --set-mark %s\n", lanipaddr, lanmask, ipaddr, seq);
+						ipt_write("-A POSTROUTING ! -s %s/%s -m iprange --dst-range %s -j MARK --set-mark %s\n", lanipaddr, lanmask, ipaddr, seq);
 						break;
 				}
 			}
 		}
 
 		if (!strcmp(ulceil, ""))
-			strcpy(ulceil, ulrate);
+			*ulceil = *ulrate;
 
 		if (strcmp(ulrate, "") && strcmp(ulceil, "")) {
 			if (chain == 1) {
@@ -375,7 +376,7 @@ void start_bwlimit(void)
 		if ((p = strsep(&g, ">")) == NULL)
 			break;
 
-		strcpy(p1, p);
+		strlcpy(p1, p, sizeof(p1));
 		i = vstrsep(p, "<", &enabled, &ipaddr_old, &dlrate, &dlceil, &ulrate, &ulceil, &priority, &tcplimit, &udplimit, &description);
 		if (i < 10) {
 			i = vstrsep(p1, "<", &ipaddr_old, &dlrate, &dlceil, &ulrate, &ulceil, &priority, &tcplimit, &udplimit); /* compat */
@@ -395,13 +396,13 @@ void start_bwlimit(void)
 		priority_num++;
 		sprintf(priority, "%d", priority_num);
 
-		address_checker(&address_type, ipaddr_old, ipaddr);
+		address_checker(&address_type, ipaddr_old, ipaddr, sizeof(ipaddr));
 		seq = iSeq * 10;
 		mark = iSeq << 20;
 		iSeq++;
 
 		if (!strcmp(dlceil, ""))
-			strcpy(dlceil, dlrate);
+			*dlceil = *dlrate;
 
 		if (strcmp(dlrate, "") && strcmp(dlceil, "")) {
 			fprintf(tc, "\t$TCA parent 1:1 classid 1:%d htb rate %skbit ceil %skbit prio %s\n"
@@ -420,7 +421,7 @@ void start_bwlimit(void)
 		}
 
 		if (!strcmp(ulceil, ""))
-			strcpy(ulceil, dlrate);
+			*ulceil = *dlrate;
 
 		if (strcmp(ulrate, "") && strcmp(ulceil, ""))
 			fprintf(tc, "\t[ \"$(nvram get qos_enable)\" == \"0\" ] && {\n"
@@ -445,9 +446,9 @@ void start_bwlimit(void)
 	prio = nvram_safe_get("bwl_br0_prio");		/* priority */
 	if ((nvram_get_int("bwl_br0_enable") == 1) && strcmp(dlr, "") && strcmp(ulr, "")) {
 		if (!strcmp(dlc, ""))
-			strcpy(dlc, dlr);
+			*dlc = *dlr;
 		if (!strcmp(ulc, ""))
-			strcpy(ulc, ulr);
+			*ulc = *ulr;
 
 		/* for br0 only, we need to shift the priority values to be after 1 - 5 used for listed IPs/MACs
 		 * to prevent conflict between filters (there cannot be 2 filters with same class parent with
@@ -478,9 +479,9 @@ void start_bwlimit(void)
 		prio = nvram_safe_get("bwl_br1_prio");		/* priority */
 
 		if (!strcmp(dlc, ""))
-			strcpy(dlc, dlr);
+			*dlc = *dlr;
 		if (!strcmp(ulc, ""))
-			strcpy(ulc, ulr);
+			*ulc = *ulr;
 
 		/* download for br1 */
 		fprintf(tc, "\tTCA1=\"tc class add dev br1\"\n"
@@ -515,9 +516,9 @@ void start_bwlimit(void)
 		prio = nvram_safe_get("bwl_br2_prio");		/* priority */
 
 		if (!strcmp(dlc, ""))
-			strcpy(dlc, dlr);
+			*dlc = *dlr;
 		if (!strcmp(ulc, ""))
-			strcpy(ulc, ulr);
+			*ulc = *ulr;
 
 		/* download for br2 */
 		fprintf(tc, "\tTCA2=\"tc class add dev br2\"\n"
@@ -552,9 +553,9 @@ void start_bwlimit(void)
 		prio = nvram_safe_get("bwl_br3_prio");		/* priority */
 
 		if (!strcmp(dlc, ""))
-			strcpy(dlc, dlr);
+			*dlc = *dlr;
 		if (!strcmp(ulc, ""))
-			strcpy(ulc, ulr);
+			*ulc = *ulr;
 
 		/* download for br3 */
 		fprintf(tc, "\tTCA3=\"tc class add dev br3\"\n"

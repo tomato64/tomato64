@@ -968,7 +968,7 @@ int mount_partition(char *dev_name, int host_num, char *dsc_name, char *pt_name,
 			return 0;
 
 		if ((mnt = mount_fstab(dev_name, type, the_label, uuid))) {
-			strcpy(mountpoint, mnt->mnt_dir);
+			strlcpy(mountpoint, mnt->mnt_dir, sizeof(mountpoint));
 			ret = MOUNT_VAL_RW;
 			goto done;
 		}
@@ -1102,7 +1102,7 @@ static inline void usbled_proc(char *device, int add)
 	/* check if there are two LEDs for USB and USB3, see LED table at shared/led.c */
 	if (do_led(LED_USB, LED_PROBE) != 255 && do_led(LED_USB3, LED_PROBE) != 255) {
 		if (device != NULL) {
-			strncpy(param, device, sizeof(param));
+			strlcpy(param, device, sizeof(param));
 			if ((p = strchr(param, ':')) != NULL)
 				*p = 0;
 
@@ -1195,7 +1195,7 @@ static inline void usbled_proc(char *device, int add)
 #if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
 		if (device != NULL) {
 #endif
-			strncpy(param, device, sizeof(param));
+			strlcpy(param, device, sizeof(param));
 			if ((p = strchr(param, ':')) != NULL)
 				*p = 0;
 

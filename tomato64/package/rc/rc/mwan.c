@@ -31,7 +31,7 @@ typedef struct
 
 static waninfo_t wan_info;
 
-int get_sta_wan_prefix(char *sPrefix)
+int get_sta_wan_prefix(char *sPrefix, const size_t buf_sz)
 {
 	int mwan_num;
 	int wan_unit;
@@ -54,9 +54,9 @@ int get_sta_wan_prefix(char *sPrefix)
 	}
 
 	if (found)
-		strcpy(sPrefix, prefix);
+		strlcpy(sPrefix, prefix, buf_sz);
 	else
-		strcpy(sPrefix, "wan");
+		strlcpy(sPrefix, "wan", buf_sz);
 
 	return found;
 }

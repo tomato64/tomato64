@@ -290,7 +290,7 @@ void start_dnsmasq_wet()
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
 		nv = nvram_safe_get(lanN_ifname);
@@ -498,7 +498,7 @@ void start_dnsmasq()
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		snprintf(lanN_proto, sizeof(lanN_proto), "lan%s_proto", bridge);
 		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
@@ -816,8 +816,7 @@ void start_dnsmasq()
 			 */
 			foreach (word, nvram_safe_get("ipv6_dns_lan"), next) {
 				if ((cntdns < MAX_DNS6_SERVER_LAN) && (inet_pton(AF_INET6, word, &addr) == 1)) {
-					strncpy(dns6[cntdns], ipv6_address(word), INET6_ADDRSTRLEN-1);
-					dns6[cntdns][INET6_ADDRSTRLEN-1] = '\0';
+					strlcpy(dns6[cntdns], ipv6_address(word), INET6_ADDRSTRLEN);
 					cntdns++;
 				}
 			}
@@ -1848,7 +1847,7 @@ void start_upnp(void)
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge);
 		snprintf(lanN_netmask, sizeof(lanN_netmask), "lan%s_netmask", bridge);
@@ -2302,7 +2301,7 @@ void start_igmp_proxy(void)
 				if (br != 0)
 					bridge[0] += br;
 				else
-					strcpy(bridge, "");
+					memset(bridge, 0, sizeof(bridge));
 
 				snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
 				snprintf(multicast_lanN, sizeof(multicast_lanN), "multicast_lan%s", bridge);

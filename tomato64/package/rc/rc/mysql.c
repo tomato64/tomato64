@@ -138,7 +138,7 @@ void start_mysql(int force)
 		ptmpdir[strlen(ptmpdir) - 1] = 0;
 
 	if (strlen(ptmpdir) == 0) {
-		strcpy (ptmpdir, "tmp");
+		strlcpy (ptmpdir, "tmp", sizeof(ptmpdir));
 		nvram_set("mysql_tmpdir", "tmp");
 	}
 	memset(full_tmpdir, 0, sizeof(full_tmpdir));

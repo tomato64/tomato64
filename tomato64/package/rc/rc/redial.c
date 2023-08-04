@@ -59,11 +59,11 @@ int redial_main(int argc, char **argv)
 	char prefix_mwan[] = "wanXX";
 
 	if (argc > 1)
-		strcpy(prefix, argv[1]);
+		strlcpy(prefix, argv[1], sizeof(prefix));
 	else
-		strcpy(prefix, "wan");
+		strlcpy(prefix, "wan", sizeof(prefix));
 
-	strcpy(prefix_mwan, prefix);
+	strlcpy(prefix_mwan, prefix, sizeof(prefix_mwan));
 
 	mwan_num = nvram_get_int("mwan_num");
 	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
@@ -95,9 +95,8 @@ int redial_main(int argc, char **argv)
 		if ((!wait_action_idle(10)) || (check_wanup(prefix)))
 			continue;
 
-		if (!strcmp(prefix, "wan") && mwan_num != 1) {
-			strcpy(prefix_mwan, "wan1");
-		}
+		if (!strcmp(prefix, "wan") && mwan_num != 1)
+			strlcpy(prefix_mwan, "wan1", sizeof(prefix_mwan));
 
 		memset(tmp, 0, 32);
 		sprintf(tmp, "%s-restart", prefix_mwan);
