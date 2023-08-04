@@ -2626,7 +2626,7 @@ function navi() {
 			] ],
 /* USB-END */
 /* VPN-BEGIN */
-		['VPN Tunneling',			'vpn', 0, [
+		['VPN',					'vpn', 0, [
 /* OPENVPN-BEGIN */
 			['OpenVPN Server',		'server.asp'],
 			['OpenVPN Client',		'client.asp'],
@@ -2636,12 +2636,12 @@ function navi() {
 			['PPTP Online',			'pptp-online.asp'],
 			['PPTP Client',			'pptp.asp']
 /* PPTPD-END */
-/* TINC-BEGIN */
-			,['Tinc Daemon',		'tinc.asp']
-/* TINC-END */
 /* WIREGUARD-BEGIN */
 			,['Wireguard',			'wireguard.asp']
 /* WIREGUARD-END */
+/* TINC-BEGIN */
+			,['Tinc',			'tinc.asp']
+/* TINC-END */
 		] ],
 /* VPN-END */
 		null,
