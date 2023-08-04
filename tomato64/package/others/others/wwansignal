@@ -186,7 +186,7 @@ signal4g() {
 				RSSI=$(echo "$SIGNAL" | cut -d "," -f2 | cut -d ":" -f2)
 				RSRQ=$(echo "$SIGNAL" | cut -d "," -f3 | cut -d ":" -f2)
 				RSRP=$(echo "$SIGNAL" | cut -d "," -f4 | cut -d ":" -f2)
-				SINR=$(echo "$SIGNAL" | cut -d ":" -f6 | cut -d "}" -f1)
+				SINR=$(echo "$SIGNAL" | cut -d ":" -f6 | cut -d "}" -f1 | cut -c1-4)
 				$LOGS "MODEM Current Mode: LTE"
 				$LOGS "MODEM Signal Strength: RSSI $RSSI dBm, RSRP $RSRP dBm, RSRQ $RSRQ dB, SINR $SINR dB"
 				$LOGS "MODEM BTS: MCCMNC $MCCMNC"

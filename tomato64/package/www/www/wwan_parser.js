@@ -4,9 +4,9 @@ function createWWANTableItem(value, unit, bar) {
 
 	if (unit.length == 0) { /* None */
 		calculatedMargin = 26;
-	} else if (unit.length < 3 && unit.length > 0) { /* dB */
+	else if (unit.length < 3 && unit.length > 0) /* dB */
 		calculatedMargin = 14;
-	}
+
 	retVal += '<span style="width:34px;display:inline-block">'+value+'</span><small style="margin-right:'+calculatedMargin+'px">'+unit+'</small>';
 	if (bar) {
 		var altText = getAltText(bar);
@@ -138,7 +138,7 @@ function showSMSForWWAN(wwannum) {
 }
 
 function wwan_getSignalStrengthMap(buffer, returnMap) {
-	var index, itemsToFind = ['RSSI', 'RSRP', 'RSRQ', 'RSSP', 'RSCP', 'SINR', 'CQI1', 'CQI2', 'ECIO'];
+	var index, itemsToFind = ['RSSI','RSRP','RSRQ','RSSP','RSCP','SINR','CQI1','CQI2','ECIO'];
 	for (index = 0; index < itemsToFind.length; ++index) {
 		var element = itemsToFind[index];
 		returnMap[element] = extractStringItem(element, buffer);
@@ -146,7 +146,7 @@ function wwan_getSignalStrengthMap(buffer, returnMap) {
 }
 
 function wwan_getLocationMap(buffer, returnMap) {
-	var index, itemsToFind = ['LAC', 'CID', 'PCI', 'Cell ID'];
+	var index, itemsToFind = ['LAC','CID','PCI','Cell ID'];
 	for (index = 0; index < itemsToFind.length; ++index) {
 		var element = itemsToFind[index];
 		returnMap[element] = extractLocationItem(element, buffer);
