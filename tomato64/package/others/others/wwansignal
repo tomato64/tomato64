@@ -183,6 +183,9 @@ signal4g() {
 		MCC=$(uqmiCall "--get-serving-system")
 		MCCMNC=$(echo "$MCC" | cut -d "," -f2 | cut -d ":" -f2)$(printf "%02d" $(echo "$MCC" | cut -d "," -f3 | cut -d ":" -f2))
 
+		OPERATOR=$(echo "$MCC" | cut -d "," -f4 | cut -d ":" -f2)
+		$LOGS "MODEM Current Operator: $OPERATOR"
+
 		case "$SPEED" in
 			"lte")
 				RSSI=$(echo "$SIGNAL" | cut -d "," -f2 | cut -d ":" -f2)
