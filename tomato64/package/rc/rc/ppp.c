@@ -49,7 +49,7 @@ int ipup_main(int argc, char **argv)
 	char *wan_ifname;
 	int proto;
 	char prefix[] = "wanXX";
-	char tmp[100];
+	char tmp[100], tmp2[32];
 	char ppplink_file[32];
 	char buf[256];
 	char *value;
@@ -90,15 +90,15 @@ int ipup_main(int argc, char **argv)
 			case WP_PPPOE:
 			case WP_PPP3G:
 				if ((proto == WP_PPPOE) && using_dhcpc(prefix)) /* PPPoE with DHCP MAN */
-					nvram_set(strlcat_r(prefix, "_ipaddr_buf", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_ppp_get_ip", tmp, sizeof(tmp))));
+					nvram_set(strlcat_r(prefix, "_ipaddr_buf", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_ppp_get_ip", tmp2, sizeof(tmp2))));
 				else { /* PPPoE / 3G */
-					nvram_set(strlcat_r(prefix, "_ipaddr_buf", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_ipaddr", tmp, sizeof(tmp))));
+					nvram_set(strlcat_r(prefix, "_ipaddr_buf", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_ipaddr", tmp2, sizeof(tmp2))));
 					nvram_set(strlcat_r(prefix, "_ipaddr", tmp, sizeof(tmp)), value);
 				}
 				break;
 			case WP_PPTP:
 			case WP_L2TP:
-				nvram_set(strlcat_r(prefix, "_ipaddr_buf", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_ppp_get_ip", tmp, sizeof(tmp))));
+				nvram_set(strlcat_r(prefix, "_ipaddr_buf", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_ppp_get_ip", tmp2, sizeof(tmp2))));
 				break;
 		}
 
@@ -144,7 +144,7 @@ int ipdown_main(int argc, char **argv)
 {
 	int proto;
 	char prefix[] = "wanXX";
-	char tmp[100];
+	char tmp[100], tmp2[32], tmp3[32];
 	char ppplink_file[32];
 	struct in_addr ipaddr;
 	int mwan_num;
@@ -172,28 +172,28 @@ int ipdown_main(int argc, char **argv)
 
 		if (proto == WP_L2TP) {
 			if (inet_pton(AF_INET, nvram_safe_get(strlcat_r(prefix, "_l2tp_server_ip", tmp, sizeof(tmp))), &(ipaddr.s_addr))) {
-				route_del(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, nvram_safe_get(strlcat_r(prefix, "_l2tp_server_ip", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))), "255.255.255.255"); /* fixed routing problem in Israel */
-				logmsg(LOG_DEBUG, "*** %s: route_del(%s, 0, %s, %s, 255.255.255.255)", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_l2tp_server_ip", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
+				route_del(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, nvram_safe_get(strlcat_r(prefix, "_l2tp_server_ip", tmp2, sizeof(tmp2))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp3, sizeof(tmp3))), "255.255.255.255"); /* fixed routing problem in Israel */
+				logmsg(LOG_DEBUG, "*** %s: route_del(%s, 0, %s, %s, 255.255.255.255)", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_l2tp_server_ip", tmp2, sizeof(tmp2))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp3, sizeof(tmp3))));
 			}
 		}
 
 		if (proto == WP_PPTP) {
 			if (inet_pton(AF_INET, nvram_safe_get(strlcat_r(prefix, "_pptp_server_ip", tmp, sizeof(tmp))), &(ipaddr.s_addr))) {
-				route_del(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, nvram_safe_get(strlcat_r(prefix, "_pptp_server_ip", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))), "255.255.255.255");
-				logmsg(LOG_DEBUG, "*** %s: route_del(%s, 0, %s, %s, 255.255.255.255)", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_pptp_server_ip", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
+				route_del(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, nvram_safe_get(strlcat_r(prefix, "_pptp_server_ip", tmp2, sizeof(tmp2))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp3, sizeof(tmp3))), "255.255.255.255");
+				logmsg(LOG_DEBUG, "*** %s: route_del(%s, 0, %s, %s, 255.255.255.255)", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_pptp_server_ip", tmp2, sizeof(tmp2))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp3, sizeof(tmp3))));
 			}
 		}
 
 		if (!nvram_get_int(strlcat_r(prefix, "_ppp_demand", tmp, sizeof(tmp)))) { /* don't setup temp gateway for demand connections */
 			/* restore the default gateway for WAN interface */
-			nvram_set(strlcat_r(prefix, "_gateway_get", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
+			nvram_set(strlcat_r(prefix, "_gateway_get", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp2, sizeof(tmp2))));
 			logmsg(LOG_DEBUG, "*** %s: restore default gateway: nvram_set(%s_gateway_get, %s)", __FUNCTION__, prefix, nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
 
 			if (mwan_num == 1) {
 				/* set default route to gateway if specified */
-				route_del(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, "0.0.0.0", nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))), "0.0.0.0");
-				route_add(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, "0.0.0.0", nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))), "0.0.0.0");
-				logmsg(LOG_DEBUG, "*** %s: route_add(%s, 0, 0.0.0.0, %s, 0.0.0.0)", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
+				route_del(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, "0.0.0.0", nvram_safe_get(strlcat_r(prefix, "_gateway", tmp2, sizeof(tmp2))), "0.0.0.0");
+				route_add(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, "0.0.0.0", nvram_safe_get(strlcat_r(prefix, "_gateway", tmp2, sizeof(tmp2))), "0.0.0.0");
+				logmsg(LOG_DEBUG, "*** %s: route_add(%s, 0, 0.0.0.0, %s, 0.0.0.0)", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp2, sizeof(tmp2))));
 			}
 		}
 
@@ -228,7 +228,7 @@ int ipdown_main(int argc, char **argv)
  */
 int ippreup_main(int argc, char **argv)
 {
-	/* nothing to do righ now! */
+	/* nothing to do right now! */
 	return 0;
 }
 
