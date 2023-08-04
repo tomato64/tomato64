@@ -2276,7 +2276,7 @@ static int save_variables(int write)
 		if ((p = webcgi_get(s)) != NULL) {
 			if (strlen(p) > 2048) {
 				memset(t, 0, sizeof(t));
-				strlcpy(t, s, sizeof(s));
+				strlcpy(t, s, sizeof(t));
 				snprintf(s, sizeof(s), msgf, t);
 				resmsg_set(s);
 				return 0;
