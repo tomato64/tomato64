@@ -2,7 +2,7 @@ function createWWANTableItem(value, unit, bar) {
 	var retVal = '<td class="content">';
 	var calculatedMargin = 6; /* dBm */
 
-	if (unit.length == 0) { /* None */
+	if (unit.length == 0) /* None */
 		calculatedMargin = 26;
 	else if (unit.length < 3 && unit.length > 0) /* dB */
 		calculatedMargin = 14;
