@@ -466,17 +466,17 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">SSH Daemon</div>
+<div class="section-title">SSH Server</div>
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'Enable at Startup', name: 'f_sshd_eas', type: 'checkbox', value: nvram.sshd_eas == 1 },
+			{ title: 'Enable on Startup', name: 'f_sshd_eas', type: 'checkbox', value: nvram.sshd_eas == 1 },
 			{ title: 'Extended MOTD', name: 'f_sshd_motd', type: 'checkbox', value: nvram.sshd_motd == 1 },
-			{ title: 'Remote Access', name: 'f_sshd_remote', type: 'checkbox', value: nvram.sshd_remote == 1 },
-				{ title: 'Remote Port', indent: 2, name: 'sshd_rport', type: 'text', maxlen: 5, size: 7, value: nvram.sshd_rport },
-			{ title: 'Remote Forwarding', name: 'f_sshd_forwarding', type: 'checkbox', value: nvram.sshd_forwarding == 1 },
-			{ title: 'Port', name: 'sshd_port', type: 'text', maxlen: 5, size: 7, value: nvram.sshd_port },
 			{ title: 'Allow Password Login', name: 'f_sshd_pass', type: 'checkbox', value: nvram.sshd_pass == 1 },
+			{ title: 'LAN Port', name: 'sshd_port', type: 'text', maxlen: 5, size: 7, value: nvram.sshd_port },
+			{ title: 'Port Forwarding', name: 'f_sshd_forwarding', type: 'checkbox', value: nvram.sshd_forwarding == 1 },
+			{ title: 'WAN Access', name: 'f_sshd_remote', type: 'checkbox', value: nvram.sshd_remote == 1 },
+				{ title: 'WAN Port', indent: 2, name: 'sshd_rport', type: 'text', maxlen: 5, size: 7, value: nvram.sshd_rport },
 			{ title: 'Authorized Keys', name: 'sshd_authkeys', type: 'textarea', value: nvram.sshd_authkeys }
 		]);
 	</script>
