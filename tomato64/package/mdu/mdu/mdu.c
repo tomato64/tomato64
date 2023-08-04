@@ -1572,9 +1572,10 @@ static void update_wget(void)
 	*p = 0;
 
 	if ((c = strstr(path, "@IP")) != NULL) {
+		size_t sizeOfPath = sizeof(path);
 		strlcpy(s, c + 3, sizeof(s));
-		strlcpy(c, get_address(1), sizeof(path) - strlen(path) + 3); /*  space left in path is the sizeof the array - the currently used chars + 3 as @IP gets replace */
-		strlcat(c, s, sizeof(path) - strlen(path)); /* space left is the size of the path array - the currently used chars (which now include the IP address) */
+		strlcpy(c, get_address(1), sizeOfPath - strnlen(path, sizeOfPath) + 3); /*  space left in path is the sizeof the array - the currently used chars + 3 as @IP gets replace */
+		strlcat(c, s, sizeOfPath - strnlen(path, sizeOfPath)); /* space left is the size of the path array - the currently used chars (which now include the IP address) */
 	}
 
 	logmsg(LOG_DEBUG, "*** %s: host: %s, path: %s", __FUNCTION__, host, path);
