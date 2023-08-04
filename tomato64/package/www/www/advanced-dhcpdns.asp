@@ -127,6 +127,9 @@ function verifyFields(focused, quiet) {
 	vis._f_ipv6_fast_ra = v;
 	vis._f_dnsmasq_qr = v;
 	vis._f_dnsmasq_q6 = v;
+
+	if (nvram.ipv6_service == 'native-pd') /* for case DHCPv6 PD use IPv6 preferred lifetime provided by your ISP/Server and hide lease time option */
+		vis._f_ipv6_lease_time = 0;
 /* IPV6-END */
 
 	for (i in vis) {
@@ -637,7 +640,7 @@ function init() {
 			{ title: 'Announce IPv6 on LAN (SLAAC)', name: 'f_ipv6_radvd', type: 'checkbox', value: nvram.ipv6_radvd == 1 },
 			{ title: 'Announce IPv6 on LAN (DHCP)', name: 'f_ipv6_dhcpd', type: 'checkbox', value: nvram.ipv6_dhcpd == 1 },
 			{ title: 'Fast RA mode', name: 'f_ipv6_fast_ra', type: 'checkbox', value: nvram.ipv6_fast_ra == 1 },
-			{ title: 'DHCP IPv6 lease time', name: 'f_ipv6_lease_time', type: 'text', maxlen: 3, size: 8, suffix: ' <small>(in hours)<\/small>', value: nvram.ipv6_lease_time || 12, hidden: nvram.ipv6_service == 'native-pd' },
+			{ title: 'DHCP IPv6 lease time', name: 'f_ipv6_lease_time', type: 'text', maxlen: 3, size: 8, suffix: ' <small>(in hours)<\/small>', value: nvram.ipv6_lease_time || 12 },
 			{ title: 'IPv6 DNS Server', name: 'f_ipv6_dns1_lan', type: 'text', maxlen: 40, size: 42, value: dns_ip6[0] || '', suffix: ' <small>(optional; usually empty)<\/small>' },
 			{ title: '',                name: 'f_ipv6_dns2_lan', type: 'text', maxlen: 40, size: 42, value: dns_ip6[1] || '', suffix: ' <small>(optional; usually empty)<\/small>' },
 /* IPV6-END */
