@@ -2208,7 +2208,7 @@ static int nv_wl_bwcap_chanspec(int idx, int unit, int subunit, void *param)
 			if (write)
 				nvram_set(wl_nvname("bw_cap", unit, 0), "7");
 			if (*ch != '0')
-				strlcpy(chan_spec + strlen(chan_spec), "/80", sizeof(chan_spec));
+				strlcpy(chan_spec + strlen(chan_spec), "/80", sizeof(chan_spec) - strlen(chan_spec)); /* size of the chan_spec array - the currently used */
 			break;
 	}
 	if (write)
