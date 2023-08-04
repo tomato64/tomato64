@@ -181,7 +181,7 @@ static int bound(char *ifname, int renew, char *prefix)
 	netmask = getenv("subnet") ? : "255.255.255.255";
 	if ((wan_proto == WP_DHCP) || (wan_proto == WP_LTE) || (using_dhcpc(prefix))) { /* netmask for DHCP MAN */
 		nvram_set(strlcat_r(prefix, "_netmask", tmp, sizeof(tmp)), netmask);
-		nvram_set(strlcat_r(prefix, "_gateway_get", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp2, sizeof(tmp2))));
+		nvram_set(strlcat_r(prefix, "_gateway_get", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp2, sizeof(tmp2))));  /* tmp2 needed --> code evaluation left to right! */
 	}
 
 	/* RFC3442: If the DHCP server returns both a Classless Static Routes option
@@ -295,7 +295,7 @@ static int renew(char *ifname, char *prefix)
 	}
 
 	nvram_set(strlcat_r(prefix, "_routes1_save", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_routes1", tmp2, sizeof(tmp2)))); /* backup */
-	nvram_set(strlcat_r(prefix, "_routes2_save", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_routes2", tmp2, sizeof(tmp2))));
+	nvram_set(strlcat_r(prefix, "_routes2_save", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_routes2", tmp2, sizeof(tmp2)))); /* tmp2 needed --> code evaluation left to right! */
 
 	/* Classless Static Routes (option 121) or MS Classless Static Routes (option 249) */
 	if (getenv("staticroutes"))
