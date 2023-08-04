@@ -98,6 +98,7 @@ function init() {
 	}
 
 	adblockg.recolor();
+	eventHandler();
 }
 
 function earlyInit() {
@@ -172,6 +173,7 @@ function earlyInit() {
 <div class="section-title">Notes <small><i><a href='javascript:toggleVisibility(cprefix,"notes");'><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
+		<li><b>Updated information on tested adblock lists can be found at <a href="https://wiki.freshtomato.org/doku.php/adblock_dns_filtering" class="new_window">this page</a></b></li>
 		<li><b>Adblock</b> - Autoupdate will be launched randomly between 02:00 and 02:59 AM every day</li>
 		<li><b>Debug Mode</b> - All queries to dnsmasq will be logged to syslog</li>
 		<li><b>Blacklist URL</b> - Correct entry format: 0.0.0.0 domain.com or 127.0.0.1 domain.com, with one domain per line</li>

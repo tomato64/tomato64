@@ -117,6 +117,7 @@ function init() {
 	adblockg.recolor();
 	adblockStatus();
 	ref.initPage();
+	eventHandler();
 }
 
 function adblockMe(command) {
@@ -324,6 +325,7 @@ function sortDomains(element) {
 <div class="section-title">Notes <small><i><a href='javascript:toggleVisibility(cprefix,"notes");'><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
+		<li><b>Updated information on tested adblock lists can be found at <a href="https://wiki.freshtomato.org/doku.php/adblock_dns_filtering" class="new_window">this page</a></b></li>
 		<li><b>Enable</b> - Used to activate/deactivate the adblock function. When enable is set the script runs after a save, a manual Load/Update, it autostart at boot and set autoupdate to run daily at a random time between 3am and 6am (excluding mins 59,00,01).</li>
 		<li><b>Blockfile size limit</b> - Defined in Bytes, it's an automatically calculated hard limit for the dnsmasq.adblock file. This limit can be overwritten manually. Removing the number and saving will trigger an internal calculation performed at the next run.</li>
 		<li><b>Custom path</b> - Optional, allows to save the potentially large adblock files on permanent storage like USB/CIFS/etc. This indirectly also means lower RAM usage and additional list control to avoid downloads/processing when not necessary.</li>
