@@ -163,7 +163,7 @@ static int deconfig(char *ifname, char *prefix)
 
 static int bound(char *ifname, int renew, char *prefix)
 {
-	char tmp [32];
+	char tmp [32], tmp2[32];
 	char *netmask, *dns, *gw;
 	int wan_proto = get_wanx_proto(prefix);
 
@@ -181,7 +181,7 @@ static int bound(char *ifname, int renew, char *prefix)
 	netmask = getenv("subnet") ? : "255.255.255.255";
 	if ((wan_proto == WP_DHCP) || (wan_proto == WP_LTE) || (using_dhcpc(prefix))) { /* netmask for DHCP MAN */
 		nvram_set(strlcat_r(prefix, "_netmask", tmp, sizeof(tmp)), netmask);
-		nvram_set(strlcat_r(prefix, "_gateway_get", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
+		nvram_set(strlcat_r(prefix, "_gateway_get", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp2, sizeof(tmp2))));
 	}
 
 	/* RFC3442: If the DHCP server returns both a Classless Static Routes option
@@ -194,7 +194,7 @@ static int bound(char *ifname, int renew, char *prefix)
 	/* Classless Static Routes (option 121) */
 	if (!env2nv("staticroutes", strlcat_r(prefix, "_routes1", tmp, sizeof(tmp))))
 		/* or MS Classless Static Routes (option 249) */
-		env2nv("msstaticroutes", strlcat_r(prefix, "_routes1", tmp, sizeof(tmp)));
+		env2nv("msstaticroutes", strlcat_r(prefix, "_routes1", tmp2, sizeof(tmp2)));
 
 	/* Static Routes (option 33) */
 	env2nv("routes", strlcat_r(prefix, "_routes2", tmp, sizeof(tmp)));
