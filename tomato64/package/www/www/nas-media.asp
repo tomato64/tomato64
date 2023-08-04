@@ -114,6 +114,24 @@ function updateNotice() {
 	xob.post('update.cgi', 'exec=notice&arg0=dlna');
 }
 
+var cmd = null;
+
+function updatePort() {
+	if (cmd)
+		return;
+
+	cmd = new XmlHttp();
+	cmd.onCompleted = function(text, xml) {
+		http_port = text;
+		cmd = null;
+		setTimeout(updatePort, 2000);
+	}
+	cmd.onError = function(ex) { cmd = null; }
+	var commands = '/bin/netstat -ptln | grep \'^tcp.*minidlna$\' | awk \'{print $4}\' | cut -d : -f2';
+	cmd.post('shell.cgi', 'action=execute&nojs=1&command='+escapeCGI(commands.replace(/\r/g, '')));
+
+}
+
 function verifyFields(focused, quiet) {
 	if (focused && focused != E('_f_ms_enable')) /* except on/off */
 		changed = 1;
@@ -133,8 +151,6 @@ function verifyFields(focused, quiet) {
 			once = 0;
 		}
 	}
-
-	http_port = E('_ms_port').value;
 
 	eLoc = E('_f_loc');
 	eUser = E('_f_user');
@@ -240,6 +256,7 @@ function earlyInit() {
 function init() {
 	up.initPage(250, 5);
 	updateNotice();
+	updatePort();
 }
 </script>
 </head>
@@ -323,7 +340,7 @@ function init() {
 			] },
 				{ title: 'Scan Media at Startup*', indent: 2, name: 'f_ms_sas', type: 'checkbox', value: nvram.ms_sas == 1, hidden: 1 },
 				{ title: 'Rescan on the next run*', indent: 2, name: 'f_ms_rescan', type: 'checkbox', value: 0 },
-				{ title: 'Auto scan media', indent: 2, name: 'f_ms_autoscan', type: 'checkbox', value: nvram.ms_autoscan == 1, suffix: ' <small>(10 minutes interval)<\/small>' },
+				{ title: 'Auto scan media', indent: 2, name: 'f_ms_autoscan', type: 'checkbox', value: nvram.ms_autoscan == 1, suffix: ' <small>10 minutes interval<\/small>' },
 			null,
 			{ title: 'TiVo Support', name: 'f_ms_tivo', type: 'checkbox', value: nvram.ms_tivo == 1 },
 			{ title: 'Strictly adhere to DLNA standards', name: 'f_ms_stdlna', type: 'checkbox', value: nvram.ms_stdlna == 1 },
