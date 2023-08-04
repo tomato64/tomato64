@@ -65,6 +65,7 @@ signal4g() {
 	local DIAGSFILE="/tmp/switch4g_$PREFIX.diags"
 
 	if [ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ]; then
+		[ -f "$DIAGSFILE" ] || return
 		DEVALL="$DEVNR $(cat "$DIAGSFILE" | sed "s~"$DEVNR"~~")"
 
 		for i in $DEVALL; do	# find working interface
@@ -176,6 +177,7 @@ signal4g() {
 		esac
 
 	elif [ "$MTYPE" == "qmi_wwan" ]; then
+		[ -f "$DIAGSFILE" ] || return
 		SIGNAL=$(uqmiCall "--get-signal-info")
 		SPEED=$(echo "$SIGNAL" | cut -d '"' -f4)
 		MCC=$(uqmiCall "--get-serving-system")
