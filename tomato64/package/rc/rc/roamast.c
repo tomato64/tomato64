@@ -496,7 +496,7 @@ void rast_update_sta_info(int bssidx, int vifidx)
 	memset(mac_list, 0, mac_list_size);
 
 	/* query authentication sta list */
-	strlcpy((char*) mac_list, "authe_sta_list", sizeof(mac_list));
+	strlcpy((char*) mac_list, "authe_sta_list", mac_list_size);
 	if (wl_ioctl(wlif_name, WLC_GET_VAR, mac_list, mac_list_size))
 		goto exit;
 
