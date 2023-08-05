@@ -23,8 +23,10 @@
 #include <dirent.h>
 #include <sys/file.h>
 #include <sys/swap.h>
+#ifdef TOMATO64
 #include <limits.h>
 #include <sys/stat.h>
+#endif /* TOMATO64 */
 
 #include <wlutils.h>
 
@@ -48,7 +50,11 @@
 #define USBOHCI_MOD	"ohci-hcd"
 #define USBUHCI_MOD	"uhci-hcd"
 #define USBPRINTER_MOD	"usblp"
+#ifndef TOMATO64
+#define SCSI_WAIT_MOD	"scsi_wait_scan"
+#else
 #define SCSI_WAIT_MOD	"scsi_scan_async"
+#endif /* TOMATO64 */
 #define USBFS		"usbfs"
 
 #ifndef MNT_DETACH

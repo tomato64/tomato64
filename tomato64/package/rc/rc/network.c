@@ -1658,7 +1658,7 @@ void start_lan(void)
 #if !defined(TCONFIG_BLINK) && !defined(TCONFIG_BCMARM) /* RT only */
 							if ((vid_map < 1) || (vid_map > 4094)) vid_map = vlan0tag | vid;
 #else
- 							if ((vid_map < 1) || (vid_map > 4094)) vid_map = vid;
+							if ((vid_map < 1) || (vid_map > 4094)) vid_map = vid;
 #endif
 #ifndef TOMATO64
  							if ((vid_map < 1) || (vid_map > 4094)) vid_map = vid;

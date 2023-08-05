@@ -38,7 +38,9 @@
 #include <sys/sysinfo.h>
 #include <wlutils.h>
 #include <bcmdevs.h>
+#ifdef TOMATO64
 #include <sys/sysmacros.h>
+#endif /* TOMATO64 */
 #ifndef TOMATO64
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 #include <bcmparams.h>

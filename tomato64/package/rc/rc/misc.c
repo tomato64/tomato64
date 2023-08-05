@@ -18,7 +18,9 @@
 #include <wlutils.h>
 #include <dirent.h>
 #include <sys/wait.h>
+#ifdef TOMATO64
 #include <linux/limits.h>
+#endif /* TOMATO64 */
 
 #define MAX_XSTART_ARGC 16
 

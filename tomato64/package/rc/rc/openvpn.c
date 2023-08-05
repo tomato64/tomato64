@@ -15,7 +15,9 @@
 #include <dirent.h>
 #include <string.h>
 #include <time.h>
+#ifdef TOMATO64
 #include <sys/stat.h>
+#endif /* TOMATO64 */
 
 #define OVPN_CLIENT_BASEIF	10
 #define OVPN_SERVER_BASEIF	20

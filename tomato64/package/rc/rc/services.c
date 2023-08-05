@@ -49,7 +49,9 @@
 #include <mntent.h>
 #include <dirent.h>
 #include <linux/version.h>
+#ifdef TOMATO64
 #include <sys/stat.h>
+#endif /* TOMATO64 */
 
 #define ADBLOCK_EXE		"/usr/sbin/adblock"
 #define DNSMASQ_CONF		"/etc/dnsmasq.conf"
