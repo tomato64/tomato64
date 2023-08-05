@@ -321,11 +321,11 @@ void start_ftpd(int force)
 
 			tmp[0] = 0;
 			if (nvram_invmatch("ftp_dirlist", "1"))
-				strcat(tmp, "dirlist_enable=yes\n");
+				strlcat(tmp, "dirlist_enable=yes\n", sizeof(tmp));
 			if ((strstr(rights, "Read")) || (!strcmp(rights, "Private")))
-				strcat(tmp, "download_enable=yes\n");
+				strlcat(tmp, "download_enable=yes\n", sizeof(tmp));
 			if ((strstr(rights, "Write")) || (!strncmp(rights, "Private", 7)))
-				strcat(tmp, "write_enable=yes\n");
+				strlcat(tmp, "write_enable=yes\n", sizeof(tmp));
 
 			fputs(tmp, f);
 			fclose(f);

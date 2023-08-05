@@ -15,6 +15,12 @@
  * MA 02111-1307 USA
  *
  */
+/*
+ *
+ * FreshTomato Firmware
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -169,9 +175,9 @@ void start_samba(int force)
 			snprintf(buffer2, sizeof(buffer2), "br%d", i);
 			if ((strlen(nvram_safe_get(buffer)) > 0) && (strstr(si, buffer2) != NULL)) { /* bridge is up & present in 'smbd_ifnames' */
 				if (strlen(buffer3) > 0)
-					strcat(buffer3, " ");
+					strlcat(buffer3, " ", sizeof(buffer3));
 
-				strcat(buffer3, buffer2);
+				strlcat(buffer3, buffer2, sizeof(buffer3));
 			}
 		}
 		si = buffer3;

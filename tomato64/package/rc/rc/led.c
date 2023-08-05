@@ -2,6 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
  *
  */
 
@@ -19,9 +20,9 @@ static void help(void)
 	for (i = 0; i < LED_COUNT; ++i) {
 		if (led(i, LED_PROBE)) {
 			if (s[0])
-				strcat(s, "/");
+				strlcat(s, "/", sizeof(s));
 
-			strcat(s, led_names[i]);
+			strlcat(s, led_names[i], sizeof(s));
 		}
 	}
 

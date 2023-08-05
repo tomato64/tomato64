@@ -239,13 +239,13 @@ void ipt_qos(void)
 
 		if (app[0]) {
 			v4v6_ok &= ~IPT_V6; /* L7 for IPv6 not working either! */
-			strcat(saddr, app);
+			strlcat(saddr, app, sizeof(saddr));
 		}
 
 		/* dscp */
 		memset(s, 0, sizeof(s));
 		if (ipt_dscp(dscp, s))
-			strcat(saddr, s);
+			strlcat(saddr, s, sizeof(saddr));
 
 		class_flag = 0;
 
@@ -253,7 +253,7 @@ void ipt_qos(void)
 		if (*bcount) {
 			min = strtoul(bcount, &p, 10);
 			if (*p != 0) {
-				strcat(saddr, " -m connbytes --connbytes-mode bytes --connbytes-dir both --connbytes ");
+				strlcat(saddr, " -m connbytes --connbytes-mode bytes --connbytes-dir both --connbytes ", sizeof(saddr));
 				++p;
 				if (*p == 0)
 					sprintf(saddr + strlen(saddr), "%lu:", min * 1024);

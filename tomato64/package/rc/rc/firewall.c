@@ -1,21 +1,21 @@
 /*
-
-	Copyright 2003-2005, CyberTAN Inc.  All Rights Reserved
-
-	This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
-	the contents of this file may not be disclosed to third parties,
-	copied or duplicated in any form without the prior written
-	permission of CyberTAN Inc.
-
-	This software should be used as a reference only, and it not
-	intended for production use!
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
-
-*/
+ *
+ * Copyright 2003-2005, CyberTAN Inc.  All Rights Reserved
+ *
+ * This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
+ * the contents of this file may not be disclosed to third parties,
+ * copied or duplicated in any form without the prior written
+ * permission of CyberTAN Inc.
+ *
+ * This software should be used as a reference only, and it not
+ * intended for production use!
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
+ *
+ */
 /*
  *
  * Modified for Tomato Firmware
@@ -329,23 +329,23 @@ int ipt_ipp2p(const char *v, char *opt, const size_t buf_sz)
 
 	strlcpy(opt, " -m ipp2p ", buf_sz);
 	if ((n & 0xFFF) == 0xFFF)
-		strcat(opt, "--ipp2p");
+		strlcat(opt, "--ipp2p", buf_sz);
 	else {
 		/* x12 */
-		if (n & 0x0001) strcat(opt, "--apple ");
-		if (n & 0x0002) strcat(opt, "--ares ");
-		if (n & 0x0004) strcat(opt, "--bit ");
-		if (n & 0x0008) strcat(opt, "--dc ");
-		if (n & 0x0010) strcat(opt, "--edk ");
-		if (n & 0x0020) strcat(opt, "--gnu ");
-		if (n & 0x0040) strcat(opt, "--kazaa ");
-		if (n & 0x0080) strcat(opt, "--mute ");
-		if (n & 0x0100) strcat(opt, "--soul ");
-		if (n & 0x0200) strcat(opt, "--waste ");
-		if (n & 0x0400) strcat(opt, "--winmx ");
-		if (n & 0x0800) strcat(opt, "--xdcc ");
-		if (n & 0x1000) strcat(opt, "--pp ");
-		if (n & 0x2000) strcat(opt, "--xunlei ");
+		if (n & 0x0001) strlcat(opt, "--apple ", buf_sz);
+		if (n & 0x0002) strlcat(opt, "--ares ", buf_sz);
+		if (n & 0x0004) strlcat(opt, "--bit ", buf_sz);
+		if (n & 0x0008) strlcat(opt, "--dc ", buf_sz);
+		if (n & 0x0010) strlcat(opt, "--edk ", buf_sz);
+		if (n & 0x0020) strlcat(opt, "--gnu ", buf_sz);
+		if (n & 0x0040) strlcat(opt, "--kazaa ", buf_sz);
+		if (n & 0x0080) strlcat(opt, "--mute ", buf_sz);
+		if (n & 0x0100) strlcat(opt, "--soul ", buf_sz);
+		if (n & 0x0200) strlcat(opt, "--waste ", buf_sz);
+		if (n & 0x0400) strlcat(opt, "--winmx ", buf_sz);
+		if (n & 0x0800) strlcat(opt, "--xdcc ", buf_sz);
+		if (n & 0x1000) strlcat(opt, "--pp ", buf_sz);
+		if (n & 0x2000) strlcat(opt, "--xunlei ", buf_sz);
 	}
 
 	modprobe("ipt_ipp2p");

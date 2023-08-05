@@ -1,6 +1,8 @@
 /*
  *
  * USB Support
+ * FreshTomato Firmware
+ * Fixes/updates (C) 2018 - 2023 pedro
  *
  */
 
@@ -1013,10 +1015,10 @@ int dir_is_mountpoint(const char *root, const char *dir)
 
 	if (S_ISDIR(sb.st_mode)) {
 		/* If this dir & its parent dir are on the same device, it is not a mountpoint */
-		strcat(path, "/.");
+		strlcat(path, "/.", sizeof(path));
 		stat(path, &sb);
 		thisdev = sb.st_dev;
-		strcat(path, ".");
+		strlcat(path, ".", sizeof(path));
 		++sb.st_dev; /* failsafe */
 		stat(path, &sb);
 

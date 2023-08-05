@@ -1,32 +1,32 @@
 /*
-
-	Copyright 2003, CyberTAN  Inc.  All Rights Reserved
-
-	This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
-	the contents of this file may not be disclosed to third parties,
-	copied or duplicated in any form without the prior written
-	permission of CyberTAN Inc.
-
-	This software should be used as a reference only, and it not
-	intended for production use!
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
-
-*/
+ *
+ * Copyright 2003, CyberTAN  Inc.  All Rights Reserved
+ *
+ * This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
+ * the contents of this file may not be disclosed to third parties,
+ * copied or duplicated in any form without the prior written
+ * permission of CyberTAN Inc.
+ *
+ * This software should be used as a reference only, and it not
+ * intended for production use!
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
+ *
+ */
 /*
-
-	Copyright 2005, Broadcom Corporation
-	All Rights Reserved.
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
-
-*/
+ *
+ * Copyright 2005, Broadcom Corporation
+ * All Rights Reserved.
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ *
+ */
 /*
  *
  * Modified for Tomato Firmware
@@ -2674,9 +2674,9 @@ static void start_media_server(int force)
 					snprintf(buffer2, sizeof(buffer2), "br%d", i);
 					if ((strlen(nvram_safe_get(buffer)) > 0) && (strstr(msi, buffer2) != NULL)) { /* bridge is up & present in 'ms_ifname' */
 						if (strlen(buffer3) > 0)
-							strcat(buffer3, ",");
+							strlcat(buffer3, ",", sizeof(buffer3));
 
-						strcat(buffer3, buffer2);
+						strlcat(buffer3, buffer2, sizeof(buffer3));
 					}
 				}
 				msi = buffer3;

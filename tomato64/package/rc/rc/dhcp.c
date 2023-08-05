@@ -1,38 +1,39 @@
 /*
-
-	Copyright 2003, CyberTAN  Inc.  All Rights Reserved
-
-	This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
-	the contents of this file may not be disclosed to third parties,
-	copied or duplicated in any form without the prior written
-	permission of CyberTAN Inc.
-
-	This software should be used as a reference only, and it not
-	intended for production use!
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
-
-*/
-/*
-
-	Copyright 2005, Broadcom Corporation
-	All Rights Reserved.
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
-
+ *
+ * Copyright 2003, CyberTAN  Inc.  All Rights Reserved
+ *
+ * This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
+ * the contents of this file may not be disclosed to third parties,
+ * copied or duplicated in any form without the prior written
+ * permission of CyberTAN Inc.
+ *
+ * This software should be used as a reference only, and it not
+ * intended for production use!
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
+ *
  */
 /*
-
-	Modified for Tomato Firmware
-	Portions, Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Copyright 2005, Broadcom Corporation
+ * All Rights Reserved.
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ *
+ */
+/*
+ *
+ * Modified for Tomato Firmware
+ * Portions, Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -645,7 +646,7 @@ void start_dhcpc_lan(void)
 	memset(tmp, 0, sizeof(tmp));
 	if (nvram_invmatch("wan_hostname", "")) {
 		strlcpy(tmp, "-x hostname:", sizeof(tmp));
-		strcat(tmp, nvram_safe_get("wan_hostname"));
+		strlcat(tmp, nvram_safe_get("wan_hostname"), sizeof(tmp));
 	}
 
 	memset(cmd, 0, sizeof(cmd));
@@ -702,7 +703,7 @@ void start_dhcpc(char *prefix)
 	memset(tmp, 0, sizeof(tmp));
 	if (nvram_invmatch("wan_hostname", "")) {
 		strlcpy(tmp, "-x hostname:", sizeof(tmp));
-		strcat(tmp, nvram_safe_get("wan_hostname"));
+		strlcat(tmp, nvram_safe_get("wan_hostname"), sizeof(tmp));
 	}
 
 	memset(cmd, 0, sizeof(cmd));

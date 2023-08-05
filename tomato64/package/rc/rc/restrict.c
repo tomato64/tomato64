@@ -6,6 +6,7 @@
  *
  */
 
+
 #include "rc.h"
 
 #include <time.h>
@@ -358,11 +359,11 @@ void ipt_restrictions(void)
 
 		app[0] = 0;
 		if (http_file & 1)
-			strcat(app, ".ocx$ .cab$ ");
+			strlcat(app, ".ocx$ .cab$ ", sizeof(app));
 		if (http_file & 2)
 			strlcpy(app, ".swf$ ", sizeof(app));
 		if (http_file & 4)
-			strcat(app, ".class$ .jar$");
+			strlcat(app, ".class$ .jar$", sizeof(app));
 
 		if (app[0]) {
 			ip46t_write(ipv6_enabled, "-A %s -p tcp -m multiport --dports %s -m web --path \"%s\" -j %s\n", reschain, nvram_safe_get("rrulewp"), app, chain_out_reject);
