@@ -111,10 +111,16 @@ char *reltime(time_t t, char *buf, const size_t buf_sz)
 	int days;
 	int m;
 
-	if (t < 0) t = 0;
+	if (t < 0)
+		t = 0;
+
 	days = t / 86400;
 	m = t / 60;
-	snprintf(buf, buf_sz, "%d day%s, %02d:%02d:%02d", days, ((days==1) ? "" : "s"), ((m / 60) % 24), (m % 60), (int)(t % 60));
+
+	if (days > 0)
+		snprintf(buf, buf_sz, "%d day%s, ", days, ((days == 1) ? "" : "s"));
+
+	snprintf(buf + strlen(buf), buf_sz - strlen(buf), "%02d:%02d:%02d", ((m / 60) % 24), (m % 60), (int)(t % 60));
 
 	return buf;
 }
