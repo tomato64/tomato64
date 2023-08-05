@@ -204,7 +204,7 @@ void ipt_bwlimit(int chain)
 		iSeq++;
 
 		if (!strcmp(dlceil, ""))
-			*dlceil = *dlrate;
+			dlceil = dlrate;
 
 		if (strcmp(dlrate, "") && strcmp(dlceil, "")) {
 			if (chain == 1) {
@@ -222,7 +222,7 @@ void ipt_bwlimit(int chain)
 		}
 
 		if (!strcmp(ulceil, ""))
-			*ulceil = *ulrate;
+			ulceil = ulrate;
 
 		if (strcmp(ulrate, "") && strcmp(ulceil, "")) {
 			if (chain == 1) {
@@ -403,7 +403,7 @@ void start_bwlimit(void)
 		iSeq++;
 
 		if (!strcmp(dlceil, ""))
-			*dlceil = *dlrate;
+			dlceil = dlrate;
 
 		if (strcmp(dlrate, "") && strcmp(dlceil, "")) {
 			fprintf(tc, "\t$TCA parent 1:1 classid 1:%d htb rate %skbit ceil %skbit prio %s\n"
@@ -422,7 +422,7 @@ void start_bwlimit(void)
 		}
 
 		if (!strcmp(ulceil, ""))
-			*ulceil = *dlrate;
+			ulceil = dlrate;
 
 		if (strcmp(ulrate, "") && strcmp(ulceil, ""))
 			fprintf(tc, "\t[ \"$(nvram get qos_enable)\" == \"0\" ] && {\n"
@@ -447,9 +447,9 @@ void start_bwlimit(void)
 	prio = nvram_safe_get("bwl_br0_prio");		/* priority */
 	if ((nvram_get_int("bwl_br0_enable") == 1) && strcmp(dlr, "") && strcmp(ulr, "")) {
 		if (!strcmp(dlc, ""))
-			*dlc = *dlr;
+			dlc = dlr;
 		if (!strcmp(ulc, ""))
-			*ulc = *ulr;
+			ulc = ulr;
 
 		/* for br0 only, we need to shift the priority values to be after 1 - 5 used for listed IPs/MACs
 		 * to prevent conflict between filters (there cannot be 2 filters with same class parent with
@@ -480,9 +480,9 @@ void start_bwlimit(void)
 		prio = nvram_safe_get("bwl_br1_prio");		/* priority */
 
 		if (!strcmp(dlc, ""))
-			*dlc = *dlr;
+			dlc = dlr;
 		if (!strcmp(ulc, ""))
-			*ulc = *ulr;
+			ulc = ulr;
 
 		/* download for br1 */
 		fprintf(tc, "\tTCA1=\"tc class add dev br1\"\n"
@@ -517,9 +517,9 @@ void start_bwlimit(void)
 		prio = nvram_safe_get("bwl_br2_prio");		/* priority */
 
 		if (!strcmp(dlc, ""))
-			*dlc = *dlr;
+			dlc = dlr;
 		if (!strcmp(ulc, ""))
-			*ulc = *ulr;
+			ulc = ulr;
 
 		/* download for br2 */
 		fprintf(tc, "\tTCA2=\"tc class add dev br2\"\n"
@@ -554,9 +554,9 @@ void start_bwlimit(void)
 		prio = nvram_safe_get("bwl_br3_prio");		/* priority */
 
 		if (!strcmp(dlc, ""))
-			*dlc = *dlr;
+			dlc = dlr;
 		if (!strcmp(ulc, ""))
-			*ulc = *ulr;
+			ulc = ulr;
 
 		/* download for br3 */
 		fprintf(tc, "\tTCA3=\"tc class add dev br3\"\n"
