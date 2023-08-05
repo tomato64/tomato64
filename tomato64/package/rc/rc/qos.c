@@ -227,7 +227,7 @@ void ipt_qos(void)
 				continue;
 		}
 		else if (*addr_type == '3') { /* match mac */
-			sprintf(saddr, "-m mac --mac-source %s", addr); /* (-m mac modified, returns !match in OUTPUT) */
+			snprintf(saddr, sizeof(saddr), "-m mac --mac-source %s", addr); /* (-m mac modified, returns !match in OUTPUT) */
 		}
 
 		/* IPP2P/Layer7 */
@@ -235,7 +235,7 @@ void ipt_qos(void)
 		if (ipt_ipp2p(ipp2p, app, sizeof(app)))
 			v4v6_ok &= ~IPT_V6;
 		else
-			ipt_layer7(layer7, app);
+			ipt_layer7(layer7, app, sizeof(app));
 
 		if (app[0]) {
 			v4v6_ok &= ~IPT_V6; /* L7 for IPv6 not working either! */
@@ -244,7 +244,7 @@ void ipt_qos(void)
 
 		/* dscp */
 		memset(s, 0, sizeof(s));
-		if (ipt_dscp(dscp, s))
+		if (ipt_dscp(dscp, s, sizeof(s)))
 			strlcat(saddr, s, sizeof(saddr));
 
 		class_flag = 0;
@@ -256,10 +256,10 @@ void ipt_qos(void)
 				strlcat(saddr, " -m connbytes --connbytes-mode bytes --connbytes-dir both --connbytes ", sizeof(saddr));
 				++p;
 				if (*p == 0)
-					sprintf(saddr + strlen(saddr), "%lu:", min * 1024);
+					snprintf(saddr + strlen(saddr), sizeof(saddr) - strlen(saddr), "%lu:", min * 1024);
 				else {
 					max = strtoul(p, NULL, 10);
-					sprintf(saddr + strlen(saddr), "%lu:%lu", min * 1024, (max * 1024) - 1);
+					snprintf(saddr + strlen(saddr), sizeof(saddr) - strlen(saddr), "%lu:%lu", min * 1024, (max * 1024) - 1);
 					if (!sizegroup) {
 						/* create table of connbytes sizes, pass appropriate connections there and only continue processing them if mark was wiped */
 						ip46t_write(ipv6_enabled,
@@ -295,7 +295,7 @@ void ipt_qos(void)
 
 		chain = "QOSO";
 		class_num |= class_flag;
-		sprintf(end + strlen(end), " -j CONNMARK --set-mark 0x%x/0xff00f\n", class_num);
+		snprintf(end + strlen(end), sizeof(end) - strlen(end), " -j CONNMARK --set-mark 0x%x/0xff00f\n", class_num);
 
 		/* If we found a L7 rule, make all next rules follow the case as if we found
 		 * a size rule, but do this AFTER the L7 rule mark was computed because L7
@@ -312,10 +312,10 @@ void ipt_qos(void)
 				if (*port_type != 'a') {
 					if ((*port_type == 'x') || (strchr(port, ',')))
 						/* dst-or-src port matches, and anything with multiple lists "," use multiport */
-						sprintf(sport, "-m multiport --%sports %s", (*port_type == 's') ? "s" : ((*port_type == 'd') ? "d" : ""), port);
+						snprintf(sport, sizeof(sport), "-m multiport --%sports %s", (*port_type == 's') ? "s" : ((*port_type == 'd') ? "d" : ""), port);
 					else
 						/* single or simple x:y range, use built-in tcp/udp match */
-						sprintf(sport, "--%sport %s", (*port_type == 's') ? "s" : ((*port_type == 'd') ? "d" : ""), port);
+						snprintf(sport, sizeof(sport), "--%sport %s", (*port_type == 's') ? "s" : ((*port_type == 'd') ? "d" : ""), port);
 				}
 				else
 					sport[0] = 0;
@@ -403,7 +403,7 @@ void ipt_qos(void)
 
 	inuse |= (1 << i) | 1; /* default and highest are always built */
 	memset(s, 0, sizeof(s));
-	sprintf(s, "%d", inuse);
+	snprintf(s, sizeof(s), "%d", inuse);
 	nvram_set("qos_inuse", s);
 
 #ifdef TCONFIG_BCMARM
@@ -560,11 +560,11 @@ void start_qos(char *prefix)
 	if (x) {
 		char alpha[10], beta[10], gamma[10];
 		memset(alpha, 0, sizeof(alpha));
-		sprintf(alpha, "alpha=%d", nvram_get_int("ne_valpha"));
+		snprintf(alpha, sizeof(alpha), "alpha=%d", nvram_get_int("ne_valpha"));
 		memset(beta, 0, sizeof(beta));
-		sprintf(beta, "beta=%d", nvram_get_int("ne_vbeta"));
+		snprintf(beta, sizeof(beta), "beta=%d", nvram_get_int("ne_vbeta"));
 		memset(gamma, 0, sizeof(gamma));
-		sprintf(gamma, "gamma=%d", nvram_get_int("ne_vgamma"));
+		snprintf(gamma, sizeof(gamma), "gamma=%d", nvram_get_int("ne_vgamma"));
 		modprobe("tcp_vegas", alpha, beta, gamma);
 		f_write_procsysnet("ipv4/tcp_congestion_control", "vegas");
 	}
@@ -594,13 +594,13 @@ void start_qos(char *prefix)
 
 	i = nvram_get_int("qos_burst0");
 	if (i > 0)
-		sprintf(burst_root, "burst %dk", i);
+		snprintf(burst_root, sizeof(burst_root), "burst %dk", i);
 	else
 		burst_root[0] = 0;
 
 	i = nvram_get_int("qos_burst1");
 	if (i > 0)
-		sprintf(burst_leaf, "burst %dk", i);
+		snprintf(burst_leaf, sizeof(burst_leaf), "burst %dk", i);
 	else
 		burst_leaf[0] = 0;
 
@@ -745,7 +745,7 @@ void start_qos(char *prefix)
 				continue; /* 0=off */
 
 			if (ceil > 0)
-				sprintf(s, "ceil %ukbit", calc(bw, ceil));
+				snprintf(s, sizeof(s), "ceil %ukbit", calc(bw, ceil));
 			else
 				s[0] = 0;
 

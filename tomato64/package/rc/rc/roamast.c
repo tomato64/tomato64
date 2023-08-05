@@ -281,7 +281,7 @@ void rast_deauth_sta(int bssidx, int vifidx, rast_sta_info_t *sta)
 	char wlif_name[32];
 
 	if (vifidx > 0)
-		sprintf(wlif_name, "wl%d.%d", bssidx, vifidx);
+		snprintf(wlif_name, sizeof(wlif_name), "wl%d.%d", bssidx, vifidx);
 	else
 		strlcpy(wlif_name, bssinfo[bssidx].wlif_name, sizeof(wlif_name));
 
@@ -404,7 +404,7 @@ void rast_retrieve_bs_data(int bssidx, int vifidx)
 	char wlif_name[32];
 
 	if (vifidx > 0)
-		sprintf(wlif_name, "wl%d.%d", bssidx, vifidx);
+		snprintf(wlif_name, sizeof(wlif_name), "wl%d.%d", bssidx, vifidx);
 	else
 		strlcpy(wlif_name, bssinfo[bssidx].wlif_name, sizeof(wlif_name));
 
@@ -483,7 +483,7 @@ void rast_update_sta_info(int bssidx, int vifidx)
 	rast_sta_info_t *sta = NULL;
 
 	if (vifidx > 0)
-		sprintf(wlif_name, "wl%d.%d", bssidx, vifidx);
+		snprintf(wlif_name, sizeof(wlif_name), "wl%d.%d", bssidx, vifidx);
 	else
 		strlcpy(wlif_name, bssinfo[bssidx].wlif_name, sizeof(wlif_name));
 
@@ -579,7 +579,7 @@ static void rast_watchdog(int sig)
 		for (vidx = 0; vidx < MAX_SUBIF_NUM; vidx++) {
 
 			if (vidx > 0) {
-				sprintf(prefix, "wl%d.%d", idx, vidx);
+				snprintf(prefix, sizeof(prefix), "wl%d.%d", idx, vidx);
 				if (!nvram_match(strlcat_r(prefix, "_bss_enabled", tmp, sizeof(tmp)), "1"))
 					continue;
 			}

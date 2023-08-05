@@ -23,6 +23,11 @@
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
  */
+/*
+ *
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include <stdio.h>
@@ -174,8 +179,8 @@ static void phy_tempsense_mon()
 	if (!base)
 		nvram_set("fanctrl_dutycycle_ex", "0");
 	else {
-		memset(w, 0, 8);
-		sprintf(w, "%d", base);
+		memset(w, 0, sizeof(w));
+		snprintf(w, sizeof(w), "%d", base);
 		nvram_set("fanctrl_dutycycle_ex", w);
 	}
 }

@@ -85,7 +85,7 @@ static int is_sta(int idx, int unit, int subunit, void *param)
 }
 
 #ifdef TCONFIG_BCMARM
-void ip2class(char *lan_ip, char *netmask, char *buf)
+void ip2class(char *lan_ip, char *netmask, char *buf, const size_t buf_sz)
 {
 	unsigned int val, ip;
 	struct in_addr in;
@@ -99,7 +99,7 @@ void ip2class(char *lan_ip, char *netmask, char *buf)
 	for (val = ntohl(val); val; i++)
 		val <<= 1;
 
-	sprintf(buf, "%s/%d", inet_ntoa(in), i);
+	snprintf(buf, buf_sz, "%s/%d", inet_ntoa(in), i);
 }
 #endif
 
@@ -298,7 +298,7 @@ static void foreach_wan_nat(int wanXup, wanface_list_t wanXfaces, char *p)
 	}
 }
 
-int ipt_dscp(const char *v, char *opt)
+int ipt_dscp(const char *v, char *opt, const size_t buf_sz)
 {
 	unsigned int n;
 
@@ -311,7 +311,7 @@ int ipt_dscp(const char *v, char *opt)
 	if (n > 63)
 		n = 63;
 
-	sprintf(opt, " -m dscp --dscp 0x%02X", n);
+	snprintf(opt, buf_sz, " -m dscp --dscp 0x%02X", n);
 
 	modprobe("xt_dscp");
 
@@ -408,7 +408,7 @@ static void ipt_layer7_inbound(void)
 	layer7_in = NULL;
 }
 
-int ipt_layer7(const char *v, char *opt)
+int ipt_layer7(const char *v, char *opt, const size_t buf_sz)
 {
 	char s[128];
 	char *path;
@@ -433,7 +433,7 @@ int ipt_layer7(const char *v, char *opt)
 		}
 	}
 
-	sprintf(opt, " -m layer7 --l7dir %s --l7proto %s", path, v);
+	snprintf(opt, buf_sz, " -m layer7 --l7dir %s --l7proto %s", path, v);
 
 	if (nvram_match("nf_l7in", "1")) {
 		if (!layer7_in)
@@ -757,7 +757,7 @@ static void mangle_table(void)
 	if (!nvram_get_int("ctf_disable")) {
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			if ((strcmp(lanface[i], "") != 0) && (strcmp(lanaddr[i], "") != 0)) { /* check LAN setup */
-				ip2class(lanaddr[i], lanmask[i], lan_class);
+				ip2class(lanaddr[i], lanmask[i], lan_class, sizeof(lan_class));
 				ipt_write("-A FORWARD -o %s -s %s -d %s -j MARK --set-mark 0x01/0x7\n", lanface[i], lan_class, lan_class);
 			}
 		}

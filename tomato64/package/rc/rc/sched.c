@@ -1,9 +1,10 @@
 /*
-
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -33,10 +34,10 @@ static void sched(const char *key, int resched)
 	}
 
 	if (resched) {
-		memset(s, 0 , 64);
-		sprintf(s, "%s_last", key);
-		memset(w, 0 , 32);
-		sprintf(w, "%ld", time(0));
+		memset(s, 0, sizeof(s));
+		snprintf(s, sizeof(s), "%s_last", key);
+		memset(w, 0, sizeof(w));
+		snprintf(w, sizeof(w), "%ld", time(0));
 		nvram_set(s, w);
 
 		if (t >= -5)
@@ -50,18 +51,18 @@ static void sched(const char *key, int resched)
 	w[1] = 0;
 	for (i = 0; i < 7; ++i) {
 		if (dow & (1 << i))
-			sprintf(w + strlen(w), ",%d", i);
+			snprintf(w + strlen(w), sizeof(w) - strlen(w), ",%d", i);
 	}
 
 	if (t >= 0) { /* specific time */
-		memset(s, 0 , 64);
-		sprintf(s, "%d %d * * %s sched %s", t % 60, t / 60, w + 1, key);
+		memset(s, 0, sizeof(s));
+		snprintf(s, sizeof(s), "%d %d * * %s sched %s", t % 60, t / 60, w + 1, key);
 	}
 	else { /* every ... */
 		t = -t;
 		if (t <= 5) { /* 1 to 5m = a simple cron job */
-			memset(s, 0 , 64);
-			sprintf(s, "*/%d * * * %s sched %s", t, w + 1, key);
+			memset(s, 0, sizeof(s));
+			snprintf(s, sizeof(s), "*/%d * * * %s sched %s", t, w + 1, key);
 		}
 		else {
 			t *= 60;
@@ -69,8 +70,8 @@ static void sched(const char *key, int resched)
 			tt = time(0) + 59;
 			tm = *localtime(&tt);
 
-			memset(s, 0 , 64);
-			sprintf(s, "%s_last", key);
+			memset(s, 0, sizeof(s));
+			snprintf(s, sizeof(s), "%s_last", key);
 			qq = strtoul(nvram_safe_get(s), NULL, 10);
 			if ((qq + t) > tt)
 				tt = qq;
@@ -85,8 +86,8 @@ static void sched(const char *key, int resched)
 				tt += 60;
 			}
 
-			memset(s, 0 , 64);
-			sprintf(s, "%d %d %d %d * sched %s", tm.tm_min, tm.tm_hour, tm.tm_mday, tm.tm_mon + 1, key);
+			memset(s, 0, sizeof(s));
+			snprintf(s, sizeof(s), "%d %d %d %d * sched %s", tm.tm_min, tm.tm_hour, tm.tm_mday, tm.tm_mon + 1, key);
 		}
 	}
 
@@ -135,8 +136,8 @@ int sched_main(int argc, char *argv[])
 
 						signal(SIGCHLD, chld_reap);
 
-						memset(s, 0 , 64);
-						sprintf(s, "%s_cmd", argv[1]);
+						memset(s, 0, sizeof(s));
+						snprintf(s, sizeof(s), "%s_cmd", argv[1]);
 						run_nvscript(s, "", 60);
 					}
 				}

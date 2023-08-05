@@ -1,38 +1,39 @@
 /*
-
-	Copyright 2003, CyberTAN  Inc.  All Rights Reserved
-
-	This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
-	the contents of this file may not be disclosed to third parties,
-	copied or duplicated in any form without the prior written
-	permission of CyberTAN Inc.
-
-	This software should be used as a reference only, and it not
-	intended for production use!
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
-
-*/
+ *
+ * Copyright 2003, CyberTAN  Inc.  All Rights Reserved
+ *
+ * This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
+ * the contents of this file may not be disclosed to third parties,
+ * copied or duplicated in any form without the prior written
+ * permission of CyberTAN Inc.
+ *
+ * This software should be used as a reference only, and it not
+ * intended for production use!
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
+ *
+ */
 /*
-
-	Copyright 2005, Broadcom Corporation
-	All Rights Reserved.
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
-
-*/
+ *
+ * Copyright 2005, Broadcom Corporation
+ * All Rights Reserved.
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ *
+ */
 /*
-
-	Modified for Tomato Firmware
-	Portions, Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Modified for Tomato Firmware
+ * Portions, Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -74,7 +75,7 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 	/* Generate options file */
 	char ppp_optfile[256];
 	memset(ppp_optfile, 0, sizeof(ppp_optfile));
-	sprintf(ppp_optfile, "/tmp/ppp/%s_options", prefix);
+	snprintf(ppp_optfile, sizeof(ppp_optfile), "/tmp/ppp/%s_options", prefix);
 	if ((fp = fopen(ppp_optfile, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, ppp_optfile);
 		return -1;
@@ -157,7 +158,7 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 		/* Generate chat file */
 		char ppp3g_chatfile[256];
 		memset(ppp3g_chatfile, 0, sizeof(ppp3g_chatfile));
-		sprintf(ppp3g_chatfile, "/tmp/ppp/%s_connect.chat", prefix);
+		snprintf(ppp3g_chatfile, sizeof(ppp3g_chatfile), "/tmp/ppp/%s_connect.chat", prefix);
 
 		if ((cfp = fopen(ppp3g_chatfile, "w")) == NULL) {
 			logerr(__FUNCTION__, __LINE__, ppp3g_chatfile);
@@ -265,15 +266,15 @@ static void stop_ppp(char *prefix)
 	char buffer[64];
 
 	memset(buffer, 0, sizeof(buffer));
-	sprintf(buffer, "/tmp/ppp/%s_link", prefix);
+	snprintf(buffer, sizeof(buffer), "/tmp/ppp/%s_link", prefix);
 	unlink(buffer);
 	/* Fix switching wan type from UI error (stale options file) */
 	memset(buffer, 0, sizeof(buffer));
-	sprintf(buffer, "/tmp/ppp/%s_options", prefix);
+	snprintf(buffer, sizeof(buffer), "/tmp/ppp/%s_options", prefix);
 	unlink(buffer);
 
 	memset(buffer, 0, sizeof(buffer));
-	sprintf(buffer, "pppd%s", prefix);
+	snprintf(buffer, sizeof(buffer), "pppd%s", prefix);
 
 	/* Race condition on start_pppoe in ip-up on boot, primary pp(poe/tp) wan will not reach start_wan_done on secondary ppp(oe/3g) start */
 	//killall_tk_period_wait("ip-up", 50);
@@ -312,10 +313,10 @@ static void run_pppd(char *prefix)
 	char ppp_optfile[256];
 
 	memset(pppd_path, 0, sizeof(pppd_path));
-	sprintf(pppd_path, "/tmp/ppp/pppd%s", prefix);
+	snprintf(pppd_path, sizeof(pppd_path), "/tmp/ppp/pppd%s", prefix);
 
 	memset(ppp_optfile, 0, sizeof(ppp_optfile));
-	sprintf(ppp_optfile, "/tmp/ppp/%s_options", prefix);
+	snprintf(ppp_optfile, sizeof(ppp_optfile), "/tmp/ppp/%s_options", prefix);
 
 	symlink("/usr/sbin/pppd", pppd_path);
 	eval(pppd_path, "file", ppp_optfile);
@@ -545,7 +546,7 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 
 	/* Generate XL2TPD configuration file */
 	memset(xl2tp_file, 0, sizeof(xl2tp_file));
-	sprintf(xl2tp_file, "/etc/xl2tpd.conf");
+	snprintf(xl2tp_file, sizeof(xl2tp_file), "/etc/xl2tpd.conf");
  	if ((fp = fopen(xl2tp_file, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, xl2tp_file);
  		return -1;
@@ -566,7 +567,7 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 			demand = nvram_get_int(strlcat_r(names[i], "_ppp_demand", tmp, sizeof(tmp)));
 			char ppp_optfile[256];
 			memset(ppp_optfile, 0, sizeof(ppp_optfile));
-			sprintf(ppp_optfile, "/tmp/ppp/%s_options", names[i]);
+			snprintf(ppp_optfile, sizeof(ppp_optfile), "/tmp/ppp/%s_options", names[i]);
 			fprintf(fp, "[lac %s]\n"
 			            "lns = %s\n"
 			            "bps = 1000000000\n" /* 1 gbit to both tx/rx */
@@ -587,7 +588,7 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 			            nvram_safe_get(strlcat_r(names[i], "_xl2tpd_custom", tmp, sizeof(tmp))));
 
 			memset(xl2tp_file, 0, sizeof(xl2tp_file));
-			sprintf(xl2tp_file, "/etc/%s_xl2tpd.custom", names[i]);
+			snprintf(xl2tp_file, sizeof(xl2tp_file), "/etc/%s_xl2tpd.custom", names[i]);
 			fappend(fp, xl2tp_file);
 		}
 	}
@@ -603,9 +604,9 @@ inline void stop_l2tp(char *prefix)
 	char dconnects[64];
 
 	memset(l2tp_file, 0, sizeof(l2tp_file));
-	sprintf(l2tp_file, "/var/run/l2tp-control");
+	snprintf(l2tp_file, sizeof(l2tp_file), "/var/run/l2tp-control");
 	memset(dconnects, 0, sizeof(dconnects));
-	sprintf(dconnects, "d %s", prefix);
+	snprintf(dconnects, sizeof(dconnects), "d %s", prefix);
 	f_write_string(l2tp_file, dconnects, 0, 0);	/* Disconnect current session first */
 	sleep(1);					/* Wait ip-down scripts to finish graceful */
 	stop_ppp(prefix);				/* Unlink ppp files in /tmp/ppp (used by mwan.c) and stop daemon */
@@ -664,15 +665,15 @@ void force_to_dial(char *prefix)
 	char dgw[64];
 
 	memset(dgw, 0, sizeof(dgw));
-	sprintf(dgw, "10.112.112.%d", 111 + get_wan_unit(prefix)); /* 10.112.112.112-115 for ppp0-3 */
+	snprintf(dgw, sizeof(dgw), "10.112.112.%d", 111 + get_wan_unit(prefix)); /* 10.112.112.112-115 for ppp0-3 */
 	sleep(1);
 
 	switch (get_wanx_proto(prefix)) {
 	case WP_L2TP:
 		memset(l2tp_file, 0, sizeof(l2tp_file));
-		sprintf(l2tp_file, "/var/run/l2tp-control");
+		snprintf(l2tp_file, sizeof(l2tp_file), "/var/run/l2tp-control");
 		memset(connects, 0, sizeof(connects));
-		sprintf(connects, "c %s", prefix);
+		snprintf(connects, sizeof(connects), "c %s", prefix);
 		f_write_string(l2tp_file, connects, 0, 0);
 		break;
 	case WP_PPTP:
@@ -741,8 +742,8 @@ void create_wanx_mac(char *prefix, int mac_plus)
 	char nvtmp[16];
 
 	snprintf(buffer, sizeof(buffer), "%s", nvram_safe_get("lan_hwaddr"));	/* get LAN MAC address (usually et0) */
-	inc_mac(buffer, mac_plus);						/* MAC + value for wanX */
-	nvram_set(strlcat_r(prefix, "_mac", nvtmp, sizeof(nvtmp)), buffer);			/* save it to nvram */
+	inc_mac(buffer, mac_plus, sizeof(buffer));				/* MAC + value for wanX */
+	nvram_set(strlcat_r(prefix, "_mac", nvtmp, sizeof(nvtmp)), buffer);	/* save it to nvram */
 	logmsg(LOG_INFO, "Create and save wanX mac address - WAN: %s - Address: %s", prefix, buffer);
 }
 
@@ -884,7 +885,7 @@ void start_wan_if(char *prefix)
 			mtu = 576;
 	}
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "%d", mtu);
+	snprintf(buf, sizeof(buf), "%d", mtu);
 	nvram_set(strlcat_r(prefix, "_mtu", tmp, sizeof(tmp)), buf);
 	nvram_set(strlcat_r(prefix, "_run_mtu", tmp, sizeof(tmp)), buf);
 
@@ -1131,7 +1132,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 		mwan_num = 1;
 
 	memset(wantime_file, 0, sizeof(wantime_file));
-	sprintf(wantime_file, "/var/lib/misc/%s_time", prefix);
+	snprintf(wantime_file, sizeof(wantime_file), "/var/lib/misc/%s_time", prefix);
 	f_write(wantime_file, &si.uptime, sizeof(si.uptime), 0, 0);
 
 	proto = get_wanx_proto(prefix);
@@ -1206,7 +1207,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 	get_wan_prefix(nvram_get_int("wan_primary"), pw); /* Get current primary wan name */
 	if (!check_wanup(pw)) { /* If primary wan offline, set current as primary */
 		memset(tmp, 0, sizeof(tmp));
-		sprintf(tmp, "%d", get_wan_unit(prefix));
+		snprintf(tmp, sizeof(tmp), "%d", get_wan_unit(prefix));
 		nvram_set("wan_primary", tmp);
 		memset(pw, 0, sizeof(pw));
 		strlcpy(pw, prefix, sizeof(pw));
@@ -1256,7 +1257,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 	if (wanup) {
 		char wan_unit_str[16];
 		memset(wan_unit_str, 0, sizeof(wan_unit_str));
-		sprintf(wan_unit_str, "%d", get_wan_unit(prefix));
+		snprintf(wan_unit_str, sizeof(wan_unit_str), "%d", get_wan_unit(prefix));
 
 		notice_set(prefix, "");
 		run_nvscript("script_mwanup", wan_unit_str, 0);
@@ -1374,7 +1375,7 @@ void stop_wan_if(char *prefix)
 		ifconfig(name, 0, "0.0.0.0", NULL);
 
 	memset(wannotice_file, 0, sizeof(wannotice_file));
-	sprintf(wannotice_file, "/var/notice/%s", prefix);
+	snprintf(wannotice_file, sizeof(wannotice_file), "/var/notice/%s", prefix);
 	unlink(wannotice_file);
 
 	do_connect_file(0, prefix);

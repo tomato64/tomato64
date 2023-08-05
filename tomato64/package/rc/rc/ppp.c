@@ -1,35 +1,40 @@
 /*
-
-	Copyright 2003, CyberTAN  Inc.  All Rights Reserved
-
-	This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
-	the contents of this file may not be disclosed to third parties,
-	copied or duplicated in any form without the prior written
-	permission of CyberTAN Inc.
-
-	This software should be used as a reference only, and it not
-	intended for production use!
-
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
-*/
+ *
+ * Copyright 2003, CyberTAN  Inc.  All Rights Reserved
+ *
+ * This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
+ * the contents of this file may not be disclosed to third parties,
+ * copied or duplicated in any form without the prior written
+ * permission of CyberTAN Inc.
+ *
+ * This software should be used as a reference only, and it not
+ * intended for production use!
+ *
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
+ */
 /*
-
-	Copyright 2005, Broadcom Corporation
-	All Rights Reserved.
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
-
-*/
+ *
+ * Copyright 2005, Broadcom Corporation
+ * All Rights Reserved.
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ *
+ */
 /*
-	$Id: ppp.c,v 1.27 2005/03/29 02:00:06 honor Exp $
-*/
+ * $Id: ppp.c,v 1.27 2005/03/29 02:00:06 honor Exp $
+ */
+/*
+ *
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -74,8 +79,8 @@ int ipup_main(int argc, char **argv)
 	 *   <interface name>  <tty device>  <speed> <local IP address> <remote IP address> <ipparam>
 	 *   ppp1              vlan1         0       71.135.98.32       151.164.184.87      0
 	 */
-	memset(ppplink_file, 0, 32);
-	sprintf(ppplink_file, "/tmp/ppp/%s_link", prefix);
+	memset(ppplink_file, 0, sizeof(ppplink_file));
+	snprintf(ppplink_file, sizeof(ppplink_file), "/tmp/ppp/%s_link", prefix);
 	f_write_string(ppplink_file, argv[1], 0, 0);
 
 	if ((p = getenv("IPREMOTE"))) {
@@ -158,8 +163,8 @@ int ipdown_main(int argc, char **argv)
 
 	strlcpy(prefix, safe_getenv("LINKNAME"), sizeof(prefix));
 
-	memset(ppplink_file, 0, 32);
-	sprintf(ppplink_file, "/tmp/ppp/%s_link", prefix);
+	memset(ppplink_file, 0, sizeof(ppplink_file));
+	snprintf(ppplink_file, sizeof(ppplink_file), "/tmp/ppp/%s_link", prefix);
 	unlink(ppplink_file);
 
 	proto = get_wanx_proto(prefix);
@@ -301,8 +306,8 @@ int pppevent_main(int argc, char **argv)
 				return 1;
 
 			if ((strcmp(argv[i], "PAP_AUTH_FAIL") == 0) || (strcmp(argv[i], "CHAP_AUTH_FAIL") == 0)) {
-				memset(ppplog_file, 0, 32);
-				sprintf(ppplog_file, "/tmp/ppp/%s_log", prefix);
+				memset(ppplog_file, 0, sizeof(ppplog_file));
+				snprintf(ppplog_file, sizeof(ppplog_file), "/tmp/ppp/%s_log", prefix);
 				f_write_string(ppplog_file, argv[i], 0, 0);
 				notice_set(prefix, "Authentication failed");
 

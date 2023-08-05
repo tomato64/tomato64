@@ -1,9 +1,10 @@
 /*
-
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -11,6 +12,7 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/statfs.h>
+
 #ifndef MNT_DETACH
 #define MNT_DETACH	0x00000002
 #endif
@@ -65,48 +67,47 @@ int mount_cifs_main(int argc, char *argv[])
 						notice_set("cifs", "Mounting...");
 						modprobe("cifs");
 						first = 0;
-						if (nvram_get_int("cifs_dbg") > 0) {
+						if (nvram_get_int("cifs_dbg") > 0)
 							f_write_string("/proc/fs/cifs/cifsFYI", nvram_safe_get("cifs_dbg"), 0, 0);
-						}
 					}
 
 #ifndef TOMATO64
 					j = snprintf(opt, sizeof(opt), "sep=<unc=%s", unc);
 					if (*user)
-						j += sprintf(opt + j, "<user=%s", user);
+						j += snprintf(opt + j, sizeof(opt) - j, "<user=%s", user);
 					if (*pass)
-						j += sprintf(opt + j, "<pass=%s", pass);
+						j += snprintf(opt + j, sizeof(opt) - j, "<pass=%s", pass);
 					if (*dom)
-						j += sprintf(opt + j, "<dom=%s", dom);
+						j += snprintf(opt + j, sizeof(opt) - j, "<dom=%s", dom);
 					if (*servern)
-						j += sprintf(opt + j, "<servern=%s", servern);
+						j += snprintf(opt + j, sizeof(opt) - j, "<servern=%s", servern);
 					if (*sec)
-						j += sprintf(opt + j, "<sec=%s", sec);
+						j += snprintf(opt + j, sizeof(opt) - j, "<sec=%s", sec);
 					if (*custom)
-						j += sprintf(opt + j, "<%s", custom);
+						j += snprintf(opt + j, sizeof(opt) - j, "<%s", custom);
 #else
 					j = snprintf(opt, sizeof(opt), "vers=1.0");
 					if (*user)
-						j += sprintf(opt + j, ",user=%s", user);
+						j += snprintf(opt + j, sizeof(opt) - j, ",user=%s", user);
 					if (*pass)
-						j += sprintf(opt + j, ",pass=%s", pass);
+						j += snprintf(opt + j, sizeof(opt) - j, ",pass=%s", pass);
 					if (*dom)
-						j += sprintf(opt + j, ",dom=%s", dom);
+						j += snprintf(opt + j, sizeof(opt) - j, ",dom=%s", dom);
 					if (*servern)
-						j += sprintf(opt + j, ",servern=%s", servern);
+						j += snprintf(opt + j, sizeof(opt) - j, ",servern=%s", servern);
 					if (*sec)
-						j += sprintf(opt + j, ",sec=%s", sec);
+						j += snprintf(opt + j, sizeof(opt) - j, ",sec=%s", sec);
 					if (*custom)
-						j += sprintf(opt + j, ",%s", custom);
+						j += snprintf(opt + j, sizeof(opt) - j, ",%s", custom);
 #endif /* TOMATO64 */
 
 					snprintf(mpath, sizeof(mpath), "/cifs%d", i);
 					umount(mpath);
 #ifndef TOMATO64
-					if (mount("-", mpath, "cifs", MS_NOATIME|MS_NODIRATIME, opt) != 0)
+					if (mount("-", mpath, "cifs", (MS_NOATIME | MS_NODIRATIME), opt) != 0)
 						continue;
 #else
-					if (mount(unc, mpath, "cifs", MS_NOATIME|MS_NODIRATIME, opt) != 0)
+					if (mount(unc, mpath, "cifs", (MS_NOATIME | MS_NODIRATIME), opt) != 0)
 						continue;
 #endif /* TOMATO64 */
 
@@ -130,9 +131,8 @@ int mount_cifs_main(int argc, char *argv[])
 					snprintf(s, sizeof(s), "Error mounting CIFS #%s. Still trying... ", (done[1] == done[2]) ? "1 and #2" : ((done[1] == 0) ? "1" : "2"));
 					notice_set("cifs", s);
 				}
-				else if (try > 180) { /* 15 mins */
+				else if (try > 180) /* 15 mins */
 					try = 180;
-				}
 			}
 
 			return 1;
@@ -145,7 +145,7 @@ int mount_cifs_main(int argc, char *argv[])
 				    && sf.f_type != 0x71736873
 #endif
 				)) {
-					// is mounted
+					/* is mounted */
 					run_userfile(mpath, ".autostop", mpath, 5);
 					run_nvscript("script_autostop", mpath, 5);
 				}

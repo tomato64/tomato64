@@ -65,8 +65,8 @@ void create_passwd(void)
 	chmod("/etc/shadow", 0600);
 
 #ifdef TCONFIG_SAMBASRV
-	memset(s, 0, 512);
-	sprintf(s, "root:x:0:0:root:/root:/bin/sh\n"
+	memset(s, 0, sizeof(s));
+	snprintf(s, sizeof(s), "root:x:0:0:root:/root:/bin/sh\n"
 	           "%s:x:100:100:nas:/dev/null:/dev/null\n"
 	           "nobody:x:65534:65534:nobody:/dev/null:/dev/null\n",
 	           smbd_user);

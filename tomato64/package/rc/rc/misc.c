@@ -1,9 +1,10 @@
 /*
-
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -144,7 +145,7 @@ void run_userfile(char *folder, char *extension, const char *arg1, int wtime)
 	if (n >= 0) {
 		for (i = 0; i < n; ++i) {
 			memset(buf, 0, (PATH_MAX + 1));
-			sprintf(buf, "%s/%s", folder, namelist[i]->d_name);
+			snprintf(buf, (PATH_MAX + 1), "%s/%s", folder, namelist[i]->d_name);
 			execute_with_maxwait(argv, (strchr(namelist[i]->d_name, '&') ? 0 : wtime));
 			free(namelist[i]);
 		}
@@ -213,7 +214,7 @@ void run_nvscript(const char *nv, const char *arg1, int wtime)
 
 		if ((script) && (*script != 0)) {
 			memset(s, 0, (PATH_MAX + 1));
-			sprintf(s, "/tmp/%s.sh", nv);
+			snprintf(s, (PATH_MAX + 1), "/tmp/%s.sh", nv);
 			if ((f = fopen(s, "w")) != NULL) {
 				fputs("#!/bin/sh\n", f);
 				fputs(script, f);
@@ -229,7 +230,7 @@ void run_nvscript(const char *nv, const char *arg1, int wtime)
 		}
 
 		memset(s, 0, (PATH_MAX + 1));
-		sprintf(s, ".%s", nv);
+		snprintf(s, (PATH_MAX + 1), ".%s", nv);
 		if (strncmp("sch_c", nv, 5) == 0)
 			check_dirs = 0;
 		else if (strncmp("sesx_", nv, 5) == 0)
@@ -257,10 +258,10 @@ static void write_ct_timeout(const char *type, const char *name, unsigned int va
 	char buf[128];
 	char v[16];
 
-	memset(buf, 0, 128);
-	sprintf(buf, "ipv4/netfilter/ip_conntrack_%s_timeout%s%s", type, ((name && name[0]) ? "_" : ""), (name ? name : ""));
-	memset(v, 0, 16);
-	sprintf(v, "%u", val);
+	memset(buf, 0, sizeof(buf));
+	snprintf(buf, sizeof(buf), "ipv4/netfilter/ip_conntrack_%s_timeout%s%s", type, ((name && name[0]) ? "_" : ""), (name ? name : ""));
+	memset(v, 0, sizeof(v));
+	snprintf(v, sizeof(v), "%u", val);
 
 	f_write_procsysnet(buf, v);
 }
@@ -279,8 +280,8 @@ static unsigned int read_ct_timeout(const char *type, const char *name)
 	unsigned int val = 0;
 	char v[16];
 
-	memset(buf, 0, 128);
-	sprintf(buf, "/proc/sys/net/ipv4/netfilter/ip_conntrack_%s_timeout%s%s", type, ((name && name[0]) ? "_" : ""), (name ? name : ""));
+	memset(buf, 0, sizeof(buf));
+	snprintf(buf, sizeof(buf), "/proc/sys/net/ipv4/netfilter/ip_conntrack_%s_timeout%s%s", type, ((name && name[0]) ? "_" : ""), (name ? name : ""));
 	if (f_read_string(buf, v, sizeof(v)) > 0)
 		val = atoi(v);
 
@@ -322,8 +323,8 @@ void setup_conntrack(void)
 		v[6] = read_tcp_timeout("close");
 		v[7] = read_tcp_timeout("close_wait");
 		v[8] = read_tcp_timeout("last_ack");
-		memset(buf, 0, 70);
-		sprintf(buf, "0 %u %u %u %u %u %u %u %u 0", v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8]);
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), "0 %u %u %u %u %u %u %u %u 0", v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8]);
 		nvram_set("ct_tcp_timeout", buf);
 	}
 
@@ -335,8 +336,8 @@ void setup_conntrack(void)
 	else {
 		v[0] = read_udp_timeout(NULL);
 		v[1] = read_udp_timeout("stream");
-		memset(buf, 0, 70);
-		sprintf(buf, "%u %u", v[0], v[1]);
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), "%u %u", v[0], v[1]);
 		nvram_set("ct_udp_timeout", buf);
 	}
 
@@ -348,8 +349,8 @@ void setup_conntrack(void)
 	else {
 		v[0] = read_ct_timeout("generic", NULL);
 		v[1] = read_ct_timeout("icmp", NULL);
-		memset(buf, 0, 70);
-		sprintf(buf, "%u %u", v[0], v[1]);
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), "%u %u", v[0], v[1]);
 		nvram_set("ct_timeout", buf);
 	}
 
@@ -390,8 +391,8 @@ void setup_conntrack(void)
 	if (nvram_match("ftp_enable", "1") && (i > 0) && (i != 21)) {
 		char ports[32];
 
-		memset(ports, 0, 32);
-		sprintf(ports, "ports=21,%d", i);
+		memset(ports, 0, sizeof(ports));
+		snprintf(ports, sizeof(ports), "ports=21,%d", i);
 		ct_modprobe_r("ftp");
 		ct_modprobe("ftp", ports);
 	}
@@ -476,7 +477,7 @@ inline int host_addrtypes(const char *name, int af)
 	return host_addr_info(name, af, NULL);
 }
 
-void inc_mac(char *mac, int plus)
+void inc_mac(char *mac, int plus, const size_t buf_sz)
 {
 	unsigned char m[6];
 	int i;
@@ -493,7 +494,7 @@ void inc_mac(char *mac, int plus)
 		}
 		plus += (plus < 0) ? 1 : -1;
 	}
-	sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
+	snprintf(mac, buf_sz, "%02X:%02X:%02X:%02X:%02X:%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
 }
 
 void set_mac(const char *ifname, const char *nvname, int plus)

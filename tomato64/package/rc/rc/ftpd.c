@@ -30,9 +30,9 @@ static char *get_full_storage_path(char *val)
 	memset(buf, 0, sizeof(buf));
 
 	if (val[0] == '/')
-		len = sprintf(buf, "%s", val);
+		len = snprintf(buf, sizeof(buf), "%s", val);
 	else
-		len = sprintf(buf, "%s/%s", MOUNT_ROOT, val);
+		len = snprintf(buf, sizeof(buf), "%s/%s", MOUNT_ROOT, val);
 
 	if (len > 1 && buf[len - 1] == '/')
 		buf[len - 1] = 0;
@@ -144,7 +144,7 @@ void start_ftpd(int force)
 	if (nvram_get_int("ftp_super")) {
 		/* rights */
 		memset(tmp, 0, sizeof(tmp));
-		sprintf(tmp, "%s/%s", vsftpd_users, "admin");
+		snprintf(tmp, sizeof(tmp), "%s/%s", vsftpd_users, "admin");
 		if ((f = fopen(tmp, "w")) == NULL) {
 			logerr(__FUNCTION__, __LINE__, tmp);
 			return;
@@ -163,7 +163,7 @@ void start_ftpd(int force)
 
 		/* rights */
 		memset(tmp, 0, sizeof(tmp));
-		sprintf(tmp, "%s/ftp", vsftpd_users);
+		snprintf(tmp, sizeof(tmp), "%s/ftp", vsftpd_users);
 		if ((f = fopen(tmp, "w")) == NULL) {
 			logerr(__FUNCTION__, __LINE__, tmp);
 			return;
@@ -246,7 +246,7 @@ void start_ftpd(int force)
 		/* does a valid HTTPD cert exist? if not, generate one */
 		if ((!f_exists("/etc/cert.pem")) || (!f_exists("/etc/key.pem"))) {
 			f_read("/dev/urandom", &sn, sizeof(sn));
-			sprintf(t, "%llu", sn & 0x7FFFFFFFFFFFFFFFULL);
+			snprintf(t, sizeof(t), "%llu", sn & 0x7FFFFFFFFFFFFFFFULL);
 			nvram_set("https_crt_gen", "1");
 			nvram_set("https_crt_save", "1");
 			eval("gencert.sh", t);
@@ -303,17 +303,17 @@ void start_ftpd(int force)
 			/* directory */
 			memset(tmp, 0, sizeof(tmp));
 			if (strncmp(rights, "Private", 7) == 0) {
-				sprintf(tmp, "%s/%s", nvram_storage_path("ftp_pvtroot"), user);
+				snprintf(tmp, sizeof(tmp), "%s/%s", nvram_storage_path("ftp_pvtroot"), user);
 				mkdir_if_none(tmp);
 			}
 			else
-				sprintf(tmp, "%s", get_full_storage_path(root_dir));
+				snprintf(tmp, sizeof(tmp), "%s", get_full_storage_path(root_dir));
 
 			fprintf(fp, "%s:%s:0:0:%s:%s:/sbin/nologin\n", user, crypt(pass, "$1$"), user, tmp);
 
 			/* rights */
 			memset(tmp, 0, sizeof(tmp));
-			sprintf(tmp, "%s/%s", vsftpd_users, user);
+			snprintf(tmp, sizeof(tmp), "%s/%s", vsftpd_users, user);
 			if ((f = fopen(tmp, "w")) == NULL) {
 				logerr(__FUNCTION__, __LINE__, tmp);
 				return;

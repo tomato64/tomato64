@@ -355,7 +355,7 @@ int main(int argc, char **argv)
 		realpath(argv[0], tmp);
 		if ((strncmp(tmp, "/tmp/", 5) != 0) && (argc < 32)) {
 			memset(tmp, 0, sizeof(tmp));
-			sprintf(tmp, "%s%s", "/tmp/", base);
+			snprintf(tmp, sizeof(tmp), "%s%s", "/tmp/", base);
 			if (f_exists(tmp)) {
 				cprintf("[rc] override: %s\n", tmp);
 				memcpy(a, argv, argc * sizeof(a[0]));

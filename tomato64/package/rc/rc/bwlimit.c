@@ -3,7 +3,8 @@
  * Copyright (C) 2006-2008 Jonathan Zarate
  * rate limit & connection limit by conanxu
  * 2011 modified by Victek & Shibby for 2.6 kernel
- * last changed: 20110210
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
  */
 
 
@@ -199,7 +200,7 @@ void ipt_bwlimit(int chain)
 		
 		address_checker(&address_type, ipaddr_old, ipaddr, sizeof(ipaddr));
 		memset(seq, 0, sizeof(seq));
-		sprintf(seq, "0x%x/0xff00000", iSeq << 20);
+		snprintf(seq, sizeof(seq), "0x%x/0xff00000", iSeq << 20);
 		iSeq++;
 
 		if (!strcmp(dlceil, ""))

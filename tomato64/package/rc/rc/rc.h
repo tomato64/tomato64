@@ -370,9 +370,9 @@ extern void ip6t_write(const char *format, ...);
 #endif /* TCONFIG_IPV6 */
 extern void ipt_log_unresolved(const char *addr, const char *addrtype, const char *categ, const char *name);
 extern int ipt_addr(char *addr, int maxlen, const char *s, const char *dir, int af, int strict, const char *categ, const char *name);
-extern int ipt_dscp(const char *v, char *opt);
+extern int ipt_dscp(const char *v, char *opt, const size_t buf_sz);
 extern int ipt_ipp2p(const char *v, char *opt, const size_t buf_sz);
-extern int ipt_layer7(const char *v, char *opt);
+extern int ipt_layer7(const char *v, char *opt, const size_t buf_sz);
 #define ipt_source_strict(s, src, categ, name) ipt_addr(src, 64, s, "src", IPT_V4, 1, categ, name)
 #define ipt_source(s, src, categ, name) ipt_addr(src, 64, s, "src", IPT_V4, 0, categ, name)
 extern int start_firewall(void);
@@ -444,7 +444,7 @@ extern void setup_conntrack(void);
 extern void remove_conntrack(void);
 extern int host_addr_info(const char *name, int af, struct sockaddr_storage *buf);
 extern int host_addrtypes(const char *name, int af);
-extern void inc_mac(char *mac, int plus);
+extern void inc_mac(char *mac, int plus, const size_t buf_sz);
 extern void set_mac(const char *ifname, const char *nvname, int plus);
 extern const char *default_wanif(void);
 extern void simple_unlock(const char *name);

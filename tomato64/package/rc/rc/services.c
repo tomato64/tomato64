@@ -554,7 +554,7 @@ void start_dnsmasq()
 						buf[0] = 0;
 						for (n = 0 ; n < dns->count; ++n) {
 							if (dns->dns[n].port == 53) /* check: option 6 doesn't seem to support other ports */
-								sprintf(buf + strlen(buf), ",%s", inet_ntoa(dns->dns[n].addr));
+								snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), ",%s", inet_ntoa(dns->dns[n].addr));
 						}
 						fprintf(f, "dhcp-option=tag:%s,6%s\n", nvram_safe_get(lanN_ifname), buf); /* dns-server */
 					}

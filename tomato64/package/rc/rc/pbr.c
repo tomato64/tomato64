@@ -1,10 +1,11 @@
 /*
-
-	Tomato Firmware
-	for policy router
-	Copyright (C) 2013-2014 arctic
-
-*/
+ *
+ * Tomato Firmware
+ * for policy router
+ * Copyright (C) 2013-2014 arctic
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -18,10 +19,10 @@ void ipt_routerpolicy(void)
 {
 	char *nv, *nvp, *b;
 	char *active, *proto, *srt_type, *srt_addr, *srt_port, *dst_type, *dst_addr, *dst_port, *wanx, *desc;
-	char msrt[192],mdst[192],jump[16];
+	char msrt[192], mdst[192], jump[16];
 	char *msport, *mdport;
 	int proto_num;
-	int wan_unit,mwan_num;
+	int wan_unit, mwan_num;
 	char prefix[] = "wanXX";
 
 	/*
@@ -131,9 +132,9 @@ void ipt_routerpolicy(void)
 
 			memset(msrt, 0, sizeof(msrt));
 			if (atoi(srt_type) == 1)
-				sprintf(msrt, "-s %s", srt_addr);
+				snprintf(msrt, sizeof(msrt), "-s %s", srt_addr);
 			else if (atoi(srt_type) == 2)
-				sprintf(msrt, "-m mac --mac-source %s", srt_addr);
+				snprintf(msrt, sizeof(msrt), "-m mac --mac-source %s", srt_addr);
 
 			memset(jump, 0, sizeof(jump));
 			if (atoi(wanx) >= 1 && atoi(wanx) <= 4) {
@@ -142,7 +143,7 @@ void ipt_routerpolicy(void)
 				if (!check_wanup(prefix))
 					continue;
 
-				sprintf(jump, "WAN_%s", wanx);
+				snprintf(jump, sizeof(jump), "WAN_%s", wanx);
 			}
 			else
 				continue;
@@ -167,7 +168,7 @@ void ipt_routerpolicy(void)
 					inet_ntop(p->ai_family, addr, buf, sizeof(buf));
 
 					memset(mdst, 0, sizeof(mdst));
-					sprintf(mdst, "-d %s", buf);
+					snprintf(mdst, sizeof(mdst), "-d %s", buf);
 
 					msport = (strchr(srt_port, ',') != NULL) ? " -m multiport --sports " : " --sport ";
 					mdport = (strchr(dst_port, ',') != NULL) ? " -m multiport --dports " : " --dport ";
@@ -211,7 +212,7 @@ void ipt_routerpolicy(void)
 			else {
 				memset(mdst, 0, sizeof(mdst));
 				if (atoi(dst_type) != 0)
-					sprintf(mdst, "-d %s", dst_addr);
+					snprintf(mdst, sizeof(mdst), "-d %s", dst_addr);
 
 				msport = (strchr(srt_port, ',') != NULL) ? " -m multiport --sports " : " --sport ";
 				mdport = (strchr(dst_port, ',') != NULL) ? " -m multiport --dports " : " --dport ";

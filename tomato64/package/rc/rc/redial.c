@@ -1,24 +1,30 @@
 /*
-
-	Copyright 2003, CyberTAN  Inc.  All Rights Reserved
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
-
-*/
+ *
+ * Copyright 2003, CyberTAN  Inc.  All Rights Reserved
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
+ *
+ */
 /*
-
-	Copyright 2005, Broadcom Corporation
-	All Rights Reserved.
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
-
-*/
+ *
+ * Copyright 2005, Broadcom Corporation
+ * All Rights Reserved.
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ *
+ */
+/*
+ *
+ * FreshTomato Firmware
+ * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -53,8 +59,8 @@ int redial_main(int argc, char **argv)
 	int mwan_num;
 	char c_pid[10];
 	char tmp[32], tmp2[16];
-	memset(c_pid, 0, 10);
-	sprintf(c_pid, "%d", getpid());
+	memset(c_pid, 0, sizeof(c_pid));
+	snprintf(c_pid, sizeof(c_pid), "%d", getpid());
 	char prefix[] = "wanXX";
 	char prefix_mwan[] = "wanXX";
 
@@ -98,10 +104,10 @@ int redial_main(int argc, char **argv)
 		if (!strcmp(prefix, "wan") && mwan_num != 1)
 			strlcpy(prefix_mwan, "wan1", sizeof(prefix_mwan));
 
-		memset(tmp, 0, 32);
-		sprintf(tmp, "%s-restart", prefix_mwan);
-		memset(tmp2, 0, 16);
-		sprintf(tmp2, "%s-restart-c", prefix_mwan);
+		memset(tmp, 0, sizeof(tmp));
+		snprintf(tmp, sizeof(tmp), "%s-restart", prefix_mwan);
+		memset(tmp2, 0, sizeof(tmp2));
+		snprintf(tmp2, sizeof(tmp2), "%s-restart-c", prefix_mwan);
 
 		if (nvram_match("action_service", "wan-restart") || nvram_match("action_service", tmp) || nvram_match("action_service", "wan-restart-c") || nvram_match("action_service", tmp2))
 			syslog(LOG_INFO, "Redial: %s DOWN. Reconnect is already in progress ...", prefix);

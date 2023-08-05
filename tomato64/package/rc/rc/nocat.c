@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2009 zd <tomato@winddns.cn>
  * Copyright (C) 2011 Modifications for K2.6 Victek, Roadkill 
+ * Fixes/updates (C) 2018 - 2023 pedro
  *
  * $Id:
  */
@@ -164,23 +165,23 @@ void start_nocat(void)
 		p = "/tmp/splashd";
 
 	memset(splashfile, 0, sizeof(splashfile));
-	sprintf(splashfile, "%s/splash.html", p);
+	snprintf(splashfile, sizeof(splashfile), "%s/splash.html", p);
 	memset(logofile, 0, sizeof(logofile));
-	sprintf(logofile, "%s/style.css", p);
+	snprintf(logofile, sizeof(logofile), "%s/style.css", p);
 	memset(iconfile, 0, sizeof(iconfile));
-	sprintf(iconfile, "%s/favicon.ico", p);
+	snprintf(iconfile, sizeof(iconfile), "%s/favicon.ico", p);
 
 	if (!f_exists(splashfile)) {
 		nvram_get_file("NC_SplashFile", splashfile, 8192);
 		if (!f_exists(splashfile)) {
 			memset(cmd, 0, sizeof(cmd));
-			sprintf(cmd, "cp /www/splash.html %s", splashfile);
+			snprintf(cmd, sizeof(cmd), "cp /www/splash.html %s", splashfile);
 			system(cmd);
 			memset(cmd, 0, sizeof(cmd));
-			sprintf(cmd, "cp /www/style.css %s", logofile);
+			snprintf(cmd, sizeof(cmd), "cp /www/style.css %s", logofile);
 			system(cmd);
 			memset(cmd, 0, sizeof(cmd));
-			sprintf(cmd, "cp /www/favicon.ico %s", iconfile);
+			snprintf(cmd, sizeof(cmd), "cp /www/favicon.ico %s", iconfile);
 			system(cmd);
 		}
 	}
