@@ -419,9 +419,7 @@ function init() {
 	<div class="section">
 		<div class="log-searchbox">
 
-			<span class="log-clear">
-				&raquo; <a href="javascript:scrollToBottom()">Scroll to bottom</a>
-			</span>
+			<span class="log-clear">&raquo; <a href="javascript:scrollToBottom()">Scroll to bottom</a></span>
 
 			<span>
 				Filter level: &nbsp;
@@ -450,13 +448,11 @@ function init() {
 		<div class="tomato-grid" id="log-table-header"></div>
 		<div class="tomato-grid" id="log-table" onscroll="onTableScroll();"></div>
 
-			<span class="log-clear">
-				&raquo; <a href="javascript:scrollToBottom()">Scroll to bottom</a>
-			</span>
-			
 		<div id="log-refresh-time"></div>
 
 		<div class="log-clear log-viewlast">
+			<span class="log-clear">&raquo; <a href="javascript:scrollToBottom()">Scroll to bottom</a></span>
+			<span style="display:block;margin-top:1em">&nbsp;</span>
 			<span>&raquo; <a href="logs/syslog.txt?_http_id=<% nv(http_id) %>">Download Log File</a></span><br>
 			<span>&raquo; <a href="admin-log.asp">Logging Configuration</a></span><br><br>
 		</div>
