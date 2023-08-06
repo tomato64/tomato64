@@ -443,8 +443,8 @@ function submit_complete() {
 /* ZFS-END */
 				{ title: 'HDD Spindown', indent: 2, name: 'f_idle_enable', type: 'checkbox', suffix: '&nbsp; <small>Spin down each HDD when idle. No need to use with flash drive.<\/small>', value: nvram.idle_enable == 1 },
 			null,
-			{ title: '3G/4G Modem Support', name: 'f_usb_3g', type: 'checkbox',
-				suffix: '&nbsp; <small>Before disconnecting Modem from USB port, remember to uncheck box. If modem used usbserial module, you have to reboot router before unplug modem.<\/small>', value: nvram.usb_3g == 1 },
+			{ title: '3G/4G/5G Modem Support', name: 'f_usb_3g', type: 'checkbox',
+				suffix: '&nbsp; <small>Before disconnecting modem, remember to uncheck box. If modem uses usbserial module, you must reboot router before unplugging modem.<\/small>', value: nvram.usb_3g == 1 },
 /* UPS-BEGIN */
 			{ title: 'Run APCUPSD Deamon', name: 'f_usb_apcupsd', type: 'checkbox',
 				suffix: '&nbsp; <small>Required by UPS Monitor (APC Uninterruptible Power Supply)<\/small>', value: nvram.usb_apcupsd == 1 },
