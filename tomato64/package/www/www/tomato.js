@@ -2552,11 +2552,13 @@ function navi() {
 			['Identification',		'ident.asp'],
 			['Time',			'time.asp'],
 			['DDNS',			'ddns.asp'],
-			['DHCP Reservation',		'static.asp']
+			['DHCP Reservation',		'static.asp'],
 /* TOMATO64-REMOVE-BEGIN */
-			,['Wireless Filter',		'wfilter.asp']
+			['Wireless Filter',		'wfilter.asp'] ] ],
 /* TOMATO64-REMOVE-END */
-									 ] ],
+/* TOMATO64-BEGIN */
+								       ] ],
+/* TOMATO64-END */
 		['Advanced', 			'advanced', 0, [
 			['Conntrack/Netfilter',		'ctnf.asp'],
 			['DHCP/DNS/TFTP',		'dhcpdns.asp'],
@@ -2572,12 +2574,14 @@ function navi() {
 			['TOR Project',			'tor.asp'],
 /* TOR-END */
 			['VLAN',			'vlan.asp'],
-			['LAN Access',			'access.asp']
+			['LAN Access',			'access.asp'],
 /* TOMATO64-REMOVE-BEGIN */
-			,['Virtual Wireless',		'wlanvifs.asp'],
-			['Wireless',			'wireless.asp']
+			['Virtual Wireless',		'wlanvifs.asp'],
+			['Wireless',			'wireless.asp'] ] ],
 /* TOMATO64-REMOVE-END */
-									 ] ],
+/* TOMATO64-BEGIN */
+									] ],
+/* TOMATO64-END */
 		['Port Forwarding', 		'forward', 0, [
 			['Basic',			'basic.asp'],
 /* IPV6-BEGIN */
@@ -2669,11 +2673,13 @@ function navi() {
 /* SNMP-END */
 			['Logging',			'log.asp'],
 			['Scheduler',			'sched.asp'],
-			['Scripts',			'scripts.asp']
+			['Scripts',			'scripts.asp'],
 /* TOMATO64-REMOVE-BEGIN */
-			,['Upgrade',			'upgrade.asp']
+			['Upgrade',			'upgrade.asp'] ] ],
 /* TOMATO64-REMOVE-END */
-									 ] ],
+/* TOMATO64-BEGIN */
+								       ] ],
+/* TOMATO64-END */
 		null,
 		['About',			'about.asp'],
 		['Reboot...',			'javascript:reboot()'],
