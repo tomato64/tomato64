@@ -521,9 +521,9 @@ function init() {
 		{ title: 'CPU Load <small>(1 / 5 / 15 mins)<\/small>', rid: 'cpu', text: stats.cpuload },
 		{ title: 'CPU Usage', rid: 'cpupercent', text: stats.cpupercent },
 		{ title: 'Used / Total RAM', rid: 'memory', text: stats.memory },
-		{ title: 'Used / Total Swap', rid: 'swap', text: stats.swap, hidden: (stats.swap == '') }
+		{ title: 'Used / Total Swap', rid: 'swap', text: stats.swap, hidden: (stats.swap == '') },
 /* TOMATO64-REMOVE-BEGIN */
-		,{ title: 'Used / Total NVRAM', rid: 'nvram_stat', text: scaleSize(nvstat.size - nvstat.free)+' / '+scaleSize(nvstat.size)+' <small>('+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%)<\/small><div class="progress-wrapper"><div class="progress-container"><div class="progress-bar" style="background-color:'+setColor(((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2))+';width:'+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%"><\/div><\/div><\/div>' },
+		{ title: 'Used / Total NVRAM', rid: 'nvram_stat', text: scaleSize(nvstat.size - nvstat.free)+' / '+scaleSize(nvstat.size)+' <small>('+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%)<\/small><div class="progress-wrapper"><div class="progress-container"><div class="progress-bar" style="background-color:'+setColor(((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2))+';width:'+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%"><\/div><\/div><\/div>' },
 		null,
 		{ title: 'CPU Temperature', rid: 'temps', text: stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F' },
 		{ title: 'Wireless Temperature', rid: 'wlsense', text: stats.wlsense }
