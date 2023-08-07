@@ -64,17 +64,26 @@
 #include <arpa/inet.h>
 #include <getopt.h>
 #include <sys/wait.h>
-//#include <error.h>
+#ifndef TOMATO64
+#include <error.h>
+#include <sys/signal.h>
+#else
 #include <signal.h>
+#endif /* TOMATO64 */
 #include <netinet/tcp.h>
 #include <sys/stat.h>
+#ifdef TOMATO64
 #include <limits.h>
+#endif /* TOMATO64 */
 
 #include <wlutils.h>
 #include "tomato.h"
 #ifdef TCONFIG_HTTPS
-//#include "../mssl/mssl.h"
+#ifndef TOMATO64
+#include "../mssl/mssl.h"
+#else
 #include "mssl.h"
+#endif /* TOMATO64 */
 #define HTTPS_CRT_VER		"1"
 #endif
 

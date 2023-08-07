@@ -27,8 +27,11 @@
 
 
 /* CGI hash table */
-//static struct hsearch_data htab = { .table = NULL };
+#if defined(__GLIBC__) || defined(__UCLIBC__)
+static struct hsearch_data htab = { .table = NULL };
+#else
 static struct hsearch_data htab;
+#endif	/* ! (__GLIBC__ || __UCLIBC__) */
 
 static void unescape(char *s)
 {

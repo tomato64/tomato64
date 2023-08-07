@@ -7,8 +7,11 @@
 
 
 #include "tomato.h"
-//#include "../mssl/mssl.h"
+#ifndef TOMATO64
+#include "../mssl/mssl.h"
+#else
 #include "mssl.h"
+#endif /* TOMATO64 */
 #include <errno.h>
 #include <stdarg.h>
 

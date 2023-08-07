@@ -746,8 +746,11 @@ static void layer7_list(const char *path, int *first)
 	DIR *dir;
 	struct dirent *de;
 	char *p;
-//	char name[NAME_MAX];
+#ifndef TOMATO64
+	char name[NAME_MAX];
+#else
 	char name[256];
+#endif /* TOMATO64 */
 
 	if ((dir = opendir(path)) != NULL) {
 		while ((de = readdir(dir)) != NULL) {
