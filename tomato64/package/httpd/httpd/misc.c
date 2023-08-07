@@ -120,7 +120,7 @@ char *reltime(time_t t, char *buf, const size_t buf_sz)
 	if (days > 0)
 		snprintf(buf, buf_sz, "%d day%s, ", days, ((days == 1) ? "" : "s"));
 
-	snprintf(buf + strlen(buf), buf_sz - strlen(buf), "%02d:%02d:%02d", ((m / 60) % 24), (m % 60), (int)(t % 60));
+	snprintf(buf + strlen(buf), buf_sz - strlen(buf), "%02dh %02dm %02ds", ((m / 60) % 24), (m % 60), (int)(t % 60));
 
 	return buf;
 }
