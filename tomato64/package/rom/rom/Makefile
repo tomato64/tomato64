@@ -3,6 +3,8 @@ SHELL := /bin/bash
 INSTALLDIR=$(TARGET_DIR)
 
 all:
+	rm rom/etc/ld.so.conf
+
 	@echo "" >rom/etc/motd
 	@echo "" >>rom/etc/motd
 	@echo "Tomato64 x86_64 `cat $(BR2_EXTERNAL_TOMATO64_PATH)/version` " >>rom/etc/motd
