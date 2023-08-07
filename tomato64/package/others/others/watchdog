@@ -7,10 +7,14 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 
 
+NV() {
+	nvram get "$1"
+}
+
 PID=$$
 PIDFILE="/var/run/watchdog.pid"
 IPLISTFILE="/tmp/watchdog.iplist"
-MWAN=$(nvram get mwan_num)
+MWAN=$(NV mwan_num)
 IPLIST=""
 MWANTABLE="wan"
 
@@ -21,7 +25,8 @@ while [ $i -le $MWAN ]; do
 done
 
 LOGS="logger -t watchdog[$PID]"
-[ "$(nvram get mwan_debug)" -gt 0 ] && DEBUG="logger -p DEBUG -t watchdog[$PID]" || DEBUG="echo"
+[ "$(NV mwan_debug)" -gt 0 ] && DEBUG="logger -p DEBUG -t watchdog[$PID]" || DEBUG="echo"
+
 
 timeout() {
 	local cmd_pid sleep_pid retval
@@ -37,7 +42,7 @@ timeout() {
 
 findHost() {
 	local host ip
-	local dst=$(nvram get mwan_ckdst)
+	local dst=$(NV mwan_ckdst)
 	local hostlist=$(echo $dst | sed 's/,/ /')
 
 	for host in $hostlist; do
@@ -58,24 +63,24 @@ dhcpFix() {
 
 watchdogRun() {
 	for PREFIX in $MWANTABLE; do
-		IFACE=$(nvram get "$PREFIX"_iface)
+		IFACE=$(NV "$PREFIX"_iface)
 		ISPPPD=$([ -f /tmp/ppp/pppd$PREFIX ] && echo 1 || echo 0)
-		WEIGHT=$(nvram get "$PREFIX"_weight)
-		METHOD=$(nvram get "$PREFIX"_ckmtd)
-		PROTO=$(nvram get "$PREFIX"_proto)
-		DEMAND=$(nvram get "$PREFIX"_ppp_demand)
+		WEIGHT=$(NV "$PREFIX"_weight)
+		METHOD=$(NV "$PREFIX"_ckmtd)
+		PROTO=$(NV "$PREFIX"_proto)
+		DEMAND=$(NV "$PREFIX"_ppp_demand)
 		RESULT=0
 		PREFIX_MWAN=$PREFIX
 		PREFIX_LOG="WAN"$(echo $PREFIX"0" | cut -c 4- | tr '[234]' '[123]' | cut -c -1)
 		STATE_FILE="/var/lib/misc/"$PREFIX"_state"
 
-		[ "$(nvram get "$PREFIX"_ck_pause)" -eq 1 ] && {
+		[ "$(NV "$PREFIX"_ck_pause)" -eq 1 ] && {
 			$DEBUG "Watchdog paused for $PREFIX_LOG - skipping ..."
 			continue
 		}
 
 		[ "$PROTO" != "disabled" ] && {
-			[ "$(nvram get mwan_debug)" -gt 0 ] && {
+			[ "$(NV mwan_debug)" -gt 0 ] && {
 				ISUP=$(wanuptime "$PREFIX")
 				ISGW=$(ip route | grep $IFACE | grep -v link | wc -l)
 				$DEBUG "prefix=$PREFIX_LOG, iface=$IFACE, uptime=$ISUP, ISGW=$ISGW, WEIGHT=$WEIGHT"
@@ -92,7 +97,7 @@ watchdogRun() {
 			}
 
 			DEFAULT_ROUTE_FRAGMENT=$(ip route | grep default | cut -d' ' -f2-)
-			GATEWAY_FRAGMENT="via $(nvram get "$PREFIX"_gateway)"
+			GATEWAY_FRAGMENT="via $(NV "$PREFIX"_gateway)"
 			[ "$ISPPPD" -eq 1 ] && GATEWAY_FRAGMENT=""
 			for IP in $IPLIST; do
 				[ ! -z "$DEFAULT_ROUTE_FRAGMENT" ] && {
@@ -134,7 +139,7 @@ watchdogRun() {
 				} || {
 					[ "$PREFIX" == "wan" -a "$MWAN" -gt 1 ] && PREFIX_MWAN="wan1" # "wan" means restart all WANs, but we only want restart one
 
-					[ "$(nvram get action_service)" == "wan-restart" -o "$(nvram get action_service)" == $PREFIX_MWAN"-restart" -o "$(nvram get action_service)" == "wan-restart-c" -o "$(nvram get action_service)" == $PREFIX_MWAN"-restart-c" ] && {
+					[ "$(NV action_service)" == "wan-restart" -o "$(NV action_service)" == $PREFIX_MWAN"-restart" -o "$(NV action_service)" == "wan-restart-c" -o "$(NV action_service)" == $PREFIX_MWAN"-restart-c" ] && {
 						$LOGS "Connection $PREFIX_LOG DOWN - Reconnect is already in progress ..."
 					} || {
 						echo "0" > $STATE_FILE
@@ -169,6 +174,7 @@ watchdogRun() {
 
 cktracert() {
 	local RXBYTES1 RXBYTES2 IP
+	local RXBYTES_MIN_DIFF=$(NV mwan_diff) # declare the minimum number of bytes indicating a working WAN
 
 	for IP in $IPLIST; do
 		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes)
@@ -176,10 +182,10 @@ cktracert() {
 		traceroute -i $IFACE -n -w 1 -m 4 -q 1 -z 1 $IP > /dev/null 2>&1
 		usleep 200
 		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes)
-		[ "$RXBYTES2" -gt "$RXBYTES1" ] && { RESULT=1; break; }
+		[ "$RXBYTES2" -gt "$(($RXBYTES1 + $RXBYTES_MIN_DIFF))" ] { RESULT=1; break; }
 	done
 
-	[ "$RESULT" -gt 0 ] && $DEBUG "tracert test result for: $IFACE - OK" || $DEBUG "tracert test result for: $IFACE - FAILED!"
+	[ "$RESULT" -gt 0 ] && $DEBUG "tracert test result for: $IFACE - OK ($(($RXBYTES2 - $RXBYTES1)) bytes)" || $DEBUG "tracert test result for: $IFACE - FAILED! ($(($RXBYTES2 - $RXBYTES1)) bytes)"
 }
 
 ckping() {
@@ -213,7 +219,7 @@ ckcurl() {
 }
 
 watchdogAdd() {
-	local CKTIME=$(nvram get mwan_cktime)
+	local CKTIME=$(NV mwan_cktime)
 	local MINS=$((CKTIME/60))
 
 	[ "$MINS" -gt 0 ] && {
@@ -304,7 +310,7 @@ elif [ "$1" == "del" ]; then
 	watchdogDel
 elif [ "$1" == "alive" ]; then
 	mwanAlive
-elif [ "$(nvram get g_upgrade)" != "1" -a "$(nvram get g_reboot)" != "1" ]; then
+elif [ "$(NV g_upgrade)" != "1" -a "$(NV g_reboot)" != "1" ]; then
 	checkPid
 
 	checkPidSwitch
