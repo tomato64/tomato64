@@ -131,7 +131,6 @@ static void restore_defaults(void)
 #endif
 #endif /* TOMATO64 */
 
-	nvram_set("os_name", "linux");
 	nvram_set("os_version", tomato_version);
 	nvram_set("os_date", tomato_buildtime);
 
