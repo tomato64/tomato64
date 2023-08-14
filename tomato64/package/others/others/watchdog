@@ -182,7 +182,7 @@ cktracert() {
 		traceroute -i $IFACE -n -w 1 -m 4 -q 1 -z 1 $IP > /dev/null 2>&1
 		usleep 200
 		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes)
-		[ "$RXBYTES2" -gt "$(($RXBYTES1 + $RXBYTES_MIN_DIFF))" ] { RESULT=1; break; }
+		[ "$RXBYTES2" -gt "$(($RXBYTES1 + $RXBYTES_MIN_DIFF))" ] && { RESULT=1; break; }
 	done
 
 	[ "$RESULT" -gt 0 ] && $DEBUG "tracert test result for: $IFACE - OK ($(($RXBYTES2 - $RXBYTES1)) bytes)" || $DEBUG "tracert test result for: $IFACE - FAILED! ($(($RXBYTES2 - $RXBYTES1)) bytes)"
