@@ -39,10 +39,10 @@ ttbshuf() {
 			cru d ttbDL
 		# no skin either zip
 		} || {
-			rm $DIR/*.css $DIR/*.zip $DIR/*.png $DIR/*.gif $DIR/*.jpg >/dev/null 2>&1
+			rm $DIR/*.css $DIR/*.zip $DIR/*.png $DIR/*.gif $DIR/*.jpg &>/dev/null
 			echo $URL_ORIG | tr ' ' '\n' | ttbshuf | tr ' ' '\n' | sed 's/\/$//' |
 			while read l; do
-				$WGET -U "Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/88.0" -T 10 -t 1 $l/$TTB.zip -O $DIR/$TTB.zip >/dev/null 2>&1 && echo $l && break
+				$WGET -U "Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/88.0" -T 10 -t 1 $l/$TTB.zip -O $DIR/$TTB.zip &>/dev/null && echo $l && break
 			done
 			sleep 1
 

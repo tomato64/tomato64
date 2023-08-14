@@ -78,7 +78,7 @@ stopRouting() {
 
 	sed -i "s/-A/-D/g" $FIREWALL_ROUTING
 	$FIREWALL_ROUTING
-	rm -f $FIREWALL_ROUTING > /dev/null 2>&1
+	rm -f $FIREWALL_ROUTING &>/dev/null
 
 	sed -i $DNSMASQ_IPSET -e "/vpnrouting$ID/d"
 }
@@ -169,7 +169,7 @@ checkPid() {
 
 	[ -f $PIDFILE ] && {
 		PIDNO=$(cat $PIDFILE)
-		cat "/proc/$PIDNO/cmdline" > /dev/null 2>&1
+		cat "/proc/$PIDNO/cmdline" &>/dev/null
 
 		[ $? -eq 0 ] && {
 			# priority has the last process
@@ -224,6 +224,6 @@ checkRestart
 
 ip route flush cache
 
-rm -f $PIDFILE > /dev/null 2>&1
+rm -f $PIDFILE &>/dev/null
 
 exit 0
