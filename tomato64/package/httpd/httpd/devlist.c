@@ -187,6 +187,7 @@ void asp_devlist(int argc, char **argv)
 {
 	FILE *f;
 	char buf[1024];
+	char buf2[32];
 	char mac[32];
 	char ip[40];
 	char hostname[256];
@@ -245,7 +246,13 @@ wl_ifname,wl_mode,wl_radio,wl_nband,wl_wds_enable"
 					continue;
 
 				host = js_string((hostname[0] == '*') ? "" : hostname);
-				web_printf("%c['%s','%s','%s','%s']", comma, (host ? host : ""), ip, mac, ((expires == 0) ? "non-expiring" : reltime(expires, buf, sizeof(buf))));
+				memset(buf2, 0, sizeof(buf2)); /* reset */
+				if (expires == 0)
+					strlcpy(buf2, "non-expiring", sizeof(buf2));
+				else
+					reltime(expires, buf2, sizeof(buf2));
+
+				web_printf("%c['%s','%s','%s','%s']", comma, (host ? host : ""), ip, mac, buf2);
 				free(host);
 				comma = ',';
 			}
