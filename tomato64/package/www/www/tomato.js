@@ -2686,12 +2686,7 @@ function navi() {
 			['Logging',			'log.asp'],
 			['Scheduler',			'sched.asp'],
 			['Scripts',			'scripts.asp'],
-/* TOMATO64-REMOVE-BEGIN */
 			['Upgrade',			'upgrade.asp'] ] ],
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-								       ] ],
-/* TOMATO64-END */
 		null,
 		['About',			'about.asp'],
 		['Reboot...',			'javascript:reboot()'],

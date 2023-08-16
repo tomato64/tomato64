@@ -78,11 +78,15 @@ void wi_upgrade(char *url, int len, char *boundary)
 		goto ERROR2;
 	}
 
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	char *args[] = { "mtd-write2", fifo, "linux", NULL };
 #else
 	char *args[] = { "mtd-write", "-w", "-i", fifo, "-d", "linux", NULL };
 #endif
+#else
+	char *args[] = { "upgrade", fifo, NULL };
+#endif /* TOMATO64 */
 	if (_eval(args, ">/tmp/.mtd-write", 0, &pid) != 0) {
 		error = "Unable to start flash program";
 		goto ERROR2;

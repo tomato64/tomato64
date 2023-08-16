@@ -34,8 +34,14 @@ function upgrade() {
 	var ext;
 
 	name = fixFile(fom.file.value);
+/* TOMATO64-REMOVE-BEGIN */
 	if (name.search(/\.(bin|trx|chk)$/i) == -1) {
 		alert('Expecting a ".bin" or ".trx" file.');
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	if (name.search(/\.(tzst)$/i) == -1) {
+		alert('Expecting a ".tzst" file.');
+/* TOMATO64-END */
 		return;
 	}
 	if (!confirm('Are you sure you want to upgrade using '+name+'?'))
