@@ -11047,6 +11047,12 @@ static void sysinit(void)
 #ifdef TOMATO64
 	/* Mount filesystem rw */
 	eval("mount", "-o", "remount,rw", "/");
+
+	/* Expand filesystem parition to fill disk */
+	if (!nvram_get_int("fs_expanded")) {
+		eval("expand_root_partition");
+		nvram_set("fs_expanded", "1");
+	}
 #endif /* TOMATO64 */
 
 	if (console_init())
