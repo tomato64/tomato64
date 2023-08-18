@@ -1,7 +1,6 @@
 #!/bin/bash
 
 VERSION=$(cat $BR2_EXTERNAL_TOMATO64_PATH/version)
-echo $V
 MAJOR=${VERSION%.*}
 MINOR=${VERSION#*.}
 
@@ -11,7 +10,7 @@ echo "#define TOMATO_MAJOR		\"$MAJOR\"" >>				tomato_version.h
 echo "#define TOMATO_MINOR		\"$MINOR\"" >>				tomato_version.h
 echo "#define TOMATO_BUILD		\"00$MINOR\"" >>			tomato_version.h
 echo "#define TOMATO_BUILDTIME	\"`date`\"" >>					tomato_version.h
-echo "#define TOMATO_VERSION		\"$VERSION\"" >>			tomato_version.h
+echo "#define TOMATO_VERSION		\"$VERSION x86_64 AIO\"" >>		tomato_version.h
 echo "#define TOMATO_SHORTVER		\"$VERSION\"" >>			tomato_version.h
 echo "#endif" >>								tomato_version.h
 
