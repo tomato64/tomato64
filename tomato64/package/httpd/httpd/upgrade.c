@@ -42,6 +42,13 @@ void wi_upgrade(char *url, int len, char *boundary)
 	int n;
 	unsigned int reset, m;
 	uint8 buf[1024];
+#ifdef TOMATO64
+	struct statvfs disk;
+	statvfs("/", &disk);
+	float f_bavail = disk.f_bavail;
+	float f_frsize = disk.f_frsize;
+	float available_space = f_bavail * f_frsize;
+#endif /* TOMATO64 */
 
 	check_id(url);
 	reset = (strcmp(webcgi_safeget("_reset", "0"), "1") == 0);
@@ -54,6 +61,13 @@ void wi_upgrade(char *url, int len, char *boundary)
 		error = "Invalid file";
 		goto ERROR;
 	}
+
+#ifdef TOMATO64
+	if ((float) len > available_space) {
+		error = "Insufficient disk space to extract update";
+		goto ERROR;
+	}
+#endif /* TOMATO64 */
 
 	/* -- anything after here ends in a reboot -- */
 
