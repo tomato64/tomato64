@@ -1,0 +1,6 @@
+config BR2_PACKAGE_NOCATSPLASH
+	bool "nocatsplash"
+	select BR2_PACKAGE_LIBGLIB2
+	help
+	  NoCatSplash is a Open Public Network Gateway Daemon.
+	  It performs as a [captive/open/active] portal.

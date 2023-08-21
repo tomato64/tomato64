@@ -220,6 +220,7 @@ config BR2_PACKAGE_RC_NGINX
 config BR2_PACKAGE_RC_NOCAT
 	bool "Enable NOCAT"
 	default y
+	select BR2_PACKAGE_NOCATSPLASH
 
 config BR2_PACKAGE_RC_NTFS
 	bool "Enable NTFS"
