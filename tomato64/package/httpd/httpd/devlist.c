@@ -246,9 +246,10 @@ wl_ifname,wl_mode,wl_radio,wl_nband,wl_wds_enable"
 					continue;
 
 				host = js_string((hostname[0] == '*') ? "" : hostname);
-				memset(buf2, 0, sizeof(buf2)); /* reset */
-				if (expires == 0)
+				if (expires == 0) {
+					memset(buf2, 0, sizeof(buf2)); /* reset */
 					strlcpy(buf2, "non-expiring", sizeof(buf2));
+				}
 				else
 					reltime(expires, buf2, sizeof(buf2));
 

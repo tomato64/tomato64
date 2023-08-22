@@ -924,13 +924,14 @@ void asp_link_uptime(int argc, char **argv)
 	else
 		strlcpy(prefix, "wan", sizeof(prefix));
 
-	memset(buf, 0, sizeof(buf));
 	if (check_wanup(prefix)) {
 		uptime = check_wanup_time(prefix); /* get wanX uptime */
 		reltime(uptime, buf, sizeof(buf));
 	}
-	else
+	else {
+		memset(buf, 0, sizeof(buf)); /* reset */
 		strlcpy(buf, "-", sizeof(buf));
+	}
 
 	web_puts(buf);
 }
