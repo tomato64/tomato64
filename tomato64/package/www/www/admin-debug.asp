@@ -147,7 +147,7 @@ function init() {
 	&raquo; <a href="clearcookies.asp?_http_id=<% nv(http_id); %>">Clear browser cookies</a><br>
 	&raquo; <a href="javascript:clearCache()">Clear browser cache</a><br>
 	&raquo; <a href="javascript:flushDNS()">Flush DNS (dnsmasq) cache</a><br>
-	&raquo; <a href="javascript:nvramCommit()">Commit NVRAM now</a><br>
+	&raquo; <a href="javascript:nvramCommit()">Commit to NVRAM now</a><br>
 	&raquo; <a href="javascript:reboot()">Reboot</a><br>
 	&raquo; <a href="javascript:halt()">Halt</a><br>
 
@@ -169,20 +169,20 @@ function init() {
 <div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
-		<li><b>Avoid performing an NVRAM commit</b> - To be used only for debug, it prevents permanent configuration changes.</li>
-		<li><b>Enable cprintf output to console</b> - Redirects cprintf output to the console hence visible form the browser.</li>
-		<li><b>Enable cprintf output to /tmp/cprintf</b> - Redirects cprintf into a file <i>/tmp/cprintf</i> for consultation.</li>
-		<li><b>Enable DDNS output to /tmp/mdu-*</b> - DDNS debug info will be written on a file under /tmp, the * is replaced with the name of the DDNS provider</li>
-		<li><b>Enable segfault logging</b> - When enabled if a program crashes due to segfault, extensive messages are logged</li>
-		<li><b>Count cache memory and buffers as free memory</b> - Notoriously Linux counts buffer and cache as used RAM. Enableing this will consider cache and buffer as unallocated RAM </li>
-		<li><b>Avoid displaying LAN to router connections</b> - Do not consider connections between LAN and router in CONNTRACK table</li>
-		<li><b>Set "no-cache" in httpd header</b> - This will essentially tell your browser not to cache Tomato64 pages</li>
+		<li><b>Avoid performing an NVRAM commit</b> - To be used only for debugging. This prevents configuration changes from being saved permanently.</li>
+		<li><b>Enable cprintf output to console</b> - Redirects cprintf output to the console, so it is visible in your browser.</li>
+		<li><b>Enable cprintf output to /tmp/cprintf</b> - Redirects cprintf output to file: <i>/tmp/cprintf</i>  for viewing.</li>
+		<li><b>Enable DDNS output to /tmp/mdu-*</b> - DDNS debug info will be written in a file in /tmp. The * is replaced with the name of the DDNS provider.</li>
+		<li><b>Enable segfault logging</b> - When enabled, if a program crashes due to segfault, extensive messages are logged.</li>
+		<li><b>Count cache memory and buffers as free memory</b> - Linux counts buffer and cache as used RAM. Enabling this will consider cache and buffer as unallocated RAM.</li>
+		<li><b>Avoid displaying LAN to router connections</b> - Do not consider connections between LAN and router in CONNTRACK table.</li>
+		<li><b>Set "no-cache" in httpd header</b> - Essentially, this will tell your browser not to cache Tomato64 web interface pages.</li>
 		<li><b>Kernel printk log level</b> - This sets klogd (kernel logging) minimum logging level.</li>
 	</ul>
 	<br>
 	<ul>
-		<li><b>Download CFE</b> - Allows you to extract the system CFE from your router in one click</li>
-		<li><b>Download NVRAM Dump</b> - WARNING: nvram dump will cointain sensitive data such as usernames/passwords/keys/DDNS details/etc</li>
+		<li><b>Download CFE</b> - Allows you to extract the system CFE from your router in one click.</li>
+		<li><b>Download NVRAM Dump</b> - Warning: An NVRAM dump will contain sensitive data, like usernames/passwords/keys/DDNS details.</li>
 	</ul>
 </div>
 
