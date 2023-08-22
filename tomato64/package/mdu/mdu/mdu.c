@@ -22,15 +22,16 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 
+#include <bcmnvram.h>
+#include <shutils.h>
+#include <shared.h>
+
 #ifdef USE_LIBCURL
 #include <curl/curl.h>
 #else
 #include <netdb.h>
 #include "mssl.h"
 #endif
-
-#include "shutils.h"
-#include "shared.h"
 
 // #define MDU_DEBUG
 #define AGENT			"Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/109.0"
@@ -778,6 +779,32 @@ const char *get_address(int required)
 
 	return required ? get_option_required("addr") : NULL;
 }
+
+#ifdef TCONFIG_IPV6
+int get_address6(char *buf, const size_t buf_sz)
+{
+	const char *lanif;
+	int n, ret = 0;
+
+	memset(buf, 0, buf_sz); /* reset */
+
+	for (n = 1; n < 5; n++) {
+		lanif = getifaddr(nvram_safe_get("lan_ifname"), AF_INET6, 0); /* get global address */
+
+		if (lanif != NULL) {
+			strlcpy(buf, lanif, buf_sz);
+			ret = 1;
+			logmsg(LOG_DEBUG, "*** %s: - valid global IPv6 address %s after %d secs...", __FUNCTION__, lanif, (n-1) * (n-1));
+			break; /* All OK and break here */
+		}
+
+		logmsg(LOG_DEBUG, "*** %s: - no global IPv6 address yet, retrying in %d secs...", __FUNCTION__, n*n);
+		sleep(n*n); /* try up to 30 sec */
+	}
+
+	return ret;
+}
+#endif /* TCONFIG_IPV6 */
 
 static void append_addr_option(char *buffer, const char *format)
 {
@@ -1556,6 +1583,9 @@ static void update_wget(void)
 	char path[256];
 	char *p;
 	char *body;
+#ifdef TCONFIG_IPV6
+	char buffer[INET6_ADDRSTRLEN];
+#endif /* TCONFIG_IPV6 */
 
 	/* https://user:pass@domain:port/path?query */
 
@@ -1575,10 +1605,27 @@ static void update_wget(void)
 	strlcpy(path, p, sizeof(path));
 	*p = 0;
 
+#ifdef TCONFIG_IPV6
+	/* check for "@IP6" first but only if IPv6 is enabled! */
+	if (ipv6_enabled() && ((c = strstr(path, "@IP6")) != NULL)) {
+
+		/* try to get IPv6 address */
+		if (get_address6(buffer, sizeof(buffer))) {
+			size_t sizeOfPath = sizeof(path);
+			strlcpy(s, c + 4, sizeof(s));
+			strlcpy(c, buffer, sizeOfPath - strnlen(path, sizeOfPath) + 4); /*  space left in path is the sizeof the array - the currently used chars + 4 as @IP6 gets replaced */
+			strlcat(c, s, sizeOfPath - strnlen(path, sizeOfPath)); /* space left is the size of the path array - the currently used chars (which now include the IP address) */
+		}
+		else {
+			error("Unable to get global IPv6 address (br0)");
+		}
+	}
+	else
+#endif /* TCONFIG_IPV6 */
 	if ((c = strstr(path, "@IP")) != NULL) {
 		size_t sizeOfPath = sizeof(path);
 		strlcpy(s, c + 3, sizeof(s));
-		strlcpy(c, get_address(1), sizeOfPath - strnlen(path, sizeOfPath) + 3); /*  space left in path is the sizeof the array - the currently used chars + 3 as @IP gets replace */
+		strlcpy(c, get_address(1), sizeOfPath - strnlen(path, sizeOfPath) + 3); /*  space left in path is the sizeof the array - the currently used chars + 3 as @IP gets replaced */
 		strlcat(c, s, sizeOfPath - strnlen(path, sizeOfPath)); /* space left is the size of the path array - the currently used chars (which now include the IP address) */
 	}
 
