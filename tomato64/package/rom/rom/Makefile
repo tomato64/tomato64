@@ -123,6 +123,7 @@ else
 		    echo "$${desc},$${desc},,,,,1,$${dnssec},$${logs},$${namecoin},$${address},$${name},$${pk}," >> $${resolvers_file_tmp}; \
 		done; \
 		IFS=$${oldifs}; \
+		sed -i "s/'/\\\'/g" "$${resolvers_file_tmp}"; \
 		mv -f "$${resolvers_file_tmp}" "$${resolvers_file}" > /dev/null 2>&1; \
 		rm -rf $${sdns_decode}; \
 		rm -f $${resolvers_md}; \
