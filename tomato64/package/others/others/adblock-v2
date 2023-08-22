@@ -373,9 +373,9 @@ download() {
 						echo "$m" | grep -Eq '^\+' && { sed -i "s/^[a-zA-Z0-9.-]\{0,64\}\.]\{0,1\}$(echo $m | cut -c2- | domain)\|^$(echo $m | cut -c2- | domain)//g" $TM ; echo $(echo $m | sed "s/^[a-zA-Z0-9.-]\{0,64\}\.]\{0,1\}$(echo $m | domain)\|^$(echo $m | domain)//g" | domain ) >> $TM1 ; } || { echo "$m" >> $TM1 ; }
 					done
 				} || loge "The defined custom blacklist file $i is not accessible"
-			} >/dev/null 2>&1 || {
+			} &>/dev/null || {
 				echo "$i" | grep -Eq '^\+' && { sed -i "s/^[a-zA-Z0-9.-]\{0,64\}\.]\{0,1\}$(echo $i | cut -c2- | domain)\|^$(echo $i | cut -c2- | domain)//g" $TM ; echo $(echo $i | sed "s/^[a-zA-Z0-9.-]\{0,64\}\.]\{0,1\}$(echo $i | domain)\|^$(echo $i | domain)//g" | domain ) >> $TM1 ; } || { echo "$i" >> $TM1 ; }
-			} >/dev/null 2>&1
+			} &>/dev/null
 		done
 
 		COUNT_CUSTOM=$(wc -l < $TM1)

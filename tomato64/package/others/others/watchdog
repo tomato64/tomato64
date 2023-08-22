@@ -179,7 +179,7 @@ cktracert() {
 	for IP in $IPLIST; do
 		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes)
 		# we need only send/receive few packages to be sure if connection works
-		traceroute -i $IFACE -n -w 1 -m 4 -q 1 -z 1 $IP > /dev/null 2>&1
+		traceroute -i $IFACE -n -w 1 -m 4 -q 1 -z 1 $IP &>/dev/null
 		usleep 200
 		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes)
 		[ "$RXBYTES2" -gt "$(($RXBYTES1 + $RXBYTES_MIN_DIFF))" ] && { RESULT=1; break; }
@@ -249,7 +249,7 @@ checkPid() {
 
 	[ -f $PIDFILE ] && {
 		PIDNO=$(cat $PIDFILE)
-		cat "/proc/$PIDNO/cmdline" > /dev/null 2>&1
+		cat "/proc/$PIDNO/cmdline" &>/dev/null
 
 		[ $? -eq 0 ] && {
 			$LOGS "Another process in action - Exiting ..."
@@ -281,7 +281,7 @@ checkPidSwitch() {
 				rm /var/run/switch3g_$SPREFIX.pid
 			} || {
 				$LOGS "Switch3g ($SPREFIX) script in action - Exiting ..."
-				rm -f $PIDFILE > /dev/null 2>&1
+				rm -f $PIDFILE &>/dev/null
 				exit 0
 			}
 		}
@@ -292,7 +292,7 @@ checkPidSwitch() {
 				rm /var/run/switch4g_$SPREFIX.pid
 			} || {
 				$LOGS "Switch4g ($SPREFIX) script in action - Exiting ..."
-				rm -f $PIDFILE > /dev/null 2>&1
+				rm -f $PIDFILE &>/dev/null
 				exit 0
 			}
 		}
@@ -337,4 +337,4 @@ elif [ "$(NV g_upgrade)" != "1" -a "$(NV g_reboot)" != "1" ]; then
 	[ -f $IPLISTFILE ] && rm $IPLISTFILE
 fi
 
-rm -f $PIDFILE > /dev/null 2>&1
+rm -f $PIDFILE &>/dev/null

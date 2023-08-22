@@ -23,8 +23,8 @@ for bridge in $(/usr/sbin/brctl show | grep -Eo ^br[0-9]); do
 	NETEND=$(((i4 & m4 | 255-m4)-1))
 	while [ "$NETSTART" -le "$NETEND" ]; do
 		HOST=$NETWORK$NETSTART
-		if [ -z $1 ] || [ $1 == "arping" ]; then usleep 1500 && /usr/sbin/arping -q -c1 -w1 -I $bridge $HOST > /dev/null 2>&1 &
-		elif [ $1 == "traceroute" ]; then /usr/bin/traceroute -i $bridge -r -F -m1 -q1 -s $ip $HOST > /dev/null 2>&1 &
+		if [ -z $1 ] || [ $1 == "arping" ]; then usleep 1500 && /usr/sbin/arping -q -c1 -w1 -I $bridge $HOST &>/dev/null &
+		elif [ $1 == "traceroute" ]; then /usr/bin/traceroute -i $bridge -r -F -m1 -q1 -s $ip $HOST &>/dev/null &
 		fi
 		NETSTART=$(($NETSTART+1))
 	done

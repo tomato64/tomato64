@@ -58,7 +58,7 @@ case "$1" in
 				# power led
 				/sbin/gpio enable 1
 				# unlock lan ports
-				/usr/sbin/et robord 0x1 0x4 > /dev/null 2>&1
+				/usr/sbin/et robord 0x1 0x4 &>/dev/null
 				/usr/sbin/wl -i eth1 leddc 1
 			;;
 			"RT-N66U"|"RT-AC66U")
@@ -132,7 +132,7 @@ case "$1" in
 				#power led
 				/sbin/gpio disable 1
 				# unlock lan ports
-				/usr/sbin/et robord 0x1 0x4 > /dev/null 2>&1
+				/usr/sbin/et robord 0x1 0x4 &>/dev/null
 				/usr/sbin/wl -i eth1 leddc 0
 			;;
 			"RT-N66U"|"RT-AC66U")

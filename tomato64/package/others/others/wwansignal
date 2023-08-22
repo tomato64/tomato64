@@ -307,7 +307,7 @@ checkPid() {
 
 	[ -f $PIDFILE ] && {
 		PIDNO=$(cat $PIDFILE)
-		cat "/proc/$PIDNO/cmdline" > /dev/null 2>&1
+		cat "/proc/$PIDNO/cmdline" &>/dev/null
 
 		[ $? -eq 0 ] && {
 			$LOGS "MODEM - another process in action - exiting"
@@ -343,7 +343,7 @@ uqmiCall() {
 	done
 
 	$LOGS "MODEM - another uqmi process in action (hang up?) - exiting ..."
-	rm -f $PIDFILE > /dev/null 2>&1
+	rm -f $PIDFILE &>/dev/null
 	exit 0
 }
 
@@ -366,4 +366,4 @@ else
 	exit 0
 fi
 
-rm -f $PIDFILE > /dev/null 2>&1
+rm -f $PIDFILE &>/dev/null

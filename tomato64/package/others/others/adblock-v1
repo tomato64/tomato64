@@ -48,7 +48,7 @@ download() {
 
 		[ "$ENBL" -eq "1" ] && {
 			$LOGS "[$COUNT] downloading blacklist - $URL"
-			$WGET "$URL" -O $PREFIX/_host$COUNT >/dev/null 2>&1
+			$WGET "$URL" -O $PREFIX/_host$COUNT &>/dev/null
 
 			[ ! -f "$PREFIX/_host$COUNT" ] && {
 				$LOGS "... [$COUNT] download error! Please check URL"

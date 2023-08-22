@@ -22,7 +22,7 @@ WGET="/usr/bin/wget"
 # STUBBY-END
 
 ttbexit() {
-	rm $LOCK >/dev/null 2>&1
+	rm $LOCK &>/dev/null
 	exit $1
 }
 
@@ -32,14 +32,14 @@ ttbshuf() {
 
 ttbdownload() {
 	ls -l /www/ext/ | grep "\->" | cut -d" " -f 27 | while read file; do
-		rm $DIR/$file  >/dev/null 2>&1
+		rm $DIR/$file &>/dev/null
 	done
-	rm $DIR2/*  >/dev/null 2>&1
+	rm $DIR2/* &>/dev/null
 	echo $(nvram get ttb_url | tr ' ' '\n' | ttbshuf ) | tr ' ' '\n' | sed 's/\/$//' |
 	while read l; do
-		$WGET -U "Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/88.0" -T 10 -t 1 $l/$TTB.zip -O $DIR2/$TTB.zip >/dev/null 2>&1 && echo $l && break
+		$WGET -U "Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/88.0" -T 10 -t 1 $l/$TTB.zip -O $DIR2/$TTB.zip &>/dev/null && echo $l && break
 	done
-	unzip -p $DIR2/$TTB.zip >/dev/null 2>&1 && {
+	unzip -p $DIR2/$TTB.zip &>/dev/null && {
 		cru d ttbDL
 	} || {
 		cru a ttbDL "*/5 * * * * /usr/sbin/ttb"
@@ -49,8 +49,8 @@ ttbdownload() {
 }
 
 ttbextract() {
-	rm $DIR/*.css $DIR/*.zip $DIR/*.png $DIR/*.gif $DIR/*.jpg  >/dev/null 2>&1
-	unzip -o $DIR2/$TTB.zip -d $DIR2/ >/dev/null 2>&1
+	rm $DIR/*.css $DIR/*.zip $DIR/*.png $DIR/*.gif $DIR/*.jpg &>/dev/null
+	unzip -o $DIR2/$TTB.zip -d $DIR2/ &>/dev/null
 	ls -1 $DIR2 | grep -v .zip | grep -v .list |
 	(
 	while read line; do
@@ -125,7 +125,7 @@ touch $LOCK
 	ttbextract $DIR2
 } || {
 	URI=$(ttbdownload $DIR2)
-	[[ $(echo $URL_ORIG | grep $URI >/dev/null 2>&1 | wc -l) -ne 1 ]] && {
+	[[ $(echo $URL_ORIG | grep $URI &>/dev/null | wc -l) -ne 1 ]] && {
 		SOURCE="user defined url [ $URI ]"
 	} || {
 		SOURCE="internally defined site [ $URI ]"

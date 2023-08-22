@@ -46,7 +46,7 @@ dl $URL/rc.unslung /opt/etc/init.d/rc.unslung x
 echo "Info: Basic packages installation..."
 /opt/bin/opkg update
 /opt/bin/opkg install ldconfig findutils
-/opt/sbin/ldconfig > /dev/null 2>&1
+/opt/sbin/ldconfig &>/dev/null
 [ -f /etc/TZ ] && ln -sf /etc/TZ /opt/etc/TZ
 
 cat << EOF
