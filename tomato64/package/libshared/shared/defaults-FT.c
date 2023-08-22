@@ -142,6 +142,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "mwan_debug",			"0"				, 0 },
 	{ "mwan_tune_gc",		"0"				, 0 },	/* tune route cache for multiwan in load balancing */
 	{ "mwan_state_init",		"1"				, 0 },	/* init wan state files with this value */
+	{ "mwan_diff",			"200"				, 0 },	/* declare the minimum number of bytes indicating a working WAN (only for tracert) */
 	{ "pbr_rules",			""				, 0 },
 
 	/* WAN H/W parameters */
@@ -808,7 +809,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "ddnsx_cktime",		"10"				, 0 },
 
 /* basic-ident */
-	{ "router_name",		"Tomato64"			, 0 },
+	{ "router_name",		"FreshTomato"			, 0 },
 	{ "wan_hostname",		"unknown"			, 0 },
 	{ "wan_domain",			""				, 0 },
 
@@ -1719,7 +1720,7 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TCONFIG_NOCAT
 	{ "NC_enable",			"0"				, 0 },	/* enable NoCatSplash */
 	{ "NC_Verbosity",		"2"				, 0 },
-	{ "NC_GatewayName",		"Tomato64 Captive Portal"	, 0 },
+	{ "NC_GatewayName",		"FreshTomato Captive Portal"	, 0 },
 	{ "NC_GatewayPort",		"5280"				, 0 },
 	{ "NC_GatewayMode",		"Open"				, 0 },
 	{ "NC_DocumentRoot",		"/tmp/splashd"			, 0 },
@@ -1742,7 +1743,7 @@ struct nvram_tuple router_defaults[] = {
 	{"nginx_docroot",		"/www"				, 0 },	/* path for server files */
 	{"nginx_port",			"85"				, 0 },	/* port to listen */
 	{"nginx_remote",		"0"				, 0 },	/* open port from WAN side */
-	{"nginx_fqdn",			"Tomato64"			, 0 },	/* server name */
+	{"nginx_fqdn",			"FreshTomato"			, 0 },	/* server name */
 	{"nginx_upload",		"100"				, 0 },	/* upload file size limit */
 	{"nginx_priority",		"10"				, 0 },	/* server priority = worker_priority */
 	{"nginx_custom",		""				, 0 },	/* additional lines for nginx.conf */
