@@ -153,7 +153,9 @@ function init() {
 
 	<br><br>
 
+/* TOMATO64-REMOVE-BEGIN */
 	&raquo; <a href="/cfe/cfe.bin?_http_id=<% nv(http_id); %>">Download CFE</a><br>
+/* TOMATO64-REMOVE-END */
 	&raquo; <a href="/ipt/iptables.txt?_http_id=<% nv(http_id); %>">Download Iptables Dump</a><br>
 <!-- IPV6-BEGIN -->
 	&raquo; <a href="/ip6t/ip6tables.txt?_http_id=<% nv(http_id); %>">Download Ip6tables Dump</a><br>
