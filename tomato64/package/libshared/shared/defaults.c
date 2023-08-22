@@ -142,7 +142,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "mwan_debug",			"0"				, 0 },
 	{ "mwan_tune_gc",		"0"				, 0 },	/* tune route cache for multiwan in load balancing */
 	{ "mwan_state_init",		"1"				, 0 },	/* init wan state files with this value */
-	{ "mwan_diff",			"800"				, 0 },	/* declare the minimum number of bytes indicating a working WAN (only for tracert) */
+	{ "mwan_diff",			"400"				, 0 },	/* declare the minimum number of bytes indicating a working WAN (only for tracert) */
 	{ "pbr_rules",			""				, 0 },
 
 	/* WAN H/W parameters */
