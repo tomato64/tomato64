@@ -185,7 +185,7 @@ cktracert() {
 		[ "$RXBYTES2" -gt "$(($RXBYTES1 + $RXBYTES_MIN_DIFF))" ] && { RESULT=1; break; }
 	done
 
-	[ "$RESULT" -gt 0 ] && $DEBUG "tracert test result for: $IFACE - OK ($(($RXBYTES2 - $RXBYTES1)) bytes)" || $DEBUG "tracert test result for: $IFACE - FAILED! ($(($RXBYTES2 - $RXBYTES1)) bytes)"
+	[ "$RESULT" -gt 0 ] && $DEBUG "tracert test result for: $IFACE - OK" || $DEBUG "tracert test result for: $IFACE - FAILED!"
 }
 
 ckping() {
