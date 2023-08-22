@@ -3,7 +3,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 # Copyright (C) 2015 shibby
 #
-# changes/fixes: 2018 - 2022 by pedro
+# changes/fixes: 2018 - 2023 by pedro
 #
 
 
@@ -61,6 +61,10 @@ dhcpFix() {
 	dhcpc-renew $PREFIX
 }
 
+ifconfigChk() {
+	[ $(ifconfig $IFACE 2>/dev/null | grep inet | grep -Eo '((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' | grep -v '0.0.0.0' | wc -l) -eq 0 ] && ret_ifchk=0 || ret_ifchk=1
+}
+
 watchdogRun() {
 	for PREFIX in $MWANTABLE; do
 		IFACE=$(NV "$PREFIX"_iface)
@@ -73,6 +77,7 @@ watchdogRun() {
 		PREFIX_MWAN=$PREFIX
 		PREFIX_LOG="WAN"$(echo $PREFIX"0" | cut -c 4- | tr '[234]' '[123]' | cut -c -1)
 		STATE_FILE="/var/lib/misc/"$PREFIX"_state"
+		local ret_ifchk
 
 		[ "$(NV "$PREFIX"_ck_pause)" -eq 1 ] && {
 			$DEBUG "Watchdog paused for $PREFIX_LOG - skipping ..."
@@ -86,10 +91,14 @@ watchdogRun() {
 				$DEBUG "prefix=$PREFIX_LOG, iface=$IFACE, uptime=$ISUP, ISGW=$ISGW, WEIGHT=$WEIGHT"
 			}
 
-			[ "$PROTO" == "dhcp" -a $(ifconfig $IFACE | grep inet | grep -Eo '((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' | grep -v '0.0.0.0' | wc -l) -eq 0 ] && { dhcpFix $PREFIX; sleep 3; }
+			[ "$PROTO" == "dhcp" ] && {
+				ifconfigChk
+				[ "$ret_ifchk" -eq 0 ] && { dhcpFix $PREFIX; sleep 3; }
+			}
 
 			[ "$PROTO" != "lte" ] && {
-				[ $(ifconfig $IFACE | grep inet | grep -Eo '((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' | grep -v '0.0.0.0' | wc -l) -eq 0 ] && { 
+				ifconfigChk
+				[ "$ret_ifchk" -eq 0 ] && {
 					$DEBUG "$PREFIX doesn't have an IP address. Skipping..."
 					echo "0" > $STATE_FILE
 					continue
@@ -103,11 +112,11 @@ watchdogRun() {
 				[ ! -z "$DEFAULT_ROUTE_FRAGMENT" ] && {
 					ROUTE_EXEC="ip route add $IP $DEFAULT_ROUTE_FRAGMENT"
 					$DEBUG $ROUTE_EXEC
-					$ROUTE_EXEC
+					$ROUTE_EXEC &>/dev/null
 				}
 				ROUTE_EXEC="ip route add $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000"
 				$DEBUG $ROUTE_EXEC
-				$ROUTE_EXEC
+				$ROUTE_EXEC &>/dev/null
 			done
 
 			$DEBUG "start test for: $IFACE ..."
@@ -123,11 +132,11 @@ watchdogRun() {
 				[ ! -z "$DEFAULT_ROUTE_FRAGMENT" ] && {
 					ROUTE_EXEC="ip route del $IP $DEFAULT_ROUTE_FRAGMENT"
 					$DEBUG $ROUTE_EXEC
-					$ROUTE_EXEC
+					$ROUTE_EXEC &>/dev/null
 				}
 				ROUTE_EXEC="ip route del $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000"
 				$DEBUG $ROUTE_EXEC
-				$ROUTE_EXEC
+				$ROUTE_EXEC &>/dev/null
 			done
 
 			# wan is down
@@ -177,11 +186,11 @@ cktracert() {
 	local RXBYTES_MIN_DIFF=$(NV mwan_diff) # declare the minimum number of bytes indicating a working WAN
 
 	for IP in $IPLIST; do
-		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes)
+		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null)
 		# we need only send/receive few packages to be sure if connection works
 		traceroute -i $IFACE -n -w 1 -m 4 -q 1 -z 1 $IP &>/dev/null
 		usleep 200
-		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes)
+		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null)
 		[ "$RXBYTES2" -gt "$(($RXBYTES1 + $RXBYTES_MIN_DIFF))" ] && { RESULT=1; break; }
 	done
 
