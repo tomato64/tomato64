@@ -1768,10 +1768,19 @@ struct nvram_tuple router_defaults[] = {
 	{ "mysql_check_time",		"5"				, 0 },
 	{ "mysql_binary",		"internal"			, 0 },
 	{ "mysql_binary_custom",	"/mnt/sda1/mysql/bin"		, 0 },
+#ifndef TOMATO64
 	{ "mysql_usb_enable",		"1"				, 0 },
+#else
+	{ "mysql_usb_enable",		"0"				, 0 },
+#endif /* TOMATO64 */
 	{ "mysql_dlroot",		""				, 0 },
+#ifndef TOMATO64
 	{ "mysql_datadir",		"data"				, 0 },
 	{ "mysql_tmpdir",		"tmp"				, 0 },
+#else
+	{ "mysql_datadir",		"/mysql/data"			, 0 },
+	{ "mysql_tmpdir",		"/mysql/tmp"			, 0 },
+#endif /* TOMATO64 */
 	{ "mysql_server_custom",	""				, 0 },
 	{ "mysql_port",			"3306"				, 0 },
 	{ "mysql_allow_anyhost",	"0"				, 0 },
@@ -1805,6 +1814,31 @@ struct nvram_tuple router_defaults[] = {
 	{ "tor_ports",			"80"				, 0 },
 	{ "tor_ports_custom",		"80,443,8080:8880"		, 0 },
 #endif /* TCONFIG_TOR */
+
+#ifdef TOMATO64
+	{ "set_macs",			"0"				, 0 },
+	{ "fs_expanded",		"0"				, 0 },
+
+	{ "wan_ifnameX",		"eth0"				, 0 },
+	{ "wan_ifnameX_vlan",		"vlan0"				, 0 },
+	{ "wan1_ifnameX_vlan",		""				, 0 },
+
+#ifdef TCONFIG_MULTIWAN
+	{ "wan2_ifnameX_vlan",		""				, 0 },
+	{ "wan3_ifnameX_vlan",		""				, 0 },
+#endif /* TCONFIG_MULTIWAN */
+
+	{ "lan_ifname",			"br0"				, 0 },
+	{ "lan_ifnames",		"eth1 eth2 eth3 eth4"		, 0 },
+	{ "lan_ifnames_vlan",		"vlan1"				, 0 },
+	{ "lan1_ifnames_vlan",		""				, 0 },
+	{ "lan2_ifnames_vlan",		""				, 0 },
+	{ "lan3_ifnames_vlan",		""				, 0 },
+
+	{ "boardflags",			"0x0100"			, 0 },
+	{ "vlan0ports",			"0 5"				, 0 },
+	{ "vlan1ports",			"1 2 3 4 5*"			, 0 },
+#endif /* TOMATO64 */
 	{ 0, 0, 0 }
 };
 

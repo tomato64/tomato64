@@ -42,11 +42,19 @@ void wo_defaults(char *url)
 				nvram_commit();
 			}
 			else
+#ifndef TOMATO64
+			{
 #ifdef TCONFIG_BCMARM
 				eval("mtd-erase2", "nvram");
 #else
 				eval("mtd-erase", "-d", "nvram");
 #endif
+			}
+#else
+			{
+				system("rm /nvram/*");
+			}
+#endif /* TOMATO64 */
 
 			set_action(ACT_REBOOT);
 

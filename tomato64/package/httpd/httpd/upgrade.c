@@ -135,11 +135,15 @@ ERROR2:
 
 	if (error == NULL && reset) {
 		set_action(ACT_IDLE);
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 		eval("mtd-erase2", "nvram");
 #else
 		eval("mtd-erase", "-d", "nvram");
 #endif
+#else
+		system("rm /nvram/*");
+#endif /* TOMATO64 */
 	}
 	set_action(ACT_REBOOT);
 

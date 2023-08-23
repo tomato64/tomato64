@@ -57,11 +57,9 @@
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"init_debug"
 
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 extern struct nvram_tuple router_defaults[];
 #endif /* TCONFIG_BCMARM */
-#endif /* TOMATO64 */
 int restore_defaults_fb = 0;
 
 
@@ -97,11 +95,9 @@ static char *defenv[] = {
 
 static void restore_defaults(void)
 {
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	struct nvram_tuple *t;
 #endif
-#endif /* TOMATO64 */
 	int restore_defaults = 0;
 #ifndef TOMATO64
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
@@ -119,7 +115,6 @@ static void restore_defaults(void)
 	restore_defaults_fb = restore_defaults;
 
 	/* Restore defaults if necessary */
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	for (t = router_defaults; t->name; t++) {
 		if (restore_defaults || !nvram_get(t->name)) {
@@ -129,7 +124,6 @@ static void restore_defaults(void)
 #else
 	eval("nvram", "defaults", "--initcheck");
 #endif
-#endif /* TOMATO64 */
 
 	nvram_set("os_version", tomato_version);
 	nvram_set("os_date", tomato_buildtime);
@@ -11127,10 +11121,6 @@ static void sysinit(void)
 	eval("hotplug2", "--coldplug");
 #else
 	eval("/etc/init.d/S10mdev", "start");
-	eval("/usr/bin/set_macs");
-	eval("/usr/bin/fudge_time");
-	eval("/usr/bin/start_qemu_guest");
-	eval("/usr/bin/start_ttyd");
 #endif /* TOMATO64 */
 
 	start_hotplug2();
@@ -11204,6 +11194,13 @@ static void sysinit(void)
 #endif /* TCONFIG_SNMP */
 	del_upnp_defaults(); /* remove upnp nvram values if feature is disabled! */
 	init_nvram();
+
+#ifdef TOMATO64
+        eval("/usr/bin/set_macs");
+        eval("/usr/bin/fudge_time");
+        eval("/usr/bin/start_qemu_guest");
+        eval("/usr/bin/start_ttyd");
+#endif /* TOMATO64 */
 
 #ifndef TOMATO64
 	set_jumbo_frame(); /* enable or disable jumbo_frame and set jumbo frame size */
