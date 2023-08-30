@@ -99,7 +99,11 @@ void asp_iptraffic(int argc, char **argv) {
 }
 
 void iptraffic_conntrack_init() {
+#ifndef TOMATO64
 	const char conntrack[] = "/proc/net/ip_conntrack";
+#else
+	const char conntrack[] = "/proc/net/nf_conntrack";
+#endif /* TOMATO64 */
 	unsigned int a_time, a_proto;
 	char a_src[INET_ADDRSTRLEN];
 	char a_dst[INET_ADDRSTRLEN];

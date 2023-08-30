@@ -261,7 +261,11 @@ static void write_ct_timeout(const char *type, const char *name, unsigned int va
 	char v[16];
 
 	memset(buf, 0, sizeof(buf));
+#ifndef TOMATO64
 	snprintf(buf, sizeof(buf), "ipv4/netfilter/ip_conntrack_%s_timeout%s%s", type, ((name && name[0]) ? "_" : ""), (name ? name : ""));
+#else
+	snprintf(buf, sizeof(buf), "netfilter/nf_conntrack_%s_timeout%s%s", type, ((name && name[0]) ? "_" : ""), (name ? name : ""));
+#endif /* TOMATO64 */
 	memset(v, 0, sizeof(v));
 	snprintf(v, sizeof(v), "%u", val);
 
@@ -283,7 +287,11 @@ static unsigned int read_ct_timeout(const char *type, const char *name)
 	char v[16];
 
 	memset(buf, 0, sizeof(buf));
+#ifndef TOMATO64
 	snprintf(buf, sizeof(buf), "/proc/sys/net/ipv4/netfilter/ip_conntrack_%s_timeout%s%s", type, ((name && name[0]) ? "_" : ""), (name ? name : ""));
+#else
+	snprintf(buf, sizeof(buf), "/proc/sys/net/netfilter/nf_conntrack_%s_timeout%s%s", type, ((name && name[0]) ? "_" : ""), (name ? name : ""));
+#endif /* TOMATO64 */
 	if (f_read_string(buf, v, sizeof(v)) > 0)
 		val = atoi(v);
 
@@ -367,8 +375,20 @@ void setup_conntrack(void)
 	p = nvram_safe_get("ct_max");
 	i = atoi(p);
 	if (i >= 128)
+#ifndef TOMATO64
+	{
 		f_write_procsysnet("ipv4/netfilter/ip_conntrack_max", p);
+	}
+#else
+	{
+		f_write_procsysnet("netfilter/nf_conntrack_max", p);
+	}
+#endif /* TOMATO64 */
+#ifndef TOMATO64
 	else if (f_read_string("/proc/sys/net/ipv4/netfilter/ip_conntrack_max", buf, sizeof(buf)) > 0) {
+#else
+	else if (f_read_string("/proc/sys/net/netfilter/nf_conntrack_max", buf, sizeof(buf)) > 0) {
+#endif /* TOMATO64 */
 		if (atoi(buf) > 0)
 			nvram_set("ct_max", buf);
 	}

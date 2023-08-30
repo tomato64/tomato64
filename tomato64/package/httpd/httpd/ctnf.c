@@ -89,11 +89,15 @@ void asp_ctcount(int argc, char **argv)
 
 	memset(count, 0, sizeof(count));
 
+#ifndef TOMATO64
 #ifdef TCONFIG_IPV6
 	if ((f = fopen("/proc/net/nf_conntrack", "r")) != NULL) {
 #else
 	if ((f = fopen("/proc/net/ip_conntrack", "r")) != NULL) {
 #endif
+#else
+	if ((f = fopen("/proc/net/nf_conntrack", "r")) != NULL) {
+#endif /* TOMATO64 */
 		ctvbuf(f); /* if possible, read in one go */
 
 		if (nvram_match("t_hidelr", "1")) {
@@ -261,11 +265,15 @@ void asp_ctdump(int argc, char **argv)
 
 	web_puts("\nctdump = [");
 	comma = ' ';
+#ifndef TOMATO64
 #ifdef TCONFIG_IPV6
 	if ((f = fopen("/proc/net/nf_conntrack", "r")) != NULL) {
 #else
 	if ((f = fopen("/proc/net/ip_conntrack", "r")) != NULL) {
 #endif
+#else
+	if ((f = fopen("/proc/net/nf_conntrack", "r")) != NULL) {
+#endif /* TOMATO64 */
 		ctvbuf(f);
 		while (fgets(s, sizeof(s), f)) {
 			dir_reply = 0;
@@ -430,11 +438,15 @@ void asp_ctrate(int argc, char **argv)
 	web_puts("\nctrate = [");
 	comma = ' ';
 
+#ifndef TOMATO64
 #ifdef TCONFIG_IPV6
 	const char name[] = "/proc/net/nf_conntrack";
 #else
 	const char name[] = "/proc/net/ip_conntrack";
 #endif
+#else
+	const char name[] = "/proc/net/nf_conntrack";
+#endif /* TOMATO64 */
 
 	if (argc != 2)
 		return;
