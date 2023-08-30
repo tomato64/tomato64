@@ -1,1 +1,0 @@
-/dev/ttyUSB0
