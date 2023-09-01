@@ -5,6 +5,14 @@
  *
  */
 
+/*
+ *
+ * WARNING
+ * Duplicate entries will cause segfaults.
+ * Use ifdefs to ensure only one entry exists.
+ *
+ */
+
 
 #include <tomato_config.h>
 #include "tomato_profile.h"
@@ -832,8 +840,13 @@ struct nvram_tuple router_defaults[] = {
 	{ "macnames",			""				, 0 },
 
 /* advanced-ctnf */
+#ifndef TOMATO64
 	{ "ct_tcp_timeout",		""				, 0 },
 	{ "ct_udp_timeout",		""				, 0 },
+#else
+	{ "ct_tcp_timeout",		"0 1200 120 60 120 120 10 60 30 0"	, 0 },
+	{ "ct_udp_timeout",		"30 180"			, 0 },
+#endif /* TOMATO64 */
 	{ "ct_timeout",			""				, 0 },
 	{ "ct_max",			""				, 0 },
 	{ "ct_hashsize",		"2048"				, 0 },
