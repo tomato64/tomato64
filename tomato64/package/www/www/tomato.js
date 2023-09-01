@@ -2690,7 +2690,12 @@ function navi() {
 		null,
 		['About',			'about.asp'],
 		['Reboot...',			'javascript:reboot()'],
+/* TOMATO64-REMOVE-BEGIN */
 		['Halt...',			'javascript:halt()'],
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		['Poweroff...',			'javascript:halt()'],
+/* TOMATO64-END */
 		['Logout',			'javascript:logout()']
 	];
 	var name, base;
@@ -2919,8 +2924,14 @@ function reboot() {
 }
 
 function halt() {
+/* TOMATO64-REMOVE-BEGIN */
 	if (!confirm("Halt?")) return;
 	if (confirm("Are you really sure you want to halt the router??\nThis will require a manual power cycle to boot again.")) form.submitHidden('shutdown.cgi', { });
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	if (!confirm("Poweroff?")) return;
+	if (confirm("Are you really sure you want to poweroff the router??\nThis will require a manual power cycle to boot again.")) form.submitHidden('shutdown.cgi', { });
+/* TOMATO64-END */
 }
 
 function logout() {

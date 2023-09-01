@@ -32,7 +32,12 @@ function tick() {
 	<div class="wrapper1">
 		<div class="wrapper2">
 			<div class="info-centered">
+/* TOMATO64-REMOVE-BEGIN */
 				<div id="msg">Please wait while the router halts... &nbsp;<div id="sptime"></div></div>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+				<div id="msg">Please wait while the router powers down... &nbsp;<div id="sptime"></div></div>
+/* TOMATO64-END */
 			</div>
 		</div>
 	</div>
