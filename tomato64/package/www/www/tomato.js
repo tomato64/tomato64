@@ -2694,7 +2694,7 @@ function navi() {
 		['Halt...',			'javascript:halt()'],
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-		['Poweroff...',			'javascript:halt()'],
+		['Shutdown...',			'javascript:halt()'],
 /* TOMATO64-END */
 		['Logout',			'javascript:logout()']
 	];
@@ -2929,8 +2929,8 @@ function halt() {
 	if (confirm("Are you really sure you want to halt the router??\nThis will require a manual power cycle to boot again.")) form.submitHidden('shutdown.cgi', { });
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-	if (!confirm("Poweroff?")) return;
-	if (confirm("Are you really sure you want to poweroff the router??\nThis will require a manual power cycle to boot again.")) form.submitHidden('shutdown.cgi', { });
+	if (!confirm("Shutdown?")) return;
+	if (confirm("Are you really sure you want to shutdown the router??\nThis will require a manual power cycle to boot again.")) form.submitHidden('shutdown.cgi', { });
 /* TOMATO64-END */
 }
 

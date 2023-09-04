@@ -36,7 +36,7 @@ function tick() {
 				<div id="msg">Please wait while the router halts... &nbsp;<div id="sptime"></div></div>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-				<div id="msg">Please wait while the router powers down... &nbsp;<div id="sptime"></div></div>
+				<div id="msg">Please wait while the router shuts down... &nbsp;<div id="sptime"></div></div>
 /* TOMATO64-END */
 			</div>
 		</div>
