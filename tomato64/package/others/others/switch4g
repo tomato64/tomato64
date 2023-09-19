@@ -414,14 +414,14 @@ switchMe() {
 	DEVICES=$(lsusb | awk '{print $6}')
 
 	for SWITCH in $DEVICES; do
-		[ "$(ls /etc/usb_modeswitch.d/"$SWITCH" 2> /dev/null | wc -l)" -eq 1 ] && {
+		[ "$(ls /etc/usb_modeswitch.d/"$SWITCH" 2>/dev/null | wc -l)" -eq 1 ] && {
 			# search for devicename & other data
 			for DEVICENAME in $(ls "$PATHDIAG"/ | grep -v ":" | grep "-"); do
 				PATHDEV="$PATHDIAG/$DEVICENAME"
 				[ -f $PATHDEV/idVendor -a -f $PATHDEV/idProduct -a -f $PATHDEV/uevent ] || continue # skip
 
-				DV=$(cat "$PATHDEV"/idVendor)					# vendor
-				DP=$(cat "$PATHDEV"/idProduct)					# product
+				DV=$(cat "$PATHDEV"/idVendor 2>/dev/null)			# vendor
+				DP=$(cat "$PATHDEV"/idProduct 2>/dev/null)			# product
 				DB=$(grep -s ^BUSNUM "$PATHDEV"/uevent | cut -d "=" -f2)	# BUSNUM
 				DG=$(grep -s ^DEVNUM "$PATHDEV"/uevent | cut -d "=" -f2)	# DEVNUM
 
@@ -459,9 +459,9 @@ switchMe() {
 				sleep 1
 
 				VENDOR=$(cat /etc/usb_modeswitch.d/"$SWITCH" | grep TargetVendor | cut -d "=" -f2 | cut -d "x" -f2)
-				[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDEV"/idVendor)
+				[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDEV"/idVendor 2>/dev/null)
 
-				PRODUCT=$(cat "$PATHDEV"/idProduct)
+				PRODUCT=$(cat "$PATHDEV"/idProduct 2>/dev/null)
 				[ -n "$PRODUCT" ] && {
 					$LOGS "4G MODEM - ready: $VENDOR:$PRODUCT"
 					SWITCHED=1
@@ -525,9 +525,9 @@ searchDiag() {
 	local TTYS="" UQMIRET="" UQMIPID=""
 	local PATHDEV WAN IFACE TTY
 
-	[ -z "$DEVICENAME" ] && DEVICENAME=$(ls -d /sys/class/net/$WAN/device/driver/*[0-9-:\.] | tr "\n" " " | sed -e "s/.*\/\//.*/g" -e "s/.*\///g" -e "s/:.*//g")
-	[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDIAG"/"$DEVICENAME"/idVendor)
-	[ -z "$PRODUCT" ] && PRODUCT=$(cat "$PATHDIAG"/"$DEVICENAME"/idProduct)
+	[ -z "$DEVICENAME" ] && DEVICENAME=$(ls -d $PATHWAN/$WAN/device/driver/*[0-9-:\.] 2>/dev/null | tr "\n" " " | sed -e "s/.*\/\//.*/g" -e "s/.*\///g" -e "s/:.*//g")
+	[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDIAG"/"$DEVICENAME"/idVendor 2>/dev/null)
+	[ -z "$PRODUCT" ] && PRODUCT=$(cat "$PATHDIAG"/"$DEVICENAME"/idProduct 2>/dev/null)
 
 	if [ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ]; then
 		isDiag # --> TTYS
@@ -546,8 +546,8 @@ searchDiag() {
 						PATHDEV="$PATHDIAG/$DEVICENAME"
 						[ -f $PATHDEV/idVendor -a -f $PATHDEV/idProduct -a -f $PATHDEV/uevent ] || continue # skip
 
-						VENDOR=$(cat "$PATHDEV"/idVendor)	# vendor
-						PRODUCT=$(cat "$PATHDEV"/idProduct)	# product
+						VENDOR=$(cat "$PATHDEV"/idVendor 2>/dev/null)	# vendor
+						PRODUCT=$(cat "$PATHDEV"/idProduct 2>/dev/null)	# product
 						$LOGS "4G MODEM - try to load usbserial module ($VENDOR:$PRODUCT) for device $DEVICENAME ..."
 
 						modprobe -r usbserial
@@ -756,7 +756,7 @@ uqmiCall() {
 	# for now, it's the only way to prevent uqmi hangups on two different calls at the same time and on the same device: https://forum.openwrt.org/viewtopic.php?id=63559
 	# OPTION: 1 - connect, 2 - background, no option - normal use
 	local COUNT=1 COMMAND="$1" OPTION="$2" UQMIPID=""
-	[[ -z $OPTION ]] && OPTION=0
+	[ -z "$OPTION" ] && OPTION=0
 
 	# wait for another uqmi process to exit...
 	while [ "$COUNT" -lt 7 ]; do
@@ -771,7 +771,7 @@ uqmiCall() {
 					${AUTOCONNECT:+--autoconnect}
 				return
 			elif [ "$OPTION" -eq 2 ]; then
-				uqmi -s -d "$DEVNR" $COMMAND 1> /dev/null &
+				uqmi -s -d "$DEVNR" $COMMAND 1>/dev/null &
 				return
 			else
 				uqmi -s -d "$DEVNR" $COMMAND
@@ -795,7 +795,7 @@ uqmiCall() {
 
 wayOut() {
 	local TEXT="$1"
-	[[ -z $TEXT ]] && TEXT="4G Modem - exiting"
+	[ -z "$TEXT" ] && TEXT="4G Modem - exiting"
 
 	$LOGS "$TEXT"
 	rm -f $READYFILE &>/dev/null
