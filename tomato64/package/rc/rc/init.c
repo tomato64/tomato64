@@ -4093,7 +4093,16 @@ static int init_nvram(void)
 			nvram_set("qtdc1_ep", "18");
 			nvram_set("qtdc1_sz", "10");
 		}
+		/* F9K1102(v3) adjust default values for wl_txq_thresh, et_txq_thresh and wl_rpcq_rxthresh (--> explicitly for WiFi modules) */
+		nvram_set("et_txq_thresh", "512");
+		nvram_set("wl_txq_thresh", "512");
+		nvram_set("wl_rpcq_rxthresh", "512");
 
+		nvram_set("wl0_txq_thresh", "512");
+		nvram_set("wl0_rpcq_rxthresh", "512");
+
+		nvram_set("wl1_txq_thresh", "512");
+		nvram_set("wl1_rpcq_rxthresh", "512");
 		break;
 	case MODEL_E900:
 	case MODEL_E1500:
@@ -4229,6 +4238,10 @@ static int init_nvram(void)
 			nvram_set("qtdc1_ep", "18");
 			nvram_set("qtdc1_sz", "10");
 		}
+		/* E3200 adjust default values for wl_txq_thresh, et_txq_thresh and wl_rpcq_rxthresh (--> not explicitly for WiFi modules) */
+		nvram_set("et_txq_thresh", "256");
+		nvram_set("wl_txq_thresh", "256");
+		nvram_set("wl_rpcq_rxthresh", "256");
 		break;
 	case MODEL_WNDR4000:
 		mfr = "Netgear";
@@ -4777,6 +4790,17 @@ static int init_nvram(void)
 		set_defaults(wndr3400v2_sb_1_params, "sb/1/%s");
 		set_defaults(wndr3400v2_pci_1_1_params, "pci/1/1/%s");
 
+		/* WNDR3400v2 adjust default values for wl_txq_thresh, et_txq_thresh and wl_rpcq_rxthresh (--> explicitly for WiFi modules) */
+		nvram_set("et_txq_thresh", "512");
+		nvram_set("wl_txq_thresh", "512");
+		nvram_set("wl_rpcq_rxthresh", "512");
+
+		nvram_set("wl0_txq_thresh", "512");
+		nvram_set("wl0_rpcq_rxthresh", "512");
+
+		nvram_set("wl1_txq_thresh", "512");
+		nvram_set("wl1_rpcq_rxthresh", "512");
+
 		xstart("gpio", "disable", "16"); /* turn on Power LED (active LOW); GPIO 16 controls state (on/off) and GPIO 14 controls color, see led.c */
 		xstart("gpio", "enable", "21"); /* turn on USB supply (active HIGH) */
 		break;
@@ -4987,6 +5011,17 @@ static int init_nvram(void)
 
 		set_defaults(wndr3400v3_sb_1_params, "sb/1/%s");
 		set_defaults(wndr3400v3_pci_1_1_params, "pci/1/1/%s");
+
+		/* WNDR3400v3 adjust default values for wl_txq_thresh, et_txq_thresh and wl_rpcq_rxthresh (--> explicitly for WiFi modules) */
+		nvram_set("et_txq_thresh", "512");
+		nvram_set("wl_txq_thresh", "512");
+		nvram_set("wl_rpcq_rxthresh", "512");
+
+		nvram_set("wl0_txq_thresh", "512");
+		nvram_set("wl0_rpcq_rxthresh", "512");
+
+		nvram_set("wl1_txq_thresh", "512");
+		nvram_set("wl1_rpcq_rxthresh", "512");
 
 		xstart("gpio", "disable", "16"); /* turn on Power LED (active LOW); GPIO 16 controls state (on/off) and GPIO 14 controls color, see led.c */
 		xstart("gpio", "enable", "21"); /* turn on USB supply (active HIGH) */
