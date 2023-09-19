@@ -4,14 +4,16 @@
 #
 ################################################################################
 
-ZFS_TOMATO_VERSION = 2.1.12
+ZFS_TOMATO_VERSION = 2.2.0-rc4
 ZFS_TOMATO_SOURCE = zfs-$(ZFS_TOMATO_VERSION).tar.gz
 ZFS_TOMATO_SITE = https://github.com/openzfs/zfs/releases/download/zfs-$(ZFS_TOMATO_VERSION)
-ZFS_TOMATO_PATCH = https://github.com/openzfs/zfs/commit/bc3f12bfac152a0c28951cec92340ba14f9ccee9.patch
 ZFS_TOMATO_LICENSE = CDDL
 ZFS_TOMATO_LICENSE_FILES = LICENSE COPYRIGHT
 ZFS_TOMATO_CPE_ID_VENDOR = openzfs
 ZFS_TOMATO_CPE_ID_PRODUCT = openzfs
+
+ZFS_TOMATO_CONF_ENV += KERNEL_CC="$(TARGET_CC)"
+ZFS_TOMATO_CONF_ENV += LDFLAGS="$(TARGET_LDFLAGS) -zmuldefs"
 
 # 0001-removal-of-LegacyVersion-broke-ax_python_dev.m4.patch
 ZFS_TOMATO_AUTORECONF = YES
@@ -97,8 +99,8 @@ define ZFS_TOMATO_INSTALL_TARGET_CMDS
 	INSTALL_MOD_DIR=extra \
 	KERNELRELEASE=$(LINUX_VERSION)
 
-	$(INSTALL) -D $(@D)/cmd/zfs/zfs $(TARGET_DIR)/usr/sbin
-	$(INSTALL) -D $(@D)/cmd/zpool/zpool $(TARGET_DIR)/usr/sbin
+	$(INSTALL) -D $(@D)/zfs $(TARGET_DIR)/usr/sbin
+	$(INSTALL) -D $(@D)/zpool $(TARGET_DIR)/usr/sbin
 endef
 
 # ZFS autotools will compile the kernel modules, so there is not needed to execute

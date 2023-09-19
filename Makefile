@@ -1,4 +1,4 @@
-BUILDROOT_VERSION = 2023.05
+BUILDROOT_VERSION = 2023.08
 PATCHES := $(wildcard src/patches/*.patch)
 
 default: .configure
