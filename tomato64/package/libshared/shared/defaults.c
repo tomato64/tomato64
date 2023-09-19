@@ -174,7 +174,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan_status_script",		"0"				, 0 },
 #endif
 	{ "wan_ckmtd",			"2"				, 0 },
-	{ "wan_ck_pause",		"0"				, 0 },	/* skip watchdog for this wan 0|1 */
+	{ "wan_ck_pause",		"0"				, 0 },	/* skip mwwatchdog for this wan 0|1 */
 
 	{ "wan2_proto",			"disabled"			, 0 },	/* [static|dhcp|pppoe|disabled] */
 	{ "wan2_ipaddr",		"0.0.0.0"			, 0 },	/* WAN IP address */
@@ -193,7 +193,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan2_status_script",		"0"				, 0 },
 #endif
 	{ "wan2_ckmtd",			"2"				, 0 },
-	{ "wan2_ck_pause",		"0"				, 0 },	/* skip watchdog for this wan 0|1 */
+	{ "wan2_ck_pause",		"0"				, 0 },	/* skip mwwatchdog for this wan 0|1 */
 
 #ifdef TCONFIG_MULTIWAN
 	{ "wan3_proto",			"disabled"			, 0 },	/* [static|dhcp|pppoe|disabled] */
@@ -213,7 +213,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan3_status_script",		"0"				, 0 },
 #endif
 	{ "wan3_ckmtd",			"2"				, 0 },
-	{ "wan3_ck_pause",		"0"				, 0 },	/* skip watchdog for this wan 0|1 */
+	{ "wan3_ck_pause",		"0"				, 0 },	/* skip mwwatchdog for this wan 0|1 */
 
 	{ "wan4_proto",			"disabled"			, 0 },	/* [static|dhcp|pppoe|disabled] */
 	{ "wan4_ipaddr",		"0.0.0.0"			, 0 },	/* WAN IP address */
@@ -232,7 +232,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan4_status_script",		"0"				, 0 },
 #endif
 	{ "wan4_ckmtd",			"2"				, 0 },
-	{ "wan4_ck_pause",		"0"				, 0 },	/* skip watchdog for this wan 0|1 */
+	{ "wan4_ck_pause",		"0"				, 0 },	/* skip mwwatchdog for this wan 0|1 */
 #endif /* TCONFIG_MULTIWAN */
 
 #if defined(TCONFIG_DNSSEC) || defined(TCONFIG_STUBBY)

@@ -687,7 +687,7 @@ state:
 	memset(buf1, 0, sizeof(buf1));
 	snprintf(buf1, sizeof(buf1), "%s_ck_pause", prefix);
 
-	if (up == 1) { /* also check result from watchdog */
+	if (up == 1) { /* also check result from mwwatchdog */
 		if ((nvram_get_int("mwan_cktime") == 0) || nvram_get_int(buf1)) /* skip checking on this WAN */
 			return up;
 

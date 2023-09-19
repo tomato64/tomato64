@@ -280,7 +280,7 @@ void mwan_state_files(void)
 		snprintf(tmp, sizeof(tmp), "/var/lib/misc/%s_state", prefix);
 		if ((f = fopen(tmp, "r")) == NULL) {
 			/* if file does not exist then we create it with value "0".
-			 * later on watchdog will set it to 1 when it proves that
+			 * later on mwwatchdog will set it to 1 when it proves that
 			 * the wan is actually working (wan can connect but still be not working)
 			 */
 			f = fopen(tmp, "w+");

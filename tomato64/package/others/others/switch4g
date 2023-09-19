@@ -182,10 +182,10 @@ connect() {
 				disconnect
 				[ "$(NV mwan_cktime)" -gt 0 ] && {
 					modemReset
-					watchdog add
-					wayOut "4G MODEM - connection failed: watchdog enabled"
+					mwwatchdog add
+					wayOut "4G MODEM - connection failed: mwwatchdog enabled"
 				} || {
-					watchdog del
+					mwwatchdog del
 					wayOut "4G MODEM - connection failed: process terminated!"
 				}
 			}
@@ -286,10 +286,10 @@ connect() {
 
 				[ "$(NV mwan_cktime)" -gt 0 ] && {
 					modemReset
-					watchdog add
-					wayOut "4G MODEM - connection failed: watchdog enabled"
+					mwwatchdog add
+					wayOut "4G MODEM - connection failed: mwwatchdog enabled"
 				} || {
-					watchdog del
+					mwwatchdog del
 					wayOut "4G MODEM - connection failed: process terminated!"
 				}
 			}
@@ -302,10 +302,10 @@ connect() {
 
 			[ "$(NV mwan_cktime)" -gt 0 ] && {
 				modemReset
-				watchdog add
-				wayOut "4G MODEM - no data link: watchdog enabled"
+				mwwatchdog add
+				wayOut "4G MODEM - no data link: mwwatchdog enabled"
 			} || {
-				watchdog del
+				mwwatchdog del
 				wayOut "4G MODEM - no data link: process terminated!"
 			}
 		}
@@ -340,16 +340,16 @@ connect() {
 
 	[ "$DONE" -eq 0 ] && {
 		[ "$(NV mwan_cktime)" -gt 0 ] && {
-			watchdog add
-			wayOut "4G MODEM - WAN IFACE failed: watchdog enabled"
+			mwwatchdog add
+			wayOut "4G MODEM - WAN IFACE failed: mwwatchdog enabled"
 		} || {
-			watchdog del
+			mwwatchdog del
 			wayOut "4G MODEM - WAN IFACE failed: connection process terminated!"
 		}
 	}
 
 	echo "1" > $STATEFILE
-	watchdog add
+	mwwatchdog add
 }
 
 disconnect() {
@@ -360,7 +360,7 @@ disconnect() {
 	local DEVALL j
 
 	$LOGS "4G MODEM - disconnecting ..."
-	watchdog del
+	mwwatchdog del
 	dhcpc-release $PREFIX
 
 	if [ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ]; then
@@ -507,10 +507,10 @@ searchWAN() {
 		$LOGS "4G MODEM - WAN ($MTYPE) found: using $MODULE module and $WAN as WAN"
 	} || {
 		[ "$(NV mwan_cktime)" -gt 0 ] && {
-			watchdog add
-			wayOut "4G MODEM - WAN not found: watchdog enabled"
+			mwwatchdog add
+			wayOut "4G MODEM - WAN not found: mwwatchdog enabled"
 		} || {
-			watchdog del
+			mwwatchdog del
 			wayOut "4G MODEM - WAN not found: connection process terminated!"
 		}
 	}
@@ -624,11 +624,11 @@ searchDiag() {
 
 	[ -z "$TTYS" ] && {
 		[ "$(NV mwan_cktime)" -gt 0 ] && {
-			watchdog add
+			mwwatchdog add
 			modemReset
-			wayOut "4G MODEM - DIAG(s) not found: watchdog enabled"
+			wayOut "4G MODEM - DIAG(s) not found: mwwatchdog enabled"
 		} || {
-			watchdog del
+			mwwatchdog del
 			wayOut "4G MODEM - DIAG(s) not found: connection process terminated!"
 		}
 	}
@@ -716,7 +716,7 @@ setPIN() {
 	}
 
 	[ "$IS_PIN" -eq 1 -a "$IS_DONE" -ne 1 ] && {
-		watchdog del
+		mwwatchdog del
 		wayOut "4G MODEM - SIM locked: connection process terminated!"
 	} || {
 		$LOGS "4G MODEM - SIM ready"

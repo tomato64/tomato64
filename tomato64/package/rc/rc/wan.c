@@ -1024,8 +1024,8 @@ void start_wan(void)
 	}
 
 	if (nvram_get_int("mwan_cktime") > 0) {
-		logmsg(LOG_DEBUG, "*** %s: adding watchdog job", __FUNCTION__);
-		xstart("watchdog", "add");
+		logmsg(LOG_DEBUG, "*** %s: adding mwwatchdog job", __FUNCTION__);
+		xstart("mwwatchdog", "add");
 	}
 
 	led(LED_DIAG, LED_OFF);
@@ -1398,7 +1398,7 @@ void stop_wan_if(char *prefix)
 	if (wan_proto == WP_PPTP || wan_proto == WP_L2TP || wan_proto == WP_PPPOE || wan_proto == WP_PPP3G) {
 		nvram_set(strlcat_r(prefix, "_ppp_get_ip", tmp, sizeof(tmp)), "0.0.0.0");
 		nvram_set(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp)), "");
-		/* For debug. Don't fool watchdog / mwan scripts with old obsolete interface, it can be actually used on other wan (ex: ppp0) */
+		/* For debug. Don't fool mwwatchdog / mwan scripts with old obsolete interface, it can be actually used on other wan (ex: ppp0) */
 		nvram_set(strlcat_r(prefix, "_iface", tmp, sizeof(tmp)), "none");
 	}
 }
@@ -1407,8 +1407,8 @@ void stop_wan(void)
 {
 	logmsg(LOG_DEBUG, "*** IN: %s", __FUNCTION__);
 
-	logmsg(LOG_DEBUG, "*** %s: removing watchdog job", __FUNCTION__);
-	xstart("watchdog", "del");
+	logmsg(LOG_DEBUG, "*** %s: removing mwwatchdog job", __FUNCTION__);
+	xstart("mwwatchdog", "del");
 
 #ifdef TCONFIG_TINC
 	stop_tinc();

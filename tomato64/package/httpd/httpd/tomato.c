@@ -224,7 +224,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan_status_script",		V_01				},
 #endif
 	{ "wan_ckmtd",			V_LENGTH(1, 2)			},	/* check method: 1 - ping, 2 - traceroute, 3 - curl */
-	{ "wan_ck_pause",		V_01				},	/* skip watchdog check for this wan */
+	{ "wan_ck_pause",		V_01				},	/* skip mwwatchdog check for this wan */
 
 #ifdef TCONFIG_MULTIWAN
 	{ "mwan_num",			V_RANGE(1, 4)			},
@@ -274,7 +274,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan2_status_script",		V_01				},
 #endif
 	{ "wan2_ckmtd",			V_LENGTH(1, 2)			},	/* check method: 1 - ping, 2 - traceroute, 3 - curl */
-	{ "wan2_ck_pause",		V_01				},	/* skip watchdog check for this wan */
+	{ "wan2_ck_pause",		V_01				},	/* skip mwwatchdog check for this wan */
 
 #ifdef TCONFIG_MULTIWAN
 	{ "wan3_proto",			V_LENGTH(1, 16)			},	/* disabled, dhcp, static, pppoe, pptp, l2tp */
@@ -310,7 +310,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan3_status_script",		V_01				},
 #endif
 	{ "wan3_ckmtd",			V_LENGTH(1, 2)			},	/* check method: 1 - ping, 2 - traceroute, 3 - curl */
-	{ "wan3_ck_pause",		V_01				},	/* skip watchdog check for this wan */
+	{ "wan3_ck_pause",		V_01				},	/* skip mwwatchdog check for this wan */
 
 	{ "wan4_proto",			V_LENGTH(1, 16)			},	/* disabled, dhcp, static, pppoe, pptp, l2tp */
 	{ "wan4_weight",		V_RANGE(0, 256)			},
@@ -345,7 +345,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan4_status_script",		V_01				},
 #endif
 	{ "wan4_ckmtd",			V_LENGTH(1, 2)			},	/* check method: 1 - ping, 2 - traceroute, 3 - curl */
-	{ "wan4_ck_pause",		V_01				},	/* skip watchdog check for this wan */
+	{ "wan4_ck_pause",		V_01				},	/* skip mwwatchdog check for this wan */
 #endif /* TCONFIG_MULTIWAN */
 
 	/* LAN */

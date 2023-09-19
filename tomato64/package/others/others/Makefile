@@ -26,7 +26,7 @@ endif
 endif # TCONFIG_USB
 
 # MultiWAN watchdog script
-	install -m 0700 watchdog $(INSTALLDIR)/usr/sbin
+	install -m 0700 mwwatchdog $(INSTALLDIR)/usr/sbin
 
 # ntp2ip
 ifeq ($(or $(TCONFIG_DNSCRYPT),$(TCONFIG_STUBBY)),y)
@@ -176,7 +176,7 @@ endif
 
 ifneq ($(TCONFIG_BCMARM),y)
 	cd $(INSTALLDIR)/usr/sbin && \
-		for F in switch3g switch4g wwansignal watchdog ntp2ip tomatoanon adblock ttb ethstate mymotd sysinfo-helper linkagg webmon_bkp optware-install.sh entware-install.sh updown-client.sh vpnrouting.sh cru sysinfo stealthMode gencert.sh; do \
+		for F in switch3g switch4g wwansignal mwwatchdog ntp2ip tomatoanon adblock ttb ethstate mymotd sysinfo-helper linkagg webmon_bkp optware-install.sh entware-install.sh updown-client.sh vpnrouting.sh cru sysinfo stealthMode gencert.sh; do \
 			[ -f $(INSTALLDIR)/usr/sbin/$$F ] && { \
 				sed -i $$F -e "/^#!/p" -e "/^\s*#/d"; \
 				sed -i $$F -e '/^\/\*\s*$$/,/\*\//! { s/^\s\+//; s/\s\+$$//; /^$$/d }'; \

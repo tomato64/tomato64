@@ -171,7 +171,7 @@ function watchdog_check(uidx) {
 	var e = E('b'+uidx+'_check');
 	e.disabled = 1;
 
-	var c = '/usr/sbin/watchdog';
+	var c = '/usr/sbin/mwwatchdog';
 	var cmd = new XmlHttp();
 	cmd.post('shell.cgi', 'action=execute&command='+escapeCGI(c.replace(/\r/g, '')));
 

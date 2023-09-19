@@ -12,8 +12,8 @@ NV() {
 }
 
 PID=$$
-PIDFILE="/var/run/watchdog.pid"
-IPLISTFILE="/tmp/watchdog.iplist"
+PIDFILE="/var/run/mwwatchdog.pid"
+IPLISTFILE="/tmp/mwwatchdog.iplist"
 MWAN=$(NV mwan_num)
 IPLIST=""
 MWANTABLE="wan"
@@ -24,8 +24,8 @@ while [ $i -le $MWAN ]; do
 	i=$((i+1))
 done
 
-LOGS="logger -t watchdog[$PID]"
-[ "$(NV mwan_debug)" -gt 0 ] && DEBUG="logger -p DEBUG -t watchdog[$PID]" || DEBUG="echo"
+LOGS="logger -t mwwatchdog[$PID]"
+[ "$(NV mwan_debug)" -gt 0 ] && DEBUG="logger -p DEBUG -t mwwatchdog[$PID]" || DEBUG="echo"
 
 
 timeout() {
@@ -65,7 +65,7 @@ ifconfigChk() {
 	[ $(ifconfig $IFACE 2>/dev/null | grep inet | grep -Eo '((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' | grep -v '0.0.0.0' | wc -l) -eq 0 ] && ret_ifchk=0 || ret_ifchk=1
 }
 
-watchdogRun() {
+mwwatchdogRun() {
 	for PREFIX in $MWANTABLE; do
 		IFACE=$(NV "$PREFIX"_iface)
 		ISPPPD=$([ -f /tmp/ppp/pppd$PREFIX ] && echo 1 || echo 0)
@@ -80,7 +80,7 @@ watchdogRun() {
 		local ret_ifchk
 
 		[ "$(NV "$PREFIX"_ck_pause)" -eq 1 ] && {
-			$DEBUG "Watchdog paused for $PREFIX_LOG - skipping ..."
+			$DEBUG "MWWatchdog paused for $PREFIX_LOG - skipping ..."
 			continue
 		}
 
@@ -227,21 +227,21 @@ ckcurl() {
 	[ "$RESULT" -gt 0 ] && $DEBUG "curl test result for: $IFACE - OK" || $DEBUG "curl test result for: $IFACE - FAILED!"
 }
 
-watchdogAdd() {
+mwwatchdogAdd() {
 	local CKTIME=$(NV mwan_cktime)
 	local MINS=$((CKTIME/60))
 
 	[ "$MINS" -gt 0 ] && {
-		cru l | grep watchdogJob >/dev/null || cru a watchdogJob "*/$MINS * * * * /usr/sbin/watchdog"
+		cru l | grep mwwatchdogJob >/dev/null || cru a mwwatchdogJob "*/$MINS * * * * /usr/sbin/mwwatchdog"
 	}
 }
 
-watchdogDel() {
-	cru l | grep watchdogJob >/dev/null && cru d watchdogJob
+mwwatchdogDel() {
+	cru l | grep mwwatchdogJob >/dev/null && cru d mwwatchdogJob
 }
 
 mwanJob() {
-	cru l | grep mwanJob >/dev/null && cru d mwanJob || cru a mwanJob "*/1 * * * * /usr/sbin/watchdog alive"
+	cru l | grep mwanJob >/dev/null && cru d mwanJob || cru a mwanJob "*/1 * * * * /usr/sbin/mwwatchdog alive"
 }
 
 mwanAlive() {
@@ -313,10 +313,10 @@ checkPidSwitch() {
 
 
 if [ "$1" == "add" ]; then
-	watchdogAdd
+	mwwatchdogAdd
 	mwanJob
 elif [ "$1" == "del" ]; then
-	watchdogDel
+	mwwatchdogDel
 elif [ "$1" == "alive" ]; then
 	mwanAlive
 elif [ "$(NV g_upgrade)" != "1" -a "$(NV g_reboot)" != "1" ]; then
@@ -341,7 +341,7 @@ elif [ "$(NV g_upgrade)" != "1" -a "$(NV g_reboot)" != "1" ]; then
 		IPLIST=$IIPLIST
 	}
 
-	watchdogRun
+	mwwatchdogRun
 
 	[ -f $IPLISTFILE ] && rm $IPLISTFILE
 fi

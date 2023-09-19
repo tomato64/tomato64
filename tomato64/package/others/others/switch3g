@@ -199,10 +199,10 @@ searchDiag() {
 	[ -z "$TTYS" ] && {
 		nvram set "$PREFIX"_modem_type=""
 		[ "$(nvram get mwan_cktime)" -gt 0 ] && {
-			watchdog add
-			wayOut "3G MODEM not found - watchdog enabled"
+			mwwatchdog add
+			wayOut "3G MODEM not found - mwwatchdog enabled"
 		} || {
-			watchdog del
+			mwwatchdog del
 			wayOut "3G MODEM not found - connection process terminated!"
 		}
 	} || {
@@ -253,7 +253,7 @@ setPIN() {
 	}
 
 	[ "$IS_PIN" -eq 1 -a "$IS_DONE" -ne 1 ] && {
-		watchdog del
+		mwwatchdog del
 		wayOut "3G MODEM - SIM locked - connection process terminated!"
 	} || {
 		$LOGS "3G MODEM - SIM ready"
