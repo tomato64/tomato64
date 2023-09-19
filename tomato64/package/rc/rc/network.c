@@ -98,6 +98,9 @@ typedef u_int8_t u8;
 #define WL_MAX_ASSOC		128
 #define STACHECK_CONNECT	30
 #define STACHECK_DISCONNECT	5
+#ifdef TCONFIG_BCMWL6
+#define STA_ARPING_FREQ		5 /* arping after X STACHECK_CONNECT checks (default: (5+1) * 30 sec = 180 sec) */
+#endif
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
@@ -2251,6 +2254,9 @@ static int check_wl_client(char *ifname, int unit, int subunit)
 static int radio_join(int idx, int unit, int subunit, void *param)
 {
 	int i, stacheck_connect, stacheck;
+#ifdef TCONFIG_BCMWL6
+	static int arp_count = 0;
+#endif /* TCONFIG_BCMWL6 */
 	char s[32], f[64];
 	char ifname[16];
 	char *amode, sec[16];
@@ -2291,6 +2297,14 @@ static int radio_join(int idx, int unit, int subunit, void *param)
 
 			if (check_wl_client(ifname, unit, subunit)) {
 				stacheck = stacheck_connect;
+#ifdef TCONFIG_BCMWL6
+				/* check next arping cycle for psta (MediaBridge) */
+				if (!strcmp(nvram_safe_get(wl_nvname("mode", unit, subunit)), "psta") && ((arp_count++) >= STA_ARPING_FREQ)) {
+					arp_count = 0; /* reset */
+					logmsg(LOG_DEBUG, "*** %s: MediaBridge - ARPING cycle (%d sec)", __FUNCTION__, ((STA_ARPING_FREQ + 1) * stacheck));
+					send_arpreq();
+				}
+#endif /* TCONFIG_BCMWL6 */
 			}
 			else {
 				eval("wl", "-i", ifname, "disassoc");

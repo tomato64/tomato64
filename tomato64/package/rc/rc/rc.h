@@ -591,6 +591,11 @@ extern void stop_bwlimit(void);
 extern void start_arpbind(void);
 extern void stop_arpbind(void);
 
+/* arpreq.c */
+#ifdef TCONFIG_BCMWL6
+extern int send_arpreq(void);
+#endif /* TCONFIG_BCMWL6 */
+
 /* mmc.c */
 #ifdef TCONFIG_SDHC
 extern void start_mmc(void);
