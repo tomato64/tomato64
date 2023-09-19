@@ -2741,10 +2741,8 @@ static void start_media_server(int force)
 	ret = _eval(argv, NULL, 0, &pid);
 	sleep(1);
 
-	if ((pidof("minidlna") > 0) && !ret) {
-		logmsg(LOG_INFO, "minidlna is started");
+	if ((pidof("minidlna") > 0) && !ret)
 		once = 0;
-	}
 	else
 		logmsg(LOG_ERR, "starting minidlna failed ...");
 }
@@ -2754,10 +2752,8 @@ static void stop_media_server(void)
 	if (serialize_restart("minidlna", 0))
 		return;
 
-	if (pidof("minidlna") > 0) {
+	if (pidof("minidlna") > 0)
 		killall_tk_period_wait("minidlna", 50);
-		logmsg(LOG_INFO, "minidlna is stopped");
-	}
 
 	/* clean-up */
 	eval("rm", "-rf", "/var/run/minidlna");
