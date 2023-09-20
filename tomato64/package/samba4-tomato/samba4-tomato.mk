@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-SAMBA4_TOMATO_VERSION = 4.18.2
+SAMBA4_TOMATO_VERSION = 4.18.6
 SAMBA4_TOMATO_SITE = https://download.samba.org/pub/samba/stable
 SAMBA4_TOMATO_SOURCE = samba-$(SAMBA4_TOMATO_VERSION).tar.gz
 SAMBA4_TOMATO_INSTALL_STAGING = YES
@@ -91,6 +91,13 @@ SAMBA4_TOMATO_CONF_OPTS += --with-libarchive
 SAMBA4_TOMATO_DEPENDENCIES += libarchive
 else
 SAMBA4_TOMATO_CONF_OPTS += --without-libarchive
+endif
+
+ifeq ($(BR2_PACKAGE_LIBUNWIND),y)
+SAMBA4_TOMATO_CONF_OPTS += --with-libunwind
+SAMBA4_TOMATO_DEPENDENCIES += libunwind
+else
+SAMBA4_TOMATO_CONF_OPTS += --without-libunwind
 endif
 
 ifeq ($(BR2_PACKAGE_NCURSES),y)
