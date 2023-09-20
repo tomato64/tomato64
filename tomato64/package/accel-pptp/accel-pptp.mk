@@ -6,7 +6,7 @@
 
 ACCEL_PPTP_VERSION = 0.8.5
 ACCEL_PPTP_SOURCE = accel-pptp-$(ACCEL_PPTP_VERSION).tar.bz2
-ACCEL_PPTP_SITE = https://github.com/lancethepants/accel-pptp/releases/download/$(ACCEL_PPTP_VERSION)
+ACCEL_PPTP_SITE = https://github.com/tomato64/accel-pptp/releases/download/$(ACCEL_PPTP_VERSION)
 ACCEL_PPTP_SUBDIR = pppd_plugin
 ACCEL_PPTP_LICENSE = GPL-2.0
 ACCEL_PPTP_DEPENDENCIES = linux-headers pppd-tomato
