@@ -44,7 +44,7 @@ BR2_PACKAGE_TMUX=y
 BR2_PACKAGE_HTOP=y
 BR2_TARGET_ROOTFS_EXT2=y
 BR2_TARGET_ROOTFS_EXT2_4=y
-BR2_TARGET_ROOTFS_EXT2_SIZE="550M"
+BR2_TARGET_ROOTFS_EXT2_SIZE="600M"
 BR2_TARGET_ROOTFS_EXT2_MKFS_OPTIONS="-O 64bit"
 BR2_TARGET_ROOTFS_TAR_ZSTD=y
 BR2_TARGET_ROOTFS_TAR_OPTIONS="--exclude='dev' --exclude='etc' --exclude='home' --exclude='lib64' --exclude='mnt' --exclude='nvram' --exclude='proc' --exclude='root' --exclude='sys' --exclude='var'"
