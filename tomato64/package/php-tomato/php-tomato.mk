@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PHP_TOMATO_VERSION = 8.2.3
+PHP_TOMATO_VERSION = 8.2.10
 PHP_TOMATO_SITE = https://www.php.net/distributions
 PHP_TOMATO_SOURCE = php-$(PHP_TOMATO_VERSION).tar.xz
 PHP_TOMATO_INSTALL_STAGING = YES
@@ -14,6 +14,7 @@ PHP_TOMATO_DEPENDENCIES = host-pkgconf pcre2
 PHP_TOMATO_LICENSE = PHP-3.01
 PHP_TOMATO_LICENSE_FILES = LICENSE
 PHP_TOMATO_CPE_ID_VENDOR = php
+
 PHP_TOMATO_CONF_OPTS = \
 	--mandir=/usr/share/man \
 	--infodir=/usr/share/info \
@@ -82,6 +83,13 @@ PHP_TOMATO_CONF_ENV += ac_cv_func_dlopen=yes ac_cv_lib_dl_dlopen=yes
 PHP_TOMATO_EXTRA_LIBS += -ldl
 else
 PHP_TOMATO_CONF_ENV += ac_cv_func_dlopen=no ac_cv_lib_dl_dlopen=no
+endif
+
+# php has some assembly function that is not present in Thumb mode:
+# Error: selected processor does not support `umlal r2,r1,r0,r3' in Thumb mode
+# so, we desactivate Thumb mode
+ifeq ($(BR2_ARM_INSTRUCTIONS_THUMB),y)
+PHP_TOMATO_CFLAGS += -marm
 endif
 
 PHP_TOMATO_CONF_OPTS += $(if $(BR2_PACKAGE_PHP_TOMATO_SAPI_CLI),--enable-cli,--disable-cli)
@@ -347,4 +355,24 @@ PHP_TOMATO_POST_INSTALL_TARGET_HOOKS += PHP_TOMATO_INSTALL_FIXUP
 
 PHP_TOMATO_CONF_ENV += CFLAGS="$(PHP_TOMATO_CFLAGS)" CXXFLAGS="$(PHP_TOMATO_CXXFLAGS)"
 
+HOST_PHP_TOMATO_CONF_OPTS = \
+	--disable-all \
+	--without-pear \
+	--with-config-file-path=$(HOST_DIR)/etc \
+	--disable-phpdbg \
+	--with-external-pcre \
+	--enable-phar \
+	--enable-json \
+	--enable-filter \
+	--enable-mbstring \
+	--enable-tokenizer \
+	--with-openssl=$(HOST_DIR)
+
+HOST_PHP_TOMATO_DEPENDENCIES = \
+	host-oniguruma \
+	host-openssl \
+	host-pcre2 \
+	host-pkgconf
+
 $(eval $(autotools-package))
+$(eval $(host-autotools-package))
