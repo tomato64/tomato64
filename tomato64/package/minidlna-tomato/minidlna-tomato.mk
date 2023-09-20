@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MINIDLNA_TOMATO_VERSION = 1.3.2
+MINIDLNA_TOMATO_VERSION = 1.3.3
 MINIDLNA_TOMATO_SOURCE = minidlna-$(MINIDLNA_TOMATO_VERSION).tar.gz
 MINIDLNA_TOMATO_SITE = https://downloads.sourceforge.net/project/minidlna/minidlna/$(MINIDLNA_TOMATO_VERSION)
 MINIDLNA_TOMATO_LICENSE = GPL-2.0, BSD-3-Clause
