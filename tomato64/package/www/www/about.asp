@@ -39,12 +39,16 @@ function init() {
 <!-- / / / -->
 
 <div class="about">
-	<b>Tomato64 Firmware <% version(1); %></b><br>
+	<b>Tomato64 Firmware <% version(1); %></b>
 	<br>
-	Linux kernel <% version(2); %> and Broadcom Wireless Driver <% version(3); %><br>
+	<br>
+	Linux kernel <% version(2); %>
+	<br>
+	Build commit: <a href="https://github.com/tomato64/tomato64/commit/___HASH___" class="new_window">___HASH_SHORT___</a>
+	<br>
 	<br>
 	<b>Tomato64 project page: </b><a href="https://tomato64.org" class="new_window"> https://tomato64.org</a><br>
-	<b>Forums about Tomato</b> - EN: <a href="https://www.linksysinfo.org/index.php?forums/tomato-firmware.33/" class="new_window">https://linksysinfo.org</a> PL: <a href="https://openlinksys.info" class="new_window">https://openlinksys.info</a><br>
+	<b>Forums about Tomato:</b> <a href="https://www.linksysinfo.org/index.php?forums/tomato-firmware.33/" class="new_window">https://linksysinfo.org</a><br>
 	<b>Source code: </b><a href="https://github.com/tomato64/tomato64" class="new_window">https://github.com/tomato64/tomato64</a><br>
 	<br>
 	<hr>
@@ -222,7 +226,7 @@ function init() {
 	<br>
 
 	<hr>
-	<br><b>Tomato64-ARM - is an alternative, customized version, forked off from FreshTomato by Pedro</b>
+	<br><b>Tomato64 - is a port of Tomato Firmware to the x86_64 architecture, forked from FreshTomato.</b>
 	<br>
 	Copyright (C) 2022-2023 by Lance Fredrickson
 	<br>
@@ -231,18 +235,35 @@ function init() {
 	<br>
 	<br>
 	<br>
-	<b>Click below to send a "Thank you" gift through PayPal:</b>
-	<br>
-	<br>
-	<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-	<div>
-		<input type="hidden" name="cmd" value="_s-xclick">
-		<input type="image" src="donate.gif" style="border:0" name="submit" alt="Donate">
-		<input type="hidden" name="hosted_button_id" value="B4FDH9TH6Z8FU">
+	<div style="width: 100%;">
+		<div style="width: 50%; height: 100px; float: left">
+			<b>Scan to donate through venmo</b>
+			<br>
+			<br>
+			<img src="venmo.png" width="150" height="auto" />
+		</div>
+		<div style="margin-left: 50%; height: 100px;">
+			<b>Click to donate through PayPal</b>
+			<br>
+			<br>
+			<form action="https://www.paypal.com/donate" method="post" target="_top">
+			<input type="hidden" name="business" value="GKYB9QTMQLD68" />
+			<input type="hidden" name="no_recurring" value="0" />
+			<input type="hidden" name="item_name" value="Open Source Development" />
+			<input type="hidden" name="currency_code" value="USD" />
+			<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
+			</form>
+		</div>
 	</div>
-	</form>
 	<br>
-	<div id="donate"><b>...Or by Bitcoin: </b> 1JDxBBQvcJ9XxgagJRNVrqC1nysq8F8B1Y</div>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
 	<br>
 	<hr>
 </div>
