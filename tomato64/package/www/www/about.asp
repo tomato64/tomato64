@@ -235,27 +235,49 @@ function init() {
 	<br>
 	<br>
 	<br>
+	<br>
 	<div style="width: 100%;">
-		<div style="width: 50%; height: 100px; float: left">
+		<div style="width: 33.33%; float: left;">
+			<b>Click to donate through PayPal</b>
+			<br>
+			<br>
+			<a href="https://www.paypal.com/donate/?business=GKYB9QTMQLD68&no_recurring=0&item_name=Open+Source+Development&currency_code=USD"><img src="paypal.png" width="150" height="auto" /></a>
+			<br>
+			<br>
+			<b>Click to sponsor through Github</b>
+			<br>
+			<br>
+			<a href="https://github.com/sponsors/lancethepants"><img src="github.png" width="150" height="auto" /></a>
+			<br>
+			<br>
+			<b>Click to sponsor through Patreon</b>
+			<br>
+			<br>
+			<a href="https://www.patreon.com/Tomato64"><img src="patreon.png" width="150" height="auto" /></a>
+		</div>
+		<div style="width: 33.33%; float: left;">
 			<b>Scan to donate through venmo</b>
 			<br>
 			<br>
 			<img src="venmo.png" width="150" height="auto" />
 		</div>
-		<div style="margin-left: 50%; height: 100px;">
-			<b>Click to donate through PayPal</b>
+		<div style="width: 33.33%; float: left;">
+			<b>Scan to donate through Cash App</b>
 			<br>
 			<br>
-			<form action="https://www.paypal.com/donate" method="post" target="_top">
-			<input type="hidden" name="business" value="GKYB9QTMQLD68" />
-			<input type="hidden" name="no_recurring" value="0" />
-			<input type="hidden" name="item_name" value="Open Source Development" />
-			<input type="hidden" name="currency_code" value="USD" />
-			<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
-			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
-			</form>
+			<img src="cash.png" width="150" height="auto" />
+			<br>
+			<br>
+			<a href="https://cash.app/$lancethepants"><b>https://cash.app/$lancethepants</b></a>
 		</div>
 	</div>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
 	<br>
 	<br>
 	<br>
