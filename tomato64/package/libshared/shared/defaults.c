@@ -1113,7 +1113,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "https_crt_gen",		""				, 0 },
 #endif
 	{ "web_wl_filter",		"0"				, 0 },	/* Allow/Deny Wireless Access Web */
+#ifndef TOMATO64
 	{ "web_css",			"default"			, 0 },
+#else
+	{ "web_css",			"bluegreen2"			, 0 },
+#endif /* TOMATO64 */
 #ifdef TCONFIG_ADVTHEMES
 	{ "web_adv_scripts",		"0"				, 0 },	/* load JS resize chart script */
 #endif
