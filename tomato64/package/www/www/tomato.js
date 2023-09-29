@@ -2991,7 +2991,7 @@ function displayOUI(i) {
 }
 
 function wikiLink() {
-	const url = "https://wiki.freshtomato.org/doku.php"
+	const url = "https://tomato64.org/wiki"
 	var page = myName();
 	if (page)
 		page = page.replace(/\.asp$/, "");
