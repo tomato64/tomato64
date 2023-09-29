@@ -1,6 +1,6 @@
 diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/config.h libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/config.h
---- libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/config.h	2023-07-27 12:55:59.107773657 -0600
-+++ libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/config.h	2023-07-27 12:56:38.699779343 -0600
+--- libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/config.h	2023-09-29 14:11:30.694271110 -0600
++++ libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/config.h	2023-09-29 14:11:57.242294987 -0600
 @@ -2,11 +2,11 @@
  #define INCLUDE_CONFIG_H
  
@@ -9,7 +9,7 @@ diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/config.h libnv
 +#define DEBUG               0
  // Determines the size of the internal buffer, used for manipulating and storing key values, etc.
 -#define BUFFER_SIZE         256
-+#define BUFFER_SIZE         2048
++#define BUFFER_SIZE         4096
  // Determines the size of the "emulated" NVRAM, used by nvram_get_nvramspace().
 -#define NVRAM_SIZE          2048
 +#define NVRAM_SIZE          1048576
@@ -29,8 +29,8 @@ diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/config.h libnv
  // Define the semantics for success and failure error codes.
  #define E_FAILURE  0
 diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/Makefile libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/Makefile
---- libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/Makefile	2023-07-27 12:55:59.107773657 -0600
-+++ libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/Makefile	2023-07-27 12:56:08.915775059 -0600
+--- libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/Makefile	2023-09-29 14:11:30.694271110 -0600
++++ libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/Makefile	2023-09-29 14:11:41.090284283 -0600
 @@ -1,5 +1,9 @@
 -CFLAGS=-O2 -fPIC -Wall
 -LDFLAGS=-shared -nostdlib
@@ -57,8 +57,8 @@ diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/Makefile libnv
  clean:
  	rm -f *.o libnvram.so test
 diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/nvram.c libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/nvram.c
---- libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/nvram.c	2023-07-27 12:55:59.107773657 -0600
-+++ libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/nvram.c	2023-07-27 12:56:08.919775059 -0600
+--- libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/nvram.c	2023-09-29 14:11:30.694271110 -0600
++++ libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/nvram.c	2023-09-29 14:11:41.090284283 -0600
 @@ -124,8 +124,8 @@
              endmntent(mnt);
          }
