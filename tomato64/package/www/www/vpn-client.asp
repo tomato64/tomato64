@@ -466,7 +466,7 @@ function init() {
 				{ title: 'Username: ', indent: 2, name: 'vpn_'+t+'_username', type: 'text', maxlen: 50, size: 54, value: eval('nvram.vpn_'+t+'_username') },
 				{ title: 'Password: ', indent: 2, name: 'vpn_'+t+'_password', type: 'password', maxlen: 70, size: 54, peekaboo:1, value: eval('nvram.vpn_'+t+'_password') },
 				{ title: 'Username Authen. Only', indent: 2, name: 'f_vpn_'+t+'_useronly', type: 'checkbox', value: eval('nvram.vpn_'+t+'_useronly') != 0,
-					suffix: ' <small style="color:red" id="'+t+'_ca_warn_text">warning: must define Certificate Authority<\/small>' },
+					suffix: ' <small id="'+t+'_ca_warn_text">warning: must define Certificate Authority<\/small>' },
 				{ title: 'Auth digest', name: 'vpn_'+t+'_digest', type: 'select', options: digests, value: eval('nvram.vpn_'+t+'_digest') },
 				{ title: 'Server is on the same subnet', name: 'f_vpn_'+t+'_bridge', type: 'checkbox', value: eval('nvram.vpn_'+t+'_bridge') != 0,
 					suffix: ' <small style="color:red" id="'+t+'_bridge_warn_text">warning: cannot bridge distinct subnets. Defaulting to routed mode<\/small>' },
