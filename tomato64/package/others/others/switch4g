@@ -23,13 +23,11 @@ LOGS="logger -t switch4g[$PID]"
 
 
 [ -z "$PREFIX" ] && {
-	echo "usage: switch4g INTERFACE [connect|disconnect|signal|reset]"
+	echo "usage: $0 INTERFACE [connect|disconnect|signal|reset]"
 	exit 0
 }
 
-[ ! "$MODE" == "lte" ] && {
-	exit 0
-}
+[ ! "$MODE" == "lte" ] && exit 0
 
 
 NV() {

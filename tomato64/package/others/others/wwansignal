@@ -25,13 +25,11 @@ if ! [ -z "$HILINK_IP" ]  && [ "$HILINK_IP" != "0.0.0.0" ]; then
 fi
 
 [ -z "$PREFIX" ] && {
-	echo "usage: wwansignal INTERFACE [-stdout]"
+	echo "usage: $0 INTERFACE [-stdout]"
 	exit 0
 }
 
-[[ "$2" == "-stdout" ]] && {
-	LOGS="echo "
-}
+[[ "$2" == "-stdout" ]] && LOGS="echo "
 
 
 signal3g() {

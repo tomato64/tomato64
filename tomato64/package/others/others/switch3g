@@ -19,13 +19,11 @@ LOGS="logger -t switch3g[$PID]"
 
 
 [ -z "$PREFIX" ] && {
-	echo "usage: switch3g INTERFACE [signal]"
+	echo "usage: $0 INTERFACE [signal]"
 	exit 0
 }
 
-[ ! "$MODE" == "ppp3g" ] && {
-	exit 0
-}
+[ ! "$MODE" == "ppp3g" ] && exit 0
 
 
 switchMode() {
