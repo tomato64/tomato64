@@ -321,7 +321,7 @@ void start_usb(void)
 			}
 #endif /* TCONFIG_HFS */
 
-#ifdef TCONFIG_TUXERA_HFS
+#ifdef TCONFIG_TUX_HFS
 			if (nvram_get_int("usb_fs_hfs") && nvram_match("usb_hfs_driver", "tuxera"))
 				modprobe("thfsplus");
 #endif
@@ -483,7 +483,7 @@ void remove_usb_storage_module(void)
 	modprobe_r("hfs");
 	modprobe_r("hfsplus");
 #endif
-#ifdef TCONFIG_TUXERA_HFS
+#ifdef TCONFIG_TUX_HFS
 	modprobe_r("thfsplus");
 #endif
 #ifdef TCONFIG_ZFS
@@ -687,7 +687,7 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 					if (strncmp(type, "hfsplus", 7) == 0)
 						snprintf(options + strlen(options), sizeof(options) - strlen(options), ",force" + (options[0] ? 0 : 1));
 				}
-#ifdef TCONFIG_TUXERA_HFS
+#ifdef TCONFIG_TUX_HFS
 				else if (nvram_match("usb_hfs_driver", "tuxera")) {
 					/* override fs fype */
 					type = "thfsplus";

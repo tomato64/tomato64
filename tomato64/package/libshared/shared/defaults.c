@@ -1289,7 +1289,7 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TCONFIG_HFS
 	{ "usb_fs_hfs",			"0"				, 0 },
 #ifdef TCONFIG_BCMARM
-#ifdef TCONFIG_TUXERA_HFS
+#ifdef TCONFIG_TUX_HFS
 	{ "usb_hfs_driver",		"tuxera"			, 0 },
 #else
 	{ "usb_hfs_driver",		"kernel"			, 0 },

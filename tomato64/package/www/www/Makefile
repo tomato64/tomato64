@@ -100,7 +100,7 @@ ifneq ($(TCONFIG_TUXERA),y)
 endif
 
 # Only include Tuxera HFS settings if Tuxera HFS is configured in.
-ifneq ($(TCONFIG_TUXERA_HFS),y)
+ifneq ($(TCONFIG_TUX_HFS),y)
 	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/TUXERAHFS-BEGIN/,/TUXERAHFS-END/d"
 endif
 
