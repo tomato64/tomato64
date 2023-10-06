@@ -295,6 +295,9 @@ extern int f_write_string(const char *file, const char *buffer, unsigned flags, 
 extern int f_write_procsysnet(const char *path, const char *value);
 extern int f_read_alloc(const char *path, char **buffer, int max);
 extern int f_read_alloc_string(const char *path, char **buffer, int max);
+#ifdef TOMATO64
+extern int f_micro_wait_exists(const char *name, int max, int invert);
+#endif /* TOMATO64 */
 extern int f_wait_exists(const char *name, int max);
 extern int f_wait_notexists(const char *name, int max);
 extern int file_lock(char *tag);

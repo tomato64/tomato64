@@ -958,7 +958,9 @@ static int print_wlnoise(int idx, int unit, int subunit, void *param)
 void asp_wlnoise(int argc, char **argv)
 {
 	web_puts("\nwlnoise = [");
+#ifndef TOMATO64
 	foreach_wif(0, NULL, print_wlnoise);
+#endif /* TOMATO64 */
 	web_puts(" ];\n");
 }
 

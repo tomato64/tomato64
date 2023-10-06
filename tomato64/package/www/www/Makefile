@@ -447,6 +447,7 @@ endif
 # Exclude features not supported Tomato64
 ifeq ($(TCONFIG_TOMATO64),y)
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
+	sed -i $(INSTALLDIR)/www/tomato.css -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
@@ -457,6 +458,7 @@ ifeq ($(TCONFIG_TOMATO64),y)
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/restrict-edit.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/shutdown.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
+	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 
 	sed -i 's,___HASH___,${HASH},g' $(INSTALLDIR)/www/about.asp
@@ -468,6 +470,7 @@ else
 	sed -i $(INSTALLDIR)/www/admin-upgrade.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/shutdown.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 endif
 

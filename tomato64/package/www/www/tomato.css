@@ -920,6 +920,7 @@ div[id$="_users"] .co2 {
 	width: 16%;
 }
 
+/* TOMATO64-REMOVE-BEGIN */
 #dev-grid .co6 {
 	width: 7%;
 	text-align: center;
@@ -934,6 +935,7 @@ div[id$="_users"] .co2 {
 	width: 7%;
 	text-align: right;
 }
+/* TOMATO64-REMOVE-END */
 
 #dev-grid img[id^="bar_"] {
 	padding: 0 6px 0 1px;

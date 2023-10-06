@@ -122,6 +122,16 @@ int f_read_alloc_string(const char *path, char **buffer, int max)
 	return _f_read_alloc(path, buffer, max, 1);
 }
 
+#ifdef TOMATO64
+int f_micro_wait_exists(const char *name, int max, int invert)
+{
+        while (max-- > 0) {
+                if (f_exists(name) ^ invert) return 1;
+                usleep(1);
+        }
+        return 0;
+}
+#endif /* TOMATO64 */
 
 static int _f_wait_exists(const char *name, int max, int invert)
 {

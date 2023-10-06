@@ -201,7 +201,9 @@ void asp_devlist(int argc, char **argv)
 
 	web_puts("wldev = [");
 	comma = ' ';
+#ifndef TOMATO64
 	foreach_wif(1, &comma, get_wl_clients);
+#endif /* TOMATO64 */
 	web_puts("];\n");
 
 	char *nvram_argv[] = { "wan_ifname,wan2_ifname,wan3_ifname,wan4_ifname,\
@@ -236,7 +238,11 @@ wl_ifname,wl_mode,wl_radio,wl_nband,wl_wds_enable"
 		/* dump the leases to a file */
 		if (killall("dnsmasq", SIGUSR2) == 0) {
 			/* helper in dnsmasq will remove this when it's done */
+#ifndef TOMATO64
 			f_wait_notexists(lease_file_tmp, 5);
+#else
+			f_micro_wait_exists(lease_file_tmp, 5000000, 1);
+#endif /* TOMATO64 */
 		}
 
 		if ((f = fopen(lease_file, "r"))) {
