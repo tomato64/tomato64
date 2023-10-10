@@ -43,7 +43,12 @@ sg.resetNewEditor = function() {
 			f[0].value = c[0];
 			f[1].value = mac_null;
 			f[3].value = c[1];
+/* TOMATO64-REMOVE-BEGIN */
 			f[5].value = c[2];
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			f[4].value = c[2];
+/* TOMATO64-END */
 			return;
 		}
 	}
@@ -52,8 +57,13 @@ sg.resetNewEditor = function() {
 	f[1].value = mac_null;
 	f[2].disabled = 1;
 	f[2].checked = 0;
+/* TOMATO64-REMOVE-BEGIN */
 	f[4].checked = 0;
 	f[5].value = '';
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	f[4].value = '';
+/* TOMATO64-END */
 
 	n = 10;
 	do {
@@ -72,26 +82,42 @@ sg.setup = function() {
 		{ multi: [ { type: 'text', maxlen: 17 }, { type: 'text', maxlen: 17 } ] },
 		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 		{ type: 'text', maxlen: 17 },
+/* TOMATO64-REMOVE-BEGIN */
 		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+/* TOMATO64-REMOVE-END */
 		{ type: 'text', maxlen: 50 } ] );
 
+/* TOMATO64-REMOVE-BEGIN */
 	this.headerSet(['MAC Address', 'Static arp', 'IP Address', 'IPTraffic', 'Hostname']);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	this.headerSet(['MAC Address', 'Static arp', 'IP Address', 'Hostname']);
+/* TOMATO64-END */
 
 	var ipt = nvram.cstats_include.split(',');
 	var s = nvram.dhcpd_static.split('>');
 	for (var i = 0; i < s.length; ++i) {
+/* TOMATO64-REMOVE-BEGIN */
 		var h = '0';
+/* TOMATO64-REMOVE-END */
 		var t = s[i].split('<');
 		if (t.length == 4) {
 			var d = t[0].split(',');
+/* TOMATO64-REMOVE-BEGIN */
 			for (var j = 0; j < ipt.length; ++j) {
 				if (t[1].length > 0 && t[1] == ipt[j]) {
 					h = '1';
 					break;
 				}
 			}
+/* TOMATO64-REMOVE-END */
 
+/* TOMATO64-REMOVE-BEGIN */
 			this.insertData(-1, [d[0], ((d.length >= 2) ? d[1] : mac_null), t[3], t[1], h, t[2]]);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			this.insertData(-1, [d[0], ((d.length >= 2) ? d[1] : mac_null), t[3], t[1], t[2]]);
+/* TOMATO64-END */
 		}
 	}
 	this.sort(2);
@@ -116,7 +142,12 @@ sg.existMAC = function(mac) {
 }
 
 sg.existName = function(name) {
+/* TOMATO64-REMOVE-BEGIN */
 	return this.exist(5, name);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	return this.exist(4, name);
+/* TOMATO64-END */
 }
 
 sg.inStatic = function(n) {
@@ -132,20 +163,35 @@ sg.dataToView = function(data) {
 	v.push((s == '') ? '<center><small><i>(unset)<\/i><\/small><\/center>' : s);
 	v.push((data[2].toString() != '0') ? '<small><i>Enabled<\/i><\/small>' : '');
 	v.push(escapeHTML(''+data[3]));
+/* TOMATO64-REMOVE-BEGIN */
 	v.push((data[4].toString() != '0') ? '<small><i>Enabled<\/i><\/small>' : '');
 	v.push(escapeHTML(''+data[5]));
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	v.push(escapeHTML(''+data[4]));
+/* TOMATO64-END */
 
 	return v;
 }
 
 sg.dataToFieldValues = function (data) {
+/* TOMATO64-REMOVE-BEGIN */
 	return ([data[0],data[1],(data[2].toString() != '0') ? 'checked' : '',data[3],(data[4].toString() != '0') ? 'checked' : '',data[5]]);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	return ([data[0],data[1],(data[2].toString() != '0') ? 'checked' : '',data[3], data[4]]);
+/* TOMATO64-END */
 }
 
 sg.fieldValuesToData = function(row) {
 	var f = fields.getAll(row);
 
+/* TOMATO64-REMOVE-BEGIN */
 	return ([f[0].value,f[1].value,f[2].checked ? '1' : '0',f[3].value,f[4].checked ? '1' : '0',f[5].value]);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	return ([f[0].value,f[1].value,f[2].checked ? '1' : '0',f[3].value,f[4].value]);
+/* TOMATO64-END */
 }
 
 sg.sortCompare = function(a, b) {
@@ -162,12 +208,19 @@ sg.sortCompare = function(a, b) {
 		case 2:
 			r = cmpIP(da[3], db[3]);
 		break;
+/* TOMATO64-REMOVE-BEGIN */
 		case 3:
 			r = cmpInt(da[4], db[4]);
+/* TOMATO64-REMOVE-END */
 		break;
 	}
 	if (r == 0)
+/* TOMATO64-REMOVE-BEGIN */
 		r = cmpText(da[5], db[5]);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		r = cmpText(da[4], db[4]);
+/* TOMATO64-END */
 
 	return this.sortAscending ? r : -r;
 }
@@ -229,12 +282,22 @@ sg.verifyFields = function(row, quiet) {
 		return 0;
 REMOVE-END */
 
+/* TOMATO64-REMOVE-BEGIN */
 	s = f[5].value.trim().replace(/\s+/g, ' ');
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	s = f[4].value.trim().replace(/\s+/g, ' ');
+/* TOMATO64-END */
 
 	if (s.length > 0) {
 		if (f[3].value == '') {
 			if (s.search(/^[a-zA-Z0-9_\-]+$/) == -1) {
+/* TOMATO64-REMOVE-BEGIN */
 				ferror.set(f[5], 'Invalid hostname. Only a single hostname containing the characters "A-Z 0-9 - _" is allowed', quiet);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+				ferror.set(f[4], 'Invalid hostname. Only a single hostname containing the characters "A-Z 0-9 - _" is allowed', quiet);
+/* TOMATO64-END */
 				return 0;
 			}
 		}
@@ -251,28 +314,53 @@ REMOVE-END */
 			}
 			else {
 				if (s.search(/^[a-zA-Z0-9_\- ]+$/) == -1) {
+/* TOMATO64-REMOVE-BEGIN */
 					ferror.set(f[5], 'Invalid hostname. Only characters "A-Z 0-9 - _" are allowed', quiet);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+					ferror.set(f[4], 'Invalid hostname. Only characters "A-Z 0-9 - _" are allowed', quiet);
+/* TOMATO64-END */
 					return 0;
 				}
 			}
 		}
 		if (this.existName(s)) {
+/* TOMATO64-REMOVE-BEGIN */
 			ferror.set(f[5], 'Duplicate hostname', quiet);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			ferror.set(f[4], 'Duplicate hostname', quiet);
+/* TOMATO64-END */
 			return 0;
 		}
+/* TOMATO64-REMOVE-BEGIN */
 		f[5].value = s;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		f[4].value = s;
+/* TOMATO64-END */
 	}
 
 	if (isMAC0(f[0].value)) {
 		if (s == '') {
 			s = 'Both MAC address and name fields must not be empty';
 			ferror.set(f[0], s, 1);
+/* TOMATO64-REMOVE-BEGIN */
 			ferror.set(f[5], s, quiet);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			ferror.set(f[4], s, quiet);
+/* TOMATO64-END */
 			return 0;
 		}
 		else {
 			ferror.clear(f[0]);
+/* TOMATO64-REMOVE-BEGIN */
 			ferror.clear(f[5]);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			ferror.clear(f[4]);
+/* TOMATO64-END */
 		}
 	}
 
@@ -313,9 +401,16 @@ function save() {
 		if (!isMAC0(d[1]))
 			sdhcp += ','+d[1];
 
+/* TOMATO64-REMOVE-BEGIN */
 		sdhcp += '<'+d[3]+'<'+d[5]+'<'+d[2]+'>';
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		sdhcp += '<'+d[3]+'<'+d[4]+'<'+d[2]+'>';
+/* TOMATO64-BEGIN */
+/* TOMATO64-REMOVE-BEGIN */
 		if (d[4] == '1')
 			ipt += ((ipt.length > 0) ? ',' : '')+d[3];
+/* TOMATO64-REMOVE-END */
 	}
 
 	var fom = E('t_fom');
