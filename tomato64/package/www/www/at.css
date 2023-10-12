@@ -140,10 +140,6 @@ small a:hover {
 	background-color: var(--tomato-accent-color);
 }
 
-a:hover.status_devices {
-	background-color: inherit !important;
-}
-
 td#content a {
 	color: var(--tomato-accent-color);
 	border-radius: var(--tomato-controls-border-radius);

@@ -19,10 +19,6 @@ a:hover {
 	background: #e02600;
 }
 
-a:hover.status_devices {
-	background-color: inherit !important;
-}
-
 img { border: 0; padding-top: 8px; float: right; }
 
 #splash {

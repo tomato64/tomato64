@@ -20,10 +20,6 @@ a:hover {
 	background: #fff;
 }
 
-a:hover.status_devices {
-	background-color: inherit !important;
-}
-
 #header {
 	border-bottom: 2px #901d0a solid;
 	padding: 27px 15px;

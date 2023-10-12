@@ -22,10 +22,6 @@ a:hover {
 	color: #343f6f;
 }
 
-a:hover.status_devices {
-	background-color: inherit !important;
-}
-
 #header {
 	border-top: 5px #343f6f solid;
 	border-left: 5px #343f6f solid;
