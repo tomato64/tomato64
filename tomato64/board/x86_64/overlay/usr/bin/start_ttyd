@@ -1,6 +1,4 @@
 #!/bin/sh
 
-source /etc/profile
-export HOME=/root
-cd /root && \
+export ENV=/etc/profile
 start-stop-daemon -b -S -x /usr/bin/ttyd -- -t disableLeaveAlert=true -t cursorStyle=bar /bin/sh
