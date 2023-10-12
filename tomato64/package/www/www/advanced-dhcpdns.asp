@@ -549,7 +549,7 @@ function init() {
 				{ title: 'Resolver Address', indent: 2, name: 'dnscrypt_resolver_address', type: 'text', maxlen: 50, size: 25, value: nvram.dnscrypt_resolver_address },
 				{ title: 'Provider Name', indent: 2, name: 'dnscrypt_provider_name', type: 'text', maxlen: 60, size: 25, value: nvram.dnscrypt_provider_name },
 				{ title: 'Provider Public Key', indent: 2, name: 'dnscrypt_provider_key', type: 'text', maxlen: 80, size: 25, value: nvram.dnscrypt_provider_key },
-				{ title: 'Priority', indent: 2, name: 'dnscrypt_priority', type: 'select', options: [['1','Strict-Order'],['2','No-Resolv'],['0','None']], suffix: '&nbsp; <small style="color:red">warning: set to No-Resolv to only use dnscrypt-proxy resolvers!<\/small>', value: nvram.dnscrypt_priority },
+				{ title: 'Priority', indent: 2, name: 'dnscrypt_priority', type: 'select', options: [['1','Strict-Order'],['2','No-Resolv'],['0','None']], suffix: '&nbsp; <small>warning: set to No-Resolv to only use dnscrypt-proxy resolvers!<\/small>', value: nvram.dnscrypt_priority },
 				{ title: 'Local Port', indent: 2, name: 'dnscrypt_port', type: 'text', maxlen: 5, size: 7, value: nvram.dnscrypt_port },
 				{ title: 'Log Level', indent: 2, name: 'dnscrypt_log', type: 'text', maxlen: 2, size: 5, value: nvram.dnscrypt_log }
 /* DNSCRYPT-END */
@@ -595,7 +595,7 @@ function init() {
 		W('<\/table><\/td><\/tr>');
 
 		createFieldTable('noopen,noclose', [
-				{ title: 'Priority', indent: 2, name: 'stubby_priority', type: 'select', options: [['1','Strict-Order'],['2','No-Resolv'],['0','None']], suffix: '&nbsp; <small style="color:red">warning: set to No-Resolv to only use Stubby resolvers!<\/small>', value: nvram.stubby_priority },
+				{ title: 'Priority', indent: 2, name: 'stubby_priority', type: 'select', options: [['1','Strict-Order'],['2','No-Resolv'],['0','None']], suffix: '&nbsp; <small>warning: set to No-Resolv to only use Stubby resolvers!<\/small>', value: nvram.stubby_priority },
 				{ title: 'Local Port', indent: 2, name: 'stubby_port', type: 'text', maxlen: 5, size: 7, value: nvram.stubby_port },
 				{ title: 'Log Level', indent: 2, name: 'stubby_log', type: 'select',  options: [['0','Emergency'],['1','Alert'],['2','Critical'],['3','Error'],['4','Warning'],['5','Notice'],['6','Info*'],['7','Debug']],
 					value: nvram.stubby_log, suffix: '&nbsp; <small>*default<\/small>' },
