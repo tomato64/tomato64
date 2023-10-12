@@ -100,6 +100,7 @@ typedef u_int8_t u8;
 #define STACHECK_DISCONNECT	5
 #ifdef TCONFIG_BCMWL6
 #define STA_ARPING_FREQ		5 /* arping after X STACHECK_CONNECT checks (default: (5+1) * 30 sec = 180 sec) */
+#define STA_RECOVER_THRES	9 /* after X checks, try to recover MediaBridge connection (minimum 5 and up!) */
 #endif
 
 /* needed by logmsg() */
@@ -2256,6 +2257,7 @@ static int radio_join(int idx, int unit, int subunit, void *param)
 	int i, stacheck_connect, stacheck;
 #ifdef TCONFIG_BCMWL6
 	static int arp_count = 0;
+	static int bss_down_count = 0;
 #endif /* TCONFIG_BCMWL6 */
 	char s[32], f[64];
 	char ifname[16];
@@ -2298,6 +2300,8 @@ static int radio_join(int idx, int unit, int subunit, void *param)
 			if (check_wl_client(ifname, unit, subunit)) {
 				stacheck = stacheck_connect;
 #ifdef TCONFIG_BCMWL6
+				bss_down_count = 0; /* reset - all OK */
+
 				/* check next arping cycle for psta (MediaBridge) */
 				if (!strcmp(nvram_safe_get(wl_nvname("mode", unit, subunit)), "psta") && ((arp_count++) >= STA_ARPING_FREQ)) {
 					arp_count = 0; /* reset */
@@ -2307,6 +2311,16 @@ static int radio_join(int idx, int unit, int subunit, void *param)
 #endif /* TCONFIG_BCMWL6 */
 			}
 			else {
+#ifdef TCONFIG_BCMWL6
+				/* MediaBridge disconnected? - try to recover */
+				if (!strcmp(nvram_safe_get(wl_nvname("mode", unit, subunit)), "psta") && ((bss_down_count++) >= STA_RECOVER_THRES)) {
+					logmsg(LOG_INFO, "MediaBridge (%s) disconnected - try to recover", ifname);
+					bss_down_count = 0; /* reset */
+
+					/* reinitialize wl */
+					start_service("wireless");
+				}
+#endif /* TCONFIG_BCMWL6 */
 				eval("wl", "-i", ifname, "disassoc");
 
 				if (!strlen(nvram_safe_get(wl_nvname("ssid", unit, subunit))))
