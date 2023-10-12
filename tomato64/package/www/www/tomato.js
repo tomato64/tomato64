@@ -2998,8 +2998,24 @@ function wikiLink() {
 	else
 		page = 'status-overview';
 
-	var res = '<a href=\"'+url+'/'+page+'\" target=\"_blank\" rel=\"noopener noreferrer\">Wiki</a>';
+	var res = '<a href=\"'+url+'/'+page+'\" target=\"_blank\" rel=\"noopener noreferrer\">Wiki</a> \| <a onclick=\"toggleTheme()\" href=\"#\">◐</a>';
+
 	document.write(res);
+	var alt = cookie.get('gui_themet');
+	if (alt == '1') { getTheme(); }
+}
+
+function getTheme() {
+	var element = document.body;
+	element.classList.toggle("alt-mode");
+}
+
+function toggleTheme() {
+	var themet = cookie.get('gui_themet');
+	getTheme();
+	themet ^= true;
+	cookie.set('gui_themet', themet);
+
 }
 
 var up = new TomatoRefresh('isup.jsz', '', 5);
