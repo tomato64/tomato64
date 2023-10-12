@@ -134,6 +134,9 @@ ars.verifyFields = function(row, quiet) {
 	var f = fields.getAll(row);
 	f[5].value = f[5].value.replace('>', '_');
 
+	if (f[0].value == 'default')
+		f[0].value = '0.0.0.0';
+
 	return v_ip(f[0], quiet) && v_ip(f[1], quiet) && v_netmask(f[2], quiet) && v_range(f[3], quiet, 0, 4294967295) && v_nodelim(f[5], quiet, 'Description');
 }
 
