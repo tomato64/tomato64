@@ -129,7 +129,7 @@ function init() {
 			{ title: 'Enable cprintf output to /tmp/cprintf', name: 'f_debug_cprintf_file', type: 'checkbox', value: nvram.debug_cprintf_file != '0' },
 			{ title: 'Enable DDNS output to /tmp/mdu-*', name: 'f_debug_ddns', type: 'checkbox', value: nvram.debug_ddns != '0' },
 			{ title: 'Enable segfault logging', name: 'f_debug_logsegfault', type: 'checkbox', value: nvram.debug_logsegfault != '0' },
-			{ title: 'Count cache memory and buffers as free memory', name: 'f_cafree', type: 'checkbox', value: nvram.t_cafree == '1' },
+			{ title: 'Count cache memory, buffers and reclaimable slab memory as free memory', name: 'f_cafree', type: 'checkbox', value: nvram.t_cafree == '1' },
 			{ title: 'Avoid displaying LAN to router connections', name: 'f_hidelr', type: 'checkbox', value: nvram.t_hidelr == '1' },
 			{ title: 'Kernel printk log level', name: 'f_console_loglevel', type: 'select', options: [[1,'Emergency'],[2,'Alert'],[3,'Critical'],[4,'Error'],[5,'Warning'],[6,'Notice'],[7,'Info'],[8,'Debug']], value: fixInt(nvram.console_loglevel, 1, 8, 1) },
 			{ title: 'Do not restart the following process if they die', multi: [

@@ -41,6 +41,7 @@ typedef struct {
 	unsigned long swaptotal;
 	unsigned long swapfree;
 	unsigned long maxfreeram;
+	unsigned long slabrecl;
 } meminfo_t;
 
 
@@ -245,6 +246,10 @@ static int get_memory(meminfo_t *m)
 				m->swapfree = strtoul(s + 11, NULL, 10) * 1024;
 				++ok;
 			}
+			else if (strncmp(s, "SReclaimable:", 13) == 0) {
+				m->slabrecl = strtoul(s + 15, NULL, 10) * 1024;
+				++ok;
+			}
 		}
 		fclose(f);
 	}
@@ -253,7 +258,7 @@ static int get_memory(meminfo_t *m)
 
 	m->maxfreeram = m->free;
 	if (nvram_match("t_cafree", "1"))
-		m->maxfreeram += (m->cached + m->buffers);
+		m->maxfreeram += (m->cached + m->buffers + m->slabrecl);
 
 	return 1;
 }
