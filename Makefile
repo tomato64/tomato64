@@ -1,4 +1,4 @@
-BUILDROOT_VERSION = 2023.08
+BUILDROOT_VERSION = 2023.08.1
 PATCHES := $(wildcard src/patches/*.patch)
 
 default: .configure
@@ -12,7 +12,7 @@ distclean:
 	@touch $@
 
 .patch: .extract
-	for patch in $(PATCHES); do \
+	for patch in $(sort $(PATCHES)); do \
 		patch -p1 -d src/buildroot < $$patch; \
 	done
 	@touch $@
