@@ -30,6 +30,7 @@ var list = [];
 var list_last = [];
 var xob = null;
 var cmd = null;
+var wol = null;
 var cmdresult = '';
 /* DISCOVERY-BEGIN */
 var cprefix = 'status_devices';
@@ -471,7 +472,11 @@ dg.populate = function() {
 			}
 		}
 		if (e.rssi == 1) {
-			f = '<img src="dis.gif"'+c+' alt="" title="Disconnected">';
+			if (e.mac.match(/^(..):(..):(..)/))
+				f = '<a href="javascript:wake('+i+')" class="status_devices"><img src="dis.gif"'+c+' alt="" title="Click to wake up"><\/a>';
+			else
+				f = '<img src="dis.gif"'+c+' alt="" title="Disconnected">';
+
 			e.media = 5;
 		}
 
@@ -594,6 +599,28 @@ function deleteLease(a, ip, mac, wl) {
 	}
 
 	xob.post('dhcpd.cgi', 'remove='+ip+'&mac='+mac+'&wl='+wl);
+}
+
+function wake(n) {
+	var e = list[n];
+
+	if (!confirm('Wake up this device ('+(e.name ? e.name : e.mac)+')?'))
+		return;
+
+	if (wol)
+		return;
+
+	wol = new XmlHttp();
+
+	wol.onCompleted = function(text, xml) {
+		wol = null;
+	}
+
+	wol.onError = function() {
+		wol = null;
+	}
+
+	wol.post('wakeup.cgi', 'mac='+e.mac);
 }
 
 function addStatic(n) {

@@ -16,6 +16,10 @@ a:hover {
 	color: #fff;
 }
 
+a:hover.status_devices {
+	background-color: inherit !important;
+}
+
 table {
 	empty-cells: show;
 }

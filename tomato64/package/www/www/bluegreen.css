@@ -7,6 +7,10 @@ a:hover {
 	color: #fff;
 }
 
+a:hover.status_devices {
+	background-color: inherit !important;
+}
+
 input[type="button"]:hover,
 input[type="submit"]:hover {
 	background: #86bf30;

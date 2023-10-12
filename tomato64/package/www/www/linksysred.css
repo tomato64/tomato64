@@ -13,6 +13,10 @@ a:hover {
 	background: #fff;
 }
 
+a:hover.status_devices {
+	background-color: inherit !important;
+}
+
 #container {
 	width: 965px;
 	height: 100%;
