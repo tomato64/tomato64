@@ -212,8 +212,8 @@ signal4g() {
 				$LOGS "MODEM Signal Strength: no data"
 			;;
 		esac
-
-	elif [ "$MTYPE" == "hilink" ]; then	# use huawei hilink api (for moded ie. E3372)
+# BBT-BEGIN
+	elif [ "$MTYPE" == "hilink" ]; then # use huawei hilink api (for moded ie. E3372)
 # TODO: Auth
 		local BTS NET PCI
 		local URLHOME="http://$WANIP/html/home.html" URLAPI1="http://$WANIP/api/device/signal"
@@ -222,7 +222,7 @@ signal4g() {
 
 		SIGNAL=$($FCURL -sf -m 5 "$URLAPI1" -b $COOKIEFILE)
 
-		[ "$(echo "$SIGNAL" | grep "<code>125002</code>" | wc -l)" -ne 0 ] && {		# repeat needed
+		[ "$(echo "$SIGNAL" | grep "<code>125002</code>" | wc -l)" -ne 0 ] && { # repeat needed
 			$FCURL -sf -m 5 "$URLHOME" -c $COOKIEFILE > /dev/null
 			SIGNAL=$($FCURL -sf -m 5 "$URLAPI1" -b $COOKIEFILE)
 		}
@@ -297,6 +297,7 @@ signal4g() {
 				;;
 			esac
 		}
+# BBT-END
 	fi
 }
 

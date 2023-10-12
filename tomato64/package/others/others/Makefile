@@ -23,10 +23,18 @@ else
 endif
 # modem status script
 	install -m 0700 wwansignal $(INSTALLDIR)/usr/sbin
+# Only include curl part if libcurl is installed.
+ifneq ($(TCONFIG_BBT),y)
+	sed -i $(INSTALLDIR)/usr/sbin/wwansignal -e "/BBT-BEGIN/,/BBT-END/d"
+endif
 endif # TCONFIG_USB
 
 # MultiWAN watchdog script
 	install -m 0700 mwwatchdog $(INSTALLDIR)/usr/sbin
+# Only include curl part if libcurl is installed.
+ifneq ($(TCONFIG_BBT),y)
+	sed -i $(INSTALLDIR)/usr/sbin/mwwatchdog -e "/BBT-BEGIN/,/BBT-END/d"
+endif
 
 # ntp2ip
 ifeq ($(or $(TCONFIG_DNSCRYPT),$(TCONFIG_STUBBY)),y)
@@ -171,6 +179,7 @@ endif
 			-e "/STUBBYNO-BEGIN/d"	-e "/STUBBYNO-END/d" \
 			-e "/BCMARM-BEGIN/d"	-e "/BCMARM-END/d" \
 			-e "/BCMARMNO-BEGIN/d"	-e "/BCMARMNO-END/d" \
+			-e "/BBT-BEGIN/d"	-e "/BBT-END/d" \
 			|| true; \
 		done
 

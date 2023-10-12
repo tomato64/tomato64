@@ -124,8 +124,10 @@ mwwatchdogRun() {
 				ckping
 			elif [ "$METHOD" -eq 2 ]; then
 				cktracert
+# BBT-BEGIN
 			else
 				ckcurl
+# BBT-END
 			fi
 
 			for IP in $IPLIST; do
@@ -212,6 +214,7 @@ ckping() {
 	[ "$RESULT" -gt 0 ] && $DEBUG "ping test result for: $IFACE - OK" || $DEBUG "ping test result for: $IFACE - FAILED!"
 }
 
+# BBT-BEGIN
 ckcurl() {
 	local IP
 	local i=0
@@ -226,6 +229,7 @@ ckcurl() {
 
 	[ "$RESULT" -gt 0 ] && $DEBUG "curl test result for: $IFACE - OK" || $DEBUG "curl test result for: $IFACE - FAILED!"
 }
+# BBT-END
 
 mwwatchdogAdd() {
 	local CKTIME=$(NV mwan_cktime)
