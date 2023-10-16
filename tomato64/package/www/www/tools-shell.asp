@@ -19,14 +19,17 @@
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
 <script src="tomato.js"></script>
-</head>
 
 <script>
+
+//      <% nvram(''); %>        // http_id
+
 	function loadIframe(){
 		var x = location.hostname;
 		document.getElementById("terminal").src=location.protocol+'//'+location.hostname+':7681';
     	}
 </script>
+</head>
 
 <body onLoad="loadIframe()">
 <table id="container">
