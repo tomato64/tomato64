@@ -1,4 +1,3 @@
 #!/bin/sh
 
-export ENV=/etc/profile
-start-stop-daemon -b -S -x /usr/bin/ttyd -- -t disableLeaveAlert=true -t cursorStyle=bar /bin/sh
+start-stop-daemon -b -S -x /usr/bin/ttyd -- -t disableLeaveAlert=true -t cursorStyle=bar /bin/login

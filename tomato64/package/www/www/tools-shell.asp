@@ -51,8 +51,13 @@
 <div class="section-title">Notes</div>
 <div class="section">
 	<ul>
-		<li>If you remote in over ssh, do a Local Port Forward of Port 7681 for shell access on this page.</li>
-		<li>Or you can use the Legacy System Commands page.</li>
+		<li>Local access is needed for the new System Commands Page. You must be</li>
+			<ul>
+				<li>Behind the router</li>
+				<li>Connected over a VPN.</li>
+				<li>Connected over SSH and using Local Forwarding on Port 7681.</li>
+			</ul>
+		<li>The Legacy System Commands Page is also available for all scenarios.</li>
 	</ul>
 </div>
 
