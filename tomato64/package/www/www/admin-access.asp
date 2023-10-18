@@ -29,7 +29,12 @@ var shlimit = nvram.ne_shlimit.split(',');
 if (shlimit.length != 3)
 	shlimit = [0,3,60];
 
+/* TOMATO64-REMOVE-BEGIN */
 var xmenus = [['Status', 'status'],['Bandwidth', 'bwm'],['IP Traffic', 'ipt'],['Tools', 'tools'],['Basic', 'basic'],['Advanced', 'advanced'],['Port Forwarding', 'forward'],['QoS', 'qos'],
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+var xmenus = [['Status', 'status'],['Bandwidth', 'bwm'],['Tools', 'tools'],['Basic', 'basic'],['Advanced', 'advanced'],['Port Forwarding', 'forward'],['QoS', 'qos'],
+/* TOMATO64-END */
 /* USB-BEGIN */
               ['USB and NAS', 'nas'],
 /* USB-END */
