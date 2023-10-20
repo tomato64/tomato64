@@ -1364,7 +1364,11 @@ void hotplug_usb(void)
 			usbled_proc(device, add);
 #endif
 	}
+#ifndef TOMATO64
 	else if (is_block && strcmp(getenv("MAJOR") ? : "", "8") == 0 && strcmp(getenv("PHYSDEVBUS") ? : "", "scsi") == 0) {
+#else
+	else if (is_block && strcmp(getenv("MAJOR") ? : "", "8") == 0 ) {
+#endif /* TOMATO64 */
 		/* scsi partition */
 		char devname[64];
 		int lock;

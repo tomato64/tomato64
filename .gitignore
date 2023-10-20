@@ -1,4 +1,5 @@
 .extract
 .patch
 .configure
+hotplug2.rules
 src/
