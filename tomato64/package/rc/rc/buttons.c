@@ -439,6 +439,7 @@ int buttons_main(int argc, char *argv[])
 		ses_led = LED_AOSS;
 		break;
 	case MODEL_AC1450:
+	case MODEL_R6200v2:
 	case MODEL_R6250:
 	case MODEL_R6300v2:
 		reset_mask = 1 << 6; /* reset button (active LOW) */

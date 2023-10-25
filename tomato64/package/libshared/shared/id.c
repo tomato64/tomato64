@@ -56,6 +56,7 @@ R8000				BCM4709               0x0665       32        0x1101 // board_id=U12H315
 AC1450				BCM4708               0x0646       679       0x1110 // CH/Charter version has the same signature
 R6900				BCM4709               0x0665       32        0x1301    0x1000
 R7000				BCM4709               0x0665       32        0x1301    0x1000
+R6200v2				BCM47081A             0x0646       679       0x1110 // Single Core same board detection as R6250 amd R6300v2
 R6250				BCM4708               0x0646       679       0x1110 // same as R6300v2 well we use the same MODEL definition
 R6300v2				BCM4708               0x0646       679       0x1110 // CH/Charter version has the same signature
 R6400				BCM4708               0x0646       32        0x1601
@@ -132,6 +133,7 @@ static int get_model_once(void)
 		if ((nvram_match("boardrev", "0x1103")) && (nvram_match("PA", "8527"))) return MODEL_RTAC68UV3; /* RT-AC68U V3 */
 		if ((nvram_match("boardrev", "0x1103")) && (nvram_match("model", "RT-AC68U"))) return MODEL_RTAC68U; /* RT-AC68P/U B1 OR RT-AC68U C1 */
 		if ((nvram_match("boardrev", "0x1110")) && (nvram_match("boardnum", "679")) && (nvram_match("board_id", "U12H240T99_NETGEAR"))) return MODEL_AC1450;
+		if ((nvram_match("boardrev", "0x1110")) && (nvram_match("boardnum", "679")) && (nvram_match("board_id", "U12H264T00_NETGEAR"))) return MODEL_R6200v2; /* single core */
 		if ((nvram_match("boardrev", "0x1110")) && (nvram_match("boardnum", "679")) && (nvram_match("board_id", "U12H245T00_NETGEAR"))) return MODEL_R6250;
 		if ((nvram_match("boardrev", "0x1110")) && (nvram_match("boardnum", "679")) && (nvram_match("board_id", "U12H240T00_NETGEAR"))) return MODEL_R6300v2;
 		if ((nvram_match("boardrev", "0x1110")) && (nvram_match("boardnum", "679")) && (nvram_match("board_id", "U12H240T70_NETGEAR"))) return MODEL_R6300v2;

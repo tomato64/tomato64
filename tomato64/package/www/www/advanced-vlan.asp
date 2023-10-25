@@ -130,6 +130,7 @@ switch (nvram['t_model_name']) {
 		break;
 	case 'vlan-testid2':
 	case 'Netgear AC1450':
+	case 'Netgear R6200v2':
 	case 'Netgear R6250':
 	case 'Netgear R6300v2':
 	case 'Asus RT-AC3100':

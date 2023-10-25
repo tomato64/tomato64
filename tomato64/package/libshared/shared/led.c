@@ -174,6 +174,7 @@ int do_led(int which, int mode)
 	static int ac66u_b1[]	= { 254,  255,     5,  255,  255,    0,  254,  255,  255,  254};
 	static int ac56u[]	= { 254,  255,     1,  255,  255,    3,    2,   14,    0,    6};
 	static int n18u[]	= { 254,  255,     6,  255,  255,    0,    9,    3,   14,  255};
+	static int r6200v2[]	= {  11,    3,    15,  255,  255,   -1,  255,    8,  255,  255};
 	static int r6250[]	= {  11,    3,    15,  255,  255,   -1,  255,    8,  255,  255};
 	static int r6300v2[]	= {  11,    3,    10,  255,  255,   -1,  255,    8,  255,  255};
 	static int r6400[]	= {   9,    2,     7,  255,  -10,  -11,  254,   12,   13,    8};
@@ -416,6 +417,15 @@ int do_led(int which, int mode)
 		b = n18u[which];
 		if (which == LED_WLAN) { /* non GPIO LED */
 			do_led_nongpio(model, which, mode);
+		}
+		break;
+	case MODEL_R6200v2:
+		if (which == LED_DIAG) {
+			b = 3; /* color amber gpio 3 (active LOW) */
+			c = 2; /* color green gpio 2 (active LOW) */
+		}
+		else {
+			b = r6200v2[which];
 		}
 		break;
 	case MODEL_R6250:
@@ -792,7 +802,8 @@ void led_setup(void)
 			set_gpio(GPIO_12, T_HIGH); /* disable sys led */
 			set_gpio(GPIO_15, T_HIGH); /* disable wps led */
 			break;
-    		case MODEL_AC1450:
+		case MODEL_AC1450:
+		case MODEL_R6200v2:
 		case MODEL_R6250:
 		case MODEL_R6300v2:
 			set_gpio(GPIO_03, T_HIGH); /* disable power led color amber */
