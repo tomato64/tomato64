@@ -132,7 +132,7 @@ la.verifyFields = function(row, quiet) {
 }
 
 la.dataToView = function(data) {
-	return [(data[0] != 0) ? 'On' : 'Off', ['LAN0','LAN1','LAN2','LAN3'][data[1]],data[2],['LAN0','LAN1','LAN2','LAN3'][data[3]],data[4],data[5] ];
+	return [(data[0] != 0) ? '&#x2b50' : '', ['LAN0','LAN1','LAN2','LAN3'][data[1]],data[2],['LAN0','LAN1','LAN2','LAN3'][data[3]],data[4],data[5] ];
 }
 
 la.dataToFieldValues = function (data) {

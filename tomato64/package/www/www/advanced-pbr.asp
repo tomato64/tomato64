@@ -89,7 +89,7 @@ pbr.dataToView = function(data) {
 
 	d.push(getOUTifdesc(data[8] * 1));
 
-	return [(data[0] != '0') ? 'On' : 'Off',a.join('<br>'),b.join('<br>'),c.join('<br>'),d.join('<br>'),escapeHTML(data[9])];
+	return [(data[0] != '0') ? '&#x2b50' : '',a.join('<br>'),b.join('<br>'),c.join('<br>'),d.join('<br>'),escapeHTML(data[9])];
 }
 
 pbr.dataToFieldValues = function (data) {
