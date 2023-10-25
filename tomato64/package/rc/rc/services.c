@@ -2717,7 +2717,7 @@ static void start_media_server(int force)
 			           nvram_get_int("ms_autoscan") ? "yes" : "no",
 			           serial,
 			           uuident,
-			           nvram_safe_get("os_version"),
+			           tomato_version,
 			           nvram_safe_get("ms_custom"));
 
 			/* media directories */

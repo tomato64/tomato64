@@ -256,7 +256,7 @@ void start_ftpd(int force)
 
 	fprintf(fp, "ftpd_banner=Welcome to Tomato64 %s FTP service.\n"
 	            "%s\n",
-	            nvram_safe_get("os_version"),
+	            tomato_version,
 	            nvram_safe_get("ftp_custom"));
 
 	fclose(fp);
