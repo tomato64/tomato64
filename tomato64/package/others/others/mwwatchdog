@@ -173,7 +173,7 @@ mwwatchdogRun() {
 					}
 				}
 			} || {
-				[ "$PROTO" == "dhcp" -a "$(cat $STATE_FILE)" -eq 0 ] && { # connected + DHCP + previous status - disconnected? release/renew
+				[ "$PROTO" == "dhcp" -a "$(cat $STATE_FILE 2>/dev/null || echo 1 )" -eq 0 ] && { # connected + DHCP + previous status - disconnected? release/renew
 					dhcpFix
 				}
 				$DEBUG "Connection $PREFIX_LOG is functioning"
@@ -191,7 +191,7 @@ cktracert() {
 		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null)
 		# we need only send/receive few packages to be sure if connection works
 		traceroute -i $IFACE -n -w 1 -q 1 -z 1 $IP &>/dev/null
-		usleep 200000
+		sleep 1
 		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null)
 		[ "$RXBYTES2" -gt "$(($RXBYTES1 + $RXBYTES_MIN_DIFF))" ] && { RESULT=1; break; }
 	done
