@@ -152,6 +152,9 @@ endif
 # system info
 	install -m 0700 sysinfo $(INSTALLDIR)/usr/sbin
 
+# nvram aliases used in other scripts
+	install -m 0700 nvram_ops $(INSTALLDIR)/usr/sbin
+
 # network discovery script for status-devices page
 ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_MIPSR2)),y)
 	install -m 0755 discovery.sh $(INSTALLDIR)/usr/sbin

@@ -1,0 +1,4 @@
+#!/bin/sh
+alias NG="nvram get"
+alias NS="nvram set"
+alias NC="nvram commit"
