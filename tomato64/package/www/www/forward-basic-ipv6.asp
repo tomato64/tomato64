@@ -22,6 +22,52 @@
 
 var fog = new TomatoGrid();
 
+fog.setup = function() {
+	this.init('fo-grid6', 'sort', 100, [
+		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+		{ type: 'select', options: [[1, 'TCP'],[2, 'UDP'],[3,'Both']] },
+		{ type: 'text', maxlen: 140 },
+		{ type: 'text', maxlen: 140 },
+		{ type: 'text', maxlen: 16 },
+		{ type: 'text', maxlen: 32 }]);
+	this.headerSet(['On','Protocol','Src Address','Dest Address','Dest Ports','Description']);
+	var nv = nvram.ipv6_portforward.split('>');
+	for (var i = 0; i < nv.length; ++i) {
+		var r;
+
+		if (r = nv[i].match(/^(\d)<(\d)<(.*)<(.*)<(.+?)<(.*)$/)) {
+			r[1] *= 1;
+			r[2] *= 1;
+			r[5] = r[5].replace(/:/g, '-');
+
+			fog.insertData(-1, r.slice(1, 7));
+		}
+	}
+	fog.sort(5);
+	fog.showNewEditor();
+}
+
+fog.resetNewEditor = function() {
+	var f = fields.getAll(this.newEditor);
+	f[0].checked = 1;
+	f[1].selectedIndex = 0;
+	f[2].value = '';
+	f[3].value = '';
+	f[4].value = '';
+	f[5].value = '';
+	ferror.clearAll(fields.getAll(this.newEditor));
+}
+
+fog.dataToView = function(data) {
+	return [(data[0] != '0') ? '&#x2b50' : '', ['TCP', 'UDP', 'Both'][data[1] - 1], (data[2].match(/(.+)-(.+)/)) ? (RegExp.$1 + ' -<br>' + RegExp.$2) : data[2], data[3], data[4], data[5]];
+}
+
+fog.fieldValuesToData = function(row) {
+	var f = fields.getAll(row);
+
+	return [f[0].checked ? 1 : 0,f[1].value,f[2].value,f[3].value,f[4].value,f[5].value];
+}
+
 fog.sortCompare = function(a, b) {
 	var col = this.sortColumn;
 	var da = a.getRowData();
@@ -42,79 +88,41 @@ fog.sortCompare = function(a, b) {
 	return this.sortAscending ? r : -r;
 }
 
-fog.dataToView = function(data) {
-	return [(data[0] != '0') ? 'On' : '', ['TCP', 'UDP', 'Both'][data[1] - 1], (data[2].match(/(.+)-(.+)/)) ? (RegExp.$1 + ' -<br>' + RegExp.$2) : data[2], data[3], data[4], data[5]];
-}
-
-fog.fieldValuesToData = function(row) {
-	var f = fields.getAll(row);
-
-	return [f[0].checked ? 1 : 0, f[1].value, f[2].value, f[3].value, f[4].value, f[5].value];
-}
-
 fog.verifyFields = function(row, quiet) {
 	var f = fields.getAll(row);
 
 	f[2].value = f[2].value.trim();
-	if ((f[2].value.length) && (!_v_iptaddr(f[2], quiet, 0, 0, 1))) return 0;
+	if ((f[2].value.length) && (!_v_iptaddr(f[2], quiet, 0, 0, 1)))
+		return 0;
 
 	f[3].value = f[3].value.trim();	
 	if ((f[3].value.length) && !v_hostname(f[3], 1)) {
-		if (!_v_iptaddr(f[3], quiet, 0, 0, 1)) return 0;
+		if (!_v_iptaddr(f[3], quiet, 0, 0, 1))
+			return 0;
 	}
 
-	if (!v_iptport(f[4], quiet)) return 0;
+	if (!v_iptport(f[4], quiet))
+		return 0;
 
 	f[5].value = f[5].value.replace(/>/g, '_');
-	if (!v_nodelim(f[5], quiet, 'Description')) return 0;
+	if (!v_nodelim(f[5], quiet, 'Description'))
+		return 0;
 
 	return 1;
 }
 
-fog.resetNewEditor = function() {
-	var f = fields.getAll(this.newEditor);
-	f[0].checked = 1;
-	f[1].selectedIndex = 0;
-	f[2].value = '';
-	f[3].value = '';
-	f[4].value = '';
-	f[5].value = '';
-	ferror.clearAll(fields.getAll(this.newEditor));
-}
-
-fog.setup = function() {
-	this.init('fo-grid6', 'sort', 100, [
-		{ type: 'checkbox' },
-		{ type: 'select', options: [[1, 'TCP'],[2, 'UDP'],[3,'Both']] },
-		{ type: 'text', maxlen: 140 },
-		{ type: 'text', maxlen: 140 },
-		{ type: 'text', maxlen: 16 },
-		{ type: 'text', maxlen: 32 }]);
-	this.headerSet(['On', 'Protocol', 'Src Address', 'Dest Address', 'Dest Ports', 'Description']);
-	var nv = nvram.ipv6_portforward.split('>');
-	for (var i = 0; i < nv.length; ++i) {
-		var r;
-
-		if (r = nv[i].match(/^(\d)<(\d)<(.*)<(.*)<(.+?)<(.*)$/)) {
-			r[1] *= 1;
-			r[2] *= 1;
-			r[5] = r[5].replace(/:/g, '-');
-			fog.insertData(-1, r.slice(1, 7));
-		}
-	}
-	fog.sort(5);
-	fog.showNewEditor();
-}
-
 function srcSort(a, b) {
-	if (a[2].length) return -1;
-	if (b[2].length) return 1;
+	if (a[2].length)
+		return -1;
+	if (b[2].length)
+		return 1;
 
 	return 0;
 }
 
 function save() {
-	if (fog.isEditing()) return;
+	if (fog.isEditing())
+		return;
 
 	var data = fog.getAllData().sort(srcSort);
 	var s = '';

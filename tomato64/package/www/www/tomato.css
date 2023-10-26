@@ -753,6 +753,8 @@ table.tomato-grid.vpn-status-table {
 #adblock-grid .centered,
 #th-grid .centered,
 #pbr-grid .centered,
+#fo-grid .centered,
+#fo-grid6 .centered,
 div[id$="_ccd"] .centered,
 div[id$="_users"] .centered,
 div[id^="table_client"] td.co1,
@@ -1154,39 +1156,36 @@ div[id$="_users"] .co1 {
 	text-align: center;
 }
 
+#fo-grid .co1,
 #fo-grid6 .co1 {
-	width: 25px;
+	width: 6%;
 	text-align: center;
 }
 
 #fo-grid .co2,
 #fo-grid .co4,
+#fo-grid .co5 {
+	width: 10%;
+}
+
+#fo-grid .co3,
+#fo-grid .co6 {
+	width: 15%;
+}
+
 #fo-grid6 .co2,
 #fo-grid6 .co5 {
-	width: 80px;
+	width: 10%;
 }
 
 #fo-grid6 .co3,
 #fo-grid6 .co4 {
-	width: 140px;
+	width: 15%;
 }
 
-#fo-grid .co1 {
-	width: 25px;
-	text-align: center;
-}
 
-#fo-grid .co3 {
-	width: 120px;
-}
 
-#fo-grid .co5 {
-	width: 55px;
-}
 
-#fo-grid .co6 {
-	width: 110px;
-}
 
 #bwlg-grid .co1 {
 	width: 3%;

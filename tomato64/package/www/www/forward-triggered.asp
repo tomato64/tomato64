@@ -22,6 +22,50 @@
 
 var tg = new TomatoGrid();
 
+
+tg.setup = function() {
+	this.init('tg-grid', 'sort', 50, [
+		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+		{ type: 'select', options: [[1, 'TCP'],[2, 'UDP'],[3,'Both']] },
+		{ type: 'text', maxlen: 16 },
+		{ type: 'text', maxlen: 16 },
+		{ type: 'text', maxlen: 32 }]);
+	this.headerSet(['On','Protocol','Trigger Ports','Forwarded Ports','Description']);
+	var nv = nvram.trigforward.split('>');
+	for (var i = 0; i < nv.length; ++i) {
+		var r;
+		if (r = nv[i].match(/^(\d)<(\d)<(.+?)<(.+?)<(.*)$/)) {
+			r[1] *= 1;
+			r[2] *= 1;
+			r[3] = r[3].replace(/:/g, '-');
+			r[4] = r[4].replace(/:/g, '-');
+			tg.insertData(-1, r.slice(1, 6));
+		}
+	}
+	tg.sort(4);
+	tg.showNewEditor();
+}
+
+tg.resetNewEditor = function() {
+	var f = fields.getAll(this.newEditor);
+	f[0].checked = 1;
+	f[1].selectedIndex = 0;
+	f[2].value = '';
+	f[3].value = '';
+	f[4].value = '';
+	ferror.clearAll(f);
+}
+
+tg.dataToView = function(data) {
+	return [data[0] ? '&#x2b50' : '', ['TCP', 'UDP', 'Both'][data[1] - 1], data[2], data[3], data[4]];
+}
+
+tg.fieldValuesToData = function(row) {
+	var f = fields.getAll(row);
+
+	return [f[0].checked ? 1 : 0,f[1].value,f[2].value,f[3].value,f[4].value];
+}
+
 tg.sortCompare = function(a, b) {
 	var col = this.sortColumn;
 	var da = a.getRowData();
@@ -41,62 +85,27 @@ tg.sortCompare = function(a, b) {
 	return this.sortAscending ? r : -r;
 }
 
-tg.dataToView = function(data) {
-	return [data[0] ? 'On' : '', ['TCP', 'UDP', 'Both'][data[1] - 1], data[2], data[3], data[4]];
-}
-
-tg.fieldValuesToData = function(row) {
-	var f = fields.getAll(row);
-
-	return [f[0].checked ? 1 : 0, f[1].value, f[2].value, f[3].value, f[4].value];
-}
-
 tg.verifyFields = function(row, quiet) {
 	var f = fields.getAll(row);
+
 	ferror.clearAll(f);
-	if (!v_portrange(f[2], quiet)) return 0;
-	if (!v_portrange(f[3], quiet)) return 0;
+
+	if (!v_portrange(f[2], quiet))
+		return 0;
+
+	if (!v_portrange(f[3], quiet))
+		return 0;
+
 	f[4].value = f[4].value.replace(/>/g, '_');
-	if (!v_nodelim(f[4], quiet, 'Description')) return 0;
+	if (!v_nodelim(f[4], quiet, 'Description'))
+		return 0;
 
 	return 1;
 }
 
-tg.resetNewEditor = function() {
-	var f = fields.getAll(this.newEditor);
-	f[0].checked = 1;
-	f[1].selectedIndex = 0;
-	f[2].value = '';
-	f[3].value = '';
-	f[4].value = '';
-	ferror.clearAll(f);
-}
-
-tg.setup = function() {
-	this.init('tg-grid', 'sort', 50, [
-		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-		{ type: 'select', options: [[1, 'TCP'],[2, 'UDP'],[3,'Both']] },
-		{ type: 'text', maxlen: 16 },
-		{ type: 'text', maxlen: 16 },
-		{ type: 'text', maxlen: 32 }]);
-	this.headerSet(['On', 'Protocol', 'Trigger Ports', 'Forwarded Ports', 'Description']);
-	var nv = nvram.trigforward.split('>');
-	for (var i = 0; i < nv.length; ++i) {
-		var r;
-		if (r = nv[i].match(/^(\d)<(\d)<(.+?)<(.+?)<(.*)$/)) {
-			r[1] *= 1;
-			r[2] *= 1;
-			r[3] = r[3].replace(/:/g, '-');
-			r[4] = r[4].replace(/:/g, '-');
-			tg.insertData(-1, r.slice(1, 6));
-		}
-	}
-	tg.sort(4);
-	tg.showNewEditor();
-}
-
 function save() {
-	if (tg.isEditing()) return;
+	if (tg.isEditing())
+		return;
 
 	var data = tg.getAllData();
 	var s = '';

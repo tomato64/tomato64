@@ -24,7 +24,7 @@ var fog = new TomatoGrid();
 
 fog.setup = function() {
 	this.init('fo-grid', 'sort', 100, [
-		{ type: 'checkbox' },
+		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 		{ type: 'select', options: [[1,'TCP'],[2,'UDP'],[3,'Both']] },
 		{ type: 'text', maxlen: 32 },
 		{ type: 'text', maxlen: 16 },
@@ -62,7 +62,7 @@ fog.resetNewEditor = function() {
 }
 
 fog.dataToView = function(data) {
-	return [(data[0] != '0' ? 'On' : ''),['TCP','UDP','Both'][data[1] - 1],(data[2].match(/(.+)-(.+)/) ? (RegExp.$1+' -<br>'+RegExp.$2) : data[2]),data[3],data[4],data[5],data[6]];
+	return [(data[0] != '0' ? '&#x2b50' : ''),['TCP','UDP','Both'][data[1] - 1],(data[2].match(/(.+)-(.+)/) ? (RegExp.$1+' -<br>'+RegExp.$2) : data[2]),data[3],data[4],data[5],data[6]];
 }
 
 fog.fieldValuesToData = function(row) {
