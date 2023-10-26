@@ -715,7 +715,12 @@ elif [ "$1" == "status-gui" ]; then
 	restarts=$(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep -E '.*dnsmasq\[.*exiting' | wc -l )
 	[ ! -z $sizeLimit ] && max=$(echo $sizeLimit | number ) || max="Calculated at the next run"
 	ramt=$(grep 'MemTotal:' /proc/meminfo | awk '{print $2}')
+# TOMATO64-REMOVE-BEGIN
 	ramu=$(free | grep buffer | awk '{print $3}')
+# TOMATO64-REMOVE-END
+# TOMATO64-BEGIN
+	ramu=$(grep -E '^MemFree:' /proc/meminfo | awk '{print $2}')
+# TOMATO64-END
 	ramc=$(grep -E '^Cached:' /proc/meminfo | awk '{print $2}')
 	ramb=$(grep 'Buffers:' /proc/meminfo | awk '{print $2}')
 	rampu=$(( $ramu * 100 / $ramt ))

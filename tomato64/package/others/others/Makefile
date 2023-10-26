@@ -62,6 +62,11 @@ ifneq ($(TCONFIG_STUBBY),y)
 else
 	sed -i $(INSTALLDIR)/usr/sbin/adblock -e "/STUBBYNO-BEGIN/,/STUBBYNO-END/d"
 endif
+ifeq ($(TCONFIG_TOMATO64),y)
+	sed -i $(INSTALLDIR)/usr/sbin/adblock -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
+else
+	sed -i $(INSTALLDIR)/usr/sbin/adblock -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+endif
 endif
 
 # TTB project
@@ -183,6 +188,8 @@ endif
 			-e "/BCMARM-BEGIN/d"	-e "/BCMARM-END/d" \
 			-e "/BCMARMNO-BEGIN/d"	-e "/BCMARMNO-END/d" \
 			-e "/BBT-BEGIN/d"	-e "/BBT-END/d" \
+			-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
+			-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
 			|| true; \
 		done
 
