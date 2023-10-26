@@ -88,6 +88,9 @@ extern struct nvram_tuple snmp_defaults[];
 #ifdef TCONFIG_BCMARM
 extern struct nvram_tuple upnp_defaults[];
 #endif /* TCONFIG_BCMARM */
+#ifdef TCONFIG_BCMBSD
+extern struct nvram_tuple bsd_defaults[];
+#endif /* TCONFIG_BCMBSD */
 
 /* Pop an alarm to recheck pids in 500 msec */
 static const struct itimerval pop_tv = { {0, 0}, {0, 500 * 1000} };
@@ -266,6 +269,32 @@ void del_upnp_defaults(void)
 	eval("nvram", "upnp_defaults", "--del");
 #endif /* TCONFIG_BCMARM */
 }
+
+#ifdef TCONFIG_BCMBSD
+void add_bsd_defaults(void)
+{
+	struct nvram_tuple *t;
+
+	/* Restore defaults if necessary */
+	for (t = bsd_defaults; t->name; t++) {
+		if (!nvram_get(t->name)) { /* check existence */
+			nvram_set(t->name, t->value);
+		}
+	}
+}
+
+void del_bsd_defaults(void)
+{
+	if (nvram_match("smart_connect_x", "0")) {
+		struct nvram_tuple *t;
+
+		/* remove defaults if NOT necessary (only keep "xyz_enable" nv var.) */
+		for (t = bsd_defaults; t->name; t++) {
+			nvram_unset(t->name);
+		}
+	}
+}
+#endif /* TCONFIG_BCMBSD */
 
 void start_dnsmasq_wet()
 {
@@ -3079,6 +3108,14 @@ TOP:
 		goto CLEAR;
 	}
 
+#ifdef TCONFIG_BCMBSD
+	if (strcmp(service, "bsd_nvram") == 0) {
+		if (act_stop) del_bsd_defaults();
+		if (act_start) add_bsd_defaults();
+		goto CLEAR;
+	}
+#endif /* TCONFIG_BCMBSD */
+
 	if (strcmp(service, "dhcpc_wan") == 0) {
 		if (act_stop) stop_dhcpc("wan");
 		if (act_start) start_dhcpc("wan");
@@ -3882,11 +3919,42 @@ void stop_service(const char *name)
 int start_bsd(void)
 {
 	int ret;
+	int bsd_enable = nvram_get_int("smart_connect_x");
+
+	/* only if enabled */
+	if (bsd_enable) {
+		add_bsd_defaults(); /* add bsd nvram values only if feature is enabled! */
+
+		/* band steering settings corrections, because 5 GHz module is the first one */
+		switch (get_model()) {
+			case MODEL_EA6350v1: /* EA6200 */
+				if (nvram_match("boardnum", "20140309")) {
+					/* nothing to do for EA6350v1 */
+					break;
+				}
+				/* fall through */
+			case MODEL_F9K1113v2:
+			case MODEL_F9K1113v2_20X0: /* version 2000 and 2010 */
+			case MODEL_R1D:
+				nvram_set("wl1_bsd_steering_policy", "0 5 3 -52 0 110 0x22");
+				nvram_set("wl0_bsd_steering_policy", "80 5 3 -82 0 0 0x20");
+				nvram_set("wl1_bsd_sta_select_policy", "10 -52 0 110 0 1 1 0 0 0 0x122");
+				nvram_set("wl0_bsd_sta_select_policy", "10 -82 0 0 0 1 1 0 0 0 0x20");
+				nvram_set("wl1_bsd_if_select_policy", "eth1");
+				nvram_set("wl0_bsd_if_select_policy", "eth2");
+				nvram_set("wl1_bsd_if_qualify_policy", "0 0x0");
+				nvram_set("wl0_bsd_if_qualify_policy", "60 0x0");
+				break;
+			default:
+				/* nothing to do right now */
+				break;
+		}
+	}
 
 	stop_bsd();
 
 	/* 0 = off, 1 = on (all-band), 2 = 5 GHz only! (no support, maybe later) */
-	if (!nvram_get_int("smart_connect_x")) {
+	if (!bsd_enable) {
 		ret = -1;
 		logmsg(LOG_INFO, "wireless band steering disabled");
 		return ret;

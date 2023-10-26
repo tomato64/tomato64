@@ -316,6 +316,10 @@ extern void del_snmp_defaults(void);
 #endif /* TCONFIG_SNMP */
 extern void add_upnp_defaults(void);
 extern void del_upnp_defaults(void);
+#ifdef TCONFIG_BCMBSD
+extern void add_bsd_defaults(void);
+extern void del_bsd_defaults(void);
+#endif /* TCONFIG_BCMBSD */
 
 /* usb.c */
 #ifdef TCONFIG_USB

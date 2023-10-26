@@ -108,6 +108,61 @@ struct nvram_tuple upnp_defaults[] = {
 	{ 0, 0, 0 }
 };
 
+#ifdef TCONFIG_BCMBSD
+struct nvram_tuple bsd_defaults[] = {
+	{ "bsd_role", 		 	"3"				, 0 },	/* Band Steer Daemon; 0:Disable, 1:Primary, 2:Helper, 3:Standalone */
+	{ "bsd_hport", 		 	"9877"				, 0 },	/* BSD helper port */
+	{ "bsd_pport", 		 	"9878"				, 0 },	/* BSD Primary port */
+	{ "bsd_helper", 		"192.168.1.232"			, 0 },	/* BSD primary ipaddr */
+	{ "bsd_primary", 		"192.168.1.231"			, 0 },	/* BSD Helper ipaddr */
+#if 0
+	{ "bsd_msglevel", 		"0x000010"			, 0 },	/* BSD_DEBUG_STEER */
+	{ "bsd_dbg", 		 	"1"				, 0 },
+#endif
+#ifdef TCONFIG_AC3200 /* Tri-Band */
+#ifdef TCONFIG_AC5300 /* Tri-Band */
+	{"bsd_ifnames",			"eth1 eth2 eth3"		, 0 },
+#else
+	{"bsd_ifnames",			"eth2 eth1 eth3"		, 0 },
+#endif
+	{"wl0_bsd_steering_policy",	"0 5 3 -52 0 110 0x22"		, 0 },
+	{"wl1_bsd_steering_policy",	"80 5 3 -82 0 0 0x20"		, 0 },
+	{"wl2_bsd_steering_policy",	"0 5 3 -82 0 0 0x28"		, 0 },
+	{"wl0_bsd_sta_select_policy",	"10 -52 0 110 0 1 1 0 0 0 0x122", 0 },
+	{"wl1_bsd_sta_select_policy",	"10 -82 0 0 0 1 1 0 0 0 0x24"	, 0 },
+	{"wl2_bsd_sta_select_policy",	"10 -82 0 0 0 1 1 0 0 0 0x28"	, 0 },
+#ifdef TCONFIG_AC5300 /* Tri-Band */
+	{"wl0_bsd_if_select_policy",	"eth3 eth2"			, 0 },
+	{"wl1_bsd_if_select_policy",	"eth1 eth3"			, 0 },
+	{"wl2_bsd_if_select_policy",	"eth1 eth2"			, 0 },
+#else
+	{"wl0_bsd_if_select_policy",	"eth3 eth1"			, 0 },
+	{"wl1_bsd_if_select_policy",	"eth2 eth3"			, 0 },
+	{"wl2_bsd_if_select_policy",	"eth2 eth1"			, 0 },
+#endif
+	{"wl0_bsd_if_qualify_policy",	"0 0x0"				, 0 },	/* bandwidth utilization disabled ; all clients possible (0x0) */
+	{"wl1_bsd_if_qualify_policy",	"60 0x0"			, 0 },	/* bandwidth utilization is less than 60 % ; all clients possible (0x0) */
+	{"wl2_bsd_if_qualify_policy",	"0 0x4"				, 0 },	/* bandwidth utilization disabled ; only AC clients possible (0x04) */
+	{"bsd_bounce_detect",		"180 2 3600"			, 0 },
+	{"bsd_aclist_timeout",		"3"				, 0 },
+#else /* Dual-Band */
+	{"bsd_ifnames",			"eth1 eth2"			, 0 },
+	{"wl0_bsd_steering_policy",	"0 5 3 -52 0 110 0x22"		, 0 },	/* Steering Trigger Condition 2,4 GHz: RSSI greater than -52 OR PHYRATE (HIGH) greater than or equal to 110 Mbit/s */
+	{"wl1_bsd_steering_policy",	"80 5 3 -82 0 0 0x20"		, 0 },	/* Steering Trigger Condition 5 GHz: RSSI less than or equal to -82 OR bandwidth use exceeds 80 % */
+	{"wl0_bsd_sta_select_policy",	"10 -52 0 110 0 1 1 0 0 0 0x122", 0 },
+	{"wl1_bsd_sta_select_policy",	"10 -82 0 0 0 1 1 0 0 0 0x20"	, 0 },
+	{"wl0_bsd_if_select_policy",	"eth2"				, 0 },
+	{"wl1_bsd_if_select_policy",	"eth1"				, 0 },
+	{"wl0_bsd_if_qualify_policy",	"0 0x0"				, 0 },	/* bandwidth utilization disabled ; all clients possible (0x0) */
+	{"wl1_bsd_if_qualify_policy",	"60 0x0"			, 0 },	/* bandwidth utilization is less than 60 % ; all clients possible (0x0) */
+	{"bsd_bounce_detect",		"180 2 3600"			, 0 },
+	{"bsd_aclist_timeout",		"3"				, 0 },
+#endif /* TCONFIG_AC3200 */
+	{"bsd_scheme",			"2"				, 0 },
+	{ 0, 0, 0 }
+};
+#endif /* TCONFIG_BCMBSD */
+
 struct nvram_tuple router_defaults[] = {
 	{ "restore_defaults",		"0"				, 0 },	/* Set to 0 to not restore defaults on boot */
 
@@ -701,56 +756,8 @@ struct nvram_tuple router_defaults[] = {
 	{ "wl_txbf_imp",		"1"				, 0 },	/* for Universal/Implicit Beamforming on = 1 , off = 0 (default: on - sync with wl_itxbf) */
 #endif /* TCONFIG_BCMWL6 */
 #ifdef TCONFIG_BCMBSD
-	{ "bsd_role", 		 	"3"				, 0 },	/* Band Steer Daemon; 0:Disable, 1:Primary, 2:Helper, 3:Standalone */
-	{ "bsd_hport", 		 	"9877"				, 0 },	/* BSD helper port */
-	{ "bsd_pport", 		 	"9878"				, 0 },	/* BSD Primary port */
-	{ "bsd_helper", 		"192.168.1.232"			, 0 },	/* BSD primary ipaddr */
-	{ "bsd_primary", 		"192.168.1.231"			, 0 },	/* BSD Helper ipaddr */
 	{ "smart_connect_x", 		"0"				, 0 },	/* 0 = off, 1 = on (all-band), 2 = 5 GHz only! (no support, maybe later) */
-#if 0
-	{ "bsd_msglevel", 		"0x000010"			, 0 },	/* BSD_DEBUG_STEER */
-	{ "bsd_dbg", 		 	"1"				, 0 },
-#endif
-#ifdef TCONFIG_AC3200 /* Tri-Band */
-#ifdef TCONFIG_AC5300 /* Tri-Band */
-	{"bsd_ifnames",			"eth1 eth2 eth3"		, 0 },
-#else
-	{"bsd_ifnames",			"eth2 eth1 eth3"		, 0 },
-#endif
-	{"wl0_bsd_steering_policy",	"0 5 3 -52 0 110 0x22"		, 0 },
-	{"wl1_bsd_steering_policy",	"80 5 3 -82 0 0 0x20"		, 0 },
-	{"wl2_bsd_steering_policy",	"0 5 3 -82 0 0 0x28"		, 0 },
-	{"wl0_bsd_sta_select_policy",	"10 -52 0 110 0 1 1 0 0 0 0x122", 0 },
-	{"wl1_bsd_sta_select_policy",	"10 -82 0 0 0 1 1 0 0 0 0x24"	, 0 },
-	{"wl2_bsd_sta_select_policy",	"10 -82 0 0 0 1 1 0 0 0 0x28"	, 0 },
-#ifdef TCONFIG_AC5300 /* Tri-Band */
-	{"wl0_bsd_if_select_policy",	"eth3 eth2"			, 0 },
-	{"wl1_bsd_if_select_policy",	"eth1 eth3"			, 0 },
-	{"wl2_bsd_if_select_policy",	"eth1 eth2"			, 0 },
-#else
-	{"wl0_bsd_if_select_policy",	"eth3 eth1"			, 0 },
-	{"wl1_bsd_if_select_policy",	"eth2 eth3"			, 0 },
-	{"wl2_bsd_if_select_policy",	"eth2 eth1"			, 0 },
-#endif
-	{"wl0_bsd_if_qualify_policy",	"0 0x0"				, 0 },	/* bandwidth utilization disabled ; all clients possible (0x0) */
-	{"wl1_bsd_if_qualify_policy",	"60 0x0"			, 0 },	/* bandwidth utilization is less than 60 % ; all clients possible (0x0) */
-	{"wl2_bsd_if_qualify_policy",	"0 0x4"				, 0 },	/* bandwidth utilization disabled ; only AC clients possible (0x04) */
-	{"bsd_bounce_detect",		"180 2 3600"			, 0 },
-	{"bsd_aclist_timeout",		"3"				, 0 },
-#else /* Dual-Band */
-	{"bsd_ifnames",			"eth1 eth2"			, 0 },
-	{"wl0_bsd_steering_policy",	"0 5 3 -52 0 110 0x22"		, 0 },	/* Steering Trigger Condition 2,4 GHz: RSSI greater than -52 OR PHYRATE (HIGH) greater than or equal to 110 Mbit/s */
-	{"wl1_bsd_steering_policy",	"80 5 3 -82 0 0 0x20"		, 0 },	/* Steering Trigger Condition 5 GHz: RSSI less than or equal to -82 OR bandwidth use exceeds 80 % */
-	{"wl0_bsd_sta_select_policy",	"10 -52 0 110 0 1 1 0 0 0 0x122", 0 },
-	{"wl1_bsd_sta_select_policy",	"10 -82 0 0 0 1 1 0 0 0 0x20"	, 0 },
-	{"wl0_bsd_if_select_policy",	"eth2"				, 0 },
-	{"wl1_bsd_if_select_policy",	"eth1"				, 0 },
-	{"wl0_bsd_if_qualify_policy",	"0 0x0"				, 0 },	/* bandwidth utilization disabled ; all clients possible (0x0) */
-	{"wl1_bsd_if_qualify_policy",	"60 0x0"			, 0 },	/* bandwidth utilization is less than 60 % ; all clients possible (0x0) */
-	{"bsd_bounce_detect",		"180 2 3600"			, 0 },
-	{"bsd_aclist_timeout",		"3"				, 0 },
-#endif /* TCONFIG_AC3200 */
-	{"bsd_scheme",			"2"				, 0 },
+	/* all other bsd_xyz variables, see bsd_defaults */
 #endif /* TCONFIG_BCMBSD */
 
 #ifdef TCONFIG_BCM7
