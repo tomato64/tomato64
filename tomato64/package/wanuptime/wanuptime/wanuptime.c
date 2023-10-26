@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 	char prefix[] = "wanXX";
 
 	if (argc > 1)
-		strlcpy(prefix, argv[0], sizeof(prefix));
+		strlcpy(prefix, argv[1], sizeof(prefix));
 	else
 		strlcpy(prefix, "wan", sizeof(prefix));
 
