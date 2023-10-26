@@ -2,7 +2,7 @@
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 ###############################
 # Copyright (C) 2012/2013 shibby
-# Changes for new versioning: 2018 - 2021 by pedro
+# Changes for new versioning: 2018 - 2023 by pedro
 #
 # This script send anonymous or incompleted information about model of router and installed tomato version.
 # Those information will be used ONLY for stats.
@@ -33,17 +33,14 @@ WGET="/usr/bin/wget"
 
 [ "$ANON_ANSWER" -eq 1 ] && {
 	[ "$ANON_ENABLED" -eq 1 ] && {
-
-############################
 		MOD=Tomato64
-############################
 
 		# Detect Version and Buildtype
 		IS_USB=$(nvram get os_version | grep USB | wc -l)
-		[ "$IS_USB" -eq 0 ] && { # if K26
-			VER=$(nvram get os_version | awk '{ print $1" "$(NF-1) }')
-		} || { # if K26USB
-			VER=$(nvram get os_version | awk '{ print $1" "$(NF-2)" "$(NF-1) }')
+		[ "$IS_USB" -eq 0 ] && {
+			VER=$(nvram get os_version | awk '{ print $1" "$2 }')
+		} || {
+			VER=$(nvram get os_version | awk '{ print $1" "$2" "$(NF-1) }')
 		}
 		BUILDTYPE=$(nvram get os_version | awk '{ print $NF }')
 
@@ -81,7 +78,6 @@ WGET="/usr/bin/wget"
 			fi
 
 			# Thanks. Now add cron job
-
 			ISCRU=$(cru l | grep checkver | wc -l)
 			[ "$ISCRU" -eq 0 ] && {
 
@@ -118,7 +114,6 @@ WGET="/usr/bin/wget"
 			$WGET -O $RESULT $ANONSEND
 
 			# Thanks. Now add cron job
-
 			ISCRU=$(cru l | grep anonupdate | wc -l)
 			[ "$ISCRU" -eq 0 ] && {
 
