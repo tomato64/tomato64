@@ -2531,7 +2531,6 @@ function navi() {
 			['Weekly',			'weekly.asp'],
 			['Monthly',			'monthly.asp']
 			] ],
-/* TOMATO64-REMOVE-BEGIN */
 		['IP Traffic',			'ipt', 0, [
 			['Real-Time',			'realtime.asp'],
 			['Last 24 Hours',		'24.asp'],
@@ -2540,7 +2539,6 @@ function navi() {
 			['Daily',			'daily.asp'],
 			['Monthly',			'monthly.asp']
 			] ],
-/* TOMATO64-REMOVE-END */
 		['Tools', 			'tools', 0, [
 			['Ping',			'ping.asp'],
 			['Traceroute',			'trace.asp'],
@@ -2665,8 +2663,8 @@ function navi() {
 			['Admin Access',		'access.asp'],
 			['TomatoAnon',			'tomatoanon.asp'],
 			['Bandwidth Monitoring',	'bwm.asp'],
-/* TOMATO64-REMOVE-BEGIN */
 			['IP Traffic Monitoring',	'iptraffic.asp'],
+/* TOMATO64-REMOVE-BEGIN */
 			['Buttons/LED',			'buttons.asp'],
 /* TOMATO64-REMOVE-END */
 /* CIFS-BEGIN */

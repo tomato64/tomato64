@@ -103,6 +103,7 @@ void iptraffic_conntrack_init() {
 	const char conntrack[] = "/proc/net/ip_conntrack";
 #else
 	const char conntrack[] = "/proc/net/nf_conntrack";
+	char a_address[5];
 #endif /* TOMATO64 */
 	unsigned int a_time, a_proto;
 	char a_src[INET_ADDRSTRLEN];
@@ -157,8 +158,15 @@ void iptraffic_conntrack_init() {
 	ctvbuf(a); /* if possible, read in one go */
 
 	while (fgets(sa, sizeof(sa), a)) {
+#ifndef TOMATO64
 		if (sscanf(sa, "%*s %u %u", &a_proto, &a_time) != 2)
 			continue;
+#else
+		if (sscanf(sa, "%4s %*u %*s %u %u", a_address, &a_proto, &a_time) != 3)
+			continue;
+		if (strncmp(a_address, "ipv4", 4) != 0)
+			continue;
+#endif /* TOMATO64 */
 		if ((a_proto != 6) && (a_proto != 17))
 			continue;
 		if ((p = strstr(sa, "src=")) == NULL)

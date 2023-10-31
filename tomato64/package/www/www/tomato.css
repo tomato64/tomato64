@@ -1206,13 +1206,8 @@ div[id$="_users"] .co1 {
 	text-align: center;
 }
 
-/* TOMATO64-REMOVE-BEGIN */
 #bs-grid .co2,
 #bs-grid .co4 {
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-#bs-grid .co2 {
-/* TOMATO64-END */
 	width: 80px;
 	text-align: center;
 }
