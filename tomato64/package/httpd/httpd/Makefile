@@ -10,7 +10,7 @@ ALL_CFLAGS = -fPIC -g
 ALL_CFLAGS += -DTOMATO64 -DUSE_OPENSSL11
 ALL_CFLAGS += $(CFLAGS)
 
-ALL_LDFLAGS = -fPIC -lmssl -lshared -lnvram -lssl -lcrypto -lmssl
+ALL_LDFLAGS = -fPIC -Wl,--start-group -lmssl -lssl -lcrypto -lshared -lnvram -Wl,--end-group
 ALL_LDFLAGS += $(LDFLAGS)
 
 ifeq ($(TOMATO_EXPERIMENTAL),1)

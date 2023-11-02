@@ -10,7 +10,7 @@ ALL_CPPFLAGS += $(CPPFLAGS)
 ALL_CFLAGS = -fPIC -g
 ALL_CFLAGS += $(CFLAGS)
 
-ALL_LDFLAGS = -fPIC -lssl -lcrypto -lshared
+ALL_LDFLAGS = -fPIC -Wl,--start-group -lssl -lcrypto -lshared -lnvram -Wl,--end-group
 ALL_LDFLAGS += $(LDFLAGS)
 
 

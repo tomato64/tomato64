@@ -16,7 +16,7 @@ DHCPV6_TOMATO_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -D_GNU_SOURCE -DTOMATO -DHAVE
 -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/common/include \
 -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/bcmwifi/include"
 
-DHCPV6_TOMATO_CONF_ENV += LDFLAGS="$(TARGET_LDFLAGS) -lnvram -lshared"
+DHCPV6_TOMATO_CONF_ENV += LDFLAGS="$(TARGET_LDFLAGS) -lshared -lnvram"
 
 DHCPV6_TOMATO_CONF_ENV += \
         ac_cv_func_setpgrp_void=yes

@@ -9,7 +9,7 @@ ALL_CPPFLAGS += $(CPPFLAGS)
 ALL_CFLAGS = -fPIC
 ALL_CFLAGS += $(CFLAGS)
 
-ALL_LDFLAGS = -fPIC -lcurl -lssl -lcrypto -lnvram -lshared
+ALL_LDFLAGS = -fPIC -Wl,--start-group -lcurl -lssl -lcrypto -lshared -lnvram -Wl,--end-group
 ALL_LDFLAGS += $(LDFLAGS)
 
 OBJS = mdu.o

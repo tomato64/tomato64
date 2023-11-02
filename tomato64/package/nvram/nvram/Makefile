@@ -17,7 +17,7 @@ OBJS = main.o
 all: nvram
 
 nvram: $(OBJS)
-	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) $(ALL_LDFLAGS) -lnvram -lshared -o $@ $^
+	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) $(ALL_LDFLAGS) -lshared -lnvram -o $@ $^
 
 %.o: %.c
 	@echo " [nvram] CC $@"
