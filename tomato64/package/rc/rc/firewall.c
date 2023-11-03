@@ -1316,7 +1316,6 @@ static void filter_forward(void)
 		ip6t_write("-A FORWARD -m rt --rt-type 0 -j DROP\n");
 #endif
 
-	/* Modern kernels don't have the required kernel module. Sounds like it would need to be re-engineered. */
 	if (nvram_match("cstats_enable", "1"))
 		ipt_account();
 
