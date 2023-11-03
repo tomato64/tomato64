@@ -223,7 +223,7 @@ function save() {
 	aj = 1;
 	en = E('_f_cstats_enable').checked;
 	fom = E('t_fom');
-	fom._service.value = 'cstats-restart';
+	fom._service.value = 'cstats-restart,firewall-restart';
 	if (en) {
 		path = getPath();
 		if (((E('_cstats_stime').value * 1) <= 48) && ((path == '*nvram')
@@ -290,7 +290,7 @@ function init() {
 <form id="t_fom" method="post" action="tomato.cgi">
 	<div class="section" id="config-section">
 		<input type="hidden" name="_nextpage" value="admin-iptraffic.asp">
-		<input type="hidden" name="_service" value="cstats-restart">
+		<input type="hidden" name="_service" value="cstats-restart,firewall-restart">
 		<input type="hidden" name="cstats_enable">
 		<input type="hidden" name="cstats_path">
 		<input type="hidden" name="cstats_sshut">
