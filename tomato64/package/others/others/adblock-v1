@@ -5,11 +5,14 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 # Source: https://openlinksys.info/forum/viewthread.php?thread_id=18549&rowstart=20#post_149346
 # Tuned by: pedro and AndreDVJ
 
+
+. nvram_ops
+
 PID=$$
 PREFIX="/tmp/adblock"
 mkdir -p $PREFIX
 
-ENABLE=$(nvram get adblock_enable)
+ENABLE=$(NG adblock_enable)
 WORK1="$PREFIX/hosts.work1"
 WORK2="$PREFIX/hosts.work2"
 CHK_FILE="$PREFIX/adblock.time"
@@ -21,9 +24,9 @@ WGET="/usr/bin/wget --no-check-certificate -T 15"
 WGET="/usr/bin/wget -T 15"
 # STUBBY-END
 
-BLACKLIST=$(nvram get adblock_blacklist)
-WHITELIST=$(nvram get adblock_whitelist)
-CUSTOM=$(nvram get adblock_blacklist_custom)
+BLACKLIST=$(NG adblock_blacklist)
+WHITELIST=$(NG adblock_whitelist)
+CUSTOM=$(NG adblock_blacklist_custom)
 
 LOGS="logger -p INFO -t adblock[$PID]"
 

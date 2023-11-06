@@ -6,6 +6,10 @@
 # Authors: Monter, Shibby, hasIPv6
 #
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+
+
+. nvram_ops
+
 # configuration
 VERSION="v0.11"
 # /configuration
@@ -14,8 +18,8 @@ VERSION="v0.11"
 
 dir=$(/bin/echo $( cd "$(/usr/bin/dirname "$0")" ; /bin/pwd -P ))
 stms=$(/usr/bin/basename ${0})
-MAKE=$(/bin/nvram get t_model_name | /usr/bin/awk '{print $1}')
-MODEL=$(/bin/nvram get t_model_name | /usr/bin/awk '{print $2}')
+MAKE=$(/bin/NG t_model_name | /usr/bin/awk '{print $1}')
+MODEL=$(/bin/NG t_model_name | /usr/bin/awk '{print $2}')
 USB3=$(/usr/bin/lsusb | /bin/grep -v "Device 001" | /bin/grep "Bus 001")
 USB2=$(/usr/bin/lsusb | /bin/grep -v "Device 001" | /bin/grep "Bus 002")
 LOGS="/usr/bin/logger -s -t stealthMode"

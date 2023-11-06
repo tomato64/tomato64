@@ -7,14 +7,12 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 
 
-NV() {
-	nvram get "$1"
-}
+. nvram_ops
 
 PID=$$
 PIDFILE="/var/run/mwwatchdog.pid"
 IPLISTFILE="/tmp/mwwatchdog.iplist"
-MWAN=$(NV mwan_num)
+MWAN=$(NG mwan_num)
 IPLIST=""
 MWANTABLE="wan"
 
@@ -25,7 +23,7 @@ while [ $i -le $MWAN ]; do
 done
 
 LOGS="logger -t mwwatchdog[$PID]"
-[ "$(NV mwan_debug)" -gt 0 ] && DEBUG="logger -p DEBUG -t mwwatchdog[$PID]" || DEBUG="echo"
+[ "$(NG mwan_debug)" -gt 0 ] && DEBUG="logger -p DEBUG -t mwwatchdog[$PID]" || DEBUG="echo"
 
 
 timeout() {
@@ -42,7 +40,7 @@ timeout() {
 
 findHost() {
 	local host ip
-	local dst=$(NV mwan_ckdst)
+	local dst=$(NG mwan_ckdst)
 	local hostlist=$(echo $dst | sed 's/,/ /')
 
 	for host in $hostlist; do
@@ -67,25 +65,25 @@ ifconfigChk() {
 
 mwwatchdogRun() {
 	for PREFIX in $MWANTABLE; do
-		IFACE=$(NV "$PREFIX"_iface)
+		IFACE=$(NG "$PREFIX"_iface)
 		ISPPPD=$([ -f /tmp/ppp/pppd$PREFIX ] && echo 1 || echo 0)
-		WEIGHT=$(NV "$PREFIX"_weight)
-		METHOD=$(NV "$PREFIX"_ckmtd)
-		PROTO=$(NV "$PREFIX"_proto)
-		DEMAND=$(NV "$PREFIX"_ppp_demand)
+		WEIGHT=$(NG "$PREFIX"_weight)
+		METHOD=$(NG "$PREFIX"_ckmtd)
+		PROTO=$(NG "$PREFIX"_proto)
+		DEMAND=$(NG "$PREFIX"_ppp_demand)
 		RESULT=0
 		PREFIX_MWAN=$PREFIX
 		PREFIX_LOG="WAN"$(echo $PREFIX"0" | cut -c 4- | tr '[234]' '[123]' | cut -c -1)
 		STATE_FILE="/var/lib/misc/"$PREFIX"_state"
 		local ret_ifchk
 
-		[ "$(NV "$PREFIX"_ck_pause)" -eq 1 ] && {
+		[ "$(NG "$PREFIX"_ck_pause)" -eq 1 ] && {
 			$DEBUG "MWWatchdog paused for $PREFIX_LOG - skipping ..."
 			continue
 		}
 
 		[ "$PROTO" != "disabled" ] && {
-			[ "$(NV mwan_debug)" -gt 0 ] && {
+			[ "$(NG mwan_debug)" -gt 0 ] && {
 				ISUP=$(wanuptime "$PREFIX")
 				ISGW=$(ip route | grep $IFACE | grep -v link | wc -l)
 				$DEBUG "prefix=$PREFIX_LOG, iface=$IFACE, uptime=$ISUP, ISGW=$ISGW, WEIGHT=$WEIGHT"
@@ -106,7 +104,7 @@ mwwatchdogRun() {
 			}
 
 			DEFAULT_ROUTE_FRAGMENT=$(ip route | grep default | cut -d' ' -f2-)
-			GATEWAY_FRAGMENT="via $(NV "$PREFIX"_gateway)"
+			GATEWAY_FRAGMENT="via $(NG "$PREFIX"_gateway)"
 			[ "$ISPPPD" -eq 1 ] && GATEWAY_FRAGMENT=""
 			for IP in $IPLIST; do
 				[ ! -z "$DEFAULT_ROUTE_FRAGMENT" ] && {
@@ -150,7 +148,7 @@ mwwatchdogRun() {
 				} || {
 					[ "$PREFIX" == "wan" -a "$MWAN" -gt 1 ] && PREFIX_MWAN="wan1" # "wan" means restart all WANs, but we only want restart one
 
-					[ "$(NV action_service)" == "wan-restart" -o "$(NV action_service)" == $PREFIX_MWAN"-restart" -o "$(NV action_service)" == "wan-restart-c" -o "$(NV action_service)" == $PREFIX_MWAN"-restart-c" ] && {
+					[ "$(NG action_service)" == "wan-restart" -o "$(NG action_service)" == $PREFIX_MWAN"-restart" -o "$(NG action_service)" == "wan-restart-c" -o "$(NG action_service)" == $PREFIX_MWAN"-restart-c" ] && {
 						$LOGS "Connection $PREFIX_LOG DOWN - Reconnect is already in progress ..."
 					} || {
 						echo "0" > $STATE_FILE
@@ -185,7 +183,7 @@ mwwatchdogRun() {
 
 cktracert() {
 	local RXBYTES1 RXBYTES2 IP
-	local RXBYTES_MIN_DIFF=$(NV mwan_diff) # declare the minimum number of bytes indicating a working WAN
+	local RXBYTES_MIN_DIFF=$(NG mwan_diff) # declare the minimum number of bytes indicating a working WAN
 
 	for IP in $IPLIST; do
 		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null)
@@ -232,7 +230,7 @@ ckcurl() {
 # BBT-END
 
 mwwatchdogAdd() {
-	local CKTIME=$(NV mwan_cktime)
+	local CKTIME=$(NG mwan_cktime)
 	local MINS=$((CKTIME/60))
 
 	[ "$MINS" -gt 0 ] && {
@@ -323,7 +321,7 @@ elif [ "$1" == "del" ]; then
 	mwwatchdogDel
 elif [ "$1" == "alive" ]; then
 	mwanAlive
-elif [ "$(NV g_upgrade)" != "1" -a "$(NV g_reboot)" != "1" ]; then
+elif [ "$(NG g_upgrade)" != "1" -a "$(NG g_reboot)" != "1" ]; then
 	checkPid
 
 	checkPidSwitch

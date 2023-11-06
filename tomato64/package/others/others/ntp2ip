@@ -1,9 +1,13 @@
 #!/bin/sh
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+
+
+. nvram_ops
+
 #cleaning
 sed -i /tmp/etc/hosts  -e "/ntp2ip/d"
 
-for server in $(nvram get ntp_server); do
+for server in $(NG ntp_server); do
 	addresses=$(hostip $server)
 	for address in $addresses; do
 		echo "$address $server #ntp2ip" >> /tmp/etc/hosts

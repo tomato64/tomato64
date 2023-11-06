@@ -1,5 +1,9 @@
 #!/bin/sh
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+
+
+. nvram_ops
+
 PID=$$
 PIDFILE="/var/run/gencert.pid"
 WAITTIMER=0
@@ -12,10 +16,10 @@ touch $PIDFILE
 
 OPENSSL=/usr/sbin/openssl
 
-LANCN=$(nvram get https_crt_cn)
-LANIP=$(nvram get lan_ipaddr)
-LANHOSTNAME=$(nvram get lan_hostname)
-ROUTERNAME=$(nvram get router_name)
+LANCN=$(NG https_crt_cn)
+LANIP=$(NG lan_ipaddr)
+LANHOSTNAME=$(NG lan_hostname)
+ROUTERNAME=$(NG router_name)
 KEYNAME="key.pem"
 CERTNAME="cert.pem"
 OPENSSLCNF="/etc/openssl.config.$PID"
@@ -69,9 +73,9 @@ I=$(($I + 1))
 }
 
 [ "$(date +%s)" -gt 946684800 ] && {
-	nvram set https_crt_timeset=1
+	NS https_crt_timeset=1
 } || {
-	nvram set https_crt_timeset=0
+	NS https_crt_timeset=0
 }
 
 # create the key and certificate request

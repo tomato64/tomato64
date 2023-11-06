@@ -8,16 +8,18 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 
 
+. nvram_ops
+
 PREFIX="$1"
 
 PID=$$
-MODE=$(nvram get "$PREFIX"_proto)
-DEVNR=$(nvram get "$PREFIX"_modem_dev)
-MTYPE=$(nvram get "$PREFIX"_modem_type)
-WANIP=$(nvram get "$PREFIX"_gateway)
+MODE=$(NG "$PREFIX"_proto)
+DEVNR=$(NG "$PREFIX"_modem_dev)
+MTYPE=$(NG "$PREFIX"_modem_type)
+WANIP=$(NG "$PREFIX"_gateway)
 LOGS="logger -t wwansignal[$PID]"
 
-HILINK_IP=$(nvram get "$PREFIX"_hilink_ip)
+HILINK_IP=$(NG "$PREFIX"_hilink_ip)
 if ! [ -z "$HILINK_IP" ]  && [ "$HILINK_IP" != "0.0.0.0" ]; then
 	MODE=lte
 	MTYPE=hilink
@@ -35,7 +37,7 @@ fi
 signal3g() {
 	local CSQ RSSI i
 	local DIAGSFILE="/tmp/switch3g_$PREFIX.diags"
-	local SDEVNR=$(nvram get "$PREFIX"_modem_dev)
+	local SDEVNR=$(NG "$PREFIX"_modem_dev)
 
 	[ -z "$SDEVNR" ] && {
 		DEVALL=$(cat "$DIAGSFILE")
@@ -51,7 +53,7 @@ signal3g() {
 			break
 		}
 	done
-	nvram set "$PREFIX"_modem_dev="$i"
+	NS "$PREFIX"_modem_dev="$i"
 
 	CSQ=$(echo "$CSQ" | grep "CSQ:" | cut -d " " -f2 | cut -d "," -f1)
 	RSSI=$((-113+CSQ*2))
@@ -74,7 +76,7 @@ signal4g() {
 				break
 			}
 		done
-		nvram set "$PREFIX"_modem_dev="$i"
+		NS "$PREFIX"_modem_dev="$i"
 		DEVNR="$i"
 
 		SPEED=$(echo "$HCSQ" | cut -d "," -f1 | cut -d '"' -f2)

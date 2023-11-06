@@ -1,5 +1,9 @@
 #!/bin/sh
 # Adblock (a.k.a. DNS-filtering) FreshTomato GUI back-end
+
+
+. nvram_ops
+
 ver="v2.72b - 04/23" # rs232
 PID=$$
 pidfile="/var/run/adblock.pid"
@@ -8,18 +12,18 @@ pre=$(date +%s)
 alias only="sed -e 's/^[ \t]*//' | grep -Ev '^($|#|!)' | sort"
 
 hashblack() {
-	hb="=B+ $(nvram get adblock_blacklist | tr '>' '\n' | grep -E ^1 | cut -d/ -f3- | sort | cut -f1 -d'<') $(nvram get adblock_enable) $(nvram get adblock_path) $(nvram get adblock_limit) =BC+ $(nvram get adblock_blacklist_custom | only ) =BCF+"
-	for i in $(nvram get adblock_blacklist_custom | only | grep -E ^/ ); do hb="$hb $(cat ${i} | only )"; done
+	hb="=B+ $(NG adblock_blacklist | tr '>' '\n' | grep -E ^1 | cut -d/ -f3- | sort | cut -f1 -d'<') $(NG adblock_enable) $(NG adblock_path) $(NG adblock_limit) =BC+ $(NG adblock_blacklist_custom | only ) =BCF+"
+	for i in $(NG adblock_blacklist_custom | only | grep -E ^/ ); do hb="$hb $(cat ${i} | only )"; done
 	echo $hb | tr " " "\n" | grep -Ev '^($|#|!)'
 }
 
 hashwhite() {
-	hw="=W+ $(nvram get adblock_whitelist | only ) =WF+"
-	for i in $(nvram get adblock_whitelist | only | grep -E ^/ ); do hw="$hw $(cat ${i} | only)"; done
+	hw="=W+ $(NG adblock_whitelist | only ) =WF+"
+	for i in $(NG adblock_whitelist | only | grep -E ^/ ); do hw="$hw $(cat ${i} | only)"; done
 	echo $hw | tr " " "\n" | grep -Ev '^($|#|!)'
 }
 
-[ $(nvram get adblock_logs | wc -c) -gt 0 ] && { LOGL=$(nvram get adblock_logs); } || { LOGL=3; }
+[ $(NG adblock_logs | wc -c) -gt 0 ] && { LOGL=$(NG adblock_logs); } || { LOGL=3; }
 alias logo='logger -p NOTICE -t adblock[$PID]'
 [ $LOGL -ge 7 ] && alias logd='logger -p DEBUG -t adblock[$PID]' || alias logd=':'
 [ $LOGL -ge 6 ] && alias logi='logger -p INFO -t adblock[$PID]' || alias logi=':'
@@ -53,23 +57,23 @@ alias domain="sed 's/[#!].*//' | grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA
 alias notin="grep -Ev '^#.*|^!.*|^::|^\s*?$|^([a-f0-9:]+:+)+[a-f0-9]+'"
 alias number="sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'"
 hold=30
-[ $(nvram get adblock_path | wc -c) -gt 0 ] && {
-	nvram get adblock_path | grep -Eq '^/jffs' && logw "Custom path is pointing to JFFS, this is not ideal. Consider using alternative storages like USB/CIFS/etc."
-	DPATH="$(nvram get adblock_path | sed 's/\/$//')/adblock" ; mkdir -p "$DPATH"; } || DPATH="/etc"
+[ $(NG adblock_path | wc -c) -gt 0 ] && {
+	NG adblock_path | grep -Eq '^/jffs' && logw "Custom path is pointing to JFFS, this is not ideal. Consider using alternative storages like USB/CIFS/etc."
+	DPATH="$(NG adblock_path | sed 's/\/$//')/adblock" ; mkdir -p "$DPATH"; } || DPATH="/etc"
 
-sizeLimit=$(nvram get adblock_limit)
+sizeLimit=$(NG adblock_limit)
 setlimit() {
-	[ $(nvram get adblock_limit | wc -c ) -le 1 ] && {
-		nvram set adblock_limit=$(echo $(($(cat /proc/meminfo | grep MemTotal | awk '{print $2}') * $([ $DPATH == '/etc' ] && echo 650 || echo 1000) / 10)))
-		nvram commit
-		logi "The nvram adblock_limit variable is now reset to the default value of $(nvram get adblock_limit)"
+	[ $(NG adblock_limit | wc -c ) -le 1 ] && {
+		NS adblock_limit=$(echo $(($(cat /proc/meminfo | grep MemTotal | awk '{print $2}') * $([ $DPATH == '/etc' ] && echo 650 || echo 1000) / 10)))
+		NC
+		logi "The nvram adblock_limit variable is now reset to the default value of $(NG adblock_limit)"
 	}
-	sizeLimit=$(nvram get adblock_limit)
+	sizeLimit=$(NG adblock_limit)
 }
 
 PREFIX="/tmp/adblock" ; mkdir -p $PREFIX && cd $PREFIX
 [ $DPATH == '/etc' ] && D=$PREFIX || D=$DPATH
-ENABLE=$(nvram get adblock_enable)
+ENABLE=$(NG adblock_enable)
 FINAL="${DPATH}/dnsmasq.adblock";
 UNLOADED="${DPATH}/dnsmasq.adblock.unloaded"
 TM="$PREFIX/adblock.temp"
@@ -77,9 +81,9 @@ TM1="$PREFIX/adblock.temp1"
 CHK_FILE="/tmp/adblock.time"
 RTN=0
 alias rtn='[ $RTN -ne 255 ] && { echo $RTN ; return; }'
-BLACKLIST=$(nvram get adblock_blacklist)
-WHITELIST=$(nvram get adblock_whitelist | only )
-CUSTOM=$(nvram get adblock_blacklist_custom | only )
+BLACKLIST=$(NG adblock_blacklist)
+WHITELIST=$(NG adblock_whitelist | only )
+CUSTOM=$(NG adblock_blacklist_custom | only )
 TRIMPERC=5
 ADHELPER="/tmp/adblock.helper"; touch ${ADHELPER}
 ADHEAD="/tmp/adblock.headers"; touch ${ADHEAD}
@@ -95,7 +99,7 @@ yellow="\033[48;2;33m"
 latest=0
 current=$(echo $ver | cut -c-6)
 UURL="https://bitbucket.org/rs232-/freshtomato-arm/downloads/adblock.rs232"
-extra="$(nvram get adblock_path | sed 's/\/$//')/adblock.extra" ; [ -s "$extra" ] && { [ $(ls -l $extra | cut -c4,7,10) != "xxx" ] && { chmod +x $extra ;} ; . "$extra"; }
+extra="$(NG adblock_path | sed 's/\/$//')/adblock.extra" ; [ -s "$extra" ] && { [ $(ls -l $extra | cut -c4,7,10) != "xxx" ] && { chmod +x $extra ;} ; . "$extra"; }
 
 checkList() { # 0=fetch_local / 1=download / 2=issues / 3=duplicated
 	urinameh=$(echo "${4}".header)
@@ -392,24 +396,24 @@ download() {
 	subsed="freshtomato.org groov.pl linksysinfo.org"
 	# TTB
 	subsed="$subsed tomatothemebase.eu"
-	for i in $(nvram get "ttb_url" | tr " " "\n" | domain); do subsed="$subsed ${i}"; done
+	for i in $(NG "ttb_url" | tr " " "\n" | domain); do subsed="$subsed ${i}"; done
 
 	# OpenVPN/PPTP/Tinc
-	subsed="$subsed $(nvram get vpn_client1_addr | domain)"
-	subsed="$subsed $(nvram get vpn_client2_addr | domain)"
-	subsed="$subsed $(nvram get vpn_client3_addr | domain)"
-	subsed="$subsed $(nvram get pptp_client_srvip | domain)"
-	for i in $(nvram get tinc_hosts | tr "<>" "\n" | domain); do subsed="$subsed ${i}"; done
+	subsed="$subsed $(NG vpn_client1_addr | domain)"
+	subsed="$subsed $(NG vpn_client2_addr | domain)"
+	subsed="$subsed $(NG vpn_client3_addr | domain)"
+	subsed="$subsed $(NG pptp_client_srvip | domain)"
+	for i in $(NG tinc_hosts | tr "<>" "\n" | domain); do subsed="$subsed ${i}"; done
 
 	# NTP & Stubby
-	for i in $(nvram get ntp_server | tr " " "\n" | domain); do subsed="$subsed ${i}"; done
-	for i in $(nvram get stubby_resolvers | tr ">" "\n" | domain); do subsed="$subsed ${i}"; done
+	for i in $(NG ntp_server | tr " " "\n" | domain); do subsed="$subsed ${i}"; done
+	for i in $(NG stubby_resolvers | tr ">" "\n" | domain); do subsed="$subsed ${i}"; done
 
 	# DDNS and mwan test
-	[ $(nvram get ddnsx0 | grep -Eo "^[a-zA-Z0-9]*" || echo 0) == "custom" ] && subsed="$subsed $(nvram get ddnsx0 | domain)" || subsed="$subsed $(grep "\['"$(nvram get ddnsx0 | grep -Eo "^[a-zA-Z0-9]*")"'" /www/basic-ddns.asp 2>/dev/null | domain | head -1)"
-	[ $(nvram get ddnsx1 | grep -Eo "^[a-zA-Z0-9]*" || echo 0) == "custom" ] && subsed="$subsed $(nvram get ddnsx1 | domain)" || subsed="$subsed $(grep "\['"$(nvram get ddnsx1 | grep -Eo "^[a-zA-Z0-9]*")"'" /www/basic-ddns.asp 2>/dev/null | domain | head -1)"
-	[ $(nvram get ddnsx_ip) == "@" ] && subsed="$subsed checkip.dyndns.org dynamic.zoneedit.com ip1.dynupdate.no-ip.com myip.dnsomatic.com myip.pairnic.com ip.changeip.com"
-	for i in $(nvram get mwan_ckdst | tr "," "\n" | domain); do subsed="$subsed ${i}"; done
+	[ $(NG ddnsx0 | grep -Eo "^[a-zA-Z0-9]*" || echo 0) == "custom" ] && subsed="$subsed $(NG ddnsx0 | domain)" || subsed="$subsed $(grep "\['"$(NG ddnsx0 | grep -Eo "^[a-zA-Z0-9]*")"'" /www/basic-ddns.asp 2>/dev/null | domain | head -1)"
+	[ $(NG ddnsx1 | grep -Eo "^[a-zA-Z0-9]*" || echo 0) == "custom" ] && subsed="$subsed $(NG ddnsx1 | domain)" || subsed="$subsed $(grep "\['"$(NG ddnsx1 | grep -Eo "^[a-zA-Z0-9]*")"'" /www/basic-ddns.asp 2>/dev/null | domain | head -1)"
+	[ $(NG ddnsx_ip) == "@" ] && subsed="$subsed checkip.dyndns.org dynamic.zoneedit.com ip1.dynupdate.no-ip.com myip.dnsomatic.com myip.pairnic.com ip.changeip.com"
+	for i in $(NG mwan_ckdst | tr "," "\n" | domain); do subsed="$subsed ${i}"; done
 
 	# Whitelist domains from list providers defined
 	logi "Whitelisting domains defined in Blacklist URL"
@@ -545,7 +549,7 @@ safeDnsmasqRestart() {
 		# Case A = $FINAL syntax issue detected, log and exclude adblock until next reboot
 		[ -s $FINAL ] && {
 			dnsmasq --test -C $FINAL &>/tmp/adblock.dnsmasq.test && logi "No syntax errors found in $FINAL" || {
-				nvram set adblock_enable=0
+				NS adblock_enable=0
 				dnsrestart
 				loge "Syntax error found in $FINAL. Adblock has been temporarily excluded from /etc/dnsmasq.conf to prevent dnsmasq issues. More information on this error can be found in /tmp/adblock.dnsmasq.test"
 				erroradd
@@ -573,15 +577,15 @@ safeDnsmasqRestart() {
 			dnsrestart
 			[ $(countdownDnsmasq) -eq 1 ] && continue || {
 				sizeLimit=$(wc -c < $FINAL)
-				nvram set adblock_limit=${sizeLimit}
-				nvram commit
+				NS adblock_limit=${sizeLimit}
+				NC
 				logi "safeDnsmasqRestart() successfully trimmed down $FINAL from $(echo $SIZE|number) to $(wc -l < $FINAL|number) lines. Now it should work."
 				return 0
 			}
 		done
 		# Case D = Shit happens; like for Case A, log and exclude adblock as a whole
 		[ $(countdownDnsmasq) -eq 1 ] && { # this is run only if 10x trim is not good enough
-			nvram set adblock_enable=0
+			NS adblock_enable=0
 			dnsrestart
 			loge "safeDnsmasqRestart(). Something unexpected happened. Dnsmasq cannot run with adblock enabled. Adblock has been temporarily disabled."
 			erroradd
@@ -652,7 +656,7 @@ adExit() {
 # STARTS HERE --------------------------------------------------------------------------------
 
 # Skip execution (and stop adblock if running) if internal DNS is disabled
-[ $(nvram get dhcpd_dmdns) -eq 0 -a $ENABLE -eq 1 ] && {
+[ $(NG dhcpd_dmdns) -eq 0 -a $ENABLE -eq 1 ] && {
 	loge "Internal DNS is disabled! Adblock/DNS-filtering is enabled but cannot run. Exiting..."
 	echo "Internal DNS is disabled! Adblock/DNS-filtering is enabled but cannot run. Exiting..."
 	erroradd
@@ -756,7 +760,7 @@ Blockfile size/limit = <b>${filp}% ~ $(wc -c < $FINAL| number) / $(echo $max | n
 	[ -s $CHK_FILE -a -s $FINAL ] && { HOLD_LEFT=$(( $hold - ($(date +%s) - $(date -r "$FINAL" +%s)) /60 )) ; [ "$HOLD_LEFT" -le $hold -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $(cat ${CHK_FILE} | grep md5black | grep -Eo ^[a-zA-Z0-9]{32}) ] && echo -e "⏲️ ${hold}min hold-time is active. ${HOLD_LEFT}min left<br>" ;}
 	exit
 elif [ "$1" == "reset" ]; then
-	nvram unset adblock_limit
+	NU adblock_limit
 	setlimit
 	exit
 elif [ "$1" == "clear" -o "$1" == "clean" ]; then
@@ -861,12 +865,12 @@ elif [ "$1" == "stop" ]; then
 	adExit 1
 elif [ "$1" == "enable" ]; then
 	logo "️ Enabled Adblock/DNS-filtering..."
-	nvram set adblock_enable=1 ; nvram commit
+	NS adblock_enable=1 ; NC
 	echo -e "Adblock has been enabled (adblock set adblock_enable=1)"
 	exit
 elif [ "$1" == "disable" ]; then
 	logo "Disabled Adblock/DNS-filtering..."
-	nvram set adblock_enable=0 ; nvram commit
+	NS adblock_enable=0 ; NC
 	echo -e "Adblock has been disabled (adblock set adblock_enable=0)"
 	exit
 elif [ "$1" == "snapshot" ]; then

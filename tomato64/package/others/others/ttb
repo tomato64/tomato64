@@ -7,6 +7,9 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 # v3.02 Changed default URLs and added URL redundancy/randomisation  - rs232 06/2021
 #
 
+
+. nvram_ops
+
 PID=$$
 LOCK="/tmp/ttb.lock"
 DIR="/www/ext"
@@ -35,7 +38,7 @@ ttbdownload() {
 		rm $DIR/$file &>/dev/null
 	done
 	rm $DIR2/* &>/dev/null
-	echo $(nvram get ttb_url | tr ' ' '\n' | ttbshuf ) | tr ' ' '\n' | sed 's/\/$//' |
+	echo $(NG ttb_url | tr ' ' '\n' | ttbshuf ) | tr ' ' '\n' | sed 's/\/$//' |
 	while read l; do
 		$WGET -U "Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/88.0" -T 10 -t 1 $l/$TTB.zip -O $DIR2/$TTB.zip &>/dev/null && echo $l && break
 	done
@@ -67,30 +70,30 @@ ttbextract() {
 }
 
 # check if set to online
-[ ! "$(nvram get web_css)" == "online" ] && {
+[ ! "$(NG web_css)" == "online" ] && {
 	$LOGS "WARNING - The NVRAM variable [ web_css ] was not set to [ online ] - exiting"
 	exit 1
 }
 
-[ -z "$(nvram get ttb_url)" ] && {
+[ -z "$(NG ttb_url)" ] && {
 	URL="$URL_ORIG"
-	nvram set ttb_url="$URL_ORIG"
-	nvram commit
+	NS ttb_url="$URL_ORIG"
+	NC
 } || {
-	[ "$(nvram get ttb_url)" == "http://www.tomatothemebase.eu/wp-content/uploads" ] && nvram set ttb_url="$URL_ORIG"
-	URL=$(echo $(nvram get ttb_url) | sed 's/\/$//')
+	[ "$(NG ttb_url)" == "http://www.tomatothemebase.eu/wp-content/uploads" ] && NS ttb_url="$URL_ORIG"
+	URL=$(echo $(NG ttb_url) | sed 's/\/$//')
 }
 
 if [ -n "$2" ]; then
 	DIR2=$(echo $2 | sed 's/\/$//')
 	DIR2=$DIR2/$SUBDIR
-	nvram set ttb_loc="$2"
-	nvram commit
-elif [ ! -n "$(nvram get ttb_loc)" ]; then
+	NS ttb_loc="$2"
+	NC
+elif [ ! -n "$(NG ttb_loc)" ]; then
 	$LOGS "INFO - The NVRAM variable ttb_loc not set. I don't know where to save the theme will keep it in RAM"
 	DIR2="/tmp/$SUBDIR"
 else
-	DIR2=$(echo $(nvram get ttb_loc) | sed 's/\/$//')
+	DIR2=$(echo $(NG ttb_loc) | sed 's/\/$//')
 	DIR2=$DIR2/$SUBDIR
 fi
 
@@ -102,18 +105,18 @@ touch $LOCK
 		echo -e "\nNOTE: This is to be used for troubleshooting, always prefer the tomato GUI whenever possible.\n\n	TTB 3.02 - usage\n\nttb	<no parameter>		- execute TTB based on NVRAM settings\n	help			- Shows this info\n	list			- Display list of available themes, this uses a themes.txt from the defined URL.\n	<theme name>		- Download, sets the theme name and sets NVRAM variables\n	<theme name> <folder>	- Download, sets the theme name, stores locally and sets NVRAM variables\n\n"
 		ttbexit 0
 	elif [ $1 == "list" ]; then
-		echo $(nvram get ttb_url | tr ' ' '\n' | ttbshuf ) | tr ' ' '\n' | sed 's/\/$//' |
+		echo $(NG ttb_url | tr ' ' '\n' | ttbshuf ) | tr ' ' '\n' | sed 's/\/$//' |
 		while read l; do
 			( $WGET -U "Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/88.0" -T 6 -t 1 -q -O - $l/themes.txt | more ) && break
 		done
 		ttbexit 0
 	else
 		TTB=$1
-		nvram set ttb_css="$1"
-		nvram commit
+		NS ttb_css="$1"
+		NC
 	fi
 } || {
-	TTB=$(nvram get ttb_css)
+	TTB=$(NG ttb_css)
 	[ -z $TTB ] && {
 		$LOGS "ERROR - Using TTB but the ttb_css nvram variable meant to contain the theme name is empty - exiting"
 		ttbexit 1

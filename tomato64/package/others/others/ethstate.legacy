@@ -1,16 +1,20 @@
 #!/bin/sh
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+
+
+. nvram_ops
+
 [ -f /tmp/ethernet.state.tmp ] && rm /tmp/ethernet.state.tmp
 [ -f /tmp/ethernet.state1 ] && rm /tmp/ethernet.state1
 [ -f /tmp/ethernet.state2 ] && rm /tmp/ethernet.state2
 [ -f /tmp/ethernet.state3 ] && rm /tmp/ethernet.state3
 
-VWAN=$(nvram get wan_ifname)
+VWAN=$(NG wan_ifname)
 
-ROUTERNAME=$(nvram get t_fix1)
+ROUTERNAME=$(NG t_fix1)
 
-VPORTLAST=$(nvram get $VWAN'ports' | awk '{print $NF}' | sed 's/[^0-9]*//g')
-VPORT=$(nvram get $VWAN'ports' | awk '{print $1}' | sed 's/[^0-9]*//g')
+VPORTLAST=$(NG $VWAN'ports' | awk '{print $NF}' | sed 's/[^0-9]*//g')
+VPORT=$(NG $VWAN'ports' | awk '{print $1}' | sed 's/[^0-9]*//g')
 # BCMARM-BEGIN
 #check if there is a wan port
 [ "$VPORTLAST" == "$VPORT" ] && {
@@ -107,7 +111,7 @@ sed -i '/Port 7/d' /tmp/ethernet.state1
 sed -i '/Port 8/d' /tmp/ethernet.state1
 
 NUM="1"
-REVERT=$(nvram get lan_invert)
+REVERT=$(NG lan_invert)
 [ "$REVERT" -eq 1 ] && {
 	cat /tmp/ethernet.state1 | sort -r >> /tmp/ethernet.state2
 	exec 0< /tmp/ethernet.state2

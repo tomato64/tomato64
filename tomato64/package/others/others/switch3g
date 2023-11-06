@@ -8,13 +8,15 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 
 
+. nvram_ops
+
 PREFIX="$1"
 
 PID=$$
 PIDFILE="/var/run/switch3g_$PREFIX.pid"
 DIAGSFILE="/tmp/switch3g_$PREFIX.diags"
-MODE=$(nvram get "$PREFIX"_proto)
-DEVNR=$(nvram get "$PREFIX"_modem_dev)
+MODE=$(NG "$PREFIX"_proto)
+DEVNR=$(NG "$PREFIX"_modem_dev)
 LOGS="logger -t switch3g[$PID]"
 
 
@@ -46,7 +48,7 @@ switchMode() {
 			MODULE=$(cat $TTYS_PATH 2>/dev/null | grep ^DRIVER | cut -d "=" -f2 | head -n1)
 			findPath		# MODULE --> MPATH
 			echo "$VENDOR $PRODUCT" > $MPATH
-			nvram set "$PREFIX"_modem_type="$MODULE"
+			NS "$PREFIX"_modem_type="$MODULE"
 
 			$LOGS "3G MODEM ready ($VENDOR:$PRODUCT) - DIAG interface(s) found ("$TTYS") - using already loaded $MODULE module"
 
@@ -195,8 +197,8 @@ searchDiag() {
 	}
 
 	[ -z "$TTYS" ] && {
-		nvram set "$PREFIX"_modem_type=""
-		[ "$(nvram get mwan_cktime)" -gt 0 ] && {
+		NS "$PREFIX"_modem_type=""
+		[ "$(NG mwan_cktime)" -gt 0 ] && {
 			mwwatchdog add
 			wayOut "3G MODEM not found - mwwatchdog enabled"
 		} || {
@@ -207,7 +209,7 @@ searchDiag() {
 		[ "$ALREADYFOUND" -eq 0 ] && $LOGS "3G MODEM ready - DIAG interface(s) found ("$TTYS")"
 
 		echo $TTYS > $DIAGSFILE
-		nvram set "$PREFIX"_modem_type="$MODULE"
+		NS "$PREFIX"_modem_type="$MODULE"
 	}
 }
 
@@ -227,8 +229,8 @@ findPath() {
 }
 
 setPIN() {
-	local PIN=$(nvram get "$PREFIX"_modem_pin)
-	local IS_PIN=$(nvram get "$PREFIX"_modem_pin | wc -w)
+	local PIN=$(NG "$PREFIX"_modem_pin)
+	local IS_PIN=$(NG "$PREFIX"_modem_pin | wc -w)
 	local IS_DONE=0 PINVAL DEVALL i
 
 	[ "$IS_PIN" -eq 1 ] && {
