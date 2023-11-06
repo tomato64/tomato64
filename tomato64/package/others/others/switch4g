@@ -22,6 +22,7 @@ PATHDIAG="/sys/bus/usb/devices"
 PATHWAN="/sys/class/net"
 MODE=$(NG "$PREFIX"_proto)
 LOGS="logger -t switch4g[$PID]"
+COUNT_KILL=0 
 
 
 [ -z "$PREFIX" ] && {
@@ -214,7 +215,12 @@ connect() {
 
 		# try to clear previous autoconnect state
 		uqmiCall "--stop-network 0xffffffff --autoconnect"
+		uqmiCall "--set-ip-family ipv6 --stop-network 0xffffffff --autoconnect"
 
+		# go online
+		uqmiCall "--set-device-operating-mode online"
+
+		# set IP format
 		uqmiCall "--set-data-format 802.3"
 		uqmiCall "--wda-set-data-format 802.3"
 		DATAFORMAT=$(uqmiCall "--wda-get-data-format")
@@ -227,8 +233,10 @@ connect() {
 		}
 
 		uqmiCall "--sync"
+		uqmiCall "--network-register"
 
 		$LOGS "4G MODEM - waiting for network registration ..."
+		sleep 5
 
 		while [ $(echo "$(uqmiCall "--get-serving-system")" | grep searching | wc -l) -ne 0 ]; do
 			[ -e "$DEVNR" ] || wayOut "4G MODEM - DIAG interface not found!"
@@ -362,7 +370,7 @@ disconnect() {
 	if [ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ]; then
 		DEVALL="$DEVNR $(cat "$DIAGSFILE" | sed "s~"$DEVNR"~~")"
 
-		for j in $DEVALL; do	# on every interface
+		for j in $DEVALL; do # on every interface
 			MODE="AT^NDISDUP=1,0" gcom -d "$j" -s /etc/gcom/setmode.gcom
 			sleep 2
 		done
@@ -579,7 +587,7 @@ searchDiag() {
 
 			for TTY in $TTYS; do
 				DEVNR="/dev/$TTY"
-				uqmiCall "--get-capabilities" 2 # in background
+				uqmiCall "--get-capabilities -t 3000" 2 # in a background
 				sleep 2
 
 				UQMIPID=$(ps | grep [g]et-capabilities | awk '{print $1}')
@@ -663,11 +671,10 @@ modemReset() {
 
 setPIN() {
 	local PIN=$(NG "$PREFIX"_modem_pin)
-	local IS_PIN=$(NG "$PREFIX"_modem_pin | wc -w)
-	local IS_DONE=0 COUNT=1 TIMEOUT=30 PINVAL DEVALL i
+	local IS_DONE=0 COUNT=1 TIMEOUT=30 PINVAL DEVALL STATUS PIN_STATUS PIN_VERIFY_TRIES i
 
 	[ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ] && {
-		[ "$IS_PIN" -eq 1 ] && {
+		[ -n "$PIN" ] && {
 			DEVALL="$DEVNR $(cat "$DIAGSFILE" | sed "s~"$DEVNR"~~")"
 
 			# find working interface
@@ -692,8 +699,11 @@ setPIN() {
 	[ "$MTYPE" == "qmi_wwan" ] && {
 		$LOGS "4G MODEM - waiting for SIM initialization"
 
+		# timeout 3s for first call to avoid hanging uqmi
+		uqmiCall "--get-pin-status -t 3000"
+
 		while uqmiCall "--get-pin-status" | grep '"UIM uninitialized"'; do
-			[ -e "$DEVNR" ] || wayOut "4G MODEM - DIAG interface not found!"
+			[ -e "$DEVNR" ] || { wayOut "4G MODEM - DIAG interface not found!" ; }
 
 			[ "$COUNT" -lt "$TIMEOUT" ] && {
 				COUNT=$((COUNT+1))
@@ -703,15 +713,81 @@ setPIN() {
 			}
 		done
 
-		# verify pin (TODO: more complex)
-		[ "$IS_PIN" -eq 1 ] && {
-			[ "$($(uqmiCall "--get-pin-status") | cut -d "," -f1 | cut -d ":" -f2 | cut -d "\"" -f2)" != "disabled" ] && {
-				uqmiCall "--verify-pin1 $PIN" && IS_DONE=1
+		# check if UIM application is stuck in illegal state
+		COUNT=1
+		TIMEOUT=10
+		while true; do
+			STATUS=$(uqmiCall "--uim-get-sim-state" | cut -d "," -f2 | cut -d ":" -f2 | tr -d '"')
+
+			# SIM card is either completely absent or state is labeled as illegal
+			# try to power-cycle the SIM card to recover from this state
+			[ -z "$STATUS" -o "$STATUS" == "illegal" ] && {
+				$LOGS "4G MODEM - SIM in illegal state: Power-cycling SIM"
+
+				# try to reset SIM application
+				uqmiCall "--uim-power-off --uim-slot 1"
+				sleep 3
+				uqmiCall "--uim-power-on --uim-slot 1"
+
+				[ "$COUNT" -lt "$TIMEOUT" ] && {
+					COUNT=$((COUNT+1))
+					sleep 1
+					continue
+				}
+
+				# recovery failed
+				wayOut
+			} || {
+				break
 			}
-		}
+		done
+
+		# verify pin 
+		if uqmiCall "--uim-get-sim-state" | grep -q '"Not supported"\|"Invalid QMI command"' && uqmiCall "--get-pin-status" | grep -q '"Not supported"\|"Invalid QMI command"' ; then
+			[ -n "$PIN" ] && {
+				uqmiCall "--verify-pin1 $PIN" || uqmiCall "--uim-verify-pin1 $PIN" || { wayOut "4G MODEM - Unable to verify PIN!" ; }
+				IS_DONE=1
+			}
+		else
+			STATUS=$(uqmiCall "--get-pin-status")
+			PIN_STATUS=$(echo $STATUS | cut -d "," -f1 | cut -d ":" -f2 | tr -d '"')
+			PIN_VERIFY_TRIES=$(echo $STATUS | cut -d "," -f2 | cut -d ":" -f2)
+
+			[ -z "$PIN_STATUS" ] && {
+				STATUS=$(uqmiCall "--uim-get-sim-state")
+				PIN_STATUS=$(echo $STATUS | cut -d "," -f3 | cut -d ":" -f2 | tr -d '"')
+				PIN_VERIFY_TRIES=$(echo $STATUS | cut -d "," -f4 | cut -d ":" -f2)
+			}
+
+			case "$PIN_STATUS" in
+				disabled)
+					$LOGS "4G MODEM - PIN verification is disabled"
+					IS_DONE=1
+					;;
+				blocked)
+					wayOut "4G MODEM - SIM locked PUK required"
+					;;
+				not_verified)
+					[ "$PIN_VERIFY_TRIES" -lt "3" ] && { wayOut "4G MODEM - PIN verify count value is $PIN_VERIFY_TRIES this is below the limit of 3" ; }
+					[ -n "$PIN" ] && {
+						uqmiCall "--verify-pin1 $PIN" || uqmiCall "--uim-verify-pin1 $PIN" || { wayOut "4G MODEM - Unable to verify PIN" ; }
+						IS_DONE=1
+					} || {
+						wayOut "4G MODEM - PIN not specified but required"
+					}
+					;;
+				verified)
+					$LOGS "4G MODEM - PIN already verified"
+					IS_DONE=1
+					;;
+				*)
+					wayOut "4G MODEM - PIN status failed (${PIN_STATUS:-sim_not_present})"
+				;;
+			esac
+		fi
 	}
 
-	[ "$IS_PIN" -eq 1 -a "$IS_DONE" -ne 1 ] && {
+	[ -n "$PIN" -a "$IS_DONE" -ne 1 ] && {
 		mwwatchdog del
 		wayOut "4G MODEM - SIM locked: connection process terminated!"
 	} || {
@@ -751,12 +827,12 @@ checkPid() {
 uqmiCall() {
 	# for now, it's the only way to prevent uqmi hangups on two different calls at the same time and on the same device: https://forum.openwrt.org/viewtopic.php?id=63559
 	# OPTION: 1 - connect, 2 - background, no option - normal use
-	local COUNT=1 COMMAND="$1" OPTION="$2" UQMIPID=""
+	local COUNT=1 COMMAND="$1" OPTION="$2"
 	[ -z "$OPTION" ] && OPTION=0
 
-	# wait for another uqmi process to exit...
-	while [ "$COUNT" -lt 7 ]; do
-		[ "$(ps | grep [u]qmi | grep "$DEVNR" | wc -l)" -eq 0 ] && {
+	# wait for other uqmi process(es) to exit...
+	while [ "$COUNT" -lt 10 ]; do
+		[ "$(ps | grep [u]qmi | wc -l)" -eq 0 ] && {
 			if [ "$OPTION" -eq 1 ]; then
 				uqmi -s -d "$DEVNR" $COMMAND \
 					${APN:+--apn "$APN"} \
@@ -778,14 +854,28 @@ uqmiCall() {
 		sleep 1
 	done
 
-	# after 7 seconds, we're sure that this process hangs, so kill it!
-	UQMIPID=$(ps | grep [u]qmi | awk '{print $1}')
-	# hangs?
-	[ -n "$UQMIPID" ] && {
-		$LOGS "4G MODEM - found another uqmi process (PID: $UQMIPID), killing ..."
+	# after 10 seconds, kill process(es) (only one try per running script)
+	[ "$COUNT_KILL" -eq 0 ] && {
+		uqmiKill $COMMAND $OPTION
+	} || {
+		wayOut "4G MODEM - uqmi hangs again: exiting!"
+	}
+}
 
-		kill -9 $UQMIPID
-		sleep 2
+uqmiKill() {
+	local C="$1" O="$2" UQMIPID="" i
+
+	UQMIPID=$(ps | grep [u]qmi | awk '{print $1}')
+	[ -n "$UQMIPID" ] && {
+		for i in $UQMIPID; do
+			$LOGS "4G MODEM - found another uqmi process (PID: $i), killing ..."
+			kill -9 $UQMIPID
+			sleep 2
+		done
+
+		# try once again
+		COUNT_KILL=1
+		uqmiCall $C $O
 	}
 }
 
