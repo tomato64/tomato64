@@ -59,7 +59,7 @@ signal3g() {
 }
 
 signal4g() {
-	local HCSQ SPEED VALUE CERSSI LOCINFO MCC RSSI RSRP LAC CID SINR ECIO RSRQ CQI1 CQI2 BAND BBAND="" i
+	local HCSQ SPEED VALUE CERSSI LOCINFO MCC RSSI RSRP LAC CID SINR ECIO RSRQ CQI1 CQI2 BAND OPERATOR="" BBAND="" i
 	local DIAGSFILE="/tmp/switch4g_$PREFIX.diags"
 
 	if [ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ]; then
@@ -79,7 +79,7 @@ signal4g() {
 
 		SPEED=$(echo "$HCSQ" | cut -d "," -f1 | cut -d '"' -f2)
 
-		OPERATOR="$(MODE="AT+COPS?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom | grep "COPS" | tr -d '\r' | tr -d ' ' | cut -d ',' -f 3)"
+		OPERATOR="$(MODE="AT+COPS?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom | grep "COPS" | tr -d '\r' | tr -d ' ' | cut -d ',' -f 3 | tr -d '"')"
 		$LOGS "MODEM Current Operator: $OPERATOR"
 
 		case "$SPEED" in
@@ -181,7 +181,7 @@ signal4g() {
 		MCC=$(uqmiCall "--get-serving-system")
 		MCCMNC=$(echo "$MCC" | cut -d "," -f2 | cut -d ":" -f2)$(printf "%02d" $(echo "$MCC" | cut -d "," -f3 | cut -d ":" -f2))
 
-		OPERATOR=$(echo "$MCC" | cut -d "," -f4 | cut -d ":" -f2)
+		OPERATOR=$(echo "$MCC" | cut -d "," -f4 | cut -d ":" -f2 | tr -d '"')
 		$LOGS "MODEM Current Operator: $OPERATOR"
 
 		case "$SPEED" in
