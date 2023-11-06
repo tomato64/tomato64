@@ -78,10 +78,6 @@ fog.sortCompare = function(a, b) {
 	var r;
 
 	switch (col) {
-		case 2:
-		case 5:
-			r = cmpIP(da[col], db[col]);
-		break;
 		case 0:
 		case 1:
 		case 3:
