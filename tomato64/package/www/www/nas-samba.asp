@@ -289,7 +289,7 @@ function init() {
 				{suffix: '&nbsp; SMBv1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', name: '_smbd_protocol', id: '_smbd_proto_1', type: 'radio', value: nvram.smbd_protocol == 0 },
 				{suffix: '&nbsp; SMBv2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', name: '_smbd_protocol', id: '_smbd_proto_2', type: 'radio', value: nvram.smbd_protocol == 1 },
 				{suffix: '&nbsp; SMBv1 + SMBv2', name: '_smbd_protocol', id: '_smbd_proto_3', type: 'radio', value: nvram.smbd_protocol == 2 } ]},
-			{ title: 'Disable GRO', name: 'f_gro_disable', type: 'checkbox', value: nvram.gro_disable == 1, suffix: ' <small>default: GRO off (checked)<\/small>' },
+			{ title: 'Disable GRO', name: 'f_gro_disable', type: 'checkbox', value: nvram.gro_disable == 1 },
 			{ title: 'Workgroup Name', name: 'smbd_wgroup', type: 'text', maxlen: 15, size: 32, value: nvram.smbd_wgroup },
 			{ title: 'Client Codepage', name: 'smbd_cpage', type: 'select',
 				options: [['', 'Unspecified'],['437', '437 (United States, Canada)'],['850', '850 (Western Europe)'],['852', '852 (Central / Eastern Europe)'],['866', '866 (Cyrillic / Russian)']
