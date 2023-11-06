@@ -472,7 +472,7 @@ void wo_ovpn_genclientconfig(char *url)
 	            "nobind\n"
 	            "float\n"
 	            "verb 3\n"
-	            "status status\n"
+	            "; status status\n"
 	            "; log /var/log/openvpn.log\n");
 
 	fclose(fp);
