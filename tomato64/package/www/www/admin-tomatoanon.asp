@@ -80,8 +80,8 @@ function init() {
 		The following data is sent by TomatoAnon:<br>
 		- MD5SUM of WAN+LAN MAC addresses - this identifies the router, ex: 1c1dbd4202d794251ec1acf1211bb2c8<br>
 		- Router model, ex: Asus RT-AC3200<br>
-		- Tomato version installed, ex: 2019.3 K26ARM USB<br>
-		- Builtype, ex: AIO-64K<br>
+		- Tomato version installed, ex: 2019.3 K26ARM7 USB<br>
+		- Buildtype, ex: AIO-64K<br>
 		- Tomato MOD, ex: Tomato64<br>
 		- Uptime of your router, ex: 7 days
 	</div>
