@@ -2,5 +2,5 @@
 
 set -e
 
-growpart /dev/sda 2
-resize2fs /dev/sda2
+growpart /dev/sda 3
+resize2fs /dev/sda3

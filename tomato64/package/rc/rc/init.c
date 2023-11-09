@@ -11302,6 +11302,7 @@ static void sysinit(void)
 #ifdef TOMATO64
 	/* Mount filesystem rw */
 	eval("mount", "-o", "remount,rw", "/");
+	eval("mount", "-T", "/rom/etc/fstab.nvram", "-a");
 
 	/* Expand filesystem parition to fill disk */
 	if (!nvram_get_int("fs_expanded")) {
