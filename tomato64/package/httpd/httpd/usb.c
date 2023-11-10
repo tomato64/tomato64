@@ -157,6 +157,11 @@ void asp_usbdevices(int argc, char **argv)
 				host_no = atoi(p + 10);
 				if (host_no == last_hn)
 					continue;
+#ifdef TOMATO64
+				// Don't display the Tomato64 installation disk.
+				if (host_no == 0)
+					continue;
+#endif /* TOMATO64 */
 				last_hn = host_no;
 				if (fgets(line, sizeof(line), fp) != NULL) {
 					memset(g_usb_vendor, 0, sizeof(g_usb_vendor));
