@@ -1324,6 +1324,13 @@ void hotplug_usb(void)
 	char *device = getenv("DEVICENAME");
 	int is_block = strcmp(getenv("SUBSYSTEM") ? : "", "block") == 0;
 	char *scsi_host = getenv("SCSI_HOST");
+#ifdef TOMATO64
+	struct stat nas;
+
+	while (stat("/tmp/var/notice/nas", &nas) == -1){
+		sleep(1);
+	}
+#endif /* TOMATO64 */
 
 	logmsg(LOG_DEBUG, "*** %s: %s hotplug INTERFACE=%s ACTION=%s PRODUCT=%s HOST=%s DEVICE=%s\n", __FUNCTION__, getenv("SUBSYSTEM") ? : "USB", interface, action, product, scsi_host, device);
 

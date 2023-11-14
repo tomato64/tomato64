@@ -2920,6 +2920,9 @@ void start_services(void)
 #endif
 #ifdef TCONFIG_USB
 	restart_nas_services(1, 1); /* Samba, FTP and Media Server */
+#ifdef TOMATO64
+	notice_set("nas", "");
+#endif /* TOMATO64 */
 #endif
 #ifdef TCONFIG_SNMP
 	start_snmp();
