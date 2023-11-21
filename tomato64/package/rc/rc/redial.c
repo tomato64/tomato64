@@ -30,7 +30,11 @@
 #include "rc.h"
 
 #include <sys/ioctl.h>
+#ifdef TOMATO64
+#include <sys/wait.h>
+#else
 #include <wait.h>
+#endif /* TOMATO64 */
 
 
 /* used in keepalive mode (ppp_demand=0) */

@@ -31,6 +31,9 @@
 #include <arpa/inet.h>
 #include <sys/sysinfo.h>
 #include <time.h>
+#ifdef TOMATO64
+#include <sys/stat.h>
+#endif /* TOMATO64 */
 
 #include <bcmnvram.h>
 #include <utils.h>
