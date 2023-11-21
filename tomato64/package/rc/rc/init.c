@@ -11659,6 +11659,9 @@ int init_main(int argc, char *argv[])
 			run_nvscript("script_init", NULL, 2);
 
 			file_unlock(fd); /* allow to process usb hotplug events */
+#ifdef TOMATO64
+			notice_set("usb", "");
+#endif /* TOMATO64 */
 #ifdef TCONFIG_USB
 			/*
 			 * On RESTART some partitions can stay mounted if they are busy at the moment.

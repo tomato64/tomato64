@@ -1336,6 +1336,11 @@ void hotplug_usb(void)
 	if (!action || ((!interface || !product) && !is_block))
 		return;
 
+#ifdef TOMATO64
+	while (access("/tmp/var/notice/usb", F_OK) == -1)
+		usleep(10000);
+#endif /* TOMATO64 */
+
 	if (scsi_host)
 		host = atoi(scsi_host);
 
