@@ -45,7 +45,7 @@ connect() {
 	local SPEEDTXT ROAMTXT BANDTXT RESSPEED RSPEEDTXT RESROAM RROAMTXT RESBAND RBANDTXT
 
 	[ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" -o "$MTYPE" == "qmi_wwan" ] && {
-		[ -e "$DEVNR" ] || wayOut "4G MODEM - DIAG interface not found: connection terminated!"
+		[ -n "$DEVNR" ] || wayOut "4G MODEM - DIAG interface not found: connection terminated!"
 	}
 
 	$LOGS "4G MODEM - connecting ..."
@@ -239,7 +239,7 @@ connect() {
 		sleep 5
 
 		while [ $(echo "$(uqmiCall "--get-serving-system")" | grep searching | wc -l) -ne 0 ]; do
-			[ -e "$DEVNR" ] || wayOut "4G MODEM - DIAG interface not found!"
+			[ -n "$DEVNR" ] || wayOut "4G MODEM - DIAG interface not found!"
 			[ "$TIMECOUNT" -lt "$TIMEOUT" ] && {
 				TIMECOUNT=$((TIMECOUNT+1))
 				sleep 1
@@ -671,39 +671,59 @@ modemReset() {
 
 setPIN() {
 	local PIN=$(NG "$PREFIX"_modem_pin)
-	local IS_DONE=0 COUNT=1 TIMEOUT=30 PINVAL DEVALL STATUS PIN_STATUS PIN_VERIFY_TRIES i
+	local IS_DONE=0 COUNT=1 TIMEOUT=30 PINVAL DEVALL STATUS PIN_STATUS PIN_VERIFY_TRIES PIN_EXT_STATUS=0
+
+	$LOGS "4G MODEM - waiting for SIM initialization"
+
+	[ -n "$DEVNR" ] || { wayOut "4G MODEM - DIAG interface not found!" ; }
 
 	[ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ] && {
-		[ -n "$PIN" ] && {
-			DEVALL="$DEVNR $(cat "$DIAGSFILE" | sed "s~"$DEVNR"~~")"
+		STATUS=$(MODE="AT^CPIN?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom) # extended PIN status (ie. Huawei modems)
 
-			# find working interface
-			for i in $DEVALL; do
-				[ -z $(MODE="ATI" gcom -d "$i" -s /etc/gcom/setverbose.gcom | grep "OK" | tr -d '\r') ] && {
-					sleep 2
-					continue
-				}
+		[ "$(echo "$STATUS" | grep ERROR | wc -l)" -gt "0" ] && {
+			STATUS=$(MODE="AT+CPIN?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom) # normal PIN status
 
-				PINVAL=$(PINCODE="$PIN" gcom -d "$i" -s /etc/gcom/setpin.gcom)
-				[ "$(echo "$PINVAL" | grep successfully | wc -l)" -eq 1 ] && {
-					NS "$PREFIX"_modem_dev="$i"
-					IS_DONE=1
-					$LOGS "4G MODEM - PIN successfully verified"
-				}
-				# try only once on working interface (do not lock the sim)
-				break
-			done
+			[ "$(echo "$STATUS" | grep ERROR | wc -l)" -gt "0" ] && {
+				[ -n "$PIN" ] && { wayOut "4G MODEM - Error reading SIM status!" ; }
+			}
+			PIN_STATUS=$(echo "$STATUS" | grep CPIN | cut -d ":" -f2 | awk '{$1=$1};1')
+		} || {
+			PIN_EXT_STATUS=1
+			PIN_STATUS=$(echo "$STATUS" | grep CPIN | cut -d ":" -f2 | awk '{$1=$1};1' | cut -d "," -f1)
+			PIN_VERIFY_TRIES=$(echo "$STATUS" | grep CPIN | cut -d "," -f4)
 		}
+
+		# verify pin
+		case "$PIN_STATUS" in
+			"READY")
+				$LOGS "4G MODEM - PIN verification is not required"
+				IS_DONE=1
+				;;
+			"SIM PUK")
+				wayOut "4G MODEM - SIM locked PUK required"
+				;;
+			"SIM PIN")
+				[ "$PIN_EXT_STATUS" -eq "1" -a "$PIN_VERIFY_TRIES" -lt "3" ] && { wayOut "4G MODEM - PIN verify count value is $PIN_VERIFY_TRIES this is below the limit of 3" ; }
+				[ -n "$PIN" ] && {
+					PINVAL=$(PINCODE="$PIN" gcom -d "$DENVR" -s /etc/gcom/setpin.gcom)
+					[ "$(echo "$PINVAL" | grep successfully | wc -l)" -eq 1 ] || { wayOut "4G MODEM - Unable to verify PIN" ; }
+					IS_DONE=1
+				} || {
+					wayOut "4G MODEM - PIN not specified but required"
+				}
+				;;
+			*)
+				wayOut "4G MODEM - PIN status failed (${PIN_STATUS:-sim_not_present})"
+			;;
+		esac
 	}
 
 	[ "$MTYPE" == "qmi_wwan" ] && {
-		$LOGS "4G MODEM - waiting for SIM initialization"
-
 		# timeout 3s for first call to avoid hanging uqmi
 		uqmiCall "--get-pin-status -t 3000"
 
 		while uqmiCall "--get-pin-status" | grep '"UIM uninitialized"'; do
-			[ -e "$DEVNR" ] || { wayOut "4G MODEM - DIAG interface not found!" ; }
+			[ -n "$DEVNR" ] || { wayOut "4G MODEM - DIAG interface not found!" ; }
 
 			[ "$COUNT" -lt "$TIMEOUT" ] && {
 				COUNT=$((COUNT+1))
@@ -736,13 +756,13 @@ setPIN() {
 				}
 
 				# recovery failed
-				wayOut
+				wayOut "4G MODEM - SIM recovery failed!"
 			} || {
 				break
 			}
 		done
 
-		# verify pin 
+		# verify pin
 		if uqmiCall "--uim-get-sim-state" | grep -q '"Not supported"\|"Invalid QMI command"' && uqmiCall "--get-pin-status" | grep -q '"Not supported"\|"Invalid QMI command"' ; then
 			[ -n "$PIN" ] && {
 				uqmiCall "--verify-pin1 $PIN" || uqmiCall "--uim-verify-pin1 $PIN" || { wayOut "4G MODEM - Unable to verify PIN!" ; }
@@ -750,13 +770,13 @@ setPIN() {
 			}
 		else
 			STATUS=$(uqmiCall "--get-pin-status")
-			PIN_STATUS=$(echo $STATUS | cut -d "," -f1 | cut -d ":" -f2 | tr -d '"')
-			PIN_VERIFY_TRIES=$(echo $STATUS | cut -d "," -f2 | cut -d ":" -f2)
+			PIN_STATUS=$(echo "$STATUS" | cut -d "," -f1 | cut -d ":" -f2 | tr -d '"')
+			PIN_VERIFY_TRIES=$(echo "$STATUS" | cut -d "," -f2 | cut -d ":" -f2)
 
 			[ -z "$PIN_STATUS" ] && {
 				STATUS=$(uqmiCall "--uim-get-sim-state")
-				PIN_STATUS=$(echo $STATUS | cut -d "," -f3 | cut -d ":" -f2 | tr -d '"')
-				PIN_VERIFY_TRIES=$(echo $STATUS | cut -d "," -f4 | cut -d ":" -f2)
+				PIN_STATUS=$(echo "$STATUS" | cut -d "," -f3 | cut -d ":" -f2 | tr -d '"')
+				PIN_VERIFY_TRIES=$(echo "$STATUS" | cut -d "," -f4 | cut -d ":" -f2)
 			}
 
 			case "$PIN_STATUS" in
@@ -787,7 +807,7 @@ setPIN() {
 		fi
 	}
 
-	[ -n "$PIN" -a "$IS_DONE" -ne 1 ] && {
+	[ "$IS_DONE" -ne 1 ] && {
 		mwwatchdog del
 		wayOut "4G MODEM - SIM locked: connection process terminated!"
 	} || {
