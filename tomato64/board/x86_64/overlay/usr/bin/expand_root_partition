@@ -2,5 +2,17 @@
 
 set -e
 
-growpart /dev/sda 3
-resize2fs /dev/sda3
+root=$(rdev | awk '{print $1}')
+
+if [[ ${root:5:2} == "sd" ]]; then
+        root1=${root:0:8}
+        root2=${root:8:1}
+fi
+
+if [[ ${root:5:4} == "nvme" ]]; then
+        root1=${root:0:12}
+        root2=${root:13:1}
+fi
+
+growpart $root1 $root2
+resize2fs $root
