@@ -3,5 +3,7 @@ alias NG="nvram get"
 alias NS="nvram set"
 alias NU="nvram unset"
 alias NC="nvram commit"
+# NE (nvram existence): NE returns 1 if the variable exists (a.k.a. defined irrelevant of the content) and 0 otherwise
 alias NE='_vrb(){ nvram show 2>/dev/null | grep -Eq "^${1}=" && echo "1" || echo "0"; }; _vrb'
+# NP (nvram populated): NP returns 1 if the variable is defined and not null, otherwise 0
 alias NP='_vrb(){ [ $(nvram get "${1}" 2>/dev/null | wc -c) -gt "0" ] && echo "1" || echo "0";}; _vrb'
