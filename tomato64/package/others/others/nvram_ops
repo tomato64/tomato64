@@ -3,3 +3,5 @@ alias NG="nvram get"
 alias NS="nvram set"
 alias NU="nvram unset"
 alias NC="nvram commit"
+alias NE='_vrb(){ nvram show 2>/dev/null | grep -Eq "^${1}=" && echo "1" || echo "0"; }; _vrb'
+alias NP='_vrb(){ [ $(nvram get "${1}" 2>/dev/null | wc -c) -gt "0" ] && echo "1" || echo "0";}; _vrb'
