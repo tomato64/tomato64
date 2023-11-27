@@ -95,14 +95,17 @@ stats.wanlease = ['<% dhcpc_time("wan"); %>','<% dhcpc_time("wan2"); %>','<% dhc
 stats.dns = [<% dns("wan"); %>,<% dns("wan2"); %>,<% dns("wan3"); %>,<% dns("wan4"); %>];
 /* MULTIWAN-END */
 
+/* check for stubby/dnscrypt_proxy */
 var dns = [];
 if (nvram.dnscrypt_proxy == 1 || nvram.stubby_proxy == 1) {
 	for (i = 0; i < stats.dns.length; ++i) {
-		dns[i] = '<a href="advanced-dhcpdns.asp">Using '+(nvram.dnscrypt_proxy == 1 ? 'dnscrypt-proxy' : 'Stubby')+' resolvers</a>';
-		if (((nvram.dnscrypt_proxy == 1 && nvram.dnscrypt_priority != 2) || (nvram.stubby_proxy == 1 && nvram.stubby_priority != 2)) && stats.dns[i] > '')
-			stats.dns[i] = dns[i]+' and: '+stats.dns[i];
+		dns[i] = '<a href="advanced-dhcpdns.asp">'+(nvram.dnscrypt_proxy == 1 ? 'dnscrypt-proxy' : 'Stubby')+'</a>';
+		if ((nvram.dnscrypt_proxy == 1 && nvram.dnscrypt_priority == 2) || (nvram.stubby_proxy == 1 && nvram.stubby_priority == 2)) /* no-resolv */
+			stats.dns[i] = 'Only: '+dns[i];
+		else if ((nvram.dnscrypt_proxy == 1 && nvram.dnscrypt_priority == 1) || (nvram.stubby_proxy == 1 && nvram.stubby_priority == 1)) /* strict-order */
+			stats.dns[i] = 'In order of (failover) preference: '+dns[i]+(stats.dns[i] > '' ? ','+stats.dns[i] : '');
 		else
-			stats.dns[i] = dns[i];
+			stats.dns[i] = 'Use all: '+dns[i]+(stats.dns[i] > '' ? ','+stats.dns[i] : '');
 	}
 }
 
