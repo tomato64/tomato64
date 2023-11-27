@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-COMGT_TOMATO_VERSION = 2dc25f00dd1af7e790f587e2e123ac61d64ebf71
+COMGT_TOMATO_VERSION = dcf6c541506d4aa4e07b5cb3d6cc86e1d828d2f5
 COMGT_TOMATO_SITE = $(call github,tomato64,comgt,$(COMGT_TOMATO_VERSION))
 COMGT_TOMATO_LICENSE = GPL-2.0+
 

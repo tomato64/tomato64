@@ -671,21 +671,28 @@ modemReset() {
 
 setPIN() {
 	local PIN=$(NG "$PREFIX"_modem_pin)
-	local IS_DONE=0 COUNT=1 TIMEOUT=30 PINVAL DEVALL STATUS PIN_STATUS PIN_VERIFY_TRIES PIN_EXT_STATUS=0
+	local IS_DONE=0 COUNT=1 TIMEOUT PINVAL DEVALL STATUS PIN_STATUS PIN_VERIFY_TRIES PIN_EXT_STATUS=0
 
 	$LOGS "4G MODEM - waiting for SIM initialization"
 
 	[ -n "$DEVNR" ] || { wayOut "4G MODEM - DIAG interface not found!" ; }
 
 	[ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ] && {
+		MODE="AT+CFUN=1" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom # set as online mode (default value)
 		STATUS=$(MODE="AT^CPIN?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom) # extended PIN status (ie. Huawei modems)
+		[ "$(echo "$STATUS" | grep ERR)" ] && { # error?
+			COUNT=1
+			while [ "$COUNT" -lt 4 ]; do # try 3 times
+				MODE="AT+CFUN=1" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom # set as online mode (default value)
+				STATUS=$(MODE="AT+CPIN?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom) # std PIN status
+				[ "$(echo "$STATUS" | grep ERR)" ] && {
+					COUNT=$((COUNT+1))
+					sleep 1
+				} || {
+					[ -n "$PIN" ] && { wayOut "4G MODEM - Error reading SIM status!"; }
+				}
+			done
 
-		[ "$(echo "$STATUS" | grep ERROR | wc -l)" -gt "0" ] && {
-			STATUS=$(MODE="AT+CPIN?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom) # normal PIN status
-
-			[ "$(echo "$STATUS" | grep ERROR | wc -l)" -gt "0" ] && {
-				[ -n "$PIN" ] && { wayOut "4G MODEM - Error reading SIM status!" ; }
-			}
 			PIN_STATUS=$(echo "$STATUS" | grep CPIN | cut -d ":" -f2 | awk '{$1=$1};1')
 		} || {
 			PIN_EXT_STATUS=1
@@ -702,11 +709,11 @@ setPIN() {
 			"SIM PUK")
 				wayOut "4G MODEM - SIM locked PUK required"
 				;;
-			"SIM PIN")
+			"SIM PIN" | "SIM PIN2")
 				[ "$PIN_EXT_STATUS" -eq "1" -a "$PIN_VERIFY_TRIES" -lt "3" ] && { wayOut "4G MODEM - PIN verify count value is $PIN_VERIFY_TRIES this is below the limit of 3" ; }
 				[ -n "$PIN" ] && {
-					PINVAL=$(PINCODE="$PIN" gcom -d "$DENVR" -s /etc/gcom/setpin.gcom)
-					[ "$(echo "$PINVAL" | grep successfully | wc -l)" -eq 1 ] || { wayOut "4G MODEM - Unable to verify PIN" ; }
+					PINVAL=$(MODE="AT+CPIN=\"$PIN\"" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom)
+					[ "$(echo "$PINVAL" | grep ERR)" ] && { wayOut "4G MODEM - Unable to verify PIN" ; }
 					IS_DONE=1
 				} || {
 					wayOut "4G MODEM - PIN not specified but required"
@@ -725,7 +732,7 @@ setPIN() {
 		while uqmiCall "--get-pin-status" | grep '"UIM uninitialized"'; do
 			[ -n "$DEVNR" ] || { wayOut "4G MODEM - DIAG interface not found!" ; }
 
-			[ "$COUNT" -lt "$TIMEOUT" ] && {
+			[ "$COUNT" -lt 30 ] && {
 				COUNT=$((COUNT+1))
 				sleep 1
 			} || {
@@ -735,7 +742,6 @@ setPIN() {
 
 		# check if UIM application is stuck in illegal state
 		COUNT=1
-		TIMEOUT=10
 		while true; do
 			STATUS=$(uqmiCall "--uim-get-sim-state" | cut -d "," -f2 | cut -d ":" -f2 | tr -d '"')
 
@@ -749,7 +755,7 @@ setPIN() {
 				sleep 3
 				uqmiCall "--uim-power-on --uim-slot 1"
 
-				[ "$COUNT" -lt "$TIMEOUT" ] && {
+				[ "$COUNT" -lt 10 ] && {
 					COUNT=$((COUNT+1))
 					sleep 1
 					continue
