@@ -49,6 +49,10 @@ ln -sf iperf3 $TARGET_DIR/usr/bin/iperf
 # ntfs symlink
 ln -sf mount.ntfs-3g $TARGET_DIR/sbin/mount.ntfs3
 
+# symlinks for wireguard
+ln -sf /usr/bin/wg $TARGET_DIR/usr/sbin/wg
+ln -sf /sbin/ip $TARGET_DIR/usr/sbin/ip
+
 # To make buildroot genimage happy
 touch $TARGET_DIR/tmp/etc/group
 touch $TARGET_DIR/tmp/etc/passwd

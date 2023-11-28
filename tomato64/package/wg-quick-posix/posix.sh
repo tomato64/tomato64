@@ -518,7 +518,7 @@ add_route() {
       # uncomment to enable adding default route
       #*:*/0)
       #  add_default "${1}"
-        ;;
+#        ;;
       *)
         [ -n "$(ip "${proto}" route show dev "${INTERFACE}" match "${1}" 2>/dev/null)" ] ||
           cmd ip "${proto}" route add "${1}" dev "${INTERFACE}"
