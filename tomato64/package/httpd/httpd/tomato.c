@@ -521,8 +521,11 @@ static const nvset_t nvset_list[] = {
 	{ "wl_key4",			V_LENGTH(0, 26)			},
 	{ "wl_crypto",			V_LENGTH(3, 8)			},	/* tkip, aes, tkip+aes */
 	{ "wl_wpa_psk",			V_LENGTH(8, 64)			},
-	{ "wl_wpa_gtk_rekey",		V_RANGE(60, 7200)		},
-
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+	{ "wl_wpa_gtk_rekey",		V_RANGE(0, 2592000)		},	/* 0 - disabled; range 1 sec up to 30 days (2592000 sec) */
+#else
+	{ "wl_wpa_gtk_rekey",		V_RANGE(60, 7200)		},	/* keep good old range for K26 (SDK5.10) */
+#endif
 	{ "wl_lazywds",			V_01				},
 	{ "wl_wds",			V_LENGTH(0, 180)		},	/* mac mac mac (x 10) */
 

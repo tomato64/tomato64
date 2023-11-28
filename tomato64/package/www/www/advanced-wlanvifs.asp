@@ -952,7 +952,7 @@ REMOVE-END */
 		}
 
 		/* range */
-		a = [['_wpa_gtk_rekey', 60, 7200], ['_radius_port', 1, 65535]];
+		a = [['_wpa_gtk_rekey', 0, 2592000], ['_radius_port', 1, 65535]];
 		for (i = a.length - 1; i >= 0; --i) {
 			v = a[i];
 			if ((wl_vis[vidx]['_wl'+v[0]]) && (!v_range('_wl'+u+v[0], quiet || !ok, v[1], v[2])))
@@ -1559,7 +1559,7 @@ function init() {
 					{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_wpa_psk', type: 'password', maxlen: 64, size: 66, peekaboo: 1,
 						suffix: ' <input type="button" id="_f_wl'+u+'_psk_random1" value="Random" onclick="random_psk(\'_wl'+u+'_wpa_psk\')">', value: eval('nvram["wl'+u+'_wpa_psk"]') },
 					{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_radius_key', type: 'password', maxlen: 80, size: 32, peekaboo: 1, suffix: ' <input type="button" id="_f_wl'+u+'_psk_random2" value="Random" onclick="random_psk(\'_wl'+u+'_radius_key\')">', value: eval('nvram["wl'+u+'_radius_key"]') },
-					{ title: 'Group Key Renewal', indent: 2, name: 'wl'+u+'_wpa_gtk_rekey', type: 'text', maxlen: 4, size: 6, suffix: '&nbsp; <small>seconds<\/small>', value: eval('nvram["wl'+u+'_wpa_gtk_rekey"]') || '3600' },
+					{ title: 'Group Key Renewal', indent: 2, name: 'wl'+u+'_wpa_gtk_rekey', type: 'text', maxlen: 7, size: 9, suffix: '&nbsp; <small>seconds<\/small>', value: eval('nvram["wl'+u+'_wpa_gtk_rekey"]') || '3600' },
 					{ title: 'Radius Server', indent: 2, multi: [
 						{ name: 'wl'+u+'_radius_ipaddr', type: 'text', maxlen: 15, size: 17, value: eval('nvram["wl'+u+'_radius_ipaddr"]') },
 						{ name: 'wl'+u+'_radius_port', type: 'text', maxlen: 5, size: 7, prefix: ' : ', value: eval('nvram["wl'+u+'_radius_port"]') || '1812' } ] },
