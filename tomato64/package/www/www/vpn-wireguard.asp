@@ -159,7 +159,8 @@ form.submit = function(fom, async, url) {
 				msg.innerHTML = escapeHTML(RegExp.$1);
 			else
 				msg.innerHTML = 'Saved';
-				update_nvram(fom);
+
+			update_nvram(fom);
 		}
 		setTimeout(
 			function() {
@@ -264,20 +265,19 @@ function tabSelect(name) {
 
 	tabHigh(name);
 
-	for (var i = 0; i < tabs.length; ++i)
+	for (var i = 0; i < tabs.length; ++i) {
 		if (name == tabs[i][0]) {
 			elem.display(tabs[i][0]+'-tab', true);
 			for (var j = 0; j < sections.length; ++j) {
-				if (E(tabs[i][0]+'-'+sections[j][0]+'-tab').classList.contains("active"))
+				if (E(tabs[i][0]+'-'+sections[j][0]+'-tab').classList.contains('active'))
 					elem.display('notes-'+sections[j][0], true);
 				else
 					elem.display('notes-'+sections[j][0], false);
 			}
 		}
-		else {
+		else
 			elem.display(tabs[i][0]+'-tab', false);
-		}
-	
+	}
 
 	cookie.set('wg_tab', name);
 }
@@ -328,7 +328,6 @@ function loadConfig(unit) {
 }
 
 function mapConfigToFields(event) {
-
 	var config = mapConfig(event.target.result);
 	var unit = event.target.unit;
 
@@ -373,9 +372,7 @@ function mapConfigToFields(event) {
 	}
 
 	for (var i = 0; i < config.peers.length; ++i) {
-
 		var peer = config.peers[i];
-
 		var [ip, allowed_ips] = peer.allowed_ips.split(',', 2);
 
 		ip = ip.trim().split('/')[0] + '/32';
@@ -392,13 +389,11 @@ function mapConfigToFields(event) {
 		];
 
 		peerTables[unit].insertData(-1, data)
-
 	}
 
 	verifyFields();
 
 	alert('Wireguard configuration imported successfully');
-
 }
 
 function clearAllFields(unit) {
@@ -427,7 +422,6 @@ function clearAllFields(unit) {
 }
 
 function validateConfig(config) {
-	
 	if (!config.interface.privkey) {
 		alert('The interface requires a PrivateKey');
 		return false;
@@ -439,7 +433,6 @@ function validateConfig(config) {
 	}
 
 	for (var i = 0; i < config.peers.length; ++i) {
-
 		var peer = config.peers[i];
 
 		if (!peer.pubkey) {
@@ -451,7 +444,6 @@ function validateConfig(config) {
 			alert('Every peer requires AllowedIPs');
 			return false;
 		}
-
 	}
 
 	return true;
@@ -466,7 +458,6 @@ function mapConfig(contents) {
 
 	var target;
 	for (var i = 0; i < lines.length; ++i) {
-
 		var line = lines[i].trim();
 
 		var comment_index = line.indexOf('#');
@@ -569,7 +560,6 @@ function mapConfig(contents) {
 				target.keepalive = value;
 				break;
 		} 
-
 	}
 
 	return config;
@@ -687,6 +677,7 @@ StatusRefresh.prototype.updateUI = function(mode) {
 
 		if ((e = E('wg'+this.unit+'_status_refresh_time')) != null)
 			((!b) ? e.removeAttribute('disabled') : e.setAttribute('disabled', 'disabled'));
+
 		if ((e = E('wg'+this.unit+'_status_refresh_spinner')) != null)
 			e.style.display = (b ? 'inline-block' : 'none');
 	}
@@ -767,7 +758,6 @@ PeerGrid.prototype.setup = function() {
 		];
 		this.insertData(-1, data);
 	}
-
 }
 
 PeerGrid.prototype.edit = function(cell) {
@@ -820,6 +810,7 @@ PeerGrid.prototype.insertData = function(at, data) {
 		cfg = '<img src="cfg-icon.svg" alt="" title="Download Config File" height="16px" onclick="genPeerGridConfigFile(event,'+this.unit+','+at+')">';
 	}
 	view.unshift(qr, cfg);
+
 	return this.insert(at, data, view, false);
 }
 
@@ -833,18 +824,14 @@ PeerGrid.prototype.rowDel = function(e) {
 }
 
 PeerGrid.prototype.rpDel = function(e) {
-
 	e = PR(e);
 	var qrcode = E('wg'+this.unit+'_qrcode');
 	if (qrcode.style.display != 'none') {
-
 		var qr_row_id = qrcode.getAttribute('row_id');
 
 		if (qr_row_id == e.rowIndex)
 			elem.display('wg'+this.unit+'_qrcode', false);
-
 		else {
-
 			if (qr_row_id > e.rowIndex) {
 				qr_row_id = qr_row_id - 1;
 				qrcode.setAttribute('row_id', qr_row_id)
@@ -856,7 +843,6 @@ PeerGrid.prototype.rpDel = function(e) {
 		
 	}
 	this.rowDel(e);
-
 }
 
 PeerGrid.prototype.getAllData = function() {
@@ -944,6 +930,7 @@ function decodePeers(unit) {
 
 		}
 	}
+
 	return peers;
 }
 
@@ -1041,11 +1028,9 @@ function verifyPeerFields(unit, require_privkey) {
 		ferror.clear(fwmark);
 
 	return result;
-
 }
 
 function copyInterfacePubKey(unit) {
-	
 	const textArea = document.createElement("textarea");
 	textArea.value = E('_wg'+unit+'_pubkey').value;
 
@@ -1067,10 +1052,12 @@ function copyInterfacePubKey(unit) {
 
 function generateInterfaceKey(unit) {
 	var response = false;
+
 	if (E('_wg'+unit+'_key').value == '')
 		response = true;
 	else
 		response = confirm('Regenerating the interface private key will\ncause any generated peers to stop working!\nDo you want to continue?');
+
 	if (response) {
 		var keys = window.wireguard.generateKeypair();
 		E('_wg'+unit+'_key').value = keys.privateKey;
@@ -1124,7 +1111,6 @@ function clearPeerFields(unit) {
 }
 
 function addPeer(unit, quiet) {
-
 	if (!verifyPeerFields(unit))
 		return;
 
@@ -1143,11 +1129,9 @@ function addPeer(unit, quiet) {
 		var content = genPeerGridConfig(unit, row);
 		displayQRCode(content, unit, row);
 	}
-
 }
 
 function editPeer(unit, rowIndex, quiet) {
-
 	if (!verifyPeerFields(unit))
 		return;
 
@@ -1172,11 +1156,9 @@ function editPeer(unit, rowIndex, quiet) {
 		var content = genPeerGridConfig(unit, row);
 		displayQRCode(content, unit, row);
 	}
-
 }
 
 function verifyPeerGenFields(unit) {
-
 	/* verify interface has a valid private key */
 	if (!window.wireguard.validateBase64Key(eval('nvram.wg'+unit+'_key'))) {
 		alert('The interface must have a valid private key before peers can be generated')
@@ -1194,7 +1176,6 @@ function verifyPeerGenFields(unit) {
 }
 
 function generatePeer(unit) {
-
 	/* verify peer gen fields have valid data */
 	if (!verifyPeerGenFields(unit))
 		return;
@@ -1250,7 +1231,6 @@ function generatePeer(unit) {
 	var button = E('wg'+unit+'_peer_add');
 	button.value = 'Add to Peers';
 	button.setAttribute('onclick', 'addPeer('+unit+')');
-
 }
 
 function displayQRCode(content, unit) {
@@ -1290,7 +1270,6 @@ function genPeerGridConfigFile(event, unit, row) {
 }
 
 function genPeerGridConfig(unit, row) {
-
 	var port = E('_f_wg'+unit+'_peer_port');
 	var fwmark = E('_f_wg'+unit+'_peer_fwmark');
 	var row_data = peerTables[unit].tb.rows[row]._data;
@@ -1322,7 +1301,6 @@ function genPeerGridConfig(unit, row) {
 }
 
 function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive, endpoint) {
-
 	var [interface_ip, interface_nm] = eval('nvram.wg'+unit+'_ip.split(",",1)[0].split("/", 2)');
 	var content = [];
 	var dns = eval('nvram.wg'+unit+'_peer_dns');
@@ -1435,7 +1413,6 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 		var interface_peers = peerTables[unit].getAllData();
 
 		for (var i = 0; i < interface_peers.length; ++i) {
-
 			var peer = interface_peers[i];
 
 			if (eval('nvram.wg'+unit+'_com') == 1 && endpoint == '' && peer[2] == '')
@@ -1570,7 +1547,6 @@ function decodeDump(dump, unit) {
 }
 
 function encodeStatus(iface, peers) {
-
 	/* add interface status */
 	var output = 'interface: '+iface.name+'\n';
 	output += '  alias: '+iface.alias+'\n';
@@ -1598,7 +1574,6 @@ function encodeStatus(iface, peers) {
 		}
 		if (peer.keepalive)
 			output += '  persistent keepalive: every '+peer.keepalive+' seconds\n';
-			
 	}
 
 	return output;
@@ -1641,19 +1616,21 @@ function escapeText(s) {
 function netmaskToCIDR(mask) {
 	var maskNodes = mask.match(/(\d+)/g);
 	var cidr = 0;
-	for(var i in maskNodes) {
+	for (var i in maskNodes) {
 		cidr += (((maskNodes[i] >>> 0).toString(2)).match(/1/g) || []).length;
 	}
+
 	return cidr;
 }
 
 function CIDRToNetmask(bitCount) {
 	var mask=[];
-	for(var i=0;i<4;i++) {
+	for (var i=0;i<4;i++) {
 		var n = Math.min(bitCount, 8);
 		mask.push(256 - Math.pow(2, 8-n));
 		bitCount -= n;
 	}
+
 	return mask.join('.');
 }
 
@@ -1668,13 +1645,14 @@ function verifyCIDR(cidr) {
 function verifyDNS(dns) {
 	var ok = true;
 	var ips = dns.split(',');
-	for(var i = 0; i < ips.length; i++) {
+	for (var i = 0; i < ips.length; i++) {
 		var ip = ips[i].trim();
 		if (!ip.match(/(([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\.){3}([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])/)) {
 			ok = false;
 			break;
 		}
 	}
+
 	return ok;
 }
 
@@ -1702,7 +1680,6 @@ function verifyFields(focused, quiet) {
 
 				fom._service.value += 'dnsmasq-restart';
 			}
-
 		}
 	}
 
@@ -1744,7 +1721,7 @@ function verifyFields(focused, quiet) {
 		/* calculate interface pubkey */
 		E('_wg'+i+'_pubkey').disabled = true;
 		var pubkey = window.wireguard.generatePublicKey(privkey.value);
-		if(pubkey == false) {
+		if (pubkey == false) {
 			pubkey = "";
 		}
 		E('_wg'+i+'_pubkey').value = pubkey;
@@ -1758,9 +1735,9 @@ function verifyFields(focused, quiet) {
 		/* otherwise verify interface CIDR address */
 		else {
 			var ip_valid = true;
-			if(ip.value != '') {
+			if (ip.value != '') {
 				var cidrs = ip.value.split(',')
-				for(var j = 0; j < cidrs.length; j++) {
+				for (var j = 0; j < cidrs.length; j++) {
 					var cidr = cidrs[j].trim();
 					if (!cidr.match(/^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$/)) {
 						ip_valid = false;
@@ -1876,16 +1853,12 @@ function verifyFields(focused, quiet) {
 				peer_pubkey.value = pubkey_temp;
 			}
 		}
-
-
-
 	}
 
 	return ok;
 }
 
 function save(nomsg) {
-
 	if (!verifyFields(null, 0))
 		return;
 
@@ -1938,7 +1911,6 @@ function save(nomsg) {
 			var content = genPeerGridConfig(i, row);
 			displayQRCode(content, i, row);
 		}
-
 	}
 
 	form.submit(fom, 1);
@@ -1957,11 +1929,12 @@ function earlyInit() {
 }
 
 function init() {
-	eventHandler();
 	var c;
 	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
 		toggleVisibility(cprefix, 'notes');
+
 	eventHandler();
+
 	up.initPage(250, 5);
 }
 </script>
@@ -2010,10 +1983,9 @@ function init() {
 			}
 			W('<\/ul><div class="tabs-bottom"><\/div>');
 
-
 			/* config tab start */
 			W('<div id="'+t+'-config">');
-			W('<div class="section-title">Interface</div>');
+			W('<div class="section-title">Interface<\/div>');
 			createFieldTable('', [
 				{ title: 'Enable on Start', name: 'f_'+t+'_enable', type: 'checkbox', value: eval('nvram.'+t+'_enable') == '1' },
 				{ title: 'Config file', name: t+'_file', type: 'text', placeholder: '(optional)', maxlen: 64, size: 64, value: eval('nvram.'+t+'_file') },
@@ -2034,7 +2006,8 @@ function init() {
 				{ title: 'Routing Mode', name: 'f_'+t+'_route', type: 'select', options: [['0','Off'],['1','Auto'],['2','Custom Table']], value: eval('nvram.'+t+'_route')[0] || 1, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_table" value="'+(eval('nvram.'+t+'_route').split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_table" maxlength="32" size="32">'},
 			]);
 			W('<br>');
-			W('<div class="section-title">Peer Parameters</div>');
+
+			W('<div class="section-title">Peer Parameters<\/div>');
 			createFieldTable('', [
 				{ title: 'Router behind NAT', name: 'f_'+t+'_ka', type: 'checkbox', value: eval('nvram.'+t+'_ka') == '1' },
 				{ title: 'Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: eval('nvram.'+t+'_endpoint')[0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(eval('nvram.'+t+'_endpoint').split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">'},
@@ -2047,46 +2020,50 @@ function init() {
 				{ title: 'Forward all peer traffic', name: 'f_'+t+'_rgw', type: 'checkbox', value: eval('nvram.'+t+'_rgw') == '1' },
 			]);
 			W('<br>');
-			W('<div class="section-title">Import Config from File</div>');
+
+			W('<div class="section-title">Import Config from File<\/div>');
 			W('<div class="import-section">');
 			W('<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File">');
 			W('<input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')" >');
-			W('</div>');
+			W('<\/div>');
 			W('<br>');
-			W('</div>');
+			W('<\/div>');
 			/* config tab stop */
 
 			/* peers tab start */
 			W('<div id="'+t+'-peers">');
-			W('<div class="section-title">Config Generation</div>');
+			W('<div class="section-title">Config Generation<\/div>');
 			createFieldTable('', [
 				{ title: 'Peer Communication', name: t+'_com', type: 'select', options: [['0','Hub and Spoke'],['1','Full Mesh (Endpoint Only)'],['2','Full Mesh']], value: eval('nvram.'+t+'_com') || 0},
 				{ title: 'Port', name: 'f_'+t+'_peer_port', type: 'text', maxlen: 5, size: 10, value: eval('nvram.'+t+'_port') == '' ? 51820+i : eval('nvram.'+t+'_port')},
 				{ title: 'FWMark', name: 'f_'+t+'_peer_fwmark', type: 'text', maxlen: 8, size: 8, value: '0'},
 			]);
 			W('<br>');
-			W('<div class="section-title">Peers</div>');
+
+			W('<div class="section-title">Peers<\/div>');
 			W('<div class="tomato-grid" id="'+t+'-peers-grid"><\/div>');
 			peerTables[i].setup();
 			W('<input type="button" value="Download All Configs" onclick="downloadAllConfigs(event,'+i+')" id="'+t+'_download_all">')
 			W('<br>');
 			W('<br>');
 			W('<div id="'+t+'_qrcode" class="qrcode" style="display:none">');
-			W('<img alt="'+t+'_qrcode_img" style="max-width: 100px;">');
+			W('<img src="qr-icon.svg" alt="'+t+'_qrcode_img" style="max-width:100px">');
 			W('<div id="'+t+'_qrcode_labels" class="qrcode-labels" title="Message">');
 			W('Point your mobile phone camera<br>');
 			W('here above to connect automatically');
-			W('</div>');
+			W('<\/div>');
 			W('<br>');
-			W('</div>');
-			W('<div class="section-title">Peer Generation</div>');
+			W('<\/div>');
+
+			W('<div class="section-title">Peer Generation<\/div>');
 			createFieldTable('', [
 				{ title: 'Generate PSK', name: 'f_'+t+'_peer_psk_gen', type: 'checkbox', value: true },
 			]);
 			W('<input type="button" value="Generate Peer" onclick="generatePeer('+i+')" id="'+t+'_peer_gen">');
 			W('<br>');
 			W('<br>');
-			W('<div class="section-title">Peer\'s Parameters</div>');
+
+			W('<div class="section-title">Peer\'s Parameters<\/div>');
 			createFieldTable('', [
 				{ title: 'Alias', name: 'f_'+t+'_peer_alias', type: 'text', maxlen: 32, size: 32},
 				{ title: 'Endpoint', name: 'f_'+t+'_peer_ep', type: 'text', maxlen: 64, size: 64},
@@ -2099,20 +2076,20 @@ function init() {
 			]);
 			W('<div>');
 			W('<input type="button" value="Add to Peers" onclick="addPeer('+i+')" id="'+t+'_peer_add">');
-			W('</div>');
-			W('</div>');
+			W('<\/div>');
+			W('<\/div>');
 			/* peers tab stop */
 
 			/* scripts tab start */
 			W('<div id="'+t+'-scripts">');
-			W('<div class="section-title">Custom Interface Scripts</div>');
+			W('<div class="section-title">Custom Interface Scripts<\/div>');
 			createFieldTable('', [
 				{ title: 'Pre-Up Script', name: t+'_preup', type: 'textarea', value: eval('nvram.'+t+'_preup') },
 				{ title: 'Post-Up Script', name: t+'_postup', type: 'textarea', value: eval('nvram.'+t+'_postup') },
 				{ title: 'Pre-Down Script', name: t+'_predown', type: 'textarea', value: eval('nvram.'+t+'_predown') },
 				{ title: 'Post-Down Script', name: t+'_postdown', type: 'textarea', value: eval('nvram.'+t+'_postdown') },
 			]);
-			W('</div>');
+			W('<\/div>');
 			/* scripts tab stop */
 
 			/* status tab start */
@@ -2121,29 +2098,29 @@ function init() {
 			W('<div style="text-align:right">');
 			W('<img src="spin.gif" id="'+t+'_status_refresh_spinner" alt=""> ');
 			genStdTimeList(t+'_status_refresh_time', 'One off', 0);
-			W('<input type="button" value="Refresh" onclick="toggleRefresh('+i+')" id="'+t+'_status_refresh_button"></div>');
+			W('<input type="button" value="Refresh" onclick="toggleRefresh('+i+')" id="'+t+'_status_refresh_button"><\/div>');
 			W('<div style="display:none;padding-left:5px" id="'+t+'_status_wait"> Please wait... <img src="spin.gif" alt="" style="vertical-align:top"><\/div>');
 			statRefreshes[i].setup();
 			statRefreshes[i].initPage(3000, 0);
-			W('</div>');
+			W('<\/div>');
 			/* status tab end */
 
 			/* start/stop button */
-			W('<div class="vpn-start-stop"><input type="button" value="" onclick="" id="_wireguard'+i+'_button">&nbsp; <img src="spin.gif" alt="" id="spin'+i+'"></div>');
+			W('<div class="vpn-start-stop"><input type="button" value="" onclick="" id="_wireguard'+i+'_button">&nbsp; <img src="spin.gif" alt="" id="spin'+i+'"><\/div>');
 
-			W('</div>');
+			W('<\/div>');
 		}
 	</script>
 </div>
 
 <!-- / / / -->
 
-/* start notes sections */
+<!-- start notes sections -->
 <div class="section-title">Notes <small><i><a href='javascript:toggleVisibility(cprefix,"notes");'><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
 
-	/* config notes start */
-	<div class="section" id="notes-config" style="display:none">
+	<!-- config notes start -->
+	<div id="notes-config" style="display:none">
 		<ul>
 			<li><b>Interface</b> - Settings directly related to the wireguard interface on this device.</li>
 			<ul>
@@ -2188,10 +2165,10 @@ function init() {
 			<li><b>Import Config from File</b> - This section can be used to parse fields from a wg-quick compatible configuration file and automatically populate the relevant fields. Using this will wipe your existing settings.</li>
 		</ul>
 	</div>
-	/* config notes stop */
+	<!-- config notes stop -->
 
-	/* peers notes start */
-	<div class="section" id="notes-peers" style="display:none">
+	<!-- peers notes start -->
+	<div id="notes-peers" style="display:none">
 		<ul>
 			<li><b>Config Generation</b></li>
 			<ul>
@@ -2237,10 +2214,10 @@ function init() {
 			</ul>
 		</ul>
 	</div>
-	/* peers notes stop */
+	<!-- peers notes stop -->
 
-	/* scripts notes start */
-	<div class="section" id="notes-scripts" style="display:none">
+	<!-- scripts notes start -->
+	<div id="notes-scripts" style="display:none">
 		<ul>
 			<li><b>Custom Interface Scripts</b> - Custom bash scripts to be run at defined events.</li>
 			<ul>
@@ -2251,19 +2228,15 @@ function init() {
 			</ul>
 		</ul>
 	</div>
-	/* scripts notes stop */
+	<!-- scripts notes stop -->
 
-	/* status notes start */
-	<div class="section" id="notes-status" style="display:none">
-		<ul>
-		</ul>
+	<!-- status notes start -->
+	<div id="notes-status" style="display:none">
 	</div>
-	/* status notes stop */
+	<!-- status notes stop -->
 
 </div>
-/* end notes sections */
-
-
+<!-- end notes sections -->
 
 <!-- / / / -->
 
