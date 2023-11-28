@@ -206,7 +206,7 @@ int nvram_restore_new(char *file, char *buf)
 	{
 #if 1
 		/* e.g.: to skip the case: 00 2e 30 2e 32 38 00 ff 77 61 6e */
-		if(*p == NULL || *p < 32 || *p > 127 ){
+		if(*p == '\0' || *p < 32 || *p > 127 ){
 			p = p + 1;
 			continue;
 		}
