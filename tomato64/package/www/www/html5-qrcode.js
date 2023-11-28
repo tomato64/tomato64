@@ -8,18 +8,70 @@
 //
 //---------------------------------------------------------------------
 
+// Map for determing which QR version
+// to use according to content length
+VERSION_MAP = [
+	17,
+	32,
+	53,
+	78,
+	106,
+	134,
+	154,
+	192,
+	230,
+	271,
+	321,
+	367,
+	425,
+	458,
+	520,
+	586,
+	644,
+	718,
+	792,
+	858,
+	929,
+	1003,
+	1091,
+	1171,
+	1273,
+	1367,
+	1465,
+	1528,
+	1628,
+	1732,
+	1840,
+	1952,
+	2068,
+	2188,
+	2303,
+	2431,
+	2563,
+	2699,
+	2809,
+	2953
+];
+
+
 // Generates a QRCode of text provided.
 // First QRCode is rendered to a canvas.
 // The canvas is then turned to an image PNG
 // before being returned as an <img> tag.
 function showQRCode(text) {
 
-
 	var dotsize = 5;  // size of box drawn on canvas
 	var padding = 10; // (white area around your QRCode)
 	var black = 'rgb(0,0,0)';
 	var white = 'rgb(255,255,255)';
-	var QRCodeVersion = 15; // 1-40 see http://www.denso-wave.com/qrcode/qrgene2-e.html
+	var QRCodeVersion = 40;
+
+	for (var i = 0; i < VERSION_MAP.length; ++i) {
+		if (text.length < VERSION_MAP[i]) {
+			QRCodeVersion = i + 1;
+			break;
+		}
+	}
 
 	var canvas = document.createElement('canvas');
 	var qrCanvasContext = canvas.getContext('2d');

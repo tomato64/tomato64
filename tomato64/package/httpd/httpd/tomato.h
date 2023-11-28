@@ -124,6 +124,12 @@ extern void asp_pptpd_userol(int argc, char **argv);
 extern void wo_pptpdcmd(char *url);
 #endif
 
+/* wireguard.c */
+#ifdef TCONFIG_WIREGUARD
+extern int wg_status(char *iface);
+extern void asp_wgstat(int argc, char **argv);
+#endif
+
 /* devlist.c */
 extern void asp_arplist(int argc, char **argv);
 extern void asp_devlist(int argc, char **argv);

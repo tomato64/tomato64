@@ -1,0 +1,4 @@
+config BR2_PACKAGE_WG_QUICK_POSIX
+	bool "wg-quick-posix"
+	help
+	  posix compliant version of wg-quick shell script.

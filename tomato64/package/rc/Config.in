@@ -308,6 +308,7 @@ config BR2_PACKAGE_RC_WIREGUARD
 	bool "Enable Wireguard"
 	default y
 	select BR2_PACKAGE_WIREGUARD_TOOLS
+	select BR2_PACKAGE_WG_QUICK_POSIX
 
 config BR2_PACKAGE_RC_ZFS
 	bool "Enable ZFS"

@@ -775,6 +775,10 @@ void start_dnsmasq()
 	write_pptpd_dnsmasq_config(f);
 #endif
 
+#ifdef TCONFIG_WIREGUARD
+	write_wg_dnsmasq_config(f);
+#endif
+
 #ifdef TCONFIG_IPV6
 	if (ipv6_enabled()) {
 
@@ -3775,6 +3779,14 @@ TOP:
 	if (strncmp(service, "vpnserver", 9) == 0) {
 		if (act_stop) stop_ovpn_server(atoi(&service[9]));
 		if (act_start) start_ovpn_server(atoi(&service[9]));
+		goto CLEAR;
+	}
+#endif
+
+#ifdef TCONFIG_WIREGUARD
+	if (strncmp(service, "wireguard", 9) == 0) {
+		if (act_stop) stop_wireguard(atoi(&service[9]));
+		if (act_start) start_wireguard(atoi(&service[9]));
 		goto CLEAR;
 	}
 #endif

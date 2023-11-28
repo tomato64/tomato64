@@ -1300,6 +1300,9 @@ void start_wan_done(char *wan_ifname, char *prefix)
 			if (nvram_get_int("ntp_ready") && !first_ntp_sync)
 				start_ovpn_eas();
 #endif
+#ifdef TCONFIG_WIREGUARD
+			start_wg_enable();
+#endif
 #ifdef TCONFIG_TINC
 			start_tinc(0);
 #endif

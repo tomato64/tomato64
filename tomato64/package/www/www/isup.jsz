@@ -37,6 +37,13 @@ isup.pptpclient = parseInt('<% psup("pptpclient"); %>');
 isup.pptpd = parseInt('<% psup("pptpd"); %>');
 /* PPTPD-END */
 
+/* WIREGUARD-BEGIN */
+var WG_INTERFACE_COUNT = 3;
+isup.wireguard0 = parseInt('<% wgstat("wg0"); %>');
+isup.wireguard1 = parseInt('<% wgstat("wg1"); %>');
+isup.wireguard2 = parseInt('<% wgstat("wg2"); %>');
+/* WIREGUARD-END */
+
 /* NGINX-BEGIN */
 isup.nginx = parseInt('<% psup("nginx"); %>');
 isup.mysqld = parseInt('<% psup("mysqld"); %>');
