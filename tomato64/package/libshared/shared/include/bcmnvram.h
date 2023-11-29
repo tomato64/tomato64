@@ -215,6 +215,7 @@ extern int nvram_space;
 #define NVRAM_INVALID_MAGIC	0xFFFFFFFF
 #define NVRAM_VERSION		1
 #define NVRAM_HEADER_SIZE	20
+#ifndef TOMATO64
 #if (defined(TCONFIG_NVRAM_128K) || defined(CONFIG_NVRAM_128K))
     /* This definition is for precommit staging, and will be removed */
     #define NVRAM_SPACE			0x20000
@@ -232,6 +233,11 @@ extern int nvram_space;
     #endif
     #define DEF_NVRAM_SPACE		0x10000
 #endif
+#else
+#define NVRAM_SPACE		0x100000
+#define MAX_NVRAM_SPACE		0x100000
+#define DEF_NVRAM_SPACE		0x100000
+#endif /* TOMATO64 */
 #define ROM_ENVRAM_SPACE	0x1000
 #define NVRAM_LZMA_MAGIC	0x4c5a4d41	/* 'LZMA' */
 

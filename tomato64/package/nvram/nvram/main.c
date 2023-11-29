@@ -31,6 +31,9 @@
 #define OUTFILE_NOT_WRITABLE	-2
 #define INVALID_CFG_FORMAT	-3
 
+#define NVRAM_SPACE		0x100000
+#define MAX_NVRAM_SPACE	0x100000
+#define DEF_NVRAM_SPACE	0x100000
 
 int print_error(int rv, char *infile, const char *outfile)
 {
