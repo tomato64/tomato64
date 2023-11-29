@@ -27,6 +27,28 @@
 
 #define PROFILE_HEADER		"HDR1"
 #define PROFILE_HEADER_NEW	"HDR2"
+#define INFILE_NOT_READABLE	-1
+#define OUTFILE_NOT_WRITABLE	-2
+#define INVALID_CFG_FORMAT	-3
+
+
+int print_error(int rv, char *infile, const char *outfile)
+{
+	switch(rv) {
+		case INFILE_NOT_READABLE:
+			fprintf(stderr, "Cannot read input file \"%s\"\n", infile);
+			return -1 * rv;
+		case OUTFILE_NOT_WRITABLE:
+			fprintf(stderr, "Cannot write to output file \"%s\"\n", outfile);
+			return -1 * rv;
+		case INVALID_CFG_FORMAT:
+			fprintf(stderr, "Invalid cfg file format for \"%s\"\n", infile);
+			return -1 * rv;
+		default:
+			fprintf(stderr, "Wrote %d bytes to %s\n", rv, outfile);
+			return 0;
+	}
+}
 
 unsigned char get_rand()
 {
@@ -83,15 +105,16 @@ int nvram_save_new(char *file, char *buf)
 	return 0;
 }
 
-int nvram_restore_new(char *file, char *buf)
+int nvram_restore_new(char *file, char *buf, FILE *ofp)
 {
 	FILE *fp;
 	char header[8], *p, *v;
 	unsigned long count, filelen, *filelenptr, i;
 	unsigned char rand, *randptr;
+	unsigned long nbytes = 0;
 
 	if ((fp = fopen(file, "r+")) == NULL)
-		return -1;
+		return INFILE_NOT_READABLE;
 
 	count = fread(header, 1, 8, fp);
 	if (count >= 8 && strncmp(header, PROFILE_HEADER, 4) == 0) {
@@ -117,7 +140,7 @@ int nvram_restore_new(char *file, char *buf)
 	}
 	else {
 		fclose(fp);
-		return 0;
+		return INVALID_CFG_FORMAT;
 	}
 	fclose(fp);
 
@@ -133,24 +156,47 @@ int nvram_restore_new(char *file, char *buf)
 
 		if (v != NULL) {
 			*v++ = '\0';
-			nvram_set(p, v);
+
+			if (ofp != NULL) {
+				nbytes += fprintf(ofp, "%s", p);
+				nbytes += fprintf(ofp, "=%s\n", v);
+			}
+			else
+				nvram_set(p, v);
+
 			p = v + strlen(v) + 1;
 		}
 		else {
-			nvram_unset(p);
+			if (ofp != NULL)
+				nbytes += fprintf(ofp, "%s=\n", p);
+			else
+				nvram_unset(p);
+
 			p = p + 1;
 		}
 	}
 
-	return 0;
+	return nbytes;
+}
+
+int nvram_restore_to_file(char *file, char *outfile, char *buf)
+{
+	FILE *ofp;
+	if ((ofp = fopen(outfile, "w+")) == NULL)
+		return OUTFILE_NOT_WRITABLE;
+
+	int rv = nvram_restore_new(file, buf, ofp);
+	fclose(ofp);
+
+	return rv;
 }
 
 void usage(void)
 {
 	fprintf(stderr, "NVRAM Utility\n"
 	                "Usage: nvram set <key=value> | get <key> | unset <key> |\n"
-	                "commit | erase | show | save <filename> | restore <filename>\n");
-//	                "convert <infilename.cfg> <outfilename.txt>\n");
+	                "commit | erase | show | save <filename> | restore <filename> |\n"
+	                "convert <infile.cfg> <outfile.txt>\n");
 
 	exit(0);
 }
@@ -159,7 +205,7 @@ void usage(void)
 int main(int argc, char **argv)
 {
 	char *name, *value, buf[MAX_NVRAM_SPACE];
-	int size;
+	int size, ret;
 
 	/* skip program name */
 	--argc;
@@ -198,7 +244,7 @@ int main(int argc, char **argv)
 		}
 		else if (!strcmp(*argv, "restore")) {
 			if (*++argv) 
-				nvram_restore_new(*argv, buf);
+				nvram_restore_new(*argv, buf, NULL);
 		}
 		else if (!strcmp(*argv, "erase")) {
 			system("nvram_erase");
@@ -211,6 +257,14 @@ int main(int argc, char **argv)
 			size = sizeof(struct nvram_header) + (int)name - (int)buf;
 			if (**argv != 'd')
 				fprintf(stderr, "size: %d bytes (%d left)\n", size, MAX_NVRAM_SPACE - size);
+		}
+		else if (!strcmp(*argv, "convert")) {
+			if (argc > 2) {
+				ret = nvram_restore_to_file(argv[1], argv[2], buf);
+				print_error(ret, argv[1], (const char *)argv[2]);
+			}
+			else
+				usage();
 		}
 		else
 			usage();
