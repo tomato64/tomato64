@@ -652,7 +652,7 @@ int wg_route_peer_allowed_ips(char *iface, char *allowed_ips, char *fwmark)
 		while ((b = strsep(&aip, ",")) != NULL) {
 			if (vstrsep(b, "/", &ip, &nm) == 2) {
 				if (atoi(nm) == 0) {
-					/* uncomment to add default routing */
+					/* uncomment to add default routing (also in router/wireguard-tools/src/wg-quick/posix.sh line 519, 520) after kernel fix */
 					//wg_route_peer_default(iface, b, fwmark);
 				}
 			}
