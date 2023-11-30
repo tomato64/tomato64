@@ -11,6 +11,10 @@
 #define WG_DNS_DIR	WG_DIR"/dns"
 
 #define BUF_SIZE		256
+#define BUF_SIZE_8		8
+#define BUF_SIZE_16		16
+#define BUF_SIZE_32		32
+#define BUF_SIZE_64		64
 #define IF_SIZE			8
 #define PEER_COUNT		3
 
@@ -96,8 +100,8 @@ void start_wireguard(int unit)
 	char *priv, *name, *key, *psk, *ip, *ka, *aip, *ep;
 	char iface[IF_SIZE];
 	char buffer[BUF_SIZE];
-	char port[6];
-	char fwmark[8];
+	char port[BUF_SIZE_8];
+	char fwmark[BUF_SIZE_16];
 
 	/* set up directories for later use */
 	wg_setup_dirs();
@@ -125,11 +129,11 @@ void start_wireguard(int unit)
 
 		/* set interface port */
 		b = getNVRAMVar("wg%d_port", unit);
-		memset(port, 0, 5);
+		memset(port, 0, BUF_SIZE_8);
 		if (b[0] == '\0')
-			snprintf(port, sizeof(port), "%d", 51820 + unit);
+			snprintf(port, BUF_SIZE_8, "%d", 51820 + unit);
 		else
-			snprintf(port, sizeof(port), "%s", b);
+			snprintf(port, BUF_SIZE_8, "%s", b);
 
 		if (wg_set_iface_port(iface, port)) {
 			stop_wireguard(unit);
@@ -144,11 +148,11 @@ void start_wireguard(int unit)
 
 		/* set interface fwmark */
 		b = getNVRAMVar("wg%d_fwmark", unit);
-		memset(fwmark, 0, 8);
+		memset(fwmark, 0, BUF_SIZE_16);
 		if (b[0] == '\0' || b[0] == '0')
-			snprintf(fwmark, BUF_SIZE, "%s", port);
+			snprintf(fwmark, BUF_SIZE_16, "%s", port);
 		else
-			snprintf(fwmark, BUF_SIZE, "%s", b);
+			snprintf(fwmark, BUF_SIZE_16, "%s", b);
 
 		if (wg_set_iface_fwmark(iface, fwmark)) {
 			stop_wireguard(unit);
@@ -479,14 +483,13 @@ int wg_set_iface_privkey(char *iface, char *privkey)
 
 int wg_set_iface_fwmark(char *iface, char *fwmark)
 {
-	int buffer_size = 10;
-	char buffer[buffer_size];
-	memset(buffer, 0, buffer_size);
+	char buffer[BUF_SIZE_16];
+	memset(buffer, 0, BUF_SIZE_16);
 
 	if (fwmark[0] == '0' && fwmark[1] == '\0')
-		snprintf(buffer, buffer_size, "%s", fwmark);
+		snprintf(buffer, BUF_SIZE_16, "%s", fwmark);
 	else
-		snprintf(buffer, buffer_size, "0x%s", fwmark);
+		snprintf(buffer, BUF_SIZE_16, "0x%s", fwmark);
 
 	if (eval("/usr/sbin/wg", "set", iface, "fwmark", fwmark)) {
 		logmsg(LOG_WARNING, "unable to set wireguard interface %s fwmark to %s!", iface, fwmark);
@@ -512,8 +515,7 @@ int wg_set_iface_mtu(char *iface, char *mtu)
 
 int wg_set_iface_dns(char *iface, char *dns)
 {
-	int buf_size = 32;
-	char fn[buf_size];
+	char fn[BUF_SIZE_32];
 	char *nv, *b;
 	FILE *fp;
 
@@ -527,8 +529,8 @@ int wg_set_iface_dns(char *iface, char *dns)
 	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has added firewall rules for its dns server(s)", iface);
 
-	memset(fn, 0, buf_size);
-	snprintf(fn, buf_size, WG_DNS_DIR"/%s.conf", iface);
+	memset(fn, 0, BUF_SIZE_32);
+	snprintf(fn, BUF_SIZE_32, WG_DNS_DIR"/%s.conf", iface);
 
 	fp = fopen(fn, "w");
 
@@ -551,11 +553,10 @@ int wg_set_iface_dns(char *iface, char *dns)
 
 int wg_unset_iface_dns(char *iface)
 {
-	int buf_size = 32;
-	char fn[buf_size];
+	char fn[BUF_SIZE_32];
 
-	memset(fn, 0, buf_size);
-	snprintf(fn, buf_size, WG_DNS_DIR"/%s.conf", iface);
+	memset(fn, 0, BUF_SIZE_32);
+	snprintf(fn, BUF_SIZE_32, WG_DNS_DIR"/%s.conf", iface);
 
 	if (!f_exists(fn))
 		return 0;
@@ -632,11 +633,11 @@ int wg_route_peer_allowed_ips(char *iface, char *allowed_ips, char *fwmark)
 {
 	char *aip, *b, *table, *rt, *tp, *ip, *nm;
 	int route_type = 1, result = 0;
-	char buffer[32];
+	char buffer[BUF_SIZE_32];
 
 	/* check which routing type the user specified */
-	memset(buffer, 0, sizeof(buffer));
-	snprintf(buffer, sizeof(buffer), "%s_route", iface);
+	memset(buffer, 0, BUF_SIZE_32);
+	snprintf(buffer, BUF_SIZE_32, "%s_route", iface);
 	tp = b = strdup(nvram_safe_get(buffer));
 	if (tp) {
 		if (vstrsep(b, "|", &rt, &table) < 3)
@@ -769,22 +770,20 @@ int wg_add_peer_privkey(char *iface, char *privkey, char *allowed_ips, char *pre
 
 int wg_iface_script(int unit, char *script_name)
 {
-	int buffer_size = 32;
-	int path_size = 64;
 	char *script;
-	char buffer[buffer_size];
-	char path[path_size];
+	char buffer[BUF_SIZE_32];
+	char path[BUF_SIZE_64];
 	FILE *fp;
 
-	memset(buffer, 0, buffer_size);
-	snprintf(buffer, buffer_size, "wg%d_%s", unit, script_name);
+	memset(buffer, 0, BUF_SIZE_32);
+	snprintf(buffer, BUF_SIZE_32, "wg%d_%s", unit, script_name);
 
 	script = nvram_safe_get(buffer);
 
 	if (strcmp(script, "") != 0) {
 		/* build path */
-		memset(path, 0, path_size);
-		snprintf(path, path_size, WG_DIR"/scripts/wg%d-%s.sh", unit, script_name);
+		memset(path, 0, BUF_SIZE_64);
+		snprintf(path, BUF_SIZE_64, WG_DIR"/scripts/wg%d-%s.sh", unit, script_name);
 
 		if (!(fp = fopen(path, "w"))) {
 			logmsg(LOG_WARNING, "unable to open %s for writing!", path);
@@ -795,8 +794,8 @@ int wg_iface_script(int unit, char *script_name)
 		chmod(path, 0700);
 
 		/* sed replace %i with interface */
-		memset(buffer, 0, buffer_size);
-		snprintf(buffer, buffer_size, "s/%%i/wg%d/g", unit);
+		memset(buffer, 0, BUF_SIZE_32);
+		snprintf(buffer, BUF_SIZE_32, "s/%%i/wg%d/g", unit);
 
 		if (eval("/bin/sed", "-i", buffer, path)) {
 			logmsg(LOG_WARNING, "unable to substitute interface name in %s script for wireguard interface wg%d!", script_name, unit);
@@ -914,7 +913,7 @@ int wg_save_iface(char *iface, char *file)
 
 void write_wg_dnsmasq_config(FILE* f)
 {
-	char buf[BUF_SIZE], device[24];
+	char buf[BUF_SIZE], device[BUF_SIZE_32];
 	char *pos, *fn;
 	DIR *dir;
 	struct dirent *file;
