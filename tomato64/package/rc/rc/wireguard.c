@@ -352,7 +352,7 @@ void wg_setup_dirs() {
 			            "ip -o \"${proto}\" addr show dev \"${interface}\" 2>/dev/null | {\n"
 			            "  while read -r line; do\n"
 			            "    match=\"$(\n"
-			            "      printf %s \"${line}\" |\n"
+			            "      printf %s \"${line}\" |\n"		/* FIXME (%s) !!! */
 			            "        sed -ne 's/^.*inet6\? \([0-9a-f:.]\\+\\)\\/[0-9]\\+.*$/\1/; t P; b; : P; p'\n"
 			            "    )\"\n"
 			            "    [ -n \"${match}\" ] ||\n"
@@ -632,9 +632,12 @@ int wg_route_peer_allowed_ips(char *iface, char *allowed_ips, char *fwmark)
 {
 	char *aip, *b, *table, *rt, *tp, *ip, *nm;
 	int route_type = 1, result = 0;
+	char buffer[32];
 
 	/* check which routing type the user specified */
-	tp = b = strdup(getNVRAMVar("%s_route", iface));
+	memset(buffer, 0, sizeof(buffer));
+	snprintf(buffer, sizeof(buffer), "%s_route", iface);
+	tp = b = strdup(nvram_safe_get(buffer));
 	if (tp) {
 		if (vstrsep(b, "|", &rt, &table) < 3)
 			route_type = atoi(rt);
