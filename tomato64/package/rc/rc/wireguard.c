@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include "curve25519.h"
 
+
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"wireguard_debug"
@@ -15,6 +16,7 @@
 
 #define WG_INTERFACE_MAX	3
 
+
 void start_wg_enable()
 {
 	int unit;
@@ -24,7 +26,68 @@ void start_wg_enable()
 			start_wireguard(unit);
 		}
 	}
-	
+}
+
+int wg_quick_iface_up(char *iface, char *file)
+{
+	int buf_size = 32;
+	char buf[buf_size];
+	FILE *f;
+
+	/* copy config to wg dir with proper name */
+	memset(buf, 0, buf_size);
+	snprintf(buf, buf_size, WG_DIR"/%s.conf", iface);
+	if ((f = fopen(buf, "w")) != NULL) {
+		fappend(f, file);
+		fclose(f);
+	}
+	else
+		logmsg(LOG_WARNING, "Unable to open wireguard configuration file %s for interface %s!", iface, file);
+
+	/* write wg config to file */
+	if (eval("/bin/sh", "/usr/sbin/wg-quick", "up", iface, "--norestart")) {
+		logmsg(LOG_WARNING, "Unable to set up wireguard interface %s from file %s!", iface, file);
+		return -1;
+	}
+	else
+		logmsg(LOG_DEBUG, "Wireguard interface %s from file %s set up", iface, file);
+
+	stop_dnsmasq();
+	start_dnsmasq();
+
+	return 0;
+}
+
+int wg_quick_iface_down(char *iface, char *file)
+{
+	int buf_size = 32;
+	char buf[buf_size];
+	FILE *f;
+
+	/* copy config to wg dir with proper name */
+	memset(buf, 0, buf_size);
+	snprintf(buf, buf_size, WG_DIR"/%s.conf", iface);
+	if ((f = fopen(buf, "w")) != NULL) {
+		fappend(f, file);
+		fclose(f);
+	}
+	else {
+		logmsg(LOG_WARNING, "Unable to open wireguard configuration file %s for interface %s!", iface, file);
+		return -1;
+	}
+
+	/* write wg config to file */
+	if (eval("/bin/sh", "/usr/sbin/wg-quick", "down", buf, "--norestart")) {
+		logmsg(LOG_WARNING, "Unable to set down wireguard interface %s from file %s!", iface, file);
+		return -1;
+	}
+	else
+		logmsg(LOG_DEBUG, "Wireguard interface %s from file %s set down", iface, file);
+
+	stop_dnsmasq();
+	start_dnsmasq();
+
+	return 0;
 }
 
 void start_wireguard(int unit)
@@ -44,9 +107,8 @@ void start_wireguard(int unit)
 	snprintf(iface, IF_SIZE, "wg%d", unit);
 
 	/* check if file is specified */
-	if (getNVRAMVar("wg%d_file", unit)[0] != '\0') {
+	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
 		wg_quick_iface_up(iface, getNVRAMVar("wg%d_file", unit));
-	}
 	else {
 
 		/* create interface */
@@ -64,12 +126,10 @@ void start_wireguard(int unit)
 		/* set interface port */
 		b = getNVRAMVar("wg%d_port", unit);
 		memset(port, 0, 5);
-		if (b[0] == '\0') {
+		if (b[0] == '\0')
 			snprintf(port, BUF_SIZE, "%d", 51820 + unit);
-		}
-		else {
+		else
 			snprintf(port, BUF_SIZE, "%s", b);
-		}
 
 		if (wg_set_iface_port(iface, port)) {
 			stop_wireguard(unit);
@@ -85,12 +145,10 @@ void start_wireguard(int unit)
 		/* set interface fwmark */
 		b = getNVRAMVar("wg%d_fwmark", unit);
 		memset(fwmark, 0, 8);
-		if (b[0] == '\0' || b[0] == '0') {
+		if (b[0] == '\0' || b[0] == '0')
 			snprintf(fwmark, BUF_SIZE, "%s", port);
-		}
-		else {
+		else
 			snprintf(fwmark, BUF_SIZE, "%s", b);
-		}
 
 		if (wg_set_iface_fwmark(iface, fwmark)) {
 			stop_wireguard(unit);
@@ -110,12 +168,10 @@ void start_wireguard(int unit)
 		}
 
 		/* check if keepalives are enabled from the router */
-		if (getNVRAMVar("wg%d_ka", unit)[0] == '1') {
+		if (getNVRAMVar("wg%d_ka", unit)[0] == '1')
 			rka = "25";
-		}
-		else {
+		else
 			rka = "0";
-		}
 
 		/* bring up interface */
 		wg_iface_pre_up(unit);
@@ -128,35 +184,29 @@ void start_wireguard(int unit)
 		nvp = nv = strdup(getNVRAMVar("wg%d_peers", unit));
 		if (nv) {
 			while ((b = strsep(&nvp, ">")) != NULL) {
-
 				if (vstrsep(b, "<", &priv, &name, &ep, &key, &psk, &ip, &aip, &ka) < 8)
 					continue;
-				
+
 				/* build peer allowed ips */
 				memset(buffer, 0, BUF_SIZE);
-				if (aip[0] == '\0') {
+				if (aip[0] == '\0')
 					snprintf(buffer, BUF_SIZE, "%s", ip);
-				}
-				else {
+				else
 					snprintf(buffer, BUF_SIZE, "%s,%s", ip, aip);
-				}
 
 				/* add peer to interface */
-				if (priv[0] == '1') {
+				if (priv[0] == '1')
 					wg_add_peer_privkey(iface, key, buffer, psk, rka, ep, fwmark);
-				}
-				else {
+				else
 					wg_add_peer(iface, key, buffer, psk, rka, ep, fwmark);
-				}
-
 			}
 		}
+		if (nvp)
+			free(nvp);
 
 		/* run post up scripts */
 		wg_iface_post_up(unit);
-
 	}
-
 	/* set iptables rules */
 	if (wg_set_iptables(iface, getNVRAMVar("wg%d_port", unit))) {
 		stop_wireguard(unit);
@@ -167,17 +217,15 @@ void start_wireguard(int unit)
 void stop_wireguard(int unit)
 {
 	char iface[IF_SIZE];
-	char buffer[BUF_SIZE];
 
-	/* Determine interface */
+	/* determine interface */
 	memset(iface, 0, IF_SIZE);
 	snprintf(iface, IF_SIZE, "wg%d", unit);
 
-	if (getNVRAMVar("wg%d_file", unit)[0] != '\0') {
+	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
 		wg_quick_iface_down(iface, getNVRAMVar("wg%d_file", unit));
-	}
 	else {
-		/* Remove interface */
+		/* remove interface */
 		wg_iface_pre_down(unit);
 		wg_remove_iface(iface);
 		wg_iface_post_down(unit);
@@ -189,30 +237,24 @@ void stop_wireguard(int unit)
 }
 
 void wg_setup_dirs() {
-
 	FILE *fp;
-	char buffer[64];
 
 	/* main dir */
-	if (mkdir_if_none(WG_DIR)) {
+	if (mkdir_if_none(WG_DIR))
 		chmod(WG_DIR, (S_IRUSR | S_IWUSR | S_IXUSR));
-	}
 
 	/* script dir */
-	if (mkdir_if_none(WG_DIR"/scripts")) {
+	if (mkdir_if_none(WG_DIR"/scripts"))
 		chmod(WG_DIR"/scripts", (S_IRUSR | S_IWUSR | S_IXUSR));
-	}
 
 	/* keys dir */
-	if (mkdir_if_none(WG_DIR"/keys")) {
+	if (mkdir_if_none(WG_DIR"/keys"))
 		chmod(WG_DIR"/keys", (S_IRUSR | S_IWUSR | S_IXUSR));
-	}
 
 	/* dns dir */
-	if (mkdir_if_none(WG_DIR"/dns")) {
+	if (mkdir_if_none(WG_DIR"/dns"))
 		chmod(WG_DIR"/dns", (S_IRUSR | S_IWUSR | S_IXUSR));
-	}
-	
+
 	/* script to generate public keys from private keys */
 	if (!(f_exists(WG_DIR"/scripts/pubkey.sh"))){
 		if ((fp = fopen(WG_DIR"/scripts/pubkey.sh", "w"))) {
@@ -311,7 +353,7 @@ void wg_setup_dirs() {
 			            "  while read -r line; do\n"
 			            "    match=\"$(\n"
 			            "      printf %s \"${line}\" |\n"
-			            "        sed -ne 's/^.*inet6\? \([0-9a-f:.]\+\)\/[0-9]\+.*$/\1/; t P; b; : P; p'\n"
+			            "        sed -ne 's/^.*inet6\? \([0-9a-f:.]\\+\\)\\/[0-9]\\+.*$/\1/; t P; b; : P; p'\n"
 			            "    )\"\n"
 			            "    [ -n \"${match}\" ] ||\n"
 			            "      continue\n"
@@ -327,7 +369,6 @@ void wg_setup_dirs() {
 			chmod(WG_DIR"/scripts/route-default.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
 		}
 	}
-
 }
 
 void wg_cleanup_dirs() {
@@ -336,8 +377,6 @@ void wg_cleanup_dirs() {
 
 int wg_create_iface(char *iface)
 {
-	FILE *fp;
-
 	/* Make sure module is loaded */
 	modprobe("wireguard");
 	f_wait_exists("/sys/module/wireguard", 5);
@@ -347,9 +386,8 @@ int wg_create_iface(char *iface)
 		logmsg(LOG_WARNING, "unable to create wireguard interface %s!", iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has been created", iface);
-	}
 
 	return 0;
 }
@@ -360,9 +398,8 @@ int wg_flush_iface_addr(char *iface)
 		logmsg(LOG_WARNING, "unable to flush wireguard interface %s!", iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "successfully flushed wireguard interface %s!", iface);
-	}
 
 	return 0;
 }
@@ -372,16 +409,17 @@ int wg_set_iface_addr(char *iface, char *addr)
 	char *nv, *b;
 
 	/* Flush all addresses from interface */
-	// wg_flush_iface_addr(iface)
+	//wg_flush_iface_addr(iface)
 
 	/* Set wireguard interface address(es) */
 	nv = strdup(addr);
 	while ((b = strsep(&nv, ",")) != NULL) {
-		if (wg_add_iface_addr(iface, b)) {
+		if (wg_add_iface_addr(iface, b))
 			return -1;
-		}
 	}
 
+	if (nv)
+		free(nv);
 
 	return 0;
 }
@@ -392,9 +430,8 @@ int wg_add_iface_addr(char *iface, char *addr)
 		logmsg(LOG_WARNING, "unable to add wireguard interface %s address of %s!", iface, addr);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has had address %s add to it", iface, addr);
-	}
 
 	return 0;
 }
@@ -405,9 +442,8 @@ int wg_set_iface_port(char *iface, char *port)
 		logmsg(LOG_WARNING, "unable to set wireguard interface %s port to %s!", iface, port);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has had its port set to %s", iface, port);
-	}
 
 	return 0;
 }
@@ -432,9 +468,8 @@ int wg_set_iface_privkey(char *iface, char *privkey)
 		logmsg(LOG_WARNING, "unable to set wireguard interface %s private key!", iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has had its private key set", iface);
-	}
 
 	/* remove file for security */
 	remove(buffer);
@@ -448,21 +483,17 @@ int wg_set_iface_fwmark(char *iface, char *fwmark)
 	char buffer[buffer_size];
 	memset(buffer, 0, buffer_size);
 
-	if (fwmark[0] == '0' && fwmark[1] == '\0') {
+	if (fwmark[0] == '0' && fwmark[1] == '\0')
 		snprintf(buffer, buffer_size, "%s", fwmark);
-	}
-	else {
+	else
 		snprintf(buffer, buffer_size, "0x%s", fwmark);
-	}
-
 
 	if (eval("/usr/sbin/wg", "set", iface, "fwmark", fwmark)) {
 		logmsg(LOG_WARNING, "unable to set wireguard interface %s fwmark to %s!", iface, fwmark);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has had its fwmark set to %s", iface, fwmark);
-	}
 
 	return 0;
 }
@@ -473,9 +504,8 @@ int wg_set_iface_mtu(char *iface, char *mtu)
 		logmsg(LOG_WARNING, "unable to set wireguard interface %s mtu to %s!", iface, mtu);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has had its mtu set to %s", iface, mtu);
-	}
 
 	return 0;
 }
@@ -487,18 +517,16 @@ int wg_set_iface_dns(char *iface, char *dns)
 	char *nv, *b;
 	FILE *fp;
 
-	if (dns[0] == '\0') {
+	if (dns[0] == '\0')
 		return 0;
-	}
 
 	if (eval(WG_DIR"/scripts/fw-dns-set.sh", iface, dns)) {
 		logmsg(LOG_WARNING, "unable to add firewall rules for wireguard interface %s's dns server(s)!", iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has added firewall rules for its dns server(s)", iface);
-	}
-	
+
 	memset(fn, 0, buf_size);
 	snprintf(fn, buf_size, WG_DNS_DIR"/%s.conf", iface);
 
@@ -510,6 +538,10 @@ int wg_set_iface_dns(char *iface, char *dns)
 	}
 
 	fclose(fp);
+
+	if (nv)
+		free(nv);
+
 
 	stop_dnsmasq();
 	start_dnsmasq();
@@ -525,9 +557,8 @@ int wg_unset_iface_dns(char *iface)
 	memset(fn, 0, buf_size);
 	snprintf(fn, buf_size, WG_DNS_DIR"/%s.conf", iface);
 
-	if (!f_exists(fn)) {
+	if (!f_exists(fn))
 		return 0;
-	}
 
 	remove(fn);
 
@@ -538,9 +569,8 @@ int wg_unset_iface_dns(char *iface)
 		logmsg(LOG_WARNING, "unable to remove firewall rules for wireguard interface %s's dns server(s)!", iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has removed firewall rules for its dns server(s)", iface);
-	}
 
 	return 0;
 }
@@ -562,6 +592,7 @@ int wg_set_iface_up(char *iface)
 	}
 
 	logmsg(LOG_WARNING, "unable to bring up wireguard interface %s!", iface);
+
 	return -1;
 }
 
@@ -571,19 +602,16 @@ int wg_add_peer(char *iface, char *pubkey, char *allowed_ips, char *presharedkey
 	wg_set_peer_allowed_ips(iface, pubkey, allowed_ips, fwmark);
 
 	/* set peer psk */
-	if (presharedkey[0] != '\0') {
+	if (presharedkey[0] != '\0')
 		wg_set_peer_psk(iface, pubkey, presharedkey);
-	}
 
 	/* set peer keepalive */
-	if (atoi(keepalive) > 0) {
+	if (atoi(keepalive) > 0)
 		wg_set_peer_keepalive(iface, pubkey, keepalive);
-	}
 
 	/* set peer endpoint */
-	if (endpoint[0] != '\0') {
+	if (endpoint[0] != '\0')
 		wg_set_peer_endpoint(iface, pubkey, endpoint);
-	}
 
 	return 0;
 }
@@ -594,9 +622,8 @@ int wg_set_peer_allowed_ips(char *iface, char *pubkey, char *allowed_ips, char *
 		logmsg(LOG_WARNING, "unable to add peer %s to wireguard interface %s!", pubkey, iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "peer %s for wireguard interface %s has had its allowed ips set to %s", pubkey, iface, allowed_ips);
-	}
 
 	return wg_route_peer_allowed_ips(iface, allowed_ips, fwmark);
 }
@@ -609,9 +636,10 @@ int wg_route_peer_allowed_ips(char *iface, char *allowed_ips, char *fwmark)
 	/* check which routing type the user specified */
 	tp = b = strdup(getNVRAMVar("%s_route", iface));
 	if (tp) {
-		if(vstrsep(b, "|", &rt, &table) < 3) {
+		if (vstrsep(b, "|", &rt, &table) < 3)
 			route_type = atoi(rt);
-		}
+
+		free(tp);
 	}
 
 	/* check which routing type the user specified */
@@ -625,18 +653,18 @@ int wg_route_peer_allowed_ips(char *iface, char *allowed_ips, char *fwmark)
 				}
 			}
 			if (route_type == 1) {
-				if (wg_route_peer(iface, b)) {
+				if (wg_route_peer(iface, b))
 					result = -1;
-				}
 			}
 			else {
-				if (wg_route_peer_custom(iface, b, table)) {
+				if (wg_route_peer_custom(iface, b, table))
 					result = -1;
-				}
 			}
 		}
+		if (aip)
+			free(aip);
 	}
-	
+
 	return result;
 }
 
@@ -646,10 +674,9 @@ int wg_route_peer(char *iface, char *route)
 		logmsg(LOG_WARNING, "unable to add route of %s for wireguard interface %s!", route, iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has had a route added to it for %s", iface, route);
-	}
-	
+
 	return 0;
 }
 
@@ -659,9 +686,8 @@ int wg_route_peer_custom(char *iface, char *route, char *table)
 		logmsg(LOG_WARNING, "unable to add route of %s to table %s for wireguard interface %s!", route, table, iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has had a route added to table %s for %s", iface, table, route);
-	}
 
 	return 0;
 }
@@ -672,9 +698,8 @@ int wg_route_peer_default(char *iface, char *route, char *fwmark)
 		logmsg(LOG_WARNING, "unable to add default route of %s to table %s for wireguard interface %s!", route, fwmark, iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_WARNING, "wireguard interface %s has had a default route added to table %s for %s", iface, fwmark, route);
-	}
 
 	return 0;
 }
@@ -697,9 +722,8 @@ int wg_set_peer_psk(char *iface, char *pubkey, char *presharedkey)
 		logmsg(LOG_WARNING, "unable to add preshared key to peer %s on wireguard interface %s!", pubkey, iface);
 		err = -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "preshared key has been added to peer %s on wireguard interface %s", pubkey, iface);
-	}
 
 	/* remove file for security */
 	remove(buffer);
@@ -712,9 +736,8 @@ int wg_set_peer_keepalive(char *iface, char *pubkey, char *keepalive)
 		logmsg(LOG_WARNING, "unable to add persistent-keepalive of %s to peer %s on wireguard interface %s!", keepalive, pubkey, iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "persistent-keepalive of %s has been added to peer %s on wireguard interface %s", keepalive, pubkey, iface);
-	}
 
 	return 0;
 }
@@ -725,9 +748,8 @@ int wg_set_peer_endpoint(char *iface, char *pubkey, char *endpoint)
 		logmsg(LOG_WARNING, "unable to add endpoint of %s to peer %s on wireguard interface %s!", endpoint, pubkey, iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "endpoint of %s has been added to peer %s on wireguard interface %s", endpoint, pubkey, iface);
-	}
 
 	return 0;
 }
@@ -757,7 +779,6 @@ int wg_iface_script(int unit, char *script_name)
 	script = nvram_safe_get(buffer);
 
 	if (strcmp(script, "") != 0) {
-
 		/* build path */
 		memset(path, 0, path_size);
 		snprintf(path, path_size, WG_DIR"/scripts/wg%d-%s.sh", unit, script_name);
@@ -770,7 +791,7 @@ int wg_iface_script(int unit, char *script_name)
 		fclose(fp);
 		chmod(path, 0700);
 
-		/*sed replace %i with interface*/
+		/* sed replace %i with interface */
 		memset(buffer, 0, buffer_size);
 		snprintf(buffer, buffer_size, "s/%%i/wg%d/g", unit);
 
@@ -778,52 +799,47 @@ int wg_iface_script(int unit, char *script_name)
 			logmsg(LOG_WARNING, "unable to substitute interface name in %s script for wireguard interface wg%d!", script_name, unit);
 			return -1;
 		}
-		else {
+		else
 			logmsg(LOG_DEBUG, "interface substitution in %s script for wireguard interface wg%d has executed successfully", script_name, unit);
-		}
 
 		/* run script */
 		if (eval("/bin/sh", path)) {
 			logmsg(LOG_WARNING, "unable to execute %s script for wireguard interface wg%d!", script_name, unit);
 			return -1;
 		}
-		else {
+		else
 			logmsg(LOG_DEBUG, "%s script for wireguard interface wg%d has executed successfully", script_name, unit);
-		}
-
 	}
 
 	return 0;
 }
 
-int wg_iface_pre_up(int unit)
+void wg_iface_pre_up(int unit)
 {
 	wg_iface_script(unit, "preup");
 }
 
-int wg_iface_post_up(int unit)
+void wg_iface_post_up(int unit)
 {
 	wg_iface_script(unit, "postup");
 }
 
-int wg_iface_pre_down(int unit)
+void wg_iface_pre_down(int unit)
 {
 	wg_iface_script(unit, "predown");
 }
 
-int wg_iface_post_down(int unit)
+void wg_iface_post_down(int unit)
 {
 	wg_iface_script(unit, "postdown");
 }
 
 int wg_set_iptables(char *iface, char *port)
 {
-	if (eval("/bin/sh", WG_DIR"/scripts/fw-add.sh", port, iface)) {
+	if (eval("/bin/sh", WG_DIR"/scripts/fw-add.sh", port, iface))
 		logmsg(LOG_WARNING, "Unable to add iptable rules for wireguard interface %s on port %s!", iface, port);
-	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "Iptable rules have been added for wireguard interface %s on port %s", iface, port);
-	}
 
 	return 0;
 }
@@ -842,9 +858,8 @@ int wg_remove_peer(char *iface, char *pubkey)
 		logmsg(LOG_WARNING, "unable to remove peer %s from wireguard interface %s!", iface, pubkey);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "peer %s has been removed from wireguard interface %s", iface, pubkey);
-	}
 
 	return 0;
 }
@@ -861,22 +876,20 @@ int wg_remove_peer_privkey(char *iface, char *privkey)
 
 int wg_remove_iface(char *iface)
 {
-    /* Create wireguard interface */
+	/* create wireguard interface */
 	if (eval("/usr/sbin/ip", "link", "delete", iface)) {
 		logmsg(LOG_WARNING, "unable to delete wireguard interface %s!", iface);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "wireguard interface %s has been deleted", iface);
-	}
 
 	return 0;
 }
 
-int wg_pubkey(char *privkey, char *pubkey)
+void wg_pubkey(char *privkey, char *pubkey)
 {
 	uint8_t key[WG_KEY_LEN] __attribute__((aligned(sizeof(uintptr_t))));
-	char base64[WG_KEY_LEN_BASE64];
 
 	key_from_base64(key, privkey);
 	curve25519_generate_public(key, key);
@@ -890,74 +903,8 @@ int wg_save_iface(char *iface, char *file)
 		logmsg(LOG_WARNING, "Unable to save wireguard interface %s to file %s!", iface, file);
 		return -1;
 	}
-	else {
+	else
 		logmsg(LOG_DEBUG, "Saved wireguard interface %s to file %s", iface, file);
-	}
-
-	return 0;
-}
-
-int wg_quick_iface_up(char *iface, char *file)
-{
-	int buf_size = 32;
-	char buf[buf_size];
-	FILE *f;
-
-	/* copy config to wg dir with proper name */
-	memset(buf, 0, buf_size);
-	snprintf(buf, buf_size, WG_DIR"/%s.conf", iface);
-	if ((f = fopen(buf, "w")) != NULL) {
-		fappend(f, file);
-		fclose(f);
-	}
-	else {
-		logmsg(LOG_WARNING, "Unable to open wireguard configuration file %s for interface %s!", iface, file);
-	}
-
-	/* write wg config to file */
-	if (eval("/bin/sh", "/usr/sbin/wg-quick", "up", iface, "--norestart")) {
-		logmsg(LOG_WARNING, "Unable to set up wireguard interface %s from file %s!", iface, file);
-		return -1;
-	}
-	else {
-		logmsg(LOG_DEBUG, "Wireguard interface %s from file %s set up", iface, file);
-	}
-
-	stop_dnsmasq();
-	start_dnsmasq();
-
-	return 0;
-}
-
-int wg_quick_iface_down(char *iface, char *file)
-{
-	int buf_size = 32;
-	char buf[buf_size];
-	FILE *f;
-
-	/* copy config to wg dir with proper name */
-	memset(buf, 0, buf_size);
-	snprintf(buf, buf_size, WG_DIR"/%s.conf", iface);
-	if ((f = fopen(buf, "w")) != NULL) {
-		fappend(f, file);
-		fclose(f);
-	}
-	else {
-		logmsg(LOG_WARNING, "Unable to open wireguard configuration file %s for interface %s!", iface, file);
-		return -1;
-	}
-
-	/* write wg config to file */
-	if (eval("/bin/sh", "/usr/sbin/wg-quick", "down", buf, "--norestart")) {
-		logmsg(LOG_WARNING, "Unable to set down wireguard interface %s from file %s!", iface, file);
-		return -1;
-	}
-	else {
-		logmsg(LOG_DEBUG, "Wireguard interface %s from file %s set down", iface, file);
-	}
-
-	stop_dnsmasq();
-	start_dnsmasq();
 
 	return 0;
 }
@@ -965,7 +912,7 @@ int wg_quick_iface_down(char *iface, char *file)
 void write_wg_dnsmasq_config(FILE* f)
 {
 	char buf[BUF_SIZE], device[24];
-	char *pos, *fn, ch;;
+	char *pos, *fn;
 	DIR *dir;
 	struct dirent *file;
 	int cur;
@@ -1009,7 +956,6 @@ static inline void encode_base64(char dest[static 4], const uint8_t src[static 3
 			  - (((51 - input[i]) >> 8) & 75)
 			  - (((61 - input[i]) >> 8) & 15)
 			  + (((62 - input[i]) >> 8) & 3);
-
 }
 
 void key_to_base64(char base64[static WG_KEY_LEN_BASE64], const uint8_t key[static WG_KEY_LEN])
@@ -1018,6 +964,7 @@ void key_to_base64(char base64[static WG_KEY_LEN_BASE64], const uint8_t key[stat
 
 	for (i = 0; i < WG_KEY_LEN / 3; ++i)
 		encode_base64(&base64[i * 4], &key[i * 3]);
+
 	encode_base64(&base64[i * 4], (const uint8_t[]){ key[i * 3 + 0], key[i * 3 + 1], 0 });
 	base64[WG_KEY_LEN_BASE64 - 2] = '=';
 	base64[WG_KEY_LEN_BASE64 - 1] = '\0';
