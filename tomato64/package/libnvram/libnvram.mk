@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-LIBNVRAM_VERSION = 153a64ae0b8c35ee6f01c07dfaaf63129086ee67
+LIBNVRAM_VERSION = e33692277d475d61a03e0772efeef5c829872f34
 LIBNVRAM_SITE = $(call github,tomato64,libnvram,$(LIBNVRAM_VERSION))
 LIBNVRAM_INSTALL_STAGING = YES
 LIBNVRAM_LICENSE = MIT
