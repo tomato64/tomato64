@@ -1,4 +1,6 @@
-BUILDROOT_VERSION = 2023.08.1
+BUILDROOT_VERSION = 2023.11
+TARBALL = ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSION).tar.xz
+URL = https://github.com/tomato64/buildroot-release/releases/download
 PATCHES := $(wildcard src/patches/*.patch)
 
 default: .configure
@@ -17,9 +19,16 @@ distclean:
 	done
 	@touch $@
 
-.extract:
-	tar xJf src/buildroot-$(BUILDROOT_VERSION).tar.xz -C src/
+.extract: .download
+	tar xJf ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSION).tar.xz -C src/
 	mv src/buildroot-$(BUILDROOT_VERSION) src/buildroot
+	@touch $@
+
+.download:
+	mkdir -p ${HOME}/buildroot-src/buildroot
+ifeq (,$(wildcard $(TARBALL)))
+	wget -O $(TARBALL) $(URL)/$(BUILDROOT_VERSION)/buildroot-$(BUILDROOT_VERSION).tar.xz
+endif
 	@touch $@
 
 .DEFAULT:
