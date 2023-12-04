@@ -98,7 +98,9 @@ signal4g() {
 				CERSSI=$(MODE="AT^CERSSI?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom | grep "CERSSI:" | tr -d '\r')
 				[ -n "$CERSSI" ] && {
 					CQI1=$(echo "$CERSSI" | cut -d "," -f10)
+					[ "$CQI1" -gt "15" ] && CQI1 = "unknown"
 					CQI2=$(echo "$CERSSI" | cut -d "," -f11)
+					[ "$CQI2" -gt "15" ] && CQI2 = "unknown"
 				}
 
 				HFREQINFO=$(MODE="AT^HFREQINFO?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom | grep "HFREQINFO:" | tr -d '\r')
