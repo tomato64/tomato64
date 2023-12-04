@@ -1,0 +1,5 @@
+config BR2_PACKAGE_OPENVPN_PLUGIN_AUTH_NVRAM
+	bool "openvpn_plugin_auth_nvram"
+	select BR2_PACKAGE_LIBNVRAM
+	help
+	  OpenVPN username plugin.
