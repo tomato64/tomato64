@@ -1,0 +1,4 @@
+config BR2_PACKAGE_NDPI
+	bool "ndpi-netfilter"
+	help
+	  Deep Packet Inspection netfilter kernel module
