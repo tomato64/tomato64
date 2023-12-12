@@ -318,6 +318,7 @@ int ipt_dscp(const char *v, char *opt, const size_t buf_sz)
 	return 1;
 }
 
+#ifndef TOMATO64
 int ipt_ipp2p(const char *v, char *opt, const size_t buf_sz)
 {
 	int n = atoi(v);
@@ -458,6 +459,100 @@ int ipt_layer7(const char *v, char *opt, const size_t buf_sz)
 
 	return 1;
 }
+#endif /* TOMATO64 */
+
+#ifdef TOMATO64
+
+char **ndpi_in;
+
+/* This nDPI matches inbound traffic, caches the results, then the nDPI outbound
+ * should read the cached result and set the appropriate marks
+ */
+static void ipt_ndpi_inbound(void)
+{
+	int en, i;
+	char **p;
+
+	if (!ndpi_in) return;
+
+	en = nvram_match("nf_ndpi_in", "1");
+	if (en) {
+		ipt_write(":nDPIin - [0:0]\n");
+		if (wanup) {
+			for (i = 0; i < wanfaces.count; ++i) {
+				if (*(wanfaces.iface[i].name))
+					ipt_write("-A FORWARD -i %s -j nDPIin\n", wanfaces.iface[i].name);
+			}
+		}
+		if (wan2up) {
+			for (i = 0; i < wan2faces.count; ++i) {
+				if (*(wan2faces.iface[i].name))
+					ipt_write("-A FORWARD -i %s -j nDPIin\n", wan2faces.iface[i].name);
+			}
+	}
+#ifdef TCONFIG_MULTIWAN
+		if (wan3up) {
+			for (i = 0; i < wan3faces.count; ++i) {
+				if (*(wan3faces.iface[i].name))
+					ipt_write("-A FORWARD -i %s -j nDPIin\n", wan3faces.iface[i].name);
+			}
+		}
+		if (wan4up) {
+			for (i = 0; i < wan4faces.count; ++i) {
+				if (*(wan4faces.iface[i].name))
+					ipt_write("-A FORWARD -i %s -j nDPIin\n", wan4faces.iface[i].name);
+			}
+		}
+#endif
+	}
+
+	p = ndpi_in;
+	while (*p) {
+		if (en) {
+			ipt_write("-A nDPIin %s -j RETURN\n", *p);
+			can_enable_fastnat = 0;
+			}
+		free(*p);
+		++p;
+	}
+	free(ndpi_in);
+	ndpi_in = NULL;
+}
+
+int ipt_ndpi(const char *v, char *opt, const size_t buf_sz)
+{
+	char s[128];
+
+	*opt = 0;
+	if (*v == 0)
+		return 0;
+
+	snprintf(opt, buf_sz, " -m ndpi --proto %s", v);
+
+	if (nvram_match("nf_ndpi_in", "1")) {
+		if (!ndpi_in)
+			ndpi_in = calloc(51, sizeof(char *));
+
+		if (ndpi_in) {
+			char **p;
+
+			p = ndpi_in;
+			while (*p) {
+				if (strcmp(*p, opt) == 0)
+					return 1;
+
+				++p;
+			}
+			if (((p - ndpi_in) / sizeof(char *)) < 50)
+				*p = strdup(opt);
+		}
+	}
+
+	modprobe("xt_ndpi");
+
+	return 1;
+}
+#endif /* TOMATO64 */
 
 static void ipt_account(void) {
 	struct in_addr ipaddr, netmask, network;
@@ -1367,7 +1462,12 @@ static void filter_forward(void)
 	) {
 		ipt_restrictions();
 
+#ifndef TOMATO64
 		ipt_layer7_inbound();
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+		ipt_ndpi_inbound();
+#endif /* TOMATO64 */
 	}
 
 	ipt_webmon();
@@ -2148,7 +2248,11 @@ int start_firewall(void)
 	modprobe_r("ip6t_REJECT");
 #endif
 
+#ifndef TOMATO64
 	modprobe_r("xt_layer7");
+#else
+	modprobe("xt_ndpi");
+#endif /* TOMATO64 */
 	modprobe_r("xt_recent");
 	modprobe_r("xt_HL");
 	modprobe_r("xt_length");
@@ -2160,7 +2264,9 @@ int start_firewall(void)
 	modprobe_r("xt_webmon");
 #endif
 	modprobe_r("xt_dscp");
+#ifndef TOMATO64
 	modprobe_r("ipt_ipp2p");
+#endif /* TOMATO64 */
 
 	unlink("/var/webmon/domain");
 	unlink("/var/webmon/search");

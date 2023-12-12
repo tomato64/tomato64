@@ -21,22 +21,38 @@
 
 //	<% nvram("qos_enable,qos_mode,qos_classnames,qos_orules"); %>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% layer7(); %>
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+//	<% ndpi(); %>
+/* TOMATO64-END */
 
 var abc = nvram.qos_classnames.split(' ');
 
+/* TOMATO64-REMOVE-BEGIN */
 var ipp2p = [[0,'IPP2P (disabled)'],[0xFFF,'All IPP2P filters'],[1,'AppleJuice'],[2,'Ares'],[4,'BitTorrent'],[8,'Direct Connect'],
              [16,'eDonkey'],[32,'Gnutella'],[64,'Kazaa'],[128,'Mute'],[256,'SoulSeek'],[512,'Waste'],[1024,'WinMX'],[2048,'XDCC']];
+/* TOMATO64-REMOVE-END */
 
 var dscp = [['','DSCP (any)'],['0x00','BE'],['0x08','CS1'],['0x10','CS2'],['0x18','CS3'],['0x20','CS4'],['0x28','CS5'],['0x30','CS6'],['0x38','CS7'],['0x0a','AF11'],['0x0c','AF12'],['0x0e','AF13'],
             ['0x12','AF21'],['0x14','AF22'],['0x16','AF23'],['0x1a','AF31'],['0x1c','AF32'],['0x1e','AF33'],['0x22','AF41'],['0x24','AF42'],['0x26','AF43'],['0x2e','EF'],['*','DSCP value']];
 for (var i = 1; i < dscp.length - 1; ++i)
 	dscp[i][1] = 'DSCP Class '+dscp[i][1];
 
+/* TOMATO64-REMOVE-BEGIN */
 layer7.sort();
 for (i = 0; i < layer7.length; ++i)
 	layer7[i] = [layer7[i],layer7[i]];
 layer7.unshift(['', 'Layer 7 (disabled)']);
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+for (i = 0; i < ndpi.length; ++i)
+	ndpi[i] = [ndpi[i],ndpi[i]];
+ndpi.unshift(['', 'nDPI (disabled)']);
+/* TOMATO64-END */
 
 var class1 = [[-1,'Disabled']];
 for (i = 0; i < 10; ++i)
@@ -94,8 +110,14 @@ qosg.setup = function() {
 			{ type: 'select', prefix: '<div class="x2b">', suffix: '<\/div>', options: [['a','Any Port'],['d','Dst Port'],['s','Src Port'],['x','Src or Dst']] },
 			{ type: 'text', maxlen: 130, prefix: '<div class="x2c">', suffix: '<\/div>' },
 
+/* TOMATO64-REMOVE-BEGIN */
 			{ type: 'select', prefix: '<div class="x3a">', suffix: '<\/div>', options: ipp2p },
 			{ type: 'select', prefix: '<div class="x3b">', suffix: '<\/div>', options: layer7 },
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+			{ type: 'select', prefix: '<div class="x3a">', suffix: '<\/div>', options: ndpi },
+/* TOMATO64-END */
 
 			{ type: 'select', prefix: '<div class="x4a">', suffix: '<\/div>', options: dscp },
 			{ type: 'text', maxlen: 4, prefix: '<div class="x4b">', suffix: '<\/div>' },
@@ -111,15 +133,26 @@ qosg.setup = function() {
 	this.headerSet(['Match Rule','Class','Description','#']);
 
 	/* addr_type < addr < proto < port_type < port < ipp2p < L7 < bcount < dscp < class < desc */
+	/* addr_type < addr < proto < port_type < port < nDPI < bcount < dscp < class < desc */
 	a = nvram.qos_orules.split('>');
 	for (i = 0; i < a.length; ++i) {
 		b = a[i].split('<');
 
+/* TOMATO64-REMOVE-BEGIN */
 		if (b.length == 11) {
 			c = b[7].split(':');
 			b.splice(7, 1, c[0], (c.length == 1) ? '' : c[1]);
 			b[11] = unescape(b[11]);
 		}
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+		if (b.length == 10) {
+			c = b[6].split(':');
+			b.splice(6, 1, c[0], (c.length == 1) ? '' : c[1]);
+			b[10] = unescape(b[10]);
+		}
+/* TOMATO64-END */
 		else
 			continue;
 
@@ -156,6 +189,7 @@ qosg.dataToView = function(data) {
 			b.push(s+'Port: '+data[4].replace(/:/g, '-'));
 		}
 	}
+/* TOMATO64-REMOVE-BEGIN */
 	if (data[5] != 0) {
 		for (i = 0; i < ipp2p.length; ++i)
 			if (ipp2p[i][0] == data[5]) {
@@ -179,22 +213,54 @@ qosg.dataToView = function(data) {
 		b.push('Transferred: '+data[7]+((data[8] == '') ? '<small>KB+<\/small>' : (' - '+data[8]+'<small>KB<\/small>')));
 
 	return [b.join('<br>'), class1[(data[10] * 1) + 1][1], escapeHTML(data[11]), (ruleCounter >= 0) ? ''+ ++ruleCounter : ''];
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+	if (data[5] != '')
+		b.push('nDPI: '+data[5]);
+
+	if (data[8] != '') {
+		s = dscpClass(data[8]);
+		if (s != '')
+			b.push(s);
+		else
+			b.push('DSCP Value: '+data[8]);
+	}
+
+	if (data[6] != '')
+		b.push('Transferred: '+data[6]+((data[7] == '') ? '<small>KB+<\/small>' : (' - '+data[7]+'<small>KB<\/small>')));
+
+	return [b.join('<br>'), class1[(data[9] * 1) + 1][1], escapeHTML(data[10]), (ruleCounter >= 0) ? ''+ ++ruleCounter : ''];
+/* TOMATO64-END */
 }
 
 qosg.fieldValuesToData = function(row) {
 	var f = fields.getAll(row);
 	var proto = f[2].value;
 	var dir = f[3].value;
+/* TOMATO64-REMOVE-BEGIN */
 	var vdscp = (f[7].value == '*') ? f[8].value : f[7].value;
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+	var vdscp = (f[6].value == '*') ? f[7].value : f[6].value;
+/* TOMATO64-END */
 	if ((proto != -1) && (proto != 6) && (proto != 17))
 		dir = 'a';
 
+/* TOMATO64-REMOVE-BEGIN */
 	return [f[0].value, f[0].selectedIndex ? f[1].value : '', proto, dir, (dir != 'a') ? f[4].value : '', f[5].value, f[6].value, f[9].value, f[10].value, vdscp, f[11].value, f[12].value];
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+	return [f[0].value, f[0].selectedIndex ? f[1].value : '', proto, dir, (dir != 'a') ? f[4].value : '', f[5].value, f[8].value, f[9].value, vdscp, f[10].value, f[11].value];
+/* TOMATO64-END */
 }
 
 qosg.dataToFieldValues = function(data) {
 	var s = '';
 
+/* TOMATO64-REMOVE-BEGIN */
 	if (data[9] != '') {
 		if (dscpClass(data[9]) == '')
 			s = '*';
@@ -203,6 +269,18 @@ qosg.dataToFieldValues = function(data) {
 	}
 
 	return [data[0], data[1], data[2], data[3], data[4], data[5], data[6], s, data[9], data[7], data[8], data[10], data[11]];
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+	if (data[8] != '') {
+		if (dscpClass(data[8]) == '')
+			s = '*';
+		else
+			s = data[8].toLowerCase();
+	}
+
+        return [data[0], data[1], data[2], data[3], data[4], data[5], s, data[8], data[6], data[7], data[9], data[10]];
+/* TOMATO64-END */
 }
 
 qosg.resetNewEditor = function() {
@@ -213,6 +291,7 @@ qosg.resetNewEditor = function() {
 	f[3].selectedIndex = 0;
 	f[4].value = '';
 	f[5].selectedIndex = 0;
+/* TOMATO64-REMOVE-BEGIN */
 	f[6].selectedIndex = 0;
 	f[7].selectedIndex = 0;
 	f[8].value = '';
@@ -220,6 +299,17 @@ qosg.resetNewEditor = function() {
 	f[10].value = '';
 	f[11].selectedIndex = 5;
 	f[12].value = '';
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+        f[6].selectedIndex = 0;
+        f[7].value = '';
+        f[8].value = '';
+        f[9].value = '';
+        f[10].selectedIndex = 5;
+        f[11].value = '';
+/* TOMATO64-END */
+
 	this.enDiFields(this.newEditor);
 	ferror.clearAll(fields.getAll(this.newEditor));
 }
@@ -243,10 +333,18 @@ qosg.enDiFields = function(row) {
 		x = 1;
 	f[4].disabled = x;
 
+/* TOMATO64-REMOVE-BEGIN */
 	f[6].disabled = (f[5].selectedIndex != 0);
 	f[5].disabled = (f[6].selectedIndex != 0);
+/* TOMATO64-REMOVE-END */
 
+/* TOMATO64-REMOVE-BEGIN */
 	f[8].disabled = (f[7].value != '*');
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+	f[7].disabled = (f[6].value != '*');
+/* TOMATO64-END */
 }
 
 qosg.verifyFields = function(row, quiet) {
@@ -271,7 +369,13 @@ qosg.verifyFields = function(row, quiet) {
 	if ((b > 0) && (b <= 3) && (f[3].selectedIndex != 0) && (!v_iptport(f[4], quiet)))
 		return 0;
 
+/* TOMATO64-REMOVE-BEGIN */
 	e = f[9];
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+	e = f[8];
+/* TOMATO64-END */
 	a = e.value = e.value.trim();
 	if (a != '') {
 		if (!v_range(e, quiet, 0, BMAX))
@@ -279,7 +383,13 @@ qosg.verifyFields = function(row, quiet) {
 		a *= 1;
 	}
 
+/* TOMATO64-REMOVE-BEGIN */
 	e = f[10];
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+	e = f[9];
+/* TOMATO64-END */
 	b = e.value = e.value.trim();
 	if (b != '') {
 		b *= 1;
@@ -289,16 +399,29 @@ qosg.verifyFields = function(row, quiet) {
 			return 0;
 
 		if (a == '')
+/* TOMATO64-REMOVE-BEGIN */
 			f[9].value = a = 0;
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+			f[8].value = a = 0;
+/* TOMATO64-END */
 	}
 	else if (a != '')
 		b = BMAX;
 
 	if ((b != '') && (a >= b)) {
+/* TOMATO64-REMOVE-BEGIN */
 		ferror.set(f[9], 'Invalid range', quiet);
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+		ferror.set(f[8], 'Invalid range', quiet);
+/* TOMATO64-END */
 		return 0;
 	}
 
+/* TOMATO64-REMOVE-BEGIN */
 	if (f[7].value == '*') {
 		if (!v_dscp(f[8], quiet))
 			return 0;
@@ -310,6 +433,21 @@ qosg.verifyFields = function(row, quiet) {
 		return 0;
 
 	return v_length(f[12], quiet);
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+        if (f[6].value == '*') {
+                if (!v_dscp(f[7], quiet))
+                        return 0;
+        }
+        else
+                f[7].value = f[6].value;
+
+        if (!v_nodelim(f[11], quiet, 'Description', 1))
+                return 0;
+
+        return v_length(f[11], quiet);
+/* TOMATO64-END */
 }
 
 function verifyFields(focused, quiet) {
@@ -328,8 +466,14 @@ function save() {
 	for (i = 0; i < c.length; ++i) {
 		b = c[i].slice(0);
 		b[4] = b[4].replace(/-/g, ':');
+/* TOMATO64-REMOVE-BEGIN */
 		b.splice(7, 2, (b[7] == '') ? '' : [b[7],b[8]].join(':'));
 		b[10] = escapeD(b[10]);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		b.splice(6, 2, (b[6] == '') ? '' : [b[6],b[7]].join(':'));
+		b[9] = escapeD(b[9]);
+/* TOMATO64-END */
 		a.push(b.join('<'));
 	}
 	fom.qos_orules.value = a.join('>');

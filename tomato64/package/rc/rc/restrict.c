@@ -279,12 +279,14 @@ void ipt_restrictions(void)
 			if ((*dir != 'a') && (*dir != 's') && (*dir != 'd') && (*dir != 'x'))
 				continue;
 
+#ifndef TOMATO64
 			/* p2p, layer7 */
 			memset(app, 0, sizeof(app));
 			if (!ipt_ipp2p(ipp2p, app, sizeof(app))) {
 				if (ipt_layer7(layer7, app, sizeof(app)) == -1)
 					continue;
 			}
+#endif /* TOMATO64 */
 #ifdef TCONFIG_IPV6
 			v4v6_ok = ((*app) ? 0 : IPT_V6) | IPT_V4;
 #else

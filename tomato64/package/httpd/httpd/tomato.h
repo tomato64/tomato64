@@ -139,7 +139,12 @@ extern void asp_ctcount(int argc, char **argv);
 extern void asp_ctdump(int argc, char **argv);
 extern void asp_ctrate(int argc, char **argv);
 extern void asp_qrate(int argc, char **argv);
+#ifndef TOMATO64
 extern void asp_layer7(int argc, char **argv);
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+extern void asp_ndpi(int argc, char **argv);
+#endif /* TOMATO64 */
 extern void wo_expct(char *url);
 
 /* wl.c */

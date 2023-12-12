@@ -753,16 +753,13 @@ void asp_qrate(int argc, char **argv)
 #endif
 }
 
+#ifndef TOMATO64
 static void layer7_list(const char *path, int *first)
 {
 	DIR *dir;
 	struct dirent *de;
 	char *p;
-#ifndef TOMATO64
 	char name[NAME_MAX];
-#else
-	char name[256];
-#endif /* TOMATO64 */
 
 	if ((dir = opendir(path)) != NULL) {
 		while ((de = readdir(dir)) != NULL) {
@@ -786,6 +783,29 @@ void asp_layer7(int argc, char **argv)
 	layer7_list("/etc/l7-protocols", &first);
 	web_puts("];\n");
 }
+#endif /* TOMATO64 */
+
+#ifdef TOMATO64
+void asp_ndpi(int argc, char **argv)
+{
+	FILE *f;
+	char proto[50];
+	int first = 1;
+
+	system("/usr/sbin/iptables -m ndpi --help |/usr/bin/tail -n +$(( 1 + $(/usr/sbin/iptables -m ndpi --help |/bin/grep -n \"Enabled protocols\"|/usr/bin/tail -n1|/usr/bin/cut -d: -f1) )) |/usr/bin/xargs -n1 > /tmp/ndpi");
+
+	web_puts("\nndpi = [");
+	if ((f = fopen("/tmp/ndpi", "r")) != NULL) {
+		while (fgets(proto, sizeof(proto), f)) {
+			proto[strcspn(proto, "\n")] = '\0';
+			web_printf("%s'%s'", first ? "" : ",", proto);
+			first = 0;
+		}
+		fclose(f);
+	}
+	web_puts("];\n");
+}
+#endif /* TOMATO64 */
 
 void wo_expct(char *url)
 {

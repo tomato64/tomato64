@@ -362,7 +362,12 @@ extern char lanface[BRIDGE_COUNT][IFNAMSIZ + 1];
 extern char wan6face[];
 #endif
 extern char lan_cclass[];
+#ifndef TOMATO64
 extern char **layer7_in;
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+extern char **ndpi_in;
+#endif /* TOMATO64 */
 extern void enable_ip_forward(void);
 extern int ipv6_enabled;
 extern void ipt_write(const char *format, ...);
@@ -378,8 +383,13 @@ extern void ip6t_write(const char *format, ...);
 extern void ipt_log_unresolved(const char *addr, const char *addrtype, const char *categ, const char *name);
 extern int ipt_addr(char *addr, int maxlen, const char *s, const char *dir, int af, int strict, const char *categ, const char *name);
 extern int ipt_dscp(const char *v, char *opt, const size_t buf_sz);
+#ifndef TOMATO64
 extern int ipt_ipp2p(const char *v, char *opt, const size_t buf_sz);
 extern int ipt_layer7(const char *v, char *opt, const size_t buf_sz);
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+extern int ipt_ndpi(const char *v, char *opt, const size_t buf_sz);
+#endif /* TOMATO64 */
 #define ipt_source_strict(s, src, categ, name) ipt_addr(src, 64, s, "src", IPT_V4, 1, categ, name)
 #define ipt_source(s, src, categ, name) ipt_addr(src, 64, s, "src", IPT_V4, 0, categ, name)
 extern int start_firewall(void);

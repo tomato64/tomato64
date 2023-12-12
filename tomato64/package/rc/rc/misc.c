@@ -313,6 +313,12 @@ void setup_conntrack(void)
 	char buf[70];
 	int i;
 
+/* Needed for qos-detailed.asp, qos-ctrate.asp & qos-graphs.asp pages. */
+#ifdef TOMATO64
+	f_write_procsysnet("netfilter/nf_conntrack_acct", "1");
+	f_write_string("/sys/module/sch_htb/parameters/htb_rate_est", "1", 0, 0);
+#endif /* TOMATO64 */
+
 	p = nvram_safe_get("ct_tcp_timeout");
 	if (sscanf(p, "%u%u%u%u%u%u%u%u%u%u", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6], &v[7], &v[8], &v[9]) == 10) {	/* lightly verify */
 		write_tcp_timeout("established", v[1]);

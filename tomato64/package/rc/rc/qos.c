@@ -97,7 +97,12 @@ void ipt_qos(void)
 	char *proto;
 	char *port_type, *port;
 	char *class_prio;
+#ifndef TOMATO64
 	char *ipp2p, *layer7;
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+	char *ndpi;
+#endif /* TOMATO64 */
 	char *bcount;
 	char *dscp;
 	char *desc;
@@ -197,10 +202,17 @@ void ipt_qos(void)
 		if ((p = strsep(&g, ">")) == NULL)
 			break;
 
+#ifndef TOMATO64
 		i = vstrsep(p, "<", &addr_type, &addr, &proto, &port_type, &port, &ipp2p, &layer7, &bcount, &dscp, &class_prio, &desc);
 		rule_num++;
 		if (i < 11)
 			continue;
+#else
+		i = vstrsep(p, "<", &addr_type, &addr, &proto, &port_type, &port, &ndpi, &bcount, &dscp, &class_prio, &desc);
+		rule_num++;
+		if (i < 10)
+			continue;
+#endif /* TOMATO64 */
 
 		class_num = atoi(class_prio);
 		if ((class_num < 0) || (class_num > 9))
@@ -230,6 +242,7 @@ void ipt_qos(void)
 			snprintf(saddr, sizeof(saddr), "-m mac --mac-source %s", addr); /* (-m mac modified, returns !match in OUTPUT) */
 		}
 
+#ifndef TOMATO64
 		/* IPP2P/Layer7 */
 		memset(app, 0, sizeof(app));
 		if (ipt_ipp2p(ipp2p, app, sizeof(app)))
@@ -241,6 +254,17 @@ void ipt_qos(void)
 			v4v6_ok &= ~IPT_V6; /* L7 for IPv6 not working either! */
 			strlcat(saddr, app, sizeof(saddr));
 		}
+#endif /* TOMATO64 */
+
+#ifdef TOMATO64
+		/* ndpi */
+		memset(app, 0, sizeof(app));
+		ipt_ndpi(ndpi, app, sizeof(app));
+
+		if (app[0]) {
+			strlcat(saddr, app, sizeof(saddr));
+		}
+#endif /* TOMATO64 */
 
 		/* dscp */
 		memset(s, 0, sizeof(s));

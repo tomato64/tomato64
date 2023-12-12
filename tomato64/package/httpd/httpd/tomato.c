@@ -100,13 +100,18 @@ const aspapi_t aspapi[] = {
 	{ "dns",			asp_dns				},
 	{ "ident",			asp_ident			},
 	{ "lanip",			asp_lanip			},
+#ifndef TOMATO64
 	{ "layer7",			asp_layer7			},
+#endif /* TOMATO64 */
 	{ "link_uptime",		asp_link_uptime			},
 	{ "netdev",			asp_netdev			},
 
 	{ "iptraffic",			asp_iptraffic			},
 	{ "iptmon",			asp_iptmon			},
 
+#ifdef TOMATO64
+	{ "ndpi",			asp_ndpi			},
+#endif /* TOMATO64 */
 	{ "notice",			asp_notice			},
 	{ "nv",				asp_nv				},
 	{ "nvram",			asp_nvram 			},
@@ -603,7 +608,11 @@ static const nvset_t nvset_list[] = {
 	{ "ct_udp_timeout",		V_LENGTH(5, 15)			},
 	{ "ct_timeout",			V_LENGTH(5, 15)			},
 	{ "nf_ttl",			V_LENGTH(1, 6)			},
+#ifndef TOMATO64
 	{ "nf_l7in",			V_01				},
+#else
+	{ "nf_ndpi_in",			V_01				},
+#endif /* TOMATO64 */
 	{ "nf_sip",			V_01				},
 	{ "ct_hashsize",		V_NUM				},
 	{ "nf_rtsp",			V_01				},
