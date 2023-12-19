@@ -80,6 +80,10 @@ void wi_upgrade(char *url, int len, char *boundary)
 
 	prepare_upgrade();
 
+#ifdef TOMATO64
+	eval("mount", "-T", "/rom/etc/fstab.nvram", "-a");
+#endif /* TOMATO64 */
+
 	/* copy to memory */
 	system("cp /www/reboot.asp /tmp");
 	system("cp /www/*.css /tmp");

@@ -26,6 +26,10 @@ void wo_defaults(char *url)
 		if ((mode == 1) || (mode == 2)) {
 			prepare_upgrade();
 
+#ifdef TOMATO64
+			eval("mount", "-T", "/rom/etc/fstab.nvram", "-a");
+#endif /* TOMATO64 */
+
 			led(LED_DIAG, 1);
 
 			parse_asp("reboot-default.asp");
@@ -147,6 +151,10 @@ void wi_restore(char *url, int len, char *boundary)
 	rboot = 1;
 
 	prepare_upgrade();
+
+#ifdef TOMATO64
+	eval("mount", "-T", "/rom/etc/fstab.nvram", "-a");
+#endif /* TOMATO64 */
 
 	if (_eval(args, msg, 0, NULL) != 0)
 		resmsg_fread(msg + 1);
