@@ -1,0 +1,12 @@
+diff -Naur iproute2-6.5.0.orig/include/uapi/linux/pkt_sched.h iproute2-6.5.0/include/uapi/linux/pkt_sched.h
+--- iproute2-6.5.0.orig/include/uapi/linux/pkt_sched.h	2023-12-19 15:13:28.401901643 -0700
++++ iproute2-6.5.0/include/uapi/linux/pkt_sched.h	2023-12-19 15:13:51.749916959 -0700
+@@ -402,7 +402,7 @@
+ };
+ 
+ /* HTB section */
+-#define TC_HTB_NUMPRIO		8
++#define TC_HTB_NUMPRIO		11
+ #define TC_HTB_MAXDEPTH		8
+ #define TC_HTB_PROTOVER		3 /* the same as HTB and TC's major */
+ 

@@ -1,0 +1,24 @@
+diff -Naur linux-6.6.6.orig/include/uapi/linux/pkt_sched.h linux-6.6.6/include/uapi/linux/pkt_sched.h
+--- linux-6.6.6.orig/include/uapi/linux/pkt_sched.h	2023-12-19 15:10:49.477800307 -0700
++++ linux-6.6.6/include/uapi/linux/pkt_sched.h	2023-12-19 15:11:29.037825014 -0700
+@@ -402,7 +402,7 @@
+ };
+ 
+ /* HTB section */
+-#define TC_HTB_NUMPRIO		8
++#define TC_HTB_NUMPRIO		11
+ #define TC_HTB_MAXDEPTH		8
+ #define TC_HTB_PROTOVER		3 /* the same as HTB and TC's major */
+ 
+diff -Naur linux-6.6.6.orig/tools/include/uapi/linux/pkt_sched.h linux-6.6.6/tools/include/uapi/linux/pkt_sched.h
+--- linux-6.6.6.orig/tools/include/uapi/linux/pkt_sched.h	2023-12-19 15:10:49.589800376 -0700
++++ linux-6.6.6/tools/include/uapi/linux/pkt_sched.h	2023-12-19 15:11:07.385811455 -0700
+@@ -382,7 +382,7 @@
+ };
+ 
+ /* HTB section */
+-#define TC_HTB_NUMPRIO		8
++#define TC_HTB_NUMPRIO		11
+ #define TC_HTB_MAXDEPTH		8
+ #define TC_HTB_PROTOVER		3 /* the same as HTB and TC's major */
+ 
