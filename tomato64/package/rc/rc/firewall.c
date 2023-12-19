@@ -2251,7 +2251,7 @@ int start_firewall(void)
 #ifndef TOMATO64
 	modprobe_r("xt_layer7");
 #else
-	modprobe("xt_ndpi");
+	modprobe_r("xt_ndpi");
 #endif /* TOMATO64 */
 	modprobe_r("xt_recent");
 	modprobe_r("xt_HL");
