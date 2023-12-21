@@ -5,6 +5,7 @@ all:
 install:
 #	install -d $(INSTALLDIR)/sbin
 #	install -d $(INSTALLDIR)/usr/sbin
+#	install -d $(INSTALLDIR)/usr/bin
 #	install -d $(INSTALLDIR)/lib
 
 ifeq ($(TCONFIG_USB),y)
