@@ -985,6 +985,9 @@ img[id^="barnoise_"] {
 	width: 60%;
 }
 
+/* TOMATO64-BEGIN */
+#res-bp-grid .box6,
+/* TOMATO64-END */
 #res-bp-grid .box4 {
 	width: 30%;
 	clear: left;
@@ -998,7 +1001,9 @@ img[id^="barnoise_"] {
 }
 
 #log-find-text,
+/* TOMATO64-REMOVE-BEGIN */
 #res-bp-grid .box6,
+/* TOMATO64-REMOVE-END */
 #sm-grid .co1 {
 	width: 30%;
 }

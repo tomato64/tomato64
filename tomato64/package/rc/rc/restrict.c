@@ -212,8 +212,12 @@ void ipt_restrictions(void)
 	char *dir;
 	char *pport;
 	int proto;
+#ifndef TOMATO64
 	char *ipp2p;
 	char *layer7;
+#else
+	char *ndpi;
+#endif /* TOMATO64 */
 	char *addr_type, *addr;
 	char app[256];
 	char ports[256];
@@ -273,8 +277,13 @@ void ipt_restrictions(void)
 		blockall = 1;
 
 		while ((q = strsep(&matches, ">")) != NULL) {
+#ifndef TOMATO64
 			if (vstrsep(q, "<", &pproto, &dir, &pport, &ipp2p, &layer7, &addr_type, &addr) < 7)
 				continue;
+#else
+			if (vstrsep(q, "<", &pproto, &dir, &pport, &ndpi, &addr_type, &addr) < 6)
+				continue;
+#endif /* TOMATO64 */
 
 			if ((*dir != 'a') && (*dir != 's') && (*dir != 'd') && (*dir != 'x'))
 				continue;
@@ -286,6 +295,11 @@ void ipt_restrictions(void)
 				if (ipt_layer7(layer7, app, sizeof(app)) == -1)
 					continue;
 			}
+#else
+			/* ndpi */
+			memset(app, 0, sizeof(app));
+			if (!ipt_ndpi(ndpi, app, sizeof(app)))
+				continue;
 #endif /* TOMATO64 */
 #ifdef TCONFIG_IPV6
 			v4v6_ok = ((*app) ? 0 : IPT_V6) | IPT_V4;

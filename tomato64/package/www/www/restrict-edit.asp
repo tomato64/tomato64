@@ -21,7 +21,13 @@
 
 //	<% nvram(''); %>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% layer7(); %>
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+//	<% ndpi(); %>
+/* TOMATO64-END */
 
 //	<% nvramseq("rrules", "rrule%d", 0, 99); %>
 
@@ -47,6 +53,7 @@ rule[3] *= 1;
 rule[4] *= 1;
 rule[8] *= 1;
 
+/* TOMATO64-REMOVE-BEGIN */
 layer7.sort();
 for (i = 0; i < layer7.length; ++i)
 	layer7[i] = [layer7[i],layer7[i]];
@@ -54,6 +61,13 @@ layer7.unshift(['','Layer 7 (disabled)']);
 
 var ipp2p = [[0,'IPP2P (disabled)'],[0xFFFF,'All IPP2P Filters'],[1,'AppleJuice'],[2,'Ares'],[4,'BitTorrent'],[8,'Direct Connect'],[16,'eDonkey'],[32,'Gnutella'],
              [64,'Kazaa'],[128,'Mute'],[4096,'PPLive/UUSee'],[256,'SoulSeek'],[512,'Waste'],[1024,'WinMX'],[2048,'XDCC'],[8192,'Xunlei/QQCyclone']];
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+for (i = 0; i < ndpi.length; ++i)
+	ndpi[i] = [ndpi[i],ndpi[i]];
+ndpi.unshift(['', 'nDPI (disabled)']);
+/* TOMATO64-END */
 
 var dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var addrestrict = 0;
@@ -143,8 +157,13 @@ bpg.setup = function() {
 		{ type: 'select', prefix: '<div class="box1">', suffix: '<\/div>', options: protos },
 		{ type: 'select', prefix: '<div class="box2">', suffix: '<\/div>', options: [['a','Any Port'],['d','Dst Port'],['s','Src Port'],['x','Src or Dst']] },
 		{ type: 'text', prefix: '<div class="box3">', suffix: '<\/div>', maxlen: 32 },
+/* TOMATO64-REMOVE-BEGIN */
 		{ type: 'select', prefix: '<div class="box4">', suffix: '<\/div>', options: ipp2p },
 		{ type: 'select', prefix: '<div class="box5">', suffix: '<\/div>', options: layer7 },
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		{ type: 'select', prefix: '<div class="box4">', suffix: '<\/div>', options: ndpi },
+/* TOMATO64-END */
 		{ type: 'select', prefix: '<div class="box6">', suffix: '<\/div>', options: [[0,'Any Address'],[1,'Dst IP'],[2,'Src IP']] },
 		{ type: 'text', prefix: '<div class="box7">', suffix: '<\/div>', maxlen: 64 }
 		] } ] );
@@ -158,7 +177,12 @@ bpg.setup = function() {
 	a = rule[6].split('>');
 	for (i = 0; i < a.length; ++i) {
 		r = a[i].split('<');
+/* TOMATO64-REMOVE-BEGIN */
 		if (r.length == 7) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		if (r.length == 6) {
+/* TOMATO64-END */
 			r[2] = r[2].replace(/:/g, '-');
 			this.insertData(-1, r);
 			++count;
@@ -174,9 +198,15 @@ bpg.resetNewEditor = function() {
 	f[1].selectedIndex = 0;
 	f[2].value = '';
 	f[3].selectedIndex = 0;
+/* TOMATO64-REMOVE-BEGIN */
 	f[4].selectedIndex = 0;
 	f[5].selectedIndex = 0;
 	f[6].value = '';
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	f[4].selectedIndex = 0;
+	f[5].value = '';
+/* TOMATO64-END */
 	this.enDiFields(this.newEditor);
 	ferror.clearAll(fields.getAll(this.newEditor));
 }
@@ -194,8 +224,14 @@ bpg.dataToView = function(data) {
 	var s, i;
 
 	s = '';
+/* TOMATO64-REMOVE-BEGIN */
 	if (data[5] != 0)
 		s = ((data[5] == 1) ? 'To ' : 'From ')+data[6]+', ';
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	if (data[4] != 0)
+		s = ((data[4] == 1) ? 'To ' : 'From ')+data[5]+', ';
+/* TOMATO64-END */
 
 	if (data[0] <= -2)
 		s += (s.length ? 'a' : 'A')+'ny protocol';
@@ -218,6 +254,7 @@ bpg.dataToView = function(data) {
 			s += data[2].replace(/:/g, '-');
 	}
 
+/* TOMATO64-REMOVE-BEGIN */
 	if (data[3] != 0) {
 		for (i = 0; i < ipp2p.length; ++i) {
 			if (data[3] == ipp2p[i][0]) {
@@ -228,6 +265,11 @@ bpg.dataToView = function(data) {
 	}
 	else if (data[4] != '')
 		s += ', L7: '+data[4];
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	if (data[3] != '')
+		s += ', nDPI: '+data[3];
+/* TOMATO64-END */
 
 	return [s];
 }
@@ -235,7 +277,12 @@ bpg.dataToView = function(data) {
 bpg.fieldValuesToData = function(row) {
 	var f = fields.getAll(row);
 
+/* TOMATO64-REMOVE-BEGIN */
 	return [f[0].value, f[1].value, (f[1].selectedIndex == 0) ? '' : f[2].value, f[3].value, f[4].value, f[5].value, (f[5].selectedIndex == 0) ? '' : f[6].value];
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	return [f[0].value, f[1].value, (f[1].selectedIndex == 0) ? '' : f[2].value, f[3].value, f[4].value, (f[4].selectedIndex == 0) ? '' : f[5].value];
+/* TOMATO64-END */
 }
 
 bpg.enDiFields = function(row) {
@@ -249,9 +296,14 @@ bpg.enDiFields = function(row) {
 		x = 1;
 
 	f[2].disabled = x;
+/* TOMATO64-REMOVE-BEGIN */
 	f[3].disabled = (f[4].selectedIndex != 0);
 	f[4].disabled = (f[3].selectedIndex != 0);
 	f[6].disabled = (f[5].selectedIndex == 0);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	f[5].disabled = (f[4].selectedIndex == 0);
+/* TOMATO64-END */
 }
 
 bpg.verifyFields = function(row, quiet) {
@@ -259,11 +311,17 @@ bpg.verifyFields = function(row, quiet) {
 	ferror.clearAll(f);
 	this.enDiFields(row);
 
+/* TOMATO64-REMOVE-BEGIN */
 	if ((f[5].selectedIndex != 0) && ((!v_length(f[6], quiet, 1)) || (!_v_iptaddr(f[6], quiet, false, true, true))))
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	if ((f[4].selectedIndex != 0) && ((!v_length(f[5], quiet, 1)) || (!_v_iptaddr(f[5], quiet, false, true, true))))
+/* TOMATO64-END */
 		return 0;
 	if ((f[1].selectedIndex != 0) && (!v_iptport(f[2], quiet)))
 		return 0;
 
+/* TOMATO64-REMOVE-BEGIN */
 	if ((f[1].selectedIndex == 0) && (f[3].selectedIndex == 0) && (f[4].selectedIndex == 0) && (f[5].selectedIndex == 0)) {
 		var m = 'Please enter a specific address or port, or select an application match';
 		ferror.set(f[3], m, 1);
@@ -272,12 +330,24 @@ bpg.verifyFields = function(row, quiet) {
 		ferror.set(f[1], m, quiet);
 		return 0;
 	}
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	if ((f[1].selectedIndex == 0) && (f[3].selectedIndex == 0) && (f[4].selectedIndex == 0)) {
+		var m = 'Please enter a specific address or port, or select an application match';
+		ferror.set(f[3], m, 1);
+		ferror.set(f[4], m, 1);
+		ferror.set(f[1], m, quiet);
+		return 0;
+	}
+/* TOMATO64-END */
 
 	ferror.clear(f[1]);
 	ferror.clear(f[3]);
 	ferror.clear(f[4]);
 	ferror.clear(f[5]);
+/* TOMATO64-REMOVE-BEGIN */
 	ferror.clear(f[6]);
+/* TOMATO64-REMOVE-END */
 
 	return 1;
 }
