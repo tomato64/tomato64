@@ -565,19 +565,19 @@ function ntoa(ip) {
 }
 
 function ntoav6(ip) {
-	let output = "";
-	if (typeof(ip) == "number")
+	var output = '';
+	if (typeof(ip) == 'number')
 		ip = BigInt(ip);
-	for (let i = 7n; i >= 0n; --i) {
-		output += ((ip >> (i*16n)) & 65535n).toString(16).padStart(2, '0');
-		if (i > 0n)
-			output += ":";
+	for (var i = BigInt(7); i >= BigInt(0); --i) {
+		output += ((ip >> (i * BigInt(16))) & BigInt(65535)).toString(16).padStart(2, '0');
+		if (i > BigInt(0))
+			output += ':';
 	}
-    return output;
+	return output;
 }
 
 function atonv6(ip) {
-	return BigInt('0x' + ip.replaceAll(':', ''));
+	return BigInt('0x'+ip.replaceAll(':', ''));
 }
 
 // ---- 1.2.3.4, 1.2.3.4/24, 1.2.3.4/255.255.255.0, 1.2.3.4-1.2.3.5
