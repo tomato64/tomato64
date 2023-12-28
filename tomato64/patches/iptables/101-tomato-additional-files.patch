@@ -260,9 +260,9 @@ diff -Naur iptables-1.8.9.orig/extensions/libip6t_ROUTE.man iptables-1.8.9/exten
 +.TP
 +.BI "--tee "
 +Make a copy of the packet, and route that copy to the given destination. For the original, uncopied packet, behave like a non-terminating target and continue traversing the rules.  Not valid in combination with `--continue'
-diff -Naur iptables-1.8.9.orig/extensions/libip6t_web.c.disabled iptables-1.8.9/extensions/libip6t_web.c.disabled
---- iptables-1.8.9.orig/extensions/libip6t_web.c.disabled	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libip6t_web.c.disabled	2023-12-28 12:39:09.926029163 -0700
+diff -Naur iptables-1.8.9.orig/extensions/libip6t_web.c iptables-1.8.9/extensions/libip6t_web.c
+--- iptables-1.8.9.orig/extensions/libip6t_web.c	1969-12-31 17:00:00.000000000 -0700
++++ iptables-1.8.9/extensions/libip6t_web.c	2023-12-28 12:39:09.926029163 -0700
 @@ -0,0 +1,215 @@
 +/*
 +
