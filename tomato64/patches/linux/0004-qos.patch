@@ -1,6 +1,18 @@
-diff -Naur linux-6.6.6.orig/include/uapi/linux/pkt_sched.h linux-6.6.6/include/uapi/linux/pkt_sched.h
---- linux-6.6.6.orig/include/uapi/linux/pkt_sched.h	2023-12-19 15:10:49.477800307 -0700
-+++ linux-6.6.6/include/uapi/linux/pkt_sched.h	2023-12-19 15:11:29.037825014 -0700
+diff -Naur linux-6.6.8.orig/drivers/net/ifb.c linux-6.6.8/drivers/net/ifb.c
+--- linux-6.6.8.orig/drivers/net/ifb.c	2023-12-28 06:53:12.156619008 -0700
++++ linux-6.6.8/drivers/net/ifb.c	2023-12-28 06:57:35.796667060 -0700
+@@ -395,7 +395,7 @@
+  * Note that these legacy devices have one queue.
+  * Prefer something like : ip link add ifb10 numtxqueues 8 type ifb
+  */
+-static int numifbs = 2;
++static int numifbs = 4;
+ module_param(numifbs, int, 0);
+ MODULE_PARM_DESC(numifbs, "Number of ifb devices");
+ 
+diff -Naur linux-6.6.8.orig/include/uapi/linux/pkt_sched.h linux-6.6.8/include/uapi/linux/pkt_sched.h
+--- linux-6.6.8.orig/include/uapi/linux/pkt_sched.h	2023-12-28 06:53:12.420619055 -0700
++++ linux-6.6.8/include/uapi/linux/pkt_sched.h	2023-12-28 06:56:36.988656018 -0700
 @@ -402,7 +402,7 @@
  };
  
@@ -10,9 +22,9 @@ diff -Naur linux-6.6.6.orig/include/uapi/linux/pkt_sched.h linux-6.6.6/include/u
  #define TC_HTB_MAXDEPTH		8
  #define TC_HTB_PROTOVER		3 /* the same as HTB and TC's major */
  
-diff -Naur linux-6.6.6.orig/tools/include/uapi/linux/pkt_sched.h linux-6.6.6/tools/include/uapi/linux/pkt_sched.h
---- linux-6.6.6.orig/tools/include/uapi/linux/pkt_sched.h	2023-12-19 15:10:49.589800376 -0700
-+++ linux-6.6.6/tools/include/uapi/linux/pkt_sched.h	2023-12-19 15:11:07.385811455 -0700
+diff -Naur linux-6.6.8.orig/tools/include/uapi/linux/pkt_sched.h linux-6.6.8/tools/include/uapi/linux/pkt_sched.h
+--- linux-6.6.8.orig/tools/include/uapi/linux/pkt_sched.h	2023-12-28 06:53:12.588619084 -0700
++++ linux-6.6.8/tools/include/uapi/linux/pkt_sched.h	2023-12-28 06:56:36.988656018 -0700
 @@ -382,7 +382,7 @@
  };
  
