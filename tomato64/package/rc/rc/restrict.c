@@ -298,8 +298,7 @@ void ipt_restrictions(void)
 #else
 			/* ndpi */
 			memset(app, 0, sizeof(app));
-			if (!ipt_ndpi(ndpi, app, sizeof(app)))
-				continue;
+			ipt_ndpi(ndpi, app, sizeof(app));
 #endif /* TOMATO64 */
 #ifdef TCONFIG_IPV6
 			v4v6_ok = ((*app) ? 0 : IPT_V6) | IPT_V4;
