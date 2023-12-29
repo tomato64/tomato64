@@ -364,7 +364,11 @@ void ipt_restrictions(void)
 			else
 				p = NULL;
 
+#ifdef TCONFIG_BCMARM
+			ipt_write("-A %s -p tcp -m web --hore \"%s\" -j %s\n", reschain, http, chain_out_reject);
+#else
 			ip46t_write(ipv6_enabled, "-A %s -p tcp -m web --hore \"%s\" -j %s\n", reschain, http, chain_out_reject);
+#endif
 			need_web = 1;
 			blockall = 0;
 			if (p == NULL)
@@ -382,7 +386,11 @@ void ipt_restrictions(void)
 			strlcat(app, ".class$ .jar$", sizeof(app));
 
 		if (app[0]) {
+#ifdef TCONFIG_BCMARM
+			ipt_write("-A %s -p tcp -m multiport --dports %s -m web --path \"%s\" -j %s\n", reschain, nvram_safe_get("rrulewp"), app, chain_out_reject);
+#else
 			ip46t_write(ipv6_enabled, "-A %s -p tcp -m multiport --dports %s -m web --path \"%s\" -j %s\n", reschain, nvram_safe_get("rrulewp"), app, chain_out_reject);
+#endif
 			need_web = 1;
 			blockall = 0;
 		}
