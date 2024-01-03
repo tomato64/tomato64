@@ -961,9 +961,17 @@ void start_qos(char *prefix)
 	free(buf);
 
 #ifdef TCONFIG_BCMARM
+#ifndef TOMATO64
 	fprintf(f, "\n\t$TFA parent ffff: protocol ip prio 10 u32 match ip %s action mirred egress redirect dev $QOS_DEV\n", (nvram_get_int("qos_udp") ? "protocol 6 0xff" : "dst 0.0.0.0/0"));
+#else
+	fprintf(f, "\n\t$TFA parent ffff: protocol ip prio 10 u32 match ip %s action connmark mirred egress redirect dev $QOS_DEV\n", (nvram_get_int("qos_udp") ? "protocol 6 0xff" : "dst 0.0.0.0/0"));
+#endif /* TOMATO64 */
 #ifdef TCONFIG_IPV6
+#ifndef TOMATO64
 	fprintf(f, "\t$TFA parent ffff: protocol ipv6 prio 11 u32 match ip6 %s action mirred egress redirect dev $QOS_DEV\n", (nvram_get_int("qos_udp") ? "protocol 6 0xff" : "dst ::/0"));
+#else
+	fprintf(f, "\t$TFA parent ffff: protocol ipv6 prio 11 u32 match ip6 %s action connmark mirred egress redirect dev $QOS_DEV\n", (nvram_get_int("qos_udp") ? "protocol 6 0xff" : "dst ::/0"));
+#endif /* TOMATO64 */
 #endif
 #endif /* TCONFIG_BCMARM */
 
