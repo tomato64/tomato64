@@ -116,7 +116,13 @@ void ipt_qos(void)
 	char s[32];
 	char app[256];
 	int inuse;
+#ifdef TOMATO64
+	int usemacsrc;
+#endif /* TOMATO64 */
 	const char *chain;
+#ifdef TOMATO64
+	const char *chain2;
+#endif /* TOMATO64 */
 	unsigned long min;
 	unsigned long max;
 	unsigned long prev_max;
@@ -154,6 +160,11 @@ void ipt_qos(void)
 	ip46t_write(ipv6_enabled,
 	            ":QOSO - [0:0]\n"
 	            "-A QOSO -m connmark --mark 0/0xff000 -m connmark ! --mark 0/0xf -j RETURN\n");
+#ifdef TOMATO64
+	ip46t_write(ipv6_enabled,
+	            ":QOSO2 - [0:0]\n"
+	            "-A QOSO2 -m connmark --mark 0/0xff000 -m connmark ! --mark 0/0xf -j RETURN\n");
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_BCMARM
 	if (!nvram_get_int("qos_classify"))
@@ -212,6 +223,8 @@ void ipt_qos(void)
 		rule_num++;
 		if (i < 10)
 			continue;
+
+		usemacsrc = 0;
 #endif /* TOMATO64 */
 
 		class_num = atoi(class_prio);
@@ -240,6 +253,9 @@ void ipt_qos(void)
 		}
 		else if (*addr_type == '3') { /* match mac */
 			snprintf(saddr, sizeof(saddr), "-m mac --mac-source %s", addr); /* (-m mac modified, returns !match in OUTPUT) */
+#ifdef TOMATO64
+		usemacsrc = 1;
+#endif /* TOMATO64 */
 		}
 
 #ifndef TOMATO64
@@ -290,6 +306,11 @@ void ipt_qos(void)
 						            ":QOSSIZE - [0:0]\n"
 						            "-I QOSO 2 -m connmark ! --mark 0/0xff000 -j QOSSIZE\n"
 						            "-I QOSO 3 -m connmark ! --mark 0/0xff000 -m connmark ! --mark 0xff000/0xff000 -j RETURN\n");
+#ifdef TOMATO64
+						ip46t_write(ipv6_enabled,
+						            "-I QOSO2 2 -m connmark ! --mark 0/0xff000 -j QOSSIZE\n"
+						            "-I QOSO2 3 -m connmark ! --mark 0/0xff000 -m connmark ! --mark 0xff000/0xff000 -j RETURN\n");
+#endif /* TOMATO64 */
 					}
 					if (max != prev_max && sizegroup < 255) {
 						class_flag = ++sizegroup << 12;
@@ -318,6 +339,9 @@ void ipt_qos(void)
 			class_flag = 255 << 12;
 
 		chain = "QOSO";
+#ifdef TOMATO64
+		chain2 = "QOSO2";
+#endif /* TOMATO64 */
 		class_num |= class_flag;
 		snprintf(end + strlen(end), sizeof(end) - strlen(end), " -j CONNMARK --set-mark 0x%x/0xff00f\n", class_num);
 
@@ -347,20 +371,44 @@ void ipt_qos(void)
 				if (proto_num != 6) {
 					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s %s", chain, "udp", sport, saddr, end);
 					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s -j RETURN\n", chain, "udp", sport, saddr);
+#ifdef TOMATO64
+					if(usemacsrc == 0) {
+						ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s %s", chain2, "udp", sport, saddr, end);
+						ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s -j RETURN\n", chain2, "udp", sport, saddr);
+					}
+#endif /* TOMATO64 */
 				}
 				if (proto_num != 17) {
 					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s %s", chain, "tcp", sport, saddr, end);
 					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s -j RETURN\n", chain, "tcp", sport, saddr);
+#ifdef TOMATO64
+					if(usemacsrc == 0) {
+						ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s %s", chain2, "tcp", sport, saddr, end);
+						ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %s %s %s -j RETURN\n", chain2, "tcp", sport, saddr);
+					}
+#endif /* TOMATO64 */
 				}
 			}
 			else {
 				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %d %s %s", chain, proto_num, saddr, end);
 				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %d %s -j RETURN\n", chain, proto_num, saddr);
+#ifdef TOMATO64
+				if(usemacsrc == 0) {
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %d %s %s", chain2, proto_num, saddr, end);
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %d %s -j RETURN\n", chain2, proto_num, saddr);
+				}
+#endif /* TOMATO64 */
 			}
 		}
 		else { /* any protocol */
 			ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s %s", chain, saddr, end);
 			ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s -j RETURN\n", chain, saddr);
+#ifdef TOMATO64
+			if(usemacsrc == 0) {
+				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s %s", chain2, saddr, end);
+				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s -j RETURN\n", chain2, saddr);
+			}
+#endif /* TOMATO64 */
 		}
 	}
 	free(buf);
@@ -376,6 +424,10 @@ void ipt_qos(void)
 	class_num |= class_flag;
 	ip46t_write(ipv6_enabled, "-A QOSO -j CONNMARK --set-mark 0x%x/0xff00f\n", class_num);
 	ip46t_write(ipv6_enabled, "-A QOSO -j RETURN\n");
+#ifdef TOMATO64
+	ip46t_write(ipv6_enabled, "-A QOSO2 -j CONNMARK --set-mark 0x%x/0xff00f\n", class_num);
+	ip46t_write(ipv6_enabled, "-A QOSO2 -j RETURN\n");
+#endif /* TOMATO64 */
 
 	wan2_up = check_wanup("wan2");
 #ifdef TCONFIG_MULTIWAN
@@ -388,14 +440,22 @@ void ipt_qos(void)
 	 */
 	qface = wanfaces.iface[0].name;
 	ipt_write("-A FORWARD -o %s -j QOSO\n"
+#ifndef TOMATO64
 	          "-A OUTPUT -o %s -j QOSO\n"
+#else
+	          "-A OUTPUT -o %s -j QOSO2\n"
+#endif /* TOMATO64 */
 	          "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n"
 	          ,qface, qface, qface);
 
 	if (wan2_up) {
 		qface = wan2faces.iface[0].name;
 		ipt_write("-A FORWARD -o %s -j QOSO\n"
+#ifndef TOMATO64
 		          "-A OUTPUT -o %s -j QOSO\n"
+#else
+		          "-A OUTPUT -o %s -j QOSO2\n"
+#endif /* TOMATO64 */
 		          "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n"
 		          ,qface, qface, qface);
 	}
@@ -403,14 +463,22 @@ void ipt_qos(void)
 	if (wan3_up) {
 		qface = wan3faces.iface[0].name;
 		ipt_write("-A FORWARD -o %s -j QOSO\n"
+#ifndef TOMATO64
 		          "-A OUTPUT -o %s -j QOSO\n"
+#else
+		          "-A OUTPUT -o %s -j QOSO2\n"
+#endif /* TOMATO64 */
 		          "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n"
 		          ,qface, qface, qface);
 	}
 	if (wan4_up) {
 		qface = wan4faces.iface[0].name;
 		ipt_write("-A FORWARD -o %s -j QOSO\n"
+#ifndef TOMATO64
 		          "-A OUTPUT -o %s -j QOSO\n"
+#else
+		          "-A OUTPUT -o %s -j QOSO2\n"
+#endif /* TOMATO64 */
 		          "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n"
 		          ,qface, qface, qface);
 	}
@@ -420,7 +488,11 @@ void ipt_qos(void)
 	if (ipv6_enabled && *wan6face)
 		ip6t_write("-A FORWARD -o %s -j QOSO\n"
 		           "-A OUTPUT -o %s -p icmpv6 -j RETURN\n"
+#ifndef TOMATO64
 		           "-A OUTPUT -o %s -j QOSO\n"
+#else
+		           "-A OUTPUT -o %s -j QOSO2\n"
+#endif /* TOMATO64 */
 		           "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n"
 		           ,wan6face, wan6face, wan6face, wan6face);
 #endif /* TCONFIG_IPV6 */
