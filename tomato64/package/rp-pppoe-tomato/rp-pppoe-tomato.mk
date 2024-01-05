@@ -6,7 +6,7 @@
 
 RP_PPPOE_TOMATO_VERSION = 3.15
 RP_PPPOE_TOMATO_SOURCE = rp-pppoe-$(RP_PPPOE_TOMATO_VERSION).tar.gz
-RP_PPPOE_TOMATO_SITE = https://dianne.skoll.ca/projects/rp-pppoe/download/OLD
+RP_PPPOE_TOMATO_SITE = https://sources.buildroot.net/rp-pppoe
 RP_PPPOE_TOMATO_LICENSE = GPL-2.0
 RP_PPPOE_TOMATO_LICENSE_FILES = doc/LICENSE
 RP_PPPOE_TOMATO_CPE_ID_VENDOR = rp-pppoe_project
