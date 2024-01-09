@@ -2446,6 +2446,9 @@ void stop_udpxy(void)
 void set_tz(void)
 {
 	f_write_string("/etc/TZ", nvram_safe_get("tm_tz"), (FW_CREATE | FW_NEWLINE), 0644);
+#ifdef TOMATO64
+	tzset();
+#endif /* TOMATO64 */
 }
 
 void start_ntpd(void)
