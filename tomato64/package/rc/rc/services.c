@@ -1474,6 +1474,14 @@ void start_httpd(void)
 		logmsg(LOG_ERR, "starting httpd failed ...");
 	else
 		logmsg(LOG_INFO, "httpd is started");
+
+#ifdef TOMATO64
+	if (nvram_match("http_enable", "1"))
+		eval("/usr/bin/start_ttyd", "1");
+
+	if (nvram_match("https_enable", "1"))
+		eval("/usr/bin/start_ttyd", "2");
+#endif /* TOMATO64 */
 }
 
 void stop_httpd(void)
@@ -1485,6 +1493,9 @@ void stop_httpd(void)
 		killall_tk_period_wait("httpd", 50);
 		logmsg(LOG_INFO, "httpd is stopped");
 	}
+#ifdef TOMATO64
+	killall("ttyd", SIGTERM);
+#endif /* TOMATO64 */
 }
 
 #ifdef TCONFIG_IPV6

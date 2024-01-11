@@ -11461,10 +11461,9 @@ static void sysinit(void)
 	init_nvram();
 
 #ifdef TOMATO64
-        eval("/usr/bin/set_macs");
-        eval("/usr/bin/fudge_time");
-        eval("/usr/bin/start_qemu_guest");
-        eval("/usr/bin/start_ttyd");
+	eval("/usr/bin/set_macs");
+	eval("/usr/bin/fudge_time");
+	eval("/usr/bin/start_qemu_guest");
 #endif /* TOMATO64 */
 
 #ifndef TOMATO64

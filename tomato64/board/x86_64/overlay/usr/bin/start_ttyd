@@ -1,3 +1,9 @@
 #!/bin/sh
 
-start-stop-daemon -b -S -x /usr/bin/ttyd -- -t disableLeaveAlert=true -t cursorStyle=bar /bin/login
+if [ "$1" == "1" ]; then
+	start-stop-daemon -b -S -n ttyd1 -x /usr/bin/ttyd -- -t disableLeaveAlert=true -t cursorStyle=bar /bin/login
+fi
+
+if [ "$1" == "2" ]; then
+	start-stop-daemon -b -S -n ttyd2 -x /usr/bin/ttyd -- -t disableLeaveAlert=true -t cursorStyle=bar -S -C /etc/cert.pem -K /etc/key.pem -p 7682 /bin/login
+fi

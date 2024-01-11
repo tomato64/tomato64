@@ -1216,6 +1216,9 @@ static void filter_input(void)
 	char *hit;
 	int n;
 	char *p, *c;
+#ifdef TOMATO64
+	char *console;
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_BCMARM
 	/* 3 for filter */
@@ -1344,6 +1347,16 @@ static void filter_input(void)
 		if (ipt_source(p, s, "remote management", NULL)) {
 			if (remotemanage)
 				ipt_write("-A INPUT -p tcp %s --dport %s -j %s\n", s, nvram_safe_get("http_wanport"), chain_in_accept);
+#ifdef TOMATO64
+			if (remotemanage) {
+				if (nvram_match("remote_mgt_https", "1")) {
+					console = "7682";
+				} else {
+					console = "7681";
+				}
+				ipt_write("-A INPUT -p tcp %s --dport %s -j %s\n", s, console, chain_in_accept);
+			}
+#endif /* TOMATO64 */
 
 			if (nvram_get_int("sshd_remote"))
 				ipt_write("-A INPUT -p tcp %s --dport %s -j %s\n", s, nvram_safe_get("sshd_rport"), chain_in_accept);
