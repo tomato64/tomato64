@@ -18,6 +18,10 @@ ifeq ($(BR2_PACKAGE_RC_DNSCRYPT),y)
 export TCONFIG_DNSCRYPT=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_DOCKER),y)
+export TCONFIG_DOCKER=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_DNSSEC),y)
 export TCONFIG_DNSSEC=y
 endif
