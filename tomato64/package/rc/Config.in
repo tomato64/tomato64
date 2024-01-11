@@ -82,6 +82,17 @@ config BR2_PACKAGE_RC_DNSSEC
 	bool "Enable DNSSEC"
 	default y
 
+config BR2_PACKAGE_RC_DOCKER
+	bool "Enable Docker"
+	default y
+	select BR2_PACKAGE_GIT
+	select BR2_PACKAGE_LIBSECCOMP
+	select BR2_PACKAGE_CGROUPFS_MOUNT
+	select BR2_PACKAGE_CONTAINERD
+	select BR2_PACKAGE_DOCKER_CLI
+	select BR2_PACKAGE_DOCKER_COMPOSE
+	select BR2_PACKAGE_DOCKER_ENGINE
+
 config BR2_PACKAGE_RC_EBTABLES
 	bool "Enable Ebtables"
 	default y
