@@ -630,8 +630,6 @@ extern int wg_remove_iptables(char *iface, char *port);
 extern int wg_remove_iface(char *iface);
 extern void start_wg_enable();
 extern void wg_pubkey(char *privkey, char *pubkey);
-extern int wg_save_iface(char *iface, char *file);
-extern int wg_load_iface(char *iface, char *file);
 extern void write_wg_dnsmasq_config(FILE* f);
 extern void key_to_base64(char base64[static WG_KEY_LEN_BASE64], const uint8_t key[static WG_KEY_LEN]);
 extern bool key_from_base64(uint8_t key[static WG_KEY_LEN], const char *base64);

@@ -20,6 +20,8 @@
 
 #define WG_INTERFACE_MAX	3
 
+char port[BUF_SIZE_8];
+
 
 void start_wg_enable()
 {
@@ -94,13 +96,24 @@ int wg_quick_iface_down(char *iface, char *file)
 	return 0;
 }
 
+static void find_port(int unit, char *port)
+{
+	char *b;
+
+	b = getNVRAMVar("wg%d_port", unit);
+	memset(port, 0, BUF_SIZE_8);
+	if (b[0] == '\0')
+		snprintf(port, BUF_SIZE_8, "%d", 51820 + unit);
+	else
+		snprintf(port, BUF_SIZE_8, "%s", b);
+}
+
 void start_wireguard(int unit)
 {
 	char *nv, *nvp, *rka, *b;
 	char *priv, *name, *key, *psk, *ip, *ka, *aip, *ep;
 	char iface[IF_SIZE];
 	char buffer[BUF_SIZE];
-	char port[BUF_SIZE_8];
 	char fwmark[BUF_SIZE_16];
 
 	/* set up directories for later use */
@@ -111,12 +124,7 @@ void start_wireguard(int unit)
 	snprintf(iface, IF_SIZE, "wg%d", unit);
 
 	/* prepare port value */
-	b = getNVRAMVar("wg%d_port", unit);
-	memset(port, 0, BUF_SIZE_8);
-	if (b[0] == '\0')
-		snprintf(port, BUF_SIZE_8, "%d", 51820 + unit);
-	else
-		snprintf(port, BUF_SIZE_8, "%s", b);
+	find_port(unit, port);
 
 	/* check if file is specified */
 	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
@@ -238,7 +246,8 @@ void stop_wireguard(int unit)
 	}
 
 	/* remove iptables rules */
-	wg_remove_iptables(iface, getNVRAMVar("wg%d_port", unit));
+	find_port(unit, port);
+	wg_remove_iptables(iface, port);
 }
 
 void wg_setup_dirs() {
@@ -401,11 +410,11 @@ int wg_create_iface(char *iface)
 int wg_flush_iface_addr(char *iface)
 {
 	if (eval("/usr/sbin/ip", "addr", "flush", "dev", iface)) {
-		logmsg(LOG_WARNING, "unable to flush wireguard interface %s!", iface);
+		logmsg(LOG_WARNING, "unable to flush wireguard interface %s", iface);
 		return -1;
 	}
 	else
-		logmsg(LOG_DEBUG, "successfully flushed wireguard interface %s!", iface);
+		logmsg(LOG_DEBUG, "successfully flushed wireguard interface %s", iface);
 
 	return 0;
 }
@@ -415,7 +424,7 @@ int wg_set_iface_addr(char *iface, char *addr)
 	char *nv, *b;
 
 	/* Flush all addresses from interface */
-	//wg_flush_iface_addr(iface)
+	//wg_flush_iface_addr(iface); /* TBD: why is it commented??? */
 
 	/* Set wireguard interface address(es) */
 	nv = strdup(addr);
