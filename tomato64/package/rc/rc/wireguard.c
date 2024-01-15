@@ -356,7 +356,7 @@ void wg_setup_dirs() {
 			            "ip -o \"${proto}\" addr show dev \"${interface}\" 2>/dev/null | {\n"
 			            "  while read -r line; do\n"
 			            "    match=\"$(\n"
-			            "      printf %s \"${line}\" |\n"		/* FIXME (%s) !!! */
+			            "      printf \"${line}\" |\n"
 			            "        sed -ne 's/^.*inet6\? \([0-9a-f:.]\\+\\)\\/[0-9]\\+.*$/\1/; t P; b; : P; p'\n"
 			            "    )\"\n"
 			            "    [ -n \"${match}\" ] ||\n"
