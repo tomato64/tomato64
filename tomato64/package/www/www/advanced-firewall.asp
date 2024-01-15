@@ -279,7 +279,7 @@ function init() {
 <div class="section" id="sesdiv_notes" style="display:none">
 	<i>Firewall:</i><br>
 	<ul>
-		<li><b>Allow DHCP spoofing</b> - Accept/process packets from DHCP servers whose IP is different from the one advertised within the DHCP messages. This is often categorized as an attach (DHCP spoofing) but could be a genuine scenario in some rare cases. Enabling the option lowers the security level.</li>
+		<li><b>Allow DHCP spoofing</b> - Accept/process packets from DHCP servers whose IP is different from the one advertised within the DHCP messages. This is often categorized as an attack (DHCP spoofing) but could be a genuine scenario in some rare cases. Enabling the option lowers the security level.</li>
 		<li><b>Smart MTU black hole detection</b> - Read more <a href="https://blog.cloudflare.com/path-mtu-discovery-in-practice/" class="new_window">HERE</a>.</li>
 	</ul>
 <!-- PROXY-BEGIN -->
