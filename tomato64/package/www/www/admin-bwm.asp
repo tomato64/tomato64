@@ -297,7 +297,7 @@ function init() {
 						[1,'Every Hour'],[2,'Every 2 Hours'],[3,'Every 3 Hours'],[4,'Every 4 Hours'],[5,'Every 5 Hours'],[6,'Every 6 Hours'],
 						[9,'Every 9 Hours'],[12,'Every 12 Hours'],[24,'Every 24 Hours'],[48,'Every 2 Days'],[72,'Every 3 Days'],[96,'Every 4 Days'],
 						[120,'Every 5 Days'],[144,'Every 6 Days'],[168,'Every Week']] },
-					{ title: 'Save On Halt', indent: 2, name: 'f_sshut', type: 'checkbox', value: nvram.rstats_sshut == '1' },
+					{ title: 'Save On Halt/Reboot', indent: 2, name: 'f_sshut', type: 'checkbox', value: nvram.rstats_sshut == '1' },
 					{ title: 'Create New File<br><small>(Reset Data)<\/small>', indent: 2, name: 'f_new', type: 'checkbox', value: 0, suffix: ' &nbsp; <b id="newmsg" style="display:none"><small>(note: enable if this is a new file)<\/small><\/b>' },
 					{ title: 'Create Backups', indent: 2, name: 'f_bak', type: 'checkbox', value: nvram.rstats_bak == '1' },
 				{ title: 'First Day Of The Month', name: 'rstats_offset', type: 'text', value: nvram.rstats_offset, maxlen: 2, size: 4 },
