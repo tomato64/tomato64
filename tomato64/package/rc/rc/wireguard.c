@@ -356,7 +356,7 @@ void wg_setup_dirs() {
 			            "ip -o \"${proto}\" addr show dev \"${interface}\" 2>/dev/null | {\n"
 			            "  while read -r line; do\n"
 			            "    match=\"$(\n"
-			            "      printf \"${line}\" |\n"
+			            "      printf %s \"${line}\" |\n"
 			            "        sed -ne 's/^.*inet6\? \([0-9a-f:.]\\+\\)\\/[0-9]\\+.*$/\1/; t P; b; : P; p'\n"
 			            "    )\"\n"
 			            "    [ -n \"${match}\" ] ||\n"
@@ -368,7 +368,7 @@ void wg_setup_dirs() {
 			            "    echo 1 > /proc/sys/net/ipv4/conf/all/src_valid_mark\n"
 			            "  printf '%s\n' \"${restore}\" |\n"
 			            "    cmd \"${iptables}-restore\" -n\n"
-			            "}\n");
+			            "}\n", "%s", "%s");
 			fclose(fp);
 			chmod(WG_DIR"/scripts/route-default.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
 		}
