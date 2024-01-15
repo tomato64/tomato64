@@ -110,6 +110,14 @@ void start_wireguard(int unit)
 	memset(iface, 0, IF_SIZE);
 	snprintf(iface, IF_SIZE, "wg%d", unit);
 
+	/* prepare port value */
+	b = getNVRAMVar("wg%d_port", unit);
+	memset(port, 0, BUF_SIZE_8);
+	if (b[0] == '\0')
+		snprintf(port, BUF_SIZE_8, "%d", 51820 + unit);
+	else
+		snprintf(port, BUF_SIZE_8, "%s", b);
+
 	/* check if file is specified */
 	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
 		wg_quick_iface_up(iface, getNVRAMVar("wg%d_file", unit));
@@ -128,13 +136,6 @@ void start_wireguard(int unit)
 		}
 
 		/* set interface port */
-		b = getNVRAMVar("wg%d_port", unit);
-		memset(port, 0, BUF_SIZE_8);
-		if (b[0] == '\0')
-			snprintf(port, BUF_SIZE_8, "%d", 51820 + unit);
-		else
-			snprintf(port, BUF_SIZE_8, "%s", b);
-
 		if (wg_set_iface_port(iface, port)) {
 			stop_wireguard(unit);
 			return;
@@ -212,7 +213,7 @@ void start_wireguard(int unit)
 		wg_iface_post_up(unit);
 	}
 	/* set iptables rules */
-	if (wg_set_iptables(iface, getNVRAMVar("wg%d_port", unit))) {
+	if (wg_set_iptables(iface, port)) {
 		stop_wireguard(unit);
 		return;
 	}
@@ -309,8 +310,8 @@ void wg_setup_dirs() {
 			            "iptables -L \"${DNS_CHAIN}\" >/dev/null 2>&1 && iptables -F \"${DNS_CHAIN}\" >/dev/null 2>&1 && iptables -X \"${DNS_CHAIN}\" >/dev/null 2>&1\n"
 			            "iptables -N \"${DNS_CHAIN}\"\n"
 			            "for NAMESERVER in $( echo \"${2}\" | tr \",\" \" \" ); do\n"
-			            "iptables -A \"${DNS_CHAIN}\" -i \"${1}\" -p tcp --dst \"${NAMESERVER}/32\" --dport 53 -j ACCEPT\n"
-			            "iptables -A \"${DNS_CHAIN}\" -i \"${1}\" -p udp --dst \"${NAMESERVER}/32\" --dport 53 -j ACCEPT\n"
+			            " iptables -A \"${DNS_CHAIN}\" -i \"${1}\" -p tcp --dst \"${NAMESERVER}/32\" --dport 53 -j ACCEPT\n"
+			            " iptables -A \"${DNS_CHAIN}\" -i \"${1}\" -p udp --dst \"${NAMESERVER}/32\" --dport 53 -j ACCEPT\n"
 			            "done\n"
 			            "iptables -A OUTPUT -j \"${DNS_CHAIN}\"\n");
 			fclose(fp);
@@ -653,7 +654,7 @@ int wg_route_peer_allowed_ips(char *iface, char *allowed_ips, char *fwmark)
 		while ((b = strsep(&aip, ",")) != NULL) {
 			if (vstrsep(b, "/", &ip, &nm) == 2) {
 				if (atoi(nm) == 0) {
-					/* uncomment to add default routing (also in router/wireguard-tools/src/wg-quick/posix.sh line 519, 520) after kernel fix */
+					/* uncomment to add default routing (also in router/wireguard-tools/src/wg-quick/posix.sh line 519, 520, 521) after kernel fix */
 					//wg_route_peer_default(iface, b, fwmark);
 				}
 			}
