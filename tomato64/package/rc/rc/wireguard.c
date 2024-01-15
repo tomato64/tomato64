@@ -424,7 +424,7 @@ int wg_set_iface_addr(char *iface, char *addr)
 	char *nv, *b;
 
 	/* Flush all addresses from interface */
-	//wg_flush_iface_addr(iface); /* TBD: why is it commented??? */
+	wg_flush_iface_addr(iface);
 
 	/* Set wireguard interface address(es) */
 	nv = strdup(addr);
