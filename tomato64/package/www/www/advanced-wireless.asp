@@ -18,7 +18,7 @@
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
 <script>
 
-//	<% nvram("t_model_name,wl_security_mode,wl_auth,wl_bcn,wl_dtim,wl_frag,wl_frameburst,wl_gmode_protection,wl_plcphdr,wl_rate,wl_rateset,wl_rts,wl_wme,wl_wme_no_ack,wl_wme_apsd,wl_txpwr,wl_mrate,t_features,wl_distance,wl_maxassoc,wl_bss_maxassoc,wlx_hpamp,wlx_hperx,wl_reg_mode,wl_country_code,0:ccode,1:ccode,2:ccode,pci/1/1/ccode,pci/2/1/ccode,pci/3/1/ccode,wl_country_rev,0:regrev,1:regrev,2:regrev,pci/1/1/regrev,pci/2/1/regrev,pci/3/1/regrev,wl_btc_mode,wl_mimo_preamble,wl_obss_coex,wl_mitigation,wl_mitigation_ac,wl_nband,wl_phytype,wl_corerev,wl_igs,wl_wmf_bss_enable,wl_wmf_ucigmp_query,wl_wmf_mdata_sendup,wl_wmf_ucast_upnp,wl_wmf_igmpq_filter,wl_optimizexbox,wl_atf,wl_turbo_qam,wl_txbf,wl_txbf_bfr_cap,wl_txbf_bfe_cap,wl_itxbf,wl_txbf_imp,wl_mumimo,wl_mu_features,wl_mfp,wl_user_rssi"); %>
+//	<% nvram("t_model_name,wl_security_mode,wl_auth,wl_bcn,wl_dtim,wl_frag,wl_frameburst,wl_gmode_protection,wl_plcphdr,wl_rate,wl_rateset,wl_rts,wl_wme,wl_wme_no_ack,wl_wme_apsd,wl_txpwr,wl_mrate,t_features,wl_distance,wl_psta_inact,wl_mode,wl_maxassoc,wl_bss_maxassoc,wlx_hpamp,wlx_hperx,wl_reg_mode,wl_country_code,0:ccode,1:ccode,2:ccode,pci/1/1/ccode,pci/2/1/ccode,pci/3/1/ccode,wl_country_rev,0:regrev,1:regrev,2:regrev,pci/1/1/regrev,pci/2/1/regrev,pci/3/1/regrev,wl_btc_mode,wl_mimo_preamble,wl_obss_coex,wl_mitigation,wl_mitigation_ac,wl_nband,wl_phytype,wl_corerev,wl_igs,wl_wmf_bss_enable,wl_wmf_ucigmp_query,wl_wmf_mdata_sendup,wl_wmf_ucast_upnp,wl_wmf_igmpq_filter,wl_optimizexbox,wl_atf,wl_turbo_qam,wl_txbf,wl_txbf_bfr_cap,wl_txbf_bfe_cap,wl_itxbf,wl_txbf_imp,wl_mumimo,wl_mu_features,wl_mfp,wl_user_rssi"); %>
 
 //	<% wlcountries(); %>
 
@@ -41,6 +41,7 @@ function verifyFields(focused, quiet) {
 			if (!v_range('_wl'+u+'_rts', quiet, 0, 2347)) return 0;
 			if (!v_range('_wl'+u+'_country_rev', quiet, 0, 999)) return 0;
 			if ((E('_wl'+u+'_txpwr').value != 0) && !v_range(E('_wl'+u+'_txpwr'), quiet, 5, hp ? 251 : 1000)) return 0;
+			if ((E('_wl'+u+'_psta_inact').value != 0) && !v_range(E('_wl'+u+'_psta_inact'), quiet, 60, 3600)) return 0;
 /* ROAM-BEGIN */
 			if ((E('_wl'+u+'_user_rssi').value != 0) && !v_range(E('_wl'+u+'_user_rssi'), quiet, -90, -45)) return 0;
 /* ROAM-END */
@@ -255,6 +256,8 @@ function init() {
 				{ title: 'Distance / ACK Timing', name: 'f_wl'+u+'_distance', type: 'text', maxlen: 5, size: 7,
 					suffix: ' <small>meters<\/small>&nbsp;&nbsp;<small>(range: 0 - 99999; 0 = use default)<\/small>',
 						value: (nvram['wl'+u+'_distance'] == '') ? '0' : nvram['wl'+u+'_distance'] },
+				{ title: 'Inactivity Timer', name: 'wl'+u+'_psta_inact', type: 'text', maxlen: 4, size: 6,
+					suffix: ' <small>(range: 60 - 3600 seconds; default: 0 (disabled))<\/small>', value: nvram['wl'+u+'_psta_inact'], hidden: (nvram['wl'+u+'_mode'] != 'psta') },
 /* ROAM-BEGIN */
 				{ title: 'Roaming Assistant', name: 'wl'+u+'_user_rssi', type: 'text', maxlen: 3, size: 5,
 					suffix: ' <small>(range: -90 ~ -45 (RSSI-Value); default: 0 (disabled))<\/small>', value: nvram['wl'+u+'_user_rssi'] },
@@ -354,6 +357,7 @@ function init() {
 	  	<li>Country code AND rev define the possible channel list, power and other regulations</li>
 		<li>Leave default values if you are not sure what you are doing!</li>
 		<li>Info: wireless driver supports ~2000 combinations</li>
+		<li>Inactivity Timer: Media Bridge Mode will create a virtual interface wlX.Y for every client device connected to the router. Remove virtual interface(s) after inactivity again.</li>
 <!-- ROAM-BEGIN -->
 		<li>Roaming Assistant: Do not enable wireless bandsteering (BSD) at the same time!</li>
 <!-- ROAM-END -->
