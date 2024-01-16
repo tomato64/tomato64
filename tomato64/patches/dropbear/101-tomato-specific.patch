@@ -1,0 +1,44 @@
+diff -Naur dropbear-2022.83.orig/localoptions.h dropbear-2022.83/localoptions.h
+--- dropbear-2022.83.orig/localoptions.h	2024-01-16 10:36:38.494062164 -0700
++++ dropbear-2022.83/localoptions.h	2024-01-16 10:36:58.718129496 -0700
+@@ -3,4 +3,26 @@
+ #endif
+ #define DO_HOST_LOOKUP 1
+ #define DROPBEAR_SMALL_CODE 0
+-#define DEFAULT_PATH "/bin:/sbin:/usr/bin:/usr/sbin"
++
++/* Override SSH 2.0 ident */
++#define LOCAL_IDENT "SSH-2.0-dropbear"
++
++#define DROPBEAR_X11FWD 0
++#define INETD_MODE 0
++
++/* encryption/hostkey/public-key algo (disable 3DES, DSS) */
++#define DROPBEAR_3DES 0
++#define DROPBEAR_DSS 0
++
++#define XAUTH_COMMAND "/opt/X11R6/X11/xauth -q"
++#define SFTPSERVER_PATH "/opt/libexec/sftp-server"
++
++#define DROPBEAR_ENABLE_CBC_MODE 0
++#define DROPBEAR_SHA1_96_HMAC 0
++#define DEFAULT_PATH "/bin:/usr/bin:/sbin:/usr/sbin:/opt/bin:/opt/sbin:/opt/usr/bin:/opt/usr/sbin"
++#define DEFAULT_ROOT_PATH "/bin:/usr/bin:/sbin:/usr/sbin:/opt/bin:/opt/sbin:/opt/usr/bin:/opt/usr/sbin"
++
++#define MAX_UNAUTH_PER_IP 2  /* default 5 */
++#define MAX_UNAUTH_CLIENTS 5 /* default 30 */
++#define MAX_AUTH_TRIES 2     /* default 10 */
++#define AUTH_TIMEOUT 60      /* default 300 */
+diff -Naur dropbear-2022.83.orig/sysoptions.h dropbear-2022.83/sysoptions.h
+--- dropbear-2022.83.orig/sysoptions.h	2024-01-16 10:36:24.338015030 -0700
++++ dropbear-2022.83/sysoptions.h	2024-01-16 10:36:52.938110257 -0700
+@@ -7,7 +7,9 @@
+ #define DROPBEAR_VERSION "2022.83"
+ #endif
+ 
++#ifndef LOCAL_IDENT
+ #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
++#endif
+ #define PROGNAME "dropbear"
+ 
+ /* Spec recommends after one hour or 1 gigabyte of data. One hour
