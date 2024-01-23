@@ -100,8 +100,10 @@ EOF
 cp $BINARIES_DIR/syslinux/isolinux.bin $BINARIES_DIR/iso/staging/isolinux/
 cp $HOST_DIR/share/syslinux/*.c32 $BINARIES_DIR/iso/staging/isolinux/
 
+GRUB2_DIR=$BUILD_DIR/$(ls $BUILD_DIR --ignore='host*' | grep grub2)
+
 grub-mkstandalone -O i386-efi \
-    --directory "/home/lance/tomato64/src/buildroot/output/build/grub2-2.06/build-i386-efi/grub-core" \
+    --directory "$GRUB2_DIR/build-i386-efi/grub-core" \
     --modules="part_gpt part_msdos fat iso9660 all_video font" \
     --locales="" \
     --themes="" \
@@ -110,7 +112,7 @@ grub-mkstandalone -O i386-efi \
     "boot/grub/grub.cfg=$BINARIES_DIR/iso/tmp/grub-embed.cfg"
 
 grub-mkstandalone -O x86_64-efi \
-    --directory "/home/lance/tomato64/src/buildroot/output/build/grub2-2.06/build-x86_64-efi/grub-core" \
+    --directory "$GRUB2_DIR/build-x86_64-efi/grub-core" \
     --modules="part_gpt part_msdos fat iso9660 all_video font" \
     --locales="" \
     --themes="" \
