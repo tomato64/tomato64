@@ -81,7 +81,7 @@ void wi_upgrade(char *url, int len, char *boundary)
 	prepare_upgrade();
 
 #ifdef TOMATO64
-	eval("mount", "-T", "/rom/etc/fstab.nvram", "-a");
+	eval("mount_nvram");
 #endif /* TOMATO64 */
 
 	/* copy to memory */

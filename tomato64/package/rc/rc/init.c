@@ -11299,18 +11299,6 @@ static void sysinit(void)
 	mknod("/dev/pts/1", S_IRWXU|S_IFCHR, makedev(136, 1));
 	mount("devpts", "/dev/pts", "devpts", MS_MGC_VAL, NULL);
 
-#ifdef TOMATO64
-	/* Mount filesystem rw */
-	eval("mount", "-o", "remount,rw", "/");
-	eval("mount", "-T", "/rom/etc/fstab.nvram", "-a");
-
-	/* Expand filesystem parition to fill disk */
-	if (!nvram_get_int("fs_expanded")) {
-		eval("expand_root_partition");
-		nvram_set("fs_expanded", "1");
-	}
-#endif /* TOMATO64 */
-
 	if (console_init())
 		noconsole = 1;
 
@@ -11383,6 +11371,16 @@ static void sysinit(void)
 	eval("hotplug2", "--coldplug");
 #else
 	eval("/etc/init.d/S10mdev", "start");
+
+	/* Mount filesystem rw */
+	eval("mount", "-o", "remount,rw", "/");
+	eval("mount_nvram");
+
+	/* Expand filesystem parition to fill disk */
+	if (!nvram_get_int("fs_expanded")) {
+		eval("expand_root_partition");
+		nvram_set("fs_expanded", "1");
+	}
 #endif /* TOMATO64 */
 
 	start_hotplug2();

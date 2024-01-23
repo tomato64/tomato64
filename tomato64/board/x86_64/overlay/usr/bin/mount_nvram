@@ -1,0 +1,25 @@
+#!/bin/sh
+
+s=0
+timeout=30
+while ! mountpoint -q /nvram
+do
+	if [ $s -gt $timeout ]; then
+		echo "Unable to mount nvram, config will not be persistent!" > /dev/console
+		break
+	fi
+
+	mount -T /rom/etc/fstab.nvram -a
+
+	if ! mountpoint -q /nvram
+	then
+		echo "Waiting for nvram to mount...$s/$timeout" > /dev/console
+		s=$((s+1))
+		sleep 1
+	fi
+
+	if mountpoint -q /nvram
+	then
+		echo "nvram partition mounted" > /dev/console
+	fi
+done

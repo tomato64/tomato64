@@ -27,7 +27,7 @@ void wo_defaults(char *url)
 			prepare_upgrade();
 
 #ifdef TOMATO64
-			eval("mount", "-T", "/rom/etc/fstab.nvram", "-a");
+			eval("mount_nvram");
 #endif /* TOMATO64 */
 
 			led(LED_DIAG, 1);
@@ -153,7 +153,7 @@ void wi_restore(char *url, int len, char *boundary)
 	prepare_upgrade();
 
 #ifdef TOMATO64
-	eval("mount", "-T", "/rom/etc/fstab.nvram", "-a");
+	eval("mount_nvram");
 #endif /* TOMATO64 */
 
 	if (_eval(args, msg, 0, NULL) != 0)
