@@ -1301,7 +1301,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 				start_ovpn_eas();
 #endif
 #ifdef TCONFIG_WIREGUARD
-			start_wg_enable();
+			start_wg_eas();
 #endif
 #ifdef TCONFIG_TINC
 			start_tinc(0);

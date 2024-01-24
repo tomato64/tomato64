@@ -596,41 +596,10 @@ extern int write_ovpn_resolv(FILE*);
 #ifdef TCONFIG_WIREGUARD
 #define WG_KEY_LEN 32
 #define WG_KEY_LEN_BASE64 ((((WG_KEY_LEN) + 2) / 3) * 4 + 1)
+extern void start_wg_eas();
 extern void start_wireguard(int unit);
 extern void stop_wireguard(int unit);
-extern void wg_setup_dirs();
-extern int wg_create_iface(char *iface);
-extern int wg_set_iface_addr(char *iface, char *addr);
-extern int wg_add_iface_addr(char *iface, char *addr);
-extern int wg_set_iface_port(char *iface, char *port);
-extern int wg_set_iface_privkey(char *iface, char* privkey);
-extern int wg_set_iface_fwmark(char *iface, char* fwmark);
-extern int wg_set_iface_mtu(char *iface, char* mtu);
-extern int wg_set_iface_up(char *iface);
-extern int wg_set_iface_dns(char *iface, char *dns);
-extern int wg_unset_iface_dns(char *iface);
-extern int wg_add_peer(char *iface, char *peer_pubkey, char *allowed_ips, char *presharedkey, char *keepalive, char *endpoint, char *fwmark);
-extern int wg_set_peer_allowed_ips(char *iface, char *pubkey, char *allowed_ips, char *fwmark);
-extern int wg_add_peer_privkey(char *iface, char *privkey, char *allowed_ips, char *presharedkey, char *keepalive, char *endpoint, char *fwmark);
-extern int wg_route_peer_allowed_ips(char *iface, char *allowed_ips, char *fwmark);
-extern int wg_route_peer(char *iface, char *route);
-extern int wg_route_peer_custom(char *iface, char *route, char *table);
-extern int wg_route_peer_default(char *iface, char *route, char *fwmark);
-extern int wg_set_peer_psk(char *iface, char *pubkey, char *presharedkey);
-extern int wg_set_peer_keepalive(char *iface, char *pubkey, char *keepalive);
-extern int wg_set_peer_endpoint(char *iface, char *pubkey, char *endpoint);
-extern void wg_iface_pre_up(int unit);
-extern void wg_iface_post_up(int unit);
-extern void wg_iface_pre_down(int unit);
-extern void wg_iface_post_down(int unit);
-extern int wg_set_iptables(char *iface, char *port);
-extern int wg_remove_iptables(char *iface, char *port);
-extern int wg_remove_iface(char *iface);
-extern void start_wg_enable();
-extern void wg_pubkey(char *privkey, char *pubkey);
 extern void write_wg_dnsmasq_config(FILE* f);
-extern void key_to_base64(char base64[static WG_KEY_LEN_BASE64], const uint8_t key[static WG_KEY_LEN]);
-extern bool key_from_base64(uint8_t key[static WG_KEY_LEN], const char *base64);
 #endif
 
 /* tinc.c */
