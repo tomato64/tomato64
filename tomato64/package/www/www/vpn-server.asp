@@ -748,7 +748,7 @@ function earlyInit() {
 
 		ccdTables[i].init('table_'+t+'_ccd','sort',0,[{ type: 'text', maxlen: 2, attrib: 'hidden' },{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },{ type: 'text', maxlen: 30 },{ type: 'text', maxlen: 15 },{ type: 'text', maxlen: 15 },{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' }]);
 		ccdTables[i].headerSet(['#','Enable','Common Name','Subnet','Netmask','Push']);
-		var ccdVal = eval('nvram.vpn_'+t+'_ccd_val');
+		var ccdVal = nvram['vpn_'+t+'_ccd_val'];
 		if (ccdVal.length) {
 			var s = ccdVal.split('>');
 			for (var j = 0; j < s.length; ++j) {
@@ -770,7 +770,7 @@ function earlyInit() {
 				{ type: 'text', maxlen: 25 },
 				{ type: 'password', peekaboo: 1, maxlen: 15 }]);
 		usersTables[i].headerSet(['#','Enable','Username','Password']);
-		var usersVal = eval('nvram.vpn_'+t+'_users_val');
+		var usersVal = nvram['vpn_'+t+'_users_val'];
 		if (usersVal.length) {
 			var s = usersVal.split('>');
 			for (var j = 0; j < s.length; ++j) {
@@ -853,52 +853,52 @@ function init() {
 			W('<div id="'+t+'-basic">');
 			createFieldTable('', [
 				{ title: 'Enable on Start', name: 'f_vpn_'+t+'_eas', type: 'checkbox', value: nvram.vpn_server_eas.indexOf(''+(i+1)) >= 0 },
-				{ title: 'Interface Type', name: 'vpn_'+t+'_if', type: 'select', options: [['tap','TAP'],['tun','TUN']], value: eval('nvram.vpn_'+t+'_if') },
+				{ title: 'Interface Type', name: 'vpn_'+t+'_if', type: 'select', options: [['tap','TAP'],['tun','TUN']], value: nvram['vpn_'+t+'_if'] },
 					{ title: 'Bridge TAP with', indent: 2, name: 'vpn_'+t+'_br', type: 'select', options: [['br0','LAN0 (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)']],
-						value: eval ('nvram.vpn_'+t+'_br'), suffix: ' <small>* default<\/small> ' },
-				{ title: 'Protocol', name: 'vpn_'+t+'_proto', type: 'select', options: [['udp','UDP'],['tcp-server','TCP'],['udp4','UDP4'],['tcp4-server','TCP4'],['udp6','UDP6'],['tcp6-server','TCP6']], value: eval('nvram.vpn_'+t+'_proto') },
-				{ title: 'Port', name: 'vpn_'+t+'_port', type: 'text', maxlen: 5, size: 10, value: eval('nvram.vpn_'+t+'_port') },
-				{ title: 'Firewall', name: 'vpn_'+t+'_firewall', type: 'select', options: [['auto','Automatic'],['external','External Only'],['custom','Custom']], value: eval('nvram.vpn_'+t+'_firewall') },
-				{ title: 'Authorization Mode', name: 'vpn_'+t+'_crypt', type: 'select', options: [['tls','TLS'],['secret','Static Key'],['custom','Custom']], value: eval('nvram.vpn_'+t+'_crypt'),
+						value: nvram['vpn_'+t+'_br'], suffix: ' <small>* default<\/small> ' },
+				{ title: 'Protocol', name: 'vpn_'+t+'_proto', type: 'select', options: [['udp','UDP'],['tcp-server','TCP'],['udp4','UDP4'],['tcp4-server','TCP4'],['udp6','UDP6'],['tcp6-server','TCP6']], value: nvram['vpn_'+t+'_proto'] },
+				{ title: 'Port', name: 'vpn_'+t+'_port', type: 'text', maxlen: 5, size: 10, value: nvram['vpn_'+t+'_port'] },
+				{ title: 'Firewall', name: 'vpn_'+t+'_firewall', type: 'select', options: [['auto','Automatic'],['external','External Only'],['custom','Custom']], value: nvram['vpn_'+t+'_firewall'] },
+				{ title: 'Authorization Mode', name: 'vpn_'+t+'_crypt', type: 'select', options: [['tls','TLS'],['secret','Static Key'],['custom','Custom']], value: nvram['vpn_'+t+'_crypt'],
 					suffix: ' <small id="'+t+'_custom_crypto_text">must be configured manually<\/small>' },
-				{ title: 'TLS control channel security <small>(tls-auth/tls-crypt)<\/small>', name: 'vpn_'+t+'_hmac', type: 'select', options: [[-1,'Disabled'],[2,'Bi-directional Auth'],[0,'Incoming Auth (0)'],[1,'Outgoing Auth (1)'],[3,'Encrypt Channel'],[4,'Encrypt Channel V2']], value: eval('nvram.vpn_'+t+'_hmac') },
-				{ title: 'Auth digest', name: 'vpn_'+t+'_digest', type: 'select', options: digests, value: eval('nvram.vpn_'+t+'_digest') },
+				{ title: 'TLS control channel security <small>(tls-auth/tls-crypt)<\/small>', name: 'vpn_'+t+'_hmac', type: 'select', options: [[-1,'Disabled'],[2,'Bi-directional Auth'],[0,'Incoming Auth (0)'],[1,'Outgoing Auth (1)'],[3,'Encrypt Channel'],[4,'Encrypt Channel V2']], value: nvram['vpn_'+t+'_hmac'] },
+				{ title: 'Auth digest', name: 'vpn_'+t+'_digest', type: 'select', options: digests, value: nvram['vpn_'+t+'_digest'] },
 				{ title: 'VPN subnet/netmask', multi: [
-					{ name: 'vpn_'+t+'_sn', type: 'text', maxlen: 15, size: 17, value: eval('nvram.vpn_'+t+'_sn'), suffix: ' ' },
-					{ name: 'vpn_'+t+'_nm', type: 'text', maxlen: 15, size: 17, value: eval('nvram.vpn_'+t+'_nm') } ] },
+					{ name: 'vpn_'+t+'_sn', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_sn'], suffix: ' ' },
+					{ name: 'vpn_'+t+'_nm', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_nm'] } ] },
 				{ title: 'Client address pool', multi: [
-					{ name: 'f_vpn_'+t+'_dhcp', type: 'checkbox', value: eval('nvram.vpn_'+t+'_dhcp') != 0, suffix: '&nbsp; DHCP ' },
-					{ name: 'vpn_'+t+'_r1', type: 'text', maxlen: 15, size: 17, value: eval('nvram.vpn_'+t+'_r1'), prefix: '<span id="'+t+'_range">', suffix: ' - ' },
-					{ name: 'vpn_'+t+'_r2', type: 'text', maxlen: 15, size: 17, value: eval('nvram.vpn_'+t+'_r2'), suffix: '<\/span>' } ] },
+					{ name: 'f_vpn_'+t+'_dhcp', type: 'checkbox', value: nvram['vpn_'+t+'_dhcp'] != 0, suffix: '&nbsp; DHCP ' },
+					{ name: 'vpn_'+t+'_r1', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_r1'], prefix: '<span id="'+t+'_range">', suffix: ' - ' },
+					{ name: 'vpn_'+t+'_r2', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_r2'], suffix: '<\/span>' } ] },
 				{ title: 'Local/remote endpoint addresses', multi: [
-					{ name: 'vpn_'+t+'_local', type: 'text', maxlen: 15, size: 17, value: eval('nvram.vpn_'+t+'_local') },
-					{ name: 'vpn_'+t+'_remote', type: 'text', maxlen: 15, size: 17, value: eval('nvram.vpn_'+t+'_remote') } ] }
+					{ name: 'vpn_'+t+'_local', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_local'] },
+					{ name: 'vpn_'+t+'_remote', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_remote'] } ] }
 			]);
 			W('<\/div>');
 
 			W('<div id="'+t+'-advanced">');
 			createFieldTable('', [
 				null,
-				{ title: 'Poll Interval', name: 'vpn_'+t+'_poll', type: 'text', maxlen: 2, size: 5, value: eval('nvram.vpn_'+t+'_poll'), suffix: ' <small>minutes; 0 to disable<\/small>' },
-				{ title: 'Push LAN0 (br0) to clients', name: 'f_vpn_'+t+'_plan', type: 'checkbox', value: eval('nvram.vpn_'+t+'_plan') != 0 },
-				{ title: 'Push LAN1 (br1) to clients', name: 'f_vpn_'+t+'_plan1', type: 'checkbox', value: eval('nvram.vpn_'+t+'_plan1') != 0 },
-				{ title: 'Push LAN2 (br2) to clients', name: 'f_vpn_'+t+'_plan2', type: 'checkbox', value: eval('nvram.vpn_'+t+'_plan2') != 0 },
-				{ title: 'Push LAN3 (br3) to clients', name: 'f_vpn_'+t+'_plan3', type: 'checkbox', value: eval('nvram.vpn_'+t+'_plan3') != 0 },
-				{ title: 'Direct clients to<br>redirect Internet traffic', name: 'f_vpn_'+t+'_rgw', type: 'checkbox', value: eval('nvram.vpn_'+t+'_rgw') != 0 },
+				{ title: 'Poll Interval', name: 'vpn_'+t+'_poll', type: 'text', maxlen: 2, size: 5, value: nvram['vpn_'+t+'_poll'], suffix: ' <small>minutes; 0 to disable<\/small>' },
+				{ title: 'Push LAN0 (br0) to clients', name: 'f_vpn_'+t+'_plan', type: 'checkbox', value: nvram['vpn_'+t+'_plan'] != 0 },
+				{ title: 'Push LAN1 (br1) to clients', name: 'f_vpn_'+t+'_plan1', type: 'checkbox', value: nvram['vpn_'+t+'_plan1'] != 0 },
+				{ title: 'Push LAN2 (br2) to clients', name: 'f_vpn_'+t+'_plan2', type: 'checkbox', value: nvram['vpn_'+t+'_plan2'] != 0 },
+				{ title: 'Push LAN3 (br3) to clients', name: 'f_vpn_'+t+'_plan3', type: 'checkbox', value: nvram['vpn_'+t+'_plan3'] != 0 },
+				{ title: 'Direct clients to<br>redirect Internet traffic', name: 'f_vpn_'+t+'_rgw', type: 'checkbox', value: nvram['vpn_'+t+'_rgw'] != 0 },
 				{ title: 'Respond to DNS', name: 'f_vpn_'+t+'_dns', type: 'checkbox', value: nvram.vpn_server_dns.indexOf(''+(i+1)) >= 0 },
-				{ title: 'Advertise DNS to clients', name: 'f_vpn_'+t+'_pdns', type: 'checkbox', value: eval('nvram.vpn_'+t+'_pdns') != 0 },
-				{ title: 'Data ciphers', name: 'vpn_'+t+'_ncp_ciphers', type: 'text', size: 70, maxlen: 127, value: eval('nvram.vpn_'+t+'_ncp_ciphers') },
-				{ title: 'Cipher', name: 'vpn_'+t+'_cipher', type: 'select', options: ciphers, value: eval('nvram.vpn_'+t+'_cipher') },
-				{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [['-1','Disabled'],['no','None'],['yes','LZO'],['adaptive','LZO Adaptive'],['lz4','LZ4'],['lz4-v2','LZ4-V2']], value: eval('nvram.vpn_'+t+'_comp') },
-				{ title: 'TLS Renegotiation Time', name: 'vpn_'+t+'_reneg', type: 'text', maxlen: 10, size: 7, value: eval('nvram.vpn_'+t+'_reneg'), suffix: ' <small> seconds; -1 for default<\/small>' },
-				{ title: 'Manage Client-Specific Options', name: 'f_vpn_'+t+'_ccd', type: 'checkbox', value: eval('nvram.vpn_'+t+'_ccd') != 0 },
-				{ title: 'Allow Client<->Client', name: 'f_vpn_'+t+'_c2c', type: 'checkbox', value: eval('nvram.vpn_'+t+'_c2c') != 0 },
-				{ title: 'Allow Only These Clients', name: 'f_vpn_'+t+'_ccd_excl', type: 'checkbox', value: eval('nvram.vpn_'+t+'_ccd_excl') != 0 },
+				{ title: 'Advertise DNS to clients', name: 'f_vpn_'+t+'_pdns', type: 'checkbox', value: nvram['vpn_'+t+'_pdns'] != 0 },
+				{ title: 'Data ciphers', name: 'vpn_'+t+'_ncp_ciphers', type: 'text', size: 70, maxlen: 127, value: nvram['vpn_'+t+'_ncp_ciphers'] },
+				{ title: 'Cipher', name: 'vpn_'+t+'_cipher', type: 'select', options: ciphers, value: nvram['vpn_'+t+'_cipher'] },
+				{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [['-1','Disabled'],['no','None'],['yes','LZO'],['adaptive','LZO Adaptive'],['lz4','LZ4'],['lz4-v2','LZ4-V2']], value: nvram['vpn_'+t+'_comp'] },
+				{ title: 'TLS Renegotiation Time', name: 'vpn_'+t+'_reneg', type: 'text', maxlen: 10, size: 7, value: nvram['vpn_'+t+'_reneg'], suffix: ' <small> seconds; -1 for default<\/small>' },
+				{ title: 'Manage Client-Specific Options', name: 'f_vpn_'+t+'_ccd', type: 'checkbox', value: nvram['vpn_'+t+'_ccd'] != 0 },
+				{ title: 'Allow Client<->Client', name: 'f_vpn_'+t+'_c2c', type: 'checkbox', value: nvram['vpn_'+t+'_c2c'] != 0 },
+				{ title: 'Allow Only These Clients', name: 'f_vpn_'+t+'_ccd_excl', type: 'checkbox', value: nvram['vpn_'+t+'_ccd_excl'] != 0 },
 				{ title: '', suffix: '<div class="tomato-grid" id="table_'+t+'_ccd"><\/div>' },
-				{ title: 'Allow User/Pass Auth', name: 'f_vpn_'+t+'_userpass', type: 'checkbox', value: eval('nvram.vpn_'+t+'_userpass') != 0 },
-				{ title: 'Allow Only User/Pass (without cert) Auth', name: 'f_vpn_'+t+'_nocert', type: 'checkbox', value: eval('nvram.vpn_'+t+'_nocert') != 0 },
+				{ title: 'Allow User/Pass Auth', name: 'f_vpn_'+t+'_userpass', type: 'checkbox', value: nvram['vpn_'+t+'_userpass'] != 0 },
+				{ title: 'Allow Only User/Pass (without cert) Auth', name: 'f_vpn_'+t+'_nocert', type: 'checkbox', value: nvram['vpn_'+t+'_nocert'] != 0 },
 				{ title: '', suffix: '<div class="tomato-grid" id="table_'+t+'_users"><\/div>' },
-				{ title: 'Custom Configuration', name: 'vpn_'+t+'_custom', type: 'textarea', value: eval('nvram.vpn_'+t+'_custom') }
+				{ title: 'Custom Configuration', name: 'vpn_'+t+'_custom', type: 'textarea', value: nvram['vpn_'+t+'_custom'] }
 			]);
 			W('<\/div>');
 
@@ -906,27 +906,27 @@ function init() {
 			W('<p class="vpn-keyhelp">For help generating keys, refer to the OpenVPN <a id="'+t+'-keyhelp">HOWTO<\/a>. All 6 keys take about 14kB of NVRAM, so check first if there is enough free space!<\/p>');
 			createFieldTable('', [
 				null,
-				{ title: 'Static Key', name: 'vpn_'+t+'_static', type: 'textarea', value: eval('nvram.vpn_'+t+'_static'),
+				{ title: 'Static Key', name: 'vpn_'+t+'_static', type: 'textarea', value: nvram['vpn_'+t+'_static'],
 					prefix: '<div id="'+t+'_static_progress_div" style="display:none"><p class="keyhelp">Please wait - generating static key...<img src="spin.gif" alt=""><\/p><\/div>' },
 				{ title: '', custom: '<input type="button" value="Generate static key" onclick="updateStaticKey('+(i+1)+')" id="_vpn_keygen_static_'+t+'_button">' }
 			]);
 			createFieldTable('', [
 				null,
-				{ title: 'Certificate Authority Key', name: 'vpn_'+t+'_ca_key', type: 'textarea', value: eval('nvram.vpn_'+t+'_ca_key'),
+				{ title: 'Certificate Authority Key', name: 'vpn_'+t+'_ca_key', type: 'textarea', value: nvram['vpn_'+t+'_ca_key'],
 					prefix: '<div id="'+t+'_ca_key_progress_div" style="display:none"><p class="keyhelp">Please wait - generating CA key...<img src="spin.gif" alt=""><\/p><\/div>' },
 				{ title: '', custom: '<div id="_vpn_'+t+'_ca_key_div_help"><p class="keyhelp">Optional, only used for client certificate generation.<br> Unencrypted (-nodes) private keys are supported.<\/p><\/div>' },
-				{ title: 'Certificate Authority', name: 'vpn_'+t+'_ca', type: 'textarea', value: eval('nvram.vpn_'+t+'_ca'),
+				{ title: 'Certificate Authority', name: 'vpn_'+t+'_ca', type: 'textarea', value: nvram['vpn_'+t+'_ca'],
 					prefix: '<div id="'+t+'_ca_progress_div" style="display:none"><p class="keyhelp">Please wait - generating CA certificate...<img src="spin.gif" alt=""><\/p><\/div>' },
-				{ title: 'Server Certificate', name: 'vpn_'+t+'_crt', type: 'textarea', value: eval('nvram.vpn_'+t+'_crt'),
+				{ title: 'Server Certificate', name: 'vpn_'+t+'_crt', type: 'textarea', value: nvram['vpn_'+t+'_crt'],
 					prefix: '<div id="'+t+'_cert_progress_div" style="display: none"><p class="keyhelp">Please wait - generating certificate...<img src="spin.gif" alt=""><\/p><\/div>' },
-				{ title: 'Server Key', name: 'vpn_'+t+'_key', type: 'textarea', value: eval('nvram.vpn_'+t+'_key'),
+				{ title: 'Server Key', name: 'vpn_'+t+'_key', type: 'textarea', value: nvram['vpn_'+t+'_key'],
 					prefix: '<div id="'+t+'_key_progress_div" style="display: none"><p class="keyhelp">Please wait - generating key...<img src="spin.gif" alt=""><\/p><\/div>' },
-				{ title: 'CRL file', name: 'vpn_'+t+'_crl', type: 'textarea', value: eval('nvram.vpn_'+t+'_crl') },
+				{ title: 'CRL file', name: 'vpn_'+t+'_crl', type: 'textarea', value: nvram['vpn_'+t+'_crl'] },
 				{ title: '', custom: '<input type="button" value="Generate keys" onclick="generateKeys('+(i+1)+')" id="_vpn_keygen_'+t+'_button">' }
 			]);
 			createFieldTable('', [
 				null,
-				{ title: 'Diffie Hellman parameters', name: 'vpn_'+t+'_dh', type: 'textarea', value: eval('nvram.vpn_'+t+'_dh'),
+				{ title: 'Diffie Hellman parameters', name: 'vpn_'+t+'_dh', type: 'textarea', value: nvram['vpn_'+t+'_dh'],
 					prefix: '<div id="'+t+'_dh_progress_div" style="display:none"><p class="keyhelp">Please wait - generating DH parameters...<img src="spin.gif" alt=""><\/p><\/div>' },
 				{ title: '', custom: '<input type="button" value="Generate DH Params" onclick="generateDHParams('+(i+1)+')" id="_vpn_dhgen_'+t+'_button">' }
 			]);
