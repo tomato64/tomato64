@@ -820,7 +820,9 @@ int wg_remove_peer_privkey(char *iface, char *privkey)
 int wg_remove_iface(char *iface)
 {
 	/* check if interface exists */
-	if (eval("ip", "addr", "show", "dev", iface)) {
+	if (eval("ip", "addr", "show", "dev", iface))
+		logmsg(LOG_DEBUG, "no such interface: %s", iface);
+	else {
 		/* delete wireguard interface */
 		if (eval("ip", "link", "delete", iface)) {
 			logmsg(LOG_WARNING, "unable to delete wireguard interface %s!", iface);
@@ -829,8 +831,6 @@ int wg_remove_iface(char *iface)
 		else
 			logmsg(LOG_DEBUG, "wireguard interface %s has been deleted", iface);
 	}
-	else
-		logmsg(LOG_DEBUG, "no such interface: %s", iface);
 
 	return 0;
 }
