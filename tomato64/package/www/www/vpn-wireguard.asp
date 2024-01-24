@@ -1354,7 +1354,7 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 		allowed_ips = '0.0.0.0/0'
 	else {
 		var netmask;
-		if (eval('nvram.wg'+unit+'_com') > 0) {
+		if (eval('nvram.wg'+unit+'_com') > 0)
 			netmask = '/' + interface_nm;
 		else
 			netmask = '/32';
@@ -1874,7 +1874,7 @@ function save(nomsg) {
 		fom['wg'+i+'_peers.value'] = s;
 		nvram['wg'+i+'_peers'] = s;
 
-		fom['wg'+i+'_ka.value'] = fom['_f_wg'+i+'_ka'].checked ? 1 : 0;
+		fom['wg'+i+'_ka'].value = fom['_f_wg'+i+'_ka'].checked ? 1 : 0;
 		fom['wg'+i+'_enable'].value = fom['_f_wg'+i+'_enable'].checked ? 1 : 0;
 		fom['wg'+i+'_lan0'].value = fom['_f_wg'+i+'_lan0'].checked ? 1 : 0;
 		fom['wg'+i+'_lan1'].value = fom['_f_wg'+i+'_lan1'].checked ? 1 : 0;
