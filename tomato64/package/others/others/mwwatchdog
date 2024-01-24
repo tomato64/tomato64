@@ -3,7 +3,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 # Copyright (C) 2015 shibby
 #
-# changes/fixes: 2018 - 2023 by pedro
+# changes/fixes: 2018 - 2024 by pedro
 #
 
 
@@ -188,7 +188,7 @@ cktracert() {
 	for IP in $IPLIST; do
 		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null)
 		# we need only send/receive few packages to be sure if connection works
-		traceroute -i $IFACE -n -w 1 -q 1 -z 1 $IP &>/dev/null
+		traceroute -i $IFACE -n -w 1 -m 10 -q 1 -z 1 $IP &>/dev/null
 		sleep 1
 		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null)
 		[ "$RXBYTES2" -gt "$(($RXBYTES1 + $RXBYTES_MIN_DIFF))" ] && { RESULT=1; break; }
