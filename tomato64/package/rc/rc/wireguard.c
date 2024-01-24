@@ -209,9 +209,9 @@ void wg_setup_dirs(void) {
 			            "    pf='ip'\n"
 			            "    ;;\n"
 			            "esac\n"
-			            "cmd ip \"${proto}\" route add \"${route}\" dev \"${interface}\" table \"${table}\"\n"
 			            "cmd ip \"${proto}\" rule add not fwmark \"${table}\" table \"${table}\"\n"
 			            "cmd ip \"${proto}\" rule add table main suppress_prefixlength 0\n"
+			            "cmd ip \"${proto}\" route add \"${route}\" dev \"${interface}\" table \"${table}\"\n"
 			            "restore=\"*raw${NL}\"\n"
 			            "ip -o \"${proto}\" addr show dev \"${interface}\" 2>/dev/null | {\n"
 			            "  while read -r line; do\n"
@@ -478,7 +478,7 @@ int wg_iface_script(int unit, char *script_name)
 			logmsg(LOG_WARNING, "unable to open %s for writing!", path);
 			return -1;
 		}
-		fprintf(fp, "%s\n", script);
+		fprintf(fp, "#!/bin/sh\n%s\n", script);
 		fclose(fp);
 		chmod(path, 0700);
 
@@ -494,7 +494,7 @@ int wg_iface_script(int unit, char *script_name)
 			logmsg(LOG_DEBUG, "interface substitution in %s script for wireguard interface wg%d has executed successfully", script_name, unit);
 
 		/* run script */
-		if (eval("/bin/sh", path)) {
+		if (eval(path)) {
 			logmsg(LOG_WARNING, "unable to execute %s script for wireguard interface wg%d!", script_name, unit);
 			return -1;
 		}
