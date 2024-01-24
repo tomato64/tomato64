@@ -1301,7 +1301,8 @@ void start_wan_done(char *wan_ifname, char *prefix)
 				start_ovpn_eas();
 #endif
 #ifdef TCONFIG_WIREGUARD
-			start_wg_eas();
+			if (nvram_get_int("ntp_ready") && !first_ntp_sync)
+				start_wg_eas();
 #endif
 #ifdef TCONFIG_TINC
 			start_tinc(0);
@@ -1421,6 +1422,9 @@ void stop_wan(void)
 
 #ifdef TCONFIG_OPENVPN
 	stop_ovpn_all();
+#endif
+#ifdef TCONFIG_WIREGUARD
+	stop_wg_all();
 #endif
 	stop_pptp_client_eas();
 	stop_igmp_proxy();

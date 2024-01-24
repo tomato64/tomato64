@@ -596,7 +596,9 @@ extern int write_ovpn_resolv(FILE*);
 #ifdef TCONFIG_WIREGUARD
 #define WG_KEY_LEN 32
 #define WG_KEY_LEN_BASE64 ((((WG_KEY_LEN) + 2) / 3) * 4 + 1)
-extern void start_wg_eas();
+extern void start_wg_eas(void);
+//extern void stop_wg_eas(void);
+extern void stop_wg_all(void);
 extern void start_wireguard(int unit);
 extern void stop_wireguard(int unit);
 extern void write_wg_dnsmasq_config(FILE* f);

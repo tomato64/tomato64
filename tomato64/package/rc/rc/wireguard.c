@@ -97,7 +97,7 @@ static void find_port(int unit, char *port)
 		snprintf(port, BUF_SIZE_8, "%s", b);
 }
 
-void wg_setup_dirs() {
+void wg_setup_dirs(void) {
 	FILE *fp;
 
 	/* main dir */
@@ -233,7 +233,7 @@ void wg_setup_dirs() {
 	}
 }
 
-void wg_cleanup_dirs() {
+void wg_cleanup_dirs(void) {
 	eval("rm", "-rf", WG_DIR);
 }
 
@@ -821,15 +821,39 @@ int wg_remove_iface(char *iface)
 	return 0;
 }
 
-void start_wg_eas()
+void start_wg_eas(void)
 {
 	int unit;
 
-	for (unit = 0; unit < WG_INTERFACE_MAX; unit ++) {
+	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
 		if (atoi(getNVRAMVar("wg%d_enable", unit)) == 1) {
 			start_wireguard(unit);
 		}
 	}
+}
+/*
+void stop_wg_eas(void)
+{
+	int unit;
+
+	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
+		if (atoi(getNVRAMVar("wg%d_enable", unit)) == 1) {
+			stop_wireguard(unit);
+		}
+	}
+}
+*/
+void stop_wg_all(void)
+{
+	int unit;
+
+	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
+		stop_wireguard(unit);
+	}
+	wg_cleanup_dirs();
+
+	/* remove tunnel interface module */
+	modprobe_r("wireguard");
 }
 
 void start_wireguard(int unit)
