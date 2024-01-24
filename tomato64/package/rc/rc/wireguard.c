@@ -4,11 +4,13 @@
 
 
 /* needed by logmsg() */
-#define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
-#define LOGMSG_NVDEBUG	"wireguard_debug"
+#define LOGMSG_DISABLE		DISABLE_SYSLOG_OSM
+#define LOGMSG_NVDEBUG		"wireguard_debug"
 
-#define WG_DIR		"/etc/wireguard"
-#define WG_DNS_DIR	WG_DIR"/dns"
+#define WG_DIR			"/etc/wireguard"
+#define WG_DNS_DIR		WG_DIR"/dns"
+#define WG_SCRIPTS_DIR		WG_DIR"/scripts"
+#define WG_KEYS_DIR		WG_DIR"/keys"
 
 #define BUF_SIZE		256
 #define BUF_SIZE_8		8
@@ -37,15 +39,15 @@ int wg_quick_iface_up(char *iface, char *file)
 		fclose(f);
 	}
 	else
-		logmsg(LOG_WARNING, "Unable to open wireguard configuration file %s for interface %s!", iface, file);
+		logmsg(LOG_WARNING, "unable to open wireguard configuration file %s for interface %s!", iface, file);
 
 	/* write wg config to file */
 	if (eval("wg-quick", "up", iface, "--norestart")) {
-		logmsg(LOG_WARNING, "Unable to set up wireguard interface %s from file %s!", iface, file);
+		logmsg(LOG_WARNING, "unable to set up wireguard interface %s from file %s!", iface, file);
 		return -1;
 	}
 	else
-		logmsg(LOG_DEBUG, "Wireguard interface %s from file %s set up", iface, file);
+		logmsg(LOG_DEBUG, "wireguard interface %s from file %s set up", iface, file);
 
 	stop_dnsmasq();
 	start_dnsmasq();
@@ -67,17 +69,17 @@ int wg_quick_iface_down(char *iface, char *file)
 		fclose(f);
 	}
 	else {
-		logmsg(LOG_WARNING, "Unable to open wireguard configuration file %s for interface %s!", iface, file);
+		logmsg(LOG_WARNING, "unable to open wireguard configuration file %s for interface %s!", iface, file);
 		return -1;
 	}
 
 	/* write wg config to file */
 	if (eval("wg-quick", "down", buf, "--norestart")) {
-		logmsg(LOG_WARNING, "Unable to set down wireguard interface %s from file %s!", iface, file);
+		logmsg(LOG_WARNING, "unable to set down wireguard interface %s from file %s!", iface, file);
 		return -1;
 	}
 	else
-		logmsg(LOG_DEBUG, "Wireguard interface %s from file %s set down", iface, file);
+		logmsg(LOG_DEBUG, "wireguard interface %s from file %s set down", iface, file);
 
 	stop_dnsmasq();
 	start_dnsmasq();
@@ -105,30 +107,30 @@ void wg_setup_dirs(void) {
 		chmod(WG_DIR, (S_IRUSR | S_IWUSR | S_IXUSR));
 
 	/* script dir */
-	if (mkdir_if_none(WG_DIR"/scripts"))
-		chmod(WG_DIR"/scripts", (S_IRUSR | S_IWUSR | S_IXUSR));
+	if (mkdir_if_none(WG_SCRIPTS_DIR))
+		chmod(WG_SCRIPTS_DIR, (S_IRUSR | S_IWUSR | S_IXUSR));
 
 	/* keys dir */
-	if (mkdir_if_none(WG_DIR"/keys"))
-		chmod(WG_DIR"/keys", (S_IRUSR | S_IWUSR | S_IXUSR));
+	if (mkdir_if_none(WG_KEYS_DIR))
+		chmod(WG_KEYS_DIR, (S_IRUSR | S_IWUSR | S_IXUSR));
 
 	/* dns dir */
-	if (mkdir_if_none(WG_DIR"/dns"))
-		chmod(WG_DIR"/dns", (S_IRUSR | S_IWUSR | S_IXUSR));
+	if (mkdir_if_none(WG_DNS_DIR))
+		chmod(WG_DNS_DIR, (S_IRUSR | S_IWUSR | S_IXUSR));
 
 	/* script to generate public keys from private keys */
-	if (!(f_exists(WG_DIR"/scripts/pubkey.sh"))){
-		if ((fp = fopen(WG_DIR"/scripts/pubkey.sh", "w"))) {
+	if (!(f_exists(WG_SCRIPTS_DIR"/pubkey.sh"))){
+		if ((fp = fopen(WG_SCRIPTS_DIR"/pubkey.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "echo \"$1\" | wg pubkey > \"$2\"\n");
 			fclose(fp);
-			chmod(WG_DIR"/scripts/pubkey.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
+			chmod(WG_SCRIPTS_DIR"/pubkey.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
 		}
 	}
 
 	/* script to add iptable rules for wireguard device */
-	if (!(f_exists(WG_DIR"/scripts/fw-add.sh"))) {
-		if ((fp = fopen(WG_DIR"/scripts/fw-add.sh", "w"))) {
+	if (!(f_exists(WG_SCRIPTS_DIR"/fw-add.sh"))) {
+		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-add.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "if [ $(nvram get ctf_disable) -eq 0 ]; then\n"
 			            " iptables -t mangle -nvL PREROUTING | grep -q '.*MARK.*all.*$2.*0x1/0x7' || iptables -t mangle -A PREROUTING -i $2 -j MARK --set-mark 0x01/0x7\n"
@@ -137,14 +139,14 @@ void wg_setup_dirs(void) {
 			            "iptables -nvL INPUT | grep -q \".*ACCEPT.*all.*$2\" || iptables -A INPUT -i \"$2\" -j ACCEPT\n"
 			            "iptables -nvL FORWARD | grep -q \".*ACCEPT.*all.*$2\" || iptables -A FORWARD -i \"$2\" -j ACCEPT\n");
 			fclose(fp);
-			chmod(WG_DIR"/scripts/fw-add.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
+			chmod(WG_SCRIPTS_DIR"/fw-add.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
 		}
 	}
 
 	/* script to remove iptable rules for wireguard device */
 	/* will probably need to add rules to clean up default route rules either in this script or another */
-	if (!(f_exists(WG_DIR"/scripts/fw-del.sh"))) {
-		if ((fp = fopen(WG_DIR"/scripts/fw-del.sh", "w"))) {
+	if (!(f_exists(WG_SCRIPTS_DIR"/fw-del.sh"))) {
+		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-del.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "if [ $(nvram get ctf_disable) -eq 0 ]; then\n"
 			            " iptables -t mangle -nvL PREROUTING | grep -q '.*MARK.*all.*$2.*0x1/0x7' && iptables -t mangle -D PREROUTING -i $2 -j MARK --set-mark 0x01/0x7\n"
@@ -153,13 +155,13 @@ void wg_setup_dirs(void) {
 			            "iptables -nvL INPUT | grep -q \".*ACCEPT.*all.*$2\" && iptables -D INPUT -i \"$2\" -j ACCEPT\n"
 			            "iptables -nvL FORWARD | grep -q \".*ACCEPT.*all.*$2\" && iptables -D FORWARD -i \"$2\" -j ACCEPT\n");
 			fclose(fp);
-			chmod(WG_DIR"/scripts/fw-del.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
+			chmod(WG_SCRIPTS_DIR"/fw-del.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
 		}
 	}
 
 	/* script to add fw rules for dns servers */
-	if (!(f_exists(WG_DIR"/scripts/fw-dns-set.sh"))) {
-		if ((fp = fopen(WG_DIR"/scripts/fw-dns-set.sh", "w"))) {
+	if (!(f_exists(WG_SCRIPTS_DIR"/fw-dns-set.sh"))) {
+		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-dns-set.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "DNS_CHAIN=\"wg-ft-${1}-dns\"\n"
 			            "iptables -D OUTPUT -j \"${DNS_CHAIN}\" >/dev/null 2>&1 || $(exit 0)\n"
@@ -171,13 +173,13 @@ void wg_setup_dirs(void) {
 			            "done\n"
 			            "iptables -A OUTPUT -j \"${DNS_CHAIN}\"\n");
 			fclose(fp);
-			chmod(WG_DIR"/scripts/fw-dns-set.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
+			chmod(WG_SCRIPTS_DIR"/fw-dns-set.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
 		}
 	}
 
 	/* script to remove fw rules for dns servers */
-	if (!(f_exists(WG_DIR"/scripts/fw-dns-unset.sh"))) {
-		if ((fp = fopen(WG_DIR"/scripts/fw-dns-unset.sh", "w"))) {
+	if (!(f_exists(WG_SCRIPTS_DIR"/fw-dns-unset.sh"))) {
+		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-dns-unset.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "INTERFACE=\"${1}\"\n"
 			            "DNS_CHAIN=\"wg-ft-${INTERFACE}-dns\"\n"
@@ -185,13 +187,13 @@ void wg_setup_dirs(void) {
 			            "iptables -F \"${DNS_CHAIN}\" || $(exit 0)\n"
 			            "iptables -X \"${DNS_CHAIN}\" || $(exit 0)\n");
 			fclose(fp);
-			chmod(WG_DIR"/scripts/fw-dns-unset.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
+			chmod(WG_SCRIPTS_DIR"/fw-dns-unset.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
 		}
 	}
 
 	/* script excerpt from wg-quick to route default */
-	if (!(f_exists(WG_DIR"/scripts/route-default.sh"))) {
-		if ((fp = fopen(WG_DIR"/scripts/route-default.sh", "w"))) {
+	if (!(f_exists(WG_SCRIPTS_DIR"/route-default.sh"))) {
+		if ((fp = fopen(WG_SCRIPTS_DIR"/route-default.sh", "w"))) {
 			fprintf(fp, "interface=\"${1}\"\n"
 			            "route=\"${2}\"\n"
 			            "table=\"${3}\"\n"
@@ -228,7 +230,7 @@ void wg_setup_dirs(void) {
 			            "    cmd \"${iptables}-restore\" -n\n"
 			            "}\n", "%s", "%s");
 			fclose(fp);
-			chmod(WG_DIR"/scripts/route-default.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
+			chmod(WG_SCRIPTS_DIR"/route-default.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
 		}
 	}
 }
@@ -269,7 +271,7 @@ int wg_add_iface_addr(char *iface, char *addr)
 int wg_flush_iface_addr(char *iface)
 {
 	if (eval("ip", "addr", "flush", "dev", iface)) {
-		logmsg(LOG_WARNING, "unable to flush wireguard interface %s", iface);
+		logmsg(LOG_WARNING, "unable to flush wireguard interface %s!", iface);
 		return -1;
 	}
 	else
@@ -317,7 +319,7 @@ int wg_set_iface_privkey(char *iface, char *privkey)
 
 	/* write private key to file */
 	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, WG_DIR"/keys/%s", iface);
+	snprintf(buffer, BUF_SIZE, WG_KEYS_DIR"/%s", iface);
 
 	fp = fopen(buffer, "w");
 	fprintf(fp, privkey);
@@ -401,7 +403,7 @@ int wg_set_iface_dns(char *iface, char *dns)
 	if (dns[0] == '\0')
 		return 0;
 
-	if (eval(WG_DIR"/scripts/fw-dns-set.sh", iface, dns)) {
+	if (eval(WG_SCRIPTS_DIR"/fw-dns-set.sh", iface, dns)) {
 		logmsg(LOG_WARNING, "unable to add firewall rules for wireguard interface %s's dns server(s)!", iface);
 		return -1;
 	}
@@ -445,7 +447,7 @@ int wg_unset_iface_dns(char *iface)
 	stop_dnsmasq();
 	start_dnsmasq();
 
-	if (eval(WG_DIR"/scripts/fw-dns-unset.sh", iface)) {
+	if (eval(WG_SCRIPTS_DIR"/fw-dns-unset.sh", iface)) {
 		logmsg(LOG_WARNING, "unable to remove firewall rules for wireguard interface %s's dns server(s)!", iface);
 		return -1;
 	}
@@ -470,7 +472,7 @@ int wg_iface_script(int unit, char *script_name)
 	if (strcmp(script, "") != 0) {
 		/* build path */
 		memset(path, 0, BUF_SIZE_64);
-		snprintf(path, BUF_SIZE_64, WG_DIR"/scripts/wg%d-%s.sh", unit, script_name);
+		snprintf(path, BUF_SIZE_64, WG_SCRIPTS_DIR"/wg%d-%s.sh", unit, script_name);
 
 		if (!(fp = fopen(path, "w"))) {
 			logmsg(LOG_WARNING, "unable to open %s for writing!", path);
@@ -531,7 +533,7 @@ int wg_set_peer_psk(char *iface, char *pubkey, char *presharedkey)
 
 	/* write preshared key to file */
 	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, WG_DIR"/keys/%s.psk", iface);
+	snprintf(buffer, BUF_SIZE, WG_KEYS_DIR"/%s.psk", iface);
 
 	fp = fopen(buffer, "w");
 	fprintf(fp, presharedkey);
@@ -758,7 +760,7 @@ int wg_add_peer_privkey(char *iface, char *privkey, char *allowed_ips, char *pre
 
 int wg_route_peer_default(char *iface, char *route, char *fwmark)
 {
-	if (eval("/bin/sh", WG_DIR"/scripts/route-default.sh", iface, route, fwmark)) {
+	if (eval("/bin/sh", WG_SCRIPTS_DIR"/route-default.sh", iface, route, fwmark)) {
 		logmsg(LOG_WARNING, "unable to add default route of %s to table %s for wireguard interface %s!", route, fwmark, iface);
 		return -1;
 	}
@@ -770,18 +772,25 @@ int wg_route_peer_default(char *iface, char *route, char *fwmark)
 
 int wg_set_iptables(char *iface, char *port)
 {
-	if (eval(WG_DIR"/scripts/fw-add.sh", port, iface))
-		logmsg(LOG_WARNING, "Unable to add iptable rules for wireguard interface %s on port %s!", iface, port);
+	if (eval(WG_SCRIPTS_DIR"/fw-add.sh", port, iface))
+		logmsg(LOG_WARNING, "unable to add iptable rules for wireguard interface %s on port %s!", iface, port);
 	else
-		logmsg(LOG_DEBUG, "Iptable rules have been added for wireguard interface %s on port %s", iface, port);
+		logmsg(LOG_DEBUG, "iptable rules have been added for wireguard interface %s on port %s", iface, port);
 
 	return 0;
 }
 
 int wg_remove_iptables(char *iface, char *port)
 {
-	eval(WG_DIR"/scripts/fw-del.sh", port, iface);
-	logmsg(LOG_DEBUG, "Iptable rules have been removed for wireguard interface %s on port %s", iface, port);
+	/* check if file exists first */
+	if (f_exists(WG_SCRIPTS_DIR"/fw-del.sh")) {
+		eval(WG_SCRIPTS_DIR"/fw-del.sh", port, iface);
+		logmsg(LOG_DEBUG, "iptable rules have been removed for wireguard interface %s on port %s", iface, port);
+	}
+	else {
+		logmsg(LOG_DEBUG, "no iptable rules for wireguard interface %s on port %s!", iface, port);
+		return -1;
+	}
 
 	return 0;
 }
@@ -810,13 +819,18 @@ int wg_remove_peer_privkey(char *iface, char *privkey)
 
 int wg_remove_iface(char *iface)
 {
-	/* create wireguard interface */
-	if (eval("ip", "link", "delete", iface)) {
-		logmsg(LOG_WARNING, "unable to delete wireguard interface %s!", iface);
-		return -1;
+	/* check if interface exists */
+	if (eval("ip", "addr", "show", "dev", iface)) {
+		/* delete wireguard interface */
+		if (eval("ip", "link", "delete", iface)) {
+			logmsg(LOG_WARNING, "unable to delete wireguard interface %s!", iface);
+			return -1;
+		}
+		else
+			logmsg(LOG_DEBUG, "wireguard interface %s has been deleted", iface);
 	}
 	else
-		logmsg(LOG_DEBUG, "wireguard interface %s has been deleted", iface);
+		logmsg(LOG_DEBUG, "no such interface: %s", iface);
 
 	return 0;
 }
@@ -1016,7 +1030,7 @@ void write_wg_dnsmasq_config(FILE* f)
 		}
 	}
 
-	if ((dir = opendir(WG_DIR"/dns")) != NULL) {
+	if ((dir = opendir(WG_DNS_DIR)) != NULL) {
 		while ((file = readdir(dir)) != NULL) {
 			fn = file->d_name;
 
