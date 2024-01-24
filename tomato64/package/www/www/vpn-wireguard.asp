@@ -86,13 +86,12 @@ for (i = 0; i < WG_INTERFACE_COUNT; ++i)
 	tabs.push(['wg'+i,'wg'+i]);
 var sections = [['config','Config'],['peers','Peers'],['scripts','Scripts'],['status','Status']];
 
-window.addEventListener("beforeunload", function (e) {
+window.addEventListener('beforeunload', function (e) {
 	if (changed) {
-		var confirmationMessage = 'It looks like you have changed the values of some fields.'
-		                        + 'If you leave before saving, your changes will be lost.';
+		var confirmationMessage = 'It looks like you have changed the values of some fields. If you leave before saving, your changes will be lost.';
 
-	(e || window.event).returnValue = confirmationMessage;
-	return confirmationMessage;
+		(e || window.event).returnValue = confirmationMessage;
+		return confirmationMessage;
 	}
 });
 
@@ -144,7 +143,7 @@ form.submit = function(fom, async, url) {
 			if (isNaN(nomsg))
 				nomsg = 0;
 		}
-		v.push(escapeCGI(f.name) + '=' + escapeCGI(f.value));
+		v.push(escapeCGI(f.name)+'='+escapeCGI(f.value));
 	}
 
 	if ((msg = E('footer-msg')) != null && !nomsg) {
@@ -219,6 +218,7 @@ function locateElement(e) {
 	do {
 		e = e.parentElement;
 	} while(e.id.indexOf('wg') < 0);
+
 	return e.id.split('-', 2);
 }
 
@@ -316,7 +316,7 @@ function loadConfig(unit) {
 	var [file] = E('wg'+unit+'_config_file').files;
 
 	var index = file.name.lastIndexOf('.');
-	if (file.name.slice(index).toLowerCase() != ".conf") {
+	if (file.name.slice(index).toLowerCase() != '.conf') {
 		alert('Only files that end in ".conf" are accepted for import');
 		return;
 	}
@@ -341,7 +341,7 @@ function mapConfigToFields(event) {
 
 	if (config.interface.port)
 		if (config.interface.port == 51820 + unit)
-			E('_wg'+unit+'_port').value = "";
+			E('_wg'+unit+'_port').value = ''
 		else
 			E('_wg'+unit+'_port').value = config.interface.port;
 
@@ -717,7 +717,7 @@ StatusRefresh.prototype.refresh = function(text) {
 	var cmdresult;
 	var output;
 	eval(text);
-	if (cmdresult == "Unable to access interface: No such device\n" || cmdresult == "Unable to access interface: Protocol not supported\n") {
+	if (cmdresult == 'Unable to access interface: No such device\n' || cmdresult == 'Unable to access interface: Protocol not supported\n') {
 		output = 'Wireguard device wg'+this.unit+' is down';
 	}
 	else {
@@ -778,7 +778,7 @@ PeerGrid.prototype.edit = function(cell) {
 	var keepalive = E('_f_wg'+this.unit+'_peer_ka');
 	var fwmark = E('_f_wg'+this.unit+'_peer_fwmark');
 
-	var interface_port = eval('nvram.'+this.interface_name+'_port');
+	var interface_port = nvram[this.interface_name+'_port'];
 	if (interface_port == '')
 		interface_port = 51820 + this.unit;
 
@@ -790,7 +790,7 @@ PeerGrid.prototype.edit = function(cell) {
 	psk.value = data[4];
 	ip.value = data[5];
 	allowedips.value = data[6];
-	keepalive.checked = data[7] == "1" ? 1 : 0;
+	keepalive.checked = data[7] == 1 ? 1 : 0;
 	fwmark.value = '';
 
 	var button = E(this.interface_name+'_peer_add');
@@ -902,7 +902,7 @@ PeerGrid.prototype.rpMouIn = function(evt) {
 
 function decodePeers(unit) {
 	var peers = []
-	var nv = eval("nvram.wg"+unit+"_peers.split('>')");
+	var nv = nvram['wg'+unit+'_peers'].split('>');
 	for (var i = 0; i < nv.length; ++i) {
 		var t = nv[i].split('<');
 		if (t.length == 8) {
@@ -913,7 +913,7 @@ function decodePeers(unit) {
 				pubkey = window.wireguard.generatePublicKey(privkey);
 			}
 			else {
-				privkey = "";
+				privkey = '';
 				pubkey = t[3];
 			}
 
@@ -1031,12 +1031,12 @@ function verifyPeerFields(unit, require_privkey) {
 }
 
 function copyInterfacePubKey(unit) {
-	const textArea = document.createElement("textarea");
+	const textArea = document.createElement('textarea');
 	textArea.value = E('_wg'+unit+'_pubkey').value;
 
 	/* Move textarea out of the viewport so it's not visible */
-	textArea.style.position = "absolute";
-	textArea.style.left = "-999999px";
+	textArea.style.position = 'absolute';
+	textArea.style.left = '-999999px';
 
 	document.body.prepend(textArea);
 	textArea.select();
@@ -1093,7 +1093,7 @@ function peerFieldsToData(unit) {
 }
 
 function clearPeerFields(unit) {
-	var port = eval('nvram.wg'+unit+'_port');
+	var port = nvram['wg'+unit+'_port'];
 	if (port == '')
 		port = 51820 + unit;
 	E('_f_wg'+unit+'_peer_alias').value = '';
@@ -1160,7 +1160,7 @@ function editPeer(unit, rowIndex, quiet) {
 
 function verifyPeerGenFields(unit) {
 	/* verify interface has a valid private key */
-	if (!window.wireguard.validateBase64Key(eval('nvram.wg'+unit+'_key'))) {
+	if (!window.wireguard.validateBase64Key(nvram['wg'+unit+'_key'])) {
 		alert('The interface must have a valid private key before peers can be generated')
 		return false;
 	}
@@ -1184,19 +1184,19 @@ function generatePeer(unit) {
 	var keys = window.wireguard.generateKeypair();
 
 	/* Generate PSK (if checked) */
-	var psk = "";
+	var psk = '';
 	if (E('_f_wg'+unit+'_peer_psk_gen').checked)
 		psk = window.wireguard.generatePresharedKey();
 
 	/* retrieve existing IPs of interface/peers to calculate new ip */
-	var [interface_ip, interface_nm] = eval('nvram.wg'+unit+'_ip.split(",")[0].split("/", 2)');
+	var [interface_ip, interface_nm] = nvram['wg'+unit+'_ip'].split(',')[0].split('/', 2);
 	var existing_ips = peerTables[unit].getAllData();
 	existing_ips = existing_ips.map(x => x[5].split('/',1)[0]);
 	existing_ips.push(interface_ip);
 
 	/* calculate ip of new peer */
-	var ip = "";
-	var network = getNetworkAddress(eval('nvram.wg'+unit+'_ip'), CIDRToNetmask(interface_nm));
+	var ip = '';
+	var network = getNetworkAddress(nvram['wg'+unit+'_ip'], CIDRToNetmask(interface_nm));
 	var limit = 2 ** (32 - parseInt(interface_nm, 10));
 	for (var i = 1; i < limit; i++) {
 
@@ -1214,7 +1214,7 @@ function generatePeer(unit) {
 	}
 
 	/* return if we could not generate an IP */
-	if (ip == "") {
+	if (ip == '') {
 		alert('Could not generate an IP for the peer');
 		return;
 	}
@@ -1225,7 +1225,7 @@ function generatePeer(unit) {
 	E('_f_wg'+unit+'_peer_pubkey').value = keys.publicKey;
 	E('_f_wg'+unit+'_peer_pubkey').disabled = true;
 	E('_f_wg'+unit+'_peer_psk').value = psk;
-	E('_f_wg'+unit+'_peer_ip').value = `${ip}/32`;
+	E('_f_wg'+unit+'_peer_ip').value = ip+'/32';
 	E('_f_wg'+unit+'_peer_ka').checked = 0;
 
 	var button = E('wg'+unit+'_peer_add');
@@ -1237,7 +1237,7 @@ function displayQRCode(content, unit) {
 	var qrcode = E('wg'+unit+'_qrcode');
 	var qrcode_content = content.join('');
 	var image = showQRCode(qrcode_content);
-	image.style.maxWidth = "700px";
+	image.style.maxWidth = '700px';
 	qrcode.replaceChild(image, qrcode.firstChild);
 	elem.display('wg'+unit+'_qrcode', true);
 }
@@ -1260,10 +1260,10 @@ function genPeerGridConfigQR(event, unit, row) {
 function genPeerGridConfigFile(event, unit, row) {
 	var content = genPeerGridConfig(unit, row);
 	if (content != false) {
-		var filename = "peer"+row+".conf";
+		var filename = 'peer'+row+'.conf';
 		var alias = peerTables[unit].tb.rows[row]._data[0];
-		if (alias != "")
-			filename = `${alias}.conf`;
+		if (alias != '')
+			filename = alias+'.conf';
 		downloadConfig(content, filename);
 	}
 	event.stopPropagation();
@@ -1301,31 +1301,31 @@ function genPeerGridConfig(unit, row) {
 }
 
 function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive, endpoint) {
-	var [interface_ip, interface_nm] = eval('nvram.wg'+unit+'_ip.split(",",1)[0].split("/", 2)');
+	var [interface_ip, interface_nm] = nvram['wg'+unit+'_ip'].split(',',1)[0].split('/', 2);
 	var content = [];
-	var dns = eval('nvram.wg'+unit+'_peer_dns');
+	var dns = nvram['wg'+unit+'_peer_dns'];
 
 	/* build interface section */
-	content.push("[Interface]\n");
+	content.push('[Interface]\n');
 
-	if (name != "")
-		content.push(`#Alias = ${name}\n`);
+	if (name != '')
+		content.push('#Alias = '+name+'\n');
 
 	content.push(
-		`Address = ${ip}/${interface_nm}\n`,
-		`ListenPort = ${port}\n`,
-		`PrivateKey = ${privkey}\n`,
+		'Address = '+ip+'/'+interface_nm+'\n',
+		'ListenPort = '+port+'\n',
+		'PrivateKey = '+privkey+'\n',
 	);
 
-	if (dns != "")
-		content.push(`DNS = ${dns}\n`)
+	if (dns != '')
+		content.push('DNS = '+dns+'\n')
 
-	if (fwmark && fwmark != "0")
-		content.push (`FwMark = 0x${fwmark}\n`);
+	if (fwmark && fwmark != 0)
+		content.push ('FwMark = 0x'+fwmark+'\n');
 
 	/* build router peer */
-	var publickey_interface = window.wireguard.generatePublicKey(eval('nvram.wg'+unit+'_key'));
-	var router_endpoint = eval('nvram.wg'+unit+'_endpoint');
+	var publickey_interface = window.wireguard.generatePublicKey(nvram['wg'+unit+'_key']);
+	var router_endpoint = nvram['wg'+unit+'_endpoint'];
 	switch(router_endpoint[0]) {
 	case '0':
 		if (nvram.wan_domain) {
@@ -1343,69 +1343,66 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 		router_endpoint = router_endpoint.split('|', 2)[1];
 		break;
 	}
-	var port = eval('nvram.wg'+unit+'_port');
+	var port = nvram['wg'+unit+'_port'];
 	if (port == '')
 		port = 51820 + unit;
-	router_endpoint += ":" + port;
+	router_endpoint += ':'+port;
 	var allowed_ips;
 
 	/* build allowed ips for router peer */
-	if (eval('nvram.wg'+unit+'_rgw') == "1") {
-		allowed_ips = "0.0.0.0/0"
-	}
+	if (eval('nvram.wg'+unit+'_rgw') == 1)
+		allowed_ips = '0.0.0.0/0'
 	else {
 		var netmask;
 		if (eval('nvram.wg'+unit+'_com') > 0) {
 			netmask = '/' + interface_nm;
-		}
-		else {
-			netmask = "/32";
-		}
+		else
+			netmask = '/32';
+
 		allowed_ips = interface_ip + netmask;
-		var other_ips_index = eval('nvram.wg'+unit+'_ip.indexOf(",")');
-		if (other_ips_index > -1) {
-			allowed_ips += eval('nvram.wg'+unit+'_ip.substring('+(other_ips_index)+')');
-		}
+		var other_ips_index = nvram['wg'+unit+'_ip'].indexOf(',');
+		if (other_ips_index > -1)
+			allowed_ips += nvram['wg'+unit+'_ip'].substring(other_ips_index);
+
 		for (var i = 0; i <= 3; ++i){
-			if (eval('nvram.wg'+unit+'_lan'+i) == "1") {
-				let t = (i == 0 ? '' : i);
-				var nm = eval(`nvram.lan${t}_netmask`);
-				var network_ip = getNetworkAddress(eval(`nvram.lan${t}_ipaddr`), nm);
+			if (eval('nvram.wg'+unit+'_lan'+i) == 1) {
+				var t = (i == 0 ? '' : i);
+				var nm = nvram['lan'+t+'_netmask'];
+				var network_ip = getNetworkAddress(nvram['lan'+t+'_ipaddr'], nm);
 				allowed_ips += ',';
 				allowed_ips += network_ip;
 				allowed_ips += '/';
 				allowed_ips += netmaskToCIDR(nm);
 			}
 		}
-		var interface_allowed_ips = eval('nvram.wg'+unit+'_aip');
+		var interface_allowed_ips = nvram['wg'+unit+'_aip'];
 		if (interface_allowed_ips != '')
 			allowed_ips += ',' + interface_allowed_ips;
 	}
 
 	/* populate router peer */
-	var router_alias = "Router";
-	if (nvram.wan_hostname && nvram.wan_hostname != "unknown")
+	var router_alias = 'Router';
+	if (nvram.wan_hostname && nvram.wan_hostname != 'unknown')
 		router_alias = nvram.wan_hostname;
 
 	content.push(
-		"\n",
-		"[Peer]\n",
-		"#Alias = "+router_alias+"\n",
-		`PublicKey = ${publickey_interface}\n`
+		'\n',
+		'[Peer]\n',
+		'#Alias = '+router_alias+'\n',
+		'PublicKey = '+publickey_interface+'\n'
 	);
 
-	if (psk != "") {
-		content.push(`PresharedKey = ${psk}\n`);
+	if (psk != '') {
+		content.push('PresharedKey = '+psk+'\n');
 	}
 
 	content.push(
-		`AllowedIPs = ${allowed_ips}\n`,
-		`Endpoint = ${router_endpoint}\n`
+		'AllowedIPs = '+allowed_ips+'\n',
+		'Endpoint = '+router_endpoint+'\n'
 	);
 
-	if (keepalive) {
+	if (keepalive)
 		content.push('PersistentKeepalive = 25\n');
-	}
 
 	/* add remaining peers to config */
 	var pubkey = window.wireguard.generatePublicKey(privkey);
@@ -1425,29 +1422,28 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 				continue;
 
 			content.push(
-				"\n",
-				"[Peer]\n",
+				'\n',
+				'[Peer]\n',
 			);
 
-			if (peer[1] != "")
-				content.push(`#Alias = ${peer[1]}\n`,);
+			if (peer[1] != '')
+				content.push('#Alias = '+peer[1]+'\n',);
 
-			content.push(`PublicKey = ${peer_pubkey}\n`,);
+			content.push('PublicKey = '+peer_pubkey+'\n',);
 
-			if (peer[4] != "")
-				content.push(`PresharedKey = ${peer[4]}\n`,);
+			if (peer[4] != '')
+				content.push('PresharedKey = '+peer[4]+'\n',);
 
-			content.push(`AllowedIPs = ${peer[5]}`,);
-			if (peer[6] != "")
-				content.push(`,${peer[6]}`,);
+			content.push('AllowedIPs = '+peer[5],);
+			if (peer[6] != '')
+				content.push(','+peer[6],);
 			content.push('\n');
 
 			if (keepalive)
 				content.push('PersistentKeepalive = 25\n',);
 
-			if (peer[2] != "")
-				content.push(`Endpoint = ${peer[2]}\n`);
-
+			if (peer[2] != '')
+				content.push('Endpoint = '+peer[2]+'\n');
 		}
 	}
 
@@ -1455,7 +1451,7 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 }
 
 function downloadConfig(content, name) {
-	const link = document.createElement("a");
+	const link = document.createElement('a');
 	const file = new Blob(content, { type: 'text/plain' });
 	link.href = URL.createObjectURL(file);
 	link.download = name;
@@ -1481,7 +1477,7 @@ function updateStatus(unit) {
 		var cmdresult;
 		var output;
 		eval(text);
-		if (cmdresult == "Unable to access interface: No such device\n" || cmdresult == "Unable to access interface: Protocol not supported\n") {
+		if (cmdresult == 'Unable to access interface: No such device\n' || cmdresult == 'Unable to access interface: Protocol not supported\n') {
 			output = 'ERROR: Wireguard device wg'+unit+' does not exist!';
 		}
 		else {
@@ -1519,7 +1515,7 @@ function decodeDump(dump, unit) {
 
 	for (var i = 0; i < lines.length; ++i) {
 		var line = lines[i];
-		if (line == "")
+		if (line == '')
 			continue;
 		var line = lines[i].split('\t');
 		var peer = {
@@ -1535,7 +1531,7 @@ function decodeDump(dump, unit) {
 		};
 		for (var j = 0; j < nvram_peers.length; ++j) {
 			var nvram_peer = nvram_peers[j];
-			if (nvram_peer.pubkey == peer.pubkey && nvram_peer.alias != "") {
+			if (nvram_peer.pubkey == peer.pubkey && nvram_peer.alias != '') {
 				peer.alias = nvram_peer.alias;
 				break;
 			}
@@ -1687,13 +1683,13 @@ function verifyFields(focused, quiet) {
 
 		/* verify valid port */
 		var port = E('_wg'+i+'_port');
-		if (port.value != "" && (!port.value.match(/^ *[-\+]?\d+ *$/) || (port.value < 1) || (port.value > 65535))) {
+		if (port.value != '' && (!port.value.match(/^ *[-\+]?\d+ *$/) || (port.value < 1) || (port.value > 65535))) {
 			ferror.set(port, 'The interface port must be a valid port', quiet || !ok);
 			ok = 0;
 		}
 		else {
 			ferror.clear(port);
-			if (port.value == "")
+			if (port.value == '')
 				E('_f_wg'+i+'_peer_port').value = 51820 + i;
 			else
 				E('_f_wg'+i+'_peer_port').value = port.value;
@@ -1722,7 +1718,7 @@ function verifyFields(focused, quiet) {
 		E('_wg'+i+'_pubkey').disabled = true;
 		var pubkey = window.wireguard.generatePublicKey(privkey.value);
 		if (pubkey == false) {
-			pubkey = "";
+			pubkey = '';
 		}
 		E('_wg'+i+'_pubkey').value = pubkey;
 
@@ -1868,23 +1864,23 @@ function save(nomsg) {
 	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
 
 		var privkey = E('_wg'+i+'_key').value;
-		eval('nvram.wg'+i+'_key = privkey');
+		nvram['wg'+i+'_key'] = privkey;
 
 		var data = peerTables[i].getAllData();
 		var s = '';
 		for (var j = 0; j < data.length; ++j)
 			s += data[j].join('<')+'>';
 
-		eval('fom.wg'+i+'_peers.value = s');
-		eval('nvram.wg'+i+'_peers = s');
+		fom['wg'+i+'_peers.value'] = s;
+		nvram['wg'+i+'_peers'] = s;
 
-		eval('fom.wg'+i+'_ka.value = fom._f_wg'+i+'_ka.checked ? 1 : 0');
-		eval('fom.wg'+i+'_enable.value = fom._f_wg'+i+'_enable.checked ? 1 : 0');
-		eval('fom.wg'+i+'_lan0.value = fom._f_wg'+i+'_lan0.checked ? 1 : 0');
-		eval('fom.wg'+i+'_lan1.value = fom._f_wg'+i+'_lan1.checked ? 1 : 0');
-		eval('fom.wg'+i+'_lan2.value = fom._f_wg'+i+'_lan2.checked ? 1 : 0');
-		eval('fom.wg'+i+'_lan3.value = fom._f_wg'+i+'_lan3.checked ? 1 : 0');
-		eval('fom.wg'+i+'_rgw.value = fom._f_wg'+i+'_rgw.checked ? 1 : 0');
+		fom['wg'+i+'_ka.value'] = fom['_f_wg'+i+'_ka'].checked ? 1 : 0;
+		fom['wg'+i+'_enable'].value = fom['_f_wg'+i+'_enable'].checked ? 1 : 0;
+		fom['wg'+i+'_lan0'].value = fom['_f_wg'+i+'_lan0'].checked ? 1 : 0;
+		fom['wg'+i+'_lan1'].value = fom['_f_wg'+i+'_lan1'].checked ? 1 : 0;
+		fom['wg'+i+'_lan2'].value = fom['_f_wg'+i+'_lan2'].checked ? 1 : 0;
+		fom['wg'+i+'_lan3'].value = fom['_f_wg'+i+'_lan3'].checked ? 1 : 0;
+		fom['wg'+i+'_rgw'].value = fom['_f_wg'+i+'_rgw'].checked ? 1 : 0;
 
 		if (E('_f_wg'+i+'_adns').checked)
 			E('wg_adns').value += ''+i+',';
@@ -1894,16 +1890,16 @@ function save(nomsg) {
 		var endpoint_output = endpoint.value + '';
 		if (endpoint.value == 2)
 			endpoint_output += '|' + custom_endpoint.value;
-		eval('fom.wg'+i+'_endpoint.value = endpoint_output');
-		eval('nvram.wg'+i+'_endpoint = endpoint_output');
+		fom['wg'+i+'_endpoint'].value = endpoint_output;
+		nvram['wg'+i+'_endpoint'] = endpoint_output;
 
 		var route = E('_f_wg'+i+'_route');
 		var custom_table = E('_f_wg'+i+'_custom_table');
 		var route_output = route.value + '';
 		if (route.value == 2)
 			route_output += '|' + custom_table.value;
-		eval('fom.wg'+i+'_route.value = route_output');
-		eval('nvram.wg'+i+'_route = route_output');
+		fom['wg'+i+'_route'].value = route_output;
+		nvram['wg'+i+'_route'] = route_output;
 
 		var qrcode = E('wg'+i+'_qrcode');
 		if (qrcode.style.display != 'none') {
@@ -1987,37 +1983,37 @@ function init() {
 			W('<div id="'+t+'-config">');
 			W('<div class="section-title">Interface<\/div>');
 			createFieldTable('', [
-				{ title: 'Enable on Start', name: 'f_'+t+'_enable', type: 'checkbox', value: eval('nvram.'+t+'_enable') == '1' },
-				{ title: 'Config file', name: t+'_file', type: 'text', placeholder: '(optional)', maxlen: 64, size: 64, value: eval('nvram.'+t+'_file') },
-				{ title: 'Port', name: t+'_port', type: 'text', maxlen: 5, size: 10, placeholder: (51820+i), value: eval('nvram.'+t+'_port') },
+				{ title: 'Enable on Start', name: 'f_'+t+'_enable', type: 'checkbox', value: nvram[t+'_enable'] == 1 },
+				{ title: 'Config file', name: t+'_file', type: 'text', placeholder: '(optional)', maxlen: 64, size: 64, value: nvram[t+'_file'] },
+				{ title: 'Port', name: t+'_port', type: 'text', maxlen: 5, size: 10, placeholder: (51820+i), value: nvram[t+'_port'] },
 				{ title: 'Private Key', multi: [
-					{ title: '', name: t+'_key', type: 'password', maxlen: 44, size: 44, value: eval('nvram.'+t+'_key'), peekaboo: 1 },
+					{ title: '', name: t+'_key', type: 'password', maxlen: 44, size: 44, value: nvram[t+'_key'], peekaboo: 1 },
 					{ title: '', custom: '<input type="button" value="Generate" onclick="generateInterfaceKey('+i+')" id="'+t+'_keygen">' },
 				] },
 				{ title: 'Public Key', multi: [
 					{ title: '', name: t+'_pubkey', type: 'text', maxlen: 44, size: 44, disabled: ""},
 					{ title: '', custom: '<input type="button" value="Copy" onclick="copyInterfacePubKey('+i+')" id="'+t+'_pubkey_copy">' },
 				] },
-				{ title: 'Interface IP', name: t+'_ip', type: 'text', maxlen: 32, size: 17, value: eval('nvram.'+t+'_ip'), placeholder: "(CIDR format)" },
-				{ title: 'DNS Servers', name: t+'_dns', type: 'text', maxlen: 128, size: 64, value: eval('nvram.'+t+'_dns') },
-				{ title: 'FWMark', name: t+'_fwmark', type: 'text', maxlen: 8, size: 8, value: eval('nvram.'+t+'_fwmark') },
-				{ title: 'MTU', name: t+'_mtu', type: 'text', maxlen: 4, size: 4, value: eval('nvram.'+t+'_mtu') },
+				{ title: 'Interface IP', name: t+'_ip', type: 'text', maxlen: 32, size: 17, value: nvram[t+'_ip'], placeholder: "(CIDR format)" },
+				{ title: 'DNS Servers', name: t+'_dns', type: 'text', maxlen: 128, size: 64, value: nvram[t+'_dns'] },
+				{ title: 'FWMark', name: t+'_fwmark', type: 'text', maxlen: 8, size: 8, value: nvram[t+'_fwmark'] },
+				{ title: 'MTU', name: t+'_mtu', type: 'text', maxlen: 4, size: 4, value: nvram[t+'_mtu'] },
 				{ title: 'Respond to DNS', name: 'f_'+t+'_adns', type: 'checkbox', value: nvram.wg_adns.indexOf(''+i) >= 0 },
-				{ title: 'Routing Mode', name: 'f_'+t+'_route', type: 'select', options: [['0','Off'],['1','Auto'],['2','Custom Table']], value: eval('nvram.'+t+'_route')[0] || 1, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_table" value="'+(eval('nvram.'+t+'_route').split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_table" maxlength="32" size="32">'},
+				{ title: 'Routing Mode', name: 'f_'+t+'_route', type: 'select', options: [['0','Off'],['1','Auto'],['2','Custom Table']], value: nvram[t+'_route'][0] || 1, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_table" value="'+(nvram[t+'_route'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_table" maxlength="32" size="32">' },
 			]);
 			W('<br>');
 
 			W('<div class="section-title">Peer Parameters<\/div>');
 			createFieldTable('', [
-				{ title: 'Router behind NAT', name: 'f_'+t+'_ka', type: 'checkbox', value: eval('nvram.'+t+'_ka') == '1' },
-				{ title: 'Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: eval('nvram.'+t+'_endpoint')[0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(eval('nvram.'+t+'_endpoint').split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">'},
-				{ title: 'Allowed IPs', name: t+'_aip', type: 'text', placeholder: "(CIDR format)", maxlen: 128, size: 64, suffix: '&nbsp;<small>comma separated<\/small>', value: eval('nvram.'+t+'_aip') },
-				{ title: 'DNS Servers for Peers', name: t+'_peer_dns', type: 'text', maxlen: 128, size: 64, value: eval('nvram.'+t+'_peer_dns') },
-				{ title: 'Push LAN0 (br0) to peers', name: 'f_'+t+'_lan0', type: 'checkbox', value: eval('nvram.'+t+'_lan0') == '1' },
-				{ title: 'Push LAN1 (br1) to peers', name: 'f_'+t+'_lan1', type: 'checkbox', value: eval('nvram.'+t+'_lan1') == '1' },
-				{ title: 'Push LAN2 (br2) to peers', name: 'f_'+t+'_lan2', type: 'checkbox', value: eval('nvram.'+t+'_lan2') == '1' },
-				{ title: 'Push LAN3 (br3) to peers', name: 'f_'+t+'_lan3', type: 'checkbox', value: eval('nvram.'+t+'_lan3') == '1' },
-				{ title: 'Forward all peer traffic', name: 'f_'+t+'_rgw', type: 'checkbox', value: eval('nvram.'+t+'_rgw') == '1' },
+				{ title: 'Router behind NAT', name: 'f_'+t+'_ka', type: 'checkbox', value: nvram[t+'_ka'] == 1 },
+				{ title: 'Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: nvram[t+'_endpoint'][0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(nvram[t+'_endpoint'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">' },
+				{ title: 'Allowed IPs', name: t+'_aip', type: 'text', placeholder: "(CIDR format)", maxlen: 128, size: 64, suffix: '&nbsp;<small>comma separated<\/small>', value: nvram[t+'_aip'] },
+				{ title: 'DNS Servers for Peers', name: t+'_peer_dns', type: 'text', maxlen: 128, size: 64, value: nvram[t+'_peer_dns'] },
+				{ title: 'Push LAN0 (br0) to peers', name: 'f_'+t+'_lan0', type: 'checkbox', value: nvram[t+'_lan0'] == 1 },
+				{ title: 'Push LAN1 (br1) to peers', name: 'f_'+t+'_lan1', type: 'checkbox', value: nvram[t+'_lan1'] == 1 },
+				{ title: 'Push LAN2 (br2) to peers', name: 'f_'+t+'_lan2', type: 'checkbox', value: nvram[t+'_lan2'] == 1 },
+				{ title: 'Push LAN3 (br3) to peers', name: 'f_'+t+'_lan3', type: 'checkbox', value: nvram[t+'_lan3'] == 1 },
+				{ title: 'Forward all peer traffic', name: 'f_'+t+'_rgw', type: 'checkbox', value: nvram[t+'_rgw'] == 1 },
 			]);
 			W('<br>');
 
@@ -2034,8 +2030,8 @@ function init() {
 			W('<div id="'+t+'-peers">');
 			W('<div class="section-title">Config Generation<\/div>');
 			createFieldTable('', [
-				{ title: 'Peer Communication', name: t+'_com', type: 'select', options: [['0','Hub and Spoke'],['1','Full Mesh (Endpoint Only)'],['2','Full Mesh']], value: eval('nvram.'+t+'_com') || 0},
-				{ title: 'Port', name: 'f_'+t+'_peer_port', type: 'text', maxlen: 5, size: 10, value: eval('nvram.'+t+'_port') == '' ? 51820+i : eval('nvram.'+t+'_port')},
+				{ title: 'Peer Communication', name: t+'_com', type: 'select', options: [['0','Hub and Spoke'],['1','Full Mesh (Endpoint Only)'],['2','Full Mesh']], value: nvram[t+'_com'] || 0 },
+				{ title: 'Port', name: 'f_'+t+'_peer_port', type: 'text', maxlen: 5, size: 10, value: nvram[t+'_port'] == '' ? 51820+i : nvram[t+'_port'] },
 				{ title: 'FWMark', name: 'f_'+t+'_peer_fwmark', type: 'text', maxlen: 8, size: 8, value: '0'},
 			]);
 			W('<br>');
@@ -2084,10 +2080,10 @@ function init() {
 			W('<div id="'+t+'-scripts">');
 			W('<div class="section-title">Custom Interface Scripts<\/div>');
 			createFieldTable('', [
-				{ title: 'Pre-Up Script', name: t+'_preup', type: 'textarea', value: eval('nvram.'+t+'_preup'), placeholder: "not working yet" },
-				{ title: 'Post-Up Script', name: t+'_postup', type: 'textarea', value: eval('nvram.'+t+'_postup'), placeholder: "not working yet" },
-				{ title: 'Pre-Down Script', name: t+'_predown', type: 'textarea', value: eval('nvram.'+t+'_predown'), placeholder: "not working yet" },
-				{ title: 'Post-Down Script', name: t+'_postdown', type: 'textarea', value: eval('nvram.'+t+'_postdown'), placeholder: "not working yet" },
+				{ title: 'Pre-Up Script', name: t+'_preup', type: 'textarea', value: nvram[t+'_preup'], placeholder: "not working yet" },
+				{ title: 'Post-Up Script', name: t+'_postup', type: 'textarea', value: nvram[t+'_postup'], placeholder: "not working yet" },
+				{ title: 'Pre-Down Script', name: t+'_predown', type: 'textarea', value: nvram[t+'_predown'], placeholder: "not working yet" },
+				{ title: 'Post-Down Script', name: t+'_postdown', type: 'textarea', value: nvram[t+'_postdown'], placeholder: "not working yet" },
 			]);
 			W('<\/div>');
 			/* scripts tab stop */
