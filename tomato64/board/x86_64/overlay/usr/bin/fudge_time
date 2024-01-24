@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ -e "/dev/rtc" || -e "dev/rtc0" ]]
+if [[ -e "/dev/rtc" || -e "/dev/rtc0" ]]
 then
 	/bin/date -s@"$(( `date +%s`-60))"
 fi
