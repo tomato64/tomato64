@@ -85,7 +85,11 @@ static int initsigs[] = {
 };
 
 static char *defenv[] = {
+#ifndef TOMATO64
 	"TERM=vt100",
+#else
+	"TERM=xterm-256color",
+#endif /* TOMATO64 */
 	"HOME=/",
 	"PATH=/usr/bin:/bin:/usr/sbin:/sbin",
 	"SHELL=" SHELL,
