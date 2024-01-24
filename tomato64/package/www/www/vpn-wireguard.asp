@@ -1871,7 +1871,7 @@ function save(nomsg) {
 		for (var j = 0; j < data.length; ++j)
 			s += data[j].join('<')+'>';
 
-		fom['wg'+i+'_peers.value'] = s;
+		fom['wg'+i+'_peers'].value = s;
 		nvram['wg'+i+'_peers'] = s;
 
 		fom['wg'+i+'_ka'].value = fom['_f_wg'+i+'_ka'].checked ? 1 : 0;
