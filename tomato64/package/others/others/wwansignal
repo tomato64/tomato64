@@ -18,6 +18,7 @@ DEVNR=$(NG "$PREFIX"_modem_dev)
 MTYPE=$(NG "$PREFIX"_modem_type)
 WANIP=$(NG "$PREFIX"_gateway)
 LOGS="logger -t wwansignal[$PID]"
+COUNT_KILL=0 
 
 HILINK_IP=$(NG "$PREFIX"_hilink_ip)
 if ! [ -z "$HILINK_IP" ]  && [ "$HILINK_IP" != "0.0.0.0" ]; then
@@ -180,9 +181,9 @@ signal4g() {
 
 	elif [ "$MTYPE" == "qmi_wwan" ]; then
 		[ -f "$DIAGSFILE" ] || return
-		SIGNAL=$(uqmiCall "--get-signal-info")
+		SIGNAL=$(uqmiCall "-t 1000 --get-signal-info")
 		SPEED=$(echo "$SIGNAL" | cut -d '"' -f4)
-		MCC=$(uqmiCall "--get-serving-system")
+		MCC=$(uqmiCall "-t 1000 --get-serving-system")
 		MCCMNC=$(echo "$MCC" | cut -d "," -f2 | cut -d ":" -f2)$(printf "%02d" $(echo "$MCC" | cut -d "," -f3 | cut -d ":" -f2))
 
 		OPERATOR=$(echo "$MCC" | cut -d "," -f4 | cut -d ":" -f2 | tr -d '"')
@@ -321,33 +322,43 @@ checkPid() {
 
 uqmiCall() {
 	# for now, it's the only way to prevent uqmi hangups on two different calls at the same time and on the same device: https://forum.openwrt.org/viewtopic.php?id=63559
-	local COUNT=1 COMMAND="$1" IS_ITCONN="$2"
-	[[ -z $IS_ITCONN ]] && IS_ITCONN=0
+	local COUNT=1 COMMAND="$1"
 
-	# wait for another uqmi process to exit...
-	while [ "$COUNT" -lt 5 ]; do
-		[ "$(ps | grep [u]qmi | grep "$DEVNR" | wc -l)" -eq 0 ] && {
-			[ "$IS_ITCONN" -eq 1 ] && {
-				uqmi -s -d "$DEVNR" $COMMAND \
-					${APN:+--apn "$APN"} \
-					${PROFILE:+--profile $PROFILE} \
-					${AUTH:+--auth-type $AUTH} \
-					${USERNAME:+--username $USERNAME} \
-					${PASSWORD:+--password $PASSWORD} \
-					${AUTOCONNECT:+--autoconnect}
-				return
-			} || {
-				uqmi -s -d "$DEVNR" $COMMAND
-				return
-			}
+	# wait for other uqmi process(es) to exit...
+	while [ "$COUNT" -lt 10 ]; do
+		[ "$(ps | grep [u]qmi | wc -l)" -eq 0 ] && {
+			uqmi -s -d "$DEVNR" $COMMAND
+			return
 		}
 		COUNT=$((COUNT+1))
 		sleep 1
 	done
 
-	$LOGS "MODEM - another uqmi process in action (hang up?) - exiting ..."
-	rm -f $PIDFILE &>/dev/null
-	exit 0
+	# after 10 seconds, kill process(es) (only one try per running script)
+	[ "$COUNT_KILL" -eq 0 ] && {
+		uqmiKill $COMMAND
+	} || {
+		$LOGS "MODEM - another uqmi process in action (hangs?) - exiting ..."
+		rm -f $PIDFILE &>/dev/null
+		exit 0
+	}
+}
+
+uqmiKill() {
+	local C="$1" UQMIPID="" i
+
+	UQMIPID=$(ps | grep [u]qmi | awk '{print $1}')
+	[ -n "$UQMIPID" ] && {
+		for i in $UQMIPID; do
+			$LOGS "4G MODEM - found another uqmi process (PID: $i), killing ..."
+			kill -9 $UQMIPID
+			sleep 2
+		done
+
+		# try once again
+		COUNT_KILL=1
+		uqmiCall $C
+	}
 }
 
 

@@ -214,16 +214,16 @@ connect() {
 		sleep 6
 
 		# try to clear previous autoconnect state
-		uqmiCall "--stop-network 0xffffffff --autoconnect"
-		uqmiCall "--set-ip-family ipv6 --stop-network 0xffffffff --autoconnect"
+		uqmiCall "-t 1000 --stop-network 0xffffffff --autoconnect"
+		uqmiCall "-t 1000 --set-ip-family ipv6 --stop-network 0xffffffff --autoconnect"
 
 		# go online
-		uqmiCall "--set-device-operating-mode online"
+		uqmiCall "-t 1000 --set-device-operating-mode online"
 
 		# set IP format
-		uqmiCall "--set-data-format 802.3"
-		uqmiCall "--wda-set-data-format 802.3"
-		DATAFORMAT=$(uqmiCall "--wda-get-data-format")
+		uqmiCall "-t 1000 --set-data-format 802.3"
+		uqmiCall "-t 1000 --wda-set-data-format 802.3"
+		DATAFORMAT=$(uqmiCall "-t 1000 --wda-get-data-format")
 
 		[ "$DATAFORMAT" == '"raw-ip"' ] && {
 			[ -f $PATHWAN/$IFA/qmi/raw_ip ] || wayOut "Device only supports raw-ip mode but is missing this required driver attribute: $PATHWAN/$IFA/qmi/raw_ip"
@@ -232,13 +232,13 @@ connect() {
 			echo "Y" > $PATHWAN/$IFA/qmi/raw_ip
 		}
 
-		uqmiCall "--sync"
-		uqmiCall "--network-register"
+		uqmiCall "-t 1000 --sync"
+		uqmiCall "-t 20000 --network-register"
 
 		$LOGS "4G MODEM - waiting for network registration ..."
 		sleep 5
 
-		while [ $(echo "$(uqmiCall "--get-serving-system")" | grep searching | wc -l) -ne 0 ]; do
+		while [ $(echo "$(uqmiCall "-t 1000 --get-serving-system")" | grep searching | wc -l) -ne 0 ]; do
 			[ -n "$DEVNR" ] || wayOut "4G MODEM - DIAG interface not found!"
 			[ "$TIMECOUNT" -lt "$TIMEOUT" ] && {
 				TIMECOUNT=$((TIMECOUNT+1))
@@ -249,27 +249,27 @@ connect() {
 		done
 
 		# set network type (all,lte,umts,cdma,td-scdma)
-		uqmiCall "--set-network-modes $SPEEDTXT"
+		uqmiCall "-t 1000 --set-network-modes $SPEEDTXT"
 		$LOGS "4G MODEM - network type is set to '$SPEEDTXT'"
 
 		# set roaming
-		uqmiCall "--set-network-roaming $ROAMTXT"
+		uqmiCall "-t 1000 --set-network-roaming $ROAMTXT"
 		$LOGS "4G MODEM - roaming is set to '$ROAMTXT'"
 
 		# get client id for wds
-		CLID=$(uqmiCall "--get-client-id wds")
+		CLID=$(uqmiCall "-t 1000 --get-client-id wds")
 
 		[ $? -ne 0 ] && wayOut "4G MODEM - unable to obtain client ID!"
 
 		NS "$PREFIX"_modem_clid="$CLID"
 		$LOGS "4G MODEM - got new client ID: $CLID"
 
-		uqmiCall "--set-client-id wds,$CLID --set-ip-family ipv4"
+		uqmiCall "-t 5000 --set-client-id wds,$CLID --set-ip-family ipv4"
 
 		while [ "$CONNECTED" -eq 0 ]; do
 			[ "$COUNT" -lt 6 ] && {
 				# connect
-				PDH=$(uqmiCall "--set-client-id wds,$CLID --start-network" 1)
+				PDH=$(uqmiCall "-t 5000 --set-client-id wds,$CLID --start-network" 1)
 
 				case $PDH in
 				     ''|*[!0-9]*)
@@ -286,7 +286,7 @@ connect() {
 				esac
 			} || {
 				# checked 5 times but still not connected?
-				uqmiCall "--set-client-id wds,$CLID --release-client-id wds"
+				uqmiCall "-t 5000 --set-client-id wds,$CLID --release-client-id wds"
 
 				[ "$(NG mwan_cktime)" -gt 0 ] && {
 					modemReset
@@ -300,9 +300,9 @@ connect() {
 		done
 
 		# check data connection state
-		CONNSTAT=$(uqmiCall "--get-data-status")
+		CONNSTAT=$(uqmiCall "-t 1000 --get-data-status")
 		[ "$CONNSTAT" == '"connected"' ] || {
-			uqmiCall "--set-client-id wds,$CLID --release-client-id wds"
+			uqmiCall "-t 5000 --set-client-id wds,$CLID --release-client-id wds"
 
 			[ "$(NG mwan_cktime)" -gt 0 ] && {
 				modemReset
@@ -376,11 +376,11 @@ disconnect() {
 		done
 	elif [ "$MTYPE" == "qmi_wwan" ]; then
 		[ -n "$CLID" ] || return
-		uqmiCall "--set-client-id wds,$CLID --stop-network 0xffffffff --autoconnect"
+		uqmiCall "-t 5000 --set-client-id wds,$CLID --stop-network 0xffffffff --autoconnect"
 
-		[ -n "$PDH" ] && uqmiCall "--set-client-id wds,$CLID --stop-network $PDH"
+		[ -n "$PDH" ] && uqmiCall "-t 5000 --set-client-id wds,$CLID --stop-network $PDH"
 
-		uqmiCall "--set-client-id wds,$CLID --release-client-id wds"
+		uqmiCall "-t 5000 --set-client-id wds,$CLID --release-client-id wds"
 		NS "$PREFIX"_modem_pdh=""
 		NS "$PREFIX"_modem_clid=""
 
@@ -587,7 +587,7 @@ searchDiag() {
 
 			for TTY in $TTYS; do
 				DEVNR="/dev/$TTY"
-				uqmiCall "--get-capabilities -t 3000" 2 # in a background
+				uqmiCall "-t 3000 --get-capabilities" 2 # in a background
 				sleep 2
 
 				UQMIPID=$(ps | grep [g]et-capabilities | awk '{print $1}')
@@ -608,7 +608,7 @@ searchDiag() {
 					done
 
 					# final check
-					UQMIRET=$(uqmiCall "--get-capabilities")
+					UQMIRET=$(uqmiCall "-t 3000 --get-capabilities")
 					case "$UQMIRET" in
 					     *data_service*) break ;;
 					esac
@@ -727,9 +727,9 @@ setPIN() {
 
 	[ "$MTYPE" == "qmi_wwan" ] && {
 		# timeout 3s for first call to avoid hanging uqmi
-		uqmiCall "--get-pin-status -t 3000"
+		uqmiCall "-t 3000 --get-pin-status"
 
-		while uqmiCall "--get-pin-status" | grep '"UIM uninitialized"'; do
+		while uqmiCall "-t 1000 --get-pin-status" | grep '"UIM uninitialized"'; do
 			[ -n "$DEVNR" ] || { wayOut "4G MODEM - DIAG interface not found!" ; }
 
 			[ "$COUNT" -lt 30 ] && {
@@ -743,7 +743,7 @@ setPIN() {
 		# check if UIM application is stuck in illegal state
 		COUNT=1
 		while true; do
-			STATUS=$(uqmiCall "--uim-get-sim-state" | cut -d "," -f2 | cut -d ":" -f2 | tr -d '"')
+			STATUS=$(uqmiCall "-t 1000 --uim-get-sim-state" | cut -d "," -f2 | cut -d ":" -f2 | tr -d '"')
 
 			# SIM card is either completely absent or state is labeled as illegal
 			# try to power-cycle the SIM card to recover from this state
@@ -751,9 +751,9 @@ setPIN() {
 				$LOGS "4G MODEM - SIM in illegal state: Power-cycling SIM"
 
 				# try to reset SIM application
-				uqmiCall "--uim-power-off --uim-slot 1"
+				uqmiCall "-t 1000 --uim-power-off --uim-slot 1"
 				sleep 3
-				uqmiCall "--uim-power-on --uim-slot 1"
+				uqmiCall "-t 1000 --uim-power-on --uim-slot 1"
 
 				[ "$COUNT" -lt 10 ] && {
 					COUNT=$((COUNT+1))
@@ -769,18 +769,18 @@ setPIN() {
 		done
 
 		# verify pin
-		if uqmiCall "--uim-get-sim-state" | grep -q '"Not supported"\|"Invalid QMI command"' && uqmiCall "--get-pin-status" | grep -q '"Not supported"\|"Invalid QMI command"' ; then
+		if uqmiCall "-t 1000 --uim-get-sim-state" | grep -q '"Not supported"\|"Invalid QMI command"' && uqmiCall "-t 1000 --get-pin-status" | grep -q '"Not supported"\|"Invalid QMI command"' ; then
 			[ -n "$PIN" ] && {
-				uqmiCall "--verify-pin1 $PIN" || uqmiCall "--uim-verify-pin1 $PIN" || { wayOut "4G MODEM - Unable to verify PIN!" ; }
+				uqmiCall "-t 1000 --verify-pin1 $PIN" || uqmiCall "-t 1000 --uim-verify-pin1 $PIN" || { wayOut "4G MODEM - Unable to verify PIN!" ; }
 				IS_DONE=1
 			}
 		else
-			STATUS=$(uqmiCall "--get-pin-status")
+			STATUS=$(uqmiCall "-t 1000 --get-pin-status")
 			PIN_STATUS=$(echo "$STATUS" | cut -d "," -f1 | cut -d ":" -f2 | tr -d '"')
 			PIN_VERIFY_TRIES=$(echo "$STATUS" | cut -d "," -f2 | cut -d ":" -f2)
 
 			[ -z "$PIN_STATUS" ] && {
-				STATUS=$(uqmiCall "--uim-get-sim-state")
+				STATUS=$(uqmiCall "-t 1000 --uim-get-sim-state")
 				PIN_STATUS=$(echo "$STATUS" | cut -d "," -f3 | cut -d ":" -f2 | tr -d '"')
 				PIN_VERIFY_TRIES=$(echo "$STATUS" | cut -d "," -f4 | cut -d ":" -f2)
 			}
@@ -796,7 +796,7 @@ setPIN() {
 				not_verified)
 					[ "$PIN_VERIFY_TRIES" -lt "3" ] && { wayOut "4G MODEM - PIN verify count value is $PIN_VERIFY_TRIES this is below the limit of 3" ; }
 					[ -n "$PIN" ] && {
-						uqmiCall "--verify-pin1 $PIN" || uqmiCall "--uim-verify-pin1 $PIN" || { wayOut "4G MODEM - Unable to verify PIN" ; }
+						uqmiCall "-t 1000 --verify-pin1 $PIN" || uqmiCall "-t 1000 --uim-verify-pin1 $PIN" || { wayOut "4G MODEM - Unable to verify PIN" ; }
 						IS_DONE=1
 					} || {
 						wayOut "4G MODEM - PIN not specified but required"
