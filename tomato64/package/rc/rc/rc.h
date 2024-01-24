@@ -585,7 +585,7 @@ extern void stop_ovpn_client(int clientNum);
 extern void start_ovpn_server(int serverNum);
 extern void stop_ovpn_server(int serverNum);
 extern void start_ovpn_eas(void);
-extern void stop_ovpn_eas(void);
+//extern void stop_ovpn_eas(void);
 extern void stop_ovpn_all(void);
 extern void run_ovpn_firewall_scripts(void);
 extern void write_ovpn_dnsmasq_config(FILE*);
