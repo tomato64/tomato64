@@ -1848,9 +1848,9 @@ function save(nomsg) {
 
 	if (!nomsg) show(); /* update '_service' field first */
 
+	E('wg_adns').value = '';
 	var fom = E('t_fom');
 	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
-
 		var privkey = E('_wg'+i+'_key').value;
 		nvram['wg'+i+'_key'] = privkey;
 
