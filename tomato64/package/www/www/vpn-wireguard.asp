@@ -1192,14 +1192,12 @@ function generatePeer(unit) {
 
 	/* calculate ip of new peer */
 	var ip = '';
-	var network = getNetworkAddress(nvram['wg'+unit+'_ip'], CIDRToNetmask(interface_nm));
 	var limit = 2 ** (32 - parseInt(interface_nm, 10));
 	for (var i = 1; i < limit; i++) {
-
-		var temp_ip = getAddress(ntoa(i) , network);
+		var temp_ip = getAddress(ntoa(i), interface_ip);
 		var end = temp_ip.split('.').slice(0, -1);
 
-		if (end == '255' || end == '0')
+		if (end >= '255' || end == '0')
 			continue;
 
 		if (existing_ips.includes(temp_ip))
@@ -1215,13 +1213,18 @@ function generatePeer(unit) {
 		return;
 	}
 
+	if (E('_wg'+unit+'_com').value > 0) /* not 'Hub and Spoke' */
+		var netmask = interface_nm;
+	else
+		var netmask = '32'; /* 'Hub and Spoke' */
+
 	/* set fields with generated data */
 	E('_f_wg'+unit+'_peer_privkey').value = keys.privateKey;
 	E('_f_wg'+unit+'_peer_privkey').disabled = false;
 	E('_f_wg'+unit+'_peer_pubkey').value = keys.publicKey;
 	E('_f_wg'+unit+'_peer_pubkey').disabled = true;
 	E('_f_wg'+unit+'_peer_psk').value = psk;
-	E('_f_wg'+unit+'_peer_ip').value = ip+'/32';
+	E('_f_wg'+unit+'_peer_ip').value = ip+'/'+netmask;
 	E('_f_wg'+unit+'_peer_ka').checked = 0;
 
 	var button = E('wg'+unit+'_peer_add');
