@@ -1,0 +1,5 @@
+config BR2_PACKAGE_SD_IDLE
+	bool "sd-idle"
+	help
+	   This program manages devices /dev/sdX 'a'<=X<='z' watching for idleness
+	   and spinning them down.
