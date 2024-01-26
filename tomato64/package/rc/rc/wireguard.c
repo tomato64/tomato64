@@ -941,6 +941,8 @@ void start_wireguard(int unit)
 		stop_wireguard(unit);
 		return;
 	}
+
+	logmsg(LOG_INFO, "wireguard (%s) started", iface);
 }
 
 void stop_wireguard(int unit)
@@ -964,6 +966,8 @@ void stop_wireguard(int unit)
 	/* remove iptables rules */
 	find_port(unit, port);
 	wg_remove_iptables(iface, port);
+
+	logmsg(LOG_INFO, "wireguard (%s) stopped", iface);
 }
 
 void write_wg_dnsmasq_config(FILE* f)
