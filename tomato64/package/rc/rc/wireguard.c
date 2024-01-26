@@ -96,7 +96,7 @@ void wg_setup_dirs(void) {
 		}
 	}
 
-	/* script to add iptable rules for wireguard device */
+	/* script to add iptable rules for wireguard device (port, iface) */
 	if (!(f_exists(WG_SCRIPTS_DIR"/fw-add.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-add.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
@@ -115,8 +115,7 @@ void wg_setup_dirs(void) {
 		}
 	}
 
-	/* script to remove iptable rules for wireguard device */
-	/* will probably need to add rules to clean up default route rules either in this script or another */
+	/* script to remove iptable rules for wireguard device (port, iface) */
 	if (!(f_exists(WG_SCRIPTS_DIR"/fw-del.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-del.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
@@ -131,7 +130,7 @@ void wg_setup_dirs(void) {
 		}
 	}
 
-	/* script to add fw rules for dns servers */
+	/* script to add fw rules for dns servers (iface, dns) */
 	if (!(f_exists(WG_SCRIPTS_DIR"/fw-dns-set.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-dns-set.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
@@ -149,7 +148,7 @@ void wg_setup_dirs(void) {
 		}
 	}
 
-	/* script to remove fw rules for dns servers */
+	/* script to remove fw rules for dns servers (iface) */
 	if (!(f_exists(WG_SCRIPTS_DIR"/fw-dns-unset.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-dns-unset.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
@@ -162,10 +161,16 @@ void wg_setup_dirs(void) {
 		}
 	}
 
-	/* script excerpt from wg-quick to route default */
+	/* script excerpt from wg-quick to route default (iface, route, fwmark) */
 	if (!(f_exists(WG_SCRIPTS_DIR"/route-default.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/route-default.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
+			            "cmd() {\n"
+			            "  echo \"[#] $*\" >&2\n"
+			            "  \"$@\"\n"
+			            "}\n\n"
+			            "NL='\n"
+			            "'\n"
 			            "interface=\"${1}\"\n"
 			            "route=\"${2}\"\n"
 			            "table=\"${3}\"\n"
@@ -186,10 +191,11 @@ void wg_setup_dirs(void) {
 			            "cmd ip \"${proto}\" route add \"${route}\" dev \"${interface}\" table \"${table}\"\n"
 			            "restore=\"*raw${NL}\"\n"
 			            "ip -o \"${proto}\" addr show dev \"${interface}\" 2>/dev/null | {\n"
+			            "  match=''\n"
 			            "  while read -r line; do\n"
 			            "    match=\"$(\n"
 			            "      printf %s \"${line}\" |\n"
-			            "        sed -ne 's/^.*inet6\? \([0-9a-f:.]\\+\\)\\/[0-9]\\+.*$/\1/; t P; b; : P; p'\n"
+			            "        sed -ne 's/^.*inet6\\? \\([0-9a-f:.]\\+\\)\\/[0-9]\\+.*$/\\1/; t P; b; : P; p'\n"
 			            "    )\"\n"
 			            "    [ -n \"${match}\" ] ||\n"
 			            "      continue\n"
@@ -198,7 +204,7 @@ void wg_setup_dirs(void) {
 			            "  restore=\"${restore:+${restore}${NL}}COMMIT${NL}*mangle${NL}-I POSTROUTING -m mark --mark ${table} -p udp -j CONNMARK --save-mark${NL}-I PREROUTING -p udp -j CONNMARK --restore-mark${NL}COMMIT\"\n"
 			            "  ! [ \"${proto}\" = '-4' ] ||\n"
 			            "    echo 1 > /proc/sys/net/ipv4/conf/all/src_valid_mark\n"
-			            "  printf '%s\n' \"${restore}\" |\n"
+			            "  printf '%s\\n' \"${restore}\" |\n"
 			            "    cmd \"${iptables}-restore\" -n\n"
 			            "}\n", "%s", "%s");
 			fclose(fp);
