@@ -841,7 +841,7 @@ void start_wireguard(int unit)
 	/* set up directories for later use */
 	wg_setup_dirs();
 
-	/* Determine interface */
+	/* determine interface */
 	memset(iface, 0, IF_SIZE);
 	snprintf(iface, IF_SIZE, "wg%d", unit);
 
@@ -854,28 +854,20 @@ void start_wireguard(int unit)
 	else {
 
 		/* create interface */
-		if (wg_create_iface(iface)) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_create_iface(iface))
+			goto out;
 
 		/* set interface address */
-		if (wg_set_iface_addr(iface, getNVRAMVar("wg%d_ip", unit))) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_addr(iface, getNVRAMVar("wg%d_ip", unit)))
+			goto out;
 
 		/* set interface port */
-		if (wg_set_iface_port(iface, port)) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_port(iface, port))
+			goto out;
 
 		/* set interface private key */
-		if (wg_set_iface_privkey(iface, getNVRAMVar("wg%d_key", unit))) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_privkey(iface, getNVRAMVar("wg%d_key", unit)))
+			goto out;
 
 		/* set interface fwmark */
 		b = getNVRAMVar("wg%d_fwmark", unit);
@@ -885,22 +877,16 @@ void start_wireguard(int unit)
 		else
 			snprintf(fwmark, BUF_SIZE_16, "%s", b);
 
-		if (wg_set_iface_fwmark(iface, fwmark)) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_fwmark(iface, fwmark))
+			goto out;
 
 		/* set interface mtu */
-		if (wg_set_iface_mtu(iface, getNVRAMVar("wg%d_mtu", unit))) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_mtu(iface, getNVRAMVar("wg%d_mtu", unit)))
+			goto out;
 
 		/* set interface dns */
-		if (wg_set_iface_dns(iface, getNVRAMVar("wg%d_dns", unit))) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_dns(iface, getNVRAMVar("wg%d_dns", unit)))
+			goto out;
 
 		/* check if keepalives are enabled from the router */
 		if (getNVRAMVar("wg%d_ka", unit)[0] == '1')
@@ -910,10 +896,8 @@ void start_wireguard(int unit)
 
 		/* bring up interface */
 		wg_iface_pre_up(unit);
-		if (wg_set_iface_up(iface)) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_up(iface))
+			goto out;
 
 		/* add stored peers */
 		nvp = nv = strdup(getNVRAMVar("wg%d_peers", unit));
@@ -943,12 +927,14 @@ void start_wireguard(int unit)
 		wg_iface_post_up(unit);
 	}
 	/* set iptables rules */
-	if (wg_set_iptables(iface, port)) {
-		stop_wireguard(unit);
-		return;
-	}
+	if (wg_set_iptables(iface, port))
+		goto out;
 
 	logmsg(LOG_INFO, "wireguard (%s) started", iface);
+	return;
+
+out:
+	stop_wireguard(unit);
 }
 
 void stop_wireguard(int unit)
