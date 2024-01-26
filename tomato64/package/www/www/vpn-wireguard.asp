@@ -803,8 +803,8 @@ PeerGrid.prototype.insertData = function(at, data) {
 	var qr = '';
 	var cfg = '';
 	if (data[2] != '') {
-		qr = '<img src="qr-icon.svg" alt="" title="Display QR Code" height="16px" onclick="genPeerGridConfigQR(event,'+this.unit+','+at+')">';
-		cfg = '<img src="cfg-icon.svg" alt="" title="Download Config File" height="16px" onclick="genPeerGridConfigFile(event,'+this.unit+','+at+')">';
+		qr = '<img src="qr-icon.svg" alt="" title="Display QR Code" height="16" onclick="genPeerGridConfigQR(event,'+this.unit+','+at+')">';
+		cfg = '<img src="cfg-icon.svg" alt="" title="Download Config File" height="16" onclick="genPeerGridConfigFile(event,'+this.unit+','+at+')">';
 	}
 	view.unshift(qr, cfg);
 
@@ -957,7 +957,6 @@ function encodePeers(data) {
 }
 
 function verifyPeerFields(unit, require_privkey) {
-
 	var result = true;
 
 	var alias = E('_f_wg'+unit+'_peer_alias');
@@ -1985,8 +1984,8 @@ function init() {
 					{ title: '', name: t+'_pubkey', type: 'text', maxlen: 44, size: 44, disabled: ""},
 					{ title: '', custom: '<input type="button" value="Copy" onclick="copyInterfacePubKey('+i+')" id="'+t+'_pubkey_copy">' },
 				] },
-				{ title: 'Interface IP', name: t+'_ip', type: 'text', maxlen: 32, size: 17, value: nvram[t+'_ip'], placeholder: "(CIDR format)" },
-				{ title: 'DNS Servers', name: t+'_dns', type: 'text', maxlen: 128, size: 64, value: nvram[t+'_dns'] },
+				{ title: 'Interface IP', name: t+'_ip', type: 'text', maxlen: 32, size: 17, value: nvram[t+'_ip'], placeholder: '(CIDR format)' },
+				{ title: 'DNS Servers', name: t+'_dns', type: 'text', maxlen: 128, size: 64, value: nvram[t+'_dns'], placeholder: 'comma separated' },
 				{ title: 'FWMark', name: t+'_fwmark', type: 'text', maxlen: 8, size: 8, value: nvram[t+'_fwmark'] },
 				{ title: 'MTU', name: t+'_mtu', type: 'text', maxlen: 4, size: 4, value: nvram[t+'_mtu'] },
 				{ title: 'Respond to DNS', name: 'f_'+t+'_adns', type: 'checkbox', value: nvram.wg_adns.indexOf(''+i) >= 0 },
@@ -2212,6 +2211,7 @@ function init() {
 				<li><b>Post-Up Script</b> - Will be run after the interface is brought up.</li>
 				<li><b>Pre-Down Script</b> - Will be run before the interface is brought down.</li>
 				<li><b>Post-Down Script</b> - Will be run after the interface is brought down.</li>
+				<li><b>Note:</b> "<i>%i</i>" will be replaced with the actual name of the wireguard interface.</li>
 			</ul>
 		</ul>
 	</div>
