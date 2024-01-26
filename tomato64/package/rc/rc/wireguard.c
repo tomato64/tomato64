@@ -153,8 +153,7 @@ void wg_setup_dirs(void) {
 	if (!(f_exists(WG_SCRIPTS_DIR"/fw-dns-unset.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-dns-unset.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
-			            "INTERFACE=\"${1}\"\n"
-			            "DNS_CHAIN=\"wg-ft-${INTERFACE}-dns\"\n"
+			            "DNS_CHAIN=\"wg-ft-${1}-dns\"\n"
 			            "iptables -D OUTPUT -j \"${DNS_CHAIN}\" || $(exit 0)\n"
 			            "iptables -F \"${DNS_CHAIN}\" || $(exit 0)\n"
 			            "iptables -X \"${DNS_CHAIN}\" || $(exit 0)\n");
@@ -940,10 +939,13 @@ out:
 void stop_wireguard(int unit)
 {
 	char iface[IF_SIZE];
+	int is_dev;
 
 	/* determine interface */
 	memset(iface, 0, IF_SIZE);
 	snprintf(iface, IF_SIZE, "wg%d", unit);
+
+	is_dev = eval("ip", "addr", "show", "dev", iface);
 
 	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
 		wg_quick_iface(iface, getNVRAMVar("wg%d_file", unit), 0);
@@ -959,7 +961,8 @@ void stop_wireguard(int unit)
 	find_port(unit, port);
 	wg_remove_iptables(iface, port);
 
-	logmsg(LOG_INFO, "wireguard (%s) stopped", iface);
+	if (!is_dev)
+		logmsg(LOG_INFO, "wireguard (%s) stopped", iface);
 }
 
 void write_wg_dnsmasq_config(FILE* f)
@@ -975,7 +978,7 @@ void write_wg_dnsmasq_config(FILE* f)
 	for (pos = strtok(buf, ","); pos != NULL; pos = strtok(NULL, ",")) {
 		cur = atoi(pos);
 		if (cur || cur == 0) {
-			logmsg(LOG_DEBUG, "*** %s: adding server %d interface to Dnsmasq config", __FUNCTION__, cur);
+			logmsg(LOG_DEBUG, "*** %s: adding server wg%d interface to Dnsmasq config", __FUNCTION__, cur);
 			fprintf(f, "interface=wg%d\n", cur);
 		}
 	}
