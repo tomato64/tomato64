@@ -165,7 +165,8 @@ void wg_setup_dirs(void) {
 	/* script excerpt from wg-quick to route default */
 	if (!(f_exists(WG_SCRIPTS_DIR"/route-default.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/route-default.sh", "w"))) {
-			fprintf(fp, "interface=\"${1}\"\n"
+			fprintf(fp, "#!/bin/sh\n"
+			            "interface=\"${1}\"\n"
 			            "route=\"${2}\"\n"
 			            "table=\"${3}\"\n"
 			            "case \"${route}\" in\n"
@@ -543,7 +544,7 @@ int wg_route_peer(char *iface, char *route)
 
 int wg_route_peer_default(char *iface, char *route, char *fwmark)
 {
-	if (eval("/bin/sh", WG_SCRIPTS_DIR"/route-default.sh", iface, route, fwmark)) {
+	if (eval(WG_SCRIPTS_DIR"/route-default.sh", iface, route, fwmark)) {
 		logmsg(LOG_WARNING, "unable to add default route of %s to table %s for wireguard interface %s!", route, fwmark, iface);
 		return -1;
 	}
