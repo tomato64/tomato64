@@ -45,10 +45,15 @@ void start_snmp(void)
 		chmod(SNMP_CONF, 0644);
 
 		xstart("snmpd", "-c", SNMP_CONF);
+
+		syslog(LOG_INFO, "snmpd started");
 	}
 }
 
 void stop_snmp(void)
 {
-	killall("snmpd", SIGTERM);
+	if (pidof("snmpd") > 0) {
+		killall("snmpd", SIGTERM);
+		syslog(LOG_INFO, "snmpd stopped");
+	}
 }
