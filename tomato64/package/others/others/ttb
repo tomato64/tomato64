@@ -18,10 +18,10 @@ SUBDIR="TomatoThemeBase"
 URL_ORIG="http://ttb.mooo.com http://ttb.ath.cx http://ttb.ddnsfree.com"
 URI=""
 # STUBBYNO-BEGIN
-WGET="/usr/bin/wget --no-check-certificate"
+WGET="wget --no-check-certificate"
 # STUBBYNO-END
 # STUBBY-BEGIN
-WGET="/usr/bin/wget"
+WGET="wget"
 # STUBBY-END
 
 ttbexit() {

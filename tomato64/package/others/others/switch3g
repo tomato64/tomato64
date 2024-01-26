@@ -4,7 +4,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 # Copyright (C) 2011 shibby
 #
 # - changes/fixes
-# Copyright (C) 2018 - 2019 by pedro
+# Copyright (C) 2018 - 2024 by pedro
 #
 
 
@@ -29,14 +29,14 @@ LOGS="logger -t switch3g[$PID]"
 
 
 switchMode() {
-	VENDOR="" PRODUCT="" MODULE="" DEVICENAME="" TTYS="" ALREADYFOUND=0	# global
+	VENDOR="" PRODUCT="" MODULE="" DEVICENAME="" TTYS="" ALREADYFOUND=0 # global
 	local COUNT=1 SWITCHED=0 DVDP=0 TTYS_PATH="" PATHDEV SWITCH DEVICES IFN_BEFORE DV DP DB DG
 
 	# search for DEVICENAME via active TTYs
 	for DEVICENAME in $(ls /sys/bus/usb/devices/ | grep -v ":" | grep "-"); do
 
 		PATHDEV="/sys/bus/usb/devices/$DEVICENAME"
-		[ -f $PATHDEV/idVendor -a -f $PATHDEV/idProduct -a -f $PATHDEV/uevent ] || continue	# skip
+		[ -f $PATHDEV/idVendor -a -f $PATHDEV/idProduct -a -f $PATHDEV/uevent ] || continue # skip
 
 		TTYS=$(ls -d $PATHDEV/${DEVICENAME}*/tty?* 2>/dev/null | sed -e "s/.*\/\//.*/g" -e "s/.*\//\/dev\//g" | tr "\n" " " | sed -e "s/  */ /g" -e "s,^ *,,; s, *$,,")
 
@@ -46,7 +46,7 @@ switchMode() {
 
 			TTYS_PATH=$(ls -d $PATHDEV/${DEVICENAME}*/tty?* 2>/dev/null | sed 's/\/tty.*/\/uevent/g')
 			MODULE=$(cat $TTYS_PATH 2>/dev/null | grep ^DRIVER | cut -d "=" -f2 | head -n1)
-			findPath		# MODULE --> MPATH
+			findPath # MODULE --> MPATH
 			echo "$VENDOR $PRODUCT" > $MPATH
 			NS "$PREFIX"_modem_type="$MODULE"
 
@@ -68,14 +68,14 @@ switchMode() {
 				# search for DEVICENAME & other data
 				for DEVICENAME in $(ls /sys/bus/usb/devices/ | grep -v ":" | grep "-"); do
 					PATHDEV="/sys/bus/usb/devices/$DEVICENAME"
-					[ -f $PATHDEV/idVendor -a -f $PATHDEV/idProduct -a -f $PATHDEV/uevent ] || continue	# skip
+					[ -f $PATHDEV/idVendor -a -f $PATHDEV/idProduct -a -f $PATHDEV/uevent ] || continue # skip
 
 					DV=$(cat "$PATHDEV"/idVendor)					# vendor
 					DP=$(cat "$PATHDEV"/idProduct)					# product
 					DB=$(grep -s ^BUSNUM "$PATHDEV"/uevent | cut -d "=" -f2)	# BUSNUM
 					DG=$(grep -s ^DEVNUM "$PATHDEV"/uevent | cut -d "=" -f2)	# DEVNUM
 
-					[ "$DV" == "$(echo "$SWITCH" | cut -d ":" -f1)" -a "$DP" == "$(echo "$SWITCH" | cut -d ":" -f2)" ] && {		# self
+					[ "$DV" == "$(echo "$SWITCH" | cut -d ":" -f1)" -a "$DP" == "$(echo "$SWITCH" | cut -d ":" -f2)" ] && { # self
 						DVDP=1
 						break
 					}
@@ -121,9 +121,7 @@ switchMode() {
 			}
 		done
 
-		[ "$SWITCHED" -eq 0 ] && {
-			$LOGS "3G MODEM not found in USB_ModeSwitch database - already switched? Loading modules..."
-		}
+		[ "$SWITCHED" -eq 0 ] && $LOGS "3G MODEM not found in USB_ModeSwitch database - already switched? Loading modules..."
 	}
 }
 
@@ -133,7 +131,7 @@ isDiag() {
 
 searchDiag() {
 	local MODULES="cdc-acm option sierra"
-	local IS_MLOADED=0 PATHDIAG="/sys/bus/usb/devices"
+	local PATHDIAG="/sys/bus/usb/devices"
 	local PATHDEV
 
 	[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDIAG"/"$DEVICENAME"/idVendor)
@@ -160,8 +158,7 @@ searchDiag() {
 		} || {
 			$LOGS "3G MODEM not found by $MODULES module. Trying usbserial ..."
 
-			IS_MLOADED=$(lsmod | grep usbserial | wc -l)
-			[ "$IS_MLOADED" -gt 0 ] && {
+			lsmod | grep usbserial && {
 				echo "$VENDOR $PRODUCT" > /sys/bus/usb-serial/drivers/generic/new_id
 			} || {
 				[ -n "$VENDOR" -a -n "$PRODUCT" ] && {
@@ -232,6 +229,8 @@ setPIN() {
 	local PIN=$(NG "$PREFIX"_modem_pin)
 	local IS_PIN=$(NG "$PREFIX"_modem_pin | wc -w)
 	local IS_DONE=0 PINVAL DEVALL i
+
+	$LOGS "3G MODEM - waiting for SIM initialization"
 
 	[ "$IS_PIN" -eq 1 ] && {
 		DEVALL="$DEVNR $(cat "$DIAGSFILE" | sed "s~"$DEVNR"~~")"

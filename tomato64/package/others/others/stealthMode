@@ -5,6 +5,9 @@
 # Version: 0.11
 # Authors: Monter, Shibby, hasIPv6
 #
+# - changes/fixes
+# Copyright (C) 2018 - 2024 by pedro
+#
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 
 
@@ -16,13 +19,13 @@ VERSION="v0.11"
 
 # Send your bug report to monter[at]techlog.pl
 
-dir=$(/bin/echo $( cd "$(/usr/bin/dirname "$0")" ; /bin/pwd -P ))
-stms=$(/usr/bin/basename ${0})
-MAKE=$(/bin/NG t_model_name | /usr/bin/awk '{print $1}')
-MODEL=$(/bin/NG t_model_name | /usr/bin/awk '{print $2}')
-USB3=$(/usr/bin/lsusb | /bin/grep -v "Device 001" | /bin/grep "Bus 001")
-USB2=$(/usr/bin/lsusb | /bin/grep -v "Device 001" | /bin/grep "Bus 002")
-LOGS="/usr/bin/logger -s -t stealthMode"
+dir=$(echo $( cd "$(dirname "$0")" ; pwd -P ))
+stms=$(basename ${0})
+MAKE=$(NG t_model_name | awk '{print $1}')
+MODEL=$(NG t_model_name | awk '{print $2}')
+USB3=$(lsusb | grep -v "Device 001" | grep "Bus 001")
+USB2=$(lsusb | grep -v "Device 001" | grep "Bus 002")
+LOGS="logger -s -t stealthMode"
 
 case "$MAKE" in
 	"Asus")
@@ -44,46 +47,46 @@ case "$1" in
 	on)
 		case "$MODEL" in
 			"RT-N16"|"RT-N66U"|"RT-AC66U"|"RT-AC68R/U")
-				/usr/sbin/et robowr 0x00 0x18 0x1e0
+				et robowr 0x00 0x18 0x1e0
 			;;
 			*)
 				exit 99
 		esac
 		# strobo effect
-		/bin/sleep 1
+		sleep 1
 
 		$dir/$stms perm_on
 		$LOGS "Activated"
-		/usr/sbin/cru a stealthmode "*/5 * * * * $dir/$stms perm_on"
+		cru a stealthmode "*/5 * * * * $dir/$stms perm_on"
 	;;
 	perm_on)
 		case "$MODEL" in
 			"RT-N16")
 				# power led
-				/sbin/gpio enable 1
+				gpio enable 1
 				# unlock lan ports
-				/usr/sbin/et robord 0x1 0x4 &>/dev/null
-				/usr/sbin/wl -i eth1 leddc 1
+				et robord 0x1 0x4 &>/dev/null
+				wl -i eth1 leddc 1
 			;;
 			"RT-N66U"|"RT-AC66U")
 				# power led
-				/sbin/gpio enable 12
+				gpio enable 12
 				# usb led
-				/sbin/gpio enable 15
-				/usr/sbin/wl -i eth1 leddc 1
-				/usr/sbin/wl -i eth2 leddc 1
+				gpio enable 15
+				wl -i eth1 leddc 1
+				wl -i eth2 leddc 1
 			;;
 			"RT-AC68R/U")
 				# white led at the back
-				/sbin/gpio enable 4
+				gpio enable 4
 				# power led
-				/sbin/gpio enable 3
+				gpio enable 3
 				# usb2 led
-				/sbin/gpio enable 0
+				gpio enable 0
 				# usb3 led
-				/sbin/gpio enable 14
-				/usr/sbin/wl -i eth1 ledbh 10 0
-				/usr/sbin/wl -i eth2 ledbh 10 0
+				gpio enable 14
+				wl -i eth1 ledbh 10 0
+				wl -i eth2 ledbh 10 0
 			;;
 			*)
 				exit 99
@@ -91,18 +94,18 @@ case "$1" in
 
 		case "$MODEL" in
 			"RT-N16"|"RT-N66U"|"RT-AC66U"|"RT-AC68R/U")
-				/usr/sbin/et robowr 0x00 0x18 0x1e0
-				/usr/sbin/et robowr 0x00 0x1a 0x1e0
+				et robowr 0x00 0x18 0x1e0
+				et robowr 0x00 0x1a 0x1e0
 		;;
 			*)
 				exit 99
 		esac
 	;;
 	sch_on)
-		[ "${2}" != "" -a "${2}" -le 23 -a "0$(/bin/echo $2 | /usr/bin/tr -d ' ')" -ge 0 ] 2>/dev/null && {
+		[ "${2}" != "" -a "${2}" -le 23 -a "0$(echo $2 | tr -d ' ')" -ge 0 ] 2>/dev/null && {
 			[ "${3}" != "" -a "${3}" -le 59 -a "${3}" -eq "${3}" ] 2>/dev/null && SCHMIN=${3} || SCHMIN="0"
-			/usr/sbin/cru a stealthsheduleon $SCHMIN $2 "* * * $dir/$stms on"
-			$LOGS "Scheduled On set to $2:$(/usr/bin/printf "%02d" $SCHMIN)"
+			cru a stealthsheduleon $SCHMIN $2 "* * * $dir/$stms on"
+			$LOGS "Scheduled On set to $2:$(printf "%02d" $SCHMIN)"
 		} || {
 			$LOGS "Scheduled On error - Hour/Minutes not specified!"
 			$dir/$stms
@@ -110,10 +113,10 @@ case "$1" in
 		}
 	;;
 	sch_off)
-		[ "${2}" != "" -a "${2}" -le 23 -a "0$(/bin/echo $2 | /usr/bin/tr -d ' ')" -ge 0 ] 2>/dev/null && {
+		[ "${2}" != "" -a "${2}" -le 23 -a "0$(echo $2 | tr -d ' ')" -ge 0 ] 2>/dev/null && {
 			[ "${3}" != "" -a "${3}" -le 59 -a "${3}" -eq "${3}" ] 2>/dev/null && SCHMIN=${3} || SCHMIN="0"
-			/usr/sbin/cru a stealthsheduleoff $SCHMIN $2 "* * * $dir/$stms off"
-			$LOGS "Scheduled Off set to $2:$(/usr/bin/printf "%02d" $SCHMIN)"
+			cru a stealthsheduleoff $SCHMIN $2 "* * * $dir/$stms off"
+			$LOGS "Scheduled Off set to $2:$(printf "%02d" $SCHMIN)"
 		} || {
 			$LOGS "Scheduled Off error - Hour/Minutes not specified!"
 			$dir/$stms
@@ -121,8 +124,8 @@ case "$1" in
 		}
 	;;
 	sch_clear)
-		/usr/sbin/cru d stealthsheduleon
-		/usr/sbin/cru d stealthsheduleoff
+		cru d stealthsheduleon
+		cru d stealthsheduleoff
 		$LOGS "Scheduler Tasks Deleted"
 	;;
 	clear_all)
@@ -130,44 +133,44 @@ case "$1" in
 		$LOGS "Complete shutdown and delete all jobs from Crontab - done"
 	;;
 	off)
-		/usr/sbin/cru d stealthmode
+		cru d stealthmode
 		case "$MODEL" in
 			"RT-N16")
 				#power led
-				/sbin/gpio disable 1
+				gpio disable 1
 				# unlock lan ports
-				/usr/sbin/et robord 0x1 0x4 &>/dev/null
-				/usr/sbin/wl -i eth1 leddc 0
+				et robord 0x1 0x4 &>/dev/null
+				wl -i eth1 leddc 0
 			;;
 			"RT-N66U"|"RT-AC66U")
 				# power led
-				/sbin/gpio disable 12
+				gpio disable 12
 				# usb led
-				/sbin/gpio disable 15
-				/usr/sbin/wl -i eth1 leddc 0
-				/usr/sbin/wl -i eth2 leddc 0
+				gpio disable 15
+				wl -i eth1 leddc 0
+				wl -i eth2 leddc 0
 			;;
 			"RT-AC68R/U")
 				# white led at the back
-				/sbin/gpio disable 4
+				gpio disable 4
 				# power led
-				/sbin/gpio disable 3
-				[ "$USB2" != "" ] && /sbin/gpio disable 0
-				[ "$USB3" != "" ] && /sbin/gpio disable 14
-				/usr/sbin/wl -i eth1 ledbh 10 7
-				/usr/sbin/wl -i eth2 ledbh 10 7
+				gpio disable 3
+				[ "$USB2" != "" ] && gpio disable 0
+				[ "$USB3" != "" ] && gpio disable 14
+				wl -i eth1 ledbh 10 7
+				wl -i eth2 ledbh 10 7
 			;;
 			*)
 				exit 99
 		esac
 		case "$MODEL" in
 			"RT-N16"|"RT-N66U"|"RT-AC66U"|"RT-AC68R/U")
-				/usr/sbin/et robowr 0x00 0x18 0x1ff
-				/usr/sbin/et robowr 0x00 0x1a 0x1ff
+				et robowr 0x00 0x18 0x1ff
+				et robowr 0x00 0x1a 0x1ff
 				# delay before repeat off commands - strobo error fix
-				/bin/sleep 1
-				/usr/sbin/et robowr 0x00 0x18 0x1ff
-				/usr/sbin/et robowr 0x00 0x1a 0x1ff
+				sleep 1
+				et robowr 0x00 0x18 0x1ff
+				et robowr 0x00 0x1a 0x1ff
 			;;
 			*)
 				exit 99
@@ -175,25 +178,25 @@ case "$1" in
 		$LOGS "Deactivated"
 	;;
 	*)
-		/bin/echo "$stms ${VERSION} by Monter"
-		/bin/echo "Usage: $stms {on|off|sch_on <H> <M>|sch_off <H> <M>|sch_clear|clear_all}"
-		/bin/echo
-		/bin/echo " [Standard mode]"
-		/bin/echo "   on | off        - enable or disable steathMode in real time"
-		/bin/echo
-		/bin/echo " [Scheduled mode]"
-		/bin/echo "   sch_on <H> <M>  - set the hour and minutes of the scheduled enable/disable"
-		/bin/echo "   sch_off <H> <M>   stealthMode in Standard mode and adding jobs to the Crontab"
-		/bin/echo "                     Hour and minute time must be a numbers without any additional"
-		/bin/echo "                     characters, where hour is a mandatory parameter, while not"
-		/bin/echo "                     specifying an minute will assign a default 00 value"
-		/bin/echo "                     These options add just the right job for Crontab, nothing more"
-		/bin/echo "   sch_clear       - removes tasks from Crontab for scheduled enable/disable"
-		/bin/echo "                     stealthMode function set by sch_on and sch_off switches"
-		/bin/echo
-		/bin/echo " [Repair / debug]"
-		/bin/echo "   clear_all       - removes all jobs from Crontab and completely disables all"
-		/bin/echo "                     available stealthMode modes"
-		/bin/echo
+		echo "$stms ${VERSION} by Monter"
+		echo "Usage: $stms {on|off|sch_on <H> <M>|sch_off <H> <M>|sch_clear|clear_all}"
+		echo
+		echo " [Standard mode]"
+		echo "   on | off        - enable or disable steathMode in real time"
+		echo
+		echo " [Scheduled mode]"
+		echo "   sch_on <H> <M>  - set the hour and minutes of the scheduled enable/disable"
+		echo "   sch_off <H> <M>   stealthMode in Standard mode and adding jobs to the Crontab"
+		echo "                     Hour and minute time must be a numbers without any additional"
+		echo "                     characters, where hour is a mandatory parameter, while not"
+		echo "                     specifying an minute will assign a default 00 value"
+		echo "                     These options add just the right job for Crontab, nothing more"
+		echo "   sch_clear       - removes tasks from Crontab for scheduled enable/disable"
+		echo "                     stealthMode function set by sch_on and sch_off switches"
+		echo
+		echo " [Repair / debug]"
+		echo "   clear_all       - removes all jobs from Crontab and completely disables all"
+		echo "                     available stealthMode modes"
+		echo
 		exit 1
 esac

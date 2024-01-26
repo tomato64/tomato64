@@ -1,12 +1,12 @@
 #!/bin/sh
-export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:/opt/bin:/opt/sbin
 unset LD_LIBRARY_PATH
 unset LD_PRELOAD
 # STUBBYNO-BEGIN
-WGET="/usr/bin/wget --no-check-certificate"
+WGET="wget --no-check-certificate"
 # STUBBYNO-END
 # STUBBY-BEGIN
-WGET="/usr/bin/wget"
+WGET="wget"
 # STUBBY-END
 
 echo "Info: Checking for prerequisites and creating folders..."

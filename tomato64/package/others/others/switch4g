@@ -324,13 +324,13 @@ connect() {
 		dhcpc-renew $PREFIX
 		sleep 1
 
-		[ "$(ifconfig | grep "$IFA" | wc -l)" -eq 0 ] && {
+		ifconfig | grep "$IFA" || {
 			$LOGS "4G MODEM - WAN IFACE not ready ($IFA) [$COUNT] ..."
 			COUNT=$((COUNT+1))
 			sleep 2
-		} || {
+		} && {
 			# TODO: IP is up only every 2nd attempt - temporary fix
-			[ "$(ifconfig | grep -A1 "$IFA" | grep 'inet addr' | wc -l)" -eq 0 ] && {
+			ifconfig | grep -A1 "$IFA" | grep 'inet addr' || {
 				dhcpc-release $PREFIX
 				sleep 1
 				dhcpc-renew $PREFIX
@@ -858,7 +858,7 @@ uqmiCall() {
 
 	# wait for other uqmi process(es) to exit...
 	while [ "$COUNT" -lt 10 ]; do
-		[ "$(ps | grep [u]qmi | wc -l)" -eq 0 ] && {
+		ps | grep [u]qmi || {
 			if [ "$OPTION" -eq 1 ]; then
 				uqmi -s -d "$DEVNR" $COMMAND \
 					${APN:+--apn "$APN"} \

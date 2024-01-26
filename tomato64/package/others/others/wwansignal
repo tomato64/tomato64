@@ -4,7 +4,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 # Copyright (C) 2015 shibby
 #
 # - changes/fixes
-# Copyright (C) 2018 - 2021 by pedro
+# Copyright (C) 2018 - 2024 by pedro
 #
 
 
@@ -46,13 +46,9 @@ signal3g() {
 		DEVALL="$SDEVNR $(cat "$DIAGSFILE" | sed "s~"$SDEVNR"~~")"
 	}
 
-	for i in $DEVALL; do	# find working interface
+	for i in $DEVALL; do # find working interface
 		CSQ=$(gcom -d "$i" -s /etc/gcom/getstrength.gcom 2>/dev/null | tr -d '\r')
-		[ "$(echo "$CSQ" | grep OK | wc -l)" -eq 0 ] && {
-			sleep 1
-		} || {
-			break
-		}
+		echo "$CSQ" | grep OK && break || sleep 1
 	done
 	NS "$PREFIX"_modem_dev="$i"
 
@@ -244,16 +240,10 @@ signal4g() {
 
 			SINR=$(echo "$SIGNAL" | grep "<sinr>" | cut -d '>' -f2 | cut -d 'd' -f1)
 			[ "$SPEED" == "0302" -o "$SPEED" == "0301" -o "$SPEED" == "00" ] && {
-				[ -n "$SINR" ] && {
-					SPEED="03"
-				} || {
-					SPEED="02"
-				}
+				[ -n "$SINR" ] && SPEED="03" || SPEED="02"
 			}
 
-			[ "$SPEED" == "0201" -o "$SPEED" == "02" ] && {
-				SPEED="02"
-			}
+			[ "$SPEED" == "0201" -o "$SPEED" == "02" ] && SPEED="02"
 
 			case "$SPEED" in
 				"03")
@@ -326,7 +316,7 @@ uqmiCall() {
 
 	# wait for other uqmi process(es) to exit...
 	while [ "$COUNT" -lt 10 ]; do
-		[ "$(ps | grep [u]qmi | wc -l)" -eq 0 ] && {
+		ps | grep [u]qmi || {
 			uqmi -s -d "$DEVNR" $COMMAND
 			return
 		}

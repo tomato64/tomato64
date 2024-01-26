@@ -3,7 +3,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 # VPN Client selective routing up down script
 #
-# Copyright by pedro 2019 - 2022
+# Copyright by pedro 2019 - 2024
 #
 
 
@@ -63,9 +63,7 @@ stopRouting() {
 	ip route flush table $ID
 	ip route flush cache
 
-	[ "$(ip rule | grep "lookup $ID" | wc -l)" -gt 0 ] && {
-		ip rule del fwmark $ID/0xf00 table $ID
-	}
+	ip rule | grep "lookup $ID" && ip rule del fwmark $ID/0xf00 table $ID
 
 # BCMARM-BEGIN
 	ipset destroy vpnrouting$ID

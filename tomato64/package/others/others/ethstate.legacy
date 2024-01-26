@@ -87,7 +87,7 @@ VPORT=$(NG $VWAN'ports' | awk '{print $1}' | sed 's/[^0-9]*//g')
 
 [ -z "$VPORT" ] && VPORT="0"
 
-/usr/sbin/robocfg showports | grep Port | awk '{print $1" "$2" "$3}' > /tmp/ethernet.state.tmp
+robocfg showports | grep Port | awk '{print $1" "$2" "$3}' > /tmp/ethernet.state.tmp
 
 # Search WAN port
 SWAN=$(cat /tmp/ethernet.state.tmp | grep "Port $VPORT" | awk '{print $3}')

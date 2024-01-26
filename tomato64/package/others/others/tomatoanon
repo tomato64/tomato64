@@ -55,11 +55,10 @@ WGET="/usr/bin/wget"
 			RESCHK=$($WGET -O- "https://tomato64.org/version.txt")
 
 			CHKVER_MAJ=$(echo $RESCHK | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
-			ISMNR=$(echo $RESCHK | grep "\." | wc -l)
-			[ "$ISMNR" -eq 0 ] && {
-				CHKVER_MNR=""
-			} || {
+			echo $RESCHK | grep "\." && {
 				CHKVER_MNR=$(echo $RESCHK | awk '{print $1}' | cut -d "." -f2 | sed 's/[^0-9]*//g')
+			} || {
+				CHKVER_MNR=""
 			}
 
 			RESULT="/tmp/anon.version"
@@ -81,9 +80,7 @@ WGET="/usr/bin/wget"
 			fi
 
 			# Thanks. Now add cron job
-			ISCRU=$(cru l | grep checkver | wc -l)
-			[ "$ISCRU" -eq 0 ] && {
-
+			cru l | grep checkver || {
 				# random minutes 0..59
 				MINUTES=$(awk 'BEGIN {srand(); printf "%d", 60*rand()}')
 
@@ -103,8 +100,7 @@ WGET="/usr/bin/wget"
 			DRIVER=$(wl ver | grep version | awk '{ print $7 }')
 			WANMAC_MD5=$(echo "$WANMAC+$LANMAC" | md5sum | awk '{ print $1 }')
 
-			ROUTERID=$(NG tomatoanon_id)
-			[ ! "$ROUTERID" == "$WANMAC_MD5" ] && {
+			[ ! "$(NG tomatoanon_id)" == "$WANMAC_MD5" ] && {
 				NS tomatoanon_id="$WANMAC_MD5"
 				NC
 			}
@@ -117,9 +113,7 @@ WGET="/usr/bin/wget"
 			$WGET -O $RESULT $ANONSEND
 
 			# Thanks. Now add cron job
-			ISCRU=$(cru l | grep anonupdate | wc -l)
-			[ "$ISCRU" -eq 0 ] && {
-
+			cru l | grep anonupdate || {
 				# random minutes 0..59
 				MINUTES=$(awk 'BEGIN {srand(); printf "%d", 60*rand()}')
 
@@ -133,23 +127,16 @@ WGET="/usr/bin/wget"
 				cru a anonupdate "$MINUTES $HOUR * * $DAY /usr/sbin/tomatoanon"
 			}
 		}
-
 	} || { # if anon is not enabled or was disabled right now
 
-		ISCRU=$(cru l | grep anonupdate | wc -l)
-		[ "$ISCRU" -eq 0 ] && cru d anonupdate
-
-		ISCRU=$(cru l | grep checkver | wc -l)
-		[ "$ISCRU" -eq 0 ] && cru d checkver
+		cru l | grep anonupdate || cru d anonupdate
+		cru l | grep checkver || cru d checkver
 
 	} # end ANON_ENABLE
 
 } || { # if answer is not enabled or was disabled right now
 
-	ISCRU=$(cru l | grep anonupdate | wc -l)
-	[ "$ISCRU" -eq 0 ] && cru d anonupdate
-
-	ISCRU=$(cru l | grep checkver | wc -l)
-	[ "$ISCRU" -eq 0 ] && cru d checkver
+	cru l | grep anonupdate || cru d anonupdate
+	cru l | grep checkver || cru d checkver
 
 } # end ANON_ANSWER

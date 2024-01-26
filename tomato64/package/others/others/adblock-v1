@@ -18,10 +18,10 @@ WORK2="$PREFIX/hosts.work2"
 CHK_FILE="$PREFIX/adblock.time"
 FINAL="/etc/dnsmasq.adblock"
 # STUBBYNO-BEGIN
-WGET="/usr/bin/wget --no-check-certificate -T 15"
+WGET="wget --no-check-certificate -T 15"
 # STUBBYNO-END
 # STUBBY-BEGIN
-WGET="/usr/bin/wget -T 15"
+WGET="wget -T 15"
 # STUBBY-END
 
 BLACKLIST=$(NG adblock_blacklist)
@@ -123,7 +123,7 @@ download() {
 }
 
 cronAdd() {
-	[ "$(cru l | grep adblockJob | wc -l)" -eq "0" ] && {
+	cru l | grep adblockJob || {
 		MINS=$(($RANDOM % 59))
 		$LOGS "add cron job"
 		cru a adblockJob "$MINS 2 * * * /usr/sbin/adblock"
@@ -131,7 +131,7 @@ cronAdd() {
 }
 
 cronDel() {
-	[ "$(cru l | grep adblockJob | wc -l)" -eq "1" ] && {
+	cru l | grep adblockJob && {
 		$LOGS "remove cron job"
 		cru d adblockJob
 	}

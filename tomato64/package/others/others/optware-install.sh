@@ -1,7 +1,7 @@
 #!/bin/sh
 # Optware pre-installation script, Leon Kos 2006-2008
 # Broadcom ARM support - Shibby 2014
-export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:/opt/bin:/opt/sbin
 # BCMARM-BEGIN
 REPOSITORY=http://ipkg.nslu2-linux.org/feeds/optware/mbwe-bluering/cross/stable
 # BCMARM-END
@@ -11,13 +11,12 @@ REPOSITORY=http://ipkg.nslu2-linux.org/feeds/optware/oleg/cross/stable
 
 TMP=/tmp
 # STUBBYNO-BEGIN
-WGET="/usr/bin/wget --no-check-certificate"
+WGET="wget --no-check-certificate"
 # STUBBYNO-END
 # STUBBY-BEGIN
-WGET="/usr/bin/wget"
+WGET="wget"
 # STUBBY-END
 
-PATH=/bin:/sbin:/usr/bin:/usr/sbin:/opt/bin:/opt/sbin
 unset LD_PRELOAD
 unset LD_LIBRARY_PATH
 

@@ -3,6 +3,9 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 # Copyright (C) 2013 shibby
 #
+# - changes/fixes
+# Copyright (C) 2018 - 2024 by pedro
+#
 
 
 . nvram_ops
@@ -30,7 +33,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 			echo "" &>/dev/null
 		} || {
 			# make first copy
-			/usr/sbin/webmon_bkp hourly
+			webmon_bkp hourly
 		}
 
 	# make a copy every hour
@@ -67,7 +70,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 					$LOGS "Backup finished."
 				}
 				# make clean copy
-				/usr/sbin/webmon_bkp hourly
+				webmon_bkp hourly
 			} || {
 				$LOGS "Failed: Something goes wrong. Backup was not created!"
 			}
