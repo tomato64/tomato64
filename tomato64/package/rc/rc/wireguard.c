@@ -814,9 +814,15 @@ void stop_wg_eas(void)
 void stop_wg_all(void)
 {
 	int unit;
+	char iface[IF_SIZE];
 
 	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
-		stop_wireguard(unit);
+		memset(iface, 0, IF_SIZE);
+		snprintf(iface, IF_SIZE, "wg%d", unit);
+		if (eval("ip", "addr", "show", "dev", iface))
+			logmsg(LOG_DEBUG, "no such wg instance to stop: %s", iface);
+		else
+			stop_wireguard(unit);
 	}
 	wg_cleanup_dirs();
 
