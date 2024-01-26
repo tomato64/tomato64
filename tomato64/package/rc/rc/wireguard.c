@@ -855,10 +855,11 @@ void start_wireguard(int unit)
 	find_port(unit, port);
 
 	/* check if file is specified */
-	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
-		wg_quick_iface(iface, getNVRAMVar("wg%d_file", unit), 1);
+	if (getNVRAMVar("wg%d_file", unit)[0] != '\0') {
+		if (wg_quick_iface(iface, getNVRAMVar("wg%d_file", unit), 1))
+			goto out;
+	}
 	else {
-
 		/* create interface */
 		if (wg_create_iface(iface))
 			goto out;
