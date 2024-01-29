@@ -1,6 +1,11 @@
 #!/bin/sh
 
-tar -I "zstd -f" -xf $1 -C /
+if [ $# -eq 0 ]; then
+	echo "missing .tzst file argument"
+	exit
+fi
+
+tar --touch -I "zstd -f" -xf $1 -C /
 
 result=$?
 
