@@ -1,3 +1,11 @@
 #!/bin/sh
 
 tar -I "zstd -f" -xf $1 -C /
+
+result=$?
+
+if [ "$result" -eq 0 ]; then
+	printf "image successfully flashed\n"
+else
+	printf 'error code "%d" returned' "$result"
+fi
