@@ -2310,6 +2310,10 @@ int start_firewall(void)
 	run_tinc_firewall_script();
 #endif
 
+#ifdef TCONFIG_WIREGUARD
+	run_wg_firewall_scripts();
+#endif
+
 	fix_chain_in_drop();
 
 	run_nvscript("script_fire", NULL, 1);

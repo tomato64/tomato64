@@ -172,7 +172,7 @@ int serialize_restart(char *service, int start)
 	return 0;
 }
 
-/* replace -A and -I in the FW script with -D */
+/* replace -A, -I and -N in the FW script with -D */
 void run_del_firewall_script(char *infile, char *outfile)
 {
 	FILE *ifp, *ofp;
@@ -182,19 +182,19 @@ void run_del_firewall_script(char *infile, char *outfile)
 
 	ifp = fopen(infile, "r");
 	ofp = fopen(outfile, "w+");
-	if (ifp == NULL || ofp == NULL) {
+	if ((ifp == NULL) || (ofp == NULL)) {
 		if (ifp != NULL) fclose(ifp);
 		if (ofp != NULL) {
 			fclose(ofp);
 			unlink(outfile);
 		}
+		logmsg(LOG_DEBUG, "*** %s: no iptable rules, file: %s!", __FUNCTION__, infile);
 		return;
 	}
-	chmod(outfile, (S_IRUSR | S_IWUSR | S_IXUSR));
 
 	while (fgets(read, sizeof(read), ifp) != NULL) {
-		if ((strstr(read, "-A") != NULL) || (strstr(read, "-I") != NULL)) {
-			while (((pos = strstr(read, "-A")) != NULL) || ((pos = strstr(read, "-I")) != NULL)) {
+		if ((strstr(read, "-A") != NULL) || (strstr(read, "-I") != NULL) || (strstr(read, "-N") != NULL)) {
+			while (((pos = strstr(read, "-A")) != NULL) || ((pos = strstr(read, "-I")) != NULL) || ((pos = strstr(read, "-N")) != NULL)) {
 				strlcpy(temp, read, sizeof(temp));
 				index = pos - read;
 				read[index] = '\0';
@@ -207,8 +207,13 @@ void run_del_firewall_script(char *infile, char *outfile)
 	fclose(ifp);
 	fclose(ofp);
 
-	logmsg(LOG_DEBUG, "*** %s: removing existing firewall rules: %s", __FUNCTION__, infile);
-	eval(outfile);
+	chmod(outfile, (S_IRUSR | S_IWUSR | S_IXUSR));
+
+	if (eval(outfile))
+		logmsg(LOG_DEBUG, "*** %s: unable to remove iptable rules, file: %s!", __FUNCTION__, infile);
+	else
+		logmsg(LOG_DEBUG, "*** %s: iptable rules have been removed, file: %s", __FUNCTION__, infile);
+
 	unlink(outfile);
 }
 

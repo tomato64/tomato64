@@ -601,6 +601,7 @@ extern void start_wg_eas(void);
 extern void stop_wg_all(void);
 extern void start_wireguard(int unit);
 extern void stop_wireguard(int unit);
+extern void run_wg_firewall_scripts(void);
 extern void write_wg_dnsmasq_config(FILE* f);
 #endif
 

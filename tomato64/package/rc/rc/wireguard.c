@@ -1,7 +1,19 @@
+/*
+ *
+ * Copyright (C) 2023 - 2024 FreshTomato
+ * https://freshtomato.org/
+ *
+ * For use with FreshTomato Firmware only.
+ * No part of this file may be used without permission.
+ *
+ * Fixes/updates (C) 2023 - 2024 pedro
+ *
+ */
+
+
 #include "rc.h"
 #include <dirent.h>
 #include "curve25519.h"
-
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE		DISABLE_SYSLOG_OSM
@@ -11,6 +23,9 @@
 #define WG_DNS_DIR		WG_DIR"/dns"
 #define WG_SCRIPTS_DIR		WG_DIR"/scripts"
 #define WG_KEYS_DIR		WG_DIR"/keys"
+#define WG_FW_DIR		WG_DIR"/fw"
+#define WG_DEL_SCRIPT		"clear-fw-tmp.sh"
+#define WG_DIR_DEL_SCRIPT	WG_FW_DIR"/"WG_DEL_SCRIPT
 
 #define BUF_SIZE		256
 #define BUF_SIZE_8		8
@@ -22,8 +37,132 @@
 
 #define WG_INTERFACE_MAX	3
 
+
 char port[BUF_SIZE_8];
 
+void wg_build_firewall(int unit, char *port, char *iface) {
+	FILE *fp;
+	char buffer[BUF_SIZE_64];
+	char *dns;
+
+	chains_log_detection();
+
+	logmsg(LOG_DEBUG, "*** %s: building firewall scripts ...", __FUNCTION__);
+
+	/* script with firewall rules (port, iface) */
+	/* (..., open wireguard port, accept packets from wireguard internal subnet, set up forwarding) */
+	memset(buffer, 0, BUF_SIZE_64);
+	snprintf(buffer, BUF_SIZE_64, WG_FW_DIR"/%s-fw.sh", iface);
+	if ((fp = fopen(buffer, "w"))) {
+		fprintf(fp, "#!/bin/sh\n"
+		            "\n# FW\n"
+// check what it looks like, e.g. w pptpd, tinc, nginx, vsftpd, transmission
+//		            "iptables -t nat -A PREROUTING -p udp --dport %s -j ACCEPT\n"
+		            "iptables -A INPUT -p udp --dport %s -j %s\n"
+		            "iptables -A INPUT -i %s -j %s\n"
+		            "iptables -A FORWARD -i %s -j ACCEPT\n",
+//		            port,
+		            port, chain_in_accept,
+		            iface, chain_in_accept,
+		            iface);
+#ifdef TCONFIG_BCMARM
+		if (!nvram_get_int("ctf_disable")) /* bypass CTF if enabled */
+			fprintf(fp, "iptables -t mangle -I PREROUTING -i %s -j MARK --set-mark 0x01/0x7\n", iface);
+#endif /* TCONFIG_BCMARM */
+		dns = getNVRAMVar("wg%d_dns", unit);
+		if (getNVRAMVar("wg%d_file", unit)[0] == '\0') { /* only if no optional config file has been added */
+			/* script to add/remove fw rules for dns servers (iface, dns) */
+			fprintf(fp, "\n# DNS\n"
+			            "DNS_CHAIN=\"wg-ft-%s-dns\"\n"
+			            "DNS_FILE=\"%s/%s.conf\"\n"
+			            "STATUS=$?\n"
+			            "\niptables -nL | grep \"$DNS_CHAIN\" && {\n"
+			            " # remove rules\n"
+			            " [ -r \"$DNS_FILE\" ] && {\n"
+			            "  rm $DNS_FILE\n"
+			            "  nohup service dnsmasq restart &\n"
+			            "  iptables -D OUTPUT -j $DNS_CHAIN\n"
+			            "  iptables -F $DNS_CHAIN\n"
+			            "  iptables -X $DNS_CHAIN\n"
+			            " }\n"
+			            "} || {\n"
+			            " # add rules\n"
+			            " [ \"%s\" != \"\" ] && {\n"
+			            "  > $DNS_FILE\n"
+			            "  iptables -N $DNS_CHAIN\n"
+			            "  for NAMESERVER in $(echo \"%s\" | tr \",\" \" \" ); do\n"
+			            "   echo \"server=$NAMESERVER\" >> $DNS_FILE\n"
+			            "   iptables -A $DNS_CHAIN -i %s -p tcp --dst $NAMESERVER/32 --dport 53 -j ACCEPT\n"
+			            "   iptables -A $DNS_CHAIN -i %s -p udp --dst $NAMESERVER/32 --dport 53 -j ACCEPT\n"
+			            "  done\n"
+			            "  iptables -A OUTPUT -j $DNS_CHAIN\n"
+			            "  [ $? -eq 0 ] && nohup service dnsmasq restart &\n"
+			            " } || {\n"
+			            "  exit $STATUS\n"
+			            " }\n"
+			            "}\n",
+			            iface,
+			            WG_DNS_DIR, iface,
+			            dns,
+			            dns,
+			            iface,
+			            iface);
+		}
+		fclose(fp);
+		chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
+	}
+
+	/* script excerpt from wg-quick to route default (iface, route, fwmark) */
+	if ((fp = fopen(WG_SCRIPTS_DIR"/route-default.sh", "w"))) {
+		fprintf(fp, "#!/bin/sh\n"
+		            "cmd() {\n"
+		            "  echo \"[#] $*\" >&2\n"
+		            "  \"$@\"\n"
+		            "}\n\n"
+		            "NL='\n"
+		            "'\n"
+		            "interface=\"${1}\"\n"
+		            "route=\"${2}\"\n"
+		            "table=\"${3}\"\n"
+		            "case \"${route}\" in\n"
+		            "  *:*)\n"
+		            "    proto='-6'\n"
+		            "    iptables='ip6tables'\n"
+		            "    pf='ip6'\n"
+		            "    ;;\n"
+		            "  *)\n"
+		            "    proto='-4'\n"
+		            "    iptables='iptables'\n"
+		            "    pf='ip'\n"
+		            "    ;;\n"
+		            "esac\n"
+		            "cmd ip \"${proto}\" rule add not fwmark \"${table}\" table \"${table}\"\n"
+		            "cmd ip \"${proto}\" rule add table main suppress_prefixlength 0\n"
+		            "cmd ip \"${proto}\" route add \"${route}\" dev \"${interface}\" table \"${table}\"\n"
+		            "restore=\"*raw${NL}\"\n"
+		            "ip -o \"${proto}\" addr show dev \"${interface}\" 2>/dev/null | {\n"
+		            "  match=''\n"
+		            "  while read -r line; do\n"
+		            "    match=\"$(\n"
+		            "      printf %s \"${line}\" |\n"
+		            "        sed -ne 's/^.*inet6\\? \\([0-9a-f:.]\\+\\)\\/[0-9]\\+.*$/\\1/; t P; b; : P; p'\n"
+		            "    )\"\n"
+		            "    [ -n \"${match}\" ] ||\n"
+		            "      continue\n"
+		            "    restore=\"${restore:+${restore}${NL}}-I PREROUTING ! -i ${interface} -d ${match} -m addrtype ! --src-type LOCAL -j DROP\"\n"
+		            "  done\n"
+		            "  restore=\"${restore:+${restore}${NL}}COMMIT${NL}*mangle${NL}-I POSTROUTING -m mark --mark ${table} -p udp -j CONNMARK --save-mark${NL}-I PREROUTING -p udp -j CONNMARK --restore-mark${NL}COMMIT\"\n"
+		            "  ! [ \"${proto}\" = '-4' ] ||\n"
+		            "    echo 1 > /proc/sys/net/ipv4/conf/all/src_valid_mark\n"
+		            "  printf '%s\\n' \"${restore}\" |\n"
+		            "    cmd \"${iptables}-restore\" -n\n"
+		            "}\n", "%s", "%s");
+		fclose(fp);
+		chmod(WG_SCRIPTS_DIR"/route-default.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
+	}
+
+	logmsg(LOG_DEBUG, "*** %s: Done", __FUNCTION__);
+}
 
 int wg_quick_iface(char *iface, char *file, int up)
 {
@@ -68,8 +207,6 @@ static void find_port(int unit, char *port)
 }
 
 void wg_setup_dirs(void) {
-	FILE *fp;
-
 	/* main dir */
 	if (mkdir_if_none(WG_DIR))
 		chmod(WG_DIR, (S_IRUSR | S_IWUSR | S_IXUSR));
@@ -86,131 +223,9 @@ void wg_setup_dirs(void) {
 	if (mkdir_if_none(WG_DNS_DIR))
 		chmod(WG_DNS_DIR, (S_IRUSR | S_IWUSR | S_IXUSR));
 
-	/* script to generate public keys from private keys */
-	if (!(f_exists(WG_SCRIPTS_DIR"/pubkey.sh"))){
-		if ((fp = fopen(WG_SCRIPTS_DIR"/pubkey.sh", "w"))) {
-			fprintf(fp, "#!/bin/sh\n"
-			            "echo \"$1\" | wg pubkey > \"$2\"\n");
-			fclose(fp);
-			chmod(WG_SCRIPTS_DIR"/pubkey.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
-		}
-	}
-
-	/* script to add iptable rules for wireguard device (port, iface) */
-	if (!(f_exists(WG_SCRIPTS_DIR"/fw-add.sh"))) {
-		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-add.sh", "w"))) {
-			fprintf(fp, "#!/bin/sh\n"
-			            "# bypass CTF for wireguard\n"
-			            "if [ $(nvram get ctf_disable) -eq 0 ]; then\n"
-			            " iptables -t mangle -nvL PREROUTING | grep -q '.*MARK.*all.*$2.*0x1/0x7' || iptables -t mangle -A PREROUTING -i $2 -j MARK --set-mark 0x01/0x7\n"
-			            "fi\n"
-			            "# open wireguard port\n"
-			            "iptables -nvL INPUT | grep -q \".*ACCEPT.*udp.dpt.$1$\" || iptables -A INPUT -p udp --dport \"$1\" -j ACCEPT\n"
-			            "# accept packets from WireGuard internal subnet\n"
-			            "iptables -nvL INPUT | grep -q \".*ACCEPT.*all.*$2\" || iptables -A INPUT -i \"$2\" -j ACCEPT\n"
-			            "# set up forwarding\n"
-			            "iptables -nvL FORWARD | grep -q \".*ACCEPT.*all.*$2\" || iptables -A FORWARD -i \"$2\" -j ACCEPT\n");
-			fclose(fp);
-			chmod(WG_SCRIPTS_DIR"/fw-add.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
-		}
-	}
-
-	/* script to remove iptable rules for wireguard device (port, iface) */
-	if (!(f_exists(WG_SCRIPTS_DIR"/fw-del.sh"))) {
-		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-del.sh", "w"))) {
-			fprintf(fp, "#!/bin/sh\n"
-			            "if [ $(nvram get ctf_disable) -eq 0 ]; then\n"
-			            " iptables -t mangle -nvL PREROUTING | grep -q '.*MARK.*all.*$2.*0x1/0x7' && iptables -t mangle -D PREROUTING -i $2 -j MARK --set-mark 0x01/0x7\n"
-			            "fi\n"
-			            "iptables -nvL INPUT | grep -q \".*ACCEPT.*udp.dpt.$1$\" && iptables -D INPUT -p udp --dport \"$1\" -j ACCEPT\n"
-			            "iptables -nvL INPUT | grep -q \".*ACCEPT.*all.*$2\" && iptables -D INPUT -i \"$2\" -j ACCEPT\n"
-			            "iptables -nvL FORWARD | grep -q \".*ACCEPT.*all.*$2\" && iptables -D FORWARD -i \"$2\" -j ACCEPT\n");
-			fclose(fp);
-			chmod(WG_SCRIPTS_DIR"/fw-del.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
-		}
-	}
-
-	/* script to add fw rules for dns servers (iface, dns) */
-	if (!(f_exists(WG_SCRIPTS_DIR"/fw-dns-set.sh"))) {
-		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-dns-set.sh", "w"))) {
-			fprintf(fp, "#!/bin/sh\n"
-			            "DNS_CHAIN=\"wg-ft-${1}-dns\"\n"
-			            "iptables -D OUTPUT -j \"${DNS_CHAIN}\" >/dev/null 2>&1 || $(exit 0)\n"
-			            "iptables -L \"${DNS_CHAIN}\" >/dev/null 2>&1 && iptables -F \"${DNS_CHAIN}\" >/dev/null 2>&1 && iptables -X \"${DNS_CHAIN}\" >/dev/null 2>&1\n"
-			            "iptables -N \"${DNS_CHAIN}\"\n"
-			            "for NAMESERVER in $( echo \"${2}\" | tr \",\" \" \" ); do\n"
-			            " iptables -A \"${DNS_CHAIN}\" -i \"${1}\" -p tcp --dst \"${NAMESERVER}/32\" --dport 53 -j ACCEPT\n"
-			            " iptables -A \"${DNS_CHAIN}\" -i \"${1}\" -p udp --dst \"${NAMESERVER}/32\" --dport 53 -j ACCEPT\n"
-			            "done\n"
-			            "iptables -A OUTPUT -j \"${DNS_CHAIN}\"\n");
-			fclose(fp);
-			chmod(WG_SCRIPTS_DIR"/fw-dns-set.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
-		}
-	}
-
-	/* script to remove fw rules for dns servers (iface) */
-	if (!(f_exists(WG_SCRIPTS_DIR"/fw-dns-unset.sh"))) {
-		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-dns-unset.sh", "w"))) {
-			fprintf(fp, "#!/bin/sh\n"
-			            "DNS_CHAIN=\"wg-ft-${1}-dns\"\n"
-			            "iptables -D OUTPUT -j \"${DNS_CHAIN}\" || $(exit 0)\n"
-			            "iptables -F \"${DNS_CHAIN}\" || $(exit 0)\n"
-			            "iptables -X \"${DNS_CHAIN}\" || $(exit 0)\n");
-			fclose(fp);
-			chmod(WG_SCRIPTS_DIR"/fw-dns-unset.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
-		}
-	}
-
-	/* script excerpt from wg-quick to route default (iface, route, fwmark) */
-	if (!(f_exists(WG_SCRIPTS_DIR"/route-default.sh"))) {
-		if ((fp = fopen(WG_SCRIPTS_DIR"/route-default.sh", "w"))) {
-			fprintf(fp, "#!/bin/sh\n"
-			            "cmd() {\n"
-			            "  echo \"[#] $*\" >&2\n"
-			            "  \"$@\"\n"
-			            "}\n\n"
-			            "NL='\n"
-			            "'\n"
-			            "interface=\"${1}\"\n"
-			            "route=\"${2}\"\n"
-			            "table=\"${3}\"\n"
-			            "case \"${route}\" in\n"
-			            "  *:*)\n"
-			            "    proto='-6'\n"
-			            "    iptables='ip6tables'\n"
-			            "    pf='ip6'\n"
-			            "    ;;\n"
-			            "  *)\n"
-			            "    proto='-4'\n"
-			            "    iptables='iptables'\n"
-			            "    pf='ip'\n"
-			            "    ;;\n"
-			            "esac\n"
-			            "cmd ip \"${proto}\" rule add not fwmark \"${table}\" table \"${table}\"\n"
-			            "cmd ip \"${proto}\" rule add table main suppress_prefixlength 0\n"
-			            "cmd ip \"${proto}\" route add \"${route}\" dev \"${interface}\" table \"${table}\"\n"
-			            "restore=\"*raw${NL}\"\n"
-			            "ip -o \"${proto}\" addr show dev \"${interface}\" 2>/dev/null | {\n"
-			            "  match=''\n"
-			            "  while read -r line; do\n"
-			            "    match=\"$(\n"
-			            "      printf %s \"${line}\" |\n"
-			            "        sed -ne 's/^.*inet6\\? \\([0-9a-f:.]\\+\\)\\/[0-9]\\+.*$/\\1/; t P; b; : P; p'\n"
-			            "    )\"\n"
-			            "    [ -n \"${match}\" ] ||\n"
-			            "      continue\n"
-			            "    restore=\"${restore:+${restore}${NL}}-I PREROUTING ! -i ${interface} -d ${match} -m addrtype ! --src-type LOCAL -j DROP\"\n"
-			            "  done\n"
-			            "  restore=\"${restore:+${restore}${NL}}COMMIT${NL}*mangle${NL}-I POSTROUTING -m mark --mark ${table} -p udp -j CONNMARK --save-mark${NL}-I PREROUTING -p udp -j CONNMARK --restore-mark${NL}COMMIT\"\n"
-			            "  ! [ \"${proto}\" = '-4' ] ||\n"
-			            "    echo 1 > /proc/sys/net/ipv4/conf/all/src_valid_mark\n"
-			            "  printf '%s\\n' \"${restore}\" |\n"
-			            "    cmd \"${iptables}-restore\" -n\n"
-			            "}\n", "%s", "%s");
-			fclose(fp);
-			chmod(WG_SCRIPTS_DIR"/route-default.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
-		}
-	}
+	/* FW dir */
+	if (mkdir_if_none(WG_FW_DIR))
+		chmod(WG_FW_DIR, (S_IRUSR | S_IWUSR | S_IXUSR));
 }
 
 void wg_cleanup_dirs(void) {
@@ -355,67 +370,6 @@ int wg_set_iface_up(char *iface)
 	logmsg(LOG_WARNING, "unable to bring up wireguard interface %s!", iface);
 
 	return -1;
-}
-
-int wg_set_iface_dns(char *iface, char *dns)
-{
-	char fn[BUF_SIZE_32];
-	char *nv, *b;
-	FILE *fp;
-
-	if (dns[0] == '\0')
-		return 0;
-
-	if (eval(WG_SCRIPTS_DIR"/fw-dns-set.sh", iface, dns)) {
-		logmsg(LOG_WARNING, "unable to add firewall rules for wireguard interface %s's dns server(s)!", iface);
-		return -1;
-	}
-	else
-		logmsg(LOG_DEBUG, "wireguard interface %s has added firewall rules for its dns server(s)", iface);
-
-	memset(fn, 0, BUF_SIZE_32);
-	snprintf(fn, BUF_SIZE_32, WG_DNS_DIR"/%s.conf", iface);
-
-	fp = fopen(fn, "w");
-
-	nv = strdup(dns);
-	while ((b = strsep(&nv, ",")) != NULL)
-		fprintf(fp, "server=%s\n", b);
-
-	fclose(fp);
-
-	if (nv)
-		free(nv);
-
-	stop_dnsmasq();
-	start_dnsmasq();
-
-	return 0;
-}
-
-int wg_unset_iface_dns(char *iface)
-{
-	char fn[BUF_SIZE_32];
-
-	memset(fn, 0, BUF_SIZE_32);
-	snprintf(fn, BUF_SIZE_32, WG_DNS_DIR"/%s.conf", iface);
-
-	if (!f_exists(fn))
-		return 0;
-
-	remove(fn);
-
-	stop_dnsmasq();
-	start_dnsmasq();
-
-	if (eval(WG_SCRIPTS_DIR"/fw-dns-unset.sh", iface)) {
-		logmsg(LOG_WARNING, "unable to remove firewall rules for wireguard interface %s's dns server(s)!", iface);
-		return -1;
-	}
-	else
-		logmsg(LOG_DEBUG, "wireguard interface %s has removed firewall rules for its dns server(s)", iface);
-
-	return 0;
 }
 
 int wg_iface_script(int unit, char *script_name)
@@ -729,10 +683,14 @@ int wg_add_peer_privkey(char *iface, char *privkey, char *allowed_ips, char *pre
 
 	return wg_add_peer(iface, pubkey, allowed_ips, presharedkey, keepalive, endpoint, fwmark);
 }
-
+/*
 int wg_set_iptables(char *iface, char *port)
 {
-	if (eval(WG_SCRIPTS_DIR"/fw-add.sh", port, iface))
+	char buffer[BUF_SIZE_64];
+
+	memset(buffer, 0, BUF_SIZE_64);
+	snprintf(buffer, BUF_SIZE_64, WG_FW_DIR"/%s-fw.sh", iface);
+	if (eval(buffer, port, iface))
 		logmsg(LOG_WARNING, "unable to add iptable rules for wireguard interface %s on port %s!", iface, port);
 	else
 		logmsg(LOG_DEBUG, "iptable rules have been added for wireguard interface %s on port %s", iface, port);
@@ -742,9 +700,14 @@ int wg_set_iptables(char *iface, char *port)
 
 int wg_remove_iptables(char *iface, char *port)
 {
-	/* check if file exists first */
-	if (f_exists(WG_SCRIPTS_DIR"/fw-del.sh")) {
-		eval(WG_SCRIPTS_DIR"/fw-del.sh", port, iface);
+	char buffer[BUF_SIZE_64];
+
+	memset(buffer, 0, BUF_SIZE_64);
+	snprintf(buffer, BUF_SIZE_64, "%s/%s-fw-del.sh", WG_SCRIPTS_DIR, iface);
+
+	// check if file exists first
+	if (f_exists(buffer)) {
+		eval(buffer, port, iface);
 		logmsg(LOG_DEBUG, "iptable rules have been removed for wireguard interface %s on port %s", iface, port);
 	}
 	else {
@@ -754,7 +717,7 @@ int wg_remove_iptables(char *iface, char *port)
 
 	return 0;
 }
-
+*/
 int wg_remove_peer(char *iface, char *pubkey)
 {
 	if (eval("wg", "set", iface, "peer", pubkey, "remove")) {
@@ -844,15 +807,15 @@ void start_wireguard(int unit)
 	char buffer[BUF_SIZE];
 	char fwmark[BUF_SIZE_16];
 
-	/* set up directories for later use */
-	wg_setup_dirs();
-
 	/* determine interface */
 	memset(iface, 0, IF_SIZE);
 	snprintf(iface, IF_SIZE, "wg%d", unit);
 
 	/* prepare port value */
 	find_port(unit, port);
+
+	/* set up directories for later use */
+	wg_setup_dirs();
 
 	/* check if file is specified */
 	if (getNVRAMVar("wg%d_file", unit)[0] != '\0') {
@@ -889,10 +852,6 @@ void start_wireguard(int unit)
 
 		/* set interface mtu */
 		if (wg_set_iface_mtu(iface, getNVRAMVar("wg%d_mtu", unit)))
-			goto out;
-
-		/* set interface dns */
-		if (wg_set_iface_dns(iface, getNVRAMVar("wg%d_dns", unit)))
 			goto out;
 
 		/* check if keepalives are enabled from the router */
@@ -933,11 +892,27 @@ void start_wireguard(int unit)
 		/* run post up scripts */
 		wg_iface_post_up(unit);
 	}
-	/* set iptables rules */
-	if (wg_set_iptables(iface, port))
-		goto out;
+
+	/* create firewall script */
+	wg_build_firewall(unit, port, iface);
+
+	/* firewall + dns rules */
+	memset(buffer, 0, BUF_SIZE);
+	snprintf(buffer, BUF_SIZE, WG_FW_DIR"/%s-fw.sh", iface);
+
+	/* first remove existing firewall rule(s) */
+	run_del_firewall_script(buffer, WG_DIR_DEL_SCRIPT);
+
+	/* then add firewall rule(s) */
+	if (eval(buffer))
+		logmsg(LOG_WARNING, "unable to add iptable rules for wireguard interface %s on port %s!", iface, port);
+	else
+		logmsg(LOG_DEBUG, "iptable rules have been added for wireguard interface %s on port %s", iface, port);
 
 	logmsg(LOG_INFO, "wireguard (%s) started", iface);
+
+	//wg_setup_watchdog(unit);
+
 	return;
 
 out:
@@ -947,6 +922,7 @@ out:
 void stop_wireguard(int unit)
 {
 	char iface[IF_SIZE];
+	char buffer[BUF_SIZE];
 	int is_dev;
 
 	/* determine interface */
@@ -955,6 +931,11 @@ void stop_wireguard(int unit)
 
 	is_dev = eval("ip", "addr", "show", "dev", iface);
 
+	/* Remove cron job */
+	//memset(buffer, 0, BUF_SIZE);
+	//snprintf(buffer, BUF_SIZE, "CheckWireguard%d", unit);
+	//eval("cru", "d", buffer);
+
 	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
 		wg_quick_iface(iface, getNVRAMVar("wg%d_file", unit), 0);
 	else {
@@ -962,15 +943,60 @@ void stop_wireguard(int unit)
 		wg_iface_pre_down(unit);
 		wg_remove_iface(iface);
 		wg_iface_post_down(unit);
-		wg_unset_iface_dns(iface);
 	}
 
-	/* remove iptables rules */
-	find_port(unit, port);
-	wg_remove_iptables(iface, port);
+	/* remove firewall rules */
+	memset(buffer, 0, BUF_SIZE);
+	snprintf(buffer, BUF_SIZE, WG_FW_DIR"/%s-fw.sh", iface);
+	run_del_firewall_script(buffer, WG_DIR_DEL_SCRIPT);
 
 	if (!is_dev)
 		logmsg(LOG_INFO, "wireguard (%s) stopped", iface);
+}
+
+void run_wg_firewall_scripts(void)
+{
+	DIR *dir;
+	struct stat fs;
+	struct dirent *file;
+	char *fa;
+	char buffer[BUF_SIZE_64];
+
+	//wg_kill_switch();
+
+	if (chdir(WG_FW_DIR))
+		return;
+
+	dir = opendir(WG_FW_DIR);
+
+	logmsg(LOG_DEBUG, "*** %s: beginning all firewall scripts...", __FUNCTION__);
+
+	while ((file = readdir(dir)) != NULL) {
+		fa = file->d_name;
+
+		if ((fa[0] == '.') || (strcmp(fa, WG_DEL_SCRIPT) == 0))
+			continue;
+
+		memset(buffer, 0, BUF_SIZE_64);
+		snprintf(buffer, BUF_SIZE_64, "%s/", WG_FW_DIR);
+		strlcat(buffer, fa, BUF_SIZE_64);
+
+		/* check exe permission */
+		stat(buffer, &fs);
+		if (fs.st_mode & S_IXUSR) {
+			/* first remove existing firewall rule(s) */
+			run_del_firewall_script(buffer, WG_DIR_DEL_SCRIPT);
+
+			/* then (re-)add firewall rule(s) */
+			logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, buffer);
+			eval(buffer);
+		}
+		else
+			logmsg(LOG_DEBUG, "*** %s: skipping firewall script (not executable): %s", __FUNCTION__, buffer);
+	}
+	logmsg(LOG_DEBUG, "*** %s: done with all firewall scripts...", __FUNCTION__);
+
+	closedir(dir);
 }
 
 void write_wg_dnsmasq_config(FILE* f)
