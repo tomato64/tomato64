@@ -22,10 +22,10 @@ int wg_status(char *iface)
 
 	int status = 0;
 
-	if (fp = fopen(buffer, "r")) {
+	if ((fp = fopen(buffer, "r"))) {
 		fgets(buffer, BUF_SIZE, fp);
 		buffer[strcspn(buffer, "\n")] = 0;
-		if (strcmp(&buffer, "unknown") == 0 || strcmp(&buffer, "up") == 0)
+		if ((strcmp(buffer, "unknown") == 0) || (strcmp(buffer, "up") == 0))
 			status = 1;
 
 		fclose(fp);
