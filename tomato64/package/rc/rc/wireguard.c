@@ -56,12 +56,9 @@ void wg_build_firewall(int unit, char *port, char *iface) {
 	if ((fp = fopen(buffer, "w"))) {
 		fprintf(fp, "#!/bin/sh\n"
 		            "\n# FW\n"
-// check what it looks like, e.g. w pptpd, tinc, nginx, vsftpd, transmission
-//		            "iptables -t nat -A PREROUTING -p udp --dport %s -j ACCEPT\n"
 		            "iptables -A INPUT -p udp --dport %s -j %s\n"
 		            "iptables -A INPUT -i %s -j %s\n"
 		            "iptables -A FORWARD -i %s -j ACCEPT\n",
-//		            port,
 		            port, chain_in_accept,
 		            iface, chain_in_accept,
 		            iface);
@@ -683,41 +680,7 @@ int wg_add_peer_privkey(char *iface, char *privkey, char *allowed_ips, char *pre
 
 	return wg_add_peer(iface, pubkey, allowed_ips, presharedkey, keepalive, endpoint, fwmark);
 }
-/*
-int wg_set_iptables(char *iface, char *port)
-{
-	char buffer[BUF_SIZE_64];
 
-	memset(buffer, 0, BUF_SIZE_64);
-	snprintf(buffer, BUF_SIZE_64, WG_FW_DIR"/%s-fw.sh", iface);
-	if (eval(buffer, port, iface))
-		logmsg(LOG_WARNING, "unable to add iptable rules for wireguard interface %s on port %s!", iface, port);
-	else
-		logmsg(LOG_DEBUG, "iptable rules have been added for wireguard interface %s on port %s", iface, port);
-
-	return 0;
-}
-
-int wg_remove_iptables(char *iface, char *port)
-{
-	char buffer[BUF_SIZE_64];
-
-	memset(buffer, 0, BUF_SIZE_64);
-	snprintf(buffer, BUF_SIZE_64, "%s/%s-fw-del.sh", WG_SCRIPTS_DIR, iface);
-
-	// check if file exists first
-	if (f_exists(buffer)) {
-		eval(buffer, port, iface);
-		logmsg(LOG_DEBUG, "iptable rules have been removed for wireguard interface %s on port %s", iface, port);
-	}
-	else {
-		logmsg(LOG_DEBUG, "no iptable rules for wireguard interface %s on port %s!", iface, port);
-		return -1;
-	}
-
-	return 0;
-}
-*/
 int wg_remove_peer(char *iface, char *pubkey)
 {
 	if (eval("wg", "set", iface, "peer", pubkey, "remove")) {
@@ -911,8 +874,6 @@ void start_wireguard(int unit)
 
 	logmsg(LOG_INFO, "wireguard (%s) started", iface);
 
-	//wg_setup_watchdog(unit);
-
 	return;
 
 out:
@@ -930,11 +891,6 @@ void stop_wireguard(int unit)
 	snprintf(iface, IF_SIZE, "wg%d", unit);
 
 	is_dev = eval("ip", "addr", "show", "dev", iface);
-
-	/* Remove cron job */
-	//memset(buffer, 0, BUF_SIZE);
-	//snprintf(buffer, BUF_SIZE, "CheckWireguard%d", unit);
-	//eval("cru", "d", buffer);
 
 	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
 		wg_quick_iface(iface, getNVRAMVar("wg%d_file", unit), 0);
@@ -961,8 +917,6 @@ void run_wg_firewall_scripts(void)
 	struct dirent *file;
 	char *fa;
 	char buffer[BUF_SIZE_64];
-
-	//wg_kill_switch();
 
 	if (chdir(WG_FW_DIR))
 		return;
