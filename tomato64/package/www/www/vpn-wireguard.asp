@@ -337,7 +337,7 @@ function mapConfigToFields(event) {
 		E('_wg'+unit+'_key').value = config.interface.privkey;
 
 	if (config.interface.port)
-		if (config.interface.port == 51820 + unit)
+		if (config.interface.port == (51820 + unit))
 			E('_wg'+unit+'_port').value = ''
 		else
 			E('_wg'+unit+'_port').value = config.interface.port;
@@ -347,6 +347,9 @@ function mapConfigToFields(event) {
 
 	if (config.interface.address)
 		E('_wg'+unit+'_ip').value = config.interface.address;
+
+	if (config.interface.dns)
+		E('_wg'+unit+'_dns').value = config.interface.dns;
 
 	if (config.interface.mtu)
 		E('_wg'+unit+'_mtu').value = config.interface.mtu;
@@ -462,7 +465,7 @@ function mapConfig(contents) {
 			if (line.match(/\#[a-zA-z]\s?.*\=\s?[a-zA-z0-9].*$/))
 				line = line.substr(1);
 			else
-			line = line.slice(0, comment_index);
+				line = line.slice(0, comment_index);
 		}
 
 		if (!line)
@@ -551,7 +554,7 @@ function mapConfig(contents) {
 					target.allowed_ips = [target.allowed_ips, value].join(',');
 				break;
 			case 'endpoint':
-				target.endpoint = value;
+				target.endpoint = value.split(':')[0];;
 				break;
 			case 'persistentkeepalive':
 				target.keepalive = value;
