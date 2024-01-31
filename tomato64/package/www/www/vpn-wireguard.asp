@@ -1421,25 +1421,25 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 				'[Peer]\n'
 			);
 
-			if (peer[1] != '')
+			if (peer[1].trim() != '')
 				content.push('#Alias = '+peer[1]+'\n');
 
 			content.push('PublicKey = '+peer_pubkey+'\n');
 
-			if (peer[4] != '')
+			if (peer[4].trim() != '')
 				content.push('PresharedKey = '+peer[4]+'\n');
 
 			content.push('AllowedIPs = '+peer[5]);
 
-			if (peer[6] != '')
+			if (peer[6].trim() != '')
 				content.push(','+peer[6]);
 			content.push('\n');
 
 			if (keepalive)
 				content.push('PersistentKeepalive = 25\n');
 
-			if (peer[2] != '')
-				content.push('Endpoint = '+peer[2]+'\n');
+			if (peer[2].trim() != '')
+				content.push('Endpoint = '+peer[2]+':'+port+'\n');
 		}
 	}
 
