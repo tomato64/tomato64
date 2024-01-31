@@ -32,11 +32,11 @@
 }
 
 .co3, co4 {
-	width: 19%;
+	width: 29%;
 }
 
 .co6 {
-	width: 40%;
+	width: 20%;
 }
 
 .co8 {
@@ -718,9 +718,9 @@ StatusRefresh.prototype.refresh = function(text) {
 	var cmdresult;
 	var output;
 	eval(text);
-	if (cmdresult == 'Unable to access interface: No such device\n' || cmdresult == 'Unable to access interface: Protocol not supported\n') {
+
+	if ((cmdresult == 'Unable to access interface: No such device\n') || (cmdresult == 'Unable to access interface: Protocol not supported\n'))
 		output = 'Wireguard device wg'+this.unit+' is down';
-	}
 	else {
 		var [iface, peers] = decodeDump(cmdresult, this.unit);
 		output = encodeStatus(iface, peers);
@@ -741,7 +741,7 @@ PeerGrid.prototype.setup = function() {
 		{ type: 'text', maxlen: 128 },
 		{ type: 'text', maxlen: 3 },
 	]);
-	this.headerSet(['QR', 'Cfg', 'Alias','Endpoint','Private Key','Public Key','Preshared Key','VPN Interface IP','Allowed IPs','KA']);
+	this.headerSet(['QR', 'Cfg', 'Alias','Endpoint','Private Key','Public Key','Preshared Key','IP','Allowed IPs','KA']);
 	this.disableNewEditor(true);
 
 	var peers = decodePeers(this.unit);
@@ -762,7 +762,6 @@ PeerGrid.prototype.setup = function() {
 }
 
 PeerGrid.prototype.edit = function(cell) {
-
 	var row = PR(cell);
 	var data = row.getRowData();
 
@@ -803,6 +802,7 @@ PeerGrid.prototype.edit = function(cell) {
 PeerGrid.prototype.insertData = function(at, data) {
 	if (at == -1)
 		at = this.tb.rows.length ;
+
 	var view = this.dataToView(data);
 	var qr = '';
 	var cfg = '';
@@ -811,6 +811,7 @@ PeerGrid.prototype.insertData = function(at, data) {
 		cfg = '<img src="cfg-icon.svg" alt="" title="Download Config File" height="16" onclick="genPeerGridConfigFile(event,'+this.unit+','+at+')">';
 	}
 	view.unshift(qr, cfg);
+	view[5] = view[5].substring(0,8)+' ... '+view[5].slice(-8);
 
 	return this.insert(at, data, view, false);
 }
