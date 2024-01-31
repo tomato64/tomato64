@@ -2,5 +2,6 @@
 .extract
 .patch
 .configure
+*.gcom
 hotplug2.rules
 src/

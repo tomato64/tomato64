@@ -15,6 +15,9 @@ endef
 define COMGT_TOMATO_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/comgt $(TARGET_DIR)/usr/sbin
 	ln -sf comgt $(TARGET_DIR)/usr/sbin/gcom
+
+	mkdir -p $(BR2_EXTERNAL_TOMATO64_PATH)/package/rom/rom/rom/etc/gcom
+	cp $(@D)/gcom/* $(BR2_EXTERNAL_TOMATO64_PATH)/package/rom/rom/rom/etc/gcom
 endef
 
 $(eval $(generic-package))
