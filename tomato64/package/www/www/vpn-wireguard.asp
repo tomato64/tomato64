@@ -719,7 +719,7 @@ StatusRefresh.prototype.refresh = function(text) {
 	var output;
 	eval(text);
 
-	if ((cmdresult == 'Unable to access interface: No such device\n') || (cmdresult == 'Unable to access interface: Protocol not supported\n'))
+	if (cmdresult == 'Unable to access interface: No such device\n' || cmdresult == 'Unable to access interface: Protocol not supported\n')
 		output = 'Wireguard device wg'+this.unit+' is down';
 	else {
 		var [iface, peers] = decodeDump(cmdresult, this.unit);
@@ -780,7 +780,7 @@ PeerGrid.prototype.edit = function(cell) {
 
 	var interface_port = nvram[this.interface_name+'_port'];
 	if (interface_port == '')
-		interface_port = 51820 + this.unit;
+		interface_port = (51820 + this.unit);
 
 	alias.value = data[0];
 	endpoint.value = data[1];
@@ -990,14 +990,14 @@ function verifyPeerFields(unit, require_privkey) {
 		ferror.clear(privkey);
 
 	if (psk.value && !window.wireguard.validateBase64Key(psk.value)) {
-		ferror.set(psk, 'A valid PSK must be provided or left blank', !result);
+		ferror.set(psk, 'A valid PresharedKey must be provided or left blank', !result);
 		result = false;
 	}
 	else
 		ferror.clear(psk);
 
 	if (!verifyCIDR(ip.value)) {
-		ferror.set(ip, 'A valid IP CIDR must be provided to generate a configuration file', !result);
+		ferror.set(ip, 'A valid CIDR (IP/MASK) must be provided to generate a configuration file', !result);
 		result = false;
 	}
 	else
@@ -1056,7 +1056,7 @@ function generateInterfaceKey(unit) {
 	if (E('_wg'+unit+'_key').value == '')
 		response = true;
 	else
-		response = confirm('Regenerating the interface private key will\ncause any generated peers to stop working!\nDo you want to continue?');
+		response = confirm('Regenerating the interface Private Key will stop any\ndefined peers from communicating with this device!\n\nDo you want to continue?');
 
 	if (response) {
 		var keys = window.wireguard.generateKeypair();
@@ -1979,18 +1979,18 @@ function init() {
 			W('<div class="section-title">Interface<\/div>');
 			createFieldTable('', [
 				{ title: 'Enable on Start', name: 'f_'+t+'_enable', type: 'checkbox', value: nvram[t+'_enable'] == 1 },
-				{ title: 'Config file', name: t+'_file', type: 'text', placeholder: '(optional)', maxlen: 64, size: 64, value: nvram[t+'_file'] },
+				{ title: 'Config file', name: t+'_file', type: 'text', placeholder: 'optional', maxlen: 64, size: 64, value: nvram[t+'_file'] },
 				{ title: 'Port', name: t+'_port', type: 'text', maxlen: 5, size: 10, placeholder: (51820+i), value: nvram[t+'_port'] },
 				{ title: 'Private Key', multi: [
 					{ title: '', name: t+'_key', type: 'password', maxlen: 44, size: 48, value: nvram[t+'_key'], peekaboo: 1 },
 					{ title: '', custom: '<input type="button" value="Generate" onclick="generateInterfaceKey('+i+')" id="'+t+'_keygen">' }
 				] },
 				{ title: 'Public Key', multi: [
-					{ title: '', name: t+'_pubkey', type: 'text', maxlen: 44, size: 48, disabled: ""},
+					{ title: '', name: t+'_pubkey', type: 'text', maxlen: 10, size: 48, disabled: ""},
 					{ title: '', custom: '<input type="button" value="Copy" onclick="copyInterfacePubKey('+i+')" id="'+t+'_pubkey_copy">' }
 				] },
-				{ title: 'VPN Interface IP', name: t+'_ip', type: 'text', maxlen: 32, size: 17, value: nvram[t+'_ip'], placeholder: '(CIDR format)' },
-				{ title: 'DNS Servers', name: t+'_dns', type: 'text', maxlen: 128, size: 64, value: nvram[t+'_dns'], placeholder: 'comma separated' },
+				{ title: 'VPN Interface IP', name: t+'_ip', type: 'text', maxlen: 32, size: 17, value: nvram[t+'_ip'], placeholder: 'CIDR format' },
+				{ title: 'DNS Servers (out)', name: t+'_dns', type: 'text', maxlen: 128, size: 64, value: nvram[t+'_dns'], placeholder: 'comma separated' },
 				{ title: 'FWMark', name: t+'_fwmark', type: 'text', maxlen: 8, size: 8, value: nvram[t+'_fwmark'] },
 				{ title: 'MTU', name: t+'_mtu', type: 'text', maxlen: 4, size: 4, value: nvram[t+'_mtu'] },
 				{ title: 'Respond to DNS', name: 'f_'+t+'_adns', type: 'checkbox', suffix: '&nbsp;<small>enables dnsmasq to resolve queries arriving on this interface<\/small>', value: nvram.wg_adns.indexOf(''+i) >= 0 },
@@ -2002,8 +2002,8 @@ function init() {
 			createFieldTable('', [
 				{ title: 'Router behind NAT', name: 'f_'+t+'_ka', type: 'checkbox', suffix: '&nbsp;<small>enables 25sec keepalives from this router towards the defined peers<\/small>', value: nvram[t+'_ka'] == 1 },
 				{ title: 'Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: nvram[t+'_endpoint'][0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(nvram[t+'_endpoint'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">' },
-				{ title: 'Allowed IPs', name: t+'_aip', type: 'text', placeholder: "(CIDR format) / comma separated", maxlen: 128, size: 64, value: nvram[t+'_aip'] },
-				{ title: 'DNS Servers for Peers', name: t+'_peer_dns', type: 'text', maxlen: 128, size: 64, placeholder: "comma separated", value: nvram[t+'_peer_dns'] },
+				{ title: 'Allowed IPs', name: t+'_aip', type: 'text', placeholder: 'CIDR format / comma separated', maxlen: 128, size: 64, value: nvram[t+'_aip'] },
+				{ title: 'DNS Servers for Peers', name: t+'_peer_dns', type: 'text', maxlen: 128, size: 64, placeholder: 'comma separated', value: nvram[t+'_peer_dns'] },
 				{ title: 'Push LAN0 (br0) to peers', name: 'f_'+t+'_lan0', type: 'checkbox', value: nvram[t+'_lan0'] == 1 },
 				{ title: 'Push LAN1 (br1) to peers', name: 'f_'+t+'_lan1', type: 'checkbox', value: nvram[t+'_lan1'] == 1 },
 				{ title: 'Push LAN2 (br2) to peers', name: 'f_'+t+'_lan2', type: 'checkbox', value: nvram[t+'_lan2'] == 1 },
@@ -2025,7 +2025,7 @@ function init() {
 			W('<div id="'+t+'-peers">');
 			W('<div class="section-title">Config Generation<\/div>');
 			createFieldTable('', [
-				{ title: 'Peer Communication', name: t+'_com', type: 'select', options: [['0','Hub and Spoke'],['1','Full Mesh (Endpoint Only)'],['2','Full Mesh']], value: nvram[t+'_com'] || 0 },
+				{ title: 'Type of VPN', name: t+'_com', type: 'select', options: [['0','Internal - Hub (this device) and Spoke (peers)'],['1','Internal - Full Mesh (defined Endpoint only)'],['2','Internal - Full Mesh'],['3','External - VPN Provider']], value: nvram[t+'_com'] || 0 },
 				{ title: 'Port', name: 'f_'+t+'_peer_port', type: 'text', maxlen: 5, size: 10, value: nvram[t+'_port'] == '' ? 51820+i : nvram[t+'_port'] },
 				{ title: 'FWMark', name: 'f_'+t+'_peer_fwmark', type: 'text', maxlen: 8, size: 8, value: '0'}
 			]);
@@ -2055,13 +2055,13 @@ function init() {
 
 			W('<div class="section-title">Peer\'s Parameters<\/div>');
 			createFieldTable('', [
-				{ title: 'Alias', name: 'f_'+t+'_peer_alias', type: 'text', maxlen: 32, size: 32, placeholder: "optional" },
-				{ title: 'Endpoint', name: 'f_'+t+'_peer_ep', type: 'text', maxlen: 64, size: 64, placeholder: "optional" },
+				{ title: 'Alias', name: 'f_'+t+'_peer_alias', type: 'text', maxlen: 32, size: 32, placeholder: 'optional' },
+				{ title: 'Endpoint', name: 'f_'+t+'_peer_ep', type: 'text', maxlen: 64, size: 48, placeholder: 'optional' },
 				{ title: 'Private Key', name: 'f_'+t+'_peer_privkey', type: 'text', maxlen: 44, size: 48 },
 				{ title: 'Public Key', name: 'f_'+t+'_peer_pubkey', type: 'text', maxlen: 44, size: 48 },
 				{ title: 'Preshared Key', name: 'f_'+t+'_peer_psk', type: 'text', maxlen: 44, size: 48 },
-				{ title: 'VPN Interface IP', name: 'f_'+t+'_peer_ip', type: 'text', placeholder: "(CIDR format)", maxlen: 64, size: 64 },
-				{ title: 'Allowed IPs', name: 'f_'+t+'_peer_aip', type: 'text', placeholder: "(CIDR format) / comma separated", maxlen: 128, size: 64 },
+				{ title: 'VPN Interface IP', name: 'f_'+t+'_peer_ip', type: 'text', placeholder: 'CIDR format', maxlen: 64, size: 64 },
+				{ title: 'Allowed IPs', name: 'f_'+t+'_peer_aip', type: 'text', placeholder: 'CIDR format / comma separated', maxlen: 128, size: 64 },
 				{ title: 'Peer behind NAT', name: 'f_'+t+'_peer_ka', type: 'checkbox', value: false, suffix: '&nbsp;<small>enables 25sec keepalives from this peer towards the other peers<\/small>' },
 				{ title: '', custom: '<input type="button" value="Add to Peers" onclick="addPeer('+i+')" id="'+t+'_peer_add">' }
 			]);
@@ -2160,11 +2160,12 @@ function init() {
 		<ul>
 			<li><b>Config Generation</b></li>
 			<ul>
-				<li><b>Peer Communication</b> - This field dicatates which peers are added to generated configurations.</li>
+				<li><b>Type of VPN</b> - This field defines how peers interact.</li>
 				<ul>
-					<li><b>Hub and Spoke</b> - Peers will only communicate with the router, and not each other. Implies /32 netmask for the peers</li>
-					<li><b>Full Mesh (Endpoint Only)</b> - Peers will communicate to any peer with an endpoint. Implies /24 netmask for the peers. Peers with endpoints will communicate with all peers.</li>
-					<li><b>Full Mesh</b> - All peers are added to each other's configuration regardless of the endpoint field being congigured or not. Implies /24 netmask for the peers.</li>
+					<li><b>Internal Hub and Spoke</b> - Peers will only communicate with the router, and not each other. Implies /32 netmask for the peers</li>
+					<li><b>Internal Full Mesh (Endpoint Only)</b> - Peers will communicate to any peer with an endpoint. Implies /24 netmask for the peers. Peers with endpoints will communicate with all peers.</li>
+					<li><b>Internal Full Mesh</b> - All peers are added to each other's configuration regardless of the endpoint field being congigured or not. Implies /24 netmask for the peers.</li>
+					<li><b>External VPN Provider</b> - This VPN Access the Internet via a 3rd party VPN provider.</li>
 				</ul>
 				<li><b>Port</b> - The port to use for the wireguard interface of generated configurations.</li>
 				<li><b>FWMark</b> - The FWMark to use for the wireguard interface of generated configurations.</li>
