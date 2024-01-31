@@ -52,8 +52,6 @@
 #define USBPRINTER_MOD	"usblp"
 #ifndef TOMATO64
 #define SCSI_WAIT_MOD	"scsi_wait_scan"
-#else
-#define SCSI_WAIT_MOD	"scsi_scan_async"
 #endif /* TOMATO64 */
 #define USBFS		"usbfs"
 
@@ -266,7 +264,9 @@ void start_usb(void)
 		if (nvram_get_int("usb_storage")) {
 			/* insert scsi and storage modules before usb drivers */
 			modprobe(SCSI_MOD);
+#ifndef TOMATO64
 			modprobe(SCSI_WAIT_MOD);
+#endif /* TOMATO64 */
 			modprobe(SD_MOD);
 			modprobe(USBSTORAGE_MOD);
 
@@ -505,7 +505,9 @@ void remove_usb_storage_module(void)
 #endif
 	modprobe_r(SD_MOD);
 	modprobe_r(USBSTORAGE_MOD);
+#ifndef TOMATO64
 	modprobe_r(SCSI_WAIT_MOD);
+#endif /* TOMATO64 */
 	modprobe_r(SCSI_MOD);
 #ifdef TCONFIG_MICROSD
 	if (nvram_get_int("usb_mmc") != 1) {
