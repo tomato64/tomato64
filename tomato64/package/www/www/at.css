@@ -1723,12 +1723,14 @@ div#status-tab > br {
 
 .tomato-grid br,
 .about > br,
+.status-result tt > br,
 #bwm-h-ctrl > br,
 #afu-progress > br,
 #result br {
 	display: inline;
 }
 
+.status-result tt,
 #result tt {
 	font-family: monospace !important;
 	font-size: smaller;
