@@ -1989,17 +1989,17 @@ function init() {
 				{ title: 'DNS Servers', name: t+'_dns', type: 'text', maxlen: 128, size: 64, value: nvram[t+'_dns'], placeholder: 'comma separated' },
 				{ title: 'FWMark', name: t+'_fwmark', type: 'text', maxlen: 8, size: 8, value: nvram[t+'_fwmark'] },
 				{ title: 'MTU', name: t+'_mtu', type: 'text', maxlen: 4, size: 4, value: nvram[t+'_mtu'] },
-				{ title: 'Respond to DNS', name: 'f_'+t+'_adns', type: 'checkbox', value: nvram.wg_adns.indexOf(''+i) >= 0 },
+				{ title: 'Respond to DNS', name: 'f_'+t+'_adns', type: 'checkbox', suffix: '&nbsp;<small>enables dnsmasq to resolve queries arriving on this interface<\/small>', value: nvram.wg_adns.indexOf(''+i) >= 0 },
 				{ title: 'Routing Mode', name: 'f_'+t+'_route', type: 'select', options: [['0','Off'],['1','Auto'],['2','Custom Table']], value: nvram[t+'_route'][0] || 1, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_table" value="'+(nvram[t+'_route'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_table" maxlength="32" size="32">' }
 			]);
 			W('<br>');
 
 			W('<div class="section-title">Peer Parameters<\/div>');
 			createFieldTable('', [
-				{ title: 'Router behind NAT', name: 'f_'+t+'_ka', type: 'checkbox', value: nvram[t+'_ka'] == 1 },
+				{ title: 'Router behind NAT', name: 'f_'+t+'_ka', type: 'checkbox', suffix: '&nbsp;<small>enables 25sec keepalives from this router towards the defined peers<\/small>', value: nvram[t+'_ka'] == 1 },
 				{ title: 'Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: nvram[t+'_endpoint'][0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(nvram[t+'_endpoint'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">' },
-				{ title: 'Allowed IPs', name: t+'_aip', type: 'text', placeholder: "(CIDR format)", maxlen: 128, size: 64, suffix: '&nbsp;<small>comma separated (eg. peer LAN subnet)<\/small>', value: nvram[t+'_aip'] },
-				{ title: 'DNS Servers for Peers', name: t+'_peer_dns', type: 'text', maxlen: 128, size: 64, value: nvram[t+'_peer_dns'] },
+				{ title: 'Allowed IPs', name: t+'_aip', type: 'text', placeholder: "(CIDR format) / comma separated", maxlen: 128, size: 64, value: nvram[t+'_aip'] },
+				{ title: 'DNS Servers for Peers', name: t+'_peer_dns', type: 'text', maxlen: 128, size: 64, placeholder: "comma separated", value: nvram[t+'_peer_dns'] },
 				{ title: 'Push LAN0 (br0) to peers', name: 'f_'+t+'_lan0', type: 'checkbox', value: nvram[t+'_lan0'] == 1 },
 				{ title: 'Push LAN1 (br1) to peers', name: 'f_'+t+'_lan1', type: 'checkbox', value: nvram[t+'_lan1'] == 1 },
 				{ title: 'Push LAN2 (br2) to peers', name: 'f_'+t+'_lan2', type: 'checkbox', value: nvram[t+'_lan2'] == 1 },
@@ -2043,7 +2043,7 @@ function init() {
 
 			W('<div class="section-title">Peer Generation<\/div>');
 			createFieldTable('', [
-				{ title: 'Generate PSK', name: 'f_'+t+'_peer_psk_gen', type: 'checkbox', value: true },
+				{ title: 'Generate PSK', name: 'f_'+t+'_peer_psk_gen', type: 'checkbox', value: true, suffix: '&nbsp;<small>strenghten encyption with PresharedKey<\/small>' },
 				{ title: '', custom: '<input type="button" value="Generate Peer" onclick="generatePeer('+i+')" id="'+t+'_peer_gen">' }
 			]);
 			W('<br>');
@@ -2051,14 +2051,14 @@ function init() {
 
 			W('<div class="section-title">Peer\'s Parameters<\/div>');
 			createFieldTable('', [
-				{ title: 'Alias', name: 'f_'+t+'_peer_alias', type: 'text', maxlen: 32, size: 32 },
-				{ title: 'Endpoint', name: 'f_'+t+'_peer_ep', type: 'text', maxlen: 64, size: 64 },
+				{ title: 'Alias', name: 'f_'+t+'_peer_alias', type: 'text', maxlen: 32, size: 32, placeholder: "optional" },
+				{ title: 'Endpoint', name: 'f_'+t+'_peer_ep', type: 'text', maxlen: 64, size: 64, placeholder: "optional" },
 				{ title: 'Private Key', name: 'f_'+t+'_peer_privkey', type: 'text', maxlen: 44, size: 48 },
 				{ title: 'Public Key', name: 'f_'+t+'_peer_pubkey', type: 'text', maxlen: 44, size: 48 },
 				{ title: 'Preshared Key', name: 'f_'+t+'_peer_psk', type: 'text', maxlen: 44, size: 48 },
 				{ title: 'VPN Interface IP', name: 'f_'+t+'_peer_ip', type: 'text', placeholder: "(CIDR format)", maxlen: 64, size: 64 },
-				{ title: 'Allowed IPs', name: 'f_'+t+'_peer_aip', type: 'text', placeholder: "(CIDR format)", suffix: '&nbsp;<small>comma separated (eg. peer LAN subnet)<\/small>', maxlen: 128, size: 64 },
-				{ title: 'Peer behind NAT', name: 'f_'+t+'_peer_ka', type: 'checkbox', value: false },
+				{ title: 'Allowed IPs', name: 'f_'+t+'_peer_aip', type: 'text', placeholder: "(CIDR format) / comma separated", maxlen: 128, size: 64 },
+				{ title: 'Peer behind NAT', name: 'f_'+t+'_peer_ka', type: 'checkbox', value: false, suffix: '&nbsp;<small>enables 25sec keepalives from this peer towards the other peers<\/small>' },
 				{ title: '', custom: '<input type="button" value="Add to Peers" onclick="addPeer('+i+')" id="'+t+'_peer_add">' }
 			]);
 			W('<\/div>');
@@ -2117,7 +2117,7 @@ function init() {
 				<li><b>DNS Servers</b> - Comma separated list of DNS servers to use for the wireguard interface.</li>
 				<li><b>FWMark</b> - The value of the FWMark to use for routing. If left as 0, it will the default value.</li>
 				<li><b>MTU</b> - The maximum transmission unit for the wireguard interface.</li>
-				<li><b>Respond to DNS</b> - If checked, this interface will respond to DNS requests using the router's dnsmasq service.</li>
+				<li><b>Respond to DNS</b> - If checked, this interface will respond to DNS requests using the router's dnsmasq service. This is usually wanted for a site-to-site scenario.</li>
 				<li><b>Routing Mode</b> - The routing mode to use when setting up the wireguard interface</li>
 				<ul>
 					<li><b>Off</b> - Will not add routing rules for the wireguard interface.</li>
@@ -2158,9 +2158,9 @@ function init() {
 			<ul>
 				<li><b>Peer Communication</b> - This field dicatates which peers are added to generated configurations.</li>
 				<ul>
-					<li><b>Hub and Spoke</b> - Peers will only communicate with the router, and not each other.</li>
-					<li><b>Full Mesh (Endpoint Only)</b> - Peers will communicate to any peer with an endpoint. Peers with endpoints will communicate with all peers.</li>
-					<li><b>Full Mesh</b> - All peers are added to each other's configuration.</li>
+					<li><b>Hub and Spoke</b> - Peers will only communicate with the router, and not each other. Implies /32 netmask for the peers</li>
+					<li><b>Full Mesh (Endpoint Only)</b> - Peers will communicate to any peer with an endpoint. Implies /24 netmask for the peers. Peers with endpoints will communicate with all peers.</li>
+					<li><b>Full Mesh</b> - All peers are added to each other's configuration regardless of the endpoint field being congigured or not. Implies /24 netmask for the peers.</li>
 				</ul>
 				<li><b>Port</b> - The port to use for the wireguard interface of generated configurations.</li>
 				<li><b>FWMark</b> - The FWMark to use for the wireguard interface of generated configurations.</li>
@@ -2179,8 +2179,8 @@ function init() {
 		<ul>
 			<li><b>Peer Generation</b></li>
 			<ul>
-				<li><b>Generate PSK</b> - If checked, will generate a PSK for this peer when Generate Peer is clicked.</li>
-				<li><b>Generate Peer</b> - This button will generate a new peer and populate the fields of the Peer's Parameters subsection.</li>
+				<li><b>Generate PSK</b> - If checked, will generate a PresharedKey for this network and assign the very same to each peer when <i>Generate Peer</i> is clicked.</li>
+				<li><b>Generate Peer</b> - This button will generate a new peer and populate the basic fields of the Peer's Parameters subsection.</li>
 			</ul>
 		</ul>
 		<ul>
