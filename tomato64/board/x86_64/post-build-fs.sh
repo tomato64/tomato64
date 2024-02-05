@@ -57,3 +57,9 @@ ln -sf /sbin/ip $TARGET_DIR/usr/sbin/ip
 touch $TARGET_DIR/tmp/etc/group
 touch $TARGET_DIR/tmp/etc/passwd
 touch $TARGET_DIR/tmp/etc/shadow
+
+# symlinks from others/rootprep.sh
+ln -sf /tmp/var/wwwext $TARGET_DIR/www/ext
+ln -sf /tmp/var/wwwext $TARGET_DIR/www/user
+ln -sf /www/ext/proxy.pac $TARGET_DIR/www/proxy.pac
+ln -sf /www/ext/proxy.pac $TARGET_DIR/www/wpad.dat
