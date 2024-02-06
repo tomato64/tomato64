@@ -1601,14 +1601,6 @@ function displayStatus(unit, text) {
 	spin(0, 'wg'+unit+'_status_wait');
 }
 
-function escapeText(s) {
-	function esc(c) {
-		return '&#'+c.charCodeAt(0)+';';
-	}
-
-	return s.replace(/[&"'<>]/g, esc).replace(/\n/g, ' <br>').replace(/ /g, '&nbsp;');
-}
-
 function netmaskToCIDR(mask) {
 	var maskNodes = mask.match(/(\d+)/g);
 	var cidr = 0;

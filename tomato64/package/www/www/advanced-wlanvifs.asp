@@ -548,14 +548,6 @@ function post_pre_submit_form(s) {
 	cmd.post('shell.cgi', 'action=execute&command='+escapeCGI(s.replace(/\r/g, '')));
 }
 
-function escapeText(s) {
-	function esc(c) {
-		return '&#'+c.charCodeAt(0)+';';
-	}
-
-	return s.replace(/[&"'<>]/g, esc).replace(/\n/g, ' <br>').replace(/ /g, '&nbsp;');
-}
-
 function verifyFields(focused, quiet) {
 	var i;
 	var ok = 1;

@@ -2273,6 +2273,14 @@ function UT(v) {
 	return (typeof(v) == 'undefined') ? '' : ''+v;
 }
 
+function escapeText(s) {
+	function esc(c) {
+		return '&#'+c.charCodeAt(0)+';';
+	}
+
+	return s.replace(/[&"'<>]/g, esc).replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
+}
+
 function escapeHTML(s) {
 	function esc(c) {
 		return '&#'+c.charCodeAt(0)+';';

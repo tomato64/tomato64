@@ -209,14 +209,6 @@ th.verifyFields = function(row, quiet) {
 	return ok;
 }
 
-function escapeText(s) {
-	function esc(c) {
-		return '&#'+c.charCodeAt(0)+';';
-	}
-
-	return s.replace(/[&"'<>]/g, esc).replace(/\n/g, ' <br>').replace(/ /g, '&nbsp;');
-}
-
 function spin(x, which) {
 	E(which).style.display = (x ? 'inline-block' : 'none');
 	if (!x)
