@@ -611,11 +611,6 @@ img[id^="spin2"],
 	text-align: right;
 }
 
-#bwm-h-ctrl,
-#iperf_client_helper {
-	text-align: center;
-}
-
 .bwm-svg,
 .qos-svg {
 	border: none;
@@ -702,6 +697,7 @@ table.tomato-grid.vpn-status-table {
 	width: 99%;
 }
 
+div[id$="peers-grid"] .co6,
 #aft-grid .co1,
 #aft-grid .co2,
 #tg-grid .co3,
@@ -736,6 +732,15 @@ table.tomato-grid.vpn-status-table {
 	margin-bottom: 12px;
 }
 
+.import-section,
+.section-centered,
+.note-warning,
+#bwm-h-ctrl,
+#iperf_client_helper,
+div#ports td.title.indent2,
+#log-table .co3,
+#log-table-header .co3,
+#vlan-grid,
 #wlif-grid .co2,
 #wlif-grid .co3,
 #wlif-grid .co4,
@@ -775,6 +780,8 @@ div[id$="_users"] .co2 {
 	width: 17%;
 }
 
+div[id$="peers-grid"] .co3,
+div[id$="peers-grid"] .co4,
 #th-grid .co3 {
 	width: 29%;
 }
@@ -881,6 +888,7 @@ div[id$="_users"] .co2 {
 	background: #95a9d5;
 }
 
+.import-section,
 #term-div table {
 	width: 100%;
 }
@@ -931,6 +939,7 @@ div[id$="_users"] .co2 {
 	width: 15%;
 }
 
+div[id$="peers-grid"] .co8,
 #dev-grid .co4 {
 	width: 16%;
 }
@@ -1050,6 +1059,8 @@ img[id^="barnoise_"] {
 	width: 23%;
 }
 
+.afu-form input,
+.import-file,
 #qos-cl-grid .x2c {
 	width: 41%;
 }
@@ -1182,6 +1193,8 @@ div[id$="_users"] .co1 {
 	width: 15%;
 }
 
+div[id$="peers-grid"] .co1,
+div[id$="peers-grid"] .co2,
 #bwlg-grid .co1 {
 	width: 3%;
 	text-align: center;
@@ -1219,10 +1232,6 @@ div[id$="_users"] .co1 {
 
 #bs-grid .co3 {
 	width: 120px;
-}
-
-#vlan-grid {
-	text-align: center;
 }
 
 #vlan-grid .co2 {
@@ -1368,11 +1377,6 @@ div[id$="_users"] .co1 {
 	width: 1%;
 }
 
-#log-table .co3,
-#log-table-header .co3 {
-	text-align: center;
-}
-
 #fmsg {
 	background: #b55;
 	color: #fff;
@@ -1391,10 +1395,6 @@ div[id$="_users"] .co1 {
 
 .afu-form {
 	padding-bottom: 15px;
-}
-
-div#ports td.title.indent2 {
-	text-align: center;
 }
 
 span#qos_numtotalconn {
@@ -1432,10 +1432,6 @@ div#unknown_router > .section-title {
 	text-align: center;
 }
 
-.section-centered {
-	text-align: center;
-}
-
 #notice {
 	background: #ffc;
 	border: 1px solid #cbb;
@@ -1454,10 +1450,6 @@ div#unknown_router > .section-title {
 	padding: 0.5em;
 	margin: 1em;
 	font-size: 0.9em
-}
-
-.note-warning {
-	text-align: center;
 }
 
 .about {

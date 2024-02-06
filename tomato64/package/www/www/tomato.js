@@ -231,6 +231,7 @@ var form = {
 			this.addId(fom);
 			if (url) fom.action = url;
 			fom.submit();
+			if (typeof update_nvram === 'function') update_nvram(fom);
 			return;
 		}
 
@@ -267,6 +268,8 @@ var form = {
 					msg.innerHTML = escapeHTML(RegExp.$1);
 				else
 					msg.innerHTML = 'Saved';
+
+				if (typeof update_nvram === 'function') update_nvram(fom);
 			}
 			setTimeout(
 				function() {
@@ -1276,8 +1279,10 @@ TomatoGrid.prototype = {
 			if (typeof(c) == 'string') {
 				td = tr.insertCell(i);
 				td.className = 'co'+(i + 1);
-				if (escCells) td.appendChild(document.createTextNode(c));
-					else td.innerHTML = c;
+				if (escCells)
+					td.appendChild(document.createTextNode(c));
+				else
+					td.innerHTML = c;
 			}
 			else
 				tr.appendChild(c);
@@ -1403,6 +1408,11 @@ TomatoGrid.prototype = {
 		x = PR(evt.target);
 		x = x.cells[x.cells.length - 1];
 		ofs = elem.getOffset(x);
+		if (ofs['x'] == 0 && ofs['y'] == 0) {
+			x = PR(evt.target);
+			x = x.cells[x.cells.length - 3];
+			ofs = elem.getOffset(x);
+		}
 		n *= 18;
 		e.style.left = (ofs.x + x.offsetWidth - n)+'px';
 		e.style.top = ofs.y+'px';
@@ -1456,7 +1466,7 @@ TomatoGrid.prototype = {
 
 		if ((this.canMove) || (this.canEdit) || (this.canDelete)) {
 			e.onmouseover = this.rpMouIn;
-// ----			e.onmouseout = this.rpMouOut;
+//			e.onmouseout = this.rpMouOut;
 			if (this.canEdit) e.title = 'Click to edit';
 		}
 
@@ -1478,7 +1488,7 @@ TomatoGrid.prototype = {
 				if (!ef) ef = [this.editorFields[i]];
 				var f = (ef && ef.length > 0 ? ef[0] : null);
 				if (f && f.type == 'password') {
-					if (!f.peekaboo || get_config('web_pb', '1') != '0')
+					if ((!f.peekaboo) || (get_config('web_pb', '1') != '0'))
 						s = s.replace(/./g, '&#x25CF;');
 				}
 			}
