@@ -12,12 +12,13 @@ APCUPSD_TOMATO_CPE_ID_VENDOR = apcupsd
 APCUPSD_TOMATO_SELINUX_MODULES = apache apcupsd
 APCUPSD_TOMATO_CONF_OPTS = --disable-test
 
-APCUPSD_TOMATO_DEPENDENCIES += libusb libusb-compat www
+APCUPSD_TOMATO_DEPENDENCIES += host-autoconf-269 libusb libusb-compat www
 
 APCUPSD_TOMATO_CONF_ENV += ac_cv_path_usbcfg=$(STAGING_DIR)/usr/bin/libusb-config
 
 define APCUPSD_TOMATO_CONFIGURE_FIXUP
-	touch $(@D)/autoconf/variables.mak && $(MAKE1) -C $(@D) configure
+	touch $(@D)/autoconf/variables.mak && \
+	PATH=$(HOST_AUTOCONF_269_DIR)/install/bin:$(PATH) $(MAKE1) -C $(@D) configure
 endef
 
 APCUPSD_TOMATO_PRE_CONFIGURE_HOOKS += APCUPSD_TOMATO_CONFIGURE_FIXUP
