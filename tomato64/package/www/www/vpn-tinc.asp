@@ -546,7 +546,7 @@ function init() {
 
 	W('<div id="tab-area"><\/div>');
 
-	// -------- BEGIN CONFIG TAB -----------
+	/* -------- BEGIN CONFIG TAB ----------- */
 	W('<div id="config-tab">');
 	W('<div class="section">');
 	createFieldTable('', [
@@ -564,10 +564,9 @@ function init() {
 	W('<small><b style="font-size: 1.5em">*<\/b> Only required to create legacy connections with tinc1.0 nodes.<\/small>');
 	W('<div class="vpn-start-stop"><input type="button" value="" onclick="" id="_tinc_button1">&nbsp; <img src="spin.gif" alt="" id="spin1"><\/div>');
 	W('<\/div><\/div>');
-	// -------- END CONFIG TAB -----------
+	/* -------- END CONFIG TAB ----------- */
 
-
-	// -------- BEGIN HOSTS TAB -----------
+	/* -------- BEGIN HOSTS TAB ----------- */
 	W('<div id="hosts-tab">');
 	W('<div class="section">');
 	W('<div class="tomato-grid" id="th-grid"><\/div>');
@@ -596,10 +595,9 @@ function init() {
 	W('<li><b>Subnet<\/b> - Subnet which the host will serve.');
 	W('<\/ul>');
 	W('<\/div><\/div>');
-	// ---------- END HOSTS TAB ------------
+	/* ---------- END HOSTS TAB ------------ */
 
-
-	// -------- BEGIN SCRIPTS TAB -----------
+	/* -------- BEGIN SCRIPTS TAB ----------- */
 	W('<div id="scripts-tab">');
 	W('<div class="section">');
 
@@ -617,10 +615,9 @@ function init() {
 
 	W('<div class="vpn-start-stop"><input type="button" value="" onclick="" id="_tinc_button3">&nbsp; <img src="spin.gif" alt="" id="spin3"><\/div>');
 	W('<\/div><\/div>');
-	// -------- END SCRIPTS TAB -----------
+	/* -------- END SCRIPTS TAB ----------- */
 
-
-	// -------- BEGIN KEYS TAB -----------
+	/* -------- BEGIN KEYS TAB ----------- */
 	W('<div id="keys-tab">');
 	W('<div class="section">');
 
@@ -634,10 +631,9 @@ function init() {
 	W('<input type="button" value="Generate Keys" onclick="generateKeys()" id="execb"> ');
 	W('<div style="display:none" id="generateWait"> Please wait... <img src="spin.gif" alt="" style="vertical-align:middle"><\/div>');
 	W('<\/div><\/div>');
-	// -------- END KEYS TAB -----------
+	/* -------- END KEYS TAB ----------- */
 
-
-	// -------- BEGIN STATUS TAB -----------
+	/* -------- BEGIN STATUS TAB ---------- */
 	W('<div id="status-tab">');
 	W('<div class="fields">');
 
@@ -655,12 +651,10 @@ function init() {
 
 	W('<div class="section">');
 	W('<div><input type="button" value="Info" onclick="updateStatus(\'info\')" id="info" style="min-width:85px"> <select id="hostselect" style="min-width:85px"><\/select><\/div>');
+	W('<pre id="result" class="status-result"><\/pre>');
 	W('<\/div>');
-
-	W('<pre id="result"><\/pre>');
-
 	W('<\/div><\/div>');
-	// -------- END KEY TAB -----------
+	/* -------- END KEY TAB ----------- */
 </script>
 
 <!-- / / / -->
