@@ -44,16 +44,17 @@ function termOpen() {
 		);
 		term.open();
 	}
-	window.addEventListener("paste", function(thePasteEvent) {
+	addEvent(window, 'paste', pasteEvent);
+
+function pasteEvent(event) {
 		if (term) {
 			var clipboardData, pastedData;
-			thePasteEvent.stopPropagation();
-			thePasteEvent.preventDefault();
-			clipboardData = thePasteEvent.clipboardData || window.clipboardData;
+			event.stopPropagation();
+			event.preventDefault();
+			clipboardData = event.clipboardData || window.clipboardData;
 			pastedData = clipboardData.getData('Text');
 			TermGlobals.importMultiLine(pastedData);
 		}
-	}, false);
 }
 
 function initHandler() {
@@ -68,25 +69,22 @@ function termHandler() {
 	if (this.lineBuffer.substring(0, 3) == 'cd ') {
 		var tmp = this.lineBuffer.slice(3);
 
-		if (tmp === ".") {
+		if (tmp === '.')
 			return; /* nothing to do here.. */
-		}
 		else if (tmp === "..") {
 			workingDirUp();
-			term.write('%+r Switching to directory %+b' + working_dir + '%-b %-r \n');
+			term.write('%+r Switching to directory %+b'+working_dir+'%-b %-r \n');
 			term.prompt();
 		}
-		else {
+		else
 			checkDirectoryExist(tmp);
-		}
 	}
-	else if (this.lineBuffer === "clear") {
+	else if (this.lineBuffer === 'clear') {
 		term.clear();
 		term.prompt();
 	}
-	else {
+	else
 		runCommand(this.lineBuffer);
-	}
 }
 
 function showWait(state) {
@@ -97,42 +95,40 @@ function showWait(state) {
 function checkDirectoryExist(directoryToCheck) {
 	var cmd = new XmlHttp();
 	cmd.onCompleted = function(text, xml) {
-		if (text.trim() === "OK") {
-			if (directoryToCheck.substring(0, 1) != '/') {
-				working_dir = working_dir + "/" + directoryToCheck;
-			}
-			else {
+		if (text.trim() === 'OK') {
+			if (directoryToCheck.substring(0, 1) != '/')
+				working_dir = working_dir+'/'+directoryToCheck;
+			else
 				working_dir = directoryToCheck;
-			}
-			term.write('%+r Switching to directory %+b' + working_dir + '%-b %-r \n');
+
+			term.write('%+r Switching to directory %+b'+working_dir+'%-b %-r \n');
 		}
-		else {
-			term.write( '%+r%c(red) ERROR directory ' + directoryToCheck + ' does not exist %c(default)%-r' );
-		}
+		else
+			term.write( '%+r%c(red) ERROR directory '+directoryToCheck+' does not exist %c(default)%-r');
+
 		showWait(false);
 		term.prompt();
 	}
 	cmd.onError = function(text) {
-		term.write( '%c(red) ERROR during switching directory: ' + text + ' %c(default)' );
+		term.write( '%c(red) ERROR during switching directory: '+text+' %c(default)' );
 		showWait(false);
 		term.prompt();
 	}
 
 	showWait(true);
-	if (directoryToCheck.substring(0, 1) != '/') {
-		directoryToCheck = working_dir + "/" + directoryToCheck;
-	}
-	cmd.post('shell.cgi', 'action=execute&nojs=1&command=' + escapeCGI("[ -d \"" + directoryToCheck + "\" ] && echo \"OK\""));
+	if (directoryToCheck.substring(0, 1) != '/')
+		directoryToCheck = working_dir+'/'+directoryToCheck;
+
+	cmd.post('shell.cgi', 'action=execute&nojs=1&command='+escapeCGI("[ -d \""+directoryToCheck+"\" ] && echo \"OK\""));
 }
 
 function workingDirUp() {
-	var tmp = working_dir.split("/");
+	var tmp = working_dir.split('/');
 	if (tmp.length > 1) {
 		tmp.pop();
-		working_dir = tmp.join("/");
-		if (working_dir === "") { /* it was last dir; */
-			working_dir = "/";
-		}
+		working_dir = tmp.join('/');
+		if (working_dir === '') /* it was last dir; */
+			working_dir = '/';
 	}
 }
 
@@ -143,13 +139,13 @@ function runCommand(command) {
 		showWait(false);
 	}
 	cmd.onError = function(text) {
-		term.type( '> ERROR: ' + text, 17 );
+		term.type( '> ERROR: '+text, 17 );
 		showWait(false);
 		term.prompt();
 	}
 
 	showWait(true);
-	cmd.post('shell.cgi', 'action=execute&nojs=1&working_dir=' + working_dir + '&command=' + escapeCGI(command));
+	cmd.post('shell.cgi', 'action=execute&nojs=1&working_dir='+working_dir+'&command='+escapeCGI(command));
 }
 
 function fakecommand() {
