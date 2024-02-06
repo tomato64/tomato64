@@ -14,10 +14,10 @@ var MAX_BRIDGE_ID = 3;
 var MAX_PORT_ID = 4;
 var MAX_VLAN_ID = 15;
 /* DUALWAN-BEGIN */
-var xifs = [['wan', 'lan', 'lan1', 'lan2', 'lan3', 'wan2'],['WAN0', 'LAN0', 'LAN1', 'LAN2', 'LAN3', 'WAN1']];
+var xifs = [['wan','lan','lan1','lan2','lan3','wan2'],['WAN0','LAN0','LAN1','LAN2','LAN3','WAN1']];
 /* DUALWAN-END */
 /* MULTIWAN-BEGIN */
-var xifs = [['wan', 'lan', 'lan1', 'lan2', 'lan3', 'wan2', 'wan3', 'wan4'],['WAN0', 'LAN0', 'LAN1', 'LAN2', 'LAN3', 'WAN1', 'WAN2', 'WAN3']];
+var xifs = [['wan','lan','lan1','lan2','lan3','wan2','wan3','wan4'],['WAN0','LAN0','LAN1','LAN2','LAN3','WAN1','WAN2','WAN3']];
 /* MULTIWAN-END */
 var mac_null = '00:00:00:00:00:00';
 var serviceLastUp = [];
@@ -51,7 +51,7 @@ String.prototype.trim = function() {
 
 Number.prototype.pad = function(min) {
 	var s = this.toString();
-	while (s.length < min) s = '0' + s;
+	while (s.length < min) s = '0'+s;
 	return s;
 }
 
@@ -60,7 +60,7 @@ Number.prototype.hex = function(min) {
 	var n = this;
 	var s = '';
 	do {
-		s = h.charAt(n & 15) + s;
+		s = h.charAt(n & 15)+s;
 		n = n >>> 4;
 	} while ((--min > 0) || (n > 0));
 	return s;
@@ -68,7 +68,7 @@ Number.prototype.hex = function(min) {
 
 // -----------------------------------------------------------------------------
 
-// ---- Element.protoype. doesn't work with all browsers
+// ---- Element.prototype. doesn't work with all browsers
 
 var elem = {
 	getOffset: function(e) {
@@ -136,7 +136,7 @@ var elem = {
 
 	setInnerHTML: function(e, html) {
 		 e = E(e);
-		 if (e.innerHTML != html) e.innerHTML = html;	/* reduce flickering */
+		 if (e.innerHTML != html) e.innerHTML = html; /* reduce flickering */
 	}
 };
 
@@ -252,7 +252,7 @@ var form = {
 				if (isNaN(nomsg))
 					nomsg = 0;
 			}
-			v.push(escapeCGI(f.name) + '=' + escapeCGI(f.value));
+			v.push(escapeCGI(f.name)+'='+escapeCGI(f.value));
 		}
 
 		if ((msg = E('footer-msg')) != null && !nomsg) {
@@ -295,16 +295,15 @@ var form = {
 			e.value = nvram.http_id;
 			fom.appendChild(e);
 		}
-		else {
+		else
 			fom._http_id.value = nvram.http_id;
-		}
 	},
 
 	addIdAction: function(fom) {
 		if (fom.action.indexOf('?') != -1)
-			fom.action += '&_http_id=' + nvram.http_id;
+			fom.action += '&_http_id='+nvram.http_id;
 		else
-			fom.action += '?_http_id=' + nvram.http_id;
+			fom.action += '?_http_id='+nvram.http_id;
 	},
 
 	dump: function(fom, async, url) {
@@ -364,7 +363,7 @@ function _v_range(e, quiet, min, max, name) {
 	if ((e = E(e)) == null) return 0;
 	var v = e.value;
 	if ((!v.match(/^ *[-\+]?\d+ *$/)) || (v < min) || (v > max)) {
-		ferror.set(e, 'Invalid ' + name + '. Valid range: ' + min + '-' + max, quiet);
+		ferror.set(e, 'Invalid '+name+'. Valid range: '+min+'-'+max, quiet);
 		return 0;
 	}
 	e.value = v * 1;
@@ -401,7 +400,7 @@ function v_mins(e, quiet, min, max) {
 			return _v_range(e, quiet, min, max, 'minutes');
 		}
 	}
-	ferror.set(e, 'Invalid number of minutes.', quiet);
+	ferror.set(e, 'Invalid number of minutes', quiet);
 	return 0;
 }
 
@@ -417,9 +416,8 @@ function v_macip(e, quiet, bok, lan_ipaddr, lan_netmask) {
 
 	if ((a = fixMAC(s)) != null) {
 		if (isMAC0(a)) {
-			if (bok) {
+			if (bok)
 				e.value = '';
-			}
 			else {
 				ferror.set(e, 'Invalid MAC or IP address');
 				return false;
@@ -440,13 +438,13 @@ function v_macip(e, quiet, bok, lan_ipaddr, lan_netmask) {
 	}
 	
 	if (a[0].match(/^\d+$/)){
-		a[0]=ipp+a[0];
+		a[0] = ipp + a[0];
 		if ((a.length == 2) && (a[1].match(/^\d+$/)))
-			a[1]=ipp+a[1];
+			a[1] = ipp + a[1];
 	}
 	else {
-		if ((a.length == 2) && (a[1].match(/^\d+$/))){
-			temp=a[0].split('.');
+		if ((a.length == 2) && (a[1].match(/^\d+$/))) {
+			temp = a[0].split('.');
 			a[1]=temp[0]+'.'+temp[1]+'.'+temp[2]+'.'+a[1];
 		}
 	}
@@ -471,7 +469,7 @@ function v_macip(e, quiet, bok, lan_ipaddr, lan_netmask) {
 
 		a[i] = c = d;
 	}
-	e.value = b.split('.')[0] + '.' + b.split('.')[1] + '.' + b.split('.')[2] + '.' + a.join('-');
+	e.value = b.split('.')[0]+'.'+b.split('.')[1]+'.'+b.split('.')[2]+'.'+a.join('-');
 	return true;
 }
 
@@ -480,7 +478,7 @@ function fixIP(ip, x) {
 	a = ip;
 	i = a.indexOf("<br>");
 	if (i > 0)
-		a = a.slice(0,i);
+		a = a.slice(0, i);
 
 	a = a.split('.');
 	if (a.length != 4) return null;
@@ -527,7 +525,7 @@ function v_dns(e, quiet) {
 			ferror.set(e, 'Invalid IP address or port', quiet);
 			return false;
 		}
-		
+
 		if ((s[0] = fixIP(s[0])) == null) {
 			ferror.set(e, 'Invalid IP address', quiet);
 			return false;
@@ -537,13 +535,11 @@ function v_dns(e, quiet) {
 			ferror.set(e, 'Invalid port', quiet);
 			return false;
 		}
-	
-		if (s[1] == 53) {
+
+		if (s[1] == 53)
 			e.value = s[0];
-		}
-		else {
+		else
 			e.value = s.join(':');
-		}
 	}
 
 	ferror.clear(e);
@@ -561,23 +557,7 @@ function aton(ip) {
 }
 
 function ntoa(ip) {
-	return ((ip >> 24) & 255) + '.' + ((ip >> 16) & 255) + '.' + ((ip >> 8) & 255) + '.' + (ip & 255);
-}
-
-function ntoav6(ip) {
-	var output = '';
-	if (typeof(ip) == 'number')
-		ip = BigInt(ip);
-	for (var i = BigInt(7); i >= BigInt(0); --i) {
-		output += ((ip >> (i * BigInt(16))) & BigInt(65535)).toString(16).padStart(2, '0');
-		if (i > BigInt(0))
-			output += ':';
-	}
-	return output;
-}
-
-function atonv6(ip) {
-	return BigInt('0x'+ip.replaceAll(':', ''));
+	return ((ip >> 24) & 255)+'.'+((ip >> 16) & 255)+'.'+((ip >> 8) & 255)+'.'+(ip & 255);
 }
 
 // ---- 1.2.3.4, 1.2.3.4/24, 1.2.3.4/255.255.255.0, 1.2.3.4-1.2.3.5
@@ -592,13 +572,13 @@ function _v_iptip(e, ip, quiet) {
 		a = fixIP(RegExp.$1);
 		b = fixIP(RegExp.$2);
 		if ((a == null) || (b == null)) {
-			ferror.set(e, oip + ' - invalid IP address range', quiet);
+			ferror.set(e, oip+' - invalid IP address range', quiet);
 			return null;
 		}
 		ferror.clear(e);
 
-		if (aton(a) > aton(b)) return b + '-' + a;
-		return a + '-' + b;
+		if (aton(a) > aton(b)) return b+'-'+a;
+		return a+'-'+b;
 	}
 
 	ma = '';
@@ -613,13 +593,13 @@ function _v_iptip(e, ip, quiet) {
 		if (isNaN(ma)) {
 			ma = fixIP(b);
 			if ((ma == null) || (!_v_netmask(ma))) {
-				ferror.set(e, oip + ' - invalid netmask', quiet);
+				ferror.set(e, oip+' - invalid netmask', quiet);
 				return null;
 			}
 		}
 		else {
 			if ((ma < 0) || (ma > 32)) {
-				ferror.set(e, oip + ' - invalid netmask', quiet);
+				ferror.set(e, oip+' - invalid netmask', quiet);
 				return null;
 			}
 		}
@@ -627,7 +607,7 @@ function _v_iptip(e, ip, quiet) {
 
 	ip = fixIP(ip);
 	if (!ip) {
-		ferror.set(e, oip + ' - invalid IP address', quiet);
+		ferror.set(e, oip+' - invalid IP address', quiet);
 		return null;
 	}
 
@@ -669,12 +649,12 @@ function _v_subnet(e, ip, quiet) {
 		ma = RegExp.$2;
 
 		if ((ma < 0) || (ma > 32)) {
-			ferror.set(e, oip + ' - invalid subnet', quiet);
+			ferror.set(e, oip+' - invalid subnet', quiet);
 			return null;
 		}
 	}
 	else {
-		ferror.set(e, oip + ' - invalid subnet', quiet);
+		ferror.set(e, oip+' - invalid subnet', quiet);
 		return null;
 	}
 
@@ -695,7 +675,7 @@ function _v_domain(e, dom, quiet) {
 	if (s.length > 0) {
 		s = _v_hostname(e, s, 1, 1, 7, '.', true);
 		if (s == null) {
-			ferror.set(e, "Invalid name. Only characters \"A-Z 0-9 . -\" are allowed.", quiet);
+			ferror.set(e, 'Invalid name. Only characters "A-Z 0-9 . -" are allowed', quiet);
 			return null;
 		}
 	}
@@ -732,13 +712,13 @@ function ExpandIPv6Address(ip) {
 			pre = a[0].split(':');
 			post = a[1].split(':');
 			n = 8 - pre.length - post.length;
-			for (i=0; i<2; i++) {
+			for (i = 0; i < 2; i++) {
 				if (a[i]=='') n++;
 			}
 			if (n < 0) return null;
 			fill = '';
 			while (n-- > 0) fill += ':0';
-			ip = pre.join(':') + fill + ':' + post.join(':');
+			ip = pre.join(':')+fill+':'+post.join(':');
 			ip = ip.replace(/^:/, '').replace(/:$/, '');
 		break;
 		default:
@@ -776,10 +756,26 @@ function ZeroIPv6PrefixBits(ip, prefix_length) {
 	else
 		c = '';
 
-	ip = ip.substring(0, n) + c + Array((m%4)+1).join('0') + (m>=4 ? '::' : '');
+	ip = ip.substring(0, n)+c+Array((m%4) + 1).join('0')+(m >= 4 ? '::' : '');
 	ip = ip.replace(/([a-f0-9]{4})(?=[a-f0-9])/g,'$1:');
 	ip = ip.replace(/(^|:)0{1,3}/g, '$1');
 	return ip;
+}
+
+function ntoav6(ip) {
+	var output = '';
+	if (typeof(ip) == 'number')
+		ip = BigInt(ip);
+	for (var i = BigInt(7); i >= BigInt(0); --i) {
+		output += ((ip >> (i * BigInt(16))) & BigInt(65535)).toString(16).padStart(2, '0');
+		if (i > BigInt(0))
+			output += ':';
+	}
+	return output;
+}
+
+function atonv6(ip) {
+	return BigInt('0x'+ip.replaceAll(':', ''));
 }
 
 function ipv6ton(ip) {
@@ -790,7 +786,7 @@ function ipv6ton(ip) {
 
 	o = ip.split(':');
 	x = '';
-	for (i = 0; i < 8; ++i) x += (('0x' + o[i]) * 1).hex(4);
+	for (i = 0; i < 8; ++i) x += (('0x'+o[i]) * 1).hex(4);
 	return parseInt(x, 16);
 }
 
@@ -807,12 +803,12 @@ function _v_ipv6_addr(e, ip, ipt, quiet) {
 		a = CompressIPv6Address(a);
 		b = CompressIPv6Address(b);
 		if ((a == null) || (b == null)) {
-			ferror.set(e, oip + ' - invalid IPv6 address range', quiet);
+			ferror.set(e, oip+' - invalid IPv6 address range', quiet);
 			return null;
 		}
 		ferror.clear(e);
 
-		if (ipv6ton(a) > ipv6ton(b)) return b + '-' + a;
+		if (ipv6ton(a) > ipv6ton(b)) return b+'-'+a;
 		return a + '-' + b;
 	}
 
@@ -822,17 +818,17 @@ function _v_ipv6_addr(e, ip, ipt, quiet) {
 		b = parseInt(RegExp.$2, 10);
 		a = ExpandIPv6Address(a);
 		if ((a == null) || (b == null)) {
-			ferror.set(e, oip + ' - invalid IPv6 address', quiet);
+			ferror.set(e, oip+' - invalid IPv6 address', quiet);
 			return null;
 		}
 		if (b < 0 || b > 128) {
-			ferror.set(e, oip + ' - invalid CIDR notation on IPv6 address', quiet);
+			ferror.set(e, oip+' - invalid CIDR notation on IPv6 address', quiet);
 			return null;
 		}
 		ferror.clear(e);
 
 		ip = ZeroIPv6PrefixBits(a, b);
-		return ip + '/' + b.toString(10);
+		return ip+'/'+b.toString(10);
 	}
 
 	if ((ipt) && ip.match(/^([A-Fa-f0-9:]+)\/([A-Fa-f0-9:]+)$/)) {
@@ -841,7 +837,7 @@ function _v_ipv6_addr(e, ip, ipt, quiet) {
 		a = CompressIPv6Address(a);
 		b = CompressIPv6Address(b);
 		if ((a == null) || (b == null)) {
-			ferror.set(e, oip + ' - invalid IPv6 address with mask', quiet);
+			ferror.set(e, oip+' - invalid IPv6 address with mask', quiet);
 			return null;
 		}
 		ferror.clear(e);
@@ -851,7 +847,7 @@ function _v_ipv6_addr(e, ip, ipt, quiet) {
 
 	ip = CompressIPv6Address(oip);
 	if (!ip) {
-		ferror.set(e, oip + ' - invalid IPv6 address', quiet);
+		ferror.set(e, oip+' - invalid IPv6 address', quiet);
 		return null;
 	}
 
@@ -872,7 +868,7 @@ function fixPort(p, def) {
 	if (def == null) def = -1;
 	if (p == null) return def;
 	p *= 1;
-	if ((isNaN(p) || (p < 1) || (p > 65535) || (('' + p).indexOf('.') != -1))) return def;
+	if ((isNaN(p) || (p < 1) || (p > 65535) || ((''+p).indexOf('.') != -1))) return def;
 	return p;
 }
 
@@ -884,7 +880,7 @@ function _v_portrange(e, quiet, v) {
 		x = fixPort(x, -1);
 		y = fixPort(y, -1);
 		if ((x == -1) || (y == -1)) {
-			ferror.set(e, 'Invalid port range: ' + v, quiet);
+			ferror.set(e, 'Invalid port range: '+v, quiet);
 			return null;
 		}
 		if (x > y) {
@@ -925,11 +921,11 @@ function v_iptport(e, quiet) {
 	a = e.value.split(/[,\.]/);
 
 	if (a.length == 0) {
-		ferror.set(e, 'Expecting a list of ports or port range.', quiet);
+		ferror.set(e, 'Expecting a list of ports or port range', quiet);
 		return 0;
 	}
 	if (a.length > 10) {
-		ferror.set(e, 'Only 10 ports/range sets are allowed.', quiet);
+		ferror.set(e, 'Only 10 ports/range sets are allowed', quiet);
 		return 0;
 	}
 
@@ -970,7 +966,7 @@ function v_netmask(e, quiet) {
 			else
 				n = (0xFFFFFFFF >>> b) ^ 0xFFFFFFFF;
 
-			e.value = (n >>> 24) + '.' + ((n >>> 16) & 0xFF) + '.' + ((n >>> 8) & 0xFF) + '.' + (n & 0xFF);
+			e.value = (n >>> 24)+'.'+((n >>> 16) & 0xFF)+'.'+((n >>> 8) & 0xFF)+'.'+(n & 0xFF);
 			ferror.clear(e);
 			return 1;
 		}
@@ -1038,12 +1034,12 @@ function v_length(e, quiet, min, max) {
 	n = s.length;
 	if (min == undefined) min = 1;
 	if (n < min) {
-		ferror.set(e, 'Invalid length. Please enter at least ' + min + ' character' + (min == 1 ? '.' : 's.'), quiet);
+		ferror.set(e, 'Invalid length. Please enter at least '+min+' character'+(min == 1 ? '' : 's'), quiet);
 		return 0;
 	}
 	max = max || e.maxlength;
 	if (n > max) {
-		ferror.set(e, 'Invalid length. Please reduce the length to ' + max + ' characters or less.', quiet);
+		ferror.set(e, 'Invalid length. Please reduce the length to '+max+' characters or less', quiet);
 		return 0;
 	}
 	e.value = s;
@@ -1083,7 +1079,7 @@ function _v_iptaddr(e, quiet, multi, ipv4, ipv6) {
 					return 0;
 				}
 				if ((t = _v_iptip(e, v[i], 1)) == null) {
-					ferror.set(e, e._error_msg + ', or invalid domain name', quiet);
+					ferror.set(e, e._error_msg+', or invalid domain name', quiet);
 					return 0;
 				}
 /* IPV6-BEGIN */
@@ -1111,13 +1107,13 @@ function _v_hostname(e, h, quiet, required, multi, delim, cidr) {
 
 	if (multi) {
 		if (v.length > multi) {
-			ferror.set(e, 'Too many hostnames.', quiet);
+			ferror.set(e, 'Too many hostnames', quiet);
 			return null;
 		}
 	}
 	else {
 		if (v.length > 1) {
-			ferror.set(e, 'Invalid hostname.', quiet);
+			ferror.set(e, 'Invalid hostname', quiet);
 			return null;
 		}
 	}
@@ -1130,11 +1126,11 @@ function _v_hostname(e, h, quiet, required, multi, delim, cidr) {
 			if (cidr && i == v.length-1)
 				re = /^[a-zA-Z0-9](([a-zA-Z0-9\-]{0,61})[a-zA-Z0-9]){0,1}(\/\d{1,3})?$/;
 			if (s.search(re) == -1) {
-				ferror.set(e, 'Invalid hostname. Only "A-Z 0-9" and "-" in the middle are allowed (up to 63 characters).', quiet);
+				ferror.set(e, 'Invalid hostname. Only "A-Z 0-9" and "-" in the middle are allowed (up to 63 characters)', quiet);
 				return null;
 			}
 		} else if (required) {
-			ferror.set(e, 'Invalid hostname.', quiet);
+			ferror.set(e, 'Invalid hostname', quiet);
 			return null;
 		}
 		v[i] = s;
@@ -1161,9 +1157,8 @@ function v_nodelim(e, quiet, name, checklist) {
 	if ((e = E(e)) == null) return 0;
 
 	e.value = e.value.trim();
-	if (e.value.indexOf('<') != -1 ||
-	   (checklist && e.value.indexOf('>') != -1)) {
-		ferror.set(e, 'Invalid ' + name + ': \"<\" ' + (checklist ? 'or \">\" are' : 'is') + ' not allowed.', quiet);
+	if (e.value.indexOf('<') != -1 || (checklist && e.value.indexOf('>') != -1)) {
+		ferror.set(e, 'Invalid '+name+': "<" '+(checklist ? 'or ">" are' : 'is')+' not allowed', quiet);
 		return 0;
 	}
 	ferror.clear(e);
@@ -1179,7 +1174,7 @@ function v_path(e, quiet, required) {
 		return 1;
 	}
 	if (e.value.substr(0, 1) != '/') {
-		ferror.set(e, 'Please start at the / root directory.', quiet);
+		ferror.set(e, 'Please start at the / root directory', quiet);
 		return 0;
 	}
 	ferror.clear(e);
@@ -1245,18 +1240,18 @@ TomatoGrid.prototype = {
 			this.tb = E(tb);
 			this.tb.gridObj = this;
 
-			var att_c = this.tb.getAttribute("class");
-			var att_s = this.tb.getAttribute("style");
-			var table = document.createElement("table");
-			if (att_c) table.setAttribute("class", att_c);
-			if (att_s) table.setAttribute("style", att_s);
+			var att_c = this.tb.getAttribute('class');
+			var att_s = this.tb.getAttribute('style');
+			var table = document.createElement('table');
+			if (att_c) table.setAttribute('class', att_c);
+			if (att_s) table.setAttribute('style', att_s);
 			this.tb.appendChild(table);
 			this.tb = E(table);
 			this.tb.gridObj = this;
 		}
-		else {
+		else
 			this.tb = null;
-		}
+
 		if (!options) options = '';
 		this.header = null;
 		this.footer = null;
@@ -1280,13 +1275,12 @@ TomatoGrid.prototype = {
 			c = cells[i];
 			if (typeof(c) == 'string') {
 				td = tr.insertCell(i);
-				td.className = 'co' + (i + 1);
+				td.className = 'co'+(i + 1);
 				if (escCells) td.appendChild(document.createTextNode(c));
 					else td.innerHTML = c;
 			}
-			else {
+			else
 				tr.appendChild(c);
-			}
 		}
 		return tr;
 	},
@@ -1294,9 +1288,7 @@ TomatoGrid.prototype = {
 	// ---- header
 
 	headerClick: function(cell) {
-		if (this.canSort) {
-			this.sort(cell.cellN);
-		}
+		if (this.canSort) this.sort(cell.cellN);
 	},
 
 	headerSet: function(cells, escCells) {
@@ -1307,7 +1299,7 @@ TomatoGrid.prototype = {
 		e.className = 'header';
 
 		for (i = 0; i < e.cells.length; ++i) {
-			e.cells[i].cellN = i;	/* cellIndex broken in Safari */
+			e.cells[i].cellN = i; /* cellIndex broken in Safari */
 			e.cells[i].onclick = function() { return TGO(this).headerClick(this); };
 		}
 		return e;
@@ -1412,9 +1404,9 @@ TomatoGrid.prototype = {
 		x = x.cells[x.cells.length - 1];
 		ofs = elem.getOffset(x);
 		n *= 18;
-		e.style.left = (ofs.x + x.offsetWidth - n) + 'px';
-		e.style.top = ofs.y + 'px';
-		e.style.width = n + 'px';
+		e.style.left = (ofs.x + x.offsetWidth - n)+'px';
+		e.style.top = ofs.y+'px';
+		e.style.width = n+'px';
 		e.innerHTML = s;
 
 		document.body.appendChild(e);
@@ -1527,7 +1519,7 @@ TomatoGrid.prototype = {
 		c = er.cells[cell.cellIndex || 0];
 		e = c.getElementsByTagName('input');
 		if ((e) && (e.length > 0)) {
-			try {	/* IE quirk */
+			try { /* IE quirk */
 				e[0].focus();
 			}
 			catch (ex) {
@@ -1535,7 +1527,6 @@ TomatoGrid.prototype = {
 		}
 
 		this.controls = this.createControls('edit', sr.rowIndex);
-
 		this.disableNewEditor(true);
 		this.rpHide();
 		this.verifyFields(this.editor, true);
@@ -1549,7 +1540,7 @@ TomatoGrid.prototype = {
 		var row = this.tb.insertRow(rowIndex);
 		row.className = 'editor';
 
-		var common = ' onkeypress="return TGO(this).onKey(\'' + which + '\', event)" onchange="TGO(this).onChange(\'' + which + '\', this)"';
+		var common = ' onkeypress="return TGO(this).onKey(\''+which+'\', event)" onchange="TGO(this).onChange(\''+which+'\', this)"';
 
 		var vi = 0;
 		for (var i = 0; i < this.editorFields.length; ++i) {
@@ -1561,7 +1552,7 @@ TomatoGrid.prototype = {
 				var f = ef[j];
 
 				if (f.prefix) s += f.prefix;
-				var attrib = ' class="fi' + (vi + 1) + '" ' + (f.attrib || '');
+				var attrib = ' class="fi'+(vi + 1)+'" '+(f.attrib || '');
 				var id = (this.tb.parentElement.id ? ('_'+this.tb.parentElement.id+'_'+(vi + 1)) : null);
 				if (id) attrib += ' id="'+id+'"';
 				switch (f.type) {
@@ -1579,9 +1570,9 @@ TomatoGrid.prototype = {
 						if (f.peekaboo && id) attrib += ' onfocus="peekaboo(\''+id+'\',1)"';
 						/* drop */
 					case 'text':
-						s += '<input type="' + f.type + '" maxlength=' + f.maxlen + common + attrib;
+						s += '<input type="'+f.type+'" maxlength='+f.maxlen+common+attrib;
 						if (which == 'edit')
-							s += ' value="' + escapeHTML('' + values[vi]) + '">';
+							s += ' value="'+escapeHTML(''+values[vi])+'">';
 						else
 							s += '>';
 					break;
@@ -1589,27 +1580,23 @@ TomatoGrid.prototype = {
 						s += '';
 					break;
 					case 'select':
-						s += '<select' + common + attrib + '>';
+						s += '<select'+common+attrib+'>';
 						for (var k = 0; k < f.options.length; ++k) {
 							var a = f.options[k];
-							if (which == 'edit') {
-								s += '<option value="' + a[0] + '"' + ((a[0] == values[vi]) ? ' selected="selected">' : '>') + a[1] + '</option>';
-							}
-							else {
-								s += '<option value="' + a[0] + '">' + a[1] + '</option>';
-							}
+							if (which == 'edit')
+								s += '<option value="'+a[0]+'"'+((a[0] == values[vi]) ? ' selected="selected">' : '>')+a[1]+'</option>';
+							else
+								s += '<option value="'+a[0]+'">'+a[1]+'</option>';
 						}
 						s += '</select>';
 					break;
 					case 'checkbox':
-						s += '<input type="checkbox"' + common + attrib;
+						s += '<input type="checkbox"'+common+attrib;
 						if ((which == 'edit') && (values[vi])) s += ' checked="checked"';
 						s += '>';
 					break;
 					case 'textarea':
-						if (which == 'edit') {
-							document.getElementById(f.proxy).value = values[vi];
-						}
+						if (which == 'edit') document.getElementById(f.proxy).value = values[vi];
 					break;
 					default:
 						s += f.custom.replace(/\$which\$/g, which);
@@ -1618,7 +1605,7 @@ TomatoGrid.prototype = {
 
 				++vi;
 			}
-			if (this.editorFields[i].type != 'textarea'){
+			if (this.editorFields[i].type != 'textarea') {
 				var c = row.insertCell(i);
 				c.innerHTML = s;
 				if (this.editorFields[i].vtop) c.style = 'vertical-align:top';
@@ -1636,22 +1623,16 @@ TomatoGrid.prototype = {
 
 		c = r.insertCell(0);
 		c.colSpan = this.header.cells.length;
-		if (which == 'edit') {
-			c.innerHTML =
-				'<input type=button value="Delete" onclick="TGO(this).onDelete()"> &nbsp; ' +
-				'<input type=button value="OK" onclick="TGO(this).onOK()"> ' +
-				'<input type=button value="Cancel" onclick="TGO(this).onCancel()">';
-		}
-		else {
-			c.innerHTML =
-				'<input type=button value="Add" onclick="TGO(this).onAdd()">';
-		}
+		if (which == 'edit')
+			c.innerHTML = '<input type=button value="Delete" onclick="TGO(this).onDelete()"> &nbsp; <input type=button value="OK" onclick="TGO(this).onOK()"> <input type=button value="Cancel" onclick="TGO(this).onCancel()">';
+		else
+			c.innerHTML = '<input type=button value="Add" onclick="TGO(this).onAdd()">';
+
 		return r;
 	},
 
 	removeEditor: function() {
 		if (this.editor) {
-
 			elem.remove(this.editor);
 			this.editor = null;
 		}
@@ -1739,8 +1720,8 @@ TomatoGrid.prototype = {
 	},
 
 	clearTextarea: function() {
-		for (var i = 0; i < this.editorFields.length; ++i){
-			if (this.editorFields[i].type == 'textarea'){
+		for (var i = 0; i < this.editorFields.length; ++i) {
+			if (this.editorFields[i].type == 'textarea') {
 				document.getElementById(this.editorFields[i].proxy).value = '';
 				ferror.clear(document.getElementById(this.editorFields[i].proxy));
 			}
@@ -1801,13 +1782,10 @@ TomatoGrid.prototype = {
 
 	sort: function(column) {
 		if (this.editor) return;
+		if (this.sortColumn >= 0) elem.removeClass(this.header.cells[this.sortColumn], 'sortasc', 'sortdes');
 
-		if (this.sortColumn >= 0) {
-			elem.removeClass(this.header.cells[this.sortColumn], 'sortasc', 'sortdes');
-		}
-		if (column == this.sortColumn) {
+		if (column == this.sortColumn)
 			this.sortAscending = !this.sortAscending;
-		}
 		else {
 			this.sortAscending = true;
 			this.sortColumn = column;
@@ -1915,7 +1893,7 @@ XmlHttp.prototype = {
 		else
 			vars = '';
 
-		vars += '_http_id=' + escapeCGI(nvram.http_id);
+		vars += '_http_id='+escapeCGI(nvram.http_id);
 		return vars;
 	},
 
@@ -1957,15 +1935,13 @@ XmlHttp.prototype = {
 
 	onReadyStateChange: function() {
 		try {
-			if (typeof(E) == 'undefined') return;	/* oddly late? testing for bug... */
+			if (typeof(E) == 'undefined') return; /* oddly late? testing for bug... */
 
 			if (this.xob.readyState == 4) {
-				if (this.xob.status == 200) {
+				if (this.xob.status == 200)
 					this.onCompleted(this.xob.responseText, this.xob.responseXML);
-				}
-				else {
-					this.onError('' + (this.xob.status || 'unknown'));
-				}
+				else
+					this.onError(''+(this.xob.status || 'unknown'));
 			}
 		}
 		catch (ex) {
@@ -2196,17 +2172,17 @@ function genStdTimeList(id, zero, min) {
 	var i, v;
 
 	if (min >= 0) {
-		b.push('<select id="' + id + '"><option value="0">' + zero);
+		b.push('<select id="'+id+'"><option value="0">' + zero);
 		for (i = 0; i < t.length; ++i) {
 			v = t[i];
 			if (v < min) continue;
-			b.push('<option value=' + v + '>');
+			b.push('<option value='+v+'>');
 			if (v == 60)
 				b.push('1 minute');
 			else if (v > 60)
-				b.push((v / 60) + ' minutes');
+				b.push((v / 60)+' minutes');
 			else
-				b.push(v + ' seconds');
+				b.push(v +'seconds');
 		}
 		b.push('</select> ');
 	}
@@ -2217,7 +2193,7 @@ function genStdRefresh(spin, min, exec) {
 	W('<div style="text-align:right">');
 	if (spin) W('<img src="spin.gif" id="refresh-spinner" alt=""> ');
 	genStdTimeList('refresh-time', 'One off', min);
-	W('<input type="button" value="Refresh" onclick="' + (exec ? exec : 'refreshClick()') + '" id="refresh-button"></div>');
+	W('<input type="button" value="Refresh" onclick="'+(exec ? exec : 'refreshClick()')+'" id="refresh-button"></div>');
 }
 
 
@@ -2228,7 +2204,7 @@ function _tabCreate(tabs) {
 	var buf = [];
 	buf.push('<ul id="tabs">');
 	for (var i = 0; i < arguments.length; ++i)
-		buf.push('<li><a href="javascript:tabSelect(\'' + arguments[i][0] + '\')" id="' + arguments[i][0] + '">' + arguments[i][1] + '</a>');
+		buf.push('<li><a href="javascript:tabSelect(\''+arguments[i][0]+'\')" id="'+arguments[i][0]+'">'+arguments[i][1]+'</a>');
 	buf.push('</ul><div id="tabs-bottom"></div>');
 	return buf.join('');
 }
@@ -2254,16 +2230,14 @@ var cookie = {
 	rollover. This effectively makes the cookie never expire.
 */
 	set: function(key, value, days) {
-		document.cookie = 'tomato_' + encodeURIComponent(key) + '=' + encodeURIComponent(value) + '; expires=' +
-		new Date(2147483647000).toUTCString() + '; path=/; SameSite=Lax';
+		document.cookie = 'tomato_'+encodeURIComponent(key)+'='+encodeURIComponent(value)+'; expires='+new Date(2147483647000).toUTCString()+'; path=/; SameSite=Lax';
 	},
 	get: function(key) {
-		var r = ('; ' + document.cookie + ';').match('; tomato_' + encodeURIComponent(key) + '=(.*?);');
+		var r = ('; '+document.cookie+';').match('; tomato_'+encodeURIComponent(key)+'=(.*?);');
 		return r ? decodeURIComponent(r[1]) : null;
 	},
 	unset: function(key) {
-		document.cookie = 'tomato_' + encodeURIComponent(key) + '=; expires=' +
-		(new Date(1)).toUTCString() + '; path=/; SameSite=Lax';
+		document.cookie = 'tomato_'+encodeURIComponent(key)+'=; expires='+(new Date(1)).toUTCString()+'; path=/; SameSite=Lax';
 	}
 };
 
@@ -2271,7 +2245,7 @@ var cookie = {
 
 function checkEvent(evt) {
 	if (typeof(evt) == 'undefined') {
-		// ---- IE
+		/* IE */
 		evt = event;
 		evt.target = evt.srcElement;
 		evt.relatedTarget = evt.toElement;
@@ -2296,12 +2270,12 @@ function THIS(obj, func) {
 }
 
 function UT(v) {
-	return (typeof(v) == 'undefined') ? '' : '' + v;
+	return (typeof(v) == 'undefined') ? '' : ''+v;
 }
 
 function escapeHTML(s) {
 	function esc(c) {
-		return '&#' + c.charCodeAt(0) + ';';
+		return '&#'+c.charCodeAt(0)+';';
 	}
 	return s.replace(/[&"'<>\r\n]/g, esc);
 }
@@ -2318,7 +2292,7 @@ function escapeD(s) {
 }
 
 function ellipsis(s, max) {
-	return (s.length <= max) ? s : s.substr(0, max - 3) + '...';
+	return (s.length <= max) ? s : s.substr(0, max - 3)+'...';
 }
 
 function MIN(a, b) {
@@ -2353,7 +2327,7 @@ function doScaleSize(n, sm) {
 		n /= 1024;
 		++s;
 	} while ((n > 9999) && (s < 2));
-	return comma(n.toFixed(2)) + (sm ? '<small> ' : ' ') + (['KB', 'MB', 'GB'])[s] + (sm ? '</small>' : '');
+	return comma(n.toFixed(2))+(sm ? '<small> ' : ' ')+(['KB', 'MB', 'GB'])[s]+(sm ? '</small>' : '');
 }
 
 function scaleSize(n) {
@@ -2363,8 +2337,8 @@ function scaleSize(n) {
 function timeString(mins) {
 	var h = Math.floor(mins / 60);
 	if ((new Date(2000, 0, 1, 23, 0, 0, 0)).toLocaleString().indexOf('23') != -1)
-		return h + ':' + (mins % 60).pad(2);
-	return ((h == 0) ? 12 : ((h > 12) ? h - 12 : h)) + ':' + (mins % 60).pad(2) + ((h >= 12) ? ' PM' : ' AM');
+		return h+':'+(mins % 60).pad(2);
+	return ((h == 0) ? 12 : ((h > 12) ? h - 12 : h))+':'+(mins % 60).pad(2)+((h >= 12) ? ' PM' : ' AM');
 }
 
 function features(s) {
@@ -2387,8 +2361,7 @@ function nothing() {
 // -----------------------------------------------------------------------------
 
 function show_notice1(s) {
-// ---- !!TB - USB Support: multi-line notices
-	if (s.length) document.write('<div id="notice">' + s.replace(/\n/g, '<br>') + '</div><br style="clear:both">');
+	if (s.length) document.write('<div id="notice">'+s.replace(/\n/g, '<br>')+'</div><br style="clear:both">');
 }
 
 // -----------------------------------------------------------------------------
@@ -2527,7 +2500,7 @@ function myName() {
 	var name, i;
 
 	name = document.location.pathname;
-	name = name.replace(/\\/g, '/');	/* IE local testing */
+	name = name.replace(/\\/g, '/'); /* IE local testing */
 	if ((i = name.lastIndexOf('/')) != -1) name = name.substring(i + 1, name.length);
 	if (name == '') name = 'status-overview.asp';
 	return name;
@@ -2734,13 +2707,11 @@ function navi() {
 			buf.push("<br>");
 			continue;
 		}
-		if (m.length == 2) {
-			buf.push('<a href="' + m[1] + '" class="indent1' + (((base == '') && (name == m[1])) ? ' active' : '') + '">' + m[0] + '</a>');
-		}
+		if (m.length == 2)
+			buf.push('<a href="'+m[1]+'" class="indent1'+(((base == '') && (name == m[1])) ? ' active' : '')+'">'+m[0]+'</a>');
 		else {
-			if (base == m[1]) {
+			if (base == m[1])
 				b = name;
-			}
 			else {
 				a = cookie.get('menu_' + m[1]);
 				b = m[3][0][1];
@@ -2751,17 +2722,17 @@ function navi() {
 					}
 				}
 			}
-			a = m[1] + '-' + b;
+			a = m[1]+'-'+b;
 			if (a == 'status-overview.asp') a = '/';
 			on1 = (base == m[1]);
-			buf.push('<a href="' + a + '" class="indent1' + (on1 ? ' active' : '') + '">' + m[0] + '</a>');
+			buf.push('<a href="'+a+'" class="indent1'+(on1 ? ' active' : '')+'">'+m[0]+'</a>');
 			if ((!on1) && (m[2] == 0) && (cexp.indexOf(m[1]) == -1)) continue;
 
 			for (j = 0; j < m[3].length; ++j) {
 				sm = m[3][j];
-				a = m[1] + '-' + sm[1];
+				a = m[1]+'-'+sm[1];
 				if (a == 'status-overview.asp') a = '/';
-				buf.push('<a href="' + a + '" class="indent2' + (((on1) && (name == sm[1])) ? ' active' : '') + '">' + sm[0] + '</a>');
+				buf.push('<a href="'+a+'" class="indent2'+(((on1) && (name == sm[1])) ? ' active' : '')+'">'+sm[0]+'</a>');
 			}
 		}
 	}
@@ -2769,7 +2740,7 @@ function navi() {
 
 	if (base.length) {
 		if ((base == 'qos') && (name == 'detailed.asp')) name = 'view.asp';
-		cookie.set('menu_' + base, name);
+		cookie.set('menu_'+base, name);
 	}
 }
 
@@ -2905,12 +2876,11 @@ function peekaboo(id, show) {
 		o.name = name;
 
 		if (show) {
-			o.onblur = function(ev) { setTimeout('peekaboo("' + this.id + '", 0)', 0) };
-			setTimeout('try { E("' + id + '").focus() } catch (ex) { }', 0)
+			o.onblur = function(ev) { setTimeout('peekaboo("'+this.id+'", 0)', 0) };
+			setTimeout('try { E("'+id+'").focus() } catch (ex) { }', 0)
 		}
-		else {
+		else
 			o.onfocus = function(ev) { peekaboo(this.id, 1); };
-		}
 	}
 	catch (ex) {
 /*		alert(ex); */
@@ -2953,15 +2923,15 @@ function logout() {
 }
 
 function toggleVisibility(where, whichone) {
-	if (E('sesdiv_' + whichone).style.display != 'none') {
-		E('sesdiv_' + whichone).style.display = 'none';
-		E('sesdiv_' + whichone + '_showhide').innerHTML = '(Show)';
-		cookie.set(where + '_' + whichone + '_vis', 0);
+	if (E('sesdiv_'+whichone).style.display != 'none') {
+		E('sesdiv_'+whichone).style.display = 'none';
+		E('sesdiv_'+whichone+'_showhide').innerHTML = '(Show)';
+		cookie.set(where+'_'+whichone+'_vis', 0);
 	}
 	else {
-		E('sesdiv_' + whichone).style.display = 'block';
-		E('sesdiv_' + whichone + '_showhide').innerHTML = '(Hide)';
-		cookie.set(where + '_' + whichone + '_vis', 1);
+		E('sesdiv_'+whichone).style.display = 'block';
+		E('sesdiv_'+whichone+'_showhide').innerHTML = '(Hide)';
+		cookie.set(where+'_'+whichone+'_vis', 1);
 	}
 }
 
@@ -3005,14 +2975,14 @@ function displayOUI(i) {
 }
 
 function wikiLink() {
-	const url = "https://tomato64.org/wiki"
+	const url = 'https://tomato64.org/wiki';
 	var page = myName();
 	if (page)
-		page = page.replace(/\.asp$/, "");
+		page = page.replace(/\.asp$/, '');
 	else
 		page = 'status-overview';
 
-	var res = '<a href=\"'+url+'/'+page+'\" target=\"_blank\" rel=\"noopener noreferrer\">Wiki</a> \| <a onclick=\"toggleTheme()\" href=\"#\">◐</a>';
+	var res = '<a href="'+url+'/'+page+'" target="_blank" rel="noopener noreferrer">Wiki</a> | <a onclick="toggleTheme()" href="#">◐</a>';
 
 	document.write(res);
 	var alt = cookie.get('gui_themet');
@@ -3021,7 +2991,7 @@ function wikiLink() {
 
 function getTheme() {
 	var element = document.body;
-	element.classList.toggle("alt-mode");
+	element.classList.toggle('alt-mode');
 }
 
 function toggleTheme() {
@@ -3049,9 +3019,9 @@ up.refresh = function(text) {
 
 // ---- events handler
 
-if (typeof document.getElementsByClassName != 'function') {	/* IE */
+if (typeof document.getElementsByClassName != 'function') { /* IE */
 	document.getElementsByClassName = function(cl) {
-		var retnode = new Array(), patt = new RegExp("(^|\\\\s)" + cl + "(\\\\s|$)"), els = this.getElementsByTagName('*');
+		var retnode = new Array(), patt = new RegExp("(^|\\\\s)"+cl+"(\\\\s|$)"), els = this.getElementsByTagName('*');
 		for (i = 0, j = 0; i < els.length; i++) {
 			if (patt.test(els[i].className)) {
 				retnode[j] = els[i];
@@ -3089,15 +3059,9 @@ var EventCache = function() {
 			var i, item;
 			for (i = listEvents.length - 1; i >= 0; i = i - 1) {
 				item = listEvents[i];
-				if (item[0].removeEventListener) {
-					item[0].removeEventListener(item[1], item[2], false);
-				};
-				if (item[1].substring(0, 2) != 'on') {
-					item[1] = 'on' + item[1];
-				};
-				if (item[0].detachEvent) {
-					item[0].detachEvent(item[1], item[2]);
-				};
+				if (item[0].removeEventListener) item[0].removeEventListener(item[1], item[2], false);
+				if (item[1].substring(0, 2) != 'on') item[1] = 'on' + item[1];
+				if (item[0].detachEvent) item[0].detachEvent(item[1], item[2]);
 				item[0][item[1]] = null;
 			};
 		}
