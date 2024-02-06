@@ -1,0 +1,11 @@
+--- apcupsd/autoconf/configure.in
++++ apcupsd/autoconf/configure.in
+@@ -14,7 +14,7 @@
+ AC_CONFIG_HEADER(include/apcconfig.h:autoconf/config.h.in)
+ 
+ topdir=`pwd`
+-AC_CONFIG_AUX_DIR(${topdir}/autoconf)
++AC_CONFIG_AUX_DIR(`pwd`/autoconf)
+ 
+ dnl
+ dnl Absolute srcdir

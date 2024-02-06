@@ -1,0 +1,12 @@
+--- apcupsd/autoconf/configure.in
++++ apcupsd/autoconf/configure.in
+@@ -179,7 +179,8 @@ AC_SUBST(SMTP)
+ AC_SUBST(APCTEST)
+ 
+ dnl Now check for programs
+-AC_REQ_PATH_PROGS(SHUTDOWN, shutdown shutdown.bsd)
++#AC_REQ_PATH_PROGS(SHUTDOWN, shutdown shutdown.bsd)
++SHUTDOWN=shutdown
+ 
+ AC_PATH_PROGS(APCUPSD_MAIL, mail, no)
+ if test "$APCUPSD_MAIL" = "no"
