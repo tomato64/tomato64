@@ -102,7 +102,7 @@ function earlyInit() {
 			<div class="afu-form">Select the file to use:</div>
 			<form name="form_upgrade" method="post" action="upgrade.cgi" enctype="multipart/form-data">
 				<div class="afu-form">
-					<input type="file" name="file"> <input type="button" id="afu-upgrade-button" value="Upgrade" onclick="upgrade()">
+					<input type="file" name="file" class="upgrade-file"> <input type="button" id="afu-upgrade-button" value="Upgrade" onclick="upgrade()">
 				</div>
 			</form>
 			<form name="form_reset" action="javascript:{}">
