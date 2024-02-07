@@ -63,3 +63,7 @@ ln -sf /tmp/var/wwwext $TARGET_DIR/www/ext
 ln -sf /tmp/var/wwwext $TARGET_DIR/www/user
 ln -sf /www/ext/proxy.pac $TARGET_DIR/www/proxy.pac
 ln -sf /www/ext/proxy.pac $TARGET_DIR/www/wpad.dat
+
+# usb_modeswitch.conf file
+USB_MODESWITCH_DIR=$BUILD_DIR/$(ls $BUILD_DIR --ignore='*data*' | grep usb_modeswitch)
+sed -e '/^\s*#.*$/d' -e '/^\s*$/d' < $USB_MODESWITCH_DIR/usb_modeswitch.conf > $TARGET_DIR/rom/etc/usb_modeswitch.conf
