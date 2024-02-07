@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-NDPI_VERSION = d9899c94e1e4306cf5844b31da12e8cc2cab7a5d
+NDPI_VERSION = 90514cb272b17ab600e68589f0436a25483e1fdb
 NDPI_SITE = $(call github,vel21ripn,nDPI,$(NDPI_VERSION))
 NDPI_LICENSE = GPL-3.0
 NDPI_DEPENDENCIES = iptables linux
