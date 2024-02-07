@@ -283,18 +283,20 @@ function clearAllFields(unit) {
 	E('_wg'+unit+'_ip').value = '';
 	E('_wg'+unit+'_fwmark').value = '';
 	E('_wg'+unit+'_mtu').value = '';
-	E('_f_wg'+unit+'_adns').checked = 0;
-	E('_f_wg'+unit+'_ka').checked = 0;
-	E('_f_wg'+unit+'_endpoint').selectedIndex = 0;
-	E('_f_wg'+unit+'_custom_endpoint').value = '';
 	E('_wg'+unit+'_aip').value = '';
 	E('_wg'+unit+'_peer_dns').value = '';
-	E('_f_wg'+unit+'_lan').checked = 0;
-	E('_f_wg'+unit+'_rgw').checked = 0;
 	E('_wg'+unit+'_preup').value = '';
 	E('_wg'+unit+'_postup').value = '';
 	E('_wg'+unit+'_predown').value = '';
 	E('_wg'+unit+'_postdown').value = '';
+	E('_f_wg'+unit+'_adns').checked = 0;
+	E('_f_wg'+unit+'_ka').checked = 0;
+	E('_f_wg'+unit+'_endpoint').selectedIndex = 0;
+	E('_f_wg'+unit+'_custom_endpoint').value = '';
+	E('_f_wg'+unit+'_rgw').checked = 0;
+	for (var i = 0; i <= MAX_BRIDGE_ID; i++)
+		E('_f_wg'+unit+'_lan'+i).checked = 0;
+
 	peerTables[unit].removeAllData();
 }
 
@@ -1220,7 +1222,7 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 			allowed_ips += nvram['wg'+unit+'_ip'].substring(other_ips_index);
 
 		for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
-			if (eval('nvram.wg'+unit+'_lan'+i) == 1) { /* push LANX to peer? */
+			if ((E('_f_wg'+unit+'_lan'+i).checked) == 1) { /* push LANX to peer? */
 				var t = (i == 0 ? '' : i);
 				var nm = nvram['lan'+t+'_netmask'];
 				var network_ip = getNetworkAddress(nvram['lan'+t+'_ipaddr'], nm);
@@ -1562,8 +1564,8 @@ function verifyFields(focused, quiet) {
 			t = (j == 0 ? '' : j);
 
 			if (eval('nvram.lan'+t+'_ifname.length') < 1) {
-				E('_f_wg'+i+'_lan'+t).checked = 0;
-				E('_f_wg'+i+'_lan'+t).disabled = 1;
+				E('_f_wg'+i+'_lan'+j).checked = 0;
+				E('_f_wg'+i+'_lan'+j).disabled = 1;
 			}
 		}
 
