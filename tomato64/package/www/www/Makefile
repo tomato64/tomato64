@@ -468,6 +468,7 @@ ifeq ($(TCONFIG_TOMATO64),y)
 	sed -i 's,___HASH_SHORT___,${HASH_SHORT},g' $(INSTALLDIR)/www/about.asp
 else
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-ctnf.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"

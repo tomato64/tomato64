@@ -1262,8 +1262,13 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TCONFIG_USB
 /* nas-usb */
 	{ "usb_enable",			"1"				, 0 },
+#ifndef TOMATO64
 	{ "usb_uhci",			"0"				, 0 },
 	{ "usb_ohci",			"0"				, 0 },
+#else
+	{ "usb_uhci",			"-1"				, 0 },
+	{ "usb_ohci",			"1"				, 0 },
+#endif /* TOMATO64 */
 	{ "usb_usb2",			"1"				, 0 },
 #ifdef TCONFIG_BCMARM
 	{ "usb_usb3",			"1"				, 0 },
@@ -1279,7 +1284,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "usb_fat_opt",		""				, 0 },
 	{ "usb_ntfs_opt",		""				, 0 },
 #ifdef TCONFIG_BCMARM
+#ifndef TOMATO64
 	{ "usb_fs_exfat",		"0"				, 0 },
+#else
+	{ "usb_fs_exfat",		"1"				, 0 },
+#endif /* TOMATO64 */
 	{ "usb_fs_ext4",		"1"				, 0 },
 #else
 	{ "usb_fs_ext3",		"1"				, 0 },
@@ -1298,7 +1307,11 @@ struct nvram_tuple router_defaults[] = {
 #endif /* TCONFIG_BCMARM */
 #endif /* TCONFIG_NTFS */
 #ifdef TCONFIG_HFS
+#ifndef TOMATO64
 	{ "usb_fs_hfs",			"0"				, 0 },
+#else
+	{ "usb_fs_hfs",			"1"				, 0 },
+#endif /* TOMATO64 */
 #ifdef TCONFIG_BCMARM
 #ifdef TCONFIG_TUX_HFS
 	{ "usb_hfs_driver",		"tuxera"			, 0 },

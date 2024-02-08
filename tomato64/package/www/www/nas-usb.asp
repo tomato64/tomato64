@@ -217,6 +217,20 @@ function init() {
 }
 
 function verifyFields(focused, quiet) {
+
+/* TOMATO64-BEGIN */
+	E('_f_usb').checked = 1;
+	E('_f_usb3').checked = 1;
+	E('_f_usb2').checked = 1;
+	E('_f_ohci').checked = 1;
+	E('_f_storage').checked = 1;
+	E('_f_ext4').checked = 1;
+	E('_f_ntfs').checked = 1;
+	E('_f_fat').checked = 1;
+	E('_f_exfat').checked = 1;
+	E('_f_hfs').checked = 1;
+/* TOMATO64-END */
+
 	var b = !E('_f_usb').checked;
 	var a = !E('_f_storage').checked;
 
@@ -249,7 +263,9 @@ function verifyFields(focused, quiet) {
 /* NTFS-END */
 /* HFS-BEGIN */
 	E('_f_hfs').disabled = b || a;
+/* TOMATO64-REMOVE-BEGIN */
 	E('_usb_hfs_driver').disabled = b || a || !E('_f_hfs').checked;
+/* TOMATO64-REMOVE-END */
 /* HFS-END */
 /* ZFS-BEGIN */
 	E('_f_zfs').disabled = b || a;
@@ -418,7 +434,6 @@ function submit_complete() {
 /* PARAGON-END */
 				], value: nvram.usb_ntfs_driver },
 /* NTFS-END */
-/* TOMATO64-REMOVE-END */
 /* HFS-BEGIN */
 				{ title: 'HFS/HFS+ Driver', indent: 2, name: 'usb_hfs_driver', type: 'select', options: [
 					['kernel','Open HFS/HFS+ driver'],
@@ -427,6 +442,7 @@ function submit_complete() {
 /* TUXERAHFS-END */
 				], value: nvram.usb_hfs_driver },
 /* HFS-END */
+/* TOMATO64-REMOVE-END */
 /* MICROSD-BEGIN */
 				{ title: 'SD/MMC Card Support', indent: 2, name: 'f_mmc', type: 'checkbox', value: nvram.usb_mmc == 1 },
 /* MICROSD-END */
