@@ -304,10 +304,18 @@ void start_mysql(int force)
 		if (f_exists(mysql_passwd))
 			unlink(mysql_passwd);
 
+#ifndef TOMATO64
 		f_write_string(mysql_passwd, "use mysql;", FW_CREATE | FW_NEWLINE, 0644);
+#else
+		f_write_string(mysql_passwd, "flush privileges;", FW_CREATE | FW_NEWLINE, 0644);
+#endif /* TOMATO64 */
 
 		memset(tmp1, 0, sizeof(tmp1));
+#ifndef TOMATO64
 		snprintf(tmp1, sizeof(tmp1), "update user set password=password('%s') where user='root';", nvram_safe_get("mysql_passwd"));
+#else
+		snprintf(tmp1, sizeof(tmp1), "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('%s');", nvram_safe_get("mysql_passwd"));
+#endif /* TOMATO64 */
 		f_write_string(mysql_passwd, tmp1, FW_APPEND | FW_NEWLINE, 0);
 
 		f_write_string(mysql_passwd, "flush privileges;", FW_APPEND | FW_NEWLINE, 0);
