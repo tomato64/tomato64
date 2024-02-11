@@ -45,6 +45,7 @@ function termOpen() {
 		term.open();
 	}
 	addEvent(window, 'paste', pasteEvent);
+}
 
 function pasteEvent(event) {
 		if (term) {
