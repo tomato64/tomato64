@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PHP_TOMATO_VERSION = 8.2.13
+PHP_TOMATO_VERSION = 8.2.15
 PHP_TOMATO_SITE = https://www.php.net/distributions
 PHP_TOMATO_SOURCE = php-$(PHP_TOMATO_VERSION).tar.xz
 PHP_TOMATO_INSTALL_STAGING = YES
