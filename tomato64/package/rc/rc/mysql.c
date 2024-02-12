@@ -396,6 +396,8 @@ void stop_mysql(void)
 
 	if ((pid = pidof("mysqld")) > 0)
 		logmsg(LOG_INFO, "terminating mysqld ...");
+	else
+		return;
 
 	/* wait for child of start_mysql to finish (if any) */
 	memset(buf, 0, sizeof(buf));
