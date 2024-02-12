@@ -269,6 +269,7 @@ void start_mysql(int force)
 		}
 	}
 
+#ifndef TOMATO64
 	/* check for tables_priv.MYD */
 	memset(tmp1, 0, sizeof(tmp1));
 	snprintf(tmp1, sizeof(tmp1), "%s/mysql/tables_priv.MYD", full_datadir);
@@ -278,6 +279,17 @@ void start_mysql(int force)
 		f_write_string(mysql_log, "=========Found NO tables_priv.MYD====================", FW_APPEND | FW_NEWLINE, 0);
 		f_write_string(mysql_log, "This is new installed MySQL.", FW_APPEND | FW_NEWLINE, 0);
 	}
+#else
+	/* check for tables_priv.MAD */
+	memset(tmp1, 0, sizeof(tmp1));
+	snprintf(tmp1, sizeof(tmp1), "%s/mysql/tables_priv.MAD", full_datadir);
+	if (!f_exists(tmp1)) {
+		new_install = 1;
+		logmsg(LOG_INFO, "tables_priv.MAD not found - it's a new MySQL installation");
+		f_write_string(mysql_log, "=========Found NO tables_priv.MAD====================", FW_APPEND | FW_NEWLINE, 0);
+		f_write_string(mysql_log, "This is new installed MySQL.", FW_APPEND | FW_NEWLINE, 0);
+	}
+#endif /* TOMATO64 */
 
 	/* initialize DB? */
 	if (nvram_get_int("mysql_init_priv") || new_install == 1) {
