@@ -317,7 +317,7 @@ void start_ovpn_client(int unit)
 {
 	FILE *fp;
 	ovpn_auth_t auth_mode;
-	ovpn_route_t route_mode;
+	ovpn_route_t route_mode = NONE;
 	ovpn_if_t if_type;
 	char iface[IF_SIZE];
 	char buffer[BUF_SIZE];
