@@ -1515,6 +1515,7 @@ static void add_ip6_lanaddr(void)
 void start_ipv6_tunnel(void)
 {
 	char ip[INET6_ADDRSTRLEN + 4];
+	char ip_tmp[INET6_ADDRSTRLEN + 4];
 	struct in_addr addr4;
 	struct in6_addr addr;
 	char *wanip, *mtu, *tun_dev;
@@ -1555,8 +1556,8 @@ void start_ipv6_tunnel(void)
 		addr.s6_addr16[0] = htons(0x2002);
 		ipv6_mapaddr4(&addr, prefixlen, &addr4, mask4size);
 		addr.s6_addr16[7] = htons(0x0001);
-		inet_ntop(AF_INET6, &addr, ip, sizeof(ip));
-		snprintf(ip, sizeof(ip), "%s/%d", ip, prefixlen);
+		inet_ntop(AF_INET6, &addr, ip_tmp, sizeof(ip_tmp));
+		snprintf(ip, sizeof(ip), "%s/%d", ip_tmp, prefixlen);
 		add_ip6_lanaddr();
 	}
 	/* static tunnel 6to4 */
