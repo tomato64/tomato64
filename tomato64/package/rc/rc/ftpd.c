@@ -147,6 +147,7 @@ void start_ftpd(int force)
 		snprintf(tmp, sizeof(tmp), "%s/%s", vsftpd_users, "admin");
 		if ((f = fopen(tmp, "w")) == NULL) {
 			logerr(__FUNCTION__, __LINE__, tmp);
+			fclose(fp);
 			return;
 		}
 
@@ -166,6 +167,7 @@ void start_ftpd(int force)
 		snprintf(tmp, sizeof(tmp), "%s/ftp", vsftpd_users);
 		if ((f = fopen(tmp, "w")) == NULL) {
 			logerr(__FUNCTION__, __LINE__, tmp);
+			fclose(fp);
 			return;
 		}
 
