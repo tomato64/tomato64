@@ -19,12 +19,12 @@ echo "ENVIRONMENT"; env; echo
 echo "CPU INFO"; cat /proc/loadavg; cat /proc/cpuinfo; echo
 echo "INTERRUPTS"; cat /proc/interrupts; echo
 echo "MEMORY"; free; cat /proc/meminfo; echo
-echo "ETH0 WIRELESS DRIVER VER"; wl -i eth0 ver; wl -i eth0 country;
-echo "Valid Channels:"; wl -i eth0 channels; echo
 echo "ETH1 WIRELESS DRIVER VER"; wl -i eth1 ver; wl -i eth1 country;
 echo "Valid Channels:"; wl -i eth1 channels; echo
 echo "ETH2 WIRELESS DRIVER VER"; wl -i eth2 ver; wl -i eth2 country;
 echo "Valid Channels:"; wl -i eth2 channels; echo
+echo "ETH3 WIRELESS DRIVER VER"; wl -i eth3 ver; wl -i eth3 country;
+echo "Valid Channels:"; wl -i eth3 channels; echo
 echo "LOADED MODULES"; lsmod; echo
 echo "PROCESSES"; top -b -n1; echo
 echo "DMESG"; dmesg; echo
