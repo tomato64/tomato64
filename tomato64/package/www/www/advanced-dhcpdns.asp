@@ -685,7 +685,7 @@ function init() {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: '<a href="http://www.thekelleys.org.uk/" class="new_window">Dnsmasq<\/a><br>Custom configuration', name: 'dnsmasq_custom', type: 'textarea', value: nvram.dnsmasq_custom }
+			{ title: '<a href="https://thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html" class="new_window">Dnsmasq<\/a><br>Custom configuration', name: 'dnsmasq_custom', type: 'textarea', value: nvram.dnsmasq_custom }
 		]);
 	</script>
 </div>
