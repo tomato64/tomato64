@@ -830,6 +830,28 @@ void asp_time(int argc, char **argv)
 	}
 }
 
+void asp_ntp(int argc, char **argv)
+{
+	FILE *file;
+	char line [100];
+
+	if (access("/tmp/ntpd", F_OK) != 0) {
+		web_puts("<span class=\"blinking\">Not Available</span>");
+		return;
+	}
+
+	file = fopen("/tmp/ntpd", "r");
+	if(file == NULL)
+		return;
+
+	while(fgets(line, sizeof(line), file)) {
+		line[strcspn(line, "\n")] = '\0';
+		web_printf("%s\\n \\\n", line);
+	}
+
+	fclose(file);
+}
+
 #ifdef TCONFIG_SDHC
 void asp_mmcid(int argc, char **argv) {
 	FILE *f;

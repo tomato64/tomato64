@@ -127,6 +127,7 @@ const aspapi_t aspapi[] = {
 	{ "jiffies",			asp_jiffies			},
 #endif
 	{ "time",			asp_time			},
+	{ "ntp",			asp_ntp			},
 	{ "upnpinfo",			asp_upnpinfo			},
 	{ "version",			asp_version			},
 	{ "wanstatus",			asp_wanstatus			},

@@ -1,0 +1,56 @@
+diff -Naur busybox.orig/networking/ntpd.c busybox/networking/ntpd.c
+--- busybox.orig/networking/ntpd.c	2024-02-19 07:51:14.526817220 -0700
++++ busybox/networking/ntpd.c	2024-02-20 11:25:31.553912126 -0700
+@@ -984,7 +984,12 @@
+ static void run_script(const char *action, double offset)
+ {
+ 	char *argv[3];
+-	char *env1, *env2, *env3, *env4;
++	char *env1, *env2, *env3, *env4, *env5, *env6, *env7;
++
++	struct sockaddr_in sa;
++	char server_ip[INET_ADDRSTRLEN];
++	sa = G.last_update_peer->p_lsa->u.sin;
++	inet_ntop(AF_INET, &(sa.sin_addr), server_ip, INET_ADDRSTRLEN);
+ 
+ 	G.last_script_run = G.cur_time;
+ 
+@@ -1005,6 +1010,12 @@
+ 	putenv(env3);
+ 	env4 = xasprintf("%s=%f", "offset", offset);
+ 	putenv(env4);
++	env5 = xasprintf("%s=%s", "server_hostname", G.last_update_peer->p_hostname);
++	putenv(env5);
++	env6 = xasprintf("%s=%s", "server_ip", server_ip);
++	putenv(env6);
++	env7 = xasprintf("%s=%f", "discipline_jitter", G.discipline_jitter);
++	putenv(env7);
+ 	/* Other items of potential interest: selected peer,
+ 	 * rootdelay, reftime, rootdisp, refid, ntp_status,
+ 	 * last_update_offset, last_update_recv_time, discipline_jitter,
+@@ -1020,10 +1031,16 @@
+ 	unsetenv("freq_drift_ppm");
+ 	unsetenv("poll_interval");
+ 	unsetenv("offset");
++	unsetenv("server_hostname");
++	unsetenv("server_ip");
++	unsetenv("discipline_jitter");
+ 	free(env1);
+ 	free(env2);
+ 	free(env3);
+ 	free(env4);
++	free(env5);
++	free(env6);
++	free(env7);
+ }
+ 
+ static NOINLINE void
+@@ -2585,7 +2602,7 @@
+ 			if (bb_got_signal)
+ 				break; /* poll was interrupted by a signal */
+ 
+-			if (G.cur_time - G.last_script_run > 11*60) {
++			if (G.cur_time - G.last_script_run > 5) {
+ 				/* Useful for updating battery-backed RTC and such */
+ 				run_script("periodic", G.last_update_offset);
+ 				gettime1900d(); /* sets G.cur_time */

@@ -25,6 +25,7 @@ var ntpList = [['custom','Custom...'],['','Default'],['africa','Africa'],['asia'
 
 function show() {
 	elem.setInnerHTML('clock', isup.time);
+	elem.setInnerHTML('ntp', isup.ntp);
 }
 
 function ntpString(name) {
@@ -182,6 +183,7 @@ function init() {
 
 		createFieldTable('', [
 			{ title: 'Router Time', text: '<span id="clock">'+isup.time+'<\/span>' },
+			{ title: 'NTP Info', text: '<span id="ntp" style="white-space: pre-line">'+isup.ntp+'<\/span>' },
 			null,
 			{ title: 'Time Zone', name: 'tm_sel', type: 'select', options: [
 				['custom','Custom...'],

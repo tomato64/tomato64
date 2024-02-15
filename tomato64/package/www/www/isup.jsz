@@ -5,6 +5,7 @@
 isup = {};
 
 isup.time = '<% time(); %>';
+isup.ntp = '<% ntp(); %>';
 
 isup.telnetd = parseInt('<% psup("telnetd"); %>');
 
