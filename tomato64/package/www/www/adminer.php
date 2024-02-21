@@ -7,7 +7,7 @@
 * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License, version 2 (one or other)
 * @version 4.8.1
 */function
-adminer_errors($cc,$ec){return!!preg_match('~^(Trying to access array offset on value of type null|Undefined array key)~',$ec);}error_reporting(6135);set_error_handler('adminer_errors',E_WARNING);$wc=!preg_match('~^(unsafe_raw)?$~',ini_get("filter.default"));if($wc||ini_get("filter.default_flags")){foreach(array('_GET','_POST','_COOKIE','_SERVER')as$X){$ch=filter_input_array(constant("INPUT$X"),FILTER_UNSAFE_RAW);if($ch)$$X=$ch;}}if(function_exists("mb_internal_encoding"))mb_internal_encoding("8bit");function
+adminer_errors($cc,$ec){return!!preg_match('~^(Trying to access array offset on( value of type)? null|Undefined array key)~',$ec);}error_reporting(6135);set_error_handler('adminer_errors',E_WARNING);$wc=!preg_match('~^(unsafe_raw)?$~',ini_get("filter.default"));if($wc||ini_get("filter.default_flags")){foreach(array('_GET','_POST','_COOKIE','_SERVER')as$X){$ch=filter_input_array(constant("INPUT$X"),FILTER_UNSAFE_RAW);if($ch)$$X=$ch;}}if(function_exists("mb_internal_encoding"))mb_internal_encoding("8bit");function
 connection(){global$e;return$e;}function
 adminer(){global$b;return$b;}function
 version(){global$ga;return$ga;}function
