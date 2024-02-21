@@ -46,6 +46,7 @@
 //#define nginxserver_hash_bucket_size	"128"				/* server names hash bucket size */
 #define nginx_fw_script			nginxdir"/nginx-fw.sh"
 #define nginx_fw_del_script		nginxdir"/nginx-clear-fw-tmp.sh"
+#define php_ini_path			"/etc/php.ini"
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
@@ -290,8 +291,8 @@ static void build_nginx_conf(void)
 	logmsg(LOG_INFO, "nginx - config file built succesfully");
 
 	if (nvram_get_int("nginx_php")) {
-		if (!(phpini_file = fopen("/etc/php.ini", "w"))) {
-			logerr(__FUNCTION__, __LINE__, "/etc/php.ini");
+		if (!(phpini_file = fopen(php_ini_path, "w"))) {
+			logerr(__FUNCTION__, __LINE__, php_ini_path);
 			return;
 		}
 		fprintf(phpini_file, "post_max_size = %sM\n"
@@ -389,10 +390,9 @@ void stop_nginx(void)
 
 	if (pidof(nginxbin) > 0) {
 		killall_tk_period_wait(nginxbin, 50);
-		killall_tk_period_wait("php-cgi", 50);
-
 		logmsg(LOG_INFO, "nginx is stopped");
 	}
+	killall_tk_period_wait("php-cgi", 50);
 
 	run_del_firewall_script(nginx_fw_script, nginx_fw_del_script);
 
