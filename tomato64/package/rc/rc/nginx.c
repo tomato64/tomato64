@@ -8,7 +8,7 @@
  * No part of this program can be used out of Tomato Firmware without owners permission.
  * This code generates the configurations files for NGINX. You can see these files in /etc/nginx/
  *
- * Fixes/updates (C) 2018 - 2022 pedro
+ * Fixes/updates (C) 2018 - 2024 pedro
  *
  */
 
@@ -47,6 +47,11 @@
 #define nginx_fw_script			nginxdir"/nginx-fw.sh"
 #define nginx_fw_del_script		nginxdir"/nginx-clear-fw-tmp.sh"
 #define php_ini_path			"/etc/php.ini"
+#ifdef TCONFIG_BCMARM
+#define php_fpm_path			"/etc/php-fpm.conf"
+#define php_fpm_socket			"/var/run/php-fpm.sock"
+#define php_fpm_pid			"/var/run/php-fpm.pid"
+#endif /* TCONFIG_BCMARM */
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
@@ -56,6 +61,9 @@ FILE * nginx_conf_file;
 FILE * fastcgi_conf_file;
 FILE * mimetypes_file;
 FILE * phpini_file;
+#ifdef TCONFIG_BCMARM
+FILE * phpfpm_file;
+#endif /* TCONFIG_BCMARM */
 unsigned int fastpath = 0;
 
 
@@ -64,6 +72,7 @@ static void build_fastcgi_conf(void)
 	/* Starting a fastcgi configuration file */
 	mkdir_if_none(nginxdir);
 	if ((fastcgi_conf_file = fopen(fastcgiconf, "w")) == NULL) {
+		logerr(__FUNCTION__, __LINE__, fastcgiconf);
 		return;
 	}
 
@@ -95,6 +104,7 @@ static void build_mime_types(void)
 	/* Starting the mime.types configuration file */
 	mkdir_if_none(nginxdir);
 	if ((mimetypes_file = fopen(mimetypes, "w")) == NULL) {
+		logerr(__FUNCTION__, __LINE__, mimetypes);
 		return;
 	}
 
@@ -168,7 +178,7 @@ static void build_nginx_conf(void)
 		i = 10; /* min = Max Performance and max= Min Performance value for worker_priority */
 
 	if ((buf = nvram_safe_get("nginx_httpcustom")) == NULL)
-		buf = nginxcustom; /* shibby - add custom config to http section */
+		buf = nginxcustom; /* add custom config to http section */
 
 	fprintf(nginx_conf_file, /* global process */
 	                         "user %s;\n"
@@ -259,9 +269,17 @@ static void build_nginx_conf(void)
 		                         "try_files $script_name = 404;\n"
 		                         "include %s;\n"
 		                         "fastcgi_param PATH_INFO $path_info;\n"
+#ifdef TCONFIG_BCMARM
+		                         "fastcgi_pass unix:%s;\n"
+#else
 		                         "fastcgi_pass 127.0.0.1:9000;\n"
+#endif /* TCONFIG_BCMARM */
 		                         "}\n",
-		                         fastcgiconf);
+		                         fastcgiconf
+#ifdef TCONFIG_BCMARM
+		                         ,php_fpm_socket
+#endif /* TCONFIG_BCMARM */
+		                         );
 
 	/* server for static files */
 	fprintf(nginx_conf_file, "location ~ ^/(images|javascript|js|css|flash|media|static)/ {\n"
@@ -300,6 +318,14 @@ static void build_nginx_conf(void)
 		                     "mysqli.default_port = 3306\n"
 		                     "mysqli.default_socket = %s/mysqld.sock\n"
 		                     "mysqli.default_host = localhost\n"
+#ifdef TCONFIG_BCMARM
+		                     "cgi.fix_pathinfo = 0\n"
+#endif /* TCONFIG_BCMARM */
+		                     "log_errors = On\n"
+		                     "error_log = syslog\n"
+		                     "error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT\n"
+		                     "display_errors = Off\n"
+		                     "display_startup_errors = Off\n"
 		                     "%s\n",
 		                     nvram_safe_get("nginx_upload"),
 		                     nvram_safe_get("nginx_upload"),
@@ -307,6 +333,33 @@ static void build_nginx_conf(void)
 		                     nvram_safe_get("nginx_phpconf"));
 
 		fclose(phpini_file);
+
+#ifdef TCONFIG_BCMARM
+		if (!(phpfpm_file = fopen(php_fpm_path, "w"))) {
+			logerr(__FUNCTION__, __LINE__, php_fpm_path);
+			return;
+		}
+		fprintf(phpfpm_file, "[global]\n"
+		                     "pid = %s\n"
+		                     "error_log = syslog\n"
+		                     "log_level = notice\n"
+		                     "daemonize = yes\n"
+		                     "[www]\n"
+		                     "user = %s\n"
+		                     "group = %s\n\n"
+		                     "listen = %s\n"
+		                     "listen.backlog = 65535\n"
+		                     "pm = ondemand\n"
+		                     "pm.max_children = 5\n"
+		                     "pm.process_idle_timeout = 10s\n"
+		                     "pm.max_requests = 200\n",
+		                     php_fpm_pid,
+		                     nvram_safe_get("nginx_user"),
+		                     nvram_safe_get("nginx_user"),
+		                     php_fpm_socket);
+
+		fclose(phpfpm_file);
+#endif /* TCONFIG_BCMARM */
 	}
 }
 
@@ -336,7 +389,7 @@ static void build_nginx_firewall(void)
 /* start the nginx module according environment directives */
 void start_nginx(int force)
 {
-	int ret;
+	int ret = 0;
 
 	/* only if enabled or forced */
 	if (!nvram_get_int("nginx_enable") && force == 0)
@@ -369,13 +422,21 @@ void start_nginx(int force)
 
 	run_nginx_firewall_script();
 
-	if (nvram_get_int("nginx_php")) /* run spawn-fcgi */
+	if (nvram_get_int("nginx_php")) /* run php-fpm/spawn-fcgi */
+#ifdef TCONFIG_BCMARM
+		ret = eval("/usr/sbin/php-fpm", "-c", php_ini_path, "-y", php_fpm_path, "-R");
+#else
 		xstart("spawn-fcgi", "-a", "127.0.0.1", "-p", "9000", "-P", nginxrundir"/php-fastcgi.pid", "-C", "2", "-u", nvram_safe_get("nginx_user"), "-g", nvram_safe_get("nginx_user"), "/usr/sbin/php-cgi");
+#endif /* TCONFIG_BCMARM */
 
-	ret = eval(nginxbin, "-c", nvram_get_int("nginx_override") ? nvram_safe_get("nginx_overridefile") : nginxconf);
+	ret |= eval(nginxbin, "-c", nvram_get_int("nginx_override") ? nvram_safe_get("nginx_overridefile") : nginxconf);
 
 	if (ret) {
+#ifdef TCONFIG_BCMARM
+		logmsg(LOG_ERR, "starting nginx and/or php-fpm failed - check configuration ...");
+#else
 		logmsg(LOG_ERR, "starting nginx failed - check configuration ...");
+#endif
 		stop_nginx();
 	}
 	else
@@ -392,13 +453,28 @@ void stop_nginx(void)
 		killall_tk_period_wait(nginxbin, 50);
 		logmsg(LOG_INFO, "nginx is stopped");
 	}
+#ifdef TCONFIG_BCMARM
+	killall_tk_period_wait("php-fpm", 50);
+#else
 	killall_tk_period_wait("php-cgi", 50);
+#endif /* TCONFIG_BCMARM */
 
 	run_del_firewall_script(nginx_fw_script, nginx_fw_del_script);
 
 	eval("rm", "-rf", nginx_fw_script);
-	if (!nvram_get_int("nginx_keepconf"))
+	if (!nvram_get_int("nginx_keepconf")) {
 		eval("rm", "-rf", nginxdir);
+#ifdef TCONFIG_BCMARM
+		eval("rm", "-f", php_ini_path);
+		eval("rm", "-f", php_fpm_path);
+#endif /* TCONFIG_BCMARM */
+	}
+#ifdef TCONFIG_BCMARM
+	if (f_exists(php_fpm_socket))
+		unlink(php_fpm_socket);
+	if (f_exists(php_fpm_pid))
+		unlink(php_fpm_pid);
+#endif /* TCONFIG_BCMARM */
 	if (f_exists(nginxpid))
 		unlink(nginxpid);
 }

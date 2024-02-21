@@ -1866,9 +1866,12 @@ struct nvram_tuple router_defaults[] = {
 	{"nginx_httpcustom",		""				, 0 },	/* additional lines for nginx.conf */
 	{"nginx_servercustom",		""				, 0 },	/* additional lines for nginx.conf */
 	{"nginx_phpconf",		""				, 0 },	/* additional lines for php.ini */
+#ifdef TCONFIG_BCMARM
+	{"nginx_phpfpmconf",		""				, 0 },	/* additional lines for php-fpm.conf */
+#endif
 	{"nginx_user",			"root"				, 0 },	/* user/group */
-	{"nginx_override",		"0"				, 0 },	/* additional lines for php.ini */
-	{"nginx_overridefile",		"/path/to/nginx.conf"		, 0 },	/* user/group */
+	{"nginx_override",		"0"				, 0 },	/* use user config */
+	{"nginx_overridefile",		"/path/to/nginx.conf"		, 0 },	/* path/to/user/nginx.conf */
 	{"nginx_h5aisupport",		"0"				, 0 },	/* enable h5ai support */
 
 	{ "mysql_enable",		"0"				, 0 },

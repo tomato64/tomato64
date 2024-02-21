@@ -25,7 +25,7 @@
 
 <script>
 
-//	<% nvram("nginx_enable,nginx_php,nginx_keepconf,nginx_port,nginx_upload,nginx_remote,nginx_fqdn,nginx_docroot,nginx_priority,nginx_custom,nginx_httpcustom,nginx_servercustom,nginx_user,nginx_phpconf,nginx_override,nginx_overridefile,nginx_h5aisupport,lan_ipaddr"); %>
+//	<% nvram("nginx_enable,nginx_php,nginx_keepconf,nginx_port,nginx_upload,nginx_remote,nginx_fqdn,nginx_docroot,nginx_priority,nginx_custom,nginx_httpcustom,nginx_servercustom,nginx_user,nginx_phpconf,nginx_phpfpmconf,nginx_override,nginx_overridefile,nginx_h5aisupport,lan_ipaddr"); %>
 
 var cprefix = 'web_nginx';
 var changed = 0;
@@ -49,6 +49,9 @@ function verifyFields(focused, quiet) {
 	E('_nginx_httpcustom').disabled = a;
 	E('_nginx_servercustom').disabled = a;
 	E('_nginx_phpconf').disabled = a;
+/* BCMARM-BEGIN */
+	E('_nginx_phpfpmconf').disabled = a;
+/* BCMARM-END */
 	E('_f_nginx_h5aisupport').disabled = a;
 	E('_nginx_overridefile').disabled = !a;
 
@@ -61,12 +64,31 @@ function verifyFields(focused, quiet) {
 			ok = 0;
 		if (!v_range(E('_nginx_upload'), quiet || !ok, 0, 512))
 			ok = 0;
+		if (!v_length(E('_nginx_httpcustom'), quiet || !ok, 0, 4096))
+			ok = 0;
+		if (!v_length(E('_nginx_servercustom'), quiet || !ok, 0, 4096))
+			ok = 0;
+		if (!v_length(E('_nginx_custom'), quiet || !ok, 0, 4096))
+			ok = 0;
+		if (!v_length(E('_nginx_phpconf'), quiet || !ok, 0, 4096))
+			ok = 0;
+/* BCMARM-BEGIN */
+		if (!v_length(E('_nginx_phpfpmconf'), quiet || !ok, 0, 4096))
+			ok = 0;
+/* BCMARM-END */
 	}
 	else {
 		ferror.clear(b);
 		ferror.clear(E('_nginx_port'));
 		ferror.clear(E('_nginx_priority'));
 		ferror.clear(E('_nginx_upload'));
+		ferror.clear(E('_nginx_httpcustom'));
+		ferror.clear(E('_nginx_servercustom'));
+		ferror.clear(E('_nginx_custom'));
+		ferror.clear(E('_nginx_phpconf'));
+/* BCMARM-BEGIN */
+		ferror.clear(E('_nginx_phpfpmconf'));
+/* BCMARM-END */
 	}
 
 	return ok;
@@ -174,10 +196,13 @@ function init() {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: '<a href="http://wiki.nginx.org/Configuration" class="new_window">NGINX<\/a><br>HTTP Section<br>Custom configuration', name: 'nginx_httpcustom', type: 'textarea', value: nvram.nginx_httpcustom },
-			{ title: '<a href="http://wiki.nginx.org/Configuration" class="new_window">NGINX<\/a><br>SERVER Section<br>Custom configuration', name: 'nginx_servercustom', type: 'textarea', value: nvram.nginx_servercustom },
-			{ title: '<a href="http://wiki.nginx.org/Configuration" class="new_window">NGINX<\/a><br>Custom configuration', name: 'nginx_custom', type: 'textarea', value: nvram.nginx_custom },
-			{ title: '<a href="http://php.net/manual/en/ini.php" class="new_window">PHP<\/a><br>Custom configuration', name: 'nginx_phpconf', type: 'textarea', value: nvram.nginx_phpconf },
+			{ title: '<a href="https://www.nginx.com/resources/wiki/start/" class="new_window">NGINX<\/a><br>HTTP Section<br>Custom configuration', name: 'nginx_httpcustom', type: 'textarea', value: nvram.nginx_httpcustom },
+			{ title: '<a href="https://www.nginx.com/resources/wiki/start/" class="new_window">NGINX<\/a><br>SERVER Section<br>Custom configuration', name: 'nginx_servercustom', type: 'textarea', value: nvram.nginx_servercustom },
+			{ title: '<a href="https://www.nginx.com/resources/wiki/start/" class="new_window">NGINX<\/a><br>Custom configuration', name: 'nginx_custom', type: 'textarea', value: nvram.nginx_custom },
+			{ title: '<a href="https://www.php.net/manual/en/ini.php" class="new_window">PHP<\/a><br>Custom configuration', name: 'nginx_phpconf', type: 'textarea', value: nvram.nginx_phpconf },
+/* BCMARM-BEGIN */
+			{ title: '<a href="https://www.php.net/manual/en/install.fpm.configuration.php" class="new_window">php-fpm<\/a><br>Custom configuration', name: 'nginx_phpfpmconf', type: 'textarea', value: nvram.nginx_phpfpmconf },
+/* BCMARM-END */
 			null,
 			{ title: 'Use user config file', name: 'f_nginx_override', type: 'checkbox', value: nvram.nginx_override == '1', suffix: ' <small>User config file will be used, some of GUI settings will be ignored<\/small>' },
 			{ title: 'User config file path', name: 'nginx_overridefile', type: 'text', maxlen: 255, size: 40, value: nvram.nginx_overridefile }
@@ -192,21 +217,24 @@ function init() {
 	<ul>
 		<li><b> Status Button</b> - Quick Start-Stop Service.</li>
 		<li><b> Enable on Start</b> - Check to activate the Web Server at the router start.</li>
-		<li><b> Enable PHP support</b> - Check to enable PHP support (php-cgi).</li>
-		<li><b> Run As</b> - Select user used to start nginx and php-cgi daemon.</li>
+		<li><b> Enable PHP support</b> - Check to enable PHP support (php-fpm).</li>
+		<li><b> Run As</b> - Select user used to start nginx and php-fpm daemon.</li>
 		<li><b> Keep Config Files</b> - Do you want to modify the configuration file manually? Tick this box and after restart changes will be maintained.</li>
 		<li><b> Web Server Port</b> - The Port used by the Web Server to be accessed. Check conflict when the port is used by other services.</li>
 		<li><b> Allow Remote Access</b> - This option will open the Web Server GUI port from the WAN side. Service will be accessed from the internet.</li>
 		<li><b> Web Server Name</b> - Name that will appear on top of your Internet Browser.</li>
 		<li><b> Document Root Path</b> - The path in your router where documents are stored (ex: /tmp/mnt/HDD/www).</li>
-		<li><b> NGINX Custom Configuration</b> - You can add other values to nginx.conf to suit your needs.</li>
-		<li><b> NGINX HTTP Section Custom Configuration</b> - You can add other values to nginx.conf in declaration of http {} to suit your needs.</li>
-		<li><b> NGINX SERVER Section Custom Configuration</b> - You can add other values to nginx.conf in declaration of server {} to suit your needs.</li>
-		<li><b> PHP Custom Configuration</b> - You can add other values to php.ini to suit your needs.</li>
 		<li><b> Server Priority</b> - Sets the service priority over other processes running on the router. The operating system kernel has priority -5. 
 		        Never select a lower value than the kernel uses. Do not use the service test page to adjust the server performance, its performance is lower 
 		        than the definitive media where files will be located, i.e; USB Stick, Hard Drive or SSD.</li>
-		<li><b> Enable <a href="https://larsjung.de/h5ai/" class="new_window">h5ai</a> support</b> - Files should be copied to the '/_h5ai' folder as described on dev page.</li>
+		<li><b> Enable h5ai support</b> - Files should be copied to the '/_h5ai' folder as described on dev page.</li>
+		<li><b> NGINX HTTP Section Custom Configuration</b> - You can add other values to nginx.conf in declaration of http {} to suit your needs.</li>
+		<li><b> NGINX SERVER Section Custom Configuration</b> - You can add other values to nginx.conf in declaration of server {} to suit your needs.</li>
+		<li><b> NGINX Custom Configuration</b> - You can add other values to nginx.conf to suit your needs.</li>
+		<li><b> PHP Custom Configuration</b> - You can add other values to php.ini to suit your needs.</li>
+<!-- BCMARM-BEGIN -->
+		<li><b> php-fpm Custom Configuration</b> - You can add other values to php-fpm.conf to suit your needs.</li>
+<!-- BCMARM-END -->
 	</ul>
 </div>
 

@@ -1460,9 +1460,12 @@ static const nvset_t nvset_list[] = {
 	{"nginx_httpcustom",		V_TEXT(0, 4096)			},	/* user window to add parameters to nginx.conf */
 	{"nginx_servercustom",		V_TEXT(0, 4096)			},	/* user window to add parameters to nginx.conf */
 	{"nginx_phpconf",		V_TEXT(0, 4096)			},	/* user window to add parameters to php.ini */
-	{"nginx_user",			V_LENGTH(0, 255)		},	/* user used to start nginx and spawn-fcgi */
-	{"nginx_override",		V_01				},
-	{"nginx_overridefile",		V_TEXT(0, 4096)			},
+#ifdef TCONFIG_BCMARM
+	{"nginx_phpfpmconf",		V_TEXT(0, 4096)			},	/* user window to add parameters to php-fpm.conf */
+#endif
+	{"nginx_user",			V_LENGTH(0, 255)		},	/* user used to start nginx and spawn-fcgi/php-fpm */
+	{"nginx_override",		V_01				},	/* use user config */
+	{"nginx_overridefile",		V_TEXT(0, 4096)			},	/* path/to/user/nginx.conf */
 	{"nginx_h5aisupport",		V_01				},	/* enable h5ai support */
 
 /* web-mysql */

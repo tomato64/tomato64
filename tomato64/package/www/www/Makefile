@@ -498,6 +498,11 @@ ifneq ($(TCONFIG_WIREGUARD),y)
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/WIREGUARD-BEGIN/,/WIREGUARD-END/d"
 endif
 
+# only add php-fpm part for ARM routers
+ifneq ($(TCONFIG_BCMARM),y)
+	sed -i $(INSTALLDIR)/www/web-nginx.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+endif
+
 # clean up
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.jsz *.html); do \
