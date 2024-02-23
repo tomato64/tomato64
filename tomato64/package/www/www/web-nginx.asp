@@ -217,8 +217,8 @@ function init() {
 	<ul>
 		<li><b> Status Button</b> - Quick Start-Stop Service.</li>
 		<li><b> Enable on Start</b> - Check to activate the Web Server at the router start.</li>
-		<li><b> Enable PHP support</b> - Check to enable PHP support (php-fpm).</li>
-		<li><b> Run As</b> - Select user used to start nginx and php-fpm daemon.</li>
+		<li><b> Enable PHP support</b> - Check to enable PHP support.</li>
+		<li><b> Run As</b> - Select user used to start nginx and php daemon.</li>
 		<li><b> Keep Config Files</b> - Do you want to modify the configuration file manually? Tick this box and after restart changes will be maintained.</li>
 		<li><b> Web Server Port</b> - The Port used by the Web Server to be accessed. Check conflict when the port is used by other services.</li>
 		<li><b> Allow Remote Access</b> - This option will open the Web Server GUI port from the WAN side. Service will be accessed from the internet.</li>
