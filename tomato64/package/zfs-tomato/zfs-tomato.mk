@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-ZFS_TOMATO_VERSION = 2.2.2
+ZFS_TOMATO_VERSION = 2.2.3
 ZFS_TOMATO_SOURCE = zfs-$(ZFS_TOMATO_VERSION).tar.gz
 ZFS_TOMATO_SITE = https://github.com/openzfs/zfs/releases/download/zfs-$(ZFS_TOMATO_VERSION)
 ZFS_TOMATO_LICENSE = CDDL
