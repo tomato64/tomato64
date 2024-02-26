@@ -436,12 +436,16 @@ void setup_conntrack(void)
 		ct_modprobe_r("ftp");
 
 	if (!nvram_match("nf_pptp", "0")) {
+#ifndef TOMATO64
 		ct_modprobe("proto_gre");
+#endif /* TOMATO64 */
 		ct_modprobe("pptp");
 	}
 	else {
 		ct_modprobe_r("pptp");
+#ifndef TOMATO64
 		ct_modprobe_r("proto_gre");
+#endif /* TOMATO64 */
 	}
 }
 
