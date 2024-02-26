@@ -48,7 +48,7 @@ function init() {
 	<br>
 	<br>
 	<b>Tomato64 project page: </b><a href="https://tomato64.org" class="new_window"> https://tomato64.org</a><br>
-	<b>Forums about Tomato:</b> <a href="https://www.linksysinfo.org/index.php?forums/tomato-firmware.33/" class="new_window">https://linksysinfo.org</a><br>
+	<b>Forums about Tomato:</b> <a href="https://www.linksysinfo.org/index.php?forums/tomato-firmware-for-x86_64.82/" class="new_window">https://linksysinfo.org</a><br>
 	<b>Source code: </b><a href="https://github.com/tomato64/tomato64" class="new_window">https://github.com/tomato64/tomato64</a><br>
 	<br>
 	<hr>
