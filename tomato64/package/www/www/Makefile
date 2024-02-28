@@ -139,6 +139,11 @@ ifneq ($(TCONFIG_NOCAT),y)
 	sed -i $(INSTALLDIR)/www/about.asp -e "/NOCAT-BEGIN/,/NOCAT-END/d"
 endif
 
+# only add php-fpm part for ARM routers
+ifneq ($(TCONFIG_BCMARM),y)
+	sed -i $(INSTALLDIR)/www/web-nginx.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+endif
+
 # Clean up NGinX files if not needed
 ifneq ($(TCONFIG_NGINX),y)
 	rm -f $(INSTALLDIR)/www/web-nginx.asp
@@ -496,11 +501,6 @@ ifneq ($(TCONFIG_WIREGUARD),y)
 	rm -f $(INSTALLDIR)/www/qr-icon.svg
 	rm -f $(INSTALLDIR)/www/wireguard.js
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/WIREGUARD-BEGIN/,/WIREGUARD-END/d"
-endif
-
-# only add php-fpm part for ARM routers
-ifneq ($(TCONFIG_BCMARM),y)
-	sed -i $(INSTALLDIR)/www/web-nginx.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
 endif
 
 # clean up
