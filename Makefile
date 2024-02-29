@@ -1,4 +1,4 @@
-BUILDROOT_VERSION = 2023.11.1
+BUILDROOT_VERSION = 2024.02-rc1
 TARBALL = ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSION).tar.xz
 URL = https://github.com/tomato64/buildroot-release/releases/download
 PATCHES := $(wildcard src/patches/*.patch)

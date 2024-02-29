@@ -1,6 +1,6 @@
-diff -Naur nfs-utils-2.6.3.orig/nfs.conf nfs-utils-2.6.3/nfs.conf
---- nfs-utils-2.6.3.orig/nfs.conf	2023-04-25 10:57:55.641449115 -0600
-+++ nfs-utils-2.6.3/nfs.conf	2023-04-25 10:58:10.169462082 -0600
+diff -Naur nfs-utils-2.6.4.orig/nfs.conf nfs-utils-2.6.4/nfs.conf
+--- nfs-utils-2.6.4.orig/nfs.conf	2024-02-29 13:40:40.794548984 -0700
++++ nfs-utils-2.6.4/nfs.conf	2024-02-29 13:40:48.646567889 -0700
 @@ -72,6 +72,7 @@
  # lease-time=90
  # udp=n
@@ -9,9 +9,9 @@ diff -Naur nfs-utils-2.6.3.orig/nfs.conf nfs-utils-2.6.3/nfs.conf
  # vers3=y
  # vers4=y
  # vers4.0=y
-diff -Naur nfs-utils-2.6.3.orig/utils/mount/configfile.c nfs-utils-2.6.3/utils/mount/configfile.c
---- nfs-utils-2.6.3.orig/utils/mount/configfile.c	2023-04-25 10:57:55.633449107 -0600
-+++ nfs-utils-2.6.3/utils/mount/configfile.c	2023-04-25 10:58:21.889472395 -0600
+diff -Naur nfs-utils-2.6.4.orig/utils/mount/configfile.c nfs-utils-2.6.4/utils/mount/configfile.c
+--- nfs-utils-2.6.4.orig/utils/mount/configfile.c	2024-02-29 13:40:40.786548964 -0700
++++ nfs-utils-2.6.4/utils/mount/configfile.c	2024-02-29 13:40:48.646567889 -0700
 @@ -71,7 +71,7 @@
  int mnt_alias_sz = (sizeof(mnt_alias_tab)/sizeof(mnt_alias_tab[0]));
  
@@ -21,9 +21,9 @@ diff -Naur nfs-utils-2.6.3.orig/utils/mount/configfile.c nfs-utils-2.6.3/utils/m
  };
  
  static int strict;
-diff -Naur nfs-utils-2.6.3.orig/utils/mount/mount.nfs.man nfs-utils-2.6.3/utils/mount/mount.nfs.man
---- nfs-utils-2.6.3.orig/utils/mount/mount.nfs.man	2023-04-25 10:57:55.633449107 -0600
-+++ nfs-utils-2.6.3/utils/mount/mount.nfs.man	2023-04-25 10:58:16.809467943 -0600
+diff -Naur nfs-utils-2.6.4.orig/utils/mount/mount.nfs.man nfs-utils-2.6.4/utils/mount/mount.nfs.man
+--- nfs-utils-2.6.4.orig/utils/mount/mount.nfs.man	2024-02-29 13:40:40.786548964 -0700
++++ nfs-utils-2.6.4/utils/mount/mount.nfs.man	2024-02-29 13:40:48.646567889 -0700
 @@ -27,7 +27,7 @@
  .BR mount.nfs4
  must be used for mounting NFSv4 file systems while
@@ -33,9 +33,9 @@ diff -Naur nfs-utils-2.6.3.orig/utils/mount/mount.nfs.man nfs-utils-2.6.3/utils/
  
  .SH OPTIONS
  .TP
-diff -Naur nfs-utils-2.6.3.orig/utils/mount/network.c nfs-utils-2.6.3/utils/mount/network.c
---- nfs-utils-2.6.3.orig/utils/mount/network.c	2023-04-25 10:57:55.633449107 -0600
-+++ nfs-utils-2.6.3/utils/mount/network.c	2023-04-25 10:58:21.889472395 -0600
+diff -Naur nfs-utils-2.6.4.orig/utils/mount/network.c nfs-utils-2.6.4/utils/mount/network.c
+--- nfs-utils-2.6.4.orig/utils/mount/network.c	2024-02-29 13:40:40.786548964 -0700
++++ nfs-utils-2.6.4/utils/mount/network.c	2024-02-29 13:40:48.646567889 -0700
 @@ -97,7 +97,7 @@
  };
  
@@ -54,9 +54,9 @@ diff -Naur nfs-utils-2.6.3.orig/utils/mount/network.c nfs-utils-2.6.3/utils/moun
  		version_val = version_key + 1;
  		version->v_mode = V_SPECIFIC;
  	} else if (found > 2 ) {
-diff -Naur nfs-utils-2.6.3.orig/utils/mount/nfs.man nfs-utils-2.6.3/utils/mount/nfs.man
---- nfs-utils-2.6.3.orig/utils/mount/nfs.man	2023-04-25 10:57:55.633449107 -0600
-+++ nfs-utils-2.6.3/utils/mount/nfs.man	2023-04-25 10:58:16.809467943 -0600
+diff -Naur nfs-utils-2.6.4.orig/utils/mount/nfs.man nfs-utils-2.6.4/utils/mount/nfs.man
+--- nfs-utils-2.6.4.orig/utils/mount/nfs.man	2024-02-29 13:40:40.786548964 -0700
++++ nfs-utils-2.6.4/utils/mount/nfs.man	2024-02-29 13:42:37.550826269 -0700
 @@ -12,7 +12,7 @@
  to allow file sharing between systems residing
  on a local area network.
@@ -66,7 +66,7 @@ diff -Naur nfs-utils-2.6.3.orig/utils/mount/nfs.man nfs-utils-2.6.3/utils/mount/
  .P
  The
  .BR mount (8)
-@@ -986,6 +986,11 @@
+@@ -1013,6 +1013,12 @@
  .BR nfsmount.conf(5)
  for details.
  .SH EXAMPLES
@@ -75,10 +75,11 @@ diff -Naur nfs-utils-2.6.3.orig/utils/mount/nfs.man nfs-utils-2.6.3/utils/mount/
 +.B nfs
 +file system type and specify the
 +.B nfsvers=2
- mount option.
++mount option.
  To mount using NFS version 3,
  use the
-@@ -1012,6 +1017,13 @@
+ .B nfs
+@@ -1038,6 +1044,13 @@
  	server:/export	/mnt	nfs	defaults	0 0
  .fi
  .P
@@ -92,7 +93,7 @@ diff -Naur nfs-utils-2.6.3.orig/utils/mount/nfs.man nfs-utils-2.6.3/utils/mount/
  This example shows how to mount using NFS version 4 over TCP
  with Kerberos 5 mutual authentication.
  .P
-@@ -1104,7 +1116,7 @@
+@@ -1130,7 +1143,7 @@
  can safely be allowed to default to the largest values supported by
  both client and server, independent of the network's MTU size.
  .SS "Using the mountproto mount option"
@@ -101,7 +102,7 @@ diff -Naur nfs-utils-2.6.3.orig/utils/mount/nfs.man nfs-utils-2.6.3/utils/mount/
  since NFS version 4 does not use a separate protocol for mount
  requests.
  .P
-@@ -1507,7 +1519,7 @@
+@@ -1533,7 +1546,7 @@
  mount option.
  .SS "Using file locks with NFS"
  The Network Lock Manager protocol is a separate sideband protocol
@@ -110,7 +111,7 @@ diff -Naur nfs-utils-2.6.3.orig/utils/mount/nfs.man nfs-utils-2.6.3/utils/mount/
  To support lock recovery after a client or server reboot,
  a second sideband protocol --
  known as the Network Status Manager protocol --
-@@ -1927,6 +1939,8 @@
+@@ -1953,6 +1966,8 @@
  .br
  RFC 793 for the TCP specification.
  .br
@@ -119,9 +120,9 @@ diff -Naur nfs-utils-2.6.3.orig/utils/mount/nfs.man nfs-utils-2.6.3/utils/mount/
  RFC 1813 for the NFS version 3 specification.
  .br
  RFC 1832 for the XDR specification.
-diff -Naur nfs-utils-2.6.3.orig/utils/mount/nfsmount.conf nfs-utils-2.6.3/utils/mount/nfsmount.conf
---- nfs-utils-2.6.3.orig/utils/mount/nfsmount.conf	2023-04-25 10:57:55.633449107 -0600
-+++ nfs-utils-2.6.3/utils/mount/nfsmount.conf	2023-04-25 10:58:21.889472395 -0600
+diff -Naur nfs-utils-2.6.4.orig/utils/mount/nfsmount.conf nfs-utils-2.6.4/utils/mount/nfsmount.conf
+--- nfs-utils-2.6.4.orig/utils/mount/nfsmount.conf	2024-02-29 13:40:40.786548964 -0700
++++ nfs-utils-2.6.4/utils/mount/nfsmount.conf	2024-02-29 13:40:48.646567889 -0700
 @@ -28,7 +28,7 @@
  # This statically named section defines global mount 
  # options that can be applied on all NFS mount.
@@ -131,9 +132,9 @@ diff -Naur nfs-utils-2.6.3.orig/utils/mount/nfsmount.conf nfs-utils-2.6.3/utils/
  # This defines the default protocol version which will
  # be used to start the negotiation with the server.
  # Defaultvers=4
-diff -Naur nfs-utils-2.6.3.orig/utils/mount/stropts.c nfs-utils-2.6.3/utils/mount/stropts.c
---- nfs-utils-2.6.3.orig/utils/mount/stropts.c	2023-04-25 10:57:55.633449107 -0600
-+++ nfs-utils-2.6.3/utils/mount/stropts.c	2023-04-25 10:58:21.889472395 -0600
+diff -Naur nfs-utils-2.6.4.orig/utils/mount/stropts.c nfs-utils-2.6.4/utils/mount/stropts.c
+--- nfs-utils-2.6.4.orig/utils/mount/stropts.c	2024-02-29 13:40:40.786548964 -0700
++++ nfs-utils-2.6.4/utils/mount/stropts.c	2024-02-29 13:40:48.646567889 -0700
 @@ -357,7 +357,6 @@
  
  static int nfs_set_version(struct nfsmount_info *mi)
@@ -165,9 +166,9 @@ diff -Naur nfs-utils-2.6.3.orig/utils/mount/stropts.c nfs-utils-2.6.3/utils/moun
  	/*
  	 * Avoid retry and negotiation logic when remounting
  	 */
-diff -Naur nfs-utils-2.6.3.orig/utils/nfsd/nfsd.c nfs-utils-2.6.3/utils/nfsd/nfsd.c
---- nfs-utils-2.6.3.orig/utils/nfsd/nfsd.c	2023-04-25 10:57:55.633449107 -0600
-+++ nfs-utils-2.6.3/utils/nfsd/nfsd.c	2023-04-25 10:58:10.169462082 -0600
+diff -Naur nfs-utils-2.6.4.orig/utils/nfsd/nfsd.c nfs-utils-2.6.4/utils/nfsd/nfsd.c
+--- nfs-utils-2.6.4.orig/utils/nfsd/nfsd.c	2024-02-29 13:40:40.786548964 -0700
++++ nfs-utils-2.6.4/utils/nfsd/nfsd.c	2024-02-29 13:40:48.650567899 -0700
 @@ -233,6 +233,7 @@
  				}
  				/* FALLTHRU */
@@ -184,9 +185,9 @@ diff -Naur nfs-utils-2.6.3.orig/utils/nfsd/nfsd.c nfs-utils-2.6.3/utils/nfsd/nfs
  				NFSCTL_VERSET(versbits, c);
  				break;
  			default:
-diff -Naur nfs-utils-2.6.3.orig/utils/nfsd/nfsd.man nfs-utils-2.6.3/utils/nfsd/nfsd.man
---- nfs-utils-2.6.3.orig/utils/nfsd/nfsd.man	2023-04-25 10:57:55.633449107 -0600
-+++ nfs-utils-2.6.3/utils/nfsd/nfsd.man	2023-04-25 10:58:10.169462082 -0600
+diff -Naur nfs-utils-2.6.4.orig/utils/nfsd/nfsd.man nfs-utils-2.6.4/utils/nfsd/nfsd.man
+--- nfs-utils-2.6.4.orig/utils/nfsd/nfsd.man	2024-02-29 13:40:40.786548964 -0700
++++ nfs-utils-2.6.4/utils/nfsd/nfsd.man	2024-02-29 13:40:48.650567899 -0700
 @@ -65,7 +65,7 @@
  .B rpc.nfsd
  does not offer certain versions of NFS. The current version of
