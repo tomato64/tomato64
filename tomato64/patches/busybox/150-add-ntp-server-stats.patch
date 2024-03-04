@@ -1,7 +1,6 @@
-diff -Naur busybox.orig/networking/ntpd.c busybox/networking/ntpd.c
---- busybox.orig/networking/ntpd.c	2024-02-19 07:51:14.526817220 -0700
-+++ busybox/networking/ntpd.c	2024-02-20 11:25:31.553912126 -0700
-@@ -984,7 +984,12 @@
+--- busybox/networking/ntpd.c
++++ busybox/networking/ntpd.c
+@@ -986,7 +986,12 @@
  static void run_script(const char *action, double offset)
  {
  	char *argv[3];
@@ -15,7 +14,7 @@ diff -Naur busybox.orig/networking/ntpd.c busybox/networking/ntpd.c
  
  	G.last_script_run = G.cur_time;
  
-@@ -1005,6 +1010,12 @@
+@@ -1007,6 +1012,12 @@
  	putenv(env3);
  	env4 = xasprintf("%s=%f", "offset", offset);
  	putenv(env4);
@@ -28,7 +27,7 @@ diff -Naur busybox.orig/networking/ntpd.c busybox/networking/ntpd.c
  	/* Other items of potential interest: selected peer,
  	 * rootdelay, reftime, rootdisp, refid, ntp_status,
  	 * last_update_offset, last_update_recv_time, discipline_jitter,
-@@ -1020,10 +1031,16 @@
+@@ -1022,10 +1033,16 @@
  	unsetenv("freq_drift_ppm");
  	unsetenv("poll_interval");
  	unsetenv("offset");
@@ -45,12 +44,12 @@ diff -Naur busybox.orig/networking/ntpd.c busybox/networking/ntpd.c
  }
  
  static NOINLINE void
-@@ -2585,7 +2602,7 @@
+@@ -2591,7 +2608,7 @@
  			if (bb_got_signal)
  				break; /* poll was interrupted by a signal */
  
 -			if (G.cur_time - G.last_script_run > 11*60) {
-+			if (G.cur_time - G.last_script_run > 5) {
++			if (G.cur_time - G.last_script_run > 60) {
  				/* Useful for updating battery-backed RTC and such */
  				run_script("periodic", G.last_update_offset);
  				gettime1900d(); /* sets G.cur_time */
