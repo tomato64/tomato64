@@ -2583,13 +2583,13 @@ int ntpd_synced_main(int argc, char *argv[])
 
 	FILE *file;
 	char message[300];
-	char *stratum = getenv("stratum");
-	char *offset = getenv("offset");
-	char *freq_drift_ppm = getenv("freq_drift_ppm");
-	char *poll_interval = getenv("poll_interval");
-	char *server_hostname = getenv("server_hostname");
-	char *server_ip = getenv("server_ip");
-	char *discipline_jitter = getenv("discipline_jitter");
+	char *stratum = safe_getenv("stratum");
+	char *offset = safe_getenv("offset");
+	char *freq_drift_ppm = safe_getenv("freq_drift_ppm");
+	char *poll_interval = safe_getenv("poll_interval");
+	char *server_hostname = safe_getenv("server_hostname");
+	char *server_ip = safe_getenv("server_ip");
+	char *discipline_jitter = safe_getenv("discipline_jitter");
 
 	snprintf(message, sizeof(message), "Server: %s (%s)\n"
 					   "Poll Interval: %ss\n"
