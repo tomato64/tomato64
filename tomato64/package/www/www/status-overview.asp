@@ -20,11 +20,9 @@
 <% css(); %>
 <script src="tomato.js"></script>
 <script src="interfaces.js"></script>
-/* TOMATO64-REMOVE-BEGIN */
 <!-- USB-BEGIN -->
 <script src="wwan_parser.js"></script>
 <!-- USB-END -->
-/* TOMATO64-REMOVE-END */
 
 <script>
 
@@ -65,7 +63,6 @@ ref.refresh = function(text) {
 	show();
 }
 
-/* TOMATO64-REMOVE-BEGIN */
 /* USB-BEGIN */
 foreach_wwan(function(i) {
 	updateWWANTimers[i - 1] = new TomatoRefresh('wwansignal.cgi', 'mwan_num='+i, 30, '', 1);
@@ -78,7 +75,6 @@ foreach_wwan(function(i) {
 	}
 });
 /* USB-END */
-/* TOMATO64-REMOVE-END */
 
 for (var uidx = 1; uidx <= nvram.mwan_num; uidx++) {
 	u = (uidx > 1) ? uidx : '';
@@ -104,18 +100,14 @@ function visibility() {
 		proto = nvram['wan'+u+'_proto'];
 
 		show_dhcpc[uidx - 1] = ((proto == 'dhcp')
-/* TOMATO64-REMOVE-END */
 /* USB-BEGIN */
 		                        || (proto == 'lte')
 /* USB-END */
-/* TOMATO64-REMOVE-END */
 		                        || (((proto == 'l2tp') || (proto == 'pptp')) && (nvram.pptp_dhcp == '1')));
 		show_codi[uidx - 1] = ((proto == 'pppoe') || (proto == 'l2tp') || (proto == 'pptp')
-/* TOMATO64-REMOVE-BEGIN */
 /* USB-BEGIN */
 		                        || (proto == 'lte') || (proto == 'ppp3g')
 /* USB-END */
-/* TOMATO64-REMOVE-END */
 		                      );
 	}
 
@@ -185,14 +177,12 @@ function onRefToggle() {
 	var u;
 	ref.toggle();
 	if (!ref.running) {
-/* TOMATO64-REMOVE-BEGIN */
 /* USB-BEGIN */
 		for (var i = 0; i < updateWWANTimers.length; i++) {
 			if (updateWWANTimers[i].running)
 				updateWWANTimers[i].stop();
 		}
 /* USB-END */
-/* TOMATO64-REMOVE-END */
 		for (var uidx = 1; uidx <= nvram.mwan_num; uidx++) {
 			u = (uidx > 1) ? uidx : '';
 			if (nvram['wan'+u+'_status_script'] == 1) {
@@ -202,12 +192,10 @@ function onRefToggle() {
 		}
 	}
 	else {
-/* TOMATO64-REMOVE-BEGIN */
 /* USB-BEGIN */
 		for (var i = 0; i < updateWWANTimers.length; i++)
 			updateWWANTimers[i].toggle();
 /* USB-END */
-/* TOMATO64-REMOVE-END */
 		for (var uidx = 1; uidx <= nvram.mwan_num; uidx++) {
 			u = (uidx > 1) ? uidx : '';
 			if (nvram['wan'+u+'_status_script'] == 1)
@@ -216,7 +204,6 @@ function onRefToggle() {
 	}
 }
 
-/* TOMATO64-REMOVE-BEGIN */
 /* USB-BEGIN */
 function foreach_wwan(functionToDo) {
 	for (var uidx = 1; uidx <= nvram.mwan_num; uidx++) {
@@ -229,7 +216,6 @@ function foreach_wwan(functionToDo) {
 	}
 }
 /* USB-END */
-/* TOMATO64-REMOVE-END */
 
 function c(id, htm) {
 	E(id).cells[1].innerHTML = htm;
@@ -432,7 +418,6 @@ function init() {
 		if (((c = cookie.get(cprefix+'_wl_'+u+'_vis')) != null) && (c != '1'))
 			toggleVisibility(cprefix, 'wl_'+u);
 	}
-/* TOMATO64-REMOVE-BEGIN */
 /* USB-BEGIN */
 	foreach_wwan(function(i) {
 		if (((c = cookie.get(cprefix+'_wwan'+i+'_vis')) != null) && (c != '1'))
@@ -442,7 +427,6 @@ function init() {
 		updateWWANTimers[i - 1].initPage(3000, 30);
 	});
 /* USB-END */
-/* TOMATO64-REMOVE-END */
 	for (var uidx = 1; uidx <= nvram.mwan_num; uidx++) {
 		if (!customStatusTimers[uidx - 1])
 			continue;
@@ -539,7 +523,6 @@ function init() {
 <!-- / / / -->
 
 <script>
-/* TOMATO64-REMOVE-BEGIN */
 /* USB-BEGIN */
 	foreach_wwan(function(i) {
 		W('<div id="WWANStatus'+i+'_overall" style="display:none;">');
@@ -550,7 +533,6 @@ function init() {
 		W('<\/div><\/div><\/div>');
 	});
 /* USB-END */
-/* TOMATO64-REMOVE-END */
 	for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
 		u = (uidx > 1) ? uidx : '';
 		W('<div class="section-title" id="wan'+u+'-title">WAN'+(uidx - 1)+' <small><i><a href="javascript:toggleVisibility(cprefix,\'wan'+u+'\');"><span id="sesdiv_wan'+u+'_showhide">(Hide)<\/span><\/a><\/i><\/small><\/div>');
@@ -558,11 +540,9 @@ function init() {
 		createFieldTable('', [
 			{ title: 'MAC Address', text: nvram['wan'+u+'_hwaddr'] },
 			{ title: 'Connection Type', text: { 'dhcp':'DHCP','static':'Static IP','pppoe':'PPPoE','pptp':'PPTP','l2tp':'L2TP'
-/* TOMATO64-REMOVE-BEGIN */
 /* USB-BEGIN */
 			                                    ,'ppp3g':'3G Modem','lte':'4G/LTE'
 /* USB-END */
-/* TOMATO64-REMOVE-END */
 			} [nvram['wan'+u+'_proto']] || '-' },
 			{ title: 'IP Address', rid: 'wan'+u+'ip', text: stats.wanip[uidx - 1] },
 			{ title: 'Subnet Mask', rid: 'wan'+u+'netmask', text: stats.wannetmask[uidx - 1] },
@@ -580,11 +560,9 @@ function init() {
 			{ title: 'MultiWAN Status', rid: 'wan'+u+'multiwan', text: stats.wanweight[uidx - 1] },
 			{ title: 'Connection Uptime', rid: 'wan'+u+'uptime', text: stats.wanuptime[uidx - 1] },
 			{ title: 'Remaining Lease Time', rid: 'wan'+u+'lease', text: stats.wanlease[uidx - 1], ignore: !show_dhcpc[uidx - 1] }
-/* TOMATO64-REMOVE-BEGIN */
 /* USB-BEGIN */
 			, { text: 'Please wait... Initial refresh... &nbsp; <img src="spin.gif" alt="" style="vertical-align:middle">', rid: "WanCustomStatus"+u, ignore: !customStatusTimers[uidx - 1] }
 /* USB-END */
-/* TOMATO64-REMOVE-END */
 		]);
 		W('<span id="b'+u+'_dhcpc" style="display:none">');
 		W('<input type="button" class="status-controls" onclick="dhcpc(\'renew\',\''+u+'\')" value="Renew" id="b'+u+'_renew"> &nbsp;');
