@@ -1,12 +1,12 @@
-diff -Naur buildroot-2023.05.orig/package/ccache/ccache.mk buildroot-2023.05/package/ccache/ccache.mk
---- buildroot-2023.05.orig/package/ccache/ccache.mk	2023-06-21 08:26:46.769656847 -0600
-+++ buildroot-2023.05/package/ccache/ccache.mk	2023-06-21 08:27:11.157772396 -0600
-@@ -16,7 +16,8 @@
- 	-UCMAKE_C_COMPILER_LAUNCHER \
+diff -Naur buildroot-2024.02-rc2.orig/package/ccache/ccache.mk buildroot-2024.02-rc2/package/ccache/ccache.mk
+--- buildroot-2024.02-rc2.orig/package/ccache/ccache.mk	2024-03-04 15:00:10.734053171 -0700
++++ buildroot-2024.02-rc2/package/ccache/ccache.mk	2024-03-04 15:00:27.654082003 -0700
+@@ -17,7 +17,8 @@
  	-UCMAKE_CXX_COMPILER_LAUNCHER \
  	-DZSTD_FROM_INTERNET=OFF \
--	-DHIREDIS_FROM_INTERNET=OFF
-+	-DHIREDIS_FROM_INTERNET=OFF \
+ 	-DHIREDIS_FROM_INTERNET=OFF \
+-	-DENABLE_TESTING=OFF
++	-DENABLE_TESTING=OFF \
 +	-DHAVE_C_AVX512=no
  
  # Patch host-ccache as follows:
