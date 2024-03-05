@@ -1288,8 +1288,7 @@ void start_irqbalance(void)
 	if (serialize_restart("irqbalance", 1))
 		return;
 
-	mkdir_if_none("/var/run/irqbalance");
-	ret = eval("irqbalance", "-t", "10");
+	ret = eval("irqbalance", "-t", "10", "-s", "/var/run/irqbalance.pid");
 
 	if (ret)
 		logmsg(LOG_ERR, "starting irqbalance failed ...");
