@@ -3287,6 +3287,14 @@ TOP:
 	}
 #endif
 
+#ifdef TCONFIG_HAVEGED
+	if (strcmp(service, "haveged") == 0) {
+		if (act_stop) stop_haveged();
+		if (act_start) start_haveged();
+		goto CLEAR;
+	}
+#endif
+
 	if (strcmp(service, "adblock") == 0) {
 		if (act_stop) stop_adblock();
 		if (act_start) start_adblock(1); /* update lists immediately */
