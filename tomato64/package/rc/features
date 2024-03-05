@@ -38,6 +38,10 @@ ifeq ($(BR2_PACKAGE_RC_FTPS),y)
 export TCONFIG_FTP_SSL=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_HAVEGED),y)
+export TCONFIG_HAVEGED=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_HTTPS),y)
 export TCONFIG_HTTPS=y
 endif

@@ -2850,6 +2850,44 @@ static void stop_media_server(void)
 }
 #endif /* TCONFIG_MEDIA_SERVER */
 
+#ifdef TCONFIG_HAVEGED
+void start_haveged(void)
+{
+	pid_t pid;
+	int ret;
+
+	if (serialize_restart("haveged", 1))
+		return;
+
+	char *cmd_argv[] = { "/usr/sbin/haveged",
+	                     "-r", "0",             /* 0 = run as daemon */
+	                     "-w", "1024",          /* write_wakeup_threshold [bits] */
+#ifdef TCONFIG_BCMARM /* it has to be checkd for all MIPS routers */
+	                     "-d", "32",            /* data cache size [KB] - fallback to 16 */
+	                     "-i", "32",            /* instruction cache size [KB] - fallback to 16 */
+#endif
+	                     NULL };
+
+	ret = _eval(cmd_argv, NULL, 0, &pid);
+
+	if (ret)
+		logmsg(LOG_ERR, "starting haveged failed ...");
+	else
+		logmsg(LOG_INFO, "haveged is started");
+}
+
+void stop_haveged(void)
+{
+	if (serialize_restart("haveged", 0))
+		return;
+
+	if (pidof("haveged") > 0) {
+		killall_tk_period_wait("haveged", 50);
+		logmsg(LOG_INFO, "haveged is stopped");
+	}
+}
+#endif /* TCONFIG_HAVEGED */
+
 #ifdef TCONFIG_USB
 static void start_nas_services(void)
 {
@@ -2943,6 +2981,9 @@ void start_services(void)
 {
 	static int once = 1;
 
+#ifdef TCONFIG_HAVEGED
+	start_haveged();
+#endif
 	if (once) {
 		once = 0;
 
@@ -3081,6 +3122,9 @@ void stop_services(void)
 #endif
 #ifdef TCONFIG_IRQBALANCE
 	stop_irqbalance();
+#endif
+#ifdef TCONFIG_HAVEGED
+	stop_haveged();
 #endif
 }
 

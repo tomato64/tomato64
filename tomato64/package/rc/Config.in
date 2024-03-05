@@ -111,6 +111,11 @@ config BR2_PACKAGE_RC_FTPS
 	select BR2_PACKAGE_OPENSSL
 endif
 
+config BR2_PACKAGE_RC_HAVEGED
+	bool "Enable HAVEGED"
+	select BR2_PACKAGE_HAVEGED
+	default y
+
 config BR2_PACKAGE_RC_HTTPS
 	bool "Enable HTTPS"
 	default y
