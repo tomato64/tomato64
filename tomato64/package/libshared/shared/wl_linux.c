@@ -17,8 +17,9 @@
  *
  * $Id: wl_linux.c 435840 2013-11-12 09:30:26Z $
  */
-
+#ifdef TOMATO64
 #include <typedefs.h>
+#endif /* TOMATO64 */
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>

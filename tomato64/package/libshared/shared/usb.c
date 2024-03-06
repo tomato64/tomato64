@@ -21,7 +21,9 @@
 #include <arpa/inet.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
+#ifdef TOMATO64
 #include <limits.h>
+#endif /* TOMATO64 */
 
 #include <bcmnvram.h>
 #include <bcmdevs.h>

@@ -4,7 +4,9 @@
 #include <tomato_profile.h>
 #include <tomato_config.h>
 
+#ifdef TOMATO64
 #include <typedefs.h>
+#endif /* TOMATO64 */
 #include <netinet/in.h>
 #include <stdint.h>
 #include <errno.h>
