@@ -2861,10 +2861,12 @@ void start_haveged(void)
 	char *cmd_argv[] = { "/usr/sbin/haveged",
 	                     "-r", "0",             /* 0 = run as daemon */
 	                     "-w", "1024",          /* write_wakeup_threshold [bits] */
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM /* it has to be checkd for all MIPS routers */
 	                     "-d", "32",            /* data cache size [KB] - fallback to 16 */
 	                     "-i", "32",            /* instruction cache size [KB] - fallback to 16 */
 #endif
+#endif /* TOMATO64 */
 	                     NULL };
 
 	ret = _eval(cmd_argv, NULL, 0, &pid);
