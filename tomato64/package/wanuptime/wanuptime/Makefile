@@ -1,4 +1,5 @@
 ALL_CPPFLAGS = -fPIC
+ALL_CPPFLAGS += -DTOMATO64
 ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared
 ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/include
 ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/common/include
@@ -8,7 +9,8 @@ ALL_CPPFLAGS += $(CPPFLAGS)
 ALL_CFLAGS = -fPIC
 ALL_CFLAGS += $(CFLAGS)
 
-ALL_LDFLAGS = -fPIC -lshared -lnvram
+ALL_LDFLAGS = -fPIC
+ALL_LDFLAGS += -lshared -lnvram
 ALL_LDFLAGS += $(LDFLAGS)
 
 EXE = wanuptime

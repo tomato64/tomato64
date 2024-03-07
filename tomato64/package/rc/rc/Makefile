@@ -1,4 +1,5 @@
 ALL_CPPFLAGS = -fPIC
+ALL_CPPFLAGS += -DTOMATO64
 ALL_CPPFLAGS += -I.
 ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared
 ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/include
@@ -7,14 +8,14 @@ ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/bcmwifi
 ALL_CPPFLAGS += $(CPPFLAGS)
 
 ALL_CFLAGS = -fPIC
-ALL_CFLAGS += -DTOMATO64
 ALL_CFLAGS += $(CFLAGS)
 
 ifeq ($(DEBUG_NOISY),y)
 	ALL_CFLAGS += -DDEBUG_NOISY
 endif
 
-ALL_LDFLAGS = -fPIC -lshared -lnvram
+ALL_LDFLAGS = -fPIC
+ALL_LDFLAGS += -lshared -lnvram
 ALL_LDFLAGS += $(LDFLAGS)
 
 OBJS := rc.o init.o interface.o network.o wan.o services.o dhcp.o \

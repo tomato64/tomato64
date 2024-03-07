@@ -144,9 +144,11 @@ static inline char * strcat_r(const char *s1, const char *s2, char *buf)
 }
 */
 /* Check for a blank character; that is, a space or a tab */
+#ifndef TOMATO64
 #ifndef isblank
 #define isblank(c) (c == ' ' || c == '\t')
 #endif
+#endif /* TOMATO64 */
 
 /* Strip trailing CR/NL from string <s> */
 #define chomp(s) ({ \
