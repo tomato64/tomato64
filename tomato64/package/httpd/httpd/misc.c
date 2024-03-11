@@ -550,6 +550,16 @@ void asp_etherstates(int argc, char **argv)
 					a = "port3";
 				else if (sscanf(s, "Port 4: %s", b) == 1)
 					a = "port4";
+#ifdef TOMATO64
+				else if (sscanf(s, "Port 5: %s", b) == 1)
+					a = "port5";
+				else if (sscanf(s, "Port 6: %s", b) == 1)
+					a = "port6";
+				else if (sscanf(s, "Port 7: %s", b) == 1)
+					a = "port7";
+				else if (sscanf(s, "Port 8: %s", b) == 1)
+					a = "port8";
+#endif /* TOMATO64 */
 				else
 					continue;
 
@@ -662,6 +672,7 @@ void asp_sysinfo(int argc, char **argv)
 #ifdef TOMATO64
 	           "\tcpumodel: '%s',\n"
 	           "\tcpucount: '%d',\n"
+	           "\tniccount: '%d',\n"
 #endif /* TOMATO64 */
 	           "\tcfeversion: '%s'",
 	           si.uptime,
@@ -684,6 +695,7 @@ void asp_sysinfo(int argc, char **argv)
 #ifdef TOMATO64
 	           cpu_model,
 	           get_cpucount(),
+	           nvram_get_int("nics"),
 #endif /* TOMATO64 */
 	           cfe_version);
 

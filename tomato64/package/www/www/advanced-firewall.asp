@@ -22,7 +22,12 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_lan1,multicast_lan2,multicast_lan3,multicast_quickleave,multicast_custom,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,udpxy_enable,udpxy_lan,udpxy_lan1,udpxy_lan2,udpxy_lan3,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_lan1,multicast_lan2,multicast_lan3,multicast_lan4,multicast_lan5,multicast_lan6,multicast_lan7,multicast_quickleave,multicast_custom,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,udpxy_enable,udpxy_lan,udpxy_lan1,udpxy_lan2,udpxy_lan3,udpxy_lan4,udpxy_lan5,udpxy_lan6,udpxy_lan7,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole"); %>
+/* TOMATO64-END */
 
 var cprefix = 'advanced_firewall';
 
@@ -37,6 +42,12 @@ function verifyFields(focused, quiet) {
 	E('_f_multicast_lan1').disabled = ((!enable_mcast) || (nvram.lan1_ifname.length < 1));
 	E('_f_multicast_lan2').disabled = ((!enable_mcast) || (nvram.lan2_ifname.length < 1));
 	E('_f_multicast_lan3').disabled = ((!enable_mcast) || (nvram.lan3_ifname.length < 1));
+/* TOMATO64-BEGIN */
+	E('_f_multicast_lan4').disabled = ((!enable_mcast) || (nvram.lan4_ifname.length < 1));
+	E('_f_multicast_lan5').disabled = ((!enable_mcast) || (nvram.lan5_ifname.length < 1));
+	E('_f_multicast_lan6').disabled = ((!enable_mcast) || (nvram.lan6_ifname.length < 1));
+	E('_f_multicast_lan7').disabled = ((!enable_mcast) || (nvram.lan7_ifname.length < 1));
+/* TOMATO64-END */
 	E('_f_multicast_quickleave').disabled = (!enable_mcast);
 
 	if (nvram.lan_ifname.length < 1)
@@ -47,14 +58,35 @@ function verifyFields(focused, quiet) {
 		E('_f_multicast_lan2').checked = 0;
 	if (nvram.lan3_ifname.length < 1)
 		E('_f_multicast_lan3').checked = 0;
+/* TOMATO64-BEGIN */
+	if (nvram.lan4_ifname.length < 1)
+		E('_f_multicast_lan4').checked = 0;
+	if (nvram.lan5_ifname.length < 1)
+		E('_f_multicast_lan5').checked = 0;
+	if (nvram.lan6_ifname.length < 1)
+		E('_f_multicast_lan6').checked = 0;
+	if (nvram.lan7_ifname.length < 1)
+		E('_f_multicast_lan7').checked = 0;
+/* TOMATO64-END */
 
 	var mcast_lan = E('_f_multicast_lan').checked;
 	var mcast_lan1 = E('_f_multicast_lan1').checked;
 	var mcast_lan2 = E('_f_multicast_lan2').checked;
 	var mcast_lan3 = E('_f_multicast_lan3').checked;
+/* TOMATO64-BEGIN */
+	var mcast_lan4 = E('_f_multicast_lan4').checked;
+	var mcast_lan5 = E('_f_multicast_lan5').checked;
+	var mcast_lan6 = E('_f_multicast_lan6').checked;
+	var mcast_lan7 = E('_f_multicast_lan7').checked;
+/* TOMATO64-END */
 	var mcast_custom_enable = 0;
 /* disable multicast_custom textarea if lanX is checked / selected */
+/* TOMATO64-REMOVE-BEGIN */
 	E('_multicast_custom').disabled = ((!enable_mcast) || (mcast_lan) || (mcast_lan1) || (mcast_lan2) || (mcast_lan3));
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	E('_multicast_custom').disabled = ((!enable_mcast) || (mcast_lan) || (mcast_lan1) || (mcast_lan2) || (mcast_lan3) || (mcast_lan4) || (mcast_lan5) || (mcast_lan6) || (mcast_lan7));
+/* TOMATO64-END */
 /* check if more than 50 charactars are in the textarea (no plausibility test) */
 	if (!E('_multicast_custom').disabled) {
 		if (v_length('_multicast_custom', 1, 50, 2048))
@@ -65,7 +97,12 @@ function verifyFields(focused, quiet) {
 	else
 		ferror.clear('_multicast_custom');
 /* IGMP proxy enable checked but no lanX checked and no custom config */
+/* TOMATO64-REMOVE-BEGIN */
 	if ((enable_mcast) && (!mcast_lan) && (!mcast_lan1) && (!mcast_lan2) && (!mcast_lan3) && (!mcast_custom_enable)) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	if ((enable_mcast) && (!mcast_lan) && (!mcast_lan1) && (!mcast_lan2) && (!mcast_lan3) && (!mcast_lan4) && (!mcast_lan5) && (!mcast_lan6) && (!mcast_lan7) && (!mcast_custom_enable)) {
+/* TOMATO64-END */
 		ferror.set('_f_multicast', 'IGMP proxy must be enabled in at least one LAN bridge OR you have to use custom configuration', quiet);
 		return 0;
 	}
@@ -81,6 +118,12 @@ function verifyFields(focused, quiet) {
 	E('_f_udpxy_lan1').disabled = ((!enable_udpxy) || (nvram.lan1_ifname.length < 1));
 	E('_f_udpxy_lan2').disabled = ((!enable_udpxy) || (nvram.lan2_ifname.length < 1));
 	E('_f_udpxy_lan3').disabled = ((!enable_udpxy) || (nvram.lan3_ifname.length < 1));
+/* TOMATO64-BEGIN */
+	E('_f_udpxy_lan4').disabled = ((!enable_udpxy) || (nvram.lan4_ifname.length < 1));
+	E('_f_udpxy_lan5').disabled = ((!enable_udpxy) || (nvram.lan5_ifname.length < 1));
+	E('_f_udpxy_lan6').disabled = ((!enable_udpxy) || (nvram.lan6_ifname.length < 1));
+	E('_f_udpxy_lan7').disabled = ((!enable_udpxy) || (nvram.lan7_ifname.length < 1));
+/* TOMATO64-END */
 	E('_f_udpxy_stats').disabled = !enable_udpxy;
 	E('_f_udpxy_clients').disabled = !enable_udpxy;
 	E('_f_udpxy_port').disabled = !enable_udpxy;
@@ -94,16 +137,42 @@ function verifyFields(focused, quiet) {
 		E('_f_udpxy_lan2').checked = 0;
 	if (nvram.lan3_ifname.length < 1)
 		E('_f_udpxy_lan3').checked = 0;
+/* TOMATO64-BEGIN */
+	if (nvram.lan4_ifname.length < 1)
+		E('_f_udpxy_lan4').checked = 0;
+	if (nvram.lan5_ifname.length < 1)
+		E('_f_udpxy_lan5').checked = 0;
+	if (nvram.lan6_ifname.length < 1)
+		E('_f_udpxy_lan6').checked = 0;
+	if (nvram.lan7_ifname.length < 1)
+		E('_f_udpxy_lan7').checked = 0;
+/* TOMATO64-END */
 
 	var udpxy_lan = E('_f_udpxy_lan').checked ? 1 : 0;
 	var udpxy_lan1 = E('_f_udpxy_lan1').checked ? 1 : 0;
 	var udpxy_lan2 = E('_f_udpxy_lan2').checked ? 1 : 0;
 	var udpxy_lan3 = E('_f_udpxy_lan3').checked ? 1 : 0;
+/* TOMATO64-BEGIN */
+	var udpxy_lan4 = E('_f_udpxy_lan4').checked ? 1 : 0;
+	var udpxy_lan5 = E('_f_udpxy_lan5').checked ? 1 : 0;
+	var udpxy_lan6 = E('_f_udpxy_lan6').checked ? 1 : 0;
+	var udpxy_lan7 = E('_f_udpxy_lan7').checked ? 1 : 0;
+/* TOMATO64-END */
+/* TOMATO64-REMOVE-BEGIN */
 	var udpxy_lan_count = udpxy_lan + udpxy_lan1 + udpxy_lan2 + udpxy_lan3;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	var udpxy_lan_count = udpxy_lan + udpxy_lan1 + udpxy_lan2 + udpxy_lan3 + udpxy_lan4 + udpxy_lan5 + udpxy_lan6 + udpxy_lan7;
+/* TOMATO64-END */
 
 /* udpxy check: only one interface can be selected to listen on OR no interface (listen on default: 0.0.0.0) */
 	if (enable_udpxy && (udpxy_lan_count > 1)) {
+/* TOMATO64-REMOVE-BEGIN */
 		ferror.set('_f_udpxy_enable', 'Udpxy: please select only one interface (LAN0, LAN1, LAN2 or LAN3) or none (see notes)', quiet);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		ferror.set('_f_udpxy_enable', 'Udpxy: please select only one interface (LAN0, LAN1, LAN2, LAN3, LAN4, LAN5, LAN6 or LAN7) or none (see notes)', quiet);
+/* TOMATO64-END */
 		return 0;
 /* udpxy clear */
 	}
@@ -131,12 +200,24 @@ function save() {
 	fom.multicast_lan1.value = fom._f_multicast_lan1.checked ? 1 : 0;
 	fom.multicast_lan2.value = fom._f_multicast_lan2.checked ? 1 : 0;
 	fom.multicast_lan3.value = fom._f_multicast_lan3.checked ? 1 : 0;
+/* TOMATO64-BEGIN */
+	fom.multicast_lan4.value = fom._f_multicast_lan4.checked ? 1 : 0;
+	fom.multicast_lan5.value = fom._f_multicast_lan5.checked ? 1 : 0;
+	fom.multicast_lan6.value = fom._f_multicast_lan6.checked ? 1 : 0;
+	fom.multicast_lan7.value = fom._f_multicast_lan7.checked ? 1 : 0;
+/* TOMATO64-END */
 	fom.multicast_quickleave.value = fom._f_multicast_quickleave.checked ? 1 : 0;
 	fom.udpxy_enable.value = fom._f_udpxy_enable.checked ? 1 : 0;
 	fom.udpxy_lan.value = fom._f_udpxy_lan.checked ? 1 : 0;
 	fom.udpxy_lan1.value = fom._f_udpxy_lan1.checked ? 1 : 0;
 	fom.udpxy_lan2.value = fom._f_udpxy_lan2.checked ? 1 : 0;
 	fom.udpxy_lan3.value = fom._f_udpxy_lan3.checked ? 1 : 0;
+/* TOMATO64-BEGIN */
+	fom.udpxy_lan4.value = fom._f_udpxy_lan4.checked ? 1 : 0;
+	fom.udpxy_lan5.value = fom._f_udpxy_lan5.checked ? 1 : 0;
+	fom.udpxy_lan6.value = fom._f_udpxy_lan6.checked ? 1 : 0;
+	fom.udpxy_lan7.value = fom._f_udpxy_lan7.checked ? 1 : 0;
+/* TOMATO64-END */
 	fom.udpxy_stats.value = fom._f_udpxy_stats.checked ? 1 : 0;
 	fom.udpxy_clients.value = fom._f_udpxy_clients.value;
 	fom.udpxy_port.value = fom._f_udpxy_port.value;
@@ -189,12 +270,24 @@ function init() {
 <input type="hidden" name="multicast_lan1">
 <input type="hidden" name="multicast_lan2">
 <input type="hidden" name="multicast_lan3">
+/* TOMATO64-BEGIN */
+<input type="hidden" name="multicast_lan4">
+<input type="hidden" name="multicast_lan5">
+<input type="hidden" name="multicast_lan6">
+<input type="hidden" name="multicast_lan7">
+/* TOMATO64-END */
 <input type="hidden" name="multicast_quickleave">
 <input type="hidden" name="udpxy_enable">
 <input type="hidden" name="udpxy_lan">
 <input type="hidden" name="udpxy_lan1">
 <input type="hidden" name="udpxy_lan2">
 <input type="hidden" name="udpxy_lan3">
+/* TOMATO64-BEGIN */
+<input type="hidden" name="udpxy_lan4">
+<input type="hidden" name="udpxy_lan5">
+<input type="hidden" name="udpxy_lan6">
+<input type="hidden" name="udpxy_lan7">
+/* TOMATO64-END */
 <input type="hidden" name="udpxy_stats">
 <input type="hidden" name="udpxy_clients">
 <input type="hidden" name="udpxy_port">
@@ -251,6 +344,12 @@ function init() {
 			{ title: 'LAN1', indent: 2, name: 'f_multicast_lan1', type: 'checkbox', value: (nvram.multicast_lan1 == '1') },
 			{ title: 'LAN2', indent: 2, name: 'f_multicast_lan2', type: 'checkbox', value: (nvram.multicast_lan2 == '1') },
 			{ title: 'LAN3', indent: 2, name: 'f_multicast_lan3', type: 'checkbox', value: (nvram.multicast_lan3 == '1') },
+/* TOMATO64-BEGIN */
+			{ title: 'LAN4', indent: 2, name: 'f_multicast_lan4', type: 'checkbox', value: (nvram.multicast_lan4 == '1') },
+			{ title: 'LAN5', indent: 2, name: 'f_multicast_lan5', type: 'checkbox', value: (nvram.multicast_lan5 == '1') },
+			{ title: 'LAN6', indent: 2, name: 'f_multicast_lan6', type: 'checkbox', value: (nvram.multicast_lan6 == '1') },
+			{ title: 'LAN7', indent: 2, name: 'f_multicast_lan7', type: 'checkbox', value: (nvram.multicast_lan7 == '1') },
+/* TOMATO64-END */
 			{ title: 'Enable quickleave', indent: 2, name: 'f_multicast_quickleave', type: 'checkbox', value: (nvram.multicast_quickleave == '1') },
 			{ title: '<a href="https://github.com/pali/igmpproxy" class="new_window">IGMP proxy<\/a><br>Custom configuration', name: 'multicast_custom', type: 'textarea', value: nvram.multicast_custom },
 			null,
@@ -260,6 +359,12 @@ function init() {
 			{ title: 'LAN1', indent: 2, name: 'f_udpxy_lan1', type: 'checkbox', value: (nvram.udpxy_lan1 == '1') },
 			{ title: 'LAN2', indent: 2, name: 'f_udpxy_lan2', type: 'checkbox', value: (nvram.udpxy_lan2 == '1') },
 			{ title: 'LAN3', indent: 2, name: 'f_udpxy_lan3', type: 'checkbox', value: (nvram.udpxy_lan3 == '1') },
+/* TOMATO64-BEGIN */
+			{ title: 'LAN4', indent: 2, name: 'f_udpxy_lan4', type: 'checkbox', value: (nvram.udpxy_lan4 == '1') },
+			{ title: 'LAN5', indent: 2, name: 'f_udpxy_lan5', type: 'checkbox', value: (nvram.udpxy_lan5 == '1') },
+			{ title: 'LAN6', indent: 2, name: 'f_udpxy_lan6', type: 'checkbox', value: (nvram.udpxy_lan6 == '1') },
+			{ title: 'LAN7', indent: 2, name: 'f_udpxy_lan7', type: 'checkbox', value: (nvram.udpxy_lan7 == '1') },
+/* TOMATO64-END */
 			{ title: 'Enable client statistics', indent: 2, name: 'f_udpxy_stats', type: 'checkbox', value: (nvram.udpxy_stats == '1') },
 			{ title: 'Max clients', indent: 2, name: 'f_udpxy_clients', type: 'text', maxlen: 4, size: 6, value: fixInt(nvram.udpxy_clients || 3, 1, 5000, 3) },
 			{ title: 'Udpxy port', indent: 2, name: 'f_udpxy_port', type: 'text', maxlen: 5, size: 7, value: fixPort(nvram.udpxy_port, 4022) },
@@ -285,7 +390,12 @@ function init() {
 <!-- PROXY-BEGIN -->
 	<i>IGMP proxy:</i><br>
 	<ul>
+/* TOMATO64-REMOVE-BEGIN */
 		<li><b>LAN0 / LAN1 / LAN2 / LAN3</b> - Add interface br0 / br1 / br2 / br3 to igmp.conf (Ex.: phyint br0 downstream ratelimit 0 threshold 1).</li>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		<li><b>LAN0 / LAN1 / LAN2 / LAN3 / LAN4 / LAN5 / LAN6 / LAN7</b> - Add interface br0 / br1 / br2 / br3 / br4 / br5 / br6 / br7 to igmp.conf (Ex.: phyint br0 downstream ratelimit 0 threshold 1).</li>
+/* TOMATO64-END */
 		<li><b>Enable quickleave</b> - Send a Leave IGMP message upstream as soon as it receives a Leave message for any downstream interface.</li>
 		<li><b>Custom configuration</b> - Use custom config for IGMP proxy instead of tomato default config. You must define one (or more) upstream interface(s) and one or more downstream interfaces. Refer to the <a href="https://github.com/pali/igmpproxy/blob/master/igmpproxy.conf" class="new_window">IGMP proxy example configuration</a> and <a href="https://github.com/pali/igmpproxy/commit/b55e0125c79fc9dbc95c6d6ab1121570f0c6f80f" class="new_window">IGMP proxy commit b55e0125c79fc9d</a> for details.</li>
 		<li><b>Note</b> - You can use your own custom config file (/etc/igmp.alt).</li>
@@ -295,7 +405,12 @@ function init() {
 	<i>Udpxy:</i><br>
 	<ul>
 		<li><b>Upstream interface</b> - As one use case for it is to access IPTV which is often delivered via multicast by the ISP but outside of the (PPPoE,etc) session.</li>
+/* TOMATO64-REMOVE-BEGIN */
 		<li><b>LAN0 / LAN1 / LAN2 / LAN3</b> - Select one interface br0 / br1 / br2 / br3 to listen on.</li>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		<li><b>LAN0 / LAN1 / LAN2 / LAN3 / LAN4 / LAN5 / LAN6 / LAN7</b> - Select one interface br0 / br1 / br2 / br3 to listen on.</li>
+/* TOMATO64-END */
 		<li><b>Status</b> - To display udpxy status, please go to http://lanaddress:port/status/.</li>
 		<li><b>Other hints</b> - If Udpxy is enabled and no interface is selected default address (0.0.0.0) will be used.</li>
 	</ul>

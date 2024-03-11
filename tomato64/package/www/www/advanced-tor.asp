@@ -19,7 +19,12 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("tor_enable,tor_solve_only,tor_socksport,tor_transport,tor_dnsport,tor_datadir,tor_users,tor_ports,tor_ports_custom,tor_custom,tor_iface,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("tor_enable,tor_solve_only,tor_socksport,tor_transport,tor_dnsport,tor_datadir,tor_users,tor_ports,tor_ports_custom,tor_custom,tor_iface,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
+/* TOMATO64-END */
 
 var changed = 0;
 var serviceType = 'tor';
@@ -184,7 +189,12 @@ function init() {
 			null,
 			{ title: 'Only solve .onion/.exit domains<br>(or use Tor as a proxy)', name: 'f_tor_solve_only', type: 'checkbox', value: nvram.tor_solve_only == 1 },
 			{ title: 'Redirect all users from', multi: [
+/* TOMATO64-REMOVE-BEGIN */
 				{ name: 'tor_iface', type: 'select', options: [['br0','LAN0 (br0)'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)'],['custom','Selected IP`s']], value: nvram.tor_iface },
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+				{ name: 'tor_iface', type: 'select', options: [['br0','LAN0 (br0)'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)'],['br4','LAN4 (br4)'],['br5','LAN5 (br5)'],['br6','LAN6 (br6)'],['br7','LAN7 (br7)'],['custom','Selected IP`s']], value: nvram.tor_iface },
+/* TOMATO64-END */
 				{ name: 'tor_users', type: 'text', maxlen: 512, size: 64, value: nvram.tor_users } ] },
 			{ title: 'Redirect TCP Ports', multi: [
 				{ name: 'tor_ports', type: 'select', options: [['80','HTTP only (TCP 80)'],['80,443','HTTP/HTTPS (TCP 80,443)'],['custom','Selected Ports']], value: nvram.tor_ports },

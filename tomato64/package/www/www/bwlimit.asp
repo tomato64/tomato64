@@ -22,7 +22,12 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("bwl_enable,wan_qos_ibw,wan_qos_obw,bwl_rules,lan_ipaddr,lan_netmask,bwl_br0_enable,bwl_br0_dlr,bwl_br0_dlc,bwl_br0_ulr,bwl_br0_ulc,bwl_br0_udp,bwl_br0_tcp,bwl_br0_prio,bwl_br1_enable,bwl_br1_dlc,bwl_br1_dlr,bwl_br1_ulc,bwl_br1_ulr,bwl_br1_prio,bwl_br2_enable,bwl_br2_dlc,bwl_br2_dlr,bwl_br2_ulc,bwl_br2_ulr,bwl_br2_prio,bwl_br3_enable,bwl_br3_dlc,bwl_br3_dlr,bwl_br3_ulc,bwl_br3_ulr,bwl_br3_prio,ctf_disable,bcmnat_disable,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("bwl_enable,wan_qos_ibw,wan_qos_obw,bwl_rules,lan_ipaddr,lan_netmask,bwl_br0_enable,bwl_br0_dlr,bwl_br0_dlc,bwl_br0_ulr,bwl_br0_ulc,bwl_br0_udp,bwl_br0_tcp,bwl_br0_prio,bwl_br1_enable,bwl_br1_dlc,bwl_br1_dlr,bwl_br1_ulc,bwl_br1_ulr,bwl_br1_prio,bwl_br2_enable,bwl_br2_dlc,bwl_br2_dlr,bwl_br2_ulc,bwl_br2_ulr,bwl_br2_prio,bwl_br3_enable,bwl_br3_dlc,bwl_br3_dlr,bwl_br3_ulc,bwl_br3_ulr,bwl_br3_prio,bwl_br4_enable,bwl_br4_dlc,bwl_br4_dlr,bwl_br4_ulc,bwl_br4_ulr,bwl_br4_prio,bwl_br5_enable,bwl_br5_dlc,bwl_br5_dlr,bwl_br5_ulc,bwl_br5_ulr,bwl_br5_prio,bwl_br6_enable,bwl_br6_dlc,bwl_br6_dlr,bwl_br6_ulc,bwl_br6_ulr,bwl_br6_prio,bwl_br7_enable,bwl_br7_dlc,bwl_br7_dlr,bwl_br7_ulc,bwl_br7_ulr,bwl_br7_prio,ctf_disable,bcmnat_disable,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
+/* TOMATO64-END */
 
 var class_prio = [['0','Highest'],['1','High'],['2','Normal'],['3','Low'],['4','Lowest']];
 var class_tcp = [['0','nolimit']];
@@ -202,6 +207,12 @@ function verifyFields(focused, quiet) {
 	E('_f_bwl_br1_enable').disabled = (a || (nvram.lan1_ifname.length < 1));
 	E('_f_bwl_br2_enable').disabled = (a || (nvram.lan2_ifname.length < 1));
 	E('_f_bwl_br3_enable').disabled = (a || (nvram.lan3_ifname.length < 1));
+/* TOMATO64-BEGIN */
+	E('_f_bwl_br4_enable').disabled = (a || (nvram.lan4_ifname.length < 1));
+	E('_f_bwl_br5_enable').disabled = (a || (nvram.lan5_ifname.length < 1));
+	E('_f_bwl_br6_enable').disabled = (a || (nvram.lan6_ifname.length < 1));
+	E('_f_bwl_br7_enable').disabled = (a || (nvram.lan7_ifname.length < 1));
+/* TOMATO64-END */
 
 	if (nvram.lan_ifname.length < 1)
 		E('_f_bwl_br0_enable').checked = 0;
@@ -211,11 +222,27 @@ function verifyFields(focused, quiet) {
 		E('_f_bwl_br2_enable').checked = 0;
 	if (nvram.lan3_ifname.length < 1)
 		E('_f_bwl_br3_enable').checked = 0;
+/* TOMATO64-BEGIN */
+	if (nvram.lan4_ifname.length < 1)
+		E('_f_bwl_br4_enable').checked = 0;
+	if (nvram.lan5_ifname.length < 1)
+		E('_f_bwl_br5_enable').checked = 0;
+	if (nvram.lan6_ifname.length < 1)
+		E('_f_bwl_br6_enable').checked = 0;
+	if (nvram.lan7_ifname.length < 1)
+		E('_f_bwl_br7_enable').checked = 0;
+/* TOMATO64-END */
 
 	var b = !E('_f_bwl_br0_enable').checked;
 	var b1 = !E('_f_bwl_br1_enable').checked;
 	var b2 = !E('_f_bwl_br2_enable').checked;
 	var b3 = !E('_f_bwl_br3_enable').checked;
+/* TOMATO64-BEGIN */
+	var b4 = !E('_f_bwl_br4_enable').checked;
+	var b5 = !E('_f_bwl_br5_enable').checked;
+	var b6 = !E('_f_bwl_br6_enable').checked;
+	var b7 = !E('_f_bwl_br7_enable').checked;
+/* TOMATO64-END */
 
 	E('_bwl_br0_dlr').disabled = b || a;
 	E('_bwl_br0_dlc').disabled = b || a;
@@ -246,6 +273,35 @@ function verifyFields(focused, quiet) {
 	E('_bwl_br3_ulc').disabled = b3 || a;
 	E('_bwl_br3_prio').disabled = b3 || a;
 	elem.display(PR('_bwl_br3_dlr'), PR('_bwl_br3_dlc'), PR('_bwl_br3_ulr'), PR('_bwl_br3_ulc'), PR('_bwl_br3_prio'), !a && !b3);
+/* TOMATO64-BEGIN */
+	E('_bwl_br4_dlr').disabled = b4 || a;
+	E('_bwl_br4_dlc').disabled = b4 || a;
+	E('_bwl_br4_ulr').disabled = b4 || a;
+	E('_bwl_br4_ulc').disabled = b4 || a;
+	E('_bwl_br4_prio').disabled = b4 || a;
+	elem.display(PR('_bwl_br4_dlr'), PR('_bwl_br4_dlc'), PR('_bwl_br4_ulr'), PR('_bwl_br4_ulc'), PR('_bwl_br4_prio'), !a && !b4);
+
+	E('_bwl_br5_dlr').disabled = b5 || a;
+	E('_bwl_br5_dlc').disabled = b5 || a;
+	E('_bwl_br5_ulr').disabled = b5 || a;
+	E('_bwl_br5_ulc').disabled = b5 || a;
+	E('_bwl_br5_prio').disabled = b5 || a;
+	elem.display(PR('_bwl_br5_dlr'), PR('_bwl_br5_dlc'), PR('_bwl_br5_ulr'), PR('_bwl_br5_ulc'), PR('_bwl_br5_prio'), !a && !b5);
+
+	E('_bwl_br6_dlr').disabled = b6 || a;
+	E('_bwl_br6_dlc').disabled = b6 || a;
+	E('_bwl_br6_ulr').disabled = b6 || a;
+	E('_bwl_br6_ulc').disabled = b6 || a;
+	E('_bwl_br6_prio').disabled = b6 || a;
+	elem.display(PR('_bwl_br6_dlr'), PR('_bwl_br6_dlc'), PR('_bwl_br6_ulr'), PR('_bwl_br6_ulc'), PR('_bwl_br6_prio'), !a && !b6);
+
+	E('_bwl_br7_dlr').disabled = b7 || a;
+	E('_bwl_br7_dlc').disabled = b7 || a;
+	E('_bwl_br7_ulr').disabled = b7 || a;
+	E('_bwl_br7_ulc').disabled = b7 || a;
+	E('_bwl_br7_prio').disabled = b7 || a;
+	elem.display(PR('_bwl_br7_dlr'), PR('_bwl_br7_dlc'), PR('_bwl_br7_ulr'), PR('_bwl_br7_ulc'), PR('_bwl_br7_prio'), !a && !b7);
+/* TOMATO64-END */
 
 	return 1;
 }
@@ -271,6 +327,12 @@ function save() {
 	fom.bwl_br1_enable.value = fom._f_bwl_br1_enable.checked ? 1 : 0;
 	fom.bwl_br2_enable.value = fom._f_bwl_br2_enable.checked ? 1 : 0;
 	fom.bwl_br3_enable.value = fom._f_bwl_br3_enable.checked ? 1 : 0;
+/* TOMATO64-BEGIN */
+	fom.bwl_br4_enable.value = fom._f_bwl_br4_enable.checked ? 1 : 0;
+	fom.bwl_br5_enable.value = fom._f_bwl_br5_enable.checked ? 1 : 0;
+	fom.bwl_br6_enable.value = fom._f_bwl_br6_enable.checked ? 1 : 0;
+	fom.bwl_br7_enable.value = fom._f_bwl_br7_enable.checked ? 1 : 0;
+/* TOMATO64-END */
 	fom.bwl_rules.value = bwllimitrules;
 	form.submit(fom, 1);
 }
@@ -325,6 +387,12 @@ function init() {
 <input type="hidden" name="bwl_br1_enable">
 <input type="hidden" name="bwl_br2_enable">
 <input type="hidden" name="bwl_br3_enable">
+/* TOMATO64-BEGIN */
+<input type="hidden" name="bwl_br4_enable">
+<input type="hidden" name="bwl_br5_enable">
+<input type="hidden" name="bwl_br6_enable">
+<input type="hidden" name="bwl_br7_enable">
+/* TOMATO64-END */
 
 <!-- / / / -->
 
@@ -449,6 +517,96 @@ function init() {
 		</ul>
 	</div>
 </div>
+
+/* TOMATO64-BEGIN */
+<!-- / / / -->
+
+<div class="section-title">Default Class for LAN4 (br4)</div>
+<div class="section">
+	<script>
+		createFieldTable('', [
+			{ title: 'Enable', name: 'f_bwl_br4_enable', type: 'checkbox', value: nvram.bwl_br4_enable == '1'},
+			{ title: 'Download rate', indent: 2, name: 'bwl_br4_dlr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br4_dlr },
+			{ title: 'Download ceil', indent: 2, name: 'bwl_br4_dlc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br4_dlc },
+			{ title: 'Upload rate', indent: 2, name: 'bwl_br4_ulr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br4_ulr },
+			{ title: 'Upload ceil', indent: 2, name: 'bwl_br4_ulc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br4_ulc },
+			{ title: 'Priority', indent: 2, name: 'bwl_br4_prio', type: 'select', options:
+				[['0','Highest'],['1','High'],['2','Normal'],['3','Low'],['4','Lowest']], value: nvram.bwl_br4_prio }
+		]);
+	</script>
+	<div>
+		<ul>
+			<li><b>The bandwidth will be shared by all hosts in br4.</b></li>
+		</ul>
+	</div>
+</div>
+
+<!-- / / / -->
+
+<div class="section-title">Default Class for LAN5 (br5)</div>
+<div class="section">
+	<script>
+		createFieldTable('', [
+			{ title: 'Enable', name: 'f_bwl_br5_enable', type: 'checkbox', value: nvram.bwl_br5_enable == '1'},
+			{ title: 'Download rate', indent: 2, name: 'bwl_br5_dlr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br5_dlr },
+			{ title: 'Download ceil', indent: 2, name: 'bwl_br5_dlc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br5_dlc },
+			{ title: 'Upload rate', indent: 2, name: 'bwl_br5_ulr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br5_ulr },
+			{ title: 'Upload ceil', indent: 2, name: 'bwl_br5_ulc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br5_ulc },
+			{ title: 'Priority', indent: 2, name: 'bwl_br5_prio', type: 'select', options:
+				[['0','Highest'],['1','High'],['2','Normal'],['3','Low'],['4','Lowest']], value: nvram.bwl_br5_prio }
+		]);
+	</script>
+	<div>
+		<ul>
+			<li><b>The bandwidth will be shared by all hosts in br5.</b></li>
+		</ul>
+	</div>
+</div>
+
+<!-- / / / -->
+
+<div class="section-title">Default Class for LAN6 (br6)</div>
+<div class="section">
+	<script>
+		createFieldTable('', [
+			{ title: 'Enable', name: 'f_bwl_br6_enable', type: 'checkbox', value: nvram.bwl_br6_enable == '1'},
+			{ title: 'Download rate', indent: 2, name: 'bwl_br6_dlr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br6_dlr },
+			{ title: 'Download ceil', indent: 2, name: 'bwl_br6_dlc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br6_dlc },
+			{ title: 'Upload rate', indent: 2, name: 'bwl_br6_ulr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br6_ulr },
+			{ title: 'Upload ceil', indent: 2, name: 'bwl_br6_ulc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br6_ulc },
+			{ title: 'Priority', indent: 2, name: 'bwl_br6_prio', type: 'select', options:
+				[['0','Highest'],['1','High'],['2','Normal'],['3','Low'],['4','Lowest']], value: nvram.bwl_br6_prio }
+		]);
+	</script>
+	<div>
+		<ul>
+			<li><b>The bandwidth will be shared by all hosts in br6.</b></li>
+		</ul>
+	</div>
+</div>
+
+<!-- / / / -->
+
+<div class="section-title">Default Class for LAN7 (br7)</div>
+<div class="section">
+	<script>
+		createFieldTable('', [
+			{ title: 'Enable', name: 'f_bwl_br7_enable', type: 'checkbox', value: nvram.bwl_br7_enable == '1'},
+			{ title: 'Download rate', indent: 2, name: 'bwl_br7_dlr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br7_dlr },
+			{ title: 'Download ceil', indent: 2, name: 'bwl_br7_dlc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br7_dlc },
+			{ title: 'Upload rate', indent: 2, name: 'bwl_br7_ulr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br7_ulr },
+			{ title: 'Upload ceil', indent: 2, name: 'bwl_br7_ulc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.bwl_br7_ulc },
+			{ title: 'Priority', indent: 2, name: 'bwl_br7_prio', type: 'select', options:
+				[['0','Highest'],['1','High'],['2','Normal'],['3','Low'],['4','Lowest']], value: nvram.bwl_br7_prio }
+		]);
+	</script>
+	<div>
+		<ul>
+			<li><b>The bandwidth will be shared by all hosts in br7.</b></li>
+		</ul>
+	</div>
+</div>
+/* TOMATO64-END */
 
 <!-- / / / -->
 

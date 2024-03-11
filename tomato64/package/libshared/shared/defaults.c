@@ -98,6 +98,12 @@ struct nvram_tuple upnp_defaults[] = {
 	{ "upnp_lan1",			""				, 0 },
 	{ "upnp_lan2",			""				, 0 },
 	{ "upnp_lan3",			""				, 0 },
+#ifdef TOMATO64
+	{ "upnp_lan4",			""				, 0 },
+	{ "upnp_lan5",			""				, 0 },
+	{ "upnp_lan6",			""				, 0 },
+	{ "upnp_lan7",			""				, 0 },
+#endif /* TOMATO64 */
 	{ "upnp_clean",			"1"				, 0 },	/* 0:Disable 1:Enable */
 	{ "upnp_clean_interval",	"600"				, 0 },	/* Cleaning interval in seconds */
 	{ "upnp_clean_threshold",	"20"				, 0 },	/* Threshold for cleaning unused rules */
@@ -353,6 +359,24 @@ struct nvram_tuple router_defaults[] = {
 	{ "dhcpd3_endip",		"" 				, 0 },
 	{ "dhcpd3_ostatic",		"0"				, 0 },	/* ignore DHCP requests from unknown devices on LAN3 */
 	{ "dhcp3_lease",		"1440"				, 0 },
+#ifdef TOMATO64
+	{ "dhcpd4_startip",		"" 				, 0 },
+	{ "dhcpd4_endip",		"" 				, 0 },
+	{ "dhcpd4_ostatic",		"0"				, 0 },	/* ignore DHCP requests from unknown devices on LAN4 */
+	{ "dhcp4_lease",		"1440"				, 0 },
+	{ "dhcpd5_startip",		"" 				, 0 },
+	{ "dhcpd5_endip",		"" 				, 0 },
+	{ "dhcpd5_ostatic",		"0"				, 0 },	/* ignore DHCP requests from unknown devices on LAN5 */
+	{ "dhcp5_lease",		"1440"				, 0 },
+	{ "dhcpd6_startip",		"" 				, 0 },
+	{ "dhcpd6_endip",		"" 				, 0 },
+	{ "dhcpd6_ostatic",		"0"				, 0 },	/* ignore DHCP requests from unknown devices on LAN6 */
+	{ "dhcp6_lease",		"1440"				, 0 },
+	{ "dhcpd7_startip",		"" 				, 0 },
+	{ "dhcpd7_endip",		"" 				, 0 },
+	{ "dhcpd7_ostatic",		"0"				, 0 },	/* ignore DHCP requests from unknown devices on LAN7 */
+	{ "dhcp7_lease",		"1440"				, 0 },
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_USB
 	/* 3G/4G Modem */
@@ -934,6 +958,12 @@ struct nvram_tuple router_defaults[] = {
 	{ "dnsmasq_pxelan1",		"0"				, 0 },
 	{ "dnsmasq_pxelan2",		"0"				, 0 },
 	{ "dnsmasq_pxelan3",		"0"				, 0 },
+#ifdef TOMATO64
+	{ "dnsmasq_pxelan4",		"0"				, 0 },
+	{ "dnsmasq_pxelan5",		"0"				, 0 },
+	{ "dnsmasq_pxelan6",		"0"				, 0 },
+	{ "dnsmasq_pxelan7",		"0"				, 0 },
+#endif /* TOMATO64 */
 #endif
 #ifdef TCONFIG_MDNS
 	{ "mdns_enable",		"0"				, 0 },
@@ -952,6 +982,12 @@ struct nvram_tuple router_defaults[] = {
 	{ "multicast_lan1",		"0"				, 0 },	/* on LAN1 (br1) */
 	{ "multicast_lan2",		"0"				, 0 },	/* on LAN2 (br2) */
 	{ "multicast_lan3",		"0"				, 0 },	/* on LAN3 (br3) */
+#ifdef TOMATO64
+	{ "multicast_lan4",		"0"				, 0 },	/* on LAN4 (br4) */
+	{ "multicast_lan5",		"0"				, 0 },	/* on LAN5 (br5) */
+	{ "multicast_lan6",		"0"				, 0 },	/* on LAN6 (br6) */
+	{ "multicast_lan7",		"0"				, 0 },	/* on LAN7 (br7) */
+#endif /* TOMATO64 */
 	{ "multicast_quickleave",	"1"				, 0 },	/* enable quickleave mode */
 	{ "multicast_custom",		""				, 0 },	/* custom config for IGMP proxy instead of default config */
 	{ "udpxy_enable",		"0"				, 0 },
@@ -959,6 +995,12 @@ struct nvram_tuple router_defaults[] = {
 	{ "udpxy_lan1",			"0"				, 0 },	/* listen on LAN (br1) */
 	{ "udpxy_lan2",			"0"				, 0 },	/* listen on LAN (br2) */
 	{ "udpxy_lan3",			"0"				, 0 },	/* listen on LAN (br3) */
+#ifdef TOMATO64
+	{ "udpxy_lan4",			"0"				, 0 },	/* listen on LAN (br4) */
+	{ "udpxy_lan5",			"0"				, 0 },	/* listen on LAN (br5) */
+	{ "udpxy_lan6",			"0"				, 0 },	/* listen on LAN (br6) */
+	{ "udpxy_lan7",			"0"				, 0 },	/* listen on LAN (br7) */
+#endif /* TOMATO64 */
 	{ "udpxy_stats",		"0"				, 0 },
 	{ "udpxy_clients",		"3"				, 0 },
 	{ "udpxy_port",			"4022"				, 0 },
@@ -1461,6 +1503,12 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_server1_plan1",		"0"				, 0 },
 	{ "vpn_server1_plan2",		"0"				, 0 },
 	{ "vpn_server1_plan3",		"0"				, 0 },
+#ifdef TOMATO64
+	{ "vpn_server1_plan4",		"0"				, 0 },
+	{ "vpn_server1_plan5",		"0"				, 0 },
+	{ "vpn_server1_plan6",		"0"				, 0 },
+	{ "vpn_server1_plan7",		"0"				, 0 },
+#endif /* TOMATO64 */
 	{ "vpn_server1_pdns",		"0"				, 0 },
 	{ "vpn_server1_ccd",		"0"				, 0 },
 	{ "vpn_server1_c2c",		"0"				, 0 },
@@ -1509,6 +1557,12 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_server2_plan1",		"0"				, 0 },
 	{ "vpn_server2_plan2",		"0"				, 0 },
 	{ "vpn_server2_plan3",		"0"				, 0 },
+#ifdef TOMATO64
+	{ "vpn_server2_plan4",		"0"				, 0 },
+	{ "vpn_server2_plan5",		"0"				, 0 },
+	{ "vpn_server2_plan6",		"0"				, 0 },
+	{ "vpn_server2_plan7",		"0"				, 0 },
+#endif /* TOMATO64 */
 	{ "vpn_server2_pdns",		"0"				, 0 },
 	{ "vpn_server2_ccd",		"0"				, 0 },
 	{ "vpn_server2_c2c",		"0"				, 0 },
@@ -1832,6 +1886,32 @@ struct nvram_tuple router_defaults[] = {
 	{ "bwl_br3_dlr",		""				, 0 },
 	{ "bwl_br3_ulr",		""				, 0 },
 	{ "bwl_br3_prio",		"2"				, 0 },
+#ifdef TOMATO64
+	{ "bwl_br4_enable",		"0"				, 0 },
+	{ "bwl_br4_dlc",		""				, 0 },
+	{ "bwl_br4_ulc",		""				, 0 },
+	{ "bwl_br4_dlr",		""				, 0 },
+	{ "bwl_br4_ulr",		""				, 0 },
+	{ "bwl_br4_prio",		"2"				, 0 },
+	{ "bwl_br5_enable",		"0"				, 0 },
+	{ "bwl_br5_dlc",		""				, 0 },
+	{ "bwl_br5_ulc",		""				, 0 },
+	{ "bwl_br5_dlr",		""				, 0 },
+	{ "bwl_br5_ulr",		""				, 0 },
+	{ "bwl_br5_prio",		"2"				, 0 },
+	{ "bwl_br6_enable",		"0"				, 0 },
+	{ "bwl_br6_dlc",		""				, 0 },
+	{ "bwl_br6_ulc",		""				, 0 },
+	{ "bwl_br6_dlr",		""				, 0 },
+	{ "bwl_br6_ulr",		""				, 0 },
+	{ "bwl_br6_prio",		"2"				, 0 },
+	{ "bwl_br7_enable",		"0"				, 0 },
+	{ "bwl_br7_dlc",		""				, 0 },
+	{ "bwl_br7_ulc",		""				, 0 },
+	{ "bwl_br7_dlr",		""				, 0 },
+	{ "bwl_br7_ulr",		""				, 0 },
+	{ "bwl_br7_prio",		"2"				, 0 },
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_NOCAT
 	{ "NC_enable",			"0"				, 0 },	/* enable NoCatSplash */
@@ -1940,15 +2020,19 @@ struct nvram_tuple router_defaults[] = {
 #endif /* TCONFIG_MULTIWAN */
 
 	{ "lan_ifname",			"br0"				, 0 },
-	{ "lan_ifnames",		"eth1 eth2 eth3 eth4"		, 0 },
+	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 eth5 eth6 eth7 eth8"	, 0 },
 	{ "lan_ifnames_vlan",		"vlan1"				, 0 },
 	{ "lan1_ifnames_vlan",		""				, 0 },
 	{ "lan2_ifnames_vlan",		""				, 0 },
 	{ "lan3_ifnames_vlan",		""				, 0 },
+	{ "lan4_ifnames_vlan",		""				, 0 },
+	{ "lan5_ifnames_vlan",		""				, 0 },
+	{ "lan6_ifnames_vlan",		""				, 0 },
+	{ "lan7_ifnames_vlan",		""				, 0 },
 
 	{ "boardflags",			"0x0100"			, 0 },
-	{ "vlan0ports",			"0 5"				, 0 },
-	{ "vlan1ports",			"1 2 3 4 5*"			, 0 },
+	{ "vlan0ports",			"0 9"				, 0 },
+	{ "vlan1ports",			"1 2 3 4 5 6 7 8 9*"		, 0 },
 #endif /* TOMATO64 */
 	{ 0, 0, 0 }
 };

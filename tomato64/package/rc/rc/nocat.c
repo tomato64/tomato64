@@ -60,6 +60,20 @@ void build_nocat_conf(void)
 	if (nvram_match("NC_BridgeLAN", "br3"))
 		fprintf(fp, "InternalDevice\t%s\n"
 		            "GatewayAddr\t%s\n", nvram_safe_get("lan3_ifname"), nvram_safe_get("lan3_ipaddr"));
+#ifdef TOMATO64
+	if (nvram_match("NC_BridgeLAN", "br4"))
+		fprintf(fp, "InternalDevice\t%s\n"
+		            "GatewayAddr\t%s\n", nvram_safe_get("lan4_ifname"), nvram_safe_get("lan4_ipaddr"));
+	if (nvram_match("NC_BridgeLAN", "br5"))
+		fprintf(fp, "InternalDevice\t%s\n"
+		            "GatewayAddr\t%s\n", nvram_safe_get("lan5_ifname"), nvram_safe_get("lan5_ipaddr"));
+	if (nvram_match("NC_BridgeLAN", "br6"))
+		fprintf(fp, "InternalDevice\t%s\n"
+		            "GatewayAddr\t%s\n", nvram_safe_get("lan6_ifname"), nvram_safe_get("lan6_ipaddr"));
+	if (nvram_match("NC_BridgeLAN", "br7"))
+		fprintf(fp, "InternalDevice\t%s\n"
+		            "GatewayAddr\t%s\n", nvram_safe_get("lan7_ifname"), nvram_safe_get("lan7_ipaddr"));
+#endif /* TOMATO64 */
 
 
 	fprintf(fp, "GatewayMAC\t%s\n", nvram_safe_get("lan_hwaddr"));

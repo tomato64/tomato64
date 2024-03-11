@@ -1973,6 +1973,7 @@ void do_static_routes(int add)
 		if (vstrsep(q, "<", &dest, &gateway, &mask, &metric, &ifname) < 5)
 			continue;
 
+#ifndef TOMATO64
 		ifname = nvram_safe_get(((strcmp(ifname, "LAN") == 0) ? "lan_ifname" :
 					((strcmp(ifname, "LAN1") == 0) ? "lan1_ifname" :
 					((strcmp(ifname, "LAN2") == 0) ? "lan2_ifname" :
@@ -1984,6 +1985,23 @@ void do_static_routes(int add)
 					((strcmp(ifname, "MAN3") == 0) ? "wan3_ifname" :
 					((strcmp(ifname, "MAN4") == 0) ? "wan4_ifname" :
 					((strcmp(ifname, "WAN") == 0) ? "wan_iface" : "wan_ifname"))))))))))));
+#else
+		ifname = nvram_safe_get(((strcmp(ifname, "LAN") == 0) ? "lan_ifname" :
+					((strcmp(ifname, "LAN1") == 0) ? "lan1_ifname" :
+					((strcmp(ifname, "LAN2") == 0) ? "lan2_ifname" :
+					((strcmp(ifname, "LAN3") == 0) ? "lan3_ifname" :
+					((strcmp(ifname, "LAN4") == 0) ? "lan4_ifname" :
+					((strcmp(ifname, "LAN5") == 0) ? "lan5_ifname" :
+					((strcmp(ifname, "LAN6") == 0) ? "lan6_ifname" :
+					((strcmp(ifname, "LAN7") == 0) ? "lan7_ifname" :
+					((strcmp(ifname, "WAN2") == 0) ? "wan2_iface" :
+					((strcmp(ifname, "WAN3") == 0) ? "wan3_iface" :
+					((strcmp(ifname, "WAN4") == 0) ? "wan4_iface" :
+					((strcmp(ifname, "MAN2") == 0) ? "wan2_ifname" :
+					((strcmp(ifname, "MAN3") == 0) ? "wan3_ifname" :
+					((strcmp(ifname, "MAN4") == 0) ? "wan4_ifname" :
+					((strcmp(ifname, "WAN") == 0) ? "wan_iface" : "wan_ifname"))))))))))))))));
+#endif /* TOMATO64 */
 		logmsg(LOG_WARNING, "Static route %s: ifname=%s, metric=%s, dest=%s, gateway=%s, mask=%s", (add ? "added" : "deleted"), ifname, metric, dest, gateway, mask);
 
 		if (add) {

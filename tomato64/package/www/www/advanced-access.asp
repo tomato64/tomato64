@@ -19,17 +19,37 @@
 
 <script>
 
-//	<% nvram ("lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan_access");%> 
+/* TOMATO64-REMOVE-BEGIN */
+//	<% nvram ("lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan_access");%>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram ("lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,lan_access");%>
+/* TOMATO64-END */
 
 var cprefix = 'advanced_access';
 
 var la = new TomatoGrid();
 la.setup = function() {
+/* TOMATO64-REMOVE-BEGIN */
 	this.init('la-grid', 'sort', 50, [
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	this.init('la-grid', 'sort', 200, [
+/* TOMATO64-END */
 	{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+/* TOMATO64-REMOVE-BEGIN */
 	{ type: 'select', options: [[0,'LAN0 (br0)'],[1,'LAN1 (br1)'],[2,'LAN2 (br2)'],[3,'LAN3 (br3)']], prefix: '<div class="centered">', suffix: '<\/div>' },
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	{ type: 'select', options: [[0,'LAN0 (br0)'],[1,'LAN1 (br1)'],[2,'LAN2 (br2)'],[3,'LAN3 (br3)'],[4,'LAN4 (br4)'],[5,'LAN5 (br5)'],[6,'LAN6 (br6)'],[7,'LAN7 (br7)']], prefix: '<div class="centered">', suffix: '<\/div>' },
+/* TOMATO64-END */
 	{ type: 'text', maxlen: 32 },
+/* TOMATO64-REMOVE-BEGIN */
 	{ type: 'select', options: [[0,'LAN0 (br0)'],[1,'LAN1 (br1)'],[2,'LAN2 (br2)'],[3,'LAN3 (br3)']], prefix: '<div class="centered">', suffix: '<\/div>' },
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	{ type: 'select', options: [[0,'LAN0 (br0)'],[1,'LAN1 (br1)'],[2,'LAN2 (br2)'],[3,'LAN3 (br3)'],[4,'LAN4 (br4)'],[5,'LAN5 (br5)'],[6,'LAN6 (br6)'],[7,'LAN7 (br7)']], prefix: '<div class="centered">', suffix: '<\/div>' },
+/* TOMATO64-END */
 	{ type: 'text', maxlen: 32 },
 	{ type: 'text', maxlen: 32 }]);
 	this.headerSet(['On','Src','Src Address','Dst','Dst Address','Description']);
@@ -132,7 +152,12 @@ la.verifyFields = function(row, quiet) {
 }
 
 la.dataToView = function(data) {
+/* TOMATO64-REMOVE-BEGIN */
 	return [(data[0] != 0) ? '&#x2b50' : '', ['LAN0','LAN1','LAN2','LAN3'][data[1]],data[2],['LAN0','LAN1','LAN2','LAN3'][data[3]],data[4],data[5] ];
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	return [(data[0] != 0) ? '&#x2b50' : '', ['LAN0','LAN1','LAN2','LAN3','LAN4','LAN5','LAN6','LAN7'][data[1]],data[2],['LAN0','LAN1','LAN2','LAN3','LAN4','LAN5','LAN6','LAN7'][data[3]],data[4],data[5] ];
+/* TOMATO64-END */
 }
 
 la.dataToFieldValues = function (data) {

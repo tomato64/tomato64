@@ -19,7 +19,12 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("upnp_enable,upnp_mnp,upnp_clean,upnp_secure,upnp_clean_interval,upnp_clean_threshold,upnp_custom,upnp_lan,upnp_lan1,upnp_lan2,upnp_lan3,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("upnp_enable,upnp_mnp,upnp_clean,upnp_secure,upnp_clean_interval,upnp_clean_threshold,upnp_custom,upnp_lan,upnp_lan1,upnp_lan2,upnp_lan3,upnp_lan4,upnp_lan5,upnp_lan6,upnp_lan7,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
+/* TOMATO64-END */
 
 </script>
 <script src="upnp.jsx?_http_id=<% nv(http_id); %>"></script>
@@ -230,8 +235,27 @@ function verifyFields(focused, quiet) {
 	E('_f_upnp_lan3').disabled = ((nvram.lan3_ifname.length < 1) || (enable == 0));
 	if (E('_f_upnp_lan3').disabled)
 		E('_f_upnp_lan3').checked = 0;
-
+/* TOMATO64-BEGIN */
+	E('_f_upnp_lan4').disabled = ((nvram.lan4_ifname.length < 1) || (enable == 0));
+	if (E('_f_upnp_lan4').disabled)
+		E('_f_upnp_lan4').checked = 0;
+	E('_f_upnp_lan5').disabled = ((nvram.lan5_ifname.length < 1) || (enable == 0));
+	if (E('_f_upnp_lan5').disabled)
+		E('_f_upnp_lan5').checked = 0;
+	E('_f_upnp_lan6').disabled = ((nvram.lan6_ifname.length < 1) || (enable == 0));
+	if (E('_f_upnp_lan6').disabled)
+		E('_f_upnp_lan6').checked = 0;
+	E('_f_upnp_lan7').disabled = ((nvram.lan7_ifname.length < 1) || (enable == 0));
+	if (E('_f_upnp_lan7').disabled)
+		E('_f_upnp_lan7').checked = 0;
+/* TOMATO64-END */
+/* TOMATO64-REMOVE-BEGIN */
 	if ((enable) && (!E('_f_upnp_lan').checked) && (!E('_f_upnp_lan1').checked) && (!E('_f_upnp_lan2').checked) && (!E('_f_upnp_lan3').checked)) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	if ((enable) && (!E('_f_upnp_lan').checked) && (!E('_f_upnp_lan1').checked) && (!E('_f_upnp_lan2').checked) && (!E('_f_upnp_lan3').checked) &&
+			(!E('_f_upnp_lan4').checked) && (!E('_f_upnp_lan5').checked) && (!E('_f_upnp_lan6').checked) && (!E('_f_upnp_lan7').checked)) {
+/* TOMATO64-END */
 		if ((E('_f_enable_natpmp').checked) || (E('_f_enable_upnp').checked)) {
 			var m = 'NAT-PMP or UPnP should be enabled on at least one LAN bridge. You can continue, but be sure to configure access to the UPnP service in Custom Configuration, otherwise miniupnpd will not run';
 			ferror.set('_f_enable_natpmp', m, quiet);
@@ -240,6 +264,12 @@ function verifyFields(focused, quiet) {
 			ferror.set('_f_upnp_lan1', m, 1);
 			ferror.set('_f_upnp_lan2', m, 1);
 			ferror.set('_f_upnp_lan3', m, 1);
+/* TOMATO64-BEGIN */
+			ferror.set('_f_upnp_lan4', m, 1);
+			ferror.set('_f_upnp_lan5', m, 1);
+			ferror.set('_f_upnp_lan6', m, 1);
+			ferror.set('_f_upnp_lan7', m, 1);
+/* TOMATO64-END */
 		}
 		return 1;
 	}
@@ -250,6 +280,12 @@ function verifyFields(focused, quiet) {
 		ferror.clear('_f_upnp_lan1');
 		ferror.clear('_f_upnp_lan2');
 		ferror.clear('_f_upnp_lan3');
+/* TOMATO64-BEGIN */
+		ferror.clear('_f_upnp_lan4');
+		ferror.clear('_f_upnp_lan5');
+		ferror.clear('_f_upnp_lan6');
+		ferror.clear('_f_upnp_lan7');
+/* TOMATO64-END */
 	}
 
 	return 1;
@@ -275,6 +311,12 @@ function save() {
 	fom.upnp_lan1.value = fom._f_upnp_lan1.checked ? 1 : 0;
 	fom.upnp_lan2.value = fom._f_upnp_lan2.checked ? 1 : 0;
 	fom.upnp_lan3.value = fom._f_upnp_lan3.checked ? 1 : 0;
+/* TOMATO64-BEGIN */
+	fom.upnp_lan4.value = fom._f_upnp_lan4.checked ? 1 : 0;
+	fom.upnp_lan5.value = fom._f_upnp_lan5.checked ? 1 : 0;
+	fom.upnp_lan6.value = fom._f_upnp_lan6.checked ? 1 : 0;
+	fom.upnp_lan7.value = fom._f_upnp_lan7.checked ? 1 : 0;
+/* TOMATO64-END */
 
 	fom._nofootermsg.value = 0;
 
@@ -320,6 +362,12 @@ function init() {
 <input type="hidden" name="upnp_lan1">
 <input type="hidden" name="upnp_lan2">
 <input type="hidden" name="upnp_lan3">
+/* TOMATO64-BEGIN */
+<input type="hidden" name="upnp_lan4">
+<input type="hidden" name="upnp_lan5">
+<input type="hidden" name="upnp_lan6">
+<input type="hidden" name="upnp_lan7">
+/* TOMATO64-END */
 <input type="hidden" name="remove_proto">
 <input type="hidden" name="remove_eport">
 
@@ -350,6 +398,12 @@ function init() {
 				{ title: 'LAN1', indent: 2, name: 'f_upnp_lan1', type: 'checkbox', value: (nvram.upnp_lan1 == '1') },
 				{ title: 'LAN2', indent: 2, name: 'f_upnp_lan2', type: 'checkbox', value: (nvram.upnp_lan2 == '1') },
 				{ title: 'LAN3', indent: 2, name: 'f_upnp_lan3', type: 'checkbox', value: (nvram.upnp_lan3 == '1') },
+/* TOMATO64-BEGIN */
+				{ title: 'LAN4', indent: 2, name: 'f_upnp_lan4', type: 'checkbox', value: (nvram.upnp_lan4 == '1') },
+				{ title: 'LAN5', indent: 2, name: 'f_upnp_lan5', type: 'checkbox', value: (nvram.upnp_lan5 == '1') },
+				{ title: 'LAN6', indent: 2, name: 'f_upnp_lan6', type: 'checkbox', value: (nvram.upnp_lan6 == '1') },
+				{ title: 'LAN7', indent: 2, name: 'f_upnp_lan7', type: 'checkbox', value: (nvram.upnp_lan7 == '1') },
+/* TOMATO64-END */
 			{ title: 'Show In My Network Places',  name: 'f_upnp_mnp',  type: 'checkbox',  value: (nvram.upnp_mnp == '1')},
 			null,
 			{ title: 'Miniupnpd<\/a><br>Custom configuration', name: 'upnp_custom', type: 'textarea', value: nvram.upnp_custom }

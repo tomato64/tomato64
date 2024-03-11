@@ -44,7 +44,7 @@
 /* TOMATO64-REMOVE-END */
 
 /* TOMATO64-BEGIN */
-//	<% nvram ("t_model_name,vlan0ports,vlan1ports,vlan2ports,vlan3ports,vlan4ports,vlan5ports,vlan6ports,vlan7ports,vlan8ports,vlan9ports,vlan10ports,vlan11ports,vlan12ports,vlan13ports,vlan14ports,vlan15ports,vlan0hwname,vlan1hwname,vlan2hwname,vlan3hwname,vlan4hwname,vlan5hwname,vlan6hwname,vlan7hwname,vlan8hwname,vlan9hwname,vlan10hwname,vlan11hwname,vlan12hwname,vlan13hwname,vlan14hwname,vlan15hwname,wan_ifnameX,wan2_ifnameX,wan3_ifnameX,wan4_ifnameX,wan_ifnameX_vlan,wan2_ifnameX_vlan,wan3_ifnameX_vlan,wan4_ifnameX_vlan,manual_boot_nv,boardtype,boardflags,lan_ifname,lan_ifnames,lan_ifnames_vlan,lan1_ifname,lan1_ifnames,lan1_ifnames_vlan,lan2_ifname,lan2_ifnames,lan2_ifnames_vlan,lan3_ifname,lan3_ifnames,lan3_ifnames_vlan,vlan0vid,vlan1vid,vlan2vid,vlan3vid,vlan4vid,vlan5vid,vlan6vid,vlan7vid,vlan8vid,vlan9vid,vlan10vid,vlan11vid,vlan12vid,vlan13vid,vlan14vid,vlan15vid,model,wl_ssid,wl_radio,wl_net_mode,wl_nband");%>
+//	<% nvram ("t_model_name,vlan0ports,vlan1ports,vlan2ports,vlan3ports,vlan4ports,vlan5ports,vlan6ports,vlan7ports,vlan8ports,vlan9ports,vlan10ports,vlan11ports,vlan12ports,vlan13ports,vlan14ports,vlan15ports,vlan0hwname,vlan1hwname,vlan2hwname,vlan3hwname,vlan4hwname,vlan5hwname,vlan6hwname,vlan7hwname,vlan8hwname,vlan9hwname,vlan10hwname,vlan11hwname,vlan12hwname,vlan13hwname,vlan14hwname,vlan15hwname,wan_ifnameX,wan2_ifnameX,wan3_ifnameX,wan4_ifnameX,wan_ifnameX_vlan,wan2_ifnameX_vlan,wan3_ifnameX_vlan,wan4_ifnameX_vlan,manual_boot_nv,boardtype,boardflags,lan_ifname,lan_ifnames,lan_ifnames_vlan,lan1_ifname,lan1_ifnames,lan1_ifnames_vlan,lan2_ifname,lan2_ifnames,lan2_ifnames_vlan,lan3_ifname,lan3_ifnames,lan3_ifnames_vlan,lan4_ifname,lan4_ifnames,lan4_ifnames_vlan,lan5_ifname,lan5_ifnames,lan5_ifnames_vlan,lan6_ifname,lan6_ifnames,lan6_ifnames_vlan,lan7_ifname,lan7_ifnames,lan7_ifnames_vlan,vlan0vid,vlan1vid,vlan2vid,vlan3vid,vlan4vid,vlan5vid,vlan6vid,vlan7vid,vlan8vid,vlan9vid,vlan10vid,vlan11vid,vlan12vid,vlan13vid,vlan14vid,vlan15vid,model,wl_ssid,wl_radio,wl_net_mode,wl_nband");%>
 /* TOMATO64-END */
 
 var cprefix = 'advanced_vlan';
@@ -127,6 +127,12 @@ switch (nvram['t_model_name']) {
 		COL_P2N = '2';
 		COL_P3N = '3';
 		COL_P4N = '4';
+/* TOMATO64-BEGIN */
+		COL_P5N = '5';
+		COL_P6N = '6';
+		COL_P7N = '7';
+		COL_P8N = '8';
+/* TOMATO64-END */
 		break;
 	case 'vlan-testid2':
 	case 'Netgear AC1450':
@@ -187,8 +193,22 @@ var COL_P3  = 8;
 var COL_P3T = 9;
 var COL_P4  = 10;
 var COL_P4T = 11;
+/* TOMATO64-REMOVE-BEGIN */
 var COL_VID_DEF = 12;
 var COL_BRI = 13;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+var COL_P5  = 12;
+var COL_P5T = 13;
+var COL_P6  = 14;
+var COL_P6T = 15;
+var COL_P7  = 16;
+var COL_P7T = 17;
+var COL_P8  = 18;
+var COL_P8T = 19;
+var COL_VID_DEF = 20;
+var COL_BRI = 21;
+/* TOMATO64-END */
 
 /* set to either 5 or 8 when nvram settings are read (FastE or GigE routers) */
 var SWITCH_INTERNAL_PORT = 0;
@@ -210,10 +230,30 @@ if (port_vlan_supported) {
 			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+/* TOMATO64-BEGIN */
 			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+/* TOMATO64-END */
+			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+/* TOMATO64-REMOVE-BEGIN */
 			{ type: 'select', options: [[1,'none'],[2,'WAN0 bridge'],[3,'LAN0 (br0)'],[4,'LAN1 (br1)'],[5,'LAN2 (br2)'],[6,'LAN3 (br3)'],[7,'WAN1 bridge'],
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			{ type: 'select', options: [[1,'none'],[2,'WAN0 bridge'],[3,'LAN0 (br0)'],[4,'LAN1 (br1)'],[5,'LAN2 (br2)'],[6,'LAN3 (br3)'],[7,'LAN4 (br4)'],[8,'LAN5 (br5)'],[9,'LAN6 (br6)'],[10,'LAN7 (br7)'],[11,'WAN1 bridge'],
+/* TOMATO64-END */
 /* MULTIWAN-BEGIN */
+/* TOMATO64-REMOVE-BEGIN */
 				[8,'WAN2 bridge'],[9,'WAN3 bridge']
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+				[12,'WAN2 bridge'],[13,'WAN3 bridge']
+/* TOMATO64-END */
 /* MULTIWAN-END */
 				], prefix: '<div class="centered">', suffix: '<\/div>' }]);
 
@@ -223,6 +263,12 @@ if (port_vlan_supported) {
 		                '<div id="vport_2"><img src="eth_off.gif" id="eth_off_3" alt=""><\/div>2', '<br>Tag<br>2',
 		                '<div id="vport_3"><img src="eth_off.gif" id="eth_off_4" alt=""><\/div>3', '<br>Tag<br>3',
 		                '<div id="vport_4"><img src="eth_off.gif" id="eth_off_5" alt=""><\/div>4', '<br>Tag<br>4',
+/* TOMATO64-BEGIN */
+		                '<div id="vport_5"><img src="eth_off.gif" id="eth_off_6" alt=""><\/div>5', '<br>Tag<br>5',
+		                '<div id="vport_6"><img src="eth_off.gif" id="eth_off_7" alt=""><\/div>6', '<br>Tag<br>6',
+		                '<div id="vport_7"><img src="eth_off.gif" id="eth_off_8" alt=""><\/div>7', '<br>Tag<br>7',
+		                '<div id="vport_8"><img src="eth_off.gif" id="eth_off_9" alt=""><\/div>8', '<br>Tag<br>8',
+/* TOMATO64-END */
 		                '<br>Default<br>VLAN', 'Ethernet to<br>bridge<br>mapping']);
 
 		vlg.populate();
@@ -278,7 +324,7 @@ REMOVE-END */
 
 /* TOMATO64-BEGIN */
 		bridged[parseInt(nvram['wan_ifnameX_vlan'].replace('vlan',''))] = '2';
-		bridged[parseInt(nvram['wan2_ifnameX_vlan'].replace('vlan',''))] = '7';
+		bridged[parseInt(nvram['wan2_ifnameX_vlan'].replace('vlan',''))] = '11';
 /* TOMATO64-END */
 
 
@@ -291,8 +337,8 @@ REMOVE-END */
 
 /* TOMATO64-BEGIN */
 /* MULTIWAN-BEGIN */
-		bridged[parseInt(nvram['wan3_ifnameX_vlan'].replace('vlan',''))] = '8';
-		bridged[parseInt(nvram['wan4_ifnameX_vlan'].replace('vlan',''))] = '9';
+		bridged[parseInt(nvram['wan3_ifnameX_vlan'].replace('vlan',''))] = '12';
+		bridged[parseInt(nvram['wan4_ifnameX_vlan'].replace('vlan',''))] = '13';
 /* MULTIWAN-END */
 /* TOMATO64-END */
 
@@ -324,6 +370,12 @@ REMOVE-END */
 						port[COL_P2N], tagged[COL_P2N],
 						port[COL_P3N], tagged[COL_P3N],
 						port[COL_P4N], tagged[COL_P4N],
+/* TOMATO64-BEGIN */
+						port[COL_P5N], tagged[COL_P5N],
+						port[COL_P6N], tagged[COL_P6N],
+						port[COL_P7N], tagged[COL_P7N],
+						port[COL_P8N], tagged[COL_P8N],
+/* TOMATO64-END */
 						(((nvram['vlan'+i+'ports']).indexOf('*') != -1) ? '1' : '0'),
 						(bridged[i] != null) ? bridged[i] : '1' ]);
 				}
@@ -353,16 +405,31 @@ REMOVE-END */
 	}
 
 	vlg.countWan2 = function() {
+/* TOMATO64-REMOVE-BEGIN */
 		return this.countElem(COL_BRI, 7);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		return this.countElem(COL_BRI, 11);
+/* TOMATO64-END */
 	}
 
 /* MULTIWAN-BEGIN */
 	vlg.countWan3 = function() {
+/* TOMATO64-REMOVE-BEGIN */
 		return this.countElem(COL_BRI, 8);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		return this.countElem(COL_BRI, 12);
+/* TOMATO64-END */
 	}
 
 	vlg.countWan4 = function() {
+/* TOMATO64-REMOVE-BEGIN */
 		return this.countElem(COL_BRI, 9);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		return this.countElem(COL_BRI, 13);
+/* TOMATO64-END */
 	}
 /* MULTIWAN-END */
 
@@ -415,6 +482,32 @@ REMOVE-END */
 			f[COL_P4T].disabled = 1;
 			f[COL_P4T].checked = 0;
 		}
+/* TOMATO64-BEGIN */
+		if ((trunk_vlan_supported) && (f[COL_P5].checked == 1))
+			f[COL_P5T].disabled = 0;
+		else {
+			f[COL_P5T].disabled = 1;
+			f[COL_P5T].checked = 0;
+		}
+		if ((trunk_vlan_supported) && (f[COL_P6].checked == 1))
+			f[COL_P6T].disabled = 0;
+		else {
+			f[COL_P6T].disabled = 1;
+			f[COL_P6T].checked = 0;
+		}
+		if ((trunk_vlan_supported) && (f[COL_P7].checked == 1))
+			f[COL_P7T].disabled = 0;
+		else {
+			f[COL_P7T].disabled = 1;
+			f[COL_P7T].checked = 0;
+		}
+		if ((trunk_vlan_supported) && (f[COL_P8].checked == 1))
+			f[COL_P8T].disabled = 0;
+		else {
+			f[COL_P8T].disabled = 1;
+			f[COL_P8T].checked = 0;
+		}
+/* TOMATO64-END */
 
 		/* Modifications to enable Native VLAN support (allow one untagged vlan per port) by default */
 		var err_vlan = 'Only one untagged VLAN per port is allowed (Native VLAN)';
@@ -508,7 +601,12 @@ REMOVE-END */
 			ferror.clear(f[COL_BRI]);
 /* MULTIWAN-END */
 
+/* TOMATO64-REMOVE-BEGIN */
 		for (var i = 0; i < 4; i++) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		for (var i = 0; i < 8; i++) {
+/* TOMATO64-END */
 			if ((this.countLan(i) > 0) && (f[COL_BRI].selectedIndex == (i + 2))) {
 				ferror.set(f[COL_BRI], 'One and only one VID can be used for LAN'+i+' (br'+i+') at any time', quiet);
 				valid = 0;
@@ -533,8 +631,23 @@ REMOVE-END */
 			(data[COL_P3T].toString() != '0') ? '&#x1f530' : '',
 			(data[COL_P4].toString() != '0') ? '&#x2b50' : '',
 			(data[COL_P4T].toString() != '0') ? '&#x1f530' : '',
+/* TOMATO64-BEGIN */
+			(data[COL_P5].toString() != '0') ? '&#x2b50' : '',
+			(data[COL_P5T].toString() != '0') ? '&#x1f530' : '',
+			(data[COL_P6].toString() != '0') ? '&#x2b50' : '',
+			(data[COL_P6T].toString() != '0') ? '&#x1f530' : '',
+			(data[COL_P7].toString() != '0') ? '&#x2b50' : '',
+			(data[COL_P7T].toString() != '0') ? '&#x1f530' : '',
+			(data[COL_P8].toString() != '0') ? '&#x2b50' : '',
+			(data[COL_P8T].toString() != '0') ? '&#x1f530' : '',
+/* TOMATO64-END */
 			(data[COL_VID_DEF].toString() != '0') ? '&#x1f6a9' : '',
+/* TOMATO64-REMOVE-BEGIN */
 			['','WAN0 bridge','LAN0 (br0)','LAN1 (br1)','LAN2 (br2)','LAN3 (br3)','WAN1 bridge'
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			['','WAN0 bridge','LAN0 (br0)','LAN1 (br1)','LAN2 (br2)','LAN3 (br3)','LAN4 (br4)','LAN5 (br5)','LAN6 (br6)','LAN7 (br7)','WAN1 bridge'
+/* TOMATO64-END */
 /* MULTIWAN-BEGIN */
 			,'WAN2 bridge','WAN3 bridge'
 /* MULTIWAN-END */
@@ -554,7 +667,17 @@ REMOVE-END */
 			(data[COL_P3T] != 0) ? 'checked' : '',
 			(data[COL_P4] != 0) ? 'checked' : '',
 			(data[COL_P4T] != 0) ? 'checked' : '',
+/* TOMATO64-BEGIN */
+			(data[COL_P5] != 0) ? 'checked' : '',
+			(data[COL_P5T] != 0) ? 'checked' : '',
+			(data[COL_P6] != 0) ? 'checked' : '',
+			(data[COL_P6T] != 0) ? 'checked' : '',
+			(data[COL_P7] != 0) ? 'checked' : '',
+			(data[COL_P7T] != 0) ? 'checked' : '',
+			(data[COL_P8] != 0) ? 'checked' : '',
+			(data[COL_P8T] != 0) ? 'checked' : '',
 			(data[COL_VID_DEF] != 0) ? 'checked' : '',
+/* TOMATO64-END */
 			data[COL_BRI]];
 	}
 
@@ -572,6 +695,16 @@ REMOVE-END */
 			f[COL_P3T].checked ? 1 : 0,
 			f[COL_P4].checked ? 1 : 0,
 			f[COL_P4T].checked ? 1 : 0,
+/* TOMATO64-BEGIN */
+			f[COL_P5].checked ? 1 : 0,
+			f[COL_P5T].checked ? 1 : 0,
+			f[COL_P6].checked ? 1 : 0,
+			f[COL_P6T].checked ? 1 : 0,
+			f[COL_P7].checked ? 1 : 0,
+			f[COL_P7T].checked ? 1 : 0,
+			f[COL_P8].checked ? 1 : 0,
+			f[COL_P8T].checked ? 1 : 0,
+/* TOMATO64-END */
 			f[COL_VID_DEF].checked ? 1 : 0,
 			f[COL_BRI].value];
 	}
@@ -678,6 +811,20 @@ REMOVE-END */
 		f[COL_P4].checked = 0;
 		f[COL_P4T].checked = 0;
 		f[COL_P4T].disabled = 1;
+/* TOMATO64-BEGIN */
+		f[COL_P5].checked = 0;
+		f[COL_P5T].checked = 0;
+		f[COL_P5T].disabled = 1;
+		f[COL_P6].checked = 0;
+		f[COL_P6T].checked = 0;
+		f[COL_P6T].disabled = 1;
+		f[COL_P7].checked = 0;
+		f[COL_P7T].checked = 0;
+		f[COL_P7T].disabled = 1;
+		f[COL_P8].checked = 0;
+		f[COL_P8T].checked = 0;
+		f[COL_P8T].disabled = 1;
+/* TOMATO64-END */
 		f[COL_VID_DEF].checked = 0;
 		if (this.countDefaultVID() > 0)
 			f[COL_VID_DEF].disabled = 1;
@@ -727,6 +874,12 @@ function save() {
 	fom['lan1_ifnames'].value = '';
 	fom['lan2_ifnames'].value = '';
 	fom['lan3_ifnames'].value = '';
+/* TOMATO64-BEGIN */
+	fom['lan4_ifnames'].value = '';
+	fom['lan5_ifnames'].value = '';
+	fom['lan6_ifnames'].value = '';
+	fom['lan7_ifnames'].value = '';
+/* TOMATO64-END */
 	fom['wan2_ifnameX'].value = '';
 /* MULTIWAN-BEGIN */
 	fom['wan3_ifnameX'].value = '';
@@ -757,6 +910,24 @@ function save() {
 		p += (d[i][COL_P4].toString() != '0') ? COL_P4N : '';
 		p += ((trunk_vlan_supported) && (d[i][COL_P4T].toString() != '0')) ? 't' : '';
 		p += trailingSpace(p);
+
+/* TOMATO64-BEGIN */
+		p += (d[i][COL_P5].toString() != '0') ? COL_P5N : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P5T].toString() != '0')) ? 't' : '';
+		p += trailingSpace(p);
+
+		p += (d[i][COL_P6].toString() != '0') ? COL_P6N : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P6T].toString() != '0')) ? 't' : '';
+		p += trailingSpace(p);
+
+		p += (d[i][COL_P7].toString() != '0') ? COL_P7N : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P7T].toString() != '0')) ? 't' : '';
+		p += trailingSpace(p);
+
+		p += (d[i][COL_P8].toString() != '0') ? COL_P8N : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P8T].toString() != '0')) ? 't' : '';
+		p += trailingSpace(p);
+/* TOMATO64-END */
 
 		p += (d[i][COL_VID_DEF].toString() != '0') ? (SWITCH_INTERNAL_PORT+'*') : SWITCH_INTERNAL_PORT;
 
@@ -803,10 +974,14 @@ function save() {
 					fom['lan1_ifnames'].value += (d[i][COL_BRI] == '4') ? 'eth' + port + '.' + vid + ' ' : '';
 					fom['lan2_ifnames'].value += (d[i][COL_BRI] == '5') ? 'eth' + port + '.' + vid + ' ' : '';
 					fom['lan3_ifnames'].value += (d[i][COL_BRI] == '6') ? 'eth' + port + '.' + vid + ' ' : '';
-					fom['wan2_ifnameX'].value += (d[i][COL_BRI] == '7') ? 'eth' + port + '.' + vid : '';
+					fom['lan4_ifnames'].value += (d[i][COL_BRI] == '7') ? 'eth' + port + '.' + vid + ' ' : '';
+					fom['lan5_ifnames'].value += (d[i][COL_BRI] == '8') ? 'eth' + port + '.' + vid + ' ' : '';
+					fom['lan6_ifnames'].value += (d[i][COL_BRI] == '9') ? 'eth' + port + '.' + vid + ' ' : '';
+					fom['lan7_ifnames'].value += (d[i][COL_BRI] == '10') ? 'eth' + port + '.' + vid + ' ' : '';
+					fom['wan2_ifnameX'].value += (d[i][COL_BRI] == '11') ? 'eth' + port + '.' + vid : '';
 /* MULTIWAN-BEGIN */
-					fom['wan3_ifnameX'].value += (d[i][COL_BRI] == '8') ? 'eth' + port + '.' + vid : '';
-					fom['wan4_ifnameX'].value += (d[i][COL_BRI] == '9') ? 'eth' + port + '.' + vid : '';
+					fom['wan3_ifnameX'].value += (d[i][COL_BRI] == '12') ? 'eth' + port + '.' + vid : '';
+					fom['wan4_ifnameX'].value += (d[i][COL_BRI] == '13') ? 'eth' + port + '.' + vid : '';
 /* MULTIWAN-END */
 				} else {
 					fom['wan_ifnameX'].value += (d[i][COL_BRI] == '2') ? 'eth' + port : '';
@@ -814,10 +989,14 @@ function save() {
 					fom['lan1_ifnames'].value += (d[i][COL_BRI] == '4') ? 'eth' + port + ' ' : '';
 					fom['lan2_ifnames'].value += (d[i][COL_BRI] == '5') ? 'eth' + port + ' ' : '';
 					fom['lan3_ifnames'].value += (d[i][COL_BRI] == '6') ? 'eth' + port + ' ' : '';
-					fom['wan2_ifnameX'].value += (d[i][COL_BRI] == '7') ? 'eth' + port : '';
+					fom['lan4_ifnames'].value += (d[i][COL_BRI] == '7') ? 'eth' + port + ' ' : '';
+					fom['lan5_ifnames'].value += (d[i][COL_BRI] == '8') ? 'eth' + port + ' ' : '';
+					fom['lan6_ifnames'].value += (d[i][COL_BRI] == '9') ? 'eth' + port + ' ' : '';
+					fom['lan7_ifnames'].value += (d[i][COL_BRI] == '10') ? 'eth' + port + ' ' : '';
+					fom['wan2_ifnameX'].value += (d[i][COL_BRI] == '11') ? 'eth' + port : '';
 /* MULTIWAN-BEGIN */
-					fom['wan3_ifnameX'].value += (d[i][COL_BRI] == '8') ? 'eth' + port : '';
-					fom['wan4_ifnameX'].value += (d[i][COL_BRI] == '9') ? 'eth' + port : '';
+					fom['wan3_ifnameX'].value += (d[i][COL_BRI] == '12') ? 'eth' + port : '';
+					fom['wan4_ifnameX'].value += (d[i][COL_BRI] == '13') ? 'eth' + port : '';
 /* MULTIWAN-END */
 				}
 			}
@@ -827,6 +1006,10 @@ function save() {
 		fom['lan1_ifnames'].value = fom['lan1_ifnames'].value.trim();
 		fom['lan2_ifnames'].value = fom['lan2_ifnames'].value.trim();
 		fom['lan3_ifnames'].value = fom['lan3_ifnames'].value.trim();
+		fom['lan4_ifnames'].value = fom['lan4_ifnames'].value.trim();
+		fom['lan5_ifnames'].value = fom['lan5_ifnames'].value.trim();
+		fom['lan6_ifnames'].value = fom['lan6_ifnames'].value.trim();
+		fom['lan7_ifnames'].value = fom['lan7_ifnames'].value.trim();
 /* TOMATO64-END */
 
 /* REMOVE-BEGIN
@@ -847,10 +1030,14 @@ REMOVE-END */
                 fom['lan1_ifnames_vlan'].value += (d[i][COL_BRI] == '4') ? 'vlan'+d[i][0] : '';
                 fom['lan2_ifnames_vlan'].value += (d[i][COL_BRI] == '5') ? 'vlan'+d[i][0] : '';
                 fom['lan3_ifnames_vlan'].value += (d[i][COL_BRI] == '6') ? 'vlan'+d[i][0] : '';
-                fom['wan2_ifnameX_vlan'].value += (d[i][COL_BRI] == '7') ? 'vlan'+d[i][0] : '';
+                fom['lan4_ifnames_vlan'].value += (d[i][COL_BRI] == '7') ? 'vlan'+d[i][0] : '';
+                fom['lan5_ifnames_vlan'].value += (d[i][COL_BRI] == '8') ? 'vlan'+d[i][0] : '';
+                fom['lan6_ifnames_vlan'].value += (d[i][COL_BRI] == '9') ? 'vlan'+d[i][0] : '';
+                fom['lan7_ifnames_vlan'].value += (d[i][COL_BRI] == '10') ? 'vlan'+d[i][0] : '';
+                fom['wan2_ifnameX_vlan'].value += (d[i][COL_BRI] == '11') ? 'vlan'+d[i][0] : '';
 /* MULTIWAN-BEGIN */
-                fom['wan3_ifnameX_vlan'].value += (d[i][COL_BRI] == '8') ? 'vlan'+d[i][0] : '';
-                fom['wan4_ifnameX_vlan'].value += (d[i][COL_BRI] == '9') ? 'vlan'+d[i][0] : '';
+                fom['wan3_ifnameX_vlan'].value += (d[i][COL_BRI] == '12') ? 'vlan'+d[i][0] : '';
+                fom['wan4_ifnameX_vlan'].value += (d[i][COL_BRI] == '13') ? 'vlan'+d[i][0] : '';
 /* MULTIWAN-END */
 /* TOMATO64-END */
 	}
@@ -1032,10 +1219,18 @@ function init() {
 <input type="hidden" name="lan2_ifnames">
 <input type="hidden" name="lan3_ifnames">
 /* TOMATO64-BEGIN */
+<input type="hidden" name="lan4_ifnames">
+<input type="hidden" name="lan5_ifnames">
+<input type="hidden" name="lan6_ifnames">
+<input type="hidden" name="lan7_ifnames">
 <input type="hidden" name="lan_ifnames_vlan">
 <input type="hidden" name="lan1_ifnames_vlan">
 <input type="hidden" name="lan2_ifnames_vlan">
 <input type="hidden" name="lan3_ifnames_vlan">
+<input type="hidden" name="lan4_ifnames_vlan">
+<input type="hidden" name="lan5_ifnames_vlan">
+<input type="hidden" name="lan6_ifnames_vlan">
+<input type="hidden" name="lan7_ifnames_vlan">
 /* TOMATO64-END */
 <input type="hidden" name="vlan0vid">
 <input type="hidden" name="vlan1vid">

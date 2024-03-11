@@ -1287,6 +1287,16 @@ static void filter_input(void)
 		ipt_write("-A INPUT -i %s -j ACCEPT\n", lanface[2]);
 	if (strcmp(lanface[3], "") != 0)
 		ipt_write("-A INPUT -i %s -j ACCEPT\n", lanface[3]);
+#ifdef TOMATO64
+	if (strcmp(lanface[4], "") != 0)
+		ipt_write("-A INPUT -i %s -j ACCEPT\n", lanface[4]);
+	if (strcmp(lanface[5], "") != 0)
+		ipt_write("-A INPUT -i %s -j ACCEPT\n", lanface[5]);
+	if (strcmp(lanface[6], "") != 0)
+		ipt_write("-A INPUT -i %s -j ACCEPT\n", lanface[6]);
+	if (strcmp(lanface[7], "") != 0)
+		ipt_write("-A INPUT -i %s -j ACCEPT\n", lanface[7]);
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_IPV6
 	n = get_ipv6_service();
@@ -1432,7 +1442,11 @@ static void filter_forward(void)
 			ip46t_write(ipv6_enabled, "-A FORWARD -i %s -o %s -j ACCEPT\n", lanface[i], lanface[i]); /* accept all lan to lan */
 	}
 
+#ifndef TOMATO64
 	char lanAccess[17] = "0000000000000000";
+#else
+	char lanAccess[65] = "0000000000000000000000000000000000000000000000000000000000000000";
+#endif /* TOMATO64 */
 
 	const char *d, *sbr, *saddr, *dbr, *daddr, *desc;
 	char *nv, *nvp, *b;
@@ -1459,8 +1473,13 @@ static void filter_forward(void)
 			/* ipv4 only */
 			ipt_write("-A FORWARD -i %s%s -o %s%s %s %s -j ACCEPT\n", "br", sbr, "br", dbr, src, dst);
 
+#ifndef TOMATO64
 			if ((strcmp(src, "") == 0) && (strcmp(dst, "") == 0))
 				lanAccess[((*sbr - 48) + (*dbr - 48) * 4)] = '1';
+#else
+			if ((strcmp(src, "") == 0) && (strcmp(dst, "") == 0))
+				lanAccess[((*sbr - 48) + (*dbr - 48) * 8)] = '1';
+#endif /* TOMATO64 */
 
 		}
 	}
@@ -1541,8 +1560,13 @@ static void filter_forward(void)
 				if (br == br2)
 					continue;
 
+#ifndef TOMATO64
 				if (lanAccess[((br)+(br2)*4)] == '1')
 					continue;
+#else
+				if (lanAccess[((br)+(br2)*8)] == '1')
+					continue;
+#endif /* TOMATO64 */
 
 				char bridge2[2] = "0";
 				if (br2 != 0)

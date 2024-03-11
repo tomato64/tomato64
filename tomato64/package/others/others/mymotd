@@ -118,6 +118,24 @@ mask2cidr() {
 			LAN3_NUMBITS=$(mask2cidr $(NG lan3_netmask))
 			echo " LAN4: $(NG lan3_ipaddr)/$LAN3_NUMBITS @ DHCP: $(NG dhcpd3_startip) - $(NG dhcpd3_endip)";
 		}
+/* TOMATO64-BEGIN */
+		[ "$(NG lan4_ipaddr | wc -w)" -eq 1 ] && {
+			LAN4_NUMBITS=$(mask2cidr $(NG lan4_netmask))
+			echo " LAN5: $(NG lan4_ipaddr)/$LAN4_NUMBITS @ DHCP: $(NG dhcpd4_startip) - $(NG dhcpd4_endip)";
+		}
+		[ "$(NG lan5_ipaddr | wc -w)" -eq 1 ] && {
+			LAN5_NUMBITS=$(mask2cidr $(NG lan5_netmask))
+			echo " LAN6: $(NG lan5_ipaddr)/$LAN5_NUMBITS @ DHCP: $(NG dhcpd5_startip) - $(NG dhcpd5_endip)";
+		}
+		[ "$(NG lan6_ipaddr | wc -w)" -eq 1 ] && {
+			LAN6_NUMBITS=$(mask2cidr $(NG lan6_netmask))
+			echo " LAN7: $(NG lan6_ipaddr)/$LAN6_NUMBITS @ DHCP: $(NG dhcpd6_startip) - $(NG dhcpd6_endip)";
+		}
+		[ "$(NG lan7_ipaddr | wc -w)" -eq 1 ] && {
+			LAN7_NUMBITS=$(mask2cidr $(NG lan7_netmask))
+			echo " LAN8: $(NG lan7_ipaddr)/$LAN7_NUMBITS @ DHCP: $(NG dhcpd7_startip) - $(NG dhcpd7_endip)";
+		}
+/* TOMATO64-END */
 
 # TOMATO64-REMOVE-BEGIN
 		GETCH=$(NG wl0_channel)

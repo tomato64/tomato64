@@ -32,6 +32,12 @@ void start_tor(int force) {
 		else if (nvram_match("tor_iface", "br1")) { ip = nvram_safe_get("lan1_ipaddr"); }
 		else if (nvram_match("tor_iface", "br2")) { ip = nvram_safe_get("lan2_ipaddr"); }
 		else if (nvram_match("tor_iface", "br3")) { ip = nvram_safe_get("lan3_ipaddr"); }
+#ifdef TOMATO64
+		else if (nvram_match("tor_iface", "br4")) { ip = nvram_safe_get("lan4_ipaddr"); }
+		else if (nvram_match("tor_iface", "br5")) { ip = nvram_safe_get("lan5_ipaddr"); }
+		else if (nvram_match("tor_iface", "br6")) { ip = nvram_safe_get("lan6_ipaddr"); }
+		else if (nvram_match("tor_iface", "br7")) { ip = nvram_safe_get("lan7_ipaddr"); }
+#endif /* TOMATO64 */
 		else                                      { ip = nvram_safe_get("lan_ipaddr");  }
 	}
 

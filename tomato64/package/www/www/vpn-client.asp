@@ -23,7 +23,12 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("vpn_client_eas,vpn_client1_poll,vpn_client1_if,vpn_client1_bridge,vpn_client1_nat,vpn_client1_proto,vpn_client1_addr,vpn_client1_port,vpn_client1_retry,vpn_client1_firewall,vpn_client1_crypt,vpn_client1_comp,vpn_client1_cipher,vpn_client1_ncp_ciphers,vpn_client1_local,vpn_client1_remote,vpn_client1_nm,vpn_client1_reneg,vpn_client1_hmac,vpn_client1_adns,vpn_client1_rgw,vpn_client1_gw,vpn_client1_custom,vpn_client1_static,vpn_client1_ca,vpn_client1_crt,vpn_client1_key,vpn_client1_userauth,vpn_client1_username,vpn_client1_password,vpn_client1_useronly,vpn_client1_tlsremote,vpn_client1_cn,vpn_client1_br,vpn_client1_digest,vpn_client1_routing_val,vpn_client1_fw,vpn_client1_tlsvername,vpn_client2_poll,vpn_client2_if,vpn_client2_bridge,vpn_client2_nat,vpn_client2_proto,vpn_client2_addr,vpn_client2_port,vpn_client2_retry,vpn_client2_firewall,vpn_client2_crypt,vpn_client2_comp,vpn_client2_cipher,vpn_client2_ncp_ciphers,vpn_client2_local,vpn_client2_remote,vpn_client2_nm,vpn_client2_reneg,vpn_client2_hmac,vpn_client2_adns,vpn_client2_rgw,vpn_client2_gw,vpn_client2_custom,vpn_client2_static,vpn_client2_ca,vpn_client2_crt,vpn_client2_key,vpn_client2_userauth,vpn_client2_username,vpn_client2_password,vpn_client2_useronly,vpn_client2_tlsremote,vpn_client2_cn,vpn_client2_br,vpn_client2_digest,vpn_client2_routing_val,vpn_client2_fw,vpn_client2_tlsvername,vpn_client3_poll,vpn_client3_if,vpn_client3_bridge,vpn_client3_nat,vpn_client3_proto,vpn_client3_addr,vpn_client3_port,vpn_client3_retry,vpn_client3_firewall,vpn_client3_crypt,vpn_client3_comp,vpn_client3_cipher,vpn_client3_ncp_ciphers,vpn_client3_local,vpn_client3_remote,vpn_client3_nm,vpn_client3_reneg,vpn_client3_hmac,vpn_client3_adns,vpn_client3_rgw,vpn_client3_gw,vpn_client3_custom,vpn_client3_static,vpn_client3_ca,vpn_client3_crt,vpn_client3_key,vpn_client3_userauth,vpn_client3_username,vpn_client3_password,vpn_client3_useronly,vpn_client3_tlsremote,vpn_client3_cn,vpn_client3_br,vpn_client3_digest,vpn_client3_routing_val,vpn_client3_fw,vpn_client3_tlsvername,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("vpn_client_eas,vpn_client1_poll,vpn_client1_if,vpn_client1_bridge,vpn_client1_nat,vpn_client1_proto,vpn_client1_addr,vpn_client1_port,vpn_client1_retry,vpn_client1_firewall,vpn_client1_crypt,vpn_client1_comp,vpn_client1_cipher,vpn_client1_ncp_ciphers,vpn_client1_local,vpn_client1_remote,vpn_client1_nm,vpn_client1_reneg,vpn_client1_hmac,vpn_client1_adns,vpn_client1_rgw,vpn_client1_gw,vpn_client1_custom,vpn_client1_static,vpn_client1_ca,vpn_client1_crt,vpn_client1_key,vpn_client1_userauth,vpn_client1_username,vpn_client1_password,vpn_client1_useronly,vpn_client1_tlsremote,vpn_client1_cn,vpn_client1_br,vpn_client1_digest,vpn_client1_routing_val,vpn_client1_fw,vpn_client1_tlsvername,vpn_client2_poll,vpn_client2_if,vpn_client2_bridge,vpn_client2_nat,vpn_client2_proto,vpn_client2_addr,vpn_client2_port,vpn_client2_retry,vpn_client2_firewall,vpn_client2_crypt,vpn_client2_comp,vpn_client2_cipher,vpn_client2_ncp_ciphers,vpn_client2_local,vpn_client2_remote,vpn_client2_nm,vpn_client2_reneg,vpn_client2_hmac,vpn_client2_adns,vpn_client2_rgw,vpn_client2_gw,vpn_client2_custom,vpn_client2_static,vpn_client2_ca,vpn_client2_crt,vpn_client2_key,vpn_client2_userauth,vpn_client2_username,vpn_client2_password,vpn_client2_useronly,vpn_client2_tlsremote,vpn_client2_cn,vpn_client2_br,vpn_client2_digest,vpn_client2_routing_val,vpn_client2_fw,vpn_client2_tlsvername,vpn_client3_poll,vpn_client3_if,vpn_client3_bridge,vpn_client3_nat,vpn_client3_proto,vpn_client3_addr,vpn_client3_port,vpn_client3_retry,vpn_client3_firewall,vpn_client3_crypt,vpn_client3_comp,vpn_client3_cipher,vpn_client3_ncp_ciphers,vpn_client3_local,vpn_client3_remote,vpn_client3_nm,vpn_client3_reneg,vpn_client3_hmac,vpn_client3_adns,vpn_client3_rgw,vpn_client3_gw,vpn_client3_custom,vpn_client3_static,vpn_client3_ca,vpn_client3_crt,vpn_client3_key,vpn_client3_userauth,vpn_client3_username,vpn_client3_password,vpn_client3_useronly,vpn_client3_tlsremote,vpn_client3_cn,vpn_client3_br,vpn_client3_digest,vpn_client3_routing_val,vpn_client3_fw,vpn_client3_tlsvername,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
+/* TOMATO64-END */
 
 var changed = 0, i;
 var unitCount = OVPN_CLIENT_COUNT;
@@ -313,7 +318,12 @@ function verifyFields(focused, quiet) {
 	}
 
 	for (i = 0; i < tabs.length; ++i) {
+/* TOMATO64-REMOVE-BEGIN */
 		for (var j = 0; j <= 3; ++j) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		for (var j = 0; j <= MAX_BRIDGE_ID; ++j) {
+/* TOMATO64-END */
 			t = (j == 0  ? '' : j);
 
 			if (eval('nvram.lan'+t+'_ifname.length') < 1)
@@ -450,7 +460,13 @@ function init() {
 			createFieldTable('', [
 				{ title: 'Enable on Start', name: 'f_vpn_'+t+'_eas', type: 'checkbox', value: nvram.vpn_client_eas.indexOf(''+(i+1)) >= 0 },
 				{ title: 'Interface Type', name: 'vpn_'+t+'_if', type: 'select', options: [['tap','TAP'],['tun','TUN']], value: nvram['vpn_'+t+'_if'] },
+/* TOMATO64-REMOVE-BEGIN */
 				{ title: 'Bridge TAP with', indent: 2, name: 'vpn_'+t+'_br', type: 'select', options: [['br0','LAN (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)']],
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+				{ title: 'Bridge TAP with', indent: 2, name: 'vpn_'+t+'_br', type: 'select', options: [['br0','LAN (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)'],
+														      ['br4','LAN4 (br4)*'],['br5','LAN5 (br5)'],['br6','LAN6 (br6)'],['br7','LAN7 (br7)']],
+/* TOMATO64-END */
 					value: nvram['vpn_'+t+'_br'], suffix: ' <small>* default<\/small>' },
 				{ title: 'Protocol', name: 'vpn_'+t+'_proto', type: 'select', options: [['udp','UDP'],['tcp-client','TCP'],['udp4','UDP4'],['tcp4-client','TCP4'],['udp6','UDP6'],['tcp6-client','TCP6']], value: nvram['vpn_'+t+'_proto'] },
 				{ title: 'Server Address/Port', multi: [

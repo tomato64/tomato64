@@ -22,7 +22,12 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("vpn_server_eas,vpn_server_dns,vpn_server1_poll,vpn_server1_if,vpn_server1_proto,vpn_server1_port,vpn_server1_firewall,vpn_server1_sn,vpn_server1_nm,vpn_server1_local,vpn_server1_remote,vpn_server1_dhcp,vpn_server1_r1,vpn_server1_r2,vpn_server1_crypt,vpn_server1_comp,vpn_server1_digest,vpn_server1_cipher,vpn_server1_ncp_ciphers,vpn_server1_reneg,vpn_server1_hmac,vpn_server1_plan,vpn_server1_plan1,vpn_server1_plan2,vpn_server1_plan3,vpn_server1_ccd,vpn_server1_c2c,vpn_server1_ccd_excl,vpn_server1_ccd_val,vpn_server1_pdns,vpn_server1_rgw,vpn_server1_userpass,vpn_server1_nocert,vpn_server1_users_val,vpn_server1_custom,vpn_server1_static,vpn_server1_ca,vpn_server1_ca_key,vpn_server1_crt,vpn_server1_crl,vpn_server1_key,vpn_server1_dh,vpn_server1_br,vpn_server2_poll,vpn_server2_if,vpn_server2_proto,vpn_server2_port,vpn_server2_firewall,vpn_server2_sn,vpn_server2_nm,vpn_server2_local,vpn_server2_remote,vpn_server2_dhcp,vpn_server2_r1,vpn_server2_r2,vpn_server2_crypt,vpn_server2_comp,vpn_server2_digest,vpn_server2_cipher,vpn_server2_ncp_ciphers,vpn_server2_reneg,vpn_server2_hmac,vpn_server2_plan,vpn_server2_plan1,vpn_server2_plan2,vpn_server2_plan3,vpn_server2_ccd,vpn_server2_c2c,vpn_server2_ccd_excl,vpn_server2_ccd_val,vpn_server2_pdns,vpn_server2_rgw,vpn_server2_userpass,vpn_server2_nocert,vpn_server2_users_val,vpn_server2_custom,vpn_server2_static,vpn_server2_ca,vpn_server2_ca_key,vpn_server2_crt,vpn_server2_crl,vpn_server2_key,vpn_server2_dh,vpn_server2_br,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("vpn_server_eas,vpn_server_dns,vpn_server1_poll,vpn_server1_if,vpn_server1_proto,vpn_server1_port,vpn_server1_firewall,vpn_server1_sn,vpn_server1_nm,vpn_server1_local,vpn_server1_remote,vpn_server1_dhcp,vpn_server1_r1,vpn_server1_r2,vpn_server1_crypt,vpn_server1_comp,vpn_server1_digest,vpn_server1_cipher,vpn_server1_ncp_ciphers,vpn_server1_reneg,vpn_server1_hmac,vpn_server1_plan,vpn_server1_plan1,vpn_server1_plan2,vpn_server1_plan3,vpn_server1_plan4,vpn_server1_plan5,vpn_server1_plan6,vpn_server1_plan7,vpn_server1_ccd,vpn_server1_c2c,vpn_server1_ccd_excl,vpn_server1_ccd_val,vpn_server1_pdns,vpn_server1_rgw,vpn_server1_userpass,vpn_server1_nocert,vpn_server1_users_val,vpn_server1_custom,vpn_server1_static,vpn_server1_ca,vpn_server1_ca_key,vpn_server1_crt,vpn_server1_crl,vpn_server1_key,vpn_server1_dh,vpn_server1_br,vpn_server2_poll,vpn_server2_if,vpn_server2_proto,vpn_server2_port,vpn_server2_firewall,vpn_server2_sn,vpn_server2_nm,vpn_server2_local,vpn_server2_remote,vpn_server2_dhcp,vpn_server2_r1,vpn_server2_r2,vpn_server2_crypt,vpn_server2_comp,vpn_server2_digest,vpn_server2_cipher,vpn_server2_ncp_ciphers,vpn_server2_reneg,vpn_server2_hmac,vpn_server2_plan,vpn_server2_plan1,vpn_server2_plan2,vpn_server2_plan3,vpn_server2_plan4,vpn_server2_plan5,vpn_server2_plan6,vpn_server2_plan7,vpn_server2_ccd,vpn_server2_c2c,vpn_server2_ccd_excl,vpn_server2_ccd_val,vpn_server2_pdns,vpn_server2_rgw,vpn_server2_userpass,vpn_server2_nocert,vpn_server2_users_val,vpn_server2_custom,vpn_server2_static,vpn_server2_ca,vpn_server2_ca_key,vpn_server2_crt,vpn_server2_crl,vpn_server2_key,vpn_server2_dh,vpn_server2_br,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
+/* TOMATO64-END */
 
 var changed = 0, i;
 var unitCount = OVPN_SERVER_COUNT;
@@ -618,6 +623,9 @@ function verifyFields(focused, quiet) {
 		elem.display(E(t+'_custom_crypto_text'), auth == 'custom');
 		elem.display(PR('_vpn_keygen_'+t+'_button'), auth == 'tls');
 		elem.display(PR('_vpn_'+t+'_sn'), PR('_f_vpn_'+t+'_plan'), PR('_f_vpn_'+t+'_plan1'),
+/* TOMATO64-BEGIN */
+		             PR('_f_vpn_'+t+'_plan4'), PR('_f_vpn_'+t+'_plan5'), PR('_f_vpn_'+t+'_plan6'), PR('_f_vpn_'+t+'_plan7'),
+/* TOMATO64-END */
 		             PR('_f_vpn_'+t+'_plan2'), PR('_f_vpn_'+t+'_plan3'), auth == 'tls' && iface == 'tun');
 		elem.display(PR('_f_vpn_'+t+'_dhcp'), auth == 'tls' && iface == 'tap');
 		elem.display(PR('_vpn_'+t+'_br'), iface == 'tap');
@@ -650,7 +658,12 @@ function verifyFields(focused, quiet) {
 	}
 
 	for (i = 0; i < tabs.length; ++i) {
+/* TOMATO64-REMOVE-BEGIN */
 		for (j = 0; j <= 3; ++j) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		for (j = 0; j <= MAX_BRIDGE_ID; ++j) {
+/* TOMATO64-END */
 			t = (j == 0 ? '' : j);
 
 			if (eval('nvram.lan'+t+'_ifname.length') < 1) {
@@ -721,6 +734,12 @@ function save() {
 		E('vpn_'+t+'_plan1').value = E('_f_vpn_'+t+'_plan1').checked ? 1 : 0;
 		E('vpn_'+t+'_plan2').value = E('_f_vpn_'+t+'_plan2').checked ? 1 : 0;
 		E('vpn_'+t+'_plan3').value = E('_f_vpn_'+t+'_plan3').checked ? 1 : 0;
+/* TOMATO64-BEGIN */
+		E('vpn_'+t+'_plan4').value = E('_f_vpn_'+t+'_plan4').checked ? 1 : 0;
+		E('vpn_'+t+'_plan5').value = E('_f_vpn_'+t+'_plan5').checked ? 1 : 0;
+		E('vpn_'+t+'_plan6').value = E('_f_vpn_'+t+'_plan6').checked ? 1 : 0;
+		E('vpn_'+t+'_plan7').value = E('_f_vpn_'+t+'_plan7').checked ? 1 : 0;
+/* TOMATO64-END */
 		E('vpn_'+t+'_ccd').value = E('_f_vpn_'+t+'_ccd').checked ? 1 : 0;
 		E('vpn_'+t+'_c2c').value = E('_f_vpn_'+t+'_c2c').checked ? 1 : 0;
 		E('vpn_'+t+'_ccd_excl').value = E('_f_vpn_'+t+'_ccd_excl').checked ? 1 : 0;
@@ -834,6 +853,12 @@ function init() {
 			W('<input type="hidden" id="vpn_'+t+'_plan1" name="vpn_'+t+'_plan1">');
 			W('<input type="hidden" id="vpn_'+t+'_plan2" name="vpn_'+t+'_plan2">');
 			W('<input type="hidden" id="vpn_'+t+'_plan3" name="vpn_'+t+'_plan3">');
+/* TOMATO64-BEGIN */
+			W('<input type="hidden" id="vpn_'+t+'_plan4" name="vpn_'+t+'_plan4">');
+			W('<input type="hidden" id="vpn_'+t+'_plan5" name="vpn_'+t+'_plan5">');
+			W('<input type="hidden" id="vpn_'+t+'_plan6" name="vpn_'+t+'_plan6">');
+			W('<input type="hidden" id="vpn_'+t+'_plan7" name="vpn_'+t+'_plan7">');
+/* TOMATO64-END */
 			W('<input type="hidden" id="vpn_'+t+'_ccd" name="vpn_'+t+'_ccd">');
 			W('<input type="hidden" id="vpn_'+t+'_c2c" name="vpn_'+t+'_c2c">');
 			W('<input type="hidden" id="vpn_'+t+'_ccd_excl" name="vpn_'+t+'_ccd_excl">');
@@ -854,7 +879,13 @@ function init() {
 			createFieldTable('', [
 				{ title: 'Enable on Start', name: 'f_vpn_'+t+'_eas', type: 'checkbox', value: nvram.vpn_server_eas.indexOf(''+(i+1)) >= 0 },
 				{ title: 'Interface Type', name: 'vpn_'+t+'_if', type: 'select', options: [['tap','TAP'],['tun','TUN']], value: nvram['vpn_'+t+'_if'] },
+/* TOMATO64-REMOVE-BEGIN */
 					{ title: 'Bridge TAP with', indent: 2, name: 'vpn_'+t+'_br', type: 'select', options: [['br0','LAN0 (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)']],
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+					{ title: 'Bridge TAP with', indent: 2, name: 'vpn_'+t+'_br', type: 'select', options: [['br0','LAN0 (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)'],
+																['br4','LAN4 (br4)'],['br5','LAN5 (br5)'],['br6','LAN6 (br6)'],['br7','LAN7 (br7)']],
+/* TOMATO64-END */
 						value: nvram['vpn_'+t+'_br'], suffix: ' <small>* default<\/small> ' },
 				{ title: 'Protocol', name: 'vpn_'+t+'_proto', type: 'select', options: [['udp','UDP'],['tcp-server','TCP'],['udp4','UDP4'],['tcp4-server','TCP4'],['udp6','UDP6'],['tcp6-server','TCP6']], value: nvram['vpn_'+t+'_proto'] },
 				{ title: 'Port', name: 'vpn_'+t+'_port', type: 'text', maxlen: 5, size: 10, value: nvram['vpn_'+t+'_port'] },
@@ -884,6 +915,12 @@ function init() {
 				{ title: 'Push LAN1 (br1) to clients', name: 'f_vpn_'+t+'_plan1', type: 'checkbox', value: nvram['vpn_'+t+'_plan1'] != 0 },
 				{ title: 'Push LAN2 (br2) to clients', name: 'f_vpn_'+t+'_plan2', type: 'checkbox', value: nvram['vpn_'+t+'_plan2'] != 0 },
 				{ title: 'Push LAN3 (br3) to clients', name: 'f_vpn_'+t+'_plan3', type: 'checkbox', value: nvram['vpn_'+t+'_plan3'] != 0 },
+/* TOMATO64-BEGIN */
+				{ title: 'Push LAN4 (br4) to clients', name: 'f_vpn_'+t+'_plan4', type: 'checkbox', value: nvram['vpn_'+t+'_plan4'] != 0 },
+				{ title: 'Push LAN5 (br5) to clients', name: 'f_vpn_'+t+'_plan5', type: 'checkbox', value: nvram['vpn_'+t+'_plan5'] != 0 },
+				{ title: 'Push LAN6 (br6) to clients', name: 'f_vpn_'+t+'_plan6', type: 'checkbox', value: nvram['vpn_'+t+'_plan6'] != 0 },
+				{ title: 'Push LAN7 (br7) to clients', name: 'f_vpn_'+t+'_plan7', type: 'checkbox', value: nvram['vpn_'+t+'_plan7'] != 0 },
+/* TOMATO64-END */
 				{ title: 'Direct clients to<br>redirect Internet traffic', name: 'f_vpn_'+t+'_rgw', type: 'checkbox', value: nvram['vpn_'+t+'_rgw'] != 0 },
 				{ title: 'Respond to DNS', name: 'f_vpn_'+t+'_dns', type: 'checkbox', value: nvram.vpn_server_dns.indexOf(''+(i+1)) >= 0 },
 				{ title: 'Advertise DNS to clients', name: 'f_vpn_'+t+'_pdns', type: 'checkbox', value: nvram['vpn_'+t+'_pdns'] != 0 },

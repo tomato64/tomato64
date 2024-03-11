@@ -19,7 +19,12 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dns_addget,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dns_addget,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dhcpd4_ostatic,dhcpd5_ostatic,dhcpd6_ostatic,dhcpd7_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_pxelan4,dnsmasq_pxelan5,dnsmasq_pxelan6,dnsmasq_pxelan7,dnsmasq_safe"); %>
+/* TOMATO64-END */
 
 var cprefix = 'advanced_dhcpdns';
 var height = 0;
@@ -115,6 +120,12 @@ function verifyFields(focused, quiet) {
 	vis._f_dnsmasq_pxelan1 = v;
 	vis._f_dnsmasq_pxelan2 = v;
 	vis._f_dnsmasq_pxelan3 = v;
+/* TOMATO64-BEGIN */
+	vis._f_dnsmasq_pxelan4 = v;
+	vis._f_dnsmasq_pxelan5 = v;
+	vis._f_dnsmasq_pxelan6 = v;
+	vis._f_dnsmasq_pxelan7 = v;
+/* TOMATO64-END */
 
 	if (v && !v_length('_dnsmasq_tftp_path', quiet, 0, 128))
 		return 0;
@@ -280,6 +291,12 @@ function save() {
 	fom.dhcpd1_ostatic.value = fom._f_dhcpd1_ostatic.checked ? 1 : 0;
 	fom.dhcpd2_ostatic.value = fom._f_dhcpd2_ostatic.checked ? 1 : 0;
 	fom.dhcpd3_ostatic.value = fom._f_dhcpd3_ostatic.checked ? 1 : 0;
+/* TOMATO64-BEGIN */
+	fom.dhcpd4_ostatic.value = fom._f_dhcpd4_ostatic.checked ? 1 : 0;
+	fom.dhcpd5_ostatic.value = fom._f_dhcpd5_ostatic.checked ? 1 : 0;
+	fom.dhcpd6_ostatic.value = fom._f_dhcpd6_ostatic.checked ? 1 : 0;
+	fom.dhcpd7_ostatic.value = fom._f_dhcpd7_ostatic.checked ? 1 : 0;
+/* TOMATO64-END */
 	fom.dnsmasq_gen_names.value = fom._f_dnsmasq_gen_names.checked ? 1 : 0;
 	fom.dns_addget.value = fom._f_dns_addget.checked ? 1 : 0;
 	fom.dns_norebind.value = fom._f_dns_norebind.checked ? 1 : 0;
@@ -364,6 +381,12 @@ function save() {
 	fom.dnsmasq_pxelan1.value = fom._f_dnsmasq_pxelan1.checked ? 1 : 0;
 	fom.dnsmasq_pxelan2.value = fom._f_dnsmasq_pxelan2.checked ? 1 : 0;
 	fom.dnsmasq_pxelan3.value = fom._f_dnsmasq_pxelan3.checked ? 1 : 0;
+/* TOMATO64-BEGIN */
+	fom.dnsmasq_pxelan4.value = fom._f_dnsmasq_pxelan4.checked ? 1 : 0;
+	fom.dnsmasq_pxelan5.value = fom._f_dnsmasq_pxelan5.checked ? 1 : 0;
+	fom.dnsmasq_pxelan6.value = fom._f_dnsmasq_pxelan6.checked ? 1 : 0;
+	fom.dnsmasq_pxelan7.value = fom._f_dnsmasq_pxelan7.checked ? 1 : 0;
+/* TOMATO64-END */
 /* TFTP-END */
 
 	/* check configuration of dnsmasq first */
@@ -468,6 +491,12 @@ function init() {
 <input type="hidden" name="dhcpd1_ostatic">
 <input type="hidden" name="dhcpd2_ostatic">
 <input type="hidden" name="dhcpd3_ostatic">
+/* TOMATO64-BEGIN */
+<input type="hidden" name="dhcpd4_ostatic">
+<input type="hidden" name="dhcpd5_ostatic">
+<input type="hidden" name="dhcpd6_ostatic">
+<input type="hidden" name="dhcpd7_ostatic">
+/* TOMATO64-END */
 <input type="hidden" name="dhcpd_gwmode">
 <input type="hidden" name="dns_addget">
 <input type="hidden" name="dns_norebind">
@@ -512,6 +541,12 @@ function init() {
 <input type="hidden" name="dnsmasq_pxelan1">
 <input type="hidden" name="dnsmasq_pxelan2">
 <input type="hidden" name="dnsmasq_pxelan3">
+/* TOMATO64-BEGIN */
+<input type="hidden" name="dnsmasq_pxelan4">
+<input type="hidden" name="dnsmasq_pxelan5">
+<input type="hidden" name="dnsmasq_pxelan6">
+<input type="hidden" name="dnsmasq_pxelan7">
+/* TOMATO64-END */
 <!-- TFTP-END -->
 <input type="hidden" name="dnsmasq_safe">
 
@@ -631,6 +666,12 @@ function init() {
 				{ title: 'LAN1 (br1)', indent: 2, name: 'f_dhcpd1_ostatic', type: 'checkbox', value: nvram.dhcpd1_ostatic == 1 },
 				{ title: 'LAN2 (br2)', indent: 2, name: 'f_dhcpd2_ostatic', type: 'checkbox', value: nvram.dhcpd2_ostatic == 1 },
 				{ title: 'LAN3 (br3)', indent: 2, name: 'f_dhcpd3_ostatic', type: 'checkbox', value: nvram.dhcpd3_ostatic == 1 },
+/* TOMATO64-BEGIN */
+				{ title: 'LAN4 (br4)', indent: 2, name: 'f_dhcpd4_ostatic', type: 'checkbox', value: nvram.dhcpd4_ostatic == 1 },
+				{ title: 'LAN5 (br5)', indent: 2, name: 'f_dhcpd5_ostatic', type: 'checkbox', value: nvram.dhcpd5_ostatic == 1 },
+				{ title: 'LAN6 (br6)', indent: 2, name: 'f_dhcpd6_ostatic', type: 'checkbox', value: nvram.dhcpd6_ostatic == 1 },
+				{ title: 'LAN7 (br7)', indent: 2, name: 'f_dhcpd7_ostatic', type: 'checkbox', value: nvram.dhcpd7_ostatic == 1 },
+/* TOMATO64-END */
 			{ title: 'Generate a name for DHCP clients which do not otherwise have one', name: 'f_dnsmasq_gen_names', type: 'checkbox', value: nvram.dnsmasq_gen_names == 1 },
 /* TOR-BEGIN */
 			{ title: 'Resolve .onion using Tor<br>(<a href="advanced-tor.asp" class="new_window">enable/start Tor first<\/a>)', name: 'f_dnsmasq_onion_support', type: 'checkbox', suffix: ' <small>note: disables \'DNS Rebind protection\'<\/small>', value: nvram.dnsmasq_onion_support == 1 },
@@ -674,6 +715,12 @@ function init() {
 				{ title: 'PXE on LAN1 (br1)', indent: 2, name: 'f_dnsmasq_pxelan1', type: 'checkbox', value: nvram.dnsmasq_pxelan1 == 1 },
 				{ title: 'PXE on LAN2 (br2)', indent: 2, name: 'f_dnsmasq_pxelan2', type: 'checkbox', value: nvram.dnsmasq_pxelan2 == 1 },
 				{ title: 'PXE on LAN3 (br3)', indent: 2, name: 'f_dnsmasq_pxelan3', type: 'checkbox', value: nvram.dnsmasq_pxelan3 == 1 }
+/* TOMATO64-BEGIN */
+				,{ title: 'PXE on LAN4 (br4)', indent: 2, name: 'f_dnsmasq_pxelan4', type: 'checkbox', value: nvram.dnsmasq_pxelan4 == 1 },
+				{ title: 'PXE on LAN5 (br5)', indent: 2, name: 'f_dnsmasq_pxelan5', type: 'checkbox', value: nvram.dnsmasq_pxelan5 == 1 },
+				{ title: 'PXE on LAN6 (br6)', indent: 2, name: 'f_dnsmasq_pxelan6', type: 'checkbox', value: nvram.dnsmasq_pxelan6 == 1 },
+				{ title: 'PXE on LAN7 (br7)', indent: 2, name: 'f_dnsmasq_pxelan7', type: 'checkbox', value: nvram.dnsmasq_pxelan7 == 1 }
+/* TOMATO64-END */
 		]);
 	</script>
 </div>

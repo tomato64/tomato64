@@ -18,11 +18,21 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("routes_static,dhcp_routes,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("routes_static,dhcp_routes,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface"); %>
+/* TOMATO64-END */
 
 //	<% activeroutes(); %>
 
+/* TOMATO64-REMOVE-BEGIN */
 var static_options = [['LAN','LAN0'],['LAN1','LAN1'],['LAN2','LAN2'],['LAN3','LAN3'],['WAN','WAN0'],['MAN','MAN0'],['WAN2','WAN1'],['MAN2','MAN1']
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+var static_options = [['LAN','LAN0'],['LAN1','LAN1'],['LAN2','LAN2'],['LAN3','LAN3'],['LAN4','LAN4'],['LAN5','LAN5'],['LAN6','LAN6'],['LAN7','LAN7'],['WAN','WAN0'],['MAN','MAN0'],['WAN2','WAN1'],['MAN2','MAN1']
+/* TOMATO64-END */
 /* MULTIWAN-BEGIN */
                       ,['WAN3','WAN2'],['MAN3','MAN2'],['WAN4','WAN3'],['MAN4','MAN3']
 /* MULTIWAN-END */
@@ -45,6 +55,16 @@ ara.setup = function() {
 			a[0] += ' (LAN2)';
 		else if (a[0] == nvram.lan3_ifname)
 			a[0] += ' (LAN3)';
+/* TOMATO64-BEGIN */
+		else if (a[0] == nvram.lan4_ifname)
+			a[0] += ' (LAN4)';
+		else if (a[0] == nvram.lan5_ifname)
+			a[0] += ' (LAN5)';
+		else if (a[0] == nvram.lan6_ifname)
+			a[0] += ' (LAN6)';
+		else if (a[0] == nvram.lan7_ifname)
+			a[0] += ' (LAN7)';
+/* TOMATO64-END */
 		else if (a[0] == nvram.wan_iface)
 			a[0] += ' (WAN0)';
 		else if (a[0] == nvram.wan_ifname)
@@ -78,7 +98,12 @@ ars.setup = function() {
 	var routes = nvram.routes_static.split('>');
 	for (var i = 0; i < routes.length; ++i) {
 		var r;
+/* TOMATO64-REMOVE-BEGIN */
 		if (r = routes[i].match(/^(.+)<(.+)<(.+)<(\d+)<(LAN|LAN1|LAN2|LAN3|WAN|MAN|WAN2|MAN2|WAN3|MAN3|WAN4|MAN4)<(.*)$/)) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		if (r = routes[i].match(/^(.+)<(.+)<(.+)<(\d+)<(LAN|LAN1|LAN2|LAN3|LAN4|LAN5|LAN6|LAN7|WAN|MAN|WAN2|MAN2|WAN3|MAN3|WAN4|MAN4)<(.*)$/)) {
+/* TOMATO64-END */
 			this.insertData(-1, [r[1],r[2],r[3],r[4],r[5],r[6]]);
 		}
 	}
@@ -110,6 +135,27 @@ ars.resetNewEditor = function() {
 		e[4].options[3].disabled = 1;
 	else
 		e[4].options[3].disabled = 0;
+/* TOMATO64-BEGIN */
+	if (nvram.lan4_ifname.length < 1)
+		e[4].options[4].disabled = 1;
+	else
+		e[4].options[4].disabled = 0;
+
+	if (nvram.lan5_ifname.length < 1)
+		e[4].options[5].disabled = 1;
+	else
+		e[4].options[5].disabled = 0;
+
+	if (nvram.lan6_ifname.length < 1)
+		e[4].options[6].disabled = 1;
+	else
+		e[4].options[6].disabled = 0;
+
+	if (nvram.lan7_ifname.length < 1)
+		e[4].options[7].disabled = 1;
+	else
+		e[4].options[7].disabled = 0;
+/* TOMATO64-END */
 
 	ferror.clearAll(e);
 	for (i = 0; i < e.length; ++i) {

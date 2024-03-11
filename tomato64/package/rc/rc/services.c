@@ -467,6 +467,16 @@ void start_dnsmasq()
 			t_ip = nvram_safe_get("lan2_ipaddr");
 		if (nvram_match("tor_iface", "br3"))
 			t_ip = nvram_safe_get("lan3_ipaddr");
+#ifdef TOMATO64
+		if (nvram_match("tor_iface", "br4"))
+			t_ip = nvram_safe_get("lan4_ipaddr");
+		if (nvram_match("tor_iface", "br5"))
+			t_ip = nvram_safe_get("lan5_ipaddr");
+		if (nvram_match("tor_iface", "br6"))
+			t_ip = nvram_safe_get("lan6_ipaddr");
+		if (nvram_match("tor_iface", "br7"))
+			t_ip = nvram_safe_get("lan7_ipaddr");
+#endif /* TOMATO64 */
 
 		fprintf(f, "server=/onion/%s#%s\n", t_ip, nvram_safe_get("tor_dnsport"));
 	}
@@ -516,6 +526,16 @@ void start_dnsmasq()
 		fprintf(f, "dhcp-ignore=tag:br2,tag:!known\n");
 	if (nvram_get_int("dhcpd3_ostatic"))
 		fprintf(f, "dhcp-ignore=tag:br3,tag:!known\n");
+#ifdef TOMATO64
+	if (nvram_get_int("dhcpd4_ostatic"))
+		fprintf(f, "dhcp-ignore=tag:br4,tag:!known\n");
+	if (nvram_get_int("dhcpd5_ostatic"))
+		fprintf(f, "dhcp-ignore=tag:br5,tag:!known\n");
+	if (nvram_get_int("dhcpd6_ostatic"))
+		fprintf(f, "dhcp-ignore=tag:br6,tag:!known\n");
+	if (nvram_get_int("dhcpd7_ostatic"))
+		fprintf(f, "dhcp-ignore=tag:br7,tag:!known\n");
+#endif /* TOMATO64 */
 
 	if ((n = nvram_get_int("dnsmasq_q"))) { /* process quiet flags */
 		if (n & 1)
@@ -899,6 +919,16 @@ void start_dnsmasq()
 			fprintf(f, "dhcp-boot=pxelinux.0,,%s\n", nvram_safe_get("lan2_ipaddr"));
 		if (nvram_get_int("dnsmasq_pxelan3") && strlen(nvram_safe_get("lan3_ifname")) > 0)
 			fprintf(f, "dhcp-boot=pxelinux.0,,%s\n", nvram_safe_get("lan3_ipaddr"));
+#ifdef TOMATO64
+		if (nvram_get_int("dnsmasq_pxelan4") && strlen(nvram_safe_get("lan4_ifname")) > 0)
+			fprintf(f, "dhcp-boot=pxelinux.0,,%s\n", nvram_safe_get("lan4_ipaddr"));
+		if (nvram_get_int("dnsmasq_pxelan5") && strlen(nvram_safe_get("lan5_ifname")) > 0)
+			fprintf(f, "dhcp-boot=pxelinux.0,,%s\n", nvram_safe_get("lan5_ipaddr"));
+		if (nvram_get_int("dnsmasq_pxelan6") && strlen(nvram_safe_get("lan6_ifname")) > 0)
+			fprintf(f, "dhcp-boot=pxelinux.0,,%s\n", nvram_safe_get("lan6_ipaddr"));
+		if (nvram_get_int("dnsmasq_pxelan7") && strlen(nvram_safe_get("lan7_ifname")) > 0)
+			fprintf(f, "dhcp-boot=pxelinux.0,,%s\n", nvram_safe_get("lan7_ipaddr"));
+#endif /* TOMATO64 */
 	}
 #endif /* TCONFIG_USB_EXTRAS */
 
@@ -2290,7 +2320,12 @@ void start_igmp_proxy(void)
 		 * see https://github.com/pali/igmpproxy/commit/b55e0125c79fc9dbc95c6d6ab1121570f0c6f80f and
 		 * see https://github.com/pali/igmpproxy/blob/master/igmpproxy.conf
 		 */
+#ifndef TOMATO64
 		if ((!nvram_get_int("multicast_lan")) && (!nvram_get_int("multicast_lan1")) && (!nvram_get_int("multicast_lan2")) && (!nvram_get_int("multicast_lan3"))) {
+#else
+		if ((!nvram_get_int("multicast_lan")) && (!nvram_get_int("multicast_lan1")) && (!nvram_get_int("multicast_lan2")) && (!nvram_get_int("multicast_lan3")) &&
+		    (!nvram_get_int("multicast_lan4")) && (!nvram_get_int("multicast_lan5")) && (!nvram_get_int("multicast_lan6")) && (!nvram_get_int("multicast_lan7"))) {
+#endif /* TOMATO64 */
 			fprintf(fp, "%s\n", nvram_safe_get("multicast_custom"));
 			fclose(fp);
 			ret = eval("igmpproxy", IGMP_CONF);

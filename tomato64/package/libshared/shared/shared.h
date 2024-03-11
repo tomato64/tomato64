@@ -25,7 +25,11 @@
 
 #define ASIZE(array)		(sizeof(array) / sizeof(array[0]))
 
+#ifndef TOMATO64
 #define BRIDGE_COUNT		4
+#else
+#define BRIDGE_COUNT		8
+#endif /* TOMATO64 */
 
 #define	MTD_DEV(arg)		"/dev/mtd"#arg
 #define	MTD_BLKDEV(arg)		"/dev/mtdblock"#arg

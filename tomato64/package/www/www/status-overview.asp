@@ -244,11 +244,21 @@ function ethstates() {
 		}
 	}
 	/* LANs */
+/* TOMATO64-REMOVE-BEGIN */
 	for (uidx = v; uidx <= MAX_PORT_ID; ++uidx)
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	for (uidx = v; uidx <= stats.niccount -1; ++uidx)
+/* TOMATO64-END */
 		code += '<td class="title indent2"><b>LAN'+(v > 0 ? (uidx - 1) : uidx)+'<\/b><\/td>';
 
 	code += '<td class="content"><\/td><\/tr><tr>';
+/* TOMATO64-REMOVE-BEGIN */
 	for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	for (uidx = 0; uidx <= stats.niccount -1; ++uidx) {
+/* TOMATO64-END */
 		port = eval('etherstates.port'+uidx);
 
 		state = _ethstates(port);
@@ -256,7 +266,12 @@ function ethstates() {
 		code += '<td class="title indent2"><img id="'+state[0]+'_'+uidx+'" src="'+state[0]+'.gif" alt=""><br>'+(stats.lan_desc == '1' ? state[1] : '')+'<\/td>';
 	}
 
+/* TOMATO64-REMOVE-BEGIN */
 	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="6" style="text-align:right">&raquo; <a href="basic-network.asp">Configure<\/a><\/td><\/tr><\/table><\/div>';
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="basic-network.asp">Configure<\/a><\/td><\/tr><\/table><\/div>';
+/* TOMATO64-END */
 	E('ports').innerHTML = code;
 }
 
@@ -323,6 +338,24 @@ function show() {
 	elem.display('ip6_lan3', stats.ip6_lan3 != '');
 	c('ip6_lan3_ll', stats.ip6_lan3_ll);
 	elem.display('ip6_lan3_ll', stats.ip6_lan3_ll != '');
+/* TOMATO64-BEGIN */
+	c('ip6_lan4', stats.ip6_lan4);
+	elem.display('ip6_lan4', stats.ip6_lan4 != '');
+	c('ip6_lan4_ll', stats.ip6_lan4_ll);
+	elem.display('ip6_lan4_ll', stats.ip6_lan4_ll != '');
+	c('ip6_lan5', stats.ip6_lan5);
+	elem.display('ip6_lan5', stats.ip6_lan5 != '');
+	c('ip6_lan5_ll', stats.ip6_lan5_ll);
+	elem.display('ip6_lan5_ll', stats.ip6_lan5_ll != '');
+	c('ip6_lan6', stats.ip6_lan6);
+	elem.display('ip6_lan6', stats.ip6_lan6 != '');
+	c('ip6_lan6_ll', stats.ip6_lan6_ll);
+	elem.display('ip6_lan6_ll', stats.ip6_lan6_ll != '');
+	c('ip6_lan7', stats.ip6_lan7);
+	elem.display('ip6_lan7', stats.ip6_lan7 != '');
+	c('ip6_lan7_ll', stats.ip6_lan7_ll);
+	elem.display('ip6_lan7_ll', stats.ip6_lan7_ll != '');
+/* TOMATO64-END */
 /* IPV6-END */
 
 	for (uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
@@ -620,6 +653,16 @@ function init() {
 		{ title: 'LAN2 (br2) IPv6 LL Address', rid: 'ip6_lan2_ll', text: stats.ip6_lan2_ll, hidden: (stats.ip6_lan2_ll == '') },
 		{ title: 'LAN3 (br3) IPv6 Address', rid: 'ip6_lan3', text: stats.ip6_lan3, hidden: (stats.ip6_lan3 == '') },
 		{ title: 'LAN3 (br3) IPv6 LL Address', rid: 'ip6_lan3_ll', text: stats.ip6_lan3_ll, hidden: (stats.ip6_lan3_ll == '') },
+/* TOMATO64-BEGIN */
+		{ title: 'LAN4 (br4) IPv6 Address', rid: 'ip6_lan4', text: stats.ip6_lan4, hidden: (stats.ip6_lan4 == '') },
+		{ title: 'LAN4 (br4) IPv6 LL Address', rid: 'ip6_lan4_ll', text: stats.ip6_lan4_ll, hidden: (stats.ip6_lan4_ll == '') },
+		{ title: 'LAN5 (br5) IPv6 Address', rid: 'ip6_lan5', text: stats.ip6_lan5, hidden: (stats.ip6_lan5 == '') },
+		{ title: 'LAN5 (br5) IPv6 LL Address', rid: 'ip6_lan5_ll', text: stats.ip6_lan5_ll, hidden: (stats.ip6_lan5_ll == '') },
+		{ title: 'LAN6 (br6) IPv6 Address', rid: 'ip6_lan6', text: stats.ip6_lan6, hidden: (stats.ip6_lan6 == '') },
+		{ title: 'LAN6 (br6) IPv6 LL Address', rid: 'ip6_lan6_ll', text: stats.ip6_lan6_ll, hidden: (stats.ip6_lan6_ll == '') },
+		{ title: 'LAN7 (br7) IPv6 Address', rid: 'ip6_lan7', text: stats.ip6_lan7, hidden: (stats.ip6_lan7 == '') },
+		{ title: 'LAN7 (br7) IPv6 LL Address', rid: 'ip6_lan7_ll', text: stats.ip6_lan7_ll, hidden: (stats.ip6_lan7_ll == '') },
+/* TOMATO64-END */
 /* IPV6-END */
 		{ title: 'DNS', rid: 'dns', text: nvram.wan_dns, ignore: nvram.wan_proto != 'disabled' },
 		{ title: 'DHCP', text: s }

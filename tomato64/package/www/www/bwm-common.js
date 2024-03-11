@@ -268,6 +268,16 @@ function loadData() {
 				t = 'LAN2 <small>['+i+']<\/small>';
 			else if (nvram.lan3_ifname == i)
 				t = 'LAN3 <small>['+i+']<\/small>';
+/* TOMATO64-BEGIN */
+			else if (nvram.lan4_ifname == i)
+				t = 'LAN4 <small>['+i+']<\/small>';
+			else if (nvram.lan5_ifname == i)
+				t = 'LAN5 <small>['+i+']<\/small>';
+			else if (nvram.lan6_ifname == i)
+				t = 'LAN6 <small>['+i+']<\/small>';
+			else if (nvram.lan7_ifname == i)
+				t = 'LAN7 <small>['+i+']<\/small>';
+/* TOMATO64-END */
 			/* WAN label (for PPP wan_iface) */
 			else if ((nvram.wan_proto == 'pppoe') || (nvram.wan_proto == 'ppp3g') || (nvram.wan_proto == 'pptp') || (nvram.wan_proto == 'l2tp')
 			         || (nvram.wan2_proto == 'pppoe') || (nvram.wan2_proto == 'ppp3g') || (nvram.wan2_proto == 'pptp') || (nvram.wan2_proto == 'l2tp')

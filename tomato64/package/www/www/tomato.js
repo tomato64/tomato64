@@ -10,8 +10,14 @@
 // -----------------------------------------------------------------------------
 
 /* global variables */
+/* TOMATO64-REMOVE-BEGIN */
 var MAX_BRIDGE_ID = 3;
 var MAX_PORT_ID = 4;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+var MAX_BRIDGE_ID = 7;
+var MAX_PORT_ID = 8;
+/* TOMATO64-END */
 var MAX_VLAN_ID = 15;
 /* DUALWAN-BEGIN */
 var xifs = [['wan','lan','lan1','lan2','lan3','wan2'],['WAN0','LAN0','LAN1','LAN2','LAN3','WAN1']];

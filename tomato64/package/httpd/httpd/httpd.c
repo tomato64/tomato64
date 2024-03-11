@@ -838,6 +838,12 @@ static void setup_listeners(int do_ipv6)
 	char ipaddr1[INET6_ADDRSTRLEN];
 	char ipaddr2[INET6_ADDRSTRLEN];
 	char ipaddr3[INET6_ADDRSTRLEN];
+#ifdef TOMATO64
+	char ipaddr4[INET6_ADDRSTRLEN];
+	char ipaddr5[INET6_ADDRSTRLEN];
+	char ipaddr6[INET6_ADDRSTRLEN];
+	char ipaddr7[INET6_ADDRSTRLEN];
+#endif /* TOMATO64 */
 	IF_TCONFIG_IPV6(const char *wanaddr);
 	int wanport = nvram_get_int("http_wanport");
 	IF_TCONFIG_IPV6(int wan6port = wanport);
@@ -863,6 +869,12 @@ static void setup_listeners(int do_ipv6)
 	strlcpy(ipaddr1, nvram_safe_get("lan1_ipaddr"), sizeof(ipaddr1));
 	strlcpy(ipaddr2, nvram_safe_get("lan2_ipaddr"), sizeof(ipaddr2));
 	strlcpy(ipaddr3, nvram_safe_get("lan3_ipaddr"), sizeof(ipaddr3));
+#ifdef TOMATO64
+	strlcpy(ipaddr4, nvram_safe_get("lan4_ipaddr"), sizeof(ipaddr4));
+	strlcpy(ipaddr5, nvram_safe_get("lan5_ipaddr"), sizeof(ipaddr5));
+	strlcpy(ipaddr6, nvram_safe_get("lan6_ipaddr"), sizeof(ipaddr6));
+	strlcpy(ipaddr7, nvram_safe_get("lan7_ipaddr"), sizeof(ipaddr7));
+#endif /* TOMATO64 */
 
 	if (nvram_get_int("http_enable")) {
 		lanport = nvram_get_int("http_lanport");
@@ -873,6 +885,16 @@ static void setup_listeners(int do_ipv6)
 			add_listen_socket(ipaddr2, lanport, do_ipv6, 0);
 		if (strcmp(ipaddr3, "") != 0)
 			add_listen_socket(ipaddr3, lanport, do_ipv6, 0);
+#ifdef TOMATO64
+		if (strcmp(ipaddr4, "") != 0)
+			add_listen_socket(ipaddr4, lanport, do_ipv6, 0);
+		if (strcmp(ipaddr5, "") != 0)
+			add_listen_socket(ipaddr5, lanport, do_ipv6, 0);
+		if (strcmp(ipaddr6, "") != 0)
+			add_listen_socket(ipaddr6, lanport, do_ipv6, 0);
+		if (strcmp(ipaddr7, "") != 0)
+			add_listen_socket(ipaddr7, lanport, do_ipv6, 0);
+#endif /* TOMATO64 */
 
 		IF_TCONFIG_IPV6(if (do_ipv6 && wanport == lanport) wan6port = 0);
 	}
@@ -888,6 +910,16 @@ static void setup_listeners(int do_ipv6)
 			add_listen_socket(ipaddr2, lanport, do_ipv6, 1);
 		if (strcmp(ipaddr3, "") != 0)
 			add_listen_socket(ipaddr3, lanport, do_ipv6, 1);
+#ifdef TOMATO64
+		if (strcmp(ipaddr4, "") != 0)
+			add_listen_socket(ipaddr4, lanport, do_ipv6, 1);
+		if (strcmp(ipaddr5, "") != 0)
+			add_listen_socket(ipaddr5, lanport, do_ipv6, 1);
+		if (strcmp(ipaddr6, "") != 0)
+			add_listen_socket(ipaddr6, lanport, do_ipv6, 1);
+		if (strcmp(ipaddr7, "") != 0)
+			add_listen_socket(ipaddr7, lanport, do_ipv6, 1);
+#endif /* TOMATO64 */
 
 		IF_TCONFIG_IPV6(if (do_ipv6 && wanport == lanport) wan6port = 0);
 	}

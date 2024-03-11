@@ -19,7 +19,12 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("smbd_enable,smbd_user,smbd_passwd,smbd_wgroup,smbd_cpage,smbd_ifnames,smbd_custom,smbd_master,smbd_wins,smbd_shares,smbd_autoshare,smbd_protocol,wan_wins,gro_disable,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("smbd_enable,smbd_user,smbd_passwd,smbd_wgroup,smbd_cpage,smbd_ifnames,smbd_custom,smbd_master,smbd_wins,smbd_shares,smbd_autoshare,smbd_protocol,wan_wins,gro_disable,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
+/* TOMATO64-END */
 
 var cprefix = 'nas_samba';
 var changed = 0;
@@ -270,7 +275,12 @@ function init() {
 <div class="section">
 	<script>
 		var lan_arr = nvram.smbd_ifnames.split(' ');
+/* TOMATO64-REMOVE-BEGIN */
 		var smbd_lan = [0,0,0,0];
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		var smbd_lan = [0,0,0,0,0,0,0,0];
+/* TOMATO64-END */
 		for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
 			if (lan_arr[i] == 'br'+i.toString())
 				smbd_lan[i] = 1;
@@ -285,6 +295,12 @@ function init() {
 			{ title: 'LAN1', name: 'f_smbd_lan1', type: 'checkbox', value: smbd_lan[1] == 1 },
 			{ title: 'LAN2', name: 'f_smbd_lan2', type: 'checkbox', value: smbd_lan[2] == 1 },
 			{ title: 'LAN3', name: 'f_smbd_lan3', type: 'checkbox', value: smbd_lan[3] == 1 },
+/* TOMATO64-BEGIN */
+			{ title: 'LAN4', name: 'f_smbd_lan4', type: 'checkbox', value: smbd_lan[4] == 1 },
+			{ title: 'LAN5', name: 'f_smbd_lan5', type: 'checkbox', value: smbd_lan[5] == 1 },
+			{ title: 'LAN6', name: 'f_smbd_lan6', type: 'checkbox', value: smbd_lan[6] == 1 },
+			{ title: 'LAN7', name: 'f_smbd_lan7', type: 'checkbox', value: smbd_lan[7] == 1 },
+/* TOMATO64-END */
 			{ title: 'Samba protocol version', multi: [
 				{suffix: '&nbsp; SMBv1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', name: '_smbd_protocol', id: '_smbd_proto_1', type: 'radio', value: nvram.smbd_protocol == 0 },
 				{suffix: '&nbsp; SMBv2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', name: '_smbd_protocol', id: '_smbd_proto_2', type: 'radio', value: nvram.smbd_protocol == 1 },

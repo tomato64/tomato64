@@ -495,6 +495,55 @@ static const nvset_t nvset_list[] = {
 	{ "dhcpd3_endip",		V_LENGTH(0, 15)			},
 	{ "dhcpd3_ostatic",		V_01				},	/* ignore DHCP requests from unknown devices on LAN3 */
 	{ "dhcp3_lease",		V_LENGTH(0, 5)			},
+#ifdef TOMATO64
+	{ "lan4_ifname",		V_LENGTH(0, 5)			},
+	{ "lan4_ifnames",		V_TEXT(0, 100)			},
+	{ "lan4_ifnames_vlan",		V_TEXT(0, 8)			},
+	{ "lan4_ipaddr",		V_LENGTH(0, 15)			},
+	{ "lan4_netmask",		V_LENGTH(0, 15)			},
+	{ "lan4_proto",			V_LENGTH(0, 6)			},
+	{ "lan4_stp",			V_LENGTH(0, 1)			},
+	{ "dhcpd4_startip",		V_LENGTH(0, 15)			},
+	{ "dhcpd4_endip",		V_LENGTH(0, 15)			},
+	{ "dhcpd4_ostatic",		V_01				},      /* ignore DHCP requests from unknown devices on LAN3 */
+	{ "dhcp4_lease",		V_LENGTH(0, 5)			},
+
+	{ "lan5_ifname",		V_LENGTH(0, 5)			},
+	{ "lan5_ifnames",		V_TEXT(0, 100)			},
+	{ "lan5_ifnames_vlan",		V_TEXT(0, 8)			},
+	{ "lan5_ipaddr",		V_LENGTH(0, 15)			},
+	{ "lan5_netmask",		V_LENGTH(0, 15)			},
+	{ "lan5_proto",			V_LENGTH(0, 6)			},
+	{ "lan5_stp",			V_LENGTH(0, 1)			},
+	{ "dhcpd5_startip",		V_LENGTH(0, 15)			},
+	{ "dhcpd5_endip",		V_LENGTH(0, 15)			},
+	{ "dhcpd5_ostatic",		V_01				},      /* ignore DHCP requests from unknown devices on LAN3 */
+	{ "dhcp5_lease",		V_LENGTH(0, 5)			},
+
+	{ "lan6_ifname",		V_LENGTH(0, 5)			},
+	{ "lan6_ifnames",		V_TEXT(0, 100)			},
+	{ "lan6_ifnames_vlan",		V_TEXT(0, 8)			},
+	{ "lan6_ipaddr",		V_LENGTH(0, 15)			},
+	{ "lan6_netmask",		V_LENGTH(0, 15)			},
+	{ "lan6_proto",			V_LENGTH(0, 6)			},
+	{ "lan6_stp",			V_LENGTH(0, 1)			},
+	{ "dhcpd6_startip",		V_LENGTH(0, 15)			},
+	{ "dhcpd6_endip",		V_LENGTH(0, 15)			},
+	{ "dhcpd6_ostatic",		V_01				},      /* ignore DHCP requests from unknown devices on LAN3 */
+	{ "dhcp6_lease",		V_LENGTH(0, 5)			},
+
+	{ "lan7_ifname",		V_LENGTH(0, 5)			},
+	{ "lan7_ifnames",		V_TEXT(0, 100)			},
+	{ "lan7_ifnames_vlan",		V_TEXT(0, 8)			},
+	{ "lan7_ipaddr",		V_LENGTH(0, 15)			},
+	{ "lan7_netmask",		V_LENGTH(0, 15)			},
+	{ "lan7_proto",			V_LENGTH(0, 6)			},
+	{ "lan7_stp",			V_LENGTH(0, 1)			},
+	{ "dhcpd7_startip",		V_LENGTH(0, 15)			},
+	{ "dhcpd7_endip",		V_LENGTH(0, 15)			},
+	{ "dhcpd7_ostatic",		V_01				},      /* ignore DHCP requests from unknown devices on LAN3 */
+	{ "dhcp7_lease",		V_LENGTH(0, 5)			},
+#endif /* TOMATO64 */
 
 	/* Wireless */
 	{ "wl_radio",			V_01				},
@@ -650,6 +699,12 @@ static const nvset_t nvset_list[] = {
 	{ "dnsmasq_pxelan1",		V_01				},
 	{ "dnsmasq_pxelan2",		V_01				},
 	{ "dnsmasq_pxelan3",		V_01				},
+#ifdef TOMATO64
+	{ "dnsmasq_pxelan4",		V_01				},
+	{ "dnsmasq_pxelan5",		V_01				},
+	{ "dnsmasq_pxelan6",		V_01				},
+	{ "dnsmasq_pxelan7",		V_01				},
+#endif /* TOMATO64 */
 #endif
 #ifdef TCONFIG_MDNS
 	{ "mdns_enable",		V_01				},
@@ -667,6 +722,12 @@ static const nvset_t nvset_list[] = {
 	{ "multicast_lan1",		V_01				},
 	{ "multicast_lan2",		V_01				},
 	{ "multicast_lan3",		V_01				},
+#ifdef TOMATO64
+	{ "multicast_lan4",		V_01				},
+	{ "multicast_lan5",		V_01				},
+	{ "multicast_lan6",		V_01				},
+	{ "multicast_lan7",		V_01				},
+#endif /* TOMATO64 */
 	{ "multicast_quickleave",	V_01				},
 	{ "multicast_custom",		V_TEXT(0, 2048)			},
 	{ "udpxy_enable",		V_01				},
@@ -674,6 +735,12 @@ static const nvset_t nvset_list[] = {
 	{ "udpxy_lan1",			V_01				},
 	{ "udpxy_lan2",			V_01				},
 	{ "udpxy_lan3",			V_01				},
+#ifdef TOMATO64
+	{ "udpxy_lan4",			V_01				},
+	{ "udpxy_lan5",			V_01				},
+	{ "udpxy_lan6",			V_01				},
+	{ "udpxy_lan7",			V_01				},
+#endif /* TOMATO64 */
 	{ "udpxy_stats",		V_01				},
 	{ "udpxy_clients",		V_RANGE(1, 5000)		},
 	{ "udpxy_port",			V_RANGE(0, 65535)		},
@@ -724,6 +791,7 @@ static const nvset_t nvset_list[] = {
 	{ "bcmnat_disable",		V_01				},
 #endif
 /* advanced-vlan */
+#ifndef TOMATO64
 	{ "vlan0ports",			V_TEXT(0, 17)			},
 	{ "vlan1ports",			V_TEXT(0, 17)			},
 	{ "vlan2ports",			V_TEXT(0, 17)			},
@@ -740,7 +808,6 @@ static const nvset_t nvset_list[] = {
 	{ "vlan13ports",		V_TEXT(0, 17)			},
 	{ "vlan14ports",		V_TEXT(0, 17)			},
 	{ "vlan15ports",		V_TEXT(0, 17)			},
-#ifndef TOMATO64
 	{ "vlan0hwname",		V_TEXT(0, 8)			},
 	{ "vlan1hwname",		V_TEXT(0, 8)			},
 	{ "vlan2hwname",		V_TEXT(0, 8)			},
@@ -758,6 +825,22 @@ static const nvset_t nvset_list[] = {
 	{ "vlan14hwname",		V_TEXT(0, 8)			},
 	{ "vlan15hwname",		V_TEXT(0, 8)			},
 #else
+	{ "vlan0ports",			V_TEXT(0, 29)			},
+	{ "vlan1ports",			V_TEXT(0, 29)			},
+	{ "vlan2ports",			V_TEXT(0, 29)			},
+	{ "vlan3ports",			V_TEXT(0, 29)			},
+	{ "vlan4ports",			V_TEXT(0, 29)			},
+	{ "vlan5ports",			V_TEXT(0, 29)			},
+	{ "vlan6ports",			V_TEXT(0, 29)			},
+	{ "vlan7ports",			V_TEXT(0, 29)			},
+	{ "vlan8ports",			V_TEXT(0, 29)			},
+	{ "vlan9ports",			V_TEXT(0, 29)			},
+	{ "vlan10ports",		V_TEXT(0, 29)			},
+	{ "vlan11ports",		V_TEXT(0, 29)			},
+	{ "vlan12ports",		V_TEXT(0, 29)			},
+	{ "vlan13ports",		V_TEXT(0, 29)			},
+	{ "vlan14ports",		V_TEXT(0, 29)			},
+	{ "vlan15ports",		V_TEXT(0, 29)			},
 	{ "vlan0hwname",		V_TEXT(0, 100)			},
 	{ "vlan1hwname",		V_TEXT(0, 100)			},
 	{ "vlan2hwname",		V_TEXT(0, 100)			},
@@ -854,7 +937,11 @@ static const nvset_t nvset_list[] = {
 #endif /* TCONFIG_ZEBRA */
 
 /* advanced-access */
+#ifndef TOMATO64
 	{ "lan_access",			V_LENGTH(0, 4096)		},
+#else
+	{ "lan_access",			V_LENGTH(0, 16384)		},
+#endif /* TOMATO64 */
 
 /* advanced-wireless */
 	{ "wl_country_code",		V_LENGTH(0, 4)			},	/* Country code */
@@ -972,6 +1059,12 @@ static const nvset_t nvset_list[] = {
 	{ "upnp_lan1",			V_01				},
 	{ "upnp_lan2",			V_01				},
 	{ "upnp_lan3",			V_01				},
+#ifdef TOMATO64
+	{ "upnp_lan4",			V_01				},
+	{ "upnp_lan5",			V_01				},
+	{ "upnp_lan6",			V_01				},
+	{ "upnp_lan7",			V_01				},
+#endif /* TOMATO64 */
 	{ "upnp_custom",		V_TEXT(0, 2048)			},
 
 /* forward-basic */
@@ -1371,6 +1464,32 @@ static const nvset_t nvset_list[] = {
 	{ "bwl_br3_dlr",		V_RANGE(0, 99999999)		},
 	{ "bwl_br3_ulr",		V_RANGE(0, 99999999)		},
 	{ "bwl_br3_prio",		V_RANGE(0, 5)			},
+#ifdef TOMATO64
+	{ "bwl_br4_enable",		V_01				},
+	{ "bwl_br4_dlc",		V_RANGE(0, 99999999)		},
+	{ "bwl_br4_ulc",		V_RANGE(0, 99999999)		},
+	{ "bwl_br4_dlr",		V_RANGE(0, 99999999)		},
+	{ "bwl_br4_ulr",		V_RANGE(0, 99999999)		},
+	{ "bwl_br4_prio",		V_RANGE(0, 5)			},
+	{ "bwl_br5_enable",		V_01				},
+	{ "bwl_br5_dlc",		V_RANGE(0, 99999999)		},
+	{ "bwl_br5_ulc",		V_RANGE(0, 99999999)		},
+	{ "bwl_br5_dlr",		V_RANGE(0, 99999999)		},
+	{ "bwl_br5_ulr",		V_RANGE(0, 99999999)		},
+	{ "bwl_br5_prio",		V_RANGE(0, 5)			},
+	{ "bwl_br6_enable",		V_01				},
+	{ "bwl_br6_dlc",		V_RANGE(0, 99999999)		},
+	{ "bwl_br6_ulc",		V_RANGE(0, 99999999)		},
+	{ "bwl_br6_dlr",		V_RANGE(0, 99999999)		},
+	{ "bwl_br6_ulr",		V_RANGE(0, 99999999)		},
+	{ "bwl_br6_prio",		V_RANGE(0, 5)			},
+	{ "bwl_br7_enable",		V_01				},
+	{ "bwl_br7_dlc",		V_RANGE(0, 99999999)		},
+	{ "bwl_br7_ulc",		V_RANGE(0, 99999999)		},
+	{ "bwl_br7_dlr",		V_RANGE(0, 99999999)		},
+	{ "bwl_br7_ulr",		V_RANGE(0, 99999999)		},
+	{ "bwl_br7_prio",		V_RANGE(0, 5)			},
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_BT
 /* nas-transmission */
@@ -1527,6 +1646,12 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server1_plan1",		V_01				},
 	{ "vpn_server1_plan2",		V_01				},
 	{ "vpn_server1_plan3",		V_01				},
+#ifdef TOMATO64
+	{ "vpn_server1_plan4",		V_01				},
+	{ "vpn_server1_plan5",		V_01				},
+	{ "vpn_server1_plan6",		V_01				},
+	{ "vpn_server1_plan7",		V_01				},
+#endif /* TOMATO64 */
 	{ "vpn_server1_pdns",		V_01				},
 	{ "vpn_server1_rgw",		V_01				},
 	{ "vpn_server1_userpass",	V_01				},
@@ -1568,6 +1693,12 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server2_plan1",		V_01				},
 	{ "vpn_server2_plan2",		V_01				},
 	{ "vpn_server2_plan3",		V_01				},
+#ifdef TOMATO64
+	{ "vpn_server2_plan4",		V_01				},
+	{ "vpn_server2_plan5",		V_01				},
+	{ "vpn_server2_plan6",		V_01				},
+	{ "vpn_server2_plan7",		V_01				},
+#endif /* TOMATO64 */
 	{ "vpn_server2_pdns",		V_01				},
 	{ "vpn_server2_rgw",		V_01				},
 	{ "vpn_server2_userpass",	V_01				},
@@ -1795,7 +1926,11 @@ static const nvset_t nvset_list[] = {
 	{ "wg0_dns",			V_NONE				},
 	{ "wg0_ka",			V_01				},
 	{ "wg0_com",			V_RANGE(0, 3)			},
+#ifndef TOMATO64
 	{ "wg0_lan",			V_RANGE(0, 15)			},	/* push LANX for wg0 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
+#else
+	{ "wg0_lan",			V_RANGE(0, 255)			},	/* push LANX for wg0 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
+#endif /* TOMATO64 */
 	{ "wg0_rgw",			V_01				},
 	{ "wg0_route",			V_NONE				},
 	{ "wg0_peer_dns",		V_TEXT(0, 128)			},
@@ -1816,7 +1951,11 @@ static const nvset_t nvset_list[] = {
 	{ "wg1_dns",			V_NONE				},
 	{ "wg1_ka",			V_01				},
 	{ "wg1_com",			V_RANGE(0, 3)			},
+#ifndef TOMATO64
 	{ "wg1_lan",			V_RANGE(0, 15)			},	/* push LANX for wg1 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
+#else
+	{ "wg1_lan",			V_RANGE(0, 255)			},	/* push LANX for wg1 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
+#endif /* TOMATO64 */
 	{ "wg1_rgw",			V_01				},
 	{ "wg1_route",			V_NONE				},
 	{ "wg1_peer_dns",		V_TEXT(0, 128)			},
@@ -1837,7 +1976,11 @@ static const nvset_t nvset_list[] = {
 	{ "wg2_dns",			V_NONE				},
 	{ "wg2_ka",			V_01				},
 	{ "wg2_com",			V_RANGE(0, 3)			},
+#ifndef TOMATO64
 	{ "wg2_lan",			V_RANGE(0, 15)			},	/* push LANX for wg2 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
+#else
+	{ "wg2_lan",			V_RANGE(0, 255)			},	/* push LANX for wg2 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
+#endif /* TOMATO64 */
 	{ "wg2_rgw",			V_01				},
 	{ "wg2_route",			V_NONE				},
 	{ "wg2_peer_dns",		V_TEXT(0, 128)			},

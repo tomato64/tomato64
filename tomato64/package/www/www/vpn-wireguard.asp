@@ -38,7 +38,12 @@
 <script>
 
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,lan1_ifname,lan1_ipaddr,lan1_netmask,lan2_ifname,lan2_ipaddr,lan2_netmask,lan3_ifname,lan3_ipaddr,lan3_netmask,wg_adns,wg0_enable,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg1_enable,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg2_enable,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,lan1_ifname,lan1_ipaddr,lan1_netmask,lan2_ifname,lan2_ipaddr,lan2_netmask,lan3_ifname,lan3_ipaddr,lan3_netmask,lan4_ifname,lan4_ipaddr,lan4_netmask,lan5_ifname,lan5_ipaddr,lan5_netmask,lan6_ifname,lan6_ipaddr,lan6_netmask,lan7_ifname,lan7_ipaddr,lan7_netmask,wg_adns,wg0_enable,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg1_enable,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg2_enable,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route"); %>
+/* TOMATO64-END */
 
 
 var cprefix = 'vpn_wireguard';
@@ -1749,6 +1754,16 @@ function save(nomsg) {
 			fom['wg'+i+'_lan'].value |= 4;
 		if (fom['_f_wg'+i+'_lan3'].checked)
 			fom['wg'+i+'_lan'].value |= 8;
+/* TOMATO64-BEGIN */
+		if (fom['_f_wg'+i+'_lan4'].checked)
+			fom['wg'+i+'_lan'].value |= 16;
+		if (fom['_f_wg'+i+'_lan5'].checked)
+			fom['wg'+i+'_lan'].value |= 32;
+		if (fom['_f_wg'+i+'_lan6'].checked)
+			fom['wg'+i+'_lan'].value |= 64;
+		if (fom['_f_wg'+i+'_lan7'].checked)
+			fom['wg'+i+'_lan'].value |= 128;
+/* TOMATO64-END */
 
 		if (E('_f_wg'+i+'_adns').checked)
 			E('wg_adns').value += i+',';
@@ -1879,6 +1894,12 @@ function init() {
 				{ title: 'Push LAN1 (br1) to peers', name: 'f_'+t+'_lan1', type: 'checkbox', value: (nvram[t+'_lan'] & 0x02) },
 				{ title: 'Push LAN2 (br2) to peers', name: 'f_'+t+'_lan2', type: 'checkbox', value: (nvram[t+'_lan'] & 0x04) },
 				{ title: 'Push LAN3 (br3) to peers', name: 'f_'+t+'_lan3', type: 'checkbox', value: (nvram[t+'_lan'] & 0x08) },
+/* TOMATO64-BEGIN */
+				{ title: 'Push LAN4 (br4) to peers', name: 'f_'+t+'_lan4', type: 'checkbox', value: (nvram[t+'_lan'] & 0x10) },
+				{ title: 'Push LAN5 (br5) to peers', name: 'f_'+t+'_lan5', type: 'checkbox', value: (nvram[t+'_lan'] & 0x20) },
+				{ title: 'Push LAN6 (br6) to peers', name: 'f_'+t+'_lan6', type: 'checkbox', value: (nvram[t+'_lan'] & 0x40) },
+				{ title: 'Push LAN7 (br7) to peers', name: 'f_'+t+'_lan7', type: 'checkbox', value: (nvram[t+'_lan'] & 0x80) },
+/* TOMATO64-END */
 				{ title: 'Forward all peer traffic', name: 'f_'+t+'_rgw', type: 'checkbox', value: nvram[t+'_rgw'] == 1 }
 			]);
 			W('<br>');
