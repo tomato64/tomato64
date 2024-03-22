@@ -104,7 +104,7 @@ extern int safe_fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
  * @param	stream	file stream
  * @return	number of items successfully written
  */
-extern size_t safe_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+extern int safe_fwrite(const void *ptr, size_t size, int nmemb, FILE *stream);
 
 /*
  * Convert Ethernet address string representation to binary data
