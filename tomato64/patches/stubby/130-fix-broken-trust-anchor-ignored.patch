@@ -1,0 +1,38 @@
+From 6395fe43cc6efa7cb3a619cc48dec25bab1663ac Mon Sep 17 00:00:00 2001
+From: Willem Toorop <willem@nlnetlabs.nl>
+Date: Mon, 2 Jan 2023 16:03:59 +0100
+Subject: [PATCH] Fix #536 Broken trust anchor files are silently ignored
+
+---
+ ChangeLog     | 4 ++++
+ src/convert.c | 4 +++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/ChangeLog b/ChangeLog
+index 66a61637..ab85111b 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,7 @@
++* 2023-??-??: Version 1.7.4
++  * Issue #536: Broken trust anchor files are silently ignored
++    Thanks Stéphane Bortzmeyer
++
+ * 2022-12-22: Version 1.7.3
+   * PR #532: Increase CMake required version 3.5 -> 3.20, because we
+     need cmake_path for Absolute paths in pkg-config (See Issue #517)
+diff --git a/src/convert.c b/src/convert.c
+index 5d29a60b..043a5c7c 100644
+--- a/src/convert.c
++++ b/src/convert.c
+@@ -529,8 +529,10 @@ _getdns_fp2rr_list(struct mem_funcs *mf,
+ 	else while (r == GETDNS_RETURN_GOOD && !feof(in)) {
+ 		len = GLDNS_RR_BUF_SIZE;
+ 		dname_len = 0;
+-		if (gldns_fp2wire_rr_buf(in, rr, &len, &dname_len, &pst))
++		if (gldns_fp2wire_rr_buf(in, rr, &len, &dname_len, &pst)) {
++			r = GETDNS_RETURN_GENERIC_ERROR;
+ 			break;
++		}
+ 		if (dname_len && dname_len < sizeof(pst.prev_rr)) {
+ 			memcpy(pst.prev_rr, rr, dname_len);
+ 			pst.prev_rr_len = dname_len;
