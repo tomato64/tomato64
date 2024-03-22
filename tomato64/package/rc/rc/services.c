@@ -1829,16 +1829,13 @@ void start_upnp(void)
 	char *lanip, *lanmask, *lanifname;
 	char br;
 
-	if (get_wan_proto() == WP_DISABLED)
+	enable = nvram_get_int("upnp_enable");
+
+	/* only if enabled and proto not disabled */
+	if ((enable == 0) || (get_wan_proto() == WP_DISABLED))
 		return;
 
 	if (serialize_restart("miniupnpd", 1))
-		return;
-
-	enable = nvram_get_int("upnp_enable");
-
-	/* only if enabled */
-	if (enable == 0)
 		return;
 
 	add_upnp_defaults(); /* backup: check nvram! */
