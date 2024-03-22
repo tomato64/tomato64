@@ -520,9 +520,10 @@ function init() {
 			W('<div id="_vpn_'+t+'_routing_div_help"><div class="fields"><div class="about"><b>To use Routing Policy, you have to choose TUN as interface and "Routing Policy" in "Redirect Internet Traffic".<\/b><\/div><\/div><\/div>');
 			W('<div>');
 			W('<ul>');
-			W('<li><b>Type -> From Source IP<\/b> - Ex: "1.2.3.4", "1.2.3.4 - 2.3.4.5", "1.2.3.0/24".');
-			W('<li><b>Type -> To Destination IP<\/b> - Ex: "1.2.3.4" or "1.2.3.0/24".');
-			W('<li><b>Type -> To Domain<\/b> - Ex: "domain.com". Please enter one domain per line');
+			W('<li><b>Type -> From Source IP<\/b> - Ex: "1.2.3.4", "1.2.3.4 - 2.3.4.5", "1.2.3.0/24".<\/li>');
+			W('<li><b>Type -> To Destination IP<\/b> - Ex: "1.2.3.4" or "1.2.3.0/24".<\/li>');
+			W('<li><b>Type -> To Domain<\/b> - Ex: "domain.com". Please enter one domain per line.<\/li>');
+			W('<li><b>IMPORTANT!<\/b> - Kill Switch IPs from all clients are applied to each active client, not just the client to which they are entered (so-called strict Kill Switch).<\/li>');
 			W('<\/ul>');
 			W('<\/div>');
 			W('<\/div>');
