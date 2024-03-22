@@ -228,7 +228,7 @@ void start_mysql(int force)
 	symlink(mysql_conf, mysql_conf_link);
 
 	/* fork new process */
-	if (fork() != 0)
+	if (fork() != 0) /* foreground process */
 		return;
 
 	pidof_child = getpid();
@@ -385,11 +385,11 @@ END:
 	if (pidof("mysqld") > 0) {
 		logmsg(LOG_INFO, "mysqld started");
 		setup_mysql_watchdog();
-		f_write_string(mysql_child_pid, "0", 0, 0);
+		unlink(mysql_child_pid);
 	}
 	else {
 		logmsg(LOG_ERR, "starting mysqld failed - check configuration ...");
-		f_write_string(mysql_child_pid, "0", 0, 0);
+		unlink(mysql_child_pid);
 		stop_mysql();
 	}
 
@@ -411,14 +411,14 @@ void stop_mysql(void)
 	else
 		return;
 
+	eval("cru", "d", "CheckMySQL");
+
 	/* wait for child of start_mysql to finish (if any) */
 	memset(buf, 0, sizeof(buf));
 	while (f_read_string(mysql_child_pid, buf, sizeof(buf)) > 0 && atoi(buf) > 0 && ppid(atoi(buf)) > 0 && (m-- > 0)) {
 		logmsg(LOG_DEBUG, "*** %s: waiting for child process of start_mysql to end, %d secs left ...", __FUNCTION__, m);
 		sleep(1);
 	}
-
-	eval("cru", "d", "CheckMySQL");
 
 	if (nvram_match("mysql_binary", "internal"))
 		strlcpy(pbi, "/usr/bin", sizeof(pbi));

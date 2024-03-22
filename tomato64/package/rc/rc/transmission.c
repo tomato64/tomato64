@@ -236,7 +236,7 @@ void start_bittorrent(int force)
 	build_tr_firewall();
 
 	/* fork new process */
-	if (fork() != 0)
+	if (fork() != 0) /* foreground process */
 		return;
 
 	pidof_child = getpid();
@@ -306,15 +306,15 @@ void start_bittorrent(int force)
 	system(buf);
 
 	sleep(1);
+
 	if (pidof("transmission-da") > 0) {
 		logmsg(LOG_INFO, "transmission-daemon started");
-		sleep(2);
 		setup_tr_watchdog();
-		f_write_string(tr_child_pid, "0", 0, 0);
+		unlink(tr_child_pid);
 	}
 	else {
 		logmsg(LOG_ERR, "starting transmission-daemon failed - check configuration ...");
-		f_write_string(tr_child_pid, "0", 0, 0);
+		unlink(tr_child_pid);
 		stop_bittorrent();
 	}
 
@@ -333,14 +333,14 @@ void stop_bittorrent(void)
 
 	pid = pidof("transmission-da");
 
+	eval("cru", "d", "CheckTransmission");
+
 	/* wait for child of start_bittorrent to finish (if any) */
 	memset(buf, 0, sizeof(buf));
 	while (f_read_string(tr_child_pid, buf, sizeof(buf)) > 0 && atoi(buf) > 0 && ppid(atoi(buf)) > 0 && (m-- > 0)) {
 		logmsg(LOG_DEBUG, "*** %s: waiting for child process of start_bittorrent to end, %d secs left ...", __FUNCTION__, m);
 		sleep(1);
 	}
-
-	eval("cru", "d", "CheckTransmission");
 
 	killall_and_waitfor("transmission-da", 10, 50);
 
