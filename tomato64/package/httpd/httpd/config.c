@@ -2,6 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2024 pedro
  *
  */
 
@@ -62,8 +63,8 @@ void wo_defaults(char *url)
 
 			set_action(ACT_REBOOT);
 
-			//kill(1, SIGTERM);
 			sync();
+			//kill(1, SIGTERM);
 			reboot(RB_AUTOBOOT);
 
 			exit(0);
@@ -87,14 +88,12 @@ void wo_backup(char *url)
 	if ((fd = mkstemp(file)) < 0)
 		exit(1);
 
-	close(fd);
 	args[2] = file;
 	snprintf(msg, sizeof(msg), ">%s.msg", file);
 
 	if (_eval(args, msg, 0, NULL) == 0) {
 		send_header(200, NULL, mime_binary, 0);
 		do_file(file);
-		unlink(file);
 	}
 	else {
 		resmsg_fread(msg + 1);
@@ -102,28 +101,27 @@ void wo_backup(char *url)
 		parse_asp("error.asp");
 	}
 
+	close(fd);
+	unlink(file);
 	unlink(msg + 1);
 }
 
 void wi_restore(char *url, int len, char *boundary)
 {
 	char *buf;
-	const char *error;
+	const char *error = "Error reading file";
 	int n, fd;
 	static char *args[] = { "nvram", "restore", NULL, NULL };
 	char file[] = "/tmp/restoreXXXXXX";
 	char msg[64];
 
 	buf = NULL;
-	error = "Error reading file";
-
 	check_id(url);
 
 	if ((fd = mkstemp(file)) < 0) {
 		error = "Error creating file";
 		goto ERROR;
 	}
-	close(fd);
 	args[2] = file;
 	snprintf(msg, sizeof(msg), ">%s.msg", file);
 
@@ -163,19 +161,22 @@ void wi_restore(char *url, int len, char *boundary)
 	nvram_commit();
 #endif
 
+	close(fd);
 	unlink(msg + 1);
 
 	error = NULL;
 
 ERROR:
-	free(buf);
+	if (buf)
+		free(buf);
+
+	if (file[0])
+		unlink(file);
+
 	if (error)
 		resmsg_set(error);
 
 	web_eat(len);
-
-	if (file[0])
-		unlink(file);
 }
 
 void wo_restore(char *url)
