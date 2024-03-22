@@ -2712,6 +2712,10 @@ static int init_nvram(void)
 			nvram_set("wl_ifname", "eth1");
 			nvram_set("wl0_ifname", "eth1");
 			nvram_set("sb/1/ledbh5", "2"); /* WL_LED_ACTIVITY; WiFi LED - active HIGH */
+
+			/* adjust and add cfe wifi country settings */
+			nvram_set("sb/1/ccode", "ALL");
+			nvram_set("sb/1/regrev", "0");
 		}
 		break;
 	case MODEL_RTN15U:
