@@ -2739,7 +2739,7 @@ static void start_media_server(int force)
 	int port, https;
 	pid_t pid;
 	char *dbdir;
-	char *argv[] = { "minidlna", "-f", "/etc/minidlna.conf", "-r", NULL, NULL };
+	char *argv[] = { "minidlna", "-f", "/etc/minidlna.conf", "-r", "-P", "/var/run/minidlna.pid", NULL, NULL };
 	static int once = 1;
 	int ret, index = 4, i;
 	char *msi;
@@ -2779,7 +2779,7 @@ static void start_media_server(int force)
 			if (!(*dbdir))
 				dbdir = NULL;
 
-			mkdir_if_none(dbdir ? : "/var/run/minidlna");
+			mkdir_if_none(dbdir ? : "/var/lib/minidlna");
 
 			/* persistent ident (router's mac as serial) */
 			if (!ether_atoe(nvram_safe_get("lan_hwaddr"), ea))
@@ -2825,7 +2825,7 @@ static void start_media_server(int force)
 			           "%s\n",
 			           strlen(msi) ? msi : nvram_safe_get("lan_ifname"),
 			           (port < 0) || (port >= 0xffff) ? 0 : port, /* 0 - means random port (feature applied as minidlna patch) */
-			           dbdir ? : "/var/run/minidlna",
+			           dbdir ? : "/var/lib/minidlna",
 			           nvram_get_int("ms_tivo") ? "yes" : "no",
 			           nvram_get_int("ms_stdlna") ? "yes" : "no",
 			           https ? "s" : "", nvram_safe_get("lan_ipaddr"), nvram_safe_get(https ? "https_lanport" : "http_lanport"),
