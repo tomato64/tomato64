@@ -693,11 +693,11 @@ setPIN() {
 				}
 			done
 
-			PIN_STATUS=$(echo "$STATUS" | grep CPIN | cut -d ":" -f2 | awk '{$1=$1};1')
+			PIN_STATUS=$(echo "$STATUS" | grep CPIN: | cut -d ":" -f2 | awk '{$1=$1};1')
 		} || {
 			PIN_EXT_STATUS=1
-			PIN_STATUS=$(echo "$STATUS" | grep CPIN | cut -d ":" -f2 | awk '{$1=$1};1' | cut -d "," -f1)
-			PIN_VERIFY_TRIES=$(echo "$STATUS" | grep CPIN | cut -d "," -f4)
+			PIN_STATUS=$(echo "$STATUS" | grep CPIN: | cut -d ":" -f2 | awk '{$1=$1};1' | cut -d "," -f1)
+			PIN_VERIFY_TRIES=$(echo "$STATUS" | grep CPIN: | cut -d "," -f4)
 		}
 
 		# verify pin
