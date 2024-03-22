@@ -11921,33 +11921,27 @@ int init_main(int argc, char *argv[])
 			stop_lan();
 			stop_vlan();
 
-			if ((state == SIGTERM /* REBOOT */) ||
-			    (state == SIGQUIT /* HALT */)) {
-				stop_syslog();
+			if ((state == SIGTERM) || /* REBOOT */
+			    (state == SIGQUIT)) { /* HALT */
 				killall("buttons", SIGTERM);
 				killall("udhcpc", SIGTERM);
-#ifdef TCONFIG_USB
-				remove_storage_main(1);
-				stop_usb();
-#ifndef TOMATO64
-#ifndef TCONFIG_USBAP
-				remove_usb_module();
-#endif
-#endif /* TOMATO64 */
-#endif /* TCONFIG_USB */
 				remove_conntrack();
 #ifndef TOMATO64
 				stop_jffs2();
 #endif /* TOMATO64 */
-
-				shutdn(state == SIGTERM /* REBOOT */);
+				stop_syslog();
+#ifdef TCONFIG_USB
+				remove_storage_main(1);
+				stop_usb();
+				sleep(1);
+#endif /* TCONFIG_USB */
+				shutdn(state == SIGTERM); /* REBOOT */
 				sync(); sync(); sync();
 				exit(0);
 			}
 			if (state == SIGINT) { /* STOP */
 				break;
 			}
-
 			/* SIGHUP (RESTART) falls through */
 
 			//nvram_set("wireless_restart_req", "1"); /* restart wifi twice to make sure all is working ok! not needed right now M_ars */
@@ -12075,7 +12069,10 @@ int reboothalt_main(int argc, char *argv[])
 	int reboot = (strstr(argv[0], "reboot") != NULL);
 	int def_reset_wait = 30;
 
-	cprintf(reboot ? "Rebooting...\n" : "Shutting down...\n");
+	puts(reboot ? "Rebooting...\n" : "Shutting down...\n"); /* self is reboot? */
+	fflush(stdout);
+	sleep(1);
+
 	kill(1, reboot ? SIGTERM : SIGQUIT);
 
 	int wait = nvram_get_int("reset_wait") ? : def_reset_wait;
@@ -12089,10 +12086,10 @@ int reboothalt_main(int argc, char *argv[])
 
 		f_write("/proc/sysrq-trigger", "s", 1, 0 , 0); /* sync disks */
 		sleep(wait);
-		cprintf("Still running... Doing machine reset.\n");
-#ifdef TCONFIG_USB
-		remove_usb_module();
-#endif
+
+		puts("Still running... Doing machine reset.\n");
+		fflush(stdout);
+
 		f_write("/proc/sysrq-trigger", "s", 1, 0 , 0); /* sync disks */
 		sleep(1);
 		f_write("/proc/sysrq-trigger", "b", 1, 0 , 0); /* machine reset */
