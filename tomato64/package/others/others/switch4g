@@ -689,9 +689,10 @@ setPIN() {
 					COUNT=$((COUNT+1))
 					sleep 1
 				} || {
-					[ -n "$PIN" ] && { wayOut "4G MODEM - Error reading SIM status!"; }
+					break
 				}
 			done
+			[ -n "$PIN" -a "$COUNT" -ge "3" ] && { wayOut "4G MODEM - Error reading SIM status!"; }
 
 			PIN_STATUS=$(echo "$STATUS" | grep CPIN: | cut -d ":" -f2 | awk '{$1=$1};1')
 		} || {
@@ -713,7 +714,7 @@ setPIN() {
 				[ "$PIN_EXT_STATUS" -eq "1" -a "$PIN_VERIFY_TRIES" -lt "3" ] && { wayOut "4G MODEM - PIN verify count value is $PIN_VERIFY_TRIES this is below the limit of 3" ; }
 				[ -n "$PIN" ] && {
 					PINVAL=$(MODE="AT+CPIN=\"$PIN\"" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom)
-					[ "$(echo "$PINVAL" | grep ERR)" ] && { wayOut "4G MODEM - Unable to verify PIN" ; }
+					[ -z "$(echo "$PINVAL" | grep OK)" -o "$(echo "$PINVAL" | grep ERR)" ] && { wayOut "4G MODEM - Unable to verify PIN" ; }
 					IS_DONE=1
 				} || {
 					wayOut "4G MODEM - PIN not specified but required"
