@@ -328,7 +328,7 @@ extern void del_bsd_defaults(void);
 #ifdef TCONFIG_USB
 extern void start_usb(void);
 extern void stop_usb(void);
-extern void remove_usb_module(void);
+//extern void remove_usb_all_modules(void);
 extern int dir_is_mountpoint(const char *root, const char *dir);
 extern void hotplug_usb(void);
 extern void remove_storage_main(int shutdn);

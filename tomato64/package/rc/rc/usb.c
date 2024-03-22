@@ -67,7 +67,7 @@ int uswap_mountpoint(struct mntent *mnt, uint flags);
  * Do this here, because Tomato doesn't have the sysctl command.
  * With these values, a disk block should be written to disk within 2 seconds.
  */
-void tune_bdflush(void)
+static void tune_bdflush(void)
 {
 	f_write_string("/proc/sys/vm/dirty_expire_centisecs", "200", 0, 0);
 	f_write_string("/proc/sys/vm/dirty_writeback_centisecs", "200", 0, 0);
@@ -93,34 +93,152 @@ static int p9100d_sig(int sig)
 	return -1;
 }
 
+static void remove_usb_prn_module(void)
+{
+	/* only find and kill the printer server we started (port 0) */
+	p9100d_sig(SIGTERM);
+	modprobe_r(USBPRINTER_MOD);
+}
+
+static void remove_usb_storage_module(void)
+{
+#ifdef TCONFIG_BCMARM
+	modprobe_r("ext4");
+	modprobe_r("crc16");
+	modprobe_r("jbd2");
+#else
+	modprobe_r("ext2");
+	modprobe_r("ext3");
+	modprobe_r("jbd");
+#endif
+	modprobe_r("mbcache");
+	modprobe_r("vfat");
+	modprobe_r("fat");
+	modprobe_r("exfat");
+#if defined(TCONFIG_UFSDA) || defined(TCONFIG_UFSDN)
+	modprobe_r("ufsd");
+#endif
+#ifdef TCONFIG_TUXERA
+	modprobe_r("tntfs");
+#endif
+#ifdef TCONFIG_HFS
+	modprobe_r("hfs");
+	modprobe_r("hfsplus");
+#endif
+#ifdef TCONFIG_TUX_HFS
+	modprobe_r("thfsplus");
+#endif
+#ifdef TCONFIG_ZFS
+	modprobe_r("zfs");
+#endif
+
+	modprobe_r("fuse");
+	sleep(1);
+
+#ifdef TCONFIG_SAMBASRV
+	modprobe_r("nls_cp437");
+	modprobe_r("nls_cp850");
+	modprobe_r("nls_cp852");
+	modprobe_r("nls_cp866");
+	modprobe_r("nls_cp932");
+	modprobe_r("nls_cp936");
+	modprobe_r("nls_cp949");
+	modprobe_r("nls_cp950");
+#endif
+	modprobe_r(USBSTORAGE_MOD);
+	modprobe_r(SD_MOD);
+#ifndef TOMATO64
+	modprobe_r(SCSI_WAIT_MOD);
+#endif /* TOMATO64 */
+	modprobe_r(SCSI_MOD);
+#ifdef TCONFIG_MICROSD
+	if (nvram_get_int("usb_mmc") != 1) {
+		modprobe_r("sdhci");
+		modprobe_r("mmc_block");
+		modprobe_r("mmc_core");
+	}
+#endif
+}
+
+static void remove_usb_host_module(void)
+{
+	umount("/proc/bus/usb"); /* unmount usb device filesystem */
+	modprobe_r(USBOHCI_MOD);
+	modprobe_r(USBUHCI_MOD);
+	modprobe_r(USB20_MOD);
+#ifdef TCONFIG_BCMARM
+	modprobe_r(USB30_MOD);
+#endif
+	modprobe_r(USBCORE_MOD);
+}
+
+static void remove_usb_ups_module(void)
+{
+#ifdef TCONFIG_UPS
+	modprobe_r("usbhid");
+	modprobe_r("hid");
+	modprobe_r("input-core");
+#endif
+}
+
+static void remove_usb_modem_modules(void)
+{
+	/* 4G */
+	modprobe_r("qmi_wwan");
+#ifdef TCONFIG_BCMARM
+	modprobe_r("huawei_cdc_ncm");
+#else
+	modprobe_r("huawei_ether");
+#endif
+	modprobe_r("cdc_ncm");
+	modprobe_r("rndis_host");
+	modprobe_r("cdc_ether");
+
+	/* 3G */
+	modprobe_r("sierra");
+	modprobe_r("option");
+
+	//modprobe_r("usbserial"); /* may crash */
+}
+
+/*
+void remove_usb_all_modules(void)
+{
+	remove_usb_modem_modules();
+	remove_usb_ups_module();
+	remove_usb_prn_module();
+	remove_usb_storage_module();
+	remove_usb_host_module();
+}
+*/
 void start_usb(void)
 {
 	char param[32];
 	int i = 255;
 
 #ifdef TCONFIG_BCMARM
-#ifdef TCONFIG_BCMSMP
+# ifdef TCONFIG_BCMSMP
 	int fd;
-#endif
-#if defined(TCONFIG_BCM714) || defined(TCONFIG_BCM7)
+# endif
+# if defined(TCONFIG_BCM714) || defined(TCONFIG_BCM7)
 	/* get router model */
 	int model = get_model();
 	static int usb_reset_once = 0;
 
 	if (!usb_reset_once) {
 		switch(model) {
-#ifdef TCONFIG_BCM7
-#ifdef TCONFIG_AC3200
+#  ifdef TCONFIG_BCM7
+#   ifdef TCONFIG_AC3200
 			case MODEL_RTAC3200:
-#endif /* TCONFIG_AC3200 */
-#endif
-#ifdef TCONFIG_BCM714
+#   endif /* TCONFIG_AC3200 */
+#  endif
+#  ifdef TCONFIG_BCM714
 			case MODEL_RTAC3100:
 			case MODEL_RTAC88U:
-#ifdef TCONFIG_AC5300
+#   ifdef TCONFIG_AC5300
 			case MODEL_RTAC5300:
-#endif
-#endif /* TCONFIG_BCM714 */
+#   endif
+#  endif /* TCONFIG_BCM714 */
 				set_gpio(GPIO_09, T_LOW); /* disable USB power */
 				usleep(25 * 1000); /* wait 25 ms */
 				set_gpio(GPIO_09, T_HIGH); /* enable USB power */
@@ -128,8 +246,8 @@ void start_usb(void)
 				usb_reset_once = 1;
 				logmsg(LOG_INFO, "%s: FreshTomato - reset USB Power Supply (done)", nvram_safe_get("t_model_name"));
 				break;
-#ifdef TCONFIG_BCM7
-#ifdef TCONFIG_AC3200
+#  ifdef TCONFIG_BCM7
+#   ifdef TCONFIG_AC3200
 			case MODEL_R8000:
 				set_gpio(GPIO_00, T_LOW); /* disable USB power */
 				usleep(25 * 1000); /* wait 25 ms */
@@ -138,14 +256,14 @@ void start_usb(void)
 				usb_reset_once = 1;
 				logmsg(LOG_INFO, "%s: FreshTomato - reset USB Power Supply (done)", nvram_safe_get("t_model_name"));
 				break;
-#endif /* TCONFIG_AC3200 */
-#endif
+#   endif /* TCONFIG_AC3200 */
+#  endif
 			default:
 				/* nothing to do right now! */
 				break;
 		}
 	}
-#endif /* TCONFIG_BCM714 OR TCONFIG_BCM7 */
+# endif /* TCONFIG_BCM714 OR TCONFIG_BCM7 */
 	/* nothing to do right now for ARM! */
 	/* enable USB2/3 power by default - see file bcm5301x_pcie.c */
 
@@ -312,9 +430,9 @@ void start_usb(void)
 
 #ifdef TCONFIG_HFS
 			if (nvram_get_int("usb_fs_hfs")
-#ifdef TCONFIG_BCMARM
+# ifdef TCONFIG_BCMARM
 			    && nvram_match("usb_hfs_driver", "kernel")
-#endif
+# endif
 			) {
 				modprobe("hfs");
 				modprobe("hfsplus");
@@ -345,13 +463,13 @@ void start_usb(void)
 #ifdef TCONFIG_BCMARM
 		if (nvram_get_int("usb_usb3") == 1) {
 			modprobe(USB30_MOD);
-#ifdef TCONFIG_BCMSMP
+# ifdef TCONFIG_BCMSMP
 			sleep(1);
 			if ((fd = open("/proc/irq/163/smp_affinity", O_RDWR)) >= 0) {
 				close(fd);
 				f_write_string("/proc/irq/112/smp_affinity", TOMATO_CPU1, 0, 0); /* xhci_hcd --> CPU 1 */
 			}
-#endif
+# endif
 		}
 #endif /* TCONFIG_BCMARM */
 
@@ -391,7 +509,7 @@ void start_usb(void)
 			}
 		}
 		if (nvram_get_int("idle_enable") == 1)
-			xstart( "sd-idle" );
+			xstart("sd-idle");
 
 #ifdef TCONFIG_UPS
 		if (nvram_get_int("usb_apcupsd") == 1) {
@@ -414,128 +532,7 @@ void start_usb(void)
  */
 		if (nvram_match("log_wm", "1") && nvram_match("webmon_bkp", "1"))
 			xstart("service", "firewall", "restart");
-
 	}
-}
-
-void remove_usb_modem_modules(void)
-{
-	/* 3G */
-	modprobe_r("sierra");
-	modprobe_r("option");
-	modprobe_r("cdc-acm");
-
-	/* 4G */
-	modprobe_r("cdc_mbim");
-	modprobe_r("qmi_wwan");
-	modprobe_r("cdc_wdm");
-#ifdef TCONFIG_BCMARM
-	modprobe_r("huawei_cdc_ncm");
-#else
-	modprobe_r("huawei_ether");
-#endif
-	modprobe_r("cdc_ncm");
-	modprobe_r("rndis_host");
-	modprobe_r("cdc_ether");
-
-	modprobe_r("usbnet");
-	//modprobe_r("usbserial"); /* may crash */
-}
-
-void remove_usb_ups_module(void)
-{
-#ifdef TCONFIG_UPS
-	modprobe_r("usbhid");
-	modprobe_r("hid");
-	modprobe_r("input-core");
-#endif
-}
-
-void remove_usb_prn_module(void)
-{
-	/* only find and kill the printer server we started (port 0) */
-	p9100d_sig(SIGTERM);
-	modprobe_r(USBPRINTER_MOD);
-}
-
-void remove_usb_storage_module(void)
-{
-#ifdef TCONFIG_BCMARM
-	modprobe_r("ext4");
-	modprobe_r("crc16");
-	modprobe_r("jbd2");
-#else
-	modprobe_r("ext2");
-	modprobe_r("ext3");
-	modprobe_r("jbd");
-#endif
-	modprobe_r("mbcache");
-	modprobe_r("vfat");
-	modprobe_r("fat");
-	modprobe_r("exfat");
-#if defined(TCONFIG_UFSDA) || defined(TCONFIG_UFSDN)
-	modprobe_r("ufsd");
-#endif
-#ifdef TCONFIG_TUXERA
-	modprobe_r("tntfs");
-#endif
-#ifdef TCONFIG_HFS
-	modprobe_r("hfs");
-	modprobe_r("hfsplus");
-#endif
-#ifdef TCONFIG_TUX_HFS
-	modprobe_r("thfsplus");
-#endif
-#ifdef TCONFIG_ZFS
-	modprobe_r("zfs");
-#endif
-
-	modprobe_r("fuse");
-	sleep(1);
-
-#ifdef TCONFIG_SAMBASRV
-	modprobe_r("nls_cp437");
-	modprobe_r("nls_cp850");
-	modprobe_r("nls_cp852");
-	modprobe_r("nls_cp866");
-	modprobe_r("nls_cp932");
-	modprobe_r("nls_cp936");
-	modprobe_r("nls_cp949");
-	modprobe_r("nls_cp950");
-#endif
-	modprobe_r(SD_MOD);
-	modprobe_r(USBSTORAGE_MOD);
-#ifndef TOMATO64
-	modprobe_r(SCSI_WAIT_MOD);
-#endif /* TOMATO64 */
-	modprobe_r(SCSI_MOD);
-#ifdef TCONFIG_MICROSD
-	if (nvram_get_int("usb_mmc") != 1) {
-		modprobe_r("sdhci");
-		modprobe_r("mmc_block");
-		modprobe_r("mmc_core");
-	}
-#endif
-}
-
-void remove_usb_host_module(void)
-{
-	modprobe_r(USBOHCI_MOD);
-	modprobe_r(USBUHCI_MOD);
-	modprobe_r(USB20_MOD);
-#ifdef TCONFIG_BCMARM
-	modprobe_r(USB30_MOD);
-#endif
-	modprobe_r(USBCORE_MOD);
-}
-
-void remove_usb_module(void)
-{
-	remove_usb_modem_modules();
-	remove_usb_ups_module();
-	remove_usb_prn_module();
-	remove_usb_storage_module();
-	remove_usb_host_module();
 }
 
 void stop_usb(void)
@@ -549,8 +546,9 @@ void stop_usb(void)
 	stop_ups();
 #endif
 	remove_usb_ups_module();
-	remove_usb_modem_modules();
 	remove_usb_prn_module();
+	if (nvram_get_int("remove_modem_modules")) /* let's user decide (may cause kernel panic, at least on MIPS RT-AC */
+		remove_usb_modem_modules();
 
 	if (nvram_get_int("idle_enable") == 0)
 		killall("sd-idle", SIGTERM);
@@ -564,15 +562,14 @@ void stop_usb(void)
 		remove_usb_storage_module();
 	}
 
-	if (disabled || nvram_get_int("usb_ohci") != 1)
+	if ((disabled) || (nvram_get_int("usb_ohci") != 1))
 		modprobe_r(USBOHCI_MOD);
-	if (disabled || nvram_get_int("usb_uhci") != 1)
+	if ((disabled) || (nvram_get_int("usb_uhci") != 1))
 		modprobe_r(USBUHCI_MOD);
-	if (disabled || nvram_get_int("usb_usb2") != 1)
+	if ((disabled) || (nvram_get_int("usb_usb2") != 1))
 		modprobe_r(USB20_MOD);
-
 #ifdef TCONFIG_BCMARM
-	if (disabled || nvram_get_int("usb_xhci") != 1)
+	if ((disabled) || (nvram_get_int("usb_xhci") != 1))
 		modprobe_r(USB30_MOD);
 
 	/* check USB LED */
@@ -596,16 +593,8 @@ void stop_usb(void)
 #endif
 
 	/* only unload core modules if usb is disabled */
-	if (disabled) {
-		umount("/proc/bus/usb"); /* unmount usb device filesystem */
-		modprobe_r(USBOHCI_MOD);
-		modprobe_r(USBUHCI_MOD);
-		modprobe_r(USB20_MOD);
-#ifdef TCONFIG_BCMARM
-		modprobe_r(USB30_MOD);
-#endif
-		modprobe_r(USBCORE_MOD);
-	}
+	if (disabled)
+		remove_usb_host_module();
 
 #ifdef TCONFIG_BCMARM
 	/* nothing to do right now for ARM! */
@@ -689,12 +678,12 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 					if (strncmp(type, "hfsplus", 7) == 0)
 						snprintf(options + strlen(options), sizeof(options) - strlen(options), ",force" + (options[0] ? 0 : 1));
 				}
-#ifdef TCONFIG_TUX_HFS
+# ifdef TCONFIG_TUX_HFS
 				else if (nvram_match("usb_hfs_driver", "tuxera")) {
 					/* override fs fype */
 					type = "thfsplus";
 				}
-#endif
+# endif
 				if (nvram_invmatch("usb_hfs_opt", ""))
 					snprintf(options + strlen(options), sizeof(options) - strlen(options), "%s%s", options[0] ? "," : "", nvram_safe_get("usb_hfs_opt"));
 			}
@@ -718,29 +707,29 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 			if (ret != 0 && strncmp(type, "ntfs", 4) == 0) {
 				snprintf(options + strlen(options), sizeof(options) - strlen(options), ",noatime,nodev" + (options[0] ? 0 : 1));
 				if (nvram_get_int("usb_fs_ntfs")) {
-#ifdef TCONFIG_BCMARM
+# ifdef TCONFIG_BCMARM
 #ifndef TOMATO64
 					if (nvram_match("usb_ntfs_driver", "ntfs3g"))
 						ret = eval("ntfs-3g", "-o", options, mnt_dev, mnt_dir);
-#if defined(TCONFIG_UFSDA) || defined(TCONFIG_UFSDN)
+#  if defined(TCONFIG_UFSDA) || defined(TCONFIG_UFSDN)
 					else if (nvram_match("usb_ntfs_driver", "paragon"))
 						ret = eval("mount", "-t", "ufsd", "-o", options, "-o", "force", mnt_dev, mnt_dir);
-#endif
-#ifdef TCONFIG_TUXERA
+#  endif
+#  ifdef TCONFIG_TUXERA
 					else if (nvram_match("usb_ntfs_driver", "tuxera"))
 						ret = eval("mount", "-t", "tntfs", "-o", options, mnt_dev, mnt_dir);
-#endif
+#  endif
 #endif /* TOMATO64 */
 #ifdef TOMATO64
 					ret = eval("mount", "-t", "ntfs3", "-o", options, mnt_dev, mnt_dir);
 #endif /* TOMATO64 */
-#else /* TCONFIG_BCMARM */
-#ifdef TCONFIG_UFSD
+# else /* TCONFIG_BCMARM */
+#  ifdef TCONFIG_UFSD
 					ret = eval("mount", "-t", "ufsd", "-o", options, "-o", "force", mnt_dev, mnt_dir);
-#else
+#  else
 					ret = eval("ntfs-3g", "-o", options, mnt_dev, mnt_dir);
-#endif
-#endif /* TCONFIG_BCMARM */
+#  endif
+# endif /* TCONFIG_BCMARM */
 				}
 			}
 #endif /* TCONFIG_NTFS */
@@ -748,7 +737,7 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 #ifdef TCONFIG_HFS
 			/* try rw mount for kernel HFS/HFS+ driver (guess fs) */
 			if (ret != 0 && (strncmp(type, "hfs", 3) == 0)) {
-#ifdef TCONFIG_BCMARM
+# ifdef TCONFIG_BCMARM
 				eval("fsck.hfsplus", "-f", mnt_dev);
 
 				ret = eval("mount", "-o", options, mnt_dev, mnt_dir);
@@ -756,9 +745,9 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 					logmsg(LOG_INFO, "USB: %s: attempt to mount rw after unclean unmounting succeeded!", type);
 
 				logmsg(LOG_DEBUG, "*** %s: mount cmd: mount -o %s %s %s, return: %d", __FUNCTION__, options, mnt_dev, mnt_dir, ret);
-#else /* TCONFIG_BCMARM */
+# else /* TCONFIG_BCMARM */
 				ret = eval("mount", "-o", "noatime,nodev", mnt_dev, mnt_dir);
-#endif /* TCONFIG_BCMARM */
+# endif /* TCONFIG_BCMARM */
 			}
 #endif /* TCONFIG_HFS */
 
@@ -1000,7 +989,7 @@ int mount_partition(char *dev_name, int host_num, char *dsc_name, char *pt_name,
 	ret = mount_r(dev_name, mountpoint, type);
 
 done:
-	if (ret == MOUNT_VAL_RONLY || ret == MOUNT_VAL_RW) {
+	if ((ret == MOUNT_VAL_RONLY) || (ret == MOUNT_VAL_RW)) {
 		/* Run user *.autorun and post-mount scripts if any. */
 		run_userfile(mountpoint, ".autorun", mountpoint, 3);
 		if (nvram_get_int("usb_automount"))
@@ -1051,7 +1040,7 @@ void hotplug_usb_storage_device(int host_no, int action_add, uint flags)
 	logmsg(LOG_DEBUG, "*** %s: host %d action: %d\n", __FUNCTION__, host_no, action_add);
 
 	if (action_add) {
-		if (nvram_get_int("usb_storage") && (nvram_get_int("usb_automount") || action_add < 0)) {
+		if (nvram_get_int("usb_storage") && ((nvram_get_int("usb_automount")) || (action_add < 0))) {
 			/* Do not probe the device here. It's either initiated by user,
 			 * or hotplug_usb() already did.
 			 */
@@ -1136,13 +1125,13 @@ static inline void usbled_proc(char *device, int add)
 		case MODEL_RTAC68U:
 		case MODEL_RTAC68UV3:
 		case MODEL_RTAC1900P:
-#ifdef TCONFIG_BCM714
+# ifdef TCONFIG_BCM714
 		case MODEL_RTAC3100:
 		case MODEL_RTAC88U:
-#ifdef TCONFIG_AC5300
+#  ifdef TCONFIG_AC5300
 		case MODEL_RTAC5300:
-#endif
-#endif /* TCONFIG_BCM714 */
+#  endif
+# endif /* TCONFIG_BCM714 */
 		case MODEL_R6400:
 		case MODEL_R6400v2:
 		case MODEL_R6700v1:
@@ -1150,9 +1139,9 @@ static inline void usbled_proc(char *device, int add)
 		case MODEL_R6900:
 		case MODEL_R7000:
 		case MODEL_XR300:
-#ifdef TCONFIG_AC3200
+# ifdef TCONFIG_AC3200
 		case MODEL_R8000:
-#endif
+# endif
 		case MODEL_F9K1113v2_20X0:
 		case MODEL_F9K1113v2:
 			/* switch usb2 --> usb1 and usb4 --> usb3 */
@@ -1335,7 +1324,7 @@ void hotplug_usb(void)
 
 	if (!nvram_get_int("usb_enable"))
 		return;
-	if (!action || ((!interface || !product) && !is_block))
+	if ((!action) || ((!interface || !product) && !is_block))
 		return;
 
 #ifdef TOMATO64
