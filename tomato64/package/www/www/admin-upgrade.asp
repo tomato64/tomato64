@@ -36,11 +36,11 @@ function upgrade() {
 	name = fixFile(fom.file.value);
 /* TOMATO64-REMOVE-BEGIN */
 	if (name.search(/\.(bin|trx|chk)$/i) == -1) {
-		alert('Expecting a ".bin" or ".trx" file.');
+		alert('Expecting a ".bin" or ".trx" file');
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 	if (name.search(/\.(tzst)$/i) == -1) {
-		alert('Expecting a ".tzst" file.');
+		alert('Expecting a ".tzst" file');
 /* TOMATO64-END */
 		return;
 	}
@@ -61,16 +61,11 @@ function upgrade() {
 	fom.action += '?_reset='+(E('f_reset').checked ? 1 : 0);
 	form.addIdAction(fom);
 
-	localStorage.clear();
 	fom.submit();
 }
 
 function earlyInit() {
-	if (nvram.remote_upgrade == 1)
-		E('upgradenotice').style.display = 'none';
-	else
-		E('upgradenotice').style.display = 'block';
-
+	E('upgradenotice').style.display = (nvram.remote_upgrade == 1 ? 'none' : 'block');
 	E('afu-size').innerHTML = '&nbsp; '+scaleSize(sysinfo.totalfreeram)+'&nbsp; <small>(aprox. size that can be buffered completely in RAM)<\/small>';
 /* JFFS2-BEGIN */
 	if (nvram.jffs2_on != 0 && nvram.jffs2_auto_unmount == 0) {

@@ -11,7 +11,7 @@ No part of this file may be used without permission.
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Restoring Defaults...</title>
-<link rel="stylesheet" type="text/css" href="/tomato.css">
+<link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
 <style>
 div.tomato-grid.container-div {
@@ -30,17 +30,17 @@ function tick() {
 	var e = document.getElementById('continue');
 	e.value = n--;
 	if (n < 0) {
-		e.value = "Continue";
+		e.value = 'Continue';
 		return;
 	}
 	if (n == 59) {
-		e.style = "cursor:pointer";
+		e.style = 'cursor:pointer';
 		e.disabled = false;
 	}
 	setTimeout(tick, 1000);
 }
 function go() {
-	window.location = "http://192.168.1.1/";
+	window.location = 'http://192.168.1.1/';
 }
 function init() {
 	tick();

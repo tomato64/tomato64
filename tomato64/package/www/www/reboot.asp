@@ -4,7 +4,7 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Rebooting...</title>
-<link rel="stylesheet" type="text/css" href="/tomato.css">
+<link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
 <style>
 div.tomato-grid.container-div {
@@ -21,30 +21,30 @@ div.tomato-grid.container-div {
 <script>
 var n = 90 + parseInt('0<% nv("wait_time"); %>');
 function tick() {
-	var e = document.getElementById("continue");
+	var e = document.getElementById('continue');
 	e.value = n--;
 	if (n < 0) {
-		e.value = "Continue";
+		e.value = 'Continue';
 		return;
 	}
 	if (n == 69) {
-		e.style = "cursor:pointer";
+		e.style = 'cursor:pointer';
 		e.disabled = false;
 	}
 	setTimeout(tick, 1000);
 }
 
 function go() {
-	window.location.replace("/");
+	window.location.replace('/');
 }
 
 function init() {
 	var resmsg = '';
 //	<% resmsg(); %>
 	if (resmsg.length) {
-		e = document.getElementById("msg");
+		e = document.getElementById('msg');
 		e.innerHTML = resmsg;
-		e.style.display = "block";
+		e.style.display = 'block';
 	}
 	tick();
 }
