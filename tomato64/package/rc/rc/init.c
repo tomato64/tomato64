@@ -271,6 +271,35 @@ static void setcaldata()
 		pclose(fp);
 	}
 }
+
+/* For Netgear Router to set rxgainerr data (get infos at board_data --> router specifc) (so far only EX7000) */
+static void setrxgainerrdata()
+{
+	int mtd = getMTD("board_data");
+	char cmd[64];
+	char line[256];
+	FILE *fp;
+
+	if (mtd == -1)
+		return;
+
+	snprintf(cmd, sizeof(cmd), "strings /dev/mtd%dro | grep rxgainerr", mtd);
+	fp = popen(cmd, "r");
+
+	if (fp != NULL) {
+		while (fgets(line, sizeof(line) - 1, fp) != NULL) {
+			if (strstr(line, "rxgainerr")) {
+				char *var, *val;
+				var = strtok(line, "=");
+				val = strtok(NULL, "=");
+
+				if ((var != NULL) && (val != NULL))
+					nvram_set(var, val);
+			}
+		}
+		pclose(fp);
+	}
+}
 #endif /* CONFIG_BCMWL6A */
 #endif /* TOMATO64 */
 
@@ -995,6 +1024,7 @@ static int init_vlan_ports(void)
 	case MODEL_R6700v3:
 	case MODEL_R6900:
 	case MODEL_R7000:
+	case MODEL_EX7000:
 	case MODEL_XR300:
 	case MODEL_RTN18U:
 	case MODEL_RTAC66U_B1: /* also for RT-N66U_C1 and RT-AC1750_B1 */
@@ -1589,6 +1619,7 @@ static void check_bootnv(void)
 	case MODEL_AC1450:
 	case MODEL_R6900:
 	case MODEL_R7000:
+	case MODEL_EX7000:
 	case MODEL_R6700v1:
 	case MODEL_R6400:
 	case MODEL_R6200v2:
@@ -8072,6 +8103,281 @@ static int init_nvram(void)
 		}
 		if (!nvram_get_int("caldata_ready")) { /* last step: set router specific cal data if not yet applied */
 			setcaldata();
+			nvram_set("caldata_ready", "1");
+		}
+		break;
+	case MODEL_EX7000:
+		mfr = "Netgear";
+		name = "EX7000";
+		features = SUP_SES | SUP_80211N | SUP_1000ET | SUP_80211AC;
+#ifdef TCONFIG_USB
+		nvram_set("usb_uhci", "-1");
+#endif
+		if (!nvram_match("t_fix1", (char *)name)) {
+			nvram_set("vlan1hwname", "et0");
+			nvram_set("vlan2hwname", "et0");
+			nvram_set("lan_ifname", "br0");
+			nvram_set("landevs", "vlan1 wl0 wl1");
+			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
+			nvram_set("wan_ifnames", "vlan2");
+			nvram_set("wan_ifnameX", "vlan2");
+			nvram_set("wandevs", "vlan2");
+			nvram_set("wl_ifnames", "eth1 eth2");
+			nvram_set("wl_ifname", "eth1");
+			nvram_set("wl0_ifname", "eth1");
+			nvram_set("wl1_ifname", "eth2");
+			nvram_set("wl0_vifnames", "wl0.1 wl0.2 wl0.3");
+			nvram_set("wl1_vifnames", "wl1.1 wl1.2 wl1.3");
+
+			/* disable second *fake* LAN interface - just in case! */
+			nvram_unset("et1macaddr");
+
+			/* fix MAC addresses */
+			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));	/* get et0 MAC address for LAN */
+			inc_mac(s, +2, sizeof(s));				/* MAC + 1 will be for WAN */
+			nvram_set("0:macaddr", s);				/* fix WL mac for 2,4G (do not use the same MAC address like for LAN) */
+			nvram_set("wl0_hwaddr", s);
+			inc_mac(s, +4, sizeof(s));				/* do not overlap with VIFs */
+			nvram_set("1:macaddr", s);				/* fix WL mac for 5G */
+			nvram_set("wl1_hwaddr", s);
+
+			/* usb3.0 settings */
+			nvram_set("usb_usb3", "1");
+			nvram_set("xhci_ports", "1-1");
+			nvram_set("ehci_ports", "2-1 2-2");
+			nvram_set("ohci_ports", "3-1 3-2");
+
+			/* misc settings */
+			nvram_set("boot_wait", "on");
+			nvram_set("wait_time", "3");
+
+			/* wifi settings/channels */
+			nvram_set("wl0_bw_cap","3");
+			nvram_set("wl0_chanspec","6u");
+			nvram_set("wl0_channel","6");
+			nvram_set("wl0_nbw","40");
+			nvram_set("wl0_nctrlsb", "upper");
+			nvram_set("wl1_bw_cap", "7");
+			nvram_set("wl1_chanspec", "36/80");
+			nvram_set("wl1_channel", "36");
+			nvram_set("wl1_nbw","80");
+			nvram_set("wl1_nbw_cap","3");
+			nvram_set("wl1_nctrlsb", "lower");
+
+			/* wifi country settings */
+			nvram_set("0:regrev", "12");
+			nvram_set("1:regrev", "12");
+			nvram_set("0:ccode", "SG");
+			nvram_set("1:ccode", "SG");
+
+			/* set devpath (device path) for wl driver */
+			nvram_set("devpath0", "pci/1/1/");
+			nvram_set("devpath1", "pci/2/1/");
+
+			struct nvram_tuple ex7000_0_params[] = {
+				/* 2.4 GHz defaults */
+				{ "aa2g", "7" , 0 },
+				{ "agbg0", "0x0" , 0 },
+				{ "agbg1", "0x0" , 0 },
+				{ "agbg2", "0x0" , 0 },
+				{ "antswitch", "0" , 0 },
+				{ "boardflags2", "0x2" , 0 },
+				{ "boardflags3", "0x4000001" , 0 },
+				{ "boardflags", "0x1000" , 0 },
+				{ "boardrev", "0x1421" , 0 },
+				{ "boardvendor", "0x14e4" , 0 },
+				{ "cckbw20ul2gpo", "0" , 0 },
+				{ "cckbw202gpo", "0" , 0 },
+				//{ "ccode", "E0" , 0 }, /* use FT default SG 12 */
+				{ "devid", "0x43a1" , 0 },
+				{ "dot11agduphrpo", "0" , 0 },
+				{ "dot11agduplrpo", "0" , 0 },
+				{ "dot11agofdmhrbw202gpo", "0xAECA" , 0 },
+				{ "epagain2g", "0" , 0 },
+				{ "femctrl", "6" , 0 },
+				{ "gainctrlsph", "0" , 0 },
+				{ "ledbh0", "11" , 0 },
+				{ "ledbh1", "11" , 0 },
+				{ "ledbh2", "11" , 0 },
+				{ "ledbh3", "11" , 0 },
+				{ "maxp2ga0", "106" , 0 },
+				{ "maxp2ga1", "106" , 0 },
+				{ "maxp2ga2", "106" , 0 },
+				{ "mcsbw202gpo", "0xBA76A600" , 0 },
+				{ "mcsbw402gpo", "0xBA76A600" , 0 },
+				{ "ofdmlrbw202gpo", "0x6000" , 0 },
+				{ "pa2ga0", "0xFF2C,0x1B59,0xFCAF" , 0 },
+				{ "pa2ga1", "0xFF31,0x1B9A,0xFC9D" , 0 },
+				{ "pa2ga2", "0xFF1F,0x1A53,0xFCB1" , 0 },
+				{ "papdcap2g", "0" , 0 },
+				{ "pdgain2g", "21" , 0 },
+				{ "pdoffset2g40ma0", "15" , 0 },
+				{ "pdoffset2g40ma1", "15" , 0 },
+				{ "pdoffset2g40ma2", "15" , 0 },
+				{ "pdoffset2g40mvalid", "1" , 0 },
+				{ "pdoffset40ma0", "0" , 0 },
+				{ "pdoffset40ma1", "0" , 0 },
+				{ "pdoffset40ma2", "0" , 0 },
+				{ "pdoffset80ma0", "0" , 0 },
+				{ "pdoffset80ma1", "0" , 0 },
+				{ "pdoffset80ma2", "0" , 0 },
+				{ "phycal_tempdelta", "15" , 0 },
+				{ "pwr_scale_1db", "1" , 0 },
+				{ "rawtempsense", "0x1ff" , 0 },
+				//{ "regrev", "39" , 0 }, /* use FT default SG 12 */
+				//{ "rpcal2g", "0xfa02" , 0 }, /* EX7000 value from board_data */
+				{ "rpcal2g", "0x3ef", 0 }, /* use R7000 rpcal2g default - will be changed with setcaldata() */
+				{ "rxchain", "7" , 0 },
+				{ "rxgainerr2ga0", "63" , 0 }, /* R7000 and EX7000 default value (same at board_data) - will be changed with setrxgainerrdata() */
+				{ "rxgainerr2ga1", "31" , 0 }, /* R7000 and EX7000 default value (same at board_data) - will be changed with setrxgainerrdata() */
+				{ "rxgainerr2ga2", "31" , 0 }, /* R7000 and EX7000 default value (same at board_data) - will be changed with setrxgainerrdata() */
+				{ "rxgains2gelnagaina0", "3" , 0 },
+				{ "rxgains2gelnagaina1", "3" , 0 },
+				{ "rxgains2gelnagaina2", "3" , 0 },
+				{ "rxgains2gtrelnabypa0", "1" , 0 },
+				{ "rxgains2gtrelnabypa1", "1" , 0 },
+				{ "rxgains2gtrelnabypa2", "1" , 0 },
+				{ "rxgains2gtrisoa0", "3" , 0 },
+				{ "rxgains2gtrisoa1", "3" , 0 },
+				{ "rxgains2gtrisoa2", "3" , 0 },
+				{ "sromrev", "11" , 0 },
+				{ "tempcorrx", "0x3f" , 0 },
+				{ "tempoffset", "255" , 0 },
+				{ "temps_hysteresis", "5" , 0 },
+				{ "temps_period", "5" , 0 },
+				{ "tempsense_option", "0x3" , 0 },
+				{ "tempsense_slope", "0xff" , 0 },
+				{ "tempthresh", "120" , 0 },
+				{ "tssiposslope2g", "1" , 0 },
+				{ "tworangetssi2g", "0" , 0 },
+				{ "txchain", "7" , 0 },
+				{ "venvid", "0x14e4" , 0 },
+				{ "xtalfreq", "40000" , 0 },
+				{ 0, 0, 0 }
+			};
+
+			struct nvram_tuple ex7000_1_params[] = {
+				/* 5 GHz module defaults */
+				{ "aa5g", "7" , 0 },
+				{ "aga0", "0x0" , 0 },
+				{ "aga1", "0x0" , 0 },
+				{ "aga2", "0x0" , 0 },
+				{ "antswitch", "0" , 0 },
+				{ "boardflags2", "0x2" , 0 },
+				{ "boardflags3", "0x1" , 0 },
+				{ "boardflags", "0x30008000" , 0 },
+				{ "boardrev", "0x1421" , 0 },
+				{ "boardvendor", "0x14e4" , 0 },
+				//{ "ccode", "E0" , 0 }, /* use FT default SG 12 */
+				{ "devid", "0x43a2" , 0 },
+				{ "dot11agduphrpo", "0" , 0 },
+				{ "dot11agduplrpo", "0" , 0 },
+				{ "dot11agofdmhrbw202gpo", "0x8764" , 0 },
+				{ "epagain5g", "0" , 0 },
+				{ "femctrl", "6" , 0 },
+				{ "gainctrlsph", "0" , 0 },
+				{ "ledbh0", "11" , 0 },
+				{ "ledbh1", "11" , 0 },
+				{ "ledbh2", "11" , 0 },
+				{ "ledbh3", "11" , 0 },
+				{ "maxp5ga0", "106,106,106,106" , 0 },
+				{ "maxp5ga1", "106,106,106,106" , 0 },
+				{ "maxp5ga2", "106,106,106,106" , 0 },
+				{ "mcsbw205ghpo", "0xBA768600" , 0 },
+				{ "mcsbw205glpo", "0xBA768600" , 0 },
+				{ "mcsbw205gmpo", "0xBA768600" , 0 },
+				{ "mcsbw405ghpo", "0xBA768600" , 0 },
+				{ "mcsbw405glpo", "0xBA768600" , 0 },
+				{ "mcsbw405gmpo", "0xBA768600" , 0 },
+				{ "mcsbw805ghpo", "0xBA768888" , 0 },
+				{ "mcsbw805glpo", "0xBA768600" , 0 },
+				{ "mcsbw805gmpo", "0xBA768600" , 0 },
+				{ "mcsbw1605ghpo", "0" , 0 },
+				{ "mcsbw1605glpo", "0" , 0 },
+				{ "mcsbw1605gmpo", "0" , 0 },
+				{ "mcslr5ghpo", "0" , 0 },
+				{ "mcslr5glpo", "0" , 0 },
+				{ "mcslr5gmpo", "0" , 0 },
+				{ "pa5ga0", "0xFF45,0x1D51,0xFC9C,0xFF43,0x1C9B,0xFCAA,0xFF47,0x1CE9,0xFC9D,0xFF48,0x1BD6,0xFCC3" , 0 },
+				{ "pa5ga1", "0xFF41,0x1C09,0xFCB2,0xFF49,0x1CFA,0xFCA4,0xFF49,0x1D3F,0xFC95,0xFF48,0x1BD2,0xFCC3" , 0 },
+				{ "pa5ga2", "0xFF24,0x1AC4,0xFCBD,0xFF44,0x1CA2,0xFCA9,0xFF4E,0x1CE6,0xFCB2,0xFF49,0x1B5D,0xFCD2" , 0 },
+				{ "papdcap5g", "0" , 0 },
+				{ "pdgain5g", "4" , 0 },
+				{ "pdoffset40ma0", "0" , 0 },
+				{ "pdoffset40ma1", "0" , 0 },
+				{ "pdoffset40ma2", "0" , 0 },
+				{ "pdoffset80ma0", "0" , 0 },
+				{ "pdoffset80ma1", "0" , 0 },
+				{ "pdoffset80ma2", "0" , 0 },
+				{ "phycal_tempdelta", "15" , 0 },
+				{ "pwr_scale_1db", "1" , 0 },
+				{ "rawtempsense", "0x1ff" , 0 },
+				//{ "regrev", "996" , 0 }, /* use FT default SG 12 */
+				//{ "rpcal5gb0", "0x9568" , 0 }, /* EX7000 value from board_data */
+				//{ "rpcal5gb1", "0x9f6b" , 0 }, /* EX7000 value from board_data */
+				//{ "rpcal5gb2", "0xb176" , 0 }, /* EX7000 value from board_data */
+				//{ "rpcal5gb3", "0xb184" , 0 }, /* EX7000 value from board_data */
+				{ "rpcal5gb0", "0x7005", 0 }, /* use R7000 rpcal5g default - will be changed with setcaldata() */
+				{ "rpcal5gb1", "0x8403", 0 }, /* use R7000 rpcal5g default - will be changed with setcaldata() */
+				{ "rpcal5gb2", "0x6ff9", 0 }, /* use R7000 rpcal5g default - will be changed with setcaldata() */
+				{ "rpcal5gb3", "0x8509", 0 }, /* use R7000 rpcal5g default - will be changed with setcaldata() */
+				{ "rxchain", "7" , 0 },
+				//{ "rxgainerr5ga0", "-9,63,63,-8" , 0 }, /* EX7000 value from board_data */
+				//{ "rxgainerr5ga1", "2,31,31,2" , 0 },   /* EX7000 value from board_data */
+				//{ "rxgainerr5ga2", "0,31,31,-3" , 0 },  /* EX7000 value from board_data */
+				{ "rxgainerr5ga0", "63,63,63,63", 0 }, /* use R7000 rxgainerr5g default - will be changed with setrxgainerrdata() */
+				{ "rxgainerr5ga1", "31,31,31,31", 0 }, /* use R7000 rxgainerr5g default - will be changed with setrxgainerrdata() */
+				{ "rxgainerr5ga2", "31,31,31,31", 0 }, /* use R7000 rxgainerr5g default - will be changed with setrxgainerrdata() */
+				{ "rxgains5gelnagaina0", "3" , 0 },
+				{ "rxgains5gelnagaina1", "3" , 0 },
+				{ "rxgains5gelnagaina2", "3" , 0 },
+				{ "rxgains5ghelnagaina0", "3" , 0 },
+				{ "rxgains5ghelnagaina1", "3" , 0 },
+				{ "rxgains5ghelnagaina2", "3" , 0 },
+				{ "rxgains5ghtrelnabypa0", "1" , 0 },
+				{ "rxgains5ghtrelnabypa1", "1" , 0 },
+				{ "rxgains5ghtrelnabypa2", "1" , 0 },
+				{ "rxgains5ghtrisoa0", "3" , 0 },
+				{ "rxgains5ghtrisoa1", "3" , 0 },
+				{ "rxgains5ghtrisoa2", "3" , 0 },
+				{ "rxgains5gmelnagaina0", "3" , 0 },
+				{ "rxgains5gmelnagaina1", "3" , 0 },
+				{ "rxgains5gmelnagaina2", "3" , 0 },
+				{ "rxgains5gmtrelnabypa0", "1" , 0 },
+				{ "rxgains5gmtrelnabypa1", "1" , 0 },
+				{ "rxgains5gmtrelnabypa2", "1" , 0 },
+				{ "rxgains5gmtrisoa0", "5" , 0 },
+				{ "rxgains5gmtrisoa1", "3" , 0 },
+				{ "rxgains5gmtrisoa2", "3" , 0 },
+				{ "rxgains5gtrelnabypa0", "1" , 0 },
+				{ "rxgains5gtrelnabypa1", "1" , 0 },
+				{ "rxgains5gtrelnabypa2", "1" , 0 },
+				{ "rxgains5gtrisoa0", "3" , 0 },
+				{ "rxgains5gtrisoa1", "3" , 0 },
+				{ "rxgains5gtrisoa2", "3" , 0 },
+				{ "sromrev", "11" , 0 },
+				{ "subband5gver", "0x4" , 0 },
+				{ "tempcorrx", "0x3f" , 0 },
+				{ "tempoffset", "255" , 0 },
+				{ "temps_hysteresis", "5" , 0 },
+				{ "temps_period", "5" , 0 },
+				{ "tempsense_option", "0x3" , 0 },
+				{ "tempsense_slope", "0xff" , 0 },
+				{ "tempthresh", "120" , 0 },
+				{ "tssiposslope5g", "1" , 0 },
+				{ "tworangetssi5g", "0" , 0 },
+				{ "txchain", "7" , 0 },
+				{ "venid", "0x14e4" , 0 },
+				{ "xtalfreq", "40000" , 0 },
+				{ 0, 0, 0 }
+			};
+
+			set_defaults(ex7000_0_params, "0:%s");
+			set_defaults(ex7000_1_params, "1:%s");
+		}
+		if (!nvram_get_int("caldata_ready")) { /* last step: set router specific cal and rxgainerr data if not yet applied */
+			setcaldata();
+			setrxgainerrdata(); 
 			nvram_set("caldata_ready", "1");
 		}
 		break;

@@ -464,6 +464,11 @@ int buttons_main(int argc, char *argv[])
 		wlan_mask = 1 << 5;  /* wifi button (active LOW) */
 		ses_led = LED_DIAG; /* Use LED Diag for feedback if a button is pushed. Do not interfere with LED_AOSS --> used for WLAN SUMMARY LED */
 		break;
+	case MODEL_EX7000:
+		reset_mask = 1 << 6; /* reset button (active LOW) */
+		ses_mask = 1 << 4; /* wps button (active LOW) */
+		ses_led = LED_AOSS; /* Use LED AOSS (Netgear Logo LED) for feedback if a button is pushed */
+		break;
 	case MODEL_WZR1750:
 		reset_mask = 1 << 11; /* reset button (active LOW) */
 		ses_mask = 1 << 12; /* wps button (active LOW) */
@@ -615,10 +620,11 @@ int buttons_main(int argc, char *argv[])
 				led(LED_DMZ, LED_ON); /* turn LED_DMZ back on if used for feedback */
 
 #ifdef CONFIG_BCMWL6A
-			/* turn LED_AOSS (Power LED for Asus Router; WPS LED for Tenda Router AC15/AC18) back on if used for feedback (WPS Button); Check Startup LED setting (bit 2 used for LED_AOSS) */
+			/* turn LED_AOSS (Power LED for Asus Router; WPS LED for Tenda Router AC15/AC18; Netgear Logo LED for EX7000) back on if used for feedback (WPS Button); Check Startup LED setting (bit 2 used for LED_AOSS) */
 			if ((ses_led == LED_AOSS) && (nvram_get_int("sesx_led") & 0x04) &&
 			    ((model == MODEL_AC15)
 			     || (model == MODEL_AC18)
+			     || (model == MODEL_EX7000)
 			     || (model == MODEL_RTN18U)
 			     || (model == MODEL_RTAC56U)
 			     || (model == MODEL_RTAC66U_B1)

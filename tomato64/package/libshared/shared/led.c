@@ -184,6 +184,7 @@ int do_led(int which, int mode)
 	static int r6900[]	= {  13,    3,     9,  255,  -14,  -15,  254,   18,   17,   12};
 	static int xr300[]	= {   9,    2,     7,  255,  -10,  -11,  254,   12,   13,    8};
 	static int r7000[]	= {  13,    3,     9,  255,  -14,  -15,  254,   18,   17,   12};
+	static int ex7000[]	= {   8,  255,    12,  255,  255,   -1,  254,    5,  255,   10};
 	static int ac15[]	= { 254,  -99,   255,  255,  255,   -6,  254,  -14,  255,   -2};
 	static int ac18[]	= { 254,  -99,   255,  255,  255,   -6,  254,  -14,  255,   -2};
 	static int f9k1113v2[]	= { 255,   14,    12,  255,  255,   15,  255,   0,     1,  255};
@@ -574,6 +575,19 @@ int do_led(int which, int mode)
 			b = r7000[which];
 		}
 		break;
+	case MODEL_EX7000:
+		if (which == LED_WHITE) {
+			b = 12; /* color green gpio 12 (active LOW) */
+			c = 13; /* color red gpio 13 (active LOW) */
+		}
+		else if (which == LED_BRIDGE) { /* non GPIO LED */
+			do_led_bridge(mode);
+			b = ex7000[which];
+		}
+		else {
+			b = ex7000[which];
+		}
+		break;
 	case MODEL_AC15:
 		b = ac15[which];
 		if (which == LED_WLAN) { /* non GPIO LED */
@@ -821,6 +835,12 @@ void led_setup(void)
 			set_gpio(GPIO_03, T_HIGH); /* disable power led color amber */
 			disable_led_wanlan();
 			break;
+		case MODEL_EX7000:
+			set_gpio(GPIO_09, T_HIGH); /* disable WLAN_2G_LED_RED */
+			set_gpio(GPIO_11, T_HIGH); /* disable WLAN_5G_LED_RED */
+			set_gpio(GPIO_13, T_HIGH); /* disable FT LED WHITE (Internet) - Device to Extender LED_RED */
+			disable_led_wanlan();
+			break;
 		case MODEL_RTN18U:
 			set_gpio(GPIO_00, T_HIGH); /* disable power led color blue */
 			break;
@@ -902,6 +922,26 @@ void led_setup(void)
 			/* activate WAN port led */
 			set_gpio(GPIO_08, T_HIGH); /* R6700v1, R6900 and R7000: enable LED_WHITE / WAN LED with color amber (8) if ethernet cable is connected; switch to color white (9) with WAN up */
 			set_gpio(GPIO_09, T_LOW);
+			break;
+		case MODEL_EX7000:
+			/* activate WAN port led (Device to Extender LED in case EX7000) */
+			set_gpio(GPIO_12, T_HIGH); /* LED green off */
+			set_gpio(GPIO_13, T_LOW); /* LED red on */
+
+			set_gpio(GPIO_09, T_HIGH); /* disable WLAN_2G_LED_RED */
+			set_gpio(GPIO_11, T_HIGH); /* disable WLAN_5G_LED_RED */
+			if (nvram_match("wl0_radio", "1")) {
+				set_gpio(GPIO_08, T_LOW); /* enable WLAN_2G_LED_GREEN */
+			}
+			else {
+				set_gpio(GPIO_08, T_HIGH); /* disable WLAN_2G_LED_GREEN */
+			}
+			if (nvram_match("wl1_radio", "1")) {
+				set_gpio(GPIO_10, T_LOW); /* enable WLAN_5G_LED_GREEN */
+			}
+			else {
+				set_gpio(GPIO_10, T_HIGH); /* disable WLAN_5G_LED_GREEN */
+			}
 			break;
 #endif /* TCONFIG_AC3200 */
 		default:

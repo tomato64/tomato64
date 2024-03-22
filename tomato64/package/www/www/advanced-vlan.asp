@@ -117,6 +117,7 @@ switch (nvram['t_model_name']) {
 	case 'Netgear R6700v3':
 	case 'Netgear R6900':
 	case 'Netgear R7000':
+	case 'Netgear EX7000':
 	case 'Netgear XR300':
 	case 'Asus RT-AC5300':
 /* TOMATO64-BEGIN */
