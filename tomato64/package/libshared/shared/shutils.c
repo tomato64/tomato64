@@ -492,7 +492,7 @@ safe_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
  * @param	stream	file stream
  * @return	number of items successfully written
  */
-int
+size_t
 safe_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	size_t ret = 0;
