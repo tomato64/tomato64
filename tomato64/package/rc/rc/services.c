@@ -31,7 +31,7 @@
  *
  * Modified for Tomato Firmware
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2024 pedro
  *
  */
 
@@ -3505,35 +3505,37 @@ TOP:
 
 	if (strcmp(service, "upgrade") == 0) {
 		if (act_start) {
+			nvram_set("g_upgrade", "1");
+
 			if (nvram_get_int("webmon_bkp"))
 				xstart("/usr/sbin/webmon_bkp", "hourly"); /* make a copy before upgrade */
 
-			nvram_set("g_upgrade", "1");
 			stop_sched();
 			stop_cron();
-			killall("rstats", SIGTERM);
-			killall("cstats", SIGTERM);
-#ifdef TCONFIG_USB
-			restart_nas_services(1, 0); /* Samba, FTP and Media Server */
-#endif
-#ifdef TCONFIG_ZEBRA
-			stop_zebra();
-#endif
-#ifdef TCONFIG_BT
-			stop_bittorrent();
-#endif
 #ifdef TCONFIG_NGINX
 			stop_mysql();
 			stop_nginx();
 #endif
+#ifdef TCONFIG_NFS
+			stop_nfs();
+#endif
+#ifdef TCONFIG_USB
+			restart_nas_services(1, 0); /* Samba, FTP and Media Server */
+#endif
+#ifdef TCONFIG_BT
+			stop_bittorrent();
+#endif
+#ifdef TCONFIG_NOCAT
+			stop_nocat();
+#endif
 #ifdef TCONFIG_TOR
 			stop_tor();
 #endif
-			stop_tomatoanon();
-#ifdef TCONFIG_IRQBALANCE
-			stop_irqbalance();
-#endif
+			stop_adblock();
+			killall("rstats", SIGTERM);
+			killall("cstats", SIGTERM);
 			killall("buttons", SIGTERM);
+			stop_upnp();
 			if (!nvram_get_int("remote_upgrade")) {
 				killall("xl2tpd", SIGTERM);
 				killall("pppd", SIGTERM);
@@ -3541,21 +3543,28 @@ TOP:
 				killall("udhcpc", SIGTERM);
 				stop_wan();
 			}
-			else
-				stop_ntpd();
+			stop_ntpd();
+			stop_tomatoanon();
+			remove_conntrack();
+#ifdef TCONFIG_ZEBRA
+			stop_zebra();
+#endif
+#ifdef TCONFIG_IRQBALANCE
+			stop_irqbalance();
+#endif
 #ifdef TCONFIG_MDNS
 			stop_mdns();
 #endif
+#ifdef TCONFIG_HAVEGED
+			stop_haveged();
+#endif
+			stop_jffs2();
 			stop_syslog();
+			sleep(1);
 #ifdef TCONFIG_USB
 			remove_storage_main(1);
 			stop_usb();
-#ifndef TCONFIG_USBAP
-			remove_usb_module();
-#endif
 #endif /* TCONFIG_USB */
-			remove_conntrack();
-			stop_jffs2();
 		}
 		goto CLEAR;
 	}
