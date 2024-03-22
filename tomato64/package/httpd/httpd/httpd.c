@@ -50,7 +50,7 @@
  * Modified for Tomato Firmware
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2024 pedro
  *
  */
 
@@ -103,8 +103,8 @@ int post;
 int connfd = -1;
 FILE *connfp = NULL;
 struct sockaddr_storage clientsai;
-
 int header_sent;
+char pidfile[32] = "/var/run/httpd.pid";
 
 #ifdef TCONFIG_IPV6
 char client_addr[INET6_ADDRSTRLEN];
@@ -967,12 +967,12 @@ static void close_listen_sockets(void)
 
 int main(int argc, char **argv)
 {
+	FILE *pid_fp;
 	int c;
 	fd_set rfdset;
 	int i, n;
 	struct sockaddr_storage sai;
 	char bind[128];
-	char s[16];
 	char *port = NULL;
 #ifdef TCONFIG_IPV6
 	int ip6 = 0;
@@ -1038,9 +1038,12 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	memset(s, 0, sizeof(s));
-	snprintf(s, sizeof(s), "%d", getpid());
-	f_write_string("/var/run/httpd.pid", s, 0, 0644);
+	if (!(pid_fp = fopen(pidfile, "w"))) {
+		logerr(__FUNCTION__, __LINE__, pidfile);
+		return errno;
+	}
+	fprintf(pid_fp, "%d", getpid());
+	fclose(pid_fp);
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGALRM, SIG_IGN);
