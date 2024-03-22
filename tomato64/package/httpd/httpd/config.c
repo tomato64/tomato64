@@ -62,7 +62,6 @@ void wo_defaults(char *url)
 #endif /* TOMATO64 */
 
 			set_action(ACT_REBOOT);
-
 			sync();
 			//kill(1, SIGTERM);
 			reboot(RB_AUTOBOOT);
@@ -167,8 +166,7 @@ void wi_restore(char *url, int len, char *boundary)
 	error = NULL;
 
 ERROR:
-	if (buf)
-		free(buf);
+	free(buf);
 
 	if (file[0])
 		unlink(file);
@@ -189,11 +187,12 @@ void wo_restore(char *url)
 			killall("xl2tpd", SIGTERM);
 			killall("pppd", SIGTERM);
 		}
+
 		sleep(2);
 
 		set_action(ACT_REBOOT);
-		//kill(1, SIGTERM);
 		sync();
+		//kill(1, SIGTERM);
 		reboot(RB_AUTOBOOT);
 
 		exit(0);
