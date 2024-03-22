@@ -17,7 +17,7 @@
 
 <script>
 
-//	<% nvram("usb_enable,usb_uhci,usb_ohci,usb_usb2,usb_usb3,usb_mmc,usb_storage,usb_printer,usb_printer_bidirect,usb_automount,usb_fs_ext4,usb_fs_fat,usb_fs_exfat,usb_fs_zfs,usb_fs_zfs_automount,zfs_mount_script,usb_fs_ntfs,usb_ntfs_driver,usb_fs_hfs,usb_hfs_driver,script_usbmount,script_usbumount,script_usbhotplug,idle_enable,usb_3g,usb_apcupsd,usb_apcupsd_custom"); %>
+//	<% nvram("usb_enable,usb_uhci,usb_ohci,usb_usb2,usb_usb3,usb_mmc,usb_storage,usb_printer,usb_printer_bidirect,usb_automount,usb_fs_ext4,usb_fs_fat,usb_fs_exfat,usb_fs_zfs,usb_fs_zfs_automount,zfs_mount_script,usb_fs_ntfs,usb_ntfs_driver,usb_fs_hfs,usb_hfs_driver,script_usbmount,script_usbumount,script_usbhotplug,idle_enable,usb_apcupsd,usb_apcupsd_custom"); %>
 
 //	<% usbdevices(); %>
 
@@ -250,7 +250,6 @@ function verifyFields(focused, quiet) {
 	E('_f_fat').disabled = b || a;
 	E('_f_exfat').disabled = b || a;
 	E('_f_idle_enable').disabled = b || a;
-	E('_f_usb_3g').disabled = b;
 /* UPS-BEGIN */
 	E('_f_usb_apcupsd').disabled = b;
 	E('_f_usb_apcupsd_custom').disabled = b || !E('_f_usb_apcupsd').checked;
@@ -326,7 +325,6 @@ function save() {
 /* ZFS-END */
 	fom.usb_automount.value = E('_f_automount').checked ? 1 : 0;
 	fom.idle_enable.value = E('_f_idle_enable').checked ? 1 : 0;
-	fom.usb_3g.value = E('_f_usb_3g').checked ? 1 : 0;
 /* UPS-BEGIN */
 	fom.usb_apcupsd.value = E('_f_usb_apcupsd').checked ? 1 : 0;
 	fom.usb_apcupsd_custom.value = E('_f_usb_apcupsd_custom').checked ? 1 : 0;
@@ -383,7 +381,6 @@ function submit_complete() {
 <!-- ZFS-END -->
 <input type="hidden" name="usb_automount">
 <input type="hidden" name="idle_enable">
-<input type="hidden" name="usb_3g">
 <!-- UPS-BEGIN -->
 <input type="hidden" name="usb_apcupsd">
 <input type="hidden" name="usb_apcupsd_custom">
@@ -459,8 +456,6 @@ function submit_complete() {
 /* ZFS-END */
 				{ title: 'HDD Spindown', indent: 2, name: 'f_idle_enable', type: 'checkbox', suffix: '&nbsp; <small>Spin down each HDD when idle. No need to use with flash drive.<\/small>', value: nvram.idle_enable == 1 },
 			null,
-			{ title: '3G/4G/5G Modem Support', name: 'f_usb_3g', type: 'checkbox',
-				suffix: '&nbsp; <small>Before disconnecting modem, remember to uncheck box. If modem uses usbserial module, you must reboot router before unplugging modem.<\/small>', value: nvram.usb_3g == 1 },
 /* UPS-BEGIN */
 			{ title: 'Run APCUPSD Deamon', name: 'f_usb_apcupsd', type: 'checkbox',
 				suffix: '&nbsp; <small>Required by UPS Monitor (APC Uninterruptible Power Supply)<\/small>', value: nvram.usb_apcupsd == 1 },

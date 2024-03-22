@@ -494,11 +494,7 @@ void start_pppoe(int num, char *prefix)
 
 #ifdef TCONFIG_USB
 	if (nvram_match(strlcat_r(prefix, "_proto", tmp, sizeof(tmp)), "ppp3g")) {
-		if (nvram_match("usb_3g", "1")) {
-			if (config_pppd(WP_PPP3G, num, prefix) != 0)
-				return;
-		}
-		else /* USB support has been disabled */
+		if (config_pppd(WP_PPP3G, num, prefix) != 0)
 			return;
 	}
 	else {
