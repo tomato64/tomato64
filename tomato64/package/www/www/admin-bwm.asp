@@ -326,7 +326,7 @@ function init() {
 
 <div class="section-title">Restore</div>
 <div class="section" id="restore-section">
-	<form id="restore-form" method="post" action="stats/restore.cgi?_http_id=<% nv(http_id); %>&_what=bwm" enctype="multipart/form-data">
+	<form id="restore-form" method="post" action="restorestats.cgi?_http_id=<% nv(http_id); %>&_what=bwm" enctype="multipart/form-data">
 		<div>
 			<input type="file" id="restore-name" name="restore-name">
 			<input type="button" name="f_restore_button" id="restore-button" value="Restore" onclick="restoreButton()">

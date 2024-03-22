@@ -121,7 +121,7 @@ function init() {
 
 <div class="section-title">Restore Configuration</div>
 <div class="section">
-	<form id="restore-form" method="post" action="cfg/restore.cgi" enctype="multipart/form-data">
+	<form id="restore-form" method="post" action="restore.cgi" enctype="multipart/form-data">
 		<div>
 			Select the configuration file to restore:<br><br>
 			<input type="file" id="restore-name" name="filename"> 
@@ -134,7 +134,7 @@ function init() {
 
 <div class="section-title">Restore Default Configuration</div>
 <div class="section">
-	<form id="reset-form" method="post" action="cfg/defaults.cgi">
+	<form id="reset-form" method="post" action="defaults.cgi">
 		<div>
 			<select name="mode" id="restore-mode">
 				<option value="0">Select...</option>
