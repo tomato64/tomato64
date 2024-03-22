@@ -227,31 +227,63 @@ findPath() {
 
 setPIN() {
 	local PIN=$(NG "$PREFIX"_modem_pin)
-	local IS_PIN=$(NG "$PREFIX"_modem_pin | wc -w)
-	local IS_DONE=0 PINVAL DEVALL i
+	local IS_DONE=0 COUNT=1 WORKING_IF=0 PINVAL DEVALL STATUS PIN_STATUS i
 
 	$LOGS "3G MODEM - waiting for SIM initialization"
 
-	[ "$IS_PIN" -eq 1 ] && {
-		DEVALL="$DEVNR $(cat "$DIAGSFILE" | sed "s~"$DEVNR"~~")"
+	DEVALL="$DEVNR $(cat "$DIAGSFILE" | sed "s~"$DEVNR"~~")"
 
-		for i in $DEVALL; do	# find working interface
-			[ -z $(MODE="ATI" gcom -d "$i" -s /etc/gcom/setverbose.gcom | grep "OK" | tr -d '\r') ] && {
-				sleep 2
-				continue
-			}
-
-			PINVAL=$(PINCODE="$PIN" gcom -d "$i" -s /etc/gcom/setpin.gcom)
-			[ "$(echo "$PINVAL" | grep successfully | wc -l)" -eq 1 ] && {
-				IS_DONE=1
-				$LOGS "3G MODEM - PIN successfully verified"
-			}
-			# try only once on working interface (do not lock the sim)
+	for i in $DEVALL; do # find working interface
+		[ -z "$(MODE="ATI" gcom -d "$i" -s /etc/gcom/setverbose.gcom | grep OK)" ] && {
+			sleep 2
+			continue
+		} || {
+			DEVNR=$i
+			WORKING_IF=1
 			break
+		}
+	done
+
+	[ "$WORKING_IF" -eq "1" ] && {
+		MODE="AT+CFUN=1" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom # set as online mode (default value)
+		while [ "$COUNT" -lt 4 ]; do # try 3 times
+			STATUS=$(MODE="AT+CPIN?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom) # std PIN status
+
+			[ -z "$(echo "$STATUS" | grep OK)" -o "$(echo "$STATUS" | grep ERR)" ] && { # error?
+				COUNT=$((COUNT+1))
+				sleep 1
+			} || {
+				[ -n "$PIN" ] && { wayOut "3G MODEM - Error reading SIM status!"; }
+			}
 		done
+
+		PIN_STATUS=$(echo "$STATUS" | grep CPIN: | cut -d ":" -f2 | awk '{$1=$1};1')
+
+		# verify pin
+		case "$PIN_STATUS" in
+			"READY")
+				$LOGS "3G MODEM - PIN verification is not required"
+				IS_DONE=1
+				;;
+			"SIM PUK")
+				wayOut "3G MODEM - SIM locked PUK required"
+				;;
+			"SIM PIN" | "SIM PIN2")
+				[ -n "$PIN" ] && {
+					PINVAL=$(MODE="AT+CPIN=\"$PIN\"" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom)
+					[ "$(echo "$PINVAL" | grep ERR)" ] && { wayOut "3G MODEM - Unable to verify PIN" ; }
+					IS_DONE=1
+				} || {
+					wayOut "3G MODEM - PIN not specified but required"
+				}
+				;;
+			*)
+				wayOut "3G MODEM - PIN status failed (${PIN_STATUS:-sim_not_present})"
+			;;
+		esac
 	}
 
-	[ "$IS_PIN" -eq 1 -a "$IS_DONE" -ne 1 ] && {
+	[ "$IS_DONE" -ne 1 ] && {
 		mwwatchdog del
 		wayOut "3G MODEM - SIM locked - connection process terminated!"
 	} || {
@@ -290,7 +322,7 @@ checkPid() {
 
 wayOut() {
 	local TEXT="$1"
-	[[ -z $TEXT ]] && TEXT="3G Modem - exiting"
+	[ -z $TEXT ] && TEXT="3G Modem - exiting"
 
 	$LOGS "$TEXT"
 	rm -f $PIDFILE &>/dev/null
