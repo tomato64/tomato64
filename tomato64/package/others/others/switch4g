@@ -5,7 +5,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 # - changes/fixes
 # - add support for rndis protocol
-# Copyright (C) 2018 - 2023 by pedro
+# Copyright (C) 2018 - 2024 by pedro
 #
 
 
@@ -671,7 +671,7 @@ modemReset() {
 
 setPIN() {
 	local PIN=$(NG "$PREFIX"_modem_pin)
-	local IS_DONE=0 COUNT=1 TIMEOUT PINVAL DEVALL STATUS PIN_STATUS PIN_VERIFY_TRIES PIN_EXT_STATUS=0
+	local IS_DONE=0 COUNT=1 TIMEOUT PINVAL STATUS PIN_STATUS PIN_VERIFY_TRIES PIN_EXT_STATUS=0
 
 	$LOGS "4G MODEM - waiting for SIM initialization"
 
@@ -680,12 +680,12 @@ setPIN() {
 	[ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ] && {
 		MODE="AT+CFUN=1" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom # set as online mode (default value)
 		STATUS=$(MODE="AT^CPIN?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom) # extended PIN status (ie. Huawei modems)
-		[ "$(echo "$STATUS" | grep ERR)" ] && { # error?
+		[ -z "$(echo "$STATUS" | grep OK)" -o "$(echo "$STATUS" | grep ERR)" ] && { # error?
 			COUNT=1
 			while [ "$COUNT" -lt 4 ]; do # try 3 times
-				MODE="AT+CFUN=1" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom # set as online mode (default value)
 				STATUS=$(MODE="AT+CPIN?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom) # std PIN status
-				[ "$(echo "$STATUS" | grep ERR)" ] && {
+
+				[ -z "$(echo "$STATUS" | grep OK)" -o "$(echo "$STATUS" | grep ERR)" ] && { # error?
 					COUNT=$((COUNT+1))
 					sleep 1
 				} || {
@@ -821,35 +821,6 @@ setPIN() {
 	}
 }
 
-checkPid() {
-	local PRIORITY="$1" PIDNO
-
-	[ -f $PIDFILE ] && {
-		PIDNO=$(cat $PIDFILE)
-		cat "/proc/$PIDNO/cmdline" &>/dev/null
-
-		[ $? -eq 0 ] && {
-			$LOGS "4G MODEM - another process in action: exiting"
-			exit 0
-		} || {
-			[ "$PRIORITY" -eq 0 ] && return
-			# process not found assume not running
-			echo $PID > $PIDFILE
-			[ $? -ne 0 ] && {
-				$LOGS "4G MODEM - could not create PID file"
-				exit 0
-			}
-		}
-	} || {
-		[ "$PRIORITY" -eq 0 ] && return
-		echo $PID > $PIDFILE
-		[ $? -ne 0 ] && {
-			$LOGS "4G MODEM - could not create PID file"
-			exit 0
-		}
-	}
-}
-
 uqmiCall() {
 	# for now, it's the only way to prevent uqmi hangups on two different calls at the same time and on the same device: https://forum.openwrt.org/viewtopic.php?id=63559
 	# OPTION: 1 - connect, 2 - background, no option - normal use
@@ -902,6 +873,35 @@ uqmiKill() {
 		# try once again
 		COUNT_KILL=1
 		uqmiCall $C $O
+	}
+}
+
+checkPid() {
+	local PRIORITY="$1" PIDNO
+
+	[ -f $PIDFILE ] && {
+		PIDNO=$(cat $PIDFILE)
+		cat "/proc/$PIDNO/cmdline" &>/dev/null
+
+		[ $? -eq 0 ] && {
+			$LOGS "4G MODEM - another process in action: exiting"
+			exit 0
+		} || {
+			[ "$PRIORITY" -eq 0 ] && return
+			# process not found assume not running
+			echo $PID > $PIDFILE
+			[ $? -ne 0 ] && {
+				$LOGS "4G MODEM - could not create PID file"
+				exit 0
+			}
+		}
+	} || {
+		[ "$PRIORITY" -eq 0 ] && return
+		echo $PID > $PIDFILE
+		[ $? -ne 0 ] && {
+			$LOGS "4G MODEM - could not create PID file"
+			exit 0
+		}
 	}
 }
 
