@@ -605,6 +605,7 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 	struct bss_ie_hdr *ie;
 	int r, retry;
 	int chan_bw;
+	char *c, ssid_buffer[36];
 #ifdef CONFIG_BCMWL6
 	int chanspec = 0, ctr_channel = 0;
 #endif
@@ -794,9 +795,21 @@ next_info:
 		else
 			chan_bw = 10;
 #endif
+
+		c = NULL;  /* reset */
+		/* check SSID for single quote (avoid breaking GUI wireless survey) */
+		if ((c = strchr(apinfos[i].SSID, '\'')) != NULL) {
+			int len_first_part = strlen(apinfos[i].SSID) - strlen(c);
+
+			memset(ssid_buffer, 0, sizeof(ssid_buffer)); /* reset */
+			strlcpy(ssid_buffer, apinfos[i].SSID, len_first_part + 1); /* copy first part */
+			strlcat(ssid_buffer, "\\", sizeof(ssid_buffer)); /* add backslash */
+			strlcat(ssid_buffer, apinfos[i].SSID + len_first_part, sizeof(ssid_buffer));
+		}
+		
 		/* note: provide/use control channel and not the actual channel because we use it for wireless survey and scan button at basic-network.asp */
 		web_printf("%c['%s','%s',%d,%d,%d,%d,", rp->comma,
-		           apinfos[i].BSSID, apinfos[i].SSID, apinfos_ext[i].RSSI, apinfos[i].ctl_ch,
+		           apinfos[i].BSSID, (c == NULL) ? apinfos[i].SSID : ssid_buffer, apinfos_ext[i].RSSI, apinfos[i].ctl_ch,
 		           chan_bw, apinfos[i].RSSI_Quality);
 		rp->comma = ',';
 
