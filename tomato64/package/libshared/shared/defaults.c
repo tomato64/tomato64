@@ -1379,7 +1379,6 @@ struct nvram_tuple router_defaults[] = {
 	{ "script_usbmount",		""				, 0 },
 	{ "script_usbumount",		""				, 0 },
 	{ "idle_enable",		"0"				, 0 },
-	{ "usb_3g",			"1"				, 0 },
 #endif /* TCONFIG_USB */
 
 #ifdef TCONFIG_FTP
