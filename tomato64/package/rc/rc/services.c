@@ -2888,7 +2888,6 @@ static void stop_media_server(void)
 void start_haveged(void)
 {
 	pid_t pid;
-	int ret;
 
 	if (serialize_restart("haveged", 1))
 		return;
@@ -2904,12 +2903,7 @@ void start_haveged(void)
 #endif /* TOMATO64 */
 	                     NULL };
 
-	ret = _eval(cmd_argv, NULL, 0, &pid);
-
-	if (ret)
-		logmsg(LOG_ERR, "starting haveged failed ...");
-	else
-		logmsg(LOG_INFO, "haveged is started");
+	_eval(cmd_argv, NULL, 0, &pid);
 }
 
 void stop_haveged(void)
@@ -2917,10 +2911,8 @@ void stop_haveged(void)
 	if (serialize_restart("haveged", 0))
 		return;
 
-	if (pidof("haveged") > 0) {
+	if (pidof("haveged") > 0)
 		killall_tk_period_wait("haveged", 50);
-		logmsg(LOG_INFO, "haveged is stopped");
-	}
 }
 #endif /* TCONFIG_HAVEGED */
 
