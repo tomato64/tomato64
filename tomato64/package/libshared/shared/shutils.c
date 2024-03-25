@@ -493,9 +493,9 @@ safe_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
  * @return	number of items successfully written
  */
 int
-safe_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+safe_fwrite(const void *ptr, size_t size, int nmemb, FILE *stream)
 {
-	size_t ret = 0;
+	int ret = 0;
 
 	do {
 		clearerr(stream);
