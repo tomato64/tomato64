@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MINIUPNPD_VERSION = 2.3.3
+MINIUPNPD_VERSION = 2.3.6
 MINIUPNPD_SITE = http://miniupnp.free.fr/files
 MINIUPNPD_LICENSE = BSD-3-Clause
 MINIUPNPD_DEPENDENCIES = iptables
