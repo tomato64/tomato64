@@ -834,20 +834,11 @@ static void listen_wan(char* wan, wanface_list_t wanXfaces, int wanport)
 
 static void setup_listeners(int do_ipv6)
 {
-	char ipaddr[INET6_ADDRSTRLEN];
-	char ipaddr1[INET6_ADDRSTRLEN];
-	char ipaddr2[INET6_ADDRSTRLEN];
-	char ipaddr3[INET6_ADDRSTRLEN];
-#ifdef TOMATO64
-	char ipaddr4[INET6_ADDRSTRLEN];
-	char ipaddr5[INET6_ADDRSTRLEN];
-	char ipaddr6[INET6_ADDRSTRLEN];
-	char ipaddr7[INET6_ADDRSTRLEN];
-#endif /* TOMATO64 */
+	char ipaddr[BRIDGE_COUNT][INET6_ADDRSTRLEN] = {{0}};
 	IF_TCONFIG_IPV6(const char *wanaddr);
 	int wanport = nvram_get_int("http_wanport");
 	IF_TCONFIG_IPV6(int wan6port = wanport);
-	int lanport;
+	int i, lanport;
 	wanface_list_t wanfaces;
 	wanface_list_t wan2faces;
 #ifdef TCONFIG_MULTIWAN
@@ -861,40 +852,26 @@ static void setup_listeners(int do_ipv6)
 	 * if NULL or empty address is returned
 	 */
 	if (do_ipv6)
-		strlcpy(ipaddr, getifaddr(nvram_safe_get("lan_ifname"), AF_INET6, 0) ? : "", sizeof(ipaddr));
+		strlcpy(ipaddr[0], getifaddr(nvram_safe_get("lan_ifname"), AF_INET6, 0) ? : "", sizeof(ipaddr[0]));
 	else
 #endif /* TCONFIG_IPV6 */
-		strlcpy(ipaddr, nvram_safe_get("lan_ipaddr"), sizeof(ipaddr));
+		strlcpy(ipaddr[0], nvram_safe_get("lan_ipaddr"), sizeof(ipaddr[0]));
 
-	strlcpy(ipaddr1, nvram_safe_get("lan1_ipaddr"), sizeof(ipaddr1));
-	strlcpy(ipaddr2, nvram_safe_get("lan2_ipaddr"), sizeof(ipaddr2));
-	strlcpy(ipaddr3, nvram_safe_get("lan3_ipaddr"), sizeof(ipaddr3));
-#ifdef TOMATO64
-	strlcpy(ipaddr4, nvram_safe_get("lan4_ipaddr"), sizeof(ipaddr4));
-	strlcpy(ipaddr5, nvram_safe_get("lan5_ipaddr"), sizeof(ipaddr5));
-	strlcpy(ipaddr6, nvram_safe_get("lan6_ipaddr"), sizeof(ipaddr6));
-	strlcpy(ipaddr7, nvram_safe_get("lan7_ipaddr"), sizeof(ipaddr7));
-#endif /* TOMATO64 */
+	for (i = 1; i < BRIDGE_COUNT; i++)
+	{
+		char b[16];
+		snprintf(b, sizeof(b), "lan%d_ipaddr", i);
+		strlcpy(ipaddr[i], nvram_safe_get(b), sizeof(ipaddr[i]));
+	}
 
 	if (nvram_get_int("http_enable")) {
 		lanport = nvram_get_int("http_lanport");
-		add_listen_socket(ipaddr, lanport, do_ipv6, 0);
-		if (strcmp(ipaddr1, "") != 0)
-			add_listen_socket(ipaddr1, lanport, do_ipv6, 0);
-		if (strcmp(ipaddr2, "") != 0)
-			add_listen_socket(ipaddr2, lanport, do_ipv6, 0);
-		if (strcmp(ipaddr3, "") != 0)
-			add_listen_socket(ipaddr3, lanport, do_ipv6, 0);
-#ifdef TOMATO64
-		if (strcmp(ipaddr4, "") != 0)
-			add_listen_socket(ipaddr4, lanport, do_ipv6, 0);
-		if (strcmp(ipaddr5, "") != 0)
-			add_listen_socket(ipaddr5, lanport, do_ipv6, 0);
-		if (strcmp(ipaddr6, "") != 0)
-			add_listen_socket(ipaddr6, lanport, do_ipv6, 0);
-		if (strcmp(ipaddr7, "") != 0)
-			add_listen_socket(ipaddr7, lanport, do_ipv6, 0);
-#endif /* TOMATO64 */
+		add_listen_socket(ipaddr[0], lanport, do_ipv6, 0);
+		for(i = 1; i < BRIDGE_COUNT; i++)
+		{
+			if (strcmp(ipaddr[i], "") != 0)
+				add_listen_socket(ipaddr[i], lanport, do_ipv6, 0);
+		}
 
 		IF_TCONFIG_IPV6(if (do_ipv6 && wanport == lanport) wan6port = 0);
 	}
@@ -903,23 +880,12 @@ static void setup_listeners(int do_ipv6)
 	if (nvram_get_int("https_enable")) {
 		do_ssl = 1;
 		lanport = nvram_get_int("https_lanport");
-		add_listen_socket(ipaddr, lanport, do_ipv6, 1);
-		if (strcmp(ipaddr1, "") != 0)
-			add_listen_socket(ipaddr1, lanport, do_ipv6, 1);
-		if (strcmp(ipaddr2, "") != 0)
-			add_listen_socket(ipaddr2, lanport, do_ipv6, 1);
-		if (strcmp(ipaddr3, "") != 0)
-			add_listen_socket(ipaddr3, lanport, do_ipv6, 1);
-#ifdef TOMATO64
-		if (strcmp(ipaddr4, "") != 0)
-			add_listen_socket(ipaddr4, lanport, do_ipv6, 1);
-		if (strcmp(ipaddr5, "") != 0)
-			add_listen_socket(ipaddr5, lanport, do_ipv6, 1);
-		if (strcmp(ipaddr6, "") != 0)
-			add_listen_socket(ipaddr6, lanport, do_ipv6, 1);
-		if (strcmp(ipaddr7, "") != 0)
-			add_listen_socket(ipaddr7, lanport, do_ipv6, 1);
-#endif /* TOMATO64 */
+		add_listen_socket(ipaddr[0], lanport, do_ipv6, 1);
+		for(i = 1; i < BRIDGE_COUNT; i++)
+		{
+			if (strcmp(ipaddr[i], "") != 0)
+				add_listen_socket(ipaddr[i], lanport, do_ipv6, 1);
+		}
 
 		IF_TCONFIG_IPV6(if (do_ipv6 && wanport == lanport) wan6port = 0);
 	}
@@ -930,13 +896,13 @@ static void setup_listeners(int do_ipv6)
 		IF_TCONFIG_HTTPS(if (nvram_get_int("remote_mgt_https")) do_ssl = 1);
 #ifdef TCONFIG_IPV6
 		if (do_ipv6) {
-			if (*ipaddr && wan6port)
-				add_listen_socket(ipaddr, wan6port, 1, nvram_get_int("remote_mgt_https"));
+			if (*ipaddr[0] && wan6port)
+				add_listen_socket(ipaddr[0], wan6port, 1, nvram_get_int("remote_mgt_https"));
 
-			if (*ipaddr || wan6port) {
+			if (*ipaddr[0] || wan6port) {
 				/* get the IPv6 address from wan iface */
 				wanaddr = getifaddr((char *)get_wan6face(), AF_INET6, 0);
-				if (wanaddr && *wanaddr && strcmp(wanaddr, ipaddr) != 0)
+				if (wanaddr && *wanaddr && strcmp(wanaddr, ipaddr[0]) != 0)
 					add_listen_socket(wanaddr, wanport, 1, nvram_get_int("remote_mgt_https"));
 			}
 		} else
