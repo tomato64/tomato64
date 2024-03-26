@@ -120,15 +120,9 @@ void iptraffic_conntrack_init() {
 	Node tmp;
 	Node *ptr;
 
-#ifndef TOMATO64
-	unsigned long rip[4];
-	unsigned long lan[4];
-	unsigned long mask[4];
-#else
 	unsigned long rip[BRIDGE_COUNT];
 	unsigned long lan[BRIDGE_COUNT];
 	unsigned long mask[BRIDGE_COUNT];
-#endif /* TOMATO64 */
 	unsigned short int br;
 
 	for(br = 0; br < BRIDGE_COUNT; br++) {

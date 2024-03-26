@@ -20,7 +20,7 @@
  *
  * Modified for Tomato Firmware
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2024 pedro
  *
  */
 
@@ -1473,13 +1473,8 @@ static void filter_forward(void)
 			/* ipv4 only */
 			ipt_write("-A FORWARD -i %s%s -o %s%s %s %s -j ACCEPT\n", "br", sbr, "br", dbr, src, dst);
 
-#ifndef TOMATO64
 			if ((strcmp(src, "") == 0) && (strcmp(dst, "") == 0))
-				lanAccess[((*sbr - 48) + (*dbr - 48) * 4)] = '1';
-#else
-			if ((strcmp(src, "") == 0) && (strcmp(dst, "") == 0))
-				lanAccess[((*sbr - 48) + (*dbr - 48) * 8)] = '1';
-#endif /* TOMATO64 */
+				lanAccess[((*sbr - 48) + (*dbr - 48) * BRIDGE_COUNT)] = '1';
 
 		}
 	}
@@ -1560,13 +1555,8 @@ static void filter_forward(void)
 				if (br == br2)
 					continue;
 
-#ifndef TOMATO64
-				if (lanAccess[((br)+(br2)*4)] == '1')
+				if (lanAccess[((br)+(br2) * BRIDGE_COUNT)] == '1')
 					continue;
-#else
-				if (lanAccess[((br)+(br2)*8)] == '1')
-					continue;
-#endif /* TOMATO64 */
 
 				char bridge2[2] = "0";
 				if (br2 != 0)
