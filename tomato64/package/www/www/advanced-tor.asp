@@ -57,6 +57,16 @@ function verifyFields(focused, quiet) {
 		bridge.options[2].disabled = 1;
 	if (nvram.lan3_ifname.length < 1)
 		bridge.options[3].disabled = 1;
+/* TOMATO64-BEGIN */
+	if (nvram.lan4_ifname.length < 1)
+		bridge.options[4].disabled = 1;
+	if (nvram.lan5_ifname.length < 1)
+		bridge.options[5].disabled = 1;
+	if (nvram.lan6_ifname.length < 1)
+		bridge.options[6].disabled = 1;
+	if (nvram.lan7_ifname.length < 1)
+		bridge.options[7].disabled = 1;
+/* TOMATO64-END */
 
 	if (!v_port(E('_tor_socksport'), quiet || !ok)) ok = 0;
 	if (!v_port(E('_tor_transport'), quiet || !ok)) ok = 0;
