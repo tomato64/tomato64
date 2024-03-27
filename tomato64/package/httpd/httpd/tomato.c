@@ -1096,7 +1096,11 @@ static const nvset_t nvset_list[] = {
 	{ "remote_upgrade",		V_01				},
 	{ "http_wanport_bfm",		V_01				},
 	{ "http_lanport",		V_PORT				},
+#ifndef TOMATO64
 	{ "http_lan_listeners",		V_RANGE(0, 7)			},	/* Enable listeners: bit 0 = LAN1, bit 1 = LAN2, bit 2 = LAN3 */
+#else
+	{ "http_lan_listeners",		V_RANGE(0, 127)			},	/* Enable listeners: bit 0 = LAN1, bit 1 = LAN2, bit 2 = LAN3, bit 3 = LAN4, bit 4 = LAN5, bit 5 = LAN6, bit 6 = LAN7 */
+#endif /* TOMATO64 */
 #ifdef TCONFIG_IPV6
 	{ "http_ipv6",			V_01				},	/* Start httpd on IPv6 interfaces */
 #endif

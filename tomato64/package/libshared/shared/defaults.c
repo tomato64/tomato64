@@ -1154,7 +1154,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "http_wanport",		"8080"				, 0 },	/* WAN port to listen on */
 	{ "http_lanport",		"80"				, 0 },	/* LAN port to listen on */
 	{ "http_enable",		"1"				, 0 },	/* HTTP server enable/disable */
+#ifndef TOMATO64
 	{ "http_lan_listeners",		"7"				, 0 },	/* Enable listeners: bit 0 = LAN1, bit 1 = LAN2, bit 2 = LAN3 */
+#else
+	{ "http_lan_listeners",		"127"				, 0 },	/* Enable listeners: bit 0 = LAN1, bit 1 = LAN2, bit 2 = LAN3, bit 3 = LAN4, bit 4 = LAN5, bit 5 = LAN6, bit 6 = LAN7 */
+#endif /* TOMATO64 */
 #ifdef TCONFIG_IPV6
 	{ "http_ipv6",			"1"				, 0 },	/* Start httpd on IPv6 interfaces */	
 #endif

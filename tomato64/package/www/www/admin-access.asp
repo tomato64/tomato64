@@ -19,7 +19,12 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("http_enable,https_enable,http_lanport,https_lanport,http_lan_listeners,http_ipv6,ipv6_service,lan1_ifname,lan2_ifname,lan3_ifname,remote_management,remote_mgt_https,remote_upgrade,web_wl_filter,web_css,web_adv_scripts,web_dir,ttb_css,ttb_loc,ttb_url,sshd_eas,sshd_pass,sshd_remote,telnetd_eas,http_wanport,http_wanport_bfm,sshd_authkeys,sshd_port,sshd_rport,sshd_forwarding,telnetd_port,rmgt_sip,https_crt_cn,https_crt_save,lan_ipaddr,ne_shlimit,sshd_motd,http_username,jffs2_auto_unmount"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("http_enable,https_enable,http_lanport,https_lanport,http_lan_listeners,http_ipv6,ipv6_service,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,remote_management,remote_mgt_https,remote_upgrade,web_wl_filter,web_css,web_adv_scripts,web_dir,ttb_css,ttb_loc,ttb_url,sshd_eas,sshd_pass,sshd_remote,telnetd_eas,http_wanport,http_wanport_bfm,sshd_authkeys,sshd_port,sshd_rport,sshd_forwarding,telnetd_port,rmgt_sip,https_crt_cn,https_crt_save,lan_ipaddr,ne_shlimit,sshd_motd,http_username,jffs2_auto_unmount"); %>
+/* TOMATO64-END */
 
 var cprefix = 'admin_access';
 var changed = 0;
@@ -143,6 +148,12 @@ function verifyFields(focused, quiet) {
 	elem.display(PR('_f_http_lan1_listener'), (nvram.lan1_ifname == 'br1') && (a.value != 0));
 	elem.display(PR('_f_http_lan2_listener'), (nvram.lan2_ifname == 'br2') && (a.value != 0));
 	elem.display(PR('_f_http_lan3_listener'), (nvram.lan3_ifname == 'br3') && (a.value != 0));
+/* TOMATO64-BEGIN */
+	elem.display(PR('_f_http_lan4_listener'), (nvram.lan4_ifname == 'br4') && (a.value != 0));
+	elem.display(PR('_f_http_lan5_listener'), (nvram.lan5_ifname == 'br5') && (a.value != 0));
+	elem.display(PR('_f_http_lan6_listener'), (nvram.lan6_ifname == 'br6') && (a.value != 0));
+	elem.display(PR('_f_http_lan7_listener'), (nvram.lan7_ifname == 'br7') && (a.value != 0));
+/* TOMATO64-END */
 
 /* IPV6-BEGIN */
 	elem.display(PR('_f_http_ipv6'), (!nvram.ipv6_service == '') && (a.value != 0));
@@ -256,6 +267,19 @@ function save() {
 
 		if (fom._f_http_lan3_listener.checked)
 			fom.http_lan_listeners.value = fom.http_lan_listeners.value | 0x04; /* set bit 2, listener enabled for LAN3 */
+/* TOMATO64-BEGIN */
+		if (fom._f_http_lan4_listener.checked)
+			fom.http_lan_listeners.value = fom.http_lan_listeners.value | 0x08; /* set bit 3, listener enabled for LAN4 */
+
+		if (fom._f_http_lan5_listener.checked)
+			fom.http_lan_listeners.value = fom.http_lan_listeners.value | 0x10; /* set bit 4, listener enabled for LAN5 */
+
+		if (fom._f_http_lan6_listener.checked)
+			fom.http_lan_listeners.value = fom.http_lan_listeners.value | 0x20; /* set bit 5, listener enabled for LAN6 */
+
+		if (fom._f_http_lan7_listener.checked)
+			fom.http_lan_listeners.value = fom.http_lan_listeners.value | 0x40; /* set bit 6, listener enabled for LAN7 */
+/* TOMATO64-END */
 
 /* IPV6-BEGIN */
 	fom.http_ipv6.value = fom._f_http_ipv6.checked ? 1 : 0;
@@ -436,6 +460,12 @@ function init() {
 				{ title: 'Listen on LAN1 (br1)', name: 'f_http_lan1_listener', type: 'checkbox', value: (nvram.http_lan_listeners & 0x01) },
 				{ title: 'Listen on LAN2 (br2)', name: 'f_http_lan2_listener', type: 'checkbox', value: (nvram.http_lan_listeners & 0x02) },
 				{ title: 'Listen on LAN3 (br3)', name: 'f_http_lan3_listener', type: 'checkbox', value: (nvram.http_lan_listeners & 0x04) },
+/* TOMATO64-BEGIN */
+				{ title: 'Listen on LAN4 (br4)', name: 'f_http_lan4_listener', type: 'checkbox', value: (nvram.http_lan_listeners & 0x08) },
+				{ title: 'Listen on LAN5 (br5)', name: 'f_http_lan5_listener', type: 'checkbox', value: (nvram.http_lan_listeners & 0x10) },
+				{ title: 'Listen on LAN6 (br6)', name: 'f_http_lan6_listener', type: 'checkbox', value: (nvram.http_lan_listeners & 0x20) },
+				{ title: 'Listen on LAN7 (br7)', name: 'f_http_lan7_listener', type: 'checkbox', value: (nvram.http_lan_listeners & 0x40) },
+/* TOMATO64-END */
 /* IPV6-BEGIN */
 				{ title: 'Listen on IPv6', name: 'f_http_ipv6', type: 'checkbox', value: nvram.http_ipv6 == 1 },
 /* IPV6-END */
@@ -583,7 +613,12 @@ function init() {
 	These files are appended to the automatically generated configuration files resulting from the settings in the GUI.<br><br>
 	<i>Web Admin:</i><br>
 	<ul>
+/* TOMATO64-REMOVE-BEGIN */
 		<li><b>Listen on LAN1 / LAN2 / LAN3</b> - enable/disable httpd listening interfaces. (by default communication is allowed! Please use <a href="admin-scripts.asp">Firewall script</a> to add your own rules, ie. br0 = private network, br1 = IOT)</li>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		<li><b>Listen on LAN1 / LAN2 / LAN3 / LAN4 / LAN5 / LAN6 / LAN7</b> - enable/disable httpd listening interfaces. (by default communication is allowed! Please use <a href="admin-scripts.asp">Firewall script</a> to add your own rules, ie. br0 = private network, br1 = IOT)</li>
+/* TOMATO64-END */
 	</ul>
 </div>
 
