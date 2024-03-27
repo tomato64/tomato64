@@ -835,6 +835,7 @@ static void listen_wan(char* wan, wanface_list_t wanXfaces, int wanport)
 static void setup_listeners(int do_ipv6)
 {
 	char ipaddr[BRIDGE_COUNT][INET6_ADDRSTRLEN] = {{0}};
+	int http_lan_listeners = nvram_get_int("http_lan_listeners"); /* Enable listeners: bit 0 = LAN1, bit 1 = LAN2, bit 2 = LAN3, 1 == TRUE, 0 == FALSE */
 	IF_TCONFIG_IPV6(const char *wanaddr);
 	int wanport = nvram_get_int("http_wanport");
 	IF_TCONFIG_IPV6(int wan6port = wanport);
@@ -869,7 +870,7 @@ static void setup_listeners(int do_ipv6)
 		add_listen_socket(ipaddr[0], lanport, do_ipv6, 0);
 		for(i = 1; i < BRIDGE_COUNT; i++)
 		{
-			if (strcmp(ipaddr[i], "") != 0)
+			if ((strcmp(ipaddr[i], "") != 0) && (http_lan_listeners & (1 << (i-1)))) /* check for LAN1, LAN2, LAN3 */
 				add_listen_socket(ipaddr[i], lanport, do_ipv6, 0);
 		}
 
@@ -883,7 +884,7 @@ static void setup_listeners(int do_ipv6)
 		add_listen_socket(ipaddr[0], lanport, do_ipv6, 1);
 		for(i = 1; i < BRIDGE_COUNT; i++)
 		{
-			if (strcmp(ipaddr[i], "") != 0)
+			if ((strcmp(ipaddr[i], "") != 0) && (http_lan_listeners & (1 << (i-1)))) /* check for LAN1, LAN2, LAN3 */
 				add_listen_socket(ipaddr[i], lanport, do_ipv6, 1);
 		}
 
@@ -988,7 +989,7 @@ int main(int argc, char **argv)
 	}
 
 	setup_listeners(0);
-	IF_TCONFIG_IPV6(if (ipv6_enabled()) setup_listeners(1));
+	IF_TCONFIG_IPV6(if (ipv6_enabled() && nvram_get_int("http_ipv6")) setup_listeners(1)); /* Listen on IPv6 if enabled via GUI admin-access.asp; Check IPv6 first! */
 
 	if (listeners.count == 0) {
 		logmsg(LOG_ERR, "can't bind to any address");

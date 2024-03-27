@@ -1096,6 +1096,10 @@ static const nvset_t nvset_list[] = {
 	{ "remote_upgrade",		V_01				},
 	{ "http_wanport_bfm",		V_01				},
 	{ "http_lanport",		V_PORT				},
+	{ "http_lan_listeners",		V_RANGE(0, 7)			},	/* Enable listeners: bit 0 = LAN1, bit 1 = LAN2, bit 2 = LAN3 */
+#ifdef TCONFIG_IPV6
+	{ "http_ipv6",			V_01				},	/* Start httpd on IPv6 interfaces */
+#endif
 	{ "web_wl_filter",		V_01				},
 	{ "web_css",			V_LENGTH(1, 32)			},
 #ifdef TCONFIG_ADVTHEMES

@@ -19,7 +19,7 @@
 
 <script>
 
-//	<% nvram("http_enable,https_enable,http_lanport,https_lanport,remote_management,remote_mgt_https,remote_upgrade,web_wl_filter,web_css,web_adv_scripts,web_dir,ttb_css,ttb_loc,ttb_url,sshd_eas,sshd_pass,sshd_remote,telnetd_eas,http_wanport,http_wanport_bfm,sshd_authkeys,sshd_port,sshd_rport,sshd_forwarding,telnetd_port,rmgt_sip,https_crt_cn,https_crt_save,lan_ipaddr,ne_shlimit,sshd_motd,http_username,jffs2_auto_unmount"); %>
+//	<% nvram("http_enable,https_enable,http_lanport,https_lanport,http_lan_listeners,http_ipv6,ipv6_service,lan1_ifname,lan2_ifname,lan3_ifname,remote_management,remote_mgt_https,remote_upgrade,web_wl_filter,web_css,web_adv_scripts,web_dir,ttb_css,ttb_loc,ttb_url,sshd_eas,sshd_pass,sshd_remote,telnetd_eas,http_wanport,http_wanport_bfm,sshd_authkeys,sshd_port,sshd_rport,sshd_forwarding,telnetd_port,rmgt_sip,https_crt_cn,https_crt_save,lan_ipaddr,ne_shlimit,sshd_motd,http_username,jffs2_auto_unmount"); %>
 
 var cprefix = 'admin_access';
 var changed = 0;
@@ -140,6 +140,14 @@ function verifyFields(focused, quiet) {
 	elem.display(PR('_f_http_wireless'), a.value != 0);
 /* TOMATO64-REMOVE-END */
 
+	elem.display(PR('_f_http_lan1_listener'), (nvram.lan1_ifname == 'br1') && (a.value != 0));
+	elem.display(PR('_f_http_lan2_listener'), (nvram.lan2_ifname == 'br2') && (a.value != 0));
+	elem.display(PR('_f_http_lan3_listener'), (nvram.lan3_ifname == 'br3') && (a.value != 0));
+
+/* IPV6-BEGIN */
+	elem.display(PR('_f_http_ipv6'), (!nvram.ipv6_service == '') && (a.value != 0));
+/* IPV6-END */
+
 	c = (a.value == 2) || (a.value == 3);
 /* HTTPS-BEGIN */
 	elem.display(PR('_https_lanport'), 'row_sslcert', PR('_https_crt_cn'), PR('_f_https_crt_save'), PR('_f_https_crt_gen'), c);
@@ -239,6 +247,19 @@ function save() {
 	fom.https_enable.value = (a & 2) ? 1 : 0;
 /* HTTPS-END */
 
+	fom.http_lan_listeners.value = 0; /* init with 0 and check */
+    		if (fom._f_http_lan1_listener.checked)
+			fom.http_lan_listeners.value = fom.http_lan_listeners.value | 0x01; /* set bit 0, listener enabled for LAN1 */
+
+		if (fom._f_http_lan2_listener.checked)
+			fom.http_lan_listeners.value = fom.http_lan_listeners.value | 0x02; /* set bit 1, listener enabled for LAN2 */
+
+		if (fom._f_http_lan3_listener.checked)
+			fom.http_lan_listeners.value = fom.http_lan_listeners.value | 0x04; /* set bit 2, listener enabled for LAN3 */
+
+/* IPV6-BEGIN */
+	fom.http_ipv6.value = fom._f_http_ipv6.checked ? 1 : 0;
+/* IPV6-END */
 	nvram.lan_ipaddr = location.hostname;
 	if ((a != 0) && (location.hostname == nvram.lan_ipaddr)) {
 		if (location.protocol == 'https:') {
@@ -366,6 +387,10 @@ function init() {
 <input type="hidden" name="_service" value="">
 <input type="hidden" name="_nofootermsg" value="">
 <input type="hidden" name="http_enable">
+<input type="hidden" name="http_lan_listeners">
+<!-- IPV6-BEGIN -->
+<input type="hidden" name="http_ipv6">
+<!-- IPV6-END -->
 <!-- HTTPS-BEGIN -->
 <input type="hidden" name="https_enable">
 <input type="hidden" name="https_crt_save">
@@ -407,7 +432,13 @@ function init() {
 /* HTTPS-BEGIN */
 				      ((nvram.https_enable != 0) ? 2 : 0) |
 /* HTTPS-END */
-				       ((nvram.http_enable != 0) ? 1 : 0) },
+				      ((nvram.http_enable != 0) ? 1 : 0) },
+				{ title: 'Listen on LAN1 (br1)', name: 'f_http_lan1_listener', type: 'checkbox', value: (nvram.http_lan_listeners & 0x01) },
+				{ title: 'Listen on LAN2 (br2)', name: 'f_http_lan2_listener', type: 'checkbox', value: (nvram.http_lan_listeners & 0x02) },
+				{ title: 'Listen on LAN3 (br3)', name: 'f_http_lan3_listener', type: 'checkbox', value: (nvram.http_lan_listeners & 0x04) },
+/* IPV6-BEGIN */
+				{ title: 'Listen on IPv6', name: 'f_http_ipv6', type: 'checkbox', value: nvram.http_ipv6 == 1 },
+/* IPV6-END */
 				{ title: 'HTTP Port', indent: 2, name: 'http_lanport', type: 'text', maxlen: 5, size: 7, value: fixPort(nvram.http_lanport, 80) },
 /* HTTPS-BEGIN */
 				{ title: 'HTTPS Port', indent: 2, name: 'https_lanport', type: 'text', maxlen: 5, size: 7, value: fixPort(nvram.https_lanport, 443) },
@@ -542,14 +573,18 @@ function init() {
 
 <div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
-	SSH Daemon (dropbear) also accepts additional configuration in the following files:<br>
+	<i>SSH Daemon (dropbear) also accepts additional configuration in the following files:</i><br>
 	<ul>
 		<li>/etc/shadow.custom</li>
 		<li>/etc/passwd.custom</li>
 		<li>/etc/gshadow.custom</li>
 		<li>/etc/group.custom</li>
 	</ul>
-	These files are appended to the automatically generated configuration files resulting from the settings in the GUI.
+	These files are appended to the automatically generated configuration files resulting from the settings in the GUI.<br><br>
+	<i>Web Admin:</i><br>
+	<ul>
+		<li><b>Listen on LAN1 / LAN2 / LAN3</b> - enable/disable httpd listening interfaces. (by default communication is allowed! Please use <a href="admin-scripts.asp">Firewall script</a> to add your own rules, ie. br0 = private network, br1 = IOT)</li>
+	</ul>
 </div>
 
 <!-- / / / -->
