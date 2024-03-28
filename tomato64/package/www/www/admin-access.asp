@@ -259,7 +259,7 @@ function save() {
 /* HTTPS-END */
 
 	fom.http_lan_listeners.value = 0; /* init with 0 and check */
-    		if (fom._f_http_lan1_listener.checked)
+		if (fom._f_http_lan1_listener.checked)
 			fom.http_lan_listeners.value = fom.http_lan_listeners.value | 0x01; /* set bit 0, listener enabled for LAN1 */
 
 		if (fom._f_http_lan2_listener.checked)
