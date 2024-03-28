@@ -861,8 +861,23 @@ static void setup_listeners(int do_ipv6)
 	for (i = 1; i < BRIDGE_COUNT; i++)
 	{
 		char b[16];
-		snprintf(b, sizeof(b), "lan%d_ipaddr", i);
-		strlcpy(ipaddr[i], nvram_safe_get(b), sizeof(ipaddr[i]));
+		char *nv;
+#ifdef TCONFIG_IPV6
+		if (do_ipv6) {
+			snprintf(b, sizeof(b), "lan%d_ifname", i);
+			nv = nvram_safe_get(b);
+			if (strncmp(nv, "br", 2) == 0) {
+				strlcpy(ipaddr[i], getifaddr(nv, AF_INET6, 0) ? : "", sizeof(ipaddr[i]));
+			}
+			else {
+				strlcpy(ipaddr[i], "", sizeof(ipaddr[i]));
+			}
+		} else
+#endif /* TCONFIG_IPV6 */
+		{
+			snprintf(b, sizeof(b), "lan%d_ipaddr", i);
+			strlcpy(ipaddr[i], nvram_safe_get(b), sizeof(ipaddr[i]));
+		}
 	}
 
 	if (nvram_get_int("http_enable")) {
