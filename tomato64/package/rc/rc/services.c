@@ -2638,16 +2638,12 @@ int ntpd_synced_main(int argc, char *argv[])
 					    discipline_jitter,
 					    freq_drift_ppm);
 
-	int lock = file_lock("ntpd");
-
 	if (!(file = fopen("/tmp/ntpd", "w"))) {
-		file_unlock(lock);
 		return 1;
 	}
 
 	fprintf(file,"%s", message);
 	fclose(file);
-	file_unlock(lock);
 	return 0;
 }
 
