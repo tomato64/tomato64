@@ -19,17 +19,14 @@ ALL_LDFLAGS += -lshared -lnvram
 ALL_LDFLAGS += $(LDFLAGS)
 
 OBJS := rc.o init.o interface.o network.o wan.o services.o dhcp.o \
-        firewall.o ppp.o telssh.o wnas.o \
-        listen.o redial.o led.o qos.o forward.o misc.o \
-        restrict.o gpio.o sched.o \
-        bwlimit.o arpbind.o \
-        tomatoanon.o
+	firewall.o ppp.o telssh.o wnas.o listen.o redial.o \
+	led.o qos.o forward.o misc.o restrict.o \
+	gpio.o sched.o bwlimit.o arpbind.o tomatoanon.o mwan.o pbr.o
 
-#buttons.o mtd.o
+# mtd.o buttons.o
 
 ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_BLINK)),y)
-OBJS += blink.o
-OBJS += blink_br.o
+OBJS += blink.o blink_br.o
 endif
 
 ifeq ($(TCONFIG_ROAM),y)
@@ -47,9 +44,6 @@ endif
 ifeq ($(TCONFIG_FANCTRL),y)
 OBJS += phy_tempsense.o
 endif
-
-# dualwan / multiwan
-OBJS += mwan.o pbr.o
 
 ifeq ($(TCONFIG_USB),y)
 OBJS += usb.o
@@ -80,8 +74,7 @@ OBJS += openvpn.o
 endif
 
 ifeq ($(TCONFIG_WIREGUARD),y)
-OBJS += wireguard.o
-OBJS += curve25519.o
+OBJS += wireguard.o curve25519.o
 endif
 
 ifeq ($(TCONFIG_TINC),y)
@@ -89,8 +82,7 @@ OBJS += tinc.o
 endif
 
 ifeq ($(TCONFIG_PPTPD),y)
-OBJS += pptpd.o
-OBJS += pptp_client.o
+OBJS += pptpd.o pptp_client.o
 endif
 
 ifeq ($(TCONFIG_NOCAT),y)
@@ -98,8 +90,7 @@ OBJS += nocat.o
 endif
 
 ifeq ($(TCONFIG_NGINX),y)
-OBJS += nginx.o
-OBJS += mysql.o
+OBJS += nginx.o mysql.o
 endif
 
 ifeq ($(TCONFIG_BT),y)

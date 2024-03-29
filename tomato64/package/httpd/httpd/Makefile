@@ -19,13 +19,11 @@ ifeq ($(TOMATO_EXPERIMENTAL),1)
 export CFLAGS += -DDEBUG_LOGMSG
 endif
 
-OBJS = httpd.o cgi.o tomato.o version.o
-OBJS += misc.o dhcp.o upgrade.o traceping.o parser.o upnp.o ctnf.o
-OBJS += nvram.o log.o webio.o wl.o devlist.o ddns.o config.o bwm.o
-OBJS += blackhole.o utf8.o
-OBJS += cpuinfo.o
+OBJS  = httpd.o cgi.o tomato.o version.o misc.o dhcp.o upgrade.o \
+	traceping.o parser.o upnp.o ctnf.o nvram.o log.o webio.o \
+	wl.o devlist.o ddns.o config.o bwm.o utf8.o cpuinfo.o \
+	iptraffic.o #blackhole.o
 
-OBJS += iptraffic.o
 #ifeq ($(TCONFIG_USB),y)
 OBJS += usb.o
 OBJS += wwan.o
@@ -37,22 +35,6 @@ OBJS += nocat.o
 
 #ifeq ($(TCONFIG_OPENVPN),y)
 OBJS += openvpn.o
-#endif
-
-#LIBS += -L$(TOP)/nvram${BCMEX} -lnvram -L$(TOP)/shared -lshared
-
-#ifneq ($(TCONFIG_HTTPS),)
-#LIBS += -L$(TOP)/mssl -lmssl
-#ifeq ($(TCONFIG_OPENSSL11),y)
-#CFLAGS += -I$(TOP)/openssl-1.1/include -DUSE_OPENSSL11
-#LIBS += -L$(TOP)/openssl-1.1 -lssl -lcrypto
-#ifeq ($(TCONFIG_BCMARM),y)
-#LIBS += -lpthread
-#endif
-#else
-#CFLAGS += -I$(TOP)/openssl/include
-#LIBS += -L$(TOP)/openssl -lssl -lcrypto
-#endif
 #endif
 
 #ifeq ($(TCONFIG_PPTPD),y)
