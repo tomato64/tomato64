@@ -530,8 +530,9 @@ void asp_jiffies(int argc, char **argv)
 void asp_etherstates(int argc, char **argv)
 {
 	FILE *f;
-	char s[32], *a, b[16];
+	char s[32], a[8], b[16];
 	unsigned n;
+	int p;
 
 	if (nvram_match("lan_state", "1")) {
 		web_puts("\netherstates = {");
@@ -540,31 +541,11 @@ void asp_etherstates(int argc, char **argv)
 		n = 0;
 		if ((f = fopen("/tmp/ethernet.state", "r"))) {
 			while (fgets(s, sizeof(s), f)) {
-				if (sscanf(s, "Port 0: %s", b) == 1)
-					a = "port0";
-				else if (sscanf(s, "Port 1: %s", b) == 1)
-					a = "port1";
-				else if (sscanf(s, "Port 2: %s", b) == 1)
-					a = "port2";
-				else if (sscanf(s, "Port 3: %s", b) == 1)
-					a = "port3";
-				else if (sscanf(s, "Port 4: %s", b) == 1)
-					a = "port4";
-#ifdef TOMATO64
-				else if (sscanf(s, "Port 5: %s", b) == 1)
-					a = "port5";
-				else if (sscanf(s, "Port 6: %s", b) == 1)
-					a = "port6";
-				else if (sscanf(s, "Port 7: %s", b) == 1)
-					a = "port7";
-				else if (sscanf(s, "Port 8: %s", b) == 1)
-					a = "port8";
-#endif /* TOMATO64 */
-				else
-					continue;
-
-				web_printf("%s\t%s: '%s'", n ? ",\n" : "", a, b);
-				n++;
+				if (sscanf(s, "Port %d: %s", &p, b) == 2) {
+					snprintf(a, sizeof(a), "port%d", p);
+					web_printf("%s\t%s: '%s'", n ? ",\n" : "", a, b);
+					n++;
+				}
 			}
 			fclose(f);
 		}
