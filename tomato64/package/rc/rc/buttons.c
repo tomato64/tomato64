@@ -774,7 +774,8 @@ int buttons_main(int argc, char *argv[])
 
 			logmsg(LOG_DEBUG, "*** %s: wlan-released: gpio=x%ld, pushed=x%X, mask=x%X, count=%d", __FUNCTION__, gpio, wlan_pushed, wlan_mask, count);
 
-			if (count >= 2) {  /* after 1 sec */
+			/* between 1 sec and 120 sec, to avoid short presses and faulty hardware. */
+			if (count >= 2 && count <= 240) {
 				logmsg(LOG_INFO, "WLAN button pushed for %d ms - toggle radio", count * 500);
 				nvram_set("rrules_radio", "-1");
 				eval("radio", "toggle");
