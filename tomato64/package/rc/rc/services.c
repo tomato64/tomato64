@@ -2443,13 +2443,13 @@ void start_udpxy(void)
 		}
 		/* address/interface to listen on: default = 0.0.0.0 */
 		if (!bind_lan)
-		{
 #ifdef TOMATO64
+		{
 			eval("udpxy", "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-m", buffer, (nvram_get_int("udpxy_stats") ? "-S" : ""));
 #else
 			eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-m", buffer);
-#endif /* TOMATO64 */
 		}
+#endif /* TOMATO64 */
 	}
 }
 
