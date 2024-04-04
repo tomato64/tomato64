@@ -283,7 +283,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan4_dns",			""				, 0 },	/* x.x.x.x x.x.x.x ... */
 	{ "wan4_dns_auto",		"1"				, 0 },	/* wan4 auto dns to 1 after reset */
 	{ "wan4_weight",		"1"				, 0 },
-	{ "wan4_hwname"			""				, 0 },	/* WAN driver name (e.g. et1) */
+	{ "wan4_hwname",		""				, 0 },	/* WAN driver name (e.g. et1) */
 	{ "wan4_hwaddr",		""				, 0 },	/* WAN interface MAC address */
 	{ "wan4_iface",			""				, 0 },
 	{ "wan4_ifname",		""				, 0 },
