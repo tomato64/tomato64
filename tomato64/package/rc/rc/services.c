@@ -2446,7 +2446,9 @@ void start_udpxy(void)
 #ifdef TOMATO64
 		{
 			eval("udpxy", "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-m", buffer, (nvram_get_int("udpxy_stats") ? "-S" : ""));
+		}
 #else
+		{
 			eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-m", buffer);
 		}
 #endif /* TOMATO64 */
