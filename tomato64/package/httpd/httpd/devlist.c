@@ -194,6 +194,7 @@ void asp_devlist(int argc, char **argv)
 	char comma;
 	char *host;
 	unsigned long expires;
+	int i, dhcp_enabled;
 
 	/* must be here for easier call via update.cgi. arg is ignored */
 	asp_arplist(0, NULL);
@@ -256,14 +257,17 @@ wl_ifname,wl_mode,wl_radio,wl_nband,wl_wds_enable"
 
 	web_puts("dhcpd_lease = [");
 
-#ifndef TOMATO64
-	if ((nvram_match("lan_proto", "dhcp")) || (nvram_match("lan1_proto", "dhcp")) || (nvram_match("lan2_proto", "dhcp")) || (nvram_match("lan3_proto", "dhcp"))) {
+	dhcp_enabled = 0;
+	for (i = 0; i < BRIDGE_COUNT; i++) {
+		snprintf(buf, sizeof(buf), (i == 0 ? "lan_proto" : "lan%d_proto"), i);
+			if (nvram_match(buf, "dhcp")) {
+				dhcp_enabled = 1;
+				break;
+			}
+	}
+
+	if (dhcp_enabled) {
 		f_write(lease_file_tmp, NULL, 0, 0, 0666);
-#else
-	if ((nvram_match("lan_proto", "dhcp")) || (nvram_match("lan1_proto", "dhcp")) || (nvram_match("lan2_proto", "dhcp")) || (nvram_match("lan3_proto", "dhcp")) ||
-	    (nvram_match("lan4_proto", "dhcp")) || (nvram_match("lan5_proto", "dhcp")) || (nvram_match("lan6_proto", "dhcp")) || (nvram_match("lan7_proto", "dhcp"))) {
-		f_write(lease_file_tmp, NULL, 0, 0, 0666);
-#endif /* TOMATO64 */
 
 		/* dump the leases to a file */
 		if (killall("dnsmasq", SIGUSR2) == 0) {
