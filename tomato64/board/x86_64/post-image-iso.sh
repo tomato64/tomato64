@@ -9,6 +9,10 @@ mkdir -p "${BINARIES_DIR}/iso"/{staging/{EFI/BOOT,boot/grub/x86_64-efi,isolinux,
 cp $BINARIES_DIR/bzImage $BINARIES_DIR/iso/staging/live/
 cp $BINARIES_DIR/rootfs.cpio.zst $BINARIES_DIR/iso/staging/live/initrd
 
+rm -f $BINARIES_DIR/tomato64.img.zst
+zstd --compress -19 $BINARIES_DIR/tomato64.img
+cp $BINARIES_DIR/tomato64.img.zst $BINARIES_DIR/iso/staging/
+
 cat <<'EOF' > "${BINARIES_DIR}/iso/staging/isolinux/isolinux.cfg"
 UI vesamenu.c32
 

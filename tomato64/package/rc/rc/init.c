@@ -11597,6 +11597,9 @@ static void sysinit(void)
 	struct dirent *de;
 	char s[256];
 	char t[256];
+#ifdef TOMATO64
+	FILE *fp;
+#endif /* TOMATO64 */
 
 	mount("proc", "/proc", "proc", 0, NULL);
 	mount("tmpfs", "/tmp", "tmpfs", 0, NULL);
@@ -11689,6 +11692,12 @@ static void sysinit(void)
 	/* Mount filesystem rw */
 	eval("mount", "-o", "remount,rw", "/");
 	eval("mount_nvram");
+
+	if ((fp = fopen("/etc/fstab", "w"))) {
+		fprintf(fp, "LABEL=opt /opt ext4 defaults 0 0");
+		fclose(fp);
+	}
+	eval("mount", "-a");
 
 	/* Expand filesystem parition to fill disk */
 	if (!nvram_get_int("fs_expanded")) {

@@ -1,0 +1,345 @@
+#!/bin/sh
+
+# Borrowed from alpine linux
+
+PREFIX=@PREFIX@
+: ${LIBDIR=$PREFIX/lib}
+#. "$LIBDIR/libalpine.sh"
+#. "$LIBDIR/dasd-functions.sh"
+
+MBR=${MBR:-"/usr/share/syslinux/mbr.bin"}
+ROOTFS=${ROOTFS:-ext4}
+BOOTFS=${BOOTFS:-ext4}
+VARFS=${VARFS:-ext4}
+DISKLABEL=${DISKLABEL:-dos}
+KERNELOPTS=${KERNELOPTS:-quiet}
+
+# default location for mounted root
+SYSROOT=${SYSROOT:-/mnt}
+
+yesno() {
+        case $1 in
+        [Yy]|[Yy][Ee][Ss]) return 0;;
+        esac
+        return 1
+}
+
+ask_yesno() {
+        while true; do
+                ask "$1" "$2"
+                case "$resp" in
+                        y|yes|n|no) break;;
+                esac
+        done
+        yesno "$resp"
+}
+
+die() {
+        echo "$@"
+        exit 1
+}
+
+_ask() {
+        local _redo=0
+
+        read resp
+        case "$resp" in
+        !)      echo "Type 'exit' to return to setup."
+                sh
+                _redo=1
+                ;;
+        !*)     eval "${resp#?}"
+                _redo=1
+                ;;
+        esac
+        return $_redo
+}
+
+ask() {
+        local _question="$1" _default="$2"
+
+        while :; do
+                printf %s "$_question "
+                [ -z "$_default" ] || printf "[%s] " "$_default"
+                _ask && : ${resp:=$_default} && break
+        done
+}
+
+
+is_dasd() {
+        local disk="${1#*\/dev\/}" dasd_type="$2"
+        for _dasd in $(eval "echo \$${dasd_type}_dasd"); do
+                [ -e /sys/bus/ccw/drivers/dasd-$dasd_type/$_dasd/block/$disk ] && return 0
+        done
+        return 1
+}
+
+in_list() {
+	local i="$1"
+	shift
+	while [ $# -gt 0 ]; do
+		[ "$i" = "$1" ] && return 0
+		shift
+	done
+	return 1
+}
+
+all_in_list() {
+	local needle="$1"
+	local i
+	[ -z "$needle" ] && return 1
+	shift
+	for i in $needle; do
+		in_list "$i" $@ || return 1
+	done
+	return 0
+}
+
+# wrapper to only show given device
+_blkid() {
+	blkid | grep "^$1:"
+}
+
+get_bootopt() {
+	local opt="$1"
+	set -- $(cat /proc/cmdline)
+	for i; do
+		case "$i" in
+			"$opt"|"$opt"=*) echo "${i#*=}"; break;;
+		esac
+	done
+}
+
+has_mounted_part() {
+	local p
+	local sysfsdev="$(echo ${1#/dev/} | sed 's:/:!:g')"
+	# parse /proc/mounts for mounted devices
+	for p in $(awk '$1 ~ /^\/dev\// {gsub("/dev/", "", $1); gsub("/", "!", $1); print $1}' \
+			"$ROOT"/proc/mounts 2>/dev/null); do
+		[ "$p" = "$sysfsdev" ] && return 0
+		[ -e "$ROOT"/sys/block/$sysfsdev/$p ] && return 0
+	done
+	return 1
+}
+
+has_holders() {
+	local i
+	# check if device is used by any md devices
+	for i in $1/holders/* $1/*/holders/*; do
+		[ -e "$i" ] && return 0
+	done
+	return 1
+}
+
+is_available_disk() {
+	local dev="$1"
+
+	# check so it does not have mounted partitions
+	has_mounted_part $dev && return 1
+
+	# check so its not part of an md setup
+	if has_holders "$ROOT"/sys/block/$dev; then
+		[ -n "$USE_RAID" ] && echo "Warning: $dev is part of a running raid" >&2
+		return 1
+	fi
+
+	return 0
+}
+
+find_disks() {
+	local p=
+	for p in "$ROOT"/sys/block/*/device; do
+		local dev="${p%/device}"
+		dev=${dev#*/sys/block/}
+		if is_available_disk "$dev" && [[ ${dev:0:2} != "sr" ]]; then
+			printf %s " $dev"
+		fi
+	done
+}
+
+show_disk_info() {
+	local disk= vendor= model= d= size= busid=
+	for disk in $@; do
+		local dev="${disk#/dev/}"
+		d=$(echo $dev | sed 's:/:!:g')
+		vendor=$(cat "$ROOT"/sys/block/$d/device/vendor 2>/dev/null)
+		model=$(cat "$ROOT"/sys/block/$d/device/model 2>/dev/null)
+		busid=$(readlink -f "$ROOT"/sys/block/$d/device 2>/dev/null)
+		size=$(awk '{gb = ($1 * 512)/1000000000; printf "%.1f GB\n", gb}' "$ROOT"/sys/block/$d/size 2>/dev/null)
+		if is_dasd $dev eckd; then
+			echo "  $dev	($size $vendor ${busid##*/})"
+		else
+			echo "  $dev	($size $vendor $model)"
+		fi
+	done
+}
+
+diskselect_help() {
+	cat <<-__EOF__
+
+		The disk you select can be used for a traditional disk install or for a
+		data-only install.
+
+		The disk will be erased.
+
+		Enter 'none' if you want to run diskless.
+
+	__EOF__
+}
+
+# ask for a root or data disk
+# returns response in global variable $resp
+ask_disk() {
+	local prompt="$1"
+	local help_func="$2"
+	local i=
+	shift 2
+	local default_disk="${DEFAULT_DISK:-$1}"
+
+	resp=
+	while ! all_in_list "$resp" $@ "none" "abort"; do
+		echo "Available disks are:"
+		show_disk_info "$@"
+		printf "\n"
+		ask "$prompt"  "$default_disk"
+		case "$resp" in
+			'abort') exit 0;;
+			'none') return 0;;
+			'?') $help_func;;
+			*) for i in $resp; do
+				if ! [ -b "/dev/$i" ]; then
+					echo "/dev/$i is not a block device" >&2
+					resp=
+				fi
+			done;;
+		esac
+	done
+}
+
+find_modloop_media() {
+        devnum=$(mountpoint -d /.modloop) || return
+        test -n "$devnum" || return
+        modloop_file=$(cat /sys/dev/block/$devnum/loop/backing_file) || return
+        test -n "$modloop_file" || return
+        # assume that device name and mount point don't contain spaces
+        modloop_media=$(df "$modloop_file" | awk 'NR==2{print $6}') || return
+        test -n "$modloop_media" || return
+        echo "$modloop_media"
+}
+
+if [ ! -f /init ]; then
+	echo "Installation script can only be run from the ISO image"
+	exit 0
+fi
+
+umount /mnt/boot >/dev/null 2>&1
+umount /mnt/nvram >/dev/null 2>&1
+umount /mnt/rootfs >/dev/null 2>&1
+umount /mnt >/dev/null 2>&1
+umount /nvram >/dev/null 2>&1
+umount /opt >/dev/null 2>&1
+
+if [ "$DISK_MODE" = "none" ] || [ "$1" = "none" ]; then
+	exit 0
+fi
+
+diskdevs=
+
+# no disks so lets exit quietly.
+while [ -z "$disks" ]; do
+	disks=$(find_disks)
+	[ -n "$disks" ] && break
+
+	# ask to unmount the boot mmc for rpi and similar
+#	modloop_media=$(find_modloop_media)
+
+#	if [ -z "$modloop_media" ] || ! ask_yesno "No disks available. Try boot media $modloop_media? (y/n)" n; then
+		[ -z "$QUIET" ] && echo "No disks found." >&2
+		exit 0
+#	fi
+
+	DO_UMOUNT=1 modloop_media=$modloop_media copy-modloop
+done
+
+if [ $# -gt 0 ]; then
+	# check that they are
+	for i in "$@"; do
+		j=$(readlink -f "$i" | sed 's:^/dev/::; s:/:!:g')
+		if ! [ -e "$ROOT/sys/block/$j/device" ]; then
+			die "$i is not a block device suitable for partitioning"
+		fi
+		diskdevs="$diskdevs $i"
+	done
+else
+	ask_disk "Which disk would you like to use? " \
+		diskselect_help $disks
+	if [ "$resp" = "none" ]; then
+		exit 0
+	fi
+	for i in $resp; do
+		diskdevs="$diskdevs /dev/$i"
+	done
+fi
+
+if [ -n "$diskdevs" ] && [ -z "$DISK_MODE" ]; then
+	resp=
+	disk_is_or_disks_are="disk is"
+	it_them="it"
+	set -- $diskdevs
+	if [ $# -gt 1 ]; then
+		disk_is_or_disks_are="disks are"
+		it_them="them"
+	fi
+
+	while true; do
+		show_disk_info $diskdevs
+		printf "\n"
+
+
+		if ask_yesno "Are you sure you want to use this disk? (y/n)"; then
+
+fdisk $(echo $diskdevs) <<\EndOfAnswers >/dev/null 2>&1
+o
+w
+EndOfAnswers
+			echo "Writing image to disk $diskdevs"
+			mount -r /dev/sr0 /mnt
+			zstdcat /mnt/tomato64.img.zst | dd of=$(echo $diskdevs) >/dev/null 2>&1
+			if ask_yesno "Create separate partition for /opt? (y/n)"; then
+
+fdisk $(echo $diskdevs) <<\EndOfAnswers >/dev/null 2>&1
+n
+4
+
+
+w
+EndOfAnswers
+
+if [[ ${diskdevs:5:2} == "sd" ]]; then
+        part4="${diskdevs:0:8}4"
+fi
+
+if [[ ${diskdevs:5:4} == "nvme" ]]; then
+        part4="${diskdevs:0:12}p4"
+fi
+
+
+mkfs.ext4 -L opt $(echo $part4) <<\EndOfAnswers >/dev/null 2>&1
+y
+EndOfAnswers
+			fi
+			umount /mnt/boot >/dev/null 2>&1
+			umount /mnt/nvram >/dev/null 2>&1
+			umount /mnt/rootfs >/dev/null 2>&1
+			umount /mnt >/dev/null 2>&1
+			umount /nvram >/dev/null 2>&1
+			umount /opt >/dev/null 2>&1
+			rm -rf /mnt/*
+			echo "Done"
+			sleep 1
+			echo "You may now reboot the computer and remove the installation media"
+			exit 0
+		fi
+	done
+	DISK_MODE="$resp"
+fi
