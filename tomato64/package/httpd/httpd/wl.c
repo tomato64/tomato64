@@ -870,7 +870,7 @@ next_info:
 		else
 			web_printf("'%s',", "NONE");
 
-		web_printf("'%s']", CHSPEC_IS2G(apinfos_ext[i].chanspec) ? "2.4" : "5");
+		web_printf("'%s',%d]", CHSPEC_IS2G(apinfos_ext[i].chanspec) ? "2.4" : "5", apinfos[i].channel); /* add central channel at the end of the array */
 	}
 	free(results);
 
