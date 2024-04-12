@@ -89,8 +89,8 @@ static char services[][3][23] = { /* remember: the number in the third square br
 	{ "eth0.me",			"eth0.me",			"/"	},	/* txt */
 	{ "myexternalip.com",		"myexternalip.com",		"/raw"	},	/* txt */
 	{ "tyk.nu",			"ip.tyk.nu",			"/"	},	/* txt */
-	{ "wgetip.com",			"wgetip.com",			"/"	},	/* txt? */
-	{ "ipecho.net",			"ipecho.net",			"/plain"},	/* txt? */
+	{ "wgetip.com",			"wgetip.com",			"/"	},	/* txt */
+	{ "ipecho.net",			"ipecho.net",			"/plain"},	/* txt */
 	{ "ifconfig.me",		"ifconfig.me",			"/ip"	},	/* txt */
 	{ "icanhazip.com",		"icanhazip.com",		"/"	},	/* txt */
 };
@@ -391,67 +391,74 @@ static struct curl_slist *curl_headers(const char *header)
 #else /* !USE_LIBCURL */
 static int _http_req(int ssl, const char *host, int port, const char *request, char *buffer, int bufsize, char **body)
 {
-	struct hostent *he;
-	struct sockaddr_in sa;
-	int sd = -1;
+	struct addrinfo hints;
+	struct addrinfo *result, *rp;
+	struct timeval tv;
+	char cport[8];
+	int sockfd = -1;
 	FILE *f;
-	unsigned int i;
-	int trys;
+	unsigned int trys, i;
 	char *p;
 	const char *c;
-	struct timeval tv;
 
-	logmsg(LOG_DEBUG, "*** %s: %s", __FUNCTION__, host);
+	logmsg(LOG_DEBUG, "*** IN %s: %s", __FUNCTION__, host);
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+
+	memset(cport, 0, sizeof(cport));
+	snprintf(cport, sizeof(cport), "%d", port);
 
 	for (trys = 4; trys > 0; --trys) {
-		logmsg(LOG_DEBUG, "*** %s: _http_req trys=%d\n", __FUNCTION__, trys);
+		logmsg(LOG_DEBUG, "*** %s: trys=%d\n", __FUNCTION__, trys);
 
 		for (i = 4; i > 0; --i) {
-			if ((he = gethostbyname(host)) != NULL) {
-				if ((sd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-					return -1;
-
-				memset(&sa, 0, sizeof(sa));
-				sa.sin_family = AF_INET;
-				sa.sin_port = htons(port);
-				memcpy(&sa.sin_addr, he->h_addr, sizeof(sa.sin_addr));
-
+			if (getaddrinfo(host, cport, &hints, &result) == 0) {
+				for (rp = result; rp != NULL; rp = rp->ai_next) {
+					sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+					if (sockfd == -1)
+						continue;
 #ifdef MDU_DEBUG
-				struct in_addr ia;
-				ia.s_addr = sa.sin_addr.s_addr;
-
-				logmsg(LOG_DEBUG, "*** %s: [%s][%d] - connecting...", __FUNCTION__, inet_ntoa(ia), port);
+					char addrstr[INET6_ADDRSTRLEN];
+					void *ptr;
+					inet_ntop (rp->ai_family, rp->ai_addr->sa_data, addrstr, sizeof(addrstr));
+					ptr = &((struct sockaddr_in *) rp->ai_addr)->sin_addr;
+					logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting...", __FUNCTION__, inet_ntop (rp->ai_family, ptr, addrstr, sizeof(addrstr)), cport);
 #endif
-
-				if (connect_timeout(sd, (struct sockaddr *)&sa, sizeof(sa), 10) == 0) {
-					logmsg(LOG_DEBUG, "*** %s: connected", __FUNCTION__);
-					break;
+					if (connect_timeout(sockfd, rp->ai_addr, rp->ai_addrlen, 10) != -1) {
+						logmsg(LOG_DEBUG, "*** %s: connected", __FUNCTION__);
+						freeaddrinfo(result);
+						goto connected;
+					}
+					close(sockfd);
 				}
 #ifdef MDU_DEBUG
 				logerr(__FUNCTION__, __LINE__, "connect");
 #endif
-				close(sd);
 				sleep(2);
 			}
+			freeaddrinfo(result);
 		}
 		if (i <= 0)
 			return -1;
 
+connected:
 		tv.tv_sec = 10;
 		tv.tv_usec = 0;
-		setsockopt(sd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
-		setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+		setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+		setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
 		if (ssl) {
 			mssl_init(NULL, NULL);
-			f = ssl_client_fopen_name(sd, host);
+			f = ssl_client_fopen_name(sockfd, host);
 		}
 		else
-			f = fdopen(sd, "r+");
+			f = fdopen(sockfd, "r+");
 
 		if (f == NULL) {
 			logerr(__FUNCTION__, __LINE__, "error opening");
-			close(sd);
+			close(sockfd);
 			continue;
 		}
 
@@ -459,7 +466,7 @@ static int _http_req(int ssl, const char *host, int port, const char *request, c
 		if (fwrite(request, 1, i, f) != i) {
 			logerr(__FUNCTION__, __LINE__, "error writing");
 			fclose(f);
-			close(sd);
+			close(sockfd);
 			continue;
 		}
 		logmsg(LOG_DEBUG, "*** %s: sent request", __FUNCTION__);
@@ -467,7 +474,7 @@ static int _http_req(int ssl, const char *host, int port, const char *request, c
 		i = fread(buffer, 1, bufsize, f);
 		if (i <= 0) {
 			fclose(f);
-			close(sd);
+			close(sockfd);
 			logerr(__FUNCTION__, __LINE__, "error reading");
 			continue;
 		}
@@ -476,7 +483,7 @@ static int _http_req(int ssl, const char *host, int port, const char *request, c
 		logmsg(LOG_DEBUG, "*** %s: recvd=[%s], i=%d", __FUNCTION__, buffer, i);
 
 		fclose(f);
-		close(sd);
+		close(sockfd);
 
 		if ((c = get_dump_name()) != NULL) {
 			if ((f = fopen(c, "a")) != NULL) {
@@ -794,12 +801,12 @@ int get_address6(char *buf, const size_t buf_sz)
 		if (lanif != NULL) {
 			strlcpy(buf, lanif, buf_sz);
 			ret = 1;
-			logmsg(LOG_DEBUG, "*** %s: - valid global IPv6 address %s after %d secs...", __FUNCTION__, lanif, (n-1) * (n-1));
+			logmsg(LOG_DEBUG, "*** %s: - valid global IPv6 address %s after %d secs...", __FUNCTION__, lanif, (n - 1) * (n - 1));
 			break; /* All OK and break here */
 		}
 
-		logmsg(LOG_DEBUG, "*** %s: - no global IPv6 address yet, retrying in %d secs...", __FUNCTION__, n*n);
-		sleep(n*n); /* try up to 30 sec */
+		logmsg(LOG_DEBUG, "*** %s: - no global IPv6 address yet, retrying in %d secs...", __FUNCTION__, n * n);
+		sleep(n * n); /* try up to 30 sec */
 	}
 
 	return ret;
@@ -1639,7 +1646,7 @@ static void update_wget(void)
 	else
 		r = wget(https, 1, host, path, NULL, 0, &body);
 
-	logmsg(LOG_DEBUG, "*** %s: IP: %s", __FUNCTION__, body);
+	logmsg(LOG_DEBUG, "*** %s: IP: %s HOST: %s", __FUNCTION__, body, host);
 
 	switch (r) {
 	case 200:
