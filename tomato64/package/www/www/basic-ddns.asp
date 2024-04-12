@@ -69,19 +69,10 @@ var opendns = ['208.67.222.222', '208.67.220.220'];
 var opendnsInUse = 0;
 var clients_num = 2;
 
-/* DUALWAN-BEGIN */
-maxwan_num = 2;
-/* DUALWAN-END */
-
-/* MULTIWAN-BEGIN */
-maxwan_num = 4;
-/* MULTIWAN-END */
-
-
 function show() {
 	var i, j;
 
-	for (i = 1; i <= maxwan_num; i++) {
+	for (i = 1; i <= MAXWAN_NUM; i++) {
 		j = (i > 1 ? i : '');
 		E('_f_ddnsx_ip').options[i - 1].text = 'Use WAN'+(i - 1)+' IP Address '+(eval('ddnsx'+j+'_ip') != '0.0.0.0' ? eval('ddnsx'+j+'_ip') : '');
 	}
