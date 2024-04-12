@@ -872,6 +872,40 @@ next_info:
 			web_printf("'%s',", "NONE");
 
 		web_printf("'%s',%d,0x%x]", CHSPEC_IS2G(apinfos_ext[i].chanspec) ? "2.4" : "5", apinfos[i].channel, apinfos_ext[i].nbss_cap); /* add central channel AND 802.11N+AC BSS capabilities at the end of the array */
+
+		/* Array Ex.:
+		 * wlscandata = [[
+		 * 'AA:BB:CC:DD:EE:FF',	==> MAC of AP/Router/Device (BSSID)
+		 * 'SSID-Name',		==> SSID-Name
+		 * -21,			==> RSSI
+		 * 108,			==> Conrol Channel / Primary Channel
+		 * 80,			==> Bandwidth (BW)
+		 * 100,			==> RSSI Quality
+		 * '11ac',		==> Network capabilities (ac, b/g/n, etc.)
+		 * 'WPA2-Personal',	==> Security
+		 * 'AES',		==> Encryption
+		 * '5',			==> wireless band (5 GHz or 2,4 GHz)
+		 * 106,			==> Central Channel
+		 * 0x362		==> 802.11N+AC BSS capabilities
+		 * ]];
+		 *
+		 * 802.11N+AC BSS capabilities Ex.:
+		 * 0x362 (HEX)
+		 *  VHT   HT   HT
+		 * 0011 0110 0010 (BIN)
+		 * |||| |||| ||||--> 0 / not reported
+		 * |||| |||| |||---> HT_CAP_40MHZ (FALSE: 20Mhz, TRUE: 20/40MHZ supported)
+		 * |||| |||| ||----> 0 / not reported
+		 * |||| |||| |-----> 0 / not reported
+		 * |||| ||||-------> 0 / not reported
+		 * |||| |||--------> HT_CAP_SHORT_GI_20
+		 * |||| ||---------> HT_CAP_SHORT_GI_40
+		 * |||| |----------> 0 / not reported
+		 * ||||------------> VHT_BI_SGI_80MHZ
+		 * |||-------------> VHT_BI_80MHZ
+		 * ||--------------> VHT_BI_160MHZ
+		 * |---------------> VHT_BI_8080MHZ
+		 */
 	}
 	free(results);
 
