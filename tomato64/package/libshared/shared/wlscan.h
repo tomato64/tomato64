@@ -154,6 +154,7 @@ struct apinfo_ext
 {
 	int RSSI;
 	unsigned int chanspec;
+	unsigned int nbss_cap;
 } apinfos_ext[MAX_NUMBER_OF_APINFO];
 
 #define WIF "eth1"

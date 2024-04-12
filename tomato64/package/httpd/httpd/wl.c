@@ -683,6 +683,7 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 		/* add/copy extended infos for FreshTomato */
 		apinfos_ext[ap_count].RSSI = bssi->RSSI;
 		apinfos_ext[ap_count].chanspec = bssi->chanspec;
+		apinfos_ext[ap_count].nbss_cap = bssi->nbss_cap;
 
 		if (bssi->RSSI >= -50)
 			apinfos[ap_count].RSSI_Quality = 100;
@@ -870,7 +871,7 @@ next_info:
 		else
 			web_printf("'%s',", "NONE");
 
-		web_printf("'%s',%d]", CHSPEC_IS2G(apinfos_ext[i].chanspec) ? "2.4" : "5", apinfos[i].channel); /* add central channel at the end of the array */
+		web_printf("'%s',%d,0x%x]", CHSPEC_IS2G(apinfos_ext[i].chanspec) ? "2.4" : "5", apinfos[i].channel, apinfos_ext[i].nbss_cap); /* add central channel AND 802.11N+AC BSS capabilities at the end of the array */
 	}
 	free(results);
 
