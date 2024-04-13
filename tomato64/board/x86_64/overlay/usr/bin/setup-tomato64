@@ -235,6 +235,7 @@ fi
 umount /mnt/boot >/dev/null 2>&1
 umount /mnt/nvram >/dev/null 2>&1
 umount /mnt/rootfs >/dev/null 2>&1
+umount /mnt/sda3 >/dev/null 2>&1
 umount /mnt >/dev/null 2>&1
 umount /nvram >/dev/null 2>&1
 umount /opt >/dev/null 2>&1
@@ -303,7 +304,8 @@ o
 w
 EndOfAnswers
 			echo "Writing image to disk $diskdevs"
-			mount -r /dev/sr0 /mnt
+			part=$(blkid | grep "TOMATO64" | awk '{print $1}')
+			mount -r $(echo ${part%?}) /mnt
 			zstdcat /mnt/tomato64.img.zst | dd of=$(echo $diskdevs) >/dev/null 2>&1
 			if ask_yesno "Create separate partition for /opt? (y/n)"; then
 
@@ -315,22 +317,24 @@ n
 w
 EndOfAnswers
 
+diskdevs="$( echo $diskdevs )"
 if [[ ${diskdevs:5:2} == "sd" ]]; then
-        part4="${diskdevs:0:8}4"
+	part="${diskdevs:0:8}4"
 fi
 
 if [[ ${diskdevs:5:4} == "nvme" ]]; then
-        part4="${diskdevs:0:12}p4"
+        part="${diskdevs:0:12}p4"
 fi
 
 
-mkfs.ext4 -L opt $(echo $part4) <<\EndOfAnswers >/dev/null 2>&1
+mkfs.ext4 -L opt $(echo $part) <<\EndOfAnswers >/dev/null 2>&1
 y
 EndOfAnswers
 			fi
 			umount /mnt/boot >/dev/null 2>&1
 			umount /mnt/nvram >/dev/null 2>&1
 			umount /mnt/rootfs >/dev/null 2>&1
+			umount /mnt/sda3 >/dev/null 2>&1
 			umount /mnt >/dev/null 2>&1
 			umount /nvram >/dev/null 2>&1
 			umount /opt >/dev/null 2>&1
