@@ -53,6 +53,7 @@ menuconfig BR2_PACKAGE_RC
 	select BR2_PACKAGE_HOST_DOSFSTOOLS
 	select BR2_PACKAGE_HOST_GENIMAGE
 	select BR2_PACKAGE_HOST_MTOOLS
+	select BR2_HOST_CMAKE_AT_LEAST_3_27
 	help
 	  rc is the init process for Tomato.
 
