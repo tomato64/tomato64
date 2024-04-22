@@ -861,8 +861,8 @@ static void setup_listeners(int do_ipv6)
 	for (i = 1; i < BRIDGE_COUNT; i++)
 	{
 		char b[16];
-		char *nv;
 #ifdef TCONFIG_IPV6
+		char *nv;
 		if (do_ipv6) {
 			snprintf(b, sizeof(b), "lan%d_ifname", i);
 			nv = nvram_safe_get(b);
