@@ -532,6 +532,13 @@ ifneq ($(TCONFIG_WIREGUARD),y)
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/WIREGUARD-BEGIN/,/WIREGUARD-END/d"
 endif
 
+# Only include 4 DDNS clients if nvram >= 64KB and optimize size is disabled
+ifeq ($(or $(TCONFIG_NVRAM_32K),$(TCONFIG_OPTIMIZE_SIZE)),y)
+	sed -i $(INSTALLDIR)/www/basic-ddns.asp -e "/DDNS4CLS-BEGIN/,/DDNS4CLS-END/d"
+else
+	sed -i $(INSTALLDIR)/www/basic-ddns.asp -e "/DDNS2CLS-BEGIN/,/DDNS2CLS-END/d"
+endif
+
 # clean up
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.jsz *.html); do \
@@ -590,6 +597,8 @@ endif
 		-e "/PROXY-BEGIN/d"	-e "/PROXY-END/d" \
 		-e "/TFTP-BEGIN/d"	-e "/TFTP-END/d" \
 		-e "/WIREGUARD-BEGIN/d"	-e "/WIREGUARD-END/d" \
+		-e "/DDNS4CLS-BEGIN/d"	-e "/DDNS4CLS-END/d" \
+		-e "/DDNS2CLS-BEGIN/d"	-e "/DDNS2CLS-END/d" \
 		-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 		-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
 		|| true; \

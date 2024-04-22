@@ -20,10 +20,10 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dns_addget,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe"); %>
+//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe,wan_addget,wan2_addget,wan3_addget,wan4_addget,wan_proto,wan2_proto,wan3_proto,wan4_proto"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dns_addget,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dhcpd4_ostatic,dhcpd5_ostatic,dhcpd6_ostatic,dhcpd7_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_pxelan4,dnsmasq_pxelan5,dnsmasq_pxelan6,dnsmasq_pxelan7,dnsmasq_safe"); %>
+//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dhcpd4_ostatic,dhcpd5_ostatic,dhcpd6_ostatic,dhcpd7_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_pxelan4,dnsmasq_pxelan5,dnsmasq_pxelan6,dnsmasq_pxelan7,dnsmasq_safe,wan_addget,wan2_addget,wan3_addget,wan4_addget,wan_proto,wan2_proto,wan3_proto,wan4_proto"); %>
 /* TOMATO64-END */
 
 var cprefix = 'advanced_dhcpdns';
@@ -162,6 +162,23 @@ function verifyFields(focused, quiet) {
 	E('_f_dnsmasq_onion_support').disabled = a;
 /* TOR-END */
 
+	for (i = 1; i <= MAXWAN_NUM; i++) {
+		v = (i > 1) ? i : '';
+		if ((nvram['wan'+v+'_proto'] == 'disabled')
+/* DNSCRYPT-BEGIN */
+		    || (E('_f_dnscrypt_proxy').checked && E('_dnscrypt_priority').value == 2)
+/* DNSCRYPT-END */
+/* STUBBY-BEGIN */
+		    || (E('_f_stubby_proxy').checked && E('_stubby_priority').value == 2)
+/* STUBBY-END */
+		) {
+			E('_f_wan'+v+'_addget').disabled = 1;
+			E('_f_wan'+v+'_addget').checked = 0;
+		}
+		else
+			E('_f_wan'+v+'_addget').disabled = 0;
+	}
+
 	if (!v_range('_f_dnsmasq_edns_size', quiet, 512, 4096))
 		return 0;
 	if (!v_length('_dnsmasq_custom', quiet, 0, 4096))
@@ -298,7 +315,12 @@ function save() {
 	fom.dhcpd7_ostatic.value = fom._f_dhcpd7_ostatic.checked ? 1 : 0;
 /* TOMATO64-END */
 	fom.dnsmasq_gen_names.value = fom._f_dnsmasq_gen_names.checked ? 1 : 0;
-	fom.dns_addget.value = fom._f_dns_addget.checked ? 1 : 0;
+	fom.wan_addget.value = fom._f_wan_addget.checked ? 1 : 0;
+	fom.wan2_addget.value = fom._f_wan2_addget.checked ? 1 : 0;
+/* MULTIWAN-BEGIN */
+	fom.wan3_addget.value = fom._f_wan3_addget.checked ? 1 : 0;
+	fom.wan4_addget.value = fom._f_wan4_addget.checked ? 1 : 0;
+/* MULTIWAN-END */
 	fom.dns_norebind.value = fom._f_dns_norebind.checked ? 1 : 0;
 	fom.dns_fwd_local.value = fom._f_dns_fwd_local.checked ? 1 : 0;
 	fom.dns_intcpt.value = fom._f_dns_intcpt.checked ? 1 : 0;
@@ -498,7 +520,12 @@ function init() {
 <input type="hidden" name="dhcpd7_ostatic">
 /* TOMATO64-END */
 <input type="hidden" name="dhcpd_gwmode">
-<input type="hidden" name="dns_addget">
+<input type="hidden" name="wan_addget">
+<input type="hidden" name="wan2_addget">
+<!-- MULTIWAN-BEGIN -->
+<input type="hidden" name="wan3_addget">
+<input type="hidden" name="wan4_addget">
+<!-- MULTIWAN-END -->
 <input type="hidden" name="dns_norebind">
 <input type="hidden" name="dns_fwd_local">
 <input type="hidden" name="dns_intcpt">
@@ -584,7 +611,7 @@ function init() {
 				{ title: 'Resolver Address', indent: 2, name: 'dnscrypt_resolver_address', type: 'text', maxlen: 50, size: 25, value: nvram.dnscrypt_resolver_address },
 				{ title: 'Provider Name', indent: 2, name: 'dnscrypt_provider_name', type: 'text', maxlen: 60, size: 25, value: nvram.dnscrypt_provider_name },
 				{ title: 'Provider Public Key', indent: 2, name: 'dnscrypt_provider_key', type: 'text', maxlen: 80, size: 25, value: nvram.dnscrypt_provider_key },
-				{ title: 'Priority', indent: 2, name: 'dnscrypt_priority', type: 'select', options: [['1','Strict-Order'],['2','No-Resolv'],['0','None']], suffix: '&nbsp; <small>warning: set to No-Resolv to only use dnscrypt-proxy resolvers!<\/small>', value: nvram.dnscrypt_priority },
+				{ title: 'Priority', indent: 2, name: 'dnscrypt_priority', type: 'select', options: [['2','No-Resolv*'],['1','Strict-Order'],['0','None']], suffix: '&nbsp; <small>warning: set to No-Resolv to only use dnscrypt-proxy resolvers!<\/small>', value: nvram.dnscrypt_priority },
 				{ title: 'Local Port', indent: 2, name: 'dnscrypt_port', type: 'text', maxlen: 5, size: 7, value: nvram.dnscrypt_port },
 				{ title: 'Log Level', indent: 2, name: 'dnscrypt_log', type: 'text', maxlen: 2, size: 5, value: nvram.dnscrypt_log }
 /* DNSCRYPT-END */
@@ -630,7 +657,7 @@ function init() {
 		W('<\/table><\/td><\/tr>');
 
 		createFieldTable('noopen,noclose', [
-				{ title: 'Priority', indent: 2, name: 'stubby_priority', type: 'select', options: [['1','Strict-Order'],['2','No-Resolv'],['0','None']], suffix: '&nbsp; <small>warning: set to No-Resolv to only use Stubby resolvers!<\/small>', value: nvram.stubby_priority },
+				{ title: 'Priority', indent: 2, name: 'stubby_priority', type: 'select', options: [['2','No-Resolv*'],['1','Strict-Order'],['0','None']], suffix: '&nbsp; <small>warning: set to No-Resolv to only use Stubby resolvers!<\/small>', value: nvram.stubby_priority },
 				{ title: 'Local Port', indent: 2, name: 'stubby_port', type: 'text', maxlen: 5, size: 7, value: nvram.stubby_port },
 				{ title: 'Log Level', indent: 2, name: 'stubby_log', type: 'select',  options: [['0','Emergency'],['1','Alert'],['2','Critical'],['3','Error'],['4','Warning'],['5','Notice'],['6','Info*'],['7','Debug']],
 					value: nvram.stubby_log, suffix: '&nbsp; <small>*default<\/small>' },
@@ -658,7 +685,19 @@ function init() {
 		createFieldTable('', [
 			{ title: 'Use internal DNS', name: 'f_dhcpd_dmdns', type: 'checkbox', value: nvram.dhcpd_dmdns == 1 },
 				{ title: 'Debug Mode', indent: 2, name: 'f_dnsmasq_debug', type: 'checkbox', value: nvram.dnsmasq_debug == 1 },
-			{ title: 'Use received DNS with user-entered DNS', name: 'f_dns_addget', type: 'checkbox', value: nvram.dns_addget == 1 },
+			{ title: 'Use received DNS with user-entered DNS'
+/* STUBBY-BEGIN */
+/* DNSCRYPT-BEGIN */
+			 , suffix: '<small>inactive when using dncrypt-proxy/Stubby with No-Resolv option<\/small>'
+/* DNSCRYPT-END */
+/* STUBBY-END */
+			},
+				{ title: 'WAN0', indent: 2, name: 'f_wan_addget', type: 'checkbox', value: nvram.wan_addget == 1 },
+				{ title: 'WAN1', indent: 2, name: 'f_wan2_addget', type: 'checkbox', value: nvram.wan2_addget == 1 },
+/* MULTIWAN-BEGIN */
+				{ title: 'WAN2', indent: 2, name: 'f_wan3_addget', type: 'checkbox', value: nvram.wan3_addget == 1 },
+				{ title: 'WAN3', indent: 2, name: 'f_wan4_addget', type: 'checkbox', value: nvram.wan4_addget == 1 },
+/* MULTIWAN-END */
 			{ title: 'Intercept DNS port', name: 'f_dns_intcpt', type: 'checkbox', value: nvram.dns_intcpt == 1 },
 			{ title: 'Use user-entered gateway if WAN is disabled', name: 'f_dhcpd_gwmode', type: 'checkbox', value: nvram.dhcpd_gwmode == 1 },
 			{ title: 'Ignore DHCP requests from unknown devices' },

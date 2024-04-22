@@ -2,7 +2,7 @@
  * Tomato Firmware
  * Copyright (C) 2006-2010 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2024 pedro
  *
  */
 
@@ -192,16 +192,63 @@ static const nvset_t nvset_list[] = {
 /* basic-ddns */
 	{ "ddnsx0",			V_LENGTH(0, 2048)		},
 	{ "ddnsx1",			V_LENGTH(0, 2048)		},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2",			V_LENGTH(0, 2048)		},
+	{ "ddnsx3",			V_LENGTH(0, 2048)		},
+#endif
 	{ "ddnsx0_cache",		V_LENGTH(0, 1)			},	/* only to clear */
 	{ "ddnsx1_cache",		V_LENGTH(0, 1)			},
-	{ "ddnsx_ip",			V_LENGTH(0, 32)			},
-	{ "ddnsx_save",			V_01				},
-	{ "ddnsx_refresh",		V_RANGE(0, 365)			},
-	{ "ddnsx_cktime",		V_RANGE(5, 99999)		},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_cache",		V_LENGTH(0, 1)			},	/* only to clear */
+	{ "ddnsx3_cache",		V_LENGTH(0, 1)			},
+#endif
+	{ "ddnsx0_ip",			V_LENGTH(0, 32)			},
+	{ "ddnsx1_ip",			V_LENGTH(0, 32)			},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_ip",			V_LENGTH(0, 32)			},
+	{ "ddnsx3_ip",			V_LENGTH(0, 32)			},
+#endif
+	{ "ddnsx0_save",		V_01				},
+	{ "ddnsx1_save",		V_01				},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_save",		V_01				},
+	{ "ddnsx3_save",		V_01				},
+#endif
+	{ "ddnsx0_refresh",		V_RANGE(0, 365)			},
+	{ "ddnsx1_refresh",		V_RANGE(0, 365)			},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_refresh",		V_RANGE(0, 365)			},
+	{ "ddnsx3_refresh",		V_RANGE(0, 365)			},
+#endif
+	{ "ddnsx0_cktime",		V_RANGE(5, 99999)		},
+	{ "ddnsx1_cktime",		V_RANGE(5, 99999)		},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_cktime",		V_RANGE(5, 99999)		},
+	{ "ddnsx3_cktime",		V_RANGE(5, 99999)		},
+#endif
+	{ "ddnsx0_opendns",		V_RANGE(0, 15)			},	/* enable opendns as DNS for Dynamic DNS Client 1: bit 0 = WAN0, bit 1 = WAN1, bit 2 = WAN2, bit 3 = WAN3 */
+	{ "ddnsx1_opendns",		V_RANGE(0, 15)			},	/* enable opendns as DNS for Dynamic DNS Client 2: bit 0 = WAN0, bit 1 = WAN1, bit 2 = WAN2, bit 3 = WAN3 */
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_opendns",		V_RANGE(0, 15)			},	/* enable opendns as DNS for Dynamic DNS Client 3: bit 0 = WAN0, bit 1 = WAN1, bit 2 = WAN2, bit 3 = WAN3 */
+	{ "ddnsx3_opendns",		V_RANGE(0, 15)			},	/* enable opendns as DNS for Dynamic DNS Client 4: bit 0 = WAN0, bit 1 = WAN1, bit 2 = WAN2, bit 3 = WAN3 */
+#endif
 
 /* basic-network */
 	/* WAN */
+#ifdef TCONFIG_MULTIWAN
+	{ "mwan_num",			V_RANGE(1, 4)			},
+#else
+	{ "mwan_num",			V_RANGE(1, 2)			},
+#endif
+	{ "mwan_init",			V_01				},
+	{ "mwan_cktime",		V_RANGE(0, 3600)		},
+	{ "mwan_ckdst",			V_LENGTH(0, 64)			},
+	{ "mwan_tune_gc",		V_01				},
+	{ "mwan_state_init",		V_01				},
+	{ "pbr_rules",			V_LENGTH(0, 2048)		},
+
 	{ "wan_proto",			V_LENGTH(1, 16)			},	/* disabled, dhcp, static, pppoe, pptp, l2tp */
+	{ "wan_weight",			V_RANGE(0, 256)			},
 	{ "wan_ipaddr",			V_IP				},
 	{ "wan_netmask",		V_IP				},
 	{ "wan_gateway",		V_IP				},
@@ -228,27 +275,14 @@ static const nvset_t nvset_list[] = {
 	{ "wan_pppoe_lef",		V_RANGE(1, 10)			},
 	{ "wan_sta",			V_LENGTH(0, 10)			},
 	{ "wan_dns",			V_LENGTH(0, 50)			},	/* ip ip ip */
+	{ "wan_dns_auto",		V_01				},
+	{ "wan_addget",			V_01				},
 #ifdef TCONFIG_USB
 	{ "wan_hilink_ip",		V_IP				},
 	{ "wan_status_script",		V_01				},
 #endif
 	{ "wan_ckmtd",			V_LENGTH(1, 2)			},	/* check method: 1 - ping, 2 - traceroute, 3 - curl */
 	{ "wan_ck_pause",		V_01				},	/* skip mwwatchdog check for this wan */
-
-#ifdef TCONFIG_MULTIWAN
-	{ "mwan_num",			V_RANGE(1, 4)			},
-#else
-	{ "mwan_num",			V_RANGE(1, 2)			},
-#endif
-	{ "mwan_init",			V_01				},
-	{ "mwan_cktime",		V_RANGE(0, 3600)		},
-	{ "mwan_ckdst",			V_LENGTH(0, 64)			},
-	{ "mwan_tune_gc",		V_01				},
-	{ "mwan_state_init",		V_01				},
-	{ "pbr_rules",			V_LENGTH(0, 2048)		},
-
-	{ "wan_weight",			V_RANGE(0, 256)			},
-	{ "wan_dns_auto",		V_01				},
 
 	{ "wan2_proto",			V_LENGTH(1, 16)			},	/* disabled, dhcp, static, pppoe, pptp, l2tp */
 	{ "wan2_weight",		V_RANGE(0, 256)			},
@@ -278,6 +312,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan2_sta",			V_LENGTH(0, 10)			},
 	{ "wan2_dns",			V_LENGTH(0, 50)			},	/* ip ip ip */
 	{ "wan2_dns_auto",		V_01				},
+	{ "wan2_addget",		V_01				},
 #ifdef TCONFIG_USB
 	{ "wan2_hilink_ip",		V_IP				},
 	{ "wan2_status_script",		V_01				},
@@ -314,6 +349,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan3_sta",			V_LENGTH(0, 10)			},
 	{ "wan3_dns",			V_LENGTH(0, 50)			},	/* ip ip ip */
 	{ "wan3_dns_auto",		V_01				},
+	{ "wan3_addget",		V_01				},
 #ifdef TCONFIG_USB
 	{ "wan3_hilink_ip",		V_IP				},
 	{ "wan3_status_script",		V_01				},
@@ -349,6 +385,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan4_sta",			V_LENGTH(0, 10)			},
 	{ "wan4_dns",			V_LENGTH(0, 50)			},	/* ip ip ip */
 	{ "wan4_dns_auto",		V_01				},
+	{ "wan4_addget",		V_01				},
 #ifdef TCONFIG_USB
 	{ "wan4_hilink_ip",		V_IP				},
 	{ "wan4_status_script",		V_01				},
@@ -356,17 +393,6 @@ static const nvset_t nvset_list[] = {
 	{ "wan4_ckmtd",			V_LENGTH(1, 2)			},	/* check method: 1 - ping, 2 - traceroute, 3 - curl */
 	{ "wan4_ck_pause",		V_01				},	/* skip mwwatchdog check for this wan */
 #endif /* TCONFIG_MULTIWAN */
-
-	/* LAN */
-	{ "lan_ipaddr",			V_IP				},
-	{ "lan_netmask",		V_IP				},
-	{ "lan_gateway",		V_IP				},
-	{ "lan_dns",			V_LENGTH(0, 50)			},	/* ip ip ip */
-
-#if defined(TCONFIG_DNSSEC) || defined(TCONFIG_STUBBY)
-	{ "dnssec_enable",		V_01				},
-	{ "dnssec_method",		V_RANGE(0, 2)			},	/* 0=dnsmasq, 1=stubby, 2=server only */
-#endif
 
 #ifdef TCONFIG_DNSCRYPT
 	{ "dnscrypt_proxy",		V_01				},
@@ -388,6 +414,18 @@ static const nvset_t nvset_list[] = {
 	{ "stubby_force_tls13",		V_01				},	/* 0=TLS1.2, 1=TLS1.3 */
 	{ "stubby_log",			V_RANGE(0, 7)			},
 #endif
+
+	/* LAN */
+	{ "lan_ipaddr",			V_IP				},
+	{ "lan_netmask",		V_IP				},
+	{ "lan_gateway",		V_IP				},
+	{ "lan_dns",			V_LENGTH(0, 50)			},	/* ip ip ip */
+
+#if defined(TCONFIG_DNSSEC) || defined(TCONFIG_STUBBY)
+	{ "dnssec_enable",		V_01				},
+	{ "dnssec_method",		V_RANGE(0, 2)			},	/* 0=dnsmasq, 1=stubby, 2=server only */
+#endif
+
 	{ "lan_state",			V_01				},
 	{ "lan_desc",			V_01				},
 	{ "lan_invert",			V_01				},
@@ -442,8 +480,8 @@ static const nvset_t nvset_list[] = {
 	{ "wan4_modem_roam",		V_RANGE(0, 3)			},	/* 0 - not supported, 1 - supported, 2 - no change, 3 - roam only */
 	{ "wan4_modem_if",		V_LENGTH(0, 4)			},	/* eth2, eth1... */
 	{ "wan4_modem_type",		V_LENGTH(0, 15)			},	/* hilink, non-hilink, hw-ether, qmi_wwan */
-#endif
-#endif
+#endif /* TCONFIG_MULTIWAN */
+#endif /* TCONFIG_USB */
 
 	/* LAN networks */
 	{ "lan_ifname",			V_LENGTH(0, 5)			},
@@ -610,8 +648,8 @@ static const nvset_t nvset_list[] = {
 	{ "wl_mimo_preamble",		V_WORD				},	/* 802.11n Preamble: mm/gf/auto/gfbcm */
 	{ "wl_nctrlsb",			V_NONE				},	/* none, lower, upper */
 
-#ifdef TCONFIG_IPV6
 /* basic-ipv6 */
+#ifdef TCONFIG_IPV6
 	{ "ipv6_service",		V_LENGTH(0, 16)			},	/* '', native, native-pd, 6to4, sit, other */
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	{ "ipv6_debug",			V_01				},	/* enable/show debug infos */
@@ -645,7 +683,7 @@ static const nvset_t nvset_list[] = {
 	{ "ipv6_wan_addr",		V_IPV6(0)			},	/* Static IPv6 Wan Address */
 	{ "ipv6_prefix_len_wan",	V_RANGE(3, 64)			},	/* Static IPv6 Wan Prefix Length */
 	{ "ipv6_isp_gw",		V_IPV6(0)			},	/* Static IPv6 ISP Router Gateway */
-#endif
+#endif /* TCONFIG_IPV6 */
 
 /* basic-wfilter */
 	{ "wl_macmode",			V_NONE				},	/* allow, deny, disabled */
@@ -676,7 +714,6 @@ static const nvset_t nvset_list[] = {
 	{ "dhcpd_dmdns",		V_01				},
 	{ "dhcpd_lmax",			V_NUM				},
 	{ "dhcpd_gwmode",		V_NUM				},
-	{ "dns_addget",			V_01				},
 	{ "dns_intcpt",			V_01				},
 	{ "dhcpc_minpkt",		V_01				},
 	{ "dhcpc_custom",		V_LENGTH(0, 256)		},

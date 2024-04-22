@@ -1603,6 +1603,13 @@ div#sptime {
 	animation: blinker 1s linear infinite; /* W3C */
 }
 
+span[id^="opendns_info"],
+span[id^="note_cktime1_"],
+span[id^="note_cktime2_"] {
+	font-size: smaller;
+	padding: 0 0.5em 0;
+}
+
 @-webkit-keyframes blinker {
 	50% { opacity: 0; }
 }

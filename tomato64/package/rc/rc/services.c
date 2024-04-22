@@ -461,7 +461,7 @@ void start_dnsmasq()
 	if ((nvram_get_int("tor_enable")) && (nvram_get_int("dnsmasq_onion_support"))) {
 		char *t_ip = nvram_safe_get("lan_ipaddr");
 
-		for(i = 1; i < BRIDGE_COUNT; i++ ) {
+		for (i = 1; i < BRIDGE_COUNT; i++ ) {
 			snprintf(buf, sizeof(buf), "br%d", i);
 			if (nvram_match("tor_iface", buf)) {
 				snprintf(buf, sizeof(buf), "lan%d_ipaddr", i);
@@ -1389,7 +1389,7 @@ void dns_to_resolv(void)
 			logmsg(LOG_DEBUG, "*** %s: exclusive: %d", __FUNCTION__, exclusive);
 			if (!exclusive) { /* exclusive check */
 #ifdef TCONFIG_IPV6
-				if ((write_ipv6_dns_servers(f, "nameserver ", nvram_safe_get("ipv6_dns"), "\n", 0) == 0) || (nvram_get_int("dns_addget")))
+				if ((write_ipv6_dns_servers(f, "nameserver ", nvram_safe_get("ipv6_dns"), "\n", 0) == 0) || (nvram_get_int("wan_addget"))) /* addget only for the first WAN */
 					if (append == 1) /* only once */
 						write_ipv6_dns_servers(f, "nameserver ", nvram_safe_get("ipv6_get_dns"), "\n", 0);
 #endif

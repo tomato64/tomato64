@@ -2,7 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2024 pedro
  *
  */
 
@@ -40,16 +40,22 @@ static void update(int num, int *dirty, int force)
 	FILE *f;
 	char prefix[] = "wanXX";
 
-	if (nvram_match("ddnsx_ip", "wan") || nvram_match("ddnsx_ip", "wan2")
+	logmsg(LOG_DEBUG, "*** %s: IN num=[%d] dirty=[%d] force=[%d]", __FUNCTION__, num, *dirty, force);
+
+	memset(ddnsx, 0, sizeof(ddnsx));
+	snprintf(ddnsx, sizeof(ddnsx), "ddnsx%d", num);
+
+	memset(s, 0, sizeof(s));
+	snprintf(s, sizeof(s), "%s_ip", ddnsx);
+
+	if (nvram_match(s, "wan") || nvram_match(s, "wan2")
 #ifdef TCONFIG_MULTIWAN
-	    || nvram_match("ddnsx_ip", "wan3") || nvram_match("ddnsx_ip", "wan4")
+	    || nvram_match(s, "wan3") || nvram_match(s, "wan4")
 #endif
 	)
-		strlcpy(prefix, nvram_safe_get("ddnsx_ip"), sizeof(prefix));
+		strlcpy(prefix, nvram_safe_get(s), sizeof(prefix));
 	else
-		strlcpy(prefix, "wan", sizeof(prefix));
-
-	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
+		strlcpy(prefix, "wan", sizeof(prefix)); /* default */
 
 	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "ddns%d", num);
@@ -61,8 +67,6 @@ static void update(int num, int *dirty, int force)
 	eval("cru", "d", s);
 	logmsg(LOG_DEBUG, "*** %s: cru d %s", __FUNCTION__, s);
 
-	memset(ddnsx, 0, sizeof(ddnsx));
-	snprintf(ddnsx, sizeof(ddnsx), "ddnsx%d", num);
 	memset(ddnsx_path, 0, sizeof(ddnsx_path));
 	snprintf(ddnsx_path, sizeof(ddnsx_path), "/var/lib/mdu/%s", ddnsx);
 	strlcpy(config, nvram_safe_get(ddnsx), sizeof(config));
@@ -94,12 +98,16 @@ static void update(int num, int *dirty, int force)
 		nvram_set(cache_nv, "");
 	}
 
-	simple_lock("ddns");
+	memset(s, 0, sizeof(s));
+	snprintf(s, sizeof(s), "ddns%d", num);
+	simple_lock(s);
 
-	strlcpy(ip, nvram_safe_get("ddnsx_ip"), sizeof(ip));
+	memset(s, 0, sizeof(s));
+	snprintf(s, sizeof(s), "%s_ip", ddnsx);
+	strlcpy(ip, nvram_safe_get(s), sizeof(ip));
 
 	if (!check_wanup(prefix)) {
-		if ((get_wan_proto() != WP_DISABLED) || (ip[0] == 0)) {
+		if ((get_wanx_proto(prefix) != WP_DISABLED) || (ip[0] == 0)) {
 			logmsg(LOG_DEBUG, "*** %s: !check_wanup", __FUNCTION__);
 			goto CLEANUP;
 		}
@@ -115,7 +123,7 @@ static void update(int num, int *dirty, int force)
 	f_write_string(cache_fn, nvram_safe_get(cache_nv), 0, 0);
 
 	if (!f_exists(msg_fn)) {
-		logmsg(LOG_DEBUG, "*** %s: !f_exist(%s)", __FUNCTION__, msg_fn);
+		logmsg(LOG_DEBUG, "*** %s: !f_exist(%s) - adding ...", __FUNCTION__, msg_fn);
 		f_write(msg_fn, NULL, 0, 0, 0);
 	}
 
@@ -162,9 +170,6 @@ static void update(int num, int *dirty, int force)
 	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "%s_errors", ddnsx);
 	if ((exitcode == 1) || (exitcode == 2)) {
-		if (nvram_match("ddnsx_retry", "0"))
-			goto CLEANUP;
-
 		if (force)
 			errors = 0;
 		else {
@@ -197,12 +202,17 @@ static void update(int num, int *dirty, int force)
 
 	if (!nvram_match(cache_nv, s)) { /* nvram cache is different than this in file */
 		nvram_set(cache_nv, s);
-		if (nvram_get_int("ddnsx_save") && (strstr(serv, "dyndns") == 0))
+
+		memset(v, 0, sizeof(v));
+		snprintf(v, sizeof(v), "%s_save", ddnsx);
+		if (nvram_get_int(s) && (strstr(serv, "dyndns") == 0))
 			*dirty = 1;
 	}
 
 	n = 28;
-	if ((p = nvram_safe_get("ddnsx_refresh")) && (*p))
+	memset(v, 0, sizeof(v));
+	snprintf(v, sizeof(v), "%s_refresh", ddnsx);
+	if ((p = nvram_safe_get(v)) && (*p))
 		n = atoi(p);
 
 	if (n) {
@@ -234,7 +244,9 @@ static void update(int num, int *dirty, int force)
 SCHED:
 		logmsg(LOG_DEBUG, "*** %s: add scheduler [external checker] ...", __FUNCTION__);
 
-		n = ((nvram_get_int("ddnsx_cktime") ? nvram_get_int("ddnsx_cktime") : 10) + (errors * 2));
+		memset(s, 0, sizeof(s));
+		snprintf(s, sizeof(s), "%s_cktime", ddnsx);
+		n = ((nvram_get_int(s) ? nvram_get_int(s) : 10) + (errors * 2));
 		if ((exitcode == 1) || (exitcode == 2)) {
 			if (exitcode == 2) /* special case [update_dua()]: server down */
 				n = 30;
@@ -259,7 +271,9 @@ SCHED:
 	}
 
 CLEANUP:
-	simple_unlock("ddns");
+	memset(s, 0, sizeof(s));
+	snprintf(s, sizeof(s), "ddns%d", num);
+	simple_unlock(s);
 
 	logmsg(LOG_DEBUG, "*** %s: OUT", __FUNCTION__);
 }
@@ -296,11 +310,21 @@ void start_ddns(void)
 	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
 
 	/* cleanup */
-	simple_unlock("ddns");
+	simple_unlock("ddns0");
+	simple_unlock("ddns1");
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	simple_unlock("ddns2");
+	simple_unlock("ddns3");
+#endif
 	nvram_unset("ddnsx0_errors");
 	nvram_unset("ddnsx1_errors");
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	nvram_unset("ddnsx2_errors");
+	nvram_unset("ddnsx3_errors");
+#endif
 
 	xstart("ddns-update");
+	logmsg(LOG_INFO, "ddns service (re-)started");
 }
 
 void stop_ddns(void)
@@ -309,8 +333,16 @@ void stop_ddns(void)
 
 	eval("cru", "d", "ddns0");
 	eval("cru", "d", "ddns1");
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	eval("cru", "d", "ddns2");
+	eval("cru", "d", "ddns3");
+#endif
 	eval("cru", "d", "ddnsf0");
 	eval("cru", "d", "ddnsf1");
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	eval("cru", "d", "ddnsf2");
+	eval("cru", "d", "ddnsf3");
+#endif
 
 	killall("ddns-update", SIGKILL);
 	killall("mdu", SIGKILL);
