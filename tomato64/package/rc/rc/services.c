@@ -1172,11 +1172,6 @@ void generate_mdns_config(void)
 {
 	FILE *fp;
 	char avahi_config[80];
-	char *wan2_ifname;
-#ifdef TCONFIG_MULTIWAN
-	char *wan3_ifname;
-	char *wan4_ifname;
-#endif
 
 	snprintf(avahi_config, sizeof(avahi_config), "%s/%s", AVAHI_CONFIG_PATH, AVAHI_CONFIG_FN);
 
@@ -1192,19 +1187,15 @@ void generate_mdns_config(void)
 	            "use-ipv6=%s\n"
 	            "deny-interfaces=%s",
 	            ipv6_enabled() ? "yes" : "no",
-	            nvram_safe_get("wan_ifname"));
+	            get_wanface("wan"));
 
-	wan2_ifname = nvram_safe_get("wan2_ifname");
-	if (*wan2_ifname)
-		fprintf(fp, ",%s", wan2_ifname);
-
+	if (check_wanup("wan2"))
+		fprintf(fp, ",%s", get_wanface("wan2"));
 #ifdef TCONFIG_MULTIWAN
-	wan3_ifname = nvram_safe_get("wan3_ifname");
-	if (*wan3_ifname)
-		fprintf(fp, ",%s", wan3_ifname);
-	wan4_ifname = nvram_safe_get("wan4_ifname");
-	if (*wan4_ifname)
-		fprintf(fp, ",%s", wan4_ifname);
+	if (check_wanup("wan3"))
+		fprintf(fp, ",%s", get_wanface("wan3"));
+	if (check_wanup("wan4"))
+		fprintf(fp, ",%s", get_wanface("wan4"));
 #endif
 
 	fprintf(fp, "\n"
