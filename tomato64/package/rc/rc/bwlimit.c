@@ -114,87 +114,29 @@ void ipt_bwlimit(int chain)
 			 * with qos, wan pbr, and vpnrouting marks. See qos.c
 			 */
 			ipt_write("-A POSTROUTING ! -s %s/%s -d %s/%s -j MARK --set-mark 0x10/0xf0\n"
-			          "-A PREROUTING  -s %s/%s ! -d %s/%s -j MARK --set-mark 0x10/0xf0\n",
+			          "-A PREROUTING -s %s/%s ! -d %s/%s -j MARK --set-mark 0x10/0xf0\n",
 			          lanipaddr, lanmask, lanipaddr, lanmask,
 			          lanipaddr, lanmask, lanipaddr, lanmask);
 
-		/* br1 */
-		if (nvram_get_int("bwl_br1_enable") == 1) {
-			lanX_ipaddr = nvram_safe_get("lan1_ipaddr");
-			lanX_mask = nvram_safe_get("lan1_netmask");
+		/* br[1-(BRIDGE_COUNT - 1)] */
+		for (i = 1 ; i < BRIDGE_COUNT; i++) {
+			char buffer[16];
 
-			ipt_write("-A POSTROUTING ! -s %s/%s -d %s/%s -j MARK --set-mark 0x20/0xf0\n"
-			          "-A PREROUTING -s %s/%s ! -d %s/%s -j MARK --set-mark 0x20/0xf0\n",
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask,
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask);
+			snprintf(buffer, sizeof(buffer), "bwl_br%d_enable", i);
+			if (nvram_get_int(buffer) == 1) {
+
+				snprintf(buffer, sizeof(buffer), "lan%d_ipaddr", i);
+				lanX_ipaddr = nvram_safe_get(buffer);
+
+				snprintf(buffer, sizeof(buffer), "lan%d_netmask", i);
+				lanX_mask = nvram_safe_get(buffer);
+
+				ipt_write("-A POSTROUTING ! -s %s/%s -d %s/%s -j MARK --set-mark 0x%d0/0xf0\n"
+				          "-A PREROUTING -s %s/%s ! -d %s/%s -j MARK --set-mark 0x%d0/0xf0\n",
+				          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask, (i + 1),
+				          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask, (i + 1));
+			}
 		}
-
-		/* br2 */
-		if (nvram_get_int("bwl_br2_enable") == 1) {
-			lanX_ipaddr = nvram_safe_get("lan2_ipaddr");
-			lanX_mask = nvram_safe_get("lan2_netmask");
-
-			ipt_write("-A POSTROUTING ! -s %s/%s -d %s/%s -j MARK --set-mark 0x30/0xf0\n"
-			          "-A PREROUTING -s %s/%s ! -d %s/%s -j MARK --set-mark 0x30/0xf0\n",
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask,
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask);
-		}
-
-		/* br3 */
-		if (nvram_get_int("bwl_br3_enable") == 1) {
-			lanX_ipaddr = nvram_safe_get("lan3_ipaddr");
-			lanX_mask = nvram_safe_get("lan3_netmask");
-
-			ipt_write("-A POSTROUTING ! -s %s/%s -d %s/%s -j MARK --set-mark 0x40/0xf0\n"
-			          "-A PREROUTING -s %s/%s ! -d %s/%s -j MARK --set-mark 0x40/0xf0\n",
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask,
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask);
-		}
-#ifdef TOMATO64
-		/* br4 */
-		if (nvram_get_int("bwl_br4_enable") == 1) {
-			lanX_ipaddr = nvram_safe_get("lan4_ipaddr");
-			lanX_mask = nvram_safe_get("lan4_netmask");
-
-			ipt_write("-A POSTROUTING ! -s %s/%s -d %s/%s -j MARK --set-mark 0x50/0xf0\n"
-			          "-A PREROUTING -s %s/%s ! -d %s/%s -j MARK --set-mark 0x50/0xf0\n",
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask,
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask);
-		}
-
-		/* br5 */
-		if (nvram_get_int("bwl_br5_enable") == 1) {
-			lanX_ipaddr = nvram_safe_get("lan5_ipaddr");
-			lanX_mask = nvram_safe_get("lan5_netmask");
-
-			ipt_write("-A POSTROUTING ! -s %s/%s -d %s/%s -j MARK --set-mark 0x60/0xf0\n"
-			          "-A PREROUTING -s %s/%s ! -d %s/%s -j MARK --set-mark 0x60/0xf0\n",
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask,
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask);
-		}
-
-		/* br6 */
-		if (nvram_get_int("bwl_br6_enable") == 1) {
-			lanX_ipaddr = nvram_safe_get("lan6_ipaddr");
-			lanX_mask = nvram_safe_get("lan6_netmask");
-
-			ipt_write("-A POSTROUTING ! -s %s/%s -d %s/%s -j MARK --set-mark 0x70/0xf0\n"
-			          "-A PREROUTING -s %s/%s ! -d %s/%s -j MARK --set-mark 0x70/0xf0\n",
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask,
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask);
-		}
-
-		/* br7 */
-		if (nvram_get_int("bwl_br7_enable") == 1) {
-			lanX_ipaddr = nvram_safe_get("lan7_ipaddr");
-			lanX_mask = nvram_safe_get("lan7_netmask");
-
-			ipt_write("-A POSTROUTING ! -s %s/%s -d %s/%s -j MARK --set-mark 0x80/0xf0\n"
-			          "-A PREROUTING -s %s/%s ! -d %s/%s -j MARK --set-mark 0x80/0xf0\n",
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask,
-			          lanX_ipaddr, lanX_mask, lanX_ipaddr, lanX_mask);
-		}
-#endif /* TOMATO64 */
 	}
 
 	/* NAT */
@@ -516,288 +458,85 @@ void start_bwlimit(void)
 		            prio);
 	}
 
-	/* limit br1 */
-	if (nvram_get_int("bwl_br1_enable") == 1) {
-		dlr = nvram_safe_get("bwl_br1_dlr");		/* download rate */
-		dlc = nvram_safe_get("bwl_br1_dlc");		/* download ceiling */
-		ulr = nvram_safe_get("bwl_br1_ulr");		/* upload rate */
-		ulc = nvram_safe_get("bwl_br1_ulc");		/* upload ceiling */
-		prio = nvram_safe_get("bwl_br1_prio");		/* priority */
+	for (i = 1 ; i < BRIDGE_COUNT; i++) {
+		char buffer[16];
+		int id1 = ((2 * i) +2); // br[1-(BRIDGE_COUNT - 1)] (4, 6, 8, 10, 12, 14, 16)
+		int id2 =((16 * (i - 1)) +32); // br[1-(BRIDGE_COUNT - 1)] (32, 48, 64, 80, 96, 112, 128)
 
-		if (!strcmp(dlc, ""))
-			dlc = dlr;
-		if (!strcmp(ulc, ""))
-			ulc = ulr;
+		snprintf(buffer, sizeof(buffer), "bwl_br%d_enable", i);
+		if (nvram_get_int(buffer) == 1) {
 
-		/* download for br1 */
-		fprintf(tc, "\tTCA1=\"tc class add dev br1\"\n"
-		            "\tTFA1=\"tc filter add dev br1\"\n"
-		            "\tTQA1=\"tc qdisc add dev br1\"\n"
-		            "\ttc qdisc del dev br1 root\n"
-		            "\ttc qdisc add dev br1 root handle 4: htb\n"
-		            "\ttc class add dev br1 parent 4: classid 4:1 htb rate %skbit\n"
-		            "\t$TCA1 parent 4:1 classid 4:32 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t$TQA1 parent 4:32 handle 32: $Q\n"
-		            "\t$TFA1 parent 4:0 prio %s protocol all handle 0x20/0xf0 fw flowid 4:32\n",
-		            ibw,
-		            dlr, dlc, prio,
-		            prio);
+			snprintf(buffer, sizeof(buffer), "bwl_br%d_dlr", i);
+			dlr = nvram_safe_get(buffer);			/* download rate */
 
-		/* upload for br1 */
-		fprintf(tc, "\t[ \"$(nvram get qos_enable)\" == \"0\" ] && {\n"
-		            "\t\t$TCAU parent 2:1 classid 2:32 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t\t$TQAU parent 2:32 handle 32: $Q\n"
-		            "\t\t$TFAU parent 2:0 prio %s protocol all handle 0x20/0xf0 fw flowid 2:32\n"
-		            "\t}\n\n",
-		            ulr, ulc, prio,
-		            prio);
+			snprintf(buffer, sizeof(buffer), "bwl_br%d_dlc", i);
+			dlc = nvram_safe_get(buffer);			/* download ceiling */
+
+			snprintf(buffer, sizeof(buffer), "bwl_br%d_ulr", i);
+			ulr = nvram_safe_get(buffer);			/* upload rate */
+
+			snprintf(buffer, sizeof(buffer), "bwl_br%d_ulc", i);
+			ulc = nvram_safe_get(buffer);			/* upload ceiling */
+
+			snprintf(buffer, sizeof(buffer), "bwl_br%d_prio", i);
+			prio = nvram_safe_get(buffer);			/* priority */
+
+			if (!strcmp(dlc, ""))
+				dlc = dlr;
+			if (!strcmp(ulc, ""))
+				ulc = ulr;
+
+			/* download for br[1-(BRIDGE_COUNT -1)] */
+			fprintf(tc, "\tTCA%d=\"tc class add dev br%d\"\n"
+			            "\tTFA%d=\"tc filter add dev br%d\"\n"
+			            "\tTQA%d=\"tc qdisc add dev br%d\"\n"
+			            "\ttc qdisc del dev br%d root\n"
+			            "\ttc qdisc add dev br%d root handle %d: htb\n"
+			            "\ttc class add dev br%d parent %d: classid %d:1 htb rate %skbit\n"
+			            "\t$TCA%d parent %d:1 classid %d:%d htb rate %skbit ceil %skbit prio %s\n"
+			            "\t$TQA%d parent %d:%d handle %d: $Q\n"
+			            "\t$TFA%d parent %d:0 prio %s protocol all handle 0x%d0/0xf0 fw flowid %d:%d\n",
+			            i, i,
+			            i, i,
+			            i, i,
+			            i,
+			            i, id1,
+			            i, id1, id1, ibw,
+			            i, id1, id1, id2, dlr, dlc, prio,
+			            i, id1, id2, id2,
+			            i, id1, prio, (i + 1), id1, id2);
+
+			/* upload for br[1-(BRIDGE_COUNT - 1)] */
+			fprintf(tc, "\t[ \"$(nvram get qos_enable)\" == \"0\" ] && {\n"
+			            "\t\t$TCAU parent 2:1 classid 2:%d htb rate %skbit ceil %skbit prio %s\n"
+			            "\t\t$TQAU parent 2:%d handle %d: $Q\n"
+			            "\t\t$TFAU parent 2:0 prio %s protocol all handle 0x%d0/0xf0 fw flowid 2:%d\n"
+			            "\t}\n\n",
+			            id2, ulr, ulc, prio,
+			            id2, id2,
+			            prio, (i + 1), id2);
+		}
 	}
 
-	/* limit br2 */
-	if (nvram_get_int("bwl_br2_enable") == 1) {
-		dlr = nvram_safe_get("bwl_br2_dlr");		/* download rate */
-		dlc = nvram_safe_get("bwl_br2_dlc");		/* download ceiling */
-		ulr = nvram_safe_get("bwl_br2_ulr");		/* upload rate */
-		ulc = nvram_safe_get("bwl_br2_ulc");		/* upload ceiling */
-		prio = nvram_safe_get("bwl_br2_prio");		/* priority */
-
-		if (!strcmp(dlc, ""))
-			dlc = dlr;
-		if (!strcmp(ulc, ""))
-			ulc = ulr;
-
-		/* download for br2 */
-		fprintf(tc, "\tTCA2=\"tc class add dev br2\"\n"
-		            "\tTFA2=\"tc filter add dev br2\"\n"
-		            "\tTQA2=\"tc qdisc add dev br2\"\n"
-		            "\ttc qdisc del dev br2 root\n"
-		            "\ttc qdisc add dev br2 root handle 6: htb\n"
-		            "\ttc class add dev br2 parent 6: classid 6:1 htb rate %skbit\n"
-		            "\t$TCA2 parent 6:1 classid 6:48 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t$TQA2 parent 6:48 handle 48: $Q\n"
-		            "\t$TFA2 parent 6:0 prio %s protocol all handle 0x30/0xf0 fw flowid 6:48\n",
-		            ibw,
-		            dlr, dlc, prio,
-		            prio);
-
-		/* upload for br2 */
-		fprintf(tc, "\t[ \"$(nvram get qos_enable)\" == \"0\" ] && {\n"
-		            "\t\t$TCAU parent 2:1 classid 2:48 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t\t$TQAU parent 2:48 handle 48: $Q\n"
-		            "\t\t$TFAU parent 2:0 prio %s protocol all handle 0x30/0xf0 fw flowid 2:48\n"
-		            "\t}\n\n",
-		            ulr, ulc, prio,
-		            prio);
-	}
-
-	/* limit br3 */
-	if (nvram_get_int("bwl_br3_enable") == 1) {
-		dlr = nvram_safe_get("bwl_br3_dlr");		/* download rate */
-		dlc = nvram_safe_get("bwl_br3_dlc");		/* download ceiling */
-		ulr = nvram_safe_get("bwl_br3_ulr");		/* upload rate */
-		ulc = nvram_safe_get("bwl_br3_ulc");		/* upload ceiling */
-		prio = nvram_safe_get("bwl_br3_prio");		/* priority */
-
-		if (!strcmp(dlc, ""))
-			dlc = dlr;
-		if (!strcmp(ulc, ""))
-			ulc = ulr;
-
-		/* download for br3 */
-		fprintf(tc, "\tTCA3=\"tc class add dev br3\"\n"
-		            "\tTFA3=\"tc filter add dev br3\"\n"
-		            "\tTQA3=\"tc qdisc add dev br3\"\n"
-		            "\ttc qdisc del dev br3 root\n"
-		            "\ttc qdisc add dev br3 root handle 8: htb\n"
-		            "\ttc class add dev br3 parent 8: classid 8:1 htb rate %skbit\n"
-		            "\t$TCA3 parent 8:1 classid 8:64 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t$TQA3 parent 8:64 handle 64: $Q\n"
-		            "\t$TFA3 parent 8:0 prio %s protocol all handle 0x40/0xf0 fw flowid 8:64\n",
-		            ibw,
-		            dlr, dlc, prio,
-		            prio);
-
-		/* upload for br3 */
-		fprintf(tc, "\t[ \"$(nvram get qos_enable)\" == \"0\" ] && {\n"
-		            "\t\t$TCAU parent 2:1 classid 2:64 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t\t$TQAU parent 2:64 handle 64: $Q\n"
-		            "\t\t$TFAU parent 2:0 prio %s protocol all handle 0x40/0xf0 fw flowid 2:64\n"
-		            "\t}\n\n",
-		            ulr, ulc, prio,
-		            prio);
-	}
-#ifdef TOMATO64
-	/* limit br4 */
-	if (nvram_get_int("bwl_br4_enable") == 1) {
-		dlr = nvram_safe_get("bwl_br4_dlr");		/* download rate */
-		dlc = nvram_safe_get("bwl_br4_dlc");		/* download ceiling */
-		ulr = nvram_safe_get("bwl_br4_ulr");		/* upload rate */
-		ulc = nvram_safe_get("bwl_br4_ulc");		/* upload ceiling */
-		prio = nvram_safe_get("bwl_br4_prio");		/* priority */
-
-		if (!strcmp(dlc, ""))
-			dlc = dlr;
-		if (!strcmp(ulc, ""))
-			ulc = ulr;
-
-		/* download for br4 */
-		fprintf(tc, "\tTCA4=\"tc class add dev br4\"\n"
-		            "\tTFA4=\"tc filter add dev br4\"\n"
-		            "\tTQA4=\"tc qdisc add dev br4\"\n"
-		            "\ttc qdisc del dev br4 root\n"
-		            "\ttc qdisc add dev br4 root handle 10: htb\n"
-		            "\ttc class add dev br4 parent 10: classid 10:1 htb rate %skbit\n"
-		            "\t$TCA4 parent 10:1 classid 10:80 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t$TQA4 parent 10:80 handle 80: $Q\n"
-		            "\t$TFA4 parent 10:0 prio %s protocol all handle 0x50/0xf0 fw flowid 10:80\n",
-		            ibw,
-		            dlr, dlc, prio,
-		            prio);
-
-		/* upload for br4 */
-		fprintf(tc, "\t[ \"$(nvram get qos_enable)\" == \"0\" ] && {\n"
-		            "\t\t$TCAU parent 2:1 classid 2:80 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t\t$TQAU parent 2:80 handle 80: $Q\n"
-		            "\t\t$TFAU parent 2:0 prio %s protocol all handle 0x50/0xf0 fw flowid 2:80\n"
-		            "\t}\n\n",
-		            ulr, ulc, prio,
-		            prio);
-	}
-
-	/* limit br5 */
-	if (nvram_get_int("bwl_br5_enable") == 1) {
-		dlr = nvram_safe_get("bwl_br5_dlr");		/* download rate */
-		dlc = nvram_safe_get("bwl_br5_dlc");		/* download ceiling */
-		ulr = nvram_safe_get("bwl_br5_ulr");		/* upload rate */
-		ulc = nvram_safe_get("bwl_br5_ulc");		/* upload ceiling */
-		prio = nvram_safe_get("bwl_br5_prio");		/* priority */
-
-		if (!strcmp(dlc, ""))
-			dlc = dlr;
-		if (!strcmp(ulc, ""))
-			ulc = ulr;
-
-		/* download for br5 */
-		fprintf(tc, "\tTCA5=\"tc class add dev br5\"\n"
-		            "\tTFA5=\"tc filter add dev br5\"\n"
-		            "\tTQA5=\"tc qdisc add dev br5\"\n"
-		            "\ttc qdisc del dev br5 root\n"
-		            "\ttc qdisc add dev br5 root handle 12: htb\n"
-		            "\ttc class add dev br5 parent 12: classid 12:1 htb rate %skbit\n"
-		            "\t$TCA5 parent 12:1 classid 12:96 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t$TQA5 parent 12:96 handle 96: $Q\n"
-		            "\t$TFA5 parent 12:0 prio %s protocol all handle 0x60/0xf0 fw flowid 12:96\n",
-		            ibw,
-		            dlr, dlc, prio,
-		            prio);
-
-		/* upload for br5 */
-		fprintf(tc, "\t[ \"$(nvram get qos_enable)\" == \"0\" ] && {\n"
-		            "\t\t$TCAU parent 2:1 classid 2:96 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t\t$TQAU parent 2:96 handle 96: $Q\n"
-		            "\t\t$TFAU parent 2:0 prio %s protocol all handle 0x60/0xf0 fw flowid 2:96\n"
-		            "\t}\n\n",
-		            ulr, ulc, prio,
-		            prio);
-	}
-
-	/* limit br6 */
-	if (nvram_get_int("bwl_br6_enable") == 1) {
-		dlr = nvram_safe_get("bwl_br6_dlr");		/* download rate */
-		dlc = nvram_safe_get("bwl_br6_dlc");		/* download ceiling */
-		ulr = nvram_safe_get("bwl_br6_ulr");		/* upload rate */
-		ulc = nvram_safe_get("bwl_br6_ulc");		/* upload ceiling */
-		prio = nvram_safe_get("bwl_br6_prio");		/* priority */
-
-		if (!strcmp(dlc, ""))
-			dlc = dlr;
-		if (!strcmp(ulc, ""))
-			ulc = ulr;
-
-		/* download for br6 */
-		fprintf(tc, "\tTCA6=\"tc class add dev br6\"\n"
-		            "\tTFA6=\"tc filter add dev br6\"\n"
-		            "\tTQA6=\"tc qdisc add dev br6\"\n"
-		            "\ttc qdisc del dev br6 root\n"
-		            "\ttc qdisc add dev br6 root handle 14: htb\n"
-		            "\ttc class add dev br6 parent 14: classid 14:1 htb rate %skbit\n"
-		            "\t$TCA6 parent 14:1 classid 14:112 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t$TQA6 parent 14:112 handle 112: $Q\n"
-		            "\t$TFA6 parent 14:0 prio %s protocol all handle 0x70/0xf0 fw flowid 14:112\n",
-		            ibw,
-		            dlr, dlc, prio,
-		            prio);
-
-		/* upload for br6 */
-		fprintf(tc, "\t[ \"$(nvram get qos_enable)\" == \"0\" ] && {\n"
-		            "\t\t$TCAU parent 2:1 classid 2:112 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t\t$TQAU parent 2:112 handle 112: $Q\n"
-		            "\t\t$TFAU parent 2:0 prio %s protocol all handle 0x70/0xf0 fw flowid 2:112\n"
-		            "\t}\n\n",
-		            ulr, ulc, prio,
-		            prio);
-	}
-
-	/* limit br7 */
-	if (nvram_get_int("bwl_br7_enable") == 1) {
-		dlr = nvram_safe_get("bwl_br7_dlr");		/* download rate */
-		dlc = nvram_safe_get("bwl_br7_dlc");		/* download ceiling */
-		ulr = nvram_safe_get("bwl_br7_ulr");		/* upload rate */
-		ulc = nvram_safe_get("bwl_br7_ulc");		/* upload ceiling */
-		prio = nvram_safe_get("bwl_br7_prio");		/* priority */
-
-		if (!strcmp(dlc, ""))
-			dlc = dlr;
-		if (!strcmp(ulc, ""))
-			ulc = ulr;
-
-		/* download for br7 */
-		fprintf(tc, "\tTCA7=\"tc class add dev br7\"\n"
-		            "\tTFA7=\"tc filter add dev br7\"\n"
-		            "\tTQA7=\"tc qdisc add dev br7\"\n"
-		            "\ttc qdisc del dev br7 root\n"
-		            "\ttc qdisc add dev br7 root handle 16: htb\n"
-		            "\ttc class add dev br7 parent 16: classid 16:1 htb rate %skbit\n"
-		            "\t$TCA7 parent 16:1 classid 16:128 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t$TQA7 parent 16:128 handle 128: $Q\n"
-		            "\t$TFA7 parent 16:0 prio %s protocol all handle 0x80/0xf0 fw flowid 16:128\n",
-		            ibw,
-		            dlr, dlc, prio,
-		            prio);
-
-		/* upload for br7 */
-		fprintf(tc, "\t[ \"$(nvram get qos_enable)\" == \"0\" ] && {\n"
-		            "\t\t$TCAU parent 2:1 classid 2:128 htb rate %skbit ceil %skbit prio %s\n"
-		            "\t\t$TQAU parent 2:128 handle 128: $Q\n"
-		            "\t\t$TFAU parent 2:0 prio %s protocol all handle 0x80/0xf0 fw flowid 2:128\n"
-		            "\t}\n\n",
-		            ulr, ulc, prio,
-		            prio);
-	}
-#endif /* TOMATO64 */
 
 	fprintf(tc, "\tlogger -t bwlimit \"BW Limiter is started\"\n"
 	            "\t;;\n"
 	            "stop)\n"
 	            "\t[ \"$(nvram get qos_enable)\" == \"0\" ] && {\n"
 	            "\t\ttc qdisc del dev %s root\n"
-	            "\t}\n"
-	            "\ttc qdisc del dev br0 root 2>/dev/null\n"
-	            "\ttc qdisc del dev br1 root 2>/dev/null\n"
-	            "\ttc qdisc del dev br2 root 2>/dev/null\n"
-	            "\ttc qdisc del dev br3 root 2>/dev/null\n\n"
-#ifdef TOMATO64
-	            "\ttc qdisc del dev br4 root 2>/dev/null\n\n"
-	            "\ttc qdisc del dev br5 root 2>/dev/null\n\n"
-	            "\ttc qdisc del dev br6 root 2>/dev/null\n\n"
-	            "\ttc qdisc del dev br7 root 2>/dev/null\n\n"
-#endif /* TOMATO64 */
-	            "\tlogger -t bwlimit \"BW Limiter is stopped\"\n"
+	            "\t}\n",
+	            waniface);
+
+	for (i = 0 ; i < BRIDGE_COUNT; i++) {
+		fprintf(tc, "\ttc qdisc del dev br%d root 2>/dev/null\n", i);
+	}
+	fprintf(tc, "\n");
+
+	fprintf(tc, "\tlogger -t bwlimit \"BW Limiter is stopped\"\n"
 	            "\t;;\n"
 	            "*)\n"
 	            "\techo \"Usage: $0 <start|stop>\"\n"
-	            "esac\n",
-	            waniface);
+	            "esac\n");
 
 	fclose(tc);
 
