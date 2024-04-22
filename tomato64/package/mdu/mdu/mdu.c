@@ -222,7 +222,7 @@ static void error(const char *fmt, ...)
 	va_end(args);
 
 	logmsg(LOG_ERR, "%s", s);
-	printf("%s", s);
+	printf("%s\n", s);
 	save_msg(s);
 
 	exit(error_exitcode);
@@ -233,7 +233,7 @@ static void success_msg(const char *msg)
 	save_cookie();
 
 	logmsg(LOG_DEBUG, "*** %s, msg: %s", __FUNCTION__, msg);
-	printf("%s", msg);
+	printf("%s\n", msg);
 	save_msg(msg);
 
 	exit(0);
@@ -631,7 +631,7 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 	}
 	if (r != CURLE_OK) {
 		size_t len = strlen(errbuf);
-		error("libcurl error (%d) - %s", r, (len ? errbuf : curl_easy_strerror(r)));
+		error("libcurl error (%d) - %s.", r, (len ? errbuf : curl_easy_strerror(r)));
 		curl_cleanup();
 	}
 
@@ -802,6 +802,7 @@ const char *get_address(int required)
 						f_write_string(cache_name, s, 0, 0);
 
 						logmsg(LOG_DEBUG, "*** %s: used %s service; time,address (%s) saved to %s", __FUNCTION__, services[service_num][0], s, cache_name);
+						success();
 						return q;
 					}
 				}
@@ -1762,7 +1763,8 @@ int main(int argc, char *argv[])
 	g_argc = argc;
 	g_argv = argv;
 
-	printf("MDU\nCopyright (C) 2007-2009 Jonathan Zarate\n\n");
+	printf("Copyright (C) 2007-2009 Jonathan Zarate\n");
+	printf("Fixes/updates (C) 2018 - 2024 pedro\n\n");
 
 	openlog("mdu", LOG_PID, LOG_DAEMON);
 
