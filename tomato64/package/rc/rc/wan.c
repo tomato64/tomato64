@@ -1231,9 +1231,6 @@ void start_wan_done(char *wan_ifname, char *prefix)
 		}
 
 		if ((wanup) || (proto == WP_DISABLED)) {
-			if (nvram_get_int("ntp_ready") && !first_ntp_sync) {
-				start_ddns();
-			}
 			stop_igmp_proxy();
 			stop_udpxy();
 			start_igmp_proxy();
@@ -1244,6 +1241,11 @@ void start_wan_done(char *wan_ifname, char *prefix)
 			start_httpd();
 		}
 	} /* is_primary */
+
+	if ((wanup) || (proto == WP_DISABLED)) {
+		if (nvram_get_int("ntp_ready") && !first_ntp_sync)
+			start_ddns();
+	}
 
 	if (nvram_get_int("ntp_ready") && !first_ntp_sync) {
 		stop_sched();
