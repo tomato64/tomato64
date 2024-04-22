@@ -94,7 +94,6 @@ static char services[][3][23] = { /* remember: the number in the third square br
 	{ "ipecho.net",			"ipecho.net",			"/plain"},	/* txt */
 	{ "ifconfig.me",		"ifconfig.me",			"/ip"	},	/* txt */
 	{ "icanhazip.com",		"icanhazip.com",		"/"	},	/* txt */
-	{ "ip.sb",			"api.ip.sb",			"/ip"	},	/* txt */
 };
 
 static void trimamp(char *s)
