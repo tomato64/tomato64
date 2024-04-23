@@ -17,6 +17,8 @@
 void start_tor(int force) {
 	FILE *fp;
 	char *ip;
+	char buffer[16];
+	int i;
 
 	/* only if enabled or forced */
 	if (!nvram_get_int("tor_enable") && force == 0)
@@ -28,17 +30,14 @@ void start_tor(int force) {
 	/* dnsmasq uses this IP for nameserver to resolv .onion/.exit domains */
 	ip = nvram_safe_get("lan_ipaddr");
 	if (!nvram_get_int("tor_solve_only")) {
-		if (nvram_match("tor_iface", "br0"))      { ip = nvram_safe_get("lan_ipaddr");  }
-		else if (nvram_match("tor_iface", "br1")) { ip = nvram_safe_get("lan1_ipaddr"); }
-		else if (nvram_match("tor_iface", "br2")) { ip = nvram_safe_get("lan2_ipaddr"); }
-		else if (nvram_match("tor_iface", "br3")) { ip = nvram_safe_get("lan3_ipaddr"); }
-#ifdef TOMATO64
-		else if (nvram_match("tor_iface", "br4")) { ip = nvram_safe_get("lan4_ipaddr"); }
-		else if (nvram_match("tor_iface", "br5")) { ip = nvram_safe_get("lan5_ipaddr"); }
-		else if (nvram_match("tor_iface", "br6")) { ip = nvram_safe_get("lan6_ipaddr"); }
-		else if (nvram_match("tor_iface", "br7")) { ip = nvram_safe_get("lan7_ipaddr"); }
-#endif /* TOMATO64 */
-		else                                      { ip = nvram_safe_get("lan_ipaddr");  }
+		for (i = 0 ; i < BRIDGE_COUNT; i++) {
+			snprintf(buffer, sizeof(buffer), "br%d", i);
+			if (nvram_match("tor_iface", buffer)) {
+				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
+				ip = nvram_safe_get(buffer);
+				break;
+			}
+		}
 	}
 
 	/* writing data to file */
