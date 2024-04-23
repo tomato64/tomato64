@@ -57,6 +57,7 @@
 int curl_sslerr = 1;
 FILE *curl_dfile = NULL;
 CURL *curl_handle = NULL;
+char curl_err_str[512];
 #endif
 
 /* needed by logmsg() */
@@ -93,7 +94,7 @@ static char services[][3][23] = { /* remember: the number in the third square br
 	{ "wgetip.com",			"wgetip.com",			"/"	},	/* txt */
 	{ "ipecho.net",			"ipecho.net",			"/plain"},	/* txt */
 	{ "ifconfig.me",		"ifconfig.me",			"/ip"	},	/* txt */
-	{ "icanhazip.com",		"icanhazip.com",		"/"	},	/* txt */
+	{ "icanhazip.com",		"icanhazip.com",		"/"	}	/* txt */
 };
 
 static void trimamp(char *s)
@@ -129,7 +130,8 @@ static const char *get_option(const char *name)
 							p[n - 1] = 0;
 
 						n = strlen(c + 1);
-						if (n <= 0) continue;
+						if (n <= 0)
+							continue;
 						if (n >= MAX_OPTION_LENGTH)
 							exit(88);
 						if ((p = strdup(p)) == NULL)
@@ -400,7 +402,7 @@ static struct curl_slist *curl_headers(const char *header)
 	return headers;
 }
 #else /* !USE_LIBCURL */
-static int _http_req(int ssl, const char *host, int port, const char *request, char *buffer, int bufsize, char **body, char *ifname)
+static int _http_req(int ssl, const char *host, int port, const char *request, char *buffer, int bufsize, char **body, const char *ifname)
 {
 	struct addrinfo hints;
 	struct addrinfo *result, *rp;
@@ -455,9 +457,9 @@ static int _http_req(int ssl, const char *host, int port, const char *request, c
 #ifdef MDU_DEBUG
 				logerr(__FUNCTION__, __LINE__, "connect");
 #endif
+				freeaddrinfo(result);
 				sleep(2);
 			}
-			freeaddrinfo(result);
 		}
 		if (i <= 0)
 			return -1;
@@ -538,9 +540,9 @@ connected:
 }
 #endif /* USE_LIBCURL */
 
-static int http_req(int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body, char *ifname)
+static int http_req(int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body, const char *ifname)
 {
-	logmsg(LOG_DEBUG, "*** %s: IN host=[%s] query=[%s] header=[%s] auth=[%d] data=[%s] req=[%s] ifname=[%s]", __FUNCTION__, host, query, header, auth, data, req, ifname);
+	logmsg(LOG_DEBUG, "*** %s: IN host=[%s] query=[%s] ssl=[%d] header=[%s] auth=[%d] data=[%s] req=[%s] ifname=[%s]", __FUNCTION__, host, query, ssl, header, auth, data, req, ifname);
 #ifdef USE_LIBCURL
 	struct curl_slist *headers = NULL;
 	char url[HALF_BLOB];
@@ -549,11 +551,12 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 	FILE *curl_rbuf = NULL;
 	CURLcode r;
 	int trys;
-	long code;
+	long code = -1;
 
 	if (!static_host)
 		host = get_option_or("server", host);
 
+	memset(url, 0, HALF_BLOB); /* reset */
 	if (ssl) {
 		if (curl_sslerr) {
 			curl_cleanup();
@@ -628,13 +631,17 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 		fputc('\n', curl_dfile);
 		fflush(curl_dfile);
 	}
+
 	if (r != CURLE_OK) {
 		size_t len = strlen(errbuf);
-		error("libcurl error (%d) - %s.", r, (len ? errbuf : curl_easy_strerror(r)));
+		memset(curl_err_str, 0, sizeof(curl_err_str));
+		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (len ? errbuf : curl_easy_strerror(r)));
+	}
+	else {
+		*body = blob;
 		curl_cleanup();
 	}
 
-	*body = blob;
 	return code;
 #else /* !USE_LIBCURL */
 	char *p;
@@ -709,7 +716,7 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 #endif /* USE_LIBCURL */
 }
 
-static int wget(int ssl, int static_host, const char *host, const char *get, const char *header, int auth, char **body, char *ifname)
+static int wget(int ssl, int static_host, const char *host, const char *get, const char *header, int auth, char **body, const char *ifname)
 {
 	return http_req(ssl, static_host, host, "GET", get, header, auth, NULL, body, ifname);
 }
@@ -773,7 +780,7 @@ const char *get_address(int required)
 			while (n-- > 0) {
 				srand(time(0));
 				service_num = (rand() % (rows));
-				if (wget(0, 1, services[service_num][1], services[service_num][2], NULL, 0, &body, ifname) == 200) {
+				if (wget(0, 1, services[service_num][1], services[service_num][2], NULL, 0, &body, ifname) == 200) { /* do not use ssl */
 
 					if ((p = strstr(body, "Address:")) != NULL) /* dyndns */
 						p += 8;
@@ -807,11 +814,21 @@ const char *get_address(int required)
 				}
 				else {
 					if (n == 0) {
-						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP, __FUNCTION__);
+#ifdef USE_LIBCURL
+						logmsg(LOG_DEBUG, "*** %s: %s (%s)", __FUNCTION__, curl_err_str, services[service_num][0]);
+						error(curl_err_str);
+#else
+						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s)", __FUNCTION__, services[service_num][0]);
 						error(M_ERROR_GET_IP);
+#endif
 					}
-					else
+					else {
+#ifdef USE_LIBCURL
+						logmsg(LOG_DEBUG, "*** %s: %s (%s) - trying another one ...", __FUNCTION__, curl_err_str, services[service_num][0]);
+#else
 						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s) - trying another one ...", __FUNCTION__, services[service_num][0]);
+#endif
+					}
 				}
 			}
 		}
