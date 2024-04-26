@@ -2077,6 +2077,8 @@ struct nvram_tuple router_defaults[] = {
 	{ "boardflags",			"0x0100"			, 0 },
 	{ "vlan0ports",			"0 9"				, 0 },
 	{ "vlan1ports",			"1 2 3 4 5 6 7 8 9*"		, 0 },
+
+	{ "ctf_disable",		"1"				, 0 },
 #endif /* TOMATO64 */
 	{ 0, 0, 0 }
 };
