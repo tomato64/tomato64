@@ -145,6 +145,8 @@ void try_enabling_fastnat(void)
 void enable_ip_forward(void)
 {
 	f_write_procsysnet("ipv4/ip_forward", "1");
+
+	system("sysctl -p");
 }
 
 void enable_blackhole_detection(void)
