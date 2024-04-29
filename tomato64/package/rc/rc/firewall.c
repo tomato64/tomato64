@@ -1011,7 +1011,7 @@ static void nat_table(void)
 		ipt_write("-A %s -p icmp -j DNAT --to-destination %s\n", chain_wan_prerouting, lanaddr[0]);
 
 		/* force remote access to the router if DMZ is enabled */
-		if ((nvram_match("dmz_enable", "1")) && (nvram_match("dmz_ra", "1"))) {
+		if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra")) {
 			strlcpy(t, nvram_safe_get("rmgt_sip"), sizeof(t));
 			p = t;
 			do {
@@ -1024,7 +1024,7 @@ static void nat_table(void)
 					ipt_write("-A %s -p tcp -m tcp %s --dport %s -j DNAT --to-destination %s:%d\n", chain_wan_prerouting, src, nvram_safe_get("http_wanport"), lanaddr[0], web_lanport);
 
 				if (nvram_get_int("sshd_remote"))
-					ipt_write("-A %s %s -p tcp -m tcp --dport %s -j DNAT --to-destination %s:%s\n", chain_wan_prerouting, src, nvram_safe_get("sshd_rport"), lanaddr[0], nvram_safe_get("sshd_port"));
+					ipt_write("-A %s -p tcp -m tcp %s --dport %s -j DNAT --to-destination %s:%s\n", chain_wan_prerouting, src, nvram_safe_get("sshd_rport"), lanaddr[0], nvram_safe_get("sshd_port"));
 
 				if (!c)
 					break;
@@ -1128,7 +1128,7 @@ static void nat_table(void)
 
 #ifdef TCONFIG_SNMP
 	if (nvram_match("snmp_enable", "1") && nvram_match("snmp_remote", "1"))
-		ipt_write("-A WANPREROUTING -p tcp --dport %s -j DNAT --to-destination %s\n", nvram_safe_get("snmp_port"), lanaddr[0]);
+		ipt_write("-A %s -p tcp --dport %s -j DNAT --to-destination %s\n", chain_wan_prerouting, nvram_safe_get("snmp_port"), lanaddr[0]);
 #endif
 
 	if (wanup || wan2up
@@ -1265,7 +1265,11 @@ static void filter_input(void)
 		          "-A wwwlimit -m recent --set --name www\n"
 		          "-A wwwlimit -m recent --update --hitcount 15 --seconds 5 --name www -j %s\n",
 		          chain_in_drop);
-		ipt_write("-A INPUT -p tcp --dport %s -m state --state NEW -j wwwlimit\n", nvram_safe_get("http_wanport"));
+
+		if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra"))
+			ipt_write("-A INPUT -p tcp --dport %d -m state --state NEW -j wwwlimit\n", web_lanport);
+		else
+			ipt_write("-A INPUT -p tcp --dport %s -m state --state NEW -j wwwlimit\n", nvram_safe_get("http_wanport"));
 	}
 
 #ifdef TCONFIG_FTP
@@ -1346,8 +1350,12 @@ static void filter_input(void)
 			*c = 0;
 
 		if (ipt_source(p, s, "remote management", NULL)) {
-			if (remotemanage)
-				ipt_write("-A INPUT -p tcp %s --dport %s -j %s\n", s, nvram_safe_get("http_wanport"), chain_in_accept);
+			if (remotemanage) {
+				if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra"))
+					ipt_write("-A INPUT -p tcp %s --dport %d -j %s\n", s, web_lanport, chain_in_accept);
+				else
+					ipt_write("-A INPUT -p tcp %s --dport %s -j %s\n", s, nvram_safe_get("http_wanport"), chain_in_accept);
+			}
 #ifdef TOMATO64
 			if (remotemanage) {
 				if (nvram_match("remote_mgt_https", "1")) {
@@ -1359,8 +1367,12 @@ static void filter_input(void)
 			}
 #endif /* TOMATO64 */
 
-			if (nvram_get_int("sshd_remote"))
-				ipt_write("-A INPUT -p tcp %s --dport %s -j %s\n", s, nvram_safe_get("sshd_rport"), chain_in_accept);
+			if (nvram_get_int("sshd_remote")) {
+				if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra"))
+					ipt_write("-A INPUT -p tcp %s --dport %s -j %s\n", s, nvram_safe_get("sshd_port"), chain_in_accept);
+				else
+					ipt_write("-A INPUT -p tcp %s --dport %s -j %s\n", s, nvram_safe_get("sshd_rport"), chain_in_accept);
+			}
 		}
 
 		if (!c)
@@ -1798,7 +1810,11 @@ static void filter6_input(void)
 		           "-A wwwlimit -m recent --set --name www\n"
 		           "-A wwwlimit -m recent --update --hitcount 15 --seconds 5 --name www -j %s\n",
 		           chain_in_drop);
-		ip6t_write("-A INPUT -p tcp --dport %s -m state --state NEW -j wwwlimit\n", nvram_safe_get("http_wanport"));
+
+		if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra"))
+			ip6t_write("-A INPUT -p tcp --dport %d -m state --state NEW -j wwwlimit\n", web_lanport);
+		else
+			ip6t_write("-A INPUT -p tcp --dport %s -m state --state NEW -j wwwlimit\n", nvram_safe_get("http_wanport"));
 	}
 
 #ifdef TCONFIG_FTP
