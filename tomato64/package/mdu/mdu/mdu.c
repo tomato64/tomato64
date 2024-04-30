@@ -78,23 +78,23 @@ int f_argc = -1;
 static void save_cookie(void);
 
 /* this should be in nvram so you can add/edit/remove checkers, but we have so little nvram it's impossible... */
-static char services[][3][23] = { /* remember: the number in the third square bracket must be (len + 1) of the longest string */
-/*	  service name			service hostname		path */
-	{ "ipify.org",			"api.ipify.org",		"/"	},	/* txt */
-	{ "amazonaws.com",		"checkip.amazonaws.com",	"/"	},	/* txt */
-	{ "dyndns.org",			"checkip.dyndns.org",		"/"	},	/* "<html><head><title>Current IP Check</title></head><body>Current IP Address: 1.2.3.4</body></html>" */
-	{ "ipecho.net",			"ipecho.net",			"/plain"},	/* txt */
-	{ "trackip.net",		"trackip.net",			"/ip"	},	/* txt */
-	{ "changeip.com",		"ip.changeip.com",		"/"	},	/* "1.2.3.4\n<!--IPADDR=1.2.3.4-->" */
-	{ "ifconfig.co",		"ifconfig.co",			"/ip"	},	/* txt */
-	{ "ident.me",			"ident.me",			"/"	},	/* txt */
-	{ "eth0.me",			"eth0.me",			"/"	},	/* txt */
-	{ "myexternalip.com",		"myexternalip.com",		"/raw"	},	/* txt */
-	{ "tyk.nu",			"ip.tyk.nu",			"/"	},	/* txt */
-	{ "wgetip.com",			"wgetip.com",			"/"	},	/* txt */
-	{ "ipecho.net",			"ipecho.net",			"/plain"},	/* txt */
-	{ "ifconfig.me",		"ifconfig.me",			"/ip"	},	/* txt */
-	{ "icanhazip.com",		"icanhazip.com",		"/"	}	/* txt */
+static char services[][2][23] = { /* remember: the number in the third square bracket must be (len + 1) of the longest string */
+/*	  service			path */
+	{ "api.ipify.org",		"/"	},	/* txt */
+	{ "checkip.amazonaws.com",	"/"	},	/* txt */
+	{ "checkip.dyndns.org",		"/"	},	/* "<html><head><title>Current IP Check</title></head><body>Current IP Address: 1.2.3.4</body></html>" */
+	{ "ipecho.net",			"/plain"},	/* txt */
+	{ "trackip.net",		"/ip"	},	/* txt */
+	{ "ip.changeip.com",		"/"	},	/* "1.2.3.4\n<!--IPADDR=1.2.3.4-->" */
+	{ "ifconfig.co",		"/ip"	},	/* txt */
+	{ "ident.me",			"/"	},	/* txt */
+	{ "eth0.me",			"/"	},	/* txt */
+	{ "myexternalip.com",		"/raw"	},	/* txt */
+	{ "ip.tyk.nu",			"/"	},	/* txt */
+	{ "wgetip.com",			"/"	},	/* txt */
+	{ "ipecho.net",			"/plain"},	/* txt */
+	{ "ifconfig.me",		"/ip"	},	/* txt */
+	{ "icanhazip.com",		"/"	}	/* txt */
 };
 
 static void trimamp(char *s)
@@ -782,7 +782,7 @@ const char *get_address(int required)
 			while (n-- > 0) {
 				srand(time(0));
 				service_num = (rand() % (rows));
-				if (wget(0, 1, services[service_num][1], services[service_num][2], NULL, 0, &body, ifname) == 200) { /* do not use ssl */
+				if (wget(0, 1, services[service_num][0], services[service_num][1], NULL, 0, &body, ifname) == 200) { /* do not use ssl */
 
 					if ((p = strstr(body, "Address:")) != NULL) /* dyndns */
 						p += 8;
@@ -809,7 +809,7 @@ const char *get_address(int required)
 						snprintf(s, sizeof(s), "%ld,%s", ut + DDNS_IP_CACHE, q);
 						f_write_string(cache_name, s, 0, 0);
 
-						logmsg(LOG_DEBUG, "*** %s: used %s service; time,address (%s) saved to %s", __FUNCTION__, services[service_num][1], s, cache_name);
+						logmsg(LOG_DEBUG, "*** %s: used %s service; time,address (%s) saved to %s", __FUNCTION__, services[service_num][0], s, cache_name);
 						success_msg("Update successful.", 0); /* do not exit! */
 						return q;
 					}
@@ -817,18 +817,18 @@ const char *get_address(int required)
 				else {
 					if (n == 0) {
 #ifdef USE_LIBCURL
-						logmsg(LOG_DEBUG, "*** %s: %s (%s)", __FUNCTION__, curl_err_str, services[service_num][1]);
+						logmsg(LOG_DEBUG, "*** %s: %s (%s)", __FUNCTION__, curl_err_str, services[service_num][0]);
 						error(curl_err_str);
 #else
-						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s)", __FUNCTION__, services[service_num][1]);
+						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s)", __FUNCTION__, services[service_num][0]);
 						error(M_ERROR_GET_IP);
 #endif
 					}
 					else {
 #ifdef USE_LIBCURL
-						logmsg(LOG_DEBUG, "*** %s: %s (%s) - trying another one ...", __FUNCTION__, curl_err_str, services[service_num][1]);
+						logmsg(LOG_DEBUG, "*** %s: %s (%s) - trying another one ...", __FUNCTION__, curl_err_str, services[service_num][0]);
 #else
-						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s) - trying another one ...", __FUNCTION__, services[service_num][1]);
+						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s) - trying another one ...", __FUNCTION__, services[service_num][0]);
 #endif
 						sleep(1); /* for srand() */
 					}
