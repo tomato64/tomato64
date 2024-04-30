@@ -229,7 +229,7 @@ static void error(const char *fmt, ...)
 	exit(error_exitcode);
 }
 
-static void success_msg(const char *msg)
+static void success_msg(const char *msg, const unsigned int do_exit)
 {
 	save_cookie();
 
@@ -237,12 +237,13 @@ static void success_msg(const char *msg)
 	printf("%s\n", msg);
 	save_msg(msg);
 
-	exit(0);
+	if (do_exit == 1)
+		exit(0);
 }
 
 static void success(void)
 {
-	success_msg("Update successful.");
+	success_msg("Update successful.", 1);
 }
 
 static const char *get_dump_name(void)
@@ -553,6 +554,8 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 	int trys;
 	long code = -1;
 
+	curl_setup();
+
 	if (!static_host)
 		host = get_option_or("server", host);
 
@@ -637,10 +640,10 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 		memset(curl_err_str, 0, sizeof(curl_err_str));
 		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (len ? errbuf : curl_easy_strerror(r)));
 	}
-	else {
+	else
 		*body = blob;
-		curl_cleanup();
-	}
+
+	curl_cleanup();
 
 	return code;
 #else /* !USE_LIBCURL */
@@ -744,7 +747,7 @@ const char *get_address(int required)
 {
 	char *body;
 	struct in_addr ia;
-	const char *c, *d;
+	const char *c;
 	char *p, *q;
 	char s[64];
 	char cache_name[64];
@@ -758,8 +761,7 @@ const char *get_address(int required)
 		if (*c == '@') {
 			ut = get_uptime();
 
-			d = get_option_required("addrcache");
-			strlcpy(cache_name, d, sizeof(cache_name));
+			strlcpy(cache_name, get_option_required("addrcache"), sizeof(cache_name));
 
 			if (read_tmaddr(cache_name, &et, addr)) {
 				if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE)) {
@@ -807,27 +809,28 @@ const char *get_address(int required)
 						snprintf(s, sizeof(s), "%ld,%s", ut + DDNS_IP_CACHE, q);
 						f_write_string(cache_name, s, 0, 0);
 
-						logmsg(LOG_DEBUG, "*** %s: used %s service; time,address (%s) saved to %s", __FUNCTION__, services[service_num][0], s, cache_name);
-						success();
+						logmsg(LOG_DEBUG, "*** %s: used %s service; time,address (%s) saved to %s", __FUNCTION__, services[service_num][1], s, cache_name);
+						success_msg("Update successful.", 0); /* do not exit! */
 						return q;
 					}
 				}
 				else {
 					if (n == 0) {
 #ifdef USE_LIBCURL
-						logmsg(LOG_DEBUG, "*** %s: %s (%s)", __FUNCTION__, curl_err_str, services[service_num][0]);
+						logmsg(LOG_DEBUG, "*** %s: %s (%s)", __FUNCTION__, curl_err_str, services[service_num][1]);
 						error(curl_err_str);
 #else
-						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s)", __FUNCTION__, services[service_num][0]);
+						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s)", __FUNCTION__, services[service_num][1]);
 						error(M_ERROR_GET_IP);
 #endif
 					}
 					else {
 #ifdef USE_LIBCURL
-						logmsg(LOG_DEBUG, "*** %s: %s (%s) - trying another one ...", __FUNCTION__, curl_err_str, services[service_num][0]);
+						logmsg(LOG_DEBUG, "*** %s: %s (%s) - trying another one ...", __FUNCTION__, curl_err_str, services[service_num][1]);
 #else
-						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s) - trying another one ...", __FUNCTION__, services[service_num][0]);
+						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s) - trying another one ...", __FUNCTION__, services[service_num][1]);
 #endif
+						sleep(1); /* for srand() */
 					}
 				}
 			}
@@ -1374,7 +1377,7 @@ static void update_afraid(int ssl)
 			success();
 		else if ((strstr(body, "ERROR")) || (strstr(body, "fail"))) {
 			if (strstr(body, "has not changed"))
-				success();
+				success_msg(M_SAME_RECORD, 1); /* update cookie */
 
 			error(M_INVALID_AUTH);
 		}
@@ -1533,13 +1536,13 @@ static void update_cloudflare(int ssl)
 			if (strstr(body, "\"proxiable\":true") != NULL) {
 				if (strstr(body, "\"proxied\":true") != NULL) {
 					if (prox)
-						success_msg(M_SAME_RECORD); /* use success to update the cookie */
+						success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
 				}
 				else if (!prox)
-					success_msg(M_SAME_RECORD); /* use success to update the cookie */
+					success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
 			}
 			else
-				success_msg(M_SAME_RECORD); /* use success to update the cookie */
+				success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
 		}
 
 		find = "\"id\":\"";
@@ -1756,10 +1759,6 @@ int main(int argc, char *argv[])
 	mkdir("/var/lib/mdu", 0700);
 	chdir("/var/lib/mdu");
 
-#ifdef USE_LIBCURL
-	curl_setup();
-#endif
-
 	check_cookie();
 
 	p = get_option_required("service");
@@ -1814,10 +1813,6 @@ int main(int argc, char *argv[])
 		update_wget();
 	else
 		error("Unknown service");
-
-#ifdef USE_LIBCURL
-	curl_cleanup();
-#endif
 
 	logmsg(LOG_DEBUG, "*** %s: OUT", __FUNCTION__);
 

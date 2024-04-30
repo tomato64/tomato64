@@ -118,12 +118,20 @@ static void update(int num, int *dirty, int force)
 		logmsg(LOG_DEBUG, "*** %s: inet_addr ip: %s", __FUNCTION__, ip);
 	}
 
+	/* copy content of nvram cache to a file cache */
 	memset(cache_fn, 0, sizeof(cache_fn));
 	snprintf(cache_fn, sizeof(cache_fn), "%s.cache", ddnsx_path);
 	f_write_string(cache_fn, nvram_safe_get(cache_nv), 0, 0);
 
+	/* if nvram cache is empty, the 'Force next update' option is probably checked - reset also cache file .extip */
+	if (strcmp(nvram_safe_get(cache_nv), "") == 0) {
+		memset(s, 0, sizeof(s));
+		snprintf(s, sizeof(s), "%s.extip", ddnsx_path);
+		f_write(s, NULL, 0, 0, 0);
+	}
+
 	if (!f_exists(msg_fn)) {
-		logmsg(LOG_DEBUG, "*** %s: !f_exist(%s) - adding ...", __FUNCTION__, msg_fn);
+		logmsg(LOG_DEBUG, "*** %s: !f_exist(%s) - creating ...", __FUNCTION__, msg_fn);
 		f_write(msg_fn, NULL, 0, 0, 0);
 	}
 
@@ -164,6 +172,7 @@ static void update(int num, int *dirty, int force)
 
 	fclose(f);
 
+	logmsg(LOG_DEBUG, "*** mdu <<<<<<<");
 	exitcode = eval("mdu", "--service", serv, "--conf", conf_fn);
 	logmsg(LOG_DEBUG, "*** mdu >>>>>>> %s: service: %s config: %s; exitcode: %d", __FUNCTION__, serv, conf_fn, exitcode);
 
