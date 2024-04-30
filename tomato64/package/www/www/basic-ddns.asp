@@ -61,7 +61,6 @@ var services = [
 	['enom', 'eNom', 'https://www.enom.com/', 'ut', 'Domain'],
 	['afraid', 'FreeDNS (https)', 'https://freedns.afraid.org/', 'n'],
 	['heipv6tb', 'HE.net IPv6 Tunnel Broker (https)', 'https://www.tunnelbroker.net/', 'uh', 'Account Name', 'Update Key', 'Tunnel ID'],
-	['ieserver', 'ieServer.net (https)', 'http://www.ieserver.net/', 'uhz', 'Username / Hostname', null, 'Domain'],
 	['namecheap', 'namecheap (https)', 'https://www.namecheap.com/', 'ut', 'Domain'],
 	['noip', 'No-IP.com (https)', 'https://www.noip.com/', 'uh', 'Email Address', null, 'Hostname / Group'],
 	['opendns', 'OpenDNS (https)', 'https://www.opendns.com/', 'uhoz', null, null, 'Network <small>(optional)<\/small>'],

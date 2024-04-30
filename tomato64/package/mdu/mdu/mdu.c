@@ -1204,44 +1204,6 @@ static void update_dnsexit(int ssl)
 }
 
 /*
-	ieserver.net
-	http://www.ieserver.net/tools.html
-
-	---
-
-	http://ieserver.net/cgi-bin/dip.cgi?username=XXX&domain=XXX&password=XXX&updatehost=1
-
-	username = hostname
-	domain = dip.jp, fam.cx, etc.
-*/
-static void update_ieserver(int ssl)
-{
-	int r;
-	char *body;
-	char query[2048];
-	char *p;
-
-	/* +opt +opt */
-	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "/cgi-bin/dip.cgi?username=%s&domain=%s&password=%s&updatehost=1", get_option_required("user"), get_option_required("host"), get_option_required("pass"));
-
-	r = wget(ssl, 0, "ieserver.net", query, NULL, 0, &body, NULL);
-	if (r == 200) {
-		if (strstr(body, "<title>Error")) {
-			/* <p>yuuzaa na mata pasuwoodo (EUC-JP) */
-			if ((p = strstr(body, "<p>\xA5\xE6\xA1\xBC\xA5\xB6\xA1\xBC")) != NULL) /* <p>user */
-				error(M_INVALID_AUTH);
-
-			error(M_UNKNOWN_RESPONSE__D, -1);
-		}
-
-		success();
-	}
-
-	error(M_UNKNOWN_ERROR__D, r);
-}
-
-/*
 	dyns.cx
 	http://www.dyns.cx/documentation/technical/protocol/v1.1.php
 
@@ -1830,8 +1792,6 @@ int main(int argc, char *argv[])
 		update_afraid(1);
 	else if (strcmp(p, "heipv6tb") == 0)
 		update_dua("heipv6tb", 1, "ipv4.tunnelbroker.net", "/nic/update", 1);
-	else if (strcmp(p, "ieserver") == 0)
-		update_ieserver(1); /* TLS 1.0 only... */
 	else if (strcmp(p, "namecheap") == 0)
 		update_namecheap(1);
 	else if (strcmp(p, "noip") == 0)
