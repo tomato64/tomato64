@@ -359,9 +359,9 @@ void asp_ctdump(int argc, char **argv)
 			}
 
 			if (dir_reply == 1)
-				web_printf("%c[%u,%u,'%s','%s','%s','%s','%s','%s',%d,%d]", comma, proto, time, dst, src, dport, sport, bytesi, byteso, mark, rule);
+				web_printf("%c[%u,%u,'%s','%s','%s','%s','%s','%s',%d,%d,1]", comma, proto, time, dst, src, dport, sport, bytesi, byteso, mark, rule);
 			else
-				web_printf("%c[%u,%u,'%s','%s','%s','%s','%s','%s',%d,%d]", comma, proto, time, src, dst, sport, dport, byteso, bytesi, mark, rule);
+				web_printf("%c[%u,%u,'%s','%s','%s','%s','%s','%s',%d,%d,0]", comma, proto, time, src, dst, sport, dport, byteso, bytesi, mark, rule);
 
 			comma = ',';
 		}
@@ -586,9 +586,9 @@ void asp_ctrate(int argc, char **argv)
 		}
 
 		if (dir_reply == 1)
-			web_printf("%c[%u,'%s','%s','%s','%s',%li,%li]", comma, a_proto, a_dst, a_src, a_dport, a_sport, inbytes, outbytes);
+			web_printf("%c[%u,'%s','%s','%s','%s',%li,%li,1]", comma, a_proto, a_dst, a_src, a_dport, a_sport, inbytes, outbytes);
 		else
-			web_printf("%c[%u,'%s','%s','%s','%s',%li,%li]", comma, a_proto, a_src, a_dst, a_sport, a_dport, outbytes, inbytes);
+			web_printf("%c[%u,'%s','%s','%s','%s',%li,%li,0]", comma, a_proto, a_src, a_dst, a_sport, a_dport, outbytes, inbytes);
 
 		comma = ',';
 	}

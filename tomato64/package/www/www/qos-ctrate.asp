@@ -335,6 +335,11 @@ ref.refresh = function(text) {
 				else
 					cursor = null;
 			}
+			if (E('_f_bold').checked) {
+				if ((b[7] == '0' && cols[j] == '1')  || (b[7] == '1' && cols[j] == '2')) {
+					b[cols[j]] = '<b>' +b[cols[j]]+ '<\/b>';
+				}
+			}
 			if (E('_f_shortcuts').checked) {
 				b[cols[j]] = b[cols[j]]+' <small class="pics">';
 				if (cache[ip] == null)
@@ -345,7 +350,14 @@ ref.refresh = function(text) {
 		}
 
 		numconnshown++;
-		d = [protocols[b[0]] || b[0], b[1], b[3], b[2], b[4], b[5], b[6]];
+
+		if ((E('_f_originsource').checked) && b[7] == '1') {
+			d = [protocols[b[0]] || b[0], b[2], b[4], b[1], b[3], b[6], b[5]];
+		}
+		else {
+			d = [protocols[b[0]] || b[0], b[1], b[3], b[2], b[4], b[5], b[6]];
+		}
+
 		var row = grid.insertData(-1, d);
 		if (cursor)
 			row.style.cursor = cursor;
@@ -414,6 +426,10 @@ function verifyFields(focused, quiet) {
 
 	cookie.set(cprefix+'_shortcuts', (E('_f_shortcuts').checked ? '1' : '0'), 1);
 
+	cookie.set(cprefix+'_bold', (E('_f_bold').checked ? '1' : '0'), 1);
+
+	cookie.set(cprefix+'_originsource', (E('_f_originsource').checked ? '1' : '0'), 1);
+
 	thresChanged();
 	resolveChanged();
 	dofilter();
@@ -448,6 +464,10 @@ function init() {
 		thres = 0;
 
 	E('_f_shortcuts').checked = (((c = cookie.get(cprefix+'_shortcuts')) != null) && (c == '1'));
+
+	E('_f_bold').checked = (((c = cookie.get(cprefix+'_bold')) != null) && (c == '1'));
+
+	E('_f_originsource').checked = (((c = cookie.get(cprefix+'_originsource')) != null) && (c == '1'));
 
 	E('_f_excludebythreshold').checked = (thres != 0);
 	grid.setup();
@@ -496,6 +516,8 @@ function init() {
 		c.push({ title: 'Ignore inactive connections', name: 'f_excludebythreshold', type: 'checkbox' });
 		c.push({ title: 'Auto resolve addresses', name: 'f_autoresolve', type: 'checkbox' });
 		c.push({ title: 'Show shortcuts', name: 'f_shortcuts', type: 'checkbox' });
+		c.push({ title: 'Bold connection originator', name: 'f_bold', type: 'checkbox' });
+		c.push({ title: 'Show connection originator always as Source', name: 'f_originsource', type: 'checkbox' });
 		createFieldTable('',c);
 	</script>
 </div>
