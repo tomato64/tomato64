@@ -200,7 +200,9 @@ void start_samba(int force)
 	            " server string = Tomato64 Samba Server\n"
 	            " dos charset = ASCII\n"
 	            " unix charset = UTF8\n"
+#ifndef TOMATO64
 	            " display charset = UTF8\n"
+#endif /* TOMATO64 */
 	            " guest account = nobody\n"
 	            " security = user\n"
 	            " %s\n"
