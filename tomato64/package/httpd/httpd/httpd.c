@@ -87,7 +87,11 @@
 #define HTTPS_CRT_VER		"1"
 #endif
 
+#ifndef TOMATO64
 #define HTTP_MAX_LISTENERS	16
+#else
+#define HTTP_MAX_LISTENERS	17
+#endif /* TOMATO64 */
 #define SERVER_NAME		"httpd"
 #define PROTOCOL		"HTTP/1.0"
 #define RFC1123FMT		"%a, %d %b %Y %H:%M:%S GMT"
