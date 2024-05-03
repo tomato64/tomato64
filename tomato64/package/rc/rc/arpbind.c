@@ -49,6 +49,9 @@ void stop_arpbind(void)
 			if (sscanf(buf, "%s %*s %*s %*s %*s %*s", ipaddr) != 1)
 				continue;
 
+			if (strcmp(ipaddr, "IP") == 0)
+				continue;
+
 			eval ("arp", "-d", (char *)ipaddr);
 		}
 		fclose(f);
