@@ -145,8 +145,9 @@ void try_enabling_fastnat(void)
 void enable_ip_forward(void)
 {
 	f_write_procsysnet("ipv4/ip_forward", "1");
-
+#ifdef TOMATO64
 	system("sysctl -p -q");
+#endif /* TOMATO64 */
 }
 
 void enable_blackhole_detection(void)
