@@ -188,7 +188,7 @@ static void update(int num, int *dirty, int force)
 			if (errors < 1)
 				errors = 1;
 
-			if (errors >= 3) {
+			if (errors >= 10) { /* remove from cru, go to standby */
 				nvram_unset(s);
 				goto CLEANUP;
 			}
