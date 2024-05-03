@@ -2552,6 +2552,7 @@ int ntpd_synced_main(int argc, char *argv[])
 		stop_httpd();
 		start_httpd();
 		start_sched();
+		stop_ddns();
 		start_ddns();
 #ifdef TCONFIG_DNSCRYPT
 		stop_dnscrypt();

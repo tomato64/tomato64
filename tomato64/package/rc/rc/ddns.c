@@ -14,6 +14,8 @@
 #include <time.h>
 #include <arpa/inet.h>
 
+#define CRU_TMP_FILE	"/tmp/cru-ddns"
+
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OS
 #define LOGMSG_NVDEBUG	"ddns_debug"
@@ -314,9 +316,16 @@ int ddns_update_main(int argc, char **argv)
 
 void start_ddns(void)
 {
-	stop_ddns();
+	char tmp[8];
 
 	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
+
+	system("cru l | grep ddns-update | wc -l >" CRU_TMP_FILE);
+	memset(tmp, 0, sizeof(tmp));
+	f_read(CRU_TMP_FILE, tmp, sizeof(tmp));
+
+	if ((pidof("ddns-update") > 0) || (pidof("mdu") > 0) || (atoi(tmp) > 0))
+		stop_ddns();
 
 	/* cleanup */
 	simple_unlock("ddns0");
@@ -333,7 +342,8 @@ void start_ddns(void)
 #endif
 
 	xstart("ddns-update");
-	logmsg(LOG_INFO, "ddns service (re-)started");
+
+	logmsg(LOG_INFO, "ddns is started");
 }
 
 void stop_ddns(void)
@@ -355,4 +365,6 @@ void stop_ddns(void)
 
 	killall("ddns-update", SIGKILL);
 	killall("mdu", SIGKILL);
+
+	logmsg(LOG_INFO, "ddns is stopped");
 }
