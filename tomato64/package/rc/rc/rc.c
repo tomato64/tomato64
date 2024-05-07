@@ -280,6 +280,9 @@ static const applets_t applets[] = {
 	{ "led",			led_main			},
 	{ "halt",			reboothalt_main			},
 	{ "reboot",			reboothalt_main			},
+#ifdef TOMATO64
+	{ "fast-reboot",		fastreboot_main			},
+#endif /* TOMATO64 */
 	{ "gpio",			gpio_main			},
 	{ "wldist",			wldist_main			},
 #ifdef TCONFIG_CIFS

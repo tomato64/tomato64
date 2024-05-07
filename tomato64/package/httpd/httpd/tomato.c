@@ -39,6 +39,9 @@
 
 char *post_buf = NULL;
 int rboot = 0;
+#ifdef TOMATO64
+int fastrboot = 0;
+#endif /* TOMATO64 */
 extern int post;
 
 #if defined(TCONFIG_BCMARM) || defined(TCONFIG_MIPSR2)
@@ -2581,6 +2584,9 @@ static void wo_tomato(char *url)
 	force_commit = atoi(webcgi_safeget("_force_commit", "0"));
 	ajax = atoi(webcgi_safeget("_ajax", "0"));
 	rboot = atoi(webcgi_safeget("_reboot", "0"));
+#ifdef TOMATO64
+	fastrboot = atoi(webcgi_safeget("_fastreboot", "0"));
+#endif /* TOMATO64 */
 	nvset = atoi(webcgi_safeget("_nvset", "1"));
 
 	if (!*red)
@@ -2600,7 +2606,11 @@ static void wo_tomato(char *url)
 		resmsg_set("Settings saved.");
 	}
 
+#ifdef TOMATO64
+	if (rboot || fastrboot)
+#else
 	if (rboot)
+#endif /* TOMATO64 */
 		parse_asp("reboot.asp");
 	else {
 		if (ajax)
@@ -2642,6 +2652,12 @@ static void wo_tomato(char *url)
 		sleep(1);
 		kill(1, SIGTERM);
 	}
+#ifdef TOMATO64
+	if (fastrboot) {
+		web_close();
+		system("fast-reboot");
+	}
+#endif /* TOMATO64 */
 }
 
 static void wo_update(char *url)

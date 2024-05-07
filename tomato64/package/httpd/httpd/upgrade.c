@@ -194,6 +194,11 @@ ERROR:
 
 void wo_flash(char *url)
 {
+#ifdef TOMATO64
+	unsigned int fastreboot;
+	fastreboot = (strcmp(webcgi_safeget("_fastreboot", "0"), "1") == 0);
+#endif /* TOMATO64 */
+
 	if (rboot) {
 		sleep(1);
 		parse_asp("/tmp/reboot.asp");
@@ -208,7 +213,16 @@ void wo_flash(char *url)
 
 		sync();
 		//kill(1, SIGTERM);
+#ifdef TOMATO64
+		if (fastreboot) {
+			system("kexec -l /boot/bzImage --reuse-cmdline");
+			system("kexec -e");
+		} else {
+			reboot(RB_AUTOBOOT);
+		}
+#else
 		reboot(RB_AUTOBOOT);
+#endif /* TOMATO64 */
 
 		exit(0);
 	}

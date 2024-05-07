@@ -11775,3 +11775,51 @@ int reboothalt_main(int argc, char *argv[])
 
 	return 0;
 }
+#ifdef TOMATO64
+int fastreboot_main(int argc, char *argv[])
+{
+	int i, n;
+	pid_t p;
+
+
+	puts("Fast Rebooting...\n");
+	fflush(stdout);
+	sleep(1);
+
+	p = fork();
+
+	if (p < 0)
+	{
+		puts("fork fail");
+		return 1;
+	}
+	else if (p > 0)
+	{
+		return 0;
+	}
+	else if (p == 0)
+	{
+		i = 10;
+		while ((!nvram_match("action_service", "")) && (i-- > 0)) {
+			sleep(1);
+		}
+
+		nvram_set("action_service", "upgrade-start");
+		kill(1, SIGUSR1);
+
+		for (n = 60; n > 0; --n) { /* wait 60 seconds for completion */
+			sleep(1);
+
+			if (nvram_match("action_service", "")) /* this is cleared at the end */
+				break;
+		}
+
+		unlink("/var/log/messages");
+		unlink("/var/log/messages.0");
+		sync();
+
+		system("kexec -l /boot/bzImage --reuse-cmdline");
+		system("kexec -e");
+	}
+}
+#endif /* TOMATO64 */

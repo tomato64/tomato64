@@ -35,6 +35,7 @@ define RC_INSTALL_TARGET_CMDS
 	ln -sf rc $(TARGET_DIR)/sbin/radio
 	ln -sf rc $(TARGET_DIR)/sbin/led
 	ln -sf rc $(TARGET_DIR)/sbin/reboot
+	ln -sf rc $(TARGET_DIR)/sbin/fast-reboot
 	ln -sf rc $(TARGET_DIR)/sbin/halt
 	ln -sf rc $(TARGET_DIR)/sbin/redial
 	ln -sf rc $(TARGET_DIR)/sbin/mwanroute

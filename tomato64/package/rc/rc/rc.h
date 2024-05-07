@@ -114,6 +114,9 @@ extern void run_del_firewall_script(char *infile, char *outfile);
 /* init.c */
 extern int init_main(int argc, char *argv[]);
 extern int reboothalt_main(int argc, char *argv[]);
+#ifdef TOMATO64
+extern int fastreboot_main(int argc, char *argv[]);
+#endif /* TOMATO64 */
 extern int console_main(int argc, char *argv[]);
 
 /* interface.c */
