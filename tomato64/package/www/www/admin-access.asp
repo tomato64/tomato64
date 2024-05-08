@@ -34,14 +34,14 @@ var shlimit = nvram.ne_shlimit.split(',');
 if (shlimit.length != 3)
 	shlimit = [0,3,60];
 
-var xmenus = [['Status', 'status'],['Bandwidth', 'bwm'],['IP Traffic', 'ipt'],['Tools', 'tools'],['Basic', 'basic'],['Advanced', 'advanced'],['Port Forwarding', 'forward'],['QoS', 'qos'],
+var xmenus = [['Status','status'],['Bandwidth','bwm'],['IP Traffic','ipt'],['Tools','tools'],['Basic','basic'],['Advanced','advanced'],['Port Forwarding','forward'],['QoS','qos'],
 /* USB-BEGIN */
-              ['USB and NAS', 'nas'],
+              ['USB and NAS','nas'],
 /* USB-END */
 /* VPN-BEGIN */
-              ['VPN Tunneling', 'vpn'],
+              ['VPN Tunneling','vpn'],
 /* VPN-END */
-              ['Administration', 'admin']];
+              ['Administration','admin']];
 
 function show() {
 	var e = E('_sshd_button');
@@ -172,7 +172,13 @@ function verifyFields(focused, quiet) {
 	b = b != 0;
 	a = E('_http_wanport');
 	elem.display(PR(a), b);
-	if ((b) && (!v_port(a, quiet || !ok))) ok = 0;
+	if (b) {
+		if (!v_port(a, quiet || !ok)) ok = 0;
+		if ((a.value == 80) || (a.value == 443)) {
+			ferror.set(a, 'Port 80 and 443 are not allowed for remote GUI access', quiet || !ok);
+			ok = 0;
+		}
+	}
 
 	a = E('_f_http_wanport_bfm');
 	elem.display(PR(a), b);
@@ -457,7 +463,7 @@ function init() {
 				        (nvram.remote_mgt_https == 1) ? 2 :
 /* HTTPS-END */
 				        1) : 0 },
-				{ title: 'Port', indent: 2, name: 'http_wanport', type: 'text', maxlen: 5, size: 7, value:  fixPort(nvram.http_wanport, 8080) },
+				{ title: 'Port', indent: 2, name: 'http_wanport', type: 'text', maxlen: 5, size: 7, suffix: '&nbsp;<small>not allowed: 80 and 443<\/small>', value: fixPort(nvram.http_wanport, 8080) },
 /* HTTPS-BEGIN */
 			null,
 			{ title: 'SSL Certificate', rid: 'row_sslcert' },
