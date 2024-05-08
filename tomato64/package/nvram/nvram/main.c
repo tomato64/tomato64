@@ -262,12 +262,13 @@ int main(int argc, char **argv)
 				fprintf(stderr, "size: %d bytes (%d left)\n", size, MAX_NVRAM_SPACE - size);
 		}
 		else if (!strcmp(*argv, "convert")) {
-			if (argc > 2) {
-				ret = nvram_restore_to_file(argv[1], argv[2], buf);
-				print_error(ret, argv[1], (const char *)argv[2]);
+			if (*++argv) {
+				name = *argv;
+				if (*++argv) {
+					ret = nvram_restore_to_file(name, *argv, buf);
+					print_error(ret, name, (const char *)*argv);
+				}
 			}
-			else
-				usage();
 		}
 		else
 			usage();
