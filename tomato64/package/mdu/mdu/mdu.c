@@ -1207,60 +1207,6 @@ static void update_dnsexit(int ssl)
 }
 
 /*
-	dyns.cx
-	http://www.dyns.cx/documentation/technical/protocol/v1.1.php
-
-	---
-
-"HTTP/1.1 200 OK
-...
-
-401 testuser not authenticated"
-*/
-static void update_dyns(int ssl)
-{
-	int r;
-	char *body;
-	char query[2048];
-
-
-	/* +opt +opt +opt */
-	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "/postscript011.php?username=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
-
-	/* +opt */
-	append_addr_option(query, "&ip=%s");
-
-	r = wget(ssl, 0, "www.dyns.net", query, NULL, 0, &body, NULL);
-	if (r == 200) {
-		while ((*body == ' ') || (*body == '\r') || (*body == '\n')) {
-			++body;
-		}
-		switch (r = atoi(body)) {
-		case 200:
-			success();
-			break;
-		case 400:
-			error(M_INVALID_PARAM__D, r);
-			break;
-		case 401:
-			error(M_INVALID_AUTH);
-			break;
-		case 402:
-			error(M_TOOSOON);
-			break;
-		case 405:
-			error(M_INVALID_HOST);
-			break;
-		}
-
-		error(M_UNKNOWN_RESPONSE__D, r);
-	}
-
-	error(M_UNKNOWN_ERROR__D, r);
-}
-
-/*
 	ZoneEdit
 	http://www.zoneedit.com/doc/dynamic.html
 
@@ -1781,8 +1727,6 @@ int main(int argc, char *argv[])
 		update_dua("statdns", 1, "members.dyndns.org", "/nic/update", 1);
 	else if (strcmp(p, "dyndns-custom") == 0)
 		update_dua("custom", 1, "members.dyndns.org", "/nic/update", 1);
-	else if (strcmp(p, "dyns") == 0)
-		update_dyns(0); /* no https */
 	else if (strcmp(p, "easydns") == 0)
 		update_dua(NULL, 1, "members.easydns.com", "/dyn/dyndns.php", 1);
 	else if (strcmp(p, "enom") == 0)

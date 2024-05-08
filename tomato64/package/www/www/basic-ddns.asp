@@ -56,7 +56,6 @@ var services = [
 	['dyndns', 'DynDNS (https) - Dynamic', 'https://www.dyndns.com/', 'uhwmbs'],
 	['dyndns-static', 'DynDNS (https) - Static', 'https://www.dyndns.com/', 'uhwmbs'],
 	['dyndns-custom', 'DynDNS (https) - Custom', 'https://www.dyndns.com/', 'uhwmbs'],
-	['dyns', 'DyNS', 'http://www.dyns.cx/', 'uh'],
 	['easydns', 'easyDNS (https)', 'https://www.easydns.com/', 'uhwm'],
 	['enom', 'eNom', 'https://www.enom.com/', 'ut', 'Domain'],
 	['afraid', 'FreeDNS (https)', 'https://freedns.afraid.org/', 'n'],
