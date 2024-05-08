@@ -31,9 +31,11 @@
 #define OUTFILE_NOT_WRITABLE	-2
 #define INVALID_CFG_FORMAT	-3
 
-#define NVRAM_SPACE		0x100000
+#ifdef TOMATO64
+#define NVRAM_SPACE	0x100000
 #define MAX_NVRAM_SPACE	0x100000
 #define DEF_NVRAM_SPACE	0x100000
+#endif /* TOMATO64 */
 
 int print_error(int rv, char *infile, const char *outfile)
 {
