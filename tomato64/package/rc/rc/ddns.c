@@ -14,7 +14,7 @@
 #include <time.h>
 #include <arpa/inet.h>
 
-#define CRU_TMP_FILE	"/tmp/cru-ddns"
+#define CRU_TMP_FN	"/tmp/cru-ddns"
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OS
@@ -320,9 +320,9 @@ void start_ddns(void)
 
 	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
 
-	system("cru l | grep ddns-update | wc -l >" CRU_TMP_FILE);
+	system("cru l | grep ddns-update | wc -l >" CRU_TMP_FN);
 	memset(tmp, 0, sizeof(tmp));
-	f_read(CRU_TMP_FILE, tmp, sizeof(tmp));
+	f_read(CRU_TMP_FN, tmp, sizeof(tmp));
 
 	if ((pidof("ddns-update") > 0) || (pidof("mdu") > 0) || (atoi(tmp) > 0))
 		stop_ddns();
@@ -348,6 +348,8 @@ void start_ddns(void)
 
 void stop_ddns(void)
 {
+	int m = 15;
+
 	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
 
 	eval("cru", "d", "ddns0");
@@ -364,6 +366,15 @@ void stop_ddns(void)
 #endif
 
 	killall("ddns-update", SIGKILL);
+
+	/* prevent mdu from leaving unwanted routing (only in MultiWAN mode) */
+	if (nvram_get_int("mwan_num") > 1 && pidof("mdu") > 0 && !nvram_get_int("g_upgrade") && !nvram_get_int("g_reboot")) {
+		f_write_string(MDU_STOP_FN, "1", 0, 0); /* create stop file */
+		while (pidof("mdu") > 0 && (m-- > 0)) {
+			logmsg(LOG_DEBUG, "*** %s: waiting for mdu to end, %d secs left ...", __FUNCTION__, m);
+			sleep(1);
+		}
+	}
 	killall("mdu", SIGKILL);
 
 	logmsg(LOG_INFO, "ddns is stopped");

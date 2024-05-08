@@ -424,4 +424,7 @@ extern int dhd_bssiovar_setint(char *ifname, char *iovar, int bssidx, int val);
 extern pid_t get_pid_by_name(char *name); /* Returns the process ID */
 extern int getMTD(char *name); /* Find partition with defined name and return partition number as an integer */
 
+/* mdu.c/ddns.c */
+#define MDU_STOP_FN		"/var/lib/mdu/mdu-stop"
+
 #endif /* __SHARED_H__ */
