@@ -186,7 +186,7 @@ static const char *get_option(const char *name)
 							exit(99);
 
 						f_argv[f_argc++] = p;
-						if ((unsigned int) f_argc >= (sizeof(f_argv) / sizeof(f_argv[0])))
+						if ((unsigned int)f_argc >= ASIZE(f_argv))
 							break;
 					}
 				}
@@ -894,7 +894,7 @@ const char *get_address(int required)
 				}
 			}
 
-			rows = sizeof(services) / sizeof(services[0]);
+			rows = ASIZE(services);
 			n = 5; /* try 5 times on different checkers, if no response it means (probably) WAN is down - wait */
 			while (n-- > 0) {
 				srand(time(0));
