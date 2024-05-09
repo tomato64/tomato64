@@ -13,7 +13,6 @@
 
 #include <stdlib.h>
 #include <shutils.h>
-#include <utils.h>
 #include <syslog.h>
 #include <sys/stat.h>
 

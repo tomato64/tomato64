@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <bcmnvram.h>
 #include <shutils.h>
-#include <utils.h>
 #include <errno.h>
 #include <sys/stat.h>
 

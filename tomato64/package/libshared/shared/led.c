@@ -18,7 +18,6 @@
 #include <sys/ioctl.h>
 #include <linux_gpio.h>
 
-#include "utils.h"
 #include "shutils.h"
 #include "shared.h"
 
