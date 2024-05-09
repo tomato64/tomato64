@@ -445,9 +445,9 @@ static void shutdn(int rb)
 	_dprintf("shutdn rb=%d\n", rb);
 
 	sigemptyset(&ss);
-	for (i = 0; i < sizeof(fatalsigs) / sizeof(fatalsigs[0]); i++)
+	for (i = 0; i < ASIZE(fatalsigs); i++)
 		sigaddset(&ss, fatalsigs[i]);
-	for (i = 0; i < sizeof(initsigs) / sizeof(initsigs[0]); i++)
+	for (i = 0; i < ASIZE(initsigs); i++)
 		sigaddset(&ss, initsigs[i]);
 	sigprocmask(SIG_BLOCK, &ss, NULL);
 
@@ -11389,7 +11389,7 @@ static void sysinit(void)
 	f_write_procsysnet("ipv6/conf/default/disable_ipv6", "1");
 #endif
 
-	for (i = 0; i < sizeof(fatalsigs) / sizeof(fatalsigs[0]); i++) {
+	for (i = 0; i < ASIZE(fatalsigs); i++) {
 		signal(fatalsigs[i], handle_fatalsigs);
 	}
 	signal(SIGCHLD, handle_reap);
@@ -11527,7 +11527,7 @@ int init_main(int argc, char *argv[])
 	sysinit();
 
 	sigemptyset(&sigset);
-	for (i = 0; i < sizeof(initsigs) / sizeof(initsigs[0]); i++) {
+	for (i = 0; i < ASIZE(initsigs); i++) {
 		sigaddset(&sigset, initsigs[i]);
 	}
 	sigprocmask(SIG_BLOCK, &sigset, NULL);
