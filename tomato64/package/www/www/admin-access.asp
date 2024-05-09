@@ -134,7 +134,7 @@ function verifyFields(focused, quiet) {
 	a = E('_f_http_local');
 	b = E('_f_http_remote').value;
 	if ((a.value != 3) && (b != 0) && (a.value != b)) {
-		ferror.set(a, 'The local http/https must also be enabled when using remote access', quiet || !ok);
+		ferror.set(a, 'The local HTTP/HTTPS must also be enabled when using remote access', quiet || !ok);
 		ok = 0;
 	}
 	else
@@ -168,16 +168,32 @@ function verifyFields(focused, quiet) {
 	    || (!v_port('_https_lanport', quiet || !ok))
 /* HTTPS-END */
 	    ) ok = 0;
-
+/* HTTPS-BEGIN */
+	a = E('_https_lanport');
+	if (a.value == E('_http_lanport').value) {
+		ferror.set(a, 'HTTP and HTTPS ports cannot be the same', quiet || !ok);
+		ok = 0;
+	}
+/* HTTPS-END */
 	b = b != 0;
 	a = E('_http_wanport');
 	elem.display(PR(a), b);
 	if (b) {
 		if (!v_port(a, quiet || !ok)) ok = 0;
 		if ((a.value == 80) || (a.value == 443)) {
-			ferror.set(a, 'Port 80 and 443 are not allowed for remote GUI access', quiet || !ok);
+			ferror.set(a, 'Ports 80 and 443 are not allowed for remote GUI access', quiet || !ok);
 			ok = 0;
 		}
+		if (a.value == E('_http_lanport').value) {
+			ferror.set(a, 'Ports for local and remote GUI access cannot be the same', quiet || !ok);
+			ok = 0;
+		}
+/* HTTPS-BEGIN */
+		if (a.value == E('_https_lanport').value) {
+			ferror.set(a, 'Ports for local and remote GUI access cannot be the same', quiet || !ok);
+			ok = 0;
+		}
+/* HTTPS-END */
 	}
 
 	a = E('_f_http_wanport_bfm');
@@ -239,76 +255,87 @@ function verifyFields(focused, quiet) {
 }
 
 function save() {
-	var a, b, fom;
+	var fom, rem, loc, a, b, i;
+	var local = 0, remote = 0;
 
 	if (!verifyFields(null, 0))
 		return;
 
 	fom = E('t_fom');
-	a = E('_f_http_local').value * 1;
-	if (a == 0) {
-		if (!confirm('Warning: Web Admin is about to be disabled. If you decide to re-enable Web Admin at a later time, it must be done manually via Telnet, SSH or by performing a hardware reset. Are you sure you want to do this?'))
-			return;
-
-		fom._nextpage.value = 'about:blank';
-	}
-	fom.http_enable.value = (a & 1) ? 1 : 0;
-/* HTTPS-BEGIN */
-	fom.https_enable.value = (a & 2) ? 1 : 0;
-/* HTTPS-END */
 
 	fom.http_lan_listeners.value = 0; /* init with 0 and check */
 	for (i = 1; i <= MAX_BRIDGE_ID; i++)
 		if (eval('fom._f_http_lan'+i+'_listener.checked'))
 			fom.http_lan_listeners.value = fom.http_lan_listeners.value | (2 ** (i - 1)); /* set hex value bit, listener enabled for LAN(i) */
-
 /* IPV6-BEGIN */
 	fom.http_ipv6.value = fom._f_http_ipv6.checked ? 1 : 0;
 /* IPV6-END */
-	nvram.lan_ipaddr = location.hostname;
-	if ((a != 0) && (location.hostname == nvram.lan_ipaddr)) {
-		if (location.protocol == 'https:') {
-			b = 's';
-			if ((a & 2) == 0)
-				b = '';
-		}
-		else {
-			b = '';
-			if ((a & 1) == 0)
-				b = 's';
-		}
 
-		a = 'http'+b+'://'+location.hostname;
-		if (b == 's') {
-			if (fom.https_lanport.value != 443)
-				a += ':'+fom.https_lanport.value;
-		}
-		else {
-			if (fom.http_lanport.value != 80)
-				a += ':'+fom.http_lanport.value;
-		}
-		fom._nextpage.value = a+'/admin-access.asp';
-	}
-
-	a = fom._f_http_remote.value;
-	fom.remote_management.value = (a != 0) ? 1 : 0;
+	/* remote access */
+	rem = fom._f_http_remote.value; /* 0, 1, 2 */
+	fom.remote_management.value = (rem != 0) ? 1 : 0;
 /* HTTPS-BEGIN */
-	fom.remote_mgt_https.value = (a == 2) ? 1 : 0;
+	fom.remote_mgt_https.value = (rem == 2) ? 1 : 0;
 /* HTTPS-END */
-/*
-	if ((a != 0) && (location.hostname != nvram.lan_ipaddr)) {
-		if (location.protocol == 'https:') {
-			if (a != 2) fom._nextpage.value = 'http://'+location.hostname+':'+fom.http_wanport.value+'/admin-access.asp';
-		} else {
-			if (a == 2) fom._nextpage.value = 'https://'+location.hostname+':'+fom.http_wanport.value+'/admin-access.asp';
-		}
+
+	/* local access */
+	loc = fom._f_http_local.value; /* 0, 1, 2, 3 */
+	fom.http_enable.value = (loc & 1) ? 1 : 0;
+/* HTTPS-BEGIN */
+	fom.https_enable.value = (loc & 2) ? 1 : 0;
+/* HTTPS-END */
+
+	/* prepare redirect url */
+	i = 0;
+	if (location.port == '') {
+		if (location.protocol == 'https:')
+			i = 443;
+		else
+			i = 80;
 	}
-*/
+
+	if ((rem != 0) && (location.hostname != nvram.lan_ipaddr) && (location.port == nvram.http_wanport))
+		remote = 1;
+	else if ((loc != 0) && ((location.port == nvram.http_lanport) || (location.port == nvram.https_lanport) || (i == nvram.http_lanport) || (i == nvram.https_lanport)))
+		local = 1;
+
+	if (location.protocol == 'https:') {
+		a = 's';
+		if ((local && (loc & 2) == 0) || (remote && rem == 1))
+			a = '';
+	}
+	else {
+		a = '';
+		if ((local && (loc & 1) == 0) || (remote && rem == 2))
+			a = 's';
+	}
+	b = 'http'+a+'://'+location.hostname;
+
+	if (a == 's') {
+		if (local && fom.https_lanport.value != 443)
+			b += ':'+fom.https_lanport.value;
+		else if (remote && fom.http_wanport != 443)
+			b += ':'+fom.http_wanport.value;
+	}
+	else {
+		if (local && fom.http_lanport.value != 80)
+			b += ':'+fom.http_lanport.value;
+		else if (remote && fom.http_wanport != 80)
+			b += ':'+fom.http_wanport.value;
+	}
+	fom._nextpage.value = b+'/admin-access.asp';
+
+	if (loc == 0) {
+		if (!confirm('Warning: Web Admin is about to be disabled. If you decide to re-enable Web Admin at a later time, it must be done manually via Telnet, SSH or by performing a hardware reset. Are you sure you want to do this?'))
+			return;
+
+		fom._nextpage.value = 'about:blank';
+	}
+
 /* HTTPS-BEGIN */
 	fom.https_crt_gen.value = fom._f_https_crt_gen.checked ? 1 : 0;
 	fom.https_crt_save.value = fom._f_https_crt_save.checked ? 1 : 0;
 /* HTTPS-END */
-
 /* TOMATO64-REMOVE-BEGIN */
 	fom.web_wl_filter.value = fom._f_http_wireless.checked ? 0 : 1;
 /* TOMATO64-REMOVE-END */
@@ -343,7 +370,7 @@ function save() {
 	fom.ne_shlimit.value = ((fom._f_limit_ssh.checked ? 1 : 0) | (fom._f_limit_telnet.checked ? 2 : 0))+','+fom._f_limit_hit.value+','+fom._f_limit_sec.value;
 
 	a = [];
-	for (var i = 0; i < xmenus.length; ++i) {
+	for (i = 0; i < xmenus.length; ++i) {
 		b = xmenus[i][1];
 		if (E('_f_mx_'+b).checked)
 			a.push(b);
