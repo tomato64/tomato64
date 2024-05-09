@@ -60,6 +60,7 @@ function save() {
 /*	if (fom.f_nr_dnsmasq.checked) a.push('dnsmasq'); */
 	if (fom.f_nr_hotplug2.checked) a.push('hotplug2');
 	if (fom.f_nr_igmprt.checked) a.push('igmprt');
+	if (fom.f_nr_ntpd.checked) a.push('ntpd');
 	fom.debug_norestart.value = a.join(',');
 
 	fom._service.value = '';
@@ -136,7 +137,8 @@ function init() {
 				{ name: 'f_nr_crond', type: 'checkbox', suffix: ' crond<br>', value: (nvram.debug_norestart.indexOf('crond') != -1) },
 /*				{ name: 'f_nr_dnsmasq', type: 'checkbox', suffix: ' dnsmasq<br>', value: (nvram.debug_norestart.indexOf('dnsmasq') != -1) }, */
 				{ name: 'f_nr_hotplug2', type: 'checkbox', suffix: ' hotplug2<br>', value: (nvram.debug_norestart.indexOf('hotplug2') != -1) },
-				{ name: 'f_nr_igmprt', type: 'checkbox', suffix: ' igmprt<br>', value: (nvram.debug_norestart.indexOf('igmprt') != -1) }
+				{ name: 'f_nr_igmprt', type: 'checkbox', suffix: ' igmprt<br>', value: (nvram.debug_norestart.indexOf('igmprt') != -1) },
+				{ name: 'f_nr_ntpd', type: 'checkbox', suffix: ' ntpd<br>', value: (nvram.debug_norestart.indexOf('ntpd') != -1) }
 			] },
 			{ title: 'Set "no-cache" in httpd header', name: 'f_http_nocache', type: 'checkbox', value: nvram.http_nocache == '1' }
 		]);

@@ -102,6 +102,7 @@ static const char dmresolv[] = "/etc/resolv.dnsmasq";
 static pid_t pid_crond = -1;
 static pid_t pid_hotplug2 = -1;
 static pid_t pid_igmp = -1;
+static pid_t pid_ntpd = -1;
 #ifdef TCONFIG_FANCTRL
 static pid_t pid_phy_tempsense = -1;
 #endif
@@ -2525,6 +2526,10 @@ void start_ntpd(void)
 		}
 
 		ret = _eval(ntpd_argv, NULL, 0, &pid);
+
+		if (!nvram_contains_word("debug_norestart", "ntpd"))
+			pid_ntpd = -2;
+
 		if (ret)
 			logmsg(LOG_ERR, "starting ntpd failed ...");
 		else
@@ -2537,6 +2542,7 @@ void stop_ntpd(void)
 	if (serialize_restart("ntpd", 0))
 		return;
 
+	pid_ntpd = -1;
 	if (pidof("ntpd") > 0) {
 		killall_tk_period_wait("ntpd", 50);
 		logmsg(LOG_INFO, "ntpd is stopped");
@@ -2961,6 +2967,8 @@ void check_services(void)
 //		_check(pid_dnsmasq, "dnsmasq", start_dnsmasq);
 		_check(pid_crond, "crond", start_cron);
 		_check(pid_igmp, "igmpproxy", start_igmp_proxy);
+		if (nvram_get_int("ntp_updates") >= 1)
+			_check(pid_igmp, "ntpd", start_ntpd);
 	}
 }
 
