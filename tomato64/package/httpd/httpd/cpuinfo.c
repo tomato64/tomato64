@@ -11,6 +11,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#ifdef TOMATO64
+#include <sys/sysinfo.h>
+#endif /* TOMATO64 */
 #include "tomato.h"
 
 
@@ -183,18 +186,7 @@ void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
 
 int get_cpucount()
 {
-	FILE *fd;
-	char buff[10];
-
-	system("/usr/bin/nproc > /tmp/cpucount");
-	fd = fopen("/tmp/cpucount", "r");
-	fgets(buff, sizeof(buff), fd);
-	if (strcmp(buff, "") != 0){
-		return atoi(buff);
-	}
-	else {
-		return 0;
-	}
+	return get_nprocs();
 }
 #endif /* TOMATO64 */
 
