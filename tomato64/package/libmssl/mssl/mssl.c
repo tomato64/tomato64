@@ -8,7 +8,6 @@
 
 */
 
-
 #define _GNU_SOURCE
 
 #include <stdio.h>
@@ -23,42 +22,224 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#ifdef USE_OPENSSL
 #include <openssl/rsa.h>
-#include <openssl/ec.h>
 #include <openssl/crypto.h>
 #include <openssl/x509.h>
 #include <openssl/pem.h>
-#else
-/* CyaSSL */
-#include <cyassl_error.h>
-#endif
 
-#include "shared.h"
+#define _dprintf(args...)	while (0) {}
 
-/* refer https://ssl-config.mozilla.org/ w/o DES ciphers */
-#ifdef USE_OPENSSL
-#define SERVER_CIPHERS "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:!DSS"
-#else
-#define SERVER_CIPHERS "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS"
-#endif
+// refer https://mozilla.github.io/server-side-tls/ssl-config-generator/ w/o DES ciphers
+#define SERVER_CIPHERS "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:!DSS"
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-/* use reasonable defaults */
+// use reasonable defaults
 #define CLIENT_CIPHERS NULL
 #else
 #define CLIENT_CIPHERS "ALL:!EXPORT:!EXPORT40:!EXPORT56:!aNULL:!LOW:!RC4:@STRENGTH"
 #endif
 
-/* needed by logmsg() */
-#define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
-#define LOGMSG_NVDEBUG	"mssl_debug"
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#define X509_getm_notBefore X509_get_notBefore
+#define X509_getm_notAfter X509_get_notAfter
+#define RSA_get0_n(d) ((d)->n)
+#define DSA_get0_pub_key(d) ((d)->pub_key)
+#endif
 
+#if defined(RTCONFIG_MUSL_LIBC_1116_WAR)
+/* Workaround for musl libc earlier than v1.1.19 that has its own fopencookie() implementation.
+ * introduce musl fopencookie patch & copy some musl definition here (musl-1.1.16)
+ */
+typedef ssize_t (cookie_read_function_t)(void *, char *, size_t);
+typedef ssize_t (cookie_write_function_t)(void *, const char *, size_t);
+typedef int (cookie_seek_function_t)(void *, off_t *, int);
+typedef int (cookie_close_function_t)(void *);
+
+typedef struct {
+	cookie_read_function_t *read;
+	cookie_write_function_t *write;
+	cookie_seek_function_t *seek;
+	cookie_close_function_t *close;
+} cookie_io_functions_t;
+
+struct fcookie {
+	void *cookie;
+	cookie_io_functions_t iofuncs;
+};
+
+typedef struct _IO_FILE FILE;
+struct _IO_FILE {
+        unsigned flags;
+        unsigned char *rpos, *rend;
+        int (*close)(FILE *);
+        unsigned char *wend, *wpos;
+        unsigned char *mustbezero_1;
+        unsigned char *wbase;
+        size_t (*read)(FILE *, unsigned char *, size_t);
+        size_t (*write)(FILE *, const unsigned char *, size_t);
+        off_t (*seek)(FILE *, off_t, int);
+        unsigned char *buf;
+        size_t buf_size;
+        FILE *prev, *next;
+        int fd;
+        int pipe_pid;
+        long lockcount;
+        short dummy3;
+        signed char mode;
+        signed char lbf;
+        volatile int lock;
+        volatile int waiters;
+        void *cookie;
+        off_t off;
+        char *getln_buf;
+        void *mustbezero_2;
+        unsigned char *shend;
+        off_t shlim, shcnt;
+        FILE *prev_locked, *next_locked;
+        struct __locale_struct *locale;
+};
+#define UNGET 8
+#define F_PERM 1
+#define F_NORD 4
+#define F_NOWR 8
+#define F_EOF 16
+#define F_ERR 32
+#define F_SVB 64
+#define F_APP 128
+FILE *__ofl_add(FILE *f);
+
+struct cookie_FILE {
+	FILE f;
+	struct fcookie fc;
+	unsigned char buf[UNGET+BUFSIZ];
+};
+
+static size_t cookieread(FILE *f, unsigned char *buf, size_t len)
+{
+	struct fcookie *fc = f->cookie;
+	ssize_t ret = -1;
+	size_t remain = len, readlen = 0;
+	size_t len2 = len - !!f->buf_size;
+
+	if (!fc->iofuncs.read) goto bail;
+
+	if (len2) {
+		ret = fc->iofuncs.read(fc->cookie, (char *) buf, len2);
+		if (ret <= 0) goto bail;
+
+		readlen += ret;
+		remain -= ret;
+	}
+
+	if (!f->buf_size || remain > !!f->buf_size) return readlen;
+
+	f->rpos = f->buf;
+	ret = fc->iofuncs.read(fc->cookie, (char *) f->rpos, f->buf_size);
+	if (ret <= 0) goto bail;
+	f->rend = f->rpos + ret;
+
+	buf[readlen++] = *f->rpos++;
+
+	return readlen;
+
+bail:
+	f->flags |= ret == 0 ? F_EOF : F_ERR;
+	f->rpos = f->rend = f->buf;
+	return readlen;
+}
+
+static size_t cookiewrite(FILE *f, const unsigned char *buf, size_t len)
+{
+	struct fcookie *fc = f->cookie;
+	ssize_t ret;
+	size_t len2 = f->wpos - f->wbase;
+	if (!fc->iofuncs.write) return len;
+	if (len2) {
+		f->wpos = f->wbase;
+		if (cookiewrite(f, f->wpos, len2) < len2) return 0;
+	}
+	ret = fc->iofuncs.write(fc->cookie, (const char *) buf, len);
+	if (ret < 0) {
+		f->wpos = f->wbase = f->wend = 0;
+		f->flags |= F_ERR;
+		return 0;
+	}
+	return ret;
+}
+
+static off_t cookieseek(FILE *f, off_t off, int whence)
+{
+	struct fcookie *fc = f->cookie;
+	int res;
+	if (whence > 2U) {
+		errno = EINVAL;
+		return -1;
+	}
+	if (!fc->iofuncs.seek) {
+		errno = ENOTSUP;
+		return -1;
+	}
+	res = fc->iofuncs.seek(fc->cookie, &off, whence);
+	if (res < 0)
+		return res;
+	return off;
+}
+
+static int cookieclose(FILE *f)
+{
+	struct fcookie *fc = f->cookie;
+	if (fc->iofuncs.close) return fc->iofuncs.close(fc->cookie);
+	return 0;
+}
+
+FILE *fopencookie(void *cookie, const char *mode, cookie_io_functions_t iofuncs)
+{
+	struct cookie_FILE *f;
+
+	/* Check for valid initial mode character */
+	if (!strchr("rwa", *mode)) {
+		errno = EINVAL;
+		return 0;
+	}
+
+	/* Allocate FILE+fcookie+buffer or fail */
+	if (!(f=malloc(sizeof *f))) return 0;
+
+	/* Zero-fill only the struct, not the buffer */
+	memset(&f->f, 0, sizeof f->f);
+
+	/* Impose mode restrictions */
+	if (!strchr(mode, '+')) f->f.flags = (*mode == 'r') ? F_NOWR : F_NORD;
+
+	/* Set up our fcookie */
+	f->fc.cookie = cookie;
+	f->fc.iofuncs.read = iofuncs.read;
+	f->fc.iofuncs.write = iofuncs.write;
+	f->fc.iofuncs.seek = iofuncs.seek;
+	f->fc.iofuncs.close = iofuncs.close;
+
+	f->f.fd = -1;
+	f->f.cookie = &f->fc;
+	f->f.buf = f->buf + UNGET;
+	f->f.buf_size = BUFSIZ;
+	f->f.lbf = EOF;
+
+	/* Initialize op ptrs. No problem if some are unneeded. */
+	f->f.read = cookieread;
+	f->f.write = cookiewrite;
+	f->f.seek = cookieseek;
+	f->f.close = cookieclose;
+
+	/* Add new FILE to open file list */
+	return __ofl_add(&f->f);
+}
+#endif	/* RTCONFIG_MUSL_LIBC_1116_WAR */
 
 typedef struct {
 	SSL* ssl;
@@ -69,11 +250,7 @@ static SSL_CTX* ctx;
 
 static inline void mssl_print_err(SSL* ssl)
 {
-#ifdef USE_OPENSSL
 	ERR_print_errors_fp(stderr);
-#else
-	logmsg(LOG_DEBUG, "*** [mssl] error %d", ssl ? SSL_get_error(ssl, 0) : -1);
-#endif
 }
 
 static inline void mssl_cleanup(int err)
@@ -85,7 +262,7 @@ static inline void mssl_cleanup(int err)
 
 static ssize_t mssl_read(void *cookie, char *buf, size_t len)
 {
-	logmsg(LOG_DEBUG, "*** [mssl] %s IN", __FUNCTION__);
+	_dprintf("%s()\n", __FUNCTION__);
 
 	mssl_cookie_t *kuki = cookie;
 	int total = 0;
@@ -93,7 +270,7 @@ static ssize_t mssl_read(void *cookie, char *buf, size_t len)
 
 	do {
 		n = SSL_read(kuki->ssl, &(buf[total]), len - total);
-		logmsg(LOG_DEBUG, "*** [mssl] SSL_read(max=%d) returned %d", len - total, n);
+		_dprintf("SSL_read(max=%d) returned %d\n", len - total, n);
 
 		err = SSL_get_error(kuki->ssl, n);
 		switch (err) {
@@ -107,7 +284,7 @@ static ssize_t mssl_read(void *cookie, char *buf, size_t len)
 		case SSL_ERROR_WANT_READ:
 			break;
 		default:
-			logmsg(LOG_DEBUG, "*** [mssl] %s: SSL error %d", __FUNCTION__, err);
+			_dprintf("%s(): SSL error %d\n", __FUNCTION__, err);
 			mssl_print_err(kuki->ssl);
 			if (total == 0) total = -1;
 			goto OUT;
@@ -115,21 +292,21 @@ static ssize_t mssl_read(void *cookie, char *buf, size_t len)
 	} while ((len - total > 0) && SSL_pending(kuki->ssl));
 
 OUT:
-	logmsg(LOG_DEBUG, "*** [mssl] %s: returns %d", __FUNCTION__, total);
+	_dprintf("%s() returns %d\n", __FUNCTION__, total);
 	return total;
 }
 
 static ssize_t mssl_write(void *cookie, const char *buf, size_t len)
 {
-	logmsg(LOG_DEBUG, "*** [mssl] %s IN", __FUNCTION__);
+	_dprintf("%s()\n", __FUNCTION__);
 
 	mssl_cookie_t *kuki = cookie;
-	unsigned int total = 0;
+	int total = 0;
 	int n, err;
 
 	while (total < len) {
 		n = SSL_write(kuki->ssl, &(buf[total]), len - total);
-		logmsg(LOG_DEBUG, "*** [mssl] SSL_write(max=%d) returned %d", len - total, n);
+		_dprintf("SSL_write(max=%d) returned %d\n", len - total, n);
 		err = SSL_get_error(kuki->ssl, n);
 		switch (err) {
 		case SSL_ERROR_NONE:
@@ -142,7 +319,7 @@ static ssize_t mssl_write(void *cookie, const char *buf, size_t len)
 		case SSL_ERROR_WANT_READ:
 			break;
 		default:
-			logmsg(LOG_DEBUG, "*** [mssl] %s: SSL error %d", __FUNCTION__, err);
+			_dprintf("%s(): SSL error %d\n", __FUNCTION__, err);
 			mssl_print_err(kuki->ssl);
 			if (total == 0) total = -1;
 			goto OUT;
@@ -150,20 +327,20 @@ static ssize_t mssl_write(void *cookie, const char *buf, size_t len)
 	}
 
 OUT:
-	logmsg(LOG_DEBUG, "*** [mssl] %s returns %d", __FUNCTION__, total);
+	_dprintf("%s() returns %d\n", __FUNCTION__, total);
 	return total;
 }
 
 static int mssl_seek(void *cookie, off64_t *pos, int whence)
 {
-	logmsg(LOG_DEBUG, "*** [mssl] %s IN", __FUNCTION__);
+	_dprintf("%s()\n", __FUNCTION__);
 	errno = EIO;
 	return -1;
 }
 
 static int mssl_close(void *cookie)
 {
-	logmsg(LOG_DEBUG, "*** [mssl] %s IN", __FUNCTION__);
+	_dprintf("%s()\n", __FUNCTION__);
 
 	mssl_cookie_t *kuki = cookie;
 	if (!kuki) return 0;
@@ -187,7 +364,7 @@ static FILE *_ssl_fopen(int sd, int client, const char *name)
 	mssl_cookie_t *kuki;
 	FILE *f;
 
-	logmsg(LOG_DEBUG, "*** [mssl] %s IN", __FUNCTION__);
+	_dprintf("%s()\n", __FUNCTION__);
 
 	if ((kuki = calloc(1, sizeof(*kuki))) == NULL) {
 		errno = ENOMEM;
@@ -195,64 +372,60 @@ static FILE *_ssl_fopen(int sd, int client, const char *name)
 	}
 	kuki->sd = sd;
 
-	/* Create new SSL object */
+	// Create new SSL object
 	if ((kuki->ssl = SSL_new(ctx)) == NULL) {
-		logmsg(LOG_DEBUG, "*** [mssl] %s: SSL_new failed", __FUNCTION__);
+		_dprintf("%s: SSL_new failed\n", __FUNCTION__);
 		goto ERROR;
 	}
 
-	/* SSL structure for client authenticate after SSL_new() */
-#ifdef USE_OPENSSL
+	// SSL structure for client authenticate after SSL_new()
 	SSL_set_verify(kuki->ssl, SSL_VERIFY_NONE, NULL);
 	SSL_set_mode(kuki->ssl, SSL_MODE_AUTO_RETRY);
 
 	if (client) {
-		/* Setup SNI */
+		// Setup SNI
 #if OPENSSL_VERSION_NUMBER >= 0x0090806fL && !defined(OPENSSL_NO_TLSEXT)
 		if (name && *name) {
 			struct addrinfo *res, hint = { .ai_flags = AI_NUMERICHOST };
 			if (getaddrinfo(name, NULL, &hint, &res) == 0)
 				freeaddrinfo(res);
 			else if (SSL_set_tlsext_host_name(kuki->ssl, name) != 1) {
-				logmsg(LOG_DEBUG, "*** [mssl] %s: SSL_set_tlsext_host_name failed", __FUNCTION__);
+				_dprintf("%s: SSL_set_tlsext_host_name failed\n", __FUNCTION__);
 				mssl_print_err(kuki->ssl);
 				goto ERROR;
 			}
 		}
 #endif
 	}
-#endif
-	/* Bind the socket to SSL structure
-	 * kuki->ssl : SSL structure
-	 * kuki->sd  : socket_fd
-	 */
+
+	// Bind the socket to SSL structure
+	// kuki->ssl : SSL structure
+	// kuki->sd  : socket_fd
 	r = SSL_set_fd(kuki->ssl, kuki->sd);
 
 	if (!client) {
-		/* Do the SSL Handshake */
+		// Do the SSL Handshake
 		r = SSL_accept(kuki->ssl);
 	} else {
-		/* Connect to the server, SSL layer */
+		// Connect to the server, SSL layer
 		r = SSL_connect(kuki->ssl);
 	}
-	/* r = 0 show unknown CA, but we don't have any CA, so ignore */
+	// r = 0 show unknown CA, but we don't have any CA, so ignore.
 	if (r < 0) {
-		/* Check error in connect or accept */
-		logmsg(LOG_DEBUG, "*** [mssl] %s: SSL_%s failed", __FUNCTION__, (client ? "connect" : "accept"));
+		// Check error in connect or accept
+		_dprintf(client ? "%s: SSL_connect failed\n" : "%s: SSL_accept failed\n", __FUNCTION__);
 		mssl_print_err(kuki->ssl);
 		goto ERROR;
 	}
-
-#ifdef USE_OPENSSL
-	logmsg(LOG_DEBUG, "*** [mssl] SSL connection using %s cipher", SSL_get_cipher(kuki->ssl));
-#endif
+	
+	_dprintf("SSL connection using %s cipher\n", SSL_get_cipher(kuki->ssl));
 
 	if ((f = fopencookie(kuki, "r+", mssl)) == NULL) {
-		logmsg(LOG_DEBUG, "*** [mssl] %s: fopencookie failed", __FUNCTION__);
+		_dprintf("%s: fopencookie failed\n", __FUNCTION__);
 		goto ERROR;
 	}
 
-	logmsg(LOG_DEBUG, "*** [mssl] %s success", __FUNCTION__);
+	_dprintf("%s() success\n", __FUNCTION__);
 	return f;
 
 ERROR:
@@ -262,19 +435,19 @@ ERROR:
 
 FILE *ssl_server_fopen(int sd)
 {
-	logmsg(LOG_DEBUG, "*** [mssl] %s IN", __FUNCTION__);
+	_dprintf("%s()\n", __FUNCTION__);
 	return _ssl_fopen(sd, 0, NULL);
 }
 
 FILE *ssl_client_fopen(int sd)
 {
-	logmsg(LOG_DEBUG, "*** [mssl] %s IN", __FUNCTION__);
+	_dprintf("%s()\n", __FUNCTION__);
 	return _ssl_fopen(sd, 1, NULL);
 }
 
 FILE *ssl_client_fopen_name(int sd, const char *name)
 {
-	logmsg(LOG_DEBUG, "*** [mssl] %s IN", __FUNCTION__);
+	_dprintf("%s()\n", __FUNCTION__);
 	return _ssl_fopen(sd, 1, name);
 }
 
@@ -283,7 +456,7 @@ FILE *ssl_client_fopen_name(int sd, const char *name)
 static void ssl_info_cb(const SSL *ssl, int where, int ret)
 {
 	if ((where & SSL_CB_HANDSHAKE_DONE) != 0 && SSL_is_server((SSL *) ssl)) {
-		/* disable renegotiation (CVE-2009-3555) */
+		// disable renegotiation (CVE-2009-3555)
 		ssl->s3->flags |= SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS;
 	}
 }
@@ -294,40 +467,36 @@ int mssl_init_ex(char *cert, char *priv, char *ciphers)
 {
 	int server;
 
-	logmsg(LOG_DEBUG, "*** [mssl] %s IN", __FUNCTION__);
+	_dprintf("%s()\n", __FUNCTION__);
 
 	server = (cert != NULL);
 
-#ifdef USE_OPENSSL
-	/* Register error strings for libcrypto and libssl functions */
+	// Register error strings for libcrypto and libssl functions
 	SSL_load_error_strings();
 	SSLeay_add_ssl_algorithms();
-#endif
 
-	/* Create the new CTX with the method 
-	 * If server=1, use TLSv1_server_method() or SSLv23_server_method()
-	 * else 	use TLSv1_client_method() or SSLv23_client_method()
-	 */
+	// Create the new CTX with the method 
+	// If server=1, use TLSv1_server_method() or SSLv23_server_method()
+	// else 	use TLSv1_client_method() or SSLv23_client_method()
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	ctx = SSL_CTX_new(server ? TLS_server_method() : TLS_client_method());
 #else
 	ctx = SSL_CTX_new(server ? SSLv23_server_method() : SSLv23_client_method());
 #endif
 	if (!ctx) {
-		logmsg(LOG_DEBUG, "*** [mssl] SSL_CTX_new() failed");
+		_dprintf("SSL_CTX_new() failed\n");
 		mssl_print_err(NULL);
 		return 0;
 	}
 
-#ifdef USE_OPENSSL
-	/* Setup common modes */
+	// Setup common modes
 	SSL_CTX_set_mode(ctx,
 #ifdef SSL_MODE_RELEASE_BUFFERS
 				 SSL_MODE_RELEASE_BUFFERS |
 #endif
 				 SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
-	/* Setup common options */
+	// Setup common options
 	SSL_CTX_set_options(ctx, SSL_OP_ALL |
 #ifdef SSL_OP_NO_TICKET
 				 SSL_OP_NO_TICKET |
@@ -339,9 +508,8 @@ int mssl_init_ex(char *cert, char *priv, char *ciphers)
 				 SSL_OP_SINGLE_DH_USE |
 #endif
 				 SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
-#endif
 
-	/* Setup EC support */
+	// Setup EC support
 #ifdef NID_X9_62_prime256v1
 	EC_KEY *ecdh = NULL;
 	if ((ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1)) != NULL) {
@@ -353,47 +521,44 @@ int mssl_init_ex(char *cert, char *priv, char *ciphers)
 	}
 #endif
 
-	/* Setup available ciphers */
-	ciphers = server ? SERVER_CIPHERS : CLIENT_CIPHERS;
+	// Setup available ciphers
+	if (ciphers == NULL)
+		ciphers = server ? SERVER_CIPHERS : CLIENT_CIPHERS;
 	if (ciphers && SSL_CTX_set_cipher_list(ctx, ciphers) != 1) {
-		logmsg(LOG_DEBUG, "*** [mssl] %s: SSL_CTX_set_cipher_list failed", __FUNCTION__);
+		_dprintf("%s: SSL_CTX_set_cipher_list failed\n", __FUNCTION__);
 		mssl_cleanup(1);
 		return 0;
 	}
 
 	if (server) {
-#ifdef USE_OPENSSL11
-		/* Disable TLS 1.0 & 1.1 */
+		// Disable TLS 1.0 & 1.1
 		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1);
-#endif
-#ifdef USE_OPENSSL
-		/* Enforce server cipher order */
+
+		// Enforce server cipher order
 		SSL_CTX_set_options(ctx, SSL_OP_CIPHER_SERVER_PREFERENCE);
-#endif
-		/* Set the certificate to be used */
-		logmsg(LOG_DEBUG, "*** [mssl] SSL_CTX_use_certificate_chain_file(%s)", cert);
+
+		// Set the certificate to be used
+		_dprintf("SSL_CTX_use_certificate_chain_file(%s)\n", cert);
 		if (SSL_CTX_use_certificate_chain_file(ctx, cert) <= 0) {
-			logmsg(LOG_DEBUG, "*** [mssl] SSL_CTX_use_certificate_chain_file() failed");
+			_dprintf("SSL_CTX_use_certificate_chain_file() failed\n");
 			mssl_cleanup(1);
 			return 0;
 		}
-		/* Indicate the key file to be used */
-		logmsg(LOG_DEBUG, "*** [mssl] SSL_CTX_use_PrivateKey_file(%s)", priv);
+		// Indicate the key file to be used
+		_dprintf("SSL_CTX_use_PrivateKey_file(%s)\n", priv);
 		if (SSL_CTX_use_PrivateKey_file(ctx, priv, SSL_FILETYPE_PEM) <= 0) {
-			logmsg(LOG_DEBUG, "*** [mssl] SSL_CTX_use_PrivateKey_file() failed");
+			_dprintf("SSL_CTX_use_PrivateKey_file() failed\n");
 			mssl_cleanup(1);
 			return 0;
 		}
-#ifdef USE_OPENSSL
-		/* Make sure the key and certificate file match */
+		// Make sure the key and certificate file match
 		if (!SSL_CTX_check_private_key(ctx)) {
-			logmsg(LOG_DEBUG, "*** [mssl] Private key does not match the certificate public key");
+			_dprintf("Private key does not match the certificate public key\n");
 			mssl_cleanup(0);
 			return 0;
 		}
-#endif
 
-		/* Disable renegotiation */
+		// Disable renegotiation
 #ifdef SSL_OP_NO_RENGOTIATION
 		SSL_CTX_set_options(ctx, SSL_OP_NO_RENGOTIATION);
 #elif OPENSSL_VERSION_NUMBER < 0x10100000L && defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
@@ -403,8 +568,7 @@ int mssl_init_ex(char *cert, char *priv, char *ciphers)
 
 	SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
 
-	logmsg(LOG_DEBUG, "*** [mssl] %s success", __FUNCTION__);
-
+	_dprintf("%s() success\n", __FUNCTION__);
 	return 1;
 }
 
@@ -413,7 +577,11 @@ int mssl_init(char *cert, char *priv)
 	return mssl_init_ex(cert, priv, NULL);
 }
 
-#ifdef USE_OPENSSL11
+void mssl_ctx_free()
+{
+	mssl_cleanup(0);
+}
+
 static int mssl_f_exists(const char *path)
 {
 	struct stat st;
@@ -434,144 +602,174 @@ int mssl_cert_key_match(const char *cert_path, const char *key_path)
 	DSA *dsa_pri = NULL;
 	EC_KEY *ec_pub = NULL;
 	EC_KEY *ec_pri = NULL;
-	const EC_GROUP *ec_group = NULL;
-	const EC_POINT *ec_pub_pub = NULL;
-	const EC_POINT *ec_pri_pub = NULL;
-
 	int pem = 1;
 	int ret = 0;
 
-	if (!mssl_f_exists(cert_path) || !mssl_f_exists(key_path))
+	if(!mssl_f_exists(cert_path) || !mssl_f_exists(key_path))
+	{
 		return 0;
+	}
 
-	/* get x509 from cert file */
+	//get x509 from cert file
 	fp = fopen(cert_path, "r");
-	if (!fp)
+	if(!fp)
+	{
 		return 0;
-
-	if (!PEM_read_X509(fp, &x509data, NULL, NULL)) {
-		logmsg(LOG_DEBUG, "*** [mssl] Try to read DER format certificate");
+	}
+	if(!PEM_read_X509(fp, &x509data, NULL, NULL))
+	{
+		_dprintf("[mssl] Try to read DER format certificate\n");
 		pem = 0;
 		fseek(fp, 0, SEEK_SET);
 		d2i_X509_fp(fp, &x509data);
 	}
-	else {
-		logmsg(LOG_DEBUG, "*** [mssl] PEM format certificate");
+	else
+	{
+		_dprintf("[mssl] PEM format certificate\n");
 	}
 
 	fclose(fp);
-	if (x509data == NULL) {
-		logmsg(LOG_DEBUG, "*** [mssl] Load certificate failed");
+	if(x509data == NULL)
+	{
+		_dprintf("[mssl] Load certificate failed\n");
 		ret = 0;
 		goto end;
 	}
 
-	/* get pubic key from x509 */
+	//get pubic key from x509
 	pkey = X509_get_pubkey(x509data);
-	if (pkey == NULL) {
+	if(pkey == NULL)
+	{
 		ret = 0;
 		goto end;
 	}
 	X509_free(x509data);
 	x509data = NULL;
 
-	if (EVP_PKEY_id(pkey) == EVP_PKEY_RSA)
+	if(EVP_PKEY_id(pkey) == EVP_PKEY_RSA)
+	{
+		//_dprintf("RSA public key\n");
 		rsa_pub = EVP_PKEY_get1_RSA(pkey);
-	else if (EVP_PKEY_id(pkey) == EVP_PKEY_DSA)
+	}
+	else if(EVP_PKEY_id(pkey) == EVP_PKEY_DSA)
+	{
+		//_dprintf("DSA public key\n");
 		dsa_pub = EVP_PKEY_get1_DSA(pkey);
-	else if (EVP_PKEY_id(pkey) == EVP_PKEY_EC)
+	}
+	else if(EVP_PKEY_id(pkey) == EVP_PKEY_EC)
+	{
+		//_dprintf("EC public key\n");
 		ec_pub = EVP_PKEY_get1_EC_KEY(pkey);
-
+	}
 	EVP_PKEY_free(pkey);
 	pkey = NULL;
 
-	/* get private key from key file */
+	//get private key from key file
 	fp = fopen(key_path, "r");
-	if (!fp) {
+	if(!fp)
+	{
 		ret = 0;
 		goto end;
 	}
-
-	if (pem)
+	if(pem)
+	{
+		//_dprintf("PEM format private key\n");
 		pkey = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
+	}
 	else
+	{
+		//_dprintf("DER format private key\n");
 		pkey = d2i_PrivateKey_fp(fp, NULL);
-
+	}
 	fclose(fp);
 
-	if (pkey == NULL) {
-		logmsg(LOG_DEBUG, "*** [mssl] Load private key failed");
+	if(pkey == NULL)
+	{
+		_dprintf("[mssl] Load private key failed\n");
 		ret = 0;
 		goto end;
 	}
 
-	if (EVP_PKEY_id(pkey) == EVP_PKEY_RSA)
+	if(EVP_PKEY_id(pkey) == EVP_PKEY_RSA)
+	{
+		//_dprintf("RSA private key\n");
 		rsa_pri = EVP_PKEY_get1_RSA(pkey);
-	else if (EVP_PKEY_id(pkey) == EVP_PKEY_DSA)
+	}
+	else if(EVP_PKEY_id(pkey) == EVP_PKEY_DSA)
+	{
+		//_dprintf("DSA private key\n");
 		dsa_pri = EVP_PKEY_get1_DSA(pkey);
-	else if (EVP_PKEY_id(pkey) == EVP_PKEY_EC)
+	}
+	else if(EVP_PKEY_id(pkey) == EVP_PKEY_EC)
+	{
+		//_dprintf("EC private key\n");
 		ec_pri  = EVP_PKEY_get1_EC_KEY(pkey);
-
+	}
 	EVP_PKEY_free(pkey);
 	pkey = NULL;
 
-	/* compare modulus */
-	if (rsa_pub && rsa_pri) {
-		if (BN_cmp(RSA_get0_n(rsa_pub), RSA_get0_n(rsa_pri))) {
-			logmsg(LOG_DEBUG, "*** [mssl] rsa n not match");
+	//compare modulus
+	if(rsa_pub && rsa_pri)
+	{
+		if(BN_cmp(RSA_get0_n(rsa_pub), RSA_get0_n(rsa_pri)))
+		{
+			_dprintf("[mssl] rsa n not match\n");
 			ret = 0;
 		}
-		else {
-			logmsg(LOG_DEBUG, "*** [mssl] rsa n match");
+		else
+		{
+			_dprintf("[mssl] rsa n match\n");
 			ret = 1;
 		}
 	}
-	else if (dsa_pub && dsa_pri) {
-		if (BN_cmp(DSA_get0_pub_key(dsa_pub), DSA_get0_pub_key(dsa_pri))) {
-			logmsg(LOG_DEBUG, "*** [mssl] dsa modulus not match");
+	else if(dsa_pub && dsa_pri)
+	{
+		if(BN_cmp(DSA_get0_pub_key(dsa_pub), DSA_get0_pub_key(dsa_pri)))
+		{
+			_dprintf("[mssl] dsa modulus not match\n");
 			ret = 0;
 		}
-		else {
-			logmsg(LOG_DEBUG, "*** [mssl] dsa modulus match");
+		else
+		{
+			_dprintf("[mssl] dsa modulus match\n");
 			ret = 1;
 		}
 	}
-	else if (ec_pub && ec_pri) {
-		ec_group = EC_KEY_get0_group(ec_pub);
-		ec_pub_pub = EC_KEY_get0_public_key(ec_pub);
-		ec_pri_pub = EC_KEY_get0_public_key(ec_pri);
-
-		if (ec_group != NULL && ec_pub_pub != NULL && ec_pri_pub != NULL && EC_POINT_cmp(ec_group, ec_pub_pub, ec_pri_pub, NULL) == 0) {
-			logmsg(LOG_DEBUG, "*** [mssl] ec modulus match");
-			ret = 1;
-		}
-		else {
-			logmsg(LOG_DEBUG, "*** [mssl] ec modulus not match");
+	else if(ec_pub && ec_pri)
+	{
+		if(EC_POINT_cmp(EC_KEY_get0_group(ec_pub), EC_KEY_get0_public_key(ec_pub), EC_KEY_get0_public_key(ec_pri), NULL))
+		{
+			_dprintf("[mssl] ec not match\n");
 			ret = 0;
 		}
+		else
+		{
+			_dprintf("[mssl] ec match\n");
+			ret = 1;
+		}
 	}
-	else {
-		logmsg(LOG_DEBUG, "*** [mssl] compare failed");
+	else
+	{
+		_dprintf("[mssl] compare failed\n");
 	}
 
 end:
-	if (x509data)
+	if(x509data)
 		X509_free(x509data);
-	if (pkey)
+	if(pkey)
 		EVP_PKEY_free(pkey);
-	if (rsa_pub)
+	if(rsa_pub)
 		RSA_free(rsa_pub);
-	if (dsa_pub)
+	if(dsa_pub)
 		DSA_free(dsa_pub);
-	if (ec_pub)
+	if(ec_pub)
 		EC_KEY_free(ec_pub);
-	if (rsa_pri)
+	if(rsa_pri)
 		RSA_free(rsa_pri);
-	if (dsa_pri)
+	if(dsa_pri)
 		DSA_free(dsa_pri);
-	if (ec_pri)
+	if(ec_pri)
 		EC_KEY_free(ec_pri);
 
 	return ret;
 }
-#endif /* USE_OPENSSL11 */
