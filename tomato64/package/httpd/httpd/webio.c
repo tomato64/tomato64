@@ -132,8 +132,13 @@ int web_write(const char *buffer, int len)
 
 	while (n > 0) {
 		r = fwrite(buffer, 1, n, connfp);
+#ifndef TOMATO64
 		if ((r == 0) && (errno != EINTR))
 			return -1;
+#else
+		if (ferror(connfp) != 0)
+			return -1;
+#endif /* TOMATO64 */
 
 		buffer += r;
 		n -= r;
