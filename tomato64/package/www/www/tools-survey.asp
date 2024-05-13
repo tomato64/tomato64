@@ -15,14 +15,10 @@
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
 <script src="tomato.js"></script>
-<style>
-	#ellipses2 { border: 1px solid #AAAAAA; }
-	#ellipses5 { border: 1px solid #AAAAAA; }
-</style>
 
 <script>
 
-//	<% nvram("wl0_radio,wl1_radio,wl2_radio,wl0_nband,wl1_nband,wl2_nband,wl0_mode,wl1_mode,wl2_mode,wl0_closed,wl1_closed,wl2_closed,wl_ifname,wl_ifnames,wl0_ifname,wl1_ifname,wl2_ifname,web_css,web_adv_scripts"); %>
+//	<% nvram("wl_radio,wl_nband,wl_mode,wl_closed,wl_ifname,web_css,web_adv_scripts"); %>
 
 
 var cprefix = 'tools_wlsurvey';
@@ -111,8 +107,8 @@ function resize_graph(id) {
 		hsize = graph.clientWidth - 10;
 		vsize = parseInt(hsize * 0.35);
 
-		dest.setAttribute("width", hsize+'px');
-		dest.setAttribute("height", vsize+'px');
+		dest.setAttribute("width", hsize);
+		dest.setAttribute("height", vsize);
 	});
 	observer.observe(graph);
 }
