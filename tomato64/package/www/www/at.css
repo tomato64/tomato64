@@ -1139,19 +1139,24 @@ td#navi a.indent1.active[href^="splashd"]::after {
 }
 
 td#navi a.indent1[href*=":reboot"] {
-	right: 185px;
+	right: 405px;
+}
+
+td#navi a.indent1[href*=":fastreboot"] {
+	right: 270px;
 }
 
 td#navi a.indent1[href*=":halt"] {
-	right: 105px;
+	right: 150px;
 }
 
 td#navi a.indent1[href*=":logout"] {
-	right: 15px;
+	right: 60px;
 }
 
 td#navi a.indent1[href^="about"],
 td#navi a.indent1[href*=":reboot"],
+td#navi a.indent1[href*=":fastreboot"],
 td#navi a.indent1[href*=":halt"],
 td#navi a.indent1[href*=":logout"] {
 	position: absolute;
@@ -1167,6 +1172,7 @@ td#navi a.indent1[href*=":logout"] {
 
 td#navi a.indent1[href^="about"]:hover,
 td#navi a.indent1[href*=":reboot"]:hover,
+td#navi a.indent1[href*=":fastreboot"]:hover,
 td#navi a.indent1[href*=":halt"]:hover,
 td#navi a.indent1[href*=":logout"]:hover {
 	color: #fff;
@@ -1174,7 +1180,7 @@ td#navi a.indent1[href*=":logout"]:hover {
 }
 
 td#navi a.indent1[href^="about"] {
-	right: 285px;
+	right: 505px;
 	z-index: 3;
 	overflow: visible;
 }
@@ -1204,6 +1210,13 @@ td#navi a.indent1[href*=":halt"]::before {
 }
 
 td#navi a.indent1[href*=":reboot"]::before {
+	content: "\1F504";
+	mask-image: var(--icon-reboot);
+	-webkit-mask-image: var(--icon-reboot);
+	background-color: #fff;
+}
+
+td#navi a.indent1[href*=":fastreboot"]::before {
 	content: "\1F504";
 	mask-image: var(--icon-reboot);
 	-webkit-mask-image: var(--icon-reboot);
@@ -1376,6 +1389,7 @@ td#navi a.indent1:hover::before {
 	td#navi a.indent1[href*=":halt"],
 	td#navi a.indent1[href^="about"],
 	td#navi a.indent1[href*=":reboot"],
+	td#navi a.indent1[href*=":fastreboot"],
 	td#navi a.indent1[href*=":logout"] {
 		color: #fff !important;
 		width: unset;
