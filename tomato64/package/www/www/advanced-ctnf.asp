@@ -103,9 +103,19 @@ function verifyFields(focused, quiet) {
 		if (!v_range('_f_ct_' + i, quiet, 1, 432000)) return 0;
 	}
 
+/* TOMATO64-REMOVE-BEGIN */
 	if (!v_range('_ct_max', quiet, 128, 300000)) return 0;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	if (!v_range('_ct_max', quiet, 128, 1000000)) return 0;
+/* TOMATO64-END */
 
+/* TOMATO64-REMOVE-BEGIN */
 	if (!v_range('_ct_hashsize', quiet, 127, 65535)) return 0;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	if (!v_range('_ct_hashsize', quiet, 127, 250000)) return 0;
+/* TOMATO64-END */
 
 	v = (E('_f_nf_ttl').value == '');
 	E('_f_ttl_val').style.display = (v ? '' : 'none');
