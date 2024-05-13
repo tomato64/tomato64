@@ -73,11 +73,13 @@ input[type="password"] {
 	margin: 1px;
 }
 
+input[type="number"],
 input[type="checkbox"] {
 	padding: 0;
 	margin: 1px 0 2px 0;
 }
 
+input[type="number"][disabled],
 input[type="checkbox"][disabled] {
 	opacity: 0.3;
 }
@@ -105,6 +107,7 @@ input[type="submit"]:hover {
 	cursor: pointer;
 }
 
+input[type="number"][disabled],
 input[type="button"][disabled],
 input[type="text"][disabled],
 input[type="submit"][disabled],
@@ -112,6 +115,14 @@ textarea[disabled],
 select[disabled]{
 	color: #aaa;
 	cursor: not-allowed;
+}
+
+input[type="number"] {
+	color: #000;
+	background: #ededed;
+	border: 1px solid #c7c7c7;
+	padding: 2px;
+	width: 33px;
 }
 
 #container {
@@ -864,10 +875,6 @@ div[id$="peers-grid"] .co4,
 	padding: 5px;
 	margin: 10px 0 10px 0;
 	width: 300px;
-}
-
-#survey-warn {
-	margin: 15px 0 15px 0;
 }
 
 #survey-controls,

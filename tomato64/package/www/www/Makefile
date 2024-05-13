@@ -397,6 +397,25 @@ ifeq ($(TCONFIG_USB),y)
 endif
 endif
 
+# Only include Advanced Themes stuff if it is required
+ifneq ($(TCONFIG_ADVTHEMES),y)
+	rm -f $(INSTALLDIR)/www/resize-charts.js
+	rm -f $(INSTALLDIR)/www/at.css
+	rm -f $(INSTALLDIR)/www/at-blue.css
+	rm -f $(INSTALLDIR)/www/at-dark.css
+	rm -f $(INSTALLDIR)/www/at-green.css
+	rm -f $(INSTALLDIR)/www/at-red.css
+	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/bwm-24.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/bwm-realtime.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/ipt-24.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/ipt-realtime.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/tools-survey.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/bwm-graph.svg -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/ipt-graph.svg -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/qos-graph.svg -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+endif
+
 # Only include Discovery helper if it is required
 ifneq ($(TCONFIG_BCMARM),y)
 ifneq ($(TCONFIG_MIPSR2),y)
@@ -590,6 +609,7 @@ endif
 		-e "/DUALWAN-BEGIN/d"	-e "/DUALWAN-END/d" \
 		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d" \
 		-e "/IPERF-BEGIN/d"	-e "/IPERF-END/d" \
+		-e "/ADVTHEMES-BEGIN/d"	-e "/ADVTHEMES-END/d" \
 		-e "/SSH-BEGIN/d"	-e "/SSH-END/d" \
 		-e "/DISCOVERY-BEGIN/d"	-e "/DISCOVERY-END/d" \
 		-e "/MDNS-BEGIN/d"	-e "/MDNS-END/d" \

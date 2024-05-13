@@ -1621,6 +1621,7 @@ td.co4 small a::before {
 	display: block;
 }
 
+input[type="number"],
 input[type="checkbox"],
 input[type="radio"] {
 	appearance: none;
@@ -1644,6 +1645,7 @@ input[type="radio"] {
 	border-radius: 50%;
 }
 
+input[type="number"]:focus,
 input[type="checkbox"]:focus,
 input[type="radio"]:focus {
 	box-shadow: 0 0 0 3px rgba(var(--tomato-shadow-color), 0.12);
@@ -1663,6 +1665,7 @@ input[type="radio"]:checked {
 }
 
 textarea:disabled,
+input[type="number"]:disabled,
 input[type="text"]:disabled,
 input[type="password"]:disabled,
 input[type="checkbox"]:disabled,
@@ -1708,6 +1711,24 @@ input[type="submit"][disabled] {
 input + input,
 select + input {
 	margin-left: 20px;
+}
+
+input[type="number"] {
+	color: var(--tomato-color);
+	padding: 0;
+	width: 35px;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+	-moz-appearance: textfield;
 }
 
 span[id$="_dhcpc"],

@@ -514,7 +514,7 @@ function init() {
 					  ['at-dark','Advanced Dark'],['at-red','Advanced Red'],['at-blue','Advanced Blue'],['at-green','Advanced Green'],
 /* TOMATO64-END */
 					  ['ext/custom','Custom (ext/custom.css)'], ['online', 'Online from TTB (TomatoThemeBase)']], suffix: '&nbsp;<small id="web_css_warn">requires a modern browser<\/small>', value: nvram.web_css },
-				{ title: 'Dynamic BW/IPT charts', indent: 2, name: 'f_web_adv_scripts', type: 'checkbox', suffix: '&nbsp;<small>JS based, supported only by modern browsers<\/small>', value: nvram.web_adv_scripts == 1 },
+				{ title: 'Dynamic BW/IPT/WL charts', indent: 2, name: 'f_web_adv_scripts', type: 'checkbox', suffix: '&nbsp;<small>JS based, supported only by modern browsers<\/small>', value: nvram.web_adv_scripts == 1 },
 				{ title: 'TTB theme name', indent: 2, name: 'ttb_css', type: 'text', maxlen: 25, size: 35, suffix: '&nbsp;<small>TTB theme <a href="https://freshtomato.org/tomatothemebase/wp-content/uploads/themes.txt" class="new_window">list<\/a> and full <a href="https://freshtomato.org/tomatothemebase/" class="new_window">gallery<\/a><\/small>', value: nvram.ttb_css },
 /* USB-BEGIN */
 				{ title: 'TTB save folder', indent: 2, name: 'ttb_loc', type: 'text', maxlen: 35, size: 35, suffix: '&nbsp;/TomatoThemeBase <small>optional<\/small>', placeholder: 'empty = /tmp', value: nvram.ttb_loc },
