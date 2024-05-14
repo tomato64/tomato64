@@ -19,10 +19,10 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("routes_static,dhcp_routes,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface"); %>
+//	<% nvram("routes_static,dhcpc_33,dhcpc_121,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("routes_static,dhcp_routes,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface"); %>
+//	<% nvram("routes_static,dhcpc_33,dhcpc_121,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface"); %>
 /* TOMATO64-END */
 
 //	<% activeroutes(); %>
@@ -209,8 +209,9 @@ function save() {
 		r.push(data[i].join('<'));
 
 	fom.routes_static.value = r.join('>');
-	fom.dhcp_routes.value = E('_f_dhcp_routes').checked ? '1' : '0';
-	fom._service.value = (fom.dhcp_routes.value != nvram.dhcp_routes) ? 'wan-restart' : 'routing-restart';
+	fom.dhcpc_33.value = E('_f_dhcpc_33').checked ? '1' : '0';
+	fom.dhcpc_121.value = E('_f_dhcpc_121').checked ? '1' : '0';
+	fom._service.value = ((fom.dhcpc_33.value != nvram.dhcpc_33) || (fom.dhcpc_121.value != nvram.dhcpc_121)) ? 'wan-restart' : 'routing-restart';
 
 	form.submit(fom, 1);
 }
@@ -243,7 +244,8 @@ function init() {
 <input type="hidden" name="_nextpage" value="advanced-routing.asp">
 <input type="hidden" name="_service" value="routing-restart">
 <input type="hidden" name="routes_static">
-<input type="hidden" name="dhcp_routes">
+<input type="hidden" name="dhcpc_33">
+<input type="hidden" name="dhcpc_121">
 
 <!-- / / / -->
 
@@ -265,7 +267,8 @@ function init() {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'Accept DHCP Routes<br>on WAN interface', name: 'f_dhcp_routes', type: 'checkbox', value: nvram.dhcp_routes != '0' }
+			{ title: 'Accept DHCP Static Route<br>(option 33)', name: 'f_dhcpc_33', type: 'checkbox', value: nvram.dhcpc_33 != 0 },
+			{ title: 'Accept DHCP Classless Routes<br>(option 121)', name: 'f_dhcpc_121', type: 'checkbox', value: nvram.dhcpc_121 != 0 }
 		]);
 	</script>
 </div>

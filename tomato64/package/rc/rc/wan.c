@@ -723,11 +723,16 @@ static void _do_wan_routes(char *ifname, char *nvname, int metric, int add)
 
 void do_wan_routes(char *ifname, int metric, int add, char *prefix)
 {
-	if (nvram_get_int("dhcp_routes")) {
-		char tmp[100];
-		/* Static Routes:             IP ROUTER IP2 ROUTER2 ... */
+	char tmp[100];
+
+	if (nvram_get_int("dhcpc_121")) {
 		/* Classless Static Routes:   IP/MASK ROUTER IP2/MASK2 ROUTER2 ... */
+		memset(tmp, 0, sizeof(tmp));
 		_do_wan_routes(ifname, strlcat_r(prefix, "_routes1", tmp, sizeof(tmp)), metric, add);
+	}
+	if (nvram_get_int("dhcpc_33")) {
+		/* Static Routes:             IP ROUTER IP2 ROUTER2 ... */
+		memset(tmp, 0, sizeof(tmp));
 		_do_wan_routes(ifname, strlcat_r(prefix, "_routes2", tmp, sizeof(tmp)), metric, add);
 	}
 }

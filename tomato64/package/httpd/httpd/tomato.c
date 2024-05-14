@@ -951,7 +951,8 @@ static const nvset_t nvset_list[] = {
 
 /* advanced-routing */
 	{ "routes_static",		V_LENGTH(0, 2048)		},
-	{ "dhcp_routes",		V_01				},
+	{ "dhcpc_33",			V_01				},	/* DHCP Static Route (option 33) */
+	{ "dhcpc_121",			V_01				},	/* DHCP Classless Static Route (option 121) */
 	{ "force_igmpv2",		V_01				},
 	{ "lan_stp",			V_RANGE(0, 1)			},
 #ifdef TCONFIG_ZEBRA

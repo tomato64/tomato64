@@ -1051,7 +1051,8 @@ struct nvram_tuple router_defaults[] = {
 
 /* advanced-routing */
 	{ "routes_static",		""				, 0 },
-	{ "dhcp_routes",		"1"				, 0 },
+	{ "dhcpc_33",			"1"				, 0 },	/* DHCP Static Route (option 33) */
+	{ "dhcpc_121",			"1"				, 0 },	/* DHCP Classless Static Route (option 121) */
 	{ "force_igmpv2",		"0"				, 0 },
 #ifdef TCONFIG_ZEBRA
 	{ "dr_setting",			"0"				, 0 },	/* [ Disable | WAN | LAN | Both ] */

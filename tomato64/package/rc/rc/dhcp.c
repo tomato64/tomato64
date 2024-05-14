@@ -707,11 +707,12 @@ void start_dhcpc(char *prefix)
 	}
 
 	memset(cmd, 0, sizeof(cmd));
-	snprintf(cmd, sizeof(cmd), "/sbin/udhcpc -i %s -b -s /sbin/dhcpc-event -p %s %s %s %s %s %s %s",
+	snprintf(cmd, sizeof(cmd), "udhcpc -i %s -b -s /sbin/dhcpc-event -p %s %s %s %s %s %s %s %s",
 	                           ifname,
 	                           pid_file,
 	                           tmp,
-	                           nvram_get_int("dhcp_routes") ? "-O33 -O121 -O249" : "", /* routes/staticroutes/msstaticroutes */
+	                           nvram_get_int("dhcpc_33") ? "-O33" : "", /* routes */
+	                           nvram_get_int("dhcpc_121") ? "-O121 -O249" : "", /* staticroutes/msstaticroutes */
 	                           nvram_get_int("dhcpc_minpkt") ? "-m" : "",
 	                           nvram_contains_word("log_events", "dhcpc") ? "-S" : "",
 #ifdef TCONFIG_IPV6
