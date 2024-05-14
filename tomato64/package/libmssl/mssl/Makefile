@@ -15,6 +15,9 @@ ALL_LDFLAGS = -fPIC
 ALL_LDFLAGS += -Wl,--start-group -lssl -lcrypto -lshared -lnvram -Wl,--end-group
 ALL_LDFLAGS += $(LDFLAGS)
 
+ifeq ($(TOMATO_EXPERIMENTAL),1)
+ALL_CFLAGS += -DDEBUG_LOGMSG
+endif
 
 #ifneq ($(TCONFIG_HTTPS),)
 #ifeq ($(TCONFIG_OPENSSL11),y)
@@ -33,10 +36,6 @@ ALL_LDFLAGS += $(LDFLAGS)
 #LIBS += -lpthread
 #endif
 OBJ = mssl.o
-
-ifeq ($(TOMATO_EXPERIMENTAL),1)
-export CFLAGS += -DDEBUG_LOGMSG
-endif
 
 all: libmssl.so libmssl.a
 

@@ -9,12 +9,12 @@ ALL_CPPFLAGS += $(CPPFLAGS)
 ALL_CFLAGS = -fPIC
 ALL_CFLAGS += $(CFLAGS)
 
-ifeq ($(DEBUG_NOISY),y)
-        ALL_CFLAGS += -DDEBUG_NOISY
-endif
-
 ALL_LDFLAGS = -fPIC
 ALL_LDFLAGS += $(LDFLAGS)
+
+ifeq ($(TOMATO_EXPERIMENTAL),1)
+ALL_CFLAGS += -DDEBUG_LOGMSG
+endif
 
 OBJS = shutils.o wl.o wl_linux.o linux_timer.o defaults.o id.o misc.o \
        led.o version.o base64.o files.o strings.o process.o nvparse.o usb.o

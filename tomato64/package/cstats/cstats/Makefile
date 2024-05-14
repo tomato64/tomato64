@@ -14,7 +14,7 @@ ALL_LDFLAGS += -lshared -lnvram
 ALL_LDFLAGS += $(LDFLAGS)
 
 ifeq ($(TOMATO_EXPERIMENTAL),1)
-export CFLAGS += -DDEBUG_LOGMSG
+ALL_CFLAGS += -DDEBUG_LOGMSG
 endif
 
 OBJS = cstats.o

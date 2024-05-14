@@ -15,6 +15,10 @@ ALL_LDFLAGS = -fPIC
 ALL_LDFLAGS += -Wl,--start-group -lcurl -lssl -lcrypto -lshared -lnvram -Wl,--end-group
 ALL_LDFLAGS += $(LDFLAGS)
 
+ifeq ($(TOMATO_EXPERIMENTAL),1)
+ALL_CFLAGS += -DDEBUG_LOGMSG
+endif
+
 OBJS = mdu.o
 
 all: mdu

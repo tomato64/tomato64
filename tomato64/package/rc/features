@@ -150,6 +150,10 @@ ifeq ($(BR2_PACKAGE_RC_ZFS),y)
 export TCONFIG_ZFS=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_EXPERIMENTAL),y)
+export TOMATO_EXPERIMENTAL=1
+endif
+
 ifeq ($(BR2_PACKAGE_RC_DEBUG),y)
 export DEBUG_NOISY=y
 endif

@@ -337,6 +337,9 @@ config BR2_PACKAGE_RC_ZFS
 
 comment "Debugging"
 
+config BR2_PACKAGE_RC_EXPERIMENTAL
+	bool "Enable Debug Experimental (TOMATO_EXPERIMENTAL)"
+
 config BR2_PACKAGE_RC_DEBUG
 	bool "Enable Debug to Console (buggy)"
 endif

@@ -16,7 +16,7 @@ ALL_LDFLAGS += -Wl,--start-group -lmssl -lssl -lcrypto -lshared -lnvram -Wl,--en
 ALL_LDFLAGS += $(LDFLAGS)
 
 ifeq ($(TOMATO_EXPERIMENTAL),1)
-export CFLAGS += -DDEBUG_LOGMSG
+ALL_CFLAGS += -DDEBUG_LOGMSG
 endif
 
 OBJS  = httpd.o cgi.o tomato.o version.o misc.o dhcp.o upgrade.o \

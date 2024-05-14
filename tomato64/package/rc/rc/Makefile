@@ -10,13 +10,13 @@ ALL_CPPFLAGS += $(CPPFLAGS)
 ALL_CFLAGS = -fPIC
 ALL_CFLAGS += $(CFLAGS)
 
-ifeq ($(DEBUG_NOISY),y)
-	ALL_CFLAGS += -DDEBUG_NOISY
-endif
-
 ALL_LDFLAGS = -fPIC
 ALL_LDFLAGS += -lshared -lnvram
 ALL_LDFLAGS += $(LDFLAGS)
+
+ifeq ($(TOMATO_EXPERIMENTAL),1)
+ALL_CFLAGS += -DDEBUG_LOGMSG
+endif
 
 OBJS := rc.o init.o interface.o network.o wan.o services.o dhcp.o \
 	firewall.o ppp.o telssh.o wnas.o listen.o redial.o \
