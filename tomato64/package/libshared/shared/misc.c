@@ -96,7 +96,7 @@ int get_wan_proto(void)
 
 int get_wanx_proto(char *prefix)
 {
-	char tmp[100];
+	char tmp[16];
 	const char *names[] = {	/* order must be synced with def at shared.h */
 		"static",
 		"dhcp",
@@ -249,7 +249,7 @@ int calc_6rd_local_prefix(const struct in6_addr *prefix,
 
 int using_dhcpc(char *prefix)
 {
-	char tmp[100];
+	char tmp[16];
 	switch (get_wanx_proto(prefix)) {
 		case WP_DHCP:
 		case WP_LTE:
@@ -363,7 +363,7 @@ int foreach_wif(int include_vifs, void *param,
 
 void notice_set(const char *path, const char *format, ...)
 {
-	char p[256];
+	char p[64];
 	char buf[2048];
 	va_list args;
 
@@ -546,7 +546,7 @@ long check_wanup_time(char *prefix)
 	long wanuptime = 0; /* wanX uptime in seconds */
 	struct sysinfo si;
 	long uptime;
-	char wanuptime_file[128];
+	char wanuptime_file[64];
 
 	sysinfo(&si); /* get time */
 	memset(wanuptime_file, 0, sizeof(wanuptime_file)); /* reset */
@@ -575,8 +575,8 @@ int check_wanup(char *prefix)
 	int s;
 	struct ifreq ifr;
 	char tmp[100];
-	char ppplink_file[256];
-	char pppd_name[256];
+	char ppplink_file[64];
+	char pppd_name[16];
 
 	proto = get_wanx_proto(prefix);
 
@@ -596,19 +596,15 @@ int check_wanup(char *prefix)
 				name = psname(atoi(buf1), buf2, sizeof(buf2));
 
 				memset(pppd_name, 0, sizeof(pppd_name));
-				snprintf(pppd_name, sizeof(pppd_name), "pppd%s", prefix);
-				logmsg(LOG_DEBUG, "*** %s: pppd name=%s, psname=%s", __FUNCTION__, pppd_name, name);
+				if (proto == WP_L2TP)
+					strlcpy(pppd_name, "pppd", sizeof(pppd_name));
+				else
+					snprintf(pppd_name, sizeof(pppd_name), "pppd%s", prefix);
+
+				logmsg(LOG_DEBUG, "*** %s: %s pppd name=%s, psname=%s", __FUNCTION__, (proto == WP_L2TP ? "L2TP" : ""), pppd_name, name);
 
 				if (strcmp(name, pppd_name) == 0)
 					up = 1;
-
-				if (proto == WP_L2TP) {
-					snprintf(pppd_name, sizeof(pppd_name), "pppd");
-					logmsg(LOG_DEBUG, "*** %s: L2TP pppd name=%s, psname=%s", __FUNCTION__, pppd_name, name);
-
-					if (strcmp(name, pppd_name) == 0)
-						up = 1;
-				}
 			}
 			else {
 				logmsg(LOG_DEBUG, "*** %s: error reading %s", __FUNCTION__, buf2);
@@ -640,7 +636,7 @@ int check_wanup(char *prefix)
 		}
 		close(s);
 
-		if ((ifr.ifr_flags & IFF_UP) == 0 || (ifr.ifr_flags & IFF_RUNNING) == 0) {
+		if (((ifr.ifr_flags & IFF_UP) == 0) || ((ifr.ifr_flags & IFF_RUNNING) == 0)) {
 			up = 0;
 			logmsg(LOG_DEBUG, "*** %s: !IFF_UP || !IFF_RUNNING", __FUNCTION__);
 		}
@@ -690,8 +686,8 @@ state:
 	memset(buf1, 0, sizeof(buf1));
 	snprintf(buf1, sizeof(buf1), "%s_ck_pause", prefix);
 
-	if (up == 1) { /* also check result from mwwatchdog */
-		if ((nvram_get_int("mwan_cktime") == 0) || nvram_get_int(buf1)) /* skip checking on this WAN */
+	if (up) { /* also check result from mwwatchdog */
+		if ((nvram_get_int("mwan_cktime") == 0) || (nvram_get_int(buf1))) /* skip checking on this WAN */
 			return up;
 
 		memset(buf1, 0, sizeof(buf1));
@@ -740,7 +736,7 @@ const dns_list_t *get_dns(char *prefix)
 		else {
 			/* add received DNS servers to the static DNS server list */
 			memset(tmp, 0, sizeof(tmp)); /* reset */
-			logmsg(LOG_DEBUG, "*** %s: get_dns: adding received servers (%s) to the static DNS server list", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp))));
+			logmsg(LOG_DEBUG, "*** %s: adding received servers (%s) to the static DNS server list", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp))));
 			snprintf(s + strlen(s), sizeof(s) - strlen(s), " %s", nvram_safe_get(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp))));
 		}
 	}
@@ -816,7 +812,7 @@ const wanface_list_t *get_wanfaces(char *prefix)
 	static wanface_list_t wanfaces;
 	char *ip, *iface;
 	int proto;
-	char tmp[100];
+	char tmp[32];
 
 	wanfaces.count = 0;
 
@@ -1088,15 +1084,6 @@ int mtd_getinfo(const char *mtdname, int *part, int *size)
 int nvram_get_int(const char *key)
 {
 	return atoi(nvram_safe_get(key));
-}
-
-int nvram_set_int(const char *key, int value)
-{
-	char nvramstr[16];
-
-	snprintf(nvramstr, sizeof(nvramstr), "%d", value);
-
-	return nvram_set(key, nvramstr);
 }
 
 /*
