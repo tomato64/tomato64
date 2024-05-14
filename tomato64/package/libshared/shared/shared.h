@@ -175,7 +175,6 @@ extern char *wl_nvname(const char *nv, int unit, int subunit);
 extern int get_radio(int unit);
 extern void set_radio(int on, int unit);
 extern int nvram_get_int(const char *key);
-extern int nvram_set_int(const char *key, int value);
 extern int nvram_get_file(const char *key, const char *fname, int max);
 extern int nvram_set_file(const char *key, const char *fname, int max);
 extern int nvram_contains_word(const char *key, const char *word);
