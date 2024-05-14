@@ -23,7 +23,7 @@ while [ $i -le $MWAN ]; do
 done
 
 LOGS="logger -t mwwatchdog[$PID]"
-[ "$(NG mwan_debug)" -gt 0 ] && DEBUG="logger -p DEBUG -t mwwatchdog[$PID]" || DEBUG="echo"
+[ "$(NG mwanwatchdog_debug)" -gt 0 ] && DEBUG="logger -p DEBUG -t mwwatchdog[$PID]" || DEBUG="echo"
 
 
 timeout() {
