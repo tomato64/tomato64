@@ -2968,7 +2968,7 @@ void check_services(void)
 		_check(pid_crond, "crond", start_cron);
 		_check(pid_igmp, "igmpproxy", start_igmp_proxy);
 		if (nvram_get_int("ntp_updates") >= 1)
-			_check(pid_igmp, "ntpd", start_ntpd);
+			_check(pid_ntpd, "ntpd", start_ntpd);
 	}
 }
 
