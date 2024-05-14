@@ -145,12 +145,14 @@ static int route_manip(int cmd, char *name, int metric, char *dst, char *gateway
 
 	/* fill in rtentry */
 	memset(&rt, 0, sizeof(rt));
-	if (dst)
+	if (dst && *dst)
 		inet_aton(dst, &sin_addr(&rt.rt_dst));
-	if (gateway)
+	if (gateway && *gateway)
 		inet_aton(gateway, &sin_addr(&rt.rt_gateway));
-	if (genmask)
+	if (genmask && *genmask)
 		inet_aton(genmask, &sin_addr(&rt.rt_genmask));
+	if (name && *name)
+		rt.rt_dev = name;
 
 	rt.rt_metric = metric;
 	rt.rt_flags = RTF_UP;
@@ -158,8 +160,6 @@ static int route_manip(int cmd, char *name, int metric, char *dst, char *gateway
 		rt.rt_flags |= RTF_GATEWAY;
 	if (sin_addr(&rt.rt_genmask).s_addr == INADDR_BROADCAST)
 		rt.rt_flags |= RTF_HOST;
-
-	rt.rt_dev = name;
 
 	/* force address family to AF_INET */
 	rt.rt_dst.sa_family = AF_INET;
@@ -184,7 +184,7 @@ int route_add(char *name, int metric, char *dst, char *gateway, char *genmask)
 
 void route_del(char *name, int metric, char *dst, char *gateway, char *genmask)
 {
-	while (route_manip(SIOCDELRT, name, (metric + 1), dst, gateway, genmask) == 0) {
+	while (route_manip(SIOCDELRT, name, (metric + 1), dst, gateway, genmask) == 0) { /* del all! */
 		//
 	}
 }
