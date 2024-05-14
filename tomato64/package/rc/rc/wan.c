@@ -697,6 +697,7 @@ static void _do_wan_routes(char *ifname, char *nvname, int metric, int add)
 		char *ipaddr, *gateway, *nmask;
 
 		ipaddr = nmask = strsep(&tmp, " ");
+		memset(netmask, 0, sizeof(netmask));
 		strlcpy(netmask, "255.255.255.255", sizeof(netmask));
 
 		if (nmask) {
@@ -705,6 +706,7 @@ static void _do_wan_routes(char *ifname, char *nvname, int metric, int add)
 				bits = strtol(nmask, &nmask, 10);
 				if (bits >= 1 && bits <= 32) {
 					mask.s_addr = htonl(0xffffffff << (32 - bits));
+					memset(netmask, 0, sizeof(netmask));
 					strlcpy(netmask, inet_ntoa(mask), sizeof(netmask));
 				}
 			}
