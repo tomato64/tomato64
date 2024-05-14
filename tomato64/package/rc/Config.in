@@ -103,18 +103,6 @@ config BR2_PACKAGE_RC_EBTABLES
 	default y
 	select BR2_PACKAGE_EBTABLES
 
-config BR2_PACKAGE_RC_FTP
-	bool "Enable FTP"
-	default y
-	select BR2_PACKAGE_VSFTPD_TOMATO
-
-if BR2_PACKAGE_RC_FTP
-config BR2_PACKAGE_RC_FTPS
-	bool "Enable FTPS"
-	default y
-	select BR2_PACKAGE_OPENSSL
-endif
-
 config BR2_PACKAGE_RC_HAVEGED
 	bool "Enable HAVEGED"
 	select BR2_PACKAGE_HAVEGED
@@ -148,11 +136,6 @@ config BR2_PACKAGE_RC_MDNS
 	bool "Enable MDNS"
 	default y
 	select BR2_PACKAGE_AVAHI_TOMATO
-
-config BR2_PACKAGE_RC_MEDIA_SERVER
-	bool "Enable Media Server"
-	default y
-	select BR2_PACKAGE_MINIDLNA_TOMATO
 
 config BR2_PACKAGE_RC_MULTIWAN
 	bool "Enable MultiWan"
@@ -272,12 +255,6 @@ config BR2_PACKAGE_RC_PROXY
 	select BR2_PACKAGE_UDPXY
 	select BR2_PACKAGE_IGMPPROXY
 
-config BR2_PACKAGE_RC_SAMBA
-	bool "Enable Samba"
-	default y
-	select BR2_PACKAGE_SAMBA4_TOMATO
-	select BR2_PACKAGE_WSDD2
-
 config BR2_PACKAGE_RC_SNMP
 	bool "Enable SNMP"
 	default y
@@ -304,11 +281,6 @@ config BR2_PACKAGE_RC_TOR
 	default y
 	select BR2_PACKAGE_TOR
 
-config BR2_PACKAGE_RC_UPS
-	bool "Enable UPS"
-	default y
-	select BR2_PACKAGE_APCUPSD_TOMATO
-
 config BR2_PACKAGE_RC_USB
 	bool "Enable USB"
 	default y
@@ -318,6 +290,39 @@ config BR2_PACKAGE_RC_USB
 	select BR2_PACKAGE_UQMI
 	select BR2_PACKAGE_USB_MODESWITCH_DATA
 	select BR2_PACKAGE_USBUTILS
+
+if BR2_PACKAGE_RC_USB
+
+config BR2_PACKAGE_RC_FTP
+	bool "Enable FTP"
+	default y
+	select BR2_PACKAGE_VSFTPD_TOMATO
+
+if BR2_PACKAGE_RC_FTP
+
+config BR2_PACKAGE_RC_FTPS
+	bool "Enable FTPS"
+	default y
+	select BR2_PACKAGE_OPENSSL
+
+endif
+
+config BR2_PACKAGE_RC_MEDIA_SERVER
+	bool "Enable Media Server"
+	default y
+	select BR2_PACKAGE_MINIDLNA_TOMATO
+
+config BR2_PACKAGE_RC_SAMBA
+	bool "Enable Samba"
+	default y
+	select BR2_PACKAGE_SAMBA4_TOMATO
+	select BR2_PACKAGE_WSDD2
+
+config BR2_PACKAGE_RC_UPS
+	bool "Enable UPS"
+	default y
+	select BR2_PACKAGE_APCUPSD_TOMATO
+endif
 
 config BR2_PACKAGE_RC_WIREGUARD
 	bool "Enable Wireguard"
