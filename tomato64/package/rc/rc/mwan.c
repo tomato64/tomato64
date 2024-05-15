@@ -70,7 +70,7 @@ void get_wan_info(char *sPrefix)
 	int proto = get_wanx_proto(sPrefix);
 
 	/* WAN if name */
-	strlcpy(wan_info.wan_name, nvram_safe_get(strlcat_r(sPrefix, "_iface", tmp, sizeof(tmp))), sizeof(wan_info.wan_name));
+	strlcpy(wan_info.wan_name, get_wanface(sPrefix), sizeof(wan_info.wan_name)); /* use correct wan interface */
 
 	/* WAN IP address */
 	switch (proto) {
@@ -376,22 +376,20 @@ void mwan_load_balance(void)
 		get_wan_prefix(wan_unit, prefix);
 		get_wan_info(prefix);
 		proto = get_wanx_proto(prefix);
+		memset(buf, 0, sizeof(buf));
+		get_wan_ip(proto, buf, sizeof(buf));
 
 		if (check_wanup(prefix) && (mwan_curr[wan_unit - 1] == '2')) { /* up and actively routing WAN */
 			if (wan_info.wan_weight == 0) /* override weight for failover interface */
 				wan_info.wan_weight = 1;
 
 			memset(cmd, 0, sizeof(cmd));
-			memset(buf, 0, sizeof(buf));
-			get_wan_ip(proto, buf, sizeof(buf));
 			snprintf(cmd, sizeof(cmd), " nexthop via %s dev %s weight %d", buf, wan_info.wan_name, wan_info.wan_weight);
 			strlcat(lb_cmd, cmd, sizeof(lb_cmd));
 		}
 		/* ip route del default via 10.0.10.1 dev ppp3 (from main route table) */
 		if (strcmp(wan_info.wan_name, "none")) { /* skip disabled / disconnected ppp WAN */
 			memset(cmd, 0, sizeof(cmd));
-			memset(buf, 0, sizeof(buf));
-			get_wan_ip(proto, buf, sizeof(buf));
 			snprintf(cmd, sizeof(cmd), "ip route del default via %s dev %s", buf, wan_info.wan_name);
 			logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, prefix, cmd);
 			system(cmd);
