@@ -69,8 +69,6 @@ void get_wan_info(char *sPrefix)
 	char tmp[32];
 	int proto = get_wanx_proto(sPrefix);
 
-	memset(wan_info, 0, sizeof(wan_info)); /* reset */
-
 	/* WAN if name */
 	strlcpy(wan_info.wan_name, nvram_safe_get(strlcat_r(sPrefix, "_iface", tmp, sizeof(tmp))), sizeof(wan_info.wan_name));
 
