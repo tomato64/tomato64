@@ -844,9 +844,10 @@ function init() {
 
 <div id="footer">
 	<div id="survey-controls">
+		Timeout:
 		<img src="spin.gif" alt="" id="refresh-spinner">
 		<script>
-			genStdTimeList('expire-time', 'Expires = ♾️', 6);
+			genStdTimeList('expire-time', 'Never = ♾️', 6);
 			genStdTimeList('refresh-time', 'One off', 10);
 		</script>
 		<input type="button" value="Refresh" onclick="ref.toggle()" id="refresh-button">
