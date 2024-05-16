@@ -696,6 +696,194 @@ out:
 #endif /* !TCONFIG_BCMARM */
 #endif /* TOMATO64 */
 
+#ifdef TCONFIG_AC5300
+static int wlshutdown_ethx_rtac5300(void)
+{
+	int dirty = 0;
+	int debug_wlx_shdown = nvram_get_int("debug_wlx_shdown");
+	int i;
+	char buffer[32];
+	char tmp[64];
+
+	/* check eth1 - shutdown ? */
+	if (debug_wlx_shdown & 0x01) {
+		/* 1 - remove devpath */
+		nvram_unset("devpath0");
+
+		/* 2 - check bridges and remove eth1 radio from the interface list */
+		for (i = 0; i < BRIDGE_COUNT; i++) {
+			memset(buffer, 0, sizeof(buffer));
+			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+			if (strcmp(nvram_safe_get(buffer), "") != 0) { /* check brX */
+				memset(buffer, 0, sizeof(buffer));
+				memset(tmp, 0, sizeof(tmp));
+				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
+				snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get(buffer));
+
+				if (!remove_from_list("eth1", tmp, sizeof(tmp))) {
+					nvram_set(buffer, tmp); /* save lanX_ifnames back to nvram without eth1 interface */
+					break;
+				}
+
+			}
+		}
+
+		/* 3 - adjust nvram wl_ifnames and remove eth1 radio from the interface list */
+		memset(tmp, 0, sizeof(tmp));
+		snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get("wl_ifnames"));
+		remove_from_list("eth1", tmp, sizeof(tmp));
+		nvram_set("wl_ifnames", tmp); /* save wl_ifnames back to nvram without eth1 interface */
+
+		/* clear! */
+		nvram_set("wl_ifname", "");
+		nvram_set("wl0_ifname", "");
+	}
+	else {
+		/* check if we have the default setup in place */
+		if (nvram_match("devpath0", "pcie/1/3/")) {
+			/* default path */
+			dirty |= check_nv("wl0_ifname", "eth1");
+		}
+		else { /* bring back default setup */
+			/* set devpath */
+			nvram_set("devpath0", "pcie/1/3/");
+
+			memset(tmp, 0, sizeof(tmp));
+			snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get("lan_ifnames"));
+			add_to_list("eth1", tmp, sizeof(tmp));
+			/* Add wireless interface eth1 back to br0 (default) */
+			nvram_set("lan_ifnames", tmp);
+
+			memset(tmp, 0, sizeof(tmp));
+			snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get("wl_ifnames"));
+			add_to_list("eth1", tmp, sizeof(tmp));
+			nvram_set("wl_ifnames", tmp); /* save wl_ifnames */
+
+			nvram_set("wl_ifname", "eth1");
+			nvram_set("wl0_ifname", "eth1");
+			dirty = 1; /* save critical or important values and prepare for nv commit & reboot */
+		}
+	}
+
+	/* check eth2 - shutdown ? */
+	if (debug_wlx_shdown & 0x02) {
+		/* 1 - remove devpath */
+		nvram_unset("devpath1");
+
+		/* 2 - check bridges and remove eth2 radio from the interface list */
+		for (i = 0; i < BRIDGE_COUNT; i++) {
+			memset(buffer, 0, sizeof(buffer));
+			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+			if (strcmp(nvram_safe_get(buffer), "") != 0) { /* check brX */
+				memset(buffer, 0, sizeof(buffer));
+				memset(tmp, 0, sizeof(tmp));
+				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
+				snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get(buffer));
+
+				if (!remove_from_list("eth2", tmp, sizeof(tmp))) {
+					nvram_set(buffer, tmp); /* save lanX_ifnames back to nvram without eth2 interface */
+					break;
+				}
+
+			}
+		}
+
+		/* 3 - adjust nvram wl_ifnames and remove eth2 radio from the interface list */
+		memset(tmp, 0, sizeof(tmp));
+		snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get("wl_ifnames"));
+		remove_from_list("eth2", tmp, sizeof(tmp));
+		nvram_set("wl_ifnames", tmp); /* save wl_ifnames back to nvram without eth2 interface */
+
+		/* clear! */
+		nvram_set("wl1_ifname", "");
+	}
+	else {
+		/* check if we have the default setup in place */
+		if (nvram_match("devpath1", "pcie/1/4/")) {
+			/* default path */
+			dirty |= check_nv("wl1_ifname", "eth2");
+		}
+		else { /* bring back default setup */
+			/* set devpath */
+			nvram_set("devpath1", "pcie/1/4/");
+
+			memset(tmp, 0, sizeof(tmp));
+			snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get("lan_ifnames"));
+			add_to_list("eth2", tmp, sizeof(tmp));
+			/* Add wireless interface eth2 back to br0 (default) */
+			nvram_set("lan_ifnames", tmp);
+
+			memset(tmp, 0, sizeof(tmp));
+			snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get("wl_ifnames"));
+			add_to_list("eth2", tmp, sizeof(tmp));
+			nvram_set("wl_ifnames", tmp); /* save wl_ifnames */
+
+			nvram_set("wl1_ifname", "eth2");
+			dirty = 1; /* save critical or important values and prepare for nv commit & reboot */
+		}
+	}
+
+	/* check eth3 - shutdown ? */
+	if (debug_wlx_shdown & 0x04) {
+		/* 1 - remove devpath */
+		nvram_unset("devpath2");
+
+		/* 2 - check bridges and remove eth3 radio from the interface list */
+		for (i = 0; i < BRIDGE_COUNT; i++) {
+			memset(buffer, 0, sizeof(buffer));
+			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+			if (strcmp(nvram_safe_get(buffer), "") != 0) { /* check brX */
+				memset(buffer, 0, sizeof(buffer));
+				memset(tmp, 0, sizeof(tmp));
+				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
+				snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get(buffer));
+
+				if (!remove_from_list("eth3", tmp, sizeof(tmp))) {
+					nvram_set(buffer, tmp); /* save lanX_ifnames back to nvram without eth3 interface */
+					break;
+				}
+
+			}
+		}
+
+		/* 3 - adjust nvram wl_ifnames and remove eth3 radio from the interface list */
+		memset(tmp, 0, sizeof(tmp));
+		snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get("wl_ifnames"));
+		remove_from_list("eth3", tmp, sizeof(tmp));
+		nvram_set("wl_ifnames", tmp); /* save wl_ifnames back to nvram without eth3 interface */
+
+		/* clear! */
+		nvram_set("wl2_ifname", "");
+	}
+	else {
+		/* check if we have the default setup in place */
+		if (nvram_match("devpath2", "pcie/2/1/")) {
+			/* default path */
+			dirty |= check_nv("wl2_ifname", "eth3");
+		}
+		else { /* bring back default setup */
+			/* set devpath */
+			nvram_set("devpath2", "pcie/2/1/");
+
+			memset(tmp, 0, sizeof(tmp));
+			snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get("lan_ifnames"));
+			add_to_list("eth3", tmp, sizeof(tmp));
+			/* Add wireless interface eth3 back to br0 (default) */
+			nvram_set("lan_ifnames", tmp);
+
+			memset(tmp, 0, sizeof(tmp));
+			snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get("wl_ifnames"));
+			add_to_list("eth3", tmp, sizeof(tmp));
+			nvram_set("wl_ifnames", tmp); /* save wl_ifnames */
+
+			nvram_set("wl2_ifname", "eth3");
+			dirty = 1; /* save critical or important values and prepare for nv commit & reboot */
+		}
+	}
+
+	return dirty;
+}
+#endif /* TCONFIG_AC5300 */
 
 static void init_lan_hwaddr(void)
 {
@@ -1099,7 +1287,6 @@ static void check_bootnv(void)
 	int hardware;
 	char mac[18];
 #endif
-
 	model = get_model();
 	dirty = check_nv("wl0_leddc", "0x640000") | check_nv("wl1_leddc", "0x640000");
 #endif /* TOMATO64 */
@@ -1678,9 +1865,8 @@ static void check_bootnv(void)
 		dirty |= check_nv("rgmii_port", "5"); /* RGMII_BRCM5301X */
 		dirty |= check_nv("vlan1hwname", "et1");
 		dirty |= check_nv("vlan2hwname", "et1");
-		dirty |= check_nv("wl0_ifname", "eth1");
-		dirty |= check_nv("wl1_ifname", "eth2");
-		dirty |= check_nv("wl2_ifname", "eth3");
+		/* check if user wants to shutdown wl radios (for ex. broken ones) */
+		dirty |= wlshutdown_ethx_rtac5300();
 		break;
 #endif
 	case MODEL_R8000:

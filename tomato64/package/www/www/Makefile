@@ -268,6 +268,7 @@ endif
 
 ifneq ($(TCONFIG_BCM714),y)
 	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMWL714-BEGIN/,/BCMWL714-END/d"
+	sed -i $(INSTALLDIR)/www/admin-debug.asp -e "/BCMWL714-BEGIN/,/BCMWL714-END/d"
 endif
 
 # Only include the wireless band steering option if is compiled in

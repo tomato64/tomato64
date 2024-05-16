@@ -1217,6 +1217,9 @@ static const nvset_t nvset_list[] = {
 	{ "debug_logsegfault",		V_01				},
 //	{ "debug_keepfiles",		V_01				},
 	{ "debug_ddns",			V_01				},
+#ifdef TCONFIG_BCM714
+	{ "debug_wlx_shdown",		V_RANGE(0, 7)			},	/* Shutdown wl radio eth1 (bit 0) and/or eth2 (bit 1) and/or eth3 (bit 2)*/
+#endif /* TCONFIG_BCM714 */
 	{ "debug_norestart",		V_TEXT(0, 128)			},
 	{ "console_loglevel",		V_RANGE(1, 8)			},
 	{ "t_cafree",			V_01				},

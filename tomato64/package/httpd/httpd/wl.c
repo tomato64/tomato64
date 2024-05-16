@@ -1516,8 +1516,14 @@ void asp_wlcountries(int argc, char **argv)
 	wl_country_list_t *cl = (wl_country_list_t *)malloc(WLC_IOCTL_MAXLEN + WLC_IOCTL_MAXLEN_ADDON);
 	cntry_name_t *cntry = NULL;
 	char *abbrev = NULL;
-	char *ifname = (strcmp(nvram_safe_get("wl_ifname"),"") != 0) ? nvram_safe_get("wl_ifname") : "eth1"; /* keep it easy - take the first interface */
 	int band = WLC_BAND_ALL; /* all bands == 3 */
+	char *ifname = NULL;
+
+#ifdef TCONFIG_AC5300
+	ifname = (strcmp(nvram_safe_get("wl0_ifname"),"") != 0) ? nvram_safe_get("wl0_ifname") : ((strcmp(nvram_safe_get("wl1_ifname"),"") != 0) ? nvram_safe_get("wl1_ifname") : "eth3"); /* take the first interface available */
+#else
+	ifname = (strcmp(nvram_safe_get("wl_ifname"),"") != 0) ? nvram_safe_get("wl_ifname") : "eth1"; /* keep it easy - take the first interface */
+#endif /* TCONFIG_AC5300 */
 
 	web_puts("\nwl_countries = [");
 

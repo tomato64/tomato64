@@ -18,7 +18,15 @@
 
 <script>
 
-//	<% nvram("debug_nocommit,debug_cprintf,debug_cprintf_file,console_loglevel,t_cafree,t_hidelr,debug_ddns,debug_norestart,debug_logsegfault,http_nocache"); %>
+//	<% nvram("t_model_name,debug_nocommit,debug_cprintf,debug_cprintf_file,console_loglevel,t_cafree,t_hidelr,debug_ddns,debug_norestart,debug_logsegfault,debug_wlx_shdown,http_nocache"); %>
+
+/* BCMWL714-BEGIN */
+var wlx_shdown_display = 'none';
+switch(nvram['t_model_name']) {
+	case 'Asus RT-AC5300':
+		wlx_shdown_display = '';
+}
+/* BCMWL714-END */
 
 var cprefix = 'admin_debug';
 
@@ -54,6 +62,18 @@ function save() {
 	fom.debug_ddns.value = fom.f_debug_ddns.checked ? 1 : 0;
 	fom.http_nocache.value = fom.f_http_nocache.checked ? 1 : 0;
 	fom.console_loglevel.value = fom._f_console_loglevel.value;
+
+/* BCMWL714-BEGIN */
+	fom.debug_wlx_shdown.value = 0; /* init with 0 and check */
+		if (fom.f_wlx_shdown_eth1.checked)
+			fom.debug_wlx_shdown.value = fom.debug_wlx_shdown.value  | 0x01; /* set bit 0, wl radio eth1 */
+
+		if (fom.f_wlx_shdown_eth2.checked)
+			fom.debug_wlx_shdown.value = fom.debug_wlx_shdown.value  | 0x02; /* set bit 1, wl radio eth2 */
+
+		if (fom.f_wlx_shdown_eth3.checked)
+			fom.debug_wlx_shdown.value = fom.debug_wlx_shdown.value  | 0x04; /* set bit 2, wl radio eth3 */
+/* BCMWL714-END */
 
 	var a = [];
 	if (fom.f_nr_crond.checked) a.push('crond');
@@ -114,6 +134,9 @@ function init() {
 <input type="hidden" name="debug_ddns">
 <input type="hidden" name="debug_norestart">
 <input type="hidden" name="debug_logsegfault">
+<!-- BCMWL714-BEGIN -->
+<input type="hidden" name="debug_wlx_shdown">
+<!-- BCMWL714-END -->
 <input type="hidden" name="t_cafree">
 <input type="hidden" name="t_hidelr">
 <input type="hidden" name="http_nocache">
@@ -140,6 +163,13 @@ function init() {
 				{ name: 'f_nr_igmprt', type: 'checkbox', suffix: ' igmprt<br>', value: (nvram.debug_norestart.indexOf('igmprt') != -1) },
 				{ name: 'f_nr_ntpd', type: 'checkbox', suffix: ' ntpd<br>', value: (nvram.debug_norestart.indexOf('ntpd') != -1) }
 			] },
+/* BCMWL714-BEGIN */
+			{ title: 'Disable wireless interface(s)', multi: [
+				{ name: 'f_wlx_shdown_eth1', type: 'checkbox', suffix: ' eth1 (2,4 GHz radio)<br>', value: (nvram.debug_wlx_shdown & 0x01) },
+				{ name: 'f_wlx_shdown_eth2', type: 'checkbox', suffix: ' eth2 (first 5 GHz radio)<br>', value: (nvram.debug_wlx_shdown & 0x02) },
+				{ name: 'f_wlx_shdown_eth3', type: 'checkbox', suffix: ' eth3 (second 5 GHz radio)<br>', value: (nvram.debug_wlx_shdown & 0x04) }
+			], hidden: wlx_shdown_display },
+/* BCMWL714-END */
 			{ title: 'Set "no-cache" in httpd header', name: 'f_http_nocache', type: 'checkbox', value: nvram.http_nocache == '1' }
 		]);
 	</script>
@@ -183,6 +213,12 @@ function init() {
 		<li><b>Set "no-cache" in httpd header</b> - Essentially, this will tell your browser not to cache Tomato64 web interface pages.</li>
 		<li><b>Kernel printk log level</b> - This sets klogd (kernel logging) minimum logging level.</li>
 	</ul>
+<!-- BCMWL714-BEGIN -->
+	<br>
+	<ul>
+		<li><b>Disable wireless interface(s)</b> - Allows you to shutdown wireless interfaces (for example if broken; Note: currently only for Asus RT-AC5300). Reboot required!</li>
+	</ul>
+<!-- BCMWL714-END -->
 	<br>
 	<ul>
 		<li><b>Download CFE</b> - Allows you to extract the system CFE from your router in one click.</li>
