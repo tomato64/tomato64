@@ -1063,7 +1063,8 @@ REMOVE-END */
 			fom['wan'+j+'_proto'].value = 'disabled';
 		}
 	}
-	fom.mwan_num.value = (k < 1 ? 1 : k);
+	//fom.mwan_num.value = (k < 1 ? 1 : k);
+	fom.mwan_num.value = 1; /* just reset mwan_num to 1 to avoid problems */
 
 	for (i = 0; i < wl_ifaces.length; ++i) {
 		var wlan = E('_f_bridge_wlan'+i+'_to');
