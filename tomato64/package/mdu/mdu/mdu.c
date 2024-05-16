@@ -1802,6 +1802,7 @@ static void save_cookie(void)
 int main(int argc, char *argv[])
 {
 	const char *p, *c;
+	char tmp[16];
 
 	g_argc = argc;
 	g_argv = argv;
@@ -1824,12 +1825,15 @@ int main(int argc, char *argv[])
 
 	memset(sPrefix, 0, sizeof(sPrefix)); /* reset */
 	memset(ifname, 0, sizeof(ifname)); /* reset */
+	memset(tmp, 0, sizeof(tmp)); /* reset */
 
 	/* addr is present in the config */
 	if (((c = get_option("addr")) != NULL) && *c == '@' && nvram_get_int("mwan_num") > 1) {
 		/* via what WAN check external IP? */
 		snprintf(sPrefix, sizeof(sPrefix), (atoi(c + 1) == 1 ? "wan": "wan%s"), c + 1);
 		snprintf(ifname, sizeof(ifname), "%s", get_wanface(sPrefix));
+		if ((strcmp(ifname, "none") == 0) || (strcmp(nvram_safe_get(strlcat_r(sPrefix, "_proto", tmp, sizeof(tmp))), "disabled") == 0)) /* in some cases */
+			memset(ifname, 0, sizeof(ifname)); /* reset again */
 	}
 
 	check_cookie();
