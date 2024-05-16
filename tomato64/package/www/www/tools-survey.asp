@@ -128,6 +128,12 @@ function redraw() {
 	drawBoard('ellipses5');
 }
 
+function recolor() {
+	colors = colors.sort(() => Math.random() - 0.5);
+	redraw();
+	doit();
+}
+
 function doit() {
 	fillstyle = E('fill-style').value;
 	ssidshow = E('ssid-show').value;
@@ -832,7 +838,10 @@ function init() {
 				</select>&nbsp;&nbsp;&nbsp;&nbsp;
 		</td><td>
 			<label for="ssid-limit">Limit SSIDs: </label>
-			<input type="number" id="ssid-limit" min="0" max="40" value="20" onchange="doit();">
+			<input type="number" id="ssid-limit" min="0" max="40" value="20" onchange="doit();">&nbsp;&nbsp;&nbsp;&nbsp;
+		</td>
+		</td><td>
+			<input type=button id="shuffle" value="🔀 Shuffle" onclick='recolor()'>
 		</td></tr>
 		</table>
 	</div>
