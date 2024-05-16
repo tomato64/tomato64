@@ -212,16 +212,16 @@ function drawNoise(board, style) {
 	var noise1, noise2, noise;
 	var canvas = E(board);
 	var ctx = canvas.getContext('2d');
-	if (wl0.radio.value == 1 && wl0.mode != 'sta' && board == 'ellipses2') {
+	if (wl0.radio.value == 1 && board == 'ellipses2') {
 		if (res0a !== null) noise = ((-wl0.noise - 10) * (canvas.height / 100) * (10 / vdiv));
 		var noiseV = Number(wl0.noise);
 	}
-	if (wl1.radio.value == 1 && wl1.mode != 'sta' && board == 'ellipses5') {
+	if (wl1.radio.value == 1 && board == 'ellipses5') {
 		res1 = String(res1).replace(/\\x0a/g, ',').match(/\d+/g);
 		if (res1a !== null) noise = ((-wl1.noise - 10) * (canvas.height / 100) * (10 / vdiv));
 		var noiseV = Number(wl1.noise);
 	}
-	if (wl2.radio.value == 1 && wl2.mode != 'sta' && board == 'ellipses5') {
+	if (wl2.radio.value == 1 && board == 'ellipses5') {
 		res2 = String(res2).replace(/\\x0a/g, ',').match(/\d+/g);
 		if (res2a !== null) noise = ((-wl2.noise - 10) * (canvas.height / 100) * (10 / vdiv));
 		var noiseV = Number(wl2.noise);
