@@ -295,6 +295,7 @@ function verifyFields(focused, quiet) {
 					/* OR if WANX is already used for opendns as a DNS in one client, disable it on the other(s) */
 					if ((nvram['wan'+k+'_proto'] == 'disabled') || (!E('_f_opendns'+i).checked) || (nvram['wan'+k+'_addget'] == 1) || (!E('_f_opendns'+i+'_wan'+k).checked && used_wans[j - 1])) {
 						E('_f_opendns'+i+'_wan'+k).disabled = 1;
+						E('_f_opendns'+i+'_wan'+k).checked = 0;
 						if (nvram['wan'+k+'_addget'] == 1)
 							elem.setInnerHTML('opendns_info'+i+j, txt);
 					}
