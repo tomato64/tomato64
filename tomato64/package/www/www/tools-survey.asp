@@ -324,13 +324,6 @@ function drawEllipse(c = -100, m = 20, q, col, ssid, noise, style, sshow) {
 	ctx.closePath();
 }
 
-function sortByProperty(array, property) {
-	array.sort(function(a, b) {
-		return b[property] - a[property];
-	});
-	return array;
-}
-
 sg.populate = function(style, sshow) {
 	var added = 0;
 	var removed = 0;
@@ -349,11 +342,11 @@ sg.populate = function(style, sshow) {
 	}
 
 	drawFT();
+	wlscandata.sort((b, a) => a[2] - b[2]);
 
 	for (i = 0; i < wlscandata.length; ++i) {
 		s = wlscandata[i];
 		e = null;
-		sortByProperty(entries, 'rssi');
 		for (j = 0; j < entries.length; ++j) {
 			if (entries[j].bssid == s[0]) {
 				e = entries[j];
@@ -432,9 +425,9 @@ sg.populate = function(style, sshow) {
 				colo = '#aaaaaa';
 			else {
 				colo = colors[col2];
-				lim2++;
 				col2++;
 			}
+			lim2++;
 			var decimalColor = hexToDecimal(colo);
 			e.col = '<div style="margin:0 auto;display:block;padding:0px;width:20px;height:40px;background-color:rgba('+decimalColor+','+density+');border:1px solid black;"><\/div>';
 			drawEllipse(chan[0], e.mhz, (100 + e.rssi), colo, e.ssid, 0, style, sshow);
@@ -444,9 +437,9 @@ sg.populate = function(style, sshow) {
 				colo = '#aaaaaa';
 			else {
 				colo = colors[col5];
-				lim5++;
 				col5--;
 			}
+			lim5++;
 			var decimalColor = hexToDecimal(colo);
 			e.col = '<div style="margin:0 auto;display:block;padding:0px;width:20px;height:40px;background-color:rgba('+decimalColor+','+density+');border:1px solid black;"><\/div>';
 			drawEllipse(chan[0], e.mhz, (100 + e.rssi), colo, e.ssid, 0, style, sshow);
