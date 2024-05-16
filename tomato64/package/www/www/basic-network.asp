@@ -29,18 +29,19 @@
 
 var sta_list = [];
 function refresh_sta_list() {
-	var u;
-	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
-		if (wl_sunit(uidx) < 0) {
-			u = wl_unit(uidx);
-			sta_list[u] = [];
-			sta_list[u][0] = 'wl'+u;
-			sta_list[u][1] = wl_display_ifname(uidx);
+	var u, wluidx;
+	for (wluidx = 0; wluidx < wl_ifaces.length; ++wluidx) {
+		if (wl_sunit(wluidx) < 0) {
+			u = wl_unit(wluidx);
+			sta_list[wluidx] = [];
+			sta_list[wluidx][0] = 'wl'+u;
+			sta_list[wluidx][1] = wl_display_ifname(wluidx);
 		}
 	}
-	sta_list[u + 1] = [];
-	sta_list[u + 1][0] = '';
-	sta_list[u + 1][1] = 'Disabled';
+	/* And finally - Add Option "Disabled" */
+	sta_list[wluidx] = [];
+	sta_list[wluidx][0] = '';
+	sta_list[wluidx][1] = 'Disabled';
 }
 
 var lg = new TomatoGrid();
