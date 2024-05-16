@@ -516,56 +516,56 @@ function drawFT(show) {
 	if (typeof res0a === 'undefined')
 		return;
 
-	noiseMatch = res0a.match(/noise: (-?\\d+)/);
+	noiseMatch = res0a.match(/noise: (-?\d+)/);
 	wl0.noise = noiseMatch ? noiseMatch[1] : null;
 	ssidMatch = res0a.match(/SSID: "([^"]+)"/);
 	wl0.ssid = ssidMatch ? ssidMatch[1] : null;
-	bssidMatch = res0a.match(/BSSID: (\\S+)/);
+	bssidMatch = res0a.match(/BSSID: (\S+)/);
 	wl0.bssid = bssidMatch ? bssidMatch[1] : null;
 	if (wl0.mode.value === 'ap')
 		wl0.rssi = -10;
 	else {
-		rssiMatch = res0a.match(/RSSI:\\s*(-?\\d+)\\s*dBm/);
+		rssiMatch = res0a.match(/RSSI:\s*(-?\d+)\s*dBm/);
 		wl0.rssi = rssiMatch ? parseInt(rssiMatch[1], 10) : null;
 	}
-	channelMatch = res0a.match(/Primary channel: (\\d+)/);
+	channelMatch = res0a.match(/Primary channel: (\d+)/);
 	wl0.controlchannel = channelMatch ? channelMatch[1] : null;
-	chanspecMatch = res0a.match(/Chanspec: (\\d+(?:\\.\\d+)?)GHz channel (\\d+) (\\d+)MHz/);
+	chanspecMatch = res0a.match(/Chanspec: (\d+(?:\.\d+)?)GHz channel (\d+) (\d+)MHz/);
 	wl0.centralchannel = chanspecMatch ? chanspecMatch[2] : null;
 	wl0.width = chanspecMatch ? chanspecMatch[3] : null;
-	noiseMatch = res1a.match(/noise: (-?\\d+)/);
+	noiseMatch = res1a.match(/noise: (-?\d+)/);
 	wl1.noise = noiseMatch ? noiseMatch[1] : null;
 	ssidMatch = res1a.match(/SSID: "([^"]+)"/);
 	wl1.ssid = ssidMatch ? ssidMatch[1] : null;
-	bssidMatch = res1a.match(/BSSID: (\\S+)/);
+	bssidMatch = res1a.match(/BSSID: (\S+)/);
 	wl1.bssid = bssidMatch ? bssidMatch[1] : null;
 	if (wl1.mode.value === 'ap')
 		wl1.rssi = -10;
 	else {
-		rssiMatch = res1a.match(/RSSI:\\s*(-?\\d+)\\s*dBm/);
+		rssiMatch = res1a.match(/RSSI:\s*(-?\d+)\s*dBm/);
 		wl1.rssi = rssiMatch ? parseInt(rssiMatch[1], 10) : null;
 	}
-	channelMatch = res1a.match(/Primary channel: (\\d+)/);
+	channelMatch = res1a.match(/Primary channel: (\d+)/);
 	wl1.controlchannel = channelMatch ? channelMatch[1] : null;
-	chanspecMatch = res1a.match(/Chanspec: (\\d+(?:\\.\\d+)?)GHz channel (\\d+) (\\d+)MHz/);
+	chanspecMatch = res1a.match(/Chanspec: (\d+(?:\.\d+)?)GHz channel (\d+) (\d+)MHz/);
 	wl1.centralchannel = chanspecMatch ? chanspecMatch[2] : null;
 	wl1.width = chanspecMatch ? chanspecMatch[3] : null;
-	noiseMatch = res2a.match(/noise: (-?\\d+)/);
+	noiseMatch = res2a.match(/noise: (-?\d+)/);
 	wl2.noise = noiseMatch ? noiseMatch[1] : null;
 	ssidMatch = res2a.match(/SSID: "([^"]+)"/);
 	wl2.ssid = ssidMatch ? ssidMatch[1] : null;
-	bssidMatch = res2a.match(/BSSID: (\\S+)/);
+	bssidMatch = res2a.match(/BSSID: (\S+)/);
 	wl2.bssid = bssidMatch ? bssidMatch[1] : null;
 	wl2.bssid = bssidMatch ? bssidMatch[1] : null;
 	if (wl2.mode.value === 'ap')
 		wl2.rssi = -10;
 	else {
-		rssiMatch = res2a.match(/RSSI:\\s*(-?\\d+)\\s*dBm/);
+		rssiMatch = res2a.match(/RSSI:\s*(-?\d+)\s*dBm/);
 		wl2.rssi = rssiMatch ? parseInt(rssiMatch[1], 10) : null;
 	}
-	channelMatch = res2a.match(/Primary channel: (\\d+)/);
+	channelMatch = res2a.match(/Primary channel: (\d+)/);
 	wl2.controlchannel = channelMatch ? channelMatch[1] : null;
-	chanspecMatch = res2a.match(/Chanspec: (\\d+(?:\\.\\d+)?)GHz channel (\\d+) (\\d+)MHz/);
+	chanspecMatch = res2a.match(/Chanspec: (\d+(?:\.\d+)?)GHz channel (\d+) (\d+)MHz/);
 	wl2.centralchannel = chanspecMatch ? chanspecMatch[2] : null;
 	wl2.width = chanspecMatch ? chanspecMatch[3] : null;
 	if (Number(wl0.radio.value) === 1) {
