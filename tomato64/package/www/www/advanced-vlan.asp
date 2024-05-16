@@ -20,7 +20,7 @@
 	March 2015 Tvlz
 	https://bitbucket.org/tvlz/tvlz-advanced-vlan/
 
-	** Last Updated - June 30 2022 - pedro **
+	** Last Updated - May 15 2024 - pedro **
 
 	For use with Tomato Firmware only.
 	No part of this file may be used without permission.
@@ -863,31 +863,33 @@ function save() {
 	if (vlg.isEditing())
 		return;
 
-	var i, j, p, d, e, v = '', k = 0;
-
+	var i, j, k, p, d, e, v = '';
 	var fom = E('t_fom');
+
 	/* wipe out relevant fields just in case this is not the first time we try to submit */
 	for (i = 0 ; i <= MAX_VLAN_ID ; i++) {
 		fom['vlan'+i+'ports'].value = '';
 		fom['vlan'+i+'hwname'].value = '';
 		fom['vlan'+i+'vid'].value = '';
 	}
-	fom['wan_ifnameX'].value = '';
-	fom['lan_ifnames'].value = '';
-	fom['lan1_ifnames'].value = '';
-	fom['lan2_ifnames'].value = '';
-	fom['lan3_ifnames'].value = '';
-/* TOMATO64-BEGIN */
-	fom['lan4_ifnames'].value = '';
-	fom['lan5_ifnames'].value = '';
-	fom['lan6_ifnames'].value = '';
-	fom['lan7_ifnames'].value = '';
-/* TOMATO64-END */
-	fom['wan2_ifnameX'].value = '';
-/* MULTIWAN-BEGIN */
-	fom['wan3_ifnameX'].value = '';
-	fom['wan4_ifnameX'].value = '';
-/* MULTIWAN-END */
+
+	for (i = 0; i <= MAX_BRIDGE_ID; i++) {
+		j = (i == 0) ? '' : i;
+		fom['lan'+j+'_ifnames'].value = '';
+	}
+
+	for (i = 1; i <= MAXWAN_NUM; ++i) {
+		j = (i > 1) ? i : '';
+		fom['wan'+j+'_ifnameX'].value = '';
+		fom['wan'+j+'_iface'].value = '';
+		fom['wan'+j+'_iface'].disabled = 1;
+		fom['wan'+j+'_ifname'].value = '';
+		fom['wan'+j+'_ifname'].disabled = 1;
+		fom['wan'+j+'_hwaddr'].value = '';
+		fom['wan'+j+'_hwaddr'].disabled = 1;
+		fom['wan'+j+'_proto'].value = '';
+		fom['wan'+j+'_proto'].disabled = 1;
+	}
 
 	d = vlg.getAllData();
 
@@ -1044,31 +1046,42 @@ REMOVE-END */
 /* TOMATO64-END */
 	}
 
+	/* count active WANs / wipe out relevant fields for inactive or just disabled WAN - needed in various places for the proper operation of FW */
+	k = 0;
 	for (i = 1; i <= MAXWAN_NUM; ++i) {
 		j = (i > 1) ? i : '';
-		if (fom['wan'+j+'_ifnameX'].value.length > 0)
+		if (fom['wan'+j+'_ifnameX'].value.length > 1)
 			k++;
+		else {
+			fom['wan'+j+'_iface'].disabled = 0;
+			fom['wan'+j+'_iface'].value = '';
+			fom['wan'+j+'_ifname'].disabled = 0;
+			fom['wan'+j+'_ifname'].value = '';
+			fom['wan'+j+'_hwaddr'].disabled = 0;
+			fom['wan'+j+'_hwaddr'].value = '';
+			fom['wan'+j+'_proto'].disabled = 0;
+			fom['wan'+j+'_proto'].value = 'disabled';
+		}
 	}
-	if (k < 1) k = 1;
-	fom.mwan_num.value = k;
+	fom.mwan_num.value = (k < 1 ? 1 : k);
 
-	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
-		var wlan = E('_f_bridge_wlan'+uidx+'_to');
+	for (i = 0; i < wl_ifaces.length; ++i) {
+		var wlan = E('_f_bridge_wlan'+i+'_to');
 /* REMOVE-BEGIN
 		alert(wlan.selectedIndex);
 REMOVE-END */
 		switch (parseInt(wlan.selectedIndex)) {
 			case 0:
-				fom['lan_ifnames'].value += ' '+wl_ifaces[uidx][0];
+				fom['lan_ifnames'].value += ' '+wl_ifaces[i][0];
 			break;
 			case 1:
-				fom['lan1_ifnames'].value += ' '+wl_ifaces[uidx][0];
+				fom['lan1_ifnames'].value += ' '+wl_ifaces[i][0];
 			break;
 			case 2:
-				fom['lan2_ifnames'].value += ' '+wl_ifaces[uidx][0];
+				fom['lan2_ifnames'].value += ' '+wl_ifaces[i][0];
 			break;
 			case 3:
-				fom['lan3_ifnames'].value += ' '+wl_ifaces[uidx][0];
+				fom['lan3_ifnames'].value += ' '+wl_ifaces[i][0];
 			break;
 		}
 	}
@@ -1222,7 +1235,23 @@ function init() {
 <input type="hidden" name="wan3_ifnameX_vlan">
 <input type="hidden" name="wan4_ifnameX_vlan">
 /* TOMATO64-END */
+<input type="hidden" name="wan3_iface" value="" disabled="disabled">
+<input type="hidden" name="wan4_iface" value="" disabled="disabled">
+<input type="hidden" name="wan3_ifname" value="" disabled="disabled">
+<input type="hidden" name="wan4_ifname" value="" disabled="disabled">
+<input type="hidden" name="wan3_hwaddr" value="" disabled="disabled">
+<input type="hidden" name="wan4_hwaddr" value="" disabled="disabled">
+<input type="hidden" name="wan3_proto" value="" disabled="disabled">
+<input type="hidden" name="wan4_proto" value="" disabled="disabled">
 <!-- MULTIWAN-END -->
+<input type="hidden" name="wan_iface" value="" disabled="disabled">
+<input type="hidden" name="wan2_iface" value="" disabled="disabled">
+<input type="hidden" name="wan_ifname" value="" disabled="disabled">
+<input type="hidden" name="wan2_ifname" value="" disabled="disabled">
+<input type="hidden" name="wan_hwaddr" value="" disabled="disabled">
+<input type="hidden" name="wan2_hwaddr" value="" disabled="disabled">
+<input type="hidden" name="wan_proto" value="" disabled="disabled">
+<input type="hidden" name="wan2_proto" value="" disabled="disabled">
 <input type="hidden" name="mwan_num">
 <input type="hidden" name="manual_boot_nv">
 <input type="hidden" name="lan_ifnames">
