@@ -2512,6 +2512,7 @@ static int save_variables(int write)
 	for (v = nvset_list; v->name; ++v) {
 		ok = webcgi_nvram_set(v, v->name, write);
 
+#ifndef TOMATO64
 		if ((ok >= 0) && (strncmp(v->name, "wl_", 3) == 0)) {
 			nv.dirty = dirty;
 			nv.v = v;
@@ -2520,6 +2521,7 @@ static int save_variables(int write)
 			else
 				ok = -1;
 		}
+#endif /* TOMATO64 */
 
 		if (ok < 0) {
 			snprintf(s, sizeof(s), msgf, v->name);
