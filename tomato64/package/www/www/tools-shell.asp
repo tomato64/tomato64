@@ -53,19 +53,6 @@
 	<input type="button" value="Open Legacy System Commands" onclick="window.open(location.protocol+'//'+location.hostname+':'+location.port+'/tools-shell-legacy.asp','_self')"><br>
 </div>
 
-<div class="section-title">Notes</div>
-<div class="section">
-	<ul>
-		<li>Local access is needed for the new System Commands Page. You must be</li>
-			<ul>
-				<li>Behind the router</li>
-				<li>Connected over a VPN.</li>
-				<li>Connected over SSH and using Local Forwarding on Port 7681.</li>
-			</ul>
-		<li>The Legacy System Commands Page is also available for all scenarios.</li>
-	</ul>
-</div>
-
 </td></tr>
 </table>
 </form>
