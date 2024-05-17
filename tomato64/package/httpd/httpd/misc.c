@@ -675,7 +675,7 @@ void asp_sysinfo(int argc, char **argv)
 #endif
 #ifdef TOMATO64
 	           cpu_model,
-	           get_cpucount(),
+	           get_nprocs(),
 	           nvram_get_int("nics"),
 #endif /* TOMATO64 */
 	           cfe_version);

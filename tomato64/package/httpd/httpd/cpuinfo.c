@@ -183,11 +183,6 @@ void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
 		fclose(fd);
 	}
 }
-
-int get_cpucount()
-{
-	return get_nprocs();
-}
 #endif /* TOMATO64 */
 
 float get_cpupercent()
