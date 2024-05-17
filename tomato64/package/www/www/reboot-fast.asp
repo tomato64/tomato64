@@ -19,12 +19,7 @@ div.tomato-grid.container-div {
 }
 </style>
 <script>
-/* TOMATO64-REMOVE-BEGIN */
-var n = 90 + parseInt('0<% nv("wait_time"); %>');
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-var n = 45 + parseInt('0<% nv("wait_time"); %>');
-/* TOMATO64-END */
+var n = 20 + parseInt('0<% nv("wait_time"); %>');
 function tick() {
 	var e = document.getElementById('continue');
 	e.value = n--;
@@ -32,12 +27,7 @@ function tick() {
 		e.value = 'Continue';
 		return;
 	}
-/* TOMATO64-REMOVE-BEGIN */
-	if (n == 69) {
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-	if (n == 14) {
-/* TOMATO64-END */
+	if (n == 4) {
 		e.style = 'cursor:pointer';
 		e.disabled = false;
 	}
@@ -68,7 +58,7 @@ function init() {
 			<div class="info-centered">
 				<form>
 					<div id="msg"></div>
-					<div>Please wait while the router reboots... &nbsp;<input type="button" value="" id="continue" onclick="go()" disabled="disabled"></div>
+					<div>Please wait while the router fast reboots... &nbsp;<input type="button" value="" id="continue" onclick="go()" disabled="disabled"></div>
 				</form>
 			</div>
 		</div>

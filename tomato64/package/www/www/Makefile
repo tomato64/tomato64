@@ -497,6 +497,8 @@ ifeq ($(TCONFIG_TOMATO64),y)
 	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/forward-upnp.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
+	sed -i $(INSTALLDIR)/www/reboot.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
+	sed -i $(INSTALLDIR)/www/reboot-default.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/restrict-edit.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/shutdown.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/splashd.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d" || true
@@ -529,6 +531,8 @@ else
 	sed -i $(INSTALLDIR)/www/admin-upgrade.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/forward-upnp.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+	sed -i $(INSTALLDIR)/www/reboot-default.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+	sed -i $(INSTALLDIR)/www/reboot.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/restrict-edit.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/shutdown.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/splashd.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d" || true

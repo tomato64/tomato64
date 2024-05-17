@@ -2613,11 +2613,17 @@ static void wo_tomato(char *url)
 	}
 
 #ifdef TOMATO64
-	if (rboot || fastrboot)
+	if (rboot || fastrboot) {
+		if (rboot) {
+			parse_asp("reboot.asp");
+		} else if (fastrboot) {
+			parse_asp("reboot-fast.asp");
+		}
+	}
 #else
 	if (rboot)
-#endif /* TOMATO64 */
 		parse_asp("reboot.asp");
+#endif /* TOMATO64 */
 	else {
 		if (ajax)
 			web_printf("@msg:%s", resmsg_get());

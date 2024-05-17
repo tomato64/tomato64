@@ -109,6 +109,9 @@ void wi_upgrade(char *url, int len, char *boundary)
 	system("cp /www/reboot.asp /tmp");
 	system("cp /www/*.css /tmp");
 	system("cp /www/*.png /tmp");
+#ifdef TOMATO64
+	system("cp /www/reboot-fast.asp /tmp");
+#endif /* TOMATO64 */
 
 	led(LED_DIAG, 1);
 
@@ -201,6 +204,11 @@ void wo_flash(char *url)
 
 	if (rboot) {
 		sleep(1);
+#ifdef TOMATO64
+		if (fastreboot)
+			parse_asp("/tmp/reboot-fast.asp");
+		else
+#endif /* TOMATO64 */
 		parse_asp("/tmp/reboot.asp");
 		web_close();
 

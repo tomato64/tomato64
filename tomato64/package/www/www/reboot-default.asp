@@ -25,7 +25,12 @@ div.tomato-grid.container-div {
 }
 </style>
 <script>
+/* TOMATO64-REMOVE-BEGIN */
 var n = 90;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+var n = 45;
+/* TOMATO64-END */
 function tick() {
 	var e = document.getElementById('continue');
 	e.value = n--;
@@ -33,7 +38,12 @@ function tick() {
 		e.value = 'Continue';
 		return;
 	}
+/* TOMATO64-REMOVE-BEGIN */
 	if (n == 59) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	if (n == 14) {
+/* TOMATO64-END */
 		e.style = 'cursor:pointer';
 		e.disabled = false;
 	}
