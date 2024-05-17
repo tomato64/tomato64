@@ -792,16 +792,16 @@ void asp_ndpi(int argc, char **argv)
 	char proto[50];
 	int first = 1;
 
-	system("/usr/sbin/iptables -m ndpi --help |/usr/bin/tail -n +$(( 1 + $(/usr/sbin/iptables -m ndpi --help |/bin/grep -n \"Enabled protocols\"|/usr/bin/tail -n1|/usr/bin/cut -d: -f1) )) |/usr/bin/xargs -n1 > /tmp/ndpi");
+	const char cmd[] = "/usr/sbin/iptables -m ndpi --help |/usr/bin/tail -n +$(( 1 + $(/usr/sbin/iptables -m ndpi --help |/bin/grep -n \"Enabled protocols\"|/usr/bin/tail -n1|/usr/bin/cut -d: -f1) )) |/usr/bin/xargs -n1";
 
 	web_puts("\nndpi = [");
-	if ((f = fopen("/tmp/ndpi", "r")) != NULL) {
+	if ((f = popen(cmd, "r")) != NULL) {
 		while (fgets(proto, sizeof(proto), f)) {
 			proto[strcspn(proto, "\n")] = '\0';
 			web_printf("%s'%s'", first ? "" : ",", proto);
 			first = 0;
 		}
-		fclose(f);
+		pclose(f);
 	}
 	web_puts("];\n");
 }
