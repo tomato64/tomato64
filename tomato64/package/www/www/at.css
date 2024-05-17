@@ -1139,24 +1139,43 @@ td#navi a.indent1.active[href^="splashd"]::after {
 }
 
 td#navi a.indent1[href*=":reboot"] {
+/* TOMATO64-REMOVE-BEGIN */
+	right: 185px;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
 	right: 405px;
+/* TOMATO64-END */
 }
 
+/* TOMATO64-BEGIN */
 td#navi a.indent1[href*=":fastreboot"] {
 	right: 270px;
 }
+/* TOMATO64-END */
 
 td#navi a.indent1[href*=":halt"] {
+/* TOMATO64-REMOVE-BEGIN */
+	right: 105px;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
 	right: 150px;
+/* TOMATO64-END */
 }
 
 td#navi a.indent1[href*=":logout"] {
+/* TOMATO64-REMOVE-BEGIN */
+	right: 15px;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
 	right: 60px;
+/* TOMATO64-END */
 }
 
 td#navi a.indent1[href^="about"],
 td#navi a.indent1[href*=":reboot"],
+/* TOMATO64-BEGIN */
 td#navi a.indent1[href*=":fastreboot"],
+/* TOMATO64-END */
 td#navi a.indent1[href*=":halt"],
 td#navi a.indent1[href*=":logout"] {
 	position: absolute;
@@ -1172,7 +1191,9 @@ td#navi a.indent1[href*=":logout"] {
 
 td#navi a.indent1[href^="about"]:hover,
 td#navi a.indent1[href*=":reboot"]:hover,
+/* TOMATO64-BEGIN */
 td#navi a.indent1[href*=":fastreboot"]:hover,
+/* TOMATO64-END */
 td#navi a.indent1[href*=":halt"]:hover,
 td#navi a.indent1[href*=":logout"]:hover {
 	color: #fff;
@@ -1180,7 +1201,12 @@ td#navi a.indent1[href*=":logout"]:hover {
 }
 
 td#navi a.indent1[href^="about"] {
+/* TOMATO64-REMOVE-BEGIN */
+	right: 285px;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
 	right: 505px;
+/* TOMATO64-END */
 	z-index: 3;
 	overflow: visible;
 }
@@ -1216,12 +1242,14 @@ td#navi a.indent1[href*=":reboot"]::before {
 	background-color: #fff;
 }
 
+/* TOMATO64-BEGIN */
 td#navi a.indent1[href*=":fastreboot"]::before {
 	content: "\1F504";
 	mask-image: var(--icon-reboot);
 	-webkit-mask-image: var(--icon-reboot);
 	background-color: #fff;
 }
+/* TOMATO64-END */
 
 td#navi a.indent1[href*=":logout"]::before {
 	content: "\1F80A";
@@ -1389,7 +1417,9 @@ td#navi a.indent1:hover::before {
 	td#navi a.indent1[href*=":halt"],
 	td#navi a.indent1[href^="about"],
 	td#navi a.indent1[href*=":reboot"],
+/* TOMATO64-BEGIN */
 	td#navi a.indent1[href*=":fastreboot"],
+/* TOMATO64-END */
 	td#navi a.indent1[href*=":logout"] {
 		color: #fff !important;
 		width: unset;

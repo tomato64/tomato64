@@ -472,6 +472,7 @@ endif
 # Exclude features not supported Tomato64
 ifeq ($(TCONFIG_TOMATO64),y)
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
+	sed -i $(INSTALLDIR)/www/at.css -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/bwm-common.js -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/bwlimit.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/bwm-24.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
@@ -511,6 +512,7 @@ ifeq ($(TCONFIG_TOMATO64),y)
 	sed -i 's,___HASH_SHORT___,${HASH_SHORT},g' $(INSTALLDIR)/www/about.asp
 else
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+	sed -i $(INSTALLDIR)/www/at.css -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/bwm-common.js -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/bwlimit.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/bwm-24.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
