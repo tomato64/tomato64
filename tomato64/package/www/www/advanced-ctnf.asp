@@ -216,9 +216,16 @@ function save() {
 <div class="section">
 	<script>
 		createFieldTable('', [
+/* TOMATO64-REMOVE-BEGIN */
 			{ title: 'Maximum Connections', name: 'ct_max', type: 'text', maxlen: 6, size: 8,
 				suffix: '&nbsp; <a href="javascript:clicked()" id="count0">[ count current... ]<\/a> <img src="spin.gif" alt="" id="spin">',
 				value: fixInt(nvram.ct_max || 4096, 128, 300000, 4096) }
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			{ title: 'Maximum Connections', name: 'ct_max', type: 'text', maxlen: 7, size: 8,
+				suffix: '&nbsp; <a href="javascript:clicked()" id="count0">[ count current... ]<\/a> <img src="spin.gif" alt="" id="spin">',
+				value: fixInt(nvram.ct_max || 4096, 128, 1000000, 4096) }
+/* TOMATO64-END */
 			,{ title: 'Hash Table Size', name: 'ct_hashsize', type: 'text', maxlen: 6, size: 8, value: nvram.ct_hashsize || 1023 }
 		]);
 	</script>
