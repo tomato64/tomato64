@@ -219,13 +219,13 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 		if (wlstats[uidx].client) {
 			/* use signal quality instead of SNR (the same like on Device List page */
 			b = wlstats[uidx].rssi * 1;
-			if (b > 0) {
+			if (b != -999 && b != 0) {
 				if (b >= -50)
 					a = 100;
 				else if (b >= -80) /* between -50 ~ -80dbm */
-					a = Math.round(24 + ((b + 80) * 26)/10);
+					a = Math.round(24 + ((b + 80) * 26) / 10);
 				else if (b >= -90) /* between -80 ~ -90dbm */
-					a = Math.round(24 + ((b + 90) * 26)/10);
+					a = Math.round(24 + ((b + 90) * 26) / 10);
 				else
 					a = 0;
 			}
