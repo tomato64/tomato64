@@ -211,7 +211,7 @@ sg.setup = function() {
 	this.init('survey-grid','sort');
 	this.headerSet(['Last Seen','RGB','SSID','BSSID','RSSI<br>dBm','Quality','Ctrl/Centr<br>Channel','Security','802.11']);
 	this.populate();
-	this.sort(5);
+	this.sort(4);
 }
 
 function drawNoise(board, style) {
@@ -499,7 +499,7 @@ sg.sortCompare = function(a, b) {
 	if (r == 0)
 		r = cmpText(da.bssid, db.bssid);
 
-	return this.sortAscending ? r : -r;
+	return this.sortAscending ? -r : r;
 }
 
 Date.prototype.toWHMS = function() {
