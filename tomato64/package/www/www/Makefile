@@ -432,7 +432,9 @@ endif
 # Only include the QR Code page if it is compiled in
 ifneq ($(TCONFIG_QRCODE),y)
 	rm -f $(INSTALLDIR)/www/tools-qr.asp
+ifneq ($(TCONFIG_WIREGUARD),y)
 	rm -f $(INSTALLDIR)/www/html5-qrcode.js
+endif
 	rm -f $(INSTALLDIR)/www/qrcode.js
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/QRCODE-BEGIN/,/QRCODE-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/QRCODE-BEGIN/,/QRCODE-END/d"
@@ -555,9 +557,11 @@ endif
 ifneq ($(TCONFIG_WIREGUARD),y)
 	rm -f $(INSTALLDIR)/www/vpn-wireguard.asp
 	rm -f $(INSTALLDIR)/www/cfg-icon.svg
-	rm -f $(INSTALLDIR)/www/html5-qrcode.js
-#	rm -f $(INSTALLDIR)/www/interfaces-v6.js
 	rm -f $(INSTALLDIR)/www/qr-icon.svg
+ifneq ($(TCONFIG_QRCODE),y)
+	rm -f $(INSTALLDIR)/www/html5-qrcode.js
+endif
+#	rm -f $(INSTALLDIR)/www/interfaces-v6.js
 	rm -f $(INSTALLDIR)/www/wireguard.js
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/WIREGUARD-BEGIN/,/WIREGUARD-END/d"
 endif
