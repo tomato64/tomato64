@@ -663,8 +663,8 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 			var yPos = (canvas.height / (vdiv * 10)) * (-y - 10);
 
 			ctx.textBaseline = 'middle';
-			ctx.fillText(y.toString(), 10, yPos);
-			ctx.fillText(y.toString(), hsize - 10, yPos);
+			ctx.fillText(y.toString(), 7, yPos);
+			ctx.fillText(y.toString(), hsize - 7, yPos);
 		}
 	}
 }
@@ -870,7 +870,7 @@ function init() {
 		Timeout:
 		<img src="spin.gif" alt="" id="refresh-spinner">
 		<script>
-			genStdTimeList('expire-time', 'Never = ♾️', 6);
+			genStdTimeList('expire-time', 'Never = ♾️', 10);
 			genStdTimeList('refresh-time', 'One off', 10);
 		</script>
 		<input type="button" value="Refresh" onclick="ref.toggle()" id="refresh-button">
