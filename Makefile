@@ -6,12 +6,23 @@ PATCHES := $(wildcard src/patches/*.patch)
 default: .configure
 	make -C src/buildroot
 
+legacy: .configure-legacy
+	make -C src/buildroot
+
+legacy-menuconfig: .configure-legacy
+	make -C src/buildroot menuconfig
+
 distclean:
 	git clean -fdxq && git reset --hard
 
 .configure: .patch
 	make -C src/buildroot BR2_EXTERNAL=../../tomato64 tomato64_defconfig
 	@touch $@
+
+.configure-legacy: .patch
+	make -C src/buildroot BR2_EXTERNAL=../../tomato64 tomato64_legacy_defconfig
+	@touch $@
+	@touch .configure
 
 .patch: .extract
 	for patch in $(sort $(PATCHES)); do \
@@ -32,5 +43,9 @@ endif
 	@touch $@
 
 .DEFAULT:
+ifneq (,$(wildcard ./.configure-legacy))
+	make .configure-legacy
+else
 	make .configure
+endif
 	make -C src/buildroot $@
