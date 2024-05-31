@@ -324,7 +324,7 @@ if [[ ${diskdevs:5:2} == "sd" ]]; then
 	part="${diskdevs:0:8}$(echo $partition)"
 fi
 
-if [[ ${diskdevs:5:4} == "nvme" ]]; then
+if [[ ${diskdevs:5:4} == "nvme" ]] || [[ ${diskdevs:5:3} == "mmc" ]]; then
 	partition=$(fdisk -l | grep -i "$(echo $diskdevs)p[1-9]" | wc -l)
 	part="${diskdevs:0:12}p$(echo $partition)"
 fi
