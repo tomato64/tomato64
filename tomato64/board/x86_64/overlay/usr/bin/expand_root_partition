@@ -9,7 +9,7 @@ if [[ ${root:5:2} == "sd" ]]; then
         root2=${root:8:1}
 fi
 
-if [[ ${root:5:4} == "nvme" ]]; then
+if [[ ${root:5:4} == "nvme" ]] || [[ ${root:5:3} == "mmc" ]]; then
         root1=${root:0:12}
         root2=${root:13:1}
 fi
