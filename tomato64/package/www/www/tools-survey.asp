@@ -138,14 +138,31 @@ function doit() {
 	fillstyle = E('fill-style').value;
 	ssidshow = E('ssid-show').value;
 	ssidlimit = E('ssid-limit').value;
+	var filter = E('freq-filter').value;
 	if (ssidlimit > 40)
 		ssidlimit = 40;
 
 	sg.removeAllData();
-	sg.populate(fillstyle, ssidshow);
+	sg.populate(fillstyle, ssidshow, filter);
 	sg.resort();
 	drawNoise('ellipses2', fillstyle);
 	drawNoise('ellipses5', fillstyle);
+				
+	var ellipses2Div = E('tomato-chart2');
+	var ellipses5Div = E('tomato-chart5');
+	if (filter == 2.4 && wl0.radio.value == 1) {
+		ellipses2Div.style.display = 'block';
+		ellipses5Div.style.display = 'none';
+	} else if (filter == 5 && wl1.radio.value == 1) {
+		ellipses2Div.style.display = 'none';
+		ellipses5Div.style.display = 'block';
+	} else if  ( filter == 0 && wl0.radio.value == 1 && wl1.radio.value == 1) {
+		ellipses2Div.style.display = 'block';
+		ellipses5Div.style.display = 'block';
+	} else  {
+		ellipses2Div.style.display = 'none';
+		ellipses5Div.style.display = 'none';
+	}
 }
 
 var colors = [
@@ -324,7 +341,7 @@ function drawEllipse(c = -100, m = 20, q, col, ssid, noise, style, sshow) {
 	ctx.closePath();
 }
 
-sg.populate = function(style, sshow) {
+sg.populate = function(style, sshow, filter) {
 	var added = 0;
 	var removed = 0;
 	var i, j, k, t, e, s;
@@ -371,12 +388,12 @@ sg.populate = function(style, sshow) {
 		e.channel = e.channel+'<br><small>'+s[9]+' GHz<\/small><br><small>'+s[4]+' MHz<\/small>';
 		e.rssi = s[2];
 		if (s[9] == 2.4)
-			e.snr = Number(e.rssi) + Math.abs(wl0.noise)
+			e.snr = Number(e.rssi) + Math.abs(wl0.noise);
 		else
-			e.snr = Number(e.rssi) + Math.abs(wl1.noise)
+			e.snr = Number(e.rssi) + Math.abs(wl1.noise);
 		e.mhz = s[4];
 		e.cap = s[7]+ '<br>'+s[8];
-		e.rates =s[6].replace('11', '');;
+		e.rates =s[6].replace('11', '');
 		if (e.rssi != -999) {
 			if (e.rssi >= -50)
 				e.qual = 100;
@@ -410,6 +427,11 @@ sg.populate = function(style, sshow) {
 	for (i = 0; i < entries.length; ++i) {
 		var seen, m, mac;
 		e = entries[i];
+		const startIndex = e.channel.indexOf("<small>") + 7; // Find the index of "<small>" and add 7 to skip it
+		const endIndex = e.channel.indexOf(" GHz"); // Find the index of " GHz"
+		var frequency = e.channel.substring(startIndex, endIndex);
+		if (filter != frequency && filter != 0)
+				continue
 		seen = e.lastSeen.toWHMS();
 		if (useAjax()) {
 			m = Math.floor(((new Date()).getTime() - e.firstSeen.getTime()) / 60000);
@@ -809,6 +831,13 @@ function init() {
 	<br>
 	<div id="wl-controls">
 		<table border="0"><tr><td>
+			<label for="freqfilter">Display: </label>
+				<select id="freq-filter" onchange="doit();">
+					<option value="2.4">2.4 GHz</option>
+					<option value="5">5 GHz</option>
+					<option value="0" selected>2.4 & 5 GHz</option>
+				</select>&nbsp;&nbsp;&nbsp;&nbsp;
+		</td><td>
 			<label for="fill-style">Style: </label>
 				<select id="fill-style" onchange="doit();">
 					<option value="100">100%</option>
