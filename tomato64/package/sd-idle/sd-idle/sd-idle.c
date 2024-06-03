@@ -29,6 +29,7 @@
 #define _GNU_SOURCE
 
 #include <errno.h>
+#include <libgen.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <stdint.h>

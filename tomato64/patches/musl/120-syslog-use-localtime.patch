@@ -1,12 +1,12 @@
-diff -Naur musl-1.2.4.orig/src/misc/syslog.c musl-1.2.4/src/misc/syslog.c
---- musl-1.2.4.orig/src/misc/syslog.c	2024-01-09 08:26:17.696596134 -0700
-+++ musl-1.2.4/src/misc/syslog.c	2024-01-09 08:26:52.248614370 -0700
-@@ -98,7 +98,7 @@
+diff -Naur musl-1.2.5.orig/src/misc/syslog.c musl-1.2.5/src/misc/syslog.c
+--- musl-1.2.5.orig/src/misc/syslog.c	2024-06-03 15:27:04.415863481 -0600
++++ musl-1.2.5/src/misc/syslog.c	2024-06-03 15:27:25.003869629 -0600
+@@ -99,7 +99,7 @@
  	if (!(priority & LOG_FACMASK)) priority |= log_facility;
  
  	now = time(NULL);
 -	gmtime_r(&now, &tm);
 +	localtime_r(&now, &tm);
- 	strftime(timebuf, sizeof timebuf, "%b %e %T", &tm);
+ 	strftime_l(timebuf, sizeof timebuf, "%b %e %T", &tm, C_LOCALE);
  
  	pid = (log_opt & LOG_PID) ? getpid() : 0;

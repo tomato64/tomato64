@@ -359,8 +359,8 @@ diff -Naur buildroot-2024.02.orig/package/libopenssl/libopenssl.hash buildroot-2
 --- buildroot-2024.02.orig/package/libopenssl/libopenssl.hash	2024-03-09 21:58:56.120803414 -0700
 +++ buildroot-2024.02/package/libopenssl/libopenssl.hash	2024-03-09 22:03:40.332910055 -0700
 @@ -1,5 +1,5 @@
--# From https://www.openssl.org/source/openssl-3.2.1.tar.gz.sha256
--sha256  83c7329fe52c850677d75e5d0b0ca245309b97e8ecbcfdc1dfdc4ab9fac35b39  openssl-3.2.1.tar.gz
+-# From https://www.openssl.org/source/openssl-3.3.0.tar.gz.sha256
+-sha256  53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02  openssl-3.3.0.tar.gz
 +# From https://www.openssl.org/source/openssl-3.1.4.tar.gz.sha256
 +sha256  6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262  openssl-3.1.5.tar.gz
  
@@ -373,7 +373,7 @@ diff -Naur buildroot-2024.02.orig/package/libopenssl/libopenssl.mk buildroot-202
  #
  ################################################################################
  
--LIBOPENSSL_VERSION = 3.2.1
+-LIBOPENSSL_VERSION = 3.3.0
 +LIBOPENSSL_VERSION = 3.1.5
  LIBOPENSSL_SITE = https://www.openssl.org/source
  LIBOPENSSL_SOURCE = openssl-$(LIBOPENSSL_VERSION).tar.gz

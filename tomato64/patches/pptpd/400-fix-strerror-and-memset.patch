@@ -1,0 +1,33 @@
+commit 0194b8004dea6d296018ddf6c30d822c9b7087ac
+Author: James Cameron <quozl@laptop.org>
+Date:   Sat May 18 11:37:57 2024 +1000
+
+    strerror and memset require string.h
+
+diff --git a/compat.c b/compat.c
+index 8a91a66..b3b55e9 100644
+--- a/compat.c
++++ b/compat.c
+@@ -11,8 +11,9 @@
+ #include "compat.h"
+ #include "our_syslog.h"
+ 
+-#ifndef HAVE_STRLCPY
+ #include <string.h>
++
++#ifndef HAVE_STRLCPY
+ #include <stdio.h>
+ 
+ void strlcpy(char *dst, const char *src, size_t size)
+diff --git a/our_syslog.h b/our_syslog.h
+index ac6a265..019da9f 100644
+--- a/our_syslog.h
++++ b/our_syslog.h
+@@ -34,6 +34,7 @@
+ 
+ #include <errno.h>
+ #include <syslog.h>
++#include <string.h>
+ 
+ #define syslog_perror(s)        syslog(LOG_ERR, "%s: %s", s, strerror(errno))
+ 

@@ -1,0 +1,11 @@
+diff -Naur syslinux-6.03.orig/com32/lib/syslinux/debug.c syslinux-6.03/com32/lib/syslinux/debug.c
+--- syslinux-6.03.orig/com32/lib/syslinux/debug.c	2024-06-05 10:33:11.531523435 -0600
++++ syslinux-6.03/com32/lib/syslinux/debug.c	2024-06-05 10:33:28.187493953 -0600
+@@ -1,6 +1,7 @@
+ #include <linux/list.h>
+ #include <string.h>
+ #include <stdbool.h>
++#include <stdio.h>
+ 
+ #ifdef DYNAMIC_DEBUG
+ 

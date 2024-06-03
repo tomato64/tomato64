@@ -1,0 +1,11 @@
+diff -Naur kexec-tools-2.0.28.orig/kexec/arch/i386/x86-linux-setup.c kexec-tools-2.0.28/kexec/arch/i386/x86-linux-setup.c
+--- kexec-tools-2.0.28.orig/kexec/arch/i386/x86-linux-setup.c	2024-06-05 09:13:47.295796713 -0600
++++ kexec-tools-2.0.28/kexec/arch/i386/x86-linux-setup.c	2024-06-05 09:14:06.443842225 -0600
+@@ -21,6 +21,7 @@
+ #include <stdlib.h>
+ #include <stddef.h>
+ #include <errno.h>
++#include <libgen.h>
+ #include <limits.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>

@@ -1,0 +1,12 @@
+diff -Naur open-vm-tools-11.3.5-18557794.orig/lib/err/errPosix.c open-vm-tools-11.3.5-18557794/lib/err/errPosix.c
+--- open-vm-tools-11.3.5-18557794.orig/lib/err/errPosix.c	2024-06-05 10:10:10.825579732 -0600
++++ open-vm-tools-11.3.5-18557794/lib/err/errPosix.c	2024-06-05 10:10:32.629626620 -0600
+@@ -64,7 +64,7 @@
+    char *p;
+ 
+ #if defined(__linux__) && !defined(__ANDROID__)
+-   p = strerror_r(errorNumber, buf, bufSize);
++   p = strerror(errorNumber);
+ #else
+    p = strerror(errorNumber);
+ #endif

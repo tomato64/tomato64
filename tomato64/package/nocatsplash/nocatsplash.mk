@@ -10,8 +10,9 @@ NOCATSPLASH_LICENSE = GPLv2+
 NOCATSPLASH_DEPENDENCIES = libglib2
 
 NOCATSPLASH_CONF_ENV += NC_CONF_PATH="/"
-NOCATSPLASH_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -I$(STAGING_DIR)/usr/include/glib-2.0 -I$(STAGING_DIR)/usr/lib/glib-2.0/include -lglib-2.0"
-NOCATSPLASH_CONF_ENV += CPPFLAGS="$(TARGET_CPPFLAGS) -I$(STAGING_DIR)/usr/include/glib-2.0 -I$(STAGING_DIR)/usr/lib/glib-2.0/include -lglib-2.0"
+NOCATSPLASH_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -I$(STAGING_DIR)/usr/include/glib-2.0 -I$(STAGING_DIR)/usr/lib/glib-2.0/include -lglib-2.0 -Wno-implicit-function-declaration -Wno-incompatible-pointer-types"
+NOCATSPLASH_CONF_ENV += CPPFLAGS="$(TARGET_CPPFLAGS) -I$(STAGING_DIR)/usr/include/glib-2.0 -I$(STAGING_DIR)/usr/lib/glib-2.0/include -lglib-2.0 -Wno-implicit-function-declaration -Wno-incompatible-pointer-types"
+# gcc-14 fix needed
 
 NOCATSPLASH_CONF_OPTS = \
 	--with-firewall=iptables \

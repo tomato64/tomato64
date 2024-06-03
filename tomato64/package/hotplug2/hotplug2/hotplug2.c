@@ -23,6 +23,7 @@
 #include <linux/types.h>
 #include <linux/netlink.h>
 #include <poll.h>
+#include <libgen.h>
 
 #include "mem_utils.h"
 #include "filemap_utils.h"
