@@ -101,7 +101,7 @@ function verifyFields(focused, quiet) {
 
 	E('qos_cake_prio_mode').addEventListener('change', checkQoSMode);
 	checkQoSMode();
-	
+
 	if (E('_f_qos_classify').disabled == true ) {
 		E('_f_qos_classify').disabled = false;
 		E('_f_qos_classify').selected = true;
@@ -274,17 +274,15 @@ function init() {
 
 <div class="section-title">Basic Settings</div>
 <div class="section">
-<!-- CTF-BEGIN
-	<div class="note-disabled" id="notedisabled" style="display:none"><p style="color: red;"><b>CTF (or FastNAT) is currently enabled, this prevents QoS from functioning.</b></div>
-CTF-END -->
 <!-- CTF-BEGIN -->
 	<div class="note-disabled" id="ctfnotice" style="display:none"><div class="about"><p style="color: red;"><b><a href="advanced-misc.asp">CTF</a> is currently enabled, this prevents QoS from functioning.</b></div></div>
 <!-- CTF-END -->
 <!-- BCMNAT-BEGIN -->
-	<div class="note-disabled" id="bcmnatnotice" style="display:none"><div class="about"><p style="color: red;"><b><a href="advanced-misc.asp">Broadcom FastNAT</a> is enabled this prevents QoS from functioning.</b></div></div>
+	<div class="note-disabled" id="bcmnatnotice" style="display:none"><div class="about"><p style="color: red;"><b><a href="advanced-misc.asp">FastNAT</a> is currently enabled this prevents QoS from functioning.</b></div></div>
 <!-- BCMNAT-END -->
 	<div class="note-disabled" id="qosnotice" style="display:none"><div class="about"><b>Upload Limit rules for host IP addresses will not be applied, and Outbound QoS rules will govern upload rates.</b></div></div>
-	<script>		classList = [];
+	<script>
+		classList = [];
 		for (i = 0; i < 10; ++i)
 			classList.push([i, classNames[i]]);
 

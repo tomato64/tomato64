@@ -147,7 +147,7 @@ function doit() {
 	sg.resort();
 	drawNoise('ellipses2', fillstyle);
 	drawNoise('ellipses5', fillstyle);
-				
+
 	var ellipses2Div = E('tomato-chart2');
 	var ellipses5Div = E('tomato-chart5');
 	if (filter == 2.4 && wl0.radio.value == 1) {
@@ -431,7 +431,7 @@ sg.populate = function(style, sshow, filter) {
 		const endIndex = e.channel.indexOf(" GHz"); // Find the index of " GHz"
 		var frequency = e.channel.substring(startIndex, endIndex);
 		if (filter != frequency && filter != 0)
-				continue
+			continue
 		seen = e.lastSeen.toWHMS();
 		if (useAjax()) {
 			m = Math.floor(((new Date()).getTime() - e.firstSeen.getTime()) / 60000);
