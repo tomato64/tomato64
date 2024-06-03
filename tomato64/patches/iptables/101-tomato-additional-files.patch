@@ -1,6 +1,5 @@
-diff -Naur iptables-1.8.9.orig/extensions/libip6t_ROUTE.c.disabled iptables-1.8.9/extensions/libip6t_ROUTE.c.disabled
---- iptables-1.8.9.orig/extensions/libip6t_ROUTE.c.disabled	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libip6t_ROUTE.c.disabled	2023-12-28 12:39:09.926029163 -0700
+--- iptables-1.8.x/extensions/libip6t_ROUTE.c.disabled
++++ iptables-1.8.x/extensions/libip6t_ROUTE.c.disabled
 @@ -0,0 +1,239 @@
 +/* Shared library add-on to iptables to add ROUTE v6 target support.
 + * Author : Cedric de Launois, <delaunois@info.ucl.ac.be>
@@ -241,9 +240,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libip6t_ROUTE.c.disabled iptables-1.8.
 +{
 +	xtables_register_target(&route);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libip6t_ROUTE.man iptables-1.8.9/extensions/libip6t_ROUTE.man
---- iptables-1.8.9.orig/extensions/libip6t_ROUTE.man	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libip6t_ROUTE.man	2023-12-28 12:39:09.926029163 -0700
+--- iptables-1.8.x/extensions/libip6t_ROUTE.man
++++ iptables-1.8.x/extensions/libip6t_ROUTE.man
 @@ -0,0 +1,15 @@
 +This is used to explicitly override the core network stack's routing decision.
 +.B mangle
@@ -260,9 +258,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libip6t_ROUTE.man iptables-1.8.9/exten
 +.TP
 +.BI "--tee "
 +Make a copy of the packet, and route that copy to the given destination. For the original, uncopied packet, behave like a non-terminating target and continue traversing the rules.  Not valid in combination with `--continue'
-diff -Naur iptables-1.8.9.orig/extensions/libip6t_web.c iptables-1.8.9/extensions/libip6t_web.c
---- iptables-1.8.9.orig/extensions/libip6t_web.c	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libip6t_web.c	2023-12-28 12:39:09.926029163 -0700
+--- iptables-1.8.x/extensions/libip6t_web.c
++++ iptables-1.8.x/extensions/libip6t_web.c
 @@ -0,0 +1,215 @@
 +/*
 +
@@ -479,9 +476,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libip6t_web.c iptables-1.8.9/extension
 +{
 +	xtables_register_match(&web6_match);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libip6t_webmon.c iptables-1.8.9/extensions/libip6t_webmon.c
---- iptables-1.8.9.orig/extensions/libip6t_webmon.c	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libip6t_webmon.c	2023-12-28 12:39:09.926029163 -0700
+--- iptables-1.8.x/extensions/libip6t_webmon.c
++++ iptables-1.8.x/extensions/libip6t_webmon.c
 @@ -0,0 +1,668 @@
 +/*  webmon --	An iptables extension to match URLs in HTTP requests 
 + *  		This module can match using string match or regular expressions
@@ -547,14 +543,14 @@ diff -Naur iptables-1.8.9.orig/extensions/libip6t_webmon.c iptables-1.8.9/extens
 +
 +
 +/* utility functions necessary for module to work across multiple iptables versions */
-+static void param_problem_exit_error(char* msg);
++//static void param_problem_exit_error(char* msg);
 +
 +
-+void parse_ips_and_ranges(char* addr_str, struct ipt_webmon_info *info);
++static void parse_ips_and_ranges(char* addr_str, struct ipt_webmon_info *info);
 +
-+char** split_on_separators(char* line, char* separators, int num_separators, int max_pieces, int include_remainder_at_max);
-+char* trim_flanking_whitespace(char* str);
-+unsigned char* read_entire_file(FILE* in, unsigned long read_block_size, unsigned long *length);
++static char** split_on_separators(char* line, char* separators, int num_separators, int max_pieces, int include_remainder_at_max);
++static char* trim_flanking_whitespace(char* str);
++static unsigned char* read_entire_file(FILE* in, unsigned long read_block_size, unsigned long *length);
 +
 +#define DEFAULT_MAX      300
 +
@@ -794,13 +790,13 @@ diff -Naur iptables-1.8.9.orig/extensions/libip6t_webmon.c iptables-1.8.9/extens
 +#endif
 +
 +
-+static void param_problem_exit_error(char* msg)
++/*static void param_problem_exit_error(char* msg)
 +{
 +	xtables_error(PARAMETER_PROBLEM, msg);
-+}
++}*/
 +
 +
-+void parse_ips_and_ranges(char* addr_str, struct ipt_webmon_info *info)
++static void parse_ips_and_ranges(char* addr_str, struct ipt_webmon_info *info)
 +{
 +	char** addr_parts = split_on_separators(addr_str, ",", 1, -1, 0);
 +
@@ -946,7 +942,7 @@ diff -Naur iptables-1.8.9.orig/extensions/libip6t_webmon.c iptables-1.8.9/extens
 + * result is dynamically allocated, MUST be freed after call-- even if 
 + * line is empty (you still get a valid char** pointer to to a NULL char*)
 + */
-+char** split_on_separators(char* line_str, char* separators, int num_separators, int max_pieces, int include_remainder_at_max)
++static char** split_on_separators(char* line_str, char* separators, int num_separators, int max_pieces, int include_remainder_at_max)
 +{
 +	char** split;
 +
@@ -1065,7 +1061,7 @@ diff -Naur iptables-1.8.9.orig/extensions/libip6t_webmon.c iptables-1.8.9/extens
 +
 +
 +
-+char* trim_flanking_whitespace(char* str)
++static char* trim_flanking_whitespace(char* str)
 +{
 +	int new_start = 0;
 +	int new_length = 0;
@@ -1117,7 +1113,7 @@ diff -Naur iptables-1.8.9.orig/extensions/libip6t_webmon.c iptables-1.8.9/extens
 +}
 +
 +
-+unsigned char* read_entire_file(FILE* in, unsigned long read_block_size, unsigned long *length)
++static unsigned char* read_entire_file(FILE* in, unsigned long read_block_size, unsigned long *length)
 +{
 +	int max_read_size = read_block_size;
 +	unsigned char* read_string = (unsigned char*)malloc(max_read_size+1);
@@ -1151,9 +1147,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libip6t_webmon.c iptables-1.8.9/extens
 +	return read_string;
 +}
 +
-diff -Naur iptables-1.8.9.orig/extensions/libipt_account.c iptables-1.8.9/extensions/libipt_account.c
---- iptables-1.8.9.orig/extensions/libipt_account.c	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_account.c	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_account.c
++++ iptables-1.8.x/extensions/libipt_account.c
 @@ -0,0 +1,366 @@
 +/* Copyright (c) 2004-2009 Piotr 'QuakeR' Gasidlo <quaker@barbara.eu.org>
 + *
@@ -1521,9 +1516,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_account.c iptables-1.8.9/extens
 +#endif
 +}
 +  
-diff -Naur iptables-1.8.9.orig/extensions/libipt_condition.c.disabled iptables-1.8.9/extensions/libipt_condition.c.disabled
---- iptables-1.8.9.orig/extensions/libipt_condition.c.disabled	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_condition.c.disabled	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_condition.c.disabled
++++ iptables-1.8.x/extensions/libipt_condition.c.disabled
 @@ -0,0 +1,102 @@
 +/* Shared library add-on to iptables for condition match */
 +#include <stdio.h>
@@ -1627,17 +1621,15 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_condition.c.disabled iptables-1
 +{
 +	xtables_register_match(&condition);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libipt_condition.man iptables-1.8.9/extensions/libipt_condition.man
---- iptables-1.8.9.orig/extensions/libipt_condition.man	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_condition.man	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_condition.man
++++ iptables-1.8.x/extensions/libipt_condition.man
 @@ -0,0 +1,4 @@
 +This matches if a specific /proc filename is '0' or '1'.
 +.TP
 +.BI "--condition " "[!] \fIfilename\fP"
 +Match on boolean value stored in /proc/net/ipt_condition/filename file
-diff -Naur iptables-1.8.9.orig/extensions/libipt_geoip.disabled iptables-1.8.9/extensions/libipt_geoip.disabled
---- iptables-1.8.9.orig/extensions/libipt_geoip.disabled	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_geoip.disabled	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_geoip.c.disabled
++++ iptables-1.8.x/extensions/libipt_geoip.c.disabled
 @@ -0,0 +1,337 @@
 +/* Shared library add-on to iptables to add geoip match support.
 +
@@ -1976,9 +1968,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_geoip.disabled iptables-1.8.9/e
 +{
 +   xtables_register_match(&geoip);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libipt_geoip.man iptables-1.8.9/extensions/libipt_geoip.man
---- iptables-1.8.9.orig/extensions/libipt_geoip.man	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_geoip.man	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_geoip.man
++++ iptables-1.8.x/extensions/libipt_geoip.man
 @@ -0,0 +1,15 @@
 +Match a packet by its source or destination country.
 +.TP
@@ -1995,9 +1986,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_geoip.man iptables-1.8.9/extens
 +Both files are generated from a countries & subnets database with the csv2bin tool,
 +available at www.cookinglinux.org/geoip/. Both files MUST also be moved in /var/geoip/
 +as the shared library is statically looking for that pathname (ex.: /var/geoip/geoipdb.bin).
-diff -Naur iptables-1.8.9.orig/extensions/libipt_ipp2p.c.disabled iptables-1.8.9/extensions/libipt_ipp2p.c.disabled
---- iptables-1.8.9.orig/extensions/libipt_ipp2p.c.disabled	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_ipp2p.c.disabled	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_ipp2p.c.disabled
++++ iptables-1.8.x/extensions/libipt_ipp2p.c.disabled
 @@ -0,0 +1,409 @@
 +#include <stdio.h>
 +#include <netdb.h>
@@ -2408,9 +2398,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_ipp2p.c.disabled iptables-1.8.9
 +{
 +    xtables_register_match(&ipp2p);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libipt_ipp2p.man iptables-1.8.9/extensions/libipt_ipp2p.man
---- iptables-1.8.9.orig/extensions/libipt_ipp2p.man	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_ipp2p.man	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_ipp2p.man
++++ iptables-1.8.x/extensions/libipt_ipp2p.man
 @@ -0,0 +1,43 @@
 +This module matches certain packets in P2P flows. It is not
 +designed to match all packets belonging to a P2P connection - 
@@ -2455,9 +2444,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_ipp2p.man iptables-1.8.9/extens
 +.B "--debug "
 +Prints some information about each hit into kernel logfile. May 
 +produce huge logfiles so beware!
-diff -Naur iptables-1.8.9.orig/extensions/libipt_layer7.c.disabled iptables-1.8.9/extensions/libipt_layer7.c.disabled
---- iptables-1.8.9.orig/extensions/libipt_layer7.c.disabled	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_layer7.c.disabled	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_layer7.c.disabled
++++ iptables-1.8.x/extensions/libipt_layer7.c.disabled
 @@ -0,0 +1,392 @@
 +/* 
 +   Shared library add-on to iptables to add layer 7 matching support. 
@@ -2851,9 +2839,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_layer7.c.disabled iptables-1.8.
 +{
 +	xtables_register_match(&layer7_match);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libipt_layer7.man iptables-1.8.9/extensions/libipt_layer7.man
---- iptables-1.8.9.orig/extensions/libipt_layer7.man	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_layer7.man	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_layer7.man
++++ iptables-1.8.x/extensions/libipt_layer7.man
 @@ -0,0 +1,14 @@
 +This module matches packets based on the application layer data of 
 +their connections.  It uses regular expression matching to compare 
@@ -2869,9 +2856,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_layer7.man iptables-1.8.9/exten
 +Use \fIdirectory\fP instead of /etc/l7-protocols/.  This option must be 
 +specified before --l7proto.
 +
-diff -Naur iptables-1.8.9.orig/extensions/libipt_ROUTE.c.disabled iptables-1.8.9/extensions/libipt_ROUTE.c.disabled
---- iptables-1.8.9.orig/extensions/libipt_ROUTE.c.disabled	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_ROUTE.c.disabled	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_ROUTE.c.disabled
++++ iptables-1.8.x/extensions/libipt_ROUTE.c.disabled
 @@ -0,0 +1,246 @@
 +/* Shared library add-on to iptables to add ROUTE target support.
 + * Author : Cedric de Launois, <delaunois@info.ucl.ac.be>
@@ -3119,9 +3105,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_ROUTE.c.disabled iptables-1.8.9
 +{
 +	xtables_register_target(&route_target);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libipt_ROUTE.man iptables-1.8.9/extensions/libipt_ROUTE.man
---- iptables-1.8.9.orig/extensions/libipt_ROUTE.man	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_ROUTE.man	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_ROUTE.man
++++ iptables-1.8.x/extensions/libipt_ROUTE.man
 @@ -0,0 +1,18 @@
 +This is used to explicitly override the core network stack's routing decision.
 +.B mangle
@@ -3141,9 +3126,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_ROUTE.man iptables-1.8.9/extens
 +.TP
 +.BI "--tee "
 +Make a copy of the packet, and route that copy to the given destination. For the original, uncopied packet, behave like a non-terminating target and continue traversing the rules.  Not valid in combination with `--iif' or `--continue'
-diff -Naur iptables-1.8.9.orig/extensions/libipt_tos.c.disabled iptables-1.8.9/extensions/libipt_tos.c.disabled
---- iptables-1.8.9.orig/extensions/libipt_tos.c.disabled	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_tos.c.disabled	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_tos.c.disabled
++++ iptables-1.8.x/extensions/libipt_tos.c.disabled
 @@ -0,0 +1,169 @@
 +/* Shared library add-on to iptables to add TOS matching support. */
 +#include <stdio.h>
@@ -3314,9 +3298,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_tos.c.disabled iptables-1.8.9/e
 +{
 +	xtables_register_match(&tos);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libipt_TOS.c.disabled iptables-1.8.9/extensions/libipt_TOS.c.disabled
---- iptables-1.8.9.orig/extensions/libipt_TOS.c.disabled	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_TOS.c.disabled	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_TOS.c.disabled
++++ iptables-1.8.x/extensions/libipt_TOS.c.disabled
 @@ -0,0 +1,174 @@
 +/* Shared library add-on to iptables to add TOS target support. */
 +#include <stdio.h>
@@ -3492,9 +3475,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_TOS.c.disabled iptables-1.8.9/e
 +{
 +	xtables_register_target(&tos);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libipt_tos.man iptables-1.8.9/extensions/libipt_tos.man
---- iptables-1.8.9.orig/extensions/libipt_tos.man	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_tos.man	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_tos.man
++++ iptables-1.8.x/extensions/libipt_tos.man
 @@ -0,0 +1,9 @@
 +This module matches the 8 bits of Type of Service field in the IP
 +header (ie. including the precedence bits).
@@ -3505,9 +3487,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_tos.man iptables-1.8.9/extensio
 + iptables -m tos -h
 +.br
 +to see the list), or a numeric value to match.
-diff -Naur iptables-1.8.9.orig/extensions/libipt_TOS.man iptables-1.8.9/extensions/libipt_TOS.man
---- iptables-1.8.9.orig/extensions/libipt_TOS.man	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_TOS.man	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_TOS.man
++++ iptables-1.8.x/extensions/libipt_TOS.man
 @@ -0,0 +1,11 @@
 +This is used to set the 8-bit Type of Service field in the IP header.
 +It is only valid in the
@@ -3520,9 +3501,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_TOS.man iptables-1.8.9/extensio
 + iptables -j TOS -h
 +.fi
 +to see the list of valid TOS names.
-diff -Naur iptables-1.8.9.orig/extensions/libipt_TRIGGER.c iptables-1.8.9/extensions/libipt_TRIGGER.c
---- iptables-1.8.9.orig/extensions/libipt_TRIGGER.c	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_TRIGGER.c	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_TRIGGER.c
++++ iptables-1.8.x/extensions/libipt_TRIGGER.c
 @@ -0,0 +1,209 @@
 +/* Port-triggering target. 
 + *
@@ -3733,9 +3713,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_TRIGGER.c iptables-1.8.9/extens
 +{
 +	xtables_register_target(&trigger);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libipt_web.c iptables-1.8.9/extensions/libipt_web.c
---- iptables-1.8.9.orig/extensions/libipt_web.c	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_web.c	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_web.c
++++ iptables-1.8.x/extensions/libipt_web.c
 @@ -0,0 +1,214 @@
 +/*
 +
@@ -3951,9 +3930,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_web.c iptables-1.8.9/extensions
 +{
 +	xtables_register_match(&web_match);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libipt_webmon.c iptables-1.8.9/extensions/libipt_webmon.c
---- iptables-1.8.9.orig/extensions/libipt_webmon.c	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_webmon.c	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_webmon.c
++++ iptables-1.8.x/extensions/libipt_webmon.c
 @@ -0,0 +1,723 @@
 +/*  webmon --	An iptables extension to match URLs in HTTP requests 
 + *  		This module can match using string match or regular expressions
@@ -4022,14 +4000,14 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_webmon.c iptables-1.8.9/extensi
 +
 +
 +/* utility functions necessary for module to work across multiple iptables versions */
-+static void param_problem_exit_error(char* msg);
++//static void param_problem_exit_error(char* msg);
 +
 +
-+void parse_ips_and_ranges(char* addr_str, struct ipt_webmon_info *info);
++static void parse_ips_and_ranges(char* addr_str, struct ipt_webmon_info *info);
 +
-+char** split_on_separators(char* line, char* separators, int num_separators, int max_pieces, int include_remainder_at_max);
-+char* trim_flanking_whitespace(char* str);
-+unsigned char* read_entire_file(FILE* in, unsigned long read_block_size, unsigned long *length);
++static char** split_on_separators(char* line, char* separators, int num_separators, int max_pieces, int include_remainder_at_max);
++static char* trim_flanking_whitespace(char* str);
++static unsigned char* read_entire_file(FILE* in, unsigned long read_block_size, unsigned long *length);
 +
 +#define DEFAULT_MAX      300
 +
@@ -4317,17 +4295,17 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_webmon.c iptables-1.8.9/extensi
 +
 +
 +
-+static void param_problem_exit_error(char* msg)
++/*static void param_problem_exit_error(char* msg)
 +{
 +	#ifdef xtables_error
 +		xtables_error(PARAMETER_PROBLEM, msg);
 +	#else
 +		exit_error(PARAMETER_PROBLEM, msg);
 +	#endif
-+}
++}*/
 +
 +
-+void parse_ips_and_ranges(char* addr_str, struct ipt_webmon_info *info)
++static void parse_ips_and_ranges(char* addr_str, struct ipt_webmon_info *info)
 +{
 +	char** addr_parts = split_on_separators(addr_str, ",", 1, -1, 0);
 +
@@ -4473,7 +4451,7 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_webmon.c iptables-1.8.9/extensi
 + * result is dynamically allocated, MUST be freed after call-- even if 
 + * line is empty (you still get a valid char** pointer to to a NULL char*)
 + */
-+char** split_on_separators(char* line_str, char* separators, int num_separators, int max_pieces, int include_remainder_at_max)
++static char** split_on_separators(char* line_str, char* separators, int num_separators, int max_pieces, int include_remainder_at_max)
 +{
 +	char** split;
 +
@@ -4592,7 +4570,7 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_webmon.c iptables-1.8.9/extensi
 +
 +
 +
-+char* trim_flanking_whitespace(char* str)
++static char* trim_flanking_whitespace(char* str)
 +{
 +	int new_start = 0;
 +	int new_length = 0;
@@ -4644,7 +4622,7 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_webmon.c iptables-1.8.9/extensi
 +}
 +
 +
-+unsigned char* read_entire_file(FILE* in, unsigned long read_block_size, unsigned long *length)
++static unsigned char* read_entire_file(FILE* in, unsigned long read_block_size, unsigned long *length)
 +{
 +	int max_read_size = read_block_size;
 +	unsigned char* read_string = (unsigned char*)malloc(max_read_size+1);
@@ -4678,9 +4656,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_webmon.c iptables-1.8.9/extensi
 +	return read_string;
 +}
 +
-diff -Naur iptables-1.8.9.orig/extensions/libipt_webstr.c iptables-1.8.9/extensions/libipt_webstr.c
---- iptables-1.8.9.orig/extensions/libipt_webstr.c	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libipt_webstr.c	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libipt_webstr.c
++++ iptables-1.8.x/extensions/libipt_webstr.c
 @@ -0,0 +1,241 @@
 +/* Shared library add-on to iptables to add string matching support. 
 + * 
@@ -4923,9 +4900,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libipt_webstr.c iptables-1.8.9/extensi
 +{
 +	xtables_register_match(&webstr_match);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libxt_CONNMARK.c iptables-1.8.9/extensions/libxt_CONNMARK.c
---- iptables-1.8.9.orig/extensions/libxt_CONNMARK.c	2023-12-28 12:39:03.594034959 -0700
-+++ iptables-1.8.9/extensions/libxt_CONNMARK.c	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libxt_CONNMARK.c
++++ iptables-1.8.x/extensions/libxt_CONNMARK.c
 @@ -39,6 +39,7 @@
  enum {
  	O_SET_MARK = 0,
@@ -5057,9 +5033,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libxt_CONNMARK.c iptables-1.8.9/extens
  	case XT_CONNMARK_SAVE:
  		printf(" --save-mark --nfmask 0x%x --ctmask 0x%x",
  		       info->nfmask, info->ctmask);
-diff -Naur iptables-1.8.9.orig/extensions/libxt_ethport.c_disabled iptables-1.8.9/extensions/libxt_ethport.c_disabled
---- iptables-1.8.9.orig/extensions/libxt_ethport.c_disabled	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libxt_ethport.c_disabled	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libxt_ethport.c.disabled
++++ iptables-1.8.x/extensions/libxt_ethport.c.disabled
 @@ -0,0 +1,146 @@
 +/*
 + * IP tables module for matching the value of the incoming ether port
@@ -5207,9 +5182,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libxt_ethport.c_disabled iptables-1.8.
 +	xtables_register_match(&ethport_match);
 +	xtables_register_match(&ethport_match6);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libxt_IMQ.c iptables-1.8.9/extensions/libxt_IMQ.c
---- iptables-1.8.9.orig/extensions/libxt_IMQ.c	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libxt_IMQ.c	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libxt_IMQ.c
++++ iptables-1.8.x/extensions/libxt_IMQ.c
 @@ -0,0 +1,105 @@
 +/* Shared library add-on to iptables to add IMQ target support. */
 +#include <stdio.h>
@@ -5316,9 +5290,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libxt_IMQ.c iptables-1.8.9/extensions/
 +	xtables_register_target(&imq_target);
 +	xtables_register_target(&imq_target6);
 +}
-diff -Naur iptables-1.8.9.orig/extensions/libxt_IMQ.man iptables-1.8.9/extensions/libxt_IMQ.man
---- iptables-1.8.9.orig/extensions/libxt_IMQ.man	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/extensions/libxt_IMQ.man	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/extensions/libxt_IMQ.man
++++ iptables-1.8.x/extensions/libxt_IMQ.man
 @@ -0,0 +1,15 @@
 +This target is used to redirect the traffic to the IMQ driver and you can apply
 +QoS rules like HTB or CBQ.
@@ -5335,9 +5308,8 @@ diff -Naur iptables-1.8.9.orig/extensions/libxt_IMQ.man iptables-1.8.9/extension
 +Redirect incomming traffic from interface eth0 to imq0 and outgoing traffic to imq1:
 +iptables \-t mangle \-A FORWARD \-i eth0 \-j IMQ \-\-to\-dev 0
 +iptables \-t mangle \-A FORWARD \-o eth0 \-j IMQ \-\-to\-dev 1
-diff -Naur iptables-1.8.9.orig/include/linux/netfilter/nf_conntrack_tuple_common.h iptables-1.8.9/include/linux/netfilter/nf_conntrack_tuple_common.h
---- iptables-1.8.9.orig/include/linux/netfilter/nf_conntrack_tuple_common.h	2023-12-28 12:39:03.590034962 -0700
-+++ iptables-1.8.9/include/linux/netfilter/nf_conntrack_tuple_common.h	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/include/linux/netfilter/nf_conntrack_tuple_common.h
++++ iptables-1.8.x/include/linux/netfilter/nf_conntrack_tuple_common.h
 @@ -7,6 +7,9 @@
  	IP_CT_DIR_MAX
  };
@@ -5357,9 +5329,8 @@ diff -Naur iptables-1.8.9.orig/include/linux/netfilter/nf_conntrack_tuple_common
  
  #define CTINFO2DIR(ctinfo) ((ctinfo) >= IP_CT_IS_REPLY ? IP_CT_DIR_REPLY : IP_CT_DIR_ORIGINAL)
  
-diff -Naur iptables-1.8.9.orig/include/linux/netfilter/xt_connmark.h iptables-1.8.9/include/linux/netfilter/xt_connmark.h
---- iptables-1.8.9.orig/include/linux/netfilter/xt_connmark.h	2023-12-28 12:39:03.590034962 -0700
-+++ iptables-1.8.9/include/linux/netfilter/xt_connmark.h	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/include/linux/netfilter/xt_connmark.h
++++ iptables-1.8.x/include/linux/netfilter/xt_connmark.h
 @@ -15,7 +15,8 @@
  enum {
  	XT_CONNMARK_SET = 0,
@@ -5370,9 +5341,8 @@ diff -Naur iptables-1.8.9.orig/include/linux/netfilter/xt_connmark.h iptables-1.
  };
  
  struct xt_connmark_tginfo1 {
-diff -Naur iptables-1.8.9.orig/include/linux/netfilter/xt_IMQ.h iptables-1.8.9/include/linux/netfilter/xt_IMQ.h
---- iptables-1.8.9.orig/include/linux/netfilter/xt_IMQ.h	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/include/linux/netfilter/xt_IMQ.h	2023-12-28 12:39:09.930029159 -0700
+--- iptables-1.8.x/include/linux/netfilter/xt_IMQ.h
++++ iptables-1.8.x/include/linux/netfilter/xt_IMQ.h
 @@ -0,0 +1,9 @@
 +#ifndef _XT_IMQ_H
 +#define _XT_IMQ_H
@@ -5417,9 +5387,8 @@ diff -Naur iptables-1.8.9.orig/include/linux/netfilter/xt_web.h iptables-1.8.9/i
 +};
 +
 +#endif
-diff -Naur iptables-1.8.9.orig/include/linux/netfilter.h iptables-1.8.9/include/linux/netfilter.h
---- iptables-1.8.9.orig/include/linux/netfilter.h	2023-12-28 12:39:03.590034962 -0700
-+++ iptables-1.8.9/include/linux/netfilter.h	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/include/linux/netfilter.h
++++ iptables-1.8.x/include/linux/netfilter.h
 @@ -77,4 +77,13 @@
  	struct in6_addr	in6;
  };
@@ -5434,9 +5403,8 @@ diff -Naur iptables-1.8.9.orig/include/linux/netfilter.h iptables-1.8.9/include/
 +}
 +
  #endif /* __LINUX_NETFILTER_H */
-diff -Naur iptables-1.8.9.orig/include/linux/netfilter_ipv4/ip_tables.h iptables-1.8.9/include/linux/netfilter_ipv4/ip_tables.h
---- iptables-1.8.9.orig/include/linux/netfilter_ipv4/ip_tables.h	2023-12-28 12:39:03.590034962 -0700
-+++ iptables-1.8.9/include/linux/netfilter_ipv4/ip_tables.h	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/include/linux/netfilter_ipv4/ip_tables.h
++++ iptables-1.8.x/include/linux/netfilter_ipv4/ip_tables.h
 @@ -95,6 +95,7 @@
  #define IPT_INV_FRAG		0x20	/* Invert the sense of FRAG. */
  #define IPT_INV_PROTO		XT_INV_PROTO
@@ -5603,9 +5571,8 @@ diff -Naur iptables-1.8.9.orig/include/linux/netfilter_ipv4/ipt_webmon.h iptable
 +};
 +
 +#endif /*_IPT_WEBMON_H*/
-diff -Naur iptables-1.8.9.orig/iptables/xtoptions.c iptables-1.8.9/iptables/xtoptions.c
---- iptables-1.8.9.orig/iptables/xtoptions.c	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/iptables/xtoptions.c	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/iptables/xtoptions.c
++++ iptables-1.8.x/iptables/xtoptions.c
 @@ -0,0 +1,1211 @@
 +/*
 + *	Argument parser
@@ -6818,9 +6785,8 @@ diff -Naur iptables-1.8.9.orig/iptables/xtoptions.c iptables-1.8.9/iptables/xtop
 +			return head->name;
 +	return NULL;
 +}
-diff -Naur iptables-1.8.9.orig/l7-protocols/aim.pat iptables-1.8.9/l7-protocols/aim.pat
---- iptables-1.8.9.orig/l7-protocols/aim.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/aim.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/aim.pat
++++ iptables-1.8.x/l7-protocols/aim.pat
 @@ -0,0 +1,27 @@
 +# AIM - AOL instant messenger (OSCAR and TOC)
 +# Pattern attributes: good slow notsofast
@@ -6849,9 +6815,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/aim.pat iptables-1.8.9/l7-protocols/
 +# This pattern is too slow!
 +
 +^(\*[\x01\x02].*\x03\x0b|\*\x01.?.?.?.?\x01)|flapon|toc_signon.*0x
-diff -Naur iptables-1.8.9.orig/l7-protocols/aimwebcontent.pat iptables-1.8.9/l7-protocols/aimwebcontent.pat
---- iptables-1.8.9.orig/l7-protocols/aimwebcontent.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/aimwebcontent.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/aimwebcontent.pat
++++ iptables-1.8.x/l7-protocols/aimwebcontent.pat
 @@ -0,0 +1,9 @@
 +# AIM web content - ads/news content downloaded by AOL Instant Messenger
 +# Pattern attributes: good notsofast notsofast
@@ -6862,9 +6827,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/aimwebcontent.pat iptables-1.8.9/l7-
 +
 +aimwebcontent
 +user-agent:aim/
-diff -Naur iptables-1.8.9.orig/l7-protocols/applejuice.pat iptables-1.8.9/l7-protocols/applejuice.pat
---- iptables-1.8.9.orig/l7-protocols/applejuice.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/applejuice.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/applejuice.pat
++++ iptables-1.8.x/l7-protocols/applejuice.pat
 @@ -0,0 +1,11 @@
 +# Apple Juice - P2P filesharing - http://www.applejuicenet.de
 +# Pattern attributes: great veryfast fast
@@ -6877,9 +6841,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/applejuice.pat iptables-1.8.9/l7-pro
 +applejuice
 +# this pattern extracted from ipp2p, by Eicke Friedrich.
 +^ajprot\x0d\x0a
-diff -Naur iptables-1.8.9.orig/l7-protocols/ares.pat iptables-1.8.9/l7-protocols/ares.pat
---- iptables-1.8.9.orig/l7-protocols/ares.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/ares.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/ares.pat
++++ iptables-1.8.x/l7-protocols/ares.pat
 @@ -0,0 +1,62 @@
 +# Ares - P2P filesharing - http://aresgalaxy.sf.net
 +# Pattern attributes: good veryfast fast undermatch
@@ -6943,9 +6906,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/ares.pat iptables-1.8.9/l7-protocols
 +# File transfers appear to be encrypted or at least obfuscated.  (The
 +# files themselves, at least, are not transmitted in the clear.) I
 +# haven't found any patterns.
-diff -Naur iptables-1.8.9.orig/l7-protocols/armagetron.pat iptables-1.8.9/l7-protocols/armagetron.pat
---- iptables-1.8.9.orig/l7-protocols/armagetron.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/armagetron.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/armagetron.pat
++++ iptables-1.8.x/l7-protocols/armagetron.pat
 @@ -0,0 +1,11 @@
 +# Armagetron Advanced - open source Tron/snake based multiplayer game
 +# Pattern attributes: good slow notsofast
@@ -6958,9 +6920,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/armagetron.pat iptables-1.8.9/l7-pro
 +
 +armagetron
 +YCLC_E|CYEL
-diff -Naur iptables-1.8.9.orig/l7-protocols/battlefield1942.pat iptables-1.8.9/l7-protocols/battlefield1942.pat
---- iptables-1.8.9.orig/l7-protocols/battlefield1942.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/battlefield1942.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/battlefield1942.pat
++++ iptables-1.8.x/l7-protocols/battlefield1942.pat
 @@ -0,0 +1,13 @@
 +# Battlefield 1942 - An EA game
 +# Pattern attributes: ok veryfast fast
@@ -6975,9 +6936,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/battlefield1942.pat iptables-1.8.9/l
 +# matches the first two packets of joining a server
 +battlefield1942
 +^\x01\x11\x10\|\xf8\x02\x10\x40\x06
-diff -Naur iptables-1.8.9.orig/l7-protocols/bgp.pat iptables-1.8.9/l7-protocols/bgp.pat
---- iptables-1.8.9.orig/l7-protocols/bgp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/bgp.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/bgp.pat
++++ iptables-1.8.x/l7-protocols/bgp.pat
 @@ -0,0 +1,18 @@
 +# BGP - Border Gateway Protocol - RFC 1771
 +# Pattern attributes: ok veryfast fast
@@ -6997,9 +6957,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/bgp.pat iptables-1.8.9/l7-protocols/
 +# Could keep going, but that should be sufficient.
 +^\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff..?\x01[\x03\x04]
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/bittorrent.pat iptables-1.8.9/l7-protocols/bittorrent.pat
---- iptables-1.8.9.orig/l7-protocols/bittorrent.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/bittorrent.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/bittorrent.pat
++++ iptables-1.8.x/l7-protocols/bittorrent.pat
 @@ -0,0 +1,27 @@
 +# Bittorrent - P2P filesharing / publishing tool - http://www.bittorrent.com
 +# Pattern attributes: good slow notsofast undermatch
@@ -7028,9 +6987,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/bittorrent.pat iptables-1.8.9/l7-pro
 +
 +# This pattern is "fast", but won't catch as much
 +#^(\x13bittorrent protocol|azver\x01$|get /scrape\?info_hash=)
-diff -Naur iptables-1.8.9.orig/l7-protocols/chikka.pat iptables-1.8.9/l7-protocols/chikka.pat
---- iptables-1.8.9.orig/l7-protocols/chikka.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/chikka.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/chikka.pat
++++ iptables-1.8.x/l7-protocols/chikka.pat
 @@ -0,0 +1,16 @@
 +# Chikka - SMS service which can be used without phones - http://chikka.com
 +# Pattern attributes: good veryfast fast superset
@@ -7048,9 +7006,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/chikka.pat iptables-1.8.9/l7-protoco
 +
 +chikka
 +^CTPv1.[123] Kamusta.*\x0d\x0a$
-diff -Naur iptables-1.8.9.orig/l7-protocols/cimd.pat iptables-1.8.9/l7-protocols/cimd.pat
---- iptables-1.8.9.orig/l7-protocols/cimd.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/cimd.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/cimd.pat
++++ iptables-1.8.x/l7-protocols/cimd.pat
 @@ -0,0 +1,18 @@
 +# CIMD - Computer Interface to Message Distribution, an SMSC protocol by Nokia
 +# Pattern attributes: good notsofast notsofast subset
@@ -7070,9 +7027,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/cimd.pat iptables-1.8.9/l7-protocols
 +
 +cimd
 +\x02[0-4][0-9]:[0-9]+.*\x03$
-diff -Naur iptables-1.8.9.orig/l7-protocols/ciscovpn.pat iptables-1.8.9/l7-protocols/ciscovpn.pat
---- iptables-1.8.9.orig/l7-protocols/ciscovpn.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/ciscovpn.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/ciscovpn.pat
++++ iptables-1.8.x/l7-protocols/ciscovpn.pat
 @@ -0,0 +1,10 @@
 +# Cisco VPN - VPN client software to a Cisco VPN server
 +# Pattern attributes: ok veryfast fast
@@ -7084,9 +7040,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/ciscovpn.pat iptables-1.8.9/l7-proto
 +ciscovpn
 +^\x01\xf4\x01\xf4
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/citrix.pat iptables-1.8.9/l7-protocols/citrix.pat
---- iptables-1.8.9.orig/l7-protocols/citrix.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/citrix.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/citrix.pat
++++ iptables-1.8.x/l7-protocols/citrix.pat
 @@ -0,0 +1,11 @@
 +# Citrix ICA - proprietary remote desktop application - http://citrix.com
 +# Pattern attributes: marginal notsofast notsofast
@@ -7099,9 +7054,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/citrix.pat iptables-1.8.9/l7-protoco
 +
 +citrix
 +\x32\x26\x85\x92\x58
-diff -Naur iptables-1.8.9.orig/l7-protocols/code_red.pat iptables-1.8.9/l7-protocols/code_red.pat
---- iptables-1.8.9.orig/l7-protocols/code_red.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/code_red.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/code_red.pat
++++ iptables-1.8.x/l7-protocols/code_red.pat
 @@ -0,0 +1,7 @@
 +# Code Red - a worm that attacks Microsoft IIS web servers
 +# Pattern attributes: ok fast notsofast subset
@@ -7110,9 +7064,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/code_red.pat iptables-1.8.9/l7-proto
 +
 +code_red
 +/default\.ida\?NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN%u9090%u6858%ucbd3%u7801%u9090%u6858%ucbd3%u7801%u9090%u6858%ucbd3%u7801%u9090%u9090%u8190%u00c3%u0003%u8b00%u531b%u53ff%u0078%u0000%u00=a
-diff -Naur iptables-1.8.9.orig/l7-protocols/counterstrike-source.pat iptables-1.8.9/l7-protocols/counterstrike-source.pat
---- iptables-1.8.9.orig/l7-protocols/counterstrike-source.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/counterstrike-source.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/counterstrike-source.pat
++++ iptables-1.8.x/l7-protocols/counterstrike-source.pat
 @@ -0,0 +1,41 @@
 +# Counterstrike (using the new Source engine) - network game 
 +# Pattern attributes: good veryfast fast
@@ -7155,9 +7108,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/counterstrike-source.pat iptables-1.
 +# only two versions that are playable on the Internet since Valve
 +# disabled the WON system in favor of steam.")
 +# cs .*dl.www.counter-strike.net
-diff -Naur iptables-1.8.9.orig/l7-protocols/cvs.pat iptables-1.8.9/l7-protocols/cvs.pat
---- iptables-1.8.9.orig/l7-protocols/cvs.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/cvs.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/cvs.pat
++++ iptables-1.8.x/l7-protocols/cvs.pat
 @@ -0,0 +1,13 @@
 +# CVS - Concurrent Versions System
 +# Pattern attributes: good veryfast fast
@@ -7172,9 +7124,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/cvs.pat iptables-1.8.9/l7-protocols/
 +# http://www.loria.fr/~molli/cvs/doc/cvsclient_3.html
 +
 +^BEGIN (AUTH|VERIFICATION|GSSAPI) REQUEST\x0a
-diff -Naur iptables-1.8.9.orig/l7-protocols/dayofdefeat-source.pat iptables-1.8.9/l7-protocols/dayofdefeat-source.pat
---- iptables-1.8.9.orig/l7-protocols/dayofdefeat-source.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/dayofdefeat-source.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/dayofdefeat-source.pat
++++ iptables-1.8.x/l7-protocols/dayofdefeat-source.pat
 @@ -0,0 +1,10 @@
 +# Day of Defeat: Source - game (Half-Life 2 mod) - http://www.valvesoftware.com
 +# Pattern attributes: good veryfast fast
@@ -7186,9 +7137,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/dayofdefeat-source.pat iptables-1.8.
 +dayofdefeat-source
 +^\xff\xff\xff\xff.*dodDay of Defeat
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/dhcp.pat iptables-1.8.9/l7-protocols/dhcp.pat
---- iptables-1.8.9.orig/l7-protocols/dhcp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/dhcp.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/dhcp.pat
++++ iptables-1.8.x/l7-protocols/dhcp.pat
 @@ -0,0 +1,35 @@
 +# DHCP - Dynamic Host Configuration Protocol - RFC 1541
 +# Pattern attributes: good veryfast fast
@@ -7225,9 +7175,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/dhcp.pat iptables-1.8.9/l7-protocols
 +# Can we make this more specific by restricting the number of hops or seconds?
 +#
 +# 0x63825363 is the "magic cookie" which begins the DHCP options field.
-diff -Naur iptables-1.8.9.orig/l7-protocols/directconnect.pat iptables-1.8.9/l7-protocols/directconnect.pat
---- iptables-1.8.9.orig/l7-protocols/directconnect.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/directconnect.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/directconnect.pat
++++ iptables-1.8.x/l7-protocols/directconnect.pat
 @@ -0,0 +1,13 @@
 +# Direct Connect - P2P filesharing - http://www.neo-modus.com
 +# Pattern attributes: good fast fast
@@ -7242,9 +7191,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/directconnect.pat iptables-1.8.9/l7-
 +directconnect
 +# client-to-client handshake|client-to-hub login, hub speaking|client-to-hub login, client speaking
 +^(\$mynick |\$lock |\$key )
-diff -Naur iptables-1.8.9.orig/l7-protocols/dns.pat iptables-1.8.9/l7-protocols/dns.pat
---- iptables-1.8.9.orig/l7-protocols/dns.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/dns.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/dns.pat
++++ iptables-1.8.x/l7-protocols/dns.pat
 @@ -0,0 +1,62 @@
 +# DNS - Domain Name System - RFC 1035
 +# Pattern attributes: great slow fast
@@ -7308,9 +7256,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/dns.pat iptables-1.8.9/l7-protocols/
 +# If you have more processing power than me, you can substitute this for
 +# the [a-z][a-z][a-z]?[a-z]?[a-z]?[a-z]?
 +#(aero|arpa|biz|com|coop|edu|gov|info|int|mil|museum|name|net|org|pro|arpa|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|de|dj|dk|dm|do|dz|ec|ee|eg|eh|er|es|et|fi|fj|fk|fm|fo|fr|ga|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kp|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|st|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|um|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|yu|za|zm|zw)
-diff -Naur iptables-1.8.9.orig/l7-protocols/doom3.pat iptables-1.8.9/l7-protocols/doom3.pat
---- iptables-1.8.9.orig/l7-protocols/doom3.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/doom3.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/doom3.pat
++++ iptables-1.8.x/l7-protocols/doom3.pat
 @@ -0,0 +1,9 @@
 +# Doom 3 - computer game
 +# Pattern attributes: good veryfast fast
@@ -7321,9 +7268,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/doom3.pat iptables-1.8.9/l7-protocol
 +
 +doom3
 +^\xff\xffchallenge
-diff -Naur iptables-1.8.9.orig/l7-protocols/edonkey.pat iptables-1.8.9/l7-protocols/edonkey.pat
---- iptables-1.8.9.orig/l7-protocols/edonkey.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/edonkey.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/edonkey.pat
++++ iptables-1.8.x/l7-protocols/edonkey.pat
 @@ -0,0 +1,36 @@
 +# eDonkey2000 - P2P filesharing - http://edonkey2000.com and others
 +# Pattern attributes: good veryfast fast overmatch
@@ -7361,9 +7307,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/edonkey.pat iptables-1.8.9/l7-protoc
 +# bandwidtharbitrator uses 
 +# e0.*@.*6[a-z].*p$|e0.*@.*[a-z]6[a-z].*p0$|e.*@.*[0-9]6.*p$|emule|edonkey
 +# no comments to explain what all the mush is, of course...
-diff -Naur iptables-1.8.9.orig/l7-protocols/fasttrack.pat iptables-1.8.9/l7-protocols/fasttrack.pat
---- iptables-1.8.9.orig/l7-protocols/fasttrack.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/fasttrack.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/fasttrack.pat
++++ iptables-1.8.x/l7-protocols/fasttrack.pat
 @@ -0,0 +1,22 @@
 +# FastTrack - P2P filesharing (Kazaa, Morpheus, iMesh, Grokster, etc)
 +# Pattern attributes: good slow notsofast
@@ -7387,9 +7332,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/fasttrack.pat iptables-1.8.9/l7-prot
 +# This isn't much faster:
 +#^get (/.download/.*|/.supernode.|/.status.|/.network.*|/.files|/.hash=[0-9a-f]*/.*) http/1.1|user-agent: kazaa|x-kazaa(-username|-network|-ip|-supernodeip|-xferid|-xferuid|tag)|^give [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]?[0-9]?[0-9]?
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/finger.pat iptables-1.8.9/l7-protocols/finger.pat
---- iptables-1.8.9.orig/l7-protocols/finger.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/finger.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/finger.pat
++++ iptables-1.8.x/l7-protocols/finger.pat
 @@ -0,0 +1,14 @@
 +# Finger - User information server - RFC 1288
 +# Pattern attributes: good slow slow undermatch overmatch
@@ -7405,9 +7349,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/finger.pat iptables-1.8.9/l7-protoco
 +# The second matches the usual UNIX reply (but remember that they are
 +# allowed to say whatever they want)
 +^[a-z][a-z0-9\-_]+|login: [\x09-\x0d -~]* name: [\x09-\x0d -~]* Directory: 
-diff -Naur iptables-1.8.9.orig/l7-protocols/freenet.pat iptables-1.8.9/l7-protocols/freenet.pat
---- iptables-1.8.9.orig/l7-protocols/freenet.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/freenet.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/freenet.pat
++++ iptables-1.8.x/l7-protocols/freenet.pat
 @@ -0,0 +1,9 @@
 +# Freenet - Anonymous information retrieval - http://freenetproject.org
 +# Pattern attributes: poor veryfast fast
@@ -7418,9 +7361,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/freenet.pat iptables-1.8.9/l7-protoc
 +# Freenet is intentionally hard to identify...
 +# This is empirical, only tested on one computer, and unlikely to work anymore.
 +^\x01[\x08\x09][\x03\x04]
-diff -Naur iptables-1.8.9.orig/l7-protocols/ftp.pat iptables-1.8.9/l7-protocols/ftp.pat
---- iptables-1.8.9.orig/l7-protocols/ftp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/ftp.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/ftp.pat
++++ iptables-1.8.x/l7-protocols/ftp.pat
 @@ -0,0 +1,45 @@
 +# FTP - File Transfer Protocol - RFC 959
 +# Pattern attributes: great notsofast fast
@@ -7467,9 +7409,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/ftp.pat iptables-1.8.9/l7-protocols/
 +
 +# same as above, but slightly less precise and only takes 2 packets.
 +#^220[\x09-\x0d -~]*\x0d\x0aUSER[\x09-\x0d -~]*\x0d\x0a
-diff -Naur iptables-1.8.9.orig/l7-protocols/gkrellm.pat iptables-1.8.9/l7-protocols/gkrellm.pat
---- iptables-1.8.9.orig/l7-protocols/gkrellm.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/gkrellm.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/gkrellm.pat
++++ iptables-1.8.x/l7-protocols/gkrellm.pat
 @@ -0,0 +1,12 @@
 +# Gkrellm - a system monitor - http://gkrellm.net
 +# Pattern attributes: great veryfast fast
@@ -7483,9 +7424,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/gkrellm.pat iptables-1.8.9/l7-protoc
 +gkrellm
 +# tested with gkrellm 2.2.7
 +^gkrellm [23].[0-9].[0-9]\x0a$
-diff -Naur iptables-1.8.9.orig/l7-protocols/gnucleuslan.pat iptables-1.8.9/l7-protocols/gnucleuslan.pat
---- iptables-1.8.9.orig/l7-protocols/gnucleuslan.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/gnucleuslan.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/gnucleuslan.pat
++++ iptables-1.8.x/l7-protocols/gnucleuslan.pat
 @@ -0,0 +1,9 @@
 +# GnucleusLAN - LAN-only P2P filesharing
 +# Pattern attributes: good notsofast notsofast
@@ -7496,9 +7436,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/gnucleuslan.pat iptables-1.8.9/l7-pr
 +
 +gnucleuslan
 +gnuclear connect/[\x09-\x0d -~]*user-agent: gnucleus [\x09-\x0d -~]*lan:
-diff -Naur iptables-1.8.9.orig/l7-protocols/gnutella.pat iptables-1.8.9/l7-protocols/gnutella.pat
---- iptables-1.8.9.orig/l7-protocols/gnutella.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/gnutella.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/gnutella.pat
++++ iptables-1.8.x/l7-protocols/gnutella.pat
 @@ -0,0 +1,33 @@
 +# Gnutella - P2P filesharing
 +# Pattern attributes: good notsofast notsofast
@@ -7533,9 +7472,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/gnutella.pat iptables-1.8.9/l7-proto
 +#^(gnd[\x01\x02]?.?.?\x01|gnutella connect/[012]\.[0-9]\x0d\x0a|get /uri-res/n2r\?urn:sha1:|get /[\x09-\x0d -~]*user-agent: (gtk-gnutella|bearshare|mactella|gnucleus|gnotella|limewire|imesh)|get /[\x09-\x0d -~]*content-type: application/x-gnutella-packets|giv [0-9]*:[0-9a-f]*/|queue [0-9a-f]* [1-9][0-9]?[0-9]?\.[1-9][0-9]?[0-9]?\.[1-9][0-9]?[0-9]?\.[1-9][0-9]?[0-9]?:[1-9][0-9]?[0-9]?[0-9]?|gnutella[\x09-\x0d -~]*content-type: application/x-gnutella|..................lime)
 +
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/gopher.pat iptables-1.8.9/l7-protocols/gopher.pat
---- iptables-1.8.9.orig/l7-protocols/gopher.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/gopher.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/gopher.pat
++++ iptables-1.8.x/l7-protocols/gopher.pat
 @@ -0,0 +1,24 @@
 +# Gopher - A precursor to HTTP - RFC 1436
 +# Pattern attributes: good slow notsofast undermatch
@@ -7561,9 +7499,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/gopher.pat iptables-1.8.9/l7-protoco
 +# "\r7search by keywords on protein data using wais\twaissrc:/protein_all/protein\tgopher.dna.affrc.go.jp\t70"
 +
 +^[\x09-\x0d]*[1-9,+tgi][\x09-\x0d -~]*\x09[\x09-\x0d -~]*\x09[a-z0-9.]*\.[a-z][a-z].?.?\x09[1-9]
-diff -Naur iptables-1.8.9.orig/l7-protocols/h323.pat iptables-1.8.9/l7-protocols/h323.pat
---- iptables-1.8.9.orig/l7-protocols/h323.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/h323.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/h323.pat
++++ iptables-1.8.x/l7-protocols/h323.pat
 @@ -0,0 +1,35 @@
 +# H.323 - Voice over IP.
 +# Pattern attributes: ok veryfast fast
@@ -7600,9 +7537,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/h323.pat iptables-1.8.9/l7-protocols
 +#
 +# Yup, it doesn't actually include any H.323 protocol information.
 +^\x03..?\x08...?.?.?.?.?.?.?.?.?.?.?.?.?.?.?\x05
-diff -Naur iptables-1.8.9.orig/l7-protocols/halflife2-deathmatch.pat iptables-1.8.9/l7-protocols/halflife2-deathmatch.pat
---- iptables-1.8.9.orig/l7-protocols/halflife2-deathmatch.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/halflife2-deathmatch.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/halflife2-deathmatch.pat
++++ iptables-1.8.x/l7-protocols/halflife2-deathmatch.pat
 @@ -0,0 +1,9 @@
 +# Half-Life 2 Deathmatch - popular computer game
 +# Pattern attributes: good veryfast fast
@@ -7613,9 +7549,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/halflife2-deathmatch.pat iptables-1.
 +
 +halflife2-deathmatch
 +^\xff\xff\xff\xff.*hl2mpDeathmatch
-diff -Naur iptables-1.8.9.orig/l7-protocols/hddtemp.pat iptables-1.8.9/l7-protocols/hddtemp.pat
---- iptables-1.8.9.orig/l7-protocols/hddtemp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/hddtemp.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/hddtemp.pat
++++ iptables-1.8.x/l7-protocols/hddtemp.pat
 @@ -0,0 +1,13 @@
 +# hddtemp - Hard drive temperature reporting
 +# Pattern attributes: great veryfast fast
@@ -7630,9 +7565,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/hddtemp.pat iptables-1.8.9/l7-protoc
 +
 +hddtemp
 +^\|/dev/[a-z][a-z][a-z]\|[0-9a-z]*\|[0-9][0-9]\|[cfk]\|
-diff -Naur iptables-1.8.9.orig/l7-protocols/http.pat iptables-1.8.9/l7-protocols/http.pat
---- iptables-1.8.9.orig/l7-protocols/http.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/http.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/http.pat
++++ iptables-1.8.x/l7-protocols/http.pat
 @@ -0,0 +1,27 @@
 +# HTTP - HyperText Transfer Protocol - RFC 2616
 +# Pattern attributes: great slow notsofast superset
@@ -7661,9 +7595,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/http.pat iptables-1.8.9/l7-protocols
 +#http/(0\.9|1\.0|1\.1) [1-5][0-9][0-9]|post [\x09-\x0d -~]* http/[01]\.[019]
 +# old pattern(s):
 +#(http[\x09-\x0d -~]*(200 ok|302 |304 )[\x09-\x0d -~]*(connection:|content-type:|content-length:))|^(post [\x09-\x0d -~]* http/)
-diff -Naur iptables-1.8.9.orig/l7-protocols/http-rtsp.pat iptables-1.8.9/l7-protocols/http-rtsp.pat
---- iptables-1.8.9.orig/l7-protocols/http-rtsp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/http-rtsp.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/http-rtsp.pat
++++ iptables-1.8.x/l7-protocols/http-rtsp.pat
 @@ -0,0 +1,15 @@
 +# RTSP in HTTP - RTSP tunneled within HTTP
 +# Pattern attributes: ok notsofast notsofast subset
@@ -7680,9 +7613,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/http-rtsp.pat iptables-1.8.9/l7-prot
 +
 +http-rtsp
 +^(get[\x09-\x0d -~]* Accept: application/x-rtsp-tunnelled|http/(0\.9|1\.0|1\.1) [1-5][0-9][0-9] [\x09-\x0d -~]*a=control:rtsp://)
-diff -Naur iptables-1.8.9.orig/l7-protocols/ident.pat iptables-1.8.9/l7-protocols/ident.pat
---- iptables-1.8.9.orig/l7-protocols/ident.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/ident.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/ident.pat
++++ iptables-1.8.x/l7-protocols/ident.pat
 @@ -0,0 +1,14 @@
 +# Ident - Identification Protocol - RFC 1413
 +# Pattern attributes: good fast fast
@@ -7698,9 +7630,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/ident.pat iptables-1.8.9/l7-protocol
 +# ^$ is appropriate because the first packet should never have anything
 +# else in it.
 +^[1-9][0-9]?[0-9]?[0-9]?[0-9]?[\x09-\x0d]*,[\x09-\x0d]*[1-9][0-9]?[0-9]?[0-9]?[0-9]?(\x0d\x0a|[\x0d\x0a])?$
-diff -Naur iptables-1.8.9.orig/l7-protocols/imap.pat iptables-1.8.9/l7-protocols/imap.pat
---- iptables-1.8.9.orig/l7-protocols/imap.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/imap.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/imap.pat
++++ iptables-1.8.x/l7-protocols/imap.pat
 @@ -0,0 +1,13 @@
 +# IMAP - Internet Message Access Protocol (A common e-mail protocol)
 +# Pattern attributes: great veryfast fast
@@ -7715,9 +7646,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/imap.pat iptables-1.8.9/l7-protocols
 +# some unknown reason can happen at the start of a connection?)  
 +imap
 +^(\* ok|a[0-9]+ noop)
-diff -Naur iptables-1.8.9.orig/l7-protocols/imesh.pat iptables-1.8.9/l7-protocols/imesh.pat
---- iptables-1.8.9.orig/l7-protocols/imesh.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/imesh.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/imesh.pat
++++ iptables-1.8.x/l7-protocols/imesh.pat
 @@ -0,0 +1,14 @@
 +# iMesh - the native protocol of iMesh, a P2P application - http://imesh.com
 +# Pattern attributes: ok notsofast notsofast
@@ -7733,9 +7663,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/imesh.pat iptables-1.8.9/l7-protocol
 +# The third branch matches downloads of "premium" content
 +# The fourth branch matches peer downloads.
 +^(post[\x09-\x0d -~]*<PasswordHash>................................</PasswordHash><ClientVer>|\x34\x80?\x0d?\xfc\xff\x04|get[\x09-\x0d -~]*Host: imsh\.download-prod\.musicnet\.com|\x02[\x01\x02]\x83.*\x02[\x01\x02]\x83)
-diff -Naur iptables-1.8.9.orig/l7-protocols/ipp.pat iptables-1.8.9/l7-protocols/ipp.pat
---- iptables-1.8.9.orig/l7-protocols/ipp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/ipp.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/ipp.pat
++++ iptables-1.8.x/l7-protocols/ipp.pat
 @@ -0,0 +1,11 @@
 +# IP printing - a new standard for UNIX printing - RFC 2911
 +# Pattern attributes: good notsofast notsofast
@@ -7748,9 +7677,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/ipp.pat iptables-1.8.9/l7-protocols/
 +# It's unlikely that anything else has this string, but I think we could
 +# do a bit better...
 +ipp://
-diff -Naur iptables-1.8.9.orig/l7-protocols/irc.pat iptables-1.8.9/l7-protocols/irc.pat
---- iptables-1.8.9.orig/l7-protocols/irc.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/irc.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/irc.pat
++++ iptables-1.8.x/l7-protocols/irc.pat
 @@ -0,0 +1,19 @@
 +# IRC - Internet Relay Chat - RFC 1459
 +# Pattern attributes: great veryfast fast
@@ -7771,9 +7699,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/irc.pat iptables-1.8.9/l7-protocols/
 +# \x09-\x0d).
 +^(nick[\x09-\x0d -~]*user[\x09-\x0d -~]*:|user[\x09-\x0d -~]*:[\x02-\x0d -~]*nick[\x09-\x0d -~]*\x0d\x0a)
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/jabber.pat iptables-1.8.9/l7-protocols/jabber.pat
---- iptables-1.8.9.orig/l7-protocols/jabber.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/jabber.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/jabber.pat
++++ iptables-1.8.x/l7-protocols/jabber.pat
 @@ -0,0 +1,23 @@
 +# Jabber (XMPP) - open instant messenger protocol - RFC 3920 - http://jabber.org
 +# Pattern attributes: good notsofast notsofast
@@ -7798,9 +7725,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/jabber.pat iptables-1.8.9/l7-protoco
 +
 +jabber
 +<stream:stream[\x09-\x0d ][ -~]*[\x09-\x0d ]xmlns=['"]jabber
-diff -Naur iptables-1.8.9.orig/l7-protocols/mohaa.pat iptables-1.8.9/l7-protocols/mohaa.pat
---- iptables-1.8.9.orig/l7-protocols/mohaa.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/mohaa.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/mohaa.pat
++++ iptables-1.8.x/l7-protocols/mohaa.pat
 @@ -0,0 +1,10 @@
 +# Medal of Honor Allied Assault - an Electronic Arts game
 +# Pattern attributes: good veryfast fast
@@ -7812,9 +7738,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/mohaa.pat iptables-1.8.9/l7-protocol
 +mohaa
 +^\xff\xff\xff\xffgetstatus\x0a
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/msnmessenger.pat iptables-1.8.9/l7-protocols/msnmessenger.pat
---- iptables-1.8.9.orig/l7-protocols/msnmessenger.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/msnmessenger.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/msnmessenger.pat
++++ iptables-1.8.x/l7-protocols/msnmessenger.pat
 @@ -0,0 +1,27 @@
 +# MSN Messenger - Microsoft Network chat client
 +# Pattern attributes: good slow notsofast
@@ -7843,9 +7768,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/msnmessenger.pat iptables-1.8.9/l7-p
 +# Branches are written entirely separately for better performance.
 +ver [0-9]+ msnp[1-9][0-9]? [\x09-\x0d -~]*cvr0\x0d\x0a$|usr 1 [!-~]+ [0-9. ]+\x0d\x0a$|ans 1 [!-~]+ [0-9. ]+\x0d\x0a$
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/mute.pat iptables-1.8.9/l7-protocols/mute.pat
---- iptables-1.8.9.orig/l7-protocols/mute.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/mute.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/mute.pat
++++ iptables-1.8.x/l7-protocols/mute.pat
 @@ -0,0 +1,10 @@
 +# MUTE - P2P filesharing - http://mute-net.sourceforge.net
 +# Pattern attributes: marginal veryfast fast
@@ -7857,9 +7781,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/mute.pat iptables-1.8.9/l7-protocols
 +
 +mute
 +^(Public|AES)Key: [0-9a-f]*\x0aEnd(Public|AES)Key\x0a$
-diff -Naur iptables-1.8.9.orig/l7-protocols/napster.pat iptables-1.8.9/l7-protocols/napster.pat
---- iptables-1.8.9.orig/l7-protocols/napster.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/napster.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/napster.pat
++++ iptables-1.8.x/l7-protocols/napster.pat
 @@ -0,0 +1,23 @@
 +# Napster - P2P filesharing
 +# Pattern attributes: good fast fast
@@ -7884,9 +7807,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/napster.pat iptables-1.8.9/l7-protoc
 +# Assumes that filenames are well-behaved ASCII strings.  I have found
 +# one case where this assumptions fails (filename had \x99 in it).
 +^(.[\x02\x06][!-~]+ [!-~]+ [0-9][0-9]?[0-9]?[0-9]?[0-9]? "[\x09-\x0d -~]+" ([0-9]|10)|1(send|get)[!-~]+ "[\x09-\x0d -~]+")
-diff -Naur iptables-1.8.9.orig/l7-protocols/nbns.pat iptables-1.8.9/l7-protocols/nbns.pat
---- iptables-1.8.9.orig/l7-protocols/nbns.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/nbns.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/nbns.pat
++++ iptables-1.8.x/l7-protocols/nbns.pat
 @@ -0,0 +1,19 @@
 +# NBNS - NetBIOS name service
 +# Pattern attributes: good slow notsofast
@@ -7907,9 +7829,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/nbns.pat iptables-1.8.9/l7-protocols
 +nbns
 +# This is not a valid basic GNU regular expression.
 +\x01\x10\x01|\)\x10\x01\x01|0\x10\x01
-diff -Naur iptables-1.8.9.orig/l7-protocols/ncp.pat iptables-1.8.9/l7-protocols/ncp.pat
---- iptables-1.8.9.orig/l7-protocols/ncp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/ncp.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/ncp.pat
++++ iptables-1.8.x/l7-protocols/ncp.pat
 @@ -0,0 +1,22 @@
 +# NCP - Novell Core Protocol
 +# Pattern attributes: good veryfast fast
@@ -7933,9 +7854,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/ncp.pat iptables-1.8.9/l7-protocols/
 +
 +ncp
 +^(dmdt.*\x01.*(""|\x11\x11|uu)|tncp.*33)
-diff -Naur iptables-1.8.9.orig/l7-protocols/nimda.pat iptables-1.8.9/l7-protocols/nimda.pat
---- iptables-1.8.9.orig/l7-protocols/nimda.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/nimda.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/nimda.pat
++++ iptables-1.8.x/l7-protocols/nimda.pat
 @@ -0,0 +1,7 @@
 +# Nimda - a worm that attacks Microsoft IIS web servers, and MORE!
 +# Pattern attributes: ok notsofast notsofast subset
@@ -7944,9 +7864,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/nimda.pat iptables-1.8.9/l7-protocol
 +
 +nimda
 +GET (/scripts/root\.exe\?/c\+dir|/MSADC/root\.exe\?/c\+dir|/c/winnt/system32/cmd\.exe\?/c\+dir|/d/winnt/system32/cmd\.exe\?/c\+dir|/scripts/\.\.%5c\.\./winnt/system32/cmd\.exe\?/c\+dir|/_vti_bin/\.\.%5c\.\./\.\.%5c\.\./\.\.%5c\.\./winnt/system32/cmd\.exe\?/c\+dir|/_mem_bin/\.\.%5c\.\./\.\.%5c\.\./\.\.%5c\.\./winnt/system32/cmd\.exe\?/c\+dir|/msadc/\.\.%5c\.\./\.\.%5c\.\./\.\.%5c/\.\.\xc1\x1c\.\./\.\.\xc1\x1c\.\./\.\.\xc1\x1c\.\./winnt/system32/cmd\.exe\?/c\+dir|/scripts/\.\.\xc1\x1c\.\./winnt/system32/cmd\.exe\?/c\+dir|/scripts/\.\.\xc0/\.\./winnt/system32/cmd\.exe\?/c\+dir|/scripts/\.\.\xc0\xaf\.\./winnt/system32/cmd\.exe\?/c\+dir|/scripts/\.\.\xc1\x9c\.\./winnt/system32/cmd\.exe\?/c\+dir|/scripts/\.\.%35c\.\./winnt/system32/cmd\.exe\?/c\+dir|/scripts/\.\.%35c\.\./winnt/system32/cmd\.exe\?/c\+dir|/scripts/\.\.%5c\.\./winnt/system32/cmd\.exe\?/c\+dir|/scripts/\.\.%2f\.\./winnt/system32/cmd\.exe\?/c\+dir)
-diff -Naur iptables-1.8.9.orig/l7-protocols/nntp.pat iptables-1.8.9/l7-protocols/nntp.pat
---- iptables-1.8.9.orig/l7-protocols/nntp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/nntp.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/nntp.pat
++++ iptables-1.8.x/l7-protocols/nntp.pat
 @@ -0,0 +1,20 @@
 +# NNTP - Network News Transfer Protocol - RFCs 977 and 2980
 +# Pattern attributes: good veryfast fast
@@ -7968,9 +7887,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/nntp.pat iptables-1.8.9/l7-protocols
 +
 +# same thing, slightly more accurate, but 100+ times slower
 +#^20[01][\x09-\x0d -~]*\x0d\x0a[\x09-\x0d -~]*AUTHINFO USER|20[01][\x09-\x0d -~]*news
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/exe.pat iptables-1.8.9/l7-protocols/not_commit/exe.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/exe.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/exe.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/exe.pat
++++ iptables-1.8.x/l7-protocols/not_commit/exe.pat
 @@ -0,0 +1,19 @@
 +# Executable - Microsoft PE file format.  
 +# Pattern attributes: good notsofast notsofast subset
@@ -7991,9 +7909,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/exe.pat iptables-1.8.9/l7
 +
 +# This is easier to understand:
 +\x4d\x5a(\x90\x03|\x50\x02)\x04
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/flash.pat iptables-1.8.9/l7-protocols/not_commit/flash.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/flash.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/flash.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/flash.pat
++++ iptables-1.8.x/l7-protocols/not_commit/flash.pat
 @@ -0,0 +1,17 @@
 +# Flash - Macromedia Flash.  
 +# Pattern attributes: good slow notsofast subset
@@ -8012,9 +7929,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/flash.pat iptables-1.8.9/
 +# FWS = uncompressed, CWS = compressed, next byte is version number
 +# FLV = video 
 +[FC]WS[\x01-\x09]|FLV\x01\x05\x09
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/gif.pat iptables-1.8.9/l7-protocols/not_commit/gif.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/gif.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/gif.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/gif.pat
++++ iptables-1.8.x/l7-protocols/not_commit/gif.pat
 @@ -0,0 +1,7 @@
 +# GIF - Popular Image format.  
 +# Pattern attributes: good notsofast notsofast subset
@@ -8023,9 +7939,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/gif.pat iptables-1.8.9/l7
 +gif
 +# drawn from /usr/share/magic
 +GIF8(7|9)a
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/html.pat iptables-1.8.9/l7-protocols/not_commit/html.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/html.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/html.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/html.pat
++++ iptables-1.8.x/l7-protocols/not_commit/html.pat
 @@ -0,0 +1,10 @@
 +# (X)HTML - (Extensible) Hypertext Markup Language - http://w3.org
 +# Pattern attributes: good fast notsofast subset
@@ -8037,9 +7952,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/html.pat iptables-1.8.9/l
 +# even vaugly to the standards.
 +html
 +<html.*><head>
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/jpeg.pat iptables-1.8.9/l7-protocols/not_commit/jpeg.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/jpeg.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/jpeg.pat	2023-12-28 12:39:09.934029155 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/jpeg.pat
++++ iptables-1.8.x/l7-protocols/not_commit/jpeg.pat
 @@ -0,0 +1,7 @@
 +# JPEG - Joint Picture Expert Group image format.  
 +# Pattern attributes: ok fast notsofast subset
@@ -8048,9 +7962,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/jpeg.pat iptables-1.8.9/l
 +jpeg
 +# drawn from /usr/share/magic
 +\xff\xd8
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/mp3.pat iptables-1.8.9/l7-protocols/not_commit/mp3.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/mp3.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/mp3.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/mp3.pat
++++ iptables-1.8.x/l7-protocols/not_commit/mp3.pat
 @@ -0,0 +1,10 @@
 +# MP3 - Moving Picture Experts Group Audio Layer III
 +# Pattern attributes: good notsofast notsofast subset
@@ -8062,9 +7975,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/mp3.pat iptables-1.8.9/l7
 +
 +mp3
 +\x49\x44\x33\x03
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/ogg.pat iptables-1.8.9/l7-protocols/not_commit/ogg.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/ogg.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/ogg.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/ogg.pat
++++ iptables-1.8.x/l7-protocols/not_commit/ogg.pat
 @@ -0,0 +1,6 @@
 +# Ogg - Ogg Vorbis music format (not any ogg file, just vorbis)
 +# Pattern attributes: ok notsofast notsofast subset
@@ -8072,9 +7984,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/ogg.pat iptables-1.8.9/l7
 +
 +ogg
 +oggs.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?\x01vorbis
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/pdf.pat iptables-1.8.9/l7-protocols/not_commit/pdf.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/pdf.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/pdf.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/pdf.pat
++++ iptables-1.8.x/l7-protocols/not_commit/pdf.pat
 @@ -0,0 +1,10 @@
 +# PDF - Portable Document Format - Postscript-like format by Adobe
 +# Pattern attributes: good fast notsofast subset
@@ -8086,9 +7997,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/pdf.pat iptables-1.8.9/l7
 +# will.
 +pdf
 +%PDF-1\.[0123456]
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/perl.pat iptables-1.8.9/l7-protocols/not_commit/perl.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/perl.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/perl.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/perl.pat
++++ iptables-1.8.x/l7-protocols/not_commit/perl.pat
 @@ -0,0 +1,6 @@
 +# Perl - A scripting language by Larry Wall.
 +# Pattern attributes: good fast notsofast subset
@@ -8096,9 +8006,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/perl.pat iptables-1.8.9/l
 +
 +perl
 +\#! ?/(usr/(local/)?)?bin/perl
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/postscript.pat iptables-1.8.9/l7-protocols/not_commit/postscript.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/postscript.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/postscript.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/postscript.pat
++++ iptables-1.8.x/l7-protocols/not_commit/postscript.pat
 @@ -0,0 +1,6 @@
 +# Postscript - Printing Language
 +# Pattern attributes: good fast notsofast subset
@@ -8106,9 +8015,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/postscript.pat iptables-1
 +
 +postscript
 +%!ps
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/rar.pat iptables-1.8.9/l7-protocols/not_commit/rar.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/rar.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/rar.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/rar.pat
++++ iptables-1.8.x/l7-protocols/not_commit/rar.pat
 @@ -0,0 +1,6 @@
 +# RAR - The WinRAR archive format  
 +# Pattern attributes: good notsofast notsofast subset
@@ -8116,9 +8024,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/rar.pat iptables-1.8.9/l7
 +
 +rar
 +rar\x21\x1a\x07
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/rpm.pat iptables-1.8.9/l7-protocols/not_commit/rpm.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/rpm.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/rpm.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/rpm.pat
++++ iptables-1.8.x/l7-protocols/not_commit/rpm.pat
 @@ -0,0 +1,6 @@
 +# RPM - Redhat Package Management packages
 +# Pattern attributes: good fast notsofast subset
@@ -8126,9 +8033,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/rpm.pat iptables-1.8.9/l7
 +
 +rpm
 +\xed\xab\xee\xdb.?.?.?.?[1-7]
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/rtf.pat iptables-1.8.9/l7-protocols/not_commit/rtf.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/rtf.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/rtf.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/rtf.pat
++++ iptables-1.8.x/l7-protocols/not_commit/rtf.pat
 @@ -0,0 +1,7 @@
 +# RTF - Rich Text Format - an open document format
 +# Pattern attributes: good fast notsofast subset
@@ -8137,9 +8043,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/rtf.pat iptables-1.8.9/l7
 +rtf
 +\{\\rtf[12]
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/tar.pat iptables-1.8.9/l7-protocols/not_commit/tar.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/tar.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/tar.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/tar.pat
++++ iptables-1.8.x/l7-protocols/not_commit/tar.pat
 @@ -0,0 +1,11 @@
 +# Tar - tape archive.  Standard UNIX file archiver, not just for tapes.
 +# Pattern attributes: good notsofast notsofast subset
@@ -8152,9 +8057,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/tar.pat iptables-1.8.9/l7
 +#257     string          ustar\040\040\0 GNU tar archive
 +# this is pretty general.  It's not a dictionary word, but still...
 +ustar
-diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/zip.pat iptables-1.8.9/l7-protocols/not_commit/zip.pat
---- iptables-1.8.9.orig/l7-protocols/not_commit/zip.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/not_commit/zip.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/not_commit/zip.pat
++++ iptables-1.8.x/l7-protocols/not_commit/zip.pat
 @@ -0,0 +1,6 @@
 +# ZIP - (PK|Win)Zip archive format  
 +# Pattern attributes: good notsofast notsofast subset
@@ -8162,9 +8066,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/not_commit/zip.pat iptables-1.8.9/l7
 +
 +zip
 +pk\x03\x04\x14
-diff -Naur iptables-1.8.9.orig/l7-protocols/ntp.pat iptables-1.8.9/l7-protocols/ntp.pat
---- iptables-1.8.9.orig/l7-protocols/ntp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/ntp.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/ntp.pat
++++ iptables-1.8.x/l7-protocols/ntp.pat
 @@ -0,0 +1,16 @@
 +# (S)NTP - (Simple) Network Time Protocol - RFCs 1305 and 2030
 +# Pattern attributes: good fast fast overmatch 
@@ -8182,9 +8085,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/ntp.pat iptables-1.8.9/l7-protocols/
 +
 +ntp
 +^([\x13\x1b\x23\xd3\xdb\xe3]|[\x14\x1c$].......?.?.?.?.?.?.?.?.?[\xc6-\xff])
-diff -Naur iptables-1.8.9.orig/l7-protocols/openft.pat iptables-1.8.9/l7-protocols/openft.pat
---- iptables-1.8.9.orig/l7-protocols/openft.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/openft.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/openft.pat
++++ iptables-1.8.x/l7-protocols/openft.pat
 @@ -0,0 +1,12 @@
 +# OpenFT - P2P filesharing (implemented in giFT library)
 +# Pattern attributes: good fast notsofast
@@ -8198,9 +8100,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/openft.pat iptables-1.8.9/l7-protoco
 +
 +openft
 +x-openftalias: [-)(0-9a-z ~.]
-diff -Naur iptables-1.8.9.orig/l7-protocols/pop3.pat iptables-1.8.9/l7-protocols/pop3.pat
---- iptables-1.8.9.orig/l7-protocols/pop3.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/pop3.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/pop3.pat
++++ iptables-1.8.x/l7-protocols/pop3.pat
 @@ -0,0 +1,49 @@
 +# POP3 - Post Office Protocol version 3 (popular e-mail protocol) - RFC 1939
 +# Pattern attributes: great veryfast fast
@@ -8251,9 +8152,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/pop3.pat iptables-1.8.9/l7-protocols
 +#-ERR Unknown AUTHORIZATION state command
 +#-ERR Unrecognized command
 +#-ERR Unknown command: "sadf'".
-diff -Naur iptables-1.8.9.orig/l7-protocols/qq.pat iptables-1.8.9/l7-protocols/qq.pat
---- iptables-1.8.9.orig/l7-protocols/qq.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/qq.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/qq.pat
++++ iptables-1.8.x/l7-protocols/qq.pat
 @@ -0,0 +1,18 @@
 +# Tencent QQ Protocol - Chinese instant messenger protocol - http://www.qq.com
 +# Pattern attributes: good fast fast
@@ -8273,9 +8173,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/qq.pat iptables-1.8.9/l7-protocols/q
 +qq
 +^.?\x02.+\x03$
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/quake-halflife.pat iptables-1.8.9/l7-protocols/quake-halflife.pat
---- iptables-1.8.9.orig/l7-protocols/quake-halflife.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/quake-halflife.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/quake-halflife.pat
++++ iptables-1.8.x/l7-protocols/quake-halflife.pat
 @@ -0,0 +1,26 @@
 +# HL1, Quake, CS - Half Life 1 engine games (HL 1, Quake 2/3/World, Counterstrike 1.6, etc.)
 +# Pattern attributes: good veryfast fast
@@ -8303,9 +8202,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/quake-halflife.pat iptables-1.8.9/l7
 +# A previous quake pattern allowed the connection to start with only 2 bytes
 +# of 0xFF.  This doesn't seem to ever happen, but we should keep an eye out
 +# for it.
-diff -Naur iptables-1.8.9.orig/l7-protocols/radmin.pat iptables-1.8.9/l7-protocols/radmin.pat
---- iptables-1.8.9.orig/l7-protocols/radmin.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/radmin.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/radmin.pat
++++ iptables-1.8.x/l7-protocols/radmin.pat
 @@ -0,0 +1,16 @@
 +# Famatech Remote Administrator - remote desktop for MS Windows
 +# Pattern attributes: ok veryfast fast
@@ -8323,9 +8221,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/radmin.pat iptables-1.8.9/l7-protoco
 +radmin
 +^\x01\x01(\x08\x08|\x1b\x1b)$
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/rdp.pat iptables-1.8.9/l7-protocols/rdp.pat
---- iptables-1.8.9.orig/l7-protocols/rdp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/rdp.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/rdp.pat
++++ iptables-1.8.x/l7-protocols/rdp.pat
 @@ -0,0 +1,19 @@
 +# RDP - Remote Desktop Protocol (used in Windows Terminal Services)
 +# Pattern attributes: ok notsofast notsofast
@@ -8346,9 +8243,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/rdp.pat iptables-1.8.9/l7-protocols/
 +# rdpdr.*cliprdp.*rdpsnd 
 +
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/replaytv-ivs.pat iptables-1.8.9/l7-protocols/replaytv-ivs.pat
---- iptables-1.8.9.orig/l7-protocols/replaytv-ivs.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/replaytv-ivs.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/replaytv-ivs.pat
++++ iptables-1.8.x/l7-protocols/replaytv-ivs.pat
 @@ -0,0 +1,10 @@
 +# ReplayTV Internet Video Sharing - Digital Video Recorder - http://replaytv.com
 +# Pattern attributes: good veryfast fast
@@ -8360,9 +8256,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/replaytv-ivs.pat iptables-1.8.9/l7-p
 +replaytv-ivs
 +^(get /ivs-IVSGetFileChunk|http/(0\.9|1\.0|1\.1) [1-5][0-9][0-9] [\x09-\x0d -~]*\x23\x23\x23\x23\x23REPLAY_CHUNK_START\x23\x23\x23\x23\x23)
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/rtp.pat iptables-1.8.9/l7-protocols/rtp.pat
---- iptables-1.8.9.orig/l7-protocols/rtp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/rtp.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/rtp.pat
++++ iptables-1.8.x/l7-protocols/rtp.pat
 @@ -0,0 +1,40 @@
 +# RTP - Real-time Transport Protocol - RFC 3550
 +# Pattern attributes: marginal overmatch undermatch veryfast fast
@@ -8404,9 +8299,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/rtp.pat iptables-1.8.9/l7-protocols/
 +# Might also try this.  It's a bit slower (one packet and not too much extra
 +# regexec load) and a bit more accurate:
 +#^\x80......?.?.?.?.?.?.?.?.?.?.?.?.?\x80.*\x80
-diff -Naur iptables-1.8.9.orig/l7-protocols/rtsp.pat iptables-1.8.9/l7-protocols/rtsp.pat
---- iptables-1.8.9.orig/l7-protocols/rtsp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/rtsp.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/rtsp.pat
++++ iptables-1.8.x/l7-protocols/rtsp.pat
 @@ -0,0 +1,14 @@
 +# RTSP - Real Time Streaming Protocol - http://www.rtsp.org - RFC 2326
 +# Pattern attributes: good notsofast notsofast
@@ -8422,9 +8316,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/rtsp.pat iptables-1.8.9/l7-protocols
 +
 +rtsp
 +rtsp/1.0 200 ok
-diff -Naur iptables-1.8.9.orig/l7-protocols/shoutcast.pat iptables-1.8.9/l7-protocols/shoutcast.pat
---- iptables-1.8.9.orig/l7-protocols/shoutcast.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/shoutcast.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/shoutcast.pat
++++ iptables-1.8.x/l7-protocols/shoutcast.pat
 @@ -0,0 +1,26 @@
 +# Shoutcast and Icecast - streaming audio
 +# Pattern attributes: good slow notsofast
@@ -8452,9 +8345,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/shoutcast.pat iptables-1.8.9/l7-prot
 +# this will not work.
 +# This pattern was discovered using Ethereal.
 +^get /.*icy-metadata:1|icy [1-5][0-9][0-9] [\x09-\x0d -~]*(content-type:audio|icy-)
-diff -Naur iptables-1.8.9.orig/l7-protocols/sip.pat iptables-1.8.9/l7-protocols/sip.pat
---- iptables-1.8.9.orig/l7-protocols/sip.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/sip.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/sip.pat
++++ iptables-1.8.x/l7-protocols/sip.pat
 @@ -0,0 +1,18 @@
 +# SIP - Session Initiation Protocol - Internet telephony - RFC 3261
 +# Pattern attributes: ok fast fast
@@ -8474,9 +8366,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/sip.pat iptables-1.8.9/l7-protocols/
 +#Request-Line  =  Method SP Request-URI SP SIP-Version CRLF
 +sip
 +^(invite|register|cancel) sip[\x09-\x0d -~]*sip/[0-2]\.[0-9]
-diff -Naur iptables-1.8.9.orig/l7-protocols/skypeout.pat iptables-1.8.9/l7-protocols/skypeout.pat
---- iptables-1.8.9.orig/l7-protocols/skypeout.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/skypeout.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/skypeout.pat
++++ iptables-1.8.x/l7-protocols/skypeout.pat
 @@ -0,0 +1,49 @@
 +# Skype to phone - UDP voice call (program to POTS phone) - http://skype.com
 +# Pattern attributes: ok slow notsofast overmatch
@@ -8527,9 +8418,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/skypeout.pat iptables-1.8.9/l7-proto
 +
 +# This is slow, but not as bad as you might think.
 +^(\x01.?.?.?.?.?.?.?.?\x01|\x02.?.?.?.?.?.?.?.?\x02|\x03.?.?.?.?.?.?.?.?\x03|\x04.?.?.?.?.?.?.?.?\x04|\x05.?.?.?.?.?.?.?.?\x05|\x06.?.?.?.?.?.?.?.?\x06|\x07.?.?.?.?.?.?.?.?\x07|\x08.?.?.?.?.?.?.?.?\x08|\x09.?.?.?.?.?.?.?.?\x09|\x0a.?.?.?.?.?.?.?.?\x0a|\x0b.?.?.?.?.?.?.?.?\x0b|\x0c.?.?.?.?.?.?.?.?\x0c|\x0d.?.?.?.?.?.?.?.?\x0d|\x0e.?.?.?.?.?.?.?.?\x0e|\x0f.?.?.?.?.?.?.?.?\x0f|\x10.?.?.?.?.?.?.?.?\x10|\x11.?.?.?.?.?.?.?.?\x11|\x12.?.?.?.?.?.?.?.?\x12|\x13.?.?.?.?.?.?.?.?\x13|\x14.?.?.?.?.?.?.?.?\x14|\x15.?.?.?.?.?.?.?.?\x15|\x16.?.?.?.?.?.?.?.?\x16|\x17.?.?.?.?.?.?.?.?\x17|\x18.?.?.?.?.?.?.?.?\x18|\x19.?.?.?.?.?.?.?.?\x19|\x1a.?.?.?.?.?.?.?.?\x1a|\x1b.?.?.?.?.?.?.?.?\x1b|\x1c.?.?.?.?.?.?.?.?\x1c|\x1d.?.?.?.?.?.?.?.?\x1d|\x1e.?.?.?.?.?.?.?.?\x1e|\x1f.?.?.?.?.?.?.?.?\x1f|\x20.?.?.?.?.?.?.?.?\x20|\x21.?.?.?.?.?.?.?.?\x21|\x22.?.?.?.?.?.?.?.?\x22|\x23.?.?.?.?.?.?.?.?\x23|\$.?.?.?.?.?.?.?.?\$|\x25.?.?.?.?.?.?.?.?\x25|\x26.?.?.?.?.?.?.?.?\x26|\x27.?.?.?.?.?.?.?.?\x27|\(.?.?.?.?.?.?.?.?\(|\).?.?.?.?.?.?.?.?\)|\*.?.?.?.?.?.?.?.?\*|\+.?.?.?.?.?.?.?.?\+|\x2c.?.?.?.?.?.?.?.?\x2c|\x2d.?.?.?.?.?.?.?.?\x2d|\..?.?.?.?.?.?.?.?\.|\x2f.?.?.?.?.?.?.?.?\x2f|\x30.?.?.?.?.?.?.?.?\x30|\x31.?.?.?.?.?.?.?.?\x31|\x32.?.?.?.?.?.?.?.?\x32|\x33.?.?.?.?.?.?.?.?\x33|\x34.?.?.?.?.?.?.?.?\x34|\x35.?.?.?.?.?.?.?.?\x35|\x36.?.?.?.?.?.?.?.?\x36|\x37.?.?.?.?.?.?.?.?\x37|\x38.?.?.?.?.?.?.?.?\x38|\x39.?.?.?.?.?.?.?.?\x39|\x3a.?.?.?.?.?.?.?.?\x3a|\x3b.?.?.?.?.?.?.?.?\x3b|\x3c.?.?.?.?.?.?.?.?\x3c|\x3d.?.?.?.?.?.?.?.?\x3d|\x3e.?.?.?.?.?.?.?.?\x3e|\?.?.?.?.?.?.?.?.?\?|\x40.?.?.?.?.?.?.?.?\x40|\x41.?.?.?.?.?.?.?.?\x41|\x42.?.?.?.?.?.?.?.?\x42|\x43.?.?.?.?.?.?.?.?\x43|\x44.?.?.?.?.?.?.?.?\x44|\x45.?.?.?.?.?.?.?.?\x45|\x46.?.?.?.?.?.?.?.?\x46|\x47.?.?.?.?.?.?.?.?\x47|\x48.?.?.?.?.?.?.?.?\x48|\x49.?.?.?.?.?.?.?.?\x49|\x4a.?.?.?.?.?.?.?.?\x4a|\x4b.?.?.?.?.?.?.?.?\x4b|\x4c.?.?.?.?.?.?.?.?\x4c|\x4d.?.?.?.?.?.?.?.?\x4d|\x4e.?.?.?.?.?.?.?.?\x4e|\x4f.?.?.?.?.?.?.?.?\x4f|\x50.?.?.?.?.?.?.?.?\x50|\x51.?.?.?.?.?.?.?.?\x51|\x52.?.?.?.?.?.?.?.?\x52|\x53.?.?.?.?.?.?.?.?\x53|\x54.?.?.?.?.?.?.?.?\x54|\x55.?.?.?.?.?.?.?.?\x55|\x56.?.?.?.?.?.?.?.?\x56|\x57.?.?.?.?.?.?.?.?\x57|\x58.?.?.?.?.?.?.?.?\x58|\x59.?.?.?.?.?.?.?.?\x59|\x5a.?.?.?.?.?.?.?.?\x5a|\[.?.?.?.?.?.?.?.?\[|\\.?.?.?.?.?.?.?.?\\|\].?.?.?.?.?.?.?.?\]|\^.?.?.?.?.?.?.?.?\^|\x5f.?.?.?.?.?.?.?.?\x5f|\x60.?.?.?.?.?.?.?.?\x60|\x61.?.?.?.?.?.?.?.?\x61|\x62.?.?.?.?.?.?.?.?\x62|\x63.?.?.?.?.?.?.?.?\x63|\x64.?.?.?.?.?.?.?.?\x64|\x65.?.?.?.?.?.?.?.?\x65|\x66.?.?.?.?.?.?.?.?\x66|\x67.?.?.?.?.?.?.?.?\x67|\x68.?.?.?.?.?.?.?.?\x68|\x69.?.?.?.?.?.?.?.?\x69|\x6a.?.?.?.?.?.?.?.?\x6a|\x6b.?.?.?.?.?.?.?.?\x6b|\x6c.?.?.?.?.?.?.?.?\x6c|\x6d.?.?.?.?.?.?.?.?\x6d|\x6e.?.?.?.?.?.?.?.?\x6e|\x6f.?.?.?.?.?.?.?.?\x6f|\x70.?.?.?.?.?.?.?.?\x70|\x71.?.?.?.?.?.?.?.?\x71|\x72.?.?.?.?.?.?.?.?\x72|\x73.?.?.?.?.?.?.?.?\x73|\x74.?.?.?.?.?.?.?.?\x74|\x75.?.?.?.?.?.?.?.?\x75|\x76.?.?.?.?.?.?.?.?\x76|\x77.?.?.?.?.?.?.?.?\x77|\x78.?.?.?.?.?.?.?.?\x78|\x79.?.?.?.?.?.?.?.?\x79|\x7a.?.?.?.?.?.?.?.?\x7a|\{.?.?.?.?.?.?.?.?\{|\|.?.?.?.?.?.?.?.?\||\}.?.?.?.?.?.?.?.?\}|\x7e.?.?.?.?.?.?.?.?\x7e|\x7f.?.?.?.?.?.?.?.?\x7f|\x80.?.?.?.?.?.?.?.?\x80|\x81.?.?.?.?.?.?.?.?\x81|\x82.?.?.?.?.?.?.?.?\x82|\x83.?.?.?.?.?.?.?.?\x83|\x84.?.?.?.?.?.?.?.?\x84|\x85.?.?.?.?.?.?.?.?\x85|\x86.?.?.?.?.?.?.?.?\x86|\x87.?.?.?.?.?.?.?.?\x87|\x88.?.?.?.?.?.?.?.?\x88|\x89.?.?.?.?.?.?.?.?\x89|\x8a.?.?.?.?.?.?.?.?\x8a|\x8b.?.?.?.?.?.?.?.?\x8b|\x8c.?.?.?.?.?.?.?.?\x8c|\x8d.?.?.?.?.?.?.?.?\x8d|\x8e.?.?.?.?.?.?.?.?\x8e|\x8f.?.?.?.?.?.?.?.?\x8f|\x90.?.?.?.?.?.?.?.?\x90|\x91.?.?.?.?.?.?.?.?\x91|\x92.?.?.?.?.?.?.?.?\x92|\x93.?.?.?.?.?.?.?.?\x93|\x94.?.?.?.?.?.?.?.?\x94|\x95.?.?.?.?.?.?.?.?\x95|\x96.?.?.?.?.?.?.?.?\x96|\x97.?.?.?.?.?.?.?.?\x97|\x98.?.?.?.?.?.?.?.?\x98|\x99.?.?.?.?.?.?.?.?\x99|\x9a.?.?.?.?.?.?.?.?\x9a|\x9b.?.?.?.?.?.?.?.?\x9b|\x9c.?.?.?.?.?.?.?.?\x9c|\x9d.?.?.?.?.?.?.?.?\x9d|\x9e.?.?.?.?.?.?.?.?\x9e|\x9f.?.?.?.?.?.?.?.?\x9f|\xa0.?.?.?.?.?.?.?.?\xa0|\xa1.?.?.?.?.?.?.?.?\xa1|\xa2.?.?.?.?.?.?.?.?\xa2|\xa3.?.?.?.?.?.?.?.?\xa3|\xa4.?.?.?.?.?.?.?.?\xa4|\xa5.?.?.?.?.?.?.?.?\xa5|\xa6.?.?.?.?.?.?.?.?\xa6|\xa7.?.?.?.?.?.?.?.?\xa7|\xa8.?.?.?.?.?.?.?.?\xa8|\xa9.?.?.?.?.?.?.?.?\xa9|\xaa.?.?.?.?.?.?.?.?\xaa|\xab.?.?.?.?.?.?.?.?\xab|\xac.?.?.?.?.?.?.?.?\xac|\xad.?.?.?.?.?.?.?.?\xad|\xae.?.?.?.?.?.?.?.?\xae|\xaf.?.?.?.?.?.?.?.?\xaf|\xb0.?.?.?.?.?.?.?.?\xb0|\xb1.?.?.?.?.?.?.?.?\xb1|\xb2.?.?.?.?.?.?.?.?\xb2|\xb3.?.?.?.?.?.?.?.?\xb3|\xb4.?.?.?.?.?.?.?.?\xb4|\xb5.?.?.?.?.?.?.?.?\xb5|\xb6.?.?.?.?.?.?.?.?\xb6|\xb7.?.?.?.?.?.?.?.?\xb7|\xb8.?.?.?.?.?.?.?.?\xb8|\xb9.?.?.?.?.?.?.?.?\xb9|\xba.?.?.?.?.?.?.?.?\xba|\xbb.?.?.?.?.?.?.?.?\xbb|\xbc.?.?.?.?.?.?.?.?\xbc|\xbd.?.?.?.?.?.?.?.?\xbd|\xbe.?.?.?.?.?.?.?.?\xbe|\xbf.?.?.?.?.?.?.?.?\xbf|\xc0.?.?.?.?.?.?.?.?\xc0|\xc1.?.?.?.?.?.?.?.?\xc1|\xc2.?.?.?.?.?.?.?.?\xc2|\xc3.?.?.?.?.?.?.?.?\xc3|\xc4.?.?.?.?.?.?.?.?\xc4|\xc5.?.?.?.?.?.?.?.?\xc5|\xc6.?.?.?.?.?.?.?.?\xc6|\xc7.?.?.?.?.?.?.?.?\xc7|\xc8.?.?.?.?.?.?.?.?\xc8|\xc9.?.?.?.?.?.?.?.?\xc9|\xca.?.?.?.?.?.?.?.?\xca|\xcb.?.?.?.?.?.?.?.?\xcb|\xcc.?.?.?.?.?.?.?.?\xcc|\xcd.?.?.?.?.?.?.?.?\xcd|\xce.?.?.?.?.?.?.?.?\xce|\xcf.?.?.?.?.?.?.?.?\xcf|\xd0.?.?.?.?.?.?.?.?\xd0|\xd1.?.?.?.?.?.?.?.?\xd1|\xd2.?.?.?.?.?.?.?.?\xd2|\xd3.?.?.?.?.?.?.?.?\xd3|\xd4.?.?.?.?.?.?.?.?\xd4|\xd5.?.?.?.?.?.?.?.?\xd5|\xd6.?.?.?.?.?.?.?.?\xd6|\xd7.?.?.?.?.?.?.?.?\xd7|\xd8.?.?.?.?.?.?.?.?\xd8|\xd9.?.?.?.?.?.?.?.?\xd9|\xda.?.?.?.?.?.?.?.?\xda|\xdb.?.?.?.?.?.?.?.?\xdb|\xdc.?.?.?.?.?.?.?.?\xdc|\xdd.?.?.?.?.?.?.?.?\xdd|\xde.?.?.?.?.?.?.?.?\xde|\xdf.?.?.?.?.?.?.?.?\xdf|\xe0.?.?.?.?.?.?.?.?\xe0|\xe1.?.?.?.?.?.?.?.?\xe1|\xe2.?.?.?.?.?.?.?.?\xe2|\xe3.?.?.?.?.?.?.?.?\xe3|\xe4.?.?.?.?.?.?.?.?\xe4|\xe5.?.?.?.?.?.?.?.?\xe5|\xe6.?.?.?.?.?.?.?.?\xe6|\xe7.?.?.?.?.?.?.?.?\xe7|\xe8.?.?.?.?.?.?.?.?\xe8|\xe9.?.?.?.?.?.?.?.?\xe9|\xea.?.?.?.?.?.?.?.?\xea|\xeb.?.?.?.?.?.?.?.?\xeb|\xec.?.?.?.?.?.?.?.?\xec|\xed.?.?.?.?.?.?.?.?\xed|\xee.?.?.?.?.?.?.?.?\xee|\xef.?.?.?.?.?.?.?.?\xef|\xf0.?.?.?.?.?.?.?.?\xf0|\xf1.?.?.?.?.?.?.?.?\xf1|\xf2.?.?.?.?.?.?.?.?\xf2|\xf3.?.?.?.?.?.?.?.?\xf3|\xf4.?.?.?.?.?.?.?.?\xf4|\xf5.?.?.?.?.?.?.?.?\xf5|\xf6.?.?.?.?.?.?.?.?\xf6|\xf7.?.?.?.?.?.?.?.?\xf7|\xf8.?.?.?.?.?.?.?.?\xf8|\xf9.?.?.?.?.?.?.?.?\xf9|\xfa.?.?.?.?.?.?.?.?\xfa|\xfb.?.?.?.?.?.?.?.?\xfb|\xfc.?.?.?.?.?.?.?.?\xfc|\xfd.?.?.?.?.?.?.?.?\xfd|\xfe.?.?.?.?.?.?.?.?\xfe|\xff.?.?.?.?.?.?.?.?\xff)
-diff -Naur iptables-1.8.9.orig/l7-protocols/skypetoskype.pat iptables-1.8.9/l7-protocols/skypetoskype.pat
---- iptables-1.8.9.orig/l7-protocols/skypetoskype.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/skypetoskype.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/skypetoskype.pat
++++ iptables-1.8.x/l7-protocols/skypetoskype.pat
 @@ -0,0 +1,13 @@
 +# Skype to Skype - UDP voice call (program to program) - http://skype.com
 +# Pattern attributes: ok veryfast fast overmatch
@@ -8544,9 +8434,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/skypetoskype.pat iptables-1.8.9/l7-p
 +# require at least 16 bytes (my limited tests always get at least 18)
 +^..\x02.............
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/smb.pat iptables-1.8.9/l7-protocols/smb.pat
---- iptables-1.8.9.orig/l7-protocols/smb.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/smb.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/smb.pat
++++ iptables-1.8.x/l7-protocols/smb.pat
 @@ -0,0 +1,18 @@
 +# Samba/SMB - Server Message Block - Microsoft Windows filesharing
 +# Pattern attributes: good fast notsofast
@@ -8566,9 +8455,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/smb.pat iptables-1.8.9/l7-protocols/
 +smb
 +# matches a NEGOTIATE PROTOCOL or TRANSACTION REQUEST command
 +\xffsmb[\x72\x25]
-diff -Naur iptables-1.8.9.orig/l7-protocols/smtp.pat iptables-1.8.9/l7-protocols/smtp.pat
---- iptables-1.8.9.orig/l7-protocols/smtp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/smtp.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/smtp.pat
++++ iptables-1.8.x/l7-protocols/smtp.pat
 @@ -0,0 +1,39 @@
 +# SMTP - Simple Mail Transfer Protocol - RFC 2821 (See also RFC 1869)
 +# Pattern attributes: great notsofast fast
@@ -8609,9 +8497,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/smtp.pat iptables-1.8.9/l7-protocols
 +^220[\x09-\x0d -~]* (e?smtp|simple mail)
 +userspace pattern=^220[\x09-\x0d -~]* (E?SMTP|[Ss]imple [Mm]ail)
 +userspace flags=REG_NOSUB REG_EXTENDED
-diff -Naur iptables-1.8.9.orig/l7-protocols/snmp.pat iptables-1.8.9/l7-protocols/snmp.pat
---- iptables-1.8.9.orig/l7-protocols/snmp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/snmp.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/snmp.pat
++++ iptables-1.8.x/l7-protocols/snmp.pat
 @@ -0,0 +1,18 @@
 +# SNMP - Simple Network Management Protocol - RFC 1157
 +# Pattern attributes: good veryfast fast superset
@@ -8631,9 +8518,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/snmp.pat iptables-1.8.9/l7-protocols
 +# All SNMPv1 traffic.  See snmp-mon.pat and snmp-trap.pat for details.
 +snmp
 +^\x02\x01\x04.+([\xa0-\xa3]\x02[\x01-\x04].?.?.?.?\x02\x01.?\x02\x01.?\x30|\xa4\x06.+\x40\x04.?.?.?.?\x02\x01.?\x02\x01.?\x43)
-diff -Naur iptables-1.8.9.orig/l7-protocols/socks.pat iptables-1.8.9/l7-protocols/socks.pat
---- iptables-1.8.9.orig/l7-protocols/socks.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/socks.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/socks.pat
++++ iptables-1.8.x/l7-protocols/socks.pat
 @@ -0,0 +1,31 @@
 +# SOCKS Version 5 - Firewall traversal protocol - RFC 1928
 +# Pattern attributes: good notsofast notsofast
@@ -8666,9 +8552,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/socks.pat iptables-1.8.9/l7-protocol
 +
 +socks
 +\x05[\x01-\x08]*\x05[\x01-\x08]?.*\x05[\x01-\x03][\x01\x03].*\x05[\x01-\x08]?[\x01\x03]
-diff -Naur iptables-1.8.9.orig/l7-protocols/soribada.pat iptables-1.8.9/l7-protocols/soribada.pat
---- iptables-1.8.9.orig/l7-protocols/soribada.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/soribada.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/soribada.pat
++++ iptables-1.8.x/l7-protocols/soribada.pat
 @@ -0,0 +1,50 @@
 +# Soribada - A Korean P2P filesharing program/protocol - http://www.soribada.com
 +# Pattern attributes: good slow notsofast
@@ -8720,9 +8605,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/soribada.pat iptables-1.8.9/l7-proto
 +# This will match everything including the udp packet portions
 +^GETMP3\x0d\x0aFilename|^\x01.?.?.?(\x51\x3a\+|\x51\x32\x3a)|^\x10[\x14-\x16]\x10[\x15-\x17].?.?.?.?$
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/soulseek.pat iptables-1.8.9/l7-protocols/soulseek.pat
---- iptables-1.8.9.orig/l7-protocols/soulseek.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/soulseek.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/soulseek.pat
++++ iptables-1.8.x/l7-protocols/soulseek.pat
 @@ -0,0 +1,16 @@
 +# Soulseek - P2P filesharing - http://slsknet.org
 +# Pattern attributes: good fast fast
@@ -8740,9 +8624,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/soulseek.pat iptables-1.8.9/l7-proto
 +# (Pierce firewall: in theory the token could be 4 bytes, but the last two 
 +# seem to always be zero.|download: Peer Init)
 +^(\x05..?|.\x01.[ -~]+\x01F..?.?.?.?.?.?.?)$
-diff -Naur iptables-1.8.9.orig/l7-protocols/ssdp.pat iptables-1.8.9/l7-protocols/ssdp.pat
---- iptables-1.8.9.orig/l7-protocols/ssdp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/ssdp.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/ssdp.pat
++++ iptables-1.8.x/l7-protocols/ssdp.pat
 @@ -0,0 +1,20 @@
 +# SSDP - Simple Service Discovery Protocol - easy discovery of network devices
 +# Pattern attributes: good slow notsofast
@@ -8764,9 +8647,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/ssdp.pat iptables-1.8.9/l7-protocols
 +ssdp
 +^notify[\x09-\x0d ]\*[\x09-\x0d ]http/1\.1[\x09-\x0d -~]*ssdp:(alive|byebye)|^m-search[\x09-\x0d ]\*[\x09-\x0d ]http/1\.1[\x09-\x0d -~]*ssdp:discover
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/ssh.pat iptables-1.8.9/l7-protocols/ssh.pat
---- iptables-1.8.9.orig/l7-protocols/ssh.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/ssh.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/ssh.pat
++++ iptables-1.8.x/l7-protocols/ssh.pat
 @@ -0,0 +1,16 @@
 +# SSH - Secure SHell
 +# Pattern attributes: great veryfast fast
@@ -8784,9 +8666,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/ssh.pat iptables-1.8.9/l7-protocols/
 +
 +# old pattern:
 +# (diffie-hellman-group-exchange-sha1|diffie-hellman-group1-sha1.ssh-rsa|ssh-dssfaes128-cbc|3des-cbc|blowfish-cbc|cast128-cbc|arcfour|aes192-cbc|aes256-cbc|rijndael-cbc@lysator.liu.sefaes128-cbc|3des-cbc|blowfish-cbc|cast128-cbc|arcfour|aes192-cbc|aes256-cbc|rijndael-cbc@lysator.liu.seuhmac-md5|hmac-sha1|hmac-ripemd160)+
-diff -Naur iptables-1.8.9.orig/l7-protocols/ssl.pat iptables-1.8.9/l7-protocols/ssl.pat
---- iptables-1.8.9.orig/l7-protocols/ssl.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/ssl.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/ssl.pat
++++ iptables-1.8.x/l7-protocols/ssl.pat
 @@ -0,0 +1,15 @@
 +# SSL and TLS - Secure Socket Layer / Transport Layer Security - RFC 2246
 +# Pattern attributes: good notsofast fast superset
@@ -8803,9 +8684,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/ssl.pat iptables-1.8.9/l7-protocols/
 +# Server Hello with certificate | Client Hello
 +# This allows SSL 3.X, which includes TLS 1.0, known internally as SSL 3.1
 +^(.?.?\x16\x03.*\x16\x03|.?.?\x01\x03\x01?.*\x0b)
-diff -Naur iptables-1.8.9.orig/l7-protocols/subspace.pat iptables-1.8.9/l7-protocols/subspace.pat
---- iptables-1.8.9.orig/l7-protocols/subspace.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/subspace.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/subspace.pat
++++ iptables-1.8.x/l7-protocols/subspace.pat
 @@ -0,0 +1,20 @@
 +# Subspace - 2D asteroids-style space game - http://sscentral.com
 +# Pattern attributes: marginal veryfast fast
@@ -8827,9 +8707,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/subspace.pat iptables-1.8.9/l7-proto
 +subspace
 +^\x01....\x11\x10........\x01$
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/subversion.pat iptables-1.8.9/l7-protocols/subversion.pat
---- iptables-1.8.9.orig/l7-protocols/subversion.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/subversion.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/subversion.pat
++++ iptables-1.8.x/l7-protocols/subversion.pat
 @@ -0,0 +1,12 @@
 +# Subversion - a version control system
 +# Pattern attributes: ok veryfast fast
@@ -8843,9 +8722,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/subversion.pat iptables-1.8.9/l7-pro
 +subversion
 +# This is not a valid basic GNU regular expression.
 +^\( success \( 1 2 \(
-diff -Naur iptables-1.8.9.orig/l7-protocols/teamfortress2.pat iptables-1.8.9/l7-protocols/teamfortress2.pat
---- iptables-1.8.9.orig/l7-protocols/teamfortress2.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/teamfortress2.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/teamfortress2.pat
++++ iptables-1.8.x/l7-protocols/teamfortress2.pat
 @@ -0,0 +1,10 @@
 +# Team Fortress 2 - network game - http://www.valvesoftware.com
 +# Pattern attributes: good veryfast fast
@@ -8857,9 +8735,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/teamfortress2.pat iptables-1.8.9/l7-
 +
 +teamfortress2
 +^\xff\xff\xff\xff.....*tfTeam Fortress
-diff -Naur iptables-1.8.9.orig/l7-protocols/teamspeak.pat iptables-1.8.9/l7-protocols/teamspeak.pat
---- iptables-1.8.9.orig/l7-protocols/teamspeak.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/teamspeak.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/teamspeak.pat
++++ iptables-1.8.x/l7-protocols/teamspeak.pat
 @@ -0,0 +1,14 @@
 +# TeamSpeak - VoIP application - http://goteamspeak.com
 +# Pattern attributes: good veryfast fast
@@ -8875,9 +8752,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/teamspeak.pat iptables-1.8.9/l7-prot
 +teamspeak
 +^\xf4\xbe\x03.*teamspeak
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/telnet.pat iptables-1.8.9/l7-protocols/telnet.pat
---- iptables-1.8.9.orig/l7-protocols/telnet.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/telnet.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/telnet.pat
++++ iptables-1.8.x/l7-protocols/telnet.pat
 @@ -0,0 +1,15 @@
 +# Telnet - Insecure remote login - RFC 854
 +# Pattern attributes: good veryfast fast
@@ -8894,9 +8770,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/telnet.pat iptables-1.8.9/l7-protoco
 +# This pattern could fail on a unchatty connection or it could be 
 +# matched by something non-telnet spewing a lot of stuff in the fb-ff range.
 +^\xff[\xfb-\xfe].\xff[\xfb-\xfe].\xff[\xfb-\xfe]
-diff -Naur iptables-1.8.9.orig/l7-protocols/thecircle.pat iptables-1.8.9/l7-protocols/thecircle.pat
---- iptables-1.8.9.orig/l7-protocols/thecircle.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/thecircle.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/thecircle.pat
++++ iptables-1.8.x/l7-protocols/thecircle.pat
 @@ -0,0 +1,11 @@
 +# The Circle - P2P application - http://thecircle.org.au
 +# Pattern attributes: ok veryfast fast
@@ -8909,9 +8784,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/thecircle.pat iptables-1.8.9/l7-prot
 +
 +thecircle
 +^t\x03ni.?[\x01-\x06]?t[\x01-\x05]s[\x0a\x0b](glob|who are you$|query data)
-diff -Naur iptables-1.8.9.orig/l7-protocols/tor.pat iptables-1.8.9/l7-protocols/tor.pat
---- iptables-1.8.9.orig/l7-protocols/tor.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/tor.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/tor.pat
++++ iptables-1.8.x/l7-protocols/tor.pat
 @@ -0,0 +1,16 @@
 +# Tor - The Onion Router - used for anonymization - http://tor.eff.org
 +# Pattern attributes: good notsofast notsofast
@@ -8929,9 +8803,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/tor.pat iptables-1.8.9/l7-protocols/
 +
 +tor
 +TOR1.*<identity>
-diff -Naur iptables-1.8.9.orig/l7-protocols/tsp.pat iptables-1.8.9/l7-protocols/tsp.pat
---- iptables-1.8.9.orig/l7-protocols/tsp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/tsp.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/tsp.pat
++++ iptables-1.8.x/l7-protocols/tsp.pat
 @@ -0,0 +1,13 @@
 +# TSP - Berkely UNIX Time Synchronization Protocol
 +# Pattern attributes: good veryfast fast overmatch
@@ -8946,9 +8819,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/tsp.pat iptables-1.8.9/l7-protocols/
 +tsp
 +# type, version (1), sequence number, 8 type specific bytes, machine name
 +^[\x01-\x13\x16-$]\x01.?.?.?.?.?.?.?.?.?.?[ -~]+
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/100bao.pat iptables-1.8.9/l7-protocols/untested/100bao.pat
---- iptables-1.8.9.orig/l7-protocols/untested/100bao.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/100bao.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/100bao.pat
++++ iptables-1.8.x/l7-protocols/untested/100bao.pat
 @@ -0,0 +1,11 @@
 +# 100bao - a Chinese P2P protocol/program - http://www.100bao.com
 +# Pattern attributes: ok veryfast fast
@@ -8961,9 +8833,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/100bao.pat iptables-1.8.9/l
 +100bao
 +^\x01\x01\x05\x0a
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/battlefield2142.pat iptables-1.8.9/l7-protocols/untested/battlefield2142.pat
---- iptables-1.8.9.orig/l7-protocols/untested/battlefield2142.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/battlefield2142.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/battlefield2142.pat
++++ iptables-1.8.x/l7-protocols/untested/battlefield2142.pat
 @@ -0,0 +1,13 @@
 +# Battlefield 2142 - An EA game.
 +# Pattern attributes: ok fast fast
@@ -8978,9 +8849,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/battlefield2142.pat iptable
 +# This branch seems to matter very rarely, though
 +^(\x11\x20\x01\x90\x50\x64\x10|\xfe\xfd.?.?.?\x18|[\x01\\].?battlefield2)
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/battlefield2.pat iptables-1.8.9/l7-protocols/untested/battlefield2.pat
---- iptables-1.8.9.orig/l7-protocols/untested/battlefield2.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/battlefield2.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/battlefield2.pat
++++ iptables-1.8.x/l7-protocols/untested/battlefield2.pat
 @@ -0,0 +1,25 @@
 +# Battlefield 2 - An EA game.
 +# Pattern attributes: ok slow notsofast
@@ -9007,9 +8877,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/battlefield2.pat iptables-1
 +
 +# Pattern prior to 193.85.217.35's comment on protocolinfo:
 +#^(\x11\x20\x01\xa0\x98\x11|\xfe\xfd.?.?.?.?.?.?(\x14\x01\x06|\xff\xff\xff))|[]\x01].?battlefield2
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/biff.pat iptables-1.8.9/l7-protocols/untested/biff.pat
---- iptables-1.8.9.orig/l7-protocols/untested/biff.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/biff.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/biff.pat
++++ iptables-1.8.x/l7-protocols/untested/biff.pat
 @@ -0,0 +1,15 @@
 +# Biff - new mail notification 
 +# Pattern attributes: good veryfast fast undermatch overmatch
@@ -9026,9 +8895,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/biff.pat iptables-1.8.9/l7-
 +# something that looks like a username, an @, a number.
 +# won't catch usernames that have strange characters in them.
 +^[a-z][a-z0-9]+@[1-9][0-9]+$
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/goboogy.pat iptables-1.8.9/l7-protocols/untested/goboogy.pat
---- iptables-1.8.9.orig/l7-protocols/untested/goboogy.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/goboogy.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/goboogy.pat
++++ iptables-1.8.x/l7-protocols/untested/goboogy.pat
 @@ -0,0 +1,12 @@
 +# GoBoogy - a Korean P2P protocol
 +# Pattern attributes: marginal slow notsofast
@@ -9042,9 +8910,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/goboogy.pat iptables-1.8.9/
 +
 +goboogy
 +<peerplat>|^get /getfilebyhash\.cgi\?|^get /queue_register\.cgi\?|^get /getupdowninfo\.cgi\?
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/hotline.pat iptables-1.8.9/l7-protocols/untested/hotline.pat
---- iptables-1.8.9.orig/l7-protocols/untested/hotline.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/hotline.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/hotline.pat
++++ iptables-1.8.x/l7-protocols/untested/hotline.pat
 @@ -0,0 +1,11 @@
 +# Hotline - An old P2P filesharing protocol
 +# Pattern attributes: marginal fast fast
@@ -9057,9 +8924,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/hotline.pat iptables-1.8.9/
 +
 +hotline
 +^....................TRTPHOTL\x01\x02
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/kugoo.pat iptables-1.8.9/l7-protocols/untested/kugoo.pat
---- iptables-1.8.9.orig/l7-protocols/untested/kugoo.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/kugoo.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/kugoo.pat
++++ iptables-1.8.x/l7-protocols/untested/kugoo.pat
 @@ -0,0 +1,14 @@
 +# KuGoo - a Chinese P2P program - http://www.kugoo.com
 +# Pattern attributes: ok veryfast fast
@@ -9075,9 +8941,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/kugoo.pat iptables-1.8.9/l7
 +
 +kugoo
 +^(\x31..\x8e|\x64.+\x74\x47\x50\x37)
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/live365.pat iptables-1.8.9/l7-protocols/untested/live365.pat
---- iptables-1.8.9.orig/l7-protocols/untested/live365.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/live365.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/live365.pat
++++ iptables-1.8.x/l7-protocols/untested/live365.pat
 @@ -0,0 +1,14 @@
 +# live365 - An Internet radio site - http://live365.com
 +# Pattern attributes: marginal notsofast notsofast
@@ -9093,9 +8958,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/live365.pat iptables-1.8.9/
 +# FIXME: what's going on here?
 +membername.*session.*player
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/liveforspeed.pat iptables-1.8.9/l7-protocols/untested/liveforspeed.pat
---- iptables-1.8.9.orig/l7-protocols/untested/liveforspeed.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/liveforspeed.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/liveforspeed.pat
++++ iptables-1.8.x/l7-protocols/untested/liveforspeed.pat
 @@ -0,0 +1,12 @@
 +# Live For Speed - A racing game.
 +# Pattern attributes: poor veryfast fast
@@ -9109,9 +8973,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/liveforspeed.pat iptables-1
 +liveforspeed
 +^..\x05\x58\x0a\x1d\x03
 +# The same guy came by the next day and deleted the \x03 without comment...
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/lpd.pat iptables-1.8.9/l7-protocols/untested/lpd.pat
---- iptables-1.8.9.orig/l7-protocols/untested/lpd.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/lpd.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/lpd.pat
++++ iptables-1.8.x/l7-protocols/untested/lpd.pat
 @@ -0,0 +1,17 @@
 +# LPD - Line Printer Daemon Protocol (old-style UNIX printing) - RFC 1179
 +# Pattern attributes: ok fast fast
@@ -9130,9 +8993,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/lpd.pat iptables-1.8.9/l7-p
 +# testing shows that this is not the case.
 +
 +^(\x01[!-~]+|\x02[!-~]+\x0a.[\x01\x02\x03][\x01-\x0a -~]*|[\x03\x04][!-~]+[\x09-\x0d]+[a-z][\x09-\x0d -~]*|\x05[!-~]+[\x09-\x0d]+([a-z][!-~]*[\x09-\x0d]+[1-9][0-9]?[0-9]?|root[\x09-\x0d]+[!-~]+).*)\x0a$
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/msn-filetransfer.pat iptables-1.8.9/l7-protocols/untested/msn-filetransfer.pat
---- iptables-1.8.9.orig/l7-protocols/untested/msn-filetransfer.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/msn-filetransfer.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/msn-filetransfer.pat
++++ iptables-1.8.x/l7-protocols/untested/msn-filetransfer.pat
 @@ -0,0 +1,29 @@
 +# MSN file transfers - MSN (Micosoft Network) Messenger file transfers (MSNFTP and MSNSLP)
 +# Pattern attributes: good veryfast fast
@@ -9163,9 +9025,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/msn-filetransfer.pat iptabl
 +msn-filetransfer
 +^(ver [ -~]*msnftp\x0d\x0aver msnftp\x0d\x0ausr|method msnmsgr:)
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/netbios.pat iptables-1.8.9/l7-protocols/untested/netbios.pat
---- iptables-1.8.9.orig/l7-protocols/untested/netbios.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/netbios.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/netbios.pat
++++ iptables-1.8.x/l7-protocols/untested/netbios.pat
 @@ -0,0 +1,28 @@
 +# NetBIOS - Network Basic Input Output System
 +# Pattern attributes: marginal notsofast notsofast
@@ -9195,9 +9056,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/netbios.pat iptables-1.8.9/
 +# the NetBIOS names of the involved computers (with a null between them).  
 +# (40ish here, damn this regexp implementation and its lack of {40,})
 +\x81.?.?.[A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P][A-P]
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/pcanywhere.pat iptables-1.8.9/l7-protocols/untested/pcanywhere.pat
---- iptables-1.8.9.orig/l7-protocols/untested/pcanywhere.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/pcanywhere.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/pcanywhere.pat
++++ iptables-1.8.x/l7-protocols/untested/pcanywhere.pat
 @@ -0,0 +1,11 @@
 +# pcAnywhere - Symantec remote access program
 +# Pattern attributes: marginal veryfast fast
@@ -9210,9 +9070,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/pcanywhere.pat iptables-1.8
 +pcanywhere
 +# I think this only matches queries and not the bulk of the traffic!
 +^(nq|st)$
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/poco.pat iptables-1.8.9/l7-protocols/untested/poco.pat
---- iptables-1.8.9.orig/l7-protocols/untested/poco.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/poco.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/poco.pat
++++ iptables-1.8.x/l7-protocols/untested/poco.pat
 @@ -0,0 +1,11 @@
 +# POCO and PP365 - Chinese P2P filesharing - http://pp365.com http://poco.cn
 +# Pattern attributes: ok veryfast fast
@@ -9225,9 +9084,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/poco.pat iptables-1.8.9/l7-
 +poco
 +^\x80\x94\x0a\x01....\x1f\x9e
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/quake1.pat iptables-1.8.9/l7-protocols/untested/quake1.pat
---- iptables-1.8.9.orig/l7-protocols/untested/quake1.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/quake1.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/quake1.pat
++++ iptables-1.8.x/l7-protocols/untested/quake1.pat
 @@ -0,0 +1,18 @@
 +# Quake 1 - A popular computer game.
 +# Pattern attributes: marginal veryfast fast
@@ -9247,9 +9105,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/quake1.pat iptables-1.8.9/l
 +# \x01 = CCREQ_CONNECT
 +# \x03 = protocol version (3 == 0.91, 0.92, 1.00, 1.01)
 +^\x80\x0c\x01quake\x03
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/rlogin.pat iptables-1.8.9/l7-protocols/untested/rlogin.pat
---- iptables-1.8.9.orig/l7-protocols/untested/rlogin.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/rlogin.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/rlogin.pat
++++ iptables-1.8.x/l7-protocols/untested/rlogin.pat
 @@ -0,0 +1,18 @@
 +# rlogin - remote login - RFC 1282
 +# Pattern attributes: ok veryfast fast
@@ -9269,9 +9126,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/rlogin.pat iptables-1.8.9/l
 +# I know of end in two zeros and are between 3 and 6 digits long.
 +# This pattern is uncomfortably general.
 +^[a-z][a-z0-9][a-z0-9]+/[1-9][0-9]?[0-9]?[0-9]?00
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/stun.pat iptables-1.8.9/l7-protocols/untested/stun.pat
---- iptables-1.8.9.orig/l7-protocols/untested/stun.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/stun.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/stun.pat
++++ iptables-1.8.x/l7-protocols/untested/stun.pat
 @@ -0,0 +1,45 @@
 +# STUN - Simple Traversal of UDP Through NAT - RFC 3489
 +# Pattern attributes: ok veryfast fast
@@ -9318,9 +9174,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/stun.pat iptables-1.8.9/l7-
 +# single example):
 +# 
 +# ^\x01................?\x01\x01\x24
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/tesla.pat iptables-1.8.9/l7-protocols/untested/tesla.pat
---- iptables-1.8.9.orig/l7-protocols/untested/tesla.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/tesla.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/tesla.pat
++++ iptables-1.8.x/l7-protocols/untested/tesla.pat
 @@ -0,0 +1,14 @@
 +# Tesla Advanced Communication - P2P filesharing (?)
 +# Pattern attributes: marginal slow notsofast
@@ -9336,9 +9191,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/tesla.pat iptables-1.8.9/l7
 +
 +tesla
 +\x03\x9a\x89\x22\x31\x31\x31\.\x30\x30\x20\x42\x65\x74\x61\x20|\xe2\x3c\x69\x1e\x1c\xe9
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/tftp.pat iptables-1.8.9/l7-protocols/untested/tftp.pat
---- iptables-1.8.9.orig/l7-protocols/untested/tftp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/tftp.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/tftp.pat
++++ iptables-1.8.x/l7-protocols/untested/tftp.pat
 @@ -0,0 +1,20 @@
 +# TFTP - Trivial File Transfer Protocol - used for bootstrapping - RFC 1350
 +# Pattern attributes: marginal veryfast fast
@@ -9360,9 +9214,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/tftp.pat iptables-1.8.9/l7-
 +# the rest = netascii|octet|mail (case insensitivity done by the kernel)
 +
 +^(\x01|\x02)[ -~]*(netascii|octet|mail)
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/unknown.pat iptables-1.8.9/l7-protocols/untested/unknown.pat
---- iptables-1.8.9.orig/l7-protocols/untested/unknown.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/unknown.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/unknown.pat
++++ iptables-1.8.x/l7-protocols/untested/unknown.pat
 @@ -0,0 +1,7 @@
 +# Unknown - Dummy pattern for old unmatched connections.
 +
@@ -9371,9 +9224,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/unknown.pat iptables-1.8.9/
 +# "unknown" and always returns unmatched for connections that are still
 +# being tested.
 +.
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/unset.pat iptables-1.8.9/l7-protocols/untested/unset.pat
---- iptables-1.8.9.orig/l7-protocols/untested/unset.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/unset.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/unset.pat
++++ iptables-1.8.x/l7-protocols/untested/unset.pat
 @@ -0,0 +1,8 @@
 +# Unset - Dummy pattern for unmatched connections that are still being tested
 +
@@ -9383,9 +9235,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/unset.pat iptables-1.8.9/l7
 +# being tested.
 +# NOT YET IMPLEMENTED.
 +.
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/uucp.pat iptables-1.8.9/l7-protocols/untested/uucp.pat
---- iptables-1.8.9.orig/l7-protocols/untested/uucp.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/uucp.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/uucp.pat
++++ iptables-1.8.x/l7-protocols/untested/uucp.pat
 @@ -0,0 +1,11 @@
 +# UUCP - Unix to Unix Copy
 +# Pattern attributes: ok veryfast fast
@@ -9398,9 +9249,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/uucp.pat iptables-1.8.9/l7-
 +
 +uucp
 +^\x10here=
-diff -Naur iptables-1.8.9.orig/l7-protocols/untested/zmaap.pat iptables-1.8.9/l7-protocols/untested/zmaap.pat
---- iptables-1.8.9.orig/l7-protocols/untested/zmaap.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/untested/zmaap.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/untested/zmaap.pat
++++ iptables-1.8.x/l7-protocols/untested/zmaap.pat
 @@ -0,0 +1,17 @@
 +# ZMAAP - Zeroconf Multicast Address Allocation Protocol
 +# Pattern attributes: ok veryfast fast
@@ -9419,9 +9269,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/untested/zmaap.pat iptables-1.8.9/l7
 +# - 1 byte message type,which is either 0 or 1
 +# - 1 byte address family.  L7-filter only works in IPv4, so this is 1.
 +^\x1b\xd7\x3b\x48[\x01\x02]\x01?\x01
-diff -Naur iptables-1.8.9.orig/l7-protocols/validcertssl.pat iptables-1.8.9/l7-protocols/validcertssl.pat
---- iptables-1.8.9.orig/l7-protocols/validcertssl.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/validcertssl.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/validcertssl.pat
++++ iptables-1.8.x/l7-protocols/validcertssl.pat
 @@ -0,0 +1,24 @@
 +# Valid Cert. SSL - Valid certificate SSL 
 +# Pattern attributes: good notsofast notsofast subset
@@ -9447,9 +9296,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/validcertssl.pat iptables-1.8.9/l7-p
 +
 +validcertssl
 +^(.?.?\x16\x03.*\x16\x03|.?.?\x01\x03\x01?.*\x0b).*(thawte|equifax secure|rsa data security, inc|verisign, inc|gte cybertrust root|entrust\.net limited)
-diff -Naur iptables-1.8.9.orig/l7-protocols/ventrilo.pat iptables-1.8.9/l7-protocols/ventrilo.pat
---- iptables-1.8.9.orig/l7-protocols/ventrilo.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/ventrilo.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/ventrilo.pat
++++ iptables-1.8.x/l7-protocols/ventrilo.pat
 @@ -0,0 +1,17 @@
 +# Ventrilo - VoIP - http://ventrilo.com
 +# Pattern attributes: good fast fast
@@ -9468,9 +9316,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/ventrilo.pat iptables-1.8.9/l7-proto
 +ventrilo
 +^..?v\$\xcf
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/vnc.pat iptables-1.8.9/l7-protocols/vnc.pat
---- iptables-1.8.9.orig/l7-protocols/vnc.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/vnc.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/vnc.pat
++++ iptables-1.8.x/l7-protocols/vnc.pat
 @@ -0,0 +1,22 @@
 +# VNC - Virtual Network Computing.  Also known as RFB - Remote Frame Buffer
 +# Pattern attributes: great veryfast fast
@@ -9494,9 +9341,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/vnc.pat iptables-1.8.9/l7-protocols/
 +# slightly faster, but probably not worth the extra maintenance. 
 +# ^rfb 003\.00[3578]\x0a$
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/whois.pat iptables-1.8.9/l7-protocols/whois.pat
---- iptables-1.8.9.orig/l7-protocols/whois.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/whois.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/whois.pat
++++ iptables-1.8.x/l7-protocols/whois.pat
 @@ -0,0 +1,13 @@
 +# Whois - query/response system, usually used for domain name info - RFC 3912
 +# Pattern attributes: good notsofast notsofast overmatch
@@ -9511,9 +9357,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/whois.pat iptables-1.8.9/l7-protocol
 +# Matches the query.  Assumes only that it is printable ASCII without wierd
 +# whitespace.
 +^[ !-~]+\x0d\x0a$
-diff -Naur iptables-1.8.9.orig/l7-protocols/worldofwarcraft.pat iptables-1.8.9/l7-protocols/worldofwarcraft.pat
---- iptables-1.8.9.orig/l7-protocols/worldofwarcraft.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/worldofwarcraft.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/worldofwarcraft.pat
++++ iptables-1.8.x/l7-protocols/worldofwarcraft.pat
 @@ -0,0 +1,65 @@
 +# World of Warcraft - popular network game - http://blizzard.com/
 +# Pattern attributes: ok veryfast fast
@@ -9580,9 +9425,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/worldofwarcraft.pat iptables-1.8.9/l
 +# 0090:  0E 61 20 15 8B 6B 83 13 CB FD 09 D5 7F 0C 13 3F  .a ..k.........?
 +# 00A0:  DB 07 B4 EA 54 F8                                ....T.
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/x11.pat iptables-1.8.9/l7-protocols/x11.pat
---- iptables-1.8.9.orig/l7-protocols/x11.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/x11.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/x11.pat
++++ iptables-1.8.x/l7-protocols/x11.pat
 @@ -0,0 +1,22 @@
 +# X Windows Version 11 - Networked GUI system used in most Unices
 +# Pattern attributes: good notsofast fast
@@ -9606,9 +9450,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/x11.pat iptables-1.8.9/l7-protocols/
 +^[lb].?\x0b
 +userspace pattern=^[lB].?\x0b
 +userspace flags=REG_NOSUB
-diff -Naur iptables-1.8.9.orig/l7-protocols/xboxlive.pat iptables-1.8.9/l7-protocols/xboxlive.pat
---- iptables-1.8.9.orig/l7-protocols/xboxlive.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/xboxlive.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/xboxlive.pat
++++ iptables-1.8.x/l7-protocols/xboxlive.pat
 @@ -0,0 +1,40 @@
 +# XBox Live - Console gaming
 +# pattern attributes: marginal slow notsofast
@@ -9650,9 +9493,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/xboxlive.pat iptables-1.8.9/l7-proto
 +
 +xboxlive
 +^\x58\x80........\xf3|^\x06\x58\x4e
-diff -Naur iptables-1.8.9.orig/l7-protocols/xunlei.pat iptables-1.8.9/l7-protocols/xunlei.pat
---- iptables-1.8.9.orig/l7-protocols/xunlei.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/xunlei.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/xunlei.pat
++++ iptables-1.8.x/l7-protocols/xunlei.pat
 @@ -0,0 +1,14 @@
 +# Xunlei - Chinese P2P filesharing - http://xunlei.com
 +# Pattern attributes: good veryfast fast
@@ -9668,9 +9510,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/xunlei.pat iptables-1.8.9/l7-protoco
 +xunlei
 +^[()]...?.?.?(reg|get|query)
 +
-diff -Naur iptables-1.8.9.orig/l7-protocols/yahoo.pat iptables-1.8.9/l7-protocols/yahoo.pat
---- iptables-1.8.9.orig/l7-protocols/yahoo.pat	1969-12-31 17:00:00.000000000 -0700
-+++ iptables-1.8.9/l7-protocols/yahoo.pat	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/l7-protocols/yahoo.pat
++++ iptables-1.8.x/l7-protocols/yahoo.pat
 @@ -0,0 +1,26 @@
 +# Yahoo messenger - an instant messenger protocol - http://yahoo.com
 +# Pattern attributes: good fast fast
@@ -9698,9 +9539,8 @@ diff -Naur iptables-1.8.9.orig/l7-protocols/yahoo.pat iptables-1.8.9/l7-protocol
 +# after the "type of command" byte.
 +
 +^(ymsg|ypns|yhoo).?.?.?.?.?.?.?[lwt].*\xc0\x80
-diff -Naur iptables-1.8.9.orig/libiptc/libip4tc.c iptables-1.8.9/libiptc/libip4tc.c
---- iptables-1.8.9.orig/libiptc/libip4tc.c	2023-12-28 12:39:03.610034943 -0700
-+++ iptables-1.8.9/libiptc/libip4tc.c	2023-12-28 12:39:09.938029151 -0700
+--- iptables-1.8.x/libiptc/libip4tc.c
++++ iptables-1.8.x/libiptc/libip4tc.c
 @@ -180,7 +180,7 @@
  	    || a->ip.smsk.s_addr != b->ip.smsk.s_addr
  	    || a->ip.dmsk.s_addr != b->ip.dmsk.s_addr
