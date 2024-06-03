@@ -19,7 +19,7 @@
 
 <script>
 
-//	<% nvram("qos_enable,qos_mode,qos_classnames,qos_orules"); %>
+//	<% nvram("qos_enable,qos_mode,qos_classnames,qos_orules,qos_cake_prio_mode"); %>
 
 /* TOMATO64-REMOVE-BEGIN */
 //	<% layer7(); %>
@@ -28,8 +28,27 @@
 /* TOMATO64-BEGIN */
 //	<% ndpi(); %>
 /* TOMATO64-END */
-
 var abc = nvram.qos_classnames.split(' ');
+
+if (nvram.qos_mode == 2) {
+		var position;
+	if (nvram.qos_cake_prio_mode == 1 || nvram.qos_cake_prio_mode == 4) {
+			position = 7;
+		}
+	else if (nvram.qos_cake_prio_mode == 2) {
+			position = 3;
+		}
+	else if (nvram.qos_cake_prio_mode == 3) {
+			position = 2;
+		}
+	for (var i = 0; i < position + 1; i++) {
+			var p = i+1;
+			abc[i] = 'Priority '+p;
+		}
+	for (var i = position + 1; i < abc.length; i++) {
+			abc[i] = '- unused -';
+		}
+}
 
 /* TOMATO64-REMOVE-BEGIN */
 var ipp2p = [[0,'IPP2P (disabled)'],[0xFFF,'All IPP2P filters'],[1,'AppleJuice'],[2,'Ares'],[4,'BitTorrent'],[8,'Direct Connect'],
@@ -506,12 +525,12 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Outbound Direction</div>
+<div class="section-title">Traffic classification</div>
 <script>
 	if (nvram.qos_enable != '1')
 		W('<div class="note-disabled"><b>QoS disabled.<\/b><br><br><a href="qos-settings.asp">Enable &raquo;<\/a><\/div>');
-	else if (nvram.qos_enable == '1' && nvram.qos_mode == '2')
-		W('<div class="note-disabled"><b>Classification is not available in Cake mode.<\/b><br><br><a href="qos-settings.asp">Change mode &raquo;<\/a><\/div>');
+	else if (nvram.qos_enable == 1 && nvram.qos_mode == 2 && nvram.qos_cake_prio_mode == 0)
+		W('<div class="note-disabled"><p><b>CAKE is currently set in single class queue mode, in single class an automatic fair usage policy per IP is applied and classification settings not used.<\/b><\/div><\/td><\/tr></table>');
 	else
 		show_notice1('<% notice("iptables"); %>');
 </script>
