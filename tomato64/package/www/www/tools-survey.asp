@@ -864,7 +864,9 @@ function init() {
 			if ('<% wlclient(); %>' == '0')
 				document.write('<li><b>Warning:<\/b> Wireless connections to this router may be disrupted while using this tool.<br><\/li>');
 		</script>
+<!-- BCMARM-BEGIN -->
 		<li><b>Wireless Survey:</b> will not show any results with WL filter turned on in 'permit only' mode. </li>
+<!-- BCMARM-END -->
 		<li><b>Internal SSID:</b> a full page reload is needed if any of the internal SSID parameters (grey ellipse) ever change.</li>
 		<li><b>Protocols:</b> 802.11ac based FT routers may not accurately detect 160, 240, or 320 MHz channel widths used by 802.11ax (WiFi 6) and 802.11be (WiFi 7) routers. Conversely, 802.11ax-based FT routers may misinterpret 240 or 320 MHz widths in 802.11be routers as 160 MHz. Consider these limitations when assessing network configurations for compatibility and performance.</li>
 	</ul>
