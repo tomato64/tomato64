@@ -209,7 +209,7 @@ var sg = new TomatoGrid();
 
 sg.setup = function() {
 	this.init('survey-grid','sort');
-	this.headerSet(['Last Seen','RGB','SSID','BSSID','RSSI<br>dBm','Quality','Ctrl/Centr<br>Channel','Security','802.11']);
+	this.headerSet(['Last Seen','RGB','SSID','BSSID','RSSI<br>dBm','SNR<br>dB','Qual','Ctrl/Centr<br>Channel','Security','802.11']);
 	this.populate();
 	this.sort(4);
 }
@@ -370,6 +370,10 @@ sg.populate = function(style, sshow) {
 		e.channel = s[10];
 		e.channel = e.channel+'<br><small>'+s[9]+' GHz<\/small><br><small>'+s[4]+' MHz<\/small>';
 		e.rssi = s[2];
+		if (s[9] == 2.4)
+			e.snr = Number(e.rssi) + Math.abs(wl0.noise)
+		else
+			e.snr = Number(e.rssi) + Math.abs(wl1.noise)
 		e.mhz = s[4];
 		e.cap = s[7]+ '<br>'+s[8];
 		e.rates =s[6].replace('11', '');;
@@ -450,7 +454,7 @@ sg.populate = function(style, sshow) {
 		if (mac.match(/^(..):(..):(..)/))
 			mac = '<div style="display:none" id="gW_'+i+'">&nbsp; <img src="spin.gif" alt="" style="vertical-align:middle"><\/div><a href="javascript:searchOUI(\''+RegExp.$1+'-'+RegExp.$2+'-'+RegExp.$3+'\','+i+')" title="OUI Search">'+mac+'<\/a>';
 
-		sg.insert(-1, e, [ '<small>'+seen+'<\/small>', ''+e.col, ''+e.ssid, mac, (e.rssi < 0 ? e.rssi+'' : ''),
+		sg.insert(-1, e, [ '<small>'+seen+'<\/small>', ''+e.col, ''+e.ssid, mac, (e.rssi < 0 ? e.rssi+'' : ''), ''+e.snr,
 		          (e.qual < 0 ? '' : '<small>'+e.qual+'<\/small><br><img src="bar'+MIN(MAX(Math.floor(e.qual / 12), 1), 6)+'.gif" id="bar_'+i+'" alt="">'),
 		          ''+e.control+'/'+e.channel, '<small>'+e.cap, '<\/small>'+e.rates], false);
 	}
@@ -487,9 +491,12 @@ sg.sortCompare = function(a, b) {
 			r = cmpInt(da.rssi, db.rssi);
 		break;
 		case 5:
-			r = cmpInt(da.qual, db.qual);
+			r = cmpInt(da.snr, db.snr);
 		break;
 		case 6:
+			r = cmpInt(da.qual, db.qual);
+		break;
+		case 7:
 			r = cmpInt(da.channel, db.channel);
 		break;
 		default:
