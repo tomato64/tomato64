@@ -1,0 +1,28 @@
+From 860e705d5e4745d706a67635cfaf2a94a57b3213 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Tue, 11 Jun 2024 22:49:35 -0600
+Subject: [PATCH] package/linux-firmware: Add additional firmware to Intel
+ iwlwifi 9xxx
+
+Intel Wireless-AC 9560 needs iwlwifi-so-a0-jf-b0-*.ucode.
+
+Signed-off-by: Lance Fredrickson <lancethepants@gmail.com>
+---
+ package/linux-firmware/linux-firmware.mk | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/package/linux-firmware/linux-firmware.mk b/package/linux-firmware/linux-firmware.mk
+index 8dcd57fb7c..13dbc6d98c 100644
+--- a/package/linux-firmware/linux-firmware.mk
++++ b/package/linux-firmware/linux-firmware.mk
+@@ -583,6 +583,7 @@ endif
+ 
+ ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_IWLWIFI_9XXX),y)
+ LINUX_FIRMWARE_FILES += iwlwifi-9???-*.ucode
++LINUX_FIRMWARE_FILES += iwlwifi-so-a0-jf-b0*.ucode
+ LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.iwlwifi_firmware
+ endif
+ 
+-- 
+2.39.2
+
