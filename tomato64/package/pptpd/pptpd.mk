@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PPTPD_VERSION = 1.4.0
+PPTPD_VERSION = 1.5.0
 PPTPD_SITE = https://sourceforge.net/projects/poptop/files/pptpd/pptpd-$(PPTPD_VERSION)
 PPTPD_LICENSE = MIT
 PPTPD_LICENSE_FILES = COPYING
