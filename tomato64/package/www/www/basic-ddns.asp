@@ -306,6 +306,7 @@ function verifyFields(focused, quiet) {
 				}
 			}
 		} /* -> if (enabled) */
+		var count_enabled_wans = 0;
 		for (j = 1; j <= MAXWAN_NUM; j++) {
 			k = (j > 1) ? j : '';
 			l = j - 1;
@@ -319,7 +320,13 @@ function verifyFields(focused, quiet) {
 			else {
 				E('_f_ddnsx'+i+'_wanip')[l].disabled = 0;
 				E('_f_ddnsx'+i+'_wanip')[l + MAXWAN_NUM].disabled = 0;
+				count_enabled_wans++;
 			}
+		}
+		/* device is configured with no WAN */
+		if (count_enabled_wans == 0) {
+			E('_f_ddnsx'+i+'_wanip')[MAXWAN_NUM].disabled = 0;
+			E('_f_ddnsx'+i+'_wanip')[MAXWAN_NUM].text = 'External address checker';
 		}
 	}
 
