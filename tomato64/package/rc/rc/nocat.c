@@ -125,8 +125,7 @@ void build_nocat_conf(void)
 	            NOCAT_SCRIPTS,
 	            nvram_safe_get("NC_ExcludePorts"),
 	            nvram_safe_get("NC_IncludePorts"),
-	            nvram_safe_get("lan_ipaddr"),
-	            nvram_safe_get("NC_AllowedWebHosts"),
+	            nvram_safe_get("lan_ipaddr"), nvram_safe_get("NC_AllowedWebHosts"),
 	            nvram_safe_get("NC_MACWhiteList"),
 	            "1",
 	            nvram_safe_get("NC_HomePage"),
@@ -212,11 +211,12 @@ void start_nocat(void)
 	            "LOGGER=\"logger -t splashd\"\n"
 	            "LOCK_FILE="NOCAT_LOCKFILE"\n"
 	            "if [ -f $LOCK_FILE ]; then\n"
-	            "	$LOGGER \"Captive Portal halted (0), other process starting\"\n"
-	            "	exit\n"
+	            " $LOGGER \"Captive Portal halted (0), other process starting\"\n"
+	            " exit\n"
 	            "fi\n"
 	            "echo \"TOMATO64\" > $LOCK_FILE\n"
 	            "sleep 20\n"
+	            "[ -f "NOCAT_LEASES" ] || touch "NOCAT_LEASES"\n"
 	            "$LOGGER \"Captive Portal Splash Daemon started\"\n"
 	            "echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse\n"
 	            "/usr/sbin/splashd >> "NOCAT_LOGFILE" 2>&1 &\n"
