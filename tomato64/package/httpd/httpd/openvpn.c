@@ -75,7 +75,7 @@ static void prepareCAGeneration(int serverNum)
 	put_to_file(OPENSSL_TMP_DIR"/index.txt", "");
 	put_to_file(OPENSSL_TMP_DIR"/openssl.log", "");
 
-	memset(buffer, 0, 512);
+	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), "vpn_server%d_ca_key", serverNum);
 
 	if (nvram_match(buffer, "")) {
@@ -85,9 +85,9 @@ static void prepareCAGeneration(int serverNum)
 		if ((p = nvram_safe_get("wan_domain")) && (strcmp(p, "")))
 			snprintf(tmp, sizeof(tmp), ".%s", p);
 
-		memset(buffer2, 0, 512);
+		memset(buffer2, 0, sizeof(buffer2));
 		snprintf(buffer2, sizeof(buffer2), "\"/C=GB/ST=Yorks/L=York/O=Tomato64/OU=IT/CN=server%s\"", tmp);
-		memset(buffer, 0, 512);
+		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), "openssl req -days 3650 -nodes -new -x509 -keyout "OPENSSL_TMP_DIR"/cakey.pem -out "OPENSSL_TMP_DIR"/cacert.pem -subj %s >>"OPENSSL_TMP_DIR"/openssl.log 2>&1", buffer2);
 		syslog(LOG_WARNING, buffer);
 		system(buffer);
@@ -128,20 +128,20 @@ static void generateKey(const char *prefix, const int userid)
 	if ((p = nvram_safe_get("wan_domain")) && (strcmp(p, "")))
 		snprintf(tmp, sizeof(tmp), ".%s", p);
 
-	memset(subj_buf, 0, 256);
+	memset(subj_buf, 0, sizeof(subj_buf));
 	snprintf(subj_buf, sizeof(subj_buf), "\"/C=GB/ST=Yorks/L=York/O=Tomato64/OU=IT/CN=%s%s%s\"", prefix, (userid > 0 ? serial : ""), tmp);
 
-	memset(buffer, 0, 512);
+	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), "openssl req -nodes -new -keyout "OPENSSL_TMP_DIR"/%s.key -out "OPENSSL_TMP_DIR"/%s.csr %s -subj %s >>"OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix, str, subj_buf);
 	syslog(LOG_WARNING, buffer);
 	system(buffer);
 
-	memset(buffer, 0, 512);
+	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), "openssl ca -batch -policy policy_anything -days 3650 -out "OPENSSL_TMP_DIR"/%s.crt -in "OPENSSL_TMP_DIR"/%s.csr %s -subj %s >>"OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix, str, subj_buf);
 	syslog(LOG_WARNING, buffer);
 	system(buffer);
 
-	memset(buffer, 0, 512);
+	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), "openssl x509 -in "OPENSSL_TMP_DIR"/%s.crt -inform PEM -out "OPENSSL_TMP_DIR"/%s.crt -outform PEM >>"OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix);
 	syslog(LOG_WARNING, buffer);
 	system(buffer);
@@ -161,12 +161,12 @@ static void print_generated_keys_to_user(const char *prefix)
 	char buffer[32];
 
 	web_puts("\ngenerated_crt = '");
-	memset(buffer, 0, 32);
+	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), OPENSSL_TMP_DIR"/%s.crt", prefix);
 	web_putfile(buffer, WOF_JAVASCRIPT);
 
 	web_puts("';\ngenerated_key = '");
-	memset(buffer, 0, 32);
+	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), OPENSSL_TMP_DIR"/%s.key", prefix);
 	web_putfile(buffer, WOF_JAVASCRIPT);
 
@@ -192,9 +192,11 @@ void wo_ovpn_status(char *url)
 
 	num = str ? atoi(str) : 0;
 	if ((type) && (num > 0)) {
+		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), "vpn%s%d", type, num);
 		if ((pid = pidof(buffer)) > 0) {
 			/* Read the status file and repeat it verbatim to the caller */
+			memset(buffer, 0, sizeof(buffer));
 			snprintf(buffer, sizeof(buffer), "/etc/openvpn/%s%d/status", type, num);
 
 			/* Give it some time if it doesn't exist yet */
@@ -214,11 +216,12 @@ void wo_ovpn_status(char *url)
 void wo_ovpn_genkey(char *url)
 {
 #ifdef TCONFIG_OPENVPN
-	char buffer[64];
+	char buffer[128];
 	char *modeStr;
 	char *serverStr;
 	int server;
 
+	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, webcgi_safeget("_mode", ""), sizeof(buffer));
 	modeStr = js_string(buffer); /* quicky scrub */
 	if (modeStr == NULL) {
@@ -228,6 +231,7 @@ void wo_ovpn_genkey(char *url)
 		return;
 	}
 
+	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, webcgi_safeget("_server", ""), sizeof(buffer));
 	serverStr = js_string(buffer); /* quicky scrub */
 	if (serverStr == NULL && ((!strncmp(modeStr, "static", 6)) || (!strcmp(modeStr, "key")))) {
@@ -238,18 +242,30 @@ void wo_ovpn_genkey(char *url)
 	}
 
 	server = atoi(serverStr);
+	memset(buffer, 0, sizeof(buffer));
 
-	if (!strcmp(modeStr, "static1")) /* tls-auth / tls-crypt */
+	if (!strcmp(modeStr, "static1")) { /* tls-auth / tls-crypt */
 #ifndef TCONFIG_OPTIMIZE_SIZE_MORE
-		web_pipecmd("openvpn --genkey secret /tmp/genvpnkey >/dev/null 2>&1 && cat /tmp/genvpnkey | tail -n +4 && rm /tmp/genvpnkey", WOF_NONE);
-	else if (!strcmp(modeStr, "static2")) /* tls-crypt-v2 */
-		web_pipecmd("openvpn --genkey tls-crypt-v2-server /tmp/genvpnkey >/dev/null 2>&1 && cat /tmp/genvpnkey && rm /tmp/genvpnkey", WOF_NONE);
+		strlcpy(buffer, "openvpn --genkey secret /tmp/genvpnkey >/dev/null 2>&1 && cat /tmp/genvpnkey | tail -n +4 && rm /tmp/genvpnkey", sizeof(buffer));
+		syslog(LOG_WARNING, buffer);
+		web_pipecmd(buffer, WOF_NONE);
+	}
+	else if (!strcmp(modeStr, "static2")) { /* tls-crypt-v2 */
+		strlcpy(buffer, "openvpn --genkey tls-crypt-v2-server /tmp/genvpnkey >/dev/null 2>&1 && cat /tmp/genvpnkey && rm /tmp/genvpnkey", sizeof(buffer));
+		syslog(LOG_WARNING, buffer);
+		web_pipecmd(buffer, WOF_NONE);
 #else
-		web_pipecmd("openvpn --genkey --secret /tmp/genvpnkey >/dev/null 2>&1 && cat /tmp/genvpnkey | tail -n +4 && rm /tmp/genvpnkey", WOF_NONE);
+		strlcpy(buffer, "openvpn --genkey --secret /tmp/genvpnkey >/dev/null 2>&1 && cat /tmp/genvpnkey | tail -n +4 && rm /tmp/genvpnkey", sizeof(buffer));
+		syslog(LOG_WARNING, buffer);
+		web_pipecmd(buffer, WOF_NONE);
 #endif /* !TCONFIG_OPTIMIZE_SIZE_MORE */
 #ifdef TCONFIG_KEYGEN
-	else if (!strcmp(modeStr, "dh"))
-		web_pipecmd("openssl dhparam -out /tmp/dh1024.pem 1024 >/dev/null 2>&1 && cat /tmp/dh1024.pem && rm /tmp/dh1024.pem", WOF_NONE);
+	}
+	else if (!strcmp(modeStr, "dh")) {
+		strlcpy(buffer, "openssl dhparam -out /tmp/dh1024.pem 1024 >/dev/null 2>&1 && cat /tmp/dh1024.pem && rm /tmp/dh1024.pem", sizeof(buffer));
+		syslog(LOG_WARNING, buffer);
+		web_pipecmd(buffer, WOF_NONE);
+	}
 	else {
 		prepareCAGeneration(server);
 		generateKey("server", 0);
@@ -275,9 +291,11 @@ void wo_ovpn_genclientconfig(char *url)
 	FILE *fp;
 	FILE *fa;
 
+	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, webcgi_safeget("_server", ""), sizeof(buffer));
 	serverStr = js_string(buffer); /* quicky scrub */
 
+	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, url, sizeof(buffer));
 	u = js_string(buffer);
 
@@ -300,7 +318,7 @@ void wo_ovpn_genclientconfig(char *url)
 		return;
 	}
 
-	memset(buffer, 0, 256);
+	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), "vpn_server%d_crypt", server);
 	if (nvram_match(buffer, "tls"))
 		tls = 1;
@@ -313,11 +331,13 @@ void wo_ovpn_genclientconfig(char *url)
 	            atoi(getNVRAMVar("vpn_server%d_port", server)));
 
 	/* Proto */
+	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, getNVRAMVar("vpn_server%d_proto", server), sizeof(buffer));
 	str_replace(buffer, "-server", "-client");
 	fprintf(fp, "proto %s\n", buffer);
 
 	/* Compression */
+	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, getNVRAMVar("vpn_server%d_comp", server), sizeof(buffer));
 	if (strcmp(buffer, "-1")) {
 		if ((!strcmp(buffer, "lz4")) || (!strcmp(buffer, "lz4-v2")))
@@ -334,20 +354,21 @@ void wo_ovpn_genclientconfig(char *url)
 	fprintf(fp, "dev %s\n", getNVRAMVar("vpn_server%d_if", server));
 
 	/* Cipher */
+	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, getNVRAMVar("vpn_server%d_ncp_ciphers", server), sizeof(buffer));
 	if (tls == 1) {
 		if (buffer[0] != '\0')
 			fprintf(fp, "ncp-ciphers %s\n", buffer);
 	}
 	else { /* secret */
-		memset(buffer, 0, 256);
+		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), "vpn_server%d_cipher", server);
 		if (!nvram_contains_word(buffer, "default"))
 			fprintf(fp, "cipher %s\n", nvram_safe_get(buffer));
 	}
 
 	/* Digest */
-	memset(buffer, 0, 256);
+	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), "vpn_server%d_digest", server);
 	if (!nvram_contains_word(buffer, "default"))
 		fprintf(fp, "auth %s\n", nvram_safe_get(buffer));
@@ -360,7 +381,7 @@ void wo_ovpn_genclientconfig(char *url)
 
 		put_to_file(OVPN_CLIENT_DIR"/ca.pem", getNVRAMVar("vpn_server%d_ca", server));
 
-		memset(buffer, 0, 256);
+		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), "vpn_server%d_hmac", server);
 		hmac = nvram_get_int(buffer);
 		if (hmac >= 0) {
@@ -448,7 +469,7 @@ void wo_ovpn_genclientconfig(char *url)
 	}
 	else {
 		fprintf(fp, "mode p2p\n");
-		memset(buffer, 0, 256);
+		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), "vpn_server%d_if", server);
 		if (nvram_contains_word(buffer, "tap")) {
 			fprintf(fp, "ifconfig %s ", getNVRAMVar("vpn_server%d_local", server));
