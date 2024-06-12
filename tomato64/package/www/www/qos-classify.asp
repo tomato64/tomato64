@@ -19,7 +19,7 @@
 
 <script>
 
-//	<% nvram("qos_enable,qos_mode,qos_classnames,qos_orules,qos_cake_prio_mode"); %>
+//	<% nvram("qos_enable,qos_mode,qos_classnames,qos_orules,qos_cake_prio_mode,qos_classify"); %>
 
 /* TOMATO64-REMOVE-BEGIN */
 //	<% layer7(); %>
@@ -531,6 +531,8 @@ function init() {
 		W('<div class="note-disabled"><b>QoS disabled.<\/b><br><br><a href="qos-settings.asp">Enable &raquo;<\/a><\/div>');
 	else if (nvram.qos_enable == 1 && nvram.qos_mode == 2 && nvram.qos_cake_prio_mode == 0)
 		W('<div class="note-disabled"><p><b>CAKE is currently set in single class queue mode, in single class an automatic fair usage policy per IP is applied and classification settings not used.<\/b><\/div><\/td><\/tr></table>');
+	else if (nvram.qos_enable == 1 && nvram.qos_mode == 1 && nvram.qos_classify == 0)
+		W('<div class="note-disabled"><p><b>QoS classification is disabled.<\/b><\/div><\/td><\/tr></table>');
 	else
 		show_notice1('<% notice("iptables"); %>');
 </script>
