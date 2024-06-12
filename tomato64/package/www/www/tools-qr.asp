@@ -46,10 +46,10 @@
 }
 </style>
 
-<script src="tomato.js"></script>
+<script src="tomato.js?rel=<% version(); %>"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
-<script src="qrcode.js"></script>
-<script src="html5-qrcode.js"></script>
+<script src="qrcode.js?rel=<% version(); %>"></script>
+<script src="html5-qrcode.js?rel=<% version(); %>"></script>
 
 <script>
 

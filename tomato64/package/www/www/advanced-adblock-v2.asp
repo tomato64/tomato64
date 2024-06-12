@@ -14,7 +14,7 @@
 <title>[<% ident(); %>] Advanced: Adblock (DNS filtering)</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script src="tomato.js"></script>
+<script src="tomato.js?rel=<% version(); %>"></script>
 <script>
 
 //	<% nvram("adblock_enable,adblock_blacklist,adblock_blacklist_custom,adblock_whitelist,adblock_path,adblock_limit,adblock_logs"); %>

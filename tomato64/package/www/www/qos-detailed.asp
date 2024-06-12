@@ -18,9 +18,9 @@
 <title>[<% ident(); %>] QoS: View Details</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script src="tomato.js"></script>
-<script src="protocols.js"></script>
-<script src="interfaces.js"></script>
+<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="protocols.js?rel=<% version(); %>"></script>
+<script src="interfaces.js?rel=<% version(); %>"></script>
 
 <script>
 

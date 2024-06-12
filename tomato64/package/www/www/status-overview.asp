@@ -18,10 +18,10 @@
 <title>[<% ident(); %>] Status: Overview</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script src="tomato.js"></script>
-<script src="interfaces.js"></script>
+<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="interfaces.js?rel=<% version(); %>"></script>
 <!-- USB-BEGIN -->
-<script src="wwan_parser.js"></script>
+<script src="wwan_parser.js?rel=<% version(); %>"></script>
 <!-- USB-END -->
 
 <script>

@@ -30,11 +30,11 @@
 
 </style>
 <script src="isup.jsz"></script>
-<script src="tomato.js"></script>
-<script src="wireguard.js"></script>
-<script src="interfaces.js"></script>
-<script src="qrcode.js"></script>
-<script src="html5-qrcode.js"></script>
+<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="wireguard.js?rel=<% version(); %>"></script>
+<script src="interfaces.js?rel=<% version(); %>"></script>
+<script src="qrcode.js?rel=<% version(); %>"></script>
+<script src="html5-qrcode.js?rel=<% version(); %>"></script>
 <script>
 
 

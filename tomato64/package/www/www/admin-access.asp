@@ -15,7 +15,7 @@
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <link rel="stylesheet" type="text/css" href="<% nv('web_css'); %>.css" id="guicss">
 <script src="isup.jsz"></script>
-<script src="tomato.js"></script>
+<script src="tomato.js?rel=<% version(); %>"></script>
 
 <script>
 

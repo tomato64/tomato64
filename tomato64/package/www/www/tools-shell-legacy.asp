@@ -12,8 +12,8 @@
 <title>[<% ident(); %>] Tools: System Commands</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script src="tomato.js"></script>
-<script src="termlib_min.js"></script>
+<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="termlib_min.js?rel=<% version(); %>"></script>
 
 <script>
 

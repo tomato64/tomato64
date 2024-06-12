@@ -14,7 +14,7 @@
 <title>[<% ident(); %>] Admin: IP Traffic Monitoring</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script src="tomato.js"></script>
+<script src="tomato.js?rel=<% version(); %>"></script>
 
 <script>
 

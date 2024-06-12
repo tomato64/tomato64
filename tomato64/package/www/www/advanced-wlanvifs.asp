@@ -21,10 +21,10 @@
 <title>[<% ident(); %>] Advanced: Virtual Wireless Interfaces</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script src="tomato.js"></script>
-<script src="md5.js"></script>
-<script src="interfaces.js"></script>
-<script src="wireless.js"></script>
+<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="md5.js?rel=<% version(); %>"></script>
+<script src="interfaces.js?rel=<% version(); %>"></script>
+<script src="wireless.js?rel=<% version(); %>"></script>
 <script>
 var lastjiffiestotal = 0, lastjiffiesidle = 0, lastjiffiesusage = 100;
 </script>
