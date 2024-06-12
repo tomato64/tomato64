@@ -271,8 +271,8 @@ void wo_ovpn_genkey(char *url)
 		generateKey("server", 0);
 		print_generated_ca_to_user();
 		print_generated_keys_to_user("server");
-	}
 #endif /* TCONFIG_KEYGEN */
+	}
 #endif /* TCONFIG_OPENVPN */
 }
 
