@@ -29,7 +29,7 @@
 }
 
 </style>
-<script src="isup.jsz"></script>
+<script src="isup.jsz?rel=<% version(); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="wireguard.js?rel=<% version(); %>"></script>
 <script src="interfaces.js?rel=<% version(); %>"></script>

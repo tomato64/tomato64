@@ -16,7 +16,7 @@
 <title>[<% ident(); %>] OpenVPN: Server</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script src="isup.jsz"></script>
+<script src="isup.jsz?rel=<% version(); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="vpn.js?rel=<% version(); %>"></script>
 
