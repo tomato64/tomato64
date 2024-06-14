@@ -11855,6 +11855,7 @@ int init_main(int argc, char *argv[])
 			mwan_state_files();
 			start_services();
 
+#ifndef TOMATO64
 			if (restore_defaults_fb /*|| nvram_match("wireless_restart_req", "1")*/) {
 				logmsg(LOG_INFO, "%s: Tomato64 WiFi restarting ... (restore defaults)", nvram_safe_get("t_model_name"));
 				restore_defaults_fb = 0; /* reset */
@@ -11870,11 +11871,13 @@ int init_main(int argc, char *argv[])
 					restart_wireless();
 				}
 			}
+#endif /* TOMATO64 */
 			/*
 			 * last one as ssh telnet httpd samba etc can fail to load until start_wan_done
 			 */
 			start_wan();
 
+#ifndef TOMATO64
 			if (wds_enable()) {
 				/* Restart NAS one more time - for some reason without
 				 * this the new driver doesn't always bring WDS up.
@@ -11882,6 +11885,7 @@ int init_main(int argc, char *argv[])
 				stop_nas();
 				start_nas();
 			}
+#endif /* TOMATO64 */
 
 			logmsg(LOG_INFO, "%s: Tomato64 %s", nvram_safe_get("t_model_name"), tomato_version);
 

@@ -2988,7 +2988,9 @@ void start_services(void)
 			start_sshd();
 	}
 	start_dhcpc_lan(); /* start very early */
+#ifndef TOMATO64
 	start_nas();
+#endif /* TOMATO64 */
 #ifdef TCONFIG_ZEBRA
 	start_zebra();
 #endif
@@ -3108,7 +3110,9 @@ void stop_services(void)
 #ifdef TCONFIG_ZEBRA
 	stop_zebra();
 #endif
+#ifndef TOMATO64
 	stop_nas();
+#endif /* TOMATO64 */
 #ifdef TCONFIG_BCMBSD
 	stop_bsd();
 #endif
@@ -3688,7 +3692,9 @@ TOP:
 			stop_mdns();
 #endif
 			stop_dnsmasq();
+#ifndef TOMATO64
 			stop_nas();
+#endif /* TOMATO64 */
 			stop_wan();
 			stop_arpbind();
 			stop_lan();
@@ -3698,13 +3704,17 @@ TOP:
 			start_vlan();
 			start_lan();
 			start_arpbind();
+#ifndef TOMATO64
 			start_nas();
+#endif /* TOMATO64 */
 			start_dnsmasq();
 #ifdef TCONFIG_MDNS
 			start_mdns();
 #endif
 			start_httpd();
+#ifndef TOMATO64
 			start_wl();
+#endif /* TOMATO64 */
 #ifdef TCONFIG_USB
 			start_nas_services();
 #endif
@@ -3714,6 +3724,7 @@ TOP:
 		goto CLEAR;
 	}
 
+#ifndef TOMATO64
 	if ((strcmp(service, "wireless") == 0) || (strcmp(service, "wl") == 0)) { /* for tomato user --> 'service wl start' will restart wl allways (failsafe, even if wl was not stopped!) */
 		if (act_stop) stop_wireless();
 		if (act_start) restart_wireless();
@@ -3734,6 +3745,7 @@ TOP:
 		}
 		goto CLEAR;
 	}
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_BCMBSD
 	if (strcmp(service, "bsd") == 0) {

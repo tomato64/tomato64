@@ -91,6 +91,7 @@ const char *chain_out_drop;
 const char *chain_out_accept;
 const char *chain_out_reject;
 
+#ifndef TOMATO64
 static inline int is_wet(int idx, int unit, int subunit, void *param)
 {
 	return nvram_match(wl_nvname("mode", unit, subunit), "wet");
@@ -102,6 +103,7 @@ static inline int is_psta(int idx, int unit, int subunit, void *param)
 	return nvram_match(wl_nvname("mode", unit, subunit), "psta");
 }
 #endif /* TCONFIG_BCMWL6 */
+#endif /* TOMATO64 */
 
 /* rc.c */
 extern void chains_log_detection(void);
@@ -197,6 +199,7 @@ extern void start_lan(void);
 extern void stop_lan(void);
 extern void hotplug_net(void);
 extern void do_static_routes(int add);
+#ifndef TOMATO64
 extern int radio_main(int argc, char *argv[]);
 extern int wldist_main(int argc, char *argv[]);
 extern void stop_wireless(void);
@@ -206,6 +209,7 @@ extern void start_wl(void);
 extern int disabled_wl(int idx, int unit, int subunit, void *param);
 extern void unload_wl(void);
 extern void load_wl(void);
+#endif /* TOMATO64 */
 #ifdef TCONFIG_IPV6
 extern void enable_ipv6(int enable);
 extern void accept_ra(const char *ifname);
@@ -343,11 +347,13 @@ extern void remove_storage_main(int shutdn);
 #endif /* TCONFIG_USB */
 
 /* wnas.c */
+#ifndef TOMATO64
 extern int wds_enable(void);
 extern int wl_security_on(void);
 extern void start_nas(void);
 extern void stop_nas(void);
 extern void notify_nas(const char *ifname);
+#endif /* TOMATO64 */
 
 /* firewall.c */
 typedef void (*_tf_ipt_write)(const char *format, ... );

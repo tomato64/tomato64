@@ -55,7 +55,12 @@ static int hotplug_main(int argc, char *argv[])
 {
 	if (argc >= 2) {
 		if (strcmp(argv[1], "net") == 0)
+#ifndef TOMATO64
 			hotplug_net();
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+			;
+#endif /* TOMATO64 */
 #ifdef TCONFIG_USB
 		else if (strcmp(argv[1], "usb") == 0)
 			hotplug_usb();
@@ -276,7 +281,9 @@ static const applets_t applets[] = {
 #ifdef TCONFIG_IPV6
 	{ "dhcp6c-state",		dhcp6c_state_main		},
 #endif
+#ifndef TOMATO64
 	{ "radio",			radio_main			},
+#endif /* TOMATO64 */
 	{ "led",			led_main			},
 	{ "halt",			reboothalt_main			},
 	{ "reboot",			reboothalt_main			},
@@ -284,7 +291,9 @@ static const applets_t applets[] = {
 	{ "fast-reboot",		fastreboot_main			},
 #endif /* TOMATO64 */
 	{ "gpio",			gpio_main			},
+#ifndef TOMATO64
 	{ "wldist",			wldist_main			},
+#endif /* TOMATO64 */
 #ifdef TCONFIG_CIFS
 	{ "mount-cifs",			mount_cifs_main			},
 #endif

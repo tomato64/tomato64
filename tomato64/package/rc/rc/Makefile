@@ -19,11 +19,11 @@ ALL_CFLAGS += -DDEBUG_LOGMSG
 endif
 
 OBJS := rc.o init.o interface.o network.o wan.o services.o dhcp.o \
-	firewall.o ppp.o telssh.o wnas.o listen.o redial.o \
+	firewall.o ppp.o telssh.o listen.o redial.o \
 	led.o qos.o forward.o misc.o restrict.o \
 	gpio.o sched.o bwlimit.o arpbind.o tomatoanon.o mwan.o pbr.o
 
-# mtd.o buttons.o
+# mtd.o buttons.o wnas.o
 
 ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_BLINK)),y)
 OBJS += blink.o blink_br.o

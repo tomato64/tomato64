@@ -996,7 +996,9 @@ void start_wan_if(char *prefix)
 	close(sd);
 
 	/* Set initial QoS mode again now that WAN port is ready. */
+#ifndef TOMATO64
 	set_et_qos_mode();
+#endif /* TOMATO64 */
 }
 
 void start_wan(void)

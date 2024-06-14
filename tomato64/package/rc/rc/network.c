@@ -59,6 +59,9 @@ typedef u_int8_t u8;
 #include <arpa/inet.h>
 #include <dirent.h>
 
+#ifdef TOMATO64
+#include <proto/ethernet.h>
+#else
 #include <wlutils.h>
 #include <bcmparams.h>
 #include <wlioctl.h>
@@ -75,7 +78,6 @@ typedef u_int8_t u8;
 #include <sys/reboot.h>
 #endif
 
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 #ifdef TCONFIG_BCMARM
 #include <d11.h>
@@ -93,7 +95,6 @@ typedef u_int8_t u8;
 				 (phy) == PHY_TYPE_LCN ? "c" : "n")
 #endif
 #endif /* TCONFIG_BCMWL6 */
-#endif /* TOMATO64 */
 
 #define WL_MAX_ASSOC		128
 #define STACHECK_CONNECT	30
@@ -102,23 +103,23 @@ typedef u_int8_t u8;
 #define STA_ARPING_FREQ		5 /* arping after X STACHECK_CONNECT checks (default: (5+1) * 30 sec = 180 sec) */
 #define STA_RECOVER_THRES	9 /* after X checks, try to recover MediaBridge connection (minimum 5 and up!) */
 #endif
+#endif /* TOMATO64 */
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"network_debug"
 
 
+#ifndef TOMATO64
 void restart_wl(void);
 void stop_lan_wl(void);
 void start_lan_wl(void);
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 int wl_sta_prepare(void);
 void wl_sta_start(void);
 void wl_sta_stop(void);
 int wl_send_dif_event(const char *ifname, uint32 event);
 #endif
-#endif /* TOMATO64 */
 
 enum {
 	RADIO_OFF = 0,
@@ -126,7 +127,6 @@ enum {
 	RADIO_TOGGLE = 2
 };
 
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 void wlconf_pre(void)
 {
@@ -284,6 +284,7 @@ static void set_lan_hostname(const char *wan_hostname)
 		logerr(__FUNCTION__, __LINE__, "/etc/hosts");
 }
 
+#ifndef TOMATO64
 static int soc_req(const char *name, int action, struct ifreq *ifr)
 {
 	int s;
@@ -349,6 +350,7 @@ static void wl_vif_hwaddr_set(const char *name)
 	else
 		logmsg(LOG_INFO, "VIF: mac addr (%s) was set properly for %s after %d ms\n", ea, name, retry);
 }
+#endif /* TOMATO64 */
 
 void set_host_domain_name(void)
 {
@@ -365,12 +367,12 @@ void set_host_domain_name(void)
 	setdomainname(s, strlen(s));
 }
 
+#ifndef TOMATO64
 static int wlconf(char *ifname, int unit, int subunit)
 {
 	int r = -1;
 	char wl[24];
 
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	int phytype;
 	char buf[8] = {0};
@@ -384,7 +386,6 @@ static int wlconf(char *ifname, int unit, int subunit)
 	int wlif_count = 0;
 	int i = 0;
 #endif
-#endif /* TOMATO64 */
 
 	/* Check interface - fail for non-wl interfaces */
 	if ((unit < 0) || wl_probe(ifname))
@@ -392,7 +393,6 @@ static int wlconf(char *ifname, int unit, int subunit)
 
 	logmsg(LOG_DEBUG, "*** %s: wlconf: ifname %s unit %d subunit %d", __FUNCTION__, ifname, unit, subunit);
 
-#ifndef TOMATO64
 #ifndef TCONFIG_BCMARM
 	/* Tomato MIPS needs a little help here: wlconf() will not validate/restore all per-interface related variables right now; */
 	snprintf(wl, sizeof(wl), "--wl%d", unit);
@@ -437,7 +437,6 @@ static int wlconf(char *ifname, int unit, int subunit)
 		}
 	}
 #endif /* TCONFIG_BCMBSD */
-#endif /* TOMATO64 */
 
 	r = eval("wlconf", ifname, "up");
 	logmsg(LOG_DEBUG, "*** %s: wlconf %s = %d", __FUNCTION__, ifname, r);
@@ -449,7 +448,6 @@ static int wlconf(char *ifname, int unit, int subunit)
 			eval("wl", "-i", ifname, "antdiv", nvram_safe_get(wl_nvname("antdiv", unit, 0)));
 			eval("wl", "-i", ifname, "txant", nvram_safe_get(wl_nvname("txant", unit, 0)));
 			eval("wl", "-i", ifname, "txpwr1", "-o", "-m", nvram_get_int(wl_nvname("txpwr", unit, 0)) ? nvram_safe_get(wl_nvname("txpwr", unit, 0)) : "-1");
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 			eval("wl", "-i", ifname, "interference", nvram_match(wl_nvname("phytype", unit, 0), "v") ? nvram_safe_get(wl_nvname("mitigation_ac", unit, 0)) : nvram_safe_get(wl_nvname("mitigation", unit, 0)));
 #else
@@ -459,7 +457,6 @@ static int wlconf(char *ifname, int unit, int subunit)
 			if (nvram_match(wl_nvname("phytype", unit, 0), "v"))
 				eval("wl", "-i", ifname, "ldpc_cap", nvram_match(wl_nvname("optimizexbox", unit, 0), "1") ? "0" : "1"); /* driver default setting is ldpc_cap = 1 (On) --> optimizexbox disabled! */
 #endif
-#endif /* TOMATO64 */
 		}
 
 		if (wl_client(unit, subunit)) {
@@ -475,7 +472,6 @@ static int wlconf(char *ifname, int unit, int subunit)
 	return r;
 }
 
-#ifndef TOMATO64
 #ifdef TCONFIG_EMF
 static void emf_mfdb_update(char *lan_ifname, char *lan_port_ifname, bool add)
 {
@@ -608,7 +604,6 @@ static void stop_emf(char *lan_ifname)
 	}
 }
 #endif /* TCONFIG_EMF */
-#endif /* TOMATO64 */
 
 /* Set initial QoS mode for all et interfaces that are up. */
 void set_et_qos_mode(void)
@@ -682,11 +677,9 @@ static void wl_driver_mode_update(void)
 			char mode_str[128];
 			char *mode = "NIC";
 
-#ifndef TOMATO64
 #ifdef TCONFIG_DHDAP
 			mode = dhd_probe(ifname) ? "NIC" : "DGL";
 #endif
-#endif /* TOMATO64 */
 
 			if (!wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit))) {
 				maxunit = (unit > maxunit) ? unit : maxunit + 1;
@@ -706,11 +699,9 @@ static void wl_driver_mode_update(void)
 			char mode_str[128];
 			char *mode = "NIC";
 
-#ifndef TOMATO64
 #ifdef TCONFIG_DHDAP
 			mode = dhd_probe(ifname) ? "NIC" : "DGL";
 #endif
-#endif /* TOMATO64 */
 
 			if (!wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit))) {
 				snprintf(mode_str, sizeof(mode_str), "wlradio_dmode_%d", i);
@@ -864,7 +855,6 @@ void restart_wl(void)
 	char br;
 	char prefix[16] = {0};
 
-#ifndef TOMATO64
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	int wlan_cnt = 0;
 	int wlan_5g_cnt = 0;
@@ -879,7 +869,6 @@ void restart_wl(void)
 	/* get router model */
 	int model = get_model();
 #endif
-#endif /* TOMATO64 */
 
 #if defined(TCONFIG_EBTABLES) && (defined(TCONFIG_BCMARM) || !defined(TCONFIG_BCMWL6)) /* for all branches, except SDK6 mips (RT-AC) */
 	/* check for wireless ethernet bridge mode (wet) and block IPv6 */
@@ -938,7 +927,6 @@ void restart_wl(void)
 						eval("wlconf", ifname, "start"); /* start wl iface */
 					}
 
-#ifndef TOMATO64
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 					/* Enable WLAN LEDs if wireless interface is enabled */
 					if (nvram_get_int(wl_nvname("radio", unit, 0))) {
@@ -973,7 +961,6 @@ void restart_wl(void)
 #endif /* TCONFIG_AC3200 */
 					}
 #endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
-#endif /* TOMATO64 */
 				}
 				free(lan_ifnames);
 			}
@@ -987,7 +974,6 @@ void restart_wl(void)
 	killall("wldist", SIGTERM);
 	eval("wldist");
 
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	/* do some LED setup */
 	if ((model == MODEL_WS880)
@@ -1030,7 +1016,6 @@ void restart_wl(void)
 #endif
 	}
 #endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
-#endif /* TOMATO64 */
 }
 
 void stop_lan_wl(void)
@@ -1074,33 +1059,27 @@ void stop_lan_wl(void)
 						continue;
 				}
 				else if (wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit))) {
-#ifndef TOMATO64
 #ifdef TCONFIG_EMF
 					if (nvram_get_int("emf_enable"))
 						eval("emf", "del", "iface", lan_ifname, ifname);
 #endif
-#endif /* TOMATO64 */
 					continue;
 				}
 
 				eval("wlconf", ifname, "down");
 				ifconfig(ifname, 0, NULL, NULL);
 				eval("brctl", "delif", lan_ifname, ifname);
-#ifndef TOMATO64
 #ifdef TCONFIG_EMF
 				if (nvram_get_int("emf_enable"))
 					eval("emf", "del", "iface", lan_ifname, ifname);
 #endif
-#endif /* TOMATO64 */
 
 			}
 			free(wl_ifnames);
 		}
-#ifndef TOMATO64
 #ifdef TCONFIG_EMF
 	stop_emf(lan_ifname);
 #endif
-#endif /* TOMATO64 */
 	}
 
 }
@@ -1134,14 +1113,12 @@ void start_lan_wl(void)
 		lan_ifname = nvram_safe_get(tmp);
 
 		if (strncmp(lan_ifname, "br", 2) == 0) {
-#ifndef TOMATO64
 #ifdef TCONFIG_EMF
 			if (nvram_get_int("emf_enable")) {
 				eval("emf", "add", "bridge", lan_ifname);
 				eval("igs", "add", "bridge", lan_ifname);
 			}
 #endif
-#endif /* TOMATO64 */
 			strlcpy(tmp, "lan", sizeof(tmp));
 			strlcat(tmp, bridge, sizeof(tmp));
 			strlcat(tmp, "_ipaddr", sizeof(tmp));
@@ -1198,14 +1175,12 @@ void start_lan_wl(void)
 									wl_iovar_set(ifname, "wet_host_ipv4", &wh, sizeof(wet_host_t));
 								}
 #else /* (!defined(TCONFIG_BCM7) && defined(TCONFIG_BCMSMP)) || defined(TCONFIG_BCM714) */
-#ifndef TOMATO64
 #ifdef TCONFIG_DHDAP
 								is_dhd = !dhd_probe(ifname);
 								if (is_dhd)
 									dhd_iovar_setint(ifname, "wet_host_ipv4", ip);
 								else
 #endif /* TCONFIG_DHDAP */
-#endif /* TOMATO64 */
 									wl_iovar_setint(ifname, "wet_host_ipv4", ip);
 #endif /* (!defined(TCONFIG_BCM7) && defined(TCONFIG_BCMSMP)) || defined(TCONFIG_BCM714) */
 							}
@@ -1213,30 +1188,24 @@ void start_lan_wl(void)
 
 						sta |= (strcmp(mode, "sta") == 0);
 						if ((strcmp(mode, "ap") != 0) && (strcmp(mode, "wet") != 0)
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 						    && (strcmp(mode, "psta") != 0)
 #endif
-#endif /* TOMATO64 */
 						)
 							continue;
 					}
 					eval("brctl", "addif", lan_ifname, ifname);
-#ifndef TOMATO64
 #ifdef TCONFIG_EMF
 					if (nvram_get_int("emf_enable"))
 						eval("emf", "add", "iface", lan_ifname, ifname);
 #endif
-#endif /* TOMATO64 */
 				}
 				free(wl_ifnames);
 			}
 		}
-#ifndef TOMATO64
 #ifdef TCONFIG_EMF
 		start_emf(lan_ifname);
 #endif
-#endif /* TOMATO64 */
 	}
 }
 
@@ -1248,38 +1217,30 @@ void stop_wireless(void) {
 		logmsg(LOG_INFO, "wireless client WAN: stopping %s (WL down)", prefix);
 		stop_wan_if(prefix);
 	}
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 	wl_sta_stop();
 #endif
-#endif /* TOMATO64 */
 	stop_lan_wl();
 }
 
 void start_wireless(void) {
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 	int ret = 0;
 #endif
-#endif /* TOMATO64 */
 	char prefix[] = "wanXX";
 
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 	if ((ret = wl_sta_prepare()))
 		wl_sta_start();
 #endif
-#endif /* TOMATO64 */
 	start_lan_wl();
 	start_nas();
 	restart_wl();
 
 	if (1 &&
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 	    ret &&
 #endif
-#endif /* TOMATO64 */
 	    get_sta_wan_prefix(prefix, sizeof(prefix))) { /* wl client up again */
 		logmsg(LOG_INFO, "wireless client WAN: starting %s (WL up)", prefix);
 		start_wan_if(prefix);
@@ -1294,7 +1255,6 @@ void restart_wireless(void) {
 	start_wireless();
 }
 
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 void wl_sta_start(void)
 {
@@ -1616,23 +1576,17 @@ void start_lan(void)
 	int is_dhd;
 #endif
 #endif
-#endif /* TOMATO64 */
 
-#ifndef TOMATO64
 #if !defined(TCONFIG_DHDAP) && !defined(TCONFIG_USBAP) /* load driver at init.c for USBAP/sdk7 */
 	load_wl(); /* lets go! */
 #endif
-#endif /* TOMATO64 */
 
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	wlconf_pre(); /* prepare a few wifi things */
 #endif
-#endif /* TOMATO64 */
 
 	foreach_wif(0, NULL, set_wlmac);
 
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 	if (wl_sta_prepare())
 		wl_sta_start();
@@ -1772,6 +1726,7 @@ void start_lan(void)
 						}
 					}
 
+#ifndef TOMATO64
 					if (wlconf(ifname, unit, subunit) == 0) {
 						const char *mode = nvram_safe_get(wl_nvname("mode", unit, subunit));
 
@@ -1795,7 +1750,6 @@ void start_lan(void)
 									wl_iovar_set(ifname, "wet_host_ipv4", &wh, sizeof(wet_host_t)); /* set ip */
 								}
 #else /* (!defined(TCONFIG_BCM7) && defined(TCONFIG_BCMSMP)) || defined(TCONFIG_BCM714) */
-#ifndef TOMATO64
 #ifdef TCONFIG_DHDAP
 								is_dhd = !dhd_probe(ifname);
 								if (is_dhd) {
@@ -1804,9 +1758,7 @@ void start_lan(void)
 								}
 								else
 #endif /* TCONFIG_DHDAP */
-#endif /* TOMATO64 */
 									wl_iovar_set(ifname, "wet_host_mac", ifr.ifr_hwaddr.sa_data, ETHER_ADDR_LEN); /* set mac */
-#ifndef TOMATO64
 #ifdef TCONFIG_DHDAP
 								is_dhd = !dhd_probe(ifname);
 								if (is_dhd) {
@@ -1814,7 +1766,6 @@ void start_lan(void)
 								}
 								else
 #endif /* TCONFIG_DHDAP */
-#endif /* TOMATO64 */
 									wl_iovar_setint(ifname, "wet_host_ipv4", ip); /* set ip */
 #endif /* (!defined(TCONFIG_BCM7) && defined(TCONFIG_BCMSMP)) || defined(TCONFIG_BCM714) */
 							}
@@ -1822,14 +1773,13 @@ void start_lan(void)
 
 						sta |= (strcmp(mode, "sta") == 0);
 						if ((strcmp(mode, "ap") != 0) && (strcmp(mode, "wet") != 0)
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 						    && (strcmp(mode, "psta") != 0)
 #endif
-#endif /* TOMATO64 */
 						)
 							continue;
 					}
+#endif /* TOMATO64 */
 					eval("brctl", "addif", lan_ifname, ifname);
 #ifndef TOMATO64
 #ifdef TCONFIG_EMF
@@ -1844,7 +1794,9 @@ void start_lan(void)
 		/* --- this shouldn't happen --- */
 		else if (*lan_ifname) {
 			ifconfig(lan_ifname, IFUP, NULL, NULL);
+#ifndef TOMATO64
 			wlconf(lan_ifname, -1, -1);
+#endif /* TOMATO64 */
 		}
 		else {
 			close(sfd);
@@ -1867,7 +1819,9 @@ void start_lan(void)
 		close(sfd); /* close file descriptor */
 
 		/* Set initial QoS mode for LAN ports */
+#ifndef TOMATO64
 		set_et_qos_mode();
+#endif /* TOMATO64 */
 
 		/* bring up and configure LAN interface */
 		strlcpy(tmp, "lan", sizeof(tmp));
@@ -2007,9 +1961,11 @@ void stop_lan(void)
 			eval("wlconf", lan_ifname, "down");
 		}
 	}
+#ifndef TOMATO64
 #if !defined(TCONFIG_DHDAP) && !defined(TCONFIG_USBAP) /* do not unload driver for USBAP/sdk7 */
 	unload_wl(); /* stop! */
 #endif
+#endif /* TOMATO64 */
 
 	logmsg(LOG_DEBUG, "*** OUT %s: %d", __FUNCTION__, __LINE__);
 }
@@ -2139,6 +2095,7 @@ void do_static_routes(int add)
 #endif
 }
 
+#ifndef TOMATO64
 void hotplug_net(void)
 {
 	char *interface, *action;
@@ -2152,11 +2109,9 @@ void hotplug_net(void)
 
 	logmsg(LOG_DEBUG, "*** %s: INTERFACE=%s ACTION=%s", __FUNCTION__, interface, action);
 
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 	psta = wl_wlif_is_psta(interface);
 #endif
-#endif /* TOMATO64 */
 
 	if (((strncmp(interface, "wds", 3) == 0)
 #ifdef TCONFIG_BCMWL6
@@ -2168,7 +2123,6 @@ void hotplug_net(void)
 		/* interface up! */
 		ifconfig(interface, IFUP, NULL, NULL);
 
-#ifndef TOMATO64
 #ifdef TCONFIG_EMF
 		if (nvram_get_int("emf_enable")) {
 			eval("emf", "add", "iface", lan_ifname, interface);
@@ -2185,7 +2139,6 @@ void hotplug_net(void)
 			return;
 		}
 #endif
-#endif /* TOMATO64 */
 		if (strncmp(lan_ifname, "br", 2) == 0) {
 			eval("brctl", "addif", lan_ifname, interface);
 			notify_nas(interface);
@@ -2194,7 +2147,6 @@ void hotplug_net(void)
 		return;
 	}
 
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 	if (strcmp(action, "unregister") == 0 || strcmp(action, "remove") == 0) {
 		/* Indicate interface delete event to eapd */
@@ -2207,8 +2159,8 @@ void hotplug_net(void)
 #endif /* TCONFIG_EMF */
 	}
 #endif
-#endif /* TOMATO64 */
 }
+#endif /* TOMATO64 */
 
 #ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
@@ -2256,7 +2208,6 @@ int wl_send_dif_event(const char *ifname, uint32 event)
 	return n;
 }
 #endif /* TCONFIG_BCMWL6 */
-#endif /* TOMATO64 */
 
 static int is_same_addr(struct ether_addr *addr1, struct ether_addr *addr2)
 {
@@ -2545,3 +2496,4 @@ int wldist_main(int argc, char *argv[])
 
 	return 0;
 }
+#endif /* TOMATO64 */
