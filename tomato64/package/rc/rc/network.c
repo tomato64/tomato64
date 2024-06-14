@@ -284,6 +284,72 @@ static void set_lan_hostname(const char *wan_hostname)
 		logerr(__FUNCTION__, __LINE__, "/etc/hosts");
 }
 
+static int soc_req(const char *name, int action, struct ifreq *ifr)
+{
+	int s;
+	int rv = 0;
+
+	if (name == NULL)
+		return -1;
+
+	if ((s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
+		return -1;
+
+	/* set interface name */
+	strlcpy(ifr->ifr_name, name, IFNAMSIZ);
+
+	rv = ioctl(s, action, ifr);
+	close(s);
+
+	return rv;
+}
+
+/* Set the wireless virtual interface (ex. "wl0.1" or "wl2.2") hwaddr according to nvram */
+static void wl_vif_hwaddr_set(const char *name)
+{
+	int rc;
+	char *ea;
+	char hwaddr[20];
+	struct ifreq ifr;
+	int retry = 0;
+	unsigned char comp_mac_address[ETHER_ADDR_LEN];
+
+	snprintf(hwaddr, sizeof(hwaddr), "%s_hwaddr", name);
+	ea = nvram_get(hwaddr);
+
+	if ((ea == NULL) || (ea && !strlen(ea))) {
+		fprintf(stderr, "NET: No hw addr found for %s\n", name);
+		return;
+	}
+
+	fprintf(stderr, "NET: Setting %s hw addr to %s\n", name, ea);
+	ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER;
+
+	ether_atoe(ea, comp_mac_address); /* string to binary */
+	memcpy(ifr.ifr_hwaddr.sa_data, comp_mac_address, ETHER_ADDR_LEN); /* copy */
+	
+	if ((rc = soc_req(name, SIOCSIFHWADDR, &ifr)) < 0) {
+		fprintf(stderr, "NET: Error setting hw for %s; returned %d\n", name, rc);
+	}
+
+	memset(&ifr, 0, sizeof(ifr)); /* reset */
+	while (retry < 100) { /* maximum 100 ms waiting */
+		usleep(1000); /* wait 1 ms  and check */
+		if ((rc = soc_req(name, SIOCGIFHWADDR, &ifr)) < 0) {
+			fprintf(stderr, "NET: Error Getting hw for %s; returned %d\n", name, rc);
+		}
+		if (memcmp(comp_mac_address, (unsigned char *)ifr.ifr_hwaddr.sa_data, ETHER_ADDR_LEN) == 0) { /* compare if identical */
+			break;
+		}
+		retry++;
+	}
+
+	if (retry >= 100)
+		logmsg(LOG_ERR, "VIF: unable to check if mac addr was set properly for %s after %d ms\n", name, retry);
+	else
+		logmsg(LOG_INFO, "VIF: mac addr (%s) was set properly for %s after %d ms\n", ea, name, retry);
+}
+
 void set_host_domain_name(void)
 {
 	const char *s;
@@ -1106,7 +1172,7 @@ void start_lan_wl(void)
 						if (get_ifname_unit(ifname, &unit, &subunit) < 0)
 							continue;
 
-						set_wlmac(0, unit, subunit, NULL);
+						wl_vif_hwaddr_set(ifname);
 					}
 					else
 						wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit));
@@ -1648,7 +1714,7 @@ void start_lan(void)
 						if (get_ifname_unit(ifname, &unit, &subunit) < 0)
 							continue;
 
-						set_wlmac(0, unit, subunit, NULL);
+						wl_vif_hwaddr_set(ifname);
 					}
 					else
 						wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit));
