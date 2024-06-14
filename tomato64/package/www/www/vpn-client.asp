@@ -54,7 +54,10 @@ var ciphers = [['default','Use Default'],['none','None']];
 for (i = 0; i < vpnciphers.length; ++i)
 	ciphers.push([vpnciphers[i],vpnciphers[i]]);
 
-var vpndigests = vpndigests.concat(['DSA','DSA-SHA','DSA-SHA1','DSA-SHA1-old','ecdsa-with-SHA1','MD4','MDC2','RSA-MD5','RSA-MDC2','RSA-RIPEMD160','RSA-SHA','RSA-SHA1','RSA-SHA1-2','RSA-SHA224','RSA-SHA256','RSA-SHA384','RSA-SHA512','SHA','whirlpool']);
+var vpndigests = vpndigests.concat(['DSA','DSA-SHA','DSA-SHA1','DSA-SHA1-old','ecdsa-with-SHA1','RSA-MD5','RSA-RIPEMD160','RSA-SHA','RSA-SHA1','RSA-SHA1-2','RSA-SHA224','RSA-SHA256','RSA-SHA384','RSA-SHA512','SHA']);
+/* KEYGEN-BEGIN */
+var vpndigests = vpndigests.concat(['MD4']);
+/* KEYGEN-END */
 var digests = [['default','Use Default'],['none','None']];
 for (i = 0; i < vpndigests.length; ++i)
 	digests.push([vpndigests[i],vpndigests[i]]);
@@ -472,7 +475,11 @@ function init() {
 				{ title: 'Inbound Firewall', name: 'f_vpn_'+t+'_fw', type: 'checkbox', value: nvram['vpn_'+t+'_fw'] != 0 },
 				{ title: 'Authorization Mode', name: 'vpn_'+t+'_crypt', type: 'select', options: [['tls','TLS'],['secret','Static Key'],['custom','Custom']], value: nvram['vpn_'+t+'_crypt'],
 					suffix: ' <small id="'+t+'_custom_crypto_text">must be configured manually<\/small>' },
-				{ title: 'TLS control channel security <small>(tls-auth/tls-crypt)<\/small>', name: 'vpn_'+t+'_hmac', type: 'select', options: [[-1,'Disabled'],[2,'Bi-directional Auth'],[0,'Incoming Auth (0)'],[1,'Outgoing Auth (1)'],[3,'Encrypt Channel'],[4,'Encrypt Channel V2']], value: nvram['vpn_'+t+'_hmac'] },
+				{ title: 'TLS control channel security <small>(tls-auth/tls-crypt)<\/small>', name: 'vpn_'+t+'_hmac', type: 'select', options: [[-1,'Disabled'],[2,'Bi-directional Auth'],[0,'Incoming Auth (0)'],[1,'Outgoing Auth (1)'],[3,'Encrypt Channel']
+/* SIZEOPTMORE-BEGIN */
+				         ,[4,'Encrypt Channel V2']
+/* SIZEOPTMORE-END */
+				         ], value: nvram['vpn_'+t+'_hmac'] },
 				{ title: 'Username/Password Authentication', name: 'f_vpn_'+t+'_userauth', type: 'checkbox', value: nvram['vpn_'+t+'_userauth'] != 0 },
 				{ title: 'Username: ', indent: 2, name: 'vpn_'+t+'_username', type: 'text', maxlen: 50, size: 54, value: nvram['vpn_'+t+'_username'] },
 				{ title: 'Password: ', indent: 2, name: 'vpn_'+t+'_password', type: 'password', maxlen: 70, size: 54, peekaboo:1, value: nvram['vpn_'+t+'_password'] },
@@ -499,7 +506,11 @@ function init() {
 				{ title: 'Accept DNS configuration', name: 'vpn_'+t+'_adns', type: 'select', options: [[0,'Disabled'],[1,'Relaxed'],[2,'Strict'],[3,'Exclusive']], value: nvram['vpn_'+t+'_adns'] },
 				{ title: 'Data ciphers', name: 'vpn_'+t+'_ncp_ciphers', type: 'text', size: 70, maxlen: 127, value: nvram['vpn_'+t+'_ncp_ciphers'] },
 				{ title: 'Cipher', name: 'vpn_'+t+'_cipher', type: 'select', options: ciphers, value: nvram['vpn_'+t+'_cipher'] },
-				{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [['-1','Disabled'],['no','None'],['yes','LZO'],['adaptive','LZO Adaptive'],['lz4','LZ4'],['lz4-v2','LZ4-V2'],['stub','Stub'],['stub-v2','Stub-V2']], value: nvram['vpn_'+t+'_comp'] },
+				{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [['-1','Disabled'],['no','None'],['yes','LZO'],['adaptive','LZO Adaptive']
+/* SIZEOPTMORE-BEGIN */
+				          ,['lz4','LZ4'],['lz4-v2','LZ4-V2'],['stub','Stub'],['stub-v2','Stub-V2']
+/* SIZEOPTMORE-END */
+				          ], value: nvram['vpn_'+t+'_comp'] },
 				{ title: 'TLS Renegotiation Time', name: 'vpn_'+t+'_reneg', type: 'text', maxlen: 10, size: 7, value: nvram['vpn_'+t+'_reneg'], suffix: ' <small>seconds; -1 for default<\/small>' },
 				{ title: 'Connection retry', name: 'vpn_'+t+'_retry', type: 'text', maxlen: 5, size: 7, value: nvram['vpn_'+t+'_retry'], suffix: ' <small>seconds; -1 for infinite<\/small>' },
 				{ title: 'Verify Certificate<br>(remote-cert-tls server)', name: 'f_vpn_'+t+'_tlsremote', type: 'checkbox', value: nvram['vpn_'+t+'_tlsremote'] != 0 },

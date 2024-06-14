@@ -55,8 +55,9 @@ for (i = 0; i < tabs.length; ++i) {
 	usersTables[i].servername = tabs[i][0];
 	statusUpdaters.push(new StatusUpdater());
 }
-
+/* KEYGEN-BEGIN */
 var vpnciphers = vpnciphers.concat(['CAMELLIA-128-CBC'],['CAMELLIA-192-CBC'],['CAMELLIA-256-CBC']);
+/* KEYGEN-END */
 var ciphers = [['default','Use Default'],['none','None']];
 for (i = 0; i < vpnciphers.length; ++i)
 	ciphers.push([vpnciphers[i],vpnciphers[i]]);
@@ -117,6 +118,7 @@ function updateForm(num) {
 	}
 }
 
+/* KEYGEN-BEGIN */
 function rewriteUsers(row, k) {
 	for (var i = 0; i < tabs.length; ++i) {
 		var users_option = '';
@@ -153,6 +155,7 @@ function v_serial(e, quiet) {
 
 	return 1;
 }
+/* KEYGEN-END */
 
 CCDGrid.prototype.fieldValuesToData = function(row) {
 	var f = fields.getAll(row);
@@ -282,7 +285,9 @@ UsersGrid.prototype.reDraw = function() {
 		for (j = 0; j < view.length; ++j)
 			elem.setInnerHTML(this.tb.rows[i + header].cells[j], view[j]);
 	}
+/* KEYGEN-BEGIN */
 	rewriteUsers();
+/* KEYGEN-END */
 }
 
 UsersGrid.prototype.fieldValuesToData = function(row) {
@@ -293,7 +298,9 @@ UsersGrid.prototype.fieldValuesToData = function(row) {
 			break;
 	}
 	var r = [(f[0].value ? ''+f[0].value+'' : ''+(usersTables[i].getDataCount() + 1)+''), (f[1].checked ? '1' : '0'), f[2].value, f[3].value];
+/* KEYGEN-BEGIN */
 	rewriteUsers(r, i);
+/* KEYGEN-END */
 
 	return r;
 }
@@ -404,6 +411,7 @@ function updateStaticKey(num) {
 	keyGenRequest.post('vpngenkey.cgi', '_mode='+((crypt == 'tls' && hmac == 4) ? 'static2' : 'static1')+'&_server='+num);
 }
 
+/* KEYGEN-BEGIN */
 function generateDHParams(num) {
 	if (keyGenRequest)
 		return;
@@ -460,13 +468,17 @@ function generateKeys(num) {
 	keyGenRequest.onError = function(ex) { keyGenRequest = null; }
 	keyGenRequest.post('vpngenkey.cgi', '_mode=key&_server='+num);
 }
+/* KEYGEN-END */
 
 function disableKeyButtons(num, state) {
 	E('_vpn_keygen_static_server'+num+'_button').disabled = state;
+/* KEYGEN-BEGIN */
 	E('_vpn_keygen_server'+num+'_button').disabled = state;
 	E('_vpn_dhgen_server'+num+'_button').disabled = state;
+/* KEYGEN-END */
 }
 
+/* KEYGEN-BEGIN */
 function showTLSProgressDivs(num, state) {
 	elem.display(E('server'+num+'_key_progress_div'), state);
 	elem.display(E('server'+num+'_cert_progress_div'), state);
@@ -546,6 +558,7 @@ function downloadClientConfig(num) {
 	keyGenRequest.responseType = 'blob';
 	keyGenRequest.get('vpn/ClientConfig.tgz','_server='+num+((userid) ? '&_userid='+userid : ''));
 }
+/* KEYGEN-END */
 
 function verifyFields(focused, quiet) {
 	tgHideIcons();
@@ -597,14 +610,21 @@ function verifyFields(focused, quiet) {
 			ok = 0;
 		if (!v_range('_vpn_'+t+'_reneg', quiet || !ok, -1, 2147483647))
 			ok = 0;
+/* KEYGEN-BEGIN */
 		if (E('_vpn_'+t+'_crypt').value == 'tls' && !E('_f_vpn_'+t+'_userpass').checked && !v_serial('_vpn_'+t+'_serial', quiet || !ok))
 			ok = 0;
+/* KEYGEN-END */
 	}
 
 	/* Visibility changes */
 	for (i = 0; i < tabs.length; ++i) {
 		t = tabs[i][0];
 
+/* SIZEOPTMORE0-BEGIN */
+		if (E('_vpn_'+t+'_crypt').value == 'tls')
+			E('_vpn_'+t+'_crypt').value = 'secret';
+		E('_vpn_'+t+'_crypt').options[0].disabled = 1;
+/* SIZEOPTMORE0-END */
 		var auth = E('_vpn_'+t+'_crypt').value;
 		var iface = E('_vpn_'+t+'_if').value;
 		var hmac = E('_vpn_'+t+'_hmac').value;
@@ -612,16 +632,23 @@ function verifyFields(focused, quiet) {
 		var ccd = E('_f_vpn_'+t+'_ccd').checked;
 		var userpass = E('_f_vpn_'+t+'_userpass').checked;
 		var dns = E('_f_vpn_'+t+'_dns').checked;
+/* SIZEOPTMORE-BEGIN */
 		var comp = E('_vpn_'+t+'_comp').value;
+/* SIZEOPTMORE-END */
 
 		elem.display(PR('_vpn_'+t+'_ca'), PR('_vpn_'+t+'_ca_key'), PR('_vpn_'+t+'_ca_key_div_help'),
-			     PR('_vpn_dhgen_'+t+'_button'), PR('_vpn_'+t+'_crt'), PR('_vpn_'+t+'_crl'), PR('_vpn_'+t+'_dh'),
+/* KEYGEN-BEGIN */
+			     PR('_vpn_dhgen_'+t+'_button'),
+/* KEYGEN-END */
+			     PR('_vpn_'+t+'_crt'), PR('_vpn_'+t+'_crl'), PR('_vpn_'+t+'_dh'),
 			     PR('_vpn_'+t+'_key'), PR('_vpn_'+t+'_hmac'), PR('_f_vpn_'+t+'_rgw'),
 			     PR('_vpn_'+t+'_reneg'), auth == 'tls');
 		elem.display(PR('_vpn_'+t+'_static'), auth == 'secret' || (auth == 'tls' && hmac >= 0));
 		elem.display(PR('_vpn_keygen_static_'+t+'_button'), auth == 'secret' || (auth == 'tls' && hmac >= 0));
 		elem.display(E(t+'_custom_crypto_text'), auth == 'custom');
+/* KEYGEN-BEGIN */
 		elem.display(PR('_vpn_keygen_'+t+'_button'), auth == 'tls');
+/* KEYGEN-END */
 		elem.display(PR('_vpn_'+t+'_sn'), PR('_f_vpn_'+t+'_plan'), PR('_f_vpn_'+t+'_plan1'),
 /* TOMATO64-BEGIN */
 		             PR('_f_vpn_'+t+'_plan4'), PR('_f_vpn_'+t+'_plan5'), PR('_f_vpn_'+t+'_plan6'), PR('_f_vpn_'+t+'_plan7'),
@@ -638,9 +665,11 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_f_vpn_'+t+'_pdns'), auth == 'tls' && dns );
 		elem.display(PR('_vpn_'+t+'_ncp_ciphers'), auth == 'tls');
 		elem.display(PR('_vpn_'+t+'_cipher'), auth == 'secret');
+/* KEYGEN-BEGIN */
 		elem.display(PR('_vpn_client_gen_'+t+'_button'), auth != 'custom');
 		elem.display(PR('_vpn_'+t+'_serial'), auth == 'tls' && !userpass);
 		elem.display(PR('_vpn_'+t+'_usergen'), auth == 'tls' && userpass);
+/* KEYGEN-END */
 
 		var keyHelp = E(t+'-keyhelp');
 		keyHelp.className = 'new_window';
@@ -691,6 +720,7 @@ function save() {
 
 		t = tabs[i][0];
 
+/* SIZEOPTMORE-BEGIN */
 		var crypt = E('_vpn_'+t+'_crypt').value;
 		var hmac = E('_vpn_'+t+'_hmac').value;
 		var key = E('_vpn_'+t+'_static').value;
@@ -701,6 +731,7 @@ function save() {
 				return;
 			}
 		}
+/* SIZEOPTMORE-END */
 
 		if (E('_f_vpn_'+t+'_eas').checked)
 			E('vpn_server_eas').value += ''+(i + 1)+',';
@@ -807,7 +838,9 @@ function earlyInit() {
 }
 
 function init() {
+/* KEYGEN-BEGIN */
 	rewriteUsers();
+/* KEYGEN-END */
 	up.initPage(250, 5);
 	eventHandler();
 }
@@ -887,7 +920,11 @@ function init() {
 				{ title: 'Firewall', name: 'vpn_'+t+'_firewall', type: 'select', options: [['auto','Automatic'],['external','External Only'],['custom','Custom']], value: nvram['vpn_'+t+'_firewall'] },
 				{ title: 'Authorization Mode', name: 'vpn_'+t+'_crypt', type: 'select', options: [['tls','TLS'],['secret','Static Key'],['custom','Custom']], value: nvram['vpn_'+t+'_crypt'],
 					suffix: ' <small id="'+t+'_custom_crypto_text">must be configured manually<\/small>' },
-				{ title: 'TLS control channel security <small>(tls-auth/tls-crypt)<\/small>', name: 'vpn_'+t+'_hmac', type: 'select', options: [[-1,'Disabled'],[2,'Bi-directional Auth'],[0,'Incoming Auth (0)'],[1,'Outgoing Auth (1)'],[3,'Encrypt Channel'],[4,'Encrypt Channel V2']], value: nvram['vpn_'+t+'_hmac'] },
+				{ title: 'TLS control channel security <small>(tls-auth/tls-crypt)<\/small>', name: 'vpn_'+t+'_hmac', type: 'select', options: [[-1,'Disabled'],[2,'Bi-directional Auth'],[0,'Incoming Auth (0)'],[1,'Outgoing Auth (1)'],[3,'Encrypt Channel']
+/* SIZEOPTMORE-BEGIN */
+				          ,[4,'Encrypt Channel V2']
+/* SIZEOPTMORE-END */
+				          ], value: nvram['vpn_'+t+'_hmac'] },
 				{ title: 'Auth digest', name: 'vpn_'+t+'_digest', type: 'select', options: digests, value: nvram['vpn_'+t+'_digest'] },
 				{ title: 'VPN subnet/netmask', multi: [
 					{ name: 'vpn_'+t+'_sn', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_sn'], suffix: ' ' },
@@ -921,7 +958,11 @@ function init() {
 				{ title: 'Advertise DNS to clients', name: 'f_vpn_'+t+'_pdns', type: 'checkbox', value: nvram['vpn_'+t+'_pdns'] != 0 },
 				{ title: 'Data ciphers', name: 'vpn_'+t+'_ncp_ciphers', type: 'text', size: 70, maxlen: 127, value: nvram['vpn_'+t+'_ncp_ciphers'] },
 				{ title: 'Cipher', name: 'vpn_'+t+'_cipher', type: 'select', options: ciphers, value: nvram['vpn_'+t+'_cipher'] },
-				{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [['-1','Disabled'],['no','None'],['yes','LZO'],['adaptive','LZO Adaptive'],['lz4','LZ4'],['lz4-v2','LZ4-V2']], value: nvram['vpn_'+t+'_comp'] },
+				{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [['-1','Disabled'],['no','None'],['yes','LZO'],['adaptive','LZO Adaptive']
+/* SIZEOPTMORE-BEGIN */
+				         ,['lz4','LZ4'],['lz4-v2','LZ4-V2']
+/* SIZEOPTMORE-END */
+				         ], value: nvram['vpn_'+t+'_comp'] },
 				{ title: 'TLS Renegotiation Time', name: 'vpn_'+t+'_reneg', type: 'text', maxlen: 10, size: 7, value: nvram['vpn_'+t+'_reneg'], suffix: ' <small> seconds; -1 for default<\/small>' },
 				{ title: 'Manage Client-Specific Options', name: 'f_vpn_'+t+'_ccd', type: 'checkbox', value: nvram['vpn_'+t+'_ccd'] != 0 },
 				{ title: 'Allow Client<->Client', name: 'f_vpn_'+t+'_c2c', type: 'checkbox', value: nvram['vpn_'+t+'_c2c'] != 0 },
@@ -944,22 +985,34 @@ function init() {
 			]);
 			createFieldTable('', [
 				null,
-				{ title: 'Certificate Authority Key', name: 'vpn_'+t+'_ca_key', type: 'textarea', value: nvram['vpn_'+t+'_ca_key'],
-					prefix: '<div id="'+t+'_ca_key_progress_div" style="display:none"><p class="keyhelp">Please wait - generating CA key...<img src="spin.gif" alt=""><\/p><\/div>' },
+				{ title: 'Certificate Authority Key', name: 'vpn_'+t+'_ca_key', type: 'textarea', value: nvram['vpn_'+t+'_ca_key']
+/* KEYGEN-BEGIN */
+					, prefix: '<div id="'+t+'_ca_key_progress_div" style="display:none"><p class="keyhelp">Please wait - generating CA key...<img src="spin.gif" alt=""><\/p><\/div>'
+/* KEYGEN-END */
+				},
 				{ title: '', custom: '<div id="_vpn_'+t+'_ca_key_div_help"><p class="keyhelp">Optional, only used for client certificate generation.<br> Unencrypted (-nodes) private keys are supported.<\/p><\/div>' },
 				{ title: 'Certificate Authority', name: 'vpn_'+t+'_ca', type: 'textarea', value: nvram['vpn_'+t+'_ca'],
 					prefix: '<div id="'+t+'_ca_progress_div" style="display:none"><p class="keyhelp">Please wait - generating CA certificate...<img src="spin.gif" alt=""><\/p><\/div>' },
-				{ title: 'Server Certificate', name: 'vpn_'+t+'_crt', type: 'textarea', value: nvram['vpn_'+t+'_crt'],
-					prefix: '<div id="'+t+'_cert_progress_div" style="display: none"><p class="keyhelp">Please wait - generating certificate...<img src="spin.gif" alt=""><\/p><\/div>' },
-				{ title: 'Server Key', name: 'vpn_'+t+'_key', type: 'textarea', value: nvram['vpn_'+t+'_key'],
-					prefix: '<div id="'+t+'_key_progress_div" style="display: none"><p class="keyhelp">Please wait - generating key...<img src="spin.gif" alt=""><\/p><\/div>' },
-				{ title: 'CRL file', name: 'vpn_'+t+'_crl', type: 'textarea', value: nvram['vpn_'+t+'_crl'] },
-				{ title: '', custom: '<input type="button" value="Generate keys" onclick="generateKeys('+(i+1)+')" id="_vpn_keygen_'+t+'_button">' }
+				{ title: 'Server Certificate', name: 'vpn_'+t+'_crt', type: 'textarea', value: nvram['vpn_'+t+'_crt']
+/* KEYGEN-BEGIN */
+					, prefix: '<div id="'+t+'_cert_progress_div" style="display: none"><p class="keyhelp">Please wait - generating certificate...<img src="spin.gif" alt=""><\/p><\/div>'
+/* KEYGEN-END */
+				},
+				{ title: 'Server Key', name: 'vpn_'+t+'_key', type: 'textarea', value: nvram['vpn_'+t+'_key']
+/* KEYGEN-BEGIN */
+					, prefix: '<div id="'+t+'_key_progress_div" style="display: none"><p class="keyhelp">Please wait - generating key...<img src="spin.gif" alt=""><\/p><\/div>'
+/* KEYGEN-END */
+				},
+				{ title: 'CRL file', name: 'vpn_'+t+'_crl', type: 'textarea', value: nvram['vpn_'+t+'_crl'] }
+/* KEYGEN-BEGIN */
+				, { title: '', custom: '<input type="button" value="Generate keys" onclick="generateKeys('+(i+1)+')" id="_vpn_keygen_'+t+'_button">' }
+/* KEYGEN-END */
 			]);
 			createFieldTable('', [
 				null,
-				{ title: 'Diffie Hellman parameters', name: 'vpn_'+t+'_dh', type: 'textarea', value: nvram['vpn_'+t+'_dh'],
-					prefix: '<div id="'+t+'_dh_progress_div" style="display:none"><p class="keyhelp">Please wait - generating DH parameters...<img src="spin.gif" alt=""><\/p><\/div>' },
+				{ title: 'Diffie Hellman parameters', name: 'vpn_'+t+'_dh', type: 'textarea', value: nvram['vpn_'+t+'_dh']
+/* KEYGEN-BEGIN */
+					, prefix: '<div id="'+t+'_dh_progress_div" style="display:none"><p class="keyhelp">Please wait - generating DH parameters...<img src="spin.gif" alt=""><\/p><\/div>' },
 				{ title: '', custom: '<input type="button" value="Generate DH Params" onclick="generateDHParams('+(i+1)+')" id="_vpn_dhgen_'+t+'_button">' }
 			]);
 			createFieldTable('', [
@@ -967,7 +1020,9 @@ function init() {
 				{ title: 'Serial number', custom: '<input type="text" name="vpn_'+t+'_serial" value="00" maxlength="2" size="2" id="_vpn_'+t+'_serial">' },
 				{ title: 'User', custom: '<select name="vpn_'+t+'_usergen" id="_vpn_'+t+'_usergen"><\/select>' },
 				{ title: '', custom: '<input type="button" value="Generate client config" onclick="downloadClientConfig('+(i+1)+')" id="_vpn_client_gen_'+t+'_button">',
-					suffix: '<div id="'+t+'_gen_progress_div" style="display:none"><p class="keyhelp">Please wait while the configuration is being generated...<img src="spin.gif" alt=""><\/p><\/div>' }
+					suffix: '<div id="'+t+'_gen_progress_div" style="display:none"><p class="keyhelp">Please wait while the configuration is being generated...<img src="spin.gif" alt=""><\/p><\/div>'
+/* KEYGEN-END */
+				}
 			]);
 			W('<\/div>');
 

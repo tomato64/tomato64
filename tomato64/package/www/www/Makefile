@@ -394,8 +394,47 @@ ifneq ($(TCONFIG_HTTPS),y)
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
 # depends on USB and NAS pages - only if USB Support is configured in
 ifeq ($(TCONFIG_USB),y)
+ifeq ($(TCONFIG_FTP),y)
 	sed -i $(INSTALLDIR)/www/nas-ftp.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
 endif
+endif
+endif
+
+# Only include the TLS keys generator option and algo if it is compiled in
+ifeq ($(TCONFIG_OPENVPN),y)
+ifneq ($(TCONFIG_KEYGEN),y)
+	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/KEYGEN-BEGIN/,/KEYGEN-END/d"
+	sed -i $(INSTALLDIR)/www/vpn.js -e "/KEYGEN-BEGIN/,/KEYGEN-END/d"
+endif
+endif
+
+# Only include the Termlib based tools-shell.asp option if it is compiled in
+ifneq ($(TCONFIG_TERMLIB),y)
+	rm -f $(INSTALLDIR)/www/termlib_min.js
+	sed -i $(INSTALLDIR)/www/tools-shell.asp -e "/TERMLIB-BEGIN/,/TERMLIB-END/d"
+	sed -i $(INSTALLDIR)/www/about.asp -e "/TERMLIB-BEGIN/,/TERMLIB-END/d"
+else
+	sed -i $(INSTALLDIR)/www/tools-shell.asp -e "/TERMLIB0-BEGIN/,/TERMLIB0-END/d"
+endif
+
+# Only include more info on about.asp page if size opt is not required
+ifeq ($(TCONFIG_OPTIMIZE_SIZE),y)
+	sed -i $(INSTALLDIR)/www/about.asp -e "/OPTSIZE-BEGIN/,/OPTSIZE-END/d"
+endif
+
+# Only include LZ4 compression option/TLS server support if normal and 2.5+ OpenVPN is build
+ifeq ($(TCONFIG_OPENVPN),y)
+ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
+	sed -i $(INSTALLDIR)/www/vpn-client.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
+	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
+else
+	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/SIZEOPTMORE0-BEGIN/,/SIZEOPTMORE0-END/d"
+endif
+endif
+
+# Only include "Remote Forwarding" if special size optimization is not required
+ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
+	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
 endif
 
 # Only include Advanced Themes stuff if it is required
@@ -590,7 +629,7 @@ endif
 		-e "/EMF-BEGIN/d"	-e "/EMF-END/d" \
 		-e "/OPENVPN-BEGIN/d"	-e "/OPENVPN-END/d" \
 		-e "/AES-BEGIN/d"	-e "/AES-END/d" \
-		-e "/PPTPD-BEGIN/d"	-e "/PPTPD-END/d"\
+		-e "/PPTPD-BEGIN/d"	-e "/PPTPD-END/d" \
 		-e "/VPN-BEGIN/,/VPN-END/d" \
 		-e "/IPV6-BEGIN/d"	-e "/IPV6-END/d" \
 		-e "/CTF-BEGIN/d"	-e "/CTF-END/d" \
@@ -619,6 +658,12 @@ endif
 		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d" \
 		-e "/DUALWAN-BEGIN/d"	-e "/DUALWAN-END/d" \
 		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d" \
+		-e "/KEYGEN-BEGIN/d"	-e "/KEYGEN-END/d" \
+		-e "/TERMLIB-BEGIN/d"	-e "/TERMLIB-END/d" \
+		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d" \
+		-e "/OPTSIZE-BEGIN/d"	-e "/OPTSIZE-END/d" \
+		-e "/SIZEOPTMORE-BEGIN/d" -e "/SIZEOPTMORE-END/d" \
+		-e "/SIZEOPTMORE0-BEGIN/d" -e "/SIZEOPTMORE0-END/d" \
 		-e "/IPERF-BEGIN/d"	-e "/IPERF-END/d" \
 		-e "/ADVTHEMES-BEGIN/d"	-e "/ADVTHEMES-END/d" \
 		-e "/SSH-BEGIN/d"	-e "/SSH-END/d" \

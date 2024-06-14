@@ -3,10 +3,15 @@ var vpnciphers = [];
 /* AES-BEGIN */
 vpnciphers = vpnciphers.concat(['CHACHA20-POLY1305','AES-128-CBC','AES-128-CFB','AES-128-OFB','AES-192-CBC','AES-192-CFB','AES-192-OFB','AES-256-CBC','AES-256-CFB','AES-256-OFB','AES-128-GCM','AES-192-GCM','AES-256-GCM']);
 /* AES-END */
-vpnciphers = vpnciphers.concat(['BF-CBC','BF-CFB','BF-OFB','CAST5-CBC','CAST5-CFB','CAST5-OFB','DES-CBC','DES-CFB','DES-EDE3-CBC','DES-EDE3-CFB','DES-EDE3-OFB','DES-EDE-CBC','DES-EDE-CFB','DES-EDE-OFB','DES-OFB','DESX-CBC','IDEA-CBC','IDEA-CFB','IDEA-OFB']);
+vpnciphers = vpnciphers.concat(['BF-CBC','BF-CFB','BF-OFB','DES-CBC','DES-CFB','DES-EDE3-CBC','DES-EDE3-CFB','DES-EDE3-OFB','DES-EDE-CBC','DES-EDE-CFB','DES-EDE-OFB','DES-OFB','DESX-CBC']);
+/* KEYGEN-BEGIN */
+vpnciphers = vpnciphers.concat(['CAST5-CBC','CAST5-CFB','CAST5-OFB']);
+/* KEYGEN-END */
 
-var vpndigests = ['MD5','RIPEMD160','RSA-MD4','SHA1','SHA224','SHA256','SHA384','SHA512'];
-
+var vpndigests = ['SHA1','SHA224','SHA256','SHA384','SHA512','MD5'];
+/* KEYGEN-BEGIN */
+var vpndigests = vpndigests.concat(['RSA-MD4','RIPEMD160']);
+/* KEYGEN-END */
 var helpURL = new Array();
 helpURL['howto'] = 'https://openvpn.net/community-resources/1xhowto/';
 helpURL['staticKeys'] = 'https://openvpn.net/community-resources/static-key-mini-howto/';
