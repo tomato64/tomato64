@@ -620,11 +620,11 @@ function verifyFields(focused, quiet) {
 	for (i = 0; i < tabs.length; ++i) {
 		t = tabs[i][0];
 
-/* SIZEOPTMORE0-BEGIN */
+/* SIZEOPTMORE-NO-BEGIN */
 		if (E('_vpn_'+t+'_crypt').value == 'tls')
 			E('_vpn_'+t+'_crypt').value = 'secret';
 		E('_vpn_'+t+'_crypt').options[0].disabled = 1;
-/* SIZEOPTMORE0-END */
+/* SIZEOPTMORE-NO-END */
 		var auth = E('_vpn_'+t+'_crypt').value;
 		var iface = E('_vpn_'+t+'_if').value;
 		var hmac = E('_vpn_'+t+'_hmac').value;

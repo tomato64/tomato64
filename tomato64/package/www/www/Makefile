@@ -67,13 +67,13 @@ ifneq ($(TCONFIG_JFFS2),y)
 	sed -i $(INSTALLDIR)/www/nas-media.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
 else
-ifeq ($(TCONFIG_BRCM_NAND_JFFS2),y)
+ ifeq ($(TCONFIG_BRCM_NAND_JFFS2),y)
 	sed -i $(INSTALLDIR)/www/admin-jffs2.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
-else
+ else
 	sed -i $(INSTALLDIR)/www/admin-jffs2.asp -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
-endif
+ endif
 endif
 
 # Only include EMF options if EMF is configured in.
@@ -89,9 +89,9 @@ endif
 
 # Only include Paragon NTFS settings if Paragon is configured in.
 ifneq ($(TCONFIG_UFSDA),y)
-ifneq ($(TCONFIG_UFSDN),y)
+ ifneq ($(TCONFIG_UFSDN),y)
 	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/PARAGON-BEGIN/,/PARAGON-END/d"
-endif
+ endif
 endif
 
 # Only include Tuxera NTFS settings if Tuxera is configured in.
@@ -168,6 +168,16 @@ ifneq ($(TCONFIG_ZFS),y)
 	sed -i $(INSTALLDIR)/www/about.asp -e "/ZFS-BEGIN/,/ZFS-END/d"
 endif
 
+# only add for RT-N+ routers
+ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+	sed -i $(INSTALLDIR)/www/basic-ipv6.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+else
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTNPLUS-NO-BEGIN/,/RTNPLUS-NO-END/d"
+endif
+
 # Only include IPv6 options if IPv6 is configured in.
 ifneq ($(TCONFIG_IPV6),y)
 	cd $(INSTALLDIR)/www && \
@@ -227,13 +237,18 @@ ifneq ($(TCONFIG_USB),y)
 	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/USB-BEGIN/,/USB-END/d"
 endif
 
-# Only include the USB and NAS pages if REMOVE_USBAPP is NOT configured in.
+# ...And also don't include them if we have router with wl_high module but without USB support
 ifeq ($(TCONFIG_REMOVE_USBAPP),y)
 	rm -f $(INSTALLDIR)/www/nas-*.*
+	rm -f $(INSTALLDIR)/www/wwan_parser.js
+	rm -f $(INSTALLDIR)/www/wwan-sms.asp
 	rm -f $(INSTALLDIR)/www/cell.gif
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/USB-BEGIN/,/USB-END/d"
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/USB-BEGIN/,/USB-END/d"
 	sed -i $(INSTALLDIR)/www/admin-buttons.asp -e "/USB-BEGIN/,/USB-END/d"
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/USB-BEGIN/,/USB-END/d"
+	sed -i $(INSTALLDIR)/www/about.asp -e "/USB-BEGIN/,/USB-END/d"
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/USB-BEGIN/,/USB-END/d"
 	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/USB-BEGIN/,/USB-END/d"
 endif
 
@@ -252,15 +267,16 @@ ifneq ($(TCONFIG_BCMNAT),y)
 	sed -i $(INSTALLDIR)/www/restrict.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
 endif
 ifneq ($(TCONFIG_BCMARM),y)
-ifeq ($(CONFIG_BCMWL6),y)
+ ifeq ($(CONFIG_BCMWL6),y)
 	sed -i $(INSTALLDIR)/www/advanced-misc.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
 	sed -i $(INSTALLDIR)/www/bwlimit.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
 	sed -i $(INSTALLDIR)/www/qos-settings.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
 	sed -i $(INSTALLDIR)/www/restrict.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
-endif
+ endif
 endif
 
-ifneq ($(TCONFIG_BCMWL6),y)
+# Only for BCMWL6 SDK / RT-AC branch
+ifneq ($(CONFIG_BCMWL6),y)
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-wlanvifs.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
@@ -393,19 +409,19 @@ ifneq ($(TCONFIG_HTTPS),y)
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/HTTPS-BEGIN/,/HTTPS-END/d"
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
 # depends on USB and NAS pages - only if USB Support is configured in
-ifeq ($(TCONFIG_USB),y)
-ifeq ($(TCONFIG_FTP),y)
+ ifeq ($(TCONFIG_USB),y)
+  ifeq ($(TCONFIG_FTP),y)
 	sed -i $(INSTALLDIR)/www/nas-ftp.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
-endif
-endif
+  endif
+ endif
 endif
 
 # Only include the TLS keys generator option and algo if it is compiled in
 ifeq ($(TCONFIG_OPENVPN),y)
-ifneq ($(TCONFIG_KEYGEN),y)
+ ifneq ($(TCONFIG_KEYGEN),y)
 	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/KEYGEN-BEGIN/,/KEYGEN-END/d"
 	sed -i $(INSTALLDIR)/www/vpn.js -e "/KEYGEN-BEGIN/,/KEYGEN-END/d"
-endif
+ endif
 endif
 
 # Only include the Termlib based tools-shell.asp option if it is compiled in
@@ -424,12 +440,12 @@ endif
 
 # Only include LZ4 compression option/TLS server support if normal and 2.5+ OpenVPN is build
 ifeq ($(TCONFIG_OPENVPN),y)
-ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
+ ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
 	sed -i $(INSTALLDIR)/www/vpn-client.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
 	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
-else
-	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/SIZEOPTMORE0-BEGIN/,/SIZEOPTMORE0-END/d"
-endif
+ else
+	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/SIZEOPTMORE-NO-BEGIN/,/SIZEOPTMORE-NO-END/d"
+ endif
 endif
 
 # Only include "Remote Forwarding" if special size optimization is not required
@@ -458,9 +474,9 @@ endif
 
 # Only include Discovery helper if it is required
 ifneq ($(TCONFIG_BCMARM),y)
-ifneq ($(TCONFIG_MIPSR2),y)
+ ifneq ($(TCONFIG_MIPSR2),y)
 	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/DISCOVERY-BEGIN/,/DISCOVERY-END/d"
-endif
+ endif
 endif
 
 # Only include the mdns option if it is compiled in
@@ -471,9 +487,9 @@ endif
 # Only include the QR Code page if it is compiled in
 ifneq ($(TCONFIG_QRCODE),y)
 	rm -f $(INSTALLDIR)/www/tools-qr.asp
-ifneq ($(TCONFIG_WIREGUARD),y)
+ ifneq ($(TCONFIG_WIREGUARD),y)
 	rm -f $(INSTALLDIR)/www/html5-qrcode.js
-endif
+ endif
 	rm -f $(INSTALLDIR)/www/qrcode.js
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/QRCODE-BEGIN/,/QRCODE-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/QRCODE-BEGIN/,/QRCODE-END/d"
@@ -481,11 +497,11 @@ endif
 
 # distinguish version if ARM or MIPS
 ifeq ($(TCONFIG_OPENVPN),y)
-ifneq ($(TCONFIG_BCMARM),y)
+ ifneq ($(TCONFIG_BCMARM),y)
 	sed -i $(INSTALLDIR)/www/isup.jsz -e "/BCMARM-BEGIN/,/BCMARM-END/d"
-else
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/BCMARMNO-BEGIN/,/BCMARMNO-END/d"
-endif
+ else
+	sed -i $(INSTALLDIR)/www/isup.jsz -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
+ endif
 endif
 
 # add a note about WL Survey issue only on ARM routers
@@ -496,13 +512,6 @@ endif
 # only include isup.js helper if it is needed
 ifeq ($(TCONFIG_FTP)$(TCONFIG_SAMBASRV)$(TCONFIG_MEDIA_SERVER)$(TCONFIG_PPTPD)$(TCONFIG_NGINX)$(TCONFIG_BT),)
 	rm -f $(INSTALLDIR)/www/isup.js
-endif
-
-# only add for RT-N+ routers
-ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
-	sed -i $(INSTALLDIR)/www/basic-ipv6.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
-	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 endif
 
 # Only include udpxy/igmpproxy part if needed
@@ -597,9 +606,9 @@ ifneq ($(TCONFIG_WIREGUARD),y)
 	rm -f $(INSTALLDIR)/www/vpn-wireguard.asp
 	rm -f $(INSTALLDIR)/www/cfg-icon.svg
 	rm -f $(INSTALLDIR)/www/qr-icon.svg
-ifneq ($(TCONFIG_QRCODE),y)
+ ifneq ($(TCONFIG_QRCODE),y)
 	rm -f $(INSTALLDIR)/www/html5-qrcode.js
-endif
+ endif
 #	rm -f $(INSTALLDIR)/www/interfaces-v6.js
 	rm -f $(INSTALLDIR)/www/wireguard.js
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/WIREGUARD-BEGIN/,/WIREGUARD-END/d"
@@ -610,6 +619,20 @@ ifeq ($(or $(TCONFIG_NVRAM_32K),$(TCONFIG_OPTIMIZE_SIZE)),y)
 	sed -i $(INSTALLDIR)/www/basic-ddns.asp -e "/DDNS4CLS-BEGIN/,/DDNS4CLS-END/d"
 else
 	sed -i $(INSTALLDIR)/www/basic-ddns.asp -e "/DDNS2CLS-BEGIN/,/DDNS2CLS-END/d"
+endif
+
+# Add wireless modes based on branch
+# Wireless Ethernet Bridge - doesn't work on ARM7
+ifeq ($(TCONFIG_BCM7),y)
+ ifneq ($(TCONFIG_BCM714),y)
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/BCMWL7-NO-BEGIN/,/BCMWL7-NO-END/d"
+ endif
+endif
+# Wireless Client and Wireless Ethernet Bridge - doesn't work on MIPS RT-AC
+ifeq ($(CONFIG_BCMWL6),y)
+ ifneq ($(CONFIG_BCMWL6A),y)
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTAC-NO-BEGIN/,/RTAC-NO-END/d"
+ endif
 endif
 
 # clean up
@@ -626,6 +649,7 @@ endif
 		-e "/JFFS2-BEGIN/d"	-e "/JFFS2-END/d" \
 		-e "/JFFS2NAND-BEGIN/d"	-e "/JFFS2NAND-END/d" \
 		-e "/CIFS-BEGIN/d"	-e "/CIFS-END/d" \
+		-e "/ZEBRA-BEGIN/d"	-e "/ZEBRA-END/d" \
 		-e "/EMF-BEGIN/d"	-e "/EMF-END/d" \
 		-e "/OPENVPN-BEGIN/d"	-e "/OPENVPN-END/d" \
 		-e "/AES-BEGIN/d"	-e "/AES-END/d" \
@@ -635,6 +659,9 @@ endif
 		-e "/CTF-BEGIN/d"	-e "/CTF-END/d" \
 		-e "/BCMNAT-BEGIN/d"	-e "/BCMNAT-END/d" \
 		-e "/BCMWL6-BEGIN/d"	-e "/BCMWL6-END/d" \
+		-e "/BCMWL6-NO-BEGIN/d"	-e "/BCMWL6-NO-END/d" \
+		-e "/BCMWL7-BEGIN/d"	-e "/BCMWL7-END/d" \
+		-e "/BCMWL7-NO-BEGIN/d"	-e "/BCMWL7-NO-END/d" \
 		-e "/BCMWL714-BEGIN/d"	-e "/BCMWL714-END/d" \
 		-e "/BSD-BEGIN/d"	-e "/BSD-END/d" \
 		-e "/ROAM-BEGIN/d"	-e "/ROAM-END/d" \
@@ -644,6 +671,7 @@ endif
 		-e "/NOCAT-BEGIN/d"	-e "/NOCAT-END/d" \
 		-e "/NGINX-BEGIN/d"	-e "/NGINX-END/d" \
 		-e "/SNMP-BEGIN/d"	-e "/SNMP-END/d" \
+		-e "/SDHC-BEGIN/d"	-e "/SDHC-END/d" \
 		-e "/HFS-BEGIN/d"	-e "/HFS-END/d" \
 		-e "/DNSCRYPT-BEGIN/d"	-e "/DNSCRYPT-END/d" \
 		-e "/STUBBY-BEGIN/d"	-e "/STUBBY-END/d" \
@@ -663,7 +691,7 @@ endif
 		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d" \
 		-e "/OPTSIZE-BEGIN/d"	-e "/OPTSIZE-END/d" \
 		-e "/SIZEOPTMORE-BEGIN/d" -e "/SIZEOPTMORE-END/d" \
-		-e "/SIZEOPTMORE0-BEGIN/d" -e "/SIZEOPTMORE0-END/d" \
+		-e "/SIZEOPTMORE-NO-BEGIN/d" -e "/SIZEOPTMORE-NO-END/d" \
 		-e "/IPERF-BEGIN/d"	-e "/IPERF-END/d" \
 		-e "/ADVTHEMES-BEGIN/d"	-e "/ADVTHEMES-END/d" \
 		-e "/SSH-BEGIN/d"	-e "/SSH-END/d" \
@@ -672,8 +700,10 @@ endif
 		-e "/ZFS-BEGIN/d"	-e "/ZFS-END/d" \
 		-e "/QRCODE-BEGIN/d"	-e "/QRCODE-END/d" \
 		-e "/BCMARM-BEGIN/d"	-e "/BCMARM-END/d" \
-		-e "/BCMARMNO-BEGIN/d"	-e "/BCMARMNO-END/d" \
+		-e "/BCMARM-NO-BEGIN/d"	-e "/BCMARM-NO-END/d" \
 		-e "/RTNPLUS-BEGIN/d"	-e "/RTNPLUS-END/d" \
+		-e "/RTNPLUS-NO-BEGIN/d" -e "/RTNPLUS-NO-END/d" \
+		-e "/RTAC-NO-BEGIN/d"	-e "/RTAC-NO-END/d" \
 		-e "/PROXY-BEGIN/d"	-e "/PROXY-END/d" \
 		-e "/TFTP-BEGIN/d"	-e "/TFTP-END/d" \
 		-e "/WIREGUARD-BEGIN/d"	-e "/WIREGUARD-END/d" \

@@ -31,9 +31,9 @@ isup.bwl = <% nv("bwl_enable"); %>;
 var OVPN_CLIENT_COUNT = 3;
 isup.vpnclient3 = parseInt('<% psup("vpnclient3"); %>');
 /* BCMARM-END */
-/* BCMARMNO-BEGIN */
+/* BCMARM-NO-BEGIN */
 var OVPN_CLIENT_COUNT = 2;
-/* BCMARMNO-END */
+/* BCMARM-NO-END */
 isup.vpnclient1 = parseInt('<% psup("vpnclient1"); %>');
 isup.vpnclient2 = parseInt('<% psup("vpnclient2"); %>');
 
