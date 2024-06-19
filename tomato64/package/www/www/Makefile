@@ -613,8 +613,8 @@ endif
 ifneq ($(TCONFIG_WIREGUARD),y)
 	rm -f $(INSTALLDIR)/www/vpn-wireguard.asp
 	rm -f $(INSTALLDIR)/www/cfg-icon.svg
-	rm -f $(INSTALLDIR)/www/qr-icon.svg
  ifneq ($(TCONFIG_QRCODE),y)
+	rm -f $(INSTALLDIR)/www/qr-icon.svg
 	rm -f $(INSTALLDIR)/www/html5-qrcode.js
  endif
 #	rm -f $(INSTALLDIR)/www/interfaces-v6.js

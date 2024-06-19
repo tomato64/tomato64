@@ -708,7 +708,7 @@ function init() {
 			{ title: 'Interference Level', rid: 'interference'+uidx, text: stats.interference[uidx], ignore: (wl_sunit(uidx) >= 0) },
 			{ title: 'Rate', rid: 'rate'+uidx, text: wlstats[uidx].rate, ignore: (wl_sunit(uidx) >= 0) },
 /* QRCODE-BEGIN */
-			{ title: 'QR code', rid: 'qr-code'+uidx, text: '<a href="tools-qr.asp?wl='+wl_unit(uidx)+(wl_sunit(uidx) >= 0 ? '.'+wl_sunit(uidx) : '')+'">🏁<\/a>' },
+			{ title: 'QR code', rid: 'qr-code'+uidx, text: '<a href="tools-qr.asp?wl='+wl_unit(uidx)+(wl_sunit(uidx) >= 0 ? '.'+wl_sunit(uidx) : '')+'"><img src="qr-icon.svg" style="width:12px;height:12px"><\/a>' },
 /* QRCODE-END */
 			{ title: 'RSSI', rid: 'rssi'+uidx, text: wlstats[uidx].rssi || '', ignore: ((!wlstats[uidx].client) || (wl_sunit(uidx) >= 0)) },
 			{ title: 'Noise', rid: 'noise'+uidx, text: wlstats[uidx].noise || '', ignore: ((!wlstats[uidx].client) || (wl_sunit(uidx) >= 0)) },
