@@ -30,6 +30,7 @@
 var sta_list = [];
 function refresh_sta_list() {
 	var u, wluidx, staidx = 0;
+/* RTAC-NO-BEGIN */
 	for (wluidx = 0; wluidx < wl_ifaces.length; ++wluidx) {
 		if (wl_sunit(wluidx) < 0) {
 			u = wl_unit(wluidx);
@@ -39,6 +40,7 @@ function refresh_sta_list() {
 			staidx++; /* next one */
 		}
 	}
+/* RTAC-NO-END */
 	/* And finally - Add Option "Disabled" */
 	sta_list[staidx] = [];
 	sta_list[staidx][0] = '';
@@ -1431,6 +1433,24 @@ REMOVE-END */
 		}
 	}
 
+	/* disable unsupported Wireless modes */
+	for (uidx = 0; uidx < wl_ifaces.length; ++uidx) {
+		if (wl_sunit(uidx) < 0) {
+			u = wl_unit(uidx);
+
+			wmode = E('_f_wl'+u+'_mode');
+/* RTAC-BEGIN */
+			wmode.options[2].disabled = 1;
+/* RTAC-END */
+/* RTAC-BEGIN */
+			wmode.options[3].disabled = 1;
+/* RTAC-END */
+/* BCMWL7-BEGIN */
+			wmode.options[3].disabled = 1;
+/* BCMWL7-END */
+		}
+	}
+
 	if (curr_mwan_num == 1) {
 		elem.display(PR('_wan_weight'), 0);
 		E('_wan_weight').disabled = 1;
@@ -1950,9 +1970,7 @@ function init() {
 /* USB-END */
 				['disabled','Disabled']],
 				suffix: '&nbsp; <small id="_f_wan'+u+'_islan" style="display:none"><a href="advanced-vlan.asp">Bridge WAN ?<\/a><\/small>', value: nvram['wan'+u+'_proto'] },
-/* RTAC-NO-BEGIN */
 			{ title: 'Wireless Client Mode', name: 'wan'+u+'_sta', type: 'select', options: sta_list, value: nvram['wan'+u+'_sta'] },
-/* RTAC-NO-END */
 /* USB-BEGIN */
 			{ title: 'Modem device', name: 'wan'+u+'_modem_dev', type: 'select', options: [['/dev/ttyUSB0','/dev/ttyUSB0'],['/dev/ttyUSB1','/dev/ttyUSB1'],['/dev/ttyUSB2','/dev/ttyUSB2'],['/dev/ttyUSB3','/dev/ttyUSB3'],['/dev/ttyUSB4','/dev/ttyUSB4'],['/dev/ttyUSB5','/dev/ttyUSB5'],['/dev/ttyUSB6','/dev/ttyUSB6'],['/dev/ttyACM0','/dev/ttyACM0']], value: nvram['wan'+u+'_modem_dev'] },
 /* USB-END */
@@ -2098,14 +2116,7 @@ function init() {
 					value: (eval('nvram.wl'+u+'_radio') == '1') && (eval('nvram.wl'+u+'_net_mode') != 'disabled') },
 				{ title: 'MAC Address', text: '<a href="advanced-mac.asp">'+eval('nvram.wl'+u+'_hwaddr')+'<\/a>' },
 				{ title: 'Wireless Mode', name: 'f_wl'+u+'_mode', type: 'select',
-					options: [['ap','Access Point'],['apwds','Access Point + WDS']
-/* RTAC-NO-BEGIN */
-						  ,['sta','Wireless Client']
-/* BCMWL7-NO-BEGIN */
-						  ,['wet','Wireless Ethernet Bridge']
-/* BCMWL7-NO-END */
-/* RTAC-NO-END */
-						  ,['wds','WDS']
+					options: [['ap','Access Point'],['apwds','Access Point + WDS'],['sta','Wireless Client'],['wet','Wireless Ethernet Bridge'],['wds','WDS']
 /* BCMWL6-BEGIN */
 						  ,['psta','Media Bridge']
 /* BCMWL6-END */
