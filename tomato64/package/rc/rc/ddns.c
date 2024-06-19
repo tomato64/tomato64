@@ -302,10 +302,18 @@ int ddns_update_main(int argc, char **argv)
 	if (argc == 1) {
 		update(0, &dirty, 0);
 		update(1, &dirty, 0);
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+		update(2, &dirty, 0);
+		update(3, &dirty, 0);
+#endif
 	}
 	else if ((argc == 2) || (argc == 3)) {
 		num = atoi(argv[1]);
-		if ((num == 0) || (num == 1))
+		if ((num == 0) || (num == 1)
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+		    || (num == 2) || (num == 3)
+#endif
+		   )
 			update(num, &dirty, ((argc == 3) && (strcmp(argv[2], "force") == 0)));
 	}
 	if (dirty)
