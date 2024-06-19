@@ -28,6 +28,9 @@ void build_nocat_conf(void)
 {
 	FILE *fp;
 	char *p;
+	char *lanX_ifname;
+	char *lanX_ipaddr;
+	int i;
 
 	if (!(fp = fopen(NOCAT_CONF, "w"))) {
 		logerr(__FUNCTION__, __LINE__, NOCAT_CONF);
@@ -44,36 +47,23 @@ void build_nocat_conf(void)
 	            nvram_safe_get("wan_iface"),
 	            "1");
 
-	if (nvram_match("NC_BridgeLAN", "br0"))
-		fprintf(fp, "InternalDevice\t%s\n"
-		            "GatewayAddr\t%s\n", nvram_safe_get("lan_ifname"), nvram_safe_get("lan_ipaddr"));
+	for (i = 0 ; i < BRIDGE_COUNT; i++) {
+		char buffer[16];
+		snprintf(buffer, sizeof(buffer),"br%d", i);
 
-	if (nvram_match("NC_BridgeLAN", "br1"))
-		fprintf(fp, "InternalDevice\t%s\n"
-		            "GatewayAddr\t%s\n", nvram_safe_get("lan1_ifname"), nvram_safe_get("lan1_ipaddr"));
+		if (nvram_match("NC_BridgeLAN", buffer)) {
+			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+			lanX_ifname = nvram_safe_get(buffer);
 
-	if (nvram_match("NC_BridgeLAN", "br2"))
-		fprintf(fp, "InternalDevice\t%s\n"
-		            "GatewayAddr\t%s\n", nvram_safe_get("lan2_ifname"), nvram_safe_get("lan2_ipaddr"));
+			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
+			lanX_ipaddr = nvram_safe_get(buffer);
 
-	if (nvram_match("NC_BridgeLAN", "br3"))
-		fprintf(fp, "InternalDevice\t%s\n"
-		            "GatewayAddr\t%s\n", nvram_safe_get("lan3_ifname"), nvram_safe_get("lan3_ipaddr"));
-#ifdef TOMATO64
-	if (nvram_match("NC_BridgeLAN", "br4"))
-		fprintf(fp, "InternalDevice\t%s\n"
-		            "GatewayAddr\t%s\n", nvram_safe_get("lan4_ifname"), nvram_safe_get("lan4_ipaddr"));
-	if (nvram_match("NC_BridgeLAN", "br5"))
-		fprintf(fp, "InternalDevice\t%s\n"
-		            "GatewayAddr\t%s\n", nvram_safe_get("lan5_ifname"), nvram_safe_get("lan5_ipaddr"));
-	if (nvram_match("NC_BridgeLAN", "br6"))
-		fprintf(fp, "InternalDevice\t%s\n"
-		            "GatewayAddr\t%s\n", nvram_safe_get("lan6_ifname"), nvram_safe_get("lan6_ipaddr"));
-	if (nvram_match("NC_BridgeLAN", "br7"))
-		fprintf(fp, "InternalDevice\t%s\n"
-		            "GatewayAddr\t%s\n", nvram_safe_get("lan7_ifname"), nvram_safe_get("lan7_ipaddr"));
-#endif /* TOMATO64 */
+			fprintf(fp, "InternalDevice\t%s\n"
+			            "GatewayAddr\t%s\n", lanX_ifname, lanX_ipaddr);
 
+			break;
+		}
+	}
 
 	fprintf(fp, "GatewayMAC\t%s\n", nvram_safe_get("lan_hwaddr"));
 
