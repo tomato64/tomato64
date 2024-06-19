@@ -92,7 +92,7 @@ struct nvram_tuple snmp_defaults[] = {
 struct nvram_tuple upnp_defaults[] = {
 	{ "upnp_secure",		"1"				, 0 },
 	{ "upnp_port",			"0"				, 0 },
-	{ "upnp_ssdp_interval",		"60"				, 0 },	/* SSDP interval */
+	{ "upnp_ssdp_interval",		"900"				, 0 },	/* SSDP interval */
 	{ "upnp_mnp",			"0"				, 0 },
 	{ "upnp_custom",		""				, 0 },
 	{ "upnp_lan",			""				, 0 },

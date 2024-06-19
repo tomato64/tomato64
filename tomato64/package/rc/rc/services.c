@@ -1834,7 +1834,7 @@ void start_upnp(void)
 	fprintf(f, "ext_ifname=%s\n"
 	           "port=%d\n"
 	           "enable_upnp=%s\n"
-	           "enable_natpmp=%s\n"
+	           "enable_pcp_pmp=%s\n"
 	           "secure_mode=%s\n"
 	           "upnp_forward_chain=upnp\n"
 	           "upnp_nat_chain=upnp\n"
