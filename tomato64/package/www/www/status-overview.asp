@@ -270,7 +270,6 @@ function ethstates() {
 	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="6" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="basic-network.asp">Configure<\/a><\/td><\/tr><\/table><\/div>';
 	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
 /* TOMATO64-END */
 	E('ports').innerHTML = code;
