@@ -267,10 +267,11 @@ function ethstates() {
 	}
 
 /* TOMATO64-REMOVE-BEGIN */
-	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="6" style="text-align:right">&raquo; <a href="basic-network.asp">Configure<\/a><\/td><\/tr><\/table><\/div>';
+	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="6" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="basic-network.asp">Configure<\/a><\/td><\/tr><\/table><\/div>';
+	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
 /* TOMATO64-END */
 	E('ports').innerHTML = code;
 }
@@ -701,13 +702,13 @@ function init() {
 			{ title: 'Security', text: sec },
 			{ title: 'Control Channel', rid: 'channel'+uidx, text: stats.channel[uidx], ignore: (wl_sunit(uidx) >= 0) },
 /* RTNPLUS-BEGIN */
-			{ title: 'Control Channel Location', rid: 'ctrlsb'+uidx, text: wlstats[uidx].ctrlsb, ignore: ((!nphy) || (wl_sunit(uidx) >= 0)) },
+			{ title: 'Control Sideband', rid: 'ctrlsb'+uidx, text: wlstats[uidx].ctrlsb, ignore: ((!nphy) || (wl_sunit(uidx) >= 0)) },
 /* RTNPLUS-END */
 			{ title: 'Channel Width', rid: 'nbw'+uidx, text: wlstats[uidx].nbw, ignore: ((!nphy) || (wl_sunit(uidx) >= 0)) },
 			{ title: 'Interference Level', rid: 'interference'+uidx, text: stats.interference[uidx], ignore: (wl_sunit(uidx) >= 0) },
 			{ title: 'Rate', rid: 'rate'+uidx, text: wlstats[uidx].rate, ignore: (wl_sunit(uidx) >= 0) },
 /* QRCODE-BEGIN */
-			{ title: ' ', rid: 'qr-code'+uidx, text: '<a href="tools-qr.asp?wl='+wl_unit(uidx)+(wl_sunit(uidx) >= 0 ? '.'+wl_sunit(uidx) : '')+'">Show QR code<\/a>' },
+			{ title: 'QR code', rid: 'qr-code'+uidx, text: '<a href="tools-qr.asp?wl='+wl_unit(uidx)+(wl_sunit(uidx) >= 0 ? '.'+wl_sunit(uidx) : '')+'">🏁<\/a>' },
 /* QRCODE-END */
 			{ title: 'RSSI', rid: 'rssi'+uidx, text: wlstats[uidx].rssi || '', ignore: ((!wlstats[uidx].client) || (wl_sunit(uidx) >= 0)) },
 			{ title: 'Noise', rid: 'noise'+uidx, text: wlstats[uidx].noise || '', ignore: ((!wlstats[uidx].client) || (wl_sunit(uidx) >= 0)) },
