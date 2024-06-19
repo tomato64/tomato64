@@ -454,7 +454,7 @@ function init() {
 			<span class="log-clear">&raquo; <a href="javascript:scrollToBottom()">Scroll to bottom ⏬</a></span>
 			<span style="display:block;margin-top:1em">&nbsp;</span>
 			<span>&raquo; <a href="logs/syslog.txt?_http_id=<% nv(http_id) %>">Download Log File 🔽</a></span><br>
-			<span>&raquo; <a href="admin-log.asp">Logging Configuration ⚙️/a></span><br><br>
+			<span>&raquo; <a href="admin-log.asp">Logging Configuration ⚙️</a></span><br><br>
 		</div>
 
 		<div class="log-viewlast">
