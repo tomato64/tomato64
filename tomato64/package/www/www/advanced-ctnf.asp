@@ -217,16 +217,16 @@ function save() {
 	<script>
 		createFieldTable('', [
 /* TOMATO64-REMOVE-BEGIN */
-			{ title: 'Maximum Connections', name: 'ct_max', type: 'text', maxlen: 6, size: 8,
-				suffix: '&nbsp; <a href="javascript:clicked()" id="count0">[ count current... ]<\/a> <img src="spin.gif" alt="" id="spin">',
+			{ title: 'Maximum Connections', indent: 2,  name: 'ct_max', type: 'text', maxlen: 6, size: 8,
+				suffix: '&nbsp; <a href="javascript:clicked()" id="count0">[ count current ]<\/a> <img src="spin.gif" alt="" id="spin">',
 				value: fixInt(nvram.ct_max || 4096, 128, 300000, 4096) }
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-			{ title: 'Maximum Connections', name: 'ct_max', type: 'text', maxlen: 7, size: 8,
-				suffix: '&nbsp; <a href="javascript:clicked()" id="count0">[ count current... ]<\/a> <img src="spin.gif" alt="" id="spin">',
+			{ title: 'Maximum Connections', indent: 2,  name: 'ct_max', type: 'text', maxlen: 7, size: 8,
+				suffix: '&nbsp; <a href="javascript:clicked()" id="count0">[ count current ]<\/a> <img src="spin.gif" alt="" id="spin">',
 				value: fixInt(nvram.ct_max || 4096, 128, 1000000, 4096) }
 /* TOMATO64-END */
-			,{ title: 'Hash Table Size', name: 'ct_hashsize', type: 'text', maxlen: 6, size: 8, value: nvram.ct_hashsize || 1023 }
+			,{ title: 'Hash Table Size', name: 'ct_hashsize', indent: 2, type: 'text', maxlen: 6, size: 8, value: nvram.ct_hashsize || 1023 }
 		]);
 	</script>
 	<input id="expire-button" type="button" value="Drop Idle" onclick="expireClicked()">
@@ -234,17 +234,17 @@ function save() {
 
 <!-- / / / -->
 
-<div class="section-title">TCP Timeout</div>
+<div class="section-title">TCP Timeout <small>(seconds)</small></div>
 <div class="section">
 	<script>
 		if ((v = nvram.ct_tcp_timeout.match(/^(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)$/)) == null) {
 			v = [0,0,1200,120,60,120,120,10,60,30,0];
 		}
 		titles = ['-', 'None', 'Established', 'SYN Sent', 'SYN Received', 'FIN Wait', 'Time Wait', 'Close', 'Close Wait', 'Last ACK', 'Listen'];
-		f = [{ title: ' ', text: '<small>(seconds)<\/small>' }];
+		f = [{ title: ' ', text: '' }];
 		for (i = 1; i < 11; ++i) {
 			f.push({ title: titles[i], name: ('f_tcp_' + (i - 1)),
-				type: 'text', maxlen: 6, size: 8, value: v[i],
+				type: 'text', indent: 2, maxlen: 6, size: 8, value: v[i],
 				hidden: (i == 1 || i == 10) ? 1 : 0,
 				suffix: '<span id="count' + i + '"><\/span>' });
 		}
@@ -254,32 +254,30 @@ function save() {
 
 <!-- / / / -->
 
-<div class="section-title">UDP Timeout</div>
+<div class="section-title">UDP Timeout <small>(seconds)</small></div>
 <div class="section">
 	<script>
 		if ((v = nvram.ct_udp_timeout.match(/^(\d+)\s+(\d+)$/)) == null) {
 			v = [0,30,180];
 		}
 		createFieldTable('', [
-			{ title: ' ', text: '<small>(seconds)<\/small>' },
-			{ title: 'Unreplied', name: 'f_udp_0', type: 'text', maxlen: 6, size: 8, value: v[1], suffix: '<span id="count11"><\/span>' },
-			{ title: 'Assured', name: 'f_udp_1', type: 'text', maxlen: 6, size: 8, value: v[2], suffix: '<span id="count12"><\/span>' }
+			{ title: 'Unreplied', name: 'f_udp_0', indent: 2, type: 'text', maxlen: 6, size: 8, value: v[1], suffix: '<span id="count11"><\/span>' },
+			{ title: 'Assured', name: 'f_udp_1', indent: 2, type: 'text', maxlen: 6, size: 8, value: v[2], suffix: '<span id="count12"><\/span>' }
 		]);
 	</script>
 </div>
 
 <!-- / / / -->
 
-<div class="section-title">Other Timeouts</div>
+<div class="section-title">Other Timeouts <small>(seconds)</small></div>
 <div class="section">
 	<script>
 		if ((v = nvram.ct_timeout.match(/^(\d+)\s+(\d+)$/)) == null) {
 			v = [0,600,30];
 		}
 		createFieldTable('', [
-			{ title: ' ', text: '<small>(seconds)<\/small>' },
-			{ title: 'Generic', name: 'f_ct_0', type: 'text', maxlen: 6, size: 8, value: v[1] },
-			{ title: 'ICMP', name: 'f_ct_1', type: 'text', maxlen: 6, size: 8, value: v[2] }
+			{ title: 'Generic', name: 'f_ct_0', indent: 2, type: 'text', maxlen: 6, size: 8, value: v[1] },
+			{ title: 'ICMP', name: 'f_ct_1', indent: 2, type: 'text', maxlen: 6, size: 8, value: v[2] }
 		]);
 	</script>
 </div>
@@ -290,12 +288,12 @@ function save() {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'FTP', name: 'f_ftp', type: 'checkbox', value: nvram.nf_ftp != '0' },
-			{ title: 'GRE / PPTP', name: 'f_pptp', type: 'checkbox', value: nvram.nf_pptp != '0' },
-			{ title: 'H.323', name: 'f_h323', type: 'checkbox', value: nvram.nf_h323 != '0' },
-			{ title: 'SIP', name: 'f_sip', type: 'checkbox', value: nvram.nf_sip != '0' },
-			{ title: 'RTSP', name: 'f_rtsp', type: 'checkbox', value: nvram.nf_rtsp != '0' },
-			{ title: 'Enable IPSec Passthrough', name: 'f_ipsec_pass', type: 'select', options: [[0,'Disabled'],[1,'IPv4 & IPv6'],[2,'IPv6 only'],[3,'IPv4 only']], value: nvram.ipsec_pass }
+			{ title: 'FTP', name: 'f_ftp', indent: 2, type: 'checkbox', value: nvram.nf_ftp != '0' },
+			{ title: 'GRE / PPTP', name: 'f_pptp', indent: 2, type: 'checkbox', value: nvram.nf_pptp != '0' },
+			{ title: 'H.323', name: 'f_h323', indent: 2, type: 'checkbox', value: nvram.nf_h323 != '0' },
+			{ title: 'SIP', name: 'f_sip', indent: 2, type: 'checkbox', value: nvram.nf_sip != '0' },
+			{ title: 'RTSP', name: 'f_rtsp', indent: 2, type: 'checkbox', value: nvram.nf_rtsp != '0' },
+			{ title: 'Enable IPSec Passthrough', name: 'f_ipsec_pass', indent: 2, type: 'select', options: [[0,'Disabled'],[1,'IPv4 & IPv6'],[2,'IPv6 only'],[3,'IPv4 only']], value: nvram.ipsec_pass }
 		]);
 	</script>
 </div>
@@ -312,18 +310,18 @@ function save() {
 		v.push(['', 'Custom']);
 
 		createFieldTable('', [
-			{ title: 'TCP/UDP Buffers', multi: [
+			{ title: 'TCP/UDP Buffers', indent: 2, multi: [
 				{suffix: '&nbsp; Small <small>(default)<\/small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', name: '_fw_nat_tuning', id: '_fw_nat_tun_1', type: 'radio', value: nvram.fw_nat_tuning == '0' },
 				{suffix: '&nbsp; Medium&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', name: '_fw_nat_tuning', id: '_fw_nat_tun_2', type: 'radio', value: nvram.fw_nat_tuning == '1' },
 				{suffix: '&nbsp; Large', name: '_fw_nat_tuning', id: '_fw_nat_tun_3', type: 'radio', value: nvram.fw_nat_tuning == '2' } ]},
-			{ title: 'TTL Adjust', multi: [
+			{ title: 'TTL Adjust', indent: 2, multi: [
 				{ name: 'f_nf_ttl', type: 'select', options: v, value: nvram.nf_ttl.substr(0, 2) == 'c:' ? '' : nvram.nf_ttl },
 				{ name: 'f_ttl_val', type: 'text', maxlen: 3, size: 6, value: nvram.nf_ttl.substr(0, 2) == 'c:' ?  nvram.nf_ttl.substr(2, 5) : '' } ] },
 /* TOMATO64-REMOVE-BEGIN */
-			{ title: 'Inbound Layer 7', name: 'f_l7in', type: 'checkbox', value: nvram.nf_l7in != '0' }
+			{ title: 'Inbound Layer 7', name: 'f_l7in', indent: 2, type: 'checkbox', value: nvram.nf_l7in != '0' }
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-			{ title: 'Inbound nDPI', name: 'f_ndpi_in', type: 'checkbox', value: nvram.nf_ndpi_in != '0' }
+			{ title: 'Inbound nDPI', name: 'f_ndpi_in', indent: 2, type: 'checkbox', value: nvram.nf_ndpi_in != '0' }
 /* TOMATO64-END */
 		]);
 	</script>
