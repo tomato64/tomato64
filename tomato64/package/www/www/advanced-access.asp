@@ -20,7 +20,7 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram ("lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan_access");%>
+//	<% nvram ("lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan_access");%> 
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 //	<% nvram ("lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,lan_access");%>
