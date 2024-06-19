@@ -234,7 +234,7 @@ function save() {
 
 <!-- / / / -->
 
-<div class="section-title">TCP Timeout <small>(seconds)</small></div>
+<div class="section-title">TCP Timeout <small class="secs">(seconds)</small></div>
 <div class="section">
 	<script>
 		if ((v = nvram.ct_tcp_timeout.match(/^(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)$/)) == null) {
@@ -254,7 +254,7 @@ function save() {
 
 <!-- / / / -->
 
-<div class="section-title">UDP Timeout <small>(seconds)</small></div>
+<div class="section-title">UDP Timeout <small class="secs">(seconds)</small></div>
 <div class="section">
 	<script>
 		if ((v = nvram.ct_udp_timeout.match(/^(\d+)\s+(\d+)$/)) == null) {
@@ -269,7 +269,7 @@ function save() {
 
 <!-- / / / -->
 
-<div class="section-title">Other Timeouts <small>(seconds)</small></div>
+<div class="section-title">Other Timeouts <small class="secs">(seconds)</small></div>
 <div class="section">
 	<script>
 		if ((v = nvram.ct_timeout.match(/^(\d+)\s+(\d+)$/)) == null) {

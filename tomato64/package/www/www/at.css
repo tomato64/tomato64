@@ -352,6 +352,12 @@ div.section-title > small {
 	color: var(--tomato-color);
 }
 
+div.section-title > small.secs {
+	float: unset;
+	font-size: 12px;
+	color: var(--tomato-color);
+}
+
 div.section div[id$="-tab-enabled"],
 div.section div[id$="-tab-disabled"] {
 	padding-bottom: 20px;
