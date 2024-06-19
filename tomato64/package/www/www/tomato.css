@@ -307,11 +307,19 @@ table.fields {
 }
 
 .fields td.title.indent1 {
-	padding: 1px 15px 1px 0;
+	padding: 1px 5px 1px 7px;
 }
 
 .fields td.title.indent2 {
-	padding: 1px 5px 1px 10px;
+	padding: 1px 5px 1px 14px;
+}
+
+.fields td.title.indent3 {
+	padding: 1px 5px 1px 21px;
+}
+
+.fields td.title.indent4 {
+	padding: 1px 5px 1px 28px;
 }
 
 .fields .spacer {
