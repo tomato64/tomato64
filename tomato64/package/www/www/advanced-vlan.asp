@@ -579,7 +579,12 @@ REMOVE-END */
 		else
 			ferror.clear(f[COL_BRI]);
 
+/* TOMATO64-REMOVE-BEGIN */
 		if ((this.countWan2() > 0) && (f[COL_BRI].selectedIndex == 6)) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		if ((this.countWan2() > 0) && (f[COL_BRI].selectedIndex == 10)) {
+/* TOMATO64-END */
 			ferror.set(f[COL_BRI], 'Only one VID can be used as WAN1 at any time', quiet);
 			valid = 0;
 		}
@@ -587,14 +592,24 @@ REMOVE-END */
 			ferror.clear(f[COL_BRI]);
 
 /* MULTIWAN-BEGIN */
+/* TOMATO64-REMOVE-BEGIN */
 		if ((this.countWan3() > 0) && (f[COL_BRI].selectedIndex == 7)) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		if ((this.countWan3() > 0) && (f[COL_BRI].selectedIndex == 11)) {
+/* TOMATO64-END */
 			ferror.set(f[COL_BRI], 'Only one VID can be used as WAN2 at any time', quiet);
 			valid = 0;
 		}
 		else
 			ferror.clear(f[COL_BRI]);
 
+/* TOMATO64-REMOVE-BEGIN */
 		if ((this.countWan4() > 0) && (f[COL_BRI].selectedIndex == 8)) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		if ((this.countWan4() > 0) && (f[COL_BRI].selectedIndex == 12)) {
+/* TOMATO64-END */
 			ferror.set(f[COL_BRI], 'Only one VID can be used as WAN3 at any time', quiet);
 			valid = 0;
 		}

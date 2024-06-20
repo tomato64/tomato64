@@ -221,6 +221,7 @@ function c(id, htm) {
 	E(id).cells[1].innerHTML = htm;
 }
 
+/* TOMATO64-REMOVE-BEGIN */
 function ethstates() {
 	var port = etherstates.port0;
 	if (port == 'disabled')
@@ -244,21 +245,11 @@ function ethstates() {
 		}
 	}
 	/* LANs */
-/* TOMATO64-REMOVE-BEGIN */
 	for (uidx = v; uidx <= MAX_PORT_ID; ++uidx)
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-	for (uidx = v; uidx <= stats.niccount -1; ++uidx)
-/* TOMATO64-END */
 		code += '<td class="title indent2"><b>LAN'+(v > 0 ? (uidx - 1) : uidx)+'<\/b><\/td>';
 
 	code += '<td class="content"><\/td><\/tr><tr>';
-/* TOMATO64-REMOVE-BEGIN */
 	for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-	for (uidx = 0; uidx <= stats.niccount -1; ++uidx) {
-/* TOMATO64-END */
 		port = eval('etherstates.port'+uidx);
 
 		state = _ethstates(port);
@@ -266,14 +257,82 @@ function ethstates() {
 		code += '<td class="title indent2"><img id="'+state[0]+'_'+uidx+'" src="'+state[0]+'.gif" alt=""><br>'+(stats.lan_desc == '1' ? state[1] : '')+'<\/td>';
 	}
 
-/* TOMATO64-REMOVE-BEGIN */
 	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="6" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
-/* TOMATO64-END */
 	E('ports').innerHTML = code;
 }
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+
+function get_wan(port) {
+	var i, j, vlan, wan='';
+
+	for (i = 1; i <= nvram.mwan_num; i++) {
+		vlan='';
+		j = (i > 1) ? i : '';
+
+		if (nvram['wan'+j+'_ifnames'].includes('eth'+port)) {
+			if (nvram['wan'+j+'_ifnames'].includes('.')) {
+				vlan = '-'+nvram['wan'+j+'_ifnames'].split('.')[1];
+			}
+			wan += 'wan'+(i-1)+vlan+'<br>';
+		}
+	}
+	return wan;
+}
+
+function get_lan(port) {
+	var i, j, vlan, ifaces, index, lan='';
+
+	for (i = 0; i <= MAX_BRIDGE_ID; i++) {
+		vlan='';
+		j = (i > 0) ? i: '';
+
+		ifaces = nvram['lan'+j+'_ifnames'].split(" ");
+
+		for (index = 0; index < ifaces.length; ++index) {
+			if(ifaces[index].includes('eth'+port)) {
+				if(ifaces[index].includes('.')) {
+					vlan = '-'+ifaces[index].split('.')[1];
+				}
+				lan += nvram['lan'+j+'_ifname']+vlan+'<br>';
+			}
+		}
+	}
+	return lan;
+}
+
+function ethstates() {
+	var port = etherstates.port0;
+	if (port == 'disabled')
+		return 0;
+
+	var state = [];
+	var p;
+	var code ='<div class="section-title">Ethernet Ports State<\/div><div class="section"><table class="fields"><tr>';
+	var code2 = '';
+
+	for ((nvram.lan_invert==0) ? p = 0 : p = stats.niccount - 1; (nvram.lan_invert==0) ? p <= stats.niccount - 1 : p >= 0; (nvram.lan_invert==0) ? p++ : p--) {
+		code += '<td class="title indent2"><b>eth'+p+'<\/b><\/td>';
+		var wan = get_wan(p);
+		var lan = get_lan(p);
+		code2 += '<td class="title indent2" valign="top"><b>'+wan+lan+'<\/b><\/td>';
+	}
+
+	code += '<td class="content"><\/td><\/tr><tr>';
+	for ((nvram.lan_invert==0) ? p = 0 : p = stats.niccount - 1; (nvram.lan_invert==0) ? p <= stats.niccount - 1 : p >= 0; (nvram.lan_invert==0) ? p++ : p--) {
+		port = eval('etherstates.port'+p);
+
+		state = _ethstates(port);
+
+		code += '<td class="title indent2"><img id="'+state[0]+'_'+p+'" src="'+state[0]+'.gif" alt=""><br>'+(stats.lan_desc == '1' ? state[1] : '')+'<\/td>';
+	}
+
+	code += '<\/tr><tr>'+code2;
+	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
+	E('ports').innerHTML = code;
+}
+/* TOMATO64-END */
 
 function anon_update() {
 	var code = '';
