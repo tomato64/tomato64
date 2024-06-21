@@ -2857,7 +2857,7 @@ void start_haveged(void)
 	if (serialize_restart("haveged", 1))
 		return;
 
-	char *cmd_argv[] = { "/usr/sbin/haveged",
+	char *cmd_argv[] = { "haveged",
 	                     "-r", "0",             /* 0 = run as daemon */
 	                     "-w", "1024",          /* write_wakeup_threshold [bits] */
 #ifndef TOMATO64
