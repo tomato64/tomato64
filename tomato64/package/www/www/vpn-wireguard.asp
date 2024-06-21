@@ -53,7 +53,7 @@ var serviceType = 'wireguard';
 var tabs =  [];
 for (i = 0; i < WG_INTERFACE_COUNT; ++i)
 	tabs.push(['wg'+i,'wg'+i]);
-var sections = [['config','Config'],['peers','Peers'],['scripts','Scripts'],['status','Status']];
+var sections = [['wg-config','Config'],['wg-peers','Peers'],['wg-scripts','Scripts'],['wg-status','Status']];
 
 function update_nvram(fom) {
 	for (var i = 0; i < fom.length; ++i) {
@@ -151,16 +151,16 @@ function tabSelect(name) {
 
 	for (var i = 0; i < tabs.length; ++i) {
 		if (name == tabs[i][0]) {
-			elem.display(tabs[i][0]+'-tab', true);
+			elem.display(tabs[i][0]+'-wg-tab', true);
 			for (var j = 0; j < sections.length; ++j) {
-				elem.display('notes-'+sections[j][0], (E(tabs[i][0]+'-'+sections[j][0]+'-tab').classList.contains('active')));
+				elem.display('notes-'+sections[j][0], (E(tabs[i][0]+'-'+sections[j][0]+'-wg-tab').classList.contains('active')));
 			}
 		}
 		else
-			elem.display(tabs[i][0]+'-tab', false);
+			elem.display(tabs[i][0]+'-wg-tab', false);
 	}
 
-	cookie.set('wg_tab', name);
+	cookie.set(cprefix+'_tab', name);
 }
 
 function sectSelect(tab, section) {
@@ -168,18 +168,18 @@ function sectSelect(tab, section) {
 
 	for (var i = 0; i < sections.length; ++i) {
 		if (section == sections[i][0]) {
-			elem.addClass(tabs[tab][0]+'-'+sections[i][0]+'-tab', 'active');
+			elem.addClass(tabs[tab][0]+'-'+sections[i][0]+'-wg-tab', 'active');
 			elem.display(tabs[tab][0]+'-'+sections[i][0], true);
 			elem.display('notes-'+sections[i][0], true);
 		}
 		else {
-			elem.removeClass(tabs[tab][0]+'-'+sections[i][0]+'-tab', 'active');
+			elem.removeClass(tabs[tab][0]+'-'+sections[i][0]+'-wg-tab', 'active');
 			elem.display(tabs[tab][0]+'-'+sections[i][0], false);
 			elem.display('notes-'+sections[i][0], false);
 		}
 	}
 
-	cookie.set('wg'+tab+'_section', section);
+	cookie.set(cprefix+tab+'_section', section);
 }
 
 function updateForm(num) {
@@ -455,7 +455,7 @@ StatusRefresh.prototype.setup = function() {
 	this.actionURL = 'shell.cgi';
 	this.postData = 'action=execute&command='+escapeCGI('/usr/sbin/wg show wg'+this.unit+' dump\n'.replace(/\r/g, ''));
 	this.refreshTime = 5 * 1000;
-	this.cookieTag = 'wg'+this.unit+'_refresh';
+	this.cookieTag = cprefix+this.unit+'_refresh';
 	this.dontuseButton = 0;
 	this.timer = new TomatoTimer(THIS(this, this.start));
 }
@@ -1799,9 +1799,9 @@ function save(nomsg) {
 
 function earlyInit() {
 	show();
-	var tab = cookie.get('wg_tab') || tabs[0][0];
+	var tab = cookie.get(cprefix+'_tab') || tabs[0][0];
 	for (var i = 0; i < tabs.length; ++i) {
-		sectSelect(i, cookie.get('wg'+i+'_section') || sections[0][0]);
+		sectSelect(i, cookie.get(cprefix+i+'_section') || sections[0][0]);
 	}
 	tabSelect(tab);
 	verifyFields(null, 1);
@@ -1845,7 +1845,7 @@ function init() {
 
 		for (i = 0; i < tabs.length; ++i) {
 			t = tabs[i][0];
-			W('<div id="'+t+'-tab">');
+			W('<div id="'+t+'-wg-tab">');
 			W('<input type="hidden" name="'+t+'_enable">');
 			W('<input type="hidden" name="'+t+'_ka">');
 			W('<input type="hidden" name="'+t+'_lan">');
@@ -1856,12 +1856,12 @@ function init() {
 
 			W('<ul class="tabs">');
 			for (j = 0; j < sections.length; j++) {
-				W('<li><a href="javascript:sectSelect('+i+',\''+sections[j][0]+'\')" id="'+t+'-'+sections[j][0]+'-tab">'+sections[j][1]+'<\/a><\/li>');
+				W('<li><a href="javascript:sectSelect('+i+',\''+sections[j][0]+'\')" id="'+t+'-'+sections[j][0]+'-wg-tab">'+sections[j][1]+'<\/a><\/li>');
 			}
 			W('<\/ul><div class="tabs-bottom"><\/div>');
 
 			/* config tab start */
-			W('<div id="'+t+'-config">');
+			W('<div id="'+t+'-wg-config">');
 			W('<div class="section-title">Interface<\/div>');
 			createFieldTable('', [
 				{ title: 'Enable on Start', name: 'f_'+t+'_enable', type: 'checkbox', value: nvram[t+'_enable'] == 1 },
@@ -1914,7 +1914,7 @@ function init() {
 			/* config tab stop */
 
 			/* peers tab start */
-			W('<div id="'+t+'-peers">');
+			W('<div id="'+t+'-wg-peers">');
 			W('<div class="section-title">VPN Connectivity<\/div>');
 			createFieldTable('', [
 				{ title: 'Type of VPN', name: t+'_com', type: 'select', options: [['0','Internal - Hub (this device) and Spoke (peers)'],['1','Internal - Full Mesh (defined Endpoint only)'],['2','Internal - Full Mesh'],['3','External - VPN Provider']], value: nvram[t+'_com'] || 0 },
@@ -1930,10 +1930,10 @@ function init() {
 			W('<br>');
 			W('<br>');
 			W('<div id="'+t+'_qrcode" class="qrcode" style="display:none">');
-			 W('<img src="qr-icon.svg" alt="'+t+'_qrcode_img" style="max-width:100px">');
-			 W('<div id="'+t+'_qrcode_labels" class="qrcode-labels" title="Message">Point your mobile phone camera <br>here above to connect automatically<\/div>');
-			 W('<br>');
+			W('<img src="qr-icon.svg" alt="'+t+'_qrcode_img" style="max-width:100px">');
+			W('<div id="'+t+'_qrcode_labels" class="qrcode-labels" title="Message">Point your mobile phone camera <br>here above to connect automatically<\/div>');
 			W('<\/div>');
+			W('<br>');
 
 			W('<div class="section-title">Peer Generation<\/div>');
 			createFieldTable('', [
@@ -1959,7 +1959,7 @@ function init() {
 			/* peers tab stop */
 
 			/* scripts tab start */
-			W('<div id="'+t+'-scripts">');
+			W('<div id="'+t+'-wg-scripts">');
 			W('<div class="section-title">Custom Interface Scripts<\/div>');
 			createFieldTable('', [
 				{ title: 'Pre-Up Script', name: t+'_preup', type: 'textarea', value: nvram[t+'_preup'] },
@@ -1971,7 +1971,7 @@ function init() {
 			/* scripts tab stop */
 
 			/* status tab start */
-			W('<div id="'+t+'-status">');
+			W('<div id="'+t+'-wg-status">');
 			W('<pre id="'+t+'_result" class="status-result"><\/pre>');
 			W('<div style="text-align:right">');
 			W('<img src="spin.gif" id="'+t+'_status_refresh_spinner" alt=""> &nbsp;');
@@ -1998,7 +1998,7 @@ function init() {
 <div class="section" id="sesdiv_notes" style="display:none">
 
 	<!-- config notes start -->
-	<div id="notes-config" style="display:none">
+	<div id="notes-wg-config" style="display:none">
 		<ul>
 			<li><b>Interface</b> - Settings directly related to the wireguard interface on this device.</li>
 			<ul>
@@ -2046,7 +2046,7 @@ function init() {
 	<!-- config notes stop -->
 
 	<!-- peers notes start -->
-	<div id="notes-peers" style="display:none">
+	<div id="notes-wg-peers" style="display:none">
 		<ul>
 			<li><b>VPN Connectivity</b></li>
 			<ul>
@@ -2094,7 +2094,7 @@ function init() {
 	<!-- peers notes stop -->
 
 	<!-- scripts notes start -->
-	<div id="notes-scripts" style="display:none">
+	<div id="notes-wg-scripts" style="display:none">
 		<ul>
 			<li><b>Custom Interface Scripts</b> - Custom bash scripts to be run at defined events.</li>
 			<ul>
@@ -2109,7 +2109,7 @@ function init() {
 	<!-- scripts notes stop -->
 
 	<!-- status notes start -->
-	<div id="notes-status" style="display:none">
+	<div id="notes-wg-status" style="display:none">
 	</div>
 	<!-- status notes stop -->
 

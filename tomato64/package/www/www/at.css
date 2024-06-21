@@ -309,6 +309,10 @@ td#content > small {
 	box-shadow: rgba(var(--tomato-shadow-color), .2) 0px 1px 1px;
 }
 
+div[id$="-wg-config"] > div.section-title,
+div[id$="-wg-peers"] > div.section-title,
+div[id$="-wg-scripts"] > div.section-title,
+div[id$="-wg-status"] > div.section-title,
 div[id$="-status-stats"] > div.section-title,
 div[id$="-status-routing"] > div.section-title,
 div[id$="-status-clients"] > div.section-title,
