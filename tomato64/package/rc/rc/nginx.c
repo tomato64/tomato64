@@ -33,9 +33,7 @@
 #define nginxaccesslog			nginxlogdir"/access.log"	/* access log */
 #define nginxerrorlog			nginxlogdir"/error.log"		/* error log */
 #define nginxcustom			"#"				/* additional window for custom parameter */
-#define nginx_worker_proc		"1"				/* worker processes. CPU, cores */
-#define nginx_cpu_affinity		"0101"				/* Can bind the worker process to a CPU, it calls sched_setaffinity() */
-#define nginx_master_process		"off"				/* set to "on" in developpment mode only */
+#define nginx_master_process		"on"				/* set to "off" in developpment mode only */
 #define nginxpid			nginxrundir"/nginx.pid"		/* pid */
 #define nginx_worker_rlimit_profile	"8192"				/* worker rlimit profile */
 #define nginx_worker_connections	"512"				/* worker_proc*512/keepalive_timeout*60 = 512 users per minute */
@@ -181,7 +179,7 @@ static void build_nginx_conf(void)
 		buf = nginxcustom; /* add custom config to http section */
 
 	fprintf(nginx_conf_file, /* global process */
-	                         "user %s;\n"
+	                         "user %s %s;\n"
 	                         "worker_processes %s;\n"
 	                         "worker_cpu_affinity %s;\n"
 	                         "master_process %s;\n"
@@ -205,9 +203,9 @@ static void build_nginx_conf(void)
 	                         "sendfile %s;\n"
 	                         "client_max_body_size %sM;\n"
 	                         "%s\n",
-	                         nvram_safe_get("nginx_user"),
-	                         nginx_worker_proc,
-	                         nginx_cpu_affinity,
+	                         nvram_safe_get("nginx_user"), nvram_safe_get("nginx_user"),
+	                         "auto",
+	                         "auto",
 	                         nginx_master_process,
 	                         i,
 	                         nginxerrorlog,
@@ -422,12 +420,20 @@ void start_nginx(int force)
 
 	run_nginx_firewall_script();
 
-	if (nvram_get_int("nginx_php")) /* run php-fpm/spawn-fcgi */
+	if (nvram_get_int("nginx_php")) { /* run php-fpm/spawn-fcgi */
 #ifdef TCONFIG_BCMARM
-		ret = eval("/usr/sbin/php-fpm", "-c", php_ini_path, "-y", php_fpm_path, "-R");
+		ret = eval("php-fpm", "-c", php_ini_path, "-y", php_fpm_path, "-R");
 #else
 		xstart("spawn-fcgi", "-a", "127.0.0.1", "-p", "9000", "-P", nginxrundir"/php-fastcgi.pid", "-C", "2", "-u", nvram_safe_get("nginx_user"), "-g", nvram_safe_get("nginx_user"), "/usr/sbin/php-cgi");
 #endif /* TCONFIG_BCMARM */
+	}
+	else {
+#ifdef TCONFIG_BCMARM
+		killall_tk_period_wait("php-fpm", 50);
+#else
+		killall_tk_period_wait("php-cgi", 50);
+#endif /* TCONFIG_BCMARM */
+	}
 
 	ret |= eval(nginxbin, "-c", nvram_get_int("nginx_override") ? nvram_safe_get("nginx_overridefile") : nginxconf);
 
