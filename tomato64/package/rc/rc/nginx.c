@@ -341,12 +341,17 @@ static void build_nginx_conf(void)
 		                     "pid = %s\n"
 		                     "error_log = syslog\n"
 		                     "log_level = notice\n"
-		                     "daemonize = yes\n"
+		                     "daemonize = yes\n\n"
 		                     "[www]\n"
 		                     "user = %s\n"
 		                     "group = %s\n\n"
+//		                     "listen 127.0.0.1:9000\n"
+//		                     "listen.allowed_clients = 127.0.0.1\n"
 		                     "listen = %s\n"
-		                     "listen.backlog = 65535\n"
+		                     "listen.owner = %s\n"
+		                     "listen.group = %s\n"
+		                     "listen.mode = 0660\n"
+		                     "listen.backlog = 65535\n\n"
 		                     "pm = ondemand\n"
 		                     "pm.max_children = 5\n"
 		                     "pm.process_idle_timeout = 10s\n"
@@ -354,7 +359,9 @@ static void build_nginx_conf(void)
 		                     php_fpm_pid,
 		                     nvram_safe_get("nginx_user"),
 		                     nvram_safe_get("nginx_user"),
-		                     php_fpm_socket);
+		                     php_fpm_socket,
+		                     nvram_safe_get("nginx_user"),
+		                     nvram_safe_get("nginx_user"));
 
 		fclose(phpfpm_file);
 #endif /* TCONFIG_BCMARM */
