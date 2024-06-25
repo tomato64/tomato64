@@ -11543,6 +11543,7 @@ static void sysinit(void)
 	eval("hotplug2", "--coldplug");
 #else
 	eval("/etc/init.d/S10mdev", "start");
+	eval("set_devs");
 
 	/* Mount filesystem rw */
 	eval("mount", "-o", "remount,rw", "/");

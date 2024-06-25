@@ -1,0 +1,11 @@
+diff -Naur ifrename-deec7127ae36fe3d2ed47d0871e7961d1759d469.orig/ifrename.c ifrename-deec7127ae36fe3d2ed47d0871e7961d1759d469/ifrename.c
+--- ifrename-deec7127ae36fe3d2ed47d0871e7961d1759d469.orig/ifrename.c	2024-06-25 10:24:29.763381171 -0600
++++ ifrename-deec7127ae36fe3d2ed47d0871e7961d1759d469/ifrename.c	2024-06-25 10:24:46.339440836 -0600
+@@ -48,6 +48,7 @@
+ #include <getopt.h>		/* getopt_long() */
+ #include <linux/sockios.h>	/* SIOCSIFNAME */
+ #include <fnmatch.h>		/* fnmatch() */
++#include <libgen.h>
+ //#include <sys/syslog.h>
+ 
+ #include "iwlib.h"		/* Wireless Tools library */
