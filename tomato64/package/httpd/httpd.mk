@@ -9,7 +9,7 @@ HTTPD_SITE = $(BR2_EXTERNAL_TOMATO64_PATH)/package/httpd/httpd
 HTTPD_SITE_METHOD = local
 HTTPD_INSTALL_STAGING = YES
 HTTPD_LICENSE = tomato
-HTTPD_DEPENDENCIES = libnvram libshared libmssl
+HTTPD_DEPENDENCIES = libnvram libshared libmssl openssl
 
 define HTTPD_BUILD_CMDS
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)
