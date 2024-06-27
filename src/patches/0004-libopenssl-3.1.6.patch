@@ -362,7 +362,7 @@ diff -Naur buildroot-2024.02.orig/package/libopenssl/libopenssl.hash buildroot-2
 -# From https://www.openssl.org/source/openssl-3.3.1.tar.gz.sha256
 -sha256  777cd596284c883375a2a7a11bf5d2786fc5413255efab20c50d6ffe6d020b7e  openssl-3.3.1.tar.gz
 +# From https://www.openssl.org/source/openssl-3.1.4.tar.gz.sha256
-+sha256  6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262  openssl-3.1.5.tar.gz
++sha256  5d2be4036b478ef3cb0a854ca9b353072c3a0e26d8a56f8f0ab9fb6ed32d38d7  openssl-3.1.6.tar.gz
  
  # License files
  sha256  7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a  LICENSE.txt
@@ -374,7 +374,7 @@ diff -Naur buildroot-2024.02.orig/package/libopenssl/libopenssl.mk buildroot-202
  ################################################################################
  
 -LIBOPENSSL_VERSION = 3.3.1
-+LIBOPENSSL_VERSION = 3.1.5
++LIBOPENSSL_VERSION = 3.1.6
  LIBOPENSSL_SITE = https://www.openssl.org/source
  LIBOPENSSL_SOURCE = openssl-$(LIBOPENSSL_VERSION).tar.gz
  LIBOPENSSL_LICENSE = Apache-2.0
