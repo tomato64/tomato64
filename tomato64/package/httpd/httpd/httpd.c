@@ -647,7 +647,7 @@ static void start_ssl(void)
 		save = nvram_get_int("https_crt_save");
 
 		if ((!f_exists("/etc/cert.pem")) || (!f_exists("/etc/key.pem"))
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if defined(USE_OPENSSL) && OPENSSL_VERSION_NUMBER >= 0x10100000L
 		    || !mssl_cert_key_match("/etc/cert.pem", "/etc/key.pem")
 #endif
 		    || ((!nvram_get_int("https_crt_timeset")) && (time(NULL) > Y2K))) {
@@ -657,13 +657,13 @@ static void start_ssl(void)
 					if (eval("tar", "-xzf", "/tmp/cert.tgz", "-C", "/", "etc/cert.pem", "etc/key.pem") == 0) {
 						system("cat /etc/key.pem /etc/cert.pem > /etc/server.pem");
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if defined(USE_OPENSSL) && OPENSSL_VERSION_NUMBER >= 0x10100000L
 						/* check key and cert pair, if they are mismatched, regenerate key and cert */
 						if (mssl_cert_key_match("/etc/cert.pem", "/etc/key.pem")) {
 							logmsg(LOG_INFO, "mssl_cert_key_match : PASS");
 #endif
 							ok = 1;
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if defined(USE_OPENSSL) && OPENSSL_VERSION_NUMBER >= 0x10100000L
 						}
 #endif
 					}
