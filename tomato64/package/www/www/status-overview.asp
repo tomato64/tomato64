@@ -273,7 +273,7 @@ function get_wan(port) {
 
 		if (nvram['wan'+j+'_ifnames'].includes('eth'+port)) {
 			if (nvram['wan'+j+'_ifnames'].includes('.')) {
-				vlan = '-'+nvram['wan'+j+'_ifnames'].split('.')[1];
+				vlan = '&nbsp;'+nvram['wan'+j+'_ifnames'].split('.')[1];
 			}
 			wan += 'wan'+(i-1)+vlan+'<br>';
 		}
@@ -293,7 +293,7 @@ function get_lan(port) {
 		for (index = 0; index < ifaces.length; ++index) {
 			if(ifaces[index].includes('eth'+port)) {
 				if(ifaces[index].includes('.')) {
-					vlan = '-'+ifaces[index].split('.')[1];
+					vlan = '&nbsp;'+ifaces[index].split('.')[1];
 				}
 				lan += nvram['lan'+j+'_ifname']+vlan+'<br>';
 			}
