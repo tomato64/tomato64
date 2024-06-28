@@ -17,4 +17,10 @@ if [ -d "$GRUB2_DIR/build-i386-pc/" ]; then
     cp -f "$GRUB2_DIR/build-i386-pc/grub-core/boot.img" "$BINARIES_DIR"
 fi
 
+rm  -f $BINARIES_DIR/iwlwifi*
+rm -rf $BINARIES_DIR/rtl*
+rm -rf $BINARIES_DIR/rtw*
+rm -rf $BINARIES_DIR/mediatek/
+rm -rf $BINARIES_DIR/ath10k/
+
 $BR2_EXTERNAL_TOMATO64_PATH/board/x86_64/post-build-fs.sh
