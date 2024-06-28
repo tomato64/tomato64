@@ -864,6 +864,11 @@ static const nvset_t nvset_list[] = {
 	{ "vlan13hwname",		V_TEXT(0, 8)			},
 	{ "vlan14hwname",		V_TEXT(0, 8)			},
 	{ "vlan15hwname",		V_TEXT(0, 8)			},
+	{ "wan_ifnameX",		V_TEXT(0, 8)			},
+	{ "wan2_ifnameX",		V_TEXT(0, 8)			},
+	{ "wan3_ifnameX",		V_TEXT(0, 8)			},
+	{ "wan4_ifnameX",		V_TEXT(0, 8)			},
+	{ "lan_ifnames",		V_TEXT(0, 64)			},
 #else
 	{ "vlan0ports",			V_TEXT(0, 29)			},
 	{ "vlan1ports",			V_TEXT(0, 29)			},
@@ -901,14 +906,10 @@ static const nvset_t nvset_list[] = {
 	{ "wan2_ifnameX_vlan",		V_TEXT(0, 8)			},
 	{ "wan3_ifnameX_vlan",		V_TEXT(0, 8)			},
 	{ "wan4_ifnameX_vlan",		V_TEXT(0, 8)			},
-#endif /* TOMATO64 */
-	{ "wan_ifnameX",		V_TEXT(0, 8)			},
-	{ "wan2_ifnameX",		V_TEXT(0, 8)			},
-	{ "wan3_ifnameX",		V_TEXT(0, 8)			},
-	{ "wan4_ifnameX",		V_TEXT(0, 8)			},
-#ifndef TOMATO64
-	{ "lan_ifnames",		V_TEXT(0, 64)			},
-#else
+	{ "wan_ifnameX",		V_TEXT(0, 9)			},
+	{ "wan2_ifnameX",		V_TEXT(0, 9)			},
+	{ "wan3_ifnameX",		V_TEXT(0, 9)			},
+	{ "wan4_ifnameX",		V_TEXT(0, 9)			},
 	{ "lan_ifnames",		V_TEXT(0, 100)			},
 	{ "lan_ifnames_vlan",		V_TEXT(0, 8)			},
 #endif /* TOMATO64 */
