@@ -9,8 +9,18 @@ tar --touch -I "zstd -f" -xf $1 -C /
 
 result=$?
 
-if [ "$result" -eq 0 ]; then
+if [ "$result" -ne 0 ]; then
+	printf 'error code "%d" returned during extraction' "$result"
+	exit
+fi
+
+if [ -f /boot/bzImage ]; then
+	kernel=`file -bL /boot/bzImage  | sed 's/.*version //;s/ .*//'`
+	for dir in /lib/modules/*; do
+		[ "$dir" = "/lib/modules/$kernel" ] && continue
+		rm -rf "$dir"
+	done
 	printf "image successfully flashed\n"
 else
-	printf 'error code "%d" returned' "$result"
+	printf "Could not detect the new kernel version. Possible issue with the kernel.\n"
 fi
