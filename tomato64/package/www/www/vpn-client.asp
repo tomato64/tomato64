@@ -506,7 +506,7 @@ function init() {
 				{ title: 'Accept DNS configuration', name: 'vpn_'+t+'_adns', type: 'select', options: [[0,'Disabled'],[1,'Relaxed'],[2,'Strict'],[3,'Exclusive']], value: nvram['vpn_'+t+'_adns'] },
 				{ title: 'Data ciphers', name: 'vpn_'+t+'_ncp_ciphers', type: 'text', size: 70, maxlen: 127, value: nvram['vpn_'+t+'_ncp_ciphers'] },
 				{ title: 'Cipher', name: 'vpn_'+t+'_cipher', type: 'select', options: ciphers, value: nvram['vpn_'+t+'_cipher'] },
-				{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [['-1','Disabled'],['no','None'],['yes','LZO'],['adaptive','LZO Adaptive']
+				{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [['-1','Disabled'],['no','None']
 /* SIZEOPTMORE-BEGIN */
 				          ,['lz4','LZ4'],['lz4-v2','LZ4-V2'],['stub','Stub'],['stub-v2','Stub-V2']
 /* SIZEOPTMORE-END */

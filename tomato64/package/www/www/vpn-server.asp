@@ -958,7 +958,7 @@ function init() {
 				{ title: 'Advertise DNS to clients', name: 'f_vpn_'+t+'_pdns', type: 'checkbox', value: nvram['vpn_'+t+'_pdns'] != 0 },
 				{ title: 'Data ciphers', name: 'vpn_'+t+'_ncp_ciphers', type: 'text', size: 70, maxlen: 127, value: nvram['vpn_'+t+'_ncp_ciphers'] },
 				{ title: 'Cipher', name: 'vpn_'+t+'_cipher', type: 'select', options: ciphers, value: nvram['vpn_'+t+'_cipher'] },
-				{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [['-1','Disabled'],['no','None'],['yes','LZO'],['adaptive','LZO Adaptive']
+				{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [['-1','Disabled'],['no','None']
 /* SIZEOPTMORE-BEGIN */
 				         ,['lz4','LZ4'],['lz4-v2','LZ4-V2']
 /* SIZEOPTMORE-END */
