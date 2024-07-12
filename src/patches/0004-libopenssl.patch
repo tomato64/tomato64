@@ -1,0 +1,12 @@
+diff -Naur buildroot-2024.05.orig/package/libopenssl/libopenssl.mk buildroot-2024.05/package/libopenssl/libopenssl.mk
+--- buildroot-2024.05.orig/package/libopenssl/libopenssl.mk	2024-07-12 14:29:56.665234879 -0600
++++ buildroot-2024.05/package/libopenssl/libopenssl.mk	2024-07-12 14:30:20.485232016 -0600
+@@ -13,7 +13,7 @@
+ LIBOPENSSL_DEPENDENCIES = zlib
+ HOST_LIBOPENSSL_DEPENDENCIES = host-zlib
+ LIBOPENSSL_TARGET_ARCH = $(call qstrip,$(BR2_PACKAGE_LIBOPENSSL_TARGET_ARCH))
+-LIBOPENSSL_CFLAGS = $(TARGET_CFLAGS)
++LIBOPENSSL_CFLAGS = $(TARGET_CFLAGS) -DOPENSSL_TLS_SECURITY_LEVEL=0
+ LIBOPENSSL_PROVIDES = openssl
+ LIBOPENSSL_CPE_ID_VENDOR = $(LIBOPENSSL_PROVIDES)
+ LIBOPENSSL_CPE_ID_PRODUCT = $(LIBOPENSSL_PROVIDES)
