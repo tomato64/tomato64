@@ -164,6 +164,7 @@ function verifyFields(focused, quiet) {
 	var op;
 	var enabled;
 	var used_wans = [0, 0, 0, 0];
+	var count_enabled_wans = 0;
 	var txt = 'not available when <a href="advanced-dhcpdns.asp">\'Use received DNS with user-entered DNS\'<\/a> is enabled';
 
 	/* prepare used_wans[] array */
@@ -174,6 +175,8 @@ function verifyFields(focused, quiet) {
 				used_wans[j - 1]++;
 			if (!E('_f_opendns'+i).checked) /* otherwise, uncheck WANx */
 				E('_f_opendns'+i+'_wan'+k).checked = 0;
+			if (nvram['wan'+k+'_proto'] != 'disabled')
+				count_enabled_wans++;
 		}
 	}
 
@@ -306,27 +309,26 @@ function verifyFields(focused, quiet) {
 				}
 			}
 		} /* -> if (enabled) */
-		var count_enabled_wans = 0;
 		for (j = 1; j <= MAXWAN_NUM; j++) {
 			k = (j > 1) ? j : '';
 			l = j - 1;
 			/* disable/unselect the dropdown item for which WAN is disabled */
 			if (nvram['wan'+k+'_proto'] == 'disabled') {
-				E('_f_ddnsx'+i+'_wanip')[l].disabled = 1;
-				E('_f_ddnsx'+i+'_wanip')[l].selected = 0;
-				E('_f_ddnsx'+i+'_wanip')[l + MAXWAN_NUM].disabled = 1;
-				E('_f_ddnsx'+i+'_wanip')[l + MAXWAN_NUM].selected = 0;
+				if (count_enabled_wans == 0 && l == 0) { /* device is configured with no WAN */
+					E('_f_ddnsx'+i+'_wanip')[MAXWAN_NUM].disabled = 0;
+					E('_f_ddnsx'+i+'_wanip')[MAXWAN_NUM].text = 'External address checker';
+				}
+				else {
+					E('_f_ddnsx'+i+'_wanip')[l].disabled = 1;
+					E('_f_ddnsx'+i+'_wanip')[l].selected = 0;
+					E('_f_ddnsx'+i+'_wanip')[l + MAXWAN_NUM].disabled = 1;
+					E('_f_ddnsx'+i+'_wanip')[l + MAXWAN_NUM].selected = 0;
+				}
 			}
 			else {
 				E('_f_ddnsx'+i+'_wanip')[l].disabled = 0;
 				E('_f_ddnsx'+i+'_wanip')[l + MAXWAN_NUM].disabled = 0;
-				count_enabled_wans++;
 			}
-		}
-		/* device is configured with no WAN */
-		if (count_enabled_wans == 0) {
-			E('_f_ddnsx'+i+'_wanip')[MAXWAN_NUM].disabled = 0;
-			E('_f_ddnsx'+i+'_wanip')[MAXWAN_NUM].text = 'External address checker';
 		}
 	}
 
