@@ -389,7 +389,11 @@ static void curl_setup(const unsigned int ssl, const unsigned int no_dump)
 	CURLsslset result;
 	const char *dump;
 
+#ifdef USE_WOLFSSL
+	result = curl_global_sslset(CURLSSLBACKEND_WOLFSSL, NULL, NULL);
+#else
 	result = curl_global_sslset(CURLSSLBACKEND_OPENSSL, NULL, NULL);
+#endif
 	if ((result == CURLSSLSET_OK) || (result == CURLSSLSET_TOO_LATE))
 		curl_sslerr = 0;
 
