@@ -3,15 +3,15 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
+ * Fixes/updates (C) 2018 - 2024 pedro
+ *
  */
 
 
 #include "tomato.h"
-#ifndef TOMATO64
-#include "../mssl/mssl.h"
-#else
-#include "mssl.h"
-#endif /* TOMATO64 */
+#ifdef TCONFIG_HTTPS
+ #include "mssl.h"
+#endif
 #include <errno.h>
 #include <stdarg.h>
 

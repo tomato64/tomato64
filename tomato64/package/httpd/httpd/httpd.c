@@ -79,11 +79,7 @@
 #include <wlutils.h>
 #include "tomato.h"
 #ifdef TCONFIG_HTTPS
-#ifndef TOMATO64
-#include "../mssl/mssl.h"
-#else
 #include "mssl.h"
-#endif /* TOMATO64 */
  #ifdef USE_OPENSSL
   #include <openssl/opensslv.h>
  #endif
