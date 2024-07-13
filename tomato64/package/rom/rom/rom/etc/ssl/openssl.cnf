@@ -169,7 +169,6 @@ basicConstraints=CA:FALSE
 nsCertType              = server
 nsComment               = "Tomato64 Generated Server Certificate"
 subjectKeyIdentifier    = hash
-authorityKeyIdentifier  = keyid,issuer:always
 extendedKeyUsage        = serverAuth
 keyUsage                = digitalSignature, keyEncipherment
 
