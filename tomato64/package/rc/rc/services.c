@@ -1085,7 +1085,6 @@ void start_stubby(void)
 	            "tls_connection_retries: 5\n"
 	            "tls_backoff_time: 900\n"
 	            "timeout: 2000\n"
-	            "log_level: %s\n"
 	            "round_robin_upstreams: 1\n"
 	            "tls_min_version: %s\n"
 	/* listen address */
@@ -1094,7 +1093,6 @@ void start_stubby(void)
 	            ntp_ready ? "  - GETDNS_TRANSPORT_TLS\n" : "  - GETDNS_TRANSPORT_UDP\n  - GETDNS_TRANSPORT_TCP\n",
 	            ntp_ready ? "GETDNS_AUTHENTICATION_REQUIRED" : "GETDNS_AUTHENTICATION_NONE",
 	            (ntp_ready && dnssec) ? "dnssec: GETDNS_EXTENSION_TRUE\n" : "",
-	            nvram_safe_get("stubby_log"),
 	            nvram_get_int("stubby_force_tls13") ? "GETDNS_TLS1_3" : "GETDNS_TLS1_2",
 	            nvram_safe_get("stubby_port"));
 #ifdef TCONFIG_IPV6
@@ -1152,7 +1150,7 @@ void start_stubby(void)
 			logmsg(LOG_INFO, "stubby: DNSSEC pending ntp sync");
 	}
 
-	ret = eval("stubby", "-g", "-C", (char *)stubby_config);
+	ret = eval("stubby", "-g", "-v", nvram_safe_get("stubby_log"), "-C", (char *)stubby_config);
 
 	if (ret)
 		logmsg(LOG_ERR, "starting stubby failed ...");

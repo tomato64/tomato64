@@ -659,7 +659,7 @@ function init() {
 		createFieldTable('noopen,noclose', [
 				{ title: 'Priority', indent: 2, name: 'stubby_priority', type: 'select', options: [['2','No-Resolv*'],['1','Strict-Order'],['0','None']], suffix: '&nbsp; <small>warning: set to No-Resolv to only use Stubby resolvers!<\/small>', value: nvram.stubby_priority },
 				{ title: 'Local Port', indent: 2, name: 'stubby_port', type: 'text', maxlen: 5, size: 7, value: nvram.stubby_port },
-				{ title: 'Log Level', indent: 2, name: 'stubby_log', type: 'select',  options: [['0','Emergency'],['1','Alert'],['2','Critical'],['3','Error'],['4','Warning'],['5','Notice'],['6','Info*'],['7','Debug']],
+				{ title: 'Log Level', indent: 2, name: 'stubby_log', type: 'select',  options: [['0','Emergency'],['1','Alert'],['2','Critical'],['3','Error'],['4','Warning'],['5','Notice*'],['6','Info'],['7','Debug']],
 					value: nvram.stubby_log, suffix: '&nbsp; <small>*default<\/small>' },
 				{ title: 'Force TLS1.3', indent: 2, name: 'f_stubby_force_tls13', type: 'checkbox', suffix: '&nbsp; <small>note: works with OpenSSL >= 1.1.1 only<\/small>', value: nvram.stubby_force_tls13 == 1 },
 			null

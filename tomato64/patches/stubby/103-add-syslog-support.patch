@@ -1,6 +1,6 @@
 --- getdns/stubby/src/log.c
 +++ getdns/stubby/src/log.c
-@@ -64,6 +64,8 @@
+@@ -63,6 +63,8 @@
          gmtime_s(&tm, &tsec);
  #else
  	if (level > log_level) return;
@@ -36,15 +36,17 @@
  void
  print_usage(FILE *out)
  {
-@@ -183,6 +187,11 @@
+@@ -184,7 +188,12 @@
  		log_connections = 1;
  		log_level = config_log_level;
  	}
+-	stubby_log(NULL,GETDNS_LOG_UPSTREAM_STATS, GETDNS_LOG_INFO,
 +#if !defined(STUBBY_ON_WINDOWS) && !defined(GETDNS_ON_WINDOWS)
 +	use_syslog = log_connections || !run_in_foreground;
 +	if (use_syslog)
 +		openlog(STUBBY_PACKAGE, LOG_PID, LOG_DAEMON);
 +#endif
- 	stubby_log(NULL,GETDNS_LOG_UPSTREAM_STATS, GETDNS_LOG_INFO,
- 		   "Stubby version: %s", STUBBY_PACKAGE_STRING);
++	stubby_log(NULL,GETDNS_LOG_UPSTREAM_STATS, GETDNS_LOG_NOTICE,
+ 		   "Stubby version: %s\n", STUBBY_PACKAGE_STRING);
  
+ 	if (print_api_info) {
