@@ -5,10 +5,15 @@ if [ $# -eq 0 ]; then
 	exit
 fi
 
-tar --touch -I "zstd -f" -xf $1 -C /
-
+mount -o remount,rw /
 result=$?
+if [ "$result" -ne 0 ]; then
+	printf 'error code "%d", unable to mount the filesystem as read/write' "$result"
+	exit
+fi
 
+tar --touch -I "zstd -f" -xf $1 -C /
+result=$?
 if [ "$result" -ne 0 ]; then
 	printf 'error code "%d" returned during extraction' "$result"
 	exit

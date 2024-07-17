@@ -11546,8 +11546,10 @@ static void sysinit(void)
 	eval("set_devs");
 
 	/* Mount filesystem rw */
-	eval("mount", "-o", "remount,rw", "/");
 	eval("mount_nvram");
+	if (!nvram_get_int("fs_mount_ro")) {
+		eval("mount", "-o", "remount,rw", "/");
+	}
 
 	if ((fp = fopen("/etc/fstab", "w"))) {
 		fprintf(fp, "LABEL=opt /opt ext4 defaults 0 0");

@@ -2057,6 +2057,7 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64
 	{ "set_macs",			"0"				, 0 },
 	{ "fs_expanded",		"0"				, 0 },
+	{ "fs_mount_ro",		"0"				, 0 },
 
 	{ "wan_ifnameX",		"eth0"				, 0 },
 	{ "wan_ifnameX_vlan",		"vlan0"				, 0 },
