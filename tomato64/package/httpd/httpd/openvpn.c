@@ -262,7 +262,11 @@ void wo_ovpn_genkey(char *url)
 #ifdef TCONFIG_KEYGEN
 	}
 	else if (!strcmp(modeStr, "dh")) {
+#ifdef TOMATO64
+		strlcpy(buffer, "openssl dhparam -out /tmp/dh2048.pem 2048 >/dev/null 2>&1 && cat /tmp/dh2048.pem && rm /tmp/dh2048.pem", sizeof(buffer));
+#else
 		strlcpy(buffer, "openssl dhparam -out /tmp/dh1024.pem 1024 >/dev/null 2>&1 && cat /tmp/dh1024.pem && rm /tmp/dh1024.pem", sizeof(buffer));
+#endif /* TOMATO64 */
 		syslog(LOG_WARNING, buffer);
 		web_pipecmd(buffer, WOF_NONE);
 	}
