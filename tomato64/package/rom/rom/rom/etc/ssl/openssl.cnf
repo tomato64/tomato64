@@ -107,7 +107,6 @@ nsComment = "Tomato64 Generated Client Certificate"
 
 # PKIX recommendations harmless if included in all certificates.
 subjectKeyIdentifier = hash
-authorityKeyIdentifier = keyid,issuer:always
 
 # This stuff is for subjectAltName and issuerAltname.
 # Import the email address.
