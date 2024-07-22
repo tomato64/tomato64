@@ -3,14 +3,14 @@ INSTALLDIR=$(TARGET_DIR)
 all:
 
 install:
-#	install -d $(INSTALLDIR)/sbin
-#	install -d $(INSTALLDIR)/usr/sbin
-#	install -d $(INSTALLDIR)/usr/bin
-#	install -d $(INSTALLDIR)/lib
+	install -d $(INSTALLDIR)/sbin
+	install -d $(INSTALLDIR)/usr/sbin
+	install -d $(INSTALLDIR)/usr/bin
+	install -d $(INSTALLDIR)/lib
 
 ifeq ($(TCONFIG_USB),y)
 # Optware perl symlink
-#	install -d $(INSTALLDIR)/usr/bin
+	install -d $(INSTALLDIR)/usr/bin
 	ln -sf /opt/bin/perl $(INSTALLDIR)/usr/bin/perl
 
 # 3G modem switch script
@@ -67,7 +67,7 @@ ifeq ($(TCONFIG_TOMATO64),y)
 	sed -i $(INSTALLDIR)/usr/sbin/adblock -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 else
 	sed -i $(INSTALLDIR)/usr/sbin/adblock -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
-endif
+endif #TOMATO64
 endif
 
 # TTB project
@@ -121,31 +121,35 @@ endif
 	install -m 0700 webmon_bkp $(INSTALLDIR)/usr/sbin
 
 # optware/entware install script
-#ifeq ($(TCONFIG_USB),y)
-#ifneq ($(TCONFIG_BCMARM),y)
-#	install -m 0700 optware-install.sh $(INSTALLDIR)/usr/sbin
-#ifneq ($(TCONFIG_BCMARM),y)
-#	sed -i $(INSTALLDIR)/usr/sbin/optware-install.sh -e "/BCMARM-BEGIN/,/BCMARM-END/d"
-#else
-#	sed -i $(INSTALLDIR)/usr/sbin/optware-install.sh -e "/BCMARMNO-BEGIN/,/BCMARMNO-END/d"
-#endif
-#ifneq ($(TCONFIG_STUBBY),y)
-#	sed -i $(INSTALLDIR)/usr/sbin/optware-install.sh -e "/STUBBY-BEGIN/,/STUBBY-END/d"
-#else
-#	sed -i $(INSTALLDIR)/usr/sbin/optware-install.sh -e "/STUBBYNO-BEGIN/,/STUBBYNO-END/d"
-#endif
-#endif
-#ifeq ($(TCONFIG_BCMARM),y)
-#	install -m 0700 entware-install-ARM.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
-#else
-#	install -m 0700 entware-install-MIPS.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
-#endif
-#ifneq ($(TCONFIG_STUBBY),y)
-#	sed -i $(INSTALLDIR)/usr/sbin/entware-install.sh -e "/STUBBY-BEGIN/,/STUBBY-END/d"
-#else
-#	sed -i $(INSTALLDIR)/usr/sbin/entware-install.sh -e "/STUBBYNO-BEGIN/,/STUBBYNO-END/d"
-#endif
-#endif # TCONFIG_USB
+ifneq ($(TCONFIG_TOMATO64),y)
+ifeq ($(TCONFIG_USB),y)
+ifneq ($(TCONFIG_BCMARM),y)
+	install -m 0700 optware-install.sh $(INSTALLDIR)/usr/sbin
+ifneq ($(TCONFIG_BCMARM),y)
+	sed -i $(INSTALLDIR)/usr/sbin/optware-install.sh -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+else
+	sed -i $(INSTALLDIR)/usr/sbin/optware-install.sh -e "/BCMARMNO-BEGIN/,/BCMARMNO-END/d"
+endif
+ifneq ($(TCONFIG_STUBBY),y)
+	sed -i $(INSTALLDIR)/usr/sbin/optware-install.sh -e "/STUBBY-BEGIN/,/STUBBY-END/d"
+else
+	sed -i $(INSTALLDIR)/usr/sbin/optware-install.sh -e "/STUBBYNO-BEGIN/,/STUBBYNO-END/d"
+endif
+endif
+ifeq ($(TCONFIG_BCMARM),y)
+	install -m 0700 entware-install-ARM.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
+else
+	install -m 0700 entware-install-MIPS.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
+endif
+ifneq ($(TCONFIG_STUBBY),y)
+	sed -i $(INSTALLDIR)/usr/sbin/entware-install.sh -e "/STUBBY-BEGIN/,/STUBBY-END/d"
+else
+	sed -i $(INSTALLDIR)/usr/sbin/entware-install.sh -e "/STUBBYNO-BEGIN/,/STUBBYNO-END/d"
+endif
+endif # TCONFIG_USB
+else #TOMATO64
+	install -m 0700 entware-install-x86_64.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
+endif # TOMATO64
 
 # ovpn up/down/etc scripts
 ifeq ($(TCONFIG_OPENVPN),y)
