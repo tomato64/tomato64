@@ -18,7 +18,7 @@ OBJS = openvpn_plugin_auth_nvram.o
 all: openvpn_plugin_auth_nvram.so
 
 openvpn_plugin_auth_nvram.so: $(OBJS)
-	@echo " [openvpn_plugin_auth_nvram] CC -o $@"
+	@echo " [openvpn_plugin_auth_nvram.so] CC -o $@"
 	@$(CC) -shared $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ $(OBJS) $(ALL_LDFLAGS)
 
 install: all
@@ -30,5 +30,5 @@ clean:
 	rm -f openvpn_plugin_auth_nvram.so .*.depend *.o
 
 %.o: %.c
-	@echo " [openvpn_plugin_auth_nvram] CC $@"
+	@echo " [openvpn_plugin_auth_nvram.o] CC $@"
 	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ -c $<
