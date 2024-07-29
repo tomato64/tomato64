@@ -902,6 +902,7 @@ elif [ "$1" == "snapshot" ]; then
 elif [ "$1" == "update" -o "$1" == "start" -o $# -eq 0 ]; then
 	if [ "$ENABLE" -eq "1" ]; then {
 		[ ! -f $pidfile ] && echo $PID > $pidfile
+		[ $(NP adblock_blacklist) -eq 1 ] && {		
 		[[ $(NP mwan_ckdst) -eq 1 && $(NG mwan_ckdst |  tr ',' '\n' | domain | wc -l) -gt 0 ]] && { itarget=$(NG mwan_ckdst |  tr ',' '\n' | domain | head -1); } || { itarget="google.com"; }
 		while ! ( traceroute -n -m10 -w1 -q1 -z1 "$itarget" >/dev/null 2>&1 && [ $(date +%Y) -gt 2023 ] ); do { 
 				[ $itest -eq 0 ] && echo "Waiting for Internet connectivity..." | tee /dev/tty | logn
@@ -910,6 +911,7 @@ elif [ "$1" == "update" -o "$1" == "start" -o $# -eq 0 ]; then
 				pre=$(date +%s); 
 			} done
 			[ $itest -gt 0 ] && echo "...restored Internet connectivity" | tee /dev/tty | logn
+			}
 		[ -s "$FINAL" ] && {
 			HOLD_LEFT=$(( $hold - ($(date +%s) - $(date -r "$FINAL" +%s)) /60))
 			[ "$HOLD_LEFT" -lt $hold -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { grep 'md5black' "${CHK_FILE}" | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $(hashwhite | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { cat ${CHK_FILE} | grep md5white | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $( [ -s ${ADHEAD} ] && { cat ${ADHEAD} | grep -Ev ' 0$' | wc -l; } || echo 1 ) -eq 0 ]  && {
