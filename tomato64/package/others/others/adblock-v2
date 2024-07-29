@@ -902,7 +902,8 @@ elif [ "$1" == "snapshot" ]; then
 elif [ "$1" == "update" -o "$1" == "start" -o $# -eq 0 ]; then
 	if [ "$ENABLE" -eq "1" ]; then {
 		[ ! -f $pidfile ] && echo $PID > $pidfile
-		while ! ( traceroute -n -m10 -w1 -q1 -z1 google.com >/dev/null 2>&1 && [ $(date +%Y) -gt 2023 ] ); do { 
+		[[ $(NP mwan_ckdst) -eq 1 && $(NG mwan_ckdst |  tr ',' '\n' | domain | wc -l) -gt 0 ]] && { itarget=$(NG mwan_ckdst |  tr ',' '\n' | domain | head -1); } || { itarget="google.com"; }
+		while ! ( traceroute -n -m10 -w1 -q1 -z1 "$itarget" >/dev/null 2>&1 && [ $(date +%Y) -gt 2023 ] ); do { 
 				[ $itest -eq 0 ] && echo "Waiting for Internet connectivity..." | tee /dev/tty | logn
 				itest=$((itest+1))
 				sleep 10
