@@ -97,6 +97,7 @@ grey="\033[0;5;238m"
 green="\033[48;2;32m"
 yellow="\033[48;2;33m"
 latest=0
+itest=0
 current=$(echo $ver | cut -c-6)
 UURL="https://bitbucket.org/rs232-/freshtomato-arm/downloads/adblock.rs232"
 extra="$(NG adblock_path | sed 's/\/$//')/adblock.extra" ; [ -s "$extra" ] && { [ $(ls -l $extra | cut -c4,7,10) != "xxx" ] && { chmod +x $extra ;} ; . "$extra"; }
@@ -901,7 +902,13 @@ elif [ "$1" == "snapshot" ]; then
 elif [ "$1" == "update" -o "$1" == "start" -o $# -eq 0 ]; then
 	if [ "$ENABLE" -eq "1" ]; then {
 		[ ! -f $pidfile ] && echo $PID > $pidfile
-		while [ $(date +%Y) -lt 2022 ]; do { sleep 5; pre=$(date +%s); } done
+		while ! ( traceroute -n -m10 -w1 -q1 -z1 google.com >/dev/null 2>&1 && [ $(date +%Y) -gt 2023 ] ); do { 
+				[ $itest -eq 0 ] && echo "Waiting for Internet connectivity..." | tee /dev/tty | logn
+				itest=$((itest+1))
+				sleep 10
+				pre=$(date +%s); 
+			} done
+			[ $itest -gt 0 ] && echo "...restored Internet connectivity" | tee /dev/tty | logn
 		[ -s "$FINAL" ] && {
 			HOLD_LEFT=$(( $hold - ($(date +%s) - $(date -r "$FINAL" +%s)) /60))
 			[ "$HOLD_LEFT" -lt $hold -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { grep 'md5black' "${CHK_FILE}" | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $(hashwhite | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { cat ${CHK_FILE} | grep md5white | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $( [ -s ${ADHEAD} ] && { cat ${ADHEAD} | grep -Ev ' 0$' | wc -l; } || echo 1 ) -eq 0 ]  && {
