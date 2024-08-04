@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-SAMBA4_TOMATO_VERSION = 4.19.7
+SAMBA4_TOMATO_VERSION = 4.20.3
 SAMBA4_TOMATO_SITE = https://download.samba.org/pub/samba/stable
 SAMBA4_TOMATO_SOURCE = samba-$(SAMBA4_TOMATO_VERSION).tar.gz
 SAMBA4_TOMATO_INSTALL_STAGING = YES
@@ -79,13 +79,6 @@ else
 SAMBA4_TOMATO_CONF_OPTS += --disable-avahi
 endif
 
-ifeq ($(BR2_PACKAGE_GAMIN),y)
-SAMBA4_TOMATO_CONF_OPTS += --with-fam
-SAMBA4_TOMATO_DEPENDENCIES += gamin
-else
-SAMBA4_TOMATO_CONF_OPTS += --without-fam
-endif
-
 ifeq ($(BR2_PACKAGE_LIBARCHIVE),y)
 SAMBA4_TOMATO_CONF_OPTS += --with-libarchive
 SAMBA4_TOMATO_DEPENDENCIES += libarchive
@@ -145,6 +138,7 @@ define SAMBA4_TOMATO_CONFIGURE_CMDS
 			--disable-rpath \
 			--disable-rpath-install \
 			--disable-iprint \
+			--without-fam \
 			--without-pam \
 			--without-dmapi \
 			--without-gpgme \
