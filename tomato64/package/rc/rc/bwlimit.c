@@ -73,7 +73,6 @@ void ipt_bwlimit(int chain)
 	char *g;
 	char *p;
 	char p1[128];
-	char *ibw, *obw;		/* bandwidth */
 	char seq[32];			/* mark number */
 	int iSeq = 1;
 	char *ipaddr_old;
@@ -97,9 +96,6 @@ void ipt_bwlimit(int chain)
 
 	/* read bwl rules from nvram */
 	g = buf = strdup(nvram_safe_get("bwl_rules"));
-
-	ibw = nvram_safe_get("wan_qos_ibw");	/* read from QOS setting */
-	obw = nvram_safe_get("wan_qos_obw");	/* read from QOS setting */
 
 	lanipaddr = nvram_safe_get("lan_ipaddr");
 	lanmask = nvram_safe_get("lan_netmask");
@@ -294,8 +290,6 @@ void start_bwlimit(void)
 	char *dlrate, *dlceil;		/* guaranteed rate & maximum rate for download */
 	char *ulrate, *ulceil;		/* guaranteed rate & maximum rate for upload */
 	char *priority;			/* priority */
-	char *lanipaddr;		/* lan ip address */
-	char *lanmask;			/* lan netmask */
 	char *tcplimit, *udplimit;	/* tcp connection limit & udp packets per second */
 	char *description;		/* description */
 	char *enabled;
@@ -314,8 +308,6 @@ void start_bwlimit(void)
 	ibw = nvram_safe_get("wan_qos_ibw"); /* read from QOS setting */
 	obw = nvram_safe_get("wan_qos_obw"); /* read from QOS setting */
 
-	lanipaddr = nvram_safe_get("lan_ipaddr");
-	lanmask = nvram_safe_get("lan_netmask");
 	waniface = nvram_safe_get("wan_iface");
 
 	if ((tc = fopen(bwlimitfn, "w")) == NULL) {

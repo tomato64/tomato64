@@ -309,7 +309,6 @@ int mtd_write_main_old(int argc, char *argv[])
 	struct sysinfo si;
 	uint32 ofs;
 	char c;
-	int web = 0;
 	char *iname = NULL;
 	char *dev = NULL;
 	char msg_buf[2048];
@@ -327,7 +326,6 @@ int mtd_write_main_old(int argc, char *argv[])
 			dev = optarg;
 			break;
 		case 'w':
-			web = 1;
 			break;
 		}
 	}
@@ -1160,12 +1158,12 @@ static int wget(int method, const char *server, char *buf, size_t count, off_t o
 		if (*s == '\n')
 			break;
 		if (!strncasecmp(s, "Content-Length:", 15)) {
-			for (s += 15; isblank(*s); s++);
+			for (s += 15; is_blank(*s); s++);
 			chomp(s);
 			len = atoi(s);
 		}
 		else if (!strncasecmp(s, "Transfer-Encoding:", 18)) {
-			for (s += 18; isblank(*s); s++);
+			for (s += 18; is_blank(*s); s++);
 			chomp(s);
 			if (!strncasecmp(s, "chunked", 7))
 				chunked = 1;

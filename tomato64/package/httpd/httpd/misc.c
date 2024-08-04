@@ -3,7 +3,7 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2024 pedro
  *
  */
 
@@ -461,7 +461,9 @@ mtd1: 007d0000 00010000 "linux"
 	char s[512];
 	unsigned int size;
 	char partname[17];
+#ifndef TCONFIG_NAND
 	int found = 0;
+#endif
 
 	if ((f = fopen("/proc/mtd", "r"))) {
 		while (fgets(s, sizeof(s), f)) {
@@ -469,7 +471,9 @@ mtd1: 007d0000 00010000 "linux"
 				continue;
 
 			if (strcmp(partname, "\"linux\"") == 0) {
+#ifndef TCONFIG_NAND
 				found = 1;
+#endif
 				break;
 			}
 		}

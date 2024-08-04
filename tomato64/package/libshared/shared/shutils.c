@@ -939,8 +939,7 @@ find_in_list(const char *haystack, const char *needle)
 int
 remove_from_list(const char *name, char *list, int listsize)
 {
-	int listlen = 0;
-	int namelen = 0;
+	int listlen, namelen = 0;
 	char *occurrence = list;
 
 	if (!list || !name || (listsize <= 0))

@@ -2,7 +2,7 @@
  *
  * Tomato Firmware
  *
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2024 pedro
  *
  */
 
@@ -207,7 +207,6 @@ static void cal_occupy (struct occupy *o, struct occupy *n)
 {
 	double od, nd;
 	double id, sd;
-	double scale;
 
 #ifdef TCONFIG_BCMARM
 	od = (double) (o->user + o->nice + o->system + o->idle + o->io + o->irq + o->sirq);
@@ -217,7 +216,6 @@ static void cal_occupy (struct occupy *o, struct occupy *n)
 	nd = (double) (n->user + n->nice + n->system + n->idle);
 #endif
 
-	scale = 100.0 / (float)(nd-od);
 	id = (double) (n->user - o->user);
 	sd = (double) (n->system - o->system);
 	g_cpu_used = ((sd+id) * 100.0) / (nd-od);
