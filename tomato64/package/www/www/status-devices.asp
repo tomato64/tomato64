@@ -35,6 +35,9 @@ var cmdresult = '';
 /* DISCOVERY-BEGIN */
 var cprefix = 'status_devices';
 var discovery_mode = cookie.get(cprefix+'_discovery') || 'off';
+/* TOMATO64-BEGIN */
+var show_wan_entries = cookie.get(cprefix+'_show_wan_entries') || 'disabled';
+/* TOMATO64-END */
 var wait = gc_time;
 var time_o;
 /* DISCOVERY-END */
@@ -486,7 +489,9 @@ dg.populate = function() {
 		                     e.txrx, e.lease], false);
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-		this.insert(-1, e, [ a, '<div id="media_'+i+'">'+f+'<\/div>', b, (e.mode == 'wds' ? '' : e.ip), e.name, e.lease], false);
+		if ((show_wan_entries == 'enabled') || (!a.includes("WAN"))) {
+			this.insert(-1, e, [ a, '<div id="media_'+i+'">'+f+'<\/div>', b, (e.mode == 'wds' ? '' : e.ip), e.name, e.lease], false);
+		}
 /* TOMATO64-END */
 	}
 }
@@ -691,6 +696,10 @@ function verifyFields(f, c) {
 
 	discovery_mode = E('_discovery_mode').value;
 	cookie.set(cprefix+'_discovery', discovery_mode);
+/* TOMATO64-BEGIN */
+	show_wan_entries = E('_show_wan_entries').value;
+	cookie.set(cprefix+'_show_wan_entries', show_wan_entries);
+/* TOMATO64-END */
 	discovery = new TomatoRefresh('update.cgi', 'exec=discovery&arg0='+discovery_mode, gc_time, '', 1);
 	discovery.refresh = function() { }
 	if (ref.running)
@@ -782,6 +791,9 @@ function init() {
 		f.push(
 			null,
 			{ title: 'Network Discovery mode', name: 'discovery_mode', type: 'select', options: [['off','off'],['arping','arping (preferred)'],['traceroute','traceroute']], suffix: '&nbsp; <img src="spin.gif" alt="" id="spin"><div id="wait"><\/div>', value: discovery_mode }
+/* TOMATO64-BEGIN */
+			,{ title: 'Show WAN Entries', name: 'show_wan_entries', type: 'select', options: [['disabled','disabled'],['enabled','enabled']], value: show_wan_entries }
+/* TOMATO64-END */
 		);
 /* DISCOVERY-END */
 		createFieldTable('', f);
