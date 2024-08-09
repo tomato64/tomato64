@@ -1,0 +1,63 @@
+From fe7cc17a8c5139336e943bbc43bc5178a5baed3c Mon Sep 17 00:00:00 2001
+From: Lance Fredrickson <lancethepants@gmail.com>
+Date: Fri, 9 Aug 2024 14:01:46 -0600
+Subject: [PATCH] commit
+
+---
+ package/ffmpeg/0003-libavutil-Fix-mips-build.patch | 5 ++---
+ package/ffmpeg/ffmpeg.hash                         | 2 +-
+ package/ffmpeg/ffmpeg.mk                           | 2 +-
+ 3 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/package/ffmpeg/0003-libavutil-Fix-mips-build.patch b/package/ffmpeg/0003-libavutil-Fix-mips-build.patch
+index aeb272c459..a52d7fc347 100644
+--- a/package/ffmpeg/0003-libavutil-Fix-mips-build.patch
++++ b/package/ffmpeg/0003-libavutil-Fix-mips-build.patch
+@@ -10,8 +10,7 @@ Fixes https://trac.ffmpeg.org/ticket/9138
+ Patch sent upstream:
+ http://ffmpeg.org/pipermail/ffmpeg-devel/2021-June/281272.html
+ 
+-[Bernd: rebased for version 6.1.2]
+-Signed-off-by: Bernd Kuhls <bernd@kuhls.net>
++Signed-off-by: Bernd Kuhls <bernd.kuhls@t-online.de>
+ [Dario: make the patch to be applied with fuzz factor 0]
+ Signed-off-by: Dario Binacchi <dario.binacchi@amarulasolutions.com>
+ ---
+@@ -24,9 +23,9 @@ index a89cfa6d959d..6ec00df75312 100755
+ --- a/configure
+ +++ b/configure
+ @@ -2227,6 +2227,7 @@ HEADERS_LIST="
++     opencv2_core_core_c_h
+      OpenGL_gl3_h
+      poll_h
+-     pthread_np_h
+ +    sys_auxv_h
+      sys_param_h
+      sys_resource_h
+diff --git a/package/ffmpeg/ffmpeg.hash b/package/ffmpeg/ffmpeg.hash
+index 630bd70c56..f70ff5da83 100644
+--- a/package/ffmpeg/ffmpeg.hash
++++ b/package/ffmpeg/ffmpeg.hash
+@@ -1,5 +1,5 @@
+ # Locally calculated
+-sha256  3b624649725ecdc565c903ca6643d41f33bd49239922e45c9b1442c63dca4e38  ffmpeg-6.1.2.tar.xz
++sha256  8684f4b00f94b85461884c3719382f1261f0d9eb3d59640a1f4ac0873616f968  ffmpeg-6.1.1.tar.xz
+ sha256  8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643  COPYING.GPLv2
+ sha256  b634ab5640e258563c536e658cad87080553df6f34f62269a21d554844e58bfe  COPYING.LGPLv2.1
+ sha256  cb48bf09a11f5fb576cddb0431c8f5ed0a60157a9ec942adffc13907cbe083f2  LICENSE.md
+diff --git a/package/ffmpeg/ffmpeg.mk b/package/ffmpeg/ffmpeg.mk
+index 19c270a14b..5b2d33883d 100644
+--- a/package/ffmpeg/ffmpeg.mk
++++ b/package/ffmpeg/ffmpeg.mk
+@@ -4,7 +4,7 @@
+ #
+ ################################################################################
+ 
+-FFMPEG_VERSION = 6.1.2
++FFMPEG_VERSION = 6.1.1
+ FFMPEG_SOURCE = ffmpeg-$(FFMPEG_VERSION).tar.xz
+ FFMPEG_SITE = https://ffmpeg.org/releases
+ FFMPEG_INSTALL_STAGING = YES
+-- 
+2.39.2
+

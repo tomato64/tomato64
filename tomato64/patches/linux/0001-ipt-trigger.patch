@@ -1,6 +1,6 @@
-diff -Naur linux-6.1.14.orig/include/linux/netfilter_ipv4/ip_autofw.h linux-6.1.14/include/linux/netfilter_ipv4/ip_autofw.h
---- linux-6.1.14.orig/include/linux/netfilter_ipv4/ip_autofw.h	1969-12-31 17:00:00.000000000 -0700
-+++ linux-6.1.14/include/linux/netfilter_ipv4/ip_autofw.h	2023-05-01 12:47:11.114973133 -0600
+diff -Naur linux-6.10.3.orig/include/linux/netfilter_ipv4/ip_autofw.h linux-6.10.3/include/linux/netfilter_ipv4/ip_autofw.h
+--- linux-6.10.3.orig/include/linux/netfilter_ipv4/ip_autofw.h	1969-12-31 17:00:00.000000000 -0700
++++ linux-6.10.3/include/linux/netfilter_ipv4/ip_autofw.h	2024-08-09 10:49:57.865454218 -0600
 @@ -0,0 +1,35 @@
 +/*
 + * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
@@ -37,9 +37,9 @@ diff -Naur linux-6.1.14.orig/include/linux/netfilter_ipv4/ip_autofw.h linux-6.1.
 +};
 +
 +#endif /* _IP_AUTOFW_H */
-diff -Naur linux-6.1.14.orig/include/linux/netfilter_ipv4/ipt_TRIGGER.h linux-6.1.14/include/linux/netfilter_ipv4/ipt_TRIGGER.h
---- linux-6.1.14.orig/include/linux/netfilter_ipv4/ipt_TRIGGER.h	1969-12-31 17:00:00.000000000 -0700
-+++ linux-6.1.14/include/linux/netfilter_ipv4/ipt_TRIGGER.h	2023-05-01 12:47:11.114973133 -0600
+diff -Naur linux-6.10.3.orig/include/linux/netfilter_ipv4/ipt_TRIGGER.h linux-6.10.3/include/linux/netfilter_ipv4/ipt_TRIGGER.h
+--- linux-6.10.3.orig/include/linux/netfilter_ipv4/ipt_TRIGGER.h	1969-12-31 17:00:00.000000000 -0700
++++ linux-6.10.3/include/linux/netfilter_ipv4/ipt_TRIGGER.h	2024-08-09 10:49:57.865454218 -0600
 @@ -0,0 +1,25 @@
 +#ifndef _IPT_TRIGGER_H_target
 +#define _IPT_TRIGGER_H_target
@@ -66,9 +66,9 @@ diff -Naur linux-6.1.14.orig/include/linux/netfilter_ipv4/ipt_TRIGGER.h linux-6.
 +};
 +
 +#endif /*_IPT_TRIGGER_H_target*/
-diff -Naur linux-6.1.14.orig/include/net/netfilter/nf_conntrack.h linux-6.1.14/include/net/netfilter/nf_conntrack.h
---- linux-6.1.14.orig/include/net/netfilter/nf_conntrack.h	2023-05-01 12:46:31.591009451 -0600
-+++ linux-6.1.14/include/net/netfilter/nf_conntrack.h	2023-05-01 12:47:11.114973133 -0600
+diff -Naur linux-6.10.3.orig/include/net/netfilter/nf_conntrack.h linux-6.10.3/include/net/netfilter/nf_conntrack.h
+--- linux-6.10.3.orig/include/net/netfilter/nf_conntrack.h	2024-08-09 09:07:00.695026591 -0600
++++ linux-6.10.3/include/net/netfilter/nf_conntrack.h	2024-08-09 10:49:57.865454218 -0600
 @@ -72,6 +72,12 @@
  #include <net/netfilter/ipv4/nf_conntrack_ipv4.h>
  #include <net/netfilter/ipv6/nf_conntrack_ipv6.h>
@@ -82,9 +82,9 @@ diff -Naur linux-6.1.14.orig/include/net/netfilter/nf_conntrack.h linux-6.1.14/i
  struct nf_conn {
  	/* Usage count in here is 1 for hash table, 1 per skb,
  	 * plus 1 for any connection(s) we are `master' for
-diff -Naur linux-6.1.14.orig/include/net/netfilter/nf_nat.h linux-6.1.14/include/net/netfilter/nf_nat.h
---- linux-6.1.14.orig/include/net/netfilter/nf_nat.h	2023-05-01 12:46:31.591009451 -0600
-+++ linux-6.1.14/include/net/netfilter/nf_nat.h	2023-05-01 12:47:11.118973129 -0600
+diff -Naur linux-6.10.3.orig/include/net/netfilter/nf_nat.h linux-6.10.3/include/net/netfilter/nf_nat.h
+--- linux-6.10.3.orig/include/net/netfilter/nf_nat.h	2024-08-09 09:07:00.695026591 -0600
++++ linux-6.10.3/include/net/netfilter/nf_nat.h	2024-08-09 10:49:57.865454218 -0600
 @@ -2,6 +2,12 @@
  #ifndef _NF_NAT_H
  #define _NF_NAT_H
@@ -98,9 +98,9 @@ diff -Naur linux-6.1.14.orig/include/net/netfilter/nf_nat.h linux-6.1.14/include
  #include <linux/list.h>
  #include <linux/netfilter_ipv4.h>
  #include <linux/netfilter/nf_conntrack_pptp.h>
-diff -Naur linux-6.1.14.orig/include/net/netfilter/nf_nat_rule.h linux-6.1.14/include/net/netfilter/nf_nat_rule.h
---- linux-6.1.14.orig/include/net/netfilter/nf_nat_rule.h	1969-12-31 17:00:00.000000000 -0700
-+++ linux-6.1.14/include/net/netfilter/nf_nat_rule.h	2023-05-01 12:47:11.118973129 -0600
+diff -Naur linux-6.10.3.orig/include/net/netfilter/nf_nat_rule.h linux-6.10.3/include/net/netfilter/nf_nat_rule.h
+--- linux-6.10.3.orig/include/net/netfilter/nf_nat_rule.h	1969-12-31 17:00:00.000000000 -0700
++++ linux-6.10.3/include/net/netfilter/nf_nat_rule.h	2024-08-09 10:49:57.865454218 -0600
 @@ -0,0 +1,15 @@
 +#ifndef _NF_NAT_RULE_H
 +#define _NF_NAT_RULE_H
@@ -117,9 +117,9 @@ diff -Naur linux-6.1.14.orig/include/net/netfilter/nf_nat_rule.h linux-6.1.14/in
 +			    struct nf_conn *ct);
 +
 +#endif /* _NF_NAT_RULE_H */
-diff -Naur linux-6.1.14.orig/include/uapi/linux/netfilter/nf_conntrack_common.h linux-6.1.14/include/uapi/linux/netfilter/nf_conntrack_common.h
---- linux-6.1.14.orig/include/uapi/linux/netfilter/nf_conntrack_common.h	2023-05-01 12:46:31.615009429 -0600
-+++ linux-6.1.14/include/uapi/linux/netfilter/nf_conntrack_common.h	2023-05-01 12:47:11.118973129 -0600
+diff -Naur linux-6.10.3.orig/include/uapi/linux/netfilter/nf_conntrack_common.h linux-6.10.3/include/uapi/linux/netfilter/nf_conntrack_common.h
+--- linux-6.10.3.orig/include/uapi/linux/netfilter/nf_conntrack_common.h	2024-08-09 09:07:00.723026699 -0600
++++ linux-6.10.3/include/uapi/linux/netfilter/nf_conntrack_common.h	2024-08-09 10:49:57.865454218 -0600
 @@ -118,6 +118,10 @@
  	IPS_HW_OFFLOAD_BIT = 15,
  	IPS_HW_OFFLOAD = (1 << IPS_HW_OFFLOAD_BIT),
@@ -131,9 +131,9 @@ diff -Naur linux-6.1.14.orig/include/uapi/linux/netfilter/nf_conntrack_common.h 
  	/* Be careful here, modifying these bits can make things messy,
  	 * so don't let users modify them directly.
  	 */
-diff -Naur linux-6.1.14.orig/include/uapi/linux/netfilter/xt_connmark.h linux-6.1.14/include/uapi/linux/netfilter/xt_connmark.h
---- linux-6.1.14.orig/include/uapi/linux/netfilter/xt_connmark.h	2023-05-01 12:46:31.615009429 -0600
-+++ linux-6.1.14/include/uapi/linux/netfilter/xt_connmark.h	2023-05-01 12:48:39.182896935 -0600
+diff -Naur linux-6.10.3.orig/include/uapi/linux/netfilter/xt_connmark.h linux-6.10.3/include/uapi/linux/netfilter/xt_connmark.h
+--- linux-6.10.3.orig/include/uapi/linux/netfilter/xt_connmark.h	2024-08-09 09:07:00.723026699 -0600
++++ linux-6.10.3/include/uapi/linux/netfilter/xt_connmark.h	2024-08-09 10:49:57.865454218 -0600
 @@ -11,7 +11,8 @@
  enum {
  	XT_CONNMARK_SET = 0,
@@ -144,9 +144,9 @@ diff -Naur linux-6.1.14.orig/include/uapi/linux/netfilter/xt_connmark.h linux-6.
  };
  
  enum {
-diff -Naur linux-6.1.14.orig/net/ipv4/netfilter/ipt_TRIGGER.c linux-6.1.14/net/ipv4/netfilter/ipt_TRIGGER.c
---- linux-6.1.14.orig/net/ipv4/netfilter/ipt_TRIGGER.c	1969-12-31 17:00:00.000000000 -0700
-+++ linux-6.1.14/net/ipv4/netfilter/ipt_TRIGGER.c	2023-05-01 12:47:11.118973129 -0600
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/ipt_TRIGGER.c linux-6.10.3/net/ipv4/netfilter/ipt_TRIGGER.c
+--- linux-6.10.3.orig/net/ipv4/netfilter/ipt_TRIGGER.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-6.10.3/net/ipv4/netfilter/ipt_TRIGGER.c	2024-08-09 10:49:57.865454218 -0600
 @@ -0,0 +1,461 @@
 +/* Kernel module to match the port-ranges, trigger related port-ranges,
 + * and alters the destination to a local IP address.
@@ -609,10 +609,10 @@ diff -Naur linux-6.1.14.orig/net/ipv4/netfilter/ipt_TRIGGER.c linux-6.1.14/net/i
 +
 +module_init(init);
 +module_exit(fini);
-diff -Naur linux-6.1.14.orig/net/ipv4/netfilter/Kconfig linux-6.1.14/net/ipv4/netfilter/Kconfig
---- linux-6.1.14.orig/net/ipv4/netfilter/Kconfig	2023-05-01 12:46:31.703009347 -0600
-+++ linux-6.1.14/net/ipv4/netfilter/Kconfig	2023-05-01 12:47:11.118973129 -0600
-@@ -86,6 +86,13 @@
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/Kconfig linux-6.10.3/net/ipv4/netfilter/Kconfig
+--- linux-6.10.3.orig/net/ipv4/netfilter/Kconfig	2024-08-09 09:07:00.959027612 -0600
++++ linux-6.10.3/net/ipv4/netfilter/Kconfig	2024-08-09 10:49:57.865454218 -0600
+@@ -90,6 +90,13 @@
  	default m if NETFILTER_ADVANCED=n
  
  if NF_NAT
@@ -626,10 +626,10 @@ diff -Naur linux-6.1.14.orig/net/ipv4/netfilter/Kconfig linux-6.1.14/net/ipv4/ne
  config NF_NAT_SNMP_BASIC
  	tristate "Basic SNMP-ALG support"
  	depends on NF_CONNTRACK_SNMP
-diff -Naur linux-6.1.14.orig/net/ipv4/netfilter/Makefile linux-6.1.14/net/ipv4/netfilter/Makefile
---- linux-6.1.14.orig/net/ipv4/netfilter/Makefile	2023-05-01 12:46:31.703009347 -0600
-+++ linux-6.1.14/net/ipv4/netfilter/Makefile	2023-05-01 12:47:11.122973126 -0600
-@@ -43,6 +43,7 @@
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/Makefile linux-6.10.3/net/ipv4/netfilter/Makefile
+--- linux-6.10.3.orig/net/ipv4/netfilter/Makefile	2024-08-09 09:07:00.959027612 -0600
++++ linux-6.10.3/net/ipv4/netfilter/Makefile	2024-08-09 10:49:57.865454218 -0600
+@@ -42,6 +42,7 @@
  obj-$(CONFIG_IP_NF_TARGET_ECN) += ipt_ECN.o
  obj-$(CONFIG_IP_NF_TARGET_REJECT) += ipt_REJECT.o
  obj-$(CONFIG_IP_NF_TARGET_SYNPROXY) += ipt_SYNPROXY.o
@@ -637,9 +637,9 @@ diff -Naur linux-6.1.14.orig/net/ipv4/netfilter/Makefile linux-6.1.14/net/ipv4/n
  
  # generic ARP tables
  obj-$(CONFIG_IP_NF_ARPTABLES) += arp_tables.o
-diff -Naur linux-6.1.14.orig/net/netfilter/xt_connmark.c linux-6.1.14/net/netfilter/xt_connmark.c
---- linux-6.1.14.orig/net/netfilter/xt_connmark.c	2023-05-01 12:46:31.727009325 -0600
-+++ linux-6.1.14/net/netfilter/xt_connmark.c	2023-05-01 12:50:19.290830655 -0600
+diff -Naur linux-6.10.3.orig/net/netfilter/xt_connmark.c linux-6.10.3/net/netfilter/xt_connmark.c
+--- linux-6.10.3.orig/net/netfilter/xt_connmark.c	2024-08-09 09:07:01.031027890 -0600
++++ linux-6.10.3/net/netfilter/xt_connmark.c	2024-08-09 10:49:57.865454218 -0600
 @@ -50,6 +50,15 @@
  			nf_conntrack_event_cache(IPCT_MARK, ct);
  		}

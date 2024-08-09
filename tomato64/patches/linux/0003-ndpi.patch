@@ -1,9 +1,9 @@
-diff -urpN linux-6.1.38.old/include/net/netfilter/nf_conntrack.h linux-6.1.38/include/net/netfilter/nf_conntrack.h
---- linux-6.1.38.old/include/net/netfilter/nf_conntrack.h	2023-07-05 23:27:38.000000000 +0600
-+++ linux-6.1.38/include/net/netfilter/nf_conntrack.h	2023-07-14 12:34:56.663750711 +0600
-@@ -362,6 +362,11 @@ static inline struct nf_conntrack_net *n
- 	return net_generic(net, nf_conntrack_net_id);
- }
+diff -Naur linux-6.10.3.orig/include/net/netfilter/nf_conntrack.h linux-6.10.3/include/net/netfilter/nf_conntrack.h
+--- linux-6.10.3.orig/include/net/netfilter/nf_conntrack.h	2024-08-09 10:52:05.181710720 -0600
++++ linux-6.10.3/include/net/netfilter/nf_conntrack.h	2024-08-09 10:54:50.478009789 -0600
+@@ -382,6 +382,11 @@
+ int nf_ct_handle_fragments(struct net *net, struct sk_buff *skb,
+ 			   u16 zone, u8 family, u8 *proto, u16 *mru);
  
 +#ifdef CONFIG_NF_CONNTRACK_DESTROY_HOOK
 +void register_nf_ct_destroy_hook(void (*hook)(struct nf_conn *));
@@ -13,10 +13,10 @@ diff -urpN linux-6.1.38.old/include/net/netfilter/nf_conntrack.h linux-6.1.38/in
  #define NF_CT_STAT_INC(net, count)	  __this_cpu_inc((net)->ct.stat->count)
  #define NF_CT_STAT_INC_ATOMIC(net, count) this_cpu_inc((net)->ct.stat->count)
  #define NF_CT_STAT_ADD_ATOMIC(net, count, v) this_cpu_add((net)->ct.stat->count, (v))
-diff -urpN linux-6.1.38.old/net/netfilter/Kconfig linux-6.1.38/net/netfilter/Kconfig
---- linux-6.1.38.old/net/netfilter/Kconfig	2023-07-05 23:27:38.000000000 +0600
-+++ linux-6.1.38/net/netfilter/Kconfig	2023-07-14 12:34:11.966879899 +0600
-@@ -76,11 +76,15 @@ config NETFILTER_NETLINK_OSF
+diff -Naur linux-6.10.3.orig/net/netfilter/Kconfig linux-6.10.3/net/netfilter/Kconfig
+--- linux-6.10.3.orig/net/netfilter/Kconfig	2024-08-09 09:07:01.011027812 -0600
++++ linux-6.10.3/net/netfilter/Kconfig	2024-08-09 10:54:50.478009789 -0600
+@@ -79,11 +79,15 @@
  	  If this option is enabled, the kernel will include support
  	  for passive OS fingerprint via NFNETLINK.
  
@@ -32,10 +32,10 @@ diff -urpN linux-6.1.38.old/net/netfilter/Kconfig linux-6.1.38/net/netfilter/Kco
  	help
  	  Connection tracking keeps a record of what packets have passed
  	  through your machine, in order to figure out how they are related
-diff -urpN linux-6.1.38.old/net/netfilter/nf_conntrack_core.c linux-6.1.38/net/netfilter/nf_conntrack_core.c
---- linux-6.1.38.old/net/netfilter/nf_conntrack_core.c	2023-07-05 23:27:38.000000000 +0600
-+++ linux-6.1.38/net/netfilter/nf_conntrack_core.c	2023-07-14 12:33:45.580092713 +0600
-@@ -582,9 +582,30 @@ static void destroy_gre_conntrack(struct
+diff -Naur linux-6.10.3.orig/net/netfilter/nf_conntrack_core.c linux-6.10.3/net/netfilter/nf_conntrack_core.c
+--- linux-6.10.3.orig/net/netfilter/nf_conntrack_core.c	2024-08-09 09:07:01.011027812 -0600
++++ linux-6.10.3/net/netfilter/nf_conntrack_core.c	2024-08-09 10:54:50.478009789 -0600
+@@ -571,9 +571,30 @@
  #endif
  }
  
@@ -64,9 +64,9 @@ diff -urpN linux-6.1.38.old/net/netfilter/nf_conntrack_core.c linux-6.1.38/net/n
 +	void (*hook)(struct nf_conn *);
 +#endif
  
- 	pr_debug("%s(%p)\n", __func__, ct);
  	WARN_ON(refcount_read(&nfct->use) != 0);
-@@ -594,6 +615,12 @@ void nf_ct_destroy(struct nf_conntrack *
+ 
+@@ -582,6 +603,12 @@
  		return;
  	}
  

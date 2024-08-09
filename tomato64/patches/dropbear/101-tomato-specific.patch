@@ -1,5 +1,6 @@
---- dropbear/localoptions.h
-+++ dropbear/localoptions.h
+diff -Naur dropbear-2024.85.orig/localoptions.h dropbear-2024.85/localoptions.h
+--- dropbear-2024.85.orig/localoptions.h	2024-08-09 13:28:53.373898542 -0600
++++ dropbear-2024.85/localoptions.h	2024-08-09 13:29:09.589909643 -0600
 @@ -3,4 +3,26 @@
  #endif
  #define DO_HOST_LOOKUP 1
@@ -28,8 +29,9 @@
 +#define MAX_UNAUTH_CLIENTS 5 /* default 30 */
 +#define MAX_AUTH_TRIES 2     /* default 10 */
 +#define AUTH_TIMEOUT 60      /* default 300 */
---- dropbear/src/sysoptions.h
-+++ dropbear/src/sysoptions.h
+diff -Naur dropbear-2024.85.orig/src/sysoptions.h dropbear-2024.85/src/sysoptions.h
+--- dropbear-2024.85.orig/src/sysoptions.h	2024-08-09 13:28:53.373898542 -0600
++++ dropbear-2024.85/src/sysoptions.h	2024-08-09 13:29:09.589909643 -0600
 @@ -7,7 +7,9 @@
  #define DROPBEAR_VERSION "2024.85"
  #endif
@@ -39,4 +41,4 @@
 +#endif
  #define PROGNAME "dropbear"
  
- /* Spec recommends after one hour or 1 gigabyte of data. One hour
+ #ifndef DROPBEAR_CLIENT

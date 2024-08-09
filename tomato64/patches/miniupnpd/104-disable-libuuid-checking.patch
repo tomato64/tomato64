@@ -1,6 +1,7 @@
---- miniupnpd/configure
-+++ miniupnpd/configure
-@@ -640,19 +640,19 @@
+diff -Naur miniupnpd-2.3.7.orig/configure miniupnpd-2.3.7/configure
+--- miniupnpd-2.3.7.orig/configure	2024-08-11 12:40:29.734155012 -0600
++++ miniupnpd-2.3.7/configure	2024-08-11 12:45:07.642536852 -0600
+@@ -671,19 +671,19 @@
  fi
  
  # UUID API

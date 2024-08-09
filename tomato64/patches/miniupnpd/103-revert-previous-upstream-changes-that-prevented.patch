@@ -1,6 +1,7 @@
---- miniupnpd/miniupnpd.c
-+++ miniupnpd/miniupnpd.c
-@@ -1014,11 +1014,13 @@ 
+diff -Naur miniupnpd-2.3.7.orig/miniupnpd.c miniupnpd-2.3.7/miniupnpd.c
+--- miniupnpd-2.3.7.orig/miniupnpd.c	2024-08-11 12:43:04.630367720 -0600
++++ miniupnpd-2.3.7/miniupnpd.c	2024-08-11 12:43:26.742398108 -0600
+@@ -1018,11 +1018,13 @@
  				INIT_PRINT_ERR("Error parsing address : %s\n", lan_addr->ext_ip_str);
  				return -1;
  			}
@@ -14,7 +15,7 @@
  		}
  	}
  #else
-@@ -1851,10 +1853,12 @@ 
+@@ -1867,10 +1869,12 @@
  			INIT_PRINT_ERR("Error: option ext_ip contains invalid address %s\n", use_ext_ip_addr);
  			return 1;
  		}
@@ -27,9 +28,10 @@
  	}
  
  #ifndef NO_BACKGROUND_NO_PIDFILE
---- miniupnpd/natpmp.c
-+++ miniupnpd/natpmp.c
-@@ -109,9 +109,11 @@ 
+diff -Naur miniupnpd-2.3.7.orig/natpmp.c miniupnpd-2.3.7/natpmp.c
+--- miniupnpd-2.3.7.orig/natpmp.c	2024-08-11 12:39:16.838055049 -0600
++++ miniupnpd-2.3.7/natpmp.c	2024-08-11 12:43:26.742398108 -0600
+@@ -109,9 +109,11 @@
  			syslog(LOG_ERR, "Failed to get IP for interface %s", ext_if_name);
  			resp[3] = 3;	/* Network Failure (e.g. NAT box itself
  			                 * has not obtained a DHCP lease) */
@@ -41,9 +43,10 @@
  		} else {
  			inet_pton(AF_INET, tmp, resp+8); /* ok */
  		}
---- miniupnpd/upnpdescgen.c
-+++ miniupnpd/upnpdescgen.c
-@@ -1316,7 +1316,7 @@ 
+diff -Naur miniupnpd-2.3.7.orig/upnpdescgen.c miniupnpd-2.3.7/upnpdescgen.c
+--- miniupnpd-2.3.7.orig/upnpdescgen.c	2024-08-11 12:39:16.838055049 -0600
++++ miniupnpd-2.3.7/upnpdescgen.c	2024-08-11 12:43:26.742398108 -0600
+@@ -1316,7 +1316,7 @@
  				else {
  					struct in_addr addr;
  					char ext_ip_addr[INET_ADDRSTRLEN];
@@ -52,9 +55,10 @@
  						str = strcat_str(str, len, &tmplen, "0.0.0.0");
  					} else {
  						str = strcat_str(str, len, &tmplen, ext_ip_addr);
---- miniupnpd/upnpsoap.c
-+++ miniupnpd/upnpsoap.c
-@@ -346,9 +346,11 @@ 
+diff -Naur miniupnpd-2.3.7.orig/upnpsoap.c miniupnpd-2.3.7/upnpsoap.c
+--- miniupnpd-2.3.7.orig/upnpsoap.c	2024-08-11 12:39:16.838055049 -0600
++++ miniupnpd-2.3.7/upnpsoap.c	2024-08-11 12:43:26.742398108 -0600
+@@ -346,9 +346,11 @@
  			syslog(LOG_ERR, "Failed to get ip address for interface %s",
  				ext_if_name);
  			ext_ip_addr[0] = '\0';

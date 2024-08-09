@@ -1,6 +1,6 @@
-diff -Naur linux-6.5.8.orig/include/linux/netfilter_ipv4/ipt_account.h linux-6.5.8/include/linux/netfilter_ipv4/ipt_account.h
---- linux-6.5.8.orig/include/linux/netfilter_ipv4/ipt_account.h	1969-12-31 17:00:00.000000000 -0700
-+++ linux-6.5.8/include/linux/netfilter_ipv4/ipt_account.h	2023-10-31 11:07:22.218948820 -0600
+diff -Naur linux-6.10.3.orig/include/linux/netfilter_ipv4/ipt_account.h linux-6.10.3/include/linux/netfilter_ipv4/ipt_account.h
+--- linux-6.10.3.orig/include/linux/netfilter_ipv4/ipt_account.h	1969-12-31 17:00:00.000000000 -0700
++++ linux-6.10.3/include/linux/netfilter_ipv4/ipt_account.h	2024-08-09 10:52:18.849736767 -0600
 @@ -0,0 +1,24 @@
 +/* Copyright (c) 2004-2012 Piotr 'QuakeR' Gasidlo <quaker@barbara.eu.org>
 + *
@@ -26,9 +26,9 @@ diff -Naur linux-6.5.8.orig/include/linux/netfilter_ipv4/ipt_account.h linux-6.5
 +
 +#endif /* _IPT_ACCOUNT_H */
 +
-diff -Naur linux-6.5.8.orig/net/ipv4/netfilter/ipt_account.c linux-6.5.8/net/ipv4/netfilter/ipt_account.c
---- linux-6.5.8.orig/net/ipv4/netfilter/ipt_account.c	1969-12-31 17:00:00.000000000 -0700
-+++ linux-6.5.8/net/ipv4/netfilter/ipt_account.c	2023-10-31 11:07:22.218948820 -0600
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/ipt_account.c linux-6.10.3/net/ipv4/netfilter/ipt_account.c
+--- linux-6.10.3.orig/net/ipv4/netfilter/ipt_account.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-6.10.3/net/ipv4/netfilter/ipt_account.c	2024-08-09 10:52:18.849736767 -0600
 @@ -0,0 +1,1216 @@
 +/* Copyright (c) 2004-2012 Piotr 'QuakeR' Gasidlo <quaker@barbara.eu.org>
 + *
@@ -1246,12 +1246,12 @@ diff -Naur linux-6.5.8.orig/net/ipv4/netfilter/ipt_account.c linux-6.5.8/net/ipv
 +module_init(init);
 +module_exit(fini);
 +
-diff -Naur linux-6.5.8.orig/net/ipv4/netfilter/Kconfig linux-6.5.8/net/ipv4/netfilter/Kconfig
---- linux-6.5.8.orig/net/ipv4/netfilter/Kconfig	2023-10-31 06:57:46.913162929 -0600
-+++ linux-6.5.8/net/ipv4/netfilter/Kconfig	2023-10-31 11:07:22.218948820 -0600
-@@ -340,5 +340,24 @@
- 
- endif # IP_NF_ARPTABLES
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/Kconfig linux-6.10.3/net/ipv4/netfilter/Kconfig
+--- linux-6.10.3.orig/net/ipv4/netfilter/Kconfig	2024-08-09 10:52:05.181710720 -0600
++++ linux-6.10.3/net/ipv4/netfilter/Kconfig	2024-08-09 10:52:18.849736767 -0600
+@@ -356,5 +356,24 @@
+ 	  This option is needed by both arptables-legacy and arptables-nft.
+ 	  It is not used by nftables.
  
 +config IP_NF_MATCH_ACCOUNT
 +  tristate "account match support"
@@ -1274,10 +1274,10 @@ diff -Naur linux-6.5.8.orig/net/ipv4/netfilter/Kconfig linux-6.5.8/net/ipv4/netf
 +
  endmenu
  
-diff -Naur linux-6.5.8.orig/net/ipv4/netfilter/Makefile linux-6.5.8/net/ipv4/netfilter/Makefile
---- linux-6.5.8.orig/net/ipv4/netfilter/Makefile	2023-10-31 06:57:46.913162929 -0600
-+++ linux-6.5.8/net/ipv4/netfilter/Makefile	2023-10-31 11:07:33.198951542 -0600
-@@ -51,3 +51,5 @@
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/Makefile linux-6.10.3/net/ipv4/netfilter/Makefile
+--- linux-6.10.3.orig/net/ipv4/netfilter/Makefile	2024-08-09 10:52:05.181710720 -0600
++++ linux-6.10.3/net/ipv4/netfilter/Makefile	2024-08-09 10:52:18.849736767 -0600
+@@ -52,3 +52,5 @@
  obj-$(CONFIG_IP_NF_ARPFILTER) += arptable_filter.o
  
  obj-$(CONFIG_NF_DUP_IPV4) += nf_dup_ipv4.o

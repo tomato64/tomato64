@@ -1,6 +1,6 @@
-diff -Naur linux-6.6.8.orig/include/linux/netfilter_ipv4/ipt_web.h linux-6.6.8/include/linux/netfilter_ipv4/ipt_web.h
---- linux-6.6.8.orig/include/linux/netfilter_ipv4/ipt_web.h	1969-12-31 17:00:00.000000000 -0700
-+++ linux-6.6.8/include/linux/netfilter_ipv4/ipt_web.h	2023-12-26 10:39:42.339583410 -0700
+diff -Naur linux-6.10.3.orig/include/linux/netfilter_ipv4/ipt_web.h linux-6.10.3/include/linux/netfilter_ipv4/ipt_web.h
+--- linux-6.10.3.orig/include/linux/netfilter_ipv4/ipt_web.h	1969-12-31 17:00:00.000000000 -0700
++++ linux-6.10.3/include/linux/netfilter_ipv4/ipt_web.h	2024-08-09 10:57:22.802259904 -0600
 @@ -0,0 +1,30 @@
 +/*
 +
@@ -32,9 +32,9 @@ diff -Naur linux-6.6.8.orig/include/linux/netfilter_ipv4/ipt_web.h linux-6.6.8/i
 +};
 +
 +#endif
-diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/ipt_web.c linux-6.6.8/net/ipv4/netfilter/ipt_web.c
---- linux-6.6.8.orig/net/ipv4/netfilter/ipt_web.c	1969-12-31 17:00:00.000000000 -0700
-+++ linux-6.6.8/net/ipv4/netfilter/ipt_web.c	2023-12-26 10:38:28.871370586 -0700
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/ipt_web.c linux-6.10.3/net/ipv4/netfilter/ipt_web.c
+--- linux-6.10.3.orig/net/ipv4/netfilter/ipt_web.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-6.10.3/net/ipv4/netfilter/ipt_web.c	2024-08-09 10:57:22.802259904 -0600
 @@ -0,0 +1,214 @@
 +/*
 +
@@ -250,12 +250,12 @@ diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/ipt_web.c linux-6.6.8/net/ipv4/ne
 +
 +module_init(init);
 +module_exit(fini);
-diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/Kconfig linux-6.6.8/net/ipv4/netfilter/Kconfig
---- linux-6.6.8.orig/net/ipv4/netfilter/Kconfig	2023-12-26 10:37:26.987178481 -0700
-+++ linux-6.6.8/net/ipv4/netfilter/Kconfig	2023-12-26 10:43:29.252157650 -0700
-@@ -347,6 +347,10 @@
- 
- endif # IP_NF_ARPTABLES
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/Kconfig linux-6.10.3/net/ipv4/netfilter/Kconfig
+--- linux-6.10.3.orig/net/ipv4/netfilter/Kconfig	2024-08-09 10:54:14.105946761 -0600
++++ linux-6.10.3/net/ipv4/netfilter/Kconfig	2024-08-09 10:57:22.802259904 -0600
+@@ -356,6 +356,10 @@
+ 	  This option is needed by both arptables-legacy and arptables-nft.
+ 	  It is not used by nftables.
  
 +config IP_NF_MATCH_WEB
 +        tristate  'web match'
@@ -264,9 +264,9 @@ diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/Kconfig linux-6.6.8/net/ipv4/netf
  config IP_NF_MATCH_ACCOUNT
    tristate "account match support"
    depends on IP_NF_IPTABLES
-diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/Makefile linux-6.6.8/net/ipv4/netfilter/Makefile
---- linux-6.6.8.orig/net/ipv4/netfilter/Makefile	2023-12-26 10:37:26.987178481 -0700
-+++ linux-6.6.8/net/ipv4/netfilter/Makefile	2023-12-26 10:40:52.415772905 -0700
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/Makefile linux-6.10.3/net/ipv4/netfilter/Makefile
+--- linux-6.10.3.orig/net/ipv4/netfilter/Makefile	2024-08-09 10:54:14.105946761 -0600
++++ linux-6.10.3/net/ipv4/netfilter/Makefile	2024-08-09 10:57:22.802259904 -0600
 @@ -37,6 +37,7 @@
  # matches
  obj-$(CONFIG_IP_NF_MATCH_AH) += ipt_ah.o

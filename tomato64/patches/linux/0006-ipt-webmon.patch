@@ -1,6 +1,6 @@
-diff -Naur linux-6.6.8.orig/include/linux/netfilter_ipv4/ipt_webmon.h linux-6.6.8/include/linux/netfilter_ipv4/ipt_webmon.h
---- linux-6.6.8.orig/include/linux/netfilter_ipv4/ipt_webmon.h	1969-12-31 17:00:00.000000000 -0700
-+++ linux-6.6.8/include/linux/netfilter_ipv4/ipt_webmon.h	2023-12-28 07:19:26.952934001 -0700
+diff -Naur linux-6.10.3.orig/include/linux/netfilter_ipv4/ipt_webmon.h linux-6.10.3/include/linux/netfilter_ipv4/ipt_webmon.h
+--- linux-6.10.3.orig/include/linux/netfilter_ipv4/ipt_webmon.h	1969-12-31 17:00:00.000000000 -0700
++++ linux-6.10.3/include/linux/netfilter_ipv4/ipt_webmon.h	2024-08-09 10:59:14.482431594 -0600
 @@ -0,0 +1,63 @@
 +/*  webmon --	A netfilter module to match URLs in HTTP(S) requests
 + *  		This module can match using string match or regular expressions
@@ -65,9 +65,9 @@ diff -Naur linux-6.6.8.orig/include/linux/netfilter_ipv4/ipt_webmon.h linux-6.6.
 +};
 +
 +#endif /*_IPT_WEBMON_H*/
-diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/ipt_webmon.c linux-6.6.8/net/ipv4/netfilter/ipt_webmon.c
---- linux-6.6.8.orig/net/ipv4/netfilter/ipt_webmon.c	1969-12-31 17:00:00.000000000 -0700
-+++ linux-6.6.8/net/ipv4/netfilter/ipt_webmon.c	2023-12-28 11:22:49.042083051 -0700
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/ipt_webmon.c linux-6.10.3/net/ipv4/netfilter/ipt_webmon.c
+--- linux-6.10.3.orig/net/ipv4/netfilter/ipt_webmon.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-6.10.3/net/ipv4/netfilter/ipt_webmon.c	2024-08-09 10:59:14.482431594 -0600
 @@ -0,0 +1,1318 @@
 +/*  webmon --	A netfilter module to match URLs in HTTP(S) requests
 + *  		This module can match using string match or regular expressions
@@ -1387,11 +1387,11 @@ diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/ipt_webmon.c linux-6.6.8/net/ipv4
 +
 +module_init(init);
 +module_exit(fini);
-diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/Kconfig linux-6.6.8/net/ipv4/netfilter/Kconfig
---- linux-6.6.8.orig/net/ipv4/netfilter/Kconfig	2023-12-28 07:23:05.404979954 -0700
-+++ linux-6.6.8/net/ipv4/netfilter/Kconfig	2023-12-28 07:22:17.380969847 -0700
-@@ -348,8 +348,12 @@
- endif # IP_NF_ARPTABLES
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/Kconfig linux-6.10.3/net/ipv4/netfilter/Kconfig
+--- linux-6.10.3.orig/net/ipv4/netfilter/Kconfig	2024-08-09 10:58:53.502399983 -0600
++++ linux-6.10.3/net/ipv4/netfilter/Kconfig	2024-08-09 10:59:14.482431594 -0600
+@@ -357,8 +357,12 @@
+ 	  It is not used by nftables.
  
  config IP_NF_MATCH_WEB
 -        tristate  'web match'
@@ -1405,9 +1405,9 @@ diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/Kconfig linux-6.6.8/net/ipv4/netf
  
  config IP_NF_MATCH_ACCOUNT
    tristate "account match support"
-diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/Makefile linux-6.6.8/net/ipv4/netfilter/Makefile
---- linux-6.6.8.orig/net/ipv4/netfilter/Makefile	2023-12-28 07:23:05.404979954 -0700
-+++ linux-6.6.8/net/ipv4/netfilter/Makefile	2023-12-28 07:20:08.592942749 -0700
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/Makefile linux-6.10.3/net/ipv4/netfilter/Makefile
+--- linux-6.10.3.orig/net/ipv4/netfilter/Makefile	2024-08-09 10:58:53.502399983 -0600
++++ linux-6.10.3/net/ipv4/netfilter/Makefile	2024-08-09 10:59:14.482431594 -0600
 @@ -38,6 +38,7 @@
  obj-$(CONFIG_IP_NF_MATCH_AH) += ipt_ah.o
  obj-$(CONFIG_IP_NF_MATCH_RPFILTER) += ipt_rpfilter.o
@@ -1416,9 +1416,9 @@ diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/Makefile linux-6.6.8/net/ipv4/net
  
  # targets
  obj-$(CONFIG_IP_NF_TARGET_ECN) += ipt_ECN.o
-diff -Naur linux-6.6.8.orig/net/ipv4/netfilter/tree_map.h linux-6.6.8/net/ipv4/netfilter/tree_map.h
---- linux-6.6.8.orig/net/ipv4/netfilter/tree_map.h	1969-12-31 17:00:00.000000000 -0700
-+++ linux-6.6.8/net/ipv4/netfilter/tree_map.h	2023-12-28 08:39:24.541772211 -0700
+diff -Naur linux-6.10.3.orig/net/ipv4/netfilter/tree_map.h linux-6.10.3/net/ipv4/netfilter/tree_map.h
+--- linux-6.10.3.orig/net/ipv4/netfilter/tree_map.h	1969-12-31 17:00:00.000000000 -0700
++++ linux-6.10.3/net/ipv4/netfilter/tree_map.h	2024-08-09 10:59:14.482431594 -0600
 @@ -0,0 +1,1084 @@
 +/*
 + * Copyright © 2008 by Eric Bishop <eric@gargoyle-router.com>
