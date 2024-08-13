@@ -1,8 +1,11 @@
-.download
-.extract
+.download-buildroot
+.download-mediatek-kernel
+.extract-buildroot
 .patch
 .configure
 .configure-legacy
+.configure-flint2
 *.gcom
 hotplug2.rules
 src/
+00001-openwrt-mediatek-kernel-*
