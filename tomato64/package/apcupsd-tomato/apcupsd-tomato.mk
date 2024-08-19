@@ -35,7 +35,7 @@ endef
 define APCUPSD_TOMATO_INSTALL_TARGET_CMDS
 	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) DESTDIR=$(TARGET_DIR) install
 
-	rm -rf $(TARGET_DIR)/www/apcupsd/ups*.cgi
+#	rm -rf $(TARGET_DIR)/www/apcupsd/ups*.cgi
 	rm -rf $(TARGET_DIR)/rom/etc/apcupsd
 	mkdir -p $(TARGET_DIR)/rom/etc/apcupsd
 	cp -f $(TARGET_DIR)/etc/apcupsd/* $(TARGET_DIR)/rom/etc/apcupsd/
