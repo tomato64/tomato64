@@ -1,0 +1,15 @@
+menuconfig BR2_PACKAGE_PLATFORM
+	bool "platform"
+	help
+	  Target Platform
+
+if BR2_PACKAGE_PLATFORM
+
+config BR2_PACKAGE_PLATFORM_X86_64
+	bool "x86_64"
+	depends on !BR2_PACKAGE_PLATFORM_MT6000
+
+config BR2_PACKAGE_PLATFORM_MT6000
+	bool "MT6000"
+
+endif

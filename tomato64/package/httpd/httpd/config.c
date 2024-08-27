@@ -27,9 +27,9 @@ void wo_defaults(char *url)
 		if ((mode == 1) || (mode == 2)) {
 			prepare_upgrade();
 
-#ifdef TOMATO64
+#ifdef TOMATO64_X86_64
 			eval("mount_nvram");
-#endif /* TOMATO64 */
+#endif /* TOMATO64_X86_64 */
 
 			led(LED_DIAG, 1);
 
@@ -149,9 +149,9 @@ void wi_restore(char *url, int len, char *boundary)
 
 	prepare_upgrade();
 
-#ifdef TOMATO64
+#ifdef TOMATO64_X86_64
 	eval("mount_nvram");
-#endif /* TOMATO64 */
+#endif /* TOMATO64_X86_64 */
 
 	if (_eval(args, msg, 0, NULL) != 0)
 		resmsg_fread(msg + 1);

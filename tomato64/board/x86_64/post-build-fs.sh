@@ -8,7 +8,8 @@ $TARGET_DIR/etc \
 $TARGET_DIR/home \
 $TARGET_DIR/mnt \
 $TARGET_DIR/root \
-$TARGET_DIR/var
+$TARGET_DIR/var \
+$TARGET_DIR/run
 
 # Needed for some hook scripts
 mkdir -p \
@@ -23,6 +24,7 @@ ln -sf tmp/home $TARGET_DIR/home
 ln -sf tmp/home/root $TARGET_DIR/root
 ln -sf tmp/mnt $TARGET_DIR/mnt
 ln -sf tmp/var $TARGET_DIR/var
+ln -sf tmp/var/run $TARGET_DIR/run
 
 # create ldd symlink
 ln -sf /lib/ld-musl-x86_64.so.1 $TARGET_DIR/usr/bin/ldd

@@ -11231,7 +11231,12 @@ static int init_nvram(void)
 	}
 	nvram_set("t_model_name", s);
 #else
+#ifdef TOMATO64_X86_64
 	nvram_set("t_model_name", "x86_64");
+#endif /* TOMATO64_X86_64 */
+#ifdef TOMATO64_MT6000
+	nvram_set("t_model_name", "GL.iNet GL-MT6000");
+#endif /* TOMATO64_MT6000 */
 #endif /* TOMATO64 */
 #ifndef CONFIG_BCMWL6A
 	nvram_set("pa0maxpwr", "400"); /* allow Tx power up tp 400 mW, needed for ND only */
@@ -11526,10 +11531,16 @@ static void sysinit(void)
 	eval("hotplug2", "--coldplug");
 #else
 	eval("/etc/init.d/S10mdev", "start");
+
+#ifdef TOMATO64_MT6000
+	eval("set_devs_mt6000");
+#endif /* TOMATO64_MT6000 */
 	eval("set_devs");
 
+#ifdef TOMATO64_X86_64
 	/* Mount filesystem rw */
 	eval("mount_nvram");
+#endif /* TOMATO64_X86_64 */
 	if (!nvram_get_int("fs_mount_ro")) {
 		eval("mount", "-o", "remount,rw", "/");
 	}
@@ -11540,11 +11551,13 @@ static void sysinit(void)
 	}
 	eval("mount", "-a");
 
+#ifdef TOMATO64_X86_64
 	/* Expand filesystem parition to fill disk */
 	if (!nvram_get_int("fs_expanded")) {
 		eval("expand_root_partition");
 		nvram_set("fs_expanded", "1");
 	}
+#endif /* TOMATO64_X86_64 */
 #endif /* TOMATO64 */
 
 	start_hotplug2();

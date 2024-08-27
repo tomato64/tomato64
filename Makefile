@@ -1,7 +1,7 @@
 BUILDROOT_VERSION = 2024.08-rc1
 BUILDROOT_TARBALL = ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSION).tar.xz
 BUILDROOT_URL = https://github.com/tomato64/buildroot-release/releases/download/$(BUILDROOT_VERSION)
-MEDIATEK_KERNEL_VERSION=$(shell grep "BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE" tomato64/configs/flint2_defconfig | cut -d '"' -f2)
+MEDIATEK_KERNEL_VERSION=$(shell grep "BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE" tomato64/configs/mt6000_defconfig | cut -d '"' -f2)
 MEDIATEK_KERNEL_PATCH=${HOME}/buildroot-src/mediatek-kernel/00001-openwrt-mediatek-kernel-${MEDIATEK_KERNEL_VERSION}.patch
 PATCHES := $(wildcard src/patches/*.patch)
 
@@ -11,13 +11,13 @@ default: .configure
 legacy: .configure-legacy
 	make -C src/buildroot
 
-flint2: .configure-flint2
+mt6000: .configure-mt6000
 	make -C src/buildroot
 
 legacy-menuconfig: .configure-legacy
 	make -C src/buildroot menuconfig
 
-flint2-menuconfig: .configure-flint2
+mt6000-menuconfig: .configure-mt6000
 	make -C src/buildroot menuconfig
 
 distclean:
@@ -32,8 +32,8 @@ distclean:
 	@touch $@
 	@touch .configure
 
-.configure-flint2: .download-mediatek-kernel .patch
-	make -C src/buildroot BR2_EXTERNAL=../../tomato64 flint2_defconfig
+.configure-mt6000: .download-mediatek-kernel .patch
+	make -C src/buildroot BR2_EXTERNAL=../../tomato64 mt6000_defconfig
 	@touch $@
 	@touch .configure
 
@@ -60,7 +60,7 @@ endif
 ifeq (,$(wildcard ${MEDIATEK_KERNEL_PATCH}))
 	wget -O ${MEDIATEK_KERNEL_PATCH} https://github.com/tomato64/openwrt-mediatek-kernel/releases/download/${MEDIATEK_KERNEL_VERSION}/00001-openwrt-mediatek-kernel-${MEDIATEK_KERNEL_VERSION}.patch
 endif
-	cp ${MEDIATEK_KERNEL_PATCH} tomato64/board/flint2/linux-patches/
+	cp ${MEDIATEK_KERNEL_PATCH} tomato64/board/mt6000/linux-patches/
 	@touch $@
 
 .DEFAULT:

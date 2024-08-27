@@ -6,7 +6,7 @@ KERNEL_VERSION=$(ls $BUILD_DIR | grep "linux-headers" | cut -d- -f3)
 
 lzma_alone e $BINARIES_DIR/Image -lc1 -lp2 -pb2 $BINARIES_DIR/glinet_gl-mt6000-kernel.bin
 
-$BR2_EXTERNAL_TOMATO64_PATH/board/flint2/mkits.sh \
+$BR2_EXTERNAL_TOMATO64_PATH/board/mt6000/mkits.sh \
 -D glinet_gl-mt6000 \
 -o $BINARIES_DIR/glinet_gl-mt6000-kernel.bin.its \
 -k $BINARIES_DIR/glinet_gl-mt6000-kernel.bin \
@@ -22,8 +22,8 @@ mkimage \
 $BINARIES_DIR/glinet_gl-mt6000-kernel.bin
 
 sh \
-$BR2_EXTERNAL_TOMATO64_PATH/board/flint2/sysupgrade-tar.sh \
+$BR2_EXTERNAL_TOMATO64_PATH/board/mt6000/sysupgrade-tar.sh \
 --board glinet_gl-mt6000 \
 --kernel $BINARIES_DIR/glinet_gl-mt6000-kernel.bin \
---rootfs $BINARIES_DIR/rootfs.squashfs \
-$BINARIES_DIR/tomato64-mediatek-filogic-glinet_gl-mt6000-squashfs-sysupgrade.bin
+--rootfs $BINARIES_DIR/rootfs.ext4 \
+$BINARIES_DIR/tomato64-mediatek-filogic-glinet_gl-mt6000-ext4-sysupgrade.bin

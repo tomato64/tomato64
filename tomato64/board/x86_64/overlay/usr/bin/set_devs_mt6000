@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e
+
+increment_mac() {
+	tmp=$1
+	tmp=$(echo $tmp |  tr '[:lower:]' '[:upper:]' | tr -d ':')
+	tmp=$( printf '%d\n' 0x$tmp )
+	tmp=$( expr $tmp + 1 )
+	tmp=$( printf '%X\n' $tmp )
+	tmp=$(echo $tmp | sed 's/../&:/g;s/:$//')
+	echo "$tmp"
+}
+
+mac=$(ifconfig eth0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+mac1=$(ifconfig eth1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+
+echo "switch0 mac $mac" > /etc/iftab
+echo "eth0 mac $mac1" >> /etc/iftab
+
+for p in 1 2 3 4 5
+do
+	mac=$(increment_mac $mac)
+	ip link set dev lan$p address $mac
+	echo "eth$p mac $mac" >> /etc/iftab
+done

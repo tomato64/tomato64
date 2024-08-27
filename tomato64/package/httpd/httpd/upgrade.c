@@ -101,9 +101,9 @@ void wi_upgrade(char *url, int len, char *boundary)
 
 	prepare_upgrade();
 
-#ifdef TOMATO64
+#ifdef TOMATO64_X86_64
 	eval("mount_nvram");
-#endif /* TOMATO64 */
+#endif /* TOMATO64_X86_64 */
 
 	/* copy to memory */
 	system("cp /www/reboot.asp /tmp");

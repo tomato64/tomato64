@@ -2069,7 +2069,12 @@ struct nvram_tuple router_defaults[] = {
 #endif /* TCONFIG_MULTIWAN */
 
 	{ "lan_ifname",			"br0"				, 0 },
+#ifdef TOMATO64_X86_64
 	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 eth5 eth6 eth7 eth8"	, 0 },
+#endif /* TOMATO64_X86_64 */
+#ifdef TOMATO64_MT6000
+	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 eth5"	, 0 },
+#endif /* TOMATO64_MT6000 */
 	{ "lan_ifnames_vlan",		"vlan1"				, 0 },
 	{ "lan1_ifnames_vlan",		""				, 0 },
 	{ "lan2_ifnames_vlan",		""				, 0 },

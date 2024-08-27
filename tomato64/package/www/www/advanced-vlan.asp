@@ -122,6 +122,7 @@ switch (nvram['t_model_name']) {
 	case 'Asus RT-AC5300':
 /* TOMATO64-BEGIN */
 	case 'x86_64':
+	case 'GL.iNet GL-MT6000':
 /* TOMATO64-END */
 		COL_P0N = '0';
 		COL_P1N = '1';

@@ -7,6 +7,14 @@ ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/common/
 ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/bcmwifi/include
 ALL_CPPFLAGS += $(CPPFLAGS)
 
+ifeq ($(PLATFORM_X86_64),y)
+ALL_CPPFLAGS += -DTOMATO64_X86_64
+endif
+
+ifeq ($(PLATFORM_MT6000),y)
+ALL_CPPFLAGS += -DTOMATO64_MT6000
+endif
+
 ALL_CFLAGS = -fPIC
 ALL_CFLAGS += $(CFLAGS)
 

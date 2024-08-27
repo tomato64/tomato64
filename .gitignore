@@ -4,7 +4,7 @@
 .patch
 .configure
 .configure-legacy
-.configure-flint2
+.configure-mt6000
 *.gcom
 hotplug2.rules
 src/
