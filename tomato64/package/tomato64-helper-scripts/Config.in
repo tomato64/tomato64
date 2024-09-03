@@ -1,0 +1,4 @@
+config BR2_PACKAGE_TOMATO64_HELPER_SCRIPTS
+	bool "tomato64-helper-scripts"
+	help
+	  tomato64 helper scripts
