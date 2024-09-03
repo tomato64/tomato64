@@ -189,8 +189,8 @@ void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
 	}
 #endif /* TOMATO64_X86_64 */
 #ifdef TOMATO64_MT6000
-#endif /* TOMATO64_MT6000 */
 	strlcpy(cpumodel, "MediaTek MT7986AV (Cortex-A53)", buf_cpumodel_sz);
+#endif /* TOMATO64_MT6000 */
 }
 #endif /* TOMATO64 */
 
