@@ -2086,7 +2086,12 @@ struct nvram_tuple router_defaults[] = {
 
 	{ "boardflags",			"0x0100"			, 0 },
 	{ "vlan0ports",			"0 9"				, 0 },
+#ifdef TOMATO64_X86_64
 	{ "vlan1ports",			"1 2 3 4 5 6 7 8 9*"		, 0 },
+#endif /* TOMATO64_X86_64 */
+#ifdef TOMATO64_MT6000
+	{ "vlan1ports",			"1 2 3 4 5 9*"			, 0 },
+#endif /* TOMATO64_MT6000 */
 
 	{ "ctf_disable",		"1"				, 0 },
 #endif /* TOMATO64 */
