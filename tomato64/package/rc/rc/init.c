@@ -11551,13 +11551,16 @@ static void sysinit(void)
 	}
 	eval("mount", "-a");
 
-#ifdef TOMATO64_X86_64
 	/* Expand filesystem parition to fill disk */
 	if (!nvram_get_int("fs_expanded")) {
+#ifdef TOMATO64_X86_64
 		eval("expand_root_partition");
+#endif /* TOMATO64_X86_64 */
+#ifdef TOMATO64_MT6000
+		eval("resize2fs", "/dev/mmcblk0p7");
+#endif /* TOMATO64_MT6000 */
 		nvram_set("fs_expanded", "1");
 	}
-#endif /* TOMATO64_X86_64 */
 #endif /* TOMATO64 */
 
 	start_hotplug2();
