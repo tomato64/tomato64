@@ -12,7 +12,7 @@ NDPI_AUTORECONF = YES
 NDPI_CONF_OPTS = --with-only-libndpi
 
 define NDPI_BUILD_CMDS
-	$(TARGET_CONFIGURE_OPTS) $(MAKE) KERNEL_DIR=$(LINUX_DIR) CC="$(TARGET_CC)" -C $(@D)/ndpi-netfilter
+	$(TARGET_MAKE_ENV) $(MAKE) KERNEL_DIR=$(LINUX_DIR) CC="$(TARGET_CC)" -C $(@D)/ndpi-netfilter $(LINUX_MAKE_FLAGS)
 endef
 
 define NDPI_INSTALL_TARGET_CMDS
