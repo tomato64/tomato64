@@ -1,0 +1,4 @@
+config BR2_PACKAGE_MAC80211
+	bool "mac80211"
+	help
+	  Backport of mac80211
