@@ -71,6 +71,7 @@ menuconfig BR2_PACKAGE_RC
 	select BR2_PACKAGE_UBOOT_TOOLS					if BR2_aarch64
 	select BR2_PACKAGE_UBOOT_TOOLS_MKIMAGE				if BR2_aarch64
 	select BR2_PACKAGE_MAC80211					if BR2_aarch64
+	select BR2_PACKAGE_MT76						if BR2_aarch64
 
 	# Ethernet
 	select BR2_PACKAGE_LINUX_FIRMWARE_RTL_815X			if BR2_x86_64

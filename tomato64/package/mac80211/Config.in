@@ -1,4 +1,5 @@
 config BR2_PACKAGE_MAC80211
 	bool "mac80211"
+	depends on BR2_aarch64
 	help
 	  Backport of mac80211

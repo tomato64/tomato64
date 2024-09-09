@@ -9,6 +9,7 @@ MAC80211_SOURCE = backports-$(MAC80211_VERSION).tar.xz
 MAC80211_SITE = http://mirror2.openwrt.org/sources
 MAC80211_LICENSE = GPL-3.0
 MAC80211_DEPENDENCIES = linux
+MAC80211_INSTALL_STAGING = YES
 
 define MAC80211_BUILD_CMDS
 
@@ -72,13 +73,25 @@ modules
 endef
 
 define MAC80211_INSTALL_TARGET_CMDS
-	mkdir -p $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/kernel/net/mac80211
-        $(INSTALL) $(@D)/net/mac80211/mac80211.ko $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/kernel/net/mac80211
-	mkdir -p $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/kernel/net/wireless
-        $(INSTALL) $(@D)/net/wireless/cfg80211.ko $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/kernel/net/wireless
-	mkdir -p $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/kernel/compat
-        $(INSTALL) $(@D)/compat/compat.ko $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/kernel/compat
+
+	mkdir -p $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+
+        $(INSTALL) $(@D)/net/mac80211/mac80211.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+        $(INSTALL) $(@D)/net/wireless/cfg80211.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+        $(INSTALL) $(@D)/compat/compat.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+endef
+
+define MAC80211_INSTALL_STAGING_CMDS
+	mkdir -p $(STAGING_DIR)/usr/include/mac80211
+	mkdir -p $(STAGING_DIR)/usr/include/mac80211-backport
+	mkdir -p $(STAGING_DIR)/usr/include/mac80211/ath
+	mkdir -p $(STAGING_DIR)/usr/include/net/mac80211
+
+        cp -r $(@D)/net/mac80211/*.h $(@D)/include/* $(STAGING_DIR)/usr/include/mac80211/
+        cp -r $(@D)/backport-include/* $(STAGING_DIR)/usr/include/mac80211-backport/
+        cp -r $(@D)/net/mac80211/rate.h $(STAGING_DIR)/usr/include/net/mac80211/
+        cp -r $(@D)/drivers/net/wireless/ath/*.h $(STAGING_DIR)/usr/include/mac80211/ath/
+        rm -f $(STAGING_DIR)/usr/include/mac80211-backport/linux/module.h
 endef
 
 $(eval $(generic-package))
-
