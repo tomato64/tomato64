@@ -90,6 +90,8 @@ define MT76_INSTALL_TARGET_CMDS
 	$(INSTALL) $(@D)/firmware/mt7986_wm.bin			$(TARGET_DIR)/lib/firmware/mediatek
 	$(INSTALL) $(@D)/firmware/mt7986_rom_patch_mt7975.bin	$(TARGET_DIR)/lib/firmware/mediatek
 	$(INSTALL) $(@D)/firmware/mt7986_rom_patch.bin		$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/mt7986_wo_0.bin		$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/mt7986_wo_1.bin		$(TARGET_DIR)/lib/firmware/mediatek
 
 endef
 
