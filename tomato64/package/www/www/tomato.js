@@ -2475,6 +2475,26 @@ function _ethstates(port) {
 		state2 = port.replace('DOWN','Unplugged');
 	}
 /* TOMATO64-BEGIN */
+	else if (port == '10000FD') {
+		fn = 'eth_10000_fd';
+		state1 = port.replace('HD','Mbps Half');
+		state2 = state1.replace('FD','Mbps Full');
+	}
+	else if (port == '10000HD') {
+		fn = 'eth_10000_hd';
+		state1 = port.replace('HD','Mbps Half');
+		state2 = state1.replace('FD','Mbps Full');
+	}
+	else if (port == '5000FD') {
+		fn = 'eth_5000_fd';
+		state1 = port.replace('HD','Mbps Half');
+		state2 = state1.replace('FD','Mbps Full');
+	}
+	else if (port == '5000HD') {
+		fn = 'eth_2500_hd';
+		state1 = port.replace('HD','Mbps Half');
+		state2 = state1.replace('FD','Mbps Full');
+	}
 	else if (port == '2500FD') {
 		fn = 'eth_2500_fd';
 		state1 = port.replace('HD','Mbps Half');
