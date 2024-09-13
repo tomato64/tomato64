@@ -27,7 +27,15 @@ ln -sf tmp/var $TARGET_DIR/var
 ln -sf tmp/var/run $TARGET_DIR/run
 
 # create ldd symlink
-ln -sf /lib/ld-musl-x86_64.so.1 $TARGET_DIR/usr/bin/ldd
+if grep -q ^BR2_x86_64=y ${BR2_CONFIG}
+then
+	ln -sf /lib/ld-musl-x86_64.so.1 $TARGET_DIR/usr/bin/ldd
+fi
+
+if grep -q ^BR2_aarch64=y ${BR2_CONFIG}
+then
+	ln -sf /lib/ld-musl-aarch64.so.1 $TARGET_DIR/usr/bin/ldd
+fi
 
 # symlink openssl since Tomato expects it in a non-standard place
 ln -sf /usr/bin/openssl $TARGET_DIR/usr/sbin/openssl
