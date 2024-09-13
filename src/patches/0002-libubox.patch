@@ -1,0 +1,34 @@
+From 65297c486905dc776873ee7692fc231d2b825653 Mon Sep 17 00:00:00 2001
+From: Lance Fredrickson <lancethepants@gmail.com>
+Date: Tue, 17 Sep 2024 14:01:38 -0600
+Subject: [PATCH] libubox
+
+---
+ package/libubox/libubox.hash | 2 +-
+ package/libubox/libubox.mk   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/package/libubox/libubox.hash b/package/libubox/libubox.hash
+index 7738caf223..95ebcb1e5b 100644
+--- a/package/libubox/libubox.hash
++++ b/package/libubox/libubox.hash
+@@ -1,2 +1,2 @@
+ # Locally calculated
+-sha256  918acc85199117ef109f2a204020f6fe4d5a1724a09888f45b70b6474345d6fe  libubox-75a3b870cace1171faf57bd55e5a9a2f1564f757-git4.tar.gz
++sha256  16646f6bb9257e08bfb519d2e770ca7c38659eadf4a816034740de44ec6900af  libubox-eb9bcb64185ac155c02cc1a604692c4b00368324-git4.tar.gz
+diff --git a/package/libubox/libubox.mk b/package/libubox/libubox.mk
+index d6da078c7b..d37b96c5a9 100644
+--- a/package/libubox/libubox.mk
++++ b/package/libubox/libubox.mk
+@@ -4,7 +4,7 @@
+ #
+ ################################################################################
+ 
+-LIBUBOX_VERSION = 75a3b870cace1171faf57bd55e5a9a2f1564f757
++LIBUBOX_VERSION = eb9bcb64185ac155c02cc1a604692c4b00368324
+ LIBUBOX_SITE = https://git.openwrt.org/project/libubox.git
+ LIBUBOX_SITE_METHOD = git
+ LIBUBOX_LICENSE = ISC, BSD-3-Clause
+-- 
+2.39.2
+

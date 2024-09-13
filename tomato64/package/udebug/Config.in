@@ -1,0 +1,6 @@
+config BR2_PACKAGE_UDEBUG
+	bool "udebug"
+	depends on BR2_aarch64
+	select BR2_PACKAGE_UBUS
+	help
+	  The ucode language is a small, general-purpose scripting language that resembles ECMAScript syntax.
