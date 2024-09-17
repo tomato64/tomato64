@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-SAMBA4_TOMATO_VERSION = 4.20.3
+SAMBA4_TOMATO_VERSION = 4.20.4
 SAMBA4_TOMATO_SITE = https://download.samba.org/pub/samba/stable
 SAMBA4_TOMATO_SOURCE = samba-$(SAMBA4_TOMATO_VERSION).tar.gz
 SAMBA4_TOMATO_INSTALL_STAGING = YES
