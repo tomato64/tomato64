@@ -24,3 +24,12 @@ do
 	ip link set dev lan$p address $mac
 	echo "eth$p mac $mac" >> /etc/iftab
 done
+
+KERNEL_VERSION=$(uname -r)
+
+insmod /lib/modules/$KERNEL_VERSION/wifi/compat.ko
+insmod /lib/modules/$KERNEL_VERSION/wifi/cfg80211.ko
+insmod /lib/modules/$KERNEL_VERSION/wifi/mac80211.ko
+insmod /lib/modules/$KERNEL_VERSION/wifi/mt76.ko
+insmod /lib/modules/$KERNEL_VERSION/wifi/mt76-connac-lib.ko
+insmod /lib/modules/$KERNEL_VERSION/wifi/mt7915e.ko
