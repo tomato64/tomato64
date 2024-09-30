@@ -11969,7 +11969,7 @@ int reboothalt_main(int argc, char *argv[])
 
 	return 0;
 }
-#ifdef TOMATO64
+#ifdef TOMATO64_X86_64
 int fastreboot_main(int argc, char *argv[])
 {
 	int i, n;
@@ -12016,4 +12016,4 @@ int fastreboot_main(int argc, char *argv[])
 		system("kexec -e");
 	}
 }
-#endif /* TOMATO64 */
+#endif /* TOMATO64_X86_64 */

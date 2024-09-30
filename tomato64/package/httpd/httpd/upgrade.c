@@ -109,9 +109,9 @@ void wi_upgrade(char *url, int len, char *boundary)
 	system("cp /www/reboot.asp /tmp");
 	system("cp /www/*.css /tmp");
 	system("cp /www/*.png /tmp");
-#ifdef TOMATO64
+#ifdef TOMATO64_X86_64
 	system("cp /www/reboot-fast.asp /tmp");
-#endif /* TOMATO64 */
+#endif /* TOMATO64_X86_64 */
 
 	led(LED_DIAG, 1);
 
@@ -197,18 +197,18 @@ ERROR:
 
 void wo_flash(char *url)
 {
-#ifdef TOMATO64
+#ifdef TOMATO64_X86_64
 	unsigned int fastreboot;
 	fastreboot = (strcmp(webcgi_safeget("_fastreboot", "0"), "1") == 0);
-#endif /* TOMATO64 */
+#endif /* TOMATO64_X86_64 */
 
 	if (rboot) {
 		sleep(1);
-#ifdef TOMATO64
+#ifdef TOMATO64_X86_64
 		if (fastreboot)
 			parse_asp("/tmp/reboot-fast.asp");
 		else
-#endif /* TOMATO64 */
+#endif /* TOMATO64_X86_64 */
 		parse_asp("/tmp/reboot.asp");
 		web_close();
 
@@ -221,7 +221,7 @@ void wo_flash(char *url)
 
 		sync();
 		//kill(1, SIGTERM);
-#ifdef TOMATO64
+#ifdef TOMATO64_X86_64
 		if (fastreboot) {
 			system("kexec -l /boot/bzImage --reuse-cmdline");
 			system("kexec -e");
@@ -230,7 +230,7 @@ void wo_flash(char *url)
 		}
 #else
 		reboot(RB_AUTOBOOT);
-#endif /* TOMATO64 */
+#endif /* TOMATO64_X86_64 */
 
 		exit(0);
 	}

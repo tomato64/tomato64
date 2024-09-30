@@ -604,6 +604,11 @@ else
 	sed -i $(INSTALLDIR)/www/qos-ctrate.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 endif
 
+ifeq ($(PLATFORM_MT6000),y)
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/MT6000-REMOVE-BEGIN/,/MT6000-REMOVE-END/d"
+else
+endif
+
 # Only include TFTP if it is compiled in
 ifneq ($(TCONFIG_USB_EXTRAS),y)
 	sed -i $(INSTALLDIR)/www/advanced-dhcpdns.asp -e "/TFTP-BEGIN/,/TFTP-END/d"
@@ -728,6 +733,8 @@ endif
 		-e "/DDNS2CLS-BEGIN/d"	-e "/DDNS2CLS-END/d" \
 		-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 		-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
+		-e "/MT6000-BEGIN/d"	-e "/MT6000-END/d" \
+		-e "/MT6000-REMOVE-BEGIN/d"	-e "/MT6000-REMOVE-END/d" \
 		|| true; \
 	done
 
