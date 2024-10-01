@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MAC80211_VERSION = 6.9.9
+MAC80211_VERSION = 6.11
 MAC80211_SOURCE = backports-$(MAC80211_VERSION).tar.xz
 MAC80211_SITE = http://mirror2.openwrt.org/sources
 MAC80211_LICENSE = GPL-3.0
