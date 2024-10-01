@@ -604,9 +604,10 @@ else
 	sed -i $(INSTALLDIR)/www/qos-ctrate.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 endif
 
-ifeq ($(PLATFORM_MT6000),y)
-	sed -i $(INSTALLDIR)/www/tomato.js -e "/MT6000-REMOVE-BEGIN/,/MT6000-REMOVE-END/d"
+ifeq ($(PLATFORM_X86_64),y)
 else
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-X86_64-BEGIN/,/TOMATO64-X86_64-END/d"
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-X86_64-BEGIN/,/TOMATO64-X86_64-END/d"
 endif
 
 # Only include TFTP if it is compiled in
@@ -733,8 +734,7 @@ endif
 		-e "/DDNS2CLS-BEGIN/d"	-e "/DDNS2CLS-END/d" \
 		-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 		-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
-		-e "/MT6000-BEGIN/d"	-e "/MT6000-END/d" \
-		-e "/MT6000-REMOVE-BEGIN/d"	-e "/MT6000-REMOVE-END/d" \
+		-e "/TOMATO64-X86_64-BEGIN/d"	-e "/TOMATO64-X86_64-END/d" \
 		|| true; \
 	done
 

@@ -59,9 +59,9 @@ function upgrade() {
 	setInterval('clock()', 800);
 
 	fom.action += '?_reset='+(E('f_reset').checked ? 1 : 0);
-/* TOMATO64-BEGIN */
+/* TOMATO64-X86_64-BEGIN */
 	fom.action += '&_fastreboot='+(E('f_fastreboot').checked ? 1 : 0);
-/* TOMATO64-END */
+/* TOMATO64-X86_64-END */
 	form.addIdAction(fom);
 
 	fom.submit();
@@ -106,11 +106,9 @@ function earlyInit() {
 			<form name="form_reset" action="javascript:{}">
 				<div class="afu-form">
 					<input type="checkbox" id="f_reset">&nbsp; After flashing, erase all data in NVRAM memory
-/* TOMATO64-BEGIN */
-/* MT6000-REMOVE-BEGIN */
+/* TOMATO64-X86_64-BEGIN */
 					<br><input type="checkbox" id="f_fastreboot">&nbsp; After flashing, perform a Fast Reboot <small>(Run locally the first time to ensure correct functionality)</small>
-/* MT6000-REMOVE-END */
-/* TOMATO64-END */
+/* TOMATO64-X86_64-END */
 				</div>
 			</form>
 

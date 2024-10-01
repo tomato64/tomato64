@@ -2725,11 +2725,9 @@ function navi() {
 		null,
 		['About',			'about.asp'],
 		['Reboot...',			'javascript:reboot()'],
-/* TOMATO64-BEGIN */
-/* MT6000-REMOVE-BEGIN */
+/* TOMATO64-X86_64-BEGIN */
 		['Fast Reboot...',		'javascript:fastreboot()'],
-/* MT6000-REMOVE-END */
-/* TOMATO64-END */
+/* TOMATO64-X86_64-END */
 /* TOMATO64-REMOVE-BEGIN */
 		['Halt...',			'javascript:halt()'],
 /* TOMATO64-REMOVE-END */
@@ -2960,13 +2958,11 @@ function reboot() {
 	if (confirm("Reboot?")) form.submitHidden('tomato.cgi', { _reboot: 1, _commit: 0, _nvset: 0 });
 }
 
-/* TOMATO64-BEGIN */
-/* MT6000-REMOVE-BEGIN */
+/* TOMATO64-X86_64-BEGIN */
 function fastreboot() {
 	if (confirm("Fast Reboot?\nRun locally the first time to ensure correct functionality")) form.submitHidden('tomato.cgi', { _fastreboot: 1, _commit: 0, _nvset: 0 });
 }
-/* MT6000-REMOVE-END */
-/* TOMATO64-END */
+/* TOMATO64-X86_64-END */
 
 function halt() {
 /* TOMATO64-REMOVE-BEGIN */
