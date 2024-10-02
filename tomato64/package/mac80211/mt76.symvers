@@ -10,7 +10,6 @@
 0x00000000	mt76_ac_to_hwq	mt76	EXPORT_SYMBOL_GPL	
 0x00000000	mt76_alloc_device	mt76	EXPORT_SYMBOL_GPL	
 0x00000000	mt76_alloc_phy	mt76	EXPORT_SYMBOL_GPL	
-0x00000000	mt76_calculate_default_rate	mt76	EXPORT_SYMBOL_GPL	
 0x00000000	mt76_connac2_load_patch	mt76-connac-lib	EXPORT_SYMBOL_GPL	
 0x00000000	mt76_connac2_load_ram	mt76-connac-lib	EXPORT_SYMBOL_GPL	
 0x00000000	mt76_connac2_mac_add_txs_skb	mt76-connac-lib	EXPORT_SYMBOL_GPL	
