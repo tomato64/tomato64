@@ -1,0 +1,10 @@
+config BR2_PACKAGE_NETIFD
+	bool "netifd"
+	depends on BR2_aarch64
+	select BR2_PACKAGE_LIBUBOX
+	select BR2_PACKAGE_UBUS
+	select BR2_PACKAGE_UDEBUG
+	select BR2_PACKAGE_LIBUCI
+	select BR2_PACKAGE_LIBNL_TINY
+	help
+	  OpenWrt network interface daemon
