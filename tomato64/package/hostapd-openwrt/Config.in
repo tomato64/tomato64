@@ -6,6 +6,7 @@ config BR2_PACKAGE_HOSTAPD_OPENWRT
 	select BR2_PACKAGE_LIBOPENSSL_ENABLE_MD4 if BR2_PACKAGE_LIBOPENSSL
 	select BR2_PACKAGE_UCODE
 	select BR2_PACKAGE_UDEBUG
+	select BR2_PACKAGE_LIBNL_TINY
 	help
 	  User space daemon for wireless access points.
 
