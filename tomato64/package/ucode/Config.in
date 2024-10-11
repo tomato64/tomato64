@@ -1,5 +1,9 @@
 config BR2_PACKAGE_UCODE
 	bool "ucode"
 	depends on BR2_aarch64
+	select BR2_PACKAGE_LIBUBOX
+	select BR2_PACKAGE_UBUS
+	select BR2_PACKAGE_LIBUCI
+	select BR2_PACKAGE_LIBNL_TINY
 	help
 	  The ucode language is a small, general-purpose scripting language that resembles ECMAScript syntax.
