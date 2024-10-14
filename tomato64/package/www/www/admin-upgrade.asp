@@ -105,7 +105,7 @@ function earlyInit() {
 			</form>
 			<form name="form_reset" action="javascript:{}">
 				<div class="afu-form">
-					<input type="checkbox" id="f_reset">&nbsp; After flashing, erase all data in NVRAM memory
+					<input type="checkbox" id="f_reset">&nbsp; Erase NVRAM configuration and restore firmware defaults
 /* TOMATO64-X86_64-BEGIN */
 					<br><input type="checkbox" id="f_fastreboot">&nbsp; After flashing, perform a Fast Reboot <small>(Run locally the first time to ensure correct functionality)</small>
 /* TOMATO64-X86_64-END */
