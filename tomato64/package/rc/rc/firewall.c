@@ -851,7 +851,7 @@ static void mangle_table(void)
 		syslog(LOG_INFO, "Firewall: No Clamping of TCP MSS to PMTU of WAN interface"); /* Ex.: case MTU 1500 for ISPs that support RFC 4638 */
 
 #ifdef TCONFIG_BCMARM
-	/* set mark for NAT loopback to work if CTF is enabled! (bypass) */
+	/* set mark for NAT loopback to work if CTF is enabled! (bypass) - see https://bitbucket.org/pedro311/freshtomato-arm/issues/142/hardware-nat-seem-broken-port-forwarding */
 	if (!nvram_get_int("ctf_disable")) {
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			if ((strcmp(lanface[i], "") != 0) && (strcmp(lanaddr[i], "") != 0)) { /* check LAN setup */
@@ -859,6 +859,8 @@ static void mangle_table(void)
 				ipt_write("-A FORWARD -o %s -s %s -d %s -j MARK --set-mark 0x01/0x7\n", lanface[i], lan_class, lan_class);
 			}
 		}
+		/* keep it simple: mark UDP packets arriving at all ports to bypass CTF - see https://bitbucket.org/pedro311/freshtomato-arm/issues/334/nat-loopback-not-working-for-udp-packets */
+		ipt_write("-A PREROUTING -p udp -m state --state NEW -j MARK --set-mark 0x01/0x7\n"); /* Append to the end; OpenVPN and Wireguard CTF bypass will be inserted at the head of the chain */
 	}
 #endif /* TCONFIG_BCMARM */
 
