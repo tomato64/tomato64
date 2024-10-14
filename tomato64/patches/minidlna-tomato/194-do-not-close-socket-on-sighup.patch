@@ -1,0 +1,21 @@
+From: Alexander GQ Gerasiov <gq@debian.org>
+Date: Sun, 31 Jan 2021 18:55:16 +0300
+Subject: do-not-close-socket-on-sighup
+
+---
+ minidlna.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/minidlna.c b/minidlna.c
+index 47ca712..37462ac 100644
+--- minidlna/minidlna.c
++++ minidlna/minidlna.c
+@@ -215,8 +215,6 @@ sighup(int sig)
+ {
+ 	signal(sig, sighup);
+ 	DPRINTF(E_WARN, L_GENERAL, "received signal %d, reloading\n", sig);
+-
+-	reload_ifaces(1);
+ 	log_reopen();
+ }
+ 

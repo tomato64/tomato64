@@ -1,0 +1,21 @@
+From: Alexander Gerasiov <a@gerasiov.net>
+Date: Sat, 5 Dec 2020 14:24:52 +0300
+Subject: Fix testupnpdescgen build.
+
+Signed-off-by: Alexander Gerasiov <a@gerasiov.net>
+---
+ Makefile.am | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 1e33833..dcfc625 100644
+--- minidlna/Makefile.am
++++ minidlna/Makefile.am
+@@ -70,7 +70,6 @@ testupnpdescgen_LDADD = \
+ 	@LIBID3TAG_LIBS@ \
+ 	@LIBSQLITE3_LIBS@ \
+ 	@LIBAVFORMAT_LIBS@ \
+-	@LIBAVUTIL_LIBS@ \
+ 	@LIBEXIF_LIBS@ \
+ 	-lFLAC $(flacogglibs) $(vorbislibs) $(avahilibs)
+ 

@@ -1,0 +1,61 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Sun, 27 Nov 2022 18:29:22 +0000
+Subject: autoupdate
+
+---
+ configure.ac | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index b632bcb..11421a5 100644
+--- minidlna/configure.ac
++++ minidlna/configure.ac
+@@ -14,11 +14,11 @@
+ # License along with MiniDLNA; if not, write to the Free Software
+ # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+ # USA.
+-AC_INIT(MiniDLNA,1.1.3,,minidlna)
++AC_INIT([MiniDLNA],[1.3.3],[],[minidlna],[http://sourceforge.net/projects/minidlna/])
+ #LT_INIT
+ 
+ AC_CANONICAL_TARGET
+-AM_INIT_AUTOMAKE([subdir-objects])
++AM_INIT_AUTOMAKE([-Wall subdir-objects])
+ AC_CONFIG_HEADERS([config.h])
+ AM_SILENT_RULES([yes])
+ 
+@@ -28,7 +28,6 @@ m4_ifdef([AC_USE_SYSTEM_EXTENSIONS], [AC_USE_SYSTEM_EXTENSIONS])
+ 
+ AM_ICONV
+ AM_GNU_GETTEXT([external])
+-AM_GNU_GETTEXT_VERSION(0.18)
+ AM_GNU_GETTEXT_REQUIRE_VERSION(0.18)
+ 
+ # Checks for programs.
+@@ -76,21 +75,21 @@ AC_SEARCH_LIBS([clock_gettime], [rt], [AC_DEFINE([HAVE_CLOCK_GETTIME], [1], [use
+ # Check for struct ip_mreqn
+ #
+ AC_MSG_CHECKING(for struct ip_mreqn)
+-AC_TRY_COMPILE([#include <netinet/in.h>], [
++AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netinet/in.h>]], [[
+     struct ip_mreqn mreq;
+     mreq.imr_address.s_addr = 0;
+-], [
++]])],[
+     # Yes, we have it...
+     AC_MSG_RESULT(yes)
+     AC_DEFINE([HAVE_STRUCT_IP_MREQN],[],[Support for struct ip_mreqn])
+-], [
++],[
+     # We'll just have to try and use struct ip_mreq
+     AC_MSG_RESULT(no)
+     AC_MSG_CHECKING(for struct ip_mreq)
+-    AC_TRY_COMPILE([#include <netinet/in.h>], [
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netinet/in.h>]], [[
+         struct ip_mreq mreq;
+         mreq.imr_interface.s_addr = 0;
+-    ], [
++]])], [
+         # Yes, we have it...
+         AC_MSG_RESULT(yes)
+         AC_DEFINE([HAVE_STRUCT_IP_MREQ],[],[Support for struct ip_mreq])

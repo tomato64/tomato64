@@ -1,0 +1,28 @@
+From: =?utf-8?q?Beno=C3=AEt_Knecht?= <benoit.knecht@fsfe.org>
+Date: Sun, 1 Mar 2015 22:11:34 +0100
+Subject: Make sure the database is closed after scanning
+
+---
+ minidlna.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/minidlna.c b/minidlna.c
+index 999adee..4f972f0 100644
+--- minidlna/minidlna.c
++++ minidlna/minidlna.c
+@@ -417,6 +417,7 @@ rescan:
+ 		open_db(&db);
+ 		if (*scanner_pid == 0) /* child (scanner) process */
+ 		{
++			open_db(&db);
+ 			start_scanner();
+ 			sqlite3_close(db);
+ 			log_close();
+@@ -432,6 +433,7 @@ rescan:
+ 			SETFLAG(SCANNING_MASK);
+ #else
+ 		start_scanner();
++		sqlite3_close(db);
+ #endif
+ 	}
+ }
