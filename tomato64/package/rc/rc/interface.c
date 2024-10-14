@@ -250,7 +250,11 @@ void start_vlan(void)
 #endif /* TOMATO64 */
 
 	/* set vlan i/f name to style "vlan<ID>" */
+#ifndef TOMATO64
 	eval("vconfig", "set_name_type", "VLAN_PLUS_VID_NO_PAD");
+#else
+	eval("vconfig", "set_name_type", "VLAN_NAME_TYPE_RAW_PLUS_VID_NO_PAD");
+#endif /* TOMATO64 */
 
 	/* create vlan interfaces */
 	if ((s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
@@ -327,9 +331,10 @@ void start_vlan(void)
 #endif /* TOMATO64 */
 #ifdef TOMATO64
 		snprintf(iface_name, sizeof(iface_name), "%s.%s", ifr.ifr_name, vlan_id);
-		eval("ip", "link", "add", "link", ifr.ifr_name, "name", iface_name, "type", "vlan", "id", vlan_id);
+		eval("ip", "link", "add", "link", ifr.ifr_name, "name", iface_name, "type", "vlan", "id", vlan_id, "ingress-qos-map", "0:0", "1:1", "2:2", "3:3", "4:4", "5:5", "6:6", "7:7");
 #endif /* TOMATO64 */
 
+#ifndef TOMATO64
 		/* setup ingress map (vlan->priority => skb->priority) */
 		snprintf(vlan_id, sizeof(vlan_id), "vlan%d", vid_map);
 		for (j = 0; j < VLAN_NUMPRIS; j ++) {
@@ -337,6 +342,7 @@ void start_vlan(void)
 
 			eval("vconfig", "set_ingress_map", vlan_id, prio, prio);
 		}
+#endif /* TOMATO64 */
 #ifdef TOMATO64
 		}
 #endif /* TOMATO64 */
