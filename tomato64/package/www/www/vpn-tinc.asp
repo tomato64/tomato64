@@ -139,7 +139,7 @@ th.setup = function() {
 }
 
 th.dataToView = function(data) {
-	return [(data[0] != '0') ? 'On' : '', data[1], data[2], data[3], data[4] ,data[5]];
+	return [(data[0] != '0') ? '&#x2b50' : '', data[1], data[2], data[3], data[4] ,data[5]];
 }
 
 th.fieldValuesToData = function(row) {
