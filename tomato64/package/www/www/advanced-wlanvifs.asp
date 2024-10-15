@@ -176,7 +176,7 @@ wlg.dataToView = function(data) {
 	else
 		ifname = wl_display_ifname(uidx);
 
-	return ([ifname,(data[1] == 1) ? 'Yes' : 'No',
+	return ([ifname,(data[1] == 1) ? '&#x2b50' : '',
 	                 data[2] || '<small><i>(unset)<\/i><\/small>',
 	                 wmo[data[3]] || '<small><i>(unset)<\/i><\/small>',
 	                 ['LAN0 (br0)','LAN1 (br1)','LAN2 (br2)','LAN3 (br3)','none' ][data[4]],
