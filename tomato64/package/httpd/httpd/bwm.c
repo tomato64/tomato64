@@ -161,7 +161,7 @@ void asp_netdev(int argc, char **argv)
 		comma = ' ';
 
 		if ((sfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
-			logmsg(LOG_DEBUG, "*** %s: %d: error opening socket %m\n", __FUNCTION__, __LINE__);
+			logmsg(LOG_DEBUG, "*** %s: %d: error opening socket %m", __FUNCTION__, __LINE__);
 
 		while (fgets(buf, sizeof(buf), f)) {
 			if ((p = strchr(buf, ':')) == NULL)

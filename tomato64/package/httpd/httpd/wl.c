@@ -1462,7 +1462,7 @@ static int print_wif(int idx, int unit, int subunit, void *param)
 	}
 
 	if ((sfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
-		logmsg(LOG_ERR, "[%s %d]: error opening socket %m\n", __FUNCTION__, __LINE__);
+		logmsg(LOG_ERR, "[%s %d]: error opening socket %m", __FUNCTION__, __LINE__);
 
 	if (sfd >= 0) {
 		strlcpy(ifr.ifr_name, nvram_safe_get(wl_nvname("ifname", unit, subunit)), sizeof(ifr.ifr_name));
