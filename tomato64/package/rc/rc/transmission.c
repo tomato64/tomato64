@@ -249,6 +249,9 @@ void start_bittorrent(int force)
 	/* tune buffers */
 	f_write_procsysnet("core/rmem_max", "4194304");
 	f_write_procsysnet("core/wmem_max", "2080768");
+	memset(buf2, 0, sizeof(buf2));
+	if (f_read_string("/proc/sys/net/ipv4/tcp_adv_win_scale", buf2, sizeof(buf2)) > 0 && atoi(buf2) > 0);
+		f_write_procsysnet("ipv4/tcp_adv_win_scale", "4");
 
 	/* wait a given time for partition to be mounted, etc */
 	n = atoi(nvram_safe_get("bt_sleep"));
@@ -274,8 +277,8 @@ void start_bittorrent(int force)
 	system(buf);
 
 	memset(buf, 0, sizeof(buf));
-	snprintf(buf, sizeof(buf), "%s/.settings/blocklists/*", pk);
-	remove(buf);
+	snprintf(buf, sizeof(buf), "%s/.settings/blocklists", pk);
+	eval("rm", "-rf", buf);
 
 	memset(buf, 0, sizeof(buf));
 	if (nvram_get_int("bt_blocklist")) {
@@ -357,6 +360,10 @@ void stop_bittorrent(void)
 	memset(buf, 0, sizeof(buf));
 	if (f_read_string("/proc/sys/net/core/wmem_default", buf, sizeof(buf)) > 0 && atoi(buf) > 0);
 		f_write_procsysnet("core/wmem_max", buf);
+
+	memset(buf, 0, sizeof(buf));
+	if (f_read_string("/proc/sys/net/ipv4/tcp_adv_win_scale", buf, sizeof(buf)) > 0 && atoi(buf) > 0);
+		f_write_procsysnet("ipv4/tcp_adv_win_scale", "2");
 
 	/* clean-up */
 	system("/bin/rm -rf "tr_dir);
