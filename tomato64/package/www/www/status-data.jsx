@@ -20,9 +20,9 @@
 //	<% wlstats(1); %>
 
 function setColor(n) {
-	if (n >= 80)
+	if (n >= 95)
 		return '#ff6f59';
-	else if (n >= 60)
+	else if (n >= 75)
 		return '#f9c05c';
 	else
 		return '#6fbf3d';
