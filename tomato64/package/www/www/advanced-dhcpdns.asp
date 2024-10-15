@@ -818,7 +818,7 @@ function init() {
 	<br>
 	<i>Other relevant notes/hints:</i><br>
 	<ul>
-		<li>The contents of file /etc/dnsmasq.custom are also added to the end of Dnsmasq's configuration file (if it exists).</li>
+		<li>The contents of file /etc/dnsmasq.custom are also added to the end of Dnsmasq's configuration file (if it exists). Parameters names need to be defined without leading dashes e.g. cache-size=4096</li>
 	</ul>
 </div>
 
