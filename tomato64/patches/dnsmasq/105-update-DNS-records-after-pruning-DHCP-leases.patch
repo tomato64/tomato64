@@ -1,0 +1,10 @@
+--- dnsmasq/src/dnsmasq.c
++++ dnsmasq/src/dnsmasq.c
+@@ -1556,6 +1556,7 @@
+ 	  {
+ 	    lease_prune(NULL, now);
+ 	    lease_update_file(now);
++	    lease_update_dns(0);
+ 	  }
+ #ifdef HAVE_DHCP6
+ 	else if (daemon->doing_ra)
