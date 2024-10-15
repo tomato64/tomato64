@@ -97,6 +97,12 @@ void wo_ttcprun(char *url)
 	int udpMode = 0;
 	int byteLimitMode = 0;		/* Time limit by default */
 	unsigned long long limit = 10;	/* 10 Seconds, by default */
+#if defined(TCONFIG_BCMARM) && defined(TCONFIG_BCMSMP)
+	char cpulist[2];
+	int cpu_num = sysconf(_SC_NPROCESSORS_CONF);
+	if (cpu_num < 1)
+		cpu_num = 1;
+#endif
 
 	unlink(iperf_interval);
 	unlink(iperf_log);
@@ -118,8 +124,13 @@ void wo_ttcprun(char *url)
 				if ((strstr(host, "/") > 0) || (strstr(host, ";") > 0) || (strstr(host, "`") > 0))
 					return;
 
-				logmsg(LOG_INFO, "iperf started in client mode, address %s", host);
+#if defined(TCONFIG_BCMARM) && defined(TCONFIG_BCMSMP)
+				logmsg(LOG_INFO, "iperf started in client mode, address: %s, number of parallel streams: %d", host, cpu_num);
+				snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile "iperf_log" --intervalfile "iperf_interval" -p %d %s %s %llu -c %s -P %d &", port, udpMode == 1 ? "-u" : "", byteLimitMode == 1 ? "-n" : "-t", limit, host, cpu_num);
+#else
+				logmsg(LOG_INFO, "iperf started in client mode, address: %s", host);
 				snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile "iperf_log" --intervalfile "iperf_interval" -p %d %s %s %llu -c %s &", port, udpMode == 1 ? "-u" : "", byteLimitMode == 1 ? "-n" : "-t", limit, host);
+#endif
 			}
 		}
 		logmsg(LOG_DEBUG, "*** %s: %d: Running command: %s", __FUNCTION__, __LINE__, cmdBuffer);
