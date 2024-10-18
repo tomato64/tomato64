@@ -1,0 +1,9 @@
+config BR2_PACKAGE_OPENWRT_WIFI
+	bool "openwrt-wifi"
+	depends on BR2_aarch64
+	select BR2_PACKAGE_HOSTAPD_OPENWRT
+	select BR2_PACKAGE_IW_OPENWRT
+	select BR2_PACKAGE_IWINFO
+	select BR2_PACKAGE_NETIFD
+	help
+	  wireless-scripts taken from OpenWrt
