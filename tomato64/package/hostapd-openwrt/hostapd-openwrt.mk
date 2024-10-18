@@ -207,13 +207,13 @@ endef
 
 define HOSTAPD_OPENWRT_INSTALL_TARGET_CMDS
 
-	install -m0755 $(@D)/wpad $(TARGET_DIR)/usr/sbin/
+	$(INSTALL) -m 0755 $(@D)/wpad $(TARGET_DIR)/usr/sbin/
 	ln -sf wpad $(TARGET_DIR)/usr/sbin/hostapd
 	ln -sf wpad $(TARGET_DIR)/usr/sbin/wpa_supplicant
 
-	install -d $(TARGET_DIR)/usr/share/hostap/
-	install -m0644 $(BR2_EXTERNAL_TOMATO64_PATH)/package/hostapd-openwrt/files/hostapd.uc $(TARGET_DIR)/usr/share/hostap/
-	install -m0644 $(BR2_EXTERNAL_TOMATO64_PATH)/package/hostapd-openwrt/files/wpa_supplicant.uc $(TARGET_DIR)/usr/share/hostap/
+	$(INSTALL) -d $(TARGET_DIR)/usr/share/hostap/
+	$(INSTALL) -m 0644 $(BR2_EXTERNAL_TOMATO64_PATH)/package/hostapd-openwrt/files/hostapd.uc $(TARGET_DIR)/usr/share/hostap/
+	$(INSTALL) -m 0644 $(BR2_EXTERNAL_TOMATO64_PATH)/package/hostapd-openwrt/files/wpa_supplicant.uc $(TARGET_DIR)/usr/share/hostap/
 
 endef
 
