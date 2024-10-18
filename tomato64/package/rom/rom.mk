@@ -17,8 +17,8 @@ endif
 
 define ROM_BUILD_CMDS
 	patch -d $(@D) -p1 < $(BR2_EXTERNAL_TOMATO64_PATH)/package/rom/001-remove-ldd-env.patch 
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) all
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) install
+	$(MAKE) $(TARGET_CONFIGURE_OPTS) BUILD_DIR=$(BUILD_DIR) -C $(@D) all
+	$(MAKE) $(TARGET_CONFIGURE_OPTS) BUILD_DIR=$(BUILD_DIR) -C $(@D) install
 endef
 
 $(eval $(generic-package))

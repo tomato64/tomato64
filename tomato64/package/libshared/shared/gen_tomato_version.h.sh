@@ -13,13 +13,13 @@ echo "#define TOMATO_BUILDTIME	\"`date`\"" >>					tomato_version.h
 
 if [ "$PLATFORM_X86_64" == y ]; then
 	echo "#define TOMATO_VERSION		\"$VERSION x86_64 AIO\"" >>		tomato_version.h
+	echo "$VERSION x86_64 AIO" >>							tomato_version
 fi
 
 if [ "$PLATFORM_MT6000" == y ]; then
 	echo "#define TOMATO_VERSION		\"$VERSION GL-MT6000 AIO\"" >>		tomato_version.h
+	echo "$VERSION GL-MT6000 AIO" >>						tomato_version
 fi
 
 echo "#define TOMATO_SHORTVER		\"$VERSION\"" >>			tomato_version.h
 echo "#endif" >>								tomato_version.h
-
-echo "$VERSION" > tomato_version

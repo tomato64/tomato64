@@ -1,0 +1,75 @@
+{
+	"model": {
+		"id": "glinet,gl-mt6000",
+		"name": "GL.iNet GL-MT6000"
+	},
+	"network": {
+		"lan": {
+			"ports": [
+				"lan1",
+				"lan2",
+				"lan3",
+				"lan4",
+				"lan5"
+			],
+			"protocol": "static"
+		},
+		"wan": {
+			"device": "eth1",
+			"protocol": "dhcp"
+		}
+	},
+	"wlan": {
+		"phy0": {
+			"path": "platform/soc/18000000.wifi",
+			"info": {
+				"antenna_rx": 15,
+				"antenna_tx": 15,
+				"bands": {
+					"2G": {
+						"ht": true,
+						"he": true,
+						"max_width": 40,
+						"modes": [
+							"NOHT",
+							"HT20",
+							"HE20",
+							"HT40",
+							"HE40"
+						],
+						"default_channel": 1
+					}
+				}
+			}
+		},
+		"phy1": {
+			"path": "platform/soc/18000000.wifi+1",
+			"info": {
+				"antenna_rx": 15,
+				"antenna_tx": 15,
+				"bands": {
+					"5G": {
+						"ht": true,
+						"vht": true,
+						"he": true,
+						"max_width": 160,
+						"modes": [
+							"NOHT",
+							"HT20",
+							"VHT20",
+							"HE20",
+							"HT40",
+							"VHT40",
+							"HE40",
+							"VHT80",
+							"HE80",
+							"VHT160",
+							"HE160"
+						],
+						"default_channel": 36
+					}
+				}
+			}
+		}
+	}
+}

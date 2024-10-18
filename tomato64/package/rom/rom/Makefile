@@ -7,7 +7,7 @@ all:
 
 	@echo "" >rom/etc/motd
 	@echo "" >>rom/etc/motd
-	@echo "Tomato64 x86_64 `cat $(BR2_EXTERNAL_TOMATO64_PATH)/version` " >>rom/etc/motd
+	@echo "Tomato64 `cat $(BUILD_DIR)/libshared-1.0/tomato_version` " >>rom/etc/motd
 
 clean:
 	rm -f rom/etc/motd
@@ -131,6 +131,10 @@ else
 		count=6; \
 	    fi; \
 	done
+endif
+
+ifneq ($(PLATFORM_MT6000),y)
+	rm -f $(INSTALLDIR)/rom/etc/board.json
 endif
 
 .PHONY: dummy
