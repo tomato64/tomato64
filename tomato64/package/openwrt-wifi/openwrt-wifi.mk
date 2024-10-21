@@ -26,6 +26,22 @@ define OPENWRT_WIFI_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 0644 $(@D)/package/network/config/wifi-scripts/files/lib/netifd/hostapd.sh $(TARGET_DIR)/lib/netifd/
 	$(INSTALL) -m 0644 $(@D)/package/network/config/wifi-scripts/files/lib/netifd/netifd-wireless.sh $(TARGET_DIR)/lib/netifd/
 	$(INSTALL) -m 0755 $(@D)/package/network/config/wifi-scripts/files/lib/netifd/wireless/mac80211.sh $(TARGET_DIR)/lib/netifd/wireless/
+
+	$(INSTALL) -d $(TARGET_DIR)/lib/functions
+	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions.sh $(TARGET_DIR)/lib/
+	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions/caldata.sh $(TARGET_DIR)/lib/functions/
+	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions/ipv4.sh $(TARGET_DIR)/lib/functions/
+	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions/leds.sh $(TARGET_DIR)/lib/functions/
+	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions/migrations.sh $(TARGET_DIR)/lib/functions/
+	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions/network.sh $(TARGET_DIR)/lib/functions/
+	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions/preinit.sh $(TARGET_DIR)/lib/functions/
+	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions/service.sh $(TARGET_DIR)/lib/functions/
+	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions/system.sh $(TARGET_DIR)/lib/functions/
+	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions/uci-defaults.sh $(TARGET_DIR)/lib/functions/
+
+	$(INSTALL) -d $(TARGET_DIR)/lib/config
+	$(INSTALL) -m 0644 $(@D)/package/system/uci/files/lib/config/uci.sh $(TARGET_DIR)/lib/config/
+
 endef
 
 $(eval $(generic-package))
