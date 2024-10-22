@@ -5,5 +5,6 @@ config BR2_PACKAGE_OPENWRT_WIFI
 	select BR2_PACKAGE_IW_OPENWRT
 	select BR2_PACKAGE_IWINFO
 	select BR2_PACKAGE_NETIFD
+	select BR2_PACKAGE_JSONPATH
 	help
 	  wireless-scripts taken from OpenWrt
