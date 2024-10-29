@@ -199,6 +199,10 @@ extern void start_lan(void);
 extern void stop_lan(void);
 extern void hotplug_net(void);
 extern void do_static_routes(int add);
+#ifdef TOMATO64
+extern void start_wifi(void);
+extern void stop_wifi(void);
+#endif /* TOMATO64 */
 #ifndef TOMATO64
 extern int radio_main(int argc, char *argv[]);
 extern int wldist_main(int argc, char *argv[]);

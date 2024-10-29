@@ -31,6 +31,8 @@ OBJS := rc.o init.o interface.o network.o wan.o services.o dhcp.o \
 	led.o qos.o forward.o misc.o restrict.o \
 	gpio.o sched.o bwlimit.o arpbind.o tomatoanon.o mwan.o pbr.o
 
+OBJS += wifi.o
+
 # mtd.o buttons.o wnas.o
 
 ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_BLINK)),y)

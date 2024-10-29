@@ -2964,6 +2964,9 @@ void start_services(void)
 {
 	static int once = 1;
 
+#ifdef TOMATO64_MT6000
+	start_wifi();
+#endif /* TOMATO64_MT6000 */
 #ifdef TCONFIG_HAVEGED
 	start_haveged();
 #endif
@@ -3112,6 +3115,9 @@ void stop_services(void)
 #ifdef TCONFIG_HAVEGED
 	stop_haveged();
 #endif
+#ifdef TOMATO64_MT6000
+	stop_wifi();
+#endif /* TOMATO64_MT6000 */
 }
 
 /* nvram "action_service" is: "service-action[-modifier]"
@@ -3674,6 +3680,9 @@ TOP:
 			stop_pppoerelay();
 #endif
 			stop_httpd();
+#ifdef TOMATO64_MT6000
+			stop_wifi();
+#endif /* TOMATO64_MT6000 */
 #ifdef TCONFIG_MDNS
 			stop_mdns();
 #endif
@@ -3698,6 +3707,9 @@ TOP:
 			start_mdns();
 #endif
 			start_httpd();
+#ifdef TOMATO64_MT6000
+			start_wifi();
+#endif /* TOMATO64_MT6000 */
 #ifndef TOMATO64
 			start_wl();
 #endif /* TOMATO64 */
@@ -3709,6 +3721,14 @@ TOP:
 		}
 		goto CLEAR;
 	}
+
+#ifdef TOMATO64
+	if (strcmp(service, "wifi") == 0) {
+		if (act_stop) stop_wifi();
+		if (act_start) start_wifi();
+		goto CLEAR;
+	}
+#endif /* TOMATO64 */
 
 #ifndef TOMATO64
 	if ((strcmp(service, "wireless") == 0) || (strcmp(service, "wl") == 0)) { /* for tomato user --> 'service wl start' will restart wl allways (failsafe, even if wl was not stopped!) */

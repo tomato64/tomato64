@@ -143,6 +143,7 @@ extern void asp_layer7(int argc, char **argv);
 #endif /* TOMATO64 */
 #ifdef TOMATO64
 extern void asp_ndpi(int argc, char **argv);
+extern void asp_wireless(int argc, char **argv);
 #endif /* TOMATO64 */
 extern void wo_expct(char *url);
 

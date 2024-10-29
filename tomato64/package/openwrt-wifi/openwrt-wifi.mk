@@ -42,6 +42,9 @@ define OPENWRT_WIFI_INSTALL_TARGET_CMDS
 	$(INSTALL) -d $(TARGET_DIR)/lib/config
 	$(INSTALL) -m 0644 $(@D)/package/system/uci/files/lib/config/uci.sh $(TARGET_DIR)/lib/config/
 
+	$(INSTALL) -d $(TARGET_DIR)/usr/bin/
+	$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/start_wifi.sh $(TARGET_DIR)/usr/bin/
+	$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/enumerate-phy.sh $(TARGET_DIR)/usr/bin/
 endef
 
 $(eval $(generic-package))

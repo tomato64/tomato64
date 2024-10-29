@@ -2592,6 +2592,9 @@ function navi() {
 		null,
 		['Basic', 			'basic', 0, [
 			['Network',			'network.asp'],
+/* TOMATO64-MT6000-BEGIN */
+			['Wireless',			'wireless.asp'],
+/* TOMATO64-MT6000-END */
 /* IPV6-BEGIN */
 			['IPv6',			'ipv6.asp'],
 /* IPV6-END */

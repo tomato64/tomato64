@@ -805,6 +805,23 @@ void asp_ndpi(int argc, char **argv)
 	}
 	web_puts("];\n");
 }
+
+void asp_wireless(int argc, char **argv)
+{
+	FILE *f;
+	char row[50];
+
+	const char cmd[] = "/usr/bin/enumerate-phy.sh";
+
+	web_puts("\nwireless = {\n");
+	if ((f = popen(cmd, "r")) != NULL) {
+		while (fgets(row, sizeof(row), f)) {
+			web_printf("%s", row);
+		}
+		pclose(f);
+	}
+	web_puts("};\n");
+}
 #endif /* TOMATO64 */
 
 void wo_expct(char *url)
