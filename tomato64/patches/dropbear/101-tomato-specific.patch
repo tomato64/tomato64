@@ -1,6 +1,17 @@
-diff -Naur dropbear-2024.85.orig/localoptions.h dropbear-2024.85/localoptions.h
---- dropbear-2024.85.orig/localoptions.h	2024-08-09 13:28:53.373898542 -0600
-+++ dropbear-2024.85/localoptions.h	2024-08-09 13:29:09.589909643 -0600
+From 433ae56315c18d418c493ce88c39465979bb5222 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Wed, 13 Nov 2024 14:07:30 -0700
+Subject: [PATCH] Dropbear 2024.86
+
+---
+ localoptions.h   | 24 +++++++++++++++++++++++-
+ src/sysoptions.h |  2 ++
+ 2 files changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/localoptions.h b/localoptions.h
+index 890ab7e..94c6e1b 100644
+--- a/localoptions.h
++++ b/localoptions.h
 @@ -3,4 +3,26 @@
  #endif
  #define DO_HOST_LOOKUP 1
@@ -29,16 +40,20 @@ diff -Naur dropbear-2024.85.orig/localoptions.h dropbear-2024.85/localoptions.h
 +#define MAX_UNAUTH_CLIENTS 5 /* default 30 */
 +#define MAX_AUTH_TRIES 2     /* default 10 */
 +#define AUTH_TIMEOUT 60      /* default 300 */
-diff -Naur dropbear-2024.85.orig/src/sysoptions.h dropbear-2024.85/src/sysoptions.h
---- dropbear-2024.85.orig/src/sysoptions.h	2024-08-09 13:28:53.373898542 -0600
-+++ dropbear-2024.85/src/sysoptions.h	2024-08-09 13:29:09.589909643 -0600
-@@ -7,7 +7,9 @@
- #define DROPBEAR_VERSION "2024.85"
+diff --git a/src/sysoptions.h b/src/sysoptions.h
+index 9b325d5..5822ec0 100644
+--- a/src/sysoptions.h
++++ b/src/sysoptions.h
+@@ -11,7 +11,9 @@
+ #ifndef IDENT_VERSION_PART
+ #define IDENT_VERSION_PART "_" DROPBEAR_VERSION
  #endif
- 
 +#ifndef LOCAL_IDENT
- #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
+ #define LOCAL_IDENT "SSH-2.0-dropbear" IDENT_VERSION_PART
 +#endif
  #define PROGNAME "dropbear"
  
  #ifndef DROPBEAR_CLIENT
+-- 
+2.39.5
+
