@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-OPENWRT_WIFI_VERSION = dbc2923cbe21ad9ea3fbdddc4b880a6e81678e11
+OPENWRT_WIFI_VERSION = 1fdc4b144b095fa881746a74d4a8488b317f199b
 OPENWRT_WIFI_SITE = https://git.openwrt.org/openwrt/openwrt.git
 OPENWRT_WIFI_SITE_METHOD = git
 OPENWRT_WIFI_LICENSE = GPL-2.0
