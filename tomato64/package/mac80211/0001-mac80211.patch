@@ -1,6 +1,6 @@
-From d0bb4f640ffcbb9600671cf4bdf87fd4c6872cb4 Mon Sep 17 00:00:00 2001
+From a135f16561bf6f686f8be98c1af151d4a64e47f3 Mon Sep 17 00:00:00 2001
 From: lancethepants <lancethepants@gmail.com>
-Date: Tue, 1 Oct 2024 13:41:57 -0600
+Date: Thu, 14 Nov 2024 11:13:45 -0700
 Subject: [PATCH] mac80211
 
 ---
@@ -9,6 +9,8 @@ Subject: [PATCH] mac80211
  Makefile.kernel                               |   2 -
  Makefile.real                                 |  29 +-
  backport-include/net/dropreason.h             |   3 +-
+ backport-include/net/genetlink.h              |   2 +-
+ compat/backport-genetlink.c                   |  18 +-
  compat/main.c                                 |  25 -
  compat_version                                |   1 +
  drivers/bus/mhi/host/trace.h                  |  12 +-
@@ -19,13 +21,15 @@ Subject: [PATCH] mac80211
  drivers/net/wireless/ath/ath10k/Makefile      |   2 +-
  drivers/net/wireless/ath/ath10k/core.c        |  13 +
  drivers/net/wireless/ath/ath10k/core.h        |   4 +
+ drivers/net/wireless/ath/ath10k/debug.c       |   4 +-
  drivers/net/wireless/ath/ath10k/htt.h         |   4 +
  drivers/net/wireless/ath/ath10k/leds.c        |   2 +-
- drivers/net/wireless/ath/ath10k/mac.c         |  65 +-
+ drivers/net/wireless/ath/ath10k/mac.c         |  67 +-
  drivers/net/wireless/ath/ath10k/pci.c         |  16 +
  drivers/net/wireless/ath/ath10k/snoc.c        |   6 +-
  drivers/net/wireless/ath/ath10k/thermal.h     |   2 +-
  drivers/net/wireless/ath/ath10k/trace.h       |  64 +-
+ drivers/net/wireless/ath/ath10k/wmi.c         |   2 +-
  drivers/net/wireless/ath/ath11k/Kconfig       |  13 +-
  drivers/net/wireless/ath/ath11k/Makefile      |   2 +-
  drivers/net/wireless/ath/ath11k/ahb.c         |   6 +-
@@ -37,7 +41,9 @@ Subject: [PATCH] mac80211
  drivers/net/wireless/ath/ath11k/reg.h         |   2 +-
  drivers/net/wireless/ath/ath11k/thermal.h     |   2 +-
  drivers/net/wireless/ath/ath11k/trace.h       |  44 +-
+ drivers/net/wireless/ath/ath11k/wmi.c         |   2 +-
  drivers/net/wireless/ath/ath12k/trace.h       |  16 +-
+ drivers/net/wireless/ath/ath12k/wmi.c         |   2 +-
  drivers/net/wireless/ath/ath5k/ath5k.h        |   1 +
  drivers/net/wireless/ath/ath5k/base.c         |   8 +-
  drivers/net/wireless/ath/ath5k/debug.c        |  93 ++
@@ -47,9 +53,12 @@ Subject: [PATCH] mac80211
  drivers/net/wireless/ath/ath5k/pci.c          |  28 +-
  drivers/net/wireless/ath/ath5k/reset.c        |   2 +
  drivers/net/wireless/ath/ath6kl/trace.h       |   4 +-
+ drivers/net/wireless/ath/ath9k/dfs.c          |   2 +-
+ drivers/net/wireless/ath/ath9k/dfs_debug.c    |   2 +-
  drivers/net/wireless/ath/regd.c               |  72 +-
  drivers/net/wireless/ath/regd_common.h        |   3 +
  drivers/net/wireless/ath/trace.h              |   4 +-
+ drivers/net/wireless/ath/wil6210/cfg80211.c   |   1 +
  drivers/net/wireless/broadcom/b43/Kconfig     |   2 +-
  drivers/net/wireless/broadcom/b43/Makefile    |   2 +-
  drivers/net/wireless/broadcom/b43/b43.h       |   3 +
@@ -69,15 +78,24 @@ Subject: [PATCH] mac80211
  .../wireless/intel/iwlwifi/iwl-devtrace-msg.h |   2 +-
  .../net/wireless/intel/iwlwifi/iwl-devtrace.h |   2 +-
  drivers/net/wireless/intel/iwlwifi/mvm/tt.c   |  15 +
- drivers/net/wireless/marvell/libertas/cfg.c   |   4 +
+ drivers/net/wireless/marvell/libertas/cfg.c   |   5 +
  drivers/net/wireless/marvell/libertas/main.c  |   1 +
+ drivers/net/wireless/marvell/mwifiex/11h.c    |  11 +-
+ .../net/wireless/marvell/mwifiex/cfg80211.c   |   6 +-
  drivers/net/wireless/marvell/mwifiex/cmdevt.c |  96 +-
  drivers/net/wireless/marvell/mwifiex/decl.h   |   4 +-
  drivers/net/wireless/marvell/mwifiex/main.h   |   2 +
  .../wireless/marvell/mwifiex/sta_cmdresp.c    |   5 +-
  .../net/wireless/marvell/mwifiex/uap_cmd.c    |   3 +-
  drivers/net/wireless/marvell/mwl8k.c          |   5 +-
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   |   2 +-
+ .../net/wireless/mediatek/mt76/mt76x02_dfs.c  |   4 +-
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   |   2 +-
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   |   2 +-
  drivers/net/wireless/mediatek/mt7601u/usb.h   |   2 +-
+ .../wireless/microchip/wilc1000/cfg80211.c    |   3 +-
+ .../net/wireless/quantenna/qtnfmac/cfg80211.c |   2 +-
+ .../net/wireless/quantenna/qtnfmac/event.c    |  12 +-
  drivers/net/wireless/ralink/rt2x00/Kconfig    |  23 +-
  drivers/net/wireless/ralink/rt2x00/Makefile   |   1 +
  drivers/net/wireless/ralink/rt2x00/rt2800.h   |   5 +
@@ -91,40 +109,59 @@ Subject: [PATCH] mac80211
  .../net/wireless/ralink/rt2x00/rt2x00eeprom.c | 208 +++++
  .../net/wireless/ralink/rt2x00/rt2x00leds.c   |   3 +
  .../net/wireless/ralink/rt2x00/rt2x00soc.c    |  16 +
- drivers/net/wireless/virtual/mac80211_hwsim.c |  14 +
+ drivers/net/wireless/ti/wl18xx/event.c        |   2 +-
+ drivers/net/wireless/virtual/mac80211_hwsim.c |  16 +-
  drivers/staging/rtl8723bs/Kconfig             |   1 -
  include/linux/ath5k_platform.h                |  30 +
  include/linux/mhi.h                           | 830 ------------------
  include/linux/rt2x00_platform.h               |  23 +
- include/net/cfg80211.h                        |   4 +
- include/net/mac80211.h                        |   2 +-
+ include/net/cfg80211.h                        |  50 +-
+ include/net/mac80211.h                        |  19 +-
  include/trace/events/qrtr.h                   |   2 +-
+ include/uapi/linux/nl80211.h                  |  10 +
  kconf/Makefile                                |   6 +-
  kconf/conf.c                                  |  46 +-
  kconf/confdata.c                              |   4 +-
  local-symbols                                 |  12 +-
  local-symbols.orig                            | 490 +++++++++++
  net/mac80211/airtime.c                        | 140 ++-
- net/mac80211/cfg.c                            |   8 +-
- net/mac80211/debugfs.c                        |  13 +-
- net/mac80211/ieee80211_i.h                    |   4 +
+ net/mac80211/cfg.c                            | 105 ++-
+ net/mac80211/chan.c                           |  28 +-
+ net/mac80211/debugfs.c                        |  14 +-
+ net/mac80211/driver-ops.c                     |   1 +
+ net/mac80211/ieee80211_i.h                    |  14 +-
+ net/mac80211/iface.c                          |  32 +-
+ net/mac80211/key.c                            |  42 +-
+ net/mac80211/link.c                           |  12 +
  net/mac80211/main.c                           |  19 +-
+ net/mac80211/mlme.c                           |  13 +-
+ net/mac80211/pm.c                             |   2 +-
  net/mac80211/rc80211_minstrel_ht.c            |  75 +-
  net/mac80211/rc80211_minstrel_ht.h            |   2 +-
+ net/mac80211/rx.c                             |  71 +-
+ net/mac80211/scan.c                           |  28 +-
  net/mac80211/sta_info.c                       |  25 +-
  net/mac80211/sta_info.h                       |   3 +-
- net/mac80211/status.c                         |   5 +-
+ net/mac80211/status.c                         |  10 +-
  net/mac80211/trace.h                          |   2 +-
- net/mac80211/tx.c                             |  63 +-
+ net/mac80211/tx.c                             |  69 +-
+ net/mac80211/util.c                           |  94 +-
  net/wireless/ap.c                             |   6 +-
- net/wireless/chan.c                           |  45 +
- net/wireless/core.c                           |  15 -
- net/wireless/core.h                           |   2 +
- net/wireless/mlme.c                           |   7 +-
- net/wireless/reg.c                            |   3 +
+ net/wireless/chan.c                           |  48 +-
+ net/wireless/core.c                           |  81 +-
+ net/wireless/core.h                           |   3 +
+ net/wireless/ibss.c                           |   2 +-
+ net/wireless/mesh.c                           |   2 +-
+ net/wireless/mlme.c                           |  27 +-
+ net/wireless/nl80211.c                        | 124 ++-
+ net/wireless/rdev-ops.h                       |  18 +-
+ net/wireless/reg.c                            |  22 +-
+ net/wireless/scan.c                           |  10 +-
  net/wireless/sysfs.c                          |  27 +-
- net/wireless/trace.h                          |   2 +-
- 120 files changed, 2403 insertions(+), 1683 deletions(-)
+ net/wireless/trace.h                          |  52 +-
+ net/wireless/util.c                           |  29 +
+ net/wireless/wext-compat.c                    |   2 +-
+ 157 files changed, 3061 insertions(+), 1972 deletions(-)
  create mode 100644 compat_version
  create mode 100644 drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
  create mode 100644 include/linux/ath5k_platform.h
@@ -396,6 +433,84 @@ index ec74e71..ab6a632 100644
  #endif
  
  #if LINUX_VERSION_IS_LESS(6,4,0)
+diff --git a/backport-include/net/genetlink.h b/backport-include/net/genetlink.h
+index 016e96c..e8157e9 100644
+--- a/backport-include/net/genetlink.h
++++ b/backport-include/net/genetlink.h
+@@ -150,7 +150,7 @@ int genlmsg_multicast(const struct genl_family *family,
+ #define genlmsg_multicast_allns LINUX_BACKPORT(genlmsg_multicast_allns)
+ int backport_genlmsg_multicast_allns(const struct genl_family *family,
+ 				     struct sk_buff *skb, u32 portid,
+-				     unsigned int group, gfp_t flags);
++				     unsigned int group);
+ 
+ #define genl_family_attrbuf LINUX_BACKPORT(genl_family_attrbuf)
+ static inline struct nlattr **genl_family_attrbuf(struct genl_family *family)
+diff --git a/compat/backport-genetlink.c b/compat/backport-genetlink.c
+index b4465da..a630e2a 100644
+--- a/compat/backport-genetlink.c
++++ b/compat/backport-genetlink.c
+@@ -198,23 +198,23 @@ int genlmsg_multicast(const struct genl_family *family,
+ }
+ EXPORT_SYMBOL_GPL(genlmsg_multicast);
+ 
+-static int genlmsg_mcast(struct sk_buff *skb, u32 portid, unsigned long group,
+-			 gfp_t flags)
++static int genlmsg_mcast(struct sk_buff *skb, u32 portid, unsigned long group)
+ {
+ 	struct sk_buff *tmp;
+ 	struct net *net, *prev = NULL;
+ 	bool delivered = false;
+ 	int err;
+ 
++	rcu_read_lock();
+ 	for_each_net_rcu(net) {
+ 		if (prev) {
+-			tmp = skb_clone(skb, flags);
++			tmp = skb_clone(skb, GFP_ATOMIC);
+ 			if (!tmp) {
+ 				err = -ENOMEM;
+ 				goto error;
+ 			}
+ 			err = nlmsg_multicast(prev->genl_sock, tmp,
+-					      portid, group, flags);
++					      portid, group, GFP_ATOMIC);
+ 			if (!err)
+ 				delivered = true;
+ 			else if (err != -ESRCH)
+@@ -223,25 +223,29 @@ static int genlmsg_mcast(struct sk_buff *skb, u32 portid, unsigned long group,
+ 
+ 		prev = net;
+ 	}
++	err = nlmsg_multicast(prev->genl_sock, skb, portid, group, GFP_ATOMIC);
++
++	rcu_read_unlock();
+ 
+-	err = nlmsg_multicast(prev->genl_sock, skb, portid, group, flags);
+ 	if (!err)
+ 		delivered = true;
+ 	else if (err != -ESRCH)
+ 		return err;
+ 	return delivered ? 0 : -ESRCH;
+  error:
++	rcu_read_unlock();
++
+ 	kfree_skb(skb);
+ 	return err;
+ }
+ 
+ int backport_genlmsg_multicast_allns(const struct genl_family *family,
+ 				     struct sk_buff *skb, u32 portid,
+-				     unsigned int group, gfp_t flags)
++				     unsigned int group)
+ {
+ 	group = __backport_genl_group(family, group);
+ 	if (group == INVALID_GROUP)
+ 		return -EINVAL;
+-	return genlmsg_mcast(skb, portid, group, flags);
++	return genlmsg_mcast(skb, portid, group);
+ }
+ EXPORT_SYMBOL_GPL(backport_genlmsg_multicast_allns);
 diff --git a/compat/main.c b/compat/main.c
 index d4f3340..651ab63 100644
 --- a/compat/main.c
@@ -637,6 +752,28 @@ index b893c43..394c978 100644
  	/* must be last */
  	u8 drv_priv[] __aligned(sizeof(void *));
  };
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index e577eed..8337ffb 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -3,7 +3,7 @@
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
+  * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2022, 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #include <linux/module.h>
+@@ -1774,7 +1774,7 @@ static ssize_t ath10k_write_simulate_radar(struct file *file,
+ 	if (!arvif->is_started)
+ 		return -EINVAL;
+ 
+-	ieee80211_radar_detected(ar->hw);
++	ieee80211_radar_detected(ar->hw, NULL);
+ 
+ 	return count;
+ }
 diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
 index 603f6de..bea1d16 100644
 --- a/drivers/net/wireless/ath/ath10k/htt.h
@@ -667,7 +804,7 @@ index 9b1d04e..b82033b 100644
  	ret = led_classdev_register(wiphy_dev(ar->hw->wiphy), &ar->leds.cdev);
  	if (ret)
 diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 35cb06d..9f96315 100644
+index 35cb06d..97bdd1d 100644
 --- a/drivers/net/wireless/ath/ath10k/mac.c
 +++ b/drivers/net/wireless/ath/ath10k/mac.c
 @@ -1022,6 +1022,40 @@ static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
@@ -721,6 +858,15 @@ index 35cb06d..9f96315 100644
  
  	reinit_completion(&ar->vdev_setup_done);
  	reinit_completion(&ar->vdev_delete_done);
+@@ -1437,7 +1472,7 @@ static void ath10k_recalc_radar_detection(struct ath10k *ar)
+ 		 * by indicating that radar was detected.
+ 		 */
+ 		ath10k_warn(ar, "failed to start CAC: %d\n", ret);
+-		ieee80211_radar_detected(ar->hw);
++		ieee80211_radar_detected(ar->hw, NULL);
+ 	}
+ }
+ 
 @@ -1500,7 +1535,8 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
  	arg.channel.min_power = 0;
  	arg.channel.max_power = chandef->chan->max_power * 2;
@@ -1040,6 +1186,19 @@ index db8fcbe..52e502c 100644
  		__entry->len = len;
  		memcpy(__get_dynamic_array(data), data, len);
  	),
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 6b428b4..341fba7 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3990,7 +3990,7 @@ static void ath10k_radar_detected(struct ath10k *ar)
+ 	if (ar->dfs_block_radar_events)
+ 		ath10k_info(ar, "DFS Radar detected, but ignored as requested\n");
+ 	else
+-		ieee80211_radar_detected(ar->hw);
++		ieee80211_radar_detected(ar->hw, NULL);
+ }
+ 
+ static void ath10k_radar_confirmation_work(struct work_struct *work)
 diff --git a/drivers/net/wireless/ath/ath11k/Kconfig b/drivers/net/wireless/ath/ath11k/Kconfig
 index da6352f..b420e46 100644
 --- a/drivers/net/wireless/ath/ath11k/Kconfig
@@ -1726,6 +1885,19 @@ index 7e7b25d..46ac67b 100644
  		       memcpy(__get_dynamic_array(peer_addr), peer_addr,
  			      ETH_ALEN);
  		       __entry->peer_ps_state = peer_ps_state;
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 2662092..87abfa5 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -8358,7 +8358,7 @@ ath11k_wmi_pdev_dfs_radar_detected_event(struct ath11k_base *ab, struct sk_buff
+ 	if (ar->dfs_block_radar_events)
+ 		ath11k_info(ab, "DFS Radar detected, but ignored as requested\n");
+ 	else
+-		ieee80211_radar_detected(ar->hw);
++		ieee80211_radar_detected(ar->hw, NULL);
+ 
+ exit:
+ 	rcu_read_unlock();
 diff --git a/drivers/net/wireless/ath/ath12k/trace.h b/drivers/net/wireless/ath/ath12k/trace.h
 index 8f3aef2..142ab30 100644
 --- a/drivers/net/wireless/ath/ath12k/trace.h
@@ -1774,6 +1946,19 @@ index 8f3aef2..142ab30 100644
  		__entry->len = len;
  		memcpy(__get_dynamic_array(data), data, len);
  	),
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index a764133..2cd3ff9 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -6789,7 +6789,7 @@ ath12k_wmi_pdev_dfs_radar_detected_event(struct ath12k_base *ab, struct sk_buff
+ 	if (ar->dfs_block_radar_events)
+ 		ath12k_info(ab, "DFS Radar detected, but ignored as requested\n");
+ 	else
+-		ieee80211_radar_detected(ath12k_ar_to_hw(ar));
++		ieee80211_radar_detected(ath12k_ar_to_hw(ar), NULL);
+ 
+ exit:
+ 	rcu_read_unlock();
 diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
 index 308a429..0e6d184 100644
 --- a/drivers/net/wireless/ath/ath5k/ath5k.h
@@ -2101,6 +2286,32 @@ index def9c1d..73da293 100644
  		__entry->buf_len = buf_len;
  		memcpy(__get_dynamic_array(buf), buf, buf_len);
  	),
+diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
+index 1134921..3689e12 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs.c
++++ b/drivers/net/wireless/ath/ath9k/dfs.c
+@@ -280,7 +280,7 @@ ath9k_dfs_process_radar_pulse(struct ath_softc *sc, struct pulse_event *pe)
+ 	if (!pd->add_pulse(pd, pe, NULL))
+ 		return;
+ 	DFS_STAT_INC(sc, radar_detected);
+-	ieee80211_radar_detected(sc->hw);
++	ieee80211_radar_detected(sc->hw, NULL);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath9k/dfs_debug.c b/drivers/net/wireless/ath/ath9k/dfs_debug.c
+index 8e18e9b..426caa0 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs_debug.c
++++ b/drivers/net/wireless/ath/ath9k/dfs_debug.c
+@@ -116,7 +116,7 @@ static ssize_t write_file_simulate_radar(struct file *file,
+ {
+ 	struct ath_softc *sc = file->private_data;
+ 
+-	ieee80211_radar_detected(sc->hw);
++	ieee80211_radar_detected(sc->hw, NULL);
+ 
+ 	return count;
+ }
 diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
 index 2afdebf..3ba9fc3 100644
 --- a/drivers/net/wireless/ath/regd.c
@@ -2326,6 +2537,18 @@ index 070e61d..956ce6a 100644
  		    __assign_vstr(msg, vaf->fmt, vaf->va);
  	    ),
  
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index e8f1d30..a1a0a92 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -1493,6 +1493,7 @@ out:
+ }
+ 
+ static int wil_cfg80211_set_channel(struct wiphy *wiphy,
++				    struct net_device *dev,
+ 				    struct cfg80211_chan_def *chandef)
+ {
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
 diff --git a/drivers/net/wireless/broadcom/b43/Kconfig b/drivers/net/wireless/broadcom/b43/Kconfig
 index 84cbe38..5f008b4 100644
 --- a/drivers/net/wireless/broadcom/b43/Kconfig
@@ -2626,7 +2849,7 @@ index b2d97b8..597a4c3 100644
  
  config BRCMSMAC
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index d4cc5fa..7af7912 100644
+index 815f6b3..baad26f 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
 @@ -980,8 +980,36 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
@@ -2666,7 +2889,7 @@ index d4cc5fa..7af7912 100644
  	brcmf_dbg(TRACE, "enter: %s type %d\n", name, type);
  	err = brcmf_vif_add_validate(wiphy_to_cfg(wiphy), type);
  	if (err) {
-@@ -3285,6 +3313,10 @@ brcmf_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *ndev,
+@@ -3286,6 +3314,10 @@ brcmf_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *ndev,
  	 * preference in cfg struct to apply this to
  	 * FW later while initializing the dongle
  	 */
@@ -2964,10 +3187,18 @@ index d924709..cb12a88 100644
  		IWL_DEBUG_TEMP(mvm,
  			       "Failed to register to thermal zone (err = %ld)\n",
 diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
-index b700c21..5a37686 100644
+index b700c21..d3dc76e 100644
 --- a/drivers/net/wireless/marvell/libertas/cfg.c
 +++ b/drivers/net/wireless/marvell/libertas/cfg.c
-@@ -2101,6 +2101,8 @@ struct wireless_dev *lbs_cfg_alloc(struct device *dev)
+@@ -486,6 +486,7 @@ static int lbs_add_wps_enrollee_tlv(u8 *tlv, const u8 *ie, size_t ie_len)
+  */
+ 
+ static int lbs_cfg_set_monitor_channel(struct wiphy *wiphy,
++				       struct net_device *dev,
+ 				       struct cfg80211_chan_def *chandef)
+ {
+ 	struct lbs_private *priv = wiphy_priv(wiphy);
+@@ -2101,6 +2102,8 @@ struct wireless_dev *lbs_cfg_alloc(struct device *dev)
  		goto err_wiphy_new;
  	}
  
@@ -2976,7 +3207,7 @@ index b700c21..5a37686 100644
  	return wdev;
  
   err_wiphy_new:
-@@ -2176,6 +2178,8 @@ int lbs_cfg_register(struct lbs_private *priv)
+@@ -2176,6 +2179,8 @@ int lbs_cfg_register(struct lbs_private *priv)
  	wdev->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
  	wdev->wiphy->reg_notifier = lbs_reg_notifier;
  
@@ -2997,6 +3228,84 @@ index 78e8b5a..b56a495 100644
  	dev->ieee80211_ptr = wdev;
  	dev->ml_priv = priv;
  	SET_NETDEV_DEV(dev, dmdev);
+diff --git a/drivers/net/wireless/marvell/mwifiex/11h.c b/drivers/net/wireless/marvell/mwifiex/11h.c
+index b90f922..032b93a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11h.c
++++ b/drivers/net/wireless/marvell/mwifiex/11h.c
+@@ -117,12 +117,12 @@ void mwifiex_dfs_cac_work_queue(struct work_struct *work)
+ 				     dfs_cac_work);
+ 
+ 	chandef = priv->dfs_chandef;
+-	if (priv->wdev.cac_started) {
++	if (priv->wdev.links[0].cac_started) {
+ 		mwifiex_dbg(priv->adapter, MSG,
+ 			    "CAC timer finished; No radar detected\n");
+ 		cfg80211_cac_event(priv->netdev, &chandef,
+ 				   NL80211_RADAR_CAC_FINISHED,
+-				   GFP_KERNEL);
++				   GFP_KERNEL, 0);
+ 	}
+ }
+ 
+@@ -174,7 +174,7 @@ int mwifiex_stop_radar_detection(struct mwifiex_private *priv,
+  */
+ void mwifiex_abort_cac(struct mwifiex_private *priv)
+ {
+-	if (priv->wdev.cac_started) {
++	if (priv->wdev.links[0].cac_started) {
+ 		if (mwifiex_stop_radar_detection(priv, &priv->dfs_chandef))
+ 			mwifiex_dbg(priv->adapter, ERROR,
+ 				    "failed to stop CAC in FW\n");
+@@ -182,7 +182,8 @@ void mwifiex_abort_cac(struct mwifiex_private *priv)
+ 			    "Aborting delayed work for CAC.\n");
+ 		cancel_delayed_work_sync(&priv->dfs_cac_work);
+ 		cfg80211_cac_event(priv->netdev, &priv->dfs_chandef,
+-				   NL80211_RADAR_CAC_ABORTED, GFP_KERNEL);
++				   NL80211_RADAR_CAC_ABORTED, GFP_KERNEL,
++				   0);
+ 	}
+ }
+ 
+@@ -221,7 +222,7 @@ int mwifiex_11h_handle_chanrpt_ready(struct mwifiex_private *priv,
+ 				cfg80211_cac_event(priv->netdev,
+ 						   &priv->dfs_chandef,
+ 						   NL80211_RADAR_DETECTED,
+-						   GFP_KERNEL);
++						   GFP_KERNEL, 0);
+ 			}
+ 			break;
+ 		default:
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index fbfc230..abf79c1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -1880,7 +1880,7 @@ mwifiex_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	struct mwifiex_sta_node *sta_node;
+ 	u8 deauth_mac[ETH_ALEN];
+ 
+-	if (!priv->bss_started && priv->wdev.cac_started) {
++	if (!priv->bss_started && priv->wdev.links[0].cac_started) {
+ 		mwifiex_dbg(priv->adapter, INFO, "%s: abort CAC!\n", __func__);
+ 		mwifiex_abort_cac(priv);
+ 	}
+@@ -3978,7 +3978,7 @@ mwifiex_cfg80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EBUSY;
+ 	}
+ 
+-	if (priv->wdev.cac_started)
++	if (priv->wdev.links[0].cac_started)
+ 		return -EBUSY;
+ 
+ 	if (cfg80211_chandef_identical(&params->chandef,
+@@ -4145,7 +4145,7 @@ static int
+ mwifiex_cfg80211_start_radar_detection(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       struct cfg80211_chan_def *chandef,
+-				       u32 cac_time_ms)
++				       u32 cac_time_ms, int link_id)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+ 	struct mwifiex_radar_params radar_params;
 diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
 index 9eff29a..e7129c3 100644
 --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
@@ -3227,6 +3536,67 @@ index b130e05..7bf4d69 100644
  	if (priv->fw_state == FW_STATE_ERROR) {
  		mwl8k_hw_reset(priv);
  		goto unmap;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index d50d967..53c8ebe 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -394,7 +394,7 @@ mt7615_mcu_rx_radar_detected(struct mt7615_dev *dev, struct sk_buff *skb)
+ 	if (mt76_phy_dfs_state(mphy) < MT_DFS_STATE_CAC)
+ 		return;
+ 
+-	ieee80211_radar_detected(mphy->hw);
++	ieee80211_radar_detected(mphy->hw, NULL);
+ 	dev->hw_pattern++;
+ }
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x02_dfs.c
+index 024a5c0..7a07636 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_dfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_dfs.c
+@@ -630,7 +630,7 @@ static void mt76x02_dfs_tasklet(struct tasklet_struct *t)
+ 		radar_detected = mt76x02_dfs_check_detection(dev);
+ 		if (radar_detected) {
+ 			/* sw detector rx radar pattern */
+-			ieee80211_radar_detected(dev->mt76.hw);
++			ieee80211_radar_detected(dev->mt76.hw, NULL);
+ 			mt76x02_dfs_detector_reset(dev);
+ 
+ 			return;
+@@ -658,7 +658,7 @@ static void mt76x02_dfs_tasklet(struct tasklet_struct *t)
+ 
+ 		/* hw detector rx radar pattern */
+ 		dfs_pd->stats[i].hw_pattern++;
+-		ieee80211_radar_detected(dev->mt76.hw);
++		ieee80211_radar_detected(dev->mt76.hw, NULL);
+ 		mt76x02_dfs_detector_reset(dev);
+ 
+ 		return;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index bce6cda..590c185 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -293,7 +293,7 @@ mt7915_mcu_rx_radar_detected(struct mt7915_dev *dev, struct sk_buff *skb)
+ 						&dev->rdd2_chandef,
+ 						GFP_ATOMIC);
+ 	else
+-		ieee80211_radar_detected(mphy->hw);
++		ieee80211_radar_detected(mphy->hw, NULL);
+ 	dev->hw_pattern++;
+ }
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 7c5ec13..1349490 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -371,7 +371,7 @@ mt7996_mcu_rx_radar_detected(struct mt7996_dev *dev, struct sk_buff *skb)
+ 						&dev->rdd2_chandef,
+ 						GFP_ATOMIC);
+ 	else
+-		ieee80211_radar_detected(mphy->hw);
++		ieee80211_radar_detected(mphy->hw, NULL);
+ 	dev->hw_pattern++;
+ }
+ 
 diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.h b/drivers/net/wireless/mediatek/mt7601u/usb.h
 index 9fdf359..66481b7 100644
 --- a/drivers/net/wireless/mediatek/mt7601u/usb.h
@@ -3240,6 +3610,80 @@ index 9fdf359..66481b7 100644
  
  #define MT_VEND_REQ_MAX_RETRY	10
  #define MT_VEND_REQ_TOUT_MS	300
+diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+index eb37b22..9977be0 100644
+--- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
++++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+@@ -231,6 +231,7 @@ struct wilc_vif *wilc_get_wl_to_vif(struct wilc *wl)
+ }
+ 
+ static int set_channel(struct wiphy *wiphy,
++		       struct net_device *dev,
+ 		       struct cfg80211_chan_def *chandef)
+ {
+ 	struct wilc *wl = wiphy_priv(wiphy);
+@@ -1424,7 +1425,7 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	struct wilc_vif *vif = netdev_priv(dev);
+ 	int ret;
+ 
+-	ret = set_channel(wiphy, &settings->chandef);
++	ret = set_channel(wiphy, dev, &settings->chandef);
+ 	if (ret != 0)
+ 		netdev_err(dev, "Error in setting channel\n");
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 663d777..8b97acc 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -837,7 +837,7 @@ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ static int qtnf_start_radar_detection(struct wiphy *wiphy,
+ 				      struct net_device *ndev,
+ 				      struct cfg80211_chan_def *chandef,
+-				      u32 cac_time_ms)
++				      u32 cac_time_ms, int link_id)
+ {
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(ndev);
+ 	int ret;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index 76b07db..71840f4 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -520,21 +520,21 @@ static int qtnf_event_handle_radar(struct qtnf_vif *vif,
+ 		cfg80211_radar_event(wiphy, &chandef, GFP_KERNEL);
+ 		break;
+ 	case QLINK_RADAR_CAC_FINISHED:
+-		if (!vif->wdev.cac_started)
++		if (!vif->wdev.links[0].cac_started)
+ 			break;
+ 
+ 		cfg80211_cac_event(vif->netdev, &chandef,
+-				   NL80211_RADAR_CAC_FINISHED, GFP_KERNEL);
++				   NL80211_RADAR_CAC_FINISHED, GFP_KERNEL, 0);
+ 		break;
+ 	case QLINK_RADAR_CAC_ABORTED:
+-		if (!vif->wdev.cac_started)
++		if (!vif->wdev.links[0].cac_started)
+ 			break;
+ 
+ 		cfg80211_cac_event(vif->netdev, &chandef,
+-				   NL80211_RADAR_CAC_ABORTED, GFP_KERNEL);
++				   NL80211_RADAR_CAC_ABORTED, GFP_KERNEL, 0);
+ 		break;
+ 	case QLINK_RADAR_CAC_STARTED:
+-		if (vif->wdev.cac_started)
++		if (vif->wdev.links[0].cac_started)
+ 			break;
+ 
+ 		if (!wiphy_ext_feature_isset(wiphy,
+@@ -542,7 +542,7 @@ static int qtnf_event_handle_radar(struct qtnf_vif *vif,
+ 			break;
+ 
+ 		cfg80211_cac_event(vif->netdev, &chandef,
+-				   NL80211_RADAR_CAC_STARTED, GFP_KERNEL);
++				   NL80211_RADAR_CAC_STARTED, GFP_KERNEL, 0);
+ 		break;
+ 	default:
+ 		pr_warn("%s: unhandled radar event %u\n",
 diff --git a/drivers/net/wireless/ralink/rt2x00/Kconfig b/drivers/net/wireless/ralink/rt2x00/Kconfig
 index 8f6e3d2..abaa51b 100644
 --- a/drivers/net/wireless/ralink/rt2x00/Kconfig
@@ -4426,10 +4870,32 @@ index eface61..541b718 100644
  	return 0;
  
  exit_free_reg:
+diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
+index 34d95f4..a9f090e 100644
+--- a/drivers/net/wireless/ti/wl18xx/event.c
++++ b/drivers/net/wireless/ti/wl18xx/event.c
+@@ -142,7 +142,7 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
+ 			    wl18xx_radar_type_decode(mbox->radar_type));
+ 
+ 		if (!wl->radar_debug_mode)
+-			ieee80211_radar_detected(wl->hw);
++			ieee80211_radar_detected(wl->hw, NULL);
+ 	}
+ 
+ 	if (vector & PERIODIC_SCAN_REPORT_EVENT_ID) {
 diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
-index a4f0fc7..ff9ac8c 100644
+index 637dc6c..62b738d 100644
 --- a/drivers/net/wireless/virtual/mac80211_hwsim.c
 +++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
+@@ -1146,7 +1146,7 @@ static int hwsim_write_simulate_radar(void *dat, u64 val)
+ {
+ 	struct mac80211_hwsim_data *data = dat;
+ 
+-	ieee80211_radar_detected(data->hw);
++	ieee80211_radar_detected(data->hw, NULL);
+ 
+ 	return 0;
+ }
 @@ -6629,6 +6629,7 @@ static void hwsim_virtio_rx_done(struct virtqueue *vq)
  
  static int init_vqs(struct virtio_device *vdev)
@@ -5372,7 +5838,7 @@ index 0000000..e10377e
 +
 +#endif /* _RT2X00_PLATFORM_H */
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index bd1bda1..360eeb0 100644
+index bd1bda1..562a4f8 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
 @@ -187,6 +187,8 @@ enum ieee80211_channel_flags {
@@ -5392,7 +5858,23 @@ index bd1bda1..360eeb0 100644
  	unsigned int dfs_cac_ms;
  	s8 psd;
  };
-@@ -3420,6 +3423,7 @@ enum wiphy_params_flags {
+@@ -2269,6 +2272,7 @@ static inline int cfg80211_get_station(struct net_device *dev,
+  * @MONITOR_FLAG_OTHER_BSS: disable BSSID filtering
+  * @MONITOR_FLAG_COOK_FRAMES: report frames after processing
+  * @MONITOR_FLAG_ACTIVE: active monitor, ACKs frames on its MAC address
++ * @MONITOR_FLAG_SKIP_TX: do not pass locally transmitted frames
+  */
+ enum monitor_flags {
+ 	MONITOR_FLAG_CHANGED		= BIT(__NL80211_MNTR_FLAG_INVALID),
+@@ -2278,6 +2282,7 @@ enum monitor_flags {
+ 	MONITOR_FLAG_OTHER_BSS		= BIT(NL80211_MNTR_FLAG_OTHER_BSS),
+ 	MONITOR_FLAG_COOK_FRAMES	= BIT(NL80211_MNTR_FLAG_COOK_FRAMES),
+ 	MONITOR_FLAG_ACTIVE		= BIT(NL80211_MNTR_FLAG_ACTIVE),
++	MONITOR_FLAG_SKIP_TX		= BIT(NL80211_MNTR_FLAG_SKIP_TX),
+ };
+ 
+ /**
+@@ -3420,6 +3425,7 @@ enum wiphy_params_flags {
  /* The per TXQ device queue limit in airtime */
  #define IEEE80211_DEFAULT_AQL_TXQ_LIMIT_L	5000
  #define IEEE80211_DEFAULT_AQL_TXQ_LIMIT_H	12000
@@ -5400,11 +5882,136 @@ index bd1bda1..360eeb0 100644
  
  /* The per interface airtime threshold to switch to lower queue limit */
  #define IEEE80211_AQL_THRESHOLD			24000
+@@ -4696,6 +4702,7 @@ struct cfg80211_ops {
+ 					     struct ieee80211_channel *chan);
+ 
+ 	int	(*set_monitor_channel)(struct wiphy *wiphy,
++				       struct net_device *dev,
+ 				       struct cfg80211_chan_def *chandef);
+ 
+ 	int	(*scan)(struct wiphy *wiphy,
+@@ -4837,9 +4844,9 @@ struct cfg80211_ops {
+ 	int	(*start_radar_detection)(struct wiphy *wiphy,
+ 					 struct net_device *dev,
+ 					 struct cfg80211_chan_def *chandef,
+-					 u32 cac_time_ms);
++					 u32 cac_time_ms, int link_id);
+ 	void	(*end_cac)(struct wiphy *wiphy,
+-				struct net_device *dev);
++			   struct net_device *dev, unsigned int link_id);
+ 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
+ 				 struct cfg80211_update_ft_ies_params *ftie);
+ 	int	(*crit_proto_start)(struct wiphy *wiphy,
+@@ -5436,6 +5443,8 @@ struct wiphy_radio_freq_range {
+  * @iface_combinations: Valid interface combinations array, should not
+  *	list single interface types.
+  * @n_iface_combinations: number of entries in @iface_combinations array.
++ *
++ * @antenna_mask: bitmask of antennas connected to this radio.
+  */
+ struct wiphy_radio {
+ 	const struct wiphy_radio_freq_range *freq_range;
+@@ -5443,6 +5452,8 @@ struct wiphy_radio {
+ 
+ 	const struct ieee80211_iface_combination *iface_combinations;
+ 	int n_iface_combinations;
++
++	u32 antenna_mask;
+ };
+ 
+ #define CFG80211_HW_TIMESTAMP_ALL_PEERS	0xffff
+@@ -6194,9 +6205,6 @@ enum ieee80211_ap_reg_power {
+  * @address: The address for this device, valid only if @netdev is %NULL
+  * @is_running: true if this is a non-netdev device that has been started, e.g.
+  *	the P2P Device.
+- * @cac_started: true if DFS channel availability check has been started
+- * @cac_start_time: timestamp (jiffies) when the dfs state was entered.
+- * @cac_time_ms: CAC time in ms
+  * @ps: powersave mode is enabled
+  * @ps_timeout: dynamic powersave timeout
+  * @ap_unexpected_nlportid: (private) netlink port ID of application
+@@ -6220,7 +6228,13 @@ enum ieee80211_ap_reg_power {
+  *	unprotected beacon report
+  * @links: array of %IEEE80211_MLD_MAX_NUM_LINKS elements containing @addr
+  *	@ap and @client for each link
++ * @links[].cac_started: true if DFS channel availability check has been
++ *	started
++ * @links[].cac_start_time: timestamp (jiffies) when the dfs state was
++ *	entered.
++ * @links[].cac_time_ms: CAC time in ms
+  * @valid_links: bitmap describing what elements of @links are valid
++ * @radio_mask: Bitmask of radios that this interface is allowed to operate on.
+  */
+ struct wireless_dev {
+ 	struct wiphy *wiphy;
+@@ -6261,11 +6275,6 @@ struct wireless_dev {
+ 	u32 owner_nlportid;
+ 	bool nl_owner_dead;
+ 
+-	/* FIXME: need to rework radar detection for MLO */
+-	bool cac_started;
+-	unsigned long cac_start_time;
+-	unsigned int cac_time_ms;
+-
+ #ifdef CPTCFG_CFG80211_WEXT
+ 	/* wext data */
+ 	struct {
+@@ -6332,8 +6341,14 @@ struct wireless_dev {
+ 				struct cfg80211_internal_bss *current_bss;
+ 			} client;
+ 		};
++
++		bool cac_started;
++		unsigned long cac_start_time;
++		unsigned int cac_time_ms;
+ 	} links[IEEE80211_MLD_MAX_NUM_LINKS];
+ 	u16 valid_links;
++
++	u32 radio_mask;
+ };
+ 
+ static inline const u8 *wdev_address(struct wireless_dev *wdev)
+@@ -6519,6 +6534,17 @@ static inline bool cfg80211_channel_is_psc(struct ieee80211_channel *chan)
+ bool cfg80211_radio_chandef_valid(const struct wiphy_radio *radio,
+ 				  const struct cfg80211_chan_def *chandef);
+ 
++/**
++ * cfg80211_wdev_channel_allowed - Check if the wdev may use the channel
++ *
++ * @wdev: the wireless device
++ * @chan: channel to check
++ *
++ * Return: whether or not the wdev may use the channel
++ */
++bool cfg80211_wdev_channel_allowed(struct wireless_dev *wdev,
++				   struct ieee80211_channel *chan);
++
+ /**
+  * ieee80211_get_response_rate - get basic rate for a given rate
+  *
+@@ -8740,6 +8766,7 @@ void cfg80211_sta_opmode_change_notify(struct net_device *dev, const u8 *mac,
+  * @chandef: chandef for the current channel
+  * @event: type of event
+  * @gfp: context flags
++ * @link_id: valid link_id for MLO operation or 0 otherwise.
+  *
+  * This function is called when a Channel availability check (CAC) is finished
+  * or aborted. This must be called to notify the completion of a CAC process,
+@@ -8747,7 +8774,8 @@ void cfg80211_sta_opmode_change_notify(struct net_device *dev, const u8 *mac,
+  */
+ void cfg80211_cac_event(struct net_device *netdev,
+ 			const struct cfg80211_chan_def *chandef,
+-			enum nl80211_radar_event event, gfp_t gfp);
++			enum nl80211_radar_event event, gfp_t gfp,
++			unsigned int link_id);
+ 
+ /**
+  * cfg80211_background_cac_abort - Channel Availability Check offchan abort event
 diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9f57de7..7097b83 100644
+index fd29d27..2203b9c 100644
 --- a/include/net/mac80211.h
 +++ b/include/net/mac80211.h
-@@ -1221,8 +1221,8 @@ struct ieee80211_tx_info {
+@@ -1222,8 +1222,8 @@ struct ieee80211_tx_info {
  	    status_data_idr:1,
  	    status_data:13,
  	    hw_queue:4,
@@ -5414,6 +6021,73 @@ index 9f57de7..7097b83 100644
  
  	union {
  		struct {
+@@ -1448,8 +1448,6 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  * @RX_FLAG_AMPDU_IS_LAST: this subframe is the last subframe of the A-MPDU
+  * @RX_FLAG_AMPDU_DELIM_CRC_ERROR: A delimiter CRC error has been detected
+  *	on this subframe
+- * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
+- *	is stored in the @ampdu_delimiter_crc field)
+  * @RX_FLAG_MIC_STRIPPED: The mic was stripped of this packet. Decryption was
+  *	done by the hardware
+  * @RX_FLAG_ONLY_MONITOR: Report frame only to monitor interfaces without
+@@ -1521,7 +1519,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_AMPDU_LAST_KNOWN	= BIT(12),
+ 	RX_FLAG_AMPDU_IS_LAST		= BIT(13),
+ 	RX_FLAG_AMPDU_DELIM_CRC_ERROR	= BIT(14),
+-	RX_FLAG_AMPDU_DELIM_CRC_KNOWN	= BIT(15),
++	/* one free bit at 15 */
+ 	RX_FLAG_MACTIME			= BIT(16) | BIT(17),
+ 	RX_FLAG_MACTIME_PLCP_START	= 1 << 16,
+ 	RX_FLAG_MACTIME_START		= 2 << 16,
+@@ -1618,7 +1616,6 @@ enum mac80211_rx_encoding {
+  * @rx_flags: internal RX flags for mac80211
+  * @ampdu_reference: A-MPDU reference number, must be a different value for
+  *	each A-MPDU but the same for each subframe within one A-MPDU
+- * @ampdu_delimiter_crc: A-MPDU delimiter CRC
+  * @zero_length_psdu_type: radiotap type of the 0-length PSDU
+  * @link_valid: if the link which is identified by @link_id is valid. This flag
+  *	is set only when connection is MLO.
+@@ -1656,7 +1653,6 @@ struct ieee80211_rx_status {
+ 	s8 signal;
+ 	u8 chains;
+ 	s8 chain_signal[IEEE80211_MAX_CHAINS];
+-	u8 ampdu_delimiter_crc;
+ 	u8 zero_length_psdu_type;
+ 	u8 link_valid:1, link_id:4;
+ };
+@@ -2683,6 +2679,11 @@ struct ieee80211_txq {
+  *	a virtual monitor interface when monitor interfaces are the only
+  *	active interfaces.
+  *
++ * @IEEE80211_HW_NO_VIRTUAL_MONITOR: The driver would like to be informed
++ *	of any monitor interface, as well as their configured channel.
++ *	This is useful for supporting multiple monitor interfaces on different
++ *	channels.
++ *
+  * @IEEE80211_HW_NO_AUTO_VIF: The driver would like for no wlanX to
+  *	be created.  It is expected user-space will create vifs as
+  *	desired (and thus have them named as desired).
+@@ -2842,6 +2843,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_PS,
+ 	IEEE80211_HW_MFP_CAPABLE,
+ 	IEEE80211_HW_WANT_MONITOR_VIF,
++	IEEE80211_HW_NO_VIRTUAL_MONITOR,
+ 	IEEE80211_HW_NO_AUTO_VIF,
+ 	IEEE80211_HW_SW_CRYPTO_CONTROL,
+ 	IEEE80211_HW_SUPPORT_FAST_XMIT,
+@@ -6717,8 +6719,11 @@ void ieee80211_cqm_beacon_loss_notify(struct ieee80211_vif *vif, gfp_t gfp);
+  * ieee80211_radar_detected - inform that a radar was detected
+  *
+  * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @chanctx_conf: Channel context on which radar is detected. Mandatory to
++ *	pass a valid pointer during MLO. For non-MLO %NULL can be passed
+  */
+-void ieee80211_radar_detected(struct ieee80211_hw *hw);
++void ieee80211_radar_detected(struct ieee80211_hw *hw,
++			      struct ieee80211_chanctx_conf *chanctx_conf);
+ 
+ /**
+  * ieee80211_chswitch_done - Complete channel switch process
 diff --git a/include/trace/events/qrtr.h b/include/trace/events/qrtr.h
 index 14f8229..441132c 100644
 --- a/include/trace/events/qrtr.h
@@ -5427,6 +6101,62 @@ index 14f8229..441132c 100644
  		__entry->sq_node = sq_node;
  		__entry->sq_port = sq_port;
  	),
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f97f5ad..6d11437 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2868,6 +2868,9 @@ enum nl80211_commands {
+  *	nested item, it contains attributes defined in
+  *	&enum nl80211_if_combination_attrs.
+  *
++ * @NL80211_ATTR_VIF_RADIO_MASK: Bitmask of allowed radios (u32).
++ *	A value of 0 means all radios.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -3416,6 +3419,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_WIPHY_RADIOS,
+ 	NL80211_ATTR_WIPHY_INTERFACE_COMBINATIONS,
+ 
++	NL80211_ATTR_VIF_RADIO_MASK,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -4698,6 +4703,7 @@ enum nl80211_survey_info {
+  *	overrides all other flags.
+  * @NL80211_MNTR_FLAG_ACTIVE: use the configured MAC address
+  *	and ACK incoming unicast packets.
++ * @NL80211_MNTR_FLAG_SKIP_TX: do not pass local tx packets
+  *
+  * @__NL80211_MNTR_FLAG_AFTER_LAST: internal use
+  * @NL80211_MNTR_FLAG_MAX: highest possible monitor flag
+@@ -4710,6 +4716,7 @@ enum nl80211_mntr_flags {
+ 	NL80211_MNTR_FLAG_OTHER_BSS,
+ 	NL80211_MNTR_FLAG_COOK_FRAMES,
+ 	NL80211_MNTR_FLAG_ACTIVE,
++	NL80211_MNTR_FLAG_SKIP_TX,
+ 
+ 	/* keep last */
+ 	__NL80211_MNTR_FLAG_AFTER_LAST,
+@@ -8031,6 +8038,8 @@ enum nl80211_ap_settings_flags {
+  * @NL80211_WIPHY_RADIO_ATTR_INTERFACE_COMBINATION: Supported interface
+  *	combination for this radio. Attribute may be present multiple times
+  *	and contains attributes defined in &enum nl80211_if_combination_attrs.
++ * @NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK: bitmask (u32) of antennas
++ *	connected to this radio.
+  *
+  * @__NL80211_WIPHY_RADIO_ATTR_LAST: Internal
+  * @NL80211_WIPHY_RADIO_ATTR_MAX: Highest attribute
+@@ -8041,6 +8050,7 @@ enum nl80211_wiphy_radio_attrs {
+ 	NL80211_WIPHY_RADIO_ATTR_INDEX,
+ 	NL80211_WIPHY_RADIO_ATTR_FREQ_RANGE,
+ 	NL80211_WIPHY_RADIO_ATTR_INTERFACE_COMBINATION,
++	NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK,
+ 
+ 	/* keep last */
+ 	__NL80211_WIPHY_RADIO_ATTR_LAST,
 diff --git a/kconf/Makefile b/kconf/Makefile
 index 2004c44..c1bd620 100644
 --- a/kconf/Makefile
@@ -6350,10 +7080,78 @@ index fdf8b65..c61df63 100644
  	if (stat->encoding != RX_ENC_LEGACY)
  		return true;
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 14576b6..38c7531 100644
+index 14576b6..e90e032 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -1649,12 +1649,6 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
+@@ -105,8 +105,11 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	/* also validate MU-MIMO change */
+-	monitor_sdata = wiphy_dereference(local->hw.wiphy,
+-					  local->monitor_sdata);
++	if (ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++		monitor_sdata = sdata;
++	else
++		monitor_sdata = wiphy_dereference(local->hw.wiphy,
++						  local->monitor_sdata);
+ 
+ 	if (!monitor_sdata &&
+ 	    (params->vht_mumimo_groups || params->vht_mumimo_follow_addr))
+@@ -114,7 +117,9 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* apply all changes now - no failures allowed */
+ 
+-	if (monitor_sdata && ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF))
++	if (monitor_sdata &&
++		(ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF) ||
++		 ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)))
+ 		ieee80211_set_mu_mimo_follow(monitor_sdata, params);
+ 
+ 	if (params->flags) {
+@@ -879,6 +884,7 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+ }
+ 
+ static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
++					 struct net_device *dev,
+ 					 struct cfg80211_chan_def *chandef)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+@@ -888,22 +894,25 @@ static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+-	if (cfg80211_chandef_identical(&local->monitor_chanreq.oper,
+-				       &chanreq.oper))
+-		return 0;
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	if (!ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
++		if (cfg80211_chandef_identical(&local->monitor_chanreq.oper,
++						   &chanreq.oper))
++			return 0;
+ 
+-	sdata = wiphy_dereference(local->hw.wiphy,
+-				  local->monitor_sdata);
+-	if (!sdata)
+-		goto done;
++		sdata = wiphy_dereference(wiphy, local->monitor_sdata);
++		if (!sdata)
++			goto done;
++	}
+ 
+-	if (cfg80211_chandef_identical(&sdata->vif.bss_conf.chanreq.oper,
++	if (rcu_access_pointer(sdata->deflink.conf->chanctx_conf) &&
++		cfg80211_chandef_identical(&sdata->vif.bss_conf.chanreq.oper,
+ 				       &chanreq.oper))
+ 		return 0;
+ 
+ 	ieee80211_link_release_channel(&sdata->deflink);
+ 	ret = ieee80211_link_use_channel(&sdata->deflink, &chanreq,
+-					 IEEE80211_CHANCTX_EXCLUSIVE);
++					 IEEE80211_CHANCTX_SHARED);
+ 	if (ret)
+ 		return ret;
+ done:
+@@ -1649,12 +1658,6 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
  
  	__sta_info_flush(sdata, true, link_id);
  
@@ -6366,7 +7164,23 @@ index 14576b6..38c7531 100644
  	link_conf->enable_beacon = false;
  	sdata->beacon_rate_set = false;
  	sdata->vif.cfg.ssid_len = 0;
-@@ -2869,6 +2863,8 @@ static int ieee80211_scan(struct wiphy *wiphy,
+@@ -1662,12 +1665,12 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	ieee80211_link_info_change_notify(sdata, link,
+ 					  BSS_CHANGED_BEACON_ENABLED);
+ 
+-	if (sdata->wdev.cac_started) {
++	if (sdata->wdev.links[link_id].cac_started) {
+ 		chandef = link_conf->chanreq.oper;
+-		wiphy_delayed_work_cancel(wiphy, &sdata->dfs_cac_timer_work);
++		wiphy_delayed_work_cancel(wiphy, &link->dfs_cac_timer_work);
+ 		cfg80211_cac_event(sdata->dev, &chandef,
+ 				   NL80211_RADAR_CAC_ABORTED,
+-				   GFP_KERNEL);
++				   GFP_KERNEL, link_id);
+ 	}
+ 
+ 	drv_stop_ap(sdata->local, sdata, link_conf);
+@@ -2869,6 +2872,8 @@ static int ieee80211_scan(struct wiphy *wiphy,
  		 */
  		fallthrough;
  	case NL80211_IFTYPE_AP:
@@ -6375,8 +7189,238 @@ index 14576b6..38c7531 100644
  		/*
  		 * If the scan has been forced (and the driver supports
  		 * forcing), don't care about being beaconing already.
+@@ -3052,7 +3057,8 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
+ 	if (wdev) {
+ 		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+ 
+-		if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++		    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
+ 			if (!ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF))
+ 				return -EOPNOTSUPP;
+ 
+@@ -3100,7 +3106,8 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
+ 	}
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++		    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
+ 			has_monitor = true;
+ 			continue;
+ 		}
+@@ -3110,7 +3117,8 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
+ 		sdata->vif.bss_conf.txpower_type = txp_type;
+ 	}
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++		    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
+ 			continue;
+ 		ieee80211_recalc_txpower(sdata, update_txp_type);
+ 	}
+@@ -3138,7 +3146,8 @@ static int ieee80211_get_tx_power(struct wiphy *wiphy,
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+ 
+-	if (local->ops->get_txpower)
++	if (local->ops->get_txpower &&
++	    (sdata->flags & IEEE80211_SDATA_IN_DRIVER))
+ 		return drv_get_txpower(local, sdata, dbm);
+ 
+ 	if (local->emulate_chanctx)
+@@ -3462,51 +3471,58 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 					   struct net_device *dev,
+ 					   struct cfg80211_chan_def *chandef,
+-					   u32 cac_time_ms)
++					   u32 cac_time_ms, int link_id)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_chan_req chanreq = { .oper = *chandef };
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_link_data *link_data;
+ 	int err;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+-	if (!list_empty(&local->roc_list) || local->scanning) {
+-		err = -EBUSY;
+-		goto out_unlock;
+-	}
++	if (!list_empty(&local->roc_list) || local->scanning)
++		return -EBUSY;
++
++	link_data = sdata_dereference(sdata->link[link_id], sdata);
++	if (!link_data)
++		return -ENOLINK;
+ 
+ 	/* whatever, but channel contexts should not complain about that one */
+-	sdata->deflink.smps_mode = IEEE80211_SMPS_OFF;
+-	sdata->deflink.needed_rx_chains = local->rx_chains;
++	link_data->smps_mode = IEEE80211_SMPS_OFF;
++	link_data->needed_rx_chains = local->rx_chains;
+ 
+-	err = ieee80211_link_use_channel(&sdata->deflink, &chanreq,
++	err = ieee80211_link_use_channel(link_data, &chanreq,
+ 					 IEEE80211_CHANCTX_SHARED);
+ 	if (err)
+-		goto out_unlock;
++		return err;
+ 
+-	wiphy_delayed_work_queue(wiphy, &sdata->dfs_cac_timer_work,
++	wiphy_delayed_work_queue(wiphy, &link_data->dfs_cac_timer_work,
+ 				 msecs_to_jiffies(cac_time_ms));
+ 
+- out_unlock:
+-	return err;
++	return 0;
+ }
+ 
+ static void ieee80211_end_cac(struct wiphy *wiphy,
+-			      struct net_device *dev)
++			      struct net_device *dev, unsigned int link_id)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_link_data *link_data;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
++		link_data = sdata_dereference(sdata->link[link_id], sdata);
++		if (!link_data)
++			continue;
++
+ 		wiphy_delayed_work_cancel(wiphy,
+-					  &sdata->dfs_cac_timer_work);
++					  &link_data->dfs_cac_timer_work);
+ 
+-		if (sdata->wdev.cac_started) {
+-			ieee80211_link_release_channel(&sdata->deflink);
+-			sdata->wdev.cac_started = false;
++		if (sdata->wdev.links[link_id].cac_started) {
++			ieee80211_link_release_channel(link_data);
++			sdata->wdev.links[link_id].cac_started = false;
+ 		}
+ 	}
+ }
+@@ -3961,7 +3977,7 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	if (!list_empty(&local->roc_list) || local->scanning)
+ 		return -EBUSY;
+ 
+-	if (sdata->wdev.cac_started)
++	if (sdata->wdev.links[link_id].cac_started)
+ 		return -EBUSY;
+ 
+ 	if (WARN_ON(link_id >= IEEE80211_MLD_MAX_NUM_LINKS))
+@@ -4294,7 +4310,8 @@ static int ieee80211_cfg_get_channel(struct wiphy *wiphy,
+ 	if (chanctx_conf) {
+ 		*chandef = link->conf->chanreq.oper;
+ 		ret = 0;
+-	} else if (local->open_count > 0 &&
++	} else if (!ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR) &&
++		   local->open_count > 0 &&
+ 		   local->open_count == local->monitors &&
+ 		   sdata->vif.type == NL80211_IFTYPE_MONITOR) {
+ 		*chandef = local->monitor_chanreq.oper;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index e856772..fbb8808 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -337,6 +337,10 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
+ 		case NL80211_IFTYPE_P2P_DEVICE:
+ 		case NL80211_IFTYPE_NAN:
+ 			continue;
++		case NL80211_IFTYPE_MONITOR:
++			WARN_ON_ONCE(!ieee80211_hw_check(&local->hw,
++							 NO_VIRTUAL_MONITOR));
++			fallthrough;
+ 		case NL80211_IFTYPE_ADHOC:
+ 		case NL80211_IFTYPE_MESH_POINT:
+ 		case NL80211_IFTYPE_OCB:
+@@ -345,7 +349,6 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
+ 		case NL80211_IFTYPE_WDS:
+ 		case NL80211_IFTYPE_UNSPECIFIED:
+ 		case NUM_NL80211_IFTYPES:
+-		case NL80211_IFTYPE_MONITOR:
+ 		case NL80211_IFTYPE_P2P_CLIENT:
+ 		case NL80211_IFTYPE_P2P_GO:
+ 			WARN_ON_ONCE(1);
+@@ -681,6 +684,7 @@ ieee80211_alloc_chanctx(struct ieee80211_local *local,
+ 	ctx->mode = mode;
+ 	ctx->conf.radar_enabled = false;
+ 	ctx->conf.radio_idx = radio_idx;
++	ctx->radar_detected = false;
+ 	_ieee80211_recalc_chanctx_min_def(local, ctx, NULL, false);
+ 
+ 	return ctx;
+@@ -953,6 +957,10 @@ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
+ 			if (!link->sdata->u.mgd.associated)
+ 				continue;
+ 			break;
++		case NL80211_IFTYPE_MONITOR:
++			if (!ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++				continue;
++			break;
+ 		case NL80211_IFTYPE_AP:
+ 		case NL80211_IFTYPE_ADHOC:
+ 		case NL80211_IFTYPE_MESH_POINT:
+@@ -965,6 +973,11 @@ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
+ 		if (rcu_access_pointer(link->conf->chanctx_conf) != &chanctx->conf)
+ 			continue;
+ 
++		if (link->sdata->vif.type == NL80211_IFTYPE_MONITOR) {
++			rx_chains_dynamic = rx_chains_static = local->rx_chains;
++			break;
++		}
++
+ 		switch (link->smps_mode) {
+ 		default:
+ 			WARN_ONCE(1, "Invalid SMPS mode %d\n",
+@@ -1166,7 +1179,7 @@ ieee80211_replace_chanctx(struct ieee80211_local *local,
+ static bool
+ ieee80211_find_available_radio(struct ieee80211_local *local,
+ 			       const struct ieee80211_chan_req *chanreq,
+-			       int *radio_idx)
++			       u32 radio_mask, int *radio_idx)
+ {
+ 	struct wiphy *wiphy = local->hw.wiphy;
+ 	const struct wiphy_radio *radio;
+@@ -1177,6 +1190,9 @@ ieee80211_find_available_radio(struct ieee80211_local *local,
+ 		return true;
+ 
+ 	for (i = 0; i < wiphy->n_radio; i++) {
++		if (!(radio_mask & BIT(i)))
++			continue;
++
+ 		radio = &wiphy->radio[i];
+ 		if (!cfg80211_radio_chandef_valid(radio, &chanreq->oper))
+ 			continue;
+@@ -1210,7 +1226,9 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ 	new_ctx = ieee80211_find_reservation_chanctx(local, chanreq, mode);
+ 	if (!new_ctx) {
+ 		if (ieee80211_can_create_new_chanctx(local, -1) &&
+-		    ieee80211_find_available_radio(local, chanreq, &radio_idx))
++		    ieee80211_find_available_radio(local, chanreq,
++						   sdata->wdev.radio_mask,
++						   &radio_idx))
+ 			new_ctx = ieee80211_new_chanctx(local, chanreq, mode,
+ 							false, radio_idx);
+ 		else
+@@ -1880,7 +1898,9 @@ int _ieee80211_link_use_channel(struct ieee80211_link_data *link,
+ 	/* Note: context is now reserved */
+ 	if (ctx)
+ 		reserved = true;
+-	else if (!ieee80211_find_available_radio(local, chanreq, &radio_idx))
++	else if (!ieee80211_find_available_radio(local, chanreq,
++						 sdata->wdev.radio_mask,
++						 &radio_idx))
+ 		ctx = ERR_PTR(-EBUSY);
+ 	else
+ 		ctx = ieee80211_new_chanctx(local, chanreq, mode,
 diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index f9528ab..ce8eb40 100644
+index f9528ab..421476b 100644
 --- a/net/mac80211/debugfs.c
 +++ b/net/mac80211/debugfs.c
 @@ -215,11 +215,13 @@ static ssize_t aql_pending_read(struct file *file,
@@ -6425,8 +7469,28 @@ index f9528ab..ce8eb40 100644
  	if (sscanf(buf, "%u %u %u", &ac, &q_limit_low, &q_limit_high) != 3)
  		return -EINVAL;
  
+@@ -456,6 +465,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(SUPPORTS_DYNAMIC_PS),
+ 	FLAG(MFP_CAPABLE),
+ 	FLAG(WANT_MONITOR_VIF),
++	FLAG(NO_VIRTUAL_MONITOR),
+ 	FLAG(NO_AUTO_VIF),
+ 	FLAG(SW_CRYPTO_CONTROL),
+ 	FLAG(SUPPORT_FAST_XMIT),
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index fe868b5..8179310 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -65,6 +65,7 @@ int drv_add_interface(struct ieee80211_local *local,
+ 	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+ 		    (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
+ 		     !ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF) &&
++		     !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR) &&
+ 		     !(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))))
+ 		return -EINVAL;
+ 
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 23cc5da..2a91006 100644
+index 23cc5da..7ffa9a1 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
 @@ -103,6 +103,8 @@ ieee80211_sta_keep_active(struct sta_info *sta, u8 ac)
@@ -6438,7 +7502,33 @@ index 23cc5da..2a91006 100644
  struct ieee80211_bss {
  	u32 device_ts_beacon, device_ts_presp;
  
-@@ -1349,10 +1351,12 @@ struct ieee80211_local {
+@@ -893,6 +895,8 @@ struct ieee80211_chanctx {
+ 	struct ieee80211_chan_req req;
+ 
+ 	struct ieee80211_chanctx_conf conf;
++
++	bool radar_detected;
+ };
+ 
+ struct mac80211_qos_map {
+@@ -1067,6 +1071,7 @@ struct ieee80211_link_data {
+ 	int ap_power_level; /* in dBm */
+ 
+ 	bool radar_required;
++	struct wiphy_delayed_work dfs_cac_timer_work;
+ 
+ 	union {
+ 		struct ieee80211_link_data_managed mgd;
+@@ -1165,8 +1170,6 @@ struct ieee80211_sub_if_data {
+ 	struct ieee80211_link_data deflink;
+ 	struct ieee80211_link_data __rcu *link[IEEE80211_MLD_MAX_NUM_LINKS];
+ 
+-	struct wiphy_delayed_work dfs_cac_timer_work;
+-
+ 	/* for ieee80211_set_active_links_async() */
+ 	struct wiphy_work activate_links_work;
+ 	u16 desired_active_links;
+@@ -1349,10 +1352,12 @@ struct ieee80211_local {
  	spinlock_t handle_wake_tx_queue_lock;
  
  	u16 airtime_flags;
@@ -6451,6 +7541,226 @@ index 23cc5da..2a91006 100644
  	atomic_t aql_ac_pending_airtime[IEEE80211_NUM_ACS];
  
  	const struct ieee80211_ops *ops;
+@@ -1369,7 +1374,7 @@ struct ieee80211_local {
+ 	spinlock_t queue_stop_reason_lock;
+ 
+ 	int open_count;
+-	int monitors, cooked_mntrs;
++	int monitors, cooked_mntrs, tx_mntrs;
+ 	/* number of interfaces with corresponding FIF_ flags */
+ 	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss, fif_pspoll,
+ 	    fif_probe_req;
+@@ -2629,7 +2634,8 @@ void ieee80211_recalc_chanctx_min_def(struct ieee80211_local *local,
+ bool ieee80211_is_radar_required(struct ieee80211_local *local);
+ 
+ void ieee80211_dfs_cac_timer_work(struct wiphy *wiphy, struct wiphy_work *work);
+-void ieee80211_dfs_cac_cancel(struct ieee80211_local *local);
++void ieee80211_dfs_cac_cancel(struct ieee80211_local *local,
++			      struct ieee80211_chanctx *chanctx);
+ void ieee80211_dfs_radar_detected_work(struct wiphy *wiphy,
+ 				       struct wiphy_work *work);
+ int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index f735e41..54060ba 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -279,8 +279,13 @@ static int _ieee80211_change_mac(struct ieee80211_sub_if_data *sdata,
+ 	ret = eth_mac_addr(sdata->dev, sa);
+ 
+ 	if (ret == 0) {
+-		memcpy(sdata->vif.addr, sa->sa_data, ETH_ALEN);
+-		ether_addr_copy(sdata->vif.bss_conf.addr, sdata->vif.addr);
++		if (check_dup) {
++			memcpy(sdata->vif.addr, sa->sa_data, ETH_ALEN);
++			ether_addr_copy(sdata->vif.bss_conf.addr, sdata->vif.addr);
++		} else {
++			memset(sdata->vif.addr, 0, ETH_ALEN);
++			memset(sdata->vif.bss_conf.addr, 0, ETH_ALEN);
++		}
+ 	}
+ 
+ 	/* Regardless of eth_mac_addr() return we still want to add the
+@@ -551,15 +556,15 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 	wiphy_work_cancel(local->hw.wiphy,
+ 			  &sdata->deflink.color_change_finalize_work);
+ 	wiphy_delayed_work_cancel(local->hw.wiphy,
+-				  &sdata->dfs_cac_timer_work);
++				  &sdata->deflink.dfs_cac_timer_work);
+ 
+-	if (sdata->wdev.cac_started) {
++	if (sdata->wdev.links[0].cac_started) {
+ 		chandef = sdata->vif.bss_conf.chanreq.oper;
+ 		WARN_ON(local->suspended);
+ 		ieee80211_link_release_channel(&sdata->deflink);
+ 		cfg80211_cac_event(sdata->dev, &chandef,
+ 				   NL80211_RADAR_CAC_ABORTED,
+-				   GFP_KERNEL);
++				   GFP_KERNEL, 0);
+ 	}
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+@@ -699,9 +704,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 		ieee80211_recalc_idle(local);
+ 		ieee80211_recalc_offload(local);
+ 
+-		if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))
++		if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) &&
++		    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
+ 			break;
+ 
++		ieee80211_link_release_channel(&sdata->deflink);
+ 		fallthrough;
+ 	default:
+ 		if (!going_down)
+@@ -1087,6 +1094,8 @@ void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
+ 	ADJUST(CONTROL, control);
+ 	ADJUST(CONTROL, pspoll);
+ 	ADJUST(OTHER_BSS, other_bss);
++	if (!(flags & MONITOR_FLAG_SKIP_TX))
++		local->tx_mntrs += offset;
+ 
+ #undef ADJUST
+ }
+@@ -1131,7 +1140,8 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 	ASSERT_RTNL();
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+-	if (local->monitor_sdata)
++	if (local->monitor_sdata ||
++	    ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
+ 		return 0;
+ 
+ 	sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size, GFP_KERNEL);
+@@ -1193,6 +1203,9 @@ void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 
++	if (ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++		return;
++
+ 	ASSERT_RTNL();
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+@@ -1328,7 +1341,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 			break;
+ 		}
+ 
+-		if (sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
++		if ((sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) ||
++		    ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
+ 			res = drv_add_interface(local, sdata);
+ 			if (res)
+ 				goto err_stop;
+@@ -1744,8 +1758,6 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	wiphy_work_init(&sdata->work, ieee80211_iface_work);
+ 	wiphy_work_init(&sdata->activate_links_work,
+ 			ieee80211_activate_links_work);
+-	wiphy_delayed_work_init(&sdata->dfs_cac_timer_work,
+-				ieee80211_dfs_cac_timer_work);
+ 
+ 	switch (type) {
+ 	case NL80211_IFTYPE_P2P_GO:
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index eecdd22..e45b5f5 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -987,6 +987,26 @@ void ieee80211_reenable_keys(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
++static void
++ieee80211_key_iter(struct ieee80211_hw *hw,
++		   struct ieee80211_vif *vif,
++		   struct ieee80211_key *key,
++		   void (*iter)(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ieee80211_sta *sta,
++				struct ieee80211_key_conf *key,
++				void *data),
++		   void *iter_data)
++{
++	/* skip keys of station in removal process */
++	if (key->sta && key->sta->removed)
++		return;
++	if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
++		return;
++	iter(hw, vif, key->sta ? &key->sta->sta : NULL,
++	     &key->conf, iter_data);
++}
++
+ void ieee80211_iter_keys(struct ieee80211_hw *hw,
+ 			 struct ieee80211_vif *vif,
+ 			 void (*iter)(struct ieee80211_hw *hw,
+@@ -1005,16 +1025,13 @@ void ieee80211_iter_keys(struct ieee80211_hw *hw,
+ 	if (vif) {
+ 		sdata = vif_to_sdata(vif);
+ 		list_for_each_entry_safe(key, tmp, &sdata->key_list, list)
+-			iter(hw, &sdata->vif,
+-			     key->sta ? &key->sta->sta : NULL,
+-			     &key->conf, iter_data);
++			ieee80211_key_iter(hw, vif, key, iter, iter_data);
+ 	} else {
+ 		list_for_each_entry(sdata, &local->interfaces, list)
+ 			list_for_each_entry_safe(key, tmp,
+ 						 &sdata->key_list, list)
+-				iter(hw, &sdata->vif,
+-				     key->sta ? &key->sta->sta : NULL,
+-				     &key->conf, iter_data);
++				ieee80211_key_iter(hw, &sdata->vif, key,
++						   iter, iter_data);
+ 	}
+ }
+ EXPORT_SYMBOL(ieee80211_iter_keys);
+@@ -1031,17 +1048,8 @@ _ieee80211_iter_keys_rcu(struct ieee80211_hw *hw,
+ {
+ 	struct ieee80211_key *key;
+ 
+-	list_for_each_entry_rcu(key, &sdata->key_list, list) {
+-		/* skip keys of station in removal process */
+-		if (key->sta && key->sta->removed)
+-			continue;
+-		if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
+-			continue;
+-
+-		iter(hw, &sdata->vif,
+-		     key->sta ? &key->sta->sta : NULL,
+-		     &key->conf, iter_data);
+-	}
++	list_for_each_entry_rcu(key, &sdata->key_list, list)
++		ieee80211_key_iter(hw, &sdata->vif, key, iter, iter_data);
+ }
+ 
+ void ieee80211_iter_keys_rcu(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/link.c b/net/mac80211/link.c
+index 1a211b8..0bbac64 100644
+--- a/net/mac80211/link.c
++++ b/net/mac80211/link.c
+@@ -45,6 +45,8 @@ void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
+ 			  ieee80211_color_collision_detection_work);
+ 	INIT_LIST_HEAD(&link->assigned_chanctx_list);
+ 	INIT_LIST_HEAD(&link->reserved_chanctx_list);
++	wiphy_delayed_work_init(&link->dfs_cac_timer_work,
++				ieee80211_dfs_cac_timer_work);
+ 
+ 	if (!deflink) {
+ 		switch (sdata->vif.type) {
+@@ -75,6 +77,16 @@ void ieee80211_link_stop(struct ieee80211_link_data *link)
+ 			  &link->color_change_finalize_work);
+ 	wiphy_work_cancel(link->sdata->local->hw.wiphy,
+ 			  &link->csa.finalize_work);
++
++	if (link->sdata->wdev.links[link->link_id].cac_started) {
++		wiphy_delayed_work_cancel(link->sdata->local->hw.wiphy,
++					  &link->dfs_cac_timer_work);
++		cfg80211_cac_event(link->sdata->dev,
++				   &link->conf->chanreq.oper,
++				   NL80211_RADAR_CAC_ABORTED,
++				   GFP_KERNEL, link->link_id);
++	}
++
+ 	ieee80211_link_release_channel(link);
+ }
+ 
 diff --git a/net/mac80211/main.c b/net/mac80211/main.c
 index 3257545..79c77af 100644
 --- a/net/mac80211/main.c
@@ -6488,6 +7798,49 @@ index 3257545..79c77af 100644
  #ifdef CONFIG_INET
  	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
  	result = register_inetaddr_notifier(&local->ifa_notifier);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 9e3d2ed..b705a54 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3031,18 +3031,19 @@ void ieee80211_dynamic_ps_timer(struct timer_list *t)
+ 
+ void ieee80211_dfs_cac_timer_work(struct wiphy *wiphy, struct wiphy_work *work)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		container_of(work, struct ieee80211_sub_if_data,
++	struct ieee80211_link_data *link =
++		container_of(work, struct ieee80211_link_data,
+ 			     dfs_cac_timer_work.work);
+-	struct cfg80211_chan_def chandef = sdata->vif.bss_conf.chanreq.oper;
++	struct cfg80211_chan_def chandef = link->conf->chanreq.oper;
++	struct ieee80211_sub_if_data *sdata = link->sdata;
+ 
+ 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
+ 
+-	if (sdata->wdev.cac_started) {
+-		ieee80211_link_release_channel(&sdata->deflink);
++	if (sdata->wdev.links[link->link_id].cac_started) {
++		ieee80211_link_release_channel(link);
+ 		cfg80211_cac_event(sdata->dev, &chandef,
+ 				   NL80211_RADAR_CAC_FINISHED,
+-				   GFP_KERNEL);
++				   GFP_KERNEL, link->link_id);
+ 	}
+ }
+ 
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index d823d58..7be5234 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -32,7 +32,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 
+ 	ieee80211_scan_cancel(local);
+ 
+-	ieee80211_dfs_cac_cancel(local);
++	ieee80211_dfs_cac_cancel(local, NULL);
+ 
+ 	ieee80211_roc_purge(local, NULL);
+ 
 diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
 index b128191..802cd6c 100644
 --- a/net/mac80211/rc80211_minstrel_ht.c
@@ -6646,6 +7999,209 @@ index f385cf6..1f78a94 100644
  #define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
  
  #define EWMA_LEVEL	96	/* ewma weighting factor [/EWMA_DIV] */
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 35240d4..915ea28 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -508,18 +508,13 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 			flags |= IEEE80211_RADIOTAP_AMPDU_IS_LAST;
+ 		if (status->flag & RX_FLAG_AMPDU_DELIM_CRC_ERROR)
+ 			flags |= IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_ERR;
+-		if (status->flag & RX_FLAG_AMPDU_DELIM_CRC_KNOWN)
+-			flags |= IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_KNOWN;
+ 		if (status->flag & RX_FLAG_AMPDU_EOF_BIT_KNOWN)
+ 			flags |= IEEE80211_RADIOTAP_AMPDU_EOF_KNOWN;
+ 		if (status->flag & RX_FLAG_AMPDU_EOF_BIT)
+ 			flags |= IEEE80211_RADIOTAP_AMPDU_EOF;
+ 		put_unaligned_le16(flags, pos);
+ 		pos += 2;
+-		if (status->flag & RX_FLAG_AMPDU_DELIM_CRC_KNOWN)
+-			*pos++ = status->ampdu_delimiter_crc;
+-		else
+-			*pos++ = 0;
++		*pos++ = 0;
+ 		*pos++ = 0;
+ 	}
+ 
+@@ -767,8 +762,8 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 		     struct ieee80211_rate *rate)
+ {
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(origskb);
+-	struct ieee80211_sub_if_data *sdata;
+-	struct sk_buff *monskb = NULL;
++	struct ieee80211_sub_if_data *sdata, *prev_sdata = NULL;
++	struct sk_buff *skb, *monskb = NULL;
+ 	int present_fcs_len = 0;
+ 	unsigned int rtap_space = 0;
+ 	struct ieee80211_sub_if_data *monitor_sdata =
+@@ -842,40 +837,52 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	ieee80211_handle_mu_mimo_mon(monitor_sdata, origskb, rtap_space);
+ 
+ 	list_for_each_entry_rcu(sdata, &local->mon_list, u.mntr.list) {
+-		bool last_monitor = list_is_last(&sdata->u.mntr.list,
+-						 &local->mon_list);
++		struct cfg80211_chan_def *chandef;
++
++		chandef = &sdata->vif.bss_conf.chanreq.oper;
++		if (chandef->chan &&
++		    chandef->chan->center_freq != status->freq)
++			continue;
++
++		if (!prev_sdata) {
++			prev_sdata = sdata;
++			continue;
++		}
++
++		if (ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++			ieee80211_handle_mu_mimo_mon(sdata, origskb, rtap_space);
+ 
+ 		if (!monskb)
+ 			monskb = ieee80211_make_monitor_skb(local, &origskb,
+ 							    rate, rtap_space,
+-							    only_monitor &&
+-							    last_monitor);
++							    false);
++		if (!monskb)
++			continue;
+ 
+-		if (monskb) {
+-			struct sk_buff *skb;
++		skb = skb_clone(monskb, GFP_ATOMIC);
++		if (!skb)
++			continue;
+ 
+-			if (last_monitor) {
+-				skb = monskb;
+-				monskb = NULL;
+-			} else {
+-				skb = skb_clone(monskb, GFP_ATOMIC);
+-			}
++		skb->dev = prev_sdata->dev;
++		dev_sw_netstats_rx_add(skb->dev, skb->len);
++		netif_receive_skb(skb);
++		prev_sdata = sdata;
++	}
+ 
+-			if (skb) {
+-				skb->dev = sdata->dev;
+-				dev_sw_netstats_rx_add(skb->dev, skb->len);
+-				netif_receive_skb(skb);
+-			}
++	if (prev_sdata) {
++		if (monskb)
++			skb = monskb;
++		else
++			skb = ieee80211_make_monitor_skb(local, &origskb,
++							 rate, rtap_space,
++							 only_monitor);
++		if (skb) {
++			skb->dev = prev_sdata->dev;
++			dev_sw_netstats_rx_add(skb->dev, skb->len);
++			netif_receive_skb(skb);
+ 		}
+-
+-		if (last_monitor)
+-			break;
+ 	}
+ 
+-	/* this happens if last_monitor was erroneously false */
+-	dev_kfree_skb(monskb);
+-
+-	/* ditto */
+ 	if (!origskb)
+ 		return NULL;
+ 
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 1c5d999..ac89684 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -575,6 +575,7 @@ static bool __ieee80211_can_leave_ch(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_sub_if_data *sdata_iter;
++	unsigned int link_id;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+@@ -585,8 +586,9 @@ static bool __ieee80211_can_leave_ch(struct ieee80211_sub_if_data *sdata)
+ 		return false;
+ 
+ 	list_for_each_entry(sdata_iter, &local->interfaces, list) {
+-		if (sdata_iter->wdev.cac_started)
+-			return false;
++		for_each_valid_link(&sdata_iter->wdev, link_id)
++			if (sdata_iter->wdev.links[link_id].cac_started)
++				return false;
+ 	}
+ 
+ 	return true;
+@@ -1176,14 +1178,14 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				unsigned int n_channels)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	int ret = -EBUSY, i, n_ch = 0;
++	int i, n_ch = 0;
+ 	enum nl80211_band band;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+ 	/* busy scanning */
+ 	if (local->scan_req)
+-		goto unlock;
++		return -EBUSY;
+ 
+ 	/* fill internal scan request */
+ 	if (!channels) {
+@@ -1200,7 +1202,9 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				    &local->hw.wiphy->bands[band]->channels[i];
+ 
+ 				if (tmp_ch->flags & (IEEE80211_CHAN_NO_IR |
+-						     IEEE80211_CHAN_DISABLED))
++						     IEEE80211_CHAN_DISABLED) ||
++				    !cfg80211_wdev_channel_allowed(&sdata->wdev,
++								   tmp_ch))
+ 					continue;
+ 
+ 				local->int_scan_req->channels[n_ch] = tmp_ch;
+@@ -1209,21 +1213,23 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 
+ 		if (WARN_ON_ONCE(n_ch == 0))
+-			goto unlock;
++			return -EINVAL;
+ 
+ 		local->int_scan_req->n_channels = n_ch;
+ 	} else {
+ 		for (i = 0; i < n_channels; i++) {
+ 			if (channels[i]->flags & (IEEE80211_CHAN_NO_IR |
+-						  IEEE80211_CHAN_DISABLED))
++						  IEEE80211_CHAN_DISABLED) ||
++			    !cfg80211_wdev_channel_allowed(&sdata->wdev,
++							   channels[i]))
+ 				continue;
+ 
+ 			local->int_scan_req->channels[n_ch] = channels[i];
+ 			n_ch++;
+ 		}
+ 
+-		if (WARN_ON_ONCE(n_ch == 0))
+-			goto unlock;
++		if (n_ch == 0)
++			return -EINVAL;
+ 
+ 		local->int_scan_req->n_channels = n_ch;
+ 	}
+@@ -1233,9 +1239,7 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(local->int_scan_req->ssids[0].ssid, ssid, IEEE80211_MAX_SSID_LEN);
+ 	local->int_scan_req->ssids[0].ssid_len = ssid_len;
+ 
+-	ret = __ieee80211_start_scan(sdata, sdata->local->int_scan_req);
+- unlock:
+-	return ret;
++	return __ieee80211_start_scan(sdata, sdata->local->int_scan_req);
+ }
+ 
+ void ieee80211_scan_cancel(struct ieee80211_local *local)
 diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
 index 16f28db..8bc63a3 100644
 --- a/net/mac80211/sta_info.c
@@ -6717,7 +8273,7 @@ index d1b3a61..40513d8 100644
  struct sta_info;
  
 diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index dd8f857..2ef9896 100644
+index dd8f857..9a02d2b 100644
 --- a/net/mac80211/status.c
 +++ b/net/mac80211/status.c
 @@ -734,7 +734,7 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
@@ -6729,7 +8285,26 @@ index dd8f857..2ef9896 100644
  		rcu_read_unlock();
  	}
  
-@@ -1158,10 +1158,11 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+@@ -927,6 +927,9 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
+ 			if (!ieee80211_sdata_running(sdata))
+ 				continue;
+ 
++			if (sdata->u.mntr.flags & MONITOR_FLAG_SKIP_TX)
++				continue;
++
+ 			if ((sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES) &&
+ 			    !send_to_cooked)
+ 				continue;
+@@ -1099,7 +1102,7 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 	 * This is a bit racy but we can avoid a lot of work
+ 	 * with this test...
+ 	 */
+-	if (!local->monitors && (!send_to_cooked || !local->cooked_mntrs)) {
++	if (!local->tx_mntrs && (!send_to_cooked || !local->cooked_mntrs)) {
+ 		if (status->free_list)
+ 			list_add_tail(&skb->list, status->free_list);
+ 		else
+@@ -1158,10 +1161,11 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
  		/* Do this here to avoid the expensive lookup of the sta
  		 * in ieee80211_report_used_skb().
  		 */
@@ -6756,10 +8331,20 @@ index dc498cd..78ffd3b 100644
  #define VIF_PR_ARG	__get_str(vif_name), __entry->vif_type, __entry->p2p ? "/p2p" : ""
  
 diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3aecc67..902c9cc 100644
+index 8c51b40..1d0bca0 100644
 --- a/net/mac80211/tx.c
 +++ b/net/mac80211/tx.c
-@@ -2554,7 +2554,7 @@ static u16 ieee80211_store_ack_skb(struct ieee80211_local *local,
+@@ -1763,7 +1763,8 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_MONITOR:
+-		if (sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
++		if ((sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) ||
++		    ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
+ 			vif = &sdata->vif;
+ 			break;
+ 		}
+@@ -2554,7 +2555,7 @@ static u16 ieee80211_store_ack_skb(struct ieee80211_local *local,
  
  		spin_lock_irqsave(&local->ack_status_lock, flags);
  		id = idr_alloc(&local->ack_status_frames, ack_skb,
@@ -6768,7 +8353,17 @@ index 3aecc67..902c9cc 100644
  		spin_unlock_irqrestore(&local->ack_status_lock, flags);
  
  		if (id >= 0) {
-@@ -3982,20 +3982,20 @@ begin:
+@@ -3952,7 +3953,8 @@ begin:
+ 
+ 	switch (tx.sdata->vif.type) {
+ 	case NL80211_IFTYPE_MONITOR:
+-		if (tx.sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
++		if ((tx.sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) ||
++		    ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
+ 			vif = &tx.sdata->vif;
+ 			break;
+ 		}
+@@ -3982,20 +3984,20 @@ begin:
  encap_out:
  	info->control.vif = vif;
  
@@ -6799,7 +8394,7 @@ index 3aecc67..902c9cc 100644
  	}
  
  	return skb;
-@@ -4047,6 +4047,7 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
+@@ -4047,6 +4049,7 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
  	struct ieee80211_txq *ret = NULL;
  	struct txq_info *txqi = NULL, *head = NULL;
  	bool found_eligible_txq = false;
@@ -6807,7 +8402,7 @@ index 3aecc67..902c9cc 100644
  
  	spin_lock_bh(&local->active_txq_lock[ac]);
  
-@@ -4070,26 +4071,26 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
+@@ -4070,26 +4073,26 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
  	if (!head)
  		head = txqi;
  
@@ -6847,7 +8442,7 @@ index 3aecc67..902c9cc 100644
  	if (txqi->schedule_round == local->schedule_round[ac])
  		goto out;
  
-@@ -4154,7 +4155,8 @@ bool ieee80211_txq_airtime_check(struct ieee80211_hw *hw,
+@@ -4154,7 +4157,8 @@ bool ieee80211_txq_airtime_check(struct ieee80211_hw *hw,
  		return true;
  
  	if (!txq->sta)
@@ -6857,7 +8452,7 @@ index 3aecc67..902c9cc 100644
  
  	if (unlikely(txq->tid == IEEE80211_NUM_TIDS))
  		return true;
-@@ -4203,15 +4205,15 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
+@@ -4203,15 +4207,15 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
  
  	spin_lock_bh(&local->active_txq_lock[ac]);
  
@@ -6876,7 +8471,7 @@ index 3aecc67..902c9cc 100644
  	list_for_each_entry_safe(iter, tmp, &local->active_txqs[ac],
  				 schedule_order) {
  		if (iter == txqi)
-@@ -4224,7 +4226,8 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
+@@ -4224,7 +4228,8 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
  		}
  		sta = container_of(iter->txq.sta, struct sta_info, sta);
  		if (ieee80211_sta_deficit(sta, ac) < 0)
@@ -6886,7 +8481,7 @@ index 3aecc67..902c9cc 100644
  		list_move_tail(&iter->schedule_order, &local->active_txqs[ac]);
  	}
  
-@@ -4232,7 +4235,7 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
+@@ -4232,7 +4237,7 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
  	if (sta->airtime[ac].deficit >= 0)
  		goto out;
  
@@ -6895,6 +8490,170 @@ index 3aecc67..902c9cc 100644
  	list_move_tail(&txqi->schedule_order, &local->active_txqs[ac]);
  	spin_unlock_bh(&local->active_txq_lock[ac]);
  
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index c7ad9bc..809e399 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -754,7 +754,8 @@ static void __iterate_interfaces(struct ieee80211_local *local,
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_MONITOR:
+-			if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))
++			if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) &&
++			    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
+ 				continue;
+ 			break;
+ 		case NL80211_IFTYPE_AP_VLAN:
+@@ -1857,8 +1858,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	}
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++		    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++			continue;
+ 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+-		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+ 		    ieee80211_sdata_running(sdata)) {
+ 			res = drv_add_interface(local, sdata);
+ 			if (WARN_ON(res))
+@@ -1871,11 +1874,14 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	 */
+ 	if (res) {
+ 		list_for_each_entry_continue_reverse(sdata, &local->interfaces,
+-						     list)
++						     list) {
++			if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++			    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++				continue;
+ 			if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+-			    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+ 			    ieee80211_sdata_running(sdata))
+ 				drv_remove_interface(local, sdata);
++		}
+ 		ieee80211_handle_reconfig_failure(local);
+ 		return res;
+ 	}
+@@ -3451,24 +3457,44 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+ 	return ts;
+ }
+ 
+-void ieee80211_dfs_cac_cancel(struct ieee80211_local *local)
++/* Cancel CAC for the interfaces under the specified @local. If @ctx is
++ * also provided, only the interfaces using that ctx will be canceled.
++ */
++void ieee80211_dfs_cac_cancel(struct ieee80211_local *local,
++			      struct ieee80211_chanctx *ctx)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct cfg80211_chan_def chandef;
++	struct ieee80211_link_data *link;
++	struct ieee80211_chanctx_conf *chanctx_conf;
++	unsigned int link_id;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		wiphy_delayed_work_cancel(local->hw.wiphy,
+-					  &sdata->dfs_cac_timer_work);
+-
+-		if (sdata->wdev.cac_started) {
+-			chandef = sdata->vif.bss_conf.chanreq.oper;
+-			ieee80211_link_release_channel(&sdata->deflink);
+-			cfg80211_cac_event(sdata->dev,
+-					   &chandef,
++		for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS;
++		     link_id++) {
++			link = sdata_dereference(sdata->link[link_id],
++						 sdata);
++			if (!link)
++				continue;
++
++			chanctx_conf = sdata_dereference(link->conf->chanctx_conf,
++							 sdata);
++			if (ctx && &ctx->conf != chanctx_conf)
++				continue;
++
++			wiphy_delayed_work_cancel(local->hw.wiphy,
++						  &link->dfs_cac_timer_work);
++
++			if (!sdata->wdev.links[link_id].cac_started)
++				continue;
++
++			chandef = link->conf->chanreq.oper;
++			ieee80211_link_release_channel(link);
++			cfg80211_cac_event(sdata->dev, &chandef,
+ 					   NL80211_RADAR_CAC_ABORTED,
+-					   GFP_KERNEL);
++					   GFP_KERNEL, link_id);
+ 		}
+ 	}
+ }
+@@ -3478,9 +3504,8 @@ void ieee80211_dfs_radar_detected_work(struct wiphy *wiphy,
+ {
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local, radar_detected_work);
+-	struct cfg80211_chan_def chandef = local->hw.conf.chandef;
++	struct cfg80211_chan_def chandef;
+ 	struct ieee80211_chanctx *ctx;
+-	int num_chanctx = 0;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+@@ -3488,25 +3513,46 @@ void ieee80211_dfs_radar_detected_work(struct wiphy *wiphy,
+ 		if (ctx->replace_state == IEEE80211_CHANCTX_REPLACES_OTHER)
+ 			continue;
+ 
+-		num_chanctx++;
++		if (!ctx->radar_detected)
++			continue;
++
++		ctx->radar_detected = false;
++
+ 		chandef = ctx->conf.def;
++
++		ieee80211_dfs_cac_cancel(local, ctx);
++		cfg80211_radar_event(local->hw.wiphy, &chandef, GFP_KERNEL);
+ 	}
++}
++
++static void
++ieee80211_radar_mark_chan_ctx_iterator(struct ieee80211_hw *hw,
++				       struct ieee80211_chanctx_conf *chanctx_conf,
++				       void *data)
++{
++	struct ieee80211_chanctx *ctx =
++		container_of(chanctx_conf, struct ieee80211_chanctx,
++			     conf);
+ 
+-	ieee80211_dfs_cac_cancel(local);
++	if (ctx->replace_state == IEEE80211_CHANCTX_REPLACES_OTHER)
++		return;
+ 
+-	if (num_chanctx > 1)
+-		/* XXX: multi-channel is not supported yet */
+-		WARN_ON(1);
+-	else
+-		cfg80211_radar_event(local->hw.wiphy, &chandef, GFP_KERNEL);
++	if (data && data != chanctx_conf)
++		return;
++
++	ctx->radar_detected = true;
+ }
+ 
+-void ieee80211_radar_detected(struct ieee80211_hw *hw)
++void ieee80211_radar_detected(struct ieee80211_hw *hw,
++			      struct ieee80211_chanctx_conf *chanctx_conf)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
+ 	trace_api_radar_detected(local);
+ 
++	ieee80211_iter_chan_contexts_atomic(hw, ieee80211_radar_mark_chan_ctx_iterator,
++					    chanctx_conf);
++
+ 	wiphy_work_queue(hw->wiphy, &local->radar_detected_work);
+ }
+ EXPORT_SYMBOL(ieee80211_radar_detected);
 diff --git a/net/wireless/ap.c b/net/wireless/ap.c
 index 9a9a870..9cd0ab4 100644
 --- a/net/wireless/ap.c
@@ -6920,7 +8679,7 @@ index 9a9a870..9cd0ab4 100644
  	}
  
 diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 138df3a..edc9034 100644
+index 138df3a..b8b8328 100644
 --- a/net/wireless/chan.c
 +++ b/net/wireless/chan.c
 @@ -598,6 +598,8 @@ static void cfg80211_set_chans_dfs_state(struct wiphy *wiphy, u32 center_freq,
@@ -6982,11 +8741,85 @@ index 138df3a..edc9034 100644
  static bool cfg80211_chandef_dfs_available(struct wiphy *wiphy,
  				const struct cfg80211_chan_def *chandef)
  {
+@@ -1628,6 +1673,7 @@ bool cfg80211_reg_check_beaconing(struct wiphy *wiphy,
+ EXPORT_SYMBOL(cfg80211_reg_check_beaconing);
+ 
+ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev,
+ 				 struct cfg80211_chan_def *chandef)
+ {
+ 	if (!rdev->ops->set_monitor_channel)
+@@ -1635,7 +1681,7 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 	if (!cfg80211_has_monitors_only(rdev))
+ 		return -EBUSY;
+ 
+-	return rdev_set_monitor_channel(rdev, chandef);
++	return rdev_set_monitor_channel(rdev, dev, chandef);
+ }
+ 
+ bool cfg80211_any_usable_channels(struct wiphy *wiphy,
 diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 1636064..2bde41f 100644
+index 1636064..68534b0 100644
 --- a/net/wireless/core.c
 +++ b/net/wireless/core.c
-@@ -654,21 +654,6 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
+@@ -599,16 +599,20 @@ use_default_name:
+ }
+ EXPORT_SYMBOL(wiphy_new_nm);
+ 
+-static int wiphy_verify_combinations(struct wiphy *wiphy)
++static
++int wiphy_verify_iface_combinations(struct wiphy *wiphy,
++				    const struct ieee80211_iface_combination *iface_comb,
++				    int n_iface_comb,
++				    bool combined_radio)
+ {
+ 	const struct ieee80211_iface_combination *c;
+ 	int i, j;
+ 
+-	for (i = 0; i < wiphy->n_iface_combinations; i++) {
++	for (i = 0; i < n_iface_comb; i++) {
+ 		u32 cnt = 0;
+ 		u16 all_iftypes = 0;
+ 
+-		c = &wiphy->iface_combinations[i];
++		c = &iface_comb[i];
+ 
+ 		/*
+ 		 * Combinations with just one interface aren't real,
+@@ -621,9 +625,13 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
+ 		if (WARN_ON(!c->num_different_channels))
+ 			return -EINVAL;
+ 
+-		/* DFS only works on one channel. */
+-		if (WARN_ON(c->radar_detect_widths &&
+-			    (c->num_different_channels > 1)))
++		/* DFS only works on one channel. Avoid this check
++		 * for multi-radio global combination, since it hold
++		 * the capabilities of all radio combinations.
++		 */
++		if (!combined_radio &&
++		    WARN_ON(c->radar_detect_widths &&
++			    c->num_different_channels > 1))
+ 			return -EINVAL;
+ 
+ 		if (WARN_ON(!c->n_limits))
+@@ -644,30 +652,23 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
+ 			if (WARN_ON(wiphy->software_iftypes & types))
+ 				return -EINVAL;
+ 
+-			/* Only a single P2P_DEVICE can be allowed */
+-			if (WARN_ON(types & BIT(NL80211_IFTYPE_P2P_DEVICE) &&
+-				    c->limits[j].max > 1))
+-				return -EINVAL;
+-
+-			/* Only a single NAN can be allowed */
+-			if (WARN_ON(types & BIT(NL80211_IFTYPE_NAN) &&
++			/* Only a single P2P_DEVICE can be allowed, avoid this
++			 * check for multi-radio global combination, since it
++			 * hold the capabilities of all radio combinations.
++			 */
++			if (!combined_radio &&
++			    WARN_ON(types & BIT(NL80211_IFTYPE_P2P_DEVICE) &&
  				    c->limits[j].max > 1))
  				return -EINVAL;
  
@@ -6999,17 +8832,66 @@ index 1636064..2bde41f 100644
 -			 * and IBSS in the same interface, but it seems that
 -			 * some drivers support that, possibly only with fixed
 -			 * beacon intervals for IBSS.
--			 */
++			/* Only a single NAN can be allowed, avoid this
++			 * check for multi-radio global combination, since it
++			 * hold the capabilities of all radio combinations.
+ 			 */
 -			if (WARN_ON(types & BIT(NL80211_IFTYPE_ADHOC) &&
 -				    c->beacon_int_min_gcd)) {
--				return -EINVAL;
++			if (!combined_radio &&
++			    WARN_ON(types & BIT(NL80211_IFTYPE_NAN) &&
++				    c->limits[j].max > 1))
+ 				return -EINVAL;
 -			}
--
+ 
  			cnt += c->limits[j].max;
  			/*
- 			 * Don't advertise an unsupported type
+@@ -689,6 +690,34 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
+ 	return 0;
+ }
+ 
++static int wiphy_verify_combinations(struct wiphy *wiphy)
++{
++	int i, ret;
++	bool combined_radio = false;
++
++	if (wiphy->n_radio) {
++		for (i = 0; i < wiphy->n_radio; i++) {
++			const struct wiphy_radio *radio = &wiphy->radio[i];
++
++			ret = wiphy_verify_iface_combinations(wiphy,
++							      radio->iface_combinations,
++							      radio->n_iface_combinations,
++							      false);
++			if (ret)
++				return ret;
++		}
++
++		combined_radio = true;
++	}
++
++	ret = wiphy_verify_iface_combinations(wiphy,
++					      wiphy->iface_combinations,
++					      wiphy->n_iface_combinations,
++					      combined_radio);
++
++	return ret;
++}
++
+ int wiphy_register(struct wiphy *wiphy)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+@@ -1386,6 +1415,8 @@ void cfg80211_init_wdev(struct wireless_dev *wdev)
+ 	/* allow mac80211 to determine the timeout */
+ 	wdev->ps_timeout = -1;
+ 
++	wdev->radio_mask = BIT(wdev->wiphy->n_radio) - 1;
++
+ 	if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+ 	     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
+ 	     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
 diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 4304d1a..cebc5a1 100644
+index 4304d1a..6660d2e 100644
 --- a/net/wireless/core.h
 +++ b/net/wireless/core.h
 @@ -467,6 +467,8 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
@@ -7021,8 +8903,42 @@ index 4304d1a..cebc5a1 100644
  
  void cfg80211_sched_dfs_chan_update(struct cfg80211_registered_device *rdev);
  
+@@ -508,6 +510,7 @@ static inline unsigned int elapsed_jiffies_msecs(unsigned long start)
+ }
+ 
+ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev,
+ 				 struct cfg80211_chan_def *chandef);
+ 
+ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 0651e9b..0fc930a 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -94,7 +94,7 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 
+ 	lockdep_assert_held(&rdev->wiphy.mtx);
+ 
+-	if (wdev->cac_started)
++	if (wdev->links[0].cac_started)
+ 		return -EBUSY;
+ 
+ 	if (wdev->u.ibss.ssid_len)
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index aaca65b..2c66540 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -127,7 +127,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	if (!rdev->ops->join_mesh)
+ 		return -EOPNOTSUPP;
+ 
+-	if (wdev->cac_started)
++	if (wdev->links[0].cac_started)
+ 		return -EBUSY;
+ 
+ 	if (!setup->chandef.chan) {
 diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 3b0fe7c..c7e62eb 100644
+index 3b0fe7c..5c96273 100644
 --- a/net/wireless/mlme.c
 +++ b/net/wireless/mlme.c
 @@ -1037,6 +1037,8 @@ void cfg80211_dfs_channels_update_work(struct work_struct *work)
@@ -7048,8 +8964,413 @@ index 3b0fe7c..c7e62eb 100644
  			if (time_after_eq(jiffies, timeout)) {
  				c->dfs_state = NL80211_DFS_USABLE;
  				c->dfs_state_entered = jiffies;
+@@ -1110,26 +1111,28 @@ EXPORT_SYMBOL(__cfg80211_radar_event);
+ 
+ void cfg80211_cac_event(struct net_device *netdev,
+ 			const struct cfg80211_chan_def *chandef,
+-			enum nl80211_radar_event event, gfp_t gfp)
++			enum nl80211_radar_event event, gfp_t gfp,
++			unsigned int link_id)
+ {
+ 	struct wireless_dev *wdev = netdev->ieee80211_ptr;
+ 	struct wiphy *wiphy = wdev->wiphy;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+ 	unsigned long timeout;
+ 
+-	/* not yet supported */
+-	if (wdev->valid_links)
++	if (WARN_ON(wdev->valid_links &&
++		    !(wdev->valid_links & BIT(link_id))))
+ 		return;
+ 
+-	trace_cfg80211_cac_event(netdev, event);
++	trace_cfg80211_cac_event(netdev, event, link_id);
+ 
+-	if (WARN_ON(!wdev->cac_started && event != NL80211_RADAR_CAC_STARTED))
++	if (WARN_ON(!wdev->links[link_id].cac_started &&
++		    event != NL80211_RADAR_CAC_STARTED))
+ 		return;
+ 
+ 	switch (event) {
+ 	case NL80211_RADAR_CAC_FINISHED:
+-		timeout = wdev->cac_start_time +
+-			  msecs_to_jiffies(wdev->cac_time_ms);
++		timeout = wdev->links[link_id].cac_start_time +
++			  msecs_to_jiffies(wdev->links[link_id].cac_time_ms);
+ 		WARN_ON(!time_after_eq(jiffies, timeout));
+ 		cfg80211_set_dfs_state(wiphy, chandef, NL80211_DFS_AVAILABLE);
+ 		memcpy(&rdev->cac_done_chandef, chandef,
+@@ -1138,10 +1141,10 @@ void cfg80211_cac_event(struct net_device *netdev,
+ 		cfg80211_sched_dfs_chan_update(rdev);
+ 		fallthrough;
+ 	case NL80211_RADAR_CAC_ABORTED:
+-		wdev->cac_started = false;
++		wdev->links[link_id].cac_started = false;
+ 		break;
+ 	case NL80211_RADAR_CAC_STARTED:
+-		wdev->cac_started = true;
++		wdev->links[link_id].cac_started = true;
+ 		break;
+ 	default:
+ 		WARN_ON(1);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b991602..feaa628 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -829,6 +829,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_MLO_TTLM_DLINK] = NLA_POLICY_EXACT_LEN(sizeof(u16) * 8),
+ 	[NL80211_ATTR_MLO_TTLM_ULINK] = NLA_POLICY_EXACT_LEN(sizeof(u16) * 8),
+ 	[NL80211_ATTR_ASSOC_SPP_AMSDU] = { .type = NLA_FLAG },
++	[NL80211_ATTR_VIF_RADIO_MASK] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -2430,6 +2431,11 @@ static int nl80211_put_radio(struct wiphy *wiphy, struct sk_buff *msg, int idx)
+ 	if (nla_put_u32(msg, NL80211_WIPHY_RADIO_ATTR_INDEX, idx))
+ 		goto nla_put_failure;
+ 
++	if (r->antenna_mask &&
++	    nla_put_u32(msg, NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK,
++			r->antenna_mask))
++		goto nla_put_failure;
++
+ 	for (i = 0; i < r->n_freq_range; i++) {
+ 		const struct wiphy_radio_freq_range *range = &r->freq_range[i];
+ 
+@@ -3561,7 +3567,7 @@ static int __nl80211_set_channel(struct cfg80211_registered_device *rdev,
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		return cfg80211_set_mesh_channel(rdev, wdev, &chandef);
+ 	case NL80211_IFTYPE_MONITOR:
+-		return cfg80211_set_monitor_channel(rdev, &chandef);
++		return cfg80211_set_monitor_channel(rdev, dev, &chandef);
+ 	default:
+ 		break;
+ 	}
+@@ -3996,7 +4002,8 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 	    nla_put_u32(msg, NL80211_ATTR_GENERATION,
+ 			rdev->devlist_generation ^
+ 			(cfg80211_rdev_list_generation << 2)) ||
+-	    nla_put_u8(msg, NL80211_ATTR_4ADDR, wdev->use_4addr))
++	    nla_put_u8(msg, NL80211_ATTR_4ADDR, wdev->use_4addr) ||
++	    nla_put_u32(msg, NL80211_ATTR_VIF_RADIO_MASK, wdev->radio_mask))
+ 		goto nla_put_failure;
+ 
+ 	if (rdev->ops->get_channel && !wdev->valid_links) {
+@@ -4199,6 +4206,7 @@ static const struct nla_policy mntr_flags_policy[NL80211_MNTR_FLAG_MAX + 1] = {
+ 	[NL80211_MNTR_FLAG_OTHER_BSS] = { .type = NLA_FLAG },
+ 	[NL80211_MNTR_FLAG_COOK_FRAMES] = { .type = NLA_FLAG },
+ 	[NL80211_MNTR_FLAG_ACTIVE] = { .type = NLA_FLAG },
++	[NL80211_MNTR_FLAG_SKIP_TX] = { .type = NLA_FLAG },
+ };
+ 
+ static int parse_monitor_flags(struct nlattr *nla, u32 *mntrflags)
+@@ -4312,6 +4320,29 @@ static int nl80211_valid_4addr(struct cfg80211_registered_device *rdev,
+ 	return -EOPNOTSUPP;
+ }
+ 
++static int nl80211_parse_vif_radio_mask(struct genl_info *info,
++					u32 *radio_mask)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct nlattr *attr = info->attrs[NL80211_ATTR_VIF_RADIO_MASK];
++	u32 mask, allowed;
++
++	if (!attr) {
++		*radio_mask = 0;
++		return 0;
++	}
++
++	allowed = BIT(rdev->wiphy.n_radio) - 1;
++	mask = nla_get_u32(attr);
++	if (mask & ~allowed)
++		return -EINVAL;
++	if (!mask)
++		mask = allowed;
++	*radio_mask = mask;
++
++	return 1;
++}
++
+ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -4319,6 +4350,8 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 	int err;
+ 	enum nl80211_iftype otype, ntype;
+ 	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	u32 radio_mask = 0;
+ 	bool change = false;
+ 
+ 	memset(&params, 0, sizeof(params));
+@@ -4332,8 +4365,6 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_MESH_ID]) {
+-		struct wireless_dev *wdev = dev->ieee80211_ptr;
+-
+ 		if (ntype != NL80211_IFTYPE_MESH_POINT)
+ 			return -EINVAL;
+ 		if (otype != NL80211_IFTYPE_MESH_POINT)
+@@ -4364,6 +4395,12 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (err > 0)
+ 		change = true;
+ 
++	err = nl80211_parse_vif_radio_mask(info, &radio_mask);
++	if (err < 0)
++		return err;
++	if (err && netif_running(dev))
++		return -EBUSY;
++
+ 	if (change)
+ 		err = cfg80211_change_iface(rdev, dev, ntype, &params);
+ 	else
+@@ -4372,11 +4409,11 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (!err && params.use_4addr != -1)
+ 		dev->ieee80211_ptr->use_4addr = params.use_4addr;
+ 
+-	if (change && !err) {
+-		struct wireless_dev *wdev = dev->ieee80211_ptr;
++	if (radio_mask)
++		wdev->radio_mask = radio_mask;
+ 
++	if (change && !err)
+ 		nl80211_notify_iface(rdev, wdev, NL80211_CMD_SET_INTERFACE);
+-	}
+ 
+ 	return err;
+ }
+@@ -4387,6 +4424,7 @@ static int _nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	struct vif_params params;
+ 	struct wireless_dev *wdev;
+ 	struct sk_buff *msg;
++	u32 radio_mask;
+ 	int err;
+ 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
+ 
+@@ -4424,6 +4462,10 @@ static int _nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (err < 0)
+ 		return err;
+ 
++	err = nl80211_parse_vif_radio_mask(info, &radio_mask);
++	if (err < 0)
++		return err;
++
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!msg)
+ 		return -ENOMEM;
+@@ -4465,6 +4507,9 @@ static int _nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		break;
+ 	}
+ 
++	if (radio_mask)
++		wdev->radio_mask = radio_mask;
++
+ 	if (nl80211_send_iface(msg, info->snd_portid, info->snd_seq, 0,
+ 			       rdev, wdev, NL80211_CMD_NEW_INTERFACE) < 0) {
+ 		nlmsg_free(msg);
+@@ -6066,7 +6111,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	if (!rdev->ops->start_ap)
+ 		return -EOPNOTSUPP;
+ 
+-	if (wdev->cac_started)
++	if (wdev->links[link_id].cac_started)
+ 		return -EBUSY;
+ 
+ 	if (wdev->links[link_id].ap.beacon_interval)
+@@ -9180,6 +9225,9 @@ static bool cfg80211_off_channel_oper_allowed(struct wireless_dev *wdev,
+ 
+ 	lockdep_assert_wiphy(wdev->wiphy);
+ 
++	if (!cfg80211_wdev_channel_allowed(wdev, chan))
++		return false;
++
+ 	if (!cfg80211_beaconing_iface_active(wdev))
+ 		return true;
+ 
+@@ -9392,7 +9440,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 			}
+ 
+ 			/* ignore disabled channels */
+-			if (chan->flags & IEEE80211_CHAN_DISABLED)
++			if (chan->flags & IEEE80211_CHAN_DISABLED ||
++			    !cfg80211_wdev_channel_allowed(wdev, chan))
+ 				continue;
+ 
+ 			request->channels[i] = chan;
+@@ -9412,7 +9461,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 
+ 				chan = &wiphy->bands[band]->channels[j];
+ 
+-				if (chan->flags & IEEE80211_CHAN_DISABLED)
++				if (chan->flags & IEEE80211_CHAN_DISABLED ||
++				    !cfg80211_wdev_channel_allowed(wdev, chan))
+ 					continue;
+ 
+ 				request->channels[i] = chan;
+@@ -10073,6 +10123,7 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	int link_id = nl80211_link_id(info->attrs);
+ 	struct wiphy *wiphy = wdev->wiphy;
+ 	struct cfg80211_chan_def chandef;
+ 	enum nl80211_dfs_regions dfs_region;
+@@ -10122,7 +10173,20 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 		goto unlock;
+ 	}
+ 
+-	if (cfg80211_beaconing_iface_active(wdev) || wdev->cac_started) {
++	if (cfg80211_beaconing_iface_active(wdev)) {
++		/* During MLO other link(s) can beacon, only the current link
++		 * can not already beacon
++		 */
++		if (wdev->valid_links &&
++		    !wdev->links[link_id].ap.beacon_interval) {
++			/* nothing */
++		} else {
++			err = -EBUSY;
++			goto unlock;
++		}
++	}
++
++	if (wdev->links[link_id].cac_started) {
+ 		err = -EBUSY;
+ 		goto unlock;
+ 	}
+@@ -10142,12 +10206,26 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (WARN_ON(!cac_time_ms))
+ 		cac_time_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
+ 
+-	err = rdev_start_radar_detection(rdev, dev, &chandef, cac_time_ms);
++	err = rdev_start_radar_detection(rdev, dev, &chandef, cac_time_ms,
++					 link_id);
+ 	if (!err) {
+-		wdev->links[0].ap.chandef = chandef;
+-		wdev->cac_started = true;
+-		wdev->cac_start_time = jiffies;
+-		wdev->cac_time_ms = cac_time_ms;
++		switch (wdev->iftype) {
++		case NL80211_IFTYPE_AP:
++		case NL80211_IFTYPE_P2P_GO:
++			wdev->links[0].ap.chandef = chandef;
++			break;
++		case NL80211_IFTYPE_ADHOC:
++			wdev->u.ibss.chandef = chandef;
++			break;
++		case NL80211_IFTYPE_MESH_POINT:
++			wdev->u.mesh.chandef = chandef;
++			break;
++		default:
++			break;
++		}
++		wdev->links[link_id].cac_started = true;
++		wdev->links[link_id].cac_start_time = jiffies;
++		wdev->links[link_id].cac_time_ms = cac_time_ms;
+ 	}
+ unlock:
+ 	wiphy_unlock(wiphy);
+@@ -16499,10 +16577,10 @@ nl80211_set_ttlm(struct sk_buff *skb, struct genl_info *info)
+ 	SELECTOR(__sel, NETDEV_UP_NOTMX,		\
+ 		 NL80211_FLAG_NEED_NETDEV_UP |		\
+ 		 NL80211_FLAG_NO_WIPHY_MTX)		\
+-	SELECTOR(__sel, NETDEV_UP_NOTMX_NOMLO,		\
++	SELECTOR(__sel, NETDEV_UP_NOTMX_MLO,		\
+ 		 NL80211_FLAG_NEED_NETDEV_UP |		\
+ 		 NL80211_FLAG_NO_WIPHY_MTX |		\
+-		 NL80211_FLAG_MLO_UNSUPPORTED)		\
++		 NL80211_FLAG_MLO_VALID_LINK_ID)	\
+ 	SELECTOR(__sel, NETDEV_UP_CLEAR,		\
+ 		 NL80211_FLAG_NEED_NETDEV_UP |		\
+ 		 NL80211_FLAG_CLEAR_SKB)		\
+@@ -17397,7 +17475,7 @@ static const struct genl_small_ops nl80211_small_ops[] = {
+ 		.flags = GENL_UNS_ADMIN_PERM,
+ 		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP |
+ 					 NL80211_FLAG_NO_WIPHY_MTX |
+-					 NL80211_FLAG_MLO_UNSUPPORTED),
++					 NL80211_FLAG_MLO_VALID_LINK_ID),
+ 	},
+ 	{
+ 		.cmd = NL80211_CMD_GET_PROTOCOL_FEATURES,
+@@ -17956,10 +18034,8 @@ void nl80211_common_reg_change_event(enum nl80211_commands cmd_id,
+ 
+ 	genlmsg_end(msg, hdr);
+ 
+-	rcu_read_lock();
+ 	genlmsg_multicast_allns(&nl80211_fam, msg, 0,
+-				NL80211_MCGRP_REGULATORY, GFP_ATOMIC);
+-	rcu_read_unlock();
++				NL80211_MCGRP_REGULATORY);
+ 
+ 	return;
+ 
+@@ -18692,10 +18768,8 @@ void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
+ 
+ 	genlmsg_end(msg, hdr);
+ 
+-	rcu_read_lock();
+ 	genlmsg_multicast_allns(&nl80211_fam, msg, 0,
+-				NL80211_MCGRP_REGULATORY, GFP_ATOMIC);
+-	rcu_read_unlock();
++				NL80211_MCGRP_REGULATORY);
+ 
+ 	return;
+ 
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 951ca95..12eefbd 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -445,11 +445,12 @@ rdev_libertas_set_mesh_channel(struct cfg80211_registered_device *rdev,
+ 
+ static inline int
+ rdev_set_monitor_channel(struct cfg80211_registered_device *rdev,
++			 struct net_device *dev,
+ 			 struct cfg80211_chan_def *chandef)
+ {
+ 	int ret;
+-	trace_rdev_set_monitor_channel(&rdev->wiphy, chandef);
+-	ret = rdev->ops->set_monitor_channel(&rdev->wiphy, chandef);
++	trace_rdev_set_monitor_channel(&rdev->wiphy, dev, chandef);
++	ret = rdev->ops->set_monitor_channel(&rdev->wiphy, dev, chandef);
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
+ 	return ret;
+ }
+@@ -1200,26 +1201,27 @@ static inline int
+ rdev_start_radar_detection(struct cfg80211_registered_device *rdev,
+ 			   struct net_device *dev,
+ 			   struct cfg80211_chan_def *chandef,
+-			   u32 cac_time_ms)
++			   u32 cac_time_ms, int link_id)
+ {
+ 	int ret = -EOPNOTSUPP;
+ 
+ 	trace_rdev_start_radar_detection(&rdev->wiphy, dev, chandef,
+-					 cac_time_ms);
++					 cac_time_ms, link_id);
+ 	if (rdev->ops->start_radar_detection)
+ 		ret = rdev->ops->start_radar_detection(&rdev->wiphy, dev,
+-						       chandef, cac_time_ms);
++						       chandef, cac_time_ms,
++						       link_id);
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
+ 	return ret;
+ }
+ 
+ static inline void
+ rdev_end_cac(struct cfg80211_registered_device *rdev,
+-	     struct net_device *dev)
++	     struct net_device *dev, unsigned int link_id)
+ {
+-	trace_rdev_end_cac(&rdev->wiphy, dev);
++	trace_rdev_end_cac(&rdev->wiphy, dev, link_id);
+ 	if (rdev->ops->end_cac)
+-		rdev->ops->end_cac(&rdev->wiphy, dev);
++		rdev->ops->end_cac(&rdev->wiphy, dev, link_id);
+ 	trace_rdev_return_void(&rdev->wiphy);
+ }
+ 
 diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index d52cf73..6cf33cd 100644
+index d52cf73..cf8c38c 100644
 --- a/net/wireless/reg.c
 +++ b/net/wireless/reg.c
 @@ -3364,6 +3364,8 @@ void regulatory_hint_country_ie(struct wiphy *wiphy, enum nl80211_band band,
@@ -7069,6 +9390,70 @@ index d52cf73..6cf33cd 100644
  	/* Restore of regulatory settings is not required when wiphy(s)
  	 * ignore IE from connected access point but clearance of beacon hints
  	 * is required when wiphy(s) supports beacon hints.
+@@ -4229,6 +4232,8 @@ EXPORT_SYMBOL(regulatory_pre_cac_allowed);
+ static void cfg80211_check_and_end_cac(struct cfg80211_registered_device *rdev)
+ {
+ 	struct wireless_dev *wdev;
++	unsigned int link_id;
++
+ 	/* If we finished CAC or received radar, we should end any
+ 	 * CAC running on the same channels.
+ 	 * the check !cfg80211_chandef_dfs_usable contain 2 options:
+@@ -4241,16 +4246,17 @@ static void cfg80211_check_and_end_cac(struct cfg80211_registered_device *rdev)
+ 	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
+ 		struct cfg80211_chan_def *chandef;
+ 
+-		if (!wdev->cac_started)
+-			continue;
++		for_each_valid_link(wdev, link_id) {
++			if (!wdev->links[link_id].cac_started)
++				continue;
+ 
+-		/* FIXME: radar detection is tied to link 0 for now */
+-		chandef = wdev_chandef(wdev, 0);
+-		if (!chandef)
+-			continue;
++			chandef = wdev_chandef(wdev, link_id);
++			if (!chandef)
++				continue;
+ 
+-		if (!cfg80211_chandef_dfs_usable(&rdev->wiphy, chandef))
+-			rdev_end_cac(rdev, wdev->netdev);
++			if (!cfg80211_chandef_dfs_usable(&rdev->wiphy, chandef))
++				rdev_end_cac(rdev, wdev->netdev, link_id);
++		}
+ 	}
+ }
+ 
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 009fab5..6aa2c59 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -956,7 +956,8 @@ static int cfg80211_scan_6ghz(struct cfg80211_registered_device *rdev)
+ 		struct ieee80211_channel *chan =
+ 			ieee80211_get_channel(&rdev->wiphy, ap->center_freq);
+ 
+-		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
++		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED ||
++		    !cfg80211_wdev_channel_allowed(rdev_req->wdev, chan))
+ 			continue;
+ 
+ 		for (i = 0; i < rdev_req->n_channels; i++) {
+@@ -3490,9 +3491,12 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 			continue;
+ 
+ 		for (j = 0; j < wiphy->bands[band]->n_channels; j++) {
++			struct ieee80211_channel *chan;
++
+ 			/* ignore disabled channels */
+-			if (wiphy->bands[band]->channels[j].flags &
+-						IEEE80211_CHAN_DISABLED)
++			chan = &wiphy->bands[band]->channels[j];
++			if (chan->flags & IEEE80211_CHAN_DISABLED ||
++			    !cfg80211_wdev_channel_allowed(creq->wdev, chan))
+ 				continue;
+ 
+ 			/* If we have a wireless request structure and the
 diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
 index 62f2661..4e7644f 100644
 --- a/net/wireless/sysfs.c
@@ -7115,7 +9500,7 @@ index 62f2661..4e7644f 100644
  static ssize_t name_show(struct device *dev,
  			 struct device_attribute *attr,
 diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index e52164d..6f2e9a5 100644
+index e52164d..3119412 100644
 --- a/net/wireless/trace.h
 +++ b/net/wireless/trace.h
 @@ -446,7 +446,7 @@ TRACE_EVENT(rdev_add_virtual_intf,
@@ -7127,6 +9512,165 @@ index e52164d..6f2e9a5 100644
  		__entry->type = type;
  	),
  	TP_printk(WIPHY_PR_FMT ", virtual intf name: %s, type: %d",
+@@ -805,9 +805,22 @@ DEFINE_EVENT(wiphy_netdev_evt, rdev_flush_pmksa,
+ 	TP_ARGS(wiphy, netdev)
+ );
+ 
+-DEFINE_EVENT(wiphy_netdev_evt, rdev_end_cac,
+-	     TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
+-	     TP_ARGS(wiphy, netdev)
++TRACE_EVENT(rdev_end_cac,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 unsigned int link_id),
++	TP_ARGS(wiphy, netdev, link_id),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		__field(unsigned int, link_id)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		__entry->link_id = link_id;
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", link_id: %d",
++		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->link_id)
+ );
+ 
+ DECLARE_EVENT_CLASS(station_add_change,
+@@ -1305,19 +1318,21 @@ TRACE_EVENT(rdev_libertas_set_mesh_channel,
+ );
+ 
+ TRACE_EVENT(rdev_set_monitor_channel,
+-	TP_PROTO(struct wiphy *wiphy,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+ 		 struct cfg80211_chan_def *chandef),
+-	TP_ARGS(wiphy, chandef),
++	TP_ARGS(wiphy, netdev, chandef),
+ 	TP_STRUCT__entry(
+ 		WIPHY_ENTRY
++		NETDEV_ENTRY
+ 		CHAN_DEF_ENTRY
+ 	),
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
+ 		CHAN_DEF_ASSIGN(chandef);
+ 	),
+-	TP_printk(WIPHY_PR_FMT ", " CHAN_DEF_PR_FMT,
+-		  WIPHY_PR_ARG, CHAN_DEF_PR_ARG)
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " CHAN_DEF_PR_FMT,
++		  WIPHY_PR_ARG, NETDEV_PR_ARG, CHAN_DEF_PR_ARG)
+ );
+ 
+ TRACE_EVENT(rdev_auth,
+@@ -2652,24 +2667,26 @@ TRACE_EVENT(rdev_external_auth,
+ TRACE_EVENT(rdev_start_radar_detection,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+ 		 struct cfg80211_chan_def *chandef,
+-		 u32 cac_time_ms),
+-	TP_ARGS(wiphy, netdev, chandef, cac_time_ms),
++		 u32 cac_time_ms, int link_id),
++	TP_ARGS(wiphy, netdev, chandef, cac_time_ms, link_id),
+ 	TP_STRUCT__entry(
+ 		WIPHY_ENTRY
+ 		NETDEV_ENTRY
+ 		CHAN_DEF_ENTRY
+ 		__field(u32, cac_time_ms)
++		__field(int, link_id)
+ 	),
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+ 		NETDEV_ASSIGN;
+ 		CHAN_DEF_ASSIGN(chandef);
+ 		__entry->cac_time_ms = cac_time_ms;
++		__entry->link_id = link_id;
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " CHAN_DEF_PR_FMT
+-		  ", cac_time_ms=%u",
++		  ", cac_time_ms=%u, link_id=%d",
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, CHAN_DEF_PR_ARG,
+-		  __entry->cac_time_ms)
++		  __entry->cac_time_ms, __entry->link_id)
+ );
+ 
+ TRACE_EVENT(rdev_set_mcast_rate,
+@@ -3483,18 +3500,21 @@ TRACE_EVENT(cfg80211_radar_event,
+ );
+ 
+ TRACE_EVENT(cfg80211_cac_event,
+-	TP_PROTO(struct net_device *netdev, enum nl80211_radar_event evt),
+-	TP_ARGS(netdev, evt),
++	TP_PROTO(struct net_device *netdev, enum nl80211_radar_event evt,
++		 unsigned int link_id),
++	TP_ARGS(netdev, evt, link_id),
+ 	TP_STRUCT__entry(
+ 		NETDEV_ENTRY
+ 		__field(enum nl80211_radar_event, evt)
++		__field(unsigned int, link_id)
+ 	),
+ 	TP_fast_assign(
+ 		NETDEV_ASSIGN;
+ 		__entry->evt = evt;
++		__entry->link_id = link_id;
+ 	),
+-	TP_printk(NETDEV_PR_FMT ",  event: %d",
+-		  NETDEV_PR_ARG, __entry->evt)
++	TP_printk(NETDEV_PR_FMT ",  event: %d, link_id=%u",
++		  NETDEV_PR_ARG, __entry->evt, __entry->link_id)
+ );
+ 
+ DECLARE_EVENT_CLASS(cfg80211_rx_evt,
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index edeeb05..2afc6a6 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -2923,3 +2923,32 @@ bool cfg80211_radio_chandef_valid(const struct wiphy_radio *radio,
+ 	return true;
+ }
+ EXPORT_SYMBOL(cfg80211_radio_chandef_valid);
++
++bool cfg80211_wdev_channel_allowed(struct wireless_dev *wdev,
++				   struct ieee80211_channel *chan)
++{
++	struct wiphy *wiphy = wdev->wiphy;
++	const struct wiphy_radio *radio;
++	struct cfg80211_chan_def chandef;
++	u32 radio_mask;
++	int i;
++
++	radio_mask = wdev->radio_mask;
++	if (!wiphy->n_radio || radio_mask == BIT(wiphy->n_radio) - 1)
++		return true;
++
++	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
++	for (i = 0; i < wiphy->n_radio; i++) {
++		if (!(radio_mask & BIT(i)))
++			continue;
++
++		radio = &wiphy->radio[i];
++		if (!cfg80211_radio_chandef_valid(radio, &chandef))
++			continue;
++
++		return true;
++	}
++
++	return false;
++}
++EXPORT_SYMBOL(cfg80211_wdev_channel_allowed);
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 2371069..fd3d013 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -830,7 +830,7 @@ static int cfg80211_wext_siwfreq(struct net_device *dev,
+ 			ret = -EINVAL;
+ 			break;
+ 		}
+-		ret = cfg80211_set_monitor_channel(rdev, &chandef);
++		ret = cfg80211_set_monitor_channel(rdev, dev, &chandef);
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		freq = cfg80211_wext_freq(wextfreq);
 -- 
 2.39.5
 
