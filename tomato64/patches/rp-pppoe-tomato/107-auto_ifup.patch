@@ -1,0 +1,88 @@
+Description: Bring up underlying interface before attempting PPPoE
+ pppoe fails to start when the interface its running on is not up. This is a
+ hack to automatically bring up the interface prior running pppoe on it.
+Author: Eduard Bloch <edi@ka.linux.de>
+Bug-Debian: https://bugs.debian.org/106970
+Forwarded: no
+Reviewed-By: Christian Hudon <chrish@debian.org>
+Last-Update: 2016-06-21
+
+--- rp-pppoe/src/Makefile.in
++++ rp-pppoe/src/Makefile.in
+@@ -72,7 +72,7 @@
+ 	@CC@ -o $@ $^ $(LDFLAGS) $(STATIC)
+ 
+ pppoe.o: pppoe.c pppoe.h
+-	@CC@ $(CFLAGS) '-DRP_VERSION="$(RP_VERSION)"' -c -o $@ $<
++	@CC@ $(CFLAGS) -DAUTO_IFUP '-DRP_VERSION="$(RP_VERSION)"' -c -o $@ $<
+ 
+ discovery.o: discovery.c pppoe.h
+ 	@CC@ $(CFLAGS) '-DRP_VERSION="$(RP_VERSION)"' -c -o $@ $<
+--- rp-pppoe/src/pppoe.c
++++ rp-pppoe/src/pppoe.c
+@@ -52,6 +52,48 @@
+ 				   USED FOR STRESS-TESTING ONLY.  DO NOT
+ 				   USE THE -F OPTION AGAINST A REAL ISP */
+ 
++#ifdef AUTO_IFUP
++/* for interface activation, based on stripped down source source of ifconfig*/
++#include <linux/if.h>
++/*#include <sys/socket.h> */
++#include <sys/types.h>
++#include <sys/socket.h>
++#include "config.h"
++int skfd = -1;			/* generic raw socket desc.     */
++int sockets_open(int family)
++{
++  int sfd = -1;
++  sfd = socket(AF_INET, SOCK_DGRAM, 0);
++  return sfd;
++}
++/* Like strncpy but make sure the resulting string is always 0 terminated.
++ * Ripped from util.c (net-tools package) */  
++char *safe_strncpy(char *dst, const char *src, size_t size)
++{   
++    dst[size-1] = '\0';
++    return strncpy(dst,src,size-1);   
++}
++/* Set a certain interface flag. Ripped from ifconfig.c */
++static int set_flag(char *ifname, short flag)
++{
++    struct ifreq ifr;
++
++    safe_strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
++    if (ioctl(skfd, SIOCGIFFLAGS, &ifr) < 0) {
++	fprintf(stderr, "%s: unknown interface: %s\n", 
++		ifname,	strerror(errno));
++	return (-1);
++    }
++    safe_strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
++    ifr.ifr_flags |= flag;
++    if (ioctl(skfd, SIOCSIFFLAGS, &ifr) < 0) {
++	perror("SIOCSIFFLAGS");
++	return -1;
++    }
++    return (0);
++}
++#endif
++
+ PPPoEConnection *Connection = NULL; /* Must be global -- used
+ 				       in signal handler */
+ 
+@@ -519,6 +561,16 @@
+ 	SET_STRING(conn.ifName, DEFAULT_IF);
+     }
+ 
++#ifdef AUTO_IFUP    
++    /* Create a channel to the NET kernel. */
++    if ((skfd = sockets_open(0)) < 0) {
++	perror("socket");
++	exit(1);
++    }
++
++    set_flag(conn.ifName, (IFF_UP | IFF_RUNNING));
++#endif
++
+     if (!conn.printACNames) {
+ 
+ #ifdef HAVE_N_HDLC

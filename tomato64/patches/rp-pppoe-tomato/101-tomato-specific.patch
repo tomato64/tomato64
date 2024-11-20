@@ -1,32 +1,30 @@
 --- rp-pppoe/src/discovery.c
 +++ rp-pppoe/src/discovery.c
-@@ -44,9 +44,9 @@ static char const RCSID[] =
- #include <signal.h>
- 
- #ifdef PLUGIN
+@@ -38,9 +38,9 @@
+ #define HAVE_STDARG_H 1
+ #define HAVE_STDBOOL_H 1
+ #define HAVE_STDDEF_H 1
 -#include "pppd/pppd.h"
 -#include "pppd/fsm.h"
 -#include "pppd/lcp.h"
 +#include "../../pppd/pppd/pppd.h"
 +#include "../../pppd/pppd/fsm.h"
 +#include "../../pppd/pppd/lcp.h"
- #else
- int persist = 0;
- #endif
+ 
+ #ifdef PPPD_VERSION
+ /* New-style pppd API */
 --- rp-pppoe/src/plugin.c
 +++ rp-pppoe/src/plugin.c
-@@ -61,16 +61,19 @@ static char const RCSID[] =
+@@ -64,7 +64,7 @@
  #define _ROOT_PATH ""
  #endif
  
 -#define _PATH_ETHOPT         _ROOT_PATH "/etc/ppp/options."
 +#define _PATH_ETHOPT         _ROOT_PATH "/ppp/options."
  
- char pppd_version[] = VERSION;
- 
- static int seen_devnam[2] = {0, 0};
- static char *pppoe_reqd_mac = NULL;
- 
+ #ifdef PPPD_VERSION
+ /* Handle new-style (as of pppd 2.5) API */
+@@ -86,6 +86,9 @@
  /* From sys-linux.c in pppd -- MUST FIX THIS! */
  extern int new_style_driver;
  
@@ -36,7 +34,7 @@
  char *pppd_pppoe_service = NULL;
  static char *acName = NULL;
  static char *existingSession = NULL;
-@@ -271,7 +274,7 @@ PPPOESendConfig(int mtu,
+@@ -301,7 +304,7 @@
      struct ifreq ifr;
  
      if (mtu > MAX_PPPOE_MTU) {
@@ -45,7 +43,7 @@
  	mtu = MAX_PPPOE_MTU;
      }
      sock = socket(AF_INET, SOCK_DGRAM, 0);
-@@ -295,7 +298,7 @@ PPPOERecvConfig(int mru,
+@@ -325,7 +328,7 @@
  		int pcomp,
  		int accomp)
  {
@@ -54,25 +52,9 @@
  	warn("Couldn't increase MRU to %d", mru);
      }
  }
---- rp-pppoe/src/pppoe-server.c
-+++ rp-pppoe/src/pppoe-server.c
-@@ -2081,12 +2081,12 @@ startPPPDLinuxKernelMode(ClientSession *
-     argv[c++] = "default-asyncmap";
-     if (PassUnitOptionToPPPD) {
- 	argv[c++] = "unit";
--	sprintf(buffer, "%u", (unsigned int) (ntohs(session->sess) - 1 - SessOffset));
-+	sprintf(buffer, "%u", (unsigned int) (ntohs(session->sess) - 1));
- 	argv[c++] = buffer;
-     }
-     if (session->requested_mtu > 1492) {
- 	sprintf(buffer, "%u", (unsigned int) session->requested_mtu);
- 	argv[c++] = "mru";
- 	argv[c++] = buffer;
- 	argv[c++] = "mtu";
- 	argv[c++] = buffer;
 --- rp-pppoe/src/relay.c
 +++ rp-pppoe/src/relay.c
-@@ -960,10 +960,11 @@ relayHandlePADT(PPPoEInterface const *if
+@@ -940,10 +940,11 @@
      SessionHash *sh;
      PPPoESession *ses;
  

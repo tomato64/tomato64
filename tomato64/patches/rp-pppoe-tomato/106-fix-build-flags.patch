@@ -1,0 +1,17 @@
+Description: Add hardening build flags to Makefile
+Author: Lee Garrett <debian@rocketjump.eu>
+Forwarded: not-needed
+Last-Update: 2023-01-18
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- rp-pppoe/src/Makefile.in
++++ rp-pppoe/src/Makefile.in
+@@ -51,7 +51,7 @@
+ 	'-DPLUGIN_PATH="$(PLUGIN_PATH)"' \
+ 	'-DPPPOE_SERVER_OPTIONS="$(PPPOESERVER_PPPD_OPTIONS)"'
+ 
+-CFLAGS= @CFLAGS@ $(DEFINES) $(PATHS) -Ilibevent
++CFLAGS= @CFLAGS@ $(CPPFLAGS) $(DEFINES) $(PATHS) -Ilibevent
+ TARGETS=@TARGETS@
+ LDFLAGS=@LDFLAGS@
+ STATIC=@STATIC@

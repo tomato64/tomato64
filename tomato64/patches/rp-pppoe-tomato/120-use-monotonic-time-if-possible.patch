@@ -1,8 +1,8 @@
 --- rp-pppoe/src/common.c
 +++ rp-pppoe/src/common.c
-@@ -36,6 +36,10 @@
+@@ -29,6 +29,10 @@
+ #include <stdarg.h>
  #include <unistd.h>
- #endif
  
 +#ifdef HAVE_SYS_TIME_H
 +#include <sys/time.h>
@@ -11,10 +11,10 @@
  #include <sys/types.h>
  #include <pwd.h>
  
-@@ -658,3 +662,40 @@
+@@ -671,3 +675,40 @@
+ 
      return src - orig_src - 1;
  }
- #endif
 +
 +/********************************************************************
 + *
@@ -70,7 +70,7 @@
      tv->tv_sec = expire_at->tv_sec - now.tv_sec;
      tv->tv_usec = expire_at->tv_usec - now.tv_usec;
      if (tv->tv_usec < 0) {
-@@ -429,9 +435,15 @@
+@@ -432,9 +438,15 @@
      conn->seenMaxPayload = 0;
  #endif
  
@@ -87,7 +87,7 @@
      expire_at.tv_sec += timeout;
  
      do {
-@@ -651,9 +663,15 @@
+@@ -650,9 +662,15 @@
      PPPoEPacket packet;
      int len;
  
@@ -105,14 +105,14 @@
      do {
 --- rp-pppoe/src/pppoe.h
 +++ rp-pppoe/src/pppoe.h
-@@ -338,6 +338,10 @@
+@@ -228,6 +228,10 @@
  void discovery(PPPoEConnection *conn);
- unsigned char *findTag(PPPoEPacket *packet, UINT16_t tagType,
+ unsigned char *findTag(PPPoEPacket *packet, uint16_t tagType,
  		       PPPoETag *tag);
 +#ifdef HAVE_SYS_TIME_H
 +struct timeval;
 +int get_time(struct timeval *tv);
 +#endif
  
- #ifndef HAVE_STRLCPY
- size_t strlcpy(char *dst, const char *src, size_t size);
+ size_t rp_strlcpy(char *dst, const char *src, size_t size);
+ 

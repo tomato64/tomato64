@@ -10,7 +10,7 @@ Signed-off-by: Jo-Philipp Wich <jo@mein.io>
 
 --- rp-pppoe/src/plugin.c
 +++ rp-pppoe/src/plugin.c
-@@ -68,9 +68,6 @@
+@@ -83,9 +83,6 @@
  static int seen_devnam[2] = {0, 0};
  static char *pppoe_reqd_mac = NULL;
  
@@ -20,14 +20,15 @@ Signed-off-by: Jo-Philipp Wich <jo@mein.io>
  /* Supplied by pppd */
  extern int debug;
  
-@@ -469,10 +466,6 @@
+@@ -508,11 +505,6 @@
  void
  plugin_init(void)
  {
+-#ifndef PPPD_2_5  
 -    if (!ppp_available() && !new_style_driver) {
 -	fatal("Linux kernel does not support PPPoE -- are you running 2.4.x?");
 -    }
--
+-#endif
      add_options(Options);
  
      info("RP-PPPoE plugin version %s compiled against pppd %s",
