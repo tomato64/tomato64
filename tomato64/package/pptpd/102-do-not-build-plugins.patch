@@ -1,0 +1,38 @@
+--- pptpd/Makefile.am
++++ pptpd/Makefile.am
+@@ -22,7 +22,6 @@
+ Makefile.uClinux config.embed.h version reconf \
+ tools/pptp-portslave tools/vpnstats tools/vpnstats.pl tools/vpnuser \
+ pptpd.init pptpd.spec makepackage \
+-plugins/Makefile plugins/*.h plugins/*.c \
+ debian/README.debian debian/changelog debian/conffiles debian/config \
+ debian/control debian/copyright debian/dirs debian/docs \
+ debian/examples debian/pptpd-options debian/pptpd.conf \
+@@ -50,7 +49,7 @@
+ 
+ bcrelay_SOURCES = bcrelay.c defaults.h our_syslog.h our_getopt.h
+ 
+-subdirs = plugins
++#subdirs = plugins
+ 
+ all-local:
+ 	for d in $(subdirs); do $(MAKE) $(MFLAGS) 'CC=$(CC)' -C $$d all; done
+--- pptpd/Makefile.in
++++ pptpd/Makefile.in
+@@ -333,7 +333,6 @@
+ Makefile.uClinux config.embed.h version reconf \
+ tools/pptp-portslave tools/vpnstats tools/vpnstats.pl tools/vpnuser \
+ pptpd.init pptpd.spec makepackage \
+-plugins/Makefile plugins/*.h plugins/*.c \
+ debian/README.debian debian/changelog debian/conffiles debian/config \
+ debian/control debian/copyright debian/dirs debian/docs \
+ debian/examples debian/pptpd-options debian/pptpd.conf \
+@@ -355,7 +354,7 @@
+ pptpd_LDADD = $(XTRALIBS_MGR)
+ pptpctrl_LDADD = $(XTRALIBS_CTRL)
+ bcrelay_SOURCES = bcrelay.c defaults.h our_syslog.h our_getopt.h
+-subdirs = plugins
++#subdirs = plugins
+ all: config.h
+ 	$(MAKE) $(AM_MAKEFLAGS) all-am
+ 
