@@ -1722,6 +1722,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server1_key",		V_NONE				},
 	{ "vpn_server1_dh",		V_NONE				},
 	{ "vpn_server1_br",		V_LENGTH(0, 50)			},
+	{ "vpn_server1_ecdh",		V_01				},	/* when using ECDH */
 	{ "vpn_server2_poll",		V_RANGE(0, 30)			},
 	{ "vpn_server2_if",		V_TEXT(3, 3)			},	/* tap, tun */
 	{ "vpn_server2_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
@@ -1769,6 +1770,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server2_key",		V_NONE				},
 	{ "vpn_server2_dh",		V_NONE				},
 	{ "vpn_server2_br",		V_LENGTH(0, 50)			},
+	{ "vpn_server2_ecdh",		V_01				},	/* when using ECDH */
 	{ "vpn_client_eas",		V_NONE				},
 	{ "vpn_client1_poll",		V_RANGE(0, 30)			},
 	{ "vpn_client1_if",		V_TEXT(3, 3)			},	/* tap, tun */

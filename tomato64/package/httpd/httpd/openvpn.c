@@ -66,7 +66,7 @@ char *read_from_file(const char *filePath, char *buf, size_t buf_len)
 	return buf;
 }
 
-static void prepareCAGeneration(const int serverNum)
+static void prepareCAGeneration(const int serverNum, const int is_ecdh)
 {
 	char buffer[512];
 	char buffer2[512];
@@ -91,9 +91,21 @@ static void prepareCAGeneration(const int serverNum)
 		memset(buffer2, 0, sizeof(buffer2));
 		snprintf(buffer2, sizeof(buffer2), "\"/C=GB/ST=Yorks/L=York/O=Tomato64/OU=IT/CN=server%s\"", tmp);
 		memset(buffer, 0, sizeof(buffer));
-		snprintf(buffer, sizeof(buffer), "openssl req -days 3650 -nodes -new -x509 -keyout "OPENSSL_TMP_DIR"/cakey.pem -out "OPENSSL_TMP_DIR"/cacert.pem -subj %s >>"OPENSSL_TMP_DIR"/openssl.log 2>&1", buffer2);
-		syslog(LOG_WARNING, buffer);
-		system(buffer);
+
+		if (is_ecdh == 1) {
+			snprintf(buffer, sizeof(buffer), "openssl ecparam -genkey -name prime256v1 -out "OPENSSL_TMP_DIR"/cakey.pem -noout >> "OPENSSL_TMP_DIR"/openssl.log 2>&1");
+			syslog(LOG_WARNING, buffer);
+			system(buffer);
+			memset(buffer, 0, sizeof(buffer));
+			snprintf(buffer, sizeof(buffer), "openssl req -new -noenc -x509 -days 3650 -key "OPENSSL_TMP_DIR"/cakey.pem -out "OPENSSL_TMP_DIR"/cacert.pem -extensions v3_ca -subj %s >> "OPENSSL_TMP_DIR"/openssl.log 2>&1", buffer2);
+			syslog(LOG_WARNING, buffer);
+			system(buffer);
+		}
+		else {
+			snprintf(buffer, sizeof(buffer), "openssl req -new -noenc -x509 -days 3650 -keyout "OPENSSL_TMP_DIR"/cakey.pem -out "OPENSSL_TMP_DIR"/cacert.pem -subj %s >> "OPENSSL_TMP_DIR"/openssl.log 2>&1", buffer2);
+			syslog(LOG_WARNING, buffer);
+			system(buffer);
+		}
 	}
 	else {
 		syslog(LOG_WARNING, "Found CA KEY for server %d, creating from NVRAM", serverNum);
@@ -102,7 +114,7 @@ static void prepareCAGeneration(const int serverNum)
 	}
 }
 
-static void generateKey(const char *prefix, const int userid)
+static void generateKey(const char *prefix, const int userid, const int is_ecdh)
 {
 	char subj_buf[256];
 	char buffer[512];
@@ -120,34 +132,50 @@ static void generateKey(const char *prefix, const int userid)
 		syslog(LOG_WARNING, "Building Certs for Client%d", userid);
 	}
 
-	memset(serial, 0, 8);
+	memset(serial, 0, sizeof(serial));
 	snprintf(serial, sizeof(serial), "%.2X", userid);
 	put_to_file(OPENSSL_TMP_DIR"/serial", serial);
 
-	memset(serial, 0, 8);
+	memset(serial, 0, sizeof(serial));
 	snprintf(serial, sizeof(serial), "%d", userid);
 
-	memset(tmp, 0, 64);
+	memset(tmp, 0, sizeof(tmp));
 	if ((p = nvram_safe_get("wan_domain")) && (strcmp(p, "")))
 		snprintf(tmp, sizeof(tmp), ".%s", p);
 
 	memset(subj_buf, 0, sizeof(subj_buf));
 	snprintf(subj_buf, sizeof(subj_buf), "\"/C=GB/ST=Yorks/L=York/O=Tomato64/OU=IT/CN=%s%s%s\"", prefix, (userid > 0 ? serial : ""), tmp);
 
-	memset(buffer, 0, sizeof(buffer));
-	snprintf(buffer, sizeof(buffer), "openssl req -nodes -new -keyout "OPENSSL_TMP_DIR"/%s.key -out "OPENSSL_TMP_DIR"/%s.csr %s -subj %s >>"OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix, str, subj_buf);
-	syslog(LOG_WARNING, buffer);
-	system(buffer);
+	if (is_ecdh == 1) {
+		memset(buffer, 0, sizeof(buffer));
+		snprintf(buffer, sizeof(buffer), "openssl ecparam -genkey -name prime256v1 -out "OPENSSL_TMP_DIR"/%s.key -noout >> "OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix);
+		syslog(LOG_WARNING, buffer);
+		system(buffer);
+		memset(buffer, 0, sizeof(buffer));
+		snprintf(buffer, sizeof(buffer), "openssl req -new -noenc -key "OPENSSL_TMP_DIR"/%s.key -out "OPENSSL_TMP_DIR"/%s.csr %s -subj %s >> "OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix, str, subj_buf);
+		syslog(LOG_WARNING, buffer);
+		system(buffer);
+		memset(buffer, 0, sizeof(buffer));
+		snprintf(buffer, sizeof(buffer), "openssl ca -batch -policy policy_anything -days 3650 -notext -keyfile "OPENSSL_TMP_DIR"/cakey.pem -cert "OPENSSL_TMP_DIR"/cacert.pem -in "OPENSSL_TMP_DIR"/%s.csr -out "OPENSSL_TMP_DIR"/%s.crt %s -subj %s >> "OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix, str, subj_buf);
+		syslog(LOG_WARNING, buffer);
+		system(buffer);
+	}
+	else {
+		memset(buffer, 0, sizeof(buffer));
+		snprintf(buffer, sizeof(buffer), "openssl req -new -noenc -keyout "OPENSSL_TMP_DIR"/%s.key -out "OPENSSL_TMP_DIR"/%s.csr %s -subj %s >> "OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix, str, subj_buf);
+		syslog(LOG_WARNING, buffer);
+		system(buffer);
 
-	memset(buffer, 0, sizeof(buffer));
-	snprintf(buffer, sizeof(buffer), "openssl ca -batch -policy policy_anything -days 3650 -out "OPENSSL_TMP_DIR"/%s.crt -in "OPENSSL_TMP_DIR"/%s.csr %s -subj %s >>"OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix, str, subj_buf);
-	syslog(LOG_WARNING, buffer);
-	system(buffer);
+		memset(buffer, 0, sizeof(buffer));
+		snprintf(buffer, sizeof(buffer), "openssl ca -batch -policy policy_anything -days 3650 -in "OPENSSL_TMP_DIR"/%s.csr -out "OPENSSL_TMP_DIR"/%s.crt %s -subj %s >> "OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix, str, subj_buf);
+		syslog(LOG_WARNING, buffer);
+		system(buffer);
 
-	memset(buffer, 0, sizeof(buffer));
-	snprintf(buffer, sizeof(buffer), "openssl x509 -in "OPENSSL_TMP_DIR"/%s.crt -inform PEM -out "OPENSSL_TMP_DIR"/%s.crt -outform PEM >>"OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix);
-	syslog(LOG_WARNING, buffer);
-	system(buffer);
+		memset(buffer, 0, sizeof(buffer));
+		snprintf(buffer, sizeof(buffer), "openssl x509 -in "OPENSSL_TMP_DIR"/%s.crt -inform PEM -out "OPENSSL_TMP_DIR"/%s.crt -outform PEM >> "OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix);
+		syslog(LOG_WARNING, buffer);
+		system(buffer);
+	}
 }
 
 static void print_generated_ca_to_user()
@@ -221,7 +249,7 @@ void wo_ovpn_genkey(char *url)
 #ifdef TCONFIG_OPENVPN
 	char buffer[128];
 	char *modeStr, *serverStr;
-	int server, dhtype;
+	int server, dhtype, is_ecdh;
 
 	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, webcgi_safeget("_mode", ""), sizeof(buffer));
@@ -249,6 +277,10 @@ void wo_ovpn_genkey(char *url)
 	dhtype = atoi(js_string(buffer)); /* quicky scrub */
 
 	memset(buffer, 0, sizeof(buffer));
+	strlcpy(buffer, webcgi_safeget("_ecdh", "0"), sizeof(buffer));
+	is_ecdh = atoi(js_string(buffer)); /* quicky scrub */
+
+	memset(buffer, 0, sizeof(buffer));
 
 	if (!strcmp(modeStr, "static1")) { /* tls-auth / tls-crypt */
 #ifndef TCONFIG_OPTIMIZE_SIZE_MORE
@@ -273,8 +305,8 @@ void wo_ovpn_genkey(char *url)
 		web_pipecmd(buffer, WOF_NONE);
 	}
 	else {
-		prepareCAGeneration(server);
-		generateKey("server", 0);
+		prepareCAGeneration(server, is_ecdh);
+		generateKey("server", 0, is_ecdh);
 		print_generated_ca_to_user();
 		print_generated_keys_to_user("server");
 #endif /* TCONFIG_KEYGEN */
@@ -291,7 +323,7 @@ void wo_ovpn_genclientconfig(char *url)
 	char *serverStr;
 	char *dummy, *uname, *passwd;
 	char *u, *nv, *nvp, *b;
-	int server, hmac, tls = 0;
+	int server, hmac, is_ecdh, tls = 0;
 	int userauth, useronly, userid, i = 0;
 	struct in_addr lanip, lannetmask, lannet;
 	FILE *fp;
@@ -314,6 +346,7 @@ void wo_ovpn_genclientconfig(char *url)
 	userauth = atoi(getNVRAMVar("vpn_server%d_userpass", server));
 	useronly = userauth && atoi(getNVRAMVar("vpn_server%d_nocert", server));
 	userid = atoi(webcgi_safeget("_userid", "0"));
+	is_ecdh = atoi(webcgi_safeget("_ecdh", "0"));
 
 	eval("rm", "-Rf", OVPN_CLIENT_DIR);
 	eval("mkdir", "-m", "0777", "-p", OVPN_CLIENT_DIR);
@@ -363,7 +396,7 @@ void wo_ovpn_genclientconfig(char *url)
 	strlcpy(buffer, getNVRAMVar("vpn_server%d_ncp_ciphers", server), sizeof(buffer));
 	if (tls == 1) {
 		if (buffer[0] != '\0')
-			fprintf(fp, "ncp-ciphers %s\n", buffer);
+			fprintf(fp, "data-ciphers %s\n", buffer);
 	}
 	else { /* secret */
 		memset(buffer, 0, sizeof(buffer));
@@ -380,9 +413,11 @@ void wo_ovpn_genclientconfig(char *url)
 
 	if (tls == 1) {
 		fprintf(fp, "client\n"
+		            ";verify-x509-name \"server\" name\n"
 		            "remote-cert-tls server\n"
-		            "; ca ca.pem\n"
-		            "<ca>\n%s\n</ca>\n\n", getNVRAMVar("vpn_server%d_ca", server));
+		            "\n;ca ca.pem\n"
+		            "<ca>\n%s</ca>\n\n",
+		            getNVRAMVar("vpn_server%d_ca", server));
 
 		put_to_file(OVPN_CLIENT_DIR"/ca.pem", getNVRAMVar("vpn_server%d_ca", server));
 
@@ -391,13 +426,13 @@ void wo_ovpn_genclientconfig(char *url)
 		hmac = nvram_get_int(buffer);
 		if (hmac >= 0) {
 			if (hmac == 3)
-				fprintf(fp, "; tls-crypt static.key");
+				fprintf(fp, ";tls-crypt static.key");
 #ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 			else if (hmac == 4)
-				fprintf(fp, "; tls-crypt-v2 static.key");
+				fprintf(fp, ";tls-crypt-v2 static.key");
 #endif /* TCONFIG_OPTIMIZE_SIZE_MORE */
 			else {
-				fprintf(fp, "; tls-auth static.key");
+				fprintf(fp, ";tls-auth static.key");
 				if (hmac == 0) {
 					fprintf(fp, " 1\n");
 					fprintf(fp, "key-direction 1\n");
@@ -417,7 +452,7 @@ void wo_ovpn_genclientconfig(char *url)
 				system("openvpn --tls-crypt-v2 "OVPN_CLIENT_DIR"/static-server.key --genkey tls-crypt-v2-client "OVPN_CLIENT_DIR"/static.key >/dev/null 2>&1");
 				eval("rm", OVPN_CLIENT_DIR"/static-server.key");
 
-				fprintf(fp, "<tls-crypt-v2>\n%s\n</tls-crypt-v2>\n\n", read_from_file(OVPN_CLIENT_DIR"/static.key", buffer2, sizeof(buffer2)));
+				fprintf(fp, "<tls-crypt-v2>\n%s</tls-crypt-v2>\n\n", read_from_file(OVPN_CLIENT_DIR"/static.key", buffer2, sizeof(buffer2)));
 			}
 			else
 #endif /* TCONFIG_OPTIMIZE_SIZE_MORE */
@@ -425,9 +460,9 @@ void wo_ovpn_genclientconfig(char *url)
 				put_to_file(OVPN_CLIENT_DIR"/static.key", getNVRAMVar("vpn_server%d_static", server));
 
 				if (hmac == 3) /* tls-crypt */
-					fprintf(fp, "<tls-crypt>\n%s\n</tls-crypt>\n\n", getNVRAMVar("vpn_server%d_static", server));
+					fprintf(fp, "<tls-crypt>\n%s</tls-crypt>\n\n", getNVRAMVar("vpn_server%d_static", server));
 				else /* tls-auth */
-					fprintf(fp, "<tls-auth>\n%s\n</tls-auth>\n\n", getNVRAMVar("vpn_server%d_static", server));
+					fprintf(fp, "<tls-auth>\n%s</tls-auth>\n\n", getNVRAMVar("vpn_server%d_static", server));
 			}
 		}
 
@@ -462,14 +497,14 @@ void wo_ovpn_genclientconfig(char *url)
 		}
 
 		if (!useronly) {
-			prepareCAGeneration(server);
-			generateKey("client", userid);
+			prepareCAGeneration(server, is_ecdh);
+			generateKey("client", userid, is_ecdh);
 
 			eval("cp", OPENSSL_TMP_DIR"/client.crt", OVPN_CLIENT_DIR);
 			eval("cp", OPENSSL_TMP_DIR"/client.key", OVPN_CLIENT_DIR);
 
-			fprintf(fp, "; cert client.crt\n<cert>\n%s\n</cert>\n\n", read_from_file(OVPN_CLIENT_DIR"/client.crt", buffer2, sizeof(buffer2)));
-			fprintf(fp, "; key client.key\n<key>\n%s\n</key>\n\n", read_from_file(OVPN_CLIENT_DIR"/client.key", buffer2, sizeof(buffer2)));
+			fprintf(fp, ";cert client.crt\n<cert>\n%s</cert>\n\n", read_from_file(OVPN_CLIENT_DIR"/client.crt", buffer2, sizeof(buffer2)));
+			fprintf(fp, ";key client.key\n<key>\n%s</key>\n\n", read_from_file(OVPN_CLIENT_DIR"/client.key", buffer2, sizeof(buffer2)));
 		}
 	}
 	else {
@@ -487,9 +522,9 @@ void wo_ovpn_genclientconfig(char *url)
 		if (inet_aton(nvram_safe_get("lan_ipaddr"),&lanip) && inet_aton(nvram_safe_get("lan_netmask"),&lannetmask))
 		{
 			lannet.s_addr = lanip.s_addr & lannetmask.s_addr;
-			fprintf(fp, "route %s %s\n", inet_ntoa(lannet), nvram_safe_get("lan_netmask"));
+			fprintf(fp, "route %s %s\n\n", inet_ntoa(lannet), nvram_safe_get("lan_netmask"));
 		}
-		fprintf(fp, "; secret static.key\n<secret>\n%s\n</secret>\n\n", getNVRAMVar("vpn_server%d_static", server));
+		fprintf(fp, ";secret static.key\n<secret>\n%s</secret>\n\n", getNVRAMVar("vpn_server%d_static", server));
 		put_to_file(OVPN_CLIENT_DIR"/static.key", getNVRAMVar("vpn_server%d_static", server));
 	}
 
@@ -498,8 +533,8 @@ void wo_ovpn_genclientconfig(char *url)
 	            "nobind\n"
 	            "float\n"
 	            "verb 3\n"
-	            "; status status\n"
-	            "; log /var/log/openvpn.log\n");
+	            ";status status\n"
+	            ";log /var/log/openvpn.log\n");
 
 	fclose(fp);
 

@@ -4,7 +4,7 @@
  *
  * No part of this file may be used without permission.
  *
- * Fixes/updates (C) 2018 - 2022 pedro
+ * Fixes/updates (C) 2018 - 2024 pedro
  *
  */
 
@@ -1159,10 +1159,15 @@ void start_ovpn_server(int unit)
 		snprintf(buffer, sizeof(buffer), "vpn_server%d_ca", unit);
 		if (!nvram_is_empty(buffer))
 			fprintf(fp, "ca ca.crt\n");
+
+		nvi = atoi(getNVRAMVar("vpn_server%d_ecdh", unit));
 		memset(buffer, 0, BUF_SIZE);
 		snprintf(buffer, sizeof(buffer), "vpn_server%d_dh", unit);
-		if (!nvram_is_empty(buffer))
+		if (!nvram_is_empty(buffer) && nvi == 0)
 			fprintf(fp, "dh dh.pem\n");
+		else
+			fprintf(fp, "dh none\n");
+
 		memset(buffer, 0, BUF_SIZE);
 		snprintf(buffer, sizeof(buffer), "vpn_server%d_crt", unit);
 		if (!nvram_is_empty(buffer))
