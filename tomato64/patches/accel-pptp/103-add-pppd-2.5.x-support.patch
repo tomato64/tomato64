@@ -1,0 +1,76 @@
+From 76aa1f933e4fd0fb204a0592c46590cc9d726378 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Wed, 20 Nov 2024 14:15:15 -0700
+Subject: [PATCH] add pppd 2.5.x support
+
+---
+ pppd_plugin/config.h.in |  3 +++
+ pppd_plugin/configure   | 16 ++++++++++++----
+ pppd_plugin/src/pptp.c  |  9 +++++++++
+ 3 files changed, 24 insertions(+), 4 deletions(-)
+
+diff --git a/pppd_plugin/config.h.in b/pppd_plugin/config.h.in
+index b3cd229..90963a1 100644
+--- a/pppd_plugin/config.h.in
++++ b/pppd_plugin/config.h.in
+@@ -59,3 +59,6 @@
+ 
+ /* Version number of package */
+ #undef PLUGINVERSION
++
++/* Define to 1 if this is pppd 2.5.x */
++#undef PPPD_2_5
+diff --git a/pppd_plugin/configure b/pppd_plugin/configure
+index 0c167c5..3fb5c0c 100755
+--- a/pppd_plugin/configure
++++ b/pppd_plugin/configure
+@@ -19467,14 +19467,22 @@ echo $ECHO_N "checking for pppd... $ECHO_C" >&6; }
+ if test -n "${PPPDIR}"; then
+     if test -f ${PPPDIR}/pppd/patchlevel.h; then
+ 	pppd=${PPPDIR}/pppd
++	pppd_ver=`cat ${pppd}/patchlevel.h | awk '/VERSION/ {gsub(/"/,"",$3);print $3}'`
+     else
+-	{ echo "$as_me:$LINENO: result: not found" >&5
++	if test -f ${PPPDIR}/pppd/pppdconf.h; then
++	    pppd=${PPPDIR}/pppd
++	    pppd_ver=`cat ${pppd}/pppdconf.h | awk '/PPPD_VERSION/ {gsub(/"/,"",$3);print $3}'`
++cat >>confdefs.h <<_ACEOF
++#define PPPD_2_5 1
++_ACEOF
++	else
++	    { echo "$as_me:$LINENO: result: not found" >&5
+ echo "${ECHO_T}not found" >&6; }
+-        { { echo "$as_me:$LINENO: error: Could not find pppd" >&5
++	    { { echo "$as_me:$LINENO: error: Could not find pppd" >&5
+ echo "$as_me: error: Could not find pppd" >&2;}
+-   { (exit 1); exit 1; }; }
++	    { (exit 1); exit 1; }; }
++	fi
+     fi
+-    pppd_ver=`cat ${pppd}/patchlevel.h | awk '/VERSION/ {gsub(/"/,"",$3);print $3}'`
+ else
+     pppd=`which pppd 2>&1`
+     if test $? -eq 1; then
+diff --git a/pppd_plugin/src/pptp.c b/pppd_plugin/src/pptp.c
+index e66c86b..f3ffb9d 100644
+--- a/pppd_plugin/src/pptp.c
++++ b/pppd_plugin/src/pptp.c
+@@ -45,6 +45,15 @@
+ #include "pppd/ccp.h"
+ #include "pppd/pathnames.h"
+ 
++#ifdef PPPD_2_5
++/* Handle new-style (as of pppd 2.5) API */
++#define add_options              ppp_add_options
++#define generic_establish_ppp    ppp_generic_establish
++#define generic_disestablish_ppp ppp_generic_disestablish
++#include "pppd/options.h"
++#include "pppd/pppd-private.h"
++#endif
++
+ #include "pptp_callmgr.h"
+ #include <net/if.h>
+ #include <net/ethernet.h>
+-- 
+2.39.5
+
