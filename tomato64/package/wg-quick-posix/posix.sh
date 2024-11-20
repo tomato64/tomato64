@@ -35,172 +35,13 @@ exit_trap() {
   trap "${EXIT_TRAP:--}" EXIT
 }
 
-# freshtomato doesn't have mktemp so we need to monkeypatch
-mktemp() {
-  FILENAME=$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 10)
-  echo "" > /tmp/var/tmp/$FILENAME
-  echo "/tmp/var/tmp/$FILENAME"
+type_p() {
+  type -p "${@}"
 }
 
-# freshtomato doesn't have readlink so we need to monkeypatch
-readlink() {
-  [ "${1:-}" ] || return 1
-  max_symlinks=40
-  CDPATH='' # to avoid changing to an unexpected directory
-
-  target=$1
-  [ -e "${target%/}" ] || target=${1%"${1##*[!/]}"} # trim trailing slashes
-  [ -d "${target:-/}" ] && target="$target/"
-
-  cd -P . 2>/dev/null || return 1
-  while [ "$max_symlinks" -ge 0 ] && max_symlinks=$((max_symlinks - 1)); do
-    if [ ! "$target" = "${target%/*}" ]; then
-      case $target in
-        /*) cd -P "${target%/*}/" 2>/dev/null || break ;;
-        *) cd -P "./${target%/*}" 2>/dev/null || break ;;
-      esac
-      target=${target##*/}
-    fi
-
-    if [ ! -L "$target" ]; then
-      target="${PWD%/}${target:+/}${target}"
-      printf '%s\n' "${target:-/}"
-      return 0
-    fi
-
-    # `ls -dl` format: "%s %u %s %s %u %s %s -> %s\n",
-    #   <file mode>, <number of links>, <owner name>, <group name>,
-    #   <size>, <date and time>, <pathname of link>, <contents of link>
-    # https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ls.html
-    link=$(ls -dl -- "$target" 2>/dev/null) || break
-    target=${link#*" $target -> "}
-  done
-  return 1
+stat_octal() {
+  stat -c '%04a' "${@}"
 }
-
-# embedded systems without char-classes in "tr" need monkeypatching
-if ! [ "$(printf 'aBcD' | tr '[:upper:]' '[:lower:]')" = 'abcd' ]; then
-  REAL_TR="$(type -p tr 2>/dev/null)"
-  tr() {
-    args=''
-    while [ "${#}" -ne 0 ]; do
-      case "${1}" in
-        '[:upper:]')
-          args="${args:+${args} }$(entity_save '[A-Z]')"
-          ;;
-        '[:lower:]')
-          args="${args:+${args} }$(entity_save '[a-z]')"
-          ;;
-        *)
-          args="${args:+${args} }$(entity_save "${1}")"
-          ;;
-      esac
-      shift
-    done
-    eval "${REAL_TR} ${args}"
-    unset args
-  }
-fi
-
-# POSIX shells _may_ not have "type -p" so we need this drop-in
-#shellcheck disable=SC2039
-if [ -n "$(type -p cat 2>/dev/null || :)" ]; then
-  type_p() {
-    type -p "${@}"
-  }
-else
-  type_p() {
-    ret=0
-    for arg; do
-      found=0
-      for path in $(printf %s "${PATH-}" | tr ':' ' '); do
-        if [ -x "${path}/${arg}" ]; then
-          found=1
-          break
-        fi
-      done
-      if [ "${found}" -eq 1 ]; then
-        printf '%s/%s' "${path}" "${arg}"
-      else
-        ret=1
-      fi
-    done
-    unset arg found path
-    if [ "${ret}" -eq 0 ]; then
-      unset ret
-      return 0
-    else
-      unset ret
-      return 1
-    fi
-  }
-fi
-
-# embedded systems without "stat" need this drop-in
-if type -p stat >/dev/null 2>&1; then
-  stat_octal() {
-    stat -c '%04a' "${@}"
-  }
-else
-  stat_octal() {
-    #shellcheck disable=SC2012 disable=SC2034
-    ls -l "${@}" |
-      sed -ne '
-        s/^[-dsbclp]\([-r]\)\([-w]\)\([-xsStT]\)\([-r]\)\([-w]\)\([-xsStT]\)\([-r]\)\([-w]\)\([-xsStT]\).*$/\1 \2 \3 \4 \5 \6 \7 \8 \9/g
-        t P
-        b
-        : P
-        p
-      ' |
-      while read -r ur uw ux gr gw gx or ow ox; do
-        out=''
-        spc_sum=0
-        for ctg in u g o; do
-          sum=0
-          for perm in r w x; do
-            var="${ctg}${perm}"
-            eval "val=\"\${${var}}\""
-            #shellcheck disable=SC2154
-            case "${val}" in
-              r) exp=2 ;;
-              w) exp=1 ;;
-              s | t | x) exp=0 ;;
-              - | S | T) exp=-1 ;;
-              *) exit 1 ;;
-            esac
-            case "${val}" in
-              - | w | r | x)
-                spc_exp=-1
-                ;;
-              S | s)
-                case "${var}" in
-                  u*) spc_exp=2 ;;
-                  g*) spc_exp=1 ;;
-                  *) exit 1 ;;
-                esac
-                ;;
-              T | t)
-                case "${var}" in
-                  o*) spc_exp=0 ;;
-                  *) exit 1 ;;
-                esac
-                ;;
-              *)
-                exit 1
-                ;;
-            esac
-            [ "${exp}" -lt 0 ] ||
-              sum=$((sum + $((1 << exp))))
-            [ "${spc_exp}" -lt 0 ] ||
-              spc_sum=$((spc_sum + $((1 << spc_exp))))
-          done
-          out="${out}$(printf %o "${sum}")"
-        done
-        printf '%o%s\n' "${spc_sum}" "${out}"
-      done
-    unset ur uw ux gr gw gx or ow ox ctg spc_sum out perm sum var val exp spc_exp
-  }
-fi
 
 ##
 
@@ -623,9 +464,9 @@ add_default() {
       pf='ip'
       ;;
   esac
-  cmd ip "${proto}" route add "${1}" dev "${INTERFACE}" table "${table}"
   cmd ip "${proto}" rule add not fwmark "${table}" table "${table}"
   cmd ip "${proto}" rule add table main suppress_prefixlength 0
+  cmd ip "${proto}" route add "${1}" dev "${INTERFACE}" table "${table}"
 
   restore="*raw${NL}"
   nftable="wg-quick-${INTERFACE}"
@@ -790,8 +631,8 @@ cmd_up() {
   [ -z "$(ip link show dev "${INTERFACE}" 2>/dev/null)" ] ||
     die "'${INTERFACE}' already exists"
   exit_trap push 'del_if'
-  eval "execute_hooks ${PRE_UP}"
   add_if
+  eval "execute_hooks ${PRE_UP}"
   set_config
   set_mtu_up
   eval "set -- ${ADDRESSES}"
