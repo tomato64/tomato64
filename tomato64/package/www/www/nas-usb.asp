@@ -457,7 +457,7 @@ function submit_complete() {
 				{ title: 'HDD Spindown', indent: 2, name: 'f_idle_enable', type: 'checkbox', suffix: '&nbsp; <small>Spin down each HDD when idle. No need to use with flash drive.<\/small>', value: nvram.idle_enable == 1 },
 			null,
 /* UPS-BEGIN */
-			{ title: 'Run APCUPSD Deamon', name: 'f_usb_apcupsd', type: 'checkbox',
+			{ title: 'Run APCUPSD Daemon', name: 'f_usb_apcupsd', type: 'checkbox',
 				suffix: '&nbsp; <small>Required by UPS Monitor (APC Uninterruptible Power Supply)<\/small>', value: nvram.usb_apcupsd == 1 },
 				{ title: 'Custom Config File', indent: 2, name: 'f_usb_apcupsd_custom', type: 'checkbox',
 					suffix: '&nbsp; <small>(located /etc/apcupsd.conf)<\/small>', value: nvram.usb_apcupsd_custom == 1 },
