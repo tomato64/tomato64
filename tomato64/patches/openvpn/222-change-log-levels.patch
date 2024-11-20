@@ -1,0 +1,87 @@
+--- openvpn/src/openvpn/ssl.c
++++ openvpn/src/openvpn/ssl.c
+@@ -2600,7 +2600,7 @@
+     dmsg(D_TLS_DEBUG_MED, "STATE S_ACTIVE");
+ 
+     ks->established = now;
+-    if (check_debug_level(D_HANDSHAKE))
++    if (check_debug_level(D_SHOW_PARMS))
+     {
+         print_details(&ks->ks_ssl, "Control Channel:");
+     }
+@@ -3069,7 +3069,7 @@
+                 && ks->n_packets >= session->opt->renegotiate_packets)
+             || (packet_id_close_to_wrapping(&ks->crypto_options.packet_id.send))))
+     {
+-        msg(D_TLS_DEBUG_LOW, "TLS: soft reset sec=%d/%d bytes=" counter_format
++        msg(D_SHOW_PARMS, "TLS: soft reset sec=%d/%d bytes=" counter_format
+             "/%d pkts=" counter_format "/%d",
+             (int) (now - ks->established), session->opt->renegotiate_seconds,
+             ks->n_bytes, session->opt->renegotiate_bytes,
+--- openvpn/src/openvpn/ssl_verify.c
++++ openvpn/src/openvpn/ssl_verify.c
+@@ -350,7 +350,7 @@
+     {
+         if (SUCCESS == x509_verify_cert_ku(peer_cert, opt->remote_cert_ku, MAX_PARMS))
+         {
+-            msg(D_HANDSHAKE, "VERIFY KU OK");
++            msg(D_SHOW_PARMS, "VERIFY KU OK");
+         }
+         else
+         {
+@@ -364,7 +364,7 @@
+     {
+         if (SUCCESS == x509_verify_cert_eku(peer_cert, opt->remote_cert_eku))
+         {
+-            msg(D_HANDSHAKE, "VERIFY EKU OK");
++            msg(D_SHOW_PARMS, "VERIFY EKU OK");
+         }
+         else
+         {
+@@ -384,7 +384,7 @@
+                  && strncmp(opt->verify_x509_name, common_name,
+                             strlen(opt->verify_x509_name)) == 0) )
+         {
+-            msg(D_HANDSHAKE, "VERIFY X509NAME OK: %s", subject);
++            msg(D_SHOW_PARMS, "VERIFY X509NAME OK: %s", subject);
+         }
+         else
+         {
+@@ -791,7 +791,7 @@
+         }
+     }
+ 
+-    msg(D_HANDSHAKE, "VERIFY OK: depth=%d, %s", cert_depth, subject);
++    msg(D_SHOW_PARMS, "VERIFY OK: depth=%d, %s", cert_depth, subject);
+     session->verified = true;
+     ret = SUCCESS;
+ 
+--- openvpn/src/openvpn/ssl_verify_openssl.c
++++ openvpn/src/openvpn/ssl_verify_openssl.c
+@@ -753,7 +753,7 @@
+     {
+         int i;
+ 
+-        msg(D_HANDSHAKE, "Validating certificate extended key usage");
++        msg(D_SHOW_PARMS, "Validating certificate extended key usage");
+         for (i = 0; SUCCESS != fFound && i < sk_ASN1_OBJECT_num(eku); i++)
+         {
+             ASN1_OBJECT *oid = sk_ASN1_OBJECT_value(eku, i);
+@@ -761,7 +761,7 @@
+ 
+             if (SUCCESS != fFound && OBJ_obj2txt(szOid, sizeof(szOid), oid, 0) != -1)
+             {
+-                msg(D_HANDSHAKE, "++ Certificate has EKU (str) %s, expects %s",
++                msg(D_SHOW_PARMS, "++ Certificate has EKU (str) %s, expects %s",
+                     szOid, expected_oid);
+                 if (!strcmp(expected_oid, szOid))
+                 {
+@@ -770,7 +770,7 @@
+             }
+             if (SUCCESS != fFound && OBJ_obj2txt(szOid, sizeof(szOid), oid, 1) != -1)
+             {
+-                msg(D_HANDSHAKE, "++ Certificate has EKU (oid) %s, expects %s",
++                msg(D_SHOW_PARMS, "++ Certificate has EKU (oid) %s, expects %s",
+                     szOid, expected_oid);
+                 if (!strcmp(expected_oid, szOid))
+                 {
