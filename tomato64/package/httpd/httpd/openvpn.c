@@ -1,9 +1,12 @@
 /*
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ * Fixes/updates (C) 2018 - 2024 pedro
+ *
+ */
 
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
 
 #include "tomato.h"
 #include "httpd.h"
@@ -63,7 +66,7 @@ char *read_from_file(const char *filePath, char *buf, size_t buf_len)
 	return buf;
 }
 
-static void prepareCAGeneration(int serverNum)
+static void prepareCAGeneration(const int serverNum)
 {
 	char buffer[512];
 	char buffer2[512];
@@ -217,9 +220,8 @@ void wo_ovpn_genkey(char *url)
 {
 #ifdef TCONFIG_OPENVPN
 	char buffer[128];
-	char *modeStr;
-	char *serverStr;
-	int server;
+	char *modeStr, *serverStr;
+	int server, dhtype;
 
 	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, webcgi_safeget("_mode", ""), sizeof(buffer));
@@ -240,8 +242,12 @@ void wo_ovpn_genkey(char *url)
 #endif
 		return;
 	}
-
 	server = atoi(serverStr);
+
+	memset(buffer, 0, sizeof(buffer));
+	strlcpy(buffer, webcgi_safeget("_dhtype", "0"), sizeof(buffer));
+	dhtype = atoi(js_string(buffer)); /* quicky scrub */
+
 	memset(buffer, 0, sizeof(buffer));
 
 	if (!strcmp(modeStr, "static1")) { /* tls-auth / tls-crypt */
@@ -261,12 +267,8 @@ void wo_ovpn_genkey(char *url)
 #endif /* !TCONFIG_OPTIMIZE_SIZE_MORE */
 #ifdef TCONFIG_KEYGEN
 	}
-	else if (!strcmp(modeStr, "dh")) {
-#ifdef TOMATO64
-		strlcpy(buffer, "openssl dhparam -out /tmp/dh2048.pem 2048 >/dev/null 2>&1 && cat /tmp/dh2048.pem && rm /tmp/dh2048.pem", sizeof(buffer));
-#else
-		strlcpy(buffer, "openssl dhparam -out /tmp/dh1024.pem 1024 >/dev/null 2>&1 && cat /tmp/dh1024.pem && rm /tmp/dh1024.pem", sizeof(buffer));
-#endif /* TOMATO64 */
+	else if (!strcmp(modeStr, "dh")) { /* Diffie-Hellman */
+		snprintf(buffer, sizeof(buffer), "openssl dhparam -out /tmp/dh.pem %s >/dev/null 2>&1 && cat /tmp/dh.pem && rm /tmp/dh.pem", (dhtype == 1 ? "2048" : "1024"));
 		syslog(LOG_WARNING, buffer);
 		web_pipecmd(buffer, WOF_NONE);
 	}
@@ -307,7 +309,6 @@ void wo_ovpn_genclientconfig(char *url)
 		syslog(LOG_WARNING, "No server '%s' for /%s", serverStr, u);
 		return;
 	}
-
 	server = atoi(serverStr);
 
 	userauth = atoi(getNVRAMVar("vpn_server%d_userpass", server));

@@ -147,7 +147,7 @@ function v_serial(e, quiet) {
 	var v = e.value;
 
 	if (!v.match(/[0-9A-Fa-f]{2}/)) {
-		ferror.set(e, 'Invalid key serial number. Valid range: "00" - "FF"', quiet);
+		ferror.set(e, 'Invalid key serial number. Valid range: "01" - "FF"', quiet);
 		return 0;
 	}
 	e.value = v.toUpperCase();
@@ -423,13 +423,13 @@ function generateDHParams(num) {
 		keyGenRequest = new XmlHttp();
 
 		keyGenRequest.onCompleted = function(text, xml) {
-			E('_vpn_server'+num+'_dh').value = text;
+			E('_f_vpn_server'+num+'_dh').value = text;
 			keyGenRequest = null;
 			elem.display(E('server'+num+'_dh_progress_div'), false);
 			disableKeyButtons(num, false);
 		}
 		keyGenRequest.onError = function(ex) { keyGenRequest = null; }
-		keyGenRequest.post('vpngenkey.cgi', '_mode=dh');
+		keyGenRequest.post('vpngenkey.cgi', '_mode=dh&_dhtype='+(E('_f_vpn_server'+num+'_dhtype').checked ? '1' : '0'));
 	}
 }
 
@@ -640,7 +640,7 @@ function verifyFields(focused, quiet) {
 /* KEYGEN-BEGIN */
 			     PR('_vpn_dhgen_'+t+'_button'),
 /* KEYGEN-END */
-			     PR('_vpn_'+t+'_crt'), PR('_vpn_'+t+'_crl'), PR('_vpn_'+t+'_dh'),
+			     PR('_vpn_'+t+'_crt'), PR('_vpn_'+t+'_crl'), PR('_f_vpn_'+t+'_dh'),
 			     PR('_vpn_'+t+'_key'), PR('_vpn_'+t+'_hmac'), PR('_f_vpn_'+t+'_rgw'),
 			     PR('_vpn_'+t+'_reneg'), auth == 'tls');
 		elem.display(PR('_vpn_'+t+'_static'), auth == 'secret' || (auth == 'tls' && hmac >= 0));
@@ -709,8 +709,8 @@ function save() {
 	var i, j, t, n;
 	var fom = E('t_fom');
 
-	E('vpn_server_eas').value = '';
-	E('vpn_server_dns').value = '';
+	fom.vpn_server_eas.value = '';
+	fom.vpn_server_dns.value = '';
 
 	for (i = 0; i < tabs.length; ++i) {
 		if (ccdTables[i].isEditing())
@@ -734,10 +734,10 @@ function save() {
 /* SIZEOPTMORE-END */
 
 		if (E('_f_vpn_'+t+'_eas').checked)
-			E('vpn_server_eas').value += ''+(i + 1)+',';
+			fom.vpn_server_eas.value += ''+(i + 1)+',';
 
 		if (E('_f_vpn_'+t+'_dns').checked)
-			E('vpn_server_dns').value += ''+(i + 1)+',';
+			fom.vpn_server_dns.value += ''+(i + 1)+',';
 
 		var data = ccdTables[i].getAllData();
 		var ccd = '';
@@ -751,7 +751,7 @@ function save() {
 		var users = '';
 		for (j = 0; j < userdata.length; ++j) {
 			var u = userdata[j].join('<')+'>';
-			n = u.indexOf("<");
+			n = u.indexOf('<');
 			users += u.substring(n + 1);
 		}
 
@@ -775,6 +775,7 @@ function save() {
 		E('vpn_'+t+'_users_val').value = users;
 		E('vpn_'+t+'_pdns').value = E('_f_vpn_'+t+'_pdns').checked ? 1 : 0;
 		E('vpn_'+t+'_rgw').value = E('_f_vpn_'+t+'_rgw').checked ? 1 : 0;
+		E('vpn_'+t+'_dh').value = E('_f_vpn_'+t+'_dh').value;
 	}
 	fom._nofootermsg.value = 0;
 
@@ -896,6 +897,7 @@ function init() {
 			W('<input type="hidden" id="vpn_'+t+'_users_val" name="vpn_'+t+'_users_val">');
 			W('<input type="hidden" id="vpn_'+t+'_pdns" name="vpn_'+t+'_pdns">');
 			W('<input type="hidden" id="vpn_'+t+'_rgw" name="vpn_'+t+'_rgw">');
+			W('<input type="hidden" id="vpn_'+t+'_dh" name="vpn_'+t+'_dh">');
 
 			W('<ul class="tabs">');
 			for (j = 0; j < sections.length; j++) {
@@ -1010,14 +1012,16 @@ function init() {
 			]);
 			createFieldTable('', [
 				null,
-				{ title: 'Diffie Hellman parameters', name: 'vpn_'+t+'_dh', type: 'textarea', value: nvram['vpn_'+t+'_dh']
+				{ title: 'Diffie-Hellman parameters', name: 'f_vpn_'+t+'_dh', type: 'textarea', value: nvram['vpn_'+t+'_dh']
 /* KEYGEN-BEGIN */
 					, prefix: '<div id="'+t+'_dh_progress_div" style="display:none"><p class="keyhelp">Please wait - generating DH parameters...<img src="spin.gif" alt=""><\/p><\/div>' },
-				{ title: '', custom: '<input type="button" value="Generate DH Params" onclick="generateDHParams('+(i+1)+')" id="_vpn_dhgen_'+t+'_button">' }
+				{ title: '', multi: [
+					{ custom: '<input type="button" value="Generate DH Params" onclick="generateDHParams('+(i+1)+')" id="_vpn_dhgen_'+t+'_button">', suffix: '&nbsp; &nbsp;' },
+					{ name: 'f_vpn_'+t+'_dhtype', type: 'checkbox', value: 0, suffix: '&nbsp; <small>use 2048 instead of 1024 bytes. Warning! It may take a very long time!<\/small>' } ] }
 			]);
 			createFieldTable('', [
 				null,
-				{ title: 'Serial number', custom: '<input type="text" name="vpn_'+t+'_serial" value="00" maxlength="2" size="2" id="_vpn_'+t+'_serial">' },
+				{ title: 'Serial number', custom: '<input type="text" name="vpn_'+t+'_serial" value="01" maxlength="2" size="2" id="_vpn_'+t+'_serial">', suffix: '&nbsp; <small>in hex (01 - FF)<\/small>' },
 				{ title: 'User', custom: '<select name="vpn_'+t+'_usergen" id="_vpn_'+t+'_usergen"><\/select>' },
 				{ title: '', custom: '<input type="button" value="Generate client config" onclick="downloadClientConfig('+(i+1)+')" id="_vpn_client_gen_'+t+'_button">',
 					suffix: '<div id="'+t+'_gen_progress_div" style="display:none"><p class="keyhelp">Please wait while the configuration is being generated...<img src="spin.gif" alt=""><\/p><\/div>'
