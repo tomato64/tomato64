@@ -109,15 +109,26 @@ static void wg_build_firewall(int unit, char *port, char *iface) {
 		chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
 	}
 
-	/* script excerpt from wg-quick to route default (iface, route, fwmark) */
+	/* script excerpt from wg-quick to route default (iface, route, table) */
 	if ((fp = fopen(WG_SCRIPTS_DIR"/route-default.sh", "w"))) {
 		fprintf(fp, "#!/bin/sh\n"
+		            "table=''\n"
+		            "line=''\n"
+		            "proto=''\n"
+		            "iptables=''\n"
+		            "pf=''\n"
+		            "restore=''\n"
+		            "nftable=''\n"
+		            "nftcmd=''\n"
 		            "cmd() {\n"
 		            "  echo \"[#] $*\" >&2\n"
 		            "  \"$@\"\n"
 		            "}\n\n"
 		            "NL='\n"
 		            "'\n"
+		            "type_p() {\n"
+		            "  type -p \"${@}\"\n"
+		            "}\n"
 		            "interface=\"${1}\"\n"
 		            "route=\"${2}\"\n"
 		            "table=\"${3}\"\n"
@@ -137,6 +148,11 @@ static void wg_build_firewall(int unit, char *port, char *iface) {
 		            "cmd ip \"${proto}\" rule add table main suppress_prefixlength 0\n"
 		            "cmd ip \"${proto}\" route add \"${route}\" dev \"${interface}\" table \"${table}\"\n"
 		            "restore=\"*raw${NL}\"\n"
+		            "nftable=\"wg-quick-${interface}\"\n"
+		            "nftcmd=\"${nftcmd:+${nftcmd}${NL}}add table ${pf} ${nftable}\"\n"
+		            "nftcmd=\"${nftcmd:+${nftcmd}${NL}}add chain ${pf} ${nftable} preraw { type filter hook prerouting priority -300; }\"\n"
+		            "nftcmd=\"${nftcmd:+${nftcmd}${NL}}add chain ${pf} ${nftable} premangle { type filter hook prerouting priority -150; }\"\n"
+		            "nftcmd=\"${nftcmd:+${nftcmd}${NL}}add chain ${pf} ${nftable} postmangle { type filter hook postrouting priority -150; }\"\n"
 		            "ip -o \"${proto}\" addr show dev \"${interface}\" 2>/dev/null | {\n"
 		            "  match=''\n"
 		            "  while read -r line; do\n"
@@ -147,13 +163,22 @@ static void wg_build_firewall(int unit, char *port, char *iface) {
 		            "    [ -n \"${match}\" ] ||\n"
 		            "      continue\n"
 		            "    restore=\"${restore:+${restore}${NL}}-I PREROUTING ! -i ${interface} -d ${match} -m addrtype ! --src-type LOCAL -j DROP\"\n"
+		            "    nftcmd=\"${nftcmd:+${nftcmd}${NL}}add rule ${pf} ${nftable} preraw iifname != \"${interface}\" ${pf} daddr ${match} fib saddr type != local drop\"\n"
 		            "  done\n"
 		            "  restore=\"${restore:+${restore}${NL}}COMMIT${NL}*mangle${NL}-I POSTROUTING -m mark --mark ${table} -p udp -j CONNMARK --save-mark${NL}-I PREROUTING -p udp -j CONNMARK --restore-mark${NL}COMMIT\"\n"
+		            "  nftcmd=\"${nftcmd:+${nftcmd}${NL}}add rule ${pf} ${nftable} postmangle meta l4proto udp mark ${table} ct mark set mark\"\n"
+		            "  nftcmd=\"${nftcmd:+${nftcmd}${NL}}add rule ${pf} ${nftable} premangle meta l4proto udp meta mark set ct mark\"\n"
 		            "  ! [ \"${proto}\" = '-4' ] ||\n"
 		            "    echo 1 > /proc/sys/net/ipv4/conf/all/src_valid_mark\n"
-		            "  printf '%s\\n' \"${restore}\" |\n"
-		            "    cmd \"${iptables}-restore\" -n\n"
-		            "}\n", "%s", "%s");
+		            "  if type_p nft >/dev/null; then\n"
+		            "    printf '%s\n' \"${nftcmd}\" |\n"
+		            "      cmd nft -f\n"
+		            "  else\n"
+		            "    printf '%s\n' \"${restore}\" |\n"
+		            "      cmd \"${iptables}-restore\" -n\n"
+		            "  fi\n"
+		            "}\n", "%s", "%s", "%s");
+
 		fclose(fp);
 		chmod(WG_SCRIPTS_DIR"/route-default.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
 	}
@@ -358,7 +383,7 @@ static int wg_set_iface_up(char *iface)
 			return 0;
 		}
 		else if (retry < 4) {
-			logmsg(LOG_WARNING, "unable to bring up wireguard interface %s, retrying...", iface);
+			logmsg(LOG_WARNING, "unable to bring up wireguard interface %s, retrying %d ...", iface, retry + 1);
 			sleep(4);
 		}
 		retry += 1;
