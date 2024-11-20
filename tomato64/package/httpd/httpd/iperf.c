@@ -98,7 +98,6 @@ void wo_ttcprun(char *url)
 	int byteLimitMode = 0;		/* Time limit by default */
 	unsigned long long limit = 10;	/* 10 Seconds, by default */
 #if defined(TCONFIG_BCMARM) && defined(TCONFIG_BCMSMP)
-	char cpulist[2];
 	int cpu_num = sysconf(_SC_NPROCESSORS_CONF);
 	if (cpu_num < 1)
 		cpu_num = 1;
