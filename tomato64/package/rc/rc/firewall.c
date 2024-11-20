@@ -852,7 +852,8 @@ static void mangle_table(void)
 
 #ifdef TCONFIG_BCMARM
 	/* set mark for NAT loopback to work if CTF is enabled! (bypass) - see https://bitbucket.org/pedro311/freshtomato-arm/issues/142/hardware-nat-seem-broken-port-forwarding */
-	if (!nvram_get_int("ctf_disable")) {
+	if (!nvram_get_int("ctf_disable") &&
+	    !nvram_get_int("nf_loopback")) { /* only for NAT loopback ALL (0 (default)) */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			if ((strcmp(lanface[i], "") != 0) && (strcmp(lanaddr[i], "") != 0)) { /* check LAN setup */
 				ip2class(lanaddr[i], lanmask[i], lan_class, sizeof(lan_class));
