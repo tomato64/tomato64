@@ -1045,7 +1045,7 @@ function init() {
 /* KEYGEN-BEGIN */
 				, { title: '', multi: [
 					{ custom: '<input type="button" value="Generate keys" onclick="generateKeys('+(i+1)+')" id="_vpn_keygen_'+t+'_button">', suffix: '&nbsp; &nbsp;' },
-					{ name: 'f_vpn_'+t+'_ecdh', type: 'checkbox', value: nvram['vpn_'+t+'_ecdh'] != 0, suffix: '&nbsp; <small>use <a href="https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman" class="new_window">ECDH keys<\/a><\/small>' } ] }
+					{ name: 'f_vpn_'+t+'_ecdh', type: 'checkbox', value: (nvram['vpn_'+t+'_ecdh'] != 0 || nvram['vpn_'+t+'_ca_key'] == ''), suffix: '&nbsp; <small>use <a href="https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman" class="new_window">ECDH keys<\/a><\/small>' } ] }
 /* KEYGEN-END */
 			]);
 			createFieldTable('', [
