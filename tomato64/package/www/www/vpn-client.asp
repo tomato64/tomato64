@@ -367,6 +367,7 @@ function save() {
 	form.submit(fom, 1);
 
 	changed = 0;
+	fom._service.value = '';
 }
 
 function earlyInit() {
