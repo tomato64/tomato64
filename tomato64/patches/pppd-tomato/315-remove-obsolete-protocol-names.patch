@@ -1,8 +1,13 @@
-diff --git pppd/pppd/main.c pppd/pppd/main.c
-index 90393b0..c2971eb 100644
+pppd: Remove historical protocol names
+
+Remove a number of historical protocol entries from pppd's builtin list, this
+reduced the binary size without loss of features.
+
+Signed-off-by: Jo-Philipp Wich <jo@mein.io>
+
 --- pppd/pppd/main.c
 +++ pppd/pppd/main.c
-@@ -866,14 +866,17 @@ struct protocol_list {
+@@ -984,14 +984,17 @@
      const char	*name;
  } protocol_list[] = {
      { 0x21,	"IP" },
@@ -10,9 +15,9 @@ index 90393b0..c2971eb 100644
      { 0x23,	"OSI Network Layer" },
      { 0x25,	"Xerox NS IDP" },
      { 0x27,	"DECnet Phase IV" },
-+#endif
      { 0x29,	"Appletalk" },
      { 0x2b,	"Novell IPX" },
++#endif
      { 0x2d,	"VJ compressed TCP/IP" },
      { 0x2f,	"VJ uncompressed TCP/IP" },
      { 0x31,	"Bridging PDU" },
@@ -20,7 +25,7 @@ index 90393b0..c2971eb 100644
      { 0x33,	"Stream Protocol ST-II" },
      { 0x35,	"Banyan Vines" },
      { 0x39,	"AppleTalk EDDP" },
-@@ -887,8 +890,11 @@ struct protocol_list {
+@@ -1005,8 +1008,11 @@
      { 0x49,	"Serial Data Transport Protocol (PPP-SDTP)" },
      { 0x4b,	"SNA over 802.2" },
      { 0x4d,	"SNA" },
@@ -32,7 +37,7 @@ index 90393b0..c2971eb 100644
      { 0x53,	"Encryption" },
      { 0x55,	"Individual Link Encryption" },
      { 0x57,	"IPv6" },
-@@ -899,12 +905,15 @@ struct protocol_list {
+@@ -1017,12 +1023,15 @@
      { 0x65,	"RTP IPHC Compressed non-TCP" },
      { 0x67,	"RTP IPHC Compressed UDP 8" },
      { 0x69,	"RTP IPHC Compressed RTP 8" },
@@ -48,7 +53,7 @@ index 90393b0..c2971eb 100644
      { 0x0203,	"IBM Source Routing BPDU" },
      { 0x0205,	"DEC LANBridge100 Spanning Tree" },
      { 0x0207,	"Cisco Discovery Protocol" },
-@@ -916,15 +925,19 @@ struct protocol_list {
+@@ -1034,15 +1043,19 @@
      { 0x0231,	"Luxcom" },
      { 0x0233,	"Sigma Network Systems" },
      { 0x0235,	"Apple Client Server Protocol" },
@@ -68,7 +73,7 @@ index 90393b0..c2971eb 100644
      { 0x4001,	"Cray Communications Control Protocol" },
      { 0x4003,	"CDPD Mobile Network Registration Protocol" },
      { 0x4005,	"Expand accelerator protocol" },
-@@ -935,17 +948,23 @@ struct protocol_list {
+@@ -1053,8 +1066,10 @@
      { 0x4023,	"RefTek Protocol" },
      { 0x4025,	"Fibre Channel" },
      { 0x4027,	"EMIT Protocols" },
@@ -79,10 +84,7 @@ index 90393b0..c2971eb 100644
      { 0x8023,	"OSI Network Layer Control Protocol" },
      { 0x8025,	"Xerox NS IDP Control Protocol" },
      { 0x8027,	"DECnet Phase IV Control Protocol" },
-+#endif
-     { 0x8029,	"Appletalk Control Protocol" },
-     { 0x802b,	"Novell IPX Control Protocol" },
-+#if 0
+@@ -1063,7 +1078,9 @@
      { 0x8031,	"Bridging NCP" },
      { 0x8033,	"Stream Protocol Control Protocol" },
      { 0x8035,	"Banyan Vines Control Protocol" },
@@ -92,7 +94,7 @@ index 90393b0..c2971eb 100644
      { 0x803f,	"NETBIOS Framing Control Protocol" },
      { 0x8041,	"Cisco Systems Control Protocol" },
      { 0x8043,	"Ascom Timeplex" },
-@@ -954,18 +973,24 @@ struct protocol_list {
+@@ -1072,18 +1089,24 @@
      { 0x8049,	"Serial Data Control Protocol (PPP-SDCP)" },
      { 0x804b,	"SNA over 802.2 Control Protocol" },
      { 0x804d,	"SNA Control Protocol" },
@@ -117,7 +119,7 @@ index 90393b0..c2971eb 100644
      { 0x8207,	"Cisco Discovery Protocol Control" },
      { 0x8209,	"Netcs Twin Routing" },
      { 0x820b,	"STP - Control Protocol" },
-@@ -974,24 +999,29 @@ struct protocol_list {
+@@ -1092,24 +1115,29 @@
      { 0x8281,	"MPLSCP" },
      { 0x8285,	"IEEE p1284.4 standard - Protocol Control" },
      { 0x8287,	"ETSI TETRA TNP1 Control Protocol" },

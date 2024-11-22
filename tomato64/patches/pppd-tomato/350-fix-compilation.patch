@@ -1,0 +1,35 @@
+--- pppd/pppd/plugins/pppol2tp/pppol2tp.c
++++ pppd/pppd/plugins/pppol2tp/pppol2tp.c
+@@ -38,7 +38,8 @@
+ 
+ #include <linux/version.h>
+ #include <linux/sockios.h>
+-#include <linux/ppp-ioctl.h>
++#include <linux/ppp_defs.h>
++#include <linux/if_ppp.h>
+ 
+ #ifndef aligned_u64
+ /* should be defined in sys/types.h */
+--- pppd/pppd/sys-linux.c
++++ pppd/pppd/sys-linux.c
+@@ -126,7 +126,8 @@
+ #include <netinet/in.h>
+ #include <arpa/inet.h>
+ 
+-#include <linux/ppp-ioctl.h>
++#include <linux/ppp_defs.h>
++#include <linux/if_ppp.h>
+ 
+ #include <linux/netlink.h>
+ #include <linux/rtnetlink.h>
+--- pppd/pppstats/pppstats.c
++++ pppd/pppstats/pppstats.c
+@@ -72,7 +72,7 @@
+ #include <linux/if.h>
+ #endif
+ #include <linux/ppp_defs.h>
+-#include <linux/ppp-ioctl.h>
++#include <linux/if_ppp.h>
+ 
+ #endif /* __linux__ */
+ 

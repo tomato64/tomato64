@@ -1,0 +1,24 @@
+From bf44459f3ba5321ad01444da8f2483f24df1bdee Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Tue, 26 Nov 2024 13:13:33 -0700
+Subject: [PATCH] include linux/types.h
+
+---
+ include/linux/ppp_defs.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/linux/ppp_defs.h b/include/linux/ppp_defs.h
+index 807d681..a6e8404 100644
+--- a/include/linux/ppp_defs.h
++++ b/include/linux/ppp_defs.h
+@@ -47,6 +47,7 @@
+  *     installation script can recognize it.
+  */
+ 
++#include <linux/types.h>
+ #ifndef _PPP_DEFS_H_
+ #define _PPP_DEFS_H_
+ 
+-- 
+2.39.5
+

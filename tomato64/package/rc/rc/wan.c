@@ -120,16 +120,16 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 		            "noaccomp\n");	/* Disable Address/Control compression */
 
 	if (wan_proto != WP_L2TP)
-		fprintf(fp, "persist\n"
-		            "holdoff %d\n",
+		fprintf(fp, "persist\n" /* Keep on reopening connection after close */
+		            "holdoff %d\n", /* Set time in seconds before retrying connection */
 		            demand ? 30 : (nvram_get_int(strlcat_r(prefix, "_ppp_redialperiod", tmp, sizeof(tmp))) ? : 30));
 
 	switch (wan_proto) {
 	case WP_PPTP:
 		fprintf(fp, "plugin pptp.so\n"
 		            "pptp_server %s\n"
-		            "nomppe-stateful\n"
-		            "require-mschap-v2\n"
+		            "nomppe-stateful\n" /* disallow MPPE stateful mode */
+		            "require-mschap-v2\n" /* Require MS-CHAPv2 authentication from peer */
 		            "noauth\n" /* No authenticate peer (i dunno why it doesn't apply from shared params) */
 		            "mtu %d\n",
 		            nvram_safe_get(strlcat_r(prefix, "_pptp_server_ip", tmp, sizeof(tmp))),
@@ -137,7 +137,7 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 		break;
 	case WP_PPPOE:
 		fprintf(fp, "plugin rp-pppoe.so\n"
-		            "nomppe nomppc\n"
+		            "nomppe\n" /* don't allow MPPE encryption */
 		            "nic-%s\n"
 		            "mru %d mtu %d\n",
 		            nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))),
@@ -150,7 +150,7 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 			fprintf(fp, "rp_pppoe_ac '%s'\n", p);
 
 		if (nvram_match(strlcat_r(prefix, "_ppp_mlppp", tmp, sizeof(tmp)), "1"))
-			fprintf(fp, "mp\n");
+			fprintf(fp, "mp\n"); /* Enable multilink operation */
 
 		break;
 #ifdef TCONFIG_USB
@@ -200,11 +200,11 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 		fprintf(fp, "%s\n"
 		            "460800\n"
 		            "connect \"/usr/sbin/chat %s -t 30 -f %s\"\n"
-		            "noipdefault\n"
-		            "lock\n"	/* Lock the modem device, to avoid another process trying to use it */
-		            "crtscts\n"	/* Use hardware flow-control between the computer and the modem, to avoid data loss */
-		            "modem\n"	/* Use the modem control lines */
-		            "ipcp-accept-local\n",
+		            "noipdefault\n" /* Don't use name for default IP adrs */
+		            "lock\n" /* Lock the modem device, to avoid another process trying to use it */
+		            "crtscts\n" /* Use hardware flow-control between the computer and the modem, to avoid data loss */
+		            "modem\n" /* Use the modem control lines */
+		            "ipcp-accept-local\n", /* Accept peer's address for us */
 		            nvram_safe_get(strlcat_r(prefix, "_modem_dev", tmp, sizeof(tmp))),
 		            nvram_get_int("debug_ppp") ? "-v" : "-V",
 		            ppp3g_chatfile);
@@ -224,7 +224,7 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 		break;
 #endif
 	case WP_L2TP:
-		fprintf(fp, "nomppe nomppc\n");		/* Disable MPPE, MPPC */
+		fprintf(fp, "nomppe\n"); /* don't allow MPPE encryption */
 		if (nvram_get_int(strlcat_r(prefix, "_mtu_enable", tmp, sizeof(tmp))))
 			fprintf(fp, "mtu %d\n", nvram_get_int(strlcat_r(prefix, "_mtu", tmp, sizeof(tmp))));
 		break;

@@ -1,16 +1,14 @@
-diff --git pppd/pppd/options.c pppd/pppd/options.c
-index f8d6c00..048fc41 100644
 --- pppd/pppd/options.c
 +++ pppd/pppd/options.c
-@@ -115,6 +115,7 @@ char	linkname[MAXPATHLEN];	/* logical name for link */
+@@ -121,6 +121,7 @@
  bool	tune_kernel;		/* may alter kernel settings */
  int	connect_delay = 1000;	/* wait this many ms after connect script */
  int	req_unit = -1;		/* requested interface unit */
 +int	req_minunit = -1;	/* requested minimal interface unit */
- char	path_ipup[MAXPATHLEN];	/* pathname of ip-up script */
- char	path_ipdown[MAXPATHLEN];/* pathname of ip-down script */
- char	req_ifname[MAXIFNAMELEN];	/* requested interface name */
-@@ -292,6 +293,9 @@ option_t general_options[] = {
+ char	path_net_init[MAXPATHLEN]; /* pathname of net-init script */
+ char	path_net_preup[MAXPATHLEN];/* pathname of net-pre-up script */
+ char	path_net_down[MAXPATHLEN]; /* pathname of net-down script */
+@@ -310,6 +311,9 @@
      { "unit", o_int, &req_unit,
        "PPP interface unit number to use if possible",
        OPT_PRIO | OPT_LLIMIT, 0, 0 },
@@ -20,33 +18,31 @@ index f8d6c00..048fc41 100644
  
      { "ifname", o_string, req_ifname,
        "Set PPP interface name",
-diff --git pppd/pppd/pppd.h pppd/pppd/pppd.h
-index 612902f..195a4a9 100644
 --- pppd/pppd/pppd.h
 +++ pppd/pppd/pppd.h
-@@ -75,6 +75,7 @@
+@@ -63,6 +63,7 @@
+ #define MAXARGS		1	/* max # args to a command */
+ #define MAXNAMELEN	256	/* max length of hostname or name for auth */
  #define MAXSECRETLEN	256	/* max length of password or secret */
- #define MAXIFNAMELEN	32	/* max length of interface name; or use IFNAMSIZ, can we
- 				   always include net/if.h? */
 +#define MAXUNIT		255	/* max ppp interface */
  
+ 
  /*
-  * If PPP_DRV_NAME is not defined, use the default "ppp" as the device name.
-@@ -325,6 +326,7 @@ extern bool	tune_kernel;	/* May alter kernel settings as necessary */
+--- pppd/pppd/pppd-private.h
++++ pppd/pppd/pppd-private.h
+@@ -194,6 +194,7 @@
  extern int	connect_delay;	/* Time to delay after connect script */
  extern int	max_data_rate;	/* max bytes/sec through charshunt */
  extern int	req_unit;	/* interface unit number to use */
 +extern int	req_minunit;	/* interface minimal unit number to use */
- extern char	path_ipup[MAXPATHLEN]; /* pathname of ip-up script */
- extern char	path_ipdown[MAXPATHLEN]; /* pathname of ip-down script */
- extern char	req_ifname[MAXIFNAMELEN]; /* interface name to use */
-diff --git pppd/pppd/sys-linux.c pppd/pppd/sys-linux.c
-index 85033d9..dee5fd0 100644
+ extern char	path_net_init[]; /* pathname of net-init script */
+ extern char	path_net_preup[];/* pathname of net-pre-up script */
+ extern char	path_net_down[]; /* pathname of net-down script */
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -656,13 +656,15 @@ static int make_ppp_unit(void)
- 	    || fcntl(ppp_dev_fd, F_SETFL, flags | O_NONBLOCK) == -1)
- 		warn("Couldn't set /dev/ppp to nonblock: %m");
+@@ -929,18 +929,15 @@
+ 		return -1;
+ 	}
  
 -	ifunit = req_unit;
 -	x = ioctl(ppp_dev_fd, PPPIOCNEWUNIT, &ifunit);
@@ -56,6 +52,11 @@ index 85033d9..dee5fd0 100644
 +	ifunit = (req_unit >= 0) ? req_unit : req_minunit;
 +	do {
  		x = ioctl(ppp_dev_fd, PPPIOCNEWUNIT, &ifunit);
+-	}
+-	if (x < 0 && errno == EEXIST) {
+-		srand(time(NULL) * getpid());
+-		ifunit = rand() % 10000;
+-		x = ioctl(ppp_dev_fd, PPPIOCNEWUNIT, &ifunit);
 -	}
 +		if (x < 0 && errno == EEXIST) {
 +			warn("Couldn't allocate PPP unit %d as it is already in use", ifunit);

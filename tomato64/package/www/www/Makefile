@@ -456,9 +456,10 @@ ifeq ($(TCONFIG_OPENVPN),y)
  endif
 endif
 
-# Only include "Remote Forwarding" if special size optimization is not required
+# Only include "Remote Forwarding" if special size optimization is not required / basic-network: remove PPPoE single line MLPPP
 ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
 endif
 
 # Only include Advanced Themes stuff if it is required

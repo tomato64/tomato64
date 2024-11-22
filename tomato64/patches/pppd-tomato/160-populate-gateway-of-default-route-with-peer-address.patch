@@ -1,8 +1,6 @@
-diff --git pppd/pppd/sys-linux.c pppd/pppd/sys-linux.c
-index dee5fd0..f03893c 100644
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -1710,6 +1710,9 @@ int sifdefaultroute (int unit, u_int32_t ouraddr, u_int32_t gateway, bool replac
+@@ -2236,6 +2236,9 @@
      memset (&rt, 0, sizeof (rt));
      SET_SA_FAMILY (rt.rt_dst, AF_INET);
  
@@ -12,7 +10,7 @@ index dee5fd0..f03893c 100644
      rt.rt_dev = ifname;
      rt.rt_metric = dfl_route_metric + 1; /* +1 for binary compatibility */
  
-@@ -1718,7 +1721,7 @@ int sifdefaultroute (int unit, u_int32_t ouraddr, u_int32_t gateway, bool replac
+@@ -2244,7 +2247,7 @@
  	SIN_ADDR(rt.rt_genmask) = 0L;
      }
  

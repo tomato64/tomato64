@@ -441,7 +441,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan_ppp_redialperiod",	"20"				, 0 },	/* Redial Period (seconds) */
 	{ "wan_ppp_service",		""				, 0 },	/* PPPoE service name */
 	{ "wan_ppp_custom",		""				, 0 },	/* PPPD additional options */
+#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "wan_ppp_mlppp",		"0"				, 0 },	/* PPPoE single line MLPPP */
+#endif
 	{ "wan_pppoe_lei",		"10"				, 0 },
 	{ "wan_pppoe_lef",		"5"				, 0 },
 
@@ -453,7 +455,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan2_ppp_redialperiod",	"20"				, 0 },	/* Redial Period (seconds) */
 	{ "wan2_ppp_service",		""				, 0 },	/* PPPoE service name */
 	{ "wan2_ppp_custom",		""				, 0 },	/* PPPD additional options */
+#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "wan2_ppp_mlppp",		"0"				, 0 },	/* PPPoE single line MLPPP */
+#endif
 	{ "wan2_pppoe_lei",		"10"				, 0 },
 	{ "wan2_pppoe_lef",		"5"				, 0 },
 
@@ -466,7 +470,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan3_ppp_redialperiod",	"20"				, 0 },	/* Redial Period (seconds) */
 	{ "wan3_ppp_service",		""				, 0 },	/* PPPoE service name */
 	{ "wan3_ppp_custom",		""				, 0 },	/* PPPD additional options */
+#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "wan3_ppp_mlppp",		"0"				, 0 },	/* PPPoE single line MLPPP */
+#endif
 	{ "wan3_pppoe_lei",		"10"				, 0 },
 	{ "wan3_pppoe_lef",		"5"				, 0 },
 
@@ -478,7 +484,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan4_ppp_redialperiod",	"20"				, 0 },	/* Redial Period (seconds) */
 	{ "wan4_ppp_service",		""				, 0 },	/* PPPoE service name */
 	{ "wan4_ppp_custom",		""				, 0 },	/* PPPD additional options */
+#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "wan4_ppp_mlppp",		"0"				, 0 },	/* PPPoE single line MLPPP */
+#endif
 	{ "wan4_pppoe_lei",		"10"				, 0 },
 	{ "wan4_pppoe_lef",		"5"				, 0 },
 #endif /* TCONFIG_MULTIWAN */

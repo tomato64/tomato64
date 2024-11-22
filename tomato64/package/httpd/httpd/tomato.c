@@ -270,7 +270,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan_ppp_custom",		V_LENGTH(0, 256)		},
 	{ "wan_ppp_idletime",		V_RANGE(0, 1440)		},
 	{ "wan_ppp_redialperiod",	V_RANGE(1, 86400)		},
+#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "wan_ppp_mlppp",		V_01				},
+#endif
 	{ "wan_mtu_enable",		V_01				},
 	{ "wan_mtu",			V_RANGE(576, 1500)		},
 	{ "wan_modem_ipaddr",		V_IP				},
@@ -306,7 +308,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan2_ppp_custom",		V_LENGTH(0, 256)		},
 	{ "wan2_ppp_idletime",		V_RANGE(0, 1440)		},
 	{ "wan2_ppp_redialperiod",	V_RANGE(1, 86400)		},
+#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "wan2_ppp_mlppp",		V_01				},
+#endif
 	{ "wan2_mtu_enable",		V_01				},
 	{ "wan2_mtu",			V_RANGE(576, 1500)		},
 	{ "wan2_modem_ipaddr",		V_IP				},
@@ -343,7 +347,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan3_ppp_custom",		V_LENGTH(0, 256)		},
 	{ "wan3_ppp_idletime",		V_RANGE(0, 1440)		},
 	{ "wan3_ppp_redialperiod",	V_RANGE(1, 86400)		},
+#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "wan3_ppp_mlppp",		V_01				},
+#endif
 	{ "wan3_mtu_enable",		V_01				},
 	{ "wan3_mtu",			V_RANGE(576, 1500)		},
 	{ "wan3_modem_ipaddr",		V_IP				},
@@ -379,7 +385,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan4_ppp_custom",		V_LENGTH(0, 256)		},
 	{ "wan4_ppp_idletime",		V_RANGE(0, 1440)		},
 	{ "wan4_ppp_redialperiod",	V_RANGE(1, 86400)		},
+#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "wan4_ppp_mlppp",		V_01				},
+#endif
 	{ "wan4_mtu_enable",		V_01				},
 	{ "wan4_mtu",			V_RANGE(576, 1500)		},
 	{ "wan4_modem_ipaddr",		V_IP				},

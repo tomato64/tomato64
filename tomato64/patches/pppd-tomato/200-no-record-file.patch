@@ -1,20 +1,16 @@
-diff --git pppd/pppd/pppd.h pppd/pppd/pppd.h
-index 6b1fbfb..4f1322a 100644
---- pppd/pppd/pppd.h
-+++ pppd/pppd/pppd.h
-@@ -320,7 +320,6 @@ extern int	holdoff;	/* Dead time before restarting */
+--- pppd/pppd/pppd-private.h
++++ pppd/pppd/pppd-private.h
+@@ -188,7 +188,6 @@
  extern bool	holdoff_specified; /* true if user gave a holdoff value */
  extern bool	notty;		/* Stdin/out is not a tty */
  extern char	*pty_socket;	/* Socket to connect to pty */
 -extern char	*record_file;	/* File to record chars sent/received */
- extern bool	sync_serial;	/* Device is synchronous serial device */
  extern int	maxfail;	/* Max # of unsuccessful connection attempts */
- extern char	linkname[MAXPATHLEN]; /* logical name for link */
-diff --git pppd/pppd/tty.c pppd/pppd/tty.c
-index 852cee7..3cb9055 100644
+ extern char	linkname[];	/* logical name for link */
+ extern bool	tune_kernel;	/* May alter kernel settings as necessary */
 --- pppd/pppd/tty.c
 +++ pppd/pppd/tty.c
-@@ -143,7 +143,7 @@ char	*disconnect_script = NULL; /* Script to disestablish physical link */
+@@ -150,7 +150,7 @@
  char	*welcomer = NULL;	/* Script to run after phys link estab. */
  char	*ptycommand = NULL;	/* Command to run on other side of pty */
  bool	notty = 0;		/* Stdin/out is not a tty */
@@ -23,7 +19,7 @@ index 852cee7..3cb9055 100644
  int	max_data_rate;		/* max bytes/sec through charshunt */
  bool	sync_serial = 0;	/* Device is synchronous serial device */
  char	*pty_socket = NULL;	/* Socket to connect to pty */
-@@ -199,9 +199,6 @@ option_t tty_options[] = {
+@@ -206,9 +206,6 @@
        "Send and receive over socket, arg is host:port",
        OPT_PRIO | OPT_DEVNAM },
  
@@ -33,9 +29,9 @@ index 852cee7..3cb9055 100644
      { "crtscts", o_int, &crtscts,
        "Set hardware (RTS/CTS) flow control",
        OPT_PRIO | OPT_NOARG | OPT_VAL(1) },
-@@ -613,28 +610,8 @@ int connect_tty(void)
+@@ -675,28 +672,8 @@
  	 */
- 	status = EXIT_PTYCMD_FAILED;
+ 	ppp_set_status(EXIT_PTYCMD_FAILED);
  	if (ptycommand != NULL) {
 -		if (record_file != NULL) {
 -			int ipipe[2], opipe[2], ok;
@@ -62,7 +58,7 @@ index 852cee7..3cb9055 100644
  	} else if (pty_socket != NULL) {
  		int fd = open_socket(pty_socket);
  		if (fd < 0)
-@@ -651,10 +628,6 @@ int connect_tty(void)
+@@ -713,10 +690,6 @@
  			log_to_fd = -1;
  		if (log_to_fd != 2)
  			dup2(fd_devnull, 2);
@@ -73,7 +69,7 @@ index 852cee7..3cb9055 100644
  	}
  
  	if (using_pty || record_file != NULL) {
-@@ -1016,15 +989,6 @@ charshunt(int ifd, int ofd, char *record_file)
+@@ -1082,15 +1055,6 @@
  	fatal("internal error: file descriptor too large (%d, %d, %d)",
  	      ifd, ofd, pty_master);
  

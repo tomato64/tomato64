@@ -1,8 +1,6 @@
-diff --git pppd/pppd/ipv6cp.c pppd/pppd/ipv6cp.c
-index a6f81ec..e55985a 100644
 --- pppd/pppd/ipv6cp.c
 +++ pppd/pppd/ipv6cp.c
-@@ -308,7 +308,7 @@ struct protent ipv6cp_protent = {
+@@ -312,7 +312,7 @@
      ipv6cp_close,
      ipv6cp_printpkt,
      NULL,

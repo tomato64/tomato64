@@ -138,20 +138,20 @@ void start_pptp_client(void)
 			fprintf(fd, "password \"%s\"\n", p);
 
 		/* Encryption */
+		/*  0 - Auto, 1 - None,  2 - Maximum (128 bit only), 3 - Required (128 or 40 bit) */
 		switch (nvram_get_int("pptp_client_crypt")) {
 			case 1:
-				fprintf(fd, "nomppe nomppc\n");
+				fprintf(fd, "nomppe\n"); /* don't allow MPPE encryption */
 				break;
 			case 2:
-				fprintf(fd, "nomppe-40\n"
-				            "require-mppe\n"
-				            "require-mppe-128\n");
+				fprintf(fd, "nomppe-40\n" /* don't allow MPPE 40-bit encryption */
+				            "require-mppe\n" /* require MPPE encryption */
+				            "require-mppe-128\n"); /* require MPPE 128-bit encryption */
 				break;
 			case 3:
-				fprintf(fd, "require-mppe\n"
-				            "require-mppe-40\n"
-				            "require-mppe-56\n"
-				            "require-mppe-128\n");
+				fprintf(fd, "require-mppe\n" /* require MPPE encryption */
+				            "require-mppe-40\n" /* require MPPE 40-bit encryption */
+				            "require-mppe-128\n"); /* require MPPE 128-bit encryption */
 				break;
 			default:
 				break;

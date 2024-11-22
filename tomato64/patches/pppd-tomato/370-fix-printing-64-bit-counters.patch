@@ -1,0 +1,55 @@
+--- pppd/pppd/main.c
++++ pppd/pppd/main.c
+@@ -1362,7 +1362,7 @@
+     if (link_stats_print && link_stats_valid) {
+        int t = (link_connect_time + 5) / 6;    /* 1/10ths of minutes */
+        info("Connect time %d.%d minutes.", t/10, t%10);
+-       info("Sent %u bytes, received %u bytes.",
++       info("Sent %llu bytes, received %llu bytes.",
+ 	    link_stats.bytes_out, link_stats.bytes_in);
+        link_stats_print = 0;
+     }
+--- pppd/pppd/utils.c
++++ pppd/pppd/utils.c
+@@ -142,8 +142,8 @@
+     int c, i, n;
+     int width, prec, fillch;
+     int base, len, neg, quoted;
+-    long lval = 0;
+-    unsigned long val = 0;
++    long long lval = 0;
++    unsigned long long val = 0;
+     char *str, *buf0;
+     const char *f;
+     unsigned char *p;
+@@ -208,6 +208,30 @@
+ 	case 'l':
+ 	    c = *fmt++;
+ 	    switch (c) {
++	    case 'l':
++		c = *fmt++;
++		switch (c) {
++		case 'd':
++		    lval = va_arg(args, long long);
++		    if (lval < 0) {
++			neg = 1;
++			val = -lval;
++		    } else
++			val = lval;
++		    base = 10;
++		    break;
++		case 'u':
++		    val = va_arg(args, unsigned long long);
++		    base = 10;
++		    break;
++		default:
++		    OUTCHAR('%');
++		    OUTCHAR('l');
++		    OUTCHAR('l');
++		    --fmt;		/* so %llz outputs %llz etc. */
++		    continue;
++		}
++		break;
+ 	    case 'd':
+ 		lval = va_arg(args, long);
+ 		if (lval < 0) {

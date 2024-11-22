@@ -1,8 +1,6 @@
-diff --git pppd/pppd/options.c pppd/pppd/options.c
-index 8829879..14853f8 100644
 --- pppd/pppd/options.c
 +++ pppd/pppd/options.c
-@@ -329,13 +329,14 @@ option_t general_options[] = {
+@@ -376,13 +376,14 @@
        "Enable multilink operation", OPT_PRIOSUB | OPT_ALIAS | 1 },
      { "nomultilink", o_bool, &multilink,
        "Disable multilink operation", OPT_PRIOSUB | 0 },
@@ -11,11 +9,11 @@ index 8829879..14853f8 100644
  
      { "bundle", o_string, &bundle_name,
        "Bundle name for multilink", OPT_PRIO },
- #endif /* HAVE_MULTILINK */
+ #endif /* PPP_WITH_MULTILINK */
  
 +    { "nomp", o_bool, &multilink,
 +      "Disable multilink operation", OPT_PRIOSUB | OPT_ALIAS | 0 },
 +
- #ifdef PLUGIN
+ #ifdef PPP_WITH_PLUGINS
      { "plugin", o_special, (void *)loadplugin,
        "Load a plug-in module into pppd", OPT_PRIV | OPT_A2LIST },

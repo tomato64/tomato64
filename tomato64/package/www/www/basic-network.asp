@@ -482,7 +482,9 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_pppoe_lef'] = 1;
 			vis['_wan'+u+'_mtu_enable'] = 1;
 			vis['_f_wan'+u+'_mtu'] = 1;
+/* SIZEOPTMORE-BEGIN */
 			vis['_f_wan'+u+'_ppp_mlppp'] = 1;
+/* SIZEOPTMORE-END */
 			vis['_wan'+u+'_modem_ipaddr'] = 1;
 /* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 1;
@@ -528,7 +530,9 @@ function verifyFields(focused, quiet) {
 			E('_wan'+u+'_pppoe_lef').disabled = 0;
 			E('_wan'+u+'_mtu_enable').disabled = 0;
 			E('_f_wan'+u+'_mtu').disabled = 0;
+/* SIZEOPTMORE-BEGIN */
 			E('_f_wan'+u+'_ppp_mlppp').disabled = 0;
+/* SIZEOPTMORE-END */
 			E('_wan'+u+'_modem_ipaddr').disabled = 0;
 /* USB-BEGIN */
 			E('_wan'+u+'_modem_pin').disabled = 0;
@@ -568,7 +572,9 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_pppoe_lef'] = 0;
 			vis['_wan'+u+'_mtu_enable'] = 0;
 			vis['_f_wan'+u+'_mtu'] = 0;
+/* SIZEOPTMORE-BEGIN */
 			vis['_f_wan'+u+'_ppp_mlppp'] = 0;
+/* SIZEOPTMORE-END */
 			vis['_wan'+u+'_modem_ipaddr'] = 0;
 /* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 0;
@@ -609,7 +615,9 @@ function verifyFields(focused, quiet) {
 			E('_wan'+u+'_pppoe_lef').disabled = 1;
 			E('_wan'+u+'_mtu_enable').disabled = 1;
 			E('_f_wan'+u+'_mtu').disabled = 1;
+/* SIZEOPTMORE-BEGIN */
 			E('_f_wan'+u+'_ppp_mlppp').disabled = 1;
+/* SIZEOPTMORE-END */
 			E('_wan'+u+'_modem_ipaddr').disabled = 1;
 /* USB-BEGIN */
 			E('_wan'+u+'_modem_pin').disabled = 1;
@@ -724,7 +732,9 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_ppp_demand'] = 0;
 			vis['_wan'+u+'_mtu_enable'] = 0;
 			vis['_f_wan'+u+'_mtu'] = 0;
+/* SIZEOPTMORE-BEGIN */
 			vis['_f_wan'+u+'_ppp_mlppp'] = 0;
+/* SIZEOPTMORE-END */
 			vis['_wan'+u+'_modem_ipaddr'] = 0;
 /* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 0;
@@ -756,7 +766,9 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_gateway'] = 0;
 			vis['_wan'+u+'_ipaddr'] = 0;
 			vis['_wan'+u+'_netmask'] = 0;
+/* SIZEOPTMORE-BEGIN */
 			vis['_f_wan'+u+'_ppp_mlppp'] = 0;
+/* SIZEOPTMORE-END */
 /* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 0;
 			vis['_wan'+u+'_modem_dev'] = 0;
@@ -796,7 +808,9 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_speed'] = 0;
 			vis['_wan'+u+'_modem_band'] = 0;
 			vis['_wan'+u+'_modem_roam'] = 0;
+/* SIZEOPTMORE-BEGIN */
 			vis['_f_wan'+u+'_ppp_mlppp'] = 0;
+/* SIZEOPTMORE-END */
 			E('_wan'+u+'_sta').value = '';
 			vis['_wan'+u+'_sta'] = 0;
 		break;
@@ -816,7 +830,9 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_ipaddr'] = 0;
 			vis['_wan'+u+'_modem_dev'] = 0;
 			vis['_wan'+u+'_modem_init'] = 0;
+/* SIZEOPTMORE-BEGIN */
 			vis['_f_wan'+u+'_ppp_mlppp'] = 0;
+/* SIZEOPTMORE-END */
 			E('_wan'+u+'_sta').value = '';
 			vis['_wan'+u+'_sta'] = 0;
 		break;
@@ -831,7 +847,9 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_ppp_custom'] = 0;
 			vis['_wan'+u+'_pptp_server_ip'] = 0;
 			vis['_f_wan'+u+'_pptp_dhcp'] = 0;
+/* SIZEOPTMORE-BEGIN */
 			vis['_f_wan'+u+'_ppp_mlppp'] = 0;
+/* SIZEOPTMORE-END */
 /* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 0;
 			vis['_wan'+u+'_modem_dev'] = 0;
@@ -1749,7 +1767,9 @@ REMOVE-END */
 		fom['wan'+u+'_mtu'].value = fom['f_wan'+u+'_mtu'].value;
 		fom['wan'+u+'_mtu'].disabled = fom['f_wan'+u+'_mtu'].disabled;
 		fom['wan'+u+'_pptp_dhcp'].value = fom['f_wan'+u+'_pptp_dhcp'].checked ? 1 : 0;
+/* SIZEOPTMORE-BEGIN */
 		fom['wan'+u+'_ppp_mlppp'].value = fom['f_wan'+u+'_ppp_mlppp'].checked ? 1 : 0;
+/* SIZEOPTMORE-END */
 /* USB-BEGIN */
 		fom['wan'+u+'_status_script'].value = fom['f_wan'+u+'_status_script'].checked ? 1 : 0;
 /* USB-END */
@@ -1944,7 +1964,9 @@ function init() {
 		dns = nvram['wan'+u+'_dns'].split(/\s+/);
 		W('<input type="hidden" name="wan'+u+'_mtu">');
 		W('<input type="hidden" name="wan'+u+'_pptp_dhcp">');
+/* SIZEOPTMORE-BEGIN */
 		W('<input type="hidden" name="wan'+u+'_ppp_mlppp">');
+/* SIZEOPTMORE-END */
 		W('<input type="hidden" name="wan'+u+'_dns">');
 /* USB-BEGIN */
 		W('<input type="hidden" name="wan'+u+'_status_script">');
@@ -2005,14 +2027,14 @@ function init() {
 				{ name: 'wan'+u+'_mtu_enable', type: 'select', options: [['0', 'Default'],['1','Manual']], value: nvram['wan'+u+'_mtu_enable'] },
 				{ name: 'f_wan'+u+'_mtu', type: 'text', maxlen: 4, size: 6, value: nvram['wan'+u+'_mtu'] } ] },
 			{ title: 'Use DHCP', name: 'f_wan'+u+'_pptp_dhcp', type: 'checkbox', value: (nvram['wan'+u+'_pptp_dhcp'] == 1) },
+/* SIZEOPTMORE-BEGIN */
 			{ title: 'Single Line MLPPP', name: 'f_wan'+u+'_ppp_mlppp', type: 'checkbox', value: (nvram['wan'+u+'_ppp_mlppp'] == 1) },
-
+/* SIZEOPTMORE-END */
 			{ title: 'Route Modem IP', name: 'wan'+u+'_modem_ipaddr', type: 'text', maxlen: 15, size: 17, suffix: '&nbsp; <small>must be in different subnet to router, 0.0.0.0 to disable<\/small>', value: nvram['wan'+u+'_modem_ipaddr'] },
 /* USB-BEGIN */
 			{ title: 'Query HiLink Modem IP', name: 'wan'+u+'_hilink_ip', type: 'text', maxlen: 15, size: 17, suffix: '&nbsp; <small>show status of reachable hilink modem, 0.0.0.0 to disable<\/small>', value: nvram['wan'+u+'_hilink_ip'] },
 			{ title: 'Call Custom Status Script', name: 'f_wan'+u+'_status_script', type: 'checkbox', suffix: '&nbsp; <small>Call /www/user/cgi-bin/wan'+u+'_status.sh in the home page. Must output HTML<\/small>', value: (nvram['wan'+u+'_status_script'] == 1) },
 /* USB-END */
-
 			{ title: 'Disable Watchdog', name: 'f_wan'+u+'_ck_pause', type: 'checkbox', suffix: '&nbsp; <small>only for this WAN<\/small>', value: (nvram['wan'+u+'_ck_pause'] == 1) },
 			{ title: 'Watchdog Mode', name: 'wan'+u+'_ckmtd', type: 'select', options: [['1','Ping'],['2','Traceroute*']
 /* BBT-BEGIN */

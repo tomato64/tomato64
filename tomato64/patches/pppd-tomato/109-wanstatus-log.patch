@@ -1,8 +1,6 @@
-diff --git pppd/pppd/fsm.c pppd/pppd/fsm.c
-index 96d20e8..347af89 100644
 --- pppd/pppd/fsm.c
 +++ pppd/pppd/fsm.c
-@@ -67,6 +67,8 @@ static void fsm_sconfreq (fsm *, int);
+@@ -71,6 +71,8 @@
  
  int peer_mru[NUM_PPP];
  
@@ -11,7 +9,7 @@ index 96d20e8..347af89 100644
  
  /*
   * fsm_init - Initialize fsm.
-@@ -294,6 +296,10 @@ fsm_timeout(void *arg)
+@@ -298,6 +300,10 @@
      case ACKRCVD:
      case ACKSENT:
  	if (f->retransmits <= 0) {
@@ -22,11 +20,9 @@ index 96d20e8..347af89 100644
  	    warn("%s: timeout sending Config-Requests\n", PROTO_NAME(f));
  	    f->state = STOPPED;
  	    if( (f->flags & OPT_PASSIVE) == 0 && f->callbacks->finished )
-diff --git pppd/pppd/lcp.c pppd/pppd/lcp.c
-index ac5d5ce..1115b42 100644
 --- pppd/pppd/lcp.c
 +++ pppd/pppd/lcp.c
-@@ -61,6 +61,9 @@
+@@ -72,6 +72,9 @@
  
  static void lcp_delayed_up(void *);
  
@@ -34,17 +30,17 @@ index ac5d5ce..1115b42 100644
 +void saveWANStatus(char *currentstatus, int statusindex);
 +
  /*
-  * LCP-related command-line options.
-  */
-@@ -382,6 +385,7 @@ void
+  * These definitions relate to the measurement and logging of round-trip
+  * time (RTT) of LCP echo-requests implemented in lcp_rtt_update_buffer().
+@@ -408,6 +411,7 @@
  lcp_close(int unit, char *reason)
  {
      fsm *f = &lcp_fsm[unit];
 +    int statusindex = 0; /* add to wanstatus.log */
      int oldstate;
  
-     if (phase != PHASE_DEAD && phase != PHASE_MASTER)
-@@ -394,6 +398,16 @@ lcp_close(int unit, char *reason)
+     if (!in_phase(PHASE_DEAD) && !in_phase(PHASE_MASTER))
+@@ -420,6 +424,16 @@
      oldstate = f->state;
  
      fsm_close(f, reason);
@@ -61,16 +57,13 @@ index ac5d5ce..1115b42 100644
      if (oldstate == STOPPED && f->flags & (OPT_PASSIVE|OPT_SILENT|DELAYED_UP)) {
  	/*
  	 * This action is not strictly according to the FSM in RFC1548,
-diff --git pppd/pppd/utils.c pppd/pppd/utils.c
-index 7228279..f33a168 100644
 --- pppd/pppd/utils.c
 +++ pppd/pppd/utils.c
-@@ -949,3 +949,28 @@ unlock(void)
+@@ -1056,3 +1056,27 @@
      }
  }
  
 +/* add to wanstatus.log */
-+
 +void saveWANStatus(char *currentstatus, int statusindex)
 +{
 +	FILE *STATUSFILE;
@@ -80,14 +73,14 @@ index 7228279..f33a168 100644
 +		return;
 +
 +#ifdef ONWL500G_SHELL
-+	if ((req_unit == 0) && (STATUSFILE = fopen("/etc/linuxigd/wanstatus.log", "w"))!=NULL)
++	if ((req_unit == 0) && (STATUSFILE = fopen("/etc/linuxigd/wanstatus.log", "w")) != NULL)
 +	{
 +		fprintf(STATUSFILE, "StatusCode=\"%d\"\n", statusindex);
 +		fprintf(STATUSFILE, "StatusReason=\"%s\"\n", currentstatus);
 +		fclose(STATUSFILE);
 +	}
 +#else
-+	if ((req_unit == 0) && (STATUSFILE = fopen("/tmp/wanstatus.log", "w"))!=NULL)
++	if ((req_unit == 0) && (STATUSFILE = fopen("/tmp/wanstatus.log", "w")) != NULL)
 +	{
 +		fprintf(STATUSFILE, "%d,%s\n", statusindex, currentstatus);
 +		fclose(STATUSFILE);

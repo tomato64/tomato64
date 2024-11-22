@@ -1,0 +1,62 @@
+--- pppd/pppd/main.c
++++ pppd/pppd/main.c
+@@ -1596,10 +1596,14 @@
+ 	kill_my_pg(sig);
+     notify(sigreceived, sig);
+     if (waiting) {
++#if defined(__GNUC__) && __GNUC__ >= 5
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wunused-result"
++#endif
+ 	write(sigpipe[1], &sig, sizeof(sig));
++#if defined(__GNUC__) && __GNUC__ >= 5
+ #pragma GCC diagnostic pop
++#endif
+     }
+ }
+ 
+@@ -1620,10 +1624,14 @@
+ 	kill_my_pg(sig);
+     notify(sigreceived, sig);
+     if (waiting) {
++#if defined(__GNUC__) && __GNUC__ >= 5
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wunused-result"
++#endif
+ 	write(sigpipe[1], &sig, sizeof(sig));
++#if defined(__GNUC__) && __GNUC__ >= 5
+ #pragma GCC diagnostic pop
++#endif
+     }
+ }
+ 
+@@ -1637,10 +1645,14 @@
+ {
+     got_sigchld = 1;
+     if (waiting) {
++#if defined(__GNUC__) && __GNUC__ >= 5
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wunused-result"
++#endif
+ 	write(sigpipe[1], &sig, sizeof(sig));
++#if defined(__GNUC__) && __GNUC__ >= 5
+ #pragma GCC diagnostic pop
++#endif
+     }
+ }
+ 
+@@ -1674,10 +1686,14 @@
+ {
+     got_sigusr2 = 1;
+     if (waiting) {
++#if defined(__GNUC__) && __GNUC__ >= 5
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wunused-result"
++#endif
+ 	write(sigpipe[1], &sig, sizeof(sig));
++#if defined(__GNUC__) && __GNUC__ >= 5
+ #pragma GCC diagnostic pop
++#endif
+     }
+ }
+ 

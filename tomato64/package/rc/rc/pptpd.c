@@ -211,10 +211,11 @@ void start_pptpd(int force)
 	fprintf(fp, "%s-mschap\n", (pptpd_opt == 0 || pptpd_opt & 1) ? "require" : "refuse");
 	fprintf(fp, "%s-mschap-v2\n", (pptpd_opt == 0 || pptpd_opt & 2) ? "require" : "refuse");
 
+	/* 0 - None,  1 - MPPE-128 */
 	if (nvram_match("pptpd_forcemppe", "0"))
-		fprintf(fp, "nomppe nomppc\n");
+		fprintf(fp, "nomppe\n"); /* don't allow MPPE encryption */
 	else
-		fprintf(fp, "require-mppe-128\n");
+		fprintf(fp, "require-mppe-128\n"); /* require MPPE 128-bit encryption */
 
 	fprintf(fp, "chapms-strip-domain\n"
 	            "chap-secrets "PPTPD_SECRETS"\n"

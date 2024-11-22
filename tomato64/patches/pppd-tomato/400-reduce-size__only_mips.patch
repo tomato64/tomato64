@@ -1,0 +1,306 @@
+--- pppd/chat/chat.c
++++ pppd/chat/chat.c
+@@ -477,9 +477,11 @@
+  */
+ void usage(void)
+ {
++#ifdef NO_OPTSIZE
+     fprintf(stderr, "\
+ Usage: %s [-e] [-E] [-v] [-V] [-t timeout] [-r report-file]\n\
+      [-T phone-number] [-U phone-number2] {-f chat-file | chat-script}\n", program_name);
++#endif
+     exit(1);
+ }
+ 
+@@ -498,7 +500,11 @@
+     if (to_log)
+ 	syslog(LOG_INFO, "%s", line);
+     if (to_stderr)
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "%s\n", line);
++#else
++	printf("%s\n", line);
++#endif
+     va_end(args);
+ }
+ 
+@@ -516,7 +522,11 @@
+     if (to_log)
+ 	syslog(LOG_ERR, "%s", line);
+     if (to_stderr)
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "%s\n", line);
++#else
++	printf("%s\n", line);
++#endif
+     va_end(args);
+     terminate(code);
+ }
+--- pppd/pppd/options.c
++++ pppd/pppd/options.c
+@@ -1186,10 +1186,10 @@
+ {
+     FILE *fp = stderr;
+     if (in_phase(PHASE_INITIALIZE)) {
++#ifdef NO_OPTSIZE
+         fprintf(fp, "%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
+         fprintf(fp, "Copyright (C) 1999-2022 Paul Mackerras, and others. All rights reserved.\n\n");
+ 
+-
+         fprintf(fp, "License BSD: The 3 clause BSD license <https://opensource.org/licenses/BSD-3-Clause>\n");
+         fprintf(fp, "This is free software: you are free to change and redistribute it.\n");
+         fprintf(fp, "There is NO WARRANTY, to the extent permitted by law.\n\n");
+@@ -1210,6 +1210,9 @@
+         fprintf(fp, "   mru <n>         Set MRU value to <n> for negotiation\n");
+         fprintf(fp, "   show-options    Display an extended list of options\n");
+         fprintf(fp, "See pppd(8) for more options.\n");
++#else
++        printf("%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
++#endif
+     }
+ }
+ 
+@@ -1233,7 +1236,11 @@
+ showversion(char **argv)
+ {
+     if (in_phase(PHASE_INITIALIZE)) {
++#ifdef NO_OPTSIZE
+ 	fprintf(stdout, "pppd version %s\n", VERSION);
++#else
++	printf("pppd version %s\n", VERSION);
++#endif
+ 	exit(0);
+     }
+     return 0;
+@@ -1309,7 +1316,11 @@
+     vslprintf(buf, sizeof(buf), fmt, args);
+     va_end(args);
+     if (in_phase(PHASE_INITIALIZE))
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "%s: %s\n", progname, buf);
++#else
++	printf("%s: %s\n", progname, buf);
++#endif
+     syslog(LOG_ERR, "%s", buf);
+ }
+ 
+--- pppd/pppd/plugins/pppoe/pppoe-discovery.c
++++ pppd/pppd/plugins/pppoe/pppoe-discovery.c
+@@ -32,6 +32,7 @@
+ int pppoe_verbose;
+ static FILE *debugFile;
+ 
++#ifdef NO_OPTSIZE
+ void
+ fatal(const char *fmt, ...)
+ {
+@@ -62,6 +63,7 @@
+     fputc('\n', stderr);
+     va_end(pvar);
+ }
++#endif
+ 
+ void
+ info(const char *fmt, ...)
+@@ -175,7 +177,11 @@
+ 	    break;
+ 	case 't':
+ 	    if (sscanf(optarg, "%d", &conn->discoveryTimeout) != 1) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Illegal argument to -t: Should be -t timeout\n");
++#else
++		printf("Illegal argument to -t: Should be -t timeout\n");
++#endif
+ 		exit(EXIT_FAILURE);
+ 	    }
+ 	    if (conn->discoveryTimeout < 1) {
+@@ -184,7 +190,11 @@
+ 	    break;
+ 	case 'a':
+ 	    if (sscanf(optarg, "%d", &conn->discoveryAttempts) != 1) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Illegal argument to -a: Should be -a attempts\n");
++#else
++		printf("Illegal argument to -a: Should be -a attempts\n");
++#endif
+ 		exit(EXIT_FAILURE);
+ 	    }
+ 	    if (conn->discoveryAttempts < 1) {
+@@ -193,7 +203,12 @@
+ 	    break;
+ 	case 'U':
+ 	    if(conn->hostUniq.length) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "-U and -W are mutually exclusive\n");
++#else
++		printf("-U and -W are mutually exclusive\n");
++
++#endif
+ 		exit(EXIT_FAILURE);
+ 	    } else {
+ 		pid_t pid = getpid();
+@@ -204,11 +219,19 @@
+ 	    break;
+ 	case 'W':
+ 	    if(conn->hostUniq.length) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "-U and -W are mutually exclusive\n");
++#else
++		printf("-U and -W are mutually exclusive\n");
++#endif
+ 		exit(EXIT_FAILURE);
+ 	    }
+ 	    if (!parseHostUniq(optarg, &conn->hostUniq)) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Invalid host-uniq argument: %s\n", optarg);
++#else
++		printf("Invalid host-uniq argument: %s\n", optarg);
++#endif
+ 		exit(EXIT_FAILURE);
+             }
+ 	    break;
+@@ -217,8 +240,13 @@
+ 	    debug = 1;
+ 	    debugFile = fopen(optarg, "w");
+ 	    if (!debugFile) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Could not open %s: %s\n",
+ 			optarg, strerror(errno));
++#else
++		printf("Could not open %s: %s\n",
++			optarg, strerror(errno));
++#endif
+ 		exit(1);
+ 	    }
+ 	    fprintf(debugFile, "pppoe-discovery from pppd %s\n", PPPD_VERSION);
+@@ -240,13 +268,21 @@
+     }
+ 
+     if (optind != argc) {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "%s: extra argument '%s'\n", argv[0], argv[optind]);
++#else
++	printf("%s: extra argument '%s'\n", argv[0], argv[optind]);
++#endif
+ 	usage();
+ 	exit(EXIT_FAILURE);
+     }
+ 
+     if (!conn->ifName) {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "Interface was not specified\n");
++#else
++	printf("Interface was not specified\n");
++#endif
+ 	exit(EXIT_FAILURE);
+     }
+ 
+@@ -269,6 +305,7 @@
+ static void
+ usage(void)
+ {
++#ifdef NO_OPTSIZE
+     fprintf(stderr, "Usage: pppoe-discovery [options]\n");
+     fprintf(stderr, "Options:\n");
+     fprintf(stderr, "   -I if_name     -- Specify interface (mandatory option)\n");
+@@ -284,4 +321,7 @@
+ 	    "   -W hexvalue    -- Set the Host-Unique to the supplied hex string.\n"
+ 	    "   -h             -- Print usage information.\n");
+     fprintf(stderr, "\npppoe-discovery from pppd " PPPD_VERSION "\n");
++#else
++    printf("Usage: pppoe-discovery [options]\n");
++#endif
+ }
+--- pppd/pppd/pppd.h
++++ pppd/pppd/pppd.h
+@@ -264,8 +264,10 @@
+ /* safe strncpy */
+ size_t strlcat(char *, const char *, size_t);
+ 
++#ifdef NO_OPTSIZE
+ /* log a debug message */
+ void dbglog(const char *, ...);
++#endif
+ 
+ /* log an informational message */
+ void info(const char *, ...);
+@@ -273,6 +275,7 @@
+ /* log a notice-level message */
+ void notice(const char *, ...);
+ 
++#ifdef NO_OPTSIZE
+ /* log a warning message */
+ void warn(const char *, ...);
+ 
+@@ -281,6 +284,12 @@
+ 
+ /* log an error message and die(1) */
+ void fatal(const char *, ...);
++#else
++#define dbglog(a,...)
++#define warn(a,...)
++#define error(a,...)
++#define fatal(a,...) exit(1)
++#endif
+ 
+ /* Say we ran out of memory, and die */
+ void novm(const char *);
+--- pppd/pppd/srp-entry.c
++++ pppd/pppd/srp-entry.c
+@@ -89,8 +89,10 @@
+ static void
+ usage(void)
+ {
++#ifdef NO_OPTSIZE
+ 	(void) fprintf(stderr, "Usage:\n\t%s [-i index] [clientname]\n",
+ 	    myname);
++#endif
+ 	exit(1);
+ }
+ 
+@@ -137,7 +139,11 @@
+ 		tcent = &mytce;
+ 	}
+ 	if (tcent == NULL) {
++#ifdef NO_OPTSIZE
+ 		(void) fprintf(stderr, "SRP modulus/generator %d not found\n",
++#else
++		(void) printf("SRP modulus/generator %d not found\n",
++#endif
+ 		    idx);
+ 		exit(1);
+ 	}
+--- pppd/pppd/utils.c
++++ pppd/pppd/utils.c
+@@ -659,6 +659,7 @@
+ /*
+  * fatal - log an error message and die horribly.
+  */
++#ifdef NO_OPTSIZE
+ void
+ fatal(const char *fmt, ...)
+ {
+@@ -704,6 +705,7 @@
+     logit(LOG_WARNING, fmt, pvar);
+     va_end(pvar);
+ }
++#endif
+ 
+ /*
+  * notice - log a notice-level message.
+@@ -736,6 +738,7 @@
+ /*
+  * dbglog - log a debug message.
+  */
++#ifdef NO_OPTSIZE
+ void
+ dbglog(const char *fmt, ...)
+ {
+@@ -746,6 +749,7 @@
+     logit(LOG_DEBUG, fmt, pvar);
+     va_end(pvar);
+ }
++#endif
+ 
+ /*
+  * dump_packet - print out a packet in readable form if it is interesting.
