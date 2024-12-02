@@ -337,9 +337,9 @@ REMOVE-END */
 					{ title: 'Create New File<br><small>(Reset Data)<\/small>', indent: 2, name: 'f_new', type: 'checkbox', value: 0, suffix: ' &nbsp; <b id="newmsg" style="display:none"><small>(note: enable if this is a new file)<\/small><\/b>' },
 					{ title: 'Create Backups', indent: 2, name: 'f_bak', type: 'checkbox', value: nvram.cstats_bak == '1' },
 				{ title: 'First Day Of The Month', name: 'cstats_offset', type: 'text', value: nvram.cstats_offset, maxlen: 2, size: 4 },
-				{ title: 'Excluded IPs', name: 'cstats_exclude', type: 'text', value: nvram.cstats_exclude, maxlen: 512, size: 50, suffix: '&nbsp;<small>(comma separated list)<\/small>' },
-				{ title: 'Included IPs', name: 'cstats_include', type: 'text', value: nvram.cstats_include, maxlen: 2048, size: 50, suffix: '&nbsp;<small>(comma separated list)<\/small>' },
-				{ title: 'Enable Auto-Discovery', name: 'f_all', type: 'checkbox', value: nvram.cstats_all == '1', suffix: '&nbsp;<small>(automatically include new IPs in monitoring as soon as any traffic is detected)<\/small>' },
+				{ title: 'Do not monitor these IPs', name: 'cstats_exclude', type: 'text', value: nvram.cstats_exclude, maxlen: 512, size: 50, suffix: ' <small>(comma separated list)<\/small>' },
+				{ title: 'Monitor these IPs', name: 'cstats_include', type: 'text', value: nvram.cstats_include, maxlen: 2048, size: 50, suffix: ' <small>(comma separated list)<\/small>' },
+				{ title: 'Enable Auto-Discovery', name: 'f_all', type: 'checkbox', value: nvram.cstats_all == '1', suffix: ' <small>(automatically include new IPs in monitoring as soon as any traffic is detected)<\/small>' },
 				{ title: 'Labels on graphics', name: 'cstats_labels', type: 'select', value: nvram.cstats_stime, options: [[0,'Show known hostnames and IPs'],[1,'Prefer to show only known hostnames, otherwise show IPs'],[2,'Show only IPs']], value: nvram.cstats_labels }
 			]);
 		</script>
