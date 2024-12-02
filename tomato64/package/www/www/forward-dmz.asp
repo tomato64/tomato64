@@ -14,6 +14,7 @@
 <title>[<% ident(); %>] Forwarding: DMZ</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="isup.jsz?_http_id=<% nv(http_id); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="interfaces.js?rel=<% version(); %>"></script>
 
@@ -22,6 +23,11 @@
 //	<% nvram("dmz_enable,dmz_ipaddr,dmz_sip,dmz_ra"); %>
 
 //	<% lanip(1); %>
+
+function show() {
+	elem.setInnerHTML('notice_container', '<div id="notice">'+isup.notice_iptables.replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
+	elem.display('notice_container', isup.notice_iptables != '');
+}
 
 function verifyFields(focused, quiet) {
 	var sip, dip, off;
@@ -76,6 +82,7 @@ function save() {
 
 function init() {
 	verifyFields(null, 1);
+	up.initPage(250, 5);
 }
 </script>
 </head>
@@ -117,10 +124,7 @@ function init() {
 
 <!-- / / / -->
 
-<script>
-	if (nvram.dmz_enable == 1)
-		show_notice1('<% notice("iptables"); %>');
-</script>
+<div id="notice_container" style="display:none">&nbsp;</div>
 
 <!-- / / / -->
 
