@@ -483,6 +483,11 @@ img[id^="spin2"],
 	margin: 0 4px 0 4px;
 }
 
+img[id^="eth_"] {
+	width: 46px;
+	height: 35px;
+}
+
 #wait {
 	display: none;
 	text-align: right;
