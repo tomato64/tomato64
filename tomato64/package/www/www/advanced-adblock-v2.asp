@@ -177,7 +177,7 @@ function determineDelimiter(inputString) {
 
 /* Sort Domains */
 function sortDomains(element) {
-	var textarea = document.getElementById(element);
+	var textarea = E(element);
 	var delimiter = determineDelimiter(textarea.value.trim());
 	var splitDomains = textarea.value.split(delimiter).map((domain) => domain.trim().split(".").reverse());
 	const regex = /[%!#+\s]/g

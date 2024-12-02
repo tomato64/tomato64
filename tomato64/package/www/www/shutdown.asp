@@ -13,15 +13,16 @@ No part of this file may be used without permission.
 <title>[<% ident(); %>] Shutting down...</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="tomato.js?rel=<% version(); %>"></script>
 <script>
 var n = 31;
 function tick() {
 	if (--n > 0) {
-		document.getElementById('sptime').innerHTML = n;
+		E('sptime').innerHTML = n;
 		setTimeout(tick, 1000);
 	}
 	else {
-		document.getElementById('msg').innerHTML = 'You can now unplug the router.';
+		E('msg').innerHTML = 'You can now unplug the router.';
 	}
 }
 </script>

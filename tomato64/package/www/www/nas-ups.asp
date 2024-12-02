@@ -39,7 +39,7 @@ function clientSideInclude(id, url) {
 			}
 		}
 	}
-	var element = document.getElementById(id);
+	var element = E(id);
 
 	if (!element) {
 		alert("Bad id " + id + "passed to clientSideInclude. You need a div or span element with this id in your page.");

@@ -6,6 +6,7 @@
 <title>[<% ident(); %>] Rebooting...</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="tomato.js?rel=<% version(); %>"></script>
 <style>
 div.tomato-grid.container-div {
 	height: 90px;
@@ -26,7 +27,7 @@ var n = 90 + parseInt('0<% nv("wait_time"); %>');
 var n = 45 + parseInt('0<% nv("wait_time"); %>');
 /* TOMATO64-END */
 function tick() {
-	var e = document.getElementById('continue');
+	var e = E('continue');
 	e.value = n--;
 	if (n < 0) {
 		e.value = 'Continue';
@@ -52,7 +53,7 @@ function init() {
 	var resmsg = '';
 //	<% resmsg(); %>
 	if (resmsg.length) {
-		e = document.getElementById('msg');
+		e = E('msg');
 		e.innerHTML = resmsg;
 		e.style.display = 'block';
 	}

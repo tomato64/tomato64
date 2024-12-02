@@ -13,6 +13,7 @@ No part of this file may be used without permission.
 <title>[<% ident(); %>] Restarting...</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="tomato.js?rel=<% version(); %>"></script>
 <style>
 div.tomato-grid.container-div {
 	height: 90px;
@@ -30,7 +31,7 @@ div.tomato-grid.container-div {
 var n = 20;
 function tick() {
 	var txt = 'The router\'s new IP address is ';
-	var e = document.getElementById("msg");
+	var e = E('msg');
 
 	if (nvram.dhcp_moveip == 0)
 		txt += nvram.lan_ipaddr+'. You may need to release then renew your computer\'s DHCP lease before continuing.';
@@ -41,14 +42,14 @@ function tick() {
 
 	e.innerHTML = txt;
 
-	e = document.getElementById("continue");
+	e = E('continue');
 	e.value = n;
 	if (n == 10) {
-		e.style = "cursor:pointer";
+		e.style = 'cursor:pointer';
 		e.disabled = false;
 	}
 	if (n == 0)
-		e.value = "Continue";
+		e.value = 'Continue';
 	else {
 		--n;
 		setTimeout(tick, 1000);

@@ -298,7 +298,7 @@ function updateStatus(type) {
 	if (type != 'info')
 		var c = '/usr/sbin/tinc dump '+type+'\n';
 	else {
-		var selects = document.getElementById('hostselect');
+		var selects = E('hostselect');
 		var c = '/usr/sbin/tinc '+type+' '+selects.options[selects.selectedIndex].text+'\n';
 	}
 
@@ -307,7 +307,7 @@ function updateStatus(type) {
 }
 
 function displayNodes() {
-	var hostselect = document.getElementById('hostselect');
+	var hostselect = E('hostselect');
 	var selected = hostselect.value;
 
 	while (hostselect.firstChild)

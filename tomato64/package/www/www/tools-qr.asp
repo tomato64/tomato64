@@ -14,6 +14,7 @@
 <title>[<% ident(); %>] Tools: WiFi QR code generator</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="tomato.js?rel=<% version(); %>"></script>
 <style media="print">
 @page {
 	size: auto;  /* auto is the initial value */
@@ -64,7 +65,7 @@ function getNvramWifiParameter(wifiInterface, paramName) {
 }
 
 function printDiv(divName) {
-	var printContents = document.getElementById(divName).innerHTML;
+	var printContents = E(divName).innerHTML;
 	var originalContents = document.body.innerHTML;
 	document.body.innerHTML = printContents;
 	window.print();

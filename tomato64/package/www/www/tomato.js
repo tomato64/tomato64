@@ -1236,7 +1236,7 @@ function TGO(e) {
 
 function tgHideIcons() {
 	var e;
-	while ((e = document.getElementById('tg-row-panel')) != null) e.parentNode.removeChild(e);
+	while ((e = E('tg-row-panel')) != null) e.parentNode.removeChild(e);
 }
 
 // ---- options = sort, move, delete
@@ -1614,7 +1614,7 @@ TomatoGrid.prototype = {
 						s += '>';
 					break;
 					case 'textarea':
-						if (which == 'edit') document.getElementById(f.proxy).value = values[vi];
+						if (which == 'edit') E(f.proxy).value = values[vi];
 					break;
 					default:
 						s += f.custom.replace(/\$which\$/g, which);
@@ -1740,8 +1740,8 @@ TomatoGrid.prototype = {
 	clearTextarea: function() {
 		for (var i = 0; i < this.editorFields.length; ++i) {
 			if (this.editorFields[i].type == 'textarea') {
-				document.getElementById(this.editorFields[i].proxy).value = '';
-				ferror.clear(document.getElementById(this.editorFields[i].proxy));
+				E(this.editorFields[i].proxy).value = '';
+				ferror.clear(E(this.editorFields[i].proxy));
 			}
 		}
 	},

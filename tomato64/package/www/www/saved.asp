@@ -13,6 +13,7 @@ No part of this file may be used without permission.
 <title>[<% ident(); %>] Please Wait...</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="tomato.js?rel=<% version(); %>"></script>
 <script>
 var spun = 1;
 var wait = parseInt('<% cgi_get('_nextwait'); %>', 10);
@@ -30,17 +31,17 @@ function setSpin(x) {
 }
 function init() {
 	if (wait > 0) {
-		l2 = document.getElementById('l2');
+		l2 = E('l2');
 		l2.style.display = 'inline-block';
-		clock = document.getElementById('sptime');
+		clock = E('sptime');
 		clock.style.display = "inline";
-		spin = document.getElementById('spin');
+		spin = E('spin');
 		spin.style.display = 'inline-block';
 		tick();
 		if (!spun) setSpin(0);
 	}
 	else {
-		l1 = document.getElementById('l1');
+		l1 = E('l1');
 		l1.style.display = 'block';
 	}
 }
