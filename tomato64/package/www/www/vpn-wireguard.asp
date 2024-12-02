@@ -90,7 +90,9 @@ ferror.show = function(e) {
 	if ((e = E(e)) == null) return;
 	if (!e._error_msg) return;
 	elem.addClass(e, 'error-focused');
-	var [tab, section] = locateElement(e);
+	var id = locateElement(e);
+	var tab = id.slice(0, 3);
+	var section = id.slice(4);
 	tabSelect(tab);
 	sectSelect(tab.substr(2), section);
 	e.focus();
@@ -103,7 +105,7 @@ function locateElement(e) {
 		e = e.parentElement;
 	} while(e.id.indexOf('wg') < 0);
 
-	return e.id.split('-', 2);
+	return e.id;
 }
 
 function show() {
