@@ -533,15 +533,10 @@ function init() {
 		W('<div class="note-disabled"><p><b>CAKE is currently set in single class queue mode, in single class an automatic fair usage policy per IP is applied and classification settings not used.<\/b><\/div><\/td><\/tr></table>');
 	else if (nvram.qos_enable == 1 && nvram.qos_mode == 1 && nvram.qos_classify == 0)
 		W('<div class="note-disabled"><p><b>QoS classification is disabled.<\/b><\/div><\/td><\/tr></table>');
-	else
+	else {
 		show_notice1('<% notice("iptables"); %>');
+		W('<div class="section"><div class="tomato-grid" id="qos-cl-grid"></div></div>'); };
 </script>
-
-<!-- / / / -->
-
-<div class="section">
-	<div class="tomato-grid" id="qos-cl-grid"></div>
-</div>
 
 <!-- / / / -->
 
