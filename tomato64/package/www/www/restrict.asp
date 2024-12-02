@@ -14,6 +14,7 @@
 <title>[<% ident(); %>] Access Restrictions</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="isup.jsz?_http_id=<% nv(http_id); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 
 <script>
@@ -22,13 +23,18 @@
 
 //	<% nvramseq("rrules", "rrule%d", 0, 99); %>
 
-var dowNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function show() {
+	elem.setInnerHTML('notice_container', '<div id="notice">'+isup.notice_iptables.replace(/\n/g, '<br>')+isup.notice_ip6tables.replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
+	elem.display('notice_container', (isup.notice_iptables != '' || isup.notice_ip6tables != ''));
+}
+
+var dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 var og = new TomatoGrid();
 
 og.setup = function() {
 	this.init('res-over-grid', 'sort');
-	this.headerSet(['Description', 'Schedule']);
+	this.headerSet(['Description','Schedule']);
 	var r = this.footerSet(['<input type="button" value="Add" onclick="TGO(this).addEntry()" id="res-add-button">']);
 	r.cells[0].colSpan = 2;
 }
@@ -97,6 +103,7 @@ function init() {
 /* BCMNAT-END */
 
 	og.populate();
+	up.initPage(250, 5);
 }
 </script>
 </head>
@@ -128,8 +135,9 @@ function init() {
 	<div class="tomato-grid" id="res-over-grid"></div>
 </div>
 
-<script>show_notice1('<% notice("iptables"); %>');</script>
-<script>show_notice1('<% notice("ip6tables"); %>');</script>
+<!-- / / / -->
+
+<div id="notice_container" style="display:none">&nbsp;</div>
 
 <!-- / / / -->
 
