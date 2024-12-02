@@ -12,7 +12,12 @@
 /* global variables */
 /* TOMATO64-REMOVE-BEGIN */
 var MAX_BRIDGE_ID = 3;
+/* EXTSW-NO-BEGIN */
 var MAX_PORT_ID = 4;
+/* EXTSW-NO-END */
+/* EXTSW-BEGIN */
+var MAX_PORT_ID = 5;
+/* EXTSW-END */
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 var MAX_BRIDGE_ID = 7;

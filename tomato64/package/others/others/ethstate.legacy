@@ -106,14 +106,22 @@ sed -n -e "/Port $VPORT:/!p" /tmp/ethernet.state.tmp > /tmp/ethernet.state1
 }
 # BCMARM-END
 
+# EXTSW-NO-BEGIN
 sed -i '/Port 5/d' /tmp/ethernet.state1
+# EXTSW-NO-END
 sed -i '/Port 7/d' /tmp/ethernet.state1
 sed -i '/Port 8/d' /tmp/ethernet.state1
 
 NUM="1"
 REVERT=$(NG lan_invert)
 [ "$REVERT" -eq 1 ] && {
+# EXTSW-NO-BEGIN
 	cat /tmp/ethernet.state1 | sort -r >> /tmp/ethernet.state2
+# EXTSW-NO-END
+# EXTSW-BEGIN
+	grep 'Port [0-3]' /tmp/ethernet.state1 | sort -r >> /tmp/ethernet.state2
+	grep 'Port 5' /tmp/ethernet.state1 >> /tmp/ethernet.state2
+# EXTSW-END
 	exec 0< /tmp/ethernet.state2
 		while read line; test -n "$line"; do
 			STATE=$(echo $line | awk '{print $3}')

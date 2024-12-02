@@ -148,6 +148,9 @@ switch (nvram['t_model_name']) {
 		COL_P2N = '2';
 		COL_P3N = '1';
 		COL_P4N = '0';
+/* EXTSW-BEGIN */
+		COL_P5N = '5';
+/* EXTSW-END */
 		break;
 	case 'vlan-testid3':
 	case 'Asus RT-AC3200':
@@ -196,8 +199,16 @@ var COL_P3T = 9;
 var COL_P4  = 10;
 var COL_P4T = 11;
 /* TOMATO64-REMOVE-BEGIN */
+/* EXTSW-NO-BEGIN */
 var COL_VID_DEF = 12;
 var COL_BRI = 13;
+/* EXTSW-NO-END */
+/* EXTSW-BEGIN */
+var COL_P5  = 12;
+var COL_P5T = 13;
+var COL_VID_DEF = 14;
+var COL_BRI = 15;
+/* EXTSW-END */
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 var COL_P5  = 12;
@@ -232,6 +243,13 @@ if (port_vlan_supported) {
 			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+/* TOMATO64-REMOVE-BEGIN */
+/* EXTSW-BEGIN */
+			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+/* EXTSW-END */
+/* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
@@ -242,7 +260,6 @@ if (port_vlan_supported) {
 			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 /* TOMATO64-END */
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 /* TOMATO64-REMOVE-BEGIN */
 			{ type: 'select', options: [[1,'none'],[2,'WAN0 bridge'],[3,'LAN0 (br0)'],[4,'LAN1 (br1)'],[5,'LAN2 (br2)'],[6,'LAN3 (br3)'],[7,'WAN1 bridge'],
 /* TOMATO64-REMOVE-END */
@@ -265,6 +282,11 @@ if (port_vlan_supported) {
 		                '<div id="vport_2"><img src="eth_off.gif" id="eth_off_3" alt=""><\/div>2', '<br>Tag<br>2',
 		                '<div id="vport_3"><img src="eth_off.gif" id="eth_off_4" alt=""><\/div>3', '<br>Tag<br>3',
 		                '<div id="vport_4"><img src="eth_off.gif" id="eth_off_5" alt=""><\/div>4', '<br>Tag<br>4',
+/* TOMATO64-REMOVE-BEGIN */
+/* EXTSW-BEGIN */
+		                '<div id="vport_5"><img src="eth_off.gif" id="eth_off_6" alt=""><\/div>5-8', '<br>Tag<br>5-8',
+/* EXTSW-END */
+/* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 		                '<div id="vport_5"><img src="eth_off.gif" id="eth_off_6" alt=""><\/div>5', '<br>Tag<br>5',
 		                '<div id="vport_6"><img src="eth_off.gif" id="eth_off_7" alt=""><\/div>6', '<br>Tag<br>6',
@@ -372,6 +394,11 @@ REMOVE-END */
 						port[COL_P2N], tagged[COL_P2N],
 						port[COL_P3N], tagged[COL_P3N],
 						port[COL_P4N], tagged[COL_P4N],
+/* TOMATO64-REMOVE-BEGIN */
+/* EXTSW-BEGIN */
+						port[COL_P5N], tagged[COL_P5N],
+/* EXTSW-END */
+/* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 						port[COL_P5N], tagged[COL_P5N],
 						port[COL_P6N], tagged[COL_P6N],
@@ -484,6 +511,16 @@ REMOVE-END */
 			f[COL_P4T].disabled = 1;
 			f[COL_P4T].checked = 0;
 		}
+/* TOMATO64-REMOVE-BEGIN */
+/* EXTSW-BEGIN */
+		if ((trunk_vlan_supported) && (f[COL_P5].checked == 1))
+			f[COL_P5T].disabled = 0;
+		else {
+			f[COL_P5T].disabled = 1;
+			f[COL_P5T].checked = 0;
+		}
+/* EXTSW-END */
+/* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 		if ((trunk_vlan_supported) && (f[COL_P5].checked == 1))
 			f[COL_P5T].disabled = 0;
@@ -553,6 +590,18 @@ REMOVE-END */
 			else
 				ferror.clear(f[COL_P4T]);
 		}
+/* TOMATO64-REMOVE-BEGIN */
+/* EXTSW-BEGIN */
+		if ((f[COL_P5].checked == 1) && (this.countElem(COL_P5, 1) > 0)) {
+			if (((this.countElem(COL_P5, 1) - 1) >= this.countElem(COL_P5T, 1)) && (f[COL_P5T].checked == 0)) {
+				ferror.set(f[COL_P5T], err_vlan, quiet);
+				valid = 0;
+			}
+			else
+				ferror.clear(f[COL_P5T]);
+		}
+/* EXTSW-END */
+/* TOMATO64-REMOVE-END */
 
 		if (this.countDefaultVID() > 0) {
 			f[COL_VID_DEF].disabled = 1;
@@ -648,6 +697,12 @@ REMOVE-END */
 			(data[COL_P3T].toString() != '0') ? '&#x1f530' : '',
 			(data[COL_P4].toString() != '0') ? '&#x2b50' : '',
 			(data[COL_P4T].toString() != '0') ? '&#x1f530' : '',
+/* TOMATO64-REMOVE-BEGIN */
+/* EXTSW-BEGIN */
+			(data[COL_P5].toString() != '0') ? '&#x2b50' : '',
+			(data[COL_P5T].toString() != '0') ? '&#x1f530' : '',
+/* EXTSW-END */
+/* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 			(data[COL_P5].toString() != '0') ? '&#x2b50' : '',
 			(data[COL_P5T].toString() != '0') ? '&#x1f530' : '',
@@ -712,6 +767,12 @@ REMOVE-END */
 			f[COL_P3T].checked ? 1 : 0,
 			f[COL_P4].checked ? 1 : 0,
 			f[COL_P4T].checked ? 1 : 0,
+/* TOMATO64-REMOVE-BEGIN */
+/* EXTSW-BEGIN */
+			f[COL_P5].checked ? 1 : 0,
+			f[COL_P5T].checked ? 1 : 0,
+/* EXTSW-END */
+/* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 			f[COL_P5].checked ? 1 : 0,
 			f[COL_P5T].checked ? 1 : 0,
@@ -828,6 +889,13 @@ REMOVE-END */
 		f[COL_P4].checked = 0;
 		f[COL_P4T].checked = 0;
 		f[COL_P4T].disabled = 1;
+/* TOMATO64-REMOVE-BEGIN */
+/* EXTSW-BEGIN */
+		f[COL_P5].checked = 0;
+		f[COL_P5T].checked = 0;
+		f[COL_P5T].disabled = 1;
+/* EXTSW-END */
+/* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 		f[COL_P5].checked = 0;
 		f[COL_P5T].checked = 0;
@@ -930,6 +998,14 @@ function save() {
 		p += (d[i][COL_P4].toString() != '0') ? COL_P4N : '';
 		p += ((trunk_vlan_supported) && (d[i][COL_P4T].toString() != '0')) ? 't' : '';
 		p += trailingSpace(p);
+
+/* TOMATO64-REMOVE-BEGIN */
+/* EXTSW-BEGIN */
+		p += (d[i][COL_P5].toString() != '0') ? COL_P5N : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P5T].toString() != '0')) ? 't' : '';
+		p += trailingSpace(p);
+/* EXTSW-END */
+/* TOMATO64-REMOVE-END */
 
 /* TOMATO64-BEGIN */
 		p += (d[i][COL_P5].toString() != '0') ? COL_P5N : '';

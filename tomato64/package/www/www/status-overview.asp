@@ -244,9 +244,9 @@ function ethstates() {
 			++v;
 		}
 	}
-	/* LANs */
+	/* LANs - both cases: 4 Ports OR 8 Ports for RT-AC88U with RTL8365MB switch (EXTSW=y) */
 	for (uidx = v; uidx <= MAX_PORT_ID; ++uidx)
-		code += '<td class="title indent2"><b>LAN'+(v > 0 ? (uidx - 1) : uidx)+'<\/b><\/td>';
+		code += '<td class="title indent2"><b>LAN'+(v > 0 ? ((uidx < 5) ? (uidx - 1) : '4-7' ) : ((uidx < 5) ? (uidx) : '5-8' ))+'<\/b><\/td>';
 
 	code += '<td class="content"><\/td><\/tr><tr>';
 	for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {

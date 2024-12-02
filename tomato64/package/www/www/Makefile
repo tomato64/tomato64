@@ -46,6 +46,17 @@ else
 	done
 endif
 
+# Only include external switch options if EXTSW is enabled (RT-AC88U)
+ifneq ($(TCONFIG_EXTSW),y)
+	sed -i $(INSTALLDIR)/www/at.css -e "/EXTSW-BEGIN/,/EXTSW-END/d"
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/EXTSW-BEGIN/,/EXTSW-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/EXTSW-BEGIN/,/EXTSW-END/d"
+else
+	sed -i $(INSTALLDIR)/www/at.css -e "/EXTSW-NO-BEGIN/,/EXTSW-NO-END/d"
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/EXTSW-NO-BEGIN/,/EXTSW-NO-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/EXTSW-NO-BEGIN/,/EXTSW-NO-END/d"
+endif
+
 # Only include the CIFS pages if CIFS is configured in.
 ifneq ($(TCONFIG_CIFS),y)
 	rm -f $(INSTALLDIR)/www/admin-cifs.asp
@@ -664,7 +675,7 @@ endif
 
 # clean up
 	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.asp *.js *.jsx *.jsz *.html); do \
+	for F in $(wildcard *.asp *.js *.jsx *.jsz *.html) at.css; do \
 		[ -f $(INSTALLDIR)/www/$$F ] && sed -i $$F \
 		-e "/USB-BEGIN/d"	-e "/USB-END/d" \
 		-e "/UPS-BEGIN/d"	-e "/UPS-END/d" \
@@ -737,6 +748,8 @@ endif
 		-e "/WIREGUARD-BEGIN/d"	-e "/WIREGUARD-END/d" \
 		-e "/DDNS4CLS-BEGIN/d"	-e "/DDNS4CLS-END/d" \
 		-e "/DDNS2CLS-BEGIN/d"	-e "/DDNS2CLS-END/d" \
+		-e "/EXTSW-BEGIN/d"	-e "/EXTSW-END/d" \
+		-e "/EXTSW-NO-BEGIN/d"	-e "/EXTSW-NO-END/d" \
 		-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 		-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
 		-e "/TOMATO64-X86_64-BEGIN/d"	-e "/TOMATO64-X86_64-END/d" \

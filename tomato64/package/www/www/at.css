@@ -791,7 +791,13 @@ div#vlan-grid tr.header .co3,
 div#vlan-grid tr.header .co5,
 div#vlan-grid tr.header .co7,
 div#vlan-grid tr.header .co9,
+/* EXTSW-NO-BEGIN */
 div#vlan-grid tr.header .co11 {
+/* EXTSW-NO-END */
+/* EXTSW-BEGIN */
+div#vlan-grid tr.header .co11,
+div#vlan-grid tr.header .co13 {
+/* EXTSW-END */
 	width: 100px;
 	padding-right: 0px;
 	padding-left: 0px;

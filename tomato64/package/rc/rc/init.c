@@ -1237,7 +1237,11 @@ static int init_vlan_ports(void)
 		dirty |= check_nv("vlan2ports", "4 5");
 		break;
 	case MODEL_RTAC88U:
-		dirty |= check_nv("vlan1ports", "3 2 1 0 7*"); /* exclude RTL8365MB switch --> port 5 */
+#ifdef TCONFIG_EXTSW
+		dirty |= check_nv("vlan1ports", "3 2 1 0 5 7*"); /* support RTL8365MB switch --> add port 5 (for Router LAN Port 5 to 8) */
+#else
+		dirty |= check_nv("vlan1ports", "3 2 1 0 7*"); /* NO RTL8365MB switch --> exclude port 5 */
+#endif
 		dirty |= check_nv("vlan2ports", "4 7");
 		break;
 #endif
@@ -10251,6 +10255,7 @@ static int init_nvram(void)
 		nvram_set("usb_uhci", "-1");
 #endif
 		if (!nvram_match("t_fix1", (char *)name)) {
+			nvram_set("lan_invert", "1");
 			nvram_set("vlan1hwname", "et1");
 			nvram_set("vlan2hwname", "et1");
 			nvram_set("lan_ifname", "br0");
