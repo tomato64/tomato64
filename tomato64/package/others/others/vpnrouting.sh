@@ -135,7 +135,7 @@ startRouting() {
 					$LOGS "Type: $VAL2 - add $VAL3"
 					echo "ipset=/$VAL3/vpnrouting$ID" >> $DNSMASQ_IPSET
 					# try to add ipset rule using forced query to DNS server
-					nslookup $VAL3 2>/dev/null
+					#nslookup $VAL3 2>/dev/null
 
 					DNSMASQ=1
 				;;
