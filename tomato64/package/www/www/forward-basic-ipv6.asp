@@ -14,11 +14,17 @@
 <title>[<% ident(); %>] Forwarding: Basic IPv6</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="isup.jsz?_http_id=<% nv(http_id); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 
 <script>
 
 //	<% nvram("ipv6_portforward"); %>
+
+function show() {
+	elem.setInnerHTML('notice_container', '<div id="notice">'+isup.notice_ip6tables.replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
+	elem.display('notice_container', isup.notice_ip6tables != '');
+}
 
 var fog = new TomatoGrid();
 
@@ -132,12 +138,14 @@ function save() {
 	}
 	var fom = E('t_fom');
 	fom.ipv6_portforward.value = s;
-	form.submit(fom, 0, 'tomato.cgi');
+
+	form.submit(fom, 1, 'tomato.cgi');
 }
 
 function init() {
 	fog.recolor();
 	fog.resetNewEditor();
+	up.initPage(250, 5);
 }
 </script>
 </head>
@@ -180,9 +188,7 @@ function init() {
 
 <!-- / / / -->
 
-<script>
-	show_notice1('<% notice("ip6tables"); %>');
-</script>
+<div id="notice_container" style="display:none">&nbsp;</div>
 
 <!-- / / / -->
 
