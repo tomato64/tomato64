@@ -63,18 +63,18 @@ stopRouting() {
 	ip route flush table $ID
 	ip route flush cache
 
-	ip rule | grep "lookup $ID" && ip rule del fwmark $ID/0xf00 table $ID
-
+	[ -f "$FIREWALL_ROUTING" ] && {
+		sed -i "s/-A/-D/g" $FIREWALL_ROUTING
+		$FIREWALL_ROUTING
+		rm -f $FIREWALL_ROUTING &>/dev/null
+	}
 # BCMARM-BEGIN
 	ipset destroy vpnrouting$ID
 # BCMARM-END
 # BCMARMNO-BEGIN
 	ipset --destroy vpnrouting$ID
 # BCMARMNO-END
-
-	sed -i "s/-A/-D/g" $FIREWALL_ROUTING
-	$FIREWALL_ROUTING
-	rm -f $FIREWALL_ROUTING &>/dev/null
+	ip rule | grep "lookup $ID" && ip rule del fwmark $ID/0xf00 table $ID
 
 	sed -i $DNSMASQ_IPSET -e "/vpnrouting$ID/d"
 }
