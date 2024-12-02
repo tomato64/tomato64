@@ -14,6 +14,7 @@
 <title>[<% ident(); %>] QoS: Classification</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="isup.jsz?_http_id=<% nv(http_id); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="protocols.js?rel=<% version(); %>"></script>
 
@@ -26,28 +27,30 @@
 /* TOMATO64-REMOVE-END */
 
 /* TOMATO64-BEGIN */
-//	<% ndpi(); %>
+//      <% ndpi(); %>
 /* TOMATO64-END */
+function show() {
+	elem.setInnerHTML('notice_container', '<div id="notice">'+isup.notice_iptables.replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
+	elem.display('notice_container', isup.notice_iptables != '');
+}
+
 var abc = nvram.qos_classnames.split(' ');
 
 if (nvram.qos_mode == 2) {
-		var position;
-	if (nvram.qos_cake_prio_mode == 1 || nvram.qos_cake_prio_mode == 4) {
-			position = 7;
-		}
-	else if (nvram.qos_cake_prio_mode == 2) {
-			position = 3;
-		}
-	else if (nvram.qos_cake_prio_mode == 3) {
-			position = 2;
-		}
+	var position;
+	if (nvram.qos_cake_prio_mode == 1 || nvram.qos_cake_prio_mode == 4)
+		position = 7;
+	else if (nvram.qos_cake_prio_mode == 2)
+		position = 3;
+	else if (nvram.qos_cake_prio_mode == 3)
+		position = 2;
+
 	for (var i = 0; i < position + 1; i++) {
-			var p = i+1;
-			abc[i] = 'Priority '+p;
-		}
-	for (var i = position + 1; i < abc.length; i++) {
-			abc[i] = '- unused -';
-		}
+		var p = i+1;
+		abc[i] = 'Priority '+p;
+	}
+	for (var i = position + 1; i < abc.length; i++)
+		abc[i] = '- unused -';
 }
 
 /* TOMATO64-REMOVE-BEGIN */
@@ -502,6 +505,7 @@ function save() {
 
 function init() {
 	qosg.recolor();
+	up.initPage(250, 5);
 }
 </script>
 </head>
@@ -530,13 +534,22 @@ function init() {
 	if (nvram.qos_enable != '1')
 		W('<div class="note-disabled"><b>QoS disabled.<\/b><br><br><a href="qos-settings.asp">Enable &raquo;<\/a><\/div>');
 	else if (nvram.qos_enable == 1 && nvram.qos_mode == 2 && nvram.qos_cake_prio_mode == 0)
-		W('<div class="note-disabled"><p><b>CAKE is currently set in single class queue mode, in single class an automatic fair usage policy per IP is applied and classification settings not used.<\/b><\/div><\/td><\/tr></table>');
+		W('<div class="note-disabled"><b>CAKE is currently set in single class queue mode, in single class an automatic fair usage policy per IP is applied and classification settings not used.<\/b><\/div>');
 	else if (nvram.qos_enable == 1 && nvram.qos_mode == 1 && nvram.qos_classify == 0)
-		W('<div class="note-disabled"><p><b>QoS classification is disabled.<\/b><\/div><\/td><\/tr></table>');
-	else {
-		show_notice1('<% notice("iptables"); %>');
-		W('<div class="section"><div class="tomato-grid" id="qos-cl-grid"></div></div>'); };
+		W('<div class="note-disabled"><b>QoS classification is disabled.<\/b><\/div>');
+	else
+		elem.display('qos-cl-grid', 1);
 </script>
+
+<!-- / / / -->
+
+<div class="section">
+	<div class="tomato-grid" id="qos-cl-grid" style="display:none"></div>
+</div>
+
+<!-- / / / -->
+
+<div id="notice_container" style="display:none">&nbsp;</div>
 
 <!-- / / / -->
 
