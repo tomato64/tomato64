@@ -11,7 +11,7 @@
 <head>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
-<title>[<% ident(); %>] Forwarding: UPnP / NAT-PMP</title>
+<title>[<% ident(); %>] Forwarding: UPnP IGD &amp; PCP/NAT-PMP</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="isup.jsz?rel=<% version(); %>"></script>
@@ -20,10 +20,10 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("upnp_enable,upnp_mnp,upnp_clean,upnp_secure,upnp_clean_interval,upnp_clean_threshold,upnp_custom,upnp_lan,upnp_lan1,upnp_lan2,upnp_lan3,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
+//	<% nvram("upnp_enable,upnp_secure,upnp_custom,upnp_lan,upnp_lan1,upnp_lan2,upnp_lan3,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("upnp_enable,upnp_mnp,upnp_clean,upnp_secure,upnp_clean_interval,upnp_clean_threshold,upnp_custom,upnp_lan,upnp_lan1,upnp_lan2,upnp_lan3,upnp_lan4,upnp_lan5,upnp_lan6,upnp_lan7,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
+//	<% nvram("upnp_enable,upnp_secure,upnp_custom,upnp_lan,upnp_lan1,upnp_lan2,upnp_lan3,upnp_lan4,upnp_lan5,upnp_lan6,upnp_lan7,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
 /* TOMATO64-END */
 
 </script>
@@ -45,20 +45,15 @@ function upnpNvramAdd() {
 	var sb, cb, msg;
 
 	/* short check for upnp nvram var. If OK - nothing to do! */
-	if ((nvram.upnp_secure.length > 0) &&
-	    (nvram.upnp_clean.length > 0))
-		return;
-
-	/* check already enabled? - nothing to do! */
-	if (nvram.upnp_enable > 0)
+	if ((nvram.upnp_secure.length > 0) || (nvram.upnp_enable > 0))
 		return;
 
 	E('_f_enable_upnp').disabled = 1;
-	E('_f_enable_natpmp').disabled = 1;
+	E('_f_enable_pcp_pmp').disabled = 1;
 	if ((sb = E('save-button')) != null) sb.disabled = 1;
 	if ((cb = E('cancel-button')) != null) cb.disabled = 1;
 
-	if (!confirm("Add UPNP to nvram?"))
+	if (!confirm("Add UPnP IGD & PCP/NAT-PMP autonomous port forwarding service to nvram?"))
 		return;
 
 	if (xob)
@@ -81,7 +76,7 @@ function upnpNvramAdd() {
 		setTimeout(
 			function() {
 				E('_f_enable_upnp').disabled = 0;
-				E('_f_enable_natpmp').disabled = 0;
+				E('_f_enable_pcp_pmp').disabled = 0;
 				if (sb) sb.disabled = 0;
 				if (cb) cb.disabled = 0;
 				if (msg) msg.style.display = 'none';
@@ -142,14 +137,14 @@ function submitDelete(proto, eport) {
 }
 
 function deleteData(data) {
-	if (!confirm('Delete '+data[3]+' '+data[0]+' -> '+data[2]+':'+data[1]+' ?'))
+	if (!confirm('Delete port forward '+data[2]+'/'+data[3]+' -> '+data[0]+':'+data[1]+'?'))
 		return;
 
-	submitDelete(data[3], data[0]);
+	submitDelete(data[3], data[2]);
 }
 
 function deleteAll() {
-	if (!confirm('Delete all entries?'))
+	if (!confirm('Delete all port forwards?'))
 		return;
 
 	submitDelete('*', '0');
@@ -159,9 +154,9 @@ var ug = new TomatoGrid();
 
 ug.setup = function() {
 	this.init('upnp-grid', 'sort delete');
-	this.headerSet(['External', 'Internal', 'Internal Address', 'Protocol', 'Description']);
+	this.headerSet(['Internal Address', 'Internal Port', 'External Port', 'Protocol', 'Description']);
 	ug.populate();
-	this.sort(2);
+	this.sort(0);
 }
 
 ug.populate = function() {
@@ -174,12 +169,11 @@ ug.populate = function() {
 			if (r == null)
 				continue;
 
-			row = this.insertData(-1, [r[2], r[4], r[3], r[1], r[5]]);
+			row = this.insertData(-1, [r[3], r[4], r[2], r[1], r[5]]);
 
 			if (!r[0]) {
-				for (j = 0; j < 5; ++j) {
+				for (j = 0; j < 5; ++j)
 					elem.addClass(row.cells[j], 'disabled');
-				}
 			}
 			for (j = 0; j < 5; ++j)
 				row.cells[j].title = 'Delete';
@@ -197,58 +191,18 @@ ug.onClick = function(cell) {
 }
 
 function verifyFields(focused, quiet) {
-	var enable = (E('_f_enable_upnp').checked || E('_f_enable_natpmp').checked);
-	var bc = E('_f_upnp_clean').checked;
+	var enable = (E('_f_enable_upnp').checked || E('_f_enable_pcp_pmp').checked);
 
-	E('_f_upnp_clean').disabled = (enable == 0);
-	E('_f_upnp_secure').disabled = (enable == 0);
-	E('_upnp_custom').disabled = (enable == 0);
-	E('_f_upnp_mnp').disabled = (E('_f_enable_upnp').checked == 0);
-	E('_upnp_clean_interval').disabled = (enable == 0) || (bc == 0);
-	E('_upnp_clean_threshold').disabled = (enable == 0) || (bc == 0);
-	elem.display(PR(E('_upnp_clean_interval')), (enable != 0) && (bc != 0));
-	elem.display(PR(E('_upnp_clean_threshold')), (enable != 0) && (bc != 0));
+	E('_f_upnp_secure').disabled = !enable;
+	E('_upnp_custom').disabled = !enable;
 
-	if ((enable != 0) && (bc != 0)) {
-		if (!v_range('_upnp_clean_interval', quiet, 60, 65535))
-			return 0;
-		if (!v_range('_upnp_clean_threshold', quiet, 0, 9999))
-			return 0;
-	}
-	else {
-		ferror.clear(E('_upnp_clean_interval'));
-		ferror.clear(E('_upnp_clean_threshold'));
+	for (var i = 0 ; i <= MAX_BRIDGE_ID ; i++) {
+		var j = (i == 0) ? '' : i.toString();
+		E('_f_upnp_lan'+j).disabled = ((nvram['lan'+j+'_ifname'].length < 1) || !enable);
+		if (E('_f_upnp_lan'+j).disabled)
+			E('_f_upnp_lan'+j).checked = 0;
 	}
 
-	E('_f_upnp_lan').disabled = ((nvram.lan_ifname.length < 1) || (enable == 0));
-	if (E('_f_upnp_lan').disabled)
-		E('_f_upnp_lan').checked = 0;
-
-	E('_f_upnp_lan1').disabled = ((nvram.lan1_ifname.length < 1) || (enable == 0));
-	if (E('_f_upnp_lan1').disabled)
-		E('_f_upnp_lan1').checked = 0;
-
-	E('_f_upnp_lan2').disabled = ((nvram.lan2_ifname.length < 1) || (enable == 0));
-	if (E('_f_upnp_lan2').disabled)
-		E('_f_upnp_lan2').checked = 0;
-
-	E('_f_upnp_lan3').disabled = ((nvram.lan3_ifname.length < 1) || (enable == 0));
-	if (E('_f_upnp_lan3').disabled)
-		E('_f_upnp_lan3').checked = 0;
-/* TOMATO64-BEGIN */
-	E('_f_upnp_lan4').disabled = ((nvram.lan4_ifname.length < 1) || (enable == 0));
-	if (E('_f_upnp_lan4').disabled)
-		E('_f_upnp_lan4').checked = 0;
-	E('_f_upnp_lan5').disabled = ((nvram.lan5_ifname.length < 1) || (enable == 0));
-	if (E('_f_upnp_lan5').disabled)
-		E('_f_upnp_lan5').checked = 0;
-	E('_f_upnp_lan6').disabled = ((nvram.lan6_ifname.length < 1) || (enable == 0));
-	if (E('_f_upnp_lan6').disabled)
-		E('_f_upnp_lan6').checked = 0;
-	E('_f_upnp_lan7').disabled = ((nvram.lan7_ifname.length < 1) || (enable == 0));
-	if (E('_f_upnp_lan7').disabled)
-		E('_f_upnp_lan7').checked = 0;
-/* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
 	if ((enable) && (!E('_f_upnp_lan').checked) && (!E('_f_upnp_lan1').checked) && (!E('_f_upnp_lan2').checked) && (!E('_f_upnp_lan3').checked)) {
 /* TOMATO64-REMOVE-END */
@@ -256,9 +210,9 @@ function verifyFields(focused, quiet) {
 	if ((enable) && (!E('_f_upnp_lan').checked) && (!E('_f_upnp_lan1').checked) && (!E('_f_upnp_lan2').checked) && (!E('_f_upnp_lan3').checked) &&
 			(!E('_f_upnp_lan4').checked) && (!E('_f_upnp_lan5').checked) && (!E('_f_upnp_lan6').checked) && (!E('_f_upnp_lan7').checked)) {
 /* TOMATO64-END */
-		if ((E('_f_enable_natpmp').checked) || (E('_f_enable_upnp').checked)) {
-			var m = 'NAT-PMP or UPnP should be enabled on at least one LAN bridge. You can continue, but be sure to configure access to the UPnP service in Custom Configuration, otherwise miniupnpd will not run';
-			ferror.set('_f_enable_natpmp', m, quiet);
+		if ((E('_f_enable_pcp_pmp').checked) || (E('_f_enable_upnp').checked)) {
+			var m = 'Must be enabled on at least one LAN interface if no custom configuration is used, otherwise the service will not run';
+			ferror.set('_f_enable_pcp_pmp', m, quiet);
 			ferror.set('_f_enable_upnp', m, 1);
 			ferror.set('_f_upnp_lan', m, 1);
 			ferror.set('_f_upnp_lan1', m, 1);
@@ -274,7 +228,7 @@ function verifyFields(focused, quiet) {
 		return 1;
 	}
 	else {
-		ferror.clear('_f_enable_natpmp');
+		ferror.clear('_f_enable_pcp_pmp');
 		ferror.clear('_f_enable_upnp');
 		ferror.clear('_f_upnp_lan');
 		ferror.clear('_f_upnp_lan1');
@@ -300,12 +254,10 @@ function save() {
 	fom.upnp_enable.value = 0;
 	if (fom.f_enable_upnp.checked)
 		fom.upnp_enable.value = 1;
-	if (fom.f_enable_natpmp.checked)
+	if (fom.f_enable_pcp_pmp.checked)
 		fom.upnp_enable.value |= 2;
 
-	fom.upnp_mnp.value = fom._f_upnp_mnp.checked ? 1 : 0;
-	fom.upnp_clean.value = fom._f_upnp_clean.checked ? 1 : 0;
-	fom.upnp_secure.value = fom._f_upnp_secure.checked ? 1 : 0;
+	fom.upnp_secure.value = fom._f_upnp_secure.checked ? 0 : 1;
 
 	fom.upnp_lan.value = fom._f_upnp_lan.checked ? 1 : 0;
 	fom.upnp_lan1.value = fom._f_upnp_lan1.checked ? 1 : 0;
@@ -355,8 +307,6 @@ function init() {
 <input type="hidden" name="_service" value="upnp-restart">
 <input type="hidden" name="_nofootermsg" value="">
 <input type="hidden" name="upnp_enable">
-<input type="hidden" name="upnp_mnp">
-<input type="hidden" name="upnp_clean">
 <input type="hidden" name="upnp_secure">
 <input type="hidden" name="upnp_lan">
 <input type="hidden" name="upnp_lan1">
@@ -374,7 +324,7 @@ function init() {
 <!-- / / / -->
 
 <div id="show_ports">
-	<div class="section-title">Forwarded Ports</div>
+	<div class="section-title">Active Port Forwards</div>
 	<div class="section">
 		<div class="tomato-grid" id="upnp-grid"></div>
 		<div style="width:100%;text-align:right"><img src="spin.gif" id="refresh-spinner" alt=""> &nbsp;<input type="button" value="Delete All" onclick="deleteAll()" id="upnp-delete-all"></div>
@@ -383,30 +333,25 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">UPnP / NAT-PMP Settings</div>
+<div class="section-title">UPnP IGD &amp; PCP/NAT-PMP Service Settings</div>
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'Enable UPnP', name: 'f_enable_upnp', type: 'checkbox', value: (nvram.upnp_enable & 1) },
-			{ title: 'Enable NAT-PMP', name: 'f_enable_natpmp', type: 'checkbox', value: (nvram.upnp_enable & 2) },
-			{ title: 'Inactive Rules Cleaning', name: 'f_upnp_clean', type: 'checkbox', value: (nvram.upnp_clean == '1') },
-				{ title: 'Cleaning Interval', indent: 2, name: 'upnp_clean_interval', type: 'text', maxlen: 5, size: 7, suffix: ' <small>seconds<\/small>', value: nvram.upnp_clean_interval },
-				{ title: 'Cleaning Threshold', indent: 2, name: 'upnp_clean_threshold', type: 'text', maxlen: 4, size: 7, suffix: ' <small>redirections<\/small>', value: nvram.upnp_clean_threshold },
-			{ title: 'Secure Mode', name: 'f_upnp_secure', type: 'checkbox', suffix: ' <small>when enabled, UPnP clients are allowed to add mappings only to their IP<\/small>', value: (nvram.upnp_secure == '1') },
+			{ title: 'Enable UPnP IGD', name: 'f_enable_upnp', type: 'checkbox', suffix: ' <small>This protocol is often used by Microsoft-compatible systems<\/small>', value: (nvram.upnp_enable & 1) },
+			{ title: 'Enable PCP/NAT-PMP', name: 'f_enable_pcp_pmp', type: 'checkbox', suffix: ' <small>These protocols are often used by Apple-compatible systems<\/small>', value: (nvram.upnp_enable & 2) },
 			{ title: 'Enabled on' },
-				{ title: 'LAN0', indent: 2, name: 'f_upnp_lan', type: 'checkbox', value: (nvram.upnp_lan == '1') },
-				{ title: 'LAN1', indent: 2, name: 'f_upnp_lan1', type: 'checkbox', value: (nvram.upnp_lan1 == '1') },
-				{ title: 'LAN2', indent: 2, name: 'f_upnp_lan2', type: 'checkbox', value: (nvram.upnp_lan2 == '1') },
-				{ title: 'LAN3', indent: 2, name: 'f_upnp_lan3', type: 'checkbox', value: (nvram.upnp_lan3 == '1') },
+				{ title: 'LAN0', indent: 2, name: 'f_upnp_lan', type: 'checkbox', value: (nvram.upnp_lan == 1) },
+				{ title: 'LAN1', indent: 2, name: 'f_upnp_lan1', type: 'checkbox', value: (nvram.upnp_lan1 == 1) },
+				{ title: 'LAN2', indent: 2, name: 'f_upnp_lan2', type: 'checkbox', value: (nvram.upnp_lan2 == 1) },
+				{ title: 'LAN3', indent: 2, name: 'f_upnp_lan3', type: 'checkbox', value: (nvram.upnp_lan3 == 1) },
 /* TOMATO64-BEGIN */
-				{ title: 'LAN4', indent: 2, name: 'f_upnp_lan4', type: 'checkbox', value: (nvram.upnp_lan4 == '1') },
-				{ title: 'LAN5', indent: 2, name: 'f_upnp_lan5', type: 'checkbox', value: (nvram.upnp_lan5 == '1') },
-				{ title: 'LAN6', indent: 2, name: 'f_upnp_lan6', type: 'checkbox', value: (nvram.upnp_lan6 == '1') },
-				{ title: 'LAN7', indent: 2, name: 'f_upnp_lan7', type: 'checkbox', value: (nvram.upnp_lan7 == '1') },
+				{ title: 'LAN4', indent: 2, name: 'f_upnp_lan4', type: 'checkbox', value: (nvram.upnp_lan4 == 1) },
+				{ title: 'LAN5', indent: 2, name: 'f_upnp_lan5', type: 'checkbox', value: (nvram.upnp_lan5 == 1) },
+				{ title: 'LAN6', indent: 2, name: 'f_upnp_lan6', type: 'checkbox', value: (nvram.upnp_lan6 == 1) },
+				{ title: 'LAN7', indent: 2, name: 'f_upnp_lan7', type: 'checkbox', value: (nvram.upnp_lan7 == 1) },
 /* TOMATO64-END */
-			{ title: 'Show In My Network Places',  name: 'f_upnp_mnp',  type: 'checkbox',  value: (nvram.upnp_mnp == '1')},
-			null,
-			{ title: 'Miniupnpd<\/a><br>Custom configuration', name: 'upnp_custom', type: 'textarea', value: nvram.upnp_custom }
+			{ title: 'Allow third-party forwarding', name: 'f_upnp_secure', type: 'checkbox', suffix: ' <small>Allow adding port forwards for non-requesting IP addresses<\/small>', value: (nvram.upnp_secure == 0) },
+			{ title: 'Custom Configuration', name: 'upnp_custom', type: 'textarea', value: nvram.upnp_custom }
 		]);
 	</script>
 </div>
@@ -414,7 +359,7 @@ function init() {
 <div class="section-title">Notes</div>
 <div class="section">
 	<ul>
-		<li><b>NVRAM</b> - If UPnP has been enabled, nvram values will be added. Nvram values will be removed after reboot in case UPnP will be disabled.</li>
+		<li><b>NVRAM</b> - If UPnP IGD or PCP/NAT-PMP has been enabled, nvram values will be added. Nvram values will be removed after reboot in case service will be disabled.</li>
 	</ul>
 </div>
 

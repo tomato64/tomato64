@@ -93,7 +93,6 @@ struct nvram_tuple upnp_defaults[] = {
 	{ "upnp_secure",		"1"				, 0 },
 	{ "upnp_port",			"0"				, 0 },
 	{ "upnp_ssdp_interval",		"900"				, 0 },	/* SSDP interval */
-	{ "upnp_mnp",			"0"				, 0 },
 	{ "upnp_custom",		""				, 0 },
 	{ "upnp_lan",			""				, 0 },
 	{ "upnp_lan1",			""				, 0 },
@@ -105,9 +104,6 @@ struct nvram_tuple upnp_defaults[] = {
 	{ "upnp_lan6",			""				, 0 },
 	{ "upnp_lan7",			""				, 0 },
 #endif /* TOMATO64 */
-	{ "upnp_clean",			"1"				, 0 },	/* 0:Disable 1:Enable */
-	{ "upnp_clean_interval",	"600"				, 0 },	/* Cleaning interval in seconds */
-	{ "upnp_clean_threshold",	"20"				, 0 },	/* Threshold for cleaning unused rules */
 #if 0	/* disabled for miniupnpd */
 	{ "upnp_max_age",		"180"				, 0 },	/* Max age */
 	{ "upnp_config",		"0"				, 0 },

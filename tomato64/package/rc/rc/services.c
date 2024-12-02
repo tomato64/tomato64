@@ -1780,7 +1780,7 @@ void stop_ipv6(void)
 void start_upnp(void)
 {
 	FILE *f;
-	int enable, upnp_port, interval, https;
+	int enable, upnp_port, https;
 	int ports[4];
 	char uuid[45];
 	char lanN_ipaddr[] = "lanXX_ipaddr";
@@ -1815,6 +1815,8 @@ void start_upnp(void)
 	}
 
 	/* GUI configuration */
+
+	/* not implemented in GUI */
 	upnp_port = nvram_get_int("upnp_port");
 	if ((upnp_port < 0) || (upnp_port >= 0xFFFF))
 		upnp_port = 0;
@@ -1833,13 +1835,15 @@ void start_upnp(void)
 	           "port=%d\n"
 	           "enable_upnp=%s\n"
 	           "enable_pcp_pmp=%s\n"
+//	           "force_igd_desc_v1=yes\n" /* when igd2 is compiled in */
 	           "secure_mode=%s\n"
+	           "pcp_allow_thirdparty=%s\n"
 	           "upnp_forward_chain=upnp\n"
 	           "upnp_nat_chain=upnp\n"
 	           "upnp_nat_postrouting_chain=pupnp\n"
 	           "notify_interval=%d\n"
 	           "system_uptime=yes\n"
-	           "friendly_name=Tomato64 UPnP daemon\n"
+	           "friendly_name=Tomato64 UPnP IGD &amp; PCP\n"
 	           "model_name=%s\n"
 	           "model_url=https://tomato64.org/\n"
 	           "manufacturer_name=Tomato64 Firmware\n"
@@ -1848,31 +1852,14 @@ void start_upnp(void)
 	           get_wanface("wan"),
 	           upnp_port,
 	           (enable & 1) ? "yes" : "no",			/* upnp enable */
-	           (enable & 2) ? "yes" : "no",			/* natpmp enable */
+	           (enable & 2) ? "yes" : "no",			/* pcp_pmp enable */
 	           nvram_get_int("upnp_secure") ? "yes" : "no",	/* secure_mode (only forward to self) */
+	           nvram_get_int("upnp_secure") ? "no" : "yes",	/* allow third party */
 	           nvram_get_int("upnp_ssdp_interval"),
 	           nvram_safe_get("t_model_name"));
 
-	if (nvram_get_int("upnp_clean")) {
-		interval = nvram_get_int("upnp_clean_interval");
-		if (interval < 60)
-			interval = 60;
-
-		fprintf(f, "clean_ruleset_interval=%d\n"
-		           "clean_ruleset_threshold=%d\n",
-		           interval,
-		           nvram_get_int("upnp_clean_threshold"));
-	}
-	else
-		fprintf(f, "clean_ruleset_interval=0\n");
-
-	if (nvram_get_int("upnp_mnp")) {
-		https = nvram_get_int("https_enable");
-		fprintf(f, "presentation_url=http%s://%s:%s/forward-upnp.asp\n", (https ? "s" : ""), nvram_safe_get("lan_ipaddr"), nvram_safe_get(https ? "https_lanport" : "http_lanport"));
-	}
-	else
-		/* Empty parameters are not included into XML service description */
-		fprintf(f, "presentation_url=\n");
+	https = nvram_get_int("https_enable");
+	fprintf(f, "presentation_url=http%s://%s:%s/forward-upnp.asp\n", (https ? "s" : ""), nvram_safe_get("lan_ipaddr"), nvram_safe_get(https ? "https_lanport" : "http_lanport"));
 
 	f_read_string("/proc/sys/kernel/random/uuid", uuid, sizeof(uuid));
 	fprintf(f, "uuid=%s\n", uuid);
@@ -1901,6 +1888,7 @@ void start_upnp(void)
 		if ((strcmp(nvram_safe_get(upnp_lanN), "1") == 0) && (strcmp(lanifname, "") != 0)) {
 			fprintf(f, "listening_ip=%s\n", lanifname);
 
+			/* not implemented in GUI */
 			if ((ports[0] = nvram_get_int("upnp_min_port_ext")) > 0 &&
 			    (ports[1] = nvram_get_int("upnp_max_port_ext")) > 0 &&
 			    (ports[2] = nvram_get_int("upnp_min_port_int")) > 0 &&

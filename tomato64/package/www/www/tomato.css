@@ -733,7 +733,7 @@ div[id$="peers-grid"] .co6,
 }
 
 #aft-grid .co3,
-#upnp-grid .co3,
+#upnp-grid .co1,
 #wol-grid .co2 {
 	width: 15%;
 }
@@ -1176,8 +1176,8 @@ div[id$="_ccd"] .co6 {
 	width: 81%;
 }
 
-#upnp-grid .co1,
-#upnp-grid .co2 {
+#upnp-grid .co2,
+#upnp-grid .co3 {
 	width: 12%;
 }
 

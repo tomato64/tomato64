@@ -2635,7 +2635,7 @@ function navi() {
 /* IPV6-END */
 			['DMZ',				'dmz.asp'],
 			['Triggered',			'triggered.asp'],
-			['UPnP/NAT-PMP',		'upnp.asp'] ] ],
+			['UPnP IGD & PCP',		'upnp.asp'] ] ],
 		['QoS',				'qos', 0, [
 			['Basic Settings',		'settings.asp'],
 			['Classification',		'classify.asp'],
