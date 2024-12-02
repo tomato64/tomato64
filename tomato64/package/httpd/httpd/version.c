@@ -1,12 +1,16 @@
 /*
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ * Fixes/updates (C) 2018 - 2024 pedro
+ *
+ */
 
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
 
 #include <epivers.h>
 #include "tomato.h"
+
 
 void asp_build_time(int argc, char **argv)
 {
@@ -16,25 +20,23 @@ void asp_build_time(int argc, char **argv)
 void asp_version(int argc, char **argv)
 {
 #if 0
-	if (argc != 0) {
+	if (argc != 0)
 		web_puts(tomato_version);
-	}
-	else {
+	else
 		web_write(tomato_version, strrchr(tomato_version, '.') - tomato_version);
-	}
 #else
 	if (argc != 0) {
 		switch (atoi(argv[0])) {
 		case 2:
-			// kernel version
+			/* kernel version */
 			web_pipecmd("uname -r", WOF_NONE);
 			break;
 		case 3:
-			// wl driver version
+			/* wl driver version */
 			web_puts(EPI_VERSION_STR);
 			break;
 		default:
-			// tomato version
+			/* tomato version */
 			web_puts(tomato_version);
 			break;
 		}
@@ -44,4 +46,3 @@ void asp_version(int argc, char **argv)
 	}
 #endif
 }
-
