@@ -628,6 +628,8 @@ ifneq ($(TCONFIG_WIREGUARD),y)
 	rm -f $(INSTALLDIR)/www/wireguard.js
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/WIREGUARD-BEGIN/,/WIREGUARD-END/d"
 endif
+	# enable when needed
+	rm -f $(INSTALLDIR)/www/interfaces-v6.js
 
 # Only include 4 DDNS clients if nvram >= 64KB and optimize size is disabled
 ifeq ($(or $(TCONFIG_NVRAM_32K),$(TCONFIG_OPTIMIZE_SIZE)),y)

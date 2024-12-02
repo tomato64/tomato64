@@ -772,7 +772,7 @@ function ZeroIPv6PrefixBits(ip, prefix_length) {
 	ip = ip.replace(/(^|:)0{1,3}/g, '$1');
 	return ip;
 }
-
+/*
 function ntoav6(ip) {
 	var output = '';
 	if (typeof(ip) == 'number')
@@ -788,7 +788,7 @@ function ntoav6(ip) {
 function atonv6(ip) {
 	return BigInt('0x'+ip.replaceAll(':', ''));
 }
-
+*/
 function ipv6ton(ip) {
 	var o, x, i;
 
