@@ -72,6 +72,7 @@ char *blob = NULL;
 char ifname[16];
 char sPrefix[8];
 int error_exitcode = 1;
+int no_wan_mode = 1;
 
 int g_argc;
 char **g_argv;
@@ -1807,6 +1808,7 @@ int main(int argc, char *argv[])
 {
 	const char *p, *c;
 	char tmp[16];
+	int mwan_num, wan_unit;
 
 	g_argc = argc;
 	g_argv = argv;
@@ -1831,13 +1833,34 @@ int main(int argc, char *argv[])
 	memset(ifname, 0, sizeof(ifname)); /* reset */
 	memset(tmp, 0, sizeof(tmp)); /* reset */
 
-	/* addr is present in the config */
-	if (((c = get_option("addr")) != NULL) && *c == '@' && nvram_get_int("mwan_num") > 1) {
-		/* via what WAN check external IP? */
-		snprintf(sPrefix, sizeof(sPrefix), (atoi(c + 1) == 1 ? "wan": "wan%s"), c + 1);
-		snprintf(ifname, sizeof(ifname), "%s", get_wanface(sPrefix));
-		if ((strcmp(ifname, "none") == 0) || (get_wanx_proto(sPrefix) == WP_DISABLED)) /* in some cases */
-			memset(ifname, 0, sizeof(ifname)); /* reset again */
+	/* addr (@...) is present in the config */
+	if (((c = get_option("addr")) != NULL) && *c == '@') {
+		if (nvram_get_int("mwan_num") > 1) {
+			/* via what WAN check external IP? */
+			snprintf(sPrefix, sizeof(sPrefix), (atoi(c + 1) == 1 ? "wan": "wan%s"), c + 1);
+			snprintf(ifname, sizeof(ifname), "%s", get_wanface(sPrefix));
+			if ((strcmp(ifname, "none") == 0) || (get_wanx_proto(sPrefix) == WP_DISABLED)) /* in some cases */
+				memset(ifname, 0, sizeof(ifname)); /* reset again */
+		}
+		/* check if it's no WAN mode, if so - add custom interface */
+		mwan_num = nvram_get_int("mwan_num");
+		if (mwan_num > MWAN_MAX)
+			mwan_num = MWAN_MAX;
+
+		for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
+			memset(tmp, 0, sizeof(tmp)); /* reset */
+			get_wan_prefix(wan_unit, tmp);
+			if (get_wanx_proto(tmp) != WP_DISABLED) {
+				logmsg(LOG_DEBUG, "*** %s: checking for no WAN mode - false, using default interface: %s", __FUNCTION__, ifname[0] != '\0' ? ifname : get_wanface("wan"));
+				no_wan_mode = 0;
+				break;
+			}
+		}
+		if (no_wan_mode == 1) {
+			logmsg(LOG_DEBUG, "*** %s: checking for no WAN mode - true, using custom interface: %s", __FUNCTION__, nvram_safe_get("ddnsx_custom_if"));
+			memset(ifname, 0, sizeof(ifname)); /* reset */
+			snprintf(ifname, sizeof(ifname), nvram_safe_get("ddnsx_custom_if"));
+		}
 	}
 
 	check_cookie();

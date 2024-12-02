@@ -235,6 +235,7 @@ static const nvset_t nvset_list[] = {
 	{ "ddnsx2_opendns",		V_RANGE(0, 15)			},	/* enable opendns as DNS for Dynamic DNS Client 3: bit 0 = WAN0, bit 1 = WAN1, bit 2 = WAN2, bit 3 = WAN3 */
 	{ "ddnsx3_opendns",		V_RANGE(0, 15)			},	/* enable opendns as DNS for Dynamic DNS Client 4: bit 0 = WAN0, bit 1 = WAN1, bit 2 = WAN2, bit 3 = WAN3 */
 #endif
+	{ "ddnsx_custom_if",		V_LENGTH(0, 6)			},
 
 /* basic-network */
 	/* WAN */
