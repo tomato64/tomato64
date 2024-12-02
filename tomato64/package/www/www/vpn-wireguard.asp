@@ -296,8 +296,8 @@ function clearAllFields(unit) {
 	E('_wg'+unit+'_postup').value = '';
 	E('_wg'+unit+'_predown').value = '';
 	E('_wg'+unit+'_postdown').value = '';
+	E('_wg'+unit+'_ka').value = '';
 	E('_f_wg'+unit+'_adns').checked = 0;
-	E('_f_wg'+unit+'_ka').checked = 0;
 	E('_f_wg'+unit+'_endpoint').selectedIndex = 0;
 	E('_f_wg'+unit+'_custom_endpoint').value = '';
 	E('_f_wg'+unit+'_rgw').checked = 0;
@@ -668,6 +668,8 @@ PeerGrid.prototype.edit = function(cell) {
 	if (interface_port == '')
 		interface_port = (51820 + this.unit);
 
+	E('_f_wg'+this.unit+'_peer_pubkey').disabled = true;
+
 	alias.value = data[0];
 	endpoint.value = data[1];
 	port.value = interface_port;
@@ -676,7 +678,14 @@ PeerGrid.prototype.edit = function(cell) {
 	psk.value = data[4];
 	ip.value = data[5];
 	allowedips.value = data[6];
-	keepalive.checked = data[7] == 1 ? 1 : 0;
+	/* compat */
+	if (data[7] == 'true')
+		keepalive.value = '25';
+	else if (data[7] == 'false')
+		keepalive.value = '0';
+	else
+		keepalive.value = data[7];
+
 	fwmark.value = '';
 
 	var button = E(this.interface_name+'_peer_add');
@@ -811,67 +820,74 @@ function encodePeers(data) {
 }
 
 function verifyPeerFields(unit, require_privkey) {
-	var result = true;
+	var result = 1;
 
-	var alias = E('_f_wg'+unit+'_peer_alias');
-	var endpoint = E('_f_wg'+unit+'_peer_ep');
 	var port = E('_f_wg'+unit+'_peer_port');
 	var privkey = E('_f_wg'+unit+'_peer_privkey');
 	var pubkey = E('_f_wg'+unit+'_peer_pubkey');
 	var psk = E('_f_wg'+unit+'_peer_psk');
 	var ip = E('_f_wg'+unit+'_peer_ip');
 	var allowedips = E('_f_wg'+unit+'_peer_aip');
-	var keepalive = E('_f_wg'+unit+'_peer_ka');
 	var fwmark = E('_f_wg'+unit+'_peer_fwmark');
 
 	if ((!port.value.match(/^ *[-\+]?\d+ *$/)) || (port.value < 1) || (port.value > 65535)) {
 		ferror.set(port, 'A valid port must be provided', !result);
-		result = false;
+		result = 0;
 	}
 	else
 		ferror.clear(port);
 
 	if ((privkey.value || require_privkey) && !window.wireguard.validateBase64Key(privkey.value)) {
 		ferror.set(privkey, 'A valid private key must be provided', !result);
-		result = false;
+		result = 0;
 	}
 	else
 		ferror.clear(privkey);
 
+	if (pubkey.value && !window.wireguard.validateBase64Key(pubkey.value)) {
+		ferror.set(privkey, 'A valid public key must be provided', !result);
+		result = 0;
+	}
+	else
+		ferror.clear(pubkey);
+
 	if (psk.value && !window.wireguard.validateBase64Key(psk.value)) {
 		ferror.set(psk, 'A valid PresharedKey must be provided or left blank', !result);
-		result = false;
+		result = 0;
 	}
 	else
 		ferror.clear(psk);
 
 	if (!verifyCIDR(ip.value)) {
 		ferror.set(ip, 'A valid CIDR (IP/MASK) must be provided to generate a configuration file', !result);
-		result = false;
+		result = 0;
 	}
 	else
 		ferror.clear(ip);
 
-	var ok = true;
+	var ok = 1;
 	if (allowedips.value != '') {
 		var cidrs = allowedips.value.split(',')
 		for(var i = 0; i < cidrs.length; i++) {
 			var cidr = cidrs[i].trim();
 			if (!verifyCIDR(cidr)) {
-				ok = false;
+				ok = 0;
 			}
 		}
 	}
 	if (!ok) {
 		ferror.set(allowedips, 'Allowed IPs must be in CIDR format separated by commas', !result);
-		result = false;
+		result = 0;
 	}
 	else
 		ferror.clear(allowedips);
-	
+
+	/* verify peer keep alive */
+	if (!v_range('_f_wg'+unit+'_peer_ka', !result, 0, 99)) result = 0;
+
 	if (fwmark.value && !verifyFWMark(fwmark.value)) {
 		ferror.set(fwmark, 'FWMark must be a hexadecimal number of 8 characters or 0', !result);
-		result = false;
+		result = 0;
 	}
 	else
 		ferror.clear(fwmark);
@@ -924,7 +940,7 @@ function peerFieldsToData(unit) {
 	var psk = E('_f_wg'+unit+'_peer_psk').value;
 	var ip = E('_f_wg'+unit+'_peer_ip').value;
 	var allowedips = E('_f_wg'+unit+'_peer_aip').value;
-	var keepalive = E('_f_wg'+unit+'_peer_ka').checked;
+	var keepalive = E('_f_wg'+unit+'_peer_ka').value;
 
 	if (privkey != '')
 		pubkey = window.wireguard.generatePublicKey(privkey);
@@ -955,7 +971,7 @@ function clearPeerFields(unit) {
 	E('_f_wg'+unit+'_peer_psk').value = '';
 	E('_f_wg'+unit+'_peer_ip').value = '';
 	E('_f_wg'+unit+'_peer_aip').value = '';
-	E('_f_wg'+unit+'_peer_ka').checked = 0;
+	E('_f_wg'+unit+'_peer_ka').value = '';
 	E('_f_wg'+unit+'_peer_fwmark').value = '';
 }
 
@@ -1017,7 +1033,7 @@ function verifyPeerGenFields(unit) {
 	/* verify peer fwmark*/
 	var fwmark = E('_f_wg'+unit+'_peer_fwmark').value;
 	if (fwmark && !verifyFWMark(fwmark)) {
-		alert('TFWMark must be a hexadecimal number of 8 characters or 0')
+		alert('FWMark must be a hexadecimal number of 8 characters or 0')
 		return false;
 	}
 
@@ -1078,7 +1094,7 @@ function generatePeer(unit) {
 	E('_f_wg'+unit+'_peer_pubkey').disabled = true;
 	E('_f_wg'+unit+'_peer_psk').value = psk;
 	E('_f_wg'+unit+'_peer_ip').value = ip+'/'+netmask;
-	E('_f_wg'+unit+'_peer_ka').checked = 0;
+	E('_f_wg'+unit+'_peer_ka').value = 0;
 
 	var button = E('wg'+unit+'_peer_add');
 	button.value = 'Add to Peers';
@@ -1162,13 +1178,19 @@ function genPeerGridConfig(unit, row) {
 	if (!result)
 		return false;
 
-	return generateWGConfig(unit, row_data[0], row_data[2], row_data[4], row_data[5].split('/')[0], port.value, fwmark.value, row_data[7]=='1', row_data[1]);
+	return generateWGConfig(unit, row_data[0], row_data[2], row_data[4], row_data[5].split('/')[0], port.value, fwmark.value, row_data[7], row_data[1]);
 }
 
 function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive, endpoint) {
 	var [interface_ip, interface_nm] = nvram['wg'+unit+'_ip'].split(',', 1)[0].split('/', 2);
 	var content = [];
 	var dns = nvram['wg'+unit+'_peer_dns'];
+
+	/* compat */
+	if (keepalive == 'true')
+		keepalive = '25';
+	else if ((keepalive == 'false') || (keepalive == '0'))
+		keepalive = false;
 
 	/* build interface section */
 	content.push('[Interface]\n');
@@ -1263,7 +1285,7 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 	);
 
 	if (keepalive)
-		content.push('PersistentKeepalive = 25\n');
+		content.push('PersistentKeepalive = '+keepalive+'\n');
 
 	/* add remaining peers to config */
 	var pubkey = window.wireguard.generatePublicKey(privkey);
@@ -1302,7 +1324,7 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 			content.push('\n');
 
 			if (keepalive)
-				content.push('PersistentKeepalive = 25\n');
+				content.push('PersistentKeepalive = '+keepalive+'\n');
 
 			if (peer[2].trim() != '')
 				content.push('Endpoint = '+peer[2]+':'+port+'\n');
@@ -1588,9 +1610,9 @@ function verifyFields(focused, quiet) {
 		/* calculate interface pubkey */
 		E('_wg'+i+'_pubkey').disabled = true;
 		var pubkey = window.wireguard.generatePublicKey(privkey.value);
-		if (pubkey == false) {
+		if (pubkey == false)
 			pubkey = '';
-		}
+
 		E('_wg'+i+'_pubkey').value = pubkey;
 
 		/* autopopulate IP if it's empty */
@@ -1674,6 +1696,9 @@ function verifyFields(focused, quiet) {
 			ferror.clear(custom_table);
 		}
 
+		/* verify interface keep alive */
+		if (!v_range('_wg'+i+'_ka', quiet || !ok, 0, 99)) ok = 0;
+
 		/* verify peer dns */
 		var peer_dns = E('_wg'+i+'_peer_dns');
 		if (peer_dns.value != '' && !verifyDNS(peer_dns.value)) {
@@ -1742,7 +1767,6 @@ function save(nomsg) {
 		fom['wg'+i+'_peers'].value = s;
 		nvram['wg'+i+'_peers'] = s;
 
-		fom['wg'+i+'_ka'].value = fom['_f_wg'+i+'_ka'].checked ? 1 : 0;
 		fom['wg'+i+'_enable'].value = fom['_f_wg'+i+'_enable'].checked ? 1 : 0;
 		fom['wg'+i+'_rgw'].value = fom['_f_wg'+i+'_rgw'].checked ? 1 : 0;
 
@@ -1775,6 +1799,7 @@ function save(nomsg) {
 		var endpoint_output = endpoint.value+'';
 		if (endpoint.value == 2)
 			endpoint_output += '|'+custom_endpoint.value;
+
 		fom['wg'+i+'_endpoint'].value = endpoint_output;
 		nvram['wg'+i+'_endpoint'] = endpoint_output;
 
@@ -1783,6 +1808,7 @@ function save(nomsg) {
 		var route_output = route.value+'';
 		if (route.value == 2)
 			route_output += '|'+custom_table.value;
+
 		fom['wg'+i+'_route'].value = route_output;
 		nvram['wg'+i+'_route'] = route_output;
 
@@ -1850,7 +1876,6 @@ function init() {
 			t = tabs[i][0];
 			W('<div id="'+t+'-wg-tab">');
 			W('<input type="hidden" name="'+t+'_enable">');
-			W('<input type="hidden" name="'+t+'_ka">');
 			W('<input type="hidden" name="'+t+'_lan">');
 			W('<input type="hidden" name="'+t+'_rgw">');
 			W('<input type="hidden" name="'+t+'_endpoint">');
@@ -1889,7 +1914,7 @@ function init() {
 
 			W('<div class="section-title">Peer Parameters<\/div>');
 			createFieldTable('', [
-				{ title: 'Router behind NAT', name: 'f_'+t+'_ka', type: 'checkbox', suffix: '&nbsp;<small>enables 25sec keepalives from this router towards the defined peers<\/small>', value: nvram[t+'_ka'] == 1 },
+				{ title: 'Router behind NAT', name: t+'_ka', type: 'text', maxlen: 2, size: 4, suffix: '&nbsp;<small>enables keepalives from this router towards the defined peers (range 0 - 99 secs; 0 to disable)<\/small>', value: nvram[t+'_ka'] },
 				{ title: 'Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: nvram[t+'_endpoint'][0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(nvram[t+'_endpoint'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">' },
 				{ title: 'Allowed IPs', name: t+'_aip', type: 'text', placeholder: 'CIDR format / comma separated', maxlen: 128, size: 64, value: nvram[t+'_aip'] },
 				{ title: 'DNS Servers for Peers', name: t+'_peer_dns', type: 'text', maxlen: 128, size: 64, placeholder: 'comma separated', value: nvram[t+'_peer_dns'] },
@@ -1955,7 +1980,7 @@ function init() {
 				{ title: 'Preshared Key', name: 'f_'+t+'_peer_psk', type: 'text', maxlen: 44, size: 48 },
 				{ title: 'VPN Interface IP', name: 'f_'+t+'_peer_ip', type: 'text', placeholder: 'CIDR format', maxlen: 64, size: 64 },
 				{ title: 'Allowed IPs', name: 'f_'+t+'_peer_aip', type: 'text', placeholder: 'CIDR format / comma separated', maxlen: 128, size: 64 },
-				{ title: 'Peer behind NAT', name: 'f_'+t+'_peer_ka', type: 'checkbox', value: false, suffix: '&nbsp;<small>enables 25sec keepalives from this peer towards the other peers<\/small>' },
+				{ title: 'Peer behind NAT', name: 'f_'+t+'_peer_ka', type: 'text', maxlen: 2, size: 4, value: '', suffix: '&nbsp;<small>enables keepalives from this peer towards the other peers (range 0 - 99 secs; 0 to disable)<\/small>' },
 				{ title: '', custom: '<input type="button" value="Add to Peers" onclick="addPeer('+i+')" id="'+t+'_peer_add">' }
 			]);
 			W('<\/div>');

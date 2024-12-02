@@ -847,11 +847,8 @@ void start_wireguard(int unit)
 		if (wg_set_iface_mtu(iface, getNVRAMVar("wg%d_mtu", unit)))
 			goto out;
 
-		/* check if keepalives are enabled from the router */
-		if (getNVRAMVar("wg%d_ka", unit)[0] == '1')
-			rka = "25";
-		else
-			rka = "0";
+		/* check for keepalives from the router */
+		rka = getNVRAMVar("wg%d_ka", unit);
 
 		/* bring up interface */
 		wg_iface_pre_up(unit);
