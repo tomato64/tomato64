@@ -1323,7 +1323,7 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 				if (peer[2].indexOf('.') >= 0 && peer[2].indexOf(':') >= 0) /* has port */
 					content.push('Endpoint = '+peer[2]+'\n');
 				/* IPv6 */
-				else if (peer[2].indexOf('[') >= 0 && peer[2].indexOf(']') >= 0 && peer[2].indexOf(':') >= 0) /* has port */
+				else if (peer[2].indexOf('[') >= 0 && peer[2].indexOf(']:') >= 0) /* has port */
 					content.push('Endpoint = '+peer[2]+'\n');
 				else
 					content.push('Endpoint = '+peer[2]+':'+port+'\n');
