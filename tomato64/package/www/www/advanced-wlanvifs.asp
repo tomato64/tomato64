@@ -1567,7 +1567,7 @@ REMOVE-END */
 
 				for (var j = 1; j <= 4; ++j) {
 					f.push(
-						{ title: ('Key '+j), indent: 2, name: ('wl'+u+'_key'+j), type: 'text', maxlen: 26, size: 34, suffix: '<input type="radio" onchange="verifyFields(this,1)" onclick="verifyFields(this,1)" name="f_wl'+u+'_wepidx" id="_f_wl'+u+'_wepidx_'+j+'" value="'+j+'"'+((eval('nvram["wl'+u+'_key"]') == j) ? ' checked>' : '>'), value: nvram['wl'+u+'_key'+j] });
+						{ title: ('Key '+j), indent: 2, name: ('wl'+u+'_key'+j), type: 'text', maxlen: 26, size: 34, suffix: '&nbsp;<input type="radio" onchange="verifyFields(this,1)" onclick="verifyFields(this,1)" name="f_wl'+u+'_wepidx" id="_f_wl'+u+'_wepidx_'+j+'" value="'+j+'"'+((eval('nvram["wl'+u+'_key"]') == j) ? ' checked>' : '>'), value: nvram['wl'+u+'_key'+j] });
 				}
 
 				f.push(null, { title: 'WDS', name: 'f_wl'+u+'_lazywds', type: 'select', options: [['0','Link With...'],['1','Automatic']], value: nvram['wl'+u+'_lazywds'] } );
