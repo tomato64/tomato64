@@ -1397,12 +1397,6 @@ div[id$="peers-grid"] .co2,
 	width: 1%;
 }
 
-#fmsg {
-	background: #b55;
-	color: #fff;
-	padding: 1px 8px;
-}
-
 #afu-progress {
 	text-align: center;
 	padding: 200px 0;

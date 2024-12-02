@@ -1855,12 +1855,6 @@ input[id*="_f_nr"]:first-child {
 	margin-left: 0px;
 }
 
-.content > #fmsg {
-	background-color: transparent;
-	color: var(--tomato-accent-color);
-	vertical-align: middle;
-}
-
 /* those are not supported by all browsers */
 td#content > div.section-title {
 	break-after: avoid;

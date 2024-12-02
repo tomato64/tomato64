@@ -70,9 +70,11 @@ else
  ifeq ($(TCONFIG_BRCM_NAND_JFFS2),y)
 	sed -i $(INSTALLDIR)/www/admin-jffs2.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsz -e "/JFFS2-BEGIN/,/JFFS2-END/d"
  else
 	sed -i $(INSTALLDIR)/www/admin-jffs2.asp -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsz -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
  endif
 endif
 

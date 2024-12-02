@@ -14,20 +14,35 @@
 <title>[<% ident(); %>] Admin: JFFS</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="isup.jsz?_http_id=<% nv(http_id); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 
 <script>
 
-//	<% nvram("jffs2_on,jffs2_exec,t_fix1"); %>
+//	<% nvram("jffs2_on,jffs2_exec"); %>
 
+function show() {
 /* JFFS2-BEGIN */
-//	<% statfs("/jffs", "jffs2"); %>
+	statfs = jffs2;
 /* JFFS2-END */
 /* JFFS2NAND-BEGIN */
-//	<% statfs("/jffs", "brcmnand"); %>
+	statfs = brcmnand;
 /* JFFS2NAND-END */
+	elem.setInnerHTML('msg_container', (((statfs.mnt) || (statfs.size > 0)) ? scaleSize(statfs.size) : '')+((statfs.mnt) ? ' / '+scaleSize(statfs.free) : ' / (not mounted)'));
 
-fmtwait = (nvram.t_fix1 == 'RT-N16' ? 120 : 60);
+	if (isup.notice_jffs != '') {
+		elem.setInnerHTML('notice_container', '<div id="notice">'+isup.notice_jffs.replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
+		E('format').disabled = 0;
+	}
+
+	elem.display('notice_container', isup.notice_jffs != '');
+}
+
+function formatJffs() {
+	if (!verifyFields(null, 0)) return;
+	if (!confirm("Format the JFFS partition?")) return;
+	save(1);
+}
 
 function verifyFields(focused, quiet) {
 	var b = !E('_f_jffs2_on').checked;
@@ -37,30 +52,13 @@ function verifyFields(focused, quiet) {
 	return 1;
 }
 
-function formatClicked() {
-	if (!verifyFields(null, 0)) return;
-	if (!confirm("Format the JFFS partition?")) return;
-	save(1);
-}
-
-function formatClock() {
-	if (ftime == 0) {
-		E('fclock').innerHTML = 'a few more seconds';
-	}
-	else {
-		E('fclock').innerHTML = ((ftime > 0) ? 'about ' : '') + ftime + ' second' + ((ftime == 1) ? '' : 's');
-	}
-	if (--ftime >= 0)
-		setTimeout(formatClock, 1000);
-}
-
 function save(format) {
 	if (!verifyFields(null, 0)) return;
 
 	E('format').disabled = 1;
 	if (format) {
-		E('spin').style.display = 'inline-block';
-		E('fmsg').style.display = 'inline-block';
+		elem.setInnerHTML('notice_container', '<div id="notice"><img src="spin.gif" alt="" id="spin" style="display:inline-block"> <span>Please wait ...<\/span><\/div><br style="clear:both">');
+		elem.display('notice_container', 1);
 	}
 
 	var fom = E('t_fom');
@@ -69,29 +67,24 @@ function save(format) {
 	if (format) {
 		fom.jffs2_format.value = 1;
 		fom._commit.value = 0;
-		fom._nextwait.value = fmtwait;
 	}
 	else {
 		fom.jffs2_format.value = 0;
 		fom._commit.value = 1;
-		fom._nextwait.value = on ? 15 : 3;
 	}
+
 	form.submit(fom, 1);
 
-	if (format) {
-		E('footer-msg').style.display = 'none';
-		ftime = fmtwait;
-		formatClock();
-	}
+	if (format) E('footer-msg').style.display = 'none';
 }
 
-function submit_complete() {
-	reloadPage();
+function init() {
+	up.initPage(250, 5);
 }
 </script>
 </head>
 
-<body>
+<body onload="init()">
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
 <tr><td colspan="2" id="header">
@@ -105,7 +98,6 @@ function submit_complete() {
 <!-- / / / -->
 
 <input type="hidden" name="_nextpage" value="admin-jffs2.asp">
-<input type="hidden" name="_nextwait" value="10">
 <input type="hidden" name="_service" value="jffs2-restart">
 <input type="hidden" name="_commit" value="1">
 <input type="hidden" name="jffs2_on">
@@ -118,24 +110,18 @@ function submit_complete() {
 	<script>
 		createFieldTable('', [
 			{ title: 'Enable', name: 'f_jffs2_on', type: 'checkbox', value: (nvram.jffs2_on == 1) },
-			{ title: 'Execute When Mounted', name: 'jffs2_exec', type: 'text', maxlen: 64, size: 34, value: nvram.jffs2_exec },
+			{ title: 'Execute when mounted', name: 'jffs2_exec', type: 'text', maxlen: 64, size: 34, value: nvram.jffs2_exec },
 			null,
-/* JFFS2-BEGIN */
-			{ title: 'Total / Free Size', text: (((jffs2.mnt) || (jffs2.size > 0)) ? scaleSize(jffs2.size) : '') + ((jffs2.mnt) ? ' / ' + scaleSize(jffs2.free) : ' (not mounted)') },
-/* JFFS2-END */
-/* JFFS2NAND-BEGIN */
-			{ title: 'Total / Free Size', text: (((brcmnand.mnt) || (brcmnand.size > 0)) ? scaleSize(brcmnand.size) : '') + ((brcmnand.mnt) ? ' / ' + scaleSize(brcmnand.free) : ' (not mounted)') },
-/* JFFS2NAND-END */
+			{ title: 'Total / Free Size', text: '<span id="msg_container">&nbsp;<\/span>' },
 			null,
-			{ title: '', custom: '<input type="button" value="Format / Erase..." onclick="formatClicked()" id="format">' +
-				'<img src="spin.gif" alt="" id="spin"> <span style="display:none" id="fmsg">Please wait for <span id="fclock">about 60 seconds<\/span>...<\/span>' }
+			{ title: '', custom: '<input type="button" value="Format & Load" onclick="formatJffs()" id="format">' }
 		]);
 	</script>
 </div>
 
 <!-- / / / -->
 
-<script>show_notice1('<% notice("jffs"); %>');</script>
+<div id="notice_container" style="display:none">&nbsp;</div>
 
 <!-- / / / -->
 
@@ -148,6 +134,6 @@ function submit_complete() {
 </td></tr>
 </table>
 </form>
-<script>verifyFields(null, true);</script>
+<script>verifyFields(null, 1);</script>
 </body>
 </html>

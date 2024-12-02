@@ -2388,12 +2388,6 @@ function nothing() {
 
 // -----------------------------------------------------------------------------
 
-function show_notice1(s) {
-	if (s.length) W('<div id="notice">'+s.replace(/\n/g, '<br>')+'</div><br style="clear:both">');
-}
-
-// -----------------------------------------------------------------------------
-
 function getColor(classname) {
 	var styleSheets = document.styleSheets;
 	for (var i = 0; i < styleSheets.length; i++) {

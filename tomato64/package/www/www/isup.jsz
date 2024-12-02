@@ -16,6 +16,13 @@ isup = {};
 isup.notice_iptables = '<% notice("iptables"); %>';
 isup.notice_ip6tables = '<% notice("ip6tables"); %>';
 isup.notice_cifs = '<% notice("cifs"); %>';
+isup.notice_jffs = '<% notice("jffs"); %>';
+/* JFFS2-BEGIN */
+//	<% statfs("/jffs", "jffs2"); %>
+/* JFFS2-END */
+/* JFFS2NAND-BEGIN */
+//	<% statfs("/jffs", "brcmnand"); %>
+/* JFFS2NAND-END */
 
 isup.time = '<% time(); %>';
 isup.ntp = '<% ntp(); %>';
