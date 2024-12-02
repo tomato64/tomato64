@@ -13,6 +13,8 @@ stats.dns = [<% dns("wan"); %>,<% dns("wan2"); %>,<% dns("wan3"); %>,<% dns("wan
 
 isup = {};
 
+isup.notice_iptables = '<% notice("iptables"); %>';
+
 isup.time = '<% time(); %>';
 isup.ntp = '<% ntp(); %>';
 
