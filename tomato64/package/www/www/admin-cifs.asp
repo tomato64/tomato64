@@ -14,6 +14,7 @@
 <title>[<% ident(); %>] Admin: CIFS Client</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="isup.jsz?_http_id=<% nv(http_id); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 
 <script>
@@ -23,6 +24,11 @@
 //	<% statfs("/cifs1", "cifs1"); %>
 
 //	<% statfs("/cifs2", "cifs2"); %>
+
+function show() {
+	elem.setInnerHTML('notice_container', '<div id="notice">'+isup.notice_cifs.replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
+	elem.display('notice_container', isup.notice_cifs != '');
+}
 
 function verifyFields(focused, quiet) {
 	var i, p, b;
@@ -50,16 +56,17 @@ function verifyFields(focused, quiet) {
 			if ((!v_nodelim(unc, quiet, 'UNC')) || (!v_nodelim(user, quiet, 'username')) || (!v_nodelim(pass, quiet, 'password')) ||
 				 (!v_nodelim(servern, quiet, 'Netbios name')) ||
 				 (!v_nodelim(dom, quiet, 'domain')) || (!v_nodelim(exec, quiet, 'exec path'))) return 0;
+
 			if ((!v_length(user, quiet, 1)) || (!v_length(pass, quiet, 1))) return 0;
+
 			unc.value = unc.value.replace(/\//g, '\\');
 			if (!unc.value.match(/^\\\\.+\\/)) {
 				ferror.set(unc, 'Invalid UNC', quiet);
 				return 0;
 			}
 		}
-		else {
+		else
 			ferror.clear(unc, user, pass, dom, exec, servern, sec);
-		}
 	}
 
 	return 1;
@@ -75,12 +82,17 @@ function save() {
 		E('cifs' + i).value = (E(p + '_enable').checked ? '1' : '0') + '<' + E(p + '_unc').value + '<' + E(p + '_user').value + '<' + E(p + '_pass').value + '<' + 
 				       E(p + '_dom').value + '<' + E(p + '_exec').value + '<' + E(p + '_servern').value + '<' + E(p + '_sec').value;
 	}
-	form.submit('t_fom', 0);
+
+	form.submit('t_fom', 1);
+}
+
+function init() {
+	up.initPage(250, 5);
 }
 </script>
 </head>
 
-<body>
+<body onload="init()">
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
 <tr><td colspan="2" id="header">
@@ -94,7 +106,6 @@ function save() {
 <!-- / / / -->
 
 <input type="hidden" name="_nextpage" value="admin-cifs.asp">
-<input type="hidden" name="_nextwait" value="10">
 <input type="hidden" name="_service" value="cifs-restart">
 <input type="hidden" name="cifs1" id="cifs1">
 <input type="hidden" name="cifs2" id="cifs2">
@@ -141,7 +152,7 @@ function save() {
 
 <!-- / / / -->
 
-<script>show_notice1('<% notice("cifs"); %>');</script>
+<div id="notice_container" style="display:none">&nbsp;</div>
 
 <!-- / / / -->
 
@@ -154,6 +165,6 @@ function save() {
 </td></tr>
 </table>
 </form>
-<script>verifyFields(null, true);</script>
+<script>verifyFields(null, 1);</script>
 </body>
 </html>

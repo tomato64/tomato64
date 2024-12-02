@@ -15,6 +15,7 @@ isup = {};
 
 isup.notice_iptables = '<% notice("iptables"); %>';
 isup.notice_ip6tables = '<% notice("ip6tables"); %>';
+isup.notice_cifs = '<% notice("cifs"); %>';
 
 isup.time = '<% time(); %>';
 isup.ntp = '<% ntp(); %>';
