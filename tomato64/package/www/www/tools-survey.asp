@@ -212,7 +212,7 @@ var wlscandata = [];
 var entries = [];
 var dayOfWeek = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var cmd = null;
-var ref = new TomatoRefresh('update.cgi', 'exec=wlscan', 0, 'tools_survey_refresh');
+var ref = new TomatoRefresh('update.cgi', 'exec=wlscan', 0, 'tools_wlsurvey_refresh');
 
 ref.refresh = function(text) {
 	try {
