@@ -460,7 +460,7 @@ function v_macip(e, quiet, bok, lan_ipaddr, lan_netmask) {
 		}
 	}
 	for (i = 0; i < a.length; ++i) {
-		b = a[i];    
+		b = a[i];
 		b = fixIP(b);
 		if (!b) {
 			ferror.set(e, 'Invalid IP address', quiet);
@@ -762,7 +762,7 @@ function ZeroIPv6PrefixBits(ip, prefix_length) {
 	n = Math.floor(prefix_length/4);
 	m = 32 - Math.ceil(prefix_length/4);
 	b = prefix_length % 4;
-	if (b != 0) 
+	if (b != 0)
 		c = (parseInt(ip.charAt(n), 16) & (0xf << 4-b)).toString(16);
 	else
 		c = '';
@@ -2637,7 +2637,6 @@ function navi() {
 			['DMZ',				'dmz.asp'],
 			['Triggered',			'triggered.asp'],
 			['UPnP/NAT-PMP',		'upnp.asp'] ] ],
-		['Access Restriction',		'restrict.asp'],
 		['QoS',				'qos', 0, [
 			['Basic Settings',		'settings.asp'],
 			['Classification',		'classify.asp'],
@@ -2645,12 +2644,15 @@ function navi() {
 			['View Details',		'detailed.asp'],
 			['Transfer Rates',		'ctrate.asp']
 			] ],
-		['Bandwidth Limiter',		'bwlimit.asp'],
-		null,
+		['Misc',			'misc', 0, [
+			['Access Restriction',		'restrict.asp'],
+			['Bandwidth Limiter',		'bwlimit.asp']
 /* NOCAT-BEGIN */
-		['Captive Portal',		'splashd.asp'],
+			,['Captive Portal',		'splashd.asp']
 /* NOCAT-END */
+			] ],
 /* NGINX-BEGIN */
+		null,
 		['Web Server',			'web', 0, [
 			['Nginx & PHP',		'nginx.asp'],
 			['MySQL Server',	'mysql.asp']
@@ -2752,6 +2754,9 @@ function navi() {
 	}
 	else base = '';
 
+	var lastOpenCategory = null;
+	var isMiscActive = false;
+
 	for (i = 0; i < menu.length; ++i) {
 		var m = menu[i];
 		if (!m) {
@@ -2761,10 +2766,11 @@ function navi() {
 		if (m.length == 2)
 			buf.push('<a href="'+m[1]+'" class="indent1'+(((base == '') && (name == m[1])) ? ' active' : '')+'">'+m[0]+'</a>');
 		else {
-			if (base == m[1])
+			if (base == m[1]) {
 				b = name;
-			else {
-				a = cookie.get('menu_' + m[1]);
+				lastOpenCategory = i;
+			} else {
+				a = cookie.get('menu_'+m[1]);
 				b = m[3][0][1];
 				for (j = 0; j < m[3].length; ++j) {
 					if (m[3][j][1] == a) {
@@ -2776,15 +2782,37 @@ function navi() {
 			a = m[1]+'-'+b;
 			if (a == 'status-overview.asp') a = '/';
 			on1 = (base == m[1]);
-			buf.push('<a href="'+a+'" class="indent1'+(on1 ? ' active' : '')+'">'+m[0]+'</a>');
-			if ((!on1) && (m[2] == 0) && (cexp.indexOf(m[1]) == -1)) continue;
+
+			var shouldExpand = cexp.indexOf(m[1]) !== -1;
+			buf.push('<a href="javascript:void(0);" class="indent1'+(on1 ? ' active' : '')+'" onclick="toggleMenu('+i+')" name="menu_'+m[1]+'">'+m[0]+'</a>');
+
+			var isExpanded = on1 || shouldExpand;
+			if (m[1] === 'misc') {
+				for (j = 0; j < m[3].length; ++j) {
+					if (name === m[3][j][1]) {
+						isExpanded = true;
+						isMiscActive = true;
+						break;
+					}
+				}
+			}
+			buf.push('<div id="menu_'+i+'" style="display:'+(isExpanded ? 'block' : 'none')+'">');
 
 			for (j = 0; j < m[3].length; ++j) {
 				sm = m[3][j];
-				a = m[1]+'-'+sm[1];
+				a = m[1] === 'misc' ? sm[1] : m[1]+'-'+sm[1];
 				if (a == 'status-overview.asp') a = '/';
-				buf.push('<a href="'+a+'" class="indent2'+(((on1) && (name == sm[1])) ? ' active' : '')+'">'+sm[0]+'</a>');
+				var isActive = (m[1] === 'misc' && name === sm[1]) || ((on1) && (name == sm[1]));
+				buf.push('<a href="'+a+'" class="indent2'+(isActive ? ' active' : '')+'">'+sm[0]+'</a>');
 			}
+			buf.push('</div>');
+		}
+	}
+
+	if (lastOpenCategory !== null) {
+		for (i = 0; i < menu.length; ++i) {
+			if (i !== lastOpenCategory && menu[i] && menu[i].length > 2 && cexp.indexOf(menu[i][1]) === -1 && !(menu[i][1] === 'misc' && isMiscActive))
+				buf.push('<script>E("menu_'+i+'").style.display = "none";</script>');
 		}
 	}
 	document.write(buf.join(''));
@@ -2792,6 +2820,19 @@ function navi() {
 	if (base.length) {
 		if ((base == 'qos') && (name == 'detailed.asp')) name = 'view.asp';
 		cookie.set('menu_'+base, name);
+	}
+}
+
+function toggleMenu(id) {
+	var submenu = E('menu_'+id);
+	if (submenu) {
+		submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+
+		var links = submenu.getElementsByTagName('a');
+		for (var k = 0; k < links.length; k++) {
+			if (!links[k].classList.contains('active'))
+				links[k].classList.remove('active');
+		}
 	}
 }
 
