@@ -13,7 +13,7 @@ No part of this file may be used without permission.
 <title>[<% ident(); %>] Shutting down...</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
-<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="tomato.js"></script>
 <script>
 var n = 31;
 function tick() {

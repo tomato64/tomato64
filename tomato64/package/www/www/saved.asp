@@ -13,7 +13,7 @@ No part of this file may be used without permission.
 <title>[<% ident(); %>] Please Wait...</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
-<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="tomato.js"></script>
 <script>
 var spun = 1;
 var wait = parseInt('<% cgi_get('_nextwait'); %>', 10);

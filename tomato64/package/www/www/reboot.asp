@@ -6,7 +6,7 @@
 <title>[<% ident(); %>] Rebooting...</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
-<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="tomato.js"></script>
 <style>
 div.tomato-grid.container-div {
 	height: 90px;
