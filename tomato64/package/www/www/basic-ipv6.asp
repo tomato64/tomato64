@@ -14,11 +14,17 @@
 <title>[<% ident(); %>] Basic: IPv6</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
+<script src="isup.jsz?_http_id=<% nv(http_id); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 
 <script>
 
 //	<% nvram("ipv6_6rd_prefix_length,ipv6_prefix,ipv6_prefix_length,ipv6_radvd,ipv6_dhcpd,ipv6_accept_ra,ipv6_isp_opt,ipv6_pdonly,ipv6_pd_norelease,ipv6_rtr_addr,ipv6_service,ipv6_debug,ipv6_duid_type,ipv6_dns,ipv6_tun_addr,ipv6_tun_addrlen,ipv6_ifname,ipv6_tun_v4end,ipv6_relay,ipv6_tun_mtu,ipv6_tun_ttl,ipv6_6rd_ipv4masklen,ipv6_6rd_prefix,ipv6_6rd_borderrelay,lan1_ifname,lan2_ifname,lan3_ifname,ipv6_vlan,ipv6_prefix_len_wan,ipv6_isp_gw,ipv6_wan_addr"); %>
+
+function show() {
+	elem.setInnerHTML('notice_container', '<div id="notice">'+isup.notice_ip6tables.replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
+	elem.display('notice_container', isup.notice_ip6tables != '');
+}
 
 nvram.ipv6_accept_ra = fixInt(nvram.ipv6_accept_ra, 0, 3, 0);
 
@@ -402,9 +408,13 @@ function save() {
 
 	form.submit(fom, 1);
 }
+
+function init() {
+	up.initPage(250, 5);
+}
 </script>
 </head>
-<body>
+<body onload="init()">
 
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
@@ -499,9 +509,7 @@ function save() {
 
 <!-- / / / -->
 
-<script>
-	show_notice1('<% notice("ip6tables"); %>');
-</script>
+<div id="notice_container" style="display:none">&nbsp;</div>
 
 <!-- / / / -->
 
