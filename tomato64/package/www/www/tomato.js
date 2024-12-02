@@ -2206,7 +2206,7 @@ function genStdTimeList(id, zero, min) {
 		}
 		b.push('</select> ');
 	}
-	document.write(b.join(''));
+	W(b.join(''));
 }
 
 function genStdRefresh(spin, min, exec) {
@@ -2230,7 +2230,7 @@ function _tabCreate(tabs) {
 }
 
 function tabCreate(tabs) {
-	document.write(_tabCreate.apply(this, arguments));
+	W(_tabCreate.apply(this, arguments));
 }
 
 function tabHigh(id) {
@@ -2389,7 +2389,7 @@ function nothing() {
 // -----------------------------------------------------------------------------
 
 function show_notice1(s) {
-	if (s.length) document.write('<div id="notice">'+s.replace(/\n/g, '<br>')+'</div><br style="clear:both">');
+	if (s.length) W('<div id="notice">'+s.replace(/\n/g, '<br>')+'</div><br style="clear:both">');
 }
 
 // -----------------------------------------------------------------------------
@@ -2815,7 +2815,7 @@ function navi() {
 				buf.push('<script>E("menu_'+i+'").style.display = "none";</script>');
 		}
 	}
-	document.write(buf.join(''));
+	W(buf.join(''));
 
 	if (base.length) {
 		if ((base == 'qos') && (name == 'detailed.asp')) name = 'view.asp';
@@ -2946,7 +2946,7 @@ function createFieldTable(flags, desc) {
 		buf.push('</tr>');
 	}
 	if ((!flags) || (flags.indexOf('noclose') == -1)) buf.push('</table>');
-	document.write(buf.join(''));
+	W(buf.join(''));
 }
 
 function peekaboo(id, show) {
@@ -3082,7 +3082,7 @@ function wikiLink() {
 
 	var res = '<a href="'+url+'/'+page+'" target="_blank" rel="noopener noreferrer">Wiki</a> | <a onclick="toggleTheme()" href="#">◐</a>';
 
-	document.write(res);
+	W(res);
 	var alt = cookie.get('gui_themet');
 	if (alt == '1') { getTheme(); }
 }
