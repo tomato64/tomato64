@@ -20,7 +20,7 @@ BR2_ROOTFS_DEVICE_TABLE="$(BR2_EXTERNAL_TOMATO64_PATH)/board/x86_64/device_table
 # BR2_TARGET_GENERIC_GETTY is not set
 # BR2_TARGET_GENERIC_REMOUNT_ROOTFS_RW is not set
 BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_TOMATO64_PATH)/board/x86_64/post-build-fs.sh"
-BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_TOMATO64_PATH)/board/mt6000/post-image.sh"
+BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_TOMATO64_PATH)/board/mt6000/post-image.sh $(BR2_EXTERNAL_TOMATO64_PATH)/board/mt6000/post-image-tar.sh"
 BR2_LINUX_KERNEL=y
 BR2_LINUX_KERNEL_CUSTOM_VERSION=y
 BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="6.6.63"
@@ -45,6 +45,7 @@ BR2_PACKAGE_TMUX=y
 BR2_TARGET_ROOTFS_EXT2=y
 BR2_TARGET_ROOTFS_EXT2_4=y
 BR2_TARGET_ROOTFS_EXT2_SIZE="700M"
-# BR2_TARGET_ROOTFS_TAR is not set
+BR2_TARGET_ROOTFS_TAR_ZSTD=y
+BR2_TARGET_ROOTFS_TAR_OPTIONS="--exclude='./bkp' --exclude='./cifs1' --exclude='./cifs2' --exclude='./dev' --exclude='./etc' --exclude='./home' --exclude='./jffs' --exclude='./lib64' --exclude='./media' --exclude='./mmc' --exclude='./mnt' --exclude='./nas' --exclude='./nvram' --exclude='./opt' --exclude='./proc' --exclude='./root' --exclude='./sys' --exclude='./tftpboot' --exclude='./var'"
 BR2_PACKAGE_HOST_GO_BIN=y
 BR2_PACKAGE_PLATFORM_MT6000=y
