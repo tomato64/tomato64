@@ -1,6 +1,6 @@
-From a135f16561bf6f686f8be98c1af151d4a64e47f3 Mon Sep 17 00:00:00 2001
+From 0a743972d46756be5e05a2718d984b1b94d1b218 Mon Sep 17 00:00:00 2001
 From: lancethepants <lancethepants@gmail.com>
-Date: Thu, 14 Nov 2024 11:13:45 -0700
+Date: Tue, 3 Dec 2024 14:24:34 -0700
 Subject: [PATCH] mac80211
 
 ---
@@ -115,8 +115,8 @@ Subject: [PATCH] mac80211
  include/linux/ath5k_platform.h                |  30 +
  include/linux/mhi.h                           | 830 ------------------
  include/linux/rt2x00_platform.h               |  23 +
- include/net/cfg80211.h                        |  50 +-
- include/net/mac80211.h                        |  19 +-
+ include/net/cfg80211.h                        |  94 +-
+ include/net/mac80211.h                        |  22 +-
  include/trace/events/qrtr.h                   |   2 +-
  include/uapi/linux/nl80211.h                  |  10 +
  kconf/Makefile                                |   6 +-
@@ -125,15 +125,15 @@ Subject: [PATCH] mac80211
  local-symbols                                 |  12 +-
  local-symbols.orig                            | 490 +++++++++++
  net/mac80211/airtime.c                        | 140 ++-
- net/mac80211/cfg.c                            | 105 ++-
+ net/mac80211/cfg.c                            | 126 +--
  net/mac80211/chan.c                           |  28 +-
  net/mac80211/debugfs.c                        |  14 +-
  net/mac80211/driver-ops.c                     |   1 +
- net/mac80211/ieee80211_i.h                    |  14 +-
- net/mac80211/iface.c                          |  32 +-
+ net/mac80211/ieee80211_i.h                    |  20 +-
+ net/mac80211/iface.c                          |  25 +-
  net/mac80211/key.c                            |  42 +-
- net/mac80211/link.c                           |  12 +
- net/mac80211/main.c                           |  19 +-
+ net/mac80211/link.c                           |  19 +-
+ net/mac80211/main.c                           |  21 +-
  net/mac80211/mlme.c                           |  13 +-
  net/mac80211/pm.c                             |   2 +-
  net/mac80211/rc80211_minstrel_ht.c            |  75 +-
@@ -148,7 +148,7 @@ Subject: [PATCH] mac80211
  net/mac80211/util.c                           |  94 +-
  net/wireless/ap.c                             |   6 +-
  net/wireless/chan.c                           |  48 +-
- net/wireless/core.c                           |  81 +-
+ net/wireless/core.c                           |  88 +-
  net/wireless/core.h                           |   3 +
  net/wireless/ibss.c                           |   2 +-
  net/wireless/mesh.c                           |   2 +-
@@ -161,7 +161,7 @@ Subject: [PATCH] mac80211
  net/wireless/trace.h                          |  52 +-
  net/wireless/util.c                           |  29 +
  net/wireless/wext-compat.c                    |   2 +-
- 157 files changed, 3061 insertions(+), 1972 deletions(-)
+ 157 files changed, 3131 insertions(+), 1985 deletions(-)
  create mode 100644 compat_version
  create mode 100644 drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
  create mode 100644 include/linux/ath5k_platform.h
@@ -5838,7 +5838,7 @@ index 0000000..e10377e
 +
 +#endif /* _RT2X00_PLATFORM_H */
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index bd1bda1..562a4f8 100644
+index bd1bda1..174e2fd 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
 @@ -187,6 +187,8 @@ enum ieee80211_channel_flags {
@@ -5920,7 +5920,58 @@ index bd1bda1..562a4f8 100644
  };
  
  #define CFG80211_HW_TIMESTAMP_ALL_PEERS	0xffff
-@@ -6194,9 +6205,6 @@ enum ieee80211_ap_reg_power {
+@@ -6129,6 +6140,50 @@ void wiphy_delayed_work_cancel(struct wiphy *wiphy,
+ void wiphy_delayed_work_flush(struct wiphy *wiphy,
+ 			      struct wiphy_delayed_work *dwork);
+ 
++/**
++ * wiphy_delayed_work_pending - Find out whether a wiphy delayable
++ * work item is currently pending.
++ *
++ * @wiphy: the wiphy, for debug purposes
++ * @dwork: the delayed work in question
++ *
++ * Return: true if timer is pending, false otherwise
++ *
++ * How wiphy_delayed_work_queue() works is by setting a timer which
++ * when it expires calls wiphy_work_queue() to queue the wiphy work.
++ * Because wiphy_delayed_work_queue() uses mod_timer(), if it is
++ * called twice and the second call happens before the first call
++ * deadline, the work will rescheduled for the second deadline and
++ * won't run before that.
++ *
++ * wiphy_delayed_work_pending() can be used to detect if calling
++ * wiphy_work_delayed_work_queue() would start a new work schedule
++ * or delayed a previous one. As seen below it cannot be used to
++ * detect precisely if the work has finished to execute nor if it
++ * is currently executing.
++ *
++ *      CPU0                                CPU1
++ * wiphy_delayed_work_queue(wk)
++ *  mod_timer(wk->timer)
++ *                                     wiphy_delayed_work_pending(wk) -> true
++ *
++ * [...]
++ * expire_timers(wk->timer)
++ *  detach_timer(wk->timer)
++ *                                     wiphy_delayed_work_pending(wk) -> false
++ *  wk->timer->function()                          |
++ *   wiphy_work_queue(wk)                          | delayed work pending
++ *    list_add_tail()                              | returns false but
++ *    queue_work(cfg80211_wiphy_work)              | wk->func() has not
++ *                                                 | been run yet
++ * [...]                                           |
++ *  cfg80211_wiphy_work()                          |
++ *   wk->func()                                    V
++ *
++ */
++bool wiphy_delayed_work_pending(struct wiphy *wiphy,
++				struct wiphy_delayed_work *dwork);
++
+ /**
+  * enum ieee80211_ap_reg_power - regulatory power for an Access Point
+  *
+@@ -6194,9 +6249,6 @@ enum ieee80211_ap_reg_power {
   * @address: The address for this device, valid only if @netdev is %NULL
   * @is_running: true if this is a non-netdev device that has been started, e.g.
   *	the P2P Device.
@@ -5930,7 +5981,7 @@ index bd1bda1..562a4f8 100644
   * @ps: powersave mode is enabled
   * @ps_timeout: dynamic powersave timeout
   * @ap_unexpected_nlportid: (private) netlink port ID of application
-@@ -6220,7 +6228,13 @@ enum ieee80211_ap_reg_power {
+@@ -6220,7 +6272,13 @@ enum ieee80211_ap_reg_power {
   *	unprotected beacon report
   * @links: array of %IEEE80211_MLD_MAX_NUM_LINKS elements containing @addr
   *	@ap and @client for each link
@@ -5944,7 +5995,7 @@ index bd1bda1..562a4f8 100644
   */
  struct wireless_dev {
  	struct wiphy *wiphy;
-@@ -6261,11 +6275,6 @@ struct wireless_dev {
+@@ -6261,11 +6319,6 @@ struct wireless_dev {
  	u32 owner_nlportid;
  	bool nl_owner_dead;
  
@@ -5956,7 +6007,7 @@ index bd1bda1..562a4f8 100644
  #ifdef CPTCFG_CFG80211_WEXT
  	/* wext data */
  	struct {
-@@ -6332,8 +6341,14 @@ struct wireless_dev {
+@@ -6332,8 +6385,14 @@ struct wireless_dev {
  				struct cfg80211_internal_bss *current_bss;
  			} client;
  		};
@@ -5971,7 +6022,7 @@ index bd1bda1..562a4f8 100644
  };
  
  static inline const u8 *wdev_address(struct wireless_dev *wdev)
-@@ -6519,6 +6534,17 @@ static inline bool cfg80211_channel_is_psc(struct ieee80211_channel *chan)
+@@ -6519,6 +6578,17 @@ static inline bool cfg80211_channel_is_psc(struct ieee80211_channel *chan)
  bool cfg80211_radio_chandef_valid(const struct wiphy_radio *radio,
  				  const struct cfg80211_chan_def *chandef);
  
@@ -5989,7 +6040,7 @@ index bd1bda1..562a4f8 100644
  /**
   * ieee80211_get_response_rate - get basic rate for a given rate
   *
-@@ -8740,6 +8766,7 @@ void cfg80211_sta_opmode_change_notify(struct net_device *dev, const u8 *mac,
+@@ -8740,6 +8810,7 @@ void cfg80211_sta_opmode_change_notify(struct net_device *dev, const u8 *mac,
   * @chandef: chandef for the current channel
   * @event: type of event
   * @gfp: context flags
@@ -5997,7 +6048,7 @@ index bd1bda1..562a4f8 100644
   *
   * This function is called when a Channel availability check (CAC) is finished
   * or aborted. This must be called to notify the completion of a CAC process,
-@@ -8747,7 +8774,8 @@ void cfg80211_sta_opmode_change_notify(struct net_device *dev, const u8 *mac,
+@@ -8747,7 +8818,8 @@ void cfg80211_sta_opmode_change_notify(struct net_device *dev, const u8 *mac,
   */
  void cfg80211_cac_event(struct net_device *netdev,
  			const struct cfg80211_chan_def *chandef,
@@ -6008,7 +6059,7 @@ index bd1bda1..562a4f8 100644
  /**
   * cfg80211_background_cac_abort - Channel Availability Check offchan abort event
 diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index fd29d27..2203b9c 100644
+index fd29d27..fd4dff8 100644
 --- a/include/net/mac80211.h
 +++ b/include/net/mac80211.h
 @@ -1222,8 +1222,8 @@ struct ieee80211_tx_info {
@@ -6055,7 +6106,24 @@ index fd29d27..2203b9c 100644
  	u8 zero_length_psdu_type;
  	u8 link_valid:1, link_id:4;
  };
-@@ -2683,6 +2679,11 @@ struct ieee80211_txq {
+@@ -1976,6 +1972,8 @@ enum ieee80211_neg_ttlm_res {
+  * @neg_ttlm: negotiated TID to link mapping info.
+  *	see &struct ieee80211_neg_ttlm.
+  * @addr: address of this interface
++ * @addr_valid: indicates if the address is actively used. Set to false for
++ *	passive monitor interfaces, true in all other cases.
+  * @p2p: indicates whether this AP or STA interface is a p2p
+  *	interface, i.e. a GO or p2p-sta respectively
+  * @netdev_features: tx netdev features supported by the hardware for this
+@@ -2015,6 +2013,7 @@ struct ieee80211_vif {
+ 	u16 valid_links, active_links, dormant_links, suspended_links;
+ 	struct ieee80211_neg_ttlm neg_ttlm;
+ 	u8 addr[ETH_ALEN] __aligned(2);
++	bool addr_valid;
+ 	bool p2p;
+ 
+ 	u8 cab_queue;
+@@ -2683,6 +2682,11 @@ struct ieee80211_txq {
   *	a virtual monitor interface when monitor interfaces are the only
   *	active interfaces.
   *
@@ -6067,7 +6135,7 @@ index fd29d27..2203b9c 100644
   * @IEEE80211_HW_NO_AUTO_VIF: The driver would like for no wlanX to
   *	be created.  It is expected user-space will create vifs as
   *	desired (and thus have them named as desired).
-@@ -2842,6 +2843,7 @@ enum ieee80211_hw_flags {
+@@ -2842,6 +2846,7 @@ enum ieee80211_hw_flags {
  	IEEE80211_HW_SUPPORTS_DYNAMIC_PS,
  	IEEE80211_HW_MFP_CAPABLE,
  	IEEE80211_HW_WANT_MONITOR_VIF,
@@ -6075,7 +6143,7 @@ index fd29d27..2203b9c 100644
  	IEEE80211_HW_NO_AUTO_VIF,
  	IEEE80211_HW_SW_CRYPTO_CONTROL,
  	IEEE80211_HW_SUPPORT_FAST_XMIT,
-@@ -6717,8 +6719,11 @@ void ieee80211_cqm_beacon_loss_notify(struct ieee80211_vif *vif, gfp_t gfp);
+@@ -6717,8 +6722,11 @@ void ieee80211_cqm_beacon_loss_notify(struct ieee80211_vif *vif, gfp_t gfp);
   * ieee80211_radar_detected - inform that a radar was detected
   *
   * @hw: pointer as obtained from ieee80211_alloc_hw()
@@ -7080,7 +7148,7 @@ index fdf8b65..c61df63 100644
  	if (stat->encoding != RX_ENC_LEGACY)
  		return true;
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 14576b6..e90e032 100644
+index 14576b6..7e71246 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
 @@ -105,8 +105,11 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
@@ -7180,6 +7248,24 @@ index 14576b6..e90e032 100644
  	}
  
  	drv_stop_ap(sdata->local, sdata, link_conf);
+@@ -1911,6 +1914,8 @@ static int sta_link_apply_parameters(struct ieee80211_local *local,
+ 						    params->eht_capa_len,
+ 						    link_sta);
+ 
++	ieee80211_sta_init_nss(link_sta);
++
+ 	if (params->opmode_notif_used) {
+ 		/* returned value is only needed for rc update, but the
+ 		 * rc isn't initialized here yet, so ignore it
+@@ -1920,8 +1925,6 @@ static int sta_link_apply_parameters(struct ieee80211_local *local,
+ 					      sband->band);
+ 	}
+ 
+-	ieee80211_sta_init_nss(link_sta);
+-
+ 	return 0;
+ }
+ 
 @@ -2869,6 +2872,8 @@ static int ieee80211_scan(struct wiphy *wiphy,
  		 */
  		fallthrough;
@@ -7324,6 +7410,46 @@ index 14576b6..e90e032 100644
  		   local->open_count == local->monitors &&
  		   sdata->vif.type == NL80211_IFTYPE_MONITOR) {
  		*chandef = local->monitor_chanreq.oper;
+@@ -4819,12 +4836,12 @@ void ieee80211_color_change_finalize_work(struct wiphy *wiphy,
+ 	ieee80211_color_change_finalize(link);
+ }
+ 
+-void ieee80211_color_collision_detection_work(struct work_struct *work)
++void ieee80211_color_collision_detection_work(struct wiphy *wiphy,
++					      struct wiphy_work *work)
+ {
+-	struct delayed_work *delayed_work = to_delayed_work(work);
+ 	struct ieee80211_link_data *link =
+-		container_of(delayed_work, struct ieee80211_link_data,
+-			     color_collision_detect_work);
++		container_of(work, struct ieee80211_link_data,
++			     color_collision_detect_work.work);
+ 	struct ieee80211_sub_if_data *sdata = link->sdata;
+ 
+ 	cfg80211_obss_color_collision_notify(sdata->dev, link->color_bitmap,
+@@ -4877,7 +4894,8 @@ ieee80211_obss_color_collision_notify(struct ieee80211_vif *vif,
+ 		return;
+ 	}
+ 
+-	if (delayed_work_pending(&link->color_collision_detect_work)) {
++	if (wiphy_delayed_work_pending(sdata->local->hw.wiphy,
++				       &link->color_collision_detect_work)) {
+ 		rcu_read_unlock();
+ 		return;
+ 	}
+@@ -4886,9 +4904,9 @@ ieee80211_obss_color_collision_notify(struct ieee80211_vif *vif,
+ 	/* queue the color collision detection event every 500 ms in order to
+ 	 * avoid sending too much netlink messages to userspace.
+ 	 */
+-	ieee80211_queue_delayed_work(&sdata->local->hw,
+-				     &link->color_collision_detect_work,
+-				     msecs_to_jiffies(500));
++	wiphy_delayed_work_queue(sdata->local->hw.wiphy,
++				 &link->color_collision_detect_work,
++				 msecs_to_jiffies(500));
+ 
+ 	rcu_read_unlock();
+ }
 diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
 index e856772..fbb8808 100644
 --- a/net/mac80211/chan.c
@@ -7490,7 +7616,7 @@ index fe868b5..8179310 100644
  		return -EINVAL;
  
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 23cc5da..7ffa9a1 100644
+index 23cc5da..e687ae2 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
 @@ -103,6 +103,8 @@ ieee80211_sta_keep_active(struct sta_info *sta, u8 ac)
@@ -7502,16 +7628,26 @@ index 23cc5da..7ffa9a1 100644
  struct ieee80211_bss {
  	u32 device_ts_beacon, device_ts_presp;
  
-@@ -893,6 +895,8 @@ struct ieee80211_chanctx {
+@@ -892,6 +894,9 @@ struct ieee80211_chanctx {
+ 	/* temporary data for search algorithm etc. */
  	struct ieee80211_chan_req req;
  
- 	struct ieee80211_chanctx_conf conf;
-+
 +	bool radar_detected;
++
++	/* MUST be last - ends in a flexible-array member. */
+ 	struct ieee80211_chanctx_conf conf;
  };
  
- struct mac80211_qos_map {
-@@ -1067,6 +1071,7 @@ struct ieee80211_link_data {
+@@ -1051,7 +1056,7 @@ struct ieee80211_link_data {
+ 	} csa;
+ 
+ 	struct wiphy_work color_change_finalize_work;
+-	struct delayed_work color_collision_detect_work;
++	struct wiphy_delayed_work color_collision_detect_work;
+ 	u64 color_bitmap;
+ 
+ 	/* context reservation -- protected with wiphy mutex */
+@@ -1067,6 +1072,7 @@ struct ieee80211_link_data {
  	int ap_power_level; /* in dBm */
  
  	bool radar_required;
@@ -7519,7 +7655,7 @@ index 23cc5da..7ffa9a1 100644
  
  	union {
  		struct ieee80211_link_data_managed mgd;
-@@ -1165,8 +1170,6 @@ struct ieee80211_sub_if_data {
+@@ -1165,8 +1171,6 @@ struct ieee80211_sub_if_data {
  	struct ieee80211_link_data deflink;
  	struct ieee80211_link_data __rcu *link[IEEE80211_MLD_MAX_NUM_LINKS];
  
@@ -7528,7 +7664,7 @@ index 23cc5da..7ffa9a1 100644
  	/* for ieee80211_set_active_links_async() */
  	struct wiphy_work activate_links_work;
  	u16 desired_active_links;
-@@ -1349,10 +1352,12 @@ struct ieee80211_local {
+@@ -1349,10 +1353,12 @@ struct ieee80211_local {
  	spinlock_t handle_wake_tx_queue_lock;
  
  	u16 airtime_flags;
@@ -7541,7 +7677,7 @@ index 23cc5da..7ffa9a1 100644
  	atomic_t aql_ac_pending_airtime[IEEE80211_NUM_ACS];
  
  	const struct ieee80211_ops *ops;
-@@ -1369,7 +1374,7 @@ struct ieee80211_local {
+@@ -1369,7 +1375,7 @@ struct ieee80211_local {
  	spinlock_t queue_stop_reason_lock;
  
  	int open_count;
@@ -7550,7 +7686,17 @@ index 23cc5da..7ffa9a1 100644
  	/* number of interfaces with corresponding FIF_ flags */
  	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss, fif_pspoll,
  	    fif_probe_req;
-@@ -2629,7 +2634,8 @@ void ieee80211_recalc_chanctx_min_def(struct ieee80211_local *local,
+@@ -2004,7 +2010,8 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ /* color change handling */
+ void ieee80211_color_change_finalize_work(struct wiphy *wiphy,
+ 					  struct wiphy_work *work);
+-void ieee80211_color_collision_detection_work(struct work_struct *work);
++void ieee80211_color_collision_detection_work(struct wiphy *wiphy,
++					      struct wiphy_work *work);
+ 
+ /* interface handling */
+ #define MAC80211_SUPPORTED_FEATURES_TX	(NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM | \
+@@ -2629,7 +2636,8 @@ void ieee80211_recalc_chanctx_min_def(struct ieee80211_local *local,
  bool ieee80211_is_radar_required(struct ieee80211_local *local);
  
  void ieee80211_dfs_cac_timer_work(struct wiphy *wiphy, struct wiphy_work *work);
@@ -7561,26 +7707,10 @@ index 23cc5da..7ffa9a1 100644
  				       struct wiphy_work *work);
  int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
 diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index f735e41..54060ba 100644
+index f735e41..1cc195c 100644
 --- a/net/mac80211/iface.c
 +++ b/net/mac80211/iface.c
-@@ -279,8 +279,13 @@ static int _ieee80211_change_mac(struct ieee80211_sub_if_data *sdata,
- 	ret = eth_mac_addr(sdata->dev, sa);
- 
- 	if (ret == 0) {
--		memcpy(sdata->vif.addr, sa->sa_data, ETH_ALEN);
--		ether_addr_copy(sdata->vif.bss_conf.addr, sdata->vif.addr);
-+		if (check_dup) {
-+			memcpy(sdata->vif.addr, sa->sa_data, ETH_ALEN);
-+			ether_addr_copy(sdata->vif.bss_conf.addr, sdata->vif.addr);
-+		} else {
-+			memset(sdata->vif.addr, 0, ETH_ALEN);
-+			memset(sdata->vif.bss_conf.addr, 0, ETH_ALEN);
-+		}
- 	}
- 
- 	/* Regardless of eth_mac_addr() return we still want to add the
-@@ -551,15 +556,15 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+@@ -551,15 +551,15 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
  	wiphy_work_cancel(local->hw.wiphy,
  			  &sdata->deflink.color_change_finalize_work);
  	wiphy_delayed_work_cancel(local->hw.wiphy,
@@ -7599,7 +7729,7 @@ index f735e41..54060ba 100644
  	}
  
  	if (sdata->vif.type == NL80211_IFTYPE_AP) {
-@@ -699,9 +704,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+@@ -699,9 +699,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
  		ieee80211_recalc_idle(local);
  		ieee80211_recalc_offload(local);
  
@@ -7612,7 +7742,7 @@ index f735e41..54060ba 100644
  		fallthrough;
  	default:
  		if (!going_down)
-@@ -1087,6 +1094,8 @@ void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
+@@ -1087,6 +1089,8 @@ void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
  	ADJUST(CONTROL, control);
  	ADJUST(CONTROL, pspoll);
  	ADJUST(OTHER_BSS, other_bss);
@@ -7621,7 +7751,7 @@ index f735e41..54060ba 100644
  
  #undef ADJUST
  }
-@@ -1131,7 +1140,8 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+@@ -1131,7 +1135,8 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
  	ASSERT_RTNL();
  	lockdep_assert_wiphy(local->hw.wiphy);
  
@@ -7631,7 +7761,7 @@ index f735e41..54060ba 100644
  		return 0;
  
  	sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size, GFP_KERNEL);
-@@ -1193,6 +1203,9 @@ void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+@@ -1193,6 +1198,9 @@ void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
  {
  	struct ieee80211_sub_if_data *sdata;
  
@@ -7641,7 +7771,16 @@ index f735e41..54060ba 100644
  	ASSERT_RTNL();
  	lockdep_assert_wiphy(local->hw.wiphy);
  
-@@ -1328,7 +1341,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+@@ -1311,6 +1319,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 		}
+ 	}
+ 
++	sdata->vif.addr_valid = sdata->vif.type != NL80211_IFTYPE_MONITOR ||
++				(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE);
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 		/* no need to tell driver, but set carrier and chanctx */
+@@ -1328,7 +1338,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
  			break;
  		}
  
@@ -7651,7 +7790,7 @@ index f735e41..54060ba 100644
  			res = drv_add_interface(local, sdata);
  			if (res)
  				goto err_stop;
-@@ -1744,8 +1758,6 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+@@ -1744,8 +1755,6 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
  	wiphy_work_init(&sdata->work, ieee80211_iface_work);
  	wiphy_work_init(&sdata->activate_links_work,
  			ieee80211_activate_links_work);
@@ -7732,11 +7871,17 @@ index eecdd22..e45b5f5 100644
  
  void ieee80211_iter_keys_rcu(struct ieee80211_hw *hw,
 diff --git a/net/mac80211/link.c b/net/mac80211/link.c
-index 1a211b8..0bbac64 100644
+index 1a211b8..46092fb 100644
 --- a/net/mac80211/link.c
 +++ b/net/mac80211/link.c
-@@ -45,6 +45,8 @@ void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
- 			  ieee80211_color_collision_detection_work);
+@@ -41,10 +41,12 @@ void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
+ 			ieee80211_csa_finalize_work);
+ 	wiphy_work_init(&link->color_change_finalize_work,
+ 			ieee80211_color_change_finalize_work);
+-	INIT_DELAYED_WORK(&link->color_collision_detect_work,
+-			  ieee80211_color_collision_detection_work);
++	wiphy_delayed_work_init(&link->color_collision_detect_work,
++				ieee80211_color_collision_detection_work);
  	INIT_LIST_HEAD(&link->assigned_chanctx_list);
  	INIT_LIST_HEAD(&link->reserved_chanctx_list);
 +	wiphy_delayed_work_init(&link->dfs_cac_timer_work,
@@ -7744,7 +7889,14 @@ index 1a211b8..0bbac64 100644
  
  	if (!deflink) {
  		switch (sdata->vif.type) {
-@@ -75,6 +77,16 @@ void ieee80211_link_stop(struct ieee80211_link_data *link)
+@@ -70,11 +72,22 @@ void ieee80211_link_stop(struct ieee80211_link_data *link)
+ 	if (link->sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		ieee80211_mgd_stop_link(link);
+ 
+-	cancel_delayed_work_sync(&link->color_collision_detect_work);
++	wiphy_delayed_work_cancel(link->sdata->local->hw.wiphy,
++				  &link->color_collision_detect_work);
+ 	wiphy_work_cancel(link->sdata->local->hw.wiphy,
  			  &link->color_change_finalize_work);
  	wiphy_work_cancel(link->sdata->local->hw.wiphy,
  			  &link->csa.finalize_work);
@@ -7762,10 +7914,19 @@ index 1a211b8..0bbac64 100644
  }
  
 diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 3257545..79c77af 100644
+index 3257545..24210c0 100644
 --- a/net/mac80211/main.c
 +++ b/net/mac80211/main.c
-@@ -952,6 +952,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+@@ -167,6 +167,8 @@ static u32 ieee80211_calc_hw_conf_chan(struct ieee80211_local *local,
+ 	}
+ 
+ 	power = ieee80211_chandef_max_power(&chandef);
++	if (local->user_power_level != IEEE80211_UNSET_POWER_LEVEL)
++		power = min(local->user_power_level, power);
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+@@ -952,6 +954,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
  	spin_lock_init(&local->rx_path_lock);
  	spin_lock_init(&local->queue_stop_reason_lock);
  
@@ -7773,7 +7934,7 @@ index 3257545..79c77af 100644
  	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
  		INIT_LIST_HEAD(&local->active_txqs[i]);
  		spin_lock_init(&local->active_txq_lock[i]);
-@@ -1581,24 +1582,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+@@ -1581,24 +1584,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
  
  	ieee80211_check_wbrf_support(local);
  
@@ -8759,7 +8920,7 @@ index 138df3a..b8b8328 100644
  
  bool cfg80211_any_usable_channels(struct wiphy *wiphy,
 diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 1636064..68534b0 100644
+index 1636064..68e6bed 100644
 --- a/net/wireless/core.c
 +++ b/net/wireless/core.c
 @@ -599,16 +599,20 @@ use_default_name:
@@ -8890,6 +9051,20 @@ index 1636064..68534b0 100644
  	if ((wdev->iftype == NL80211_IFTYPE_STATION ||
  	     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
  	     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
+@@ -1704,6 +1735,13 @@ void wiphy_delayed_work_flush(struct wiphy *wiphy,
+ }
+ EXPORT_SYMBOL_GPL(wiphy_delayed_work_flush);
+ 
++bool wiphy_delayed_work_pending(struct wiphy *wiphy,
++				struct wiphy_delayed_work *dwork)
++{
++	return timer_pending(&dwork->timer);
++}
++EXPORT_SYMBOL_GPL(wiphy_delayed_work_pending);
++
+ static int __init cfg80211_init(void)
+ {
+ 	int err;
 diff --git a/net/wireless/core.h b/net/wireless/core.h
 index 4304d1a..6660d2e 100644
 --- a/net/wireless/core.h
