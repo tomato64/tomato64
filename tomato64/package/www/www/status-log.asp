@@ -468,7 +468,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="note-disabled" id="note-disabled" style="display:none"><b>Internal logging disabled.</b><br><br><a href="admin-log.asp">Enable &raquo;</a></div>
+<div class="note-disabled" id="note-disabled"><b>Internal logging disabled.</b><br><br><a href="admin-log.asp">Enable &raquo;</a></div>
 
 <!-- / / / -->
 

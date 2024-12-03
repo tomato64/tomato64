@@ -396,7 +396,7 @@ function earlyInit() {
 
 <!-- / / / -->
 
-<div class="note-disabled" id="note-disabled" style="display:none"><b>Web Monitoring disabled.</b><br><br><a href="admin-log.asp">Enable &raquo;</a></div>
+<div class="note-disabled" id="note-disabled"><b>Web Monitoring disabled.</b><br><br><a href="admin-log.asp">Enable &raquo;</a></div>
 
 <!-- / / / -->
 

@@ -275,12 +275,12 @@ function init() {
 <div class="section-title">Basic Settings</div>
 <div class="section">
 <!-- CTF-BEGIN -->
-	<div class="note-disabled" id="ctfnotice" style="display:none"><div class="about"><p style="color: red;"><b><a href="advanced-misc.asp">CTF</a> is currently enabled, this prevents QoS from functioning.</b></div></div>
+	<div class="note-disabled" id="ctfnotice"><div class="about"><p style="color: red;"><b><a href="advanced-misc.asp">CTF</a> is currently enabled, this prevents QoS from functioning.</b></div></div>
 <!-- CTF-END -->
 <!-- BCMNAT-BEGIN -->
-	<div class="note-disabled" id="bcmnatnotice" style="display:none"><div class="about"><p style="color: red;"><b><a href="advanced-misc.asp">FastNAT</a> is currently enabled this prevents QoS from functioning.</b></div></div>
+	<div class="note-disabled" id="bcmnatnotice"><div class="about"><p style="color: red;"><b><a href="advanced-misc.asp">FastNAT</a> is currently enabled this prevents QoS from functioning.</b></div></div>
 <!-- BCMNAT-END -->
-	<div class="note-disabled" id="qosnotice" style="display:none"><div class="about"><b>Upload Limit rules for host IP addresses will not be applied, and Outbound QoS rules will govern upload rates.</b></div></div>
+	<div class="note-disabled" id="qosnotice"><div class="about"><b>Upload Limit rules for host IP addresses will not be applied, and Outbound QoS rules will govern upload rates.</b></div></div>
 	<script>
 		classList = [];
 		for (i = 0; i < 10; ++i)

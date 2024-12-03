@@ -240,8 +240,8 @@ function earlyInit() {
 
 <!-- / / / -->
 
-<div class="note-disabled" id="note-disabled" style="display:none"><b>QoS disabled.</b><br><br><a href="qos-settings.asp">Enable &raquo;</a></div>
-<div class="note-disabled" id="note-cake" style="display:none"><b>Statistics not available in Cake mode.</b><br><br><a href="qos-settings.asp">Change mode &raquo;</a></div>
+<div class="note-disabled" id="note-disabled"><b>QoS disabled.</b><br><br><a href="qos-settings.asp">Enable &raquo;</a></div>
+<div class="note-disabled" id="note-cake"><b>Statistics not available in Cake mode.</b><br><br><a href="qos-settings.asp">Change mode &raquo;</a></div>
 
 <!-- / / / -->
 

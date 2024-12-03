@@ -128,7 +128,7 @@ function earlyInit() {
 <!-- / / / -->
 
 <!--JFFS2-BEGIN -->
-<div class="note-warning" id="afu-warn" style="display:none">
+<div class="note-warning" id="afu-warn">
 	<b>Upgrading firmware with JFFS enabled is not possible. You might now:</b><br><br>
 	- <a href="admin-jffs2.asp">Manually unmount the JFFS partition</a> first before re-attempting the upgrade<br><br>
 	- <a href="admin-access.asp">Enable the Unmount JFFS during upgrade</a> option<br><br>

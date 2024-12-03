@@ -504,14 +504,14 @@ function save() {
 }
 
 function earlyInit() {
-	if (nvram.qos_enable != '1')
-		elem.display('qos-note1', 1);
+	if (nvram.qos_enable != 1)
+		E('qos-note1').style.display = 'block';
 	else if (nvram.qos_enable == 1 && nvram.qos_mode == 2 && nvram.qos_cake_prio_mode == 0)
-		elem.display('qos-note2', 1);
+		E('qos-note2').style.display = 'block';
 	else if (nvram.qos_enable == 1 && nvram.qos_mode == 1 && nvram.qos_classify == 0)
-		elem.display('qos-note3', 1);
+		E('qos-note3').style.display = 'block';
 	else
-		elem.display('qos-cl-grid', 1);
+		E('qos-cl-grid').style.display = 'block';
 
 	qosg.setup();
 }
@@ -543,9 +543,9 @@ function init() {
 <!-- / / / -->
 
 <div class="section-title">Traffic classification</div>
-<div class="note-disabled" id="qos-note1" style="display:none"><b>QoS disabled.</b><br><br><a href="qos-settings.asp">Enable &raquo;</a></div>
-<div class="note-disabled" id="qos-note2" style="display:none"><b>CAKE is currently set in single class queue mode, in single class an automatic fair usage policy per IP is applied and classification settings not used.</b></div>
-<div class="note-disabled" id="qos-note3" style="display:none"><b>QoS classification is disabled.</b></div>
+<div class="note-disabled" id="qos-note1"><b>QoS disabled.</b><br><br><a href="qos-settings.asp">Enable &raquo;</a></div>
+<div class="note-disabled" id="qos-note2"><b>CAKE is currently set in single class queue mode, in single class an automatic fair usage policy per IP is applied and classification settings not used.</b></div>
+<div class="note-disabled" id="qos-note3"><b>QoS classification is disabled.</b></div>
 
 <!-- / / / -->
 

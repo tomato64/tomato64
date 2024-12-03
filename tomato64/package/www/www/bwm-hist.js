@@ -31,12 +31,12 @@ function cmpHist(a, b) {
 }
 
 function checkStats(type) {
-	if (nvram[type+'_enable'] != '1') {
+	if (nvram[type+'_enable'] != 1) {
 		E(type).style.display = 'none';
-		W('<div class="note-disabled"><b>'+(type == 'rstats' ? 'Bandwidth' : 'IP Traffic')+' monitoring disabled.<\/b><br><br><a href="admin-'+(type == 'rstats' ? 'bwm' : 'iptraffic')+'.asp">Enable &raquo;<\/a><\/div>');
+		W('<div class="note-disabled" style="display:block"><b>'+(type == 'rstats' ? 'Bandwidth' : 'IP Traffic')+' monitoring disabled.<\/b><br><br><a href="admin-'+(type == 'rstats' ? 'bwm' : 'iptraffic')+'.asp">Enable &raquo;<\/a><\/div>');
 	}
 	else if (eval(type+'_busy'))
-		W('<div class="note-warning">The '+type+' program is not responding or is busy. Try reloading after a few seconds.<\/div>');
+		W('<div class="note-warning" style="display:block">The '+type+' program is not responding or is busy. Try reloading after a few seconds.<\/div>');
 }
 
 /*

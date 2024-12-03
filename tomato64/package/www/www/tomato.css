@@ -1463,7 +1463,8 @@ div#unknown_router > .section-title {
 	width: 30em;
 	padding: 0.5em;
 	margin: 1em;
-	font-size: 0.9em
+	font-size: 0.9em;
+	display: none;
 }
 
 .about {
