@@ -398,7 +398,7 @@ function init() {
 <div class="section">
 	<ul>
 		<li><b>Generally</b> - Don't use the same username as when logging into the web panel - it will be rejected until you select <br>'Allow Admin Login' (with all the consequences).</li>
-		<li><b>NVRAM</b> - If FTP Server has been enabled, nvram values will be added. Nvram values will be removed after reboot in case FTP Server will be disabled.</li>
+		<li><b>NVRAM</b> - If FTP Server has been enabled, NVRAM values will be added. These NVRAM values will be removed after a reboot if the service is disabled.</li>
 	</ul>
 </div>
 

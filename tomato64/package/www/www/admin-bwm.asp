@@ -339,7 +339,7 @@ function init() {
 <div class="section-title">Notes</div>
 <div class="section">
 	<ul>
-		<li><b>NVRAM</b> - If Bandwidth Monitoring has been enabled, nvram values will be added. Nvram values will be removed after reboot in case Bandwidth Monitoring will be disabled.</li>
+		<li><b>NVRAM</b> - If Bandwidth Monitoring has been enabled, NVRAM values will be added. These NVRAM values will be removed after a reboot if the service is disabled.</li>
 	</ul>
 </div>
 

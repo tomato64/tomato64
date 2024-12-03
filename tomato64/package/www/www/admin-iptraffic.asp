@@ -379,7 +379,7 @@ REMOVE-END */
 <div class="section">
 	<ul>
 		<li><b>Generally</b> - This feature will only work for <b>IPv4</b> (IPv6 is not possible).</li>
-		<li><b>NVRAM</b> - If IP Traffic Monitoring has been enabled, nvram values will be added. Nvram values will be removed after reboot in case IP Traffic Monitoring will be disabled.</li>
+		<li><b>NVRAM</b> - If IP Traffic Monitoring has been enabled, NVRAM values will be added. These NVRAM values will be removed after a reboot if the service is disabled.</li>
 	</ul>
 </div>
 
