@@ -229,7 +229,7 @@ function init() {
 		E('ctfnotice').style.display = 'none';
 /* CTF-END */
 /* BCMNAT-BEGIN */
-	if (nvram.bcmnat_disable && nvram.bcmnat_disable === 0)
+	if (nvram.bcmnat_disable == 0 && nvram.qos_enable == 1)
 		E('bcmnatnotice').style.display = 'block';
 	else
 		E('bcmnatnotice').style.display = 'none';
@@ -318,25 +318,26 @@ function init() {
 		const encap_options = [['0','None'],['1','ATM (ADSL)'],['2','PTM (most VDSL2)']];
 
 		const overhead_options = [['0','None'],
-										['8','8-RFC2684/RFC1483 Routed VC-Mux'],
-										['10','10-PPPoA VC-Mux'],
-										['14','14-PPPoA LLC/Snap'],
-										['16','16-RFC2684/RFC1483 Routed LLC/Snap'],
-										['24','24-RFC2684/RFC1483 Bridged VC-Mux'],
-										['30','30-PPPoE PTM (VDSL2)'],
-										['32','32-PPPoE VC-Mux'],
-										['32','32-RFC2684/RFC1483 Bridged LLC/Snap'],
-										['34','34-PPPoE PTM (VDSL2) + VLAN'],
-										['40','40-PPPoE LLC/Snap'],
-										['48','48-PPPoE LLC/Snap + VLAN']];
+		                          ['8','8-RFC2684/RFC1483 Routed VC-Mux'],
+		                          ['10','10-PPPoA VC-Mux'],
+		                          ['14','14-PPPoA LLC/Snap'],
+		                          ['16','16-RFC2684/RFC1483 Routed LLC/Snap'],
+		                          ['24','24-RFC2684/RFC1483 Bridged VC-Mux'],
+		                          ['30','30-PPPoE PTM (VDSL2)'],
+		                          ['32','32-PPPoE VC-Mux'],
+		                          ['32','32-RFC2684/RFC1483 Bridged LLC/Snap'],
+		                          ['34','34-PPPoE PTM (VDSL2) + VLAN'],
+		                          ['40','40-PPPoE LLC/Snap'],
+		                          ['48','48-PPPoE LLC/Snap + VLAN']
+		                         ];
 
 		const encap_fields = [];
 		for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
 			var u = (uidx > 1) ? uidx : '';
 			encap_fields.push({
 				title: 'WAN'+(uidx - 1), multi: [
-					{ name: 'wan'+u+'_qos_encap', type: 'select', options: encap_options, value: nvram["wan"+u+"_qos_encap"], suffix: ' ' },
-					{ name: 'wan'+u+'_qos_overhead', type: 'select', options: overhead_options, value: nvram["wan"+u+"_qos_overhead"]},
+					{ name: 'wan'+u+'_qos_encap', type: 'select', options: encap_options, value: nvram['wan'+u+'_qos_encap'], suffix: ' ' },
+					{ name: 'wan'+u+'_qos_overhead', type: 'select', options: overhead_options, value: nvram['wan'+u+'_qos_overhead']},
 				]
 			});
 		}
