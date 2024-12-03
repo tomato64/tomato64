@@ -11,12 +11,13 @@ MINIUPNPD_DEPENDENCIES = iptables
 
 define MINIUPNPD_CONFIGURE_CMDS
 	cd $(MINIUPNPD_DIR) && \
-	$(TARGET_MAKE_ENV) \
+	$(TARGET_CONFIGURE_OPTS)  \
 	./configure \
 	--leasefile \
 	--vendorcfg \
 	--portinuse \
-	$(if $(TCONFIG_IPV6),--ipv6,) \
+	--firewall=iptables \
+	$(if $(TCONFIG_IPV6),--ipv6 --igd2,) \
 	--iptablespath=$(IPTABLES_DIR)
 endef
 

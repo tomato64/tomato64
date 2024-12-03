@@ -1668,13 +1668,21 @@ static void filter_forward(void)
 	}
 #endif
 
-	/* IPv4 only */
+	/* miniupnp - prepare filter table */
 	if (nvram_get_int("upnp_enable") & 3) {
+		/* IPv4 - upnp chain for filter */
 		ipt_write(":upnp - [0:0]\n");
 		for (i = 0; i < (unsigned int) wanfaces.count; ++i) {
 			if (*(wanfaces.iface[i].name))
 				ipt_write("-A FORWARD -i %s -j upnp\n", wanfaces.iface[i].name);
 		}
+#ifdef TCONFIG_IPV6
+		/* IPv6 - MINIUPNPD chain for filter6 */
+		if (ipv6_enabled) {
+			ip6t_write(":MINIUPNPD - [0:0]\n"
+				   "-A FORWARD -i %s ! -o %s -j MINIUPNPD\n", wan6face, wan6face);
+		}
+#endif
 	}
 
 	if (wanup || wan2up

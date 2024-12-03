@@ -1835,7 +1835,9 @@ void start_upnp(void)
 	           "port=%d\n"
 	           "enable_upnp=%s\n"
 	           "enable_pcp_pmp=%s\n"
-//	           "force_igd_desc_v1=yes\n" /* when igd2 is compiled in */
+#ifdef TCONFIG_IPV6
+	           "force_igd_desc_v1=yes\n" /* If igd2 is compiled in + IPv6 support (force version 1 in IGD v2 mode) */
+#endif
 	           "secure_mode=%s\n"
 	           "pcp_allow_thirdparty=%s\n"
 	           "upnp_forward_chain=upnp\n"
