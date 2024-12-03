@@ -503,6 +503,19 @@ function save() {
 	form.submit(fom, 1);
 }
 
+function earlyInit() {
+	if (nvram.qos_enable != '1')
+		elem.display('qos-note1', 1);
+	else if (nvram.qos_enable == 1 && nvram.qos_mode == 2 && nvram.qos_cake_prio_mode == 0)
+		elem.display('qos-note2', 1);
+	else if (nvram.qos_enable == 1 && nvram.qos_mode == 1 && nvram.qos_classify == 0)
+		elem.display('qos-note3', 1);
+	else
+		elem.display('qos-cl-grid', 1);
+
+	qosg.setup();
+}
+
 function init() {
 	qosg.recolor();
 	up.initPage(250, 5);
@@ -530,16 +543,9 @@ function init() {
 <!-- / / / -->
 
 <div class="section-title">Traffic classification</div>
-<script>
-	if (nvram.qos_enable != '1')
-		W('<div class="note-disabled"><b>QoS disabled.<\/b><br><br><a href="qos-settings.asp">Enable &raquo;<\/a><\/div>');
-	else if (nvram.qos_enable == 1 && nvram.qos_mode == 2 && nvram.qos_cake_prio_mode == 0)
-		W('<div class="note-disabled"><b>CAKE is currently set in single class queue mode, in single class an automatic fair usage policy per IP is applied and classification settings not used.<\/b><\/div>');
-	else if (nvram.qos_enable == 1 && nvram.qos_mode == 1 && nvram.qos_classify == 0)
-		W('<div class="note-disabled"><b>QoS classification is disabled.<\/b><\/div>');
-	else
-		elem.display('qos-cl-grid', 1);
-</script>
+<div class="note-disabled" id="qos-note1" style="display:none"><b>QoS disabled.</b><br><br><a href="qos-settings.asp">Enable &raquo;</a></div>
+<div class="note-disabled" id="qos-note2" style="display:none"><b>CAKE is currently set in single class queue mode, in single class an automatic fair usage policy per IP is applied and classification settings not used.</b></div>
+<div class="note-disabled" id="qos-note3" style="display:none"><b>QoS classification is disabled.</b></div>
 
 <!-- / / / -->
 
@@ -562,6 +568,6 @@ function init() {
 </td></tr>
 </table>
 </form>
-<script>qosg.setup();</script>
+<script>earlyInit();</script>
 </body>
 </html>
