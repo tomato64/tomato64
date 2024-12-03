@@ -229,6 +229,11 @@ void start_samba(int force)
 	            " map hidden = no\n"
 	            " map read only = no\n"
 	            " map system = no\n"
+#ifndef TCONFIG_BCMARM
+	            " load printers = no\n" /* add for Samba printcap issue (MIPS only) */
+	            " printing = bsd\n"
+	            " printcap name = /dev/null\n"
+#endif
 	            " store dos attributes = no\n"
 	            " dos filemode = yes\n"
 	            " strict locking = no\n"
