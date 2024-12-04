@@ -157,7 +157,12 @@ else
 endif
 endif # TCONFIG_USB
 else #TOMATO64
+ifeq ($(BR2_PACKAGE_PLATFORM_X86_64),y)
 	install -m 0700 entware-install-x86_64.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
+endif
+ifeq ($(PLATFORM_MT6000),y)
+	install -m 0700 entware-install-AARCH64.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
+endif
 endif # TOMATO64
 
 # ovpn up/down/etc scripts
