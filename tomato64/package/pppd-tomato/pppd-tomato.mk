@@ -19,6 +19,7 @@ PPPD_TOMATO_INSTALL_STAGING = YES
 
 # hack
 PPPD_TOMATO_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -Wno-return-mismatch -Wno-implicit-function-declaration -Wno-incompatible-pointer-types"
+PPPD_TOMATO_CONF_ENV += enable_microsoft_extensions=yes with_openssl=no enable_eaptls=no enable_peap=no with_pam=no with_pcap=no with_srp=no enable_multilink=yes enable_ipv6cp=yes
 
 PPPD_TOMATO_CONF_OPTS = \
 		--prefix=/usr \
@@ -27,19 +28,5 @@ PPPD_TOMATO_CONF_OPTS = \
 		--with-runtime-dir=/var/run \
 		--with-logfile-dir=/var/log \
 		--with-system-ca-path=/etc/ssl/certs
-
-PPPD_TOMATO_CONF_OPTS += --enable-multilink
-PPPD_TOMATO_CONF_OPTS += --enable-cbcp
-PPPD_TOMATO_CONF_OPTS += --without-pam
-
-PPPD_TOMATO_CONF_OPTS += \
-	--disable-eaptls \
-	--disable-openssl-engine \
-	--disable-peap \
-	--without-openssl
-
-PPPD_TOMATO_CONF_OPTS += --without-pcap
-PPPD_TOMATO_CONF_OPTS += --disable-systemd
-
 
 $(eval $(autotools-package))

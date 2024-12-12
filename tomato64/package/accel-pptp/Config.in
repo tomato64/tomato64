@@ -1,5 +1,0 @@
-config BR2_PACKAGE_ACCEL_PPTP
-	bool "accel-pptp"
-	select BR2_PACKAGE_PPPD_TOMATO
-	help
-	  accel-pptp for tomato
