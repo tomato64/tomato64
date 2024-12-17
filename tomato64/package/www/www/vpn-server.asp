@@ -680,6 +680,9 @@ function verifyFields(focused, quiet) {
 			E('_vpn_dhgen_'+t+'_button').disabled = 0;
 			E('_f_vpn_'+t+'_dhtype').disabled = 0;
 		}
+/* TOMATO64-BEGIN */
+		E('_f_vpn_'+t+'_dhtype').checked = 1;
+/* TOMATO64-END */
 /* KEYGEN-END */
 
 		var keyHelp = E(t+'-keyhelp');
