@@ -777,12 +777,14 @@ int dhcp6c_state_main(int argc, char **argv)
 		if (!nvram_match("ipv6_prefix", (char *) prefix))
 			nvram_set("ipv6_prefix", prefix);
 
-		/* (re)start dnsmasq and httpd */
+		/* (re)start dnsmasq, httpd and upnp */
 		set_host_domain_name();
 		stop_dnsmasq();
 		start_dnsmasq();
 		stop_httpd();
 		start_httpd();
+		stop_upnp();
+		start_upnp();
 	}
 
 	/* check DNS - change/new ? */
