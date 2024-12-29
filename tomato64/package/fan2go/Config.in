@@ -1,0 +1,6 @@
+config BR2_PACKAGE_FAN2GO
+	bool "fan2go"
+	depends on BR2_x86_64
+	select BR2_PACKAGE_LM_SENSORS
+	help
+	  A simple daemon providing dynamic fan speed control based on temperature sensors.
