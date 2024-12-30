@@ -1,0 +1,5 @@
+config BR2_PACKAGE_T64UP
+	bool "t64up"
+	depends on BR2_x86_64
+	help
+	  Tomato64 Upgrade Script
