@@ -2053,6 +2053,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0_channel",		V_TEXT(1, 3)			},	/* 1 - 165+ */
 	{"wifi_phy0_width",		V_TEXT(2, 3)			},	/* 20, 40, 80, 160, 320 */
 	{"wifi_phy0_brates",		V_NONE				},	/* legacy b rates */
+	{"wifi_phy0_noscan",		V_NONE				},	/* Force 40MHz mode */
 	{"wifi_phy0_power",		V_TEXT(0, 2)			},	/* 0 - 30+ */
 	{"wifi_phy0_country",		V_TEXT(0, 2)			},	/* 2 Digit Country Code */
 	{"wifi_phy0_ifaces",		V_RANGE(0, 16)			},
@@ -2062,6 +2063,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1_channel",		V_TEXT(1, 3)			},	/* 1 - 165+ */
 	{"wifi_phy1_width",		V_TEXT(2, 3)			},	/* 20, 40, 80, 160, 320 */
 	{"wifi_phy1_brates",		V_NONE				},	/* legacy b rates */
+	{"wifi_phy1_noscan",		V_NONE				},	/* Force 40MHz mode */
 	{"wifi_phy1_power",		V_TEXT(0, 2)			},	/* 0 - 30+ */
 	{"wifi_phy1_country",		V_TEXT(0, 2)			},	/* 2 Digit Country Code */
 	{"wifi_phy1_ifaces",		V_RANGE(0, 16)			},

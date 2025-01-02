@@ -146,6 +146,7 @@ do
 	uci set "wireless.radio${i}.txpower=$(NG wifi_phy${i}_power)"
 	uci set "wireless.radio${i}.country=$(NG wifi_phy${i}_country)"
 	uci set "wireless.radio${i}.cell_density=0"
+	uci set "wireless.radio${i}.noscan=$(NG wifi_phy${i}_noscan)"
 
 	# For each device interface
 	for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)));
