@@ -2129,6 +2129,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface0_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface0_key",		""				, 0 },
 	{"wifi_phy0iface0_isolate",	""				, 0 },
+	{"wifi_phy0iface0_ifname",	""				, 0 },
 
 	{"wifi_phy0iface1_enable",	"0"				, 0 },
 	{"wifi_phy0iface1_mode",	"ap"				, 0 },
@@ -2140,6 +2141,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface1_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface1_key",		""				, 0 },
 	{"wifi_phy0iface1_isolate",	""				, 0 },
+	{"wifi_phy0iface1_ifname",	""				, 0 },
 
 	{"wifi_phy0iface2_enable",	"0"				, 0 },
 	{"wifi_phy0iface2_mode",	"ap"				, 0 },
@@ -2151,6 +2153,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface2_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface2_key",		""				, 0 },
 	{"wifi_phy0iface2_isolate",	""				, 0 },
+	{"wifi_phy0iface2_ifname",	""				, 0 },
 
 	{"wifi_phy0iface3_enable",	"0"				, 0 },
 	{"wifi_phy0iface3_mode",	"ap"				, 0 },
@@ -2162,6 +2165,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface3_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface3_key",		""				, 0 },
 	{"wifi_phy0iface3_isolate",	""				, 0 },
+	{"wifi_phy0iface3_ifname",	""				, 0 },
 
 	{"wifi_phy0iface4_enable",	"0"				, 0 },
 	{"wifi_phy0iface4_mode",	"ap"				, 0 },
@@ -2173,6 +2177,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface4_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface4_key",		""				, 0 },
 	{"wifi_phy0iface4_isolate",	""				, 0 },
+	{"wifi_phy0iface4_ifname",	""				, 0 },
 
 	{"wifi_phy0iface5_enable",	"0"				, 0 },
 	{"wifi_phy0iface5_mode",	"ap"				, 0 },
@@ -2184,6 +2189,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface5_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface5_key",		""				, 0 },
 	{"wifi_phy0iface5_isolate",	""				, 0 },
+	{"wifi_phy0iface5_ifname",	""				, 0 },
 
 	{"wifi_phy0iface6_enable",	"0"				, 0 },
 	{"wifi_phy0iface6_mode",	"ap"				, 0 },
@@ -2195,6 +2201,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface6_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface6_key",		""				, 0 },
 	{"wifi_phy0iface6_isolate",	""				, 0 },
+	{"wifi_phy0iface6_ifname",	""				, 0 },
 
 	{"wifi_phy0iface7_enable",	"0"				, 0 },
 	{"wifi_phy0iface7_mode",	"ap"				, 0 },
@@ -2206,6 +2213,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface7_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface7_key",		""				, 0 },
 	{"wifi_phy0iface7_isolate",	""				, 0 },
+	{"wifi_phy0iface7_ifname",	""				, 0 },
 
 	{"wifi_phy0iface8_enable",	"0"				, 0 },
 	{"wifi_phy0iface8_mode",	"ap"				, 0 },
@@ -2217,6 +2225,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface8_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface8_key",		""				, 0 },
 	{"wifi_phy0iface8_isolate",	""				, 0 },
+	{"wifi_phy0iface8_ifname",	""				, 0 },
 
 	{"wifi_phy0iface9_enable",	"0"				, 0 },
 	{"wifi_phy0iface9_mode",	"ap"				, 0 },
@@ -2228,6 +2237,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface9_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface9_key",		""				, 0 },
 	{"wifi_phy0iface9_isolate",	""				, 0 },
+	{"wifi_phy0iface9_ifname",	""				, 0 },
 
 	{"wifi_phy0iface10_enable",	"0"				, 0 },
 	{"wifi_phy0iface10_mode",	"ap"				, 0 },
@@ -2239,6 +2249,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface10_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface10_key",	""				, 0 },
 	{"wifi_phy0iface10_isolate",	""				, 0 },
+	{"wifi_phy0iface10_ifname",	""				, 0 },
 
 	{"wifi_phy0iface11_enable",	"0"				, 0 },
 	{"wifi_phy0iface11_mode",	"ap"				, 0 },
@@ -2250,6 +2261,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface11_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface11_key",	""				, 0 },
 	{"wifi_phy0iface11_isolate",	""				, 0 },
+	{"wifi_phy0iface11_ifname",	""				, 0 },
 
 	{"wifi_phy0iface12_enable",	"0"				, 0 },
 	{"wifi_phy0iface12_mode",	"ap"				, 0 },
@@ -2261,6 +2273,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface12_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface12_key",	""				, 0 },
 	{"wifi_phy0iface12_isolate",	""				, 0 },
+	{"wifi_phy0iface12_ifname",	""				, 0 },
 
 	{"wifi_phy0iface13_enable",	"0"				, 0 },
 	{"wifi_phy0iface13_mode",	"ap"				, 0 },
@@ -2272,6 +2285,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface13_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface13_key",	""				, 0 },
 	{"wifi_phy0iface13_isolate",	""				, 0 },
+	{"wifi_phy0iface13_ifname",	""				, 0 },
 
 	{"wifi_phy0iface14_enable",	"0"				, 0 },
 	{"wifi_phy0iface14_mode",	"ap"				, 0 },
@@ -2283,6 +2297,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface14_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface14_key",	""				, 0 },
 	{"wifi_phy0iface14_isolate",	""				, 0 },
+	{"wifi_phy0iface14_ifname",	""				, 0 },
 
 	{"wifi_phy0iface15_enable",	"0"				, 0 },
 	{"wifi_phy0iface15_mode",	"ap"				, 0 },
@@ -2294,6 +2309,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface15_cipher",	"auto"				, 0 },
 	{"wifi_phy0iface15_key",	""				, 0 },
 	{"wifi_phy0iface15_isolate",	""				, 0 },
+	{"wifi_phy0iface15_ifname",	""				, 0 },
 
 	{"wifi_phy1iface0_enable",	"0"				, 0 },
 	{"wifi_phy1iface0_mode",	"ap"				, 0 },
@@ -2305,6 +2321,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface0_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface0_key",		""				, 0 },
 	{"wifi_phy1iface0_isolate",	""				, 0 },
+	{"wifi_phy1iface0_ifname",	""				, 0 },
 
 	{"wifi_phy1iface1_enable",	"0"				, 0 },
 	{"wifi_phy1iface1_mode",	"ap"				, 0 },
@@ -2316,6 +2333,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface1_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface1_key",		""				, 0 },
 	{"wifi_phy1iface1_isolate",	""				, 0 },
+	{"wifi_phy1iface1_ifname",	""				, 0 },
 
 	{"wifi_phy1iface2_enable",	"0"				, 0 },
 	{"wifi_phy1iface2_mode",	"ap"				, 0 },
@@ -2327,6 +2345,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface2_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface2_key",		""				, 0 },
 	{"wifi_phy1iface2_isolate",	""				, 0 },
+	{"wifi_phy1iface2_ifname",	""				, 0 },
 
 	{"wifi_phy1iface3_enable",	"0"				, 0 },
 	{"wifi_phy1iface3_mode",	"ap"				, 0 },
@@ -2338,6 +2357,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface3_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface3_key",		""				, 0 },
 	{"wifi_phy1iface3_isolate",	""				, 0 },
+	{"wifi_phy1iface3_ifname",	""				, 0 },
 
 	{"wifi_phy1iface4_enable",	"0"				, 0 },
 	{"wifi_phy1iface4_mode",	"ap"				, 0 },
@@ -2349,6 +2369,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface4_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface4_key",		""				, 0 },
 	{"wifi_phy1iface4_isolate",	""				, 0 },
+	{"wifi_phy1iface4_ifname",	""				, 0 },
 
 	{"wifi_phy1iface5_enable",	"0"				, 0 },
 	{"wifi_phy1iface5_mode",	"ap"				, 0 },
@@ -2360,6 +2381,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface5_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface5_key",		""				, 0 },
 	{"wifi_phy1iface5_isolate",	""				, 0 },
+	{"wifi_phy1iface5_ifname",	""				, 0 },
 
 	{"wifi_phy1iface6_enable",	"0"				, 0 },
 	{"wifi_phy1iface6_mode",	"ap"				, 0 },
@@ -2371,6 +2393,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface6_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface6_key",		""				, 0 },
 	{"wifi_phy1iface6_isolate",	""				, 0 },
+	{"wifi_phy1iface6_ifname",	""				, 0 },
 
 	{"wifi_phy1iface7_enable",	"0"				, 0 },
 	{"wifi_phy1iface7_mode",	"ap"				, 0 },
@@ -2382,6 +2405,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface7_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface7_key",		""				, 0 },
 	{"wifi_phy1iface7_isolate",	""				, 0 },
+	{"wifi_phy1iface7_ifname",	""				, 0 },
 
 	{"wifi_phy1iface8_enable",	"0"				, 0 },
 	{"wifi_phy1iface8_mode",	"ap"				, 0 },
@@ -2393,6 +2417,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface8_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface8_key",		""				, 0 },
 	{"wifi_phy1iface8_isolate",	""				, 0 },
+	{"wifi_phy1iface8_ifname",	""				, 0 },
 
 	{"wifi_phy1iface9_enable",	"0"				, 0 },
 	{"wifi_phy1iface9_mode",	"ap"				, 0 },
@@ -2404,6 +2429,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface9_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface9_key",		""				, 0 },
 	{"wifi_phy1iface9_isolate",	""				, 0 },
+	{"wifi_phy1iface9_ifname",	""				, 0 },
 
 	{"wifi_phy1iface10_enable",	"0"				, 0 },
 	{"wifi_phy1iface10_mode",	"ap"				, 0 },
@@ -2415,6 +2441,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface10_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface10_key",	""				, 0 },
 	{"wifi_phy1iface10_isolate",	""				, 0 },
+	{"wifi_phy1iface10_ifname",	""				, 0 },
 
 	{"wifi_phy1iface11_enable",	"0"				, 0 },
 	{"wifi_phy1iface11_mode",	"ap"				, 0 },
@@ -2426,6 +2453,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface11_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface11_key",	""				, 0 },
 	{"wifi_phy1iface11_isolate",	""				, 0 },
+	{"wifi_phy1iface11_ifname",	""				, 0 },
 
 	{"wifi_phy1iface12_enable",	"0"				, 0 },
 	{"wifi_phy1iface12_mode",	"ap"				, 0 },
@@ -2437,6 +2465,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface12_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface12_key",	""				, 0 },
 	{"wifi_phy1iface12_isolate",	""				, 0 },
+	{"wifi_phy1iface12_ifname",	""				, 0 },
 
 	{"wifi_phy1iface13_enable",	"0"				, 0 },
 	{"wifi_phy1iface13_mode",	"ap"				, 0 },
@@ -2448,6 +2477,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface13_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface13_key",	""				, 0 },
 	{"wifi_phy1iface13_isolate",	""				, 0 },
+	{"wifi_phy1iface13_ifname",	""				, 0 },
 
 	{"wifi_phy1iface14_enable",	"0"				, 0 },
 	{"wifi_phy1iface14_mode",	"ap"				, 0 },
@@ -2459,6 +2489,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface14_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface14_key",	""				, 0 },
 	{"wifi_phy1iface14_isolate",	""				, 0 },
+	{"wifi_phy1iface14_ifname",	""				, 0 },
 
 	{"wifi_phy1iface15_enable",	"0"				, 0 },
 	{"wifi_phy1iface15_mode",	"ap"				, 0 },
@@ -2470,6 +2501,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface15_cipher",	"auto"				, 0 },
 	{"wifi_phy1iface15_key",	""				, 0 },
 	{"wifi_phy1iface15_isolate",	""				, 0 },
+	{"wifi_phy1iface15_ifname",	""				, 0 },
 
 #endif /* TOMATO64_MT6000 */
 

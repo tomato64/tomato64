@@ -131,6 +131,16 @@ print_encryption() {
 	fi
 }
 
+print_ifname() {
+
+	if [ ! -z "$(NG wifi_phy${1}iface${2}_ifname)" ];
+	then
+		uci set "wireless.phy${1}iface${2}.ifname=$(NG wifi_phy${1}iface${2}_ifname)"
+	else
+		uci set "wireless.phy${1}iface${2}.ifname=phy${1}-ap${2}"
+	fi
+}
+
 json_for_each_item "count_phy" "wlan"
 
 # For each wireless device
@@ -169,6 +179,7 @@ do
 				uci set "wireless.phy${i}iface${j}.hidden=$(NG wifi_phy${i}iface${j}_hidden)"
 				uci set "wireless.phy${i}iface${j}.isolate=$(NG wifi_phy${i}iface${j}_isolate)"
 				uci set "wireless.phy${i}iface${j}.bridge=$(NG wifi_phy${i}iface${j}_network)"
+				print_ifname ${i} ${j}
 			fi
 		fi
 	done
