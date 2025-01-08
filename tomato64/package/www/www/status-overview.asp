@@ -360,6 +360,9 @@ function show() {
 
 	c('cpu', stats.cpuload);
 	c('cpupercent', stats.cpupercent);
+/* TOMATO64-BEGIN */
+	c('cpumhz', stats.cpumhz);
+/* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
 	c('wlsense', stats.wlsense);
 	c('temps', stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F');
@@ -586,9 +589,10 @@ function init() {
 /* TOMATO64-BEGIN */
 		{ title: 'CPU', text: stats.cpumodel },
 		{ title: 'CPU Cores', text: stats.cpucount },
+		{ title: 'CPU Frequency', rid: 'cpumhz', text: stats.cpumhz },
 /* TOMATO64-END */
-		{ title: 'CPU Frequency', text: stats.cpumhz, suffix: ' <small>(dual-core)<\/small>' },
 /* TOMATO64-REMOVE-BEGIN */
+		{ title: 'CPU Frequency', text: stats.cpumhz, suffix: ' <small>(dual-core)<\/small>' },
 		{ title: 'Flash Size', text: stats.flashsize },
 /* TOMATO64-REMOVE-END */
 		null,
