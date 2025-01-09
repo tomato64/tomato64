@@ -3,7 +3,6 @@ BUILDROOT_TARBALL = ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSIO
 BUILDROOT_URL = https://github.com/tomato64/buildroot-release/releases/download/$(BUILDROOT_VERSION)
 MEDIATEK_KERNEL_VERSION=$(shell grep "BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE" tomato64/configs/mt6000_defconfig | cut -d '"' -f2)
 MEDIATEK_KERNEL_PATCH=${HOME}/buildroot-src/mediatek-kernel/00001-openwrt-mediatek-kernel-${MEDIATEK_KERNEL_VERSION}.patch
-PATCHES := $(wildcard src/patches/*.patch)
 
 default: .configure
 	make -C src/buildroot
@@ -23,11 +22,11 @@ mt6000-menuconfig: .configure-mt6000
 distclean:
 	git clean -fdxq && git reset --hard
 
-.configure: .patch
+.configure: .prepatch .patch
 	make -C src/buildroot BR2_EXTERNAL=../../tomato64 tomato64_defconfig
 	@touch $@
 
-.configure-legacy: .patch
+.configure-legacy: .prepatch .patch
 	make -C src/buildroot BR2_EXTERNAL=../../tomato64 tomato64_legacy_defconfig
 	@touch $@
 	@touch .configure
@@ -38,10 +37,13 @@ distclean:
 	@touch .configure
 
 .patch: .extract-buildroot
-	for patch in $(sort $(PATCHES)); do \
+	for patch in $(sort $(wildcard src/patches/*.patch)); do \
 		patch -p1 -d src/buildroot < $$patch; \
 	done
 	@touch $@
+
+.prepatch:
+	cp tomato64/board/x86_64/*.patch src/patches/
 
 .extract-buildroot: .download-buildroot
 	tar xJf ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSION).tar.xz -C src/
