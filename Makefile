@@ -37,6 +37,7 @@ distclean:
 	@touch .configure
 
 .patch: .extract-buildroot
+	@touch .prepatch
 	for patch in $(sort $(wildcard src/patches/*.patch)); do \
 		patch -p1 -d src/buildroot < $$patch; \
 	done
@@ -44,6 +45,7 @@ distclean:
 
 .prepatch:
 	cp tomato64/board/x86_64/*.patch src/patches/
+	@touch $@
 
 .extract-buildroot: .download-buildroot
 	tar xJf ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSION).tar.xz -C src/

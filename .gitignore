@@ -2,6 +2,7 @@
 .download-mediatek-kernel
 .extract-buildroot
 .patch
+.prepatch
 .configure
 .configure-legacy
 .configure-mt6000
