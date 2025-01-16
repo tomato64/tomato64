@@ -11236,6 +11236,7 @@ static int init_nvram(void)
 	}
 	nvram_set("t_model_name", s);
 #else
+	features = SUP_1000ET;
 #ifdef TOMATO64_X86_64
 	nvram_set("t_model_name", "x86_64");
 #endif /* TOMATO64_X86_64 */
@@ -11342,9 +11343,11 @@ static void load_files_from_nvram(void)
 		run_nvscript(".autorun", NULL, 3);
 }
 #endif
+#endif /* TOMATO64 */
 
 static inline void set_jumbo_frame(void)
 {
+#ifndef TOMATO64
 	int enable = nvram_get_int("jumbo_frame_enable");
 
 	/*
@@ -11362,8 +11365,10 @@ static inline void set_jumbo_frame(void)
 	if (enable) {
 		eval("et", "robowr", "0x40", "0x05", nvram_safe_get("jumbo_frame_size")); /* set the packet size */
 	}
-}
+#else
+	eval("set_jumbo_frame");
 #endif /* TOMATO64 */
+}
 
 static inline void set_kernel_panic(void)
 {
@@ -11652,9 +11657,7 @@ static void sysinit(void)
 	eval("/usr/bin/start_qemu_guest");
 #endif /* TOMATO64 */
 
-#ifndef TOMATO64
 	set_jumbo_frame(); /* enable or disable jumbo_frame and set jumbo frame size */
-#endif /* TOMATO64 */
 
 	/* load after init_nvram */
 #ifndef TOMATO64

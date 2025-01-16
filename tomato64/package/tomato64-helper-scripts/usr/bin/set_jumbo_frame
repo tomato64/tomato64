@@ -1,0 +1,11 @@
+#!/bin/sh
+
+. /usr/sbin/nvram_ops
+
+if [ "$(NG jumbo_frame_enable)" == "1" ]; then
+
+	for i in $(seq 0 $(($(NG nics) - 1)));
+	do
+		ip link set eth$i mtu $(NG jumbo_frame_size)
+	done
+fi
