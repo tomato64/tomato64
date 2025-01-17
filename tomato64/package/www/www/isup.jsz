@@ -48,9 +48,18 @@ var OVPN_CLIENT_COUNT = 2;
 isup.vpnclient1 = parseInt('<% psup("vpnclient1"); %>');
 isup.vpnclient2 = parseInt('<% psup("vpnclient2"); %>');
 
+/* TOMATO64-REMOVE-BEGIN */
 var OVPN_SERVER_COUNT = 2;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+var OVPN_SERVER_COUNT = 4;
+/* TOMATO64-END */
 isup.vpnserver1 = parseInt('<% psup("vpnserver1"); %>');
 isup.vpnserver2 = parseInt('<% psup("vpnserver2"); %>');
+/* TOMATO64-BEGIN */
+isup.vpnserver3 = parseInt('<% psup("vpnserver3"); %>');
+isup.vpnserver4 = parseInt('<% psup("vpnserver4"); %>');
+/* TOMATO64-END */
 /* OPENVPN-END */
 
 /* PPTPD-BEGIN */

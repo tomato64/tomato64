@@ -30,7 +30,11 @@
 #define OVPN_DIR_DEL_SCRIPT	OVPN_DIR"/fw/"OVPN_DEL_SCRIPT
 
 /* OpenVPN clients/servers count */
+#ifdef TOMATO64
+#define OVPN_SERVER_MAX		4
+#else
 #define OVPN_SERVER_MAX		2
+#endif /* TOMATO64 */
 
 #if defined(TCONFIG_BCMARM)
 #define OVPN_CLIENT_MAX		3
@@ -1416,7 +1420,11 @@ void stop_ovpn_server(int unit)
 void start_ovpn_eas()
 {
 	char buffer[16], *cur;
+#ifdef TOMATO64
+	int nums[OVPN_SERVER_MAX], i;
+#else
 	int nums[OVPN_CLIENT_MAX], i;
+#endif /* TOMATO64 */
 
 	if ((strlen(nvram_safe_get("vpn_server_eas")) == 0) && (strlen(nvram_safe_get("vpn_client_eas")) == 0))
 		return;
