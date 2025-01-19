@@ -226,7 +226,7 @@ function init() {
 	<br>
 
 	<hr>
-	<br><b>Tomato64 - is a port of Tomato Firmware to the x86_64 architecture, forked from FreshTomato.</b>
+	<br><b>Tomato64 - is a port of Tomato Firmware to the x86_64 and arm64 (GL-MT6000) architectures, forked from FreshTomato.</b>
 	<br>
 	Copyright (C) 2022-2025 by Lance Fredrickson
 	<br>
