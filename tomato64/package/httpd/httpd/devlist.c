@@ -108,6 +108,7 @@ static int get_wds_ifname(const struct ether_addr *ea, char *ifname)
 	return 0;
 }
 
+#ifndef TOMATO64
 static int get_wl_clients(int idx, int unit, int subunit, void *param)
 {
 	char *comma = param;
@@ -182,6 +183,23 @@ static int get_wl_clients(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
+#else
+
+void get_wl_clients(void)
+{
+	FILE *f;
+	char row[128];
+
+	const char cmd[] = "/usr/bin/wldev";
+
+	if ((f = popen(cmd, "r")) != NULL) {
+		while (fgets(row, sizeof(row), f)) {
+			web_printf(row);
+		}
+		pclose(f);
+	}
+}
+#endif /* TOMATO64 */
 
 void asp_devlist(int argc, char **argv)
 {
@@ -204,6 +222,8 @@ void asp_devlist(int argc, char **argv)
 	comma = ' ';
 #ifndef TOMATO64
 	foreach_wif(1, &comma, get_wl_clients);
+#else
+	get_wl_clients();
 #endif /* TOMATO64 */
 	web_puts("];\n");
 

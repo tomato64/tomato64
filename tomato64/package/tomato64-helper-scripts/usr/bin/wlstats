@@ -1,0 +1,77 @@
+#!/bin/sh
+
+. /usr/sbin/nvram_ops
+. /usr/share/libubox/jshn.sh
+
+json_load_file /etc/board.json
+
+phycount=0
+
+count_phy() {
+        phycount=$((phycount+1))
+}
+
+print_ifname() {
+
+	if [ ! -z "$(NG wifi_phy${1}iface${2}_ifname)" ];
+	then
+		echo "$(NG wifi_phy${1}iface${2}_ifname)"
+	else
+		echo "phy${1}-ap${2}"
+	fi
+}
+
+first_entry=0
+
+json_for_each_item "count_phy" "wlan"
+
+# For each wireless device
+for i in $(seq 0 1 $(($phycount - 1)));
+do
+	# For each device interface
+	for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)));
+	do
+		# If interface is enabled
+		if [ $(NG "wifi_phy${i}iface${j}_enable") -eq 1 ];
+		then
+
+			# If interface is an Access Point
+			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "ap" ];
+			then
+				iwinfo="$(iwinfo $(print_ifname ${i} ${j}) info)" > /dev/null 2>&1
+
+				if [ ! -z "${iwinfo}" ];
+				then
+
+					channel=$(echo "$iwinfo" | grep "Master" | awk '{print $4}')
+
+					mhz=$(echo "$iwinfo" | grep "Master" | awk '{print $5}')
+					mhz="${mhz:1:1}${mhz:3}"
+
+					nbw=$(echo "$iwinfo" | grep "Master" | awk '{print $9}')
+					nbw="${nbw:2}"
+
+					noise=$(echo "$iwinfo" | grep "Noise" | sed 's/dBm//g' | awk '{print $4}')
+					if [ "${noise}" == "unknown" ];
+					then
+						noise="-99"
+					fi
+
+					rate=$(echo "$iwinfo" | grep "Bit" | awk '{print $3}')
+					if [ "${rate}" == "unknown" ];
+					then
+						rate=0
+					fi
+
+					if [ $first_entry -eq 1 ]; then
+						echo -n ","
+					fi
+
+					echo { radio: 1, client: 0, channel: ${channel}, mhz: $mhz, rate: $rate, nbw: $nbw, rssi: 0, noise: $noise, intf: 0}
+
+					first_entry=1
+				fi
+			fi
+		fi
+	done
+done

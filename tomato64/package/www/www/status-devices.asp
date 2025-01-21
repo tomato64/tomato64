@@ -54,14 +54,12 @@ ref.refresh = function(text) {
 	dg.removeAllData();
 	dg.populate();
 	dg.resort();
-/* TOMATO64-REMOVE-BEGIN */
 	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 		if (wl_sunit(uidx) < 0 && E('noise'+uidx) != null) {
 			elem.setInnerHTML(E('noise'+uidx), wlnoise[uidx]);
 			setNoiseBar(uidx, wlnoise[uidx]);
 		}
 	}
-/* TOMATO64-REMOVE-END */
 }
 
 /* DISCOVERY-BEGIN */
@@ -73,12 +71,7 @@ var dg = new TomatoGrid();
 
 dg.setup = function() {
 	this.init('dev-grid', 'sort');
-/* TOMATO64-REMOVE-BEGIN */
 	this.headerSet(['Interface','Media','MAC Address','IP Address','Hostname','RSSI','Quality &nbsp;','TX/RX<br>Rate','Lease&nbsp;']);
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-	this.headerSet(['Interface','Media','MAC Address','IP Address','Hostname','Lease&nbsp;']);
-/* TOMATO64-END */
 	this.populate();
 	this.sort(3);
 }
@@ -318,7 +311,6 @@ dg.populate = function() {
 	for (i = list.length - 1; i >= 0; --i) {
 		e = list[i];
 
-/* TOMATO64-REMOVE-BEGIN */
 		var ifidx = wl_uidx(e.unit);
 		if ((e.rssi !== '') && (ifidx >= 0) && (wlnoise[ifidx] < 0)) {
 			if (e.rssi >= -50)
@@ -332,7 +324,6 @@ dg.populate = function() {
 		}
 		else
 			e.qual = -1;
-/* TOMATO64-REMOVE-END */
 
 		/* fix problem with arplist */
 		if (e.bridge == '' && e.mode != 'wds') {
@@ -449,7 +440,12 @@ dg.populate = function() {
 
 		a = '';
 		if (e.freq != '') /* WL */
+/* TOMATO64-REMOVE-BEGIN */
 			a = e.ifstatus+' '+(e.ifname.indexOf('.') == -1 ? e.ifname+' (wl'+e.unit+')' : '('+e.ifname+')')+c;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			a = e.lan+e.wan+'('+e.ifname+')'+c;
+/* TOMATO64-END */
 		else if (e.ifname != '' && found_last == 0)
 			a = e.lan+e.wan+'('+e.ifname+')'+c;
 		else
@@ -490,7 +486,9 @@ dg.populate = function() {
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 		if ((show_wan_entries == 'enabled') || (!a.includes("WAN"))) {
-			this.insert(-1, e, [ a, '<div id="media_'+i+'">'+f+'<\/div>', b, (e.mode == 'wds' ? '' : e.ip), e.name, e.lease], false);
+			this.insert(-1, e, [ a, '<div id="media_'+i+'">'+f+'<\/div>', b, (e.mode == 'wds' ? '' : e.ip), e.name, (e.rssi < 0 ? e.rssi+' <small>dBm<\/small>' : ''),
+			                     (e.qual < 0 ? '' : '<small>'+e.qual+'<\/small> <img src="bar'+MIN(MAX(Math.floor(e.qual / 12), 1), 6)+'.gif" id="bar_'+i+'" alt="">'),
+			                     e.txrx, e.lease], false);
 		}
 /* TOMATO64-END */
 	}
@@ -735,13 +733,11 @@ function setNoiseBar(i, lvl) {
 }
 
 function earlyInit() {
-/* TOMATO64-REMOVE-BEGIN */
 	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 		if (wl_sunit(uidx) < 0 && E('noise'+uidx) != null) {
 			setNoiseBar(uidx, wlnoise[uidx]);
 		}
 	}
-/* TOMATO64-REMOVE-END */
 
 	dg.setup();
 }
@@ -780,13 +776,16 @@ function init() {
 
 	<script>
 		var f = [];
-/* TOMATO64-REMOVE-BEGIN */
 		for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 			var u = wl_unit(uidx);
+/* TOMATO64-REMOVE-BEGIN */
 			if (nvram['wl'+u+'_radio'] == 1 && wl_sunit(uidx) < 0)
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			if (wl_sunit(uidx) < 0)
+/* TOMATO64-END */
 					f.push( { title: '<span id="nf'+u+'" title="Noise Floor"><b>Noise<\/b> '+wl_display_ifname(uidx)+'&nbsp;<b>:<\/b><\/span>', prefix: '<span id="noiseimg_'+uidx+'"><\/span>&nbsp;<span id="noise'+uidx+'">', custom: wlnoise[uidx], suffix: '<\/span>&nbsp;<small>dBm<\/small>' } );
 		}
-/* TOMATO64-REMOVE-END */
 /* DISCOVERY-BEGIN */
 		f.push(
 			null,

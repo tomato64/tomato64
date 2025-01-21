@@ -579,6 +579,7 @@ ifeq ($(TCONFIG_TOMATO64),y)
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d" || true
 	sed -i $(INSTALLDIR)/www/vpn-wireguard.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
+	sed -i $(INSTALLDIR)/www/wireless.jsx -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 
 	sed -i 's,___HASH___,${HASH},g' $(INSTALLDIR)/www/about.asp
 	sed -i 's,___HASH_SHORT___,${HASH_SHORT},g' $(INSTALLDIR)/www/about.asp
@@ -596,6 +597,7 @@ else
 	sed -i $(INSTALLDIR)/www/advanced-ctnf.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-dhcpdns.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-mac.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-routing.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-tor.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d" || true
 	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
@@ -616,6 +618,7 @@ else
 	sed -i $(INSTALLDIR)/www/vpn-wireguard.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/qos-classify.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/qos-ctrate.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+	sed -i $(INSTALLDIR)/www/wireless.jsx -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 endif
 
 ifeq ($(PLATFORM_X86_64),y)

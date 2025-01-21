@@ -44,7 +44,12 @@ function wl_ifidxx(ifname) {
 }
 
 function wl_display_ifname(uidx) {
+/* TOMATO64-REMOVE-BEGIN */
 	return wl_ifaces[uidx][0]+(wl_sunit(uidx) < 0 ?
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	return wl_ifaces[uidx][0]+(wl_sunit(uidx) == 0 ?
+/* TOMATO64-END */
 	       ' (wl'+wl_fface(uidx)+')' : '')+((wl_bands[uidx].length == 1) ?
 	       ((wl_bands[uidx][0] == '1') ? ' / 5 GHz' : ' / 2.4 GHz') : ((nvram['wl'+wl_unit(uidx)+'_nband'] == 1) ?
 	       ' / 5 GHz' : ' / 2.4 GHz'));

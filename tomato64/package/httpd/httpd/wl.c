@@ -996,18 +996,37 @@ static int get_wlnoise(int client, int unit)
 	return v;
 }
 
+#ifndef TOMATO64
 static int print_wlnoise(int idx, int unit, int subunit, void *param)
 {
 	web_printf("%c%d", (idx == 0) ? ' ' : ',', get_wlnoise(wl_client(unit, 0), unit));
 
 	return 0;
 }
+#else
+void print_wlnoise(void)
+{
+       FILE *f;
+       char row[8];
+
+       const char cmd[] = "/usr/bin/wlnoise";
+
+       if ((f = popen(cmd, "r")) != NULL) {
+               while (fgets(row, sizeof(row), f)) {
+                       web_printf(row);
+               }
+               pclose(f);
+       }
+}
+#endif /* TOMATO64 */
 
 void asp_wlnoise(int argc, char **argv)
 {
 	web_puts("\nwlnoise = [");
 #ifndef TOMATO64
 	foreach_wif(0, NULL, print_wlnoise);
+#else
+	print_wlnoise();
 #endif /* TOMATO64 */
 	web_puts(" ];\n");
 }
@@ -1033,6 +1052,7 @@ void asp_wlclient(int argc, char **argv)
 	web_puts(foreach_wif(1, NULL, not_wlclient) ? "0" : "1");
 }
 
+#ifndef TOMATO64
 static int print_wlstats(int idx, int unit, int subunit, void *param)
 {
 	int phytype;
@@ -1135,13 +1155,33 @@ static int print_wlstats(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
+#else
+void print_wlstats(void)
+{
+       FILE *f;
+       char row[128];
+
+       const char cmd[] = "/usr/bin/wlstats";
+
+       if ((f = popen(cmd, "r")) != NULL) {
+               while (fgets(row, sizeof(row), f)) {
+                       web_printf(row);
+               }
+               pclose(f);
+       }
+}
+#endif /* TOMATO64 */
 
 void asp_wlstats(int argc, char **argv)
 {
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwlstats = [");
+#ifndef TOMATO64
 	foreach_wif(include_vifs, NULL, print_wlstats);
+#else
+	print_wlstats();
+#endif /* TOMATO64 */
 	web_puts("];\n");
 }
 
@@ -1360,6 +1400,7 @@ void asp_wlchannels(int argc, char **argv)
 	web_puts("];\n");
 }
 
+#ifndef TOMATO64
 static int print_wlbands(int idx, int unit, int subunit, void *param)
 {
 	char *phytype, *phylist, *ifname;
@@ -1423,13 +1464,33 @@ static int print_wlbands(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
+#else
+void print_wlbands(void)
+{
+       FILE *f;
+       char row[16];
+
+       const char cmd[] = "/usr/bin/wlbands";
+
+       if ((f = popen(cmd, "r")) != NULL) {
+               while (fgets(row, sizeof(row), f)) {
+                       web_printf(row);
+               }
+               pclose(f);
+       }
+}
+#endif /* TOMATO64 */
 
 void asp_wlbands(int argc, char **argv)
 {
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwl_bands = [");
+#ifndef TOMATO64
 	foreach_wif(include_vifs, NULL, print_wlbands);
+#else
+	print_wlbands();
+#endif /* TOMATO64 */
 	web_puts(" ];\n");
 }
 
@@ -1489,12 +1550,31 @@ static int print_wif(int idx, int unit, int subunit, void *param)
 	return 0;
 }
 
+void get_wlifaces(void)
+{
+       FILE *f;
+       char row[128];
+
+       const char cmd[] = "/usr/bin/wlifaces";
+
+       if ((f = popen(cmd, "r")) != NULL) {
+               while (fgets(row, sizeof(row), f)) {
+                       web_printf(row);
+               }
+               pclose(f);
+       }
+}
+
 void asp_wlifaces(int argc, char **argv)
 {
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwl_ifaces = [");
+#ifndef TOMATO64
 	foreach_wif(include_vifs, NULL, print_wif);
+#else
+	get_wlifaces();
+#endif /* TOMATO64 */
 	web_puts("];\n");
 }
 

@@ -27,6 +27,11 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/start_qemu_guest		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/start_ttyd			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_jumbo_frame		$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlbands			$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wldev			$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlnoise			$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlifaces			$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlstats			$(TARGET_DIR)/usr/bin
 endef
 
 $(eval $(generic-package))

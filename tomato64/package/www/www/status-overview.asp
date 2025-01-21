@@ -46,6 +46,11 @@ var updateWWANTimers = [], customStatusTimers = [], show_dhcpc = [], show_codi =
 <script src="status-data.jsx?_http_id=<% nv(http_id); %>"></script>
 
 <script>
+/* TOMATO64-BEGIN */
+/* Temporary workaround */
+wl_ifaces=[];
+wlstats=[];
+/* TOMATO64-END */
 var cprefix = 'status_overview';
 var u;
 nphy = features('11n');

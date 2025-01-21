@@ -1,0 +1,83 @@
+#!/bin/sh
+
+#set -e
+#set -x
+
+. /usr/sbin/nvram_ops
+. /usr/share/libubox/jshn.sh
+
+json_load_file /etc/board.json
+
+phycount=0
+
+count_phy() {
+        phycount=$((phycount+1))
+}
+
+print_ifname() {
+
+	if [ ! -z "$(NG wifi_phy${1}iface${2}_ifname)" ];
+	then
+		echo "$(NG wifi_phy${1}iface${2}_ifname)"
+	else
+		echo "phy${1}-ap${2}"
+	fi
+}
+
+first_entry=0
+
+json_for_each_item "count_phy" "wlan"
+
+# For each wireless device
+for i in $(seq 0 1 $(($phycount - 1)));
+do
+	# For each device interface
+	for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)));
+	do
+		# If interface is enabled
+		if [ $(NG "wifi_phy${i}iface${j}_enable") -eq 1 ];
+		then
+
+			# If interface is an Access Point
+			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "ap" ];
+			then
+				clients=$(iw $(print_ifname ${i} ${j}) station dump | grep 'Station\|signal:\|tx bitrate:\|rx bitrate:\|connected time:' | sed '/ack/d' | sed 's/tx\|rx\|connected//g' | awk ' { print $2 }')
+
+				if [ ! -z "${clients}" ]; then
+					echo "$clients" > /tmp/wldev
+
+					a=0
+					client=""
+					while IFS= read -r line; do
+						if [ $a == 0 ]; then
+							if [ $first_entry -eq 1 ]; then
+								client="${client},"
+							fi
+							client="${client}['$(print_ifname ${i} ${j})',"
+							mac=$(echo $line | tr '[:lower:]' '[:upper:]')
+							client="${client}'${mac}',"
+						fi
+						if [[ $a == 1 || $a == 4 ]]; then
+							client="${client}${line},"
+						fi
+						if [[ $a == 2 || $a == 3 ]]; then
+							int=${line%.*}
+							value="$(( int*1000 ))"
+							client="${client}${value},"
+						fi
+
+						a=$((a+1))
+
+						if [ $a == 5 ]; then
+							client="${client}${i}]"
+							echo $client
+							a=0
+							client=""
+						fi
+						first_entry=1
+					done < /tmp/wldev
+				fi
+			fi
+		fi
+	done
+done

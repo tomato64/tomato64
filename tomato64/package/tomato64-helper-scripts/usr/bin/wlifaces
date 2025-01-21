@@ -1,0 +1,62 @@
+#!/bin/sh
+
+. /usr/sbin/nvram_ops
+. /usr/share/libubox/jshn.sh
+
+json_load_file /etc/board.json
+
+phycount=0
+
+count_phy() {
+        phycount=$((phycount+1))
+}
+
+print_ifname() {
+
+	if [ ! -z "$(NG wifi_phy${1}iface${2}_ifname)" ];
+	then
+		echo "$(NG wifi_phy${1}iface${2}_ifname)"
+	else
+		echo "phy${1}-ap${2}"
+	fi
+}
+
+first_entry=0
+
+json_for_each_item "count_phy" "wlan"
+
+# For each wireless device
+for i in $(seq 0 1 $(($phycount - 1)));
+do
+	# For each device interface
+	for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)));
+	do
+		# If interface is enabled
+		if [ $(NG "wifi_phy${i}iface${j}_enable") -eq 1 ];
+		then
+
+			# If interface is an Access Point
+			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "ap" ];
+			then
+
+				ifname=$(print_ifname ${i} ${j})
+				if [ -f /sys/class/net/$ifname/address ];
+				then
+					if [ $first_entry -eq 1 ]; then
+						echo -n ","
+					fi
+
+					if [ ${j} -eq 0 ]; then
+						subunit=-1
+					else
+						subunit=${j}
+					fi
+
+					echo "['$ifname','${i}',${i},${subunit},'$(NG wifi_phy${i}iface${j}_essid)','$(cat /sys/class/net/$ifname/address)',1,16,'ap','$(cat /sys/class/net/$ifname/address)']"
+				fi
+
+				first_entry=1
+			fi
+		fi
+	done
+done
