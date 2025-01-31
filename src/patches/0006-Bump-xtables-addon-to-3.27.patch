@@ -1,0 +1,41 @@
+From 9108213ce45f46a69c240e86272056ac849c95a1 Mon Sep 17 00:00:00 2001
+From: Lance Fredrickson <lancethepants@gmail.com>
+Date: Thu, 30 Jan 2025 17:06:28 -0700
+Subject: [PATCH] Bump xtables-addon to 3.27
+
+---
+ package/xtables-addons/xtables-addons.hash | 2 +-
+ package/xtables-addons/xtables-addons.mk   | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/package/xtables-addons/xtables-addons.hash b/package/xtables-addons/xtables-addons.hash
+index 7bdbbb8578..8eb91574ef 100644
+--- a/package/xtables-addons/xtables-addons.hash
++++ b/package/xtables-addons/xtables-addons.hash
+@@ -1,3 +1,3 @@
+ # Locally calculated
+-sha256  3e823f71720519ced31c4c7d2bfaf7120d9c01c59a0843dfcbe93c95c64d81c1  xtables-addons-3.24.tar.xz
++sha256  e47ea8febe73c12ecab09d2c93578c5dc72d76f17fdf673397758f519cce6828  xtables-addons-3.27.tar.xz
+ sha256  ab15fd526bd8dd18a9e77ebc139656bf4d33e97fc7238cd11bf60e2b9b8666c6  LICENSE
+diff --git a/package/xtables-addons/xtables-addons.mk b/package/xtables-addons/xtables-addons.mk
+index efd8bd98ce..1accba44f4 100644
+--- a/package/xtables-addons/xtables-addons.mk
++++ b/package/xtables-addons/xtables-addons.mk
+@@ -4,12 +4,13 @@
+ #
+ ################################################################################
+ 
+-XTABLES_ADDONS_VERSION = 3.24
++XTABLES_ADDONS_VERSION = 3.27
+ XTABLES_ADDONS_SOURCE = xtables-addons-$(XTABLES_ADDONS_VERSION).tar.xz
+ XTABLES_ADDONS_SITE = https://inai.de/files/xtables-addons
+ XTABLES_ADDONS_DEPENDENCIES = iptables linux host-pkgconf
+ XTABLES_ADDONS_LICENSE = GPL-2.0+
+ XTABLES_ADDONS_LICENSE_FILES = LICENSE
++XTABLES_ADDONS_AUTORECONF = YES
+ 
+ XTABLES_ADDONS_CONF_OPTS = \
+ 	--with-kbuild="$(LINUX_DIR)" \
+-- 
+2.39.5
+
