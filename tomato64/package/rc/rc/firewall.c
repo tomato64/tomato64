@@ -722,6 +722,29 @@ static void ipt_webmon(void)
 #endif
 }
 
+#ifdef TOMATO64
+static void raw_table(void)
+{
+	ipt_write("*raw\n"
+	          ":PREROUTING ACCEPT [0:0]\n"
+	          ":OUTPUT ACCEPT [0:0]\n");
+
+	if (!nvram_match("nf_ftp", "0"))
+		ipt_write("-A PREROUTING -p tcp -m tcp --dport 21 -j CT --helper ftp\n");
+
+	if (!nvram_match("nf_pptp", "0"))
+		ipt_write("-A PREROUTING -p tcp -m tcp --dport 1723 -j CT --helper pptp\n");
+
+	if (!nvram_match("nf_sip", "0"))
+		ipt_write("-A PREROUTING -p udp -m udp --dport 5060 -j CT --helper sip\n");
+
+	if (!nvram_match("nf_rtsp", "0"))
+		ipt_write("-A PREROUTING -p tcp -m tcp --dport 554 -j CT --helper rtsp\n");
+
+	ipt_write("COMMIT\n");
+}
+#endif /* TOMATO64 */
+
 static void mangle_table(void)
 {
 	int ttl;
@@ -2195,6 +2218,9 @@ int start_firewall(void)
 	modprobe("xt_IMQ");
 #endif
 
+#ifdef TOMATO64
+	raw_table();
+#endif /* TOMATO64 */
 	mangle_table();
 	nat_table();
 	filter_table();

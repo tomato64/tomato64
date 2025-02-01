@@ -160,7 +160,9 @@ function save() {
 	fom.nf_sip.value = fom._f_sip.checked ? 1 : 0;
 	fom.nf_rtsp.value = fom._f_rtsp.checked ? 1 : 0;
 	fom.nf_pptp.value = fom._f_pptp.checked ? 1 : 0;
+/* TOMATO64-REMOVE-BEGIN */
 	fom.nf_h323.value = fom._f_h323.checked ? 1 : 0;
+/* TOMATO64-REMOVE-END */
 	fom.nf_ftp.value = fom._f_ftp.checked ? 1 : 0;
 	fom.ipsec_pass.value = fom._f_ipsec_pass.value;
 
@@ -204,7 +206,9 @@ function save() {
 <input type="hidden" name="nf_ttl">
 <input type="hidden" name="nf_rtsp">
 <input type="hidden" name="nf_pptp">
+/* TOMATO64-REMOVE-BEGIN */
 <input type="hidden" name="nf_h323">
+/* TOMATO64-REMOVE-END */
 <input type="hidden" name="nf_ftp">
 <input type="hidden" name="nf_sip">
 <input type="hidden" name="fw_nat_tuning">
@@ -290,7 +294,9 @@ function save() {
 		createFieldTable('', [
 			{ title: 'FTP', name: 'f_ftp',type: 'checkbox', value: nvram.nf_ftp != '0' },
 			{ title: 'GRE / PPTP', name: 'f_pptp',type: 'checkbox', value: nvram.nf_pptp != '0' },
+/* TOMATO64-REMOVE-BEGIN */
 			{ title: 'H.323', name: 'f_h323',type: 'checkbox', value: nvram.nf_h323 != '0' },
+/* TOMATO64-REMOVE-END */
 			{ title: 'SIP', name: 'f_sip',type: 'checkbox', value: nvram.nf_sip != '0' },
 			{ title: 'RTSP', name: 'f_rtsp',type: 'checkbox', value: nvram.nf_rtsp != '0' },
 			{ title: 'Enable IPSec Passthrough', name: 'f_ipsec_pass',type: 'select', options: [[0,'Disabled'],[1,'IPv4 & IPv6'],[2,'IPv6 only'],[3,'IPv4 only']], value: nvram.ipsec_pass }
