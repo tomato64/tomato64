@@ -1,0 +1,27 @@
+From 11b5013ed10ddb7897d75c9dd94b0e0203f4e8cd Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Mon, 3 Feb 2025 08:35:41 -0700
+Subject: [PATCH] Fix for kernels 6.8 and newer
+
+---
+ extensions/rtsp/nf_conntrack_rtsp.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/extensions/rtsp/nf_conntrack_rtsp.c b/extensions/rtsp/nf_conntrack_rtsp.c
+index 75dd2c2..6bd92bc 100644
+--- a/extensions/rtsp/nf_conntrack_rtsp.c
++++ b/extensions/rtsp/nf_conntrack_rtsp.c
+@@ -734,7 +734,9 @@ init(void)
+ 			sprintf(tmpname, "rtsp-%d", i);
+ 		}
+ 
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,8,0)
++		strscpy(hlpr->name, tmpname, sizeof(hlpr->name));
++#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,0)
+ 		strlcpy(hlpr->name, tmpname, sizeof(hlpr->name));
+ #else
+ 		hlpr->name = tmpname;
+-- 
+2.39.5
+
