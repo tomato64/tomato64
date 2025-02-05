@@ -418,7 +418,7 @@ void stop_samba(void)
 	unlink("/var/log/log.nmbd");
 	eval("rm", "-rf", "/var/nmbd");
 	eval("rm", "-rf", "/var/log/cores");
-	eval("rm", "-rf", samba_dir);
+	// eval("rm", "-rf", samba_dir); /* see: https://bitbucket.org/pedro311/freshtomato-arm/issues/349/samba-file-cleanup-prevents-adding */
 	eval("rm", "-rf", samba_var_dir);
 #ifdef TOMATO64
 	eval("rm", "-rf", samba_cache_dir);
