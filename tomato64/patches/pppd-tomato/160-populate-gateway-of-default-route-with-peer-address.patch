@@ -1,6 +1,6 @@
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -2236,6 +2236,9 @@
+@@ -2232,6 +2232,9 @@
      memset (&rt, 0, sizeof (rt));
      SET_SA_FAMILY (rt.rt_dst, AF_INET);
  
@@ -10,7 +10,7 @@
      rt.rt_dev = ifname;
      rt.rt_metric = dfl_route_metric + 1; /* +1 for binary compatibility */
  
-@@ -2244,7 +2247,7 @@
+@@ -2240,7 +2243,7 @@
  	SIN_ADDR(rt.rt_genmask) = 0L;
      }
  

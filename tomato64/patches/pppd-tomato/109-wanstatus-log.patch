@@ -59,7 +59,7 @@
  	 * This action is not strictly according to the FSM in RFC1548,
 --- pppd/pppd/utils.c
 +++ pppd/pppd/utils.c
-@@ -1056,3 +1056,27 @@
+@@ -1076,3 +1076,27 @@
      }
  }
  

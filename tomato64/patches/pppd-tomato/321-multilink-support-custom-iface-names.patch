@@ -8,7 +8,7 @@ Signed-off-by: George Kashperko <george@znau.edu.ua>
  2 files changed, 53 insertions(+), 14 deletions(-)
 --- pppd/pppd/multilink.c
 +++ pppd/pppd/multilink.c
-@@ -40,6 +40,7 @@
+@@ -36,6 +36,7 @@
  #include <signal.h>
  #include <netinet/in.h>
  #include <unistd.h>
@@ -16,7 +16,7 @@ Signed-off-by: George Kashperko <george@znau.edu.ua>
  
  #include "pppd-private.h"
  #include "fsm.h"
-@@ -62,7 +63,8 @@
+@@ -58,7 +59,8 @@
  
  static int get_default_epdisc(struct epdisc *);
  static int parse_num(char *str, const char *key, int *valp);
@@ -26,7 +26,7 @@ Signed-off-by: George Kashperko <george@znau.edu.ua>
  
  #define set_ip_epdisc(ep, addr) do {	\
  	ep->length = 4;			\
-@@ -215,35 +217,38 @@
+@@ -211,35 +213,38 @@
  	key.dptr = bundle_id;
  	key.dsize = p - bundle_id;
  	pid = tdb_fetch(pppdb, key);
@@ -73,7 +73,7 @@ Signed-off-by: George Kashperko <george@znau.edu.ua>
  	}
  
  	/* we have to make a new bundle */
-@@ -423,20 +428,39 @@
+@@ -419,20 +424,39 @@
  	return 0;
  }
  
@@ -119,7 +119,7 @@ Signed-off-by: George Kashperko <george@znau.edu.ua>
  			&& memcmp(vd.dptr, key.dptr, vd.dsize) == 0;
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -981,6 +981,16 @@
+@@ -977,6 +977,16 @@
  	add_fd(ppp_dev_fd);
  }
  
@@ -136,7 +136,7 @@ Signed-off-by: George Kashperko <george@znau.edu.ua>
  /*
   * make_new_bundle - create a new PPP unit (i.e. a bundle)
   * and connect our channel to it.  This should only get called
-@@ -999,6 +1009,8 @@
+@@ -995,6 +1005,8 @@
  
  	/* set the mrru and flags */
  	cfg_bundle(mrru, mtru, rssn, tssn);

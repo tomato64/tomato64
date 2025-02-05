@@ -30,7 +30,7 @@
  /*
 --- pppd/pppd/pppd-private.h
 +++ pppd/pppd/pppd-private.h
-@@ -194,6 +194,7 @@
+@@ -196,6 +196,7 @@
  extern int	connect_delay;	/* Time to delay after connect script */
  extern int	max_data_rate;	/* max bytes/sec through charshunt */
  extern int	req_unit;	/* interface unit number to use */
@@ -40,7 +40,7 @@
  extern char	path_net_down[]; /* pathname of net-down script */
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -929,18 +929,15 @@
+@@ -925,18 +925,15 @@
  		return -1;
  	}
  

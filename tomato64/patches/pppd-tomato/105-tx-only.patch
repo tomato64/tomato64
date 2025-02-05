@@ -1,6 +1,6 @@
 --- pppd/pppd/auth.c
 +++ pppd/pppd/auth.c
-@@ -1307,6 +1307,10 @@
+@@ -1302,6 +1302,10 @@
      if (idle_time_hook != 0) {
  	tlim = idle_time_hook(&idle);
      } else {
@@ -34,7 +34,7 @@
  
 --- pppd/pppd/pppd-private.h
 +++ pppd/pppd/pppd-private.h
-@@ -90,6 +90,7 @@
+@@ -92,6 +92,7 @@
   * Global variables.
   */
  

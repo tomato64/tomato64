@@ -6,9 +6,9 @@
 
 # The tarball provided at https://download.samba.org/pub/ppp/ does not
 # include the license files yet so we use the github tarball.
-PPPD_TOMATO_VERSION = 2.5.1
+PPPD_TOMATO_VERSION = 2.5.2
 PPPD_TOMATO_SOURCE = pppd-$(PPPD_TOMATO_VERSION).tar.gz
-PPPD_TOMATO_SITE = $(call github,ppp-project,ppp,ppp-$(PPPD_TOMATO_VERSION))
+PPPD_TOMATO_SITE = $(call github,ppp-project,ppp,v$(PPPD_TOMATO_VERSION))
 PPPD_TOMATO_LICENSE = LGPL-2.0+, LGPL, BSD-4-Clause, BSD-3-Clause, GPL-2.0+
 PPPD_TOMATO_LICENSE_FILES = LICENSE.BSD LICENSE.GPL-2
 PPPD_TOMATO_CPE_ID_VENDOR = point-to-point_protocol_project

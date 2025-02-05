@@ -1,6 +1,6 @@
 --- pppd/pppd/plugins/radius/config.c
 +++ pppd/pppd/plugins/radius/config.c
-@@ -381,31 +381,37 @@
+@@ -379,31 +379,37 @@
  	}
  #endif
  
@@ -40,7 +40,7 @@
  }
 --- pppd/pppd/plugins/radius/options.h
 +++ pppd/pppd/plugins/radius/options.h
-@@ -31,24 +31,21 @@
+@@ -29,24 +29,21 @@
  static SERVER acctserver = {0};
  static SERVER authserver = {0};
  

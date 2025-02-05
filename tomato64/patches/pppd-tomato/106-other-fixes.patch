@@ -78,7 +78,7 @@
  
 --- pppd/pppd/auth.c
 +++ pppd/pppd/auth.c
-@@ -652,6 +652,9 @@
+@@ -647,6 +647,9 @@
   */
  void start_link(int unit)
  {

@@ -1,6 +1,6 @@
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -231,7 +231,7 @@
+@@ -227,7 +227,7 @@
  static int restore_term        = 0;	/* 1 => we've munged the terminal */
  static struct termios inittermios;	/* Initial TTY termios */
  
@@ -9,7 +9,7 @@
  
  static char loop_name[20];
  static unsigned char inbuf[512]; /* buffer for chars read from loopback */
-@@ -250,8 +250,8 @@
+@@ -246,8 +246,8 @@
  static int	link_mtu;		/* mtu for the link (not bundle) */
  
  static struct utsname utsname;	/* for the kernel version */
@@ -19,7 +19,7 @@
  
  #define MAX_IFS		100
  
-@@ -1955,11 +1955,12 @@
+@@ -1951,11 +1951,12 @@
   *
   * path_to_procfs - find the path to the proc file system mount point
   */
@@ -34,7 +34,7 @@
      struct mntent *mntent;
      FILE *fp;
  
-@@ -1981,6 +1982,7 @@
+@@ -1977,6 +1978,7 @@
  	    fclose (fp);
  	}
      }
@@ -42,7 +42,7 @@
  
      strlcpy(proc_path + proc_path_len, tail,
  	    sizeof(proc_path) - proc_path_len);
-@@ -2880,15 +2882,19 @@
+@@ -2874,15 +2876,19 @@
      int    my_version, my_modification, my_patch;
      int osmaj, osmin, ospatch;
  
@@ -62,7 +62,7 @@
  
  	/* XXX should get from driver */
  	driver_version = 2;
-@@ -2948,6 +2954,7 @@
+@@ -2942,6 +2948,7 @@
  
      if (ok && ((ifr.ifr_hwaddr.sa_family & ~0xFF) != ARPHRD_PPP))
  	ok = 0;
@@ -70,7 +70,7 @@
  
  /*
   *  This is the PPP device. Validate the version of the driver at this
-@@ -3564,6 +3571,7 @@
+@@ -3558,6 +3565,7 @@
      }
  #endif /* TIOCGPTN */
  
@@ -78,7 +78,7 @@
      if (sfd < 0) {
  	/* the old way - scan through the pty name space */
  	for (i = 0; i < 64; ++i) {
-@@ -3588,6 +3596,7 @@
+@@ -3582,6 +3590,7 @@
  	    }
  	}
      }
@@ -105,7 +105,7 @@
  
 --- pppd/pppd/plugins/pppoe/plugin.c
 +++ pppd/pppd/plugins/pppoe/plugin.c
-@@ -57,9 +57,6 @@
+@@ -54,9 +54,6 @@
  
  char pppd_version[] = PPPD_VERSION;
  
@@ -115,7 +115,7 @@
  char *pppd_pppoe_service = NULL;
  static char *acName = NULL;
  static char *existingSession = NULL;
-@@ -421,10 +418,6 @@
+@@ -418,10 +415,6 @@
  void
  plugin_init(void)
  {

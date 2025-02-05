@@ -44,7 +44,7 @@
      if (in_phase(PHASE_INITIALIZE)) {
 +#ifdef NO_OPTSIZE
          fprintf(fp, "%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
-         fprintf(fp, "Copyright (C) 1999-2022 Paul Mackerras, and others. All rights reserved.\n\n");
+         fprintf(fp, "Copyright (C) 1999-2024 Paul Mackerras, and others. All rights reserved.\n\n");
  
 -
          fprintf(fp, "License BSD: The 3 clause BSD license <https://opensource.org/licenses/BSD-3-Clause>\n");
@@ -272,7 +272,7 @@
  	}
 --- pppd/pppd/utils.c
 +++ pppd/pppd/utils.c
-@@ -659,6 +659,7 @@
+@@ -655,6 +655,7 @@
  /*
   * fatal - log an error message and die horribly.
   */
@@ -280,7 +280,7 @@
  void
  fatal(const char *fmt, ...)
  {
-@@ -704,6 +705,7 @@
+@@ -700,6 +701,7 @@
      logit(LOG_WARNING, fmt, pvar);
      va_end(pvar);
  }
@@ -288,7 +288,7 @@
  
  /*
   * notice - log a notice-level message.
-@@ -736,6 +738,7 @@
+@@ -732,6 +734,7 @@
  /*
   * dbglog - log a debug message.
   */
@@ -296,7 +296,7 @@
  void
  dbglog(const char *fmt, ...)
  {
-@@ -746,6 +749,7 @@
+@@ -742,6 +745,7 @@
      logit(LOG_DEBUG, fmt, pvar);
      va_end(pvar);
  }
