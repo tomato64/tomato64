@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PHP_TOMATO_VERSION = 8.3.14
+PHP_TOMATO_VERSION = 8.3.16
 PHP_TOMATO_SITE = https://www.php.net/distributions
 PHP_TOMATO_SOURCE = php-$(PHP_TOMATO_VERSION).tar.xz
 PHP_TOMATO_INSTALL_STAGING = YES
@@ -378,6 +378,13 @@ HOST_PHP_TOMATO_DEPENDENCIES = \
 	host-openssl \
 	host-pcre2 \
 	host-pkgconf
+
+# PHP can't be AUTORECONFed the standard way unfortunately
+HOST_PHP_TOMATO_DEPENDENCIES += host-autoconf host-automake host-libtool
+define HOST_PHP_TOMATO_BUILDCONF
+	cd $(@D) ; $(HOST_MAKE_ENV) ./buildconf --force
+endef
+HOST_PHP_TOMATO_PRE_CONFIGURE_HOOKS += HOST_PHP_TOMATO_BUILDCONF
 
 $(eval $(autotools-package))
 $(eval $(host-autotools-package))
