@@ -97,7 +97,6 @@ static char services[][2][23] = { /* remember: the number in the third square br
 	{ "myexternalip.com",		"/raw"	},	/* txt */
 	{ "ip.tyk.nu",			"/"	},	/* txt */
 	{ "wgetip.com",			"/"	},	/* txt */
-	{ "ipecho.net",			"/plain"},	/* txt */
 	{ "ifconfig.me",		"/ip"	},	/* txt */
 	{ "icanhazip.com",		"/"	}	/* txt */
 };
