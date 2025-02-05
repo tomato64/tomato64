@@ -301,7 +301,13 @@ function save() {
 	fom.usb_uhci.value = nvram.usb_uhci == -1 ? -1 : (E('_f_uhci').checked ? 1 : 0);
 	fom.usb_ohci.value = nvram.usb_ohci == -1 ? -1 : (E('_f_ohci').checked ? 1 : 0);
 	fom.usb_usb2.value = E('_f_usb2').checked ? 1 : 0;
+
+	if (nvram.usb_usb3 == 0 && E('_f_usb3').checked) {
+		alert('Please note that enabling USB 3.0 may adversely affect your 2.4G wireless range');
+		nvram.usb_usb3 = 1; /* reset */
+	}
 	fom.usb_usb3.value = E('_f_usb3').checked ? 1 : 0;
+
 	fom.usb_storage.value = E('_f_storage').checked ? 1 : 0;
 	fom.usb_printer.value = E('_f_print').checked ? 1 : 0;
 	fom.usb_printer_bidirect.value = E('_f_bprint').checked ? 1 : 0;
