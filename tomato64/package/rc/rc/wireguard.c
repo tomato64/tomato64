@@ -6,7 +6,7 @@
  * For use with FreshTomato Firmware only.
  * No part of this file may be used without permission.
  *
- * Fixes/updates (C) 2023 - 2024 pedro
+ * Fixes/updates (C) 2023 - 2025 pedro
  *
  */
 
@@ -520,18 +520,6 @@ static int wg_set_peer_endpoint(char *iface, char *pubkey, char *endpoint, char 
 	return 0;
 }
 
-static int wg_route_peer(char *iface, char *route)
-{
-	if (eval("ip", "route", "add", route, "dev", iface)) {
-		logmsg(LOG_WARNING, "unable to add route of %s for wireguard interface %s!", route, iface);
-		return -1;
-	}
-	else
-		logmsg(LOG_DEBUG, "wireguard interface %s has had a route added to it for %s", iface, route);
-
-	return 0;
-}
-
 #ifdef KERNEL_WG_FIX
 static int wg_route_peer_default(char *iface, char *route, char *fwmark)
 {
@@ -540,16 +528,28 @@ static int wg_route_peer_default(char *iface, char *route, char *fwmark)
 		return -1;
 	}
 	else
-		logmsg(LOG_WARNING, "wireguard interface %s has had a default route added to table %s for %s", iface, fwmark, route);
+		logmsg(LOG_DEBUG, "wireguard interface %s has had a default route added to table %s for %s", iface, fwmark, route);
 
 	return 0;
 }
 #endif
 
+static int wg_route_peer(char *iface, char *route)
+{
+	if (eval("ip", "route", "add", route, "dev", iface)) {
+		logmsg(LOG_WARNING, "unable to add route of %s for wireguard interface %s! When using mask, check if the entry is correct (for the /24-31 mask the last IP octet must be 0, for the /9-16 mask the last two octets must be 0, etc.)", route, iface);
+		return -1;
+	}
+	else
+		logmsg(LOG_DEBUG, "wireguard interface %s has had a route added to it for %s", iface, route);
+
+	return 0;
+}
+
 static int wg_route_peer_custom(char *iface, char *route, char *table)
 {
 	if (eval("ip", "route", "add", route, "dev", iface, "table", table)) {
-		logmsg(LOG_WARNING, "unable to add route of %s to table %s for wireguard interface %s!", route, table, iface);
+		logmsg(LOG_WARNING, "unable to add route of %s to table %s for wireguard interface %s! When using mask, check if the entry is correct (for the /24-31 mask the last IP octet must be 0, for the /9-16 mask the last two octets must be 0, etc.)", route, table, iface);
 		return -1;
 	}
 	else
@@ -579,6 +579,9 @@ static int wg_route_peer_allowed_ips(char *iface, char *allowed_ips, char *fwmar
 	if (route_type > 0) {
 		aip = strdup(allowed_ips);
 		while ((b = strsep(&aip, ",")) != NULL) {
+			memset(buffer, 0, BUF_SIZE_32);
+			snprintf(buffer, BUF_SIZE_32, "%s", b);
+
 			if (vstrsep(b, "/", &ip, &nm) == 2) {
 				if (atoi(nm) == 0) {
 #ifdef KERNEL_WG_FIX
@@ -589,11 +592,11 @@ static int wg_route_peer_allowed_ips(char *iface, char *allowed_ips, char *fwmar
 				}
 			}
 			if (route_type == 1) { /* Auto */
-				if (wg_route_peer(iface, b))
+				if (wg_route_peer(iface, buffer))
 					result = -1;
 			}
 			else /* Custom Table */
-				if (wg_route_peer_custom(iface, b, table))
+				if (wg_route_peer_custom(iface, buffer, table))
 					result = -1;
 		}
 		if (aip)
