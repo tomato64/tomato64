@@ -2940,6 +2940,9 @@ function createFieldTable(flags, desc) {
 				case 'textarea':
 					buf2.push('<textarea'+name+common+placeholder+(f.wrap ? (' style="white-space:'+f.wrap+';overflow-wrap:normal;overflow-x:scroll"') : '')+'>'+escapeHTML(UT(f.value))+'</textarea>');
 				break;
+				case 'button':
+					buf2.push('<input type="button" name="'+name+'" value="'+f.value+'" onclick="'+f.action+'"'+(f.size ? (' style="width:'+f.size+'"') : '')+common+'>');
+				break;
 				default:
 					if (f.custom) buf2.push(f.custom);
 				break;
