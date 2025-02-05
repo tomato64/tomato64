@@ -37,6 +37,9 @@
 
 #define WG_INTERFACE_MAX	3
 
+/* uncomment to add default routing (also in router/wireguard-tools/src/wg-quick/posix.sh line 519 - 521) after kernel fix */
+#define KERNEL_WG_FIX
+
 
 char port[BUF_SIZE_8];
 
@@ -528,7 +531,8 @@ static int wg_route_peer(char *iface, char *route)
 
 	return 0;
 }
-/*
+
+#ifdef KERNEL_WG_FIX
 static int wg_route_peer_default(char *iface, char *route, char *fwmark)
 {
 	if (eval(WG_SCRIPTS_DIR"/route-default.sh", iface, route, fwmark)) {
@@ -540,7 +544,8 @@ static int wg_route_peer_default(char *iface, char *route, char *fwmark)
 
 	return 0;
 }
-*/
+#endif
+
 static int wg_route_peer_custom(char *iface, char *route, char *table)
 {
 	if (eval("ip", "route", "add", route, "dev", iface, "table", table)) {
@@ -571,13 +576,16 @@ static int wg_route_peer_allowed_ips(char *iface, char *allowed_ips, char *fwmar
 	}
 
 	/* check which routing type the user specified */
-	if (route_type >  0) {
+	if (route_type > 0) {
 		aip = strdup(allowed_ips);
 		while ((b = strsep(&aip, ",")) != NULL) {
 			if (vstrsep(b, "/", &ip, &nm) == 2) {
 				if (atoi(nm) == 0) {
-					/* uncomment to add default routing (also in router/wireguard-tools/src/wg-quick/posix.sh line 519 - 521) after kernel fix */
-					//wg_route_peer_default(iface, b, fwmark);
+#ifdef KERNEL_WG_FIX
+					wg_route_peer_default(iface, b, fwmark);
+#else
+					logmsg(LOG_WARNING, "unable to add default route of %s to table %s for wireguard interface %s - kernel has to be patched!", b, fwmark, iface);
+#endif
 				}
 			}
 			if (route_type == 1) { /* Auto */
