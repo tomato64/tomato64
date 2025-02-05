@@ -735,7 +735,6 @@ div[id$="peers-grid"] .co6,
 }
 
 #aft-grid .co3,
-#upnp-grid .co1,
 #wol-grid .co2 {
 	width: 15%;
 }
@@ -1192,15 +1191,6 @@ div[id$="_ccd"] .co6 {
 	width: 81%;
 }
 
-#upnp-grid .co2,
-#upnp-grid .co3 {
-	width: 12%;
-}
-
-#upnp-grid .co5 {
-	width: 53%;
-}
-
 #tg-grid .co1,
 div[id$="_ccd"] .co1,
 div[id$="_users"] .co1 {
@@ -1310,8 +1300,7 @@ div[id$="peers-grid"] .co2,
 	text-align: center;
 }
 
-#pbr-grid .co2,
-#upnp-grid .co4 {
+#pbr-grid .co2 {
 	width: 8%;
 }
 
@@ -1344,6 +1333,28 @@ div[id$="peers-grid"] .co2,
 #adblock-grid .co1 {
 	width: 5%;
 	text-align: center;
+}
+
+#upnp-grid .co1 {
+	width: 33%;
+}
+
+#upnp-grid .co2 {
+	width: 10%;
+}
+
+#upnp-grid .co3,
+#upnp-grid .co4 {
+	width: 8%;
+}
+
+#upnp-grid .co5 {
+	width: 11%;
+	text-align: right;
+}
+
+#upnp-grid .co6 {
+	width: 30%;
 }
 
 #adblock-grid .co2 {

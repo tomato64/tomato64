@@ -13,12 +13,14 @@ define MINIUPNPD_CONFIGURE_CMDS
 	cd $(MINIUPNPD_DIR) && \
 	$(TARGET_CONFIGURE_OPTS)  \
 	./configure \
+	--igd2 \
 	--leasefile \
 	--vendorcfg \
 	--portinuse \
+	--disable-pppconn \
 	--firewall=iptables \
-	$(if $(TCONFIG_IPV6),--ipv6 --igd2,) \
-	--iptablespath=$(IPTABLES_DIR)
+	--iptablespath=$(IPTABLES_DIR) \
+	--ipv6
 endef
 
 define MINIUPNPD_BUILD_CMDS

@@ -53,7 +53,7 @@ function upnpNvramAdd() {
 	if ((sb = E('save-button')) != null) sb.disabled = 1;
 	if ((cb = E('cancel-button')) != null) cb.disabled = 1;
 
-	if (!confirm("Add UPnP IGD & PCP/NAT-PMP autonomous port forwarding service to nvram?"))
+	if (!confirm("Add UPnP IGD & PCP/NAT-PMP autonomous port forwarding service to NVRAM?"))
 		return;
 
 	if (xob)
@@ -137,7 +137,7 @@ function submitDelete(proto, eport) {
 }
 
 function deleteData(data) {
-	if (!confirm('Delete port forward '+data[2]+'/'+data[3]+' -> '+data[0]+':'+data[1]+'?'))
+	if (!confirm('Delete port forward for '+data[0]+':'+data[1]+'/'+data[3]+' ('+data[5]+')?'))
 		return;
 
 	submitDelete(data[3], data[2]);
@@ -150,11 +150,17 @@ function deleteAll() {
 	submitDelete('*', '0');
 }
 
+function padnum(num, length) {
+	num = num.toString();
+	while (num.length < length) num = "0" + num;
+	return num;
+}
+
 var ug = new TomatoGrid();
 
 ug.setup = function() {
 	this.init('upnp-grid', 'sort delete');
-	this.headerSet(['Internal Address', 'Internal Port', 'External Port', 'Protocol', 'Description']);
+	this.headerSet(['Client Address', 'Client Port', 'Ext Port', 'Protocol', 'Expires', 'Description']);
 	ug.populate();
 	this.sort(0);
 }
@@ -169,13 +175,27 @@ ug.populate = function() {
 			if (r == null)
 				continue;
 
-			row = this.insertData(-1, [r[3], r[4], r[2], r[1], r[5]]);
+			var expires_sec, hour, minute, second, expires_str = '';
+			expires_sec = (new Date(r[6] * 1000) - new Date().getTime()) / 1000;
+			hour = Math.floor(expires_sec / 3600);
+			minute = Math.floor(expires_sec % 3600 / 60);
+			second = Math.floor(expires_sec % 60);
+			if (hour > 0) {
+				expires_str += hour + 'h ';
+				expires_str += padnum(minute, 2) + 'm ';
+				expires_str += padnum(second, 2) + 's';
+			} else if (minute > 0) {
+				expires_str += minute + 'm ';
+				expires_str += padnum(second, 2) + 's';
+			} else if (expires_sec > 0) expires_str += second + 's';
+
+			row = this.insertData(-1, [r[3], r[4], r[2], r[1], expires_str, r[5]]);
 
 			if (!r[0]) {
-				for (j = 0; j < 5; ++j)
+				for (j = 0; j < 6; ++j)
 					elem.addClass(row.cells[j], 'disabled');
 			}
-			for (j = 0; j < 5; ++j)
+			for (j = 0; j < 6; ++j)
 				row.cells[j].title = 'Delete';
 		}
 	}
@@ -193,7 +213,7 @@ ug.onClick = function(cell) {
 function verifyFields(focused, quiet) {
 	var enable = (E('_f_enable_upnp').checked || E('_f_enable_pcp_pmp').checked);
 
-	E('_f_upnp_secure').disabled = !enable;
+	E('_f_upnp_allow_third_party').disabled = !enable;
 	E('_upnp_custom').disabled = !enable;
 
 	for (var i = 0 ; i <= MAX_BRIDGE_ID ; i++) {
@@ -257,7 +277,7 @@ function save() {
 	if (fom.f_enable_pcp_pmp.checked)
 		fom.upnp_enable.value |= 2;
 
-	fom.upnp_secure.value = fom._f_upnp_secure.checked ? 0 : 1;
+	fom.upnp_secure.value = fom._f_upnp_allow_third_party.checked ? 0 : 1;
 
 	fom.upnp_lan.value = fom._f_upnp_lan.checked ? 1 : 0;
 	fom.upnp_lan1.value = fom._f_upnp_lan1.checked ? 1 : 0;
@@ -350,7 +370,7 @@ function init() {
 				{ title: 'LAN6', indent: 2, name: 'f_upnp_lan6', type: 'checkbox', value: (nvram.upnp_lan6 == 1) },
 				{ title: 'LAN7', indent: 2, name: 'f_upnp_lan7', type: 'checkbox', value: (nvram.upnp_lan7 == 1) },
 /* TOMATO64-END */
-			{ title: 'Allow third-party forwarding', name: 'f_upnp_secure', type: 'checkbox', suffix: ' <small>Allow adding port forwards for non-requesting IP addresses<\/small>', value: (nvram.upnp_secure == 0) },
+			{ title: 'Allow third-party forwarding', name: 'f_upnp_allow_third_party', type: 'checkbox', suffix: ' <small>Allow adding port forwards for non-requesting IP addresses<\/small>', value: (nvram.upnp_secure == 0) },
 			{ title: 'Custom Configuration', name: 'upnp_custom', type: 'textarea', value: nvram.upnp_custom }
 		]);
 	</script>
