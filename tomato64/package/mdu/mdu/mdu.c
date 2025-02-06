@@ -482,11 +482,12 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url)
 		sleep(2);
 	}
 
-	if ((r == CURLE_OK) && !curl_easy_getinfo(curl_handle, CURLINFO_PRIMARY_IP, &ip) && ip)
+	if (((r == CURLE_OK) || (r == CURLE_RECV_ERROR)) && !curl_easy_getinfo(curl_handle, CURLINFO_PRIMARY_IP, &ip) && ip) /* CURLE_RECV_ERROR needed for clouflare */
 		ok = 1;
 	else {
 		memset(curl_err_str, 0, sizeof(curl_err_str));
 		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (strlen(errbuf) ? errbuf : curl_easy_strerror(r)));
+		logmsg(LOG_DEBUG, "*** %s: error - (%s)", __FUNCTION__, curl_err_str);
 	}
 
 	curl_cleanup();
@@ -599,12 +600,13 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	curl_slist_free_all(headers);
 	curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &code);
 
-	if (r != CURLE_OK) {
+	if ((r == CURLE_OK) || (r == CURLE_RECV_ERROR)) /* CURLE_RECV_ERROR needed for clouflare */
+		*body = blob;
+	else {
 		memset(curl_err_str, 0, sizeof(curl_err_str));
 		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (strlen(errbuf) ? errbuf : curl_easy_strerror(r)));
+		logmsg(LOG_DEBUG, "*** %s: error - (%s)", __FUNCTION__, curl_err_str);
 	}
-	else
-		*body = blob;
 
 	fclose(curl_wbuf);
 	if (curl_rbuf)
