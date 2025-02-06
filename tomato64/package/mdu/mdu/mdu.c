@@ -33,7 +33,7 @@
  #include "mssl.h"
 #endif
 
-#define VERSION			"2.1"
+#define VERSION			"2.2"
 #define AGENT			"Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/109.0"
 #define MAX_OPTION_LENGTH	256
 #define BLOB_SIZE		(4 * 1024)
@@ -1560,17 +1560,34 @@ zone_id can be retrieved via
 GET https://api.cloudflare.com/client/v4/zones?name=example.com&status=active
 but this is unimplemented here.
 */
+static char *remove_spaces(const char *body)
+{
+	int length = 0, j = 0;
+	char *copy;
+
+	/* first, count how many non-space characters there are */
+	for (int i = 0; body[i] != '\0'; i++) {
+		if (body[i] != ' ')
+			length++;
+	}
+
+	/* allocate memory for the new string (plus null terminator) */
+	copy = (char *)malloc(length + 1);
+	if (!copy)
+		error("memory allocation failed");
+
+	/* copy non-space characters to the new string */
+	for (int i = 0; body[i] != '\0'; i++) {
+		if (body[i] != ' ')
+			copy[j++] = body[i];
+	}
+	copy[j] = '\0'; /* null-terminate the new string */
+
+	return copy;
+}
+
 static int cloudflare_errorcheck(const int code, const char *req, char *body)
 {
-	unsigned int i, n = 0;
-
-	/* remove spaces */
-	for (i = 0; i < strlen(body); ++i) {
-		if (body[i] != ' ')
-			body[n++] = body[i];
-	}
-	body[n] = '\0';
-
 	if (code == 200) {
 		if (strstr(body, "\"success\":true") != NULL) {
 			if (strstr(body, "\"total_count\":0") != NULL)
@@ -1578,21 +1595,31 @@ static int cloudflare_errorcheck(const int code, const char *req, char *body)
 
 			return 0;
 		}
-		else
+		else {
+			free(body);
 			error(M_UNKNOWN_RESPONSE__D, -1);
+		}
 	}
-	else if (code == 400 && strstr(body, "\"code\":6003") != NULL)
+	else if (code == 400 && strstr(body, "\"code\":6003") != NULL) {
+		free(body);
 		error(M_INVALID_AUTH);
-	else if (code == 403 && strstr(body, "\"code\":9103") != NULL)
+	}
+	else if (code == 403 && strstr(body, "\"code\":9103") != NULL) {
+		free(body);
 		error(M_INVALID_AUTH);
-	else if (code == 403 && strstr(blob, "\"code\":10000") != NULL)
+	}
+	else if (code == 403 && strstr(body, "\"code\":10000") != NULL) {
+		free(body);
 		error(M_INVALID_AUTH);
+	}
 
+	free(body);
 	error("%s returned HTTP error code %d.", req, code);
 
 	return -1;
 }
 
+/* warning! doesn't work (in libcurl version) with dump enabled! */
 static void update_cloudflare(const unsigned int ssl)
 {
 	char header[HALF_BLOB];
@@ -1603,8 +1630,9 @@ static void update_cloudflare(const unsigned int ssl)
 	long s;
 	const char *addr;
 	int prox, r;
-	const char *find;
+	char *find;
 	char *found;
+	char *body_copy;
 	char data[QUARTER_BLOB];
 
 	/* +opt */
@@ -1622,49 +1650,68 @@ static void update_cloudflare(const unsigned int ssl)
 	else if (s == -2 )
 		error(M_ERROR_MEM_STREAM);
 
-	r = cloudflare_errorcheck(s, "GET", body);
+	body_copy = remove_spaces(body);
+
+	r = cloudflare_errorcheck(s, "GET", body_copy);
 
 	addr = get_address(1);
 	prox = get_option_onoff("wildcard", 0);
 	if (r == 1) {
 		if (get_option_onoff("backmx", 0))
 			snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records", zone);
-		else
+		else {
+			free(body_copy);
 			error(M_INVALID_HOST);
+		}
 	}
 	else if (r == 0) {
 		/* check the current IP to see if we actually need to update */
 		find = "\"content\":\"";
-		if ((found = strstr(body, find)) == NULL)
+		if ((found = strstr(body_copy, find)) == NULL) {
+			free(body_copy);
 			error(M_UNKNOWN_RESPONSE__D, -1);
+		}
+
 		found += strlen(find);
 		if (strncmp(addr, found, strlen(addr)) == 0) {
-			if (strstr(body, "\"proxiable\":true") != NULL) {
-				if (strstr(body, "\"proxied\":true") != NULL) {
-					if (prox)
+			if (strstr(body_copy, "\"proxiable\":true") != NULL) {
+				if (strstr(body_copy, "\"proxied\":true") != NULL) {
+					if (prox) {
+						free(body_copy);
 						success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
+					}
 				}
-				else if (!prox)
+				else if (!prox) {
+					free(body_copy);
 					success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
+				}
 			}
-			else
+			else {
+				free(body_copy);
 				success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
+			}
 		}
 
 		find = "\"id\":\"";
-		if ((found = strstr(body, find)) == NULL)
+		if ((found = strstr(body_copy, find)) == NULL) {
+			free(body_copy);
 			error(M_UNKNOWN_RESPONSE__D, -1);
+		}
 
 		found += strlen(find);
 		*strchr(found, '"') = 0; /* assume we can find the closing quote */
 
 		snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records/%s", zone, found);
 	}
-	else
+	else {
+		free(body_copy);
 		error(M_UNKNOWN_ERROR__D, r);
+	}
+
+	free(body_copy);
 
 	/* +opt +opt */
-	snprintf(data, QUARTER_BLOB, "{\"type\":\"A\",\"name\":\"%s\",\"content\":\"%s\",\"proxied\":%s}", host, addr, (prox ? "true" : "false"));
+	snprintf(data, QUARTER_BLOB, "{\"content\":\"%s\",\"name\":\"%s\",\"proxied\":%s,\"type\":\"A\"}", addr, host, (prox ? "true" : "false"));
 
 	s = _http_req(ssl, 1, "api.cloudflare.com", "PUT", query, header, 0, data, &body);
 
@@ -1673,7 +1720,11 @@ static void update_cloudflare(const unsigned int ssl)
 	else if (s == -2 )
 		error(M_ERROR_MEM_STREAM);
 
-	r = cloudflare_errorcheck(s, "PUT", body);
+	body_copy = remove_spaces(body);
+
+	r = cloudflare_errorcheck(s, "PUT", body_copy);
+
+	free(body_copy);
 
 	if (r != 0)
 		error(M_UNKNOWN_ERROR__D, r);
