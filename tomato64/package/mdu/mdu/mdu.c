@@ -59,6 +59,7 @@
 #ifdef USE_LIBCURL
  FILE *curl_dfile = NULL;
  CURL *curl_handle = NULL;
+ struct curl_slist *headers = NULL;
  char errbuf[CURL_ERROR_SIZE];
  char curl_err_str[512];
 #endif
@@ -433,9 +434,9 @@ static void curl_setup(const unsigned int ssl)
 static struct curl_slist *curl_headers(const char *header)
 {
 	char *sub = NULL;
-	struct curl_slist *headers = NULL;
 	struct curl_slist *tmp = NULL;
 	size_t n = strlen(header);
+	headers = NULL;
 
 	if (!header)
 		return NULL;
@@ -474,7 +475,7 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url, const char
 	CURLcode r;
 	int trys, stop = 0;
 	unsigned int ok = 0;
-	struct curl_slist *headers = NULL;
+	headers = NULL;
 
 	curl_setup(ssl);
 
@@ -508,6 +509,7 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url, const char
 		logmsg(LOG_DEBUG, "*** %s: error - (%s)", __FUNCTION__, curl_err_str);
 	}
 
+	curl_slist_free_all(headers);
 	curl_cleanup();
 
 	if (stop == 1)
@@ -523,7 +525,6 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 {
 	logmsg(LOG_DEBUG, "*** %s: IN host=[%s] query=[%s] ssl=[%d] header=[%s] auth=[%d] data=[%s] req=[%s] ifname=[%s]", __FUNCTION__, host, query, ssl, header, auth, data, req, ifname);
 #ifdef USE_LIBCURL
-	struct curl_slist *headers = NULL;
 	char url[HALF_BLOB];
 	char ip[INET6_ADDRSTRLEN];
 	char *ip_ret;
@@ -532,6 +533,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	CURLcode r;
 	int trys, stop = 0;
 	long code = -1;
+	headers = NULL;
 
 	if (!static_host)
 		host = get_option_or("server", host);
@@ -1553,8 +1555,9 @@ but this is unimplemented here.
 */
 static int cloudflare_errorcheck(const int code, const char *req, char *body)
 {
-	unsigned int n = 0, i = 0;
+	unsigned int i, n = 0;
 
+	/* remove spaces */
 	for (i = 0; i < strlen(body); ++i) {
 		if (body[i] != ' ')
 			body[n++] = body[i];
