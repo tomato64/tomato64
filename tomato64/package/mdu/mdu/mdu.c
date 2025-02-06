@@ -49,7 +49,7 @@
 #define M_INVALID_PARAM__S	"Invalid parameter (%s)."
 #define M_TOOSOON		"Update was too soon or too frequent."
 #define M_ERROR_GET_IP		"Error obtaining IP address."
-#define M_ERROR_MEM_STREAM	"Failed to open memory stream, aborting."
+#define M_ERROR_MEM_STREAM	"Failed to open memory stream."
 #define M_SAME_IP		"The IP address is the same."
 #define M_SAME_RECORD		"Record already up-to-date."
 #define M_DOWN			"Server temporarily down or under maintenance."
@@ -544,9 +544,12 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	memset(ip, 0, INET6_ADDRSTRLEN); /* reset */
 	/* resolve IP to add/remove routes first */
 	if (ifname[0] != '\0') {
+		logmsg(LOG_DEBUG, "*** %s: resolving IP of server %s ...", __FUNCTION__, host);
 		ip_ret = curl_resolve_ip(ssl, url, header);
-		if (strcmp(ip_ret, "0"))
+		if (strcmp(ip_ret, "0")) {
 			strlcpy(ip, ip_ret, INET6_ADDRSTRLEN); /* copy as it will be reused in the next request */
+			logmsg(LOG_DEBUG, "*** %s: IP=[%s] of host=[%s]", __FUNCTION__, ip, host);
+		}
 		else
 			return code; /* couldn't resolve IP */
 	}
@@ -554,7 +557,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	/* open a memory stream to store data */
 	curl_wbuf = fmemopen(blob, BLOB_SIZE, "w");
 	if (curl_wbuf == NULL) {
-		logmsg(LOG_ERR, "failed to open memory stream, aborting ...");
+		logmsg(LOG_ERR, M_ERROR_MEM_STREAM);
 		return -2;
 	}
 	setbuf(curl_wbuf, NULL); /* disable buffering */
@@ -620,6 +623,8 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	curl_slist_free_all(headers);
 	curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &code);
 
+	logmsg(LOG_DEBUG, "*** %s: connected, response=[%ld]", __FUNCTION__, code);
+
 	if ((r == CURLE_OK) || (r == CURLE_RECV_ERROR)) /* CURLE_RECV_ERROR needed for clouflare */
 		*body = blob;
 	else {
@@ -631,7 +636,6 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	fclose(curl_wbuf);
 	if (curl_rbuf)
 		fclose(curl_rbuf);
-
 	if (curl_dfile) {
 		fputc('\n', curl_dfile);
 		fflush(curl_dfile);
@@ -892,6 +896,7 @@ static int read_tmaddr(const char *name, long *tm, char *addr)
 		else
 			logmsg(LOG_DEBUG, "*** %s: unknown=%s", __FUNCTION__, s);
 	}
+
 	return 0;
 }
 
@@ -917,7 +922,7 @@ static const char *get_address(int required)
 
 			if (read_tmaddr(cache_name, &et, addr)) {
 				if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE)) {
-					logmsg(LOG_DEBUG, "*** %s: using cached address %s from %s. Expires in %ld seconds", __FUNCTION__, addr, cache_name, (et - ut));
+					logmsg(LOG_DEBUG, "*** %s: OUT using cached address %s from %s. Expires in %ld seconds", __FUNCTION__, addr, cache_name, (et - ut));
 					return addr;
 				}
 			}
@@ -953,8 +958,9 @@ static const char *get_address(int required)
 						snprintf(s, sizeof(s), "%ld,%s", ut + DDNS_IP_CACHE, q);
 						f_write_string(cache_name, s, 0, 0);
 
-						logmsg(LOG_DEBUG, "*** %s: used %s service; time,address (%s) saved to %s", __FUNCTION__, services[service_num][0], s, cache_name);
+						logmsg(LOG_DEBUG, "*** %s: OUT used %s service; time,address (%s) saved to %s q=[%s]", __FUNCTION__, services[service_num][0], s, cache_name, q);
 						success_msg("Update successful.", 0); /* do not exit! */
+
 						return q;
 					}
 				}
@@ -1839,7 +1845,7 @@ static void save_cookie(void)
 	snprintf(s, sizeof(s), "%ld,%s", now, c);
 	f_write_string(cookie, s, FW_NEWLINE, 0);
 
-	logmsg(LOG_DEBUG, "*** %s: cookie=%s", __FUNCTION__, s);
+	logmsg(LOG_DEBUG, "*** %s: OUT cookie=[%s]", __FUNCTION__, s);
 }
 
 int main(int argc, char *argv[])
