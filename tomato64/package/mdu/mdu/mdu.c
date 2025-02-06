@@ -371,14 +371,14 @@ static int curl_dump_cb(CURL *handle, curl_infotype type, char *data, size_t siz
 
 static void curl_cleanup()
 {
-	if (curl_dfile != NULL)
+	if (curl_dfile)
 		fclose(curl_dfile);
 
 	curl_easy_cleanup(curl_handle);
 	curl_global_cleanup();
 }
 
-static void curl_setup(const unsigned int ssl, const unsigned int use_dump)
+static void curl_setup(const unsigned int ssl)
 {
 	CURLsslset result;
 	const char *dump;
@@ -398,13 +398,13 @@ static void curl_setup(const unsigned int ssl, const unsigned int use_dump)
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
 	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
-	curl_easy_setopt(curl_handle, CURLOPT_MAXREDIRS, (use_dump ? 5L : 0L));
-	curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT, (use_dump ? 10L : 3L));
-	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, (use_dump ? 10L : 3L));
+	curl_easy_setopt(curl_handle, CURLOPT_MAXREDIRS, 3L);
+	curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT, 5L);
+	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 20L);
 	curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
 	curl_easy_setopt(curl_handle, CURLOPT_ERRORBUFFER, errbuf);
 
-	if (use_dump && (dump = get_dump_name()) != NULL) {
+	if ((dump = get_dump_name()) != NULL) {
 		if ((curl_dfile = fopen(dump, "a")) != NULL) {
 			curl_easy_setopt(curl_handle, CURLOPT_DEBUGFUNCTION, curl_dump_cb);
 			curl_easy_setopt(curl_handle, CURLOPT_DEBUGDATA, (void *)curl_dfile);
@@ -467,7 +467,7 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url)
 	int trys, stop = 0;
 	unsigned int ok = 0;
 
-	curl_setup(ssl, 0); /* we don't need dump here */
+	curl_setup(ssl);
 
 	/* check by default gateway, no specific iface */
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
@@ -538,7 +538,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	}
 	setbuf(curl_wbuf, NULL); /* disable buffering */
 
-	curl_setup(ssl, 1); /* use dump */
+	curl_setup(ssl);
 
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
 
