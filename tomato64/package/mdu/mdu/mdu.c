@@ -531,7 +531,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	}
 
 	/* open a memory stream to store data */
-	curl_wbuf = fmemopen(blob, HALF_BLOB, "w");
+	curl_wbuf = fmemopen(blob, BLOB_SIZE, "w");
 	if (curl_wbuf == NULL) {
 		logmsg(LOG_ERR, "Failed to open memory stream, aborting ...");
 		return code;
