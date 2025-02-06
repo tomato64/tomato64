@@ -498,175 +498,6 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url)
 
 	return ok ? ip : "0";
 }
-
-#else /* !USE_LIBCURL */
-static long _sock_http_req(const unsigned int ssl, const char *host, const int port, const char *request, char *buffer, int bufsize, char **body)
-{
-	struct addrinfo hints;
-	struct addrinfo *result, *rp;
-	struct timeval tv;
-	char cport[11];
-	int sockfd = -1, stop = 0;
-	FILE *f;
-	unsigned int trys;
-	long i;
-	char *p;
-	const char *c, *ip;
-	struct tm *stm;
-	time_t now;
-	char buf[20];
-
-	logmsg(LOG_DEBUG, "*** IN %s: %s", __FUNCTION__, host);
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET; /* connect_timeout() only supports IPv4, maybe some day... */
-	hints.ai_socktype = SOCK_STREAM;
-
-	memset(cport, 0, sizeof(cport));
-	snprintf(cport, sizeof(cport), "%d", port);
-
-	for (trys = 4; trys > 0; --trys) {
-		logmsg(LOG_DEBUG, "*** %s: trys=%d\n", __FUNCTION__, trys);
-
-		for (i = 4; i > 0; --i) {
-			if (getaddrinfo(host, cport, &hints, &result) == 0) {
-				for (rp = result; rp != NULL; rp = rp->ai_next) {
-					sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-					if (sockfd == -1)
-						continue;
-
-					if (ifname[0] != '\0') {
-						struct ifreq ifr;
-						memset(&ifr, 0, sizeof(ifr));
-						snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), ifname);
-						if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0) {
-							logmsg(LOG_DEBUG, "*** %s: can't bind to device: %s ...", __FUNCTION__, ifname);
-							continue;
-						}
-					}
-
-					char addrstr[INET_ADDRSTRLEN + 1];
-					ip = inet_ntop(rp->ai_family, &(((struct sockaddr_in *)rp->ai_addr)->sin_addr), addrstr, sizeof(addrstr));
-					if (ip == NULL)
-						continue;
-
-					logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting ...", __FUNCTION__, ip, cport);
-
-					/* add route if needed */
-					route_adddel(ip, 1);
-					if (connect_timeout(sockfd, rp->ai_addr, rp->ai_addrlen, 10) != -1) {
-						logmsg(LOG_DEBUG, "*** %s: connected", __FUNCTION__);
-						/* del route */
-						route_adddel(ip, 0);
-						stop = check_stop();
-						freeaddrinfo(result);
-						goto proceed;
-					}
-					/* del route */
-					route_adddel(ip, 0);
-
-					stop = check_stop();
-					if (stop == 1) {
-						freeaddrinfo(result);
-						goto proceed;
-					}
-
-					close(sockfd);
-				}
-				freeaddrinfo(result);
-				sleep(2);
-			}
-		}
-		if (i <= 0)
-			return -1;
-
-proceed:
-		logmsg(LOG_DEBUG, "*** %s: proceed", __FUNCTION__);
-
-		if (stop == 1) {
-			close(sockfd);
-			error("Force stop.");
-		}
-
-		tv.tv_sec = 10;
-		tv.tv_usec = 0;
-		setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
-		setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-
-		if (ssl) {
-			mssl_init(NULL, NULL);
-			f = ssl_client_fopen_name(sockfd, host);
-		}
-		else
-			f = fdopen(sockfd, "r+");
-
-		if (f == NULL) {
-			logerr(__FUNCTION__, __LINE__, "error opening");
-			close(sockfd);
-			continue;
-		}
-
-		i = strlen(request);
-		if (fwrite(request, 1, i, f) != (size_t)i) {
-			logerr(__FUNCTION__, __LINE__, "error writing");
-			fclose(f);
-			close(sockfd);
-			continue;
-		}
-		logmsg(LOG_DEBUG, "*** %s: sent request", __FUNCTION__);
-
-		i = fread(buffer, 1, bufsize, f);
-		if (i <= 0) {
-			fclose(f);
-			close(sockfd);
-			logerr(__FUNCTION__, __LINE__, "error reading");
-			continue;
-		}
-		buffer[i] = '\0'; /* null-terminate the string */
-
-		logmsg(LOG_DEBUG, "*** %s: recvd=[%s], i=%ld", __FUNCTION__, buffer, i);
-
-		fclose(f);
-		close(sockfd);
-
-		/* make dump */
-		if ((c = get_dump_name()) != NULL) {
-			if ((f = fopen(c, "a")) != NULL) {
-				time(&now);
-				stm = localtime(&now);
-				memset(buf, 0, sizeof(buf));
-				strftime(buf, sizeof(buf), "%b %d %H:%M:%S", stm);
-
-				fprintf(f, "[%s -> %s:%d]\nREQUEST =>\n", buf, host, port);
-				fputs(request, f);
-				fputs("REPLY <=\n", f);
-				fputs(blob, f);
-				fputs("\nEND\n\n", f);
-				fclose(f);
-			}
-		}
-
-		if ((sscanf(buffer, "HTTP/1.%*d %ld", &i) == 1) && (i >= 100) && (i <= 999)) {
-			logmsg(LOG_DEBUG, "*** %s: HTTP/1.* i=%ld", __FUNCTION__, i);
-			if ((p = strstr(buffer, "\r\n\r\n")) != NULL)
-				p += 4;
-			else if ((p = strstr(buffer, "\n\n")) != NULL)
-				p += 2;
-
-			if (p) {
-				if (body) {
-					*body = p;
-					logmsg(LOG_DEBUG, "*** %s: body=[%s] i=[%ld]", __FUNCTION__, p, i);
-				}
-				return i;
-			}
-			else
-				logmsg(LOG_DEBUG, "*** %s: !p", __FUNCTION__);
-		}
-	}
-
-	return -1;
-}
 #endif /* USE_LIBCURL */
 
 static long _http_req(const unsigned int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body)
@@ -791,12 +622,22 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 
 	return code;
 #else /* !USE_LIBCURL */
-	char *p;
+	FILE *f;
+	char *request, *p, *httpv;
 	int port;
 	char a[512];
 	char b[512];
-	long n;
-	char *httpv;
+	long i;
+	struct addrinfo hints;
+	struct addrinfo *result, *rp;
+	struct timeval tv;
+	char cport[11];
+	unsigned int trys;
+	int sockfd = -1, stop = 0;
+	const char *c, *ip;
+	struct tm *stm;
+	time_t now;
+	char buf[20];
 
 	if ((strncmp(host, "updates.opendns.com", 19) == 0) || (strncmp(host, "api.cloudflare.com", 18) == 0))
 		httpv = "HTTP/1.1";
@@ -806,12 +647,12 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	if (!static_host)
 		host = get_option_or("server", host);
 
-	n = strlen(query);
+	i = strlen(query);
 	if (header)
-		n += strlen(header);
+		i += strlen(header);
 	if (data)
-		n += strlen(data);
-	if (n > (BLOB_SIZE - 512)) /* just don't go over 512 below... */
+		i += strlen(data);
+	if (i > (BLOB_SIZE - 512)) /* just don't go over 512 below... */
 		return -1;
 
 	if (header)
@@ -823,13 +664,13 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		memset(a, 0, sizeof(a));
 		snprintf(a, sizeof(a), "%s:%s", get_option_required("user"), get_option_required("pass"));
 
-		n = base64_encode((const char *) a, b, strlen(a));
-		b[n] = 0;
+		i = base64_encode((const char *) a, b, strlen(a));
+		b[i] = 0;
 		snprintf(blob + strlen(blob), BLOB_SIZE - strlen(blob), "Authorization: Basic %s\r\n", b);
 	}
-	if ((header) && ((n = strlen(header)) > 0)) {
+	if ((header) && ((i = strlen(header)) > 0)) {
 		strlcat(blob, header, BLOB_SIZE);
-		if (header[n - 1] != '\n')
+		if (header[i - 1] != '\n')
 			strlcat(blob, "\r\n", BLOB_SIZE);
 	}
 	if (data)
@@ -843,23 +684,168 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	port = ssl ? 443 : 80;
 	memset(a, 0, sizeof(a));
 	strlcpy(a, host, sizeof(a));
-	if ((p = strrchr(a, ':')) != NULL) {
-		*p = 0;
-		if ((n = atoi(p + 1)) > 0)
-			port = n;
+	if ((request = strrchr(a, ':')) != NULL) {
+		*request = 0;
+		if ((i = atoi(request + 1)) > 0)
+			port = i;
 	}
 
-	if ((p = strdup(blob)) == NULL)
+	if ((request = strdup(blob)) == NULL) {
+		logmsg(LOG_DEBUG, "*** %s: strdup failed", __FUNCTION__);
 		return -1;
+	}
 
-	logmsg(LOG_DEBUG, "*** %s: host=[%s] port=[%d] request=[%s] ssl=[%d] buffer=[%s]", __FUNCTION__, a, port, p, ssl, blob);
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET; /* connect_timeout() only supports IPv4, maybe some day... */
+	hints.ai_socktype = SOCK_STREAM;
 
-	n = _sock_http_req(ssl, a, port, p, blob, BLOB_SIZE, body);
-	free(p);
+	memset(cport, 0, sizeof(cport));
+	snprintf(cport, sizeof(cport), "%d", port);
 
-	logmsg(LOG_DEBUG, "*** %s: OUT n=%ld", __FUNCTION__, n);
+	for (trys = 4; trys > 0; --trys) {
+		logmsg(LOG_DEBUG, "*** %s: trys=%d\n", __FUNCTION__, trys);
 
-	return n;
+		for (i = 4; i > 0; --i) {
+			if (getaddrinfo(a, cport, &hints, &result) == 0) {
+				for (rp = result; rp != NULL; rp = rp->ai_next) {
+					sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+					if (sockfd == -1)
+						continue;
+
+					if (ifname[0] != '\0') {
+						struct ifreq ifr;
+						memset(&ifr, 0, sizeof(ifr));
+						snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), ifname);
+						if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0) {
+							logmsg(LOG_DEBUG, "*** %s: can't bind to device: %s ...", __FUNCTION__, ifname);
+							continue;
+						}
+					}
+
+					char addrstr[INET_ADDRSTRLEN + 1];
+					ip = inet_ntop(rp->ai_family, &(((struct sockaddr_in *)rp->ai_addr)->sin_addr), addrstr, sizeof(addrstr));
+					if (ip == NULL)
+						continue;
+
+					logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting ...", __FUNCTION__, ip, cport);
+
+					/* add route if needed */
+					route_adddel(ip, 1);
+					if (connect_timeout(sockfd, rp->ai_addr, rp->ai_addrlen, 10) != -1) {
+						logmsg(LOG_DEBUG, "*** %s: connected", __FUNCTION__);
+						/* del route */
+						route_adddel(ip, 0);
+						stop = check_stop();
+						freeaddrinfo(result);
+						goto proceed;
+					}
+					/* del route */
+					route_adddel(ip, 0);
+
+					stop = check_stop();
+					if (stop == 1) {
+						freeaddrinfo(result);
+						goto proceed;
+					}
+
+					close(sockfd);
+				}
+				freeaddrinfo(result);
+				sleep(2);
+			}
+		}
+		if (i <= 0)
+			return -1;
+
+proceed:
+		logmsg(LOG_DEBUG, "*** %s: proceed", __FUNCTION__);
+
+		if (stop == 1) {
+			close(sockfd);
+			free(request);
+			error("Force stop.");
+		}
+
+		tv.tv_sec = 10;
+		tv.tv_usec = 0;
+		setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+		setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+		if (ssl) {
+			mssl_init(NULL, NULL);
+			f = ssl_client_fopen_name(sockfd, a);
+		}
+		else
+			f = fdopen(sockfd, "r+");
+
+		if (f == NULL) {
+			logerr(__FUNCTION__, __LINE__, "error opening");
+			close(sockfd);
+			continue;
+		}
+
+		i = strlen(request);
+		if (fwrite(request, 1, i, f) != (size_t)i) {
+			logerr(__FUNCTION__, __LINE__, "error writing");
+			fclose(f);
+			close(sockfd);
+			continue;
+		}
+		logmsg(LOG_DEBUG, "*** %s: sent request", __FUNCTION__);
+
+		i = fread(blob, 1, BLOB_SIZE, f);
+		if (i <= 0) {
+			fclose(f);
+			close(sockfd);
+			logerr(__FUNCTION__, __LINE__, "error reading");
+			continue;
+		}
+		blob[i] = '\0'; /* null-terminate the string */
+
+		logmsg(LOG_DEBUG, "*** %s: recvd=[%s], i=%ld", __FUNCTION__, blob, i);
+
+		fclose(f);
+		close(sockfd);
+
+		/* make dump */
+		if ((c = get_dump_name()) != NULL) {
+			if ((f = fopen(c, "a")) != NULL) {
+				time(&now);
+				stm = localtime(&now);
+				memset(buf, 0, sizeof(buf));
+				strftime(buf, sizeof(buf), "%b %d %H:%M:%S", stm);
+
+				fprintf(f, "[%s -> %s:%d]\nREQUEST =>\n", buf, a, port);
+				fputs(request, f);
+				fputs("REPLY <=\n", f);
+				fputs(blob, f);
+				fputs("\nEND\n\n", f);
+				fclose(f);
+			}
+		}
+
+		if ((sscanf(blob, "HTTP/1.%*d %ld", &i) == 1) && (i >= 100) && (i <= 999)) {
+			logmsg(LOG_DEBUG, "*** %s: HTTP/1.* i=%ld", __FUNCTION__, i);
+			if ((p = strstr(blob, "\r\n\r\n")) != NULL)
+				p += 4;
+			else if ((p = strstr(blob, "\n\n")) != NULL)
+				p += 2;
+
+			if (p) {
+				if (body) {
+					*body = p;
+					logmsg(LOG_DEBUG, "*** %s: body=[%s] i=[%ld]", __FUNCTION__, p, i);
+				}
+				free(request);
+				return i;
+			}
+			else
+				logmsg(LOG_DEBUG, "*** %s: !p", __FUNCTION__);
+		}
+	}
+	free(request);
+
+	return -1;
 #endif /* USE_LIBCURL */
 }
 
