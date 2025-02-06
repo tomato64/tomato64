@@ -876,7 +876,7 @@ static long http_req(const unsigned int ssl, int static_host, const char *host, 
 	return _http_req(ssl, static_host, host, "GET", get, header, auth, NULL, body);
 }
 
-int read_tmaddr(const char *name, long *tm, char *addr)
+static int read_tmaddr(const char *name, long *tm, char *addr)
 {
 	char s[64];
 
@@ -895,7 +895,7 @@ int read_tmaddr(const char *name, long *tm, char *addr)
 	return 0;
 }
 
-const char *get_address(int required)
+static const char *get_address(int required)
 {
 	char *body;
 	struct in_addr ia;
@@ -986,7 +986,7 @@ const char *get_address(int required)
 }
 
 #ifdef TCONFIG_IPV6
-int get_address6(char *buf, const size_t buf_sz)
+static int get_address6(char *buf, const size_t buf_sz)
 {
 	const char *lanif;
 	int n, ret = 0;
