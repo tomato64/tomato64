@@ -8,7 +8,7 @@
 # - changes/fixes
 # Copyright (C) 2018 - 2024 by pedro
 #
-export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 
 
 . nvram_ops

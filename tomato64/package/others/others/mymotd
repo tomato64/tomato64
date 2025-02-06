@@ -1,5 +1,5 @@
 #!/bin/sh
-export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 # Supplementary MOTD script with information about the network / router settings
 # Version 0.6 written by Monter, modified by Shibby, additions by tsynik, changes by pedro
 

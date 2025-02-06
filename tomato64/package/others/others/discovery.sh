@@ -1,5 +1,5 @@
 #!/bin/sh
-export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 # Network discovery script v2.0 - ARM and MIPSR2 - 05/2024 - rs232
 #------------------------------------------------------
 #    FreshTomato Network Discovery - usage

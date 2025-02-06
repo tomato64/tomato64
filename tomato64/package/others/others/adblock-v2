@@ -7,7 +7,7 @@
 ver="v2.72b - 04/23" # rs232
 PID=$$
 pidfile="/var/run/adblock.pid"
-export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 pre=$(date +%s)
 alias only="sed -e 's/^[ \t]*//' | grep -Ev '^($|#|!)' | sort"
 
