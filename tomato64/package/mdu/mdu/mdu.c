@@ -607,7 +607,7 @@ proceed:
 		}
 
 		i = strlen(request);
-		if (fwrite(request, 1, i, f) != i) {
+		if (fwrite(request, 1, i, f) != (size_t)i) {
 			logerr(__FUNCTION__, __LINE__, "error writing");
 			fclose(f);
 			close(sockfd);
@@ -624,7 +624,7 @@ proceed:
 		}
 		buffer[i] = '\0'; /* null-terminate the string */
 
-		logmsg(LOG_DEBUG, "*** %s: recvd=[%s], i=%d", __FUNCTION__, buffer, i);
+		logmsg(LOG_DEBUG, "*** %s: recvd=[%s], i=%ld", __FUNCTION__, buffer, i);
 
 		fclose(f);
 		close(sockfd);
@@ -646,8 +646,8 @@ proceed:
 			}
 		}
 
-		if ((sscanf(buffer, "HTTP/1.%*d %d", &i) == 1) && (i >= 100) && (i <= 999)) {
-			logmsg(LOG_DEBUG, "*** %s: HTTP/1.* i=%d", __FUNCTION__, i);
+		if ((sscanf(buffer, "HTTP/1.%*d %ld", &i) == 1) && (i >= 100) && (i <= 999)) {
+			logmsg(LOG_DEBUG, "*** %s: HTTP/1.* i=%ld", __FUNCTION__, i);
 			if ((p = strstr(buffer, "\r\n\r\n")) != NULL)
 				p += 4;
 			else if ((p = strstr(buffer, "\n\n")) != NULL)
@@ -656,7 +656,7 @@ proceed:
 			if (p) {
 				if (body) {
 					*body = p;
-					logmsg(LOG_DEBUG, "*** %s: body=[%s]", __FUNCTION__, p);
+					logmsg(LOG_DEBUG, "*** %s: body=[%s] i=[%ld]", __FUNCTION__, p, i);
 				}
 				return i;
 			}
@@ -857,7 +857,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	n = _sock_http_req(ssl, a, port, p, blob, BLOB_SIZE, body);
 	free(p);
 
-	logmsg(LOG_DEBUG, "*** %s: n=%d", __FUNCTION__, n);
+	logmsg(LOG_DEBUG, "*** %s: OUT n=%ld", __FUNCTION__, n);
 
 	return n;
 #endif /* USE_LIBCURL */
