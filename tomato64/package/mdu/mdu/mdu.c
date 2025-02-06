@@ -4,7 +4,7 @@
  * Copyright (C) 2007-2009 Jonathan Zarate
  *
  * Licensed under GNU GPL v2 or later versions.
- * Fixes/updates (C) 2018 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -33,7 +33,7 @@
 #include "mssl.h"
 #endif
 
-// #define MDU_DEBUG
+#define VERSION			"2.1"
 #define AGENT			"Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/109.0"
 #define MAX_OPTION_LENGTH	256
 #define BLOB_SIZE		(4 * 1024)
@@ -296,11 +296,7 @@ static void success(void)
 
 static const char *get_dump_name(void)
 {
-#ifdef MDU_DEBUG
-	return get_option_or("dump", "/tmp/mdu.txt");
-#else
 	return get_option("dump");
-#endif
 }
 
 #ifdef USE_LIBCURL
@@ -483,9 +479,6 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url)
 		stop = check_stop();
 		if ((r != CURLE_COULDNT_CONNECT) || (stop == 1))
 			break;
-#ifdef MDU_DEBUG
-		logerr(__FUNCTION__, __LINE__, "connect IP resolver");
-#endif
 		sleep(2);
 	}
 	curl_easy_getinfo(curl_handle, CURLINFO_PRIMARY_IP, &ip);
@@ -570,9 +563,6 @@ static int _http_req(const unsigned int ssl, const char *host, const int port, c
 
 					close(sockfd);
 				}
-#ifdef MDU_DEBUG
-				logerr(__FUNCTION__, __LINE__, "connect");
-#endif
 				freeaddrinfo(result);
 				sleep(2);
 			}
@@ -743,9 +733,6 @@ static int http_req(const unsigned int ssl, int static_host, const char *host, c
 		stop = check_stop();
 		if ((r != CURLE_COULDNT_CONNECT) || (stop == 1))
 			break;
-#ifdef MDU_DEBUG
-		logerr(__FUNCTION__, __LINE__, "connect");
-#endif
 		sleep(2);
 	}
 	route_adddel(0, ip);
@@ -1812,17 +1799,29 @@ int main(int argc, char *argv[])
 	g_argc = argc;
 	g_argv = argv;
 
-	printf("Copyright (C) 2007-2009 Jonathan Zarate\n");
-	printf("Fixes/updates (C) 2018 - 2024 pedro\n\n");
+	printf("mdu v" VERSION
+#ifdef USE_LIBCURL
+	" [libcurl]\n\n"
+#else
+	" [sockets]\n\n"
+#endif
+	"Copyright (C) 2007-2009 Jonathan Zarate\n"
+	"Fixes/updates (C) 2018 - 2025 pedro\n\n");
 
 	openlog("mdu", LOG_PID, LOG_DAEMON);
 
-	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
+#ifdef USE_LIBCURL
+	logmsg(LOG_DEBUG, "*** %s: IN v" VERSION " [libcurl]", __FUNCTION__);
+#else
+	logmsg(LOG_DEBUG, "*** %s: IN v" VERSION " [sockets]", __FUNCTION__);
+#endif
 
+	/* global variable */
 	if ((blob = malloc(BLOB_SIZE)) == NULL) {
 		logmsg(LOG_ERR, "Cannot alocate memory, aborting ...");
 		return 1;
 	}
+	memset(blob, 0, BLOB_SIZE); /* reset */
 
 	mkdir("/var/lib/mdu", 0700);
 	chdir("/var/lib/mdu");
