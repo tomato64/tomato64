@@ -1004,7 +1004,7 @@ static int print_wlnoise(int idx, int unit, int subunit, void *param)
 	return 0;
 }
 #else
-void print_wlnoise(void)
+static void print_wlnoise(void)
 {
        FILE *f;
        char row[8];
@@ -1156,7 +1156,7 @@ static int print_wlstats(int idx, int unit, int subunit, void *param)
 	return 0;
 }
 #else
-void print_wlstats(void)
+static void print_wlstats(void)
 {
        FILE *f;
        char row[128];
@@ -1465,7 +1465,7 @@ static int print_wlbands(int idx, int unit, int subunit, void *param)
 	return 0;
 }
 #else
-void print_wlbands(void)
+static void print_wlbands(void)
 {
        FILE *f;
        char row[16];
@@ -1494,6 +1494,7 @@ void asp_wlbands(int argc, char **argv)
 	web_puts(" ];\n");
 }
 
+#ifndef TOMATO64
 static int print_wif(int idx, int unit, int subunit, void *param)
 {
 	struct ifreq ifr;
@@ -1549,8 +1550,8 @@ static int print_wif(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
-
-void get_wlifaces(void)
+#else
+static void print_wif(void)
 {
        FILE *f;
        char row[128];
@@ -1564,6 +1565,7 @@ void get_wlifaces(void)
                pclose(f);
        }
 }
+#endif /* TOMATO64 */
 
 void asp_wlifaces(int argc, char **argv)
 {
@@ -1573,7 +1575,7 @@ void asp_wlifaces(int argc, char **argv)
 #ifndef TOMATO64
 	foreach_wif(include_vifs, NULL, print_wif);
 #else
-	get_wlifaces();
+	print_wif();
 #endif /* TOMATO64 */
 	web_puts("];\n");
 }
