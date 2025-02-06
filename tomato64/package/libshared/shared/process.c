@@ -36,6 +36,23 @@ static int getpsstate(int pid) {
 //# cat /proc/1/stat
 //1 (init) S 0 0 0 0 -1 256 287 10043 109 21377 7 110 473 1270 9 0 0 0 27 1810432 126 2147483647 4194304 4369680 2147450688 2147449688 717374852 0 0 0 514751 2147536844 0 0 0 0
 
+static char *psname_argv0(int pid, char *buffer, int maxlen)
+{
+	char buf[512];
+	char path[64];
+
+	if (maxlen <= 0)
+		return NULL;
+
+	*buffer = 0;
+	sprintf(path, "/proc/%d/cmdline", pid);
+	if (f_read_string(path, buf, sizeof(buf)) > 0) {
+		strlcpy(buffer, buf, maxlen);
+	}
+
+	return buffer;
+}
+
 char *psname(int pid, char *buffer, int maxlen)
 {
 	char buf[512];
@@ -71,6 +88,7 @@ char *psname(int pid, char *buffer, int maxlen)
 static int _pidof(const char *name, pid_t **pids)
 {
 	const char *p;
+	const char *altname = name;
 	char *e;
 	DIR *dir;
 	struct dirent *de;
@@ -83,7 +101,7 @@ static int _pidof(const char *name, pid_t **pids)
 		*pids = NULL;
 
 	if ((p = strrchr(name, '/')) != NULL)
-		name = p + 1;
+		altname = p + 1;
 
 	if ((dir = opendir("/proc")) != NULL) {
 		while ((de = readdir(dir)) != NULL) {
@@ -91,7 +109,7 @@ static int _pidof(const char *name, pid_t **pids)
 			if (*e != 0)
 				continue;
 
-			if (strncmp(name, psname(i, buf, sizeof(buf)), 15) == 0) {
+			if ((strncmp(altname, psname(i, buf, sizeof(buf)), 15) == 0) || (strncmp(name, psname_argv0(i, buf, sizeof(buf)), 15) == 0)) {
 				if (getpsstate(i) == 'Z') {
 					closedir(dir);
 					return -1;
