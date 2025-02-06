@@ -227,6 +227,10 @@ table#container td#header div.title {
 	padding-left: 18px;
 }
 
+table#container td#header div.title a {
+	font-size: medium;
+}
+
 table#container td#header div.title::before {
 	content: "*";
 	display: inline-block;

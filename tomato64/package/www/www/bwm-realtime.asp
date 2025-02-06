@@ -129,7 +129,7 @@ function init() {
 <form>
 <table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">Tomato64</div>
+	<div class="title"><a href="/">Tomato64</a></div>
 	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>
