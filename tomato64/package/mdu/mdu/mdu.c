@@ -500,15 +500,16 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url)
 }
 
 #else /* !USE_LIBCURL */
-static int _sock_http_req(const unsigned int ssl, const char *host, const int port, const char *request, char *buffer, int bufsize, char **body)
+static long _sock_http_req(const unsigned int ssl, const char *host, const int port, const char *request, char *buffer, int bufsize, char **body)
 {
 	struct addrinfo hints;
 	struct addrinfo *result, *rp;
 	struct timeval tv;
-	char cport[8];
+	char cport[11];
 	int sockfd = -1, stop = 0;
 	FILE *f;
-	unsigned int trys, i;
+	unsigned int trys;
+	long i;
 	char *p;
 	const char *c, *ip;
 
@@ -535,8 +536,10 @@ static int _sock_http_req(const unsigned int ssl, const char *host, const int po
 						struct ifreq ifr;
 						memset(&ifr, 0, sizeof(ifr));
 						snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), ifname);
-						if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0)
+						if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0) {
+							logmsg(LOG_DEBUG, "*** %s: can't bind to device: %s ...", __FUNCTION__, ifname);
 							continue;
+						}
 					}
 
 					char addrstr[INET_ADDRSTRLEN + 1];
@@ -621,6 +624,7 @@ proceed:
 		fclose(f);
 		close(sockfd);
 
+		/* make dump */
 		if ((c = get_dump_name()) != NULL) {
 			if ((f = fopen(c, "a")) != NULL) {
 				fprintf(f, "\n[%s:%d]\nREQUEST\n", host, port);
@@ -655,7 +659,7 @@ proceed:
 }
 #endif /* USE_LIBCURL */
 
-static int _http_req(const unsigned int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body)
+static long _http_req(const unsigned int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body)
 {
 	logmsg(LOG_DEBUG, "*** %s: IN host=[%s] query=[%s] ssl=[%d] header=[%s] auth=[%d] data=[%s] req=[%s] ifname=[%s]", __FUNCTION__, host, query, ssl, header, auth, data, req, ifname);
 #ifdef USE_LIBCURL
@@ -781,7 +785,7 @@ static int _http_req(const unsigned int ssl, int static_host, const char *host, 
 	int port;
 	char a[512];
 	char b[512];
-	int n;
+	long n;
 	char *httpv;
 
 	if ((strncmp(host, "updates.opendns.com", 19) == 0) || (strncmp(host, "api.cloudflare.com", 18) == 0))
@@ -849,7 +853,7 @@ static int _http_req(const unsigned int ssl, int static_host, const char *host, 
 #endif /* USE_LIBCURL */
 }
 
-static int http_req(const unsigned int ssl, int static_host, const char *host, const char *get, const char *header, int auth, char **body)
+static long http_req(const unsigned int ssl, int static_host, const char *host, const char *get, const char *header, int auth, char **body)
 {
 	return _http_req(ssl, static_host, host, "GET", get, header, auth, NULL, body);
 }
@@ -1026,7 +1030,7 @@ static void update_dua(const char *type, const unsigned int ssl, const char *ser
 {
 	const char *p;
 	char query[2048];
-	int r;
+	long r;
 	char *body;
 
 	/* +opt */
@@ -1157,7 +1161,7 @@ bad:
 */
 static void update_namecheap(const unsigned int ssl)
 {
-	int r;
+	long r;
 	char *p;
 	char *q;
 	char *body;
@@ -1237,7 +1241,7 @@ Done=true
 */
 static void update_enom(const unsigned int ssl)
 {
-	int r;
+	long r;
 	char *p;
 	char *q;
 	char *body;
@@ -1297,7 +1301,7 @@ static void update_enom(const unsigned int ssl)
 */
 static void update_dnsexit(const unsigned int ssl)
 {
-	int r;
+	long r;
 	char *body;
 	char query[2048];
 
@@ -1359,7 +1363,7 @@ SUCCESS CODE="201" TEXT="No records need updating." ZONE="%zone%"
 */
 static void update_zoneedit(const unsigned int ssl)
 {
-	int r;
+	long r;
 	char *body;
 	char *c;
 	char query[2048];
@@ -1428,7 +1432,7 @@ bad:
 */
 static void update_afraid(const unsigned int ssl)
 {
-	int r;
+	long r;
 	char *body;
 	char query[2048];
 
@@ -1567,10 +1571,9 @@ static void update_cloudflare(const unsigned int ssl)
 	const char *host;
 	char query[QUARTER_BLOB];
 	char *body;
-	int r;
-	const char *req;
+	long s;
 	const char *addr;
-	int prox;
+	int prox, r;
 	const char *find;
 	char *found;
 	char data[QUARTER_BLOB];
@@ -1583,9 +1586,9 @@ static void update_cloudflare(const unsigned int ssl)
 	/* +opt +opt */
 	snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records?type=A&name=%s&order=name&direction=asc", zone, host);
 
-	r = http_req(ssl, 1, "api.cloudflare.com", query, header, 0, &body);
-	r = cloudflare_errorcheck(r, "GET", body);
-	req = "PUT";
+	s = http_req(ssl, 1, "api.cloudflare.com", query, header, 0, &body);
+	r = cloudflare_errorcheck(s, "GET", body);
+
 	addr = get_address(1);
 	prox = get_option_onoff("wildcard", 0);
 	if (r == 1) {
@@ -1628,8 +1631,8 @@ static void update_cloudflare(const unsigned int ssl)
 	/* +opt +opt */
 	snprintf(data, QUARTER_BLOB, "{\"type\":\"A\",\"name\":\"%s\",\"content\":\"%s\",\"proxied\":%s}", host, addr, (prox ? "true" : "false"));
 
-	r = _http_req(ssl, 1, "api.cloudflare.com", req, query, header, 0, data, &body);
-	r = cloudflare_errorcheck(r, req, body);
+	s = _http_req(ssl, 1, "api.cloudflare.com", "PUT", query, header, 0, data, &body);
+	r = cloudflare_errorcheck(s, "PUT", body);
 
 	if (r != 0)
 		error(M_UNKNOWN_ERROR__D, r);
@@ -1642,7 +1645,7 @@ static void update_cloudflare(const unsigned int ssl)
  */
 static void update_duckdns(const unsigned int ssl)
 {
-	int r;
+	long r;
 	char *body;
 	char query[2048];
 
@@ -1665,7 +1668,7 @@ static void update_duckdns(const unsigned int ssl)
 /* wget/custom */
 static void update_custom(void)
 {
-	int r;
+	long r;
 	char *c;
 	char url[256];
 	char s[256];
