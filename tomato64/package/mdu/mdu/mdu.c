@@ -461,17 +461,27 @@ static struct curl_slist *curl_headers(const char *header)
 	return headers;
 }
 
-static char *curl_resolve_ip(const unsigned int ssl, const char *url)
+static char *curl_resolve_ip(const unsigned int ssl, const char *url, const char *header)
 {
 	char *ip;
 	CURLcode r;
 	int trys, stop = 0;
 	unsigned int ok = 0;
+	struct curl_slist *headers = NULL;
 
 	curl_setup(ssl);
 
-	/* check by default gateway, no specific iface */
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+
+	if (header)
+		headers = curl_headers(header);
+	else
+		headers = curl_headers("User-Agent: " AGENT "\r\nCache-Control: no-cache");
+
+	curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
+
+	if (ifname[0] != '\0')
+		curl_easy_setopt(curl_handle, CURLOPT_INTERFACE, ifname);
 
 	for (trys = 4; trys > 0; --trys) {
 		errbuf[0] = 0;
@@ -525,7 +535,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	memset(ip, 0, INET6_ADDRSTRLEN); /* reset */
 	/* resolve IP to add/remove routes first */
 	if (ifname[0] != '\0') {
-		ip_ret = curl_resolve_ip(ssl, url);
+		ip_ret = curl_resolve_ip(ssl, url, header);
 		if (strcmp(ip_ret, "0"))
 			strlcpy(ip, ip_ret, INET6_ADDRSTRLEN); /* copy as it will be reused in the next request */
 		else
