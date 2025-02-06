@@ -534,7 +534,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	/* open a memory stream to store data */
 	curl_wbuf = fmemopen(blob, BLOB_SIZE, "w");
 	if (curl_wbuf == NULL) {
-		logmsg(LOG_ERR, "Failed to open memory stream, aborting ...");
+		logmsg(LOG_ERR, "failed to open memory stream, aborting ...");
 		return code;
 	}
 	setbuf(curl_wbuf, NULL); /* disable buffering */
@@ -1588,6 +1588,10 @@ static void update_cloudflare(const unsigned int ssl)
 	snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records?type=A&name=%s&order=name&direction=asc", zone, host);
 
 	s = http_req(ssl, 1, "api.cloudflare.com", query, header, 0, &body);
+
+	if (s == -1)
+		error(M_ERROR_GET_IP);
+
 	r = cloudflare_errorcheck(s, "GET", body);
 
 	addr = get_address(1);
@@ -1633,6 +1637,10 @@ static void update_cloudflare(const unsigned int ssl)
 	snprintf(data, QUARTER_BLOB, "{\"type\":\"A\",\"name\":\"%s\",\"content\":\"%s\",\"proxied\":%s}", host, addr, (prox ? "true" : "false"));
 
 	s = _http_req(ssl, 1, "api.cloudflare.com", "PUT", query, header, 0, data, &body);
+
+	if (s == -1)
+		error(M_ERROR_GET_IP);
+
 	r = cloudflare_errorcheck(s, "PUT", body);
 
 	if (r != 0)
