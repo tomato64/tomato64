@@ -1,0 +1,25 @@
+From 6bd94fbc61bc322c7a3d5f1678289d55d875c83b Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Thu, 6 Feb 2025 10:50:35 -0700
+Subject: [PATCH] Include linux/types.h for Tomato64
+
+---
+ include/linux/ppp_defs.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/include/linux/ppp_defs.h b/include/linux/ppp_defs.h
+index 5f20649..ea2cb54 100644
+--- a/include/linux/ppp_defs.h
++++ b/include/linux/ppp_defs.h
+@@ -24,6 +24,8 @@
+  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include <linux/types.h>
++
+ #ifndef _PPP_DEFS_H_
+ #define _PPP_DEFS_H_
+ 
+-- 
+2.39.5
+
