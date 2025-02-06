@@ -195,8 +195,8 @@ function verifyFields(focused, quiet) {
 
 		b = E('_f_ddnsx'+i+'_wanip').value == 'custom';
 		e = E('_f_ddnsx'+i+'_wanip');
-		elem.display(PR('_f_custom_ip'+i), b);
-		if ((b) && (!v_ip('_f_custom_ip'+i, quiet)))
+		elem.display(PR('_f_custom_ip'+i), b && enabled);
+		if ((b) && enabled && (!v_ip('_f_custom_ip'+i, quiet)))
 			ok = 0;
 		else
 			ferror.clear(e);
