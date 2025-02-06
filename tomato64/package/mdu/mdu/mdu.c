@@ -57,7 +57,6 @@
 #define MDU_ROUTE_FN		"/tmp/mdu-route"
 
 #ifdef USE_LIBCURL
- int curl_sslerr = 1;
  FILE *curl_dfile = NULL;
  CURL *curl_handle = NULL;
  char errbuf[CURL_ERROR_SIZE];
@@ -301,7 +300,7 @@ static const char *get_dump_name(void)
 #ifdef USE_LIBCURL
 static int curl_dump_cb(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr)
 {
-	FILE *f_out = (FILE *)userptr;
+	FILE *stream = (FILE *)userptr;
 	const char *prefix;
 	char *in, *out;
 	unsigned char c;
@@ -309,12 +308,13 @@ static int curl_dump_cb(CURL *handle, curl_infotype type, char *data, size_t siz
 	size_t i;
 	struct tm *stm;
 	time_t now;
-	char buf[20];
+	char t_buf[20];
 
+	/* add timestamp */
 	time(&now);
 	stm = localtime(&now);
-	memset(buf, 0, sizeof(buf));
-	strftime(buf, sizeof(buf), "%b %d %H:%M:%S ", stm);
+	memset(t_buf, 0, sizeof(t_buf));
+	strftime(t_buf, sizeof(t_buf), "%b %d %H:%M:%S ", stm);
 
 	switch (type) {
 		case CURLINFO_HEADER_OUT:
@@ -337,35 +337,41 @@ static int curl_dump_cb(CURL *handle, curl_infotype type, char *data, size_t siz
 			return 0;
 	}
 
-	/* pretty up a bit */
-	for (in = out = data; *in != '\0'; in++) {
-		*out = *in;
-		if (*out != '\r')
-			out++;
+	/* pretty up a bit (remove carriage returns and process data in chunks) */
+	for (in = out = data; in < data + size; ++in) {
+		if (*in != '\r') {
+			*out = *in;
+			++out;
+		}
 	}
-	*out = '\0';
-	size = strlen(data);
+	*out = '\0'; /* null-terminate the modified string (for convenience) */
+
+	/* adjust the size after removing '\r' */
+	size = out - data; 
 
 	if (data[size - 1] == '\n')
 		size -= 1;
 	if (is_info && data[size - 1] == ':')
 		size -= 1;
 
-	fputs(buf, f_out);
-	fputs(prefix, f_out);
+	/* write timestamp and prefix to file */
+	fputs(t_buf, stream);
+	fputs(prefix, stream);
 
-	c = 0;
+	/* loop over the data and print it */
 	for (i = 0; i < size; ++i) {
 		c = data[i];
 		if (c == '\n') {
-			fputc('\n', f_out);
-			fputs(buf, f_out);
-			fputs(prefix, f_out);
+			fputc('\n', stream);
+			fputs(t_buf, stream);
+			fputs(prefix, stream);
 		}
-		else
-			fputc((c >= 0x20 && c < 0x80) ? c : '.', f_out);
+		else /* if character is printable (0x20 - 0x7E), print it, otherwise print '.' */
+			fputc((c >= 0x20 && c < 0x80) ? c : '.', stream);
 	}
-	fputc('\n', f_out);
+
+	/* end with a newline */
+	fputc('\n', stream);
 
 	return 0;
 }
@@ -383,6 +389,7 @@ static void curl_setup(const unsigned int ssl)
 {
 	CURLsslset result;
 	const char *dump;
+	unsigned int curl_sslerr = 1;
 
 #ifdef USE_WOLFSSL
 	result = curl_global_sslset(CURLSSLBACKEND_WOLFSSL, NULL, NULL);
