@@ -1555,6 +1555,8 @@ static int cloudflare_errorcheck(const int code, const char *req, char *body)
 		error(M_INVALID_AUTH);
 	else if (code == 403 && strstr(body, "\"code\":9103") != NULL)
 		error(M_INVALID_AUTH);
+	else if (code == 403 && strstr(blob, "\"code\":10000") != NULL)
+		error(M_INVALID_AUTH);
 
 	error("%s returned HTTP error code %d.", req, code);
 
