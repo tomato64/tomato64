@@ -27,10 +27,10 @@
 #include <shared.h>
 
 #ifdef USE_LIBCURL
-#include <curl/curl.h>
+ #include <curl/curl.h>
 #else
-#include <netdb.h>
-#include "mssl.h"
+ #include <netdb.h>
+ #include "mssl.h"
 #endif
 
 #define VERSION			"2.1"
@@ -56,11 +56,11 @@
 #define MDU_ROUTE_FN		"/tmp/mdu-route"
 
 #ifdef USE_LIBCURL
-int curl_sslerr = 1;
-FILE *curl_dfile = NULL;
-CURL *curl_handle = NULL;
-char errbuf[CURL_ERROR_SIZE];
-char curl_err_str[512];
+ int curl_sslerr = 1;
+ FILE *curl_dfile = NULL;
+ CURL *curl_handle = NULL;
+ char errbuf[CURL_ERROR_SIZE];
+ char curl_err_str[512];
 #endif
 
 /* needed by logmsg() */
@@ -1545,9 +1545,10 @@ zone_id can be retrieved via
 GET https://api.cloudflare.com/client/v4/zones?name=example.com&status=active
 but this is unimplemented here.
 */
-static int cloudflare_errorcheck(int code, const char *req, char *body)
+static int cloudflare_errorcheck(const int code, const char *req, char *body)
 {
 	unsigned int n = 0, i = 0;
+
 	for (i = 0; i < strlen(body); ++i) {
 		if (body[i] != ' ')
 			body[n++] = body[i];
