@@ -886,6 +886,7 @@ static int read_tmaddr(const char *name, long *tm, char *addr)
 
 	logmsg(LOG_DEBUG, "*** %s: IN cachename: %s", __FUNCTION__, name);
 
+	memset(s, 0, sizeof(s)); /* reset */
 	if (f_read_string(name, s, sizeof(s)) > 0) {
 		if (sscanf(s, "%ld,%15s", tm, addr) == 2) {
 			logmsg(LOG_DEBUG, "*** %s: s=%s tm=%ld addr=%s", __FUNCTION__, s, *tm, addr);
