@@ -126,11 +126,10 @@ static void update(int num, int *dirty, int force)
 	f_write_string(cache_fn, nvram_safe_get(cache_nv), 0, 0);
 
 	/* if nvram cache is empty, the 'Force next update' option is probably checked - reset also cache file .extip */
-	if (strcmp(nvram_safe_get(cache_nv), "") == 0) {
-		memset(s, 0, sizeof(s));
-		snprintf(s, sizeof(s), "%s.extip", ddnsx_path);
+	memset(s, 0, sizeof(s));
+	snprintf(s, sizeof(s), "%s.extip", ddnsx_path);
+	if (strcmp(nvram_safe_get(cache_nv), "") == 0)
 		f_write(s, NULL, 0, 0, 0);
-	}
 
 	if (!f_exists(msg_fn)) {
 		logmsg(LOG_DEBUG, "*** %s: !f_exist(%s) - creating ...", __FUNCTION__, msg_fn);
@@ -154,7 +153,7 @@ static void update(int num, int *dirty, int force)
 	           "ahash %s\n"
 	           "msg %s\n"
 	           "cookie %s\n"
-	           "addrcache ddnsx%d.extip\n"
+	           "addrcache %s\n"
 	           "",
 	           user,
 	           pass,
@@ -167,7 +166,7 @@ static void update(int num, int *dirty, int force)
 	           cust,
 	           msg_fn,
 	           cache_fn,
-	           num);
+	           s);
 
 	if (nvram_get_int("debug_ddns"))
 		fprintf(f, "dump /tmp/mdu%d-%s.txt\n", num, serv);
