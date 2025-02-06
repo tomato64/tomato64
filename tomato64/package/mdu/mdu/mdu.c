@@ -500,7 +500,7 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url)
 }
 
 #else /* !USE_LIBCURL */
-static int _http_req(const unsigned int ssl, const char *host, const int port, const char *request, char *buffer, int bufsize, char **body)
+static int _sock_http_req(const unsigned int ssl, const char *host, const int port, const char *request, char *buffer, int bufsize, char **body)
 {
 	struct addrinfo hints;
 	struct addrinfo *result, *rp;
@@ -544,7 +544,7 @@ static int _http_req(const unsigned int ssl, const char *host, const int port, c
 					if (ip == NULL)
 						continue;
 
-					logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting...", __FUNCTION__, ip, cport);
+					logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting ...", __FUNCTION__, ip, cport);
 
 					/* add route if needed */
 					route_adddel(ip, 1);
@@ -614,7 +614,7 @@ proceed:
 			logerr(__FUNCTION__, __LINE__, "error reading");
 			continue;
 		}
-		buffer[i] = 0;
+		buffer[i] = '\0'; /* null-terminate the string */
 
 		logmsg(LOG_DEBUG, "*** %s: recvd=[%s], i=%d", __FUNCTION__, buffer, i);
 
@@ -655,7 +655,7 @@ proceed:
 }
 #endif /* USE_LIBCURL */
 
-static int http_req(const unsigned int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body)
+static int _http_req(const unsigned int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body)
 {
 	logmsg(LOG_DEBUG, "*** %s: IN host=[%s] query=[%s] ssl=[%d] header=[%s] auth=[%d] data=[%s] req=[%s] ifname=[%s]", __FUNCTION__, host, query, ssl, header, auth, data, req, ifname);
 #ifdef USE_LIBCURL
@@ -753,6 +753,14 @@ static int http_req(const unsigned int ssl, int static_host, const char *host, c
 
 	curl_slist_free_all(headers);
 	curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &code);
+
+	if (r != CURLE_OK) {
+		memset(curl_err_str, 0, sizeof(curl_err_str));
+		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (strlen(errbuf) ? errbuf : curl_easy_strerror(r)));
+	}
+	else
+		*body = blob;
+
 	fclose(curl_wbuf);
 	if (curl_rbuf)
 		fclose(curl_rbuf);
@@ -761,13 +769,6 @@ static int http_req(const unsigned int ssl, int static_host, const char *host, c
 		fputc('\n', curl_dfile);
 		fflush(curl_dfile);
 	}
-
-	if (r != CURLE_OK) {
-		memset(curl_err_str, 0, sizeof(curl_err_str));
-		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (strlen(errbuf) ? errbuf : curl_easy_strerror(r)));
-	}
-	else
-		*body = blob;
 
 	curl_cleanup();
 
@@ -839,7 +840,7 @@ static int http_req(const unsigned int ssl, int static_host, const char *host, c
 
 	logmsg(LOG_DEBUG, "*** %s: host=[%s] port=[%d] request=[%s] ssl=[%d] buffer=[%s]", __FUNCTION__, a, port, p, ssl, blob);
 
-	n = _http_req(ssl, a, port, p, blob, BLOB_SIZE, body);
+	n = _sock_http_req(ssl, a, port, p, blob, BLOB_SIZE, body);
 	free(p);
 
 	logmsg(LOG_DEBUG, "*** %s: n=%d", __FUNCTION__, n);
@@ -848,9 +849,9 @@ static int http_req(const unsigned int ssl, int static_host, const char *host, c
 #endif /* USE_LIBCURL */
 }
 
-static int wget(const unsigned int ssl, int static_host, const char *host, const char *get, const char *header, int auth, char **body)
+static int http_req(const unsigned int ssl, int static_host, const char *host, const char *get, const char *header, int auth, char **body)
 {
-	return http_req(ssl, static_host, host, "GET", get, header, auth, NULL, body);
+	return _http_req(ssl, static_host, host, "GET", get, header, auth, NULL, body);
 }
 
 int read_tmaddr(const char *name, long *tm, char *addr)
@@ -904,7 +905,7 @@ const char *get_address(int required)
 			while (n-- > 0) {
 				srand(time(0));
 				service_num = (rand() % (rows));
-				if (wget(0, 1, services[service_num][0], services[service_num][1], NULL, 0, &body) == 200) { /* do not use ssl */
+				if (http_req(0, 1, services[service_num][0], services[service_num][1], NULL, 0, &body) == 200) { /* do not use ssl */
 					if ((p = strstr(body, "Address:")) != NULL) /* dyndns */
 						p += 8;
 					else /* the rest */
@@ -976,11 +977,11 @@ int get_address6(char *buf, const size_t buf_sz)
 		if (lanif != NULL) {
 			strlcpy(buf, lanif, buf_sz);
 			ret = 1;
-			logmsg(LOG_DEBUG, "*** %s: - valid global IPv6 address %s after %d secs...", __FUNCTION__, lanif, (n - 1) * (n - 1));
+			logmsg(LOG_DEBUG, "*** %s: - valid global IPv6 address %s after %d secs ...", __FUNCTION__, lanif, (n - 1) * (n - 1));
 			break; /* All OK and break here */
 		}
 
-		logmsg(LOG_DEBUG, "*** %s: - no global IPv6 address yet, retrying in %d secs...", __FUNCTION__, n * n);
+		logmsg(LOG_DEBUG, "*** %s: - no global IPv6 address yet, retrying in %d secs ...", __FUNCTION__, n * n);
 		sleep(n * n); /* try up to 30 sec */
 	}
 
@@ -1053,7 +1054,7 @@ static void update_dua(const char *type, const unsigned int ssl, const char *ser
 
 	trimamp(query);
 
-	r = wget(ssl, 0, server ? server : get_option_required("server"), query, NULL, 1, &body);
+	r = http_req(ssl, 0, server ? server : get_option_required("server"), query, NULL, 1, &body);
 	switch (r) {
 	case 200:
 		if ((strstr(body, "dnserr")) || (strstr(body, "911"))) {
@@ -1169,7 +1170,7 @@ static void update_namecheap(const unsigned int ssl)
 	/* +opt */
 	append_addr_option(query, "&ip=%s");
 
-	r = wget(ssl, 0, "dynamicdns.park-your-domain.com", query, NULL, 0, &body);
+	r = http_req(ssl, 0, "dynamicdns.park-your-domain.com", query, NULL, 0, &body);
 	if (r == 200) {
 		if (strstr(body, "<ErrCount>0<"))
 			success();
@@ -1251,7 +1252,7 @@ static void update_enom(const unsigned int ssl)
 	/* +opt */
 	append_addr_option(query, "&Address=%s");
 
-	r = wget(ssl, 0, "dynamic.name-services.com", query, NULL, 0, &body);
+	r = http_req(ssl, 0, "dynamic.name-services.com", query, NULL, 0, &body);
 	if (r == 200) {
 		if (strstr(body, "ErrCount=0"))
 			success();
@@ -1307,7 +1308,7 @@ static void update_dnsexit(const unsigned int ssl)
 	/* +opt */
 	append_addr_option(query, "&myip=%s");
 
-	r = wget(ssl, 0, "update.dnsexit.com", query, NULL, 0, &body);
+	r = http_req(ssl, 0, "update.dnsexit.com", query, NULL, 0, &body);
 	if (r == 200) { /* (\d+)=.+ */
 		if ((strstr(body, "0=Success")) || (strstr(body, "1=IP")))
 			success();
@@ -1370,7 +1371,7 @@ static void update_zoneedit(const unsigned int ssl)
 	/* +opt */
 	append_addr_option(query, "&dnsto=%s");
 
-	r = wget(ssl, 0, "dynamic.zoneedit.com", query, NULL, 1, &body);
+	r = http_req(ssl, 0, "dynamic.zoneedit.com", query, NULL, 1, &body);
 	switch (r) {
 	case 200:
 		if (strstr(body, "<SUCCESS CODE"))
@@ -1438,7 +1439,7 @@ static void update_afraid(const unsigned int ssl)
 	/* +opt */
 	append_addr_option(query, "&address=%s");
 
-	r = wget(ssl, 0, "freedns.afraid.org", query, NULL, 0, &body);
+	r = http_req(ssl, 0, "freedns.afraid.org", query, NULL, 0, &body);
 	if (r == 200) {
 		if ((strstr(body, "Updated")) && (strstr(body, "seconds")))
 			success();
@@ -1582,7 +1583,7 @@ static void update_cloudflare(const unsigned int ssl)
 	/* +opt +opt */
 	snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records?type=A&name=%s&order=name&direction=asc", zone, host);
 
-	r = wget(ssl, 1, "api.cloudflare.com", query, header, 0, &body);
+	r = http_req(ssl, 1, "api.cloudflare.com", query, header, 0, &body);
 	r = cloudflare_errorcheck(r, "GET", body);
 	req = "PUT";
 	addr = get_address(1);
@@ -1627,7 +1628,7 @@ static void update_cloudflare(const unsigned int ssl)
 	/* +opt +opt */
 	snprintf(data, QUARTER_BLOB, "{\"type\":\"A\",\"name\":\"%s\",\"content\":\"%s\",\"proxied\":%s}", host, addr, (prox ? "true" : "false"));
 
-	r = http_req(ssl, 1, "api.cloudflare.com", req, query, header, 0, data, &body);
+	r = _http_req(ssl, 1, "api.cloudflare.com", req, query, header, 0, data, &body);
 	r = cloudflare_errorcheck(r, req, body);
 
 	if (r != 0)
@@ -1650,7 +1651,7 @@ static void update_duckdns(const unsigned int ssl)
 
 	append_addr_option(query, "&ip=%s");
 
-	r = wget(ssl, 0, "www.duckdns.org", query, NULL, 0, &body);
+	r = http_req(ssl, 0, "www.duckdns.org", query, NULL, 0, &body);
 	if (r == 200) {
 		if (strstr(body, "OK"))
 			success();
@@ -1662,7 +1663,7 @@ static void update_duckdns(const unsigned int ssl)
 }
 
 /* wget/custom */
-static void update_wget(void)
+static void update_custom(void)
 {
 	int r;
 	char *c;
@@ -1724,10 +1725,10 @@ static void update_wget(void)
 	if ((c = strrchr(host, '@')) != NULL) {
 		*c = 0;
 		host = c + 1;
-		r = wget(https, 1, host, path, NULL, 1, &body);
+		r = http_req(https, 1, host, path, NULL, 1, &body);
 	}
 	else
-		r = wget(https, 1, host, path, NULL, 0, &body);
+		r = http_req(https, 1, host, path, NULL, 0, &body);
 
 	logmsg(LOG_DEBUG, "*** %s: IP: %s HOST: %s", __FUNCTION__, body, host);
 
@@ -1925,7 +1926,7 @@ int main(int argc, char *argv[])
 	else if (strcmp(p,  "duckdns") ==0)
 		update_duckdns(1);
 	else if ((strcmp(p, "wget") == 0) || (strcmp(p, "custom") == 0))
-		update_wget();
+		update_custom();
 	else
 		error("Unknown service");
 
