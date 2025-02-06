@@ -99,13 +99,13 @@ static char services[][2][23] = { /* remember: the number in the third square br
 	{ "icanhazip.com",		"/"	}	/* txt */
 };
 
-static void route_adddel(unsigned int add, const char *ip)
+static void route_adddel(const char *ip, unsigned int add)
 {
 	char cmd[256];
 	char buf[64];
 	char buf2[64];
 
-	if (ifname[0] != '\0' && nvram_get_int("mwan_num") > 1) {
+	if (ifname[0] != '\0' && nvram_get_int("mwan_num") > 1) { /* only for MultiWAN */
 		logmsg(LOG_DEBUG, "*** IN %s: add=[%d] ip=[%s] ifname=[%s] - %s routes ...", __FUNCTION__, add, ip, ifname, (add ? "adding" : "deleting"));
 
 		memset(buf, 0, sizeof(buf)); /* reset */
@@ -543,15 +543,18 @@ static int _http_req(const unsigned int ssl, const char *host, const int port, c
 
 					logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting...", __FUNCTION__, ip, cport);
 
-					route_adddel(1, ip);
+					/* add route if needed */
+					route_adddel(ip, 1);
 					if (connect_timeout(sockfd, rp->ai_addr, rp->ai_addrlen, 10) != -1) {
 						logmsg(LOG_DEBUG, "*** %s: connected", __FUNCTION__);
-						route_adddel(0, ip);
+						/* del route */
+						route_adddel(ip, 0);
 						stop = check_stop();
 						freeaddrinfo(result);
 						goto proceed;
 					}
-					route_adddel(0, ip);
+					/* del route */
+					route_adddel(ip, 0);
 
 					stop = check_stop();
 					if (stop == 1) {
@@ -724,16 +727,20 @@ static int http_req(const unsigned int ssl, int static_host, const char *host, c
 	else if (!strcmp(req, "PUT"))
 		curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 1L);
 
-	route_adddel(1, ip);
+	/* add route if needed */
+	route_adddel(ip, 1);
+
 	for (trys = 4; trys > 0; --trys) {
 		errbuf[0] = 0;
 		r = curl_easy_perform(curl_handle);
 		stop = check_stop();
 		if ((r != CURLE_COULDNT_CONNECT) || (stop == 1))
 			break;
+
 		sleep(2);
 	}
-	route_adddel(0, ip);
+	/* del route */
+	route_adddel(ip, 0);
 
 	curl_slist_free_all(headers);
 	curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &code);
