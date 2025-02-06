@@ -1,9 +1,11 @@
 /*
-
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ * Fixes/updates (C) 2023 - 2025 pedro
+ *
+ */
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +16,23 @@
 #include "shared.h"
 
 
+static int getpsstate(int pid) {
+	char buf[512];
+	char path[64];
+	char *p;
+	char *c;
+
+	sprintf(path, "/proc/%d/stat", pid);
+	if ((f_read_string(path, buf, sizeof(buf)) > 4) && ((p = strrchr(buf, ')')) != NULL)) {
+		c = p + 2;
+		unsigned char state;
+		sscanf(c, "%c", &state);
+		return state;
+	}
+
+	return 0;
+}
+
 //# cat /proc/1/stat
 //1 (init) S 0 0 0 0 -1 256 287 10043 109 21377 7 110 473 1270 9 0 0 0 27 1810432 126 2147483647 4194304 4369680 2147450688 2147449688 717374852 0 0 0 514751 2147536844 0 0 0 0
 
@@ -23,7 +42,9 @@ char *psname(int pid, char *buffer, int maxlen)
 	char path[64];
 	char *p;
 
-	if (maxlen <= 0) return NULL;
+	if (maxlen <= 0)
+		return NULL;
+
 	*buffer = 0;
 	sprintf(path, "/proc/%d/stat", pid);
 	if ((f_read_string(path, buf, sizeof(buf)) > 4) && ((p = strrchr(buf, ')')) != NULL)) {
@@ -32,6 +53,7 @@ char *psname(int pid, char *buffer, int maxlen)
 			strlcpy(buffer, p + 1, maxlen);
 		}
 	}
+
 	return buffer;
 }
 
@@ -54,19 +76,26 @@ static int _pidof(const char *name, pid_t **pids)
 	struct dirent *de;
 	pid_t i;
 	int count;
-	char buf[256];
+	char buf[256] = { 0 };
 
 	count = 0;
 	if (pids)
 		*pids = NULL;
+
 	if ((p = strrchr(name, '/')) != NULL)
 		name = p + 1;
+
 	if ((dir = opendir("/proc")) != NULL) {
 		while ((de = readdir(dir)) != NULL) {
 			i = strtol(de->d_name, &e, 10);
 			if (*e != 0)
 				continue;
-			if (strcmp(name, psname(i, buf, sizeof(buf))) == 0) {
+
+			if (strncmp(name, psname(i, buf, sizeof(buf)), 15) == 0) {
+				if (getpsstate(i) == 'Z') {
+					closedir(dir);
+					return -1;
+				}
 				if (pids) {
 					if ((*pids = realloc(*pids, sizeof(pid_t) * (count + 1))) == NULL) {
 						closedir(dir);
@@ -82,6 +111,7 @@ static int _pidof(const char *name, pid_t **pids)
 		}
 	}
 	closedir(dir);
+
 	return count;
 }
 
