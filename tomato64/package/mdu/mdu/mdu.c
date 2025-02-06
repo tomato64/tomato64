@@ -72,8 +72,6 @@ char *blob = NULL;
 char ifname[16];
 char sPrefix[8];
 int error_exitcode = 1;
-int no_wan_mode = 1;
-
 int g_argc;
 char **g_argv;
 
@@ -1795,6 +1793,7 @@ int main(int argc, char *argv[])
 	const char *p, *c;
 	char tmp[16];
 	int mwan_num, wan_unit;
+	unsigned int no_wan_mode = 1;
 
 	g_argc = argc;
 	g_argv = argv;
