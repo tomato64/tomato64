@@ -512,6 +512,9 @@ static long _sock_http_req(const unsigned int ssl, const char *host, const int p
 	long i;
 	char *p;
 	const char *c, *ip;
+	struct tm *stm;
+	time_t now;
+	char buf[20];
 
 	logmsg(LOG_DEBUG, "*** IN %s: %s", __FUNCTION__, host);
 
@@ -578,6 +581,8 @@ static long _sock_http_req(const unsigned int ssl, const char *host, const int p
 			return -1;
 
 proceed:
+		logmsg(LOG_DEBUG, "*** %s: proceed", __FUNCTION__);
+
 		if (stop == 1) {
 			close(sockfd);
 			error("Force stop.");
@@ -627,11 +632,16 @@ proceed:
 		/* make dump */
 		if ((c = get_dump_name()) != NULL) {
 			if ((f = fopen(c, "a")) != NULL) {
-				fprintf(f, "\n[%s:%d]\nREQUEST\n", host, port);
+				time(&now);
+				stm = localtime(&now);
+				memset(buf, 0, sizeof(buf));
+				strftime(buf, sizeof(buf), "%b %d %H:%M:%S", stm);
+
+				fprintf(f, "[%s -> %s:%d]\nREQUEST =>\n", buf, host, port);
 				fputs(request, f);
-				fputs("\nREPLY\n", f);
-				fputs(buffer, f);
-				fputs("\nEND\n", f);
+				fputs("REPLY <=\n", f);
+				fputs(blob, f);
+				fputs("\nEND\n\n", f);
 				fclose(f);
 			}
 		}
