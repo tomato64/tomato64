@@ -298,7 +298,7 @@ static const char *get_dump_name(void)
 }
 
 #ifdef USE_LIBCURL
-static int curl_dump(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr)
+static int curl_dump_cb(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr)
 {
 	FILE *f_out = (FILE *)userptr;
 	const char *prefix;
@@ -406,7 +406,7 @@ static void curl_setup(const unsigned int ssl, const unsigned int use_dump)
 
 	if (use_dump && (dump = get_dump_name()) != NULL) {
 		if ((curl_dfile = fopen(dump, "a")) != NULL) {
-			curl_easy_setopt(curl_handle, CURLOPT_DEBUGFUNCTION, curl_dump);
+			curl_easy_setopt(curl_handle, CURLOPT_DEBUGFUNCTION, curl_dump_cb);
 			curl_easy_setopt(curl_handle, CURLOPT_DEBUGDATA, (void *)curl_dfile);
 		}
 	}
@@ -709,7 +709,7 @@ static int http_req(const unsigned int ssl, int static_host, const char *host, c
 	setbuf(curl_wbuf, NULL);
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)curl_wbuf);
 
-	if (data) {
+	if (data) { /* only cloudflare (for now) */
 		curl_rbuf = fmemopen(data, strlen(data), "r");
 		curl_easy_setopt(curl_handle, CURLOPT_READDATA, (void *)curl_rbuf);
 		curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, strlen(data));
