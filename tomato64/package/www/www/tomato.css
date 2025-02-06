@@ -452,7 +452,7 @@ table.fields {
 
 div#vlan-grid img[id^="eth_"] {
 	width: 55%;
-	max-height: 55vh;
+	height: 55%;
 }
 
 div[id^="vport_"],
@@ -483,12 +483,10 @@ img[id^="spin2"],
 	margin: 0 4px 0 4px;
 }
 
-/* TOMATO64-REMOVE-BEGIN */
 img[id^="eth_"] {
 	width: 46px;
 	height: 35px;
 }
-/* TOMATO64-REMOVE-END */
 
 #wait {
 	display: none;
