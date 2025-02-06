@@ -279,7 +279,7 @@ static void success_msg(const char *msg, const unsigned int do_exit)
 {
 	save_cookie();
 
-	logmsg(LOG_DEBUG, "*** %s, msg: %s", __FUNCTION__, msg);
+	logmsg(LOG_DEBUG, "*** %s: msg=[%s]", __FUNCTION__, msg);
 	printf("%s\n", msg);
 	save_msg(msg);
 
@@ -465,6 +465,7 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url)
 	char *ip;
 	CURLcode r;
 	int trys, stop = 0;
+	unsigned int ok = 0;
 
 	curl_setup(ssl, 0); /* we don't need dump here */
 
@@ -480,9 +481,10 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url)
 
 		sleep(2);
 	}
-	curl_easy_getinfo(curl_handle, CURLINFO_PRIMARY_IP, &ip);
 
-	if (r != CURLE_OK) {
+	if ((r == CURLE_OK) && !curl_easy_getinfo(curl_handle, CURLINFO_PRIMARY_IP, &ip) && ip)
+		ok = 1;
+	else {
 		memset(curl_err_str, 0, sizeof(curl_err_str));
 		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (strlen(errbuf) ? errbuf : curl_easy_strerror(r)));
 	}
@@ -492,9 +494,9 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url)
 	if (stop == 1)
 		error("Force stop.");
 
-	logmsg(LOG_DEBUG, "*** %s: IP=[%s]", __FUNCTION__, (ip ? ip : "NULL"));
+	logmsg(LOG_DEBUG, "*** %s: OUT IP=[%s]", __FUNCTION__, (ok ? ip : "unknown"));
 
-	return ip ? ip : 0;
+	return ok ? ip : "0";
 }
 
 #else /* !USE_LIBCURL */
@@ -674,14 +676,22 @@ static int http_req(const unsigned int ssl, int static_host, const char *host, c
 	snprintf(url, HALF_BLOB, "%s%s", host, query);
 
 	memset(ip, 0, INET6_ADDRSTRLEN); /* reset */
-	/* resolve IP first to add/remove routes (only for multiWAN) */
+	/* resolve IP to add/remove routes first */
 	if (ifname[0] != '\0') {
 		ip_ret = curl_resolve_ip(ssl, url);
-		if (ip_ret)
+		if (strcmp(ip_ret, "0"))
 			strlcpy(ip, ip_ret, INET6_ADDRSTRLEN); /* copy as it will be reused in the next request */
 		else
 			return code; /* couldn't resolve IP */
 	}
+
+	/* open a memory stream to store data */
+	curl_wbuf = fmemopen(blob, HALF_BLOB, "w");
+	if (curl_wbuf == NULL) {
+		logmsg(LOG_ERR, "Failed to open memory stream, aborting ...");
+		return code;
+	}
+	setbuf(curl_wbuf, NULL); /* disable buffering */
 
 	curl_setup(ssl, 1); /* use dump */
 
@@ -705,8 +715,6 @@ static int http_req(const unsigned int ssl, int static_host, const char *host, c
 	else
 		curl_easy_setopt(curl_handle, CURLOPT_HTTPAUTH, CURLAUTH_NONE);
 
-	curl_wbuf = fmemopen(blob, HALF_BLOB, "w");
-	setbuf(curl_wbuf, NULL);
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)curl_wbuf);
 
 	if (data) { /* only cloudflare (for now) */
@@ -775,7 +783,7 @@ static int http_req(const unsigned int ssl, int static_host, const char *host, c
 	int n;
 	char *httpv;
 
-	if (strncmp(host, "updates.opendns.com", 19) == 0 || strncmp(host, "api.cloudflare.com", 18) == 0)
+	if ((strncmp(host, "updates.opendns.com", 19) == 0) || (strncmp(host, "api.cloudflare.com", 18) == 0))
 		httpv = "HTTP/1.1";
 	else
 		httpv = "HTTP/1.0";
