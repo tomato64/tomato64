@@ -378,7 +378,7 @@ static void curl_cleanup()
 	curl_global_cleanup();
 }
 
-static void curl_setup(const unsigned int ssl, const unsigned int no_dump)
+static void curl_setup(const unsigned int ssl, const unsigned int use_dump)
 {
 	CURLsslset result;
 	const char *dump;
@@ -398,13 +398,13 @@ static void curl_setup(const unsigned int ssl, const unsigned int no_dump)
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
 	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
-	curl_easy_setopt(curl_handle, CURLOPT_MAXREDIRS, (no_dump ? 0L : 5L));
-	curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT, (no_dump ? 3L : 10L));
-	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, (no_dump ? 3L : 10L));
+	curl_easy_setopt(curl_handle, CURLOPT_MAXREDIRS, (use_dump ? 5L : 0L));
+	curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT, (use_dump ? 10L : 3L));
+	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, (use_dump ? 10L : 3L));
 	curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
 	curl_easy_setopt(curl_handle, CURLOPT_ERRORBUFFER, errbuf);
 
-	if (!no_dump && (dump = get_dump_name()) != NULL) {
+	if (use_dump && (dump = get_dump_name()) != NULL) {
 		if ((curl_dfile = fopen(dump, "a")) != NULL) {
 			curl_easy_setopt(curl_handle, CURLOPT_DEBUGFUNCTION, curl_dump);
 			curl_easy_setopt(curl_handle, CURLOPT_DEBUGDATA, (void *)curl_dfile);
@@ -466,7 +466,7 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url)
 	CURLcode r;
 	int trys, stop = 0;
 
-	curl_setup(ssl, 1); /* we don't need dump here */
+	curl_setup(ssl, 0); /* we don't need dump here */
 
 	/* check by default gateway, no specific iface */
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
@@ -477,6 +477,7 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url)
 		stop = check_stop();
 		if ((r != CURLE_COULDNT_CONNECT) || (stop == 1))
 			break;
+
 		sleep(2);
 	}
 	curl_easy_getinfo(curl_handle, CURLINFO_PRIMARY_IP, &ip);
@@ -682,7 +683,7 @@ static int http_req(const unsigned int ssl, int static_host, const char *host, c
 			return code; /* couldn't resolve IP */
 	}
 
-	curl_setup(ssl, 0);
+	curl_setup(ssl, 1); /* use dump */
 
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
 
