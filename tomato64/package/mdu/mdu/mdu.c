@@ -620,7 +620,6 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	/* del route */
 	route_adddel(ip, 0);
 
-	curl_slist_free_all(headers);
 	curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &code);
 
 	logmsg(LOG_DEBUG, "*** %s: connected, response=[%ld]", __FUNCTION__, code);
@@ -641,6 +640,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		fflush(curl_dfile);
 	}
 
+	curl_slist_free_all(headers);
 	curl_cleanup();
 
 	if (stop == 1)
