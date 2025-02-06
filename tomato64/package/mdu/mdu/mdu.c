@@ -1905,7 +1905,7 @@ int main(int argc, char *argv[])
 	else if (strcmp(p, "easydns") == 0)
 		update_dua(NULL, 1, "members.easydns.com", "/dyn/dyndns.php", 1);
 	else if (strcmp(p, "enom") == 0)
-		update_enom(0); /* bad cert */
+		update_enom(1); /* fixed cert */
 	else if (strcmp(p, "afraid") == 0)
 		update_afraid(1);
 	else if (strcmp(p, "heipv6tb") == 0)
