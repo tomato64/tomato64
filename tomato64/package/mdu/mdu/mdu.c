@@ -49,6 +49,7 @@
 #define M_INVALID_PARAM__S	"Invalid parameter (%s)."
 #define M_TOOSOON		"Update was too soon or too frequent."
 #define M_ERROR_GET_IP		"Error obtaining IP address."
+#define M_ERROR_MEM_STREAM	"Failed to open memory stream, aborting."
 #define M_SAME_IP		"The IP address is the same."
 #define M_SAME_RECORD		"Record already up-to-date."
 #define M_DOWN			"Server temporarily down or under maintenance."
@@ -535,7 +536,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	curl_wbuf = fmemopen(blob, BLOB_SIZE, "w");
 	if (curl_wbuf == NULL) {
 		logmsg(LOG_ERR, "failed to open memory stream, aborting ...");
-		return code;
+		return -2;
 	}
 	setbuf(curl_wbuf, NULL); /* disable buffering */
 
@@ -1591,6 +1592,8 @@ static void update_cloudflare(const unsigned int ssl)
 
 	if (s == -1)
 		error(M_ERROR_GET_IP);
+	else if (s == -2 )
+		error(M_ERROR_MEM_STREAM);
 
 	r = cloudflare_errorcheck(s, "GET", body);
 
@@ -1640,6 +1643,8 @@ static void update_cloudflare(const unsigned int ssl)
 
 	if (s == -1)
 		error(M_ERROR_GET_IP);
+	else if (s == -2 )
+		error(M_ERROR_MEM_STREAM);
 
 	r = cloudflare_errorcheck(s, "PUT", body);
 
