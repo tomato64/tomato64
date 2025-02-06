@@ -2044,7 +2044,7 @@ function init() {
 				<ul>
 					<li><b>Off</b> - Will not add routing rules for the wireguard interface.</li>
 					<li><b>Auto</b> - The wireguard interface will be routed using the default table (the same number as the interface port)</li>
-					<li><b>Custom Table</b> - Will route the wireguard interface using a custom table number. If sepcified, you must also include the table number in the additional field.</li>
+					<li><b>Custom Table</b> - Will route the wireguard interface using a custom table number. If specified, you must also include the table number in the additional field.</li>
 				</ul>
 			</ul>
 		</ul>
