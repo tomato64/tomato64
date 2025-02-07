@@ -743,6 +743,12 @@ REMOVE-END */
 			(data[COL_P3T] != 0) ? 'checked' : '',
 			(data[COL_P4] != 0) ? 'checked' : '',
 			(data[COL_P4T] != 0) ? 'checked' : '',
+/* TOMATO64-REMOVE-BEGIN */
+/* EXTSW-BEGIN */
+			(data[COL_P5] != 0) ? 'checked' : '',
+			(data[COL_P5T] != 0) ? 'checked' : '',
+/* EXTSW-END */
+/* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 			(data[COL_P5] != 0) ? 'checked' : '',
 			(data[COL_P5T] != 0) ? 'checked' : '',
