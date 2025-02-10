@@ -65,6 +65,7 @@ define HOSTAPD_OPENWRT_CONFIGURE_CMDS
 	CONFIG_SUITEB192=y \
 	CONFIG_AP=y \
 	CONFIG_MESH=y \
+	CONFIG_EAP_PWD=y \
 	LIBS="-L$(TARGET_DIR)/usr/lib -fuse-ld=bfd -Wl,--gc-sections -flto=auto -fuse-linker-plugin -DPIC -fPIC -znow -zrelro -lcrypto -lssl -lubox -lubus -lblobmsg_json -lucode -lm -lnl-tiny -ludebug" \
 	LIBS_c="" \
 	AR="$(TARGET_CROSS)gcc-ar" \
@@ -101,6 +102,7 @@ define HOSTAPD_OPENWRT_CONFIGURE_CMDS
 	CONFIG_SUITEB192=y \
 	CONFIG_AP=y \
 	CONFIG_MESH=y \
+	CONFIG_EAP_PWD=y \
 	LIBS="-L$(TARGET_DIR)/usr/lib -fuse-ld=bfd -Wl,--gc-sections -flto=auto -fuse-linker-plugin -DPIC -fPIC -znow -zrelro -lcrypto -lssl -lubox -lubus -lblobmsg_json -lucode -lm -lnl-tiny -ludebug" \
 	LIBS_c="" \
 	AR="$(TARGET_CROSS)gcc-ar" \
@@ -144,6 +146,7 @@ define HOSTAPD_OPENWRT_BUILD_CMDS
 	CONFIG_SUITEB192=y \
 	CONFIG_AP=y \
 	CONFIG_MESH=y \
+	CONFIG_EAP_PWD=y \
 	LIBS="-L$(TARGET_DIR)/usr/lib -fuse-ld=bfd -Wl,--gc-sections -flto=auto -fuse-linker-plugin -DPIC -fPIC -znow -zrelro -lcrypto -lssl -lubox -lubus -lblobmsg_json -lucode -lm -lnl-tiny -ludebug" \
 	LIBS_c="" \
 	AR="$(TARGET_CROSS)gcc-ar" \
@@ -182,6 +185,7 @@ define HOSTAPD_OPENWRT_BUILD_CMDS
 	CONFIG_SUITEB192=y \
 	CONFIG_AP=y \
 	CONFIG_MESH=y \
+	CONFIG_EAP_PWD=y \
 	LIBS="-L$(TARGET_DIR)/usr/lib -fuse-ld=bfd -Wl,--gc-sections -flto=auto -fuse-linker-plugin -DPIC -fPIC -znow -zrelro -lcrypto -lssl -lubox -lubus -lblobmsg_json -lucode -lm -lnl-tiny -ludebug" \
 	LIBS_c="" \
 	AR="$(TARGET_CROSS)gcc-ar" \
