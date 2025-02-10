@@ -15,7 +15,7 @@ index af70e86e46..d58d52ee2b 100644
 @@ -1,3 +1,3 @@
  # Locally calculated
 -sha256  0020c808d0ba74b1f4c9514e2b3dfa98ec13a142c97b86b9c229479c560aca19  ubus-f787c97b34894a38b15599886cacbca01271684f-git4.tar.gz
-+sha256  ebc9289cf26ae0b7e2e61aa6abdf4b1a340b90db6968e8d73c69411b781d4f24  ubus-252a9b0c1774790fb9c25735d5a09c27dba895db-git4.tar.gz
++sha256  ba7602c660cb2c15c0e04942414e4cf3d96622622406c5fc3b88895694aebb9f  ubus-afa57cce0aff82f4a7a0e509d4387ebc23dd3be7-git4.tar.gz
  sha256  a3caa6c0e90c87b7c97c2ac3d0c0d416082ef777215faec2e9b24ea6e68f6988  ubusd_acl.h
 diff --git a/package/ubus/ubus.mk b/package/ubus/ubus.mk
 index cc2ed81786..e350732fc1 100644
@@ -26,7 +26,7 @@ index cc2ed81786..e350732fc1 100644
  ################################################################################
  
 -UBUS_VERSION = f787c97b34894a38b15599886cacbca01271684f
-+UBUS_VERSION = 252a9b0c1774790fb9c25735d5a09c27dba895db
++UBUS_VERSION = afa57cce0aff82f4a7a0e509d4387ebc23dd3be7
  UBUS_SITE = https://git.openwrt.org/project/ubus.git
  UBUS_SITE_METHOD = git
  
