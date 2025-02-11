@@ -7,7 +7,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 # This script send anonymous or incompleted information about model of router and installed tomato version.
 # Those information will be used ONLY for stats.
 # Any of private information will be NOT sended!
-# Results you can explore on http://anon.groov.pl page.
+# Results you can explore on https://anon.freshtomato.org page.
 # If you don`t agree to run this script you can disable it in GUI.
 #
 # Sended information:
@@ -106,7 +106,7 @@ WGET="/usr/bin/wget"
 			}
 
 			# Change all spaces to %20.
-			ANONSEND=$(echo "http://anon.groov.pl/index.php?wanmac_md5=$WANMAC_MD5&model=$MODEL&version=$VER&buildtype=$BUILDTYPE&driver=$DRIVER&uptime=$UPTIME&mod=$MOD&anon=1" | sed "s/ /%20/g")
+			ANONSEND=$(echo "http://anon.freshtomato.org/index.php?wanmac_md5=$WANMAC_MD5&model=$MODEL&version=$VER&buildtype=$BUILDTYPE&driver=$DRIVER&uptime=$UPTIME&mod=$MOD&anon=1" | sed "s/ /%20/g")
 
 			# We have all we need well we can send data to Anon database
 			RESULT="/tmp/anon.result"

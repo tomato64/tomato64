@@ -19,7 +19,7 @@
 
 //	<% nvram("tomatoanon_enable,tomatoanon_answer,tomatoanon_id,tomatoanon_notify"); %>
 
-var anon_link = '&nbsp;&nbsp;<a href="http://anon.groov.pl/index.php?search=9&routerid=<% nv('tomatoanon_id'); %>" class="new_window"><i>[Checkout my router]<\/i><\/a>';
+var anon_link = '&nbsp;&nbsp;<a href="http://anon.freshtomato.org/index.php?search=9&routerid=<% nv('tomatoanon_id'); %>" class="new_window"><i>[Checkout my router]<\/i><\/a>';
 
 function verifyFields(focused, quiet) {
 	var o = (E('_tomatoanon_answer').value == '1');
@@ -74,7 +74,7 @@ function init() {
 		<b>This script does NOT send any private or personal information (such as MAC, IP addresses, etc.)</b><br>
 		The script is fully open and written in bash. Everyone can freely view the content sent to the database.<br>
 		<br>
-		The submitted results can be viewed on the <a href="http://anon.groov.pl" class="new_window"><b>http://anon.groov.pl</b></a> page.<br>
+		The submitted results can be viewed on the <a href="https://anon.freshtomato.org" class="new_window"><b>https://anon.freshtomato.org</b></a> page.<br>
 		<br>
 		<br>
 		The following data is sent by TomatoAnon:<br>
