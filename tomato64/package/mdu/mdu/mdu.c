@@ -1562,11 +1562,11 @@ but this is unimplemented here.
 */
 static char *remove_spaces(const char *body)
 {
-	int length = 0, j = 0;
+	int i, length = 0, j = 0;
 	char *copy;
 
 	/* first, count how many non-space characters there are */
-	for (int i = 0; body[i] != '\0'; i++) {
+	for (i = 0; body[i] != '\0'; i++) {
 		if (body[i] != ' ')
 			length++;
 	}
@@ -1577,7 +1577,7 @@ static char *remove_spaces(const char *body)
 		error("memory allocation failed");
 
 	/* copy non-space characters to the new string */
-	for (int i = 0; body[i] != '\0'; i++) {
+	for (i = 0; body[i] != '\0'; i++) {
 		if (body[i] != ' ')
 			copy[j++] = body[i];
 	}
