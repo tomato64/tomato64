@@ -1,7 +1,20 @@
-diff -Naur dnsmasq-2.89.orig/src/config.h dnsmasq-2.89/src/config.h
---- dnsmasq-2.89.orig/src/config.h	2023-10-06 10:39:24.194969217 -0600
-+++ dnsmasq-2.89/src/config.h	2023-10-06 10:39:33.906970063 -0600
-@@ -79,6 +79,10 @@
+From 78b519be874030053be91d0a1cf18c346975fcb9 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Sat, 15 Feb 2025 13:53:05 -0700
+Subject: [PATCH] dnsmasq: Tomato-helper patch fixes
+
+---
+ src/config.h  | 11 +++++++
+ src/dnsmasq.c | 58 +++++++++++++++++++++++++++++++++
+ src/dnsmasq.h |  6 ++++
+ src/lease.c   | 88 +++++++++++++++++++++++++++++++++++++++++++++++++--
+ 4 files changed, 161 insertions(+), 2 deletions(-)
+
+diff --git a/src/config.h b/src/config.h
+index e722e98..0f2068c 100644
+--- a/src/config.h
++++ b/src/config.h
+@@ -82,6 +82,10 @@ HAVE_BROKEN_RTC
     NOTE: when enabling or disabling this, be sure to delete any old
     leases file, otherwise dnsmasq may get very confused.
  
@@ -12,7 +25,7 @@ diff -Naur dnsmasq-2.89.orig/src/config.h dnsmasq-2.89/src/config.h
  HAVE_TFTP
     define this to get dnsmasq's built-in TFTP server.
  
-@@ -355,6 +359,10 @@
+@@ -358,6 +362,10 @@ HAVE_SOCKADDR_SA_LEN
  #undef HAVE_LOOP
  #endif
  
@@ -23,7 +36,7 @@ diff -Naur dnsmasq-2.89.orig/src/config.h dnsmasq-2.89/src/config.h
  #ifdef NO_DUMPFILE
  #undef HAVE_DUMPFILE
  #endif
-@@ -431,6 +439,9 @@
+@@ -434,6 +442,9 @@ static char *compile_opts =
  "no-"
  #endif
  "nftset "
@@ -33,9 +46,10 @@ diff -Naur dnsmasq-2.89.orig/src/config.h dnsmasq-2.89/src/config.h
  #ifndef HAVE_AUTH
  "no-"
  #endif
-diff -Naur dnsmasq-2.89.orig/src/dnsmasq.c dnsmasq-2.89/src/dnsmasq.c
---- dnsmasq-2.89.orig/src/dnsmasq.c	2023-10-06 10:39:24.194969217 -0600
-+++ dnsmasq-2.89/src/dnsmasq.c	2023-10-06 10:39:33.906970063 -0600
+diff --git a/src/dnsmasq.c b/src/dnsmasq.c
+index 30fb419..f34e3f8 100644
+--- a/src/dnsmasq.c
++++ b/src/dnsmasq.c
 @@ -13,6 +13,44 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -81,7 +95,7 @@ diff -Naur dnsmasq-2.89.orig/src/dnsmasq.c dnsmasq-2.89/src/dnsmasq.c
  
  /* Declare static char *compiler_opts  in config.h */
  #define DNSMASQ_COMPILE_OPTS
-@@ -1563,8 +1601,22 @@
+@@ -1575,8 +1613,22 @@ static void async_event(int pipe, time_t now)
  	/* Note: this may leave TCP-handling processes with the old file still open.
  	   Since any such process will die in CHILD_LIFETIME or probably much sooner,
  	   we leave them logging to the old file. */
@@ -104,7 +118,7 @@ diff -Naur dnsmasq-2.89.orig/src/dnsmasq.c dnsmasq-2.89/src/dnsmasq.c
  	break;
  
        case EVENT_NEWADDR:
-@@ -1607,6 +1659,12 @@
+@@ -1620,6 +1672,12 @@ static void async_event(int pipe, time_t now)
  	    close(daemon->helperfd);
  	  }
  #endif
@@ -117,10 +131,11 @@ diff -Naur dnsmasq-2.89.orig/src/dnsmasq.c dnsmasq-2.89/src/dnsmasq.c
  	
  	if (daemon->lease_stream)
  	  fclose(daemon->lease_stream);
-diff -Naur dnsmasq-2.89.orig/src/dnsmasq.h dnsmasq-2.89/src/dnsmasq.h
---- dnsmasq-2.89.orig/src/dnsmasq.h	2023-10-06 10:39:24.194969217 -0600
-+++ dnsmasq-2.89/src/dnsmasq.h	2023-10-06 10:39:33.906970063 -0600
-@@ -1599,6 +1599,12 @@
+diff --git a/src/dnsmasq.h b/src/dnsmasq.h
+index e455c3f..ba95db3 100644
+--- a/src/dnsmasq.h
++++ b/src/dnsmasq.h
+@@ -1638,6 +1638,12 @@ int make_icmp_sock(void);
  int icmp_ping(struct in_addr addr);
  int delay_dhcp(time_t start, int sec, int fd, uint32_t addr, unsigned short id);
  #endif
@@ -133,10 +148,11 @@ diff -Naur dnsmasq-2.89.orig/src/dnsmasq.h dnsmasq-2.89/src/dnsmasq.h
  void queue_event(int event);
  void send_alarm(time_t event, time_t now);
  void send_event(int fd, int event, int data, char *msg);
-diff -Naur dnsmasq-2.89.orig/src/lease.c dnsmasq-2.89/src/lease.c
---- dnsmasq-2.89.orig/src/lease.c	2023-10-06 10:39:24.194969217 -0600
-+++ dnsmasq-2.89/src/lease.c	2023-10-06 10:39:33.906970063 -0600
-@@ -118,12 +118,15 @@
+diff --git a/src/lease.c b/src/lease.c
+index 55e8443..a5b9441 100644
+--- a/src/lease.c
++++ b/src/lease.c
+@@ -113,12 +113,15 @@ static int read_leases(time_t now, FILE *leasestream)
  
  	ei = atol(daemon->dhcp_buff3);
  
@@ -153,7 +169,7 @@ diff -Naur dnsmasq-2.89.orig/src/lease.c dnsmasq-2.89/src/lease.c
  #else
  	/* strictly time_t is opaque, but this hack should work on all sane systems,
  	   even when sizeof(time_t) == 8 */
-@@ -269,7 +272,16 @@
+@@ -264,7 +267,16 @@ void lease_update_file(time_t now)
  	    continue;
  #endif
  
@@ -170,7 +186,7 @@ diff -Naur dnsmasq-2.89.orig/src/lease.c dnsmasq-2.89/src/lease.c
  	  ourprintf(&err, "%u ", lease->length);
  #else
  	  ourprintf(&err, "%lu ", (unsigned long)lease->expires);
-@@ -313,12 +325,21 @@
+@@ -308,12 +320,21 @@ void lease_update_file(time_t now)
  	      if (!(lease->flags & (LEASE_TA | LEASE_NA)))
  		continue;
  
@@ -193,7 +209,7 @@ diff -Naur dnsmasq-2.89.orig/src/lease.c dnsmasq-2.89/src/lease.c
  	      inet_ntop(AF_INET6, &lease->addr6, daemon->addrbuff, ADDRSTRLEN);
  	 
  	      ourprintf(&err, "%s%u %s ", (lease->flags & LEASE_TA) ? "T" : "",
-@@ -1196,4 +1217,66 @@
+@@ -1221,4 +1242,67 @@ void lease_add_extradata(struct dhcp_lease *lease, unsigned char *data, unsigned
  }
  #endif
  
@@ -209,11 +225,12 @@ diff -Naur dnsmasq-2.89.orig/src/lease.c dnsmasq-2.89/src/lease.c
 +  /* if delete exists... */
 +  if ((f = fopen("/var/tmp/dhcp/delete", "r")) != NULL) {
 +    while (fgets(buf, sizeof(buf), f)) {
-+	ia.s_addr = inet_addr(buf);
-+	lease = lease_find_by_addr(ia);
-+	if (lease) {
++	buf[strcspn(buf, "\n")] = 0;
++	inet_aton(buf, &ia);
++	if (lease = lease_find_by_addr(ia)) {
 +	  lease_prune(lease, 0);
 +	  lease_update_file(now);
++	  lease_update_dns(0);
 +	}
 +    }
 +    fclose(f);
@@ -260,3 +277,6 @@ diff -Naur dnsmasq-2.89.orig/src/lease.c dnsmasq-2.89/src/lease.c
 +#endif /* HAVE_LEASEFILE_EXPIRE */
 +
  #endif /* HAVE_DHCP */
+-- 
+2.39.5
+
