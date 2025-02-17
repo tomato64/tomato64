@@ -71,6 +71,9 @@ void wo_dhcpd(char *url)
 	char *p, *w, *m;
 	char *argv[5];
 	pid_t pid;
+#ifdef TOMATO64
+	char buffer[128];
+#endif /* TOMATO64 */
 
 	if ((p = webcgi_get("remove")) != NULL) {
 		f_write_string("/var/tmp/dhcp/delete", p, FW_CREATE | FW_NEWLINE, 0666);
@@ -79,12 +82,17 @@ void wo_dhcpd(char *url)
 	}
 
 	if (((w = webcgi_get("wl")) != NULL) && ((m = webcgi_get("mac")) != NULL)) {
+#ifndef TOMATO64
 		argv[0] = "wl";
 		argv[1] = "-i";
 		argv[2] = w;
 		argv[3] = "deauthenticate";
 		argv[4] = m;
 		_eval(argv, NULL, 0, &pid);
+#else
+		snprintf(buffer, sizeof(buffer), "ubus call hostapd.%s del_client '{\"addr\":\"%s\", \"reason\":1, \"deauth\":true}'", w, m);
+		system(buffer);
+#endif /* TOMATO64 */
 	}
 
 	web_puts("{}");
