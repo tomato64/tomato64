@@ -1,0 +1,62 @@
+#!/bin/sh
+
+#set -e
+#set -x
+
+. /usr/sbin/nvram_ops
+. /usr/share/libubox/jshn.sh
+
+json_load_file /etc/board.json
+
+phycount=0
+
+count_phy() {
+        phycount=$((phycount+1))
+}
+
+print_ifname() {
+
+	if [ ! -z "$(NG wifi_phy${1}iface${2}_ifname)" ];
+	then
+		echo "$(NG wifi_phy${1}iface${2}_ifname)"
+	else
+		echo "phy${1}-ap${2}"
+	fi
+}
+
+first_entry=0
+
+json_for_each_item "count_phy" "wlan"
+
+# For each wireless device
+for i in $(seq 0 1 $(($phycount - 1)))
+do
+	# For each device interface
+	for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)))
+	do
+
+		# If interface is enabled
+		if [ "$(NG "wifi_phy${i}iface${j}_enable")" == "1" ];
+		then
+
+			# If interface is an Access Point
+			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "ap" ];
+			then
+
+				# If this is the interface
+				if [ "${INTERFACE}" == "$(print_ifname ${i} ${j})" ];
+				then
+
+					#If bridge_isolate is enabled
+					if [ "$(NG "wifi_phy${i}iface${j}_br_isolate")" == "1" ];
+					then
+
+						bridge link set dev ${INTERFACE} isolated on
+					fi
+
+					break 2
+				fi
+			fi
+		fi
+	done
+done

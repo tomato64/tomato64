@@ -55,12 +55,7 @@ static int hotplug_main(int argc, char *argv[])
 {
 	if (argc >= 2) {
 		if (strcmp(argv[1], "net") == 0)
-#ifndef TOMATO64
 			hotplug_net();
-#endif /* TOMATO64 */
-#ifdef TOMATO64
-			;
-#endif /* TOMATO64 */
 #ifdef TCONFIG_USB
 		else if (strcmp(argv[1], "usb") == 0)
 			hotplug_usb();

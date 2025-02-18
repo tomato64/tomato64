@@ -32,6 +32,7 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlnoise			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlifaces			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlstats			$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wl_bridge_isolate		$(TARGET_DIR)/usr/bin
 endef
 
 $(eval $(generic-package))

@@ -2172,6 +2172,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface0_cipher",	V_NONE				},
 	{"wifi_phy0iface0_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy0iface0_isolate",	V_NONE				},
+	{"wifi_phy0iface0_br_isolate",	V_NONE				},
 	{"wifi_phy0iface0_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface1_enable",	V_RANGE(0, 1)			},
@@ -2184,6 +2185,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface1_cipher",	V_NONE				},
 	{"wifi_phy0iface1_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy0iface1_isolate",	V_NONE				},
+	{"wifi_phy0iface1_br_isolate",	V_NONE				},
 	{"wifi_phy0iface1_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface2_enable",	V_RANGE(0, 1)			},
@@ -2196,6 +2198,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface2_cipher",	V_NONE				},
 	{"wifi_phy0iface2_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy0iface2_isolate",	V_NONE				},
+	{"wifi_phy0iface2_br_isolate",	V_NONE				},
 	{"wifi_phy0iface2_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface3_enable",	V_RANGE(0, 1)			},
@@ -2208,6 +2211,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface3_cipher",	V_NONE				},
 	{"wifi_phy0iface3_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy0iface3_isolate",	V_NONE				},
+	{"wifi_phy0iface3_br_isolate",	V_NONE				},
 	{"wifi_phy0iface3_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface4_enable",	V_RANGE(0, 1)			},
@@ -2220,6 +2224,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface4_cipher",	V_NONE				},
 	{"wifi_phy0iface4_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy0iface4_isolate",	V_NONE				},
+	{"wifi_phy0iface4_br_isolate",	V_NONE				},
 	{"wifi_phy0iface4_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface5_enable",	V_RANGE(0, 1)			},
@@ -2232,6 +2237,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface5_cipher",	V_NONE				},
 	{"wifi_phy0iface5_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy0iface5_isolate",	V_NONE				},
+	{"wifi_phy0iface5_br_isolate",	V_NONE				},
 	{"wifi_phy0iface5_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface6_enable",	V_RANGE(0, 1)			},
@@ -2244,6 +2250,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface6_cipher",	V_NONE				},
 	{"wifi_phy0iface6_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy0iface6_isolate",	V_NONE				},
+	{"wifi_phy0iface6_br_isolate",	V_NONE				},
 	{"wifi_phy0iface6_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface7_enable",	V_RANGE(0, 1)			},
@@ -2256,6 +2263,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface7_cipher",	V_NONE				},
 	{"wifi_phy0iface7_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy0iface7_isolate",	V_NONE				},
+	{"wifi_phy0iface7_br_isolate",	V_NONE				},
 	{"wifi_phy0iface7_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface8_enable",	V_RANGE(0, 1)			},
@@ -2268,6 +2276,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface8_cipher",	V_NONE				},
 	{"wifi_phy0iface8_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy0iface8_isolate",	V_NONE				},
+	{"wifi_phy0iface8_br_isolate",	V_NONE				},
 	{"wifi_phy0iface8_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface9_enable",	V_RANGE(0, 1)			},
@@ -2280,6 +2289,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface9_cipher",	V_NONE				},
 	{"wifi_phy0iface9_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy0iface9_isolate",	V_NONE				},
+	{"wifi_phy0iface9_br_isolate",	V_NONE				},
 	{"wifi_phy0iface9_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface10_enable",	V_RANGE(0, 1)			},
@@ -2292,6 +2302,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface10_cipher",	V_NONE				},
 	{"wifi_phy0iface10_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy0iface10_isolate",	V_NONE				},
+	{"wifi_phy0iface10_br_isolate",	V_NONE				},
 	{"wifi_phy0iface10_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface11_enable",	V_RANGE(0, 1)			},
@@ -2304,6 +2315,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface11_cipher",	V_NONE				},
 	{"wifi_phy0iface11_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy0iface11_isolate",	V_NONE				},
+	{"wifi_phy0iface11_br_isolate",	V_NONE				},
 	{"wifi_phy0iface11_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface12_enable",	V_RANGE(0, 1)			},
@@ -2316,6 +2328,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface12_cipher",	V_NONE				},
 	{"wifi_phy0iface12_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy0iface12_isolate",	V_NONE				},
+	{"wifi_phy0iface12_br_isolate",	V_NONE				},
 	{"wifi_phy0iface12_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface13_enable",	V_RANGE(0, 1)			},
@@ -2328,6 +2341,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface13_cipher",	V_NONE				},
 	{"wifi_phy0iface13_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy0iface13_isolate",	V_NONE				},
+	{"wifi_phy0iface13_br_isolate",	V_NONE				},
 	{"wifi_phy0iface13_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface14_enable",	V_RANGE(0, 1)			},
@@ -2340,6 +2354,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface14_cipher",	V_NONE				},
 	{"wifi_phy0iface14_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy0iface14_isolate",	V_NONE				},
+	{"wifi_phy0iface14_br_isolate",	V_NONE				},
 	{"wifi_phy0iface14_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy0iface15_enable",	V_RANGE(0, 1)			},
@@ -2352,6 +2367,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface15_cipher",	V_NONE				},
 	{"wifi_phy0iface15_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy0iface15_isolate",	V_NONE				},
+	{"wifi_phy0iface15_br_isolate",	V_NONE				},
 	{"wifi_phy0iface15_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface0_enable",	V_RANGE(0, 1)			},
@@ -2364,6 +2380,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface0_cipher",	V_NONE				},
 	{"wifi_phy1iface0_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy1iface0_isolate",	V_NONE				},
+	{"wifi_phy1iface0_br_isolate",	V_NONE				},
 	{"wifi_phy1iface0_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface1_enable",	V_RANGE(0, 1)			},
@@ -2376,6 +2393,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface1_cipher",	V_NONE				},
 	{"wifi_phy1iface1_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy1iface1_isolate",	V_NONE				},
+	{"wifi_phy1iface1_br_isolate",	V_NONE				},
 	{"wifi_phy1iface1_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface2_enable",	V_RANGE(0, 1)			},
@@ -2388,6 +2406,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface2_cipher",	V_NONE				},
 	{"wifi_phy1iface2_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy1iface2_isolate",	V_NONE				},
+	{"wifi_phy1iface2_br_isolate",	V_NONE				},
 	{"wifi_phy1iface2_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface3_enable",	V_RANGE(0, 1)			},
@@ -2400,6 +2419,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface3_cipher",	V_NONE				},
 	{"wifi_phy1iface3_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy1iface3_isolate",	V_NONE				},
+	{"wifi_phy1iface3_br_isolate",	V_NONE				},
 	{"wifi_phy1iface3_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface4_enable",	V_RANGE(0, 1)			},
@@ -2412,6 +2432,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface4_cipher",	V_NONE				},
 	{"wifi_phy1iface4_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy1iface4_isolate",	V_NONE				},
+	{"wifi_phy1iface4_br_isolate",	V_NONE				},
 	{"wifi_phy1iface4_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface5_enable",	V_RANGE(0, 1)			},
@@ -2424,6 +2445,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface5_cipher",	V_NONE				},
 	{"wifi_phy1iface5_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy1iface5_isolate",	V_NONE				},
+	{"wifi_phy1iface5_br_isolate",	V_NONE				},
 	{"wifi_phy1iface5_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface6_enable",	V_RANGE(0, 1)			},
@@ -2436,6 +2458,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface6_cipher",	V_NONE				},
 	{"wifi_phy1iface6_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy1iface6_isolate",	V_NONE				},
+	{"wifi_phy1iface6_br_isolate",	V_NONE				},
 	{"wifi_phy1iface6_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface7_enable",	V_RANGE(0, 1)			},
@@ -2448,6 +2471,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface7_cipher",	V_NONE				},
 	{"wifi_phy1iface7_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy1iface7_isolate",	V_NONE				},
+	{"wifi_phy1iface7_br_isolate",	V_NONE				},
 	{"wifi_phy1iface7_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface8_enable",	V_RANGE(0, 1)			},
@@ -2460,6 +2484,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface8_cipher",	V_NONE				},
 	{"wifi_phy1iface8_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy1iface8_isolate",	V_NONE				},
+	{"wifi_phy1iface8_br_isolate",	V_NONE				},
 	{"wifi_phy1iface8_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface9_enable",	V_RANGE(0, 1)			},
@@ -2472,6 +2497,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface9_cipher",	V_NONE				},
 	{"wifi_phy1iface9_key",		V_LENGTH(8, 64)			},
 	{"wifi_phy1iface9_isolate",	V_NONE				},
+	{"wifi_phy1iface9_br_isolate",	V_NONE				},
 	{"wifi_phy1iface9_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface10_enable",	V_RANGE(0, 1)			},
@@ -2484,6 +2510,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface10_cipher",	V_NONE				},
 	{"wifi_phy1iface10_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy1iface10_isolate",	V_NONE				},
+	{"wifi_phy1iface10_br_isolate",	V_NONE				},
 	{"wifi_phy1iface10_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface11_enable",	V_RANGE(0, 1)			},
@@ -2496,6 +2523,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface11_cipher",	V_NONE				},
 	{"wifi_phy1iface11_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy1iface11_isolate",	V_NONE				},
+	{"wifi_phy1iface11_br_isolate",	V_NONE				},
 	{"wifi_phy1iface11_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface12_enable",	V_RANGE(0, 1)			},
@@ -2508,6 +2536,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface12_cipher",	V_NONE				},
 	{"wifi_phy1iface12_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy1iface12_isolate",	V_NONE				},
+	{"wifi_phy1iface12_ibr_solate",	V_NONE				},
 	{"wifi_phy1iface12_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface13_enable",	V_RANGE(0, 1)			},
@@ -2520,6 +2549,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface13_cipher",	V_NONE				},
 	{"wifi_phy1iface13_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy1iface13_isolate",	V_NONE				},
+	{"wifi_phy1iface13_br_isolate",	V_NONE				},
 	{"wifi_phy1iface13_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface14_enable",	V_RANGE(0, 1)			},
@@ -2532,6 +2562,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface14_cipher",	V_NONE				},
 	{"wifi_phy1iface14_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy1iface14_isolate",	V_NONE				},
+	{"wifi_phy1iface14_br_isolate",	V_NONE				},
 	{"wifi_phy1iface14_ifname",	V_TEXT(0, 15)			},
 
 	{"wifi_phy1iface15_enable",	V_RANGE(0, 1)			},
@@ -2544,6 +2575,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface15_cipher",	V_NONE				},
 	{"wifi_phy1iface15_key",	V_LENGTH(8, 64)			},
 	{"wifi_phy1iface15_isolate",	V_NONE				},
+	{"wifi_phy1iface15_br_isolate",	V_NONE				},
 	{"wifi_phy1iface15_ifname",	V_TEXT(0, 15)			},
 
 #endif /* TOMATO64 */

@@ -2160,6 +2160,15 @@ void hotplug_net(void)
 	}
 #endif
 }
+#else
+void hotplug_net(void)
+{
+	if (((getenv("INTERFACE")) == NULL) || ((getenv("ACTION")) == NULL))
+		return;
+
+	if ((strcmp(getenv("DEVTYPE"), "wlan") == 0) && (strcmp(getenv("ACTION"), "add") == 0))
+		eval("/usr/bin/wl_bridge_isolate");
+}
 #endif /* TOMATO64 */
 
 #ifndef TOMATO64
