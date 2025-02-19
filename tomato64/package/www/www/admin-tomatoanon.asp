@@ -19,7 +19,7 @@
 
 //	<% nvram("tomatoanon_enable,tomatoanon_answer,tomatoanon_id,tomatoanon_notify"); %>
 
-var anon_link = '&nbsp;&nbsp;<a href="http://anon.freshtomato.org/index.php?search=9&routerid=<% nv('tomatoanon_id'); %>" class="new_window"><i>[Checkout my router]<\/i><\/a>';
+var anon_link = '&nbsp;&nbsp;<a href="https://anon.freshtomato.org/index.php?search=9&routerid=<% nv('tomatoanon_id'); %>" class="new_window"><i>[Checkout my router]<\/i><\/a>';
 
 function verifyFields(focused, quiet) {
 	var o = (E('_tomatoanon_answer').value == '1');
