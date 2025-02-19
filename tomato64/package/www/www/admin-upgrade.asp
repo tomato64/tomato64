@@ -115,7 +115,7 @@ function earlyInit() {
 				<div class="afu-form">
 					<input type="file" name="file" class="upgrade-file">
 					<p>
-					<input type="button" id="afu-upgrade-button" value="Upgrade" sizeonclick="upgrade()">
+					<input type="button" id="afu-upgrade-button" value="Upgrade" onclick="upgrade()">
 				</div>
 			</form>
 			<table class="afu-info-table"><tr>
