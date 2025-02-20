@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PHP_TOMATO_VERSION = 8.3.16
+PHP_TOMATO_VERSION = 8.3.17
 PHP_TOMATO_SITE = https://www.php.net/distributions
 PHP_TOMATO_SOURCE = php-$(PHP_TOMATO_VERSION).tar.xz
 PHP_TOMATO_INSTALL_STAGING = YES
@@ -313,52 +313,17 @@ PHP_TOMATO_CONF_OPTS += --with-ffi
 PHP_TOMATO_DEPENDENCIES += libffi
 endif
 
-ifeq ($(BR2_PACKAGE_PHP_TOMATO_SAPI_FPM),y)
-define PHP_TOMATO_INSTALL_INIT_SYSV
-	$(INSTALL) -D -m 0755 $(@D)/sapi/fpm/init.d.php-fpm \
-		$(TARGET_DIR)/etc/init.d/S49php-fpm
-endef
-
-define PHP_TOMATO_INSTALL_INIT_SYSTEMD
-	$(INSTALL) -D -m 0644 $(@D)/sapi/fpm/php-fpm.service \
-		$(TARGET_DIR)/usr/lib/systemd/system/php-fpm.service
-endef
-
-define PHP_TOMATO_INSTALL_FPM_CONF
-	$(INSTALL) -D -m 0644 package/php/php-fpm.conf \
-		$(TARGET_DIR)/etc/php-fpm.conf
-	rm -f $(TARGET_DIR)/etc/php-fpm.d/www.conf.default
-	# remove unused sample status page /usr/php/php/fpm/status.html
-	rm -rf $(TARGET_DIR)/usr/php
-endef
-
-PHP_TOMATO_POST_INSTALL_TARGET_HOOKS += PHP_TOMATO_INSTALL_FPM_CONF
-endif
-
-define PHP_TOMATO_EXTENSIONS_FIXUP
-	$(SED) "/prefix/ s:/usr:$(STAGING_DIR)/usr:" \
-		$(STAGING_DIR)/usr/bin/phpize
-	$(SED) "/extension_dir/ s:/usr:$(TARGET_DIR)/usr:" \
-		$(STAGING_DIR)/usr/bin/php-config
-endef
-
-PHP_TOMATO_POST_INSTALL_TARGET_HOOKS += PHP_TOMATO_EXTENSIONS_FIXUP
-
-define PHP_TOMATO_INSTALL_FIXUP
-	rm -rf $(TARGET_DIR)/usr/lib/php/build
-	rm -f $(TARGET_DIR)/usr/bin/phpize
-	$(INSTALL) -D -m 0755 $(PHP_TOMATO_DIR)/php.ini-production \
-		$(TARGET_DIR)/etc/php.ini
-	$(SED) 's%;date.timezone =.*%date.timezone = $(PHP_TOMATO_LOCALTIME)%' \
-		$(TARGET_DIR)/etc/php.ini
-	$(if $(BR2_PACKAGE_PHP_TOMATO_EXT_OPCACHE),
-		$(SED) '/;extension=php_xsl.dll/azend_extension=opcache.so' \
-		$(TARGET_DIR)/etc/php.ini)
-endef
-
-PHP_TOMATO_POST_INSTALL_TARGET_HOOKS += PHP_TOMATO_INSTALL_FIXUP
-
 PHP_TOMATO_CONF_ENV += CFLAGS="$(PHP_TOMATO_CFLAGS)" CXXFLAGS="$(PHP_TOMATO_CXXFLAGS)"
+
+define PHP_TOMATO_INSTALL_TARGET_CMDS
+	$(INSTALL) -d $(TARGET_DIR)/usr/bin
+	$(INSTALL) -d $(TARGET_DIR)/usr/sbin
+
+	$(INSTALL) -D $(@D)/sapi/cli/php $(TARGET_DIR)/usr/bin/
+	ln -sf /usr/bin/php $(TARGET_DIR)/usr/sbin/php-cli
+
+	$(INSTALL) -D $(@D)/sapi/fpm/php-fpm $(TARGET_DIR)/usr/sbin/
+endef
 
 HOST_PHP_TOMATO_CONF_OPTS = \
 	--disable-all \

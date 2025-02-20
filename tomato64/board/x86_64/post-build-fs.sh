@@ -50,8 +50,6 @@ ln -sf rpc.mountd $TARGET_DIR/usr/sbin/mountd
 
 # PHP symlinks
 ln -sf /usr/bin/php $TARGET_DIR/usr/sbin/php-cli
-ln -sf /usr/bin/php-cgi $TARGET_DIR/usr/sbin/php-cgi
-ln -sf /usr/bin/php-cgi $TARGET_DIR/usr/sbin/php-fcgi
 
 # iperf symlink
 ln -sf iperf3 $TARGET_DIR/usr/bin/iperf
