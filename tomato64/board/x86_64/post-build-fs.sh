@@ -40,9 +40,6 @@ fi
 # symlink openssl since Tomato expects it in a non-standard place
 ln -sf /usr/bin/openssl $TARGET_DIR/usr/sbin/openssl
 
-# symlink mysqld since Tomato expects it in a non-standard place
-ln -sf /usr/sbin/mysqld $TARGET_DIR/usr/bin/mysqld
-
 # Symlinks for nfs-utils binaries
 ln -sf rpc.statd $TARGET_DIR/usr/sbin/statd
 ln -sf rpc.nfsd $TARGET_DIR/usr/sbin/nfsd
