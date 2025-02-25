@@ -594,13 +594,13 @@ for (i = 0; i < devices.length; ++i) {
 	var bands = [];
 
 	if (eval('wireless.phy'+i+'_2G') == 1) {
-		bands.push(['2g', '2G']);
+		bands.push(['2g', '2.4 GHz']);
 	}
 	if (eval('wireless.phy'+i+'_5G') == 1) {
-		bands.push(['5g', '5G']);
+		bands.push(['5g', '5 GHz']);
 	}
 	if (eval('wireless.phy'+i+'_6G') == 1) {
-		bands.push(['6g', '6G']);
+		bands.push(['6g', '6 GHz']);
 	}
 
 	createFieldTable('', [
