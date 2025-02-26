@@ -2578,6 +2578,8 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface15_br_isolate",	V_NONE				},
 	{"wifi_phy1iface15_ifname",	V_TEXT(0, 15)			},
 
+	{"flow_offloading",		V_RANGE(0, 2)			},
+
 #endif /* TOMATO64 */
 
 	{ NULL }

@@ -1527,6 +1527,14 @@ static void filter_forward(void)
 
 	ipt_webmon();
 
+#ifdef TOMATO64
+	if (nvram_match("flow_offloading", "1")) {
+		ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED -j FLOWOFFLOAD\n");
+	} else if (nvram_match("flow_offloading", "2")) {
+		ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED -j FLOWOFFLOAD --hw\n");
+	}
+#endif /* TOMATO64 */
+
 	ip46t_write(ipv6_enabled,
 	            ":wanin - [0:0]\n"
 	            ":wanout - [0:0]\n"
