@@ -1459,6 +1459,14 @@ static void filter_forward(void)
 	char lanN_ifname2[] = "lanXX_ifname";
 	unsigned int i;
 
+#ifdef TOMATO64
+	if (nvram_match("flow_offloading", "1")) {
+		ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED -j FLOWOFFLOAD\n");
+	} else if (nvram_match("flow_offloading", "2")) {
+		ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED -j FLOWOFFLOAD --hw\n");
+	}
+#endif /* TOMATO64 */
+
 #ifdef TCONFIG_IPV6
 	if (ipv6_enabled)
 		ip6t_write("-A FORWARD -m rt --rt-type 0 -j DROP\n");
@@ -1526,14 +1534,6 @@ static void filter_forward(void)
 	}
 
 	ipt_webmon();
-
-#ifdef TOMATO64
-	if (nvram_match("flow_offloading", "1")) {
-		ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED -j FLOWOFFLOAD\n");
-	} else if (nvram_match("flow_offloading", "2")) {
-		ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED -j FLOWOFFLOAD --hw\n");
-	}
-#endif /* TOMATO64 */
 
 	ip46t_write(ipv6_enabled,
 	            ":wanin - [0:0]\n"
