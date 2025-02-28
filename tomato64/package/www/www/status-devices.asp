@@ -32,9 +32,13 @@ var xob = null;
 var cmd = null;
 var wol = null;
 var cmdresult = '';
-/* DISCOVERY-BEGIN */
 var cprefix = 'status_devices';
-var discovery_mode = cookie.get(cprefix+'_discovery') || 'off';
+/* DISCOVERY-BEGIN */
+var discovery_clear = parseInt(cookie.get(cprefix + '_discovery_clear')) || 0;
+var clear2 = (discovery_clear === 1) ? 'clear' : '';
+var discovery_limit = cookie.get(cprefix+'_discovery_limit') || '60';
+var discovery_target = cookie.get(cprefix+'_discovery_target') || 'lan';
+var discovery_mode = cookie.get(cprefix+'_discovery_mode') || 'off';
 /* TOMATO64-BEGIN */
 var show_wan_entries = cookie.get(cprefix+'_show_wan_entries') || 'disabled';
 /* TOMATO64-END */
@@ -63,7 +67,7 @@ ref.refresh = function(text) {
 }
 
 /* DISCOVERY-BEGIN */
-var discovery = new TomatoRefresh('update.cgi', 'exec=discovery&arg0='+discovery_mode, gc_time, '', 1);
+var discovery = new TomatoRefresh('update.cgi', 'exec=discovery&arg0='+discovery_mode+'&arg1='+discovery_target+'&arg2='+clear2+'&arg3='+discovery_limit, gc_time, '', 1);
 discovery.refresh = function() { }
 /* DISCOVERY-END */
 
@@ -668,16 +672,18 @@ function tick() {
 	var clock = E('wait');
 	var spin = E('spin');
 
-	if (ref.running && discovery_mode != 'off' && E('refresh-button').value == 'Stop' && E('refresh-time').value != 0) {
+	if (ref.running && discovery_mode !== 'off' && E('refresh-button').value == 'Stop' && E('refresh-time').value != 0) {
 		elem.setInnerHTML(clock, wait+' sec');
 		clock.style.display = 'inline-block';
 		spin.style.display = 'inline';
 
-		if (wait-- <= 0) {
+		if (wait <= 0) {
+			discovery.initPage(0, gc_time);
 			wait = gc_time;
-			clearTimeout(time_o);
 		}
-
+		else {
+			wait--;
+		}
 		time_o = setTimeout(tick, 1000);
 	}
 	else {
@@ -689,21 +695,27 @@ function tick() {
 }
 
 function verifyFields(f, c) {
-	if (discovery.running)
-		discovery.stop();
-
+	if (discovery.running) discovery.stop();
+	discovery_clear = E('_discovery_clear').checked ? 1 : 0;
+	cookie.set(cprefix+'_discovery_clear', discovery_clear);
+	clear2 = (discovery_clear === 1) ? 'clear' : '';
+	discovery_limit = E('_discovery_limit').value;
+	cookie.set(cprefix+'_discovery_limit', discovery_limit);
+	discovery_target = E('_discovery_target').value;
+	cookie.set(cprefix+'_discovery_target', discovery_target);
 	discovery_mode = E('_discovery_mode').value;
-	cookie.set(cprefix+'_discovery', discovery_mode);
+	cookie.set(cprefix+'_discovery_mode', discovery_mode);
 /* TOMATO64-BEGIN */
 	show_wan_entries = E('_show_wan_entries').value;
 	cookie.set(cprefix+'_show_wan_entries', show_wan_entries);
 /* TOMATO64-END */
-	discovery = new TomatoRefresh('update.cgi', 'exec=discovery&arg0='+discovery_mode, gc_time, '', 1);
+	discovery = new TomatoRefresh('update.cgi', 'exec=discovery&arg0='+discovery_mode+'&arg1='+discovery_target+'&arg2='+clear2+'&arg3='+discovery_limit, gc_time, '', 1);
 	discovery.refresh = function() { }
+
 	if (ref.running)
 		discovery.initPage(0, gc_time);
 
-	if (discovery_mode != 'off') {
+	if (discovery_mode !== 'off') {
 		wait = gc_time;
 		clearTimeout(time_o);
 		tick();
@@ -738,11 +750,16 @@ function earlyInit() {
 			setNoiseBar(uidx, wlnoise[uidx]);
 		}
 	}
-
 	dg.setup();
+/* DISCOVERY-BEGIN */
+	E('_discovery_clear').checked = (discovery_clear === 1);
+/* DISCOVERY-END */
 }
 
 function init() {
+	var c;
+	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
+	toggleVisibility(cprefix, 'notes');
 	dg.recolor();
 
 	ref.initPage(3000, 3);
@@ -786,17 +803,55 @@ function init() {
 /* TOMATO64-END */
 					f.push( { title: '<span id="nf'+u+'" title="Noise Floor"><b>Noise<\/b> '+wl_display_ifname(uidx)+'&nbsp;<b>:<\/b><\/span>', prefix: '<span id="noiseimg_'+uidx+'"><\/span>&nbsp;<span id="noise'+uidx+'">', custom: wlnoise[uidx], suffix: '<\/span>&nbsp;<small>dBm<\/small>' } );
 		}
-/* DISCOVERY-BEGIN */
-		f.push(
-			null,
-			{ title: 'Network Discovery mode', name: 'discovery_mode', type: 'select', options: [['off','off'],['arping','arping (preferred)'],['traceroute','traceroute']], suffix: '&nbsp; <img src="spin.gif" alt="" id="spin"><div id="wait"><\/div>', value: discovery_mode }
+		createFieldTable('', f);
+	</script>
+</div>
+<!-- DISCOVERY-BEGIN -->
+<div class="section-title">Network Discovery</div>
+<div class="section">
+	<script>
+		createFieldTable('', [
+			{ title: 'Sanitize results', name: 'discovery_clear', type: 'checkbox', value: 'clear', checked: (discovery_clear === 1) ? 'checked' : '' },
+			{ title: 'Max Probes', name: 'discovery_limit', type: 'text', maxlen: 3, size: 3, value: discovery_limit,  placeholder: '60', suffix: '<\/span>&nbsp;<small> 5 - 200<\/small>' },
+			{ title: 'Scan Target', name: 'discovery_target', type: 'select', options: [['lan','LANs *'],['wan','WANs'],['both','LANs & WANs']], value: discovery_target },
+			{ title: 'Scan Mode', name: 'discovery_mode', type: 'select', options: [['off','Off *'],['arping','arping (preferred)'],['traceroute','traceroute'],['nc','netcat'],['all','all (round-robin)']], suffix: '&nbsp; <img src="spin.gif" alt="" id="spin"><div id="wait"><\/div>', value: discovery_mode }
 /* TOMATO64-BEGIN */
 			,{ title: 'Show WAN Entries', name: 'show_wan_entries', type: 'select', options: [['disabled','disabled'],['enabled','enabled']], value: show_wan_entries }
 /* TOMATO64-END */
-		);
-/* DISCOVERY-END */
-		createFieldTable('', f);
+
+		]);
 	</script>
+</div>
+<!-- DISCOVERY-END -->
+
+<!-- / / / -->
+
+<div class="section-title">Notes <small><i><a href='javascript:toggleVisibility(cprefix,"notes");'><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
+<div class="section" id="sesdiv_notes" style="display:none">
+<b>Device List</b>
+<ul>
+	<li>You can hover over the fields in device list to find shortcuts to pre-populated pages: [DR] DHCP Reservation, [BWL] BandWidth Limiter, [AR] Access Restriction and [WLF] WireLess Filter.</li>
+	<li>Clicking on the MAC address will lookup the manufacturer by looking at the first half of the MAC address, this is purely informational.</li>
+	<li>When present, pressing an ON/OFF icon will send a Wake-up On Line datagram to the device, if the device supports that it will become active.</li>
+	<li>Clicking on the remaining lease time lets you terminate that lease, and if it is wireless connected it will also de-authenticate it. use with care.</li>
+</ul>
+<!-- DISCOVERY-BEGIN -->
+<b>Network Discovery</b>
+<ul>
+	<li><b>Sanitize results:</b> Before and after discovery has run, the reported state of devices known to T64 may not have settled completely, but eventually it will by itself. Ticking "Sanitize results" will speed up that process after the scan has run.</li>
+	<li><b>Max Probes:</b> determines the maximum concurrent number of probes. Each eligible IP address is probed, not limiting the simultaneous probes may be too large a load for the router and negatively affect its core job: routing traffic.Range is from 5 to 200 simultaneous probes, default 60, which is the optimum on the most popular routers at the moment. That's why it is not an good idea to leave the discovery running with the web page open.</li>
+	<li><b>Scan Target:</b> You can scan LANs ( default ), WANs or both, but not individual LANs or individual WANs if you have multiple. The maximum size of a subnet to scan is /22, being 1022 individual IP addresses. There is no need to do a WAN scan if the T64 router and an upstream device are the only two devices in that WAN.</li>
+	<li><b>Scan Mode:</b> selects the method to obtain the status of a device on the network. the choices are:
+		<ul>
+		<li>Off - This is the default. No scanning is done at all. The device list is populated only by devices which have frequent contact with the router themselves. WAN devices other than the upstream router will often go undetected.</li>
+		<li>arping - the most lightweight and preferred method</li>
+		<li>traceroute - alternative might work better with certain devices (e.g. old Apple kit)</li>
+		<li>nc - netcat is a well known alternative for scanning</li>
+		<li>all - Each consecutive discovery scan is done round robin with the next discovery method</li>
+	</li></ul>
+	<li>When enabled the discovery runs once in 60 or 120 seconds (depending on the device) when on the right side the screen refresh is activated. As the discovery itself runs for a number of seconds - depending on your choices, network and router this may be between 10 and 30 seconds, or even more - be prepared that it may take some time before the results that appear have settled. When "One off" is chosen, please refresh the screen by ctrl-F5 instead of pressing "Refresh" again.</li>
+</ul>
+<!-- DISCOVERY-END -->
 </div>
 
 <!-- / / / -->
