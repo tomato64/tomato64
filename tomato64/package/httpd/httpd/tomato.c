@@ -2892,7 +2892,8 @@ static void asp_discovery(int argc, char **argv)
 	/* append probe limit (numeric) */
 	if (argc > 3) {
 		int is_number = 1;
-		for (const char *p = argv[3]; *p; ++p) {
+		const char *p;
+		for (p = argv[3]; *p; ++p) {
 			if (!isdigit(*p)) {
 				is_number = 0;
 				break;
