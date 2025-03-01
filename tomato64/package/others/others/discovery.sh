@@ -117,7 +117,7 @@ fi
 
 scanthis() {
 	for iface in $this; do
-		cidr=$(ip a l dev "$iface" | grep inet | awk '{print $2}')
+		cidr=$(ip a l dev "$iface" | grep inet | grep -v inet6 | awk '{print $2}')
 		[ "$(echo "$cidr" | cut -d/ -f2)" -lt 22 ] && {
 			echo "$iface - subnet mask shorter than /22. Too many IPs to scan - skipping..." | tee /dev/tty | logger
 			continue
