@@ -1,6 +1,6 @@
 --- iptables-1.8.x/libiptc/libiptc.c
 +++ iptables-1.8.x/libiptc/libiptc.c
-@@ -1887,6 +1887,7 @@
+@@ -1890,6 +1890,7 @@
  {
  	const STRUCT_ENTRY_MATCH *b;
  	unsigned int i;
@@ -8,7 +8,7 @@
  
  	/* Offset of b is the same as a. */
  	b = (void *)b_elems + ((unsigned char *)a - a_elems);
-@@ -1897,9 +1898,14 @@
+@@ -1900,9 +1901,14 @@
  	if (strcmp(a->u.user.name, b->u.user.name) != 0)
  		return 1;
  

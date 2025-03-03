@@ -1,0 +1,121 @@
+From 0fbec0dbe04c5d6dadca03ed7b1067da1a74d135 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Mon, 3 Mar 2025 13:10:20 -0700
+Subject: [PATCH] Tomato64 specific changes
+
+---
+ extensions/{libip6t_ROUTE.c => libip6t_ROUTE.c.disabled}   | 0
+ extensions/libip6t_webmon.c                                | 1 +
+ extensions/{libipt_ROUTE.c => libipt_ROUTE.c.disabled}     | 0
+ extensions/{libipt_TOS.c => libipt_TOS.c.disabled}         | 0
+ extensions/libipt_TRIGGER.c                                | 7 +++++--
+ .../{libipt_condition.c => libipt_condition.c.disabled}    | 0
+ extensions/{libipt_geoip.c => libipt_geoip.c.disabled}     | 0
+ extensions/{libipt_ipp2p.c => libipt_ipp2p.c.disabled}     | 0
+ extensions/{libipt_layer7.c => libipt_layer7.c.disabled}   | 0
+ extensions/{libipt_tos.c => libipt_tos.c.disabled}         | 0
+ extensions/libipt_webmon.c                                 | 1 +
+ extensions/{libxt_ethport.c => libxt_ethport.c.disabled}   | 0
+ 12 files changed, 7 insertions(+), 2 deletions(-)
+ rename extensions/{libip6t_ROUTE.c => libip6t_ROUTE.c.disabled} (100%)
+ rename extensions/{libipt_ROUTE.c => libipt_ROUTE.c.disabled} (100%)
+ rename extensions/{libipt_TOS.c => libipt_TOS.c.disabled} (100%)
+ rename extensions/{libipt_condition.c => libipt_condition.c.disabled} (100%)
+ rename extensions/{libipt_geoip.c => libipt_geoip.c.disabled} (100%)
+ rename extensions/{libipt_ipp2p.c => libipt_ipp2p.c.disabled} (100%)
+ rename extensions/{libipt_layer7.c => libipt_layer7.c.disabled} (100%)
+ rename extensions/{libipt_tos.c => libipt_tos.c.disabled} (100%)
+ rename extensions/{libxt_ethport.c => libxt_ethport.c.disabled} (100%)
+
+diff --git a/extensions/libip6t_ROUTE.c b/extensions/libip6t_ROUTE.c.disabled
+similarity index 100%
+rename from extensions/libip6t_ROUTE.c
+rename to extensions/libip6t_ROUTE.c.disabled
+diff --git a/extensions/libip6t_webmon.c b/extensions/libip6t_webmon.c
+index 67ee96f..0c86d5f 100644
+--- a/extensions/libip6t_webmon.c
++++ b/extensions/libip6t_webmon.c
+@@ -25,6 +25,7 @@
+ #include <string.h>
+ #include <stdlib.h>
+ #include <getopt.h>
++#include <unistd.h>
+ 
+ #include <arpa/inet.h>
+ 
+diff --git a/extensions/libipt_ROUTE.c b/extensions/libipt_ROUTE.c.disabled
+similarity index 100%
+rename from extensions/libipt_ROUTE.c
+rename to extensions/libipt_ROUTE.c.disabled
+diff --git a/extensions/libipt_TOS.c b/extensions/libipt_TOS.c.disabled
+similarity index 100%
+rename from extensions/libipt_TOS.c
+rename to extensions/libipt_TOS.c.disabled
+diff --git a/extensions/libipt_TRIGGER.c b/extensions/libipt_TRIGGER.c
+index 6a677aa..6d61027 100644
+--- a/extensions/libipt_TRIGGER.c
++++ b/extensions/libipt_TRIGGER.c
+@@ -6,19 +6,22 @@
+ 
+ /* Shared library add-on to iptables to add port-trigger support. */
+ 
++#include <sys/types.h>
+ #include <stdio.h>
+ #include <netdb.h>
+ #include <string.h>
+ #include <stdlib.h>
+ #include <getopt.h>
+-#include <linux/poison.h>
++//#include <linux/poison.h>
+ #include <linux/netfilter_ipv4/ipt_TRIGGER.h>
+ #include <iptables.h>
+ #include <xtables.h>
+-#include <net/netfilter/nf_nat.h>
++//#include <net/netfilter/nf_nat.h>
+ #include <linux/netfilter_ipv4/ip_tables.h>
+ #include <linux/netfilter_ipv4/ipt_TRIGGER.h>
+ 
++#define IP_NAT_RANGE_PROTO_SPECIFIED 2
++
+ /* Function which prints out usage message. */
+ static void
+ help(void)
+diff --git a/extensions/libipt_condition.c b/extensions/libipt_condition.c.disabled
+similarity index 100%
+rename from extensions/libipt_condition.c
+rename to extensions/libipt_condition.c.disabled
+diff --git a/extensions/libipt_geoip.c b/extensions/libipt_geoip.c.disabled
+similarity index 100%
+rename from extensions/libipt_geoip.c
+rename to extensions/libipt_geoip.c.disabled
+diff --git a/extensions/libipt_ipp2p.c b/extensions/libipt_ipp2p.c.disabled
+similarity index 100%
+rename from extensions/libipt_ipp2p.c
+rename to extensions/libipt_ipp2p.c.disabled
+diff --git a/extensions/libipt_layer7.c b/extensions/libipt_layer7.c.disabled
+similarity index 100%
+rename from extensions/libipt_layer7.c
+rename to extensions/libipt_layer7.c.disabled
+diff --git a/extensions/libipt_tos.c b/extensions/libipt_tos.c.disabled
+similarity index 100%
+rename from extensions/libipt_tos.c
+rename to extensions/libipt_tos.c.disabled
+diff --git a/extensions/libipt_webmon.c b/extensions/libipt_webmon.c
+index 5f66302..16876dd 100644
+--- a/extensions/libipt_webmon.c
++++ b/extensions/libipt_webmon.c
+@@ -25,6 +25,7 @@
+ #include <string.h>
+ #include <stdlib.h>
+ #include <getopt.h>
++#include <unistd.h>
+ 
+ #include <arpa/inet.h>
+ 
+diff --git a/extensions/libxt_ethport.c b/extensions/libxt_ethport.c.disabled
+similarity index 100%
+rename from extensions/libxt_ethport.c
+rename to extensions/libxt_ethport.c.disabled
+-- 
+2.39.5
+

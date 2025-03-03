@@ -25,7 +25,7 @@
  		break;
  	}
  }
-@@ -154,7 +150,6 @@
+@@ -150,7 +146,6 @@
  	.save		= NFLOG_save,
  	.x6_options	= NFLOG_opts,
  	.xlate		= NFLOG_xlate,
@@ -43,7 +43,7 @@
  #include <linux/netfilter/xt_mark.h>
  
  #include <libmnl/libmnl.h>
-@@ -1572,8 +1571,6 @@
+@@ -1609,8 +1608,6 @@
  			ret = add_verdict(r, NF_DROP);
  		else if (strcmp(cs->jumpto, XTC_LABEL_RETURN) == 0)
  			ret = add_verdict(r, NFT_RETURN);
@@ -52,7 +52,7 @@
  		else
  			ret = add_target(r, cs->target->t);
  	} else if (strlen(cs->jumpto) > 0) {
-@@ -1586,31 +1583,6 @@
+@@ -1623,31 +1620,6 @@
  	return ret;
  }
  
@@ -86,7 +86,7 @@
  {
 --- iptables-1.8.x/iptables/nft.h
 +++ iptables-1.8.x/iptables/nft.h
-@@ -195,7 +195,6 @@
+@@ -197,7 +197,6 @@
  int add_target(struct nftnl_rule *r, struct xt_entry_target *t);
  int add_jumpto(struct nftnl_rule *r, const char *name, int verdict);
  int add_action(struct nftnl_rule *r, struct iptables_command_state *cs, bool goto_set);

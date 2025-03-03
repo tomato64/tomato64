@@ -1,0 +1,26 @@
+--- iptables-1.8.x/libxtables/xtables.c
++++ iptables-1.8.x/libxtables/xtables.c
+@@ -809,9 +809,9 @@
+ 		dptr = &((*dptr)->next);
+ 	}
+ 
+-	if (seen && !found)
++	if (seen && !found && !(strcmp(name, "DNAT") == 0) && !(strcmp(name, "SNAT") == 0))
+ 		fprintf(stderr,
+-			"Warning: Extension %s is not supported, missing kernel module?\n",
++			"Warning: Extension %s (match) is not supported, missing kernel module?\n",
+ 			name);
+ 
+ 	for (ptr = xtables_matches; ptr; ptr = ptr->next) {
+@@ -939,9 +939,9 @@
+ 		dptr = &((*dptr)->next);
+ 	}
+ 
+-	if (seen && !found)
++	if (seen && !found && !(strcmp(name, "DNAT") == 0) && !(strcmp(name, "SNAT") == 0))
+ 		fprintf(stderr,
+-			"Warning: Extension %s is not supported, missing kernel module?\n",
++			"Warning: Extension %s (target) is not supported, missing kernel module?\n",
+ 			name);
+ 
+ 	for (ptr = xtables_targets; ptr; ptr = ptr->next) {

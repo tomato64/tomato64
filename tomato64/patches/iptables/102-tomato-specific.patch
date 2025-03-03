@@ -1,0 +1,203 @@
+--- iptables-1.8.x/extensions/libxt_CONNMARK.c
++++ iptables-1.8.x/extensions/libxt_CONNMARK.c
+@@ -34,6 +34,7 @@
+ enum {
+ 	O_SET_MARK = 0,
+ 	O_SAVE_MARK,
++	O_SET_RETURN,
+ 	O_RESTORE_MARK,
+ 	O_AND_MARK,
+ 	O_OR_MARK,
+@@ -46,6 +47,7 @@
+ 	O_MASK,
+ 	F_SET_MARK         = 1 << O_SET_MARK,
+ 	F_SAVE_MARK        = 1 << O_SAVE_MARK,
++	F_SET_RETURN       = 1 << O_SET_RETURN,
+ 	F_RESTORE_MARK     = 1 << O_RESTORE_MARK,
+ 	F_AND_MARK         = 1 << O_AND_MARK,
+ 	F_OR_MARK          = 1 << O_OR_MARK,
+@@ -56,7 +58,7 @@
+ 	F_CTMASK           = 1 << O_CTMASK,
+ 	F_NFMASK           = 1 << O_NFMASK,
+ 	F_MASK             = 1 << O_MASK,
+-	F_OP_ANY           = F_SET_MARK | F_SAVE_MARK | F_RESTORE_MARK |
++	F_OP_ANY           = F_SET_MARK | F_SAVE_MARK | F_SET_RETURN | F_RESTORE_MARK |
+ 	                     F_AND_MARK | F_OR_MARK | F_XOR_MARK | F_SET_XMARK,
+ };
+ 
+@@ -70,6 +72,7 @@
+ 	printf(
+ "CONNMARK target options:\n"
+ "  --set-mark value[/mask]       Set conntrack mark value\n"
++"  --set-return [--mask mask]    Set conntrack mark & nfmark, RETURN\n"
+ "  --save-mark [--mask mask]     Save the packet nfmark in the connection\n"
+ "  --restore-mark [--mask mask]  Restore saved nfmark value\n");
+ }
+@@ -80,6 +83,8 @@
+ 	 .excl = F_OP_ANY},
+ 	{.name = "save-mark", .id = O_SAVE_MARK, .type = XTTYPE_NONE,
+ 	 .excl = F_OP_ANY},
++	{.name = "set-return", .id = O_SET_RETURN, .type = XTTYPE_MARKMASK32,
++	 .excl = F_OP_ANY},
+ 	{.name = "restore-mark", .id = O_RESTORE_MARK, .type = XTTYPE_NONE,
+ 	 .excl = F_OP_ANY},
+ 	{.name = "mask", .id = O_MASK, .type = XTTYPE_UINT32},
+@@ -93,6 +98,8 @@
+ 	 .excl = F_OP_ANY},
+ 	{.name = "set-mark", .id = O_SET_MARK, .type = XTTYPE_MARKMASK32,
+ 	 .excl = F_OP_ANY},
++	{.name = "set-return", .id = O_SET_RETURN, .type = XTTYPE_MARKMASK32,
++	 .excl = F_OP_ANY},
+ 	{.name = "and-mark", .id = O_AND_MARK, .type = XTTYPE_UINT32,
+ 	 .excl = F_OP_ANY},
+ 	{.name = "or-mark", .id = O_OR_MARK, .type = XTTYPE_UINT32,
+@@ -153,6 +160,7 @@
+ "  --restore-mark [--ctmask mask] [--nfmask mask]\n"
+ "                                Copy nfmark to ctmark using masks\n"
+ "  --set-mark value[/mask]       Set conntrack mark value\n"
++"  --set-return value[/mask]     Set conntrack mark & nfmark, RETURN\n"
+ "  --save-mark [--mask mask]     Save the packet nfmark in the connection\n"
+ "  --restore-mark [--mask mask]  Restore saved nfmark value\n"
+ "  --and-mark value              Binary AND the ctmark with bits\n"
+@@ -205,6 +213,11 @@
+ 		markinfo->mark = cb->val.mark;
+ 		markinfo->mask = cb->val.mask;
+ 		break;
++	case O_SET_RETURN:
++		markinfo->mode = XT_CONNMARK_SET_RETURN;
++		markinfo->mark = cb->val.mark;
++		markinfo->mask = cb->val.mask;
++		break;
+ 	case O_SAVE_MARK:
+ 		markinfo->mode = XT_CONNMARK_SAVE;
+ 		break;
+@@ -233,6 +246,11 @@
+ 		info->ctmark = cb->val.mark;
+ 		info->ctmask = cb->val.mark | cb->val.mask;
+ 		break;
++	case O_SET_RETURN:
++		info->mode   = XT_CONNMARK_SET_RETURN;
++		info->ctmark = cb->val.mark;
++		info->ctmask = cb->val.mask;
++		break;
+ 	case O_AND_MARK:
+ 		info->mode   = XT_CONNMARK_SET;
+ 		info->ctmark = 0;
+@@ -346,6 +364,11 @@
+ 	    print_mark(markinfo->mark);
+ 	    print_mask("/", markinfo->mask);
+ 	    break;
++	case XT_CONNMARK_SET_RETURN:
++	    printf(" CONNMARK set-return ");
++	    print_mark(markinfo->mark);
++	    print_mask("/", markinfo->mask);
++	    break;
+ 	case XT_CONNMARK_SAVE:
+ 	    printf(" CONNMARK save ");
+ 	    print_mask("mask ", markinfo->mask);
+@@ -381,6 +404,13 @@
+ 			printf(" CONNMARK xset 0x%x/0x%x",
+ 			       info->ctmark, info->ctmask);
+ 		break;
++	case XT_CONNMARK_SET_RETURN:
++		if (info->ctmask == 0xFFFFFFFFU)
++			printf(" CONNMARK set-return 0x%x", info->ctmark);
++		else
++			printf(" CONNMARK set-return 0x%x/0x%x",
++			       info->ctmark, info->ctmask);
++		break;
+ 	case XT_CONNMARK_SAVE:
+ 		if (info->nfmask == UINT32_MAX && info->ctmask == UINT32_MAX)
+ 			printf(" CONNMARK save");
+@@ -469,6 +499,11 @@
+ 	    print_mark(markinfo->mark);
+ 	    print_mask("/", markinfo->mask);
+ 	    break;
++	case XT_CONNMARK_SET_RETURN:
++	    printf(" --set-return ");
++	    print_mark(markinfo->mark);
++	    print_mask("/", markinfo->mask);
++	    break;
+ 	case XT_CONNMARK_SAVE:
+ 	    printf(" --save-mark ");
+ 	    print_mask("--mask ", markinfo->mask);
+@@ -500,6 +535,9 @@
+ 	case XT_CONNMARK_SET:
+ 		printf(" --set-xmark 0x%x/0x%x", info->ctmark, info->ctmask);
+ 		break;
++	case XT_CONNMARK_SET_RETURN:
++		printf(" --set-return 0x%x/0x%x", info->ctmark, info->ctmask);
++		break;
+ 	case XT_CONNMARK_SAVE:
+ 		printf(" --save-mark --nfmask 0x%x --ctmask 0x%x",
+ 		       info->nfmask, info->ctmask);
+--- iptables-1.8.x/include/linux/netfilter/xt_connmark.h
++++ iptables-1.8.x/include/linux/netfilter/xt_connmark.h
+@@ -11,7 +11,8 @@
+ enum {
+ 	XT_CONNMARK_SET = 0,
+ 	XT_CONNMARK_SAVE,
+-	XT_CONNMARK_RESTORE
++	XT_CONNMARK_RESTORE,
++	XT_CONNMARK_SET_RETURN
+ };
+ 
+ enum {
+--- iptables-1.8.x/include/linux/netfilter/nf_conntrack_tuple_common.h
++++ iptables-1.8.x/include/linux/netfilter/nf_conntrack_tuple_common.h
+@@ -7,6 +7,9 @@
+ 	IP_CT_DIR_MAX
+ };
+ 
++
++/* TOMATO */
++#ifndef _NF_CONNTRACK_TUPLE_H
+ /* The protocol-specific manipulable parts of the tuple: always in
+  * network order
+  */
+@@ -33,6 +36,8 @@
+ 		__be16 key;	/* GRE key is 32bit, PPtP only uses 16bit */
+ 	} gre;
+ };
++#endif
++/* END TOMATO */
+ 
+ #define CTINFO2DIR(ctinfo) ((ctinfo) >= IP_CT_IS_REPLY ? IP_CT_DIR_REPLY : IP_CT_DIR_ORIGINAL)
+ 
+--- iptables-1.8.x/include/linux/netfilter.h
++++ iptables-1.8.x/include/linux/netfilter.h
+@@ -77,4 +77,13 @@
+ 	struct in6_addr	in6;
+ };
+ 
++static inline int nf_inet_addr_cmp(const union nf_inet_addr *a1,
++				    const union nf_inet_addr *a2)
++{
++	return 	a1->all[0] == a2->all[0] &&
++		a1->all[1] == a2->all[1] &&
++		a1->all[2] == a2->all[2] &&
++		a1->all[3] == a2->all[3];
++}
++
+ #endif /* __LINUX_NETFILTER_H */
+--- iptables-1.8.x/include/linux/netfilter_ipv4/ip_tables.h
++++ iptables-1.8.x/include/linux/netfilter_ipv4/ip_tables.h
+@@ -95,6 +95,7 @@
+ #define IPT_INV_FRAG		0x20	/* Invert the sense of FRAG. */
+ #define IPT_INV_PROTO		XT_INV_PROTO
+ #define IPT_INV_MASK		0x7F	/* All possible flag bits mask. */
++#define IPT_F_NO_DEF_MATCH	0x80	/* Internal: no default match rules present */
+ 
+ /* This structure defines each of the firewall rules.  Consists of 3
+    parts which are 1) general IP header stuff 2) match specific
+--- iptables-1.8.x/libiptc/libip4tc.c
++++ iptables-1.8.x/libiptc/libip4tc.c
+@@ -180,7 +180,7 @@
+ 	    || a->ip.smsk.s_addr != b->ip.smsk.s_addr
+ 	    || a->ip.dmsk.s_addr != b->ip.dmsk.s_addr
+ 	    || a->ip.proto != b->ip.proto
+-	    || a->ip.flags != b->ip.flags
++	    || (a->ip.flags & ~IPT_F_NO_DEF_MATCH) != (b->ip.flags & ~IPT_F_NO_DEF_MATCH)
+ 	    || a->ip.invflags != b->ip.invflags)
+ 		return NULL;
+ 

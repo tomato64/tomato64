@@ -1,0 +1,223 @@
+From 4fd1cd2ea1b29049e46f343d17a0355789f18aa7 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Mon, 3 Mar 2025 13:02:52 -0700
+Subject: [PATCH] add Tomato64 specific missing firewall extensions
+
+---
+ include/linux/netfilter/xt_web.h           | 30 +++++++++++
+ include/linux/netfilter_ipv4/ipt_TRIGGER.h | 25 +++++++++
+ include/linux/netfilter_ipv4/ipt_account.h | 24 +++++++++
+ include/linux/netfilter_ipv4/ipt_web.h     | 30 +++++++++++
+ include/linux/netfilter_ipv4/ipt_webmon.h  | 63 ++++++++++++++++++++++
+ 5 files changed, 172 insertions(+)
+ create mode 100644 include/linux/netfilter/xt_web.h
+ create mode 100644 include/linux/netfilter_ipv4/ipt_TRIGGER.h
+ create mode 100644 include/linux/netfilter_ipv4/ipt_account.h
+ create mode 100644 include/linux/netfilter_ipv4/ipt_web.h
+ create mode 100644 include/linux/netfilter_ipv4/ipt_webmon.h
+
+diff --git a/include/linux/netfilter/xt_web.h b/include/linux/netfilter/xt_web.h
+new file mode 100644
+index 0000000..c042367
+--- /dev/null
++++ b/include/linux/netfilter/xt_web.h
+@@ -0,0 +1,30 @@
++/*
++
++	web (experimental)
++	HTTP client match
++	Copyright (C) 2006 Jonathan Zarate
++
++	Licensed under GNU GPL v2 or later.
++
++*/
++#ifndef _XT_WEB_H
++#define _XT_WEB_H
++
++#define XT_WEB_MAXTEXT	512
++
++typedef enum {
++	XT_WEB_HTTP,
++	XT_WEB_RURI,
++	XT_WEB_PATH,
++	XT_WEB_QUERY,
++	XT_WEB_HOST,
++	XT_WEB_HORE
++} xt_web_mode_t;
++
++struct xt_web_info {
++	xt_web_mode_t mode;
++	int invert;
++	char text[XT_WEB_MAXTEXT];
++};
++
++#endif
+diff --git a/include/linux/netfilter_ipv4/ipt_TRIGGER.h b/include/linux/netfilter_ipv4/ipt_TRIGGER.h
+new file mode 100644
+index 0000000..aa1bb8b
+--- /dev/null
++++ b/include/linux/netfilter_ipv4/ipt_TRIGGER.h
+@@ -0,0 +1,25 @@
++#ifndef _IPT_TRIGGER_H_target
++#define _IPT_TRIGGER_H_target
++
++#define TRIGGER_TIMEOUT 600	/* 600 secs */
++
++enum ipt_trigger_type
++{
++	IPT_TRIGGER_DNAT = 1,
++	IPT_TRIGGER_IN = 2,
++	IPT_TRIGGER_OUT = 3,
++	IPT_TRIGGER_REFRESH = 4
++};
++
++struct ipt_trigger_ports {
++	u_int16_t mport[2];	/* Related destination port range */
++	u_int16_t rport[2];	/* Port range to map related destination port range to */
++};
++
++struct ipt_trigger_info {
++	enum ipt_trigger_type type;
++	u_int16_t proto;	/* Related protocol */
++	struct ipt_trigger_ports ports;
++};
++
++#endif /*_IPT_TRIGGER_H_target*/
+diff --git a/include/linux/netfilter_ipv4/ipt_account.h b/include/linux/netfilter_ipv4/ipt_account.h
+new file mode 100644
+index 0000000..9e950af
+--- /dev/null
++++ b/include/linux/netfilter_ipv4/ipt_account.h
+@@ -0,0 +1,24 @@
++/* Copyright (c) 2004-2012 Piotr 'QuakeR' Gasidlo <quaker@barbara.eu.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef _IPT_ACCOUNT_H_
++#define _IPT_ACCOUNT_H_
++
++#define IPT_ACCOUNT_NAME_LEN 64
++
++struct t_ipt_account_table;
++
++struct t_ipt_account_info {
++  char name[IPT_ACCOUNT_NAME_LEN + 1];
++  u_int32_t network, netmask;
++  int shortlisting:1;
++  /* pointer to the table for fast matching */
++  struct t_ipt_account_table *table;
++};
++
++#endif /* _IPT_ACCOUNT_H */
++
+diff --git a/include/linux/netfilter_ipv4/ipt_web.h b/include/linux/netfilter_ipv4/ipt_web.h
+new file mode 100644
+index 0000000..176208e
+--- /dev/null
++++ b/include/linux/netfilter_ipv4/ipt_web.h
+@@ -0,0 +1,30 @@
++/*
++
++	web (experimental)
++	HTTP client match
++	Copyright (C) 2006 Jonathan Zarate
++
++	Licensed under GNU GPL v2 or later.
++
++*/
++#ifndef _IPT_WEB_H
++#define _IPT_WEB_H
++
++#define IPT_WEB_MAXTEXT	512
++
++typedef enum {
++	IPT_WEB_HTTP,
++	IPT_WEB_RURI,
++	IPT_WEB_PATH,
++	IPT_WEB_QUERY,
++	IPT_WEB_HOST,
++	IPT_WEB_HORE
++} ipt_web_mode_t;
++
++struct ipt_web_info {
++	ipt_web_mode_t mode;
++	int invert;
++	char text[IPT_WEB_MAXTEXT];
++};
++
++#endif
+diff --git a/include/linux/netfilter_ipv4/ipt_webmon.h b/include/linux/netfilter_ipv4/ipt_webmon.h
+new file mode 100644
+index 0000000..d2f7e26
+--- /dev/null
++++ b/include/linux/netfilter_ipv4/ipt_webmon.h
+@@ -0,0 +1,63 @@
++/*  webmon --	A netfilter module to match URLs in HTTP(S) requests
++ *  		This module can match using string match or regular expressions
++ *  		Originally designed for use with Gargoyle router firmware (gargoyle-router.com)
++ *
++ *
++ *  Copyright © 2008-2010 by Eric Bishop <eric@gargoyle-router.com>
++ * 
++ *  This file is free software: you may copy, redistribute and/or modify it
++ *  under the terms of the GNU General Public License as published by the
++ *  Free Software Foundation, either version 2 of the License, or (at your
++ *  option) any later version.
++ *
++ *  This file is distributed in the hope that it will be useful, but
++ *  WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ *  General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++
++
++
++#ifndef _IPT_WEBMON_H
++#define _IPT_WEBMON_H
++
++
++#define WEBMON_MAX_IPS           256
++#define WEBMON_MAX_IP_RANGES      16
++
++#define WEBMON_EXCLUDE             1
++#define WEBMON_INCLUDE             2
++
++#define WEBMON_MAXDOMAIN           4
++#define WEBMON_MAXSEARCH           8
++
++#define WEBMON_DOMAIN             16
++#define WEBMON_SEARCH             32
++
++
++#define WEBMON_SET              3064
++
++struct ipt_webmon_ip_range
++{
++	uint32_t start;
++	uint32_t end;
++};
++
++struct ipt_webmon_info
++{
++	uint32_t max_domains;
++	uint32_t max_searches;
++	uint32_t exclude_ips[WEBMON_MAX_IPS];
++	struct ipt_webmon_ip_range exclude_ranges[WEBMON_MAX_IP_RANGES];
++	uint32_t num_exclude_ips;
++	uint32_t num_exclude_ranges;
++	unsigned char exclude_type;
++	uint32_t* ref_count;
++
++};
++
++#endif /*_IPT_WEBMON_H*/
+-- 
+2.39.5
+
