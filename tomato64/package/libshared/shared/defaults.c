@@ -1049,7 +1049,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "udpxy_wanface",		""				, 0 },	/* alternative wanface */
 #endif /* TCONFIG_PROXY */
 	{ "ne_syncookies",		"0"				, 0 },	/* tcp_syncookies */
-	{ "DSCP_fix_enable",		"1"				, 0 },	/* Comacst DSCP fix */
+	{ "DSCP_fix_enable",		"0"				, 0 },	/* Comacst DSCP fix */
 	{ "ne_snat",			"0"				, 0 },	/* use SNAT instead of MASQUERADE */
 	{ "wan_dhcp_pass",		"0"				, 0 },	/* allow DHCP responses */
 	{ "fw_blackhole",		"1"				, 0 },	/* MTU black hole detection */
