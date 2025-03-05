@@ -334,6 +334,35 @@ static int check_wif(int idx, int unit, int subunit, void *param)
 	return (wl_ioctl(nvram_safe_get(wl_nvname("ifname", unit, subunit)), WLC_GET_VAR, sti, sizeof(*sti)) == 0);
 }
 
+#ifdef TOMATO64
+static int is_wifi_client(char* mac)
+{
+	FILE *f1;
+	FILE *f2;
+	char buffer1[32];
+	char buffer2[128];
+
+	const char cmd[] = "iw dev | grep Interface | awk '{print $2}'";
+
+	if ((f1 = popen(cmd, "r"))) {
+		while (fgets(buffer1, sizeof(buffer1), f1)) {
+			buffer1[strcspn(buffer1, "\n")] = 0;
+			snprintf(buffer2, sizeof(buffer2), "iw dev %s station dump | grep -i %s", buffer1, mac);
+			if((f2 = popen(buffer2, "r"))) {
+				if (fgets(buffer2, sizeof(buffer2), f2) != NULL) {
+					pclose(f2);
+					pclose(f1);
+					return 1;
+				}
+				pclose(f2);
+			}
+		}
+		pclose(f1);
+	}
+	return 0;
+}
+#endif /* TOMATO64 */
+
 static int check_wlaccess(void)
 {
 	char mac[32];
@@ -342,10 +371,14 @@ static int check_wlaccess(void)
 
 	if (nvram_get_int("web_wl_filter")) {
 		if (get_client_info(mac, ifname)) {
+#ifndef TOMATO64
 			memset(&sti, 0, sizeof(sti));
 			strlcpy((char *)&sti, "sta_info", sizeof(sti)); /* sta_info0<mac> */
 			ether_atoe(mac, (unsigned char *)&sti + 9);
 			if (foreach_wif(1, &sti, check_wif)) {
+#else
+			if (is_wifi_client(mac)) {
+#endif /* TOMATO64 */
 				if (nvram_get_int("debug_logwlac"))
 					logmsg(LOG_WARNING, "wireless access from %s blocked", mac);
 

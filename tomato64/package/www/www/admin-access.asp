@@ -141,9 +141,9 @@ function verifyFields(focused, quiet) {
 		ferror.clear(a);
 
 	elem.display(PR('_http_lanport'), (a.value == 1) || (a.value == 3));
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-MT6000-BEGIN */
 	elem.display(PR('_f_http_wireless'), a.value != 0);
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-MT6000-END */
 
 	for (i = 1; i <= MAX_BRIDGE_ID; i++)
 		elem.display(PR('_f_http_lan'+i+'_listener'), (eval('nvram.lan'+i+'_ifname') == 'br'+i+'') && (a.value != 0));
@@ -336,9 +336,9 @@ function save() {
 	fom.https_crt_gen.value = fom._f_https_crt_gen.checked ? 1 : 0;
 	fom.https_crt_save.value = fom._f_https_crt_save.checked ? 1 : 0;
 /* HTTPS-END */
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-MT6000-BEGIN */
 	fom.web_wl_filter.value = fom._f_http_wireless.checked ? 0 : 1;
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-MT6000-END */
 	fom.remote_upgrade.value = fom._f_remote_upgrade.checked ? 1 : 0;
 	fom.http_wanport_bfm.value = fom._f_http_wanport_bfm.checked ? 1 : 0;
 
@@ -430,9 +430,9 @@ function init() {
 <input type="hidden" name="remote_mgt_https">
 <!-- HTTPS-END -->
 <input type="hidden" name="remote_management">
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-MT6000-BEGIN */
 <input type="hidden" name="web_wl_filter">
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-MT6000-END */
 <input type="hidden" name="remote_upgrade">
 <input type="hidden" name="http_wanport_bfm">
 <input type="hidden" name="web_adv_scripts">
@@ -472,9 +472,9 @@ function init() {
 /* HTTPS-BEGIN */
 				{ title: 'HTTPS Port', indent: 2, name: 'https_lanport', type: 'text', maxlen: 5, size: 7, value: fixPort(nvram.https_lanport, 443) },
 /* HTTPS-END */
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-MT6000-BEGIN */
 				{ title: 'Allow Wireless Access', indent: 2, name: 'f_http_wireless', type: 'checkbox', value: nvram.web_wl_filter == 0 },
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-MT6000-END */
 			null,
 /* JFFS2-BEGIN */
 			{ title: 'Unmount JFFS during upgrade', name: 'f_jffs2_auto_unmount', type: 'checkbox', suffix: '&nbsp;<small>Warning! In some peculiar cases the content of JFFS might not be preserved after a firmware upgrade<\/small>', value: nvram.jffs2_auto_unmount == 1 },
