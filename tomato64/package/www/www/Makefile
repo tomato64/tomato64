@@ -633,6 +633,7 @@ else
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-MT6000-BEGIN/,/TOMATO64-MT6000-END/d"
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/TOMATO64-MT6000-BEGIN/,/TOMATO64-MT6000-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/TOMATO64-MT6000-BEGIN/,/TOMATO64-MT6000-END/d"
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-MT6000-BEGIN/,/TOMATO64-MT6000-END/d"
 endif
 
 # Only include TFTP if it is compiled in

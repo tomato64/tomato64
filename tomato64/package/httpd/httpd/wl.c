@@ -1645,6 +1645,7 @@ int mround(float val)
  * Get temperature of wireless chip
  * bwq518. Copyright 2013
 */
+#ifndef TOMATO64_MT6000
 char* get_wl_tempsense(char *buf, const size_t buf_sz)
 {
 	char *lan_ifnames;
@@ -1740,4 +1741,50 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 
 	return buf;
 }
+#else
+char* get_wl_tempsense(char *buf, const size_t buf_sz)
+{
+
+	FILE *f;
+	char buffer[8];
+	char phy0_C[8];
+	char phy0_F[8];
+	char phy1_C[8];
+	char phy1_F[8];
+	int phy0_temp, phy1_temp;
+
+	const char phy0_cmd[] = "sensors -A mt7915_phy0-isa-0000 | grep 'temp1' | awk '{print $2}' | cut -c2- | rev | cut -c 3- | rev";
+	const char phy1_cmd[] = "sensors -A mt7915_phy1-isa-0000 | grep 'temp1' | awk '{print $2}' | cut -c2- | rev | cut -c 3- | rev";
+
+	if ((f = popen(phy0_cmd, "r"))) {
+		if (fgets(buffer, sizeof(buffer), f) != NULL) {
+			buffer[strcspn(buffer, "\n")] = 0;
+			phy0_temp = mround(atof(buffer));
+			snprintf(phy0_C, sizeof(phy0_C), "%d", phy0_temp);
+			snprintf(phy0_F, sizeof(phy0_F), "%d", mround((phy0_temp * 1.8f) + 32));
+		}
+		pclose(f);
+	}
+	else {
+		snprintf(phy0_C, sizeof(phy0_C), "");
+		snprintf(phy0_F, sizeof(phy0_F), "");
+	}
+
+	if ((f = popen(phy1_cmd, "r"))) {
+		if (fgets(buffer, sizeof(buffer), f) != NULL) {
+			buffer[strcspn(buffer, "\n")] = 0;
+			phy1_temp = mround(atof(buffer));
+			snprintf(phy1_C, sizeof(phy1_C), "%d", phy1_temp);
+			snprintf(phy1_F, sizeof(phy1_F), "%d", mround((phy1_temp * 1.8f) + 32));
+		}
+		pclose(f);
+	}
+	else {
+		snprintf(phy1_C, sizeof(phy1_C), "");
+		snprintf(phy1_F, sizeof(phy1_F), "");
+	}
+
+	snprintf(buf, buf_sz, "phy0: 2.4G - %s&#176;C&nbsp;/&nbsp;%s&#176;F&nbsp;&nbsp;&nbsp;&nbsp;phy1: 5G - %s&#176;C&nbsp;/&nbsp;%s&#176;F", phy0_C, phy0_F, phy1_C, phy1_F);
+}
+#endif /* TOMATO64_MT6000 */
 #endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
