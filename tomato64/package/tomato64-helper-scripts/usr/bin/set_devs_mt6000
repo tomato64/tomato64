@@ -2,6 +2,8 @@
 
 set -e
 
+. /usr/sbin/nvram_ops
+
 increment_mac() {
 	tmp=$1
 	tmp=$(echo $tmp |  tr '[:lower:]' '[:upper:]' | tr -d ':')
@@ -27,9 +29,9 @@ done
 
 KERNEL_VERSION=$(uname -r)
 
-insmod /lib/modules/$KERNEL_VERSION/wifi/compat.ko
-insmod /lib/modules/$KERNEL_VERSION/wifi/cfg80211.ko
-insmod /lib/modules/$KERNEL_VERSION/wifi/mac80211.ko
-insmod /lib/modules/$KERNEL_VERSION/wifi/mt76.ko
-insmod /lib/modules/$KERNEL_VERSION/wifi/mt76-connac-lib.ko
-insmod /lib/modules/$KERNEL_VERSION/wifi/mt7915e.ko
+
+if [ "$(NG wed_offloading)" == "1" ]; then
+	modprobe mt7915e wed_enable=Y
+else
+	modprobe mt7915e
+fi

@@ -2647,6 +2647,7 @@ struct nvram_tuple router_defaults[] = {
 
 	{ "ctf_disable",		"1"				, 0 },
 	{ "flow_offloading",		"0"				, 0 },
+	{ "wed_offloading",		"0"				, 0 },
 #endif /* TOMATO64 */
 	{ 0, 0, 0 }
 };
