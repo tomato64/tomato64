@@ -1023,14 +1023,18 @@ static void nat_table(void)
 	) {
 		if (nvram_match("dns_intcpt", "1")) {
 			/* Need to intercept both TCP and UDP DNS requests for all lan interfaces */
+#ifndef TOMATO64
 			modprobe("ipt_REDIRECT");
+#endif /* TOMATO64 */
 			ipt_write("-A PREROUTING -i br+ -p tcp -m tcp --dport 53 -j REDIRECT\n");
 			ipt_write("-A PREROUTING -i br+ -p udp -m udp --dport 53 -j REDIRECT\n");
 		}
 
 		/* NTP server redir */
 		if (nvram_get_int("ntpd_enable") && nvram_get_int("ntpd_server_redir")) {
+#ifndef TOMATO64
 			modprobe("ipt_REDIRECT");
+#endif /* TOMATO64 */
 			ipt_write("-A PREROUTING -i br+ -p udp -m udp --dport 123 -j REDIRECT\n");
 		}
 
