@@ -9,7 +9,7 @@ diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/config.h libnv
 +#define DEBUG               0
  // Determines the size of the internal buffer, used for manipulating and storing key values, etc.
 -#define BUFFER_SIZE         256
-+#define BUFFER_SIZE         4096
++#define BUFFER_SIZE         16384
  // Determines the size of the "emulated" NVRAM, used by nvram_get_nvramspace().
 -#define NVRAM_SIZE          2048
 +#define NVRAM_SIZE          1048576
