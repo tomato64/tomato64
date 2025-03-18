@@ -1,6 +1,6 @@
 --- busybox/networking/udhcp/common.h
 +++ busybox/networking/udhcp/common.h
-@@ -88,6 +88,8 @@
+@@ -93,6 +93,8 @@
  	char c[IP_UDP_DHCP_SIZE == 576 ? 1 : -1];
  };
  
@@ -22,7 +22,7 @@
  	USE_FOR_MMU(             OPTBIT_b,)
  	IF_FEATURE_UDHCPC_ARPING(OPTBIT_a,)
  	IF_FEATURE_UDHCP_PORT(   OPTBIT_P,)
-@@ -1250,6 +1251,7 @@
+@@ -1240,6 +1241,7 @@
  	opt = getopt32long(argv, "^"
  		/* O,x: list; -T,-t,-A take numeric param */
  		"CV:F:i:np:qRr:s:T:+t:+SA:+O:*ox:*fB"
@@ -30,7 +30,7 @@
  		USE_FOR_MMU("b")
  		IF_FEATURE_UDHCPC_ARPING("a::")
  		IF_FEATURE_UDHCP_PORT("P:")
-@@ -1342,6 +1344,9 @@
+@@ -1332,6 +1334,9 @@
  		clientid_mac_ptr += OPT_DATA + 1; /* skip option code, len, ethernet */
  	}
  
@@ -51,7 +51,7 @@
  #if ENABLE_UDHCPC || ENABLE_UDHCPD
  void FAST_FUNC udhcp_init_header(struct dhcp_packet *packet, char type)
  {
-@@ -153,7 +155,9 @@
+@@ -156,7 +158,9 @@
  	 * Thus, we retain enough padding to not go below 300 BOOTP bytes.
  	 * Some devices have filters which drop DHCP packets shorter than that.
  	 */
@@ -62,7 +62,7 @@
  	if (padding > DHCP_SIZE - 300)
  		padding = DHCP_SIZE - 300;
  
-@@ -241,7 +245,7 @@
+@@ -244,7 +248,7 @@
  	}
  
  	udhcp_dump_packet(dhcp_pkt);

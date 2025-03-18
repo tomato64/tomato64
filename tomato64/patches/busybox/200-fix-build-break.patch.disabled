@@ -1,0 +1,13 @@
+diff -daurN busybox/libbb/hash_md5_sha.c busybox_/libbb/hash_md5_sha.c
+--- busybox/libbb/hash_md5_sha.c	2024-09-26 16:00:52.000000000 +0200
++++ busybox_/libbb/hash_md5_sha.c	2024-09-29 14:03:32.000000000 +0200
+@@ -1313,7 +1313,9 @@
+ 	hash_size = 8;
+ 	if (ctx->process_block == sha1_process_block64
+ #if ENABLE_SHA1_HWACCEL
++# if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+ 	 || ctx->process_block == sha1_process_block64_shaNI
++# endif
+ #endif
+ 	) {
+ 		hash_size = 5;

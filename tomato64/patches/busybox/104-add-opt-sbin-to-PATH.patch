@@ -1,6 +1,6 @@
 --- busybox/include/libbb.h
 +++ busybox/include/libbb.h
-@@ -2282,7 +2282,7 @@
+@@ -2306,7 +2306,7 @@
  /* util-linux manpage says /sbin:/bin:/usr/sbin:/usr/bin,
   * but I want to save a few bytes here:
   */

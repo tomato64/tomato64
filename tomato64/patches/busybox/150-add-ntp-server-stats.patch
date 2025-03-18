@@ -1,6 +1,6 @@
 --- busybox/networking/ntpd.c
 +++ busybox/networking/ntpd.c
-@@ -986,7 +986,12 @@
+@@ -987,7 +987,12 @@
  static void run_script(const char *action, double offset)
  {
  	char *argv[3];
@@ -14,7 +14,7 @@
  
  	G.last_script_run = G.cur_time;
  
-@@ -1007,6 +1012,12 @@
+@@ -1008,6 +1013,12 @@
  	putenv(env3);
  	env4 = xasprintf("%s=%f", "offset", offset);
  	putenv(env4);
@@ -27,7 +27,7 @@
  	/* Other items of potential interest: selected peer,
  	 * rootdelay, reftime, rootdisp, refid, ntp_status,
  	 * last_update_offset, last_update_recv_time, discipline_jitter,
-@@ -1022,10 +1033,16 @@
+@@ -1023,10 +1034,16 @@
  	unsetenv("freq_drift_ppm");
  	unsetenv("poll_interval");
  	unsetenv("offset");
@@ -44,7 +44,7 @@
  }
  
  static NOINLINE void
-@@ -2591,7 +2608,7 @@
+@@ -2601,7 +2618,7 @@
  			if (bb_got_signal)
  				break; /* poll was interrupted by a signal */
  

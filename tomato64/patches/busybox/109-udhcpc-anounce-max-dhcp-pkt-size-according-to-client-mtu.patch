@@ -1,6 +1,6 @@
 --- busybox/networking/udhcp/common.h
 +++ busybox/networking/udhcp/common.h
-@@ -371,7 +371,7 @@
+@@ -379,7 +379,7 @@
  int udhcp_sp_read(void) FAST_FUNC;
  
  int udhcp_read_interface(const char *interface,
@@ -11,7 +11,7 @@
  
 --- busybox/networking/udhcp/dhcpc.c
 +++ busybox/networking/udhcp/dhcpc.c
-@@ -620,7 +620,10 @@
+@@ -609,7 +609,10 @@
  {
  	int i, end, len;
  
@@ -23,7 +23,7 @@
  
  	/* Add a "param req" option with the list of options we'd like to have
  	 * from stubborn DHCP servers. Pull the data from the struct in common.c.
-@@ -1344,7 +1347,8 @@
+@@ -1334,7 +1337,8 @@
  	if (udhcp_read_interface(client_data.interface,
  			&client_data.ifindex,
  			NULL,
@@ -33,7 +33,7 @@
  	) {
  		return 1;
  	}
-@@ -1433,7 +1437,8 @@
+@@ -1423,7 +1427,8 @@
  			if (udhcp_read_interface(client_data.interface,
  					&client_data.ifindex,
  					NULL,
@@ -55,7 +55,7 @@
  	uint32_t xid;
 --- busybox/networking/udhcp/dhcpd.c
 +++ busybox/networking/udhcp/dhcpd.c
-@@ -958,7 +958,8 @@
+@@ -976,7 +976,8 @@
  	if (udhcp_read_interface(server_data.interface,
  			&server_data.ifindex,
  			(server_data.server_nip == 0 ? &server_data.server_nip : NULL),
