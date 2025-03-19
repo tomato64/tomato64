@@ -86,7 +86,7 @@ void asp_iptraffic(int argc, char **argv) {
 					ct_tcp = ptr->tcp_conn;
 					ct_udp = ptr->udp_conn;
 				}
-				web_printf("%c['%s', %lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu]", comma, ip, rx_bytes, tx_bytes, rp_tcp, tp_tcp, rp_udp, tp_udp, rp_icmp, tp_icmp, ct_tcp, ct_udp);
+				web_printf("%c['%s', %lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu, %u, %u]", comma, ip, rx_bytes, tx_bytes, rp_tcp, tp_tcp, rp_udp, tp_udp, rp_icmp, tp_icmp, ct_tcp, ct_udp);
 				comma = ',';
 			}
 		}
