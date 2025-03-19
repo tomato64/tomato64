@@ -53,6 +53,7 @@ void start_nfs(void)
 #else
         mkdir_if_none("/run/nfs");
         mkdir_if_none("/run/nfs/sm");
+        mkdir_if_none("/run/nfs/sm.bak");
         mkdir_if_none("/run/nfs/v4recovery");
 
         unlink("/run/nfs/etab");
