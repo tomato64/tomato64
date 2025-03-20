@@ -46,11 +46,6 @@ var updateWWANTimers = [], customStatusTimers = [], show_dhcpc = [], show_codi =
 <script src="status-data.jsx?_http_id=<% nv(http_id); %>"></script>
 
 <script>
-/* TOMATO64-BEGIN */
-/* Temporary workaround */
-wl_ifaces=[];
-wlstats=[];
-/* TOMATO64-END */
 var cprefix = 'status_overview';
 var u;
 nphy = features('11n');
@@ -474,11 +469,13 @@ function show() {
 			if (nphy)
 				c('nbw'+uidx, wlstats[uidx].nbw);
 
+/* TOMATO64-REMOVE-BEGIN */
 			c('rate'+uidx, wlstats[uidx].rate);
 			elem.display('rate'+uidx, (show_radio[uidx] && wlstats[uidx].rate));
 
 			c('interference'+uidx, stats.interference[uidx]);
 			elem.display('interference'+uidx, (wlstats[uidx].radio && stats.interference[uidx] != ''));
+/* TOMATO64-REMOVE-END */
 
 			if (wlstats[uidx].client) {
 				c('rssi'+uidx, wlstats[uidx].rssi || '');
@@ -761,24 +758,43 @@ function init() {
 			wmode += ' + WDS';
 
 		createFieldTable('', [
+/* TOMATO64-BEGIN */
+			{ title: 'MAC Address', text: wl_ifaces[uidx][5] },
+			{ title: 'Wireless Mode', text: wl_info[uidx][0] },
+			{ title: 'Wireless Network Mode', text: wl_info[uidx][2], ignore: (wl_sunit(uidx) >= 0) },
+/* TOMATO64-END */
+/* TOMATO64-REMOVE-BEGIN */
 			{ title: 'MAC Address', text: nvram['wl'+u+'_hwaddr'] },
 			{ title: 'Wireless Mode', text: wmode },
 			{ title: 'Wireless Network Mode', text: bgmo[nvram['wl'+u+'_net_mode']], ignore: (wl_sunit(uidx) >= 0) },
+/* TOMATO64-REMOVE-END */
 			{ title: 'Interface Status', rid: 'ifstatus'+uidx, text: wlstats[uidx].ifstatus },
 			{ title: 'Radio', rid: 'radio'+uidx, text: (wlstats[uidx].radio == 0) ? '<b>Disabled<\/b>' : 'Enabled', ignore: (wl_sunit(uidx) >= 0) },
+/* TOMATO64-BEGIN */
+			{ title: 'SSID', text: wl_ifaces[uidx][4] },
+			{ title: 'Broadcast', text: (wl_info[uidx][5] == 1) ? 'Enabled' : '<b>Disabled<\/b>', ignore: (wl_info[uidx][0] != 'Access Point') },
+			{ title: 'Security', text: wl_info[uidx][1] },
+/* TOMATO64-END */
+/* TOMATO64-REMOVE-BEGIN */
 			{ title: 'SSID', text: nvram['wl'+u+'_ssid'] },
 			{ title: 'Broadcast', text: (nvram['wl'+u+'_closed'] == 0) ? 'Enabled' : '<b>Disabled<\/b>', ignore: (nvram['wl'+u+'_mode'] != 'ap') },
 			{ title: 'Security', text: sec },
+/* TOMATO64-REMOVE-END */
 			{ title: 'Control Channel', rid: 'channel'+uidx, text: stats.channel[uidx], ignore: (wl_sunit(uidx) >= 0) },
 /* RTNPLUS-BEGIN */
 			{ title: 'Control Sideband', rid: 'ctrlsb'+uidx, text: wlstats[uidx].ctrlsb, ignore: ((!nphy) || (wl_sunit(uidx) >= 0)) },
 /* RTNPLUS-END */
+/* TOMATO64-BEGIN */
+			{ title: 'Channel Width', rid: 'nbw'+uidx, text: wl_info[uidx][3], ignore: (wl_sunit(uidx) >= 0) },
+/* TOMATO64-END */
+/* TOMATO64-REMOVE-BEGIN */
 			{ title: 'Channel Width', rid: 'nbw'+uidx, text: wlstats[uidx].nbw, ignore: ((!nphy) || (wl_sunit(uidx) >= 0)) },
 			{ title: 'Interference Level', rid: 'interference'+uidx, text: stats.interference[uidx], ignore: (wl_sunit(uidx) >= 0) },
 			{ title: 'Rate', rid: 'rate'+uidx, text: wlstats[uidx].rate, ignore: (wl_sunit(uidx) >= 0) },
 /* QRCODE-BEGIN */
 			{ title: 'QR code', rid: 'qr-code'+uidx, text: '<a href="tools-qr.asp?wl='+wl_unit(uidx)+(wl_sunit(uidx) >= 0 ? '.'+wl_sunit(uidx) : '')+'"><img src="qr-icon.svg" style="width:12px;height:12px"><\/a>' },
 /* QRCODE-END */
+/* TOMATO64-REMOVE-END */
 			{ title: 'RSSI', rid: 'rssi'+uidx, text: wlstats[uidx].rssi || '', ignore: ((!wlstats[uidx].client) || (wl_sunit(uidx) >= 0)) },
 			{ title: 'Noise', rid: 'noise'+uidx, text: wlstats[uidx].noise || '', ignore: ((!wlstats[uidx].client) || (wl_sunit(uidx) >= 0)) },
 			{ title: 'Signal Quality', rid: 'qual'+uidx, text: stats.qual[uidx] || '', ignore: ((!wlstats[uidx].client) || (wl_sunit(uidx) >= 0)) }

@@ -1479,6 +1479,21 @@ static void print_wlbands(void)
                pclose(f);
        }
 }
+
+static void print_wlinfo(void)
+{
+       FILE *f;
+       char row[128];
+
+       const char cmd[] = "/usr/bin/wlinfo";
+
+       if ((f = popen(cmd, "r")) != NULL) {
+               while (fgets(row, sizeof(row), f)) {
+                       web_printf(row);
+               }
+               pclose(f);
+       }
+}
 #endif /* TOMATO64 */
 
 void asp_wlbands(int argc, char **argv)
@@ -1493,6 +1508,15 @@ void asp_wlbands(int argc, char **argv)
 #endif /* TOMATO64 */
 	web_puts(" ];\n");
 }
+
+#ifdef TOMATO64
+void asp_wlinfo(int argc, char **argv)
+{
+	web_puts("\nwl_info = [");
+	print_wlinfo();
+	web_puts(" ];\n");
+}
+#endif /* TOMATO64 */
 
 #ifndef TOMATO64
 static int print_wif(int idx, int unit, int subunit, void *param)

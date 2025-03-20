@@ -151,6 +151,9 @@ const aspapi_t aspapi[] = {
 	{ "wlcountries",		asp_wlcountries			},
 	{ "wlifaces",			asp_wlifaces			},
 	{ "wlbands",			asp_wlbands			},
+#ifdef TOMATO64
+	{ "wlinfo",			asp_wlinfo			},
+#endif /* TOMATO64 */
 #ifdef TCONFIG_USB
 	{ "usbdevices",			asp_usbdevices			},
 #endif

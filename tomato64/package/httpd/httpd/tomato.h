@@ -155,6 +155,9 @@ extern void asp_wlstats(int argc, char **argv);
 extern void asp_wlclient(int argc, char **argv);
 extern void asp_wlchannels(int argc, char **argv);
 extern void asp_wlbands(int argc, char **argv);
+#ifdef TOMATO64
+extern void asp_wlinfo(int argc, char **argv);
+#endif /* TOMATO64 */
 extern void asp_wlifaces(int argc, char **argv);
 extern void asp_wlcountries(int argc, char **argv);
 
