@@ -42,22 +42,27 @@ do
 			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "ap" ];
 			then
 
-				band="$(iwinfo $(print_ifname ${i} ${j}) info | grep "PHY name:" | awk '{print $6}')" > /dev/null 2>&1
+				phy="$(iwinfo $(print_ifname ${i} ${j}) info | grep "PHY name:" | awk '{print $6}')" > /dev/null 2>&1
 
-				if [ ! -z "${band}" ];
+				if [ ! -z "${phy}" ];
 				then
+					band="$(NG wifi_${phy}_band)"
 
 					if [ $first_entry -eq 1 ]; then
 						echo -n ","
 					fi
 
-					if [ "$band" == "phy0" ];
+					if [ "$band" == "2g" ];
 					then
 						echo "['2']"
 					fi
-					if [ "$band" == "phy1" ];
+					if [ "$band" == "5g" ];
 					then
 						echo "['1']"
+					fi
+					if [ "$band" == "6g" ];
+					then
+						echo "['3']"
 					fi
 
 					first_entry=1
