@@ -35,3 +35,5 @@ if [ "$(NG wed_offloading)" == "1" ]; then
 else
 	modprobe mt7915e
 fi
+
+modprobe mt7921u

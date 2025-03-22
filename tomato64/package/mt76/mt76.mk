@@ -68,6 +68,11 @@ define MT76_BUILD_CMDS
 	CONFIG_MT76_CONNAC_LIB=m \
 	CONFIG_MT7915E=m \
 	CONFIG_MT798X_WMAC=y \
+	CONFIG_MT792x_LIB=m \
+	CONFIG_MT792x_USB=m \
+	CONFIG_MT7921_COMMON=m \
+	CONFIG_MT7921U=m \
+	CONFIG_MT76_USB=m \
 	M="$(@D)" \
 	NOSTDINC_FLAGS="-nostdinc -isystem $(TARGET_DIR)/include -I$(@D) -I$(STAGING_DIR)/usr/include/mac80211-backport/uapi -I$(STAGING_DIR)/usr/include/mac80211-backport -I$(STAGING_DIR)/usr/include/mac80211/uapi -I$(STAGING_DIR)/usr/include/mac80211 -include backport/autoconf.h -include backport/backport.h -DCONFIG_MAC80211_MESH -DCONFIG_MT798X_WMAC" \
 	modules
@@ -78,21 +83,28 @@ define MT76_INSTALL_TARGET_CMDS
 
 	mkdir -p $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 
-        $(INSTALL) $(@D)/mt76-connac-lib.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
-        $(INSTALL) $(@D)/mt7915/mt7915e.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
-        $(INSTALL) $(@D)/mt76.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+        $(INSTALL) $(@D)/mt76-connac-lib.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+        $(INSTALL) $(@D)/mt7915/mt7915e.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+        $(INSTALL) $(@D)/mt76.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 
+        $(INSTALL) $(@D)/mt76-usb.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+        $(INSTALL) $(@D)/mt792x-usb.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+        $(INSTALL) $(@D)/mt792x-lib.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+        $(INSTALL) $(@D)/mt7921/mt7921-common.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+        $(INSTALL) $(@D)/mt7921/mt7921u.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 
 	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek
 
-	$(INSTALL) $(@D)/firmware/mt7986_wa.bin			$(TARGET_DIR)/lib/firmware/mediatek
-	$(INSTALL) $(@D)/firmware/mt7986_wm_mt7975.bin		$(TARGET_DIR)/lib/firmware/mediatek
-	$(INSTALL) $(@D)/firmware/mt7986_wm.bin			$(TARGET_DIR)/lib/firmware/mediatek
-	$(INSTALL) $(@D)/firmware/mt7986_rom_patch_mt7975.bin	$(TARGET_DIR)/lib/firmware/mediatek
-	$(INSTALL) $(@D)/firmware/mt7986_rom_patch.bin		$(TARGET_DIR)/lib/firmware/mediatek
-	$(INSTALL) $(@D)/firmware/mt7986_wo_0.bin		$(TARGET_DIR)/lib/firmware/mediatek
-	$(INSTALL) $(@D)/firmware/mt7986_wo_1.bin		$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/mt7986_wa.bin				$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/mt7986_wm_mt7975.bin			$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/mt7986_wm.bin				$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/mt7986_rom_patch_mt7975.bin		$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/mt7986_rom_patch.bin			$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/mt7986_wo_0.bin			$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/mt7986_wo_1.bin			$(TARGET_DIR)/lib/firmware/mediatek
 
+	$(INSTALL) $(@D)/firmware/WIFI_MT7961_patch_mcu_1_2_hdr.bin	$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/WIFI_RAM_CODE_MT7961_1.bin		$(TARGET_DIR)/lib/firmware/mediatek
 endef
 
 $(eval $(generic-package))
