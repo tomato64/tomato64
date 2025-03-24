@@ -350,7 +350,7 @@ function init() {
 	<script>
 		createFieldTable('', [
 			{ title: 'Flow offloading type', name: 'flow_offloading', type: 'select', options: [[0,'None'],[1,'Software flow offloading'],[2,'Hardware flow offloading']], value: fixInt(nvram.flow_offloading, 0, 2, 0) },
-			{ title: 'Wireless Ethernet Dispatch (WED)', name: 'wed_offloading', type: 'select', options: [[0,'Disabled'],[1,'Enabled']], value: fixInt(nvram.wed_offloading, 0, 1, 0), suffix: ' &nbsp;<small>requires Hardare flow offloading<\/small>' }
+			{ title: 'Wireless Ethernet Dispatch (WED)', name: 'wed_offloading', type: 'select', options: [[0,'Disabled'],[1,'Enabled']], value: fixInt(nvram.wed_offloading, 0, 1, 0), suffix: ' &nbsp;<small>requires Hardware flow offloading<\/small>' }
 		]);
 	</script>
 </div>
