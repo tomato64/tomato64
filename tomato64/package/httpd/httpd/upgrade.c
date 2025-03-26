@@ -221,9 +221,6 @@ void wo_flash(char *url)
 
 		sync();
 		//kill(1, SIGTERM);
-#ifdef TOMATO64
-		system("mount -o remount,ro /");
-#endif /* TOMATO64 */
 #ifdef TOMATO64_X86_64
 		if (fastreboot) {
 			system("kexec -l /boot/bzImage --reuse-cmdline");
