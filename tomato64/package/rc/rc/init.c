@@ -11542,6 +11542,7 @@ static void sysinit(void)
 	eval("hotplug2", "--coldplug");
 #else
 	eval("/etc/init.d/S10mdev", "start");
+	start_hotplug2();
 
 #ifdef TOMATO64_MT6000
 	eval("set_devs_mt6000");
@@ -11573,8 +11574,6 @@ static void sysinit(void)
 		nvram_set("fs_expanded", "1");
 	}
 #endif /* TOMATO64 */
-
-	start_hotplug2();
 
 	if (!noconsole) {
 		printf("\n\nHit ENTER for console...\n\n");

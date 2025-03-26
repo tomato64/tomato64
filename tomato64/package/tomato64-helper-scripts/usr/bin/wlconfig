@@ -1,0 +1,13 @@
+#!/bin/sh
+
+(
+	# Depends on util-linux flock
+	flock -x -w 3 200 || exit 1
+
+	if ! [ -e /etc/board.json ]; then
+		echo "{ }" > /etc/board.json
+	fi
+
+	/sbin/wifi config
+
+) 200>/var/lock/.wlconfig

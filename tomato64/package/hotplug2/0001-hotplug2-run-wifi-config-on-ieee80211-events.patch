@@ -1,0 +1,27 @@
+From 215bd798a4bc660ff404f47585045d3370eb6bd4 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Tue, 25 Mar 2025 14:06:22 -0600
+Subject: [PATCH] hotplug2: run wifi config on ieee80211 events
+
+---
+ examples/hotplug2.rules-2.6kernel | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/examples/hotplug2.rules-2.6kernel b/examples/hotplug2.rules-2.6kernel
+index f0b41b9..e4fed2c 100644
+--- a/examples/hotplug2.rules-2.6kernel
++++ b/examples/hotplug2.rules-2.6kernel
+@@ -6,6 +6,10 @@ MODALIAS is set, ACTION == add {
+ 	exec /sbin/modprobe -q %MODALIAS% ;
+ }
+ 
++SUBSYSTEM == ieee80211 {
++	exec /usr/bin/wlconfig ;
++}
++
+ SUBSYSTEM == usb, DEVICENAME ~~ ^(lp[0-9]+)$, DEVPATH is set, ACTION == add {
+ 	exec mkdir -p -m 0777 /dev/usb ;
+ 	symlink /dev/%DEVICENAME% /dev/usb/%DEVICENAME%
+-- 
+2.39.5
+

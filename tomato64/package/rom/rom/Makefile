@@ -133,8 +133,4 @@ else
 	done
 endif
 
-ifneq ($(PLATFORM_MT6000),y)
-	rm -f $(INSTALLDIR)/rom/etc/board.json
-endif
-
 .PHONY: dummy
