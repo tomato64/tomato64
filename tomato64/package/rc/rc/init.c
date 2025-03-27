@@ -496,6 +496,7 @@ static void shutdn(int rb)
 #endif /* TOMATO64 */
 
 #ifdef TOMATO64
+	system("/bin/umount -a -d -r");
 	reboot(rb ? RB_AUTOBOOT : RB_POWER_OFF);
 #else
 	reboot(rb ? RB_AUTOBOOT : RB_HALT_SYSTEM);
@@ -12020,6 +12021,7 @@ int fastreboot_main(int argc, char *argv[])
 		unlink("/var/log/messages.0");
 		sync();
 
+		system("/bin/umount -a -d -r");
 		system("kexec -l /boot/bzImage --reuse-cmdline");
 		system("kexec -e");
 	}
