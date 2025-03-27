@@ -1,0 +1,83 @@
+#!/bin/sh
+
+#set -e
+#set -x
+
+if [ ! -f "/etc/board.json" ]; then
+	exit 0
+fi
+
+. /usr/sbin/nvram_ops
+. /usr/share/libubox/jshn.sh
+
+json_load_file /etc/board.json
+
+phycount=0
+
+count_phy() {
+        phycount=$((phycount+1))
+}
+
+print_ifname() {
+
+	if [ ! -z "$(NG wifi_phy${1}iface${2}_ifname)" ];
+	then
+		echo "$(NG wifi_phy${1}iface${2}_ifname)"
+	else
+		echo "phy${1}-ap${2}"
+	fi
+}
+
+first_entry=0
+
+json_for_each_item "count_phy" "wlan"
+
+wifi_motd=""
+
+# For each wireless device
+for i in $(seq 0 1 $(($phycount - 1)));
+do
+	# For each device interface
+	for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)));
+	do
+		# If interface is enabled
+		if [ $(NG "wifi_phy${i}iface${j}_enable") -eq 1 ];
+		then
+
+			# If interface is an Access Point
+			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "ap" ];
+			then
+
+				phy="$(iwinfo $(print_ifname ${i} ${j}) info | grep "PHY name:" | awk '{print $6}')" > /dev/null 2>&1
+
+				if [ ! -z "${phy}" ];
+				then
+					band="$(NG wifi_${phy}_band)"
+
+					if [ "$band" == "2g" ];
+					then
+						radio="2.4GHz"
+					fi
+					if [ "$band" == "5g" ];
+					then
+						radio="5GHz"
+					fi
+					if [ "$band" == "6g" ];
+					then
+						radio="6GHz"
+					fi
+
+					ifname=$(print_ifname ${i} ${j})
+					wifi_motd=" $wifi_motd $(print_ifname $i $j) : "$radio" @ $(NG "wifi_phy${i}iface${j}_essid") @ channel: $(NG "wifi_phy${i}_channel") @ $(cat /sys/class/net/$ifname/address)\n"
+                                fi
+
+			fi
+		fi
+	done
+done
+
+# Remove last '\n' from string
+wifi_motd=$(echo "$wifi_motd" | rev | cut -c 3- | rev)
+
+# Apply table formatting
+echo -e $wifi_motd | column -t -L -o " " | sed 's/^/ /' | awk '{gsub(/ :/, ":"); print}'
