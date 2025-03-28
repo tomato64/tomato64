@@ -43,14 +43,39 @@ function wl_ifidxx(ifname) {
 	return -1;
 }
 
-function wl_display_ifname(uidx) {
 /* TOMATO64-REMOVE-BEGIN */
+function wl_display_ifname(uidx) {
 	return wl_ifaces[uidx][0]+(wl_sunit(uidx) < 0 ?
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-	return wl_ifaces[uidx][0]+(wl_sunit(uidx) == 0 ?
-/* TOMATO64-END */
 	       ' (wl'+wl_fface(uidx)+')' : '')+((wl_bands[uidx].length == 1) ?
 	       ((wl_bands[uidx][0] == '1') ? ' / 5 GHz' : ' / 2.4 GHz') : ((nvram['wl'+wl_unit(uidx)+'_nband'] == 1) ?
 	       ' / 5 GHz' : ' / 2.4 GHz'));
 }
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+function wl_display_ifname(uidx) {
+	let result = wl_ifaces[uidx][0];
+
+	if (wl_sunit(uidx) == 0) {
+		result += ' (wl' + wl_fface(uidx) + ')';
+	}
+
+	if (wl_bands[uidx].length == 1) {
+		if (wl_bands[uidx][0] == '1') {
+			result += ' / 5 GHz';
+		} else if (wl_bands[uidx][0] == '2') {
+			result += ' / 2.4 GHz';
+		} else if (wl_bands[uidx][0] == '3') {
+			result += ' / 6 GHz';
+		}
+	} else {
+		if (nvram['wl' + wl_unit(uidx) + '_nband'] == 1) {
+			result += ' / 5 GHz';
+		} else {
+			result += ' / 2.4 GHz';
+		}
+	}
+
+	return result;
+}
+/* TOMATO64-END */

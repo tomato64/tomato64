@@ -459,6 +459,12 @@ dg.populate = function() {
 		if (e.freq != '') {
 			f = '<img src="wl'+(e.freq == '5 GHz' ? '50' : '24')+'.gif"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'">';
 			e.media = (e.freq == '5 GHz' ? 1 : 2);
+/* TOMATO64-BEGIN */
+			if (e.freq == '6 GHz') {
+				f = '<img src="wl60.gif"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'">';
+				e.media = 0;
+			}
+/* TOMATO64-END */
 		}
 		else if (e.ifname != '' && mode != 'wet') {
 			c = (e.wan != '' ? 'style="filter:invert(1)"' : '');
