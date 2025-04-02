@@ -2591,10 +2591,12 @@ function navi() {
 			['System Commands',		'shell.asp'],
 /* TOMATO64-REMOVE-BEGIN */
 			['Wireless Survey',		'survey.asp'],
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-MT6000-BEGIN */
 /* QRCODE-BEGIN */
 			['WiFi QR Codes',		'qr.asp'],
 /* QRCODE-END */
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-MT6000-END */
 /* IPERF-BEGIN */
 			['iPerf',			'iperf.asp'],
 /* IPERF-END */

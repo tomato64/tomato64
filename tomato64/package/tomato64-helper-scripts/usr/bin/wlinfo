@@ -78,7 +78,7 @@ do
 					broadcast=1
 				fi
 
-				echo "['Access Point','$encryption','$mode','"$(NG "wifi_phy${i}_width")" MHz','"$(NG wifi_phy${i}iface${j}_network)"','$broadcast']"
+				echo "['Access Point','$encryption','$mode','"$(NG "wifi_phy${i}_width")" MHz','"$(NG wifi_phy${i}iface${j}_network)"','$broadcast','"$(NG wifi_phy${i}iface${j}_key)"']"
 
 				first_entry=1
 			fi

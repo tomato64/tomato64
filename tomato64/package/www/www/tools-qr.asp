@@ -55,10 +55,19 @@
 <script>
 
 //	<% nvram('wl_ssid,wl_security_mode,wl_closed,wl_passphrase,wl_wpa_psk'); %>
+/* TOMATO64-BEGIN */
+//      <% wlinfo(); %>
+/* TOMATO64-END */
 
 var cprefix = 'tools_qr';
 var tabs = []
+/* TOMATO64-REMOVE-BEGIN */
 var authMap = {'disabled':'nopass','wep':'WEP','wpa_personal':'WPA','wpa_enterprise':'WPA','wpa2_personal':'WPA','wpa2_enterprise':'WPA','wpaX_personal':'WPA','wpaX_enterprise':'WPA'};
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+/* Must match with /usr/bin/wlinfo */
+var authMap = {'none (Open Network)':'nopass','OWE (Open Network)':'nopass','WPA':'WPA','WPA/WPA2':'WPA','WPA2':'WPA','WPA2/WPA3':'WPA','WPA3':'WPA'};
+/* TOMATO64-END */
 
 function getNvramWifiParameter(wifiInterface, paramName) {
 	return nvram[wifiInterface+'_'+paramName];
@@ -78,8 +87,14 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 	var u = wl_fface(uidx);
 
 	var sunit = wl_sunit(uidx);
+/* TOMATO64-REMOVE-BEGIN */
 	var tabName = 'wl'+wl_unit(uidx)+(sunit >= 0 ? ('.'+sunit) : '');
 	var displayName = getNvramWifiParameter(tabName, 'ssid')+' - '+wl_display_ifname(uidx);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	var tabName = wl_ifaces[uidx][0];
+	var displayName = wl_ifaces[uidx][4]+' - '+wl_display_ifname(uidx);
+/* TOMATO64-END */
 
 	tabs.push([tabName, displayName]);
 }
@@ -89,10 +104,18 @@ function tabSelect(name) {
 
 	for (var i = 0; i < tabs.length; ++i) {
 		if (name == tabs[i][0] ) {
+/* TOMATO64-REMOVE-BEGIN */
 			var ssid = getNvramWifiParameter(name, 'ssid');
 			var enc = authMap[getNvramWifiParameter(name, 'security_mode')];
 			var hidden = (getNvramWifiParameter(name, 'closed') == '1' ) ? 'true' : 'false';
 			var pw = (enc == 'WEP') ? getNvramWifiParameter(name, 'passphrase') : getNvramWifiParameter(name, 'wpa_psk');
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			var ssid = wl_ifaces[i][4];
+			var enc = authMap[wl_info[i][1]];
+			var hidden = (wl_info[i][5] == '0' ) ? 'true' : 'false';
+			var pw = wl_info[i][6] ;
+/* TOMATO64-END */
 
 			E('wifi-network-ssid').innerHTML = ssid.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 			E('wifi-network-password').innerHTML = pw.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
@@ -124,10 +147,20 @@ function init() {
 		toggleVisibility(cprefix, 'notes')
 
 	var tabSelectParamter = window.location.search.substr(1).split('=');
+/* TOMATO64-REMOVE-BEGIN */
 	var openedTab = cookie.get('qr-tab') || 'wl0';
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	var openedTab = cookie.get('qr-tab') || wl_ifaces[0][0];
+/* TOMATO64-END */
 
 	if (tabSelectParamter.length > 0 && tabSelectParamter.includes('wl'))
+/* TOMATO64-REMOVE-BEGIN */
 		openedTab = 'wl'+tabSelectParamter[1];
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		openedTab = tabSelectParamter[1];
+/* TOMATO64-END */
 
 	tabSelect(openedTab);
 }
