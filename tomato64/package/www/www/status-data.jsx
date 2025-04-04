@@ -82,6 +82,11 @@ stats.wlsense = sysinfo.wlsense;
 a = sysinfo.totalram;
 b = sysinfo.totalfreeram;
 stats.memory = scaleSize(a - b)+' / '+scaleSize(a)+' <small>('+((a - b) / a * 100.0).toFixed(2)+'%)</small><div class="progress-wrapper"><div class="progress-container"><div class="progress-bar" style="background-color:'+setColor(((a - b) / a * 100.0).toFixed(2))+';width:'+((a - b) / a * 100.0).toFixed(2)+'%"></div></div></div>';
+/* TOMATO64-BEGIN */
+a = sysinfo.disktotal;
+b = sysinfo.diskfree;
+stats.disk = scaleSize(a - b)+' / '+scaleSize(a)+' <small>('+((a - b) / a * 100.0).toFixed(2)+'%)</small><div class="progress-wrapper"><div class="progress-container"><div class="progress-bar" style="background-color:'+setColor(((a - b) / a * 100.0).toFixed(2))+';width:'+((a - b) / a * 100.0).toFixed(2)+'%"></div></div></div>';
+/* TOMATO64-END */
 if (sysinfo.totalswap > 0) {
 	a = sysinfo.totalswap;
 	b = sysinfo.freeswap;

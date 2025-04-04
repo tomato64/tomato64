@@ -44,6 +44,13 @@ typedef struct {
 	unsigned long slabrecl;
 } meminfo_t;
 
+#ifdef TOMATO64
+typedef struct {
+	double total;
+	double free;
+} diskinfo_t;
+#endif /* TOMATO64 */
+
 
 /* to javascript-safe string */
 char *js_string(const char *s)
@@ -262,6 +269,32 @@ static int get_memory(meminfo_t *m)
 
 	return 1;
 }
+
+#ifdef TOMATO64
+static int get_disk(diskinfo_t *d)
+{
+
+	struct statvfs fs_info;
+	const char *path = "/"; // Root partition
+
+	memset(d, 0, sizeof(*d));
+
+	// Get filesystem stats for the root partition
+	if (statvfs(path, &fs_info) == -1) {
+		return 1;
+	}
+
+	// Calculate sizes in bytes
+	unsigned long long block_size = fs_info.f_frsize; // Fundamental filesystem block size
+	unsigned long long total_blocks = fs_info.f_blocks; // Total blocks
+	unsigned long long free_blocks = fs_info.f_bfree; // Free blocks for all users
+
+	d->total = (double)(total_blocks * block_size);
+	d->free  = (double)(free_blocks * block_size);
+
+	return 0;
+}
+#endif /* TOMATO64 */
 
 static char* get_cfeversion(char *buf, const size_t buf_sz)
 {
@@ -594,6 +627,7 @@ void asp_sysinfo(int argc, char **argv)
 	meminfo_t mem;
 
 #ifdef TOMATO64
+	diskinfo_t disk;
 	char cpu_model[64];
 #endif /* TOMATO64 */
 	char system_type[64];
@@ -618,6 +652,7 @@ void asp_sysinfo(int argc, char **argv)
 
 #ifdef TOMATO64
 	get_cpumodel(cpu_model, sizeof(cpu_model));
+	get_disk(&disk);
 #endif /* TOMATO64 */
 
 
@@ -658,6 +693,8 @@ void asp_sysinfo(int argc, char **argv)
 	           "\tcpumodel: '%s',\n"
 	           "\tcpucount: '%d',\n"
 	           "\tniccount: '%d',\n"
+	           "\tdisktotal: '%.0f',\n"
+	           "\tdiskfree: '%.0f',\n"
 #endif /* TOMATO64 */
 	           "\tcfeversion: '%s'",
 	           si.uptime,
@@ -681,6 +718,8 @@ void asp_sysinfo(int argc, char **argv)
 	           cpu_model,
 	           get_nprocs(),
 	           nvram_get_int("nics"),
+		   disk.total,
+		   disk.free,
 #endif /* TOMATO64 */
 	           cfe_version);
 
