@@ -77,6 +77,29 @@ sed -e '/^\s*#.*$/d' -e '/^\s*$/d' < $USB_MODESWITCH_DIR/usb_modeswitch.conf > $
 if grep -q ^BR2_aarch64=y ${BR2_CONFIG}
 then
 	ln -sf /usr/bin/uci $TARGET_DIR/sbin/uci
+
+# Generate kernel fit file
+	KERNEL_VERSION=$(ls $BUILD_DIR | grep "linux-headers" | cut -d- -f3)
+
+	lzma_alone e $BINARIES_DIR/Image -lc1 -lp2 -pb2 $BINARIES_DIR/glinet_gl-mt6000-kernel.bin
+
+	$BR2_EXTERNAL_TOMATO64_PATH/board/mt6000/mkits.sh \
+	-D glinet_gl-mt6000 \
+	-o $BINARIES_DIR/glinet_gl-mt6000-kernel.bin.its \
+	-k $BINARIES_DIR/glinet_gl-mt6000-kernel.bin \
+	-C lzma \
+	-d $BINARIES_DIR/mt7986a-glinet-gl-mt6000.dtb \
+	-a 0x48000000 -e 0x48000000 \
+	-c "config-1" \
+	-A arm64 \
+	-v $KERNEL_VERSION
+
+	mkimage \
+	-f $BINARIES_DIR/glinet_gl-mt6000-kernel.bin.its \
+	$BINARIES_DIR/glinet_gl-mt6000-kernel.bin
+
+	mkdir -p $TARGET_DIR/boot
+	cp $BINARIES_DIR/glinet_gl-mt6000-kernel.bin $TARGET_DIR/boot/
 fi
 
 # Remove unneeded mariadb stuff

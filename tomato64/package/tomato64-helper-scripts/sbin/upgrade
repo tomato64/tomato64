@@ -26,6 +26,30 @@ if [ -f /boot/bzImage ]; then
 		rm -rf "$dir"
 	done
 	printf "image successfully flashed\n"
-else
-	printf "Could not detect the new kernel version. Possible issue with the kernel.\n"
+fi
+
+if [ -f /boot/glinet_gl-mt6000-kernel.bin ]; then
+
+	export EMMC_KERNEL_BLOCKS=$(($(dd if=/boot/glinet_gl-mt6000-kernel.bin of=/dev/mmcblk0p6 bs=512 2>&1 | grep "records out" | cut -d' ' -f1)))
+
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d" returned during kernel write' "$result"
+		exit
+	fi
+
+	dd if=/dev/zero of=/dev/mmcblk0p6 bs=512 seek=$EMMC_KERNEL_BLOCKS count=8 >/dev/null 2>&1
+
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d" returned during kernel padding write' "$result"
+		exit
+	fi
+
+	kernel=$(strings /boot/glinet_gl-mt6000-kernel.bin | grep -i "Linux-" | awk '{print $3}' | sed "s/.*-//")
+	for dir in /lib/modules/*; do
+		[ "$dir" = "/lib/modules/$kernel" ] && continue
+		rm -rf "$dir"
+	done
+	printf "image successfully flashed\n"
 fi
