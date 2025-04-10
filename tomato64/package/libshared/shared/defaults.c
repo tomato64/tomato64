@@ -2207,7 +2207,7 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_MT6000
 	{ "vlan1ports",			"1 2 3 4 5 9*"			, 0 },
 
-	{"wifi_phy0_band",		"2G"				, 0 },
+	{"wifi_phy0_band",		"2g"				, 0 },
 	{"wifi_phy0_mode",		"ax"				, 0 },
 	{"wifi_phy0_channel",		"1"				, 0 },
 	{"wifi_phy0_width",		"20"				, 0 },
@@ -2217,7 +2217,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0_country",		""				, 0 },
 	{"wifi_phy0_ifaces",		"1"				, 0 },
 
-	{"wifi_phy1_band",		"5G"				, 0 },
+	{"wifi_phy1_band",		"5g"				, 0 },
 	{"wifi_phy1_mode",		"ax"				, 0 },
 	{"wifi_phy1_channel",		"36"				, 0 },
 	{"wifi_phy1_width",		"80"				, 0 },
@@ -2227,7 +2227,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1_country",		""				, 0 },
 	{"wifi_phy1_ifaces",		"1"				, 0 },
 
-	{"wifi_phy2_band",		"5G"				, 0 },
+	{"wifi_phy2_band",		"5g"				, 0 },
 	{"wifi_phy2_mode",		"ax"				, 0 },
 	{"wifi_phy2_channel",		"36"				, 0 },
 	{"wifi_phy2_width",		"80"				, 0 },
