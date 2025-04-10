@@ -52,7 +52,7 @@ WGET="/usr/bin/wget"
 			VER_MAJ=$(echo $VER | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
 			VER_MNR=$(echo $VER | awk '{print $1}' | cut -d "." -f2 | sed 's/[^0-9]*//g')
 
-			RESCHK=$($WGET -O- "https://tomato64.org/version.txt")
+			RESCHK=$(curl https://api.github.com/repos/tomato64/tomato64/releases/latest -s | jq -r '.name')
 
 			CHKVER_MAJ=$(echo $RESCHK | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
 			echo $RESCHK | grep "\." && {
