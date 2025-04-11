@@ -245,7 +245,7 @@ wlg.onAdd = function() {
 		data[1] || '1',				/* bss_enabled */
 		data[3],				/* WL net mode */
 		data[2],				/* nvram['wl'+u+'_ssid'] */
-		(eval('nvram["wl'+u+'_hwaddr"]')) || mac_null, /* MAC addr */
+		(nvram['wl'+u+'_hwaddr']) || mac_null,	/* MAC addr */
 		'0',					/* VIFs supported */
 		data[4],
 		data[5]					/* Wireless Filter */
@@ -785,7 +785,7 @@ REMOVE-END */
 			b = selectedBand(wl_ifidxx(u));
 
 			if (wl_vis[vidx]._wl_channel == 1 && wl_vis[vidx]._f_wl_nctrlsb != 0 && ((b == '2') || (wl_vis[vidx]._f_wl_nband == 0 && b == '0'))) {
-				switch (eval('nvram["wl'+u+'_net_mode"]')) {
+				switch (nvram['wl'+u+'_net_mode']) {
 					case 'b-only':
 					case 'g-only':
 					case 'bg-mixed':
@@ -1135,8 +1135,7 @@ REMOVE-END */
 		E('_wl'+u+'_radio').value = wradio ? 1 : 0;
 		E('_wl'+u+'_bss_enabled').value = wradio ? 1 : 0;
 		E('_wl'+u+'_ap_isolate').value = E('_f_wl'+u+'_ap_isolate').checked ? 1 : 0;
-
-		E('_wl'+u+'_auth').value = eval('nvram["wl'+u+'_auth"]') || '0';
+		E('_wl'+u+'_auth').value = nvram['wl'+u+'_auth'] || '0';
 
 		e = E('_wl'+u+'_akm');
 		switch (sm2) {
@@ -1223,7 +1222,7 @@ REMOVE-END */
 					break;
 			}
 
-			E('_wl'+u+'_nctrlsb').value = eval('nvram.wl'+u+'_nctrlsb');
+			E('_wl'+u+'_nctrlsb').value = nvram['wl'+u+'_nctrlsb'];
 			if (E('_wl'+u+'_nmode').value != 0) {
 				E('_wl'+u+'_nctrlsb').value = E('_f_wl'+u+'_nctrlsb').value;
 				E('_wl'+u+'_nbw').value = (E('_wl'+u+'_nbw_cap').value == 0) ? 20 : ((E('_wl'+u+'_nbw_cap').value == 3) ? 80 : 40);
@@ -1232,7 +1231,7 @@ REMOVE-END */
 
 		E('_wl'+u+'_closed').value = E('_f_wl'+u+'_bcast').checked ? 0 : 1;
 
-		a = fields.radio.selected(eval('fom["f_wl'+u+'_wepidx"]'));
+		a = fields.radio.selected(fom['f_wl'+u+'_wepidx']);
 /* REMOVE-BEGIN
 		if (a) E('_wl'+u+'_key').value = a.value;
 REMOVE-END */
@@ -1508,84 +1507,76 @@ function init() {
 /* common to all VIFs */
 				var f = [];
 				f.push (
-					{ title: 'Enable Interface', name: 'f_wl'+u+'_radio', type: 'checkbox', value: (eval('nvram["wl'+u+'_radio"]') == '1') && (eval('nvram["wl'+u+'_net_mode"]') != 'disabled') },
-					{ title: 'AP Isolation', name: 'f_wl'+u+'_ap_isolate', type: 'checkbox', value: (eval('nvram["wl'+u+'_ap_isolate"]') == '1') },
-					{ title: 'MAC Address', text: '<a href="advanced-mac.asp">'+(eval('nvram["wl'+u+'_hwaddr"]') || mac_null)+'<\/a>'+' &nbsp; <b id="wl'+u+'_hwaddr_msg" style="display:none"><small>(warning: WL driver reports BSSID <a href="advanced-mac.asp">'+((typeof(wl_ifaces[wl_ifidxx(u)]) != 'undefined') ? wl_ifaces[wl_ifidxx(u)][9] : '')+'<\/a>)<\/small><\/b>' },
-					{ title: 'Wireless Mode', name: 'f_wl'+u+'_mode', type: 'select', options: wl_modes_available, value: ((eval('nvram["wl'+u+'_mode"]') == 'ap') && (eval('nvram["wl'+u+'_wds_enable"]') == '1')) ? 'apwds' : eval('nvram["wl'+u+'_mode"]'), suffix: ' &nbsp; <b id="wl'+u+'_mode_msg" style="display:none"><small>(note: you might wish to cross-check settings later on <a href="basic-network.asp">Basic/Network<\/a>)<\/small><\/b>' }
+					{ title: 'Enable Interface', name: 'f_wl'+u+'_radio', type: 'checkbox', value: (nvram['wl'+u+'_radio'] == '1' && nvram['wl'+u+'_net_mode'] != 'disabled') },
+					{ title: 'AP Isolation', name: 'f_wl'+u+'_ap_isolate', type: 'checkbox', value: nvram['wl'+u+'_ap_isolate'] == '1' },
+					{ title: 'MAC Address', text: '<a href="advanced-mac.asp">'+(nvram['wl'+u+'_hwaddr'] || mac_null)+'<\/a>'+' &nbsp; <b id="wl'+u+'_hwaddr_msg" style="display:none"><small>(warning: WL driver reports BSSID <a href="advanced-mac.asp">'+((typeof(wl_ifaces[wl_ifidxx(u)]) != 'undefined') ? wl_ifaces[wl_ifidxx(u)][9] : '')+'<\/a>)<\/small><\/b>' },
+					{ title: 'Wireless Mode', name: 'f_wl'+u+'_mode', type: 'select', options: wl_modes_available, value: (nvram['wl'+u+'_mode'] == 'ap' && nvram['wl'+u+'_wds_enable'] == '1') ? 'apwds' : nvram['wl'+u+'_mode'], suffix: ' &nbsp; <b id="wl'+u+'_mode_msg" style="display:none"><small>(note: you might wish to cross-check settings later on <a href="basic-network.asp">Basic/Network<\/a>)<\/small><\/b>' }
 				);
 
 /* only if primary VIF */
 				if (u.toString().indexOf('.') < 0) {
 					f.push (
-						{ title: 'Radio Band', name: 'f_wl'+u+'_nband', type: 'select', options: bands[uidx], value: eval('nvram["wl'+u+'_nband"]') || '0' == '0' ? bands[uidx][0][0] : eval('nvram["wl'+u+'_nband"]') },
-						{ title: 'Wireless Network Mode', name: 'wl'+u+'_net_mode', type: 'select', value: (eval('nvram["wl'+u+'_net_mode"]') == 'disabled') ? 'mixed' : eval('nvram["wl'+u+'_net_mode"]'), options: [], prefix: '<span id="__wl'+u+'_net_mode">', suffix: '<\/span>' }
+						{ title: 'Radio Band', name: 'f_wl'+u+'_nband', type: 'select', options: bands[uidx], value: (nvram['wl'+u+'_nband'] || '0' == '0') ? bands[uidx][0][0] : nvram['wl'+u+'_nband'] },
+						{ title: 'Wireless Network Mode', name: 'wl'+u+'_net_mode', type: 'select', value: (nvram['wl'+u+'_net_mode'] == 'disabled') ? 'mixed' : nvram['wl'+u+'_net_mode'], options: [], prefix: '<span id="__wl'+u+'_net_mode">', suffix: '<\/span>' }
 					);
 				}
 
-				if (typeof(eval('nvram["wl'+u+'_closed"]')) == 'undefined')
+				if (typeof(nvram['wl'+u+'_closed']) == 'undefined')
 					nvram['wl'+u+'_closed'] = '0';
 
 				f.push (
-					{ title: 'SSID', name: 'wl'+u+'_ssid', type: 'text', maxlen: 32, size: 34, value: eval('nvram["wl'+u+'_ssid"]') },
-					{ title: 'Broadcast', indent: 2, name: 'f_wl'+u+'_bcast', type: 'checkbox', value: (eval('nvram["wl'+u+'_closed"]') == '0') }
+					{ title: 'SSID', name: 'wl'+u+'_ssid', type: 'text', maxlen: 32, size: 34, value: nvram['wl'+u+'_ssid'] },
+					{ title: 'Broadcast', indent: 2, name: 'f_wl'+u+'_bcast', type: 'checkbox', value: nvram['wl'+u+'_closed'] == '0' }
 				);
 
 /* only if primary VIF */
 				if (u.toString().indexOf('.') < 0) {
 					f.push (
-						{ title: 'Channel', name: 'wl'+u+'_channel', type: 'select', options: ghz[uidx], prefix: '<span id="__wl'+u+'_channel">', suffix: '<\/span> <input type="button" id="_f_wl'+u+'_scan" value="Scan" onclick="scanButton('+u+')"> <img src="spin.gif" alt="" id="spin'+u+'">', value: eval('nvram["wl'+u+'_channel"]') },
-						{ title: 'Channel Width', name: 'wl'+u+'_nbw_cap', type: 'select', options: [], value: eval('nvram["wl'+u+'_nbw_cap"]'), prefix: '<span id="__wl'+u+'_nbw_cap">', suffix: '<\/span>' },
-						{ title: 'Control Sideband', name: 'f_wl'+u+'_nctrlsb', type: 'select', options: [['lower','Lower'],['upper','Upper']], value: eval('nvram["wl'+u+'_nctrlsb"]') == 'none' ? 'lower' : eval('nvram["wl'+u+'_nctrlsb"]') }
+						{ title: 'Channel', name: 'wl'+u+'_channel', type: 'select', options: ghz[uidx], prefix: '<span id="__wl'+u+'_channel">', suffix: '<\/span> <input type="button" id="_f_wl'+u+'_scan" value="Scan" onclick="scanButton('+u+')"> <img src="spin.gif" alt="" id="spin'+u+'">', value: nvram['wl'+u+'_channel'] },
+						{ title: 'Channel Width', name: 'wl'+u+'_nbw_cap', type: 'select', options: [], value: nvram['wl'+u+'_nbw_cap'], prefix: '<span id="__wl'+u+'_nbw_cap">', suffix: '<\/span>' },
+						{ title: 'Control Sideband', name: 'f_wl'+u+'_nctrlsb', type: 'select', options: [['lower','Lower'],['upper','Upper']], value: (nvram['wl'+u+'_nctrlsb'] == 'none') ? 'lower' : nvram['wl'+u+'_nctrlsb'] }
 					);
 				}
 
-				if (typeof(eval('nvram["wl'+u+'_crypto"]')) == 'undefined')
+				if (typeof(nvram['wl'+u+'_crypto']) == 'undefined')
 					nvram['wl'+u+'_crypto'] = 'aes';
 
 				f.push (
 					null,
 					{ title: '<a href="basic-wfilter.asp" class="new_window">Wireless Filter<\/a>', name: 'f_wl'+u+'_macmode', type: 'select', options: [['disabled','Disable filter on that interface'],['deny','Block clients from the list on that interface'],['allow','Permit only clients from the list on that interface']], value: nvram['wl'+u+'_macmode'] },
 					null,
-					{ title: 'Security', name: 'wl'+u+'_security_mode', type: 'select', options: [['disabled','Disabled'],['wep','WEP'],['wpa_personal','WPA Personal'],['wpa_enterprise','WPA Enterprise'],['wpa2_personal','WPA2 Personal'],['wpa2_enterprise','WPA2 Enterprise'],['wpaX_personal','WPA / WPA2 Personal'],['wpaX_enterprise','WPA / WPA2 Enterprise'],['radius','Radius']], value: eval('nvram["wl'+u+'_security_mode"]') },
-					{ title: 'Encryption', indent: 2, name: 'wl'+u+'_crypto', type: 'select', options: [['tkip','TKIP'],['aes','AES'],['tkip+aes','TKIP / AES']], value: eval('nvram["wl'+u+'_crypto"]') },
+					{ title: 'Security', name: 'wl'+u+'_security_mode', type: 'select', options: [['disabled','Disabled'],['wep','WEP'],['wpa_personal','WPA Personal'],['wpa_enterprise','WPA Enterprise'],['wpa2_personal','WPA2 Personal'],['wpa2_enterprise','WPA2 Enterprise'],['wpaX_personal','WPA / WPA2 Personal'],['wpaX_enterprise','WPA / WPA2 Enterprise'],['radius','Radius']], value: nvram['wl'+u+'_security_mode'] },
+					{ title: 'Encryption', indent: 2, name: 'wl'+u+'_crypto', type: 'select', options: [['tkip','TKIP'],['aes','AES'],['tkip+aes','TKIP / AES']], value: nvram['wl'+u+'_crypto'] },
 					{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_wpa_psk', type: 'password', maxlen: 64, size: 66, peekaboo: 1,
-						suffix: ' <input type="button" id="_f_wl'+u+'_psk_random1" value="Random" onclick="random_psk(\'_wl'+u+'_wpa_psk\')">', value: eval('nvram["wl'+u+'_wpa_psk"]') },
-					{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_radius_key', type: 'password', maxlen: 80, size: 32, peekaboo: 1, suffix: ' <input type="button" id="_f_wl'+u+'_psk_random2" value="Random" onclick="random_psk(\'_wl'+u+'_radius_key\')">', value: eval('nvram["wl'+u+'_radius_key"]') },
-					{ title: 'Group Key Renewal', indent: 2, name: 'wl'+u+'_wpa_gtk_rekey', type: 'text', maxlen: 7, size: 9, suffix: '&nbsp; <small>seconds<\/small>', value: eval('nvram["wl'+u+'_wpa_gtk_rekey"]') || '3600' },
+						suffix: ' <input type="button" id="_f_wl'+u+'_psk_random1" value="Random" onclick="random_psk(\'_wl'+u+'_wpa_psk\')">', value: nvram['wl'+u+'_wpa_psk'] },
+					{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_radius_key', type: 'password', maxlen: 80, size: 32, peekaboo: 1, suffix: ' <input type="button" id="_f_wl'+u+'_psk_random2" value="Random" onclick="random_psk(\'_wl'+u+'_radius_key\')">', value: nvram['wl'+u+'_radius_key'] },
+					{ title: 'Group Key Renewal', indent: 2, name: 'wl'+u+'_wpa_gtk_rekey', type: 'text', maxlen: 7, size: 9, suffix: '&nbsp; <small>seconds<\/small>', value: (nvram['wl'+u+'_wpa_gtk_rekey'] || '3600') },
 					{ title: 'Radius Server', indent: 2, multi: [
-						{ name: 'wl'+u+'_radius_ipaddr', type: 'text', maxlen: 15, size: 17, value: eval('nvram["wl'+u+'_radius_ipaddr"]') },
-						{ name: 'wl'+u+'_radius_port', type: 'text', maxlen: 5, size: 7, prefix: ' : ', value: eval('nvram["wl'+u+'_radius_port"]') || '1812' } ] },
-					{ title: 'Encryption', indent: 2, name: 'wl'+u+'_wep_bit', type: 'select', options: [['128','128-bits'],['64','64-bits']], value: eval('nvram["wl'+u+'_wep_bit"]') },
-					{ title: 'Passphrase', indent: 2, name: 'wl'+u+'_passphrase', type: 'text', maxlen: 16, size: 20, suffix: ' <input type="button" id="_f_wl'+u+'_wep_gen" value="Generate" onclick="generate_wep('+u+')"> <input type="button" id="_f_wl'+u+'_wep_random" value="Random" onclick="random_wep('+u+')">', value: eval('nvram["wl'+u+'_passphrase"]') }
+						{ name: 'wl'+u+'_radius_ipaddr', type: 'text', maxlen: 15, size: 17, value: nvram['wl'+u+'_radius_ipaddr'] },
+						{ name: 'wl'+u+'_radius_port', type: 'text', maxlen: 5, size: 7, prefix: ' : ', value: (nvram['wl'+u+'_radius_port'] || '1812') } ] },
+					{ title: 'Encryption', indent: 2, name: 'wl'+u+'_wep_bit', type: 'select', options: [['128','128-bits'],['64','64-bits']], value: nvram['wl'+u+'_wep_bit'] },
+					{ title: 'Passphrase', indent: 2, name: 'wl'+u+'_passphrase', type: 'text', maxlen: 16, size: 20, suffix: ' <input type="button" id="_f_wl'+u+'_wep_gen" value="Generate" onclick="generate_wep('+u+')"> <input type="button" id="_f_wl'+u+'_wep_random" value="Random" onclick="random_wep('+u+')">', value: nvram['wl'+u+'_passphrase'] }
 				);
 
-				if (typeof(eval('nvram["wl'+u+'_key"]')) == 'undefined')
+				if (typeof(nvram['wl'+u+'_key']) == 'undefined')
 					nvram['wl'+u+'_key'] = '1';
-/* REMOVE-BEGIN
-					eval('nvram["wl'+u+'_key"] = 1');
-REMOVE-END */
 
 				for (var j = 1; j <= 4; ++j) {
 					f.push(
-						{ title: ('Key '+j), indent: 2, name: ('wl'+u+'_key'+j), type: 'text', maxlen: 26, size: 34, suffix: '&nbsp;<input type="radio" onchange="verifyFields(this,1)" onclick="verifyFields(this,1)" name="f_wl'+u+'_wepidx" id="_f_wl'+u+'_wepidx_'+j+'" value="'+j+'"'+((eval('nvram["wl'+u+'_key"]') == j) ? ' checked>' : '>'), value: nvram['wl'+u+'_key'+j] });
+						{ title: ('Key '+j), indent: 2, name: ('wl'+u+'_key'+j), type: 'text', maxlen: 26, size: 34, suffix: '&nbsp;<input type="radio" onchange="verifyFields(this,1)" onclick="verifyFields(this,1)" name="f_wl'+u+'_wepidx" id="_f_wl'+u+'_wepidx_'+j+'" value="'+j+'"'+((nvram['wl'+u+'_key'] == j) ? ' checked>' : '>'), value: nvram['wl'+u+'_key'+j] });
 				}
 
 				f.push(null, { title: 'WDS', name: 'f_wl'+u+'_lazywds', type: 'select', options: [['0','Link With...'],['1','Automatic']], value: nvram['wl'+u+'_lazywds'] } );
-/* REMOVE-BEGIN
-				alert('nvram["wl'+u+'_wds"]='+eval('nvram["wl'+u+'_wds"]'));
-REMOVE-END */
-				var wds = eval('nvram["wl'+u+'_wds"]');
+
+				var wds = nvram['wl'+u+'_wds'];
 				if (typeof(wds) == 'undefined')
 					nvram['wl'+u+'_wds'] = '';
 
-				wds = eval('nvram["wl'+u+'_wds"]').split(/\s+/);
-/* REMOVE-BEGIN
-				wds = (nvram['wl'+u+'_wds']).split(/\s+/);
-REMOVE-END */
+				wds = nvram['wl'+u+'_wds'].split(/\s+/);
 				for (var k = 0; k < 10; k += 2)	{
 					f.push({ title: (k ? '' : 'MAC Address'), indent: 2, multi: [
-						{ name: 'f_wl'+u+'_wds_'+k, type: 'text', maxlen: 17, size: 20, value: wds[k] || mac_null },
-						{ name: 'f_wl'+u+'_wds_'+(k + 1), type: 'text', maxlen: 17, size: 20, value: wds[k + 1] || mac_null } ] } );
+						{ name: 'f_wl'+u+'_wds_'+k, type: 'text', maxlen: 17, size: 20, value: (wds[k] || mac_null) },
+						{ name: 'f_wl'+u+'_wds_'+(k + 1), type: 'text', maxlen: 17, size: 20, value: (wds[k + 1] || mac_null) } ] } );
 				}
 
 				createFieldTable('', f);
