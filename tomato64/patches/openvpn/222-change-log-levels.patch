@@ -1,6 +1,6 @@
 --- openvpn/src/openvpn/ssl.c
 +++ openvpn/src/openvpn/ssl.c
-@@ -2600,7 +2600,7 @@
+@@ -2633,7 +2633,7 @@
      dmsg(D_TLS_DEBUG_MED, "STATE S_ACTIVE");
  
      ks->established = now;
@@ -9,7 +9,7 @@
      {
          print_details(&ks->ks_ssl, "Control Channel:");
      }
-@@ -3069,7 +3069,7 @@
+@@ -3102,7 +3102,7 @@
                  && ks->n_packets >= session->opt->renegotiate_packets)
              || (packet_id_close_to_wrapping(&ks->crypto_options.packet_id.send))))
      {
