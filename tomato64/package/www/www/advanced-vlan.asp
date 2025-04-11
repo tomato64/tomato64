@@ -1397,7 +1397,7 @@ function init() {
 <div id="unknown_router" style="display:none">
 	<div class="section-title">!! Unknown Port Mapping, using default !!</div>
 	<div class="section-centered">
-		<a href="http://www.linksysinfo.org/index.php?threads/can-vlan-gui-port-order-be-corrected.70160/#post-247634/" class="new_window"><b>Please follow this link for instructions to get it corrected.</b></a>
+		<a href="https://www.linksysinfo.org/index.php?threads/can-vlan-gui-port-order-be-corrected.70160/#post-247634" class="new_window"><b>Please follow this link for instructions to get it corrected.</b></a>
 		<br><br>Include router Brand/Model (<% nv('t_model_name'); %>), results from "nvram show | grep vlan1ports" &amp;
 		<br>port numbers on BACK of router case (left -> right viewed from front).
 	</div>
