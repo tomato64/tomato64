@@ -297,7 +297,7 @@ if (port_vlan_supported) {
 		                '<div id="vport_7"><img src="eth_off.gif" id="eth_off_8" alt=""><\/div>7', '<br>Tag<br>7',
 		                '<div id="vport_8"><img src="eth_off.gif" id="eth_off_9" alt=""><\/div>8', '<br>Tag<br>8',
 /* TOMATO64-END */
-		                '<br>Default<br>VLAN', 'Ethernet to<br>bridge<br>mapping']);
+		                '<br>Default<br>VLAN', 'VLAN to<br>bridge<br>mapping']);
 
 		vlg.populate();
 		vlg.canDelete = false;
@@ -1456,7 +1456,7 @@ function init() {
 			<li><b>1-4 &amp; WAN</b> - Which ethernet ports on the router chassis should be members of this VLAN.</li>
 			<li><b>Tag</b> - Enable 802.1Q tagging of ethernet frames on a particular port/VLAN</li>
 			<li><b>Default VLAN</b> - VLAN ID assigned to untagged frames received by the router.</li>
-			<li><b>Ethernet to Bridge mapping</b> - One and only one VLAN can be assigned to a bridge. Do not confuse Ethernet WAN (physical port) with WAN bridge (logical interface), they might or might not map onto each other</li>
+			<li><b>VLAN to Bridge mapping</b> - One and only one VLAN can be assigned to a bridge. Do not confuse Ethernet WAN (physical port) with WAN bridge (logical interface), they might or might not map onto each other</li>
 		</ul>
 		<br>
 		<i>VLAN Wireless:</i> Assignments of wireless interfaces to predefined LAN bridges.<br>
