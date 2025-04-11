@@ -1,5 +1,5 @@
 function show() {
-	var up = eval('isup.'+serviceType);
+	var up = isup[serviceType];
 	var e = E('_'+serviceType+'_button');
 
 	if (E('_'+serviceType+'_notice')) E('_'+serviceType+'_notice').innerHTML = serviceType+' is currently '+(up ? 'running ' : 'stopped')+'&nbsp;';

@@ -63,7 +63,7 @@ function show() {
 		return 0;
 
 	for (var i = 0 ; i <= MAX_PORT_ID ; i++) {
-		port = eval('etherstates.port'+i);
+		port = etherstates['port'+i];
 		state = _ethstates(port);
 		elem.setInnerHTML('vport_'+i, '<img src="'+state[0]+'.gif" id="'+state[0]+'_'+i+'" title="'+state[1]+'" alt="">');
 	}

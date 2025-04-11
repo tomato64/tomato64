@@ -111,7 +111,7 @@ function show() {
 	countButton += 1;
 	for (var i = 1; i <= unitCount; ++i) {
 		var e = E('_'+serviceType+i+'_button');
-		var d = eval('isup.'+serviceType+i);
+		var d = isup[serviceType+i];
 
 		e.value = (d ? 'Stop' : 'Start')+' Now';
 		e.setAttribute('onclick', 'javascript:toggle(\''+serviceType+''+i+'\','+d+');');

@@ -112,7 +112,7 @@ function show() {
 	countButton += 1;
 	for (var i = 0; i < WG_INTERFACE_COUNT; ++i) {
 		var e = E('_'+serviceType+i+'_button');
-		var d = eval('isup.'+serviceType+i);
+		var d = isup[serviceType+i];
 
 		e.value = (d ? 'Stop' : 'Start')+' Now';
 		e.setAttribute('onclick', 'javascript:toggle(\''+serviceType+''+i+'\','+d+');');
@@ -187,7 +187,7 @@ function sectSelect(tab, section) {
 function updateForm(num) {
 	var fom = E('t_fom');
 
-	if (eval('isup.wireguard'+num) && fom._service.value.indexOf('wg'+num) < 0) {
+	if (isup['wireguard'+num] && fom._service.value.indexOf('wg'+num) < 0) {
 		if (fom._service.value != '')
 			fom._service.value += ',';
 

@@ -250,7 +250,7 @@ function ethstates() {
 
 	code += '<td class="content"><\/td><\/tr><tr>';
 	for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
-		port = eval('etherstates.port'+uidx);
+		port = etherstates['port'+uidx];
 
 		state = _ethstates(port);
 

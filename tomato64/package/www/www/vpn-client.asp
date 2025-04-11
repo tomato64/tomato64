@@ -115,7 +115,7 @@ function updateForm(num, fw) {
 		fom._service.value += 'firewall-restart';
 	}
 
-	if (eval('isup.vpnclient'+num) && fom._service.value.indexOf('client'+num) < 0) {
+	if (isup['vpnclient'+num] && fom._service.value.indexOf('client'+num) < 0) {
 		if (fom._service.value != '')
 			fom._service.value += ',';
 

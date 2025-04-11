@@ -110,7 +110,7 @@ function sectSelect(tab, section) {
 function updateForm(num) {
 	var fom = E('t_fom');
 
-	if (eval('isup.vpnserver'+num) && fom._service.value.indexOf('server'+num) < 0) {
+	if (isup['vpnserver'+num] && fom._service.value.indexOf('server'+num) < 0) {
 		if (fom._service.value != '')
 			fom._service.value += ',';
 
