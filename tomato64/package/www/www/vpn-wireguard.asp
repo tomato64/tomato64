@@ -252,6 +252,12 @@ function mapConfigToFields(event) {
 	if (config.interface.postdown)
 		E('_wg'+unit+'_postdown').value = config.interface.postdown;
 
+	if (config.interface.keepalive)
+		E('_wg'+unit+'_ka').value = 25; /* default for keepalive, user may change */
+
+	else
+		E('_wg'+unit+'_ka').value = 0;
+
 	if (config.interface.endpoint) {
 		E('_f_wg'+unit+'_custom_endpoint').value = config.interface.endpoint;
 		E('_f_wg'+unit+'_endpoint').selectedIndex = 2;
@@ -270,8 +276,8 @@ function mapConfigToFields(event) {
 			peer.pubkey,
 			peer.psk ? peer.psk : '',
 			ip,
-			allowed_ips ? allowed_ips: '',
-			0
+			allowed_ips ? allowed_ips : '',
+			peer.keepalive ? 25 : 0 /* default for keepalive, user may change */
 		];
 
 		peerTables[unit].insertData(-1, data)
