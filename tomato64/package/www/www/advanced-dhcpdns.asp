@@ -261,16 +261,16 @@ function verifyFields(focused, quiet) {
 	if (v) {
 		for (i = 0; i <= MAX_BRIDGE_ID; ++i) {
 			a = (i == 0 ? '' : i.toString());
-			E('_f_dnsmasq_pxelan'+i).disabled = (eval('nvram.lan'+a+'_ifname.length') < 1);
-			if (eval('nvram.lan'+a+'_ifname.length') < 1)
+			E('_f_dnsmasq_pxelan'+i).disabled = (nvram['lan'+a+'_ifname'].length < 1);
+			if (nvram['lan'+a+'_ifname'].length < 1)
 				E('_f_dnsmasq_pxelan'+i).checked = 0;
 		}
 	}
 /* TFTP-END */
 	for (i = 0; i <= MAX_BRIDGE_ID; ++i) {
 		a = (i == 0 ? '' : i.toString());
-		E('_f_dhcpd'+a+'_ostatic').disabled = (eval('nvram.lan'+a+'_ifname.length') < 1);
-		if (eval('nvram.lan'+a+'_ifname.length') < 1)
+		E('_f_dhcpd'+a+'_ostatic').disabled = (nvram['lan'+a+'_ifname'].length < 1);
+		if (nvram['lan'+a+'_ifname'].length < 1)
 			E('_f_dhcpd'+a+'_ostatic').checked = 0;
 	}
 
