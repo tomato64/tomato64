@@ -37,7 +37,7 @@
 
 #define WG_INTERFACE_MAX	3
 
-/* uncomment to add default routing (also in router/wireguard-tools/src/wg-quick/posix.sh line 519 - 521) after kernel fix */
+/* uncomment to add default routing (also in patches/wireguard-tools/101-tomato-specific.patch line 412 - 414) after kernel fix */
 #define KERNEL_WG_FIX
 
 
