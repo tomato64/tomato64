@@ -414,7 +414,6 @@ download() {
 	[ $(NG ddnsx0 | grep -Eo "^[a-zA-Z0-9]*" || echo 0) == "custom" ] && subsed="$subsed $(NG ddnsx0 | domain)" || subsed="$subsed $(grep "\['"$(NG ddnsx0 | grep -Eo "^[a-zA-Z0-9]*")"'" /www/basic-ddns.asp 2>/dev/null | domain | head -1)"
 	[ $(NG ddnsx1 | grep -Eo "^[a-zA-Z0-9]*" || echo 0) == "custom" ] && subsed="$subsed $(NG ddnsx1 | domain)" || subsed="$subsed $(grep "\['"$(NG ddnsx1 | grep -Eo "^[a-zA-Z0-9]*")"'" /www/basic-ddns.asp 2>/dev/null | domain | head -1)"
 	[ $(NG ddnsx_ip) == "@" ] && subsed="$subsed checkip.dyndns.org dynamic.zoneedit.com ip1.dynupdate.no-ip.com myip.dnsomatic.com myip.pairnic.com ip.changeip.com"
-	for i in $(NG mwan_ckdst | tr "," "\n" | domain); do subsed="$subsed ${i}"; done
 
 	# Whitelist domains from list providers defined
 	logi "Whitelisting domains defined in Blacklist URL"
@@ -437,7 +436,7 @@ download() {
 		# Individual domains
 		[ ! -z ${WHITELIST+1} ] && for i in $(echo "$WHITELIST" | tr " " "\n" | grep -Ev '^($|#|!)' | grep -Ev '^/'); do subsed="$subsed ${i}"; done
 		# User defined whitelist file
-		[ ! -z ${WHITELIST+1} ] && for i in $(echo "$WHITELIST" | tr " " "\n" | grep -Ev '^($|#|!)' | grep -E '^/'); do if [[ -f ${i} ]]; then while IFS= read -r dom || [ -n "$dom" ]; do printf '%s\n' "$dom"; done < $i | grep -Ev '^($|#|!)' | tr -d "\r"  >> $TM1 ; else loge "The defined whitelist file $i is not accessible"; erroradd ;fi done
+		[ ! -z ${WHITELIST+1} ] && for i in $(echo "$WHITELIST" | tr " " "\n" | grep -Ev '^($|#|!)' | grep -E '^/'); do if [[ -f ${i} ]]; then while IFS= read -r dom || [ -n "$dom" ]; do printf '%s\n' "$dom"; done < $i | grep -Ev '^($|#|!)' | tr -d "\r" >> $TM1 ; else loge "The defined whitelist file $i is not accessible"; erroradd ;fi done
 		[ -s $TM1 ] && for i in $(cat $TM1); do subsed="$subsed ${i}"; done
 	}
 	
@@ -454,7 +453,7 @@ download() {
 	# Whitelisting phase C = Handle strict whitelisted domains (don't allow any subdomain resolution)
 	whitis=$(echo $subsed | tr " " "\n" | grep -v ^$ | grep -E '^%.*' | domain | while read l; do echo "$l"; done ;)
 	[ $LOGL -eq 7 ] && echo $whitis >/tmp/adblock.whitis
-	echo ${whitis} | grep -vq ^$ && { echo ${whitis} | tr " " "\n" | while read l; do echo "local=/.$l/" >> $TM  ; done ;}
+	echo ${whitis} | grep -vq ^$ && { echo ${whitis} | tr " " "\n" | while read l; do echo "local=/.$l/" >> $TM ; done ;}
 
 	# DE-DUPLICATION
 	logn "Removing duplicates"
@@ -903,7 +902,7 @@ elif [ "$1" == "update" -o "$1" == "start" -o $# -eq 0 ]; then
 	if [ "$ENABLE" -eq "1" ]; then {
 		[ ! -f $pidfile ] && echo $PID > $pidfile
 		[ $(NG adblock_blacklist | tr ">" "\n" | grep ^1 | wc -l) -gt 0 ] && {	
-		[[ $(NP mwan_ckdst) -eq 1 && $(NG mwan_ckdst |  tr ',' '\n' | domain | wc -l) -gt 0 ]] && { itarget=$(NG mwan_ckdst |  tr ',' '\n' | domain | head -1); } || { itarget="google.com"; }
+		[[ $(NP mwan_ckdst) -eq 1 && $(NG mwan_ckdst | tr ',' '\n' | domain | wc -l) -gt 0 ]] && { itarget=$(NG mwan_ckdst | tr ',' '\n' | domain | head -1); } || { itarget="google.com"; }
 		while ! ( traceroute -n -m10 -w1 -q1 -z1 "$itarget" >/dev/null 2>&1 && [ $(date +%Y) -gt 2023 ] ); do { 
 				[ $itest -eq 0 ] && echo "Waiting for Internet connectivity..." | tee /dev/tty | logn
 				itest=$((itest+1))
@@ -914,7 +913,7 @@ elif [ "$1" == "update" -o "$1" == "start" -o $# -eq 0 ]; then
 			}
 		[ -s "$FINAL" ] && {
 			HOLD_LEFT=$(( $hold - ($(date +%s) - $(date -r "$FINAL" +%s)) /60))
-			[ "$HOLD_LEFT" -lt $hold -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { grep 'md5black' "${CHK_FILE}" | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $(hashwhite | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { cat ${CHK_FILE} | grep md5white | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $( [ -s ${ADHEAD} ] && { cat ${ADHEAD} | grep -Ev ' 0$' | wc -l; } || echo 1 ) -eq 0 ]  && {
+			[ "$HOLD_LEFT" -lt $hold -a "$HOLD_LEFT" -gt 0 -a $(hashblack | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { grep 'md5black' "${CHK_FILE}" | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $(hashwhite | md5sum | awk '{print $1}') == $([ -s "$CHK_FILE" ] && { cat ${CHK_FILE} | grep md5white | grep -Eo ^[a-zA-Z0-9]{32} ;} || echo "0") -a $( [ -s ${ADHEAD} ] && { cat ${ADHEAD} | grep -Ev ' 0$' | wc -l; } || echo 1 ) -eq 0 ] && {
 				logw "The last update was performed less then ${hold}min ago (${HOLD_LEFT}min left) and no modification to the config have been detected since. Skipping script execution for now..."
 				echo "The last update was performed less then ${hold}min ago (${HOLD_LEFT}min left) and no modification to the config have been detected since. Skipping script execution for now..."
 				adExit 5
