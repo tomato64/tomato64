@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (C) 2023 - 2024 FreshTomato
+ * Copyright (C) 2023 - 2025 FreshTomato
  * https://freshtomato.org/
  *
  * For use with FreshTomato Firmware only.
@@ -289,6 +289,9 @@ static int wg_set_iface_addr(char *iface, const char *addr)
 	/* Set wireguard interface address(es) */
 	nv = strdup(addr);
 	while ((b = strsep(&nv, ",")) != NULL) {
+
+		logmsg(LOG_DEBUG, "*** %s: iface=[%s] b=[%s] addr=[%s]", __FUNCTION__, iface, b, addr);
+
 		if (eval("ip", "addr", "add", b, "dev", iface)) {
 			logmsg(LOG_WARNING, "unable to add wireguard interface %s address of %s!", iface, addr);
 			return -1;
@@ -609,7 +612,7 @@ static int wg_route_peer_allowed_ips(char *iface, const char *allowed_ips, const
 static int wg_set_peer_allowed_ips(char *iface, char *pubkey, char *allowed_ips, const char *fwmark)
 {
 	if (eval("wg", "set", iface, "peer", pubkey, "allowed-ips", allowed_ips)) {
-		logmsg(LOG_WARNING, "unable to add peer %s to wireguard interface %s!", pubkey, iface);
+		logmsg(LOG_WARNING, "unable to add allowed ips %s for peer %s to wireguard interface %s!", allowed_ips, pubkey, iface);
 		return -1;
 	}
 	else
@@ -869,9 +872,14 @@ void start_wireguard(const int unit)
 		/* add stored peers */
 		nvp = nv = strdup(getNVRAMVar("wg%d_peers", unit));
 		if (nv) {
+
+			logmsg(LOG_DEBUG, "*** %s: adding wg%d_peers ...", __FUNCTION__, unit);
+
 			while ((b = strsep(&nvp, ">")) != NULL) {
 				if (vstrsep(b, "<", &priv, &name, &ep, &key, &psk, &ip, &aip, &ka) < 8)
 					continue;
+
+				logmsg(LOG_DEBUG, "*** %s: peer IF=[%i]: priv=[%s] name=[%s] ep=[%s] key=[%s] psk=[%s] ip=[%s] aip=[%s] ka=[%s]", __FUNCTION__, unit, priv, name, ep, key, psk, ip, aip, ka);
 
 				/* build peer allowed ips */
 				memset(buffer, 0, BUF_SIZE);
@@ -881,10 +889,14 @@ void start_wireguard(const int unit)
 					snprintf(buffer, BUF_SIZE, "%s,%s", ip, aip);
 
 				/* add peer to interface */
-				if (priv[0] == '1')
+				if (priv[0] == '1') {
+					logmsg(LOG_DEBUG, "*** %s: running wg_add_peer_privkey(): iface=[%s] key=[%s] buffer=[%s] psk=[%s] rka=[%s] ep=[%s] fwmark=[%s]", __FUNCTION__, iface, key, buffer, psk, rka, ep, fwmark);
 					wg_add_peer_privkey(iface, key, buffer, psk, rka, ep, fwmark);
-				else
+				}
+				else {
+					logmsg(LOG_DEBUG, "*** %s: running wg_add_peer(): iface=[%s] key=[%s] buffer=[%s] psk=[%s] rka=[%s] ep=[%s] fwmark=[%s] port=[%s]", __FUNCTION__, iface, key, buffer, psk, rka, ep, fwmark, port);
 					wg_add_peer(iface, key, buffer, psk, rka, ep, fwmark, port);
+				}
 			}
 		}
 		if (nvp)
