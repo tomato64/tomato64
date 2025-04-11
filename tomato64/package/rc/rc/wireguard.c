@@ -384,7 +384,7 @@ static int wg_set_iface_up(char *iface)
 	int retry = 0;
 
 	while (retry < 5) {
-		if (!(eval("ifconfig", iface, "up"))) {
+		if (!(eval("ip", "link", "set", "up", "dev", iface))) {
 			logmsg(LOG_DEBUG, "wireguard interface %s has been brought up", iface);
 			return 0;
 		}
