@@ -1,20 +1,6 @@
-From 78b519be874030053be91d0a1cf18c346975fcb9 Mon Sep 17 00:00:00 2001
-From: lancethepants <lancethepants@gmail.com>
-Date: Sat, 15 Feb 2025 13:53:05 -0700
-Subject: [PATCH] dnsmasq: Tomato-helper patch fixes
-
----
- src/config.h  | 11 +++++++
- src/dnsmasq.c | 58 +++++++++++++++++++++++++++++++++
- src/dnsmasq.h |  6 ++++
- src/lease.c   | 88 +++++++++++++++++++++++++++++++++++++++++++++++++--
- 4 files changed, 161 insertions(+), 2 deletions(-)
-
-diff --git a/src/config.h b/src/config.h
-index e722e98..0f2068c 100644
---- a/src/config.h
-+++ b/src/config.h
-@@ -82,6 +82,10 @@ HAVE_BROKEN_RTC
+--- dnsmasq/src/config.h
++++ dnsmasq/src/config.h
+@@ -82,6 +82,10 @@
     NOTE: when enabling or disabling this, be sure to delete any old
     leases file, otherwise dnsmasq may get very confused.
  
@@ -25,7 +11,7 @@ index e722e98..0f2068c 100644
  HAVE_TFTP
     define this to get dnsmasq's built-in TFTP server.
  
-@@ -358,6 +362,10 @@ HAVE_SOCKADDR_SA_LEN
+@@ -354,6 +358,10 @@
  #undef HAVE_LOOP
  #endif
  
@@ -36,7 +22,7 @@ index e722e98..0f2068c 100644
  #ifdef NO_DUMPFILE
  #undef HAVE_DUMPFILE
  #endif
-@@ -434,6 +442,9 @@ static char *compile_opts =
+@@ -435,6 +443,9 @@
  "no-"
  #endif
  "nftset "
@@ -46,10 +32,8 @@ index e722e98..0f2068c 100644
  #ifndef HAVE_AUTH
  "no-"
  #endif
-diff --git a/src/dnsmasq.c b/src/dnsmasq.c
-index 30fb419..f34e3f8 100644
---- a/src/dnsmasq.c
-+++ b/src/dnsmasq.c
+--- dnsmasq/src/dnsmasq.c
++++ dnsmasq/src/dnsmasq.c
 @@ -13,6 +13,44 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -95,7 +79,7 @@ index 30fb419..f34e3f8 100644
  
  /* Declare static char *compiler_opts  in config.h */
  #define DNSMASQ_COMPILE_OPTS
-@@ -1575,8 +1613,22 @@ static void async_event(int pipe, time_t now)
+@@ -1610,8 +1648,22 @@
  	/* Note: this may leave TCP-handling processes with the old file still open.
  	   Since any such process will die in CHILD_LIFETIME or probably much sooner,
  	   we leave them logging to the old file. */
@@ -118,7 +102,7 @@ index 30fb419..f34e3f8 100644
  	break;
  
        case EVENT_NEWADDR:
-@@ -1620,6 +1672,12 @@ static void async_event(int pipe, time_t now)
+@@ -1655,6 +1707,12 @@
  	    close(daemon->helperfd);
  	  }
  #endif
@@ -131,11 +115,9 @@ index 30fb419..f34e3f8 100644
  	
  	if (daemon->lease_stream)
  	  fclose(daemon->lease_stream);
-diff --git a/src/dnsmasq.h b/src/dnsmasq.h
-index e455c3f..ba95db3 100644
---- a/src/dnsmasq.h
-+++ b/src/dnsmasq.h
-@@ -1638,6 +1638,12 @@ int make_icmp_sock(void);
+--- dnsmasq/src/dnsmasq.h
++++ dnsmasq/src/dnsmasq.h
+@@ -1648,6 +1648,12 @@
  int icmp_ping(struct in_addr addr);
  int delay_dhcp(time_t start, int sec, int fd, uint32_t addr, unsigned short id);
  #endif
@@ -148,11 +130,9 @@ index e455c3f..ba95db3 100644
  void queue_event(int event);
  void send_alarm(time_t event, time_t now);
  void send_event(int fd, int event, int data, char *msg);
-diff --git a/src/lease.c b/src/lease.c
-index 55e8443..a5b9441 100644
---- a/src/lease.c
-+++ b/src/lease.c
-@@ -113,12 +113,15 @@ static int read_leases(time_t now, FILE *leasestream)
+--- dnsmasq/src/lease.c
++++ dnsmasq/src/lease.c
+@@ -113,12 +113,15 @@
  
  	ei = atol(daemon->dhcp_buff3);
  
@@ -169,7 +149,7 @@ index 55e8443..a5b9441 100644
  #else
  	/* strictly time_t is opaque, but this hack should work on all sane systems,
  	   even when sizeof(time_t) == 8 */
-@@ -264,7 +267,16 @@ void lease_update_file(time_t now)
+@@ -268,7 +271,16 @@
  	    continue;
  #endif
  
@@ -186,7 +166,7 @@ index 55e8443..a5b9441 100644
  	  ourprintf(&err, "%u ", lease->length);
  #else
  	  ourprintf(&err, "%lu ", (unsigned long)lease->expires);
-@@ -308,12 +320,21 @@ void lease_update_file(time_t now)
+@@ -312,12 +324,21 @@
  	      if (!(lease->flags & (LEASE_TA | LEASE_NA)))
  		continue;
  
@@ -209,7 +189,7 @@ index 55e8443..a5b9441 100644
  	      inet_ntop(AF_INET6, &lease->addr6, daemon->addrbuff, ADDRSTRLEN);
  	 
  	      ourprintf(&err, "%s%u %s ", (lease->flags & LEASE_TA) ? "T" : "",
-@@ -1221,4 +1242,67 @@ void lease_add_extradata(struct dhcp_lease *lease, unsigned char *data, unsigned
+@@ -1225,4 +1246,67 @@
  }
  #endif
  
@@ -277,6 +257,3 @@ index 55e8443..a5b9441 100644
 +#endif /* HAVE_LEASEFILE_EXPIRE */
 +
  #endif /* HAVE_DHCP */
--- 
-2.39.5
-

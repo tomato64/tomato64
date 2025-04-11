@@ -1,7 +1,17 @@
-diff -Naur dnsmasq-2.89.orig/Makefile dnsmasq-2.89/Makefile
---- dnsmasq-2.89.orig/Makefile	2023-10-06 10:51:48.951289018 -0600
-+++ dnsmasq-2.89/Makefile	2023-10-06 10:52:15.223320185 -0600
-@@ -92,7 +92,7 @@
+From dd4fd515d6eb4259fe2e4bf0aa197737df45fb46 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Fri, 11 Apr 2025 11:20:59 -0600
+Subject: [PATCH] ENABLE -DHAVETOMATO
+
+---
+ Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index a503c82..1448309 100644
+--- a/Makefile
++++ b/Makefile
+@@ -89,7 +89,7 @@ hdrs = dnsmasq.h config.h dhcp-protocol.h dhcp6-protocol.h \
  all : $(BUILDDIR)
  	@cd $(BUILDDIR) && $(MAKE) \
   top="$(top)" \
@@ -10,7 +20,7 @@ diff -Naur dnsmasq-2.89.orig/Makefile dnsmasq-2.89/Makefile
   build_libs="$(dbus_libs) $(idn2_libs) $(idn_libs) $(ct_libs) $(lua_libs) $(sunos_libs) $(nettle_libs) $(gmp_libs) $(ubus_libs) $(nft_libs)" \
   -f $(top)/Makefile dnsmasq 
  
-@@ -117,7 +117,7 @@
+@@ -112,7 +112,7 @@ all-i18n : $(BUILDDIR)
  	@cd $(BUILDDIR) && $(MAKE) \
   top="$(top)" \
   i18n=-DLOCALEDIR=\'\"$(LOCALEDIR)\"\' \
@@ -19,3 +29,6 @@ diff -Naur dnsmasq-2.89.orig/Makefile dnsmasq-2.89/Makefile
   build_libs="$(dbus_libs) $(idn2_libs) $(idn_libs) $(ct_libs) $(lua_libs) $(sunos_libs) $(nettle_libs) $(gmp_libs) $(ubus_libs) $(nft_libs)"  \
   -f $(top)/Makefile dnsmasq
  	for f in `cd $(PO); echo *.po`; do \
+-- 
+2.39.5
+
