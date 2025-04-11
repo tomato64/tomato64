@@ -148,11 +148,11 @@ function verifyFields(focused, quiet) {
 
 	for (i = 0; i <= MAX_BRIDGE_ID; ++i) {
 		n = (i == 0 ? '' : i.toString());
-		E('_f_ms_lan'+i).disabled = (eval('nvram.lan'+n+'_ifname.length') < 1);
-		if (eval('nvram.lan'+n+'_ifname.length') < 1)
+		E('_f_ms_lan'+i).disabled = (nvram['lan'+n+'_ifname'].length < 1);
+		if (nvram['lan'+n+'_ifname'].length < 1)
 			E('_f_ms_lan'+i).checked = 0;
 		else if (E('_f_ms_lan'+i).checked && once) {
-			http_if = eval('nvram.lan'+n+'_ipaddr');
+			http_if = nvram['lan'+n+'_ipaddr'];
 			once = 0;
 		}
 	}
