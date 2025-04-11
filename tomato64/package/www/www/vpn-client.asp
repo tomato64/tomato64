@@ -324,7 +324,7 @@ function verifyFields(focused, quiet) {
 		for (var j = 0; j <= MAX_BRIDGE_ID; ++j) {
 			t = (j == 0  ? '' : j);
 
-			if (eval('nvram.lan'+t+'_ifname.length') < 1)
+			if (nvram['lan'+t+'_ifname'].length < 1)
 				E('_vpn_client'+(i + 1)+'_br').options[j].disabled = 1;
 		}
 	}
