@@ -235,6 +235,11 @@ ifneq ($(TCONFIG_TOR),y)
 	sed -i $(INSTALLDIR)/www/isup.jsz -e "/TOR-BEGIN/,/TOR-END/d"
 endif
 
+# Only include the USBAP warning if needed.
+ifneq ($(TCONFIG_USBAP),y)
+	sed -i $(INSTALLDIR)/www/admin-upgrade.asp -e "/USBAP-BEGIN/,/USBAP-END/d"
+endif
+
 # Only include the USB and NAS pages if USB Support is configured in.
 ifneq ($(TCONFIG_USB),y)
 	rm -f $(INSTALLDIR)/www/nas-*.*
@@ -764,6 +769,7 @@ endif
 		-e "/DDNS2CLS-BEGIN/d"	-e "/DDNS2CLS-END/d" \
 		-e "/EXTSW-BEGIN/d"	-e "/EXTSW-END/d" \
 		-e "/EXTSW-NO-BEGIN/d"	-e "/EXTSW-NO-END/d" \
+		-e "/USBAP-BEGIN/d"	-e "/USBAP-END/d" \
 		-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 		-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
 		-e "/TOMATO64-X86_64-BEGIN/d"	-e "/TOMATO64-X86_64-END/d" \

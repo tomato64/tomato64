@@ -3530,6 +3530,10 @@ TOP:
 			stop_syslog();
 			sleep(1);
 #ifdef TCONFIG_USB
+#ifdef TCONFIG_USBAP
+			stop_wireless();
+			sleep(1);
+#endif
 			remove_storage_main(1);
 			stop_usb();
 #endif /* TCONFIG_USB */

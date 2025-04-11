@@ -95,6 +95,9 @@ function earlyInit() {
 <div id="afu-input">
 	<div class="section-title">Upgrade Firmware</div>
 	<div class="section">
+<!--USBAP-BEGIN -->
+		<div class="fields"><div class="about"><b>WARNING! This router (with wl_high module) requires Wi-Fi to be turned off for the upgrade to work properly, so only update it using a cable connection!</b></div></div>
+<!--USBAP-END -->
 		<div class="fields" id="upgradenotice" style="display:none"><div class="about"><b>Note: Remote upgrade is disabled. You can enable it (not recommended) <a href="admin-access.asp">here</a>.</b></div></div>
 		<div>
 			<form name="form_reset" action="javascript:{}">
