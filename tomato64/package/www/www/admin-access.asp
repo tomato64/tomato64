@@ -146,7 +146,7 @@ function verifyFields(focused, quiet) {
 /* TOMATO64-MT6000-END */
 
 	for (i = 1; i <= MAX_BRIDGE_ID; i++)
-		elem.display(PR('_f_http_lan'+i+'_listener'), (eval('nvram.lan'+i+'_ifname') == 'br'+i+'') && (a.value != 0));
+		elem.display(PR('_f_http_lan'+i+'_listener'), (nvram['lan'+i+'_ifname'] == 'br'+i+'') && (a.value != 0));
 
 /* IPV6-BEGIN */
 	elem.display(PR('_f_http_ipv6'), (!nvram.ipv6_service == '') && (a.value != 0));
@@ -264,9 +264,10 @@ function save() {
 	fom = E('t_fom');
 
 	fom.http_lan_listeners.value = 0; /* init with 0 and check */
-	for (i = 1; i <= MAX_BRIDGE_ID; i++)
-		if (eval('fom._f_http_lan'+i+'_listener.checked'))
+	for (i = 1; i <= MAX_BRIDGE_ID; i++) {
+		if (fom['_f_http_lan'+i+'_listener'].checked)
 			fom.http_lan_listeners.value = fom.http_lan_listeners.value | (2 ** (i - 1)); /* set hex value bit, listener enabled for LAN(i) */
+	}
 /* IPV6-BEGIN */
 	fom.http_ipv6.value = fom._f_http_ipv6.checked ? 1 : 0;
 /* IPV6-END */
