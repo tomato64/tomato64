@@ -3,6 +3,8 @@
  *
  * Copyright (C) 2012 shibby
  *
+ * Fixes/updates (C) 2018 - 2025 pedro
+ *
  */
 
 
@@ -13,11 +15,9 @@
 
 void start_tomatoanon(void)
 {
-	/* only if enable... */
-	if ((!nvram_match("tomatoanon_enable", "1")) || (!nvram_match("tomatoanon_answer", "1")))
-		return;
-
-	xstart("tomatoanon");
+	/* only if enabled... */
+	if (nvram_match("tomatoanon_enable", "1"))
+		xstart("tomatoanon", "anonupdate");
 
 	if (nvram_match("tomatoanon_notify", "1"))
 		xstart("tomatoanon", "checkver");

@@ -2,7 +2,8 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2024 pedro
+ *
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -19,14 +20,14 @@
 #include "tomato_profile.h"
 #include <string.h>
 #ifdef TCONFIG_BCMARM
-#include <stdio.h>
-#include <ctype.h>
-#include <wlioctl.h>
-#include <shared.h>
-#include <shutils.h>
-#include <bcmnvram.h>
+ #include <stdio.h>
+ #include <ctype.h>
+ #include <wlioctl.h>
+ #include <shared.h>
+ #include <shutils.h>
+ #include <bcmnvram.h>
 #else
-#include "defaults.h"
+ #include "defaults.h"
 #endif
 
 struct nvram_tuple rstats_defaults[] = {
@@ -1351,9 +1352,8 @@ struct nvram_tuple router_defaults[] = {
 
 /* admin-tomatoanon */
 	{ "tomatoanon_enable",		"0"				, 0 },
-	{ "tomatoanon_answer",		"0"				, 0 },
-	{ "tomatoanon_id",		""				, 0 },
 	{ "tomatoanon_notify",		"1"				, 0 },
+	{ "tomatoanon_id",		""				, 0 },
 
 #ifdef TCONFIG_USB
 /* nas-usb */

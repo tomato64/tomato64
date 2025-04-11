@@ -17,17 +17,11 @@
 
 <script>
 
-//	<% nvram("tomatoanon_enable,tomatoanon_answer,tomatoanon_id,tomatoanon_notify"); %>
+//	<% nvram("tomatoanon_enable,tomatoanon_notify"); %>
 
 var anon_link = '&nbsp;&nbsp;<a href="https://anon.freshtomato.org/index.php?search=9&routerid=<% nv('tomatoanon_id'); %>" class="new_window"><i>[Checkout my router]<\/i><\/a>';
 
 function verifyFields(focused, quiet) {
-	var o = (E('_tomatoanon_answer').value == '1');
-	var s = (E('_tomatoanon_enable').value == '1');
-
-	E('_tomatoanon_enable').disabled = !o;
-	E('_f_tomatoanon_notify').disabled = !o || !s;
-
 	return 1;
 }
 
@@ -36,6 +30,7 @@ function save() {
 	var fom = E('t_fom');
 
 	fom.tomatoanon_notify.value = E('_f_tomatoanon_notify').checked ? 1 : 0;
+	fom.tomatoanon_enable.value = E('_f_tomatoanon_enable').checked ? 1 : 0;
 
 	fom._service.value = 'tomatoanon-restart';
 	form.submit('t_fom', 1);
@@ -63,51 +58,46 @@ function init() {
 <input type="hidden" name="_nextpage" value="admin-tomatoanon.asp">
 <input type="hidden" name="_service" value="tomatoanon-restart">
 <input type="hidden" name="tomatoanon_notify">
+<input type="hidden" name="tomatoanon_enable">
 
 <!-- / / / -->
 
-<div class="section-title">TomatoAnon</div>
+<div class="section-title">TomatoAnon <script>W(anon_link);</script></div>
 <div class="section">
 	<div class="about">
-		The script sends (to the database) information about the router model and the installed version of Tomato.<br>
+		TomatoAnon sends (to the database) information about the router model and the installed version of Tomato.<br>
 		The information submitted is 100% anonymous and will be used ONLY for statistical purposes.<br>
-		<b>This script does NOT send any private or personal information (such as MAC, IP addresses, etc.)</b><br>
-		The script is fully open and written in bash. Everyone can freely view the content sent to the database.<br>
+		TomatoAnon is open source and written in bash. Anyone can freely view the content sent to the database.<br>
 		<br>
-		The submitted results can be viewed on the <a href="https://anon.freshtomato.org" class="new_window"><b>https://anon.freshtomato.org</b></a> page.<br>
+		<b>TomatoAnon does NOT send any private or personal information (such as MAC, IP addresses, etc.).</b><br>
 		<br>
-		<br>
-		The following data is sent by TomatoAnon:<br>
+		The following data is sent:<br>
 		- MD5SUM of WAN+LAN MAC addresses - this identifies the router, ex: 1c1dbd4202d794251ec1acf1211bb2c8<br>
 		- Router model, ex: Asus RT-AC3200<br>
-		- Tomato version installed, ex: 2019.3 K26ARM7 USB<br>
-		- Buildtype, ex: AIO-64K<br>
-		- Tomato MOD, ex: Tomato64<br>
-		- Uptime of your router, ex: 7 days
+		- Tomato version installed, ex: 2025.2 K26ARM7 USB<br>
+		- Buildtype, ex: AIO-128K<br>
+		- Tomato MOD, in our case: Tomato64<br>
+		- Uptime of your router, ex: 7 days<br>
+		<br>
+		The submitted results can be viewed on the <a href="https://anon.freshtomato.org" class="new_window"><b>anon.freshtomato.org</b></a> page.
 	</div>
-</div>
-
-<!-- / / / -->
-
-<div class="section-title">TomatoAnon Settings <script>W(anon_link);</script></div>
-<div class="section">
 	<script>
-		createFieldTable('', [
-			{ title: 'Do you know what TomatoAnon does?', name: 'tomatoanon_answer', type: 'select', options: [['0','No, I don\'t. Have to read all information, before I will make a choice'],['1','Yes, I do and want to make a choice']], value: nvram.tomatoanon_answer },
-			{ title: 'TomatoAnon enable', name: 'tomatoanon_enable', type: 'select', options: [['0','No'],['1','Yes']], value: nvram.tomatoanon_enable }
-		]);
+		createFieldTable('', [ { title: 'Enable', name: 'f_tomatoanon_enable', type: 'checkbox', value: nvram.tomatoanon_enable == 1 } ]);
 	</script>
+	<ul>
+		<li>Note: If you have TomatoAnon enabled and want to update database now, click 'Save'.</li>
+	</ul>
 </div>
 
 <!-- / / / -->
 
-<div class="section-title">Tomato64 Update Notification System</div>
+<div class="section-title">Update Notification System</div>
 <div class="section">
 	<script>
 		createFieldTable('', [ { title: 'Enable', name: 'f_tomatoanon_notify', type: 'checkbox', value: nvram.tomatoanon_notify == 1 } ]);
 	</script>
 	<ul>
-		<li>When a new version of Tomato64 is available, you will be notified on the status-overview page.</li>
+		<li>Note: As soon as a new version of Tomato64 is available, you will be notified on the Overview page.</li>
 	</ul>
 </div>
 

@@ -2,7 +2,7 @@
  * Tomato Firmware
  * Copyright (C) 2006-2010 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -1310,10 +1310,9 @@ static const nvset_t nvset_list[] = {
 #endif
 
 /* admin-tomatoanon */
-	{ "tomatoanon_answer",		V_RANGE(0, 1)			},
-	{ "tomatoanon_enable",		V_RANGE(0, 1)			},
-	{ "tomatoanon_id",		V_LENGTH(0, 32)			},
+	{ "tomatoanon_enable",		V_01				},
 	{ "tomatoanon_notify",		V_01				},
+	{ "tomatoanon_id",		V_LENGTH(0, 32)			},
 
 /* nas-usb */
 #ifdef TCONFIG_USB

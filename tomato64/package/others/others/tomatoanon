@@ -2,31 +2,29 @@
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 ###############################
 # Copyright (C) 2012/2013 shibby
-# Changes for new versioning: 2018 - 2023 by pedro
 #
-# This script send anonymous or incompleted information about model of router and installed tomato version.
-# Those information will be used ONLY for stats.
-# Any of private information will be NOT sended!
-# Results you can explore on https://anon.freshtomato.org page.
-# If you don`t agree to run this script you can disable it in GUI.
+# Fixes/updates (C) 2018 - 2025 pedro
 #
-# Sended information:
-# - MD5SUM of WAN+LAN MAC addresses - this will identify a router. Ex: 1c1dbd4202d794251ec1acf1211bb2c8
-# - Model of router. Ex: Asus RT-N66U
-# - Version of installed tomato. Ex: 110 K26 USB
-# - Builtype. Ex: Mega-VPN-64K
-# - Uptime of your router. Ex: 3 days
-# - Number of version for tomato update notification system. Ex: 110
+# The script sends (to the database) information about the router model and the installed version of Tomato.
+# The information submitted is 100% anonymous and will be used ONLY for statistical purposes.
+# This script does NOT send any private or personal information (such as MAC, IP addresses, etc.).
+# The submitted results can be viewed on the https://anon.freshtomato.org page.
+# If you don't agree to run this script you can disable it in GUI.
 #
-# That`s all
+# The following data is sent by TomatoAnon:
+# - MD5SUM of WAN+LAN MAC addresses - this identifies the router, ex: 1c1dbd4202d794251ec1acf1211bb2c8
+# - Router model, ex: Asus RT-AC3200
+# - Tomato version installed, ex: 2025.2 K26ARM7 USB
+# - Buildtype, ex: AIO-128K
+# - Tomato MOD, in our case: FreshTomato
+# - Uptime of your router, ex: 7 days
+#
 ###############################
 
 
 . nvram_ops
 
-ANON_ENABLED=$(NG tomatoanon_enable)
-ANON_ANSWER=$(NG tomatoanon_answer)
-ANON_NOTIFY=$(NG tomatoanon_notify)
+MOD=Tomato64
 # STUBBYNO-BEGIN
 WGET="/usr/bin/wget --no-check-certificate"
 # STUBBYNO-END
@@ -34,109 +32,102 @@ WGET="/usr/bin/wget --no-check-certificate"
 WGET="/usr/bin/wget"
 # STUBBY-END
 
-[ "$ANON_ANSWER" -eq 1 ] && {
-	[ "$ANON_ENABLED" -eq 1 ] && {
-		MOD=Tomato64
+# detect Version and Buildtype
+IS_USB=$(NG os_version | grep USB | wc -l)
+[ "$IS_USB" -eq 0 ] && {
+	VER=$(NG os_version | awk '{ print $1" "$2 }')
+} || {
+	VER=$(NG os_version | awk '{ print $1" "$2" "$(NF-1) }')
+}
+BUILDTYPE=$(NG os_version | awk '{ print $NF }')
+ANON_ENABLED=$(NG tomatoanon_enable)
+ANON_NOTIFY=$(NG tomatoanon_notify)
 
-		# Detect Version and Buildtype
-		IS_USB=$(NG os_version | grep USB | wc -l)
-		[ "$IS_USB" -eq 0 ] && {
-			VER=$(NG os_version | awk '{ print $1" "$2 }')
+
+# update notification script
+[ "$ANON_NOTIFY" -eq 1 -a "$1" == "checkver" ] && {
+	VER_MAJ=$(echo $VER | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
+	VER_MNR=$(echo $VER | awk '{print $1}' | cut -d "." -f2 | sed 's/[^0-9]*//g')
+
+	RESCHK=$(curl https://api.github.com/repos/tomato64/tomato64/releases/latest -s | jq -r '.name')
+
+	CHKVER_MAJ=$(echo $RESCHK | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
+	echo $RESCHK | grep "\." && {
+		CHKVER_MNR=$(echo $RESCHK | awk '{print $1}' | cut -d "." -f2 | sed 's/[^0-9]*//g')
+	} || {
+		CHKVER_MNR=""
+	}
+
+	RESULT="/tmp/anon.version"
+
+	if [ "$CHKVER_MAJ" -eq "$VER_MAJ" ]; then
+		[ ! -z "$CHKVER_MNR" -a "$CHKVER_MNR" -gt "$VER_MNR" ] && {
+			echo "have_update=$CHKVER_MAJ.$CHKVER_MNR" > $RESULT
 		} || {
-			VER=$(NG os_version | awk '{ print $1" "$2" "$(NF-1) }')
+			echo "have_update=no" > $RESULT
 		}
-		BUILDTYPE=$(NG os_version | awk '{ print $NF }')
-
-		[ "$1" == "checkver" -a "$ANON_NOTIFY" -eq 1 ] && {
-			# Tomato Update Notification Script
-			VER_MAJ=$(echo $VER | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
-			VER_MNR=$(echo $VER | awk '{print $1}' | cut -d "." -f2 | sed 's/[^0-9]*//g')
-
-			RESCHK=$(curl https://api.github.com/repos/tomato64/tomato64/releases/latest -s | jq -r '.name')
-
-			CHKVER_MAJ=$(echo $RESCHK | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
-			echo $RESCHK | grep "\." && {
-				CHKVER_MNR=$(echo $RESCHK | awk '{print $1}' | cut -d "." -f2 | sed 's/[^0-9]*//g')
-			} || {
-				CHKVER_MNR=""
-			}
-
-			RESULT="/tmp/anon.version"
-
-			if [ "$CHKVER_MAJ" -eq "$VER_MAJ" ]; then
-				[ ! -z "$CHKVER_MNR" -a "$CHKVER_MNR" -gt "$VER_MNR" ] && {
-					echo "have_update=$CHKVER_MAJ.$CHKVER_MNR" > $RESULT
-				} || {
-					echo "have_update=no" > $RESULT
-				}
-			elif [ "$CHKVER_MAJ" -gt "$VER_MAJ" ]; then
-				[ ! -z "$CHKVER_MNR" ] && {
-					echo "have_update=$CHKVER_MAJ.$CHKVER_MNR" > $RESULT
-				} || {
-					echo "have_update=$CHKVER_MAJ" > $RESULT
-				}
-			else
-				echo "have_update=no" > $RESULT
-			fi
-
-			# Thanks. Now add cron job
-			cru l | grep checkver || {
-				# random minutes 0..59
-				MINUTES=$(awk 'BEGIN {srand(); printf "%d", 60*rand()}')
-
-				# random hour 0..23
-				HOUR=$(awk 'BEGIN {srand(); printf "%d", 23*rand()}')
-
-				# checkver daily
-				cru a checkver "$MINUTES $HOUR * * * /usr/sbin/tomatoanon checkver"
-			}
-
-		} || { # just update anon database
-			# Collect datas
-			UPTIME=$(uptime | cut -d "," -f1 | cut -d " " -f4,5)
-			WANMAC=$(NG wan_hwaddr)
-			LANMAC=$(NG lan_hwaddr)
-			MODEL=$(NG t_model_name)
-			DRIVER=$(wl ver | grep version | awk '{ print $7 }')
-			WANMAC_MD5=$(echo "$WANMAC+$LANMAC" | md5sum | awk '{ print $1 }')
-
-			[ ! "$(NG tomatoanon_id)" == "$WANMAC_MD5" ] && {
-				NS tomatoanon_id="$WANMAC_MD5"
-				NC
-			}
-
-			# Change all spaces to %20.
-			ANONSEND=$(echo "http://anon.freshtomato.org/index.php?wanmac_md5=$WANMAC_MD5&model=$MODEL&version=$VER&buildtype=$BUILDTYPE&driver=$DRIVER&uptime=$UPTIME&mod=$MOD&anon=1" | sed "s/ /%20/g")
-
-			# We have all we need well we can send data to Anon database
-			RESULT="/tmp/anon.result"
-			$WGET -O $RESULT $ANONSEND
-
-			# Thanks. Now add cron job
-			cru l | grep anonupdate || {
-				# random minutes 0..59
-				MINUTES=$(awk 'BEGIN {srand(); printf "%d", 60*rand()}')
-
-				# random hour 0..23
-				HOUR=$(awk 'BEGIN {srand(); printf "%d", 23*rand()}')
-
-				# random day of week 0..6
-				DAY=$(awk 'BEGIN {srand(); printf "%d", 6*rand()}')
-
-				# update anon one time per week
-				cru a anonupdate "$MINUTES $HOUR * * $DAY /usr/sbin/tomatoanon"
-			}
+	elif [ "$CHKVER_MAJ" -gt "$VER_MAJ" ]; then
+		[ ! -z "$CHKVER_MNR" ] && {
+			echo "have_update=$CHKVER_MAJ.$CHKVER_MNR" > $RESULT
+		} || {
+			echo "have_update=$CHKVER_MAJ" > $RESULT
 		}
-	} || { # if anon is not enabled or was disabled right now
+	else
+		echo "have_update=no" > $RESULT
+	fi
 
-		cru l | grep anonupdate || cru d anonupdate
-		cru l | grep checkver || cru d checkver
+	# now add cron job
+	cru l | grep checkver || {
+		# random minutes 0..59
+		MINUTES=$(awk 'BEGIN {srand(); printf "%d", 60*rand()}')
 
-	} # end ANON_ENABLE
+		# random hour 0..23
+		HOUR=$(awk 'BEGIN {srand(); printf "%d", 23*rand()}')
 
-} || { # if answer is not enabled or was disabled right now
+		# checkver daily
+		cru a checkver "$MINUTES $HOUR * * * /usr/sbin/tomatoanon checkver"
+	}
 
-	cru l | grep anonupdate || cru d anonupdate
+} || {
 	cru l | grep checkver || cru d checkver
+}
 
-} # end ANON_ANSWER
+# update anon database
+[ "$ANON_ENABLED" -eq 1 -a "$1" == "anonupdate" ] && {
+	# collect data
+	UPTIME=$(uptime | cut -d "," -f1 | cut -d " " -f4,5)
+	WANMAC=$(NG wan_hwaddr)
+	LANMAC=$(NG lan_hwaddr)
+	MODEL=$(NG t_model_name)
+	DRIVER=$(wl ver | grep version | awk '{ print $7 }')
+	WANMAC_MD5=$(echo "$WANMAC+$LANMAC" | md5sum | awk '{ print $1 }')
+
+	[ ! "$(NG tomatoanon_id)" == "$WANMAC_MD5" ] && {
+		NS tomatoanon_id="$WANMAC_MD5"
+		NC
+	}
+
+	# change all spaces to %20.
+	ANONSEND=$(echo "http://anon.freshtomato.org/index.php?wanmac_md5=$WANMAC_MD5&model=$MODEL&version=$VER&buildtype=$BUILDTYPE&driver=$DRIVER&uptime=$UPTIME&mod=$MOD&anon=1" | sed "s/ /%20/g")
+
+	# we have all we need, so send data to Anon database
+	RESULT="/tmp/anon.result"
+	$WGET -O $RESULT $ANONSEND
+
+	# now add cron job
+	cru l | grep anonupdate || {
+		# random minutes 0..59
+		MINUTES=$(awk 'BEGIN {srand(); printf "%d", 60*rand()}')
+
+		# random hour 0..23
+		HOUR=$(awk 'BEGIN {srand(); printf "%d", 23*rand()}')
+
+		# random day of week 0..6
+		DAY=$(awk 'BEGIN {srand(); printf "%d", 6*rand()}')
+
+		# update anon one time per week
+		cru a anonupdate "$MINUTES $HOUR * * $DAY /usr/sbin/tomatoanon anonupdate"
+	}
+} || {
+	cru l | grep anonupdate || cru d anonupdate
+}

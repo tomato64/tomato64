@@ -3,7 +3,7 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -598,7 +598,7 @@ void asp_anonupdate(int argc, char **argv)
 	char s[32], *a, b[16];
 	unsigned n;
 
-	if (nvram_match("tomatoanon_answer", "1") && nvram_match("tomatoanon_enable", "1") && nvram_match("tomatoanon_notify", "1")) {
+	if (nvram_match("tomatoanon_notify", "1")) {
 		web_puts("\nanonupdate = {");
 
 		n = 0;
