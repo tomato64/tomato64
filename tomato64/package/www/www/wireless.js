@@ -2,7 +2,7 @@ function selectedBand(uidx) {
 	if (bands[uidx].length > 1) {
 		var u = wl_fface(uidx);
 		var e = E('_f_wl'+u+'_nband');
-		return (e.value + '' == '' ? eval('nvram["wl'+u+'_nband"]') : e.value);
+		return (e.value + '' == '' ? nvram['wl'+u+'_nband'] : e.value);
 	}
 	else if (bands[uidx].length > 0) {
 		return bands[uidx][0][0] || '0';
@@ -40,7 +40,7 @@ function refreshNetModes(uidx) {
 
 	e = E('_wl'+u+'_net_mode');
 	buf = '';
-	val = (!nm_loaded[uidx] || (e.value + '' == '')) ? eval('nvram["wl'+u+'_net_mode"]') : e.value;
+	val = (!nm_loaded[uidx] || (e.value + '' == '')) ? nvram['wl'+u+'_net_mode'] : e.value;
 	if (val == 'disabled') val = 'mixed';
 	for (i = 0; i < m.length; ++i)
 		buf += '<option value="' + m[i][0] + '"' + ((m[i][0] == val) ? ' selected="selected"' : '') + '>' + m[i][1] + '<\/option>';
@@ -69,7 +69,7 @@ function refreshBandWidth(uidx) {
 
 	e = E('_wl'+u+'_nbw_cap');
 	buf = '';
-	val = (!nm_loaded[uidx] || (e.value + '' == '')) ? eval('nvram.wl'+u+'_nbw_cap') : e.value;
+	val = (!nm_loaded[uidx] || (e.value + '' == '')) ? nvram['wl'+u+'_nbw_cap'] : e.value;
 
 	for (i = 0; i < m.length; ++i)
 		buf += '<option value="' + m[i][0] + '"' + ((m[i][0] == val) ? ' selected="selected"' : '') + '>' + m[i][1] + '<\/option>';
@@ -115,7 +115,7 @@ function refreshChannels(uidx) {
 
 			e = E('_wl'+u+'_channel');
 			buf = '';
-			val = (!ch_loaded[uidx] || (e.value + '' == '')) ? eval('nvram["wl'+u+'_channel"]') : e.value;
+			val = (!ch_loaded[uidx] || (e.value + '' == '')) ? nvram['wl'+u+'_channel'] : e.value;
 			for (i = 0; i < ghz[uidx].length; ++i)
 				buf += '<option value="' + ghz[uidx][i][0] + '"' + ((ghz[uidx][i][0] == val) ? ' selected="selected"' : '') + '>' + ghz[uidx][i][1] + '<\/option>';
 
@@ -135,10 +135,10 @@ function refreshChannels(uidx) {
 	var bw, sb, e;
 
 	e = E('_f_wl'+u+'_nctrlsb');
-	sb = (e.value + '' == '' ? eval('nvram.wl'+u+'_nctrlsb') : e.value);
+	sb = (e.value + '' == '' ? nvram['wl'+u+'_nctrlsb'] : e.value);
 
 	e = E('_wl'+u+'_nbw_cap');
-	switch(e.value + '' == '' ? eval('nvram.wl'+u+'_nbw_cap') : e.value) {
+	switch(e.value + '' == '' ? nvram['wl'+u+'_nbw_cap'] : e.value) {
 		case '0':
 			bw = '20';
 		break;
