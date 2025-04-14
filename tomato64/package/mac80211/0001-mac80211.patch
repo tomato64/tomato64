@@ -1,6 +1,6 @@
-From 2917881b8b02fbcb5b815455d519d7564fd9dc30 Mon Sep 17 00:00:00 2001
+From 705ae5cf8e6c17c10befb4048804274e16d5a5d8 Mon Sep 17 00:00:00 2001
 From: lancethepants <lancethepants@gmail.com>
-Date: Mon, 10 Feb 2025 09:24:08 -0700
+Date: Mon, 14 Apr 2025 14:19:05 -0600
 Subject: [PATCH] mac80211
 
 ---
@@ -8,6 +8,10 @@ Subject: [PATCH] mac80211
  Makefile                                      | 115 +--
  Makefile.kernel                               |   2 -
  Makefile.real                                 |  29 +-
+ backport-include/net/genetlink.h              |  11 +
+ compat/Makefile                               |   3 +-
+ compat/Makefile.orig                          |  23 +
+ compat/backport-genetlink.c                   |  61 ++
  compat/main.c                                 |  25 -
  compat_version                                |   1 +
  drivers/bus/mhi/host/trace.h                  |  12 +-
@@ -29,6 +33,9 @@ Subject: [PATCH] mac80211
  drivers/net/wireless/ath/ath11k/Makefile      |   2 +-
  drivers/net/wireless/ath/ath11k/ahb.c         |   6 +-
  drivers/net/wireless/ath/ath11k/core.c        |  33 +-
+ drivers/net/wireless/ath/ath11k/dp.c          |  35 +-
+ drivers/net/wireless/ath/ath11k/dp.h          |   6 +-
+ drivers/net/wireless/ath/ath11k/dp_rx.c       | 117 ++-
  drivers/net/wireless/ath/ath11k/mhi.c         |  49 +-
  drivers/net/wireless/ath/ath11k/mhi.h         |   3 +
  drivers/net/wireless/ath/ath11k/pci.c         |   9 +-
@@ -90,7 +97,7 @@ Subject: [PATCH] mac80211
  .../net/wireless/ralink/rt2x00/rt2800usb.c    |   7 +
  drivers/net/wireless/ralink/rt2x00/rt2x00.h   |   9 +
  .../net/wireless/ralink/rt2x00/rt2x00dev.c    |  34 +-
- .../net/wireless/ralink/rt2x00/rt2x00eeprom.c | 208 +++++
+ .../net/wireless/ralink/rt2x00/rt2x00eeprom.c | 233 +++++
  .../net/wireless/ralink/rt2x00/rt2x00leds.c   |   3 +
  .../net/wireless/ralink/rt2x00/rt2x00queue.h  |  20 +
  .../net/wireless/ralink/rt2x00/rt2x00soc.c    |  16 +
@@ -137,7 +144,8 @@ Subject: [PATCH] mac80211
  net/wireless/trace.h                          |  12 +-
  net/wireless/util.c                           |  29 +
  net/wireless/wext-compat.c                    |   2 +-
- 133 files changed, 2772 insertions(+), 1923 deletions(-)
+ 140 files changed, 2963 insertions(+), 2013 deletions(-)
+ create mode 100644 compat/Makefile.orig
  create mode 100644 compat_version
  create mode 100644 drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
  create mode 100644 include/linux/ath5k_platform.h
@@ -393,6 +401,145 @@ index 6550802..971a543 100644
  	@echo " done."
  
  .PHONY: modules
+diff --git a/backport-include/net/genetlink.h b/backport-include/net/genetlink.h
+index e8157e9..979cc3f 100644
+--- a/backport-include/net/genetlink.h
++++ b/backport-include/net/genetlink.h
+@@ -172,4 +172,15 @@ static inline int genlmsg_parse(const struct nlmsghdr *nlh,
+ }
+ #endif /* LINUX_VERSION_IS_LESS(5,2,0) */
+ 
++#if LINUX_VERSION_IN_RANGE(5,15,0,5,15,169) || \
++    LINUX_VERSION_IN_RANGE(6,1,0,6,1,115) || \
++    LINUX_VERSION_IN_RANGE(6,6,0,6,6,58)
++#define genlmsg_multicast_allns LINUX_BACKPORT(genlmsg_multicast_allns)
++int backport_genlmsg_multicast_allns(const struct genl_family *family,
++				     struct sk_buff *skb, u32 portid,
++				     unsigned int group);
++#endif /* LINUX_VERSION_IN_RANGE(5,15,0,5,15,169) ||
++	  LINUX_VERSION_IN_RANGE(6,1,0,6,1,115) ||
++	  LINUX_VERSION_IN_RANGE(6,6,0,6,6,58) */
++
+ #endif /* __BACKPORT_NET_GENETLINK_H */
+diff --git a/compat/Makefile b/compat/Makefile
+index c705150..06fa855 100644
+--- a/compat/Makefile
++++ b/compat/Makefile
+@@ -16,7 +16,8 @@ compat-$(CPTCFG_KERNEL_5_9) += backport-5.9.o
+ compat-$(CPTCFG_KERNEL_5_10) += backport-5.10.o
+ compat-$(CPTCFG_KERNEL_5_11) += backport-5.11.o
+ compat-$(CPTCFG_KERNEL_5_13) += backport-5.13.o
+-compat-$(CPTCFG_KERNEL_5_15) += backport-5.15.o
++compat-$(CPTCFG_KERNEL_5_15) += backport-5.15.o backport-genetlink.o
++compat-$(CPTCFG_KERNEL_6_1) += backport-genetlink.o
+ compat-$(CPTCFG_KERNEL_6_4) += backport-6.4.o
+ compat-$(CPTCFG_KERNEL_6_11) += backport-6.11.o
+ 
+diff --git a/compat/Makefile.orig b/compat/Makefile.orig
+new file mode 100644
+index 0000000..c705150
+--- /dev/null
++++ b/compat/Makefile.orig
+@@ -0,0 +1,23 @@
++ccflags-y += -I$(src) -Wframe-larger-than=1280
++ifeq ($(CONFIG_BACKPORT_INTEGRATE),)
++obj-m += compat.o
++else
++obj-y += compat.o
++endif
++compat-y += main.o
++
++# Kernel backport compatibility code
++compat-$(CPTCFG_KERNEL_4_18) += backport-4.18.o
++compat-$(CPTCFG_KERNEL_4_19) += backport-4.19.o
++compat-$(CPTCFG_KERNEL_5_2) += backport-5.2.o backport-genetlink.o
++compat-$(CPTCFG_KERNEL_5_3) += backport-5.3.o
++compat-$(CPTCFG_KERNEL_5_5) += backport-5.5.o
++compat-$(CPTCFG_KERNEL_5_9) += backport-5.9.o
++compat-$(CPTCFG_KERNEL_5_10) += backport-5.10.o
++compat-$(CPTCFG_KERNEL_5_11) += backport-5.11.o
++compat-$(CPTCFG_KERNEL_5_13) += backport-5.13.o
++compat-$(CPTCFG_KERNEL_5_15) += backport-5.15.o
++compat-$(CPTCFG_KERNEL_6_4) += backport-6.4.o
++compat-$(CPTCFG_KERNEL_6_11) += backport-6.11.o
++
++compat-$(CPTCFG_BPAUTO_BUILD_CRYPTO_LIB_ARC4) += lib-crypto-arc4.o
+diff --git a/compat/backport-genetlink.c b/compat/backport-genetlink.c
+index a630e2a..57a5c36 100644
+--- a/compat/backport-genetlink.c
++++ b/compat/backport-genetlink.c
+@@ -17,6 +17,7 @@
+ #include <net/netlink.h>
+ #include <net/sock.h>
+ 
++#if LINUX_VERSION_IS_LESS(5,2,0)
+ static const struct genl_family *find_family_real_ops(const struct genl_ops **ops)
+ {
+ 	const struct genl_family *family;
+@@ -249,3 +250,63 @@ int backport_genlmsg_multicast_allns(const struct genl_family *family,
+ 	return genlmsg_mcast(skb, portid, group);
+ }
+ EXPORT_SYMBOL_GPL(backport_genlmsg_multicast_allns);
++#endif /* LINUX_VERSION_IS_LESS(5,2,0) */
++
++#if LINUX_VERSION_IN_RANGE(5,15,0,5,15,169) || \
++    LINUX_VERSION_IN_RANGE(6,1,0,6,1,115) || \
++    LINUX_VERSION_IN_RANGE(6,6,0,6,6,58)
++static int genlmsg_mcast(struct sk_buff *skb, u32 portid, unsigned long group)
++{
++	struct sk_buff *tmp;
++	struct net *net, *prev = NULL;
++	bool delivered = false;
++	int err;
++
++	rcu_read_lock();
++	for_each_net_rcu(net) {
++		if (prev) {
++			tmp = skb_clone(skb, GFP_ATOMIC);
++			if (!tmp) {
++				err = -ENOMEM;
++				goto error;
++			}
++			err = nlmsg_multicast(prev->genl_sock, tmp,
++					      portid, group, GFP_ATOMIC);
++			if (!err)
++				delivered = true;
++			else if (err != -ESRCH)
++				goto error;
++		}
++
++		prev = net;
++	}
++	err = nlmsg_multicast(prev->genl_sock, skb, portid, group, GFP_ATOMIC);
++
++	rcu_read_unlock();
++
++	if (!err)
++		delivered = true;
++	else if (err != -ESRCH)
++		return err;
++	return delivered ? 0 : -ESRCH;
++ error:
++	rcu_read_unlock();
++
++	kfree_skb(skb);
++	return err;
++}
++
++int backport_genlmsg_multicast_allns(const struct genl_family *family,
++				     struct sk_buff *skb, u32 portid,
++				     unsigned int group)
++{
++	if (WARN_ON_ONCE(group >= family->n_mcgrps))
++		return -EINVAL;
++
++	group = family->mcgrp_offset + group;
++	return genlmsg_mcast(skb, portid, group);
++}
++EXPORT_SYMBOL_GPL(backport_genlmsg_multicast_allns);
++#endif /* LINUX_VERSION_IN_RANGE(5,15,0,5,15,169) ||
++	  LINUX_VERSION_IN_RANGE(6,1,0,6,1,115) ||
++	  LINUX_VERSION_IN_RANGE(6,6,0,6,6,58) */
 diff --git a/compat/main.c b/compat/main.c
 index d4f3340..651ab63 100644
 --- a/compat/main.c
@@ -1162,6 +1309,311 @@ index ccf4ad3..01d7f60 100644
  
  	return 0;
  }
+diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
+index fbf666d..f124b73 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.c
++++ b/drivers/net/wireless/ath/ath11k/dp.c
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #include <crypto/hash.h>
+@@ -104,14 +104,12 @@ void ath11k_dp_srng_cleanup(struct ath11k_base *ab, struct dp_srng *ring)
+ 	if (!ring->vaddr_unaligned)
+ 		return;
+ 
+-	if (ring->cached) {
+-		dma_unmap_single(ab->dev, ring->paddr_unaligned, ring->size,
+-				 DMA_FROM_DEVICE);
+-		kfree(ring->vaddr_unaligned);
+-	} else {
++	if (ring->cached)
++		dma_free_noncoherent(ab->dev, ring->size, ring->vaddr_unaligned,
++				     ring->paddr_unaligned, DMA_FROM_DEVICE);
++	else
+ 		dma_free_coherent(ab->dev, ring->size, ring->vaddr_unaligned,
+ 				  ring->paddr_unaligned);
+-	}
+ 
+ 	ring->vaddr_unaligned = NULL;
+ }
+@@ -249,25 +247,14 @@ int ath11k_dp_srng_setup(struct ath11k_base *ab, struct dp_srng *ring,
+ 		default:
+ 			cached = false;
+ 		}
+-
+-		if (cached) {
+-			ring->vaddr_unaligned = kzalloc(ring->size, GFP_KERNEL);
+-			if (!ring->vaddr_unaligned)
+-				return -ENOMEM;
+-
+-			ring->paddr_unaligned = dma_map_single(ab->dev,
+-							       ring->vaddr_unaligned,
+-							       ring->size,
+-							       DMA_FROM_DEVICE);
+-			if (dma_mapping_error(ab->dev, ring->paddr_unaligned)) {
+-				kfree(ring->vaddr_unaligned);
+-				ring->vaddr_unaligned = NULL;
+-				return -ENOMEM;
+-			}
+-		}
+ 	}
+ 
+-	if (!cached)
++	if (cached)
++		ring->vaddr_unaligned = dma_alloc_noncoherent(ab->dev, ring->size,
++							      &ring->paddr_unaligned,
++							      DMA_FROM_DEVICE,
++							      GFP_KERNEL);
++	else
+ 		ring->vaddr_unaligned = dma_alloc_coherent(ab->dev, ring->size,
+ 							   &ring->paddr_unaligned,
+ 							   GFP_KERNEL);
+diff --git a/drivers/net/wireless/ath/ath11k/dp.h b/drivers/net/wireless/ath/ath11k/dp.h
+index 65d2bc0..eaf902c 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.h
++++ b/drivers/net/wireless/ath/ath11k/dp.h
+@@ -1,7 +1,7 @@
+ /* SPDX-License-Identifier: BSD-3-Clause-Clear */
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2021-2023 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2021-2023, 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #ifndef ATH11K_DP_H
+@@ -20,7 +20,6 @@ struct ath11k_ext_irq_grp;
+ 
+ struct dp_rx_tid {
+ 	u8 tid;
+-	u32 *vaddr;
+ 	dma_addr_t paddr;
+ 	u32 size;
+ 	u32 ba_win_sz;
+@@ -37,6 +36,9 @@ struct dp_rx_tid {
+ 	/* Timer info related to fragments */
+ 	struct timer_list frag_timer;
+ 	struct ath11k_base *ab;
++	u32 *vaddr_unaligned;
++	dma_addr_t paddr_unaligned;
++	u32 unaligned_size;
+ };
+ 
+ #define DP_REO_DESC_FREE_THRESHOLD  64
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 40088e6..9c1f594 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #include <linux/ieee80211.h>
+@@ -675,11 +675,11 @@ void ath11k_dp_reo_cmd_list_cleanup(struct ath11k_base *ab)
+ 	list_for_each_entry_safe(cmd, tmp, &dp->reo_cmd_list, list) {
+ 		list_del(&cmd->list);
+ 		rx_tid = &cmd->data;
+-		if (rx_tid->vaddr) {
+-			dma_unmap_single(ab->dev, rx_tid->paddr,
+-					 rx_tid->size, DMA_BIDIRECTIONAL);
+-			kfree(rx_tid->vaddr);
+-			rx_tid->vaddr = NULL;
++		if (rx_tid->vaddr_unaligned) {
++			dma_free_noncoherent(ab->dev, rx_tid->unaligned_size,
++					     rx_tid->vaddr_unaligned,
++					     rx_tid->paddr_unaligned, DMA_BIDIRECTIONAL);
++			rx_tid->vaddr_unaligned = NULL;
+ 		}
+ 		kfree(cmd);
+ 	}
+@@ -689,11 +689,11 @@ void ath11k_dp_reo_cmd_list_cleanup(struct ath11k_base *ab)
+ 		list_del(&cmd_cache->list);
+ 		dp->reo_cmd_cache_flush_count--;
+ 		rx_tid = &cmd_cache->data;
+-		if (rx_tid->vaddr) {
+-			dma_unmap_single(ab->dev, rx_tid->paddr,
+-					 rx_tid->size, DMA_BIDIRECTIONAL);
+-			kfree(rx_tid->vaddr);
+-			rx_tid->vaddr = NULL;
++		if (rx_tid->vaddr_unaligned) {
++			dma_free_noncoherent(ab->dev, rx_tid->unaligned_size,
++					     rx_tid->vaddr_unaligned,
++					     rx_tid->paddr_unaligned, DMA_BIDIRECTIONAL);
++			rx_tid->vaddr_unaligned = NULL;
+ 		}
+ 		kfree(cmd_cache);
+ 	}
+@@ -708,11 +708,11 @@ static void ath11k_dp_reo_cmd_free(struct ath11k_dp *dp, void *ctx,
+ 	if (status != HAL_REO_CMD_SUCCESS)
+ 		ath11k_warn(dp->ab, "failed to flush rx tid hw desc, tid %d status %d\n",
+ 			    rx_tid->tid, status);
+-	if (rx_tid->vaddr) {
+-		dma_unmap_single(dp->ab->dev, rx_tid->paddr, rx_tid->size,
+-				 DMA_BIDIRECTIONAL);
+-		kfree(rx_tid->vaddr);
+-		rx_tid->vaddr = NULL;
++	if (rx_tid->vaddr_unaligned) {
++		dma_free_noncoherent(dp->ab->dev, rx_tid->unaligned_size,
++				     rx_tid->vaddr_unaligned,
++				     rx_tid->paddr_unaligned, DMA_BIDIRECTIONAL);
++		rx_tid->vaddr_unaligned = NULL;
+ 	}
+ }
+ 
+@@ -749,10 +749,10 @@ static void ath11k_dp_reo_cache_flush(struct ath11k_base *ab,
+ 	if (ret) {
+ 		ath11k_err(ab, "failed to send HAL_REO_CMD_FLUSH_CACHE cmd, tid %d (%d)\n",
+ 			   rx_tid->tid, ret);
+-		dma_unmap_single(ab->dev, rx_tid->paddr, rx_tid->size,
+-				 DMA_BIDIRECTIONAL);
+-		kfree(rx_tid->vaddr);
+-		rx_tid->vaddr = NULL;
++		dma_free_noncoherent(ab->dev, rx_tid->unaligned_size,
++				     rx_tid->vaddr_unaligned,
++				     rx_tid->paddr_unaligned, DMA_BIDIRECTIONAL);
++		rx_tid->vaddr_unaligned = NULL;
+ 	}
+ }
+ 
+@@ -802,10 +802,10 @@ static void ath11k_dp_rx_tid_del_func(struct ath11k_dp *dp, void *ctx,
+ 
+ 	return;
+ free_desc:
+-	dma_unmap_single(ab->dev, rx_tid->paddr, rx_tid->size,
+-			 DMA_BIDIRECTIONAL);
+-	kfree(rx_tid->vaddr);
+-	rx_tid->vaddr = NULL;
++	dma_free_noncoherent(ab->dev, rx_tid->unaligned_size,
++			     rx_tid->vaddr_unaligned,
++			     rx_tid->paddr_unaligned, DMA_BIDIRECTIONAL);
++	rx_tid->vaddr_unaligned = NULL;
+ }
+ 
+ void ath11k_peer_rx_tid_delete(struct ath11k *ar,
+@@ -831,14 +831,16 @@ void ath11k_peer_rx_tid_delete(struct ath11k *ar,
+ 		if (ret != -ESHUTDOWN)
+ 			ath11k_err(ar->ab, "failed to send HAL_REO_CMD_UPDATE_RX_QUEUE cmd, tid %d (%d)\n",
+ 				   tid, ret);
+-		dma_unmap_single(ar->ab->dev, rx_tid->paddr, rx_tid->size,
+-				 DMA_BIDIRECTIONAL);
+-		kfree(rx_tid->vaddr);
+-		rx_tid->vaddr = NULL;
++		dma_free_noncoherent(ar->ab->dev, rx_tid->unaligned_size,
++				     rx_tid->vaddr_unaligned,
++				     rx_tid->paddr_unaligned, DMA_BIDIRECTIONAL);
++		rx_tid->vaddr_unaligned = NULL;
+ 	}
+ 
+ 	rx_tid->paddr = 0;
++	rx_tid->paddr_unaligned = 0;
+ 	rx_tid->size = 0;
++	rx_tid->unaligned_size = 0;
+ }
+ 
+ static int ath11k_dp_rx_link_desc_return(struct ath11k_base *ab,
+@@ -982,10 +984,9 @@ static void ath11k_dp_rx_tid_mem_free(struct ath11k_base *ab,
+ 	if (!rx_tid->active)
+ 		goto unlock_exit;
+ 
+-	dma_unmap_single(ab->dev, rx_tid->paddr, rx_tid->size,
+-			 DMA_BIDIRECTIONAL);
+-	kfree(rx_tid->vaddr);
+-	rx_tid->vaddr = NULL;
++	dma_free_noncoherent(ab->dev, rx_tid->unaligned_size, rx_tid->vaddr_unaligned,
++			     rx_tid->paddr_unaligned, DMA_BIDIRECTIONAL);
++	rx_tid->vaddr_unaligned = NULL;
+ 
+ 	rx_tid->active = false;
+ 
+@@ -1000,9 +1001,8 @@ int ath11k_peer_rx_tid_setup(struct ath11k *ar, const u8 *peer_mac, int vdev_id,
+ 	struct ath11k_base *ab = ar->ab;
+ 	struct ath11k_peer *peer;
+ 	struct dp_rx_tid *rx_tid;
+-	u32 hw_desc_sz;
+-	u32 *addr_aligned;
+-	void *vaddr;
++	u32 hw_desc_sz, *vaddr;
++	void *vaddr_unaligned;
+ 	dma_addr_t paddr;
+ 	int ret;
+ 
+@@ -1050,49 +1050,40 @@ int ath11k_peer_rx_tid_setup(struct ath11k *ar, const u8 *peer_mac, int vdev_id,
+ 	else
+ 		hw_desc_sz = ath11k_hal_reo_qdesc_size(DP_BA_WIN_SZ_MAX, tid);
+ 
+-	vaddr = kzalloc(hw_desc_sz + HAL_LINK_DESC_ALIGN - 1, GFP_ATOMIC);
+-	if (!vaddr) {
++	rx_tid->unaligned_size = hw_desc_sz + HAL_LINK_DESC_ALIGN - 1;
++	vaddr_unaligned = dma_alloc_noncoherent(ab->dev, rx_tid->unaligned_size, &paddr,
++						DMA_BIDIRECTIONAL, GFP_ATOMIC);
++	if (!vaddr_unaligned) {
+ 		spin_unlock_bh(&ab->base_lock);
+ 		return -ENOMEM;
+ 	}
+ 
+-	addr_aligned = PTR_ALIGN(vaddr, HAL_LINK_DESC_ALIGN);
+-
+-	ath11k_hal_reo_qdesc_setup(addr_aligned, tid, ba_win_sz,
+-				   ssn, pn_type);
+-
+-	paddr = dma_map_single(ab->dev, addr_aligned, hw_desc_sz,
+-			       DMA_BIDIRECTIONAL);
+-
+-	ret = dma_mapping_error(ab->dev, paddr);
+-	if (ret) {
+-		spin_unlock_bh(&ab->base_lock);
+-		ath11k_warn(ab, "failed to setup dma map for peer %pM rx tid %d: %d\n",
+-			    peer_mac, tid, ret);
+-		goto err_mem_free;
+-	}
+-
+-	rx_tid->vaddr = vaddr;
+-	rx_tid->paddr = paddr;
++	rx_tid->vaddr_unaligned = vaddr_unaligned;
++	vaddr = PTR_ALIGN(vaddr_unaligned, HAL_LINK_DESC_ALIGN);
++	rx_tid->paddr_unaligned = paddr;
++	rx_tid->paddr = rx_tid->paddr_unaligned + ((unsigned long)vaddr -
++			(unsigned long)rx_tid->vaddr_unaligned);
++	ath11k_hal_reo_qdesc_setup(vaddr, tid, ba_win_sz, ssn, pn_type);
+ 	rx_tid->size = hw_desc_sz;
+ 	rx_tid->active = true;
+ 
++	/* After dma_alloc_noncoherent, vaddr is being modified for reo qdesc setup.
++	 * Since these changes are not reflected in the device, driver now needs to
++	 * explicitly call dma_sync_single_for_device.
++	 */
++	dma_sync_single_for_device(ab->dev, rx_tid->paddr,
++				   rx_tid->size,
++				   DMA_TO_DEVICE);
+ 	spin_unlock_bh(&ab->base_lock);
+ 
+-	ret = ath11k_wmi_peer_rx_reorder_queue_setup(ar, vdev_id, peer_mac,
+-						     paddr, tid, 1, ba_win_sz);
++	ret = ath11k_wmi_peer_rx_reorder_queue_setup(ar, vdev_id, peer_mac, rx_tid->paddr,
++						     tid, 1, ba_win_sz);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to setup rx reorder queue for peer %pM tid %d: %d\n",
+ 			    peer_mac, tid, ret);
+ 		ath11k_dp_rx_tid_mem_free(ab, peer_mac, vdev_id, tid);
+ 	}
+ 
+-	return ret;
+-
+-err_mem_free:
+-	kfree(rx_tid->vaddr);
+-	rx_tid->vaddr = NULL;
+-
+ 	return ret;
+ }
+ 
 diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
 index e907a40..8791e57 100644
 --- a/drivers/net/wireless/ath/ath11k/mhi.c
@@ -4887,10 +5339,10 @@ index 274524e..69f8d5a 100644
  #endif
 diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c b/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
 new file mode 100644
-index 0000000..15c4e0b
+index 0000000..f87a56e
 --- /dev/null
 +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
-@@ -0,0 +1,208 @@
+@@ -0,0 +1,233 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
 + *	Copyright (C) 2004 - 2009 Gertjan van Wingerde <gwingerde@gmail.com>
@@ -4924,6 +5376,27 @@ index 0000000..15c4e0b
 +
 +	for (i = 0; i < len / sizeof(u16); i++)
 +		rt2x00dev->eeprom[i] = swab16(rt2x00dev->eeprom[i]);
++}
++
++static int rt2800lib_read_eeprom_data(struct rt2x00_dev *rt2x00dev)
++{
++	struct device_node *np = rt2x00dev->dev->of_node;
++	unsigned int len = rt2x00dev->ops->eeprom_size;
++	const void *data;
++	int size;
++
++	data = of_get_property(np, "ralink,eeprom-data", &size);
++	if (!data)
++		return -ENOENT;
++
++	if (size != len) {
++		dev_err(rt2x00dev->dev, "invalid eeprom size, required: 0x%04x\n", len);
++		return -EINVAL;
++	}
++
++	memcpy(rt2x00dev->eeprom, data, size);
++
++	return 0;
 +}
 +
 +#if IS_ENABLED(CONFIG_MTD)
@@ -5050,7 +5523,7 @@ index 0000000..15c4e0b
 +	}
 +
 +	if (!ee_name)
-+		return 0;
++		return -ENOENT;
 +
 +	rt2x00_info(rt2x00dev, "Loading EEPROM data from '%s'.\n", ee_name);
 +
@@ -5085,6 +5558,10 @@ index 0000000..15c4e0b
 +int rt2x00lib_read_eeprom(struct rt2x00_dev *rt2x00dev)
 +{
 +	int ret;
++
++	ret = rt2800lib_read_eeprom_data(rt2x00dev);
++	if (!ret)
++		return 0;
 +
 +#if IS_ENABLED(CONFIG_MTD)
 +	ret = rt2800lib_read_eeprom_mtd(rt2x00dev);
