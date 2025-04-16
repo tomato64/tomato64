@@ -79,11 +79,11 @@ function verifyFields(focused, quiet) {
 	elem.display(PR('_f_ntp_server'), b);
 
 	a = (E('_f_ntp_server').value == 'custom');
-	elem.display(PR('_f_ntp_1'), PR('_f_ntp_2'), PR('_f_ntp_3'), a && b);
+	elem.display(PR('_f_ntp_1'), PR('_f_ntp_2'), PR('_f_ntp_3'), PR('_f_ntp_4'), a && b);
 	elem.display(PR('ntp-preset'), !a && b);
 
 	if (a) {
-		if ((E('_f_ntp_1').value == '') && (E('_f_ntp_2').value == '') && ((E('_f_ntp_3').value == ''))) {
+		if ((E('_f_ntp_1').value == '') && (E('_f_ntp_2').value == '') && (E('_f_ntp_3').value == '') && (E('_f_ntp_4').value == '')) {
 			ferror.set('_f_ntp_1', 'At least one NTP server is required', quiet);
 			return 0;
 		}
@@ -111,7 +111,7 @@ function save() {
 	if (fom._f_ntp_server.value != 'custom')
 		fom.ntp_server.value = ntpString(fom._f_ntp_server.value);
 	else {
-		a = [fom.f_ntp_1.value, fom.f_ntp_2.value, fom.f_ntp_3.value];
+		a = [fom.f_ntp_1.value, fom.f_ntp_2.value, fom.f_ntp_3.value, fom.f_ntp_4.value];
 		for (i = 0; i < a.length; ) {
 			if (a[i] == '')
 				a.splice(i, 1);
@@ -264,7 +264,8 @@ function init() {
 			{ title: '&nbsp;', text: '<small><span id="ntp-preset">xx<\/span><\/small>', hidden: 1 },
 			{ title: '', name: 'f_ntp_1', type: 'text', maxlen: 48, size: 34, value: ntp[0] || 'pool.ntp.org', hidden: 1 },
 			{ title: '', name: 'f_ntp_2', type: 'text', maxlen: 48, size: 34, value: ntp[1] || '', hidden: 1 },
-			{ title: '', name: 'f_ntp_3', type: 'text', maxlen: 48, size: 34, value: ntp[2] || '', hidden: 1 }
+			{ title: '', name: 'f_ntp_3', type: 'text', maxlen: 48, size: 34, value: ntp[2] || '', hidden: 1 },
+			{ title: '', name: 'f_ntp_4', type: 'text', maxlen: 48, size: 34, value: ntp[3] || '', hidden: 1 }
 		]);
 	</script>
 </div>
