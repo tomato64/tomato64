@@ -197,6 +197,8 @@ ifeq ($(TCONFIG_TOMATO64),y)
 
 ifeq ($(PLATFORM_X86_64),y)
 	install -m 0700 entware-install-x86_64.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
+else
+	sed -i $(INSTALLDIR)/usr/sbin/tomatoanon -e "/TOMATO64-X86_64-BEGIN/,/TOMATO64-X86_64-END/d"
 endif #PLATFORM_X86_64
 
 ifeq ($(PLATFORM_MT6000),y)
@@ -222,6 +224,7 @@ endif #TOMATO64
 			-e "/BBT-BEGIN/d"	-e "/BBT-END/d" \
 			-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 			-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
+			-e "/TOMATO64-X86_64-BEGIN/d"	-e "/TOMATO64-X86_64-END/d" \
 			|| true; \
 		done
 

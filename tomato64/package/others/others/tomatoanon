@@ -116,6 +116,18 @@ ANON_NOTIFY=$(NG tomatoanon_notify)
 	WANMAC=$(NG wan_hwaddr)
 	LANMAC=$(NG lan_hwaddr)
 	MODEL=$(NG t_model_name)
+# TOMATO64-X86_64-BEGIN
+	ENVIRONMENT=$(virt-what)
+	if [ $? -eq 0 ]; then
+		if [ -z "${ENVIRONMENT}" ]; then
+			ENVIRONMENT="baremetal"
+		fi
+		ENVIRONMENT=$(echo "$ENVIRONMENT" | tr '\n' '/' | sed 's/\/$//')
+	else
+		ENVIRONMENT="unknown"
+	fi
+	MODEL="$MODEL ($ENVIRONMENT)"
+# TOMATO64-X86_64-END
 	DRIVER=$(wl ver | grep version | awk '{ print $7 }')
 	WANMAC_MD5=$(echo "$WANMAC+$LANMAC" | md5sum | awk '{ print $1 }')
 
