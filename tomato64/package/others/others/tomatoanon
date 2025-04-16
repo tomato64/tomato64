@@ -26,10 +26,10 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 
 MOD=Tomato64
 # STUBBYNO-BEGIN
-WGET="/usr/bin/wget --no-check-certificate"
+WGET="/usr/bin/wget -q --no-check-certificate"
 # STUBBYNO-END
 # STUBBY-BEGIN
-WGET="/usr/bin/wget"
+WGET="/usr/bin/wget -q"
 # STUBBY-END
 
 # detect Version and Buildtype
@@ -49,8 +49,25 @@ ANON_NOTIFY=$(NG tomatoanon_notify)
 	VER_MAJ=$(echo $VER | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
 	VER_MNR=$(echo $VER | awk '{print $1}' | cut -d "." -f2 | sed 's/[^0-9]*//g')
 
+# TOMATO64-BEGIN
 	RESCHK=$(curl https://api.github.com/repos/tomato64/tomato64/releases/latest -s | jq -r '.name')
+# TOMATO64-END
 
+# TOMATO64-REMOVE-BEGIN
+# STUBBYNO-BEGIN
+	RESCHK=$($WGET -O- "http://freshtomato.org/version.txt")
+# STUBBYNO-END
+# STUBBY-BEGIN
+# BCMARMNO-BEGIN
+	URL="https://raw.githubusercontent.com/FreshTomato-Project/freshtomato-mips/refs/heads/mips-master/release/src/router/shared/tomato_version.h"
+	RESCHK=$($WGET -O- $URL | grep -E '^#define TOMATO_(MAJOR|MINOR)' | awk -F'"' 'NR==1{major=$2} NR==2{minor=$2} END{print major "." minor}')
+# BCMARMNO-END
+# BCMARM-BEGIN
+	URL="https://raw.githubusercontent.com/FreshTomato-Project/freshtomato-arm/refs/heads/arm-master/release/src-rt-6.x.4708/router/shared/tomato_version.h"
+	RESCHK=$($WGET -O- $URL | grep -E '^#define TOMATO_(MAJOR|MINOR)' | awk -F'"' 'NR==1{major=$2} NR==2{minor=$2} END{print major "." minor}')
+# BCMARM-END
+# STUBBY-END
+# TOMATO64-REMOVE-END
 	CHKVER_MAJ=$(echo $RESCHK | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
 	echo $RESCHK | grep "\." && {
 		CHKVER_MNR=$(echo $RESCHK | awk '{print $1}' | cut -d "." -f2 | sed 's/[^0-9]*//g')
