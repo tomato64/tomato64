@@ -60,12 +60,11 @@ ANON_NOTIFY=$(NG tomatoanon_notify)
 # STUBBY-BEGIN
 # BCMARMNO-BEGIN
 	URL="https://raw.githubusercontent.com/FreshTomato-Project/freshtomato-mips/refs/heads/mips-master/release/src/router/shared/tomato_version.h"
-	RESCHK=$($WGET -O- $URL | grep -E '^#define TOMATO_(MAJOR|MINOR)' | awk -F'"' 'NR==1{major=$2} NR==2{minor=$2} END{print major "." minor}')
 # BCMARMNO-END
 # BCMARM-BEGIN
 	URL="https://raw.githubusercontent.com/FreshTomato-Project/freshtomato-arm/refs/heads/arm-master/release/src-rt-6.x.4708/router/shared/tomato_version.h"
-	RESCHK=$($WGET -O- $URL | grep -E '^#define TOMATO_(MAJOR|MINOR)' | awk -F'"' 'NR==1{major=$2} NR==2{minor=$2} END{print major "." minor}')
 # BCMARM-END
+	RESCHK=$($WGET -O- $URL | grep -E '^#define TOMATO_(MAJOR|MINOR)' | awk -F'"' 'NR==1{major=$2} NR==2{minor=$2} END{print major "." minor}')
 # STUBBY-END
 # TOMATO64-REMOVE-END
 	CHKVER_MAJ=$(echo $RESCHK | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
