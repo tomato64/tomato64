@@ -888,6 +888,8 @@ void start_wireguard(const int unit)
 				memset(buffer, 0, BUF_SIZE);
 				if (aip[0] == '\0')
 					snprintf(buffer, BUF_SIZE, "%s", ip);
+				else if (ip[0] == '\0')
+					snprintf(buffer, BUF_SIZE, "%s", aip);
 				else
 					snprintf(buffer, BUF_SIZE, "%s,%s", ip, aip);
 
