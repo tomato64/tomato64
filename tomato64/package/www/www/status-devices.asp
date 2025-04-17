@@ -39,9 +39,7 @@ var clear2 = (discovery_clear === 1) ? 'clear' : '';
 var discovery_limit = cookie.get(cprefix+'_discovery_limit') || '60';
 var discovery_target = cookie.get(cprefix+'_discovery_target') || 'lan';
 var discovery_mode = cookie.get(cprefix+'_discovery_mode') || 'off';
-/* TOMATO64-BEGIN */
 var show_wan_entries = cookie.get(cprefix+'_show_wan_entries') || 'disabled';
-/* TOMATO64-END */
 var wait = gc_time;
 var time_o;
 /* DISCOVERY-END */
@@ -489,18 +487,11 @@ dg.populate = function() {
 			e.media = 5;
 		}
 
-/* TOMATO64-REMOVE-BEGIN */
-		this.insert(-1, e, [ a, '<div id="media_'+i+'">'+f+'<\/div>', b, (e.mode == 'wds' ? '' : e.ip), e.name, (e.rssi < 0 ? e.rssi+' <small>dBm<\/small>' : ''),
-		                     (e.qual < 0 ? '' : '<small>'+e.qual+'<\/small> <img src="bar'+MIN(MAX(Math.floor(e.qual / 12), 1), 6)+'.gif" id="bar_'+i+'" alt="">'),
-		                     e.txrx, e.lease], false);
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
 		if ((show_wan_entries == 'enabled') || (!a.includes("WAN"))) {
 			this.insert(-1, e, [ a, '<div id="media_'+i+'">'+f+'<\/div>', b, (e.mode == 'wds' ? '' : e.ip), e.name, (e.rssi < 0 ? e.rssi+' <small>dBm<\/small>' : ''),
 			                     (e.qual < 0 ? '' : '<small>'+e.qual+'<\/small> <img src="bar'+MIN(MAX(Math.floor(e.qual / 12), 1), 6)+'.gif" id="bar_'+i+'" alt="">'),
 			                     e.txrx, e.lease], false);
 		}
-/* TOMATO64-END */
 	}
 }
 
@@ -711,10 +702,8 @@ function verifyFields(f, c) {
 	cookie.set(cprefix+'_discovery_target', discovery_target);
 	discovery_mode = E('_discovery_mode').value;
 	cookie.set(cprefix+'_discovery_mode', discovery_mode);
-/* TOMATO64-BEGIN */
 	show_wan_entries = E('_show_wan_entries').value;
 	cookie.set(cprefix+'_show_wan_entries', show_wan_entries);
-/* TOMATO64-END */
 	discovery = new TomatoRefresh('update.cgi', 'exec=discovery&arg0='+discovery_mode+'&arg1='+discovery_target+'&arg2='+clear2+'&arg3='+discovery_limit, gc_time, '', 1);
 	discovery.refresh = function() { }
 
@@ -820,11 +809,8 @@ function init() {
 			{ title: 'Sanitize results', name: 'discovery_clear', type: 'checkbox', value: 'clear', checked: (discovery_clear === 1) ? 'checked' : '' },
 			{ title: 'Max Probes', name: 'discovery_limit', type: 'text', maxlen: 3, size: 3, value: discovery_limit,  placeholder: '60', suffix: '<\/span>&nbsp;<small> 5 - 200<\/small>' },
 			{ title: 'Scan Target', name: 'discovery_target', type: 'select', options: [['lan','LANs *'],['wan','WANs'],['both','LANs & WANs']], value: discovery_target },
-			{ title: 'Scan Mode', name: 'discovery_mode', type: 'select', options: [['off','Off *'],['arping','arping (preferred)'],['traceroute','traceroute'],['nc','netcat'],['all','all (round-robin)']], suffix: '&nbsp; <img src="spin.gif" alt="" id="spin"><div id="wait"><\/div>', value: discovery_mode }
-/* TOMATO64-BEGIN */
-			,{ title: 'Show WAN Entries', name: 'show_wan_entries', type: 'select', options: [['disabled','disabled'],['enabled','enabled']], value: show_wan_entries }
-/* TOMATO64-END */
-
+			{ title: 'Scan Mode', name: 'discovery_mode', type: 'select', options: [['off','Off *'],['arping','arping (preferred)'],['traceroute','traceroute'],['nc','netcat'],['all','all (round-robin)']], suffix: '&nbsp; <img src="spin.gif" alt="" id="spin"><div id="wait"><\/div>', value: discovery_mode },
+			{ title: 'Show WAN Entries', name: 'show_wan_entries', type: 'select', options: [['disabled','disabled'],['enabled','enabled']], value: show_wan_entries }
 		]);
 	</script>
 </div>
@@ -856,6 +842,7 @@ function init() {
 		<li>all - Each consecutive discovery scan is done round robin with the next discovery method</li>
 	</li></ul>
 	<li>When enabled the discovery runs once in 60 or 120 seconds (depending on the device) when on the right side the screen refresh is activated. As the discovery itself runs for a number of seconds - depending on your choices, network and router this may be between 10 and 30 seconds, or even more - be prepared that it may take some time before the results that appear have settled. When "One off" is chosen, please refresh the screen by ctrl-F5 instead of pressing "Refresh" again.</li>
+	<li><b>Show WAN Entries:</b> Toggle to show or hide WAN devices in the device list</li>
 </ul>
 <!-- DISCOVERY-END -->
 </div>
