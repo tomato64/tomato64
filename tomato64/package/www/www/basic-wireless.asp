@@ -22,6 +22,8 @@
 
 //	<% wireless(); %>
 
+var cprefix = 'basic_wireless';
+
 var devices = [];
 var interfaces = [];
 var mode_loaded = [];
@@ -536,6 +538,9 @@ function earlyInit() {
 }
 
 function init() {
+        if (((c = cookie.get(cprefix + '_notes_vis')) != null) && (c == '1'))
+                toggleVisibility(cprefix, "notes");
+
 	up.initPage(250, 5);
 }
 
@@ -704,6 +709,83 @@ for (var i = 0; i < devices.length; i++) {
 	W('<\/div>');
 }
 </script>
+</div>
+
+<!-- / / / -->
+
+<div class="section-title">Notes <small><i><a href='javascript:toggleVisibility(cprefix,"notes");'><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
+<div class="section" id="sesdiv_notes" style="display:none">
+	<i>Device Configuration:</i><br>
+	<ul>
+		<li><b>General Setup</b></li>
+		<ul>
+			<li><b>Band</b> - Frequency this radio will operate on.</li>
+			<li><b>Mode</b> - Wifi standard to use.</li>
+			<ul>
+				<li><b>AX</b> - Wifi 6 (802.11ax)</li>
+				<li><b>AC</b> - Wifi 5 (802.11ac)</li>
+				<li><b>N</b> - Wifi 4 (802.11n)</li>
+				<li><b>Legacy</b> - 802.11b/g</li>
+			</ul>
+			<li><b>Channel</b> - Specifies the wireless channel. “auto” defaults to the lowest available channel.</li>
+			<li><b>Width</b> - The width is the range of frequencies i.e. how broad the signal is for transferring data.</li>
+			<li><b>Allow legacy 802.11b rates</b> - Enable compatibility for very old devices running up to 11 Mbps. Can reduce network efficiency and lower throughput for all devices.</li>
+			<li><b>Maximum transmit power</b> - The highest radio signal strength the Wi-Fi interface can use to transmit.</li>
+			<li><b>Country code</b> - Specifies the Country Code/Regulatory Domain (e.g. US, EU) for the Wi-Fi radio. Affects available channels and transmit powers to comply with local regulations.</li>
+		</ul>
+		<li><b>Advanced Settings</b></li>
+		<ul>
+			<li><b>Force 40MHz mode </b> - Disables scanning and forces use of the specified width. Applicable to 80 & 160 widths as well.</li>
+		</ul>
+	</ul>
+	<br>
+	<i>Interface Configuration:</i><br>
+	<ul>
+		<li><b>General Setup</b></li>
+		<ul>
+			<li><b>Enable</b> - Enables this interface.</li>
+			<li><b>Mode</b> - Currently only 'Access Point' is supported.</li>
+			<ul>
+				<li><b>Access Point</b> - Creates a wireless network for devices to join.</li>
+			</ul>
+			<li><b>ESSID</b> - The broadcasted SSID of the wireless network.</li>
+			<li><b>Network</b> - Which network/bridge this interface will join.</li>
+			<li><b>Hide ESSID</b> - Disables the broadcasting of beacon frames if checked and hides the ESSID.</li>
+			<li><b>WMM Mode</b> - Enables WMM. Where Wi-Fi Multimedia (WMM) Mode QoS is disabled, clients may be limited to 802.11a/802.11g rates. Required for 802.11n/802.11ac/802.11ax.</li>
+		</ul>
+		<li><b>Wireless Security</b></li>
+		<ul>
+			<li><b>Encryption</b> - Wireless encryption method.</li>
+			<li><b>Cipher</b> - </li>
+			<li><b>Key</b> - The Wifi Password. Must be 8-63 characters long.</li>
+		</ul>
+		<li><b>MAC-Filter</b></li>
+		<ul>
+			<li><b>WIP</b></li>
+		</ul>
+		<li><b>Advanced Settings</b></li>
+		<ul>
+			<li><b>Isolate Clients</b> - Isolates wireless clients from each other, </li>
+			<li><b>Isolate Bridge Port</b> - Isolates wireless clients from each other on the AP's bridge. (i.e. 2.4ghz and 5ghz radios on the same AP.)</li>
+			<li><b>Interface name</b> - Specifies a custom name for the Wi-Fi interface, which is otherwise automatically named.</li>
+		</ul>
+	</ul>
+	<br>
+	<i>Other relevant notes/hints:</i><br>
+	<ul>
+		<li>The Channel list and TX Power are dependent on your Country code. They are only updated accordinly once you</li>
+		<ul>
+			<li>make your country selection</li>
+			<li>enable at least one interface</li>
+			<li>click Save</li>
+			Afterwards you may see a new selection of option to choose from.
+		</ul>
+		<li><b>5GHz Radio:</b> Before attempting to setup the 5Ghz radio, please follow the steps in the previous point. It can sometimes be difficult to find the right settings to bring the 5Ghz radio up, particularly if you want to use 160Mhz width. To see your country's regulations, run the following over ssh or in Tools -> System Commands</li>
+			<ul>
+				<li><b>iwinfo phy1-ap0 freqlist</b></li>
+			</ul>
+			Avoid channels with the "NO_IR" code, and channels with "NO_160MHZ" if wanting to use 160MHz widths. Also keep an eye in the logs for other issues/errors when starting the 5GHz radio.
+	</ul>
 </div>
 
 <!-- / / / -->
