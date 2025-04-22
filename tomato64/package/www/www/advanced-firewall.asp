@@ -26,7 +26,7 @@
 //	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_lan1,multicast_lan2,multicast_lan3,multicast_quickleave,multicast_custom,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,udpxy_enable,udpxy_lan,udpxy_lan1,udpxy_lan2,udpxy_lan3,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_lan1,multicast_lan2,multicast_lan3,multicast_lan4,multicast_lan5,multicast_lan6,multicast_lan7,multicast_quickleave,multicast_custom,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,udpxy_enable,udpxy_lan,udpxy_lan1,udpxy_lan2,udpxy_lan3,udpxy_lan4,udpxy_lan5,udpxy_lan6,udpxy_lan7,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole,flow_offloading,wed_offloading"); %>
+//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_lan1,multicast_lan2,multicast_lan3,multicast_lan4,multicast_lan5,multicast_lan6,multicast_lan7,multicast_quickleave,multicast_custom,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,udpxy_enable,udpxy_lan,udpxy_lan1,udpxy_lan2,udpxy_lan3,udpxy_lan4,udpxy_lan5,udpxy_lan6,udpxy_lan7,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole,flow_offloading,wed_offloading,packet_steering,steering_flows,steering_flows_custom"); %>
 /* TOMATO64-END */
 
 var cprefix = 'advanced_firewall';
@@ -133,6 +133,15 @@ function verifyFields(focused, quiet) {
 	E('_wed_offloading').readonly = !(E('_flow_offloading').value == 2);
 	if (E('_flow_offloading').value != 2)
 		E('_wed_offloading').value = 0;
+
+	var p = E('_packet_steering').value != 0;
+	var f = E('_steering_flows').value == 'custom';
+
+	PR(E('_steering_flows')).style.display = p ? '' : 'none';
+
+	elem.display('_steering_flows_custom', (p && f));
+	E('_steering_flows_custom').disabled = (!p || !f);
+	E('steering_note').style.display = p ? '' : 'none';
 /* TOMATO64-MT6000-END */
 
 	if (nvram.lan_ifname.length < 1)
@@ -353,6 +362,20 @@ function init() {
 			{ title: 'Wireless Ethernet Dispatch (WED)', name: 'wed_offloading', type: 'select', options: [[0,'Disabled'],[1,'Enabled']], value: fixInt(nvram.wed_offloading, 0, 1, 0), suffix: ' &nbsp;<small>requires Hardware flow offloading<\/small>' }
 		]);
 	</script>
+</div>
+
+<div class="section-title">Packet Steering</div>
+<div class="section">
+	<script>
+		createFieldTable('', [
+			{ title: 'Packet Steering', name: 'packet_steering', type: 'select', options: [[0,'Disabled'],[1,'Enabled'],[2,'Enabled (all CPUSs)']], value: nvram.packet_steering, suffix: ' &nbsp;<small>Enable packet steering across CPUs. May help or hinder network speed.<\/small>' },
+			{ title: 'Steering Flows (RPS)*', multi: [
+				{ name: 'steering_flows', type: 'select', options: [['0','none'],['128','128'],['256','256'],['custom','Custom']], value: nvram.steering_flows },
+				{ name: 'steering_flows_custom', type: 'text', maxlen: 5, size: 5, value: nvram.steering_flows_custom },
+				{ suffix: ' &nbsp;<small>Directs packet flows to specific CPUs where the local socket owner listens (the local service).<\/small>' } ] }
+		]);
+	</script>
+	<div id="steering_note"><small><br>*&nbsp;Note: this setting is for local services on the device only (not for forwarding).</small></div>
 </div>
 /* TOMATO64-MT6000-END */
 

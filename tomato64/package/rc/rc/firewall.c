@@ -2394,6 +2394,10 @@ int start_firewall(void)
 	allow_fastnat("firewall", can_enable_fastnat);
 	try_enabling_fastnat();
 
+#ifdef TOMATO64
+	system("/usr/bin/packet-steering");
+#endif /* TOMATO64 */
+
 	simple_unlock("firewall");
 
 	return 0;

@@ -27,6 +27,9 @@ define OPENWRT_WIFI_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 0644 $(@D)/package/network/config/wifi-scripts/files/lib/netifd/netifd-wireless.sh $(TARGET_DIR)/lib/netifd/
 	$(INSTALL) -m 0755 $(@D)/package/network/config/wifi-scripts/files/lib/netifd/wireless/mac80211.sh $(TARGET_DIR)/lib/netifd/wireless/
 
+	$(INSTALL) -d $(TARGET_DIR)/usr/libexec/network
+	$(INSTALL) -m 0755 $(@D)/package/network/config/netifd/files/usr/libexec/network/packet-steering.uc $(TARGET_DIR)/usr/libexec/network/
+
 	$(INSTALL) -d $(TARGET_DIR)/lib/functions
 	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions.sh $(TARGET_DIR)/lib/
 	$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/functions/caldata.sh $(TARGET_DIR)/lib/functions/
@@ -45,6 +48,7 @@ define OPENWRT_WIFI_INSTALL_TARGET_CMDS
 	$(INSTALL) -d $(TARGET_DIR)/usr/bin/
 	$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/start_wifi.sh $(TARGET_DIR)/usr/bin/
 	$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/enumerate-phy.sh $(TARGET_DIR)/usr/bin/
+	$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/packet-steering $(TARGET_DIR)/usr/bin/
 endef
 
 $(eval $(generic-package))

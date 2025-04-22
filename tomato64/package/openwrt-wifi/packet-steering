@@ -1,0 +1,18 @@
+#!/bin/sh
+
+. /usr/sbin/nvram_ops
+
+packet_steering="$(NG packet_steering)"
+
+if [ "$packet_steering" != "0" ]; then
+
+	steering_flows="$(NG steering_flows)"
+
+	if [ "$steering_flows" == "custom" ]; then
+		steering_flows="$(NG steering_flows_custom)"
+	fi
+
+	[ "${steering_flows:-0}" -gt 0 ] && opts="-l $steering_flows"
+fi
+
+/usr/libexec/network/packet-steering.uc $opts "$packet_steering"

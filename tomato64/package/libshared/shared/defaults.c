@@ -2865,6 +2865,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "ctf_disable",		"1"				, 0 },
 	{ "flow_offloading",		"0"				, 0 },
 	{ "wed_offloading",		"0"				, 0 },
+	{ "packet_steering",		"1"				, 0 },
+	{ "steering_flows",		"0"				, 0 },
+	{ "steering_flows_custom",	"0"				, 0 },
 #endif /* TOMATO64 */
 	{ 0, 0, 0 }
 };
