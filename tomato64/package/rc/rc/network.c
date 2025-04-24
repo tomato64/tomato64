@@ -1484,6 +1484,7 @@ CLEANUP:
 #ifdef TCONFIG_IPV6
 void enable_ipv6(int enable)
 {
+#ifndef TOMATO64
 	DIR *dir;
 	struct dirent *dirent;
 	char s[128];
@@ -1504,6 +1505,10 @@ void enable_ipv6(int enable)
 		}
 		closedir(dir);
 	}
+#else
+	f_write_procsysnet("ipv6/conf/default/disable_ipv6", enable ? "0" : "1");
+	f_write_procsysnet("ipv6/conf/all/disable_ipv6", enable ? "0" : "1");
+#endif /* TOMATO64 */
 }
 
 void accept_ra(const char *ifname)
