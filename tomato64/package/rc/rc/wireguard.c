@@ -813,6 +813,7 @@ void start_wireguard(const int unit)
 	char iface[IF_SIZE];
 	char buffer[BUF_SIZE];
 	char fwmark[BUF_SIZE_16];
+	char peer_ka[BUF_SIZE_16];
 
 	/* determine interface */
 	memset(iface, 0, IF_SIZE);
@@ -824,7 +825,7 @@ void start_wireguard(const int unit)
 	/* set up directories for later use */
 	wg_setup_dirs();
 
-	/* create firewall script */
+	/* create firewall script & DNS rules */
 	wg_build_firewall(unit, port, iface);
 
 	/* check if file is specified */
@@ -875,6 +876,8 @@ void start_wireguard(const int unit)
 		/* add stored peers */
 		nvp = nv = strdup(getNVRAMVar("wg%d_peers", unit));
 		if (nv) {
+			memset(peer_ka, 0, BUF_SIZE_16);
+			snprintf(peer_ka, BUF_SIZE_16, "%s_com", iface);
 
 			logmsg(LOG_DEBUG, "*** %s: adding wg%d_peers ...", __FUNCTION__, unit);
 
@@ -894,13 +897,13 @@ void start_wireguard(const int unit)
 					snprintf(buffer, BUF_SIZE, "%s,%s", ip, aip);
 
 				/* add peer to interface */
-				if (priv[0] == '1') {
-					logmsg(LOG_DEBUG, "*** %s: running wg_add_peer_privkey(): iface=[%s] key=[%s] buffer=[%s] psk=[%s] rka=[%s] ep=[%s] fwmark=[%s]", __FUNCTION__, iface, key, buffer, psk, rka, ep, fwmark);
-					wg_add_peer_privkey(iface, key, buffer, psk, rka, ep, fwmark);
+				if (priv[0] == '1') { /* peer has private key? */
+					logmsg(LOG_DEBUG, "*** %s: running wg_add_peer_privkey(): iface=[%s] key=[%s] buffer=[%s] psk=[%s] rka=[%s] ep=[%s] fwmark=[%s]", __FUNCTION__, iface, key, buffer, psk, (nvram_get_int(peer_ka) == 3 ? ka : rka), ep, fwmark);
+					wg_add_peer_privkey(iface, key, buffer, psk, (nvram_get_int(peer_ka) == 3 ? ka : rka), ep, fwmark);
 				}
 				else {
-					logmsg(LOG_DEBUG, "*** %s: running wg_add_peer(): iface=[%s] key=[%s] buffer=[%s] psk=[%s] rka=[%s] ep=[%s] fwmark=[%s] port=[%s]", __FUNCTION__, iface, key, buffer, psk, rka, ep, fwmark, port);
-					wg_add_peer(iface, key, buffer, psk, rka, ep, fwmark, port);
+					logmsg(LOG_DEBUG, "*** %s: running wg_add_peer(): iface=[%s] key=[%s] buffer=[%s] psk=[%s] rka=[%s] ep=[%s] fwmark=[%s] port=[%s]", __FUNCTION__, iface, key, buffer, psk, (nvram_get_int(peer_ka) == 3 ? ka : rka), ep, fwmark, port);
+					wg_add_peer(iface, key, buffer, psk, (nvram_get_int(peer_ka) == 3 ? ka : rka), ep, fwmark, port);
 				}
 			}
 		}
