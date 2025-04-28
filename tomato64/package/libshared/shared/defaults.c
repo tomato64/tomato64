@@ -2214,7 +2214,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0_brates",		""				, 0 },
 	{"wifi_phy0_noscan",		""				, 0 },
 	{"wifi_phy0_power",		""				, 0 },
-	{"wifi_phy0_country",		""				, 0 },
+	{"wifi_phy0_country",		"00"				, 0 },
 	{"wifi_phy0_ifaces",		"1"				, 0 },
 
 	{"wifi_phy1_band",		"5g"				, 0 },
@@ -2224,7 +2224,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1_brates",		""				, 0 },
 	{"wifi_phy1_noscan",		""				, 0 },
 	{"wifi_phy1_power",		""				, 0 },
-	{"wifi_phy1_country",		""				, 0 },
+	{"wifi_phy1_country",		"00"				, 0 },
 	{"wifi_phy1_ifaces",		"1"				, 0 },
 
 	{"wifi_phy2_band",		"5g"				, 0 },
@@ -2234,7 +2234,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2_brates",		""				, 0 },
 	{"wifi_phy2_noscan",		""				, 0 },
 	{"wifi_phy2_power",		""				, 0 },
-	{"wifi_phy2_country",		""				, 0 },
+	{"wifi_phy2_country",		"00"				, 0 },
 	{"wifi_phy2_ifaces",		"1"				, 0 },
 
 	{"wifi_phy0iface0_enable",	"1"				, 0 },
