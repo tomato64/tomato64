@@ -46,29 +46,49 @@ char port[BUF_SIZE_8];
 static void wg_build_firewall(const int unit, const char *port, const char *iface) {
 	FILE *fp;
 	char buffer[BUF_SIZE_64];
+	char tmp[BUF_SIZE_16];
 	char *dns;
 
 	chains_log_detection();
 
 	logmsg(LOG_DEBUG, "*** %s: building firewall scripts ...", __FUNCTION__);
 
-	/* script with firewall rules (port, iface) */
-	/* (..., open wireguard port, accept packets from wireguard internal subnet, set up forwarding) */
 	memset(buffer, 0, BUF_SIZE_64);
 	snprintf(buffer, BUF_SIZE_64, WG_FW_DIR"/%s-fw.sh", iface);
+	memset(tmp, 0, BUF_SIZE_16);
+	snprintf(tmp, BUF_SIZE_16, "%s_com", iface);
+
+	/* script with firewall rules (port, iface) */
+	/* (..., open wireguard port, accept packets from wireguard internal subnet, set up forwarding) */
 	if ((fp = fopen(buffer, "w"))) {
 		fprintf(fp, "#!/bin/sh\n"
-		            "\n# FW\n"
-		            "iptables -A INPUT -p udp --dport %s -j %s\n"
-		            "iptables -A INPUT -i %s -j %s\n"
-		            "iptables -A FORWARD -i %s -j ACCEPT\n",
-		            port, chain_in_accept,
-		            iface, chain_in_accept,
-		            iface);
+		            "\n# FW\n");
+
+		if (nvram_get_int(tmp) == 3) { /* 'External - VPN Provider' */
+			fprintf(fp, "iptables -I INPUT -i %s -m state --state NEW -j %s\n"
+			            "iptables -I FORWARD -i %s -m state --state NEW -j DROP\n"
+			            "iptables -I FORWARD -o %s -j ACCEPT\n",
+			            iface, chain_in_drop,
+			            iface,
+			            iface);
+		}
+		else {
+			fprintf(fp, "iptables -A INPUT -p udp --dport %s -j %s\n"
+			            "iptables -A INPUT -i %s -j %s\n"
+			            "iptables -A FORWARD -i %s -j ACCEPT\n",
+			            port, chain_in_accept,
+			            iface, chain_in_accept,
+			            iface);
+		}
+
 #ifdef TCONFIG_BCMARM
 		if (!nvram_get_int("ctf_disable")) /* bypass CTF if enabled */
 			fprintf(fp, "iptables -t mangle -I PREROUTING -i %s -j MARK --set-mark 0x01/0x7\n", iface);
 #endif /* TCONFIG_BCMARM */
+
+		if (nvram_get_int(tmp) == 3) /* 'External - VPN Provider' */
+			fprintf(fp, "iptables -t nat -I POSTROUTING -o %s -j MASQUERADE\n", iface);
+
 		dns = getNVRAMVar("wg%d_dns", unit);
 		if (getNVRAMVar("wg%d_file", unit)[0] == '\0') { /* only if no optional config file has been added */
 			/* script to add/remove fw rules for dns servers (iface, dns) */
