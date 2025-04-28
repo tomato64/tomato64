@@ -616,16 +616,12 @@ static int wg_route_peer_allowed_ips(char *iface, const char *allowed_ips, const
 	return result;
 }
 
-static int wg_set_peer_allowed_ips(char *iface, char *pubkey, char *allowed_ips, const char *fwmark)
+static void wg_set_peer_allowed_ips(char *iface, char *pubkey, char *allowed_ips, const char *fwmark)
 {
-	if (eval("wg", "set", iface, "peer", pubkey, "allowed-ips", allowed_ips)) {
+	if (eval("wg", "set", iface, "peer", pubkey, "allowed-ips", allowed_ips))
 		logmsg(LOG_WARNING, "unable to add allowed ips %s for peer %s to wireguard interface %s!", allowed_ips, pubkey, iface);
-		return -1;
-	}
 	else
 		logmsg(LOG_DEBUG, "peer %s for wireguard interface %s has had its allowed ips set to %s", pubkey, iface, allowed_ips);
-
-	return wg_route_peer_allowed_ips(iface, allowed_ips, fwmark);
 }
 
 static void wg_add_peer(char *iface, char *pubkey, char *allowed_ips, const char *presharedkey, char *keepalive, const char *endpoint, const char *fwmark, const char *port)
@@ -644,6 +640,8 @@ static void wg_add_peer(char *iface, char *pubkey, char *allowed_ips, const char
 	/* set peer endpoint */
 	if (endpoint[0] != '\0')
 		wg_set_peer_endpoint(iface, pubkey, endpoint, port);
+
+	wg_route_peer_allowed_ips(iface, allowed_ips, fwmark);
 }
 
 static inline int decode_base64(const char src[static 4])
