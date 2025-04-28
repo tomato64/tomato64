@@ -450,8 +450,14 @@ function mapConfig(contents) {
 				target.psk = value;
 				break;
 			case 'allowedips':
-				if (!target.allowed_ips)
-					target.allowed_ips = value;
+				if (!target.allowed_ips) {
+					var tmp = value.split(',');
+					for (var j = 0; j < tmp.length; ++j) {
+						if (tmp[j].indexOf(':')) /* we're not IPv6 ready yet */
+							tmp.splice(j, j);
+					}
+					target.allowed_ips = tmp.join(',');
+				}
 				else
 					target.allowed_ips = [target.allowed_ips, value].join(',');
 				break;
