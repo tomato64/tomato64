@@ -113,6 +113,7 @@ function show() {
 		var e = E('_'+serviceType+i+'_button');
 		var d = isup[serviceType+i];
 
+		if (E('_'+serviceType+i+'_notice')) E('_'+serviceType+i+'_notice').innerHTML = serviceType+i+' is '+(d ? '<span class="service_up">RUNNING<\/span>' : '<span class="service_down">STOPPED<\/span>');
 		e.value = (d ? 'Stop' : 'Start')+' Now';
 		e.setAttribute('onclick', 'javascript:toggle(\''+serviceType+''+i+'\','+d+');');
 		if (serviceLastUp[i - 1] != d || countButton > 6) {

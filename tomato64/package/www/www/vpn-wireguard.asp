@@ -114,6 +114,7 @@ function show() {
 		var e = E('_'+serviceType+i+'_button');
 		var d = isup[serviceType+i];
 
+		E('_'+serviceType+i+'_notice').innerHTML = serviceType+i+' is '+(d ? '<span class="service_up">RUNNING<\/span>' : '<span class="service_down">STOPPED<\/span>');
 		e.value = (d ? 'Stop' : 'Start')+' Now';
 		e.setAttribute('onclick', 'javascript:toggle(\''+serviceType+''+i+'\','+d+');');
 		if (serviceLastUp[i] != d || countButton > 6) {
@@ -154,12 +155,15 @@ function tabSelect(name) {
 	for (var i = 0; i < tabs.length; ++i) {
 		if (name == tabs[i][0]) {
 			elem.display(tabs[i][0]+'-wg-tab', true);
+			elem.display(tabs[i][0]+'-wg-status-button', true);
 			for (var j = 0; j < sections.length; ++j) {
 				elem.display('notes-'+sections[j][0], (E(tabs[i][0]+'-'+sections[j][0]+'-wg-tab').classList.contains('active')));
 			}
 		}
-		else
+		else {
 			elem.display(tabs[i][0]+'-wg-tab', false);
+			elem.display(tabs[i][0]+'-wg-status-button', false);
+		}
 	}
 
 	cookie.set(cprefix+'_tab', name);
@@ -1873,6 +1877,24 @@ function init() {
 
 <!-- / / / -->
 
+<div class="section-title">Status</div>
+<div class="section">
+	<div class="fields">
+		<script>
+			for (i = 0; i < tabs.length; ++i) {
+				t = tabs[i][0];
+
+				W('<div id="'+t+'-wg-status-button">');
+				W('<span id="_wireguard'+i+'_notice"><\/span>');
+				W('<input type="button" id="_wireguard'+i+'_button">&nbsp; <img src="spin.gif" alt="" id="spin'+i+'">');
+				W('<\/div>');
+			}
+		</script>
+	</div>
+</div>
+
+<!-- / / / -->
+
 <div class="section-title">Wireguard Configuration</div>
 <div class="section">
 	<script>
@@ -1940,6 +1962,7 @@ function init() {
 			W('<br>');
 
 			W('<div class="section-title">Import Config from File<\/div>');
+			W('<div class="fields">');
 			W('<div>Before importing the configuration, set the correct "Type of VPN" above.<\/div>');
 			W('<br>');
 			W('<div class="import-section">');
@@ -1947,7 +1970,7 @@ function init() {
 			W('<input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')" >');
 			W('<\/div>');
 			W('<br>');
-			W('<\/div>');
+			W('<\/div><\/div>');
 			/* config tab stop */
 
 			/* peers tab start */
@@ -2015,9 +2038,6 @@ function init() {
 			statRefreshes[i].initPage(3000, 0);
 			W('<\/div>');
 			/* status tab end */
-
-			/* start/stop button */
-			W('<div class="vpn-start-stop"><input type="button" value="" onclick="" id="_wireguard'+i+'_button">&nbsp; <img src="spin.gif" alt="" id="spin'+i+'"><\/div>');
 
 			W('<\/div>');
 		}

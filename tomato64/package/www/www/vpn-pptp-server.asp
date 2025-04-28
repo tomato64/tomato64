@@ -278,6 +278,16 @@ function init() {
 
 <!-- / / / -->
 
+<div class="section-title">Status</div>
+<div class="section">
+	<div class="fields">
+		<span id="_pptpd_notice"></span>
+		<input type="button" id="_pptpd_button">&nbsp; <img src="spin.gif" alt="" id="spin">
+	</div>
+</div>
+
+<!-- / / / -->
+
 <div class="section-title">PPTP Server Configuration</div>
 <div class="section">
 	<script>
@@ -300,7 +310,6 @@ function init() {
 			{ title: '<a href="http://poptop.sourceforge.net/" class="new_window">Poptop<\/a><br>Custom configuration', name: 'pptpd_custom', type: 'textarea', value: nvram.pptpd_custom }
 		]);
 	</script>
-	<div class="vpn-start-stop"><input type="button" value="" onclick="" id="_pptpd_button">&nbsp; <img src="spin.gif" alt="" id="spin"></div>
 </div>
 
 <!-- / / / -->

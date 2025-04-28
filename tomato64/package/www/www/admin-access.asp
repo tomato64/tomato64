@@ -47,6 +47,7 @@ function show() {
 	var e = E('_sshd_button');
 	e.value = (isup.dropbear ? 'Stop' : 'Start')+' Now';
 	e.setAttribute('onclick', 'javascript:toggle(\'sshd\','+isup.dropbear+');');
+	E('_sshd_notice').innerHTML = (isup.dropbear ? '<span class="service_up">RUNNING<\/span>' : '<span class="service_down">STOPPED<\/span>');
 	countButton += 1;
 	if (serviceLastUp[0] != isup.dropbear || countButton > 6) {
 		serviceLastUp[0] = isup.dropbear;
@@ -58,6 +59,7 @@ function show() {
 	e = E('_telnetd_button');
 	e.value = ((isup.telnetd) ? 'Stop' : 'Start')+' Now';
 	e.setAttribute('onclick', 'javascript:toggle(\'telnetd\','+(isup.telnetd)+');');
+	E('_telnetd_notice').innerHTML = (isup.telnetd ? '<span class="service_up">RUNNING<\/span>' : '<span class="service_down">STOPPED<\/span>');
 	countButton2 += 1;
 	if (serviceLastUp2[0] != isup.telnetd || countButton2 > 6) {
 		serviceLastUp2[0] = isup.telnetd;
@@ -552,7 +554,10 @@ function init() {
 			{ title: 'Authorized Keys', name: 'sshd_authkeys', type: 'textarea', value: nvram.sshd_authkeys }
 		]);
 	</script>
-	<input type="button" value="" onclick="" id="_sshd_button">&nbsp; <img src="spin.gif" alt="" id="spin"></div>
+	<div class="fields">
+		<span id="_sshd_notice"></span>
+		<input type="button" id="_sshd_button">&nbsp; <img src="spin.gif" alt="" id="spin">
+	</div>
 </div>
 
 <!-- / / / -->
@@ -565,7 +570,10 @@ function init() {
 			{ title: 'Port', name: 'telnetd_port', type: 'text', maxlen: 5, size: 7, value: nvram.telnetd_port }
 		]);
 	</script>
-	<input type="button" value="" onclick="" id="_telnetd_button">&nbsp; <img src="spin.gif" alt="" id="spin2"></div>
+	<div class="fields">
+		<span id="_telnetd_notice"></span>
+		<input type="button" id="_telnetd_button">&nbsp; <img src="spin.gif" alt="" id="spin2">
+	</div>
 </div>
 
 <!-- / / / -->

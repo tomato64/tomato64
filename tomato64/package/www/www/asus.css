@@ -161,8 +161,7 @@ a:hover {
 	background-color: #F2EEED;
 	border: solid 1px #BFBCBB;
 	padding: 10px;
-	margin: 5px;
-	margin-left: 0px;
+	margin: 5px 0 5px 0;
 }
 
 .fields td.title.indent1 {
@@ -315,4 +314,8 @@ li, div {
 
 .about {
 	margin:20px 20px;
+}
+
+span[id$="_notice"] {
+	width: 176px;
 }

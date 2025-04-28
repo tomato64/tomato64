@@ -84,8 +84,10 @@ function tabSelect(name) {
 
 	tabHigh(name);
 
-	for (var i = 0; i < tabs.length; ++i)
+	for (var i = 0; i < tabs.length; ++i) {
 		elem.display(tabs[i][0]+'-tab', (name == tabs[i][0]));
+		elem.display(tabs[i][0]+'-tab-status-button', (name == tabs[i][0]));
+	}
 
 	cookie.set('vpn_server_tab', name);
 }
@@ -905,6 +907,24 @@ function init() {
 
 <!-- / / / -->
 
+<div class="section-title">Status</div>
+<div class="section">
+	<div class="fields">
+		<script>
+			for (i = 0; i < tabs.length; ++i) {
+				t = tabs[i][0];
+
+				W('<div id="'+t+'-tab-status-button">');
+				W('<span id="_vpn'+t+'_notice"><\/span>');
+				W('<input type="button" id="_vpn'+t+'_button">&nbsp; <img src="spin.gif" alt="" id="spin'+(i+1)+'">');
+				W('<\/div>');
+			}
+		</script>
+	</div>
+</div>
+
+<!-- / / / -->
+
 <div class="section-title">OpenVPN Server Configuration</div>
 <div class="section">
 	<script>
@@ -975,7 +995,7 @@ function init() {
 					{ name: 'vpn_'+t+'_r1', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_r1'], prefix: '<span id="'+t+'_range">', suffix: ' - ' },
 					{ name: 'vpn_'+t+'_r2', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_r2'], suffix: '<\/span>' } ] },
 				{ title: 'Local/remote endpoint addresses', multi: [
-					{ name: 'vpn_'+t+'_local', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_local'] },
+					{ name: 'vpn_'+t+'_local', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_local'], suffix: ' ' },
 					{ name: 'vpn_'+t+'_remote', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_remote'] } ] }
 			]);
 			W('<\/div>');
@@ -1080,7 +1100,6 @@ function init() {
 			W('<div id="'+t+'-status-stats"><div class="section-title">General Statistics<\/div><div class="tomato-grid vpn-status-table" id="'+t+'-status-stats-table"><\/div><br><\/div>');
 			W('<\/div>');
 			W('<\/div>');
-			W('<div class="vpn-start-stop"><input type="button" value="" onclick="" id="_vpn'+t+'_button">&nbsp; <img src="spin.gif" alt="" id="spin'+(i+1)+'"><\/div>');
 			W('<\/div>');
 		}
 	</script>

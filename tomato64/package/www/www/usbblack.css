@@ -168,8 +168,7 @@ div.tabs-bottom,
 	background-color: #FAFAFA;
 	border: solid 1px #EEEEEE;
 	padding: 10px;
-	margin: 5px;
-	margin-left: 0px;
+	margin: 5px 0 5px, 0;
 }
 
 .fields td.title.indent1 {
@@ -178,7 +177,17 @@ div.tabs-bottom,
 }
 
 .fields td.title.indent2 {
-	padding: 1px 5px 1px 10px;
+	padding: 1px 5px 1px 14px;
+	font-family: Tahoma, Arial, Sans-serif;
+}
+
+.fields td.title.indent3 {
+	padding: 1px 5px 1px 21px;
+	font-family: Tahoma, Arial, Sans-serif;
+}
+
+.fields td.title.indent4 {
+	padding: 1px 5px 1px 28px;
 	font-family: Tahoma, Arial, Sans-serif;
 }
 
@@ -305,5 +314,9 @@ li, div {
 }
 
 .about {
-	margin:20px 20px;
+	margin: 20px 20px;
+}
+
+span[id$="_notice"] {
+	width: 168px;
 }

@@ -848,18 +848,15 @@ table.fields tr td {
 	margin-left: 20px;
 }
 
-.fields td.title {
-	width: 210px;
-}
-
 .fields td.title.indent1 {
+	width: 220px;
 	padding: unset;
-	padding-right: 10px;
+	padding-right: 15px;
 }
 
 .fields input[type="button"] {
 	margin-left: 20px;
-	margin-right: 0px;
+	margin-right: 0;
 }
 
 .fields input[type="text"][id^="_f_w"][id*="hwaddr"] {
@@ -872,6 +869,10 @@ table.fields tr td {
 
 .fields select[id*="channel"] {
 	width: 250px;
+}
+
+.fields > input[type="button"][id$="_button"] {
+	margin-left: 0;
 }
 
 #afu-warn {
@@ -2082,26 +2083,16 @@ table.fields tr td.wwan-parser-view {
 	margin-bottom: 20px;
 }
 
-#_tor_button,
-#_ftpd_button {
-	margin-left: 65px;
+.service_up {
+	padding: 9px 7px;
 }
 
-#_nginx_button {
-	margin-left: 55px;
+.service_down {
+	padding: 9px 7px;
 }
 
-#_mysqld_button,
-#_samba_button {
-	margin-left: 47px;
-}
-
-#_minidlna_button {
-	margin-left: 39px;
-}
-
-#_transmission_button {
-	margin-left: 12px;
+span[id$="_notice"] {
+	width: 234px;
 }
 
 textarea.as-script {
@@ -2139,10 +2130,6 @@ div#term-helper-div input.term-helper-button {
 
 div#term-helper-div > input#term-helper-icommands {
 	width: 100%;
-}
-
-div.section div.vpn-start-stop {
-	padding: 15px 0 0 0;
 }
 
 .vpn-status-header {

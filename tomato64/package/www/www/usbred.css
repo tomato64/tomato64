@@ -48,7 +48,7 @@ a:hover {
 #navi a:hover {
 	background: #e02600;
 	color: #fff;
-	text-decoration:none;
+	text-decoration: none;
 	border-bottom: #3f4f52 solid 1px;
 }
 
@@ -58,7 +58,7 @@ a:hover {
 }
 
 #navi a.indent1 {
-	padding:4px 0 4px 10px;
+	padding: 4px 0 4px 10px;
 	font-weight: bold;
 }
 
@@ -68,18 +68,9 @@ a:hover {
 
 #content {
 	background-color: #ededed;
+	border: #FFF solid 15px;
 	border-top-width: 0px;
-	border-right-width: 15px;
-	border-bottom-width: 15px;
 	border-left-width: 0px;
-	border-top-style: solid;
-	border-right-style: solid;
-	border-bottom-style: solid;
-	border-left-style: solid;
-	border-top-color: #FFF;
-	border-right-color: #FFF;
-	border-bottom-color: #FFF;
-	border-left-color: #FFF;
 }
 
 #header {
@@ -160,7 +151,7 @@ div.tabs-bottom,
 }
 
 .content a:hover {
-	text-decoration:none;
+	text-decoration: none;
 	color: #fff;
 	background: #e02600;
 	padding: 2px;
@@ -171,8 +162,7 @@ div.tabs-bottom,
 	background-color: #FAFAFA;
 	border: solid 1px #EEEEEE;
 	padding: 10px;
-	margin: 5px;
-	margin-left: 0px;
+	margin: 5px 0 5px 0;
 }
 
 .fields td.title.indent1 {
@@ -302,5 +292,9 @@ li, div {
 }
 
 .about {
-	margin:20px 20px;
+	margin: 20px 20px;
+}
+
+span[id$="_notice"] {
+	width: 168px;
 }

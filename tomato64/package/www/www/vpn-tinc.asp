@@ -36,21 +36,19 @@ function show() {
 	var d = isup.tincd;
 
 	countButton += 1;
-	for (var i = 1; i <= 4; i++) {
-		var e = E('_tinc_button'+i);
-		e.value = (d ? 'Stop' : 'Start')+' Now';
-		e.setAttribute('onclick', 'javascript:toggle(\'tinc\','+d+');');
-		if (serviceLastUp[0] != d || countButton > 6) {
-			e.disabled = 0;
-			E('spin'+i).style.display = 'none';
-		}
+	var e = E('_tinc_button');
+	e.value = (d ? 'Stop' : 'Start')+' Now';
+	e.setAttribute('onclick', 'javascript:toggle(\'tinc\','+d+');');
+	if (serviceLastUp[0] != d || countButton > 6) {
+		e.disabled = 0;
+		E('spin').style.display = 'none';
 	}
 	if (serviceLastUp[0] != d || countButton > 6) {
 		serviceLastUp[0] = d;
 		countButton = 0;
 	}
 
-	E('_tinc_running').innerHTML = 'Tinc is currently '+(d ? 'running ' : 'stopped');
+	E('_tinc_notice').innerHTML = (d ? '<span class="service_up">RUNNING<\/span>' : '<span class="service_down">STOPPED<\/span>');
 	E('edges').disabled = !d;
 	E('connections').disabled = !d;
 	E('subnets').disabled = !d;
@@ -77,15 +75,13 @@ function toggle(service, isup) {
 		changed = 1;
 
 	if (!save_pre()) return;
-	if (changed) alert("Configuration changes were detected - they will be saved");
+	if (changed) alert('Configuration changes detected - will be saved');
 
 	serviceLastUp[0] = isup;
 	countButton = 0;
 
-	for (var i = 1; i <= 4; i++) {
-		E('_'+service+'_button'+i).disabled = 1;
-		E('spin'+i).style.display = 'inline';
-	}
+	E('_'+service+'_button').disabled = 1;
+	E('spin').style.display = 'inline';
 
 	elem.display(E('result'), !isup);
 	if (!isup)
@@ -342,26 +338,6 @@ function updateNodes() {
 	}
 }
 
-function displayVersion() {
-	elem.setInnerHTML(E('version'), escapeText(cmdresult.substring(0, cmdresult.length - 1)));
-	cmdresult = '';
-}
-
-function getVersion() {
-	cmd = new XmlHttp();
-	cmd.onCompleted = function(text, xml) {
-		eval(text);
-		displayVersion();
-	}
-	cmd.onError = function(x) {
-		cmdresult = 'ERROR: '+x;
-		displayVersion();
-	}
-
-	var c = '/usr/sbin/tinc --version | /bin/busybox awk \'NR==1 {print $3}\'';
-	cmd.post('shell.cgi', 'action=execute&command='+escapeCGI(c.replace(/\r/g, '')));
-}
-
 function tabSelect(name) {
 	tgHideIcons();
 	cookie.set(cprefix+'_tab', name);
@@ -492,7 +468,6 @@ function save(nomsg) {
 
 function earlyInit() {
 	tabSelect(cookie.get(cprefix+'_tab') || 'config');
-	getVersion();
 	show();
 	verifyFields(null, 1);
 }
@@ -532,7 +507,17 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title" id="tinc-title">Tinc <span id="version"></span> Configuration</div>
+<div class="section-title">Status</div>
+<div class="section">
+	<div class="fields">
+		<span id="_tinc_notice"></span>
+		<input type="button" id="_tinc_button">&nbsp; <img src="spin.gif" alt="" id="spin">
+	</div>
+</div>
+
+<!-- / / / -->
+
+<div class="section-title" id="tinc-title">Tinc Configuration</div>
 <script>
 	tabCreate.apply(this, tabs);
 
@@ -543,18 +528,17 @@ function init() {
 	W('<div class="section">');
 	createFieldTable('', [
 		{ title: 'Enable on Start', name: 'f_tinc_enable', type: 'checkbox', value: (nvram.tinc_enable == 1) },
+		{ title: 'Poll Interval', name: 'tinc_poll', type: 'text', maxlen: 4, size: 5, value: nvram.tinc_poll, suffix: ' <small>minutes; 0 to disable<\/small>' },
 		{ title: 'Interface Type', name: 'tinc_devicetype', type: 'select', options: [['tun','TUN'],['tap','TAP']], value: nvram.tinc_devicetype },
 		{ title: 'Mode', name: 'tinc_mode', type: 'select', options: [['switch','Switch'],['hub','Hub']], value: nvram.tinc_mode },
 		{ title: 'VPN Netmask', name: 'tinc_vpn_netmask', type: 'text', maxlen: 15, size: 25, value: nvram.tinc_vpn_netmask,  suffix: ' <small>netmask for the entire VPN network<\/small>' },
 		{ title: 'Host Name', name: 'tinc_name', type: 'text', maxlen: 30, size: 25, value: nvram.tinc_name, suffix: ' <small>must also be defined in the \'Hosts\' area<\/small>' },
-		{ title: 'Poll Interval', name: 'tinc_poll', type: 'text', maxlen: 4, size: 5, value: nvram.tinc_poll, suffix: ' <small>minutes; 0 to disable<\/small>' },
 		{ title: 'Ed25519 Private Key', name: 'tinc_private_ed25519', type: 'textarea', value: nvram.tinc_private_ed25519 },
 		{ title: 'RSA Private Key *', name: 'tinc_private_rsa', type: 'textarea', value: nvram.tinc_private_rsa },
 		{ title: 'Custom', name: 'tinc_custom', type: 'textarea', value: nvram.tinc_custom }
 	]);
 
 	W('<small><b style="font-size: 1.5em">*<\/b> Only required to create legacy connections with tinc1.0 nodes.<\/small>');
-	W('<div class="vpn-start-stop"><input type="button" value="" onclick="" id="_tinc_button1">&nbsp; <img src="spin.gif" alt="" id="spin1"><\/div>');
 	W('<\/div><\/div>');
 	/* -------- END CONFIG TAB ----------- */
 
@@ -572,7 +556,6 @@ function init() {
 	]);
 
 	W('<small><b style="font-size: 1.5em">*<\/b> Only required to create legacy connections with tinc1.0 nodes.<\/small>');
-	W('<div class="vpn-start-stop"><input type="button" value="" onclick="" id="_tinc_button2">&nbsp; <img src="spin.gif" alt="" id="spin2"><\/div>');
 	W('<\/div>');
 
 	W('<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,\'hosts\');"><span id="sesdiv_hosts_showhide">(Show)<\/span><\/a><\/i><\/small><\/div>');
@@ -605,7 +588,6 @@ function init() {
 		{ title: 'subnet-down', name: 'tinc_subnet_down', type: 'textarea', value: nvram.tinc_subnet_down }
 	]);
 
-	W('<div class="vpn-start-stop"><input type="button" value="" onclick="" id="_tinc_button3">&nbsp; <img src="spin.gif" alt="" id="spin3"><\/div>');
 	W('<\/div><\/div>');
 	/* -------- END SCRIPTS TAB ----------- */
 
@@ -630,7 +612,6 @@ function init() {
 	W('<div class="fields">');
 
 	W('<div class="section">');
-	W('<div class="vpn-start-stop"><span id="_tinc_running"><\/span> <input type="button" value="" onclick="" id="_tinc_button4">&nbsp; <img src="spin.gif" alt="" id="spin4"><\/div>');
 	W('<\/div>');
 
 	W('<div class="section">');

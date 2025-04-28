@@ -139,7 +139,7 @@ ul.tabs a,
 .fields {
 	font-family: Tahoma, Arial, Sans-serif;
 	border: solid 1px #ccc;
-	margin: 5px 5px 5px 0;
+	margin: 5px 0 5px 0;
 	padding: 10px;
 	background: #FAFAFA;
 }
@@ -281,4 +281,8 @@ input[type="submit"]:hover {
 
 #tg-row-panel img  {
 	margin-top: 23%;
+}
+
+span[id$="_notice"] {
+	width: 168px;
 }

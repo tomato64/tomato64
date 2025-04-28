@@ -43,13 +43,11 @@ a:hover {
 #navi {
 	font-family: Tahoma, Arial, Sans-serif;
 	width: 160px;
-	border-color: #FFF;
-	border-style: solid;
-	border-width: 3px 0 3px 3px;
+	border: #FFF solid 3px 0 3px 3px;
 	background: #F0F0F0;
 }
 
-#navi a{
+#navi a {
 	color: #5C5C5C;
 	font-family: Tahoma, Arial, Sans-serif;
 	border-bottom: #D4D4D4 solid 1px;
@@ -138,7 +136,7 @@ ul.tabs a,
 .fields {
 	font-family: Tahoma, Arial, Sans-serif;
 	border: solid 1px #ccc;
-	margin: 5px 5px 5px 0;
+	margin: 5px 0 5px 0;
 	padding: 10px;
 	background: #FAFAFA;
 }
@@ -287,4 +285,8 @@ input[type="submit"]:hover {
 
 #tg-row-panel img  {
 	margin-top: 23%;
+}
+
+span[id$="_notice"] {
+	width: 168px;
 }

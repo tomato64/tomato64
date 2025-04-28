@@ -126,6 +126,16 @@ function init() {
 
 <!-- / / / -->
 
+<div class="section-title">Status</div>
+<div class="section">
+	<div class="fields">
+		<span id="_pptpclient_notice"></span>
+		<input type="button" id="_pptpclient_button">&nbsp; <img src="spin.gif" alt="" id="spin">
+	</div>
+</div>
+
+<!-- / / / -->
+
 <div class="section-title">PPTP Client Configuration</div>
 <div class="section">
 	<script>
@@ -157,7 +167,6 @@ function init() {
 			{ title: 'Custom Configuration', name: 'pptp_client_custom', type: 'textarea', value: nvram.pptp_client_custom }
 		]);
 	</script>
-	<div class="vpn-start-stop"><input type="button" value="" onclick="" id="_pptpclient_button">&nbsp; <img src="spin.gif" alt="" id="spin"></div>
 </div>
 
 <!-- / / / -->

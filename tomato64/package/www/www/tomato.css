@@ -309,12 +309,9 @@ table.fields {
 	padding: 2px 0;
 }
 
-.fields td.title {
-	width: 160px;
-}
-
 .fields td.title.indent1 {
-	padding: 1px 5px 1px 7px;
+	width: 160px;
+	padding: 1px 15px 1px 0px;
 }
 
 .fields td.title.indent2 {
@@ -693,7 +690,6 @@ embed[type="image/svg+xml"] {
 }
 
 .note-spacer,
-.vpn-start-stop,
 .iperf_status_table,
 .afu-info-table {
 	padding-top: 10px;
@@ -1676,6 +1672,31 @@ span[id^="note_cktime2_"] {
 }
 @keyframes blinker {
 	50% { opacity: 0; }
+}
+
+.service_up {
+	background-color: #32CD32;
+	color: white;
+	padding: 5px 6px;
+	margin-left: 6px;
+	border-radius: 4px;
+	font-weight: bold;
+}
+
+.service_down {
+	background-color: #FF4500;
+	color: white;
+	padding: 5px 6px;
+	margin-left: 6px;
+	border-radius: 4px;
+	font-weight: bold;
+}
+
+span[id$="_notice"] {
+	display: inline-block;
+	padding-left: 0;
+	vertical-align: middle;
+	width: 177px;
 }
 
 /* SVG */
