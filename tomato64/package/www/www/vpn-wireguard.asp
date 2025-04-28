@@ -1003,7 +1003,9 @@ function clearPeerFields(unit) {
 	E('_f_wg'+unit+'_peer_ka').value = '';
 	E('_f_wg'+unit+'_peer_fwmark').value = '';
 
-	E('wg'+unit+'_peer_add').value = 'Add to Peers';
+	var button = E('wg'+unit+'_peer_add');
+	button.value = 'Add to Peers';
+	button.setAttribute('onclick', 'addPeer('+unit+')');
 }
 
 function addPeer(unit, quiet) {
