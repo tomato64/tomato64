@@ -593,10 +593,14 @@ static int wg_route_peer_allowed_ips(char *iface, const char *allowed_ips, const
 	char *aip, *b, *table, *rt, *tp, *ip, *nm;
 	int route_type = 1, result = 0;
 	char buffer[BUF_SIZE_32];
+	char tmp[BUF_SIZE_16];
 
 	/* check which routing type the user specified */
 	memset(buffer, 0, BUF_SIZE_32);
+	memset(tmp, 0, BUF_SIZE_16);
 	snprintf(buffer, BUF_SIZE_32, "%s_route", iface);
+	snprintf(tmp, BUF_SIZE_16, "%s_com", iface);
+
 	tp = b = strdup(nvram_safe_get(buffer));
 	if (tp) {
 		if (vstrsep(b, "|", &rt, &table) < 3)
@@ -621,13 +625,19 @@ static int wg_route_peer_allowed_ips(char *iface, const char *allowed_ips, const
 #endif
 				}
 			}
-			if (route_type == 1) { /* Auto */
-				if (wg_route_peer(iface, buffer))
-					result = -1;
+
+			if (nvram_get_int(tmp) != 3) { /* !'External - VPN Provider' */
+				if (route_type == 1) { /* Auto */
+					logmsg(LOG_DEBUG, "*** %s: running wg_route_peer() iface=[%s] buffer=[%s]", __FUNCTION__, iface, buffer);
+					if (wg_route_peer(iface, buffer))
+						result = -1;
+				}
+				else /* Custom Table */ {
+					logmsg(LOG_DEBUG, "*** %s: running wg_route_peer_custom() iface=[%s] buffer=[%s] table=[%s]", __FUNCTION__, iface, buffer, table);
+					if (wg_route_peer_custom(iface, buffer, table))
+						result = -1;
+				}
 			}
-			else /* Custom Table */
-				if (wg_route_peer_custom(iface, buffer, table))
-					result = -1;
 		}
 		if (aip)
 			free(aip);
