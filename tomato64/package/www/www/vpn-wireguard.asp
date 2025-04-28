@@ -720,7 +720,7 @@ PeerGrid.prototype.edit = function(cell) {
 
 PeerGrid.prototype.insertData = function(at, data) {
 	if (at == -1)
-		at = this.tb.rows.length ;
+		at = this.tb.rows.length;
 
 	var view = this.dataToView(data);
 	var qr = '';
@@ -1002,11 +1002,21 @@ function clearPeerFields(unit) {
 	E('_f_wg'+unit+'_peer_aip').value = '';
 	E('_f_wg'+unit+'_peer_ka').value = '';
 	E('_f_wg'+unit+'_peer_fwmark').value = '';
+
+	E('wg'+unit+'_peer_add').value = 'Add to Peers';
 }
 
 function addPeer(unit, quiet) {
 	if (!verifyPeerFields(unit))
 		return;
+
+	if (E('_wg'+unit+'_com').value == 3) { /* 'External - VPN Provider' - allow only one peer (us) */
+		var rows = peerTables[unit].getAllData().length;
+		if (rows > 0) {
+			alert('In "External - VPN Provider" mode you can only add one peer (this router)')
+			return;
+		}
+	}
 
 	changed = 1;
 
@@ -2030,7 +2040,7 @@ function init() {
 				{ title: 'VPN Interface IP', name: 'f_'+t+'_peer_ip', type: 'text', placeholder: 'CIDR format', maxlen: 64, size: 64 },
 				{ title: 'Allowed IPs', name: 'f_'+t+'_peer_aip', type: 'text', placeholder: 'CIDR format / comma separated', maxlen: 128, size: 64 },
 				{ title: 'Peer behind NAT', name: 'f_'+t+'_peer_ka', type: 'text', maxlen: 2, size: 4, value: '', suffix: '&nbsp;<small>enables keepalives from this peer towards the other peers (range 0 - 99 secs; 0 to disable)<\/small>' },
-				{ title: '', custom: '<input type="button" value="Add to Peers" onclick="addPeer('+i+')" id="'+t+'_peer_add">' }
+				{ title: '', custom: '<input type="button" value="Add to Peers" onclick="addPeer('+i+')" id="'+t+'_peer_add"> <input type="button" value="Clean" onclick="clearPeerFields('+i+')" id="'+t+'_peer_clean">' }
 			]);
 			W('<\/div>');
 			/* peers tab stop */
