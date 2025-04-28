@@ -509,16 +509,23 @@ static int wg_set_peer_keepalive(char *iface, char *pubkey, char *keepalive)
 static int wg_set_peer_endpoint(char *iface, char *pubkey, const char *endpoint, const char *port)
 {
 	char buffer[BUF_SIZE_64];
+	char tmp[BUF_SIZE_16];
 
+	memset(tmp, 0, BUF_SIZE_16);
 	memset(buffer, 0, BUF_SIZE_64);
-	snprintf(buffer, BUF_SIZE_64, "%s:%s", endpoint, port);
+	snprintf(tmp, BUF_SIZE_16, "%s_com", iface);
+
+	if (nvram_get_int(tmp) == 3) /* 'External - VPN Provider' */
+		snprintf(buffer, BUF_SIZE_64, "%s", endpoint);
+	else
+		snprintf(buffer, BUF_SIZE_64, "%s:%s", endpoint, port);
 
 	if (eval("wg", "set", iface, "peer", pubkey, "endpoint", buffer)) {
-		logmsg(LOG_WARNING, "unable to add endpoint of %s:%s to peer %s on wireguard interface %s!", endpoint, port, pubkey, iface);
+		logmsg(LOG_WARNING, "unable to add endpoint of %s to peer %s on wireguard interface %s!", buffer, pubkey, iface);
 		return -1;
 	}
 	else
-		logmsg(LOG_DEBUG, "endpoint of %s:%s has been added to peer %s on wireguard interface %s", endpoint, port, pubkey, iface);
+		logmsg(LOG_DEBUG, "endpoint of %s has been added to peer %s on wireguard interface %s", buffer, pubkey, iface);
 
 	return 0;
 }
