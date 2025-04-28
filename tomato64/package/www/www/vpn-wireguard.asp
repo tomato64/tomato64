@@ -1940,7 +1940,8 @@ function init() {
 			W('<br>');
 
 			W('<div class="section-title">Import Config from File<\/div>');
-			W('<div>Before importing the configuration, set the correct "Type of VPN".<\/div>');
+			W('<div>Before importing the configuration, set the correct "Type of VPN" above.<\/div>');
+			W('<br>');
 			W('<div class="import-section">');
 			W('<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File">');
 			W('<input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')" >');
