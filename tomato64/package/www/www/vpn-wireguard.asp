@@ -352,6 +352,7 @@ function validateConfig(config) {
 
 function mapConfig(contents) {
 	var lines = contents.split('\n');
+	var unit = event.target.unit;
 	var config = {
 		'interface': {},
 		'peers': []
@@ -455,7 +456,10 @@ function mapConfig(contents) {
 					target.allowed_ips = [target.allowed_ips, value].join(',');
 				break;
 			case 'endpoint':
-				target.endpoint = value.split(':')[0];;
+				if (E('_wg'+unit+'_com').value == 3) /* 'External - VPN Provider' */
+					target.endpoint = value;
+				else
+					target.endpoint = value.split(':')[0];
 				break;
 			case 'persistentkeepalive':
 				target.keepalive = value;
