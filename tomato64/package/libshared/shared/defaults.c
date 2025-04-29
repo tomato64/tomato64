@@ -2209,7 +2209,7 @@ struct nvram_tuple router_defaults[] = {
 
 	{"wifi_phy0_band",		"2g"				, 0 },
 	{"wifi_phy0_mode",		"ax"				, 0 },
-	{"wifi_phy0_channel",		"1"				, 0 },
+	{"wifi_phy0_channel",		"auto"				, 0 },
 	{"wifi_phy0_width",		"20"				, 0 },
 	{"wifi_phy0_brates",		""				, 0 },
 	{"wifi_phy0_noscan",		""				, 0 },
@@ -2219,7 +2219,7 @@ struct nvram_tuple router_defaults[] = {
 
 	{"wifi_phy1_band",		"5g"				, 0 },
 	{"wifi_phy1_mode",		"ax"				, 0 },
-	{"wifi_phy1_channel",		"36"				, 0 },
+	{"wifi_phy1_channel",		"auto"				, 0 },
 	{"wifi_phy1_width",		"80"				, 0 },
 	{"wifi_phy1_brates",		""				, 0 },
 	{"wifi_phy1_noscan",		""				, 0 },
@@ -2229,7 +2229,7 @@ struct nvram_tuple router_defaults[] = {
 
 	{"wifi_phy2_band",		"5g"				, 0 },
 	{"wifi_phy2_mode",		"ax"				, 0 },
-	{"wifi_phy2_channel",		"36"				, 0 },
+	{"wifi_phy2_channel",		"auto"				, 0 },
 	{"wifi_phy2_width",		"80"				, 0 },
 	{"wifi_phy2_brates",		""				, 0 },
 	{"wifi_phy2_noscan",		""				, 0 },

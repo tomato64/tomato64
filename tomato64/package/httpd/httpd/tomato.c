@@ -2147,7 +2147,7 @@ static const nvset_t nvset_list[] = {
 #ifdef TOMATO64
 	{"wifi_phy0_band",		V_TEXT(2, 2)			},	/* 2G, 5G, 6G */
 	{"wifi_phy0_mode",		V_TEXT(1, 6)			},	/* n, ac, ax, be, legacy */
-	{"wifi_phy0_channel",		V_TEXT(1, 3)			},	/* 1 - 165+ */
+	{"wifi_phy0_channel",		V_TEXT(1, 4)			},	/* 1 - 165+, auto  */
 	{"wifi_phy0_width",		V_TEXT(2, 3)			},	/* 20, 40, 80, 160, 320 */
 	{"wifi_phy0_brates",		V_NONE				},	/* legacy b rates */
 	{"wifi_phy0_noscan",		V_NONE				},	/* Force 40MHz mode */
@@ -2157,7 +2157,7 @@ static const nvset_t nvset_list[] = {
 
 	{"wifi_phy1_band",		V_TEXT(2, 2)			},	/* 2G, 5G, 6G */
 	{"wifi_phy1_mode",		V_TEXT(1, 6)			},	/* n, ac, ax, be, legacy */
-	{"wifi_phy1_channel",		V_TEXT(1, 3)			},	/* 1 - 165+ */
+	{"wifi_phy1_channel",		V_TEXT(1, 4)			},	/* 1 - 165+, auto  */
 	{"wifi_phy1_width",		V_TEXT(2, 3)			},	/* 20, 40, 80, 160, 320 */
 	{"wifi_phy1_brates",		V_NONE				},	/* legacy b rates */
 	{"wifi_phy1_noscan",		V_NONE				},	/* Force 40MHz mode */
@@ -2167,7 +2167,7 @@ static const nvset_t nvset_list[] = {
 
 	{"wifi_phy2_band",		V_TEXT(2, 2)			},	/* 2G, 5G, 6G */
 	{"wifi_phy2_mode",		V_TEXT(1, 6)			},	/* n, ac, ax, be, legacy */
-	{"wifi_phy2_channel",		V_TEXT(1, 3)			},	/* 1 - 165+ */
+	{"wifi_phy2_channel",		V_TEXT(1, 4)			},	/* 1 - 165+, auto */
 	{"wifi_phy2_width",		V_TEXT(2, 3)			},	/* 20, 40, 80, 160, 320 */
 	{"wifi_phy2_brates",		V_NONE				},	/* legacy b rates */
 	{"wifi_phy2_noscan",		V_NONE				},	/* Force 40MHz mode */

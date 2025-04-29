@@ -203,6 +203,7 @@ function displayChannels(device) {
 	var channels = [];
 	var result = cmdresult.split('\n');
 
+	channels.push(['auto', 'auto']);
 	for (var i = 0; i < result.length; i++) {
 		if (result[i] !== "") {
 			var result2 = result[i].split(/\s+/);
