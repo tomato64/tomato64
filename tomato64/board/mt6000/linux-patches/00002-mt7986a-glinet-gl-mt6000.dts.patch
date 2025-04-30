@@ -1,6 +1,6 @@
-From 67a7692f85929a1f7dbeccc776946563cdc690ad Mon Sep 17 00:00:00 2001
+From 22a52dfb8b0a43c46b91937f5972e4086fcffa52 Mon Sep 17 00:00:00 2001
 From: lancethepants <lancethepants@gmail.com>
-Date: Fri, 23 Aug 2024 10:04:58 -0600
+Date: Wed, 30 Apr 2025 10:47:33 -0600
 Subject: [PATCH] mt7986a-glinet-gl-mt6000.dts
 
 ---
@@ -23,7 +23,7 @@ index 4e60dce42..cd02f42ce 100644
  dtb-$(CONFIG_ARCH_MEDIATEK) += mt8173-elm-hana.dtb
 diff --git a/arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts b/arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts
 new file mode 100644
-index 000000000..fe55f2ea3
+index 000000000..04b690d6a
 --- /dev/null
 +++ b/arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts
 @@ -0,0 +1,354 @@
@@ -85,12 +85,12 @@ index 000000000..fe55f2ea3
 +	leds {
 +		compatible = "gpio-leds";
 +
-+		led_blue: led@0 {
++		led_blue: led-0 {
 +			label = "blue:run";
 +			gpios = <&pio 38 GPIO_ACTIVE_LOW>;
 +		};
 +
-+		led_white: led@1 {
++		led_white: led-1 {
 +			label = "white:system";
 +			gpios = <&pio 37 GPIO_ACTIVE_LOW>;
 +		};
@@ -382,5 +382,5 @@ index 000000000..fe55f2ea3
 +	};
 +};
 -- 
-2.39.2
+2.39.5
 
