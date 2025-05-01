@@ -1943,7 +1943,9 @@ void stop_lan(void)
 							ifname = tmp;
 						}
 					}
+#ifndef TOMATO64
 					eval("wlconf", ifname, "down");
+#endif /* TOMATO64 */
 					ifconfig(ifname, 0, NULL, NULL);
 					eval("brctl", "delif", lan_ifname, ifname);
 #ifndef TOMATO64
@@ -1962,9 +1964,11 @@ void stop_lan(void)
 #endif /* TOMATO64 */
 			eval("brctl", "delbr", lan_ifname);
 		}
+#ifndef TOMATO64
 		else if (*lan_ifname) {
 			eval("wlconf", lan_ifname, "down");
 		}
+#endif /* TOMATO64 */
 	}
 #ifndef TOMATO64
 #if !defined(TCONFIG_DHDAP) && !defined(TCONFIG_USBAP) /* do not unload driver for USBAP/sdk7 */
