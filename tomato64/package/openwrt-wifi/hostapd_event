@@ -1,0 +1,22 @@
+#!/bin/sh
+
+log_message() {
+	logger -p user.info -t hostapd_disconnect "$1"
+}
+
+if [ "$3" = "<3>AP-STA-DISCONNECTED" ]; then
+	mac=$(echo "$4")
+	if [ -n "$mac" ]; then
+		ip=$(arp -n | grep -i $mac | awk '{print $2}' | tr -d '()')
+		if [ -n "$ip" ]; then
+			arp -d "$ip" 2>/dev/null
+			if [ $? -eq 0 ]; then
+				log_message "Successfully deleted ARP entry for IP $ip (MAC $mac)"
+			else
+				log_message "Failed to delete ARP entry for IP $ip (MAC $mac)"
+			fi
+		fi
+	fi
+fi
+
+exit 0

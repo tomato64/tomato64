@@ -214,6 +214,7 @@ define HOSTAPD_OPENWRT_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 0755 $(@D)/wpad $(TARGET_DIR)/usr/sbin/
 	ln -sf wpad $(TARGET_DIR)/usr/sbin/hostapd
 	ln -sf wpad $(TARGET_DIR)/usr/sbin/wpa_supplicant
+	$(INSTALL) -m 0755 $(@D)/hostapd/hostapd_cli $(TARGET_DIR)/usr/sbin/
 
 	$(INSTALL) -d $(TARGET_DIR)/usr/share/hostap/
 	$(INSTALL) -m 0644 $(BR2_EXTERNAL_TOMATO64_PATH)/package/hostapd-openwrt/files/hostapd.uc $(TARGET_DIR)/usr/share/hostap/

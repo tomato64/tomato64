@@ -49,6 +49,7 @@ define OPENWRT_WIFI_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/start_wifi.sh $(TARGET_DIR)/usr/bin/
 	$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/enumerate-phy.sh $(TARGET_DIR)/usr/bin/
 	$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/packet-steering $(TARGET_DIR)/usr/bin/
+	$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/hostapd_event $(TARGET_DIR)/usr/bin/
 endef
 
 $(eval $(generic-package))

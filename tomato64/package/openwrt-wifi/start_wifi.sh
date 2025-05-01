@@ -190,5 +190,11 @@ if [ "${enabled_interface}" == "1" ];
 then
 	start-stop-daemon -b -S -n ubusd -x /usr/sbin/ubusd
 	start-stop-daemon -b -S -n hostapd -x /usr/sbin/hostapd -- -s -g /var/run/hostapd/global
+
+	while ! hostapd_cli -s /var/run/hostapd/ -i global ping > /dev/null 2>&1; do
+		sleep .1
+	done
+	/usr/sbin/hostapd_cli -B -s /var/run/hostapd/ -i global -a /usr/bin/hostapd_event
+
 	start-stop-daemon -b -S -n netifd -x /usr/sbin/netifd
 fi
