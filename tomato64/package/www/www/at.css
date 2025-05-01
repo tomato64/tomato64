@@ -795,6 +795,7 @@ div#vlan-grid tr.header .co3,
 div#vlan-grid tr.header .co5,
 div#vlan-grid tr.header .co7,
 div#vlan-grid tr.header .co9,
+/* TOMATO64-REMOVE-BEGIN */
 /* EXTSW-NO-BEGIN */
 div#vlan-grid tr.header .co11 {
 /* EXTSW-NO-END */
@@ -802,6 +803,14 @@ div#vlan-grid tr.header .co11 {
 div#vlan-grid tr.header .co11,
 div#vlan-grid tr.header .co13 {
 /* EXTSW-END */
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+div#vlan-grid tr.header .co11,
+div#vlan-grid tr.header .co13,
+div#vlan-grid tr.header .co15,
+div#vlan-grid tr.header .co17,
+div#vlan-grid tr.header .co19 {
+/* TOMATO64-END */
 	width: 100px;
 	padding-right: 0px;
 	padding-left: 0px;

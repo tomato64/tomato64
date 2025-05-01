@@ -1267,7 +1267,12 @@ div[id$="peers-grid"] .co2,
 }
 
 #vlan-grid .co2 {
+/* TOMATO64-REMOVE-BEGIN */
 	width: 60px;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	width: 50px;
+/* TOMATO64-END */
 }
 
 #ara-grid .co1,
