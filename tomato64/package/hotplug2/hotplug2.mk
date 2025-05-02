@@ -12,6 +12,7 @@ HOTPLUG2_LICENSE = tomato
 
 define HOTPLUG2_BUILD_CMDS
 	patch -d $(@D) -p1 < $(BR2_EXTERNAL_TOMATO64_PATH)/package/hotplug2/0001-hotplug2-run-wifi-config-on-ieee80211-events.patch
+	$(if $(BR2_PACKAGE_PLATFORM_MT6000),patch -d $(@D) -p1 < $(BR2_EXTERNAL_TOMATO64_PATH)/package/hotplug2/0002-hotplug2-run-packet-steering-on-net-events.patch)
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)
 endef
 
