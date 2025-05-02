@@ -309,9 +309,20 @@ table.fields {
 	padding: 2px 0;
 }
 
+/* TOMATO64-BEGIN */
+.fields td.title {
+	width: 160px;
+}
+/* TOMATO64-END */
+
 .fields td.title.indent1 {
+/* TOMATO64-REMOVE-BEGIN */
 	width: 160px;
 	padding: 1px 15px 1px 0px;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	padding: 1px 5px 1px 7px;
+/* TOMATO64-END */
 }
 
 .fields td.title.indent2 {
