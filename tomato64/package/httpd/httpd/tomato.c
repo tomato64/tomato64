@@ -2068,6 +2068,7 @@ static const nvset_t nvset_list[] = {
 /* wireguard */
 	{ "wg_adns",			V_NONE				},
 	{ "wg0_enable",			V_01				},
+	{ "wg0_poll",			V_RANGE(0, 30)			},
 	{ "wg0_file",			V_TEXT(0, 64)			},
 	{ "wg0_key",			V_TEXT(0, 44)			},
 	{ "wg0_endpoint",		V_NONE				},
@@ -2093,6 +2094,7 @@ static const nvset_t nvset_list[] = {
 	{ "wg0_peer_dns",		V_TEXT(0, 128)			},
 	{ "wg0_peers",			V_NONE				},
 	{ "wg1_enable",			V_01				},
+	{ "wg1_poll",			V_RANGE(0, 30)			},
 	{ "wg1_file",			V_TEXT(0, 64)			},
 	{ "wg1_key",			V_TEXT(0, 44)			},
 	{ "wg1_endpoint",		V_NONE				},
@@ -2118,6 +2120,7 @@ static const nvset_t nvset_list[] = {
 	{ "wg1_peer_dns",		V_TEXT(0, 128)			},
 	{ "wg1_peers",			V_NONE				},
 	{ "wg2_enable",			V_01				},
+	{ "wg2_poll",			V_RANGE(0, 30)			},
 	{ "wg2_file",			V_TEXT(0, 64)			},
 	{ "wg2_key",			V_TEXT(0, 44)			},
 	{ "wg2_endpoint",		V_NONE				},
