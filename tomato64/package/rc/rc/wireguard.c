@@ -281,12 +281,12 @@ static void wg_cleanup_dirs(void) {
 static void wg_setup_watchdog(const int unit)
 {
 	FILE *fp;
-	char buffer[BUF_SIZE_64], buffer2[BUF_SIZE_32];
+	char buffer[BUF_SIZE_64], buffer2[BUF_SIZE_64];
 	char taskname[24];
 	int nvi;
 
-	memset(buffer2, 0, BUF_SIZE_32);
-	snprintf(buffer2, BUF_SIZE_32, "wg%d_poll", unit);
+	memset(buffer2, 0, BUF_SIZE_64);
+	snprintf(buffer2, BUF_SIZE_64, "wg%d_poll", unit);
 	if ((nvi = nvram_get_int(buffer2)) > 0) {
 		memset(buffer, 0, BUF_SIZE_64);
 		snprintf(buffer, BUF_SIZE_64, WG_SCRIPTS_DIR"/watchdog%d.sh", unit);
@@ -294,7 +294,7 @@ static void wg_setup_watchdog(const int unit)
 		if ((fp = fopen(buffer, "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "ISUP=$(cat /sys/class/net/wg%d/operstate)\n"
-			            "[ \"$ISUP\" != \"unknown\" -o \"$ISUP\" != \"up\" ] && [ \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
+			            "[ \"$ISUP\" != \"unknown\" -a \"$ISUP\" != \"up\" ] && [ \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
 			            " logger -t wg-watchdog wg%d stopped? Starting...\n"
 			            " service wireguard%d restart\n"
 			            "}\n",
@@ -306,8 +306,8 @@ static void wg_setup_watchdog(const int unit)
 
 			memset(taskname, 0, sizeof(taskname));
 			snprintf(taskname, sizeof(taskname),"CheckWireguard%d", unit);
-			memset(buffer2, 0, BUF_SIZE_32);
-			snprintf(buffer2, BUF_SIZE_32, "*/%d * * * * %s", nvi, buffer);
+			memset(buffer2, 0, BUF_SIZE_64);
+			snprintf(buffer2, BUF_SIZE_64, "*/%d * * * * %s", nvi, buffer);
 			eval("cru", "a", taskname, buffer2);
 		}
 	}
@@ -631,7 +631,6 @@ static int wg_route_peer_allowed_ips(char *iface, const char *allowed_ips, const
 	char buffer[BUF_SIZE_32];
 	char tmp[BUF_SIZE_16];
 
-	/* check which routing type the user specified */
 	memset(buffer, 0, BUF_SIZE_32);
 	memset(tmp, 0, BUF_SIZE_16);
 	snprintf(buffer, BUF_SIZE_32, "%s_route", iface);
