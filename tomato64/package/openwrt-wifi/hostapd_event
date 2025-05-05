@@ -10,11 +10,11 @@ if [ "$3" = "<3>AP-STA-DISCONNECTED" ]; then
 		entry=$(ip neigh show | grep -i $mac)
 		if [ -n "$entry" ]; then
 			ip=$(echo $entry | awk '{print $1}')
-			ip neigh del "$ip" dev "$(echo $entry | awk '{print $3}')" 2>/dev/null
+			ip neigh change "$ip" nud none dev "$(echo $entry | awk '{print $3}')" 2>/dev/null
 			if [ $? -eq 0 ]; then
-				log_message "Successfully deleted neighbor entry for IP $ip (MAC $mac)"
+				log_message "Successfully removed neighbor entry for IP $ip (MAC $mac)"
 			else
-				log_message "Failed to delete neighbor entry for IP $ip (MAC $mac)"
+				log_message "Failed to remove neighbor entry for IP $ip (MAC $mac)"
 			fi
 		fi
 	fi
