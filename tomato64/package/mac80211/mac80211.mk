@@ -8,7 +8,7 @@ MAC80211_VERSION = 6.12.6
 MAC80211_SOURCE = backports-$(MAC80211_VERSION).tar.xz
 MAC80211_SITE = http://mirror2.openwrt.org/sources
 MAC80211_LICENSE = GPL-3.0
-MAC80211_DEPENDENCIES = linux
+MAC80211_DEPENDENCIES = linux host-flex
 MAC80211_INSTALL_STAGING = YES
 
 define MAC80211_BUILD_CMDS
@@ -33,6 +33,7 @@ define MAC80211_BUILD_CMDS
 	cmd_syscalls= \
 	KBUILD_EXTRA_SYMBOLS="$(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/gpio-button-hotplug.symvers $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/mac80211.symvers $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/mt76.symvers" \
 	CC="aarch64-tomato64-linux-musl-" \
+	LEX="flex" \
 	KERNELRELEASE=$(LINUX_VERSION) \
 	EXTRA_CFLAGS="-I$(@D)/include -fmacro-prefix-map=$(@D)=mac80211-$(MAC80211_VERSION) " \
 	KLIB_BUILD=$(LINUX_DIR) \
@@ -61,6 +62,7 @@ define MAC80211_BUILD_CMDS
 	cmd_syscalls= \
 	KBUILD_EXTRA_SYMBOLS="$(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/gpio-button-hotplug.symvers $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/mac80211.symvers $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/mt76.symvers" \
 	CC=$(TARGET_CC) \
+	LEX="flex" \
 	KERNELRELEASE=$(LINUX_VERSION) \
 	EXTRA_CFLAGS="-I$(@D)/include -fmacro-prefix-map=$(@D)=mac80211-$(MAC80211_VERSION) " \
 	KLIB_BUILD=$(LINUX_DIR) \
