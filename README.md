@@ -1,7 +1,9 @@
 Tomato64 is a port of tomato firmware to the x86_64 and arm64 (GL-MT6000) architectures.
 
-To build Tomato64 run:
+To build Tomato64 use Debian 12 and run:
 ```sh
+apt install bc build-essential git libncurses-dev rsync unzip u-boot-tools
+
 git clone https://github.com/tomato64/tomato64.git
 cd tomato64
 
@@ -12,6 +14,6 @@ make mt6000 (GL-MT6000/Flint 2)
 make distclean (between builds)
 ```
 
-The software sources are downloaded to `~/buildroot-src/` and will be used in subsequent builds instead of being redownloaded. The build system creates a cache at `~/.buildroot-ccache` which is used to speed up later builds. Tomato64 is known to build on Debian 12.
+The software sources are downloaded to `~/buildroot-src/` and will be used in subsequent builds instead of being redownloaded. The build system creates a cache at `~/.buildroot-ccache` which is used to speed up later builds. Plan on allocating 50GB+ disk space to compile all variants.
 
 The resulting images are found in `./src/buildroot/output/images`
