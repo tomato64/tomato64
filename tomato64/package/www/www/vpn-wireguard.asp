@@ -200,9 +200,14 @@ function updateForm(num) {
 }
 
 function loadConfig(unit) {
-	var [file] = E('wg'+unit+'_config_file').files;
+	if (isup['wireguard'+unit]) {
+		alert('Before importing the configuration file, you must first stop this unit');
+		return;
+	}
 
+	var [file] = E('wg'+unit+'_config_file').files;
 	var index = file.name.lastIndexOf('.');
+
 	if (file.name.slice(index).toLowerCase() != '.conf') {
 		alert('Only files that end in ".conf" are accepted for import');
 		return;
