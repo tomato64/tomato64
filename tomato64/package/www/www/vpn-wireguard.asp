@@ -1978,11 +1978,13 @@ function init() {
 				{ title: 'FWMark', name: t+'_fwmark', type: 'text', maxlen: 8, size: 8, value: nvram[t+'_fwmark'] },
 				{ title: 'MTU', name: t+'_mtu', type: 'text', maxlen: 4, size: 4, value: nvram[t+'_mtu'] },
 				{ title: 'Respond to DNS', name: 'f_'+t+'_adns', type: 'checkbox', suffix: '&nbsp;<small>enables dnsmasq to resolve queries arriving on this interface<\/small>', value: nvram.wg_adns.indexOf(''+i) >= 0 },
-				{ title: 'Routing Mode', name: 'f_'+t+'_route', type: 'select', options: [['0','Off'],['1','Auto'],['2','Custom Table']], value: nvram[t+'_route'][0] || 1, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_table" value="'+(nvram[t+'_route'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_table" maxlength="32" size="32">' }
+				{ title: 'Routing Mode', name: 'f_'+t+'_route', type: 'select', options: [['0','Off'],['1','Auto'],['2','Custom Table']], value: nvram[t+'_route'][0] || 1, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_table" value="'+(nvram[t+'_route'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_table" maxlength="32" size="32">' },
+				null,
+				{ title: 'Type of VPN', name: t+'_com', type: 'select', options: [['0','Internal - Hub (this device) and Spoke (peers)'],['1','Internal - Full Mesh (defined Endpoint only)'],['2','Internal - Full Mesh'],['3','External - VPN Provider']], value: nvram[t+'_com'] || 0 }
 			]);
 			W('<br>');
 
-			W('<div class="section-title">Peer Parameters<\/div>');
+			W('<div class="section-title">Peer Parameters <span style="font-size:0.7em">(used to generate peer config files)</span><\/div>');
 			createFieldTable('', [
 				{ title: 'Router behind NAT', name: t+'_ka', type: 'text', maxlen: 2, size: 4, suffix: '&nbsp;<small>enables keepalives from this router towards the defined peers (range 0 - 99 secs; 0 to disable)<\/small>', value: nvram[t+'_ka'] },
 				{ title: 'Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: nvram[t+'_endpoint'][0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(nvram[t+'_endpoint'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">' },
@@ -1998,8 +2000,7 @@ function init() {
 				{ title: 'Push LAN6 (br6) to peers', name: 'f_'+t+'_lan6', type: 'checkbox', value: (nvram[t+'_lan'] & 0x40) },
 				{ title: 'Push LAN7 (br7) to peers', name: 'f_'+t+'_lan7', type: 'checkbox', value: (nvram[t+'_lan'] & 0x80) },
 /* TOMATO64-END */
-				{ title: 'Forward all peer traffic', name: 'f_'+t+'_rgw', type: 'checkbox', value: nvram[t+'_rgw'] == 1 },
-				{ title: 'Type of VPN', name: t+'_com', type: 'select', options: [['0','Internal - Hub (this device) and Spoke (peers)'],['1','Internal - Full Mesh (defined Endpoint only)'],['2','Internal - Full Mesh'],['3','External - VPN Provider']], value: nvram[t+'_com'] || 0 }
+				{ title: 'Forward all peer traffic', name: 'f_'+t+'_rgw', type: 'checkbox', value: nvram[t+'_rgw'] == 1 }
 			]);
 			W('<br>');
 
@@ -2113,6 +2114,13 @@ function init() {
 					<li><b>Auto</b> - The wireguard interface will be routed using the default table (the same number as the interface port)</li>
 					<li><b>Custom Table</b> - Will route the wireguard interface using a custom table number. If specified, you must also include the table number in the additional field.</li>
 				</ul>
+				<li><b>Type of VPN</b> - This field defines how peers interact.</li>
+				<ul>
+					<li><b>Internal - Hub (this device) and Spoke (peers)</b> - Peers will only communicate with the router, and not each other. Implies /32 netmask for the peers</li>
+					<li><b>Internal - Full Mesh (defined Endpoint only)</b> - Peers will communicate to any peer with an endpoint. Implies /24 netmask for the peers. Peers with endpoints will communicate with all peers.</li>
+					<li><b>Internal - Full Mesh</b> - All peers are added to each other's configuration regardless of the endpoint field being congigured or not. Implies /24 netmask for the peers.</li>
+					<li><b>External - VPN Provider</b> - This VPN Access the Internet via a 3rd party VPN provider.</li>
+				</ul>
 			</ul>
 		</ul>
 		<ul>
@@ -2143,16 +2151,6 @@ function init() {
 	<!-- peers notes start -->
 	<div id="notes-wg-peers" style="display:none">
 		<ul>
-			<li><b>VPN Connectivity</b></li>
-			<ul>
-				<li><b>Type of VPN</b> - This field defines how peers interact.</li>
-				<ul>
-					<li><b>Internal - Hub (this device) and Spoke (peers)</b> - Peers will only communicate with the router, and not each other. Implies /32 netmask for the peers</li>
-					<li><b>Internal - Full Mesh (defined Endpoint only)</b> - Peers will communicate to any peer with an endpoint. Implies /24 netmask for the peers. Peers with endpoints will communicate with all peers.</li>
-					<li><b>Internal - Full Mesh</b> - All peers are added to each other's configuration regardless of the endpoint field being congigured or not. Implies /24 netmask for the peers.</li>
-					<li><b>External - VPN Provider</b> - This VPN Access the Internet via a 3rd party VPN provider (not yet implemented).</li>
-				</ul>
-			</ul>
 			<li><b>Peers Grid</b> - Each row represents a peer in the network. Peers are added through the Peer's Parameters subsection. Peers can also be edited by clicking on the row. The columns represent the following:</li>
 			<ul>
 				<li><b>QR</b> - Click the button to generate and display a QR code of this peer's configuration. Click again to hide it.</li>
