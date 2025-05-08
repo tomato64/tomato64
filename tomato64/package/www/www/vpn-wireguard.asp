@@ -1689,9 +1689,14 @@ function verifyFields(focused, quiet) {
 		if (E('_wg'+i+'_com').value == 3) { /* 'External - VPN Provider' */
 			E('_f_wg'+i+'_peer_ip').value = '';
 			E('_f_wg'+i+'_peer_ip').disabled = 1;
+			elem.display('wg'+i+'-peer-param-title', 0);
+			elem.display('wg'+i+'-peer-param', 0);
 		}
-		else
+		else {
 			E('_f_wg'+i+'_peer_ip').disabled = 0;
+			elem.display('wg'+i+'-peer-param-title', 1);
+			elem.display('wg'+i+'-peer-param', 1);
+		}
 
 		/* verify interface dns */
 		var dns = E('_wg'+i+'_dns');
@@ -1984,7 +1989,8 @@ function init() {
 			]);
 			W('<br>');
 
-			W('<div class="section-title">Peer Parameters <span style="font-size:0.7em">(used to generate peer config files)</span><\/div>');
+			W('<div class="section-title" id="'+t+'-peer-param-title">Peer Parameters <span style="font-size:0.7em">(used to generate peer config files)</span><\/div>');
+			W('<div id="'+t+'-peer-param">');
 			createFieldTable('', [
 				{ title: 'Router behind NAT', name: t+'_ka', type: 'text', maxlen: 2, size: 4, suffix: '&nbsp;<small>enables keepalives from this router towards the defined peers (range 0 - 99 secs; 0 to disable)<\/small>', value: nvram[t+'_ka'] },
 				{ title: 'Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: nvram[t+'_endpoint'][0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(nvram[t+'_endpoint'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">' },
@@ -2003,6 +2009,7 @@ function init() {
 				{ title: 'Forward all peer traffic', name: 'f_'+t+'_rgw', type: 'checkbox', value: nvram[t+'_rgw'] == 1 }
 			]);
 			W('<br>');
+			W('<\/div>');
 
 			W('<div class="section-title">Import Config from File<\/div>');
 			W('<div class="fields">');
