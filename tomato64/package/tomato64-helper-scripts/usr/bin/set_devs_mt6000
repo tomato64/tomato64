@@ -37,3 +37,7 @@ else
 fi
 
 modprobe mt7921u
+modprobe leds_gpio
+if [ "$(NG stealth_mode)" != "1" ]; then
+	echo 1 > /sys/class/leds/white:system/brightness
+fi
