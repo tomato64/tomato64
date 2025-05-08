@@ -1691,11 +1691,17 @@ function verifyFields(focused, quiet) {
 			E('_f_wg'+i+'_peer_ip').disabled = 1;
 			elem.display('wg'+i+'-peer-param-title', 0);
 			elem.display('wg'+i+'-peer-param', 0);
+			elem.display('wg'+i+'-peers-download', 0);
+			elem.display('wg'+i+'-peers-generate-title', 0);
+			elem.display('wg'+i+'-peers-generate', 0);
 		}
 		else {
 			E('_f_wg'+i+'_peer_ip').disabled = 0;
 			elem.display('wg'+i+'-peer-param-title', 1);
 			elem.display('wg'+i+'-peer-param', 1);
+			elem.display('wg'+i+'-peers-download', 1);
+			elem.display('wg'+i+'-peers-generate-title', 1);
+			elem.display('wg'+i+'-peers-generate', 1);
 		}
 
 		/* verify interface dns */
@@ -1989,7 +1995,7 @@ function init() {
 			]);
 			W('<br>');
 
-			W('<div class="section-title" id="'+t+'-peer-param-title">Peer Parameters <span style="font-size:0.7em">(used to generate peer config files)</span><\/div>');
+			W('<div class="section-title" id="'+t+'-peer-param-title">Peer Parameters <span style="font-size:0.7em">(used to generate peer config files)<\/span><\/div>');
 			W('<div id="'+t+'-peer-param">');
 			createFieldTable('', [
 				{ title: 'Router behind NAT', name: t+'_ka', type: 'text', maxlen: 2, size: 4, suffix: '&nbsp;<small>enables keepalives from this router towards the defined peers (range 0 - 99 secs; 0 to disable)<\/small>', value: nvram[t+'_ka'] },
@@ -2028,26 +2034,31 @@ function init() {
 			W('<div class="section-title">Peers<\/div>');
 			W('<div class="tomato-grid" id="'+t+'-peers-grid"><\/div>');
 			peerTables[i].setup();
+			W('<div id="'+t+'-peers-download">');
 			W('<input type="button" value="Download All Configs" onclick="downloadAllConfigs(event,'+i+')" id="'+t+'_download_all">');
 			W('<br>');
-			W('<br>');
+			W('<\/div>');
 			W('<div id="'+t+'_qrcode" class="qrcode" style="display:none">');
 			W('<img src="qr-icon.svg" alt="'+t+'_qrcode_img" style="max-width:100px">');
 			W('<div id="'+t+'_qrcode_labels" class="qrcode-labels" title="Message">Point your mobile phone camera <br>here above to connect automatically<\/div>');
 			W('<\/div>');
 
+			W('<div id="'+t+'-dummy" style="display:none">');
 			createFieldTable('', [
 				{ title: 'Port', name: 'f_'+t+'_peer_port', type: 'text', maxlen: 5, size: 10, value: nvram[t+'_port'] == '' ? (51820 + i) : nvram[t+'_port'], hidden: 1 },
 				{ title: 'FWMark', name: 'f_'+t+'_peer_fwmark', type: 'text', maxlen: 8, size: 8, value: '0', hidden: 1 }
 			]);
+			W('<\/div>');
+			W('<br>');
 
-			W('<div class="section-title">Peer Generation<\/div>');
+			W('<div class="section-title" id="'+t+'-peers-generate-title">Peer Generation<\/div>');
+			W('<div id="'+t+'-peers-generate">');
 			createFieldTable('', [
 				{ title: 'Generate PSK', name: 'f_'+t+'_peer_psk_gen', type: 'checkbox', value: true, suffix: '&nbsp;<small>strenghten encyption with PresharedKey<\/small>' },
 				{ title: '', custom: '<input type="button" value="Generate Peer" onclick="generatePeer('+i+')" id="'+t+'_peer_gen">' }
 			]);
 			W('<br>');
-			W('<br>');
+			W('<\/div>');
 
 			W('<div class="section-title">Peer\'s Parameters<\/div>');
 			createFieldTable('', [
@@ -2131,7 +2142,7 @@ function init() {
 			</ul>
 		</ul>
 		<ul>
-			<li><b>Peer Parameters</b> - Settings related to peer configuration generation on the Peers page.</li>
+			<li><b>Peer Parameters</b> - Settings related to peer configuration generation on the Peers page (not available in 'External - VPN Provider' mode).</li>
 			<ul>
 				<li><b>Router behind NAT</b> - If enabled, Keepalives will be sent from the router to peers.</li>
 				<li><b>Endpoint</b> - What to use for the endpoint of the router in configuration files generated on the Peers tab.</li>
@@ -2167,10 +2178,10 @@ function init() {
 				<li><b>Public Key</b> - The public key for this peer's wireguard interface.</li>
 				<li><b>VPN Interface IP</b> - The IP address of this peer's wireguard interface.</li>
 			</ul>
-			<li><b>Download All Configs</b> - This button will generate and download the configuration files for all the peers in the table.</li>
+			<li><b>Download All Configs</b> - This button will generate and download the configuration files for all the peers in the table (not available in 'External - VPN Provider' mode).</li>
 		</ul>
 		<ul>
-			<li><b>Peer Generation</b></li>
+			<li><b>Peer Generation (not available in 'External - VPN Provider' mode)</b></li>
 			<ul>
 				<li><b>Generate PSK</b> - If checked, will generate a PresharedKey for this network and assign the very same to each peer when <i>Generate Peer</i> is clicked.</li>
 				<li><b>Generate Peer</b> - This button will generate a new peer and populate the basic fields of the Peer's Parameters subsection.</li>
