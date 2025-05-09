@@ -890,6 +890,8 @@ void start_wireguard(const int unit)
 	char buffer[BUF_SIZE];
 	int mode;
 
+	/* TODO: serialize_restart */
+
 	/* determine interface */
 	memset(iface, 0, IF_SIZE);
 	snprintf(iface, IF_SIZE, "wg%d", unit);
@@ -1006,6 +1008,8 @@ void stop_wireguard(const int unit)
 	char iface[IF_SIZE];
 	char buffer[BUF_SIZE];
 	int is_dev;
+
+	/* TODO: serialize_restart */
 
 	/* remove cron job */
 	memset(buffer, 0, BUF_SIZE);
