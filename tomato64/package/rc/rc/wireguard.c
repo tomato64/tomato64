@@ -852,10 +852,20 @@ static int wg_remove_iface(char *iface)
 void start_wg_eas(void)
 {
 	int unit;
+	int external_mode = 0;
 
 	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
 		if (atoi(getNVRAMVar("wg%d_enable", unit)) == 1) {
-			start_wireguard(unit);
+			if (atoi(getNVRAMVar("wg%d_com", unit)) == 3) { /* check for 'External - VPN Provider' mode on this unit */
+				if (external_mode == 0) { /* no previous unit is in this mode - allow */
+					start_wireguard(unit);
+					external_mode++;
+				}
+				else
+					logmsg(LOG_WARNING, "only one wireguard instance can be run in 'External - VPN Provider' mode (currently up: wg%d)! Aborting ...", unit);
+			}
+			else
+				start_wireguard(unit);
 		}
 	}
 }
@@ -865,9 +875,7 @@ void stop_wg_eas(void)
 	int unit;
 
 	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
-		if (atoi(getNVRAMVar("wg%d_enable", unit)) == 1) {
-			stop_wireguard(unit);
-		}
+		stop_wireguard(unit);
 	}
 }
 */
