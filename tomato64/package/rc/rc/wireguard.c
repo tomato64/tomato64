@@ -42,6 +42,7 @@
 
 
 char port[BUF_SIZE_8];
+char fwmark[BUF_SIZE_16];
 
 static void wg_build_firewall(const int unit, const char *port, const char *iface) {
 	FILE *fp;
@@ -240,7 +241,7 @@ static int wg_quick_iface(char *iface, const char *file, const int up)
 	return 0;
 }
 
-static void find_port(const int unit, char *port)
+static void wg_find_port(const int unit, char *port)
 {
 	char *b;
 
@@ -250,6 +251,18 @@ static void find_port(const int unit, char *port)
 		snprintf(port, BUF_SIZE_8, "%d", 51820 + unit);
 	else
 		snprintf(port, BUF_SIZE_8, "%s", b);
+}
+
+static void wg_find_fwmark(const int unit, char *port, char *fwmark)
+{
+	char *b;
+
+	b = getNVRAMVar("wg%d_fwmark", unit);
+	memset(fwmark, 0, BUF_SIZE_16);
+	if (b[0] == '\0' || b[0] == '0')
+		snprintf(fwmark, BUF_SIZE_16, "%s", port);
+	else
+		snprintf(fwmark, BUF_SIZE_16, "%s", b);
 }
 
 static void wg_setup_dirs(void) {
@@ -880,7 +893,6 @@ void start_wireguard(const int unit)
 	char *priv, *name, *key, *psk, *ip, *ka, *aip, *ep;
 	char iface[IF_SIZE];
 	char buffer[BUF_SIZE];
-	char fwmark[BUF_SIZE_16];
 	char peer_ka[BUF_SIZE_16];
 
 	/* determine interface */
@@ -888,7 +900,7 @@ void start_wireguard(const int unit)
 	snprintf(iface, IF_SIZE, "wg%d", unit);
 
 	/* prepare port value */
-	find_port(unit, port);
+	wg_find_port(unit, port);
 
 	/* set up directories for later use */
 	wg_setup_dirs();
@@ -919,13 +931,7 @@ void start_wireguard(const int unit)
 			goto out;
 
 		/* set interface fwmark */
-		b = getNVRAMVar("wg%d_fwmark", unit);
-		memset(fwmark, 0, BUF_SIZE_16);
-		if (b[0] == '\0' || b[0] == '0')
-			snprintf(fwmark, BUF_SIZE_16, "%s", port);
-		else
-			snprintf(fwmark, BUF_SIZE_16, "%s", b);
-
+		wg_find_fwmark(unit, port, fwmark);
 		if (wg_set_iface_fwmark(iface, fwmark))
 			goto out;
 
