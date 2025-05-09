@@ -52,8 +52,6 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 
 	chains_log_detection();
 
-	logmsg(LOG_DEBUG, "*** %s: building firewall scripts ...", __FUNCTION__);
-
 	memset(buffer, 0, BUF_SIZE_64);
 	snprintf(buffer, BUF_SIZE_64, WG_FW_DIR"/%s-fw.sh", iface);
 	memset(tmp, 0, BUF_SIZE_16);
@@ -68,7 +66,8 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 		if (nvram_get_int(tmp) == 3) { /* 'External - VPN Provider' */
 			fprintf(fp, "iptables -I INPUT -i %s -m state --state NEW -j %s\n"
 			            "iptables -I FORWARD -i %s -m state --state NEW -j DROP\n"
-			            "iptables -I FORWARD -o %s -j ACCEPT\n",
+			            "iptables -I FORWARD -o %s -j ACCEPT\n"
+			            "echo 1 > /proc/sys/net/ipv4/conf/all/src_valid_mark\n",
 			            iface, chain_in_drop,
 			            iface,
 			            iface);
@@ -207,8 +206,6 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 		fclose(fp);
 		chmod(WG_SCRIPTS_DIR"/route-default.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
 	}
-
-	logmsg(LOG_DEBUG, "*** %s: Done", __FUNCTION__);
 }
 
 static int wg_quick_iface(char *iface, const char *file, const int up)
