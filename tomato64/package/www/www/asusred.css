@@ -141,14 +141,11 @@ ul.tabs a,
 	background: #FAFAFA;
 }
 
-.fields td.title.indent1 {
+.fields td.title.indent1,
+.fields td.title.indent2,
+.fields td.title.indent3,
+.fields td.title.indent4 {
 	font-family: Tahoma, Arial, Sans-serif;
-	padding: 1px 15px 1px 0;
-}
-
-.fields td.title.indent2 {
-	font-family: Tahoma, Arial, Sans-serif;
-	padding: 1px 5px 1px 10px;
 }
 
 .section-title {
@@ -288,5 +285,5 @@ input[type="submit"]:hover {
 }
 
 span[id$="_notice"] {
-	width: 168px;
+	width: 186px;
 }

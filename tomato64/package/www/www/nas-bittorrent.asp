@@ -250,8 +250,7 @@ function init() {
 <div class="section-title">Status</div>
 <div class="section">
 	<div class="fields">
-		<span id="_transmission_notice"></span>
-		<input type="button" id="_transmission_button" value="">
+		<span id="_transmission_notice"></span><input type="button" id="_transmission_button" value="">
 		<input type="button" id="_transmission_status" value="Open Transmission GUI in new tab" class="new_window" onclick="window.open('http://'+location.hostname+':'+nvram.bt_port_gui+'')">
 		&nbsp; <img src="spin.gif" alt="" id="spin">
 	</div>

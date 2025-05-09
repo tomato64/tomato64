@@ -795,17 +795,10 @@ div#vlan-grid tr.header .co3,
 div#vlan-grid tr.header .co5,
 div#vlan-grid tr.header .co7,
 div#vlan-grid tr.header .co9,
+div#vlan-grid tr.header .co11,
 /* TOMATO64-REMOVE-BEGIN */
-/* EXTSW-NO-BEGIN */
-div#vlan-grid tr.header .co11 {
-/* EXTSW-NO-END */
-/* EXTSW-BEGIN */
-div#vlan-grid tr.header .co11,
 div#vlan-grid tr.header .co13 {
-/* EXTSW-END */
 /* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-div#vlan-grid tr.header .co11,
 div#vlan-grid tr.header .co13,
 div#vlan-grid tr.header .co15,
 div#vlan-grid tr.header .co17,
@@ -880,7 +873,8 @@ table.fields tr td {
 	width: 250px;
 }
 
-.fields > input[type="button"][id$="_button"] {
+.fields > input[type="button"][id$="_button"],
+[id$="-status-button"] > input[type="button"][id$="_button"] {
 	margin-left: 0;
 }
 
@@ -2101,7 +2095,7 @@ table.fields tr td.wwan-parser-view {
 }
 
 span[id$="_notice"] {
-	width: 234px;
+	width: 235px;
 }
 
 textarea.as-script {

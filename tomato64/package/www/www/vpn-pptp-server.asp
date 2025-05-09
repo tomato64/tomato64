@@ -281,8 +281,7 @@ function init() {
 <div class="section-title">Status</div>
 <div class="section">
 	<div class="fields">
-		<span id="_pptpd_notice"></span>
-		<input type="button" id="_pptpd_button">&nbsp; <img src="spin.gif" alt="" id="spin">
+		<span id="_pptpd_notice"></span><input type="button" id="_pptpd_button">&nbsp; <img src="spin.gif" alt="" id="spin">
 	</div>
 </div>
 

@@ -164,13 +164,10 @@ a:hover {
 	margin: 5px 0 5px 0;
 }
 
-.fields td.title.indent1 {
-	padding: 1px 15px 1px 0;
-	font-family: Tahoma, Arial, Sans-serif;
-}
-
-.fields td.title.indent2 {
-	padding: 1px 5px 1px 10px;
+.fields td.title.indent1,
+.fields td.title.indent2,
+.fields td.title.indent3,
+.fields td.title.indent4 {
 	font-family: Tahoma, Arial, Sans-serif;
 }
 
@@ -317,5 +314,5 @@ li, div {
 }
 
 span[id$="_notice"] {
-	width: 176px;
+	width: 196px;
 }

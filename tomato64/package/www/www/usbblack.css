@@ -172,7 +172,7 @@ div.tabs-bottom,
 }
 
 .fields td.title.indent1 {
-	padding: 1px 15px 1px 0;
+	padding: 1px 15px 1px 7px;
 	font-family: Tahoma, Arial, Sans-serif;
 }
 
@@ -318,5 +318,5 @@ li, div {
 }
 
 span[id$="_notice"] {
-	width: 168px;
+	width: 185px;
 }

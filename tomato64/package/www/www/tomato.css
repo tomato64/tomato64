@@ -310,7 +310,7 @@ table.fields {
 }
 
 .fields td.title {
-	width: 160px;
+	width: 153px;
 }
 
 .fields td.title.indent1 {
@@ -335,7 +335,7 @@ table.fields {
 }
 
 .fields td.content {
-	width: 585px;
+	width: 550px;
 	vertical-align: top;
 }
 
@@ -1705,7 +1705,7 @@ span[id$="_notice"] {
 	display: inline-block;
 	padding-left: 0;
 	vertical-align: middle;
-	width: 177px;
+	width: 194px;
 }
 
 /* SVG */
