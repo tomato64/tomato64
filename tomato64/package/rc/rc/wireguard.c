@@ -794,9 +794,9 @@ static void wg_pubkey(const char *privkey, char *pubkey)
 
 static void wg_add_peer_privkey(char *iface, const char *privkey, char *allowed_ips, const char *presharedkey, char *keepalive, const char *endpoint, const char *fwmark)
 {
-	char pubkey[64];
+	char pubkey[BUF_SIZE_64];
 
-	memset(pubkey, 0, sizeof(pubkey));
+	memset(pubkey, 0, BUF_SIZE_64);
 	wg_pubkey(privkey, pubkey);
 
 	wg_add_peer(iface, pubkey, allowed_ips, presharedkey, keepalive, endpoint, fwmark, port);
@@ -816,8 +816,8 @@ static int wg_remove_peer(char *iface, char *pubkey)
 
 static int wg_remove_peer_privkey(char *iface, char *privkey)
 {
-	char pubkey[64];
-	memset(pubkey, 0, sizeof(pubkey));
+	char pubkey[BUF_SIZE_64];
+	memset(pubkey, 0, BUF_SIZE_64);
 
 	wg_pubkey(privkey, pubkey);
 
