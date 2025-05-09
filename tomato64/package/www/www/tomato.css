@@ -309,9 +309,13 @@ table.fields {
 	padding: 2px 0;
 }
 
+.fields td.title {
+	width: 160px;
+}
+
 .fields td.title.indent1 {
 	width: 160px;
-	padding: 1px 15px 1px 0px;
+	padding: 1px 15px 1px 7px;
 }
 
 .fields td.title.indent2 {
@@ -1683,7 +1687,7 @@ span[id^="note_cktime2_"] {
 	background-color: #32CD32;
 	color: white;
 	padding: 5px 6px;
-	margin-left: 6px;
+	margin-left: 2px;
 	border-radius: 4px;
 	font-weight: bold;
 }
@@ -1692,7 +1696,7 @@ span[id^="note_cktime2_"] {
 	background-color: #FF4500;
 	color: white;
 	padding: 5px 6px;
-	margin-left: 6px;
+	margin-left: 2px;
 	border-radius: 4px;
 	font-weight: bold;
 }
