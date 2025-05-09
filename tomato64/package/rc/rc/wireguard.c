@@ -667,7 +667,7 @@ static void wg_route_peer_allowed_ips(int unit, char *iface, const char *allowed
 			snprintf(buffer, BUF_SIZE_32, "%s", b);
 
 			if ((vstrsep(b, "/", &ip, &nm) == 2) && (atoi(nm) == 0)) { /* default route */
-				route_default = 1;
+//				route_default = 1;
 				logmsg(LOG_DEBUG, "*** %s: running wg_route_peer_default() iface=[%s] route=[%s] fwmark=[%s]", __FUNCTION__, iface, buffer, fwmark);
 				wg_route_peer_default(iface, buffer, (char *)fwmark, add);
 			}
