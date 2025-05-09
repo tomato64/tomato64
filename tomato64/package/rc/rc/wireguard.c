@@ -801,29 +801,25 @@ static void wg_add_peer_privkey(char *iface, const char *privkey, char *allowed_
 
 	wg_add_peer(iface, pubkey, allowed_ips, presharedkey, keepalive, endpoint, fwmark, port);
 }
-/*
-static int wg_remove_peer(char *iface, char *pubkey)
+
+static void wg_remove_peer(char *iface, char *pubkey)
 {
-	if (eval("wg", "set", iface, "peer", pubkey, "remove")) {
+	if (eval("wg", "set", iface, "peer", pubkey, "remove"))
 		logmsg(LOG_WARNING, "unable to remove peer %s from wireguard interface %s!", iface, pubkey);
-		return -1;
-	}
 	else
 		logmsg(LOG_DEBUG, "peer %s has been removed from wireguard interface %s", iface, pubkey);
-
-	return 0;
 }
 
-static int wg_remove_peer_privkey(char *iface, char *privkey)
+static void wg_remove_peer_privkey(char *iface, char *privkey)
 {
 	char pubkey[BUF_SIZE_64];
 	memset(pubkey, 0, BUF_SIZE_64);
 
 	wg_pubkey(privkey, pubkey);
 
-	return wg_remove_peer(iface, pubkey);
+	wg_remove_peer(iface, pubkey);
 }
-*/
+
 static int wg_remove_iface(char *iface)
 {
 	/* check if interface exists */
@@ -1003,6 +999,8 @@ out:
 
 void stop_wireguard(const int unit)
 {
+	char *nv, *nvp, *b;
+	char *priv, *name, *key, *psk, *ip, *ka, *aip, *ep;
 	char iface[IF_SIZE];
 	char buffer[BUF_SIZE];
 	int is_dev;
@@ -1021,7 +1019,39 @@ void stop_wireguard(const int unit)
 	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
 		wg_quick_iface(iface, getNVRAMVar("wg%d_file", unit), 0);
 	else {
+		/* prepare port value */
+		wg_find_port(unit, port);
+
+		/* prepare fwmark value */
+		wg_find_fwmark(unit, port, fwmark);
+
 		wg_iface_pre_down(unit);
+
+		/* remove peers */
+		nvp = nv = strdup(getNVRAMVar("wg%d_peers", unit));
+		if (nv) {
+			while ((b = strsep(&nvp, ">")) != NULL) {
+				if (vstrsep(b, "<", &priv, &name, &ep, &key, &psk, &ip, &aip, &ka) < 8)
+					continue;
+
+				/* build peer allowed ips */
+				memset(buffer, 0, BUF_SIZE);
+				if (aip[0] == '\0')
+					snprintf(buffer, BUF_SIZE, "%s", ip);
+				else if (ip[0] == '\0')
+					snprintf(buffer, BUF_SIZE, "%s", aip);
+				else
+					snprintf(buffer, BUF_SIZE, "%s,%s", ip, aip);
+
+				/* remove peer from interface */
+				if (priv[0] == '1') /* peer has private key? */
+					wg_remove_peer_privkey(iface, key);
+				else
+					wg_remove_peer(iface, key);
+			}
+		}
+		if (nvp)
+			free(nvp);
 
 		eval("ip", "route", "flush", "table", fwmark);
 		eval("ip", "route", "flush", "cache");
