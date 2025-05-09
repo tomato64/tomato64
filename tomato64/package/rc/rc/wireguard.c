@@ -949,13 +949,9 @@ void start_wireguard(const int unit)
 			memset(peer_ka, 0, BUF_SIZE_16);
 			snprintf(peer_ka, BUF_SIZE_16, "%s_com", iface);
 
-			logmsg(LOG_DEBUG, "*** %s: adding wg%d_peers ...", __FUNCTION__, unit);
-
 			while ((b = strsep(&nvp, ">")) != NULL) {
 				if (vstrsep(b, "<", &priv, &name, &ep, &key, &psk, &ip, &aip, &ka) < 8)
 					continue;
-
-				logmsg(LOG_DEBUG, "*** %s: peer IF=[%i]: priv=[%s] name=[%s] ep=[%s] key=[%s] psk=[%s] ip=[%s] aip=[%s] ka=[%s]", __FUNCTION__, unit, priv, name, ep, key, psk, ip, aip, ka);
 
 				/* build peer allowed ips */
 				memset(buffer, 0, BUF_SIZE);
@@ -966,15 +962,11 @@ void start_wireguard(const int unit)
 				else
 					snprintf(buffer, BUF_SIZE, "%s,%s", ip, aip);
 
-				/* add peer to interface */
-				if (priv[0] == '1') { /* peer has private key? */
-					logmsg(LOG_DEBUG, "*** %s: running wg_add_peer_privkey(): iface=[%s] key=[%s] buffer=[%s] psk=[%s] rka=[%s] ep=[%s] fwmark=[%s]", __FUNCTION__, iface, key, buffer, psk, (nvram_get_int(peer_ka) == 3 ? ka : rka), ep, fwmark);
+				/* add peer to interface (and route) */
+				if (priv[0] == '1') /* peer has private key? */
 					wg_add_peer_privkey(iface, key, buffer, psk, (nvram_get_int(peer_ka) == 3 ? ka : rka), ep, fwmark);
-				}
-				else {
-					logmsg(LOG_DEBUG, "*** %s: running wg_add_peer(): iface=[%s] key=[%s] buffer=[%s] psk=[%s] rka=[%s] ep=[%s] fwmark=[%s] port=[%s]", __FUNCTION__, iface, key, buffer, psk, (nvram_get_int(peer_ka) == 3 ? ka : rka), ep, fwmark, port);
+				else
 					wg_add_peer(iface, key, buffer, psk, (nvram_get_int(peer_ka) == 3 ? ka : rka), ep, fwmark, port);
-				}
 			}
 		}
 		if (nvp)
@@ -1061,8 +1053,6 @@ void run_wg_firewall_scripts(void)
 
 	dir = opendir(WG_FW_DIR);
 
-	logmsg(LOG_DEBUG, "*** %s: beginning all firewall scripts...", __FUNCTION__);
-
 	while ((file = readdir(dir)) != NULL) {
 		fa = file->d_name;
 
@@ -1086,7 +1076,6 @@ void run_wg_firewall_scripts(void)
 		else
 			logmsg(LOG_DEBUG, "*** %s: skipping firewall script (not executable): %s", __FUNCTION__, buffer);
 	}
-	logmsg(LOG_DEBUG, "*** %s: done with all firewall scripts...", __FUNCTION__);
 
 	closedir(dir);
 }
