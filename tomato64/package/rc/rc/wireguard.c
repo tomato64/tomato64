@@ -636,10 +636,10 @@ static int wg_route_peer_custom(char *iface, char *route, char *table)
 	return 0;
 }
 
-static int wg_route_peer_allowed_ips(char *iface, const char *allowed_ips, const char *fwmark)
+static void wg_route_peer_allowed_ips(char *iface, const char *allowed_ips, const char *fwmark)
 {
 	char *aip, *b, *table, *rt, *tp, *ip, *nm;
-	int route_type = 1, result = 0;
+	int route_type = 1;
 	char buffer[BUF_SIZE_32];
 	char tmp[BUF_SIZE_16];
 
@@ -676,21 +676,17 @@ static int wg_route_peer_allowed_ips(char *iface, const char *allowed_ips, const
 			if (nvram_get_int(tmp) != 3) { /* !'External - VPN Provider' */
 				if (route_type == 1) { /* Auto */
 					logmsg(LOG_DEBUG, "*** %s: running wg_route_peer() iface=[%s] route=[%s]", __FUNCTION__, iface, buffer);
-					if (wg_route_peer(iface, buffer))
-						result = -1;
+					wg_route_peer(iface, buffer);
 				}
 				else { /* Custom Table */
 					logmsg(LOG_DEBUG, "*** %s: running wg_route_peer_custom() iface=[%s] route=[%s] table=[%s]", __FUNCTION__, iface, buffer, table);
-					if (wg_route_peer_custom(iface, buffer, table))
-						result = -1;
+					wg_route_peer_custom(iface, buffer, table);
 				}
 			}
 		}
 		if (aip)
 			free(aip);
 	}
-
-	return result;
 }
 
 static void wg_set_peer_allowed_ips(char *iface, char *pubkey, char *allowed_ips, const char *fwmark)
@@ -718,6 +714,7 @@ static void wg_add_peer(char *iface, char *pubkey, char *allowed_ips, const char
 	if (endpoint[0] != '\0')
 		wg_set_peer_endpoint(iface, pubkey, endpoint, port);
 
+	/* add routes (also default route if any) */
 	wg_route_peer_allowed_ips(iface, allowed_ips, fwmark);
 }
 
