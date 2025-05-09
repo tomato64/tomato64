@@ -984,6 +984,8 @@ void start_wireguard(const int unit)
 		if (nvp)
 			free(nvp);
 
+		eval("ip", "route", "flush", "cache");
+
 		/* run post up scripts */
 		wg_iface_post_up(unit);
 	}
@@ -1033,6 +1035,10 @@ void stop_wireguard(const int unit)
 	else {
 		/* remove interface */
 		wg_iface_pre_down(unit);
+
+		eval("ip", "route", "flush", "table", fwmark);
+		eval("ip", "route", "flush", "cache");
+
 		wg_remove_iface(iface);
 		wg_iface_post_down(unit);
 	}
