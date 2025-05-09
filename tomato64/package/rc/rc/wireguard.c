@@ -360,15 +360,12 @@ static int wg_set_iface_addr(char *iface, const char *addr)
 	/* Set wireguard interface address(es) */
 	nv = strdup(addr);
 	while ((b = strsep(&nv, ",")) != NULL) {
-
-		logmsg(LOG_DEBUG, "*** %s: iface=[%s] b=[%s] addr=[%s]", __FUNCTION__, iface, b, addr);
-
 		if (eval("ip", "addr", "add", b, "dev", iface)) {
-			logmsg(LOG_WARNING, "unable to add wireguard interface %s address of %s!", iface, addr);
+			logmsg(LOG_WARNING, "unable to add wireguard interface %s address of %s!", iface, b);
 			return -1;
 		}
 		else
-			logmsg(LOG_DEBUG, "wireguard interface %s has had address %s add to it", iface, addr);
+			logmsg(LOG_DEBUG, "wireguard interface %s has had address %s add to it", iface, b);
 	}
 
 	if (nv)
