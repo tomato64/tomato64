@@ -598,6 +598,47 @@ static int wg_set_peer_endpoint(char *iface, char *pubkey, const char *endpoint,
 	return 0;
 }
 
+static int wg_route_peer(char *iface, char *route, char *table, int add)
+{
+	if (add == 1) {
+		if (table != NULL) {
+			if (eval("ip", "route", "add", route, "dev", iface, "table", table)) {
+				logmsg(LOG_WARNING, "unable to add route of %s to table %s for wireguard interface %s! When using mask, check if the entry is correct (for the /24-31 mask the last IP octet must be 0, for the /9-16 mask the last two octets must be 0, etc.)", route, table, iface);
+				return -1;
+			}
+			else
+				logmsg(LOG_DEBUG, "wireguard interface %s has had a route added to table %s for %s", iface, table, route);
+		}
+		else {
+			if (eval("ip", "route", "add", route, "dev", iface)) {
+				logmsg(LOG_WARNING, "unable to add route of %s for wireguard interface %s! When using mask, check if the entry is correct (for the /24-31 mask the last IP octet must be 0, for the /9-16 mask the last two octets must be 0, etc.)", route, iface);
+				return -1;
+			}
+			else
+				logmsg(LOG_DEBUG, "wireguard interface %s has had a route added for %s", iface, route);
+		}
+	}
+	else {
+		if (table != NULL) {
+			if (eval("ip", "route", "del", route, "dev", iface, "table", table)) {
+				logmsg(LOG_WARNING, "unable to remove route of %s to table %s for wireguard interface %s!", route, table, iface);
+				return -1;
+			}
+			else
+				logmsg(LOG_DEBUG, "wireguard interface %s has had a route removed to table %s for %s", iface, table, route);
+		}
+		else {
+			if (eval("ip", "route", "del", route, "dev", iface)) {
+				logmsg(LOG_WARNING, "unable to remove route of %s for wireguard interface %s!", route, iface);
+				return -1;
+			}
+			else
+				logmsg(LOG_DEBUG, "wireguard interface %s has had a route removed for %s", iface, route);
+		}
+	}
+	return 0;
+}
+
 #ifdef KERNEL_WG_FIX
 static int wg_route_peer_default(char *iface, char *route, char *fwmark)
 {
@@ -612,31 +653,7 @@ static int wg_route_peer_default(char *iface, char *route, char *fwmark)
 }
 #endif
 
-static int wg_route_peer(char *iface, char *route)
-{
-	if (eval("ip", "route", "add", route, "dev", iface)) {
-		logmsg(LOG_WARNING, "unable to add route of %s for wireguard interface %s! When using mask, check if the entry is correct (for the /24-31 mask the last IP octet must be 0, for the /9-16 mask the last two octets must be 0, etc.)", route, iface);
-		return -1;
-	}
-	else
-		logmsg(LOG_DEBUG, "wireguard interface %s has had a route added to it for %s", iface, route);
-
-	return 0;
-}
-
-static int wg_route_peer_custom(char *iface, char *route, char *table)
-{
-	if (eval("ip", "route", "add", route, "dev", iface, "table", table)) {
-		logmsg(LOG_WARNING, "unable to add route of %s to table %s for wireguard interface %s! When using mask, check if the entry is correct (for the /24-31 mask the last IP octet must be 0, for the /9-16 mask the last two octets must be 0, etc.)", route, table, iface);
-		return -1;
-	}
-	else
-		logmsg(LOG_DEBUG, "wireguard interface %s has had a route added to table %s for %s", iface, table, route);
-
-	return 0;
-}
-
-static void wg_route_peer_allowed_ips(char *iface, const char *allowed_ips, const char *fwmark)
+static void wg_route_peer_allowed_ips(char *iface, const char *allowed_ips, const char *fwmark, int add)
 {
 	char *aip, *b, *table, *rt, *tp, *ip, *nm;
 	int route_type = 1;
@@ -663,25 +680,16 @@ static void wg_route_peer_allowed_ips(char *iface, const char *allowed_ips, cons
 			memset(buffer, 0, BUF_SIZE_32);
 			snprintf(buffer, BUF_SIZE_32, "%s", b);
 
-			if (vstrsep(b, "/", &ip, &nm) == 2) {
-				if (atoi(nm) == 0) {
+			if ((vstrsep(b, "/", &ip, &nm) == 2) && atoi(nm) == 0) { /* default route */
 #ifdef KERNEL_WG_FIX
-					wg_route_peer_default(iface, b, fwmark);
+				wg_route_peer_default(iface, b, fwmark);
 #else
-					logmsg(LOG_WARNING, "unable to add default route of %s to table %s for wireguard interface %s - kernel has to be patched!", b, fwmark, iface);
+				logmsg(LOG_WARNING, "unable to add default route of %s to table %s for wireguard interface %s - kernel has to be patched!", b, fwmark, iface);
 #endif
-				}
 			}
-
-			if (nvram_get_int(tmp) != 3) { /* !'External - VPN Provider' */
-				if (route_type == 1) { /* Auto */
-					logmsg(LOG_DEBUG, "*** %s: running wg_route_peer() iface=[%s] route=[%s]", __FUNCTION__, iface, buffer);
-					wg_route_peer(iface, buffer);
-				}
-				else { /* Custom Table */
-					logmsg(LOG_DEBUG, "*** %s: running wg_route_peer_custom() iface=[%s] route=[%s] table=[%s]", __FUNCTION__, iface, buffer, table);
-					wg_route_peer_custom(iface, buffer, table);
-				}
+			else { /* std route */
+				logmsg(LOG_DEBUG, "*** %s: running wg_route_peer() iface=[%s] route=[%s] table=[%s]", __FUNCTION__, iface, buffer, table);
+				wg_route_peer(iface, buffer, (route_type == 1 ? NULL : table), add);
 			}
 		}
 		if (aip)
@@ -715,7 +723,7 @@ static void wg_add_peer(char *iface, char *pubkey, char *allowed_ips, const char
 		wg_set_peer_endpoint(iface, pubkey, endpoint, port);
 
 	/* add routes (also default route if any) */
-	wg_route_peer_allowed_ips(iface, allowed_ips, fwmark);
+	wg_route_peer_allowed_ips(iface, allowed_ips, fwmark, 1); /* 1 = add */
 }
 
 static inline int decode_base64(const char src[static 4])
@@ -802,22 +810,25 @@ static void wg_add_peer_privkey(char *iface, const char *privkey, char *allowed_
 	wg_add_peer(iface, pubkey, allowed_ips, presharedkey, keepalive, endpoint, fwmark, port);
 }
 
-static void wg_remove_peer(char *iface, char *pubkey)
+static void wg_remove_peer(char *iface, char *pubkey, char *allowed_ips, const char *fwmark)
 {
 	if (eval("wg", "set", iface, "peer", pubkey, "remove"))
 		logmsg(LOG_WARNING, "unable to remove peer %s from wireguard interface %s!", iface, pubkey);
 	else
 		logmsg(LOG_DEBUG, "peer %s has been removed from wireguard interface %s", iface, pubkey);
+
+	/* remove routes (also default route if any) */
+	wg_route_peer_allowed_ips(iface, allowed_ips, fwmark, 0); /* 0 = remove */
 }
 
-static void wg_remove_peer_privkey(char *iface, char *privkey)
+static void wg_remove_peer_privkey(char *iface, char *privkey, char *allowed_ips, const char *fwmark)
 {
 	char pubkey[BUF_SIZE_64];
 	memset(pubkey, 0, BUF_SIZE_64);
 
 	wg_pubkey(privkey, pubkey);
 
-	wg_remove_peer(iface, pubkey);
+	wg_remove_peer(iface, pubkey, allowed_ips, fwmark);
 }
 
 static int wg_remove_iface(char *iface)
@@ -1043,11 +1054,11 @@ void stop_wireguard(const int unit)
 				else
 					snprintf(buffer, BUF_SIZE, "%s,%s", ip, aip);
 
-				/* remove peer from interface */
+				/* remove peer from interface (and route) */
 				if (priv[0] == '1') /* peer has private key? */
-					wg_remove_peer_privkey(iface, key);
+					wg_remove_peer_privkey(iface, key, buffer, fwmark);
 				else
-					wg_remove_peer(iface, key);
+					wg_remove_peer(iface, key, buffer, fwmark);
 			}
 		}
 		if (nvp)
