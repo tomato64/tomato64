@@ -265,6 +265,11 @@ static void wg_find_fwmark(const int unit, char *port, char *fwmark)
 		snprintf(fwmark, BUF_SIZE_16, "%s", b);
 }
 
+static int wg_if_exist(const char *ifname)
+{
+	return if_nametoindex(ifname) ? 1 : 0;
+}
+
 static void wg_setup_dirs(void) {
 	/* main dir */
 	if (mkdir_if_none(WG_DIR))
@@ -831,17 +836,17 @@ static int wg_remove_peer_privkey(char *iface, char *privkey)
 static int wg_remove_iface(char *iface)
 {
 	/* check if interface exists */
-	if (eval("ip", "addr", "show", "dev", iface))
-		logmsg(LOG_DEBUG, "no such interface: %s", iface);
-	else {
+	if (wg_if_exist(iface)) {
 		/* delete wireguard interface */
-		if (eval("ip", "link", "delete", iface)) {
+		if (eval("ip", "link", "del", "dev", iface)) {
 			logmsg(LOG_WARNING, "unable to delete wireguard interface %s!", iface);
 			return -1;
 		}
 		else
 			logmsg(LOG_DEBUG, "wireguard interface %s has been deleted", iface);
 	}
+	else
+		logmsg(LOG_DEBUG, "no such interface: %s", iface);
 
 	return 0;
 }
@@ -876,10 +881,10 @@ void stop_wg_all(void)
 	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
 		memset(iface, 0, IF_SIZE);
 		snprintf(iface, IF_SIZE, "wg%d", unit);
-		if (eval("ip", "addr", "show", "dev", iface))
-			logmsg(LOG_DEBUG, "no such wg instance to stop: %s", iface);
-		else
+		if (wg_if_exist(iface))
 			stop_wireguard(unit);
+		else
+			logmsg(LOG_DEBUG, "no such wg instance to stop: %s", iface);
 	}
 	wg_cleanup_dirs();
 
@@ -1028,17 +1033,17 @@ void stop_wireguard(const int unit)
 	memset(iface, 0, IF_SIZE);
 	snprintf(iface, IF_SIZE, "wg%d", unit);
 
-	is_dev = eval("ip", "addr", "show", "dev", iface);
+	is_dev = wg_if_exist(iface);
 
 	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
 		wg_quick_iface(iface, getNVRAMVar("wg%d_file", unit), 0);
 	else {
-		/* remove interface */
 		wg_iface_pre_down(unit);
 
 		eval("ip", "route", "flush", "table", fwmark);
 		eval("ip", "route", "flush", "cache");
 
+		/* remove interface */
 		wg_remove_iface(iface);
 		wg_iface_post_down(unit);
 	}
@@ -1048,7 +1053,7 @@ void stop_wireguard(const int unit)
 	snprintf(buffer, BUF_SIZE, WG_FW_DIR"/%s-fw.sh", iface);
 	run_del_firewall_script(buffer, WG_DIR_DEL_SCRIPT);
 
-	if (!is_dev)
+	if (is_dev)
 		logmsg(LOG_INFO, "wireguard (%s) stopped", iface);
 }
 
