@@ -48,7 +48,7 @@ function show() {
 		countButton = 0;
 	}
 
-	E('_tinc_notice').innerHTML = (d ? '<span class="service_up">RUNNING<\/span>' : '<span class="service_down">STOPPED<\/span>');
+	E('_tinc_notice').innerHTML = (d ? '<span class="service_up"><span class="servup_image">▷ <\/span>RUNNING<\/span>' : '<span class="service_down"><span class="servdn_image">⛔ <\/span>STOPPED<\/span>');
 	E('edges').disabled = !d;
 	E('connections').disabled = !d;
 	E('subnets').disabled = !d;
@@ -510,7 +510,7 @@ function init() {
 <div class="section-title">Status</div>
 <div class="section">
 	<div class="fields">
-		<span id="_tinc_notice"></span>	<input type="button" id="_tinc_button">&nbsp; <img src="spin.gif" alt="" id="spin">
+		<span id="_tinc_notice"></span><input type="button" id="_tinc_button">&nbsp; <img src="spin.gif" alt="" id="spin">
 	</div>
 </div>
 

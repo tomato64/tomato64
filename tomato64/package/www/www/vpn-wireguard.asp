@@ -52,7 +52,7 @@ var serviceType = 'wireguard';
 
 var tabs =  [];
 for (i = 0; i < WG_INTERFACE_COUNT; ++i)
-	tabs.push(['wg'+i,'wg'+i]);
+	tabs.push(['wg'+i,'<span id="'+serviceType+i+'_tabicon" style="font-size:9px">⛔ <\/span><span class="tabname">wg'+i+'</span>']);
 var sections = [['wg-config','Config'],['wg-peers','Peers'],['wg-scripts','Scripts'],['wg-status','Status']];
 
 function update_nvram(fom) {
@@ -114,7 +114,8 @@ function show() {
 		var e = E('_'+serviceType+i+'_button');
 		var d = isup[serviceType+i];
 
-		E('_'+serviceType+i+'_notice').innerHTML = serviceType+i+' is '+(d ? '<span class="service_up">RUNNING<\/span>' : '<span class="service_down">STOPPED<\/span>');
+		E('_'+serviceType+i+'_notice').innerHTML = (d ? '<span class="service_up"><span class="servup_image">▷ <\/span>RUNNING<\/span>' : '<span class="service_down"><span class="servdn_image">⛔ <\/span>STOPPED<\/span>');
+		if (E(serviceType+i+'_tabicon')) E(serviceType+i+'_tabicon').innerHTML = (d ? '<span class="icon_up"><span class="servup_image">▷ <\/span><\/span>' : '<span class="icon_down"><span class="servdn_image">⛔ <\/span><\/span>');
 		e.value = (d ? 'Stop' : 'Start')+' Now';
 		e.setAttribute('onclick', 'javascript:toggle(\''+serviceType+''+i+'\','+d+');');
 		if (serviceLastUp[i] != d || countButton > 6) {
