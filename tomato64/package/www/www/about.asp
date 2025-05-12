@@ -39,7 +39,7 @@ function init() {
 <!-- / / / -->
 
 <div class="about">
-	<b>Tomato64 Firmware <% version(1); %></b>
+	<b>Tomato64 Firmware <% version(1); %><% version(4); %></b>
 	<br>
 	<br>
 	Linux kernel <% version(2); %>

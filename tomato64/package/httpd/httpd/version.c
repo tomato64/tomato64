@@ -35,6 +35,12 @@ void asp_version(int argc, char **argv)
 			/* wl driver version */
 			web_puts(EPI_VERSION_STR);
 			break;
+#ifdef TOMATO64
+		case 4:
+			/* nightly version */
+			web_puts(tomato_nightly);
+			break;
+#endif /* TOMATO64 */
 		default:
 			/* tomato version */
 			web_puts(tomato_version);

@@ -1,8 +1,14 @@
 #!/bin/bash
 
+set -e
+set -x
+
 VERSION=$(cat $BR2_EXTERNAL_TOMATO64_PATH/version)
 MAJOR=${VERSION%.*}
 MINOR=${VERSION#*.}
+
+COMMIT=$(unset GIT_DIR && git -C $BR2_EXTERNAL_TOMATO64_PATH rev-parse HEAD)
+TAGS=$(unset GIT_DIR && git -C $BR2_EXTERNAL_TOMATO64_PATH tag --points-at "$COMMIT")
 
 echo "#ifndef __TOMATO_VERSION_H__" >						tomato_version.h
 echo "#define __TOMATO_VERSION_H__" >>						tomato_version.h
@@ -22,4 +28,14 @@ if [ "$PLATFORM_MT6000" == y ]; then
 fi
 
 echo "#define TOMATO_SHORTVER		\"$VERSION\"" >>			tomato_version.h
+
+if [ ! -n "$TAGS" ]; then
+
+	DATE=$(unset GIT_DIR && git -C $BR2_EXTERNAL_TOMATO64_PATH log -1 --format=%ct)
+	DATE=$(date -d "@$DATE" +%m.%d.%y 2>/dev/null)
+
+	echo "#define TOMATO_NIGHTLY		\" Nightly $DATE\"" >>		tomato_version.h
+else
+	echo "#define TOMATO_NIGHTLY		\"\"" >>		tomato_version.h
+fi
 echo "#endif" >>								tomato_version.h

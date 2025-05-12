@@ -75,6 +75,9 @@
 extern const char *tomato_version;
 extern const char *tomato_buildtime;
 extern const char *tomato_shortver;
+#ifdef TOMATO64
+extern const char *tomato_nightly;
+#endif /* TOMATO64 */
 
 /* misc.c */
 #define	WP_DISABLED		0 /* order must be synced with def in misc.c */

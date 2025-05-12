@@ -123,7 +123,12 @@ function earlyInit() {
 			</form>
 			<table class="afu-info-table"><tr>
 				<td>Current Version:</td>
+/* TOMATO64-REMOVE-BEGIN */
 				<td>&nbsp; <% version(1); %></td>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+				<td>&nbsp; <% version(1); %><% version(4); %></td>
+/* TOMATO64-END */
 			</tr>
 			<tr>
 				<td>Free Memory:</td>
