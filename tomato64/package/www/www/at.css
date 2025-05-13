@@ -117,10 +117,6 @@ textarea {
 	color: inherit;
 }
 
-ul {
-	list-style-type: none;
-}
-
 li {
 	line-height: 18px;
 }
@@ -963,6 +959,10 @@ input[type="checkbox"] {
 }
 
 .section ul {
+	margin: 0px;
+}
+
+ul.tabs {
 	padding-left: 0px;
 	margin: 0px;
 }
@@ -2119,7 +2119,7 @@ span[id$="_notice"] > span[class^="service_"] {
 span[id$="_tabicon"] > span[class^="icon_"] {
 	background-position: 0;
 	background-repeat: no-repeat;
-	background-size: 20px 20px;
+	background-size: 18px 18px;
 	background-origin: border-box;
 	padding-left: 30px;
 	margin-top: 2px;
