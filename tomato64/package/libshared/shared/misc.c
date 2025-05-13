@@ -1197,7 +1197,7 @@ void nvram_commit_x(void)
 
 char *getNVRAMVar(const char *text, const int unit)
 {
-	char buffer[32];
+	char buffer[256];
 	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), text, unit);
 
