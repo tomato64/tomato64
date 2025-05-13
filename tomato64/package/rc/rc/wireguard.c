@@ -79,7 +79,8 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 #endif /* TCONFIG_BCMARM */
 
 			/* masquerade all peer outbound traffic regardless of source subnet */
-			fprintf(fp, "iptables -t nat -I POSTROUTING -o %s -j MASQUERADE\n", iface);
+			if (atoi(getNVRAMVar("wg%d_nat", unit)) == 1)
+				fprintf(fp, "iptables -t nat -I POSTROUTING -o %s -j MASQUERADE\n", iface);
 		}
 		else if (atoi(getNVRAMVar("wg%d_com", unit)) != 3) { /* other */
 			fprintf(fp, "iptables -A INPUT -p udp --dport %s -j %s\n"
