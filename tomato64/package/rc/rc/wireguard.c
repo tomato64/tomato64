@@ -49,6 +49,7 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 	char buffer[BUF_SIZE_64];
 	char tmp[BUF_SIZE_16];
 	char *dns;
+	int nvi;
 
 	memset(buffer, 0, BUF_SIZE_64);
 	snprintf(buffer, BUF_SIZE_64, WG_FW_DIR"/%s-fw.sh", iface);
@@ -61,16 +62,18 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 
 		chains_log_detection();
 
+		nvi = atoi(getNVRAMVar("wg%d_fw", unit));
+
 		/* Handle firewall rules if appropriate */
 		memset(tmp, 0, BUF_SIZE_16);
 		snprintf(tmp, BUF_SIZE_16, "wg%d_firewall", unit);
 		if (atoi(getNVRAMVar("wg%d_com", unit)) == 3 && !nvram_contains_word(tmp, "custom")) { /* 'External - VPN Provider' & auto */
 			fprintf(fp, "iptables -I INPUT -i %s -m state --state NEW -j %s\n"
-			            "iptables -I FORWARD -i %s -m state --state NEW -j DROP\n"
+			            "iptables -I FORWARD -i %s -m state --state NEW -j %s\n"
 			            "iptables -I FORWARD -o %s -j ACCEPT\n"
 			            "echo 1 > /proc/sys/net/ipv4/conf/all/src_valid_mark\n",
-			            iface, chain_in_drop,
-			            iface,
+			            iface, (nvi ? chain_in_drop : chain_in_accept),
+			            iface, (nvi ? "DROP" : "ACCEPT"),
 			            iface);
 
 #ifdef TCONFIG_BCMARM
