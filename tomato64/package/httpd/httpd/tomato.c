@@ -2093,6 +2093,7 @@ static const nvset_t nvset_list[] = {
 	{ "wg0_route",			V_NONE				},
 	{ "wg0_peer_dns",		V_TEXT(0, 128)			},
 	{ "wg0_peers",			V_NONE				},
+	{ "wg0_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
 	{ "wg1_enable",			V_01				},
 	{ "wg1_poll",			V_RANGE(0, 30)			},
 	{ "wg1_file",			V_TEXT(0, 64)			},
@@ -2119,6 +2120,7 @@ static const nvset_t nvset_list[] = {
 	{ "wg1_route",			V_NONE				},
 	{ "wg1_peer_dns",		V_TEXT(0, 128)			},
 	{ "wg1_peers",			V_NONE				},
+	{ "wg1_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
 	{ "wg2_enable",			V_01				},
 	{ "wg2_poll",			V_RANGE(0, 30)			},
 	{ "wg2_file",			V_TEXT(0, 64)			},
@@ -2145,6 +2147,7 @@ static const nvset_t nvset_list[] = {
 	{ "wg2_route",			V_NONE				},
 	{ "wg2_peer_dns",		V_TEXT(0, 128)			},
 	{ "wg2_peers",			V_NONE				},
+	{ "wg2_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
 #endif
 
 #ifdef TOMATO64

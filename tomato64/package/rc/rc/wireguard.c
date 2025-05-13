@@ -47,9 +47,8 @@ char fwmark[BUF_SIZE_16];
 static void wg_build_firewall(const int unit, const char *port, const char *iface) {
 	FILE *fp;
 	char buffer[BUF_SIZE_64];
+	char tmp[BUF_SIZE_16];
 	char *dns;
-
-	chains_log_detection();
 
 	memset(buffer, 0, BUF_SIZE_64);
 	snprintf(buffer, BUF_SIZE_64, WG_FW_DIR"/%s-fw.sh", iface);
@@ -60,7 +59,12 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 		fprintf(fp, "#!/bin/sh\n"
 		            "\n# FW\n");
 
-		if (atoi(getNVRAMVar("wg%d_com", unit)) == 3) { /* 'External - VPN Provider' */
+		chains_log_detection();
+
+		/* Handle firewall rules if appropriate */
+		memset(tmp, 0, BUF_SIZE_16);
+		snprintf(tmp, BUF_SIZE_16, "wg%d_firewall", unit);
+		if (atoi(getNVRAMVar("wg%d_com", unit)) == 3 && !nvram_contains_word(tmp, "custom")) { /* 'External - VPN Provider' & auto */
 			fprintf(fp, "iptables -I INPUT -i %s -m state --state NEW -j %s\n"
 			            "iptables -I FORWARD -i %s -m state --state NEW -j DROP\n"
 			            "iptables -I FORWARD -o %s -j ACCEPT\n"
@@ -68,24 +72,29 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 			            iface, chain_in_drop,
 			            iface,
 			            iface);
+
+#ifdef TCONFIG_BCMARM
+			if (!nvram_get_int("ctf_disable")) /* bypass CTF if enabled */
+				fprintf(fp, "iptables -t mangle -I PREROUTING -i %s -j MARK --set-mark 0x01/0x7\n", iface);
+#endif /* TCONFIG_BCMARM */
+
+			/* masquerade all peer outbound traffic regardless of source subnet */
+			fprintf(fp, "iptables -t nat -I POSTROUTING -o %s -j MASQUERADE\n", iface);
 		}
-		else { /* other */
+		else if (atoi(getNVRAMVar("wg%d_com", unit)) != 3) { /* other */
 			fprintf(fp, "iptables -A INPUT -p udp --dport %s -j %s\n"
 			            "iptables -A INPUT -i %s -j %s\n"
 			            "iptables -A FORWARD -i %s -j ACCEPT\n",
 			            port, chain_in_accept,
 			            iface, chain_in_accept,
 			            iface);
-		}
 
 #ifdef TCONFIG_BCMARM
-		if (!nvram_get_int("ctf_disable")) /* bypass CTF if enabled */
-			fprintf(fp, "iptables -t mangle -I PREROUTING -i %s -j MARK --set-mark 0x01/0x7\n", iface);
+			if (!nvram_get_int("ctf_disable")) /* bypass CTF if enabled */
+				fprintf(fp, "iptables -t mangle -I PREROUTING -i %s -j MARK --set-mark 0x01/0x7\n", iface);
 #endif /* TCONFIG_BCMARM */
 
-		if (atoi(getNVRAMVar("wg%d_com", unit)) == 3) /* 'External - VPN Provider' */
-			/* masquerade all peer outbound traffic regardless of source subnet */
-			fprintf(fp, "iptables -t nat -I POSTROUTING -o %s -j MASQUERADE\n", iface);
+		}
 
 		dns = getNVRAMVar("wg%d_dns", unit);
 		if (getNVRAMVar("wg%d_file", unit)[0] == '\0') { /* only if no optional config file has been added */
@@ -901,9 +910,6 @@ void start_wireguard(const int unit)
 	/* set up directories for later use */
 	wg_setup_dirs();
 
-	/* create firewall script & DNS rules */
-	wg_build_firewall(unit, port, iface);
-
 	/* check if file is specified */
 	if (getNVRAMVar("wg%d_file", unit)[0] != '\0') {
 		if (wg_quick_iface(iface, getNVRAMVar("wg%d_file", unit), 1))
@@ -976,6 +982,9 @@ void start_wireguard(const int unit)
 		/* run post up scripts */
 		wg_iface_post_up(unit);
 	}
+
+	/* create firewall script & DNS rules */
+	wg_build_firewall(unit, port, iface);
 
 	/* firewall + dns rules */
 	memset(buffer, 0, BUF_SIZE);
