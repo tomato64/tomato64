@@ -491,8 +491,8 @@ function init() {
 					{ name: 'vpn_'+t+'_addr', type: 'text', maxlen: 60, size: 17, value: nvram['vpn_'+t+'_addr'] },
 					{ name: 'vpn_'+t+'_port', type: 'text', maxlen: 5, size: 7, value: nvram['vpn_'+t+'_port'] } ] },
 				{ title: 'Firewall', name: 'vpn_'+t+'_firewall', type: 'select', options: [['auto','Automatic'],['custom','Custom']], value: nvram['vpn_'+t+'_firewall'] },
-				{ title: 'Create NAT on tunnel', name: 'f_vpn_'+t+'_nat', type: 'checkbox', value: nvram['vpn_'+t+'_nat'] != 0, suffix: ' <small id="'+t+'_nat_warn_text">routes must be configured manually<\/small>' },
-				{ title: 'Inbound Firewall', name: 'f_vpn_'+t+'_fw', type: 'checkbox', value: nvram['vpn_'+t+'_fw'] != 0 },
+				{ title: 'Create NAT on tunnel', indent: 2, name: 'f_vpn_'+t+'_nat', type: 'checkbox', value: nvram['vpn_'+t+'_nat'] != 0, suffix: ' <small id="'+t+'_nat_warn_text">routes must be configured manually<\/small>' },
+				{ title: 'Inbound Firewall', indent: 2, name: 'f_vpn_'+t+'_fw', type: 'checkbox', value: nvram['vpn_'+t+'_fw'] != 0 },
 				{ title: 'Authorization Mode', name: 'vpn_'+t+'_crypt', type: 'select', options: [['tls','TLS'],['secret','Static Key'],['custom','Custom']], value: nvram['vpn_'+t+'_crypt'],
 					suffix: ' <small id="'+t+'_custom_crypto_text">must be configured manually<\/small>' },
 				{ title: 'TLS control channel security <small>(tls-auth/tls-crypt)<\/small>', name: 'vpn_'+t+'_hmac', type: 'select', options: [[-1,'Disabled'],[2,'Bi-directional Auth'],[0,'Incoming Auth (0)'],[1,'Outgoing Auth (1)'],[3,'Encrypt Channel']
