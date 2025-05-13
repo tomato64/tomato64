@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+-<!DOCTYPE html>
 <!--
 	FreshTomato GUI
 	Copyright (C) 2023 - 2025 pedro
@@ -1713,6 +1713,7 @@ function verifyFields(focused, quiet) {
 		var nat = E('_f_wg'+i+'_nat').checked;
 		var ext = E('_wg'+i+'_com').value == 3; /* 'External - VPN Provider' */
 		if (ext) E('_f_wg'+i+'_peer_ip').value = '';
+		if (ext) E('_f_wg'+i+'_route').value = '1';
 		E('_f_wg'+i+'_peer_ip').disabled = ext;
 		elem.display('wg'+i+'-peer-param-title', !ext);
 		elem.display('wg'+i+'-peer-param', !ext);
@@ -1720,6 +1721,7 @@ function verifyFields(focused, quiet) {
 		elem.display('wg'+i+'-peers-generate-title', !ext);
 		elem.display('wg'+i+'-peers-generate', !ext);
 		elem.display(PR('_wg'+i+'_firewall'), ext);
+		elem.display(PR('_f_wg'+i+'_route'), !ext);
 		elem.display(PR('_f_wg'+i+'_nat'), fw != 'custom' && ext);
 		elem.display(PR('_f_wg'+i+'_fw'), fw != 'custom' && ext);
 		elem.display(E('wg'+i+'_nat_warn_text'), ext && !nat);
