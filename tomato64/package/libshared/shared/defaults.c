@@ -2870,6 +2870,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "packet_steering",		"1"				, 0 },
 	{ "steering_flows",		"0"				, 0 },
 	{ "steering_flows_custom",	"0"				, 0 },
+	{ "tty_login",			"1"				, 0 },
 #endif /* TOMATO64 */
 	{ 0, 0, 0 }
 };

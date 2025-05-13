@@ -97,6 +97,18 @@ static char *defenv[] = {
 	NULL
 };
 
+#ifdef TOMATO64
+static char *loginenv[] = {
+	"TERM=xterm-256color",
+	"HOME=/",
+	"PATH=/usr/bin:/bin:/usr/sbin:/sbin",
+	"SHELL=" SHELL,
+	"USER=root",
+	"LOGIN_TIMEOUT=0",
+	NULL
+};
+#endif /* TOMATO64 */
+
 static void restore_defaults(void)
 {
 #ifdef TCONFIG_BCMARM
@@ -413,7 +425,14 @@ static pid_t run_shell(int timeout, int nowait)
 
 		/* Now run it. The new program will take over this PID,
 		 * so nothing further in init.c should be run. */
+#ifdef TOMATO64
+		if (nvram_get_int("tty_login"))
+			execve("/bin/login", (char *[]) { "/bin/login", NULL }, loginenv);
+		else
+			execve(SHELL, (char *[]) { SHELL, NULL }, defenv);
+#else
 		execve(SHELL, (char *[]) { SHELL, NULL }, defenv);
+#endif /* TOMATO64 */
 
 		/* We're still here? Some error happened. */
 		perror(SHELL);
@@ -11576,10 +11595,19 @@ static void sysinit(void)
 	}
 #endif /* TOMATO64 */
 
+#ifndef TOMATO64
 	if (!noconsole) {
 		printf("\n\nHit ENTER for console...\n\n");
 		run_shell(1, 0);
 	}
+#else
+	if (!nvram_get_int("tty_login")) {
+		if (!noconsole) {
+			printf("\n\nHit ENTER for console...\n\n");
+			run_shell(1, 0);
+		}
+	}
+#endif /* TOMATO64 */
 
 	check_bootnv();
 
