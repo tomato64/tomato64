@@ -1,0 +1,5 @@
+config BR2_PACKAGE_NBFC_LINUX
+	bool "nbfc-linux"
+	select BR2_PACKAGE_LM_SENSORS
+	help
+	  C port of Stefan Hirschmann's NoteBook FanControl
