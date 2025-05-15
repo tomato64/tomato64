@@ -31,8 +31,7 @@ echo "#define TOMATO_SHORTVER		\"$VERSION\"" >>			tomato_version.h
 
 if [ ! -n "$TAGS" ]; then
 
-	DATE=$(unset GIT_DIR && git -C $BR2_EXTERNAL_TOMATO64_PATH log -1 --format=%ct)
-	DATE=$(date -d "@$DATE" +%m.%d.%y 2>/dev/null)
+	DATE=$(date -d "yesterday" +%m.%d.%y 2>/dev/null)
 
 	echo "#define TOMATO_NIGHTLY		\" Nightly $DATE\"" >>		tomato_version.h
 else
