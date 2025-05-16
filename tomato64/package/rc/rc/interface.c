@@ -359,6 +359,11 @@ void stop_vlan(void)
 	char nvvar_name[16];
 	char vlan_id[16];
 	char *hwname;
+#ifdef TOMATO64
+	char *hwnames, *p;
+	char iface_name[16];
+#endif /* TOMATO64 */
+
 #ifndef TOMATO64
 #if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
 	int vlan0tag = nvram_get_int("vlan0tag");
@@ -371,8 +376,15 @@ void stop_vlan(void)
 	for (i = 0; i < TOMATO_VLANNUM; i ++) {
 		/* get the address of the EMAC on which the VLAN sits */
 		snprintf(nvvar_name, sizeof(nvvar_name), "vlan%dhwname", i);
+#ifndef TOMATO64
 		if (!(hwname = nvram_get(nvvar_name)))
 			continue;
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+		hwnames = nvram_get(nvvar_name);
+		if (hwnames == NULL || hwnames[0] == '\0')
+			continue;
+#endif /* TOMATO64 */
 
 		/* vlan ID mapping */
 		snprintf(nvvar_name, sizeof(nvvar_name), "vlan%dvid", i);
@@ -390,8 +402,17 @@ void stop_vlan(void)
 		}
 
 		/* remove the VLAN interface */
+#ifdef TOMATO64
+		p = hwnames;
+		while ((hwname = strsep(&p, " ")) != NULL) {
+			snprintf(iface_name, sizeof(iface_name), "%s.%d", hwname, vid_map);
+			eval("ip", "link", "delete", iface_name);
+		}
+#endif /* TOMATO64 */
+#ifndef TOMATO64
 		snprintf(vlan_id, sizeof(vlan_id), "vlan%d", vid_map);
 
 		eval("vconfig", "rem", vlan_id);
+#endif /* TOMATO64 */
 	}
 }
