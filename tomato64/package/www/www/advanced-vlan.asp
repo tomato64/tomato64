@@ -1420,9 +1420,6 @@ function init() {
 /* TOMATO64-REMOVE-BEGIN */
 	<div class="section-title">VLAN Wireless</div>
 /* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-	<div class="section-title" hidden="hidden">VLAN Wireless</div>
-/* TOMATO64-END */
 	<div class="section">
 		<script>
 			var f = [];
@@ -1458,18 +1455,23 @@ function init() {
 			<li><b>Default VLAN</b> - VLAN ID assigned to untagged frames received by the router.</li>
 			<li><b>VLAN to Bridge mapping</b> - One and only one VLAN can be assigned to a bridge. Do not confuse Ethernet WAN (physical port) with WAN bridge (logical interface), they might or might not map onto each other</li>
 		</ul>
+/* TOMATO64-REMOVE-BEGIN */
 		<br>
 		<i>VLAN Wireless:</i> Assignments of wireless interfaces to predefined LAN bridges.<br>
 		<ul>
 			<li><b>Bridge $wireless_if to $lan_bridge</b> - For each wireless interface define (physical or virtual) specify to what LAN bridge this has to map</li>
 		</ul>
+/* TOMATO64-REMOVE-END */
 		<br>
 		<i>Other relevant notes/hints:</i><br>
 		<ul>
-			<li>You should probably cross check things on <a href="basic-network.asp">Basic/Network</a> and <a href="advanced-wlanvifs.asp">Advanced/Virtual Wireless</a></li>
 /* TOMATO64-REMOVE-BEGIN */
+			<li>You should probably cross check things on <a href="basic-network.asp">Basic/Network</a> and <a href="advanced-wlanvifs.asp">Advanced/Virtual Wireless</a></li>
 			<li>Be mindful some Tomato64 releases might use VID 0 as default others VID 1.</li>
 /* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			<li>You should probably cross check things on <a href="basic-network.asp">Basic/Network</a></li>
+/* TOMATO64-END */
 			<li>One VID <i>must</i> be assigned to the WAN bridge.</li>
 			<script>
 				W('<li>One VID <i>must<\/i> be selected as the default VLAN.<\/li>\n');
