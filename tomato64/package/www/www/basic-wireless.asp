@@ -316,7 +316,7 @@ function refreshWidths(device) {
 	if (mode == 'be') {
 		if (eval('wireless.'+t+'_EHT20') == 1) w.push(['20', '20 MHz']);
 		if (eval('wireless.'+t+'_EHT40') == 1) w.push(['40', '40 MHz']);
-		if (eval('wireless.'+t+ '_EHT80') == 1) w.push(['80', '80 MHz']);
+		if (eval('wireless.'+t+'_EHT80') == 1) w.push(['80', '80 MHz']);
 		if (eval('wireless.'+t+'_EHT160') == 1) w.push(['160', '160 MHz']);
 		if (eval('wireless.'+t+'_EHT320') == 1) w.push(['320', '320 MHz']);
 	}
