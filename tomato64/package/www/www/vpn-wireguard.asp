@@ -1,4 +1,4 @@
--<!DOCTYPE html>
+<!DOCTYPE html>
 <!--
 	FreshTomato GUI
 	Copyright (C) 2023 - 2025 pedro
@@ -24,21 +24,28 @@
 
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,lan1_ifname,lan1_ipaddr,lan1_netmask,lan2_ifname,lan2_ipaddr,lan2_netmask,lan3_ifname,lan3_ipaddr,lan3_netmask,wg_adns,wg0_enable,wg0_poll,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg1_enable,wg1_poll,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg2_enable,wg2_poll,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw"); %>
+//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,lan1_ifname,lan1_ipaddr,lan1_netmask,lan2_ifname,lan2_ipaddr,lan2_netmask,lan3_ifname,lan3_ipaddr,lan3_netmask,wg_adns,wg0_enable,wg0_poll,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg0_rgwr,wg0_routing_val,wg1_enable,wg1_poll,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg1_rgwr,wg1_routing_val,wg2_enable,wg2_poll,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw,wg2_rgwr,wg2_routing_val"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,lan1_ifname,lan1_ipaddr,lan1_netmask,lan2_ifname,lan2_ipaddr,lan2_netmask,lan3_ifname,lan3_ipaddr,lan3_netmask,lan4_ifname,lan4_ipaddr,lan4_netmask,lan5_ifname,lan5_ipaddr,lan5_netmask,lan6_ifname,lan6_ipaddr,lan6_netmask,lan7_ifname,lan7_ipaddr,lan7_netmask,wg_adns,wg0_enable,wg0_poll,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg1_enable,wg1_poll,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg2_enable,wg2_poll,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw"); %>
+//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,lan1_ifname,lan1_ipaddr,lan1_netmask,lan2_ifname,lan2_ipaddr,lan2_netmask,lan3_ifname,lan3_ipaddr,lan3_netmask,lan4_ifname,lan4_ipaddr,lan4_netmask,lan5_ifname,lan5_ipaddr,lan5_netmask,lan6_ifname,lan6_ipaddr,lan6_netmask,lan7_ifname,lan7_ipaddr,lan7_netmask,wg_adns,wg0_enable,wg0_poll,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg0_rgwr,wg0_routing_val,wg1_enable,wg1_poll,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg1_rgwr,wg1_routing_val,wg2_enable,wg2_poll,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw,wg2_rgwr,wg2_routing_val"); %>
 /* TOMATO64-END */
 
 
 var cprefix = 'vpn_wireguard';
-var changed = 0;
+var changed = 0, i;
 var serviceType = 'wireguard';
+for (i = 0; i < WG_INTERFACE_COUNT; i++) serviceLastUp.push('0');
+
+function RouteGrid() {return this;}
+RouteGrid.prototype = new TomatoGrid;
 
 var tabs =  [];
 for (i = 0; i < WG_INTERFACE_COUNT; ++i)
 	tabs.push(['wg'+i,'<span id="'+serviceType+i+'_tabicon" style="font-size:9px">⛔ <\/span><span class="tabname">wg'+i+'</span>']);
-var sections = [['wg-config','Config'],['wg-peers','Peers'],['wg-scripts','Scripts'],['wg-status','Status']];
+var sections = [['wg-config','Config'],['wg-peers','Peers'],['wg-scripts','Scripts'],['wg-policy','Routing Policy'],['wg-status','Status']];
+
+var routingTables = [];
+for (i = 0; i < tabs.length; ++i) routingTables.push(new RouteGrid());
 
 function update_nvram(fom) {
 	for (var i = 0; i < fom.length; ++i) {
@@ -185,8 +192,15 @@ function sectSelect(tab, section) {
 	cookie.set(cprefix+tab+'_section', section);
 }
 
-function updateForm(num) {
+function updateForm(num, fw) {
 	var fom = E('t_fom');
+
+	if (fw && fom._service.value.indexOf('firewall') < 0) {
+		if (fom._service.value != '')
+			fom._service.value += ',';
+
+		fom._service.value += 'firewall-restart';
+	}
 
 	if (isup['wireguard'+num] && fom._service.value.indexOf('wg'+num) < 0) {
 		if (fom._service.value != '')
@@ -958,7 +972,7 @@ function generateInterfaceKey(unit) {
 		var keys = window.wireguard.generateKeypair();
 		E('_wg'+unit+'_key').value = keys.privateKey;
 		E('_wg'+unit+'_pubkey').value = keys.publicKey;
-		updateForm(unit);
+		updateForm(unit, 0);
 		changed = 1;
 	}
 }
@@ -1029,7 +1043,7 @@ function addPeer(unit, quiet) {
 	peerTables[unit].disableNewEditor(true);
 
 	clearPeerFields(unit);
-	updateForm(unit);
+	updateForm(unit, 0);
 
 	var qrcode = E('wg'+unit+'_qrcode');
 	if (qrcode.style.display != 'none') {
@@ -1052,7 +1066,7 @@ function editPeer(unit, rowIndex, quiet) {
 	peerTables[unit].disableNewEditor(true);
 
 	clearPeerFields(unit);
-	updateForm(unit);
+	updateForm(unit, 0);
 
 	var button = E('wg'+unit+'_peer_add');
 	button.value = 'Add to Peers';
@@ -1566,6 +1580,78 @@ function mayClose(event) {
 	}
 }
 
+RouteGrid.prototype.fieldValuesToData = function(row) {
+	var f = fields.getAll(row);
+
+	return [(f[0].checked ? 1 : 0), f[1].value, f[2].value,f[3].checked?1:0];
+}
+
+RouteGrid.prototype.dataToView = function(data) {
+	var temp = ['<input type="checkbox" disabled'+(data[0] != 0 ? ' checked' : '')+'>',['From Source IP','To Destination IP','To Domain'][data[1] - 1],data[2],'<input type="checkbox" disabled'+(data[3] != 0 ? ' checked' : '')+'>'];
+	var v = [];
+	for (var i = 0; i < temp.length; ++i)
+		v.push(((i == 0) || (i == 3)) ? temp[i] : escapeHTML(''+temp[i]));
+
+	return v;
+}
+
+RouteGrid.prototype.dataToFieldValues = function(data) {
+	return [data[0] == 1, data[1], data[2],data[3] == 1];
+}
+
+RouteGrid.prototype.rpDel = function(row) {
+	changed = 1;
+	row = PR(row);
+	TGO(row).moving = null;
+	row.parentNode.removeChild(row);
+	this.recolor();
+	this.rpHide();
+
+	for (var unit = 0; unit < tabs.length; ++unit) {
+		if (routingTables[unit] == this)
+			updateForm(unit, 1);
+	}
+}
+
+RouteGrid.prototype.verifyFields = function(row, quiet) {
+	changed = 1;
+	var ok = 1;
+	var clientnum = 1;
+	for (var unit = 0; unit < tabs.length; ++unit) {
+		if (routingTables[unit] == this)
+			updateForm(unit, 1);
+	}
+	var f = fields.getAll(row);
+
+	f[2].value = f[2].value.trim();
+	ferror.clear(f[2]);
+
+	/* Verify fields in this row of the table */
+	if (f[2].value == '') {
+		ferror.set(f[2], 'Value is mandatory', quiet || !ok);
+		ok = 0;
+	}
+	else if (f[2].value.indexOf('>') >= 0 || f[2].value.indexOf('<') >= 0) {
+		ferror.set(f[2], 'Value cannot contain "<" or ">" characters', quiet || !ok);
+		ok = 0;
+	}
+	else if (f[2].value.indexOf(' ') >= 0 || f[2].value.indexOf(',') >= 0 || f[2].value.indexOf('\t') >= 0 || f[2].value.indexOf(':') >= 0) {
+		ferror.set(f[2], 'Value cannot contain "space", "tab", ":" or "," characters. Only one IP or Domain per entry', quiet || !ok);
+		ok = 0;
+	}
+	else if (f[2].value.indexOf('-') >= 0 && f[1].value == 2) {
+		ferror.set(f[2], 'Value cannot contain "-" character. IP range is not supported', quiet || !ok);
+		ok = 0;
+	}
+	else
+		ferror.clear(f[2]);
+
+	if (f[1].value != 3 && (!v_iptaddr(f[2], quiet || !ok)))
+		ok = 0;
+
+	return ok;
+}
+
 function verifyCIDR(cidr) {
 	return cidr.match(/(([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\.){3}([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\/[0-9]|([1-2][0-9]|3[0-2])/)
 }
@@ -1600,7 +1686,7 @@ function verifyFields(focused, quiet) {
 		if (serveridx >= 0) {
 			var num = focused.name.substring(serveridx + 2, serveridx + 3);
 
-			updateForm(num);
+			updateForm(num, 0);
 
 			if (focused.name.indexOf('_adns') >= 0 && fom._service.value.indexOf('dnsmasq') < 0) {
 				if (fom._service.value != '')
@@ -1697,6 +1783,7 @@ function verifyFields(focused, quiet) {
 		var fw = E('_wg'+i+'_firewall').value;
 		var nat = E('_f_wg'+i+'_nat').checked;
 		var ext = E('_wg'+i+'_com').value == 3; /* 'External - VPN Provider' */
+		var rgwr = (E('_wg'+i+'_rgwr').value == 2 || E('_wg'+i+'_rgwr').value == 3);
 		if (ext) E('_f_wg'+i+'_peer_ip').value = '';
 		if (ext) E('_f_wg'+i+'_route').value = '1';
 		E('_f_wg'+i+'_peer_ip').disabled = ext;
@@ -1710,6 +1797,10 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_f_wg'+i+'_nat'), fw != 'custom' && ext);
 		elem.display(PR('_f_wg'+i+'_fw'), fw != 'custom' && ext);
 		elem.display(E('wg'+i+'_nat_warn_text'), ext && !nat);
+
+		/* Page Routing Policy */
+		elem.display(E('table_wg'+i+'_routing'), ext && rgwr);
+		elem.display(E('_wg'+i+'_routing_div_help'), (!ext) || (ext && !rgwr));
 
 		/* verify interface dns */
 		var dns = E('_wg'+i+'_dns');
@@ -1836,6 +1927,12 @@ function save(nomsg) {
 		fom['wg'+i+'_peers'].value = s;
 		nvram['wg'+i+'_peers'] = s;
 
+		var routedata = routingTables[i].getAllData();
+		s = '';
+		for (j = 0; j < routedata.length; ++j)
+			s += routedata[j].join('<')+'>';
+
+		fom['wg'+i+'_routing_val'].value = s;
 		fom['wg'+i+'_enable'].value = fom['_f_wg'+i+'_enable'].checked ? 1 : 0;
 		fom['wg'+i+'_rgw'].value = fom['_f_wg'+i+'_rgw'].checked ? 1 : 0;
 		fom['wg'+i+'_nat'].value = fom['_f_wg'+i+'_nat'].checked ? 1 : 0;
@@ -1902,6 +1999,27 @@ function earlyInit() {
 	var tab = cookie.get(cprefix+'_tab') || tabs[0][0];
 	for (var i = 0; i < tabs.length; ++i) {
 		sectSelect(i, cookie.get(cprefix+i+'_section') || sections[0][0]);
+
+		var t = tabs[i][0];
+
+		routingTables[i].init('table_'+t+'_routing','sort', 0,[ { type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+		                                                        { type: 'select', options: [[1,'From Source IP'],[2,'To Destination IP'],[3,'To Domain']] },
+		                                                        { type: 'text', maxlen: 50 },
+		                                                        { type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' }]);
+		routingTables[i].headerSet(['Enable','Type','Value','Kill Switch']);
+		var routingVal = nvram['wg'+t+'_routing_val'];
+		if (routingVal && routingVal.length) {
+			var s = routingVal.split('>');
+			for (var j = 0; j < s.length; ++j) {
+				if (!s[j].length)
+					continue;
+
+				var row = s[j].split('<');
+				routingTables[i].insertData(-1, row);
+			}
+		}
+		routingTables[i].showNewEditor();
+		routingTables[i].resetNewEditor();
 	}
 	tabSelect(tab);
 	verifyFields(null, 1);
@@ -1972,6 +2090,7 @@ function init() {
 			W('<input type="hidden" name="'+t+'_route">');
 			W('<input type="hidden" name="'+t+'_nat">');
 			W('<input type="hidden" name="'+t+'_fw">');
+			W('<input type="hidden" name="'+t+'_routing_val">');
 
 			W('<ul class="tabs">');
 			for (j = 0; j < sections.length; j++) {
@@ -2005,7 +2124,8 @@ function init() {
 				{ title: 'Create NAT on tunnel', indent: 2, name: 'f_'+t+'_nat', type: 'checkbox', value: nvram[t+'_nat'] != 0, suffix: ' <small id="'+t+'_nat_warn_text">routes must be configured manually<\/small>' },
 				{ title: 'Inbound Firewall', indent: 2, name: 'f_'+t+'_fw', type: 'checkbox', value: nvram[t+'_fw'] != 0 },
 				null,
-				{ title: 'Type of VPN', name: t+'_com', type: 'select', options: [['0','Internal - Hub (this device) and Spoke (peers)'],['1','Internal - Full Mesh (defined Endpoint only)'],['2','Internal - Full Mesh'],['3','External - VPN Provider']], value: nvram[t+'_com'] || 0 }
+				{ title: 'Type of VPN', name: t+'_com', type: 'select', options: [['0','Internal - Hub (this device) and Spoke (peers)'],['1','Internal - Full Mesh (defined Endpoint only)'],['2','Internal - Full Mesh'],['3','External - VPN Provider']], value: nvram[t+'_com'] || 0 },
+				{ title: 'Redirect Internet traffic', name: t+'_rgwr', type: 'select', options: [[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram[t+'_rgwr'] },
 			]);
 			W('<br>');
 
@@ -2100,6 +2220,13 @@ function init() {
 			]);
 			W('<\/div>');
 			/* scripts tab stop */
+
+			/* routing policy tab start */
+			W('<div id="'+t+'-wg-policy">');
+			W('<div class="tomato-grid" id="table_'+t+'_routing"><\/div>');
+			W('<div id="_'+t+'_routing_div_help"><div class="fields"><div class="about"><b>To use Routing Policy, you have to choose "Extarnal - VPN Provider" as Type of VPN and "Routing Policy [(strict)]" in "Redirect Internet Traffic".<\/b><\/div><\/div><\/div>');
+			W('<\/div>');
+			/* routing policy tab stop */
 
 			/* status tab start */
 			W('<div id="'+t+'-wg-status">');
@@ -2217,6 +2344,20 @@ function init() {
 		</ul>
 	</div>
 	<!-- peers notes stop -->
+
+	<!-- routing policy start -->
+	<div id="notes-wg-policy" style="display:none">
+		<ul>
+			<li><b>Routing Policy</b> - defines rules that determine how network traffic is routed through the VPN tunnel, based on factors such as source or destination.</li>
+			<ul>
+				<li><b>Type -> From Source IP</b> - Ex: "1.2.3.4", "1.2.3.4 - 2.3.4.5", "1.2.3.0/24".</li>
+				<li><b>Type -> To Destination IP</b> - Ex: "1.2.3.4" or "1.2.3.0/24".</li>
+				<li><b>Type -> To Domain</b> - Ex: "domain.com". Please enter one domain per line.</li>
+				<li><b>IMPORTANT!</b> - Kill Switch IPs from all clients are applied to each active client, not just the client to which they are entered (so-called strict Kill Switch).</li>
+			</ul>
+		</ul>
+	</div>
+	<!-- routing policy notes stop -->
 
 	<!-- scripts notes start -->
 	<div id="notes-wg-scripts" style="display:none">
