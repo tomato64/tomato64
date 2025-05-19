@@ -1,0 +1,35 @@
+commit 4cca0f30f2b263acf97c6d0abd8d31e2417542e2
+Author: Peter Korsgaard <peter@korsgaard.com>
+Date:   Fri May 16 22:55:46 2025 +0200
+
+    package/pkg-autotools.mk: LIBTOOL_PATCH_HOOK: also handle libtool 2.5.x
+    
+    Fixes:
+    https://autobuild.buildroot.org/results/ac60d29fbcd9fb8ddb21b76b3b185e45e580c006/
+    
+    Libtool 2.5.x has been released and is starting to be used by upstreams when
+    generating release tarballs (E.G. openvpn-2.6.14).
+    
+    https://lists.gnu.org/archive/html/autotools-announce/2024-09/msg00000.html
+    
+    It needs to be patched similar to earlier versions, and the existing v2.4.4
+    patch luckily still applies, so extend LIBTOOL_PATCH_HOOK to also patch
+    2.5.x versions with that.
+    
+    Signed-off-by: Peter Korsgaard <peter@korsgaard.com>
+    Tested-by: Bernd Kuhls <bernd@kuhls.net>
+    [fixes build of openvpn-2.6.14]
+
+diff --git a/package/pkg-autotools.mk b/package/pkg-autotools.mk
+index 8ffb0e0047..16b21acb6d 100644
+--- a/package/pkg-autotools.mk
++++ b/package/pkg-autotools.mk
+@@ -74,6 +74,8 @@ define LIBTOOL_PATCH_HOOK
+ 			else \
+ 				patch -i support/libtool/buildroot-libtool-v2.4.patch $${i}; \
+ 			fi \
++		elif test $${ltmain_version} = "2.5"; then\
++			patch -i support/libtool/buildroot-libtool-v2.4.4.patch $${i}; \
+ 		fi \
+ 	done
+ endef

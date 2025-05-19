@@ -36,7 +36,6 @@ BR2_PACKAGE_BUSYBOX_CONFIG="$(BR2_EXTERNAL_TOMATO64_PATH)/package/busybox/busybo
 BR2_PACKAGE_BINUTILS=y
 BR2_PACKAGE_BINUTILS_TARGET=y
 # BR2_PACKAGE_EUDEV_ENABLE_HWDB is not set
-# BR2_PACKAGE_UBOOT_TOOLS_FWPRINTENV is not set
 # BR2_PACKAGE_DROPBEAR_SMALL is not set
 # BR2_PACKAGE_IFUPDOWN_SCRIPTS is not set
 # BR2_PACKAGE_WIRELESS_TOOLS_IWCONFIG is not set
@@ -44,7 +43,7 @@ BR2_PACKAGE_FILE=y
 BR2_PACKAGE_TMUX=y
 BR2_TARGET_ROOTFS_EXT2=y
 BR2_TARGET_ROOTFS_EXT2_4=y
-BR2_TARGET_ROOTFS_EXT2_SIZE="620M"
+BR2_TARGET_ROOTFS_EXT2_SIZE="625M"
 BR2_TARGET_ROOTFS_TAR_ZSTD=y
 BR2_TARGET_ROOTFS_TAR_OPTIONS="--exclude='./bkp' --exclude='./cifs1' --exclude='./cifs2' --exclude='./dev' --exclude='./etc' --exclude='./home' --exclude='./jffs' --exclude='./lib64' --exclude='./media' --exclude='./mmc' --exclude='./mnt' --exclude='./nas' --exclude='./nvram' --exclude='./opt' --exclude='./proc' --exclude='./root' --exclude='./sys' --exclude='./tftpboot' --exclude='./var'"
 BR2_PACKAGE_HOST_GO_BIN=y
