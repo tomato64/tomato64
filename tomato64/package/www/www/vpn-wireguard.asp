@@ -14,21 +14,6 @@
 <title>[<% ident(); %>] Wireguard</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
-<style>
-
-.co5, .co7, .co9, .co10 {
-	display: none;
-}
-
-.qrcode {
-	display: grid;
-	justify-items: center;
-	text-align: center;
-	font-size: large;
-	padding: 10px;
-}
-
-</style>
 <script src="isup.jsz?rel=<% version(); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="wireguard.js?rel=<% version(); %>"></script>

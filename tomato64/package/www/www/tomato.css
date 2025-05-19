@@ -1708,6 +1708,21 @@ span[id$="_notice"] {
 	width: 194px;
 }
 
+div[id$="-wg-peers"] > .qrcode {
+	display: grid;
+	justify-items: center;
+	text-align: center;
+	font-size: large;
+	padding: 10px;
+}
+
+div[id^="wg"] td.co5,
+div[id^="wg"] td.co7,
+div[id^="wg"] td.co9,
+div[id^="wg"] td.co10 {
+	display: none;
+}
+
 /* SVG */
 #svg text {
 	font: 11px monospace;
