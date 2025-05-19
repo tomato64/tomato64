@@ -8237,6 +8237,21 @@ static int init_nvram(void)
 			set_defaults(ex7000_0_params, "0:%s");
 			set_defaults(ex7000_1_params, "1:%s");
 		}
+
+		/* Enable ethernet switch - toggle bit 11 for all ports (0...4) from "Power-down" back to "Normal operation" */
+		/* Power-down */
+		eval("et", "robowr", "0x10", "0x0", "0x1940"); /* Port 0 Internal PHY MII Registers */
+		eval("et", "robowr", "0x11", "0x0", "0x1940");
+		eval("et", "robowr", "0x12", "0x0", "0x1940");
+		eval("et", "robowr", "0x13", "0x0", "0x1940");
+		eval("et", "robowr", "0x14", "0x0", "0x1940"); /* Port 4 Internal PHY MII Registers */
+		/* Normal operation */
+		eval("et", "robowr", "0x10", "0x0", "0x1140");
+		eval("et", "robowr", "0x11", "0x0", "0x1140");
+		eval("et", "robowr", "0x12", "0x0", "0x1140");
+		eval("et", "robowr", "0x13", "0x0", "0x1140");
+		eval("et", "robowr", "0x14", "0x0", "0x1140");
+		
 		if (!nvram_get_int("caldata_ready")) { /* last step: set router specific cal and rxgainerr data if not yet applied */
 			setcaldata();
 			setrxgainerrdata(); 
