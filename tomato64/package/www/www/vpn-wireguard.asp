@@ -2007,8 +2007,8 @@ function earlyInit() {
 		                                                        { type: 'text', maxlen: 50 },
 		                                                        { type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' }]);
 		routingTables[i].headerSet(['Enable','Type','Value','Kill Switch']);
-		var routingVal = nvram['wg'+t+'_routing_val'];
-		if (routingVal && routingVal.length) {
+		var routingVal = nvram[t+'_routing_val'];
+		if (routingVal.length) {
 			var s = routingVal.split('>');
 			for (var j = 0; j < s.length; ++j) {
 				if (!s[j].length)
