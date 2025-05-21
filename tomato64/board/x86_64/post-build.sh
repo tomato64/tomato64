@@ -23,4 +23,4 @@ rm -rf $BINARIES_DIR/rtw*
 rm -rf $BINARIES_DIR/mediatek/
 rm -rf $BINARIES_DIR/ath10k/
 
-$BR2_EXTERNAL_TOMATO64_PATH/board/x86_64/post-build-fs.sh
+$BR2_EXTERNAL_TOMATO64_PATH/board/common/post-build-fs.sh

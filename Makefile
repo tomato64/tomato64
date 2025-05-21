@@ -64,7 +64,7 @@ endif
 ifeq (,$(wildcard ${MEDIATEK_KERNEL_PATCH}))
 	wget -O ${MEDIATEK_KERNEL_PATCH} https://github.com/tomato64/openwrt-mediatek-kernel/releases/download/${MEDIATEK_KERNEL_VERSION}/00001-openwrt-mediatek-kernel-${MEDIATEK_KERNEL_VERSION}.patch
 endif
-	cp ${MEDIATEK_KERNEL_PATCH} tomato64/board/mt6000/linux-patches/
+	cp ${MEDIATEK_KERNEL_PATCH} tomato64/board/arm64/common/linux-patches/
 	@touch $@
 
 .DEFAULT:

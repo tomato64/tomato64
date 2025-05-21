@@ -3,7 +3,7 @@
 set -e
 
 sh \
-$BR2_EXTERNAL_TOMATO64_PATH/board/mt6000/sysupgrade-tar.sh \
+$BR2_EXTERNAL_TOMATO64_PATH/board/arm64/common/sysupgrade-tar.sh \
 --board glinet_gl-mt6000 \
 --kernel $BINARIES_DIR/glinet_gl-mt6000-kernel.bin \
 --rootfs $BINARIES_DIR/rootfs.ext4 \

@@ -83,7 +83,7 @@ then
 
 	lzma_alone e $BINARIES_DIR/Image -lc1 -lp2 -pb2 $BINARIES_DIR/glinet_gl-mt6000-kernel.bin
 
-	$BR2_EXTERNAL_TOMATO64_PATH/board/mt6000/mkits.sh \
+	$BR2_EXTERNAL_TOMATO64_PATH/board/arm64/common/mkits.sh \
 	-D glinet_gl-mt6000 \
 	-o $BINARIES_DIR/glinet_gl-mt6000-kernel.bin.its \
 	-k $BINARIES_DIR/glinet_gl-mt6000-kernel.bin \
