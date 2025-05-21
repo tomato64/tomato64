@@ -2074,7 +2074,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Wireguard Configuration</div>
+<div class="section-title vpn-title"><img src="wireguard.svg">Wireguard Configuration</div>
 <div class="section">
 	<script>
 		tabCreate.apply(this, tabs);

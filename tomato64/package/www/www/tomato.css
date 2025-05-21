@@ -300,6 +300,15 @@ ul.tabs a:hover,
 	border-bottom: 1px solid #f0f0f0;
 }
 
+div.section-title.vpn-title {
+	display: flex;
+	align-items: center;
+}
+
+div.section-title.vpn-title > img {
+	margin-right: 10px;
+}
+
 table.fields {
 	margin: 0;
 	width: 100%

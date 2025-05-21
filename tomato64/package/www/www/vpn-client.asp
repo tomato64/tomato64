@@ -453,7 +453,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">OpenVPN Client Configuration</div>
+<div class="section-title vpn-title"><img src="openvpn.svg">OpenVPN Client Configuration</div>
 <div class="section">
 	<script>
 		tabCreate.apply(this, tabs);

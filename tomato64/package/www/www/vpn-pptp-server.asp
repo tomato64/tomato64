@@ -287,7 +287,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">PPTP Server Configuration</div>
+<div class="section-title vpn-title"><img src="pptp.svg">PPTP Server Configuration</div>
 <div class="section">
 	<script>
 		createFieldTable('', [
