@@ -47,7 +47,7 @@ function show() {
 	var e = E('_sshd_button');
 	e.value = (isup.dropbear ? 'Stop' : 'Start')+' Now';
 	e.setAttribute('onclick', 'javascript:toggle(\'sshd\','+isup.dropbear+');');
-	E('_sshd_notice').innerHTML = (isup.dropbear ? '<span class="service_up"><span class="servup_image">▷ <\/span>RUNNING<\/span>' : '<span class="service_down"><span class="servdn_image">⛔ <\/span>STOPPED<\/span>');
+	E('_sshd_notice').innerHTML = (isup.dropbear ? '<span class="service_up"><span class="servup_image">▲ <\/span>Up<\/span>' : '<span class="service_down"><span class="servdn_image">▽ <\/span>Down<\/span>');
 	countButton += 1;
 	if (serviceLastUp[0] != isup.dropbear || countButton > 6) {
 		serviceLastUp[0] = isup.dropbear;
@@ -59,7 +59,7 @@ function show() {
 	e = E('_telnetd_button');
 	e.value = ((isup.telnetd) ? 'Stop' : 'Start')+' Now';
 	e.setAttribute('onclick', 'javascript:toggle(\'telnetd\','+(isup.telnetd)+');');
-	E('_telnetd_notice').innerHTML = (isup.telnetd ? '<span class="service_up"><span class="servup_image">▷ <\/span>RUNNING<\/span>' : '<span class="service_down"><span class="servdn_image">⛔ <\/span>STOPPED<\/span>');
+	E('_telnetd_notice').innerHTML = (isup.telnetd ? '<span class="service_up"><span class="servup_image">▲ <\/span>Up<\/span>' : '<span class="service_down"><span class="servdn_image">▽ <\/span>Down<\/span>');
 	countButton2 += 1;
 	if (serviceLastUp2[0] != isup.telnetd || countButton2 > 6) {
 		serviceLastUp2[0] = isup.telnetd;

@@ -2100,6 +2100,23 @@ table.fields tr td.wwan-parser-view {
 	background-image: var(--icon-button-stopped);
 }
 
+.service_up {
+	color: white;
+	background-color: #32CD32;
+	font-weight: bold;
+	min-width: 38px;
+	text-align: center;
+	border: none;
+}
+
+.service_down {
+	color: white;
+	background-color: #FF4500;
+	font-weight: bold;
+	min-width: 38px;
+	border: none;
+}
+
 .servup_image,
 .servdn_image {
 	display: none;

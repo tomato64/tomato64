@@ -2,7 +2,7 @@ function show() {
 	var up = isup[serviceType];
 	var e = E('_'+serviceType+'_button');
 
-	if (E('_'+serviceType+'_notice')) E('_'+serviceType+'_notice').innerHTML = (up ? '<span class="service_up"><span class="servup_image">▷ <\/span>RUNNING<\/span>' : '<span class="service_down"><span class="servdn_image">⛔ <\/span>STOPPED<\/span>');
+	if (E('_'+serviceType+'_notice')) E('_'+serviceType+'_notice').innerHTML = (up ? '<span class="service_up"><span class="servup_image">▲ <\/span>Up<\/span>' : '<span class="service_down"><span class="servdn_image">▽ <\/span>Down<\/span>');
 	if (E('_'+serviceType+'_interface')) E('_'+serviceType+'_interface').disabled = (up ? 0 : 1);
 	if (E('_'+serviceType+'_status')) E('_'+serviceType+'_status').disabled = (up ? 0 : 1);
 

@@ -1693,21 +1693,18 @@ span[id^="note_cktime2_"] {
 }
 
 .service_up {
-	background-color: #32CD32;
-	color: white;
-	padding: 5px 6px;
-	margin-left: 2px;
+	color: black;
+	background-color: #E0F2E0;
+	padding: 4px 22px;
 	border-radius: 4px;
-	font-weight: bold;
+	border: 1px solid #32CD32;
 }
-
 .service_down {
-	background-color: #FF4500;
-	color: white;
-	padding: 5px 6px;
-	margin-left: 2px;
+	color: black;
+	background-color: #F2E0E0;
+	padding: 4px 14px;
 	border-radius: 4px;
-	font-weight: bold;
+	border: 1px solid #FF0000;
 }
 
 span[id$="_notice"] {
