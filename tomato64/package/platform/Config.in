@@ -13,4 +13,8 @@ config BR2_PACKAGE_PLATFORM_MT6000
 	bool "MT6000"
 	depends on BR2_aarch64
 
+config BR2_PACKAGE_PLATFORM_BPIR3MINI
+	bool "BPIR3MINI"
+	depends on BR2_aarch64
+
 endif

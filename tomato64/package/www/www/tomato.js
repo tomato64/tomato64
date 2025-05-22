@@ -2592,11 +2592,11 @@ function navi() {
 /* TOMATO64-REMOVE-BEGIN */
 			['Wireless Survey',		'survey.asp'],
 /* TOMATO64-REMOVE-END */
-/* TOMATO64-MT6000-BEGIN */
+/* TOMATO64-WIFI-BEGIN */
 /* QRCODE-BEGIN */
 			['WiFi QR Codes',		'qr.asp'],
 /* QRCODE-END */
-/* TOMATO64-MT6000-END */
+/* TOMATO64-WIFI-END */
 /* IPERF-BEGIN */
 			['iPerf',			'iperf.asp'],
 /* IPERF-END */
@@ -2604,9 +2604,9 @@ function navi() {
 		null,
 		['Basic', 			'basic', 0, [
 			['Network',			'network.asp'],
-/* TOMATO64-MT6000-BEGIN */
+/* TOMATO64-WIFI-BEGIN */
 			['Wireless',			'wireless.asp'],
-/* TOMATO64-MT6000-END */
+/* TOMATO64-WIFI-END */
 /* IPV6-BEGIN */
 			['IPv6',			'ipv6.asp'],
 /* IPV6-END */

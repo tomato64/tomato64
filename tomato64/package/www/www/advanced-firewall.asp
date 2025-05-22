@@ -129,7 +129,7 @@ function verifyFields(focused, quiet) {
 	E('_f_udpxy_port').disabled = !enable_udpxy;
 	E('_f_udpxy_wanface').disabled = !enable_udpxy;
 
-/* TOMATO64-MT6000-BEGIN */
+/* TOMATO64-WIFI-BEGIN */
 	E('_wed_offloading').readonly = !(E('_flow_offloading').value == 2);
 	if (E('_flow_offloading').value != 2)
 		E('_wed_offloading').value = 0;
@@ -142,7 +142,7 @@ function verifyFields(focused, quiet) {
 	elem.display('_steering_flows_custom', (p && f));
 	E('_steering_flows_custom').disabled = (!p || !f);
 	E('steering_note').style.display = p ? '' : 'none';
-/* TOMATO64-MT6000-END */
+/* TOMATO64-WIFI-END */
 
 	if (nvram.lan_ifname.length < 1)
 		E('_f_udpxy_lan').checked = 0;
@@ -247,7 +247,7 @@ function save() {
 	fom.wan_dhcp_pass.value = fom._f_wan_dhcp_pass.checked ? 1 : 0;
 	fom.fw_blackhole.value = fom._f_fw_blackhole.checked ? 1 : 0;
 
-/* TOMATO64-MT6000-BEGIN */
+/* TOMATO64-WIFI-BEGIN */
 	if (fom.wed_offloading.value != nvram.wed_offloading) {
 		if (confirm("Router must be rebooted to apply changed settings. Reboot now? (and commit changes to NVRAM)")) {
 			fom._reboot.value = 1;
@@ -258,11 +258,11 @@ function save() {
 		}
 	}
 	else {
-/* TOMATO64-MT6000-END */
+/* TOMATO64-WIFI-END */
 	form.submit(fom, 1);
-/* TOMATO64-MT6000-BEGIN */
+/* TOMATO64-WIFI-BEGIN */
 	}
-/* TOMATO64-MT6000-END */
+/* TOMATO64-WIFI-END */
 }
 
 function init() {
@@ -289,9 +289,9 @@ function init() {
 
 <input type="hidden" name="_nextpage" value="advanced-firewall.asp">
 <input type="hidden" name="_service" value="firewall-restart">
-/* TOMATO64-MT6000-BEGIN */
+/* TOMATO64-WIFI-BEGIN */
 <input type="hidden" name="_reboot" value="0">
-/* TOMATO64-MT6000-END */
+/* TOMATO64-WIFI-END */
 <input type="hidden" name="block_wan">
 <input type="hidden" name="block_wan_limit">
 <input type="hidden" name="block_wan_limit_icmp">
@@ -353,7 +353,7 @@ function init() {
 	</script>
 </div>
 
-/* TOMATO64-MT6000-BEGIN */
+/* TOMATO64-WIFI-BEGIN */
 <div class="section-title">Routing/NAT Offloading</div>
 <div class="section">
 	<script>
@@ -377,7 +377,7 @@ function init() {
 	</script>
 	<div id="steering_note"><small><br>*&nbsp;Note: this setting is for local services on the device only (not for forwarding).</small></div>
 </div>
-/* TOMATO64-MT6000-END */
+/* TOMATO64-WIFI-END */
 
 <!-- / / / -->
 

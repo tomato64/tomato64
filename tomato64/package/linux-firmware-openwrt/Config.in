@@ -1,0 +1,5 @@
+config BR2_PACKAGE_LINUX_FIRMWARE_OPENWRT
+	bool "linux-firmware-openwrt"
+	help
+	  This package provides various binary firmware files (closed
+	  binary blobs) for such devices like LAN, WLAN cards etc.

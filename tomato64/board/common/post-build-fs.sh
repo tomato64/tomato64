@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -e
+set -x
 
 # Tomato64 will create and populate these directories on boot
 rm -rf \
@@ -35,6 +36,7 @@ fi
 if grep -q ^BR2_aarch64=y ${BR2_CONFIG}
 then
 	ln -sf /lib/ld-musl-aarch64.so.1 $TARGET_DIR/usr/bin/ldd
+	ln -sf /usr/bin/uci $TARGET_DIR/sbin/uci
 fi
 
 # symlink openssl since Tomato expects it in a non-standard place
@@ -74,10 +76,8 @@ USB_MODESWITCH_DIR=$BUILD_DIR/$(ls $BUILD_DIR --ignore='*data*' | grep usb_modes
 sed -e '/^\s*#.*$/d' -e '/^\s*$/d' < $USB_MODESWITCH_DIR/usb_modeswitch.conf > $TARGET_DIR/rom/etc/usb_modeswitch.conf
 
 #GL-MT6000 specific edits
-if grep -q ^BR2_aarch64=y ${BR2_CONFIG}
+if grep -q ^BR2_PACKAGE_PLATFORM_MT6000=y ${BR2_CONFIG}
 then
-	ln -sf /usr/bin/uci $TARGET_DIR/sbin/uci
-
 # Generate kernel fit file
 	KERNEL_VERSION=$(ls $BUILD_DIR | grep "linux-headers" | cut -d- -f3)
 
@@ -100,6 +100,12 @@ then
 
 	mkdir -p $TARGET_DIR/boot
 	cp $BINARIES_DIR/glinet_gl-mt6000-kernel.bin $TARGET_DIR/boot/
+fi
+
+#BPI-R3 MINI specific edits (overlayfs)
+if grep -q ^BR2_PACKAGE_PLATFORM_BPIR3MINI ${BR2_CONFIG}
+then
+	mkdir -p $TARGET_DIR/romfs $TARGET_DIR/overlay
 fi
 
 # Remove unneeded mariadb stuff

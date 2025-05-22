@@ -11,6 +11,10 @@ RC_INSTALL_STAGING = YES
 RC_LICENSE = tomato
 RC_DEPENDENCIES = libnvram libshared
 
+ifeq ($(BR2_PACKAGE_PLATFORM_BPIR3MINI),y)
+RC_DEPENDENCIES += host-gzip
+endif
+
 include $(BR2_EXTERNAL_TOMATO64_PATH)/package/rc/features
 
 define RC_BUILD_CMDS

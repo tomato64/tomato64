@@ -153,7 +153,7 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 		fclose(fd);
 	}
 #endif
-#ifdef TOMATO64_MT6000
+#ifdef TOMATO64_ARM64
 	strlcpy(system_type, "MediaTek Filogic 830", buf_system_type_sz);
 	strlcpy(cpuclk, "2000", buf_cpuclk_sz);
 
@@ -174,7 +174,7 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 	else {
 		snprintf(cputemp, buf_cputemp_sz, "");
 	}
-#endif /* TOMATO64_MT6000 */
+#endif /* TOMATO64_ARM64 */
 }
 
 #ifdef TOMATO64
@@ -206,9 +206,9 @@ void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
 		fclose(fd);
 	}
 #endif /* TOMATO64_X86_64 */
-#ifdef TOMATO64_MT6000
+#ifdef TOMATO64_ARM64
 	strlcpy(cpumodel, "MediaTek MT7986AV (Cortex-A53)", buf_cpumodel_sz);
-#endif /* TOMATO64_MT6000 */
+#endif /* TOMATO64_ARM64 */
 }
 #endif /* TOMATO64 */
 

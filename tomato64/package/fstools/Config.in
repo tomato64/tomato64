@@ -1,0 +1,6 @@
+config BR2_PACKAGE_FSTOOLS
+	bool "fstools"
+	depends on BR2_aarch64
+	select BR2_PACKAGE_LIBUBOX
+	help
+	  OpenWrt filesystem utilities

@@ -1,0 +1,174 @@
+From 9e95eaff5dadcc2d0ffed0ebd7718c24b73f0494 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Sun, 25 May 2025 23:37:38 -0600
+Subject: [PATCH] rom to romfs
+
+---
+ block.c               |  2 +-
+ libfstools/extroot.c  |  6 +++---
+ libfstools/mount.c    |  2 +-
+ libfstools/overlay.c  | 18 +++++++++---------
+ libfstools/rootdisk.c |  2 +-
+ libfstools/snapshot.c |  8 ++++----
+ 6 files changed, 19 insertions(+), 19 deletions(-)
+
+diff --git a/block.c b/block.c
+index 37f5bfb..84f4135 100644
+--- a/block.c
++++ b/block.c
+@@ -1431,7 +1431,7 @@ static int find_root_dev(char *buf, int len)
+ {
+ 	int err = find_dev("/", buf, len);
+ 	if (err)
+-	    err = find_dev("/rom", buf, len);
++	    err = find_dev("/romfs", buf, len);
+ 
+ 	return err;
+ }
+diff --git a/libfstools/extroot.c b/libfstools/extroot.c
+index 7cc0b19..32f6d34 100644
+--- a/libfstools/extroot.c
++++ b/libfstools/extroot.c
+@@ -80,12 +80,12 @@ int mount_extroot(char const *extroot_prefix)
+ 				mkdir("/tmp/extroot/mnt/dev", 0755);
+ 				mkdir("/tmp/extroot/mnt/sys", 0755);
+ 				mkdir("/tmp/extroot/mnt/tmp", 0755);
+-				mkdir("/tmp/extroot/mnt/rom", 0755);
++				mkdir("/tmp/extroot/mnt/romfs", 0755);
+ 
+ 				if (mount_move("/tmp/extroot", "", "/mnt")) {
+ 					ULOG_ERR("moving pivotroot failed - continue normal boot\n");
+ 					umount("/tmp/extroot/mnt");
+-				} else if (pivot("/mnt", "/rom")) {
++				} else if (pivot("/mnt", "/romfs")) {
+ 					ULOG_ERR("switching to pivotroot failed - continue normal boot\n");
+ 					umount("/mnt");
+ 				} else {
+@@ -99,7 +99,7 @@ int mount_extroot(char const *extroot_prefix)
+ 				if (mount_move("/tmp/extroot", "", "/overlay")) {
+ 					ULOG_ERR("moving extroot failed - continue normal boot\n");
+ 					umount("/tmp/extroot/overlay");
+-				} else if (fopivot("/overlay", "/rom")) {
++				} else if (fopivot("/overlay", "/romfs")) {
+ 					ULOG_ERR("switching to extroot failed - continue normal boot\n");
+ 					umount("/overlay");
+ 				} else {
+diff --git a/libfstools/mount.c b/libfstools/mount.c
+index 3d4111f..1c7baf2 100644
+--- a/libfstools/mount.c
++++ b/libfstools/mount.c
+@@ -169,5 +169,5 @@ ramoverlay(void)
+ 	mkdir("/tmp/root", 0755);
+ 	mount("tmpfs", "/tmp/root", "tmpfs", MS_NOATIME, "mode=0755");
+ 
+-	return fopivot("/tmp/root", "/rom");
++	return fopivot("/tmp/root", "/romfs");
+ }
+diff --git a/libfstools/overlay.c b/libfstools/overlay.c
+index 7a7a95f..6397537 100644
+--- a/libfstools/overlay.c
++++ b/libfstools/overlay.c
+@@ -35,7 +35,7 @@
+ #endif
+ 
+ #define SWITCH_JFFS2 "/tmp/.switch_jffs2"
+-#define OVERLAYDIR "/rom/overlay"
++#define OVERLAYDIR "/romfs/overlay"
+ 
+ static bool keep_sysupgrade;
+ 
+@@ -202,13 +202,13 @@ switch2jffs(struct volume *v)
+ 		return -1;
+ 	}
+ 
+-	if (system("cp -a /tmp/root/* /rom/overlay")) {
+-		ULOG_ERR("failed - cp -a /tmp/root/* /rom/overlay: %m\n");
++	if (system("cp -a /tmp/root/* /romfs/overlay")) {
++		ULOG_ERR("failed - cp -a /tmp/root/* /romfs/overlay: %m\n");
+ 		return -1;
+ 	}
+ 
+-	if (pivot("/rom", "/mnt")) {
+-		ULOG_ERR("failed - pivot /rom /mnt: %m\n");
++	if (pivot("/romfs", "/mnt")) {
++		ULOG_ERR("failed - pivot /romfs /mnt: %m\n");
+ 		return -1;
+ 	}
+ 
+@@ -217,14 +217,14 @@ switch2jffs(struct volume *v)
+ 		return -1;
+ 	}
+ 
+-	ret = fopivot("/overlay", "/rom");
++	ret = fopivot("/overlay", "/romfs");
+ 
+ 	/*
+ 	 * Besides copying overlay data from "tmpfs" to "jffs2" we should also
+ 	 * move mount points that user could create during JFFS2 formatting.
+ 	 * This has to happen after fopivot call because:
+ 	 * 1) It's trivial to find mount points to move then (/tmp/root/...).
+-	 * 2) We can't do that earlier using /rom/overlay/upper/ as overlay(fs)
++	 * 2) We can't do that earlier using /romfs/overlay/upper/ as overlay(fs)
+ 	 *    doesn't support mounts. Mounting to upper dir don't make overlay
+ 	 *    /propagate/ files to the target dir.
+ 	 */
+@@ -332,7 +332,7 @@ jffs2_switch(struct volume *v)
+ 	case FS_UBIFS:
+ 		if (overlay_mount(v, fs_name))
+ 			return -1;
+-		if (mount_move("/tmp", "", "/overlay") || fopivot("/overlay", "/rom")) {
++		if (mount_move("/tmp", "", "/overlay") || fopivot("/overlay", "/romfs")) {
+ 			ULOG_ERR("switching to %s failed\n", fs_name);
+ 			return -1;
+ 		}
+@@ -458,7 +458,7 @@ int mount_overlay(struct volume *v)
+ 
+ 	fs_name = overlay_fs_name(volume_identify(v));
+ 	ULOG_INFO("switching to %s overlay\n", fs_name);
+-	if (mount_move("/tmp", "", "/overlay") || fopivot("/overlay", "/rom")) {
++	if (mount_move("/tmp", "", "/overlay") || fopivot("/overlay", "/romfs")) {
+ 		ULOG_ERR("switching to %s failed - fallback to ramoverlay\n", fs_name);
+ 		return ramoverlay();
+ 	}
+diff --git a/libfstools/rootdisk.c b/libfstools/rootdisk.c
+index 910899a..b7089c5 100644
+--- a/libfstools/rootdisk.c
++++ b/libfstools/rootdisk.c
+@@ -103,7 +103,7 @@ static struct volume *rootdisk_volume_find(char *name)
+ 	if (!rootdev)
+ 		rootdev = get_rootdev("/");
+ 	if (!rootdev)
+-		rootdev = get_rootdev("/rom");
++		rootdev = get_rootdev("/romfs");
+ 	if (!rootdev)
+ 		return NULL;
+ 
+diff --git a/libfstools/snapshot.c b/libfstools/snapshot.c
+index 5e7e847..49e9bcb 100644
+--- a/libfstools/snapshot.c
++++ b/libfstools/snapshot.c
+@@ -332,7 +332,7 @@ mount_snapshot(struct volume *v)
+ {
+ 	snapshot_sync(v);
+ 	setenv("SNAPSHOT", "magic", 1);
+-	_ramoverlay("/rom", "/overlay");
++	_ramoverlay("/romfs", "/overlay");
+ 	if (system("/sbin/snapshot unpack") == -1) {
+ 		perror("system");
+ 		return -1;
+@@ -342,9 +342,9 @@ mount_snapshot(struct volume *v)
+ 		perror("mkdir");
+ 		return -1;
+ 	}
+-	_ramoverlay("/rom", "/volatile");
+-	mount_move("/rom/volatile", "/volatile", "");
+-	mount_move("/rom/rom", "/rom", "");
++	_ramoverlay("/romfs", "/volatile");
++	mount_move("/romfs/volatile", "/volatile", "");
++	mount_move("/romfs/romfs", "/romfs", "");
+ 	if (system("/sbin/snapshot config_unpack")) {
+ 		perror("system");
+ 		return -1;
+-- 
+2.39.5
+

@@ -2965,9 +2965,9 @@ void start_services(void)
 {
 	static int once = 1;
 
-#ifdef TOMATO64_MT6000
+#ifdef TOMATO64_WIFI
 	start_wifi();
-#endif /* TOMATO64_MT6000 */
+#endif /* TOMATO64_WIFI */
 #ifdef TCONFIG_HAVEGED
 	start_haveged();
 #endif
@@ -3116,9 +3116,9 @@ void stop_services(void)
 #ifdef TCONFIG_HAVEGED
 	stop_haveged();
 #endif
-#ifdef TOMATO64_MT6000
+#ifdef TOMATO64_WIFI
 	stop_wifi();
-#endif /* TOMATO64_MT6000 */
+#endif /* TOMATO64_WIFI */
 }
 
 /* nvram "action_service" is: "service-action[-modifier]"
@@ -3685,9 +3685,9 @@ TOP:
 			stop_pppoerelay();
 #endif
 			stop_httpd();
-#ifdef TOMATO64_MT6000
+#ifdef TOMATO64_WIFI
 			stop_wifi();
-#endif /* TOMATO64_MT6000 */
+#endif /* TOMATO64_WIFI */
 #ifdef TCONFIG_MDNS
 			stop_mdns();
 #endif
@@ -3712,9 +3712,9 @@ TOP:
 			start_mdns();
 #endif
 			start_httpd();
-#ifdef TOMATO64_MT6000
+#ifdef TOMATO64_WIFI
 			start_wifi();
-#endif /* TOMATO64_MT6000 */
+#endif /* TOMATO64_WIFI */
 #ifndef TOMATO64
 			start_wl();
 #endif /* TOMATO64 */

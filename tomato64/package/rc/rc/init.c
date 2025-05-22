@@ -11279,6 +11279,9 @@ static int init_nvram(void)
 #ifdef TOMATO64_MT6000
 	nvram_set("t_model_name", "GL.iNet GL-MT6000");
 #endif /* TOMATO64_MT6000 */
+#ifdef TOMATO64_BPIR3MINI
+	nvram_set("t_model_name", "Banana Pi BPI-R3 Mini");
+#endif /* TOMATO64_BPIR3MINI */
 #endif /* TOMATO64 */
 #ifndef CONFIG_BCMWL6A
 	nvram_set("pa0maxpwr", "400"); /* allow Tx power up tp 400 mW, needed for ND only */
@@ -11582,15 +11585,22 @@ static void sysinit(void)
 #ifdef TOMATO64_MT6000
 	eval("set_devs_mt6000");
 #endif /* TOMATO64_MT6000 */
+#ifdef TOMATO64_BPIR3MINI
+	eval("touch", "/tmp/.preinit");
+	eval("mount_root");
+	eval("set_devs_bpir3mini");
+#endif /* TOMATO64_BPIR3MINI */
 	eval("set_devs");
 
 #ifdef TOMATO64_X86_64
 	/* Mount filesystem rw */
 	eval("mount_nvram");
 #endif /* TOMATO64_X86_64 */
+#ifndef TOMATO64_BPIR3MINI
 	if (!nvram_get_int("fs_mount_ro")) {
 		eval("mount", "-o", "remount,rw", "/");
 	}
+#endif /* TOMATO64_BPIR3MINI */
 
 	if ((fp = fopen("/etc/fstab", "w"))) {
 		fprintf(fp, "LABEL=opt /opt ext4 defaults 0 0");
@@ -11932,6 +11942,9 @@ int init_main(int argc, char *argv[])
 			 * last one as ssh telnet httpd samba etc can fail to load until start_wan_done
 			 */
 			start_wan();
+#ifdef TOMATO64_BPIR3MINI
+			eval("mount_root","done");
+#endif /* TOMATO64_BPIR3MINI */
 
 #ifndef TOMATO64
 			if (wds_enable()) {

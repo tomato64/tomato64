@@ -10,6 +10,14 @@ endif
 
 ifeq ($(BR2_PACKAGE_PLATFORM_MT6000),y)
 export PLATFORM_MT6000=y
+export PLATFORM_ARM64=y
+export PLATFORM_WIFI=y
+endif
+
+ifeq ($(BR2_PACKAGE_PLATFORM_BPIR3MINI),y)
+export PLATFORM_BPIR3MINI=y
+export PLATFORM_ARM64=y
+export PLATFORM_WIFI=y
 endif
 
 $(eval $(generic-package))

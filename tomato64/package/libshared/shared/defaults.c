@@ -190,7 +190,11 @@ struct nvram_tuple router_defaults[] = {
 
 	{ "lan_state",			"1"				, 0 },	/* Show Ethernet LAN ports state (0|1) */
 	{ "lan_desc",			"1"				, 0 },	/* Show Ethernet LAN ports state (0|1) */
+#ifdef TOMATO64_BPIR3MINI
+	{ "lan_invert",			"1"				, 0 },	/* Invert Ethernet LAN ports state (0|1) */
+#else
 	{ "lan_invert",			"0"				, 0 },	/* Invert Ethernet LAN ports state (0|1) */
+#endif /* TOMATO64_BPIR3MINI */
 
 	{ "lan1_ipaddr",		""				, 0 },
 	{ "lan1_netmask",		""				, 0 },
@@ -2207,6 +2211,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_MT6000
 	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 eth5"	, 0 },
 #endif /* TOMATO64_MT6000 */
+#ifdef TOMATO64_BPIR3MINI
+	{ "lan_ifnames",		"eth1"				, 0 },
+#endif /* TOMATO64_BPIR3MINI */
 	{ "lan_ifnames_vlan",		"vlan1"				, 0 },
 	{ "lan1_ifnames_vlan",		""				, 0 },
 	{ "lan2_ifnames_vlan",		""				, 0 },
@@ -2223,7 +2230,11 @@ struct nvram_tuple router_defaults[] = {
 #endif /* TOMATO64_X86_64 */
 #ifdef TOMATO64_MT6000
 	{ "vlan1ports",			"1 2 3 4 5 9*"			, 0 },
-
+#endif /* TOMATO64_MT6000 */
+#ifdef TOMATO64_BPIR3MINI
+	{ "vlan1ports",			"1 9*"				, 0 },
+#endif /* TOMATO64_BPIR3MINI */
+#ifdef TOMATO64_WIFI
 	{"wifi_phy0_band",		"2g"				, 0 },
 	{"wifi_phy0_mode",		"ax"				, 0 },
 	{"wifi_phy0_channel",		"auto"				, 0 },
@@ -2877,7 +2888,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface15_isolate",	""				, 0 },
 	{"wifi_phy2iface15_br_isolate",	""				, 0 },
 	{"wifi_phy2iface15_ifname",	""				, 0 },
-#endif /* TOMATO64_MT6000 */
+#endif /* TOMATO64_WIFI */
 
 	{ "ctf_disable",		"1"				, 0 },
 	{ "flow_offloading",		"0"				, 0 },

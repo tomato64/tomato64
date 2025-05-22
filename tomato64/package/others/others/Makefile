@@ -201,9 +201,9 @@ else
 	sed -i $(INSTALLDIR)/usr/sbin/tomatoanon -e "/TOMATO64-X86_64-BEGIN/,/TOMATO64-X86_64-END/d"
 endif #PLATFORM_X86_64
 
-ifeq ($(PLATFORM_MT6000),y)
+ifeq ($(PLATFORM_ARM64),y)
 	install -m 0700 entware-install-AARCH64.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
-endif #PLATFORM_MT6000
+endif #PLATFORM_ARM64
 
 else #TOMATO64
 	sed -i $(INSTALLDIR)/usr/sbin/adblock -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"

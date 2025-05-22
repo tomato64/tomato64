@@ -638,12 +638,12 @@ else
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-X86_64-BEGIN/,/TOMATO64-X86_64-END/d"
 endif
 
-ifeq ($(PLATFORM_MT6000),y)
+ifeq ($(PLATFORM_WIFI),y)
 else
-	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-MT6000-BEGIN/,/TOMATO64-MT6000-END/d"
-	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/TOMATO64-MT6000-BEGIN/,/TOMATO64-MT6000-END/d"
-	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/TOMATO64-MT6000-BEGIN/,/TOMATO64-MT6000-END/d"
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-MT6000-BEGIN/,/TOMATO64-MT6000-END/d"
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-MTWIFI-END/d"
+	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
 endif
 
 # Only include TFTP if it is compiled in
@@ -777,7 +777,7 @@ endif
 		-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 		-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
 		-e "/TOMATO64-X86_64-BEGIN/d"	-e "/TOMATO64-X86_64-END/d" \
-		-e "/TOMATO64-MT6000-BEGIN/d"	-e "/TOMATO64-MT6000-END/d" \
+		-e "/TOMATO64-WIFI-BEGIN/d"	-e "/TOMATO64-WIFI-END/d" \
 		|| true; \
 	done
 

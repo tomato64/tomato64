@@ -1669,7 +1669,7 @@ int mround(float val)
  * Get temperature of wireless chip
  * bwq518. Copyright 2013
 */
-#ifndef TOMATO64_MT6000
+#ifndef TOMATO64_ARM64
 char* get_wl_tempsense(char *buf, const size_t buf_sz)
 {
 	char *lan_ifnames;
@@ -1810,5 +1810,5 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 
 	snprintf(buf, buf_sz, "phy0: 2.4G - %s&#176;C&nbsp;/&nbsp;%s&#176;F&nbsp;&nbsp;&nbsp;&nbsp;phy1: 5G - %s&#176;C&nbsp;/&nbsp;%s&#176;F", phy0_C, phy0_F, phy1_C, phy1_F);
 }
-#endif /* TOMATO64_MT6000 */
+#endif /* TOMATO64_ARM64 */
 #endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
