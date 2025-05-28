@@ -5,6 +5,7 @@ set -x
 
 . /usr/sbin/nvram_ops
 
+modprobe pwm-fan
 modprobe air_en8811h
 modprobe aquantia
 
