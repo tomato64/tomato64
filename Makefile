@@ -13,7 +13,7 @@ legacy: .configure-legacy
 mt6000: .configure-mt6000
 	make -C src/buildroot
 
-bpir3mini: .configure-bpir3mini
+bpi-r3-mini: .configure-bpi-r3-mini
 	make -C src/buildroot
 
 legacy-menuconfig: .configure-legacy
@@ -22,7 +22,7 @@ legacy-menuconfig: .configure-legacy
 mt6000-menuconfig: .configure-mt6000
 	make -C src/buildroot menuconfig
 
-bpir3mini-menuconfig: .configure-bpir3mini
+bpi-r3-mini-menuconfig: .configure-bpi-r3-mini
 	make -C src/buildroot menuconfig
 
 distclean:
@@ -42,8 +42,8 @@ distclean:
 	@touch $@
 	@touch .configure
 
-.configure-bpir3mini: .download-mediatek-kernel .patch
-	make -C src/buildroot BR2_EXTERNAL=../../tomato64 bpir3mini_defconfig
+.configure-bpi-r3-mini: .download-mediatek-kernel .patch
+	make -C src/buildroot BR2_EXTERNAL=../../tomato64 bpi-r3-mini_defconfig
 	@touch $@
 	@touch .configure
 

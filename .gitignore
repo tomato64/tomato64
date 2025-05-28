@@ -6,7 +6,7 @@
 .configure
 .configure-legacy
 .configure-mt6000
-.configure-bpir3mini
+.configure-bpi-r3-mini
 *.gcom
 hotplug2.rules
 src/
