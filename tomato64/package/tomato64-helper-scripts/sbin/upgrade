@@ -5,11 +5,13 @@ if [ $# -eq 0 ]; then
 	exit
 fi
 
-mount -o remount,rw /
-result=$?
-if [ "$result" -ne 0 ]; then
-	printf 'error code "%d", unable to mount the filesystem as read/write' "$result"
-	exit
+if ! df -h / | grep -q "overlay"; then
+	mount -o remount,rw /
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d", unable to mount the filesystem as read/write' "$result"
+		exit
+	fi
 fi
 
 tar --touch -I "zstd -f" -xf $1 -C /
@@ -17,6 +19,10 @@ result=$?
 if [ "$result" -ne 0 ]; then
 	printf 'error code "%d" returned during extraction' "$result"
 	exit
+else
+	if df -h / | grep -q "overlay"; then
+		printf "image successfully flashed\n"
+	fi
 fi
 
 if [ -f /boot/bzImage ]; then

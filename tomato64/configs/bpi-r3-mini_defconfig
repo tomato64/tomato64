@@ -45,6 +45,6 @@ BR2_TARGET_ROOTFS_SQUASHFS=y
 # BR2_TARGET_ROOTFS_SQUASHFS_PAD is not set
 BR2_TARGET_ROOTFS_SQUASHFS4_XZ=y
 BR2_TARGET_ROOTFS_TAR_ZSTD=y
-BR2_TARGET_ROOTFS_TAR_OPTIONS="--exclude='./bkp' --exclude='./cifs1' --exclude='./cifs2' --exclude='./dev' --exclude='./etc' --exclude='./home' --exclude='./jffs' --exclude='./lib64' --exclude='./media' --exclude='./mmc' --exclude='./mnt' --exclude='./nas' --exclude='./nvram' --exclude='./opt' --exclude='./proc' --exclude='./root' --exclude='./sys' --exclude='./tftpboot' --exclude='./var'"
+BR2_TARGET_ROOTFS_TAR_OPTIONS="--exclude='./bkp' --exclude='./cifs1' --exclude='./cifs2' --exclude='./dev' --exclude='./etc' --exclude='./home' --exclude='./jffs' --exclude='./lib64' --exclude='./media' --exclude='./mmc' --exclude='./mnt' --exclude='./nas' --exclude='./nvram' --exclude='./opt' --exclude='./proc' --exclude='./root' --exclude='./sys' --exclude='./tftpboot' --exclude='./var' --exclude='./romfs' --exclude='./overlay'"
 BR2_PACKAGE_HOST_GO_BIN=y
 BR2_PACKAGE_PLATFORM_BPIR3MINI=y
