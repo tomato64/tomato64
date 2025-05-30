@@ -345,9 +345,9 @@ for (var i = 0; i <= MAX_BRIDGE_ID; i++) {
 	for (var i = 0; i <= MAX_BRIDGE_ID; i++) {
 
 		if (i == 0) {
-			W('<div class="section-title">Default Class for unlisted MAC / IP\'s in LAN0 (br0)</div>');
+			W('<div class="section-title">Default Class for unlisted MAC / IP\'s in LAN0 (br0)<\/div>');
 		} else {
-			W('<div class="section-title">Default Class for LAN'+i+' (br'+i+')</div>');
+			W('<div class="section-title">Default Class for LAN'+i+' (br'+i+')<\/div>');
 		}
 
 		W('<div class="section">');
@@ -375,14 +375,14 @@ for (var i = 0; i <= MAX_BRIDGE_ID; i++) {
 		W('<div>');
 			W('<ul>');
 			if (i == 0) {
-				W('<li><b>Default Class</b> - IP / MAC\'s non included in the list will take the Default Rate/Ceiling setting</li>');
-				W('<li><b>The bandwidth will be shared by all unlisted hosts in br0</b></li>');
+				W('<li><b>Default Class<\/b> - IP / MAC\'s non included in the list will take the Default Rate/Ceiling setting<\/li>');
+				W('<li><b>The bandwidth will be shared by all unlisted hosts in br0<\/b><\/li>');
 			} else {
-				W('<li><b>The bandwidth will be shared by all hosts in br'+i+'.</b></li>');
+				W('<li><b>The bandwidth will be shared by all hosts in br'+i+'.<\/b><\/li>');
 			}
-			W('</ul>');
-		W('</div>');
-		W('</div>');
+			W('<\/ul>');
+		W('<\/div>');
+		W('<\/div>');
 	}
 </script>
 

@@ -731,29 +731,29 @@ elif [ "$1" == "status-gui" ]; then
 	rampc=$(( $ramc * 100 / $ramt ))
 	rampb=$(( $ramb * 100 / $ramt ))
 	echo -e "Version: ${ver:0:6}<br>
-System Load = $(cat /proc/loadavg | awk '{print "<b>"$1" / "$2" / "$3"</b>"}')<br>
-Ram Used/Cache/Buffer / Total = <b>${rampu}% ~ $(echo $ramu | number)</b>/$(echo $ramc | number)/$(echo $ramb | number)<b> / $(echo $ramt | number) KBytes</b><br>
+System Load = $(cat /proc/loadavg | awk '{print ""$1" / "$2" / "$3""}')<br>
+Ram Used/Cache/Buffer / Total = ${rampu}% ~ $(echo $ramu | number)/$(echo $ramc | number)/$(echo $ramb | number) / $(echo $ramt | number) KBytes<br>
 <div class=\"progress-container\" style=\"width:400px;float:left;display:flex;flex:1\">
 <div class=\"progress-bar\" style=\"background-color:#005691;width:${rampu}%\"></div>
 <div class=\"progress-bar\" style=\"background-color:#CDA5F3;width:${rampc}%\"></div>
 <div class=\"progress-bar\" style=\"background-color:#74CDC1;width:${rampb}%\"></div></div><br>
-Dnsmasq running = $(echo $([ -f "/var/run/dnsmasq.pid" ] && echo "<b>Yes 🆗</b>" || echo "<b>no ⛔</b>"))<br>
-Dnsmasq restarts today = $(echo "<b> $restarts </b>")<br>
-Dnsmasq owner = $(ps | grep -q '[d]nsmasq.*async$' && [ $(ps | grep '[d]nsmasq.*async$' | awk '{print $2}') == "root" ] && echo "<b>root ️⛔</b> <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" || echo "<b>nobody 🆗</b>" )<br>
-Dnsmasq restart time = $([ -f $DNS_TIME ] && echo \<b\>$(cat $DNS_TIME)\</b\> || echo "<b>N/A"\</b\>)<br>
-Adblock calls today = <b>$(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep "Kick off" | wc -l )</b><br>
-Adblock config loaded = $(echo $(grep -q 'conf-file=/etc/dnsmasq.adblock' /etc/dnsmasq.conf && echo "<b>Yes 🆗</b>" || echo "<b>No ⛔</b>"))<br>
-Adblock script activity = $(echo $([ -f "/var/run/adblock.pid" ] && { [ -f ${VRFY} ] && echo "👁️ <b>Checking...<img src=\"spin.gif\" heigh=\"8px\" width=\"8px\"></b>" || echo "🌀 <b>Loading... $([ -s $TM ] && { wc -l < $TM | number ;}) domains / $([ -s $TM ] && { wc -c < $TM | number ;} ) Bytes <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\"></b>" ;} || echo "<b>idle</b>"))<br>"
+Dnsmasq running = $(echo $([ -f "/var/run/dnsmasq.pid" ] && echo "Yes 🆗" || echo "no ⛔"))<br>
+Dnsmasq restarts today = $(echo " $restarts ")<br>
+Dnsmasq owner = $(ps | grep -q '[d]nsmasq.*async$' && [ $(ps | grep '[d]nsmasq.*async$' | awk '{print $2}') == "root" ] && echo "root ️⛔ <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" || echo "nobody 🆗" )<br>
+Dnsmasq restart time = $([ -f $DNS_TIME ] && echo $(cat $DNS_TIME) || echo "N/A")<br>
+Adblock calls today = $(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep "Kick off" | wc -l )<br>
+Adblock config loaded = $(echo $(grep -q 'conf-file=/etc/dnsmasq.adblock' /etc/dnsmasq.conf && echo "Yes 🆗" || echo "No ⛔"))<br>
+Adblock script activity = $(echo $([ -f "/var/run/adblock.pid" ] && { [ -f ${VRFY} ] && echo "👁️ Checking...<img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" || echo "🌀 Loading... $([ -s $TM ] && { wc -l < $TM | number ;}) domains / $([ -s $TM ] && { wc -c < $TM | number ;} ) Bytes <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" ;} || echo "idle"))<br>"
 	[ -s "$FINAL" -a $(grep 'conf-file=/etc/dnsmasq.adblock' /etc/dnsmasq.conf | wc -l) -eq 1 ] && {
 		filp=$(($(wc -c < $FINAL) * 100 / $([ $(echo $sizeLimit | wc -c 2>/dev/null ) -gt 0 ] && echo $sizeLimit || echo 99999999)))
 		lre=$(grep 'error' $ADHELPER | awk '{print $2}')
-		echo "Last run errors = <b>$lre"
+		echo "Last run errors = $lre"
 		[ $lre -gt 0 ] && echo " ⚠️"
-		echo -e "</b><br>
-Last run processing time = <b>$(grep 'runtime' $ADHELPER | cut -d: -f2)</b><br>
-Blockfile references = $(echo \<b\>$(wc -l < $FINAL| number) Domains\</b\> )<br>
-Blockfile date = $(echo \<b\>$(ls -lah $FINAL | awk '{print $8" on "$7" "$6}'))</b><br>
-Blockfile size/limit = <b>${filp}% ~ $(wc -c < $FINAL| number) / $(echo $max | number) Bytes</b><br>
+		echo -e "<br>
+Last run processing time = $(grep 'runtime' $ADHELPER | cut -d: -f2)<br>
+Blockfile references = $(echo $(wc -l < $FINAL| number) Domains )<br>
+Blockfile date = $(echo $(ls -lah $FINAL | awk '{print $8" on "$7" "$6}'))<br>
+Blockfile size/limit = ${filp}% ~ $(wc -c < $FINAL| number) / $(echo $max | number) Bytes<br>
 <div class=\"progress-wrapper\"><div class=\"progress-container\" style=\"width:400px\"><div class=\"progress-bar\" style=\"background-color:#005691;width: ${filp}%\"></div></div></div><br>"
 	}
 	[ $LOGL -eq 7 ] && { echo -e "✏️ Running in trace mode" ; [ $(ls -1tr /tmp/adblock.debug.output.* 2>/dev/null | tail -1 | wc -l) -gt 0 ] && { echo ", output redirected to <code>$(ls -1tr /tmp/adblock.debug.output.* | tail -1)</code><br>"; } ;}

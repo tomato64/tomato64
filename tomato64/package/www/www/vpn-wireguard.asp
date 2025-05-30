@@ -1543,7 +1543,7 @@ function spin(x, which) {
 }
 
 function displayStatus(unit, text) {
-	elem.setInnerHTML(E('wg'+unit+'_result'), '<tt>'+escapeText(text)+'<\/tt>');
+	elem.setInnerHTML(E('wg'+unit+'_result'), escapeText(text));
 	spin(0, 'wg'+unit+'_status_wait');
 }
 
@@ -2080,7 +2080,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title vpn-title"><img src="wireguard.svg">Wireguard Configuration</div>
+<div class="section-title vpn-title"><img src="wireguard.svg" alt="">Wireguard Configuration</div>
 <div class="section">
 	<script>
 		tabCreate.apply(this, tabs);
@@ -2236,7 +2236,7 @@ function init() {
 
 			/* status tab start */
 			W('<div id="'+t+'-wg-status">');
-			W('<pre id="'+t+'_result" class="status-result"><\/pre>');
+			W('<div id="'+t+'_result" class="status-result"><\/div>');
 			W('<div style="text-align:right">');
 			W('<img src="spin.gif" id="'+t+'_status_refresh_spinner" alt=""> &nbsp;');
 			genStdTimeList(t+'_status_refresh_time', 'One off', 0);
@@ -2261,7 +2261,7 @@ function init() {
 	<!-- config notes start -->
 	<div id="notes-wg-config" style="display:none">
 		<ul>
-			<li><b>Interface</b> - Settings directly related to the wireguard interface on this device.</li>
+			<li><b>Interface</b> - Settings directly related to the wireguard interface on this device.
 			<ul>
 				<li><b>Enable on Start</b> - Enabling this will start the wireguard device when the router starts up.</li>
 				<li><b>Config file</b> - File path to wg-quick compatible configuration file. If this is specified all other settings will be ignored.</li>
@@ -2273,31 +2273,41 @@ function init() {
 				<li><b>FWMark</b> - The value of the FWMark to use for routing. If left as 0, it will the default value.</li>
 				<li><b>MTU</b> - The maximum transmission unit for the wireguard interface.</li>
 				<li><b>Respond to DNS</b> - If checked, this interface will respond to DNS requests using the router's dnsmasq service. This is usually wanted for a site-to-site scenario.</li>
-				<li><b>Routing Mode</b> - The routing mode to use when setting up the wireguard interface</li>
-				<ul>
+				<li><b>Routing Mode</b> - The routing mode to use when setting up the wireguard interface
+					<ul>
 					<li><b>Off</b> - Will not add routing rules for the wireguard interface.</li>
 					<li><b>Auto</b> - The wireguard interface will be routed using the default table (the same number as the interface port)</li>
 					<li><b>Custom Table</b> - Will route the wireguard interface using a custom table number. If specified, you must also include the table number in the additional field.</li>
-				</ul>
-				<li><b>Type of VPN</b> - This field defines how peers interact.</li>
-				<ul>
+					</ul>
+				</li>
+				<li><b>Type of VPN</b> - This field defines how peers interact.
+					<ul>
 					<li><b>Internal - Hub (this device) and Spoke (peers)</b> - Peers will only communicate with the router, and not each other. Implies /32 netmask for the peers</li>
 					<li><b>Internal - Full Mesh (defined Endpoint only)</b> - Peers will communicate to any peer with an endpoint. Implies /24 netmask for the peers. Peers with endpoints will communicate with all peers.</li>
 					<li><b>Internal - Full Mesh</b> - All peers are added to each other's configuration regardless of the endpoint field being congigured or not. Implies /24 netmask for the peers.</li>
 					<li><b>External - VPN Provider</b> - This VPN Access the Internet via a 3rd party VPN provider.</li>
-				</ul>
-			</ul>
+					</ul>
+				</li>
+				<li><b>Redirect Internet traffic</b> - Available only in 'External - VPN Provider' mode.
+					<ul>
+					<li><b>All</b> - Redirects all internet traffic, regardless of destination or type.</li>
+					<li><b>Routing Policy</b> - Redirects traffic based on predefined rules, such as specific destinations or source, allowing selective rerouting.</li>
+					<li><b>Routing Policy (strict)</b> - Enforces stricter rules for redirection, only allowing traffic that explicitly matches the defined policy, blocking or ignoring non-matching traffic.</li>
+					</ul>
+				</li>
+			</ul></li>
 		</ul>
 		<ul>
-			<li><b>Peer Parameters</b> - Settings related to peer configuration generation on the Peers page (not available in 'External - VPN Provider' mode).</li>
+			<li><b>Peer Parameters</b> - Settings related to peer configuration generation on the Peers page (not available in 'External - VPN Provider' mode).
 			<ul>
 				<li><b>Router behind NAT</b> - If enabled, Keepalives will be sent from the router to peers.</li>
-				<li><b>Endpoint</b> - What to use for the endpoint of the router in configuration files generated on the Peers tab.</li>
-				<ul>
-					<li><b>FQDN</b> - Will use the hostname and domain name set up on the Identification page.</li>
-					<li><b>WAN IP</b> - Will use the WAN IP address of the router.</li>
-					<li><b>Custom Endpoint</b> - Will use a user specified endpoint. If selected, you must also include the custom endpoint in the addition field.</li>
-				</ul>
+				<li><b>Endpoint</b> - What to use for the endpoint of the router in configuration files generated on the Peers tab.
+					<ul>
+						<li><b>FQDN</b> - Will use the hostname and domain name set up on the Identification page.</li>
+						<li><b>WAN IP</b> - Will use the WAN IP address of the router.</li>
+						<li><b>Custom Endpoint</b> - Will use a user specified endpoint. If selected, you must also include the custom endpoint in the addition field.</li>
+					</ul>
+				</li>
 				<li><b>Allowed IPs</b> - A list of additional CIDRs to attach to the router peer for configuration files generated on the peers tab.</li>
 				<li><b>DNS Servers for Peers</b> - DNS Servers to use in the Interface section of configuration files generated on the peers tab.</li>
 				<li><b>Push LAN0 (br0) to peers</b> - Allows the peers access to LAN0</li>
@@ -2305,7 +2315,7 @@ function init() {
 				<li><b>Push LAN2 (br2) to peers</b> - Allows the peers access to LAN2</li>
 				<li><b>Push LAN3 (br3) to peers</b> - Allows the peers access to LAN3</li>
 				<li><b>Forward all peer traffic</b> - Ensure all traffic from the peer is tunneled through the router's wireguard interface by adding an Allowed IP of 0.0.0.0/0</li>
-			</ul>
+			</ul></li>
 		</ul>
 		<ul>
 			<li><b>Import Config from File</b> - This section can be used to parse fields from a wg-quick compatible configuration file and automatically populate the relevant fields. Using this will wipe your existing settings.</li>
@@ -2316,7 +2326,7 @@ function init() {
 	<!-- peers notes start -->
 	<div id="notes-wg-peers" style="display:none">
 		<ul>
-			<li><b>Peers Grid</b> - Each row represents a peer in the network. Peers are added through the Peer's Parameters subsection. Peers can also be edited by clicking on the row. The columns represent the following:</li>
+			<li><b>Peers Grid</b> - Each row represents a peer in the network. Peers are added through the Peer's Parameters subsection. Peers can also be edited by clicking on the row. The columns represent the following:
 			<ul>
 				<li><b>QR</b> - Click the button to generate and display a QR code of this peer's configuration. Click again to hide it.</li>
 				<li><b>Cfg</b> - Click the button to generate and download this peer's configuration file.</li>
@@ -2324,18 +2334,18 @@ function init() {
 				<li><b>Endpoint</b> - Endpoint of this peer's wireguard interface.</li>
 				<li><b>Public Key</b> - The public key for this peer's wireguard interface.</li>
 				<li><b>VPN Interface IP</b> - The IP address of this peer's wireguard interface.</li>
-			</ul>
+			</ul></li>
 			<li><b>Download All Configs</b> - This button will generate and download the configuration files for all the peers in the table (not available in 'External - VPN Provider' mode).</li>
 		</ul>
 		<ul>
-			<li><b>Peer Generation (not available in 'External - VPN Provider' mode)</b></li>
+			<li><b>Peer Generation (not available in 'External - VPN Provider' mode)</b>
 			<ul>
 				<li><b>Generate PSK</b> - If checked, will generate a PresharedKey for this network and assign the very same to each peer when <i>Generate Peer</i> is clicked.</li>
 				<li><b>Generate Peer</b> - This button will generate a new peer and populate the basic fields of the Peer's Parameters subsection.</li>
-			</ul>
+			</ul></li>
 		</ul>
 		<ul>
-			<li><b>Peer's Parameters</b> - A subsection for adding and editing peers.</li>
+			<li><b>Peer's Parameters</b> - A subsection for adding and editing peers.
 			<ul>
 				<li><b>Alias</b> - A custom name for this peer.</li>
 				<li><b>Endpoint</b> - Endpoint of this peer's wireguard interface.</li>
@@ -2346,7 +2356,7 @@ function init() {
 				<li><b>Allowed IPs</b> - Additional Allowed IPs to use for this Peer. Must be in CIDR format. Can be a list of comma separated values.</li>
 				<li><b>Peer behind NAT</b> - If enabled, this peer will send Keepalives to all other peers.</li>
 				<li><b>Add/Save to Peers</b> - Click to add a peer or save changes to an edited peer.</li>
-			</ul>
+			</ul></li>
 		</ul>
 	</div>
 	<!-- peers notes stop -->
@@ -2354,13 +2364,13 @@ function init() {
 	<!-- routing policy start -->
 	<div id="notes-wg-policy" style="display:none">
 		<ul>
-			<li><b>Routing Policy</b> - defines rules that determine how network traffic is routed through the VPN tunnel, based on factors such as source or destination.</li>
+			<li><b>Routing Policy</b> - defines rules that determine how network traffic is routed through the VPN tunnel, based on factors such as source or destination.
 			<ul>
 				<li><b>Type -> From Source IP</b> - Ex: "1.2.3.4", "1.2.3.4 - 2.3.4.5", "1.2.3.0/24".</li>
 				<li><b>Type -> To Destination IP</b> - Ex: "1.2.3.4" or "1.2.3.0/24".</li>
 				<li><b>Type -> To Domain</b> - Ex: "domain.com". Please enter one domain per line.</li>
 				<li><b>IMPORTANT!</b> - Kill Switch IPs from all instances are applied to every active instance, not just the one they were entered into (so-called strict Kill Switch).</li>
-			</ul>
+			</ul></li>
 		</ul>
 	</div>
 	<!-- routing policy notes stop -->
@@ -2368,14 +2378,14 @@ function init() {
 	<!-- scripts notes start -->
 	<div id="notes-wg-scripts" style="display:none">
 		<ul>
-			<li><b>Custom Interface Scripts</b> - Custom bash scripts to be run at defined events.</li>
+			<li><b>Custom Interface Scripts</b> - Custom bash scripts to be run at defined events.
 			<ul>
 				<li><b>Pre-Up Script</b> - Will be run before the interface is brought up.</li>
 				<li><b>Post-Up Script</b> - Will be run after the interface is brought up.</li>
 				<li><b>Pre-Down Script</b> - Will be run before the interface is brought down.</li>
 				<li><b>Post-Down Script</b> - Will be run after the interface is brought down.</li>
 				<li><b>Note:</b> "<i>%i</i>" will be replaced with the actual name of the wireguard interface.</li>
-			</ul>
+			</ul></li>
 		</ul>
 	</div>
 	<!-- scripts notes stop -->

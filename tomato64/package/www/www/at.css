@@ -1798,17 +1798,15 @@ span[id$="_multiwan"] input {
 
 .tomato-grid br,
 .about > br,
-.status-result tt > br,
 #bwm-h-ctrl > br,
 #afu-progress > br,
 #result br {
 	display: inline;
 }
 
-.status-result tt,
-#result tt {
-	font-family: monospace !important;
-	font-size: smaller;
+.status-result {
+	font-size: 13px;
+	line-height: 17px;
 }
 
 .about b {
@@ -2135,7 +2133,6 @@ span.log-configuration a::after {
 a[href*=":toggle"] span,
 span#dtime,
 td#navi br,
-br + br,
 br:last-child,
 #content > br,
 .content > br,
@@ -2583,10 +2580,9 @@ div#sptime {
 	font-size: 12px;
 }
 
-div#adblock-status {
+#adblock-status {
 	padding-left: 0;
 	padding-top: 35px;
-	font-size: 14px;
 	border: none;
 }
 

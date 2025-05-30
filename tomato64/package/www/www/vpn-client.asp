@@ -40,7 +40,7 @@ RouteGrid.prototype = new TomatoGrid;
 
 var tabs =  [];
 for (i = 1; i <= unitCount; ++i)
-	tabs.push(['client'+i,'<span id="'+serviceType+i+'_tabicon" style="font-size:9px">▽ <\/span><span class="tabname">Client '+i+'</span>']);
+	tabs.push(['client'+i,'<span id="'+serviceType+i+'_tabicon" style="font-size:9px">▽ <\/span><span class="tabname">Client '+i+'<\/span>']);
 var sections = [['basic','Basic'],['advanced','Advanced'],['keys','Keys'],['policy','Routing Policy'],['status','Status']];
 
 var routingTables = [];
@@ -457,7 +457,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title vpn-title"><img src="openvpn.svg">OpenVPN Client Configuration</div>
+<div class="section-title vpn-title"><img src="openvpn.svg" alt="">OpenVPN Client Configuration</div>
 <div class="section">
 	<script>
 		tabCreate.apply(this, tabs);

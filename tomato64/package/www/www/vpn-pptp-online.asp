@@ -219,7 +219,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title vpn-title"><img src="pptp.svg">PPTP Users Online</div>
+<div class="section-title vpn-title"><img src="pptp.svg" alt="">PPTP Users Online</div>
 <div class="section">
 	<div class="tomato-grid" id="vpn-pptp-grid"></div>
 

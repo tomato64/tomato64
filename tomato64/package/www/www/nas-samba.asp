@@ -343,7 +343,6 @@ function init() {
 				<li>Refer to the <a href="https://www.samba.org/samba/docs/man/manpages-3/smb.conf.5.html" class="new_window">Samba documentation</a> for details.</li>
 			</ul>
 		</li>
-		<br>
 		<li><b>Disable GRO</b> - Disable/Enable Generic Receive Offload</li>
 	</ul>
 </div>

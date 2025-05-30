@@ -46,9 +46,9 @@ function check() {
 			conntrack = [];
 		}
 		for (i = 1; i < 13; ++i) {
-			E('count' + i).innerHTML = '&nbsp; <small>('+ ((conntrack[i] || 0) * 1) + ' in this state)<\/small>';
+			E('count'+i).innerHTML = '&nbsp; <small>('+((conntrack[i] || 0) * 1)+' in this state)<\/small>';
 		}
-		E('count0').innerHTML = '(' + ((conntrack[0] || 0) * 1) + ' connections currently tracked)';
+		E('count0').innerHTML = '('+((conntrack[0] || 0) * 1)+' connections currently tracked)';
 		checker = null;
 		timer.start(3000);
 	}
@@ -79,7 +79,7 @@ function expireTimer() {
 	}
 	else {
 		setTimeout(expireTimer, 1000);
-		e.value = 'Expire Scheduled... ' + expireTime;
+		e.value = 'Expire Scheduled... '+expireTime;
 	}
 }
 
@@ -94,13 +94,13 @@ function verifyFields(focused, quiet) {
 	var i, v;
 
 	for (i = 1; i < 9; ++i) {
-		if (!v_range('_f_tcp_' + i, quiet, 1, 432000)) return 0;
+		if (!v_range('_f_tcp_'+i, quiet, 1, 432000)) return 0;
 	}
 	for (i = 0; i < 2; ++i) {
-		if (!v_range('_f_udp_' + i, quiet, 1, 432000)) return 0;
+		if (!v_range('_f_udp_'+i, quiet, 1, 432000)) return 0;
 	}
 	for (i = 0; i < 2; ++i) {
-		if (!v_range('_f_ct_' + i, quiet, 1, 432000)) return 0;
+		if (!v_range('_f_ct_'+i, quiet, 1, 432000)) return 0;
 	}
 
 /* TOMATO64-REMOVE-BEGIN */
@@ -133,18 +133,18 @@ function save() {
 	tcp = [];
 	tcp.push('0');
 	for (i = 1; i < 9; ++i) {
-		tcp.push(E('_f_tcp_' + i).value);
+		tcp.push(E('_f_tcp_'+i).value);
 	}
 	tcp.push('0');
 
 	udp = [];
 	for (i = 0; i < 2; ++i) {
-		udp.push(E('_f_udp_' + i).value);
+		udp.push(E('_f_udp_'+i).value);
 	}
 
 	ct = [];
 	for (i = 0; i < 2; ++i) {
-		ct.push(E('_f_ct_' + i).value);
+		ct.push(E('_f_ct_'+i).value);
 	}
 
 	fom = E('t_fom');
@@ -168,7 +168,7 @@ function save() {
 
 	i = E('_f_nf_ttl').value;
 	if (i == '')
-		fom.nf_ttl.value = 'c:' + E('_f_ttl_val').value;
+		fom.nf_ttl.value = 'c:'+E('_f_ttl_val').value;
 	else
 		fom.nf_ttl.value = i;
 
@@ -245,12 +245,14 @@ function save() {
 			v = [0,0,1200,120,60,120,120,10,60,30,0];
 		}
 		titles = ['-', 'None', 'Established', 'SYN Sent', 'SYN Received', 'FIN Wait', 'Time Wait', 'Close', 'Close Wait', 'Last ACK', 'Listen'];
-		f = [{ title: ' ', text: '' }];
+		f = [];
 		for (i = 1; i < 11; ++i) {
-			f.push({ title: titles[i], name: ('f_tcp_' + (i - 1)),
-				type: 'text', maxlen: 6, size: 8, value: v[i],
-				hidden: (i == 1 || i == 10) ? 1 : 0,
-				suffix: '<span id="count' + i + '"><\/span>' });
+			f.push({ title: titles[i],
+			         name: ('f_tcp_'+(i - 1)),
+			         type: 'text', maxlen: 6, size: 8, value: v[i],
+			         hidden: (i == 1 || i == 10) ? 1 : 0,
+			         suffix: '<span id="count'+i+'"><\/span>'
+			});
 		}
 		createFieldTable('', f);
 	</script>
@@ -311,7 +313,7 @@ function save() {
 	<script>
 		v = [];
 		for (i = -5; i <= 5; ++i) {
-			v.push([i + '', i ? ((i > 0) ? '+' : '') + i : 'None']);
+			v.push([i+'', i ? ((i > 0) ? '+' : '')+i : 'None']);
 		}
 		v.push(['', 'Custom']);
 

@@ -1730,6 +1730,12 @@ div[id^="wg"] td.co10 {
 	display: none;
 }
 
+.status-result {
+	font-family: monospace !important;
+	font-size: 11px;
+	line-height: 14px;
+}
+
 table.adblock-status-table {
 	padding: 5px;
 	border: none;
@@ -1740,12 +1746,11 @@ td.adblock-td1 {
 	width: 145px;
 }
 
-div#adblock-status {
+#adblock-status {
 	text-align: left;
 	padding-left: 30px;
 	padding-top: 10px;
-	font-size: 10px;
-	height: 230px;
+	height: 265px;
 	border: 1px solid #AAAAAA;
 }
 

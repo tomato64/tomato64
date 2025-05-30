@@ -42,7 +42,7 @@ UsersGrid.prototype = new TomatoGrid;
 
 var tabs =  [];
 for (i = 1; i <= unitCount; ++i)
-	tabs.push(['server'+i,'<span id="'+serviceType+i+'_tabicon" style="font-size:9px">▽ <\/span><span class="tabname">Server '+i+'</span>']);
+	tabs.push(['server'+i,'<span id="'+serviceType+i+'_tabicon" style="font-size:9px">▽ <\/span><span class="tabname">Server '+i+'<\/span>']);
 var sections = [['basic','Basic'],['advanced','Advanced'],['keys','Keys'],['status','Status']];
 
 var ccdTables = [];
@@ -925,7 +925,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title vpn-title"><img src="openvpn.svg">OpenVPN Server Configuration</div>
+<div class="section-title vpn-title"><img src="openvpn.svg" alt="">OpenVPN Server Configuration</div>
 <div class="section">
 	<script>
 		tabCreate.apply(this, tabs);

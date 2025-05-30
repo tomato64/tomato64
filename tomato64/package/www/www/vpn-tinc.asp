@@ -83,9 +83,9 @@ function toggle(service, isup) {
 	E('_'+service+'_button').disabled = 1;
 	E('spin').style.display = 'inline';
 
-	elem.display(E('result'), !isup);
+	elem.display(E('status-result'), !isup);
 	if (!isup)
-		elem.setInnerHTML(E('result'), '');
+		elem.setInnerHTML(E('status-result'), '');
 
 	var fom = E('t_fom');
 	fom._service.value = service+(isup ? '-stop' : '-start');
@@ -272,13 +272,13 @@ function generateKeys() {
 }
 
 function displayStatus() {
-	elem.setInnerHTML(E('result'), '<tt>'+escapeText(cmdresult)+'<\/tt>');
+	elem.setInnerHTML(E('status-result'), escapeText(cmdresult));
 	cmdresult = '';
 	spin(0, 'statusWait');
 }
 
 function updateStatus(type) {
-	elem.setInnerHTML(E('result'), '');
+	elem.setInnerHTML(E('status-result'), '');
 	spin(1, 'statusWait');
 
 	cmd = new XmlHttp();
@@ -516,7 +516,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title vpn-title" id="tinc-title"><img src="tinc.svg">Tinc Configuration</div>
+<div class="section-title vpn-title" id="tinc-title"><img src="tinc.svg" alt="">Tinc Configuration</div>
 <script>
 	tabCreate.apply(this, tabs);
 
@@ -623,7 +623,7 @@ function init() {
 
 	W('<div class="section">');
 	W('<div><input type="button" value="Info" onclick="updateStatus(\'info\')" id="info" style="min-width:85px"> <select id="hostselect" style="min-width:85px"><\/select><\/div>');
-	W('<pre id="result" class="status-result"><\/pre>');
+	W('<pre id="status-result" class="status-result"><\/pre>');
 	W('<\/div>');
 	W('<\/div><\/div>');
 	/* -------- END KEY TAB ----------- */
