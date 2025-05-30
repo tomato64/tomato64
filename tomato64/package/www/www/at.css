@@ -33,6 +33,7 @@
 	--icon-pin: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M6.166 16.943l1.4 1.4-4.622 4.657h-2.944l6.166-6.057zm11.768-6.012c2.322-2.322 4.482-.457 6.066-1.931l-8-8c-1.474 1.584.142 3.494-2.18 5.817-3.016 3.016-4.861-.625-10.228 4.742l9.6 9.6c5.367-5.367 1.725-7.211 4.742-10.228z'/></svg>");
 	--icon-key: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M12.451 17.337l-2.451 2.663h-2v2h-2v2h-6v-5l6.865-6.949c1.08 2.424 3.095 4.336 5.586 5.286zm11.549-9.337c0 4.418-3.582 8-8 8s-8-3.582-8-8 3.582-8 8-8 8 3.582 8 8zm-3-3c0-1.104-.896-2-2-2s-2 .896-2 2 .896 2 2 2 2-.896 2-2z'/></svg>");
 	--icon-down: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M0 7.33l2.829-2.83 9.175 9.339 9.167-9.339 2.829 2.83-11.996 12.17z'/></svg>");
+	--icon-up: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' version='1.1' xmlns:xlink='http://www.w3.org/1999/xlink' transform='matrix(-1,1.2246467991473532e-16,-1.2246467991473532e-16,-1,0,0)'><path d='M0 7.33l2.829-2.83 9.175 9.339 9.167-9.339 2.829 2.83-11.996 12.17z'></path></svg>");
 	--icon-filter: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M1 0h22l-9 15.094v8.906l-4-3v-5.906z'/></svg>");
 	--icon-resolve: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M11.998265,0.031401c-3.797828,0 -6.876811,3.137137 -6.876811,7.006665c0,3.870461 6.876811,16.928975 6.876811,16.928975s6.87676,-13.058514 6.87676,-16.928975c0,-3.869527 -3.077948,-7.006665 -6.87676,-7.006665zm0,10.354904c-1.814589,0 -3.286203,-1.498519 -3.286203,-3.348239s1.471615,-3.348232 3.286203,-3.348232s3.286146,1.499379 3.286146,3.348232s-1.471608,3.348239 -3.286146,3.348239z'/></svg>");
 	--icon-mount: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='1 1 25 25'><path d='M12 0C12.5523 0 13 0.447715 13 1V12.5858L14.2929 11.2929C14.6834 10.9024 15.3166 10.9024 15.7071 11.2929C16.0976 11.6834 16.0976 12.3166 15.7071 12.7071L12.7071 15.7071C12.3166 16.0976 11.6834 16.0976 11.2929 15.7071L8.29289 12.7071C7.90237 12.3166 7.90237 11.6834 8.29289 11.2929C8.68342 10.9024 9.31658 10.9024 9.70711 11.2929L11 12.5858V1C11 0.447715 11.4477 0 12 0ZM6 9C5.44772 9 5 9.44772 5 10V21C5 21.5523 5.44772 22 6 22H18C18.5523 22 19 21.5523 19 21V10C19 9.44772 18.5523 9 18 9H16C15.4477 9 15 8.55228 15 8C15 7.44772 15.4477 7 16 7H18C19.6569 7 21 8.34315 21 10V21C21 22.6569 19.6569 24 18 24H6C4.34315 24 3 22.6569 3 21V10C3 8.34315 4.34315 7 6 7H8C8.55228 7 9 7.44772 9 8C9 8.55228 8.55228 9 8 9H6Z'/></svg>");
@@ -175,7 +176,9 @@ div[id^="sesdiv_wl"] .content > small {
 	background-size: contain;
 }
 
-a[href*=":toggle"]::before {
+a[href*=":toggle"]::before,
+small > i > .show::before,
+small > i > .hide::before {
 	content: "\23F7";
 	color: transparent;
 	background-color: var(--tomato-color);
@@ -187,6 +190,11 @@ a[href*=":toggle"]::before {
 	-webkit-mask-repeat: no-repeat;
 	-webkit-mask-position: center;
 	-webkit-mask-size: contain;
+}
+
+small > i > .hide::before {
+	mask-image: var(--icon-up);
+	-webkit-mask-image: var(--icon-up);
 }
 
 a[href*=":toggle"]:hover {

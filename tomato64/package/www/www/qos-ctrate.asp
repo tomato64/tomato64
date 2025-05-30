@@ -458,7 +458,7 @@ function init() {
 		E('_f_excludemcast').checked = mcastCB = 1;
 
 	if (((c = cookie.get(cprefix+'_filters_vis')) != null) && (c == '1'))
-		toggleVisibility(cprefix, "filters");
+		toggleVisibility(cprefix, 'filters');
 
 	if (((thres = cookie.get(cprefix+'_thres')) == null) || (isNaN(thres *= 1)))
 		thres = 0;
@@ -503,7 +503,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Filters: <small><i><a href="javascript:toggleVisibility(cprefix,'filters');"><span id="sesdiv_filters_showhide">(Show)</span></a></i></small></div>
+<div class="section-title">Filters: <small><i><a href="javascript:toggleVisibility(cprefix,'filters');" id="toggleLink-filters"><span id="sesdiv_filters_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_filters" style="display:none">
 	<script>
 		var c;

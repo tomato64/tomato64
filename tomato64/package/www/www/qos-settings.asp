@@ -218,7 +218,7 @@ function init() {
 	var c;
 
 	if (((c = cookie.get(cprefix+'_classnames_vis')) != null) && (c == '1'))
-		toggleVisibility(cprefix, "classnames");
+		toggleVisibility(cprefix, 'classnames');
 
 /* CTF-BEGIN */
 	if (nvram.ctf_disable && nvram.ctf_disable === 0) {
@@ -431,7 +431,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title" id="class-names">Custom Class Names <small><i><a href="javascript:toggleVisibility(cprefix,'classnames');"><span id="sesdiv_classnames_showhide">(Show)</span></a></i></small></div>
+<div class="section-title" id="class-names">Custom Class Names <small><i><a href="javascript:toggleVisibility(cprefix,'classnames');" id="toggleLink-classnames"><span id="sesdiv_classnames_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_classnames" style="display:none">
 	<script>
 		if ((v = nvram.qos_classnames.match(/^(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)$/)) == null)

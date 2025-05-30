@@ -227,7 +227,7 @@ function earlyInit() {
 function init() {
 	var c;
 	if (((c = cookie.get(cprefix + '_notes_vis')) != null) && (c == '1')) {
-		toggleVisibility(cprefix, "notes");
+		toggleVisibility(cprefix, 'notes');
 	}
 	eventHandler();
 	up.initPage(250, 5);
@@ -333,7 +333,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
+<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
 		<li><b>LAN0, LAN1, LAN2, LAN3</b> - list of router interface names Samba will bind to.

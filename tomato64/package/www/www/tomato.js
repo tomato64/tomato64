@@ -3038,14 +3038,22 @@ function logout() {
 }
 
 function toggleVisibility(where, whichone) {
-	if (E('sesdiv_'+whichone).style.display != 'none') {
-		E('sesdiv_'+whichone).style.display = 'none';
-		E('sesdiv_'+whichone+'_showhide').innerHTML = '(Show)';
+	var content = E('sesdiv_'+whichone);
+	var span = E('sesdiv_'+whichone+'_showhide');
+	var tag = E('toggleLink-'+whichone);
+
+	if (content.style.display != 'none') {
+		content.style.display = 'none';
+		span.innerHTML = '(Show)';
+		tag.classList.remove('hide');
+		tag.classList.add('show');
 		cookie.set(where+'_'+whichone+'_vis', 0);
 	}
 	else {
-		E('sesdiv_'+whichone).style.display = 'block';
-		E('sesdiv_'+whichone+'_showhide').innerHTML = '(Hide)';
+		content.style.display = 'block';
+		span.innerHTML = '(Hide)';
+		tag.classList.remove('show');
+		tag.classList.add('hide');
 		cookie.set(where+'_'+whichone+'_vis', 1);
 	}
 }

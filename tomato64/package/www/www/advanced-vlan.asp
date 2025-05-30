@@ -1264,7 +1264,7 @@ function init() {
 		vlg.resetNewEditor();
 		var c;
 		if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
-			toggleVisibility(cprefix, "notes");
+			toggleVisibility(cprefix, 'notes');
 	}
 	else
 		E('notice-msg').innerHTML = '<div id="notice">The feature is not supported on this router.<\/div>';
@@ -1443,7 +1443,7 @@ function init() {
 
 <!-- / / / -->
 
-	<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
+	<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 	<div class="section" id="sesdiv_notes" style="display:none">
 		<div>If you notice that the order of the LAN Ports are incorrectly mapped, <a href="http://www.linksysinfo.org/index.php?threads/can-vlan-gui-port-order-be-corrected.70160/#post-247634/"> <b>please follow these instructions to get it corrected.</b></a></div>
 		<br>
