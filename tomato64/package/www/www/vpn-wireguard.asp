@@ -2359,7 +2359,7 @@ function init() {
 				<li><b>Type -> From Source IP</b> - Ex: "1.2.3.4", "1.2.3.4 - 2.3.4.5", "1.2.3.0/24".</li>
 				<li><b>Type -> To Destination IP</b> - Ex: "1.2.3.4" or "1.2.3.0/24".</li>
 				<li><b>Type -> To Domain</b> - Ex: "domain.com". Please enter one domain per line.</li>
-				<li><b>IMPORTANT!</b> - Kill Switch IPs from all clients are applied to each active client, not just the client to which they are entered (so-called strict Kill Switch).</li>
+				<li><b>IMPORTANT!</b> - Kill Switch IPs from all instances are applied to every active instance, not just the one they were entered into (so-called strict Kill Switch).</li>
 			</ul>
 		</ul>
 	</div>
