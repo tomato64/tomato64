@@ -207,10 +207,22 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 
 		if ((fp = fopen(buffer, "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
-			            "[ -z \"$(pidof vpn%s%d)\" -a \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
+			            "pingme() {\n"
+			            "[ \"server\" == \"%s\" ] && return 0\n"
+			            " local i=1\n"
+			            " while :; do\n"
+			            "  ping -qc1 -W3 -I tun1%d 1.1.1.1 &>/dev/null && return 0\n"
+			            "  [ $((i++)) -ge 3 ] && break || sleep 5\n"
+			            " done\n"
+			            " return 1\n"
+			            "}\n"
+			            "[ \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
+			            " pidof vpn%s%d &>/dev/null && pingme && exit 0\n"
 			            " logger -t openvpn-watchdog vpn%s%d stopped? Starting...\n"
 			            " service vpn%s%d restart\n"
 			            "}\n",
+			            instanceType,
+			            unit,
 			            instanceType, unit,
 			            instanceType, unit,
 			            instanceType, unit);
