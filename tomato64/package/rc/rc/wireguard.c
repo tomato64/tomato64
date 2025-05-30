@@ -233,7 +233,7 @@ static void wg_setup_watchdog(const int unit)
 {
 	FILE *fp;
 	char buffer[BUF_SIZE_64], buffer2[BUF_SIZE_64];
-	char taskname[24];
+	char taskname[BUF_SIZE_32];
 	int nvi;
 
 	if ((nvi = atoi(getNVRAMVar("wg%d_poll", unit))) > 0) {
@@ -253,8 +253,8 @@ static void wg_setup_watchdog(const int unit)
 			fclose(fp);
 			chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
 
-			memset(taskname, 0, sizeof(taskname));
-			snprintf(taskname, sizeof(taskname),"CheckWireguard%d", unit);
+			memset(taskname, 0, BUF_SIZE_32);
+			snprintf(taskname, BUF_SIZE_32,"CheckWireguard%d", unit);
 			memset(buffer2, 0, BUF_SIZE_64);
 			snprintf(buffer2, BUF_SIZE_64, "*/%d * * * * %s", nvi, buffer);
 			eval("cru", "a", taskname, buffer2);
@@ -845,6 +845,104 @@ static int wg_remove_iface(char *iface)
 	return 0;
 }
 
+static void wg_kill_switch(void)
+{
+	unsigned int unit, br, rules_count;
+	int policy_type;
+	int wan_unit, mwan_num;
+	char *enable, *type, *value, *kswitch;
+	char *nv, *nvp, *b, *c;
+	char wan_prefix[] = "wanXX";
+	char buf[BUF_SIZE_64], buf2[BUF_SIZE_64], val[BUF_SIZE_64], wan_if[BUF_SIZE_16];
+
+	mwan_num = nvram_get_int("mwan_num");
+	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
+		mwan_num = 1;
+
+	for (unit = 1; unit <= WG_INTERFACE_MAX; ++unit) {
+		rules_count = 0;
+		nv = nvp = strdup(getNVRAMVar("wg%d_routing_val", unit));
+
+		while (nvp && (b = strsep(&nvp, ">")) != NULL) {
+			enable = type = value = kswitch = NULL;
+
+			/* enable<type<domain_or_IP<kill_switch> */
+			if ((vstrsep(b, "<", &enable, &type, &value, &kswitch)) < 4)
+				continue;
+
+			/* check if rule is enabled and kill switch is active and IP/domain is set */
+			if ((atoi(enable) != 1) || (atoi(kswitch) != 1) || (*value == '\0'))
+				continue;
+
+			policy_type = atoi(type);
+			rules_count++;
+
+			/* check all active WANs */
+			for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
+				get_wan_prefix(wan_unit, wan_prefix);
+
+				/* find WAN IF */
+				memset(wan_if, 0, BUF_SIZE_16); /* reset */
+				snprintf(wan_if, BUF_SIZE_16, "%s", get_wanface(wan_prefix));
+				if ((!*wan_if) || (strcmp(wan_if, "") == 0))
+					continue;
+
+				memset(val, 0, BUF_SIZE_64); /* reset */
+				snprintf(val, BUF_SIZE_64, "%s", value); /* copy IP/domain to buffer */
+
+				/* "From Source IP" */
+				if (policy_type == 1) {
+					/* find correct bridge for given IP */
+					for (br = 0; br < BRIDGE_COUNT; br++) {
+						memset(buf, 0, BUF_SIZE_64); /* reset */
+						snprintf(buf, BUF_SIZE_64, (br == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), br);
+
+						char *lan_ip = nvram_safe_get(buf);
+						if (strcmp(lan_ip, "") != 0) { /* only for active */
+							memset(buf, 0, BUF_SIZE_64); /* reset */
+							snprintf(buf, BUF_SIZE_64, "%s", val);
+							if ((c = strchr(buf, '/')) != NULL)
+								*c = 0; /* with mask? get IP */
+
+							memset(buf, 0, BUF_SIZE_64); /* reset */
+							snprintf(buf, BUF_SIZE_64, "%s", val);
+							if ((c = strrchr(buf, '.')) != NULL)
+								*(c + 1) = 0; /* get first 3 octets from value */
+
+							memset(buf2, 0, BUF_SIZE_64); /* reset */
+							snprintf(buf2, BUF_SIZE_64, "%s", lan_ip);
+							if ((c = strrchr(buf2, '.')) != NULL)
+								*(c + 1) = 0; /* get first 3 octets from lan IP */
+
+							if (strcmp(buf, buf2) == 0) {
+								memset(buf2, 0, BUF_SIZE_64); /* reset */
+								snprintf(buf2, BUF_SIZE_64, "br%d", br); /* copy brX to buffer */
+
+								eval("iptables", "-I", "FORWARD", "-i", buf2, "-s", val, "-o", wan_if, "-j", "REJECT");
+							}
+						}
+					}
+				}
+				/* "To Destination IP" / "To Domain" */
+				else if ((policy_type == 2) || (policy_type == 3)) {
+					memset(buf, 0, BUF_SIZE_64); /* reset */
+					snprintf(buf, BUF_SIZE_64, "wg%d", unit); /* find the appropriate IF */
+
+					/* xstart - do not wait when WAN in not up! */
+					xstart("iptables", "-I", "FORWARD", "!", "-o", buf, "-d", val, "-j", "REJECT");
+					xstart("iptables", "-I", "FORWARD", "-o", wan_if, "-d", val, "-j", "REJECT");
+				}
+
+			}
+		}
+		if (nv)
+			free(nv);
+
+		if (rules_count > 0)
+			logmsg(LOG_INFO, "Kill-Switch: added %d rules to firewall for wg%d", rules_count, unit);
+	}
+}
+
 void start_wg_eas(void)
 {
 	int unit;
@@ -1025,7 +1123,7 @@ void stop_wireguard(const int unit)
 
 	/* remove cron job */
 	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, sizeof(buffer), "CheckWireguard%d", unit);
+	snprintf(buffer, BUF_SIZE, "CheckWireguard%d", unit);
 	eval("cru", "d", buffer);
 
 	/* determine interface */
@@ -1095,6 +1193,8 @@ void run_wg_firewall_scripts(void)
 	struct dirent *file;
 	char *fa;
 	char buffer[BUF_SIZE_64];
+
+	wg_kill_switch();
 
 	if (chdir(WG_FW_DIR))
 		return;
