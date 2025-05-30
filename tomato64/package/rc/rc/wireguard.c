@@ -242,11 +242,23 @@ static void wg_setup_watchdog(const int unit)
 
 		if ((fp = fopen(buffer, "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
+			            "pingme() {\n"
+			            "[ \"3\" != \"%d\" ] && return 0\n"
+			            " local i=1\n"
+			            " while :; do\n"
+			            "  ping -qc1 -W3 -I wg%d 1.1.1.1 &>/dev/null && return 0\n"
+			            "  [ $((i++)) -ge 3 ] && break || sleep 5\n"
+			            " done\n"
+			            " return 1\n"
+			            "}\n"
 			            "ISUP=$(cat /sys/class/net/wg%d/operstate)\n"
-			            "[ \"$ISUP\" != \"unknown\" -a \"$ISUP\" != \"up\" ] && [ \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
+			            "[ \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
+			            " [ \"$ISUP\" == \"unknown\" -o \"$ISUP\" == \"up\" ] && pingme && exit 0\n"
 			            " logger -t wg-watchdog wg%d stopped? Starting...\n"
 			            " service wireguard%d restart\n"
 			            "}\n",
+			            atoi(getNVRAMVar("wg%d_com", unit)), /* only for 'External' (3) mode */
+			            unit,
 			            unit,
 			            unit,
 			            unit);
