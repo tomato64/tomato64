@@ -747,7 +747,7 @@ Adblock script activity = $(echo $([ -f "/var/run/adblock.pid" ] && { [ -f ${VRF
 	[ -s "$FINAL" -a $(grep 'conf-file=/etc/dnsmasq.adblock' /etc/dnsmasq.conf | wc -l) -eq 1 ] && {
 		filp=$(($(wc -c < $FINAL) * 100 / $([ $(echo $sizeLimit | wc -c 2>/dev/null ) -gt 0 ] && echo $sizeLimit || echo 99999999)))
 		lre=$(grep 'error' $ADHELPER | awk '{print $2}')
-		[ $lre -gt 0 ] && echo "Last run errors = $lre ⚠️" || "Last run errors = $lre"
+		[ $lre -gt 0 ] && { echo "Last run errors = $lre ⚠️"; } || { echo "Last run errors = $lre"; }
 		echo -e "Last run processing time = $(grep 'runtime' $ADHELPER | cut -d: -f2)
 Blockfile references = $(echo $(wc -l < $FINAL| number) Domains )
 Blockfile date = $(echo $(ls -lah $FINAL | awk '{print $8" on "$7" "$6}'))
