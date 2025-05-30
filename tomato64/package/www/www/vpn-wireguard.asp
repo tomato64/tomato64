@@ -2225,7 +2225,7 @@ function init() {
 			/* routing policy tab start */
 			W('<div id="'+t+'-wg-policy">');
 			W('<div class="tomato-grid" id="table_'+t+'_routing"><\/div>');
-			W('<div id="_'+t+'_routing_div_help"><div class="fields"><div class="about"><b>To use Routing Policy, you have to choose "Extarnal - VPN Provider" as Type of VPN and "Routing Policy [(strict)]" in "Redirect Internet Traffic".<\/b><\/div><\/div><\/div>');
+			W('<div id="_'+t+'_routing_div_help"><div class="fields"><div class="about"><b>To use Routing Policy, you have to choose "External - VPN Provider" as Type of VPN and "Routing Policy [(strict)]" in "Redirect Internet Traffic".<\/b><\/div><\/div><\/div>');
 			W('<\/div>');
 			/* routing policy tab stop */
 
