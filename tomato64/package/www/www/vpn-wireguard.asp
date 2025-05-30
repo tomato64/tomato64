@@ -1796,6 +1796,7 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_f_wg'+i+'_route'), !ext);
 		elem.display(PR('_f_wg'+i+'_nat'), fw != 'custom' && ext);
 		elem.display(PR('_f_wg'+i+'_fw'), fw != 'custom' && ext);
+		elem.display(PR('_wg'+i+'_rgwr'), ext);
 		elem.display(E('wg'+i+'_nat_warn_text'), ext && !nat);
 
 		/* Page Routing Policy */
