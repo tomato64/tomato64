@@ -830,8 +830,8 @@ function init() {
 	</div>
 	<br>
 	<div id="wl-controls">
-		<table border="0"><tr><td>
-			<label for="freqfilter">Display: </label>
+		<table style="border:none"><tr><td>
+			<label for="freq-filter">Display: </label>
 				<select id="freq-filter" onchange="doit();">
 					<option value="2.4">2.4 GHz</option>
 					<option value="5">5 GHz</option>
