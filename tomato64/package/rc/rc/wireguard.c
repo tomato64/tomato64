@@ -871,7 +871,7 @@ static void wg_kill_switch(void)
 	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
 		mwan_num = 1;
 
-	for (unit = 1; unit <= WG_INTERFACE_MAX; ++unit) {
+	for (unit = 0; unit < WG_INTERFACE_MAX; ++unit) {
 		rules_count = 0;
 		nv = nvp = strdup(getNVRAMVar("wg%d_routing_val", unit));
 
