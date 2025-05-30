@@ -739,11 +739,11 @@ Ram Used/Cache/Buffer / Total = ${rampu}% ~ $(echo $ramu | number)/$(echo $ramc 
 <div class=\"progress-bar\" style=\"background-color:#74CDC1;width:${rampb}%\"></div></div>
 Dnsmasq running = $(echo $([ -f "/var/run/dnsmasq.pid" ] && echo "Yes 🆗" || echo "no ⛔"))
 Dnsmasq restarts today = $(echo " $restarts ")
-Dnsmasq owner = $(ps | grep -q '[d]nsmasq.*async$' && [ $(ps | grep '[d]nsmasq.*async$' | awk '{print $2}') == "root" ] && echo "root ️⛔ <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" || echo "nobody 🆗" )
+Dnsmasq owner = $(ps | grep -q '[d]nsmasq.*async$' && [ "$(ps | grep '[d]nsmasq.*async$' | awk '{print $2}')" == "root" ] && echo "root ️⛔ <img src=\"spin.gif\" style=\"vertical-align:middle;height:7px;width:7px\">" || echo "nobody 🆗" )
 Dnsmasq restart time = $([ -f $DNS_TIME ] && echo $(cat $DNS_TIME) || echo "N/A")
 Adblock calls today = $(grep -E $(date +%b)" "+$(date +%d|sed 's/^0*//') /var/log/messages | grep "Kick off" | wc -l )
 Adblock config loaded = $(echo $(grep -q 'conf-file=/etc/dnsmasq.adblock' /etc/dnsmasq.conf && echo "Yes 🆗" || echo "No ⛔"))
-Adblock script activity = $(echo $([ -f "/var/run/adblock.pid" ] && { [ -f ${VRFY} ] && echo "👁️ Checking...<img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" || echo "🌀 Loading... $([ -s $TM ] && { wc -l < $TM | number ;}) domains / $([ -s $TM ] && { wc -c < $TM | number ;} ) Bytes <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" ;} || echo "idle"))"
+Adblock script activity = $(echo $([ -f "/var/run/adblock.pid" ] && { [ -f ${VRFY} ] && echo "👁️ Checking...<img src=\"spin.gif\" style=\"vertical-align:middle;height:7px;width:7px\">" || echo "🌀 Loading... $([ -s $TM ] && { wc -l < $TM | number ;}) domains / $([ -s $TM ] && { wc -c < $TM | number ;} ) Bytes <img src=\"spin.gif\" style=\"vertical-align:middle;height:7px;width:7px\">" ;} || echo "idle"))"
 	[ -s "$FINAL" -a $(grep 'conf-file=/etc/dnsmasq.adblock' /etc/dnsmasq.conf | wc -l) -eq 1 ] && {
 		filp=$(($(wc -c < $FINAL) * 100 / $([ $(echo $sizeLimit | wc -c 2>/dev/null ) -gt 0 ] && echo $sizeLimit || echo 99999999)))
 		lre=$(grep 'error' $ADHELPER | awk '{print $2}')
