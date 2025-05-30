@@ -416,7 +416,7 @@ void wo_ovpn_genclientconfig(char *url)
 		            ";verify-x509-name \"server\" name\n"
 		            "remote-cert-tls server\n"
 		            "\n;ca ca.pem\n"
-		            "<ca>\n%s</ca>\n\n",
+		            "<ca>\n%s\n</ca>\n\n",
 		            getNVRAMVar("vpn_server%d_ca", server));
 
 		put_to_file(OVPN_CLIENT_DIR"/ca.pem", getNVRAMVar("vpn_server%d_ca", server));
