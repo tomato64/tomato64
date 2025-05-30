@@ -29,7 +29,7 @@ fi
 
 if [ "$PLATFORM_BPIR3MINI" == y ]; then
 	echo "#define TOMATO_VERSION		\"$VERSION BPI-R3-MINI AIO\"" >>	tomato_version.h
-	echo "$VERSION BPI-R3-MINI AIO" >>						tomato_version
+	echo "$VERSION BPI-R3 MINI AIO" >>						tomato_version
 fi
 
 echo "#define TOMATO_SHORTVER		\"$VERSION\"" >>			tomato_version.h
