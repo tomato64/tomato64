@@ -1933,6 +1933,7 @@ function save(nomsg) {
 		for (j = 0; j < routedata.length; ++j)
 			s += routedata[j].join('<')+'>';
 
+		if (fom['_wg'+i+'_com'].value != 3) s = ''; /* clean routing policy if not in 'External' mode */
 		fom['wg'+i+'_routing_val'].value = s;
 		fom['wg'+i+'_enable'].value = fom['_f_wg'+i+'_enable'].checked ? 1 : 0;
 		fom['wg'+i+'_rgw'].value = fom['_f_wg'+i+'_rgw'].checked ? 1 : 0;
