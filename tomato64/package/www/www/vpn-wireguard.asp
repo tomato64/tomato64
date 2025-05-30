@@ -1676,15 +1676,16 @@ function verifyFWMark(fwmark) {
 
 function verifyFields(focused, quiet) {
 	var ok = 1;
+	tgHideIcons();
 
 	/* When settings change, make sure we restart the right services */
 	if (focused) {
 		changed = 1;
 
 		var fom = E('t_fom');
-		var serveridx = focused.name.indexOf('wg');
-		if (serveridx >= 0) {
-			var num = focused.name.substring(serveridx + 2, serveridx + 3);
+		var unitidx = focused.name.indexOf('wg');
+		if (unitidx >= 0) {
+			var num = focused.name.substring(unitidx + 2, unitidx + 3);
 
 			updateForm(num, 0);
 
