@@ -193,6 +193,7 @@ small > i > .hide::before {
 }
 
 small > i > .hide::before {
+	content: "\23F6";
 	mask-image: var(--icon-up);
 	-webkit-mask-image: var(--icon-up);
 }
