@@ -734,9 +734,9 @@ elif [ "$1" == "status-gui" ]; then
 System Load = $(cat /proc/loadavg | awk '{print "<b>"$1" / "$2" / "$3"</b>"}')<br>
 Ram Used/Cache/Buffer / Total = <b>${rampu}% ~ $(echo $ramu | number)</b>/$(echo $ramc | number)/$(echo $ramb | number)<b> / $(echo $ramt | number) KBytes</b><br>
 <div class=\"progress-container\" style=\"width:400px;float:left;display:flex;flex:1\">
-<div class=\"progress-bar\" style=\"background-color:#005691;width: ${rampu}%\"></div>
-<div class=\"progress-bar\" style=\"background-color:#CDA5F3;width: ${rampc}%\"></div>
-<div class=\"progress-bar\" style=\"background-color:#74CDC1;width: ${rampb}%\"></div></div><br>
+<div class=\"progress-bar\" style=\"background-color:#005691;width:${rampu}%\"></div>
+<div class=\"progress-bar\" style=\"background-color:#CDA5F3;width:${rampc}%\"></div>
+<div class=\"progress-bar\" style=\"background-color:#74CDC1;width:${rampb}%\"></div></div><br>
 Dnsmasq running = $(echo $([ -f "/var/run/dnsmasq.pid" ] && echo "<b>Yes 🆗</b>" || echo "<b>no ⛔</b>"))<br>
 Dnsmasq restarts today = $(echo "<b> $restarts </b>")<br>
 Dnsmasq owner = $(ps | grep -q '[d]nsmasq.*async$' && [ $(ps | grep '[d]nsmasq.*async$' | awk '{print $2}') == "root" ] && echo "<b>root ️⛔</b> <img src=\"spin.gif\" heigh=\"8px\" width=\"8px\">" || echo "<b>nobody 🆗</b>" )<br>

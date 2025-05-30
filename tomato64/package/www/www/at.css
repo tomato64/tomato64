@@ -2583,6 +2583,25 @@ div#sptime {
 	font-size: 12px;
 }
 
+div#adblock-status {
+	padding-left: 0;
+	padding-top: 35px;
+	font-size: 14px;
+	border: none;
+}
+
+td.adblock-td1 {
+	width: 210px;
+}
+
+td.adblock-td2 {
+	vertical-align: top;
+}
+
+.adblock-status-table tr > td > input[type="button"] {
+	width: 130px;
+}
+
 /* SVG */
 #svg text {
 	font: 13px monospace;
