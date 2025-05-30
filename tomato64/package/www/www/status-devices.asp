@@ -455,11 +455,11 @@ dg.populate = function() {
 
 		f = '';
 		if (e.freq != '') {
-			f = '<img src="wl'+(e.freq == '5 GHz' ? '50' : '24')+'.gif"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'">';
+			f = '<img src="wl'+(e.freq == '5 GHz' ? '50' : '24')+'.svg"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'">';
 			e.media = (e.freq == '5 GHz' ? 1 : 2);
 /* TOMATO64-BEGIN */
 			if (e.freq == '6 GHz') {
-				f = '<img src="wl60.gif"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'">';
+				f = '<img src="wl60.svg"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'">';
 				e.media = 0;
 			}
 /* TOMATO64-END */
@@ -468,21 +468,21 @@ dg.populate = function() {
 			c = (e.wan != '' ? 'style="filter:invert(1)"' : '');
 /* USB-BEGIN */
 			if ((e.proto == 'lte') || (e.proto == 'ppp3g')) {
-				f = '<img src="cell.gif"'+c+' alt="" title="LTE / 3G">';
+				f = '<img src="cell.svg"'+c+' alt="" title="LTE / 3G">';
 				e.media = 3;
 			}
 			else
 /* USB-END */
 			     if (e.rssi != 1) {
-				f = '<img src="eth.gif"'+c+' alt="" title="Ethernet">';
+				f = '<img src="eth.svg"'+c+' alt="" title="Ethernet">';
 				e.media = 4;
 			}
 		}
 		if (e.rssi == 1) {
 			if (e.mac.match(/^(..):(..):(..)/))
-				f = '<a href="javascript:wake('+i+')" class="status_devices"><img src="dis.gif"'+c+' alt="" title="Click to wake up"><\/a>';
+				f = '<a href="javascript:wake('+i+')" class="status_devices"><img src="dis.svg"'+c+' alt="" title="Click to wake up"><\/a>';
 			else
-				f = '<img src="dis.gif"'+c+' alt="" title="Disconnected">';
+				f = '<img src="dis.svg"'+c+' alt="" title="Disconnected">';
 
 			e.media = 5;
 		}
