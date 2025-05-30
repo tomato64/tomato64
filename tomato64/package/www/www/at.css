@@ -2133,6 +2133,7 @@ span.log-configuration a::after {
 a[href*=":toggle"] span,
 span#dtime,
 td#navi br,
+br + br,
 br:last-child,
 #content > br,
 .content > br,
@@ -2582,7 +2583,7 @@ div#sptime {
 
 #adblock-status {
 	padding-left: 0;
-	padding-top: 35px;
+	padding-top: 20px;
 	border: none;
 }
 

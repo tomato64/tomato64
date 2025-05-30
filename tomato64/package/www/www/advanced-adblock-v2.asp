@@ -293,7 +293,7 @@ function sortDomains(element) {
 <div class="fields">
 	<table class="adblock-status-table">
 			<td class="adblock-td1">&nbsp;</td>
-			<td class="adblock-td2" rowspan="10"><div id="adblock-status" class="status-result"></div></td>
+			<td class="adblock-td2" rowspan="10"><pre id="adblock-status" class="status-result"></pre></td>
 		</tr>
 
 		<tr><td><input type="button" value="▶️ Load" id="adblock-start" onclick="adblockMe('start');"></td></tr>

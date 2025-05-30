@@ -2236,7 +2236,7 @@ function init() {
 
 			/* status tab start */
 			W('<div id="'+t+'-wg-status">');
-			W('<div id="'+t+'_result" class="status-result"><\/div>');
+			W('<pre id="'+t+'_result" class="status-result"><\/pre>');
 			W('<div style="text-align:right">');
 			W('<img src="spin.gif" id="'+t+'_status_refresh_spinner" alt=""> &nbsp;');
 			genStdTimeList(t+'_status_refresh_time', 'One off', 0);
