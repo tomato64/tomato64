@@ -221,7 +221,9 @@ function init() {
 <!-- BCMWL714-END -->
 	<br>
 	<ul>
+/* TOMATO64-REMOVE-BEGIN */
 		<li><b>Download CFE</b> - Allows you to extract the system CFE from your router in one click.</li>
+/* TOMATO64-REMOVE-END */
 		<li><b>Download NVRAM Dump</b> - Warning: An NVRAM dump will contain sensitive data, like usernames/passwords/keys/DDNS details.</li>
 	</ul>
 </div>

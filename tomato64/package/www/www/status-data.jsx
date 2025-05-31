@@ -59,7 +59,9 @@ stats.cpumodel = sysinfo.cpumodel;
 stats.cpucount = sysinfo.cpucount;
 stats.niccount = sysinfo.niccount;
 /* TOMATO64-END */
+/* TOMATO64-REMOVE-BEGIN */
 stats.cfeversion = sysinfo.cfeversion;
+/* TOMATO64-REMOVE-END */
 stats.cpuload = ((sysinfo.loads[0] / 65536.0).toFixed(2)+'<small> / </small> '+(sysinfo.loads[1] / 65536.0).toFixed(2)+'<small> / </small>'+(sysinfo.loads[2] / 65536.0).toFixed(2));
 stats.uptime = sysinfo.uptime_s;
 stats.freqcpu = nvram.clkfreq;

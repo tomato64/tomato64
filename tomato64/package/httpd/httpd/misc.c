@@ -296,6 +296,7 @@ static int get_disk(diskinfo_t *d)
 }
 #endif /* TOMATO64 */
 
+#ifndef TOMATO64
 static char* get_cfeversion(char *buf, const size_t buf_sz)
 {
 	FILE *f;
@@ -347,6 +348,7 @@ static char* get_cfeversion(char *buf, const size_t buf_sz)
 
 	return buf;
 }
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_IPV6
 #define NOT_AVAIL		"--"
@@ -632,7 +634,9 @@ void asp_sysinfo(int argc, char **argv)
 #endif /* TOMATO64 */
 	char system_type[64];
 	char cpuclk[32];
+#ifndef TOMATO64
 	char cfe_version[16];
+#endif /* TOMATO64 */
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	char wl_tempsense[256];
 #endif
@@ -660,7 +664,9 @@ void asp_sysinfo(int argc, char **argv)
 	get_wl_tempsense(wl_tempsense, sizeof(wl_tempsense));
 #endif
 
+#ifndef TOMATO64
 	get_cfeversion(cfe_version, sizeof(cfe_version));
+#endif /* TOMATO64 */
 
 	web_puts("\nsysinfo = {\n");
 
@@ -694,9 +700,11 @@ void asp_sysinfo(int argc, char **argv)
 	           "\tcpucount: '%d',\n"
 	           "\tniccount: '%d',\n"
 	           "\tdisktotal: '%.0f',\n"
-	           "\tdiskfree: '%.0f',\n"
+	           "\tdiskfree: '%.0f'",
 #endif /* TOMATO64 */
+#ifndef TOMATO64
 	           "\tcfeversion: '%s'",
+#endif /* TOMATO64 */
 	           si.uptime,
 	           reltime(si.uptime, s, sizeof(s)),
 	           si.loads[0], si.loads[1], si.loads[2],
@@ -719,9 +727,11 @@ void asp_sysinfo(int argc, char **argv)
 	           get_nprocs(),
 	           nvram_get_int("nics"),
 		   disk.total,
-		   disk.free,
+		   disk.free);
 #endif /* TOMATO64 */
+#ifndef TOMATO64
 	           cfe_version);
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_BCMARM
 	if ((a = fopen(procstat, "r"))) {
