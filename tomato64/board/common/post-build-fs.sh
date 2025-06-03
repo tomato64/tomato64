@@ -74,39 +74,3 @@ ln -sf /www/ext/proxy.pac $TARGET_DIR/www/wpad.dat
 # usb_modeswitch.conf file
 USB_MODESWITCH_DIR=$BUILD_DIR/$(ls $BUILD_DIR --ignore='*data*' | grep usb_modeswitch)
 sed -e '/^\s*#.*$/d' -e '/^\s*$/d' < $USB_MODESWITCH_DIR/usb_modeswitch.conf > $TARGET_DIR/rom/etc/usb_modeswitch.conf
-
-#GL-MT6000 specific edits
-if grep -q ^BR2_PACKAGE_PLATFORM_MT6000=y ${BR2_CONFIG}
-then
-# Generate kernel fit file
-	KERNEL_VERSION=$(ls $BUILD_DIR | grep "linux-headers" | cut -d- -f3)
-
-	lzma_alone e $BINARIES_DIR/Image -lc1 -lp2 -pb2 $BINARIES_DIR/glinet_gl-mt6000-kernel.bin
-
-	$BR2_EXTERNAL_TOMATO64_PATH/board/arm64/common/mkits.sh \
-	-D glinet_gl-mt6000 \
-	-o $BINARIES_DIR/glinet_gl-mt6000-kernel.bin.its \
-	-k $BINARIES_DIR/glinet_gl-mt6000-kernel.bin \
-	-C lzma \
-	-d $BINARIES_DIR/mt7986a-glinet-gl-mt6000.dtb \
-	-a 0x48000000 -e 0x48000000 \
-	-c "config-1" \
-	-A arm64 \
-	-v $KERNEL_VERSION
-
-	mkimage \
-	-f $BINARIES_DIR/glinet_gl-mt6000-kernel.bin.its \
-	$BINARIES_DIR/glinet_gl-mt6000-kernel.bin
-
-	mkdir -p $TARGET_DIR/boot
-	cp $BINARIES_DIR/glinet_gl-mt6000-kernel.bin $TARGET_DIR/boot/
-fi
-
-#BPI-R3 MINI specific edits (overlayfs)
-if grep -q ^BR2_PACKAGE_PLATFORM_BPIR3MINI ${BR2_CONFIG}
-then
-	mkdir -p $TARGET_DIR/romfs $TARGET_DIR/overlay
-fi
-
-# Remove unneeded mariadb stuff
-cd $TARGET_DIR/usr/bin && rm -f myisam_ftdump myisamlog myisampack mysql_client_test mariadb-client-test mysql_client_test_embedded mariadb-client-test-embedded mysql_convert_table_format mariadb-convert-table-format mysql_embedded mariadb-embedded mysql_find_rows mariadb-find-rows mysql_fix_extensions mariadb-fix-extensions mysql_plugin mariadb-plugin mysql_secure_installation mariadb-secure-installation mysql_setpermission mariadb-setpermission mysql_tzinfo_to_sql mariadb-tzinfo-to-sql mysql_upgrade mariadb-upgrade mysql_waitpid mariadb-waitpid mysqlaccess mariadb-access mysqlbinlog mariadb-binlog mysqlcheck mariadb-check mysqld_multi mariadbd-multi mysqld_safe mariadbd-safe mysqld_safe_helper mariadbd-safe-helper mysqldumpslow mariadb-dumpslow mysqlhotcopy mariadb-hotcopy mysqlimport mariadb-import mysqlshow mariadb-show mysqlslap mariadb-slap mysqltest mariadb-test mysqltest_embedded mariadb-test-embedded msql2mysql wsrep_sst_backup wsrep_sst_common wsrep_sst_mariabackup wsrep_sst_mysqldump wsrep_sst_rsync wsrep_sst_rsync_wan aria_chk aria_dump_log aria_ftdump aria_pack aria_read_log aria_s3_copy mariabackup mariadb-backup mariadb-config

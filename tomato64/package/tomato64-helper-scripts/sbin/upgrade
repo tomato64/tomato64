@@ -5,13 +5,11 @@ if [ $# -eq 0 ]; then
 	exit
 fi
 
-if ! df -h / | grep -q "overlay"; then
-	mount -o remount,rw /
-	result=$?
-	if [ "$result" -ne 0 ]; then
-		printf 'error code "%d", unable to mount the filesystem as read/write' "$result"
-		exit
-	fi
+mount -o remount,rw /
+result=$?
+if [ "$result" -ne 0 ]; then
+	printf 'error code "%d", unable to mount the filesystem as read/write' "$result"
+	exit
 fi
 
 tar --touch -I "zstd -f" -xf $1 -C /
@@ -19,12 +17,9 @@ result=$?
 if [ "$result" -ne 0 ]; then
 	printf 'error code "%d" returned during extraction' "$result"
 	exit
-else
-	if df -h / | grep -q "overlay"; then
-		printf "image successfully flashed\n"
-	fi
 fi
 
+# x86_64
 if [ -f /boot/bzImage ]; then
 	kernel=`file -bL /boot/bzImage  | sed 's/.*version //;s/ .*//'`
 	for dir in /lib/modules/*; do
@@ -34,6 +29,7 @@ if [ -f /boot/bzImage ]; then
 	printf "image successfully flashed\n"
 fi
 
+# GL-MT6000
 if [ -f /boot/glinet_gl-mt6000-kernel.bin ]; then
 
 	export EMMC_KERNEL_BLOCKS=$(($(dd if=/boot/glinet_gl-mt6000-kernel.bin of=/dev/mmcblk0p6 bs=512 2>&1 | grep "records out" | cut -d' ' -f1)))
@@ -53,6 +49,33 @@ if [ -f /boot/glinet_gl-mt6000-kernel.bin ]; then
 	fi
 
 	kernel=$(strings /boot/glinet_gl-mt6000-kernel.bin | grep -i "Linux-" | awk '{print $3}' | sed "s/.*-//")
+	for dir in /lib/modules/*; do
+		[ "$dir" = "/lib/modules/$kernel" ] && continue
+		rm -rf "$dir"
+	done
+	printf "image successfully flashed\n"
+fi
+
+# BPI-R3 Mini
+if [ -f /boot/tomato64-bpi-r3-mini-sysupgrade.itb ]; then
+
+	export EMMC_KERNEL_BLOCKS=$(($(dd if=/boot/tomato64-bpi-r3-mini-sysupgrade.itb of=/dev/mmcblk0p4 bs=512 2>&1 | grep "records out" | cut -d' ' -f1)))
+
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d" returned during kernel write' "$result"
+		exit
+	fi
+
+	dd if=/dev/zero of=/dev/mmcblk0p4 bs=512 seek=$EMMC_KERNEL_BLOCKS count=8 >/dev/null 2>&1
+
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d" returned during kernel padding write' "$result"
+		exit
+	fi
+
+	kernel=$(strings /boot/tomato64-bpi-r3-mini-sysupgrade.itb | grep -i "Linux-" | awk '{print $3}' | sed "s/.*-//")
 	for dir in /lib/modules/*; do
 		[ "$dir" = "/lib/modules/$kernel" ] && continue
 		rm -rf "$dir"

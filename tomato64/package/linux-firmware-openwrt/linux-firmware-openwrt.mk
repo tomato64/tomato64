@@ -11,6 +11,8 @@ LINUX_FIRMWARE_OPENWRT_SITE = $(BR2_KERNEL_MIRROR)/linux/kernel/firmware
 define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
 	cp -r $(@D)/airoha $(TARGET_DIR)/lib/firmware
 	cp -r $(@D)/inside-secure $(TARGET_DIR)/lib/firmware
+
+	cp $(@D)/airoha/* $(BINARIES_DIR)
 endef
 
 $(eval $(generic-package))

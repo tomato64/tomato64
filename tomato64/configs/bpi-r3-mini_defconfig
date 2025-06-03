@@ -19,7 +19,7 @@ BR2_ROOTFS_DEVICE_TABLE="$(BR2_EXTERNAL_TOMATO64_PATH)/board/common/device_table
 # BR2_TARGET_ENABLE_ROOT_LOGIN is not set
 # BR2_TARGET_GENERIC_GETTY is not set
 # BR2_TARGET_GENERIC_REMOUNT_ROOTFS_RW is not set
-BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_TOMATO64_PATH)/board/common/post-build-fs.sh"
+BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_TOMATO64_PATH)/board/arm64/bpir3mini/post-build.sh"
 BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_TOMATO64_PATH)/board/arm64/bpir3mini/post-image.sh $(BR2_EXTERNAL_TOMATO64_PATH)/board/common/post-image-tar.sh"
 BR2_LINUX_KERNEL=y
 BR2_LINUX_KERNEL_CUSTOM_VERSION=y
@@ -41,10 +41,27 @@ BR2_PACKAGE_BINUTILS_TARGET=y
 # BR2_PACKAGE_WIRELESS_TOOLS_IWCONFIG is not set
 BR2_PACKAGE_FILE=y
 BR2_PACKAGE_TMUX=y
-BR2_TARGET_ROOTFS_SQUASHFS=y
-# BR2_TARGET_ROOTFS_SQUASHFS_PAD is not set
-BR2_TARGET_ROOTFS_SQUASHFS4_XZ=y
+BR2_TARGET_ROOTFS_EXT2=y
+BR2_TARGET_ROOTFS_EXT2_4=y
+BR2_TARGET_ROOTFS_EXT2_SIZE="650M"
 BR2_TARGET_ROOTFS_TAR_ZSTD=y
-BR2_TARGET_ROOTFS_TAR_OPTIONS="--exclude='./bkp' --exclude='./cifs1' --exclude='./cifs2' --exclude='./dev' --exclude='./etc' --exclude='./home' --exclude='./jffs' --exclude='./lib64' --exclude='./media' --exclude='./mmc' --exclude='./mnt' --exclude='./nas' --exclude='./nvram' --exclude='./opt' --exclude='./proc' --exclude='./root' --exclude='./sys' --exclude='./tftpboot' --exclude='./var' --exclude='./romfs' --exclude='./overlay'"
+BR2_TARGET_ROOTFS_TAR_OPTIONS="--exclude='./bkp' --exclude='./cifs1' --exclude='./cifs2' --exclude='./dev' --exclude='./etc' --exclude='./home' --exclude='./jffs' --exclude='./lib64' --exclude='./media' --exclude='./mmc' --exclude='./mnt' --exclude='./nas' --exclude='./nvram' --exclude='./opt' --exclude='./proc' --exclude='./root' --exclude='./sys' --exclude='./tftpboot' --exclude='./var'"
+BR2_TARGET_ARM_TRUSTED_FIRMWARE=y
+BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_GIT=y
+BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_REPO_URL="https://github.com/mtk-openwrt/arm-trusted-firmware.git"
+BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_REPO_VERSION="bacca82a8cac369470df052a9d801a0ceb9b74ca"
+BR2_TARGET_ARM_TRUSTED_FIRMWARE_PLATFORM="mt7986"
+BR2_TARGET_ARM_TRUSTED_FIRMWARE_ADDITIONAL_TARGETS="PLAT=mt7986 BOOT_DEVICE=emmc USE_MKIMAGE=1 DRAM_USE_DDR4=1 BOARD_BGA=1 HAVE_DRAM_OBJ_FILE=yes"
+BR2_TARGET_ARM_TRUSTED_FIRMWARE_IMAGES="bl2.img bl31.bin "
+BR2_TARGET_UBOOT=y
+BR2_TARGET_UBOOT_BUILD_SYSTEM_KCONFIG=y
+BR2_TARGET_UBOOT_CUSTOM_VERSION=y
+BR2_TARGET_UBOOT_CUSTOM_VERSION_VALUE="2024.10"
+BR2_TARGET_UBOOT_PATCH="$(BR2_EXTERNAL_TOMATO64_PATH)/patches/uboot-mediatek"
+BR2_TARGET_UBOOT_BOARD_DEFCONFIG="mt7986a_bpi-r3-mini-emmc"
+BR2_TARGET_UBOOT_NEEDS_GNUTLS=y
+BR2_TARGET_UBOOT_NEEDS_XXD=y
+BR2_TARGET_UBOOT_NEEDS_ATF_BL31=y
+BR2_PACKAGE_HOST_DTC=y
 BR2_PACKAGE_HOST_GO_BIN=y
 BR2_PACKAGE_PLATFORM_BPIR3MINI=y
