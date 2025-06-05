@@ -13,7 +13,7 @@ set -x
 	rm -f $BINARIES_DIR/mt7986_bananapi_bpi-r3-mini-emmc-u-boot.fip
 	rm -f $BINARIES_DIR/tomato64-mediatek-filogic-bananapi_bpi-r3-mini-emmc-bl31-uboot.fip
 	rm -f $BINARIES_DIR/mt7986-emmc-ddr4-bl2.img
-	rm -f $BINARIES_DIR/tomato64-mediatek-filogic-bananapi_bpi-r3-mini-emmc-preloader.bin
+	rm -f $BINARIES_DIR/tomato64-bpi-r3-mini-emmc-preloader.bin
 
 	rm -f $BINARIES_DIR/tomato64-bpi-r3-mini.img
 	rm -f $BINARIES_DIR/tomato64-bpi-r3-mini.img.gz
@@ -37,7 +37,7 @@ set -x
 	install -m0644 $BINARIES_DIR/bl2.img $BINARIES_DIR/mt7986-emmc-ddr4-bl2.img
 
 	cat $BINARIES_DIR/mt7986-emmc-ddr4-bl2.img >> \
-	$BINARIES_DIR/tomato64-mediatek-filogic-bananapi_bpi-r3-mini-emmc-preloader.bin
+	$BINARIES_DIR/tomato64-bpi-r3-mini-emmc-preloader.bin
 
 	cp $BINARIES_DIR/Image \
 	$BINARIES_DIR/bananapi_bpi-r3-mini-kernel.bin
