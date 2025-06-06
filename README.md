@@ -2,7 +2,7 @@ Tomato64 is a port of tomato firmware to the x86_64 and arm64 (GL-MT6000 | BPI-R
 
 To build Tomato64 use Debian 12 and run:
 ```sh
-apt install bc build-essential file git libncurses-dev rsync unzip u-boot-tools wget
+apt install bc build-essential file git libncurses-dev rsync unzip wget
 
 git clone https://github.com/tomato64/tomato64.git
 cd tomato64

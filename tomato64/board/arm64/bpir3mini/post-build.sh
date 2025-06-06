@@ -19,7 +19,7 @@ set -x
 	rm -f $BINARIES_DIR/tomato64-bpi-r3-mini.img.gz
 
 	FIPTOOL_DIR=$BUILD_DIR/$(ls $BUILD_DIR --ignore='host*' | grep arm-trusted-firmware)/tools/fiptool
-	(cd $FIPTOOL_DIR && make)
+	(cd $FIPTOOL_DIR && make HOSTCC="/usr/bin/gcc -Wl,-rpath,$HOST_DIR/lib" OPENSSL_DIR=$HOST_DIR)
 
 	install -m0644 $BINARIES_DIR/bl31.bin $BINARIES_DIR/mt7986-emmc-ddr4-bl31.bin
 
