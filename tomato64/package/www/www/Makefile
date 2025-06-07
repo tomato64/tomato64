@@ -640,7 +640,7 @@ endif
 
 ifeq ($(PLATFORM_WIFI),y)
 else
-	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-MTWIFI-END/d"
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
