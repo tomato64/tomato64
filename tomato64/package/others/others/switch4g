@@ -5,7 +5,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 #
 # - changes/fixes
 # - add support for rndis protocol
-# Copyright (C) 2018 - 2024 by pedro
+# Copyright (C) 2018 - 2025 by pedro
 #
 
 
@@ -744,7 +744,7 @@ setPIN() {
 		# check if UIM application is stuck in illegal state
 		COUNT=1
 		while true; do
-			STATUS=$(uqmiCall "-t 1000 --uim-get-sim-state" | cut -d "," -f2 | cut -d ":" -f2 | tr -d '"')
+			STATUS=$(uqmiCall "-t 2000 --uim-get-sim-state" | cut -d "," -f2 | cut -d ":" -f2 | tr -d '"')
 
 			# SIM card is either completely absent or state is labeled as illegal
 			# try to power-cycle the SIM card to recover from this state
@@ -758,7 +758,7 @@ setPIN() {
 
 				[ "$COUNT" -lt 10 ] && {
 					COUNT=$((COUNT+1))
-					sleep 1
+					sleep 5
 					continue
 				}
 
