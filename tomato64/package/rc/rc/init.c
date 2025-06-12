@@ -1232,6 +1232,7 @@ static int init_vlan_ports(void)
 	case MODEL_R6700v3:
 	case MODEL_R6900:
 	case MODEL_R7000:
+	case MODEL_EX6200:
 	case MODEL_EX7000:
 	case MODEL_XR300:
 	case MODEL_RTN18U:
@@ -1828,6 +1829,7 @@ static void check_bootnv(void)
 	case MODEL_AC1450:
 	case MODEL_R6900:
 	case MODEL_R7000:
+	case MODEL_EX6200:
 	case MODEL_EX7000:
 	case MODEL_R6700v1:
 	case MODEL_R6400:
@@ -8255,6 +8257,274 @@ static int init_nvram(void)
 		if (!nvram_get_int("caldata_ready")) { /* last step: set router specific cal and rxgainerr data if not yet applied */
 			setcaldata();
 			setrxgainerrdata(); 
+			nvram_set("caldata_ready", "1");
+		}
+		break;
+	case MODEL_EX6200:
+		mfr = "Netgear";
+		name = "EX6200";
+		features = SUP_SES | SUP_80211N | SUP_1000ET | SUP_80211AC;
+#ifdef TCONFIG_USB
+		nvram_set("usb_uhci", "-1");
+#endif
+		if (!nvram_match("t_fix1", (char *)name)) {
+			nvram_set("vlan1hwname", "et0");
+			nvram_set("vlan2hwname", "et0");
+			nvram_set("lan_ifname", "br0");
+			nvram_set("landevs", "vlan1 wl0 wl1");
+			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
+			nvram_set("wan_ifnames", "vlan2");
+			nvram_set("wan_ifnameX", "vlan2");
+			nvram_set("wandevs", "vlan2");
+			nvram_set("wl_ifnames", "eth1 eth2");
+			nvram_set("wl_ifname", "eth1");
+			nvram_set("wl0_ifname", "eth1");
+			nvram_set("wl1_ifname", "eth2");
+			nvram_set("wl0_vifnames", "wl0.1 wl0.2 wl0.3");
+			nvram_set("wl1_vifnames", "wl1.1 wl1.2 wl1.3");
+
+			/* disable second *fake* LAN interface - just in case! */
+			nvram_unset("et1macaddr");
+
+			/* fix MAC addresses */
+			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));	/* get et0 MAC address for LAN */
+			inc_mac(s, +2, sizeof(s));				/* MAC + 1 will be for WAN */
+			nvram_set("0:macaddr", s);				/* fix WL mac for 2,4G (do not use the same MAC address like for LAN) */
+			nvram_set("wl0_hwaddr", s);
+			inc_mac(s, +4, sizeof(s));				/* do not overlap with VIFs */
+			nvram_set("1:macaddr", s);				/* fix WL mac for 5G */
+			nvram_set("wl1_hwaddr", s);
+
+			/* usb3.0 settings */
+			nvram_set("usb_usb3", "0");
+			nvram_set("xhci_ports", "1-1");
+			nvram_set("ehci_ports", "2-1 2-2");
+			nvram_set("ohci_ports", "3-1 3-2");
+
+			/* misc settings */
+			nvram_set("boot_wait", "on");
+			nvram_set("wait_time", "3");
+
+			/* wifi settings/channels */
+			nvram_set("wl0_bw_cap","3");
+			nvram_set("wl0_chanspec","6u");
+			nvram_set("wl0_channel","6");
+			nvram_set("wl0_nbw","40");
+			nvram_set("wl0_nctrlsb", "upper");
+			nvram_set("wl1_bw_cap", "7");
+			nvram_set("wl1_chanspec", "36/80");
+			nvram_set("wl1_channel", "36");
+			nvram_set("wl1_nbw","80");
+			nvram_set("wl1_nbw_cap","3");
+			nvram_set("wl1_nctrlsb", "lower");
+
+			/* misc wifi settings */
+			nvram_set("wl0_vreqd", "0"); /* do not enable vhtmode and vht_features for 2G NON-AC PHY */
+
+			/* wifi country settings */
+			nvram_set("0:regrev", "12");
+			nvram_set("1:regrev", "12");
+			nvram_set("0:ccode", "SG");
+			nvram_set("1:ccode", "SG");
+
+			/* set devpath (device path) for wl driver */
+			nvram_set("devpath0", "pci/1/1/");
+			nvram_set("devpath1", "pci/2/1/");
+
+			struct nvram_tuple ex6200_0_params[] = {
+				/* 2.4 GHz defaults */
+				{ "aa2g", "3" , 0 },
+				{ "ag0", "2" , 0 },
+				{ "ag1", "2" , 0 },
+				{ "ag2", "255" , 0 },
+				{ "antswctl2g", "0" , 0 },
+				{ "antswitch", "0" , 0 },
+				{ "boardflags2", "0x1800" , 0 },
+				{ "boardflags", "0x80001200" , 0 },
+				{ "boardtype", "0x62b" , 0 },
+				{ "boardvendor", "0x14e4" , 0 },
+				{ "cck2gpo", "0" , 0 },
+				//{ "ccode", "EU" , 0 }, /* use FT default SG 12 */
+				{ "devid", "0x43a9" , 0 },
+				{ "elna2g", "2" , 0 },
+				{ "extpagain2g", "3" , 0 },
+				{ "ledbh0", "11" , 0 },
+				{ "ledbh12", "11" , 0 },
+				{ "ledbh1", "11" , 0 },
+				{ "ledbh2", "11" , 0 },
+				{ "ledbh3", "11" , 0 },
+				{ "leddc", "0xFFFF" , 0 },
+				{ "maxp2ga0", "0x6A" , 0 },
+				{ "maxp2ga1", "0x6A" , 0 },
+				{ "mcs2gpo0", "0x1000" , 0 },
+				{ "mcs2gpo1", "0xA864" , 0 },
+				{ "mcs2gpo2", "0x1000" , 0 },
+				{ "mcs2gpo3", "0xA864" , 0 },
+				{ "mcs2gpo4", "0x1000" , 0 },
+				{ "mcs2gpo5", "0xA864" , 0 },
+				{ "mcs2gpo6", "0x1000" , 0 },
+				{ "mcs2gpo7", "0xA864" , 0 },
+				{ "ofdm2gpo", "0xA8641000" , 0 },
+				{ "ofdm5ghpo", "0" , 0 },
+				{ "ofdm5glpo", "0" , 0 },
+				{ "ofdm5gpo", "0" , 0 },
+				{ "opo", "68" , 0 },
+				{ "pa2gw0a0", "0xfed9" , 0 },
+				{ "pa2gw0a1", "0xfed4" , 0 },
+				{ "pa2gw1a0", "0x1a7b" , 0 },
+				{ "pa2gw1a1", "0x1a4a" , 0 },
+				{ "pa2gw2a0", "0xfa91" , 0 },
+				{ "pa2gw2a1", "0xfa9a" , 0 },
+				{ "pdetrange2g", "3" , 0 },
+				//{ "regrev", "85" , 0 }, /* use FT default SG 12 */
+				{ "rpcal2g", "0" , 0 }, /* use EX6200 vaules from user nvram dump - will be changed with setcaldata() */
+				{ "rxchain", "3" , 0 },
+				{ "rxgainerr2ga0", "0x3F" , 0 }, /* use EX6200 vaules from user nvram dump - will be changed with setrxgainerrdata() */
+				{ "rxgainerr2ga1", "0x1F" , 0 }, /* use EX6200 vaules from user nvram dump - will be changed with setrxgainerrdata() */
+				{ "sromrev", "8" , 0 },
+				{ "tempoffset", "0" , 0 },
+				{ "tempthresh", "120" , 0 },
+				{ "triso2g", "3" , 0 },
+				{ "tssipos2g", "1" , 0 },
+				{ "txchain", "3" , 0 },
+				{ "venid", "0x14e4" , 0 },
+				{ 0, 0, 0 }
+			};
+
+			struct nvram_tuple ex6200_1_params[] = {
+				/* 5 GHz module defaults */
+				{ "aa5g", "3" , 0 },
+				{ "aga0", "0" , 0 },
+				{ "aga1", "0" , 0 },
+				{ "agbg0", "0" , 0 },
+				{ "agbg1", "0" , 0 },
+				{ "antswitch", "0" , 0 },
+				{ "boardflags2", "0x300002" , 0 },
+				{ "boardflags3", "0x0" , 0 },
+				{ "boardflags", "0x30001000" , 0 },
+				{ "boardnum", "20771" , 0 },
+				{ "boardrev", "0x1402" , 0 },
+				{ "boardtype", "0x621" , 0 },
+				{ "boardvendor", "0x14e4" , 0 },
+				//{ "ccode", "E0" , 0 }, /* use FT default SG 12 */
+				{ "devid", "0x43b1" , 0 },
+				{ "dot11agduphrpo", "0" , 0 },
+				{ "dot11agduplrpo", "0" , 0 },
+				{ "epagain5g", "0" , 0 },
+				{ "eu_edthresh5g", "-69" , 0 },
+				{ "femctrl", "1" , 0 },
+				{ "gainctrlsph", "0" , 0 },
+				{ "maxp5ga0", "100,100,100,100" , 0 },
+				{ "maxp5ga1", "100,100,100,100" , 0 },
+				{ "mcsbw1605ghpo", "0" , 0 },
+				{ "mcsbw1605glpo", "0" , 0 },
+				{ "mcsbw1605gmpo", "0" , 0 },
+				{ "mcsbw205ghpo", "0xDD975000" , 0 },
+				{ "mcsbw205glpo", "0xDD975111" , 0 },
+				{ "mcsbw205gmpo", "0xDD975000" , 0 },
+				{ "mcsbw405ghpo", "0xDD975000" , 0 },
+				{ "mcsbw405glpo", "0xDD975111" , 0 },
+				{ "mcsbw405gmpo", "0xDD975000" , 0 },
+				{ "mcsbw805ghpo", "0xDD975300" , 0 },
+				{ "mcsbw805glpo", "0xFFFFFFFF" , 0 },
+				{ "mcsbw805gmpo", "0xDD975300" , 0 },
+				{ "mcslr5ghpo", "0" , 0 },
+				{ "mcslr5glpo", "0" , 0 },
+				{ "mcslr5gmpo", "0" , 0 },
+				{ "measpower1", "0x7f" , 0 },
+				{ "measpower2", "0x7f" , 0 },
+				{ "measpower", "0x7f" , 0 },
+				{ "noiselvl5ga0", "31,31,31,31" , 0 },
+				{ "noiselvl5ga1", "31,31,31,31" , 0 },
+				{ "ofdm5ghpo", "0x75000000" , 0 },
+				{ "ofdm5glpo", "0x75111000" , 0 },
+				{ "pa5ga0", "0xff3c,0x19d6,0xfce4,0xff3b,0x19d0,0xfce5,0xff39,0x19b8,0xfce5,0xff3a,0x19b0,0xfce5" , 0 },
+				{ "pa5ga1", "0xff33,0x1918,0xfcf3,0xff37,0x1988,0xfcea,0xff32,0x1953,0xfceb,0xff36,0x1944,0xfcee" , 0 },
+				{ "papdcap5g", "0" , 0 },
+				{ "pdgain5g", "4" , 0 },
+				{ "pdoffset40ma0", "0x1111" , 0 },
+				{ "pdoffset40ma1", "0x1111" , 0 },
+				{ "pdoffset40ma2", "0x1111" , 0 },
+				{ "pdoffset80ma0", "0x0" , 0 },
+				{ "pdoffset80ma1", "0x0" , 0 },
+				{ "pdoffset80ma2", "0x0" , 0 },
+				{ "phycal_tempdelta", "0" , 0 },
+				{ "rawtempsense", "0x1ff" , 0 },
+				// { "regrev", "6" , 0 }, /* use FT default SG 12 */
+				{ "rxchain", "3" , 0 },
+				{ "rxgainerr5ga0", "0x3F,0x3F,0x3F,0x3F" , 0 }, /* use EX6200 vaules from user nvram dump - will be changed with setrxgainerrdata() */
+				{ "rxgainerr5ga1", "0x1F,0x1F,0x1F,0x1F" , 0 }, /* use EX6200 vaules from user nvram dump - will be changed with setrxgainerrdata() */
+				{ "rxgains5gelnagaina0", "1" , 0 },
+				{ "rxgains5gelnagaina1", "1" , 0 },
+				{ "rxgains5ghelnagaina0", "2" , 0 },
+				{ "rxgains5ghelnagaina1", "2" , 0 },
+				{ "rxgains5ghtrelnabypa0", "1" , 0 },
+				{ "rxgains5ghtrelnabypa1", "1" , 0 },
+				{ "rxgains5ghtrisoa0", "5" , 0 },
+				{ "rxgains5ghtrisoa1", "4" , 0 },
+				{ "rxgains5gmelnagaina0", "2" , 0 },
+				{ "rxgains5gmelnagaina1", "2" , 0 },
+				{ "rxgains5gmtrelnabypa0", "1" , 0 },
+				{ "rxgains5gmtrelnabypa1", "1" , 0 },
+				{ "rxgains5gmtrisoa0", "5" , 0 },
+				{ "rxgains5gmtrisoa1", "4" , 0 },
+				{ "rxgains5gtrelnabypa0", "1" , 0 },
+				{ "rxgains5gtrelnabypa1", "1" , 0 },
+				{ "rxgains5gtrisoa0", "7" , 0 },
+				{ "rxgains5gtrisoa1", "6" , 0 },
+				{ "sar5g", "0xFF" , 0 },
+				{ "sb20in40hrpo", "0" , 0 },
+				{ "sb20in40lrpo", "0" , 0 },
+				{ "sb20in80and160hr5ghpo", "0" , 0 },
+				{ "sb20in80and160hr5glpo", "0" , 0 },
+				{ "sb20in80and160hr5gmpo", "0" , 0 },
+				{ "sb20in80and160lr5ghpo", "0" , 0 },
+				{ "sb20in80and160lr5glpo", "0" , 0 },
+				{ "sb20in80and160lr5gmpo", "0" , 0 },
+				{ "sb40and80hr5ghpo", "0" , 0 },
+				{ "sb40and80hr5glpo", "0" , 0 },
+				{ "sb40and80hr5gmpo", "0" , 0 },
+				{ "sb40and80lr5ghpo", "0" , 0 },
+				{ "sb40and80lr5glpo", "0" , 0 },
+				{ "sb40and80lr5gmpo", "0" , 0 },
+				{ "sromrev", "11" , 0 },
+				{ "subband5gver", "0x4" , 0 },
+				{ "tempcorrx", "0x3f" , 0 },
+				{ "tempoffset", "255" , 0 },
+				{ "temps_hysteresis", "15" , 0 },
+				{ "temps_period", "15" , 0 },
+				{ "tempsense_option", "0x3" , 0 },
+				{ "tempsense_slope", "0xff" , 0 },
+				{ "tempthresh", "255" , 0 },
+				{ "tssiposslope5g", "1" , 0 },
+				{ "tworangetssi5g", "0" , 0 },
+				{ "txchain", "3" , 0 },
+				{ "venid", "0x14e4" , 0 },
+				{ "xtalfreq", "40000" , 0 },
+				{ 0, 0, 0 }
+			};
+
+			set_defaults(ex6200_0_params, "0:%s");
+			set_defaults(ex6200_1_params, "1:%s");
+		}
+
+		/* Enable ethernet switch - toggle bit 11 for all ports (0...4) from "Power-down" back to "Normal operation" */
+		/* Power-down */
+		eval("et", "robowr", "0x10", "0x0", "0x1940"); /* Port 0 Internal PHY MII Registers */
+		eval("et", "robowr", "0x11", "0x0", "0x1940");
+		eval("et", "robowr", "0x12", "0x0", "0x1940");
+		eval("et", "robowr", "0x13", "0x0", "0x1940");
+		eval("et", "robowr", "0x14", "0x0", "0x1940"); /* Port 4 Internal PHY MII Registers */
+		/* Normal operation */
+		eval("et", "robowr", "0x10", "0x0", "0x1140");
+		eval("et", "robowr", "0x11", "0x0", "0x1140");
+		eval("et", "robowr", "0x12", "0x0", "0x1140");
+		eval("et", "robowr", "0x13", "0x0", "0x1140");
+		eval("et", "robowr", "0x14", "0x0", "0x1140");
+		
+		if (!nvram_get_int("caldata_ready")) { /* last step: set router specific cal and rxgainerr data if not yet applied */
+			setcaldata(); /* at least check it, even if nothing is there ... */
+			setrxgainerrdata(); /* at least check it, even if nothing is there ... */
 			nvram_set("caldata_ready", "1");
 		}
 		break;
