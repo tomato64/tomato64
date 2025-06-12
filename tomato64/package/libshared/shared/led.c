@@ -855,9 +855,14 @@ void led_setup(void)
 			disable_led_wanlan();
 			break;
 		case MODEL_EX6200:
+			set_gpio(GPIO_01, T_LOW); /* disable Netgear LOGO_LED */
+			set_gpio(GPIO_05, T_HIGH); /* disable Netgear USB_LED */
 			set_gpio(GPIO_13, T_HIGH); /* disable WLAN_2G_LED_RED */
+			set_gpio(GPIO_12, T_HIGH); /* disable WLAN_2G_LED_GREEN */
 			set_gpio(GPIO_11, T_HIGH); /* disable WLAN_5G_LED_RED */
+			set_gpio(GPIO_10, T_HIGH); /* disable WLAN_5G_LED_GREEN */
 			set_gpio(GPIO_09, T_HIGH); /* disable FT LED WHITE (Internet) - Device to Extender LED_RED */
+			set_gpio(GPIO_08, T_HIGH); /* disable FT LED WHITE (Internet) - Device to Extender LED_GREEN */
 			disable_led_wanlan();
 			break;
 		case MODEL_RTN18U:
