@@ -1779,6 +1779,27 @@ input[type="number"] {
 	-moz-appearance: textfield;
 }
 
+a[href*=":toggle"] span,
+span#dtime,
+td#navi br,
+br + br,
+br:last-child,
+#content > br,
+.content > br,
+div#status-tab > br,
+#usb-grid .tomato-grid .co4 br,
+#rstats hr,
+.about > hr,
+#bwm-controls a#drawcolor + br,
+#dev-grid small br,
+.servup_image,
+.servdn_image,
+.scrollbm_icon,
+.download_icon,
+.lconfig_icon {
+	display: none;
+}
+
 span[id$="_dhcpc"],
 span[id$="_codi"],
 span[id$="_multiwan"] {
@@ -1800,7 +1821,8 @@ span[id$="_multiwan"] input {
 .about > br,
 #bwm-h-ctrl > br,
 #afu-progress > br,
-#result br {
+#result br,
+.status-result > br {
 	display: inline;
 }
 
@@ -2128,27 +2150,6 @@ span.log-configuration a::after {
 	content: "\2699";
 	mask-image: var(--icon-admin);
 	-webkit-mask-image: var(--icon-admin);
-}
-
-a[href*=":toggle"] span,
-span#dtime,
-td#navi br,
-br + br,
-br:last-child,
-#content > br,
-.content > br,
-div#status-tab > br,
-#usb-grid .tomato-grid .co4 br,
-#rstats hr,
-.about > hr,
-#bwm-controls a#drawcolor + br,
-#dev-grid small br,
-.servup_image,
-.servdn_image,
-.scrollbm_icon,
-.download_icon,
-.lconfig_icon {
-	display: none;
 }
 
 span[id$="_notice"] > span[class^="service_"] {
