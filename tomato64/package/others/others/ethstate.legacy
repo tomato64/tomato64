@@ -18,6 +18,10 @@ VPORT=$(NG $VWAN'ports' | awk '{print $1}' | sed 's/[^0-9]*//g')
 # BCMARM-BEGIN
 #check if there is a wan port
 [ "$VPORTLAST" == "$VPORT" ] && {
+	[ "$ROUTERNAME" == "Netgear AC1450" ] ||
+	[ "$ROUTERNAME" == "Netgear R6200v2" ] ||
+	[ "$ROUTERNAME" == "Netgear R6250" ] ||
+	[ "$ROUTERNAME" == "Netgear R6300v2" ] ||
 	[ "$ROUTERNAME" == "RT-AC56U" ] ||
 	[ "$ROUTERNAME" == "RT-AC56S" ] ||
 	[ "$ROUTERNAME" == "RT-AC3100" ] ||
