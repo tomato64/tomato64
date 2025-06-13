@@ -455,7 +455,7 @@ dg.populate = function() {
 
 		f = '';
 		if (e.freq != '') {
-			f = '<img src="wl'+(e.freq == '5 GHz' ? '50' : '24')+'.svg"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'">';
+			f = '<span class="wl'+(e.freq == '5 GHz' ? '50' : '24')+'svg" '+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' title="'+e.freq+'">&nbsp;</span>';
 			e.media = (e.freq == '5 GHz' ? 1 : 2);
 /* TOMATO64-BEGIN */
 			if (e.freq == '6 GHz') {
@@ -468,21 +468,21 @@ dg.populate = function() {
 			c = (e.wan != '' ? 'style="filter:invert(1)"' : '');
 /* USB-BEGIN */
 			if ((e.proto == 'lte') || (e.proto == 'ppp3g')) {
-				f = '<img src="cell.svg"'+c+' alt="" title="LTE / 3G">';
+				f = '<span class="cellsvg"'+c+' title="LTE / 3G">&nbsp;</span>';
 				e.media = 3;
 			}
 			else
 /* USB-END */
 			     if (e.rssi != 1) {
-				f = '<img src="eth.svg"'+c+' alt="" title="Ethernet">';
+				f = '<span class="ethsvg"'+c+' title="Ethernet">&nbsp;</span>';
 				e.media = 4;
 			}
 		}
 		if (e.rssi == 1) {
 			if (e.mac.match(/^(..):(..):(..)/))
-				f = '<a href="javascript:wake('+i+')" class="status_devices"><img src="dis.svg"'+c+' alt="" title="Click to wake up"><\/a>';
+				f = '<a href="javascript:wake('+i+')" class="status_devices"><span class="dissvg"'+c+' title="Click to wake up">&nbsp;</span><\/a>';
 			else
-				f = '<img src="dis.svg"'+c+' alt="" title="Disconnected">';
+				f = '<span class="dissvg"'+c+' title="Disconnected">&nbsp;</span>';
 
 			e.media = 5;
 		}

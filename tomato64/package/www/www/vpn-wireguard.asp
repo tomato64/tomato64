@@ -742,8 +742,8 @@ PeerGrid.prototype.insertData = function(at, data) {
 	var qr = '';
 	var cfg = '';
 	if (data[2] != '') {
-		qr = '<img src="qr-icon.svg" alt="" title="Display QR Code" height="16" onclick="genPeerGridConfigQR(event,'+this.unit+','+at+')">';
-		cfg = '<img src="cfg-icon.svg" alt="" title="Download Config File" height="16" onclick="genPeerGridConfigFile(event,'+this.unit+','+at+')">';
+		qr = '<span class="qriconsvg" title="Display QR Code" onclick="genPeerGridConfigQR(event,'+this.unit+','+at+')">&nbsp;<\/span>';
+		cfg = '<span class="cfgiconsvg" title="Download Config File" onclick="genPeerGridConfigFile(event,'+this.unit+','+at+')">&nbsp;<\/span>';
 	}
 	view.unshift(qr, cfg);
 	view[5] = view[5].substring(0,8)+' ... '+view[5].slice(-8);
@@ -2080,7 +2080,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title vpn-title"><img src="wireguard.svg" alt="">Wireguard Configuration</div>
+<div class="section-title"><span class="wireguardsvg">&nbsp;</span>Wireguard Configuration</div>
 <div class="section">
 	<script>
 		tabCreate.apply(this, tabs);

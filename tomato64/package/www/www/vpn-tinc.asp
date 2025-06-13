@@ -516,7 +516,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title vpn-title" id="tinc-title"><img src="tinc.svg" alt="">Tinc Configuration</div>
+<div class="section-title" id="tinc-title"><span class="tincsvg">&nbsp;</span>Tinc Configuration</div>
 <script>
 	tabCreate.apply(this, tabs);
 
