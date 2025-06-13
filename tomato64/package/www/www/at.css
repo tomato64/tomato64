@@ -769,6 +769,7 @@ div#vlan-grid tr.header .co11,
 /* TOMATO64-REMOVE-BEGIN */
 div#vlan-grid tr.header .co13 {
 /* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
 div#vlan-grid tr.header .co13,
 div#vlan-grid tr.header .co15,
 div#vlan-grid tr.header .co17,

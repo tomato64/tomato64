@@ -353,6 +353,7 @@ qosg.enDiFields = function(row) {
 	f[3].disabled = x;
 	if (f[3].selectedIndex == 0)
 		x = 1;
+
 	f[4].disabled = x;
 
 /* TOMATO64-REMOVE-BEGIN */
