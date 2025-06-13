@@ -459,7 +459,7 @@ dg.populate = function() {
 			e.media = (e.freq == '5 GHz' ? 1 : 2);
 /* TOMATO64-BEGIN */
 			if (e.freq == '6 GHz') {
-				f = '<img src="wl60.svg"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'">';
+				f = '<span class="wl60svg"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'>&nbsp;</span">';
 				e.media = 0;
 			}
 /* TOMATO64-END */
