@@ -190,7 +190,7 @@ connect() {
 
 	# non-hilink/2nd type
 	elif [ "$MTYPE" == "qmi_wwan" ]; then
-		local DATAFORMAT TIMEOUT=30 TIMECOUNT=0 CONNSTAT
+		local DATAFORMAT TIMEOUT=30 TIMECOUNT=0 CONNSTAT REGISTRATION_STATE=""
 		# for feature use
 		local AUTOCONNECT="" PROFILE="" AUTH="" USERNAME="" PASSWORD=""
 
@@ -235,26 +235,45 @@ connect() {
 		uqmiCall "-t 1000 --sync"
 		uqmiCall "-t 20000 --network-register"
 
-		$LOGS "4G MODEM - waiting for network registration ..."
-		sleep 5
-
-		while [ $(echo "$(uqmiCall "-t 1000 --get-serving-system")" | grep searching | wc -l) -ne 0 ]; do
-			[ -n "$DEVNR" ] || wayOut "4G MODEM - DIAG interface not found!"
-			[ "$TIMECOUNT" -lt "$TIMEOUT" ] && {
-				TIMECOUNT=$((TIMECOUNT+1))
-				sleep 1
-			} || {
-				wayOut "4G MODEM - network registration failed!"
-			}
-		done
-
 		# set network type (all,lte,umts,cdma,td-scdma)
 		uqmiCall "-t 1000 --set-network-modes $SPEEDTXT"
 		$LOGS "4G MODEM - network type is set to '$SPEEDTXT'"
+		sleep 3
+
+		# scan network to not rely on registration-timeout after RAT change
+		uqmiCall "--network-scan"
+		sleep 3
 
 		# set roaming
 		uqmiCall "-t 1000 --set-network-roaming $ROAMTXT"
 		$LOGS "4G MODEM - roaming is set to '$ROAMTXT'"
+
+		$LOGS "4G MODEM - waiting for network registration ..."
+		sleep 5
+
+		while true; do
+			REGISTRATION_STATE=$(echo "$(uqmiCall "-t 1000 --get-serving-system")" | grep -o '"registration":"[^"]*"' | cut -d'"' -f4)
+
+			[ "$REGISTRATION_STATE" = "registered" ] && break
+
+			if [ "$REGISTRATION_STATE" = "searching" ] || [ "$REGISTRATION_STATE" = "not_registered" ]; then
+				if [ "$TIMECOUNT" -lt "$TIMEOUT" ]; then
+					[ "$REGISTRATION_STATE" = "searching" ] || {
+						$LOGS "4G MODEM - device stopped network registration. Restart network registration"
+						uqmiCall "-t 20000 --network-register"
+					}
+					TIMECOUNT=$((TIMECOUNT+1))
+					sleep 1
+					continue
+				fi
+				wayOut "4G MODEM - network registration failed, registration timeout reached"
+			else
+				# REGISTRATION_STATE is 'registration_denied' or 'unknown' or ''
+				wayOut "4G MODEM - network registration failed (reason: '$REGISTRATION_STATE')"
+			fi
+		done
+
+		$LOGS "4G MODEM - starting network $IFA"
 
 		# get client id for wds
 		CLID=$(uqmiCall "-t 1000 --get-client-id wds")
@@ -264,6 +283,7 @@ connect() {
 		NS "$PREFIX"_modem_clid="$CLID"
 		$LOGS "4G MODEM - got new client ID: $CLID"
 
+		# only IPv4 for now
 		uqmiCall "-t 5000 --set-client-id wds,$CLID --set-ip-family ipv4"
 
 		while [ "$CONNECTED" -eq 0 ]; do
