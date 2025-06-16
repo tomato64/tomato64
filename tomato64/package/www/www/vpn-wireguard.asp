@@ -126,13 +126,13 @@ function toggle(service, up) {
 		return;
 
 	/* check for active 'External - VPN Provider' mode */
-	var external_mode = 0;
+	var externalall_mode = 0;
 	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
-		if (isup['wireguard'+i] && E('_wg'+i+'_com').value == 3) /* active */
-			external_mode++;
+		if (isup['wireguard'+i] && E('_wg'+i+'_com').value == 3 && E('_wg'+i+'_rgwr').value == 1) /* active */
+			externalall_mode++;
 	}
-	if (external_mode && !up && E('_wg'+(service.substr(9, 1))+'_com').value == 3) {
-		alert('Only one wireguard instance can be run in "External - VPN Provider" mode!');
+	if (externalall_mode && !up && E('_wg'+(service.substr(9, 1))+'_com').value == 3 && E('_wg'+i+'_rgwr').value == 1) {
+		alert('Only one wireguard instance can be run in "External - VPN Provider" mode with "Redirect Internet traffic" set to "All"!');
 		return;
 	}
 
@@ -1699,10 +1699,10 @@ function verifyFields(focused, quiet) {
 	}
 
 	/* check for active 'External - VPN Provider' mode */
-	var external_mode = 0;
+	var externalall_mode = 0;
 	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
-		if (isup['wireguard'+i] && E('_wg'+i+'_com').value == 3) /* active */
-			external_mode++;
+		if (isup['wireguard'+i] && E('_wg'+i+'_com').value == 3 && E('_wg'+i+'_rgwr').value == 1) /* active */
+			externalall_mode++;
 	}
 
 	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
@@ -1777,9 +1777,9 @@ function verifyFields(focused, quiet) {
 				ferror.clear(ip);
 		}
 
-		/* allow only one instance in 'External - VPN Provider' mode - disable option 3 in others */
-		if (external_mode && !isup['wireguard'+i])
-			E('_wg'+i+'_com').lastChild.disabled = 1;
+		/* allow only one instance in 'External - VPN Provider' with 'Redirect Internet traffic' set to 'All' mode - disable option 'All' in others */
+		if (externalall_mode && !isup['wireguard'+i])
+			E('_wg'+i+'_rgwr').firstChild.disabled = 1;
 
 		var fw = E('_wg'+i+'_firewall').value;
 		var nat = E('_f_wg'+i+'_nat').checked;

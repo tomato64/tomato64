@@ -958,18 +958,17 @@ static void wg_kill_switch(void)
 void start_wg_eas(void)
 {
 	int unit;
-	int external_mode = 0;
+	int externalall_mode = 0;
 
 	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
 		if (atoi(getNVRAMVar("wg%d_enable", unit)) == 1) {
-			/* TODO: forbid only in all mode, the same in vpn-wireguard.asp */
-			if (atoi(getNVRAMVar("wg%d_com", unit)) == 3) { /* check for 'External - VPN Provider' mode on this unit */
-				if (external_mode == 0) { /* no previous unit is in this mode - allow */
+			if (atoi(getNVRAMVar("wg%d_com", unit)) == 3 && atoi(getNVRAMVar("wg%d_rgwr", unit)) == 1) { /* check for 'External - VPN Provider' mode with "Redirect Internet traffic" set to "All" on this unit */
+				if (externalall_mode == 0) { /* no previous unit is in this mode - allow */
 					start_wireguard(unit);
-					external_mode++;
+					externalall_mode++;
 				}
 				else
-					logmsg(LOG_WARNING, "only one wireguard instance can be run in 'External - VPN Provider' mode (currently up: wg%d)! Aborting ...", unit);
+					logmsg(LOG_WARNING, "only one wireguard instance can be run in 'External - VPN Provider' mode with 'Redirect Internet traffic' set to 'All' (currently up: wg%d)! Aborting ...", unit);
 			}
 			else
 				start_wireguard(unit);
