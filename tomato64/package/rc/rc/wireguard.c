@@ -1187,6 +1187,7 @@ void stop_wireguard(const int unit)
 		if (nvp)
 			free(nvp);
 
+		eval("ip", "rule", "delete", "fwmark", fwmark, "table", fwmark);
 		eval("ip", "route", "flush", "table", fwmark);
 		eval("ip", "route", "flush", "cache");
 
