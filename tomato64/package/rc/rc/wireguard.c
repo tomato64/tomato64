@@ -563,7 +563,7 @@ static int wg_route_peer(char *iface, char *route, char *table, int add)
 	}
 	else {
 		if (table != NULL) {
-			if (eval("ip", "route", "del", route, "dev", iface, "table", table)) {
+			if (eval("ip", "route", "delete", route, "dev", iface, "table", table)) {
 				logmsg(LOG_WARNING, "unable to remove route of %s to table %s for wireguard interface %s!", route, table, iface);
 				return -1;
 			}
@@ -571,7 +571,7 @@ static int wg_route_peer(char *iface, char *route, char *table, int add)
 				logmsg(LOG_DEBUG, "wireguard interface %s has had a route removed to table %s for %s", iface, table, route);
 		}
 		else {
-			if (eval("ip", "route", "del", route, "dev", iface)) {
+			if (eval("ip", "route", "delete", route, "dev", iface)) {
 				logmsg(LOG_WARNING, "unable to remove route of %s for wireguard interface %s!", route, iface);
 				return -1;
 			}
@@ -659,7 +659,7 @@ static void wg_route_peer_default(char *iface, char *route, char *fwmark, int ad
 				buffer[strcspn(buffer, "\n")] = 0;
 				if (strlen(buffer) > 1) {
 					memset(cmd, 0, BUF_SIZE);
-					snprintf(cmd, BUF_SIZE, "ip route del %s dev br%d table %s", buffer, i, fwmark);
+					snprintf(cmd, BUF_SIZE, "ip route delete %s dev br%d table %s", buffer, i, fwmark);
 					system(cmd);
 				}
 				fclose(fp);
@@ -962,6 +962,7 @@ void start_wg_eas(void)
 
 	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
 		if (atoi(getNVRAMVar("wg%d_enable", unit)) == 1) {
+			/* TODO: forbid only in all mode, the same in vpn-wireguard.asp */
 			if (atoi(getNVRAMVar("wg%d_com", unit)) == 3) { /* check for 'External - VPN Provider' mode on this unit */
 				if (external_mode == 0) { /* no previous unit is in this mode - allow */
 					start_wireguard(unit);
@@ -1012,7 +1013,10 @@ void start_wireguard(const int unit)
 	char buffer[BUF_SIZE];
 	int mode;
 
-	/* TODO: serialize_restart */
+	memset(buffer, 0, BUF_SIZE);
+	snprintf(buffer, BUF_SIZE, "wireguard%d", unit);
+	if (serialize_restart(buffer, 1))
+		return;
 
 	/* determine interface */
 	memset(iface, 0, IF_SIZE);
@@ -1131,7 +1135,10 @@ void stop_wireguard(const int unit)
 	char buffer[BUF_SIZE];
 	int is_dev;
 
-	/* TODO: serialize_restart */
+	memset(buffer, 0, BUF_SIZE);
+	snprintf(buffer, BUF_SIZE, "wireguard%d", unit);
+	if (serialize_restart(buffer, 0))
+		return;
 
 	/* remove cron job */
 	memset(buffer, 0, BUF_SIZE);

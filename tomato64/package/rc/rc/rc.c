@@ -2,7 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -141,6 +141,7 @@ int serialize_restart(char *service, int start)
 	pid_t pid, pid_rc = getpid();
 
 	/* replace '-' with '_' otherwise exec_service() will fail */
+	memset(s, 0, sizeof(s)); /* reset */
 	strlcpy(s, service, sizeof(s));
 	if ((pos = strstr(s, "-")) != NULL) {
 		index = pos - s;
@@ -160,6 +161,17 @@ int serialize_restart(char *service, int start)
 			logmsg(LOG_WARNING, "service: %s already running; its PID: %d", s, pid);
 			return 1;
 		}
+#ifdef TCONFIG_WIREGUARD
+		/* special case: wireguard */
+		if (strncmp(service, "wireguard", 9) == 0) {
+			memset(s, 0, sizeof(s)); /* reset */
+			snprintf(s, sizeof(s), "wg%d", atoi(&service[9]));
+			if (if_nametoindex(s)) {
+				logmsg(LOG_WARNING, "service: %s already running; interface %s is up", service, s);
+				return 1;
+			}
+		}
+#endif
 	}
 	else {
 		if (pid_rc != 1) {
