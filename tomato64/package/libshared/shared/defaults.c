@@ -2277,6 +2277,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface0_isolate",	""				, 0 },
 	{"wifi_phy0iface0_br_isolate",	""				, 0 },
 	{"wifi_phy0iface0_ifname",	""				, 0 },
+	{"wifi_phy0iface0_macfilter",	""				, 0 },
+	{"wifi_phy0iface0_maclist",	""				, 0 },
 
 	{"wifi_phy0iface1_enable",	"0"				, 0 },
 	{"wifi_phy0iface1_mode",	"ap"				, 0 },
@@ -2290,6 +2292,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface1_isolate",	""				, 0 },
 	{"wifi_phy0iface1_br_isolate",	""				, 0 },
 	{"wifi_phy0iface1_ifname",	""				, 0 },
+	{"wifi_phy0iface1_macfilter",	""				, 0 },
+	{"wifi_phy0iface1_maclist",	""				, 0 },
 
 	{"wifi_phy0iface2_enable",	"0"				, 0 },
 	{"wifi_phy0iface2_mode",	"ap"				, 0 },
@@ -2303,6 +2307,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface2_isolate",	""				, 0 },
 	{"wifi_phy0iface2_br_isolate",	""				, 0 },
 	{"wifi_phy0iface2_ifname",	""				, 0 },
+	{"wifi_phy0iface2_macfilter",	""				, 0 },
+	{"wifi_phy0iface2_maclist",	""				, 0 },
 
 	{"wifi_phy0iface3_enable",	"0"				, 0 },
 	{"wifi_phy0iface3_mode",	"ap"				, 0 },
@@ -2316,6 +2322,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface3_isolate",	""				, 0 },
 	{"wifi_phy0iface3_br_isolate",	""				, 0 },
 	{"wifi_phy0iface3_ifname",	""				, 0 },
+	{"wifi_phy0iface3_macfilter",	""				, 0 },
+	{"wifi_phy0iface3_maclist",	""				, 0 },
 
 	{"wifi_phy0iface4_enable",	"0"				, 0 },
 	{"wifi_phy0iface4_mode",	"ap"				, 0 },
@@ -2329,6 +2337,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface4_isolate",	""				, 0 },
 	{"wifi_phy0iface4_br_isolate",	""				, 0 },
 	{"wifi_phy0iface4_ifname",	""				, 0 },
+	{"wifi_phy0iface4_macfilter",	""				, 0 },
+	{"wifi_phy0iface4_maclist",	""				, 0 },
 
 	{"wifi_phy0iface5_enable",	"0"				, 0 },
 	{"wifi_phy0iface5_mode",	"ap"				, 0 },
@@ -2342,6 +2352,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface5_isolate",	""				, 0 },
 	{"wifi_phy0iface5_br_isolate",	""				, 0 },
 	{"wifi_phy0iface5_ifname",	""				, 0 },
+	{"wifi_phy0iface5_macfilter",	""				, 0 },
+	{"wifi_phy0iface5_maclist",	""				, 0 },
 
 	{"wifi_phy0iface6_enable",	"0"				, 0 },
 	{"wifi_phy0iface6_mode",	"ap"				, 0 },
@@ -2355,6 +2367,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface6_isolate",	""				, 0 },
 	{"wifi_phy0iface6_br_isolate",	""				, 0 },
 	{"wifi_phy0iface6_ifname",	""				, 0 },
+	{"wifi_phy0iface6_macfilter",	""				, 0 },
+	{"wifi_phy0iface6_maclist",	""				, 0 },
 
 	{"wifi_phy0iface7_enable",	"0"				, 0 },
 	{"wifi_phy0iface7_mode",	"ap"				, 0 },
@@ -2368,6 +2382,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface7_isolate",	""				, 0 },
 	{"wifi_phy0iface7_br_isolate",	""				, 0 },
 	{"wifi_phy0iface7_ifname",	""				, 0 },
+	{"wifi_phy0iface7_macfilter",	""				, 0 },
+	{"wifi_phy0iface7_maclist",	""				, 0 },
 
 	{"wifi_phy0iface8_enable",	"0"				, 0 },
 	{"wifi_phy0iface8_mode",	"ap"				, 0 },
@@ -2381,6 +2397,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface8_isolate",	""				, 0 },
 	{"wifi_phy0iface8_br_isolate",	""				, 0 },
 	{"wifi_phy0iface8_ifname",	""				, 0 },
+	{"wifi_phy0iface8_macfilter",	""				, 0 },
+	{"wifi_phy0iface8_maclist",	""				, 0 },
 
 	{"wifi_phy0iface9_enable",	"0"				, 0 },
 	{"wifi_phy0iface9_mode",	"ap"				, 0 },
@@ -2394,6 +2412,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface9_isolate",	""				, 0 },
 	{"wifi_phy0iface9_br_isolate",	""				, 0 },
 	{"wifi_phy0iface9_ifname",	""				, 0 },
+	{"wifi_phy0iface9_macfilter",	""				, 0 },
+	{"wifi_phy0iface9_maclist",	""				, 0 },
 
 	{"wifi_phy0iface10_enable",	"0"				, 0 },
 	{"wifi_phy0iface10_mode",	"ap"				, 0 },
@@ -2407,6 +2427,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface10_isolate",	""				, 0 },
 	{"wifi_phy0iface10_br_isolate",	""				, 0 },
 	{"wifi_phy0iface10_ifname",	""				, 0 },
+	{"wifi_phy0iface10_macfilter",	""				, 0 },
+	{"wifi_phy0iface10_maclist",	""				, 0 },
 
 	{"wifi_phy0iface11_enable",	"0"				, 0 },
 	{"wifi_phy0iface11_mode",	"ap"				, 0 },
@@ -2420,6 +2442,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface11_isolate",	""				, 0 },
 	{"wifi_phy0iface11_br_isolate",	""				, 0 },
 	{"wifi_phy0iface11_ifname",	""				, 0 },
+	{"wifi_phy0iface11_macfilter",	""				, 0 },
+	{"wifi_phy0iface11_maclist",	""				, 0 },
 
 	{"wifi_phy0iface12_enable",	"0"				, 0 },
 	{"wifi_phy0iface12_mode",	"ap"				, 0 },
@@ -2433,6 +2457,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface12_isolate",	""				, 0 },
 	{"wifi_phy0iface12_br_isolate",	""				, 0 },
 	{"wifi_phy0iface12_ifname",	""				, 0 },
+	{"wifi_phy0iface12_macfilter",	""				, 0 },
+	{"wifi_phy0iface12_maclist",	""				, 0 },
 
 	{"wifi_phy0iface13_enable",	"0"				, 0 },
 	{"wifi_phy0iface13_mode",	"ap"				, 0 },
@@ -2446,6 +2472,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface13_isolate",	""				, 0 },
 	{"wifi_phy0iface13_br_isolate",	""				, 0 },
 	{"wifi_phy0iface13_ifname",	""				, 0 },
+	{"wifi_phy0iface13_macfilter",	""				, 0 },
+	{"wifi_phy0iface13_maclist",	""				, 0 },
 
 	{"wifi_phy0iface14_enable",	"0"				, 0 },
 	{"wifi_phy0iface14_mode",	"ap"				, 0 },
@@ -2459,6 +2487,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface14_isolate",	""				, 0 },
 	{"wifi_phy0iface14_br_isolate",	""				, 0 },
 	{"wifi_phy0iface14_ifname",	""				, 0 },
+	{"wifi_phy0iface14_macfilter",	""				, 0 },
+	{"wifi_phy0iface14_maclist",	""				, 0 },
 
 	{"wifi_phy0iface15_enable",	"0"				, 0 },
 	{"wifi_phy0iface15_mode",	"ap"				, 0 },
@@ -2472,6 +2502,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface15_isolate",	""				, 0 },
 	{"wifi_phy0iface15_br_isolate",	""				, 0 },
 	{"wifi_phy0iface15_ifname",	""				, 0 },
+	{"wifi_phy0iface15_macfilter",	""				, 0 },
+	{"wifi_phy0iface15_maclist",	""				, 0 },
 
 	{"wifi_phy1iface0_enable",	"0"				, 0 },
 	{"wifi_phy1iface0_mode",	"ap"				, 0 },
@@ -2485,6 +2517,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface0_isolate",	""				, 0 },
 	{"wifi_phy1iface0_br_isolate",	""				, 0 },
 	{"wifi_phy1iface0_ifname",	""				, 0 },
+	{"wifi_phy1iface0_macfilter",	""				, 0 },
+	{"wifi_phy1iface0_maclist",	""				, 0 },
 
 	{"wifi_phy1iface1_enable",	"0"				, 0 },
 	{"wifi_phy1iface1_mode",	"ap"				, 0 },
@@ -2498,6 +2532,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface1_isolate",	""				, 0 },
 	{"wifi_phy1iface1_br_isolate",	""				, 0 },
 	{"wifi_phy1iface1_ifname",	""				, 0 },
+	{"wifi_phy1iface1_macfilter",	""				, 0 },
+	{"wifi_phy1iface1_maclist",	""				, 0 },
 
 	{"wifi_phy1iface2_enable",	"0"				, 0 },
 	{"wifi_phy1iface2_mode",	"ap"				, 0 },
@@ -2511,6 +2547,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface2_isolate",	""				, 0 },
 	{"wifi_phy1iface2_br_isolate",	""				, 0 },
 	{"wifi_phy1iface2_ifname",	""				, 0 },
+	{"wifi_phy1iface2_macfilter",	""				, 0 },
+	{"wifi_phy1iface2_maclist",	""				, 0 },
 
 	{"wifi_phy1iface3_enable",	"0"				, 0 },
 	{"wifi_phy1iface3_mode",	"ap"				, 0 },
@@ -2524,6 +2562,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface3_isolate",	""				, 0 },
 	{"wifi_phy1iface3_br_isolate",	""				, 0 },
 	{"wifi_phy1iface3_ifname",	""				, 0 },
+	{"wifi_phy1iface3_macfilter",	""				, 0 },
+	{"wifi_phy1iface3_maclist",	""				, 0 },
 
 	{"wifi_phy1iface4_enable",	"0"				, 0 },
 	{"wifi_phy1iface4_mode",	"ap"				, 0 },
@@ -2537,6 +2577,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface4_isolate",	""				, 0 },
 	{"wifi_phy1iface4_br_isolate",	""				, 0 },
 	{"wifi_phy1iface4_ifname",	""				, 0 },
+	{"wifi_phy1iface4_macfilter",	""				, 0 },
+	{"wifi_phy1iface4_maclist",	""				, 0 },
 
 	{"wifi_phy1iface5_enable",	"0"				, 0 },
 	{"wifi_phy1iface5_mode",	"ap"				, 0 },
@@ -2550,6 +2592,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface5_isolate",	""				, 0 },
 	{"wifi_phy1iface5_br_isolate",	""				, 0 },
 	{"wifi_phy1iface5_ifname",	""				, 0 },
+	{"wifi_phy1iface5_macfilter",	""				, 0 },
+	{"wifi_phy1iface5_maclist",	""				, 0 },
 
 	{"wifi_phy1iface6_enable",	"0"				, 0 },
 	{"wifi_phy1iface6_mode",	"ap"				, 0 },
@@ -2563,6 +2607,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface6_isolate",	""				, 0 },
 	{"wifi_phy1iface6_br_isolate",	""				, 0 },
 	{"wifi_phy1iface6_ifname",	""				, 0 },
+	{"wifi_phy1iface6_macfilter",	""				, 0 },
+	{"wifi_phy1iface6_maclist",	""				, 0 },
 
 	{"wifi_phy1iface7_enable",	"0"				, 0 },
 	{"wifi_phy1iface7_mode",	"ap"				, 0 },
@@ -2576,6 +2622,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface7_isolate",	""				, 0 },
 	{"wifi_phy1iface7_br_isolate",	""				, 0 },
 	{"wifi_phy1iface7_ifname",	""				, 0 },
+	{"wifi_phy1iface7_macfilter",	""				, 0 },
+	{"wifi_phy1iface7_maclist",	""				, 0 },
 
 	{"wifi_phy1iface8_enable",	"0"				, 0 },
 	{"wifi_phy1iface8_mode",	"ap"				, 0 },
@@ -2589,6 +2637,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface8_isolate",	""				, 0 },
 	{"wifi_phy1iface8_br_isolate",	""				, 0 },
 	{"wifi_phy1iface8_ifname",	""				, 0 },
+	{"wifi_phy1iface8_macfilter",	""				, 0 },
+	{"wifi_phy1iface8_maclist",	""				, 0 },
 
 	{"wifi_phy1iface9_enable",	"0"				, 0 },
 	{"wifi_phy1iface9_mode",	"ap"				, 0 },
@@ -2602,6 +2652,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface9_isolate",	""				, 0 },
 	{"wifi_phy1iface9_br_isolate",	""				, 0 },
 	{"wifi_phy1iface9_ifname",	""				, 0 },
+	{"wifi_phy1iface9_macfilter",	""				, 0 },
+	{"wifi_phy1iface9_maclist",	""				, 0 },
 
 	{"wifi_phy1iface10_enable",	"0"				, 0 },
 	{"wifi_phy1iface10_mode",	"ap"				, 0 },
@@ -2615,6 +2667,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface10_isolate",	""				, 0 },
 	{"wifi_phy1iface10_br_isolate",	""				, 0 },
 	{"wifi_phy1iface10_ifname",	""				, 0 },
+	{"wifi_phy1iface10_macfilter",	""				, 0 },
+	{"wifi_phy1iface10_maclist",	""				, 0 },
 
 	{"wifi_phy1iface11_enable",	"0"				, 0 },
 	{"wifi_phy1iface11_mode",	"ap"				, 0 },
@@ -2628,6 +2682,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface11_isolate",	""				, 0 },
 	{"wifi_phy1iface11_br_isolate",	""				, 0 },
 	{"wifi_phy1iface11_ifname",	""				, 0 },
+	{"wifi_phy1iface11_macfilter",	""				, 0 },
+	{"wifi_phy1iface11_maclist",	""				, 0 },
 
 	{"wifi_phy1iface12_enable",	"0"				, 0 },
 	{"wifi_phy1iface12_mode",	"ap"				, 0 },
@@ -2641,6 +2697,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface12_isolate",	""				, 0 },
 	{"wifi_phy1iface12_br_isolate",	""				, 0 },
 	{"wifi_phy1iface12_ifname",	""				, 0 },
+	{"wifi_phy1iface12_macfilter",	""				, 0 },
+	{"wifi_phy1iface12_maclist",	""				, 0 },
 
 	{"wifi_phy1iface13_enable",	"0"				, 0 },
 	{"wifi_phy1iface13_mode",	"ap"				, 0 },
@@ -2654,6 +2712,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface13_isolate",	""				, 0 },
 	{"wifi_phy1iface13_br_isolate",	""				, 0 },
 	{"wifi_phy1iface13_ifname",	""				, 0 },
+	{"wifi_phy1iface13_macfilter",	""				, 0 },
+	{"wifi_phy1iface13_maclist",	""				, 0 },
 
 	{"wifi_phy1iface14_enable",	"0"				, 0 },
 	{"wifi_phy1iface14_mode",	"ap"				, 0 },
@@ -2667,6 +2727,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface14_isolate",	""				, 0 },
 	{"wifi_phy1iface14_br_isolate",	""				, 0 },
 	{"wifi_phy1iface14_ifname",	""				, 0 },
+	{"wifi_phy1iface14_macfilter",	""				, 0 },
+	{"wifi_phy1iface14_maclist",	""				, 0 },
 
 	{"wifi_phy1iface15_enable",	"0"				, 0 },
 	{"wifi_phy1iface15_mode",	"ap"				, 0 },
@@ -2680,6 +2742,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy1iface15_isolate",	""				, 0 },
 	{"wifi_phy1iface15_br_isolate",	""				, 0 },
 	{"wifi_phy1iface15_ifname",	""				, 0 },
+	{"wifi_phy1iface15_macfilter",	""				, 0 },
+	{"wifi_phy1iface15_maclist",	""				, 0 },
 
 	{"wifi_phy2iface0_enable",	"0"				, 0 },
 	{"wifi_phy2iface0_mode",	"ap"				, 0 },
@@ -2693,6 +2757,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface0_isolate",	""				, 0 },
 	{"wifi_phy2iface0_br_isolate",	""				, 0 },
 	{"wifi_phy2iface0_ifname",	""				, 0 },
+	{"wifi_phy2iface0_macfilter",	""				, 0 },
+	{"wifi_phy2iface0_maclist",	""				, 0 },
 
 	{"wifi_phy2iface1_enable",	"0"				, 0 },
 	{"wifi_phy2iface1_mode",	"ap"				, 0 },
@@ -2706,6 +2772,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface1_isolate",	""				, 0 },
 	{"wifi_phy2iface1_br_isolate",	""				, 0 },
 	{"wifi_phy2iface1_ifname",	""				, 0 },
+	{"wifi_phy2iface1_macfilter",	""				, 0 },
+	{"wifi_phy2iface1_maclist",	""				, 0 },
 
 	{"wifi_phy2iface2_enable",	"0"				, 0 },
 	{"wifi_phy2iface2_mode",	"ap"				, 0 },
@@ -2719,6 +2787,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface2_isolate",	""				, 0 },
 	{"wifi_phy2iface2_br_isolate",	""				, 0 },
 	{"wifi_phy2iface2_ifname",	""				, 0 },
+	{"wifi_phy2iface2_macfilter",	""				, 0 },
+	{"wifi_phy2iface2_maclist",	""				, 0 },
 
 	{"wifi_phy2iface3_enable",	"0"				, 0 },
 	{"wifi_phy2iface3_mode",	"ap"				, 0 },
@@ -2732,6 +2802,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface3_isolate",	""				, 0 },
 	{"wifi_phy2iface3_br_isolate",	""				, 0 },
 	{"wifi_phy2iface3_ifname",	""				, 0 },
+	{"wifi_phy2iface3_macfilter",	""				, 0 },
+	{"wifi_phy2iface3_maclist",	""				, 0 },
 
 	{"wifi_phy2iface4_enable",	"0"				, 0 },
 	{"wifi_phy2iface4_mode",	"ap"				, 0 },
@@ -2745,6 +2817,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface4_isolate",	""				, 0 },
 	{"wifi_phy2iface4_br_isolate",	""				, 0 },
 	{"wifi_phy2iface4_ifname",	""				, 0 },
+	{"wifi_phy2iface4_macfilter",	""				, 0 },
+	{"wifi_phy2iface4_maclist",	""				, 0 },
 
 	{"wifi_phy2iface5_enable",	"0"				, 0 },
 	{"wifi_phy2iface5_mode",	"ap"				, 0 },
@@ -2758,6 +2832,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface5_isolate",	""				, 0 },
 	{"wifi_phy2iface5_br_isolate",	""				, 0 },
 	{"wifi_phy2iface5_ifname",	""				, 0 },
+	{"wifi_phy2iface5_macfilter",	""				, 0 },
+	{"wifi_phy2iface5_maclist",	""				, 0 },
 
 	{"wifi_phy2iface6_enable",	"0"				, 0 },
 	{"wifi_phy2iface6_mode",	"ap"				, 0 },
@@ -2771,6 +2847,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface6_isolate",	""				, 0 },
 	{"wifi_phy2iface6_br_isolate",	""				, 0 },
 	{"wifi_phy2iface6_ifname",	""				, 0 },
+	{"wifi_phy2iface6_macfilter",	""				, 0 },
+	{"wifi_phy2iface6_maclist",	""				, 0 },
 
 	{"wifi_phy2iface7_enable",	"0"				, 0 },
 	{"wifi_phy2iface7_mode",	"ap"				, 0 },
@@ -2784,6 +2862,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface7_isolate",	""				, 0 },
 	{"wifi_phy2iface7_br_isolate",	""				, 0 },
 	{"wifi_phy2iface7_ifname",	""				, 0 },
+	{"wifi_phy2iface7_macfilter",	""				, 0 },
+	{"wifi_phy2iface7_maclist",	""				, 0 },
 
 	{"wifi_phy2iface8_enable",	"0"				, 0 },
 	{"wifi_phy2iface8_mode",	"ap"				, 0 },
@@ -2797,6 +2877,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface8_isolate",	""				, 0 },
 	{"wifi_phy2iface8_br_isolate",	""				, 0 },
 	{"wifi_phy2iface8_ifname",	""				, 0 },
+	{"wifi_phy2iface8_macfilter",	""				, 0 },
+	{"wifi_phy2iface8_maclist",	""				, 0 },
 
 	{"wifi_phy2iface9_enable",	"0"				, 0 },
 	{"wifi_phy2iface9_mode",	"ap"				, 0 },
@@ -2810,6 +2892,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface9_isolate",	""				, 0 },
 	{"wifi_phy2iface9_br_isolate",	""				, 0 },
 	{"wifi_phy2iface9_ifname",	""				, 0 },
+	{"wifi_phy2iface9_macfilter",	""				, 0 },
+	{"wifi_phy2iface9_maclist",	""				, 0 },
 
 	{"wifi_phy2iface10_enable",	"0"				, 0 },
 	{"wifi_phy2iface10_mode",	"ap"				, 0 },
@@ -2823,6 +2907,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface10_isolate",	""				, 0 },
 	{"wifi_phy2iface10_br_isolate",	""				, 0 },
 	{"wifi_phy2iface10_ifname",	""				, 0 },
+	{"wifi_phy2iface10_macfilter",	""				, 0 },
+	{"wifi_phy2iface10_maclist",	""				, 0 },
 
 	{"wifi_phy2iface11_enable",	"0"				, 0 },
 	{"wifi_phy2iface11_mode",	"ap"				, 0 },
@@ -2836,6 +2922,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface11_isolate",	""				, 0 },
 	{"wifi_phy2iface11_br_isolate",	""				, 0 },
 	{"wifi_phy2iface11_ifname",	""				, 0 },
+	{"wifi_phy2iface11_macfilter",	""				, 0 },
+	{"wifi_phy2iface11_maclist",	""				, 0 },
 
 	{"wifi_phy2iface12_enable",	"0"				, 0 },
 	{"wifi_phy2iface12_mode",	"ap"				, 0 },
@@ -2849,6 +2937,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface12_isolate",	""				, 0 },
 	{"wifi_phy2iface12_br_isolate",	""				, 0 },
 	{"wifi_phy2iface12_ifname",	""				, 0 },
+	{"wifi_phy2iface12_macfilter",	""				, 0 },
+	{"wifi_phy2iface12_maclist",	""				, 0 },
 
 	{"wifi_phy2iface13_enable",	"0"				, 0 },
 	{"wifi_phy2iface13_mode",	"ap"				, 0 },
@@ -2862,6 +2952,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface13_isolate",	""				, 0 },
 	{"wifi_phy2iface13_br_isolate",	""				, 0 },
 	{"wifi_phy2iface13_ifname",	""				, 0 },
+	{"wifi_phy2iface13_macfilter",	""				, 0 },
+	{"wifi_phy2iface13_maclist",	""				, 0 },
 
 	{"wifi_phy2iface14_enable",	"0"				, 0 },
 	{"wifi_phy2iface14_mode",	"ap"				, 0 },
@@ -2875,6 +2967,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface14_isolate",	""				, 0 },
 	{"wifi_phy2iface14_br_isolate",	""				, 0 },
 	{"wifi_phy2iface14_ifname",	""				, 0 },
+	{"wifi_phy2iface14_macfilter",	""				, 0 },
+	{"wifi_phy2iface14_maclist",	""				, 0 },
 
 	{"wifi_phy2iface15_enable",	"0"				, 0 },
 	{"wifi_phy2iface15_mode",	"ap"				, 0 },
@@ -2888,6 +2982,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2iface15_isolate",	""				, 0 },
 	{"wifi_phy2iface15_br_isolate",	""				, 0 },
 	{"wifi_phy2iface15_ifname",	""				, 0 },
+	{"wifi_phy2iface15_macfilter",	""				, 0 },
+	{"wifi_phy2iface15_maclist",	""				, 0 },
 #endif /* TOMATO64_WIFI */
 
 	{ "ctf_disable",		"1"				, 0 },

@@ -141,6 +141,18 @@ print_ifname() {
 	fi
 }
 
+print_mac_filter() {
+
+	if [ ! -z "$(NG wifi_phy${1}iface${2}_macfilter)" ] && [ ! -z "$(NG wifi_phy${1}iface${2}_maclist)" ];
+	then
+		uci set "wireless.phy${1}iface${2}.macfilter=$(NG wifi_phy${1}iface${2}_macfilter)"
+
+		mac_addresses=$(echo "$(NG wifi_phy${1}iface${2}_maclist)" | grep -oE '([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}' | tr '\n' ' ')
+		mac_addresses=${mac_addresses% }
+		uci set "wireless.phy${1}iface${2}.maclist=${mac_addresses}"
+	fi
+}
+
 json_for_each_item "count_phy" "wlan"
 
 # For each wireless device
@@ -180,6 +192,7 @@ do
 				uci set "wireless.phy${i}iface${j}.isolate=$(NG wifi_phy${i}iface${j}_isolate)"
 				uci set "wireless.phy${i}iface${j}.bridge=$(NG wifi_phy${i}iface${j}_network)"
 				print_ifname ${i} ${j}
+				print_mac_filter ${i} ${j}
 			fi
 		fi
 	done

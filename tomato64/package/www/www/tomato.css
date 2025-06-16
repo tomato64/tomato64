@@ -1965,3 +1965,9 @@ span.pptpsvg {
 .svg-color12 {
 	color: #323232;
 }
+
+/* TOMATO64-BEGIN */
+div[id$="_maclist"] .co1 {
+	width: 30%;
+}
+/* TOMATO64-END */

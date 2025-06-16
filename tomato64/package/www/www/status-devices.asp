@@ -649,7 +649,12 @@ function addStatic(n) {
 function addWF(n) {
 	var e = list[n];
 	cookie.set('addmac', [e.mac, e.name.split(',')[0]].join(','), 1);
+/* TOMATO64-REMOVE-BEGIN */
 	location.href = 'basic-wfilter.asp';
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	location.href = 'basic-wireless.asp';
+/* TOMATO64-END */
 }
 
 function addbwlimit(n) {
