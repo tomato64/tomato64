@@ -638,6 +638,11 @@ else
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-X86_64-BEGIN/,/TOMATO64-X86_64-END/d"
 endif
 
+ifeq ($(PLATFORM_ARM64),y)
+else
+	sed -i $(INSTALLDIR)/www/at.css -e "/TOMATO64-ARM64-BEGIN/,/TOMATO64-ARM64-END/d"
+endif
+
 ifeq ($(PLATFORM_WIFI),y)
 else
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
@@ -776,6 +781,7 @@ endif
 		-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 		-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
 		-e "/TOMATO64-X86_64-BEGIN/d"	-e "/TOMATO64-X86_64-END/d" \
+		-e "/TOMATO64-ARM64-BEGIN/d"	-e "/TOMATO64-ARM64-END/d" \
 		-e "/TOMATO64-WIFI-BEGIN/d"	-e "/TOMATO64-WIFI-END/d" \
 		|| true; \
 	done

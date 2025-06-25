@@ -1137,9 +1137,12 @@ td#navi a.indent1[href*=":reboot"] {
 /* TOMATO64-REMOVE-BEGIN */
 	right: 185px;
 /* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* TOMATO64-X86_64-BEGIN */
 	right: 405px;
-/* TOMATO64-END */
+/* TOMATO64-X86_64-END */
+/* TOMATO64-ARM64-BEGIN */
+	right: 270px;
+/* TOMATO64-ARM64-END */
 }
 
 /* TOMATO64-BEGIN */
@@ -1199,9 +1202,12 @@ td#navi a.indent1[href^="about"] {
 /* TOMATO64-REMOVE-BEGIN */
 	right: 285px;
 /* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* TOMATO64-X86_64-BEGIN */
 	right: 505px;
-/* TOMATO64-END */
+/* TOMATO64-X86_64-END */
+/* TOMATO64-ARM64-BEGIN */
+	right: 370px;
+/* TOMATO64-ARM64-END */
 	z-index: 3;
 	overflow: visible;
 }
