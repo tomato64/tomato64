@@ -2095,7 +2095,8 @@ span.log-clear a::after,
 span.log-download a::after,
 span.log-configuration a::after {
 	position: relative;
-	left: -7px; 
+	left: -7px;
+	top: 2px;
 	float: right;
 	content: "\25E5";
 	color: transparent;
