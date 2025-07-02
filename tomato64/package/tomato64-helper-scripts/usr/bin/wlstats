@@ -49,7 +49,12 @@ do
 					mhz="${mhz:1:1}${mhz:3}"
 
 					nbw=$(echo "$iwinfo" | grep "Master" | awk '{print $9}')
-					nbw="${nbw:2}"
+						if [ "$nbw" == "NOHT" ];
+						then
+							nbw="0"
+						else
+							nbw="${nbw: -2}"
+						fi
 
 					noise=$(echo "$iwinfo" | grep "Noise" | sed 's/dBm//g' | awk '{print $4}')
 					if [ "${noise}" == "unknown" ];
