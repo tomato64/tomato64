@@ -21,10 +21,6 @@
 //	<% nvram("log_remote,log_remoteip,log_remoteport,log_file,log_file_custom,log_file_path,log_limit,log_in,log_out,log_mark,log_events,log_wm,log_wmtype,log_wmip,log_wmdmax,log_wmsmax,log_file_size,log_file_keep,log_dropdups,log_min_level,webmon_bkp,webmon_dir,webmon_shrink"); %>
 
 function verifyFields(focused, quiet) {
-/* TOMATO64-BEGIN */
-	E('_f_log_wm').checked = 0;
-/* TOMATO64-END */
-
 	var a, b, c;
 
 	a = E('_f_log_file').checked;
@@ -219,12 +215,7 @@ REMOVE-END */
 <div class="section">
 	<script>
 		createFieldTable('', [
-/* TOMATO64-REMOVE-BEGIN */
 			{ title: 'Monitor Web Usage', name: 'f_log_wm', type: 'checkbox', value: nvram.log_wm == 1 },
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-			{ title: 'Monitor Web Usage (WIP)', name: 'f_log_wm', type: 'checkbox', value: nvram.log_wm == 1 },
-/* TOMATO64-END */
 			{ title: 'Monitor', name: 'log_wmtype', type: 'select', options: [[0,'All Computers / Devices'],[1,'The Following...'],[2,'All Except...']], value: nvram.log_wmtype },
 				{ title: 'IP Address(es)', indent: 2,  name: 'f_log_wmip', type: 'text', maxlen: 512, size: 64, value: nvram.log_wmip,
 				suffix: '<br><small>ex: "1.1.1.1", "1.1.1.0/24" or "1.1.1.1 - 2.2.2.2"<\/small>' },

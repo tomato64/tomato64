@@ -619,12 +619,16 @@ static void ipt_webmon(void)
 	wmtype = nvram_get_int("log_wmtype");
 	clear = nvram_get_int("log_wmclear");
 
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	/* disable webmon for ip6tables (ARM) - FIXME */
 	ipt_write(":monitor - [0:0]\n");
 #else
 	ip46t_write(ipv6_enabled, ":monitor - [0:0]\n");
 #endif
+#else /* TOMATO64 */
+	ip46t_write(ipv6_enabled, ":monitor - [0:0]\n");
+#endif /* TOMATO64 */
 	/* include IPs */
 	strlcpy(t, wmtype == 1 ? nvram_safe_get("log_wmip") : "", sizeof(t));
 	p = t;
@@ -634,12 +638,19 @@ static void ipt_webmon(void)
 		if ((ok = ipt_addr(src, sizeof(src), p, "src", (IPT_V4 | IPT_V6), 0, "webmon", NULL))) {
 
 /* disable webmon for ip6tables (ARM) - FIXME */
+#ifndef TOMATO64
 #ifndef TCONFIG_BCMARM
 #ifdef TCONFIG_IPV6
 			if (ipv6_enabled && *wan6face && (ok & IPT_V6))
 				ip6t_write("-A FORWARD -o %s %s -j monitor\n", wan6face, src);
 #endif
 #endif
+#else /* TOMATO64 */
+#ifdef TCONFIG_IPV6
+			if (ipv6_enabled && *wan6face && (ok & IPT_V6))
+				ip6t_write("-A FORWARD -o %s %s -j monitor\n", wan6face, src);
+#endif
+#endif /* TOMATO64 */
 			if (ok & IPT_V4) {
 				for (i = 0; i < wanfaces.count; ++i) {
 					if (*(wanfaces.iface[i].name))
@@ -675,12 +686,16 @@ static void ipt_webmon(void)
 				*c = 0;
 			if ((ok = ipt_addr(src, sizeof(src), p, "src", (IPT_V4 | IPT_V6), 0, "webmon", NULL))) {
 				if (*src)
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 					/* disable webmon for ip6tables (ARM) - FIXME */
 					ip46t_flagged_write(0, ok, "-A monitor %s -j RETURN\n", src);
 #else
 					ip46t_flagged_write(ipv6_enabled, ok, "-A monitor %s -j RETURN\n", src);
 #endif
+#else /* TOMATO64 */
+					ip46t_flagged_write(ipv6_enabled, ok, "-A monitor %s -j RETURN\n", src);
+#endif /* TOMATO64 */
 			}
 			if (!c) break;
 			p = c + 1;
@@ -703,23 +718,31 @@ static void ipt_webmon(void)
 		snprintf(websearch, sizeof(websearch), "--search_load_file /var/webmon/search");
 	}
 
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	/* disable webmon for ip6tables - FIXME */
 	ipt_write(
 #else
 	ip46t_write(ipv6_enabled,
 #endif
+#else /* TOMATO64 */
+	ip46t_write(ipv6_enabled,
+#endif /* TOMATO64 */
 	            "-A monitor -p tcp -m webmon --max_domains %d --max_searches %d %s %s -j RETURN\n",
 	            nvram_get_int("log_wmdmax") ? : 1, nvram_get_int("log_wmsmax") ? : 1, (clear & 1) == 0 ? webdomain : "--clear_domain", (clear & 2) == 0 ? websearch : "--clear_search");
 
 	if (nvram_match("webmon_bkp", "1"))
 		xstart("/usr/sbin/webmon_bkp", "hourly"); /* make a copy immediately */
 
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	modprobe("ipt_webmon");
 #else
 	modprobe("xt_webmon");
 #endif
+#else /* TOMATO64 */
+	modprobe("xt_webmon");
+#endif /* TOMATO64 */
 }
 
 #ifdef TOMATO64
@@ -2380,7 +2403,11 @@ int start_firewall(void)
 	modprobe_r("xt_length");
 #ifdef TCONFIG_BCMARM
 	modprobe_r("ipt_web");
+#ifndef TOMATO64
 	modprobe_r("ipt_webmon");
+#else /* TOMATO64 */
+	modprobe_r("xt_webmon");
+#endif /* TOMATO64 */
 #else
 	modprobe_r("xt_web");
 	modprobe_r("xt_webmon");

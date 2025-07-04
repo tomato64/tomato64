@@ -1,20 +1,20 @@
-From 4fd1cd2ea1b29049e46f343d17a0355789f18aa7 Mon Sep 17 00:00:00 2001
+From 83a70608ef7987a5784d10668dece457cd6b46f6 Mon Sep 17 00:00:00 2001
 From: lancethepants <lancethepants@gmail.com>
-Date: Mon, 3 Mar 2025 13:02:52 -0700
+Date: Fri, 4 Jul 2025 17:40:01 -0600
 Subject: [PATCH] add Tomato64 specific missing firewall extensions
 
 ---
- include/linux/netfilter/xt_web.h           | 30 +++++++++++
- include/linux/netfilter_ipv4/ipt_TRIGGER.h | 25 +++++++++
- include/linux/netfilter_ipv4/ipt_account.h | 24 +++++++++
- include/linux/netfilter_ipv4/ipt_web.h     | 30 +++++++++++
- include/linux/netfilter_ipv4/ipt_webmon.h  | 63 ++++++++++++++++++++++
- 5 files changed, 172 insertions(+)
+ include/linux/netfilter/xt_web.h           | 30 ++++++++++
+ include/linux/netfilter/xt_webmon.h        | 69 ++++++++++++++++++++++
+ include/linux/netfilter_ipv4/ipt_TRIGGER.h | 25 ++++++++
+ include/linux/netfilter_ipv4/ipt_account.h | 24 ++++++++
+ include/linux/netfilter_ipv4/ipt_web.h     | 30 ++++++++++
+ 5 files changed, 178 insertions(+)
  create mode 100644 include/linux/netfilter/xt_web.h
+ create mode 100644 include/linux/netfilter/xt_webmon.h
  create mode 100644 include/linux/netfilter_ipv4/ipt_TRIGGER.h
  create mode 100644 include/linux/netfilter_ipv4/ipt_account.h
  create mode 100644 include/linux/netfilter_ipv4/ipt_web.h
- create mode 100644 include/linux/netfilter_ipv4/ipt_webmon.h
 
 diff --git a/include/linux/netfilter/xt_web.h b/include/linux/netfilter/xt_web.h
 new file mode 100644
@@ -52,6 +52,81 @@ index 0000000..c042367
 +};
 +
 +#endif
+diff --git a/include/linux/netfilter/xt_webmon.h b/include/linux/netfilter/xt_webmon.h
+new file mode 100644
+index 0000000..0a51b6c
+--- /dev/null
++++ b/include/linux/netfilter/xt_webmon.h
+@@ -0,0 +1,69 @@
++/*  webmon --	A netfilter module to match URLs in HTTP(S) requests
++ *  		This module can match using string match or regular expressions
++ *  		Originally designed for use with Gargoyle router firmware (gargoyle-router.com)
++ *
++ *
++ *  Copyright © 2008-2010 by Eric Bishop <eric@gargoyle-router.com>
++ * 
++ *  This file is free software: you may copy, redistribute and/or modify it
++ *  under the terms of the GNU General Public License as published by the
++ *  Free Software Foundation, either version 2 of the License, or (at your
++ *  option) any later version.
++ *
++ *  This file is distributed in the hope that it will be useful, but
++ *  WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ *  General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++
++
++
++#ifndef _XT_WEBMON_H
++#define _XT_WEBMON_H
++
++
++#define WEBMON_MAX_IPS           256
++#define WEBMON_MAX_IP_RANGES      16
++
++#define WEBMON_EXCLUDE             1
++#define WEBMON_INCLUDE             2
++
++#define WEBMON_MAXDOMAIN           4
++#define WEBMON_MAXSEARCH           8
++
++#define WEBMON_DOMAIN             16
++#define WEBMON_SEARCH             32
++
++
++#define WEBMON_SET              3064
++
++union xt_webmon_ipany
++{
++  struct in_addr ip4;
++  struct in6_addr ip6;
++};
++
++struct xt_webmon_ip_range
++{
++	union xt_webmon_ipany start;
++	union xt_webmon_ipany end;
++};
++
++struct xt_webmon_info
++{
++	uint32_t max_domains;
++	uint32_t max_searches;
++	union xt_webmon_ipany exclude_ips[WEBMON_MAX_IPS];
++	struct xt_webmon_ip_range exclude_ranges[WEBMON_MAX_IP_RANGES];
++	uint32_t num_exclude_ips;
++	uint32_t num_exclude_ranges;
++	unsigned char exclude_type;
++	uint32_t* ref_count;
++
++};
++
++#endif /*_XT_WEBMON_H*/
 diff --git a/include/linux/netfilter_ipv4/ipt_TRIGGER.h b/include/linux/netfilter_ipv4/ipt_TRIGGER.h
 new file mode 100644
 index 0000000..aa1bb8b
@@ -149,75 +224,6 @@ index 0000000..176208e
 +};
 +
 +#endif
-diff --git a/include/linux/netfilter_ipv4/ipt_webmon.h b/include/linux/netfilter_ipv4/ipt_webmon.h
-new file mode 100644
-index 0000000..d2f7e26
---- /dev/null
-+++ b/include/linux/netfilter_ipv4/ipt_webmon.h
-@@ -0,0 +1,63 @@
-+/*  webmon --	A netfilter module to match URLs in HTTP(S) requests
-+ *  		This module can match using string match or regular expressions
-+ *  		Originally designed for use with Gargoyle router firmware (gargoyle-router.com)
-+ *
-+ *
-+ *  Copyright © 2008-2010 by Eric Bishop <eric@gargoyle-router.com>
-+ * 
-+ *  This file is free software: you may copy, redistribute and/or modify it
-+ *  under the terms of the GNU General Public License as published by the
-+ *  Free Software Foundation, either version 2 of the License, or (at your
-+ *  option) any later version.
-+ *
-+ *  This file is distributed in the hope that it will be useful, but
-+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ *  General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+
-+
-+
-+#ifndef _IPT_WEBMON_H
-+#define _IPT_WEBMON_H
-+
-+
-+#define WEBMON_MAX_IPS           256
-+#define WEBMON_MAX_IP_RANGES      16
-+
-+#define WEBMON_EXCLUDE             1
-+#define WEBMON_INCLUDE             2
-+
-+#define WEBMON_MAXDOMAIN           4
-+#define WEBMON_MAXSEARCH           8
-+
-+#define WEBMON_DOMAIN             16
-+#define WEBMON_SEARCH             32
-+
-+
-+#define WEBMON_SET              3064
-+
-+struct ipt_webmon_ip_range
-+{
-+	uint32_t start;
-+	uint32_t end;
-+};
-+
-+struct ipt_webmon_info
-+{
-+	uint32_t max_domains;
-+	uint32_t max_searches;
-+	uint32_t exclude_ips[WEBMON_MAX_IPS];
-+	struct ipt_webmon_ip_range exclude_ranges[WEBMON_MAX_IP_RANGES];
-+	uint32_t num_exclude_ips;
-+	uint32_t num_exclude_ranges;
-+	unsigned char exclude_type;
-+	uint32_t* ref_count;
-+
-+};
-+
-+#endif /*_IPT_WEBMON_H*/
 -- 
 2.39.5
 

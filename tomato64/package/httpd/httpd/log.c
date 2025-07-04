@@ -246,7 +246,11 @@ static void webmon_list(char *name, int webmon, int resolve, unsigned int maxcou
 
 						strlcpy(line, start, length);
 						line[length] = '\0';
+#ifndef TOMATO64
 						if (sscanf(line, "%lu\t%s\t%s", &time, ip, val) != 3)
+#else
+						if (sscanf(line, "%lu\t%*d\t%s\t%s", &time, ip, val) != 3)
+#endif /* TOMATO64 */
 							continue;
 
 						jh = NULL;
