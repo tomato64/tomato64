@@ -38,7 +38,7 @@ function clearLog(clear) {
 	xob = new XmlHttp();
 	xob.onCompleted = function(text, xml) {
 		xob = null;
-		E('clear' + clear).innerHTML = '&raquo; <a href="javascript:clearLog(' + clear + ')">Clear<\/a>';
+		E('clear'+clear).innerHTML = '&raquo; <a href="javascript:clearLog('+clear+')">Clear<\/a>';
 		if (!ref.running) ref.once = 1;
 		ref.start();
 	}
@@ -46,8 +46,8 @@ function clearLog(clear) {
 		xob = null;
 	}
 
-	xob.post('webmon.cgi', 'clear=' + clear);
-	E('clear' + clear).innerHTML = 'Please wait... <img src="spin.gif" style="vertical-align:top">';
+	xob.post('webmon.cgi', 'clear='+clear);
+	E('clear'+clear).innerHTML = 'Please wait... <img src="spin.gif" style="vertical-align:top">';
 }
 
 function resolve() {
@@ -71,7 +71,7 @@ function resolve() {
 		xob = null;
 	}
 
-	xob.post('resolve.cgi', 'ip=' + queue.splice(0, 20).join(','));
+	xob.post('resolve.cgi', 'ip='+queue.splice(0, 20).join(','));
 }
 
 var ref = new TomatoRefresh('update.cgi', '', 0, 'status_webmon');
@@ -100,8 +100,8 @@ function showSelectedOption(prev, curr) {
 	var e;
 
 	/* safe if prev doesn't exist */
-	elem.removeClass('mc' + prev, 'selected');
-	if ((e = E('mc' + curr)) != null) {
+	elem.removeClass('mc'+prev, 'selected');
+	if ((e = E('mc'+curr)) != null) {
 		elem.addClass(e, 'selected');
 		e.blur();
 	}
@@ -111,7 +111,7 @@ function showMaxCount() {
 	if (maxCount == lastMaxCount) return;
 	showSelectedOption(lastMaxCount, maxCount);
 	lastMaxCount = maxCount;
-	ref.postData = 'exec=webmon&arg0=' + maxCount;
+	ref.postData = 'exec=webmon&arg0='+maxCount;
 }
 
 function switchMaxCount(c) {
@@ -171,7 +171,7 @@ WMGrid.prototype.setName = function(ip, name) {
 		row = this.tb.rows[i];
 		data = row.getRowData();
 		if (data.ip == ip) {
-			data[1] = name + ((ip.indexOf(':') != -1) ? '<br>' : ' ') + '<small>(' + ip + ')<\/small>';
+			data[1] = name+((ip.indexOf(':') != -1) ? '<br>' : ' ')+'<small>('+ip+')<\/small>';
 			row.setRowData(data);
 			row.cells[1].innerHTML = data[1];
 			row.style.cursor = 'default';
@@ -198,7 +198,7 @@ WMGrid.prototype.populateData = function(data, url) {
 		e = {
 			time: a[0],
 			ip: a[1],
-			value: a[2] + ''
+			value: a[2]+''
 		};
 		list.push(e);
 	}
@@ -212,24 +212,22 @@ WMGrid.prototype.populateData = function(data, url) {
 /* IPV6-END */
 		if (cache[e.ip] != null) {
 			new_cache[e.ip] = cache[e.ip];
-			e.ip = cache[e.ip] + ((e.ip.indexOf(':') != -1) ? '<br>' : ' ') + '<small>(' + e.ip + ')<\/small>';
+			e.ip = cache[e.ip]+((e.ip.indexOf(':') != -1) ? '<br>' : ' ')+'<small>('+e.ip+')<\/small>';
 			cursor = 'default';
 		}
 		else
 			cursor = null;
 
 		if (url != 0) {
-			e.value = '<a href="http://' + e.value + '" class="new_window">' +
-				(e.value.length > maxl + 3 ? e.value.substr(0, maxl) + '...' : e.value) + '<\/a>';
+			e.value = '<a href="https://'+e.value+'" class="new_window">'+(e.value.length > maxl + 3 ? e.value.substr(0, maxl)+'...' : e.value)+'<\/a>';
 		}
 		else {
 			e.value = e.value.replace(/\+/g, ' ');
 			if (e.value.length > maxl + 3)
-				e.value = e.value.substr(0, maxl) + '...';
+				e.value = e.value.substr(0, maxl)+'...';
 		}
 		dt.setTime(e.time * 1000);
-		var row = this.insert(-1, e, [dt.toDateString() + ', ' + dt.toLocaleTimeString(),
-			e.ip, e.value], false);
+		var row = this.insert(-1, e, [dt.toDateString()+', '+dt.toLocaleTimeString(), e.ip, e.value], false);
 		if (cursor) row.style.cursor = cursor;
 	}
 
@@ -266,8 +264,8 @@ WMGrid.prototype.sortCompare = function(a, b) {
 var dg = new WMGrid();
 
 dg.setup = function() {
-	this.init('dom-grid', 'sort');
-	this.headerSet(['Last Access Time', 'IP Address', 'Domain Name']);
+	this.init('dom-grid','sort');
+	this.headerSet(['Last Access Time','IP Address','Domain Name']);
 	this.sort(0);
 }
 
@@ -278,8 +276,8 @@ dg.populate = function() {
 var sg = new WMGrid();
 
 sg.setup = function() {
-	this.init('srh-grid', 'sort');
-	this.headerSet(['Search Time', 'IP Address', 'Search Criteria']);
+	this.init('srh-grid','sort');
+	this.headerSet(['Search Time','IP Address','Search Criteria']);
 	this.sort(0);
 }
 
@@ -291,7 +289,7 @@ var observer = window.MutationObserver || window.WebKitMutationObserver || windo
 
 function init() {
 	if (observer)
-		new observer(eventHandler).observe(E("dom-grid"), { childList: true, subtree: true });
+		new observer(eventHandler).observe(E('dom-grid'), { childList: true, subtree: true });
 
 	ref.initPage();
 
