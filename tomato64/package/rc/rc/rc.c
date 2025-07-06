@@ -185,18 +185,16 @@ int serialize_restart(char *service, int start)
 }
 
 /* replace -A, -I and -N in the FW script with -D */
-void run_del_firewall_script(char *infile, char *outfile)
+void run_del_firewall_script(const char *infile, char *outfile)
 {
 	FILE *ifp, *ofp;
-	char read[128], temp[128];
-	char *pos;
-	int index = 0;
+	char line[128];
 
 	ifp = fopen(infile, "r");
 	ofp = fopen(outfile, "w+");
-	if ((ifp == NULL) || (ofp == NULL)) {
-		if (ifp != NULL) fclose(ifp);
-		if (ofp != NULL) {
+	if (!ifp || !ofp) {
+		if (ifp) fclose(ifp);
+		if (ofp) {
 			fclose(ofp);
 			unlink(outfile);
 		}
@@ -204,17 +202,13 @@ void run_del_firewall_script(char *infile, char *outfile)
 		return;
 	}
 
-	while (fgets(read, sizeof(read), ifp) != NULL) {
-		if ((strstr(read, "-A") != NULL) || (strstr(read, "-I") != NULL) || (strstr(read, "-N") != NULL)) {
-			while (((pos = strstr(read, "-A")) != NULL) || ((pos = strstr(read, "-I")) != NULL) || ((pos = strstr(read, "-N")) != NULL)) {
-				strlcpy(temp, read, sizeof(temp));
-				index = pos - read;
-				read[index] = '\0';
-				strlcat(read, "-D", sizeof(read));
-				strlcat(read, temp + index + 2, sizeof(read));
+	while (fgets(line, sizeof(line), ifp)) {
+		for (char *p = line; *p; ++p) {
+			if (*p == '-' && (p[1] == 'A' || p[1] == 'I' || p[1] == 'N')) {
+				p[1] = 'D';
 			}
 		}
-		fputs(read, ofp);
+		fputs(line, ofp);
 	}
 	fclose(ifp);
 	fclose(ofp);

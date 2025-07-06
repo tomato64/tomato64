@@ -110,7 +110,7 @@ extern void chains_log_detection(void);
 extern void fix_chain_in_drop(void);
 extern int env2nv(char *env, char *nv);
 extern int serialize_restart(char *service, int start);
-extern void run_del_firewall_script(char *infile, char *outfile);
+extern void run_del_firewall_script(const char *infile, char *outfile);
 
 /* init.c */
 extern int init_main(int argc, char *argv[]);
