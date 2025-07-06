@@ -2,9 +2,10 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
+
 
 #include "tomato.h"
 
@@ -214,13 +215,12 @@ void asp_showsyslog(int argc, char **argv)
 	web_pipecmd(s, WOF_NONE);
 }
 
-static void webmon_list(char *name, int webmon, int resolve, unsigned int maxcount)
+static void webmon_list(char *name, int webmon, unsigned int maxcount)
 {
 	FILE *f;
-	char *js, *jh;
+	char *js;
 	char comma = ' ';
 	unsigned long time;
-	char host[NI_MAXHOST];
 	char s[512], ip[64], val[256];
 	size_t filesize;
 
@@ -231,21 +231,22 @@ static void webmon_list(char *name, int webmon, int resolve, unsigned int maxcou
 		if ((f = fopen(s, "r")) != NULL) {
 			int readall_ok;
 			char *data;
+
 			readall_ok = readall(f, &data, &filesize);
 			if (readall_ok == READALL_OK) {
-				char *end = data + filesize;
+				char *current_end = data + filesize;
 				char *lineStart;
 				unsigned int lines_processed = 0;
-				for (lineStart = end; lineStart >= data; lineStart--) {
-					if ((*lineStart == '\n') || (*lineStart == '\r') || (lineStart == data)) {
-						const int length = end - lineStart;
-						char *line = malloc(length + 1);
-						char *start = lineStart;
-						if (start > data)
-							start += 1;
 
-						strlcpy(line, start, length);
+				for (lineStart = data + filesize - 1; lineStart >= data; lineStart--) {
+					if ((*lineStart == '\n') || (*lineStart == '\r') || (lineStart == data)) {
+						char *line_start = (lineStart == data) ? data : lineStart + 1;
+						int length = current_end - line_start;
+
+						char *line = malloc(length + 1);
+						strlcpy(line, line_start, length + 1);
 						line[length] = '\0';
+
 #ifndef TOMATO64
 						if (sscanf(line, "%lu\t%s\t%s", &time, ip, val) != 3)
 #else
@@ -253,20 +254,17 @@ static void webmon_list(char *name, int webmon, int resolve, unsigned int maxcou
 #endif /* TOMATO64 */
 							continue;
 
-						jh = NULL;
-						if (resolve && (resolve_addr(ip, host) == 0))
-							jh = js_string(host);
-
 						js = utf8_to_js_string(val);
-						web_printf("%c['%lu','%s','%s', '%s']", comma, time, ip, js ? : "", jh ? : "");
+
+						web_printf("%c['%lu','%s','%s']", comma, time, ip, (js ? : ""));
+
 						free(js);
-						free(jh);
-						comma = ',';
 						free(line);
-						end = lineStart;
+						comma = ',';
+						current_end = lineStart;
 						lines_processed++;
 
-						if ((maxcount > 0) && (lines_processed >= maxcount))
+						if (maxcount && lines_processed >= maxcount)
 							break;
 					}
 				}
@@ -281,10 +279,9 @@ void asp_webmon(int argc, char **argv)
 {
 	int webmon = nvram_get_int("log_wm");
 	int maxcount = (argc > 0) ? atoi(argv[0]) : 0;
-	int resolve = (argc > 1) ? atoi(argv[1]) : 0;
 
-	webmon_list("domains", webmon, resolve, maxcount);
-	webmon_list("searches", webmon, resolve, maxcount);
+	webmon_list("domains", webmon, maxcount);
+	webmon_list("searches", webmon, maxcount);
 }
 
 void wo_webmon(char *url)
