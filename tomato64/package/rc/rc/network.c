@@ -806,19 +806,35 @@ void load_wl(void)
 }
 #endif /* TCONFIG_BCM714 */
 
-int disabled_wl(int idx, int unit, int subunit, void *param)
+/* check for disabled wl vifs */
+int disabled_wl_vif(int idx, int unit, int subunit, void *param)
 {
 	char *ifname;
 
 	ifname = nvram_safe_get(wl_nvname("ifname", unit, subunit));
 
-	/* skip disabled wl vifs */
 	if (strncmp(ifname, "wl", 2) == 0 && strchr(ifname, '.') &&
 	    !nvram_get_int(wl_nvname("bss_enabled", unit, subunit)))
 		return 1;
 
 	return 0;
 }
+
+#if defined(TCONFIG_AC3200) && !defined(TCONFIG_BCM714) /* only add for SDK7 */
+/* check for enabled wl vifs */
+int enabled_wl_vif(int idx, int unit, int subunit, void *param)
+{
+	char *ifname;
+
+	ifname = nvram_safe_get(wl_nvname("ifname", unit, subunit));
+
+	if (strncmp(ifname, "wl", 2) == 0 && strchr(ifname, '.') &&
+	    nvram_get_int(wl_nvname("bss_enabled", unit, subunit)))
+		return 1;
+
+	return 0;
+}
+#endif /* defined(TCONFIG_AC3200) && !defined(TCONFIG_BCM714) */
 
 static int set_wlmac(int idx, int unit, int subunit, void *param)
 {

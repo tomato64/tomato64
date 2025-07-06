@@ -12198,10 +12198,16 @@ int init_main(int argc, char *argv[])
 				start_wl();
 
 				/* If a virtual SSID is disabled, it requires two initialisations */
-				if (foreach_wif(1, NULL, disabled_wl)) {
+				if (foreach_wif(1, NULL, disabled_wl_vif)) {
 					logmsg(LOG_INFO, "%s: Tomato64 WiFi restarting ... (virtual SSID disabled)", nvram_safe_get("t_model_name"));
 					restart_wireless();
 				}
+#if defined(TCONFIG_AC3200) && !defined(TCONFIG_BCM714) /* only add for SDK7 - so far only R8000/R7900 having an issue with 2,4 GHz VIF */
+				else if ((get_model() == MODEL_R8000) && foreach_wif(1, NULL, enabled_wl_vif)) {
+					logmsg(LOG_INFO, "%s: Tomato64 WiFi restarting ... (virtual SSID workaround)", nvram_safe_get("t_model_name"));
+					restart_wireless();
+				}
+#endif /* defined(TCONFIG_AC3200) && !defined(TCONFIG_BCM714) */
 			}
 #endif /* TOMATO64 */
 			/*
