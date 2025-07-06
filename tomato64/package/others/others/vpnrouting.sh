@@ -65,7 +65,7 @@ stopRouting() {
 	ip rule | grep "lookup $ID" && ip rule del fwmark $ID/0xf00 table $ID
 
 	[ -f "$FIREWALL_ROUTING" ] && {
-		sed -i -e "s/-I/-D/g; s/-A/-D/g" $FIREWALL_ROUTING &>/dev/null
+		sed -i -e "s/-I/-D/g; s/-A/-D/g" "$FIREWALL_ROUTING" &>/dev/null
 		$FIREWALL_ROUTING &>/dev/null
 		rm -f $FIREWALL_ROUTING &>/dev/null
 	}
@@ -75,15 +75,19 @@ stopRouting() {
 # BCMARMNO-BEGIN
 	ipset --destroy vpnrouting$ID &>/dev/null
 # BCMARMNO-END
-
-	sed -i $DNSMASQ_IPSET -e "/vpnrouting$ID/d" &>/dev/null
+	[ -f "$DNSMASQ_IPSET" ] && {
+		if grep -q "/vpnrouting$ID" "$DNSMASQ_IPSET"; then
+			sed -i "$DNSMASQ_IPSET" -e "/vpnrouting$ID/d" &>/dev/null
+			# ipset was used on this client so dnsmasq restart is needed
+			RESTART_DNSMASQ=1
+		fi
+	}
 }
 
 startRouting() {
-	local DNSMASQ=0 i VAL1 VAL2 VAL3
+	local i VAL1 VAL2 VAL3
 
 	stopRouting
-	NS vpn_client"${ID#??}"_rdnsmasq=0
 
 	$LOGS "Starting routing policy for openvpn-$SERVICE - Interface $IFACE - Table $ID"
 
@@ -133,11 +137,9 @@ startRouting() {
 				;;
 				3)	# to domain
 					$LOGS "Type: $VAL2 - add $VAL3"
-					echo "ipset=/$VAL3/vpnrouting$ID" >> $DNSMASQ_IPSET
-					# try to add ipset rule using forced query to DNS server
-					#nslookup $VAL3 2>/dev/null
+					echo "ipset=/$VAL3/vpnrouting$ID" >> $DNSMASQ_IPSET # add
 
-					DNSMASQ=1
+					RESTART_DNSMASQ=1
 				;;
 				*) continue ;;
 			esac
@@ -147,16 +149,11 @@ startRouting() {
 	chmod 700 $FIREWALL_ROUTING
 	RESTART_FW=1
 
-	[ "$DNSMASQ" -eq 1 ] && {
-		NS vpn_client"${ID#??}"_rdnsmasq=1
-		RESTART_DNSMASQ=1
-	}
-
 	$LOGS "Completed routing policy configuration for openvpn-$SERVICE"
 }
 
 checkRestart() {
-	[ "$RESTART_DNSMASQ" -eq 1 -o "$(NG "vpn_client"${ID#??}"_rdnsmasq")" -eq 1 ] && service dnsmasq restart
+	[ "$RESTART_DNSMASQ" -eq 1 ] && service dnsmasq restart
 	[ "$RESTART_FW" -eq 1 ] && service firewall restart
 }
 
@@ -204,19 +201,18 @@ VPN_REDIR=$(NG vpn_"$SERVICE"_rgw)
 
 [ "$script_type" == "route-up" -a "$VPN_REDIR" -lt 2 ] && {
 	$LOGS "Skipping, $SERVICE not in routing policy mode"
-	checkRestart
 	exit 0
 }
 
 [ "$script_type" == "route-pre-down" ] && {
 	stopRouting
+	checkRestart
 }
 
 [ "$script_type" == "route-up" ] && {
 	startRouting
+	checkRestart
 }
-
-checkRestart
 
 ip route flush cache
 
