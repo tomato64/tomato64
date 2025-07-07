@@ -12,7 +12,10 @@ touch /etc/config/wireless
 json_load_file /etc/board.json
 
 phycount=0
-enabled_interface=0
+start_hostapd=0
+start_wpa_supplicant=0
+client_ifaces=""
+error=0
 
 count_phy() {
         phycount=$((phycount+1))
@@ -141,6 +144,19 @@ print_ifname() {
 	fi
 }
 
+print_ifname_client() {
+
+	if [ ! -z "$(NG wifi_phy${1}iface${2}_ifname)" ];
+	then
+		uci set "wireless.phy${1}iface${2}.ifname=$(NG wifi_phy${1}iface${2}_ifname)"
+		client_ifaces="$client_ifaces $(NG wifi_phy${1}iface${2}_ifname)"
+	else
+		uci set "wireless.phy${1}iface${2}.ifname=phy${1}-sta${2}"
+		client_ifaces="$client_ifaces phy${1}-sta${2}"
+	fi
+	client_ifaces=$(echo "$client_ifaces" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+}
+
 print_mac_filter() {
 
 	if [ ! -z "$(NG wifi_phy${1}iface${2}_macfilter)" ] && [ ! -z "$(NG wifi_phy${1}iface${2}_maclist)" ];
@@ -176,11 +192,11 @@ do
 		# If interface is enabled
 		if [ $(NG "wifi_phy${i}iface${j}_enable") -eq 1 ];
 		then
-			enabled_interface=1
-
 			# If interface is an Access Point
 			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "ap" ];
 			then
+				start_hostapd=1
+
 				uci set "wireless.phy${i}iface${j}=wifi-iface"
 				uci set "wireless.phy${i}iface${j}.device=radio${i}"
 				uci set "wireless.phy${i}iface${j}.mode=$(NG wifi_phy${i}iface${j}_mode)"
@@ -194,20 +210,75 @@ do
 				print_ifname ${i} ${j}
 				print_mac_filter ${i} ${j}
 			fi
+
+			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "sta" ];
+			then
+				start_wpa_supplicant=1
+
+				uci set "wireless.phy${i}iface${j}=wifi-iface"
+				uci set "wireless.phy${i}iface${j}.device=radio${i}"
+				uci set "wireless.phy${i}iface${j}.mode=$(NG wifi_phy${i}iface${j}_mode)"
+				uci set "wireless.phy${i}iface${j}.ssid=$(NG wifi_phy${i}iface${j}_essid)"
+				uci set "wireless.phy${i}iface${j}.bssid=$(NG wifi_phy${i}iface${j}_bssid)"
+				print_encryption ${i} ${j}
+				uci set "wireless.phy${i}iface${j}.hidden=$(NG wifi_phy${i}iface${j}_hidden)"
+				uci set "wireless.phy${i}iface${j}.isolate=$(NG wifi_phy${i}iface${j}_isolate)"
+				print_ifname_client ${i} ${j}
+				print_mac_filter ${i} ${j}
+			fi
 		fi
 	done
 done
 uci commit wireless
 
-if [ "${enabled_interface}" == "1" ];
+if [ "${start_hostapd}" == "1" ] || [ "${start_wpa_supplicant}" == "1" ];
 then
 	start-stop-daemon -b -S -n ubusd -x /usr/sbin/ubusd
-	start-stop-daemon -b -S -n hostapd -x /usr/sbin/hostapd -- -s -g /var/run/hostapd/global
+	start-stop-daemon -b -S -n netifd -x /usr/sbin/netifd
+
+	if [ "${start_wpa_supplicant}" == "1" ];
+	then
+		mkdir -p /var/run/wpa_supplicant
+		start-stop-daemon -b -S -n wpa_supplicant -x /usr/sbin/wpa_supplicant -- -n -s -g /var/run/wpa_supplicant/global
+	fi
+
+	if [ "${start_hostapd}" == "1" ];
+	then
+		start-stop-daemon -b -S -n hostapd -x /usr/sbin/hostapd -- -s -g /var/run/hostapd/global
+	fi
+
+
+	timeout_duration=20
+	start_time=$(date +%s)
+	error=0
+	all_up=0
+
+	while [ $(($(date +%s) - start_time)) -lt $timeout_duration ] && [ $all_up -eq 0 ]; do
+		all_up=1
+		for iface in $client_ifaces; do
+			if ! ip link show "$iface" 2>/dev/null | grep -q "state UP"; then
+				all_up=0
+			fi
+		done
+		sleep 0.1
+	done
+
+	for iface in $client_ifaces; do
+		if ! ip link show "$iface" 2>/dev/null | grep -q "state UP"; then
+			logger -p user.error "Interface $iface did not come up within $timeout_duration seconds"
+			error=1
+		fi
+	done
 
 	while ! hostapd_cli -s /var/run/hostapd/ -i global ping > /dev/null 2>&1; do
 		sleep .1
 	done
 	/usr/sbin/hostapd_cli -B -s /var/run/hostapd/ -i global -a /usr/bin/hostapd_event
+fi
 
-	start-stop-daemon -b -S -n netifd -x /usr/sbin/netifd
+if [ "$error" == 1 ];
+then
+	logger -p user.error "Wireless client(s) did not start or connect, check logs and settings"
+else
+	logger -p user.info "Wireless client(s) started successully"
 fi

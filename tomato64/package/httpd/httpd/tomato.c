@@ -284,7 +284,11 @@ static const nvset_t nvset_list[] = {
 	{ "wan_modem_ipaddr",		V_IP				},
 	{ "wan_pppoe_lei",		V_RANGE(1, 60)			},
 	{ "wan_pppoe_lef",		V_RANGE(1, 10)			},
+#ifndef TOMATO64
 	{ "wan_sta",			V_LENGTH(0, 10)			},
+#else
+	{ "wan_sta",			V_LENGTH(0, 15)			},
+#endif /* TOMATO64 */
 	{ "wan_dns",			V_LENGTH(0, 50)			},	/* ip ip ip */
 	{ "wan_dns_auto",		V_01				},
 	{ "wan_addget",			V_01				},
@@ -322,7 +326,11 @@ static const nvset_t nvset_list[] = {
 	{ "wan2_modem_ipaddr",		V_IP				},
 	{ "wan2_pppoe_lei",		V_RANGE(1, 60)			},
 	{ "wan2_pppoe_lef",		V_RANGE(1, 10)			},
+#ifndef TOMATO64
 	{ "wan2_sta",			V_LENGTH(0, 10)			},
+#else
+	{ "wan2_sta",			V_LENGTH(0, 15)			},
+#endif /* TOMATO64 */
 	{ "wan2_dns",			V_LENGTH(0, 50)			},	/* ip ip ip */
 	{ "wan2_dns_auto",		V_01				},
 	{ "wan2_addget",		V_01				},
@@ -361,7 +369,11 @@ static const nvset_t nvset_list[] = {
 	{ "wan3_modem_ipaddr",		V_IP				},
 	{ "wan3_pppoe_lei",		V_RANGE(1, 60)			},
 	{ "wan3_pppoe_lef",		V_RANGE(1, 10)			},
+#ifndef TOMATO64
 	{ "wan3_sta",			V_LENGTH(0, 10)			},
+#else
+	{ "wan3_sta",			V_LENGTH(0, 15)			},
+#endif /* TOMATO64 */
 	{ "wan3_dns",			V_LENGTH(0, 50)			},	/* ip ip ip */
 	{ "wan3_dns_auto",		V_01				},
 	{ "wan3_addget",		V_01				},
@@ -399,7 +411,11 @@ static const nvset_t nvset_list[] = {
 	{ "wan4_modem_ipaddr",		V_IP				},
 	{ "wan4_pppoe_lei",		V_RANGE(1, 60)			},
 	{ "wan4_pppoe_lef",		V_RANGE(1, 10)			},
+#ifndef TOMATO64
 	{ "wan4_sta",			V_LENGTH(0, 10)			},
+#else
+	{ "wan4_sta",			V_LENGTH(0, 15)			},
+#endif /* TOMATO64 */
 	{ "wan4_dns",			V_LENGTH(0, 50)			},	/* ip ip ip */
 	{ "wan4_dns_auto",		V_01				},
 	{ "wan4_addget",		V_01				},
@@ -2163,6 +2179,8 @@ static const nvset_t nvset_list[] = {
 #endif
 
 #ifdef TOMATO64
+	{"wifi_sta_list",		V_NONE				},	/* Wireless Station Mode */
+
 	{"wifi_phy0_band",		V_TEXT(2, 2)			},	/* 2G, 5G, 6G */
 	{"wifi_phy0_mode",		V_TEXT(1, 6)			},	/* n, ac, ax, be, legacy */
 	{"wifi_phy0_channel",		V_TEXT(1, 4)			},	/* 1 - 165+, auto  */
@@ -2196,6 +2214,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface0_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface0_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface0_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface0_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface0_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface0_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface0_wmm",		V_RANGE(0, 1)			},
@@ -2211,6 +2230,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface1_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface1_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface1_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface1_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface1_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface1_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface1_wmm",		V_RANGE(0, 1)			},
@@ -2226,6 +2246,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface2_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface2_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface2_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface2_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface2_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface2_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface2_wmm",		V_RANGE(0, 1)			},
@@ -2241,6 +2262,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface3_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface3_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface3_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface3_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface3_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface3_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface3_wmm",		V_RANGE(0, 1)			},
@@ -2256,6 +2278,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface4_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface4_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface4_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface4_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface4_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface4_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface4_wmm",		V_RANGE(0, 1)			},
@@ -2271,6 +2294,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface5_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface5_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface5_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface5_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface5_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface5_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface5_wmm",		V_RANGE(0, 1)			},
@@ -2286,6 +2310,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface6_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface6_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface6_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface6_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface6_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface6_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface6_wmm",		V_RANGE(0, 1)			},
@@ -2301,6 +2326,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface7_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface7_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface7_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface7_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface7_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface7_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface7_wmm",		V_RANGE(0, 1)			},
@@ -2316,6 +2342,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface8_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface8_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface8_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface8_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface8_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface8_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface8_wmm",		V_RANGE(0, 1)			},
@@ -2331,6 +2358,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface9_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface9_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface9_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface9_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface9_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface9_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface9_wmm",		V_RANGE(0, 1)			},
@@ -2346,6 +2374,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface10_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface10_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface10_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface10_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface10_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface10_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface10_wmm",	V_RANGE(0, 1)			},
@@ -2361,6 +2390,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface11_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface11_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface11_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface11_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface11_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface11_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface11_wmm",	V_RANGE(0, 1)			},
@@ -2376,6 +2406,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface12_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface12_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface12_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface12_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface12_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface12_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface12_wmm",	V_RANGE(0, 1)			},
@@ -2391,6 +2422,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface13_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface13_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface13_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface13_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface13_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface13_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface13_wmm",	V_RANGE(0, 1)			},
@@ -2406,6 +2438,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface14_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface14_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface14_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface14_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface14_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface14_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface14_wmm",	V_RANGE(0, 1)			},
@@ -2421,6 +2454,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface15_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface15_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy0iface15_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy0iface15_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy0iface15_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface15_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface15_wmm",	V_RANGE(0, 1)			},
@@ -2436,6 +2470,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface0_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface0_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface0_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface0_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface0_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface0_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface0_wmm",		V_RANGE(0, 1)			},
@@ -2451,6 +2486,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface1_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface1_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface1_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface1_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface1_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface1_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface1_wmm",		V_RANGE(0, 1)			},
@@ -2466,6 +2502,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface2_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface2_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface2_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface2_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface2_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface2_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface2_wmm",		V_RANGE(0, 1)			},
@@ -2481,6 +2518,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface3_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface3_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface3_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface3_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface3_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface3_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface3_wmm",		V_RANGE(0, 1)			},
@@ -2496,6 +2534,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface4_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface4_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface4_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface4_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface4_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface4_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface4_wmm",		V_RANGE(0, 1)			},
@@ -2511,6 +2550,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface5_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface5_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface5_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface5_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface5_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface5_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface5_wmm",		V_RANGE(0, 1)			},
@@ -2526,6 +2566,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface6_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface6_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface6_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface6_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface6_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface6_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface6_wmm",		V_RANGE(0, 1)			},
@@ -2541,6 +2582,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface7_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface7_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface7_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface7_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface7_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface7_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface7_wmm",		V_RANGE(0, 1)			},
@@ -2556,6 +2598,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface8_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface8_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface8_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface8_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface8_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface8_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface8_wmm",		V_RANGE(0, 1)			},
@@ -2571,6 +2614,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface9_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface9_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface9_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface9_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface9_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface9_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface9_wmm",		V_RANGE(0, 1)			},
@@ -2586,6 +2630,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface10_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface10_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface10_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface10_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface10_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface10_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface10_wmm",	V_RANGE(0, 1)			},
@@ -2601,6 +2646,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface11_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface11_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface11_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface11_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface11_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface11_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface11_wmm",	V_RANGE(0, 1)			},
@@ -2616,6 +2662,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface12_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface12_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface12_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface12_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface12_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface12_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface12_wmm",	V_RANGE(0, 1)			},
@@ -2631,6 +2678,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface13_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface13_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface13_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface13_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface13_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface13_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface13_wmm",	V_RANGE(0, 1)			},
@@ -2646,6 +2694,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface14_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface14_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface14_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface14_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface14_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface14_hidden",	V_NONE			},	/*  Hide SSID */
 	{"wifi_phy1iface14_wmm",	V_RANGE(0, 1)			},
@@ -2661,6 +2710,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface15_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface15_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy1iface15_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy1iface15_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy1iface15_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface15_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface15_wmm",	V_RANGE(0, 1)			},
@@ -2676,6 +2726,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface0_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface0_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface0_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface0_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface0_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface0_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface0_wmm",		V_RANGE(0, 1)			},
@@ -2691,6 +2742,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface1_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface1_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface1_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface1_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface1_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface1_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface1_wmm",		V_RANGE(0, 1)			},
@@ -2706,6 +2758,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface2_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface2_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface2_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface2_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface2_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface2_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface2_wmm",		V_RANGE(0, 1)			},
@@ -2721,6 +2774,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface3_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface3_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface3_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface3_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface3_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface3_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface3_wmm",		V_RANGE(0, 1)			},
@@ -2736,6 +2790,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface4_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface4_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface4_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface4_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface4_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface4_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface4_wmm",		V_RANGE(0, 1)			},
@@ -2751,6 +2806,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface5_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface5_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface5_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface5_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface5_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface5_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface5_wmm",		V_RANGE(0, 1)			},
@@ -2766,6 +2822,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface6_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface6_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface6_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface6_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface6_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface6_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface6_wmm",		V_RANGE(0, 1)			},
@@ -2781,6 +2838,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface7_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface7_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface7_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface7_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface7_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface7_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface7_wmm",		V_RANGE(0, 1)			},
@@ -2796,6 +2854,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface8_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface8_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface8_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface8_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface8_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface8_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface8_wmm",		V_RANGE(0, 1)			},
@@ -2811,6 +2870,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface9_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface9_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface9_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface9_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface9_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface9_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface9_wmm",		V_RANGE(0, 1)			},
@@ -2826,6 +2886,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface10_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface10_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface10_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface10_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface10_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface10_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface10_wmm",	V_RANGE(0, 1)			},
@@ -2841,6 +2902,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface11_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface11_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface11_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface11_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface11_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface11_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface11_wmm",	V_RANGE(0, 1)			},
@@ -2856,6 +2918,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface12_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface12_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface12_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface12_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface12_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface12_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface12_wmm",	V_RANGE(0, 1)			},
@@ -2871,6 +2934,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface13_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface13_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface13_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface13_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface13_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface13_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface13_wmm",	V_RANGE(0, 1)			},
@@ -2886,6 +2950,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface14_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface14_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface14_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface14_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface14_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface14_hidden",	V_NONE			},	/*  Hide SSID */
 	{"wifi_phy2iface14_wmm",	V_RANGE(0, 1)			},
@@ -2901,6 +2966,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface15_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface15_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
 	{"wifi_phy2iface15_essid",	V_TEXT(0, 32)			},
+	{"wifi_phy2iface15_bssid",	V_TEXT(0, 17)			},
 	{"wifi_phy2iface15_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface15_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface15_wmm",	V_RANGE(0, 1)			},

@@ -18,7 +18,7 @@
 
 <script>
 
-//	<% nvram("wifi_phy0_band,wifi_phy0_mode,wifi_phy0_channel,wifi_phy0_width,wifi_phy0_brates,wifi_phy0_power,wifi_phy0_country,wifi_phy0_noscan,wifi_phy0_ifaces,wifi_phy1_band,wifi_phy1_mode,wifi_phy1_channel,wifi_phy1_width,wifi_phy1_brates,wifi_phy1_power,wifi_phy1_country,wifi_phy1_noscan,wifi_phy1_ifaces,wifi_phy2_band,wifi_phy2_mode,wifi_phy2_channel,wifi_phy2_width,wifi_phy2_brates,wifi_phy2_power,wifi_phy2_country,wifi_phy2_noscan,wifi_phy2_ifaces,wifi_phy0iface0_enable,wifi_phy0iface0_mode,wifi_phy0iface0_essid,wifi_phy0iface0_network,wifi_phy0iface0_hidden,wifi_phy0iface0_wmm,wifi_phy0iface0_encryption,wifi_phy0iface0_cipher,wifi_phy0iface0_key,wifi_phy0iface0_isolate,wifi_phy0iface0_br_isolate,wifi_phy0iface0_ifname,wifi_phy0iface0_macfilter,wifi_phy0iface0_maclist,wifi_phy0iface1_enable,wifi_phy0iface1_mode,wifi_phy0iface1_essid,wifi_phy0iface1_network,wifi_phy0iface1_hidden,wifi_phy0iface1_wmm,wifi_phy0iface1_encryption,wifi_phy0iface1_cipher,wifi_phy0iface1_key,wifi_phy0iface1_isolate,wifi_phy0iface1_br_isolate,wifi_phy0iface1_ifname,wifi_phy0iface1_macfilter,wifi_phy0iface1_maclist,wifi_phy0iface2_enable,wifi_phy0iface2_mode,wifi_phy0iface2_essid,wifi_phy0iface2_network,wifi_phy0iface2_hidden,wifi_phy0iface2_wmm,wifi_phy0iface2_encryption,wifi_phy0iface2_cipher,wifi_phy0iface2_key,wifi_phy0iface2_isolate,wifi_phy0iface2_br_isolate,wifi_phy0iface2_ifname,wifi_phy0iface2_macfilter,wifi_phy0iface2_maclist,wifi_phy0iface3_enable,wifi_phy0iface3_mode,wifi_phy0iface3_essid,wifi_phy0iface3_network,wifi_phy0iface3_hidden,wifi_phy0iface3_wmm,wifi_phy0iface3_encryption,wifi_phy0iface3_cipher,wifi_phy0iface3_key,wifi_phy0iface3_isolate,wifi_phy0iface3_br_isolate,wifi_phy0iface3_ifname,wifi_phy0iface3_macfilter,wifi_phy0iface3_maclist,wifi_phy0iface4_enable,wifi_phy0iface4_mode,wifi_phy0iface4_essid,wifi_phy0iface4_network,wifi_phy0iface4_hidden,wifi_phy0iface4_wmm,wifi_phy0iface4_encryption,wifi_phy0iface4_cipher,wifi_phy0iface4_key,wifi_phy0iface4_isolate,wifi_phy0iface4_br_isolate,wifi_phy0iface4_ifname,wifi_phy0iface4_macfilter,wifi_phy0iface4_maclist,wifi_phy0iface5_enable,wifi_phy0iface5_mode,wifi_phy0iface5_essid,wifi_phy0iface5_network,wifi_phy0iface5_hidden,wifi_phy0iface5_wmm,wifi_phy0iface5_encryption,wifi_phy0iface5_cipher,wifi_phy0iface5_key,wifi_phy0iface5_isolate,wifi_phy0iface5_br_isolate,wifi_phy0iface5_ifname,wifi_phy0iface5_macfilter,wifi_phy0iface5_maclist,wifi_phy0iface6_enable,wifi_phy0iface6_mode,wifi_phy0iface6_essid,wifi_phy0iface6_network,wifi_phy0iface6_hidden,wifi_phy0iface6_wmm,wifi_phy0iface6_encryption,wifi_phy0iface6_cipher,wifi_phy0iface6_key,wifi_phy0iface6_isolate,wifi_phy0iface6_br_isolate,wifi_phy0iface6_ifname,wifi_phy0iface6_macfilter,wifi_phy0iface6_maclist,wifi_phy0iface7_enable,wifi_phy0iface7_mode,wifi_phy0iface7_essid,wifi_phy0iface7_network,wifi_phy0iface7_hidden,wifi_phy0iface7_wmm,wifi_phy0iface7_encryption,wifi_phy0iface7_cipher,wifi_phy0iface7_key,wifi_phy0iface7_isolate,wifi_phy0iface7_br_isolate,wifi_phy0iface7_ifname,wifi_phy0iface7_macfilter,wifi_phy0iface7_maclist,wifi_phy0iface8_enable,wifi_phy0iface8_mode,wifi_phy0iface8_essid,wifi_phy0iface8_network,wifi_phy0iface8_hidden,wifi_phy0iface8_wmm,wifi_phy0iface8_encryption,wifi_phy0iface8_cipher,wifi_phy0iface8_key,wifi_phy0iface8_isolate,wifi_phy0iface8_br_isolate,wifi_phy0iface8_ifname,wifi_phy0iface8_macfilter,wifi_phy0iface8_maclist,wifi_phy0iface9_enable,wifi_phy0iface9_mode,wifi_phy0iface9_essid,wifi_phy0iface9_network,wifi_phy0iface9_hidden,wifi_phy0iface9_wmm,wifi_phy0iface9_encryption,wifi_phy0iface9_cipher,wifi_phy0iface9_key,wifi_phy0iface9_isolate,wifi_phy0iface9_br_isolate,wifi_phy0iface9_ifname,wifi_phy0iface9_macfilter,wifi_phy0iface9_maclist,wifi_phy0iface10_enable,wifi_phy0iface10_mode,wifi_phy0iface10_essid,wifi_phy0iface10_network,wifi_phy0iface10_hidden,wifi_phy0iface10_wmm,wifi_phy0iface10_encryption,wifi_phy0iface10_cipher,wifi_phy0iface10_key,wifi_phy0iface10_isolate,wifi_phy0iface10_br_isolate,wifi_phy0iface10_ifname,wifi_phy0iface10_macfilter,wifi_phy0iface10_maclist,wifi_phy0iface11_enable,wifi_phy0iface11_mode,wifi_phy0iface11_essid,wifi_phy0iface11_network,wifi_phy0iface11_hidden,wifi_phy0iface11_wmm,wifi_phy0iface11_encryption,wifi_phy0iface11_cipher,wifi_phy0iface11_key,wifi_phy0iface11_isolate,wifi_phy0iface11_br_isolate,wifi_phy0iface11_ifname,wifi_phy0iface11_macfilter,wifi_phy0iface11_maclist,wifi_phy0iface12_enable,wifi_phy0iface12_mode,wifi_phy0iface12_essid,wifi_phy0iface12_network,wifi_phy0iface12_hidden,wifi_phy0iface12_wmm,wifi_phy0iface12_encryption,wifi_phy0iface12_cipher,wifi_phy0iface12_key,wifi_phy0iface12_isolate,wifi_phy0iface12_br_isolate,wifi_phy0iface12_ifname,wifi_phy0iface12_macfilter,wifi_phy0iface12_maclist,wifi_phy0iface13_enable,wifi_phy0iface13_mode,wifi_phy0iface13_essid,wifi_phy0iface13_network,wifi_phy0iface13_hidden,wifi_phy0iface13_wmm,wifi_phy0iface13_encryption,wifi_phy0iface13_cipher,wifi_phy0iface13_key,wifi_phy0iface13_isolate,wifi_phy0iface13_br_isolate,wifi_phy0iface13_ifname,wifi_phy0iface13_macfilter,wifi_phy0iface13_maclist,wifi_phy0iface14_enable,wifi_phy0iface14_mode,wifi_phy0iface14_essid,wifi_phy0iface14_network,wifi_phy0iface14_hidden,wifi_phy0iface14_wmm,wifi_phy0iface14_encryption,wifi_phy0iface14_cipher,wifi_phy0iface14_key,wifi_phy0iface14_isolate,wifi_phy0iface14_br_isolate,wifi_phy0iface14_ifname,wifi_phy0iface14_macfilter,wifi_phy0iface14_maclist,wifi_phy0iface15_enable,wifi_phy0iface15_mode,wifi_phy0iface15_essid,wifi_phy0iface15_network,wifi_phy0iface15_hidden,wifi_phy0iface15_wmm,wifi_phy0iface15_encryption,wifi_phy0iface15_cipher,wifi_phy0iface15_key,wifi_phy0iface15_isolate,wifi_phy0iface15_br_isolate,wifi_phy0iface15_ifname,wifi_phy0iface15_macfilter,wifi_phy0iface15_maclist,wifi_phy1iface0_enable,wifi_phy1iface0_mode,wifi_phy1iface0_essid,wifi_phy1iface0_network,wifi_phy1iface0_hidden,wifi_phy1iface0_wmm,wifi_phy1iface0_encryption,wifi_phy1iface0_cipher,wifi_phy1iface0_key,wifi_phy1iface0_isolate,wifi_phy1iface0_br_isolate,wifi_phy1iface0_ifname,wifi_phy1iface0_macfilter,wifi_phy1iface0_maclist,wifi_phy1iface1_enable,wifi_phy1iface1_mode,wifi_phy1iface1_essid,wifi_phy1iface1_network,wifi_phy1iface1_hidden,wifi_phy1iface1_wmm,wifi_phy1iface1_encryption,wifi_phy1iface1_cipher,wifi_phy1iface1_key,wifi_phy1iface1_isolate,wifi_phy1iface1_br_isolate,wifi_phy1iface1_ifname,wifi_phy1iface1_macfilter,wifi_phy1iface1_maclist,wifi_phy1iface2_enable,wifi_phy1iface2_mode,wifi_phy1iface2_essid,wifi_phy1iface2_network,wifi_phy1iface2_hidden,wifi_phy1iface2_wmm,wifi_phy1iface2_encryption,wifi_phy1iface2_cipher,wifi_phy1iface2_key,wifi_phy1iface2_isolate,wifi_phy1iface2_br_isolate,wifi_phy1iface2_ifname,wifi_phy1iface2_macfilter,wifi_phy1iface2_maclist,wifi_phy1iface3_enable,wifi_phy1iface3_mode,wifi_phy1iface3_essid,wifi_phy1iface3_network,wifi_phy1iface3_hidden,wifi_phy1iface3_wmm,wifi_phy1iface3_encryption,wifi_phy1iface3_cipher,wifi_phy1iface3_key,wifi_phy1iface3_isolate,wifi_phy1iface3_br_isolate,wifi_phy1iface3_ifname,wifi_phy1iface3_macfilter,wifi_phy1iface3_maclist,wifi_phy1iface4_enable,wifi_phy1iface4_mode,wifi_phy1iface4_essid,wifi_phy1iface4_network,wifi_phy1iface4_hidden,wifi_phy1iface4_wmm,wifi_phy1iface4_encryption,wifi_phy1iface4_cipher,wifi_phy1iface4_key,wifi_phy1iface4_isolate,wifi_phy1iface4_br_isolate,wifi_phy1iface4_ifname,wifi_phy1iface4_macfilter,wifi_phy1iface4_maclist,wifi_phy1iface5_enable,wifi_phy1iface5_mode,wifi_phy1iface5_essid,wifi_phy1iface5_network,wifi_phy1iface5_hidden,wifi_phy1iface5_wmm,wifi_phy1iface5_encryption,wifi_phy1iface5_cipher,wifi_phy1iface5_key,wifi_phy1iface5_isolate,wifi_phy1iface5_br_isolate,wifi_phy1iface5_ifname,wifi_phy1iface5_macfilter,wifi_phy1iface5_maclist,wifi_phy1iface6_enable,wifi_phy1iface6_mode,wifi_phy1iface6_essid,wifi_phy1iface6_network,wifi_phy1iface6_hidden,wifi_phy1iface6_wmm,wifi_phy1iface6_encryption,wifi_phy1iface6_cipher,wifi_phy1iface6_key,wifi_phy1iface6_isolate,wifi_phy1iface6_br_isolate,wifi_phy1iface6_ifname,wifi_phy1iface6_macfilter,wifi_phy1iface6_maclist,wifi_phy1iface7_enable,wifi_phy1iface7_mode,wifi_phy1iface7_essid,wifi_phy1iface7_network,wifi_phy1iface7_hidden,wifi_phy1iface7_wmm,wifi_phy1iface7_encryption,wifi_phy1iface7_cipher,wifi_phy1iface7_key,wifi_phy1iface7_isolate,wifi_phy1iface7_br_isolate,wifi_phy1iface7_ifname,wifi_phy1iface7_macfilter,wifi_phy1iface7_maclist,wifi_phy1iface8_enable,wifi_phy1iface8_mode,wifi_phy1iface8_essid,wifi_phy1iface8_network,wifi_phy1iface8_hidden,wifi_phy1iface8_wmm,wifi_phy1iface8_encryption,wifi_phy1iface8_cipher,wifi_phy1iface8_key,wifi_phy1iface8_isolate,wifi_phy1iface8_br_isolate,wifi_phy1iface8_ifname,wifi_phy1iface8_macfilter,wifi_phy1iface8_maclist,wifi_phy1iface9_enable,wifi_phy1iface9_mode,wifi_phy1iface9_essid,wifi_phy1iface9_network,wifi_phy1iface9_hidden,wifi_phy1iface9_wmm,wifi_phy1iface9_encryption,wifi_phy1iface9_cipher,wifi_phy1iface9_key,wifi_phy1iface9_isolate,wifi_phy1iface9_br_isolate,wifi_phy1iface9_ifname,wifi_phy1iface9_macfilter,wifi_phy1iface9_maclist,wifi_phy1iface10_enable,wifi_phy1iface10_mode,wifi_phy1iface10_essid,wifi_phy1iface10_network,wifi_phy1iface10_hidden,wifi_phy1iface10_wmm,wifi_phy1iface10_encryption,wifi_phy1iface10_cipher,wifi_phy1iface10_key,wifi_phy1iface10_isolate,wifi_phy1iface10_br_isolate,wifi_phy1iface10_ifname,wifi_phy1iface10_macfilter,wifi_phy1iface10_maclist,wifi_phy1iface11_enable,wifi_phy1iface11_mode,wifi_phy1iface11_essid,wifi_phy1iface11_network,wifi_phy1iface11_hidden,wifi_phy1iface11_wmm,wifi_phy1iface11_encryption,wifi_phy1iface11_cipher,wifi_phy1iface11_key,wifi_phy1iface11_isolate,wifi_phy1iface11_br_isolate,wifi_phy1iface11_ifname,wifi_phy1iface11_macfilter,wifi_phy1iface11_maclist,wifi_phy1iface12_enable,wifi_phy1iface12_mode,wifi_phy1iface12_essid,wifi_phy1iface12_network,wifi_phy1iface12_hidden,wifi_phy1iface12_wmm,wifi_phy1iface12_encryption,wifi_phy1iface12_cipher,wifi_phy1iface12_key,wifi_phy1iface12_isolate,wifi_phy1iface12_br_isolate,wifi_phy1iface12_ifname,wifi_phy1iface12_macfilter,wifi_phy1iface12_maclist,wifi_phy1iface13_enable,wifi_phy1iface13_mode,wifi_phy1iface13_essid,wifi_phy1iface13_network,wifi_phy1iface13_hidden,wifi_phy1iface13_wmm,wifi_phy1iface13_encryption,wifi_phy1iface13_cipher,wifi_phy1iface13_key,wifi_phy1iface13_isolate,wifi_phy1iface13_br_isolate,wifi_phy1iface13_ifname,wifi_phy1iface13_macfilter,wifi_phy1iface13_maclist,wifi_phy1iface14_enable,wifi_phy1iface14_mode,wifi_phy1iface14_essid,wifi_phy1iface14_network,wifi_phy1iface14_hidden,wifi_phy1iface14_wmm,wifi_phy1iface14_encryption,wifi_phy1iface14_cipher,wifi_phy1iface14_key,wifi_phy1iface14_isolate,wifi_phy1iface14_br_isolate,wifi_phy1iface14_ifname,wifi_phy1iface14_macfilter,wifi_phy1iface14_maclist,wifi_phy1iface15_enable,wifi_phy1iface15_mode,wifi_phy1iface15_essid,wifi_phy1iface15_network,wifi_phy1iface15_hidden,wifi_phy1iface15_wmm,wifi_phy1iface15_encryption,wifi_phy1iface15_cipher,wifi_phy1iface15_key,wifi_phy1iface15_isolate,wifi_phy1iface15_br_isolate,wifi_phy1iface15_ifname,wifi_phy1iface15_macfilter,wifi_phy1iface15_maclist,wifi_phy2iface0_enable,wifi_phy2iface0_mode,wifi_phy2iface0_essid,wifi_phy2iface0_network,wifi_phy2iface0_hidden,wifi_phy2iface0_wmm,wifi_phy2iface0_encryption,wifi_phy2iface0_cipher,wifi_phy2iface0_key,wifi_phy2iface0_isolate,wifi_phy2iface0_br_isolate,wifi_phy2iface0_ifname,wifi_phy2iface0_macfilter,wifi_phy2iface0_maclist,wifi_phy2iface1_enable,wifi_phy2iface1_mode,wifi_phy2iface1_essid,wifi_phy2iface1_network,wifi_phy2iface1_hidden,wifi_phy2iface1_wmm,wifi_phy2iface1_encryption,wifi_phy2iface1_cipher,wifi_phy2iface1_key,wifi_phy2iface1_isolate,wifi_phy2iface1_br_isolate,wifi_phy2iface1_ifname,wifi_phy2iface1_macfilter,wifi_phy2iface1_maclist,wifi_phy2iface2_enable,wifi_phy2iface2_mode,wifi_phy2iface2_essid,wifi_phy2iface2_network,wifi_phy2iface2_hidden,wifi_phy2iface2_wmm,wifi_phy2iface2_encryption,wifi_phy2iface2_cipher,wifi_phy2iface2_key,wifi_phy2iface2_isolate,wifi_phy2iface2_br_isolate,wifi_phy2iface2_ifname,wifi_phy2iface2_macfilter,wifi_phy2iface2_maclist,wifi_phy2iface3_enable,wifi_phy2iface3_mode,wifi_phy2iface3_essid,wifi_phy2iface3_network,wifi_phy2iface3_hidden,wifi_phy2iface3_wmm,wifi_phy2iface3_encryption,wifi_phy2iface3_cipher,wifi_phy2iface3_key,wifi_phy2iface3_isolate,wifi_phy2iface3_br_isolate,wifi_phy2iface3_ifname,wifi_phy2iface3_macfilter,wifi_phy2iface3_maclist,wifi_phy2iface4_enable,wifi_phy2iface4_mode,wifi_phy2iface4_essid,wifi_phy2iface4_network,wifi_phy2iface4_hidden,wifi_phy2iface4_wmm,wifi_phy2iface4_encryption,wifi_phy2iface4_cipher,wifi_phy2iface4_key,wifi_phy2iface4_isolate,wifi_phy2iface4_br_isolate,wifi_phy2iface4_ifname,wifi_phy2iface4_macfilter,wifi_phy2iface4_maclist,wifi_phy2iface5_enable,wifi_phy2iface5_mode,wifi_phy2iface5_essid,wifi_phy2iface5_network,wifi_phy2iface5_hidden,wifi_phy2iface5_wmm,wifi_phy2iface5_encryption,wifi_phy2iface5_cipher,wifi_phy2iface5_key,wifi_phy2iface5_isolate,wifi_phy2iface5_br_isolate,wifi_phy2iface5_ifname,wifi_phy2iface5_macfilter,wifi_phy2iface5_maclist,wifi_phy2iface6_enable,wifi_phy2iface6_mode,wifi_phy2iface6_essid,wifi_phy2iface6_network,wifi_phy2iface6_hidden,wifi_phy2iface6_wmm,wifi_phy2iface6_encryption,wifi_phy2iface6_cipher,wifi_phy2iface6_key,wifi_phy2iface6_isolate,wifi_phy2iface6_br_isolate,wifi_phy2iface6_ifname,wifi_phy2iface6_macfilter,wifi_phy2iface6_maclist,wifi_phy2iface7_enable,wifi_phy2iface7_mode,wifi_phy2iface7_essid,wifi_phy2iface7_network,wifi_phy2iface7_hidden,wifi_phy2iface7_wmm,wifi_phy2iface7_encryption,wifi_phy2iface7_cipher,wifi_phy2iface7_key,wifi_phy2iface7_isolate,wifi_phy2iface7_br_isolate,wifi_phy2iface7_ifname,wifi_phy2iface7_macfilter,wifi_phy2iface7_maclist,wifi_phy2iface8_enable,wifi_phy2iface8_mode,wifi_phy2iface8_essid,wifi_phy2iface8_network,wifi_phy2iface8_hidden,wifi_phy2iface8_wmm,wifi_phy2iface8_encryption,wifi_phy2iface8_cipher,wifi_phy2iface8_key,wifi_phy2iface8_isolate,wifi_phy2iface8_br_isolate,wifi_phy2iface8_ifname,wifi_phy2iface8_macfilter,wifi_phy2iface8_maclist,wifi_phy2iface9_enable,wifi_phy2iface9_mode,wifi_phy2iface9_essid,wifi_phy2iface9_network,wifi_phy2iface9_hidden,wifi_phy2iface9_wmm,wifi_phy2iface9_encryption,wifi_phy2iface9_cipher,wifi_phy2iface9_key,wifi_phy2iface9_isolate,wifi_phy2iface9_br_isolate,wifi_phy2iface9_ifname,wifi_phy2iface9_macfilter,wifi_phy2iface9_maclist,wifi_phy2iface10_enable,wifi_phy2iface10_mode,wifi_phy2iface10_essid,wifi_phy2iface10_network,wifi_phy2iface10_hidden,wifi_phy2iface10_wmm,wifi_phy2iface10_encryption,wifi_phy2iface10_cipher,wifi_phy2iface10_key,wifi_phy2iface10_isolate,wifi_phy2iface10_br_isolate,wifi_phy2iface10_ifname,wifi_phy2iface10_macfilter,wifi_phy2iface10_maclist,wifi_phy2iface11_enable,wifi_phy2iface11_mode,wifi_phy2iface11_essid,wifi_phy2iface11_network,wifi_phy2iface11_hidden,wifi_phy2iface11_wmm,wifi_phy2iface11_encryption,wifi_phy2iface11_cipher,wifi_phy2iface11_key,wifi_phy2iface11_isolate,wifi_phy2iface11_br_isolate,wifi_phy2iface11_ifname,wifi_phy2iface11_macfilter,wifi_phy2iface11_maclist,wifi_phy2iface12_enable,wifi_phy2iface12_mode,wifi_phy2iface12_essid,wifi_phy2iface12_network,wifi_phy2iface12_hidden,wifi_phy2iface12_wmm,wifi_phy2iface12_encryption,wifi_phy2iface12_cipher,wifi_phy2iface12_key,wifi_phy2iface12_isolate,wifi_phy2iface12_br_isolate,wifi_phy2iface12_ifname,wifi_phy2iface12_macfilter,wifi_phy2iface12_maclist,wifi_phy2iface13_enable,wifi_phy2iface13_mode,wifi_phy2iface13_essid,wifi_phy2iface13_network,wifi_phy2iface13_hidden,wifi_phy2iface13_wmm,wifi_phy2iface13_encryption,wifi_phy2iface13_cipher,wifi_phy2iface13_key,wifi_phy2iface13_isolate,wifi_phy2iface13_br_isolate,wifi_phy2iface13_ifname,wifi_phy2iface13_macfilter,wifi_phy2iface13_maclist,wifi_phy2iface14_enable,wifi_phy2iface14_mode,wifi_phy2iface14_essid,wifi_phy2iface14_network,wifi_phy2iface14_hidden,wifi_phy2iface14_wmm,wifi_phy2iface14_encryption,wifi_phy2iface14_cipher,wifi_phy2iface14_key,wifi_phy2iface14_isolate,wifi_phy2iface14_br_isolate,wifi_phy2iface14_ifname,wifi_phy2iface14_macfilter,wifi_phy2iface14_maclist,wifi_phy2iface15_enable,wifi_phy2iface15_mode,wifi_phy2iface15_essid,wifi_phy2iface15_network,wifi_phy2iface15_hidden,wifi_phy2iface15_wmm,wifi_phy2iface15_encryption,wifi_phy2iface15_cipher,wifi_phy2iface15_key,wifi_phy2iface15_isolate,wifi_phy2iface15_br_isolate,wifi_phy2iface15_ifname,wifi_phy2iface15_macfilter,wifi_phy2iface15_maclist,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
+//	<% nvram("wifi_sta_list,wan_sta,wan2_sta,wan3_sta,wan4_sta,wifi_phy0_band,wifi_phy0_mode,wifi_phy0_channel,wifi_phy0_width,wifi_phy0_brates,wifi_phy0_power,wifi_phy0_country,wifi_phy0_noscan,wifi_phy0_ifaces,wifi_phy1_band,wifi_phy1_mode,wifi_phy1_channel,wifi_phy1_width,wifi_phy1_brates,wifi_phy1_power,wifi_phy1_country,wifi_phy1_noscan,wifi_phy1_ifaces,wifi_phy2_band,wifi_phy2_mode,wifi_phy2_channel,wifi_phy2_width,wifi_phy2_brates,wifi_phy2_power,wifi_phy2_country,wifi_phy2_noscan,wifi_phy2_ifaces,wifi_phy0iface0_enable,wifi_phy0iface0_mode,wifi_phy0iface0_essid,wifi_phy0iface0_bssid,wifi_phy0iface0_network,wifi_phy0iface0_hidden,wifi_phy0iface0_wmm,wifi_phy0iface0_encryption,wifi_phy0iface0_cipher,wifi_phy0iface0_key,wifi_phy0iface0_isolate,wifi_phy0iface0_br_isolate,wifi_phy0iface0_ifname,wifi_phy0iface0_macfilter,wifi_phy0iface0_maclist,wifi_phy0iface1_enable,wifi_phy0iface1_mode,wifi_phy0iface1_essid,wifi_phy0iface1_bssid,wifi_phy0iface1_network,wifi_phy0iface1_hidden,wifi_phy0iface1_wmm,wifi_phy0iface1_encryption,wifi_phy0iface1_cipher,wifi_phy0iface1_key,wifi_phy0iface1_isolate,wifi_phy0iface1_br_isolate,wifi_phy0iface1_ifname,wifi_phy0iface1_macfilter,wifi_phy0iface1_maclist,wifi_phy0iface2_enable,wifi_phy0iface2_mode,wifi_phy0iface2_essid,wifi_phy0iface2_bssid,wifi_phy0iface2_network,wifi_phy0iface2_hidden,wifi_phy0iface2_wmm,wifi_phy0iface2_encryption,wifi_phy0iface2_cipher,wifi_phy0iface2_key,wifi_phy0iface2_isolate,wifi_phy0iface2_br_isolate,wifi_phy0iface2_ifname,wifi_phy0iface2_macfilter,wifi_phy0iface2_maclist,wifi_phy0iface3_enable,wifi_phy0iface3_mode,wifi_phy0iface3_essid,wifi_phy0iface3_bssid,wifi_phy0iface3_network,wifi_phy0iface3_hidden,wifi_phy0iface3_wmm,wifi_phy0iface3_encryption,wifi_phy0iface3_cipher,wifi_phy0iface3_key,wifi_phy0iface3_isolate,wifi_phy0iface3_br_isolate,wifi_phy0iface3_ifname,wifi_phy0iface3_macfilter,wifi_phy0iface3_maclist,wifi_phy0iface4_enable,wifi_phy0iface4_mode,wifi_phy0iface4_essid,wifi_phy0iface4_bssid,wifi_phy0iface4_network,wifi_phy0iface4_hidden,wifi_phy0iface4_wmm,wifi_phy0iface4_encryption,wifi_phy0iface4_cipher,wifi_phy0iface4_key,wifi_phy0iface4_isolate,wifi_phy0iface4_br_isolate,wifi_phy0iface4_ifname,wifi_phy0iface4_macfilter,wifi_phy0iface4_maclist,wifi_phy0iface5_enable,wifi_phy0iface5_mode,wifi_phy0iface5_essid,wifi_phy0iface5_bssid,wifi_phy0iface5_network,wifi_phy0iface5_hidden,wifi_phy0iface5_wmm,wifi_phy0iface5_encryption,wifi_phy0iface5_cipher,wifi_phy0iface5_key,wifi_phy0iface5_isolate,wifi_phy0iface5_br_isolate,wifi_phy0iface5_ifname,wifi_phy0iface5_macfilter,wifi_phy0iface5_maclist,wifi_phy0iface6_enable,wifi_phy0iface6_mode,wifi_phy0iface6_essid,wifi_phy0iface6_bssid,wifi_phy0iface6_network,wifi_phy0iface6_hidden,wifi_phy0iface6_wmm,wifi_phy0iface6_encryption,wifi_phy0iface6_cipher,wifi_phy0iface6_key,wifi_phy0iface6_isolate,wifi_phy0iface6_br_isolate,wifi_phy0iface6_ifname,wifi_phy0iface6_macfilter,wifi_phy0iface6_maclist,wifi_phy0iface7_enable,wifi_phy0iface7_mode,wifi_phy0iface7_essid,wifi_phy0iface7_bssid,wifi_phy0iface7_network,wifi_phy0iface7_hidden,wifi_phy0iface7_wmm,wifi_phy0iface7_encryption,wifi_phy0iface7_cipher,wifi_phy0iface7_key,wifi_phy0iface7_isolate,wifi_phy0iface7_br_isolate,wifi_phy0iface7_ifname,wifi_phy0iface7_macfilter,wifi_phy0iface7_maclist,wifi_phy0iface8_enable,wifi_phy0iface8_mode,wifi_phy0iface8_essid,wifi_phy0iface8_bssid,wifi_phy0iface8_network,wifi_phy0iface8_hidden,wifi_phy0iface8_wmm,wifi_phy0iface8_encryption,wifi_phy0iface8_cipher,wifi_phy0iface8_key,wifi_phy0iface8_isolate,wifi_phy0iface8_br_isolate,wifi_phy0iface8_ifname,wifi_phy0iface8_macfilter,wifi_phy0iface8_maclist,wifi_phy0iface9_enable,wifi_phy0iface9_mode,wifi_phy0iface9_essid,wifi_phy0iface9_bssid,wifi_phy0iface9_network,wifi_phy0iface9_hidden,wifi_phy0iface9_wmm,wifi_phy0iface9_encryption,wifi_phy0iface9_cipher,wifi_phy0iface9_key,wifi_phy0iface9_isolate,wifi_phy0iface9_br_isolate,wifi_phy0iface9_ifname,wifi_phy0iface9_macfilter,wifi_phy0iface9_maclist,wifi_phy0iface10_enable,wifi_phy0iface10_mode,wifi_phy0iface10_essid,wifi_phy0iface10_bssid,wifi_phy0iface10_network,wifi_phy0iface10_hidden,wifi_phy0iface10_wmm,wifi_phy0iface10_encryption,wifi_phy0iface10_cipher,wifi_phy0iface10_key,wifi_phy0iface10_isolate,wifi_phy0iface10_br_isolate,wifi_phy0iface10_ifname,wifi_phy0iface10_macfilter,wifi_phy0iface10_maclist,wifi_phy0iface11_enable,wifi_phy0iface11_mode,wifi_phy0iface11_essid,wifi_phy0iface11_bssid,wifi_phy0iface11_network,wifi_phy0iface11_hidden,wifi_phy0iface11_wmm,wifi_phy0iface11_encryption,wifi_phy0iface11_cipher,wifi_phy0iface11_key,wifi_phy0iface11_isolate,wifi_phy0iface11_br_isolate,wifi_phy0iface11_ifname,wifi_phy0iface11_macfilter,wifi_phy0iface11_maclist,wifi_phy0iface12_enable,wifi_phy0iface12_mode,wifi_phy0iface12_essid,wifi_phy0iface12_bssid,wifi_phy0iface12_network,wifi_phy0iface12_hidden,wifi_phy0iface12_wmm,wifi_phy0iface12_encryption,wifi_phy0iface12_cipher,wifi_phy0iface12_key,wifi_phy0iface12_isolate,wifi_phy0iface12_br_isolate,wifi_phy0iface12_ifname,wifi_phy0iface12_macfilter,wifi_phy0iface12_maclist,wifi_phy0iface13_enable,wifi_phy0iface13_mode,wifi_phy0iface13_essid,wifi_phy0iface13_bssid,wifi_phy0iface13_network,wifi_phy0iface13_hidden,wifi_phy0iface13_wmm,wifi_phy0iface13_encryption,wifi_phy0iface13_cipher,wifi_phy0iface13_key,wifi_phy0iface13_isolate,wifi_phy0iface13_br_isolate,wifi_phy0iface13_ifname,wifi_phy0iface13_macfilter,wifi_phy0iface13_maclist,wifi_phy0iface14_enable,wifi_phy0iface14_mode,wifi_phy0iface14_essid,wifi_phy0iface14_bssid,wifi_phy0iface14_network,wifi_phy0iface14_hidden,wifi_phy0iface14_wmm,wifi_phy0iface14_encryption,wifi_phy0iface14_cipher,wifi_phy0iface14_key,wifi_phy0iface14_isolate,wifi_phy0iface14_br_isolate,wifi_phy0iface14_ifname,wifi_phy0iface14_macfilter,wifi_phy0iface14_maclist,wifi_phy0iface15_enable,wifi_phy0iface15_mode,wifi_phy0iface15_essid,wifi_phy0iface15_bssid,wifi_phy0iface15_network,wifi_phy0iface15_hidden,wifi_phy0iface15_wmm,wifi_phy0iface15_encryption,wifi_phy0iface15_cipher,wifi_phy0iface15_key,wifi_phy0iface15_isolate,wifi_phy0iface15_br_isolate,wifi_phy0iface15_ifname,wifi_phy0iface15_macfilter,wifi_phy0iface15_maclist,wifi_phy1iface0_enable,wifi_phy1iface0_mode,wifi_phy1iface0_essid,wifi_phy1iface0_bssid,wifi_phy1iface0_network,wifi_phy1iface0_hidden,wifi_phy1iface0_wmm,wifi_phy1iface0_encryption,wifi_phy1iface0_cipher,wifi_phy1iface0_key,wifi_phy1iface0_isolate,wifi_phy1iface0_br_isolate,wifi_phy1iface0_ifname,wifi_phy1iface0_macfilter,wifi_phy1iface0_maclist,wifi_phy1iface1_enable,wifi_phy1iface1_mode,wifi_phy1iface1_essid,wifi_phy1iface1_bssid,wifi_phy1iface1_network,wifi_phy1iface1_hidden,wifi_phy1iface1_wmm,wifi_phy1iface1_encryption,wifi_phy1iface1_cipher,wifi_phy1iface1_key,wifi_phy1iface1_isolate,wifi_phy1iface1_br_isolate,wifi_phy1iface1_ifname,wifi_phy1iface1_macfilter,wifi_phy1iface1_maclist,wifi_phy1iface2_enable,wifi_phy1iface2_mode,wifi_phy1iface2_essid,wifi_phy1iface2_bssid,wifi_phy1iface2_network,wifi_phy1iface2_hidden,wifi_phy1iface2_wmm,wifi_phy1iface2_encryption,wifi_phy1iface2_cipher,wifi_phy1iface2_key,wifi_phy1iface2_isolate,wifi_phy1iface2_br_isolate,wifi_phy1iface2_ifname,wifi_phy1iface2_macfilter,wifi_phy1iface2_maclist,wifi_phy1iface3_enable,wifi_phy1iface3_mode,wifi_phy1iface3_essid,wifi_phy1iface3_bssid,wifi_phy1iface3_network,wifi_phy1iface3_hidden,wifi_phy1iface3_wmm,wifi_phy1iface3_encryption,wifi_phy1iface3_cipher,wifi_phy1iface3_key,wifi_phy1iface3_isolate,wifi_phy1iface3_br_isolate,wifi_phy1iface3_ifname,wifi_phy1iface3_macfilter,wifi_phy1iface3_maclist,wifi_phy1iface4_enable,wifi_phy1iface4_mode,wifi_phy1iface4_essid,wifi_phy1iface4_bssid,wifi_phy1iface4_network,wifi_phy1iface4_hidden,wifi_phy1iface4_wmm,wifi_phy1iface4_encryption,wifi_phy1iface4_cipher,wifi_phy1iface4_key,wifi_phy1iface4_isolate,wifi_phy1iface4_br_isolate,wifi_phy1iface4_ifname,wifi_phy1iface4_macfilter,wifi_phy1iface4_maclist,wifi_phy1iface5_enable,wifi_phy1iface5_mode,wifi_phy1iface5_essid,wifi_phy1iface5_bssid,wifi_phy1iface5_network,wifi_phy1iface5_hidden,wifi_phy1iface5_wmm,wifi_phy1iface5_encryption,wifi_phy1iface5_cipher,wifi_phy1iface5_key,wifi_phy1iface5_isolate,wifi_phy1iface5_br_isolate,wifi_phy1iface5_ifname,wifi_phy1iface5_macfilter,wifi_phy1iface5_maclist,wifi_phy1iface6_enable,wifi_phy1iface6_mode,wifi_phy1iface6_essid,wifi_phy1iface6_bssid,wifi_phy1iface6_network,wifi_phy1iface6_hidden,wifi_phy1iface6_wmm,wifi_phy1iface6_encryption,wifi_phy1iface6_cipher,wifi_phy1iface6_key,wifi_phy1iface6_isolate,wifi_phy1iface6_br_isolate,wifi_phy1iface6_ifname,wifi_phy1iface6_macfilter,wifi_phy1iface6_maclist,wifi_phy1iface7_enable,wifi_phy1iface7_mode,wifi_phy1iface7_essid,wifi_phy1iface7_bssid,wifi_phy1iface7_network,wifi_phy1iface7_hidden,wifi_phy1iface7_wmm,wifi_phy1iface7_encryption,wifi_phy1iface7_cipher,wifi_phy1iface7_key,wifi_phy1iface7_isolate,wifi_phy1iface7_br_isolate,wifi_phy1iface7_ifname,wifi_phy1iface7_macfilter,wifi_phy1iface7_maclist,wifi_phy1iface8_enable,wifi_phy1iface8_mode,wifi_phy1iface8_essid,wifi_phy1iface8_bssid,wifi_phy1iface8_network,wifi_phy1iface8_hidden,wifi_phy1iface8_wmm,wifi_phy1iface8_encryption,wifi_phy1iface8_cipher,wifi_phy1iface8_key,wifi_phy1iface8_isolate,wifi_phy1iface8_br_isolate,wifi_phy1iface8_ifname,wifi_phy1iface8_macfilter,wifi_phy1iface8_maclist,wifi_phy1iface9_enable,wifi_phy1iface9_mode,wifi_phy1iface9_essid,wifi_phy1iface9_bssid,wifi_phy1iface9_network,wifi_phy1iface9_hidden,wifi_phy1iface9_wmm,wifi_phy1iface9_encryption,wifi_phy1iface9_cipher,wifi_phy1iface9_key,wifi_phy1iface9_isolate,wifi_phy1iface9_br_isolate,wifi_phy1iface9_ifname,wifi_phy1iface9_macfilter,wifi_phy1iface9_maclist,wifi_phy1iface10_enable,wifi_phy1iface10_mode,wifi_phy1iface10_essid,wifi_phy1iface10_bssid,wifi_phy1iface10_network,wifi_phy1iface10_hidden,wifi_phy1iface10_wmm,wifi_phy1iface10_encryption,wifi_phy1iface10_cipher,wifi_phy1iface10_key,wifi_phy1iface10_isolate,wifi_phy1iface10_br_isolate,wifi_phy1iface10_ifname,wifi_phy1iface10_macfilter,wifi_phy1iface10_maclist,wifi_phy1iface11_enable,wifi_phy1iface11_mode,wifi_phy1iface11_essid,wifi_phy1iface11_bssid,wifi_phy1iface11_network,wifi_phy1iface11_hidden,wifi_phy1iface11_wmm,wifi_phy1iface11_encryption,wifi_phy1iface11_cipher,wifi_phy1iface11_key,wifi_phy1iface11_isolate,wifi_phy1iface11_br_isolate,wifi_phy1iface11_ifname,wifi_phy1iface11_macfilter,wifi_phy1iface11_maclist,wifi_phy1iface12_enable,wifi_phy1iface12_mode,wifi_phy1iface12_essid,wifi_phy1iface12_bssid,wifi_phy1iface12_network,wifi_phy1iface12_hidden,wifi_phy1iface12_wmm,wifi_phy1iface12_encryption,wifi_phy1iface12_cipher,wifi_phy1iface12_key,wifi_phy1iface12_isolate,wifi_phy1iface12_br_isolate,wifi_phy1iface12_ifname,wifi_phy1iface12_macfilter,wifi_phy1iface12_maclist,wifi_phy1iface13_enable,wifi_phy1iface13_mode,wifi_phy1iface13_essid,wifi_phy1iface13_bssid,wifi_phy1iface13_network,wifi_phy1iface13_hidden,wifi_phy1iface13_wmm,wifi_phy1iface13_encryption,wifi_phy1iface13_cipher,wifi_phy1iface13_key,wifi_phy1iface13_isolate,wifi_phy1iface13_br_isolate,wifi_phy1iface13_ifname,wifi_phy1iface13_macfilter,wifi_phy1iface13_maclist,wifi_phy1iface14_enable,wifi_phy1iface14_mode,wifi_phy1iface14_essid,wifi_phy1iface14_bssid,wifi_phy1iface14_network,wifi_phy1iface14_hidden,wifi_phy1iface14_wmm,wifi_phy1iface14_encryption,wifi_phy1iface14_cipher,wifi_phy1iface14_key,wifi_phy1iface14_isolate,wifi_phy1iface14_br_isolate,wifi_phy1iface14_ifname,wifi_phy1iface14_macfilter,wifi_phy1iface14_maclist,wifi_phy1iface15_enable,wifi_phy1iface15_mode,wifi_phy1iface15_essid,wifi_phy1iface15_bssid,wifi_phy1iface15_network,wifi_phy1iface15_hidden,wifi_phy1iface15_wmm,wifi_phy1iface15_encryption,wifi_phy1iface15_cipher,wifi_phy1iface15_key,wifi_phy1iface15_isolate,wifi_phy1iface15_br_isolate,wifi_phy1iface15_ifname,wifi_phy1iface15_macfilter,wifi_phy1iface15_maclist,wifi_phy2iface0_enable,wifi_phy2iface0_mode,wifi_phy2iface0_essid,wifi_phy2iface0_bssid,wifi_phy2iface0_network,wifi_phy2iface0_hidden,wifi_phy2iface0_wmm,wifi_phy2iface0_encryption,wifi_phy2iface0_cipher,wifi_phy2iface0_key,wifi_phy2iface0_isolate,wifi_phy2iface0_br_isolate,wifi_phy2iface0_ifname,wifi_phy2iface0_macfilter,wifi_phy2iface0_maclist,wifi_phy2iface1_enable,wifi_phy2iface1_mode,wifi_phy2iface1_essid,wifi_phy2iface1_bssid,wifi_phy2iface1_network,wifi_phy2iface1_hidden,wifi_phy2iface1_wmm,wifi_phy2iface1_encryption,wifi_phy2iface1_cipher,wifi_phy2iface1_key,wifi_phy2iface1_isolate,wifi_phy2iface1_br_isolate,wifi_phy2iface1_ifname,wifi_phy2iface1_macfilter,wifi_phy2iface1_maclist,wifi_phy2iface2_enable,wifi_phy2iface2_mode,wifi_phy2iface2_essid,wifi_phy2iface2_bssid,wifi_phy2iface2_network,wifi_phy2iface2_hidden,wifi_phy2iface2_wmm,wifi_phy2iface2_encryption,wifi_phy2iface2_cipher,wifi_phy2iface2_key,wifi_phy2iface2_isolate,wifi_phy2iface2_br_isolate,wifi_phy2iface2_ifname,wifi_phy2iface2_macfilter,wifi_phy2iface2_maclist,wifi_phy2iface3_enable,wifi_phy2iface3_mode,wifi_phy2iface3_essid,wifi_phy2iface3_bssid,wifi_phy2iface3_network,wifi_phy2iface3_hidden,wifi_phy2iface3_wmm,wifi_phy2iface3_encryption,wifi_phy2iface3_cipher,wifi_phy2iface3_key,wifi_phy2iface3_isolate,wifi_phy2iface3_br_isolate,wifi_phy2iface3_ifname,wifi_phy2iface3_macfilter,wifi_phy2iface3_maclist,wifi_phy2iface4_enable,wifi_phy2iface4_mode,wifi_phy2iface4_essid,wifi_phy2iface4_bssid,wifi_phy2iface4_network,wifi_phy2iface4_hidden,wifi_phy2iface4_wmm,wifi_phy2iface4_encryption,wifi_phy2iface4_cipher,wifi_phy2iface4_key,wifi_phy2iface4_isolate,wifi_phy2iface4_br_isolate,wifi_phy2iface4_ifname,wifi_phy2iface4_macfilter,wifi_phy2iface4_maclist,wifi_phy2iface5_enable,wifi_phy2iface5_mode,wifi_phy2iface5_essid,wifi_phy2iface5_bssid,wifi_phy2iface5_network,wifi_phy2iface5_hidden,wifi_phy2iface5_wmm,wifi_phy2iface5_encryption,wifi_phy2iface5_cipher,wifi_phy2iface5_key,wifi_phy2iface5_isolate,wifi_phy2iface5_br_isolate,wifi_phy2iface5_ifname,wifi_phy2iface5_macfilter,wifi_phy2iface5_maclist,wifi_phy2iface6_enable,wifi_phy2iface6_mode,wifi_phy2iface6_essid,wifi_phy2iface6_bssid,wifi_phy2iface6_network,wifi_phy2iface6_hidden,wifi_phy2iface6_wmm,wifi_phy2iface6_encryption,wifi_phy2iface6_cipher,wifi_phy2iface6_key,wifi_phy2iface6_isolate,wifi_phy2iface6_br_isolate,wifi_phy2iface6_ifname,wifi_phy2iface6_macfilter,wifi_phy2iface6_maclist,wifi_phy2iface7_enable,wifi_phy2iface7_mode,wifi_phy2iface7_essid,wifi_phy2iface7_bssid,wifi_phy2iface7_network,wifi_phy2iface7_hidden,wifi_phy2iface7_wmm,wifi_phy2iface7_encryption,wifi_phy2iface7_cipher,wifi_phy2iface7_key,wifi_phy2iface7_isolate,wifi_phy2iface7_br_isolate,wifi_phy2iface7_ifname,wifi_phy2iface7_macfilter,wifi_phy2iface7_maclist,wifi_phy2iface8_enable,wifi_phy2iface8_mode,wifi_phy2iface8_essid,wifi_phy2iface8_bssid,wifi_phy2iface8_network,wifi_phy2iface8_hidden,wifi_phy2iface8_wmm,wifi_phy2iface8_encryption,wifi_phy2iface8_cipher,wifi_phy2iface8_key,wifi_phy2iface8_isolate,wifi_phy2iface8_br_isolate,wifi_phy2iface8_ifname,wifi_phy2iface8_macfilter,wifi_phy2iface8_maclist,wifi_phy2iface9_enable,wifi_phy2iface9_mode,wifi_phy2iface9_essid,wifi_phy2iface9_bssid,wifi_phy2iface9_network,wifi_phy2iface9_hidden,wifi_phy2iface9_wmm,wifi_phy2iface9_encryption,wifi_phy2iface9_cipher,wifi_phy2iface9_key,wifi_phy2iface9_isolate,wifi_phy2iface9_br_isolate,wifi_phy2iface9_ifname,wifi_phy2iface9_macfilter,wifi_phy2iface9_maclist,wifi_phy2iface10_enable,wifi_phy2iface10_mode,wifi_phy2iface10_essid,wifi_phy2iface10_bssid,wifi_phy2iface10_network,wifi_phy2iface10_hidden,wifi_phy2iface10_wmm,wifi_phy2iface10_encryption,wifi_phy2iface10_cipher,wifi_phy2iface10_key,wifi_phy2iface10_isolate,wifi_phy2iface10_br_isolate,wifi_phy2iface10_ifname,wifi_phy2iface10_macfilter,wifi_phy2iface10_maclist,wifi_phy2iface11_enable,wifi_phy2iface11_mode,wifi_phy2iface11_essid,wifi_phy2iface11_bssid,wifi_phy2iface11_network,wifi_phy2iface11_hidden,wifi_phy2iface11_wmm,wifi_phy2iface11_encryption,wifi_phy2iface11_cipher,wifi_phy2iface11_key,wifi_phy2iface11_isolate,wifi_phy2iface11_br_isolate,wifi_phy2iface11_ifname,wifi_phy2iface11_macfilter,wifi_phy2iface11_maclist,wifi_phy2iface12_enable,wifi_phy2iface12_mode,wifi_phy2iface12_essid,wifi_phy2iface12_bssid,wifi_phy2iface12_network,wifi_phy2iface12_hidden,wifi_phy2iface12_wmm,wifi_phy2iface12_encryption,wifi_phy2iface12_cipher,wifi_phy2iface12_key,wifi_phy2iface12_isolate,wifi_phy2iface12_br_isolate,wifi_phy2iface12_ifname,wifi_phy2iface12_macfilter,wifi_phy2iface12_maclist,wifi_phy2iface13_enable,wifi_phy2iface13_mode,wifi_phy2iface13_essid,wifi_phy2iface13_bssid,wifi_phy2iface13_network,wifi_phy2iface13_hidden,wifi_phy2iface13_wmm,wifi_phy2iface13_encryption,wifi_phy2iface13_cipher,wifi_phy2iface13_key,wifi_phy2iface13_isolate,wifi_phy2iface13_br_isolate,wifi_phy2iface13_ifname,wifi_phy2iface13_macfilter,wifi_phy2iface13_maclist,wifi_phy2iface14_enable,wifi_phy2iface14_mode,wifi_phy2iface14_essid,wifi_phy2iface14_bssid,wifi_phy2iface14_network,wifi_phy2iface14_hidden,wifi_phy2iface14_wmm,wifi_phy2iface14_encryption,wifi_phy2iface14_cipher,wifi_phy2iface14_key,wifi_phy2iface14_isolate,wifi_phy2iface14_br_isolate,wifi_phy2iface14_ifname,wifi_phy2iface14_macfilter,wifi_phy2iface14_maclist,wifi_phy2iface15_enable,wifi_phy2iface15_mode,wifi_phy2iface15_essid,wifi_phy2iface15_bssid,wifi_phy2iface15_network,wifi_phy2iface15_hidden,wifi_phy2iface15_wmm,wifi_phy2iface15_encryption,wifi_phy2iface15_cipher,wifi_phy2iface15_key,wifi_phy2iface15_isolate,wifi_phy2iface15_br_isolate,wifi_phy2iface15_ifname,wifi_phy2iface15_macfilter,wifi_phy2iface15_maclist,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
 //	<% wireless(); %>
 
 var cprefix = 'basic_wireless';
@@ -339,6 +339,8 @@ function refreshWidths(device) {
 function verifyFields(focused, quiet) {
 	var b;
 
+	/* --- visibility --- */
+
 	for (var i = 0; i < devices.length; ++i) {
 		refreshModes(i);
 		refreshWidths(i);
@@ -369,6 +371,34 @@ function verifyFields(focused, quiet) {
 
 		for (var j = 0; j < interfaceCount[i]; ++j) {
 			t = 'phy'+i+'iface'+j;
+
+			// Show and Hide fields for ap and sta modes
+			b = E('_wifi_'+t+'_bssid');
+			c = E('_wifi_'+t+'_network');
+			d = E('_f_wifi_'+t+'_hidden');
+			e = E('_f_wifi_'+t+'_wmm');
+			if (E('_wifi_'+t+'_mode').value == 'ap') {
+				b.disabled = 1;
+				PR(b).style.display = 'none';
+
+				c.disabled = 0;
+				PR(c).style.display = '';
+				d.disabled = 0;
+				PR(d).style.display = '';
+				e.disabled = 0;
+				PR(e).style.display = '';
+			} else if (E('_wifi_'+t+'_mode').value == 'sta') {
+				b.disabled = 0;
+				PR(b).style.display = '';
+
+				c.disabled = 1;
+				PR(c).style.display = 'none';
+				d.disabled = 1;
+				PR(d).style.display = 'none';
+				e.disabled = 1;
+				PR(e).style.display = 'none';
+			}
+
 
 			// show the cipher option only for relevant modes
 			b = E('_wifi_'+t+'_cipher');
@@ -408,7 +438,6 @@ function verifyFields(focused, quiet) {
 				PR(b).style.display = 'none';
 			}
 
-
 			for (var k = 0; k <= MAX_BRIDGE_ID; ++k) {
 				n = (k == 0 ? '' : k);
 				if (eval('nvram.lan'+n+'_ifname.length') < 1) {
@@ -417,7 +446,45 @@ function verifyFields(focused, quiet) {
 			}
 		}
 	}
+
+	/* --- verify --- */
+
+	var ok = 1
+	for (var i = 0; i < devices.length; ++i) {
+		for (var j = 0; j < interfaceCount[i]; ++j) {
+			t = 'phy'+i+'iface'+j;
+
+			if (E('_f_wifi_'+t+'_enable').checked) {
+
+				if (E('_wifi_'+t+'_essid').value.length == 0 ) {
+					ferror.set(E('_wifi_'+t+'_essid'), 'ESSID cannot be empty', quiet || !ok);
+					ok = 0;
+				} else {
+					ferror.clear(E('_wifi_'+t+'_essid'));
+				}
+
+				if ((E('_wifi_'+t+'_bssid').value.length > 0 ) && (E('_wifi_'+t+'_mode').value == "sta" ) && (!v_mac(E('_wifi_'+t+'_bssid'),quiet))) {
+					ok = 0;
+				} else {
+					ferror.clear(E('_wifi_'+t+'_bssid'));
+				}
+
+				if (((E('_wifi_'+t+'_encryption').value == 'psk2') || (E('_wifi_'+t+'_encryption').value == 'sae') || (E('_wifi_'+t+'_encryption').value == 'sae-mixed') ||
+				     (E('_wifi_'+t+'_encryption').value == 'psk-mixed') || (E('_wifi_'+t+'_encryption').value == 'psk')) && (E('_wifi_'+t+'_key').value.length < 8)) {
+					ferror.set(E('_wifi_'+t+'_key'), 'Key must be at least 8 characters', quiet || !ok);
+					ok = 0;
+				} else {
+					ferror.clear(E('_wifi_'+t+'_key'));
+				}
+			} else {
+				ferror.clear(E('_wifi_'+t+'_essid'));
+				ferror.clear(E('_wifi_'+t+'_bssid'));
+				ferror.clear(E('_wifi_'+t+'_key'));
+			}
+		}
+	}
 	changed = 1;
+	return ok;
 }
 
 function tabSelect(name) {
@@ -513,9 +580,10 @@ function save_pre() {
 }
 
 function save(nomsg) {
-	save_pre();
+	if (!save_pre()) return;
 	if (!nomsg) show(); /* update '_service' field first */
 	var fom = E('t_fom');
+	var sta_list = "";
 	for (var i = 0; i < devices.length; i++) {
 		t = devices[i][0];
 		E('wifi_'+t+'_brates').value = E('_f_wifi_'+t+'_brates').checked ? 1 : "";
@@ -534,9 +602,49 @@ function save(nomsg) {
 				macs += macdata[k].join('<')+'>';
 			}
 			E('wifi_'+t+'_maclist').value = macs;
+
+			if ((E('_wifi_'+t+'_mode').value == "sta") && (E('_f_wifi_'+t+'_enable').checked)) {
+				if (E('_wifi_'+t+'_ifname').value != "") {
+					sta_list += ' ' + E('_wifi_'+t+'_ifname').value;
+				} else {
+					sta_list += ' phy'+i+'-sta'+j;
+				}
+				E('wifi_sta_list').value = sta_list.trim();
+			}
 		}
 	}
-	fom._service.value = 'wifi-restart';
+
+	// We don't have a gui element for these so set the hidden element to it's nvram value
+	// If we renamed/destroyed a station that was used by a wan we will modify its value below
+	E('wan_sta').value  = nvram['wan_sta'];
+	E('wan2_sta').value = nvram['wan2_sta'];
+	E('wan3_sta').value = nvram['wan3_sta'];
+	E('wan4_sta').value = nvram['wan4_sta'];
+
+	if (E('wifi_sta_list').value.length > 0) {
+
+		// check if we've renamed/destroyed a station that a wan was using
+		// if so, set wanX_sta = ""
+		const wan_list = ["wan_sta", "wan2_sta", "wan3_sta", "wan4_sta"];
+		const station_list = E('wifi_sta_list').value.split(" ");
+
+		for (var i = 0; i < wan_list.length; i++) {
+			if (nvram[wan_list[i]].length > 0) {
+				for (var j = 0; j < station_list.length; j++) {
+					if (nvram[wan_list[i]] == station_list[j]) {
+						break;
+					}
+					if (j == (station_list.length -1)) {
+						E(wan_list[i]).value = "";
+					}
+				}
+			}
+		}
+
+		fom._service.value = '*';
+	} else {
+		fom._service.value = 'wifi-restart';
+	}
 	form.submit(fom, 1);
 	changed = 0;
 }
@@ -646,9 +754,14 @@ for (i = 0; i < devices.length; ++i) {
 
 <!-- / / / -->
 
-<input type="hidden" name="_nextpage" value="vpn-tinc.asp">
+<input type="hidden" name="_nextpage" value="basic-wireless.asp">
 <input type="hidden" name="_service" value="">
 <input type="hidden" name="_nofootermsg">
+<input type="hidden" name="wifi_sta_list" id="wifi_sta_list">
+<input type="hidden" name="wan_sta" id="wan_sta">
+<input type="hidden" name="wan2_sta" id="wan2_sta">
+<input type="hidden" name="wan3_sta" id="wan3_sta">
+<input type="hidden" name="wan4_sta" id="wan4_sta">
 
 <!-- / / / -->
 
@@ -749,8 +862,9 @@ for (var i = 0; i < devices.length; i++) {
 
 		createFieldTable('', [
 			{ title: 'Enable', name: 'f_wifi_'+t+'_enable', type: 'checkbox', value: nvram['wifi_'+t+'_enable'] == 1 },
-			{ title: 'Mode', name: 'wifi_'+t+'_mode', type: 'select', options: [['ap', 'Access Point']], value: nvram['wifi_'+t+'_mode'] },
+			{ title: 'Mode', name: 'wifi_'+t+'_mode', type: 'select', options: [['ap', 'Access Point'],['sta','Client']], value: nvram['wifi_'+t+'_mode'] },
 			{ title: 'ESSID', name: 'wifi_'+t+'_essid', type: 'text', maxlen: 32, size: 34, value: nvram['wifi_'+t+'_essid'] },
+			{ title: 'BSSID', name: 'wifi_'+t+'_bssid', type: 'text', maxlen: 17, size: 34, value: nvram['wifi_'+t+'_bssid'] },
 			{ title: 'Network', name: 'wifi_'+t+'_network', type: 'select', options: networks, value: nvram['wifi_'+t+'_network'] },
 			{ title: 'Hide ESSID', name: 'f_wifi_'+t+'_hidden', type: 'checkbox', value: nvram['wifi_'+t+'_hidden'] == 1 },
 			{ title: 'WMM Mode', name: 'f_wifi_'+t+'_wmm', type: 'checkbox', value: nvram['wifi_'+t+'_wmm'] == 1 }
@@ -825,11 +939,16 @@ for (var i = 0; i < devices.length; i++) {
 		<li><b>General Setup</b></li>
 		<ul>
 			<li><b>Enable</b> - Enables this interface.</li>
-			<li><b>Mode</b> - Currently only 'Access Point' is supported.</li>
+			<li><b>Mode</b> - Currently 'Access Point' and 'Client' are supported.</li>
 			<ul>
 				<li><b>Access Point</b> - Creates a wireless network for devices to join.</li>
+				<li><b>Client</b> - Connects to another wireless network. This connections can then be shared wired or wirelessly.</li>
 			</ul>
 			<li><b>ESSID</b> - The broadcasted SSID of the wireless network.</li>
+				<ul>
+					<li><b>Client</b> - In client mode this is the name of the SSID you want to connect to.</li>
+				</ul>
+			<li><b>BSSID</b> - Available in Client mode and is optional. This specifies the MAC address of the Wireless SSID network you want to connect to. This is useful for situations where there may be multiple APs with the same SSID and you want to connect to a specific one.</li>
 			<li><b>Network</b> - Which network/bridge this interface will join.</li>
 			<li><b>Hide ESSID</b> - Disables the broadcasting of beacon frames if checked and hides the ESSID.</li>
 			<li><b>WMM Mode</b> - Enables WMM. Where Wi-Fi Multimedia (WMM) Mode QoS is disabled, clients may be limited to 802.11a/802.11g rates. Required for 802.11n/802.11ac/802.11ax.</li>

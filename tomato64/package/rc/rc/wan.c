@@ -806,7 +806,11 @@ void store_wan_if_to_nvram(char *prefix)
 	}
 	else { /* Wireless client as wan */
 		w = nvram_safe_get(strlcat_r(prefix, "_sta", tmp, sizeof(tmp)));
+#ifndef TOMATO64
 		p = nvram_safe_get(strlcat_r(w, "_ifname", tmp, sizeof(tmp)));
+#else
+		p = w;
+#endif /* TOMATO64 */
 	}
 	/* Store interface name to nvram */
 	nvram_set(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp)), p);

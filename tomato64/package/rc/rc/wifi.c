@@ -18,6 +18,7 @@ void stop_wifi(void)
 	killall_tk_period_wait("netifd", 50);
 	killall_tk_period_wait("hostapd_cli", 50);
 	killall_tk_period_wait("hostapd", 50);
+	killall_tk_period_wait("wpa_supplicant", 50);
 	killall_tk_period_wait("ubusd", 50);
 
 	eval("rm", "-rf", "/etc/config");
