@@ -50,11 +50,21 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 		[ -f "$BKP_DIR/$DATA" ] && {
 			rm $BKP_DIR/$DATA
 
+# TOMATO64-REMOVE-BEGIN
 			cat $BKP_DIR/webmon_recent_domains | awk '{t=$1; "date -d @\""t"\" \"+%Y-%m-%d %H:%M:%S\"" | getline d;print d"\t"$2"\t"$3 }' >> $BKP_DIR/domain-$DATA.log
+# TOMATO64-REMOVE-END
+# TOMATO64-BEGIN
+			cat $BKP_DIR/webmon_recent_domains | awk '{t=$1; "date -d @\""t"\" \"+%Y-%m-%d %H:%M:%S\"" | getline d;print d"\t"$3"\t"$4 }' >> $BKP_DIR/domain-$DATA.log
+# TOMATO64-END
 			tar -czf $BKP_DIR/domain-$DATA.log.tar.gz $BKP_DIR/domain-$DATA.log &>/dev/null
 			rm $BKP_DIR/domain-$DATA.log
 
+# TOMATO64-REMOVE-BEGIN
 			cat $BKP_DIR/webmon_recent_searches | awk '{t=$1; "date -d @\""t"\" \"+%Y-%m-%d %H:%M:%S\"" | getline d;print d"\t"$2"\t"$3 }' >> $BKP_DIR/search-$DATA.log
+# TOMATO64-REMOVE-END
+# TOMATO64-BEGIN
+			cat $BKP_DIR/webmon_recent_searches | awk '{t=$1; "date -d @\""t"\" \"+%Y-%m-%d %H:%M:%S\"" | getline d;print d"\t"$3"\t"$4 }' >> $BKP_DIR/search-$DATA.log
+# TOMATO64-END
 			tar -czf $BKP_DIR/search-$DATA.log.tar.gz $BKP_DIR/search-$DATA.log &>/dev/null
 			rm $BKP_DIR/search-$DATA.log
 

@@ -194,6 +194,7 @@ ifeq ($(TCONFIG_TOMATO64),y)
 	sed -i $(INSTALLDIR)/usr/sbin/adblock -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/usr/sbin/mymotd -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/usr/sbin/tomatoanon -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
+	sed -i $(INSTALLDIR)/usr/sbin/webmon_bkp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 
 ifeq ($(PLATFORM_X86_64),y)
 	install -m 0700 entware-install-x86_64.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
@@ -209,11 +210,12 @@ else #TOMATO64
 	sed -i $(INSTALLDIR)/usr/sbin/adblock -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/usr/sbin/mymotd -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/usr/sbin/tomatoanon -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+	sed -i $(INSTALLDIR)/usr/sbin/webmon_bkp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 endif #TOMATO64
 
 # clean up
 	cd $(INSTALLDIR)/usr/sbin && \
-		for F in tomatoanon adblock ttb optware-install.sh entware-install.sh vpnrouting.sh ethstate mymotd switch4g; do \
+		for F in tomatoanon adblock ttb optware-install.sh entware-install.sh vpnrouting.sh ethstate mymotd switch4g webmon_bkp; do \
 			[ -f $(INSTALLDIR)/usr/sbin/$$F ] && sed -i $$F \
 			-e "/STUBBY-BEGIN/d"	-e "/STUBBY-END/d" \
 			-e "/STUBBYNO-BEGIN/d"	-e "/STUBBYNO-END/d" \
