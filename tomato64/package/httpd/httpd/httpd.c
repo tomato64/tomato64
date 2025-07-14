@@ -50,7 +50,7 @@
  * Modified for Tomato Firmware
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -875,13 +875,9 @@ static void setup_listeners(int do_ipv6)
 	IF_TCONFIG_IPV6(const char *wanaddr);
 	int wanport = nvram_get_int("http_wanport");
 	IF_TCONFIG_IPV6(int wan6port = wanport);
-	int i, lanport;
-	wanface_list_t wanfaces;
-	wanface_list_t wan2faces;
-#ifdef TCONFIG_MULTIWAN
-	wanface_list_t wan3faces;
-	wanface_list_t wan4faces;
-#endif
+	int i, j, lanport;
+	char buf[8];
+	wanface_list_t wanfaces[MWAN_MAX];
 
 #ifdef TCONFIG_IPV6
 	/* get the configured routable IPv6 address from the lan iface.
@@ -960,12 +956,11 @@ static void setup_listeners(int do_ipv6)
 		} else
 #endif /* TCONFIG_IPV6 */
 		{
-			listen_wan("wan", wanfaces, wanport);
-			listen_wan("wan2", wan2faces, wanport);
-#ifdef TCONFIG_MULTIWAN
-			listen_wan("wan3", wan3faces, wanport);
-			listen_wan("wan4", wan4faces, wanport);
-#endif
+			for (j = 1; j <= MWAN_MAX; j++) {
+				memset(buf, 0, sizeof(buf));
+				snprintf(buf, sizeof(buf), (j == 1 ? "wan" : "wan%d"), j);
+				listen_wan(buf, wanfaces[j - 1], wanport);
+			}
 		}
 	}
 }

@@ -2,7 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2007-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -28,12 +28,22 @@ void asp_ddnsx(int argc, char **argv)
 	time_t tt;
 	struct stat st;
 
-	web_printf("\nddnsx_wanip = '%s';", get_wanip("wan"));
-	web_printf("\nddnsx2_wanip = '%s';", get_wanip("wan2"));
-#ifdef TCONFIG_MULTIWAN
-	web_printf("\nddnsx3_wanip = '%s';", get_wanip("wan3"));
-	web_printf("\nddnsx4_wanip = '%s';", get_wanip("wan4"));
-#endif
+	web_puts("\nif (typeof nvram === 'undefined' || nvram.length == 0) nvram = { };");
+
+	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(s, 0, sizeof(s));
+		memset(name, 0, sizeof(name));
+		snprintf(s, sizeof(s), (i == 1 ? "wan" : "wan%d"), i);
+		snprintf(name, sizeof(name), (i == 1 ? "ddnsx_wanip" : "ddnsx%d_wanip"), i);
+		web_printf("\n%s = '%s';", name, get_wanip(s));
+		snprintf(s, sizeof(s), (i == 1 ? "wan_dns" : "wan%d_dns"), i);
+		snprintf(name, sizeof(name), (i == 1 ? "nvram.wan_dns" : "nvram.wan%d_dns"), i);
+		web_printf("\n%s = '%s';", name, nvram_safe_get(s));
+		snprintf(s, sizeof(s), (i == 1 ? "wan_proto" : "wan%d_proto"), i);
+		snprintf(name, sizeof(name), (i == 1 ? "nvram.wan_proto" : "nvram.wan%d_proto"), i);
+		web_printf("\n%s = '%s';", name, nvram_safe_get(s));
+	}
+
 	web_printf("\nddnsx0_ip_get = '%s';", nvram_safe_get("ddnsx0_ip"));
 	web_printf("\nddnsx1_ip_get = '%s';", nvram_safe_get("ddnsx1_ip"));
 #if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
@@ -41,20 +51,6 @@ void asp_ddnsx(int argc, char **argv)
 	web_printf("\nddnsx3_ip_get = '%s';", nvram_safe_get("ddnsx3_ip"));
 #endif
 
-	web_puts("\nif (typeof nvram === 'undefined' || nvram.length == 0) nvram = { };");
-
-	web_printf("\nnvram.wan_dns = '%s';", nvram_safe_get("wan_dns"));
-	web_printf("\nnvram.wan2_dns = '%s';", nvram_safe_get("wan2_dns"));
-#ifdef TCONFIG_MULTIWAN
-	web_printf("\nnvram.wan3_dns = '%s';", nvram_safe_get("wan3_dns"));
-	web_printf("\nnvram.wan4_dns = '%s';", nvram_safe_get("wan4_dns"));
-#endif
-	web_printf("\nnvram.wan_proto = '%s';", nvram_safe_get("wan_proto"));
-	web_printf("\nnvram.wan2_proto = '%s';", nvram_safe_get("wan2_proto"));
-#ifdef TCONFIG_MULTIWAN
-	web_printf("\nnvram.wan3_proto = '%s';", nvram_safe_get("wan3_proto"));
-	web_printf("\nnvram.wan4_proto = '%s';", nvram_safe_get("wan4_proto"));
-#endif
 	web_printf("\nnvram.dnscrypt_proxy = '%s';", nvram_safe_get("dnscrypt_proxy"));
 	web_printf("\nnvram.stubby_proxy = '%s';", nvram_safe_get("stubby_proxy"));
 	web_printf("\nnvram.dnscrypt_priority = '%s';", nvram_safe_get("dnscrypt_priority"));
