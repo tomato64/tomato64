@@ -837,8 +837,8 @@ static void wg_init_table(char *iface, char *fwmark)
 				if (nl)
 					*nl = '\0';
 
-				/* skip default GW */
-				if (strncmp(route, "default ", 8) == 0)
+				/* skip all default gateways */
+				if ((strncmp(route, "default ", 8) == 0) || (strncmp(route, "0.0.0.0/1 ", 10) == 0) || (strncmp(route, "128.0.0.0/1 ", 12) == 0))
 					continue;
 
 				/* skip iface from vpn_ifaces[] */
