@@ -1921,6 +1921,9 @@ function save(nomsg) {
 	E('wg_adns').value = '';
 	var fom = E('t_fom');
 	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
+		if (routingTables[i].isEditing())
+			return;
+
 		var privkey = E('_wg'+i+'_key').value;
 		nvram['wg'+i+'_key'] = privkey;
 
