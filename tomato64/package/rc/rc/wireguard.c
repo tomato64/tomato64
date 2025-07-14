@@ -51,6 +51,59 @@ enum {
 char port[BUF_SIZE_8];
 char fwmark[BUF_SIZE_16];
 
+
+static int replace_in_file(const char *filename, const char *old_str, const char *new_str)
+{
+	FILE *fp_in = NULL;
+	FILE *fp_out = NULL;
+	char tmp_filename[FILENAME_MAX];
+	char buf[4096];
+	size_t old_len = strlen(old_str);
+	size_t new_len = new_str ? strlen(new_str) : 0;
+
+	if (!(fp_in = fopen(filename, "r"))) {
+		logmsg(LOG_WARNING, "cannot open file for reading: %s (%s)", filename, strerror(errno));
+		return -1;
+	}
+
+	memset(tmp_filename, 0, FILENAME_MAX);
+	snprintf(tmp_filename, FILENAME_MAX, "/tmp/%s.tmp", filename);
+	if (!(fp_out = fopen(tmp_filename, "w"))) {
+		logmsg(LOG_WARNING, "could not create temporary file: %s (%s)", tmp_filename, strerror(errno));
+		fclose(fp_in);
+		return -1;
+	}
+
+	while (fgets(buf, sizeof(buf), fp_in)) {
+		char *match = strstr(buf, old_str);
+		if (match) {
+			if (!new_str) /* delete line */
+				continue;
+
+			char *pos = buf;
+			while ((match = strstr(pos, old_str))) {
+				fwrite(pos, 1, match - pos, fp_out);
+				fwrite(new_str, 1, new_len, fp_out);
+				pos = match + old_len;
+			}
+			fputs(pos, fp_out);
+		}
+		else
+			fputs(buf, fp_out);
+	}
+
+	fclose(fp_in);
+	fclose(fp_out);
+
+	if (rename(tmp_filename, filename) != 0) {
+		logmsg(LOG_WARNING, "failed to overwrite %s: %s", filename, strerror(errno));
+		eval("rm", "-rf", tmp_filename);
+		return -1;
+	}
+
+	return 0;
+}
+
 static void wg_build_firewall(const int unit, const char *port) {
 	FILE *fp;
 	char buffer[BUF_SIZE_64];
@@ -441,11 +494,11 @@ static int wg_iface_script(const int unit, const char *script_name)
 		fclose(fp);
 		chmod(path, 0700);
 
-		/* sed replace %i with interface */
+		/* replace %i with interface */
 		memset(buffer, 0, BUF_SIZE_32);
-		snprintf(buffer, BUF_SIZE_32, "s/%%i/wg%d/g", unit);
+		snprintf(buffer, BUF_SIZE_32, "wg%d", unit);
 
-		if (eval("sed", "-i", buffer, path)) {
+		if (replace_in_file(path, "%i", buffer) != 0) {
 			logmsg(LOG_WARNING, "unable to substitute interface name in %s script for wireguard interface wg%d!", script_name, unit);
 			return -1;
 		}
