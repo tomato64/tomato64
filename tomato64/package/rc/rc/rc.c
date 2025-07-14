@@ -224,6 +224,107 @@ void run_del_firewall_script(const char *infile, char *outfile)
 	unlink(outfile);
 }
 
+#if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
+void kill_switch(const char *kind)
+{
+	unsigned int unit, br, rules_count;
+	int policy_type;
+	int wan_unit, mwan_num;
+	char *enable, *type, *value, *kswitch;
+	char *nv, *nvp, *b, *c;
+	char wan_prefix[] = "wanXX";
+	char buf[64], buf2[64], val[64], wan_if[16];
+	unsigned int start = (strcmp(kind, "wg") == 0 ? 0 : 1);
+
+	mwan_num = nvram_get_int("mwan_num");
+	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
+		mwan_num = 1;
+
+	for (unit = start; unit <= (strcmp(kind, "wg") == 0 ? WG_INTERFACE_MAX : OVPN_CLIENT_MAX); ++unit) {
+		rules_count = 0;
+		nv = nvp = strdup(getNVRAMVar((strcmp(kind, "wg") == 0 ? "wg%u_routing_val" : "vpn_client%u_routing_val"), unit));
+
+		while (nvp && (b = strsep(&nvp, ">")) != NULL) {
+			enable = type = value = kswitch = NULL;
+
+			/* enable<type<domain_or_IP<kill_switch> */
+			if ((vstrsep(b, "<", &enable, &type, &value, &kswitch)) < 4)
+				continue;
+
+			/* check if rule is enabled and kill switch is active and IP/domain is set */
+			if ((atoi(enable) != 1) || (atoi(kswitch) != 1) || (*value == '\0'))
+				continue;
+
+			policy_type = atoi(type);
+			rules_count++;
+
+			/* check all active WANs */
+			for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
+				get_wan_prefix(wan_unit, wan_prefix);
+
+				/* find WAN IF */
+				memset(wan_if, 0, sizeof(wan_if)); /* reset */
+				snprintf(wan_if, sizeof(wan_if), "%s", get_wanface(wan_prefix));
+				if ((!*wan_if) || (strcmp(wan_if, "") == 0))
+					continue;
+
+				memset(val, 0, sizeof(val)); /* reset */
+				snprintf(val, sizeof(val), "%s", value); /* copy IP/domain to buffer */
+
+				/* "From Source IP" */
+				if (policy_type == 1) {
+					/* find correct bridge for given IP */
+					for (br = 0; br < BRIDGE_COUNT; br++) {
+						memset(buf, 0, sizeof(buf)); /* reset */
+						snprintf(buf, sizeof(buf), (br == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), br);
+
+						char *lan_ip = nvram_safe_get(buf);
+						if (strcmp(lan_ip, "") != 0) { /* only for active */
+							memset(buf, 0, sizeof(buf)); /* reset */
+							snprintf(buf, sizeof(buf), "%s", val);
+							if ((c = strchr(buf, '/')) != NULL)
+								*c = 0; /* with mask? get IP */
+
+							memset(buf, 0, sizeof(buf)); /* reset */
+							snprintf(buf, sizeof(buf), "%s", val);
+							if ((c = strrchr(buf, '.')) != NULL)
+								*(c + 1) = 0; /* get first 3 octets from value */
+
+							memset(buf2, 0, sizeof(buf2)); /* reset */
+							snprintf(buf2, sizeof(buf2), "%s", lan_ip);
+							if ((c = strrchr(buf2, '.')) != NULL)
+								*(c + 1) = 0; /* get first 3 octets from lan IP */
+
+							if (strcmp(buf, buf2) == 0) {
+								memset(buf2, 0, sizeof(buf2)); /* reset */
+								snprintf(buf2, sizeof(buf2), "br%d", br); /* copy brX to buffer */
+
+								eval("iptables", "-I", "FORWARD", "-i", buf2, "-s", val, "-o", wan_if, "-j", "REJECT");
+							}
+						}
+					}
+				}
+				/* "To Destination IP" / "To Domain" */
+				else if ((policy_type == 2) || (policy_type == 3)) {
+					memset(buf, 0, sizeof(buf)); /* reset */
+					snprintf(buf, sizeof(buf), (strcmp(kind, "wg") == 0 ? "wg%u" : "tun1%u"), unit); /* find the appropriate IF */
+
+					/* xstart - do not wait when WAN in not up! */
+					xstart("iptables", "-I", "FORWARD", "!", "-o", buf, "-d", val, "-j", "REJECT");
+					xstart("iptables", "-I", "FORWARD", "-o", wan_if, "-d", val, "-j", "REJECT");
+				}
+
+			}
+		}
+		if (nv)
+			free(nv);
+
+		if (rules_count > 0)
+			logmsg(LOG_INFO, "Kill-Switch: added %d rules to firewall for %s%d", rules_count, (strcmp(kind, "wg") == 0 ? "wireguard" : "openvpn-client"), unit);
+	}
+}
+#endif
+
 typedef struct {
 	const char *name;
 	int (*main)(int argc, char *argv[]);

@@ -85,6 +85,22 @@ typedef enum { IPT_TABLE_NAT, IPT_TABLE_FILTER, IPT_TABLE_MANGLE } ipt_table_t;
 #define IPT_ANY_AF		(IPT_V4 | IPT_V6)
 #define IPT_AF_IS_EMPTY(f)	((f & IPT_ANY_AF) == 0)
 
+#if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
+/* wireguard max count */
+#define WG_INTERFACE_MAX	3
+/* OpenVPN clients/servers count */
+#ifdef TOMATO64
+#define OVPN_SERVER_MAX		4
+#else
+#define OVPN_SERVER_MAX		2
+#endif /* TOMATO64 */
+#if defined(TCONFIG_BCMARM)
+#define OVPN_CLIENT_MAX		3
+#else
+#define OVPN_CLIENT_MAX		2
+#endif
+#endif /* TCONFIG_OPENVPN || TCONFIG_WIREGUARD */
+
 const char *chain_in_drop;
 const char *chain_in_accept;
 const char *chain_out_drop;
@@ -111,6 +127,9 @@ extern void fix_chain_in_drop(void);
 extern int env2nv(char *env, char *nv);
 extern int serialize_restart(char *service, int start);
 extern void run_del_firewall_script(const char *infile, char *outfile);
+#if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
+extern void kill_switch(const char *type);
+#endif
 
 /* init.c */
 extern int init_main(int argc, char *argv[]);

@@ -33,19 +33,6 @@
 #define OVPN_DEL_SCRIPT		"clear-fw-tmp.sh"
 #define OVPN_DIR_DEL_SCRIPT	OVPN_DIR"/fw/"OVPN_DEL_SCRIPT
 
-/* OpenVPN clients/servers count */
-#ifdef TOMATO64
-#define OVPN_SERVER_MAX		4
-#else
-#define OVPN_SERVER_MAX		2
-#endif /* TOMATO64 */
-
-#if defined(TCONFIG_BCMARM)
-#define OVPN_CLIENT_MAX		3
-#else
-#define OVPN_CLIENT_MAX		2
-#endif
-
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"openvpn_debug"
@@ -235,103 +222,6 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 			snprintf(buffer2, BUF_SIZE_32, "*/%d * * * * %s", nvi, buffer);
 			eval("cru", "a", taskname, buffer2);
 		}
-	}
-}
-
-static void ovpn_kill_switch(void)
-{
-	unsigned int unit, br, rules_count;
-	int policy_type;
-	int wan_unit, mwan_num;
-	char *enable, *type, *value, *kswitch;
-	char *nv, *nvp, *b, *c;
-	char wan_prefix[] = "wanXX";
-	char buf[BUF_SIZE_64], buf2[BUF_SIZE_64], val[BUF_SIZE_64], wan_if[BUF_SIZE_16];
-
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
-
-	for (unit = 1; unit <= OVPN_CLIENT_MAX; ++unit) {
-		rules_count = 0;
-		nv = nvp = strdup(getNVRAMVar("vpn_client%d_routing_val", unit));
-
-		while (nvp && (b = strsep(&nvp, ">")) != NULL) {
-			enable = type = value = kswitch = NULL;
-
-			/* enable<type<domain_or_IP<kill_switch> */
-			if ((vstrsep(b, "<", &enable, &type, &value, &kswitch)) < 4)
-				continue;
-
-			/* check if rule is enabled and kill switch is active and IP/domain is set */
-			if ((atoi(enable) != 1) || (atoi(kswitch) != 1) || (*value == '\0'))
-				continue;
-
-			policy_type = atoi(type);
-			rules_count++;
-
-			/* check all active WANs */
-			for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
-				get_wan_prefix(wan_unit, wan_prefix);
-
-				/* find WAN IF */
-				memset(wan_if, 0, BUF_SIZE_16); /* reset */
-				snprintf(wan_if, BUF_SIZE_16, "%s", get_wanface(wan_prefix));
-				if ((!*wan_if) || (strcmp(wan_if, "") == 0))
-					continue;
-
-				memset(val, 0, BUF_SIZE_64); /* reset */
-				snprintf(val, BUF_SIZE_64, "%s", value); /* copy IP/domain to buffer */
-
-				/* "From Source IP" */
-				if (policy_type == 1) {
-					/* find correct bridge for given IP */
-					for (br = 0; br < BRIDGE_COUNT; br++) {
-						memset(buf, 0, BUF_SIZE_64); /* reset */
-						snprintf(buf, BUF_SIZE_64, (br == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), br);
-
-						char *lan_ip = nvram_safe_get(buf);
-						if (strcmp(lan_ip, "") != 0) { /* only for active */
-							memset(buf, 0, BUF_SIZE_64); /* reset */
-							snprintf(buf, BUF_SIZE_64, "%s", val);
-							if ((c = strchr(buf, '/')) != NULL)
-								*c = 0; /* with mask? get IP */
-
-							memset(buf, 0, BUF_SIZE_64); /* reset */
-							snprintf(buf, BUF_SIZE_64, "%s", val);
-							if ((c = strrchr(buf, '.')) != NULL)
-								*(c + 1) = 0; /* get first 3 octets from value */
-
-							memset(buf2, 0, BUF_SIZE_64); /* reset */
-							snprintf(buf2, BUF_SIZE_64, "%s", lan_ip);
-							if ((c = strrchr(buf2, '.')) != NULL)
-								*(c + 1) = 0; /* get first 3 octets from lan IP */
-
-							if (strcmp(buf, buf2) == 0) {
-								memset(buf2, 0, BUF_SIZE_64); /* reset */
-								snprintf(buf2, BUF_SIZE_64, "br%d", br); /* copy brX to buffer */
-
-								eval("iptables", "-I", "FORWARD", "-i", buf2, "-s", val, "-o", wan_if, "-j", "REJECT");
-							}
-						}
-					}
-				}
-				/* "To Destination IP" / "To Domain" */
-				else if ((policy_type == 2) || (policy_type == 3)) {
-					memset(buf, 0, BUF_SIZE_64); /* reset */
-					snprintf(buf, BUF_SIZE_64, "tun1%d", unit); /* find the appropriate tun IF */
-
-					xstart("iptables", "-I", "FORWARD", "!", "-o", buf, "-d", val, "-j", "REJECT");
-					xstart("iptables", "-I", "FORWARD", "-o", wan_if, "-d", val, "-j", "REJECT");
-				}
-
-			}
-		}
-		if (nv)
-			free(nv);
-
-		if (rules_count > 0)
-			logmsg(LOG_INFO, "Kill-Switch: added %d rules to firewall for openvpn-client%d", rules_count, unit);
 	}
 }
 
@@ -1517,7 +1407,7 @@ void run_ovpn_firewall_scripts(void)
 	char *fa;
 	char buf[BUF_SIZE_64];
 
-	ovpn_kill_switch();
+	kill_switch("ovpn");
 
 	if (chdir(OVPN_DIR"/fw"))
 		return;
