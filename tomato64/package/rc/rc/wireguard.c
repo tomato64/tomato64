@@ -1238,6 +1238,8 @@ void run_wg_firewall_scripts(void)
 
 	dir = opendir(WG_FW_DIR);
 
+	logmsg(LOG_DEBUG, "*** %s: beginning all firewall scripts...", __FUNCTION__);
+
 	while ((file = readdir(dir)) != NULL) {
 		fa = file->d_name;
 
@@ -1261,6 +1263,7 @@ void run_wg_firewall_scripts(void)
 		else
 			logmsg(LOG_DEBUG, "*** %s: skipping firewall script (not executable): %s", __FUNCTION__, buffer);
 	}
+	logmsg(LOG_DEBUG, "*** %s: done with all firewall scripts...", __FUNCTION__);
 
 	closedir(dir);
 }
