@@ -3,7 +3,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 #
 # VPN Client selective routing up down script
 #
-# Copyright by pedro 2019 - 2024
+# Copyright by pedro 2019 - 2025
 #
 
 
@@ -16,53 +16,36 @@ FIREWALL_ROUTING="/etc/openvpn/fw/$SERVICE-fw-routing.sh"
 DNSMASQ_IPSET="/etc/dnsmasq.ipset"
 RESTART_DNSMASQ=0
 RESTART_FW=0
-ID="0"
+FWMARK="0"
 LOGS="logger -t openvpn-vpnrouting.sh[$PID][$IFACE]"
 [ -d /etc/openvpn/fw ] || mkdir -m 0700 "/etc/openvpn/fw"
 
 
 find_iface() {
-	# These IDs were intentionally picked to avoid overwriting
+	# These FWMARKs were intentionally picked to avoid overwriting
 	# marks set by QoS. See qos.c
 	if [ "$SERVICE" == "client1" ]; then
-		ID="2304" # 0x900
+		FWMARK="2304" # 0x900
 	elif [ "$SERVICE" == "client2" ]; then
-		ID="2560" # 0xA00
+		FWMARK="2560" # 0xA00
 # BCMARM-BEGIN
 	elif [ "$SERVICE" == "client3" ]; then
-		ID="2816" # 0xB00
+		FWMARK="2816" # 0xB00
 # BCMARM-END
 	else
 		$LOGS "Interface not found!"
 		exit 0
 	fi
 
-	PIDFILE="/var/run/vpnrouting$ID.pid"
-}
-
-initTable() {
-	local ROUTE
-	$LOGS "Creating VPN routing table (mode $VPN_REDIR)"
-
-	[ "$VPN_REDIR" -eq 3 ] && {
-		ip route show table main dev $IFACE | while read ROUTE; do
-			ip route add table $ID $ROUTE dev $IFACE
-		done
-	}
-	# copy routes from main routing table (exclude vpns and default gateway)
-	[ "$VPN_REDIR" -eq 2 ] && {
-		ip route show table main | grep -Ev 'tun11|tun12|tun13|^default ' | while read ROUTE; do
-			ip route add table $ID $ROUTE
-		done
-	}
+	PIDFILE="/var/run/vpnrouting$FWMARK.pid"
 }
 
 stopRouting() {
 	$LOGS "Clean-up routing"
 
-	ip route flush table $ID
+	ip route flush table $FWMARK
 	ip route flush cache
-	ip rule | grep "lookup $ID" && ip rule del fwmark $ID/0xf00 table $ID
+	ip rule del fwmark $FWMARK/0xf00 table $FWMARK
 
 	[ -f "$FIREWALL_ROUTING" ] && {
 		sed -i -e "s/-I/-D/g; s/-A/-D/g" "$FIREWALL_ROUTING" &>/dev/null
@@ -70,14 +53,14 @@ stopRouting() {
 		rm -f $FIREWALL_ROUTING &>/dev/null
 	}
 # BCMARM-BEGIN
-	ipset destroy vpnrouting$ID &>/dev/null
+	ipset destroy vpnrouting$FWMARK &>/dev/null
 # BCMARM-END
 # BCMARMNO-BEGIN
-	ipset --destroy vpnrouting$ID &>/dev/null
+	ipset --destroy vpnrouting$FWMARK &>/dev/null
 # BCMARMNO-END
 	[ -f "$DNSMASQ_IPSET" ] && {
-		if grep -q "/vpnrouting$ID" "$DNSMASQ_IPSET"; then
-			sed -i "$DNSMASQ_IPSET" -e "/vpnrouting$ID/d" &>/dev/null
+		if grep -q "/vpnrouting$FWMARK" "$DNSMASQ_IPSET"; then
+			sed -i "$DNSMASQ_IPSET" -e "/vpnrouting$FWMARK/d" &>/dev/null
 			# ipset was used on this client so dnsmasq restart is needed
 			RESTART_DNSMASQ=1
 		fi
@@ -85,33 +68,46 @@ stopRouting() {
 }
 
 startRouting() {
-	local i VAL1 VAL2 VAL3
+	local i VAL1 VAL2 VAL3 ROUTE
 
 	stopRouting
 
-	$LOGS "Starting routing policy for openvpn-$SERVICE - Interface $IFACE - Table $ID"
+	$LOGS "Starting routing policy for openvpn-$SERVICE - Interface $IFACE - Table $FWMARK - Mode $VPN_REDIR"
+
+	# strict - copy routes from main routing table only for this interface
+	[ "$VPN_REDIR" -eq 3 ] && {
+		ip route show table main dev $IFACE | while read ROUTE; do
+			ip route add table $FWMARK $ROUTE dev $IFACE
+		done
+	}
+	# standard - copy routes from main routing table (exclude vpns and all default gateways)
+	[ "$VPN_REDIR" -eq 2 ] && {
+		ip route show table main | grep -Ev 'wg0|wg1|wg2|tun11|tun12|tun13|^default |^0.0.0.0/1 |^128.0.0.0/1 ' | while read ROUTE; do
+			ip route add table $FWMARK $ROUTE
+		done
+	}
 
 	[ -n "$route_vpn_gateway" ] && {
-		ip route add table $ID default via $route_vpn_gateway dev $IFACE
+		ip route add table $FWMARK default via $route_vpn_gateway dev $IFACE
 	} || {
-		ip route add table $ID default dev $IFACE
+		ip route add table $FWMARK default dev $IFACE
 	}
-	ip rule add fwmark $ID/0xf00 table $ID priority 90
 
-	initTable
+	ip rule add fwmark $FWMARK/0xf00 table $FWMARK priority 90
+
 # BCMARM-BEGIN
-	ipset create vpnrouting$ID hash:ip
+	ipset create vpnrouting$FWMARK hash:ip
 # BCMARM-END
 # BCMARMNO-BEGIN
-	ipset --create vpnrouting$ID iphash
+	ipset --create vpnrouting$FWMARK iphash
 # BCMARMNO-END
 
 	echo "#!/bin/sh" > $FIREWALL_ROUTING # new routing file
 # BCMARM-BEGIN
-	echo "iptables -t mangle -A PREROUTING -m set --match-set vpnrouting$ID dst,src -j MARK --set-mark $ID/0xf00" >> $FIREWALL_ROUTING
+	echo "iptables -t mangle -A PREROUTING -m set --match-set vpnrouting$FWMARK dst,src -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
 # BCMARM-END
 # BCMARMNO-BEGIN
-	echo "iptables -t mangle -A PREROUTING -m set --set vpnrouting$ID dst,src -j MARK --set-mark $ID/0xf00" >> $FIREWALL_ROUTING
+	echo "iptables -t mangle -A PREROUTING -m set --set vpnrouting$FWMARK dst,src -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
 # BCMARMNO-END
 
 	# example of routing_val: 1<2<8.8.8.8<1>1<1<1.2.3.4<0>1<3<domain.com<0> (enabled<type<domain_or_IP<kill_switch>)
@@ -126,18 +122,18 @@ startRouting() {
 				1)	# from source
 					$LOGS "Type: $VAL2 - add $VAL3"
 					[ "$(echo $VAL3 | grep -)" ] && { # range
-						echo "iptables -t mangle -A PREROUTING -m iprange --src-range $VAL3 -j MARK --set-mark $ID/0xf00" >> $FIREWALL_ROUTING
+						echo "iptables -t mangle -A PREROUTING -m iprange --src-range $VAL3 -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
 					} || {
-						echo "iptables -t mangle -A PREROUTING -s $VAL3 -j MARK --set-mark $ID/0xf00" >> $FIREWALL_ROUTING
+						echo "iptables -t mangle -A PREROUTING -s $VAL3 -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
 					}
 				;;
 				2)	# to destination
 					$LOGS "Type: $VAL2 - add $VAL3"
-					echo "iptables -t mangle -A PREROUTING -d $VAL3 -j MARK --set-mark $ID/0xf00" >> $FIREWALL_ROUTING
+					echo "iptables -t mangle -A PREROUTING -d $VAL3 -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
 				;;
 				3)	# to domain
 					$LOGS "Type: $VAL2 - add $VAL3"
-					echo "ipset=/$VAL3/vpnrouting$ID" >> $DNSMASQ_IPSET # add
+					echo "ipset=/$VAL3/vpnrouting$FWMARK" >> $DNSMASQ_IPSET # add
 
 					RESTART_DNSMASQ=1
 				;;
