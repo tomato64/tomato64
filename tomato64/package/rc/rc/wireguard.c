@@ -594,8 +594,7 @@ static void wg_route_peer_default(char *iface, char *route, char *fwmark, int ad
 
 	if (add == 1) {
 #ifdef KERNEL_WG_FIX
-		if (wg_route_peer(iface, route, fwmark, 1))
-			logmsg(LOG_WARNING, "unable to add default route of %s to wireguard interface %s!", route, iface);
+		wg_route_peer(iface, route, fwmark, 1);
 
 		if (eval("ip", "rule", "add", "not", "fwmark", fwmark, "table", fwmark))
 			logmsg(LOG_WARNING, "unable to filter fwmark %s for default route of %s on wireguard interface %s!", fwmark, route, iface);
@@ -623,8 +622,7 @@ static void wg_route_peer_default(char *iface, char *route, char *fwmark, int ad
 			unlink(filename);
 		}
 
-		if (wg_route_peer(iface, route, fwmark, 1))
-			logmsg(LOG_WARNING, "unable to add default route to table %s for wireguard interface %s!", fwmark, iface);
+		wg_route_peer(iface, route, fwmark, 1);
 
 		if (eval("ip", "rule", "add", "not", "fwmark", fwmark, "table", fwmark))
 			logmsg(LOG_WARNING, "unable to filter fwmark %s for default route of %s on wireguard interface %s!", fwmark, route, iface);
@@ -638,14 +636,12 @@ static void wg_route_peer_default(char *iface, char *route, char *fwmark, int ad
 		if (eval("ip", "rule", "delete", "not", "from", "all", "fwmark", fwmark, "lookup", fwmark))
 			logmsg(LOG_WARNING, "unable to remove filter fwmark %s for default route of %s on wireguard interface %s!", fwmark, route, iface);
 
-		if (wg_route_peer(iface, route, fwmark, 0))
-			logmsg(LOG_WARNING, "unable to remove default route of %s from wireguard interface %s!", route, iface);
+		wg_route_peer(iface, route, fwmark, 0);
 #else
 		if (eval("ip", "rule", "delete", "not", "from", "all", "fwmark", fwmark, "lookup", fwmark))
 			logmsg(LOG_WARNING, "unable to remove filter fwmark %s for default route of %s on wireguard interface %s!", fwmark, route, iface);
 
-		if (wg_route_peer(iface, route, fwmark, 0))
-			logmsg(LOG_WARNING, "unable to remove default route to table %s for wireguard interface %s!", fwmark, iface);
+		wg_route_peer(iface, route, fwmark, 0);
 
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			memset(filename, 0, BUF_SIZE_32);
