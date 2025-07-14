@@ -17,9 +17,16 @@ DNSMASQ_IPSET="/etc/dnsmasq.ipset"
 RESTART_DNSMASQ=0
 RESTART_FW=0
 FWMARK="0"
+CID="$(dev:4:1)"
+ENV_VARS="/tmp/env_vars_$(CID)"
 LOGS="logger -t openvpn-vpnrouting.sh[$PID][$IFACE]"
 [ -d /etc/openvpn/fw ] || mkdir -m 0700 "/etc/openvpn/fw"
 
+
+# utility function for retrieving environment variable values
+env_get() {
+	echo $(grep -Em1 "^$1=" $ENV_VARS | cut -d = -f2)
+}
 
 find_iface() {
 	# These FWMARKs were intentionally picked to avoid overwriting
@@ -87,11 +94,14 @@ startRouting() {
 		done
 	}
 
-	[ -n "$route_vpn_gateway" ] && {
-		ip route add table $FWMARK default via $route_vpn_gateway dev $IFACE
-	} || {
-		ip route add table $FWMARK default dev $IFACE
-	}
+	# test for presence of vpn gateway override in main routing table
+	if ip route | grep -q "^0\.0\.0\.0/1 .*$(env_get dev)"; then
+		# add WAN as default gateway to alternate routing table
+		ip route add default via $(env_get route_net_gateway) table $FWMARK dev $IFACE
+	else
+		# add VPN as default gateway to alternate routing table
+		ip route add default via $(env_get route_vpn_gateway) table $FWMARK dev $IFACE
+	fi
 
 	ip rule add fwmark $FWMARK/0xf00 table $FWMARK priority 90
 
@@ -203,9 +213,12 @@ VPN_REDIR=$(NG vpn_"$SERVICE"_rgw)
 [ "$script_type" == "route-pre-down" ] && {
 	stopRouting
 	checkRestart
+	rm -f $ENV_VARS
 }
 
 [ "$script_type" == "route-up" ] && {
+	# make environment variables persistent across openvpn events
+	env > $ENV_VARS
 	startRouting
 	checkRestart
 }
