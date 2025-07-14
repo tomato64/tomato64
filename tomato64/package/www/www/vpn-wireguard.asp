@@ -2278,7 +2278,7 @@ function init() {
 				<li><b>Public Key</b> - Public key calculated from the Private Key field. This is not user editable and only provided as a convenience.</li>
 				<li><b>VPN Interface IP</b> - IP and Netmask to use for the wireguard interface. Must be in CIDR format.</li>
 				<li><b>DNS Servers</b> - Comma separated list of DNS servers to use for the wireguard interface.</li>
-				<li><b>FWMark</b> - The value of the FWMark to use for routing. If left as 0, it will the default value.</li>
+				<li><b>FWMark</b> - The value of the FWMark to use for routing. If left as 0, it will use Port value.</li>
 				<li><b>MTU</b> - The maximum transmission unit for the wireguard interface.</li>
 				<li><b>Respond to DNS</b> - If checked, this interface will respond to DNS requests using the router's dnsmasq service. This is usually wanted for a site-to-site scenario.</li>
 				<li><b>Routing Mode</b> - The routing mode to use when setting up the wireguard interface
