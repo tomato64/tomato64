@@ -189,6 +189,7 @@ void run_del_firewall_script(const char *infile, char *outfile)
 {
 	FILE *ifp, *ofp;
 	char line[128];
+	char *p;
 
 	ifp = fopen(infile, "r");
 	ofp = fopen(outfile, "w+");
@@ -203,7 +204,7 @@ void run_del_firewall_script(const char *infile, char *outfile)
 	}
 
 	while (fgets(line, sizeof(line), ifp)) {
-		for (char *p = line; *p; ++p) {
+		for (p = line; *p; ++p) {
 			if (*p == '-' && (p[1] == 'A' || p[1] == 'I' || p[1] == 'N')) {
 				p[1] = 'D';
 			}
