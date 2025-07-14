@@ -839,6 +839,21 @@ static void wg_remove_peer_privkey(int unit, char *iface, char *privkey, char *a
 	wg_remove_peer(unit, iface, pubkey, allowed_ips, fwmark);
 }
 
+static int wg_set_iface_down(char *iface)
+{
+	/* check if interface exists */
+	if (wg_if_exist(iface)) {
+		if (eval("ip", "link", "set", "down", "dev", iface)) {
+			logmsg(LOG_WARNING, "failed to bring down wireGuard interface %s", iface);
+			return -1;
+		}
+		else
+			logmsg(LOG_DEBUG, "wireguard interface %s has been brought down", iface);
+	}
+
+	return 0;
+}
+
 static int wg_remove_iface(char *iface)
 {
 	/* check if interface exists */
@@ -1192,6 +1207,7 @@ void stop_wireguard(const int unit)
 		eval("ip", "route", "flush", "cache");
 
 		/* remove interface */
+		wg_set_iface_down(iface);
 		wg_remove_iface(iface);
 		wg_iface_post_down(unit);
 	}
