@@ -29,7 +29,6 @@
 
 #include <stdarg.h>
 #include <arpa/inet.h>
-#include <dirent.h>
 
 static int web_lanport;
 
@@ -2439,7 +2438,7 @@ int start_firewall(void)
 #endif
 
 #ifdef TCONFIG_OPENVPN
-	run_ovpn_firewall_scripts();
+	run_vpn_firewall_scripts("ovpn");
 #endif
 
 #ifdef TCONFIG_TINC
@@ -2447,7 +2446,7 @@ int start_firewall(void)
 #endif
 
 #ifdef TCONFIG_WIREGUARD
-	run_wg_firewall_scripts();
+	run_vpn_firewall_scripts("wg");
 #endif
 
 	fix_chain_in_drop();

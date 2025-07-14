@@ -12,20 +12,11 @@
 
 
 #include "rc.h"
-#include <dirent.h>
 #include "curve25519.h"
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE		DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG		"wireguard_debug"
-
-#define WG_DIR			"/etc/wireguard"
-#define WG_DNS_DIR		WG_DIR"/dns"
-#define WG_SCRIPTS_DIR		WG_DIR"/scripts"
-#define WG_KEYS_DIR		WG_DIR"/keys"
-#define WG_FW_DIR		WG_DIR"/fw"
-#define WG_DEL_SCRIPT		"clear-fw-tmp.sh"
-#define WG_DIR_DEL_SCRIPT	WG_FW_DIR"/"WG_DEL_SCRIPT
 
 #define BUF_SIZE		256
 #define BUF_SIZE_8		8
@@ -1176,51 +1167,6 @@ void stop_wireguard(const int unit)
 
 	if (is_dev)
 		logmsg(LOG_INFO, "wireguard (%s) stopped", iface);
-}
-
-void run_wg_firewall_scripts(void)
-{
-	DIR *dir;
-	struct stat fs;
-	struct dirent *file;
-	char *fa;
-	char buffer[BUF_SIZE_64];
-
-	kill_switch("wg");
-
-	if (chdir(WG_FW_DIR))
-		return;
-
-	dir = opendir(WG_FW_DIR);
-
-	logmsg(LOG_DEBUG, "*** %s: beginning all firewall scripts...", __FUNCTION__);
-
-	while ((file = readdir(dir)) != NULL) {
-		fa = file->d_name;
-
-		if ((fa[0] == '.') || (strcmp(fa, WG_DEL_SCRIPT) == 0))
-			continue;
-
-		memset(buffer, 0, BUF_SIZE_64);
-		snprintf(buffer, BUF_SIZE_64, "%s/", WG_FW_DIR);
-		strlcat(buffer, fa, BUF_SIZE_64);
-
-		/* check exe permission */
-		stat(buffer, &fs);
-		if (fs.st_mode & S_IXUSR) {
-			/* first remove existing firewall rule(s) */
-			run_del_firewall_script(buffer, WG_DIR_DEL_SCRIPT);
-
-			/* then (re-)add firewall rule(s) */
-			logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, buffer);
-			eval(buffer);
-		}
-		else
-			logmsg(LOG_DEBUG, "*** %s: skipping firewall script (not executable): %s", __FUNCTION__, buffer);
-	}
-	logmsg(LOG_DEBUG, "*** %s: done with all firewall scripts...", __FUNCTION__);
-
-	closedir(dir);
 }
 
 void write_wg_dnsmasq_config(FILE* f)

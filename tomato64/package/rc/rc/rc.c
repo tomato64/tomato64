@@ -323,6 +323,51 @@ void kill_switch(const char *kind)
 			logmsg(LOG_INFO, "Kill-Switch: added %d rules to firewall for %s%d", rules_count, (strcmp(kind, "wg") == 0 ? "wireguard" : "openvpn-client"), unit);
 	}
 }
+
+void run_vpn_firewall_scripts(const char *kind)
+{
+	DIR *dir;
+	struct stat fs;
+	struct dirent *file;
+	char *fa;
+	char buf[64];
+
+	kill_switch(kind);
+
+	if (chdir((strcmp(kind, "wg") == 0 ? WG_FW_DIR : OVPN_FW_DIR)))
+		return;
+
+	dir = opendir((strcmp(kind, "wg") == 0 ? WG_FW_DIR : OVPN_FW_DIR));
+
+	logmsg(LOG_DEBUG, "*** %s: beginning all firewall scripts...", __FUNCTION__);
+
+	while ((file = readdir(dir)) != NULL) {
+		fa = file->d_name;
+
+		if ((fa[0] == '.') || (strcmp(fa, (strcmp(kind, "wg") == 0 ? WG_DIR_DEL_SCRIPT : OVPN_DEL_SCRIPT)) == 0))
+			continue;
+
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), "%s/", (strcmp(kind, "wg") == 0 ? WG_FW_DIR : OVPN_FW_DIR));
+		strlcat(buf, fa, sizeof(buf));
+
+		/* check exe permission (in case vpnrouting.sh is still working on routing file) */
+		stat(buf, &fs);
+		if (fs.st_mode & S_IXUSR) {
+			/* first remove existing firewall rule(s) */
+			run_del_firewall_script(buf, (strcmp(kind, "wg") == 0 ? WG_DIR_DEL_SCRIPT : OVPN_DIR_DEL_SCRIPT));
+
+			/* then (re-)add firewall rule(s) */
+			logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, buf);
+			eval(buf);
+		}
+		else
+			logmsg(LOG_DEBUG, "*** %s: skipping firewall script (not executable): %s", __FUNCTION__, buf);
+	}
+	logmsg(LOG_DEBUG, "*** %s: done with all firewall scripts...", __FUNCTION__);
+
+	closedir(dir);
+}
 #endif
 
 typedef struct {

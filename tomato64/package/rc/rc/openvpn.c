@@ -12,9 +12,6 @@
 #include "rc.h"
 
 #include <sys/types.h>
-#include <dirent.h>
-#include <string.h>
-#include <time.h>
 #ifdef TOMATO64
 #include <sys/stat.h>
 #endif /* TOMATO64 */
@@ -29,9 +26,6 @@
 #define BUF_SIZE_64		64
 #define IF_SIZE			8
 #define OVPN_FW_STR		"s/-A/-D/g"
-#define OVPN_DIR		"/etc/openvpn"
-#define OVPN_DEL_SCRIPT		"clear-fw-tmp.sh"
-#define OVPN_DIR_DEL_SCRIPT	OVPN_DIR"/fw/"OVPN_DEL_SCRIPT
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
@@ -1397,51 +1391,6 @@ void stop_ovpn_all()
 
 	/* Remove tunnel interface module */
 	modprobe_r("tun");
-}
-
-void run_ovpn_firewall_scripts(void)
-{
-	DIR *dir;
-	struct stat fs;
-	struct dirent *file;
-	char *fa;
-	char buf[BUF_SIZE_64];
-
-	kill_switch("ovpn");
-
-	if (chdir(OVPN_DIR"/fw"))
-		return;
-
-	dir = opendir(OVPN_DIR"/fw");
-
-	logmsg(LOG_DEBUG, "*** %s: beginning all firewall scripts...", __FUNCTION__);
-
-	while ((file = readdir(dir)) != NULL) {
-		fa = file->d_name;
-
-		if ((fa[0] == '.') || (strcmp(fa, OVPN_DEL_SCRIPT) == 0))
-			continue;
-
-		memset(buf, 0, BUF_SIZE_64);
-		snprintf(buf, BUF_SIZE_64, "%s/fw/", OVPN_DIR);
-		strlcat(buf, fa, BUF_SIZE_64);
-
-		/* check exe permission (in case vpnrouting.sh is still working on routing file) */
-		stat(buf, &fs);
-		if (fs.st_mode & S_IXUSR) {
-			/* first remove existing firewall rule(s) */
-			run_del_firewall_script(buf, OVPN_DIR_DEL_SCRIPT);
-
-			/* then (re-)add firewall rule(s) */
-			logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, buf);
-			eval(buf);
-		}
-		else
-			logmsg(LOG_DEBUG, "*** %s: skipping firewall script (not executable): %s", __FUNCTION__, buf);
-	}
-	logmsg(LOG_DEBUG, "*** %s: done with all firewall scripts...", __FUNCTION__);
-
-	closedir(dir);
 }
 
 void write_ovpn_dnsmasq_config(FILE* f)
