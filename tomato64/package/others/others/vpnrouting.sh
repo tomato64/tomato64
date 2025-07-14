@@ -17,8 +17,8 @@ DNSMASQ_IPSET="/etc/dnsmasq.ipset"
 RESTART_DNSMASQ=0
 RESTART_FW=0
 FWMARK="0"
-CID="$(dev:4:1)"
-ENV_VARS="/tmp/env_vars_$(CID)"
+CID="${dev:4:1}"
+ENV_VARS="/tmp/env_vars_${CID}"
 LOGS="logger -t openvpn-vpnrouting.sh[$PID][$IFACE]"
 [ -d /etc/openvpn/fw ] || mkdir -m 0700 "/etc/openvpn/fw"
 
