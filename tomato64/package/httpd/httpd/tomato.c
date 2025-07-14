@@ -2144,7 +2144,7 @@ static const nvset_t nvset_list[] = {
 	{ "wg1_nat",			V_01				},
 	{ "wg1_fw",			V_01				},
 	{ "wg1_rgwr",			V_RANGE(1, 3)			},
-	{ "wg2_routing_val",		V_NONE				},
+	{ "wg1_routing_val",		V_NONE				},
 	{ "wg2_enable",			V_01				},
 	{ "wg2_poll",			V_RANGE(0, 30)			},
 	{ "wg2_file",			V_TEXT(0, 64)			},
