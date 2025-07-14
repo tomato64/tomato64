@@ -740,12 +740,9 @@ PeerGrid.prototype.insertData = function(at, data) {
 		at = this.tb.rows.length;
 
 	var view = this.dataToView(data);
-	var qr = '';
 	var cfg = '';
-	if (data[2] != '') {
-		qr = '<span class="qriconsvg" title="Display QR Code" onclick="genPeerGridConfigQR(event,'+this.unit+','+at+')">&nbsp;<\/span>';
-		cfg = '<span class="cfgiconsvg" title="Download Config File" onclick="genPeerGridConfigFile(event,'+this.unit+','+at+')">&nbsp;<\/span>';
-	}
+	var qr = '<span class="qriconsvg" title="Display QR Code" onclick="genPeerGridConfigQR(event,'+this.unit+','+at+')">&nbsp;<\/span>';
+	if (data[2] != '') cfg = '<span class="cfgiconsvg" title="Download Config File" onclick="genPeerGridConfigFile(event,'+this.unit+','+at+',\'cfg\')">&nbsp;<\/span>';
 	view.unshift(qr, cfg);
 	view[5] = view[5].substring(0,8)+' ... '+view[5].slice(-8);
 
@@ -1189,13 +1186,13 @@ function genPeerGridConfigQR(event, unit, row) {
 	event.stopPropagation();
 }
 
-function genPeerGridConfigFile(event, unit, row) {
+function genPeerGridConfigFile(event, unit, row, type) {
 	if (changed) {
 		alert('Changes have been made. You need to save before continue!');
 		return;
 	}
 
-	var content = genPeerGridConfig(unit, row);
+	var content = genPeerGridConfig(unit, row, type);
 	if (content != false) {
 		var filename = 'peer'+row+'.conf';
 		var alias = peerTables[unit].tb.rows[row]._data[0];
@@ -1206,7 +1203,7 @@ function genPeerGridConfigFile(event, unit, row) {
 	event.stopPropagation();
 }
 
-function genPeerGridConfig(unit, row) {
+function genPeerGridConfig(unit, row, type) {
 	var port = E('_f_wg'+unit+'_peer_port');
 	var fwmark = E('_f_wg'+unit+'_peer_fwmark');
 	var row_data = peerTables[unit].tb.rows[row]._data;
@@ -1214,7 +1211,7 @@ function genPeerGridConfig(unit, row) {
 
 	clearPeerFields(unit);
 
-	if (!row_data[2]) {
+	if (type == 'cfg' && !row_data[2]) {
 		alert('The selected peer does not have a private key stored, which is require for configuration generation');
 		result = false;
 	}
