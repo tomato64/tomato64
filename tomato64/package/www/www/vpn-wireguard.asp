@@ -203,7 +203,7 @@ function updateForm(num, fw) {
 		fom._service.value += 'firewall-restart';
 	}
 
-	if (isup['wireguard'+num] && fom._service.value.indexOf('wg'+num) < 0) {
+	if (isup['wireguard'+num] && fom._service.value.indexOf('wireguard'+num) < 0) {
 		if (fom._service.value != '')
 			fom._service.value += ',';
 
