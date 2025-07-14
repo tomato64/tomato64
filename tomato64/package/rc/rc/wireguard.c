@@ -51,7 +51,7 @@ enum {
 char port[BUF_SIZE_8];
 char fwmark[BUF_SIZE_16];
 
-static void wg_build_firewall(const int unit, const char *port, const char *iface) {
+static void wg_build_firewall(const int unit, const char *port) {
 	FILE *fp;
 	char buffer[BUF_SIZE_64];
 	char tmp[BUF_SIZE_16];
@@ -59,15 +59,15 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 	int nvi;
 
 	memset(buffer, 0, BUF_SIZE_64);
-	snprintf(buffer, BUF_SIZE_64, WG_FW_DIR"/%s-fw.sh", iface);
+	snprintf(buffer, BUF_SIZE_64, WG_FW_DIR"/wg%d-fw.sh", unit);
 
-	/* script with firewall rules (port, iface) */
+	/* script with firewall rules (port, unit) */
 	/* (..., open wireguard port, accept packets from wireguard internal subnet, set up forwarding) */
 	if ((fp = fopen(buffer, "w"))) {
+		chains_log_detection();
+
 		fprintf(fp, "#!/bin/sh\n"
 		            "\n# FW\n");
-
-		chains_log_detection();
 
 		nvi = atoi(getNVRAMVar("wg%d_fw", unit));
 
@@ -75,44 +75,39 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 		memset(tmp, 0, BUF_SIZE_16);
 		snprintf(tmp, BUF_SIZE_16, "wg%d_firewall", unit);
 		if (atoi(getNVRAMVar("wg%d_com", unit)) == 3 && !nvram_contains_word(tmp, "custom")) { /* 'External - VPN Provider' & auto */
-			fprintf(fp, "iptables -I INPUT -i %s -m state --state NEW -j %s\n"
-			            "iptables -I FORWARD -i %s -m state --state NEW -j %s\n"
-			            "iptables -I FORWARD -o %s -j ACCEPT\n"
+			fprintf(fp, "iptables -I INPUT -i wg%d -m state --state NEW -j %s\n"
+			            "iptables -I FORWARD -i wg%d -m state --state NEW -j %s\n"
+			            "iptables -I FORWARD -o wg%d -j ACCEPT\n"
 			            "echo 1 > /proc/sys/net/ipv4/conf/all/src_valid_mark\n",
-			            iface, (nvi ? chain_in_drop : chain_in_accept),
-			            iface, (nvi ? "DROP" : "ACCEPT"),
-			            iface);
+			            unit, (nvi ? chain_in_drop : chain_in_accept),
+			            unit, (nvi ? "DROP" : "ACCEPT"),
+			            unit);
 
-#ifdef TCONFIG_BCMARM
 			if (!nvram_get_int("ctf_disable")) /* bypass CTF if enabled */
-				fprintf(fp, "iptables -t mangle -I PREROUTING -i %s -j MARK --set-mark 0x01/0x7\n", iface);
-#endif /* TCONFIG_BCMARM */
+				fprintf(fp, "iptables -t mangle -I PREROUTING -i wg%d -j MARK --set-mark 0x01/0x7\n", unit);
 
 			/* masquerade all peer outbound traffic regardless of source subnet */
 			if (atoi(getNVRAMVar("wg%d_nat", unit)) == 1)
-				fprintf(fp, "iptables -t nat -I POSTROUTING -o %s -j MASQUERADE\n", iface);
+				fprintf(fp, "iptables -t nat -I POSTROUTING -o wg%d -j MASQUERADE\n", unit);
 		}
 		else if (atoi(getNVRAMVar("wg%d_com", unit)) != 3) { /* other */
 			fprintf(fp, "iptables -A INPUT -p udp --dport %s -j %s\n"
-			            "iptables -A INPUT -i %s -j %s\n"
-			            "iptables -A FORWARD -i %s -j ACCEPT\n",
+			            "iptables -A INPUT -i wg%d -j %s\n"
+			            "iptables -A FORWARD -i wg%d -j ACCEPT\n",
 			            port, chain_in_accept,
-			            iface, chain_in_accept,
-			            iface);
+			            unit, chain_in_accept,
+			            unit);
 
-#ifdef TCONFIG_BCMARM
 			if (!nvram_get_int("ctf_disable")) /* bypass CTF if enabled */
-				fprintf(fp, "iptables -t mangle -I PREROUTING -i %s -j MARK --set-mark 0x01/0x7\n", iface);
-#endif /* TCONFIG_BCMARM */
-
+				fprintf(fp, "iptables -t mangle -I PREROUTING -i wg%d -j MARK --set-mark 0x01/0x7\n", unit);
 		}
 
 		dns = getNVRAMVar("wg%d_dns", unit);
 		if (getNVRAMVar("wg%d_file", unit)[0] == '\0') { /* only if no optional config file has been added */
-			/* script to add/remove fw rules for dns servers (iface, dns) */
+			/* script to add/remove fw rules for dns servers (unit, dns) */
 			fprintf(fp, "\n# DNS\n"
-			            "DNS_CHAIN=\"wg-ft-%s-dns\"\n"
-			            "DNS_FILE=\"%s/%s.conf\"\n"
+			            "DNS_CHAIN=\"wg-ft-wg%d-dns\"\n"
+			            "DNS_FILE=\"%s/wg%d.conf\"\n"
 			            "STATUS=$?\n"
 			            "\niptables -nL | grep \"$DNS_CHAIN\" && {\n"
 			            " # remove rules\n"
@@ -130,8 +125,8 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 			            "  iptables -N $DNS_CHAIN\n"
 			            "  for NAMESERVER in $(echo \"%s\" | tr \",\" \" \" ); do\n"
 			            "   echo \"server=$NAMESERVER\" >> $DNS_FILE\n"
-			            "   iptables -A $DNS_CHAIN -i %s -p tcp --dst $NAMESERVER/32 --dport 53 -j ACCEPT\n"
-			            "   iptables -A $DNS_CHAIN -i %s -p udp --dst $NAMESERVER/32 --dport 53 -j ACCEPT\n"
+			            "   iptables -A $DNS_CHAIN -i wg%d -p tcp --dst $NAMESERVER/32 --dport 53 -j ACCEPT\n"
+			            "   iptables -A $DNS_CHAIN -i wg%d -p udp --dst $NAMESERVER/32 --dport 53 -j ACCEPT\n"
 			            "  done\n"
 			            "  iptables -A OUTPUT -j $DNS_CHAIN\n"
 			            "  [ $? -eq 0 ] && nohup service dnsmasq restart &\n"
@@ -139,12 +134,12 @@ static void wg_build_firewall(const int unit, const char *port, const char *ifac
 			            "  exit $STATUS\n"
 			            " }\n"
 			            "}\n",
-			            iface,
-			            WG_DNS_DIR, iface,
+			            unit,
+			            WG_DNS_DIR, unit,
 			            dns,
 			            dns,
-			            iface,
-			            iface);
+			            unit,
+			            unit);
 		}
 		fclose(fp);
 		chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
@@ -1119,7 +1114,7 @@ void start_wireguard(const int unit)
 	}
 
 	/* create firewall script & DNS rules */
-	wg_build_firewall(unit, port, iface);
+	wg_build_firewall(unit, port);
 
 	/* firewall + dns rules */
 	memset(buffer, 0, BUF_SIZE);
