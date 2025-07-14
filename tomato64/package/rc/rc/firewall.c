@@ -965,6 +965,9 @@ static void nat_table(void)
 	char t[512];
 	char *p, *c, *b;
 	int i;
+	char proto_key[16];
+	char ip_key[24];
+	char if_key[16];
 #ifndef TCONFIG_BCMARM
 	int n;
 #endif /* !TCONFIG_BCMARM */
@@ -1229,23 +1232,24 @@ static void nat_table(void)
 	/* PPTP Client NAT */
 	pptp_client_firewall("POSTROUTING", p, ipt_write);
 #endif
-	if ((nvram_match("wan_proto", "pppoe") || nvram_match("wan_proto", "dhcp") || nvram_match("wan_proto", "static"))
-	    && (b = nvram_safe_get("wan_modem_ipaddr")) && (*b) && (!nvram_match("wan_modem_ipaddr", "0.0.0.0")) && (!foreach_wif(1, NULL, is_sta)))
-		ipt_write("-A POSTROUTING -o %s -d %s -j MASQUERADE\n", nvram_safe_get("wan_ifname"), b);
 
-	if ((nvram_match("wan2_proto", "pppoe") || nvram_match("wan2_proto", "dhcp") || nvram_match("wan2_proto", "static"))
-	    && (b = nvram_safe_get("wan2_modem_ipaddr")) && (*b) && (!nvram_match("wan2_modem_ipaddr", "0.0.0.0")) && (!foreach_wif(1, NULL, is_sta)))
-		ipt_write("-A POSTROUTING -o %s -d %s -j MASQUERADE\n", nvram_safe_get("wan2_ifname"), b);
+	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(proto_key, 0, sizeof(proto_key));
+		memset(ip_key, 0, sizeof(ip_key));
+		memset(if_key, 0, sizeof(if_key));
+		snprintf(proto_key, sizeof(proto_key), (i == 1 ? "wan_proto"        : "wan%d_proto"),        i);
+		snprintf(ip_key,    sizeof(ip_key),    (i == 1 ? "wan_modem_ipaddr" : "wan%d_modem_ipaddr"), i);
+		snprintf(if_key,    sizeof(if_key),    (i == 1 ? "wan_ifname"       : "wan%d_ifname"),       i);
 
-#ifdef TCONFIG_MULTIWAN
-	if ((nvram_match("wan3_proto", "pppoe") || nvram_match("wan3_proto", "dhcp") || nvram_match("wan3_proto", "static"))
-	    && (b = nvram_safe_get("wan3_modem_ipaddr")) && (*b) && (!nvram_match("wan3_modem_ipaddr", "0.0.0.0")) && (!foreach_wif(1, NULL, is_sta)))
-		ipt_write("-A POSTROUTING -o %s -d %s -j MASQUERADE\n", nvram_safe_get("wan3_ifname"), b);
+		if (!(nvram_match(proto_key, "pppoe") || nvram_match(proto_key, "dhcp") || nvram_match(proto_key, "static")))
+			continue;
 
-	if ((nvram_match("wan4_proto", "pppoe") || nvram_match("wan4_proto", "dhcp") || nvram_match("wan4_proto", "static"))
-	    && (b = nvram_safe_get("wan4_modem_ipaddr")) && (*b) && (!nvram_match("wan4_modem_ipaddr", "0.0.0.0")) && (!foreach_wif(1, NULL, is_sta)))
-		ipt_write("-A POSTROUTING -o %s -d %s -j MASQUERADE\n", nvram_safe_get("wan4_ifname"), b);
-#endif
+		b = nvram_safe_get(ip_key);
+		if ((!b) || (!*b) || (nvram_match(ip_key, "0.0.0.0")) || (foreach_wif(1, NULL, is_sta)))
+			continue;
+
+		ipt_write("-A POSTROUTING -o %s -d %s -j MASQUERADE\n", nvram_safe_get(if_key), b);
+	}
 
 	switch (nvram_get_int("nf_loopback")) {
 		case 1: /* 1 = forwarded-only */
