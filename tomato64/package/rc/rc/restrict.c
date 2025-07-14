@@ -2,7 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -260,9 +260,9 @@ void ipt_restrictions(void)
 			if (ipv6_enabled && *wan6face)
 					ip6t_write("-A FORWARD -o %s -j restrict\n", wan6face);
 #endif
-			for (n = 0; n < wanfaces.count; ++n) {
-				if (*(wanfaces.iface[n].name))
-					ipt_write("-A FORWARD -o %s -j restrict\n", wanfaces.iface[n].name);
+			for (n = 0; n < wanfaces[0].count; ++n) {
+				if (*(wanfaces[0].iface[n].name))
+					ipt_write("-A FORWARD -o %s -j restrict\n", wanfaces[0].iface[n].name);
 			}
 			/* Only mess with DNS requests that are coming in on INPUT for both UDP and TCP */
 			ip46t_write(ipv6_enabled,

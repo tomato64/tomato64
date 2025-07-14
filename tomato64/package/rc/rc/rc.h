@@ -396,12 +396,7 @@ extern void notify_nas(const char *ifname);
 
 /* firewall.c */
 typedef void (*_tf_ipt_write)(const char *format, ... );
-extern wanface_list_t wanfaces;
-extern wanface_list_t wan2faces;
-#ifdef TCONFIG_MULTIWAN
-extern wanface_list_t wan3faces;
-extern wanface_list_t wan4faces;
-#endif
+extern wanface_list_t wanfaces[MWAN_MAX];
 extern char lanaddr[BRIDGE_COUNT][32];
 extern char lanmask[BRIDGE_COUNT][32];
 extern char lanface[BRIDGE_COUNT][IFNAMSIZ + 1];

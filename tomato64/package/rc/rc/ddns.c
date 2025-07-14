@@ -2,7 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -28,7 +28,7 @@ static void update(int num, int *dirty, int force)
 	char *serv, *user, *pass, *host, *wild, *mx, *bmx, *cust;
 	time_t t;
 	struct tm *tm;
-	int n;
+	int n, wan;
 	char ddnsx[16];
 	char ddnsx_path[32];
 	char s[128];
@@ -50,11 +50,15 @@ static void update(int num, int *dirty, int force)
 	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "%s_ip", ddnsx);
 
-	if (nvram_match(s, "wan") || nvram_match(s, "wan2")
-#ifdef TCONFIG_MULTIWAN
-	    || nvram_match(s, "wan3") || nvram_match(s, "wan4")
-#endif
-	)
+	wan = 0;
+	for (n = 1; n <= MWAN_MAX; n++) {
+		memset(v, 0, sizeof(v));
+		snprintf(v, sizeof(v), (n == 1 ? "wan" : "wan%d"), n);
+		if (nvram_match(s, v))
+			wan = 1;
+	}
+
+	if (wan)
 		strlcpy(prefix, nvram_safe_get(s), sizeof(prefix));
 	else
 		strlcpy(prefix, "wan", sizeof(prefix)); /* default */

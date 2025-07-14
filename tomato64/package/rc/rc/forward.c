@@ -1,9 +1,10 @@
 /*
-
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2025 pedro
+ *
+ */
 
 
 #include "rc.h"
@@ -68,15 +69,15 @@ void ipt_forward(ipt_table_t table)
 					          ip,  *iport ? ":" : "", iport);
 
 					if (nvram_get_int("nf_loopback") == 1) {
-						for (n = 0; n < wanfaces.count; ++n) {
-							if (*(wanfaces.iface[n].name))
+						for (n = 0; n < wanfaces[0].count; ++n) {
+							if (*(wanfaces[0].iface[n].name))
 								ipt_write("-A POSTROUTING -p %s %s %s -s %s/%s -d %s -j SNAT --to-source %s\n",
 								          c,
 								          mdport, *iport ? iport : xports,
 								          nvram_safe_get("lan_ipaddr"), /* corrected by ipt */
 								          nvram_safe_get("lan_netmask"),
 								          ip,
-								          wanfaces.iface[n].ip);
+								          wanfaces[0].iface[n].ip);
 						}
 					}
 				}

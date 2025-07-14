@@ -2,7 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -16,61 +16,56 @@ static char qosfn[] = "/etc/wanX_qos";
 static char qosdev[] = "iXXX";
 static int qos_wan_num = 0;
 static int qos_rate_start_index = 0;
-#ifdef TCONFIG_MULTIWAN
-const char disabled_classification_rates[] = "5-100,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,"
-                                             "5-100,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,"
-                                             "5-100,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,"
-                                             "5-100,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0";
-#else
-const char disabled_classification_rates[] = "5-100,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,"
-                                             "5-100,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0";
-#endif
-const char disabled_classification_rules[] = "0<<-2<a<<0<<<<0<Default";
 
-void prep_qosstr(char *prefix)
+#ifdef TCONFIG_BCMARM
+const char disabled_classification_rules[] = "0<<-2<a<<0<<<<0<Default";
+const char *rate_part = "5-100,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0,";
+
+static char *build_disabled_classification_rates(int mwan_count) {
+	int i;
+	size_t part_len = strlen(rate_part);
+	size_t total_len = mwan_count * part_len;
+
+	char *buffer = malloc(total_len);
+	if (!buffer) {
+		syslog(LOG_ERR, "qos: failed allocating memory");
+		return NULL;
+	}
+
+	char *ptr = buffer;
+
+	for (i = 0; i < mwan_count; ++i) {
+		memcpy(ptr, rate_part, part_len);
+		ptr += part_len;
+	}
+	*(ptr - 1) = '\0'; /* remove last comma */
+
+	return buffer;
+}
+#endif
+
+static void prep_qosstr(char *prefix)
 {
-	if (!strcmp(prefix, "wan")) {
-		strlcpy(qosfn, "/etc/wan_qos", sizeof(qosfn));
-		qos_wan_num = 1;
-		qos_rate_start_index = 0;
+	int i;
+	char buf[8];
+
+	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%d"), i);
+		if (!strcmp(prefix, buf)) {
+			snprintf(buf, sizeof(buf), (i == 1 ? "/etc/wan_qos" : "/etc/wan%d_qos"), i);
+			strlcpy(qosfn, buf, sizeof(qosfn));
+			qos_wan_num = i;
+			qos_rate_start_index = (i - 1) * 10;
 #ifdef TCONFIG_BCMARM
-		strlcpy(qosdev, "ifb0", sizeof(qosdev));
+			snprintf(buf, sizeof(buf), "ifb%d", (i - 1));
+			strlcpy(qosdev, buf, sizeof(qosdev));
 #else
-		strlcpy(qosdev, "imq0", sizeof(qosdev));
+			snprintf(buf, sizeof(buf), "imq%d", (i - 1));
+			strlcpy(qosdev, buf, sizeof(qosdev));
 #endif
+		}
 	}
-	else if (!strcmp(prefix, "wan2")) {
-		strlcpy(qosfn, "/etc/wan2_qos", sizeof(qosfn));
-		qos_wan_num = 2;
-		qos_rate_start_index = 10;
-#ifdef TCONFIG_BCMARM
-		strlcpy(qosdev, "ifb1", sizeof(qosdev));
-#else
-		strlcpy(qosdev, "imq1", sizeof(qosdev));
-#endif
-	}
-#ifdef TCONFIG_MULTIWAN
-	else if (!strcmp(prefix, "wan3")) {
-		strlcpy(qosfn, "/etc/wan3_qos", sizeof(qosfn));
-		qos_wan_num = 3;
-		qos_rate_start_index = 20;
-#ifdef TCONFIG_BCMARM
-		strlcpy(qosdev, "ifb2", sizeof(qosdev));
-#else
-		strlcpy(qosdev, "imq2", sizeof(qosdev));
-#endif
-	}
-	else if (!strcmp(prefix, "wan4")) {
-		strlcpy(qosfn, "/etc/wan4_qos", sizeof(qosfn));
-		qos_wan_num = 4;
-		qos_rate_start_index = 30;
-#ifdef TCONFIG_BCMARM
-		strlcpy(qosdev, "ifb3", sizeof(qosdev));
-#else
-		strlcpy(qosdev, "imq3", sizeof(qosdev));
-#endif
-	}
-#endif /* TCONFIG_MULTIWAN */
 }
 
 /* in mangle table */
@@ -109,7 +104,7 @@ void ipt_qos(void)
 	int class_num;
 	int proto_num;
 	int v4v6_ok;
-	int i;
+	int i, j;
 	char sport[192];
 	char saddr[256];
 	char end[256];
@@ -130,16 +125,11 @@ void ipt_qos(void)
 	int sizegroup;
 	int class_flag;
 	int rule_num;
-	int wan2_up;
-#ifdef TCONFIG_MULTIWAN
-	int wan3_up;
-	int wan4_up;
-	int mwan_num = 4;
-#else
-	int mwan_num = 2;
-#endif
+	int wanup[MWAN_MAX];
 #ifndef TCONFIG_BCMARM
 	int qosDevNumStr = 0;
+#else
+	char *disabled_classification_rates;
 #endif
 
 	if (!nvram_get_int("qos_enable"))
@@ -423,64 +413,32 @@ void ipt_qos(void)
 	ip46t_write(ipv6_enabled, "-A QOSO -j CONNMARK --set-mark 0x%x/0xff00f\n", class_num);
 	ip46t_write(ipv6_enabled, "-A QOSO -j RETURN\n");
 #ifdef TOMATO64
-	ip46t_write(ipv6_enabled, "-A QOSO2 -j CONNMARK --set-mark 0x%x/0xff00f\n", class_num);
-	ip46t_write(ipv6_enabled, "-A QOSO2 -j RETURN\n");
+        ip46t_write(ipv6_enabled, "-A QOSO2 -j CONNMARK --set-mark 0x%x/0xff00f\n", class_num);
+        ip46t_write(ipv6_enabled, "-A QOSO2 -j RETURN\n");
 #endif /* TOMATO64 */
 
-	wan2_up = check_wanup("wan2");
-#ifdef TCONFIG_MULTIWAN
-	wan3_up = check_wanup("wan3");
-	wan4_up = check_wanup("wan4");
-#endif
+	for (i = 2; i <= MWAN_MAX; i++) { /* always add rules for 1st WAN, so doesn't matter if it's up */
+		memset(s, 0, sizeof(s));
+		snprintf(s, sizeof(s), "wan%d", i);
+		wanup[i - 1] = check_wanup(s);
+	}
 
 	/* tc in tomato can only match from fw in filter using PACKET (not connection) mark.
 	 * Copy the connection mark to packet mark in POSTROUTING (to apply egress qos)
 	 */
-	qface = wanfaces.iface[0].name;
-	ipt_write("-A FORWARD -o %s -j QOSO\n"
+	for (i = 1; i <= MWAN_MAX; i++) {
+		if ((wanup[i - 1]) || (i == 1)) {
+			qface = wanfaces[i - 1].iface[0].name;
+			ipt_write("-A FORWARD -o %s -j QOSO\n"
 #ifndef TOMATO64
-	          "-A OUTPUT -o %s -j QOSO\n"
+			          "-A OUTPUT -o %s -j QOSO\n"
 #else
-	          "-A OUTPUT -o %s -j QOSO2\n"
+			          "-A OUTPUT -o %s -j QOSO2\n"
 #endif /* TOMATO64 */
-	          "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n"
-	          ,qface, qface, qface);
-
-	if (wan2_up) {
-		qface = wan2faces.iface[0].name;
-		ipt_write("-A FORWARD -o %s -j QOSO\n"
-#ifndef TOMATO64
-		          "-A OUTPUT -o %s -j QOSO\n"
-#else
-		          "-A OUTPUT -o %s -j QOSO2\n"
-#endif /* TOMATO64 */
-		          "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n"
-		          ,qface, qface, qface);
+			          "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n",
+			          qface, qface, qface);
+		}
 	}
-#ifdef TCONFIG_MULTIWAN
-	if (wan3_up) {
-		qface = wan3faces.iface[0].name;
-		ipt_write("-A FORWARD -o %s -j QOSO\n"
-#ifndef TOMATO64
-		          "-A OUTPUT -o %s -j QOSO\n"
-#else
-		          "-A OUTPUT -o %s -j QOSO2\n"
-#endif /* TOMATO64 */
-		          "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n"
-		          ,qface, qface, qface);
-	}
-	if (wan4_up) {
-		qface = wan4faces.iface[0].name;
-		ipt_write("-A FORWARD -o %s -j QOSO\n"
-#ifndef TOMATO64
-		          "-A OUTPUT -o %s -j QOSO\n"
-#else
-		          "-A OUTPUT -o %s -j QOSO2\n"
-#endif /* TOMATO64 */
-		          "-A POSTROUTING -o %s -j CONNMARK --restore-mark --mask 0xf\n"
-		          ,qface, qface, qface);
-	}
-#endif /* TCONFIG_MULTIWAN */
 
 #ifdef TCONFIG_IPV6
 	if (ipv6_enabled && *wan6face)
@@ -501,13 +459,15 @@ void ipt_qos(void)
 	nvram_set("qos_inuse", s);
 
 #ifdef TCONFIG_BCMARM
-	if (!nvram_get_int("qos_classify"))
+	if (!nvram_get_int("qos_classify")) {
+		disabled_classification_rates = build_disabled_classification_rates(MWAN_MAX);
 		g = buf = strdup(disabled_classification_rates);
+	}
 	else
 #endif
 		g = buf = strdup(nvram_safe_get("qos_irates"));
 
-	for (i = 0; i < (CLASSES_NUM * mwan_num) ; ++i) {
+	for (i = 0; i < (CLASSES_NUM * MWAN_MAX) ; ++i) {
 		if ((!g) || ((p = strsep(&g, ",")) == NULL))
 			continue;
 		if ((inuse & (1 << (i % CLASSES_NUM))) == 0)
@@ -518,30 +478,17 @@ void ipt_qos(void)
 		
 		/* check if we've got a percentage definition in the form of "rate-ceiling" and that rate > 1 */
 		if ((sscanf(p, "%u-%u", &rate, &ceil) == 2) && (rate >= 1)) {
-			qface = wanfaces.iface[0].name;
+			qface = wanfaces[0].iface[0].name;
 
 			/* tc in tomato can only match from fw in filter using PACKET (not connection) mark.
 			 * Copy the connection mark to packet mark in PREROUTING (to apply ingress qos)
 			 */
-			ipt_write("-A PREROUTING -i %s -j CONNMARK --restore-mark --mask 0xf\n", qface);
-
-			if (wan2_up) {
-				qface = wan2faces.iface[0].name;
-				ipt_write("-A PREROUTING -i %s -j CONNMARK --restore-mark --mask 0xf\n", qface);
+			for (j = 1; j <= MWAN_MAX; j++) {
+				if ((wanup[j - 1]) || (j == 1)) {
+					qface = wanfaces[j - 1].iface[0].name;
+					ipt_write("-A PREROUTING -i %s -j CONNMARK --restore-mark --mask 0xf\n", qface);
+				}
 			}
-
-#ifdef TCONFIG_MULTIWAN
-			if (wan3_up) {
-				qface = wan3faces.iface[0].name;
-				ipt_write("-A PREROUTING -i %s -j CONNMARK --restore-mark --mask 0xf\n", qface);
-			}
-
-			if (wan4_up) {
-				qface = wan4faces.iface[0].name;
-				ipt_write("-A PREROUTING -i %s -j CONNMARK --restore-mark --mask 0xf\n", qface);
-			}
-#endif
-
 #ifndef TCONFIG_BCMARM
 #ifdef TCONFIG_PPTPD
 			if (nvram_get_int("pptp_client_enable") && !nvram_match("pptp_client_iface", "")) {
@@ -551,50 +498,22 @@ void ipt_qos(void)
 #endif /* TCONFIG_PPTPD */
 
 			if (nvram_get_int("qos_udp")) {
-				qface = wanfaces.iface[0].name;
-				qosDevNumStr = 0;
-				ipt_write("-A PREROUTING -i %s -p tcp -j IMQ --todev %d\n", qface, qosDevNumStr); /* pass only tcp */
-
-				if (wan2_up) {
-					qface = wan2faces.iface[0].name;
-					qosDevNumStr = 1;
-					ipt_write("-A PREROUTING -i %s -p tcp -j IMQ --todev %d\n", qface, qosDevNumStr); /* pass only tcp */
+				for (j = 1; j <= MWAN_MAX; j++) {
+					if ((wanup[j - 1]) || (j == 1)) {
+						qface = wanfaces[j - 1].iface[0].name;
+						qosDevNumStr = j - 1;
+						ipt_write("-A PREROUTING -i %s -p tcp -j IMQ --todev %d\n", qface, qosDevNumStr); /* pass only tcp */
+					}
 				}
-#ifdef TCONFIG_MULTIWAN
-				if (wan3_up) {
-					qface = wan3faces.iface[0].name;
-					qosDevNumStr = 2;
-					ipt_write("-A PREROUTING -i %s -p tcp -j IMQ --todev %d\n", qface, qosDevNumStr); /* pass only tcp */
-				}
-				if (wan4_up) {
-					qface = wan4faces.iface[0].name;
-					qosDevNumStr = 3;
-					ipt_write("-A PREROUTING -i %s -p tcp -j IMQ --todev %d\n", qface, qosDevNumStr); /* pass only tcp */
-				}
-#endif /* TCONFIG_MULTIWAN */
 			}
 			else {
-				qface = wanfaces.iface[0].name;
-				qosDevNumStr = 0;
-				ipt_write("-A PREROUTING -i %s -j IMQ --todev %d\n", qface, qosDevNumStr); /* pass everything thru ingress */
-
-				if (wan2_up) {
-					qface = wan2faces.iface[0].name;
-					qosDevNumStr = 1;
-					ipt_write("-A PREROUTING -i %s -j IMQ --todev %d\n", qface, qosDevNumStr); /* pass everything thru ingress */
+				for (j = 1; j <= MWAN_MAX; j++) {
+					if ((wanup[j - 1]) || (j == 1)) {
+						qface = wanfaces[j - 1].iface[0].name;
+						qosDevNumStr = j - 1;
+						ipt_write("-A PREROUTING -i %s -j IMQ --todev %d\n", qface, qosDevNumStr); /* pass everything thru ingress */
+					}
 				}
-#ifdef TCONFIG_MULTIWAN
-				if (wan3_up) {
-					qface = wan3faces.iface[0].name;
-					qosDevNumStr = 2;
-					ipt_write("-A PREROUTING -i %s -j IMQ --todev %d\n", qface, qosDevNumStr); /* pass everything thru ingress */
-				}
-				if (wan4_up) {
-					qface = wan4faces.iface[0].name;
-					qosDevNumStr = 3;
-					ipt_write("-A PREROUTING -i %s -j IMQ --todev %d\n", qface, qosDevNumStr); /* pass everything thru ingress */
-				}
-#endif /* TCONFIG_MULTIWAN */
 			}
 #endif /* !TCONFIG_BCMARM */
 
@@ -647,6 +566,7 @@ void start_qos(char *prefix)
 #ifdef TCONFIG_BCMARM
 	char *cake_encap_root = "";
 	char *cake_prio_mode_root = "";
+	char *disabled_classification_rates;
 #endif
 
 	/* Network Congestion Control */
@@ -817,8 +737,10 @@ void start_qos(char *prefix)
 
 	inuse = nvram_get_int("qos_inuse");
 #ifdef TCONFIG_BCMARM
-	if (!nvram_get_int("qos_classify"))
+	if (!nvram_get_int("qos_classify")) {
+		disabled_classification_rates = build_disabled_classification_rates(MWAN_MAX);
 		g = buf = strdup(disabled_classification_rates);
+	}
 	else
 #endif
 		g = buf = strdup(nvram_safe_get("qos_orates"));
@@ -919,8 +841,10 @@ void start_qos(char *prefix)
 	 * INCOMING TRAFFIC SHAPING
 	 */
 #ifdef TCONFIG_BCMARM
-	if (!nvram_get_int("qos_classify"))
+	if (!nvram_get_int("qos_classify")) {
+		disabled_classification_rates = build_disabled_classification_rates(MWAN_MAX);
 		g = buf = strdup(disabled_classification_rates);
+	}
 	else
 #endif
 		g = buf = strdup(nvram_safe_get("qos_irates"));
