@@ -360,6 +360,7 @@ void run_vpn_firewall_scripts(const char *kind)
 			/* then (re-)add firewall rule(s) */
 			logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, buf);
 			eval(buf);
+			fix_chain_in_drop();
 		}
 		else
 			logmsg(LOG_DEBUG, "*** %s: skipping firewall script (not executable): %s", __FUNCTION__, buf);
