@@ -40,6 +40,13 @@
 /* uncomment to add default routing (also in patches/wireguard-tools/101-tomato-specific.patch line 412 - 414) after kernel fix */
 #define KERNEL_WG_FIX
 
+/* wireguard routing policy modes (rgwr) */
+enum {
+	WG_RGW_NONE = 0,
+	WG_RGW_ALL,
+	WG_RGW_POLICY,
+	WG_RGW_POLICY_STRICT
+};
 
 char port[BUF_SIZE_8];
 char fwmark[BUF_SIZE_16];
@@ -973,7 +980,7 @@ void start_wg_eas(void)
 
 	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
 		if (atoi(getNVRAMVar("wg%d_enable", unit)) == 1) {
-			if (atoi(getNVRAMVar("wg%d_com", unit)) == 3 && atoi(getNVRAMVar("wg%d_rgwr", unit)) == 1) { /* check for 'External - VPN Provider' mode with "Redirect Internet traffic" set to "All" on this unit */
+			if (atoi(getNVRAMVar("wg%d_com", unit)) == 3 && atoi(getNVRAMVar("wg%d_rgwr", unit)) == WG_RGW_ALL) { /* check for 'External - VPN Provider' mode with "Redirect Internet traffic" set to "All" on this unit */
 				if (externalall_mode == 0) { /* no previous unit is in this mode - allow */
 					start_wireguard(unit);
 					externalall_mode++;
