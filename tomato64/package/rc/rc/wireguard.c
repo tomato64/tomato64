@@ -1200,6 +1200,7 @@ void stop_wireguard(const int unit)
 	memset(buffer, 0, BUF_SIZE);
 	snprintf(buffer, BUF_SIZE, WG_FW_DIR"/%s-fw.sh", iface);
 	run_del_firewall_script(buffer, WG_DIR_DEL_SCRIPT);
+	eval("rm", "-rf", buffer);
 
 	if (is_dev)
 		logmsg(LOG_INFO, "wireguard (%s) stopped", iface);
