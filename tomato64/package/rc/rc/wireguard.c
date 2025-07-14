@@ -1159,6 +1159,11 @@ void stop_wireguard(const int unit)
 	snprintf(buffer, BUF_SIZE, "CheckWireguard%d", unit);
 	eval("cru", "d", buffer);
 
+	/* remove watchdog file */
+	memset(buffer, 0, BUF_SIZE);
+	snprintf(buffer, BUF_SIZE, WG_SCRIPTS_DIR"/watchdog%d.sh", unit);
+	eval("rm", "-rf", buffer);
+
 	/* determine interface */
 	memset(iface, 0, IF_SIZE);
 	snprintf(iface, IF_SIZE, "wg%d", unit);
