@@ -456,7 +456,7 @@ char **ndpi_in;
  */
 static void ipt_ndpi_inbound(void)
 {
-	int en, i;
+	int en, i, j;
 	char **p;
 
 	if (!ndpi_in) return;
@@ -464,32 +464,15 @@ static void ipt_ndpi_inbound(void)
 	en = nvram_match("nf_ndpi_in", "1");
 	if (en) {
 		ipt_write(":nDPIin - [0:0]\n");
-		if (wanup) {
-			for (i = 0; i < wanfaces.count; ++i) {
-				if (*(wanfaces.iface[i].name))
-					ipt_write("-A FORWARD -i %s -j nDPIin\n", wanfaces.iface[i].name);
+
+		for (j = 1; j <= MWAN_MAX; j++) {
+			if (wanup[j - 1]) {
+				for (i = 0; i < wanfaces[j - 1].count; ++i) {
+					if (*(wanfaces[j - 1].iface[i].name))
+						ipt_write("-A FORWARD -i %s -j nDPIin\n", wanfaces[j - 1].iface[i].name);
+				}
 			}
 		}
-		if (wan2up) {
-			for (i = 0; i < wan2faces.count; ++i) {
-				if (*(wan2faces.iface[i].name))
-					ipt_write("-A FORWARD -i %s -j nDPIin\n", wan2faces.iface[i].name);
-			}
-	}
-#ifdef TCONFIG_MULTIWAN
-		if (wan3up) {
-			for (i = 0; i < wan3faces.count; ++i) {
-				if (*(wan3faces.iface[i].name))
-					ipt_write("-A FORWARD -i %s -j nDPIin\n", wan3faces.iface[i].name);
-			}
-		}
-		if (wan4up) {
-			for (i = 0; i < wan4faces.count; ++i) {
-				if (*(wan4faces.iface[i].name))
-					ipt_write("-A FORWARD -i %s -j nDPIin\n", wan4faces.iface[i].name);
-			}
-		}
-#endif
 	}
 
 	p = ndpi_in;
