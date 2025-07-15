@@ -2,6 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -636,121 +637,49 @@ static void retrieveRatesFromTc(const char* deviceName, unsigned long ratesArray
 void asp_qrate(int argc, char **argv)
 {
 	unsigned long rates[10];
-	unsigned int n;
+	char buf[32];
+	unsigned int n, i;
 	char comma;
 	char *a[1];
 
 	a[0] = "1";
 	asp_ctcount(1, a);
 
-	memset(rates, 0, sizeof(rates));
-	retrieveRatesFromTc(get_wanface("wan"), rates);
+	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(rates, 0, sizeof(rates));
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%d"), i);
+		retrieveRatesFromTc(get_wanface(buf), rates);
 
-	comma = ' ';
-	web_puts("\nqrates1_out = [0,");
-	for (n = 0; n < 10; ++n) {
-		web_printf("%c%lu", comma, rates[n]);
-		comma = ',';
-	}
-	web_puts("];");
-	
-	memset(rates, 0, sizeof(rates));
+		comma = ' ';
+		snprintf(buf, sizeof(buf), "\nqrates%d_out = [0,", i);
+		web_puts(buf);
+		for (n = 0; n < 10; ++n) {
+			web_printf("%c%lu", comma, rates[n]);
+			comma = ',';
+		}
+		web_puts("];");
+
+		memset(rates, 0, sizeof(rates));
+		memset(buf, 0, sizeof(buf));
 #ifdef TCONFIG_BCMARM
-	retrieveRatesFromTc("ifb0", rates);
+		snprintf(buf, sizeof(buf), "ifb%d", (i - 1));
+		retrieveRatesFromTc(buf, rates);
 #else
-	retrieveRatesFromTc("imq0", rates);
+		snprintf(buf, sizeof(buf), "imq%d", (i - 1));
+		retrieveRatesFromTc(buf, rates);
 #endif
 
-	comma = ' ';
-	web_puts("\nqrates1_in = [0,");
-	for (n = 0; n < 10; ++n) {
-		web_printf("%c%lu", comma, rates[n]);
-		comma = ',';
+		comma = ' ';
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), "\nqrates%d_in = [0,", i);
+		web_puts(buf);
+		for (n = 0; n < 10; ++n) {
+			web_printf("%c%lu", comma, rates[n]);
+			comma = ',';
+		}
+		web_puts("];");
 	}
-	web_puts("];");
-
-	/* wan2 */
-	memset(rates, 0, sizeof(rates));
-	retrieveRatesFromTc(get_wanface("wan2"), rates);
-
-	comma = ' ';
-	web_puts("\nqrates2_out = [0,");
-	for (n = 0; n < 10; ++n) {
-		web_printf("%c%lu", comma, rates[n]);
-		comma = ',';
-	}
-	web_puts("];");
-	
-	memset(rates, 0, sizeof(rates));
-#ifdef TCONFIG_BCMARM
-	retrieveRatesFromTc("ifb1", rates);
-#else
-	retrieveRatesFromTc("imq1", rates);
-#endif
-
-	comma = ' ';
-	web_puts("\nqrates2_in = [0,");
-	for (n = 0; n < 10; ++n) {
-		web_printf("%c%lu", comma, rates[n]);
-		comma = ',';
-	}
-	web_puts("];");
-
-#ifdef TCONFIG_MULTIWAN
-	/* wan3 */
-	memset(rates, 0, sizeof(rates));
-	retrieveRatesFromTc(get_wanface("wan3"), rates);
-
-	comma = ' ';
-	web_puts("\nqrates3_out = [0,");
-	for (n = 0; n < 10; ++n) {
-		web_printf("%c%lu", comma, rates[n]);
-		comma = ',';
-	}
-	web_puts("];");
-	
-	memset(rates, 0, sizeof(rates));
-#ifdef TCONFIG_BCMARM
-	retrieveRatesFromTc("ifb2", rates);
-#else
-	retrieveRatesFromTc("imq2", rates);
-#endif
-
-	comma = ' ';
-	web_puts("\nqrates3_in = [0,");
-	for (n = 0; n < 10; ++n) {
-		web_printf("%c%lu", comma, rates[n]);
-		comma = ',';
-	}
-	web_puts("];");
-
-	/* wan4 */
-	memset(rates, 0, sizeof(rates));
-	retrieveRatesFromTc(get_wanface("wan4"), rates);
-
-	comma = ' ';
-	web_puts("\nqrates4_out = [0,");
-	for (n = 0; n < 10; ++n) {
-		web_printf("%c%lu", comma, rates[n]);
-		comma = ',';
-	}
-	web_puts("];");
-	
-	memset(rates, 0, sizeof(rates));
-#ifdef TCONFIG_BCMARM
-	retrieveRatesFromTc("ifb3", rates);
-#else
-	retrieveRatesFromTc("imq3", rates);
-#endif
-
-	comma = ' ';
-	web_puts("\nqrates4_in = [0,");
-	for (n = 0; n < 10; ++n) {
-		web_printf("%c%lu", comma, rates[n]);
-		comma = ',';
-	}
-	web_puts("];");
-#endif
 }
 
 #ifndef TOMATO64
