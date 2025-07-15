@@ -9,7 +9,7 @@ cd tomato64
 
 make (x86_64_v2 uefi) or
 make legacy (x86_64_v1 bios) or
-make mt6000 (GL.iNet GL-MT6000/Flint 2)
+make mt6000 (GL.iNet GL-MT6000/Flint 2) or
 make bpi-r3-mini (Banana Pi BPI-R3 Mini)
 
 make distclean (between builds)

@@ -280,5 +280,5 @@ if [ "$error" == 1 ];
 then
 	logger -p user.error "Wireless client(s) did not start or connect, check logs and settings"
 else
-	logger -p user.info "Wireless client(s) started successully"
+	logger -p user.info "Wireless client(s) started successfully"
 fi
