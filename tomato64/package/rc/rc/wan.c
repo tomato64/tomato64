@@ -31,7 +31,7 @@
  *
  * Modified for Tomato Firmware
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -942,11 +942,11 @@ void start_wan_if(char *prefix)
 			stop_dhcpc(prefix);
 			start_dhcpc(prefix);
 		}
-		else if (!strcmp(prefix, "wan"))  start_pppoe(PPPOEWAN, prefix);
-		else if (!strcmp(prefix, "wan2")) start_pppoe(PPPOEWAN2, prefix);
+		else if (!strcmp(prefix, "wan"))  start_pppoe(PPPOEWAN(1), prefix);
+		else if (!strcmp(prefix, "wan2")) start_pppoe(PPPOEWAN(2), prefix);
 #ifdef TCONFIG_MULTIWAN
-		else if (!strcmp(prefix, "wan3")) start_pppoe(PPPOEWAN3, prefix);
-		else if (!strcmp(prefix, "wan4")) start_pppoe(PPPOEWAN4, prefix);
+		else if (!strcmp(prefix, "wan3")) start_pppoe(PPPOEWAN(3), prefix);
+		else if (!strcmp(prefix, "wan4")) start_pppoe(PPPOEWAN(4), prefix);
 #endif
 		break;
 	case WP_DHCP:

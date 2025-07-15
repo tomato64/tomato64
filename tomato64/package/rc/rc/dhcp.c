@@ -31,7 +31,7 @@
  *
  * Modified for Tomato Firmware
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -164,9 +164,10 @@ static int deconfig(char *ifname, char *prefix)
 
 static int bound(char *ifname, int renew, char *prefix)
 {
-	char tmp [32], tmp2[32];
+	char tmp[32], tmp2[32];
 	char *netmask, *dns, *gw;
 	int wan_proto = get_wanx_proto(prefix);
+	unsigned int i;
 
 	do_renew_file(0, prefix);
 
@@ -246,17 +247,12 @@ static int bound(char *ifname, int renew, char *prefix)
 
 		case WP_PPPOE:
 			logmsg(LOG_DEBUG, "*** %s: start_pppoe(%s) ...", __FUNCTION__, prefix);
-
-			if (!strcmp(prefix, "wan"))
-				start_pppoe(PPPOEWAN, prefix);
-			else if (!strcmp(prefix, "wan2"))
-				start_pppoe(PPPOEWAN2, prefix);
-#ifdef TCONFIG_MULTIWAN
-			else if (!strcmp(prefix, "wan3"))
-				start_pppoe(PPPOEWAN3, prefix);
-			else if (!strcmp(prefix, "wan4"))
-				start_pppoe(PPPOEWAN4, prefix);
-#endif
+			for (i = 1; i <= MWAN_MAX; i++) {
+				memset(tmp, 0, sizeof(tmp));
+				snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%d"), i);
+				if (!strcmp(prefix, tmp))
+					start_pppoe(PPPOEWAN(i), prefix);
+			}
 			break;
 		}
 	}
@@ -342,29 +338,26 @@ static int renew(char *ifname, char *prefix)
 int dhcpc_event_main(int argc, char **argv)
 {
 	char *ifname;
-	ifname = getenv("interface");
 	char prefix[] = "wanXX";
+	char tmp[16];
+	unsigned int i;
 
-	if (nvram_match("wan_ifname", ifname))
-		strlcpy(prefix, "wan", sizeof(prefix));
-	else if (nvram_match("wan_iface", ifname))
-		strlcpy(prefix, "wan", sizeof(prefix));
-	else if (nvram_match("wan2_ifname", ifname))
-		strlcpy(prefix, "wan2", sizeof(prefix));
-	else if (nvram_match("wan2_iface", ifname))
-		strlcpy(prefix, "wan2", sizeof(prefix));
-#ifdef TCONFIG_MULTIWAN
-	else if (nvram_match("wan3_ifname", ifname))
-		strlcpy(prefix, "wan3", sizeof(prefix));
-	else if (nvram_match("wan3_iface", ifname))
-		strlcpy(prefix, "wan3", sizeof(prefix));
-	else if (nvram_match("wan4_ifname", ifname))
-		strlcpy(prefix, "wan4", sizeof(prefix));
-	else if (nvram_match("wan4_iface", ifname))
-		strlcpy(prefix, "wan4", sizeof(prefix));
-#endif
-	else
-		strlcpy(prefix, "wan", sizeof(prefix));
+	ifname = getenv("interface");
+
+	memset(tmp, 0, sizeof(tmp));
+	strlcpy(prefix, "wan", sizeof(prefix)); /* default */
+
+	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(tmp, 0, sizeof(tmp));
+		snprintf(tmp, sizeof(tmp), (i == 1 ? "wan_ifname" : "wan%d_ifname"), i);
+		if (nvram_match(tmp, ifname))
+			snprintf(prefix, sizeof(prefix), (i == 1 ? "wan" : "wan%d"), i);
+
+		memset(tmp, 0, sizeof(tmp));
+		snprintf(tmp, sizeof(tmp), (i == 1 ? "wan_iface" : "wan%d_iface"), i);
+		if (nvram_match(tmp, ifname))
+			snprintf(prefix, sizeof(prefix), (i == 1 ? "wan" : "wan%d"), i);
+	}
 
 	if (!wait_action_idle(10))
 		return 0;

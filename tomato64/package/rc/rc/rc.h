@@ -55,12 +55,7 @@
 #define REDIAL		1
 #define CONNECTING	2
 
-#define PPPOEWAN	0
-#define PPPOEWAN2	1
-#ifdef TCONFIG_MULTIWAN
-#define PPPOEWAN3	2
-#define PPPOEWAN4	3
-#endif
+#define PPPOEWAN(n)	((n) - 1)
 
 /* see init.c - used for /proc/sys/vm/min_free_kbytes */
 #define TOMATO_RAM_HIGH_END	(200 * 1024)
