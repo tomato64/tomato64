@@ -588,12 +588,10 @@ static int wg_iface_script(const int unit, const char *script_name)
 		}
 		fprintf(fp, "#!/bin/sh\n%s\n", script);
 		fclose(fp);
-		chmod(path, 0700);
 
 		/* replace %i with interface */
 		memset(buffer, 0, BUF_SIZE_32);
 		snprintf(buffer, BUF_SIZE_32, "wg%d", unit);
-
 		if (replace_in_file(path, "%i", buffer) != 0) {
 			logmsg(LOG_WARNING, "unable to substitute interface name in %s script for wireguard interface wg%d!", script_name, unit);
 			return -1;
@@ -602,6 +600,7 @@ static int wg_iface_script(const int unit, const char *script_name)
 			logmsg(LOG_DEBUG, "interface substitution in %s script for wireguard interface wg%d has executed successfully", script_name, unit);
 
 		/* run script */
+		chmod(path, (S_IRUSR | S_IWUSR | S_IXUSR));
 		if (eval(path)) {
 			logmsg(LOG_WARNING, "unable to execute %s script for wireguard interface wg%d!", script_name, unit);
 			return -1;
@@ -825,7 +824,7 @@ static void wg_init_table(char *iface, char *fwmark)
 			pclose(fp);
 		}
 	}
-	/* standard - copy routes from main routing table (exclude vpns and default gateway) */
+	/* standard - copy routes from main routing table (exclude vpns and all default gateways) */
 	else if (routing == WG_RGW_POLICY) {
 		if ((fp = popen("ip route show table main", "r")) != NULL) {
 			n_ifaces = ASIZE(vpn_ifaces);
@@ -896,6 +895,7 @@ static void wg_routing_policy(char *iface, char *route, char *fwmark, const int 
 			logmsg(LOG_DEBUG, "substitution -I and -A with -D in FW script for wireguard interface %s was done successfully", iface);
 
 		/* execute */
+		chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
 		system(buffer);
 
 		/* remove */
