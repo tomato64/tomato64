@@ -723,7 +723,7 @@ setPIN() {
 
 		# verify pin
 		case "$PIN_STATUS" in
-			"READY" | "READY^M")
+			"READY" | $'READY\r')
 				$LOGS "4G MODEM - PIN verification is not required"
 				IS_DONE=1
 				;;
