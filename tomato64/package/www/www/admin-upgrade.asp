@@ -69,7 +69,7 @@ function upgrade() {
 
 function earlyInit() {
 	E('upgradenotice').style.display = (nvram.remote_upgrade == 1 ? 'none' : 'block');
-	E('afu-size').innerHTML = '&nbsp; '+scaleSize(sysinfo.totalfreeram)+'&nbsp; <small>(aprox. size that can be buffered completely in RAM)<\/small>';
+	E('afu-size').innerHTML = '&nbsp; '+scaleSize(sysinfo.totalfreeram)+'&nbsp; <small>(approx. size that can be buffered completely in RAM)<\/small>';
 /* JFFS2-BEGIN */
 	if (nvram.jffs2_on != 0 && nvram.jffs2_auto_unmount == 0) {
 		E('afu-warn').style.display = 'block';
