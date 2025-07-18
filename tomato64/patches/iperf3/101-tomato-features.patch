@@ -1,22 +1,6 @@
-From 74a77c2fec4b77afd5407148663291c7d3d9597f Mon Sep 17 00:00:00 2001
-From: lancethepants <lancethepants@gmail.com>
-Date: Tue, 3 Sep 2024 09:26:00 -0600
-Subject: [PATCH] tomato features patch
-
----
- src/iperf.h        |  2 ++
- src/iperf_api.c    | 57 +++++++++++++++++++++++++++++++++++++++++++++-
- src/iperf_api.h    |  2 ++
- src/iperf_error.c  |  2 ++
- src/iperf_locale.c |  1 +
- src/main.c         |  1 +
- 6 files changed, 64 insertions(+), 1 deletion(-)
-
-diff --git a/src/iperf.h b/src/iperf.h
-index 527e549..13b00d0 100644
---- a/src/iperf.h
-+++ b/src/iperf.h
-@@ -308,6 +308,8 @@ struct iperf_test
+--- iperf/src/iperf.h
++++ iperf/src/iperf.h
+@@ -325,6 +325,8 @@
      char     *logfile;				/* --logfile option */
      FILE     *outfile;
  
@@ -25,11 +9,9 @@ index 527e549..13b00d0 100644
      int       ctrl_sck;
      int       mapped_v4;
      int       listener;
-diff --git a/src/iperf_api.c b/src/iperf_api.c
-index 7fb741e..084e33d 100644
---- a/src/iperf_api.c
-+++ b/src/iperf_api.c
-@@ -1124,6 +1124,7 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
+--- iperf/src/iperf_api.c
++++ iperf/src/iperf_api.c
+@@ -1134,6 +1134,7 @@
  #endif
  	{"pidfile", required_argument, NULL, 'I'},
  	{"logfile", required_argument, NULL, OPT_LOGFILE},
@@ -37,16 +19,16 @@ index 7fb741e..084e33d 100644
  	{"forceflush", no_argument, NULL, OPT_FORCEFLUSH},
  	{"get-server-output", no_argument, NULL, OPT_GET_SERVER_OUTPUT},
  	{"udp-counters-64bit", no_argument, NULL, OPT_UDP_COUNTERS_64BIT},
-@@ -1170,7 +1171,7 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
+@@ -1192,7 +1193,7 @@
      FILE *ptr_file;
  #endif /* HAVE_SSL */
  
--    while ((flag = getopt_long(argc, argv, "p:f:i:D1VJvsc:ub:t:n:k:l:P:Rw:B:M:N46S:L:ZO:F:A:T:C:dI:hX:", longopts, NULL)) != -1) {
-+    while ((flag = getopt_long(argc, argv, "p:f:i:D1VJvsc:ub:t:n:k:l:P:Rw:B:M:N46S:L:ZO:F:A:T:C:dI:hX:j:", longopts, NULL)) != -1) {
+-    while ((flag = getopt_long(argc, argv, "p:f:i:D1VJvsc:ub:t:n:k:l:P:Rw:B:M:N46S:L:ZO:F:A:T:C:dI:mhX:", longopts, NULL)) != -1) {
++    while ((flag = getopt_long(argc, argv, "p:f:i:D1VJvsc:ub:t:n:k:l:P:Rw:B:M:N46S:L:ZO:F:A:T:C:dI:mhX:j:", longopts, NULL)) != -1) {
          switch (flag) {
              case 'p':
  		portno = atoi(optarg);
-@@ -1576,6 +1577,9 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
+@@ -1631,6 +1632,9 @@
  	    case OPT_LOGFILE:
  		test->logfile = strdup(optarg);
  		break;
@@ -56,7 +38,7 @@ index 7fb741e..084e33d 100644
  	    case OPT_FORCEFLUSH:
  		test->forceflush = 1;
  		break;
-@@ -3437,6 +3441,44 @@ iperf_stats_callback(struct iperf_test *test)
+@@ -3648,6 +3652,44 @@
      }
  }
  
@@ -101,7 +83,7 @@ index 7fb741e..084e33d 100644
  /**
   * Print intermediate results during a test (interval report).
   * Uses print_interval_results to print the results for each stream,
-@@ -4227,6 +4269,7 @@ iperf_reporter_callback(struct iperf_test *test)
+@@ -4439,6 +4481,7 @@
          case STREAM_RUNNING:
              /* print interval results for each stream */
              iperf_print_intermediate(test);
@@ -109,7 +91,7 @@ index 7fb741e..084e33d 100644
              break;
          case TEST_END:
          case DISPLAY_RESULTS:
-@@ -4833,6 +4876,18 @@ iperf_delete_pidfile(struct iperf_test *test)
+@@ -5066,6 +5109,18 @@
      return 0;
  }
  
@@ -128,19 +110,17 @@ index 7fb741e..084e33d 100644
  int
  iperf_json_start(struct iperf_test *test)
  {
-diff --git a/src/iperf_api.h b/src/iperf_api.h
-index 1313142..b8aef27 100644
---- a/src/iperf_api.h
-+++ b/src/iperf_api.h
-@@ -101,6 +101,7 @@ typedef atomic_uint_fast64_t atomic_iperf_size_t;
- #define OPT_JSON_STREAM 28
- #define OPT_SND_TIMEOUT 29
+--- iperf/src/iperf_api.h
++++ iperf/src/iperf_api.h
+@@ -103,6 +103,7 @@
  #define OPT_USE_PKCS1_PADDING 30
-+#define OPT_INTERVAL_LOG 31
+ #define OPT_CNTL_KA 31
+ #define OPT_SKIP_RX_COPY 32
++#define OPT_INTERVAL_LOG 33
  
  /* states */
  #define TEST_START 1
-@@ -364,6 +365,7 @@ int iperf_handle_message_server(struct iperf_test *);
+@@ -375,6 +376,7 @@
  int iperf_create_pidfile(struct iperf_test *);
  int iperf_delete_pidfile(struct iperf_test *);
  void iperf_check_total_rate(struct iperf_test *, iperf_size_t);
@@ -148,24 +128,20 @@ index 1313142..b8aef27 100644
  
  /* JSON output routines. */
  int iperf_json_start(struct iperf_test *);
-diff --git a/src/iperf_error.c b/src/iperf_error.c
-index 0fedf31..a583e2e 100644
---- a/src/iperf_error.c
-+++ b/src/iperf_error.c
-@@ -136,6 +136,8 @@ iperf_errexit(struct iperf_test *test, const char *format, ...)
+--- iperf/src/iperf_error.c
++++ iperf/src/iperf_error.c
+@@ -154,6 +154,8 @@
      va_end(argp);
      if (test)
          iperf_delete_pidfile(test);
 +    if (test->intervalFile)
 +        iperf_delete_interval(test);
-     exit(1);
+     exit(exit_code);
  }
  
-diff --git a/src/iperf_locale.c b/src/iperf_locale.c
-index 9d94e02..001e693 100644
---- a/src/iperf_locale.c
-+++ b/src/iperf_locale.c
-@@ -119,6 +119,7 @@ const char usage_longstr[] = "Usage: iperf3 [-s|-c host] [options]\n"
+--- iperf/src/iperf_locale.c
++++ iperf/src/iperf_locale.c
+@@ -119,6 +119,7 @@
                             "  -J, --json                output in JSON format\n"
                             "  --json-stream             output in line-delimited JSON format\n"
                             "  --logfile f               send output to a log file\n"
@@ -173,11 +149,9 @@ index 9d94e02..001e693 100644
                             "  --forceflush              force flushing output at every interval\n"
                             "  --timestamps<=format>     emit a timestamp at the start of each output line\n"
                             "                            (optional \"=\" and format string as per strftime(3))\n"
-diff --git a/src/main.c b/src/main.c
-index eb29f87..415010e 100644
---- a/src/main.c
-+++ b/src/main.c
-@@ -205,6 +205,7 @@ run(struct iperf_test *test)
+--- iperf/src/main.c
++++ iperf/src/main.c
+@@ -207,6 +207,7 @@
              break;
      }
  
@@ -185,6 +159,3 @@ index eb29f87..415010e 100644
      iperf_catch_sigend(SIG_DFL);
      signal(SIGPIPE, SIG_DFL);
  
--- 
-2.39.2
-

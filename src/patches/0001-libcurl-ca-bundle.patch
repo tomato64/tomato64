@@ -1,6 +1,6 @@
-From 54f98cd322aaf3f01a973d53afcb32d99412defc Mon Sep 17 00:00:00 2001
-From: Lance Fredrickson <lancethepants@gmail.com>
-Date: Tue, 3 Sep 2024 08:16:08 -0600
+From f0bb5f8450a652813285fcf5bd05cbe4479382e3 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Fri, 18 Jul 2025 07:46:23 -0600
 Subject: [PATCH] libcurl: Add ca bundle
 
 ---
@@ -8,10 +8,10 @@ Subject: [PATCH] libcurl: Add ca bundle
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/package/libcurl/libcurl.mk b/package/libcurl/libcurl.mk
-index 71fb6152c7..158d52dc53 100644
+index 5a3a668f..9da812f5 100644
 --- a/package/libcurl/libcurl.mk
 +++ b/package/libcurl/libcurl.mk
-@@ -67,7 +67,8 @@ endif
+@@ -69,7 +69,8 @@ endif
  ifeq ($(BR2_PACKAGE_LIBCURL_OPENSSL),y)
  LIBCURL_DEPENDENCIES += openssl
  LIBCURL_CONF_OPTS += --with-openssl=$(STAGING_DIR)/usr \
