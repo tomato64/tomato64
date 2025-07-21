@@ -1336,7 +1336,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "debug_cprintf_file",		"0"				, 0 },
 	{ "debug_logsegfault",		"0"				, 0 },
 	{ "console_loglevel",		"1"				, 0 },
+#ifndef TOMATO64
 	{ "t_cafree",			"1"				, 0 },
+#else
+	{ "t_cafree",			"0"				, 0 },
+#endif /* TOMATO64 */
 	{ "t_hidelr",			"0"				, 0 },
 	{ "debug_ddns",			"0"				, 0 },
 #ifdef TCONFIG_BCM714

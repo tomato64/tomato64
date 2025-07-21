@@ -75,9 +75,16 @@ mask2cidr() {
 					printf " (used %0.2f", (stotal-sfree-scached)/1024; printf " of %0.2f", stotal/1024; printf " MB)\n"; }' /proc/meminfo
 			}
 		} || {
+# TOMATO64-REMOVE-BEGIN
 			awk '/MemTotal:/{total=$2} /MemFree:/{free=$2} END{ \
 				printf " Mem : used %0.1f", ((total-free)*100/total); printf "%c", 37; \
 				printf " (%0.2f", (total-free)/1024; printf " of %0.2f", total/1024; printf " MB)\n"; }' /proc/meminfo
+# TOMATO64-REMOVE-END
+# TOMATO64-BEGIN
+			awk '/MemTotal:/{total=$2} /MemAvailable:/{free=$2} END{ \
+				printf " Mem : used %0.1f", ((total-free)*100/total); printf "%c", 37; \
+				printf " (%0.2f", (total-free)/1024; printf " of %0.2f", total/1024; printf " MB)\n"; }' /proc/meminfo
+# TOMATO64-END
 
 			[ "$(cat /proc/meminfo | grep SwapTotal | awk '{ print $2 }')" -eq 0 ] || {
 				awk '/SwapTotal:/{stotal=$2} /SwapFree:/{sfree=$2} END{ \

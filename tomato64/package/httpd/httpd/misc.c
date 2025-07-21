@@ -233,8 +233,13 @@ static int get_memory(meminfo_t *m)
 				m->total = strtoul(s + 12, NULL, 10) * 1024;
 				++ok;
 			}
+#ifndef TOMATO64
 			else if (strncmp(s, "MemFree:", 8) == 0) {
 				m->free = strtoul(s + 12, NULL, 10) * 1024;
+#else
+			else if (strncmp(s, "MemAvailable:", 13) == 0) {
+				m->free = strtoul(s + 16, NULL, 10) * 1024;
+#endif /* TOMATO64 */
 				++ok;
 			}
 			else if (strncmp(s, "Buffers:", 8) == 0) {

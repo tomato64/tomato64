@@ -723,7 +723,8 @@ elif [ "$1" == "status-gui" ]; then
 	ramu=$(free | grep buffer | awk '{print $3}')
 # TOMATO64-REMOVE-END
 # TOMATO64-BEGIN
-	ramu=$(grep -E '^MemFree:' /proc/meminfo | awk '{print $2}')
+	ramu=$(grep -E '^MemAvailable:' /proc/meminfo | awk '{print $2}')
+	ramu=$(( ramt - ramu ))
 # TOMATO64-END
 	ramc=$(grep -E '^Cached:' /proc/meminfo | awk '{print $2}')
 	ramb=$(grep 'Buffers:' /proc/meminfo | awk '{print $2}')
