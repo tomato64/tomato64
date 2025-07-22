@@ -1,0 +1,42 @@
+From 3effc8396df88ee5469b769c967d04624ba1188f Mon Sep 17 00:00:00 2001
+From: Lance Fredrickson <lancethepants@gmail.com>
+Date: Mon, 21 Jul 2025 22:52:28 -0600
+Subject: [PATCH] package/ncurses: bump to version 6.5.20250720
+
+Release notes:
+https://github.com/ThomasDickey/ncurses-snapshots/blob/v6_5_20250720/NEWS
+
+Fixes observed issues with htop on aarch64/musl after the last ncurses update.
+
+Signed-off-by: Lance Fredrickson <lancethepants@gmail.com>
+---
+ package/ncurses/ncurses.hash | 2 +-
+ package/ncurses/ncurses.mk   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/package/ncurses/ncurses.hash b/package/ncurses/ncurses.hash
+index 9829cd512c..7369e3cd64 100644
+--- a/package/ncurses/ncurses.hash
++++ b/package/ncurses/ncurses.hash
+@@ -1,4 +1,4 @@
+ # Locally calculated
+-sha256  271044605db2f64fcd1c697c5444a08eae0f70cae33b934e59f205954004a449  ncurses-6.5-20250517.tar.gz
++sha256  fc3871f051e941a637488c07c81d984f731003e65c0f78353606e18296011aac  ncurses-6.5-20250720.tar.gz
+ # Locally computed
+ sha256  708999f95527e1ffa670c6fce288c6c600cb477dd04afcc1171422b3dd4ee226  COPYING
+diff --git a/package/ncurses/ncurses.mk b/package/ncurses/ncurses.mk
+index 4eac66a71c..864f62b57c 100644
+--- a/package/ncurses/ncurses.mk
++++ b/package/ncurses/ncurses.mk
+@@ -6,7 +6,7 @@
+ 
+ # When there is no snapshost yet for a new version, set it to the empty string
+ NCURSES_VERSION_MAJOR = 6.5
+-NCURSES_SNAPSHOT_DATE = 20250517
++NCURSES_SNAPSHOT_DATE = 20250720
+ NCURSES_VERSION = $(NCURSES_VERSION_MAJOR)$(if $(NCURSES_SNAPSHOT_DATE),-$(NCURSES_SNAPSHOT_DATE))
+ NCURSES_VERSION_GIT = $(subst .,_,$(subst -,_,$(NCURSES_VERSION)))
+ NCURSES_SITE = $(call github,ThomasDickey,ncurses-snapshots,v$(NCURSES_VERSION_GIT))
+-- 
+2.39.5
+
