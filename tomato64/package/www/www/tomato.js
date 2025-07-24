@@ -10,38 +10,6 @@
 // -----------------------------------------------------------------------------
 
 /* global variables */
-/* TOMATO64-REMOVE-BEGIN */
-var MAX_BRIDGE_ID = 3;
-/* EXTSW-NO-BEGIN */
-var MAX_PORT_ID = 4;
-/* EXTSW-NO-END */
-/* EXTSW-BEGIN */
-var MAX_PORT_ID = 5;
-/* EXTSW-END */
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-var MAX_BRIDGE_ID = 7;
-var MAX_PORT_ID = 8;
-/* TOMATO64-END */
-var MAX_VLAN_ID = 15;
-/* DUALWAN-BEGIN */
-/* TOMATO64-REMOVE-BEGIN */
-var xifs = [['wan','lan','lan1','lan2','lan3','wan2'],['WAN0','LAN0','LAN1','LAN2','LAN3','WAN1']];
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-var xifs = [['wan','lan','lan1','lan2','lan3','lan4','lan5','lan6','lan7','wan2'],['WAN0','LAN0','LAN1','LAN2','LAN3','LAN4','LAN5','LAN6','LAN7','WAN1']];
-/* TOMATO64-END */
-var MAXWAN_NUM = 2;
-/* DUALWAN-END */
-/* MULTIWAN-BEGIN */
-/* TOMATO64-REMOVE-BEGIN */
-var xifs = [['wan','lan','lan1','lan2','lan3','wan2','wan3','wan4'],['WAN0','LAN0','LAN1','LAN2','LAN3','WAN1','WAN2','WAN3']];
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-var xifs = [['wan','lan','lan1','lan2','lan3','lan4','lan5','lan6','lan7','wan2','wan3','wan4'],['WAN0','LAN0','LAN1','LAN2','LAN3','LAN4','LAN5','LAN6','LAN7','WAN1','WAN2','WAN3']];
-/* TOMATO64-END */
-var MAXWAN_NUM = 4;
-/* MULTIWAN-END */
 var mac_null = '00:00:00:00:00:00';
 var serviceLastUp = [];
 var countButton = 0;

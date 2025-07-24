@@ -48,12 +48,8 @@ endif
 
 # Only include external switch options if EXTSW is enabled (RT-AC88U)
 ifneq ($(TCONFIG_EXTSW),y)
-	sed -i $(INSTALLDIR)/www/at.css -e "/EXTSW-BEGIN/,/EXTSW-END/d"
-	sed -i $(INSTALLDIR)/www/tomato.js -e "/EXTSW-BEGIN/,/EXTSW-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/EXTSW-BEGIN/,/EXTSW-END/d"
 else
-	sed -i $(INSTALLDIR)/www/at.css -e "/EXTSW-NO-BEGIN/,/EXTSW-NO-END/d"
-	sed -i $(INSTALLDIR)/www/tomato.js -e "/EXTSW-NO-BEGIN/,/EXTSW-NO-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/EXTSW-NO-BEGIN/,/EXTSW-NO-END/d"
 endif
 

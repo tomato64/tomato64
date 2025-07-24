@@ -20,13 +20,16 @@
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="protocols.js?rel=<% version(); %>"></script>
 <script src="bwm-hist.js?rel=<% version(); %>"></script>
-<script src="bwm-common.js?rel=<% version(); %>"></script>
 <script src="interfaces.js?rel=<% version(); %>"></script>
 
 <script>
-
+//	<% jsdefaults(); %>
 //	<% devlist(); %>
+</script>
 
+<script src="bwm-common.js?rel=<% version(); %>"></script>
+
+<script>
 var cprefix = 'ipt_details';
 var cstats_busy = 0;
 

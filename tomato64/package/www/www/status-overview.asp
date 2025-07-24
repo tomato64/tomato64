@@ -25,7 +25,7 @@
 <!-- USB-END -->
 
 <script>
-
+//	<% jsdefaults(); %>
 var wmo = {'ap':'Access Point','sta':'Wireless Client','wet':'Wireless Ethernet Bridge','wds':'WDS'
 /* BCMWL6-BEGIN */
 	   ,'psta':'Media Bridge'

@@ -22,8 +22,8 @@
 
 <script>
 
+//	<% jsdefaults(); %>
 //	<% devlist(); %>
-
 //	<% lanip(1); %>
 
 var list = [];
@@ -455,11 +455,11 @@ dg.populate = function() {
 
 		f = '';
 		if (e.freq != '') {
-			f = '<span class="wl'+(e.freq == '5 GHz' ? '50' : '24')+'svg" '+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' title="'+e.freq+'">&nbsp;</span>';
+			f = '<span class="wl'+(e.freq == '5 GHz' ? '50' : '24')+'svg" '+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' title="'+e.freq+'">&nbsp;<\/span>';
 			e.media = (e.freq == '5 GHz' ? 1 : 2);
 /* TOMATO64-BEGIN */
 			if (e.freq == '6 GHz') {
-				f = '<span class="wl60svg"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'>&nbsp;</span">';
+				f = '<span class="wl60svg"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'>&nbsp;<\/span">';
 				e.media = 0;
 			}
 /* TOMATO64-END */
@@ -468,21 +468,21 @@ dg.populate = function() {
 			c = (e.wan != '' ? 'style="filter:invert(1)"' : '');
 /* USB-BEGIN */
 			if ((e.proto == 'lte') || (e.proto == 'ppp3g')) {
-				f = '<span class="cellsvg"'+c+' title="LTE / 3G">&nbsp;</span>';
+				f = '<span class="cellsvg"'+c+' title="LTE / 3G">&nbsp;<\/span>';
 				e.media = 3;
 			}
 			else
 /* USB-END */
 			     if (e.rssi != 1) {
-				f = '<span class="ethsvg"'+c+' title="Ethernet">&nbsp;</span>';
+				f = '<span class="ethsvg"'+c+' title="Ethernet">&nbsp;<\/span>';
 				e.media = 4;
 			}
 		}
 		if (e.rssi == 1) {
 			if (e.mac.match(/^(..):(..):(..)/))
-				f = '<a href="javascript:wake('+i+')" class="status_devices"><span class="dissvg"'+c+' title="Click to wake up">&nbsp;</span><\/a>';
+				f = '<a href="javascript:wake('+i+')" class="status_devices"><span class="dissvg"'+c+' title="Click to wake up">&nbsp;<\/span><\/a>';
 			else
-				f = '<span class="dissvg"'+c+' title="Disconnected">&nbsp;</span>';
+				f = '<span class="dissvg"'+c+' title="Disconnected">&nbsp;<\/span>';
 
 			e.media = 5;
 		}

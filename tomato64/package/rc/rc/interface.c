@@ -44,9 +44,6 @@
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OS
 #define LOGMSG_NVDEBUG	"interface_debug"
 
-#if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
-#define TOMATO_VLANNUM	16
-#endif
 
 int _ifconfig(const char *name, int flags, const char *addr, const char *netmask, const char *dstaddr, int mtu)
 {

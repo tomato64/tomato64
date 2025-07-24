@@ -106,6 +106,20 @@ extern const char *tomato_nightly;
 #define MWAN_MAX	2
 #endif
 
+#ifndef TOMATO64
+#ifdef TCONFIG_EXTSW
+#define MAX_PORT_ID	5
+#else
+#define MAX_PORT_ID	4
+#endif
+#else
+#define MAX_PORT_ID	8
+#endif /* TOMATO64 */
+
+#if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
+#define TOMATO_VLANNUM	16
+#endif
+
 enum {
 	ACT_IDLE,
 	ACT_TFTP_UPGRADE_UNUSED,
