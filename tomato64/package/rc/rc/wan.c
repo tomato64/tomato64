@@ -263,7 +263,8 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 
 static void stop_ppp(char *prefix)
 {
-	char buffer[64];
+	char buffer[64], ifname[8];
+	unsigned int i, not_allwan_l2tp = 1;
 
 	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), "/tmp/ppp/%s_link", prefix);
@@ -284,14 +285,18 @@ static void stop_ppp(char *prefix)
 	//killall_tk_period_wait("ipv6-up", 50);
 	//killall_tk_period_wait("ipv6-down", 50);
 #endif
+
+	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(ifname, 0, sizeof(ifname));
+		sprintf(ifname, (i == 1 ? "wan" : "wan%u"), i);
+		if (get_wanx_proto(ifname) == WP_L2TP) {
+			not_allwan_l2tp = 0;
+			break;
+		}
+	}
+
 	/* FIXME: find a proper way to stop daemon */
-	if (get_wanx_proto("wan") != WP_L2TP
-	    && get_wanx_proto("wan2") != WP_L2TP
-#ifdef TCONFIG_MULTIWAN
-	    && get_wanx_proto("wan3") != WP_L2TP
-	    && get_wanx_proto("wan4") != WP_L2TP
-#endif
-	)
+	if (not_allwan_l2tp)
 		killall_tk_period_wait("xl2tpd", 50);
 
 	//kill(nvram_get_int(strlcat_r(prefix, "_pppd_pid", tmp, sizeof(tmp))),1);
@@ -346,12 +351,17 @@ inline void stop_pptp(char *prefix)
 void start_pptp(char *prefix)
 {
 	int num = 0; /* wan */
+	unsigned int i;
+	char ifname[8];
 
-	if (!strcmp(prefix,"wan2")) num = 1;
-#ifdef TCONFIG_MULTIWAN
-	else if (!strcmp(prefix,"wan3")) num = 2;
-	else if (!strcmp(prefix,"wan4")) num = 3;
-#endif
+	for (i = 2; i <= MWAN_MAX; i++) {
+		memset(ifname, 0, sizeof(ifname));
+		snprintf(ifname, sizeof(ifname), "wan%u", i);
+		if (!strcmp(prefix, ifname)) {
+			num = i - 1;
+			break;
+		}
+	}
 
 	if (!using_dhcpc(prefix))
 		stop_dhcpc(prefix);
@@ -526,19 +536,10 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 {
 
 	FILE *fp;
-	int i;
-	int demand;
-	char xl2tp_file[256];
-	char tmp[100];
-	const char *names[] = {
-		"wan",
-		"wan2",
-#ifdef TCONFIG_MULTIWAN
-		"wan3",
-		"wan4",
-#endif
-		NULL
-	};
+	char xl2tp_file[64];
+	char ppp_optfile[64];
+	char tmp[64], ifname[8];
+	unsigned int i;
 
 	/* Generate XL2TPD configuration file */
 	memset(xl2tp_file, 0, sizeof(xl2tp_file));
@@ -557,13 +558,15 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 	            "debug state = no\n"
 	            "debug tunnel = no\n"
 	            "\n");
+
 	/* LACS */
-	for (i = 0; names[i] != NULL; ++i) {
-		if (!strcmp(nvram_safe_get(strlcat_r(names[i], "_proto", tmp, sizeof(tmp))), "l2tp")) {
-			demand = nvram_get_int(strlcat_r(names[i], "_ppp_demand", tmp, sizeof(tmp)));
-			char ppp_optfile[256];
+	for (i = 1; i <= MWAN_MAX; ++i) {
+		memset(ifname, 0, sizeof(ifname));
+		snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%u"), i);
+		if (!strcmp(nvram_safe_get(strlcat_r(ifname, "_proto", tmp, sizeof(tmp))), "l2tp")) {
 			memset(ppp_optfile, 0, sizeof(ppp_optfile));
-			snprintf(ppp_optfile, sizeof(ppp_optfile), "/tmp/ppp/%s_options", names[i]);
+			snprintf(ppp_optfile, sizeof(ppp_optfile), "/tmp/ppp/%s_options", ifname);
+
 			fprintf(fp, "[lac %s]\n"
 			            "lns = %s\n"
 			            "bps = 1000000000\n" /* 1 gbit to both tx/rx */
@@ -575,20 +578,20 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 			            "redial timeout = %d\n"
 			            "ppp debug = %s\n"
 			            "%s\n",
-			            names[i], /* LAC name */
-			            nvram_safe_get(strlcat_r(names[i], "_l2tp_server_ip", tmp, sizeof(tmp))),
+			            ifname, /* LAC ifname */
+			            nvram_safe_get(strlcat_r(ifname, "_l2tp_server_ip", tmp, sizeof(tmp))),
 			            ppp_optfile,
-			            demand ? "no" : "yes",
-			            nvram_get_int(strlcat_r(names[i], "_ppp_redialperiod", tmp, sizeof(tmp))) ? : 30,
+			            nvram_get_int(strlcat_r(ifname, "_ppp_demand", tmp, sizeof(tmp))) ? "no" : "yes",
+			            nvram_get_int(strlcat_r(ifname, "_ppp_redialperiod", tmp, sizeof(tmp))) ? : 30,
 			            nvram_get_int("debug_ppp") ? "yes" : "no",
-			            nvram_safe_get(strlcat_r(names[i], "_xl2tpd_custom", tmp, sizeof(tmp))));
+			            nvram_safe_get(strlcat_r(ifname, "_xl2tpd_custom", tmp, sizeof(tmp))));
 
+			/* append custom config file (if any) */
 			memset(xl2tp_file, 0, sizeof(xl2tp_file));
-			snprintf(xl2tp_file, sizeof(xl2tp_file), "/etc/%s_xl2tpd.custom", names[i]);
+			snprintf(xl2tp_file, sizeof(xl2tp_file), "/etc/%s_xl2tpd.custom", ifname);
 			fappend(fp, xl2tp_file);
 		}
 	}
-
 	fclose(fp);
 
 	return 0;
@@ -612,6 +615,9 @@ void start_l2tp(char *prefix)
 {
 	char tmp[100];
 	int demand;
+	int num = 0; /* wan */
+	unsigned int i;
+	char ifname[8];
 
 	if (!using_dhcpc(prefix)) /* As for PPTP */
 		stop_dhcpc(prefix);
@@ -621,12 +627,15 @@ void start_l2tp(char *prefix)
 	if (config_l2tp() != 0) /* Generate L2TP daemon config */
 		return;
 
-	int num = 0; /* wan */
-	if (!strcmp(prefix,"wan2")) num = 1;
-#ifdef TCONFIG_MULTIWAN
-	else if (!strcmp(prefix,"wan3")) num = 2;
-	else if (!strcmp(prefix,"wan4")) num = 3;
-#endif
+	for (i = 2; i <= MWAN_MAX; i++) {
+		memset(ifname, 0, sizeof(ifname));
+		snprintf(ifname, sizeof(ifname), "wan%u", i);
+		if (!strcmp(prefix, ifname)) {
+			num = i - 1;
+			break;
+		}
+	}
+
 	if (config_pppd(WP_L2TP, num, prefix) != 0) /* ppp options */
 		return;
 
@@ -830,6 +839,7 @@ void start_wan_if(char *prefix)
 	char tmp[128], tmp2[32];
 	int jumbo_enable = 0;
 	struct vlan_ioctl_args ifv;
+	unsigned int i;
 
 	do_connect_file(1, prefix);
 
@@ -942,12 +952,16 @@ void start_wan_if(char *prefix)
 			stop_dhcpc(prefix);
 			start_dhcpc(prefix);
 		}
-		else if (!strcmp(prefix, "wan"))  start_pppoe(PPPOEWAN(1), prefix);
-		else if (!strcmp(prefix, "wan2")) start_pppoe(PPPOEWAN(2), prefix);
-#ifdef TCONFIG_MULTIWAN
-		else if (!strcmp(prefix, "wan3")) start_pppoe(PPPOEWAN(3), prefix);
-		else if (!strcmp(prefix, "wan4")) start_pppoe(PPPOEWAN(4), prefix);
-#endif
+		else {
+			for (i = 1; i <= MWAN_MAX; i++) {
+				memset(tmp2, 0, sizeof(tmp2));
+				snprintf(tmp2, sizeof(tmp2), (i == 1 ? "wan" : "wan%u"), i);
+				if (!strcmp(prefix, tmp2)) {
+					start_pppoe(PPPOEWAN(i), prefix);
+					break;
+				}
+			}
+		}
 		break;
 	case WP_DHCP:
 	case WP_LTE:
@@ -1420,6 +1434,9 @@ void stop_wan_if(char *prefix)
 
 void stop_wan(void)
 {
+	char buf[16];
+	unsigned int i;
+
 	logmsg(LOG_DEBUG, "*** IN: %s", __FUNCTION__);
 
 	logmsg(LOG_DEBUG, "*** %s: removing mwwatchdog job", __FUNCTION__);
@@ -1448,12 +1465,12 @@ void stop_wan(void)
 	stop_firewall();
 	stop_adblock();
 	clear_resolv();
-	stop_wan_if("wan");
-	stop_wan_if("wan2");
-#ifdef TCONFIG_MULTIWAN
-	stop_wan_if("wan3");
-	stop_wan_if("wan4");
-#endif
+
+	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%u"), i);
+		stop_wan_if(buf);
+	}
 
 	logmsg(LOG_DEBUG, "*** OUT: %s", __FUNCTION__);
 }

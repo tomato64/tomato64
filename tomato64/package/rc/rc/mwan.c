@@ -2,7 +2,7 @@
  *
  * Multi WAN
  * By Arctic QQ:317869867 E-Mail:zengchen228@vip.qq.com
- * Fixes/updates (C) 2018 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -14,13 +14,8 @@
 #define LOGMSG_NVDEBUG	"mwan_debug"
 
 
-#ifdef TCONFIG_MULTIWAN
-static char mwan_curr[] = {'0', '0', '0', '0', '\0'};
-static char mwan_last[] = {'0', '0', '0', '0', '\0'};
-#else
-static char mwan_curr[] = {'0', '0', '\0'};
-static char mwan_last[] = {'0', '0', '\0'};
-#endif
+static char mwan_curr[MWAN_MAX + 1] = { [0 ... MWAN_MAX - 1] = '0', [MWAN_MAX] = '\0' };
+static char mwan_last[MWAN_MAX + 1] = { [0 ... MWAN_MAX - 1] = '0', [MWAN_MAX] = '\0' };
 
 typedef struct
 {
@@ -305,7 +300,8 @@ void mwan_state_files(void)
 
 void mwan_status_update(void)
 {
-	int mwan_num, wan_unit;
+	int mwan_num, wan_unit, allwan_down = 1;
+	unsigned int i;
 	char prefix[16];
 
 	mwan_num = nvram_get_int("mwan_num");
@@ -328,11 +324,14 @@ void mwan_status_update(void)
 			mwan_curr[wan_unit - 1] = '0'; /* disconnected */
 	}
 
-#ifdef TCONFIG_MULTIWAN
-	if ((mwan_curr[0] < '2') && (mwan_curr[1] < '2') && (mwan_curr[2] < '2') && (mwan_curr[3] < '2')) {
-#else
-	if ((mwan_curr[0] < '2') && (mwan_curr[1] < '2')) {
-#endif
+	for (i = 1; i <= MWAN_MAX; i++) { /* let's stick to our iteration (1 ---> <= MWAN_MAX) */
+		if (mwan_curr[i - 1] >= '2') {
+			allwan_down = 0;
+			break;
+		}
+	}
+
+	if (allwan_down) {
 		/* all connections down, searching failover interfaces */
 		for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 			if (mwan_curr[wan_unit - 1] == '1') {
@@ -354,11 +353,12 @@ void mwan_status_update(void)
 
 void mwan_load_balance(void)
 {
-	int mwan_num, wan_unit, proto, wan_default, wan_weight = 0;
+	int mwan_num, wan_unit, proto, wan_default, wan_weight = 0, not_allwan_down = 0;
 	char prefix[16];
 	char cmd[256];
 	char lb_cmd[2048];
 	char buf[32];
+	unsigned int i;
 
 	mwan_num = nvram_get_int("mwan_num");
 	if ((mwan_num == 1) || (mwan_num > MWAN_MAX))
@@ -395,11 +395,16 @@ void mwan_load_balance(void)
 			system(cmd);
 		}
 	}
-#ifdef TCONFIG_MULTIWAN
-	if (strcmp(mwan_curr, "0000")) {
-#else
-	if (strcmp(mwan_curr, "00")) {
-#endif
+
+	/* check if all down */
+	for (i = 1; i <= MWAN_MAX; i++) { /* let's stick to our iteration (1 ---> <= MWAN_MAX) */
+		if (mwan_curr[i - 1] != '0') {
+			not_allwan_down = 1;
+			break;
+		}
+	}
+
+	if (not_allwan_down) {
 		logmsg(LOG_DEBUG, "*** %s: LOAD BALANCING: cmd=[%s]", __FUNCTION__, lb_cmd);
 	}
 	else {
@@ -441,20 +446,17 @@ int mwan_route_main(int argc, char **argv)
 {
 	int check_time = 15;
 	int mwan_num;
+	unsigned int i;
 	FILE *fp;
 
 	mkdir("/etc/iproute2", 0744);
 	if ((fp = fopen("/etc/iproute2/rt_tables", "w")) != NULL) {
-		fprintf(fp, "1 WAN1\n"
-		            "2 WAN2\n"
-#ifdef TCONFIG_MULTIWAN
-		            "3 WAN3\n"
-		            "4 WAN4\n"
-#endif
+		for (i = 1; i <= MWAN_MAX; i++) {
+			fprintf(fp, "%u WAN%u\n", i, i);
+		}
 #ifdef TCONFIG_PPTPD
-		            "%d %s\n", PPTP_CLIENT_TABLE_ID, PPTP_CLIENT_TABLE_NAME
+		fprintf(fp, "%d %s\n", PPTP_CLIENT_TABLE_ID, PPTP_CLIENT_TABLE_NAME);
 #endif
-		);
 		fclose(fp);
 	}
 
