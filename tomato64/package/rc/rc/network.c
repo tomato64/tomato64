@@ -820,7 +820,7 @@ int disabled_wl_vif(int idx, int unit, int subunit, void *param)
 	return 0;
 }
 
-#if defined(TCONFIG_AC3200) && !defined(TCONFIG_BCM714) /* only add for SDK7 */
+#ifdef TCONFIG_BCMARM
 /* check for enabled wl vifs */
 int enabled_wl_vif(int idx, int unit, int subunit, void *param)
 {
@@ -834,7 +834,7 @@ int enabled_wl_vif(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
-#endif /* defined(TCONFIG_AC3200) && !defined(TCONFIG_BCM714) */
+#endif /* TCONFIG_BCMARM */
 
 static int set_wlmac(int idx, int unit, int subunit, void *param)
 {
