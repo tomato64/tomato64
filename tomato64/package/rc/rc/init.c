@@ -41,11 +41,9 @@
 #ifdef TOMATO64
 #include <sys/sysmacros.h>
 #endif /* TOMATO64 */
-#ifndef TOMATO64
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 #include <bcmparams.h>
 #endif
-#endif /* TOMATO64 */
 
 #ifndef WL_BSS_INFO_VERSION
 #error WL_BSS_INFO_VERSION
@@ -957,7 +955,6 @@ static int init_vlan_ports(void)
 	int dirty = 0;
 	int model = get_model();
 
-#ifndef TOMATO64
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	char vlanports[] = "vlanXXXXports";
 	char vlanhw[] = "vlanXXXXhwname";
@@ -986,7 +983,6 @@ static int init_vlan_ports(void)
 		}
 	}
 #endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
-#endif /* TOMATO64 */
 
 	switch (model) {
 
@@ -1912,7 +1908,6 @@ static void check_bootnv(void)
 
 	dirty |= init_vlan_ports();
 
-#ifndef TOMATO64
 	if (dirty) {
 		nvram_commit();
 
@@ -1924,7 +1919,6 @@ REBOOT: /* do a simple reboot */
 		reboot(RB_AUTOBOOT);
 		exit(0);
 	}
-#endif /* TOMATO64 */
 }
 
 static int init_nvram(void)
