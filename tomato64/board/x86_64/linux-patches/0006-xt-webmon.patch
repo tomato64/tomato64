@@ -1,6 +1,6 @@
-From 98ffbc3062aceed70175589948fe61343b86086a Mon Sep 17 00:00:00 2001
+From 126208811bd6904699d579e99aa93a6f86beb091 Mon Sep 17 00:00:00 2001
 From: lancethepants <lancethepants@gmail.com>
-Date: Fri, 4 Jul 2025 22:05:42 -0600
+Date: Sat, 26 Jul 2025 08:08:33 -0600
 Subject: [PATCH] xt-webmon
 
 ---
@@ -8,8 +8,8 @@ Subject: [PATCH] xt-webmon
  net/netfilter/Kconfig                |    4 +
  net/netfilter/Makefile               |    1 +
  net/netfilter/webmon_deps/tree_map.h | 1084 ++++++++++++++++
- net/netfilter/xt_webmon.c            | 1756 ++++++++++++++++++++++++++
- 5 files changed, 2914 insertions(+)
+ net/netfilter/xt_webmon.c            | 1760 ++++++++++++++++++++++++++
+ 5 files changed, 2918 insertions(+)
  create mode 100644 include/linux/netfilter/xt_webmon.h
  create mode 100644 net/netfilter/webmon_deps/tree_map.h
  create mode 100644 net/netfilter/xt_webmon.c
@@ -1208,10 +1208,10 @@ index 000000000..622f4c5e2
 +
 diff --git a/net/netfilter/xt_webmon.c b/net/netfilter/xt_webmon.c
 new file mode 100644
-index 000000000..635409e22
+index 000000000..ed70e3b1d
 --- /dev/null
 +++ b/net/netfilter/xt_webmon.c
-@@ -0,0 +1,1756 @@
+@@ -0,0 +1,1760 @@
 +/*  webmon --	A netfilter module to match URLs in HTTP(S) requests
 + *  		This module can match using string match or regular expressions
 + *  		Originally designed for use with Gargoyle router firmware (gargoyle-router.com)
@@ -1991,7 +1991,11 @@ index 000000000..635409e22
 +					if(length == 4)
 +					{
 +						ktime_t time;
-+						if(*split[1] == NFPROTO_IPV4)
++						long proto = 0;
++						int chk = 0;
++
++						chk = kstrtol(split[1], 10, &proto);
++						if(chk == 0 && proto == NFPROTO_IPV4)
 +						{
 +							int parsed_ip[4];
 +							int valid_ip = sscanf(split[2], "%d.%d.%d.%d", parsed_ip, parsed_ip+1, parsed_ip+2, parsed_ip+3);
@@ -2019,7 +2023,7 @@ index 000000000..635409e22
 +								}
 +							}
 +						}
-+						else
++						else if(chk == 0 && proto == NFPROTO_IPV6)
 +						{
 +							uint16_t parsed_ip[8];
 +							int valid_ip = sscanf(split[2], STRIP6, parsed_ip, parsed_ip+1, parsed_ip+2, parsed_ip+3, parsed_ip+4, parsed_ip+5, parsed_ip+6, parsed_ip+7);
