@@ -31,14 +31,6 @@
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"openvpn_debug"
 
-/* OpenVPN routing policy modes (rgw) */
-enum {
-	OVPN_RGW_NONE = 0,
-	OVPN_RGW_ALL,
-	OVPN_RGW_POLICY,
-	OVPN_RGW_POLICY_STRICT
-};
-
 typedef enum ovpn_route
 {
 	NONE = 0,

@@ -31,14 +31,6 @@
 /* uncomment to add default routing (also in patches/wireguard-tools/101-tomato-specific.patch line 412 - 414) after kernel fix */
 #define KERNEL_WG_FIX
 
-/* wireguard routing policy modes (rgwr) */
-enum {
-	WG_RGW_NONE = 0,
-	WG_RGW_ALL,
-	WG_RGW_POLICY,
-	WG_RGW_POLICY_STRICT
-};
-
 /* interfaces that we want to ignore in standard PRB mode */
 static const char *vpn_ifaces[] = { "wg0", 
                                     "wg1",
