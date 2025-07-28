@@ -350,14 +350,10 @@ function save() {
 		if (E('_f_vpn_'+t+'_eas').checked)
 			fom.vpn_client_eas.value += ''+(i + 1)+',';
 
+		var routedata = routingTables[i].getAllData();
 		var routing = '';
-		if ((E('_vpn_'+t+'_rgw').value == 2) || (E('_vpn_'+t+'_rgw').value == 3)) { /* only in routing policy mode */
-			var routedata = routingTables[i].getAllData();
-			for (j = 0; j < routedata.length; ++j)
-				routing += routedata[j].join('<')+'>';
-		}
-		else /* otherwise, remove all data */
-			routingTables[i].removeAllData();
+		for (j = 0; j < routedata.length; ++j)
+			routing += routedata[j].join('<')+'>';
 
 		E('vpn_'+t+'_bridge').value = E('_f_vpn_'+t+'_bridge').checked ? 1 : 0;
 		E('vpn_'+t+'_nat').value = E('_f_vpn_'+t+'_nat').checked ? 1 : 0;
