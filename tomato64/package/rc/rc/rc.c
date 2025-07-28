@@ -235,7 +235,6 @@ void kill_switch(const char *kind)
 	char wan_prefix[] = "wanXX";
 	char buf[64], buf2[64], val[64], wan_if[16];
 	unsigned int kd = (strcmp(kind, "wg") == 0 ? 0 : 1);
-	int policy_mode = (kd ? OVPN_RGW_POLICY : WG_RGW_POLICY);
 
 	mwan_num = nvram_get_int("mwan_num");
 	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
@@ -244,11 +243,11 @@ void kill_switch(const char *kind)
 	for (unit = kd; unit <= (kd ? OVPN_CLIENT_MAX : WG_INTERFACE_MAX); ++unit) {
 		/* only apply kill switch rules if in PBR mode! */
 		if (kd) { /* ovpn */
-			if ((atoi(getNVRAMVar(("vpn_client%u_rgw"), unit)) < policy_mode) || (strcmp(getNVRAMVar(("vpn_client%u_if"), unit), "tun"))) /* proper policy mode and if: 'tun' */
+			if ((atoi(getNVRAMVar(("vpn_client%u_rgw"), unit)) < VPN_RGW_POLICY) || (strcmp(getNVRAMVar(("vpn_client%u_if"), unit), "tun"))) /* proper policy mode and if: 'tun' */
 				continue;
 		}
 		else { /* wireguard */
-			if ((atoi(getNVRAMVar(("wg%u_rgwr"), unit)) < policy_mode) || (atoi(getNVRAMVar(("wg%u_com"), unit)) < 3)) /* proper policy mode and in 'External - VPN Provider' */
+			if ((atoi(getNVRAMVar(("wg%u_rgwr"), unit)) < VPN_RGW_POLICY) || (atoi(getNVRAMVar(("wg%u_com"), unit)) < 3)) /* proper policy mode and in 'External - VPN Provider' */
 				continue;
 		}
 

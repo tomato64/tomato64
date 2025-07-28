@@ -382,12 +382,12 @@ void start_ovpn_client(int unit)
 	/* Routing */
 	nvi = atoi(getNVRAMVar("vpn_client%d_rgw", unit));
 
-	if (nvi == OVPN_RGW_ALL) {
+	if (nvi == VPN_RGW_ALL) {
 		if (if_type == OVPN_IF_TAP && getNVRAMVar("vpn_client%d_gw", unit)[0] != '\0')
 			fprintf(fp, "route-gateway %s\n", getNVRAMVar("vpn_client%d_gw", unit));
 		fprintf(fp, "redirect-gateway def1\n");
 	}
-	else if (nvi >= OVPN_RGW_POLICY)
+	else if (nvi >= VPN_RGW_POLICY)
 		fprintf(fp, "pull-filter ignore \"redirect-gateway\"\n"
 		            "redirect-private def1\n");
 
@@ -574,7 +574,7 @@ void start_ovpn_client(int unit)
 #endif
 
 		nvi = atoi(getNVRAMVar("vpn_client%d_rgw", unit));
-		if (nvi >= OVPN_RGW_POLICY) {
+		if (nvi >= VPN_RGW_POLICY) {
 			/* Disable rp_filter when in policy mode */
 			fprintf(fp, "echo 0 > /proc/sys/net/ipv4/conf/%s/rp_filter\n"
 			            "echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter\n",

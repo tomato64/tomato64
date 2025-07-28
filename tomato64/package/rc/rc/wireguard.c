@@ -157,7 +157,7 @@ static void wg_build_firewall(const int unit, const char *port) {
 			if (atoi(getNVRAMVar("wg%d_nat", unit)) == 1)
 				fprintf(fp, "iptables -t nat -I POSTROUTING -o wg%d -j MASQUERADE\n", unit);
 
-			if (atoi(getNVRAMVar("wg%d_rgwr", unit)) >= WG_RGW_POLICY) {
+			if (atoi(getNVRAMVar("wg%d_rgwr", unit)) >= VPN_RGW_POLICY) {
 				/* Disable rp_filter when in policy mode */
 				fprintf(fp, "echo 0 > /proc/sys/net/ipv4/conf/wg%d/rp_filter\n"
 				            "echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter\n",
@@ -803,7 +803,7 @@ static void wg_init_table(char *iface, char *fwmark)
 	logmsg(LOG_INFO, "creating wireguard (wg%d) routing table (mode %d)", atoi(&iface[2]), routing);
 
 	/* strict - copy routes from main routing table only for this interface */
-	if (routing == WG_RGW_POLICY_STRICT) {
+	if (routing == VPN_RGW_POLICY_STRICT) {
 		memset(cmd, 0, BUF_SIZE_64);
 		snprintf(cmd, BUF_SIZE_64, "ip route show table main dev %s", iface);
 
@@ -817,7 +817,7 @@ static void wg_init_table(char *iface, char *fwmark)
 		}
 	}
 	/* standard - copy routes from main routing table (exclude vpns and all default gateways) */
-	else if (routing == WG_RGW_POLICY) {
+	else if (routing == VPN_RGW_POLICY) {
 		if ((fp = popen("ip route show table main", "r")) != NULL) {
 			n_ifaces = ASIZE(vpn_ifaces);
 
@@ -964,7 +964,7 @@ static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *a
 			snprintf(buffer, BUF_SIZE_32, "%s", b);
 
 			if ((vstrsep(b, "/", &ip, &nm) == 2) && (atoi(nm) == 0)) { /* default route */
-				if (atoi(getNVRAMVar("wg%d_rgwr", unit)) >= WG_RGW_POLICY) { /* routing policy+ */
+				if (atoi(getNVRAMVar("wg%d_rgwr", unit)) >= VPN_RGW_POLICY) { /* routing policy+ */
 					/* we don't want to mark packets for PBR */
 					if (add)
 						wg_set_iface_fwmark(iface, "0");
@@ -1161,7 +1161,7 @@ void start_wg_eas(void)
 
 	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
 		if (atoi(getNVRAMVar("wg%d_enable", unit)) == 1) {
-			if (atoi(getNVRAMVar("wg%d_com", unit)) == 3 && atoi(getNVRAMVar("wg%d_rgwr", unit)) == WG_RGW_ALL) { /* check for 'External - VPN Provider' mode with "Redirect Internet traffic" set to "All" on this unit */
+			if (atoi(getNVRAMVar("wg%d_com", unit)) == 3 && atoi(getNVRAMVar("wg%d_rgwr", unit)) == VPN_RGW_ALL) { /* check for 'External - VPN Provider' mode with "Redirect Internet traffic" set to "All" on this unit */
 				if (externalall_mode == 0) { /* no previous unit is in this mode - allow */
 					start_wireguard(unit);
 					externalall_mode++;
