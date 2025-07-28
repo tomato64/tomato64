@@ -2573,6 +2573,14 @@ td.adblock-td2 {
 	width: 130px;
 }
 
+.tomatoanon-note b {
+	font-size: 120%;
+}
+
+.tomatoanon-note br {
+	display: inline-block;
+}
+
 /* SVG */
 #svg text {
 	font: 13px monospace;

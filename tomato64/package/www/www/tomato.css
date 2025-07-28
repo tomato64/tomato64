@@ -1851,6 +1851,11 @@ span.pptpsvg {
 	vertical-align: text-bottom;
 }
 
+.tomatoanon-note {
+	font-size: 120%;
+	padding-bottom: 20px;
+}
+
 /* OPENVPN-BEGIN */
 span.openvpnsvg {
 	background-image: var(--icon-openvpn);

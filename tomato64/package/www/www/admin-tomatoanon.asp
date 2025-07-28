@@ -79,7 +79,19 @@ function init() {
 		- Tomato MOD, in our case: Tomato64<br>
 		- Uptime of your router, ex: 7 days<br>
 		<br>
+/* TOMATO64-REMOVE-BEGIN */
+		The submitted results can be viewed on the <a href="https://anon.freshtomato.org" class="new_window"><b>anon.freshtomato.org</b></a> page.<br>
+		<br>
+		<div class="tomatoanon-note">
+			Please consider including tomatoanon to support both myself (<a href="https://github.com/pedro0311" class="new_window"><b>pedro</b></a>) and the entire <a href="https://github.com/FreshTomato-Project" class="new_window"><b>FreshTomato project</b></a>.<br>
+			Enabling tomatoanon would allow the community to better understand how many of us are actively using FT.<br>
+			This insight is crucial - it can help demonstrate the project's relevance, attract new users, and potentially bring in new contributors or even maintainers in the future!<br><br>
+			Thank you for your time, dedication, and for considering this request.
+		</div>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
 		The submitted results can be viewed on the <a href="https://anon.freshtomato.org" class="new_window"><b>anon.freshtomato.org</b></a> page.
+/* TOMATO64-END */
 	</div>
 	<script>
 		createFieldTable('', [ { title: 'Enable', name: 'f_tomatoanon_enable', type: 'checkbox', value: nvram.tomatoanon_enable == 1 } ]);
