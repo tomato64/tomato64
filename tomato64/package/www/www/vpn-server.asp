@@ -563,9 +563,14 @@ function downloadClientConfig(num) {
 /* KEYGEN-END */
 
 function verifyFields(focused, quiet) {
+	var i, j, t, ok = 1;
+	var restart = 1;
 	tgHideIcons();
 
-	var i, j, t, ok = 1;
+	for (i = 1; i <= unitCount; ++i) {
+		if (focused && focused == E('_f_vpn_server'+i+'_eas')) /* except on/off */
+			restart = 0;
+	}
 
 	/* When settings change, make sure we restart the right services */
 	if (focused) {
@@ -576,17 +581,19 @@ function verifyFields(focused, quiet) {
 		if (serveridx >= 0) {
 			var num = focused.name.substring(serveridx + 6, serveridx + 7);
 
-			updateForm(num);
-
-			if ((focused.name.indexOf('_dns') >= 0 || (focused.name.indexOf('_if') >= 0 && E('_f_vpn_server'+num+'_dns').checked)) && fom._service.value.indexOf('dnsmasq') < 0) {
-				if (fom._service.value != '')
-					fom._service.value += ',';
-
-				fom._service.value += 'dnsmasq-restart';
-			}
-
 			if (focused.name.indexOf('_c2c') >= 0)
 				ccdTables[num - 1].reDraw();
+
+			if (restart) { /* except on/off */
+				updateForm(num);
+
+				if ((focused.name.indexOf('_dns') >= 0 || (focused.name.indexOf('_if') >= 0 && E('_f_vpn_server'+num+'_dns').checked)) && fom._service.value.indexOf('dnsmasq') < 0) {
+					if (fom._service.value != '')
+						fom._service.value += ',';
+
+					fom._service.value += 'dnsmasq-restart';
+				}
+			}
 		}
 	}
 
