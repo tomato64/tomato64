@@ -339,7 +339,7 @@ int dhcpc_event_main(int argc, char **argv)
 {
 	char *ifname;
 	char prefix[] = "wanXX";
-	char tmp[16];
+	char name[8], tmp[16];
 	unsigned int i;
 
 	ifname = getenv("interface");
@@ -348,15 +348,18 @@ int dhcpc_event_main(int argc, char **argv)
 	strlcpy(prefix, "wan", sizeof(prefix)); /* default */
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(tmp, 0, sizeof(tmp));
-		snprintf(tmp, sizeof(tmp), (i == 1 ? "wan_ifname" : "wan%d_ifname"), i);
-		if (nvram_match(tmp, ifname))
-			snprintf(prefix, sizeof(prefix), (i == 1 ? "wan" : "wan%d"), i);
+		memset(name, 0, sizeof(name));
+		snprintf(name, sizeof(name), (i == 1 ? "wan" : "wan%u"), i);
 
 		memset(tmp, 0, sizeof(tmp));
-		snprintf(tmp, sizeof(tmp), (i == 1 ? "wan_iface" : "wan%d_iface"), i);
+		snprintf(tmp, sizeof(tmp), "%s_ifname", name);
 		if (nvram_match(tmp, ifname))
-			snprintf(prefix, sizeof(prefix), (i == 1 ? "wan" : "wan%d"), i);
+			strlcpy(prefix, name, sizeof(prefix));
+
+		memset(tmp, 0, sizeof(tmp));
+		snprintf(tmp, sizeof(tmp), "%s_iface", name);
+		if (nvram_match(tmp, ifname))
+			strlcpy(prefix, name, sizeof(prefix));
 	}
 
 	if (!wait_action_idle(10))
