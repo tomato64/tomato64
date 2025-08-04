@@ -16,11 +16,11 @@
 void asp_ddnsx(int argc, char **argv)
 {
 	char *p, *q;
-	int i;
+	unsigned int i;
 #if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
-	int clients_num = 4;
+	unsigned int clients_num = 4;
 #else
-	int clients_num = 2;
+	unsigned int clients_num = 2;
 #endif
 	char s[64];
 	char m[128];
@@ -31,17 +31,18 @@ void asp_ddnsx(int argc, char **argv)
 	web_puts("\nif (typeof nvram === 'undefined' || nvram.length == 0) nvram = { };");
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(s, 0, sizeof(s));
 		memset(name, 0, sizeof(name));
-		snprintf(s, sizeof(s), (i == 1 ? "wan" : "wan%d"), i);
-		snprintf(name, sizeof(name), (i == 1 ? "ddnsx_wanip" : "ddnsx%d_wanip"), i);
-		web_printf("\n%s = '%s';", name, get_wanip(s));
-		snprintf(s, sizeof(s), (i == 1 ? "wan_dns" : "wan%d_dns"), i);
-		snprintf(name, sizeof(name), (i == 1 ? "nvram.wan_dns" : "nvram.wan%d_dns"), i);
-		web_printf("\n%s = '%s';", name, nvram_safe_get(s));
-		snprintf(s, sizeof(s), (i == 1 ? "wan_proto" : "wan%d_proto"), i);
-		snprintf(name, sizeof(name), (i == 1 ? "nvram.wan_proto" : "nvram.wan%d_proto"), i);
-		web_printf("\n%s = '%s';", name, nvram_safe_get(s));
+		snprintf(name, sizeof(name), (i == 1 ? "wan" : "wan%u"), i);
+
+		memset(s, 0, sizeof(s));
+		snprintf(s, sizeof(s), (i == 1 ? "ddnsx_wanip" : "ddnsx%u_wanip"), i);
+		web_printf("\n%s = '%s';", s, get_wanip(name));
+		snprintf(s, sizeof(s), "%s_dns", name);
+		snprintf(m, sizeof(m), "nvram.%s_dns", name);
+		web_printf("\n%s = '%s';", m, nvram_safe_get(s));
+		snprintf(s, sizeof(s), "%s_proto", name);
+		snprintf(m, sizeof(m), "nvram.%s_proto", name);
+		web_printf("\n%s = '%s';", m, nvram_safe_get(s));
 	}
 
 	web_printf("\nddnsx0_ip_get = '%s';", nvram_safe_get("ddnsx0_ip"));
@@ -60,7 +61,7 @@ void asp_ddnsx(int argc, char **argv)
 
 	for (i = 0; i < clients_num; ++i) {
 		web_puts(i ? "','" : "'");
-		snprintf(name, sizeof(name), "/var/lib/mdu/ddnsx%d.msg", i);
+		snprintf(name, sizeof(name), "/var/lib/mdu/ddnsx%u.msg", i);
 		f_read_string(name, m, sizeof(m)); /* null term'd even on error */
 		if (m[0] != 0) {
 			if ((stat(name, &st) == 0) && (st.st_mtime > Y2K)) {
@@ -75,9 +76,9 @@ void asp_ddnsx(int argc, char **argv)
 
 	for (i = 0; i < clients_num; ++i) {
 		web_puts(i ? "','" : "'");
-		snprintf(name, sizeof(name), "ddnsx%d", i);
+		snprintf(name, sizeof(name), "ddnsx%u", i);
 		if (!nvram_match(name, "")) {
-			snprintf(name, sizeof(name), "ddnsx%d_cache", i);
+			snprintf(name, sizeof(name), "ddnsx%u_cache", i);
 			if ((p = nvram_get(name)) == NULL)
 				continue;
 
