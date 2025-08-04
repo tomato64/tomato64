@@ -197,8 +197,14 @@ RouteGrid.prototype.verifyFields = function(row, quiet) {
 }
 
 function verifyFields(focused, quiet) {
-	var ok = 1;
+	var i, ok = 1;
+	var restart = 1;
 	tgHideIcons();
+
+	for (i = 1; i <= unitCount; ++i) {
+		if (focused && focused == E('_f_vpn_client'+i+'_eas')) /* except on/off */
+			restart = 0;
+	}
 
 	/* When settings change, make sure we restart the right client */
 	if (focused) {
@@ -214,12 +220,13 @@ function verifyFields(focused, quiet) {
 			else if (stripped == 'f_vpn_client_local')
 				E('_vpn_client'+clientnum+'_local').value = focused.value;
 
-			updateForm(clientnum, 0);
+			if (restart) /* except on/off */
+				updateForm(clientnum, 0);
 		}
 	}
 
 	/* Element varification */
-	for (var i = 0; i < tabs.length; ++i) {
+	for (i = 0; i < tabs.length; ++i) {
 		var t = tabs[i][0];
 
 		if (!v_range('_vpn_'+t+'_poll', quiet || !ok, 0, 30))
