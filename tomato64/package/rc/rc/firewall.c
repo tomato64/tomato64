@@ -848,9 +848,7 @@ static void nat_table(void)
 	char t[512];
 	char *p, *c, *b;
 	int i, j;
-	char proto_key[16];
-	char ip_key[24];
-	char if_key[16];
+	char proto_key[16], ip_key[24], if_key[16], name[8];
 #ifndef TCONFIG_BCMARM
 	int n;
 #endif /* !TCONFIG_BCMARM */
@@ -1035,12 +1033,15 @@ static void nat_table(void)
 #endif
 
 	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(name, 0, sizeof(name));
+		snprintf(name, sizeof(name), (i == 1 ? "wan" : "wan%d"), i);
+
 		memset(proto_key, 0, sizeof(proto_key));
 		memset(ip_key, 0, sizeof(ip_key));
 		memset(if_key, 0, sizeof(if_key));
-		snprintf(proto_key, sizeof(proto_key), (i == 1 ? "wan_proto"        : "wan%d_proto"),        i);
-		snprintf(ip_key,    sizeof(ip_key),    (i == 1 ? "wan_modem_ipaddr" : "wan%d_modem_ipaddr"), i);
-		snprintf(if_key,    sizeof(if_key),    (i == 1 ? "wan_ifname"       : "wan%d_ifname"),       i);
+		snprintf(proto_key, sizeof(proto_key), "%s_proto", name);
+		snprintf(ip_key, sizeof(ip_key), "%s_modem_ipaddr", name);
+		snprintf(if_key, sizeof(if_key), "%s_ifname", name);
 
 		if (!(nvram_match(proto_key, "pppoe") || nvram_match(proto_key, "dhcp") || nvram_match(proto_key, "static")))
 			continue;
