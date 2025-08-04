@@ -1,12 +1,23 @@
 /*
+ * wireguard.c
  *
- * Copyright (C) 2023 - 2025 FreshTomato
+ * Copyright (C) 2025 FreshTomato
  * https://freshtomato.org/
  *
- * For use with FreshTomato Firmware only.
- * No part of this file may be used without permission.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
  *
- * Fixes/updates (C) 2023 - 2025 pedro
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
  *
  */
 
@@ -18,8 +29,6 @@
 #define LOGMSG_DISABLE		DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG		"wireguard_debug"
 
-#define DNSMASQ_IPSET		"/etc/dnsmasq.ipset"
-
 #define BUF_SIZE		256
 #define BUF_SIZE_8		8
 #define BUF_SIZE_16		16
@@ -30,6 +39,7 @@
 
 /* uncomment to add default routing (also in patches/wireguard-tools/101-tomato-specific.patch line 412 - 414) after kernel fix */
 #define KERNEL_WG_FIX
+
 
 /* interfaces that we want to ignore in standard PRB mode */
 static const char *vpn_ifaces[] = { "wg0", 
@@ -44,7 +54,6 @@ char port[BUF_SIZE_8];
 char fwmark[BUF_SIZE_16];
 unsigned int restart_dnsmasq = 0;
 unsigned int restart_firewall = 0;
-
 
 static int file_contains(const char *filename, const char *pattern)
 {
@@ -240,7 +249,7 @@ static void wg_build_routing(const int unit, const char *fwmark, const char *fwm
 	/* script with routing policy rules */
 	if ((fp = fopen(buffer, "w"))) {
 		/* script with ipset rules (append) */
-		if ((fd = fopen(DNSMASQ_IPSET, "a"))) {
+		if ((fd = fopen(dmipset, "a"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "\n# Routing\n"
 			            "iptables -t mangle -A PREROUTING -m set --match-set %s dst,src -j MARK --set-mark %s\n",
@@ -903,18 +912,18 @@ static void wg_routing_policy(char *iface, char *route, char *fwmark, const int 
 
 	eval("ipset", "destroy", wgrouting_mark);
 
-	if (f_exists(DNSMASQ_IPSET)) {
+	if (f_exists(dmipset)) {
 		/* remove lines with wgroutingXXXX */
 		memset(buffer, 0, BUF_SIZE_64);
 		snprintf(buffer, BUF_SIZE_64, "/wgrouting%s", fwmark);
 
-		if (file_contains(DNSMASQ_IPSET, buffer)) {
+		if (file_contains(dmipset, buffer)) {
 			/* ipset was used on this unit so dnsmasq restart is needed */
 			restart_dnsmasq = 1;
-			if (replace_in_file(DNSMASQ_IPSET, buffer, NULL) != 0)
-				logmsg(LOG_WARNING, "unable to remove lines with %s from dnsmasq script %s for wireguard interface %s!", buffer, DNSMASQ_IPSET, iface);
+			if (replace_in_file(dmipset, buffer, NULL) != 0)
+				logmsg(LOG_WARNING, "unable to remove lines with %s from dnsmasq script %s for wireguard interface %s!", buffer, dmipset, iface);
 			else
-				logmsg(LOG_DEBUG, "removing lines with [%s] in dnsmasq script %s for wireguard interface %s was done successfully", buffer, DNSMASQ_IPSET, iface);
+				logmsg(LOG_DEBUG, "removing lines with [%s] in dnsmasq script %s for wireguard interface %s was done successfully", buffer, dmipset, iface);
 		}
 	}
 
