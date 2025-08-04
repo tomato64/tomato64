@@ -1673,11 +1673,17 @@ function verifyFWMark(fwmark) {
 }
 
 function verifyFields(focused, quiet) {
-	var ok = 1;
+	var i, ok = 1;
 	tgHideIcons();
 	var externalall_mode_enabled = -1;
+	var restart = 1;
 
-	/* When settings change, make sure we restart the right services */
+	for (i = 0; i < WG_INTERFACE_COUNT; i++) {
+		if (focused && focused == E('_f_wg'+i+'_enable')) /* except on/off */
+			restart = 0;
+	}
+
+	/* When settings change, make sure we restart the right service */
 	if (focused) {
 		changed = 1;
 
@@ -1686,21 +1692,24 @@ function verifyFields(focused, quiet) {
 		if (unitidx >= 0) {
 			var num = focused.name.substring(unitidx + 2, unitidx + 3);
 
-			updateForm(num, 0);
-
-			if (focused.name.indexOf('_adns') >= 0 && fom._service.value.indexOf('dnsmasq') < 0) {
-				if (fom._service.value != '')
-					fom._service.value += ',';
-
-				fom._service.value += 'dnsmasq-restart';
-			}
 			/* check for active 'External - VPN Provider' + 'Redirect Internet traffic' set to 'All' + 'Enable On Start' in focused */
 			if (E('_wg'+num+'_com').value == 3 && E('_wg'+num+'_rgwr').value == 1 && E('_f_wg'+num+'_enable').checked) /* enabled */
 				externalall_mode_enabled = num;
+
+			if (restart) { /* restart, except on/off */
+				updateForm(num, 0);
+
+				if (focused.name.indexOf('_adns') >= 0 && fom._service.value.indexOf('dnsmasq') < 0) {
+					if (fom._service.value != '')
+						fom._service.value += ',';
+
+					fom._service.value += 'dnsmasq-restart';
+				}
+			}
 		}
 	}
 
-	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
+	for (i = 0; i < WG_INTERFACE_COUNT; i++) {
 		/* check for active 'External - VPN Provider' + 'Redirect Internet traffic' set to 'All' + 'Enable On Start' */
 		if (E('_wg'+i+'_com').value == 3 && E('_wg'+i+'_rgwr').value == 1 && E('_f_wg'+i+'_enable').checked) { /* enabled */
 			if (externalall_mode_enabled != -1 && externalall_mode_enabled != i) {
