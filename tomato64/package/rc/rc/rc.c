@@ -235,6 +235,9 @@ void kill_switch(const char *kind)
 	char wan_prefix[] = "wanXX";
 	char buf[64], buf2[64], val[64], wan_if[16];
 	unsigned int kd = (strcmp(kind, "wg") == 0 ? 0 : 1);
+	const char *routing_key = (kd ? "vpn_client%u_routing_val" : "wg%u_routing_val");
+	const char *rgw_key =     (kd ? "vpn_client%u_rgw"         : "wg%u_rgwr");
+	const char *iface_fmt =   (kd ? "tun1%u"                   : "wg%u");
 
 	mwan_num = nvram_get_int("mwan_num");
 	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
@@ -243,18 +246,21 @@ void kill_switch(const char *kind)
 	for (unit = kd; unit <= (kd ? OVPN_CLIENT_MAX : WG_INTERFACE_MAX); ++unit) {
 		/* only apply kill switch rules if in PBR mode! */
 		if (kd) { /* ovpn */
-			if ((atoi(getNVRAMVar(("vpn_client%u_rgw"), unit)) < VPN_RGW_POLICY) || (strcmp(getNVRAMVar(("vpn_client%u_if"), unit), "tun"))) /* proper policy mode and if: 'tun' */
+			if ((atoi(getNVRAMVar(rgw_key, unit)) < VPN_RGW_POLICY) || (strcmp(getNVRAMVar("vpn_client%u_if", unit), "tun") != 0)) /* proper policy mode and if: 'tun' */
 				continue;
 		}
 		else { /* wireguard */
-			if ((atoi(getNVRAMVar(("wg%u_rgwr"), unit)) < VPN_RGW_POLICY) || (atoi(getNVRAMVar(("wg%u_com"), unit)) < 3)) /* proper policy mode and in 'External - VPN Provider' */
+			if ((atoi(getNVRAMVar(rgw_key, unit)) < VPN_RGW_POLICY) || (atoi(getNVRAMVar("wg%u_com", unit)) < 3)) /* proper policy mode and in 'External - VPN Provider' */
 				continue;
 		}
 
 		rules_count = 0;
-		nv = nvp = strdup(getNVRAMVar((kd ? "vpn_client%u_routing_val" : "wg%u_routing_val"), unit));
+		nv = strdup(getNVRAMVar(routing_key, unit));
+		if (!nv)
+			continue;
 
-		while (nvp && (b = strsep(&nvp, ">")) != NULL) {
+		nvp = nv;
+		while ((b = strsep(&nvp, ">")) != NULL) {
 			enable = type = value = kswitch = NULL;
 
 			/* enable<type<domain_or_IP<kill_switch> */
@@ -289,36 +295,37 @@ void kill_switch(const char *kind)
 						snprintf(buf, sizeof(buf), (br == 0 ? "lan_ipaddr" : "lan%u_ipaddr"), br);
 
 						char *lan_ip = nvram_safe_get(buf);
-						if (strcmp(lan_ip, "") != 0) { /* only for active */
-							memset(buf, 0, sizeof(buf)); /* reset */
-							snprintf(buf, sizeof(buf), "%s", val);
-							if ((c = strchr(buf, '/')) != NULL)
-								*c = 0; /* with mask? get IP */
+						if (!*lan_ip) /* only for active */
+							continue;
 
-							memset(buf, 0, sizeof(buf)); /* reset */
-							snprintf(buf, sizeof(buf), "%s", val);
-							if ((c = strrchr(buf, '.')) != NULL)
-								*(c + 1) = 0; /* get first 3 octets from value */
+						memset(buf, 0, sizeof(buf)); /* reset */
+						snprintf(buf, sizeof(buf), "%s", val);
+						if ((c = strchr(buf, '/')))
+							*c = 0; /* with mask? get IP */
 
+						memset(buf, 0, sizeof(buf)); /* reset */
+						snprintf(buf, sizeof(buf), "%s", val);
+						if ((c = strrchr(buf, '.')))
+							*(c + 1) = 0; /* get first 3 octets from value */
+
+						memset(buf2, 0, sizeof(buf2)); /* reset */
+						snprintf(buf2, sizeof(buf2), "%s", lan_ip);
+						if ((c = strrchr(buf2, '.')))
+							*(c + 1) = 0; /* get first 3 octets from lan IP */
+
+						if (strcmp(buf, buf2) == 0) {
 							memset(buf2, 0, sizeof(buf2)); /* reset */
-							snprintf(buf2, sizeof(buf2), "%s", lan_ip);
-							if ((c = strrchr(buf2, '.')) != NULL)
-								*(c + 1) = 0; /* get first 3 octets from lan IP */
+							snprintf(buf2, sizeof(buf2), "br%u", br); /* copy brX to buffer */
 
-							if (strcmp(buf, buf2) == 0) {
-								memset(buf2, 0, sizeof(buf2)); /* reset */
-								snprintf(buf2, sizeof(buf2), "br%u", br); /* copy brX to buffer */
-
-								logmsg(LOG_INFO, "Kill-Switch: type: %d - add %s", policy_type, val);
-								eval("iptables", "-I", "FORWARD", "-i", buf2, "-s", val, "-o", wan_if, "-j", "REJECT");
-							}
+							logmsg(LOG_INFO, "Kill-Switch: type: %d - add %s", policy_type, val);
+							eval("iptables", "-I", "FORWARD", "-i", buf2, "-s", val, "-o", wan_if, "-j", "REJECT");
 						}
 					}
 				}
 				/* "To Destination IP" / "To Domain" */
 				else if ((policy_type == 2) || (policy_type == 3)) {
 					memset(buf, 0, sizeof(buf)); /* reset */
-					snprintf(buf, sizeof(buf), (kd ? "tun1%u" : "wg%u"), unit); /* find the appropriate IF */
+					snprintf(buf, sizeof(buf), iface_fmt, unit); /* find the appropriate IF */
 
 					/* xstart - do not wait when WAN in not up! */
 					logmsg(LOG_INFO, "Kill-Switch: type: %d - add %s", policy_type, val);
