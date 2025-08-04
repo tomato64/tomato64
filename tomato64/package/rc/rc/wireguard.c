@@ -150,9 +150,6 @@ static void wg_build_firewall(const int unit, const char *port) {
 			            unit, (nvi ? "DROP" : "ACCEPT"),
 			            unit);
 
-			if (!nvram_get_int("ctf_disable")) /* bypass CTF if enabled */
-				fprintf(fp, "iptables -t mangle -I PREROUTING -i wg%d -j MARK --set-mark 0x01/0x7\n", unit);
-
 			/* masquerade all peer outbound traffic regardless of source subnet */
 			if (atoi(getNVRAMVar("wg%d_nat", unit)) == 1)
 				fprintf(fp, "iptables -t nat -I POSTROUTING -o wg%d -j MASQUERADE\n", unit);
@@ -171,9 +168,19 @@ static void wg_build_firewall(const int unit, const char *port) {
 			            port, chain_in_accept,
 			            unit, chain_in_accept,
 			            unit);
+		}
 
-			if (!nvram_get_int("ctf_disable")) /* bypass CTF if enabled */
-				fprintf(fp, "iptables -t mangle -I PREROUTING -i wg%d -j MARK --set-mark 0x01/0x7\n", unit);
+		if (!nvram_get_int("ctf_disable")) { /* bypass CTF if enabled */
+			fprintf(fp, "iptables -t mangle -I PREROUTING -i wg%d -j MARK --set-mark 0x01/0x7\n"
+			            "iptables -t mangle -I POSTROUTING -o wg%d -j MARK --set-mark 0x01/0x7\n",
+			            unit, unit);
+#ifdef TCONFIG_IPV6
+			if (ipv6_enabled()) {
+				fprintf(fp, "ip6tables -t mangle -I PREROUTING -i wg%d -j MARK --set-mark 0x01/0x7\n"
+				            "ip6tables -t mangle -I POSTROUTING -o wg%d -j MARK --set-mark 0x01/0x7\n",
+				            unit, unit);
+			}
+#endif
 		}
 
 		dns = getNVRAMVar("wg%d_dns", unit);
