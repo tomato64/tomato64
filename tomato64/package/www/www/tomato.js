@@ -2595,12 +2595,12 @@ function navi() {
 /* HTTPS-BEGIN */
 			['Adblock',			'adblock.asp'],
 /* HTTPS-END */
-			['MAC Address',			'mac.asp'],
+			['MAC Addresses',		'mac.asp'],
 			['Miscellaneous',		'misc.asp'],
 			['Routing',			'routing.asp'],
 			['MultiWAN Routing',		'pbr.asp'],
 /* TOR-BEGIN */
-			['TOR Project',			'tor.asp'],
+			['Tor',				'tor.asp'],
 /* TOR-END */
 			['VLAN',			'vlan.asp'],
 			['LAN Access',			'access.asp'],
