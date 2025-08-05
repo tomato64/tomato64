@@ -413,10 +413,10 @@ disconnect() {
 switchMode() {
 	VENDOR="" PRODUCT="" MTYPE="" MODULE="" DEVICENAME="" SWITCHED=0 # global
 # BCMARM-BEGIN
-	MODULES="qmi_wwan huawei_cdc_ncm cdc_ncm rndis_host cdc_ether"
+	MODULES="qmi_wwan cdc_ether huawei_cdc_ncm cdc_ncm rndis_host"
 # BCMARM-END
 # BCMARMNO-BEGIN
-	MODULES="qmi_wwan huawei_ether cdc_ncm rndis_host cdc_ether"
+	MODULES="qmi_wwan cdc_ether huawei_ether cdc_ncm rndis_host"
 # BCMARMNO-END
 
 	# first remove modules
