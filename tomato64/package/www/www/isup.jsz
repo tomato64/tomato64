@@ -23,6 +23,10 @@ isup.notice_jffs = '<% notice("jffs"); %>';
 /* JFFS2NAND-BEGIN */
 //	<% statfs("/jffs", "brcmnand"); %>
 /* JFFS2NAND-END */
+/* CIFS-BEGIN */
+//	<% statfs("/cifs1", "cifs1"); %>
+//	<% statfs("/cifs2", "cifs2"); %>
+/* CIFS-END */
 
 isup.time = '<% time(); %>';
 isup.ntp = '<% ntp(); %>';

@@ -61,6 +61,7 @@ ifneq ($(TCONFIG_CIFS),y)
 	sed -i $(INSTALLDIR)/www/admin-iptraffic.asp -e "/CIFS-BEGIN/,/CIFS-END/d"
 	sed -i $(INSTALLDIR)/www/nas-media.asp -e "/CIFS-BEGIN/,/CIFS-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/CIFS-BEGIN/,/CIFS-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsz -e "/CIFS-BEGIN/,/CIFS-END/d"
 endif
 
 # Only include the JFFS pages if JFFS is configured in. Distinguish JFFS2 and BRCMNAND.

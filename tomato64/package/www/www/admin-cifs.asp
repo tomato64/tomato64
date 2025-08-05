@@ -25,9 +25,15 @@
 
 //	<% statfs("/cifs2", "cifs2"); %>
 
+function c(id, htm) {
+	E(id).cells[1].innerHTML = htm;
+}
+
 function show() {
 	elem.setInnerHTML('notice_container', '<div id="notice">'+isup.notice_cifs.replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
 	elem.display('notice_container', isup.notice_cifs != '');
+	c('cifs1_size', cifs1.mnt ? (scaleSize(cifs1.size)+' / '+scaleSize(cifs1.free)) : '(not mounted)');
+	c('cifs2_size', cifs2.mnt ? (scaleSize(cifs2.size)+' / '+scaleSize(cifs2.free)) : '(not mounted)');
 }
 
 function verifyFields(focused, quiet) {
@@ -35,16 +41,16 @@ function verifyFields(focused, quiet) {
 	var unc, user, pass, dom, exec, servern, sec;
 
 	for (i = 1; i <= 2; ++i) {
-		p = '_f_cifs' + i;
-		unc = E(p + '_unc');
-		user = E(p + '_user');
-		pass = E(p + '_pass');
-		dom = E(p + '_dom');
-		exec = E(p + '_exec');
-		servern = E(p + '_servern');
-		sec = E(p + '_sec');
+		p = '_f_cifs'+i;
+		unc = E(p+'_unc');
+		user = E(p+'_user');
+		pass = E(p+'_pass');
+		dom = E(p+'_dom');
+		exec = E(p+'_exec');
+		servern = E(p+'_servern');
+		sec = E(p+'_sec');
 
-		b = !E(p + '_enable').checked;
+		b = !E(p+'_enable').checked;
 		unc.disabled = b;
 		user.disabled = b;
 		pass.disabled = b;
@@ -78,9 +84,9 @@ function save() {
 	if (!verifyFields(null, 0)) return;
 
 	for (i = 1; i <= 2; ++i) {
-		p = '_f_cifs' + i;
-		E('cifs' + i).value = (E(p + '_enable').checked ? '1' : '0') + '<' + E(p + '_unc').value + '<' + E(p + '_user').value + '<' + E(p + '_pass').value + '<' + 
-				       E(p + '_dom').value + '<' + E(p + '_exec').value + '<' + E(p + '_servern').value + '<' + E(p + '_sec').value;
+		p = '_f_cifs'+i;
+		E('cifs'+i).value = (E(p+'_enable').checked ? '1' : '0')+'<'+E(p+'_unc').value+'<'+E(p+'_user').value+'<'+E(p+'_pass').value+'<'+
+				     E(p+'_dom').value+'<'+E(p+'_exec').value+'<'+E(p+'_servern').value+'<'+E(p+'_sec').value;
 	}
 
 	form.submit('t_fom', 1);
@@ -132,7 +138,7 @@ function init() {
 			{ title: 'Security', indent: 2, name: 'f_cifs1_sec', type: 'select',
 				options: [['','Default (NTLM)'],['ntlmi','NTLM and packet signing'],['ntlmv2','NTLMv2'],['ntlmv2i','NTLMv2 and packet signing'],['nontlm','No NTLM'],['lanman','LANMAN'],['none','None']],
 				value: a[7] },
-			{ title: 'Total / Free Size', indent: 2, text: cifs1.size ? (scaleSize(cifs1.size) + ' / ' + scaleSize(cifs1.free)) : '(not mounted)' },
+			{ title: 'Total / Free Size', indent: 2, rid: 'cifs1_size', text: cifs1.mnt ? (scaleSize(cifs1.size)+' / '+scaleSize(cifs1.free)) : '(not mounted)' },
 			null,
 			{ title: '/cifs2' },
 			{ title: 'Enable', indent: 2, name: 'f_cifs2_enable', type: 'checkbox', value: b[0]*1 },
@@ -145,7 +151,7 @@ function init() {
 			{ title: 'Security', indent: 2, name: 'f_cifs2_sec', type: 'select',
 				options: [['','Default (NTLM)'],['ntlmi','NTLM and packet signing'],['ntlmv2','NTLMv2'],['ntlmv2i','NTLMv2 and packet signing'],['nontlm','No NTLM'],['lanman','LANMAN'],['none','None']],
 				value: b[7] },
-			{ title: 'Total / Free Size', indent: 2, text: cifs2.size ? (scaleSize(cifs2.size) + ' / ' + scaleSize(cifs2.free)) : '(not mounted)' }
+			{ title: 'Total / Free Size', indent: 2, rid: 'cifs2_size', text: cifs2.mnt ? (scaleSize(cifs2.size)+' / '+scaleSize(cifs2.free)) : '(not mounted)' }
 		]);
 	</script>
 </div>
