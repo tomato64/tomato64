@@ -344,22 +344,24 @@ connect() {
 		dhcpc-renew $PREFIX
 		sleep 1
 
-		ifconfig | grep "$IFA" || {
-			$LOGS "4G MODEM - WAN IFACE not ready ($IFA) [$COUNT] ..."
-			COUNT=$((COUNT+1))
-			sleep 2
-		} && {
-			# TODO: IP is up only every 2nd attempt - temporary fix
-			ifconfig | grep -A1 "$IFA" | grep 'inet addr' || {
+		# is IF up?
+		if ifconfig "$IFA" >/dev/null 2>&1; then
+			# IF has an IP address assigned?
+			if ifconfig "$IFA" | grep -q 'inet addr'; then
+				$LOGS "4G MODEM - WAN IFACE configured ($IFA)"
+				DONE=1
+				break
+			else
+				# TODO: IP is up only every 2nd attempt - temporary fix
 				dhcpc-release $PREFIX
 				sleep 1
 				dhcpc-renew $PREFIX
-			}
-
-			$LOGS "4G MODEM - WAN IFACE configured ($IFA)"
-			DONE=1
-			break
-		}
+			fi
+		else
+			$LOGS "4G MODEM - WAN IFACE not ready ($IFA) [$COUNT] ..."
+			COUNT=$((COUNT+1))
+			sleep 2
+		fi
 	done
 
 	[ "$DONE" -eq 0 ] && {
