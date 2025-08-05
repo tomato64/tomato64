@@ -2215,6 +2215,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_MT6000
 	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 eth5"	, 0 },
 #endif /* TOMATO64_MT6000 */
+#ifdef TOMATO64_BPIR3
+	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 eth5 eth6"	, 0 },
+#endif /* TOMATO64_BPIR3 */
 #ifdef TOMATO64_BPIR3MINI
 	{ "lan_ifnames",		"eth1"				, 0 },
 #endif /* TOMATO64_BPIR3MINI */
@@ -2235,6 +2238,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_MT6000
 	{ "vlan1ports",			"1 2 3 4 5 9*"			, 0 },
 #endif /* TOMATO64_MT6000 */
+#ifdef TOMATO64_BPIR3
+	{ "vlan1ports",			"1 2 3 4 5 6 9*"		, 0 },
+#endif /* TOMATO64_BPIR3 */
 #ifdef TOMATO64_BPIR3MINI
 	{ "vlan1ports",			"1 9*"				, 0 },
 #endif /* TOMATO64_BPIR3MINI */

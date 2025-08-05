@@ -18,6 +18,11 @@ config BR2_PACKAGE_PLATFORM_MT6000
 	depends on BR2_aarch64
 	select BR2_PACKAGE_PLATFORM_ARM64
 
+config BR2_PACKAGE_PLATFORM_BPIR3
+	bool "BPIR3"
+	depends on BR2_aarch64
+	select BR2_PACKAGE_PLATFORM_ARM64
+
 config BR2_PACKAGE_PLATFORM_BPIR3MINI
 	bool "BPIR3MINI"
 	depends on BR2_aarch64

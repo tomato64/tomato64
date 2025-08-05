@@ -1,0 +1,82 @@
+#!/bin/sh
+
+set -e
+set -x
+
+. /usr/sbin/nvram_ops
+
+modprobe pwm-fan
+modprobe aquantia
+
+if [ "$(NG wed_offloading)" == "1" ]; then
+	modprobe mt7915e wed_enable=Y
+else
+	modprobe mt7915e
+fi
+
+modprobe mt7921u
+modprobe leds_gpio
+
+increment_mac() {
+	tmp=$1
+	tmp=$(echo $tmp |  tr '[:lower:]' '[:upper:]' | tr -d ':')
+	tmp=$( printf '%d\n' 0x$tmp )
+	tmp=$( expr $tmp + 1 )
+	tmp=$( printf '%X\n' $tmp )
+	tmp=$(echo $tmp | sed 's/../&:/g;s/:$//')
+	echo "$tmp"
+}
+
+decrement_mac() {
+	tmp=$1
+	tmp=$(echo $tmp | tr '[:lower:]' '[:upper:]' | tr -d ':')
+	tmp=$( printf '%d\n' 0x$tmp )
+	tmp=$( expr $tmp - 1 )
+	tmp=$( printf '%X\n' $tmp )
+	tmp=$(echo $tmp | sed 's/../&:/g;s/:$//')
+	echo "$tmp"
+}
+
+mac=$(NG eth0macaddr)
+if [ -z "$mac" ]; then
+	mac=$(ifconfig eth0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+else
+	mac=$(decrement_mac $mac)
+fi
+
+echo "switch0 mac $mac" >> /etc/iftab
+#ip link set dev switch0 address $mac
+
+mac=$(increment_mac $mac)
+
+echo "eth0 mac $mac" >> /etc/iftab
+ip link set dev eth1 address $mac
+
+mac=$(increment_mac $mac)
+
+echo "eth1 mac $mac" >> /etc/iftab
+ip link set dev sfp2 address $mac
+
+mac=$(increment_mac $mac)
+
+echo "eth2 mac $mac" >> /etc/iftab
+ip link set dev wan address $mac
+
+mac=$(increment_mac $mac)
+
+echo "eth3 mac $mac" >> /etc/iftab
+ip link set dev lan1 address $mac
+mac=$(increment_mac $mac)
+
+echo "eth4 mac $mac" >> /etc/iftab
+ip link set dev lan2 address $mac
+
+mac=$(increment_mac $mac)
+
+echo "eth5 mac $mac" >> /etc/iftab
+ip link set dev lan3 address $mac
+
+mac=$(increment_mac $mac)
+
+echo "eth6 mac $mac" >> /etc/iftab
+ip link set dev lan4 address $mac

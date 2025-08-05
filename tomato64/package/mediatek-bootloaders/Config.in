@@ -1,0 +1,4 @@
+config BR2_PACKAGE_MEDIATEK_BOOTLOADERS
+	bool "mediatek-bootloaders"
+	help
+	  Pre-compile mediatek bootloaders
