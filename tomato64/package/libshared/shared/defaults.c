@@ -1943,6 +1943,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wg0_fw",			"1"				, 0 },
 	{"wg0_rgwr",			"1"				, 0 },
 	{"wg0_routing_val",		""				, 0 },
+	{"wg0_prio",			""				, 0 },
 	{"wg1_enable",			"0"				, 0 },
 	{"wg1_poll",			"0"				, 0 },
 	{"wg1_file",			""				, 0 },
@@ -1970,6 +1971,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wg1_fw",			"1"				, 0 },
 	{"wg1_rgwr",			"1"				, 0 },
 	{"wg1_routing_val",		""				, 0 },
+	{"wg1_prio",			""				, 0 },
 	{"wg2_enable",			"0"				, 0 },
 	{"wg2_poll",			"0"				, 0 },
 	{"wg2_file",			""				, 0 },
@@ -1997,6 +1999,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wg2_fw",			"1"				, 0 },
 	{"wg2_rgwr",			"1"				, 0 },
 	{"wg2_routing_val",		""				, 0 },
+	{"wg2_prio",			""				, 0 },
 #endif /* TCONFIG_WIREGUARD */
 
 #ifdef TCONFIG_BT

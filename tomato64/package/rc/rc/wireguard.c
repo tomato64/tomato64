@@ -875,6 +875,7 @@ static void wg_routing_policy(char *iface, char *route, char *fwmark, const int 
 	char buffer[BUF_SIZE_64];
 	char fwmark_mask[BUF_SIZE_16];
 	char wgrouting_mark[BUF_SIZE_16];
+	char *priority;
 
 	/* first always remove everything */
 
@@ -936,7 +937,15 @@ static void wg_routing_policy(char *iface, char *route, char *fwmark, const int 
 		logmsg(LOG_INFO, "starting routing policy for wireguard%d - interface %s - table %s", atoi(&iface[2]), iface, fwmark);
 
 		eval("ip", "route", "add", "default", "dev", iface, "table", fwmark);
-		eval("ip", "rule", "add", "fwmark", fwmark_mask, "table", fwmark, "priority", "100"); /* todo: add priority to GUI, also for OpenVPN */
+
+		priority = getNVRAMVar("wg%d_prio", atoi(&iface[2]));
+		memset(buffer, 0, BUF_SIZE_64);
+		if (priority[0] == '\0')
+			snprintf(buffer, BUF_SIZE_64, "%d", 100 + atoi(&iface[2])); /* default: 100, 101, 102 ... */
+		else
+			snprintf(buffer, BUF_SIZE_64, "%s", priority);
+
+		eval("ip", "rule", "add", "fwmark", fwmark_mask, "table", fwmark, "priority", buffer);
 
 		wg_init_table(iface, fwmark);
 

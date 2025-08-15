@@ -24,10 +24,10 @@
 
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,lan1_ifname,lan1_ipaddr,lan1_netmask,lan2_ifname,lan2_ipaddr,lan2_netmask,lan3_ifname,lan3_ipaddr,lan3_netmask,wg_adns,wg0_enable,wg0_poll,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg0_rgwr,wg0_routing_val,wg1_enable,wg1_poll,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg1_rgwr,wg1_routing_val,wg2_enable,wg2_poll,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw,wg2_rgwr,wg2_routing_val"); %>
+//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,lan1_ifname,lan1_ipaddr,lan1_netmask,lan2_ifname,lan2_ipaddr,lan2_netmask,lan3_ifname,lan3_ipaddr,lan3_netmask,wg_adns,wg0_enable,wg0_poll,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg0_rgwr,wg0_routing_val,wg0_prio,wg1_enable,wg1_poll,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg1_rgwr,wg1_routing_val,wg1_prio,wg2_enable,wg2_poll,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw,wg2_rgwr,wg2_routing_val,wg2_prio"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,lan1_ifname,lan1_ipaddr,lan1_netmask,lan2_ifname,lan2_ipaddr,lan2_netmask,lan3_ifname,lan3_ipaddr,lan3_netmask,lan4_ifname,lan4_ipaddr,lan4_netmask,lan5_ifname,lan5_ipaddr,lan5_netmask,lan6_ifname,lan6_ipaddr,lan6_netmask,lan7_ifname,lan7_ipaddr,lan7_netmask,wg_adns,wg0_enable,wg0_poll,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg0_rgwr,wg0_routing_val,wg1_enable,wg1_poll,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg1_rgwr,wg1_routing_val,wg2_enable,wg2_poll,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw,wg2_rgwr,wg2_routing_val"); %>
+//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,lan1_ifname,lan1_ipaddr,lan1_netmask,lan2_ifname,lan2_ipaddr,lan2_netmask,lan3_ifname,lan3_ipaddr,lan3_netmask,lan4_ifname,lan4_ipaddr,lan4_netmask,lan5_ifname,lan5_ipaddr,lan5_netmask,lan6_ifname,lan6_ipaddr,lan6_netmask,lan7_ifname,lan7_ipaddr,lan7_netmask,wg_adns,wg0_enable,wg0_poll,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg0_rgwr,wg0_routing_val,wg0_prio,wg1_enable,wg1_poll,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg1_rgwr,wg1_routing_val,wg1_prio,wg2_enable,wg2_poll,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw,wg2_rgwr,wg2_routing_val,wg2_prio"); %>
 /* TOMATO64-END */
 
 
@@ -317,6 +317,7 @@ function mapConfigToFields(event) {
 function clearAllFields(unit) {
 	E('_wg'+unit+'_file').value = '';
 	E('_wg'+unit+'_port').value = '';
+	E('_wg'+unit+'_prio').value = '';
 	E('_wg'+unit+'_key').value = '';
 	E('_wg'+unit+'_pubkey').value = '';
 	E('_wg'+unit+'_ip').value = '';
@@ -1730,7 +1731,7 @@ function verifyFields(focused, quiet) {
 
 		/* verify valid port */
 		var port = E('_wg'+i+'_port');
-		if (port.value != '' && (!port.value.match(/^ *[-\+]?\d+ *$/) || (port.value < 1) || (port.value > 65535))) {
+		if (port.value != '' && !v_port('_wg'+i+'_port', quiet || !ok)) {
 			ferror.set(port, 'The interface port must be a valid port', quiet || !ok);
 			ok = 0;
 		}
@@ -1741,6 +1742,15 @@ function verifyFields(focused, quiet) {
 			else
 				E('_f_wg'+i+'_peer_port').value = port.value;
 		}
+
+		/* verify priority */
+		var priority = E('_wg'+i+'_prio');
+		if (priority.value != '' && !v_range('_wg'+i+'_prio', quiet || !ok, 1, 255)) {
+			ferror.set(priority, 'The priority must be in the range 1 - 255', quiet || !ok);
+			ok = 0;
+		}
+		else
+			ferror.clear(priority);
 
 		/* disable lan checkbox if lan is not in use */
 		for (var j = 0; j <= MAX_BRIDGE_ID; ++j) {
@@ -1814,6 +1824,7 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_f_wg'+i+'_fw'), fw != 'custom' && ext);
 		elem.display(PR('_wg'+i+'_rgwr'), ext);
 		elem.display(E('wg'+i+'_nat_warn_text'), ext && !nat);
+		elem.display(PR('_wg'+i+'_prio'), ext && rgwr);
 
 		/* Page Routing Policy */
 		elem.display(E('table_wg'+i+'_routing'), ext && rgwr);
@@ -2147,7 +2158,8 @@ function init() {
 				{ title: 'Inbound Firewall', indent: 2, name: 'f_'+t+'_fw', type: 'checkbox', value: nvram[t+'_fw'] != 0 },
 				null,
 				{ title: 'Type of VPN', name: t+'_com', type: 'select', options: [['0','Internal - Hub (this device) and Spoke (peers)'],['1','Internal - Full Mesh (defined Endpoint only)'],['2','Internal - Full Mesh'],['3','External - VPN Provider']], value: nvram[t+'_com'] || 0 },
-				{ title: 'Redirect Internet traffic', name: t+'_rgwr', type: 'select', options: [[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram[t+'_rgwr'] }
+				{ title: 'Redirect Internet traffic', name: t+'_rgwr', type: 'select', options: [[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram[t+'_rgwr'] },
+				{ title: 'Priority', indent: 2, name: t+'_prio', type: 'text', maxlen: 3, size: 10, placeholder: (100 + i), value: nvram[t+'_prio'] }
 			]);
 			W('<br>');
 
@@ -2175,7 +2187,7 @@ function init() {
 
 			W('<div class="section-title">Import Config from File<\/div>');
 			W('<div class="fields">');
-			W('<div>Before importing the configuration, set the correct "Type of VPN" above.<\/div>');
+			W('<div>Note: before importing the configuration, set the correct "Type of VPN" above.<\/div>');
 			W('<br>');
 			W('<div class="import-section">');
 			W('<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File">');
@@ -2310,6 +2322,8 @@ function init() {
 					<li><b>Routing Policy</b> - Redirects traffic based on predefined rules, such as specific destinations or source, allowing selective rerouting.</li>
 					<li><b>Routing Policy (strict)</b> - Enforces stricter rules for redirection, only allowing traffic that explicitly matches the defined policy, blocking or ignoring non-matching traffic.</li>
 					</ul>
+				</li>
+				<li><b>Priority</b> - Available only in 'External - VPN Provider' with 'Routing Policy' active. Allows you to set the right priority for a given instance (1 - 255).
 				</li>
 			</ul></li>
 		</ul>
