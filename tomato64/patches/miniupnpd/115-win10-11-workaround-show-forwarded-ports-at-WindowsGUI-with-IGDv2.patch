@@ -1,0 +1,36 @@
+--- miniupnpd/upnpsoap.c
++++ miniupnpd/upnpsoap.c
+@@ -826,6 +826,16 @@ GetSpecificPortMappingEntry(struct upnphttp * h, const char * action, const char
+ 		       action,
+ 		       r_host ? r_host : "NULL", ext_port, protocol, int_ip,
+ 		       (unsigned int)iport, desc, leaseduration);
++#ifdef IGD_V2
++		/* FreshTomato: Workaround for Windows 10 & 11
++		 * leaseduration > 0 if compiled with IGDv2 (0 to indicate an infinite lease --> IGDv2 maximum 604800 seconds)
++		 * Therefore, it cannot be edited or deleted in the windows GUI (+not visible anymore)
++		 * see https://github.com/FreshTomato-Project/freshtomato-arm/issues/75
++		 */
++		if(h->respflags & FLAG_MS_CLIENT) {
++			leaseduration = 0;
++		}
++#endif
+ 		bodylen = snprintf(body, sizeof(body), resp,
+ 				action, ns/*SERVICE_TYPE_WANIPC*/,
+ 				(unsigned int)iport, int_ip, desc, leaseduration,
+@@ -1093,6 +1103,16 @@ GetGenericPortMappingEntry(struct upnphttp * h, const char * action, const char
+ 	{
+ 		int bodylen;
+ 		char body[2048];
++#ifdef IGD_V2
++		/* FreshTomato: Workaround for Windows 10 & 11
++		 * leaseduration > 0 if compiled with IGDv2 (0 to indicate an infinite lease --> IGDv2 maximum 604800 seconds)
++		 * Therefore, it cannot be edited or deleted in the windows GUI (+not visible anymore)
++		 * see https://github.com/FreshTomato-Project/freshtomato-arm/issues/75
++		 */
++		if(h->respflags & FLAG_MS_CLIENT) {
++			leaseduration = 0;
++		}
++#endif
+ 		bodylen = snprintf(body, sizeof(body), resp,
+ 			action, ns, /*SERVICE_TYPE_WANIPC,*/ rhost,
+ 			(unsigned int)eport, protocol, (unsigned int)iport, iaddr, desc,
