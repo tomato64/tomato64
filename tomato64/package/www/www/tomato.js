@@ -2537,22 +2537,23 @@ function navi() {
 			['Overview',			'overview.asp'],
 			['Device List',			'devices.asp'],
 			['Web Usage',			'webmon.asp'],
-			['Logs',			'log.asp'] ] ],
+			['Logs',			'log.asp'],
+		]],
 		['Bandwidth', 			'bwm', 0, [
 			['Real-Time',			'realtime.asp'],
 			['Last 24 Hours',		'24.asp'],
 			['Daily',			'daily.asp'],
 			['Weekly',			'weekly.asp'],
-			['Monthly',			'monthly.asp']
-			] ],
+			['Monthly',			'monthly.asp'],
+		]],
 		['IP Traffic',			'ipt', 0, [
 			['Real-Time',			'realtime.asp'],
 			['Last 24 Hours',		'24.asp'],
 			['View Graphs',			'graphs.asp'],
 			['Transfer Rates',		'details.asp'],
 			['Daily',			'daily.asp'],
-			['Monthly',			'monthly.asp']
-			] ],
+			['Monthly',			'monthly.asp'],
+		]],
 		['Tools', 			'tools', 0, [
 			['Ping',			'ping.asp'],
 			['Traceroute',			'trace.asp'],
@@ -2568,7 +2569,8 @@ function navi() {
 /* IPERF-BEGIN */
 			['iPerf',			'iperf.asp'],
 /* IPERF-END */
-			['Wake on LAN',			'wol.asp'] ] ],
+			['Wake on LAN',			'wol.asp'],
+		]],
 		null,
 		['Basic', 			'basic', 0, [
 			['Network',			'network.asp'],
@@ -2583,11 +2585,9 @@ function navi() {
 			['DDNS',			'ddns.asp'],
 			['DHCP Reservation',		'static.asp'],
 /* TOMATO64-REMOVE-BEGIN */
-			['Wireless Filter',		'wfilter.asp'] ] ],
+			['Wireless Filter',		'wfilter.asp'],
 /* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-								       ] ],
-/* TOMATO64-END */
+		]],
 		['Advanced', 			'advanced', 0, [
 			['Conntrack/Netfilter',		'ctnf.asp'],
 			['DHCP/DNS/TFTP',		'dhcpdns.asp'],
@@ -2606,11 +2606,9 @@ function navi() {
 			['LAN Access',			'access.asp'],
 /* TOMATO64-REMOVE-BEGIN */
 			['Virtual Wireless',		'wlanvifs.asp'],
-			['Wireless',			'wireless.asp'] ] ],
+			['Wireless',			'wireless.asp'],
 /* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-									] ],
-/* TOMATO64-END */
+		]],
 		['Port Forwarding', 		'forward', 0, [
 			['Basic',			'basic.asp'],
 /* IPV6-BEGIN */
@@ -2618,47 +2616,48 @@ function navi() {
 /* IPV6-END */
 			['DMZ',				'dmz.asp'],
 			['Triggered',			'triggered.asp'],
-			['UPnP IGD & PCP',		'upnp.asp'] ] ],
+			['UPnP IGD & PCP',		'upnp.asp'],
+		]],
 		['QoS',				'qos', 0, [
 			['Basic Settings',		'settings.asp'],
 			['Classification',		'classify.asp'],
 			['View Graphs',			'graphs.asp'],
 			['View Details',		'detailed.asp'],
-			['Transfer Rates',		'ctrate.asp']
-			] ],
+			['Transfer Rates',		'ctrate.asp'],
+		]],
 		['Misc',			'misc', 0, [
 			['Access Restriction',		'restrict.asp'],
-			['Bandwidth Limiter',		'bwlimit.asp']
+			['Bandwidth Limiter',		'bwlimit.asp'],
 /* NOCAT-BEGIN */
-			,['Captive Portal',		'splashd.asp']
+			['Captive Portal',		'splashd.asp'],
 /* NOCAT-END */
-			] ],
+		]],
 /* NGINX-BEGIN */
 		null,
 		['Web Server',			'web', 0, [
-			['Nginx & PHP',		'nginx.asp'],
-			['MySQL Server',	'mysql.asp']
-			] ],
+			['Nginx & PHP',			'nginx.asp'],
+			['MySQL Server',		'mysql.asp'],
+		]],
 /* NGINX-END */
 /* USB-BEGIN */
 		['USB and NAS',			'nas', 0, [
-			['USB Support',			'usb.asp']
+			['USB Support',			'usb.asp'],
 /* FTP-BEGIN */
-			,['FTP Server',			'ftp.asp']
+			['FTP Server',			'ftp.asp'],
 /* FTP-END */
 /* SAMBA-BEGIN */
-			,['File Sharing',		'samba.asp']
+			['File Sharing',		'samba.asp'],
 /* SAMBA-END */
 /* MEDIA-SRV-BEGIN */
-			,['Media Server',		'media.asp']
+			['Media Server',		'media.asp'],
 /* MEDIA-SRV-END */
 /* UPS-BEGIN */
-			,['UPS Monitor',		'ups.asp']
+			['UPS Monitor',			'ups.asp'],
 /* UPS-END */
 /* BT-BEGIN */
-			,['BitTorrent Client',		'bittorrent.asp']
+			['BitTorrent Client',		'bittorrent.asp'],
 /* BT-END */
-			] ],
+		]],
 /* USB-END */
 /* VPN-BEGIN */
 		['VPN',					'vpn', 0, [
@@ -2669,15 +2668,15 @@ function navi() {
 /* PPTPD-BEGIN */
 			['PPTP Server',			'pptp-server.asp'],
 			['PPTP Online',			'pptp-online.asp'],
-			['PPTP Client',			'pptp.asp']
+			['PPTP Client',			'pptp.asp'],
 /* PPTPD-END */
 /* WIREGUARD-BEGIN */
-			,['Wireguard',			'wireguard.asp']
+			['Wireguard',			'wireguard.asp'],
 /* WIREGUARD-END */
 /* TINC-BEGIN */
-			,['Tinc',			'tinc.asp']
+			['Tinc',			'tinc.asp'],
 /* TINC-END */
-		] ],
+		]],
 /* VPN-END */
 		null,
 		['Administration',		'admin', 0, [
@@ -2705,7 +2704,8 @@ function navi() {
 			['Logging',			'log.asp'],
 			['Scheduler',			'sched.asp'],
 			['Scripts',			'scripts.asp'],
-			['Upgrade',			'upgrade.asp'] ] ],
+			['Upgrade',			'upgrade.asp'],
+		]],
 		null,
 		['About',			'about.asp'],
 		['Reboot...',			'javascript:reboot()'],
@@ -2721,11 +2721,9 @@ function navi() {
 		['Logout',			'javascript:logout()']
 	];
 	var name, base;
-	var i, j;
+	var a, b, c, i, j;
 	var buf = [];
-	var sm;
-	var a, b, c;
-	var on1;
+	var sm, on1;
 	var cexp = get_config('web_mx', '').toLowerCase();
 
 	name = myName();
