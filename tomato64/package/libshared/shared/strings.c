@@ -62,35 +62,32 @@ int remove_word(char *buffer, const char *word)
 	return 1;
 }
 
-/* Hyzoom bwq518 */
-char * trimstr(char *str)
+char *trimstr(char *str)
 {
-	int i=0,j=0, len=0, count=0;
+	char *start, *end;
+	size_t len;
 
-	if (str == NULL) return NULL;
-	len = strlen(str);
-	if (len == 0) return str;
+	if (!str || !*str)
+		return str;
 
-	for (i = 0; i < len; i ++)
-	{
-		if ((str[i] != ' ') && (str[i] != '\t'))  break;
-	}
-	if (i == len )
-	{
+	start = str;
+	while (*start == ' ' || *start == '\t')
+		start++;
+
+	if (*start == '\0') {
 		*str = '\0';
 		return str;
 	}
 
-	for ( j = len - 1; j >= 0 ; j --)
-	{
-		if ((str[j] != ' ') && (str[j] != '\t')) break;
-	}
-	count = j - i + 1 ;
-	for ( j = 0; j < count; j ++)
-	{
-		*(str + j) = *(str + j + i);
-	}
-	*(str + count) = '\0';
+	end = start + strlen(start) - 1;
+	while (end > start && (*end == ' ' || *end == '\t'))
+		end--;
+	end++;
+
+	len = end - start;
+	memmove(str, start, len);
+	str[len] = '\0';
+
 	return str;
 }
 
@@ -229,6 +226,7 @@ int is_number(char *a)
 	if (j==len) return 1;
 	else return 0;
 }
+
 int isspacex(char ch)
 {
 	int result;
