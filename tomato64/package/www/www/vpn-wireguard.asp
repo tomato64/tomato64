@@ -1697,7 +1697,13 @@ function verifyFields(focused, quiet) {
 				externalall_mode_enabled = num;
 
 			if (restart) { /* restart, except on/off */
-				updateForm(num, 0);
+				/* check if we need to restart firewall */
+				if ((nvram['wg'+num+'_com'] < 3 && E('_wg'+num+'_com').value == 3) || (nvram['wg'+num+'_com'] == 3 && E('_wg'+num+'_com').value < 3) ||
+				    ((nvram['wg'+num+'_rgwr'] == 1 && E('_wg'+num+'_rgwr').value > 1) || (nvram['wg'+num+'_rgwr'] > 1 && E('_wg'+num+'_rgwr').value == 1))
+				)
+					updateForm(num, 1);
+				else
+					updateForm(num, 0);
 
 				if (focused.name.indexOf('_adns') >= 0 && fom._service.value.indexOf('dnsmasq') < 0) {
 					if (fom._service.value != '')
