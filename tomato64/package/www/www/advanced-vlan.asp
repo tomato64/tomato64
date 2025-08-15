@@ -82,6 +82,7 @@ switch (nvram['t_model_name']) {
 	case 'vlan-testid0':
 	case 'Asus RT-AC56U':
 	case 'Asus RT-AC56S':
+	case 'Buffalo WZR-1750DHP':
 	case 'D-Link DIR868L':
 	case 'Linksys EA6200':
 	case 'Linksys EA6350v1':

@@ -1836,6 +1836,10 @@ static void check_bootnv(void)
 		dirty |= check_nv("wl0_ifname", "eth1");
 		dirty |= check_nv("wl1_ifname", "eth2");
 		break;
+	case MODEL_WZR1750:
+		dirty |= check_nv("wl0_ifname", "eth2");
+		dirty |= check_nv("wl1_ifname", "eth1");
+		break;
 #ifdef TCONFIG_BCM714
 	case MODEL_RTAC3100:
 		nvram_unset("et2macaddr"); /* unset! */
@@ -10420,9 +10424,9 @@ static int init_nvram(void)
 			nvram_set("wan_ifnameX", "vlan2");
 			nvram_set("wandevs", "vlan2");
 			nvram_set("wl_ifnames", "eth2 eth1");
-			nvram_set("wl_ifname", "eth1");
-			nvram_set("wl0_ifname", "eth1");
-			nvram_set("wl1_ifname", "eth2");
+			nvram_set("wl_ifname", "eth2");
+			nvram_set("wl0_ifname", "eth2");
+			nvram_set("wl1_ifname", "eth1");
 			nvram_set("wl0_vifnames", "wl0.1 wl0.2 wl0.3");
 			nvram_set("wl1_vifnames", "wl1.1 wl1.2 wl1.3");
 
