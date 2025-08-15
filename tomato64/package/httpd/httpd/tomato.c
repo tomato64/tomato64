@@ -447,6 +447,7 @@ static const nvset_t nvset_list[] = {
 	{ "stubby_resolvers",		V_LENGTH(0, 1024)		},
 	{ "stubby_force_tls13",		V_01				},	/* 0=TLS1.2, 1=TLS1.3 */
 	{ "stubby_log",			V_RANGE(0, 7)			},
+	{ "stubby_custom",		V_TEXT(0, 4096)			},
 #endif
 
 	/* LAN */

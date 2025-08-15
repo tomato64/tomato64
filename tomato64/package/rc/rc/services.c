@@ -362,8 +362,10 @@ void stop_dnscrypt(void)
 #ifdef TCONFIG_STUBBY
 void start_stubby(void)
 {
-	const static char *stubby_config = "/etc/stubby/stubby.yml";
-	FILE *fp;
+	const static char *stubby_conf = "/etc/stubby/stubby.yml";
+	const static char *stubby_conf_alt = "/etc/stubby/stubby_alt.yml";
+	const static char *stubby_conf_custom = "/etc/stubby/stubby_custom.yml";
+	FILE *fp, *fc;
 	char *nv, *nvp, *b;
 	char *server, *tlsport, *hostname, *spkipin, *digest;
 	int ntp_ready, port, dnssec, ret;
@@ -383,13 +385,26 @@ void start_stubby(void)
 	mkdir_if_none("/etc/stubby");
 
 	/* alternative (user) configuration file */
-	if (f_exists("/etc/stubby/stubby_alt.yml")) {
-		eval("stubby", "-g", "-C", "/etc/stubby/stubby_alt.yml");
+	if (f_exists(stubby_conf_alt)) {
+		eval("stubby", "-g", "-C", (char *)stubby_conf_alt);
 		return;
 	}
 
-	if ((fp = fopen(stubby_config, "w")) == NULL) {
-		logerr(__FUNCTION__, __LINE__, stubby_config);
+	/* custom configuration: use only this one, omit the other settings */
+	if (strlen(nvram_safe_get("stubby_custom")) > 0) {
+		if ((fc = fopen(stubby_conf_custom, "w")) == NULL) {
+			logerr(__FUNCTION__, __LINE__, stubby_conf_custom);
+			return;
+		}
+		fprintf(fc, "%s\n", nvram_safe_get("stubby_custom"));
+		fclose(fc);
+
+		eval("stubby", "-g", "-C", (char *)stubby_conf_custom);
+		return;
+	}
+
+	if ((fp = fopen(stubby_conf, "w")) == NULL) {
+		logerr(__FUNCTION__, __LINE__, stubby_conf);
 		return;
 	}
 
@@ -475,7 +490,7 @@ void start_stubby(void)
 			logmsg(LOG_INFO, "stubby: DNSSEC pending ntp sync");
 	}
 
-	ret = eval("stubby", "-g", "-v", nvram_safe_get("stubby_log"), "-C", (char *)stubby_config);
+	ret = eval("stubby", "-g", "-v", nvram_safe_get("stubby_log"), "-C", (char *)stubby_conf);
 
 	if (ret)
 		logmsg(LOG_ERR, "starting stubby failed ...");

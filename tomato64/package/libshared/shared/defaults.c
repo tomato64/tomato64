@@ -329,6 +329,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "stubby_resolvers",		"<1.1.1.1>>cloudflare-dns.com><1.0.0.1>>cloudflare-dns.com>", 0 },	/* default DoT resolvers */
 	{ "stubby_force_tls13",		"0"				, 0 },	/* TLS version */
 	{ "stubby_log",			"5"				, 0 },	/* log level */
+	{ "stubby_custom",		""				, 0 },	/* custom config */
 #endif /* TCONFIG_STUBBY */
 	{ "wan_wins",			""				, 0 },	/* x.x.x.x x.x.x.x ... */
 	{ "wan_lease",			"86400"				, 0 },	/* WAN lease time in seconds */

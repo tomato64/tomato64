@@ -20,10 +20,10 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe,wan_addget,wan2_addget,wan3_addget,wan4_addget,wan_proto,wan2_proto,wan3_proto,wan4_proto"); %>
+//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,stubby_custom,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe,wan_addget,wan2_addget,wan3_addget,wan4_addget,wan_proto,wan2_proto,wan3_proto,wan4_proto"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dhcpd4_ostatic,dhcpd5_ostatic,dhcpd6_ostatic,dhcpd7_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_pxelan4,dnsmasq_pxelan5,dnsmasq_pxelan6,dnsmasq_pxelan7,dnsmasq_safe,wan_addget,wan2_addget,wan3_addget,wan4_addget,wan_proto,wan2_proto,wan3_proto,wan4_proto"); %>
+//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dhcpd4_ostatic,dhcpd5_ostatic,dhcpd6_ostatic,dhcpd7_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,stubby_custom,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_pxelan4,dnsmasq_pxelan5,dnsmasq_pxelan6,dnsmasq_pxelan7,dnsmasq_safe,wan_addget,wan2_addget,wan3_addget,wan4_addget,wan_proto,wan2_proto,wan3_proto,wan4_proto"); %>
 /* TOMATO64-END */
 
 var cprefix = 'advanced_dhcpdns';
@@ -105,6 +105,7 @@ function verifyFields(focused, quiet) {
 			E('_dnssec_method_0').checked = !v;
 
 	PR(E('_f_stubby_show_hide')).style.display = (v ? 'table-row' : 'none');;
+	E('_stubby_custom').disabled = !v;
 /* STUBBY-END */
 /* DNSSEC-BEGIN */
 	vis._dnssec_enable = 1;
@@ -203,6 +204,9 @@ function verifyFields(focused, quiet) {
 	if (!v_length('_dhcpc_custom', quiet, 0, 256))
 		return 0;
 /* STUBBY-BEGIN */
+	if (!v_length('_stubby_custom', quiet, 0, 4096))
+		return 0;
+
 	if (!v_port('_stubby_port', quiet))
 		return 0;
 
@@ -396,6 +400,8 @@ function save() {
 	}
 	if (stubby_list.length)
 		fom.stubby_resolvers.value = stubby_list;
+
+	fom.stubby_custom.value = trim(fom.stubby_custom.value);
 /* STUBBY-END */
 /* TFTP-BEGIN */
 	fom.dnsmasq_tftp.value = fom._f_dnsmasq_tftp.checked ? 1 : 0;
@@ -773,6 +779,11 @@ function init() {
 		createFieldTable('', [
 			{ title: '<a href="https://thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html" class="new_window">Dnsmasq<\/a><br>Custom configuration', name: 'dnsmasq_custom', type: 'textarea', value: nvram.dnsmasq_custom }
 		]);
+/* STUBBY-BEGIN */
+		createFieldTable('', [
+			{ title: '<a href="https://dnsprivacy.org/dns_privacy_daemon_-_stubby/configuring_stubby/" class="new_window">Stubby<\/a><br>Custom configuration', name: 'stubby_custom', type: 'textarea', value: nvram.stubby_custom }
+		]);
+/* STUBBY-END */
 	</script>
 </div>
 
@@ -813,7 +824,10 @@ function init() {
 <!-- MDNS-BEGIN -->
 		<li><b>Enable multicast DNS (Avahi mDNS)</b> - You will probably also want to add some <a href="advanced-access.asp">LAN access rules</a> (by default all communication between bridges is blocked) and/or use <a href="admin-scripts.asp">Firewall script</a> to add your own rules, ie. (br0 = private network, br1 = IOT): <i>iptables -I FORWARD -i br0 -o br+ -j ACCEPT</i> and <i>iptables -I INPUT -i br1 -p udp --dport 5353 -j ACCEPT</i>. Alternative config file is available (/etc/avahi/avahi-daemon_alt.conf).</li>
 <!-- MDNS-END -->
-		<li><b>Custom configuration</b> - Extra options to be added to the Dnsmasq configuration file.</li>
+		<li><b>Dnsmasq Custom configuration</b> - Extra options to be added to the Dnsmasq configuration file.</li>
+<!-- STUBBY-BEGIN -->
+		<li><b>Stubby Custom configuration</b> - If non-empty, it will be used as the configuration for stubby - in this case all GUI options are skipped. You have been warned that the correct format for this field is required!</li>
+<!-- STUBBY-END -->
 	</ul>
 	<br>
 	<i>Other relevant notes/hints:</i><br>
