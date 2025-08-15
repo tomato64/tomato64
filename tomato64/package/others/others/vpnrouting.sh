@@ -75,7 +75,7 @@ stopRouting() {
 }
 
 startRouting() {
-	local i VAL1 VAL2 VAL3 ROUTE
+	local i VAL1 VAL2 VAL3 ROUTE PRIO
 
 	stopRouting
 
@@ -103,7 +103,9 @@ startRouting() {
 		ip route add default via $(env_get route_vpn_gateway) table $FWMARK dev $IFACE
 	fi
 
-	ip rule add fwmark $FWMARK/0xf00 table $FWMARK priority 90
+	PRIO=$(NG vpn_"$SERVICE"_prio)
+	[ -z "$PRIO" ] && PRIO=$((CID+89)) # default: 90, 91, 92 ...
+	ip rule add fwmark $FWMARK/0xf00 table $FWMARK priority $PRIO
 
 # BCMARM-BEGIN
 	ipset create vpnrouting$FWMARK hash:ip
