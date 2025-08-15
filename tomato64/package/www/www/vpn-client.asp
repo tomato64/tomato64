@@ -220,8 +220,13 @@ function verifyFields(focused, quiet) {
 			else if (stripped == 'f_vpn_client_local')
 				E('_vpn_client'+clientnum+'_local').value = focused.value;
 
-			if (restart) /* except on/off */
-				updateForm(clientnum, 0);
+			if (restart) { /* except on/off */
+				/* check if we need to restart firewall */
+				if ((nvram['vpn_client'+clientnum+'_rgw'] < 2 && E('_vpn_client'+clientnum+'_rgw').value > 1) || (nvram['vpn_client'+clientnum+'_rgw'] > 1 && E('_vpn_client'+clientnum+'_rgw').value < 2))
+					updateForm(clientnum, 1);
+				else
+					updateForm(clientnum, 0);
+			}
 		}
 	}
 
@@ -362,13 +367,15 @@ function save() {
 		for (j = 0; j < routedata.length; ++j)
 			routing += routedata[j].join('<')+'>';
 
-		E('vpn_'+t+'_bridge').value = E('_f_vpn_'+t+'_bridge').checked ? 1 : 0;
-		E('vpn_'+t+'_nat').value = E('_f_vpn_'+t+'_nat').checked ? 1 : 0;
-		E('vpn_'+t+'_fw').value = E('_f_vpn_'+t+'_fw').checked ? 1 : 0;
-		E('vpn_'+t+'_userauth').value = E('_f_vpn_'+t+'_userauth').checked ? 1 : 0;
-		E('vpn_'+t+'_useronly').value = E('_f_vpn_'+t+'_useronly').checked ? 1 : 0;
-		E('vpn_'+t+'_tlsremote').value = E('_f_vpn_'+t+'_tlsremote').checked ? 1 : 0;
-		E('vpn_'+t+'_routing_val').value = routing;
+		fom['vpn_'+t+'_bridge'].value = E('_f_vpn_'+t+'_bridge').checked ? 1 : 0;
+		fom['vpn_'+t+'_nat'].value = E('_f_vpn_'+t+'_nat').checked ? 1 : 0;
+		fom['vpn_'+t+'_fw'].value = E('_f_vpn_'+t+'_fw').checked ? 1 : 0;
+		fom['vpn_'+t+'_userauth'].value = E('_f_vpn_'+t+'_userauth').checked ? 1 : 0;
+		fom['vpn_'+t+'_useronly'].value = E('_f_vpn_'+t+'_useronly').checked ? 1 : 0;
+		fom['vpn_'+t+'_tlsremote'].value = E('_f_vpn_'+t+'_tlsremote').checked ? 1 : 0;
+		fom['vpn_'+t+'_routing_val'].value = routing;
+
+		nvram['vpn_'+t+'_rgw'] = E('_vpn_'+t+'_rgw').value;
 	}
 	fom._nofootermsg.value = 0;
 
@@ -468,13 +475,13 @@ function init() {
 		for (i = 0; i < tabs.length; ++i) {
 			t = tabs[i][0];
 			W('<div id="'+t+'-tab">');
-			W('<input type="hidden" id="vpn_'+t+'_nat" name="vpn_'+t+'_nat">');
-			W('<input type="hidden" id="vpn_'+t+'_fw" name="vpn_'+t+'_fw">');
-			W('<input type="hidden" id="vpn_'+t+'_userauth" name="vpn_'+t+'_userauth">');
-			W('<input type="hidden" id="vpn_'+t+'_useronly" name="vpn_'+t+'_useronly">');
-			W('<input type="hidden" id="vpn_'+t+'_bridge" name="vpn_'+t+'_bridge">');
-			W('<input type="hidden" id="vpn_'+t+'_tlsremote" name="vpn_'+t+'_tlsremote">');
-			W('<input type="hidden" id="vpn_'+t+'_routing_val" name="vpn_'+t+'_routing_val">');
+			W('<input type="hidden" name="vpn_'+t+'_nat">');
+			W('<input type="hidden" name="vpn_'+t+'_fw">');
+			W('<input type="hidden" name="vpn_'+t+'_userauth">');
+			W('<input type="hidden" name="vpn_'+t+'_useronly">');
+			W('<input type="hidden" name="vpn_'+t+'_bridge">');
+			W('<input type="hidden" name="vpn_'+t+'_tlsremote">');
+			W('<input type="hidden" name="vpn_'+t+'_routing_val">');
 
 			W('<ul class="tabs">');
 			for (j = 0; j < sections.length; j++)
