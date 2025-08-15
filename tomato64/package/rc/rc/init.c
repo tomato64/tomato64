@@ -11861,11 +11861,13 @@ static void sysinit(void)
 		eval("mount", "-o", "remount,rw", "/");
 	}
 
+#ifdef TOMATO64_X86_64
 	if ((fp = fopen("/etc/fstab", "w"))) {
-		fprintf(fp, "LABEL=opt /opt ext4 defaults 0 0");
+		fprintf(fp, "LABEL=opt /opt ext4 defaults 0 0\n");
 		fclose(fp);
 	}
 	eval("mount", "-a");
+#endif /* TOMATO64_X86_64 */
 
 #ifdef TOMATO64_MT6000
 	eval("set_devs_mt6000");
