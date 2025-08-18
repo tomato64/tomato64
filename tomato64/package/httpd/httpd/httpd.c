@@ -99,28 +99,14 @@
 #else
  #define MAX_CONN_ACCEPT	64
 #endif
- #define MAX_CONN_TIMEOUT	30
+#define MAX_CONN_TIMEOUT	30
+#define USER_DEFAULT		"root"
+#define PASS_DEFAULT		"admin"
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE		0
 #define LOGMSG_NVDEBUG		"httpd_debug"
 
-
-int disable_maxage = 0;
-int do_ssl;
-int http_port;
-int post;
-int connfd = -1;
-FILE *connfp = NULL;
-struct sockaddr_storage clientsai;
-int header_sent;
-char pidfile[] = "/var/run/httpd.pid";
-
-#ifdef TCONFIG_IPV6
-char client_addr[INET6_ADDRSTRLEN];
-#else
-char client_addr[INET_ADDRSTRLEN];
-#endif
 
 typedef struct {
 	int count;
@@ -131,25 +117,35 @@ typedef struct {
 	} listener[HTTP_MAX_LISTENERS];
 } listeners_t;
 
-static listeners_t listeners;
-static int maxfd = -1;
-const int int_1 = 1;
-
 typedef enum {
 	AUTH_NONE,
 	AUTH_OK,
 	AUTH_BAD
 } auth_t;
 
+struct sockaddr_storage clientsai;
+static listeners_t listeners;
+FILE *connfp = NULL;
+int disable_maxage = 0;
+int do_ssl;
+int http_port;
+int post;
+int connfd = -1;
+int header_sent;
+static int maxfd = -1;
+const int int_1 = 1;
+char authinfo[512];
+#ifdef TCONFIG_IPV6
+char client_addr[INET6_ADDRSTRLEN];
+#else
+char client_addr[INET_ADDRSTRLEN];
+#endif
+const char pidfile[] = "/var/run/httpd.pid";
 const char mime_html[] = "text/html; charset=utf-8";
 const char mime_plain[] = "text/plain";
 const char mime_javascript[] = "text/javascript";
 const char mime_binary[] = "application/tomato-binary-file"; /* instead of "application/octet-stream" to make browser just "save as" and prevent automatic detection weirdness */
 const char mime_octetstream[] = "application/octet-stream";
-
-static int match(const char* pattern, const char* string);
-static int match_one(const char* pattern, int patternlen, const char* string);
-static void handle_request(void);
 
 static const char *http_status_desc(int status)
 {
@@ -307,11 +303,11 @@ static auth_t auth_check(const char *authorization)
 				*pass++ = 0;
 
 				if (((u = nvram_get("http_username")) == NULL) || (*u == 0)) /* special case: empty username => root */
-					u = "root";
+					u = USER_DEFAULT;
 
 				if (strcmp(authinfo, u) == 0) {
 					if (((p = nvram_get("http_passwd")) == NULL) || (*p == 0)) /* special case: empty password => admin */
-						p = "admin";
+						p = PASS_DEFAULT;
 
 					if (strcmp(pass, p) == 0)
 						return AUTH_OK;
@@ -554,7 +550,7 @@ static void handle_request(void)
 			cur = cp + strlen(cp) + 1;
 			logmsg(LOG_DEBUG, "*** %s: httpd authorization: %s", __FUNCTION__, authorization);
 		}
-		else if (strncasecmp( cur, "User-Agent:", 11) == 0) {
+		else if (strncasecmp(cur, "User-Agent:", 11) == 0) {
 			cp = &cur[11];
 			cp += strspn(cp, " \t");
 			useragent = cp;
