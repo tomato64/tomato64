@@ -401,7 +401,7 @@ function save() {
 	if (stubby_list.length)
 		fom.stubby_resolvers.value = stubby_list;
 
-	fom.stubby_custom.value = trim(fom.stubby_custom.value);
+	fom.stubby_custom.value = fom.stubby_custom.value.trim();
 /* STUBBY-END */
 /* TFTP-BEGIN */
 	fom.dnsmasq_tftp.value = fom._f_dnsmasq_tftp.checked ? 1 : 0;
