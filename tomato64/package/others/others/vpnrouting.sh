@@ -17,11 +17,37 @@ DNSMASQ_IPSET="/etc/dnsmasq.ipset"
 RESTART_DNSMASQ=0
 RESTART_FW=0
 FWMARK="0"
+MARK="0"
+ADD="0"
+DOMAINS=""
 CID="${dev:4:1}"
 ENV_VARS="/tmp/env_vars_${CID}"
 LOGS="logger -t openvpn-vpnrouting.sh[$PID][$IFACE]"
 [ -d /etc/openvpn/fw ] || mkdir -m 0700 "/etc/openvpn/fw"
 
+
+update_dnsmasq_ipset() {
+	[ ! -f "$DNSMASQ_IPSET" ] && touch $DNSMASQ_IPSET
+
+	[ "$ADD" -eq 1 ] && {
+		for DOMAIN in $DOMAINS; do
+			if grep -q "^ipset=/${DOMAIN}/" "$DNSMASQ_IPSET"; then
+				sed -i "\#^ipset=/${DOMAIN}/#{
+					/${MARK}/! s|\$|,${MARK}|
+					}" "$DNSMASQ_IPSET"
+			else
+				echo "ipset=/${DOMAIN}/${MARK}" >> "$DNSMASQ_IPSET"
+			fi
+		done
+	} || {
+		sed -i "s/${MARK},//g" "$DNSMASQ_IPSET"
+		sed -i "s/,$MARK//g" "$DNSMASQ_IPSET"
+		sed -i "s/\/,/\//g" "$DNSMASQ_IPSET"
+		sed -i "s/,$//g" "$DNSMASQ_IPSET"
+		sed -i "/${MARK}/d" "$DNSMASQ_IPSET"
+		sed -i "/^ipset=\/[^/][^/]*\/$/d" "$DNSMASQ_IPSET"
+	}
+}
 
 # utility function for retrieving environment variable values
 env_get() {
@@ -44,6 +70,7 @@ find_iface() {
 		exit 0
 	fi
 
+	MARK="vpnrouting$FWMARK"
 	PIDFILE="/var/run/vpnrouting$FWMARK.pid"
 }
 
@@ -67,7 +94,8 @@ stopRouting() {
 # BCMARMNO-END
 	[ -f "$DNSMASQ_IPSET" ] && {
 		if grep -q "/vpnrouting$FWMARK" "$DNSMASQ_IPSET"; then
-			sed -i "$DNSMASQ_IPSET" -e "/vpnrouting$FWMARK/d" &>/dev/null
+			ADD="0"
+			update_dnsmasq_ipset
 			# ipset was used on this client so dnsmasq restart is needed
 			RESTART_DNSMASQ=1
 		fi
@@ -145,7 +173,7 @@ startRouting() {
 				;;
 				3)	# to domain
 					$LOGS "Type: $VAL2 - add $VAL3"
-					echo "ipset=/$VAL3/vpnrouting$FWMARK" >> $DNSMASQ_IPSET # add
+					DOMAINS="$DOMAINS $VAL3"
 
 					RESTART_DNSMASQ=1
 				;;
@@ -153,6 +181,11 @@ startRouting() {
 			esac
 		}
 	done
+
+	[ -n "$DOMAINS" ] && {
+		ADD="1"
+		update_dnsmasq_ipset
+	}
 
 	chmod 700 $FIREWALL_ROUTING
 	RESTART_FW=1
