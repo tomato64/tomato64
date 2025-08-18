@@ -94,6 +94,13 @@
 #define SERVER_NAME		"httpd"
 #define PROTOCOL		"HTTP/1.0"
 #define RFC1123FMT		"%a, %d %b %Y %H:%M:%S GMT"
+#ifdef TCONFIG_BCMARM
+ #define MAX_CONN_ACCEPT	128
+#else
+ #define MAX_CONN_ACCEPT	64
+#endif
+ #define MAX_CONN_TIMEOUT	30
+
 /* needed by logmsg() */
 #define LOGMSG_DISABLE		0
 #define LOGMSG_NVDEBUG		"httpd_debug"
@@ -107,7 +114,7 @@ int connfd = -1;
 FILE *connfp = NULL;
 struct sockaddr_storage clientsai;
 int header_sent;
-char pidfile[32] = "/var/run/httpd.pid";
+char pidfile[] = "/var/run/httpd.pid";
 
 #ifdef TCONFIG_IPV6
 char client_addr[INET6_ADDRSTRLEN];
@@ -833,7 +840,7 @@ static void add_listen_socket(const char *addr, int server_port, int do_ipv6, in
 		return;
 	}
 
-	if (listen(listenfd, 64) < 0) {
+	if (listen(listenfd, MAX_CONN_ACCEPT) < 0) {
 		logmsg(LOG_ERR, "listen: %m");
 		close(listenfd);
 		return;
@@ -1108,8 +1115,10 @@ int main(int argc, char **argv)
 					exit(0);
 
 				struct timeval tv;
-				tv.tv_sec = 60;
+				tv.tv_sec = MAX_CONN_TIMEOUT;
 				tv.tv_usec = 0;
+
+				/* set receive/send timeouts */
 				setsockopt(connfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 				setsockopt(connfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
