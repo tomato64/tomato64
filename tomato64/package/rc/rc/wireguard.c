@@ -193,10 +193,10 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, int add)
 		found = 0;
 		if (add && list->domains) {
 			for (i = 0; i < domain_count; i++) {
-			if (strcmp(domain_entry, list->domains[i]) == 0) {
-				found = 1;
-				break;
-			}
+				if (strcmp(domain_entry, list->domains[i]) == 0) {
+					found = 1;
+					break;
+				}
 			}
 		}
 
