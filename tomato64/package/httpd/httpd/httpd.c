@@ -1123,7 +1123,8 @@ int main(int argc, char **argv)
 				setsockopt(connfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 				setsockopt(connfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
-				setsockopt(connfd, IPPROTO_TCP, TCP_NODELAY, &int_1, sizeof(int_1));
+				/* set the KEEPALIVE option to cull dead connections */
+				setsockopt(connfd, SOL_SOCKET, SO_KEEPALIVE, &int_1, sizeof(int_1));
 
 				fcntl(connfd, F_SETFD, FD_CLOEXEC);
 
