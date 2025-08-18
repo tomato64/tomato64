@@ -38,6 +38,9 @@
 
 #include "rc.h"
 
+#ifndef TCONFIG_BCMARM
+ #include <sys/time.h>
+#endif
 #include <wlutils.h>
 
 #ifdef TOMATO64
