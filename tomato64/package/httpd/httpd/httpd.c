@@ -394,59 +394,108 @@ static int check_wlaccess(void)
 	return 1;
 }
 
-static int match_one(const char* pattern, int patternlen, const char* string)
+/*
+ * Match a single pattern against a string.
+ * Supports ?, *, and ** wildcards.
+ * This implementation is fully NON-RECURSIVE.
+ */
+static int match_single(const char *pattern, int patternlen, const char *string)
 {
-	const char* p;
+	const char *p = pattern; /* current position in pattern */
+	const char *s = string; /* current position in string */
 
-	for (p = pattern; p - pattern < patternlen; ++p, ++string) {
-		if (*p == '?' && *string != '\0')
-			continue;
+	const char *last_star_pat = NULL; /* position in pattern after last '*' */
+	const char *last_star_str = NULL; /* position in string corresponding to that '*' */
+	int double_star = 0; /* flag for '**' */
 
-		if (*p == '*') {
-			int i, pl;
+	while (1) {
+		/* handle '*' and '**' wildcards */
+		if (p - pattern < patternlen && *p == '*') {
 			++p;
-			if (*p == '*') { /* double-wildcard matches anything */
+			double_star = 0;
+			if (p - pattern < patternlen && *p == '*') {
 				++p;
-				i = strlen(string);
+				double_star = 1; /* double-wildcard matches across '/' */
 			}
-			else /* single-wildcard matches anything but slash */
-				i = strcspn(string, "/");
 
-			pl = patternlen - (p - pattern);
+			/* save positions for possible backtracking */
+			last_star_pat = p;
+			last_star_str = s;
 
-			for (; i >= 0; --i)
-				if (match_one(p, pl, &(string[i])))
-					return 1;
+			/* if '*' at the end of pattern, it matches everything */
+			if (p - pattern >= patternlen)
+				return 1;
 
-			return 0;
+			continue;
 		}
 
-		if (*p != *string)
-			return 0;
-	}
+		/* handle '?' wildcard (matches any single char except end of string) */
+		if (p - pattern < patternlen && *p == '?') {
+			if (*s == '\0')
+				goto backtrack;
 
-	if (*string == '\0')
-		return 1;
+			++p; ++s;
+			continue;
+		}
 
-	return 0;
-}
+		/* direct character match */
+		if (p - pattern < patternlen && *p == *s) {
+			if (*s == '\0')
+				return 0; /* string ended but pattern did not */
 
-/* Simple shell-style filename matcher.  Only does ? * and **, and multiple
- * patterns separated by |.  Returns 1 or 0.
- */
-static int match(const char* pattern, const char* string)
-{
-	const char* p;
+			++p; ++s;
+			continue;
+		}
 
-	for (;;) {
-		p = strchr(pattern, '|');
-		if (p == NULL)
-			return match_one(pattern, strlen(pattern), string);
-		if (match_one(pattern, p - pattern, string))
+		/* if both pattern and string are fully consumed => success */
+		if (p - pattern >= patternlen && *s == '\0')
 			return 1;
 
-		pattern = p + 1;
+		/* attempt to backtrack if mismatch occurs */
+backtrack:
+		if (last_star_pat) {
+			/* advance string by one char from last saved star position */
+			if (*last_star_str == '\0')
+				return 0; /* nothing left to consume */
+
+			/* for single '*' we cannot cross '/' */
+			if (!double_star && *last_star_str == '/')
+				return 0;
+
+			++last_star_str;
+			p = last_star_pat;
+			s = last_star_str;
+			continue;
+		}
+
+		return 0; /* no backtrack available -> failure */
 	}
+}
+
+/*
+ * Match string against multiple patterns separated by '|'.
+ * Also fully NON-RECURSIVE.
+ */
+static int match(const char *pattern, const char *string)
+{
+	const char *start = pattern;
+	const char *sep;
+	int len;
+
+	for (;;) {
+		sep = strchr(start, '|'); /* find '|' separator */
+		len = (sep ? sep - start : (int)strlen(start));
+
+		if (match_single(start, len, string))
+			return 1; /* match success */
+
+		if (!sep)
+			break; /* no more patterns */
+
+		start = sep + 1;
+	}
+
+	return 0; /* none of the patterns matched */
 }
 
 void do_file(char *path)
@@ -606,6 +655,8 @@ static void handle_request(void)
 	}
 
 	for (handler = &mime_handlers[0]; handler->pattern; handler++) {
+		logmsg(LOG_DEBUG, "*** %s: handler->pattern: [%s] file: [%s]", __FUNCTION__, handler->pattern, file);
+
 		if (match(handler->pattern, file)) {
 			if ((handler->auth) && (auth != AUTH_OK)) {
 				auth_fail(cl, 0);
