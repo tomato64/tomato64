@@ -397,6 +397,16 @@ function verifyFields(focused, quiet) {
 				PR(d).style.display = 'none';
 				e.disabled = 1;
 				PR(e).style.display = 'none';
+			} else if (E('_wifi_'+t+'_mode').value == 'bridge') {
+				b.disabled = 0;
+				PR(b).style.display = '';
+
+				c.disabled = 0;
+				PR(c).style.display = '';
+				d.disabled = 1;
+				PR(d).style.display = 'none';
+				e.disabled = 1;
+				PR(e).style.display = 'none';
 			}
 
 
@@ -603,7 +613,7 @@ function save(nomsg) {
 			}
 			E('wifi_'+t+'_maclist').value = macs;
 
-			if ((E('_wifi_'+t+'_mode').value == "sta") && (E('_f_wifi_'+t+'_enable').checked)) {
+			if (((E('_wifi_'+t+'_mode').value == "sta") || (E('_wifi_'+t+'_mode').value == "bridge")) && (E('_f_wifi_'+t+'_enable').checked)) {
 				if (E('_wifi_'+t+'_ifname').value != "") {
 					sta_list += ' ' + E('_wifi_'+t+'_ifname').value;
 				} else {
@@ -862,7 +872,7 @@ for (var i = 0; i < devices.length; i++) {
 
 		createFieldTable('', [
 			{ title: 'Enable', name: 'f_wifi_'+t+'_enable', type: 'checkbox', value: nvram['wifi_'+t+'_enable'] == 1 },
-			{ title: 'Mode', name: 'wifi_'+t+'_mode', type: 'select', options: [['ap', 'Access Point'],['sta','Client']], value: nvram['wifi_'+t+'_mode'] },
+			{ title: 'Mode', name: 'wifi_'+t+'_mode', type: 'select', options: [['ap', 'Access Point'],['sta','Client'],['bridge','Wireless Ethernet Bridge']], value: nvram['wifi_'+t+'_mode'] },
 			{ title: 'ESSID', name: 'wifi_'+t+'_essid', type: 'text', maxlen: 32, size: 34, value: nvram['wifi_'+t+'_essid'] },
 			{ title: 'BSSID', name: 'wifi_'+t+'_bssid', type: 'text', maxlen: 17, size: 34, value: nvram['wifi_'+t+'_bssid'] },
 			{ title: 'Network', name: 'wifi_'+t+'_network', type: 'select', options: networks, value: nvram['wifi_'+t+'_network'] },

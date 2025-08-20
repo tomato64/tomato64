@@ -134,6 +134,16 @@ print_encryption() {
 	fi
 }
 
+get_ifname() {
+
+	if [ ! -z "$(NG wifi_phy${1}iface${2}_ifname)" ];
+	then
+		echo "$(NG wifi_phy${1}iface${2}_ifname)"
+	else
+		echo "phy${1}-sta${2}"
+	fi
+}
+
 print_ifname() {
 
 	if [ ! -z "$(NG wifi_phy${1}iface${2}_ifname)" ];
@@ -211,13 +221,13 @@ do
 				print_mac_filter ${i} ${j}
 			fi
 
-			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "sta" ];
+			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "sta" ] || [ "$(NG "wifi_phy${i}iface${j}_mode")" == "bridge" ];
 			then
 				start_wpa_supplicant=1
 
 				uci set "wireless.phy${i}iface${j}=wifi-iface"
 				uci set "wireless.phy${i}iface${j}.device=radio${i}"
-				uci set "wireless.phy${i}iface${j}.mode=$(NG wifi_phy${i}iface${j}_mode)"
+				uci set "wireless.phy${i}iface${j}.mode=sta"
 				uci set "wireless.phy${i}iface${j}.ssid=$(NG wifi_phy${i}iface${j}_essid)"
 				uci set "wireless.phy${i}iface${j}.bssid=$(NG wifi_phy${i}iface${j}_bssid)"
 				print_encryption ${i} ${j}
@@ -275,6 +285,29 @@ then
 	done
 	/usr/sbin/hostapd_cli -B -s /var/run/hostapd/ -i global -a /usr/bin/hostapd_event
 fi
+
+# Start relayd when using Wireless Ethernet Bridge
+# For each wireless device
+for i in $(seq 0 1 $(($phycount - 1)));
+do
+	# For each device interface
+	for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)));
+	do
+		# If interface is enabled
+		if [ $(NG "wifi_phy${i}iface${j}_enable") -eq 1 ];
+		then
+			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "bridge" ];
+			then
+				start-stop-daemon -b -S -n $(get_ifname ${i} ${j}) -x \
+				/usr/sbin/relayd -- \
+				-B -D \
+				-I $(get_ifname ${i} ${j}) \
+				-I "$(NG wifi_phy${i}iface${j}_network)" \
+				$([ -n "$(NG wan_ipaddr)" ] && [ "$(NG wan_ipaddr)" != "0.0.0.0" ] && echo "-L $(NG wan_ipaddr)")
+			fi
+		fi
+	done
+done
 
 if [ "$error" == 1 ];
 then
