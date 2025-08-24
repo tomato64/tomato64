@@ -984,7 +984,7 @@ for (var i = 0; i < devices.length; i++) {
 	<br>
 	<i>Other relevant notes/hints:</i><br>
 	<ul>
-		<li>The Channel list and TX Power are dependent on your Country code. They are only updated accordinly once you</li>
+		<li>The Channel list and TX Power are dependent on your Country code. They are only updated accordingly once you</li>
 		<ul>
 			<li>make your country selection</li>
 			<li>enable at least one interface</li>
