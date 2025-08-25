@@ -610,6 +610,40 @@ REMOVE-END */
 		}
 /* EXTSW-END */
 /* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		if ((f[COL_P5].checked == 1) && (this.countElem(COL_P5, 1) > 0)) {
+			if (((this.countElem(COL_P5, 1) - 1) >= this.countElem(COL_P5T, 1)) && (f[COL_P5T].checked == 0)) {
+				ferror.set(f[COL_P5T], err_vlan, quiet);
+				valid = 0;
+			}
+			else
+				ferror.clear(f[COL_P5T]);
+		}
+		if ((f[COL_P6].checked == 1) && (this.countElem(COL_P6, 1) > 0)) {
+			if (((this.countElem(COL_P6, 1) - 1) >= this.countElem(COL_P6T, 1)) && (f[COL_P6T].checked == 0)) {
+				ferror.set(f[COL_P6T], err_vlan, quiet);
+				valid = 0;
+			}
+			else
+				ferror.clear(f[COL_P6T]);
+		}
+		if ((f[COL_P7].checked == 1) && (this.countElem(COL_P7, 1) > 0)) {
+			if (((this.countElem(COL_P7, 1) - 1) >= this.countElem(COL_P7T, 1)) && (f[COL_P7T].checked == 0)) {
+				ferror.set(f[COL_P7T], err_vlan, quiet);
+				valid = 0;
+			}
+			else
+				ferror.clear(f[COL_P7T]);
+		}
+		if ((f[COL_P8].checked == 1) && (this.countElem(COL_P8, 1) > 0)) {
+			if (((this.countElem(COL_P8, 1) - 1) >= this.countElem(COL_P8T, 1)) && (f[COL_P8T].checked == 0)) {
+				ferror.set(f[COL_P8T], err_vlan, quiet);
+				valid = 0;
+			}
+			else
+				ferror.clear(f[COL_P8T]);
+		}
+/* TOMATO64-END */
 
 		if (this.countDefaultVID() > 0) {
 			f[COL_VID_DEF].disabled = 1;
@@ -974,11 +1008,17 @@ function save() {
 	for (i = 0; i <= MAX_BRIDGE_ID; i++) {
 		j = (i == 0) ? '' : i;
 		fom['lan'+j+'_ifnames'].value = '';
+/* TOMATO64-BEGIN */
+		fom['lan'+j+'_ifnames_vlan'].value = '';
+/* TOMATO64-END */
 	}
 
 	for (i = 1; i <= MAXWAN_NUM; ++i) {
 		j = (i > 1) ? i : '';
 		fom['wan'+j+'_ifnameX'].value = '';
+/* TOMATO64-BEGIN */
+		fom['wan'+j+'_ifnameX_vlan'].value = '';
+/* TOMATO64-END */
 		fom['wan'+j+'_iface'].value = '';
 		fom['wan'+j+'_iface'].disabled = 1;
 		fom['wan'+j+'_ifname'].value = '';
