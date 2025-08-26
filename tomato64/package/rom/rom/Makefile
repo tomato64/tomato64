@@ -133,4 +133,10 @@ else
 	done
 endif
 
+ifeq ($(PLATFORM_BPIR3),y)
+	mv $(INSTALLDIR)/rom/etc/fw_env.config-bpir3 $(INSTALLDIR)/rom/etc/fw_env.config
+else
+	rm -f $(INSTALLDIR)/rom/etc/fw_env.config-bpir3
+endif
+
 .PHONY: dummy
