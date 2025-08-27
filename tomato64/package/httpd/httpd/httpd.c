@@ -273,6 +273,15 @@ static void send_authenticate(void)
 	send_error(401, header, NULL);
 }
 
+static void auth_fail(int clen)
+{
+	if (post)
+		web_eat(clen);
+
+	eat_garbage();
+	send_authenticate();
+}
+
 static void get_client_addr(void)
 {
 	void *addr = NULL;
@@ -289,46 +298,42 @@ static void get_client_addr(void)
 
 static auth_t auth_check(const char *authorization)
 {
-	char authinfo[512];
 	const char *u, *p;
 	char* pass;
 	int len;
 
-	if ((authorization != NULL) && (strncmp(authorization, "Basic ", 6) == 0)) {
-		if (base64_decoded_len(strlen(authorization + 6)) <= sizeof(authinfo)) {
-			len = base64_decode(authorization + 6, (unsigned char *) authinfo, strlen(authorization) - 6);
-			authinfo[len] = '\0';
-			/* split into user and password. */
-			if ((pass = strchr(authinfo, ':')) != NULL) {
-				*pass++ = 0;
+	/* basic authorization info? */
+	if ((!authorization) || (strncmp(authorization, "Basic ", 6) != 0))
+		return AUTH_NONE;
 
-				if (((u = nvram_get("http_username")) == NULL) || (*u == 0)) /* special case: empty username => root */
-					u = USER_DEFAULT;
+	/* decode it */
+	len = base64_decode(authorization + 6, (unsigned char *)authinfo, sizeof(authinfo));
+	authinfo[len] = '\0';
 
-				if (strcmp(authinfo, u) == 0) {
-					if (((p = nvram_get("http_passwd")) == NULL) || (*p == 0)) /* special case: empty password => admin */
-						p = PASS_DEFAULT;
+	/* split into user and password. */
+	pass = strchr(authinfo, ':');
+	if (pass == (char*)0) {
+		/* no colon? bogus auth info. */
+		return AUTH_NONE;
+	}
+	*pass++ = 0;
 
-					if (strcmp(pass, p) == 0)
-						return AUTH_OK;
-				}
-			}
-		}
-		return AUTH_BAD;
+	/* is this the right user and password? */
+	if (((u = nvram_get("http_username")) == NULL) || (*u == 0)) /* special case: empty username => 'root' */
+		u = USER_DEFAULT;
+
+	if (((p = nvram_get("http_passwd")) == NULL) || (*p == 0)) /* special case: empty password => 'admin' */
+		p = PASS_DEFAULT;
+
+	if (strcmp(authinfo, u) == 0 && strcmp(pass, p) == 0) {
+		return AUTH_OK;
+	}
+	else {
+		/* failed login msg to syslog */
+		logmsg(LOG_WARNING, "login '%s' failed (GUI) from %s:%d", authinfo, client_addr, http_port);
 	}
 
-	return AUTH_NONE;
-}
-
-static void auth_fail(int clen, int show)
-{
-	if (post)
-		web_eat(clen);
-
-	eat_garbage();
-	send_authenticate();
-	if (show == 1)
-		logmsg(LOG_WARNING, "bad password attempt (GUI) from: %s", client_addr);
+	return AUTH_BAD;
 }
 
 static int check_wif(int idx, int unit, int subunit, void *param)
@@ -552,7 +557,8 @@ static void handle_request(void)
 		return;
 	}
 
-	if ((strcasecmp(method, "get") != 0) && (strcasecmp(method, "post") != 0)) {
+	post = (strcasecmp(method, "post") == 0);
+	if ((strcasecmp(method, "get") != 0) && !post) {
 		send_error(501, NULL, NULL);
 		return;
 	}
@@ -624,33 +630,11 @@ static void handle_request(void)
 		}
 	}
 
-	post = (strcasecmp(method, "post") == 0);
 	get_client_addr();
 	auth = auth_check(authorization);
 
-	if (strcmp(file, "logout") == 0) { /* special case */
-		wi_generic(file, cl, boundary);
-		eat_garbage();
-
-		if (strstr(useragent, "Chrome/") != NULL) {
-			if (auth != AUTH_BAD) {
-				send_authenticate();
-				return;
-			}
-		}
-		else {
-			if (auth == AUTH_OK) {
-				send_authenticate();
-				return;
-			}
-		}
-
-		send_error(404, NULL, "Goodbye");
-		return;
-	}
-
 	if (auth == AUTH_BAD) {
-		auth_fail(cl, 1);
+		auth_fail(cl);
 		return;
 	}
 
@@ -659,7 +643,7 @@ static void handle_request(void)
 
 		if (match(handler->pattern, file)) {
 			if ((handler->auth) && (auth != AUTH_OK)) {
-				auth_fail(cl, 0);
+				auth_fail(cl);
 				return;
 			}
 
@@ -679,11 +663,22 @@ static void handle_request(void)
 	}
 
 	if (auth != AUTH_OK) {
-		auth_fail(cl, (auth == AUTH_NONE ? 0 : 1));
+		auth_fail(cl);
 		return;
 	}
 
-	send_error(404, NULL, NULL);
+	if (strcmp(file, "logout") == 0) { /* special case */
+		wi_generic(file, cl, boundary);
+		eat_garbage();
+		send_authenticate();
+
+		/* send logout msg to syslog */
+		logmsg(LOG_INFO, "logout '%s' successful (GUI) %s:%d", authinfo, client_addr, http_port);
+		send_error(404, NULL, "Goodbye");
+		return;
+	}
+
+	send_error(404, NULL, NULL); /* not found */
 }
 
 #ifdef TCONFIG_HTTPS
