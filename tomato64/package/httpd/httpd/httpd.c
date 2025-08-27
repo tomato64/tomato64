@@ -705,7 +705,6 @@ static void erase_cert(void)
 static void start_ssl(void)
 {
 	int i, lock, ok, retry, save;
-	unsigned long long sn;
 	char t[32];
 
 	lock = file_lock("httpd");
@@ -755,10 +754,7 @@ static void start_ssl(void)
 				logmsg(LOG_INFO, "generating SSL certificate...");
 
 				/* browsers seem to like this when the ip address moves... */
-				f_read("/dev/urandom", &sn, sizeof(sn));
-
-				memset(t, 0, sizeof(t));
-				snprintf(t, sizeof(t), "%llu", sn & 0x7FFFFFFFFFFFFFFFULL);
+				gen_urandom(t, NULL, sizeof(t), 0);
 				eval("gencert.sh", t);
 			}
 		}
@@ -786,13 +782,9 @@ static void start_ssl(void)
 static void init_id(void)
 {
 	char s[128];
-	unsigned long long n;
 
 	if (strncmp(nvram_safe_get("http_id"), "TID", 3) != 0) {
-		f_read("/dev/urandom", &n, sizeof(n));
-
-		memset(s, 0, sizeof(s));
-		snprintf(s, sizeof(s), "TID%llx", n);
+		gen_urandom(s, NULL, sizeof(s), 1);
 		nvram_set("http_id", s);
 	}
 
