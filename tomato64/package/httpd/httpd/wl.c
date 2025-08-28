@@ -1777,8 +1777,8 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 	char phy1_F[8];
 	int phy0_temp, phy1_temp;
 
-	const char phy0_cmd[] = "sensors -A mt7915_phy0-isa-0000 | grep 'temp1' | awk '{print $2}' | cut -c2- | rev | cut -c 3- | rev";
-	const char phy1_cmd[] = "sensors -A mt7915_phy1-isa-0000 | grep 'temp1' | awk '{print $2}' | cut -c2- | rev | cut -c 3- | rev";
+	const char phy0_cmd[] = "sensors -A mt7915_phy0-isa-0000 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
+	const char phy1_cmd[] = "sensors -A mt7915_phy1-isa-0000 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
 
 	if ((f = popen(phy0_cmd, "r"))) {
 		if (fgets(buffer, sizeof(buffer), f) != NULL) {
