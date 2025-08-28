@@ -4,7 +4,7 @@ BR2_TOOLCHAIN_BUILDROOT_MUSL=y
 BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_6_6=y
 BR2_BINUTILS_VERSION_2_44_X=y
 BR2_BINUTILS_GPROFNG=y
-BR2_GCC_VERSION_14_X=y
+BR2_GCC_VERSION_15_X=y
 BR2_TOOLCHAIN_BUILDROOT_CXX=y
 BR2_GCC_ENABLE_OPENMP=y
 BR2_DL_DIR="~/buildroot-src"
@@ -43,7 +43,7 @@ BR2_PACKAGE_FILE=y
 BR2_PACKAGE_TMUX=y
 BR2_TARGET_ROOTFS_EXT2=y
 BR2_TARGET_ROOTFS_EXT2_4=y
-BR2_TARGET_ROOTFS_EXT2_SIZE="625M"
+BR2_TARGET_ROOTFS_EXT2_SIZE="640M"
 BR2_TARGET_ROOTFS_TAR_ZSTD=y
 BR2_TARGET_ROOTFS_TAR_OPTIONS="--exclude='./bkp' --exclude='./cifs1' --exclude='./cifs2' --exclude='./dev' --exclude='./etc' --exclude='./home' --exclude='./jffs' --exclude='./lib64' --exclude='./media' --exclude='./mmc' --exclude='./mnt' --exclude='./nas' --exclude='./nvram' --exclude='./opt' --exclude='./proc' --exclude='./root' --exclude='./sys' --exclude='./tftpboot' --exclude='./var'"
 BR2_PACKAGE_HOST_GO_BIN=y

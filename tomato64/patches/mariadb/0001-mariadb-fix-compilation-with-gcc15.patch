@@ -1,0 +1,24 @@
+From 5e070a9fa2a01743ba702454b9b0a505fc17ee3f Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Thu, 28 Aug 2025 09:07:47 -0600
+Subject: [PATCH] mariadb: fix compilation with gcc15
+
+---
+ wsrep-lib/include/wsrep/provider_options.hpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/wsrep-lib/include/wsrep/provider_options.hpp b/wsrep-lib/include/wsrep/provider_options.hpp
+index 022e159e..4dcfe06e 100644
+--- a/wsrep-lib/include/wsrep/provider_options.hpp
++++ b/wsrep-lib/include/wsrep/provider_options.hpp
+@@ -30,6 +30,7 @@
+ #include <functional>
+ #include <map>
+ #include <memory>
++#include <cstdint>
+ #include <string>
+ 
+ namespace wsrep
+-- 
+2.39.5
+

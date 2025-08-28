@@ -1,4 +1,4 @@
-BUILDROOT_VERSION = 2025.05
+BUILDROOT_VERSION = 2025.08-rc3
 BUILDROOT_TARBALL = ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSION).tar.xz
 BUILDROOT_URL = https://github.com/tomato64/buildroot-release/releases/download/$(BUILDROOT_VERSION)
 MEDIATEK_KERNEL_VERSION=$(shell grep "BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE" tomato64/configs/mt6000_defconfig | cut -d '"' -f2)
@@ -66,7 +66,7 @@ distclean:
 	@touch $@
 
 .prepatch:
-	cp tomato64/board/x86_64/*.patch src/patches/
+#	cp tomato64/board/x86_64/*.patch src/patches/
 	@touch $@
 
 .extract-buildroot: .download-buildroot

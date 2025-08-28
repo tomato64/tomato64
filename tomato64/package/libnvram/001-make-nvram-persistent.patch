@@ -34,7 +34,7 @@ diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/Makefile libnv
 @@ -1,5 +1,9 @@
 -CFLAGS=-O2 -fPIC -Wall
 -LDFLAGS=-shared -nostdlib
-+ALL_CFLAGS = -O2 -fPIC -Wall
++ALL_CFLAGS = -std=gnu17 -O2 -fPIC -Wall
 +ALL_LDFLAGS = -shared
 +
 +ALL_CFLAGS += $(CFLAGS)

@@ -18,7 +18,7 @@ PPPD_TOMATO_AUTORECONF = YES
 PPPD_TOMATO_INSTALL_STAGING = YES
 
 # hack
-PPPD_TOMATO_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -Wno-return-mismatch -Wno-implicit-function-declaration -Wno-incompatible-pointer-types"
+PPPD_TOMATO_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -std=gnu17 -Wno-return-mismatch -Wno-implicit-function-declaration -Wno-incompatible-pointer-types"
 
 PPPD_TOMATO_CONF_OPTS = \
 		--prefix=/usr \

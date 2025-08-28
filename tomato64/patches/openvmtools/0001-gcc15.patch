@@ -1,0 +1,25 @@
+From 75940528fbdef233db910ddbd4e693e75ea0d194 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Thu, 28 Aug 2025 17:09:17 -0600
+Subject: [PATCH] gcc15
+
+---
+ lib/lock/ul.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/lock/ul.c b/lib/lock/ul.c
+index 14c8d4b..5dea897 100644
+--- a/lib/lock/ul.c
++++ b/lib/lock/ul.c
+@@ -28,7 +28,7 @@
+ static Bool mxInPanic = FALSE;  // track when involved in a panic
+ static Bool mxUserCollectLockingTree = FALSE;
+ 
+-Bool (*MXUserTryAcquireForceFail)() = NULL;
++Bool (*MXUserTryAcquireForceFail)(const char *) = NULL;
+ 
+ static MX_Rank (*MXUserMxCheckRank)(void) = NULL;
+ static void (*MXUserMxLockLister)(void) = NULL;
+-- 
+2.39.5
+

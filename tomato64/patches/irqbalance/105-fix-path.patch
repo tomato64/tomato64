@@ -1,6 +1,6 @@
 --- irqbalance/irqbalance.h
 +++ irqbalance/irqbalance.h
-@@ -163,7 +163,7 @@
+@@ -164,7 +164,7 @@
  #endif /* HAVE_LIBSYSTEMD */
  
  #define SOCKET_PATH "irqbalance"
