@@ -3726,6 +3726,7 @@ static void wo_nvcommit(char *url)
 }
 
 const struct mime_handler mime_handlers[] = {
+/*	  pattern			mime_type				cache  input(path,len,boundary)	output(path)		auth */
 	{ "update.cgi",			mime_javascript,			0,	wi_generic,		wo_update,		1 },
 	{ "tomato.cgi",			NULL,					0,	wi_generic,		wo_tomato,		1 },
 

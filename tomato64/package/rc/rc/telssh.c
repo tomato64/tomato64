@@ -19,18 +19,17 @@
 
 void create_passwd(void)
 {
-	char s[512];
+	char s[512], salt[32];
+	unsigned char buf[8];
 	char *p;
-	char salt[32];
 	FILE *f;
 	mode_t m;
 #ifdef TCONFIG_SAMBASRV
 	char *smbd_user;
 #endif
-
 	strlcpy(salt, "$1$", sizeof(salt));
-	f_read("/dev/urandom", s, 6);
-	base64_encode(s, salt + 3, 6);
+	gen_urandom(NULL, buf, 6, 0);
+	base64_encode(buf, salt + 3, 6);
 	salt[3 + 8] = 0;
 	p = salt;
 	while (*p) {

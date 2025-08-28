@@ -1160,7 +1160,7 @@ int nvram_set_file(const char *key, const char *fname, int max)
 	r = 0;
 	if (f_read_alloc(fname, &in, max) == max) {
 		if ((out = malloc(base64_encoded_len(max) + 128)) != NULL) {
-			n = base64_encode(in, out, max);
+			n = base64_encode((unsigned char *)in, out, max);
 			out[n] = 0;
 			nvram_set(key, out);
 			free(out);
@@ -1275,4 +1275,20 @@ int connect_timeout(int fd, const struct sockaddr *addr, socklen_t len, int time
 void chld_reap(int sig)
 {
 	while (waitpid(-1, NULL, WNOHANG) > 0) {}
+}
+
+void gen_urandom(char *buf1, unsigned char *buf2, size_t buf_sz, const unsigned int addtid)
+{
+	unsigned long long sn = 0;
+
+	memset((buf1 ? buf1 : (char *)buf2), 0, buf_sz);
+	if (buf1) {
+		f_read("/dev/urandom", &sn, sizeof(sn));
+		if (addtid)
+			snprintf(buf1, buf_sz, "TID%llx", sn);
+		else
+			snprintf(buf1, buf_sz, "%llu", sn & 0x7FFFFFFFFFFFFFFFULL);
+	}
+	else
+		f_read("/dev/urandom", buf2, buf_sz);
 }

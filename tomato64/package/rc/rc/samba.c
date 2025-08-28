@@ -18,7 +18,7 @@
 /*
  *
  * FreshTomato Firmware
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
 
@@ -56,7 +56,7 @@ static void start_wsdd(void)
 	stop_wsdd();
 
 	if (!ether_atoe(nvram_safe_get("lan_hwaddr"), ea))
-		f_read("/dev/urandom", ea, sizeof(ea));
+		gen_urandom(NULL, ea, ETHER_ADDR_LEN, 0);
 
 	snprintf(serial, sizeof(serial), "%02x%02x%02x%02x%02x%02x", ea[0], ea[1], ea[2], ea[3], ea[4], ea[5]);
 

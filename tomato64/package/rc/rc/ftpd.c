@@ -118,7 +118,6 @@ void start_ftpd(int force)
 	char *user, *pass, *rights, *root_dir;
 	int i, ret;
 #ifdef TCONFIG_HTTPS
-	unsigned long long sn;
 	char t[32];
 #endif
 
@@ -247,8 +246,7 @@ void start_ftpd(int force)
 
 		/* does a valid HTTPD cert exist? if not, generate one */
 		if ((!f_exists("/etc/cert.pem")) || (!f_exists("/etc/key.pem"))) {
-			f_read("/dev/urandom", &sn, sizeof(sn));
-			snprintf(t, sizeof(t), "%llu", sn & 0x7FFFFFFFFFFFFFFFULL);
+			gen_urandom(t, NULL, sizeof(t), 0);
 			nvram_set("https_crt_gen", "1");
 			nvram_set("https_crt_save", "1");
 			eval("gencert.sh", t);
