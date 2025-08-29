@@ -497,7 +497,7 @@ function init() {
 /* HTTPS-BEGIN */
 			null,
 			{ title: 'SSL Certificate', rid: 'row_sslcert' },
-				{ title: 'Common Name (CN)', indent: 2, name: 'https_crt_cn', type: 'text', maxlen: 64, size: 40, suffix: '&nbsp;<small>optional; space separated<\/small>', value: nvram.https_crt_cn },
+				{ title: 'Subject Alternative Name (SAN)', indent: 2, name: 'https_crt_cn', type: 'text', maxlen: 64, size: 40, suffix: '&nbsp;<small>optional; space separated<\/small>', value: nvram.https_crt_cn },
 				{ title: 'Regenerate', indent: 2, name: 'f_https_crt_gen', type: 'checkbox', value: 0 },
 				{ title: 'Save In NVRAM', indent: 2, name: 'f_https_crt_save', type: 'checkbox', value: nvram.https_crt_save == 1 },
 /* HTTPS-END */
