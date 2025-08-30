@@ -21,8 +21,18 @@ modprobe leds_gpio
 
 if [ "$(NG set_macs)" != "1" ]
 then
-	NS eth0macaddr=$(cat /sys/class/net/eth0/address | tr '[:lower:]' '[:upper:]')
-	NS eth1macaddr=$(cat /sys/class/net/eth1/address | tr '[:lower:]' '[:upper:]')
+
+	eth0macaddr="$(cat /sys/class/net/eth0/address | tr '[:lower:]' '[:upper:]')"
+	eth1macaddr="$(cat /sys/class/net/eth1/address | tr '[:lower:]' '[:upper:]')"
+
+	NS "eth0macaddr=$eth0macaddr"
+	NS "eth1macaddr=$eth1macaddr"
+
+	ip link set dev eth0 address $eth1macaddr
+	ip link set dev eth1 address $eth0macaddr
+
+	echo "eth0 mac $eth0macaddr" >> /etc/iftab
+	echo "eth1 mac $eth1macaddr" >> /etc/iftab
 
 	for i in wan_hwaddr wan_mac;
 	do
@@ -32,11 +42,12 @@ then
 	NS lan_hwaddr=`ifconfig eth1 | grep -o -E ..:..:..:..:..:..`
 
 	NS set_macs=1
+else
+
+	#swap them
+	ip link set dev eth0 address "$(NG eth1macaddr)"
+	ip link set dev eth1 address "$(NG eth0macaddr)"
+
+	echo "eth0 mac $(NG eth0macaddr)" >> /etc/iftab
+	echo "eth1 mac $(NG eth1macaddr)" >> /etc/iftab
 fi
-
-#swap them
-ip link set dev eth0 address "$(NG eth1macaddr)"
-ip link set dev eth1 address "$(NG eth0macaddr)"
-
-echo "eth0 mac $(NG eth0macaddr)" >> /etc/iftab
-echo "eth1 mac $(NG eth1macaddr)" >> /etc/iftab
