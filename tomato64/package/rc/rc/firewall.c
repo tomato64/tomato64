@@ -1629,6 +1629,7 @@ static void filter6_input(void)
 	char *en;
 	char *sec;
 	char *hit;
+	int i;
 	unsigned int n;
 	char *p, *c;
 
@@ -1691,12 +1692,11 @@ static void filter6_input(void)
 	ip6t_write("-A INPUT -i lo -j ACCEPT\n"
 	           "-A INPUT -i %s -j ACCEPT\n", /* anything coming from LAN */
 	           lanface[0]);
-	if (strcmp(lanface[1], "") != 0)
-		ip6t_write("-A INPUT -i %s -j ACCEPT\n", lanface[1]);
-	if (strcmp(lanface[2], "") != 0)
-		ip6t_write("-A INPUT -i %s -j ACCEPT\n", lanface[2]);
-	if (strcmp(lanface[3], "") != 0)
-		ip6t_write("-A INPUT -i %s -j ACCEPT\n", lanface[3]);
+
+	for (i = 1; i < BRIDGE_COUNT; i++) {
+		if (strcmp(lanface[i], "") != 0)
+			ip6t_write("-A INPUT -i %s -j ACCEPT\n", lanface[i]);
+	}
 
 	switch (get_ipv6_service()) {
 	case IPV6_ANYCAST_6TO4:
