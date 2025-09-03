@@ -306,23 +306,27 @@ static auth_t auth_check(const char *authorization)
 	if ((!authorization) || (strncmp(authorization, "Basic ", 6) != 0))
 		return AUTH_NONE;
 
+	/* something's wrong */
+	if (base64_decoded_len(strlen(authorization + 6)) > sizeof(authinfo))
+		return AUTH_BAD;
+
 	/* decode it */
-	len = base64_decode(authorization + 6, (unsigned char *)authinfo, sizeof(authinfo));
+	len = base64_decode(authorization + 6, (unsigned char *)authinfo, strlen(authorization) - 6);
 	authinfo[len] = '\0';
 
-	/* split into user and password. */
+	/* split into user and password */
 	pass = strchr(authinfo, ':');
 	if (pass == (char*)0) {
-		/* no colon? bogus auth info. */
+		/* no colon? bogus auth info */
 		return AUTH_NONE;
 	}
 	*pass++ = 0;
 
 	/* is this the right user and password? */
-	if (((u = nvram_get("http_username")) == NULL) || (*u == 0)) /* special case: empty username => 'root' */
+	if (((u = nvram_get("http_username")) == NULL) || (*u == 0)) /* special case: empty username */
 		u = USER_DEFAULT;
 
-	if (((p = nvram_get("http_passwd")) == NULL) || (*p == 0)) /* special case: empty password => 'admin' */
+	if (((p = nvram_get("http_passwd")) == NULL) || (*p == 0)) /* special case: empty password */
 		p = PASS_DEFAULT;
 
 	if (strcmp(authinfo, u) == 0 && strcmp(pass, p) == 0) {
