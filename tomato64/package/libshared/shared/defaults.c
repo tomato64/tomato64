@@ -300,6 +300,9 @@ struct nvram_tuple bsd_defaults[] = {
 	{ "lan" #i "_ipaddr",		""				, 0 }, \
 	{ "lan" #i "_netmask",		""				, 0 }, \
 	{ "lan" #i "_stp",		"0"				, 0 }, \
+/* #ifdef TOMATO64 */ \
+	{ "lan" #i "_ifnames_vlan",	""				, 0 }, \
+/* #endif TOMATO64 */ \
 	{ "dhcpd" #i "_startip",	"" 				, 0 }, \
 	{ "dhcpd" #i "_endip",		"" 				, 0 }, \
 	{ "dhcpd" #i "_ostatic",	"0"				, 0 }, /* ignore DHCP requests from unknown devices on LANX */ \
@@ -2177,13 +2180,6 @@ struct nvram_tuple router_defaults[] = {
 	{ "lan_ifnames",		"eth1"				, 0 },
 #endif /* TOMATO64_BPIR3MINI */
 	{ "lan_ifnames_vlan",		"vlan1"				, 0 },
-	{ "lan1_ifnames_vlan",		""				, 0 },
-	{ "lan2_ifnames_vlan",		""				, 0 },
-	{ "lan3_ifnames_vlan",		""				, 0 },
-	{ "lan4_ifnames_vlan",		""				, 0 },
-	{ "lan5_ifnames_vlan",		""				, 0 },
-	{ "lan6_ifnames_vlan",		""				, 0 },
-	{ "lan7_ifnames_vlan",		""				, 0 },
 
 	{ "boardflags",			"0x0100"			, 0 },
 	{ "vlan0ports",			"0 9"				, 0 },
