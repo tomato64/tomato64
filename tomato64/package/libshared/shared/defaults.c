@@ -249,6 +249,9 @@ struct nvram_tuple bsd_defaults[] = {
 	{ "wan" #i "_qos_obw",		"700"				, 0 }, \
 	{ "wan" #i "_qos_ibw",		"16000"				, 0 }, \
 	{ "wan" #i "_qos_overhead",	"0"				, 0 }, \
+/* #ifdef TOMATO64 */ \
+	{ "wan" #i "_ifnameX_vlan",	""				, 0 }, \
+/* #endif TOMATO64 */ \
 	{ "wan" #i "_ifnameX",		NULL				, 0 },
 #ifdef TCONFIG_BCMARM
  #define WAN_BLOCK_BCMARM(i) \
@@ -2159,12 +2162,6 @@ struct nvram_tuple router_defaults[] = {
 
 	{ "wan_ifnameX",		"eth0"				, 0 },
 	{ "wan_ifnameX_vlan",		"vlan0"				, 0 },
-	{ "wan1_ifnameX_vlan",		""				, 0 },
-
-#ifdef TCONFIG_MULTIWAN
-	{ "wan2_ifnameX_vlan",		""				, 0 },
-	{ "wan3_ifnameX_vlan",		""				, 0 },
-#endif /* TCONFIG_MULTIWAN */
 
 	{ "lan_ifname",			"br0"				, 0 },
 #ifdef TOMATO64_X86_64
