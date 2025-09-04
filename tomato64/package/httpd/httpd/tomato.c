@@ -225,7 +225,12 @@ const aspapi_t aspapi[] = {
 	{ "wan" #i "_qos_obw",		V_RANGE(10, 99999999)		}, \
 	{ "wan" #i "_qos_ibw",		V_RANGE(10, 99999999)		}, \
 	{ "wan" #i "_qos_overhead",	V_RANGE(-127, 128)		}, \
+/* #ifndef TOMATO64 \
 	{ "wan" #i "_ifnameX",		V_TEXT(0, 8)			},
+   #else */ \
+	{ "wan" #i "_ifnameX",		V_TEXT(0, 9)			}, \
+	{ "wan" #i "_ifnameX_vlan",	V_TEXT(0, 8)			},
+/* #endif TOMATO64 */ \
 #ifdef TCONFIG_BCMARM
  #define WAN_BLOCK_BCMARM(i) \
 	{ "wan" #i "_qos_encap",	V_NUM				},
@@ -792,13 +797,7 @@ static const nvset_t nvset_list[] = {
 	{ "vlan14hwname",		V_TEXT(0, 100)			},
 	{ "vlan15hwname",		V_TEXT(0, 100)			},
 	{ "wan_ifnameX_vlan",		V_TEXT(0, 8)			},
-	{ "wan2_ifnameX_vlan",		V_TEXT(0, 8)			},
-	{ "wan3_ifnameX_vlan",		V_TEXT(0, 8)			},
-	{ "wan4_ifnameX_vlan",		V_TEXT(0, 8)			},
 	{ "wan_ifnameX",		V_TEXT(0, 9)			},
-	{ "wan2_ifnameX",		V_TEXT(0, 9)			},
-	{ "wan3_ifnameX",		V_TEXT(0, 9)			},
-	{ "wan4_ifnameX",		V_TEXT(0, 9)			},
 	{ "lan_ifnames",		V_TEXT(0, 100)			},
 	{ "lan_ifnames_vlan",		V_TEXT(0, 8)			},
 #endif /* TOMATO64 */
