@@ -2155,12 +2155,12 @@ int start_firewall(void)
 	unlink("/var/webmon/domain");
 	unlink("/var/webmon/search");
 
-#ifdef TCONFIG_FTP
-	run_ftpd_firewall_script();
-#endif
-
 #ifdef TCONFIG_PPTPD
 	run_pptpd_firewall_script();
+#endif
+
+#ifdef TCONFIG_FTP
+	run_ftpd_firewall_script();
 #endif
 
 #ifdef TCONFIG_NGINX
