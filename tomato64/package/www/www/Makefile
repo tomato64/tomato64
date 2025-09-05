@@ -320,11 +320,6 @@ ifneq ($(TCONFIG_ROAM),y)
 	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/ROAM-BEGIN/,/ROAM-END/d"
 endif
 
-# Only include SSH stuff when needed
-ifneq ($(TCONFIG_SSH),y)
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/SSH-BEGIN/,/SSH-END/d"
-endif
-
 # Add "beta" tag if needed
 ifeq ($(TOMATO_EXPERIMENTAL),1)
 	cd $(INSTALLDIR)/www && \
@@ -768,7 +763,6 @@ endif
 		-e "/SIZEOPTMORE-NO-BEGIN/d" -e "/SIZEOPTMORE-NO-END/d" \
 		-e "/IPERF-BEGIN/d"	-e "/IPERF-END/d" \
 		-e "/ADVTHEMES-BEGIN/d"	-e "/ADVTHEMES-END/d" \
-		-e "/SSH-BEGIN/d"	-e "/SSH-END/d" \
 		-e "/DISCOVERY-BEGIN/d"	-e "/DISCOVERY-END/d" \
 		-e "/MDNS-BEGIN/d"	-e "/MDNS-END/d" \
 		-e "/ZFS-BEGIN/d"	-e "/ZFS-END/d" \
