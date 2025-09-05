@@ -1195,10 +1195,8 @@ static void wg_routing_policy(char *iface, char *route, char *fwmark, const int 
 		stop_dnsmasq();
 		start_dnsmasq();
 	}
-	if (restart_fw == 1) {
-		stop_firewall();
-		start_firewall();
-	}
+	if (restart_fw == 1)
+		restart_firewall();
 }
 
 static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *allowed_ips, const char *fwmark, const int add)

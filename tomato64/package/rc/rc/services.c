@@ -292,6 +292,12 @@ void del_bsd_defaults(void)
 }
 #endif /* TCONFIG_BCMBSD */
 
+void restart_firewall(void)
+{
+	stop_firewall();
+	start_firewall();
+}
+
 #ifdef TCONFIG_DNSCRYPT
 void start_dnscrypt(void)
 {
@@ -2663,14 +2669,13 @@ TOP:
 			stop_nocat();
 #endif
 		}
-		stop_firewall();
-		start_firewall(); /* always restarted */
 		if (act_start) {
 			start_bwlimit();
 #ifdef TCONFIG_NOCAT
 			start_nocat();
 #endif
 		}
+		restart_firewall(); /* always restart */
 		goto CLEAR;
 	}
 
@@ -2682,8 +2687,6 @@ TOP:
 				stop_qos(buffer2);
 			}
 		}
-		stop_firewall();
-		start_firewall(); /* always restarted */
 		if (act_start) {
 			for (i = 1; i <= MWAN_MAX; i++) {
 				memset(buffer2, 0, sizeof(buffer2));
@@ -2694,14 +2697,14 @@ TOP:
 			if (nvram_get_int("qos_reset"))
 				f_write_string("/proc/net/clear_marks", "1", 0, 0);
 		}
+		restart_firewall(); /* always restart */
 		goto CLEAR;
 	}
 
 	if ((strcmp(service, "upnp") == 0) || (strcmp(service, "miniupnpd") == 0)) {
 		if (act_stop) stop_upnp();
-		stop_firewall();
-		start_firewall(); /* always restarted */
 		if (act_start) start_upnp();
+		restart_firewall(); /* always restart */
 		goto CLEAR;
 	}
 
@@ -2738,8 +2741,6 @@ TOP:
 			stop_telnetd();
 			stop_httpd();
 		}
-		stop_firewall();
-		start_firewall(); /* always restarted */
 		if (act_start) {
 			stop_httpd();
 			start_httpd();
@@ -2750,6 +2751,7 @@ TOP:
 			if (nvram_get_int("sshd_eas") && (!(strcmp(service, "adminnosshd") == 0)))
 				start_sshd();
 		}
+		restart_firewall(); /* always restart */
 		goto CLEAR;
 	}
 
@@ -2772,8 +2774,7 @@ TOP:
 			/* always restarted except from "service" command */
 			stop_cron();
 			start_cron();
-			stop_firewall();
-			start_firewall();
+			restart_firewall();
 		}
 		goto CLEAR;
 	}
@@ -2905,8 +2906,6 @@ TOP:
 					eval("brctl", "stp", nvram_safe_get(buffer2), "0");
 			}
 		}
-		stop_firewall();
-		start_firewall();
 		if (act_start) {
 			do_static_routes(1); /* add new */
 #ifdef TCONFIG_ZEBRA
@@ -2922,14 +2921,14 @@ TOP:
 				}
 			}
 		}
+		restart_firewall(); /* always restart */
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "ctnf") == 0) {
 		if (act_start) {
 			setup_conntrack();
-			stop_firewall();
-			start_firewall();
+			restart_firewall(); /* always restart */
 		}
 		goto CLEAR;
 	}
@@ -3118,9 +3117,8 @@ TOP:
 #ifdef TCONFIG_TOR
 	if (strcmp(service, "tor") == 0) {
 		if (act_stop) stop_tor();
-		stop_firewall();
-		start_firewall(); /* always restarted */
 		if (act_start) start_tor(1); /* force (re)start */
+		restart_firewall(); /* always restart */
 		goto CLEAR;
 	}
 #endif

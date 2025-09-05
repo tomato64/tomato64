@@ -554,8 +554,7 @@ int pptpc_ipup_main(int argc, char **argv)
 	pptp_client_add_table();
 	pptp_client_add_route();
 
-	stop_firewall();
-	start_firewall();
+	restart_firewall();
 
 	stop_dnsmasq();
 	dns_to_resolv();
@@ -581,8 +580,7 @@ int pptpc_ipdown_main(int argc, char **argv)
 	nvram_set("pptp_client_netmask", "0.0.0.0");
 	nvram_set("pptp_client_gateway", "0.0.0.0");
 
-	stop_firewall();
-	start_firewall();
+	restart_firewall();
 
 	stop_dnsmasq();
 	dns_to_resolv();

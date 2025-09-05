@@ -445,8 +445,7 @@ int dhcpc_renew_main(int argc, char **argv)
 }
 
 static void restart_basic_services(void) {
-	stop_firewall();
-	start_firewall();
+	restart_firewall();
 	set_host_domain_name();
 	stop_dnsmasq();
 	dns_to_resolv();

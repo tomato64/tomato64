@@ -367,6 +367,7 @@ extern void del_upnp_defaults(void);
 extern void add_bsd_defaults(void);
 extern void del_bsd_defaults(void);
 #endif /* TCONFIG_BCMBSD */
+extern void restart_firewall(void);
 
 /* usb.c */
 #ifdef TCONFIG_USB
