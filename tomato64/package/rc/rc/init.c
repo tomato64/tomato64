@@ -10445,6 +10445,9 @@ static int init_nvram(void)
 			nvram_set("ehci_ports", "2-1 2-2");
 			nvram_set("ohci_ports", "3-1 3-2");
 
+			/* enable usbX power supply by default */
+			nvram_set("gpio9", "usbport1"); /* Ex.: this config is correct for WZR-1750DHP and USB2.0; USB3.0 power enable/disable at start_usb()/stop_usb() */
+
 			/* misc settings */
 			nvram_set("boot_wait", "on");
 			nvram_set("wait_time", "3");

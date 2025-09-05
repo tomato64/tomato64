@@ -217,12 +217,12 @@ void start_usb(void)
 	int i = 255;
 
 #ifdef TCONFIG_BCMARM
+	/* get router model */
+	int model = get_model();
 # ifdef TCONFIG_BCMSMP
 	int fd;
 # endif
 # if defined(TCONFIG_BCM714) || defined(TCONFIG_BCM7)
-	/* get router model */
-	int model = get_model();
 	static int usb_reset_once = 0;
 
 	if (!usb_reset_once) {
@@ -267,6 +267,10 @@ void start_usb(void)
 	/* nothing to do right now for ARM! */
 	/* enable USB2/3 power by default - see file bcm5301x_pcie.c */
 
+	/* special cases */
+	if ((model == MODEL_WZR1750)) {
+		set_gpio(GPIO_10, T_LOW); /* enable USB3.0 (active LOW!!!) */
+	}
 #elif CONFIG_BCMWL6 /* TCONFIG_BCMARM */
 	if (nvram_match("boardtype", "0x0617") &&  nvram_match("boardrev", "0x1102")) /* DIR-865L enable USB */
 		xstart("gpio", "enable", "7");
@@ -540,6 +544,8 @@ void stop_usb(void)
 	int disabled = !nvram_get_int("usb_enable");
 #ifdef TCONFIG_BCMARM
 	int i = 255;
+	/* get router model */
+	int model = get_model();
 #endif
 
 #ifdef TCONFIG_UPS
@@ -600,6 +606,11 @@ void stop_usb(void)
 	/* nothing to do right now for ARM! */
 	/* enable USB2/3 power by default - see file bcm5301x_pcie.c */
 	/* do not disable USB2/3 power with stop_usb() */
+
+	/* special cases */
+	if ((model == MODEL_WZR1750)) {
+		set_gpio(GPIO_10, T_HIGH); /* disable USB3.0 (active LOW!!!) */
+	}
 #elif CONFIG_BCMWL6 /* TCONFIG_BCMARM */
 	if (nvram_match("boardtype", "0x0617") &&  nvram_match("boardrev", "0x1102")) /* DIR-865L disable USB */
 		xstart("gpio", "disable", "7");
