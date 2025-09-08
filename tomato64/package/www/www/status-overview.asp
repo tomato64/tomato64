@@ -302,6 +302,48 @@ function get_lan(port) {
 	return lan;
 }
 
+if (nvram['t_model_name'] === 'GL.iNet GL-MT6000') {
+	Ports = Object.freeze({
+		0: 'WAN',
+		1: 'WAN/LAN1',
+		2: 'LAN2',
+		3: 'LAN3',
+		4: 'LAN4',
+		5: 'LAN5'
+	});
+} else if (nvram['t_model_name'] === 'Banana Pi BPI-R3') {
+	Ports = Object.freeze({
+		0: 'SFP1',
+		1: 'SFP2',
+		2: 'WAN',
+		3: 'LAN1',
+		4: 'LAN2',
+		5: 'LAN3',
+		6: 'LAN4'
+	});
+} else if (nvram['t_model_name'] === 'Banana Pi BPI-R3 Mini') {
+	Ports = Object.freeze({
+		0: 'WAN',
+		1: 'LAN'
+	});
+} else { /* x86_64 or device not yet configured */
+	Ports = Object.freeze({
+		0: 'eth0',
+		1: 'eth1',
+		2: 'eth2',
+		3: 'eth3',
+		4: 'eth4',
+		5: 'eth5',
+		6: 'eth6',
+		7: 'eth7',
+		8: 'eth8'
+	});
+}
+
+function getPortName(p) {
+	return Ports[p];
+}
+
 function ethstates() {
 	var port = etherstates.port0;
 	if (port == 'disabled')
@@ -313,7 +355,7 @@ function ethstates() {
 	var code2 = '';
 
 	for ((nvram.lan_invert==0) ? p = 0 : p = stats.niccount - 1; (nvram.lan_invert==0) ? p <= stats.niccount - 1 : p >= 0; (nvram.lan_invert==0) ? p++ : p--) {
-		code += '<td class="title indent2"><b>eth'+p+'<\/b><\/td>';
+		code += '<td class="title indent2"><b>'+getPortName(p)+'<\/b><\/td>';
 		var wan = get_wan(p);
 		var lan = get_lan(p);
 		code2 += '<td class="title indent2" valign="top"><b>'+wan+lan+'<\/b><\/td>';
@@ -325,7 +367,7 @@ function ethstates() {
 
 		state = _ethstates(port);
 
-		code += '<td class="title indent2"><img id="'+state[0]+'_'+p+'" src="'+state[0]+'.gif" alt=""><br>'+(stats.lan_desc == '1' ? state[1] : '')+'<\/td>';
+		code += '<td class="title indent2"><img id="'+state[0]+'_'+p+'" src="'+state[0]+'.gif" alt=""><br>'+(stats.lan_desc == '1' ? '<span style="white-space: nowrap;">'+state[1]+'</span>' : '')+'<\/td>';
 	}
 
 	code += '<\/tr><tr>'+code2;
