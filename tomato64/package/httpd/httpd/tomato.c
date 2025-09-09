@@ -291,7 +291,13 @@ const aspapi_t aspapi[] = {
 	{ "dhcpd" #i "_endip",		V_LENGTH(0, 15)			}, \
 	{ "dhcpd" #i "_ostatic",	V_01				}, /* ignore DHCP requests from unknown devices on LANX */ \
 	{ "dhcp" #i "_lease",		V_LENGTH(0, 5)			}, \
-	{ "upnp_lan" #i "",		V_01				},
+	{ "upnp_lan" #i,		V_01				}, \
+	{ "bwl_br" #i "_enable",	V_01				}, \
+	{ "bwl_br" #i "_dlc",		V_RANGE(0, 99999999)		}, \
+	{ "bwl_br" #i "_ulc",		V_RANGE(0, 99999999)		}, \
+	{ "bwl_br" #i "_dlr",		V_RANGE(0, 99999999)		}, \
+	{ "bwl_br" #i "_ulr",		V_RANGE(0, 99999999)		}, \
+	{ "bwl_br" #i "_prio",		V_RANGE(0, 5)			},
 #ifdef TCONFIG_OPENVPN
  #define BRIDGE_BLOCK_OPENVPN(i) \
 	{ "vpn_server1_plan" #i,	V_01				}, \
@@ -1328,50 +1334,6 @@ static const nvset_t nvset_list[] = {
 	{ "bwl_br0_tcp",		V_RANGE(0, 1000)		},
 	{ "bwl_br0_udp",		V_RANGE(0, 100)			},
 	{ "bwl_br0_prio",		V_RANGE(0, 5)			},
-	{ "bwl_br1_enable",		V_01				},
-	{ "bwl_br1_dlc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br1_ulc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br1_dlr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br1_ulr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br1_prio",		V_RANGE(0, 5)			},
-	{ "bwl_br2_enable",		V_01				},
-	{ "bwl_br2_dlc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br2_ulc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br2_dlr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br2_ulr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br2_prio",		V_RANGE(0, 5)			},
-	{ "bwl_br3_enable",		V_01				},
-	{ "bwl_br3_dlc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br3_ulc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br3_dlr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br3_ulr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br3_prio",		V_RANGE(0, 5)			},
-#ifdef TOMATO64
-	{ "bwl_br4_enable",		V_01				},
-	{ "bwl_br4_dlc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br4_ulc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br4_dlr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br4_ulr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br4_prio",		V_RANGE(0, 5)			},
-	{ "bwl_br5_enable",		V_01				},
-	{ "bwl_br5_dlc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br5_ulc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br5_dlr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br5_ulr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br5_prio",		V_RANGE(0, 5)			},
-	{ "bwl_br6_enable",		V_01				},
-	{ "bwl_br6_dlc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br6_ulc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br6_dlr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br6_ulr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br6_prio",		V_RANGE(0, 5)			},
-	{ "bwl_br7_enable",		V_01				},
-	{ "bwl_br7_dlc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br7_ulc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br7_dlr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br7_ulr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br7_prio",		V_RANGE(0, 5)			},
-#endif /* TOMATO64 */
 
 #ifdef TCONFIG_BT
 /* nas-transmission */
