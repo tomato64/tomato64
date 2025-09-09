@@ -784,23 +784,23 @@ void start_ovpn_server(int unit)
 			fprintf(fp, "server-bridge");
 
 			if (atoi(getNVRAMVar("vpn_server%d_dhcp", unit)) == 0) {
+				br_ipaddr = nvram_get("lan_ipaddr"); /* default */
+				br_netmask = nvram_get("lan_netmask");
+
 				memset(buffer, 0, BUF_SIZE);
 				snprintf(buffer, BUF_SIZE, "vpn_server%d_br", unit);
-				if (nvram_contains_word(buffer, "br1")) {
-					br_ipaddr = nvram_get("lan1_ipaddr");
-					br_netmask = nvram_get("lan1_netmask");
-				}
-				else if (nvram_contains_word(buffer, "br2")) {
-					br_ipaddr = nvram_get("lan2_ipaddr");
-					br_netmask = nvram_get("lan2_netmask");
-				}
-				else if (nvram_contains_word(buffer, "br3")) {
-					br_ipaddr = nvram_get("lan3_ipaddr");
-					br_netmask = nvram_get("lan3_netmask");
-				}
-				else {
-					br_ipaddr = nvram_get("lan_ipaddr");
-					br_netmask = nvram_get("lan_netmask");
+				for (i = 1; i < BRIDGE_COUNT; i++) {
+					memset(buffer2, 0, BUF_SIZE_32);
+					snprintf(buffer2, BUF_SIZE_32, "br%d", i);
+					if (nvram_contains_word(buffer, buffer2)) {
+						memset(buffer2, 0, BUF_SIZE_32);
+						snprintf(buffer2, BUF_SIZE_32, "lan%d_ipaddr", i);
+						br_ipaddr = nvram_get(buffer2);
+						memset(buffer2, 0, BUF_SIZE_32);
+						snprintf(buffer2, BUF_SIZE_32, "lan%d_netmask", i);
+						br_netmask = nvram_get(buffer2);
+						break;
+					}
 				}
 
 				fprintf(fp, " %s %s %s %s",
