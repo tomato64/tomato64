@@ -292,12 +292,12 @@ const aspapi_t aspapi[] = {
 	{ "dhcpd" #i "_ostatic",	V_01				}, /* ignore DHCP requests from unknown devices on LANX */ \
 	{ "dhcp" #i "_lease",		V_LENGTH(0, 5)			}, \
 	{ "upnp_lan" #i,		V_01				}, \
-	{ "bwl_br" #i "_enable",	V_01				}, \
-	{ "bwl_br" #i "_dlc",		V_RANGE(0, 99999999)		}, \
-	{ "bwl_br" #i "_ulc",		V_RANGE(0, 99999999)		}, \
-	{ "bwl_br" #i "_dlr",		V_RANGE(0, 99999999)		}, \
-	{ "bwl_br" #i "_ulr",		V_RANGE(0, 99999999)		}, \
-	{ "bwl_br" #i "_prio",		V_RANGE(0, 5)			},
+	{ "bwl_lan" #i "_enable",	V_01				}, \
+	{ "bwl_lan" #i "_dlc",		V_RANGE(0, 99999999)		}, \
+	{ "bwl_lan" #i "_ulc",		V_RANGE(0, 99999999)		}, \
+	{ "bwl_lan" #i "_dlr",		V_RANGE(0, 99999999)		}, \
+	{ "bwl_lan" #i "_ulr",		V_RANGE(0, 99999999)		}, \
+	{ "bwl_lan" #i "_prio",		V_RANGE(0, 5)			},
 #ifdef TCONFIG_OPENVPN
  #define BRIDGE_BLOCK_OPENVPN(i) \
 	{ "vpn_server1_plan" #i,	V_01				}, \
@@ -1326,14 +1326,14 @@ static const nvset_t nvset_list[] = {
 /* bwlimit */
 	{ "bwl_enable",			V_01				},
 	{ "bwl_rules",			V_LENGTH(0, 4096)		},
-	{ "bwl_br0_enable",		V_01				},
-	{ "bwl_br0_dlc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br0_ulc",		V_RANGE(0, 99999999)		},
-	{ "bwl_br0_dlr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br0_ulr",		V_RANGE(0, 99999999)		},
-	{ "bwl_br0_tcp",		V_RANGE(0, 1000)		},
-	{ "bwl_br0_udp",		V_RANGE(0, 100)			},
-	{ "bwl_br0_prio",		V_RANGE(0, 5)			},
+	{ "bwl_lan_enable",		V_01				},
+	{ "bwl_lan_dlc",		V_RANGE(0, 99999999)		},
+	{ "bwl_lan_ulc",		V_RANGE(0, 99999999)		},
+	{ "bwl_lan_dlr",		V_RANGE(0, 99999999)		},
+	{ "bwl_lan_ulr",		V_RANGE(0, 99999999)		},
+	{ "bwl_lan_tcp",		V_RANGE(0, 1000)		},
+	{ "bwl_lan_udp",		V_RANGE(0, 100)			},
+	{ "bwl_lan_prio",		V_RANGE(0, 5)			},
 
 #ifdef TCONFIG_BT
 /* nas-transmission */

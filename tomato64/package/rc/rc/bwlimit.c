@@ -88,7 +88,7 @@ void ipt_bwlimit(int chain)
 	char *description;		/* description */
 	char *enabled;
 	int priority_num;
-	char *bwl_br0_tcp, *bwl_br0_udp;
+	char *bwl_lan_tcp, *bwl_lan_udp;
 	int i, address_type;
 
 	if (!nvram_get_int("bwl_enable"))
@@ -100,12 +100,12 @@ void ipt_bwlimit(int chain)
 	lanipaddr = nvram_safe_get("lan_ipaddr");
 	lanmask = nvram_safe_get("lan_netmask");
 
-	bwl_br0_tcp = nvram_safe_get("bwl_br0_tcp");
-	bwl_br0_udp = nvram_safe_get("bwl_br0_udp");
+	bwl_lan_tcp = nvram_safe_get("bwl_lan_tcp");
+	bwl_lan_udp = nvram_safe_get("bwl_lan_udp");
 
 	/* MANGLE */
 	if (chain == 1) {
-		if (nvram_get_int("bwl_br0_enable") == 1)
+		if (nvram_get_int("bwl_lan_enable") == 1)
 			/* These mark values and masks have been intentionally chosen to avoid conflicting
 			 * with qos, wan pbr, and vpnrouting marks. See qos.c
 			 */
@@ -118,7 +118,7 @@ void ipt_bwlimit(int chain)
 		for (i = 1 ; i < BRIDGE_COUNT; i++) {
 			char buffer[16];
 
-			snprintf(buffer, sizeof(buffer), "bwl_br%d_enable", i);
+			snprintf(buffer, sizeof(buffer), "bwl_lan%d_enable", i);
 			if (nvram_get_int(buffer) == 1) {
 
 				snprintf(buffer, sizeof(buffer), "lan%d_ipaddr", i);
@@ -137,22 +137,22 @@ void ipt_bwlimit(int chain)
 
 	/* NAT */
 	if (chain == 2) {
-		if (nvram_get_int("bwl_br0_enable") == 1) {
+		if (nvram_get_int("bwl_lan_enable") == 1) {
 #ifndef TCONFIG_BCMARM
-			if (nvram_get_int("bwl_br0_tcp") > 0)
-				ipt_write("-A PREROUTING -s %s/%s -p tcp --syn -m connlimit --connlimit-above %s -j DROP\n", lanipaddr, lanmask, bwl_br0_tcp);
+			if (nvram_get_int("bwl_lan_tcp") > 0)
+				ipt_write("-A PREROUTING -s %s/%s -p tcp --syn -m connlimit --connlimit-above %s -j DROP\n", lanipaddr, lanmask, bwl_lan_tcp);
 #endif
-			if (nvram_get_int("bwl_br0_udp") > 0)
-				ipt_write("-A PREROUTING -s %s/%s -p udp -m limit --limit %s/sec -j ACCEPT\n", lanipaddr, lanmask, bwl_br0_udp);
+			if (nvram_get_int("bwl_lan_udp") > 0)
+				ipt_write("-A PREROUTING -s %s/%s -p udp -m limit --limit %s/sec -j ACCEPT\n", lanipaddr, lanmask, bwl_lan_udp);
 		}
 	}
 
 #ifdef TCONFIG_BCMARM
 	/* Filter */
 	if (chain == 3) {
-		if (nvram_get_int("bwl_br0_enable") == 1) {
-			if (nvram_get_int("bwl_br0_tcp") > 0)
-				ipt_write("-A FORWARD -s %s/%s -p tcp --syn -m connlimit --connlimit-above %s -j DROP\n", lanipaddr, lanmask, bwl_br0_tcp);
+		if (nvram_get_int("bwl_lan_enable") == 1) {
+			if (nvram_get_int("bwl_lan_tcp") > 0)
+				ipt_write("-A FORWARD -s %s/%s -p tcp --syn -m connlimit --connlimit-above %s -j DROP\n", lanipaddr, lanmask, bwl_lan_tcp);
 		}
 	}
 #endif
@@ -419,12 +419,12 @@ void start_bwlimit(void)
 	/* the order matters! first rules for BWL for br0 (above) */
 
 	/* limit br0 */
-	dlr = nvram_safe_get("bwl_br0_dlr");		/* download rate */
-	dlc = nvram_safe_get("bwl_br0_dlc");		/* download ceiling */
-	ulr = nvram_safe_get("bwl_br0_ulr");		/* upload rate */
-	ulc = nvram_safe_get("bwl_br0_ulc");		/* upload ceiling */
-	prio = nvram_safe_get("bwl_br0_prio");		/* priority */
-	if ((nvram_get_int("bwl_br0_enable") == 1) && strcmp(dlr, "") && strcmp(ulr, "")) {
+	dlr = nvram_safe_get("bwl_lan_dlr");		/* download rate */
+	dlc = nvram_safe_get("bwl_lan_dlc");		/* download ceiling */
+	ulr = nvram_safe_get("bwl_lan_ulr");		/* upload rate */
+	ulc = nvram_safe_get("bwl_lan_ulc");		/* upload ceiling */
+	prio = nvram_safe_get("bwl_lan_prio");		/* priority */
+	if ((nvram_get_int("bwl_lan_enable") == 1) && strcmp(dlr, "") && strcmp(ulr, "")) {
 		if (!strcmp(dlc, ""))
 			dlc = dlr;
 		if (!strcmp(ulc, ""))
@@ -455,22 +455,22 @@ void start_bwlimit(void)
 		int id1 = ((2 * i) +2); // br[1-(BRIDGE_COUNT - 1)] (4, 6, 8, 10, 12, 14, 16)
 		int id2 =((16 * (i - 1)) +32); // br[1-(BRIDGE_COUNT - 1)] (32, 48, 64, 80, 96, 112, 128)
 
-		snprintf(buffer, sizeof(buffer), "bwl_br%d_enable", i);
+		snprintf(buffer, sizeof(buffer), "bwl_lan%d_enable", i);
 		if (nvram_get_int(buffer) == 1) {
 
-			snprintf(buffer, sizeof(buffer), "bwl_br%d_dlr", i);
+			snprintf(buffer, sizeof(buffer), "bwl_lan%d_dlr", i);
 			dlr = nvram_safe_get(buffer);			/* download rate */
 
-			snprintf(buffer, sizeof(buffer), "bwl_br%d_dlc", i);
+			snprintf(buffer, sizeof(buffer), "bwl_lan%d_dlc", i);
 			dlc = nvram_safe_get(buffer);			/* download ceiling */
 
-			snprintf(buffer, sizeof(buffer), "bwl_br%d_ulr", i);
+			snprintf(buffer, sizeof(buffer), "bwl_lan%d_ulr", i);
 			ulr = nvram_safe_get(buffer);			/* upload rate */
 
-			snprintf(buffer, sizeof(buffer), "bwl_br%d_ulc", i);
+			snprintf(buffer, sizeof(buffer), "bwl_lan%d_ulc", i);
 			ulc = nvram_safe_get(buffer);			/* upload ceiling */
 
-			snprintf(buffer, sizeof(buffer), "bwl_br%d_prio", i);
+			snprintf(buffer, sizeof(buffer), "bwl_lan%d_prio", i);
 			prio = nvram_safe_get(buffer);			/* priority */
 
 			if (!strcmp(dlc, ""))

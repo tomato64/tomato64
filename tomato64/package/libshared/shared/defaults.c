@@ -307,12 +307,12 @@ struct nvram_tuple bsd_defaults[] = {
 	{ "dhcpd" #i "_endip",		"" 				, 0 }, \
 	{ "dhcpd" #i "_ostatic",	"0"				, 0 }, /* ignore DHCP requests from unknown devices on LANX */ \
 	{ "dhcp" #i "_lease",		"1440"				, 0 }, \
-	{ "bwl_br" #i "_enable",	"0"				, 0 }, \
-	{ "bwl_br" #i "_dlc",		""				, 0 }, \
-	{ "bwl_br" #i "_ulc",		""				, 0 }, \
-	{ "bwl_br" #i "_dlr",		""				, 0 }, \
-	{ "bwl_br" #i "_ulr",		""				, 0 }, \
-	{ "bwl_br" #i "_prio",		"2"				, 0 },
+	{ "bwl_lan" #i "_enable",	"0"				, 0 }, \
+	{ "bwl_lan" #i "_dlc",		""				, 0 }, \
+	{ "bwl_lan" #i "_ulc",		""				, 0 }, \
+	{ "bwl_lan" #i "_dlr",		""				, 0 }, \
+	{ "bwl_lan" #i "_ulr",		""				, 0 }, \
+	{ "bwl_lan" #i "_prio",		"2"				, 0 },
 #ifdef TCONFIG_OPENVPN
  #define BRIDGE_BLOCK_OPENVPN(i) \
 	{ "vpn_server1_plan" #i,	"0"				, 0 }, \
@@ -1952,14 +1952,14 @@ struct nvram_tuple router_defaults[] = {
 /* bwlimit */
 	{ "bwl_enable",			"0"				, 0 },
 	{ "bwl_rules",			""				, 0 },
-	{ "bwl_br0_enable",		"0"				, 0 },
-	{ "bwl_br0_dlc",		""				, 0 },
-	{ "bwl_br0_ulc",		""				, 0 },
-	{ "bwl_br0_dlr",		""				, 0 },
-	{ "bwl_br0_ulr",		""				, 0 },
-	{ "bwl_br0_tcp",		"0"				, 0 },	/* unlimited */
-	{ "bwl_br0_udp",		"0"				, 0 },	/* unlimited */
-	{ "bwl_br0_prio",		"3"				, 0 },
+	{ "bwl_lan_enable",		"0"				, 0 },
+	{ "bwl_lan_dlc",		""				, 0 },
+	{ "bwl_lan_ulc",		""				, 0 },
+	{ "bwl_lan_dlr",		""				, 0 },
+	{ "bwl_lan_ulr",		""				, 0 },
+	{ "bwl_lan_tcp",		"0"				, 0 },	/* unlimited */
+	{ "bwl_lan_udp",		"0"				, 0 },	/* unlimited */
+	{ "bwl_lan_prio",		"3"				, 0 },
 
 #ifdef TCONFIG_NOCAT
 	{ "NC_enable",			"0"				, 0 },	/* enable NoCatSplash */
