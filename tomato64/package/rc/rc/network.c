@@ -241,7 +241,8 @@ static void set_lan_hostname(const char *wan_hostname)
 {
 	const char *s;
 	char *lan_hostname;
-	char hostname[16];
+	char buf[16], buf2[8];
+	int i;
 	FILE *f;
 
 	nvram_set("lan_hostname", wan_hostname);
@@ -249,13 +250,14 @@ static void set_lan_hostname(const char *wan_hostname)
 		/* derive from et0 mac address */
 		s = nvram_get("lan_hwaddr");
 		if (s && strlen(s) >= 17) {
-			snprintf(hostname, sizeof(hostname), "FT-%c%c%c%c%c%c%c%c%c%c%c%c", s[0], s[1], s[3], s[4], s[6], s[7], s[9], s[10], s[12], s[13], s[15], s[16]);
+			memset(buf, 0, sizeof(buf));
+			snprintf(buf, sizeof(buf), "FT-%c%c%c%c%c%c%c%c%c%c%c%c", s[0], s[1], s[3], s[4], s[6], s[7], s[9], s[10], s[12], s[13], s[15], s[16]);
 
 			if ((f = fopen("/proc/sys/kernel/hostname", "w"))) {
-				fputs(hostname, f);
+				fputs(buf, f);
 				fclose(f);
 			}
-			nvram_set("lan_hostname", hostname);
+			nvram_set("lan_hostname", buf);
 		}
 	}
 
@@ -263,14 +265,15 @@ static void set_lan_hostname(const char *wan_hostname)
 	if ((f = fopen("/etc/hosts", "w"))) {
 		fprintf(f, "127.0.0.1 localhost\n");
 
-		if ((s = nvram_get("lan_ipaddr")) && (*s))
-			fprintf(f, "%s %s %s-lan\n", s, lan_hostname, lan_hostname);
-		if ((s = nvram_get("lan1_ipaddr")) && (*s) && (strcmp(s, "") != 0))
-			fprintf(f, "%s %s-lan1\n", s, lan_hostname);
-		if ((s = nvram_get("lan2_ipaddr")) && (*s) && (strcmp(s, "") != 0))
-			fprintf(f, "%s %s-lan2\n", s, lan_hostname);
-		if ((s = nvram_get("lan3_ipaddr")) && (*s) && (strcmp(s, "") != 0))
-			fprintf(f, "%s %s-lan3\n", s, lan_hostname);
+		for (i = 0; i < BRIDGE_COUNT; i++) {
+			memset(buf, 0, sizeof(buf));
+			snprintf(buf, sizeof(buf), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
+			if ((s = nvram_get(buf)) && (*s)) {
+				memset(buf2, 0, sizeof(buf2));
+				snprintf(buf2, sizeof(buf2), "%d", i);
+				fprintf(f, "%s %s %s-lan%s\n", s, (i == 0 ? lan_hostname : ""), lan_hostname, (i == 0 ? "" : buf2));
+			}
+		}
 #ifdef TCONFIG_IPV6
 		if (ipv6_enabled()) {
 			fprintf(f, "::1 localhost ip6-localhost ip6-loopback\n");
