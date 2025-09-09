@@ -2311,7 +2311,7 @@ function init() {
 				<li><b>Type of VPN</b> - This field defines how peers interact.
 					<ul>
 					<li><b>Internal - Hub (this device) and Spoke (peers)</b> - Peers will only communicate with the router, and not each other. Implies /32 netmask for the peers</li>
-					<li><b>Internal - Full Mesh (defined Endpoint only)</b> - Peers will communicate to any peer with an endpoint. Implies /24 netmask for the peers. Peers with endpoints will communicate with all peers.</li>
+					<li><b>Internal - Full Mesh (defined Endpoint only)</b> - Peers will communicate with any peer with an endpoint. Implies /24 netmask for the peers. Peers with endpoints will communicate with all peers.</li>
 					<li><b>Internal - Full Mesh</b> - All peers are added to each other's configuration regardless of the endpoint field being congigured or not. Implies /24 netmask for the peers.</li>
 					<li><b>External - VPN Provider</b> - This VPN Access the Internet via a 3rd party VPN provider.</li>
 					</ul>
