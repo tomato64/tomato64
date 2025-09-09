@@ -665,7 +665,7 @@ static const nvset_t nvset_list[] = {
 #ifdef TCONFIG_USB_EXTRAS
 	{ "dnsmasq_tftp",		V_01				},
 	{ "dnsmasq_tftp_path",		V_TEXT(0, 128)			},
-	{ "dnsmasq_pxelan0",		V_01				},
+	{ "dnsmasq_pxelan",		V_01				},
 #endif
 #ifdef TCONFIG_MDNS
 	{ "mdns_enable",		V_01				},

@@ -592,7 +592,7 @@ static void write_tftp_config(FILE *f)
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			memset(key, 0, sizeof(key));
 			memset(lan_ifname, 0, sizeof(lan_ifname));
-			snprintf(key, sizeof(key), "dnsmasq_pxelan%u", i);
+			snprintf(key, sizeof(key), (i == 0 ? "dnsmasq_pxelan" : "dnsmasq_pxelan%u"), i);
 			snprintf(lan_ifname, sizeof(lan_ifname), (i == 0 ? "lan_ifname" : "lan%u_ifname"), i);
 
 			if (nvram_get_int(key) && strlen(nvram_safe_get(lan_ifname)) > 0) {

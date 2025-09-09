@@ -992,7 +992,7 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TCONFIG_USB_EXTRAS
 	{ "dnsmasq_tftp",		"0"				, 0 },
 	{ "dnsmasq_tftp_path",		""				, 0 },
-	{ "dnsmasq_pxelan0",		"0"				, 0 },
+	{ "dnsmasq_pxelan",		"0"				, 0 },
 #endif
 #ifdef TCONFIG_MDNS
 	{ "mdns_enable",		"0"				, 0 },

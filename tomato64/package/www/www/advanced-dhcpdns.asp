@@ -20,10 +20,10 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,stubby_custom,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe,wan_addget,wan2_addget,wan3_addget,wan4_addget,wan_proto,wan2_proto,wan3_proto,wan4_proto"); %>
+//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,stubby_custom,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_safe,wan_addget,wan2_addget,wan3_addget,wan4_addget,wan_proto,wan2_proto,wan3_proto,wan4_proto"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dhcpd4_ostatic,dhcpd5_ostatic,dhcpd6_ostatic,dhcpd7_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,stubby_custom,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan0,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_pxelan4,dnsmasq_pxelan5,dnsmasq_pxelan6,dnsmasq_pxelan7,dnsmasq_safe,wan_addget,wan2_addget,wan3_addget,wan4_addget,wan_proto,wan2_proto,wan3_proto,wan4_proto"); %>
+//	<% nvram("dnsmasq_q,ipv6_service,ipv6_radvd,ipv6_dhcpd,ipv6_lease_time,ipv6_fast_ra,ipv6_dns_lan,dhcpd_dmdns,dhcpd_gwmode,dns_intcpt,dhcpc_minpkt,dnsmasq_custom,dnsmasq_onion_support,dnsmasq_gen_names,dhcpd_lmax,dhcpc_custom,dns_norebind,dns_fwd_local,dns_priv_override,dhcpd_ostatic,dhcpd1_ostatic,dhcpd2_ostatic,dhcpd3_ostatic,dhcpd4_ostatic,dhcpd5_ostatic,dhcpd6_ostatic,dhcpd7_ostatic,dnsmasq_debug,dnsmasq_edns_size,dnssec_enable,dnssec_method,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,stubby_force_tls13,stubby_port,stubby_custom,wan_wins,mdns_enable,mdns_reflector,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,dnsmasq_tftp,dnsmasq_tftp_path,dnsmasq_pxelan,dnsmasq_pxelan1,dnsmasq_pxelan2,dnsmasq_pxelan3,dnsmasq_pxelan4,dnsmasq_pxelan5,dnsmasq_pxelan6,dnsmasq_pxelan7,dnsmasq_safe,wan_addget,wan2_addget,wan3_addget,wan4_addget,wan_proto,wan2_proto,wan3_proto,wan4_proto"); %>
 /* TOMATO64-END */
 
 var cprefix = 'advanced_dhcpdns';
@@ -117,7 +117,7 @@ function verifyFields(focused, quiet) {
 /* TFTP-BEGIN */
 	v = E('_f_dnsmasq_tftp').checked;
 	vis._dnsmasq_tftp_path = v;
-	vis._f_dnsmasq_pxelan0 = v;
+	vis._f_dnsmasq_pxelan = v;
 	vis._f_dnsmasq_pxelan1 = v;
 	vis._f_dnsmasq_pxelan2 = v;
 	vis._f_dnsmasq_pxelan3 = v;
@@ -265,9 +265,9 @@ function verifyFields(focused, quiet) {
 	if (v) {
 		for (i = 0; i <= MAX_BRIDGE_ID; ++i) {
 			a = (i == 0 ? '' : i.toString());
-			E('_f_dnsmasq_pxelan'+i).disabled = (nvram['lan'+a+'_ifname'].length < 1);
+			E('_f_dnsmasq_pxelan'+a).disabled = (nvram['lan'+a+'_ifname'].length < 1);
 			if (nvram['lan'+a+'_ifname'].length < 1)
-				E('_f_dnsmasq_pxelan'+i).checked = 0;
+				E('_f_dnsmasq_pxelan'+a).checked = 0;
 		}
 	}
 /* TFTP-END */
@@ -405,7 +405,7 @@ function save() {
 /* STUBBY-END */
 /* TFTP-BEGIN */
 	fom.dnsmasq_tftp.value = fom._f_dnsmasq_tftp.checked ? 1 : 0;
-	fom.dnsmasq_pxelan0.value = fom._f_dnsmasq_pxelan0.checked ? 1 : 0;
+	fom.dnsmasq_pxelan.value = fom._f_dnsmasq_pxelan.checked ? 1 : 0;
 	fom.dnsmasq_pxelan1.value = fom._f_dnsmasq_pxelan1.checked ? 1 : 0;
 	fom.dnsmasq_pxelan2.value = fom._f_dnsmasq_pxelan2.checked ? 1 : 0;
 	fom.dnsmasq_pxelan3.value = fom._f_dnsmasq_pxelan3.checked ? 1 : 0;
@@ -570,7 +570,7 @@ function init() {
 <!-- MDNS-END -->
 <!-- TFTP-BEGIN -->
 <input type="hidden" name="dnsmasq_tftp">
-<input type="hidden" name="dnsmasq_pxelan0">
+<input type="hidden" name="dnsmasq_pxelan">
 <input type="hidden" name="dnsmasq_pxelan1">
 <input type="hidden" name="dnsmasq_pxelan2">
 <input type="hidden" name="dnsmasq_pxelan3">
@@ -756,7 +756,7 @@ function init() {
 		createFieldTable('', [
 			{ title: 'Enable TFTP', name: 'f_dnsmasq_tftp', type: 'checkbox', value: nvram.dnsmasq_tftp == 1 },
 				{ title: 'TFTP root path', indent: 2, name: 'dnsmasq_tftp_path', type: 'text', maxlen: 128, size: 90, placeholder: '/mnt/sda1', value: nvram.dnsmasq_tftp_path },
-				{ title: 'PXE on LAN0 (br0)', indent: 2, name: 'f_dnsmasq_pxelan0', type: 'checkbox', value: nvram.dnsmasq_pxelan0 == 1 },
+				{ title: 'PXE on LAN0 (br0)', indent: 2, name: 'f_dnsmasq_pxelan', type: 'checkbox', value: nvram.dnsmasq_pxelan == 1 },
 				{ title: 'PXE on LAN1 (br1)', indent: 2, name: 'f_dnsmasq_pxelan1', type: 'checkbox', value: nvram.dnsmasq_pxelan1 == 1 },
 				{ title: 'PXE on LAN2 (br2)', indent: 2, name: 'f_dnsmasq_pxelan2', type: 'checkbox', value: nvram.dnsmasq_pxelan2 == 1 },
 				{ title: 'PXE on LAN3 (br3)', indent: 2, name: 'f_dnsmasq_pxelan3', type: 'checkbox', value: nvram.dnsmasq_pxelan3 == 1 }
