@@ -127,10 +127,17 @@ function redraw() {
 				if (fskip == 1) continue;
 			}
 
-			if ((b[1] == getNetworkAddress(nvram.lan_ipaddr,nvram.lan_netmask)) ||
-				(b[1] == getNetworkAddress(nvram.lan1_ipaddr,nvram.lan1_netmask)) ||
-				(b[1] == getNetworkAddress(nvram.lan2_ipaddr,nvram.lan2_netmask)) ||
-				(b[1] == getNetworkAddress(nvram.lan3_ipaddr,nvram.lan3_netmask))) {
+			var isSubnet = false;
+			for (var j = 0; j <= MAX_BRIDGE_ID; j++) {
+				var lan_ipaddr = nvram['lan' + (j == 0 ? '' : j) + '_ipaddr'];
+				var lan_netmask = nvram['lan' + (j == 0 ? '' : j) + '_netmask'];
+				if (lan_ipaddr && lan_netmask && b[1] == getNetworkAddress(lan_ipaddr, lan_netmask)) {
+					isSubnet = true;
+					break;
+				}
+			}
+
+			if (isSubnet) {
 				if(E('_f_subnet').checked == 0) {
 					continue;
 				}
