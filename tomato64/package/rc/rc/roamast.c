@@ -40,6 +40,7 @@
 #define RAST_POLL_INTV_NORMAL 5
 #define RAST_TIMEOUT_STA 10
 #define RAST_DFT_IDLE_RATE	2 /* Kbps */
+#define RAST_DFT_IDLE_RATE_MAX	25000 /* Kbps */
 #define	MAX_IF_NUM 3
 #define MAX_SUBIF_NUM 4
 #define MAX_STA_COUNT 128
@@ -135,7 +136,8 @@ void rast_init_bssinfo(void)
 
 #ifdef TCONFIG_BCMARM
 	int rate = nvram_get_int("rast_idlrt");
-	if (rate <= 0)
+	/* Check parameter threshold */
+	if ((rate <= 0) || (rate >= RAST_DFT_IDLE_RATE_MAX))
 		rate = RAST_DFT_IDLE_RATE;
 #endif
 
