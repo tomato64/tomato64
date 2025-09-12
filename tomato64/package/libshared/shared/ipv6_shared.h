@@ -16,4 +16,6 @@
 
 #define MAX_DNS6_SERVER_LAN	2
 
+#define BRIDGE_COUNT_IPV6_MAX	16 /* Max 32! */
+
 #endif /* _ipv6_shared_h_ */

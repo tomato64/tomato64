@@ -792,7 +792,7 @@ int dhcp6c_state_main(int argc, char **argv)
 void start_dhcp6c(void)
 {
 	FILE *f;
-	int prefix_len, j;
+	int prefix_len;
 	unsigned int i;
 	char *wan6face;
 	char buf[16];
@@ -864,13 +864,19 @@ void start_dhcp6c(void)
 		           nvram_safe_get("lan_ifname"),
 		           prefix_len);
 
-		/* check IPv6 for LAN1 - LAN3 */
+		/* check IPv6 for LAN1 - LANX */
 		for (i = 1; i < BRIDGE_COUNT; i++) {
-			j = (i == 1 ? 1 : 2);
+
+			if (i >= BRIDGE_COUNT_IPV6_MAX) /* Stop here if we reach this limit */
+				break;
+
 			memset(buf, 0, sizeof(buf));
 			snprintf(buf, sizeof(buf), "lan%u_ipaddr", i);
 
-			if ((ipv6_vlan & (1U << (i - 1))) && (prefix_len >= j) && (strcmp(nvram_safe_get(buf), "") != 0)) { /* 2x or 4x IPv6 /64 networks possible --> for LAN to LANX */
+			/* more IPv6 /64 networks possible --> for LAN1 to LANX */
+			if ((ipv6_vlan & (1U << (i - 1))) && /* Check GUI */
+			    ((1U << prefix_len) > i) && /* Check prefix - x IPv6 /64 networks possible */
+			    (strcmp(nvram_safe_get(buf), "") != 0)) { /* check lanX_ipaddr */
 				memset(buf, 0, sizeof(buf));
 				snprintf(buf, sizeof(buf), "lan%u_ifname", i);
 
