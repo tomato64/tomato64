@@ -381,6 +381,8 @@ function anon_update() {
 
 	if ((stats.anon_enable == '-1') || (stats.anon_answer == '0'))
 		E('status-anonwarn').style.display = 'block';
+	else if (stats.anon_enable == '2')
+		E('status-anonwarn').style.display = 'none';
 	else
 		E('status-anonwarn').style.display = 'none';
 
