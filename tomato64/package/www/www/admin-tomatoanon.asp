@@ -92,12 +92,21 @@ function init() {
 /* TOMATO64-BEGIN */
 		The submitted results can be viewed on the <a href="https://anon.freshtomato.org" class="new_window"><b>anon.freshtomato.org</b></a> page.
 /* TOMATO64-END */
-	</div>
+</div>
 	<script>
 		createFieldTable('', [ { title: 'Enable', name: 'f_tomatoanon_enable', type: 'checkbox', value: nvram.tomatoanon_enable == 1 } ]);
 	</script>
 	<ul>
-		<li>Note: If you have TomatoAnon enabled and want to update database now, click 'Save'.</li>
+		<li>Note: If you have TomatoAnon enabled and want to update database now, click 'Save' leave unchecked otherwise.</li>
+	</ul>
+</div>
+
+</div>
+	<script>
+		createFieldTable('', [ { title: 'Disable TomatoAnonMsg On Overview', name: 'f_tomatoanon_enable', type: 'checkbox', value: nvram.tomatoanon_enable == 2 } ]);
+	</script>
+	<ul>
+		<li>Note: If you have TomatoAnon Disabled Message on overview disabled and Tomato Anon Disabled check Disabled, click 'Save'.</li>
 	</ul>
 </div>
 
