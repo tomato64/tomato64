@@ -55,6 +55,9 @@
  */
 
 
+#ifdef TTYD_PROXY
+#define _GNU_SOURCE
+#endif /* TTYD_PROXY */
 #include <errno.h>
 #include <fcntl.h>
 #include <time.h>
@@ -82,6 +85,9 @@
 #include "mssl.h"
  #ifdef USE_OPENSSL
   #include <openssl/opensslv.h>
+   #ifdef TTYD_PROXY
+    #include <openssl/ssl.h>
+   #endif /* TTYD_PROXY */
  #endif
 #define HTTPS_CRT_VER		"1"
 #endif
@@ -146,6 +152,12 @@ const char mime_plain[] = "text/plain";
 const char mime_javascript[] = "text/javascript";
 const char mime_binary[] = "application/tomato-binary-file"; /* instead of "application/octet-stream" to make browser just "save as" and prevent automatic detection weirdness */
 const char mime_octetstream[] = "application/octet-stream";
+
+#ifdef TTYD_PROXY
+#include <sys/un.h>
+#include <poll.h>
+#include "ttyd.h"
+#endif /* TTYD_PROXY */
 
 static const char *http_status_desc(int status)
 {
@@ -531,6 +543,11 @@ static void handle_request(void)
 	int cl = 0;
 	auth_t auth;
 
+#ifdef TTYD_PROXY
+	char *upgrade_header = NULL, *connection_header = NULL;
+	char *ws_key_header = NULL;
+#endif
+
 	logmsg(LOG_DEBUG, "*** %s: IN ***", __FUNCTION__);
 
 	/* initialize variables */
@@ -595,6 +612,15 @@ static void handle_request(void)
 	else if ((strcmp(file, "ext/") == 0) || (strcmp(file, "ext") == 0))
 		file = "ext/index.asp";
 
+#ifdef TTYD_PROXY
+	/* Helper macro to strip trailing whitespace - CRITICAL for string comparisons */
+	#define STRIP_TRAILING_WS(str) do { \
+		char *end = (str) + strlen(str) - 1; \
+		while (end > (str) && (*end == ' ' || *end == '\t' || *end == '\r' || *end == '\n')) \
+			*end-- = '\0'; \
+	} while (0)
+#endif /* TTYD_PROXY */
+
 	cp = protocol;
 	strsep(&cp, " ");
 	cur = protocol + strlen(protocol) + 1;
@@ -632,9 +658,104 @@ static void handle_request(void)
 			cur = ++cp;
 			logmsg(LOG_DEBUG, "*** %s: boundary: %s", __FUNCTION__, boundary);
 		}
+#ifdef TTYD_PROXY
+		else if (strncasecmp(cur, "Upgrade:", 8) == 0) {
+			cp = &cur[8];
+			cp += strspn(cp, " \t");
+			upgrade_header = cp;
+			STRIP_TRAILING_WS(cp);
+			cur = upgrade_header + strlen(upgrade_header) + 1;
+			logmsg(LOG_DEBUG, "*** %s: FOUND Upgrade header: '%s'", __FUNCTION__, upgrade_header);
+		}
+		else if (strncasecmp(cur, "Connection:", 11) == 0) {
+			cp = &cur[11];
+			cp += strspn(cp, " \t");
+			connection_header = cp;
+			STRIP_TRAILING_WS(cp);
+			cur = connection_header + strlen(connection_header) + 1;
+			logmsg(LOG_DEBUG, "*** %s: FOUND Connection header: '%s'", __FUNCTION__, connection_header);
+		}
+		else if (strncasecmp(cur, "Sec-WebSocket-Key:", 18) == 0) {
+			cp = &cur[18];
+			cp += strspn(cp, " \t");
+			ws_key_header = cp;
+			STRIP_TRAILING_WS(cp);
+			cur = ws_key_header + strlen(ws_key_header) + 1;
+			logmsg(LOG_DEBUG, "*** %s: WebSocket-Key: '%s'", __FUNCTION__, ws_key_header);
+		}
+#endif /* TTYD_PROXY */
 	}
 
+#ifdef TTYD_PROXY
+	#undef STRIP_TRAILING_WS
+#endif /* TTYD_PROXY */
+
 	get_client_addr();
+#ifdef TTYD_PROXY
+	/* Check for WebSocket upgrade request */
+	if (ttyd_is_websocket_upgrade(upgrade_header, connection_header)) {
+		int auth_required = 0;
+		if (ttyd_has_route(path, &auth_required)) {
+			/* Check authentication if required */
+			if (auth_required) {
+				auth_t ws_auth = auth_check(authorization);
+				if (ws_auth != AUTH_OK) {
+					auth_fail(cl);
+					return;
+				}
+			}
+
+			if (!check_wlaccess()) {
+				send_error(403, NULL, "Access denied");
+				return;
+			}
+
+			/* Handle WebSocket upgrade */
+			if (ttyd_handle_websocket_upgrade(path, ws_key_header) < 0) {
+				send_error(500, NULL, "WebSocket upgrade failed");
+			}
+			return; /* CRITICAL: Return immediately - do not continue processing */
+		}
+		else {
+			logmsg(LOG_DEBUG, "*** %s: No WebSocket route found for path: %s", __FUNCTION__, path);
+			/* Fall through to regular HTTP handling */
+		}
+	}
+
+	/* Handle regular HTTP requests to console paths (NOT WebSocket upgrades) */
+	/* This only runs if we didn't return above from WebSocket handling */
+	{
+		char *response = NULL;
+		size_t response_len = 0;
+		int result = ttyd_handle_http_request(file, &response, &response_len);
+
+		if (result == 1) {
+			/* Console path was handled - check auth and send response */
+			auth_t console_auth = auth_check(authorization);
+			if (console_auth != AUTH_OK) {
+				free(response);
+				auth_fail(cl);
+				return;
+			}
+
+			if (!check_wlaccess()) {
+				free(response);
+				send_error(403, NULL, "Access denied");
+				return;
+			}
+
+			web_write(response, response_len);
+			free(response);
+			return;
+		}
+		else if (result == -1) {
+			/* Error handling console request */
+			send_error(502, NULL, "Failed to connect to terminal service");
+			return;
+		}
+		/* result == 0: not a console path, fall through to regular HTTP handling */
+	}
+#endif /* TTYD_PROXY */
 	auth = auth_check(authorization);
 
 	if (auth == AUTH_BAD) {
@@ -1092,6 +1213,11 @@ int main(int argc, char **argv)
 
 	init_id();
 
+#ifdef TTYD_PROXY
+    if (ttyd_init() < 0) {
+        logmsg(LOG_WARNING, "Failed to initialize WebSocket support");
+    }
+#endif /* TTYD_PROXY */
 	if (daemon(1, 1) == -1) {
 		logmsg(LOG_ERR, "daemon: %m");
 		return 0;
@@ -1175,7 +1301,9 @@ int main(int argc, char **argv)
 			close(connfd);
 		}
 	}
-
+#ifdef TTYD_PROXY
+    ttyd_cleanup();
+#endif /* TTYD_PROXY */
 	close_listen_sockets();
 
 	return 0;

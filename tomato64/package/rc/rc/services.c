@@ -814,11 +814,7 @@ void start_httpd(void)
 		logmsg(LOG_INFO, "httpd is started");
 
 #ifdef TOMATO64
-	if (nvram_match("http_enable", "1"))
-		eval("/usr/bin/start_ttyd", "1");
-
-	if (nvram_match("https_enable", "1"))
-		eval("/usr/bin/start_ttyd", "2");
+		eval("/usr/bin/start_ttyd");
 #endif /* TOMATO64 */
 }
 

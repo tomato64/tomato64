@@ -24,14 +24,8 @@
 
 //      <% nvram(''); %>        // http_id
 
-	if (location.protocol == "http:") {
-		port = 7681;
-	} else if (location.protocol == "https:") {
-		port = 7682;
-	}
-
 	function loadIframe(){
-		document.getElementById("terminal").src=location.protocol+'//'+location.hostname+':'+port;
+		document.getElementById("terminal").src=location.protocol+'//'+location.hostname+':'+location.port+'/console';
     	}
 </script>
 </head>
@@ -49,7 +43,7 @@
 <div class="section-title">Execute System Commands</div>
 <div class="section">
 	<iframe id="terminal" height="500" width="760" title="Terminal"></iframe>
-	<input type="button" value="Open in New Tab" class="new_window" onclick="window.open(location.protocol+'//'+location.hostname+':'+port)"><br><br>
+	<input type="button" value="Open in New Tab" class="new_window" onclick="window.open(location.protocol+'//'+location.hostname+':'+location.port+'/console')"><br><br>
 	<input type="button" value="Open Legacy System Commands" onclick="window.open(location.protocol+'//'+location.hostname+':'+location.port+'/tools-shell-legacy.asp','_self')"><br>
 </div>
 

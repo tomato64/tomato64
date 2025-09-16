@@ -1,6 +1,7 @@
 ALL_CPPFLAGS = -fPIC
 ALL_CPPFLAGS += -std=gnu17
 ALL_CPPFLAGS += -DTOMATO64
+ALL_CPPFLAGS += -DTTYD_PROXY
 ALL_CPPFLAGS += -DUSE_OPENSSL
 ALL_CPPFLAGS += -I.
 ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared
@@ -73,6 +74,11 @@ endif
 #ifeq ($(TCONFIG_IPERF),y)
 OBJS += iperf.o
 #endif
+
+# WebSocket proxy support (ttyd)
+ifneq ($(findstring -DTTYD_PROXY,$(ALL_CPPFLAGS)),)
+OBJS += ttyd.o
+endif
 
 all: httpd
 

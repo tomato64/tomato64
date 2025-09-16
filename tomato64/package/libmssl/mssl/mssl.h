@@ -17,4 +17,8 @@ extern int mssl_init_ex(char *cert, char *priv, char *ciphers);
 extern void mssl_ctx_free();
 extern int mssl_cert_key_match(const char *cert_path, const char *key_path);
 
+#ifdef TTYD_PROXY
+extern void *mssl_get_ssl(FILE *fp);
+#endif /* TTYD_PROXY */
+
 #endif

@@ -248,6 +248,12 @@ typedef struct {
 
 static SSL_CTX* ctx;
 
+#ifdef TTYD_PROXY
+// Global mapping to retrieve SSL from FILE* (simple approach for httpd)
+static FILE *current_ssl_fp = NULL;
+static mssl_cookie_t *current_ssl_cookie = NULL;
+#endif /* TTYD_PROXY */
+
 static inline void mssl_print_err(SSL* ssl)
 {
 	ERR_print_errors_fp(stderr);
@@ -424,6 +430,12 @@ static FILE *_ssl_fopen(int sd, int client, const char *name)
 		_dprintf("%s: fopencookie failed\n", __FUNCTION__);
 		goto ERROR;
 	}
+
+#ifdef TTYD_PROXY
+	// Store mapping for later retrieval
+	current_ssl_fp = f;
+	current_ssl_cookie = kuki;
+#endif /* TTYD_PROXY */
 
 	_dprintf("%s() success\n", __FUNCTION__);
 	return f;
@@ -773,3 +785,18 @@ end:
 
 	return ret;
 }
+
+#ifdef TTYD_PROXY
+void *mssl_get_ssl(FILE *fp)
+{
+	if (!fp) return NULL;
+
+	// Check if this is the current SSL FILE*
+	if (fp == current_ssl_fp && current_ssl_cookie) {
+		return current_ssl_cookie->ssl;
+	}
+
+	// Not found
+	return NULL;
+}
+#endif /* TTYD_PROXY */
