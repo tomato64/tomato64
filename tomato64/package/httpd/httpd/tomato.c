@@ -2025,6 +2025,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface0_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface0_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface0_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy0iface0_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface0_encryption",	V_NONE				},
 	{"wifi_phy0iface0_cipher",	V_NONE				},
 	{"wifi_phy0iface0_key",		V_LENGTH(8, 64)			},
@@ -2041,6 +2042,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface1_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface1_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface1_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy0iface1_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface1_encryption",	V_NONE				},
 	{"wifi_phy0iface1_cipher",	V_NONE				},
 	{"wifi_phy0iface1_key",		V_LENGTH(8, 64)			},
@@ -2057,6 +2059,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface2_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface2_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface2_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy0iface2_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface2_encryption",	V_NONE				},
 	{"wifi_phy0iface2_cipher",	V_NONE				},
 	{"wifi_phy0iface2_key",		V_LENGTH(8, 64)			},
@@ -2073,6 +2076,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface3_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface3_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface3_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy0iface3_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface3_encryption",	V_NONE				},
 	{"wifi_phy0iface3_cipher",	V_NONE				},
 	{"wifi_phy0iface3_key",		V_LENGTH(8, 64)			},
@@ -2089,6 +2093,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface4_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface4_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface4_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy0iface4_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface4_encryption",	V_NONE				},
 	{"wifi_phy0iface4_cipher",	V_NONE				},
 	{"wifi_phy0iface4_key",		V_LENGTH(8, 64)			},
@@ -2105,6 +2110,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface5_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface5_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface5_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy0iface5_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface5_encryption",	V_NONE				},
 	{"wifi_phy0iface5_cipher",	V_NONE				},
 	{"wifi_phy0iface5_key",		V_LENGTH(8, 64)			},
@@ -2121,6 +2127,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface6_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface6_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface6_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy0iface6_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface6_encryption",	V_NONE				},
 	{"wifi_phy0iface6_cipher",	V_NONE				},
 	{"wifi_phy0iface6_key",		V_LENGTH(8, 64)			},
@@ -2137,6 +2144,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface7_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface7_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface7_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy0iface7_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface7_encryption",	V_NONE				},
 	{"wifi_phy0iface7_cipher",	V_NONE				},
 	{"wifi_phy0iface7_key",		V_LENGTH(8, 64)			},
@@ -2153,6 +2161,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface8_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface8_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface8_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy0iface8_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface8_encryption",	V_NONE				},
 	{"wifi_phy0iface8_cipher",	V_NONE				},
 	{"wifi_phy0iface8_key",		V_LENGTH(8, 64)			},
@@ -2169,6 +2178,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface9_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface9_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface9_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy0iface9_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface9_encryption",	V_NONE				},
 	{"wifi_phy0iface9_cipher",	V_NONE				},
 	{"wifi_phy0iface9_key",		V_LENGTH(8, 64)			},
@@ -2185,6 +2195,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface10_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface10_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface10_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy0iface10_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface10_encryption",	V_NONE				},
 	{"wifi_phy0iface10_cipher",	V_NONE				},
 	{"wifi_phy0iface10_key",	V_LENGTH(8, 64)			},
@@ -2201,6 +2212,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface11_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface11_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface11_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy0iface11_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface11_encryption",	V_NONE				},
 	{"wifi_phy0iface11_cipher",	V_NONE				},
 	{"wifi_phy0iface11_key",	V_LENGTH(8, 64)			},
@@ -2217,6 +2229,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface12_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface12_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface12_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy0iface12_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface12_encryption",	V_NONE				},
 	{"wifi_phy0iface12_cipher",	V_NONE				},
 	{"wifi_phy0iface12_key",	V_LENGTH(8, 64)			},
@@ -2233,6 +2246,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface13_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface13_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface13_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy0iface13_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface13_encryption",	V_NONE				},
 	{"wifi_phy0iface13_cipher",	V_NONE				},
 	{"wifi_phy0iface13_key",	V_LENGTH(8, 64)			},
@@ -2249,6 +2263,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface14_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface14_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface14_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy0iface14_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface14_encryption",	V_NONE				},
 	{"wifi_phy0iface14_cipher",	V_NONE				},
 	{"wifi_phy0iface14_key",	V_LENGTH(8, 64)			},
@@ -2265,6 +2280,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface15_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy0iface15_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy0iface15_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy0iface15_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface15_encryption",	V_NONE				},
 	{"wifi_phy0iface15_cipher",	V_NONE				},
 	{"wifi_phy0iface15_key",	V_LENGTH(8, 64)			},
@@ -2281,6 +2297,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface0_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface0_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface0_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy1iface0_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface0_encryption",	V_NONE				},
 	{"wifi_phy1iface0_cipher",	V_NONE				},
 	{"wifi_phy1iface0_key",		V_LENGTH(8, 64)			},
@@ -2297,6 +2314,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface1_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface1_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface1_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy1iface1_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface1_encryption",	V_NONE				},
 	{"wifi_phy1iface1_cipher",	V_NONE				},
 	{"wifi_phy1iface1_key",		V_LENGTH(8, 64)			},
@@ -2313,6 +2331,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface2_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface2_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface2_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy1iface2_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface2_encryption",	V_NONE				},
 	{"wifi_phy1iface2_cipher",	V_NONE				},
 	{"wifi_phy1iface2_key",		V_LENGTH(8, 64)			},
@@ -2329,6 +2348,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface3_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface3_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface3_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy1iface3_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface3_encryption",	V_NONE				},
 	{"wifi_phy1iface3_cipher",	V_NONE				},
 	{"wifi_phy1iface3_key",		V_LENGTH(8, 64)			},
@@ -2345,6 +2365,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface4_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface4_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface4_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy1iface4_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface4_encryption",	V_NONE				},
 	{"wifi_phy1iface4_cipher",	V_NONE				},
 	{"wifi_phy1iface4_key",		V_LENGTH(8, 64)			},
@@ -2361,6 +2382,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface5_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface5_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface5_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy1iface5_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface5_encryption",	V_NONE				},
 	{"wifi_phy1iface5_cipher",	V_NONE				},
 	{"wifi_phy1iface5_key",		V_LENGTH(8, 64)			},
@@ -2377,6 +2399,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface6_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface6_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface6_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy1iface6_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface6_encryption",	V_NONE				},
 	{"wifi_phy1iface6_cipher",	V_NONE				},
 	{"wifi_phy1iface6_key",		V_LENGTH(8, 64)			},
@@ -2393,6 +2416,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface7_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface7_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface7_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy1iface7_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface7_encryption",	V_NONE				},
 	{"wifi_phy1iface7_cipher",	V_NONE				},
 	{"wifi_phy1iface7_key",		V_LENGTH(8, 64)			},
@@ -2409,6 +2433,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface8_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface8_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface8_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy1iface8_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface8_encryption",	V_NONE				},
 	{"wifi_phy1iface8_cipher",	V_NONE				},
 	{"wifi_phy1iface8_key",		V_LENGTH(8, 64)			},
@@ -2425,6 +2450,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface9_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface9_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface9_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy1iface9_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface9_encryption",	V_NONE				},
 	{"wifi_phy1iface9_cipher",	V_NONE				},
 	{"wifi_phy1iface9_key",		V_LENGTH(8, 64)			},
@@ -2441,6 +2467,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface10_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface10_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface10_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy1iface10_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface10_encryption",	V_NONE				},
 	{"wifi_phy1iface10_cipher",	V_NONE				},
 	{"wifi_phy1iface10_key",	V_LENGTH(8, 64)			},
@@ -2457,6 +2484,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface11_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface11_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface11_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy1iface11_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface11_encryption",	V_NONE				},
 	{"wifi_phy1iface11_cipher",	V_NONE				},
 	{"wifi_phy1iface11_key",	V_LENGTH(8, 64)			},
@@ -2473,6 +2501,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface12_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface12_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface12_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy1iface12_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface12_encryption",	V_NONE				},
 	{"wifi_phy1iface12_cipher",	V_NONE				},
 	{"wifi_phy1iface12_key",	V_LENGTH(8, 64)			},
@@ -2489,6 +2518,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface13_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface13_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface13_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy1iface13_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface13_encryption",	V_NONE				},
 	{"wifi_phy1iface13_cipher",	V_NONE				},
 	{"wifi_phy1iface13_key",	V_LENGTH(8, 64)			},
@@ -2505,6 +2535,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface14_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface14_hidden",	V_NONE			},	/*  Hide SSID */
 	{"wifi_phy1iface14_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy1iface14_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface14_encryption",	V_NONE				},
 	{"wifi_phy1iface14_cipher",	V_NONE				},
 	{"wifi_phy1iface14_key",	V_LENGTH(8, 64)			},
@@ -2521,6 +2552,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface15_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy1iface15_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy1iface15_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy1iface15_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface15_encryption",	V_NONE				},
 	{"wifi_phy1iface15_cipher",	V_NONE				},
 	{"wifi_phy1iface15_key",	V_LENGTH(8, 64)			},
@@ -2537,6 +2569,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface0_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface0_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface0_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy2iface0_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface0_encryption",	V_NONE				},
 	{"wifi_phy2iface0_cipher",	V_NONE				},
 	{"wifi_phy2iface0_key",		V_LENGTH(8, 64)			},
@@ -2553,6 +2586,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface1_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface1_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface1_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy2iface1_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface1_encryption",	V_NONE				},
 	{"wifi_phy2iface1_cipher",	V_NONE				},
 	{"wifi_phy2iface1_key",		V_LENGTH(8, 64)			},
@@ -2569,6 +2603,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface2_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface2_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface2_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy2iface2_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface2_encryption",	V_NONE				},
 	{"wifi_phy2iface2_cipher",	V_NONE				},
 	{"wifi_phy2iface2_key",		V_LENGTH(8, 64)			},
@@ -2585,6 +2620,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface3_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface3_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface3_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy2iface3_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface3_encryption",	V_NONE				},
 	{"wifi_phy2iface3_cipher",	V_NONE				},
 	{"wifi_phy2iface3_key",		V_LENGTH(8, 64)			},
@@ -2601,6 +2637,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface4_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface4_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface4_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy2iface4_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface4_encryption",	V_NONE				},
 	{"wifi_phy2iface4_cipher",	V_NONE				},
 	{"wifi_phy2iface4_key",		V_LENGTH(8, 64)			},
@@ -2617,6 +2654,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface5_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface5_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface5_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy2iface5_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface5_encryption",	V_NONE				},
 	{"wifi_phy2iface5_cipher",	V_NONE				},
 	{"wifi_phy2iface5_key",		V_LENGTH(8, 64)			},
@@ -2633,6 +2671,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface6_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface6_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface6_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy2iface6_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface6_encryption",	V_NONE				},
 	{"wifi_phy2iface6_cipher",	V_NONE				},
 	{"wifi_phy2iface6_key",		V_LENGTH(8, 64)			},
@@ -2649,6 +2688,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface7_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface7_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface7_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy2iface7_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface7_encryption",	V_NONE				},
 	{"wifi_phy2iface7_cipher",	V_NONE				},
 	{"wifi_phy2iface7_key",		V_LENGTH(8, 64)			},
@@ -2665,6 +2705,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface8_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface8_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface8_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy2iface8_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface8_encryption",	V_NONE				},
 	{"wifi_phy2iface8_cipher",	V_NONE				},
 	{"wifi_phy2iface8_key",		V_LENGTH(8, 64)			},
@@ -2681,6 +2722,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface9_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface9_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface9_wmm",		V_RANGE(0, 1)			},
+	{"wifi_phy2iface9_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface9_encryption",	V_NONE				},
 	{"wifi_phy2iface9_cipher",	V_NONE				},
 	{"wifi_phy2iface9_key",		V_LENGTH(8, 64)			},
@@ -2697,6 +2739,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface10_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface10_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface10_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy2iface10_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface10_encryption",	V_NONE				},
 	{"wifi_phy2iface10_cipher",	V_NONE				},
 	{"wifi_phy2iface10_key",	V_LENGTH(8, 64)			},
@@ -2713,6 +2756,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface11_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface11_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface11_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy2iface11_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface11_encryption",	V_NONE				},
 	{"wifi_phy2iface11_cipher",	V_NONE				},
 	{"wifi_phy2iface11_key",	V_LENGTH(8, 64)			},
@@ -2729,6 +2773,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface12_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface12_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface12_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy2iface12_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface12_encryption",	V_NONE				},
 	{"wifi_phy2iface12_cipher",	V_NONE				},
 	{"wifi_phy2iface12_key",	V_LENGTH(8, 64)			},
@@ -2745,6 +2790,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface13_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface13_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface13_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy2iface13_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface13_encryption",	V_NONE				},
 	{"wifi_phy2iface13_cipher",	V_NONE				},
 	{"wifi_phy2iface13_key",	V_LENGTH(8, 64)			},
@@ -2761,6 +2807,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface14_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface14_hidden",	V_NONE			},	/*  Hide SSID */
 	{"wifi_phy2iface14_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy2iface14_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface14_encryption",	V_NONE				},
 	{"wifi_phy2iface14_cipher",	V_NONE				},
 	{"wifi_phy2iface14_key",	V_LENGTH(8, 64)			},
@@ -2777,6 +2824,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface15_network",	V_TEXT(0, 3)			},	/* br0, br1, br2, br3, br4, br5, br6, br7, none "" */
 	{"wifi_phy2iface15_hidden",	V_NONE				},	/*  Hide SSID */
 	{"wifi_phy2iface15_wmm",	V_RANGE(0, 1)			},
+	{"wifi_phy2iface15_uapsd",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface15_encryption",	V_NONE				},
 	{"wifi_phy2iface15_cipher",	V_NONE				},
 	{"wifi_phy2iface15_key",	V_LENGTH(8, 64)			},

@@ -111,6 +111,10 @@ print_wmm() {
 	if [ $(NG wifi_phy${1}iface${2}_wmm) -eq 0 ];
 	then
 		uci set "wireless.phy${1}iface${2}.wmm=0"
+		uci set "wireless.phy${1}iface${2}.uapsd=0"
+	elif [ $(NG wifi_phy${1}iface${2}_uapsd) -eq 0 ];
+	then
+		uci set "wireless.phy${1}iface${2}.uapsd=0"
 	fi
 }
 
