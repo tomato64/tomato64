@@ -19,8 +19,7 @@ modprobe mt7921u
 modprobe leds_gpio
 
 
-if [ "$(NG set_macs)" != "1" ]
-then
+if [ "$(NG set_macs)" != "1" ]; then
 
 	eth0macaddr="$(cat /sys/class/net/eth0/address | tr '[:lower:]' '[:upper:]')"
 	eth1macaddr="$(cat /sys/class/net/eth1/address | tr '[:lower:]' '[:upper:]')"
@@ -39,7 +38,7 @@ then
 		NS ${i}=`ifconfig eth0 | grep -o -E ..:..:..:..:..:..`
 	done
 
-	NS lan_hwaddr=`ifconfig eth1 | grep -o -E ..:..:..:..:..:..`
+	NS et0macaddr=`ifconfig eth1 | grep -o -E ..:..:..:..:..:..`
 
 	NS set_macs=1
 else

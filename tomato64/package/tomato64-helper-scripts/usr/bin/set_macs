@@ -2,20 +2,25 @@
 
 set -e
 
-if [ "`nvram get set_macs`" == '0' ]
-then
+. /usr/sbin/nvram_ops
+
+if [ "$(NG set_macs)" == "0" ]; then
+
 	for i in `ls /sys/class/net/`;
 	do
 		if [[ "$i" == "eth"* ]]; then
-			nvram set ${i}macaddr=$(cat /sys/class/net/${i}/address | tr '[:lower:]' '[:upper:]')
+			NS ${i}macaddr=$(cat /sys/class/net/${i}/address | tr '[:lower:]' '[:upper:]')
 		fi
 	done
 
 	for i in wan_hwaddr wan_mac;
 	do
-		nvram set ${i}=`ifconfig eth0 | grep -o -E ..:..:..:..:..:..`
+		NS ${i}=`ifconfig eth0 | grep -o -E ..:..:..:..:..:..`
 	done
 
-	nvram set lan_hwaddr=`ifconfig eth1 | grep -o -E ..:..:..:..:..:..`
-	nvram set set_macs=1
+	NS set_macs=1
+fi
+
+if [ "$(NG et0macaddr)" == "" ]; then
+	NS et0macaddr=`ifconfig eth1 | grep -o -E ..:..:..:..:..:..`
 fi

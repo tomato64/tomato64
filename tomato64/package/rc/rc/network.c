@@ -1721,13 +1721,12 @@ void start_lan(void)
 						continue;
 
 					/* set the logical bridge address to that of the first interface OR Media Bridge interface address! */
+#ifndef TOMATO64
 					strlcpy(ifr.ifr_name, lan_ifname, IFNAMSIZ);
 					if ((!hwaddrset) ||
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMWL6
 					    (is_psta_client(unit, subunit)) ||
 #endif
-#endif /* TOMATO64 */
 					    (ioctl(sfd, SIOCGIFHWADDR, &ifr) == 0 && memcmp(ifr.ifr_hwaddr.sa_data, "\0\0\0\0\0\0", ETHER_ADDR_LEN) == 0)) {
 						strlcpy(ifr.ifr_name, ifname, IFNAMSIZ);
 						if (ioctl(sfd, SIOCGIFHWADDR, &ifr) == 0) {
@@ -1749,6 +1748,39 @@ void start_lan(void)
 							hwaddrset = 1;
 						}
 					}
+#else /* TOMATO64 */
+					/* Set bridge MAC address using et0macaddr as base, incremented by 32 + bridge number */
+					if ((!hwaddrset) ||
+					    (ioctl(sfd, SIOCGIFHWADDR, &ifr) == 0 && memcmp(ifr.ifr_hwaddr.sa_data, "\0\0\0\0\0\0", ETHER_ADDR_LEN) == 0)) {
+						/* Try to use et0macaddr as base, fallback to default MAC */
+						if (!ether_atoe(nvram_safe_get("et0macaddr"), (unsigned char *)ifr.ifr_hwaddr.sa_data)) {
+							/* et0macaddr invalid, use default MAC like set_mac function */
+							ifr.ifr_hwaddr.sa_data[0] = 0x00;
+							ifr.ifr_hwaddr.sa_data[1] = 0x01;
+							ifr.ifr_hwaddr.sa_data[2] = 0x23;
+							ifr.ifr_hwaddr.sa_data[3] = 0x45;
+							ifr.ifr_hwaddr.sa_data[4] = 0x67;
+							ifr.ifr_hwaddr.sa_data[5] = 0x89;
+						}
+
+						/* Increment MAC address by 32 + bridge number */
+						int increment = 32 + br;
+						int j;
+						while (increment-- > 0) {
+							for (j = 5; j >= 3; --j) {
+								ifr.ifr_hwaddr.sa_data[j]++;
+								if (ifr.ifr_hwaddr.sa_data[j] != 0)
+									break;	/* continue if rolled over */
+							}
+						}
+
+						strlcpy(ifr.ifr_name, lan_ifname, IFNAMSIZ);
+						ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER;
+						logmsg(LOG_DEBUG, "*** %s: setting MAC of %s bridge to %s (base + %d)", __FUNCTION__, ifr.ifr_name, ether_etoa((const unsigned char *)ifr.ifr_hwaddr.sa_data, eabuf), 32 + br);
+						ioctl(sfd, SIOCSIFHWADDR, &ifr);
+						hwaddrset = 1;
+					}
+#endif /* TOMATO64 */
 
 #ifndef TOMATO64
 					if (wlconf(ifname, unit, subunit) == 0) {
