@@ -1,0 +1,37 @@
+From 59822023cd3b7a17adf1f214e2d486e66fce1c2d Mon Sep 17 00:00:00 2001
+From: Lance Fredrickson <lancethepants@gmail.com>
+Date: Fri, 26 Sep 2025 11:04:10 -0600
+Subject: [PATCH] update libuci to 16ff0badbde7e17ec3bd1f827ffe45922956cf86
+
+---
+ package/libuci/libuci.hash | 4 ++--
+ package/libuci/libuci.mk   | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/package/libuci/libuci.hash b/package/libuci/libuci.hash
+index 1e429f8160..be81c47f4f 100644
+--- a/package/libuci/libuci.hash
++++ b/package/libuci/libuci.hash
+@@ -1,4 +1,4 @@
+ # Locally computed
+-sha256  d3b12df54f9faa69f0ff6d2a239fdcc30d64eda5269ddc882cf97677ea8cb066  libuci-f3fc0b76040685829191debc03edf72f486ae8ae-git4.tar.gz
++sha256  e9c3f97abd29a3fc9d6221631b2834c0c7b0affd35edf0131de74c55019d14a0  libuci-16ff0badbde7e17ec3bd1f827ffe45922956cf86-git4.tar.gz
+ sha256  5bb12361838b588bb263ade8537f5ae1a5e62d54b0a8f0640489db8cc29831d8  cli.c
+-sha256  bbc34ea5f391abc3b27416dc3c96b0f71f852c44210faf1cde0990218f68b13a  libuci.c
++sha256  4db2ea73bd713832355d2621cdabbd7a1fe2c6ab51e19d55a650637c6e515f45  libuci.c
+diff --git a/package/libuci/libuci.mk b/package/libuci/libuci.mk
+index 3c7e12baae..296e5fe014 100644
+--- a/package/libuci/libuci.mk
++++ b/package/libuci/libuci.mk
+@@ -4,7 +4,7 @@
+ #
+ ################################################################################
+ 
+-LIBUCI_VERSION = f3fc0b76040685829191debc03edf72f486ae8ae
++LIBUCI_VERSION = 16ff0badbde7e17ec3bd1f827ffe45922956cf86
+ LIBUCI_SITE = https://git.openwrt.org/project/uci.git
+ LIBUCI_SITE_METHOD = git
+ LIBUCI_LICENSE = LGPL-2.1, GPL-2.0 (tools)
+-- 
+2.39.5
+
