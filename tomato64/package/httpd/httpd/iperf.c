@@ -9,6 +9,7 @@
 
 
 #include "tomato.h"
+#include <stdbool.h>
 #include <sys/stat.h>
 
 #define iperf_log	"/tmp/iperf_log"
@@ -29,6 +30,41 @@
  * IF IPERF is running and no iperf.pid file is present and log is present -> Client receiving
  */
 
+static inline bool is_ascii_letter(unsigned char c)
+{
+	unsigned char lc = (unsigned char)(c | 0x20);
+
+	return lc >= 'a' && lc <= 'z';
+}
+
+static inline bool is_ascii_digit(unsigned char c)
+{
+	return c >= '0' && c <= '9';
+}
+
+static bool is_valid_hostname(const char *s) {
+	unsigned char c;
+	const unsigned char *p;
+
+	if (!s)
+		return false;
+
+	for (p = (const unsigned char *)s; *p; ++p) {
+		c = *p;
+
+		if ((is_ascii_letter(c)) || (is_ascii_digit(c)) || (c == '.') || (c == '-') || (c == ':'))
+			continue;
+
+		return false;
+	}
+
+	return true;
+}
+
+static void run_program(const char *program)
+{
+	pclose(popen(program, "r"));
+}
 
 void wo_ttcpstatus(char *url)
 {
@@ -82,11 +118,6 @@ void wo_ttcpstatus(char *url)
 	}
 }
 
-static void run_program(const char *program)
-{
-	pclose(popen(program, "r"));
-}
-
 void wo_ttcprun(char *url)
 {
 	char tmp[128];
@@ -119,18 +150,17 @@ void wo_ttcprun(char *url)
 			snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile "iperf_log" --intervalfile "iperf_interval" -I "iperf_pidfile" -s -1 -D -p %d", port);
 		}
 		else { /* client */
-			if ((host = webcgi_get("_host")) != NULL && (*host)) {
-				if ((strstr(host, "/") > 0) || (strstr(host, ";") > 0) || (strstr(host, "`") > 0))
-					return;
+			host = webcgi_get("_host");
+			if (!is_valid_hostname(host)) /* sanitize host name */
+				return;
 
 #if defined(TCONFIG_BCMARM) && defined(TCONFIG_BCMSMP)
-				logmsg(LOG_INFO, "iperf started in client mode, address: %s, number of parallel streams: %d", host, cpu_num);
-				snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile "iperf_log" --intervalfile "iperf_interval" -p %d %s %s %llu -c %s -P %d &", port, udpMode == 1 ? "-u" : "", byteLimitMode == 1 ? "-n" : "-t", limit, host, cpu_num);
+			logmsg(LOG_INFO, "iperf started in client mode, address: %s, number of parallel streams: %d", host, cpu_num);
+			snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile "iperf_log" --intervalfile "iperf_interval" -p %d %s %s %llu -c %s -P %d &", port, udpMode == 1 ? "-u" : "", byteLimitMode == 1 ? "-n" : "-t", limit, host, cpu_num);
 #else
-				logmsg(LOG_INFO, "iperf started in client mode, address: %s", host);
-				snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile "iperf_log" --intervalfile "iperf_interval" -p %d %s %s %llu -c %s &", port, udpMode == 1 ? "-u" : "", byteLimitMode == 1 ? "-n" : "-t", limit, host);
+			logmsg(LOG_INFO, "iperf started in client mode, address: %s", host);
+			snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile "iperf_log" --intervalfile "iperf_interval" -p %d %s %s %llu -c %s &", port, udpMode == 1 ? "-u" : "", byteLimitMode == 1 ? "-n" : "-t", limit, host);
 #endif
-			}
 		}
 		logmsg(LOG_DEBUG, "*** %s: %d: Running command: %s", __FUNCTION__, __LINE__, cmdBuffer);
 		run_program(cmdBuffer);
