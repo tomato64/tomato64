@@ -12,8 +12,28 @@
 #include <bcmparams.h>
 
 #ifndef MAX_NVPARSE
-#define MAX_NVPARSE 255
+ #define MAX_NVPARSE		255
 #endif
+
+#if MWAN_MAX < 1 || MWAN_MAX > 8
+ #error "Unsupported MWAN_MAX range"
+#endif
+#if BRIDGE_COUNT < 1 || BRIDGE_COUNT > 16
+ #error "Unsupported BRIDGE_COUNT range"
+#endif
+
+#define DIG_ALL			2u
+#define XIFS_PREFIX_LEN		13u /* "var xifs = [[" */
+#define XIFS_SEP_LEN		3u  /* "],[" */
+#define XIFS_SUFFIX_LEN		4u  /* "]];\n" */
+#define XIFS_BUF_CAP ( \
+	XIFS_PREFIX_LEN \
+	+ (unsigned)(MWAN_MAX + BRIDGE_COUNT) * (6u + DIG_ALL) \
+	+ XIFS_SEP_LEN \
+	+ (unsigned)(MWAN_MAX + BRIDGE_COUNT) * (6u + DIG_ALL) \
+	+ XIFS_SUFFIX_LEN \
+	+ 1u \
+)
 
 
 static int print_wlnv(int idx, int unit, int subunit, void *param)
@@ -29,32 +49,67 @@ static int print_wlnv(int idx, int unit, int subunit, void *param)
 	return 1;
 }
 
+/* static buffer */
+static char g_xifs_buf[XIFS_BUF_CAP];
+
+/* one time build */
+static void build_xifs_into(char *buf, size_t buf_sz)
+{
+	char *p = buf;
+	size_t n = buf_sz;
+	int w;
+	unsigned int i;
+
+	#define APPEND(fmt, ...) \
+		do { \
+			w = snprintf(p, n, fmt, ##__VA_ARGS__); \
+			if ((w < 0) || ((size_t)w >= n)) { \
+				if (n) p[n - 1] = '\0'; \
+					return; \
+			} \
+			p += w; \
+			n -= (size_t)w; \
+		} while (0)
+
+	APPEND("var xifs = [[");
+
+	for (i = 1; i <= MWAN_MAX; i++)
+		APPEND((i == 1 ? "'wan'" : ",'wan%u'"), i);
+
+	for (i = 0; i < BRIDGE_COUNT; i++)
+		APPEND((i == 0 ? ",'lan'" : ",'lan%u'"), i);
+
+	APPEND("],[");
+
+	for (i = 1; i <= MWAN_MAX; i++)
+		APPEND((i == 1 ? "'WAN%u'" : ",'WAN%u'"), (i - 1));
+
+	for (i = 0; i < BRIDGE_COUNT; i++)
+		APPEND(",'LAN%u'", i);
+
+	APPEND("]];\n");
+	#undef APPEND
+}
+
+static const char *xifs_once(void)
+{
+	static int built_xifs = 0;
+	if (!built_xifs) {
+		build_xifs_into(g_xifs_buf, sizeof(g_xifs_buf));
+		built_xifs = 1;
+	}
+
+	return g_xifs_buf;
+}
+
 /*	<% jsdefaults(); %> ---> javascript defaults, defined in C */
 void asp_jsdefaults(int argc, char **argv)
 {
-	unsigned int i;
-
 	/* global javascript variables */
 	web_printf("\nMAX_BRIDGE_ID = %d;\nMAX_VLAN_ID = %d;\nMAXWAN_NUM = %d;\nMAX_PORT_ID = %d\n",
 	           (BRIDGE_COUNT - 1), (TOMATO_VLANNUM - 1), MWAN_MAX, MAX_PORT_ID);
 
-	web_puts("var xifs = [[");
-
-	for (i = 1; i <= MWAN_MAX; i++)
-		web_printf((i == 1 ? "'wan'" : ",'wan%u'"), i);
-
-	for (i = 0; i < BRIDGE_COUNT; i++)
-		web_printf((i == 0 ? ",'lan'" : ",'lan%u'"), i);
-
-	web_puts("],[");
-
-	for (i = 1; i <= MWAN_MAX; i++)
-		web_printf((i == 1 ? "'WAN%u'" : ",'WAN%u'"), (i - 1));
-
-	for (i = 0; i < BRIDGE_COUNT; i++)
-		web_printf(",'LAN%u'", i);
-
-	web_puts("]];\n");
+	web_puts(xifs_once());
 }
 
 /*	<% nvram("x,y,z"); %> ---> nvram = {'x': '1','y': '2','z': '3'}; */
