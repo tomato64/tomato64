@@ -19,12 +19,7 @@
 
 <script>
 
-/* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("upnp_enable,upnp_secure,upnp_custom,upnp_lan,upnp_lan1,upnp_lan2,upnp_lan3,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-//	<% nvram("upnp_enable,upnp_secure,upnp_custom,upnp_lan,upnp_lan1,upnp_lan2,upnp_lan3,upnp_lan4,upnp_lan5,upnp_lan6,upnp_lan7,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
-/* TOMATO64-END */
+//	<% nvram("upnp_enable,upnp_secure,upnp_custom,upnp_lan,lan_ifname"); %>
 
 </script>
 <script src="upnp.jsx?_http_id=<% nv(http_id); %>"></script>

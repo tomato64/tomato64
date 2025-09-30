@@ -19,12 +19,7 @@
 
 <script>
 
-/* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("http_enable,https_enable,http_lanport,https_lanport,http_lan_listeners,http_ipv6,ipv6_service,lan1_ifname,lan2_ifname,lan3_ifname,remote_management,remote_mgt_https,remote_upgrade,web_wl_filter,web_css,web_adv_scripts,web_dir,ttb_css,ttb_loc,ttb_url,sshd_eas,sshd_pass,sshd_remote,telnetd_eas,http_wanport,http_wanport_bfm,sshd_authkeys,sshd_port,sshd_rport,sshd_forwarding,telnetd_port,rmgt_sip,https_crt_cn,https_crt_save,lan_ipaddr,ne_shlimit,sshd_motd,http_username,jffs2_auto_unmount"); %>
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-//	<% nvram("http_enable,https_enable,http_lanport,https_lanport,http_lan_listeners,http_ipv6,ipv6_service,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,remote_management,remote_mgt_https,remote_upgrade,web_wl_filter,web_css,web_adv_scripts,web_dir,ttb_css,ttb_loc,ttb_url,sshd_eas,sshd_pass,sshd_remote,telnetd_eas,http_wanport,http_wanport_bfm,sshd_authkeys,sshd_port,sshd_rport,sshd_forwarding,telnetd_port,rmgt_sip,https_crt_cn,https_crt_save,lan_ipaddr,ne_shlimit,sshd_motd,http_username,jffs2_auto_unmount"); %>
-/* TOMATO64-END */
+//	<% nvram("http_enable,https_enable,http_lanport,https_lanport,http_lan_listeners,http_ipv6,ipv6_service,lan_ifname,remote_management,remote_mgt_https,remote_upgrade,web_wl_filter,web_css,web_adv_scripts,web_dir,ttb_css,ttb_loc,ttb_url,sshd_eas,sshd_pass,sshd_remote,telnetd_eas,http_wanport,http_wanport_bfm,sshd_authkeys,sshd_port,sshd_rport,sshd_forwarding,telnetd_port,rmgt_sip,https_crt_cn,https_crt_save,lan_ipaddr,ne_shlimit,sshd_motd,http_username,jffs2_auto_unmount"); %>
 
 var cprefix = 'admin_access';
 var changed = 0;

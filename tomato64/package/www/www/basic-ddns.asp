@@ -20,12 +20,12 @@
 <script>
 
 /* DDNS2CLS-BEGIN */
-//	<% nvram("ddnsx0,ddnsx1,ddnsx0_refresh,ddnsx1_refresh,ddnsx0_save,ddnsx1_save,ddnsx0_cktime,ddnsx1_cktime,ddnsx0_opendns,ddnsx1_opendns,ddnsx_custom_if,wan_proto,wan2_proto,wan3_proto,wan4_proto,wan_addget,wan2_addget,wan3_addget,wan4_addget,dnscrypt_proxy,stubby_proxy,dnscrypt_priority,stubby_priority"); %>
+//	<% nvram("ddnsx0,ddnsx1,ddnsx0_refresh,ddnsx1_refresh,ddnsx0_save,ddnsx1_save,ddnsx0_cktime,ddnsx1_cktime,ddnsx0_opendns,ddnsx1_opendns,ddnsx_custom_if,wan_proto,wan_addget,dnscrypt_proxy,stubby_proxy,dnscrypt_priority,stubby_priority"); %>
 
 var clients_num = 2;
 /* DDNS2CLS-END */
 /* DDNS4CLS-BEGIN */
-//	<% nvram("ddnsx0,ddnsx1,ddnsx2,ddnsx3,ddnsx0_refresh,ddnsx1_refresh,ddnsx2_refresh,ddnsx3_refresh,ddnsx0_save,ddnsx1_save,ddnsx2_save,ddnsx3_save,ddnsx0_cktime,ddnsx1_cktime,ddnsx2_cktime,ddnsx3_cktime,ddnsx0_opendns,ddnsx1_opendns,ddnsx2_opendns,ddnsx3_opendns,ddnsx_custom_if,wan_proto,wan2_proto,wan3_proto,wan4_proto,wan_addget,wan2_addget,wan3_addget,wan4_addget,dnscrypt_proxy,stubby_proxy,dnscrypt_priority,stubby_priority"); %>
+//	<% nvram("ddnsx0,ddnsx1,ddnsx2,ddnsx3,ddnsx0_refresh,ddnsx1_refresh,ddnsx2_refresh,ddnsx3_refresh,ddnsx0_save,ddnsx1_save,ddnsx2_save,ddnsx3_save,ddnsx0_cktime,ddnsx1_cktime,ddnsx2_cktime,ddnsx3_cktime,ddnsx0_opendns,ddnsx1_opendns,ddnsx2_opendns,ddnsx3_opendns,ddnsx_custom_if,wan_proto,wan_addget,dnscrypt_proxy,stubby_proxy,dnscrypt_priority,stubby_priority"); %>
 
 var clients_num = 4;
 /* DDNS4CLS-END */

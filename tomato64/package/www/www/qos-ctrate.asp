@@ -23,12 +23,7 @@
 
 <script>
 
-/* TOMATO64-REMOVE-BEGIN */
-//	<% nvram('lan_ipaddr,lan1_ipaddr,lan2_ipaddr,lan3_ipaddr,lan_netmask,lan1_netmask,lan2_netmask,lan3_netmask,t_hidelr'); %>
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-//	<% nvram('lan_ipaddr,lan1_ipaddr,lan2_ipaddr,lan3_ipaddr,lan4_ipaddr,lan5_ipaddr,lan6_ipaddr,lan7_ipaddr,lan_netmask,lan1_netmask,lan2_netmask,lan3_netmask,lan4_netmask,lan5_netmask,lan6_netmask,lan7_netmask,t_hidelr'); %>
-/* TOMATO64-END */
+//	<% nvram('lan_ipaddr,lan_netmask,t_hidelr'); %>
 
 var cprefix = 'qos_ctrate';
 var filterip = [];

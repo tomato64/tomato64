@@ -23,10 +23,10 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_lan1,multicast_lan2,multicast_lan3,multicast_quickleave,multicast_custom,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,udpxy_enable,udpxy_lan,udpxy_lan1,udpxy_lan2,udpxy_lan3,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole"); %>
+//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_quickleave,multicast_custom,lan_ifname,udpxy_enable,udpxy_lan,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_lan1,multicast_lan2,multicast_lan3,multicast_lan4,multicast_lan5,multicast_lan6,multicast_lan7,multicast_quickleave,multicast_custom,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,udpxy_enable,udpxy_lan,udpxy_lan1,udpxy_lan2,udpxy_lan3,udpxy_lan4,udpxy_lan5,udpxy_lan6,udpxy_lan7,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole,flow_offloading,wed_offloading,packet_steering,steering_flows,steering_flows_custom"); %>
+//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_quickleave,multicast_custom,lan_ifname,udpxy_enable,udpxy_lan,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole,flow_offloading,wed_offloading,packet_steering,steering_flows,steering_flows_custom"); %>
 /* TOMATO64-END */
 
 var cprefix = 'advanced_firewall';

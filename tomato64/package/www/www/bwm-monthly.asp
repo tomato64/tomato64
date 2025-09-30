@@ -19,7 +19,7 @@
 
 <script>
 
-//	<% nvram("wan_ifname,wan2_ifname,wan3_ifname,wan4_ifname,lan_ifname,rstats_enable"); %>
+//	<% nvram("wan_ifname,lan_ifname,rstats_enable"); %>
 
 try {
 //	<% bandwidth("monthly","bwm"); %>

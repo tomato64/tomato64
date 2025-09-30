@@ -19,12 +19,7 @@
 
 <script>
 
-/* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("ms_enable,ms_port,ms_dirs,ms_dbdir,ms_ifname,ms_tivo,ms_stdlna,ms_sas,ms_autoscan,ms_custom,cifs1,cifs2,jffs2_on,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan_ipaddr,lan1_ipaddr,lan2_ipaddr,lan3_ipaddr"); %>
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-//	<% nvram("ms_enable,ms_port,ms_dirs,ms_dbdir,ms_ifname,ms_tivo,ms_stdlna,ms_sas,ms_autoscan,ms_custom,cifs1,cifs2,jffs2_on,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,lan_ipaddr,lan1_ipaddr,lan2_ipaddr,lan3_ipaddr,lan4_ipaddr,lan5_ipaddr,lan6_ipaddr,lan7_ipaddr"); %>
-/* TOMATO64-END */
+//	<% nvram("ms_enable,ms_port,ms_dirs,ms_dbdir,ms_ifname,ms_tivo,ms_stdlna,ms_sas,ms_autoscan,ms_custom,cifs1,cifs2,jffs2_on,lan_ifname,lan_ipaddr"); %>
 
 var changed = 0;
 var reinit = 0;

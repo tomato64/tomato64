@@ -36,6 +36,30 @@
 )
 
 
+static int in_arr(const char *k, const char *arr[], size_t n, int allow_prefix)
+{
+	size_t i, ls;
+	const char *s;
+
+	for (i = 0; i < n; ++i) {
+		s = arr[i];
+		if (!s)
+			continue;
+
+		if (allow_prefix) {
+			ls = strlen(s);
+			if (strncmp(s, k, ls) == 0)
+				return 1;
+		}
+		else {
+			if (strcmp(k, s) == 0)
+				return 1;
+		}
+	}
+
+	return 0;
+}
+
 static int print_wlnv(int idx, int unit, int subunit, void *param)
 {
 	char *k = param;
@@ -112,11 +136,35 @@ void asp_jsdefaults(int argc, char **argv)
 	web_puts(xifs_once());
 }
 
-/*	<% nvram("x,y,z"); %> ---> nvram = {'x': '1','y': '2','z': '3'}; */
+static const char *chk_wan_vars[]  = { "wan_", "dr_wan_" };
+static const char *skip_wan_vars[] = { "wan_dhcp_pass", "wan_domain", "wan_hostname", "wan_speed", "wan_wins" };
+
+#ifndef TOMATO64
+static const char *chk_lan_vars[]  = { "lan_", "dhcpd_", "udpxy_lan", "upnp_lan", "multicast_lan", "dr_lan_", "bwl_lan_", "dhcp_lease", "dnsmasq_pxelan", "vpn_server1_plan", "vpn_server2_plan" };
+#endif /* TOMATO64 */
+#ifdef TOMATO64
+static const char *chk_lan_vars[]  = { "lan_", "dhcpd_", "udpxy_lan", "upnp_lan", "multicast_lan", "dr_lan_", "bwl_lan_", "dhcp_lease", "dnsmasq_pxelan", "vpn_server1_plan", "vpn_server2_plan", "vpn_server3_plan", "vpn_server4_plan" };
+#endif /* TOMATO64 */
+static const char *skip_lan_vars[] = { "lan_hwaddr", "lan_hwnames", "lan_dhcp", "lan_gateway", "lan_state", "lan_desc", "lan_invert", "lan_access", "dhcpd_static", "dhcpd_slt", "dhcpd_dmdns", "dhcpd_lmax", "dhcpd_gwmode" };
+
+/* <% nvram("x,y,z"); %> ---> nvram = {'x': '1','y': '2','z': '3'};
+ *
+ * special cases:
+ *   "wan_", "dr_wan_"
+ *   "lan_", "dhcpd_", "udpxy_lan", "upnp_lan", "multicast_lan", "dr_lan_", "bwl_lan_", "dhcp_lease", "dnsmasq_pxelan", "vpn_server1_plan", "vpn_server2_plan"
+ * - these variables only need the basic value entered in the nvram call in .asp scripts, without additional wanX/lanX
+ *
+ * WARNING! When you add another lan/wan related variable to nvram/asp files, and this is not so obvious,
+ * so not simple "lan_" or "wan_" but ie. "something_lan_whatever", you must update asp_nvram() with this
+ * and use only basic one (so "something_lan_whatever" is enough, no need for "something_lan1_whatever")
+ *
+ */
 void asp_nvram(int argc, char **argv)
 {
 	char *list;
 	char *p, *k;
+	char buf[32];
+	unsigned int i;
 
 	if ((argc != 1) || ((list = strdup(argv[0])) == NULL))
 		return;
@@ -131,9 +179,75 @@ void asp_nvram(int argc, char **argv)
 		if (strcmp(k, "wl_unit") == 0)
 			continue;
 
-		web_printf("\t'%s': '", k); /* multiSSID */
+		web_printf("\t'%s': '", k);
 		web_putj_utf8(nvram_safe_get(k));
 		web_puts("',\n");
+
+		/* wanX */
+		if (in_arr(k, chk_wan_vars, ASIZE(chk_wan_vars), 1)) { /* check needed prefixes */
+			if (in_arr(k, skip_wan_vars, ASIZE(skip_wan_vars), 0)) /* do not display these vars for other wans */
+				continue;
+
+			for (i = 2; i <= (MWAN_MAX < 4 ? 4 : MWAN_MAX); i++) {
+			//for (i = 2; i <= MWAN_MAX; i++) { /* TODO: fix all .asp scripts (iteration by MAXWAN_NUM) to enable this */
+				memset(buf, 0, sizeof(buf));
+				if (strncmp(k, "wan_", 4) == 0)
+					snprintf(buf, sizeof(buf), "wan%u%s", i, k + 3);
+				else if (strncmp(k, "dr_wan_", 7) == 0)
+					snprintf(buf, sizeof(buf), "dr_wan%u%s", i, k + 6);
+				else
+					continue;
+
+				web_printf("\t'%s': '", buf);
+				web_putj_utf8(nvram_safe_get(buf));
+				web_puts("',\n");
+			}
+		}
+
+		/* lanX */
+		if (in_arr(k, chk_lan_vars, ASIZE(chk_lan_vars), 1)) { /* check needed prefixes */
+			if (in_arr(k, skip_lan_vars, ASIZE(skip_lan_vars), 0)) /* do not display these vars for other lans */
+				continue;
+
+			for (i = 1; i < (BRIDGE_COUNT < 4 ? 4 : BRIDGE_COUNT); i++) {
+			//for (i = 1; i < BRIDGE_COUNT; i++) { /* TODO: fix all .asp scripts (iteration by MAX_BRIDGE_ID) to enable this */
+				memset(buf, 0, sizeof(buf));
+				if (strncmp(k, "lan_", 4) == 0)
+					snprintf(buf, sizeof(buf), "lan%u%s", i, k + 3);
+				else if (strncmp(k, "udpxy_lan", 9) == 0)
+					snprintf(buf, sizeof(buf), "udpxy_lan%u", i);
+				else if (strncmp(k, "upnp_lan", 8) == 0)
+					snprintf(buf, sizeof(buf), "upnp_lan%u", i);
+				else if (strncmp(k, "multicast_lan", 13) == 0)
+					snprintf(buf, sizeof(buf), "multicast_lan%u", i);
+				else if (strncmp(k, "dr_lan_", 7) == 0)
+					snprintf(buf, sizeof(buf), "dr_lan%u%s", i, k + 6);
+				else if (strncmp(k, "bwl_lan_", 8) == 0)
+					snprintf(buf, sizeof(buf), "bwl_lan%u%s", i, k + 7);
+				else if (strncmp(k, "dhcpd_", 6) == 0)
+					snprintf(buf, sizeof(buf), "dhcpd%u%s", i, k + 5);
+				else if (strncmp(k, "dhcp_lease", 10) == 0)
+					snprintf(buf, sizeof(buf), "dhcp%u%s", i, k + 4);
+				else if (strncmp(k, "dnsmasq_pxelan", 14) == 0)
+					snprintf(buf, sizeof(buf), "dnsmasq_pxelan%u", i);
+				else if (strncmp(k, "vpn_server1_plan", 16) == 0)
+					snprintf(buf, sizeof(buf), "vpn_server1_plan%u", i);
+				else if (strncmp(k, "vpn_server2_plan", 16) == 0)
+					snprintf(buf, sizeof(buf), "vpn_server2_plan%u", i);
+#ifdef TOMATO64
+				else if (strncmp(k, "vpn_server3_plan", 16) == 0)
+					snprintf(buf, sizeof(buf), "vpn_server3_plan%u", i);
+				else if (strncmp(k, "vpn_server4_plan", 16) == 0)
+					snprintf(buf, sizeof(buf), "vpn_server4_plan%u", i);
+#endif /* TOMATO64 */
+				else
+					continue;
+
+				web_printf("\t'%s': '", buf);
+				web_putj_utf8(nvram_safe_get(buf));
+				web_puts("',\n");
+			}
+		}
 
 		if (strncmp(k, "wl_", 3) == 0) {
 			foreach_wif(1, k, print_wlnv);

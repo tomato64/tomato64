@@ -22,12 +22,7 @@
 
 <script>
 
-/* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("bwl_enable,wan_qos_ibw,wan_qos_obw,bwl_rules,lan_ipaddr,lan_netmask,bwl_lan_enable,bwl_lan_dlr,bwl_lan_dlc,bwl_lan_ulr,bwl_lan_ulc,bwl_lan_udp,bwl_lan_tcp,bwl_lan_prio,bwl_lan1_enable,bwl_lan1_dlc,bwl_lan1_dlr,bwl_lan1_ulc,bwl_lan1_ulr,bwl_lan1_prio,bwl_lan2_enable,bwl_lan2_dlc,bwl_lan2_dlr,bwl_lan2_ulc,bwl_lan2_ulr,bwl_lan2_prio,bwl_lan3_enable,bwl_lan3_dlc,bwl_lan3_dlr,bwl_lan3_ulc,bwl_lan3_ulr,bwl_lan3_prio,ctf_disable,bcmnat_disable,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-//	<% nvram("bwl_enable,wan_qos_ibw,wan_qos_obw,bwl_rules,lan_ipaddr,lan_netmask,bwl_lan_enable,bwl_lan_dlr,bwl_lan_dlc,bwl_lan_ulr,bwl_lan_ulc,bwl_lan_udp,bwl_lan_tcp,bwl_lan_prio,bwl_lan1_enable,bwl_lan1_dlc,bwl_lan1_dlr,bwl_lan1_ulc,bwl_lan1_ulr,bwl_lan1_prio,bwl_lan2_enable,bwl_lan2_dlc,bwl_lan2_dlr,bwl_lan2_ulc,bwl_lan2_ulr,bwl_lan2_prio,bwl_lan3_enable,bwl_lan3_dlc,bwl_lan3_dlr,bwl_lan3_ulc,bwl_lan3_ulr,bwl_lan3_prio,bwl_lan4_enable,bwl_lan4_dlc,bwl_lan4_dlr,bwl_lan4_ulc,bwl_lan4_ulr,bwl_lan4_prio,bwl_lan5_enable,bwl_lan5_dlc,bwl_lan5_dlr,bwl_lan5_ulc,bwl_lan5_ulr,bwl_lan5_prio,bwl_lan6_enable,bwl_lan6_dlc,bwl_lan6_dlr,bwl_lan6_ulc,bwl_lan6_ulr,bwl_lan6_prio,bwl_lan7_enable,bwl_lan7_dlc,bwl_lan7_dlr,bwl_lan7_ulc,bwl_lan7_ulr,bwl_lan7_prio,ctf_disable,bcmnat_disable,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname"); %>
-/* TOMATO64-END */
+//	<% nvram("bwl_enable,wan_qos_ibw,wan_qos_obw,bwl_rules,lan_ipaddr,lan_netmask,bwl_lan_enable,bwl_lan_dlr,bwl_lan_dlc,bwl_lan_ulr,bwl_lan_ulc,bwl_lan_udp,bwl_lan_tcp,bwl_lan_prio,ctf_disable,bcmnat_disable,lan_ifname"); %>
 
 var class_prio = [['0','Highest'],['1','High'],['2','Normal'],['3','Low'],['4','Lowest']];
 var class_tcp = [['0','nolimit']];

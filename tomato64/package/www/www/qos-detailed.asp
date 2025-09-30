@@ -24,7 +24,7 @@
 
 <script>
 
-//	<% nvram('qos_enable,qos_classnames,lan_ipaddr,lan1_ipaddr,lan2_ipaddr,lan3_ipaddr,lan_netmask,lan1_netmask,lan2_netmask,lan3_netmask,t_hidelr'); %>
+//	<% nvram('qos_enable,qos_classnames,lan_ipaddr,lan_netmask,t_hidelr'); %>
 
 var cprefix = 'qos_detailed';
 var Unclassified = ['Unclassified'];

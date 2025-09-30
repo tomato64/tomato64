@@ -23,7 +23,7 @@
 wl_ifaces=[];
 /* TOMATO64-END */
 
-//	<% nvram("lan_hwaddr,wan_mac,wan2_mac,wan3_mac,wan4_mac,mwan_num,wl_macaddr,wl_hwaddr,wl_nband"); %>
+//	<% nvram("lan_hwaddr,wan_mac,mwan_num,wl_macaddr,wl_hwaddr,wl_nband"); %>
 
 var cprefix = 'advanced_mac';
 

@@ -20,7 +20,7 @@
 
 //	<% arplist(); %>
 
-//	<% nvram("dhcpd_static,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname"); %>
+//	<% nvram("dhcpd_static,lan_ifname"); %>
 
 var lan_ifnames = [nvram.lan_ifname, nvram.lan1_ifname, nvram.lan2_ifname, nvram.lan3_ifname];
 var refresher = null;

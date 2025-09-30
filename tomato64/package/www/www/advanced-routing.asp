@@ -18,12 +18,7 @@
 
 <script>
 
-/* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("routes_static,dhcpc_33,dhcpc_121,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface"); %>
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-//	<% nvram("routes_static,dhcpc_33,dhcpc_121,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,lan4_ifname,lan5_ifname,lan6_ifname,lan7_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface"); %>
-/* TOMATO64-END */
+//	<% nvram("routes_static,dhcpc_33,dhcpc_121,lan_ifname,wan_ifname,wan_iface"); %>
 
 //	<% activeroutes(); %>
 
