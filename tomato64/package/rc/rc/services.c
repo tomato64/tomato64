@@ -1858,7 +1858,7 @@ void start_ntpd(void)
 		}
 
 		memset(cmd, 0, sizeof(cmd)); /* reset */
-		off = snprintf(cmd, sizeof(cmd), "sh -c 'ulimit -c 0 -e 15 -r 15 -l 64 -m 4096 -n 32 -s 4096 -u 2 -v 4096; %s", ntpd_argv[0]);
+		off = snprintf(cmd, sizeof(cmd), "sh -c 'ulimit -c 0 -e 15 -r 15 -l 64 -m 4096 -n 512 -s 4096 -u 2 -v 4096; %s", ntpd_argv[0]);
 		for (i = 1; ntpd_argv[i]; ++i)
 			off += snprintf(cmd + off, sizeof(cmd) - off, " %s", ntpd_argv[i]);
 
