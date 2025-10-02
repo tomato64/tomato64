@@ -14,7 +14,7 @@
 <title>[<% ident(); %>] Admin: Access</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <link rel="stylesheet" type="text/css" href="<% nv('web_css'); %>.css" id="guicss">
-<script src="isup.jsz?rel=<% version(); %>"></script>
+<script src="isup.jsx?_http_id=<% nv(http_id); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 
 <script>

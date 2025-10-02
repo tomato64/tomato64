@@ -3607,7 +3607,6 @@ const struct mime_handler mime_handlers[] = {
 	{ "**.png",			"image/png",				12,	wi_generic_noid,	do_file,		1 },
 	{ "**.js",			mime_javascript,			12,	wi_generic_noid,	do_file,		1 },
 	{ "**.jsx",			mime_javascript,			0,	wi_generic,		wo_asp,			1 },
-	{ "**.jsz",			mime_javascript,			0,	wi_generic_noid,	wo_asp,			1 },
 	{ "**.svg",			"image/svg+xml",			0,	wi_generic_noid,	wo_asp,			1 },
 	{ "**.txt",			mime_plain,				2,	wi_generic_noid,	do_file,		1 },
 	{ "**.bin",			mime_binary,				0,	wi_generic_noid,	do_file,		1 },

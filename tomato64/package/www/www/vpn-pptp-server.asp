@@ -17,7 +17,7 @@
 <title>[<% ident(); %>] PPTP: Server</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
-<script src="isup.jsz?rel=<% version(); %>"></script>
+<script src="isup.jsx?_http_id=<% nv(http_id); %>"></script>
 <script src="isup.js?rel=<% version(); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="interfaces.js?rel=<% version(); %>"></script>

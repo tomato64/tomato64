@@ -13,7 +13,7 @@ install:
 	cp *.gif *.png *.ico *.html *.php robots.txt $(INSTALLDIR)/www
 
 # Squish some of the files by trimming whitespace...
-	for F in $(wildcard *.js *.jsx *.jsz); do \
+	for F in $(wildcard *.js *.jsx); do \
 		sed '/^\/\*\s*$$/,/\*\//! { s/^\s\+//; s/\s\+$$//; /^\/\/ --\+\s*/d; /^$$/d }' < $$F > $(INSTALLDIR)/www/$$F; \
 	done
 
@@ -55,7 +55,7 @@ ifneq ($(TCONFIG_CIFS),y)
 	sed -i $(INSTALLDIR)/www/admin-iptraffic.asp -e "/CIFS-BEGIN/,/CIFS-END/d"
 	sed -i $(INSTALLDIR)/www/nas-media.asp -e "/CIFS-BEGIN/,/CIFS-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/CIFS-BEGIN/,/CIFS-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/CIFS-BEGIN/,/CIFS-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/CIFS-BEGIN/,/CIFS-END/d"
 endif
 
 # Only include the JFFS pages if JFFS is configured in. Distinguish JFFS2 and BRCMNAND.
@@ -72,11 +72,11 @@ else
  ifeq ($(TCONFIG_BRCM_NAND_JFFS2),y)
 	sed -i $(INSTALLDIR)/www/admin-jffs2.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/JFFS2-BEGIN/,/JFFS2-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/JFFS2-BEGIN/,/JFFS2-END/d"
  else
 	sed -i $(INSTALLDIR)/www/admin-jffs2.asp -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
  endif
 endif
 
@@ -117,21 +117,21 @@ endif
 ifneq ($(TCONFIG_FTP),y)
 	rm -f $(INSTALLDIR)/www/nas-ftp.asp
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/FTP-BEGIN/,/FTP-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/FTP-BEGIN/,/FTP-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/FTP-BEGIN/,/FTP-END/d"
 endif
 
 # Only include the Samba pages if Samba is configured in.
 ifneq ($(TCONFIG_SAMBASRV),y)
 	rm -f $(INSTALLDIR)/www/nas-samba.asp
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/SAMBA-BEGIN/,/SAMBA-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/SAMBA-BEGIN/,/SAMBA-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/SAMBA-BEGIN/,/SAMBA-END/d"
 endif
 
 # Only include the Media Server pages if Media Server is configured in.
 ifneq ($(TCONFIG_MEDIA_SERVER),y)
 	rm -f $(INSTALLDIR)/www/nas-media.asp
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/MEDIA-SRV-BEGIN/,/MEDIA-SRV-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/MEDIA-SRV-BEGIN/,/MEDIA-SRV-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/MEDIA-SRV-BEGIN/,/MEDIA-SRV-END/d"
 endif
 
 # Only include Captive Portal menu option and pages when configured.
@@ -157,7 +157,7 @@ ifneq ($(TCONFIG_NGINX),y)
 	rm -f $(INSTALLDIR)/www/adminer.php
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/NGINX-BEGIN/,/NGINX-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/NGINX-BEGIN/,/NGINX-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/NGINX-BEGIN/,/NGINX-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/NGINX-BEGIN/,/NGINX-END/d"
 endif
 
 # Only include HFS/HFS+ option and pages when configured.
@@ -185,7 +185,7 @@ endif
 # Only include IPv6 options if IPv6 is configured in.
 ifneq ($(TCONFIG_IPV6),y)
 	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.asp *.js *.jsx *.jsz); do \
+	for F in $(wildcard *.asp *.js *.jsx); do \
 		[ -f $(INSTALLDIR)/www/$$F ] && sed -i $$F \
 		-e "/IPV6-BEGIN/,/IPV6-END/d" \
 		|| true; \
@@ -206,7 +206,7 @@ ifneq ($(TCONFIG_BT),y)
 	rm -f $(INSTALLDIR)/www/nas-bittorrent.asp
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/BT-BEGIN/,/BT-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/BT-BEGIN/,/BT-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/BT-BEGIN/,/BT-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/BT-BEGIN/,/BT-END/d"
 endif
 
 # Only include the UPS pages if apcupsd is configured in.
@@ -223,7 +223,7 @@ ifneq ($(TCONFIG_TOR),y)
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOR-BEGIN/,/TOR-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/TOR-BEGIN/,/TOR-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-dhcpdns.asp -e "/TOR-BEGIN/,/TOR-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/TOR-BEGIN/,/TOR-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/TOR-BEGIN/,/TOR-END/d"
 endif
 
 # Only include the USBAP warning if needed.
@@ -339,7 +339,7 @@ else
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/OPENVPN-BEGIN/,/OPENVPN-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/OPENVPN-BEGIN/,/OPENVPN-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-dhcpdns.asp -e "/OPENVPN-BEGIN/,/OPENVPN-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/OPENVPN-BEGIN/,/OPENVPN-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/OPENVPN-BEGIN/,/OPENVPN-END/d"
 endif
 
 # Only include the PPTPD pages if PPTPD is compiled in
@@ -356,7 +356,7 @@ else
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/PPTPD-BEGIN/,/PPTPD-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/PPTPD-BEGIN/,/PPTPD-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-dhcpdns.asp -e "/PPTPD-BEGIN/,/PPTPD-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/PPTPD-BEGIN/,/PPTPD-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/PPTPD-BEGIN/,/PPTPD-END/d"
 endif
 
 # Only include the nfs pages if NFS is compiled in
@@ -390,7 +390,7 @@ else
 	sed -i $(INSTALLDIR)/www/tomato.css -e "/TINC-BEGIN/,/TINC-END/d"
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TINC-BEGIN/,/TINC-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/TINC-BEGIN/,/TINC-END/d"
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/TINC-BEGIN/,/TINC-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/TINC-BEGIN/,/TINC-END/d"
 endif
 
 # Only include the dnscrypt option if is compiled in
@@ -521,9 +521,9 @@ endif
 # distinguish version if ARM or MIPS
 ifeq ($(TCONFIG_OPENVPN),y)
  ifneq ($(TCONFIG_BCMARM),y)
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/BCMARM-BEGIN/,/BCMARM-END/d"
  else
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
  endif
 endif
 
@@ -700,7 +700,7 @@ endif
 
 # clean up
 	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.asp *.js *.jsx *.jsz *.html) tomato.css; do \
+	for F in $(wildcard *.asp *.js *.jsx *.html) tomato.css; do \
 		[ -f $(INSTALLDIR)/www/$$F ] && sed -i $$F \
 		-e "/USB-BEGIN/d"	-e "/USB-END/d" \
 		-e "/UPS-BEGIN/d"	-e "/UPS-END/d" \
@@ -783,7 +783,7 @@ endif
 	done
 
 # remove C-style comments from java, asp and css files. All "control" comments have been processed by now.
-	for F in $(wildcard *.js *.jsx *.jsz *.asp *.css); do \
+	for F in $(wildcard *.js *.jsx *.asp *.css); do \
 		[ -f $(INSTALLDIR)/www/$$F ] && $(BR2_EXTERNAL_TOMATO64_PATH)/package/www/www/remcoms2.sh $(INSTALLDIR)/www/$$F c; \
 	done
 
