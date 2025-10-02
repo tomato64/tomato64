@@ -772,7 +772,7 @@ void stop_dnsmasq(void)
 void reload_dnsmasq(void)
 {
 	/* notify dnsmasq */
-	killall("dnsmasq", SIGINT);
+	killall("dnsmasq", SIGHUP);
 }
 
 void clear_resolv(void)
