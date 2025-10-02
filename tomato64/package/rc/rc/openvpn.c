@@ -1454,10 +1454,9 @@ int write_ovpn_resolv(FILE* f)
 {
 	DIR *dir;
 	struct dirent *file;
-	char *fn, ch, num, buf[BUF_SIZE_32];
-	FILE *dnsf;
-	int exclusive = 0;
-	int adns = 0;
+	char  buf[BUF_SIZE_32];
+	char *fn, ch;
+	int num, exclusive = 0;
 
 	if (chdir(OVPN_DIR"/dns"))
 		return 0;
@@ -1470,16 +1469,14 @@ int write_ovpn_resolv(FILE* f)
 		if (fn[0] == '.')
 			continue;
 
-		if (sscanf(fn, "client%c.resol%c", &num, &ch) == 2) {
-			snprintf(buf, BUF_SIZE_32, "vpn_client%c_adns", num);
-			adns = nvram_get_int(buf);
-			if ((dnsf = fopen(fn, "r")) == NULL)
+		if (sscanf(fn, "client%d.resol%c", &num, &ch) == 2) {
+			if (fappend(f, fn) == -1)
 				continue;
 
-			logmsg(LOG_INFO, "adding DNS entries from %s", fn);
-			fappend(f, fn);
+			logmsg(LOG_INFO, "%s: adding DNS entries from %s", __FUNCTION__, fn);
 
-			if (adns == 3)
+			snprintf(buf, BUF_SIZE_32, "vpn_client%d_adns", num);
+			if (nvram_get_int(buf) == 3)
 				exclusive = 1;
 		}
 	}
