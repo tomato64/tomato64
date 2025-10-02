@@ -2,9 +2,11 @@
  *
  * Copyright (C) 2014-2021 Lance Fredrickson
  * lancethepants@gmail.com
- * Fixes/updates (C) 2018 - 2022 pedro
  *
-*/
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
+ *
+ */
 
 
 #include "rc.h"
@@ -336,9 +338,11 @@ void stop_tinc(void)
 	if (pidof("tincd") > 0)
 		killall_tk_period_wait("tincd", 50);
 
+	simple_lock("firewall");
 	run_del_firewall_script(TINC_FW_SCRIPT, TINC_FW_DEL_SCRIPT);
 
 	system("/bin/rm -rf "TINC_DIR);
+	simple_unlock("firewall");
 }
 
 void run_tinc_firewall_script(void)
@@ -346,6 +350,7 @@ void run_tinc_firewall_script(void)
 	FILE *fp;
 
 	/* first remove existing firewall rule(s) */
+	simple_lock("firewall");
 	run_del_firewall_script(TINC_FW_SCRIPT, TINC_FW_DEL_SCRIPT);
 
 	/* then (re-)add firewall rule(s) */
@@ -354,4 +359,5 @@ void run_tinc_firewall_script(void)
 		logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, TINC_FW_SCRIPT);
 		eval(TINC_FW_SCRIPT);
 	}
+	simple_unlock("firewall");
 }

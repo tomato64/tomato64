@@ -26,7 +26,6 @@
 #define BUF_SIZE_32		32
 #define BUF_SIZE_64		64
 #define IF_SIZE			8
-#define OVPN_FW_STR		"s/-A/-D/g"
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
@@ -610,10 +609,12 @@ void start_ovpn_client(int unit)
 		snprintf(buffer, BUF_SIZE, OVPN_DIR"/fw/client%d-fw.sh", unit);
 
 		/* first remove existing firewall rule(s) */
+		simple_lock("firewall");
 		run_del_firewall_script(buffer, OVPN_DIR_DEL_SCRIPT);
 
 		/* then add firewall rule(s) */
 		eval(buffer);
+		simple_unlock("firewall");
 	}
 
 	/* In case of openvpn unexpectedly dies and leaves it added - flush tun IF, otherwise openvpn will not re-start (required by iproute2) */
@@ -673,10 +674,13 @@ void stop_ovpn_client(int unit)
 	/* Remove firewall rules after VPN exit */
 	memset(buffer, 0, BUF_SIZE);
 	snprintf(buffer, BUF_SIZE, OVPN_DIR"/fw/client%d-fw.sh", unit);
+
+	simple_lock("firewall");
 	run_del_firewall_script(buffer, OVPN_DIR_DEL_SCRIPT);
 
 	/* Delete all files for this client */
 	ovpn_cleanup_dirs(OVPN_TYPE_CLIENT, unit);
+	simple_unlock("firewall");
 
 	memset(buffer, 0, BUF_SIZE);
 	snprintf(buffer, BUF_SIZE, "vpn_client%d", unit);
@@ -1223,10 +1227,12 @@ void start_ovpn_server(int unit)
 		snprintf(buffer, BUF_SIZE, OVPN_DIR"/fw/server%d-fw.sh", unit);
 
 		/* first remove existing firewall rule(s) */
+		simple_lock("firewall");
 		run_del_firewall_script(buffer, OVPN_DIR_DEL_SCRIPT);
 
 		/* then add firewall rule(s) */
 		eval(buffer);
+		simple_unlock("firewall");
 	}
 
 	/* Start the VPN server */
@@ -1283,10 +1289,13 @@ void stop_ovpn_server(int unit)
 	/* Remove firewall rules */
 	memset(buffer, 0, BUF_SIZE);
 	snprintf(buffer, BUF_SIZE, OVPN_DIR"/fw/server%d-fw.sh", unit);
+
+	simple_lock("firewall");
 	run_del_firewall_script(buffer, OVPN_DIR_DEL_SCRIPT);
 
 	/* Delete all files for this server */
 	ovpn_cleanup_dirs(OVPN_TYPE_SERVER, unit);
+	simple_unlock("firewall");
 
 	memset(buffer, 0, BUF_SIZE);
 	snprintf(buffer, BUF_SIZE, "vpn_server%d", unit);

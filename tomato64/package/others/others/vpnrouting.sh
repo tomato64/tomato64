@@ -4,6 +4,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 # VPN Client selective routing up down script
 #
 # Copyright by pedro 2019 - 2025
+# https://freshtomato.org/
 #
 
 
@@ -22,9 +23,27 @@ ADD="0"
 DOMAINS=""
 CID="${dev:4:1}"
 ENV_VARS="/tmp/env_vars_${CID}"
+FN="/var/lock/firewall.lock"
 LOGS="logger -t openvpn-vpnrouting.sh[$PID][$IFACE]"
 [ -d /etc/openvpn/fw ] || mkdir -m 0700 "/etc/openvpn/fw"
 
+
+simple_lock() {
+	local n=$((5 + ($PID % 10)))
+
+	while ! rm -- "$FN" 2>/dev/null; do
+		n=$((n - 1))
+		if [ "$n" -eq 0 ]; then
+			$LOGS "breaking $FN"
+			break
+		fi
+		sleep 1
+	done
+}
+
+simple_unlock() {
+	( umask 066; : > "$FN" )
+}
 
 update_dnsmasq_ipset() {
 	[ ! -f "$DNSMASQ_IPSET" ] && touch $DNSMASQ_IPSET
@@ -82,9 +101,11 @@ stopRouting() {
 	ip rule del fwmark $FWMARK/0xf00 table $FWMARK
 
 	[ -f "$FIREWALL_ROUTING" ] && {
+		simple_lock
 		sed -i -e "s/-I/-D/g; s/-A/-D/g" "$FIREWALL_ROUTING" &>/dev/null
 		$FIREWALL_ROUTING &>/dev/null
 		rm -f $FIREWALL_ROUTING &>/dev/null
+		simple_unlock
 	}
 # BCMARM-BEGIN
 	ipset destroy vpnrouting$FWMARK &>/dev/null
@@ -188,6 +209,9 @@ startRouting() {
 	}
 
 	chmod 700 $FIREWALL_ROUTING
+	simple_lock
+	$FIREWALL_ROUTING &>/dev/null
+	simple_unlock
 	RESTART_FW=1
 
 	$LOGS "Completed routing policy configuration for openvpn-$SERVICE"

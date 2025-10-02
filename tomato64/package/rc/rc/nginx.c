@@ -8,7 +8,8 @@
  * No part of this program can be used out of Tomato Firmware without owners permission.
  * This code generates the configurations files for NGINX. You can see these files in /etc/nginx/
  *
- * Fixes/updates (C) 2018 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -472,9 +473,11 @@ void stop_nginx(void)
 	killall_tk_period_wait("php-cgi", 50);
 #endif /* TCONFIG_BCMARM */
 
+	simple_lock("firewall");
 	run_del_firewall_script(nginx_fw_script, nginx_fw_del_script);
-
 	eval("rm", "-rf", nginx_fw_script);
+	simple_unlock("firewall");
+
 	if (!nvram_get_int("nginx_keepconf")) {
 		eval("rm", "-rf", nginxdir);
 #ifdef TCONFIG_BCMARM
@@ -497,6 +500,7 @@ void run_nginx_firewall_script(void)
 	FILE *fp;
 
 	/* first remove existing firewall rule(s) */
+	simple_lock("firewall");
 	run_del_firewall_script(nginx_fw_script, nginx_fw_del_script);
 
 	/* then (re-)add firewall rule(s) */
@@ -506,4 +510,5 @@ void run_nginx_firewall_script(void)
 		eval(nginx_fw_script);
 		fix_chain_in_drop();
 	}
+	simple_unlock("firewall");
 }

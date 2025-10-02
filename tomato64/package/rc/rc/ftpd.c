@@ -2,7 +2,9 @@
  * ftpd.c
  *
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2023 pedro
+ *
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -358,6 +360,7 @@ void stop_ftpd(void)
 		logmsg(LOG_INFO, "vsftpd is stopped");
 	}
 
+	simple_lock("firewall");
 	run_del_firewall_script(vsftpd_fw_script, vsftpd_fw_del_script);
 
 	/* clean-up */
@@ -365,6 +368,8 @@ void stop_ftpd(void)
 	unlink(vsftpd_conf);
 	eval("rm", "-rf", vsftpd_fw_script);
 	eval("rm", "-rf", vsftpd_users);
+
+	simple_unlock("firewall");
 }
 
 void run_ftpd_firewall_script(void)
@@ -372,6 +377,7 @@ void run_ftpd_firewall_script(void)
 	FILE *fp;
 
 	/* first remove existing firewall rule(s) */
+	simple_lock("firewall");
 	run_del_firewall_script(vsftpd_fw_script, vsftpd_fw_del_script);
 
 	/* then (re-)add firewall rule(s) */
@@ -381,4 +387,5 @@ void run_ftpd_firewall_script(void)
 		eval(vsftpd_fw_script);
 		fix_chain_in_drop();
 	}
+	simple_unlock("firewall");
 }

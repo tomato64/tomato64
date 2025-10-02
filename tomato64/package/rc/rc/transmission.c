@@ -2,7 +2,9 @@
  * transmission.c
  *
  * Copyright (C) 2011 shibby
- * Fixes/updates (C) 2018 - 2022 pedro
+ *
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -350,7 +352,12 @@ void stop_bittorrent(void)
 	if (pid > 0)
 		logmsg(LOG_INFO, "transmission-daemon stopped");
 
+	simple_lock("firewall");
 	run_del_firewall_script(tr_fw_script, tr_fw_del_script);
+
+	/* clean-up */
+	system("/bin/rm -rf "tr_dir);
+	simple_unlock("firewall");
 
 	/* restore default buffers */
 	memset(buf, 0, sizeof(buf));
@@ -364,9 +371,6 @@ void stop_bittorrent(void)
 	memset(buf, 0, sizeof(buf));
 	if (f_read_string("/proc/sys/net/ipv4/tcp_adv_win_scale", buf, sizeof(buf)) > 0 && atoi(buf) > 0);
 		f_write_procsysnet("ipv4/tcp_adv_win_scale", "2");
-
-	/* clean-up */
-	system("/bin/rm -rf "tr_dir);
 }
 
 void run_bt_firewall_script(void)
@@ -374,6 +378,7 @@ void run_bt_firewall_script(void)
 	FILE *fp;
 
 	/* first remove existing firewall rule(s) */
+	simple_lock("firewall");
 	run_del_firewall_script(tr_fw_script, tr_fw_del_script);
 
 	/* then (re-)add firewall rule(s) */
@@ -383,4 +388,5 @@ void run_bt_firewall_script(void)
 		eval(tr_fw_script);
 		fix_chain_in_drop();
 	}
+	simple_unlock("firewall");
 }
