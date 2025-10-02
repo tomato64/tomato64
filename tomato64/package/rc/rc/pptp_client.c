@@ -277,23 +277,16 @@ void pptp_client_firewall(const char *table, const char *opt, _tf_ipt_write ipt_
 
 int write_pptp_client_resolv(FILE* f)
 {
-	FILE *dnsf;
 	int usepeer;
-	int ch;
 
 	if ((usepeer = nvram_get_int("pptp_client_peerdns")) <= 0)
 		return 0;
 
 	if (pidof("pptpclient") > 0) { /* write DNS only for active client */
-		if (!(dnsf = fopen(PPTPC_TMP_DIR"/resolv.conf", "r" )))
+		if (fappend(f, PPTPC_RESOLV_FILE) == -1)
 			return 0;
 
-		fputs("# pptp client dns:\n", f);
-		while (!feof(dnsf)) {
-			ch = fgetc(dnsf);
-			fputc(ch == EOF ? '\n' : ch, f);
-		}
-		fclose(dnsf);
+		logmsg(LOG_INFO, "%s: adding DNS entries from %s", __FUNCTION__, PPTPC_RESOLV_FILE);
 	}
 
 	return (usepeer == 2) ? 1 : 0;
