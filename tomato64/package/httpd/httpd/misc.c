@@ -4,6 +4,7 @@
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
  * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -32,6 +33,8 @@
 
 #include <wlioctl.h>
 #include <wlutils.h>
+
+#define NOT_AVAIL	"--"
 
 typedef struct {
 	unsigned long total;
@@ -345,7 +348,7 @@ static char* get_cfeversion(char *buf, const size_t buf_sz)
 	}
 
 	if (len == 0)
-		strlcpy(buf, "--", buf_sz);
+		strlcpy(buf, NOT_AVAIL, buf_sz);
 	else {
 		strlcpy(buf, s, buf_sz);
 		buf[strcspn(buf, "\n")] = 0;
@@ -356,8 +359,6 @@ static char* get_cfeversion(char *buf, const size_t buf_sz)
 #endif /* TOMATO64 */
 
 #ifdef TCONFIG_IPV6
-#define NOT_AVAIL		"--"
-
 static void print_ipv6_infos(void) /* show IPv6 DUID and addresses: wan, dns, lan, lan-ll, lan1, lan1-ll, lan2, lan2-ll, lan3, lan3-ll */
 {
 	char buffer[INET6_ADDRSTRLEN];
@@ -380,9 +381,8 @@ static void print_ipv6_infos(void) /* show IPv6 DUID and addresses: wan, dns, la
 		web_printf("\tip6_duid: '%s',\n", line);
 		fclose(fp);
 	}
-	else {
+	else
 		web_printf("\tip6_duid: '%s',\n", NOT_AVAIL);
-	}
 
 	/* check LAN */
 	for (br = 0; br < BRIDGE_COUNT; br++) {
@@ -550,9 +550,9 @@ void asp_jiffies(int argc, char **argv)
 	char sa[128];
 	FILE *a;
 	char *e = NULL;
-	char *f= NULL;
-
+	char *f = NULL;
 	const char procstat[] = "/proc/stat";
+
 	if ((a = fopen(procstat, "r"))) {
 		fgets(sa, sizeof(sa), a);
 
@@ -563,9 +563,8 @@ void asp_jiffies(int argc, char **argv)
 		if ((f = strchr(sa, 10)) != NULL)
 			*f = 0;
 
-		web_printf("\njiffies = [ '");
-		web_printf("%s", e);
-		web_puts("' ];\n");
+		web_printf("\njiffies = ['%s'];\n", e);
+
 		fclose(a);
 	}
 }
@@ -651,7 +650,7 @@ void asp_sysinfo(int argc, char **argv)
 	char sa[128];
 	FILE *a;
 	char *e = NULL;
-	char *f= NULL;
+	char *f = NULL;
 	const char procstat[] = "/proc/stat";
 
 	get_cpuinfo(system_type, sizeof(system_type), cpuclk, sizeof(cpuclk), cputemp, sizeof(cputemp));
@@ -746,9 +745,9 @@ void asp_sysinfo(int argc, char **argv)
 			e = e + 2;
 		if ((f = strchr(sa, 10)) != NULL)
 			*f = 0;
-		web_printf(",\n\tjiffies: '");
-		web_printf("%s", e);
-		web_puts("'\n");
+
+		web_printf(",\n\tjiffies: '%s'\n", e);
+
 		fclose(a);
 	}
 	else
@@ -963,31 +962,31 @@ void asp_wanup(int argc, char **argv)
 
 void asp_wanstatus(int argc, char **argv)
 {
-	char prefix[] = "wanXX";
 	const char *p;
+	unsigned int i;
 	char renew_file[64];
 	char wanconn_file[64];
+	char prefix[] = "wanXX";
 
-	if (argc > 0)
-		strlcpy(prefix, argv[0], sizeof(prefix));
-	else
-		strlcpy(prefix, "wan", sizeof(prefix));
+	for (i = 1; i <= MWAN_MAX; i++) {
+		snprintf(prefix, sizeof(prefix), (i == 1 ? "wan" : "wan%u"), i);
 
-	memset(renew_file, 0, 64);
-	snprintf(renew_file, sizeof(renew_file), "/var/lib/misc/%s_dhcpc.renewing", prefix);
-	memset(wanconn_file, 0, 64);
-	snprintf(wanconn_file, sizeof(wanconn_file), "/var/lib/misc/%s.connecting", prefix);
+		memset(renew_file, 0, sizeof(renew_file));
+		snprintf(renew_file, sizeof(renew_file), "/var/lib/misc/%s_dhcpc.renewing", prefix);
+		memset(wanconn_file, 0, sizeof(wanconn_file));
+		snprintf(wanconn_file, sizeof(wanconn_file), "/var/lib/misc/%s.connecting", prefix);
 
-	if ((using_dhcpc(prefix)) && (f_exists(renew_file)))
-		p = "Renewing...";
-	else if (check_wanup(prefix))
-		p = "Connected";
-	else if (f_exists(wanconn_file))
-		p = "Connecting...";
-	else
-		p = "Disconnected";
+		if ((using_dhcpc(prefix)) && (f_exists(renew_file)))
+			p = "<b>Renewing...</b>";
+		else if (check_wanup(prefix))
+			p = "Connected";
+		else if (f_exists(wanconn_file))
+			p = "<b>Connecting...</b>";
+		else
+			p = "<b>Disconnected</b>";
 
-	web_puts(p);
+		web_printf("%s%s'", (i == 1 ? "'" : ",'"), p);
+	}
 }
 
 void asp_link_uptime(int argc, char **argv)
@@ -1006,7 +1005,7 @@ void asp_link_uptime(int argc, char **argv)
 			reltime(uptime, buf, sizeof(buf));
 		}
 		else
-			strlcpy(buf, "-", sizeof(buf));
+			strlcpy(buf, NOT_AVAIL, sizeof(buf));
 
 		web_printf("%s%s'", (i == 1 ? "'" : ",'"), buf);
 	}
@@ -1018,8 +1017,8 @@ void asp_rrule(int argc, char **argv)
 	int i;
 
 	i = nvram_get_int("rruleN");
-	snprintf(s, sizeof(s), "rrule%d", i);
 	web_puts("\nrrule = '");
+	snprintf(s, sizeof(s), "rrule%d", i);
 	web_putj_utf8(nvram_safe_get(s));
 	web_printf("';\nrruleN = %d;\n", i);
 }

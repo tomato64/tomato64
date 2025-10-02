@@ -7,6 +7,7 @@
  * No part of this file may be used without permission.
  *
  * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -37,6 +38,13 @@ function setColor(n) {
 stats = { };
 
 var a, b, i;
+
+stats.time = '<% time(); %>';
+stats.wanlease = [<% dhcpc_time(); %>];
+stats.wanuptime = [<% link_uptime(); %>];
+stats.wanup = [<% wanup(); %>];
+stats.dns = [<% dns(); %>];
+stats.wanstatus = [<% wanstatus(); %>];
 
 stats.anon_enable = nvram.tomatoanon_enable;
 stats.anon_answer = nvram.tomatoanon_answer;
@@ -98,12 +106,6 @@ if (sysinfo.totalswap > 0) {
 	stats.swap = scaleSize(a - b)+' / '+scaleSize(a)+' <small>('+((a - b) / a * 100.0).toFixed(2)+'%)</small><div class="progress-wrapper"><div class="progress-container"><div class="progress-bar" style="background-color:'+setColor(((a - b) / a * 100.0).toFixed(2))+';width:'+((a - b) / a * 100.0).toFixed(2)+'%"></div></div></div>';
 } else
 	stats.swap = '';
-
-stats.time = '<% time(); %>';
-stats.wanlease = [<% dhcpc_time(); %>];
-stats.wanuptime = [<% link_uptime(); %>];
-stats.wanup = [<% wanup(); %>];
-stats.dns = [<% dns(); %>];
 
 /* check for stubby/dnscrypt_proxy */
 var dns = [];
@@ -187,17 +189,7 @@ stats.ip6_lan7_ll = ((typeof(sysinfo.ip6_lan7_ll) != 'undefined') ? sysinfo.ip6_
 /* TOMATO64-END */
 /* IPV6-END */
 
-/* DUALWAN-BEGIN */
-stats.wanstatus = ['<% wanstatus("wan"); %>','<% wanstatus("wan2"); %>'];
-/* DUALWAN-END */
-/* MULTIWAN-BEGIN */
-stats.wanstatus = ['<% wanstatus("wan"); %>','<% wanstatus("wan2"); %>','<% wanstatus("wan3"); %>','<% wanstatus("wan4"); %>'];
-/* MULTIWAN-END */
-
-for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx)
-	if (stats.wanstatus[uidx - 1] != 'Connected')
-		stats.wanstatus[uidx - 1] = '<b>'+stats.wanstatus[uidx - 1]+'</b>';
-
+/* WL stats */
 stats.channel = [];
 stats.interference = [];
 stats.qual = [];

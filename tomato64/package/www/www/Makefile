@@ -35,14 +35,8 @@ install:
 # Only include MultiWAN options if MULTIWAN is configured in.
 ifneq ($(TCONFIG_MULTIWAN),y)
 	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.asp *.js *.jsx *.jsz); do \
+	for F in $(wildcard *.asp *.js); do \
 		sed -i $$F -e "/MULTIWAN-BEGIN/,/MULTIWAN-END/d"; \
-	done
-# Or remove dualwan options
-else
-	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.asp *.js *.jsx *.jsz); do \
-		sed -i $$F -e "/DUALWAN-BEGIN/,/DUALWAN-END/d"; \
 	done
 endif
 
@@ -753,7 +747,6 @@ endif
 		-e "/TUXERA-BEGIN/d"	-e "/TUXERA-END/d" \
 		-e "/TUXERAHFS-BEGIN/d"	-e "/TUXERAHFS-END/d" \
 		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d" \
-		-e "/DUALWAN-BEGIN/d"	-e "/DUALWAN-END/d" \
 		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d" \
 		-e "/KEYGEN-BEGIN/d"	-e "/KEYGEN-END/d" \
 		-e "/TERMLIB-BEGIN/d"	-e "/TERMLIB-END/d" \
