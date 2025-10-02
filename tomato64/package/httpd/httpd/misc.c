@@ -544,7 +544,7 @@ mtd1: 007d0000 00010000 "linux"
 #endif
 }
 
-#ifdef TCONFIG_BCMARM
+#if 0
 void asp_jiffies(int argc, char **argv)
 {
 	char sa[128];

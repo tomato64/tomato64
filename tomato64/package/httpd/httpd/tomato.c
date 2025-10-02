@@ -135,7 +135,7 @@ const aspapi_t aspapi[] = {
 	{ "rrule",			asp_rrule			},
 	{ "statfs",			asp_statfs			},
 	{ "sysinfo",			asp_sysinfo			},
-#ifdef TCONFIG_BCMARM
+#if 0
 	{ "jiffies",			asp_jiffies			},
 #endif
 	{ "time",			asp_time			},

@@ -85,7 +85,7 @@ extern void wo_ovpn_genkey(char *url);
 extern void wo_ovpn_genclientconfig(char *url);
 #endif
 #endif
-#ifdef TCONFIG_BCMARM
+#if 0
 extern void asp_jiffies(int argc, char **argv);
 #endif
 extern void asp_sysinfo(int argc, char **argv);
