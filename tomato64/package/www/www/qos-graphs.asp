@@ -42,14 +42,13 @@ ref.refresh = function(text) {
 	nfmarks = [];
 
 	for (var i = 1; i < 11; i++) {
-/* DUALWAN-BEGIN */
-		irates[i] = qrates1_in[i] + qrates2_in[i];
-		orates[i] = qrates1_out[i] + qrates2_out[i];
-/* DUALWAN-END */
-/* MULTIWAN-BEGIN */
-		irates[i] = qrates1_in[i] + qrates2_in[i] + qrates3_in[i] + qrates4_in[i];
-		orates[i] = qrates1_out[i] + qrates2_out[i] + qrates3_out[i] + qrates4_out[i];
-/* MULTIWAN-END */
+		var isum = 0, osum = 0;
+		for (var k = 1; k <= MAXWAN_NUM; k++) {
+			isum += (qrates_in[k] && qrates_in[k][i]) || 0;
+			osum += (qrates_out[k] && qrates_out[k][i]) || 0;
+		}
+		irates[i] = isum;
+		orates[i] = osum;
 	}
 	try {
 		eval(text);

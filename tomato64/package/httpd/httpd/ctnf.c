@@ -1,7 +1,7 @@
 /*
- *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
+ *
  * Fixes/updates (C) 2018 - 2025 pedro
  *
  */
@@ -639,44 +639,41 @@ void asp_qrate(int argc, char **argv)
 	unsigned long rates[10];
 	char buf[32];
 	unsigned int n, i;
-	char comma;
 	char *a[1];
 
 	a[0] = "1";
 	asp_ctcount(1, a);
 
+	web_puts("\nvar qrates_out = [];");
+	web_puts("\nvar qrates_in = [];");
+
 	for (i = 1; i <= MWAN_MAX; i++) {
 		memset(rates, 0, sizeof(rates));
 		memset(buf, 0, sizeof(buf));
-		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%d"), i);
+		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%u"), i);
 		retrieveRatesFromTc(get_wanface(buf), rates);
 
-		comma = ' ';
-		snprintf(buf, sizeof(buf), "\nqrates%d_out = [0,", i);
+		snprintf(buf, sizeof(buf), "\nqrates_out[%u] = [0", i);
 		web_puts(buf);
 		for (n = 0; n < 10; ++n) {
-			web_printf("%c%lu", comma, rates[n]);
-			comma = ',';
+			web_printf(",%lu", rates[n]);
 		}
 		web_puts("];");
 
 		memset(rates, 0, sizeof(rates));
 		memset(buf, 0, sizeof(buf));
 #ifdef TCONFIG_BCMARM
-		snprintf(buf, sizeof(buf), "ifb%d", (i - 1));
-		retrieveRatesFromTc(buf, rates);
+		snprintf(buf, sizeof(buf), "ifb%u", (i - 1));
 #else
-		snprintf(buf, sizeof(buf), "imq%d", (i - 1));
-		retrieveRatesFromTc(buf, rates);
+		snprintf(buf, sizeof(buf), "imq%u", (i - 1));
 #endif
+		retrieveRatesFromTc(buf, rates);
 
-		comma = ' ';
 		memset(buf, 0, sizeof(buf));
-		snprintf(buf, sizeof(buf), "\nqrates%d_in = [0,", i);
+		snprintf(buf, sizeof(buf), "\nqrates_in[%u] = [0", i);
 		web_puts(buf);
 		for (n = 0; n < 10; ++n) {
-			web_printf("%c%lu", comma, rates[n]);
-			comma = ',';
+			web_printf(",%lu", rates[n]);
 		}
 		web_puts("];");
 	}
