@@ -804,7 +804,6 @@ div[id$="peers-grid"] .co6,
 	margin-bottom: 12px;
 }
 
-.import-section,
 .section-centered,
 .note-warning,
 #bwm-h-ctrl,
@@ -1142,13 +1141,16 @@ img[id^="barnoise_"] {
 	width: 23%;
 }
 
-.upgrade-file{
+.upgrade-file {
 	width: 90%;
 	overflow: auto;
 	white-space: nowrap;
 }
 
-.import-file,
+.import-file {
+	width: 80%;
+}
+
 #qos-cl-grid .x2c {
 	width: 41%;
 }

@@ -2145,9 +2145,10 @@ function init() {
 				null,
 				{ title: 'Type of VPN', name: t+'_com', type: 'select', options: [['0','Internal - Hub (this device) and Spoke (peers)'],['1','Internal - Full Mesh (defined Endpoint only)'],['2','Internal - Full Mesh'],['3','External - VPN Provider']], value: nvram[t+'_com'] || 0 },
 				{ title: 'Redirect Internet traffic', name: t+'_rgwr', type: 'select', options: [[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram[t+'_rgwr'] },
-				{ title: 'Priority', indent: 2, name: t+'_prio', type: 'text', maxlen: 3, size: 10, placeholder: (100 + i), value: nvram[t+'_prio'] }
+				{ title: 'Priority', indent: 2, name: t+'_prio', type: 'text', maxlen: 3, size: 10, placeholder: (100 + i), value: nvram[t+'_prio'] },
+				{ title: 'Import Config from File', custom: '<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File"><input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')">' },
+				{ title: '', custom: '<div>Note: before importing the configuration, set the correct "Type of VPN" above.<\/div>' }
 			]);
-			W('<br>');
 
 			W('<div class="section-title" id="'+t+'-peer-param-title">Peer Parameters <span style="font-size:0.7em">(used to generate peer config files)<\/span><\/div>');
 			W('<div id="'+t+'-peer-param">');
@@ -2168,19 +2169,7 @@ function init() {
 /* TOMATO64-END */
 				{ title: 'Forward all peer traffic', name: 'f_'+t+'_rgw', type: 'checkbox', value: nvram[t+'_rgw'] == 1 }
 			]);
-			W('<br>');
-			W('<\/div>');
-
-			W('<div class="section-title">Import Config from File<\/div>');
-			W('<div class="fields">');
-			W('<div>Note: before importing the configuration, set the correct "Type of VPN" above.<\/div>');
-			W('<br>');
-			W('<div class="import-section">');
-			W('<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File">');
-			W('<input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')" >');
-			W('<\/div>');
-			W('<br>');
-			W('<\/div><\/div>');
+			W('<br><\/div><\/div>');
 			/* config tab stop */
 
 			/* peers tab start */
@@ -2202,8 +2191,7 @@ function init() {
 				{ title: 'Port', name: 'f_'+t+'_peer_port', type: 'text', maxlen: 5, size: 10, value: nvram[t+'_port'] == '' ? (51820 + i) : nvram[t+'_port'], hidden: 1 },
 				{ title: 'FWMark', name: 'f_'+t+'_peer_fwmark', type: 'text', maxlen: 8, size: 8, value: '0', hidden: 1 }
 			]);
-			W('<\/div>');
-			W('<br>');
+			W('<\/div><br>');
 
 			W('<div class="section-title" id="'+t+'-peers-generate-title">Peer Generation<\/div>');
 			W('<div id="'+t+'-peers-generate">');
@@ -2211,8 +2199,7 @@ function init() {
 				{ title: 'Generate PSK', name: 'f_'+t+'_peer_psk_gen', type: 'checkbox', value: true, suffix: '&nbsp;<small>strenghten encyption with PresharedKey<\/small>' },
 				{ title: '', custom: '<input type="button" value="Generate Peer" onclick="generatePeer('+i+')" id="'+t+'_peer_gen">' }
 			]);
-			W('<br>');
-			W('<\/div>');
+			W('<br><\/div>');
 
 			W('<div class="section-title">Peer\'s Parameters<\/div>');
 			createFieldTable('', [
