@@ -4,12 +4,7 @@
 
 
 if (typeof stats === 'undefined' || stats.length == 0) stats = { };
-/* DUALWAN-BEGIN */
-stats.dns = [<% dns("wan"); %>,<% dns("wan2"); %>];
-/* DUALWAN-END */
-/* MULTIWAN-BEGIN */
-stats.dns = [<% dns("wan"); %>,<% dns("wan2"); %>,<% dns("wan3"); %>,<% dns("wan4"); %>];
-/* MULTIWAN-END */
+stats.dns = [<% dns(""); %>];
 
 isup = {};
 

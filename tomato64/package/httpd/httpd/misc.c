@@ -1135,24 +1135,28 @@ void wo_wakeup(char *url)
 
 void asp_dns(int argc, char **argv)
 {
-	char s[128];
+	char s[1024];
 	int i;
+	unsigned int k;
 	const dns_list_t *dns;
 	char prefix[] = "wanXX";
 
-	if (argc > 0)
-		strlcpy(prefix, argv[0], sizeof(prefix));
-	else
-		strlcpy(prefix, "wan", sizeof(prefix));
+	for (k = 1; k <= MWAN_MAX; k++) {
+		snprintf(prefix, sizeof(prefix), (k == 1 ? "wan" : "wan%u"), k);
+		dns = get_dns(prefix); /* static buffer */
 
-	dns = get_dns(prefix); /* static buffer */
-	memset(s, 0, sizeof(s));
-	strlcpy(s, "[", sizeof(s));
-	for (i = 0 ; i < dns->count; ++i)
-		snprintf(s + strlen(s), sizeof(s) - strlen(s), "%s'%s:%u'", i ? "," : "", inet_ntoa(dns->dns[i].addr), dns->dns[i].port);
+		memset(s, 0, sizeof(s));
+		if (k == 1)
+			strlcpy(s, "[", sizeof(s));
+		else
+			strlcpy(s, ",[", sizeof(s));
 
-	strlcat(s, "]", sizeof(s));
-	web_puts(s);
+		for (i = 0 ; i < dns->count; ++i)
+			snprintf(s + strlen(s), sizeof(s) - strlen(s), "%s'%s:%u'", (i ? "," : ""), inet_ntoa(dns->dns[i].addr), dns->dns[i].port);
+
+		strlcat(s, "]", sizeof(s));
+		web_puts(s);
+	}
 }
 
 int resolve_addr(const char *ip, char *host)
