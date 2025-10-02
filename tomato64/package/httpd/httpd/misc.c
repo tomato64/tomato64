@@ -953,13 +953,12 @@ void asp_mmcid(int argc, char **argv) {
 void asp_wanup(int argc, char **argv)
 {
 	char prefix[] = "wanXX";
+	unsigned int i;
 
-	if (argc > 0)
-		strlcpy(prefix, argv[0], sizeof(prefix));
-	else
-		strlcpy(prefix, "wan", sizeof(prefix));
-
-	web_puts(check_wanup(prefix) ? "1" : "0");
+	for (i = 1; i <= MWAN_MAX; i++) {
+		snprintf(prefix, sizeof(prefix), (i == 1 ? "wan" : "wan%u"), i);
+		web_puts(check_wanup(prefix) ? (i == 1 ? "1" : ",1") : (i == 1 ? "0" : ",0"));
+	}
 }
 
 void asp_wanstatus(int argc, char **argv)

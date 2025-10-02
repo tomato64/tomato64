@@ -99,16 +99,15 @@ if (sysinfo.totalswap > 0) {
 stats.time = '<% time(); %>';
 
 /* DUALWAN-BEGIN */
-stats.wanup = [<% wanup("wan"); %>,<% wanup("wan2"); %>];
 stats.wanuptime = ['<% link_uptime("wan"); %>','<% link_uptime("wan2"); %>'];
 stats.wanlease = ['<% dhcpc_time("wan"); %>','<% dhcpc_time("wan2"); %>'];
 /* DUALWAN-END */
 /* MULTIWAN-BEGIN */
-stats.wanup = [<% wanup("wan"); %>,<% wanup("wan2"); %>,<% wanup("wan3"); %>,<% wanup("wan4"); %>];
 stats.wanuptime = ['<% link_uptime("wan"); %>','<% link_uptime("wan2"); %>','<% link_uptime("wan3"); %>','<% link_uptime("wan4"); %>'];
 stats.wanlease = ['<% dhcpc_time("wan"); %>','<% dhcpc_time("wan2"); %>','<% dhcpc_time("wan3"); %>','<% dhcpc_time("wan4"); %>'];
 /* MULTIWAN-END */
-stats.dns = [<% dns(""); %>];
+stats.wanup = [<% wanup(); %>];
+stats.dns = [<% dns(); %>];
 
 /* check for stubby/dnscrypt_proxy */
 var dns = [];
