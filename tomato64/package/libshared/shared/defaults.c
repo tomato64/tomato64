@@ -986,6 +986,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "dnsmasq_gen_names",		"0"				, 0 },
 	{ "dnsmasq_edns_size",		"1232"				, 0 },	/* dnsmasq EDNS packet size */
 	{ "dnsmasq_safe",		"0"				, 0 },	/* should dnsmasq starts in safe mode? (without custom config and /etc/dnsmasq.custom file */
+	{ "dnsmasq_norestart",		"0"				, 0 },	/* to disable periodic checking if dnsmasq is up via check_services() */
 #ifdef TCONFIG_TOR
 	{ "dnsmasq_onion_support",	"0"				, 0 },
 #endif

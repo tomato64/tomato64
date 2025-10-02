@@ -94,7 +94,6 @@ const char avahicfgalt[] = "/etc/avahi/avahi-daemon_alt.conf";
 static const struct itimerval pop_tv = { {0, 0}, {0, 500 * 1000} };
 /* Pop an alarm to reap zombies */
 static const struct itimerval zombie_tv = { {0, 0}, {307, 0} };
-//static pid_t pid_dnsmasq = -1;
 static pid_t pid_crond = -1;
 static pid_t pid_hotplug2 = -1;
 static pid_t pid_igmp = -1;
@@ -2305,9 +2304,13 @@ void check_services(void)
 	/* do not restart if upgrading/rebooting */
 	if (!nvram_get_int("g_upgrade") && !nvram_get_int("g_reboot")) {
 		_check(pid_hotplug2, "hotplug2", start_hotplug2);
-//		_check(pid_dnsmasq, "dnsmasq", start_dnsmasq);
+
+		if (!nvram_get_int("dnsmasq_norestart"))
+			_check(pid_dnsmasq, "dnsmasq", start_dnsmasq);
+
 		_check(pid_crond, "crond", start_cron);
 		_check(pid_igmp, "igmpproxy", start_igmp_proxy);
+
 		if (nvram_get_int("ntp_updates") >= 1)
 			_check(pid_ntpd, "ntpd", start_ntpd);
 	}

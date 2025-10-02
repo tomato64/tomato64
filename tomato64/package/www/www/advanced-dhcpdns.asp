@@ -140,8 +140,8 @@ function verifyFields(focused, quiet) {
 /* IPV6-END */
 
 	for (i in vis) {
-		var b = E(i);
-		var c = vis[i];
+		b = E(i);
+		c = vis[i];
 		b.disabled = (c != 1);
 		PR(b).style.display = (c ? 'table-row' : 'none');
 	}
@@ -415,13 +415,13 @@ function save() {
 	/* check configuration of dnsmasq first */
 	waitforme = 1; /* prevent user to leave the page */
 	fom.dnsmasq_safe.value = 0;
+	fom.dnsmasq_norestart.value = 1;
 	fom._service.value = 'dnsmasq-restart';
 	form.submit(fom, 1);
 
-	/* timeout of 5.5 seconds should be enough also for slower routers. I hope... */
+	/* timeout of 5 seconds should be enough also for slower routers. I hope... */
 	setTimeout(() => {
-
-		if (!isup.dnsmasq)  /* if not up, use safe mode */
+		if (!isup.dnsmasq) /* if not up, use safe mode */
 			fom.dnsmasq_safe.value = 1;
 
 		if ((fom.dhcpc_minpkt.value != nvram.dhcpc_minpkt) || (fom.dhcpc_custom.value != nvram.dhcpc_custom)) {
@@ -466,14 +466,14 @@ function save() {
 			}
 		}
 /* MDNS-END */
-
+		fom.dnsmasq_norestart.value = 0;
 		form.submit(fom, 1);
 
 		if (fom.dnsmasq_safe.value == 1)
-			alert('Dnsmasq Custom configuration contains a disruptive syntax error.\nThe Custom configuration is now excluded to allow dnsmasq to operate');
+			alert('Warning! Dnsmasq Custom configuration contains a disruptive syntax error.\nThe Custom configuration is now excluded to allow dnsmasq to operate');
 
-	waitforme = 0; /* now you can leave the page... */
-	}, 5500);
+		waitforme = 0; /* now you can leave the page... */
+	}, 5000);
 }
 
 function init() {
@@ -577,6 +577,7 @@ function init() {
 /* TOMATO64-END */
 <!-- TFTP-END -->
 <input type="hidden" name="dnsmasq_safe">
+<input type="hidden" name="dnsmasq_norestart">
 
 <!-- / / / -->
 
@@ -836,7 +837,7 @@ function init() {
 <div id="footer">
 	<span id="footer-msg"></span>
 	<input type="button" value="Save" id="save-button" onclick="save()">
-	<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">
+	<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage()">
 </div>
 
 </td></tr>

@@ -724,5 +724,6 @@ extern void clear_resolv(void);
 extern const char dmhosts[];
 extern const char dmresolv[];
 extern const char dmipset[];
+extern pid_t pid_dnsmasq;
 
 #endif /* __RC_H__ */

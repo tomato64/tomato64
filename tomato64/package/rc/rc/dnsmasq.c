@@ -44,6 +44,7 @@ const char dmwarning[]    = "Warning! Dnsmasq Custom configuration contains a di
 const char resolvcfg[]    = "/etc/resolv.conf";
 const char resolvcfgrom[] = "/rom/etc/resolv.conf";
 
+pid_t pid_dnsmasq = -1;
 static void start_dnsmasq_wet(void);
 
 static int check_bridge_modes(void) {
@@ -745,8 +746,8 @@ void start_dnsmasq(void) {
 	/* default to some values we like, but allow the user to override them */
 	eval("dnsmasq", "-c", "4096", "--log-async");
 
-//	if (!nvram_contains_word("debug_norestart", "dnsmasq"))
-//		pid_dnsmasq = -2;
+	if (!nvram_contains_word("debug_norestart", "dnsmasq"))
+		pid_dnsmasq = -2;
 }
 
 void stop_dnsmasq(void)
@@ -754,7 +755,7 @@ void stop_dnsmasq(void)
 	if (serialize_restart("dnsmasq", 0))
 		return;
 
-//	pid_dnsmasq = -1;
+	pid_dnsmasq = -1;
 
 	unlink(resolvcfg);
 	symlink(dmresolv, resolvcfg);

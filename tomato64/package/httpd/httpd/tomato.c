@@ -659,6 +659,7 @@ static const nvset_t nvset_list[] = {
 	{ "dnsmasq_gen_names",		V_01				},	/* generate a name for DHCP clients which do not otherwise have one */
 	{ "dnsmasq_edns_size",		V_RANGE(512, 4096)		},	/* dnsmasq EDNS packet size (default 1280) */
 	{ "dnsmasq_safe",		V_01				},	/* should dnsmasq starts in safe mode? (without custom config and /etc/dnsmasq.custom file */
+	{ "dnsmasq_norestart",		V_01				},	/* to disable periodic checking if dnsmasq is up via check_services() */
 #ifdef TCONFIG_TOR
 	{ "dnsmasq_onion_support",	V_01				},
 #endif

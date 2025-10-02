@@ -3091,7 +3091,7 @@ function toggleTheme() {
 
 }
 
-var up = new TomatoRefresh('isup.jsx?_http_id='+(typeof nvram === 'undefined' ? "" : nvram.http_id), '', 5);
+var up = new TomatoRefresh('isup.jsx', '', 5);
 up.refresh = function(text) {
 	isup = {};
 	try {
