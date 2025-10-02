@@ -567,14 +567,14 @@ extern void start_pptp_client(void);
 extern void stop_pptp_client(void);
 extern void start_pptp_client_eas(void);
 extern void stop_pptp_client_eas(void);
-extern int write_pptp_client_resolv(FILE*);
+extern int write_pptpc_resolv(FILE*);
 extern int pptpc_ipup_main(int argc, char **argv);
 extern int pptpc_ipdown_main(int argc, char **argv);
-extern void pptp_client_firewall(const char *table, const char *opt, _tf_ipt_write table_writer);
+extern void pptpc_firewall(const char *table, const char *opt, _tf_ipt_write table_writer);
 #else
 static inline void start_pptp_client_eas(void) {};
 static inline void stop_pptp_client_eas(void) {};
-#define write_pptp_client_resolv(f) (0)
+#define write_pptpc_resolv(f) (0)
 #endif
 
 /* nvram */

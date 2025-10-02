@@ -21,6 +21,7 @@
  * Modified for Tomato Firmware
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
  * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -1029,7 +1030,7 @@ static void nat_table(void)
 
 #ifdef TCONFIG_PPTPD
 	/* PPTP Client NAT */
-	pptp_client_firewall("POSTROUTING", p, ipt_write);
+	pptpc_firewall("POSTROUTING", p, ipt_write);
 #endif
 
 	for (i = 1; i <= MWAN_MAX; i++) {
@@ -1307,7 +1308,7 @@ static void filter_input(void)
 
 #ifdef TCONFIG_PPTPD
 	/* Add for pptp client */
-	pptp_client_firewall("INPUT", "", ipt_write);
+	pptpc_firewall("INPUT", "", ipt_write);
 #endif
 
 	/* NTP server LAN & WAN */
@@ -1494,7 +1495,7 @@ static void filter_forward(void)
 
 #ifdef TCONFIG_PPTPD
 	/* Add for pptp client */
-	pptp_client_firewall("FORWARD", "", ipt_write);
+	pptpc_firewall("FORWARD", "", ipt_write);
 #endif
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
@@ -1760,7 +1761,7 @@ static void filter_table(void)
 
 #ifdef TCONFIG_PPTPD
 	/* Add for pptp client */
-	pptp_client_firewall("OUTPUT", "", ipt_write);
+	pptpc_firewall("OUTPUT", "", ipt_write);
 #endif
 
 	ip46t_write(ipv6_enabled, ":FORWARD DROP [0:0]\n");

@@ -5,6 +5,7 @@
  * No part of this file may be used without permission.
  *
  * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -1407,20 +1408,20 @@ void stop_ovpn_all()
 
 void write_ovpn_dnsmasq_config(FILE* f)
 {
+	DIR *dir;
+	struct dirent *file;
 	char nv[BUF_SIZE_16];
 	char buf[BUF_SIZE_32];
 	char *pos, *fn, ch;
-	int cur;
-	DIR *dir;
-	struct dirent *file;
+	int num;
 
 	strlcpy(buf, nvram_safe_get("vpn_server_dns"), BUF_SIZE_32);
 	for (pos = strtok(buf, ","); pos != NULL; pos = strtok(NULL, ",")) {
-		cur = atoi(pos);
-		if (cur) {
-			logmsg(LOG_DEBUG, "*** %s: adding server %d interface to dns config", __FUNCTION__, cur);
-			snprintf(nv, BUF_SIZE_16, "vpn_server%d_if", cur);
-			fprintf(f, "interface=%s%d\n", nvram_safe_get(nv), (OVPN_SERVER_BASEIF + cur));
+		num = atoi(pos);
+		if (num) {
+			logmsg(LOG_DEBUG, "*** %s: adding server %d interface to dns config", __FUNCTION__, num);
+			snprintf(nv, BUF_SIZE_16, "vpn_server%d_if", num);
+			fprintf(f, "interface=%s%d\n", nvram_safe_get(nv), (OVPN_SERVER_BASEIF + num));
 		}
 	}
 
@@ -1431,17 +1432,17 @@ void write_ovpn_dnsmasq_config(FILE* f)
 			if (fn[0] == '.')
 				continue;
 
-			if (sscanf(fn, "client%d.resol%c", &cur, &ch) == 2) {
-				logmsg(LOG_DEBUG, "*** %s: checking ADNS settings for client %d", __FUNCTION__, cur);
-				snprintf(buf, BUF_SIZE_32, "vpn_client%d_adns", cur);
+			if (sscanf(fn, "client%d.resol%c", &num, &ch) == 2) {
+				logmsg(LOG_DEBUG, "*** %s: checking ADNS settings for client %d", __FUNCTION__, num);
+				snprintf(buf, BUF_SIZE_32, "vpn_client%d_adns", num);
 				if (nvram_get_int(buf) == 2) {
-					logmsg(LOG_INFO, "adding strict-order to dnsmasq config for client %d", cur);
+					logmsg(LOG_INFO, "adding strict-order to dnsmasq config for client %d", num);
 					fprintf(f, "strict-order\n");
 					break;
 				}
 			}
 
-			if (sscanf(fn, "client%d.con%c", &cur, &ch) == 2) {
+			if (sscanf(fn, "client%d.con%c", &num, &ch) == 2) {
 				logmsg(LOG_INFO, "adding Dnsmasq config from %s", fn);
 				fappend(f, fn);
 			}

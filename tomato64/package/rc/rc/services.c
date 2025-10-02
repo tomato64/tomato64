@@ -32,6 +32,7 @@
  * Modified for Tomato Firmware
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
  * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -726,7 +727,7 @@ void dns_to_resolv(void)
 		if ((f = fopen(dmresolv, (append == 1) ? "w" : "a")) != NULL) { /* write / append */
 			if (append == 1)
 				/* check for VPN DNS entries */
-				exclusive = (write_pptp_client_resolv(f)
+				exclusive = (write_pptpc_resolv(f)
 #ifdef TCONFIG_OPENVPN
 				             || write_ovpn_resolv(f)
 #endif
@@ -735,9 +736,10 @@ void dns_to_resolv(void)
 			logmsg(LOG_DEBUG, "*** %s: exclusive: %d", __FUNCTION__, exclusive);
 			if (!exclusive) { /* exclusive check */
 #ifdef TCONFIG_IPV6
-				if ((write_ipv6_dns_servers(f, "nameserver ", nvram_safe_get("ipv6_dns"), "\n", 0) == 0) || (nvram_get_int("wan_addget"))) /* addget only for the first WAN */
+				if ((write_ipv6_dns_servers(f, "nameserver ", nvram_safe_get("ipv6_dns"), "\n", 0) == 0) || (nvram_get_int("wan_addget"))) { /* addget only for the first WAN */
 					if (append == 1) /* only once */
 						write_ipv6_dns_servers(f, "nameserver ", nvram_safe_get("ipv6_get_dns"), "\n", 0);
+				}
 #endif
 				dns = get_dns(wan_prefix); /* static buffer */
 				if (dns->count == 0) {
@@ -752,7 +754,7 @@ void dns_to_resolv(void)
 								 * defeating the purpose of specifying a bogus DNS server in order to trigger Connect On Demand.
 								 * An IP address from TEST-NET-2 block was chosen here, as RFC 5737 explicitly states this address block
 								 * should be non-routable over the public internet. In effect since January 2010.
-								 * Further info: http://linksysinfo.org/index.php?threads/tomato-using-1-1-1-1-for-pppoe-connect-on-demand.74102
+								 * Further info: https://linksysinfo.org/index.php?threads/tomato-using-1-1-1-1-for-pppoe-connect-on-demand.74102/
 								 * Also add possibility to change that IP (198.51.100.1) in GUI by the user
 								 */
 								trig_ip = nvram_safe_get(strlcat_r(wan_prefix, "_ppp_demand_dnsip", tmp, sizeof(tmp)));
