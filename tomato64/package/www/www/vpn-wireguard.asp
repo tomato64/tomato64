@@ -37,7 +37,7 @@ RouteGrid.prototype = new TomatoGrid;
 var tabs =  [];
 for (i = 0; i < WG_INTERFACE_COUNT; ++i)
 	tabs.push(['wg'+i,'<span id="'+serviceType+i+'_tabicon" style="font-size:9px">▽ <\/span><span class="tabname">wg'+i+'<\/span>']);
-var sections = [['wg-config','Config'],['wg-peers','Peers'],['wg-scripts','Scripts'],['wg-policy','Routing Policy'],['wg-status','Status']];
+var sections = [['wg-config','Config'],['wg-peersp','Peers Params'],['wg-peers','Peers'],['wg-scripts','Scripts'],['wg-policy','Routing Policy'],['wg-status','Status']];
 
 var routingTables = [];
 for (i = 0; i < tabs.length; ++i) routingTables.push(new RouteGrid());
@@ -1803,8 +1803,6 @@ function verifyFields(focused, quiet) {
 		if (ext) E('_f_wg'+i+'_peer_ip').value = '';
 		if (ext) E('_f_wg'+i+'_route').value = '1';
 		E('_f_wg'+i+'_peer_ip').disabled = ext;
-		elem.display('wg'+i+'-peer-param-title', !ext);
-		elem.display('wg'+i+'-peer-param', !ext);
 		elem.display('wg'+i+'-peers-download', !ext);
 		elem.display('wg'+i+'-peers-generate-title', !ext);
 		elem.display('wg'+i+'-peers-generate', !ext);
@@ -2149,9 +2147,12 @@ function init() {
 				{ title: 'Import Config from File', custom: '<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File"><input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')">' },
 				{ title: '', custom: '<div>Note: before importing the configuration, set the correct "Type of VPN" above.<\/div>' }
 			]);
+			W('<br><\/div>');
+			/* config tab stop */
 
-			W('<div class="section-title" id="'+t+'-peer-param-title">Peer Parameters <span style="font-size:0.7em">(used to generate peer config files)<\/span><\/div>');
-			W('<div id="'+t+'-peer-param">');
+			/* peers params tab start */
+			W('<div id="'+t+'-wg-peersp">');
+			W('<div class="section-title">Peers Parameters <span style="font-size:0.7em">(used only to generate peer config files)<\/span><\/div>');
 			createFieldTable('', [
 				{ title: 'Router behind NAT', name: t+'_ka', type: 'text', maxlen: 2, size: 4, suffix: '&nbsp;<small>configures keepalive interval from this router towards the defined peers (0=disable/no NAT, 10-99s range, 25 is a common setting)<\/small>', value: nvram[t+'_ka'] },
 				{ title: 'Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: nvram[t+'_endpoint'][0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(nvram[t+'_endpoint'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">' },
@@ -2169,8 +2170,8 @@ function init() {
 /* TOMATO64-END */
 				{ title: 'Forward all peer traffic', name: 'f_'+t+'_rgw', type: 'checkbox', value: nvram[t+'_rgw'] == 1 }
 			]);
-			W('<br><\/div><\/div>');
-			/* config tab stop */
+			W('<br><\/div>');
+			/* peers params tab stop */
 
 			/* peers tab start */
 			W('<div id="'+t+'-wg-peers">');
@@ -2258,6 +2259,7 @@ function init() {
 <div class="section-title">Notes</div>
 <div class="section" id="sesdiv_notes">
 	<ul>
+		<li><b>Do not change (and save)</b> the settings when wireguard <b>is running</b> - you may end up with a downed firewall or broken routing table!</li>
 		<li>For help, click the link in the upper right corner to the dedicated wiki page.</li>
 	</ul>
 </div>

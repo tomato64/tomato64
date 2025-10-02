@@ -316,6 +316,7 @@ td#content > small {
 
 div[id$="-wg-config"] > div.section-title,
 div[id$="-wg-peers"] > div.section-title,
+div[id$="-wg-peersp"] > div.section-title,
 div[id$="-wg-scripts"] > div.section-title,
 div[id$="-wg-status"] > div.section-title,
 div[id$="-status-stats"] > div.section-title,
