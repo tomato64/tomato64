@@ -4,7 +4,7 @@
 
 
 if (typeof stats === 'undefined' || stats.length == 0) stats = { };
-stats.dns = [<% dns(""); %>];
+stats.dns = [<% dns(); %>];
 
 isup = {};
 

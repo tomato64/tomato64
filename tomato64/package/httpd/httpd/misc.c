@@ -994,23 +994,22 @@ void asp_link_uptime(int argc, char **argv)
 {
 	char buf[64];
 	long uptime;
+	unsigned int i;
 	char prefix[] = "wanXX";
 
-	if (argc > 0)
-		strlcpy(prefix, argv[0], sizeof(prefix));
-	else
-		strlcpy(prefix, "wan", sizeof(prefix));
-
-	if (check_wanup(prefix)) {
-		uptime = check_wanup_time(prefix); /* get wanX uptime */
-		reltime(uptime, buf, sizeof(buf));
-	}
-	else {
+	for (i = 1; i <= MWAN_MAX; i++) {
+		snprintf(prefix, sizeof(prefix), (i == 1 ? "wan" : "wan%u"), i);
 		memset(buf, 0, sizeof(buf)); /* reset */
-		strlcpy(buf, "-", sizeof(buf));
-	}
 
-	web_puts(buf);
+		if (check_wanup(prefix)) {
+			uptime = check_wanup_time(prefix); /* get wanX uptime */
+			reltime(uptime, buf, sizeof(buf));
+		}
+		else
+			strlcpy(buf, "-", sizeof(buf));
+
+		web_printf("%s%s'", (i == 1 ? "'" : ",'"), buf);
+	}
 }
 
 void asp_rrule(int argc, char **argv)
