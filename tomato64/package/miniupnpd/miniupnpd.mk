@@ -5,7 +5,7 @@
 ################################################################################
 
 MINIUPNPD_VERSION = 2.3.7
-MINIUPNPD_SITE = https://miniupnp.tuxfamily.org/files
+MINIUPNPD_SITE = https://github.com/miniupnp/miniupnp/releases/download/miniupnpd_$(subst .,_,$(MINIUPNPD_VERSION))
 MINIUPNPD_LICENSE = BSD-3-Clause
 MINIUPNPD_DEPENDENCIES = iptables
 
