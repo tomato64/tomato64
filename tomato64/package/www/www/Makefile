@@ -1,4 +1,6 @@
 INSTALLDIR=$(TARGET_DIR)
+
+unexport GIT_DIR
 HASH=$(shell git rev-parse HEAD)
 HASH_SHORT=$(shell git rev-parse --short HEAD)
 
