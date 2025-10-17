@@ -1,9 +1,13 @@
 /*
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
+ *
+ */
 
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
 
 #include "tomato.h"
 
@@ -15,13 +19,17 @@ static int check_addr(const char *addr, int max)
 	const char *p;
 	char c;
 
-	if ((addr == NULL) || (addr[0] == 0)) return 0;
+	if ((addr == NULL) || (addr[0] == 0))
+		return 0;
+
 	p = addr;
 	while (*p) {
 		c = *p;
-		if ((!isalnum(c)) && (c != '.') && (c != '-') && (c != ':')) return 0;	//Give IPv6 address a chance
+		if ((!isalnum(c)) && (c != '.') && (c != '-') && (c != ':'))
+			return 0; /* give IPv6 address a chance */
 		++p;
 	}
+
 	return((p - addr) <= max);
 }
 
@@ -31,7 +39,8 @@ void wo_trace(char *url)
 	const char *addr;
 
 	addr = webcgi_get("addr");
-	if (!check_addr(addr, 64)) return;
+	if (!check_addr(addr, 64))
+		return;
 
 	killall("traceroute", SIGTERM);
 
@@ -47,7 +56,8 @@ void wo_ping(char *url)
 	const char *addr;
 
 	addr = webcgi_get("addr");
-	if (!check_addr(addr, 64)) return;
+	if (!check_addr(addr, 64))
+		return;
 
 	killall("ping", SIGTERM);
 
@@ -57,8 +67,7 @@ void wo_ping(char *url)
 	web_puts("';");
 }
 
-
-/*
+#if 0
 #include <regex.h>
 
 int main(int argc, char **argv)
@@ -80,7 +89,6 @@ int main(int argc, char **argv)
 // 2  192.168.0.1 (192.168.0.1)  1.908 ms  1.812 ms  1.688 ms
 
 	while (fgets(s, sizeof(s), f)) {
-
 		//
 		if (regcomp(&re, "^ +[0-9]+ +(.+?) +\\((.+?)\\) +(.+?) ms +(.+?) ms +(.+?) ms", REG_EXTENDED) != 0) {
 			printf("error: regcomp\n");
@@ -104,5 +112,4 @@ int main(int argc, char **argv)
 
 	return 0;
 }
-
-*/
+#endif /* 0 */

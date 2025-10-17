@@ -2,7 +2,9 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
+ *
  * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -15,7 +17,7 @@
 #include <netdb.h>
 
 /* Max number of log lines for GUI to display */
-#define MAX_LOG_LINES	4000
+#define MAX_LOG_LINES		4000
 
 /* Size of each input chunk to be read and allocate for. */
 #ifndef READALL_CHUNK
@@ -28,6 +30,7 @@
 #define READALL_TOOMUCH		-3	/* Too much input */
 #define READALL_NOMEM		-4	/* Out of memory */
 
+
 /* This function returns one of the READALL_ constants above.
    If the return value is zero == READALL_OK, then:
      (*dataptr) points to a dynamically allocated buffer, with
@@ -36,12 +39,12 @@
      and automatically appended after the data.
    Initial values of (*dataptr) and (*sizeptr) are ignored.
  */
-int readall(FILE *in, char **dataptr, size_t *sizeptr)
+static int readall(FILE *in, char **dataptr, size_t *sizeptr)
 {
-	char *data  = NULL, *temp;
+	size_t n;
 	size_t size = 0;
 	size_t used = 0;
-	size_t n;
+	char *data  = NULL, *temp;
 
 	/* None of the parameters can be NULL. */
 	if ((in == NULL) || (dataptr == NULL) || (sizeptr == NULL))
@@ -107,11 +110,10 @@ static int logok(void)
 }
 
 /* Figure out & return the logfile name. */
-void get_logfilename(char *lfn, size_t buf_sz)
+static void get_logfilename(char *lfn, size_t buf_sz)
 {
-	char *p;
 	char cfg[256];
-	char *nv;
+	char *p, *nv;
 
 	nv = (nvram_get_int("log_file_custom") != 0 ? nvram_safe_get("log_file_path") : "/var/log/messages");
 	if (f_read_string("/etc/syslogd.cfg", cfg, sizeof(cfg)) > 0) {
@@ -133,11 +135,9 @@ void get_logfilename(char *lfn, size_t buf_sz)
 
 void wo_viewlog(char *url)
 {
+	char lfn[256], s[128], t[128];
 	char *p, *c, *w;
-	char s[128];
-	char t[128];
 	int logLines;
-	char lfn[256];
 
 	if (!logok())
 		return;
@@ -192,9 +192,8 @@ void wo_viewlog(char *url)
 
 void asp_showsyslog(int argc, char **argv)
 {
-	char s[128];
+	char lfn[256], s[128];
 	int logLines = MAX_LOG_LINES;
-	char lfn[256];
 
 	if (!logok())
 		return;
@@ -218,32 +217,30 @@ void asp_showsyslog(int argc, char **argv)
 static void webmon_list(char *name, int webmon, unsigned int maxcount)
 {
 	FILE *f;
-	char *js;
-	char comma = ' ';
-	unsigned long time;
 	char s[512], ip[64], val[256];
+	char *js, *data, *line, *lineStart, *line_start, *current_end;
+	unsigned long time;
+	unsigned int lines_processed;
+	int readall_ok, length;
 	size_t filesize;
+	char comma = ' ';
 
 	web_printf("\nwm_%s = [", name);
 
 	if (webmon) {
 		snprintf(s, sizeof(s), "/proc/webmon_recent_%s", name);
 		if ((f = fopen(s, "r")) != NULL) {
-			int readall_ok;
-			char *data;
-
 			readall_ok = readall(f, &data, &filesize);
 			if (readall_ok == READALL_OK) {
-				char *current_end = data + filesize;
-				char *lineStart;
-				unsigned int lines_processed = 0;
+				current_end = data + filesize;
+				lines_processed = 0;
 
 				for (lineStart = data + filesize - 1; lineStart >= data; lineStart--) {
 					if ((*lineStart == '\n') || (*lineStart == '\r') || (lineStart == data)) {
-						char *line_start = (lineStart == data) ? data : lineStart + 1;
-						int length = current_end - line_start;
+						line_start = (lineStart == data) ? data : lineStart + 1;
+						length = current_end - line_start;
 
-						char *line = malloc(length + 1);
+						line = malloc(length + 1);
 						strlcpy(line, line_start, length + 1);
 						line[length] = '\0';
 
@@ -304,14 +301,13 @@ static int webmon_ok(int searches)
 
 void wo_syslog(char *url)
 {
-	char lfn[256];
-	char s[128];
+	char lfn[256], s[128], file[64];
 
 	get_logfilename(lfn, sizeof(lfn));
 
 	if (strncmp(url, "webmon_", 7) == 0) {
 		/* web monitor */
-		char file[64];
+		memset(file, 0, sizeof(file));
 		snprintf(file, sizeof(file), "/proc/%s", url);
 		if (!webmon_ok(strstr(url, "searches") != NULL))
 			return;
@@ -325,6 +321,7 @@ void wo_syslog(char *url)
 			return;
 
 		send_header(200, NULL, mime_binary, 0);
+		memset(s, 0, sizeof(s));
 		snprintf(s, sizeof(s), "cat $(ls -1rv %s %s.* 2>/dev/null)", lfn, lfn);
 		web_pipecmd(s, WOF_NONE);
 	}

@@ -28,7 +28,7 @@
 #include <net/route.h>
 
 #ifdef TCONFIG_IPV6
-#include <ifaddrs.h>
+ #include <ifaddrs.h>
 #endif
 
 #include <wlioctl.h>
@@ -568,7 +568,7 @@ void asp_jiffies(int argc, char **argv)
 		fclose(a);
 	}
 }
-#endif
+#endif /* 0 */
 
 void asp_etherstates(int argc, char **argv)
 {
@@ -760,14 +760,10 @@ void asp_sysinfo(int argc, char **argv)
 void asp_activeroutes(int argc, char **argv)
 {
 	FILE *f;
-	char s[512];
-	char dev[17];
+	struct in_addr ia;
+	char s[512], dev[17], s_dest[16], s_gateway[16], s_mask[16];
 	unsigned long dest, gateway, flags, mask;
 	unsigned metric;
-	struct in_addr ia;
-	char s_dest[16];
-	char s_gateway[16];
-	char s_mask[16];
 	int n;
 
 	web_puts("\nactiveroutes = [");
@@ -802,7 +798,7 @@ void asp_activeroutes(int argc, char **argv)
 	}
 
 #ifdef TCONFIG_IPV6
-	int pxlen;
+	int pxlen, i;
 	char addr6x[80];
 	struct sockaddr_in6 snaddr6;
 	char addr6[40], nhop6[40];
@@ -815,8 +811,8 @@ void asp_activeroutes(int argc, char **argv)
 			if ((flags & RTF_UP) == 0)
 				continue;
 
-			int i = 0;
-			char *p = addr6x+14;
+			i = 0;
+			char *p = addr6x + 14;
 			do {
 				if (!*p) {
 					if (i == 40) { /* nul terminator for 1st address? */
@@ -903,7 +899,8 @@ void asp_ntp(int argc, char **argv)
 }
 
 #ifdef TCONFIG_SDHC
-void asp_mmcid(int argc, char **argv) {
+void asp_mmcid(int argc, char **argv)
+{
 	FILE *f;
 	char s[32], *a, b[16];
 	unsigned n, size;
@@ -964,8 +961,7 @@ void asp_wanstatus(int argc, char **argv)
 {
 	const char *p;
 	unsigned int i;
-	char renew_file[64];
-	char wanconn_file[64];
+	char renew_file[64], wanconn_file[64];
 	char prefix[] = "wanXX";
 
 	for (i = 1; i <= MWAN_MAX; i++) {
@@ -1081,8 +1077,7 @@ void asp_statfs(int argc, char **argv)
 
 void asp_notice(int argc, char **argv)
 {
-	char s[64];
-	char buf[2048];
+	char s[64], buf[2048];
 
 	if (argc != 1)
 		return;
@@ -1122,7 +1117,7 @@ void wo_wakeup(char *url)
 			for (i = 1; i < BRIDGE_COUNT; i++) {
 				snprintf(buf, sizeof(buf), "lan%d_ifname", i);
 				if (strcmp(nvram_safe_get(buf), "") != 0)
-				eval("ether-wake", "-b", "-i", nvram_safe_get(buf), mac);
+					eval("ether-wake", "-b", "-i", nvram_safe_get(buf), mac);
 			}
 			mac = p + 1;
 		}
@@ -1177,11 +1172,9 @@ int resolve_addr(const char *ip, char *host)
 
 void wo_resolve(char *url)
 {
-	char *p;
-	char *ip;
 	char host[NI_MAXHOST];
+	char *p, *ip, *js;
 	char comma;
-	char *js;
 
 	comma = ' ';
 	web_puts("\nresolve_data = [\n");
@@ -1239,12 +1232,9 @@ void asp_stubby_presets(int argc, char **argv)
 void asp_dnscrypt_presets(int argc, char **argv)
 {
 	FILE *fp;
-
-	char comma;
 	char line[512];
 	char *name1, *dnssec, *logs, *a, *b, *c, *d, *e, *f;
-
-	comma = ' ';
+	char comma = ' ';
 
 	if (!(fp = fopen("/etc/dnscrypt-resolvers-alt.csv", "r"))) { /* try alternative (ex. newly downloaded) resolvers file first */
 		if (!(fp = fopen("/etc/dnscrypt-resolvers.csv", "r")))

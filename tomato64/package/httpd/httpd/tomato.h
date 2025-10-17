@@ -3,7 +3,8 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -118,7 +119,7 @@ extern void wo_wwansms(char *url);
 extern void wo_wwansms_delete(char *url);
 #endif
 
-/*pptpd.c */
+/* pptpd.c */
 #ifdef TCONFIG_PPTPD
 extern void asp_pptpd_userol(int argc, char **argv);
 extern void wo_pptpdcmd(char *url);
@@ -126,7 +127,6 @@ extern void wo_pptpdcmd(char *url);
 
 /* wireguard.c */
 #ifdef TCONFIG_WIREGUARD
-extern int wg_status(char *iface);
 extern void asp_wgstat(int argc, char **argv);
 #endif
 

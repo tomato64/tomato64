@@ -1,9 +1,10 @@
 /*
  *
  * Tomato Firmware
- * Copyright (C) 2006-2008 Jonathan Zarate
+ * Copyright (C) 2006-2009 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -20,11 +21,10 @@
 
 void wi_uploadsplash(char *url, int len, char *boundary)
 {
-	char *buf;
-	char *p;
+	char tmp[255];
+	char *buf, *p;
 	const char *error;
 	int n;
-	char tmp[255];
 
 	//check_id();
 
@@ -32,9 +32,8 @@ void wi_uploadsplash(char *url, int len, char *boundary)
 	buf = NULL;
 	error = "Error reading file";
 
-	if (!skip_header(&len)) {
+	if (!skip_header(&len))
 		goto ERROR;
-	}
 
 	if ((len < 64) || (len > (NVRAM_SPACE * 2))) {
 		error = "Invalid file";

@@ -3,6 +3,9 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
+ *
  */
 
 
@@ -25,13 +28,10 @@
  */
 int parse_asp(const char *path)
 {
-	char *buffer;
-	char *cp;
-	char *a, *b, *c;
+	char *buffer, *cp, *a, *b, *c, *ident;
 	char x;
 	int argc;
 	char *argv[32];
-	char *ident;
 	const aspapi_t *api;
 
 	if (f_read_alloc_string(path, &buffer, 128 * 1024) < 0) {

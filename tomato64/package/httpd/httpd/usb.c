@@ -1,11 +1,13 @@
 /*
  *
- * Tomato Firmware
+ * FreshTomato Firmware
  * USB Support
  *
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
+
 
 #include "tomato.h"
 
@@ -16,11 +18,15 @@
 #include <mntent.h>
 
 #ifndef BLKGETSIZE
-#define BLKGETSIZE _IO(0x12,96)
+ #define BLKGETSIZE _IO(0x12,96)
 #endif
 #ifndef BLKGETSIZE64
-#define BLKGETSIZE64 _IOR(0x12,114,size_t)
+ #define BLKGETSIZE64 _IOR(0x12,114,size_t)
 #endif
+
+
+const char proc_scsi_root[] = "/proc/scsi";
+const char usb_storage[] = "usb-storage";
 
 static uint64_t get_psize(char *dev)
 {
@@ -41,22 +47,18 @@ static uint64_t get_psize(char *dev)
 	return bytes;
 }
 
-#define PROC_SCSI_ROOT	"/proc/scsi"
-#define USB_STORAGE	"usb-storage"
-
-int is_partition_mounted(char *dev_name, int host_num, char *dsc_name, char *pt_name, uint flags)
+static int is_partition_mounted(char *dev_name, int host_num, char *dsc_name, char *pt_name, uint flags)
 {
 	char the_label[128];
 	char *type, *js;
-	int is_mounted = 0;
 	struct mntent *mnt;
 	struct statfs sf;
 	uint64_t size, fsize;
+	int is_mounted = 0;
 
 	type = find_label_or_uuid(dev_name, the_label, NULL);
-	if (*the_label == 0) {
+	if (*the_label == 0)
 		strlcpy(the_label, pt_name, sizeof(the_label));
-	}
 
 	if (flags & EFH_PRINT) {
 		if (flags & EFH_1ST_DISC) {
@@ -80,37 +82,31 @@ int is_partition_mounted(char *dev_name, int host_num, char *dsc_name, char *pt_
 				size = get_psize(dev_name);
 				fsize = 0;
 			}
-			web_printf("1,'%s','%s','%s',%llu,%llu]",
-				mnt->mnt_dir, mnt->mnt_type, mnt->mnt_opts, size, fsize);
+			web_printf("1,'%s','%s','%s',%llu,%llu]", mnt->mnt_dir, mnt->mnt_type, mnt->mnt_opts, size, fsize);
 		}
 	}
 	else if ((mnt = findmntents(dev_name, 1, 0, 0))) {
 		is_mounted = 1;
-		if (flags & EFH_PRINT) {
-			web_printf("2,'','swap','',%llu,0]",
-				(uint64_t)atoi(mnt->mnt_type) * 1024);
-		}
+		if (flags & EFH_PRINT)
+			web_printf("2,'','swap','',%llu,0]", (uint64_t)atoi(mnt->mnt_type) * 1024);
 	}
 	else {
-		if (flags & EFH_PRINT) {
+		if (flags & EFH_PRINT)
 			web_printf("0,'','%s','',%llu,0]", type ? : "", get_psize(dev_name));
-		}
 	}
 
 	return is_mounted;
 }
 
-int is_host_mounted(int host_no, int print_parts)
+static int is_host_mounted(int host_no, int print_parts)
 {
-	if (print_parts) web_puts("[-1,[");
+	if (print_parts)
+		web_puts("[-1,[");
 
-	int mounted = exec_for_host(
-		host_no,
-		0x00,
-		print_parts ? EFH_PRINT : 0,
-		is_partition_mounted);
+	int mounted = exec_for_host(host_no, 0x00, print_parts ? EFH_PRINT : 0, is_partition_mounted);
 	
-	if (print_parts) web_puts("]]");
+	if (print_parts)
+		web_puts("]]");
 
 	return mounted;
 }
@@ -130,15 +126,11 @@ int is_host_mounted(int host_no, int print_parts)
 void asp_usbdevices(int argc, char **argv)
 {
 	DIR *usb_dir;
-	struct dirent *dp;
-	int host_no;
-	int last_hn = -1;
-	char *p, *p1;
-	int i = 0, mounted;
 	FILE *fp;
-	char line[128];
-	char *tmp, *js_vend, *js_prod;
-	char g_usb_vendor[30], g_usb_product[30];
+	struct dirent *dp;
+	char g_usb_vendor[30], g_usb_product[30], line[128];
+	int host_no, mounted, last_hn = -1, i = 0;
+	char *p, *p1, *tmp, *js_vend, *js_prod;
 
 	web_puts("\nusbdev = [");
 
@@ -148,8 +140,9 @@ void asp_usbdevices(int argc, char **argv)
 	}
 
 	/* find all attached USB storage devices */
-#if 1	// NZ = Get the info from the SCSI subsystem.
-	fp = fopen(PROC_SCSI_ROOT"/scsi", "r");
+#if 1	/* NZ = Get the info from the SCSI subsystem. */
+	snprintf(line, sizeof(line), "%s/scsi", proc_scsi_root);
+	fp = fopen(line, "r");
 	if (fp) {
 		while (fgets(line, sizeof(line), fp) != NULL) {
 			p = strstr(line, "Host: scsi");
@@ -163,19 +156,21 @@ void asp_usbdevices(int argc, char **argv)
 				if (host_no == 0)
 					continue;
 #endif /* TOMATO64_X86_64 */
+
 				last_hn = host_no;
 				if (fgets(line, sizeof(line), fp) != NULL) {
 					memset(g_usb_vendor, 0, sizeof(g_usb_vendor));
 					memset(g_usb_product, 0, sizeof(g_usb_product));
 					p = strstr(line, "  Vendor: ");
 					p1 = strstr(line + 10 + 8, " Model: ");
+
 					if (p && p1) {
 						strlcpy(g_usb_vendor, p + 10, 8);
 						strlcpy(g_usb_product, p1 + 8, 16);
 						js_vend = js_string(g_usb_vendor);
 						js_prod = js_string(g_usb_product);
-						web_printf("%s['Storage','%d','%s','%s','', [", i ? "," : "",
-							host_no, js_vend ? : "", js_prod ? : "");
+						web_printf("%s['Storage','%d','%s','%s','', [", i ? "," : "", host_no, js_vend ? : "", js_prod ? : "");
+
 						free(js_vend);
 						free(js_prod);
 						mounted = is_host_mounted(host_no, 1);
@@ -187,24 +182,22 @@ void asp_usbdevices(int argc, char **argv)
 		}
 		fclose(fp);
 	}
-#else	// Get the info from the usb/storage subsystem.
+#else	/* Get the info from the usb/storage subsystem. */
 	DIR *scsi_dir;
 	struct dirent *scsi_dirent;
 	char *g_usb_serial[30];
 	int attached;
 
-	scsi_dir = opendir(PROC_SCSI_ROOT);
-	while (scsi_dir && (scsi_dirent = readdir(scsi_dir)))
-	{
-		if (!strncmp(USB_STORAGE, scsi_dirent->d_name, strlen(USB_STORAGE)))
-		{
-			snprintf(line, sizeof(line), "%s/%s", PROC_SCSI_ROOT, scsi_dirent->d_name);
+	scsi_dir = opendir(proc_scsi_root);
+	while (scsi_dir && (scsi_dirent = readdir(scsi_dir))) {
+		if (!strncmp(usb_storage, scsi_dirent->d_name, strlen(usb_storage))) {
+			snprintf(line, sizeof(line), "%s/%s", proc_scsi_root, scsi_dirent->d_name);
 			usb_dir = opendir(line);
-			while (usb_dir && (dp = readdir(usb_dir)))
-			{
+			while (usb_dir && (dp = readdir(usb_dir))) {
 				if (!strcmp(dp->d_name, "..") || !strcmp(dp->d_name, "."))
 					continue;
-				snprintf(line, sizeof(line), "%s/%s/%s", PROC_SCSI_ROOT, scsi_dirent->d_name, dp->d_name);
+
+				snprintf(line, sizeof(line), "%s/%s/%s", proc_scsi_root, scsi_dirent->d_name, dp->d_name);
 
 				fp = fopen(line, "r");
 				if (fp) {
@@ -215,9 +208,8 @@ void asp_usbdevices(int argc, char **argv)
 					tmp = NULL;
 
 					while (fgets(line, sizeof(line), fp) != NULL) {
-						if (strstr(line, "Attached: Yes")) {
+						if (strstr(line, "Attached: Yes"))
 							attached = 1;
-						}
 						else if (strstr(line, "Vendor")) {
 							tmp = strtok(line, " ");
 							tmp = strtok(NULL, "\n");
@@ -246,8 +238,8 @@ void asp_usbdevices(int argc, char **argv)
 						host_no = atoi(dp->d_name);
 						js_vend = js_string(g_usb_vendor);
 						js_prod = js_string(g_usb_product);
-						web_printf("%s['Storage','%d','%s','%s','%s', [", i ? "," : "",
-							host_no, js_vend ? : "", js_prod ? : "", g_usb_serial);
+						web_printf("%s['Storage','%d','%s','%s','%s', [", i ? "," : "", host_no, js_vend ? : "", js_prod ? : "", g_usb_serial);
+
 						free(js_vend);
 						free(js_prod);
 						mounted = is_host_mounted(host_no, 1);
@@ -263,12 +255,11 @@ void asp_usbdevices(int argc, char **argv)
 	}
 	if (scsi_dir)
 		closedir(scsi_dir);
-#endif
+#endif /* 1 */
 
 	/* now look for printers */
 	usb_dir = opendir("/proc/usblp");
-	while (usb_dir && (dp = readdir(usb_dir)))
-	{
+	while (usb_dir && (dp = readdir(usb_dir))) {
 		if (!strcmp(dp->d_name, "..") || !strcmp(dp->d_name, "."))
 			continue;
 
@@ -295,8 +286,8 @@ void asp_usbdevices(int argc, char **argv)
 			if ((strlen(g_usb_product) > 0) || (strlen(g_usb_vendor) > 0)) {
 				js_vend = js_string(g_usb_vendor);
 				js_prod = js_string(g_usb_product);
-				web_printf("%s['Printer','%s','%s','%s','']", i ? "," : "",
-					dp->d_name, js_vend ? : "", js_prod ? : "");
+				web_printf("%s['Printer','%s','%s','%s','']", i ? "," : "", dp->d_name, js_vend ? : "", js_prod ? : "");
+
 				free(js_vend);
 				free(js_prod);
 				++i;
@@ -317,12 +308,11 @@ void wo_usbcommand(char *url)
 	int add = 0;
 
 	web_puts("\nusb = [\n");
-	if ((p = webcgi_get("remove")) != NULL) {
+	if ((p = webcgi_get("remove")) != NULL)
 		add = 0;
-	}
-	else if ((p = webcgi_get("mount")) != NULL) {
+	else if ((p = webcgi_get("mount")) != NULL)
 		add = 1;
-	}
+
 	if (p) {
 		add_remove_usbhost(p, add);
 		web_printf("%d", is_host_mounted(atoi(p), 0));

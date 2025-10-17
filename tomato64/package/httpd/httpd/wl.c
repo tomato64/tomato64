@@ -3,7 +3,8 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -16,23 +17,24 @@
 #include <wlscan.h>
 
 #ifndef WL_BSS_INFO_VERSION
-#error WL_BSS_INFO_VERSION
+ #error WL_BSS_INFO_VERSION
 #endif
 #if WL_BSS_INFO_VERSION < 108
-#error WL_BSS_INFO_VERSION < 108
+ #error WL_BSS_INFO_VERSION < 108
 #endif
 #define WLC_IOCTL_MAXLEN_ADDON	2048
 #define MAX_WLIF_SCAN		3 /* allow to scan using up to MAX_WLIF_SCAN wireless ifaces */
 #define WLC_SCAN_MAX_RETRY	6 /* 6 * 500 ms retry time */
 #define WLC_SCAN_TIME_EXT	40
+
 /* needed by logmsg() */
 #define LOGMSG_DISABLE		DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG		"wl_debug"
 
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
-#define WLC_SCAN_RESULT_BUF_LEN_TOMATO WLC_SCAN_RESULT_BUF_LEN /* 32 * 1024 */
+ #define WLC_SCAN_RESULT_BUF_LEN_TOMATO WLC_SCAN_RESULT_BUF_LEN /* 32 * 1024 */
 #else
-#define WLC_SCAN_RESULT_BUF_LEN_TOMATO WLC_IOCTL_MAXLEN /* 8192 */
+ #define WLC_SCAN_RESULT_BUF_LEN_TOMATO WLC_IOCTL_MAXLEN /* 8192 */
 #endif
 
 static int unit = 0;
@@ -355,7 +357,7 @@ static int start_scan(int idx, int unit, int subunit, void *param)
 	return 0;
 }
 
-int wpa_selector_to_bitfield(const unsigned char *s)
+static int wpa_selector_to_bitfield(const unsigned char *s)
 {
 	if (memcmp(s, WPA_CIPHER_SUITE_NONE, WPA_SELECTOR_LEN) == 0)
 		return WPA_CIPHER_NONE_;
@@ -371,7 +373,7 @@ int wpa_selector_to_bitfield(const unsigned char *s)
 	return 0;
 }
 
-int rsn_selector_to_bitfield(const unsigned char *s)
+static int rsn_selector_to_bitfield(const unsigned char *s)
 {
 	if (memcmp(s, RSN_CIPHER_SUITE_NONE, RSN_SELECTOR_LEN) == 0)
 		return WPA_CIPHER_NONE_;
@@ -387,7 +389,7 @@ int rsn_selector_to_bitfield(const unsigned char *s)
 	return 0;
 }
 
-int wpa_key_mgmt_to_bitfield(const unsigned char *s)
+static int wpa_key_mgmt_to_bitfield(const unsigned char *s)
 {
 	if (memcmp(s, WPA_AUTH_KEY_MGMT_UNSPEC_802_1X, WPA_SELECTOR_LEN) == 0)
 		return WPA_KEY_MGMT_IEEE8021X_;
@@ -399,7 +401,7 @@ int wpa_key_mgmt_to_bitfield(const unsigned char *s)
 	return 0;
 }
 
-int rsn_key_mgmt_to_bitfield(const unsigned char *s)
+static int rsn_key_mgmt_to_bitfield(const unsigned char *s)
 {
 	if (memcmp(s, RSN_AUTH_KEY_MGMT_UNSPEC_802_1X, RSN_SELECTOR_LEN) == 0)
 		return WPA_KEY_MGMT_IEEE8021X2_;
@@ -409,7 +411,7 @@ int rsn_key_mgmt_to_bitfield(const unsigned char *s)
 	return 0;
 }
 
-int wpa_parse_wpa_ie_wpa(const unsigned char *wpa_ie, size_t wpa_ie_len, struct wpa_ie_data *data)
+static int wpa_parse_wpa_ie_wpa(const unsigned char *wpa_ie, size_t wpa_ie_len, struct wpa_ie_data *data)
 {
 	const struct wpa_ie_hdr *hdr;
 	const unsigned char *pos;
@@ -491,7 +493,7 @@ int wpa_parse_wpa_ie_wpa(const unsigned char *wpa_ie, size_t wpa_ie_len, struct 
 	return 0;
 }
 
-int wpa_parse_wpa_ie_rsn(const unsigned char *rsn_ie, size_t rsn_ie_len, struct wpa_ie_data *data)
+static int wpa_parse_wpa_ie_rsn(const unsigned char *rsn_ie, size_t rsn_ie_len, struct wpa_ie_data *data)
 {
 	const struct rsn_ie_hdr *hdr;
 	const unsigned char *pos;
@@ -583,8 +585,7 @@ int wpa_parse_wpa_ie_rsn(const unsigned char *rsn_ie, size_t rsn_ie_len, struct 
 	return 0;
 }
 
-int wpa_parse_wpa_ie(const unsigned char *wpa_ie, size_t wpa_ie_len,
-		     struct wpa_ie_data *data)
+static int wpa_parse_wpa_ie(const unsigned char *wpa_ie, size_t wpa_ie_len, struct wpa_ie_data *data)
 {
 	if (wpa_ie_len >= 1 && wpa_ie[0] == DOT11_MNG_RSN_ID)
 		return wpa_parse_wpa_ie_rsn(wpa_ie, wpa_ie_len, data);

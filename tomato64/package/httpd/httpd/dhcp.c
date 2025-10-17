@@ -4,6 +4,7 @@
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
  * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -17,12 +18,12 @@
 
 void asp_dhcpc_time(int argc, char **argv)
 {
-	long exp, n;
 	struct sysinfo si;
+	char buf[32], expires_file[256];
+	long exp, n;
 	int r;
 	unsigned int i;
 	char prefix[] = "wanXX";
-	char buf[32], expires_file[256];
 
 	for (i = 1; i <= MWAN_MAX; i++) {
 		snprintf(prefix, sizeof(prefix), (i == 1 ? "wan" : "wan%u"), i);

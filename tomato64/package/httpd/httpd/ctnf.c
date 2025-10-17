@@ -1,8 +1,10 @@
 /*
+ *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
  * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -26,7 +28,8 @@
 #define MAX_SEARCH	10
 
 
-void ctvbuf(FILE *f) {
+void ctvbuf(FILE *f)
+{
 	int n;
 	struct sysinfo si;
 	const char *p;
@@ -59,14 +62,10 @@ void asp_ctcount(int argc, char **argv)
 	int count[13]; /* tcp(10) + udp(2) + total(1) = 13 / max classes = 10 */
 	FILE *f;
 	char s[512];
-	char *p;
-	char *t;
+	char *p, *t;
 	unsigned int i;
-	int n;
-	int mode;
-	unsigned long rip;
-	unsigned long lan;
-	unsigned long mask;
+	int n, mode;
+	unsigned long rip, lan, mask;
 
 	if (argc != 1)
 		return;
@@ -136,6 +135,7 @@ void asp_ctcount(int argc, char **argv)
 				if (rip != 0) {
 					if ((p = strstr(t + 14, "src=")) == NULL)
 						continue;
+
 					if (sscanf(p, "src=%s dst=%s", src, dst) != 2)
 						continue;
 
@@ -205,31 +205,24 @@ void asp_ctdump(int argc, char **argv)
 	FILE *f;
 	char s[512];
 	char *p, *q;
-	int x;
-	int mark;
-	int rule;
-	int findmark;
-	unsigned int proto;
-	unsigned int time;
+	int x, mark, rule, findmark, dir_reply;
+	unsigned int proto, time;
+	char sport[16], dport[16], byteso[16], bytesi[16];
+	unsigned long rip, lan, mask;
+	char comma;
 #ifdef TCONFIG_IPV6
 	unsigned int family;
 	char src[INET6_ADDRSTRLEN];
 	char dst[INET6_ADDRSTRLEN];
+	struct in6_addr rip6;
+	struct in6_addr lan6;
+	struct in6_addr in6;
+	int lan6_prefix_len;
 #else
 	const unsigned int family = 2;
 	char src[INET_ADDRSTRLEN];
 	char dst[INET_ADDRSTRLEN];
 #endif
-	char sport[16];
-	char dport[16];
-	char byteso[16];
-	char bytesi[16];
-	int dir_reply;
-
-	unsigned long rip;
-	unsigned long lan;
-	unsigned long mask;
-	char comma;
 
 	if (argc != 1)
 		return;
@@ -239,13 +232,8 @@ void asp_ctdump(int argc, char **argv)
 	mask = inet_addr(nvram_safe_get("lan_netmask"));
 	rip = inet_addr(nvram_safe_get("lan_ipaddr"));
 	lan = rip & mask;
-	
-#ifdef TCONFIG_IPV6
-	struct in6_addr rip6;
-	struct in6_addr lan6;
-	struct in6_addr in6;
-	int lan6_prefix_len;
 
+#ifdef TCONFIG_IPV6
 	lan6_prefix_len = nvram_get_int("ipv6_prefix_length");
 	if (ipv6_enabled()) {
 		inet_pton(AF_INET6, nvram_safe_get("ipv6_prefix"), &lan6);
@@ -285,23 +273,26 @@ void asp_ctdump(int argc, char **argv)
 			rule = (mark >> 20) & 0xFF;
 			if ((mark &= 0xFF) > 10)
 				mark = 0;
+
 			if ((findmark != -1) && (mark != findmark))
 				continue;
 #ifdef TCONFIG_IPV6
 			if (sscanf(s, "%*s %u %*s %u %u", &family, &proto, &time) != 3)
 				continue;
+
 			if ((p = strstr(s + 25, "src=")) == NULL)
 				continue;
 #else
 			if (sscanf(s, "%*s %u %u", &proto, &time) != 2)
 				continue;
+
 			if ((p = strstr(s + 14, "src=")) == NULL)
 				continue;
 #endif
 			if (sscanf(p, "src=%s dst=%s %n", src, dst, &x) != 2)
 				continue;
-			p += x;
 
+			p += x;
 			if ((proto == 6) || (proto == 17)) {
 				if (sscanf(p, "sport=%s dport=%s %*s bytes=%s %n", sport, dport, byteso, &x) != 3)
 					continue;
@@ -309,6 +300,7 @@ void asp_ctdump(int argc, char **argv)
 				p += x;
 				if ((q = strstr(p, "bytes=")) == NULL)
 					continue;
+
 				if (sscanf(q, "bytes=%s", bytesi) != 1)
 					continue;
 			}
@@ -326,6 +318,7 @@ void asp_ctdump(int argc, char **argv)
 						/* de-nat */
 						if ((p = strstr(p, "src=")) == NULL)
 							continue;
+
 						if ((proto == 6) || (proto == 17)) {
 							if (sscanf(p, "src=%s dst=%s sport=%s dport=%s", dst, src, dport, sport) != 4)
 								continue; /* intentionally backwards */
@@ -372,60 +365,38 @@ void asp_ctdump(int argc, char **argv)
 
 void asp_ctrate(int argc, char **argv)
 {
-	unsigned int a_time, a_proto;
-	unsigned int a_bytes_o, a_bytes_i;
-	char a_sport[16];
-	char a_dport[16];
-
-	char *p, *q;
-	int x;
-	int len;
-
+	FILE *a;
+	FILE *b;
+	char sa[512], sb[512];
+	char a_sport[16], a_dport[16];
+	unsigned int a_time, a_proto, a_bytes_o, a_bytes_i;
+	unsigned int b_time, b_proto;
+	unsigned int b_bytes_o, b_bytes_i;
+	unsigned long rip, lan, mask;
+	long b_pos, outbytes, inbytes;
+	char comma;
+	char *p, *q, *buffer;
+	int n, x, len, delay, thres, dir_reply;
+	size_t count;
 #ifdef TCONFIG_IPV6
 	unsigned int a_fam, b_fam;
 	char a_src[INET6_ADDRSTRLEN];
 	char a_dst[INET6_ADDRSTRLEN];
+	struct in6_addr rip6;
+	struct in6_addr lan6;
+	struct in6_addr in6;
+	int lan6_prefix_len;
 #else
 	const unsigned int a_fam = 2;
 	char a_src[INET_ADDRSTRLEN];
 	char a_dst[INET_ADDRSTRLEN];
 #endif
 
-	unsigned int b_time, b_proto;
-	unsigned int b_bytes_o, b_bytes_i;
-
-	char sa[512];
-	char sb[512];
-
-	FILE *a;
-	FILE *b;
-
-	long b_pos;
-
-	int delay;
-	int thres;
-
-	long outbytes;
-	long inbytes;
-	int n;
-	char comma;
-
-	int dir_reply;
-
-	unsigned long rip;
-	unsigned long lan;
-	unsigned long mask;
-
 	mask = inet_addr(nvram_safe_get("lan_netmask"));
 	rip = inet_addr(nvram_safe_get("lan_ipaddr"));
 	lan = rip & mask;
 
 #ifdef TCONFIG_IPV6
-	struct in6_addr rip6;
-	struct in6_addr lan6;
-	struct in6_addr in6;
-	int lan6_prefix_len;
-
 	lan6_prefix_len = nvram_get_int("ipv6_prefix_length");
 	if (ipv6_enabled()) {
 		inet_pton(AF_INET6, nvram_safe_get("ipv6_prefix"), &lan6);
@@ -463,9 +434,6 @@ void asp_ctrate(int argc, char **argv)
 		return;
 	}
 
-	size_t count;
-	char *buffer;
-
 	buffer = (char *)malloc(1024);
 
 	while (!feof(a)) {
@@ -489,12 +457,16 @@ void asp_ctrate(int argc, char **argv)
 #endif
 		if ((a_proto != 6) && (a_proto != 17))
 			continue;
+
 		if ((p = strstr(sa, "src=")) == NULL)
 			continue;
+
 		if (sscanf(p, "src=%s dst=%s sport=%s dport=%s%n %*s bytes=%u %n", a_src, a_dst, a_sport, a_dport, &len, &a_bytes_o, &x) != 5)
 			continue;
+
 		if ((q = strstr(p+x, "bytes=")) == NULL)
 			continue;
+
 		if (sscanf(q, "bytes=%u", &a_bytes_i) != 1)
 			continue;
 
@@ -536,6 +508,7 @@ void asp_ctrate(int argc, char **argv)
 #ifdef TCONFIG_IPV6
 			if (sscanf(sb, "%*s %u %*s %u %u", &b_fam, &b_proto, &b_time) != 3)
 				continue;
+
 			if ((b_fam != a_fam))
 				continue;
 #else
@@ -544,17 +517,23 @@ void asp_ctrate(int argc, char **argv)
 #endif
 			if ((b_proto != a_proto))
 				continue;
+
 			if ((q = strstr(sb, "src=")) == NULL)
 				continue;
+
 			if (strncmp(p, q, (size_t)len))
 				continue;
+
 			/* Ok, they should be the same now. Grab the byte counts */
 			if ((q = strstr(q + len, "bytes=")) == NULL)
 				continue;
+
 			if (sscanf(q, "bytes=%u", &b_bytes_o) != 1)
 				continue;
+
 			if ((q = strstr(q + len, "bytes=")) == NULL)
 				continue;
+
 			if (sscanf(q, "bytes=%u", &b_bytes_i) != 1)
 				continue;
 
@@ -601,8 +580,8 @@ void asp_ctrate(int argc, char **argv)
 
 static void retrieveRatesFromTc(const char* deviceName, unsigned long ratesArray[])
 {
-	char s[256];
 	FILE *f;
+	char s[256];
 	unsigned long u;
 	char *e;
 	int n;
@@ -611,9 +590,8 @@ static void retrieveRatesFromTc(const char* deviceName, unsigned long ratesArray
 	if ((f = popen(s, "r")) != NULL) {
 		n = 1;
 		while (fgets(s, sizeof(s), f)) {
-			if (strncmp(s, "class htb 1:", 12) == 0) {
+			if (strncmp(s, "class htb 1:", 12) == 0)
 				n = atoi(s + 12);
-			}
 			else if (strncmp(s, " rate ", 6) == 0) {
 				if ((n % 10) == 0) {
 					n /= 10;

@@ -1,8 +1,10 @@
 /*
  *
  * Tomato Firmware
- * Copyright (C) 2007-2009 Jonathan Zarate
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
  * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -22,9 +24,7 @@ void asp_ddnsx(int argc, char **argv)
 #else
 	unsigned int clients_num = 2;
 #endif
-	char s[64];
-	char m[128];
-	char name[64];
+	char s[64], m[128], name[64];
 	time_t tt;
 	struct stat st;
 

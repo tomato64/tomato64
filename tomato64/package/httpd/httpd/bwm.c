@@ -3,7 +3,8 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -143,14 +144,12 @@ void wo_statsrestore(char *url)
 void asp_netdev(int argc, char **argv)
 {
 	FILE *f;
-	char buf[256];
 	int64_t rx, tx;
-	char *p;
-	char *ifname;
-	char comma;
-	char *exclude;
-	int sfd;
 	struct ifreq ifr;
+	char buf[256];
+	char *p, *ifname, *exclude;
+	char comma;
+	int sfd;
 
 	exclude = nvram_safe_get("rstats_exclude");
 
@@ -201,29 +200,24 @@ void asp_netdev(int argc, char **argv)
 	web_puts("};\n");
 }
 
-void asp_iptmon(int argc, char **argv) {
-
-	char comma;
-	char sa[256];
+void asp_iptmon(int argc, char **argv)
+{
 	FILE *a;
-	char *exclude;
-	char *include;
-
-	char ip[INET6_ADDRSTRLEN];
-
 	int64_t tx, rx;
+	char sa[256];
+	char *exclude, *include;
+	char ip[INET6_ADDRSTRLEN];
+	char br, wholenetstatsline;
+	char name[] = "/proc/net/ipt_account/lanX";
+	char comma = ' ';
 
 	exclude = nvram_safe_get("cstats_exclude");
 	include = nvram_safe_get("cstats_include");
 
-	char br;
-	char name[] = "/proc/net/ipt_account/lanX";
-
 	web_puts("\n\niptmon={");
-	comma = ' ';
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char wholenetstatsline = 1;
+		wholenetstatsline = 1;
 
 		char bridge[2] = "0";
 		if (br != 0)
@@ -240,7 +234,7 @@ void asp_iptmon(int argc, char **argv) {
 			fgets(sa, sizeof(sa), a); /* network */
 
 		while (fgets(sa, sizeof(sa), a)) {
-			if(sscanf(sa, "ip = %s bytes_src = %llu %*u %*u %*u %*u packets_src = %*u %*u %*u %*u %*u bytes_dst = %llu %*u %*u %*u %*u packets_dst = %*u %*u %*u %*u %*u time = %*u", ip, &tx, &rx) != 3 )
+			if(sscanf(sa, "ip = %s bytes_src = %llu %*u %*u %*u %*u packets_src = %*u %*u %*u %*u %*u bytes_dst = %llu %*u %*u %*u %*u packets_dst = %*u %*u %*u %*u %*u time = %*u", ip, &tx, &rx) != 3)
 				continue;
 
 			if (find_word(exclude, ip)) {
@@ -248,7 +242,7 @@ void asp_iptmon(int argc, char **argv) {
 				continue;
 			}
 
-			if (((find_word(include, ip)) || (wholenetstatsline == 1)) || ((nvram_get_int("cstats_all")) && ((rx > 0) || (tx > 0)) )) {
+			if (((find_word(include, ip)) || (wholenetstatsline == 1)) || ((nvram_get_int("cstats_all")) && ((rx > 0) || (tx > 0)))) {
 				web_printf("%c'%s':{rx:0x%llx,tx:0x%llx}", comma, ip, rx, tx);
 				comma = ',';
 			}

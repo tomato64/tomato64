@@ -4,6 +4,7 @@
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
  * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -20,12 +21,13 @@
 
 #include <wlutils.h>
 
-#define lease_file		"/var/tmp/dhcp/leases"
-#define lease_file_tmp		lease_file".!"
 #define MAX_CLIENTS_COUNT	128
 
 
-char *strupr(char *str)
+const char lease_file[] = "/var/tmp/dhcp/leases";
+const char lease_file_tmp[] = "/var/tmp/dhcp/leases.!";
+
+static char *strupr(char *str)
 {
 	size_t i;
 	size_t len = strlen(str);
@@ -39,10 +41,7 @@ char *strupr(char *str)
 void asp_arplist(int argc, char **argv)
 {
 	FILE *f;
-	char s[512];
-	char ip[16];
-	char mac[18];
-	char dev[17];
+	char s[512], ip[16], mac[18], dev[17];
 	char host[NI_MAXHOST];
 	char comma;
 	char *c;
@@ -86,9 +85,9 @@ void asp_arplist(int argc, char **argv)
 static int get_wds_ifname(const struct ether_addr *ea, char *ifname)
 {
 	struct ifreq ifr;
+	struct ether_addr e;
 	int sd;
 	unsigned int i;
-	struct ether_addr e;
 
 	if ((sd = socket(PF_INET, SOCK_DGRAM, 0)) >= 0) {
 		/* wds doesn't show up under SIOCGIFCONF; seems to start at 17 (?) */
@@ -113,18 +112,15 @@ static int get_wl_clients(int idx, int unit, int subunit, void *param)
 {
 	char *comma = param;
 	unsigned int i;
-	char *p;
-	char buf[32];
-	char *wlif;
+	char *p, *wlif;
+	char buf[32], ifname[16];
 	scb_val_t rssi;
 #ifdef TCONFIG_BCMARM
 	scb_val_t rate_backup;
 #endif
 	sta_info_t sti;
-	int cmd;
+	int cmd, mac_list_size;
 	struct maclist *mlist = NULL;
-	int mac_list_size;
-	char ifname[16];
 
 	mac_list_size = sizeof(struct maclist) + (MAX_CLIENTS_COUNT * sizeof(struct ether_addr)); /* buffer and length */
 	if ((mlist = malloc(mac_list_size)) != NULL) {
@@ -163,8 +159,10 @@ static int get_wl_clients(int idx, int unit, int subunit, void *param)
 					if (sti.flags & WL_STA_WDS) {
 						if (cmd != WLC_GET_WDSLIST)
 							continue;
+
 						if ((sti.flags & WL_WDS_LINKUP) == 0)
 							continue;
+
 						if (get_wds_ifname(&rssi.ea, ifname))
 							p = ifname;
 					}
@@ -204,11 +202,7 @@ void get_wl_clients(void)
 void asp_devlist(int argc, char **argv)
 {
 	FILE *f;
-	char buf[1024];
-	char buf2[32];
-	char mac[32];
-	char ip[40];
-	char hostname[256];
+	char buf[1024], buf2[32], mac[32], ip[40], hostname[256];
 	char comma;
 	char *host;
 	unsigned long expires;

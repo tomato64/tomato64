@@ -1,9 +1,13 @@
 /*
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
+ *
+ */
 
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
 
 #include "tomato.h"
 
@@ -14,22 +18,18 @@
 void wi_blackhole(char *url, int len, char *boundary)
 {
 	char buf[2048];
-	int size;
-	int n;
+	int size, n, foo, blen;
 	time_t tick;
-	int foo;
 	const char *error;
-	int blen;
 	FILE *f;
 
 	if (!post) {
 		send_header(200, NULL, mime_html, 0);
-		web_printf(
-			"<h1>Upload Test</h1>"
-			"<form method='post' action='blackhole.cgi?_http_id=%s' encType='multipart/form-data'>"
-			"<input type='file' name='file'><input type='submit'>"
-			"</form>",
-			nvram_safe_get("http_id"));
+		web_printf("<h1>Upload Test</h1>"
+		           "<form method='post' action='blackhole.cgi?_http_id=%s' encType='multipart/form-data'>"
+		           "<input type='file' name='file'><input type='submit'>"
+		           "</form>",
+		           nvram_safe_get("http_id"));
 		return;
 	}
 
@@ -65,9 +65,9 @@ ERROR:
 
 	foo = 1;
 	while (len > 0) {
-		if (!web_getline(buf, MIN(len, sizeof(buf)))) {
+		if (!web_getline(buf, MIN(len, sizeof(buf))))
 			break;
-		}
+
 		n = strlen(buf);
 		len -= n;
 
@@ -83,7 +83,9 @@ ERROR:
 			error = "\\n without \\r";
 			goto ERROR;
 		}
-		if (n == 0) break;
+		if (n == 0)
+			break;
+
 		buf[n] = 0;
 
 		cprintf("%s<\n", buf);
@@ -121,14 +123,17 @@ ERROR:
 	size = len;
 	tick = time(0);
 	while (len > 0) {
-		 if ((n = web_read(buf, MIN(len, sizeof(buf)))) <= 0) {
+		if ((n = web_read(buf, MIN(len, sizeof(buf)))) <= 0)
 			 break;
-		 }
-		 if (f) fwrite(buf, n, 1, f);
-		 len -= n;
+
+		if (f)
+			fwrite(buf, n, 1, f);
+
+		len -= n;
 	}
 	tick = time(0) - tick;
-	if (f) fclose(f);
+	if (f)
+		fclose(f);
 
 	if (len > 0) {
 		error = "not all data was read";
@@ -141,41 +146,41 @@ ERROR:
 	}
 	buf[blen] = 0;
 	cprintf(">>%s<<\n", buf);
-	if ((strncmp(buf, "\r\n--", 4) != 0) ||
-		(buf[blen - 1] != '-') || (buf[blen - 2] != '-')
-		|| (strncmp(buf + 4, boundary, blen - 6) != 0)) {
+	if ((strncmp(buf, "\r\n--", 4) != 0) || (buf[blen - 1] != '-') || (buf[blen - 2] != '-') || (strncmp(buf + 4, boundary, blen - 6) != 0)) {
 		error = "end boundary not found";
 		goto ERROR;
 	}
 
 	len += 2;
 	if (len > 0) {
-		 if ((n = web_read(buf, MIN(len, sizeof(buf) - 1))) > 0) {
+		if ((n = web_read(buf, MIN(len, sizeof(buf) - 1))) > 0) {
 			len -= n;
 			buf[n] = 0;
 			cprintf("last >>%s<<\n", buf);
-		 }
+		}
 	}
 
 	web_eat(len);
 	cprintf("len=%d\n", len);
 
-	if (tick > 0) n = size / tick;
-		else n = 0;
+	if (tick > 0)
+		n = size / tick;
+	else
+		n = 0;
 
 	send_header(200, NULL, mime_html, 0);
-	web_printf(
-		"<pre>"
-		"Size .......: %d bytes\n"
-		"Time .......: %d seconds\n"
-		"Speed ......: %.2f kb/s | %.2f mb/s | %.2f KB/s | %.2f MB/s\n",
-		size,
-		tick,
-		n / 128.0, n / 131072.0,
-		n / 1024.0, n / 1048576.0);
-	if (f) {
+	web_printf("<pre>"
+	           "Size .......: %d bytes\n"
+	           "Time .......: %d seconds\n"
+	           "Speed ......: %.2f kb/s | %.2f mb/s | %.2f KB/s | %.2f MB/s\n",
+	           size,
+	           tick,
+	           n / 128.0, n / 131072.0,
+	           n / 1024.0, n / 1048576.0);
+
+	if (f)
 		web_pipecmd("md5sum /tmp/blackhole", WOF_NONE);
-	}
+
 	web_puts("</pre>");
 
 	cprintf("done...\n");

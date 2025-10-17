@@ -1,16 +1,24 @@
 /*
+ *
+ * FreshTomato Firmware
+ *
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
+ *
+ */
 
-	Tomato Firmware
-
-*/
 
 #include "tomato.h"
 
 #include <ctype.h>
 #include <sys/types.h>
 
-// Returns the amount of 16-bit elements in UTF-16LE needed
-// (without the terminating null) to store given UTF-8 string
+
+typedef char *(*utf16_conv)(const uint16_t u, char *b);
+
+/* Returns the amount of 16-bit elements in UTF-16LE needed
+ * (without the terminating null) to store given UTF-8 string
+ */
 static int utf8_to_utf16_size(const char *s)
 {
 	int ret = -1;
@@ -45,69 +53,67 @@ out:
 	return ret;
 }
 
-// Converts one UTF-8 sequence to cpu-endian Unicode value
+/* Converts one UTF-8 sequence to cpu-endian Unicode value */
 static int utf8_to_unicode(uint32_t *wc, const char *s)
 {
-    	unsigned int byte = *((const unsigned char *)s);
+	unsigned int byte = *((const unsigned char *)s);
 
-					/* single byte */
+	/* single byte */
 	if (byte == 0) {
 		*wc = (uint32_t) 0;
 		return 0;
-	} else if (byte < 0x80) {
+	}
+	else if (byte < 0x80) {
 		*wc = (uint32_t) byte;
 		return 1;
-					/* double byte */
-	} else if (byte < 0xc2) {
+	}
+	/* double byte */
+	else if (byte < 0xc2) {
 		goto fail;
-	} else if (byte < 0xE0) {
+	}
+	else if (byte < 0xE0) {
 		if ((s[1] & 0xC0) == 0x80) {
-			*wc = ((uint32_t)(byte & 0x1F) << 6)
-			    | ((uint32_t)(s[1] & 0x3F));
+			*wc = ((uint32_t)(byte & 0x1F) << 6) | ((uint32_t)(s[1] & 0x3F));
 			return 2;
 		} else
 			goto fail;
-					/* three-byte */
-	} else if (byte < 0xF0) {
+	}
+	/* three-byte */
+	else if (byte < 0xF0) {
 		if (((s[1] & 0xC0) == 0x80) && ((s[2] & 0xC0) == 0x80)) {
-			*wc = ((uint32_t)(byte & 0x0F) << 12)
-			    | ((uint32_t)(s[1] & 0x3F) << 6)
-			    | ((uint32_t)(s[2] & 0x3F));
+			*wc = ((uint32_t)(byte & 0x0F) << 12) | ((uint32_t)(s[1] & 0x3F) << 6) | ((uint32_t)(s[2] & 0x3F));
 			/* Check valid ranges */
-			if (((*wc >= 0x800) && (*wc <= 0xD7FF))
-			  || ((*wc >= 0xe000) && (*wc <= 0xFFFF)))
+			if (((*wc >= 0x800) && (*wc <= 0xD7FF)) || ((*wc >= 0xe000) && (*wc <= 0xFFFF)))
 				return 3;
 		}
 		goto fail;
-					/* four-byte */
-	} else if (byte < 0xF5) {
-		if (((s[1] & 0xC0) == 0x80) && ((s[2] & 0xC0) == 0x80)
-		  && ((s[3] & 0xC0) == 0x80)) {
-			*wc = ((uint32_t)(byte & 0x07) << 18)
-			    | ((uint32_t)(s[1] & 0x3F) << 12)
-			    | ((uint32_t)(s[2] & 0x3F) << 6)
-			    | ((uint32_t)(s[3] & 0x3F));
-		/* Check valid ranges */
-		if ((*wc <= 0x10ffff) && (*wc >= 0x10000))
-			return 4;
+	}
+	/* four-byte */
+	else if (byte < 0xF5) {
+		if (((s[1] & 0xC0) == 0x80) && ((s[2] & 0xC0) == 0x80) && ((s[3] & 0xC0) == 0x80)) {
+			*wc = ((uint32_t)(byte & 0x07) << 18) | ((uint32_t)(s[1] & 0x3F) << 12) | ((uint32_t)(s[2] & 0x3F) << 6) | ((uint32_t)(s[3] & 0x3F));
+			/* Check valid ranges */
+			if ((*wc <= 0x10ffff) && (*wc >= 0x10000))
+				return 4;
 		}
 		goto fail;
 	}
 fail:
 	errno = EILSEQ;
+
 	return -1;
 }
 
 #if 0
-// Converts a UTF-8 string to a UTF-16LE string (little endian version)
-// Returns length of output buffer in utf16 characters
+/* Converts a UTF-8 string to a UTF-16LE string (little endian version)
+ * Returns length of output buffer in utf16 characters
+ */
 int utf8_to_utf16_string(const char *ins, uint16_t **outs)
 {
 	const char *t = ins;
 	uint32_t wc;
-	int allocated;
+	int allocated, shorts, m, ret = -1;
 	uint16_t *outpos;
-	int shorts, ret = -1;
 
 	shorts = utf8_to_utf16_size(ins);
 	if (shorts < 0)
@@ -118,12 +124,13 @@ int utf8_to_utf16_string(const char *ins, uint16_t **outs)
 		*outs = malloc((shorts + 1) * sizeof(uint16_t));
 		if (!*outs)
 			goto fail;
+
 		allocated = 1;
 	}
 	outpos = *outs;
 
 	while(1) {
-		int m = utf8_to_unicode(&wc, t);
+		m = utf8_to_unicode(&wc, t);
 		if (m <= 0) {
 			if (m < 0) {
 				/* do not leave space allocated if failed */
@@ -151,7 +158,7 @@ int utf8_to_utf16_string(const char *ins, uint16_t **outs)
 fail:
 	return ret;
 }
-#endif
+#endif /* 0 */
 
 static inline char *js_utf16_char(const uint16_t u, char *b)
 {
@@ -181,14 +188,12 @@ static inline char *html_utf16_char(const uint16_t u, char *b)
 	return b;
 }
 
-typedef char *(*utf16_conv)(const uint16_t u, char *b);
-
 static char *utf8_to_string(const char *ins, int csize, utf16_conv conv)
 {
 	const char *t = ins;
 	uint32_t wc;
 	char *outpos, *outs = NULL;
-	int shorts;
+	int shorts, m;
 
 	shorts = utf8_to_utf16_size(ins);
 	if (shorts <= 0)
@@ -199,7 +204,7 @@ static char *utf8_to_string(const char *ins, int csize, utf16_conv conv)
 		return NULL;
 
 	while(1) {
-		int m = utf8_to_unicode(&wc, t);
+		m = utf8_to_unicode(&wc, t);
 		if (m <= 0) {
 			if (m < 0) {
 				/* do not leave space allocated if failed */

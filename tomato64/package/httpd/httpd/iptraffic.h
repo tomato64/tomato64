@@ -1,29 +1,30 @@
 /*
-
-	IPTraffic monitoring extensions for Tomato
-	Copyright (C) 2011-2012 Augusto Bott
-
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-
-	This program is free software; you can redistribute it and/or
-	modify it under the terms of the GNU General Public License
-	as published by the Free Software Foundation; either version 2
-	of the License, or (at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-*/
+ *
+ * IPTraffic monitoring extensions for Tomato
+ * Copyright (C) 2011-2012 Augusto Bott
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
+ *
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 
 
 #include <tree.h>
 
-
-void iptraffic_conntrack_init();
 
 typedef struct _Node {
 	char ipaddr[INET_ADDRSTRLEN];
@@ -46,6 +47,7 @@ Node *Node_new(char *ipaddr) {
 		self->udp_conn = 0;
 		//_dprintf("%s: new node ip=%s, sizeof(Node)=%d (bytes)\n", __FUNCTION__, self->ipaddr, sizeof(Node));
 	}
+
 	return self;
 }
 
@@ -59,9 +61,8 @@ void Node_housekeeping(Node *self, void *info) {
 	free(self);
 }
 
-/* DEBUG */
-/*
-void Node_print(Node *self, FILE *stream) {
+#if 0
+*void Node_print(Node *self, FILE *stream) {
 	fprintf(stream, "%s/%d/%d", self->ipaddr, self->tcp_conn, self->udp_conn);
 }
 
@@ -76,4 +77,4 @@ void Tree_info(void) {
 	_dprintf("\n");
 	_dprintf("Tree depth = %d\n", TREE_DEPTH(&tree, linkage));
 }
-*/
+#endif

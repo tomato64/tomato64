@@ -1,11 +1,16 @@
 /*
+ *
+ * Tomato Firmware
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
+ *
+ */
 
-	Tomato Firmware
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-*/
 
 #include "tomato.h"
+
 
 void asp_upnpinfo(int argc, char **argv)
 {
@@ -14,7 +19,7 @@ void asp_upnpinfo(int argc, char **argv)
 		if (killall("miniupnpd", SIGUSR2) == 0) {
 			f_wait_notexists("/etc/upnp/info", 5);
 		}
-	
+
 		web_puts("\nmupnp_data = '");
 		web_putfile("/etc/upnp/data.info", WOF_JAVASCRIPT);
 		web_puts("';\n");
@@ -24,14 +29,13 @@ void asp_upnpinfo(int argc, char **argv)
 void wo_upnp(char *url)
 {
 	char s[256];
-	const char *proto;
-	const char *eport;
+	const char *proto, *eport;
 
 	if (nvram_get_int("upnp_enable")) {
-		if (((proto = webcgi_get("remove_proto")) != NULL) && (*proto) &&
-			((eport = webcgi_get("remove_eport")) != NULL) && (*eport)) {
+		if (((proto = webcgi_get("remove_proto")) != NULL) && (*proto) && ((eport = webcgi_get("remove_eport")) != NULL) && (*eport)) {
 			snprintf(s, sizeof(s), "%3s %6s\n", proto, eport);
 			f_write_string("/etc/upnp/delete", s, 0, 0);
+
 			if (killall("miniupnpd", SIGUSR2) == 0) {
 				f_wait_notexists("/etc/upnp/delete", 5);
 			}

@@ -1,4 +1,13 @@
-
+/*
+ *
+ * FreshTomato Firmware
+ *
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
+ *
+ */
+ 
+ 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,6 +15,7 @@
 #include <bcmnvram.h>
 
 #include "httpd.h"
+
 
 void wo_wwansignal(char *url)
 {
@@ -22,7 +32,7 @@ void wo_wwansignal(char *url)
 	web_puts("';");
 }
 
-static char* getModemDiagPort(const char *wannum)
+static char *getModemDiagPort(const char *wannum)
 {
 	char tmp[32];
 
@@ -50,8 +60,7 @@ static char* getModemDiagPort(const char *wannum)
 
 void wo_wwansms(char *url)
 {
-	char smscmd[72];
-	char wannum[8];
+	char smscmd[72], wannum[8];
 	char *wwan_devId = NULL;
 	int desired_wan = atoi(webcgi_safeget("mwan_num", "1"));
 
@@ -71,8 +80,7 @@ void wo_wwansms(char *url)
 
 void wo_wwansms_delete(char *url)
 {
-	char smscmd[150];
-	char wannum[8];
+	char smscmd[150], wannum[8];
 	char *wwan_devId = NULL;
 	int desired_wan;
 	const char *smsToRemove_str = webcgi_safeget("sms_num", "");

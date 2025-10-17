@@ -1,26 +1,43 @@
+/*
+ * wireguard.c
+ *
+ * Copyright (C) 2025 FreshTomato
+ * https://freshtomato.org/
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ *
+ */
+
+
 #include "tomato.h"
 
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"wg_debug"
 
-#define BUF_SIZE		64
+#define BUF_SIZE	64
 
 
-void asp_wgstat(int argc, char **argv)
-{
-	if (argc == 1)
-		web_printf("%d", wg_status(argv[0]));
-}
-
-int wg_status(char *iface)
+static int wg_status(char *iface)
 {
 	FILE *fp;
 	char buffer[BUF_SIZE];
+	int status = 0;
 
 	memset(buffer, 0, BUF_SIZE);
 	snprintf(buffer, BUF_SIZE, "/sys/class/net/%s/operstate", iface);
-
-	int status = 0;
 
 	if ((fp = fopen(buffer, "r"))) {
 		fgets(buffer, BUF_SIZE, fp);
@@ -34,3 +51,8 @@ int wg_status(char *iface)
 	return status;
 }
 
+void asp_wgstat(int argc, char **argv)
+{
+	if (argc == 1)
+		web_printf("%d", wg_status(argv[0]));
+}

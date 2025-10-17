@@ -3,7 +3,8 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -16,8 +17,8 @@
 #include <stdarg.h>
 
 
-extern int do_ssl;
 extern FILE *connfp;
+extern int do_ssl;
 extern int connfd;
 
 int web_getline(char *buffer, int max)
@@ -83,8 +84,7 @@ int _web_printf(wofilter_t wof, const char *format, ...)
 {
 	va_list args;
 	char *b, *p;
-	int size;
-	int n;
+	int size, n;
 
 	size = 1024;
 	while (1) {
@@ -117,7 +117,8 @@ int _web_printf(wofilter_t wof, const char *format, ...)
 			}
 			size = n + 1;
 		}
-		else size *= 2;
+		else
+			size *= 2;
 
 		free(b);
 		if (size > (10 * 1024))
@@ -150,7 +151,9 @@ int web_write(const char *buffer, int len)
 int web_read(void *buffer, int len)
 {
 	int r;
-	if (len <= 0) return 0;
+	if (len <= 0)
+		return 0;
+
 	while ((r = fread(buffer, 1, len, connfp)) == 0) {
 		if (errno != EINTR) return -1;
 	}
@@ -160,8 +163,8 @@ int web_read(void *buffer, int len)
 
 int web_read_x(void *buffer, int len)
 {
-	int n;
-	int t = 0;
+	int n, t = 0;
+
 	while (len > 0) {
 		n = web_read(buffer, len);
 		if (n <= 0)
@@ -179,6 +182,7 @@ int web_eat(int max)
 {
 	char buf[512];
 	int n;
+
 	while (max > 0) {
 		if ((n = web_read(buf, ((unsigned int) max < sizeof(buf)) ? (unsigned int) max : sizeof(buf))) <= 0)
 			return 0;

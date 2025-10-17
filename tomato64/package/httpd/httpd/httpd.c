@@ -51,6 +51,7 @@
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
  *
  * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -114,6 +115,19 @@
 #define LOGMSG_NVDEBUG		"httpd_debug"
 
 
+struct sockaddr_storage clientsai;
+FILE *connfp = NULL;
+int do_ssl;
+int post;
+int header_sent;
+int connfd = -1;
+
+const char mime_html[] = "text/html; charset=utf-8";
+const char mime_plain[] = "text/plain";
+const char mime_javascript[] = "text/javascript";
+const char mime_binary[] = "application/tomato-binary-file"; /* instead of "application/octet-stream" to make browser just "save as" and prevent automatic detection weirdness */
+const char mime_octetstream[] = "application/octet-stream";
+
 typedef struct {
 	int count;
 	fd_set lfdset;
@@ -129,29 +143,19 @@ typedef enum {
 	AUTH_BAD
 } auth_t;
 
-struct sockaddr_storage clientsai;
-static listeners_t listeners;
-FILE *connfp = NULL;
-int disable_maxage = 0;
-int do_ssl;
-int http_port;
-int post;
-int connfd = -1;
-int header_sent;
-static int maxfd = -1;
-const int int_1 = 1;
 char authinfo[512];
 #ifdef TCONFIG_IPV6
 char client_addr[INET6_ADDRSTRLEN];
 #else
 char client_addr[INET_ADDRSTRLEN];
 #endif
-const char pidfile[] = "/var/run/httpd.pid";
-const char mime_html[] = "text/html; charset=utf-8";
-const char mime_plain[] = "text/plain";
-const char mime_javascript[] = "text/javascript";
-const char mime_binary[] = "application/tomato-binary-file"; /* instead of "application/octet-stream" to make browser just "save as" and prevent automatic detection weirdness */
-const char mime_octetstream[] = "application/octet-stream";
+
+static listeners_t listeners;
+static int disable_maxage = 0;
+static int http_port;
+static int maxfd = -1;
+static const int int_1 = 1;
+static const char pidfile[] = "/var/run/httpd.pid";
 
 #ifdef TTYD_PROXY
 #include <sys/un.h>

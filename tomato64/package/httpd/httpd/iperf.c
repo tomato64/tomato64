@@ -3,7 +3,8 @@
  * FreshTomato Firmware
  * Copyright (C) 2018 Michal Obrembski
  *
- * Fixes/updates (C) 2019 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -12,14 +13,14 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 
-#define iperf_log	"/tmp/iperf_log"
-#define iperf_interval	"/tmp/iperf_interval"
-#define iperf_pidfile	"/var/run/iperf.pid"
-
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"iperf_debug"
 
+
+const char iperf_log[] = "/tmp/iperf_log";
+const char iperf_interval[] = "/tmp/iperf_interval";
+const char iperf_pidfile[] = "/var/run/iperf.pid";
 
 /*
  * Always clear log files before run!
@@ -78,7 +79,7 @@ void wo_ttcpstatus(char *url)
 
 		if (st.st_size > 0 ) {
 			logmsg(LOG_DEBUG, "*** %s: %d: Sending content of iperf log", __FUNCTION__, __LINE__);
-			do_file(iperf_log);
+			do_file((char *)iperf_log);
 			return;
 		}
 	}
@@ -99,7 +100,7 @@ void wo_ttcpstatus(char *url)
 
 			stat(iperf_interval, &st);
 			if (st.st_size > 0)
-				do_file(iperf_interval);
+				do_file((char *)iperf_interval);
 			else
 				web_puts("{ \"mode\": \"Server waiting\"}");
 		}
@@ -112,7 +113,7 @@ void wo_ttcpstatus(char *url)
 
 		stat(iperf_interval, &st);
 		if (st.st_size > 0)
-			do_file(iperf_interval);
+			do_file((char *)iperf_interval);
 		else
 			web_puts("{ \"mode\": \"Client preparing\"}");
 	}
@@ -120,10 +121,8 @@ void wo_ttcpstatus(char *url)
 
 void wo_ttcprun(char *url)
 {
-	char tmp[128];
-	char cmdBuffer[256];
-	char *v;
-	char *host;
+	char tmp[128], cmdBuffer[256];
+	char *v, *host;
 	int port = 5201;
 	int udpMode = 0;
 	int byteLimitMode = 0;		/* Time limit by default */
@@ -147,7 +146,7 @@ void wo_ttcprun(char *url)
 		snprintf(tmp, sizeof(tmp), "%d", port);
 		if (!strcmp(v, "server")) { /* server */
 			logmsg(LOG_INFO, "iperf started in server mode");
-			snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile "iperf_log" --intervalfile "iperf_interval" -I "iperf_pidfile" -s -1 -D -p %d", port);
+			snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile %s --intervalfile %s -I %s -s -1 -D -p %d", iperf_log, iperf_interval, iperf_pidfile, port);
 		}
 		else { /* client */
 			host = webcgi_get("_host");
@@ -156,10 +155,10 @@ void wo_ttcprun(char *url)
 
 #if defined(TCONFIG_BCMARM) && defined(TCONFIG_BCMSMP)
 			logmsg(LOG_INFO, "iperf started in client mode, address: %s, number of parallel streams: %d", host, cpu_num);
-			snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile "iperf_log" --intervalfile "iperf_interval" -p %d %s %s %llu -c %s -P %d &", port, udpMode == 1 ? "-u" : "", byteLimitMode == 1 ? "-n" : "-t", limit, host, cpu_num);
+			snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile %s --intervalfile %s -p %d %s %s %llu -c %s -P %d &", iperf_log, iperf_interval, port, udpMode == 1 ? "-u" : "", byteLimitMode == 1 ? "-n" : "-t", limit, host, cpu_num);
 #else
 			logmsg(LOG_INFO, "iperf started in client mode, address: %s", host);
-			snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile "iperf_log" --intervalfile "iperf_interval" -p %d %s %s %llu -c %s &", port, udpMode == 1 ? "-u" : "", byteLimitMode == 1 ? "-n" : "-t", limit, host);
+			snprintf(cmdBuffer, sizeof(cmdBuffer), "iperf -J --logfile %s --intervalfile %s -p %d %s %s %llu -c %s &", iperf_log, iperf_interval, port, udpMode == 1 ? "-u" : "", byteLimitMode == 1 ? "-n" : "-t", limit, host);
 #endif
 		}
 		logmsg(LOG_DEBUG, "*** %s: %d: Running command: %s", __FUNCTION__, __LINE__, cmdBuffer);

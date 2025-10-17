@@ -3,7 +3,8 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2024 pedro
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -47,8 +48,7 @@ void asp_version(int argc, char **argv)
 			break;
 		}
 	}
-	else {
+	else
 		web_puts(tomato_shortver);
-	}
-#endif
+#endif /* 0 */
 }
