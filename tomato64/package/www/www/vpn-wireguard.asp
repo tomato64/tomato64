@@ -2235,7 +2235,15 @@ function init() {
 			/* routing policy tab start */
 			W('<div id="'+t+'-wg-policy">');
 			W('<div class="tomato-grid" id="'+t+'_table_routing"><\/div>');
-			W('<div id="_'+t+'_routing_div_help"><div class="fields"><div class="about"><b>To use Routing Policy, you have to choose "External - VPN Provider" as Type of VPN and "Routing Policy [(strict)]" in "Redirect Internet Traffic".<\/b><\/div><\/div><\/div>');
+			W('<div id="_'+t+'_routing_div_help"><div class="fields"><div class="about"><b>To use Routing Policy, you must select "External - VPN Provider" in the "Type of VPN" drop-down list and "Routing Policy"/"Routing Policy (strict)" in the "Redirect Internet Traffic".<\/b><\/div><\/div><\/div>');
+			W('<div>');
+			W('<ul>');
+			W('<li><b>Type -> From Source IP<\/b> - Ex: "1.2.3.4", "1.2.3.4-2.3.4.5", "1.2.3.0/24".<\/li>');
+			W('<li><b>Type -> To Destination IP<\/b> - Ex: "1.2.3.4" or "1.2.3.0/24".<\/li>');
+			W('<li><b>Type -> To Domain<\/b> - Ex: "domain.com". Please enter one domain per line.<\/li>');
+			W('<li><b>IMPORTANT!<\/b> - Kill Switch: iptables rules (if \'KS\' for given entry is enabled) are always applied even if instance is down but in PBR mode (so-called strict Kill Switch).<\/li>');
+			W('<\/ul>');
+			W('<\/div>');
 			W('<\/div>');
 			/* routing policy tab stop */
 
