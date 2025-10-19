@@ -259,6 +259,8 @@ void kill_switch(const char *kind)
 		if (!nv)
 			continue;
 
+		logmsg(LOG_INFO, "Kill-Switch: start adding rules for %s%u (if any) ...", (kd ? "openvpn-client" : "wireguard"), unit);
+
 		nvp = nv;
 		while ((b = strsep(&nvp, ">")) != NULL) {
 			enable = type = value = kswitch = NULL;
