@@ -164,7 +164,7 @@ function init() {
 	<div class="fields">
 		<span id="_nginx_notice"></span><input type="button" id="_nginx_button">
 		<input type="button" id="_nginx_interface" value="Open content in new tab" class="new_window" onclick="window.open('http://'+nvram.lan_ipaddr+':'+nvram.nginx_port)">
-		&nbsp; <img src="spin.gif" alt="" id="spin">
+		&nbsp; <img src="spin.svg" alt="" id="spin">
 	</div>
 </div>
 

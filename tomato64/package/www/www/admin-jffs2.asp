@@ -57,7 +57,7 @@ function save(format) {
 
 	E('format').disabled = 1;
 	if (format) {
-		elem.setInnerHTML('notice_container', '<div id="notice"><img src="spin.gif" alt="" id="spin" style="display:inline-block"> <span>Please wait ...<\/span><\/div><br style="clear:both">');
+		elem.setInnerHTML('notice_container', '<div id="notice"><img src="spin.svg" alt="" id="spin" style="display:inline-block"> <span>Please wait ...<\/span><\/div><br style="clear:both">');
 		elem.display('notice_container', 1);
 	}
 

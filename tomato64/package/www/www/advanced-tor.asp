@@ -175,7 +175,7 @@ function init() {
 	<div class="fields">
 		<span id="_tor_notice"></span>
 		<input type="button" id="_tor_button" value="">
-		&nbsp; <img src="spin.gif" alt="" id="spin">
+		&nbsp; <img src="spin.svg" alt="" id="spin">
 	</div>
 </div>
 

@@ -463,7 +463,7 @@ function init() {
 
 				W('<div id="'+t+'-tab-status-button">');
 				W('<span id="_vpn'+t+'_notice"><\/span>');
-				W('<input type="button" id="_vpn'+t+'_button">&nbsp; <img src="spin.gif" alt="" id="spin'+(i+1)+'">');
+				W('<input type="button" id="_vpn'+t+'_button">&nbsp; <img src="spin.svg" alt="" id="spin'+(i+1)+'">');
 				W('<\/div>');
 			}
 		</script>

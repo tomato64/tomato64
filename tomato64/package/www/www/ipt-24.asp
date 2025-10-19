@@ -381,7 +381,7 @@ REMOVE-END */
 
 <div id="footer">
 	<span id="dtime"></span>
-	<img src="spin.gif" id="refresh-spinner" alt="" onclick="debugTime=1">
+	<img src="spin.svg" id="refresh-spinner" alt="" onclick="debugTime=1">
 	<input type="button" value="Refresh" id="refresh-button" onclick="ref.toggleX()">
 </div>
 

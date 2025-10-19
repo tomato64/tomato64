@@ -294,7 +294,7 @@ function init() {
 	<div class="fields">
 		<span id="_minidlna_notice"></span><input type="button" id="_minidlna_button" value="">
 		<input type="button" id="_minidlna_status" value="Open status page in new tab" class="new_window" onclick="window.open('http://'+http_if+':'+http_port+'')">
-		&nbsp; <img src="spin.gif" alt="" id="spin">
+		&nbsp; <img src="spin.svg" alt="" id="spin">
 	</div>
 </div>
 

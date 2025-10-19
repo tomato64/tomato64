@@ -675,7 +675,7 @@ function init() {
 		W('<div class="section-title" id="wwan'+i+'-title">WWAN'+(updateWWANTimers > 1 ? i : '')+' Modem Status <small><i><a href="javascript:toggleVisibility(cprefix,\'wwan'+i+'\');" id="toggleLink-wwan'+i+'" class="hide"><span id="sesdiv_wwan'+i+'_showhide">(Hide)<\/span><\/a><\/i><\/small><\/div>');
 		W('<div class="section" id="sesdiv_wwan'+i+'">');
 		W('<div id="WWANStatus'+i+'">');
-		W('<div class="fields">Please wait... Initial refresh... &nbsp; <img src="spin.gif" alt="" style="vertical-align:middle"><\/div>');
+		W('<div class="fields">Please wait... Initial refresh... &nbsp; <img src="spin.svg" alt="" style="vertical-align:middle"><\/div>');
 		W('<\/div><\/div><\/div>');
 	});
 /* USB-END */
@@ -707,7 +707,7 @@ function init() {
 			{ title: 'Connection Uptime', rid: 'wan'+u+'uptime', text: stats.wanuptime[uidx - 1] },
 			{ title: 'Remaining Lease Time', rid: 'wan'+u+'lease', text: stats.wanlease[uidx - 1], ignore: !show_dhcpc[uidx - 1] }
 /* USB-BEGIN */
-			, { text: 'Please wait... Initial refresh... &nbsp; <img src="spin.gif" alt="" style="vertical-align:middle">', rid: "WanCustomStatus"+u, ignore: !customStatusTimers[uidx - 1] }
+			, { text: 'Please wait... Initial refresh... &nbsp; <img src="spin.svg" alt="" style="vertical-align:middle">', rid: "WanCustomStatus"+u, ignore: !customStatusTimers[uidx - 1] }
 /* USB-END */
 		]);
 		W('<span id="b'+u+'_dhcpc" style="display:none">');

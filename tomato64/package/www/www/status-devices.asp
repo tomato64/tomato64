@@ -396,7 +396,7 @@ dg.populate = function() {
 		e = list[i];
 
 		if ((e.mac.match(/^(..):(..):(..)/)) && e.proto != 'pppoe' && e.proto != 'pptp' && e.proto != 'l2tp') {
-			b = '<a href="javascript:searchOUI(\''+RegExp.$1+'-'+RegExp.$2+'-'+RegExp.$3+'\','+i+')" title="OUI Search">'+e.mac+'<\/a><div style="display:none" id="gW_'+i+'">&nbsp; <img src="spin.gif" alt="" style="vertical-align:middle"><\/div>'+
+			b = '<a href="javascript:searchOUI(\''+RegExp.$1+'-'+RegExp.$2+'-'+RegExp.$3+'\','+i+')" title="OUI Search">'+e.mac+'<\/a><div style="display:none" id="gW_'+i+'">&nbsp; <img src="spin.svg" alt="" style="vertical-align:middle"><\/div>'+
 			    '<br><small class="pics">'+
 			    '<a href="javascript:addStatic('+i+')" title="DHCP Reservation">[DR]<\/a> '+
 			    '<a href="javascript:addbwlimit('+i+')" title="BW Limiter">[BWL]<\/a> '+
@@ -833,7 +833,7 @@ function init() {
 			{ title: 'Sanitize results', name: 'discovery_clear', type: 'checkbox', value: 'clear', checked: (discovery_clear === 1) ? 'checked' : '' },
 			{ title: 'Max Probes', name: 'discovery_limit', type: 'text', maxlen: 3, size: 3, value: discovery_limit,  placeholder: '60', suffix: '<\/span>&nbsp;<small> 5 - 200<\/small>' },
 			{ title: 'Scan Target', name: 'discovery_target', type: 'select', options: [['lan','LANs *'],['wan','WANs'],['both','LANs & WANs']], value: discovery_target },
-			{ title: 'Scan Mode', name: 'discovery_mode', type: 'select', options: [['off','Off *'],['arping','arping (preferred)'],['traceroute','traceroute'],['nc','netcat'],['all','all (round-robin)']], suffix: '&nbsp; <img src="spin.gif" alt="" id="spin"><div id="wait"><\/div>', value: discovery_mode },
+			{ title: 'Scan Mode', name: 'discovery_mode', type: 'select', options: [['off','Off *'],['arping','arping (preferred)'],['traceroute','traceroute'],['nc','netcat'],['all','all (round-robin)']], suffix: '&nbsp; <img src="spin.svg" alt="" id="spin"><div id="wait"><\/div>', value: discovery_mode },
 			{ title: 'Display Mode', name: 'show_wan_entries', type: 'select', options: [['1','LANs & WANs'],['0','LANs'],['2','WANs']], value: show_wan_entries }
 		]);
 	</script>

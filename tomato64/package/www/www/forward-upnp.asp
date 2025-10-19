@@ -342,7 +342,7 @@ function init() {
 	<div class="section-title">Active Port Forwards</div>
 	<div class="section">
 		<div class="tomato-grid" id="upnp-grid"></div>
-		<div style="width:100%;text-align:right"><img src="spin.gif" id="refresh-spinner" alt=""> &nbsp;<input type="button" value="Delete All" onclick="deleteAll()" id="upnp-delete-all"></div>
+		<div style="width:100%;text-align:right"><img src="spin.svg" id="refresh-spinner" alt=""> &nbsp;<input type="button" value="Delete All" onclick="deleteAll()" id="upnp-delete-all"></div>
 	</div>
 </div>
 

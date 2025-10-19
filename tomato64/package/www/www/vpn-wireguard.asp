@@ -2082,7 +2082,7 @@ function init() {
 
 				W('<div id="'+t+'-wg-status-button">');
 				W('<span id="_wireguard'+i+'_notice"><\/span>');
-				W('<input type="button" id="_wireguard'+i+'_button">&nbsp; <img src="spin.gif" alt="" id="spin'+i+'">');
+				W('<input type="button" id="_wireguard'+i+'_button">&nbsp; <img src="spin.svg" alt="" id="spin'+i+'">');
 				W('<\/div>');
 			}
 		</script>
@@ -2240,10 +2240,10 @@ function init() {
 			W('<div id="'+t+'-wg-status">');
 			W('<pre id="'+t+'_result" class="status-result"><\/pre>');
 			W('<div style="text-align:right">');
-			W('<img src="spin.gif" id="'+t+'_status_refresh_spinner" alt=""> &nbsp;');
+			W('<img src="spin.svg" id="'+t+'_status_refresh_spinner" alt=""> &nbsp;');
 			genStdTimeList(t+'_status_refresh_time', 'One off', 0);
 			W('<input type="button" value="Refresh" onclick="toggleRefresh('+i+')" id="'+t+'_status_refresh_button"><\/div>');
-			W('<div style="display:none;padding-left:5px" id="'+t+'_status_wait"> Please wait... <img src="spin.gif" alt=""><\/div>');
+			W('<div style="display:none;padding-left:5px" id="'+t+'_status_wait"> Please wait... <img src="spin.svg" alt=""><\/div>');
 			statRefreshes[i].setup();
 			statRefreshes[i].initPage(3000, 0);
 			W('<\/div>');

@@ -2163,7 +2163,7 @@ function init() {
 					options: [], prefix: '<span id="__wl'+u+'_net_mode">', suffix: '<\/span>' },
 				{ title: 'SSID', name: 'wl'+u+'_ssid', type: 'text', maxlen: 32, size: 34, value: nvram['wl'+u+'_ssid'] },
 				{ title: 'Broadcast', indent: 2, name: 'f_wl'+u+'_bcast', type: 'checkbox', value: (nvram['wl'+u+'_closed'] == '0') },
-				{ title: 'Channel', name: 'wl'+u+'_channel', type: 'select', options: ghz[uidx], prefix: '<span id="__wl'+u+'_channel">', suffix: '<\/span> <input type="button" id="_f_wl'+u+'_scan" value="Scan" onclick="scanButton('+u+')"> <img src="spin.gif" alt="" id="spin'+u+'">',
+				{ title: 'Channel', name: 'wl'+u+'_channel', type: 'select', options: ghz[uidx], prefix: '<span id="__wl'+u+'_channel">', suffix: '<\/span> <input type="button" id="_f_wl'+u+'_scan" value="Scan" onclick="scanButton('+u+')"> <img src="spin.svg" alt="" id="spin'+u+'">',
 					value: nvram['wl'+u+'_channel'] },
 				{ title: 'Channel Width', name: 'wl'+u+'_nbw_cap', type: 'select', options: [],
 					value: nvram['wl'+u+'_nbw_cap'], prefix: '<span id="__wl'+u+'_nbw_cap">', suffix: '<\/span>' },

@@ -153,7 +153,7 @@ function earlyInit() {
 <!-- / / / -->
 
 <div id="afu-progress" style="display:none;margin:auto">
-	<img src="spin.gif" alt="" style="vertical-align:baseline"> &nbsp;<span id="afu-time">0:00</span><br>
+	<img src="spin.svg" alt="" style="vertical-align:baseline"> &nbsp;<span id="afu-time">0:00</span><br>
 	Please wait while the firmware is uploaded &amp; flashed.<br>
 	<b>Warning:</b> Do not interrupt this browser or the router!<br>
 </div>

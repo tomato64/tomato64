@@ -1532,7 +1532,7 @@ function init() {
 /* only if primary VIF */
 				if (u.toString().indexOf('.') < 0) {
 					f.push (
-						{ title: 'Channel', name: 'wl'+u+'_channel', type: 'select', options: ghz[uidx], prefix: '<span id="__wl'+u+'_channel">', suffix: '<\/span> <input type="button" id="_f_wl'+u+'_scan" value="Scan" onclick="scanButton('+u+')"> <img src="spin.gif" alt="" id="spin'+u+'">', value: nvram['wl'+u+'_channel'] },
+						{ title: 'Channel', name: 'wl'+u+'_channel', type: 'select', options: ghz[uidx], prefix: '<span id="__wl'+u+'_channel">', suffix: '<\/span> <input type="button" id="_f_wl'+u+'_scan" value="Scan" onclick="scanButton('+u+')"> <img src="spin.svg" alt="" id="spin'+u+'">', value: nvram['wl'+u+'_channel'] },
 						{ title: 'Channel Width', name: 'wl'+u+'_nbw_cap', type: 'select', options: [], value: nvram['wl'+u+'_nbw_cap'], prefix: '<span id="__wl'+u+'_nbw_cap">', suffix: '<\/span>' },
 						{ title: 'Control Sideband', name: 'f_wl'+u+'_nctrlsb', type: 'select', options: [['lower','Lower'],['upper','Upper']], value: (nvram['wl'+u+'_nctrlsb'] == 'none') ? 'lower' : nvram['wl'+u+'_nctrlsb'] }
 					);

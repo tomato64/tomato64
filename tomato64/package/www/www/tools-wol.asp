@@ -179,7 +179,7 @@ function init() {
 <div class="section">
 	<div class="tomato-grid" id="wol-grid"></div>
 
-	<div><input type="button" value="Refresh" onclick="refreshClick()" id="refresh-button"> &nbsp; <img src="spin.gif" alt="" id="refresh-spinner"></div>
+	<div><input type="button" value="Refresh" onclick="refreshClick()" id="refresh-button"> &nbsp; <img src="spin.svg" alt="" id="refresh-spinner"></div>
 </div>
 
 <!-- / / / -->

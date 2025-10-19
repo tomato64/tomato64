@@ -47,7 +47,7 @@ function clearLog(clear) {
 	}
 
 	xob.post('webmon.cgi', 'clear='+clear);
-	E('clear'+clear).innerHTML = 'Please wait... <img src="spin.gif" style="vertical-align:top">';
+	E('clear'+clear).innerHTML = 'Please wait... <img src="spin.svg" style="vertical-align:top">';
 }
 
 function resolve() {

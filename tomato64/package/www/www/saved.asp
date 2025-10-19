@@ -59,7 +59,7 @@ function go() {
 			<div class="info-centered">
 				<form>
 					<div id="l1" style="display:none"><b>Changes Saved... </b> <input type="button" value="Continue" onclick="go()"></div>
-					<div id="l2" style="display:none"><b>Please Wait... </b> &nbsp;<div id="sptime"></div> &nbsp;<img src="spin.gif" alt="" id="spin"></div>
+					<div id="l2" style="display:none"><b>Please Wait... </b> &nbsp;<div id="sptime"></div> &nbsp;<img src="spin.svg" alt="" id="spin"></div>
 				</form>
 			</div>
 		</div>

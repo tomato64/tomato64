@@ -259,7 +259,7 @@ function init() {
 <div class="section">
 	<div class="fields">
 		<span id="_samba_notice"></span><input type="button" id="_samba_button" value="">
-		&nbsp; <img src="spin.gif" alt="" id="spin">
+		&nbsp; <img src="spin.svg" alt="" id="spin">
 	</div>
 </div>
 

@@ -222,7 +222,7 @@ function save() {
 		createFieldTable('', [
 /* TOMATO64-REMOVE-BEGIN */
 			{ title: 'Maximum Connections', name: 'ct_max', type: 'text', maxlen: 6, size: 8,
-				suffix: '&nbsp; <a href="javascript:clicked()" id="count0">[ count current ]<\/a> <img src="spin.gif" alt="" id="spin">',
+				suffix: '&nbsp; <a href="javascript:clicked()" id="count0">[ count current ]<\/a> <img src="spin.svg" alt="" id="spin">',
 				value: fixInt(nvram.ct_max || 4096, 128, 300000, 4096) }
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */

@@ -177,7 +177,7 @@ function init() {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'Address', name: 'f_addr', type: 'text', maxlen: 64, size: 32, value: '', suffix: ' <input type="button" value="Ping" onclick="ping()" id="pingb"> <img src="spin.gif" alt="" id="spin">' },
+			{ title: 'Address', name: 'f_addr', type: 'text', maxlen: 64, size: 32, value: '', suffix: ' <input type="button" value="Ping" onclick="ping()" id="pingb"> <img src="spin.svg" alt="" id="spin">' },
 			{ title: 'Ping Count', name: 'f_count', type: 'text', maxlen: 2, size: 7, value: '5' },
 			{ title: 'Packet Size', name: 'f_size', type: 'text', maxlen: 5, size: 7, value: '56', suffix: ' <small>(bytes)<\/small>' }
 		]);

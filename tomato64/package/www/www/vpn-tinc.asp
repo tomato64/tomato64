@@ -510,7 +510,7 @@ function init() {
 <div class="section-title">Status</div>
 <div class="section">
 	<div class="fields">
-		<span id="_tinc_notice"></span><input type="button" id="_tinc_button">&nbsp; <img src="spin.gif" alt="" id="spin">
+		<span id="_tinc_notice"></span><input type="button" id="_tinc_button">&nbsp; <img src="spin.svg" alt="" id="spin">
 	</div>
 </div>
 
@@ -602,7 +602,7 @@ function init() {
 	]);
 
 	W('<input type="button" value="Generate Keys" onclick="generateKeys()" id="execb"> ');
-	W('<div style="display:none" id="generateWait"> Please wait... <img src="spin.gif" alt="" style="vertical-align:middle"><\/div>');
+	W('<div style="display:none" id="generateWait"> Please wait... <img src="spin.svg" alt="" style="vertical-align:middle"><\/div>');
 	W('<\/div><\/div>');
 	/* -------- END KEYS TAB ----------- */
 
@@ -618,7 +618,7 @@ function init() {
 	W('<div class="vpn-status-btn"><input type="button" value="Subnets" onclick="updateStatus(\'subnets\')" id="subnets" style="min-width:85px"><\/div>');
 	W('<div class="vpn-status-btn"><input type="button" value="Connections" onclick="updateStatus(\'connections\')" id="connections" style="min-width:85px"><\/div>');
 	W('<div class="vpn-status-btn"><input type="button" value="Nodes" onclick="updateStatus(\'nodes\')" id="nodes" style="min-width:85px"><\/div>');
-	W('<div style="display:none;padding-left:5px" id="statusWait"> Please wait... <img src="spin.gif" alt="" style="vertical-align:top"><\/div>');
+	W('<div style="display:none;padding-left:5px" id="statusWait"> Please wait... <img src="spin.svg" alt="" style="vertical-align:top"><\/div>');
 	W('<\/div>');
 
 	W('<div class="section">');

@@ -184,7 +184,7 @@ function init() {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'Address', name: 'f_addr', type: 'text', maxlen: 64, size: 32, value: '', suffix: ' <input type="button" value="Trace" onclick="trace()" id="traceb"> <img src="spin.gif" alt="" id="spin">' },
+			{ title: 'Address', name: 'f_addr', type: 'text', maxlen: 64, size: 32, value: '', suffix: ' <input type="button" value="Trace" onclick="trace()" id="traceb"> <img src="spin.svg" alt="" id="spin">' },
 			{ title: 'Maximum Hops', name: 'f_hops', type: 'text', maxlen: 2, size: 4, value: '20' },
 			{ title: 'Maximum Wait Time', name: 'f_wait', type: 'text', maxlen: 2, size: 4, value: '3', suffix: ' <small>(seconds per hop)<\/small>' }
 		]);

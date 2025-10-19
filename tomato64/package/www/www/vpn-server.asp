@@ -923,7 +923,7 @@ function init() {
 
 				W('<div id="'+t+'-tab-status-button">');
 				W('<span id="_vpn'+t+'_notice"><\/span>');
-				W('<input type="button" id="_vpn'+t+'_button">&nbsp; <img src="spin.gif" alt="" id="spin'+(i+1)+'">');
+				W('<input type="button" id="_vpn'+t+'_button">&nbsp; <img src="spin.svg" alt="" id="spin'+(i+1)+'">');
 				W('<\/div>');
 			}
 		</script>
@@ -1048,27 +1048,27 @@ function init() {
 			createFieldTable('', [
 				null,
 				{ title: 'Static Key', name: 'vpn_'+t+'_static', type: 'textarea', value: nvram['vpn_'+t+'_static'],
-					prefix: '<div id="'+t+'_static_progress_div" style="display:none"><p class="keyhelp">Please wait - generating static key...<img src="spin.gif" alt=""><\/p><\/div>' },
+					prefix: '<div id="'+t+'_static_progress_div" style="display:none"><p class="keyhelp">Please wait - generating static key...<img src="spin.svg" alt=""><\/p><\/div>' },
 				{ title: '', custom: '<input type="button" value="Generate static key" onclick="updateStaticKey('+(i+1)+')" id="_vpn_keygen_static_'+t+'_button">' }
 			]);
 			createFieldTable('', [
 				null,
 				{ title: 'Certificate Authority Key', name: 'vpn_'+t+'_ca_key', type: 'textarea', value: nvram['vpn_'+t+'_ca_key']
 /* KEYGEN-BEGIN */
-					, prefix: '<div id="'+t+'_ca_key_progress_div" style="display:none"><p class="keyhelp">Please wait - generating CA key...<img src="spin.gif" alt=""><\/p><\/div>'
+					, prefix: '<div id="'+t+'_ca_key_progress_div" style="display:none"><p class="keyhelp">Please wait - generating CA key...<img src="spin.svg" alt=""><\/p><\/div>'
 /* KEYGEN-END */
 				},
 				{ title: '', custom: '<div id="_vpn_'+t+'_ca_key_div_help"><p class="keyhelp">Optional, only used for client certificate generation.<br> Unencrypted (-noenc) private keys are supported.<\/p><\/div>' },
 				{ title: 'Certificate Authority', name: 'vpn_'+t+'_ca', type: 'textarea', value: nvram['vpn_'+t+'_ca'],
-					prefix: '<div id="'+t+'_ca_progress_div" style="display:none"><p class="keyhelp">Please wait - generating CA certificate...<img src="spin.gif" alt=""><\/p><\/div>' },
+					prefix: '<div id="'+t+'_ca_progress_div" style="display:none"><p class="keyhelp">Please wait - generating CA certificate...<img src="spin.svg" alt=""><\/p><\/div>' },
 				{ title: 'Server Certificate', name: 'vpn_'+t+'_crt', type: 'textarea', value: nvram['vpn_'+t+'_crt']
 /* KEYGEN-BEGIN */
-					, prefix: '<div id="'+t+'_cert_progress_div" style="display: none"><p class="keyhelp">Please wait - generating certificate...<img src="spin.gif" alt=""><\/p><\/div>'
+					, prefix: '<div id="'+t+'_cert_progress_div" style="display: none"><p class="keyhelp">Please wait - generating certificate...<img src="spin.svg" alt=""><\/p><\/div>'
 /* KEYGEN-END */
 				},
 				{ title: 'Server Key', name: 'vpn_'+t+'_key', type: 'textarea', value: nvram['vpn_'+t+'_key']
 /* KEYGEN-BEGIN */
-					, prefix: '<div id="'+t+'_key_progress_div" style="display: none"><p class="keyhelp">Please wait - generating key...<img src="spin.gif" alt=""><\/p><\/div>'
+					, prefix: '<div id="'+t+'_key_progress_div" style="display: none"><p class="keyhelp">Please wait - generating key...<img src="spin.svg" alt=""><\/p><\/div>'
 /* KEYGEN-END */
 				},
 				{ title: 'CRL file', name: 'vpn_'+t+'_crl', type: 'textarea', value: nvram['vpn_'+t+'_crl'] }
@@ -1082,7 +1082,7 @@ function init() {
 				null,
 				{ title: 'Diffie-Hellman parameters', name: 'f_vpn_'+t+'_dh', type: 'textarea', value: nvram['vpn_'+t+'_dh']
 /* KEYGEN-BEGIN */
-					, prefix: '<div id="'+t+'_dh_progress_div" style="display:none"><p class="keyhelp">Please wait - generating DH parameters...<img src="spin.gif" alt=""><\/p><\/div>' },
+					, prefix: '<div id="'+t+'_dh_progress_div" style="display:none"><p class="keyhelp">Please wait - generating DH parameters...<img src="spin.svg" alt=""><\/p><\/div>' },
 				{ title: '', multi: [
 					{ custom: '<input type="button" value="Generate DH Params" onclick="generateDHParams('+(i+1)+')" id="_vpn_dhgen_'+t+'_button">', suffix: '&nbsp; &nbsp;' },
 					{ name: 'f_vpn_'+t+'_dhtype', type: 'checkbox', value: 0, suffix: '&nbsp; <small>use 2048 instead of 1024 bytes. Warning! It may take a very long time!<\/small>' } ] }
@@ -1092,7 +1092,7 @@ function init() {
 				{ title: 'Serial number', custom: '<input type="text" name="vpn_'+t+'_serial" value="01" maxlength="2" size="2" id="_vpn_'+t+'_serial">', suffix: '&nbsp; <small>in hex (01 - FF)<\/small>' },
 				{ title: 'User', custom: '<select name="vpn_'+t+'_usergen" id="_vpn_'+t+'_usergen"><\/select>' },
 				{ title: '', custom: '<input type="button" value="Generate client config" onclick="downloadClientConfig('+(i+1)+')" id="_vpn_client_gen_'+t+'_button">',
-					suffix: '<div id="'+t+'_gen_progress_div" style="display:none"><p class="keyhelp">Please wait while the configuration is being generated...<img src="spin.gif" alt=""><\/p><\/div>'
+					suffix: '<div id="'+t+'_gen_progress_div" style="display:none"><p class="keyhelp">Please wait while the configuration is being generated...<img src="spin.svg" alt=""><\/p><\/div>'
 /* KEYGEN-END */
 				}
 			]);

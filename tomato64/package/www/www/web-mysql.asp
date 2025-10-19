@@ -217,7 +217,7 @@ function init() {
 	<div class="fields">
 		<span id="_mysqld_notice"></span><input type="button" id="_mysqld_button">
 		<input type="button" id="_mysqld_interface" value="Open admin interface in new tab" class="new_window" onclick="window.open('http://'+location.hostname+':'+nvram.nginx_port+'/adminer.php')">
-		&nbsp; <img src="spin.gif" alt="" id="spin">
+		&nbsp; <img src="spin.svg" alt="" id="spin">
 	</div>
 </div>
 

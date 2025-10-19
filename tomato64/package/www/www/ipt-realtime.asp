@@ -331,7 +331,7 @@ function init() {
 <div id="footer">
 	<span id="warnwd" style="display:none">Warning: 10 second timeout, restarting...&nbsp;</span>
 	<span id="dtime"></span>
-	<img src="spin.gif" id="refresh-spinner" alt="" onclick="debugTime=1">
+	<img src="spin.svg" id="refresh-spinner" alt="" onclick="debugTime=1">
 </div>
 
 </td></tr>
