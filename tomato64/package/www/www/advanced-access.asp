@@ -219,7 +219,7 @@ function init() {
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
 		<li><b>Src</b> - Source LAN bridge.</li>
-		<li><b>Src Address</b> <i>(optional)</i> - Source address allowed. Ex: "1.2.3.4", "1.2.3.4 - 2.3.4.5", "1.2.3.0/24".</li>
+		<li><b>Src Address</b> <i>(optional)</i> - Source address allowed. Ex: "1.2.3.4", "1.2.3.4-2.3.4.5", "1.2.3.0/24".</li>
 		<li><b>Dst</b> - Destination LAN bridge.</li>
 		<li><b>Dst Address</b> <i>(optional)</i> - Destination address inside the LAN.</li>
 	</ul>

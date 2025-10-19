@@ -327,7 +327,7 @@ function init() {
 			{ title: 'TLS support', indent: 2, name: 'f_ftp_tls', type: 'checkbox', suffix: ' <small>uses router httpd cert/key<\/small>', value: nvram.ftp_tls == 1 },
 /* HTTPS-END */
 			{ title: 'FTP Port', indent: 2, name: 'ftp_port', type: 'text', maxlen: 5, size: 7, value: fixPort(nvram.ftp_port, 21) },
-			{ title: 'Allowed Remote<br>Address(es)', indent: 2, name: 'f_ftp_sip', type: 'text', maxlen: 512, size: 64, value: nvram.ftp_sip, suffix: '<br><small>optional; ex: "1.1.1.1", "1.1.1.0/24", "1.1.1.1 - 2.2.2.2" or "me.example.com"<\/small>' },
+			{ title: 'Allowed Remote<br>Address(es)', indent: 2, name: 'f_ftp_sip', type: 'text', maxlen: 512, size: 64, value: nvram.ftp_sip, suffix: '<br><small>optional; ex: "1.1.1.1", "1.1.1.0/24", "1.1.1.1-2.2.2.2" or "me.example.com"<\/small>' },
 			{ title: 'Anonymous Users Access', name: 'ftp_anonymous', type: 'select', options: [['0', 'Disabled'],['1', 'Read/Write'],['2', 'Read Only'],['3', 'Write Only']], value: nvram.ftp_anonymous },
 			{ title: 'Allow Admin Login*', name: 'f_ftp_super', type: 'checkbox', suffix: ' <small>allows users to connect with admin account<\/small>', value: nvram.ftp_super == 1 },
 			{ title: 'Log FTP requests and responses', name: 'f_log_ftp', type: 'checkbox', value: nvram.log_ftp == 1 }

@@ -115,7 +115,7 @@ function init() {
 		createFieldTable('', [
 			{ title: 'Enable DMZ', name: 'f_dmz_enable', type: 'checkbox', value: (nvram.dmz_enable == '1') },
 				{ title: 'Destination Address', indent: 2, name: 'f_dmz_ipaddr', type: 'text', maxlen: 15, size: 17, value: nvram.dmz_ipaddr },
-				{ title: 'Source Address<br>Restriction', indent: 2, name: 'f_dmz_sip', type: 'text', maxlen: 512, size: 64, value: nvram.dmz_sip, suffix: ' &nbsp;<br><small>optional; ex: "1.1.1.1", "1.1.1.0/24", "1.1.1.1 - 2.2.2.2" or "me.example.com"<\/small>' },
+				{ title: 'Source Address<br>Restriction', indent: 2, name: 'f_dmz_sip', type: 'text', maxlen: 512, size: 64, value: nvram.dmz_sip, suffix: ' &nbsp;<br><small>optional; ex: "1.1.1.1", "1.1.1.0/24", "1.1.1.1-2.2.2.2" or "me.example.com"<\/small>' },
 				null,
 				{ title: 'Keep remote-access on the router', indent: 2, name: 'f_dmz_ra', type: 'checkbox', value: (nvram.dmz_ra == '1'), suffix: ' &nbsp;<small>Remote access port like SSH and WEB as per admin-access page config will not be forwarded to the DMZ target<\/small>' }
 		]);

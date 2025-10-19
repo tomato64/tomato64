@@ -598,7 +598,6 @@ function _v_iptip(e, ip, quiet) {
 			}
 		}
 	}
-
 	ip = fixIP(ip);
 	if (!ip) {
 		ferror.set(e, oip+' - invalid IP address', quiet);
@@ -1098,7 +1097,6 @@ function _v_hostname(e, h, quiet, required, multi, delim, cidr) {
 	var re;
 
 	v = (typeof(delim) == 'undefined') ? h.split(/\s+/) : h.split(delim);
-
 	if (multi) {
 		if (v.length > multi) {
 			ferror.set(e, 'Too many hostnames', quiet);
@@ -1115,10 +1113,11 @@ function _v_hostname(e, h, quiet, required, multi, delim, cidr) {
 	re = /^[a-zA-Z0-9](([a-zA-Z0-9\-]{0,61})[a-zA-Z0-9]){0,1}$/;
 
 	for (i = 0; i < v.length; ++i) {
-		s = v[i].replace(/_+/g, '-').replace(/\s+/g, '-');
+		s = v[i].replace(/_+/g, '-').replace(/ - /g, '-').replace(/\s+/g, '-');
 		if (s.length > 0) {
 			if (cidr && i == v.length-1)
 				re = /^[a-zA-Z0-9](([a-zA-Z0-9\-]{0,61})[a-zA-Z0-9]){0,1}(\/\d{1,3})?$/;
+
 			if (s.search(re) == -1) {
 				ferror.set(e, 'Invalid hostname. Only "A-Z 0-9" and "-" in the middle are allowed (up to 63 characters)', quiet);
 				return null;
@@ -1129,7 +1128,6 @@ function _v_hostname(e, h, quiet, required, multi, delim, cidr) {
 		}
 		v[i] = s;
 	}
-
 	ferror.clear(e);
 	return v.join((typeof(delim) == 'undefined') ? ' ' : delim);
 }
