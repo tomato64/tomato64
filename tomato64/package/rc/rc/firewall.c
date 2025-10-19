@@ -20,6 +20,7 @@
  *
  * Modified for Tomato Firmware
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
+ *
  * Fixes/updates (C) 2018 - 2025 pedro
  * https://freshtomato.org/
  *
@@ -129,6 +130,7 @@ static inline int fastnat_allowed(void)
 		while ((dp = readdir(dir))) {
 			if ((strcmp(dp->d_name, ".") == 0) || (strcmp(dp->d_name, "..") == 0))
 				continue;
+
 			enabled = 0;
 			break;
 		}
@@ -1773,8 +1775,7 @@ int start_firewall(void)
 {
 	DIR *dir;
 	struct dirent *dirent;
-	char s[64];
-	char buf1[16], buf2[16];
+	char s[64], buf[16];
 	char *c;
 	char *wanface[MWAN_MAX];
 	int n;
@@ -1910,23 +1911,23 @@ int start_firewall(void)
 	chains_log_detection();
 
 	for (n = 0; n < BRIDGE_COUNT; n++) {
-		memset(buf1, 0, sizeof(buf1));
-		snprintf(buf1, sizeof(buf1), (n == 0 ? "lan_ifname" : "lan%d_ifname"), n);
-		strlcpy(lanface[n], nvram_safe_get(buf1), sizeof(lanface[n]));
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), (n == 0 ? "lan_ifname" : "lan%d_ifname"), n);
+		strlcpy(lanface[n], nvram_safe_get(buf), sizeof(lanface[n]));
 
-		memset(buf1, 0, sizeof(buf1));
-		snprintf(buf1, sizeof(buf1), (n == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), n);
-		strlcpy(lanaddr[n], nvram_safe_get(buf1), sizeof(lanaddr[n]));
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), (n == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), n);
+		strlcpy(lanaddr[n], nvram_safe_get(buf), sizeof(lanaddr[n]));
 
-		memset(buf1, 0, sizeof(buf1));
-		snprintf(buf1, sizeof(buf1), (n == 0 ? "lan_netmask" : "lan%d_netmask"), n);
-		strlcpy(lanmask[n], nvram_safe_get(buf1), sizeof(lanmask[n]));
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), (n == 0 ? "lan_netmask" : "lan%d_netmask"), n);
+		strlcpy(lanmask[n], nvram_safe_get(buf), sizeof(lanmask[n]));
 	}
 
 	for (n = 1; n <= MWAN_MAX; n++) {
-		memset(buf1, 0, sizeof(buf1));
-		snprintf(buf1, sizeof(buf1), (n == 1 ? "wan" : "wan%d"), n);
-		memcpy(&wanfaces[n - 1], get_wanfaces(buf1), sizeof(wanfaces[n - 1]));
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), (n == 1 ? "wan" : "wan%d"), n);
+		memcpy(&wanfaces[n - 1], get_wanfaces(buf), sizeof(wanfaces[n - 1]));
 		wanface[n - 1] = wanfaces[n - 1].iface[0].name;
 	}
 
@@ -1957,11 +1958,9 @@ int start_firewall(void)
 			bool enable_rp_filter = 1;
 
 			for (n = 1; n <= MWAN_MAX; n++) {
-				memset(buf1, 0, sizeof(buf1));
-				snprintf(buf1, sizeof(buf1), "%d", n);
-				memset(buf2, 0, sizeof(buf2));
-				snprintf(buf2, sizeof(buf2), "wan%s_ifname", (n == 1 ? "" : buf1));
-				c = nvram_safe_get(buf2);
+				memset(buf, 0, sizeof(buf));
+				snprintf(buf, sizeof(buf), (n == 1 ? "wan_ifname" : "wan%d_ifname"), n);
+				c = nvram_safe_get(buf);
 
 				/* mcast needs rp filter to be turned off only for non default iface */
 				if (!(nvram_match("multicast_pass", "1")) || !(nvram_match("udpxy_enable", "1")) || (strcmp(wanface[n - 1], c) == 0))
@@ -2038,6 +2037,7 @@ int start_firewall(void)
 #ifdef TCONFIG_IPV6
 	if (ipv6_enabled)
 		fclose(ip6t_file);
+
 	ip6t_file = NULL;
 #endif
 
@@ -2069,7 +2069,7 @@ int start_firewall(void)
 		}
 		else {
 			syslog(LOG_INFO, "iptables-restore failed - retrying in %d secs...", n*n);
-			sleep(n*n);
+			sleep(n * n);
 		}
 	}
 	if (n < 5) {
@@ -2093,7 +2093,7 @@ int start_firewall(void)
 			}
 			else {
 				syslog(LOG_INFO, "ip6tables-restore failed - retrying in %d secs...", n*n);
-				sleep(n*n);
+				sleep(n * n);
 			}
 		}
 		if (n < 5) {
