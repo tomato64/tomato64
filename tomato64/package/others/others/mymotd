@@ -59,6 +59,7 @@ mask2cidr() {
 			MULTIWAN=0
 		}
 
+		echo -e "Built on $(NG os_date) by Lance"
 		echo -e "\033[1;34m ======================================================== \033[0m"
 		echo -e "\033[1;32m Welcome to the $(NG t_model_name) [$(NG router_name)]\033[0m"
 		echo -e "\033[1;31m Date: $(date | awk '{print $1 " " $2 " " $3 " " $6}')\033[0m"
