@@ -2,7 +2,9 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2024 pedro
+ *
+ * Fixes/updates (C) 2018 - 2025 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -39,34 +41,35 @@
 
 void get_wan_prefix(int iWan_unit, char *sPrefix)
 {
-	if (iWan_unit == 1)
-		strcpy(sPrefix, "wan");
-	else if (iWan_unit == 2)
-		strcpy(sPrefix, "wan2");
-#ifdef TCONFIG_MULTIWAN
-	else if (iWan_unit == 3)
-		strcpy(sPrefix, "wan3");
-	else if (iWan_unit == 4)
-		strcpy(sPrefix, "wan4");
-#endif
-	else
-		strcpy(sPrefix, "wan");
+	char wanstr[8];
+	int i;
+
+	strcpy(sPrefix, "wan");
+	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(wanstr, 0, sizeof(wanstr));
+		snprintf(wanstr, sizeof(wanstr), (i == 1 ? "wan" : "wan%d"), i);
+
+		if (iWan_unit == i)
+			strcpy(sPrefix, wanstr);
+	}
 }
 
 int get_wan_unit(const char *sPrefix)
 {
-	if (!strcmp(sPrefix, "wan"))
-		return 1;
-	else if (!strcmp(sPrefix, "wan2"))
-		return 2;
-#ifdef TCONFIG_MULTIWAN
-	else if (!strcmp(sPrefix, "wan3"))
-		return 3;
-	else if (!strcmp(sPrefix, "wan4"))
-		return 4;
-#endif
-	else
-		return 1;
+	char wanstr[8];
+	unsigned int i, ret = 1;
+
+	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(wanstr, 0, sizeof(wanstr));
+		snprintf(wanstr, sizeof(wanstr), (i == 1 ? "wan" : "wan%u"), i);
+
+		if (!strcmp(sPrefix, wanstr)) {
+			ret = i;
+			break;
+		}
+	}
+
+	return ret;
 }
 
 int get_wan_unit_with_value(const char *suffix, const char *value)
@@ -443,43 +446,35 @@ int wan_led_off(char *prefix) /* off WAN LED only if no other WAN active */
 {
 	char tmp[100];
 	char ppplink_file[32];
-	char *names[] = { /* FIXME: hardcoded to 4 WANs */
-		"wan",
-		"wan2",
-#ifdef TCONFIG_MULTIWAN
-		"wan3",
-		"wan4",
-#endif
-		NULL
-	};
-	int i;
-	int f;
+	char wanstr[8];
+	int f, up, proto, mwan_num, i;
 	struct ifreq ifr;
-	int up;
 	int count = 0; /* initialize with zero */
-	int proto;
-	int mwan_num = atoi(nvram_safe_get("mwan_num"));
-	if (mwan_num < 1 || mwan_num > MWAN_MAX) {
-		mwan_num = 1;
-	}
 
-	for (i = 0; (names[i] != NULL) && (i <= mwan_num-1); ++i) {
+	mwan_num = nvram_get_int("mwan_num");
+	if (mwan_num < 1 || mwan_num > MWAN_MAX)
+		mwan_num = 1;
+
+	for (i = 1; i <= mwan_num; i++) {
+		memset(wanstr, 0, sizeof(wanstr));
+		snprintf(wanstr, sizeof(wanstr), (i == 1 ? "wan" : "wan%d"), i);
+
 		up = 0; /* default is 0 (LED_OFF) */
-		if (!strcmp(prefix, names[i]))
+		if (!strcmp(prefix, wanstr))
 			continue; /* only check others */
 
-		logmsg(LOG_DEBUG, "*** %s: check %s aliveness...", __FUNCTION__, names[i]);
+		logmsg(LOG_DEBUG, "*** %s: check %s aliveness...", __FUNCTION__, wanstr);
 
-		switch (proto = get_wanx_proto(names[i])) {
+		switch (proto = get_wanx_proto(wanstr)) {
 			case WP_DISABLED:
 				break; /* WAN is disabled - skip */
 			case WP_STATIC:
 			case WP_DHCP:
 			case WP_LTE:
-				if (!nvram_match(strlcat_r(names[i], "_ipaddr", tmp, sizeof(tmp)), "0.0.0.0")) { /* have IP, assume ON */
+				if (!nvram_match(strlcat_r(wanstr, "_ipaddr", tmp, sizeof(tmp)), "0.0.0.0")) { /* have IP, assume ON */
 					up = 1;
 					if (((f = socket(AF_INET, SOCK_DGRAM, 0)) >= 0)) { /* check interface */
-						strlcpy(ifr.ifr_name, nvram_safe_get(strlcat_r(names[i], "_iface", tmp, sizeof(tmp))), sizeof(ifr.ifr_name));
+						strlcpy(ifr.ifr_name, nvram_safe_get(strlcat_r(wanstr, "_iface", tmp, sizeof(tmp))), sizeof(ifr.ifr_name));
 						if (ioctl(f, SIOCGIFFLAGS, &ifr) < 0)
 							up = 0;
 						close(f);
@@ -521,7 +516,7 @@ int wan_led_off(char *prefix) /* off WAN LED only if no other WAN active */
 			case WP_PPP3G:
 				memset(ppplink_file , 0, sizeof(ppplink_file));
 				FILE *f_tmp = NULL;
-				snprintf(ppplink_file, sizeof(ppplink_file), "/tmp/ppp/%s_link", names[i]);
+				snprintf(ppplink_file, sizeof(ppplink_file), "/tmp/ppp/%s_link", wanstr);
 				if ((f_tmp = fopen(ppplink_file, "r")) != NULL) { /* have PPP link, assume ON */
 					up = 1;
 					fclose(f_tmp);
