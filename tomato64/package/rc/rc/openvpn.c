@@ -143,19 +143,19 @@ static void ovpn_cleanup_dirs(ovpn_type_t type, int unit) {
 	eval("rm", "-rf", buffer);
 
 	memset(buffer, 0, BUF_SIZE_64);
-	snprintf(buffer, BUF_SIZE_64, OVPN_DIR"/fw/%s%d-fw.sh", tmp, unit);
+	snprintf(buffer, BUF_SIZE_64, OVPN_FW_DIR"/%s%d-fw.sh", tmp, unit);
 	eval("rm", "-rf", buffer);
 
 	if (type == OVPN_TYPE_CLIENT) {
 		memset(buffer, 0, BUF_SIZE_64);
-		snprintf(buffer, BUF_SIZE_64, OVPN_DIR"/dns/client%d.resolv", unit);
+		snprintf(buffer, BUF_SIZE_64, OVPN_DNS_DIR"/client%d.resolv", unit);
 		eval("rm", "-rf", buffer);
 
-		rmdir(OVPN_DIR"/dns");
+		rmdir(OVPN_DNS_DIR);
 	}
 
 	/* Attempt to remove directories. Will fail if not empty */
-	rmdir(OVPN_DIR"/fw");
+	rmdir(OVPN_FW_DIR);
 	rmdir(OVPN_DIR);
 }
 
@@ -537,16 +537,14 @@ void start_ovpn_client(int unit)
 		chains_log_detection();
 
 		/* Create firewall rules */
-		mkdir(OVPN_DIR"/fw", 0700);
+		mkdir(OVPN_FW_DIR, 0700);
 		memset(buffer, 0, BUF_SIZE);
-		snprintf(buffer, BUF_SIZE, OVPN_DIR"/fw/client%d-fw.sh", unit);
+		snprintf(buffer, BUF_SIZE, OVPN_FW_DIR"/client%d-fw.sh", unit);
 		fp = fopen(buffer, "w");
-		chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
-		fprintf(fp, "#!/bin/sh\n");
-
 		nvi = atoi(getNVRAMVar("vpn_client%d_fw", unit));
 
-		fprintf(fp, "iptables -I INPUT -i %s -m state --state NEW -j %s\n"
+		fprintf(fp, "#!/bin/sh\n"
+		            "iptables -I INPUT -i %s -m state --state NEW -j %s\n"
 		            "iptables -I FORWARD -i %s -m state --state NEW -j %s\n"
 		            "iptables -I FORWARD -o %s -j ACCEPT\n",
 		            iface, (nvi ? chain_in_drop : chain_in_accept),
@@ -567,9 +565,10 @@ void start_ovpn_client(int unit)
 		}
 #endif /* TCONFIG_BCMARM */
 
-		if (route_mode == NAT)
+		if (route_mode == NAT) {
 			/* masquerade all client outbound traffic regardless of source subnet */
 			fprintf(fp, "iptables -t nat -I POSTROUTING -o %s -j MASQUERADE\n", iface);
+		}
 
 		/* Create firewall rules for IPv6 */
 #ifdef TCONFIG_IPV6
@@ -603,10 +602,11 @@ void start_ovpn_client(int unit)
 		}
 
 		fclose(fp);
+		chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
 
 		/* firewall rules */
 		memset(buffer, 0, BUF_SIZE);
-		snprintf(buffer, BUF_SIZE, OVPN_DIR"/fw/client%d-fw.sh", unit);
+		snprintf(buffer, BUF_SIZE, OVPN_FW_DIR"/client%d-fw.sh", unit);
 
 		/* first remove existing firewall rule(s) */
 		simple_lock("firewall");
@@ -618,7 +618,7 @@ void start_ovpn_client(int unit)
 	}
 
 	/* In case of openvpn unexpectedly dies and leaves it added - flush tun IF, otherwise openvpn will not re-start (required by iproute2) */
-	eval("/usr/sbin/ip", "addr", "flush", "dev", iface);
+	eval("ip", "addr", "flush", "dev", iface);
 
 	/* Start the VPN client */
 	memset(buffer, 0, BUF_SIZE);
@@ -673,7 +673,7 @@ void stop_ovpn_client(int unit)
 
 	/* Remove firewall rules after VPN exit */
 	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, OVPN_DIR"/fw/client%d-fw.sh", unit);
+	snprintf(buffer, BUF_SIZE, OVPN_FW_DIR"/client%d-fw.sh", unit);
 
 	simple_lock("firewall");
 	run_del_firewall_script(buffer, OVPN_DIR_DEL_SCRIPT);
@@ -1155,28 +1155,28 @@ void start_ovpn_server(int unit)
 		chains_log_detection();
 
 		/* Create firewall rules */
-		mkdir(OVPN_DIR"/fw", 0700);
+		mkdir(OVPN_FW_DIR, 0700);
 		memset(buffer, 0, BUF_SIZE);
-		snprintf(buffer, BUF_SIZE, OVPN_DIR"/fw/server%d-fw.sh", unit);
+		snprintf(buffer, BUF_SIZE, OVPN_FW_DIR"/server%d-fw.sh", unit);
 		fp = fopen(buffer, "w");
 		chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
-		fprintf(fp, "#!/bin/sh\n");
+
 		memset(buffer, 0, BUF_SIZE);
 		strncpy(buffer, getNVRAMVar("vpn_server%d_proto", unit), BUF_SIZE);
-
 		memset(buffer2, 0, BUF_SIZE_32);
 		if ((!strcmp(buffer, "udp")) || (!strcmp(buffer, "udp4")) || (!strcmp(buffer, "udp6")))
 			snprintf(buffer2, BUF_SIZE_32, "udp");
 		else
 			snprintf(buffer2, BUF_SIZE_32, "tcp");
 
-		fprintf(fp, "iptables -t nat -I PREROUTING -p %s ", buffer2);
-		fprintf(fp, "--dport %d -j ACCEPT\n", atoi(getNVRAMVar("vpn_server%d_port", unit)));
+		fprintf(fp, "#!/bin/sh\n"
+		            "iptables -t nat -I PREROUTING -p %s --dport %d -j ACCEPT\n",
+		            buffer2, atoi(getNVRAMVar("vpn_server%d_port", unit)));
+
 		memset(buffer, 0, BUF_SIZE);
 		strncpy(buffer, getNVRAMVar("vpn_server%d_proto", unit), BUF_SIZE);
-		fprintf(fp, "iptables -I INPUT -p %s ", buffer2);
-
-		fprintf(fp, "--dport %d -j %s\n", atoi(getNVRAMVar("vpn_server%d_port", unit)), chain_in_accept);
+		fprintf(fp, "iptables -I INPUT -p %s --dport %d -j %s\n",
+		            buffer2, atoi(getNVRAMVar("vpn_server%d_port", unit)), chain_in_accept);
 
 		memset(buffer, 0, BUF_SIZE);
 		snprintf(buffer, BUF_SIZE, "vpn_server%d_firewall", unit);
@@ -1205,9 +1205,8 @@ void start_ovpn_server(int unit)
 #ifdef TCONFIG_IPV6
 		if (ipv6_enabled()) {
 			strncpy(buffer, getNVRAMVar("vpn_server%d_proto", unit), BUF_SIZE);
-			fprintf(fp, "ip6tables -I INPUT -p %s ", buffer2);
-
-			fprintf(fp, "--dport %d -j %s\n", atoi(getNVRAMVar("vpn_server%d_port", unit)), chain_in_accept);
+			fprintf(fp, "ip6tables -I INPUT -p %s --dport %d -j %s\n",
+			            buffer2, atoi(getNVRAMVar("vpn_server%d_port", unit)), chain_in_accept);
 
 			memset(buffer, 0, BUF_SIZE);
 			snprintf(buffer, BUF_SIZE, "vpn_server%d_firewall", unit);
@@ -1219,12 +1218,11 @@ void start_ovpn_server(int unit)
 			}
 		}
 #endif
-
 		fclose(fp);
 
 		/* firewall rules */
 		memset(buffer, 0, BUF_SIZE);
-		snprintf(buffer, BUF_SIZE, OVPN_DIR"/fw/server%d-fw.sh", unit);
+		snprintf(buffer, BUF_SIZE, OVPN_FW_DIR"/server%d-fw.sh", unit);
 
 		/* first remove existing firewall rule(s) */
 		simple_lock("firewall");
@@ -1288,7 +1286,7 @@ void stop_ovpn_server(int unit)
 
 	/* Remove firewall rules */
 	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, OVPN_DIR"/fw/server%d-fw.sh", unit);
+	snprintf(buffer, BUF_SIZE, OVPN_FW_DIR"/server%d-fw.sh", unit);
 
 	simple_lock("firewall");
 	run_del_firewall_script(buffer, OVPN_DIR_DEL_SCRIPT);
@@ -1434,7 +1432,7 @@ void write_ovpn_dnsmasq_config(FILE* f)
 		}
 	}
 
-	if ((dir = opendir(OVPN_DIR"/dns")) != NULL) {
+	if ((dir = opendir(OVPN_DNS_DIR)) != NULL) {
 		while ((file = readdir(dir)) != NULL) {
 			fn = file->d_name;
 
@@ -1468,10 +1466,10 @@ int write_ovpn_resolv(FILE* f)
 	char *fn, ch;
 	int num, exclusive = 0;
 
-	if (chdir(OVPN_DIR"/dns"))
+	if (chdir(OVPN_DNS_DIR))
 		return 0;
 
-	dir = opendir(OVPN_DIR"/dns");
+	dir = opendir(OVPN_DNS_DIR);
 
 	while ((file = readdir(dir)) != NULL) {
 		fn = file->d_name;

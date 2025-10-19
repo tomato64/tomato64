@@ -96,9 +96,10 @@ typedef enum { IPT_TABLE_NAT, IPT_TABLE_FILTER, IPT_TABLE_MANGLE } ipt_table_t;
 #define OVPN_CLIENT_MAX		2
 #endif
 #define OVPN_DIR		"/etc/openvpn"
+#define OVPN_DNS_DIR		OVPN_DIR"/dns"
 #define OVPN_FW_DIR		OVPN_DIR"/fw"
 #define OVPN_DEL_SCRIPT		"clear-fw-tmp.sh"
-#define OVPN_DIR_DEL_SCRIPT	OVPN_DIR"/fw/"OVPN_DEL_SCRIPT
+#define OVPN_DIR_DEL_SCRIPT	OVPN_FW_DIR"/"OVPN_DEL_SCRIPT
 #define WG_DIR			"/etc/wireguard"
 #define WG_DNS_DIR		WG_DIR"/dns"
 #define WG_SCRIPTS_DIR		WG_DIR"/scripts"
