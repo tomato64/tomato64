@@ -1738,8 +1738,8 @@ function verifyFields(focused, quiet) {
 
 		/* verify priority */
 		var priority = E('_wg'+i+'_prio');
-		if (priority.value != '' && !v_range('_wg'+i+'_prio', quiet || !ok, 1, 255)) {
-			ferror.set(priority, 'The priority must be in the range 1 - 255', quiet || !ok);
+		if (priority.value != '' && !v_range('_wg'+i+'_prio', quiet || !ok, 1, 32766)) {
+			ferror.set(priority, 'The priority must be in the range 1 - 32766', quiet || !ok);
 			ok = 0;
 		}
 		else
@@ -2146,8 +2146,8 @@ function init() {
 				null,
 				{ title: 'Type of VPN', name: t+'_com', type: 'select', options: [['0','Internal - Hub (this device) and Spoke (peers)'],['1','Internal - Full Mesh (defined Endpoint only)'],['2','Internal - Full Mesh'],['3','External - VPN Provider']], value: nvram[t+'_com'] || 0 },
 				{ title: 'Redirect Internet traffic', name: t+'_rgwr', type: 'select', options: [[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram[t+'_rgwr'] },
-				{ title: 'Priority', indent: 2, name: t+'_prio', type: 'text', maxlen: 3, size: 10, placeholder: (100 + i), value: nvram[t+'_prio'] },
-				{ title: 'Import Config from File', custom: '<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File"><input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')">' },
+				{ title: 'Priority', indent: 2, name: t+'_prio', type: 'text', maxlen: 5, size: 5, placeholder: (100 + i), suffix: '&nbsp;<small>(1 - 32766) lower number = higher priority<\/small>', value: nvram[t+'_prio'] },
+				{ title: 'Import Config from File', indent: 2, custom: '<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File"><input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')">' },
 				{ title: '', custom: '<div>Note: before importing the configuration, set the correct "Type of VPN" above.<\/div>' }
 			]);
 			W('<br><\/div>');

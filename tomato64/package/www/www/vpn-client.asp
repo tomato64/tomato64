@@ -240,8 +240,8 @@ function verifyFields(focused, quiet) {
 
 		/* verify priority */
 		var priority = E('_vpn_'+t+'_prio');
-		if (priority.value != '' && !v_range('_vpn_'+t+'_prio', quiet || !ok, 1, 255)) {
-			ferror.set(priority, 'The priority must be in the range 1 - 255', quiet || !ok);
+		if (priority.value != '' && !v_range('_vpn_'+t+'_prio', quiet || !ok, 1, 32766)) {
+			ferror.set(priority, 'The priority must be in the range 1 - 32766', quiet || !ok);
 			ok = 0;
 		}
 		else
@@ -542,7 +542,7 @@ function init() {
 				{ title: 'Redirect Internet traffic', multi: [
 					{ name: 'vpn_'+t+'_rgw', type: 'select', options: [[0,'No'],[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram['vpn_'+t+'_rgw'] },
 					{ name: 'vpn_'+t+'_gw', type: 'text', maxlen: 15, size: 17, value: nvram['vpn_'+t+'_gw'], prefix: '<span id="'+t+'_gateway"> &nbsp;Gateway:&nbsp', suffix: '<\/span>'} ] },
-				{ title: 'Priority', indent: 2, name: 'vpn_'+t+'_prio', type: 'text', maxlen: 3, size: 10, placeholder: (90 + i), value: nvram['vpn_'+t+'_prio'] },
+				{ title: 'Priority', indent: 2, name: 'vpn_'+t+'_prio', type: 'text', maxlen: 5, size: 5, placeholder: (90 + i), suffix: '&nbsp;<small>(1 - 32766) lower number = higher priority<\/small>', value: nvram['vpn_'+t+'_prio'] },
 				{ title: 'Accept DNS configuration', name: 'vpn_'+t+'_adns', type: 'select', options: [[0,'Disabled'],[1,'Relaxed'],[2,'Strict'],[3,'Exclusive']], value: nvram['vpn_'+t+'_adns'] },
 				{ title: 'Data ciphers', name: 'vpn_'+t+'_ncp_ciphers', type: 'text', size: 70, maxlen: 127, value: nvram['vpn_'+t+'_ncp_ciphers'] },
 				{ title: 'Cipher', name: 'vpn_'+t+'_cipher', type: 'select', options: ciphers, value: nvram['vpn_'+t+'_cipher'] },
