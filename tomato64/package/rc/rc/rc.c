@@ -280,6 +280,10 @@ void kill_switch(const char *kind)
 			for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 				get_wan_prefix(wan_unit, wan_prefix);
 
+				/* skip if given WAN is disabled */
+				if (get_wanx_proto(wan_prefix) == WP_DISABLED)
+					continue;
+
 				/* find WAN IF */
 				memset(wan_if, 0, sizeof(wan_if)); /* reset */
 				snprintf(wan_if, sizeof(wan_if), "%s", get_wanface(wan_prefix));
