@@ -90,6 +90,9 @@ fog.sortCompare = function(a, b) {
 		case 4:
 			r = cmpInt(da[col], db[col]);
 		break;
+		case 5:
+			r = cmpIP(da[col], db[col]);
+		break;
 		default:
 			r = cmpText(da[col], db[col]);
 		break;
