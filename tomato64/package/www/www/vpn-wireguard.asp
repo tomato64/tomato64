@@ -80,6 +80,9 @@ ferror.show = function(e) {
 	var id = locateElement(e);
 	var tab = id.slice(0, 3);
 	var section = id.slice(4);
+	if (section == 'table_routing')
+		section = 'wg-policy'; /* special case */
+
 	tabSelect(tab);
 	sectSelect(tab.substr(2), section);
 	e.focus();
@@ -850,7 +853,7 @@ function encodePeers(data) {
 }
 
 function verifyPeerFields(unit, require_privkey) {
-	var result = 1;
+	var ok = 1;
 
 	var port = E('_f_wg'+unit+'_peer_port');
 	var privkey = E('_f_wg'+unit+'_peer_privkey');
@@ -861,37 +864,37 @@ function verifyPeerFields(unit, require_privkey) {
 	var fwmark = E('_f_wg'+unit+'_peer_fwmark');
 
 	if ((!port.value.match(/^ *[-\+]?\d+ *$/)) || (port.value < 1) || (port.value > 65535)) {
-		ferror.set(port, 'A valid port must be provided', !result);
-		result = 0;
+		ferror.set(port, 'A valid port must be provided', !ok);
+		ok = 0;
 	}
 	else
 		ferror.clear(port);
 
 	if ((privkey.value || require_privkey) && !window.wireguard.validateBase64Key(privkey.value)) {
-		ferror.set(privkey, 'A valid private key must be provided', !result);
-		result = 0;
+		ferror.set(privkey, 'A valid private key must be provided', !ok);
+		ok = 0;
 	}
 	else
 		ferror.clear(privkey);
 
 	if (pubkey.value && !window.wireguard.validateBase64Key(pubkey.value)) {
-		ferror.set(privkey, 'A valid public key must be provided', !result);
-		result = 0;
+		ferror.set(privkey, 'A valid public key must be provided', !ok);
+		ok = 0;
 	}
 	else
 		ferror.clear(pubkey);
 
 	if (psk.value && !window.wireguard.validateBase64Key(psk.value)) {
-		ferror.set(psk, 'A valid PresharedKey must be provided or left blank', !result);
-		result = 0;
+		ferror.set(psk, 'A valid PresharedKey must be provided or left blank', !ok);
+		ok = 0;
 	}
 	else
 		ferror.clear(psk);
 
 	if (E('_wg'+unit+'_com').value != 3) { /* !'External - VPN Provider' */
 		if (!verifyCIDR(ip.value)) {
-			ferror.set(ip, 'A valid CIDR (IP/MASK) must be provided to generate a configuration file', !result);
-			result = 0;
+			ferror.set(ip, 'A valid CIDR (IP/MASK) must be provided to generate a configuration file', !ok);
+			ok = 0;
 		}
 		else
 			ferror.clear(ip);
@@ -910,23 +913,23 @@ function verifyPeerFields(unit, require_privkey) {
 		}
 	}
 	if (!ok) {
-		ferror.set(allowedips, 'Allowed IPs must be in CIDR format separated by commas', !result);
-		result = 0;
+		ferror.set(allowedips, 'Allowed IPs must be in CIDR format separated by commas', !ok);
+		ok = 0;
 	}
 	else
 		ferror.clear(allowedips);
 
 	/* verify peer keep alive */
-	if (!v_range('_f_wg'+unit+'_peer_ka', !result, 0, 99)) result = 0;
+	if (!v_range('_f_wg'+unit+'_peer_ka', !ok, 0, 99)) ok = 0;
 
 	if (fwmark.value && !verifyFWMark(fwmark.value)) {
-		ferror.set(fwmark, 'FWMark must be a hexadecimal number of 8 characters or 0', !result);
-		result = 0;
+		ferror.set(fwmark, 'FWMark must be a hexadecimal number of 8 characters or 0', !ok);
+		ok = 0;
 	}
 	else
 		ferror.clear(fwmark);
 
-	return result;
+	return ok;
 }
 
 function copyInterfacePubKey(unit) {
@@ -1198,31 +1201,31 @@ function genPeerGridConfig(unit, row, type) {
 	var port = E('_f_wg'+unit+'_peer_port');
 	var fwmark = E('_f_wg'+unit+'_peer_fwmark');
 	var row_data = peerTables[unit].tb.rows[row]._data;
-	var result = true;
+	var ok = 1;
 
 	clearPeerFields(unit);
 
 	if (type == 'cfg' && !row_data[2]) {
 		alert('The selected peer does not have a private key stored, which is require for configuration generation');
-		result = false;
+		ok = 0;
 	}
 
 	if ((!port.value.match(/^ *[-\+]?\d+ *$/)) || (port.value < 1) || (port.value > 65535)) {
-		ferror.set(port, 'A valid port must be provided', !result);
-		result = false;
+		ferror.set(port, 'A valid port must be provided', !ok);
+		ok = 0;
 	}
 	else
 		ferror.clear(port);
 
 	if (fwmark.value && !verifyFWMark(fwmark.value)) {
-		ferror.set(fwmark, 'FWMark must be a hexadecimal number of 8 characters or 0', !result);
-		result = false;
+		ferror.set(fwmark, 'FWMark must be a hexadecimal number of 8 characters or 0', !ok);
+		ok = 0;
 	}
 	else
 		ferror.clear(fwmark);
 
-	if (!result)
-		return false;
+	if (!ok)
+		return 0;
 
 	return generateWGConfig(unit, row_data[0], row_data[2], row_data[4], row_data[5].split('/')[0], port.value, fwmark.value, row_data[7], row_data[1]);
 }
@@ -1605,7 +1608,7 @@ RouteGrid.prototype.rpDel = function(row) {
 RouteGrid.prototype.verifyFields = function(row, quiet) {
 	changed = 1;
 	var ok = 1;
-	var clientnum = 1;
+
 	for (var unit = 0; unit < tabs.length; ++unit) {
 		if (routingTables[unit] == this)
 			updateForm(unit, 1);
@@ -1815,7 +1818,7 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_wg'+i+'_prio'), ext && rgwr);
 
 		/* Page Routing Policy */
-		elem.display(E('table_wg'+i+'_routing'), ext && rgwr);
+		elem.display(E('wg'+i+'_table_routing'), ext && rgwr);
 		elem.display(E('_wg'+i+'_routing_div_help'), (!ext) || (ext && !rgwr));
 
 		/* verify interface dns */
@@ -2022,7 +2025,7 @@ function earlyInit() {
 
 		var t = tabs[i][0];
 
-		routingTables[i].init('table_'+t+'_routing','sort', 0,[ { type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+		routingTables[i].init(t+'_table_routing','sort', 0,[ { type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 		                                                        { type: 'select', options: [[1,'From Source IP'],[2,'To Destination IP'],[3,'To Domain']] },
 		                                                        { type: 'text', maxlen: 50 },
 		                                                        { type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' }]);
@@ -2231,7 +2234,7 @@ function init() {
 
 			/* routing policy tab start */
 			W('<div id="'+t+'-wg-policy">');
-			W('<div class="tomato-grid" id="table_'+t+'_routing"><\/div>');
+			W('<div class="tomato-grid" id="'+t+'_table_routing"><\/div>');
 			W('<div id="_'+t+'_routing_div_help"><div class="fields"><div class="about"><b>To use Routing Policy, you have to choose "External - VPN Provider" as Type of VPN and "Routing Policy [(strict)]" in "Redirect Internet Traffic".<\/b><\/div><\/div><\/div>');
 			W('<\/div>');
 			/* routing policy tab stop */
