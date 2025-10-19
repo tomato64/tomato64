@@ -204,8 +204,8 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 
 			memset(taskname, 0, BUF_SIZE_32);
 			snprintf(taskname, BUF_SIZE_32,"CheckVPN%s%d", instanceType, unit);
-			memset(buffer2, 0, BUF_SIZE_32);
-			snprintf(buffer2, BUF_SIZE_32, "*/%d * * * * %s", nvi, buffer);
+			memset(buffer2, 0, BUF_SIZE_64);
+			snprintf(buffer2, BUF_SIZE_64, "*/%d * * * * %s", nvi, buffer);
 			eval("cru", "a", taskname, buffer2);
 		}
 	}
