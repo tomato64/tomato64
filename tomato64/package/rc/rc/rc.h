@@ -238,6 +238,7 @@ extern void do_static_routes(int add);
 #ifdef TOMATO64
 extern void start_wifi(void);
 extern void stop_wifi(void);
+extern void reload_wifi(void);
 #endif /* TOMATO64 */
 #ifndef TOMATO64
 extern int radio_main(int argc, char *argv[]);

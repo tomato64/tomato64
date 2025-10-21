@@ -12,7 +12,7 @@
 <title>[<% ident(); %>] Wifi</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
-<script src="isup.jsz?rel=<% version(); %>"></script>
+<script src="isup.jsx?_http_id=<% nv(http_id); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="wireless.js?rel=<% version(); %>"></script>
 
@@ -669,7 +669,7 @@ function save(nomsg) {
 
 		fom._service.value = '*';
 	} else {
-		fom._service.value = 'wifi-restart';
+		fom._service.value = 'wifi-reload';
 	}
 	form.submit(fom, 1);
 	changed = 0;

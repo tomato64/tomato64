@@ -50,6 +50,11 @@ OBJS  = httpd.o cgi.o tomato.o version.o misc.o dhcp.o upgrade.o \
 	wl.o devlist.o ddns.o config.o bwm.o utf8.o cpuinfo.o \
 	iptraffic.o #blackhole.o
 
+# TOMATO64 WiFi helper library
+ifeq ($(PLATFORM_WIFI),y)
+OBJS += wlhelper.o
+endif
+
 #ifeq ($(TCONFIG_USB),y)
 OBJS += usb.o
 OBJS += wwan.o

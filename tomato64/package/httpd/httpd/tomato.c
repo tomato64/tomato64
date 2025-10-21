@@ -1990,6 +1990,8 @@ static const nvset_t nvset_list[] = {
 
 #ifdef TOMATO64
 	{"wifi_sta_list",		V_NONE				},	/* Wireless Station Mode */
+	{"wifi_phy_count",		V_RANGE(0, 10)			},	/* Number of WiFi PHYs detected (set by wlconfig) */
+	{"wifi_phy_count_expected",	V_RANGE(0, 10)			},	/* Expected WiFi PHYs for this device (constant) */
 
 	{"wifi_phy0_band",		V_TEXT(2, 2)			},	/* 2G, 5G, 6G */
 	{"wifi_phy0_mode",		V_TEXT(1, 6)			},	/* n, ac, ax, be, legacy */

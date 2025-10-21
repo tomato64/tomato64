@@ -10,6 +10,9 @@
 
 
 #include "tomato.h"
+#ifdef TOMATO64_WIFI
+#include "wlhelper.h"
+#endif
 
 #include <ctype.h>
 #include <wlutils.h>
@@ -997,7 +1000,7 @@ static int get_wlnoise(int client, int unit)
 	return v;
 }
 
-#ifndef TOMATO64
+#ifndef TOMATO64_WIFI
 static int print_wlnoise(int idx, int unit, int subunit, void *param)
 {
 	web_printf("%c%d", (idx == 0) ? ' ' : ',', get_wlnoise(wl_client(unit, 0), unit));
@@ -1005,30 +1008,43 @@ static int print_wlnoise(int idx, int unit, int subunit, void *param)
 	return 0;
 }
 #else
+/* Callback for print_wlnoise */
+static int print_wlnoise_callback(int phy, int iface, const char *ifname, void *user_data)
+{
+	int *first_entry = (int *)user_data;
+	int noise;
+
+	/* Get noise level */
+	noise = wlhelper_get_noise_level(ifname);
+
+	/* Output noise level with comma separator */
+	if (*first_entry)
+		web_printf(",");
+	web_printf("%d", noise);
+	*first_entry = 1;
+
+	return 0; /* Continue iteration */
+}
+
 static void print_wlnoise(void)
 {
-       FILE *f;
-       char row[8];
+	int first_entry = 0;
 
-       const char cmd[] = "/usr/bin/wlnoise";
-
-       if ((f = popen(cmd, "r")) != NULL) {
-               while (fgets(row, sizeof(row), f)) {
-                       web_printf(row);
-               }
-               pclose(f);
-       }
+	/* Iterate through all enabled AP interfaces */
+	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
+	                            print_wlnoise_callback,
+	                            &first_entry);
 }
-#endif /* TOMATO64 */
+#endif /* TOMATO64_WIFI */
 
 void asp_wlnoise(int argc, char **argv)
 {
 	web_puts("\nwlnoise = [");
-#ifndef TOMATO64
+#ifndef TOMATO64_WIFI
 	foreach_wif(0, NULL, print_wlnoise);
 #else
 	print_wlnoise();
-#endif /* TOMATO64 */
+#endif /* TOMATO64_WIFI */
 	web_puts(" ];\n");
 }
 
@@ -1053,7 +1069,7 @@ void asp_wlclient(int argc, char **argv)
 	web_puts(foreach_wif(1, NULL, not_wlclient) ? "0" : "1");
 }
 
-#ifndef TOMATO64
+#ifndef TOMATO64_WIFI
 static int print_wlstats(int idx, int unit, int subunit, void *param)
 {
 	int phytype;
@@ -1157,32 +1173,50 @@ static int print_wlstats(int idx, int unit, int subunit, void *param)
 	return 0;
 }
 #else
+/* Callback for print_wlstats */
+static int print_wlstats_callback(int phy, int iface, const char *ifname, void *user_data)
+{
+	int *first_entry = (int *)user_data;
+	int channel, mhz, nbw, noise;
+	float rate;
+
+	/* Get channel statistics */
+	if (wlhelper_get_channel_stats(ifname, &channel, &mhz, &nbw, &noise, &rate) != 0)
+		return 0; /* Skip this interface, continue iteration */
+
+	/* Print comma separator for all entries after the first */
+	if (*first_entry)
+		web_puts(",");
+
+	/* Output format: { radio: 1, client: 0, channel: X, mhz: Y, rate: Z, nbw: N, rssi: 0, noise: M, intf: 0} */
+	web_printf("{ radio: 1, client: 0, channel: %d, mhz: %d, rate: %.1f, nbw: %d, rssi: 0, noise: %d, intf: 0}",
+	           channel, mhz, rate, nbw, noise);
+
+	*first_entry = 1;
+	return 0; /* Continue iteration */
+}
+
 static void print_wlstats(void)
 {
-       FILE *f;
-       char row[128];
+	int first_entry = 0;
 
-       const char cmd[] = "/usr/bin/wlstats";
-
-       if ((f = popen(cmd, "r")) != NULL) {
-               while (fgets(row, sizeof(row), f)) {
-                       web_printf(row);
-               }
-               pclose(f);
-       }
+	/* Iterate through all enabled AP interfaces */
+	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
+	                            print_wlstats_callback,
+	                            &first_entry);
 }
-#endif /* TOMATO64 */
+#endif /* TOMATO64_WIFI */
 
 void asp_wlstats(int argc, char **argv)
 {
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwlstats = [");
-#ifndef TOMATO64
+#ifndef TOMATO64_WIFI
 	foreach_wif(include_vifs, NULL, print_wlstats);
 #else
 	print_wlstats();
-#endif /* TOMATO64 */
+#endif /* TOMATO64_WIFI */
 	web_puts("];\n");
 }
 
@@ -1401,7 +1435,7 @@ void asp_wlchannels(int argc, char **argv)
 	web_puts("];\n");
 }
 
-#ifndef TOMATO64
+#ifndef TOMATO64_WIFI
 static int print_wlbands(int idx, int unit, int subunit, void *param)
 {
 	char *phytype, *phylist, *ifname;
@@ -1466,47 +1500,137 @@ static int print_wlbands(int idx, int unit, int subunit, void *param)
 	return 0;
 }
 #else
+/* Callback for print_wlbands */
+static int print_wlbands_callback(int phy, int iface, const char *ifname, void *user_data)
+{
+	int *first_entry = (int *)user_data;
+	char phy_name[32];
+	char nvram_key[64];
+	const char *band;
+
+	/* Get PHY name from iwinfo */
+	if (wlhelper_get_iwinfo_field(ifname, "PHY name:", phy_name, sizeof(phy_name)) != 0)
+		return 0; /* Skip this interface, continue iteration */
+
+	/* Get band from nvram */
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_%s_band", phy_name);
+	band = nvram_get(nvram_key);
+
+	if (!band)
+		return 0; /* Skip this interface, continue iteration */
+
+	/* Output band value */
+	if (*first_entry)
+		web_printf(",");
+
+	if (strcmp(band, "2g") == 0)
+		web_printf("['2']");
+	else if (strcmp(band, "5g") == 0)
+		web_printf("['1']");
+	else if (strcmp(band, "6g") == 0)
+		web_printf("['3']");
+
+	*first_entry = 1;
+	return 0; /* Continue iteration */
+}
+
 static void print_wlbands(void)
 {
-       FILE *f;
-       char row[16];
+	int first_entry = 0;
 
-       const char cmd[] = "/usr/bin/wlbands";
+	/* Iterate through all enabled AP interfaces */
+	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
+	                            print_wlbands_callback,
+	                            &first_entry);
+}
 
-       if ((f = popen(cmd, "r")) != NULL) {
-               while (fgets(row, sizeof(row), f)) {
-                       web_printf(row);
-               }
-               pclose(f);
-       }
+/* Callback for print_wlinfo */
+static int print_wlinfo_callback(int phy, int iface, const char *ifname, void *user_data)
+{
+	int *first_entry = (int *)user_data;
+	char nvram_key[64];
+	const char *encryption;
+	char mode_upper[16];
+	int broadcast;
+
+	/* Get encryption setting and convert to display format */
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%diface%d_encryption", phy, iface);
+	const char *enc = nvram_safe_get(nvram_key);
+
+	if (strcmp(enc, "sae") == 0)
+		encryption = "WPA3";
+	else if (strcmp(enc, "sae-mixed") == 0)
+		encryption = "WPA2/WPA3";
+	else if (strcmp(enc, "psk2") == 0)
+		encryption = "WPA2";
+	else if (strcmp(enc, "psk-mixed") == 0)
+		encryption = "WPA/WPA2";
+	else if (strcmp(enc, "psk") == 0)
+		encryption = "WPA";
+	else if (strcmp(enc, "owe") == 0)
+		encryption = "OWE (Open Network)";
+	else if (strcmp(enc, "none") == 0)
+		encryption = "none (Open Network)";
+	else
+		encryption = enc;
+
+	/* Get PHY mode and convert to uppercase */
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%d_mode", phy);
+	const char *phy_mode = nvram_safe_get(nvram_key);
+	strncpy(mode_upper, phy_mode, sizeof(mode_upper) - 1);
+	mode_upper[sizeof(mode_upper) - 1] = '\0';
+	for (char *p = mode_upper; *p; p++)
+		*p = toupper(*p);
+
+	/* Get channel width */
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%d_width", phy);
+	const char *width = nvram_safe_get(nvram_key);
+
+	/* Get network */
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%diface%d_network", phy, iface);
+	const char *network = nvram_safe_get(nvram_key);
+
+	/* Get broadcast setting (hidden flag inverted) */
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%diface%d_hidden", phy, iface);
+	broadcast = (nvram_get_int(nvram_key) == 1) ? 0 : 1;
+
+	/* Get key */
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%diface%d_key", phy, iface);
+	const char *key = nvram_safe_get(nvram_key);
+
+	/* Print comma separator for all entries after the first */
+	if (*first_entry)
+		web_puts(",");
+
+	/* Output format: ['Access Point','encryption','MODE','width MHz','network','broadcast','key'] */
+	web_printf("['Access Point','%s','%s','%s MHz','%s','%d','%s']",
+	           encryption, mode_upper, width, network, broadcast, key);
+
+	*first_entry = 1;
+	return 0; /* Continue iteration */
 }
 
 static void print_wlinfo(void)
 {
-       FILE *f;
-       char row[128];
+	int first_entry = 0;
 
-       const char cmd[] = "/usr/bin/wlinfo";
-
-       if ((f = popen(cmd, "r")) != NULL) {
-               while (fgets(row, sizeof(row), f)) {
-                       web_printf(row);
-               }
-               pclose(f);
-       }
+	/* Iterate through all enabled AP interfaces */
+	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
+	                            print_wlinfo_callback,
+	                            &first_entry);
 }
-#endif /* TOMATO64 */
+#endif /* TOMATO64_WIFI */
 
 void asp_wlbands(int argc, char **argv)
 {
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwl_bands = [");
-#ifndef TOMATO64
+#ifndef TOMATO64_WIFI
 	foreach_wif(include_vifs, NULL, print_wlbands);
 #else
 	print_wlbands();
-#endif /* TOMATO64 */
+#endif /* TOMATO64_WIFI */
 	web_puts(" ];\n");
 }
 
@@ -1517,9 +1641,9 @@ void asp_wlinfo(int argc, char **argv)
 	print_wlinfo();
 	web_puts(" ];\n");
 }
-#endif /* TOMATO64 */
+#endif /* TOMATO64_WIFI */
 
-#ifndef TOMATO64
+#ifndef TOMATO64_WIFI
 static int print_wif(int idx, int unit, int subunit, void *param)
 {
 	struct ifreq ifr;
@@ -1576,32 +1700,62 @@ static int print_wif(int idx, int unit, int subunit, void *param)
 	return 0;
 }
 #else
+/* Callback for print_wif */
+static int print_wif_callback(int phy, int iface, const char *ifname, void *user_data)
+{
+	int *first_entry = (int *)user_data;
+	char mac[18];
+	char nvram_key[64];
+	int subunit;
+
+	/* Check if interface exists */
+	if (!wlhelper_iface_exists(ifname))
+		return 0; /* Skip this interface, continue iteration */
+
+	/* Get MAC address */
+	if (wlhelper_get_mac_address(ifname, mac, sizeof(mac)) != 0)
+		return 0; /* Skip this interface, continue iteration */
+
+	/* Get ESSID from nvram */
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%diface%d_essid", phy, iface);
+	const char *essid = nvram_safe_get(nvram_key);
+
+	/* Calculate subunit (-1 for iface=0, else iface) */
+	subunit = (iface == 0) ? -1 : iface;
+
+	/* Print comma separator for all entries after the first */
+	if (*first_entry)
+		web_puts(",");
+
+	/* Output format: ['ifname','phy_str',phy_num,subunit,'essid','hwaddr',up,max_vifs,'mode','bssid'] */
+	web_printf("['%s','%d',%d,%d,'%s','%s',1,16,'ap','%s']",
+	           ifname, phy, phy, subunit, essid, mac, mac);
+
+	*first_entry = 1;
+	return 0; /* Continue iteration */
+}
+
 static void print_wif(void)
 {
-       FILE *f;
-       char row[128];
+	int first_entry = 0;
 
-       const char cmd[] = "/usr/bin/wlifaces";
-
-       if ((f = popen(cmd, "r")) != NULL) {
-               while (fgets(row, sizeof(row), f)) {
-                       web_printf(row);
-               }
-               pclose(f);
-       }
+	/* Iterate through all enabled AP interfaces */
+	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
+	                            print_wif_callback,
+	                            &first_entry);
 }
-#endif /* TOMATO64 */
+#endif /* TOMATO64_WIFI */
 
 void asp_wlifaces(int argc, char **argv)
 {
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwl_ifaces = [");
-#ifndef TOMATO64
+#ifndef TOMATO64_WIFI
 	foreach_wif(include_vifs, NULL, print_wif);
 #else
 	print_wif();
-#endif /* TOMATO64 */
+#endif /* TOMATO64_WIFI */
 	web_puts("];\n");
 }
 

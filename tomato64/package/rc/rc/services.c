@@ -2316,9 +2316,6 @@ void start_services(void)
 {
 	static int once = 1;
 
-#ifdef TOMATO64_WIFI
-	start_wifi();
-#endif /* TOMATO64_WIFI */
 #ifdef TCONFIG_HAVEGED
 	start_haveged();
 #endif
@@ -2346,6 +2343,9 @@ void start_services(void)
 #endif
 	start_cifs();
 	start_httpd();
+#ifdef TOMATO64_WIFI
+	start_wifi(); /* Start after httpd to give hotplug time to detect PHYs */
+#endif /* TOMATO64_WIFI */
 #ifdef TCONFIG_NGINX
 	start_nginx(0);
 	start_mysql(0);
@@ -3025,8 +3025,13 @@ TOP:
 
 #ifdef TOMATO64
 	if (strcmp(service, "wifi") == 0) {
-		if (act_stop) stop_wifi();
-		if (act_start) start_wifi();
+		if (strcmp(act, "reload") == 0) {
+			reload_wifi();
+		}
+		else {
+			if (act_stop) stop_wifi();
+			if (act_start) start_wifi();
+		}
 		goto CLEAR;
 	}
 #endif /* TOMATO64 */

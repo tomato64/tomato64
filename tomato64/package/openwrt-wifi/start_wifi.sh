@@ -3,6 +3,22 @@
 . /usr/sbin/nvram_ops
 . /usr/share/libubox/jshn.sh
 
+# Script mode: "reload" or "start" (default)
+MODE="${1:-start}"
+
+# Wait for wlconfig only on initial start (not reload)
+if [ "$MODE" = "start" ]; then
+	timeout=40  # 20 seconds (40 * 0.5s)
+	while [ $timeout -gt 0 ] && [ ! -f /tmp/.wlconfig_done ]; do
+		sleep 0.5
+		timeout=$((timeout - 1))
+	done
+
+	if [ ! -f /tmp/.wlconfig_done ]; then
+		logger -p user.error "wlconfig did not detect all expected WiFi PHYs within timeout, WiFi may not start correctly"
+	fi
+fi
+
 mkdir -p /etc/config
 touch /etc/config/network
 
@@ -183,7 +199,43 @@ print_mac_filter() {
 	fi
 }
 
+manage_relayd() {
+	# Kill any existing relayd instances
+	# relayd runs with interface name as process name, so we need to kill all instances
+	killall -q relayd 2>/dev/null
+
+	# Start relayd for each wireless bridge interface
+	for i in $(seq 0 1 $(($phycount - 1)));
+	do
+		for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)));
+		do
+			# If interface is enabled and in bridge mode
+			if [ $(NG "wifi_phy${i}iface${j}_enable") -eq 1 ] && [ "$(NG "wifi_phy${i}iface${j}_mode")" == "bridge" ];
+			then
+				start-stop-daemon -b -S -n $(get_ifname ${i} ${j}) -x \
+				/usr/sbin/relayd -- \
+				-B -D \
+				-I $(get_ifname ${i} ${j}) \
+				-I "$(NG wifi_phy${i}iface${j}_network)" \
+				$([ -n "$(NG wan_ipaddr)" ] && [ "$(NG wan_ipaddr)" != "0.0.0.0" ] && echo "-L $(NG wan_ipaddr)")
+			fi
+		done
+	done
+}
+
 json_for_each_item "count_phy" "wlan"
+
+# Validate PHY count
+if [ $phycount -eq 0 ]; then
+	logger -p user.error "No WiFi PHYs found in board.json, aborting WiFi start"
+	exit 1
+fi
+
+# Cross-check with nvram
+nvram_phycount=$(NG wifi_phy_count)
+if [ -n "$nvram_phycount" ] && [ $phycount -ne $nvram_phycount ]; then
+	logger -p user.warning "PHY count mismatch: board.json=$phycount nvram=$nvram_phycount, using board.json count"
+fi
 
 # For each wireless device
 for i in $(seq 0 1 $(($phycount - 1)));
@@ -245,77 +297,147 @@ do
 done
 uci commit wireless
 
-if [ "${start_hostapd}" == "1" ] || [ "${start_wpa_supplicant}" == "1" ];
-then
-	start-stop-daemon -b -S -n ubusd -x /usr/sbin/ubusd
-	start-stop-daemon -b -S -n netifd -x /usr/sbin/netifd
-
-	if [ "${start_wpa_supplicant}" == "1" ];
-	then
-		mkdir -p /var/run/wpa_supplicant
-		start-stop-daemon -b -S -n wpa_supplicant -x /usr/sbin/wpa_supplicant -- -n -s -g /var/run/wpa_supplicant/global
+# For reload mode, verify all required daemons are running
+if [ "$MODE" = "reload" ]; then
+	# If no interfaces are enabled, stop all WiFi services
+	if [ "${start_hostapd}" == "0" ] && [ "${start_wpa_supplicant}" == "0" ]; then
+		logger -p user.info "All WiFi interfaces disabled, stopping WiFi services"
+		killall -q hostapd_cli 2>/dev/null
+		killall -q hostapd 2>/dev/null
+		killall -q wpa_supplicant 2>/dev/null
+		killall -q netifd 2>/dev/null
+		killall -q ubusd 2>/dev/null
+		killall -q relayd 2>/dev/null
+		rm -f /etc/config/wireless
+		exit 0
 	fi
 
-	if [ "${start_hostapd}" == "1" ];
-	then
-		start-stop-daemon -b -S -n hostapd -x /usr/sbin/hostapd -- -s -g /var/run/hostapd/global
+	# Check essential daemons
+	if ! pidof ubusd > /dev/null || ! pidof netifd > /dev/null; then
+		logger -p user.warning "Essential WiFi daemons (ubusd/netifd) not running, performing full restart instead of reload"
+		MODE="start"
 	fi
 
+	# Check hostapd if needed
+	if [ "${start_hostapd}" == "1" ] && [ "$MODE" = "reload" ]; then
+		if ! pidof hostapd > /dev/null || ! pidof hostapd_cli > /dev/null; then
+			logger -p user.warning "hostapd/hostapd_cli required but not running, performing full restart instead of reload"
+			MODE="start"
+		fi
+	fi
 
-	timeout_duration=20
-	start_time=$(date +%s)
-	error=0
-	all_up=0
+	# Check wpa_supplicant if needed
+	if [ "${start_wpa_supplicant}" == "1" ] && [ "$MODE" = "reload" ]; then
+		if ! pidof wpa_supplicant > /dev/null; then
+			logger -p user.warning "wpa_supplicant required but not running, performing full restart instead of reload"
+			MODE="start"
+		fi
+	fi
 
-	while [ $(($(date +%s) - start_time)) -lt $timeout_duration ] && [ $all_up -eq 0 ]; do
-		all_up=1
-		for iface in $client_ifaces; do
-			if ! ip link show "$iface" 2>/dev/null | grep -q "state UP"; then
-				all_up=0
+	# If still in reload mode, all required daemons are running
+	if [ "$MODE" = "reload" ]; then
+		# Proceed with reload
+		wifi reload
+
+		# Restart relayd for wireless bridge interfaces (interface names may have changed)
+		manage_relayd
+
+		logger -p user.info "WiFi configuration reloaded"
+		exit 0
+	fi
+
+	# Mode was changed to "start" due to unhealthy daemons - clean up before restart
+	logger -p user.info "Stopping all WiFi services before full restart"
+
+	# Send SIGTERM to all daemons first (same order as stop_wifi() in C)
+	for daemon in relayd netifd hostapd_cli hostapd wpa_supplicant ubusd; do
+		if pidof $daemon > /dev/null; then
+			killall -q $daemon 2>/dev/null
+		fi
+	done
+
+	# Wait for all daemons to die (up to 5 seconds total, 50 deciseconds like C code)
+	for i in 1 2 3 4 5 6 7 8 9 10; do
+		all_dead=1
+		for daemon in relayd netifd hostapd_cli hostapd wpa_supplicant ubusd; do
+			if pidof $daemon > /dev/null; then
+				all_dead=0
+				break
 			fi
 		done
-		sleep 0.1
+		[ $all_dead -eq 1 ] && break
+		sleep 0.5
 	done
 
-	for iface in $client_ifaces; do
-		if ! ip link show "$iface" 2>/dev/null | grep -q "state UP"; then
-			logger -p user.error "Interface $iface did not come up within $timeout_duration seconds"
-			error=1
+	# Force kill any survivors with SIGKILL (like C code does after timeout)
+	for daemon in relayd netifd hostapd_cli hostapd wpa_supplicant ubusd; do
+		if pidof $daemon > /dev/null; then
+			killall -q -9 $daemon 2>/dev/null
 		fi
 	done
 
-	while ! hostapd_cli -s /var/run/hostapd/ -i global ping > /dev/null 2>&1; do
-		sleep .1
-	done
-	/usr/sbin/hostapd_cli -B -s /var/run/hostapd/ -i global -a /usr/bin/hostapd_event
+	# Brief wait after SIGKILL to ensure processes are fully terminated
+	sleep 0.5
+
+	# Note: Don't delete /etc/config here - we already generated wireless config above
+	# and will use it in start mode below
+	# Fall through to start mode below
 fi
 
-# Start relayd when using Wireless Ethernet Bridge
-# For each wireless device
-for i in $(seq 0 1 $(($phycount - 1)));
-do
-	# For each device interface
-	for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)));
-	do
-		# If interface is enabled
-		if [ $(NG "wifi_phy${i}iface${j}_enable") -eq 1 ];
-		then
-			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "bridge" ];
-			then
-				start-stop-daemon -b -S -n $(get_ifname ${i} ${j}) -x \
-				/usr/sbin/relayd -- \
-				-B -D \
-				-I $(get_ifname ${i} ${j}) \
-				-I "$(NG wifi_phy${i}iface${j}_network)" \
-				$([ -n "$(NG wan_ipaddr)" ] && [ "$(NG wan_ipaddr)" != "0.0.0.0" ] && echo "-L $(NG wan_ipaddr)")
-			fi
-		fi
-	done
-done
+# Only start services and wait for interfaces on initial start (not reload)
+if [ "$MODE" = "start" ]; then
+	if [ "${start_hostapd}" == "1" ] || [ "${start_wpa_supplicant}" == "1" ];
+	then
+		start-stop-daemon -b -S -n ubusd -x /usr/sbin/ubusd
+		start-stop-daemon -b -S -n netifd -x /usr/sbin/netifd
 
-if [ "$error" == 1 ];
-then
-	logger -p user.error "Wireless client(s) did not start or connect, check logs and settings"
-else
-	logger -p user.info "Wireless client(s) started successfully"
+		if [ "${start_wpa_supplicant}" == "1" ];
+		then
+			mkdir -p /var/run/wpa_supplicant
+			start-stop-daemon -b -S -n wpa_supplicant -x /usr/sbin/wpa_supplicant -- -n -s -g /var/run/wpa_supplicant/global
+		fi
+
+		if [ "${start_hostapd}" == "1" ];
+		then
+			start-stop-daemon -b -S -n hostapd -x /usr/sbin/hostapd -- -s -g /var/run/hostapd/global
+		fi
+
+
+		timeout_duration=20
+		start_time=$(date +%s)
+		error=0
+		all_up=0
+
+		while [ $(($(date +%s) - start_time)) -lt $timeout_duration ] && [ $all_up -eq 0 ]; do
+			all_up=1
+			for iface in $client_ifaces; do
+				if ! ip link show "$iface" 2>/dev/null | grep -q "state UP"; then
+					all_up=0
+				fi
+			done
+			sleep 0.1
+		done
+
+		for iface in $client_ifaces; do
+			if ! ip link show "$iface" 2>/dev/null | grep -q "state UP"; then
+				logger -p user.error "Interface $iface did not come up within $timeout_duration seconds"
+				error=1
+			fi
+		done
+
+		while ! hostapd_cli -s /var/run/hostapd/ -i global ping > /dev/null 2>&1; do
+			sleep .1
+		done
+		/usr/sbin/hostapd_cli -B -s /var/run/hostapd/ -i global -a /usr/bin/hostapd_event
+	fi
+
+	# Start relayd for wireless bridge interfaces
+	manage_relayd
+
+	if [ "$error" == 1 ];
+	then
+		logger -p user.error "Wireless client(s) did not start or connect, check logs and settings"
+	else
+		logger -p user.info "Wireless client(s) started successfully"
+	fi
 fi

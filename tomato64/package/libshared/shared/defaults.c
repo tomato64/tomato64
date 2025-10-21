@@ -2160,6 +2160,18 @@ struct nvram_tuple router_defaults[] = {
 #endif /* TOMATO64_BPIR3MINI */
 #ifdef TOMATO64_WIFI
 	{"wifi_sta_list",		""				, 0 },
+	{"wifi_phy_count",		"0"				, 0 },	/* Detected PHY count (cleared on boot) */
+
+	/* Expected PHY count - device-specific constant */
+#if defined(TOMATO64_MT6000)
+	{"wifi_phy_count_expected",	"2"				, 0 },	/* MT6000: 2.4GHz + 5GHz */
+#elif defined(TOMATO64_BPIR3)
+	{"wifi_phy_count_expected",	"2"				, 0 },	/* BPI-R3: 2.4GHz + 5GHz */
+#elif defined(TOMATO64_BPIR3MINI)
+	{"wifi_phy_count_expected",	"2"				, 0 },	/* BPI-R3 Mini: 2.4GHz + 5GHz */
+#else
+	{"wifi_phy_count_expected",	"0"				, 0 },	/* Unknown device: no wifi by default */
+#endif
 
 	{"wifi_phy0_band",		"2g"				, 0 },
 	{"wifi_phy0_mode",		"ax"				, 0 },

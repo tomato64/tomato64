@@ -11854,6 +11854,12 @@ static void sysinit(void)
 	eval("hotplug2", "--coldplug");
 #else
 	eval("/etc/init.d/S10mdev", "start");
+
+#ifdef TOMATO64_WIFI
+	/* Clear WiFi PHY count before hotplug2 starts detecting PHYs */
+	nvram_set("wifi_phy_count", "0");
+#endif
+
 	start_hotplug2();
 
 #ifdef TOMATO64_X86_64

@@ -1,5 +1,8 @@
 #!/bin/sh
 
+. /usr/sbin/nvram_ops
+. /usr/share/libubox/jshn.sh
+
 (
 	# Depends on util-linux flock
 	flock -x -w 3 200 || exit 1
@@ -9,5 +12,34 @@
 	fi
 
 	/sbin/wifi config
+
+	# Count PHYs from board.json and store in nvram for efficient lookups
+	if [ -e /etc/board.json ]; then
+		json_load_file /etc/board.json
+		phycount=0
+
+		# Count PHY entries using json_for_each_item
+		count_phy() {
+			phycount=$((phycount + 1))
+		}
+		json_for_each_item count_phy wlan
+
+		# Get expected minimum PHY count from nvram
+		# This is a constant set per-device in libshared/shared/defaults.c
+		expected_phys=$(NG wifi_phy_count_expected)
+		[ -z "$expected_phys" ] && expected_phys=0
+
+		# Update nvram with detected PHY count
+		if [ $phycount -gt 0 ]; then
+			NS "wifi_phy_count=$phycount"
+			NC
+		fi
+
+		# Signal wlconfig completion only if we have minimum expected PHYs
+		# This ensures all PHYs have been detected before start_wifi.sh proceeds
+		if [ $phycount -ge $expected_phys ] && [ $expected_phys -gt 0 ]; then
+			touch /tmp/.wlconfig_done
+		fi
+	fi
 
 ) 200>/var/lock/.wlconfig

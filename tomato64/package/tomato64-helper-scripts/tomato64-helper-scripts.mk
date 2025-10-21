@@ -29,15 +29,20 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/start_qemu_guest		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/start_ttyd			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_jumbo_frame		$(TARGET_DIR)/usr/bin
-	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlbands			$(TARGET_DIR)/usr/bin
+
+	# WiFi shell scripts - Still in use
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlconfig			$(TARGET_DIR)/usr/bin
-	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wldev			$(TARGET_DIR)/usr/bin
-	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlinfo			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlmotd			$(TARGET_DIR)/usr/bin
-	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlnoise			$(TARGET_DIR)/usr/bin
-	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlifaces			$(TARGET_DIR)/usr/bin
-	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlstats			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wl_bridge_isolate		$(TARGET_DIR)/usr/bin
+
+	# WiFi shell scripts - Following 6 scripts converted to C in httpd (wlhelper.c + devlist.c)
+	# Kept in repository for reference and historical purposes only
+#	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlbands			$(TARGET_DIR)/usr/bin
+#	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wldev			$(TARGET_DIR)/usr/bin
+#	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlinfo			$(TARGET_DIR)/usr/bin
+#	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlnoise			$(TARGET_DIR)/usr/bin
+#	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlifaces			$(TARGET_DIR)/usr/bin
+#	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlstats			$(TARGET_DIR)/usr/bin
 endef
 
 $(eval $(generic-package))
