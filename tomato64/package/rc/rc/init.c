@@ -11693,13 +11693,11 @@ static inline void set_kernel_panic(void)
 static inline void set_kernel_memory(void)
 {
 	f_write_string("/proc/sys/vm/overcommit_memory", "2", 0, 0); /* Linux kernel will not overcommit memory */
-#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	f_write_string("/proc/sys/vm/overcommit_ratio", "75", 0, 0); /* allow userspace to commit up to 75% of total memory */
 #else
 	f_write_string("/proc/sys/vm/overcommit_ratio", "100", 0, 0); /* allow userspace to commit up to 100% of total memory */
 #endif
-#endif /* TOMATO64 */
 }
 
 #ifdef TCONFIG_USB
