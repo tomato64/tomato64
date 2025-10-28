@@ -11,7 +11,7 @@
 #ifndef __WLHELPER_H__
 #define __WLHELPER_H__
 
-#ifdef TOMATO64_WIFI
+#ifdef TOMATO64
 
 #include <stddef.h>
 
@@ -216,6 +216,6 @@ typedef int (*wlhelper_iface_callback)(int phy, int iface, const char *ifname, v
  */
 int wlhelper_foreach_interface(int filter_flags, wlhelper_iface_callback callback, void *user_data);
 
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 
 #endif /* __WLHELPER_H__ */

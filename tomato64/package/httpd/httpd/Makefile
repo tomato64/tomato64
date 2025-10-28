@@ -30,10 +30,6 @@ ifeq ($(PLATFORM_BPIR3MINI),y)
 ALL_CPPFLAGS += -DTOMATO64_BPIR3MINI
 endif
 
-ifeq ($(PLATFORM_WIFI),y)
-ALL_CPPFLAGS += -DTOMATO64_WIFI
-endif
-
 ALL_CFLAGS = -fPIC
 ALL_CFLAGS += $(CFLAGS)
 
@@ -51,9 +47,7 @@ OBJS  = httpd.o cgi.o tomato.o version.o misc.o dhcp.o upgrade.o \
 	iptraffic.o #blackhole.o
 
 # TOMATO64 WiFi helper library
-ifeq ($(PLATFORM_WIFI),y)
 OBJS += wlhelper.o
-endif
 
 #ifeq ($(TCONFIG_USB),y)
 OBJS += usb.o

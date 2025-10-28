@@ -8,7 +8,7 @@
  * in TOMATO64, replacing shell script implementations with native C code.
  */
 
-#ifdef TOMATO64_WIFI
+#ifdef TOMATO64
 
 #include "tomato.h"
 #include "wlhelper.h"
@@ -600,4 +600,4 @@ int wlhelper_foreach_interface(int filter_flags, wlhelper_iface_callback callbac
 	return processed_count;
 }
 
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */

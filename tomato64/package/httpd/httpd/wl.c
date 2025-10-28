@@ -10,9 +10,9 @@
 
 
 #include "tomato.h"
-#ifdef TOMATO64_WIFI
+#ifdef TOMATO64
 #include "wlhelper.h"
-#endif
+#endif /* TOMATO64 */
 
 #include <ctype.h>
 #include <wlutils.h>
@@ -1000,14 +1000,14 @@ static int get_wlnoise(int client, int unit)
 	return v;
 }
 
-#ifndef TOMATO64_WIFI
+#ifndef TOMATO64
 static int print_wlnoise(int idx, int unit, int subunit, void *param)
 {
 	web_printf("%c%d", (idx == 0) ? ' ' : ',', get_wlnoise(wl_client(unit, 0), unit));
 
 	return 0;
 }
-#else
+#else /* TOMATO64 */
 /* Callback for print_wlnoise */
 static int print_wlnoise_callback(int phy, int iface, const char *ifname, void *user_data)
 {
@@ -1035,16 +1035,16 @@ static void print_wlnoise(void)
 	                            print_wlnoise_callback,
 	                            &first_entry);
 }
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 
 void asp_wlnoise(int argc, char **argv)
 {
 	web_puts("\nwlnoise = [");
-#ifndef TOMATO64_WIFI
+#ifndef TOMATO64
 	foreach_wif(0, NULL, print_wlnoise);
-#else
+#else /* TOMATO64 */
 	print_wlnoise();
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 	web_puts(" ];\n");
 }
 
@@ -1069,7 +1069,7 @@ void asp_wlclient(int argc, char **argv)
 	web_puts(foreach_wif(1, NULL, not_wlclient) ? "0" : "1");
 }
 
-#ifndef TOMATO64_WIFI
+#ifndef TOMATO64
 static int print_wlstats(int idx, int unit, int subunit, void *param)
 {
 	int phytype;
@@ -1172,7 +1172,7 @@ static int print_wlstats(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
-#else
+#else /* TOMATO64 */
 /* Callback for print_wlstats */
 static int print_wlstats_callback(int phy, int iface, const char *ifname, void *user_data)
 {
@@ -1205,18 +1205,18 @@ static void print_wlstats(void)
 	                            print_wlstats_callback,
 	                            &first_entry);
 }
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 
 void asp_wlstats(int argc, char **argv)
 {
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwlstats = [");
-#ifndef TOMATO64_WIFI
+#ifndef TOMATO64
 	foreach_wif(include_vifs, NULL, print_wlstats);
-#else
+#else /* TOMATO64 */
 	print_wlstats();
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 	web_puts("];\n");
 }
 
@@ -1435,7 +1435,7 @@ void asp_wlchannels(int argc, char **argv)
 	web_puts("];\n");
 }
 
-#ifndef TOMATO64_WIFI
+#ifndef TOMATO64
 static int print_wlbands(int idx, int unit, int subunit, void *param)
 {
 	char *phytype, *phylist, *ifname;
@@ -1499,7 +1499,7 @@ static int print_wlbands(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
-#else
+#else /* TOMATO64 */
 /* Callback for print_wlbands */
 static int print_wlbands_callback(int phy, int iface, const char *ifname, void *user_data)
 {
@@ -1619,18 +1619,18 @@ static void print_wlinfo(void)
 	                            print_wlinfo_callback,
 	                            &first_entry);
 }
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 
 void asp_wlbands(int argc, char **argv)
 {
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwl_bands = [");
-#ifndef TOMATO64_WIFI
+#ifndef TOMATO64
 	foreach_wif(include_vifs, NULL, print_wlbands);
-#else
+#else /* TOMATO64 */
 	print_wlbands();
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 	web_puts(" ];\n");
 }
 
@@ -1641,9 +1641,9 @@ void asp_wlinfo(int argc, char **argv)
 	print_wlinfo();
 	web_puts(" ];\n");
 }
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 
-#ifndef TOMATO64_WIFI
+#ifndef TOMATO64
 static int print_wif(int idx, int unit, int subunit, void *param)
 {
 	struct ifreq ifr;
@@ -1699,7 +1699,7 @@ static int print_wif(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
-#else
+#else /* TOMATO64 */
 /* Callback for print_wif */
 static int print_wif_callback(int phy, int iface, const char *ifname, void *user_data)
 {
@@ -1744,18 +1744,18 @@ static void print_wif(void)
 	                            print_wif_callback,
 	                            &first_entry);
 }
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 
 void asp_wlifaces(int argc, char **argv)
 {
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwl_ifaces = [");
-#ifndef TOMATO64_WIFI
+#ifndef TOMATO64
 	foreach_wif(include_vifs, NULL, print_wif);
-#else
+#else /* TOMATO64 */
 	print_wif();
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 	web_puts("];\n");
 }
 
@@ -1920,7 +1920,7 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 
 	return buf;
 }
-#else
+#else /* TOMATO64 */
 char* get_wl_tempsense(char *buf, const size_t buf_sz)
 {
 

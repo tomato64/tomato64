@@ -10,9 +10,9 @@
 
 
 #include "tomato.h"
-#ifdef TOMATO64_WIFI
+#ifdef TOMATO64
 #include "wlhelper.h"
-#endif
+#endif /* TOMATO64 */
 
 #include <ctype.h>
 #include <sys/ioctl.h>
@@ -110,7 +110,7 @@ static int get_wds_ifname(const struct ether_addr *ea, char *ifname)
 	return 0;
 }
 
-#ifndef TOMATO64_WIFI
+#ifndef TOMATO64
 static int get_wl_clients(int idx, int unit, int subunit, void *param)
 {
 	char *comma = param;
@@ -184,7 +184,7 @@ static int get_wl_clients(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
-#else
+#else /* TOMATO64 */
 
 /* Callback function for wlhelper_foreach_station */
 static int print_station(const char *ifname, int phy,
@@ -231,7 +231,7 @@ void get_wl_clients(void)
 	                            get_wl_clients_callback,
 	                            &first_entry);
 }
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 
 void asp_devlist(int argc, char **argv)
 {
@@ -248,11 +248,11 @@ void asp_devlist(int argc, char **argv)
 
 	web_puts("wldev = [");
 	comma = ' ';
-#ifndef TOMATO64_WIFI
+#ifndef TOMATO64
 	foreach_wif(1, &comma, get_wl_clients);
-#else
+#else /* TOMATO64 */
 	get_wl_clients();
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 	web_puts("];\n");
 
 	char *nvram_argv[] = { "wan_ifname,wan_iface,wan_proto,wan_ifnameX,wan_ifnames,wan_ipaddr,wan_hwaddr,wan_ppp_get_ip,wan_gateway_get,wan_gateway,wan_pptp_dhcp,wan_pptp_server_ip,\
@@ -277,11 +277,11 @@ lan_ifname,lan_ifnames,lan_ipaddr,lan_netmask,web_svg,web_css,cstats_enable,csta
 		/* dump the leases to a file */
 		if (killall("dnsmasq", SIGUSR2) == 0) {
 			/* helper in dnsmasq will remove this when it's done */
-#ifndef TOMATO64_WIFI
+#ifndef TOMATO64
 			f_wait_notexists(lease_file_tmp, 5);
-#else
+#else /* TOMATO64 */
 			f_micro_wait_exists(lease_file_tmp, 5000000, 1);
-#endif /* TOMATO64_WIFI */
+#endif /* TOMATO64 */
 		}
 
 		if ((f = fopen(lease_file, "r"))) {
