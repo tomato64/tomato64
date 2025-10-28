@@ -34,74 +34,75 @@ do
 	# For each device interface
 	for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)))
 	do
+		ifname="$(print_ifname ${i} ${j})"
 
-		# If interface is enabled
-		if [ "$(NG "wifi_phy${i}iface${j}_enable")" == "1" ];
+		# If this is the interface we're looking for
+		if [ "${INTERFACE}" == "$ifname" ];
 		then
-
-			# If interface is an Access Point
-			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "ap" ];
+			# Only process if interface is enabled and is an AP
+			if [ "$(NG "wifi_phy${i}iface${j}_enable")" == "1" ] && [ "$(NG "wifi_phy${i}iface${j}_mode")" == "ap" ];
 			then
-				ifname="$(print_ifname ${i} ${j})"
+				br_isolate="$(NG "wifi_phy${i}iface${j}_br_isolate")"
 
-				# If this is the interface
-				if [ "${INTERFACE}" == "$ifname" ];
+				# If bridge isolation is enabled
+				if [ "$br_isolate" == "1" ];
 				then
-					br_isolate="$(NG "wifi_phy${i}iface${j}_br_isolate")"
-
-					#If bridge_isolate is enabled
-					if [ "$br_isolate" == "1" ];
-					then
-
-						# Check if there's a STA/bridge interface on the same radio that might be initializing
-						for k in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)))
-						do
-							iface_mode="$(NG "wifi_phy${i}iface${k}_mode")"
-							if [ "$(NG "wifi_phy${i}iface${k}_enable")" == "1" ] && [ "$iface_mode" == "sta" -o "$iface_mode" == "bridge" ];
-							then
-								sta_ifname="$(print_ifname ${i} ${k})"
-								# Wait up to 5 seconds for the STA/bridge interface to be fully up
-								for sta_wait in 1 2 3 4 5; do
-									if ip link show $sta_ifname 2>/dev/null | grep -q "state UP"; then
-										break
-									fi
-									sleep 1
-								done
-								break
-							fi
-						done
-
-						# Wait for interface to be added to bridge (up to 2 seconds)
-						for retry in 1 2 3 4; do
-							if bridge link show dev ${INTERFACE} >/dev/null 2>&1; then
-								break
-							fi
-							sleep 0.5
-						done
-
-						# Try to set isolation with retry logic for transient driver issues
-						MAX_RETRIES=5
-						RETRY_DELAY=0.5
-
-						for attempt in $(seq 1 $MAX_RETRIES); do
-							ERR=$(bridge link set dev ${INTERFACE} isolated on 2>&1)
-							EXIT_CODE=$?
-
-							if [ $EXIT_CODE -eq 0 ]; then
-								break
-							else
-								if [ $attempt -eq $MAX_RETRIES ]; then
-									logger -t wl_bridge_isolate "ERROR: Failed to set isolation on $INTERFACE after $MAX_RETRIES attempts: $ERR"
-								else
-									sleep $RETRY_DELAY
+					# Check if there's a STA/bridge interface on the same radio that might be initializing
+					for k in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)))
+					do
+						iface_mode="$(NG "wifi_phy${i}iface${k}_mode")"
+						if [ "$(NG "wifi_phy${i}iface${k}_enable")" == "1" ] && [ "$iface_mode" == "sta" -o "$iface_mode" == "bridge" ];
+						then
+							sta_ifname="$(print_ifname ${i} ${k})"
+							# Wait up to 5 seconds for the STA/bridge interface to be fully up
+							for sta_wait in 1 2 3 4 5; do
+								if ip link show $sta_ifname 2>/dev/null | grep -q "state UP"; then
+									break
 								fi
-							fi
-						done
-					fi
-
-					break 2
+								sleep 1
+							done
+							break
+						fi
+					done
 				fi
+
+				# Wait for interface to be added to bridge (up to 2 seconds)
+				for retry in 1 2 3 4; do
+					if bridge link show dev ${INTERFACE} >/dev/null 2>&1; then
+						break
+					fi
+					sleep 0.5
+				done
+
+				# If isolation was requested, set it now
+				if [ "$br_isolate" == "1" ];
+				then
+					# Try to set isolation with retry logic for transient driver issues
+					MAX_RETRIES=5
+					RETRY_DELAY=0.5
+
+					for attempt in $(seq 1 $MAX_RETRIES); do
+						ERR=$(bridge link set dev ${INTERFACE} isolated on 2>&1)
+						EXIT_CODE=$?
+
+						if [ $EXIT_CODE -eq 0 ]; then
+							break
+						else
+							if [ $attempt -eq $MAX_RETRIES ]; then
+								logger -t wl_bridge_isolate "ERROR: Failed to set isolation on $INTERFACE after $MAX_RETRIES attempts: $ERR"
+							else
+								sleep $RETRY_DELAY
+							fi
+						fi
+					done
+				fi
+
+				# After interface joined bridge, re-apply all static ARP entries
+				logger -t wl_bridge_isolate "Re-applying static ARP entries after $INTERFACE joined bridge"
+				arpbind
 			fi
+
+			break 2
 		fi
 	done
 done

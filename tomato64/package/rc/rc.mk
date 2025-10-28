@@ -36,6 +36,7 @@ define RC_INSTALL_TARGET_CMDS
 	ln -sf rc $(TARGET_DIR)/sbin/blink_br
 	ln -sf rc $(TARGET_DIR)/sbin/phy_tempsense
 	ln -sf rc $(TARGET_DIR)/sbin/rcheck
+	ln -sf rc $(TARGET_DIR)/sbin/arpbind
 	ln -sf rc $(TARGET_DIR)/sbin/radio
 	ln -sf rc $(TARGET_DIR)/sbin/led
 	ln -sf rc $(TARGET_DIR)/sbin/reboot

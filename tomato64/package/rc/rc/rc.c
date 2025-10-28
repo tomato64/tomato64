@@ -66,6 +66,14 @@ static int hotplug_main(int argc, char *argv[])
 	return 0;
 }
 
+#ifdef TOMATO64
+static int arpbind_main(int argc, char *argv[])
+{
+	start_arpbind();
+	return 0;
+}
+#endif /* TOMATO64 */
+
 static int rc_main(int argc, char *argv[])
 {
 	if (argc < 2)
@@ -448,6 +456,9 @@ static const applets_t applets[] = {
 	{ "phy_tempsense",		phy_tempsense_main		},
 #endif
 	{ "rcheck",			rcheck_main			},
+#ifdef TOMATO64
+	{ "arpbind",			arpbind_main			},
+#endif /* TOMATO64 */
 	{ "dhcpc-event",		dhcpc_event_main		},
 	{ "dhcpc-release",		dhcpc_release_main		},
 	{ "dhcpc-renew",		dhcpc_renew_main		},

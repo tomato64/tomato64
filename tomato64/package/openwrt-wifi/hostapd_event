@@ -1,20 +1,179 @@
 #!/bin/sh
 
 log_message() {
-	logger -p user.info -t hostapd_disconnect "$1"
+	local tag="${2:-hostapd_event}"
+	logger -p user.info -t "$tag" "$1"
+}
+
+# Check if MAC is configured with static ARP in dhcpd_static NVRAM
+# Returns 0 (true) if MAC has static ARP enabled, 1 (false) otherwise
+is_static_arp() {
+	local check_mac="$(echo "$1" | tr '[:upper:]' '[:lower:]')"
+	local dhcpd_static="$(nvram get dhcpd_static 2>/dev/null)"
+	local OLD_IFS="$IFS"
+	local entry macfield ip hostname bind static_mac found
+
+	[ -z "$dhcpd_static" ] && return 1
+
+	# Parse dhcpd_static: format is MAC[,MAC2]<IP<HOSTNAME<BIND>...
+	# Entries are separated by '>', fields within entries by '<'
+	# We need to check if BIND field (4th field) is "1" for static ARP
+
+	found=0
+	IFS='>'
+	for entry in $dhcpd_static; do
+		[ -z "$entry" ] && continue
+
+		# Extract fields using parameter expansion
+		macfield="${entry%%<*}"
+		rest="${entry#*<}"
+		ip="${rest%%<*}"
+		rest="${rest#*<}"
+		hostname="${rest%%<*}"
+		bind="${rest##*<}"
+
+		# Only check entries with static ARP enabled (bind == "1")
+		if [ "$bind" = "1" ]; then
+			# Handle both single MAC and comma-separated MACs
+			IFS=','
+			for static_mac in $macfield; do
+				if [ "$(echo "$static_mac" | tr '[:upper:]' '[:lower:]')" = "$check_mac" ]; then
+					found=1
+					break 2
+				fi
+			done
+			IFS='>'
+		fi
+	done
+
+	IFS="$OLD_IFS"
+	[ $found -eq 1 ] && return 0
+	return 1
+}
+
+# Get static IP for a MAC address from dhcpd_static NVRAM
+# Returns the IP address if found with static ARP, empty otherwise
+get_static_ip_for_mac() {
+	local check_mac="$(echo "$1" | tr '[:upper:]' '[:lower:]')"
+	local dhcpd_static="$(nvram get dhcpd_static 2>/dev/null)"
+	local OLD_IFS="$IFS"
+	local entry macfield ip hostname bind static_mac
+
+	[ -z "$dhcpd_static" ] && return 1
+
+	IFS='>'
+	for entry in $dhcpd_static; do
+		[ -z "$entry" ] && continue
+
+		# Extract fields using parameter expansion
+		macfield="${entry%%<*}"
+		rest="${entry#*<}"
+		ip="${rest%%<*}"
+		rest="${rest#*<}"
+		hostname="${rest%%<*}"
+		bind="${rest##*<}"
+
+		# Only check entries with static ARP enabled (bind == "1")
+		if [ "$bind" = "1" ]; then
+			# Handle both single MAC and comma-separated MACs
+			IFS=','
+			for static_mac in $macfield; do
+				if [ "$(echo "$static_mac" | tr '[:upper:]' '[:lower:]')" = "$check_mac" ]; then
+					IFS="$OLD_IFS"
+					echo "$ip"
+					return 0
+				fi
+			done
+			IFS='>'
+		fi
+	done
+
+	IFS="$OLD_IFS"
+	return 1
 }
 
 if [ "$3" = "<3>AP-STA-DISCONNECTED" ]; then
 	mac=$(echo "$4")
 	if [ -n "$mac" ]; then
-		entry=$(ip neigh show | grep -i $mac)
-		if [ -n "$entry" ]; then
-			ip=$(echo $entry | awk '{print $1}')
-			ip neigh change "$ip" nud none dev "$(echo $entry | awk '{print $3}')" 2>/dev/null
-			if [ $? -eq 0 ]; then
-				log_message "Successfully removed neighbor entry for IP $ip (MAC $mac)"
+		# Check if this MAC has static ARP configured
+		if is_static_arp "$mac"; then
+			log_message "Preserving ARP entry for $mac (static ARP configured in NVRAM)" "hostapd_disconnect"
+		else
+			entry=$(ip neigh show | grep -i $mac)
+			if [ -n "$entry" ]; then
+				ip=$(echo $entry | awk '{print $1}')
+				ip neigh change "$ip" nud none dev "$(echo $entry | awk '{print $3}')" 2>/dev/null
+				if [ $? -eq 0 ]; then
+					log_message "Successfully removed neighbor entry for IP $ip (MAC $mac)" "hostapd_disconnect"
+				else
+					log_message "Failed to remove neighbor entry for IP $ip (MAC $mac)" "hostapd_disconnect"
+				fi
+			fi
+		fi
+	fi
+elif [ "$3" = "<3>AP-STA-CONNECTED" ]; then
+	mac=$(echo "$4")
+	if [ -n "$mac" ]; then
+		# Check if this MAC has static ARP configured and restore it
+		static_ip=$(get_static_ip_for_mac "$mac")
+		if [ -n "$static_ip" ]; then
+			# First, remove any existing ARP entry to force the kernel to recreate it
+			# This prevents the race where we detect the old permanent entry too quickly
+			# Find and delete entry on whatever interface it exists
+			existing_dev=$(ip neigh show "$static_ip" 2>/dev/null | head -1 | awk '{print $3}')
+			if [ -n "$existing_dev" ]; then
+				ip neigh del "$static_ip" dev "$existing_dev" 2>/dev/null
+			fi
+
+			# Now wait for the kernel to create a NEW dynamic entry from actual DHCP/traffic
+			# We specifically look for REACHABLE/STALE/DELAY states (not PERMANENT)
+			max_attempts=30  # 30 attempts * 0.2s = 6 second max wait (allow time for DHCP)
+			attempt=0
+			arp_found=0
+
+			while [ $attempt -lt $max_attempts ]; do
+				# Check if dynamic ARP entry exists for this MAC (newly created by kernel)
+				if ip neigh show | grep -i "$mac" | grep -qE "REACHABLE|STALE|DELAY"; then
+					arp_found=1
+					break
+				fi
+				sleep 0.2
+				attempt=$((attempt + 1))
+			done
+
+			if [ $arp_found -eq 1 ]; then
+				# Dynamic ARP entry appeared, extract the interface and make it permanent
+				# Get the device name from the existing ARP entry
+				arp_dev=$(ip neigh show | grep -i "$mac" | awk '{print $3}')
+
+				if [ -n "$arp_dev" ]; then
+					# Use 'ip neigh replace' for more robust handling
+					ip neigh replace "$static_ip" lladdr "$mac" nud permanent dev "$arp_dev" 2>/dev/null
+					if [ $? -eq 0 ]; then
+						log_message "Restored static ARP binding for $mac -> $static_ip on $arp_dev" "hostapd_connect"
+					else
+						# Fallback to traditional arp command
+						arp -s "$static_ip" "$mac" 2>/dev/null
+						if [ $? -eq 0 ]; then
+							log_message "Restored static ARP binding for $mac -> $static_ip using arp" "hostapd_connect"
+						else
+							log_message "Failed to restore static ARP binding for $mac -> $static_ip" "hostapd_connect"
+						fi
+					fi
+				else
+					# Can't find device, use arp command which will figure it out
+					arp -s "$static_ip" "$mac" 2>/dev/null
+					if [ $? -eq 0 ]; then
+						log_message "Restored static ARP binding for $mac -> $static_ip using arp" "hostapd_connect"
+					else
+						log_message "Failed to restore static ARP binding for $mac -> $static_ip" "hostapd_connect"
+					fi
+				fi
 			else
-				log_message "Failed to remove neighbor entry for IP $ip (MAC $mac)"
+				# Timeout - dynamic entry never appeared, set permanent anyway
+				timeout_ms=$((max_attempts * 200))
+				log_message "Dynamic ARP entry not found after ${timeout_ms}ms, setting static ARP anyway for $mac -> $static_ip" "hostapd_connect"
+				arp -s "$static_ip" "$mac" 2>/dev/null
 			fi
 		fi
 	fi
