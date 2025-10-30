@@ -15,6 +15,9 @@
  #include <sys/socket.h>
  #include <netdb.h>
 #endif
+#ifdef TOMATO64
+#include <sys/time.h>
+#endif /* TOMATO64 */
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
