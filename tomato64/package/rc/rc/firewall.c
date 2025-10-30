@@ -1477,6 +1477,14 @@ static void filter_forward(void)
 		}
 	}
 
+#if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
+#ifdef TCONFIG_IPV6
+	kill_switch(ipt_write, ip6t_write);
+#else
+	kill_switch(ipt_write);
+#endif
+#endif
+
 #ifdef TCONFIG_PPTPD
 	/* Add for pptp client */
 	pptpc_firewall("FORWARD", "", ipt_write);
@@ -1978,7 +1986,7 @@ int start_firewall(void)
 	}
 
 	if ((ipt_file = fopen(ipt_fname, "w")) == NULL) {
-		notice_set("iptables", "Unable to create iptables restore file");
+		notice_set("iptables", "Unable to create iptables restore file!");
 		simple_unlock("firewall");
 		return 0;
 	}
@@ -1986,7 +1994,7 @@ int start_firewall(void)
 #ifdef TCONFIG_IPV6
 	if (ipv6_enabled) {
 		if ((ip6t_file = fopen(ip6t_fname, "w")) == NULL) {
-			notice_set("ip6tables", "Unable to create ip6tables restore file");
+			notice_set("ip6tables", "Unable to create ip6tables restore file!");
 			simple_unlock("firewall");
 			return 0;
 		}
@@ -2135,10 +2143,6 @@ int start_firewall(void)
 
 	unlink("/var/webmon/domain");
 	unlink("/var/webmon/search");
-
-#if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
-	kill_switch();
-#endif
 
 #ifdef TCONFIG_PPTPD
 	run_pptpd_firewall_script();

@@ -11,6 +11,11 @@
 
 #include "rc.h"
 
+#if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
+ #include <sys/socket.h>
+ #include <netdb.h>
+#endif
+
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"rc_debug"
@@ -386,16 +391,117 @@ static int check_string(const char *str, char *out, size_t outlen)
 	return 0;
 }
 
-void kill_switch(void)
+typedef struct {
+	int family;
+	char addr[INET6_ADDRSTRLEN];
+} ip_addr;
+
+static int eq_ip(const ip_addr *a, const ip_addr *b)
+{
+	return a->family == b->family && strcmp(a->addr, b->addr) == 0;
+}
+
+/*
+ * Resolves a fully qualified domain name to a deduplicated vector of numeric IPv4 and/or IPv6 addresses
+ * @param	host		pointer to a domain name
+ * @param	out_addrs	output pointer to a dynamically allocated array
+ * @param	out_count	output pointer to the number of unique addresses
+ * @return	0 on success, non-zero on failure
+ */
+static int resolve_fqdn(const char *host, ip_addr **out_addrs, size_t *out_count)
+{
+	struct addrinfo hints, *res = NULL, *rp;
+	char buf[NI_MAXHOST];
+	int dup;
+	size_t cap, ncap, i;
+
+	*out_addrs = NULL;
+	*out_count = 0;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family   = AF_UNSPEC;     /* IPv4 and IPv6 */
+	hints.ai_socktype = 0;             /* any */
+	hints.ai_flags    = AI_ADDRCONFIG; /* return only families used locally */
+
+	if (getaddrinfo(host, NULL, &hints, &res) != 0)
+		return 1;
+
+	cap = 0;
+	ip_addr *vec = NULL;
+
+	for (rp = res; rp != NULL; rp = rp->ai_next) {
+#ifdef TCONFIG_IPV6
+		if (ipv6_enabled) {
+			if (rp->ai_family != AF_INET && rp->ai_family != AF_INET6)
+				continue;
+		}
+		else
+#else
+		{
+			if (rp->ai_family != AF_INET)
+				continue;
+		}
+#endif
+		memset(buf, 0, sizeof(buf));
+		if (getnameinfo(rp->ai_addr, rp->ai_addrlen, buf, sizeof(buf), NULL, 0, NI_NUMERICHOST) != 0)
+			continue;
+
+		ip_addr cand;
+		cand.family = rp->ai_family;
+		strlcpy(cand.addr, buf, sizeof(cand.addr));
+		cand.addr[sizeof(cand.addr) - 1] = '\0';
+
+		dup = 0;
+		for (i = 0; i < *out_count; i++) {
+			if (eq_ip(&cand, &vec[i])) {
+				dup = 1;
+				break;
+			}
+		}
+		if (dup)
+			continue;
+
+		if (*out_count == cap) {
+			ncap = cap ? cap * 2 : 8;
+			ip_addr *nvec = realloc(vec, ncap * sizeof(*nvec));
+			if (!nvec) {
+				free(vec);
+				freeaddrinfo(res);
+				return 2;
+			}
+			vec = nvec;
+			cap = ncap;
+		}
+		vec[*out_count] = cand;
+		(*out_count)++;
+	}
+
+	freeaddrinfo(res);
+
+	if (*out_count == 0) {
+		free(vec);
+		return 3;
+	}
+
+	*out_addrs = vec;
+
+	return 0;
+}
+
+#ifdef TCONFIG_IPV6
+void kill_switch(_tf_ipt_write ipt_write, _tf_ip6t_write ip6t_write)
+#else
+void kill_switch(_tf_ipt_write ipt_write)
+#endif
 {
 	unsigned int unit, br, rules_count, kd, type1_count;
-	int policy_type, wan_unit, mwan_num, ret, argc;
+	int policy_type, wan_unit, mwan_num, ret;
 	char *enable, *type, *value, *kswitch;
-	char *nv, *nvp, *b, *c, *lan_ip, *argv[15];
+	char *nv, *nvp, *b, *c, *lan_ip;
 	char wan_prefix[] = "wanXX";
 	char buf[64], buf2[64], val[64], wan_if[16];
 	static char sip[64];
-	size_t n, i, j, dots;
+	size_t n, i, j, dots, count;
 	const char *routing_key, *rgw_key, *iface_fmt;
 	const char* kind[] = {
 #ifdef TCONFIG_OPENVPN
@@ -505,33 +611,17 @@ void kill_switch(void)
 								/* check IP or IP range and prepare mask (if needed, for IP) */
 								ret = check_string(val, sip, sizeof(sip));
 								if (ret != 0) { /* only IPv4 or IPv4 range */
+									memset(buf2, 0, sizeof(buf2)); /* reset */
+									if (ret == 2) /* IP range */
+										snprintf(buf2, sizeof(buf2), "-m iprange --src-range %s", sip);
+									else
+										snprintf(buf2, sizeof(buf2), "-s %s", sip);
+
 									memset(buf, 0, sizeof(buf)); /* reset */
 									snprintf(buf, sizeof(buf), "br%u", br); /* copy brX to buffer */
-
-									argv[0] = "iptables";
-									argv[1] = "-I";
-									argv[2] = "FORWARD";
-									argc = 3;
-
-									if (ret == 2) { /* IP range */
-										argv[argc++] = "-m";
-										argv[argc++] = "iprange";
-										argv[argc++] = "--src-range";
-									}
-									else /* IP */
-										argv[argc++] = "-s";
-
-									argv[argc++] = sip;
-									argv[argc++] = "-i";
-									argv[argc++] = buf;
-									argv[argc++] = "-o";
-									argv[argc++] = wan_if;
-									argv[argc++] = "-j";
-									argv[argc++] = "REJECT";
-									argv[argc] = NULL;
-
 									logmsg(LOG_INFO, "Kill-Switch: type: %d - add '%s'", policy_type, sip);
-									_eval(argv, NULL, 0, NULL);
+
+									ipt_write("-I FORWARD %s -i %s -o %s -j REJECT --reject-with icmp-port-unreachable\n", buf2, buf, wan_if); /* sip! */
 									type1_count = 1;
 								}
 							}
@@ -548,7 +638,7 @@ void kill_switch(void)
 						memset(sip, 0, sizeof(sip)); /* reset */
 						ret = check_string(val, sip, sizeof(sip));
 
-						/* it's FQDN */
+						/* it's FQDN, so no 'sip' */
 						if (!ret) {
 							/* add only if time is synched and (one of) WAN is up otherwise we can't resolve it */
 							if ((!nvram_get_int("ntp_ready")) || (!is_anywanup())) {
@@ -556,18 +646,40 @@ void kill_switch(void)
 								continue;
 								/* TODO: these FQDNs have to be added ASAP with some script */
 							}
+
+							/* resolve FQDN */
+							ip_addr *addrs = NULL;
+							count = 0;
+							if (resolve_fqdn(val, &addrs, &count) != 0) {
+								logmsg(LOG_WARNING, "Kill-Switch: type: %d - can't resolve '%s' (are all WANs down, or did you enter the wrong domain?)", policy_type, val);
+								continue;
+								/* TODO: these FQDNs have to be added ASAP with some script */
+							}
+
 							logmsg(LOG_INFO, "Kill-Switch: type: %d - add '%s'", policy_type, val);
 
-							eval("iptables", "-I", "FORWARD", "-d", val, "!", "-o", buf, "-j", "REJECT");
-							eval("iptables", "-I", "FORWARD", "-d", val, "-o", wan_if, "-j", "REJECT");
+							/* add every resolved IP */
+							for (j = 0; j < count; j++) {
+								if (addrs[j].family == AF_INET) {
+									ipt_write("-I FORWARD -d %s/32 ! -o %s -j REJECT --reject-with icmp-port-unreachable\n", addrs[j].addr, buf); /* /32 because we have single IP here */
+									ipt_write("-I FORWARD -d %s/32 -o %s -j REJECT --reject-with icmp-port-unreachable\n", addrs[j].addr, wan_if);
+								}
+#ifdef TCONFIG_IPV6
+								else if (ipv6_enabled && addrs[j].family == AF_INET6) {
+									ip6t_write("-I FORWARD -d %s/128 ! -o %s -j REJECT --reject-with icmp6-port-unreachable\n", addrs[j].addr, buf); /* /128 because we have single IP here */
+									ip6t_write("-I FORWARD -d %s/128 -o %s -j REJECT --reject-with icmp6-port-unreachable\n", addrs[j].addr, wan_if);
+								}
+#endif
+							}
+							free(addrs);
 							rules_count++;
 						}
 						/* it's IPv4 already inspected/prepared by check_string() */
 						else if (ret == 1) {
 							logmsg(LOG_INFO, "Kill-Switch: type: %d - add '%s'", policy_type, sip);
 
-							eval("iptables", "-I", "FORWARD", "-d", sip, "!", "-o", buf, "-j", "REJECT"); /* sip! */
-							eval("iptables", "-I", "FORWARD", "-d", sip, "-o", wan_if, "-j", "REJECT");
+							ipt_write("-I FORWARD -d %s ! -o %s -j REJECT --reject-with icmp-port-unreachable\n", sip, buf); /* sip! */
+							ipt_write("-I FORWARD -d %s -o %s -j REJECT --reject-with icmp-port-unreachable\n", sip, wan_if);
 							rules_count++;
 						}
 					}
