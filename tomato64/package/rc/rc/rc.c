@@ -21,6 +21,11 @@
 #define LOGMSG_NVDEBUG	"rc_debug"
 
 
+#if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
+ const char ks_dir[]      = "/tmp/kill-switch";
+ const char ks_fqdns_fn[] = "fqdns";
+#endif
+
 #ifdef DEBUG_RCTEST
 /* used for various testing */
 static int rctest_main(int argc, char *argv[])
@@ -492,6 +497,7 @@ void kill_switch(_tf_ipt_write ipt_write, _tf_ip6t_write ip6t_write)
 void kill_switch(_tf_ipt_write ipt_write)
 #endif
 {
+	FILE *fp = NULL;
 	unsigned int unit, br, rules_count, kd, type1_count;
 	int policy_type, wan_unit, mwan_num, ret;
 	char *enable, *type, *value, *kswitch;
@@ -501,6 +507,8 @@ void kill_switch(_tf_ipt_write ipt_write)
 	static char sip[64];
 	size_t n, i, j, dots, count;
 	const char *routing_key, *rgw_key, *iface_fmt;
+
+	/* note: this will be eliminated with a global kill-switch */
 	const char* kind[] = {
 #ifdef TCONFIG_OPENVPN
 	                       "ovpn"
@@ -514,6 +522,10 @@ void kill_switch(_tf_ipt_write ipt_write)
 	};
 	n = ASIZE(kind);
 
+	/* create kill-switch dir */
+	mkdir_if_none(ks_dir);
+
+	/* proceed routing_val */
 	for (i = 0; i < n; i++) {
 		kd = (strcmp(kind[i], "wg") == 0 ? 0 : 1);
 		routing_key = (kd ? "vpn_client%u_routing_val" : "wg%u_routing_val");
@@ -664,6 +676,18 @@ void kill_switch(_tf_ipt_write ipt_write)
 							}
 							free(addrs);
 							rules_count++;
+
+							/* open FQDN file for writing only if it has not already been opened */
+							if (!fp) {
+								memset(buf2, 0, sizeof(buf2)); /* reset */
+								snprintf(buf2, sizeof(buf), "%s/%s", ks_dir, ks_fqdns_fn);
+								if (!(fp = fopen(buf2, "w"))) {
+									logmsg(LOG_WARNING, "Kill-Switch: cannot open file for writing: %s (%s). IP of domain '%s' will not be refreshed periodically", buf2, strerror(errno), val);
+									continue;
+								}
+							}
+							/* _always_ add FQDN to file */
+							fprintf(fp, "%s\n", val);
 						}
 						/* it's IPv4 already inspected/prepared by check_string() */
 						else if (ret == 1) {
@@ -683,6 +707,9 @@ void kill_switch(_tf_ipt_write ipt_write)
 				logmsg(LOG_INFO, "Kill-Switch: added %u rules to firewall for %s%u", rules_count, (kd ? "openvpn-client" : "wireguard"), unit);
 		}
 	}
+	/* close FQDN file */
+	if (fp)
+		fclose(fp);
 }
 
 void run_vpn_firewall_scripts(const char *kind)
