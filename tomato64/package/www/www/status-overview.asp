@@ -496,7 +496,7 @@ function show() {
 	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 		if (wl_sunit(uidx) < 0) {
 			/* warn against unsecured wifi */
-			if (nvram['wl'+wl_fface(uidx)+'_radio'] == '1' && wlstats[uidx].radio && nvram['wl'+wl_fface(uidx)+'_net_mode'] != 'disabled' && nvram['wl'+wl_fface(uidx)+'_security_mode'] == 'disabled')
+			if (nvram['wl'+wl_fface(uidx)+'_radio'] == '1' && wlstats[uidx].radio && nvram['wl'+wl_fface(uidx)+'_net_mode'] != 'disabled' && nvram['wl'+wl_fface(uidx)+'_security_mode'] == 'disabled' && nvram['wl'+wl_fface(uidx)+'_mode'] == 'ap')
 				E('status-wifiwarn').style.display = 'block';
 			else
 				E('status-wifiwarn').style.display = 'none';
