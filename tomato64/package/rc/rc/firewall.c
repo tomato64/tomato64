@@ -2136,6 +2136,10 @@ int start_firewall(void)
 	unlink("/var/webmon/domain");
 	unlink("/var/webmon/search");
 
+#if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
+	kill_switch();
+#endif
+
 #ifdef TCONFIG_PPTPD
 	run_pptpd_firewall_script();
 #endif

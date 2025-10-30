@@ -144,7 +144,7 @@ extern int env2nv(char *env, char *nv);
 extern int serialize_restart(char *service, int start);
 extern void run_del_firewall_script(const char *infile, char *outfile);
 #if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
-extern void kill_switch(const char *type);
+extern void kill_switch(void);
 extern void run_vpn_firewall_scripts(const char *kind);
 #endif
 
