@@ -2039,7 +2039,7 @@ void do_static_routes(int add)
 {
 	char *buf;
 	char *p, *q;
-	char *dest, *mask, *gateway, *metric, *if_tmp, *ifname = NULL;
+	char *dest, *mask, *gateway, *metric, *if_tmp, *ifname;
 	int r, found_lan;
 	unsigned int i;
 	char name[8], ip[16], proto_key[16], ip_key[32], if_key[16];
@@ -2054,6 +2054,7 @@ void do_static_routes(int add)
 	else
 		nvram_unset("routes_static_saved");
 
+	ifname = nvram_safe_get("wan_ifname"); /* default */
 	p = buf;
 	while ((q = strsep(&p, ">")) != NULL) {
 		if (vstrsep(q, "<", &dest, &gateway, &mask, &metric, &if_tmp) < 5)
@@ -2063,7 +2064,7 @@ void do_static_routes(int add)
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			/* LAN, LAN1, LAN2, LAN3 set in advanced-routing.asp */
 			memset(name, 0, sizeof(name));
-			snprintf(name, sizeof(name), (i == 1 ? "LAN" : "LAN%u"), i);
+			snprintf(name, sizeof(name), (i == 0 ? "LAN" : "LAN%u"), i);
 			if (strcmp(if_tmp, name) == 0) {
 				memset(if_key, 0, sizeof(if_key));
 				snprintf(if_key, sizeof(if_key), (i == 0 ? "lan_ifname" : "lan%u_ifname"), i);
