@@ -1119,7 +1119,7 @@ static void filter_input(void)
 
 		ipt_write("-N wwwlimit\n"
 		          "-A wwwlimit -m recent --set --name www\n"
-		          "-A wwwlimit -m recent --update --hitcount 30 --seconds 5 --name www -j %s\n",
+		          "-A wwwlimit -m recent --update --hitcount 20 --seconds 3 --name www -j %s\n",
 		          chain_in_drop);
 
 		if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra"))
@@ -1661,7 +1661,7 @@ static void filter6_input(void)
 
 		ip6t_write("-N wwwlimit\n"
 		           "-A wwwlimit -m recent --set --name www\n"
-		           "-A wwwlimit -m recent --update --hitcount 30 --seconds 5 --name www -j %s\n",
+		           "-A wwwlimit -m recent --update --hitcount 20 --seconds 3 --name www -j %s\n",
 		           chain_in_drop);
 
 		if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra"))
