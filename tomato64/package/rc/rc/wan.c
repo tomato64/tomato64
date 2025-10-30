@@ -1334,11 +1334,11 @@ void start_wan_done(char *wan_ifname, char *prefix)
 			start_tinc(0);
 #endif
 			start_pptpc_eas();
-			start_adblock(0);
 #ifdef TCONFIG_SAMBASRV
 			stop_samba();
 			start_samba(0);
 #endif
+			start_adblock(0);
 		}
 
 		stop_upnp();
