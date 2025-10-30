@@ -661,7 +661,7 @@ void start_adblock(int update)
 	if (update)
 		xstart(adblockexe, "update");
 	else
-		xstart(adblockexe);
+		xstart(adblockexe, "delay");
 }
 
 void stop_adblock()

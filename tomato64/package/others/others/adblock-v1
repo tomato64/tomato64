@@ -145,6 +145,12 @@ cronDel() {
 		[ "$1" == "update" ] && {
 			download 1
 		} || {
+			[ "$1" == "delay" ] && {
+				$LOGS "starting adblock (10 seconds delay) ..."
+				sleep 10
+			} || {
+				$LOGS "starting adblock ..."
+			}
 			# do not download blacklists, if they're already successfully downloaded in less than 2 hours
 			[ -f "$CHK_FILE" -a -s "$FINAL" ] && {
 				TIME_FILE=$(date -r "$CHK_FILE" +%s)
