@@ -495,7 +495,6 @@ download() {
 		echo "$(hashwhite | md5sum | awk '{print $1}') md5white" >> $CHK_FILE
 		hashblack >> $CHK_FILE
 		hashwhite >> $CHK_FILE
-		cru d adblockDL
 	}
 }
 
