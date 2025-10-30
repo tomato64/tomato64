@@ -82,17 +82,19 @@ function verifyFields(focused, quiet) {
 	var a, b, ok = 1;
 
 	a = E('_f_snmp_enable').checked;
-	b = E('_snmp_remote_sip');
+	b = E('_f_snmp_remote_sip');
+	if ((b.value.length) && (!_v_iptaddr(b, quiet || !ok, 15, 1, 1)))
+		ok = 0;
 
-	b.value = b.value.replace(/\s+/g, '');
+	ferror.clear(b);
 
 	E('_snmp_port').disabled = !a;
 	E('_f_snmp_remote').disabled = !a;
-	E('_snmp_remote_sip').disabled = !a;
+	E('_f_snmp_remote_sip').disabled = !a;
 	E('_snmp_location').disabled = !a;
 	E('_snmp_contact').disabled = !a;
 	E('_snmp_ro').disabled = !a;
-	E('_snmp_remote_sip').disabled = (!a || !E('_f_snmp_remote').checked);
+	E('_f_snmp_remote_sip').disabled = (!a || !E('_f_snmp_remote').checked);
 
 	return ok;
 }
@@ -104,13 +106,14 @@ function save() {
 	fom.snmp_enable.value = E('_f_snmp_enable').checked ? 1 : 0;
 	fom.snmp_remote.value = E('_f_snmp_remote').checked ? 1 : 0;
 
-	if (fom.snmp_enable.value == 0) {
+	fom.snmp_remote_sip.value = fom.f_snmp_remote_sip.value.split(/\s*,\s*/).join(',');
+
+	if (fom.snmp_enable.value == 0)
 		fom._service.value = 'snmp-stop';
-	}
-	else {
+	else
 		fom._service.value = 'snmp-restart,firewall-restart'; 
-	}
-	form.submit('t_fom', 1);
+
+	form.submit(fom, 1);
 }
 
 function init() {
@@ -136,6 +139,7 @@ function init() {
 <input type="hidden" name="_service" value="snmp-restart,firewall-restart">
 <input type="hidden" name="snmp_enable">
 <input type="hidden" name="snmp_remote">
+<input type="hidden" name="snmp_remote_sip">
 
 <!-- / / / -->
 
@@ -147,8 +151,8 @@ function init() {
 			null,
 			{ title: 'Port', name: 'snmp_port', type: 'text', maxlen: 5, size: 7, value: fixPort(nvram.snmp_port, 161) },
 				{ title: 'Remote access', indent: 2, name: 'f_snmp_remote', type: 'checkbox', value: nvram.snmp_remote == '1' },
-				{ title: 'Allowed Remote<br>IP Address', indent: 2, name: 'snmp_remote_sip', type: 'text', maxlen: 512, size: 64, value: nvram.snmp_remote_sip,
-					suffix: '<br><small>(optional; ex: "1.1.1.1", "1.1.1.0/24", "1.1.1.1-2.2.2.2" or "me.example.com")<\/small>' },
+				{ title: 'Allowed Remote<br>IP Address', indent: 2, name: 'f_snmp_remote_sip', type: 'text', maxlen: 512, size: 64, value: nvram.snmp_remote_sip,
+					suffix: '<br><small>eg: 1.2.3.4, 1.2.3.4/24, 1.2.3.4-1.2.3.255, me.example.com - comma separated<\/small>' },
 				null,
 				{ title: 'Location', indent: 2, name: 'snmp_location', type: 'text', maxlen: 40, size: 64, value: nvram.snmp_location },
 				{ title: 'Contact', indent: 2, name: 'snmp_contact', type: 'text', maxlen: 40, size: 64, value: nvram.snmp_contact },
