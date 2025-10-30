@@ -680,14 +680,14 @@ void kill_switch(_tf_ipt_write ipt_write)
 							/* open FQDN file for writing only if it has not already been opened */
 							if (!fp) {
 								memset(buf2, 0, sizeof(buf2)); /* reset */
-								snprintf(buf2, sizeof(buf), "%s/%s", ks_dir, ks_fqdns_fn);
+								snprintf(buf2, sizeof(buf2), "%s/%s", ks_dir, ks_fqdns_fn);
 								if (!(fp = fopen(buf2, "w"))) {
 									logmsg(LOG_WARNING, "Kill-Switch: cannot open file for writing: %s (%s). IP of domain '%s' will not be refreshed periodically", buf2, strerror(errno), val);
 									continue;
 								}
 							}
-							/* _always_ add FQDN to file */
-							fprintf(fp, "%s\n", val);
+							/* _always_ add FQDN, VPN IF, WAN IF to file */
+							fprintf(fp, "%s %s %s\n", val, buf, wan_if);
 						}
 						/* it's IPv4 already inspected/prepared by check_string() */
 						else if (ret == 1) {
