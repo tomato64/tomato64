@@ -3043,8 +3043,13 @@ function searchOUI(n, i) {
 		cmdresult = 'ERROR: '+x;
 		displayOUI(i);
 	}
-
-	var commands = '/usr/bin/wget -T 6 -q http://api.macvendors.com/'+n+' -O /tmp/oui.txt \n /bin/cat /tmp/oui.txt';
+/* STUBBYNO-BEGIN */
+	var WGET="/usr/bin/wget --no-check-certificate -T 6 -q "
+/* STUBBYNO-END */
+/* STUBBY-BEGIN */
+	var WGET="/usr/bin/wget -T 6 -q "
+/* STUBBY-END */
+	var commands = WGET+'http://api.macvendors.com/'+n+' -O /tmp/oui.txt \n /bin/cat /tmp/oui.txt';
 	cmd.post('shell.cgi', 'action=execute&command='+escapeCGI(commands.replace(/\r/g, '')));
 }
 

@@ -700,6 +700,13 @@ else
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTAC-BEGIN/,/RTAC-END/d"		# remove on RT, RT-N
 endif
 
+# use "--no-check-certificate" in wget if built without stubby
+ifneq ($(TCONFIG_STUBBY),y)
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/STUBBY-BEGIN/,/STUBBY-END/d"
+else
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/STUBBYNO-BEGIN/,/STUBBYNO-END/d"
+endif
+
 # clean up
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.html) tomato.css; do \
@@ -740,6 +747,7 @@ endif
 		-e "/HFS-BEGIN/d"	-e "/HFS-END/d" \
 		-e "/DNSCRYPT-BEGIN/d"	-e "/DNSCRYPT-END/d" \
 		-e "/STUBBY-BEGIN/d"	-e "/STUBBY-END/d" \
+		-e "/STUBBYNO-BEGIN/d"	-e "/STUBBYNO-END/d" \
 		-e "/DNSSEC-BEGIN/d"	-e "/DNSSEC-END/d" \
 		-e "/STORSEC-BEGIN/d"	-e "/STORSEC-END/d" \
 		-e "/TOR-BEGIN/d"	-e "/TOR-END/d" \
