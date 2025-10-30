@@ -17,7 +17,7 @@
 
 <script>
 
-//	<% nvram("snmp_enable,snmp_port,snmp_remote,snmp_remote_sip,snmp_location,snmp_contact,snmp_ro"); %>
+//	<% nvram("snmp_enable,snmp_port,snmp_remote,snmp_remote_sip,snmp_location,snmp_contact,snmp_ro,snmp_name,snmp_descr"); %>
 
 var xob = null;
 
@@ -82,19 +82,69 @@ function verifyFields(focused, quiet) {
 	var a, b, ok = 1;
 
 	a = E('_f_snmp_enable').checked;
-	b = E('_f_snmp_remote_sip');
-	if ((b.value.length) && (!_v_iptaddr(b, quiet || !ok, 15, 1, 1)))
-		ok = 0;
-
-	ferror.clear(b);
-
 	E('_snmp_port').disabled = !a;
 	E('_f_snmp_remote').disabled = !a;
 	E('_f_snmp_remote_sip').disabled = !a;
 	E('_snmp_location').disabled = !a;
 	E('_snmp_contact').disabled = !a;
 	E('_snmp_ro').disabled = !a;
+	E('_snmp_name').disabled = !a;
+	E('_snmp_descr').disabled = !a;
 	E('_f_snmp_remote_sip').disabled = (!a || !E('_f_snmp_remote').checked);
+
+	b = E('_f_snmp_remote_sip');
+	if ((b.value.length) && (!_v_iptaddr(b, quiet || !ok, 15, 1, 1)))
+		ok = 0;
+	else
+		ferror.clear(b);
+
+	b = E('_f_snmp_remote_sip');
+	if (b.value.length > 512) {
+		ferror.set(b, 'Value cannot be longer than 512 characters', quiet || !ok);
+		ok = 0;
+	}
+	else
+		ferror.clear(b);
+
+	b = E('_snmp_name');
+	if (b.value.length > 40) {
+		ferror.set(b, 'Value cannot be longer than 40 characters', quiet || !ok);
+		ok = 0;
+	}
+	else
+		ferror.clear(b);
+
+	b = E('_snmp_descr');
+	if (b.value.length > 40) {
+		ferror.set(b, 'Value cannot be longer than 40 characters', quiet || !ok);
+		ok = 0;
+	}
+	else
+		ferror.clear(b);
+
+	b = E('_snmp_location');
+	if (b.value.length > 40) {
+		ferror.set(b, 'Value cannot be longer than 40 characters', quiet || !ok);
+		ok = 0;
+	}
+	else
+		ferror.clear(b);
+
+	b = E('_snmp_contact');
+	if (b.value.length > 40) {
+		ferror.set(b, 'Value cannot be longer than 40 characters', quiet || !ok);
+		ok = 0;
+	}
+	else
+		ferror.clear(b);
+
+	b = E('_snmp_ro');
+	if (b.value.length > 40) {
+		ferror.set(b, 'Value cannot be longer than 40 characters', quiet || !ok);
+		ok = 0;
+	}
+	else
+		ferror.clear(b);
 
 	return ok;
 }
@@ -147,16 +197,18 @@ function init() {
 <div class="section" id="config-section">
 	<script>
 		createFieldTable('', [
-			{ title: 'Enable SNMP', name: 'f_snmp_enable', type: 'checkbox', value: nvram.snmp_enable == '1' },
+			{ title: 'Enable SNMP', name: 'f_snmp_enable', type: 'checkbox', value: nvram.snmp_enable == 1 },
 			null,
 			{ title: 'Port', name: 'snmp_port', type: 'text', maxlen: 5, size: 7, value: fixPort(nvram.snmp_port, 161) },
-				{ title: 'Remote access', indent: 2, name: 'f_snmp_remote', type: 'checkbox', value: nvram.snmp_remote == '1' },
+				{ title: 'Remote access', indent: 2, name: 'f_snmp_remote', type: 'checkbox', value: nvram.snmp_remote == 1 },
 				{ title: 'Allowed Remote<br>IP Address', indent: 2, name: 'f_snmp_remote_sip', type: 'text', maxlen: 512, size: 64, value: nvram.snmp_remote_sip,
 					suffix: '<br><small>eg: 1.2.3.4, 1.2.3.4/24, 1.2.3.4-1.2.3.255, me.example.com - comma separated<\/small>' },
 				null,
-				{ title: 'Location', indent: 2, name: 'snmp_location', type: 'text', maxlen: 40, size: 64, value: nvram.snmp_location },
-				{ title: 'Contact', indent: 2, name: 'snmp_contact', type: 'text', maxlen: 40, size: 64, value: nvram.snmp_contact },
-				{ title: 'RO Community', indent: 2, name: 'snmp_ro', type: 'text', maxlen: 40, size: 64, value: nvram.snmp_ro }
+				{ title: 'Location', indent: 2, name: 'snmp_location', type: 'text', placeholder: 'router', maxlen: 40, size: 64, value: nvram.snmp_location },
+				{ title: 'Contact', indent: 2, name: 'snmp_contact', type: 'text', placeholder: 'admin@freshtomato', maxlen: 40, size: 64, value: nvram.snmp_contact },
+				{ title: 'RO Community', indent: 2, name: 'snmp_ro', type: 'text', placeholder: 'rocommunity', maxlen: 40, size: 64, value: nvram.snmp_ro },
+				{ title: 'Name', indent: 2, name: 'snmp_name', type: 'text', placeholder: 'FreshTomato', maxlen: 40, size: 64, value: nvram.snmp_name },
+				{ title: 'Description', indent: 2, name: 'snmp_descr', type: 'text', placeholder: 'router1', maxlen: 40, size: 64, value: nvram.snmp_descr }
 		]);
 	</script>
 </div>

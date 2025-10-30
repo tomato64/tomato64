@@ -1253,6 +1253,8 @@ static const nvset_t nvset_list[] = {
 	{ "snmp_location",		V_LENGTH(0, 40)			},
 	{ "snmp_contact",		V_LENGTH(0, 40)			},
 	{ "snmp_ro",			V_LENGTH(0, 40)			},
+	{ "snmp_name",			V_LENGTH(0, 40)			},
+	{ "snmp_descr",			V_LENGTH(0, 40)			},
 #endif
 
 #ifdef TCONFIG_SAMBASRV

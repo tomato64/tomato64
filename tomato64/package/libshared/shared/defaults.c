@@ -90,9 +90,11 @@ struct nvram_tuple snmp_defaults[] = {
 	{ "snmp_port",			"161"				, 0 },
 	{ "snmp_remote",		"0"				, 0 },
 	{ "snmp_remote_sip",		""				, 0 },
-	{ "snmp_location",		"router"			, 0 },
-	{ "snmp_contact",		"admin@tomato"			, 0 },
-	{ "snmp_ro",			"rocommunity"			, 0 },
+	{ "snmp_location",		""				, 0 },
+	{ "snmp_contact",		""				, 0 },
+	{ "snmp_ro",			""				, 0 },
+	{ "snmp_name",			""				, 0 },
+	{ "snmp_descr",			""				, 0 },
 	{ 0, 0, 0 }
 };
 #endif /* TCONFIG_SNMP */
