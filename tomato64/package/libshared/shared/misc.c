@@ -301,46 +301,39 @@ int foreach_wif(int include_vifs, void *param,
 	char ifnames[256];
 	char name[64], ifname[64], *next = NULL;
 	int unit = -1, subunit = -1;
-	int i;
-	int ret = 0;
+	int i, ret = 0;
+	size_t pos = 0;
 
-#ifdef TCONFIG_MULTIWAN
+	/* LAN interfaces */
+	for (i = 0; i < BRIDGE_COUNT; i++) {
+		memset(name, 0, sizeof(name)); /* reset */
+		snprintf(name, sizeof(name), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
+		pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get(name));
+	}
+
+	/* WAN interfaces */
+	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(name, 0, sizeof(name)); /* reset */
+		snprintf(name, sizeof(name), (i == 1 ? "wan_ifnames" : "wan%d_ifnames"), i);
+		pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get(name));
+	}
+
+	/* WL interfaces */
 #ifdef TCONFIG_AC3200
-	snprintf(ifnames, sizeof(ifnames), "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
-#else
-	snprintf(ifnames, sizeof(ifnames), "%s %s %s %s %s %s %s %s %s %s %s %s %s",
+	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl2_ifname"));
+	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl2_vifs"));
 #endif /* TCONFIG_AC3200 */
-#else
-#ifdef TCONFIG_AC3200
-	snprintf(ifnames, sizeof(ifnames), "%s %s %s %s %s %s %s %s %s %s %s %s %s",
-#else
-	snprintf(ifnames, sizeof(ifnames), "%s %s %s %s %s %s %s %s %s %s %s",
-#endif /* TCONFIG_AC3200 */
-#endif /* TCONFIG_MULTIWAN */
-		nvram_safe_get("lan_ifnames"),
-		nvram_safe_get("lan1_ifnames"),
-		nvram_safe_get("lan2_ifnames"),
-		nvram_safe_get("lan3_ifnames"),
-		nvram_safe_get("wan_ifnames"),
-		nvram_safe_get("wan2_ifnames"),
-#ifdef TCONFIG_MULTIWAN
-		nvram_safe_get("wan3_ifnames"),
-		nvram_safe_get("wan4_ifnames"),
-#endif /* TCONFIG_MULTIWAN */
-#ifdef TCONFIG_AC3200
-		nvram_safe_get("wl2_ifname"),
-		nvram_safe_get("wl2_vifs"),
-#endif /* TCONFIG_AC3200 */
-		nvram_safe_get("wl_ifname"),
-		nvram_safe_get("wl0_ifname"),
-		nvram_safe_get("wl0_vifs"),
-		nvram_safe_get("wl1_ifname"),
-		nvram_safe_get("wl1_vifs"));
+	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl_ifname"));
+	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl0_ifname"));
+	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl0_vifs"));
+	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl1_ifname"));
+	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s",  nvram_safe_get("wl1_vifs"));
 
 	remove_dups(ifnames, sizeof(ifnames));
 	sort_list(ifnames, sizeof(ifnames));
 
 	i = 0;
+	memset(name, 0, sizeof(name)); /* reset */
 	foreach(name, ifnames, next) {
 		if (nvifname_to_osifname(name, ifname, sizeof(ifname)) != 0)
 			continue;
