@@ -241,22 +241,6 @@ void run_del_firewall_script(const char *infile, char *outfile)
 }
 
 #if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
-/* check if at least one WAN is up */
-static int is_anywanup(void)
-{
-	char buf[16];
-	unsigned int i;
-
-	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(buf, 0, sizeof(buf));
-		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%u"), i);
-		if (check_wanup(buf))
-			return 1;
-	}
-
-	return 0;
-}
-
 /*
  * Validates and normalizes IPv4 input in two accepted forms: single IPv4 with optional prefix-length or an IPv4 range
  * @param	str	pointer to a string to inspect and parse
@@ -406,14 +390,19 @@ static int eq_ip(const ip_addr *a, const ip_addr *b)
  * @param	host		pointer to a domain name
  * @param	out_addrs	output pointer to a dynamically allocated array
  * @param	out_count	output pointer to the number of unique addresses
+ * @param	timeout_sec	timeout in secs
  * @return	0 on success, non-zero on failure
  */
-static int resolve_fqdn(const char *host, ip_addr **out_addrs, size_t *out_count)
+static int resolve_fqdn(const char *host, ip_addr **out_addrs, size_t *out_count, int timeout_ms)
 {
 	struct addrinfo hints, *res = NULL, *rp;
-	char buf[NI_MAXHOST];
+	struct timeval tv_start, tv_now;
+	char buf[INET6_ADDRSTRLEN];
+	ip_addr *vec = NULL;
 	int dup;
-	size_t cap, ncap, i;
+	size_t cap = 0, ncap, i;
+	long elapsed_ms;
+	gettimeofday(&tv_start, NULL);
 
 	*out_addrs = NULL;
 	*out_count = 0;
@@ -423,11 +412,19 @@ static int resolve_fqdn(const char *host, ip_addr **out_addrs, size_t *out_count
 	hints.ai_socktype = 0;             /* any */
 	hints.ai_flags    = AI_ADDRCONFIG; /* return only families used locally */
 
-	if (getaddrinfo(host, NULL, &hints, &res) != 0)
-		return 1;
+	while (1) {
+		if (getaddrinfo(host, NULL, &hints, &res) == 0)
+			break;
 
-	cap = 0;
-	ip_addr *vec = NULL;
+		gettimeofday(&tv_now, NULL);
+		elapsed_ms = (tv_now.tv_sec - tv_start.tv_sec) * 1000 + (tv_now.tv_usec - tv_start.tv_usec) / 1000;
+		if (elapsed_ms > timeout_ms) {
+			logmsg(LOG_DEBUG, "*** %s: getaddrinfo timeout", __FUNCTION__);
+			return 1; /* timeout */
+
+		}
+		usleep(200 * 1000); /* 200ms */
+	}
 
 	for (rp = res; rp != NULL; rp = rp->ai_next) {
 #ifdef TCONFIG_IPV6
@@ -449,7 +446,6 @@ static int resolve_fqdn(const char *host, ip_addr **out_addrs, size_t *out_count
 		ip_addr cand;
 		cand.family = rp->ai_family;
 		strlcpy(cand.addr, buf, sizeof(cand.addr));
-		cand.addr[sizeof(cand.addr) - 1] = '\0';
 
 		dup = 0;
 		for (i = 0; i < *out_count; i++) {
@@ -467,6 +463,7 @@ static int resolve_fqdn(const char *host, ip_addr **out_addrs, size_t *out_count
 			if (!nvec) {
 				free(vec);
 				freeaddrinfo(res);
+				logmsg(LOG_ERR, "%s: failed to allocate memory for DNS lookup results", __FUNCTION__);
 				return 2;
 			}
 			vec = nvec;
@@ -480,7 +477,8 @@ static int resolve_fqdn(const char *host, ip_addr **out_addrs, size_t *out_count
 
 	if (*out_count == 0) {
 		free(vec);
-		return 3;
+		logmsg(LOG_ERR, "%s: no data", __FUNCTION__);
+		return 3; /* no data */
 	}
 
 	*out_addrs = vec;
@@ -640,17 +638,10 @@ void kill_switch(_tf_ipt_write ipt_write)
 
 						/* it's FQDN, so no 'sip' */
 						if (!ret) {
-							/* add only if time is synched and (one of) WAN is up otherwise we can't resolve it */
-							if ((!nvram_get_int("ntp_ready")) || (!is_anywanup())) {
-								logmsg(LOG_WARNING, "Kill-Switch: type: %d - can't add '%s' (are all WANs down, or did you enter the wrong domain?)", policy_type, val);
-								continue;
-								/* TODO: these FQDNs have to be added ASAP with some script */
-							}
-
 							/* resolve FQDN */
 							ip_addr *addrs = NULL;
 							count = 0;
-							if (resolve_fqdn(val, &addrs, &count) != 0) {
+							if (resolve_fqdn(val, &addrs, &count, 500) != 0) { /* timeout: 500ms */
 								logmsg(LOG_WARNING, "Kill-Switch: type: %d - can't resolve '%s' (are all WANs down, or did you enter the wrong domain?)", policy_type, val);
 								continue;
 								/* TODO: these FQDNs have to be added ASAP with some script */
