@@ -167,7 +167,7 @@ function verifyFields(focused, quiet) {
 	if (!v_path('_ftp_pvtroot', quiet || !ok, 0)) ok = 0;
 	if (!v_path('_ftp_anonroot', quiet || !ok, 0)) ok = 0;
 	if (a == 1 && b) {
-		if (!v_range('_f_limit_hit', quiet || !ok, 1, 100)) ok = 0;
+		if (!v_range('_f_limit_hit', quiet || !ok, 1, 20)) ok = 0;
 		if (!v_range('_f_limit_sec', quiet || !ok, 3, 3600)) ok = 0;
 	}
 
