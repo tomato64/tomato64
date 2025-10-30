@@ -431,7 +431,7 @@ static int resolve_fqdn(const char *host, ip_addr **out_addrs, size_t *out_count
 
 	for (rp = res; rp != NULL; rp = rp->ai_next) {
 #ifdef TCONFIG_IPV6
-		if (ipv6_enabled) {
+		if (ipv6_enabled()) {
 			if (rp->ai_family != AF_INET && rp->ai_family != AF_INET6)
 				continue;
 		}
@@ -665,7 +665,7 @@ void kill_switch(_tf_ipt_write ipt_write)
 									ipt_write("-I FORWARD -d %s/32 -o %s -j REJECT --reject-with icmp-port-unreachable\n", addrs[j].addr, wan_if);
 								}
 #ifdef TCONFIG_IPV6
-								else if (ipv6_enabled && addrs[j].family == AF_INET6) {
+								else if (ipv6_enabled() && addrs[j].family == AF_INET6) {
 									ip6t_write("-I FORWARD -d %s/128 ! -o %s -j REJECT --reject-with icmp6-port-unreachable\n", addrs[j].addr, buf); /* /128 because we have single IP here */
 									ip6t_write("-I FORWARD -d %s/128 -o %s -j REJECT --reject-with icmp6-port-unreachable\n", addrs[j].addr, wan_if);
 								}
