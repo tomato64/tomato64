@@ -1166,8 +1166,8 @@ static void wg_routing_policy(char *iface, char *route, char *fwmark, const int 
 
 	/* then, add if needed */
 	if (add == 1) {
-		modprobe("xt_set");
 		modprobe("ip_set");
+		modprobe("xt_set");
 		modprobe("ip_set_hash_ip");
 
 		logmsg(LOG_INFO, "starting routing policy for wireguard%d - interface %s - table %s", atoi(&iface[2]), iface, fwmark);

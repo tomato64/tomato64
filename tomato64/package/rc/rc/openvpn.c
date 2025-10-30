@@ -590,12 +590,12 @@ void start_ovpn_client(int unit)
 			            iface);
 
 #if defined(TCONFIG_BCMARM)
-			modprobe("xt_set");
 			modprobe("ip_set");
+			modprobe("xt_set");
 			modprobe("ip_set_hash_ip");
 #else
-			modprobe("ipt_set");
 			modprobe("ip_set");
+			modprobe("ipt_set");
 			modprobe("ip_set_iphash");
 #endif
 
