@@ -9,6 +9,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 
 
 . nvram_ops
+. simple_lock_unlock.sh
 
 PID=$$
 IFACE=$dev
@@ -23,27 +24,9 @@ MARK="0"
 DOMAINS=""
 CID="${dev:4:1}"
 ENV_VARS="/tmp/env_vars_${CID}"
-FN="/var/lock/firewall.lock"
 LOGS="logger -t openvpn-vpnrouting.sh[$PID][$IFACE]"
 [ -d /etc/openvpn/fw ] || mkdir -m 0700 "/etc/openvpn/fw"
 
-
-simple_lock() {
-	local n=$((5 + ($PID % 10)))
-
-	while ! rm -- "$FN" 2>/dev/null; do
-		n=$((n - 1))
-		if [ "$n" -eq 0 ]; then
-			$LOGS "breaking $FN"
-			break
-		fi
-		sleep 1
-	done
-}
-
-simple_unlock() {
-	( umask 066; : > "$FN" )
-}
 
 update_dnsmasq_ipset() {
 	[ ! -f "$DNSMASQ_IPSET" ] && touch $DNSMASQ_IPSET
@@ -181,7 +164,7 @@ startRouting() {
 		[ "$VAL1" -eq 1 ] && {
 			case "$VAL2" in
 				1)	# from source
-					$LOGS "Type: $VAL2 - add $VAL3"
+					$LOGS "Type: $VAL2 - add '$VAL3'"
 					[ "$(echo $VAL3 | grep -)" ] && { # range
 						echo "iptables -t mangle -A PREROUTING -m iprange --src-range $VAL3 -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
 					} || {
@@ -189,11 +172,11 @@ startRouting() {
 					}
 				;;
 				2)	# to destination
-					$LOGS "Type: $VAL2 - add $VAL3"
+					$LOGS "Type: $VAL2 - add '$VAL3'"
 					echo "iptables -t mangle -A PREROUTING -d $VAL3 -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
 				;;
 				3)	# to domain
-					$LOGS "Type: $VAL2 - add $VAL3"
+					$LOGS "Type: $VAL2 - add '$VAL3'"
 					DOMAINS="$DOMAINS $VAL3"
 					RESTART_DNSMASQ=1
 				;;

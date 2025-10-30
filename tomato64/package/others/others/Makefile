@@ -181,6 +181,11 @@ ifneq ($(TCONFIG_HTTPS),)
 	install -m 0500 gencert.sh $(INSTALLDIR)/usr/sbin
 endif
 
+# firewall simple_lock/simple_unlock helper
+ifeq ($(or $(TCONFIG_OPENVPN),$(TCONFIG_WIREGUARD)),y)
+	install -m 0755 simple_lock_unlock.sh $(INSTALLDIR)/usr/sbin
+endif
+
 # distinguish version if ARM or MIPS
 ifeq ($(TCONFIG_OPENVPN),y)
 ifneq ($(TCONFIG_BCMARM),y)
