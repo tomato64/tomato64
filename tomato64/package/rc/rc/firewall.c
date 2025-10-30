@@ -162,11 +162,6 @@ void enable_blackhole_detection(void)
 	f_write_procsysnet("ipv4/tcp_base_mss", (enabled ? "1024" : "512"));
 }
 
-void log_segfault(void)
-{
-	f_write_string("/proc/sys/kernel/print-fatal-signals", (nvram_get_int("debug_logsegfault") ? "1" : "0"), 0, 0);
-}
-
 static int dmz_dst(char *s, const size_t buf_sz)
 {
 	struct in_addr ia;
@@ -1782,8 +1777,6 @@ int start_firewall(void)
 	}
 
 	ipv6_enabled = ipv6_enabled();
-
-	log_segfault();
 
 	/* NAT performance tweaks
 	 * These values can be overriden later if needed via firewall script
