@@ -236,6 +236,22 @@ void run_del_firewall_script(const char *infile, char *outfile)
 }
 
 #if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
+/* check if at least one WAN is up */
+static int is_anywanup(void)
+{
+	char buf[16];
+	unsigned int i;
+
+	for (i = 1; i <= MWAN_MAX; i++) {
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%u"), i);
+		if (check_wanup(buf))
+			return 1;
+	}
+
+	return 0;
+}
+
 /*
  * Validates and normalizes IPv4 input in two accepted forms: single IPv4 with optional prefix-length or an IPv4 range
  * @param	str	pointer to a string to inspect and parse
@@ -524,7 +540,7 @@ void kill_switch(void)
 							rules_count++;
 					}
 
-					/* "To Destination IP" / "To Domain" */
+					/* "To Destination IP" (2) / "To Domain" (3) */
 					else if ((policy_type == 2) || (policy_type == 3)) {
 						memset(buf, 0, sizeof(buf)); /* reset */
 						snprintf(buf, sizeof(buf), iface_fmt, unit); /* find the VPN IF */
@@ -534,11 +550,16 @@ void kill_switch(void)
 
 						/* it's FQDN */
 						if (!ret) {
+							/* add only if time is synched and (one of) WAN is up otherwise we can't resolve it */
+							if ((!nvram_get_int("ntp_ready")) || (!is_anywanup())) {
+								logmsg(LOG_WARNING, "Kill-Switch: type: %d - can't add '%s' (are all WANs down, or did you enter the wrong domain?)", policy_type, val);
+								continue;
+								/* TODO: these FQDNs have to be added ASAP with some script */
+							}
 							logmsg(LOG_INFO, "Kill-Switch: type: %d - add '%s'", policy_type, val);
 
-							/* xstart - do not wait when WAN in not up! */
-							xstart("iptables", "-I", "FORWARD", "-d", val, "!", "-o", buf, "-j", "REJECT");
-							xstart("iptables", "-I", "FORWARD", "-d", val, "-o", wan_if, "-j", "REJECT");
+							eval("iptables", "-I", "FORWARD", "-d", val, "!", "-o", buf, "-j", "REJECT");
+							eval("iptables", "-I", "FORWARD", "-d", val, "-o", wan_if, "-j", "REJECT");
 							rules_count++;
 						}
 						/* it's IPv4 already inspected/prepared by check_string() */
@@ -604,7 +625,7 @@ void run_vpn_firewall_scripts(const char *kind)
 
 	closedir(dir);
 }
-#endif
+#endif /* TCONFIG_OPENVPN || TCONFIG_WIREGUARD */
 
 typedef struct {
 	const char *name;
