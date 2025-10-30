@@ -455,7 +455,7 @@ int mwan_route_main(int argc, char **argv)
 			fprintf(fp, "%u WAN%u\n", i, i);
 		}
 #ifdef TCONFIG_PPTPD
-		fprintf(fp, "%d %s\n", PPTP_CLIENT_TABLE_ID, PPTP_CLIENT_TABLE_NAME);
+		fprintf(fp, "%d %s\n", PPTPC_TABLE_ID, PPTPC_TABLE_NAME);
 #endif
 		fclose(fp);
 	}

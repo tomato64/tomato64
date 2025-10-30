@@ -491,8 +491,8 @@ void ipt_qos(void)
 			}
 #ifndef TCONFIG_BCMARM
 #ifdef TCONFIG_PPTPD
-			if (nvram_get_int("pptp_client_enable") && !nvram_match("pptp_client_iface", "")) {
-				qface = nvram_safe_get("pptp_client_iface");
+			if (nvram_get_int("pptpc_enable") && !nvram_match("pptpc_iface", "")) {
+				qface = nvram_safe_get("pptpc_iface");
 				ipt_write("-A PREROUTING -i %s -j CONNMARK --restore-mark --mask 0xf\n", qface);
 			}
 #endif /* TCONFIG_PPTPD */

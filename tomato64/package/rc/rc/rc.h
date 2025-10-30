@@ -562,19 +562,19 @@ extern void stop_sched(void);
 
 /* pptp_client.c */
 #ifdef TCONFIG_PPTPD
-#define PPTP_CLIENT_TABLE_ID 5
-#define PPTP_CLIENT_TABLE_NAME "PPTP"
-extern void start_pptp_client(void);
-extern void stop_pptp_client(void);
-extern void start_pptp_client_eas(void);
-extern void stop_pptp_client_eas(void);
+#define PPTPC_TABLE_ID 5
+#define PPTPC_TABLE_NAME "PPTP"
+extern void start_pptpc(void);
+extern void stop_pptpc(void);
+extern void start_pptpc_eas(void);
+extern void stop_pptpc_eas(void);
 extern int write_pptpc_resolv(FILE*);
 extern int pptpc_ipup_main(int argc, char **argv);
 extern int pptpc_ipdown_main(int argc, char **argv);
 extern void pptpc_firewall(const char *table, const char *opt, _tf_ipt_write table_writer);
 #else
-static inline void start_pptp_client_eas(void) {};
-static inline void stop_pptp_client_eas(void) {};
+static inline void start_pptpc_eas(void) {};
+static inline void stop_pptpc_eas(void) {};
 #define write_pptpc_resolv(f) (0)
 #endif
 

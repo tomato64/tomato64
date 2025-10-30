@@ -3267,8 +3267,8 @@ TOP:
 	}
 
 	if (strcmp(service, "pptpclient") == 0) {
-		if (act_stop) stop_pptp_client();
-		if (act_start) start_pptp_client();
+		if (act_stop) stop_pptpc();
+		if (act_start) start_pptpc();
 		goto CLEAR;
 	}
 #endif

@@ -1333,7 +1333,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 #ifdef TCONFIG_TINC
 			start_tinc(0);
 #endif
-			start_pptp_client_eas();
+			start_pptpc_eas();
 			start_adblock(0);
 #ifdef TCONFIG_SAMBASRV
 			stop_samba();
@@ -1454,7 +1454,7 @@ void stop_wan(void)
 #ifdef TCONFIG_WIREGUARD
 	stop_wg_all();
 #endif
-	stop_pptp_client_eas();
+	stop_pptpc_eas();
 	stop_igmp_proxy();
 	stop_udpxy();
 #ifdef TCONFIG_IPV6

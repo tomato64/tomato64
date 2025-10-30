@@ -403,7 +403,7 @@ download() {
 	subsed="$subsed $(NG vpn_client1_addr | domain)"
 	subsed="$subsed $(NG vpn_client2_addr | domain)"
 	subsed="$subsed $(NG vpn_client3_addr | domain)"
-	subsed="$subsed $(NG pptp_client_srvip | domain)"
+	subsed="$subsed $(NG pptpc_srvip | domain)"
 	for i in $(NG tinc_hosts | tr "<>" "\n" | domain); do subsed="$subsed ${i}"; done
 
 	# NTP & Stubby
