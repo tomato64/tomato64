@@ -298,7 +298,7 @@ int wl_client(int unit, int subunit)
 int foreach_wif(int include_vifs, void *param,
 	int (*func)(int idx, int unit, int subunit, void *param))
 {
-	char ifnames[256];
+	char ifnames[2048];
 	char name[64], ifname[64], *next = NULL;
 	int unit = -1, subunit = -1;
 	int i, ret = 0;
