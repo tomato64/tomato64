@@ -24,14 +24,16 @@ MARK="0"
 DOMAINS=""
 CID="${dev:4:1}"
 ENV_VARS="/tmp/env_vars_${CID}"
-LOGS="logger -t openvpn-vpnrouting.sh[$PID][$IFACE]"
+LOGI="logger -t openvpn-vpnrouting.sh[$PID][$IFACE]"
+LOGE="logger -p ERROR -t openvpn-vpnrouting.sh[$PID][$IFACE]"
+LOGW="logger -p WARN -t openvpn-vpnrouting.sh[$PID][$IFACE]"
 [ -d /etc/openvpn/fw ] || mkdir -m 0700 "/etc/openvpn/fw"
 
 
 update_dnsmasq_ipset() {
 	[ ! -f "$DNSMASQ_IPSET" ] && touch $DNSMASQ_IPSET
 
-	[ "$ADD_TO_DNSMASQ" -eq 1 ] && {
+	if [ "$ADD_TO_DNSMASQ" -eq 1 ]; then
 		for DOMAIN in $DOMAINS; do
 			if grep -q "^ipset=/${DOMAIN}/" "$DNSMASQ_IPSET"; then
 				sed -i "\#^ipset=/${DOMAIN}/#{
@@ -41,34 +43,29 @@ update_dnsmasq_ipset() {
 				echo "ipset=/${DOMAIN}/${MARK}" >> "$DNSMASQ_IPSET"
 			fi
 		done
-	} || {
-		sed -i "s/${MARK},//g" "$DNSMASQ_IPSET"
-		sed -i "s/,$MARK//g" "$DNSMASQ_IPSET"
-		sed -i "s/\/,/\//g" "$DNSMASQ_IPSET"
-		sed -i "s/,$//g" "$DNSMASQ_IPSET"
-		sed -i "/${MARK}/d" "$DNSMASQ_IPSET"
-		sed -i "/^ipset=\/[^/][^/]*\/$/d" "$DNSMASQ_IPSET"
-	}
+	else
+		sed -i "s/${MARK},//g; s/,$MARK//g; s/\/,/\//g; s/,$//g; /${MARK}/d; /^ipset=\/[^/][^/]*\/$/d" "$DNSMASQ_IPSET"
+	fi
 }
 
 # utility function for retrieving environment variable values
 env_get() {
-	echo $(grep -Em1 "^$1=" $ENV_VARS | cut -d = -f2)
+	grep -Em1 "^$1=" $ENV_VARS | cut -d = -f2
 }
 
 find_iface() {
 	# These FWMARKs were intentionally picked to avoid overwriting
 	# marks set by QoS. See qos.c
-	if [ "$SERVICE" == "client1" ]; then
+	if [ "$SERVICE" = "client1" ]; then
 		FWMARK="2304" # 0x900
-	elif [ "$SERVICE" == "client2" ]; then
+	elif [ "$SERVICE" = "client2" ]; then
 		FWMARK="2560" # 0xA00
 # BCMARM-BEGIN
-	elif [ "$SERVICE" == "client3" ]; then
+	elif [ "$SERVICE" = "client3" ]; then
 		FWMARK="2816" # 0xB00
 # BCMARM-END
 	else
-		$LOGS "Interface not found!"
+		$LOGW "interface not found!"
 		exit 0
 	fi
 
@@ -77,7 +74,7 @@ find_iface() {
 }
 
 stopRouting() {
-	$LOGS "Clean-up routing"
+	$LOGI "clean-up routing"
 
 	ip route flush table $FWMARK
 	ip route flush cache
@@ -111,20 +108,19 @@ startRouting() {
 
 	stopRouting
 
-	$LOGS "Starting routing policy for openvpn-$SERVICE - Interface $IFACE - Table $FWMARK - Mode $VPN_REDIR"
+	$LOGI "starting routing policy for openvpn-$SERVICE - Interface $IFACE - Table $FWMARK - Mode $VPN_REDIR"
 
 	# strict - copy routes from main routing table only for this interface
-	[ "$VPN_REDIR" -eq 3 ] && {
+	[ "$VPN_REDIR" -eq 3 ] && \
 		ip route show table main dev $IFACE | while read ROUTE; do
 			ip route add table $FWMARK $ROUTE dev $IFACE
 		done
-	}
+
 	# standard - copy routes from main routing table (exclude vpns and all default gateways)
-	[ "$VPN_REDIR" -eq 2 ] && {
+	[ "$VPN_REDIR" -eq 2 ] && \
 		ip route show table main | grep -Ev 'wg0|wg1|wg2|tun11|tun12|tun13|^default |^0.0.0.0/1 |^128.0.0.0/1 ' | while read ROUTE; do
 			ip route add table $FWMARK $ROUTE
 		done
-	}
 
 	# test for presence of vpn gateway override in main routing table
 	if ip route | grep -q "^0\.0\.0\.0/1 .*$(env_get dev)"; then
@@ -164,19 +160,19 @@ startRouting() {
 		[ "$VAL1" -eq 1 ] && {
 			case "$VAL2" in
 				1)	# from source
-					$LOGS "Type: $VAL2 - add '$VAL3'"
-					[ "$(echo $VAL3 | grep -)" ] && { # range
+					$LOGI "type: $VAL2 - add '$VAL3'"
+					if echo $VAL3 | grep - >/dev/null; then # range
 						echo "iptables -t mangle -A PREROUTING -m iprange --src-range $VAL3 -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
-					} || {
+					else
 						echo "iptables -t mangle -A PREROUTING -s $VAL3 -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
-					}
+					fi
 				;;
 				2)	# to destination
-					$LOGS "Type: $VAL2 - add '$VAL3'"
+					$LOGI "type: $VAL2 - add '$VAL3'"
 					echo "iptables -t mangle -A PREROUTING -d $VAL3 -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
 				;;
 				3)	# to domain
-					$LOGS "Type: $VAL2 - add '$VAL3'"
+					$LOGI "type: $VAL2 - add '$VAL3'"
 					DOMAINS="$DOMAINS $VAL3"
 					RESTART_DNSMASQ=1
 				;;
@@ -193,7 +189,7 @@ startRouting() {
 	chmod 700 $FIREWALL_ROUTING
 	RESTART_FW=1
 
-	$LOGS "Completed routing policy configuration for openvpn-$SERVICE"
+	$LOGI "completed routing policy configuration for openvpn-$SERVICE"
 }
 
 checkRestart() {
@@ -208,28 +204,24 @@ checkPid() {
 		PIDNO=$(cat $PIDFILE)
 		cat "/proc/$PIDNO/cmdline" &>/dev/null
 
-		[ $? -eq 0 ] && {
+		if [ $? -eq 0 ]; then
 			# priority has the last process
-			$LOGS "Killing previous process ..."
+			$LOGW "killing previous process ..."
 			kill -9 $PIDNO
-			echo $PID > $PIDFILE
-
-			[ $? -ne 0 ] && {
-				$LOGS "Could not create PID file"
+			echo $PID > $PIDFILE || {
+				$LOGE "could not create PID file"
 				exit 0
 			}
-		} || {
+		else
 			# process not found assume not running
-			echo $PID > $PIDFILE
-			[ $? -ne 0 ] && {
-				$LOGS "Could not create PID file"
+			echo $PID > $PIDFILE || {
+				$LOGE "could not create PID file"
 				exit 0
 			}
-		}
+		fi
 	} || {
-		echo $PID > $PIDFILE
-		[ $? -ne 0 ] && {
-			$LOGS "Could not create PID file"
+		echo $PID > $PIDFILE || {
+			$LOGE "could not create PID file"
 			exit 0
 		}
 	}
@@ -243,18 +235,18 @@ find_iface
 checkPid
 VPN_REDIR=$(NG vpn_"$SERVICE"_rgw)
 
-[ "$script_type" == "route-up" -a "$VPN_REDIR" -lt 2 ] && {
-	$LOGS "Skipping, $SERVICE not in routing policy mode"
+[ "$script_type" = "route-up" -a "$VPN_REDIR" -lt 2 ] && {
+	$LOGW "skipping, $SERVICE not in routing policy mode"
 	exit 0
 }
 
-[ "$script_type" == "route-pre-down" ] && {
+[ "$script_type" = "route-pre-down" ] && {
 	stopRouting
 	checkRestart
 	rm -f $ENV_VARS
 }
 
-[ "$script_type" == "route-up" ] && {
+[ "$script_type" = "route-up" ] && {
 	# make environment variables persistent across openvpn events
 	env > $ENV_VARS
 	startRouting
