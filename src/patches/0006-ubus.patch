@@ -2,7 +2,7 @@ From 785fc90636cd97ac6513ea99a48d2df11f036371 Mon Sep 17 00:00:00 2001
 From: Lance Fredrickson <lancethepants@gmail.com>
 Date: Fri, 26 Sep 2025 10:42:57 -0600
 Subject: [PATCH] update ubus to
- 4197d81b7e0ef568f83696fecead51fe1476b2d89384ca3b3b5e583af3522a9e
+ 60e04048a0e2f3e33651c19e62861b41be4c290f
 
 ---
  package/ubus/ubus.hash | 2 +-
@@ -16,7 +16,7 @@ index e35f37b03d..cf0d74db68 100644
 @@ -1,3 +1,3 @@
  # Locally calculated
 -sha256  ba7602c660cb2c15c0e04942414e4cf3d96622622406c5fc3b88895694aebb9f  ubus-afa57cce0aff82f4a7a0e509d4387ebc23dd3be7-git4.tar.gz
-+sha256  4197d81b7e0ef568f83696fecead51fe1476b2d89384ca3b3b5e583af3522a9e  ubus-5952b48e251c0ea76dfce97f129da6f18d889eda-git4.tar.gz
++sha256  a4c1ec1e6eac132edbd94abccc13d62d20b13609830bb4b190d8c9fd927d11c2  ubus-60e04048a0e2f3e33651c19e62861b41be4c290f-git4.tar.gz
  sha256  a3caa6c0e90c87b7c97c2ac3d0c0d416082ef777215faec2e9b24ea6e68f6988  ubusd_acl.h
 diff --git a/package/ubus/ubus.mk b/package/ubus/ubus.mk
 index 913c0e3e39..72d86bc6cf 100644
@@ -27,7 +27,7 @@ index 913c0e3e39..72d86bc6cf 100644
  ################################################################################
  
 -UBUS_VERSION = afa57cce0aff82f4a7a0e509d4387ebc23dd3be7
-+UBUS_VERSION = 5952b48e251c0ea76dfce97f129da6f18d889eda
++UBUS_VERSION = 60e04048a0e2f3e33651c19e62861b41be4c290f
  UBUS_SITE = https://git.openwrt.org/project/ubus.git
  UBUS_SITE_METHOD = git
  
