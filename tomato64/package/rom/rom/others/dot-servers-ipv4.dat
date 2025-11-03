@@ -32,8 +32,10 @@ Cloudflare 2 (security),1.0.0.2,,security.cloudflare-dns.com,,IPv4
 Getdnsapi,185.49.141.37,,getdnsapi.net,foxZRnIh9gZpWnl+zEiKa0EJ2rdCGroMWm02gaxSc9Q=,IPv4
 Google 1,8.8.8.8,,dns.google,,IPv4
 Google 2,8.8.4.4,,dns.google,,IPv4
-Mullvad,194.242.2.2,,doh.mullvad.net,,IPv4
-Mullvad (filtered),194.242.2.3,,adblock.doh.mullvad.net,,IPv4
+Mullvad,194.242.2.2,,dns.mullvad.net,,IPv4
+Mullvad (adblock),194.242.2.3,,adblock.dns.mullvad.net,,IPv4
+Mullvad (base),194.242.2.4,,base.dns.mullvad.net,,IPv4
+Mullvad (family),194.242.2.6,,family.dns.mullvad.net,,IPv4
 Quad9 1,9.9.9.9,,dns.quad9.net,,IPv4
 Quad9 2,149.112.112.112,,dns.quad9.net,,IPv4
 
