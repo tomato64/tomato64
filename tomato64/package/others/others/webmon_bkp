@@ -4,88 +4,83 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 # Copyright (C) 2013 shibby
 #
 # - changes/fixes
-# Copyright (C) 2018 - 2024 by pedro
+# Copyright (C) 2018 - 2025 by pedro
+# https://freshtomato.org/
 #
 
 
 . nvram_ops
 
+
+PID=$$
+LOGI="logger -t webmon-backup[$PID]"
+LOGE="logger -p ERROR -t webmon-backup[$PID]"
+
 # only if enabled
-[ "$(NG log_wm)" -eq 1 -a "$(NG webmon_bkp)" -eq 1 ] && {
+[ "$(NG log_wm)" -eq 1 ] && [ "$(NG webmon_bkp)" -eq 1 ] && {
 
 	BKP_DIR=$(NG webmon_dir)
 	DATA=$(date +%Y%m%d_%H%M)
 	ACTION=$1
 
 	# remove last character from BKP_DIR if it is "/"
-	[ $(echo $BKP_DIR | sed -e 's/\(^.*\)\(.$\)/\2/') == "/" ] && {
-		echo $DIR | sed 's/.$//'
-	}
+	[ "$(echo "$BKP_DIR" | tail -c 2)" = "/" ] && BKP_DIR=${BKP_DIR%/}
 
 	# create init job after webmon start
-	if [ "$ACTION" == "add" ]; then
-		[ "$(cru l | grep webmon | wc -l)" -eq 0 ] && {
+	if [ "$ACTION" = "add" ]; then
+		cru l | grep -q webmon || {
 			cru a webmon_bkp "0 0 */1 * * /usr/sbin/webmon_bkp"
 			cru a webmon_tmp "59 * * * * /usr/sbin/webmon_bkp hourly"
 		}
 
-		[ -f "$BKP_DIR/webmon_recent_domains" -o -f "$BKP_DIR/webmon_recent_searches" ] && {
-			echo "" &>/dev/null
-		} || {
+		if [ ! -f "$BKP_DIR/webmon_recent_domains" ] && [ ! -f "$BKP_DIR/webmon_recent_searches" ]; then
 			# make first copy
 			webmon_bkp hourly
-		}
+		fi
 
 	# make a copy every hour
-	elif [ "$ACTION" == "hourly" ]; then
-		cp /proc/webmon_recent_domains $BKP_DIR/webmon_recent_domains &>/dev/null
-		cp /proc/webmon_recent_searches $BKP_DIR/webmon_recent_searches &>/dev/null
+	elif [ "$ACTION" = "hourly" ]; then
+		cp /proc/webmon_recent_domains "$BKP_DIR/webmon_recent_domains" 2>/dev/null
+		cp /proc/webmon_recent_searches "$BKP_DIR/webmon_recent_searches" 2>/dev/null
 	else
-		LOGS="logger -t Webmon-Backup"
-
 		# try create a file (check directory rw permission)
-		touch $BKP_DIR/$DATA &>/dev/null
-
-		# directory exists and is writable
-		[ -f "$BKP_DIR/$DATA" ] && {
-			rm $BKP_DIR/$DATA
+		if touch "$BKP_DIR/$DATA" 2>/dev/null && [ -f "$BKP_DIR/$DATA" ]; then
+			# directory exists and is writable
+			rm "$BKP_DIR/$DATA"
 
 # TOMATO64-REMOVE-BEGIN
-			cat $BKP_DIR/webmon_recent_domains | awk '{t=$1; "date -d @\""t"\" \"+%Y-%m-%d %H:%M:%S\"" | getline d;print d"\t"$2"\t"$3 }' >> $BKP_DIR/domain-$DATA.log
+			awk '{t=$1; "date -d @"t" \"+%Y-%m-%d %H:%M:%S\"" | getline d; print d "\t" $2 "\t" $3}' "$BKP_DIR/webmon_recent_domains" > "$BKP_DIR/domain-$DATA.log"
 # TOMATO64-REMOVE-END
 # TOMATO64-BEGIN
-			cat $BKP_DIR/webmon_recent_domains | awk '{t=$1; "date -d @\""t"\" \"+%Y-%m-%d %H:%M:%S\"" | getline d;print d"\t"$3"\t"$4 }' >> $BKP_DIR/domain-$DATA.log
+			awk '{t=$1; "date -d @"t" \"+%Y-%m-%d %H:%M:%S\"" | getline d; print d "\t" $3 "\t" $4}' "$BKP_DIR/webmon_recent_domains" > "$BKP_DIR/domain-$DATA.log"
 # TOMATO64-END
-			tar -czf $BKP_DIR/domain-$DATA.log.tar.gz $BKP_DIR/domain-$DATA.log &>/dev/null
-			rm $BKP_DIR/domain-$DATA.log
+			tar -czf "$BKP_DIR/domain-$DATA.log.tar.gz" -C "$BKP_DIR" "domain-$DATA.log" 2>/dev/null && rm "$BKP_DIR/domain-$DATA.log"
 
 # TOMATO64-REMOVE-BEGIN
-			cat $BKP_DIR/webmon_recent_searches | awk '{t=$1; "date -d @\""t"\" \"+%Y-%m-%d %H:%M:%S\"" | getline d;print d"\t"$2"\t"$3 }' >> $BKP_DIR/search-$DATA.log
+			awk '{t=$1; "date -d @"t" \"+%Y-%m-%d %H:%M:%S\"" | getline d; print d "\t" $2 "\t" $3}' "$BKP_DIR/webmon_recent_searches" > "$BKP_DIR/search-$DATA.log"
 # TOMATO64-REMOVE-END
 # TOMATO64-BEGIN
-			cat $BKP_DIR/webmon_recent_searches | awk '{t=$1; "date -d @\""t"\" \"+%Y-%m-%d %H:%M:%S\"" | getline d;print d"\t"$3"\t"$4 }' >> $BKP_DIR/search-$DATA.log
+			awk '{t=$1; "date -d @"t" \"+%Y-%m-%d %H:%M:%S\"" | getline d; print d "\t" $3 "\t" $4}' "$BKP_DIR/webmon_recent_searches" > "$BKP_DIR/search-$DATA.log"
 # TOMATO64-END
-			tar -czf $BKP_DIR/search-$DATA.log.tar.gz $BKP_DIR/search-$DATA.log &>/dev/null
-			rm $BKP_DIR/search-$DATA.log
+			tar -czf "$BKP_DIR/search-$DATA.log.tar.gz" -C "$BKP_DIR" "search-$DATA.log" 2>/dev/null && rm "$BKP_DIR/search-$DATA.log"
 
-			[ -f "$BKP_DIR/domain-$DATA.log.tar.gz" -a -f "$BKP_DIR/search-$DATA.log.tar.gz" ] && {
-				[ "$(NG webmon_shrink)" -eq 1 ] && {
+			if [ -f "$BKP_DIR/domain-$DATA.log.tar.gz" ] && [ -f "$BKP_DIR/search-$DATA.log.tar.gz" ]; then
+				if [ "$(NG webmon_shrink)" -eq 1 ]; then
 					iptables -t filter -A monitor -p tcp -m webmon --clear_search --clear_domain
 
 					# restart firewall to reload monitor rules
 					service firewall restart
-
-					$LOGS "Backup finished. Log cleared."
-				} || {
-					$LOGS "Backup finished."
-				}
+					$LOGI "backup finished, log cleared"
+				else
+					$LOGI "backup finished"
+				fi
 				# make clean copy
 				webmon_bkp hourly
-			} || {
-				$LOGS "Failed: Something goes wrong. Backup was not created!"
-			}
-		} || {
-			$LOGS "Failed: Directory does not exist or is not writable!"
-		}
+			else
+				$LOGE "failed: something goes wrong - backup was not created!"
+			fi
+		else
+			$LOGE "failed: directory does not exist or is not writable!"
+		fi
 	fi
 }
