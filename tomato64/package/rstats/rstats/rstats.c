@@ -134,6 +134,49 @@ static int get_stime(void)
 	return t * SHOUR;
 }
 
+/* Generate speed path from save_path by appending _speed */
+static void get_speed_path(char *speed_path, int size)
+{
+	int n;
+	char *ext;
+
+	speed_path[0] = 0;
+
+	if (save_path[0] == 0)
+		return;
+
+	/* For nvram, use the same path */
+	if (strcmp(save_path, "*nvram") == 0) {
+		strlcpy(speed_path, save_path, size);
+		return;
+	}
+
+	n = strlen(save_path);
+	if (n == 0)
+		return;
+
+	/* If path ends with /, use same directory with different filename */
+	if (save_path[n - 1] == '/') {
+		unsigned char mac[6];
+		ether_atoe(nvram_safe_get("lan_hwaddr"), mac);
+		snprintf(speed_path, size, "%stomato_rstats_speed_%02x%02x%02x%02x%02x%02x.gz",
+			save_path, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	}
+	else {
+		/* File path - insert _speed before extension or at end */
+		ext = strrchr(save_path, '.');
+		if (ext && (strcmp(ext, ".gz") == 0)) {
+			/* Has .gz extension - insert _speed before it */
+			n = ext - save_path;
+			snprintf(speed_path, size, "%.*s_speed%s", n, save_path, ext);
+		}
+		else {
+			/* No extension - append _speed */
+			snprintf(speed_path, size, "%s_speed", save_path);
+		}
+	}
+}
+
 static int comp(const char *path, void *buffer, int size)
 {
 	char s[256];
@@ -156,12 +199,14 @@ static void save(int quick)
 	int n;
 	int b;
 	char hgz[256];
+	char sgz[256];
 	char tmp[256];
 	char bak[256];
 	char bkp[256];
 	time_t now;
 	struct tm *tms;
 	static int lastbak = -1;
+	static int lastbak_speed = -1;
 
 	logmsg(LOG_DEBUG, "*** %s: quick=%d", __FUNCTION__, quick);
 
@@ -245,6 +290,82 @@ static void save(int quick)
 				break;
 		}
 	}
+
+	/* Save speed to custom path */
+	sprintf(sgz, "%s.gz", speed_fn);
+
+	if (strcmp(save_path, "*nvram") == 0) {
+		if (!wait_action_idle(10)) {
+			logmsg(LOG_DEBUG, "*** %s: busy, not saving speed", __FUNCTION__);
+			return;
+		}
+
+		if ((n = f_read_alloc(sgz, &bi, 20 * 1024)) > 0) {
+			if ((bo = malloc(base64_encoded_len(n) + 1)) != NULL) {
+				n = base64_encode(bi, bo, n);
+				bo[n] = 0;
+				nvram_set("rstats_speed_data", bo);
+				if (!nvram_match("debug_nocommit", "1"))
+					nvram_commit();
+
+				logmsg(LOG_DEBUG, "*** %s: nvram commit speed", __FUNCTION__);
+
+				free(bo);
+			}
+		}
+		free(bi);
+	}
+	else if (save_path[0] != 0) {
+		char speed_path[256];
+		get_speed_path(speed_path, sizeof(speed_path));
+
+		if (speed_path[0] != 0) {
+			strcpy(tmp, speed_path);
+			strcat(tmp, ".tmp");
+
+			for (i = 15; i > 0; --i) {
+				if (!wait_action_idle(10))
+					logmsg(LOG_DEBUG, "*** %s: busy, not saving speed", __FUNCTION__);
+				else {
+					logmsg(LOG_DEBUG, "*** %s: cp %s %s", __FUNCTION__, sgz, tmp);
+					if (eval("cp", sgz, tmp) == 0) {
+						logmsg(LOG_DEBUG, "*** %s: copy ok (speed)", __FUNCTION__);
+
+						if (!nvram_match("rstats_bak", "0")) {
+							now = time(0);
+							tms = localtime(&now);
+							if (lastbak_speed != tms->tm_yday) {
+								strcpy(bak, speed_path);
+								n = strlen(bak);
+								if ((n > 3) && (strcmp(bak + (n - 3), ".gz") == 0))
+									n -= 3;
+
+								strcpy(bkp, bak);
+								for (b = HI_BACK-1; b > 0; --b) {
+									sprintf(bkp + n, "_%d.bak", b + 1);
+									sprintf(bak + n, "_%d.bak", b);
+									rename(bak, bkp);
+								}
+								if (eval("cp", "-p", speed_path, bak) == 0)
+									lastbak_speed = tms->tm_yday;
+							}
+						}
+						logmsg(LOG_DEBUG, "*** %s: rename %s %s", __FUNCTION__, tmp, speed_path);
+
+						if (rename(tmp, speed_path) == 0) {
+							logmsg(LOG_DEBUG, "*** %s: rename ok (speed)", __FUNCTION__);
+							break;
+						}
+					}
+				}
+
+				/* might not be ready */
+				sleep(3);
+				if (gotterm)
+					break;
+			}
+		}
+	}
 }
 
 static int decomp(const char *fname, void *buffer, int size, int max)
@@ -297,6 +418,24 @@ static int load_history(const char *fname)
 	return 1;
 }
 
+static int load_speed(const char *fname)
+{
+	int count;
+
+	logmsg(LOG_DEBUG, "*** %s: fname=%s", __FUNCTION__, fname);
+
+	count = decomp(fname, speed, sizeof(speed[0]), MAX_SPEED_IF);
+	if (count < 0) {
+		logmsg(LOG_DEBUG, "*** %s: load failed", __FUNCTION__);
+		return 0;
+	}
+
+	logmsg(LOG_DEBUG, "*** %s: speed_count=%d", __FUNCTION__, count);
+	speed_count = count;
+
+	return 1;
+}
+
 /* Try loading from the backup versions.
  * We'll try from oldest to newest, then
  * retry the requested one again last.  In case the drive mounts while
@@ -321,6 +460,25 @@ static int try_hardway(const char *fname)
 	return found;
 }
 
+static int try_hardway_speed(const char *fname)
+{
+	char fn[256];
+	int n, b, found = 0;
+
+	strcpy(fn, fname);
+	n = strlen(fn);
+	if ((n > 3) && (strcmp(fn + (n - 3), ".gz") == 0))
+		n -= 3;
+
+	for (b = HI_BACK; b > 0; --b) {
+		sprintf(fn + n, "_%d.bak", b);
+		found |= load_speed(fn);
+	}
+	found |= load_speed(fname);
+
+	return found;
+}
+
 static void load_new(void)
 {
 	char hgz[256];
@@ -339,6 +497,7 @@ static void load(int new)
 	char *bi, *bo;
 	int n;
 	char hgz[256];
+	char sgz[256];
 	char sp[sizeof(save_path)];
 	unsigned char mac[6];
 
@@ -360,16 +519,9 @@ static void load(int new)
 
 	logmsg(LOG_DEBUG, "*** %s: uptime = %ldm, save_utime = %ldm", __FUNCTION__, uptime / 60, save_utime / 60);
 
-	sprintf(hgz, "%s.gz", speed_fn);
-	speed_count = decomp(hgz, speed, sizeof(speed[0]), MAX_SPEED_IF);
+	sprintf(sgz, "%s.gz", speed_fn);
+	speed_count = decomp(sgz, speed, sizeof(speed[0]), MAX_SPEED_IF);
 	logmsg(LOG_DEBUG, "*** %s: speed_count = %d", __FUNCTION__, speed_count);
-
-	for (i = 0; i < speed_count; ++i) {
-		if (speed[i].utime > uptime) {
-			speed[i].utime = uptime;
-			speed[i].sync = 1;
-		}
-	}
 
 	sprintf(hgz, "%s.gz", history_fn);
 
@@ -436,6 +588,64 @@ static void load(int new)
 				if (i > (3 * 60))
 					syslog(LOG_WARNING, "Problem loading %s. Still trying...", save_path);
 			}
+		}
+	}
+
+	/* Load speed from custom path if configured */
+	if (save_path[0] != 0) {
+		char speed_path[256];
+		int speed_loaded = 0;
+
+		get_speed_path(speed_path, sizeof(speed_path));
+
+		if (strcmp(save_path, "*nvram") == 0) {
+			/* Load speed from nvram */
+			bi = nvram_safe_get("rstats_speed_data");
+			if ((n = strlen(bi)) > 0) {
+				if ((bo = malloc(base64_decoded_len(n))) != NULL) {
+					n = base64_decode(bi, (unsigned char *) bo, n);
+					logmsg(LOG_DEBUG, "*** %s: nvram speed n=%d", __FUNCTION__, n);
+					f_write(sgz, bo, n, 0, 0);
+					free(bo);
+					speed_loaded = load_speed(sgz);
+				}
+			}
+		}
+		else if (speed_path[0] != 0) {
+			/* Load speed from custom file path */
+			i = 1;
+			while (!speed_loaded) {
+				if (wait_action_idle(10)) {
+					/* cifs quirk: try forcing refresh */
+					eval("ls", speed_path);
+
+					if (load_speed(speed_path) || try_hardway_speed(speed_path)) {
+						logmsg(LOG_DEBUG, "*** %s: loaded speed from %s", __FUNCTION__, speed_path);
+						speed_loaded = 1;
+						break;
+					}
+				}
+
+				/* not ready... */
+				sleep(i);
+				if ((i *= 2) > 900)
+					i = 900; /* 15m */
+
+				if (gotterm)
+					break;
+
+				if (i > (3 * 60)) {
+					syslog(LOG_WARNING, "Problem loading %s. Still trying...", speed_path);
+				}
+			}
+		}
+	}
+
+	/* Ensure speed data is loaded and synced */
+	for (i = 0; i < speed_count; ++i) {
+		if (speed[i].utime > uptime) {
+			speed[i].utime = uptime;
+			speed[i].sync = 1;
 		}
 	}
 }
