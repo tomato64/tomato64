@@ -1,11 +1,4 @@
 <!DOCTYPE html>
-<!--
-Tomato GUI
-Copyright (C) 2006-2010 Jonathan Zarate
-http://www.polarcloud.com/tomato/
-For use with Tomato Firmware only.
-No part of this file may be used without permission.
--->
 <html lang="en-GB">
 <head>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
@@ -13,11 +6,29 @@ No part of this file may be used without permission.
 <title>[<% ident(); %>] Please Wait...</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
-<script src="tomato.js"></script>
+<script src="tomato.js?rel=<% version(); %>"></script>
 <script>
-var spun = 1;
-var wait = parseInt('<% cgi_get('_nextwait'); %>', 10);
+
+//	<% nvram(''); %>
+
+var wait = parseInt('0<% cgi_get('_nextwait'); %>', 10);
 if (isNaN(wait)) wait = 5;
+var clock, l2, spun = 1;
+
+var ref = new TomatoRefresh('httpd.jsx', '', 1);
+
+ref.refresh = function(text) {
+	isup = {};
+	try {
+		eval(text);
+	}
+	catch (ex) {
+		isup = {};
+	}
+	if (isup.httpd)
+		wait = 0;
+}
+
 function tick() {
 	clock.innerHTML = wait;
 	if (--wait >= 0)
@@ -25,18 +36,25 @@ function tick() {
 	else
 		go();
 }
+
 function setSpin(x) {
 	l2.style.display = (x ? 'inline-block' : 'none');
 	spun = x;
 }
+
+function go() {
+	clock.style.display = 'none';
+	window.location.replace('<% cgi_get('_nextpage'); %>');
+}
+
 function init() {
+	clock = E('sptime');
+	l2 = E('l2');
+
 	if (wait > 0) {
-		l2 = E('l2');
 		l2.style.display = 'inline-block';
-		clock = E('sptime');
-		clock.style.display = "inline";
-		spin = E('spin');
-		spin.style.display = 'inline-block';
+		clock.style.display = 'inline';
+		E('spin').style.display = 'inline-block';
 		tick();
 		if (!spun) setSpin(0);
 	}
@@ -44,15 +62,12 @@ function init() {
 		l1 = E('l1');
 		l1.style.display = 'block';
 	}
-}
-function go() {
-	clock.style.display = 'none';
-	window.location.replace('<% cgi_get('_nextpage'); %>');
+	ref.initPage(1000, 1);
 }
 </script>
 </head>
 
-<body onload="init()" onclick="go()">
+<body onload="init()"">
 <div class="tomato-grid container-div">
 	<div class="wrapper1">
 		<div class="wrapper2">
