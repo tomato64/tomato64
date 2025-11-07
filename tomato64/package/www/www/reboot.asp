@@ -22,7 +22,7 @@ function tick() {
 		return;
 	}
 /* TOMATO64-REMOVE-BEGIN */
-	if (n == 69) {
+	if (n == 79) {
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
         if (n == 14) {
