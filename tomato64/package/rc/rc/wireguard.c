@@ -29,11 +29,6 @@
 #define LOGMSG_DISABLE		DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG		"wireguard_debug"
 
-#define BUF_SIZE		256
-#define BUF_SIZE_8		8
-#define BUF_SIZE_16		16
-#define BUF_SIZE_32		32
-#define BUF_SIZE_64		64
 #define IF_SIZE			8
 #define PEER_COUNT		3
 #define MAX_LINE		1024

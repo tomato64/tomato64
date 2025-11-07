@@ -71,6 +71,13 @@
 #define _dprintf(args...)	do { } while(0)
 #endif
 
+#define BUF_SIZE		256 /* default */
+#define BUF_SIZE_8		8
+#define BUF_SIZE_16		16
+#define BUF_SIZE_32		32
+#define BUF_SIZE_64		64
+#define BUF_SIZE_128		128
+
 /* version.c */
 extern const char *tomato_version;
 extern const char *tomato_buildtime;

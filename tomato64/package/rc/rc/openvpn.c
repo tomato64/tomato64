@@ -20,11 +20,6 @@
 #define OVPN_CLIENT_BASEIF	10
 #define OVPN_SERVER_BASEIF	20
 
-#define BUF_SIZE		256
-#define BUF_SIZE_8		8
-#define BUF_SIZE_16		16
-#define BUF_SIZE_32		32
-#define BUF_SIZE_64		64
 #define IF_SIZE			8
 
 /* needed by logmsg() */

@@ -14,7 +14,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#define BUF_SIZE 128
 #define PPTPC_DIR		"/etc/vpn"
 #define PPTPC_TMP_DIR		"/tmp/ppp"
 #define PPTPC_OPTIONS		PPTPC_DIR"/pptpc_options"
@@ -33,7 +32,7 @@ void start_pptpc(void)
 	FILE *fd;
 	int ok = 0;
 	char *p;
-	char buffer[BUF_SIZE];
+	char buffer[BUF_SIZE_128];
 	char *argv[5];
 	int argc = 0;
 
@@ -49,8 +48,8 @@ void start_pptpc(void)
 	unlink(PPTPC_UP_SCRIPT);
 	unlink(PPTPC_DOWN_SCRIPT);
 	unlink(PPTPC_OPTIONS);
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, PPTPC_CLIENT);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, PPTPC_CLIENT);
 	unlink(buffer);
 
 	/* Make sure vpn/ppp directory exists */
@@ -177,16 +176,16 @@ void start_pptpc(void)
 		/* force route to PPTP server via selected wan */
 		char *prefix = nvram_safe_get("pptpc_usewan");
 		if ((*prefix) && strcmp(prefix, "none")) {
-			memset(buffer, 0, BUF_SIZE);
-			snprintf(buffer, BUF_SIZE, "ip rule del lookup %d pref 120", get_wan_unit(prefix));
+			memset(buffer, 0, BUF_SIZE_128);
+			snprintf(buffer, BUF_SIZE_128, "ip rule del lookup %d pref 120", get_wan_unit(prefix));
 			system(buffer);
-			memset(buffer, 0, BUF_SIZE);
-			snprintf(buffer, BUF_SIZE, "ip rule add to %s lookup %d pref 120", srv_addr, get_wan_unit(prefix));
+			memset(buffer, 0, BUF_SIZE_128);
+			snprintf(buffer, BUF_SIZE_128, "ip rule add to %s lookup %d pref 120", srv_addr, get_wan_unit(prefix));
 			system(buffer);
 		}
 
-		memset(buffer, 0, BUF_SIZE);
-		snprintf(buffer, BUF_SIZE, PPTPC_CLIENT" file "PPTPC_OPTIONS);
+		memset(buffer, 0, BUF_SIZE_128);
+		snprintf(buffer, BUF_SIZE_128, PPTPC_CLIENT" file "PPTPC_OPTIONS);
 
 		for (argv[argc = 0] = strtok(buffer, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
 		if (_eval(argv, NULL, 0, NULL)) {
@@ -203,7 +202,7 @@ void stop_pptpc(void)
 {
 	int argc;
 	char *argv[8];
-	char buffer[BUF_SIZE];
+	char buffer[BUF_SIZE_128];
 	char *prefix = nvram_safe_get("pptpc_usewan");
 
 	if (serialize_restart("pptpclient", 0))
@@ -215,15 +214,15 @@ void stop_pptpc(void)
 
 	/* remove forced route to PPTP server via selected wan */
 	if ((*prefix) && strcmp(prefix, "none")) {
-		memset(buffer, 0, BUF_SIZE);
-		snprintf(buffer, BUF_SIZE, "ip rule del lookup %d pref 120", get_wan_unit(prefix));
+		memset(buffer, 0, BUF_SIZE_128);
+		snprintf(buffer, BUF_SIZE_128, "ip rule del lookup %d pref 120", get_wan_unit(prefix));
 		system(buffer);
 	}
 
 	/* Delete all files for this client */
 	unlink(PPTPC_CLIENT"_connecting");
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "rm -rf "PPTPC_CLIENT" "PPTPC_DOWN_SCRIPT" "PPTPC_UP_SCRIPT" "PPTPC_OPTIONS" "PPTPC_RESOLV_FILE);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "rm -rf "PPTPC_CLIENT" "PPTPC_DOWN_SCRIPT" "PPTPC_UP_SCRIPT" "PPTPC_OPTIONS" "PPTPC_RESOLV_FILE);
 	for (argv[argc = 0] = strtok(buffer, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
 	_eval(argv, NULL, 0, NULL);
 
@@ -297,16 +296,16 @@ int write_pptpc_resolv(FILE* f)
 static void pptpc_add_route(void)
 {
 	if (nvram_get_int("pptpc_dfltroute") == 1) {
-		char buffer[BUF_SIZE];
-		memset(buffer, 0, BUF_SIZE);
-		snprintf(buffer, BUF_SIZE, "ip route replace default scope global via %s dev %s", nvram_safe_get("pptpc_ipaddr"), nvram_safe_get("pptpc_iface"));
+		char buffer[BUF_SIZE_128];
+		memset(buffer, 0, BUF_SIZE_128);
+		snprintf(buffer, BUF_SIZE_128, "ip route replace default scope global via %s dev %s", nvram_safe_get("pptpc_ipaddr"), nvram_safe_get("pptpc_iface"));
 		system(buffer);
 	}
 }
 
 static void pptpc_del_route(void)
 {
-	char buffer[BUF_SIZE];
+	char buffer[BUF_SIZE_128];
 	char pmw[] = "wanXX";
 	char *prefix = nvram_safe_get("pptpc_usewan");
 
@@ -314,8 +313,8 @@ static void pptpc_del_route(void)
 	if (nvram_get_int("pptpc_dfltroute") == 1) {
 
 		/* delete default route via PPTP */
-		memset(buffer, 0, BUF_SIZE);
-		snprintf(buffer, BUF_SIZE, "ip route del default via %s dev %s", nvram_safe_get("pptpc_ipaddr"), nvram_safe_get("pptpc_iface"));
+		memset(buffer, 0, BUF_SIZE_128);
+		snprintf(buffer, BUF_SIZE_128, "ip route del default via %s dev %s", nvram_safe_get("pptpc_ipaddr"), nvram_safe_get("pptpc_iface"));
 		system(buffer);
 
 		char *wan_ipaddr, *wan_gw, *wan_iface;
@@ -341,8 +340,8 @@ static void pptpc_del_route(void)
 
 		if (check_wanup(prefix)) {
 			int proto = get_wanx_proto(prefix);
-			memset(buffer, 0, BUF_SIZE);
-			snprintf(buffer, BUF_SIZE, "ip route add default via %s dev %s", (proto == WP_DHCP || proto == WP_LTE || proto == WP_STATIC) ? wan_gw : wan_ipaddr, wan_iface);
+			memset(buffer, 0, BUF_SIZE_128);
+			snprintf(buffer, BUF_SIZE_128, "ip route add default via %s dev %s", (proto == WP_DHCP || proto == WP_LTE || proto == WP_STATIC) ? wan_gw : wan_ipaddr, wan_iface);
 			system(buffer);
 		}
 	}
@@ -350,27 +349,27 @@ static void pptpc_del_route(void)
 
 static void pptpc_del_table(void)
 {
-	char buffer[BUF_SIZE];
+	char buffer[BUF_SIZE_128];
 
 	/* ip route flush table PPTP (remove all PPTP routes) */
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "ip route flush table %s", PPTPC_TABLE_NAME);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "ip route flush table %s", PPTPC_TABLE_NAME);
 	system(buffer);
 
 	/* ip rule del table PPTP pref 105 (from PPTP_IP) */
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "ip rule del table %s pref 10%d", PPTPC_TABLE_NAME, PPTPC_TABLE_ID);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "ip rule del table %s pref 10%d", PPTPC_TABLE_NAME, PPTPC_TABLE_ID);
 	system(buffer);
 
 	/* ip rule del table PPTP pref 110 (to PPTP_DNS) */
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "ip rule del table %s pref 110", PPTPC_TABLE_NAME);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "ip rule del table %s pref 110", PPTPC_TABLE_NAME);
 	system(buffer); /* del PPTP DNS1 */
 	system(buffer); /* del PPTP DNS2 */
 
 	/* ip rule del fwmark 0x500/0xf00 table PPTP pref 125 (FWMARK) */
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "ip rule del table %s pref 12%d", PPTPC_TABLE_NAME, PPTPC_TABLE_ID);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "ip rule del table %s pref 12%d", PPTPC_TABLE_NAME, PPTPC_TABLE_ID);
 	system(buffer);
 }
 
@@ -378,7 +377,7 @@ static void pptpc_del_table(void)
 static void pptpc_add_table(void)
 {
 	int mwan_num, i, wanid, proto;
-	char buffer[BUF_SIZE];
+	char buffer[BUF_SIZE_128];
 	char ip_cidr[32];
 	char remote_cidr[32];
 	char sPrefix[] = "wanXX";
@@ -398,20 +397,20 @@ static void pptpc_add_table(void)
 	 */
 
 	/* ip rule add from PPTP_IP table PPTP pref 105 */
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "ip rule add from %s table %s pref 10%d", pptpc_ipaddr, PPTPC_TABLE_NAME, PPTPC_TABLE_ID);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "ip rule add from %s table %s pref 10%d", pptpc_ipaddr, PPTPC_TABLE_NAME, PPTPC_TABLE_ID);
 	system(buffer);
 
 	for (i = 0 ; i < pptp_dns->count; ++i) {
 		/* ip rule add to PPTP_DNS table PPTP pref 110 */
-		memset(buffer, 0, BUF_SIZE);
-		snprintf(buffer, BUF_SIZE, "ip rule add to %s table %s pref 110", inet_ntoa(pptp_dns->dns[i].addr), PPTPC_TABLE_NAME);
+		memset(buffer, 0, BUF_SIZE_128);
+		snprintf(buffer, BUF_SIZE_128, "ip rule add to %s table %s pref 110", inet_ntoa(pptp_dns->dns[i].addr), PPTPC_TABLE_NAME);
 		system(buffer);
 	}
 
 	/* ip rule add fwmark 0x500/0xf00 table PPTP pref 125 */
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "ip rule add fwmark 0x%d00/0xf00 table %s pref 12%d", PPTPC_TABLE_ID, PPTPC_TABLE_NAME, PPTPC_TABLE_ID);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "ip rule add fwmark 0x%d00/0xf00 table %s pref 12%d", PPTPC_TABLE_ID, PPTPC_TABLE_NAME, PPTPC_TABLE_ID);
 	system(buffer);
 
 	/*
@@ -423,11 +422,11 @@ static void pptpc_add_table(void)
 		get_wan_prefix(wanid, sPrefix);
 		if (check_wanup(sPrefix)) {
 			proto = get_wanx_proto(sPrefix);
-			memset(buffer, 0, BUF_SIZE);
+			memset(buffer, 0, BUF_SIZE_128);
 			if (proto == WP_DHCP || proto == WP_LTE || proto == WP_STATIC) {
 				/* wan ip/netmask, wan_iface, wan_ipaddr */
 				get_cidr(nvram_safe_get(strlcat_r(sPrefix, "_ipaddr", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(sPrefix, "_netmask", tmp, sizeof(tmp))), ip_cidr, sizeof(ip_cidr));
-				snprintf(buffer, BUF_SIZE, "ip route append %s dev %s proto kernel scope link src %s table %s",
+				snprintf(buffer, BUF_SIZE_128, "ip route append %s dev %s proto kernel scope link src %s table %s",
 					ip_cidr, /* wan ip / netmask */
 					nvram_safe_get(strlcat_r(sPrefix, "_iface", tmp, sizeof(tmp))),
 					nvram_safe_get(strlcat_r(sPrefix, "_ipaddr", tmp, sizeof(tmp))),
@@ -435,15 +434,15 @@ static void pptpc_add_table(void)
 			}
 			else if ((proto == WP_PPTP || proto == WP_L2TP || proto == WP_PPPOE) && using_dhcpc(sPrefix)) {
 				/* MAN: wan_gateway, wan_ifname, wan_ipaddr */
-				snprintf(buffer, BUF_SIZE, "ip route append %s dev %s proto kernel scope link src %s table %s",
+				snprintf(buffer, BUF_SIZE_128, "ip route append %s dev %s proto kernel scope link src %s table %s",
 					nvram_safe_get(strlcat_r(sPrefix, "_gateway", tmp, sizeof(tmp))),
 					nvram_safe_get(strlcat_r(sPrefix, "_ifname", tmp, sizeof(tmp))),
 					nvram_safe_get(strlcat_r(sPrefix, "_ipaddr", tmp, sizeof(tmp))),
 					PPTPC_TABLE_NAME);
 				system(buffer);
 				/* WAN: wan_gateway_get, wan_iface, wan_ppp_get_ip */
-				memset(buffer, 0, BUF_SIZE);
-				snprintf(buffer, BUF_SIZE, "ip route append %s dev %s proto kernel scope link src %s table %s",
+				memset(buffer, 0, BUF_SIZE_128);
+				snprintf(buffer, BUF_SIZE_128, "ip route append %s dev %s proto kernel scope link src %s table %s",
 					nvram_safe_get(strlcat_r(sPrefix, "_gateway_get", tmp, sizeof(tmp))),
 					nvram_safe_get(strlcat_r(sPrefix, "_iface", tmp, sizeof(tmp))),
 					nvram_safe_get(strlcat_r(sPrefix, "_ppp_get_ip", tmp, sizeof(tmp))),
@@ -451,7 +450,7 @@ static void pptpc_add_table(void)
 			}
 			else {
 				/* wan gateway, wan_iface, wan_ipaddr */
-				snprintf(buffer, BUF_SIZE, "ip route append %s dev %s proto kernel scope link src %s table %s",
+				snprintf(buffer, BUF_SIZE_128, "ip route append %s dev %s proto kernel scope link src %s table %s",
 					wan_gateway(sPrefix), 
 					nvram_safe_get(strlcat_r(sPrefix, "_iface", tmp, sizeof(tmp))),
 					nvram_safe_get(strlcat_r(sPrefix, "_ipaddr", tmp, sizeof(tmp))),
@@ -462,57 +461,57 @@ static void pptpc_add_table(void)
 	}
 
 	/* ip route add 172.16.36.1 dev ppp4 proto kernel scope link src 172.16.36.13 */
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "ip route append %s dev %s proto kernel scope link src %s", pptpc_gateway, pptpc_iface, pptpc_ipaddr);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "ip route append %s dev %s proto kernel scope link src %s", pptpc_gateway, pptpc_iface, pptpc_ipaddr);
 	system(buffer);
 
 	for (wanid = 1; wanid <= mwan_num; ++wanid) {
 		get_wan_prefix(wanid, sPrefix);
 		if (check_wanup(sPrefix)) {
-			memset(buffer, 0, BUF_SIZE);
-			snprintf(buffer, BUF_SIZE, "ip route append %s dev %s proto kernel scope link src %s table %d", pptpc_gateway, pptpc_iface, pptpc_ipaddr, wanid);
+			memset(buffer, 0, BUF_SIZE_128);
+			snprintf(buffer, BUF_SIZE_128, "ip route append %s dev %s proto kernel scope link src %s table %d", pptpc_gateway, pptpc_iface, pptpc_ipaddr, wanid);
 			system(buffer);
 		}
 	}
 
 	/* ip route add 172.16.36.1 dev ppp4 proto kernel scope link src 172.16.36.13 table PPTP (pptp gw) */
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "ip route append %s dev %s proto kernel scope link src %s table %s", pptpc_gateway, pptpc_iface, pptpc_ipaddr, PPTPC_TABLE_NAME);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "ip route append %s dev %s proto kernel scope link src %s table %s", pptpc_gateway, pptpc_iface, pptpc_ipaddr, PPTPC_TABLE_NAME);
 	system(buffer);
 	/* ip route add 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1 table PPTP (LAN) */
 	get_cidr(nvram_safe_get("lan_ipaddr"), nvram_safe_get("lan_netmask"), ip_cidr, sizeof(ip_cidr));
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "ip route append %s dev %s proto kernel scope link src %s table %s", ip_cidr, nvram_safe_get("lan_ifname"), nvram_safe_get("lan_ipaddr"), PPTPC_TABLE_NAME);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "ip route append %s dev %s proto kernel scope link src %s table %s", ip_cidr, nvram_safe_get("lan_ifname"), nvram_safe_get("lan_ipaddr"), PPTPC_TABLE_NAME);
 	system(buffer);
 	/* ip route add 127.0.0.0/8 dev lo scope link table PPTP (lo setup) */
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "ip route append 127.0.0.0/8 dev lo scope link table %s", PPTPC_TABLE_NAME);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "ip route append 127.0.0.0/8 dev lo scope link table %s", PPTPC_TABLE_NAME);
 	system(buffer);
 	/* ip route add default via 10.0.10.1 dev ppp3 table PPTP (default route) */
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "ip route append default via %s dev %s table %s", pptpc_ipaddr, pptpc_iface, PPTPC_TABLE_NAME);
+	memset(buffer, 0, BUF_SIZE_128);
+	snprintf(buffer, BUF_SIZE_128, "ip route append default via %s dev %s table %s", pptpc_ipaddr, pptpc_iface, PPTPC_TABLE_NAME);
 	system(buffer);
 
 	/* PPTP network */
 	if (!nvram_match("pptpc_srvsub", "0.0.0.0") && !nvram_match("pptpc_srvsubmsk", "0.0.0.0")) {
 		/* add PPTP network to main table */
 		get_cidr(nvram_safe_get("pptpc_srvsub"), nvram_safe_get("pptpc_srvsubmsk"), remote_cidr, sizeof(remote_cidr));
-		memset(buffer, 0, BUF_SIZE);
-		snprintf(buffer, BUF_SIZE, "ip route append %s via %s dev %s scope link table %s", remote_cidr, pptpc_ipaddr, pptpc_iface, "main");
+		memset(buffer, 0, BUF_SIZE_128);
+		snprintf(buffer, BUF_SIZE_128, "ip route append %s via %s dev %s scope link table %s", remote_cidr, pptpc_ipaddr, pptpc_iface, "main");
 		system(buffer);
 		/* add PPTP network to all WANX tables */
 		for (wanid = 1; wanid <= mwan_num; ++wanid) {
 			get_wan_prefix(wanid, sPrefix);
 			if (check_wanup(sPrefix)) {
-				memset(buffer, 0, BUF_SIZE);
-				snprintf(buffer, BUF_SIZE, "ip route append %s via %s dev %s scope link table %d", remote_cidr, pptpc_ipaddr, pptpc_iface, wanid);
+				memset(buffer, 0, BUF_SIZE_128);
+				snprintf(buffer, BUF_SIZE_128, "ip route append %s via %s dev %s scope link table %d", remote_cidr, pptpc_ipaddr, pptpc_iface, wanid);
 				system(buffer);
 			}
 		}
 		/* add PPTP network to table PPTP */
 		get_cidr(nvram_safe_get("pptpc_srvsub"), nvram_safe_get("pptpc_srvsubmsk"), remote_cidr, sizeof(remote_cidr));
-		memset(buffer, 0, BUF_SIZE);
-		snprintf(buffer, BUF_SIZE, "ip route append %s via %s dev %s scope link table %s", remote_cidr, pptpc_ipaddr, pptpc_iface, PPTPC_TABLE_NAME);
+		memset(buffer, 0, BUF_SIZE_128);
+		snprintf(buffer, BUF_SIZE_128, "ip route append %s via %s dev %s scope link table %s", remote_cidr, pptpc_ipaddr, pptpc_iface, PPTPC_TABLE_NAME);
 		system(buffer);
 	}
 }

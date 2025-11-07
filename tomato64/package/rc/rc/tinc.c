@@ -11,7 +11,6 @@
 
 #include "rc.h"
 
-#define BUF_SIZE 256
 #define TINC_DIR		"/etc/tinc"
 #define TINC_RSA_KEY		TINC_DIR"/rsa_key.priv"
 #define TINC_PRIV_KEY		TINC_DIR"/ed25519_key.priv"
