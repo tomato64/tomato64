@@ -4,7 +4,8 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 # Copyright (C) 2011 shibby
 #
 # - changes/fixes
-# Copyright (C) 2018 - 2024 by pedro
+# Copyright (C) 2018 - 2025 by pedro
+# https://freshtomato.org/
 #
 
 
@@ -17,7 +18,9 @@ PIDFILE="/var/run/switch3g_$PREFIX.pid"
 DIAGSFILE="/tmp/switch3g_$PREFIX.diags"
 MODE=$(NG "$PREFIX"_proto)
 DEVNR=$(NG "$PREFIX"_modem_dev)
-LOGS="logger -t switch3g[$PID]"
+LOGI="logger -t switch3g[$PID]"
+LOGE="logger -p ERROR -t switch3g[$PID]"
+LOGW="logger -p WARN -t switch3g[$PID]"
 
 
 [ -z "$PREFIX" ] && {
@@ -25,32 +28,32 @@ LOGS="logger -t switch3g[$PID]"
 	exit 0
 }
 
-[ ! "$MODE" == "ppp3g" ] && exit 0
+[ "$MODE" = "ppp3g" ] || exit 0
 
 
 switchMode() {
 	VENDOR="" PRODUCT="" MODULE="" DEVICENAME="" TTYS="" ALREADYFOUND=0 # global
-	local COUNT=1 SWITCHED=0 DVDP=0 TTYS_PATH="" PATHDEV SWITCH DEVICES IFN_BEFORE DV DP DB DG
+	local COUNT SWITCHED=0 DVDP=0 TTYS_PATH PATHDEV SWITCH DEVICES IFN_BEFORE DV DP DB DG
 
 	# search for DEVICENAME via active TTYs
 	for DEVICENAME in $(ls /sys/bus/usb/devices/ | grep -v ":" | grep "-"); do
 
 		PATHDEV="/sys/bus/usb/devices/$DEVICENAME"
-		[ -f $PATHDEV/idVendor -a -f $PATHDEV/idProduct -a -f $PATHDEV/uevent ] || continue # skip
+		[ -f "$PATHDEV/idVendor" -a -f "$PATHDEV/idProduct" -a -f "$PATHDEV/uevent" ] || continue # skip
 
-		TTYS=$(ls -d $PATHDEV/${DEVICENAME}*/tty?* 2>/dev/null | sed -e "s/.*\/\//.*/g" -e "s/.*\//\/dev\//g" | tr "\n" " " | sed -e "s/  */ /g" -e "s,^ *,,; s, *$,,")
+		TTYS=$(ls -d $PATHDEV/${DEVICENAME}*/tty?* 2>/dev/null | sed -e "s/.*\/\//.*/" -e "s/.*\//\/dev\//" | tr "\n" " " | sed -e "s/  */ /g" -e "s,^ *,,;s, *$,,")
 
 		[ -n "$TTYS" ] && {
-			VENDOR=$(cat "$PATHDEV"/idVendor)
-			PRODUCT=$(cat "$PATHDEV"/idProduct)
+			VENDOR=$(cat "$PATHDEV/idVendor")
+			PRODUCT=$(cat "$PATHDEV/idProduct")
 
-			TTYS_PATH=$(ls -d $PATHDEV/${DEVICENAME}*/tty?* 2>/dev/null | sed 's/\/tty.*/\/uevent/g')
-			MODULE=$(cat $TTYS_PATH 2>/dev/null | grep ^DRIVER | cut -d "=" -f2 | head -n1)
+			TTYS_PATH=$(ls -d $PATHDEV/${DEVICENAME}*/tty?* 2>/dev/null | sed 's/\/tty.*/\/uevent/')
+			MODULE=$(grep ^DRIVER $TTYS_PATH 2>/dev/null | cut -d= -f2 | head -n1)
 			findPath # MODULE --> MPATH
 			echo "$VENDOR $PRODUCT" > $MPATH
 			NS "$PREFIX"_modem_type="$MODULE"
 
-			$LOGS "3G MODEM ready ($VENDOR:$PRODUCT) - DIAG interface(s) found ("$TTYS") - using already loaded $MODULE module"
+			$LOGI "3G MODEM ready ($VENDOR:$PRODUCT) - DIAG interface(s) found ($TTYS) - using already loaded $MODULE module"
 
 			ALREADYFOUND=1
 			break
@@ -58,24 +61,24 @@ switchMode() {
 	done
 
 	[ "$ALREADYFOUND" -eq 0 ] && {
-		$LOGS "3G MODEM - detecting ..."
+		$LOGI "3G MODEM - detecting ..."
 
 		# detect modem
 		DEVICES=$(lsusb | awk '{print $6}')
 
 		for SWITCH in $DEVICES; do
-			[ "$(ls /etc/usb_modeswitch.d/"$SWITCH" 2> /dev/null | wc -l)" -eq 1 ] && {
+			[ "$(ls /etc/usb_modeswitch.d/"$SWITCH" 2>/dev/null | wc -l)" -eq 1 ] && {
 				# search for DEVICENAME & other data
 				for DEVICENAME in $(ls /sys/bus/usb/devices/ | grep -v ":" | grep "-"); do
 					PATHDEV="/sys/bus/usb/devices/$DEVICENAME"
-					[ -f $PATHDEV/idVendor -a -f $PATHDEV/idProduct -a -f $PATHDEV/uevent ] || continue # skip
+					[ -f "$PATHDEV/idVendor" -a -f "$PATHDEV/idProduct" -a -f "$PATHDEV/uevent" ] || continue # skip
 
-					DV=$(cat "$PATHDEV"/idVendor)					# vendor
-					DP=$(cat "$PATHDEV"/idProduct)					# product
-					DB=$(grep -s ^BUSNUM "$PATHDEV"/uevent | cut -d "=" -f2)	# BUSNUM
-					DG=$(grep -s ^DEVNUM "$PATHDEV"/uevent | cut -d "=" -f2)	# DEVNUM
+					DV=$(cat "$PATHDEV/idVendor")				# vendor
+					DP=$(cat "$PATHDEV/idProduct")				# product
+					DB=$(grep -s ^BUSNUM "$PATHDEV/uevent" | cut -d= -f2)	# BUSNUM
+					DG=$(grep -s ^DEVNUM "$PATHDEV/uevent" | cut -d= -f2)	# DEVNUM
 
-					[ "$DV" == "$(echo "$SWITCH" | cut -d ":" -f1)" -a "$DP" == "$(echo "$SWITCH" | cut -d ":" -f2)" ] && { # self
+					[ "$DV" = "$(echo "$SWITCH" | cut -d: -f1)" -a "$DP" = "$(echo "$SWITCH" | cut -d: -f2)" ] && { # self
 						DVDP=1
 						break
 					}
@@ -83,37 +86,33 @@ switchMode() {
 
 				[ "$DVDP" -eq 1 ] && {
 					# in some cases it needs more time
-					COUNT=1
-					while [ "$COUNT" -lt 5 ]; do
+					for COUNT in 1 2 3 4; do
 						sleep 1
-						[ -s $PATHDEV/bNumInterfaces ] && {
-							IFN_BEFORE=$(cat "$PATHDEV"/bNumInterfaces)
+						[ -s "$PATHDEV/bNumInterfaces" ] && {
+							IFN_BEFORE=$(cat "$PATHDEV/bNumInterfaces")
 							break
 						}
-						COUNT=$((COUNT+1))
 					done
 
-					$LOGS "3G MODEM FOUND - $SWITCH - switching ..."
+					$LOGI "3G MODEM FOUND - $SWITCH - switching ..."
 
 					/usr/sbin/usb_modeswitch -Q -c /etc/usb_modeswitch.d/$SWITCH -v $DV -p $DP -b $DB -g $DG
 
 					# need few seconds before modem will be detected once again after switch
-					COUNT=1
-					while [ "$COUNT" -lt 15 ]; do
+					for COUNT in 1 2 3 4 5 6 7 8 9 10 11 12 13 14; do
 						sleep 1
-						[ -s $PATHDEV/bNumInterfaces ] && {
-							[ "$(cat "$PATHDEV"/bNumInterfaces)" -gt "$IFN_BEFORE" ] && break
+						[ -s "$PATHDEV/bNumInterfaces" ] && {
+							[ "$(cat "$PATHDEV/bNumInterfaces")" -gt "$IFN_BEFORE" ] && break
 						}
-						COUNT=$((COUNT+1))
 					done
 					sleep 1
 
-					VENDOR=$(cat /etc/usb_modeswitch.d/"$SWITCH" | grep TargetVendor | cut -d "=" -f2 | cut -d "x" -f2)
-					[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDEV"/idVendor)
+					VENDOR=$(cat /etc/usb_modeswitch.d/"$SWITCH" | grep TargetVendor | cut -d= -f2 | cut -dx -f2)
+					[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDEV/idVendor")
 
-					PRODUCT=$(cat "$PATHDEV"/idProduct)
+					PRODUCT=$(cat "$PATHDEV/idProduct")
 					[ -n "$PRODUCT" ] && {
-						$LOGS "3G MODEM ready - $VENDOR:$PRODUCT"
+						$LOGI "3G MODEM ready - $VENDOR:$PRODUCT"
 						SWITCHED=1
 						break
 					}
@@ -121,12 +120,12 @@ switchMode() {
 			}
 		done
 
-		[ "$SWITCHED" -eq 0 ] && $LOGS "3G MODEM not found in USB_ModeSwitch database - already switched? Loading modules..."
+		[ "$SWITCHED" -eq 0 ] && $LOGI "3G MODEM not found in USB_ModeSwitch database - already switched? Loading modules..."
 	}
 }
 
 isDiag() {
-	TTYS=$(ls -d $PATHDIAG/$DEVICENAME/${DEVICENAME}*/tty?* 2>/dev/null | sed -e "s/.*\/\//.*/g" -e "s/.*\//\/dev\//g" | tr "\n" " " | sed -e "s/  */ /g" -e "s,^ *,,; s, *$,,")
+	TTYS=$(ls -d $PATHDIAG/$DEVICENAME/${DEVICENAME}*/tty?* 2>/dev/null | sed -e "s/.*\/\//.*/" -e "s/.*\//\/dev\//" | tr "\n" " " | sed -e "s/  */ /g" -e "s,^ *,,;s, *$,,")
 }
 
 searchDiag() {
@@ -134,8 +133,8 @@ searchDiag() {
 	local PATHDIAG="/sys/bus/usb/devices"
 	local PATHDEV
 
-	[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDIAG"/"$DEVICENAME"/idVendor)
-	[ -z "$PRODUCT" ] && PRODUCT=$(cat "$PATHDIAG"/"$DEVICENAME"/idProduct)
+	[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDIAG/$DEVICENAME/idVendor")
+	[ -z "$PRODUCT" ] && PRODUCT=$(cat "$PATHDIAG/$DEVICENAME/idProduct")
 
 	[ -z "$TTYS" ] && {
 		for MODULE in $MODULES; do
@@ -144,35 +143,32 @@ searchDiag() {
 
 			isDiag # --> TTYS
 			[ -z "$TTYS" ] && {
-				$LOGS "3G MODEM ($MODULE) not found ..."
+				$LOGI "3G MODEM ($MODULE) not found ..."
 				modprobe -r $MODULE
 				sleep 1
-			} || {
-				# found
-				break
-			}
+			} || break # found
 		done
 
 		[ -n "$TTYS" ] && {
-			$LOGS "3G MODEM found - using $MODULE module"
+			$LOGI "3G MODEM found - using $MODULE module"
 		} || {
-			$LOGS "3G MODEM not found by $MODULES module. Trying usbserial ..."
+			$LOGI "3G MODEM not found by $MODULES module. Trying usbserial ..."
 
-			lsmod | grep usbserial && {
+			lsmod | grep -q usbserial && {
 				echo "$VENDOR $PRODUCT" > /sys/bus/usb-serial/drivers/generic/new_id
 			} || {
 				[ -n "$VENDOR" -a -n "$PRODUCT" ] && {
-					$LOGS "3G MODEM - loading usbserial module ($VENDOR:$PRODUCT)"
+					$LOGI "3G MODEM - loading usbserial module ($VENDOR:$PRODUCT)"
 					insmod usbserial vendor=0x$VENDOR product=0x$PRODUCT
 				} || {
 					# VENDOR/PRODUCT unknown, so try for every possible device...
 					for DEVICENAME in $(ls /sys/bus/usb/devices/ | grep -v ":" | grep "-"); do
 						PATHDEV="$PATHDIAG/$DEVICENAME"
-						[ -f $PATHDEV/idVendor -a -f $PATHDEV/idProduct -a -f $PATHDEV/uevent ] || continue # skip
+						[ -f "$PATHDEV/idVendor" -a -f "$PATHDEV/idProduct" -a -f "$PATHDEV/uevent" ] || continue # skip
 
-						VENDOR=$(cat "$PATHDEV"/idVendor)	# vendor
-						PRODUCT=$(cat "$PATHDEV"/idProduct)	# product
-						$LOGS "3G MODEM - try to load usbserial module ($VENDOR:$PRODUCT) for device $DEVICENAME ..."
+						VENDOR=$(cat "$PATHDEV/idVendor")	# vendor
+						PRODUCT=$(cat "$PATHDEV/idProduct")	# product
+						$LOGI "3G MODEM - try to load usbserial module ($VENDOR:$PRODUCT) for device $DEVICENAME ..."
 
 						modprobe -r usbserial
 						insmod usbserial vendor=0x$VENDOR product=0x$PRODUCT
@@ -180,7 +176,7 @@ searchDiag() {
 						isDiag # --> TTYS
 						[ -n "$TTYS" ] && {
 							# found
-							$LOGS "3G MODEM found - using usbserial module"
+							$LOGI "3G MODEM found - using usbserial module"
 							break
 						}
 					done
@@ -203,7 +199,7 @@ searchDiag() {
 			wayOut "3G MODEM not found - connection process terminated!"
 		}
 	} || {
-		[ "$ALREADYFOUND" -eq 0 ] && $LOGS "3G MODEM ready - DIAG interface(s) found ("$TTYS")"
+		[ "$ALREADYFOUND" -eq 0 ] && $LOGI "3G MODEM ready - DIAG interface(s) found ($TTYS)"
 
 		echo $TTYS > $DIAGSFILE
 		NS "$PREFIX"_modem_type="$MODULE"
@@ -211,59 +207,48 @@ searchDiag() {
 }
 
 findPath() {
-	if [ "$MODULE" == "cdc-acm" ]; then
-		MPATH="/sys/bus/usb/drivers/cdc_acm/new_id"
-	elif [ "$MODULE" == "option" ]; then
-		MPATH="/sys/bus/usb-serial/drivers/option1/new_id"
-	elif [ "$MODULE" == "sierra" ]; then
-		MPATH="/sys/bus/usb-serial/drivers/sierra/new_id"
-	elif [ "$MODULE" == "usbserial_generic" ]; then
-		MPATH="/sys/bus/usb-serial/drivers/generic/new_id"
-		MODULE="usbserial"
-	else
-		MPATH="/dev/null"
-	fi
+	case "$MODULE" in
+		cdc-acm)		MPATH="/sys/bus/usb/drivers/cdc_acm/new_id" ;;
+		option)			MPATH="/sys/bus/usb-serial/drivers/option1/new_id" ;;
+		sierra)			MPATH="/sys/bus/usb-serial/drivers/sierra/new_id" ;;
+		usbserial_generic)	MPATH="/sys/bus/usb-serial/drivers/generic/new_id"; MODULE="usbserial" ;;
+		*)			MPATH="/dev/null" ;;
+	esac
 }
 
 setPIN() {
 	local PIN=$(NG "$PREFIX"_modem_pin)
-	local IS_DONE=0 COUNT=1 WORKING_IF=0 PINVAL DEVALL STATUS PIN_STATUS i
+	local IS_DONE=0 COUNT WORKING_IF=0 PINVAL DEVALL STATUS PIN_STATUS i
 
-	$LOGS "3G MODEM - waiting for SIM initialization"
+	$LOGI "3G MODEM - waiting for SIM initialization"
 
-	DEVALL="$DEVNR $(cat "$DIAGSFILE" | sed "s~"$DEVNR"~~")"
+	DEVALL="$DEVNR $(cat "$DIAGSFILE" | sed "s~$DEVNR~~")"
 
 	for i in $DEVALL; do # find working interface
-		[ -z "$(MODE="ATI" gcom -d "$i" -s /etc/gcom/setverbose.gcom | grep OK)" ] && {
-			sleep 2
-			continue
-		} || {
+		[ -n "$(MODE="ATI" gcom -d "$i" -s /etc/gcom/setverbose.gcom | grep OK)" ] && {
 			DEVNR=$i
 			WORKING_IF=1
 			break
 		}
+		sleep 2
 	done
 
-	[ "$WORKING_IF" -eq "1" ] && {
-		MODE="AT+CFUN=1" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom # set as online mode (default value)
-		while [ "$COUNT" -lt 4 ]; do # try 3 times
+	[ "$WORKING_IF" -eq 1 ] && {
+		MODE="AT+CFUN=1" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom >/dev/null # set as online mode (default value)
+		for COUNT in 1 2 3; do # try 3 times
 			STATUS=$(MODE="AT+CPIN?" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom) # std PIN status
 
-			[ -z "$(echo "$STATUS" | grep OK)" -o "$(echo "$STATUS" | grep ERR)" ] && { # error?
-				COUNT=$((COUNT+1))
-				sleep 1
-			} || {
-				break
-			}
+			[ -n "$(echo "$STATUS" | grep OK)" -a -z "$(echo "$STATUS" | grep ERR)" ] && break # error?
+			sleep 1
 		done
-		[ -n "$PIN" -a "$COUNT" -ge "3" ] && { wayOut "3G MODEM - Error reading SIM status!"; }
+		[ -n "$PIN" -a "$COUNT" -ge 3 ] && wayOut "3G MODEM - Error reading SIM status!"
 
-		PIN_STATUS=$(echo "$STATUS" | grep CPIN: | cut -d ":" -f2 | awk '{$1=$1};1')
+		PIN_STATUS=$(echo "$STATUS" | grep CPIN: | cut -d: -f2 | awk '{$1=$1};1')
 
 		# verify pin
 		case "$PIN_STATUS" in
-			"READY")
-				$LOGS "3G MODEM - PIN verification is not required"
+			"READY" | $'READY\r')
+				$LOGI "3G MODEM - PIN verification is not required"
 				IS_DONE=1
 				;;
 			"SIM PUK")
@@ -272,7 +257,7 @@ setPIN() {
 			"SIM PIN" | "SIM PIN2")
 				[ -n "$PIN" ] && {
 					PINVAL=$(MODE="AT+CPIN=\"$PIN\"" gcom -d "$DEVNR" -s /etc/gcom/setverbose.gcom)
-					[ -z "$(echo "$PINVAL" | grep OK)" -o "$(echo "$PINVAL" | grep ERR)" ] && { wayOut "3G MODEM - Unable to verify PIN" ; }
+					[ -n "$(echo "$PINVAL" | grep OK)" -a -z "$(echo "$PINVAL" | grep ERR)" ] || wayOut "3G MODEM - Unable to verify PIN"
 					IS_DONE=1
 				} || {
 					wayOut "3G MODEM - PIN not specified but required"
@@ -280,53 +265,40 @@ setPIN() {
 				;;
 			*)
 				wayOut "3G MODEM - PIN status failed (${PIN_STATUS:-sim_not_present})"
-			;;
+				;;
 		esac
 	}
 
-	[ "$IS_DONE" -ne 1 ] && {
+	[ "$IS_DONE" -eq 1 ] && {
+		$LOGI "3G MODEM - SIM ready"
+	} || {
 		mwwatchdog del
 		wayOut "3G MODEM - SIM locked - connection process terminated!"
-	} || {
-		$LOGS "3G MODEM - SIM ready"
 	}
 }
 
 checkPid() {
 	local PRIORITY="$1" PIDNO
 
-	[ -f $PIDFILE ] && {
-		PIDNO=$(cat $PIDFILE)
-		cat "/proc/$PIDNO/cmdline" &>/dev/null
+	[ -f "$PIDFILE" ] && {
+		PIDNO=$(cat "$PIDFILE")
+		kill -0 "$PIDNO" 2>/dev/null && {
+			$LOGW "3G MODEM - another process in action - exiting"
+			exit 0
+		}
+	}
 
-		[ $? -eq 0 ] && {
-			$LOGS "3G MODEM - another process in action - exiting"
-			exit 0
-		} || {
-			[ "$PRIORITY" -eq 0 ] && return
-			# Process not found assume not running
-			echo $PID > $PIDFILE
-			[ $? -ne 0 ] && {
-				$LOGS "3G MODEM - could not create PID file"
-				exit 0
-			}
-		}
-	} || {
-		[ "$PRIORITY" -eq 0 ] && return
-		echo $PID > $PIDFILE
-		[ $? -ne 0 ] && {
-			$LOGS "3G MODEM - could not create PID file"
-			exit 0
-		}
+	[ "$PRIORITY" -eq 0 ] && return
+
+	echo $PID > $PIDFILE || {
+		$LOGE "3G MODEM - could not create PID file"
+		exit 0
 	}
 }
 
 wayOut() {
-	local TEXT="$1"
-	[ -z $TEXT ] && TEXT="3G Modem - exiting"
-
-	$LOGS "$TEXT"
-	rm -f $PIDFILE &>/dev/null
+	$LOGE "${1:-3G MODEM - exiting}"
+	rm -f $PIDFILE 2>/dev/null
 	exit 0
 }
 
@@ -334,12 +306,12 @@ wayOut() {
 ###################################################
 
 
-[ "$2" == "signal" ] && {
+[ "$2" = "signal" ] && {
 	wwansignal $PREFIX
 } || {
 	checkPid 1
 	switchMode
 	searchDiag
 	setPIN
-	rm -f $PIDFILE &>/dev/null
+	rm -f $PIDFILE 2>/dev/null
 }
