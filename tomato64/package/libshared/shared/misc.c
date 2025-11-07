@@ -298,8 +298,8 @@ int wl_client(int unit, int subunit)
 int foreach_wif(int include_vifs, void *param,
 	int (*func)(int idx, int unit, int subunit, void *param))
 {
-	char ifnames[2048];
-	char name[64], ifname[64], *next = NULL;
+	char ifnames[BUF_SIZE_64 * BRIDGE_COUNT]; /* increase size depending on bridge count */
+	char name[BUF_SIZE_64], ifname[BUF_SIZE_64], *next = NULL;
 	int unit = -1, subunit = -1;
 	int i, ret = 0;
 	size_t pos = 0;
