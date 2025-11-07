@@ -910,7 +910,7 @@ checkPid() {
 }
 
 wayOut() {
-	$LOGE "${1:-4 Modem - exiting}"
+	$LOGE "${1:-4G MODEM - exiting}"
 	rm -f $READYFILE 2>/dev/null
 	rm -f $PIDFILE 2>/dev/null
 	exit 0
