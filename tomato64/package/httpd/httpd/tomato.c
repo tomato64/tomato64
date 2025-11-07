@@ -58,6 +58,7 @@ static void asp_discovery(int argc, char **argv);
 #endif
 static void asp_css(int argc, char **argv);
 static void asp_resmsg(int argc, char **argv);
+static void asp_resreset(int argc, char **argv);
 static void wo_tomato(char *url);
 static void wo_update(char *url);
 static void wo_service(char *url);
@@ -134,6 +135,7 @@ const aspapi_t aspapi[] = {
 	{ "psup",			asp_psup			},
 	{ "qrate",			asp_qrate			},
 	{ "resmsg",			asp_resmsg			},
+	{ "resreset",			asp_resreset			},
 	{ "rrule",			asp_rrule			},
 	{ "statfs",			asp_statfs			},
 	{ "sysinfo",			asp_sysinfo			},
@@ -3208,6 +3210,17 @@ static void asp_resmsg(int argc, char **argv)
 		return;
 
 	web_printf("\nresmsg='%s';\n", p);
+	free(p);
+}
+
+static void asp_resreset(int argc, char **argv)
+{
+	char *p;
+
+	if ((p = js_string(webcgi_safeget("resreset", (argc > 0) ? argv[0] : ""))) == NULL)
+		return;
+
+	web_printf("\nresreset='%s';\n", p);
 	free(p);
 }
 

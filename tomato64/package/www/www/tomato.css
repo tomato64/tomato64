@@ -1581,6 +1581,10 @@ div.tomato-grid.container-div input {
 	width: auto;
 }
 
+div.tomato-grid.container-div.rboot {
+	height: 90px;
+}
+
 div.wrapper1 {
 	display: table;
 	height: inherit;
@@ -1703,6 +1707,21 @@ div#sptime {
 	-ms-animation: blinker 1s linear infinite; /* Internet Explorer */
 	-o-animation: blinker 1s linear infinite; /* Opera */
 	animation: blinker 1s linear infinite; /* W3C */
+}
+
+#msg1 {
+	display: none;
+	border-bottom: 1px dashed #888;
+	margin-bottom: 10px;
+	padding-bottom: 10px;
+	font-weight: bold;
+}
+
+#inf {
+	border-top: 1px dashed #888;
+	margin-top: 10px;
+	padding-top: 10px;
+	font-weight: bold;
 }
 
 span[id^="opendns_info"],

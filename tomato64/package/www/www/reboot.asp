@@ -6,18 +6,6 @@
 <title>[<% ident(); %>] Rebooting...</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
-<style>
-div.tomato-grid.container-div {
-	height: 90px;
-}
-#msg {
-	display: none;
-	border-bottom: 1px dashed #888;
-	margin-bottom: 10px;
-	padding-bottom: 10px;
-	font-weight: bold;
-}
-</style>
 <script>
 /* TOMATO64-REMOVE-BEGIN */
 var n = 90 + parseInt('0<% nv("wait_time"); %>');
@@ -25,6 +13,7 @@ var n = 90 + parseInt('0<% nv("wait_time"); %>');
 /* TOMATO64-BEGIN */
 var n = 45 + parseInt('0<% nv("wait_time"); %>');
 /* TOMATO64-END */
+var resreset = 0;
 function tick() {
 	var e = document.getElementById('continue');
 	e.value = n--;
@@ -36,39 +25,59 @@ function tick() {
 	if (n == 69) {
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-	if (n == 14) {
+        if (n == 14) {
 /* TOMATO64-END */
 		e.style = 'cursor:pointer';
-		e.disabled = false;
+		e.disabled = 0;
 	}
 	setTimeout(tick, 1000);
 }
 
 function go() {
-	window.location.replace('/');
+	var uri = '';
+
+	if (resreset)
+		uri = 'http://192.168.1.1';
+
+	window.location.replace(uri+'/about.asp');
 }
 
 function init() {
-	var resmsg = '';
+	var e, msg2 = '', resmsg = '';
 //	<% resmsg(); %>
+//	<% resreset(); %>
 	if (resmsg.length) {
-		e = document.getElementById('msg');
+		e = document.getElementById('msg1');
 		e.innerHTML = resmsg;
 		e.style.display = 'block';
 	}
+
+	if (resreset) {
+		e = document.getElementById('inf');
+		e.style.display = 'block';
+		msg2 = ' and defaults are restored';
+		e = document.getElementById('rboot');
+		e.style.height = '120px';
+	}
+
+	msg2 = 'Please wait while the router reboots'+msg2+'... &nbsp;';
+	e = document.getElementById('msg2');
+	e.innerHTML = msg2;
+
 	tick();
 }
 </script>
 </head>
 
 <body onload="init()">
-<div class="tomato-grid container-div">
+<div class="tomato-grid container-div rboot" id="rboot">
 	<div class="wrapper1">
 		<div class="wrapper2">
 			<div class="info-centered">
 				<form>
-					<div id="msg"></div>
-					<div>Please wait while the router reboots... &nbsp;<input type="button" value="" id="continue" onclick="go()" disabled="disabled"></div>
+					<div id="msg1"></div>
+					<div id="msg2" style="display:inline-block"></div><div style="display:inline-block"><input type="button" value="" id="continue" onclick="go()" disabled="disabled"></div>
+					<div id="inf" style="display:none">The router will reset its address back to 192.168.1.1. You may need to renew your computer's DHCP or reboot your computer before continuing.</div>
 				</form>
 			</div>
 		</div>
