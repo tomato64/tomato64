@@ -27,20 +27,18 @@
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"wg_debug"
 
-#define BUF_SIZE	64
-
 
 static int wg_status(char *iface)
 {
 	FILE *fp;
-	char buffer[BUF_SIZE];
+	char buffer[BUF_SIZE_64];
 	int status = 0;
 
-	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "/sys/class/net/%s/operstate", iface);
+	memset(buffer, 0, BUF_SIZE_64);
+	snprintf(buffer, BUF_SIZE_64, "/sys/class/net/%s/operstate", iface);
 
 	if ((fp = fopen(buffer, "r"))) {
-		fgets(buffer, BUF_SIZE, fp);
+		fgets(buffer, BUF_SIZE_64, fp);
 		buffer[strcspn(buffer, "\n")] = 0;
 		if ((strcmp(buffer, "unknown") == 0) || (strcmp(buffer, "up") == 0))
 			status = 1;
