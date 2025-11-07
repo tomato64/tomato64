@@ -20,6 +20,11 @@
 <% css(); %>
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="interfaces.js?rel=<% version(); %>"></script>
+<script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
+<script>
+var lastjiffiestotal = 0, lastjiffiesidle = 0, lastjiffiesusage = 100;
+</script>
+<script src="status-data.jsx?_http_id=<% nv(http_id); %>"></script>
 <!-- USB-BEGIN -->
 <script src="wwan_parser.js?rel=<% version(); %>"></script>
 <!-- USB-END -->
@@ -38,19 +43,13 @@ var bgmo = {'disabled':'-','mixed':'Auto','b-only':'B Only','g-only':'G Only','b
 	    ,'nac-mixed':'N/AC Mixed','ac-only':'AC Only'
 /* BCMWL6-END */
 };
-var lastjiffiestotal = 0, lastjiffiesidle = 0, lastjiffiesusage = 100;
+
 var updateWWANTimers = [], customStatusTimers = [], show_dhcpc = [], show_codi = [], show_radio = [];
-</script>
-
-<script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
-<script src="status-data.jsx?_http_id=<% nv(http_id); %>"></script>
-
-<script>
 var cprefix = 'status_overview';
 var u;
 nphy = features('11n');
 
-var ref = new TomatoRefresh('status-data.jsx?_http_id=<% nv(http_id); %>', '', 5, cprefix+'_refresh');
+var ref = new TomatoRefresh('status-data.jsx', '', 5, cprefix+'_refresh');
 
 ref.refresh = function(text) {
 	stats = {};

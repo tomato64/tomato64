@@ -15,18 +15,14 @@
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="isup.jsx?_http_id=<% nv(http_id); %>"></script>
+<script src="upnp.jsx?_http_id=<% nv(http_id); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
 
 <script>
 
 //	<% nvram("upnp_enable,upnp_secure,upnp_custom,upnp_lan,lan_ifname"); %>
 
-</script>
-<script src="upnp.jsx?_http_id=<% nv(http_id); %>"></script>
-
-<script>
-
-var upnp = new TomatoRefresh('upnp.jsx?_http_id=<% nv(http_id); %>', '', 30);
+var upnp = new TomatoRefresh('upnp.jsx', '', 30);
 
 nvram.upnp_enable = fixInt(nvram.upnp_enable, 0, 3, 0);
 

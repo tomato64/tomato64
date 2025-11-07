@@ -25,10 +25,10 @@
 <script src="md5.js?rel=<% version(); %>"></script>
 <script src="interfaces.js?rel=<% version(); %>"></script>
 <script src="wireless.js?rel=<% version(); %>"></script>
+<script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
 <script>
 var lastjiffiestotal = 0, lastjiffiesidle = 0, lastjiffiesusage = 100;
 </script>
-<script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
 <script src="status-data.jsx?_http_id=<% nv(http_id); %>"></script>
 
 <script>
