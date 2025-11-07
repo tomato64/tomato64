@@ -3444,15 +3444,12 @@ static int save_variables(int write)
 
 static void wo_tomato(char *url)
 {
+	const char *redir;
 	char *v;
-	int i;
-	int ajax;
-	int nvset;
-	const char *red;
-	int commit;
-	int force_commit;
+	int i, ajax, nvset, commit, force_commit;
 
-	red = webcgi_safeget("_redirect", "");
+	nvset = atoi(webcgi_safeget("_nvset", "1"));
+	redir = webcgi_safeget("_redirect", "");
 	commit = atoi(webcgi_safeget("_commit", "1"));
 	force_commit = atoi(webcgi_safeget("_force_commit", "0"));
 	ajax = atoi(webcgi_safeget("_ajax", "0"));
@@ -3460,9 +3457,8 @@ static void wo_tomato(char *url)
 #ifdef TOMATO64_X86_64
 	fastrboot = atoi(webcgi_safeget("_fastreboot", "0"));
 #endif /* TOMATO64_X86_64 */
-	nvset = atoi(webcgi_safeget("_nvset", "1"));
 
-	if (!*red)
+	if (!*redir)
 		send_header(200, NULL, mime_html, 0);
 
 	if (nvset) {
@@ -3496,7 +3492,7 @@ static void wo_tomato(char *url)
 			web_printf("@msg:%s", resmsg_get());
 		else if (atoi(webcgi_safeget("_moveip", "0")) || atoi(webcgi_safeget("dhcp_moveip", "0")))
 			parse_asp("saved-moved.asp");
-		else if (!*red)
+		else if (!*redir)
 			parse_asp("saved.asp");
 	}
 
@@ -3506,7 +3502,7 @@ static void wo_tomato(char *url)
 	}
 
 	if ((v = webcgi_get("_service")) != NULL && *v != 0) {
-		if (!*red) {
+		if (!*redir) {
 			if (ajax)
 				web_printf(" Some services are being restarted...");
 
@@ -3514,7 +3510,7 @@ static void wo_tomato(char *url)
 		}
 		sleep(1);
 
-		if (*v == '*')
+		if (*v == '*') /* restart everything */
 			kill(1, SIGHUP);
 		else
 			exec_service(v);
@@ -3523,8 +3519,8 @@ static void wo_tomato(char *url)
 	for (i = atoi(webcgi_safeget("_sleep", "0")); i > 0; --i)
 		sleep(1);
 
-	if (*red)
-		redirect(red);
+	if (*redir)
+		redirect(redir);
 
 	if (rboot) {
 		web_close();
