@@ -43,7 +43,7 @@ BR2_PACKAGE_FILE=y
 BR2_PACKAGE_TMUX=y
 BR2_TARGET_ROOTFS_EXT2=y
 BR2_TARGET_ROOTFS_EXT2_4=y
-BR2_TARGET_ROOTFS_EXT2_SIZE="650M"
+BR2_TARGET_ROOTFS_EXT2_SIZE="655M"
 BR2_TARGET_ROOTFS_TAR_ZSTD=y
 BR2_TARGET_ROOTFS_TAR_OPTIONS="--exclude='./bkp' --exclude='./cifs1' --exclude='./cifs2' --exclude='./dev' --exclude='./etc' --exclude='./home' --exclude='./jffs' --exclude='./lib64' --exclude='./media' --exclude='./mmc' --exclude='./mnt' --exclude='./nas' --exclude='./nvram' --exclude='./opt' --exclude='./proc' --exclude='./root' --exclude='./sys' --exclude='./tftpboot' --exclude='./var'"
 BR2_PACKAGE_HOST_GO_BIN=y

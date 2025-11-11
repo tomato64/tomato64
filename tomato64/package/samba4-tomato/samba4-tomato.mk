@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-SAMBA4_TOMATO_VERSION = 4.22.4
+SAMBA4_TOMATO_VERSION = 4.23.3
 SAMBA4_TOMATO_SITE = https://download.samba.org/pub/samba/stable
 SAMBA4_TOMATO_SOURCE = samba-$(SAMBA4_TOMATO_VERSION).tar.gz
 SAMBA4_TOMATO_INSTALL_STAGING = YES
@@ -27,7 +27,7 @@ SAMBA4_TOMATO_DEPENDENCIES = \
 SAMBA4_TOMATO_CFLAGS = $(TARGET_CFLAGS)
 SAMBA4_TOMATO_LDFLAGS = $(TARGET_LDFLAGS) $(TARGET_NLS_LIBS)
 SAMBA4_TOMATO_CONF_ENV = \
-	CFLAGS="$(SAMBA4_TOMATO_CFLAGS) -DMAX_DEBUG_LEVEL=\"-1\"" \
+	CFLAGS="$(SAMBA4_TOMATO_CFLAGS)" \
 	LDFLAGS="$(SAMBA4_TOMATO_LDFLAGS)" \
 	XSLTPROC=false \
 	WAF_NO_PREFORK=1
@@ -146,7 +146,6 @@ define SAMBA4_TOMATO_CONFIGURE_CMDS
 			--without-ldb-lmdb \
 			--disable-glusterfs \
 			--with-cluster-support \
-			--without-libunwind \
 			--bundled-libraries='!asn1_compile,!compile_et' \
 			--with-shared-modules=$(subst $(space),$(comma),$(strip $(SAMBA4_TOMATO_SHARED_MODULES))) \
 			$(SAMBA4_TOMATO_CONF_OPTS) \
@@ -165,13 +164,16 @@ define SAMBA4_TOMATO_INSTALL_TARGET_CMDS
 	$(TARGET_MAKE_ENV) $(SAMBA4_TOMATO_PYTHON) $(MAKE) -C $(@D) DESTDIR=$(TARGET_DIR) install
 endef
 
+# Tomato64 does not use AD DC functionality - force disable
 SAMBA4_TOMATO_CONF_OPTS += --without-ad-dc --without-json
+
+# Tomato64 does not use ADS/LDAP functionality - force disable
 SAMBA4_TOMATO_CONF_OPTS += --without-ads --without-ldap
 SAMBA4_TOMATO_SHARED_MODULES += !idmap_ad
 
-#define SAMBA4_TOMATO_REMOVE_SMBTORTURE
-#	rm -f $(TARGET_DIR)/usr/bin/smbtorture
-#endef
-#SAMBA4_TOMATO_POST_INSTALL_TARGET_HOOKS += SAMBA4_TOMATO_REMOVE_SMBTORTURE
+define SAMBA4_TOMATO_REMOVE_SMBTORTURE
+	rm -f $(TARGET_DIR)/usr/bin/smbtorture
+endef
+SAMBA4_TOMATO_POST_INSTALL_TARGET_HOOKS += SAMBA4_TOMATO_REMOVE_SMBTORTURE
 
 $(eval $(generic-package))
