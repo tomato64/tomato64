@@ -14,12 +14,51 @@ if [ "$result" -ne 0 ]; then
 	exit
 fi
 
-tar --touch -I "zstd -f" -xf $1 -C /
+# Define directories to clean
+CLEANUP_DIRS="/bin /sbin /lib /libexec /usr/bin /usr/sbin /usr/lib /usr/libexec /usr/share /boot /rom /www"
+
+# Create list of files on disk BEFORE extraction (excluding /lib/modules/*)
+DISK_FILES=$(mktemp)
+for dir in $CLEANUP_DIRS; do
+	if [ -d "$dir" ]; then
+		find "$dir" \( -type f -o -type l \) ! -path "*/modules/*"
+	fi
+done | sed 's|^/||' | sort > "$DISK_FILES"
+
+# Extract archive and output list to file
+ARCHIVE_LIST=$(mktemp)
+tar -I "zstd -f" -xvf $1 -C / 2>&1 > "$ARCHIVE_LIST"
 result=$?
+
 if [ "$result" -ne 0 ]; then
 	printf 'error code "%d" returned during extraction' "$result"
+	rm -f "$ARCHIVE_LIST" "$DISK_FILES"
 	exit
 fi
+
+# Filter archive list to CLEANUP_DIRS, remove leading ./, and exclude directories
+ARCHIVE_FILTERED=$(mktemp)
+for dir in $CLEANUP_DIRS; do
+	# Remove leading / from dir for pattern matching
+	dirpattern="${dir#/}"
+	grep "^\./${dirpattern}/" "$ARCHIVE_LIST"
+done | grep -v "/modules/" | grep -v '/$' | sed 's|^\./||' | sort > "$ARCHIVE_FILTERED"
+
+# Find files in DISK_FILES but not in ARCHIVE_FILTERED using comm
+TO_DELETE=$(mktemp)
+comm -23 "$DISK_FILES" "$ARCHIVE_FILTERED" > "$TO_DELETE"
+
+# Delete files that weren't in the archive
+while read -r filepath; do
+	[ -n "$filepath" ] && rm -f "/$filepath" 2>/dev/null
+done < "$TO_DELETE"
+
+# Remove empty directories
+for dir in $CLEANUP_DIRS; do
+	if [ -d "$dir" ]; then
+		find "$dir" -mindepth 1 -type d -empty -delete 2>/dev/null
+	fi
+done
 
 # x86_64
 if [ -f /boot/bzImage ] && [ "$(NG "t_model_name")" == "x86_64" ]; then
