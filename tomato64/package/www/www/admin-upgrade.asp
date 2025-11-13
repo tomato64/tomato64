@@ -18,7 +18,12 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("jffs2_on,jffs2_auto_unmount,remote_upgrade"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("jffs2_on,jffs2_auto_unmount,remote_upgrade,t_model_name"); %>
+/* TOMATO64-END */
 
 //	<% sysinfo(); %>
 
@@ -44,8 +49,103 @@ function upgrade() {
 /* TOMATO64-END */
 		return;
 	}
+/* TOMATO64-REMOVE-BEGIN */
 	if (!confirm('Are you sure you want to upgrade using '+name+'?'))
 		return;
+/* TOMATO64-REMOVE-END */
+
+/* TOMATO64-BEGIN */
+	// Device definitions - add new devices here
+	var devices = {
+		'x86_64': {
+			regex: /x86[_-]64/i,
+			name: 'x86_64',
+			message: 'x86_64 or x86-64'
+		},
+		'GL.iNet GL-MT6000': {
+			regex: /gl-mt6000/i,
+			name: 'GL-MT6000',
+			message: 'gl-mt6000'
+		},
+		'Banana Pi BPI-R3': {
+			regex: /bpi-r3(?!-mini)/i,
+			name: 'BPI-R3',
+			message: 'bpi-r3 (NOT bpi-r3-mini)'
+		},
+		'Banana Pi BPI-R3 Mini': {
+			regex: /bpi-r3-mini/i,
+			name: 'BPI-R3 Mini',
+			message: 'bpi-r3-mini'
+		}
+	};
+
+	// Validate filename matches device model
+	var model = nvram.t_model_name;
+	var device = devices[model];
+	var warnings = [];
+
+	if (!device) {
+		warnings.push('Unknown device model - cannot validate firmware compatibility');
+	}
+
+	// Check if filename contains identifiers for OTHER devices (wrong device check)
+	var filenameMatches = false;
+	var wrongDevice = false;
+	var wrongDeviceName = '';
+
+	if (device) {
+		// Loop through all devices and check if any OTHER device pattern matches
+		for (var key in devices) {
+			if (key !== model && devices[key].regex.test(name)) {
+				wrongDevice = true;
+				wrongDeviceName = devices[key].name;
+				break;
+			}
+		}
+	}
+
+	// If wrong device detected, block the upgrade
+	if (wrongDevice) {
+		alert('🛑 UPGRADE BLOCKED!\n\n'+
+		      'Current device: '+model+'\n'+
+		      'Filename appears to be for: '+wrongDeviceName+'\n'+
+		      'Filename: '+name+'\n\n'+
+		      'This firmware is for a DIFFERENT device!\n'+
+		      'Flashing this will BRICK your router!\n'+
+		      'Please download the correct firmware for your device.');
+		return;
+	}
+
+	// Check if filename matches expected pattern
+	if (device) {
+		if (!device.regex.test(name)) {
+			warnings.push('Filename does not contain "'+device.message+'"');
+		} else {
+			filenameMatches = true;
+		}
+	}
+
+	// Build confirmation message
+	var message = 'Current device: '+model+'\n';
+	message += 'Filename: '+name;
+	if (filenameMatches) {
+		message += ' ✓';
+	}
+	message += '\n';
+
+	if (warnings.length > 0) {
+		message += '\n⚠️  WARNINGS:\n';
+		for (var i = 0; i < warnings.length; i++) {
+			message += '  • ' + warnings[i] + '\n';
+		}
+		message += '\nFlashing the wrong firmware can BRICK your router!\n';
+	}
+
+	message += '\nAre you sure you want to upgrade using '+name+'?';
+
+	if (!confirm(message))
+		return;
+/* TOMATO64-END */
 
 	E('afu-upgrade-button').disabled = 1;
 
