@@ -11874,6 +11874,10 @@ static void sysinit(void)
 
 #ifdef TOMATO64_X86_64
 	eval("mount_nvram");
+	if (d_exists("/sys/firmware/efi"))
+		nvram_set("t_boot_type", "uefi");
+	else
+		nvram_set("t_boot_type", "bios");
 #endif /* TOMATO64_X86_64 */
 	/* Mount filesystem rw */
 	if (!nvram_get_int("fs_mount_ro")) {

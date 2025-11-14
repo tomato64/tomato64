@@ -22,7 +22,7 @@
 //	<% nvram("jffs2_on,jffs2_auto_unmount,remote_upgrade"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("jffs2_on,jffs2_auto_unmount,remote_upgrade,t_model_name"); %>
+//	<% nvram("jffs2_on,jffs2_auto_unmount,remote_upgrade,t_model_name,t_boot_type"); %>
 /* TOMATO64-END */
 
 //	<% sysinfo(); %>
@@ -114,6 +114,31 @@ function upgrade() {
 		      'Flashing this will BRICK your router!\n'+
 		      'Please download the correct firmware for your device.');
 		return;
+	}
+
+	// Check boot type for x86_64 devices
+	if (model === 'x86_64' && nvram.t_boot_type) {
+		var bootType = nvram.t_boot_type;
+		if (bootType === 'uefi' && /bios/i.test(name)) {
+			alert('🛑 UPGRADE BLOCKED!\n\n'+
+			      'Current boot type: UEFI\n'+
+			      'Filename appears to be for: BIOS\n'+
+			      'Filename: '+name+'\n\n'+
+			      'This firmware is for a DIFFERENT boot type!\n'+
+			      'Flashing this will BRICK your router!\n'+
+			      'Please download the UEFI version.');
+			return;
+		}
+		if (bootType === 'bios' && /uefi/i.test(name)) {
+			alert('🛑 UPGRADE BLOCKED!\n\n'+
+			      'Current boot type: BIOS\n'+
+			      'Filename appears to be for: UEFI\n'+
+			      'Filename: '+name+'\n\n'+
+			      'This firmware is for a DIFFERENT boot type!\n'+
+			      'Flashing this will BRICK your router!\n'+
+			      'Please download the BIOS version.');
+			return;
+		}
 	}
 
 	// Check if filename matches expected pattern
