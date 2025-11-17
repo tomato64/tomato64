@@ -39,7 +39,7 @@ function save() {
 <table id="container">
 <tr><td colspan="2" id="header">
 	<div class="title"><a href="/">Tomato64</a></div>
-	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
+	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %><span class="blinking bl2"><script><% anonupdate(); %> anon_update()</script>&nbsp;</span></div>
 </td></tr>
 <tr id="body"><td id="navi"><script>navi()</script></td>
 <td id="content">

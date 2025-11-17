@@ -375,21 +375,11 @@ function ethstates() {
 }
 /* TOMATO64-END */
 
-function anon_update() {
-	var code = '';
-
+function anon_enable() {
 	if ((stats.anon_enable == '-1') || (stats.anon_answer == '0'))
 		E('status-anonwarn').style.display = 'block';
 	else
 		E('status-anonwarn').style.display = 'none';
-
-	var update = anonupdate.update;
-	if (update == 'no' || update == '' || !update)
-		return 0;
-
-	var code = '<div class="section-title">!! Attention !!<\/div><div class="section-centered">New version of Tomato64 '+update+' is now available. <a class="new_window" href="https://tomato64.org/">Click here to download<\/a>.<\/div>';
-	E('status-nversion').style.display = 'block';
-	E('status-nversion').innerHTML = code;
 }
 
 function show() {
@@ -397,6 +387,7 @@ function show() {
 
 	visibility();
 	ethstates();
+	anon_enable();
 	anon_update();
 
 	c('cpu', stats.cpuload);

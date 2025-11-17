@@ -1709,6 +1709,15 @@ div#sptime {
 	animation: blinker 1s linear infinite; /* W3C */
 }
 
+.bl2 {
+	padding-left: 20px;
+}
+
+.bl2 > a {
+	background: inherit;
+	color: inherit;
+}
+
 #msg1 {
 	display: none;
 	border-bottom: 1px dashed #888;
@@ -1827,12 +1836,6 @@ div#dev-grid span[class$="svg"] {
 	background-position: center;
 }
 
-/* USB-BEGIN */
-div#dev-grid span.cellsvg {
-	background-image: var(--icon-cell);
-}
-/* USB-END */
-
 div#dev-grid span.wl24svg {
 	background-image: var(--icon-24);
 }
@@ -1861,18 +1864,6 @@ span.cfgiconsvg {
 	height: 16px;
 }
 
-/* QRCODE-BEGIN */
-span.qriconsvg {
-	background-image: var(--icon-qr);
-}
-/* QRCODE-END */
-
-/* WIREGUARD-BEGIN */
-span.cfgiconsvg {
-	background-image: var(--icon-cfg);
-}
-/* WIREGUARD-END */
-
 span.openvpnsvg,
 span.wireguardsvg,
 span.tincsvg,
@@ -1887,6 +1878,24 @@ span.pptpsvg {
 	font-size: 120%;
 	padding-bottom: 20px;
 }
+
+/* USB-BEGIN */
+div#dev-grid span.cellsvg {
+	background-image: var(--icon-cell);
+}
+/* USB-END */
+
+/* QRCODE-BEGIN */
+span.qriconsvg {
+	background-image: var(--icon-qr);
+}
+/* QRCODE-END */
+
+/* WIREGUARD-BEGIN */
+span.cfgiconsvg {
+	background-image: var(--icon-cfg);
+}
+/* WIREGUARD-END */
 
 /* OPENVPN-BEGIN */
 span.openvpnsvg {

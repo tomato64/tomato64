@@ -3094,6 +3094,27 @@ function toggleTheme() {
 
 }
 
+function anon_update() {
+	var res = '';
+	var page = myName();
+	if (!page) page = 'status-overview.asp';
+
+	var update = anonupdate.update;
+	if (update == 'no' || update == '' || !update)
+		return;
+
+	/* special case */
+	if (page == 'status-overview.asp') {
+		res = '<div class="section-title">!! Attention !!</div><div class="section-centered">New version of Tomato64 <b>'+update+'</b> is now available. <a class="new_window" href="https://tomato64.org/">Click here to download</a>.</div>';
+		E('status-nversion').innerHTML = res;
+		E('status-nversion').style.display = 'block';
+	}
+	else {
+		res = 'New version ('+update+') available <a href="https://tomato64.org/"><b>HERE</b></a>!';
+		W(res);
+	}
+}
+
 var up = new TomatoRefresh('isup.jsx', '', 5);
 up.refresh = function(text) {
 	isup = {};
