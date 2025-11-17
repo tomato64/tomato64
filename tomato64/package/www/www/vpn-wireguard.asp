@@ -1818,7 +1818,6 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_wg'+i+'_prio'), ext && rgwr);
 
 		/* Page Routing Policy */
-		elem.display(E('wg'+i+'_table_routing'), ext && rgwr);
 		elem.display(E('_wg'+i+'_routing_div_help'), (!ext) || (ext && !rgwr));
 
 		/* verify interface dns */
