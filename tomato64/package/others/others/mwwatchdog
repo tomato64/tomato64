@@ -324,7 +324,7 @@ case "$1" in
 			# run with a 10 sec timeout to not hang
 			timeout 10 findHost
 			[ -f "$IPLISTFILE" ] && IPLIST=$(cat "$IPLISTFILE")
-			[ -z "$IPLIST" ] && IPLIST="8.8.8.8" # Resilient IP if the list is empty
+			[ -z "$IPLIST" ] && IPLIST="$(NG wan_checker)" # Resilient IP if the list is empty
 
 			# filter out DNS IPs from the list
 			BADIPLIST=""

@@ -398,6 +398,7 @@ struct nvram_tuple router_defaults[] = {
 	/* WAN H/W parameters */
 	{ "wan_hwname",			""				, 0 },	/* WAN driver name (e.g. et1) */
 	{ "wan_hwaddr",			""				, 0 },	/* WAN interface MAC address */
+	{ "wan_checker",		"1.1.1.1"			, 0 },	/* backup IP for connection checking */
 	{ "wan_iface",			""				, 0 },
 	{ "wan_ifname",			""				, 0 },
 	{ "wan_ifnameX",		NULL				, 0 },	/* real wan if; see wan.c:start_wan */

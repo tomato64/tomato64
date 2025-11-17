@@ -21,7 +21,7 @@ LOGW="logger -p WARN -t KS-helper[$PID]"
 LOGD="logger -p DEBUG -t KS-helper[$PID]"
 PRIORITY=0
 ALLOK=1
-IP="1.1.1.1"
+IP="$(NG wan_checker)"
 
 
 [ -z "$1" ] && { echo "usage: $0 update | add"; exit 0; }

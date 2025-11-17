@@ -775,7 +775,7 @@ elif [ "$1" == "test" ]; then
 	[ $# -eq 2 -a $(echo $2 | domain | wc -l) -gt 0 ] && {
 		dom=$(echo $2 | domain)
 		int=$(nslookup $dom 127.0.0.1 2>/dev/null | grep -A999 ^$ | grep Address || echo "${grey}Unresolvable")
-		ext=$(nslookup $dom 1.1.1.1 2>/dev/null | grep -A999 ^$ | grep Address || echo "${grey}Unresolvable")
+		ext=$(nslookup $dom $(NG wan_checker) 2>/dev/null | grep -A999 ^$ | grep Address || echo "${grey}Unresolvable")
 		[ "$ext" != "${grey}Unresolvable" -a "$int" == "${grey}Unresolvable" ] && int=$(echo "${red}Blocked")
 		if [ $(grep -E "^server=/(\.)?$dom/" $FINAL | wc -l ) -gt 0 ]; then
 			blo="${green}$(grep -E "^server=/(\.)?$dom/" $FINAL)"
