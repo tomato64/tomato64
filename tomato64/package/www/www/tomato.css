@@ -1836,6 +1836,12 @@ div#dev-grid span[class$="svg"] {
 	background-position: center;
 }
 
+/* TOMATO64-REMOVE-BEGIN */
+a[href*="donations.html"]:hover {
+	background-color: transparent !important;
+}
+/* TOMATO64-REMOVE-END */
+
 div#dev-grid span.wl24svg {
 	background-image: var(--icon-24);
 }

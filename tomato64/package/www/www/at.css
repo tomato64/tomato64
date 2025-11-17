@@ -1455,6 +1455,12 @@ div#loading {
 	box-shadow: rgba(var(--tomato-shadow-color), .2) 0px 1px 1px;
 }
 
+/* TOMATO64-REMOVE-BEGIN */
+#content > .about br {
+	display: inline-block;
+}
+/* TOMATO64-REMOVE-END */
+
 .section > .about,
 .fields > .about {
 	text-align: center;
