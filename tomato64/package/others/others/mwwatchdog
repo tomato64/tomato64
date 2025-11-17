@@ -235,7 +235,7 @@ mwwatchdogAdd() {
 	local CKTIME=$(NG mwan_cktime)
 	local MINS=$((CKTIME/60))
 
-	[ "$MINS" -gt 0 ] && cru l | grep -q mwwatchdogJob || cru a mwwatchdogJob "*/$MINS * * * * /usr/sbin/mwwatchdog"
+	[ "$MINS" -gt 0 ] && { cru l | grep -q mwwatchdogJob || cru a mwwatchdogJob "*/$MINS * * * * /usr/sbin/mwwatchdog"; }
 }
 
 mwwatchdogDel() {
