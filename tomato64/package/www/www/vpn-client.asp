@@ -312,7 +312,6 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_vpn_'+t+'_prio'), rgw > 1);
 
 		/* Page Routing Policy */
-		elem.display(E('table_'+t+'_routing'), rtable);
 		elem.display(E('_vpn_'+t+'_routing_div_help'), !rtable);
 
 		/* Page Key */
@@ -563,7 +562,7 @@ function init() {
 
 			W('<div id="'+t+'-policy">');
 			W('<div class="tomato-grid" id="table_'+t+'_routing"><\/div>');
-			W('<div id="_vpn_'+t+'_routing_div_help"><div class="fields"><div class="about"><b>To use Routing Policy, you have to choose TUN as interface and "Routing Policy" in "Redirect Internet Traffic".<\/b><\/div><\/div><\/div>');
+			W('<div id="_vpn_'+t+'_routing_div_help"><div class="fields"><div class="about"><b>To use Routing Policy, you have to choose TUN as interface and "Routing Policy"/"Routing Policy (strict)" in "Redirect Internet Traffic".<\/b><\/div><\/div><\/div>');
 			W('<div>');
 			W('<ul>');
 			W('<li><b>Type -> From Source IP<\/b> - Ex: "1.2.3.4", "1.2.3.4-2.3.4.5", "1.2.3.0/24".<\/li>');
