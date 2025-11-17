@@ -34,7 +34,7 @@ for (i = 0; i < WG_INTERFACE_COUNT; i++) serviceLastUp.push('0');
 function RouteGrid() {return this;}
 RouteGrid.prototype = new TomatoGrid;
 
-var tabs =  [];
+var tabs = [];
 for (i = 0; i < WG_INTERFACE_COUNT; ++i)
 	tabs.push(['wg'+i,'<span id="'+serviceType+i+'_tabicon" style="font-size:9px">▽ <\/span><span class="tabname">wg'+i+'<\/span>']);
 var sections = [['wg-config','Config'],['wg-peersp','Peers Params'],['wg-peers','Peers'],['wg-scripts','Scripts'],['wg-policy','Routing Policy'],['wg-status','Status']];
@@ -1959,6 +1959,10 @@ function save(nomsg) {
 		fom['wg'+i+'_rgw'].value = fom['_f_wg'+i+'_rgw'].checked ? 1 : 0;
 		fom['wg'+i+'_nat'].value = fom['_f_wg'+i+'_nat'].checked ? 1 : 0;
 		fom['wg'+i+'_fw'].value = fom['_f_wg'+i+'_fw'].checked ? 1 : 0;
+
+		/* copy values from the fields */
+		nvram['wg'+i+'_rgwr'] = E('_wg'+i+'_rgwr').value;
+		nvram['wg'+i+'_com'] = E('_wg'+i+'_com').value;
 
 		/* set properly value of Push LANX to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = LAN3 */
 		fom['wg'+i+'_lan'].value = 0; /* init with 0 and check */
