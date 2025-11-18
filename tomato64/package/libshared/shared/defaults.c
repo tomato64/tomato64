@@ -970,6 +970,12 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TCONFIG_BCMNAT
 	{ "bcmnat_disable",		"1"				, 0 },
 #endif
+#ifdef TOMATO64
+	{ "zram_enable",		"0"				, 0 },
+	{ "zram_size",			"0"				, 0 },	/* 0 = auto (50% of RAM) */
+	{ "zram_priority",		"100"				, 0 },
+	{ "zram_comp_algo",		"lz4"				, 0 },
+#endif /* TOMATO64 */
 
 /* advanced-dhcpdns */
 	{ "dhcpd_dmdns",		"1"				, 0 },

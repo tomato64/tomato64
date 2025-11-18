@@ -738,6 +738,13 @@ static const nvset_t nvset_list[] = {
 #ifdef TCONFIG_BCMNAT
 	{ "bcmnat_disable",		V_01				},
 #endif
+#ifdef TOMATO64
+	{ "zram_enable",		V_01				},
+	{ "zram_size",			V_RANGE(0, 32768)		},	/* 0 = auto, max 32GB */
+	{ "zram_priority",		V_RANGE(-1, 32767)		},	/* swap priority */
+	{ "zram_comp_algo",		V_LENGTH(1, 16)			},	/* compression algorithm name */
+#endif
+
 /* advanced-vlan */
 #ifndef TOMATO64
 	{ "vlan0ports",			V_TEXT(0, 17)			},

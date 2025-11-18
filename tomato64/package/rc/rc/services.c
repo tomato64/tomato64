@@ -669,6 +669,24 @@ void stop_adblock()
 	xstart(adblockexe, "stop");
 }
 
+#ifdef TOMATO64
+void start_zram(void)
+{
+	if (nvram_get_int("g_upgrade") || nvram_get_int("g_reboot"))
+		return;
+
+	if (!nvram_get_int("zram_enable"))
+		return;
+
+	xstart("/sbin/zram", "start");
+}
+
+void stop_zram(void)
+{
+	xstart("/sbin/zram", "stop");
+}
+#endif /* TOMATO64 */
+
 #ifdef TCONFIG_IPV6
 static int write_ipv6_dns_servers(FILE *f, const char *prefix, char *dns, const char *suffix, int once)
 {
@@ -2319,6 +2337,9 @@ void start_services(void)
 #ifdef TCONFIG_HAVEGED
 	start_haveged();
 #endif
+#ifdef TOMATO64
+	start_zram();
+#endif
 	if (once) {
 		once = 0;
 
@@ -2470,6 +2491,9 @@ void stop_services(void)
 #ifdef TOMATO64_WIFI
 	stop_wifi();
 #endif /* TOMATO64_WIFI */
+#ifdef TOMATO64
+	stop_zram();
+#endif
 }
 
 /* nvram "action_service" is: "service-action[-modifier]"
@@ -2631,6 +2655,14 @@ TOP:
 		if (act_start) start_adblock(1); /* update lists immediately */
 		goto CLEAR;
 	}
+
+#ifdef TOMATO64
+	if (strcmp(service, "zram") == 0) {
+		if (act_stop) stop_zram();
+		if (act_start) start_zram();
+		goto CLEAR;
+	}
+#endif
 
 	if (strcmp(service, "firewall") == 0) {
 		if (act_stop) {

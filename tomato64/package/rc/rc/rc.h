@@ -299,6 +299,10 @@ extern void stop_phy_tempsense(void);
 #endif
 extern void start_adblock(int update);
 extern void stop_adblock(void);
+#ifdef TOMATO64
+extern void start_zram(void);
+extern void stop_zram(void);
+#endif
 #ifdef TCONFIG_ZEBRA
 extern void start_zebra(void);
 extern void stop_zebra(void);

@@ -1,0 +1,207 @@
+#!/bin/sh
+# ZRAM initialization and management script for Tomato64
+
+. nvram_ops
+
+# Configuration from NVRAM
+ZRAM_ENABLE=$(NG zram_enable)
+ZRAM_SIZE=$(NG zram_size)        # Size in MB, 0 = auto (50% of RAM)
+ZRAM_PRIO=$(NG zram_priority)    # Swap priority (default: 100)
+ZRAM_COMP=$(NG zram_comp_algo)   # Compression algorithm
+
+# Defaults if not set
+[ -z "$ZRAM_ENABLE" ] && ZRAM_ENABLE=0
+[ -z "$ZRAM_SIZE" ] && ZRAM_SIZE=0
+[ -z "$ZRAM_PRIO" ] && ZRAM_PRIO=100
+[ -z "$ZRAM_COMP" ] && ZRAM_COMP="lz4"
+
+ZRAM_DEV="/dev/zram0"
+PIDFILE="/var/run/zram.pid"
+
+# Logger alias
+alias logz='logger -t zram'
+
+get_total_ram() {
+    # Get total RAM in KB
+    awk '/MemTotal/ {print $2}' /proc/meminfo
+}
+
+calc_zram_size() {
+    total_kb=$(get_total_ram)
+
+    if [ "$ZRAM_SIZE" -eq 0 ]; then
+        # Auto mode: use 50% of total RAM
+        echo $((total_kb / 2))
+    else
+        # Use configured size (convert MB to KB)
+        echo $((ZRAM_SIZE * 1024))
+    fi
+}
+
+start_zram() {
+    [ "$ZRAM_ENABLE" != "1" ] && {
+        logz "ZRAM is disabled in configuration"
+        return 1
+    }
+
+    # Check if already running
+    [ -f "$PIDFILE" ] && {
+        logz "ZRAM is already active"
+        return 0
+    }
+
+    # Check if zram module exists
+    if [ ! -e "$ZRAM_DEV" ]; then
+        # Try to load zram module
+        modprobe zram 2>/dev/null || {
+            logz "ERROR: ZRAM module not available"
+            return 1
+        }
+    fi
+
+    # Check if device exists now
+    [ ! -b "$ZRAM_DEV" ] && {
+        logz "ERROR: ZRAM device $ZRAM_DEV not available"
+        return 1
+    }
+
+    # Calculate size
+    size_kb=$(calc_zram_size)
+    total_ram_kb=$(get_total_ram)
+
+    logz "Initializing ZRAM: size=${size_kb}KB ($(($size_kb / 1024))MB), total_ram=${total_ram_kb}KB, algo=$ZRAM_COMP, priority=$ZRAM_PRIO"
+
+    # Set compression algorithm if supported
+    if [ -f /sys/block/zram0/comp_algorithm ]; then
+        echo "$ZRAM_COMP" > /sys/block/zram0/comp_algorithm 2>/dev/null || {
+            logz "WARNING: Failed to set compression algorithm to $ZRAM_COMP, using default"
+        }
+    fi
+
+    # Set disk size (in bytes)
+    echo $((size_kb * 1024)) > /sys/block/zram0/disksize || {
+        logz "ERROR: Failed to set ZRAM disk size"
+        return 1
+    }
+
+    # Make swap
+    mkswap "$ZRAM_DEV" >/dev/null 2>&1 || {
+        logz "ERROR: Failed to create swap on $ZRAM_DEV"
+        return 1
+    }
+
+    # Enable swap with priority
+    swapon -p "$ZRAM_PRIO" "$ZRAM_DEV" || {
+        logz "ERROR: Failed to enable ZRAM swap"
+        return 1
+    }
+
+    # Create pidfile
+    echo $$ > "$PIDFILE"
+
+    # Log statistics
+    if [ -f /sys/block/zram0/mm_stat ]; then
+        logz "ZRAM started successfully"
+        logz "Compression algorithm: $(cat /sys/block/zram0/comp_algorithm 2>/dev/null | tr -d '[]' || echo 'unknown')"
+    else
+        logz "ZRAM started successfully (statistics not available)"
+    fi
+
+    return 0
+}
+
+stop_zram() {
+    [ ! -f "$PIDFILE" ] && {
+        logz "ZRAM is not active"
+        return 0
+    }
+
+    logz "Stopping ZRAM"
+
+    # Check if device is in use
+    if grep -q "$ZRAM_DEV" /proc/swaps 2>/dev/null; then
+        swapoff "$ZRAM_DEV" 2>/dev/null || {
+            logz "WARNING: Failed to disable ZRAM swap (may be in use)"
+            # Don't return error, continue cleanup
+        }
+    fi
+
+    # Reset device if possible
+    if [ -f /sys/block/zram0/reset ]; then
+        echo 1 > /sys/block/zram0/reset 2>/dev/null
+    fi
+
+    # Remove pidfile
+    rm -f "$PIDFILE"
+
+    logz "ZRAM stopped"
+    return 0
+}
+
+status_zram() {
+    if [ ! -f "$PIDFILE" ]; then
+        echo "ZRAM: Inactive"
+        return 1
+    fi
+
+    if ! grep -q "$ZRAM_DEV" /proc/swaps 2>/dev/null; then
+        echo "ZRAM: Inactive (stale pidfile)"
+        rm -f "$PIDFILE"
+        return 1
+    fi
+
+    echo "ZRAM: Active"
+    echo "Device: $ZRAM_DEV"
+
+    if [ -f /sys/block/zram0/comp_algorithm ]; then
+        comp_algo=$(cat /sys/block/zram0/comp_algorithm 2>/dev/null | grep -o '\[.*\]' | tr -d '[]')
+        [ -n "$comp_algo" ] && echo "Algorithm: $comp_algo"
+    fi
+
+    # Show swap info
+    grep "$ZRAM_DEV" /proc/swaps 2>/dev/null
+
+    # Show statistics if available
+    if [ -f /sys/block/zram0/mm_stat ]; then
+        echo ""
+        echo "Statistics:"
+        read orig_size compr_size mem_used mem_limit mem_used_max same_pages pages_compacted huge_pages huge_pages_since < /sys/block/zram0/mm_stat 2>/dev/null
+
+        if [ -n "$orig_size" ] && [ "$orig_size" -gt 0 ]; then
+            echo "  Original size:     $((orig_size / 1024 / 1024)) MB"
+            echo "  Compressed size:   $((compr_size / 1024 / 1024)) MB"
+            echo "  Memory used:       $((mem_used / 1024 / 1024)) MB"
+
+            # Calculate compression ratio
+            if [ "$compr_size" -gt 0 ]; then
+                ratio=$((orig_size * 100 / compr_size))
+                echo "  Compression ratio: $(($ratio / 100)).$(($ratio % 100))x"
+            fi
+        fi
+    fi
+
+    return 0
+}
+
+case "$1" in
+    start)
+        start_zram
+        ;;
+    stop)
+        stop_zram
+        ;;
+    restart)
+        stop_zram
+        sleep 1
+        start_zram
+        ;;
+    status)
+        status_zram
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac
+
+exit $?
