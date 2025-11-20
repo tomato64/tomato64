@@ -60,6 +60,9 @@ ln -sf mount.ntfs-3g $TARGET_DIR/sbin/mount.ntfs3
 ln -sf /usr/bin/wg $TARGET_DIR/usr/sbin/wg
 ln -sf /sbin/ip $TARGET_DIR/usr/sbin/ip
 
+# ebtables-restore symlink
+ln -sf ebtables-legacy-restore $TARGET_DIR/usr/sbin/ebtables-restore
+
 # To make buildroot genimage happy
 touch $TARGET_DIR/tmp/etc/group
 touch $TARGET_DIR/tmp/etc/passwd

@@ -167,6 +167,7 @@ config BR2_PACKAGE_RC_EBTABLES
 	bool "Enable Ebtables"
 	default y
 	select BR2_PACKAGE_EBTABLES
+	select BR2_PACKAGE_EBTABLES_UTILS_RESTORE
 
 config BR2_PACKAGE_RC_HAVEGED
 	bool "Enable HAVEGED"
