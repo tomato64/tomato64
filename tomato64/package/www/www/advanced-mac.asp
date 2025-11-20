@@ -214,7 +214,7 @@ function init() {
 			var u = (uidx > 1) ? uidx : '';
 			f.push(
 				{ title: 'WAN'+(uidx - 1)+' Port', indent: 1, name: 'f_wan'+u+'_hwaddr', type: 'text', maxlen: 17, size: 20,
-					suffix: ' <input type="button" value="Default" onclick="bdefault(\'wan'+u+'\')"> <input type="button" value="Random LLA" onclick="brand(\'wan'+u+'\',false)"> <input type="button" value="OUI + Random UAA" onclick="brand(\'wan'+u+'\',true)"> <input type="button" value="Clone PC" onclick="bclone(\'wan'+u+'\')">',
+					suffix: ' <input type="button" value="Default" onclick="bdefault(\'wan'+u+'\')"> <input type="button" value="Random LAA" onclick="brand(\'wan'+u+'\',false)"> <input type="button" value="OUI + Random UAA" onclick="brand(\'wan'+u+'\',true)"> <input type="button" value="Clone PC" onclick="bclone(\'wan'+u+'\')">',
 					value: nvram['wan'+u+'_mac'] || defmac('wan'+u) }
 			);
 		}
@@ -223,7 +223,7 @@ function init() {
 			var u = wl_fface(uidx);
 			f.push(
 				{ title: 'WL '+((wl_ifaces.length > 1) ? wl_display_ifname(uidx) : ''), indent: 1, name: 'f_wl'+u+'_hwaddr', type: 'text', maxlen: 17, size: 20,
-					suffix:' <input type="button" value="Default" onclick="bdefault(\'wl'+u+'\')"> <input type="button" value="Random LLA" onclick="brand(\'wl'+u+'\',false)"> <input type="button" value="OUI + Random UAA" onclick="brand(\'wl'+u+'\',true)"> <input type="button" value="Clone PC" onclick="bclone(\'wl'+u+'\')">',
+					suffix:' <input type="button" value="Default" onclick="bdefault(\'wl'+u+'\')"> <input type="button" value="Random LAA" onclick="brand(\'wl'+u+'\',false)"> <input type="button" value="OUI + Random UAA" onclick="brand(\'wl'+u+'\',true)"> <input type="button" value="Clone PC" onclick="bclone(\'wl'+u+'\')">',
 					value: nvram['wl'+u+'_hwaddr'] || defmac('wl' + u) }
 			);
 		}
@@ -240,7 +240,7 @@ function init() {
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
 		<li><b>Default</b> - Reset the MAC address to the Burn-in address, this is defined by the vendor</li>
-		<li><b>Random LLA</b> - XY:XX:XX:XX:XX:XX - Randomize the MAC to a locally administered address will randomise the full address apart from the I/B bit</li>
+		<li><b>Random LAA</b> - XY:XX:XX:XX:XX:XX - Randomize the MAC to a locally administered address will randomise the full address apart from the I/B bit</li>
 		<li><b>OUI + Random UAA</b> - YY:YY:YY:XX:XX:XX - This retains the first 6 vendor specific HEX digits (OUI) and randomizes the last 6 digits (UAA) only</li>
 		<li><b>Clone PC</b> - If the computer's MAC address is detected it will set the relevant interface's MAC to its clone</li>
 	</ul>
