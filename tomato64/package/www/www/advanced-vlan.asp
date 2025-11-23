@@ -131,6 +131,7 @@ switch (nvram['t_model_name']) {
 	case 'GL.iNet GL-MT6000':
 	case 'Banana Pi BPI-R3':
 	case 'Banana Pi BPI-R3 Mini':
+        case 'Raspberry Pi 4 Model B':
 /* TOMATO64-END */
 		COL_P0N = '0';
 		COL_P1N = '1';

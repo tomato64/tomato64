@@ -96,8 +96,7 @@ define ZFS_TOMATO_INSTALL_TARGET_CMDS
 	cd $(ZFS_TOMATO_DIR)/module && \
 	make -C $(LINUX_DIR) M="$$PWD" modules_install \
 	INSTALL_MOD_PATH=$(TARGET_DIR) \
-	INSTALL_MOD_DIR=extra \
-	KERNELRELEASE=$(LINUX_VERSION)
+	INSTALL_MOD_DIR=extra
 
 	$(INSTALL) -D $(@D)/zfs $(TARGET_DIR)/usr/sbin
 	$(INSTALL) -D $(@D)/zpool $(TARGET_DIR)/usr/sbin

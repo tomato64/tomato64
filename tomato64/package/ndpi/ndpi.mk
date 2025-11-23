@@ -21,8 +21,7 @@ define NDPI_INSTALL_TARGET_CMDS
 	cd $(@D)/ndpi-netfilter/src && \
 	make -C $(LINUX_DIR) M="$$PWD" modules_install \
 	INSTALL_MOD_PATH=$(TARGET_DIR) \
-	INSTALL_MOD_DIR=extra \
-	KERNELRELEASE=$(LINUX_VERSION)
+	INSTALL_MOD_DIR=extra
 endef
 
 $(eval $(autotools-package))
