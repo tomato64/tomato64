@@ -5,7 +5,7 @@
 
 (
 	# Depends on util-linux flock
-	flock -x 200 || exit 1
+	flock -x -w 3 200 || exit 1
 
 	if ! [ -e /etc/board.json ]; then
 		echo "{ }" > /etc/board.json

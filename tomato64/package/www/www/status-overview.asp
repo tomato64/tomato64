@@ -329,7 +329,7 @@ if (nvram['t_model_name'] === 'GL.iNet GL-MT6000') {
 	Ports = Object.freeze({
 		0: 'WAN',
 		1: 'LAN1',
-                2: 'LAN2',
+		2: 'LAN2',
 		3: 'LAN3',
 		4: 'LAN4'
 	});

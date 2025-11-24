@@ -1,2 +1,1 @@
 LABEL=nvram /nvram ext4 rw,sync,barrier,data=journal 0 0
-tmpfs /var/log tmpfs rw,relatime 0 0
