@@ -7,7 +7,7 @@ if [ $# -eq 0 ]; then
 	exit
 fi
 
-mount -o remount,rw /
+mount -o remount,rw,async,nobarrier /
 result=$?
 if [ "$result" -ne 0 ]; then
 	printf 'error code "%d", unable to mount the filesystem as read/write' "$result"
@@ -150,3 +150,24 @@ if [ -f /boot/tomato64-bpi-r3-mini-sysupgrade.itb ] && [ "$(NG "t_model_name")" 
 	done
 	printf "image successfully flashed\n"
 fi
+
+# Raspberry PI 4-B
+if [ -f /boot/bcm2711-rpi-4-b.dtb ] && [ "$(NG "t_model_name")" == "Raspberry Pi 4 Model B" ]; then
+	mount -t vfat /dev/mmcblk0p1 /mnt
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d" returned during mounting boot partition' "$result"
+		exit
+	fi
+	cp -ar /boot/* /mnt
+	umount /mnt
+
+	kernel=$(strings /boot/Image |grep -m 1 "Linux version " | awk '{print $3}')
+	for dir in /lib/modules/*; do
+		[ "$dir" = "/lib/modules/$kernel" ] && continue
+		rm -rf "$dir"
+	done
+	printf "image successfully flashed\n"
+fi
+
+sync

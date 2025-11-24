@@ -11562,6 +11562,9 @@ static int init_nvram(void)
 #ifdef TOMATO64_BPIR3MINI
 	nvram_set("t_model_name", "Banana Pi BPI-R3 Mini");
 #endif /* TOMATO64_BPIR3MINI */
+#ifdef TOMATO64_RPI4
+	nvram_set("t_model_name", "Raspberry Pi 4 Model B");
+#endif /* TOMATO64_RPI4 */
 #endif /* TOMATO64 */
 #ifndef CONFIG_BCMWL6A
 	nvram_set("pa0maxpwr", "400"); /* allow Tx power up tp 400 mW, needed for ND only */
@@ -11879,6 +11882,9 @@ static void sysinit(void)
 	else
 		nvram_set("t_boot_type", "bios");
 #endif /* TOMATO64_X86_64 */
+#ifdef TOMATO64_RPI4
+	eval("mount_nvram");
+#endif /* TOMATO64_RPI4 */
 	/* Mount filesystem rw */
 	if (!nvram_get_int("fs_mount_ro")) {
 		eval("mount", "-o", "remount,rw", "/");
@@ -11901,11 +11907,14 @@ static void sysinit(void)
 #ifdef TOMATO64_BPIR3MINI
 	eval("set_devs_bpir3mini");
 #endif /* TOMATO64_BPIR3MINI */
+#ifdef TOMATO64_RPI4
+	eval("set_devs_rpi4");
+#endif /* TOMATO64_RPI4 */
 	eval("set_devs");
 
 	/* Expand filesystem parition to fill disk */
 	if (!nvram_get_int("fs_expanded")) {
-#if defined(TOMATO64_X86_64) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI)
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI) || defined(TOMATO64_RPI4)
 		eval("expand_root_partition");
 #endif /* TOMATO64_X86_64 || TOMATO64_BPIR3 || TOMATO64_BPIR3MINI */
 #ifdef TOMATO64_MT6000

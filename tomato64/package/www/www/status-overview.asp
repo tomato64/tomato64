@@ -325,6 +325,14 @@ if (nvram['t_model_name'] === 'GL.iNet GL-MT6000') {
 		0: 'WAN',
 		1: 'LAN'
 	});
+} else if (nvram['t_model_name'] === 'Raspberry Pi 4 Model B') {
+	Ports = Object.freeze({
+		0: 'WAN',
+		1: 'LAN1',
+                2: 'LAN2',
+		3: 'LAN3',
+		4: 'LAN4'
+	});
 } else { /* x86_64 or device not yet configured */
 	Ports = Object.freeze({
 		0: 'eth0',

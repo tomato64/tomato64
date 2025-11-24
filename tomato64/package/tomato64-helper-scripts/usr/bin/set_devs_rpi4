@@ -1,0 +1,43 @@
+#!/bin/sh
+
+set -e
+set -x
+
+. /usr/sbin/nvram_ops
+
+macs_present=0
+while [ -e /sys/class/net/eth${macs_present}/address ];
+do
+    macs_present=$((macs_present + 1))
+done
+
+
+if [ "$(NG set_macs)" != "${macs_present}" ]
+then
+    macs=0
+	while [ -e /sys/class/net/eth${macs}/address ];
+	do
+		NS eth${macs}macaddr=$(cat /sys/class/net/eth${macs}/address | tr '[:lower:]' '[:upper:]')
+		macs=$((macs + 1))
+	done
+
+	for i in wan_hwaddr wan_mac;
+	do
+		NS ${i}=`ifconfig eth0 | grep -o -E ..:..:..:..:..:..`
+	done
+
+	NS lan_hwaddr=`ifconfig eth1 | grep -o -E ..:..:..:..:..:..`
+
+	NS set_macs=${macs}
+fi
+
+config_macs=$(NG set_macs)
+i=0
+while [ "$i" -le "${config_macs}" ];
+do
+	if [ -e /sys/class/net/eth${i}/address ]; then
+		ip link set dev eth${i} address "$(NG eth${i}macaddr)"
+		echo "eth${i} mac $(NG eth${i}macaddr)" >> /etc/iftab
+	fi
+	i=$((i + 1))
+done

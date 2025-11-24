@@ -28,4 +28,8 @@ config BR2_PACKAGE_PLATFORM_BPIR3MINI
 	depends on BR2_aarch64
 	select BR2_PACKAGE_PLATFORM_ARM64
 
+config BR2_PACKAGE_PLATFORM_RPI4
+	bool "RPI4"
+	depends on BR2_aarch64
+	select BR2_PACKAGE_PLATFORM_ARM64
 endif

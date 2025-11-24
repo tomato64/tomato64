@@ -2151,6 +2151,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_BPIR3MINI
 	{ "lan_ifnames",		"eth1"				, 0 },
 #endif /* TOMATO64_BPIR3MINI */
+#ifdef TOMATO64_RPI4
+	{ "lan_ifnames",		"eth1 eth2 eth3 eth4"				, 0 },
+#endif /* TOMATO64_RPI4 */
 	{ "lan_ifnames_vlan",		"vlan1"				, 0 },
 
 	{ "boardflags",			"0x0100"			, 0 },
@@ -2167,6 +2170,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_BPIR3MINI
 	{ "vlan1ports",			"1 9*"				, 0 },
 #endif /* TOMATO64_BPIR3MINI */
+#ifdef TOMATO64_RPI4
+	{ "vlan1ports",			"1 2 3 4 9*"				, 0 },
+#endif /* TOMATO64_RPI4 */
 #ifdef TOMATO64_WIFI
 	{"wifi_sta_list",		""				, 0 },
 	{"wifi_phy_count",		"0"				, 0 },	/* Detected PHY count (cleared on boot) */

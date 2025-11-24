@@ -3,6 +3,9 @@ BUILDROOT_TARBALL = ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSIO
 BUILDROOT_URL = https://github.com/tomato64/buildroot-release/releases/download/$(BUILDROOT_VERSION)
 MEDIATEK_KERNEL_VERSION=$(shell grep "BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE" tomato64/configs/mt6000_defconfig | cut -d '"' -f2)
 MEDIATEK_KERNEL_PATCH=${HOME}/buildroot-src/mediatek-kernel/00001-openwrt-mediatek-kernel-${MEDIATEK_KERNEL_VERSION}.patch
+RPI4_KERNEL_VERSION=$(shell grep "BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE" tomato64/configs/mt6000_defconfig | cut -d '"' -f2)
+RPI4_KERNEL_PATCH=${HOME}/buildroot-src/rpi4-kernel/00001-openwrt-rpi4-kernel-${RPI4_KERNEL_VERSION}.patch
+
 
 default: .configure
 	make -C src/buildroot
@@ -11,6 +14,9 @@ legacy: .configure-legacy
 	make -C src/buildroot
 
 mt6000: .configure-mt6000
+	make -C src/buildroot
+
+rpi4: .configure-rpi4
 	make -C src/buildroot
 
 bpi-r3: .configure-bpi-r3
@@ -23,6 +29,9 @@ legacy-menuconfig: .configure-legacy
 	make -C src/buildroot menuconfig
 
 mt6000-menuconfig: .configure-mt6000
+	make -C src/buildroot menuconfig
+
+rpi4-menuconfig: .configure-rpi4
 	make -C src/buildroot menuconfig
 
 bpi-r3-menuconfig: .configure-bpi-r3
@@ -45,6 +54,11 @@ distclean:
 
 .configure-mt6000: .download-mediatek-kernel .patch
 	make -C src/buildroot BR2_EXTERNAL=../../tomato64 mt6000_defconfig
+	@touch $@
+	@touch .configure
+
+.configure-rpi4: .patch
+	make -C src/buildroot BR2_EXTERNAL=../../tomato64 rpi4_defconfig
 	@touch $@
 	@touch .configure
 

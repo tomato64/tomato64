@@ -159,9 +159,13 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 	}
 #endif
 #ifdef TOMATO64_ARM64
+#if TOMATO64_RPI4
+	strlcpy(system_type, "Broadcom BCM2711", buf_system_type_sz);
+	strlcpy(cpuclk, "1800", buf_cpuclk_sz);
+#else
 	strlcpy(system_type, "MediaTek Filogic 830", buf_system_type_sz);
 	strlcpy(cpuclk, "2000", buf_cpuclk_sz);
-
+#endif
 	FILE *f;
 	char buffer[8];
 	int temp;
@@ -212,7 +216,11 @@ void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
 	}
 #endif /* TOMATO64_X86_64 */
 #ifdef TOMATO64_ARM64
+#if TOMATO64_RPI4
+	strlcpy(cpumodel, "ARM Cortex-A72", buf_cpumodel_sz);
+#else
 	strlcpy(cpumodel, "MediaTek MT7986AV (Cortex-A53)", buf_cpumodel_sz);
+#endif
 #endif /* TOMATO64_ARM64 */
 }
 #endif /* TOMATO64 */
