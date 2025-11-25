@@ -58,9 +58,9 @@ function upgrade() {
 	// Device definitions - add new devices here
 	var devices = {
 		'x86_64': {
-			regex: /x86[_-]64/i,
+			regex: /x86_64/i,
 			name: 'x86_64',
-			message: 'x86_64 or x86-64'
+			message: 'x86_64'
 		},
 		'GL.iNet GL-MT6000': {
 			regex: /gl-mt6000/i,
@@ -76,6 +76,11 @@ function upgrade() {
 			regex: /bpi-r3-mini/i,
 			name: 'BPI-R3 Mini',
 			message: 'bpi-r3-mini'
+		},
+		'Raspberry Pi 4 Model B': {
+			regex: /rpi4(?!\d)/i,
+			name: 'RPI4',
+			message: 'rpi4'
 		}
 	};
 
