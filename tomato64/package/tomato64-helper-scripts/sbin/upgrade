@@ -27,7 +27,7 @@ done | sed 's|^/||' | sort > "$DISK_FILES"
 
 # Extract archive and output list to file
 ARCHIVE_LIST=$(mktemp)
-tar -I "zstd -f" -xvf $1 -C / 2>&1 > "$ARCHIVE_LIST"
+tar --warning=no-timestamp -I "zstd -f" -xvf $1 -C / 2>&1 > "$ARCHIVE_LIST"
 result=$?
 
 if [ "$result" -ne 0 ]; then
