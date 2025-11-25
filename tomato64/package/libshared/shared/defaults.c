@@ -2184,6 +2184,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy_count_expected",	"2"				, 0 },	/* BPI-R3: 2.4GHz + 5GHz */
 #elif defined(TOMATO64_BPIR3MINI)
 	{"wifi_phy_count_expected",	"2"				, 0 },	/* BPI-R3 Mini: 2.4GHz + 5GHz */
+#elif defined(TOMATO64_RPI4)
+	{"wifi_phy_count_expected",	"1"				, 0 },	/* RPI4: single dual-band PHY (2.4GHz + 5GHz) */
 #else
 	{"wifi_phy_count_expected",	"0"				, 0 },	/* Unknown device: no wifi by default */
 #endif

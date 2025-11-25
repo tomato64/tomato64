@@ -8,14 +8,19 @@ MODE="${1:-start}"
 
 # Wait for wlconfig only on initial start (not reload)
 if [ "$MODE" = "start" ]; then
-	timeout=40  # 20 seconds (40 * 0.5s)
-	while [ $timeout -gt 0 ] && [ ! -f /tmp/.wlconfig_done ]; do
-		sleep 0.5
-		timeout=$((timeout - 1))
-	done
+	expected_phys=$(NG wifi_phy_count_expected)
+	[ -z "$expected_phys" ] && expected_phys=0
 
-	if [ ! -f /tmp/.wlconfig_done ]; then
-		logger -p user.error "wlconfig did not detect all expected WiFi PHYs within timeout, WiFi may not start correctly"
+	if [ $expected_phys -gt 0 ]; then
+		timeout=40  # 20 seconds (40 * 0.5s)
+		while [ $timeout -gt 0 ] && [ ! -f /tmp/.wlconfig_done ]; do
+			sleep 0.5
+			timeout=$((timeout - 1))
+		done
+
+		if [ ! -f /tmp/.wlconfig_done ]; then
+			logger -p user.error "wlconfig did not detect all expected WiFi PHYs within timeout, WiFi may not start correctly"
+		fi
 	fi
 fi
 

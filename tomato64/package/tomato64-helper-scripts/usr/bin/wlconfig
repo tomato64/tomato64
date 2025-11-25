@@ -37,7 +37,9 @@
 
 		# Signal wlconfig completion only if we have minimum expected PHYs
 		# This ensures all PHYs have been detected before start_wifi.sh proceeds
-		if [ $phycount -ge $expected_phys ] && [ $expected_phys -gt 0 ]; then
+		if [ $expected_phys -eq 0 ]; then
+			touch /tmp/.wlconfig_done
+		elif [ $phycount -ge $expected_phys ]; then
 			touch /tmp/.wlconfig_done
 		fi
 	fi
