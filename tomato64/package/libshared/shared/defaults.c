@@ -3044,6 +3044,16 @@ struct nvram_tuple router_defaults[] = {
 	{ "steering_flows",		"0"				, 0 },
 	{ "steering_flows_custom",	"0"				, 0 },
 	{ "tty_login",			"1"				, 0 },
+
+	{ "port0_label",		""				, 0 },
+	{ "port1_label",		""				, 0 },
+	{ "port2_label",		""				, 0 },
+	{ "port3_label",		""				, 0 },
+	{ "port4_label",		""				, 0 },
+	{ "port5_label",		""				, 0 },
+	{ "port6_label",		""				, 0 },
+	{ "port7_label",		""				, 0 },
+	{ "port8_label",		""				, 0 },
 #endif /* TOMATO64 */
 	{ 0, 0, 0 }
 };

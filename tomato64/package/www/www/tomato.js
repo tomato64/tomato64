@@ -2602,6 +2602,9 @@ function navi() {
 /* TOR-END */
 			['VLAN',			'vlan.asp'],
 			['LAN Access',			'access.asp'],
+/* TOMATO64-BEGIN */
+			['Port Labels',			'port-labels.asp'],
+/* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
 			['Virtual Wireless',		'wlanvifs.asp'],
 			['Wireless',			'wireless.asp'],
@@ -3194,3 +3197,98 @@ function eventHandler() {
 	for (var i = 0; i < elements.length; i++) if (elements[i].nodeName.toLowerCase()==='a')
 		addEvent(elements[i], 'click', function(e) { cancelDefaultAction(e); window.open(this,'_blank'); } );
 }
+
+/* TOMATO64-BEGIN */
+// -----------------------------------------------------------------------------
+// Port Naming Utilities
+// -----------------------------------------------------------------------------
+
+var PortNames = {
+	// Hardware port labels based on device model
+	_hardwareLabels: null,
+
+	// Initialize hardware labels based on t_model_name
+	_initHardwareLabels: function() {
+		if (this._hardwareLabels !== null)
+			return;
+
+		var model = nvram.t_model_name || '';
+
+		if (model === 'GL.iNet GL-MT6000') {
+			this._hardwareLabels = {
+				0: 'WAN',
+				1: 'WAN/LAN1',
+				2: 'LAN2',
+				3: 'LAN3',
+				4: 'LAN4',
+				5: 'LAN5'
+			};
+		}
+		else if (model === 'Banana Pi BPI-R3') {
+			this._hardwareLabels = {
+				0: 'SFP1',
+				1: 'SFP2',
+				2: 'WAN',
+				3: 'LAN1',
+				4: 'LAN2',
+				5: 'LAN3',
+				6: 'LAN4'
+			};
+		}
+		else if (model === 'Banana Pi BPI-R3 Mini') {
+			this._hardwareLabels = {
+				0: 'WAN',
+				1: 'LAN'
+			};
+		}
+		else if (model === 'Raspberry Pi 4 Model B') {
+			this._hardwareLabels = {
+				0: 'WAN',
+				1: 'LAN1',
+				2: 'LAN2',
+				3: 'LAN3',
+				4: 'LAN4'
+			};
+		}
+		else { /* x86_64 or device not yet configured */
+			this._hardwareLabels = {
+				0: 'eth0',
+				1: 'eth1',
+				2: 'eth2',
+				3: 'eth3',
+				4: 'eth4',
+				5: 'eth5',
+				6: 'eth6',
+				7: 'eth7',
+				8: 'eth8'
+			};
+		}
+	},
+
+	// Get hardware label for a port (physical label on device)
+	getHardwareLabel: function(port) {
+		this._initHardwareLabels();
+		return this._hardwareLabels[port] || ('eth'+port);
+	},
+
+	// Get custom label from NVRAM (returns empty string if not set)
+	getCustomLabel: function(port) {
+		var label = nvram['port'+port+'_label'];
+		return (label && label.length > 0) ? label : '';
+	},
+
+	// Get both labels for display
+	getBothLabels: function(port) {
+		return {
+			hardware: this.getHardwareLabel(port),
+			custom: this.getCustomLabel(port)
+		};
+	},
+
+	// Get display name (custom label if set, otherwise hardware label)
+	getDisplayName: function(port) {
+		var custom = this.getCustomLabel(port);
+		return custom || this.getHardwareLabel(port);
+	}
+};
+/* TOMATO64-END */

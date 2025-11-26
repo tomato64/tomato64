@@ -2856,6 +2856,16 @@ static const nvset_t nvset_list[] = {
 	{"steering_flows",		V_NONE				},
 	{"steering_flows_custom",	V_RANGE(0, 99999)		},
 
+	{ "port0_label",		V_LENGTH(0, 20)			},
+	{ "port1_label",		V_LENGTH(0, 20)			},
+	{ "port2_label",		V_LENGTH(0, 20)			},
+	{ "port3_label",		V_LENGTH(0, 20)			},
+	{ "port4_label",		V_LENGTH(0, 20)			},
+	{ "port5_label",		V_LENGTH(0, 20)			},
+	{ "port6_label",		V_LENGTH(0, 20)			},
+	{ "port7_label",		V_LENGTH(0, 20)			},
+	{ "port8_label",		V_LENGTH(0, 20)			},
+
 #endif /* TOMATO64 */
 
 	{ NULL }

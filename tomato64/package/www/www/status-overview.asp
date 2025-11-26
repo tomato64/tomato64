@@ -272,7 +272,7 @@ function get_wan(port) {
 
 		if (nvram['wan'+j+'_ifnames'].includes('eth'+port)) {
 			if (nvram['wan'+j+'_ifnames'].includes('.')) {
-				vlan = '&nbsp;'+nvram['wan'+j+'_ifnames'].split('.')[1];
+				vlan = '&nbsp;v'+nvram['wan'+j+'_ifnames'].split('.')[1];
 			}
 			wan += 'wan'+(i-1)+vlan+'<br>';
 		}
@@ -292,63 +292,13 @@ function get_lan(port) {
 		for (index = 0; index < ifaces.length; ++index) {
 			if(ifaces[index].includes('eth'+port)) {
 				if(ifaces[index].includes('.')) {
-					vlan = '&nbsp;'+ifaces[index].split('.')[1];
+					vlan = '&nbsp;v'+ifaces[index].split('.')[1];
 				}
 				lan += nvram['lan'+j+'_ifname']+vlan+'<br>';
 			}
 		}
 	}
 	return lan;
-}
-
-if (nvram['t_model_name'] === 'GL.iNet GL-MT6000') {
-	Ports = Object.freeze({
-		0: 'WAN',
-		1: 'WAN/LAN1',
-		2: 'LAN2',
-		3: 'LAN3',
-		4: 'LAN4',
-		5: 'LAN5'
-	});
-} else if (nvram['t_model_name'] === 'Banana Pi BPI-R3') {
-	Ports = Object.freeze({
-		0: 'SFP1',
-		1: 'SFP2',
-		2: 'WAN',
-		3: 'LAN1',
-		4: 'LAN2',
-		5: 'LAN3',
-		6: 'LAN4'
-	});
-} else if (nvram['t_model_name'] === 'Banana Pi BPI-R3 Mini') {
-	Ports = Object.freeze({
-		0: 'WAN',
-		1: 'LAN'
-	});
-} else if (nvram['t_model_name'] === 'Raspberry Pi 4 Model B') {
-	Ports = Object.freeze({
-		0: 'WAN',
-		1: 'LAN1',
-		2: 'LAN2',
-		3: 'LAN3',
-		4: 'LAN4'
-	});
-} else { /* x86_64 or device not yet configured */
-	Ports = Object.freeze({
-		0: 'eth0',
-		1: 'eth1',
-		2: 'eth2',
-		3: 'eth3',
-		4: 'eth4',
-		5: 'eth5',
-		6: 'eth6',
-		7: 'eth7',
-		8: 'eth8'
-	});
-}
-
-function getPortName(p) {
-	return Ports[p];
 }
 
 function ethstates() {
@@ -362,10 +312,16 @@ function ethstates() {
 	var code2 = '';
 
 	for ((nvram.lan_invert==0) ? p = 0 : p = stats.niccount - 1; (nvram.lan_invert==0) ? p <= stats.niccount - 1 : p >= 0; (nvram.lan_invert==0) ? p++ : p--) {
-		code += '<td class="title indent2"><b>'+getPortName(p)+'<\/b><\/td>';
+		var labels = PortNames.getBothLabels(p);
+		var portLabel = '';
+		if (labels.custom) {
+			portLabel = '<small style="color:#333">'+escapeHTML(labels.custom)+'<\/small><br>';
+		}
+		portLabel += '<b>'+labels.hardware+'<\/b>';
+		code += '<td class="title indent2" style="vertical-align:bottom">'+portLabel+'<\/td>';
 		var wan = get_wan(p);
 		var lan = get_lan(p);
-		code2 += '<td class="title indent2" valign="top"><b>'+wan+lan+'<\/b><\/td>';
+		code2 += '<td class="title indent2" style="vertical-align:top"><small style="color:#333">'+wan+lan+'<\/small><\/td>';
 	}
 
 	code += '<td class="content"><\/td><\/tr><tr>';
@@ -378,7 +334,7 @@ function ethstates() {
 	}
 
 	code += '<\/tr><tr>'+code2;
-	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
+	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="advanced-port-labels.asp">Port Labels<\/a> | <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
 	E('ports').innerHTML = code;
 }
 /* TOMATO64-END */
