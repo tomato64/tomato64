@@ -48,7 +48,7 @@ wl_ifaces=[];
 /* TOMATO64-REMOVE-END */
 
 /* TOMATO64-BEGIN */
-//	<% nvram ("t_model_name,vlan0ports,vlan1ports,vlan2ports,vlan3ports,vlan4ports,vlan5ports,vlan6ports,vlan7ports,vlan8ports,vlan9ports,vlan10ports,vlan11ports,vlan12ports,vlan13ports,vlan14ports,vlan15ports,vlan0hwname,vlan1hwname,vlan2hwname,vlan3hwname,vlan4hwname,vlan5hwname,vlan6hwname,vlan7hwname,vlan8hwname,vlan9hwname,vlan10hwname,vlan11hwname,vlan12hwname,vlan13hwname,vlan14hwname,vlan15hwname,wan_ifnameX,wan_ifnameX_vlan,manual_boot_nv,boardtype,boardflags,lan_ifname,lan_ifnames,lan_ifnames_vlan,vlan0vid,vlan1vid,vlan2vid,vlan3vid,vlan4vid,vlan5vid,vlan6vid,vlan7vid,vlan8vid,vlan9vid,vlan10vid,vlan11vid,vlan12vid,vlan13vid,vlan14vid,vlan15vid,model,wl_ssid,wl_radio,wl_net_mode,wl_nband");%>
+//	<% nvram ("t_model_name,nics,vlan0ports,vlan1ports,vlan2ports,vlan3ports,vlan4ports,vlan5ports,vlan6ports,vlan7ports,vlan8ports,vlan9ports,vlan10ports,vlan11ports,vlan12ports,vlan13ports,vlan14ports,vlan15ports,vlan0hwname,vlan1hwname,vlan2hwname,vlan3hwname,vlan4hwname,vlan5hwname,vlan6hwname,vlan7hwname,vlan8hwname,vlan9hwname,vlan10hwname,vlan11hwname,vlan12hwname,vlan13hwname,vlan14hwname,vlan15hwname,wan_ifnameX,wan_ifnameX_vlan,manual_boot_nv,boardtype,boardflags,lan_ifname,lan_ifnames,lan_ifnames_vlan,vlan0vid,vlan1vid,vlan2vid,vlan3vid,vlan4vid,vlan5vid,vlan6vid,vlan7vid,vlan8vid,vlan9vid,vlan10vid,vlan11vid,vlan12vid,vlan13vid,vlan14vid,vlan15vid,model,wl_ssid,wl_radio,wl_net_mode,wl_nband");%>
 /* TOMATO64-END */
 
 var cprefix = 'advanced_vlan';
@@ -285,30 +285,78 @@ if (port_vlan_supported) {
 /* MULTIWAN-END */
 				], prefix: '<div class="centered">', suffix: '<\/div>' }]);
 
+/* TOMATO64-BEGIN */
+		/* Build headers dynamically using PortNames */
+		var headers = ['<br><br>VLAN', '<br><br>VID'];
+		for (var i = 0; i <= MAX_PORT_ID; i++) {
+			var label = (typeof PortNames !== 'undefined' && PortNames.getVlanLabel) ? PortNames.getVlanLabel(i) : i.toString();
+			headers.push('<div id="vport_'+i+'"><img src="eth_off.gif" id="eth_off_'+(i+1)+'" alt=""><\/div>'+label);
+			headers.push('<br>Tag<br>'+label);
+		}
+		headers.push('<br>Default<br>VLAN', 'VLAN to<br>bridge<br>mapping');
+		this.headerSet(headers);
+/* TOMATO64-END */
+/* TOMATO64-REMOVE-BEGIN */
 		this.headerSet(['<br><br>VLAN', '<br><br>VID',
 		                '<div id="vport_0"><img src="eth_off.gif" id="eth_off_1" alt=""><\/div>'+(nvram.model == 'DSL-AC68U' ? 'DSL' : 'WAN'), '<br>Tag<br>'+(nvram.model == 'DSL-AC68U' ? 'DSL' : 'WAN'),
 		                '<div id="vport_1"><img src="eth_off.gif" id="eth_off_2" alt=""><\/div>1', '<br>Tag<br>1',
 		                '<div id="vport_2"><img src="eth_off.gif" id="eth_off_3" alt=""><\/div>2', '<br>Tag<br>2',
 		                '<div id="vport_3"><img src="eth_off.gif" id="eth_off_4" alt=""><\/div>3', '<br>Tag<br>3',
 		                '<div id="vport_4"><img src="eth_off.gif" id="eth_off_5" alt=""><\/div>4', '<br>Tag<br>4',
-/* TOMATO64-REMOVE-BEGIN */
 /* EXTSW-BEGIN */
 		                '<div id="vport_5"><img src="eth_off.gif" id="eth_off_6" alt=""><\/div>5-8', '<br>Tag<br>5-8',
 /* EXTSW-END */
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-		                '<div id="vport_5"><img src="eth_off.gif" id="eth_off_6" alt=""><\/div>5', '<br>Tag<br>5',
-		                '<div id="vport_6"><img src="eth_off.gif" id="eth_off_7" alt=""><\/div>6', '<br>Tag<br>6',
-		                '<div id="vport_7"><img src="eth_off.gif" id="eth_off_8" alt=""><\/div>7', '<br>Tag<br>7',
-		                '<div id="vport_8"><img src="eth_off.gif" id="eth_off_9" alt=""><\/div>8', '<br>Tag<br>8',
-/* TOMATO64-END */
 		                '<br>Default<br>VLAN', 'VLAN to<br>bridge<br>mapping']);
+/* TOMATO64-REMOVE-END */
 
 		vlg.populate();
 		vlg.canDelete = false;
 		vlg.sort(0);
 		vlg.showNewEditor();
 		vlg.resetNewEditor();
+
+/* TOMATO64-BEGIN */
+		/* Hide unused port columns based on nics count */
+		var nicCount = nvram.nics ? parseInt(nvram.nics) : (MAX_PORT_ID + 1);
+		/* Only hide columns if we have fewer ports than MAX_PORT_ID */
+		if (nicCount <= MAX_PORT_ID) {
+			/* Clear checkbox values for non-existent ports to prevent lingering config */
+			var data = this.getAllData();
+			for (var row = 0; row < data.length; row++) {
+				for (var i = nicCount; i <= MAX_PORT_ID; i++) {
+					var portCol = eval('COL_P' + i);
+					var tagCol = eval('COL_P' + i + 'T');
+					data[row][portCol] = 0;
+					data[row][tagCol] = 0;
+				}
+			}
+			/* Reinsert cleaned data */
+			this.removeAllData();
+			for (var row = 0; row < data.length; row++) {
+				this.insertData(-1, data[row]);
+			}
+
+			/* Hide the columns with CSS */
+			var style = document.createElement('style');
+			style.type = 'text/css';
+			var rules = '';
+			/* Limit ethernet icon size in headers for devices with few ports */
+			rules += 'div#vlan-grid tr.header div[id^="vport_"] img[id^="eth_"] { width: 24px !important; height: auto !important; padding: 0 !important; padding-bottom: 0 !important; }\n';
+			/* Hide port columns beyond the device's port count */
+			for (var i = nicCount; i <= MAX_PORT_ID; i++) {
+				/* Each port has 2 columns (port checkbox + tag checkbox) */
+				/* Columns are: VLAN(0), VID(1), then ports starting at column 2 */
+				var portColIdx = 2 + (i * 2);
+				var tagColIdx = portColIdx + 1;
+				rules += '#vlan-grid th:nth-child(' + (portColIdx + 1) + '), ';
+				rules += '#vlan-grid td:nth-child(' + (portColIdx + 1) + '), ';
+				rules += '#vlan-grid th:nth-child(' + (tagColIdx + 1) + '), ';
+				rules += '#vlan-grid td:nth-child(' + (tagColIdx + 1) + ') { display: none; }\n';
+			}
+			style.innerHTML = rules;
+			document.head.appendChild(style);
+		}
+/* TOMATO64-END */
 	}
 
 	vlg.populate = function() {

@@ -3206,6 +3206,8 @@ function eventHandler() {
 var PortNames = {
 	// Hardware port labels based on device model
 	_hardwareLabels: null,
+	// VLAN page labels (simplified versions)
+	_vlanLabels: null,
 
 	// Initialize hardware labels based on t_model_name
 	_initHardwareLabels: function() {
@@ -3223,6 +3225,14 @@ var PortNames = {
 				4: 'LAN4',
 				5: 'LAN5'
 			};
+			this._vlanLabels = {
+				0: 'WAN',
+				1: '1',
+				2: '2',
+				3: '3',
+				4: '4',
+				5: '5'
+			};
 		}
 		else if (model === 'Banana Pi BPI-R3') {
 			this._hardwareLabels = {
@@ -3234,12 +3244,23 @@ var PortNames = {
 				5: 'LAN3',
 				6: 'LAN4'
 			};
+			this._vlanLabels = {
+				0: 'SFP1',
+				1: 'SFP2',
+				2: 'WAN',
+				3: '1',
+				4: '2',
+				5: '3',
+				6: '4'
+			};
 		}
 		else if (model === 'Banana Pi BPI-R3 Mini') {
 			this._hardwareLabels = {
 				0: 'WAN',
 				1: 'LAN'
 			};
+			/* VLAN labels same as hardware labels for this device */
+			this._vlanLabels = this._hardwareLabels;
 		}
 		else if (model === 'Raspberry Pi 4 Model B') {
 			this._hardwareLabels = {
@@ -3248,6 +3269,13 @@ var PortNames = {
 				2: 'LAN2',
 				3: 'LAN3',
 				4: 'LAN4'
+			};
+			this._vlanLabels = {
+				0: 'WAN',
+				1: '1',
+				2: '2',
+				3: '3',
+				4: '4'
 			};
 		}
 		else { /* x86_64 or device not yet configured */
@@ -3262,6 +3290,17 @@ var PortNames = {
 				7: 'eth7',
 				8: 'eth8'
 			};
+			this._vlanLabels = {
+				0: '0',
+				1: '1',
+				2: '2',
+				3: '3',
+				4: '4',
+				5: '5',
+				6: '6',
+				7: '7',
+				8: '8'
+			};
 		}
 	},
 
@@ -3269,6 +3308,12 @@ var PortNames = {
 	getHardwareLabel: function(port) {
 		this._initHardwareLabels();
 		return this._hardwareLabels[port] || ('eth'+port);
+	},
+
+	// Get VLAN page label for a port (simplified version)
+	getVlanLabel: function(port) {
+		this._initHardwareLabels();
+		return this._vlanLabels[port] || port.toString();
 	},
 
 	// Get custom label from NVRAM (returns empty string if not set)
