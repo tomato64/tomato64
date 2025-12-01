@@ -606,36 +606,18 @@ static void load(int new)
 	/* Load speed from custom path if configured (not nvram - too large for libnvram 16KB read limit) */
 	if (save_path[0] != 0 && strcmp(save_path, "*nvram") != 0) {
 		char speed_path[256];
-		int speed_loaded = 0;
 
 		get_speed_path(speed_path, sizeof(speed_path));
 
 		if (speed_path[0] != 0) {
-			/* Load speed from custom file path */
-			i = 1;
-			while (!speed_loaded) {
-				if (wait_action_idle(10)) {
-					/* cifs quirk: try forcing refresh */
-					eval("ls", speed_path);
-
-					if (load_speed(speed_path) || try_hardway_speed(speed_path)) {
-						logmsg(LOG_DEBUG, "*** %s: loaded speed from %s", __FUNCTION__, speed_path);
-						speed_loaded = 1;
-						break;
-					}
-				}
-
-				/* not ready... */
-				sleep(i);
-				if ((i *= 2) > 900)
-					i = 900; /* 15m */
-
-				if (gotterm)
-					break;
-
-				if (i > (3 * 60)) {
-					syslog(LOG_WARNING, "Problem loading %s. Still trying...", speed_path);
-				}
+			/* Try to load speed file once - if it doesn't exist, start fresh immediately */
+			if (load_speed(speed_path) || try_hardway_speed(speed_path)) {
+				logmsg(LOG_DEBUG, "*** %s: loaded speed from %s", __FUNCTION__, speed_path);
+			} else {
+				/* Speed file doesn't exist - start fresh (normal for new installs or after migration) */
+				logmsg(LOG_INFO, "*** %s: no speed file found, starting fresh", __FUNCTION__);
+				speed_count = 0;
+				memset(speed, 0, sizeof(speed));
 			}
 		}
 	}

@@ -14,20 +14,27 @@ ALL_LDFLAGS = -fPIC
 ALL_LDFLAGS += -lshared -lnvram
 ALL_LDFLAGS += $(LDFLAGS)
 
+MIGRATE_LDFLAGS = -lz
+
 ifeq ($(TOMATO_EXPERIMENTAL),1)
 ALL_CFLAGS += -DDEBUG_LOGMSG
 endif
 
 OBJS = rstats.o
+MIGRATE_OBJS = rstats_migrate.o
 
-all: rstats
+all: rstats rstats_migrate
 
 rstats: $(OBJS)
 	@echo " [rstats] CC -o $@"
 	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ $(OBJS) $(ALL_LDFLAGS)
 
+rstats_migrate: $(MIGRATE_OBJS)
+	@echo " [rstats] CC -o $@"
+	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ $(MIGRATE_OBJS) $(MIGRATE_LDFLAGS)
+
 clean:
-	rm -f rstats .*.depend
+	rm -f rstats rstats_migrate .*.depend
 	rm -f *.o
 
 install: all

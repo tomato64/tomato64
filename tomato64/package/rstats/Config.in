@@ -1,5 +1,6 @@
 config BR2_PACKAGE_RSTATS
 	bool "bandwidth monitoring"
 	select BR2_PACKAGE_LIBSHARED
+	select BR2_PACKAGE_ZLIB
 	help
-	  MOnitors all bandwidth going through the router.
+	  Monitors all bandwidth going through the router.
