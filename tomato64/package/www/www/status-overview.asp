@@ -315,13 +315,13 @@ function ethstates() {
 		var labels = PortNames.getBothLabels(p);
 		var portLabel = '';
 		if (labels.custom) {
-			portLabel = '<small style="color:#333">'+escapeHTML(labels.custom)+'<\/small><br>';
+			portLabel = '<small class="port-label-custom">'+escapeHTML(labels.custom)+'<\/small><br>';
 		}
 		portLabel += '<b>'+labels.hardware+'<\/b>';
 		code += '<td class="title indent2" style="vertical-align:bottom">'+portLabel+'<\/td>';
 		var wan = get_wan(p);
 		var lan = get_lan(p);
-		code2 += '<td class="title indent2" style="vertical-align:top"><small style="color:#333">'+wan+lan+'<\/small><\/td>';
+		code2 += '<td class="title indent2" style="vertical-align:top"><small class="port-wan-lan">'+wan+lan+'<\/small><\/td>';
 	}
 
 	code += '<td class="content"><\/td><\/tr><tr>';
