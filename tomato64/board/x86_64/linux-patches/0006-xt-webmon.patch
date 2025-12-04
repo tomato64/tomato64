@@ -2830,6 +2830,8 @@ index 000000000..ed70e3b1d
 +							spin_unlock_bh(&webmon_lock);
 +						}
 +					}
++					free(domain);
++					free(domain_key);
 +				}
 +			}
 +		}
