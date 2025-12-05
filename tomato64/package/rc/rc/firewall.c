@@ -1304,8 +1304,8 @@ static void filter_input(void)
 
 static void filter_forward(void)
 {
-	char dst[64];
-	char src[64];
+	char dst[128];
+	char src[128];
 	char buffer[512], dmz1[32], dmz2[32];
 	char *p, *c;
 	char br, br2;
@@ -1353,15 +1353,16 @@ static void filter_forward(void)
 			 * 5.6.7.8 = dst addr
 			 * desc = desc
 			 */
+			int src_f, dst_f;
+
 			if ((vstrsep(b, "<", &d, &sbr, &saddr, &dbr, &daddr, &desc) < 6) || (*d != '1'))
 				continue;
-			if (!ipt_addr(src, sizeof(src), saddr, "src", (IPT_V4 | IPT_V6), 0, "LAN access", desc))
+			if (!(src_f = ipt_addr(src, sizeof(src), saddr, "src", (IPT_V4 | IPT_V6), 0, "LAN access", desc)))
 				continue;
-			if (!ipt_addr(dst, sizeof(dst), daddr, "dst", (IPT_V4 | IPT_V6), 0, "LAN access", desc))
+			if (!(dst_f = ipt_addr(dst, sizeof(dst), daddr, "dst", (IPT_V4 | IPT_V6), 0, "LAN access", desc)))
 				continue;
 
-			/* ipv4 only */
-			ipt_write("-A FORWARD -i %s%s -o %s%s %s %s -j ACCEPT\n", "br", sbr, "br", dbr, src, dst);
+			ip46t_flagged_write(ipv6_enabled, src_f & dst_f, "-A FORWARD -i %s%s -o %s%s %s %s -j ACCEPT\n", "br", sbr, "br", dbr, src, dst);
 
 			if ((strcmp(src, "") == 0) && (strcmp(dst, "") == 0))
 				lanAccess[((*sbr - 48) + (*dbr - 48) * BRIDGE_COUNT)] = '1';
@@ -1429,7 +1430,7 @@ static void filter_forward(void)
 				snprintf(lanN_ifname2, sizeof(lanN_ifname2), "lan%s_ifname", bridge2);
 
 				if (strncmp(nvram_safe_get(lanN_ifname2), "br", 2) == 0)
-					ipt_write("-A FORWARD -i %s -o %s -j DROP\n", nvram_safe_get(lanN_ifname), nvram_safe_get(lanN_ifname2));
+					ip46t_write(ipv6_enabled, "-A FORWARD -i %s -o %s -j DROP\n", nvram_safe_get(lanN_ifname), nvram_safe_get(lanN_ifname2));
 			}
 //			ip46t_write(ipv6_enabled, "-A FORWARD -i %s -j %s\n", nvram_safe_get(lanN_ifname), chain_out_accept);
 		}
