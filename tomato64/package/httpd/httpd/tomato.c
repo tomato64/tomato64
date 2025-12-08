@@ -594,6 +594,8 @@ static const nvset_t nvset_list[] = {
 	{ "ipv6_duid_type",		V_RANGE(1, 4)			},	/* see RFC8415 Section 11; DUID-LLT = 1, DUID-EN = 2, DUID-LL = 3, DUID-UUID = 4 */
 	{ "ipv6_prefix",		V_IPV6(0)			},
 	{ "ipv6_prefix_length",		V_RANGE(3, 127)			},
+	{ "ipv6_ia_na_id",		V_RANGE(0, 99)			},
+	{ "ipv6_ia_pd_id",		V_RANGE(0, 99)			},
 	{ "ipv6_rtr_addr",		V_IPV6(0)			},
 	{ "ipv6_radvd",			V_01				},
 	{ "ipv6_dhcpd",			V_01				},
@@ -613,7 +615,7 @@ static const nvset_t nvset_list[] = {
 	{ "ipv6_6rd_prefix_length",	V_RANGE(3, 127)			},
 	{ "ipv6_6rd_borderrelay",	V_IP				},
 	{ "ipv6_6rd_ipv4masklen",	V_RANGE(0, 32)			},
-	{ "ipv6_vlan",			V_RANGE(0, 7)			},	/* Enable IPv6: bit 0 = LAN1, bit 1 = LAN2, bit 2 = LAN3 */
+	{ "ipv6_vlan",			V_RANGE(0, 127)			},	/* Enable IPv6: bit 0 = LAN1, bit 1 = LAN2, bit 2 = LAN3, bit 3 = LAN4, bit 4 = LAN5, bit 5 = LAN6, bit 6 = LAN7 */
 	{ "ipv6_isp_opt",		V_01				},	/* see router/rc/wan.c --> add default route ::/0 */
 	{ "ipv6_pdonly",		V_01				},	/* Request DHCPv6 Prefix Delegation Only (send ia-pd and NO send ia-na) */
 	{ "ipv6_pd_norelease",		V_01				},	/* DHCP6 client - no prefix/address release on exit */
