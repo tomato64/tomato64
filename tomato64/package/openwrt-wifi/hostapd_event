@@ -5,6 +5,17 @@ log_message() {
 	logger -p user.info -t "$tag" "$1"
 }
 
+# Check if an IP address is IPv6
+# Returns 0 (true) if IPv6, 1 (false) if IPv4
+is_ipv6() {
+	local ip="$1"
+	# IPv6 addresses contain colons, IPv4 addresses contain dots only
+	case "$ip" in
+		*:*) return 0 ;;  # Contains colon, it's IPv6
+		*) return 1 ;;    # No colon, it's IPv4
+	esac
+}
+
 # Check if MAC is configured with static ARP in dhcpd_static NVRAM
 # Returns 0 (true) if MAC has static ARP enabled, 1 (false) otherwise
 is_static_arp() {
@@ -99,16 +110,23 @@ if [ "$3" = "<3>AP-STA-DISCONNECTED" ]; then
 		if is_static_arp "$mac"; then
 			log_message "Preserving ARP entry for $mac (static ARP configured in NVRAM)" "hostapd_disconnect"
 		else
-			entry=$(ip neigh show | grep -i $mac)
-			if [ -n "$entry" ]; then
+			# Process all neighbor entries for this MAC (could be both IPv4 and IPv6)
+			ip neigh show | grep -i "$mac" | while read entry; do
 				ip=$(echo $entry | awk '{print $1}')
-				ip neigh change "$ip" nud none dev "$(echo $entry | awk '{print $3}')" 2>/dev/null
+				dev=$(echo $entry | awk '{print $3}')
+
+				# Skip IPv6 addresses (static ARP system is IPv4-only)
+				# TODO: IPv6 neighbor entry handling not yet implemented
+				is_ipv6 "$ip" && continue
+
+				# Process IPv4 neighbor entry
+				ip neigh change "$ip" nud none dev "$dev" 2>/dev/null
 				if [ $? -eq 0 ]; then
 					log_message "Successfully removed neighbor entry for IP $ip (MAC $mac)" "hostapd_disconnect"
 				else
 					log_message "Failed to remove neighbor entry for IP $ip (MAC $mac)" "hostapd_disconnect"
 				fi
-			fi
+			done
 		fi
 	fi
 elif [ "$3" = "<3>AP-STA-CONNECTED" ]; then
@@ -116,7 +134,8 @@ elif [ "$3" = "<3>AP-STA-CONNECTED" ]; then
 	if [ -n "$mac" ]; then
 		# Check if this MAC has static ARP configured and restore it
 		static_ip=$(get_static_ip_for_mac "$mac")
-		if [ -n "$static_ip" ]; then
+		# Static ARP is IPv4-only, skip if somehow an IPv6 address is in the config
+		if [ -n "$static_ip" ] && ! is_ipv6 "$static_ip"; then
 			# First, remove any existing ARP entry to force the kernel to recreate it
 			# This prevents the race where we detect the old permanent entry too quickly
 			# Find and delete entry on whatever interface it exists
@@ -127,13 +146,15 @@ elif [ "$3" = "<3>AP-STA-CONNECTED" ]; then
 
 			# Now wait for the kernel to create a NEW dynamic entry from actual DHCP/traffic
 			# We specifically look for REACHABLE/STALE/DELAY states (not PERMANENT)
+			# IMPORTANT: Only look for IPv4 entries to avoid confusion with IPv6 link-local
 			max_attempts=30  # 30 attempts * 0.2s = 6 second max wait (allow time for DHCP)
 			attempt=0
 			arp_found=0
 
 			while [ $attempt -lt $max_attempts ]; do
 				# Check if dynamic ARP entry exists for this MAC (newly created by kernel)
-				if ip neigh show | grep -i "$mac" | grep -qE "REACHABLE|STALE|DELAY"; then
+				# Filter to only IPv4 entries by checking that the IP doesn't contain ':'
+				if ip neigh show | grep -i "$mac" | grep -v ':' | grep -qE "REACHABLE|STALE|DELAY"; then
 					arp_found=1
 					break
 				fi
@@ -143,8 +164,8 @@ elif [ "$3" = "<3>AP-STA-CONNECTED" ]; then
 
 			if [ $arp_found -eq 1 ]; then
 				# Dynamic ARP entry appeared, extract the interface and make it permanent
-				# Get the device name from the existing ARP entry
-				arp_dev=$(ip neigh show | grep -i "$mac" | awk '{print $3}')
+				# Get the device name from the existing ARP entry (IPv4 only)
+				arp_dev=$(ip neigh show | grep -i "$mac" | grep -v ':' | awk '{print $3}')
 
 				if [ -n "$arp_dev" ]; then
 					# Use 'ip neigh replace' for more robust handling
