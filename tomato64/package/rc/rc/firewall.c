@@ -1792,18 +1792,14 @@ int start_firewall(void)
 	f_write_procsysnet("core/netdev_max_backlog", "2048");
 	f_write_procsysnet("core/somaxconn", "1024");
 	f_write_procsysnet("ipv4/tcp_max_syn_backlog", "1024");
-#ifndef TOMATO64
 	f_write_procsysnet("ipv4/neigh/default/gc_thresh1", "1");
 	f_write_procsysnet("ipv4/neigh/default/gc_thresh2", "2048");
 	f_write_procsysnet("ipv4/neigh/default/gc_thresh3", "4096");
-#endif /* TOMATO64 */
 #ifdef TCONFIG_IPV6
 	if (ipv6_enabled) {
-#ifndef TOMATO64
 		f_write_procsysnet("ipv6/neigh/default/gc_thresh1", "1");
 		f_write_procsysnet("ipv6/neigh/default/gc_thresh2", "2048");
 		f_write_procsysnet("ipv6/neigh/default/gc_thresh3", "4096");
-#endif /* TOMATO64 */
 	}
 #endif
 
