@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PHP_TOMATO_VERSION = 8.3.24
+PHP_TOMATO_VERSION = 8.4.15
 PHP_TOMATO_SITE = https://www.php.net/distributions
 PHP_TOMATO_SOURCE = php-$(PHP_TOMATO_VERSION).tar.xz
 PHP_TOMATO_INSTALL_STAGING = YES
@@ -38,6 +38,10 @@ endif
 
 ifeq ($(BR2_TOOLCHAIN_HAS_LIBATOMIC),y)
 PHP_TOMATO_EXTRA_LIBS += -latomic
+endif
+
+ifeq ($(BR2_TOOLCHAIN_USES_UCLIBC),y)
+PHP_CONF_ENV += php_cv_func_copy_file_range=no
 endif
 
 ifeq ($(BR2_PACKAGE_LIBUCONTEXT),y)
@@ -256,10 +260,10 @@ PHP_TOMATO_POST_CONFIGURE_HOOKS += PHP_TOMATO_DISABLE_VALGRIND
 
 ifeq ($(BR2_PACKAGE_PCRE2_JIT),y)
 PHP_TOMATO_CONF_OPTS += --with-pcre-jit=yes
-PHP_TOMATO_CONF_ENV += ac_cv_have_pcre2_jit=yes
+PHP_TOMATO_CONF_ENV += php_cv_have_pcre2_jit=yes
 else
 PHP_TOMATO_CONF_OPTS += --with-pcre-jit=no
-PHP_TOMATO_CONF_ENV += ac_cv_have_pcre2_jit=no
+PHP_TOMATO_CONF_ENV += php_cv_have_pcre2_jit=no
 endif
 
 ifeq ($(BR2_PACKAGE_PHP_TOMATO_EXT_CURL),y)
