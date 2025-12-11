@@ -59,11 +59,6 @@ static void asp_discovery(int argc, char **argv);
 static void asp_css(int argc, char **argv);
 static void asp_resmsg(int argc, char **argv);
 static void asp_resreset(int argc, char **argv);
-static void wo_tomato(char *url);
-static void wo_update(char *url);
-static void wo_service(char *url);
-static void wo_shutdown(char *url);
-static void wo_nvcommit(char *url);
 
 typedef union {
 	int i;
