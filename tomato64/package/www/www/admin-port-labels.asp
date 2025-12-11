@@ -18,7 +18,7 @@
 <script>
 //	<% nvram("t_model_name,nics,port0_label,port1_label,port2_label,port3_label,port4_label,port5_label,port6_label,port7_label,port8_label"); %>
 
-var cprefix = 'advanced_port_labels';
+var cprefix = 'admin_port_labels';
 var MAX_PORT_LABEL_LENGTH = 20;
 
 var ref = new TomatoRefresh('isup.jsx', '', 2);

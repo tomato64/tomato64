@@ -334,7 +334,7 @@ function ethstates() {
 	}
 
 	code += '<\/tr><tr>'+code2;
-	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="advanced-port-labels.asp">Port Labels<\/a> | <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
+	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="admin-port-labels.asp">Port Labels<\/a> | <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
 	E('ports').innerHTML = code;
 }
 /* TOMATO64-END */

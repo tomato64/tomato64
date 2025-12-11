@@ -2602,9 +2602,6 @@ function navi() {
 /* TOR-END */
 			['VLAN',			'vlan.asp'],
 			['LAN Access',			'access.asp'],
-/* TOMATO64-BEGIN */
-			['Port Labels',			'port-labels.asp'],
-/* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
 			['Virtual Wireless',		'wlanvifs.asp'],
 			['Wireless',			'wireless.asp'],
@@ -2685,6 +2682,9 @@ function navi() {
 			['TomatoAnon',			'tomatoanon.asp'],
 			['Bandwidth Monitoring',	'bwm.asp'],
 			['IP Traffic Monitoring',	'iptraffic.asp'],
+/* TOMATO64-BEGIN */
+			['Port Labels',			'port-labels.asp'],
+/* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
 			['Buttons/LED',			'buttons.asp'],
 /* TOMATO64-REMOVE-END */
