@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-TINC11_VERSION = d9e42faa6a7f4da98502be44566605a01a16a637
+TINC11_VERSION = 940d15c46be812821f134fd7d6333088445b914c
 TINC11_SITE = $(call github,gsliepen,tinc,$(TINC11_VERSION))
 TINC11_SOURCE = tinc-$(TINC11_VERSION).tar.gz
 TINC11_DEPENDENCIES = lzo openssl zlib lz4
