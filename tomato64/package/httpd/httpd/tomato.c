@@ -3121,8 +3121,12 @@ static void asp_css(int argc, char **argv)
 		if (nvram_match("web_css", "online"))
 			web_printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"ext/%s.css?rel=%s\">", ttb, tomato_shortver);
 		else {
-			if (c)
-				web_printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s.css?rel=%s\">", css, tomato_shortver);
+			if (c) {
+				if (nvram_get_int("g_upgrade"))
+					web_printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s.css\">", css);
+				else
+					web_printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s.css?rel=%s\">", css, tomato_shortver);
+			}
 		}
 #ifdef TCONFIG_ADVTHEMES
 	}
