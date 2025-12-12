@@ -32,6 +32,8 @@ function verifyFields(focused, quiet) {
 	var i;
 	var ok = 1;
 	var a, b, c;
+	var prefixLen = parseInt(E('_f_ipv6_prefix_length').value) || 64;
+	var availableNetworks = (prefixLen >= 64) ? 1 : Math.pow(2, 64 - prefixLen);
 
 	/* --- visibility --- */
 
@@ -68,15 +70,11 @@ function verifyFields(focused, quiet) {
 		_ipv6_6rd_ipv4masklen: 1,
 		_ipv6_6rd_prefix_length: 1,
 		_ipv6_6rd_prefix: 1,
-		_ipv6_6rd_borderrelay: 1,
-		_f_lan1_ipv6: 0,
-		_f_lan2_ipv6: 0,
-		_f_lan3_ipv6: 0,
-		_f_lan4_ipv6: 0,
-		_f_lan5_ipv6: 0,
-		_f_lan6_ipv6: 0,
-		_f_lan7_ipv6: 0
+		_ipv6_6rd_borderrelay: 1
 	};
+	for (i = 1; i <= MAX_BRIDGE_ID; i++) {
+		vis['_f_lan' + i + '_ipv6'] = 0;
+	}
 
 	c = E('_ipv6_service').value;
 	switch(c) {
@@ -166,20 +164,11 @@ function verifyFields(focused, quiet) {
 			vis._ipv6_6rd_prefix = 0;
 			vis._ipv6_6rd_borderrelay = 0;
 			if (c == 'native-pd') {
-				if (nvram.lan1_ifname == 'br1' && E('_f_ipv6_prefix_length').value <= 63){  /* 2x IPv6 /64 networks possible */
-					vis._f_lan1_ipv6 = 1;}
-				if (nvram.lan2_ifname == 'br2' && E('_f_ipv6_prefix_length').value <= 62){  /* 4x IPv6 /64 networks possible */
-					vis._f_lan2_ipv6 = 1;}
-				if (nvram.lan3_ifname == 'br3' && E('_f_ipv6_prefix_length').value <= 61){  /* 4x IPv6 /64 networks possible */
-					vis._f_lan3_ipv6 = 1;}					
-				if (nvram.lan4_ifname == 'br4' && E('_f_ipv6_prefix_length').value <= 60){  /* 4x IPv6 /64 networks possible */
-					vis._f_lan4_ipv6 = 1;}
-				if (nvram.lan5_ifname == 'br5' && E('_f_ipv6_prefix_length').value <= 59){  /* 4x IPv6 /64 networks possible */
-					vis._f_lan5_ipv6 = 1;}
-				if (nvram.lan6_ifname == 'br6' && E('_f_ipv6_prefix_length').value <= 58){  /* 4x IPv6 /64 networks possible */
-					vis._f_lan6_ipv6 = 1;}
-				if (nvram.lan7_ifname == 'br7' && E('_f_ipv6_prefix_length').value <= 57){  /* 4x IPv6 /64 networks possible */
-					vis._f_lan7_ipv6 = 1;}
+				for (i = 1; i <= MAX_BRIDGE_ID; i++) {
+					if (nvram['lan' + i + '_ifname'] == 'br' + i && availableNetworks > i) {
+						vis['_f_lan' + i + '_ipv6'] = 1;
+					}
+				}
 			}
 			if (c == 'native') {
 				vis._f_ipv6_ia_na_id       = 0;
@@ -237,121 +226,15 @@ function verifyFields(focused, quiet) {
 
 	/* --- verify --- */
 
-	/* disable and un-check IPv6 for lanX if prefix length is bigger than XYZ */
-	/* only 1x IPv6 /64 network possible for lan */
-	if (E('_f_ipv6_prefix_length').value > 63) {
-		E('_f_lan1_ipv6').checked = false;
-		E('_f_lan2_ipv6').checked = false;
-		E('_f_lan3_ipv6').checked = false;
-		E('_f_lan4_ipv6').checked = false;
-		E('_f_lan5_ipv6').checked = false;
-		E('_f_lan6_ipv6').checked = false;
-		E('_f_lan7_ipv6').checked = false;
-
-		E('_f_lan1_ipv6').disabled = true;
-		E('_f_lan2_ipv6').disabled = true;
-		E('_f_lan3_ipv6').disabled = true;
-		E('_f_lan4_ipv6').disabled = true;	
-		E('_f_lan5_ipv6').disabled = true;
-		E('_f_lan6_ipv6').disabled = true;
-		E('_f_lan7_ipv6').disabled = true;	
-	}
-	/* 2x IPv6 /64 networks possible for lan and lan1 */
-	else if (E('_f_ipv6_prefix_length').value > 62) {
-		E('_f_lan2_ipv6').checked = false;
-		E('_f_lan3_ipv6').checked = false;
-		E('_f_lan4_ipv6').checked = false;
-		E('_f_lan5_ipv6').checked = false;
-		E('_f_lan6_ipv6').checked = false;
-		E('_f_lan7_ipv6').checked = false;
-
-		E('_f_lan1_ipv6').disabled = false;
-		E('_f_lan2_ipv6').disabled = true;
-		E('_f_lan3_ipv6').disabled = true;
-		E('_f_lan4_ipv6').disabled = true;	
-		E('_f_lan5_ipv6').disabled = true;
-		E('_f_lan6_ipv6').disabled = true;
-		E('_f_lan7_ipv6').disabled = true;	
-	}
-	/* 3x IPv6 /64 networks possible for lan, lan1 and lan2 */
-	else if (E('_f_ipv6_prefix_length').value > 61) {
-		E('_f_lan3_ipv6').checked = false;
-		E('_f_lan4_ipv6').checked = false;
-		E('_f_lan5_ipv6').checked = false;
-		E('_f_lan6_ipv6').checked = false;
-		E('_f_lan7_ipv6').checked = false;
-
-		E('_f_lan1_ipv6').disabled = false;
-		E('_f_lan2_ipv6').disabled = false;
-		E('_f_lan3_ipv6').disabled = true;
-		E('_f_lan4_ipv6').disabled = true;	
-		E('_f_lan5_ipv6').disabled = true;
-		E('_f_lan6_ipv6').disabled = true;
-		E('_f_lan7_ipv6').disabled = true;	
-	}
-	/* 4x IPv6 /64 networks possible for lan, lan1, lan2 and lan3 */
-	else if (E('_f_ipv6_prefix_length').value > 60) {
-		E('_f_lan4_ipv6').checked = false;
-		E('_f_lan5_ipv6').checked = false;
-		E('_f_lan6_ipv6').checked = false;
-		E('_f_lan7_ipv6').checked = false;
-
-		E('_f_lan1_ipv6').disabled = false;
-		E('_f_lan2_ipv6').disabled = false;
-		E('_f_lan3_ipv6').disabled = false;
-		E('_f_lan4_ipv6').disabled = true;	
-		E('_f_lan5_ipv6').disabled = true;
-		E('_f_lan6_ipv6').disabled = true;
-		E('_f_lan7_ipv6').disabled = true;	
-	}
-	/* 5x IPv6 /64 networks possible for lan, lan1, lan2, lan3 and lan4 */
-	else if (E('_f_ipv6_prefix_length').value > 59) {
-		E('_f_lan5_ipv6').checked = false;
-		E('_f_lan6_ipv6').checked = false;
-		E('_f_lan7_ipv6').checked = false;
-
-		E('_f_lan1_ipv6').disabled = false;
-		E('_f_lan2_ipv6').disabled = false;
-		E('_f_lan3_ipv6').disabled = false;
-		E('_f_lan4_ipv6').disabled = false;	
-		E('_f_lan5_ipv6').disabled = true;
-		E('_f_lan6_ipv6').disabled = true;
-		E('_f_lan7_ipv6').disabled = true;	
-	}
-	/* 6x IPv6 /64 networks possible for lan, lan1, lan2, lan3, lan4 and lan5 */
-	else if (E('_f_ipv6_prefix_length').value > 59) {
-		E('_f_lan6_ipv6').checked = false;
-		E('_f_lan7_ipv6').checked = false;
-
-		E('_f_lan1_ipv6').disabled = false;
-		E('_f_lan2_ipv6').disabled = false;
-		E('_f_lan3_ipv6').disabled = false;
-		E('_f_lan4_ipv6').disabled = false;	
-		E('_f_lan5_ipv6').disabled = false;
-		E('_f_lan6_ipv6').disabled = true;
-		E('_f_lan7_ipv6').disabled = true;	
-	}
-	/* 7x IPv6 /64 networks possible for lan, lan1, lan2, lan3, lan4, lan5 and lan6 */
-	else if (E('_f_ipv6_prefix_length').value > 59) {
-		E('_f_lan7_ipv6').checked = false;
-
-		E('_f_lan1_ipv6').disabled = false;
-		E('_f_lan2_ipv6').disabled = false;
-		E('_f_lan3_ipv6').disabled = false;
-		E('_f_lan4_ipv6').disabled = false;	
-		E('_f_lan5_ipv6').disabled = false;
-		E('_f_lan6_ipv6').disabled = false;
-		E('_f_lan7_ipv6').disabled = true;	
-	}
-	/* 8x (or even more) IPv6 /64 networks possible for lan, lan1, lan2, lan3, lan4, lan5, lan6 and lan7 */
-	else {
-		E('_f_lan1_ipv6').disabled = false;
-		E('_f_lan2_ipv6').disabled = false;
-		E('_f_lan3_ipv6').disabled = false;
-		E('_f_lan4_ipv6').disabled = false;	
-		E('_f_lan5_ipv6').disabled = false;
-		E('_f_lan6_ipv6').disabled = false;
-		E('_f_lan7_ipv6').disabled = false;
+	for (i = 1; i <= MAX_BRIDGE_ID; i++) {
+		var elem = E('_f_lan' + i + '_ipv6');
+		if (availableNetworks <= i) {
+			elem.checked = false;
+			elem.disabled = true;
+		}
+		else {
+			elem.disabled = false;
+		}
 	}
 
 	/* check if ipv6_radvd or ipv6_dhcpd is enabled for RA (dnsmasq); If YES, then disable Accept RA from LAN option */
@@ -461,7 +344,7 @@ function save() {
 		fom.ipv6_accept_ra.value = fom.ipv6_accept_ra.value | 0x01; /* set bit 0, accept_ra enabled for WAN */
 	}
 	if (fom.f_ipv6_accept_ra_lan.checked && !fom.f_ipv6_accept_ra_lan.disabled) {
-		fom.ipv6_accept_ra.value = fom.ipv6_accept_ra.value | 0x02; /* set bit 1, accept_ra enabled for LAN (br0...br7 if available) */
+		fom.ipv6_accept_ra.value = fom.ipv6_accept_ra.value | 0x02; /* set bit 1, accept_ra enabled for LAN (br0...brX if available) */
 	}
 
 	fom.ipv6_prefix_length.value  = fom.f_ipv6_prefix_length.value;
@@ -493,28 +376,12 @@ function save() {
 		case 'native-pd':
 			fom.ipv6_prefix.value = '';
 			fom.ipv6_rtr_addr.value = '';
-			if (fom.f_lan1_ipv6.checked) {
-				fom.ipv6_vlan.value = fom.ipv6_vlan.value | 0x01; /* set bit 0, IPv6 enabled for LAN1 */
+			for (i = 1; i <= MAX_BRIDGE_ID; i++) {
+				var elem = fom['f_lan' + i + '_ipv6'];
+				if (elem.checked) {
+					fom.ipv6_vlan.value = fom.ipv6_vlan.value | (1 << (i - 1));
+				}
 			}
-			if (fom.f_lan2_ipv6.checked) {
-				fom.ipv6_vlan.value = fom.ipv6_vlan.value | 0x02; /* set bit 1, IPv6 enabled for LAN2 */
-			}
-			if (fom.f_lan3_ipv6.checked) {
-				fom.ipv6_vlan.value = fom.ipv6_vlan.value | 0x04; /* set bit 2, IPv6 enabled for LAN3 */
-			}
-			if (fom.f_lan4_ipv6.checked) {
-				fom.ipv6_vlan.value = fom.ipv6_vlan.value | 0x08; /* set bit 3, IPv6 enabled for LAN4 */
-			}
-			if (fom.f_lan5_ipv6.checked) {
-				fom.ipv6_vlan.value = fom.ipv6_vlan.value | 0x10; /* set bit 4, IPv6 enabled for LAN5 */
-			}
-			if (fom.f_lan6_ipv6.checked) {
-				fom.ipv6_vlan.value = fom.ipv6_vlan.value | 0x20; /* set bit 5, IPv6 enabled for LAN6 */
-			}
-			if (fom.f_lan7_ipv6.checked) {
-				fom.ipv6_vlan.value = fom.ipv6_vlan.value | 0x40; /* set bit 6, IPv6 enabled for LAN7 */
-			}
-
 		break;
 		case 'native':
 			fom.ipv6_wan_addr.value       = fom.f_ipv6_wan_addr.value;
@@ -580,9 +447,10 @@ function init() {
 <div class="section-title">IPv6 Configuration</div>
 <div class="section">
 	<script>
+		var f, i;
 		dns = nvram.ipv6_dns.split(/\s+/);
 
-		createFieldTable('', [
+		f = [
 			{ title: 'IPv6 Service Type', name: 'ipv6_service', type: 'select',
 				options: [['', 'Disabled'],['native-pd','DHCPv6 with Prefix Delegation'],['native','Static IPv6'],['6to4','6to4 Anycast Relay'],['sit','6in4 Static Tunnel'],['6rd','6rd Relay'],['6rd-pd','6rd from DHCPv4 (Option 212)'],['other','Other (Manual Configuration)']],
 				value: nvram.ipv6_service },
@@ -628,15 +496,20 @@ function init() {
 			] },
 			{ title: 'Tunnel MTU', name: 'ipv6_tun_mtu', type: 'text', maxlen: 4, size: 8, value: nvram.ipv6_tun_mtu, suffix: ' <small>(0 for default)<\/small>' },
 			{ title: 'Tunnel TTL', name: 'ipv6_tun_ttl', type: 'text', maxlen: 3, size: 8, value: nvram.ipv6_tun_ttl },
-			null,
-			{ title: 'Enable IPv6 subnet for',	name: 'f_lan1_ipv6', type: 'checkbox', value: (nvram.ipv6_vlan & 0x01), suffix: '&nbsp; LAN1(br1) &nbsp;&nbsp;&nbsp;' },
-			{ title: '',				name: 'f_lan2_ipv6', type: 'checkbox', value: (nvram.ipv6_vlan & 0x02), suffix: '&nbsp; LAN2(br2) &nbsp;&nbsp;&nbsp;' },
-			{ title: '',				name: 'f_lan3_ipv6', type: 'checkbox', value: (nvram.ipv6_vlan & 0x04), suffix: '&nbsp; LAN3(br3) &nbsp;&nbsp;&nbsp;' },
-			{ title: '',				name: 'f_lan4_ipv6', type: 'checkbox', value: (nvram.ipv6_vlan & 0x08), suffix: '&nbsp; LAN4(br4) &nbsp;&nbsp;&nbsp;' },
-			{ title: '',				name: 'f_lan5_ipv6', type: 'checkbox', value: (nvram.ipv6_vlan & 0x10), suffix: '&nbsp; LAN5(br5) &nbsp;&nbsp;&nbsp;' },
-			{ title: '',				name: 'f_lan6_ipv6', type: 'checkbox', value: (nvram.ipv6_vlan & 0x20), suffix: '&nbsp; LAN6(br6) &nbsp;&nbsp;&nbsp;' },
-			{ title: '',				name: 'f_lan7_ipv6', type: 'checkbox', value: (nvram.ipv6_vlan & 0x40), suffix: '&nbsp; LAN7(br7) &nbsp;&nbsp;&nbsp;' }
-		]);
+			null
+		];
+
+		for (i = 1; i <= MAX_BRIDGE_ID; ++i) {
+			f.push({
+				title: (i == 1) ? 'Enable IPv6 subnet for' : '',
+				name: 'f_lan' + i + '_ipv6',
+				type: 'checkbox',
+				value: (nvram.ipv6_vlan & (1 << (i - 1))),
+				suffix: '&nbsp; LAN' + i + '(br' + i + ') &nbsp;&nbsp;&nbsp;'
+			});
+		}
+
+		createFieldTable('', f);
 	</script>
 </div>
 
