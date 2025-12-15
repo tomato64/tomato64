@@ -644,6 +644,15 @@ else
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
 endif
 
+# Remove wireless temperature for devices without built-in WiFi
+ifeq ($(PLATFORM_RPI4),y)
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-RPI4-REMOVE-BEGIN/,/TOMATO64-RPI4-REMOVE-END/d"
+endif
+
+ifeq ($(PLATFORM_R6S),y)
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-R6S-REMOVE-BEGIN/,/TOMATO64-R6S-REMOVE-END/d"
+endif
+
 # Only include TFTP if it is compiled in
 ifneq ($(TCONFIG_USB_EXTRAS),y)
 	sed -i $(INSTALLDIR)/www/advanced-dhcpdns.asp -e "/TFTP-BEGIN/,/TFTP-END/d"

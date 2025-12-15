@@ -81,6 +81,11 @@ function upgrade() {
 			regex: /rpi4(?!\d)/i,
 			name: 'RPI4',
 			message: 'rpi4'
+		},
+		'FriendlyElec NanoPi R6S': {
+			regex: /r6s(?!\d)/i,
+			name: 'R6S',
+			message: 'r6s'
 		}
 	};
 

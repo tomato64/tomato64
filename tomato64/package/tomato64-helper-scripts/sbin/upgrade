@@ -160,9 +160,45 @@ if [ -f /boot/bcm2711-rpi-4-b.dtb ] && [ "$(NG "t_model_name")" == "Raspberry Pi
 		exit
 	fi
 	cp -ar /boot/* /mnt
+	sync
 	umount /mnt
 
 	kernel=$(strings /boot/Image |grep -m 1 "Linux version " | awk '{print $3}')
+	for dir in /lib/modules/*; do
+		[ "$dir" = "/lib/modules/$kernel" ] && continue
+		rm -rf "$dir"
+	done
+	printf "image successfully flashed\n"
+fi
+
+# NanoPi R6S
+if [ -f /boot/friendlyarm_nanopi-r6s-kernel.bin ] && [ "$(NG "t_model_name")" == "FriendlyElec NanoPi R6S" ]; then
+	ROOT_DEV=$(findmnt -n -o SOURCE /)
+	BOOT_DISK=$(echo "$ROOT_DEV" | sed 's|/dev/||; s|p[0-9]*$||')
+
+	# Update kernel partition (p1) - ext4 filesystem containing kernel.img and boot.scr
+	MOUNT_POINT=$(mktemp -d)
+	mount -t ext4 /dev/${BOOT_DISK}p1 "$MOUNT_POINT"
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d" returned during mounting kernel partition' "$result"
+		rmdir "$MOUNT_POINT"
+		exit
+	fi
+	cp /boot/friendlyarm_nanopi-r6s-kernel.bin "$MOUNT_POINT/kernel.img"
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d" returned during kernel copy' "$result"
+		umount "$MOUNT_POINT"
+		rmdir "$MOUNT_POINT"
+		exit
+	fi
+	sync
+	umount "$MOUNT_POINT"
+	rmdir "$MOUNT_POINT"
+
+	# Clean old kernel modules
+	kernel=$(strings /boot/friendlyarm_nanopi-r6s-kernel.bin | grep -m 1 "Linux version " | awk '{print $3}')
 	for dir in /lib/modules/*; do
 		[ "$dir" = "/lib/modules/$kernel" ] && continue
 		rm -rf "$dir"

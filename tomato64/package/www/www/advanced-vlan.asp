@@ -132,6 +132,7 @@ switch (nvram['t_model_name']) {
 	case 'Banana Pi BPI-R3':
 	case 'Banana Pi BPI-R3 Mini':
 	case 'Raspberry Pi 4 Model B':
+	case 'FriendlyElec NanoPi R6S':
 /* TOMATO64-END */
 		COL_P0N = '0';
 		COL_P1N = '1';

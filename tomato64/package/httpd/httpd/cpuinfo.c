@@ -162,6 +162,9 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 #if TOMATO64_RPI4
 	strlcpy(system_type, "Broadcom BCM2711", buf_system_type_sz);
 	strlcpy(cpuclk, "1800", buf_cpuclk_sz);
+#elif TOMATO64_R6S
+	strlcpy(system_type, "Rockchip RK3588S", buf_system_type_sz);
+	strlcpy(cpuclk, "2400", buf_cpuclk_sz);
 #else
 	strlcpy(system_type, "MediaTek Filogic 830", buf_system_type_sz);
 	strlcpy(cpuclk, "2000", buf_cpuclk_sz);
@@ -170,7 +173,11 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 	char buffer[8];
 	int temp;
 
+#if TOMATO64_R6S
+	const char cmd[] = "sensors -A package_thermal-virtual-0 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
+#else
 	const char cmd[] = "sensors -A cpu_thermal-virtual-0 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
+#endif
 
 	if ((f = popen(cmd, "r"))) {
 		if (fgets(buffer, sizeof(buffer), f) != NULL) {
@@ -218,6 +225,8 @@ void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
 #ifdef TOMATO64_ARM64
 #if TOMATO64_RPI4
 	strlcpy(cpumodel, "ARM Cortex-A72", buf_cpumodel_sz);
+#elif TOMATO64_R6S
+	strlcpy(cpumodel, "ARM Cortex-A76 / A55", buf_cpumodel_sz);
 #else
 	strlcpy(cpumodel, "MediaTek MT7986AV (Cortex-A53)", buf_cpumodel_sz);
 #endif

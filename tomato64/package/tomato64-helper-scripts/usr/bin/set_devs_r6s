@@ -1,0 +1,74 @@
+#!/bin/sh
+
+set -e
+set -x
+
+. /usr/sbin/nvram_ops
+
+# NanoPi R6S has 3 ethernet ports
+# eth2 has the constant hardware MAC (RTL8211F PHY on RGMII)
+# eth0 and eth1 are derived sequentially from eth2
+
+# Function to add offset to MAC address
+macaddr_add() {
+	local mac=$1
+	local offset=$2
+
+	# Remove colons and convert to decimal
+	local mac_hex=$(echo "$mac" | tr -d ':')
+	local mac_dec=$(printf "%d" "0x${mac_hex}")
+
+	# Add offset
+	local new_dec=$((mac_dec + offset))
+
+	# Convert back to hex and format as MAC
+	printf "%012X" "$new_dec" | sed 's/\(..\)/\1:/g; s/:$//'
+}
+
+if [ "$(NG set_macs)" != "1" ]; then
+
+	# eth2 has the constant hardware MAC - use it as base
+	eth2macaddr=$(cat /sys/class/net/eth2/address | tr '[:lower:]' '[:upper:]')
+
+	# Derive eth0 and eth1 sequentially (eth0 = base-2, eth1 = base-1, eth2 = base)
+	eth0macaddr=$(macaddr_add "$eth2macaddr" -2)
+	eth1macaddr=$(macaddr_add "$eth2macaddr" -1)
+
+	NS "eth0macaddr=$eth0macaddr"
+	NS "eth1macaddr=$eth1macaddr"
+	NS "eth2macaddr=$eth2macaddr"
+
+	# Apply MAC addresses
+	ip link set dev eth0 address "$eth0macaddr"
+	ip link set dev eth1 address "$eth1macaddr"
+	# eth2 already has its hardware MAC, no need to set
+
+	# Set WAN MAC (eth0 is WAN on Tomato64)
+	for i in wan_hwaddr wan_mac; do
+		NS "${i}=$eth0macaddr"
+	done
+
+	# Set LAN MAC (eth1 and eth2 are LAN)
+	NS "lan_hwaddr=$eth1macaddr"
+
+	NS set_macs=1
+
+else
+
+	# Apply stored MAC addresses
+	ip link set dev eth0 address "$(NG eth0macaddr)"
+	ip link set dev eth1 address "$(NG eth1macaddr)"
+	# eth2 already has its hardware MAC, no need to set
+
+fi
+
+# Load required modules
+modprobe leds_gpio
+
+# Set system LED (if not in stealth mode)
+if [ "$(NG stealth_mode)" != "1" ]; then
+	# NanoPi R6S has a red system LED
+	if [ -e /sys/class/leds/red:sys/brightness ]; then
+		echo 1 > /sys/class/leds/red:sys/brightness
+	fi
+fi

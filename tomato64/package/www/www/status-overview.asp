@@ -361,7 +361,11 @@ function show() {
 	c('disk', stats.disk);
 /* TOMATO64-END */
 /* TOMATO64-WIFI-BEGIN */
+/* TOMATO64-RPI4-REMOVE-BEGIN */
+/* TOMATO64-R6S-REMOVE-BEGIN */
 	c('wlsense', stats.wlsense);
+/* TOMATO64-R6S-REMOVE-END */
+/* TOMATO64-RPI4-REMOVE-END */
 	c('temps', stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F');
 /* TOMATO64-WIFI-END */
 	c('uptime', stats.uptime);
@@ -610,7 +614,11 @@ function init() {
 /* TOMATO64-WIFI-BEGIN */
 		null,
 		{ title: 'CPU Temperature', rid: 'temps', text: stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F' },
+/* TOMATO64-RPI4-REMOVE-BEGIN */
+/* TOMATO64-R6S-REMOVE-BEGIN */
 		{ title: 'Wireless Temperature', rid: 'wlsense', text: stats.wlsense }
+/* TOMATO64-R6S-REMOVE-END */
+/* TOMATO64-RPI4-REMOVE-END */
 /* TOMATO64-WIFI-END */
 	]);
 </script>

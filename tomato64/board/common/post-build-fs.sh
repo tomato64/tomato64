@@ -13,7 +13,7 @@ $TARGET_DIR/var \
 $TARGET_DIR/run
 
 # Gets in the way of NTFS automount
-rm $TARGET_DIR/usr/bin/ntfs-3g
+rm -f $TARGET_DIR/usr/bin/ntfs-3g
 
 # Needed for some hook scripts
 mkdir -p \
