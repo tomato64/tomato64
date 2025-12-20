@@ -17,11 +17,11 @@ fi
 # Define directories to clean
 CLEANUP_DIRS="/bin /sbin /lib /libexec /usr/bin /usr/sbin /usr/lib /usr/libexec /usr/share /boot /rom /www"
 
-# Create list of files on disk BEFORE extraction (excluding /lib/modules/*)
+# Create list of files on disk BEFORE extraction
 DISK_FILES=$(mktemp)
 for dir in $CLEANUP_DIRS; do
 	if [ -d "$dir" ]; then
-		find "$dir" \( -type f -o -type l \) ! -path "*/modules/*"
+		find "$dir" \( -type f -o -type l \)
 	fi
 done | sed 's|^/||' | sort > "$DISK_FILES"
 
@@ -42,7 +42,7 @@ for dir in $CLEANUP_DIRS; do
 	# Remove leading / from dir for pattern matching
 	dirpattern="${dir#/}"
 	grep "^\./${dirpattern}/" "$ARCHIVE_LIST"
-done | grep -v "/modules/" | grep -v '/$' | sed 's|^\./||' | sort > "$ARCHIVE_FILTERED"
+done | grep -v '/$' | sed 's|^\./||' | sort > "$ARCHIVE_FILTERED"
 
 # Find files in DISK_FILES but not in ARCHIVE_FILTERED using comm
 TO_DELETE=$(mktemp)
@@ -62,11 +62,6 @@ done
 
 # x86_64
 if [ -f /boot/bzImage ] && [ "$(NG "t_model_name")" == "x86_64" ]; then
-	kernel=`file -bL /boot/bzImage  | sed 's/.*version //;s/ .*//'`
-	for dir in /lib/modules/*; do
-		[ "$dir" = "/lib/modules/$kernel" ] && continue
-		rm -rf "$dir"
-	done
 	printf "image successfully flashed\n"
 fi
 
@@ -89,11 +84,6 @@ if [ -f /boot/glinet_gl-mt6000-kernel.bin ] && [ "$(NG "t_model_name")" == "GL.i
 		exit
 	fi
 
-	kernel=$(strings /boot/glinet_gl-mt6000-kernel.bin | grep -i "Linux-" | awk '{print $3}' | sed "s/.*-//")
-	for dir in /lib/modules/*; do
-		[ "$dir" = "/lib/modules/$kernel" ] && continue
-		rm -rf "$dir"
-	done
 	printf "image successfully flashed\n"
 fi
 
@@ -116,11 +106,6 @@ if [ -f /boot/tomato64-bananapi_bpi-r3-sysupgrade.itb ] && [ "$(NG "t_model_name
 		exit
 	fi
 
-	kernel=$(strings /boot/tomato64-bananapi_bpi-r3-sysupgrade.itb | grep -i "Linux-" | awk '{print $3}' | sed "s/.*-//")
-	for dir in /lib/modules/*; do
-		[ "$dir" = "/lib/modules/$kernel" ] && continue
-		rm -rf "$dir"
-	done
 	printf "image successfully flashed\n"
 fi
 
@@ -143,11 +128,6 @@ if [ -f /boot/tomato64-bpi-r3-mini-sysupgrade.itb ] && [ "$(NG "t_model_name")" 
 		exit
 	fi
 
-	kernel=$(strings /boot/tomato64-bpi-r3-mini-sysupgrade.itb | grep -i "Linux-" | awk '{print $3}' | sed "s/.*-//")
-	for dir in /lib/modules/*; do
-		[ "$dir" = "/lib/modules/$kernel" ] && continue
-		rm -rf "$dir"
-	done
 	printf "image successfully flashed\n"
 fi
 
@@ -163,11 +143,6 @@ if [ -f /boot/bcm2711-rpi-4-b.dtb ] && [ "$(NG "t_model_name")" == "Raspberry Pi
 	sync
 	umount /mnt
 
-	kernel=$(strings /boot/Image |grep -m 1 "Linux version " | awk '{print $3}')
-	for dir in /lib/modules/*; do
-		[ "$dir" = "/lib/modules/$kernel" ] && continue
-		rm -rf "$dir"
-	done
 	printf "image successfully flashed\n"
 fi
 
@@ -197,12 +172,6 @@ if [ -f /boot/friendlyarm_nanopi-r6s-kernel.bin ] && [ "$(NG "t_model_name")" ==
 	umount "$MOUNT_POINT"
 	rmdir "$MOUNT_POINT"
 
-	# Clean old kernel modules
-	kernel=$(strings /boot/friendlyarm_nanopi-r6s-kernel.bin | grep -m 1 "Linux version " | awk '{print $3}')
-	for dir in /lib/modules/*; do
-		[ "$dir" = "/lib/modules/$kernel" ] && continue
-		rm -rf "$dir"
-	done
 	printf "image successfully flashed\n"
 fi
 
