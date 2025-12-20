@@ -2231,7 +2231,11 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy2_country",		""				, 0 },
 	{"wifi_phy2_ifaces",		"1"				, 0 },
 
+#if defined(TOMATO64_MT6000) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI)
 	{"wifi_phy0iface0_enable",	"1"				, 0 },
+#else
+	{"wifi_phy0iface0_enable",	"0"				, 0 },
+#endif
 	{"wifi_phy0iface0_mode",	"ap"				, 0 },
 	{"wifi_phy0iface0_essid",	"Tomato64"			, 0 },
 	{"wifi_phy0iface0_bssid",	""				, 0 },
