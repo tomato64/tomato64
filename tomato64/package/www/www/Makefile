@@ -644,13 +644,12 @@ else
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
 endif
 
-# Remove wireless temperature for devices without built-in WiFi
 ifeq ($(PLATFORM_RPI4),y)
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-RPI4-REMOVE-BEGIN/,/TOMATO64-RPI4-REMOVE-END/d"
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-RPI4-SKIP-BEGIN/,/TOMATO64-RPI4-SKIP-END/d"
 endif
 
 ifeq ($(PLATFORM_R6S),y)
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-R6S-REMOVE-BEGIN/,/TOMATO64-R6S-REMOVE-END/d"
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-R6S-SKIP-BEGIN/,/TOMATO64-R6S-SKIP-END/d"
 endif
 
 # Only include TFTP if it is compiled in
@@ -796,6 +795,8 @@ endif
 		-e "/TOMATO64-X86_64-BEGIN/d"	-e "/TOMATO64-X86_64-END/d" \
 		-e "/TOMATO64-ARM64-BEGIN/d"	-e "/TOMATO64-ARM64-END/d" \
 		-e "/TOMATO64-WIFI-BEGIN/d"	-e "/TOMATO64-WIFI-END/d" \
+		-e "/TOMATO64-RPI4-SKIP-BEGIN/d"	-e "/TOMATO64-RPI4-SKIP-END/d" \
+		-e "/TOMATO64-R6S-SKIP-BEGIN/d"	-e "/TOMATO64-R6S-SKIP-END/d" \
 		|| true; \
 	done
 
