@@ -272,8 +272,10 @@ static int get_memory(meminfo_t *m)
 		return 0;
 
 	m->maxfreeram = m->free;
+#ifndef TOMATO64
 	if (nvram_match("t_cafree", "1"))
 		m->maxfreeram += (m->cached + m->buffers + m->slabrecl);
+#endif /* TOMATO64 */
 
 	return 1;
 }

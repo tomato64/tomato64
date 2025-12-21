@@ -56,7 +56,9 @@ function save() {
 	fom.debug_nocommit.value = fom.f_debug_nocommit.checked ? 1 : 0;
 	fom.debug_cprintf.value = fom.f_debug_cprintf.checked ? 1 : 0;
 	fom.debug_cprintf_file.value = fom.f_debug_cprintf_file.checked ? 1 : 0;
+/* TOMATO64-REMOVE-BEGIN */
 	fom.t_cafree.value = fom.f_cafree.checked ? 1 : 0;
+/* TOMATO64-REMOVE-END */
 	fom.t_hidelr.value = fom.f_hidelr.checked ? 1 : 0;
 	fom.debug_logsegfault.value = fom.f_debug_logsegfault.checked ? 1 : 0;
 	fom.debug_ddns.value = fom.f_debug_ddns.checked ? 1 : 0;
@@ -137,7 +139,9 @@ function init() {
 <!-- BCMWL714-BEGIN -->
 <input type="hidden" name="debug_wlx_shdown">
 <!-- BCMWL714-END -->
+<!-- TOMATO64-REMOVE-BEGIN -->
 <input type="hidden" name="t_cafree">
+<!-- TOMATO64-REMOVE-END -->
 <input type="hidden" name="t_hidelr">
 <input type="hidden" name="http_nocache">
 <input type="hidden" name="console_loglevel">
@@ -153,7 +157,9 @@ function init() {
 			{ title: 'Enable cprintf output to /tmp/cprintf', name: 'f_debug_cprintf_file', type: 'checkbox', value: nvram.debug_cprintf_file != '0' },
 			{ title: 'Enable DDNS output to /tmp/mdu-*', name: 'f_debug_ddns', type: 'checkbox', value: nvram.debug_ddns != '0' },
 			{ title: 'Enable segfault logging', name: 'f_debug_logsegfault', type: 'checkbox', suffix: ' <small>(requires reboot)<\/small>', value: nvram.debug_logsegfault != '0' },
+/* TOMATO64-REMOVE-BEGIN */
 			{ title: 'Count cache memory, buffers and reclaimable slab memory as free memory', name: 'f_cafree', type: 'checkbox', value: nvram.t_cafree == '1' },
+/* TOMATO64-REMOVE-END */
 			{ title: 'Avoid displaying LAN to router connections', name: 'f_hidelr', type: 'checkbox', value: nvram.t_hidelr == '1' },
 			{ title: 'Kernel printk log level', name: 'f_console_loglevel', type: 'select', options: [[1,'Emergency'],[2,'Alert'],[3,'Critical'],[4,'Error'],[5,'Warning'],[6,'Notice'],[7,'Info'],[8,'Debug']], value: fixInt(nvram.console_loglevel, 1, 8, 1) },
 			{ title: 'Do not restart the following process if they die', multi: [
@@ -208,7 +214,9 @@ function init() {
 		<li><b>Enable cprintf output to /tmp/cprintf</b> - Redirects cprintf output to file: <i>/tmp/cprintf</i>  for viewing.</li>
 		<li><b>Enable DDNS output to /tmp/mdu-*</b> - DDNS debug info will be written in a file in /tmp. The * is replaced with the name of the DDNS provider.</li>
 		<li><b>Enable segfault logging</b> - When enabled, if a program crashes due to segfault, extensive messages are logged.</li>
+/* TOMATO64-REMOVE-BEGIN */
 		<li><b>Count cache memory and buffers as free memory</b> - Linux counts buffer and cache as used RAM. Enabling this will consider cache and buffer as unallocated RAM.</li>
+/* TOMATO64-REMOVE-END */
 		<li><b>Avoid displaying LAN to router connections</b> - Do not consider connections between LAN and router in CONNTRACK table.</li>
 		<li><b>Set "no-cache" in httpd header</b> - Essentially, this will tell your browser not to cache Tomato64 web interface pages.</li>
 		<li><b>Kernel printk log level</b> - This sets klogd (kernel logging) minimum logging level.</li>
