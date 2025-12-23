@@ -219,7 +219,7 @@ static void update(int num, int *dirty, int force)
 
 		memset(v, 0, sizeof(v));
 		snprintf(v, sizeof(v), "%s_save", ddnsx);
-		if (nvram_get_int(s) && (strstr(serv, "dyndns") == 0))
+		if (nvram_get_int(v) && (strstr(serv, "dyndns") == 0))
 			*dirty = 1;
 	}
 
