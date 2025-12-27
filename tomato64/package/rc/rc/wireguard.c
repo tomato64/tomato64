@@ -773,12 +773,12 @@ static int wg_set_iface_fwmark(char *iface, char *fwmark)
 	else
 		snprintf(buffer, BUF_SIZE_16, "0x%s", fwmark);
 
-	if (eval("wg", "set", iface, "fwmark", fwmark)) {
-		logmsg(LOG_WARNING, "unable to set wireguard interface %s fwmark to %s!", iface, fwmark);
+	if (eval("wg", "set", iface, "fwmark", buffer)) {
+		logmsg(LOG_WARNING, "unable to set wireguard interface %s fwmark to %s!", iface, buffer);
 		return -1;
 	}
 	else
-		logmsg(LOG_DEBUG, "wireguard interface %s has had its fwmark set to %s", iface, fwmark);
+		logmsg(LOG_DEBUG, "wireguard interface %s has had its fwmark set to %s", iface, buffer);
 
 	return 0;
 }
