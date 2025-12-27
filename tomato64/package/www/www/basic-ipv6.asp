@@ -19,7 +19,7 @@
 
 <script>
 
-//	<% nvram("ipv6_6rd_prefix_length,ipv6_prefix,ipv6_prefix_length,ipv6_radvd,ipv6_dhcpd,ipv6_accept_ra,ipv6_isp_opt,ipv6_pdonly,ipv6_pd_norelease,ipv6_rtr_addr,ipv6_service,ipv6_debug,ipv6_duid_type,ipv6_dns,ipv6_tun_addr,ipv6_tun_addrlen,ipv6_ifname,ipv6_tun_v4end,ipv6_relay,ipv6_tun_mtu,ipv6_tun_ttl,ipv6_6rd_ipv4masklen,ipv6_6rd_prefix,ipv6_6rd_borderrelay,lan_ifname,ipv6_vlan,ipv6_prefix_len_wan,ipv6_isp_gw,ipv6_wan_addr,ipv6_ia_na_id,ipv6_ia_pd_id"); %>
+//	<% nvram("ipv6_6rd_prefix_length,ipv6_prefix,ipv6_prefix_length,ipv6_radvd,ipv6_dhcpd,ipv6_accept_ra,ipv6_isp_opt,ipv6_pdonly,ipv6_pd_norelease,ipv6_rtr_addr,ipv6_service,ipv6_debug,ipv6_duid_type,ipv6_dns,ipv6_tun_addr,ipv6_tun_addrlen,ipv6_ifname,ipv6_tun_v4end,ipv6_relay,ipv6_tun_mtu,ipv6_tun_ttl,ipv6_6rd_ipv4masklen,ipv6_6rd_prefix,ipv6_6rd_borderrelay,lan_ifname,ipv6_vlan,ipv6_prefix_len_wan,ipv6_isp_gw,ipv6_wan_addr"); %>
 
 function show() {
 	elem.setInnerHTML('notice_container', '<div id="notice">'+isup.notice_ip6tables.replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
@@ -45,8 +45,6 @@ function verifyFields(focused, quiet) {
 		_f_ipv6_duid_type: 0,
 		_f_ipv6_prefix: 1,
 		_f_ipv6_prefix_length: 1,
-		_f_ipv6_ia_na_id: 1,
-		_f_ipv6_ia_pd_id: 1,
 		_f_ipv6_wan_addr: 0,
 		_f_ipv6_prefix_len_wan: 0,
 		_f_ipv6_isp_gw: 0,
@@ -103,8 +101,6 @@ function verifyFields(focused, quiet) {
 			vis._ipv6_tun_addrlen = 0;
 			vis._ipv6_tun_ttl = 0;
 			vis._ipv6_tun_mtu = 0;
-			vis._f_ipv6_ia_na_id = 0;
-			vis._f_ipv6_ia_pd_id = 0;
 			vis._f_ipv6_isp_opt = 0;
 			vis._f_ipv6_pdonly = 0;
 			if (c == 'other') {
@@ -171,8 +167,6 @@ function verifyFields(focused, quiet) {
 				}
 			}
 			if (c == 'native') {
-				vis._f_ipv6_ia_na_id       = 0;
-				vis._f_ipv6_ia_pd_id       = 0;
 				vis._f_ipv6_pdonly         = 0;
 				vis._f_ipv6_wan_addr       = 1;
 				vis._f_ipv6_prefix_len_wan = 1;
@@ -349,8 +343,6 @@ function save() {
 
 	fom.ipv6_prefix_length.value  = fom.f_ipv6_prefix_length.value;
 	fom.ipv6_prefix.value         = fom.f_ipv6_prefix.value;
-	fom.ipv6_ia_na_id.value       = fom.f_ipv6_ia_na_id.value;
-	fom.ipv6_ia_pd_id.value       = fom.f_ipv6_ia_pd_id.value;
 	fom.ipv6_vlan.value           = 0;
 	fom.ipv6_wan_addr.value       = fom.f_ipv6_wan_addr.value;
 	fom.ipv6_prefix_len_wan.value = fom.f_ipv6_prefix_len_wan.value;
@@ -430,8 +422,6 @@ function init() {
 <input type="hidden" name="ipv6_dns">
 <input type="hidden" name="ipv6_prefix">
 <input type="hidden" name="ipv6_prefix_length">
-<input type="hidden" name="ipv6_ia_na_id">
-<input type="hidden" name="ipv6_ia_pd_id">
 <input type="hidden" name="ipv6_rtr_addr">
 <input type="hidden" name="ipv6_accept_ra">
 <input type="hidden" name="ipv6_vlan">
@@ -469,8 +459,6 @@ function init() {
 			{ title: '6rd Routed Prefix', name: 'ipv6_6rd_prefix', type: 'text', maxlen: 40, size: 42, value: nvram.ipv6_6rd_prefix },
 			{ title: '6rd Prefix Length', name: 'ipv6_6rd_prefix_length', type: 'text', maxlen: 3, size: 5, value: nvram.ipv6_6rd_prefix_length, suffix: ' <small>(Usually 32)<\/small>' },
 			{ title: 'Prefix Length', name: 'f_ipv6_prefix_length', type: 'text', maxlen: 3, size: 5, value: nvram.ipv6_prefix_length },
-			{ title: 'IA-NA', name: 'f_ipv6_ia_na_id', type: 'text', maxlen: 2, size: 5, value: nvram.ipv6_ia_na_id },
-			{ title: 'IA-PD', name: 'f_ipv6_ia_pd_id', type: 'text', maxlen: 2, size: 5, value: nvram.ipv6_ia_pd_id },
 			{ title: 'Request PD Only', name: 'f_ipv6_pdonly', type: 'checkbox', value: (nvram.ipv6_pdonly != '0'), suffix: ' <small>(Usually PPPoE connections)<\/small>' },
 			{ title: 'Do not allow PD/Address release', name: 'f_ipv6_pd_norelease', type: 'checkbox', value: (nvram.ipv6_pd_norelease == '1'), suffix: ' <small>(see Notes)<\/small>' },
 			{ title: 'Add default route ::/0', name: 'f_ipv6_isp_opt', type: 'checkbox', value: (nvram.ipv6_isp_opt != '0'), suffix: ' <small>(see Notes)<\/small>' },
