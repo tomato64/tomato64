@@ -308,6 +308,7 @@ REMOVE-END */
 
 function earlyInit() {
 	verifyFields(null, 1);
+	insOvl();
 }
 
 function joinIPv6Addr(a) {

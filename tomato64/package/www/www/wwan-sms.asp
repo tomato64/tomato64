@@ -180,6 +180,6 @@ function init() {
 </td></tr>
 </table>
 </form>
-<script>smsGrid.setup()</script>
+<script>insOvl();smsGrid.setup()</script>
 </body>
 </html>

@@ -506,6 +506,7 @@ function earlyInit() {
 	E('_f_block_all').checked = (count == 0) && (rule[7].search(/[^\s\r\n]/) == -1) && (rule[8] == 0);
 
 	verifyFields(null, 1);
+	insOvl();
 }
 
 function init() {

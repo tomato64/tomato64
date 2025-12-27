@@ -53,6 +53,10 @@ img[src^="rp"] {
 	background: #81833b !important;
 }
 
+#overlay-content {
+	box-shadow: 0 4px 8px 0 rgba(255, 255, 255, 0.5), 0 6px 20px 0 rgba(255, 255, 255, 0.49);
+}
+
 /* SVG */
 #svg text {
 	fill: #c9c9c9;

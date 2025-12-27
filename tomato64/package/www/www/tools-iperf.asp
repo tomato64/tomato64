@@ -210,6 +210,7 @@ function earlyInit() {
 	verifyFields(1, 1);
 
 	ref.start();
+	insOvl();
 }
 
 function loadCookies() {

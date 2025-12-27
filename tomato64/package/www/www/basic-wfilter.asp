@@ -119,6 +119,7 @@ function save() {
 
 function earlyInit() {
 	smg.setup();
+	insOvl();
 }
 
 function init() {

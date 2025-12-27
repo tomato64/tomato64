@@ -150,6 +150,7 @@ function adblockStatus() {
 function earlyInit() {
 	adblockg.setup();
 	verifyFields(null, true);
+	insOvl();
 }
 
 /* Determine Delimiter/Separator */

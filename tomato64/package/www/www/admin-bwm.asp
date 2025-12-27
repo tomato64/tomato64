@@ -353,6 +353,6 @@ function init() {
 
 </td></tr>
 </table>
-<script>verifyFields(null, 1);</script>
+<script>insOvl();verifyFields(null, 1);</script>
 </body>
 </html>

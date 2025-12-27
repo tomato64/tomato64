@@ -198,6 +198,7 @@ REMOVE-END */
 
 function earlyInit() {
 	dg.setup();
+	insOvl();
 }
 
 function init() {

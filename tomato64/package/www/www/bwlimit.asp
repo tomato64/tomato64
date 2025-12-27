@@ -256,6 +256,7 @@ function save() {
 function earlyInit() {
 	bwlg.setup();
 	verifyFields(null, 1);
+	insOvl();
 }
 
 function init() {

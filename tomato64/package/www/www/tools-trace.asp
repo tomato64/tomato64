@@ -213,6 +213,6 @@ function init() {
 </td></tr>
 </table>
 </form>
-<script>tg.setup()</script>
+<script>insOvl();tg.setup()</script>
 </body>
 </html>

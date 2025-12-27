@@ -3100,7 +3100,6 @@ function toggleTheme() {
 function anon_update() {
 	var res = '';
 	var page = myName();
-	if (!page) page = 'status-overview.asp';
 
 	var update = anonupdate.update;
 	if (update == 'no' || update == '' || !update)
@@ -3117,6 +3116,72 @@ function anon_update() {
 		W(res);
 	}
 }
+
+/* TOMATO64-REMOVE-BEGIN */
+function insOvl() {
+	var ovlDiv, cntDiv;
+	var xox = null;
+
+	ovlDiv = document.createElement('div');
+	ovlDiv.id = 'overlay';
+	ovlDiv.style.display = 'none';
+	cntDiv = document.createElement('div');
+	cntDiv.id = 'overlay-content';
+
+	if (typeof(nvram) != 'undefined' && nvram.os_updated == 1) {
+		cntDiv.innerHTML = '<div id="overlay-top">Thank you for updating to the latest FreshTomato!<br><br>Your router is now secure and up-to-date. ❤️<br><br>'+
+		                   'I have difficult news to share:<br>In recent months donations have dropped to a very low level, and on top of that I am now facing serious personal financial difficulties. Without steady support I simply cannot continue active development and maintenance of FreshTomato full-time.<br><br>'+
+		                   'Unless a sufficient number of regular monthly supporters appears (enough for a project of this size and importance), I will very sadly be forced to put the entire project <b style="font-size:1.1em">on hold</b> – possibly permanently.<br>'+
+		                   'If FreshTomato is valuable to you and you want to see it live and grow, please strongly consider becoming a recurring supporter today.<br><br>'+
+		                   'Thank you for understanding.'+
+		                   '</div><div id="overlay-buttons">'+
+		                   '<div class="overlay-buttons-in"><input id="overlay-left-btn" type="button" value="Become a supporter"></div>'+
+		                   '<div class="overlay-buttons-in"><input id="overlay-right-btn" type="button" value="Continue for now"></div>'+
+		                   '</div>';
+
+		function updateAndRedirect() {
+			if (xox) return;
+
+			xox = new XmlHttp();
+			xox.onCompleted = xox.onError = function() {
+				xox = null;
+
+				var overlay = E('overlay');
+				if (overlay) overlay.style.display = 'none';
+
+				setTimeout(function() {
+					var p = '/about.asp';
+					if (!history.replaceState) {
+						location.replace(p);
+					}
+					else {
+						history.replaceState(null, null, p);
+						location.reload();
+					}
+				}, 250);
+			};
+			xox.post('updatelast.cgi', '');
+		}
+		addEvent(document, 'click', function(e) {
+			var id = e.target ? e.target.id : '';
+			if (id === 'overlay-left-btn') {
+				window.open('https://freshtomato.org/donations.html', '_blank');
+				updateAndRedirect();
+			}
+			else if (id === 'overlay-right-btn') {
+				updateAndRedirect();
+			}
+		});
+		ovlDiv.appendChild(cntDiv);
+		document.body.appendChild(ovlDiv);
+		addEvent(window, 'load', function() { if (E('overlay')) E('overlay').style.display = 'block'; } );
+	}
+}
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+function insOvl() {
+}
+/* TOMATO64-END */
 
 var up = new TomatoRefresh('isup.jsx', '', 5);
 up.refresh = function(text) {

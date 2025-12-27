@@ -54,6 +54,7 @@ function earlyInit() {
 	else {
 		E('sesdiv').style.display = 'block';
 	}
+	insOvl();
 }
 </script>
 </head>

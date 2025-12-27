@@ -69,6 +69,7 @@ function earlyInit() {
 		E(t + '-text').value = nvram['script_' + t.replace('as-', '')];
 	}
 	tabSelect(cookie.get('scripts_tab') || 'as-init');
+	insOvl();
 }
 </script>
 </head>

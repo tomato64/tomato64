@@ -303,6 +303,6 @@ function init() {
 </td></tr>
 </table>
 </form>
-<script>pbr.setup();</script>
+<script>insOvl();pbr.setup();</script>
 </body>
 </html>

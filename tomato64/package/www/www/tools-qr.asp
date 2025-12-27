@@ -14,7 +14,6 @@
 <title>[<% ident(); %>] Tools: WiFi QR code generator</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
-<script src="tomato.js?rel=<% version(); %>"></script>
 <style media="print">
 @page {
 	size: auto;  /* auto is the initial value */
@@ -243,5 +242,6 @@ function init() {
 </td></tr>
 </table>
 </form>
+<script>insOvl()</script>
 </body>
 </html>

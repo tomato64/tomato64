@@ -147,7 +147,7 @@ function init() {
 
 </td></tr>
 </table>
-<script>og.setup();</script>
+<script>insOvl();og.setup();</script>
 </form>
 </body>
 </html>

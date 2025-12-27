@@ -843,6 +843,6 @@ function init() {
 </td></tr>
 </table>
 </form>
-<script>verifyFields(null, 1);</script>
+<script>insOvl();verifyFields(null, 1);</script>
 </body>
 </html>

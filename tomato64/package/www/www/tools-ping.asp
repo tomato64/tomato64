@@ -203,6 +203,6 @@ function init() {
 </td></tr>
 </table>
 </form>
-<script>pg.setup()</script>
+<script>insOvl();pg.setup()</script>
 </body>
 </html>

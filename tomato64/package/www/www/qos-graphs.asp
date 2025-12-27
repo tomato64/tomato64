@@ -128,6 +128,7 @@ function earlyInit() {
 		ref.once = 1;
 
 	ref.start();
+	insOvl();
 }
 </script>
 </head>

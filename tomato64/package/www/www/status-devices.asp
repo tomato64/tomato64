@@ -773,6 +773,7 @@ function earlyInit() {
 			ref.initPage(0, 3);
 		});
 	});
+	insOvl();
 }
 
 function init() {

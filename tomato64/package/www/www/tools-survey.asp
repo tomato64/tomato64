@@ -763,6 +763,7 @@ function earlyInit() {
 	addEvent(E('fill-style'), 'change', function() { cookie.set(cprefix+'_fill_style', E('fill-style').selectedIndex); } );
 	addEvent(E('ssid-show'), 'change', function() { cookie.set(cprefix+'_ssid_show', E('ssid-show').selectedIndex); } );
 	addEvent(E('ssid-limit'), 'change', function() { cookie.set(cprefix+'_ssid_limit', E('ssid-limit').value); } );
+	insOvl();
 }
 
 function init() {

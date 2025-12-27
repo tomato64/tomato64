@@ -216,6 +216,7 @@ function earlyInit() {
 	show();
 	aftg.setup();
 	verifyFields(null, 1);
+	insOvl();
 }
 
 function _ftpNvramAdd() {

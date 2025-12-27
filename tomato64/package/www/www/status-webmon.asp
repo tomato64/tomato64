@@ -329,6 +329,7 @@ function earlyInit() {
 
 	maxCount = fixInt(cookie.get('webmon-maxcount'), 0, maxLimit, 50);
 	showMaxCount();
+	insOvl();
 }
 </script>
 

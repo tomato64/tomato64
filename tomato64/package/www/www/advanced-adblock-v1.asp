@@ -104,6 +104,7 @@ function init() {
 function earlyInit() {
 	adblockg.setup();
 	verifyFields(null, true);
+	insOvl();
 }
 </script>
 </head>

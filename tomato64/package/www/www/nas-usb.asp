@@ -209,6 +209,7 @@ dg.setup = function() {
 function earlyInit() {
 	dg.setup();
 	verifyFields(null, true);
+	insOvl();
 }
 
 function init() {

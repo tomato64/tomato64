@@ -201,6 +201,6 @@ function init() {
 </td></tr>
 </table>
 </form>
-<script>fog.setup();</script>
+<script>insOvl();fog.setup();</script>
 </body>
 </html>

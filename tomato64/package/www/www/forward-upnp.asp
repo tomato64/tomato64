@@ -290,6 +290,7 @@ function earlyInit() {
 	ug.setup();
 	show();
 	verifyFields(null, 1);
+	insOvl();
 }
 
 function init() {

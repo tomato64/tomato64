@@ -214,6 +214,7 @@ function save() {
 function earlyInit() {
 	ara.setup();
 	ars.setup();
+	insOvl();
 }
 
 function init() {

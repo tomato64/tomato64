@@ -3605,6 +3605,14 @@ static void wo_nvcommit(char *url)
 	nvram_commit();
 }
 
+static void wo_updatelast(char *url)
+{
+	if (strcmp(nvram_safe_get("os_version_last"), tomato_shortver)) {
+		nvram_set("os_version_last", tomato_shortver);
+		nvram_commit();
+	}
+}
+
 const struct mime_handler mime_handlers[] = {
 /*	  pattern			mime_type				cache  input(path,len,boundary)	output(path)		auth */
 	{ "update.cgi",			mime_javascript,			0,	wi_generic,		wo_update,		1 },
@@ -3654,6 +3662,7 @@ const struct mime_handler mime_handlers[] = {
 	{ "dhcpc.cgi",			NULL,					0,	wi_generic,		wo_dhcpc,		1 },
 	{ "dhcpd.cgi",			mime_javascript,			0,	wi_generic,		wo_dhcpd,		1 },
 	{ "nvcommit.cgi",		NULL,					0,	wi_generic,		wo_nvcommit,		1 },
+	{ "updatelast.cgi",		NULL,					0,	wi_generic,		wo_updatelast,		1 },
 	{ "ping.cgi",			mime_javascript,			0,	wi_generic,		wo_ping,		1 },
 	{ "trace.cgi",			mime_javascript,			0,	wi_generic,		wo_trace,		1 },
 	{ "upgrade.cgi",		mime_html,				0,	wi_upgrade,		wo_flash,		1 },

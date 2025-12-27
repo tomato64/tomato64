@@ -271,6 +271,10 @@ void asp_nvram(int argc, char **argv)
 
 	web_puts("\t'web_pb': '"); /* multiSSID */
 	web_putj(nvram_safe_get("web_pb"));
+	web_puts("',\n");
+
+	web_puts("\t'os_updated': '");
+	web_putj((strcmp(nvram_safe_get("os_version_last"), tomato_shortver) ? "1" : "0"));
 	web_puts("'};\n");
 }
 

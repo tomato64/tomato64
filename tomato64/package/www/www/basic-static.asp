@@ -330,6 +330,7 @@ function save() {
 function earlyInit() {
 	sg.setup();
 	verifyFields(null, 1);
+	insOvl();
 }
 
 function init() {

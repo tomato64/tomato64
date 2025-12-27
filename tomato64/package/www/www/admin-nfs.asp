@@ -106,6 +106,7 @@ function init() {
 function earlyInit() {
 	nfsg.setup();
 	verifyFields(null, true);
+	insOvl();
 }
 </script>
 </head>

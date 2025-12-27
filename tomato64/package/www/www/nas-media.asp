@@ -251,6 +251,7 @@ function earlyInit() {
 	show();
 	msg.setup();
 	verifyFields(null, 1);
+	insOvl();
 }
 
 function init() {
