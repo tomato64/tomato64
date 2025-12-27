@@ -177,7 +177,7 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 			            "[ \"server\" == \"%s\" ] && return 0\n"
 			            " local i=1\n"
 			            " while :; do\n"
-			            "  ping -qc1 -W3 -I tun1%d %s &>/dev/null && return 0\n"
+			            "  ping -qc1 -W3 -I %s%d %s &>/dev/null && return 0\n"
 			            "  [ $((i++)) -ge 3 ] && break || sleep 5\n"
 			            " done\n"
 			            " return 1\n"
@@ -188,7 +188,7 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 			            " service vpn%s%d restart\n"
 			            "}\n",
 			            instanceType,
-			            unit, nvram_safe_get("wan_checker"),
+			            getNVRAMVar("vpn_client%d_if", unit), unit + (type == OVPN_TYPE_SERVER ? OVPN_SERVER_BASEIF : OVPN_CLIENT_BASEIF), nvram_safe_get("wan_checker"),
 			            instanceType, unit,
 			            instanceType, unit,
 			            instanceType, unit);
