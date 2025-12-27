@@ -469,11 +469,6 @@ static void wg_build_routing(const int unit, const char *fwmark, const char *fwm
 	int policy;
 	domain_list_t my_domains;
 
-	if (init_domain_list(&my_domains) != 0) {
-		logmsg(LOG_ERR, "cannot initialize domain list");
-		return;
-	}
-
 	memset(buffer, 0, BUF_SIZE_64);
 	snprintf(buffer, BUF_SIZE_64, WG_FW_DIR"/wg%d-fw-routing.sh", unit);
 
@@ -483,6 +478,13 @@ static void wg_build_routing(const int unit, const char *fwmark, const char *fwm
 		            "\n# Routing\n"
 		            "iptables -t mangle -A PREROUTING -m set --match-set %s dst,src -j MARK --set-mark %s\n",
 		            wgrouting_mark, fwmark_mask);
+
+		if (init_domain_list(&my_domains) != 0) {
+			logmsg(LOG_WARNING, "cannot initialize domain list");
+			fclose(fp);
+			eval("rm", "-rf", buffer);
+			return;
+		}
 
 		/* example of routing_val: 1<2<8.8.8.8<1>1<1<1.2.3.4<0>1<3<domain.com<0> (enabled<type<domain_or_IP<kill_switch>) */
 		nv = nvp = strdup(getNVRAMVar("wg%d_routing_val", unit));
