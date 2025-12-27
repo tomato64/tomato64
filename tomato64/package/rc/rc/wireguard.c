@@ -1215,21 +1215,37 @@ static void wg_routing_policy(char *iface, char *route, char *fwmark, const int 
 
 static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *allowed_ips, const char *fwmark, const int add)
 {
-	char *aip, *b, *table, *rt, *tp, *ip, *nm;
-	int route_type = 1;
+	char *aip, *aip_orig, *b, *table, *rt, *tp, *ip, *nm;
+	int parsed, route_type = 1;
 	char buffer[BUF_SIZE_32];
+	char table_buf[BUF_SIZE_32];
+
+	memset(table_buf, 0, BUF_SIZE_32);
+	table = rt = NULL;
 
 	tp = b = strdup(getNVRAMVar("wg%d_route", unit));
 	if (tp) {
-		if (vstrsep(b, "|", &rt, &table) < 3)
-			route_type = atoi(rt);
+		parsed = vstrsep(b, "|", &rt, &table);
 
+		if (!rt || rt[0] == '\0') {
+			logmsg(LOG_WARNING, "invalid route format for wg%d: missing routetype in '%s'", unit, b);
+			/* use default route_type = 1, table = NULL */
+		}
+		else if (parsed == 1) {
+			route_type = atoi(rt);
+			table = NULL;
+		}
+		else {
+			route_type = atoi(rt);
+			strlcpy(table_buf, table, BUF_SIZE_32);
+			table = table_buf;
+		}
 		free(tp);
 	}
 
 	/* check which routing type the user specified */
 	if (route_type > 0) { /* !off */
-		aip = strdup(allowed_ips);
+		aip = aip_orig = strdup(allowed_ips);
 		while ((b = strsep(&aip, ",")) != NULL) {
 			memset(buffer, 0, BUF_SIZE_32);
 			snprintf(buffer, BUF_SIZE_32, "%s", b);
@@ -1249,12 +1265,12 @@ static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *a
 				}
 			}
 			else { /* std route */
-				logmsg(LOG_DEBUG, "*** %s: running wg_route_peer() iface=[%s] route=[%s] table=[%s] add=[%d]", __FUNCTION__, iface, buffer, table, add);
-				wg_route_peer(iface, buffer, (route_type == 1 ? NULL : table), add);
+				logmsg(LOG_DEBUG, "*** %s: running wg_route_peer() iface=[%s] route=[%s] table=[%s] add=[%d]", __FUNCTION__, iface, buffer, (route_type == 1 || !table) ? "-" : table, add);
+				wg_route_peer(iface, buffer, (route_type == 1) ? NULL : table, add);
 			}
 		}
-		if (aip)
-			free(aip);
+		if (aip_orig)
+			free(aip_orig);
 	}
 }
 
