@@ -145,8 +145,6 @@ static void ovpn_cleanup_dirs(ovpn_type_t type, int unit) {
 		memset(buffer, 0, BUF_SIZE_64);
 		snprintf(buffer, BUF_SIZE_64, OVPN_DNS_DIR"/client%d.resolv", unit);
 		eval("rm", "-rf", buffer);
-
-		rmdir(OVPN_DNS_DIR);
 	}
 
 	/* Attempt to remove directories. Will fail if not empty */
