@@ -1732,20 +1732,26 @@ void write_wg_dnsmasq_config(FILE* f)
 		}
 	}
 
-	if ((dir = opendir(WG_DNS_DIR)) != NULL) {
-		while ((file = readdir(dir)) != NULL) {
-			fn = file->d_name;
+	dir = opendir(WG_DNS_DIR);
+	if (!dir)
+		return;
 
-			if (fn[0] == '.')
+	while ((file = readdir(dir)) != NULL) {
+		fn = file->d_name;
+
+		if (fn[0] == '.')
+			continue;
+
+		if (sscanf(fn, "%s.conf", device) == 1) {
+			memset(buf, 0, BUF_SIZE);
+			snprintf(buf, BUF_SIZE, "%s/%s", WG_DNS_DIR, fn);
+			if (fappend(f, buf) == -1) {
+				logmsg(LOG_WARNING, "fappend failed for %s (%s)", buf, strerror(errno));
 				continue;
-
-			if (sscanf(fn, "%s.conf", device) == 1) {
-				logmsg(LOG_DEBUG, "*** %s: adding Dnsmasq config from %s", __FUNCTION__, fn);
-				memset(buf, 0, BUF_SIZE);
-				snprintf(buf, BUF_SIZE, WG_DNS_DIR"/%s", fn);
-				fappend(f, buf);
 			}
+
+			logmsg(LOG_DEBUG, "*** %s: adding Dnsmasq config from %s", __FUNCTION__, fn);
 		}
-		closedir(dir);
 	}
+	closedir(dir);
 }
