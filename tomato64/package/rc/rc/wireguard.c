@@ -107,8 +107,8 @@ static int add_domain(domain_list_t *list, const char *domain)
 
 	/* allocate memory for the new domain */
 	list->domains[list->count] = (char*)malloc((strlen(domain) + 1) * sizeof(char));
-		if (!list->domains[list->count])
-			return -1;
+	if (!list->domains[list->count])
+		return -1;
 
 	/* copy domain */
 	strlcpy(list->domains[list->count], domain, strlen(domain) + 1);
@@ -241,6 +241,8 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, int add)
 
 	/* add new entries for domains not found in file */
 	if (add && list->domains) {
+		rewind(fp_read); /* reset file pointer to beginning */
+
 		for (i = 0; i < domain_count; i++) {
 			found = 0;
 
