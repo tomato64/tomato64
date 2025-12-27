@@ -1372,9 +1372,9 @@ static void wg_add_peer_privkey(const int unit, char *iface, const char *privkey
 static void wg_remove_peer(const int unit, char *iface, char *pubkey, char *allowed_ips, const char *fwmark)
 {
 	if (eval("wg", "set", iface, "peer", pubkey, "remove"))
-		logmsg(LOG_WARNING, "unable to remove peer %s from wireguard interface %s!", iface, pubkey);
+		logmsg(LOG_WARNING, "unable to remove peer %s from wireguard interface %s!", pubkey, iface);
 	else
-		logmsg(LOG_DEBUG, "peer %s has been removed from wireguard interface %s", iface, pubkey);
+		logmsg(LOG_DEBUG, "peer %s has been removed from wireguard interface %s", pubkey, iface);
 
 	/* remove routes (also default route if any) */
 	wg_route_peer_allowed_ips(unit, iface, allowed_ips, fwmark, 0); /* 0 = remove */
@@ -1414,11 +1414,12 @@ static int wg_remove_iface(char *iface)
 			logmsg(LOG_WARNING, "unable to delete wireguard interface %s!", iface);
 			return -1;
 		}
-		else
-			logmsg(LOG_DEBUG, "wireguard interface %s has been deleted", iface);
+		logmsg(LOG_DEBUG, "wireguard interface %s has been deleted", iface);
+		return 0;
 	}
-	else
-		logmsg(LOG_DEBUG, "no such interface: %s", iface);
+
+	/* interface doesn't exist - not an error, just log */
+	logmsg(LOG_DEBUG, "no such interface: %s", iface);
 
 	return 0;
 }
