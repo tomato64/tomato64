@@ -737,8 +737,11 @@ static int wg_set_iface_privkey(char *iface, const char *privkey)
 	memset(buffer, 0, BUF_SIZE);
 	snprintf(buffer, BUF_SIZE, WG_KEYS_DIR"/%s", iface);
 
-	fp = fopen(buffer, "w");
-	fprintf(fp, privkey);
+	if (!(fp = fopen(buffer, "w"))) {
+		logmsg(LOG_WARNING, "cannot open file for writing: %s (%s)", buffer, strerror(errno));
+		return -1;
+	}
+	fprintf(fp, "%s", privkey);
 	fclose(fp);
 
 	chmod(buffer, (S_IRUSR | S_IWUSR));
@@ -887,8 +890,11 @@ static int wg_set_peer_psk(char *iface, char *pubkey, const char *presharedkey)
 	memset(buffer, 0, BUF_SIZE);
 	snprintf(buffer, BUF_SIZE, WG_KEYS_DIR"/%s.psk", iface);
 
-	fp = fopen(buffer, "w");
-	fprintf(fp, presharedkey);
+	if (!(fp = fopen(buffer, "w"))) {
+		logmsg(LOG_WARNING, "cannot open file for writing: %s (%s)", buffer, strerror(errno));
+		return -1;
+	}
+	fprintf(fp, "%s", presharedkey);
 	fclose(fp);
 
 	if (eval("wg", "set", iface, "peer", pubkey, "preshared-key", buffer)) {
@@ -900,6 +906,7 @@ static int wg_set_peer_psk(char *iface, char *pubkey, const char *presharedkey)
 
 	/* remove file for security */
 	remove(buffer);
+
 	return err;
 }
 
