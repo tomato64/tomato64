@@ -64,7 +64,7 @@ static int ovpn_setup_iface(char *iface, ovpn_if_t iface_type, ovpn_route_t rout
 
 	/* Create tap/tun interface */
 	if (eval("openvpn", "--mktun", "--dev", iface)) {
-		logmsg(LOG_WARNING, "unable to create tunnel interface %s!", iface);
+		logmsg(LOG_WARNING, "unable to create tunnel interface %s (%s)!", iface, strerror(errno));
 		return -1;
 	}
 
