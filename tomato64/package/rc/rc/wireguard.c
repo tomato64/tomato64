@@ -703,7 +703,7 @@ static int wg_set_iface_addr(char *iface, const char *addr)
 
 	/* Set wireguard interface address(es) */
 	nv = nv_orig = strdup(addr);
-	while ((b = strsep(&nv, ",")) != NULL) {
+	while (nv && (b = strsep(&nv, ",")) != NULL) {
 		if (eval("ip", "addr", "add", b, "dev", iface)) {
 			logmsg(LOG_WARNING, "unable to add wireguard interface %s address of %s!", iface, b);
 			if (nv_orig)
@@ -1228,7 +1228,7 @@ static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *a
 		parsed = vstrsep(b, "|", &rt, &table);
 
 		if (!rt || rt[0] == '\0') {
-			logmsg(LOG_WARNING, "invalid route format for wg%d: missing routetype in '%s'", unit, b);
+			logmsg(LOG_WARNING, "invalid route format for wg%d: missing routetype in '%s'", unit, tp);
 			/* use default route_type = 1, table = NULL */
 		}
 		else if (parsed == 1) {
@@ -1243,10 +1243,12 @@ static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *a
 		free(tp);
 	}
 
+	logmsg(LOG_DEBUG, "*** %s: routing: iface=[%s] route_type=[%s] table=[%d]", __FUNCTION__, iface, route_type, table);
+
 	/* check which routing type the user specified */
 	if (route_type > 0) { /* !off */
 		aip = aip_orig = strdup(allowed_ips);
-		while ((b = strsep(&aip, ",")) != NULL) {
+		while (aip && (b = strsep(&aip, ",")) != NULL) {
 			memset(buffer, 0, BUF_SIZE_32);
 			snprintf(buffer, BUF_SIZE_32, "%s", b);
 
