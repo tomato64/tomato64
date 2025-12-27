@@ -689,7 +689,7 @@ static int wg_create_iface(char *iface)
 
 static int wg_set_iface_addr(char *iface, const char *addr)
 {
-	char *nv, *b;
+	char *nv, *nv_orig, *b;
 
 	/* Flush all addresses from interface */
 	if (eval("ip", "addr", "flush", "dev", iface)) {
@@ -700,18 +700,21 @@ static int wg_set_iface_addr(char *iface, const char *addr)
 		logmsg(LOG_DEBUG, "successfully flushed wireguard interface %s", iface);
 
 	/* Set wireguard interface address(es) */
-	nv = strdup(addr);
+	nv = nv_orig = strdup(addr);
 	while ((b = strsep(&nv, ",")) != NULL) {
 		if (eval("ip", "addr", "add", b, "dev", iface)) {
 			logmsg(LOG_WARNING, "unable to add wireguard interface %s address of %s!", iface, b);
+			if (nv_orig)
+				free(nv_orig);
+
 			return -1;
 		}
 		else
 			logmsg(LOG_DEBUG, "wireguard interface %s has had address %s add to it", iface, b);
 	}
 
-	if (nv)
-		free(nv);
+	if (nv_orig)
+		free(nv_orig);
 
 	return 0;
 }
@@ -1555,9 +1558,8 @@ void start_wireguard(const int unit)
 				else
 					wg_add_peer(unit, iface, key, buffer, psk, (mode == 3 ? ka : rka), ep, fwmark, port);
 			}
+			free(nv);
 		}
-		if (nvp)
-			free(nvp);
 
 		eval("ip", "route", "flush", "cache");
 
@@ -1668,9 +1670,8 @@ void stop_wireguard(const int unit)
 				else
 					wg_remove_peer(unit, iface, key, buffer, fwmark);
 			}
+			free(nv);
 		}
-		if (nvp)
-			free(nvp);
 
 		eval("ip", "rule", "delete", "table", fwmark, "fwmark", fwmark);
 		eval("ip", "route", "flush", "table", fwmark);
