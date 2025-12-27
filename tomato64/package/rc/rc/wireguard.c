@@ -547,11 +547,14 @@ static int wg_quick_iface(char *iface, const char *file, const int up)
 	memset(buffer, 0, BUF_SIZE_32);
 	snprintf(buffer, BUF_SIZE_32, WG_DIR"/%s.conf", iface);
 	if ((f = fopen(buffer, "w")) != NULL) {
-		fappend(f, file);
-		fclose(f);
+		if (fappend(f, file) < 0) {
+			logmsg(LOG_WARNING, "fappend failed for %s", buffer);
+			fclose(f);
+			return -1;
+		}
 	}
 	else
-		logmsg(LOG_WARNING, "unable to open wireguard configuration file %s for interface %s!", iface, file);
+		logmsg(LOG_WARNING, "unable to open wireguard configuration file %s for interface %s!", file, iface);
 
 	/* set up/down wireguard IF */
 	if (eval("wg-quick", up_down, buffer, iface, "--norestart")) {
