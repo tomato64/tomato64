@@ -31,6 +31,7 @@ install:
 
 ifneq ($(TCONFIG_STUBBY),y)
 	rm -f $(INSTALLDIR)/rom/etc/ssl/certs/ca-certificates.crt
+	rm -f $(INSTALLDIR)/rom/etc/getdns-root.key
 else
 ifneq ($(TCONFIG_IPV6),y)
 	install -m 0644 others/dot-servers-ipv4.dat $(INSTALLDIR)/rom/dot-servers.dat

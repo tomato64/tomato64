@@ -441,7 +441,7 @@ void start_stubby(void)
 	            "  - 127.0.0.1@%s\n",
 	            ntp_ready ? "  - GETDNS_TRANSPORT_TLS\n" : "  - GETDNS_TRANSPORT_UDP\n  - GETDNS_TRANSPORT_TCP\n",
 	            ntp_ready ? "GETDNS_AUTHENTICATION_REQUIRED" : "GETDNS_AUTHENTICATION_NONE",
-	            (ntp_ready && dnssec) ? "dnssec: GETDNS_EXTENSION_TRUE\n" : "",
+	            (ntp_ready && dnssec) ? "dnssec: GETDNS_EXTENSION_TRUE\ndnssec_trust_anchors: \"/etc/getdns-root.key\"\n" : "",
 	            nvram_get_int("stubby_force_tls13") ? "GETDNS_TLS1_3" : "GETDNS_TLS1_2",
 	            nvram_safe_get("stubby_port"));
 #ifdef TCONFIG_IPV6
