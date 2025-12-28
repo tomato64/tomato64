@@ -2245,7 +2245,7 @@ function init() {
 			W('<li><b>Type -> From Source IP<\/b> - Ex: "1.2.3.4", "1.2.3.4-2.3.4.5", "1.2.3.0/24".<\/li>');
 			W('<li><b>Type -> To Destination IP<\/b> - Ex: "1.2.3.4" or "1.2.3.0/24".<\/li>');
 			W('<li><b>Type -> To Domain<\/b> - Ex: "domain.com". Please enter one domain per line.<\/li>');
-			W('<li><b>IMPORTANT!<\/b> - Kill Switch: iptables rules (if \'KS\' for given entry is enabled) are always applied even if instance is down but in PBR mode (so-called strict Kill Switch).<\/li>');
+			W('<li><b>IMPORTANT!<\/b> - Kill Switch: the iptables rules (when "KS" is enabled for a given policy entry) are always applied, even if the VPN instance is down and Policy-Based Routing (PBR) mode is active. This implements the so-called "strict Kill Switch" behavior.<\/li>');
 			W('<\/ul>');
 			W('<\/div>');
 			W('<\/div>');
