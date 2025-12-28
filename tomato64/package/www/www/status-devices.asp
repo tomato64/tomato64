@@ -39,10 +39,10 @@ var clear2 = (discovery_clear === 1) ? 'clear' : '';
 var discovery_limit = cookie.get(cprefix+'_discovery_limit') || '60';
 var discovery_target = cookie.get(cprefix+'_discovery_target') || 'lan';
 var discovery_mode = cookie.get(cprefix+'_discovery_mode') || 'off';
-var show_wan_entries = cookie.get(cprefix+'_show_wan_entries') || '0';
 var wait = gc_time;
 var time_o;
 /* DISCOVERY-END */
+var show_wan_entries = cookie.get(cprefix+'_show_wan_entries') || '1';
 
 var ref = new TomatoRefresh('update.cgi', 'exec=devlist', 5, 'status_devices_refresh');
 
@@ -766,13 +766,13 @@ function earlyInit() {
 	dg.setup();
 /* DISCOVERY-BEGIN */
 	E('_discovery_clear').checked = (discovery_clear === 1);
-/* DISCOVERY-END */
 	addEvent(document, 'DOMContentLoaded', function() {
 		var sel = E('_show_wan_entries');
 		sel && addEvent(sel, 'change', function() {
 			ref.initPage(0, 3);
 		});
 	});
+/* DISCOVERY-END */
 	insOvl();
 }
 
@@ -850,7 +850,7 @@ function init() {
 	<li>You can hover over the fields in device list to find shortcuts to pre-populated pages: [DR] DHCP Reservation, [BWL] BandWidth Limiter, [AR] Access Restriction and [WLF] WireLess Filter.</li>
 	<li>Clicking on the MAC address will lookup the manufacturer by looking at the first half of the MAC address, this is purely informational.</li>
 	<li>When present, pressing an ON/OFF icon will send a Wake-up On Line datagram to the device, if the device supports that it will become active.</li>
-	<li>Clicking on the remaining lease time lets you terminate that lease, and if it is wireless connected it will also de-authenticate it. use with care.</li>
+	<li>Clicking on the remaining lease time lets you terminate that lease, and if it is wireless connected it will also de-authenticate it. Use with care.</li>
 </ul>
 <!-- DISCOVERY-BEGIN -->
 <b>Network Discovery</b>
