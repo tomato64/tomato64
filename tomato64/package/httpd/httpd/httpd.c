@@ -96,7 +96,7 @@
 #ifndef TOMATO64
 #define HTTP_MAX_LISTENERS	16
 #else
-#define HTTP_MAX_LISTENERS	17
+#define HTTP_MAX_LISTENERS	36
 #endif /* TOMATO64 */
 #define SERVER_NAME		"httpd"
 #define PROTOCOL		"HTTP/1.0"
