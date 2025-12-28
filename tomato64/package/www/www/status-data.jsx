@@ -115,7 +115,7 @@ if (nvram.dnscrypt_proxy == 1 || nvram.stubby_proxy == 1) {
 		if ((nvram.dnscrypt_proxy == 1 && nvram.dnscrypt_priority == 2) || (nvram.stubby_proxy == 1 && nvram.stubby_priority == 2)) /* no-resolv */
 			stats.dns[i] = 'Only: '+dns[i];
 		else if ((nvram.dnscrypt_proxy == 1 && nvram.dnscrypt_priority == 1) || (nvram.stubby_proxy == 1 && nvram.stubby_priority == 1)) /* strict-order */
-			stats.dns[i] = 'In order of (failover) preference: '+dns[i]+(stats.dns[i] > '' ? ','+stats.dns[i] : '');
+			stats.dns[i] = 'Failover order: (1) '+dns[i]+(stats.dns[i].length > 0 ? ' ➜ '+stats.dns[i].map(function(dns, idx) { return '(' + (idx+2) + ') ' + dns; }).join(' ➜ ') : '');
 		else
 			stats.dns[i] = 'Use all: '+dns[i]+(stats.dns[i] > '' ? ','+stats.dns[i] : '');
 	}
