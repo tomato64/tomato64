@@ -509,6 +509,8 @@ struct nvram_tuple router_defaults[] = {
 	{ "ipv6_debug",			"0"				, 0 },	/* enable/show debug infos */
 #endif
 	{ "ipv6_duid_type",		"3"				, 0 },	/* see RFC8415 Section 11; DUID-LLT = 1, DUID-EN = 2, DUID-LL = 3 (default), DUID-UUID = 4 */
+	{ "ipv6_ia_na_id",		"0"				, 0 },	/* default 0 - Allow to adjust it for some special providers! */
+	{ "ipv6_ia_pd_id",		"0"				, 0 },	/* default 0 - Allow to adjust it for some special providers! */
 	{ "ipv6_prefix",		""				, 0 },	/* The global-scope IPv6 prefix to route/advertise */
 	{ "ipv6_prefix_length",		"64"				, 0 },	/* The bit length of the prefix. Used by dhcp6c. For radvd, /64 is always assumed. */
 	{ "ipv6_rtr_addr",		""				, 0 },	/* defaults to $ipv6_prefix::1 */
