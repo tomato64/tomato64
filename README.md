@@ -1,4 +1,18 @@
-Tomato64 is a port of tomato firmware to the x86_64 and arm64 (GL-MT6000 | BPI-R3 | BPI-R3 Mini | NanoPi R6S) architectures.
+Tomato64 is a port of tomato firmware to the x86_64 and arm64 architectures.
+
+Supported devices:
+
+| Platform | Device |
+|----------|--------|
+| **x86_64** | x86_64_v2 (UEFI) |
+| **x86_64** | x86_64_v1 (BIOS) |
+| **Mediatek** | GL.iNet GL-MT6000/Flint 2 |
+| **Mediatek** | Banana Pi BPI-R3 |
+| **Mediatek** | Banana Pi BPI-R3 Mini |
+| **Rockchip** | NanoPi R6S |
+| **Broadcom** | Raspberry Pi 4 |
+
+---
 
 To build Tomato64 use Debian 12 or 13 and run:
 ```sh
@@ -7,12 +21,20 @@ apt install bc build-essential cpio file git libncurses-dev rsync unzip wget
 git clone https://github.com/tomato64/tomato64.git
 cd tomato64
 
-make (x86_64_v2 uefi) or
-make legacy (x86_64_v1 bios) or
-make mt6000 (GL.iNet GL-MT6000/Flint 2) or
-make bpi-r3 (Banana Pi BPI-R3) or
+# x86_64
+make (x86_64_v2 uefi)
+make legacy (x86_64_v1 bios)
+
+# Mediatek
+make mt6000 (GL.iNet GL-MT6000/Flint 2)
+make bpi-r3 (Banana Pi BPI-R3)
 make bpi-r3-mini (Banana Pi BPI-R3 Mini)
+
+# Rockchip
 make r6s (NanoPi R6S)
+
+# Broadcom
+make rpi4 (Raspberry Pi 4)
 
 make distclean (between builds)
 ```
