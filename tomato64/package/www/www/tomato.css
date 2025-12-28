@@ -1558,10 +1558,12 @@ div#unknown_router > .section-title {
 	margin: 20px 20px;
 }
 
+/* TOMATO64-REMOVE-BEGIN */
 .about b {
 	padding-top: 10px;
 	display: inline-block;
 }
+/* TOMATO64-REMOVE-END */
 
 .section > .about {
 	margin-bottom: 0;
