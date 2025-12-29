@@ -37,7 +37,7 @@ WGET="/usr/bin/wget -q"
 IS_USB=$(NG os_version | grep USB | wc -l)
 # TOMATO64-REMOVE-END
 # TOMATO64-BEGIN
-IS_USB=$(NG os_version | grep -E 'USB|MINI' | wc -l)
+IS_USB=$(NG os_version | grep -E 'USB|MINI|R6S' | wc -l)
 # TOMATO64-END
 [ "$IS_USB" -eq 0 ] && {
 	VER=$(NG os_version | awk '{ print $1" "$2 }')
