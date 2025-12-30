@@ -1,0 +1,6 @@
+config BR2_PACKAGE_WIRELESS_REGDB_OPENWRT
+	bool "wireless-regdb-openwrt"
+	select BR2_PACKAGE_HOST_PYTHON3
+	help
+	  Wireless regulatory database compiled from source.
+	  Uses OpenWrt's build method with patched 5GHz rules.
