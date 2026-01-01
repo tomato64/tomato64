@@ -55,7 +55,7 @@ ANON_NOTIFY=$(NG tomatoanon_notify)
 	VER_MNR=$(echo $VER | awk '{print $1}' | cut -d "." -f2 | sed 's/[^0-9]*//g')
 
 # TOMATO64-BEGIN
-	RESCHK=$(curl https://api.github.com/repos/tomato64/tomato64/releases/latest -s | jq -r '.name')
+	RESCHK=$(curl https://api.github.com/repos/tomato64/tomato64/releases/latest -s | jq -r '.tag_name')
 # TOMATO64-END
 
 # TOMATO64-REMOVE-BEGIN
