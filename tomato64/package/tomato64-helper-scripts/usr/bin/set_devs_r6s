@@ -63,6 +63,7 @@ else
 fi
 
 # Load required modules
+modprobe mt7921u
 modprobe leds_gpio
 
 # Set system LED (if not in stealth mode)

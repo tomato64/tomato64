@@ -1,6 +1,5 @@
 config BR2_PACKAGE_IWINFO
 	bool "iwinfo"
-	depends on BR2_aarch64
 	help
 	  Wireless information library with simplified API for nl80211
 	  and wext driver interfaces.

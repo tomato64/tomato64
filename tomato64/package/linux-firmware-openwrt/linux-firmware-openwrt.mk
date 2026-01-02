@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-LINUX_FIRMWARE_OPENWRT_VERSION = 20241110
+LINUX_FIRMWARE_OPENWRT_VERSION = 20251125
 LINUX_FIRMWARE_OPENWRT_SOURCE = linux-firmware-$(LINUX_FIRMWARE_OPENWRT_VERSION).tar.xz
 LINUX_FIRMWARE_OPENWRT_SITE = $(BR2_KERNEL_MIRROR)/linux/kernel/firmware
 
@@ -25,6 +25,19 @@ define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
 	cp $(@D)/rtl_nic/rtl812* $(TARGET_DIR)/lib/firmware/rtl_nic
 	cp $(@D)/rtl_nic/rtl8168* $(TARGET_DIR)/lib/firmware/rtl_nic
 	cp $(@D)/rtl_nic/rtl84* $(TARGET_DIR)/lib/firmware/rtl_nic
+endef
+endif
+
+# MediaTek MT7921/MT7922/MT7925 Bluetooth firmware for x86_64
+ifeq ($(BR2_PACKAGE_PLATFORM_X86_64),y)
+define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
+	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7925
+	# MT7921 Bluetooth firmware
+	cp $(@D)/mediatek/BT_RAM_CODE_MT7961_1_2_hdr.bin $(TARGET_DIR)/lib/firmware/mediatek
+	# MT7922 Bluetooth firmware
+	cp $(@D)/mediatek/BT_RAM_CODE_MT7922_1_1_hdr.bin $(TARGET_DIR)/lib/firmware/mediatek
+	# MT7925 Bluetooth firmware
+	cp $(@D)/mediatek/mt7925/BT_RAM_CODE_MT7925_1_1_hdr.bin $(TARGET_DIR)/lib/firmware/mediatek/mt7925
 endef
 endif
 

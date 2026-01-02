@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MT76_VERSION = 6467af3bcf1154c2ceb032c903d533f0c718bbc2
+MT76_VERSION = eb567bc7f9b692bbf1ddfe31dd740861c58ec85b
 MT76_SITE = $(call github,openwrt,mt76,$(MT76_VERSION))
 MT76_LICENSE = GPL-2.0
 MT76_DEPENDENCIES = linux mac80211
@@ -17,7 +17,7 @@ define MT76_BUILD_CMDS
 	--no-warn-unused-cli \
 	-DCMAKE_SYSTEM_NAME=Linux \
 	-DCMAKE_SYSTEM_VERSION=1 \
-	-DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+	-DCMAKE_SYSTEM_PROCESSOR=$(BR2_ARCH) \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_C_FLAGS_RELEASE="-DNDEBUG" \
 	-DCMAKE_CXX_FLAGS_RELEASE="-DNDEBUG" \
@@ -51,8 +51,8 @@ define MT76_BUILD_CMDS
 	-C $(LINUX_DIR) \
 	KCFLAGS="-fno-caller-saves " \
 	HOSTCFLAGS="-O2 -I$(HOST_DIR)/include/  -Wall -Wmissing-prototypes -Wstrict-prototypes" \
-	CROSS_COMPILE="aarch64-tomato64-linux-musl-" \
-	ARCH="arm64" \
+	CROSS_COMPILE="$(TARGET_CROSS)" \
+	ARCH="$(KERNEL_ARCH)" \
 	KBUILD_HAVE_NLS=no \
 	KBUILD_BUILD_USER="" \
 	KBUILD_BUILD_HOST="" \
@@ -72,6 +72,10 @@ define MT76_BUILD_CMDS
 	CONFIG_MT792x_USB=m \
 	CONFIG_MT7921_COMMON=m \
 	CONFIG_MT7921U=m \
+	CONFIG_MT7925_COMMON=m \
+	CONFIG_MT7925U=m \
+	$(if $(BR2_PACKAGE_PLATFORM_X86_64),CONFIG_MT7921E=m) \
+	$(if $(BR2_PACKAGE_PLATFORM_X86_64),CONFIG_MT7925E=m) \
 	CONFIG_MT76_USB=m \
 	M="$(@D)" \
 	NOSTDINC_FLAGS="-nostdinc -isystem $(TARGET_DIR)/include -I$(@D) -I$(STAGING_DIR)/usr/include/mac80211-backport/uapi -I$(STAGING_DIR)/usr/include/mac80211-backport -I$(STAGING_DIR)/usr/include/mac80211/uapi -I$(STAGING_DIR)/usr/include/mac80211 -include backport/autoconf.h -include backport/backport.h -DCONFIG_MAC80211_MESH $(if $(BR2_PACKAGE_PLATFORM_MEDIATEK),-DCONFIG_MT798X_WMAC)" \
@@ -82,18 +86,40 @@ endef
 define MT76_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek
+	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7925
 
+	# Core modules
 	$(INSTALL) $(@D)/mt76-connac-lib.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 	$(INSTALL) $(@D)/mt76.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 	$(INSTALL) $(@D)/mt76-usb.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 	$(INSTALL) $(@D)/mt792x-usb.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 	$(INSTALL) $(@D)/mt792x-lib.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+
+	# MT7921 USB modules and firmware (all platforms)
 	$(INSTALL) $(@D)/mt7921/mt7921-common.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 	$(INSTALL) $(@D)/mt7921/mt7921u.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
-
 	$(INSTALL) $(@D)/firmware/WIFI_MT7961_patch_mcu_1_2_hdr.bin	$(TARGET_DIR)/lib/firmware/mediatek
 	$(INSTALL) $(@D)/firmware/WIFI_RAM_CODE_MT7961_1.bin		$(TARGET_DIR)/lib/firmware/mediatek
+
+	# MT7922 firmware (all platforms - uses MT7921 driver)
+	$(INSTALL) $(@D)/firmware/WIFI_MT7922_patch_mcu_1_1_hdr.bin	$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/WIFI_RAM_CODE_MT7922_1.bin		$(TARGET_DIR)/lib/firmware/mediatek
+
+	# MT7925 USB modules and firmware (all platforms)
+	$(INSTALL) $(@D)/mt7925/mt7925-common.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/mt7925/mt7925u.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/firmware/mt7925/WIFI_MT7925_PATCH_MCU_1_1_hdr.bin	$(TARGET_DIR)/lib/firmware/mediatek/mt7925
+	$(INSTALL) $(@D)/firmware/mt7925/WIFI_RAM_CODE_MT7925_1_1.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7925
 endef
+
+# Install MT7921e and MT7925e PCIe modules for x86_64 only
+ifeq ($(BR2_PACKAGE_PLATFORM_X86_64),y)
+define MT76_INSTALL_X86_64_MODULES
+	$(INSTALL) $(@D)/mt7921/mt7921e.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/mt7925/mt7925e.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+endef
+MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_X86_64_MODULES
+endif
 
 ifeq ($(BR2_PACKAGE_PLATFORM_MEDIATEK),y)
 define MT76_INSTALL_MEDIATEK_MODULES

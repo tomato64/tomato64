@@ -1,5 +1,4 @@
 config BR2_PACKAGE_HOST_FWTOOL
 	bool "host fwtool"
-	depends on BR2_aarch64
 	help
 	  Utility for appending and extracting firmware metadata and signatures

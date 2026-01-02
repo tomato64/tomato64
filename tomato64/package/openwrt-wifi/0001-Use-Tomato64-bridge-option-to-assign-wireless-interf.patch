@@ -1,0 +1,83 @@
+From 663e5067a48c707765067d15d0f64e0926c7555e Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Thu, 8 Jan 2026 10:06:08 -0700
+Subject: [PATCH] Use Tomato64 bridge option to assign wireless interfaces to a
+ bridges
+
+---
+ .../usr/share/schema/wireless.wifi-iface.json |  4 +++
+ .../files/lib/netifd/wireless-device.uc       | 29 +++++++++++++++++--
+ 2 files changed, 30 insertions(+), 3 deletions(-)
+
+diff --git a/package/network/config/wifi-scripts/files-ucode/usr/share/schema/wireless.wifi-iface.json b/package/network/config/wifi-scripts/files-ucode/usr/share/schema/wireless.wifi-iface.json
+index f5507305bd..a10aa7a48c 100644
+--- a/package/network/config/wifi-scripts/files-ucode/usr/share/schema/wireless.wifi-iface.json
++++ b/package/network/config/wifi-scripts/files-ucode/usr/share/schema/wireless.wifi-iface.json
+@@ -188,6 +188,10 @@
+ 		"bssid_whitelist": {
+ 			"type": "array"
+ 		},
++		"bridge": {
++			"description": "Direct bridge interface name to join (e.g. br0). Used when network interface lookup is not available.",
++			"type": "string"
++		},
+ 		"ca_cert": {
+ 			"description": "Specifies the path the CA certificate used for authentication",
+ 			"type": "string"
+diff --git a/package/network/config/wifi-scripts/files/lib/netifd/wireless-device.uc b/package/network/config/wifi-scripts/files/lib/netifd/wireless-device.uc
+index 428db6ee6a..d6e49956ad 100644
+--- a/package/network/config/wifi-scripts/files/lib/netifd/wireless-device.uc
++++ b/package/network/config/wifi-scripts/files/lib/netifd/wireless-device.uc
+@@ -79,6 +79,15 @@ function handle_link(dev, data, up)
+ 			link_ext: true,
+ 			up,
+ 		});
++
++	/* Tomato64: Handle direct bridge attachment */
++	if (data.bridge) {
++		if (up) {
++			system(`ip link set ${dev} master ${data.bridge} 2>/dev/null`);
++		} else {
++			system(`ip link set ${dev} nomaster 2>/dev/null`);
++		}
++	}
+ }
+ 
+ function wdev_config_init(wdev)
+@@ -123,9 +132,14 @@ function wdev_config_init(wdev)
+ 			vlans, stas,
+ 		};
+ 
+-		for (let net in vif.config.network)
+-			if (netifd.interface_get_bridge(net, iface))
+-				break;
++//		for (let net in vif.config.network)
++//			if (netifd.interface_get_bridge(net, iface))
++//				break;
++
++		if (vif.config.bridge) {
++			iface.bridge = vif.config.bridge;
++			iface['bridge-ifname'] = vif.config.bridge;
++		}
+ 	}
+ 
+ 	wdev.handler_config = {
+@@ -356,6 +370,15 @@ function wdev_update_disabled_vifs(wdev)
+ 			cache[name] = ifindex;
+ 		else
+ 			delete cache[name];
++
++		/* Tomato64: Detect bridge config changes */
++		let bridge_cache_key = name + "_bridge";
++		if (vif.config.bridge != cache[bridge_cache_key])
++			changed = true;
++		if (vif.config.bridge)
++			cache[bridge_cache_key] = vif.config.bridge;
++		else
++			delete cache[bridge_cache_key];
+ 	}
+ 
+ 	if (changed || !is_equal(prev_disabled, disabled))
+-- 
+2.47.3
+

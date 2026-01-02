@@ -1,6 +1,5 @@
 config BR2_PACKAGE_JSONPATH
 	bool "jsonpath"
-	depends on BR2_aarch64
 	select BR2_PACKAGE_LIBUBOX
 	select BR2_PACKAGE_JSON_C
 	help

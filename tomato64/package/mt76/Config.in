@@ -1,5 +1,4 @@
 config BR2_PACKAGE_MT76
 	bool "mt76"
-	depends on BR2_aarch64
 	help
 	  Mediatek OpenWrt Wifi Driver

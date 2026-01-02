@@ -1,5 +1,4 @@
 config BR2_PACKAGE_LIBNL_TINY
 	bool "libnl-tiny"
-	depends on BR2_aarch64
 	help
 	  OpenWrt libnl-tiny

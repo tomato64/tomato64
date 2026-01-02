@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-IWINFO_VERSION = b94f066e3f5839b8509483cdd8f4f582a45fa233
+IWINFO_VERSION = 2ebef3da84e8e35e54657eb8d7e493a9a144da4d
 IWINFO_SITE = https://git.openwrt.org/project/iwinfo.git
 IWINFO_SITE_METHOD = git
 IWINFO_DEPENDENCIES = libnl-tiny libubox ubus libuci
@@ -18,8 +18,8 @@ IWINFO_CFLAGS += \
         -D_GNU_SOURCE
 
 define IWINFO_BUILD_CMDS
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) CFLAGS="$(IWINFO_CFLAGS)" BACKENDS="nl80211" libiwinfo.so -C $(@D)
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) CFLAGS="$(IWINFO_CFLAGS)" BACKENDS="nl80211" iwinfo -C $(@D)
+	$(MAKE) $(TARGET_CONFIGURE_OPTS) FPIC="-fPIC" CFLAGS="$(IWINFO_CFLAGS)" BACKENDS="nl80211" libiwinfo.so -C $(@D)
+	$(MAKE) $(TARGET_CONFIGURE_OPTS) FPIC="-fPIC" CFLAGS="$(IWINFO_CFLAGS)" BACKENDS="nl80211" iwinfo -C $(@D)
 endef
 
 define IWINFO_INSTALL_STAGING_CMDS

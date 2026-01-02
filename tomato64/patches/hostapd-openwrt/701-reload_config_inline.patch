@@ -1,22 +1,14 @@
-From be1535cc4b5c57af1420663b335255b23d2586b7 Mon Sep 17 00:00:00 2001
-From: lancethepants <lancethepants@gmail.com>
-Date: Fri, 26 Sep 2025 13:08:47 -0600
-Subject: [PATCH] This implements vastly improved dynamic configuration reload
- support. It can handle configuration changes on individual wifi interfaces,
- as well as adding/removing interfaces.
+From: Felix Fietkau <nbd@nbd.name>
+Date: Fri, 26 May 2023 10:23:59 +0200
+Subject: [PATCH] Add ucode support, use ucode for the main ubus object #2
 
----
- hostapd/config_file.c        | 9 ++++++++-
- hostapd/main.c               | 6 +++++-
- src/ap/hostapd.c             | 9 +++++++--
- wpa_supplicant/config_file.c | 7 ++++++-
- 4 files changed, 26 insertions(+), 5 deletions(-)
+This implements vastly improved dynamic configuration reload support.
+It can handle configuration changes on individual wifi interfaces, as well
+as adding/removing interfaces.
 
-diff --git a/hostapd/config_file.c b/hostapd/config_file.c
-index 9c50da3..33d49d2 100644
 --- a/hostapd/config_file.c
 +++ b/hostapd/config_file.c
-@@ -5207,7 +5207,14 @@ struct hostapd_config * hostapd_config_read(const char *fname)
+@@ -4983,7 +4983,14 @@ struct hostapd_config * hostapd_config_r
  	int errors = 0;
  	size_t i;
  
@@ -32,50 +24,11 @@ index 9c50da3..33d49d2 100644
  	if (f == NULL) {
  		wpa_printf(MSG_ERROR, "Could not open configuration file '%s' "
  			   "for reading.", fname);
-diff --git a/hostapd/main.c b/hostapd/main.c
-index 6ce5be5..c6869f8 100644
---- a/hostapd/main.c
-+++ b/hostapd/main.c
-@@ -365,7 +365,11 @@ hostapd_interface_init(struct hapd_interfaces *interfaces, const char *if_name,
- 	struct hostapd_iface *iface;
- 	int k;
- 
--	wpa_printf(MSG_DEBUG, "Configuration file: %s", config_fname);
-+	if (!strncmp(config_fname, "data:", 5)) {
-+		wpa_printf(MSG_DEBUG, "Configuration file: %s", "<inline>");
-+	} else {
-+		wpa_printf(MSG_DEBUG, "Configuration file: %s", config_fname);
-+	}
- 	iface = hostapd_init(interfaces, config_fname);
- 	if (!iface)
- 		return NULL;
-diff --git a/src/ap/hostapd.c b/src/ap/hostapd.c
-index 5151fd4..51cd61b 100644
---- a/src/ap/hostapd.c
-+++ b/src/ap/hostapd.c
-@@ -3354,8 +3354,13 @@ hostapd_interface_init_bss(struct hapd_interfaces *interfaces, const char *phy,
- 		}
- 	}
- 
--	wpa_printf(MSG_INFO, "Configuration file: %s (phy %s)%s",
--		   config_fname, phy, iface ? "" : " --> new PHY");
-+	if (!strncmp(config_fname, "data:", 5)) {
-+		wpa_printf(MSG_INFO, "Configuration file: %s (phy %s)%s",
-+		     "<inline>", phy, iface ? "" : " --> new PHY");
-+	} else {
-+		wpa_printf(MSG_INFO, "Configuration file: %s (phy %s)%s",
-+		     config_fname, phy, iface ? "" : " --> new PHY");
-+	}
- 	if (iface) {
- 		struct hostapd_config *conf;
- 		struct hostapd_bss_config **tmp_conf;
-diff --git a/wpa_supplicant/config_file.c b/wpa_supplicant/config_file.c
-index 0dc4ca9..bdd9f28 100644
 --- a/wpa_supplicant/config_file.c
 +++ b/wpa_supplicant/config_file.c
-@@ -326,8 +326,13 @@ struct wpa_config * wpa_config_read(const char *name, struct wpa_config *cfgp,
- 	while (cred_tail && cred_tail->next)
- 		cred_tail = cred_tail->next;
+@@ -390,8 +390,13 @@ struct wpa_config * wpa_config_read(cons
+ 	while (identity_tail && identity_tail->next)
+ 		identity_tail = identity_tail->next;
  
 +	if (!strncmp(name, "data:", 5)) {
 +		f = fmemopen((void *)(name + 5), strlen(name + 5), "r");
@@ -88,6 +41,36 @@ index 0dc4ca9..bdd9f28 100644
  	if (f == NULL) {
  		wpa_printf(MSG_ERROR, "Failed to open config file '%s', "
  			   "error: %s", name, strerror(errno));
--- 
-2.39.5
-
+--- a/hostapd/main.c
++++ b/hostapd/main.c
+@@ -406,7 +406,11 @@ hostapd_interface_init(struct hapd_inter
+ 	struct hostapd_iface *iface;
+ 	int k;
+ 
+-	wpa_printf(MSG_DEBUG, "Configuration file: %s", config_fname);
++	if (!strncmp(config_fname, "data:", 5)) {
++		wpa_printf(MSG_DEBUG, "Configuration file: %s", "<inline>");
++	} else {
++		wpa_printf(MSG_DEBUG, "Configuration file: %s", config_fname);
++	}
+ 	iface = hostapd_init(interfaces, config_fname);
+ 	if (!iface)
+ 		return NULL;
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -3399,8 +3399,13 @@ hostapd_interface_init_bss(struct hapd_i
+ 		}
+ 	}
+ 
+-	wpa_printf(MSG_INFO, "Configuration file: %s (phy %s)%s",
+-		   config_fname, phy, iface ? "" : " --> new PHY");
++	if (!strncmp(config_fname, "data:", 5)) {
++		wpa_printf(MSG_INFO, "Configuration file: %s (phy %s)%s",
++		     "<inline>", phy, iface ? "" : " --> new PHY");
++	} else {
++		wpa_printf(MSG_INFO, "Configuration file: %s (phy %s)%s",
++		     config_fname, phy, iface ? "" : " --> new PHY");
++	}
+ 
+ 	conf = interfaces->config_read_cb(config_fname);
+ 	if (!conf)

@@ -1,6 +1,5 @@
 config BR2_PACKAGE_RELAYD
 	bool "relayd"
-	depends on BR2_aarch64
 	select BR2_PACKAGE_LIBUBOX
 	help
 	  IPv4 pseudo-bridge routing daemon

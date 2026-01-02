@@ -4,10 +4,10 @@
 #
 ################################################################################
 
-NETIFD_VERSION = 7901e66c5f273bceee8981bc8a0c8b0e60945f60
+NETIFD_VERSION = 777f5942fa7d6245f6ad29daa1daecc400344d37
 NETIFD_SITE = https://git.openwrt.org/project/netifd.git
 NETIFD_SITE_METHOD=git
-NETIFD_DEPENDENCIES = libubox ubus udebug libuci libnl-tiny
+NETIFD_DEPENDENCIES = libubox ubus udebug libuci libnl-tiny ucode
 NETIFD_INSTALL_STAGING = YES
 
 NETIFD_CFLAGS = \

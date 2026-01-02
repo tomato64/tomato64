@@ -394,19 +394,56 @@ if [ "$MODE" = "start" ]; then
 	if [ "${start_hostapd}" == "1" ] || [ "${start_wpa_supplicant}" == "1" ];
 	then
 		start-stop-daemon -b -S -n ubusd -x /usr/sbin/ubusd
+
+		# Wait for ubus socket to be ready before starting netifd
+		ubus_timeout=50  # 5 seconds (50 * 0.1s)
+		while [ $ubus_timeout -gt 0 ] && [ ! -S /var/run/ubus/ubus.sock ]; do
+			sleep 0.1
+			ubus_timeout=$((ubus_timeout - 1))
+		done
+		if [ ! -S /var/run/ubus/ubus.sock ]; then
+			logger -p user.error "ubus socket not ready after timeout, netifd may fail to register"
+		fi
+
 		start-stop-daemon -b -S -n netifd -x /usr/sbin/netifd
 
-		if [ "${start_wpa_supplicant}" == "1" ];
-		then
-			mkdir -p /var/run/wpa_supplicant
-			start-stop-daemon -b -S -n wpa_supplicant -x /usr/sbin/wpa_supplicant -- -n -s -g /var/run/wpa_supplicant/global
+		# Wait for netifd to register with ubus before starting hostapd/wpa_supplicant
+		netifd_timeout=50  # 5 seconds (50 * 0.1s)
+		while [ $netifd_timeout -gt 0 ] && ! ubus list network.wireless >/dev/null 2>&1; do
+			sleep 0.1
+			netifd_timeout=$((netifd_timeout - 1))
+		done
+		if ! ubus list network.wireless >/dev/null 2>&1; then
+			logger -p user.error "netifd did not register network.wireless with ubus, WiFi may not work"
 		fi
 
-		if [ "${start_hostapd}" == "1" ];
-		then
-			start-stop-daemon -b -S -n hostapd -x /usr/sbin/hostapd -- -s -g /var/run/hostapd/global
+		# In OpenWrt v25+, wpa_supplicant must always run - it coordinates with hostapd
+		# via ubus for MAC address management, PHY state, etc. even in AP-only mode
+		mkdir -p /var/run/wpa_supplicant
+		start-stop-daemon -b -S -n wpa_supplicant -x /usr/sbin/wpa_supplicant -- -n -s -g /var/run/wpa_supplicant/global
+
+		# Wait for wpa_supplicant to register with ubus
+		wpas_timeout=50  # 5 seconds (50 * 0.1s)
+		while [ $wpas_timeout -gt 0 ] && ! ubus list wpa_supplicant >/dev/null 2>&1; do
+			sleep 0.1
+			wpas_timeout=$((wpas_timeout - 1))
+		done
+		if ! ubus list wpa_supplicant >/dev/null 2>&1; then
+			logger -p user.error "wpa_supplicant did not register with ubus"
 		fi
 
+		# hostapd must also always run - it coordinates with wpa_supplicant via ubus
+		start-stop-daemon -b -S -n hostapd -x /usr/sbin/hostapd -- -s -g /var/run/hostapd/global
+
+		# Wait for hostapd to register with ubus
+		hostapd_timeout=50  # 5 seconds (50 * 0.1s)
+		while [ $hostapd_timeout -gt 0 ] && ! ubus list hostapd >/dev/null 2>&1; do
+			sleep 0.1
+			hostapd_timeout=$((hostapd_timeout - 1))
+		done
+		if ! ubus list hostapd >/dev/null 2>&1; then
+			logger -p user.error "hostapd did not register with ubus"
+		fi
 
 		timeout_duration=20
 		start_time=$(date +%s)

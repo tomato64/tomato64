@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-WIRELESS_REGDB_OPENWRT_VERSION = 2025.07.10
+WIRELESS_REGDB_OPENWRT_VERSION = 2025.10.07
 WIRELESS_REGDB_OPENWRT_SOURCE = wireless-regdb-$(WIRELESS_REGDB_OPENWRT_VERSION).tar.xz
 WIRELESS_REGDB_OPENWRT_SITE = $(BR2_KERNEL_MIRROR)/software/network/wireless-regdb
 WIRELESS_REGDB_OPENWRT_LICENSE = ISC

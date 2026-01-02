@@ -4,13 +4,14 @@
 #
 ################################################################################
 
-UCODE_VERSION = 3f64c8089bf3ea4847c96b91df09fbfcaec19e1d
+UCODE_VERSION = f7c2b97a82e8b505bf4b2c0d8883b5116e1960f9
 UCODE_SITE = $(call github,jow-,ucode,$(UCODE_VERSION))
 UCODE_LICENSE = GPL-2.0
-UCODE_DEPENDENCIES = libubox ubus libuci libnl-tiny
+UCODE_DEPENDENCIES = libubox ubus libuci libnl-tiny libmd
 UCODE_INSTALL_STAGING = YES
 
 UCODE_CONF_OPTS = -DDEBUG_SUPPORT=OFF \
+		  -DDIGEST_SUPPORT=ON \
 		  -DFS_SUPPORT=ON \
 		  -DLOG_SUPPORT=OFF \
 		  -DMATH_SUPPORT=ON \

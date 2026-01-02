@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-IW_OPENWRT_VERSION = 6.9
+IW_OPENWRT_VERSION = 6.17
 IW_OPENWRT_SOURCE = iw-$(IW_OPENWRT_VERSION).tar.xz
 IW_OPENWRT_SITE = $(BR2_KERNEL_MIRROR)/software/network/iw
 IW_OPENWRT_LICENSE = ISC
@@ -14,6 +14,7 @@ IW_OPENWRT_DEPENDENCIES = host-pkgconf libnl-tiny
 IW_OPENWRT_MAKE_ENV = \
 	$(TARGET_MAKE_ENV) \
 	PKG_CONFIG="$(HOST_DIR)/bin/pkg-config" \
+	NO_PKG_CONFIG=1 \
 	NL1FOUND="" \
 	NL2FOUND=Y \
 	IW_FULL=1 \

@@ -1,6 +1,6 @@
-From f9e7a46a35f6d85cf958e1bb5b047cfbc64adb65 Mon Sep 17 00:00:00 2001
+From 176a130f4adba285467b2a75c395adfe038b87b3 Mon Sep 17 00:00:00 2001
 From: lancethepants <lancethepants@gmail.com>
-Date: Thu, 22 May 2025 08:17:07 -0600
+Date: Thu, 8 Jan 2026 23:11:53 -0700
 Subject: [PATCH] mt7986a-glinet-gl-mt6000.dts
 
 ---
@@ -10,20 +10,20 @@ Subject: [PATCH] mt7986a-glinet-gl-mt6000.dts
  create mode 100644 arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts
 
 diff --git a/arch/arm64/boot/dts/mediatek/Makefile b/arch/arm64/boot/dts/mediatek/Makefile
-index 4e60dce42..cd02f42ce 100644
+index 7d4c852cb..dbd5e589b 100644
 --- a/arch/arm64/boot/dts/mediatek/Makefile
 +++ b/arch/arm64/boot/dts/mediatek/Makefile
-@@ -16,6 +16,7 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7986a-bananapi-bpi-r3-sd.dtbo
- dtb-$(CONFIG_ARCH_MEDIATEK) += mt7986a-bananapi-bpi-r3-respeaker-2mics.dtbo
- dtb-$(CONFIG_ARCH_MEDIATEK) += mt7986a-rfb.dtb
- dtb-$(CONFIG_ARCH_MEDIATEK) += mt7986b-rfb.dtb
+@@ -25,6 +25,7 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-bananapi-bpi-r4.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-bananapi-bpi-r4-2g5.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-bananapi-bpi-r4-emmc.dtbo
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-bananapi-bpi-r4-sd.dtbo
 +dtb-$(CONFIG_ARCH_MEDIATEK) += mt7986a-glinet-gl-mt6000.dtb
- dtb-$(CONFIG_ARCH_MEDIATEK) += mt8167-pumpkin.dtb
- dtb-$(CONFIG_ARCH_MEDIATEK) += mt8173-elm.dtb
- dtb-$(CONFIG_ARCH_MEDIATEK) += mt8173-elm-hana.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-rfb.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-rfb-emmc.dtbo
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-rfb-eth1-aqr.dtbo
 diff --git a/arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts b/arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts
 new file mode 100644
-index 000000000..1c815ae5c
+index 000000000..529443a1d
 --- /dev/null
 +++ b/arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts
 @@ -0,0 +1,356 @@
@@ -229,7 +229,7 @@ index 000000000..1c815ae5c
 +			       "WF1_HB2", "WF1_HB3", "WF1_HB4", "WF1_HB0",
 +			       "WF1_HB5", "WF1_HB6", "WF1_HB7", "WF1_HB8",
 +			       "WF1_TOP_CLK", "WF1_TOP_DATA";
-+			drive-strength = <4>;
++			drive-strength = <MTK_DRIVE_4mA>;
 +		};
 +	};
 +
@@ -243,22 +243,22 @@ index 000000000..1c815ae5c
 +			       "EMMC_DATA_3", "EMMC_DATA_4", "EMMC_DATA_5",
 +			       "EMMC_DATA_6", "EMMC_DATA_7", "EMMC_CMD";
 +			input-enable;
-+			drive-strength = <4>;
-+			mediatek,pull-up-adv = <1>;	/* pull-up 10K */
++			drive-strength = <MTK_DRIVE_4mA>;
++			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;	/* pull-up 10K */
 +		};
 +		conf-clk {
 +			pins = "EMMC_CK";
-+			drive-strength = <6>;
-+			mediatek,pull-down-adv = <2>;	/* pull-down 50K */
++			drive-strength = <MTK_DRIVE_6mA>;
++			bias-pull-down = <MTK_PUPD_SET_R1R0_10>;	/* pull-down 50K */
 +		};
 +		conf-ds {
 +			pins = "EMMC_DSL";
-+			mediatek,pull-down-adv = <2>;	/* pull-down 50K */
++			bias-pull-down = <MTK_PUPD_SET_R1R0_10>;	/* pull-down 50K */
 +		};
 +		conf-rst {
 +			pins = "EMMC_RSTB";
-+			drive-strength = <4>;
-+			mediatek,pull-up-adv = <1>;	/* pull-up 10K */
++			drive-strength = <MTK_DRIVE_4mA>;
++			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;	/* pull-up 10K */
 +		};
 +	};
 +
@@ -272,22 +272,22 @@ index 000000000..1c815ae5c
 +			       "EMMC_DATA_3", "EMMC_DATA_4", "EMMC_DATA_5",
 +			       "EMMC_DATA_6", "EMMC_DATA_7", "EMMC_CMD";
 +			input-enable;
-+			drive-strength = <4>;
-+			mediatek,pull-up-adv = <1>;	/* pull-up 10K */
++			drive-strength = <MTK_DRIVE_4mA>;
++			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;	/* pull-up 10K */
 +		};
 +		conf-clk {
 +			pins = "EMMC_CK";
-+			drive-strength = <6>;
-+			mediatek,pull-down-adv = <2>;	/* pull-down 50K */
++			drive-strength = <MTK_DRIVE_6mA>;
++			bias-pull-down = <MTK_PUPD_SET_R1R0_10>;	/* pull-down 50K */
 +		};
 +		conf-ds {
 +			pins = "EMMC_DSL";
-+			mediatek,pull-down-adv = <2>;	/* pull-down 50K */
++			bias-pull-down = <MTK_PUPD_SET_R1R0_10>;	/* pull-down 50K */
 +		};
 +		conf-rst {
 +			pins = "EMMC_RSTB";
-+			drive-strength = <4>;
-+			mediatek,pull-up-adv = <1>;	/* pull-up 10K */
++			drive-strength = <MTK_DRIVE_4mA>;
++			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;	/* pull-up 10K */
 +		};
 +	};
 +};
@@ -384,5 +384,5 @@ index 000000000..1c815ae5c
 +	};
 +};
 -- 
-2.39.5
+2.47.3
 
