@@ -134,7 +134,7 @@ static int route_manip(int cmd, char *name, int metric, char *dst, char *gateway
 	int s, err = 0;
 	struct rtentry rt;
 
-	logmsg(LOG_DEBUG, "*** %s: cmd=[%s] name=[%s] addr=[%s] netmask=[%s] gateway=[%s] metric=[%d]", __FUNCTION__, cmd == SIOCADDRT ? "ADD" : "DEL", name, dst, genmask, gateway, metric);
+	logmsg(LOG_DEBUG, "*** %s: cmd=[%s] name=[%s] addr=[%s] netmask=[%s] gateway=[%s] metric=[%d]", __FUNCTION__, cmd == SIOCADDRT ? "ADD" : "DEL", name ? : "", dst ? : "", genmask ? : "", gateway ? : "", metric ? : 0);
 
 	/* open a raw socket to the kernel */
 	if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
@@ -166,7 +166,7 @@ static int route_manip(int cmd, char *name, int metric, char *dst, char *gateway
 	if (ioctl(s, cmd, &rt) < 0) {
 		err = errno;
 		if (cmd == SIOCADDRT)
-			logerr(__FUNCTION__, __LINE__, name);
+			logerr(__FUNCTION__, __LINE__, name ? : "");
 	}
 
 	close(s);
