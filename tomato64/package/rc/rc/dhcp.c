@@ -343,6 +343,8 @@ int dhcpc_event_main(int argc, char **argv)
 	unsigned int i;
 
 	ifname = getenv("interface");
+	if (ifname == NULL)
+		return EINVAL;
 
 	memset(tmp, 0, sizeof(tmp));
 	strlcpy(prefix, "wan", sizeof(prefix)); /* default */
@@ -367,7 +369,7 @@ int dhcpc_event_main(int argc, char **argv)
 
 	logmsg(LOG_DEBUG, "*** %s: interface=%s wan_prefix=%s event=%s", __FUNCTION__, ifname, prefix, argv[1] ? : "");
 
-	if ((!argv[1]) || (ifname == NULL))
+	if (!argv[1])
 		return EINVAL;
 	else if (strstr(argv[1], "deconfig"))
 		return deconfig(ifname, prefix);
