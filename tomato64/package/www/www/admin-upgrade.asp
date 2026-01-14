@@ -19,7 +19,7 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("jffs2_on,jffs2_auto_unmount,remote_upgrade"); %>
+//	<% nvram("jffs2_on,jffs2_auto_unmount,remote_upgrade,fname"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 //	<% nvram("jffs2_on,jffs2_auto_unmount,remote_upgrade,t_model_name,t_boot_type"); %>
@@ -205,6 +205,7 @@ function upgrade() {
 function earlyInit() {
 	E('upgradenotice').style.display = (nvram.remote_upgrade == 1 ? 'none' : 'block');
 	E('afu-size').innerHTML = '&nbsp; '+scaleSize(sysinfo.totalfreeram)+'&nbsp; <small>(approx. size that can be buffered completely in RAM)<\/small>';
+	E('afu-fname').innerHTML = '&nbsp; '+nvram.fname;
 /* JFFS2-BEGIN */
 	if (nvram.jffs2_on != 0 && nvram.jffs2_auto_unmount == 0) {
 		E('afu-warn').style.display = 'block';
@@ -265,6 +266,10 @@ function earlyInit() {
 /* TOMATO64-BEGIN */
 				<td>&nbsp; <% version(1); %><% version(4); %></td>
 /* TOMATO64-END */
+			</tr>
+			<tr>
+				<td>Current Filename:</td>
+				<td id="afu-fname"></td>
 			</tr>
 			<tr>
 				<td>Free Memory:</td>
