@@ -250,8 +250,10 @@ static int bound(char *ifname, int renew, char *prefix)
 			for (i = 1; i <= MWAN_MAX; i++) {
 				memset(tmp, 0, sizeof(tmp));
 				snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%d"), i);
-				if (!strcmp(prefix, tmp))
+				if (!strcmp(prefix, tmp)) {
 					start_pppoe(PPPOEWAN(i), prefix);
+					break; /* found prefix - break */
+				}
 			}
 			break;
 		}
@@ -355,13 +357,17 @@ int dhcpc_event_main(int argc, char **argv)
 
 		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), "%s_ifname", name);
-		if (nvram_match(tmp, ifname))
+		if (nvram_match(tmp, ifname)) {
 			strlcpy(prefix, name, sizeof(prefix));
+			break; /* found prefix (ifname) - break */
+		}
 
 		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), "%s_iface", name);
-		if (nvram_match(tmp, ifname))
+		if (nvram_match(tmp, ifname)) {
 			strlcpy(prefix, name, sizeof(prefix));
+			break; /* found prefix (ifname) - break */
+		}
 	}
 
 	if (!wait_action_idle(10))
