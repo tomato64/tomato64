@@ -63,7 +63,7 @@ int ipup_main(int argc, char **argv)
 	if (!wait_action_idle(10))
 		return -1;
 
-	logmsg(LOG_DEBUG, "*** IN %s: IFNAME=%s DEVICE=%s LINKNAME=%s IPREMOTE=%s IPLOCAL=%s DNS1=%s DNS2=%s", __FUNCTION__, getenv("IFNAME"), getenv("DEVICE"), getenv("LINKNAME"), getenv("IPREMOTE"), getenv("IPLOCAL"), getenv("DNS1"), getenv("DNS2"));
+	logmsg(LOG_DEBUG, "*** IN %s: IFNAME=%s DEVICE=%s LINKNAME=%s IPREMOTE=%s IPLOCAL=%s DNS1=%s DNS2=%s", __FUNCTION__, safe_getenv("IFNAME"), safe_getenv("DEVICE"), safe_getenv("LINKNAME"), safe_getenv("IPREMOTE"), safe_getenv("IPLOCAL"), safe_getenv("DNS1"), safe_getenv("DNS2"));
 
 	wan_ifname = safe_getenv("IFNAME");
 	strlcpy(prefix, safe_getenv("LINKNAME"), sizeof(prefix));
