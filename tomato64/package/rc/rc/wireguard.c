@@ -1243,7 +1243,7 @@ static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *a
 		free(tp);
 	}
 
-	logmsg(LOG_DEBUG, "*** %s: routing: iface=[%s] route_type=[%s] table=[%d]", __FUNCTION__, iface, route_type, table);
+	logmsg(LOG_DEBUG, "*** %s: routing: iface=[%s] route_type=[%d] table=[%s]", __FUNCTION__, iface, route_type, table);
 
 	/* check which routing type the user specified */
 	if (route_type > 0) { /* !off */
