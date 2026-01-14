@@ -175,6 +175,9 @@ extern void start_vlan(void);
 extern void stop_vlan(void);
 extern int config_vlan(void);
 #ifdef TCONFIG_IPV6
+extern int _ipv6_route_add(const char *name, int metric, const char *dst, const char *gateway, int flags);
+extern int ipv6_route_add(const char *name, int metric, const char *dst, const char *gateway);
+extern int ipv6_route_del(const char *name, int metric, const char *dst, const char *gateway);
 extern int ipv6_mapaddr4(struct in6_addr *addr6, int ip6len, struct in_addr *addr4, int ip4mask);
 #endif
 

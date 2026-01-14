@@ -617,6 +617,7 @@ static const nvset_t nvset_list[] = {
 	{ "ipv6_wan_addr",		V_IPV6(0)			},	/* Static IPv6 Wan Address */
 	{ "ipv6_prefix_len_wan",	V_RANGE(3, 64)			},	/* Static IPv6 Wan Prefix Length */
 	{ "ipv6_isp_gw",		V_IPV6(0)			},	/* Static IPv6 ISP Router Gateway */
+	{ "ipv6_llremote_custom",	V_IPV6(0)			},	/* DHCPv6 PD user defined Gateway - used for default route, usually fe80:: (until provided via IPv6 RAs) */
 #endif /* TCONFIG_IPV6 */
 
 /* basic-wfilter */

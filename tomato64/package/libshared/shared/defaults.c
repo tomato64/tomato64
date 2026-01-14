@@ -541,6 +541,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "ipv6_wan_addr",		""				, 0 },	/* Static IPv6 WAN Address */
 	{ "ipv6_prefix_len_wan",	"64"				, 0 },	/* Static IPv6 WAN Prefix Length */
 	{ "ipv6_isp_gw",		""				, 0 },	/* Static IPv6 ISP Gateway */
+	{ "ipv6_llremote_custom",	""				, 0 },	/* DHCPv6 PD user defined Gateway - used for default route, usually fe80:: (until provided via IPv6 RAs) */
 #endif /* TCONFIG_IPV6 */
 
 #ifdef TCONFIG_FANCTRL

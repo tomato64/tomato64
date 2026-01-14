@@ -1060,7 +1060,9 @@ void start_wan6(const char *wan_ifname)
 {
 	struct in_addr addr4;
 	struct in6_addr addr;
-	static char addr6[INET6_ADDRSTRLEN];
+	static char addr6[INET6_ADDRSTRLEN + 4];
+	char gateway[INET6_ADDRSTRLEN];
+	int ret = 0;
 
 	int service = get_ipv6_service();
 
@@ -1083,10 +1085,20 @@ void start_wan6(const char *wan_ifname)
 	case IPV6_NATIVE_DHCP:
 		/* IPv6 RA (via WAN) will take care of adding the default route, so that ipv6_isp_opt should not be enabled/required!
 		   BUT: some ISP's, Snap (NZ), Internode (AU) may need the default route / workaround --> Tomato User can decide
-		   see also https://www.linksysinfo.org/index.php?threads/ipv6-and-comcast.38006/
+		   see https://www.linksysinfo.org/index.php?threads/ipv6-and-comcast.38006/
+		   OR https://github.com/FreshTomato-Project/freshtomato-arm/issues/182
 		*/
 		if (nvram_get_int("ipv6_isp_opt") == 1) {
-			eval("ip", "route", "add", "::/0", "dev", (char *)wan_ifname);
+			/* first check gateway provided via GUI (user) */
+			strlcpy(gateway, nvram_safe_get("ipv6_llremote_custom"), sizeof(gateway));
+			if (*gateway && (inet_pton(AF_INET6, gateway, &addr) == 1)) { /* check for valid IPv6 address */
+				ret = ipv6_route_add(wan_ifname, IPV6_METRIC_GW_LOW_INT, "::/0", gateway);
+				logmsg(LOG_INFO, "DHCPV6-PD - add default route ::/0 via gateway %s (user provided) on wan_ifname: %s - status: %s", gateway, wan_ifname, (ret == 0 ? "OK" : "ERROR"));
+			}
+			else {
+				ret = eval("ip", "-6", "route", "add", "::/0", "dev", (char *)wan_ifname, "metric", IPV6_METRIC_GW_LOW);
+				logmsg(LOG_INFO, "DHCPV6-PD - add default route ::/0 on wan_ifname: %s - status: %s", wan_ifname, (ret == 0 ? "OK" : "ERROR"));
+			}
 		}
 		stop_dhcp6c();
 		start_dhcp6c();
