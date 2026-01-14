@@ -613,6 +613,7 @@ static const nvset_t nvset_list[] = {
 	{ "ipv6_vlan",			V_RANGE(0, (1U<<(BRIDGE_COUNT-1))-1)},	/* Enable IPv6: bit 0 = LAN1, bit 1 = LAN2, bit 2 = LAN3 (depending on BRIDGE_COUNT) */
 	{ "ipv6_isp_opt",		V_01				},	/* see router/rc/wan.c --> add default route ::/0 */
 	{ "ipv6_pdonly",		V_01				},	/* Request DHCPv6 Prefix Delegation Only (send ia-pd and NO send ia-na) */
+	{ "ipv6_rapid_commit",		V_01				},	/* DHCP6 client - shorten the address assignment process from a 4-message to a 2-message exchange; default: off --> can cause problems and must be support by the server */	
 	{ "ipv6_pd_norelease",		V_01				},	/* DHCP6 client - no prefix/address release on exit */
 	{ "ipv6_wan_addr",		V_IPV6(0)			},	/* Static IPv6 Wan Address */
 	{ "ipv6_prefix_len_wan",	V_RANGE(3, 64)			},	/* Static IPv6 Wan Prefix Length */

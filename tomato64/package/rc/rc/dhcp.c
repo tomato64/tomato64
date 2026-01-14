@@ -868,6 +868,9 @@ void start_dhcp6c(void)
 		if (nvram_get_int("ipv6_pdonly") == 0)
 			fprintf(f, " send ia-na %d;\n", ia_na_id);
 
+		if (nvram_get_int("ipv6_rapid_commit"))
+			fprintf(f, " send rapid-commit;\n");
+
 		fprintf(f, " send ia-pd %d;\n"
 		           " request domain-name-servers;\n"
 		           " script \"/sbin/dhcp6c-state\";\n"
