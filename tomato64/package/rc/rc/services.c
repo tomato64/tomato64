@@ -102,6 +102,105 @@ static pid_t pid_ntpd = -1;
 static pid_t pid_phy_tempsense = -1;
 #endif
 
+/*
+ * Port Health
+ * - Managed via cron (cru)
+ * - Script installed at: /usr/sbin/porthealth.sh
+ * - Settings in nvram: porthealth_cfg
+ *   Format: enable=1,mode=monitor,max=50,hold=180,cache=60,if=l
+ */
+#ifndef TOMATO64
+static void stop_porthealth(void)
+{
+	/* remove cron job if present */
+	eval("cru", "d", "porthealth");
+}
+
+static void start_porthealth(void)
+{
+	char cfgbuf[256];
+	char sched[256];
+	char mode[16];
+	char ift[4];
+	char *p;
+	char *tok;
+	char *eq;
+	char *k;
+	char *v;
+	int enable = 0;
+	int max_i = 50;
+	int hold_i = 180;
+	int cache_i = 60;
+	const char *cfg;
+
+	stop_porthealth();
+
+	cfg = nvram_safe_get("porthealth_cfg");
+	if ((cfg == NULL) || (cfg[0] == '\0'))
+		return;
+
+	strlcpy(cfgbuf, cfg, sizeof(cfgbuf));
+	strlcpy(mode, "monitor", sizeof(mode));
+	strlcpy(ift, "l", sizeof(ift));
+
+	for (p = cfgbuf; (tok = strsep(&p, ",")) != NULL; ) {
+		/* trim leading spaces */
+		while (*tok == ' ' || *tok == '\t') tok++;
+		if (*tok == '\0') continue;
+		eq = strchr(tok, '=');
+		if (eq == NULL) continue;
+		*eq++ = '\0';
+		k = tok;
+		v = eq;
+		/* trim trailing spaces in key */
+		{
+			char *end = k + strlen(k);
+			while (end > k && (end[-1] == ' ' || end[-1] == '\t')) *--end = '\0';
+		}
+		while (*v == ' ' || *v == '\t') v++;
+
+		if (strcmp(k, "enable") == 0) {
+			enable = atoi(v);
+		}
+		else if (strcmp(k, "mode") == 0) {
+			strlcpy(mode, v, sizeof(mode));
+		}
+		else if (strcmp(k, "if") == 0) {
+			strlcpy(ift, v, sizeof(ift));
+		}
+		else if (strcmp(k, "max") == 0) {
+			max_i = atoi(v);
+		}
+		else if (strcmp(k, "hold") == 0) {
+			hold_i = atoi(v);
+		}
+		else if (strcmp(k, "cache") == 0) {
+			cache_i = atoi(v);
+		}
+	}
+
+	if (enable != 1)
+		return;
+
+	if ((strcmp(mode, "monitor") != 0) && (strcmp(mode, "recover") != 0) && (strcmp(mode, "disable") != 0))
+		strlcpy(mode, "monitor", sizeof(mode));
+
+	if ((strcmp(ift, "l") != 0) && (strcmp(ift, "w") != 0) && (strcmp(ift, "a") != 0))
+		strlcpy(ift, "l", sizeof(ift));
+
+	if (max_i < 1) max_i = 1;
+	if (max_i > 100000) max_i = 100000;
+	if (hold_i < 1) hold_i = 1;
+	if (hold_i > 86400) hold_i = 86400;
+	if (cache_i < 0) cache_i = 0;
+	if (cache_i > 86400) cache_i = 86400;
+
+	/* Run every minute; script is designed to be fast in monitor mode */
+	snprintf(sched, sizeof(sched), "* * * * * /usr/sbin/porthealth.sh %s max=%d hold=%d cache=%d if=%s", mode, max_i, hold_i, cache_i, ift);
+	eval("cru", "a", "porthealth", sched);
+}
+#endif /* TOMATO64 */
+
 void add_rstats_defaults(void)
 {
 #ifdef TCONFIG_BCMARM
@@ -2365,6 +2464,9 @@ void start_services(void)
 	start_mysql(0);
 #endif
 	start_cron();
+#ifndef TOMATO64
+	start_porthealth(); /* cron-based */
+#endif /* TOMATO64 */
 #ifdef TCONFIG_PPTPD
 	start_pptpd(0);
 #endif
@@ -2452,6 +2554,9 @@ void stop_services(void)
 	stop_pptpd();
 #endif
 	stop_sched();
+#ifndef TOMATO64
+	stop_porthealth();
+#endif /* TOMATO64 */
 	stop_cron();
 #ifdef TCONFIG_NGINX
 	stop_mysql();
@@ -3174,6 +3279,14 @@ TOP:
 		if (act_start) start_tomatoanon();
 		goto CLEAR;
 	}
+
+#ifndef TOMATO64
+	if (strcmp(service, "porthealth") == 0) {
+		if (act_stop) stop_porthealth();
+		if (act_start) start_porthealth();
+		goto CLEAR;
+	}
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_USB
 	if (strcmp(service, "usb") == 0) {

@@ -8,6 +8,11 @@ install:
 	install -d $(INSTALLDIR)/usr/bin
 	install -d $(INSTALLDIR)/lib
 
+ifneq ($(TCONFIG_TOMATO64),y)
+# Port health monitor/recover script
+	install -m 0700 porthealth.sh $(INSTALLDIR)/usr/sbin/porthealth.sh
+endif #TOMATO64
+
 ifeq ($(TCONFIG_USB),y)
 # Optware perl symlink
 	install -d $(INSTALLDIR)/usr/bin
