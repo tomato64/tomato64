@@ -3107,7 +3107,7 @@ function anon_update() {
 
 	/* special case */
 	if (page == 'status-overview.asp') {
-		res = '<div class="section-title">!! Attention !!</div><div class="section-centered">New version of Tomato64 <b>'+update+'</b> is now available. <a class="new_window" href="https://tomato64.org/">Click here to download</a>.</div>';
+		res = '<div class="section-title">!! Attention !!</div><div class="section-centered">New version of Tomato64 <b>'+update+'</b> is now available. <a href="https://tomato64.org/" target="_blank">Click here to download</a>.</div>';
 		E('status-nversion').innerHTML = res;
 		E('status-nversion').style.display = 'block';
 	}
