@@ -59,7 +59,6 @@
 extern struct nvram_tuple router_defaults[];
 #endif /* TCONFIG_BCMARM */
 int restore_defaults_fb = 0;
-static void init_firmware_filename(void);
 
 
 static int fatalsigs[] = {
@@ -142,7 +141,6 @@ static void restore_defaults(void)
 
 	nvram_set("os_version", tomato_version);
 	nvram_set("os_date", tomato_buildtime);
-	init_firmware_filename();
 
 #ifndef TOMATO64
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
@@ -904,40 +902,6 @@ static int wlshutdown_ethx_rtac5300(void)
 	return dirty;
 }
 #endif /* TCONFIG_AC5300 */
-
-static void init_firmware_filename(void)
-{
-	char *model, *os_ver;
-	char ver[16], branch[16], build[64];
-	char fname[256];
-
-	/* Get model from odmpid (clean model name without manufacturer prefix) */
-	model = nvram_safe_get("odmpid");
-	if (!*model)
-		model = nvram_safe_get("productid");
-	if (!*model)
-		model = nvram_safe_get("model");
-
-	/* Parse os_version: "2025.5 K26ARM USB AIO-64K" */
-	os_ver = nvram_safe_get("os_version");
-	if (sscanf(os_ver, "%15s %15s %*s %63s", ver, branch, build) == 3) {
-		/* Construct filename matching build.mak pattern:
-		 * freshtomato-MODEL-BRANCH-VERSION-BUILD.trx */
-		snprintf(fname, sizeof(fname), "freshtomato-%s-%s-%s-%s.trx",
-			model, branch, ver, build);
-	}
-	else {
-		/* Fallback if os_version is malformed (should never happen in normal builds) */
-		snprintf(fname, sizeof(fname), "freshtomato-%s-unknown-unknown-unknown.trx", model);
-		syslog(LOG_WARNING, "Failed to parse os_version: %s", os_ver);
-	}
-
-	/* Only update if filename changed */
-	if (!nvram_match("fname", fname)) {
-		nvram_set("fname", fname);
-		syslog(LOG_INFO, "Firmware filename: %s", fname);
-	}
-}
 
 static void init_lan_hwaddr(void)
 {

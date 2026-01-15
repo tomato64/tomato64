@@ -358,7 +358,6 @@ struct nvram_tuple bsd_defaults[] = {
 
 struct nvram_tuple router_defaults[] = {
 	{ "restore_defaults",		"0"				, 0 },	/* Set to 0 to not restore defaults on boot */
-	{ "fname",			""				, 0 },	/* Populate filename used during flashing */
 
 	/* LAN H/W parameters */
 	{ "lan_hwnames",		""				, 0 },	/* LAN driver names (e.g. et0) */
