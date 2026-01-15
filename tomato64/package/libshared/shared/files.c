@@ -2,7 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2022 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
  *
  */
 
@@ -86,8 +86,9 @@ int f_write_string(const char *path, const char *buffer, unsigned flags, unsigne
 
 int f_write_procsysnet(const char *path, const char *value)
 {
-	char syspath[64];
+	char syspath[128];
 	snprintf(syspath, sizeof(syspath), "/proc/sys/net/%s", path);
+
 	return f_write_string(syspath, value, 0, 0);
 }
 
