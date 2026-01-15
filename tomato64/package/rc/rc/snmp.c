@@ -15,11 +15,15 @@
 
 
 const char snmp_conf[] = "/etc/snmpd.conf";
+const char snmp_pid[]  = "/var/run/snmpd.pid";
 
 void start_snmp(void)
 {
 	FILE *fp;
 	const char *location, *contact, *name, *descr, *ro;
+
+	if (serialize_restart("snmpd", 1))
+		return;
 
 	/*  only if enabled... */
 	if (nvram_match("snmp_enable", "1")) {
@@ -45,7 +49,7 @@ void start_snmp(void)
 		            "rocommunity %s\n"
 		            "extend device /bin/echo \"%s\"\n"
 		            "extend version /bin/echo \"Tomato64 %s\"\n"
-		            "pidFile /var/run/snmpd.pid\n",
+		            "pidFile %s\n",
 		            nvram_get_int("snmp_port"),
 		            (location && *location ? location : "router"),
 		            (contact && *contact ? contact : "admin@tomato64"),
@@ -53,7 +57,8 @@ void start_snmp(void)
 		            (descr && *descr ? descr : "router1"),
 		            (ro && *ro ? ro : "rocommunity"),
 		            nvram_safe_get("t_model_name"),
-		            tomato_version);
+		            tomato_version,
+		            snmp_pid);
 
 		fclose(fp);
 
@@ -67,8 +72,13 @@ void start_snmp(void)
 
 void stop_snmp(void)
 {
+	if (serialize_restart("snmpd", 0))
+		return;
+
 	if (pidof("snmpd") > 0) {
-		killall("snmpd", SIGTERM);
+		killall_tk_period_wait("snmpd", 70);
 		syslog(LOG_INFO, "snmpd stopped");
 	}
+
+	eval("rm", "-f", (char *)snmp_pid);
 }
