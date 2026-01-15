@@ -2970,6 +2970,9 @@ TOP:
 			} else
 				stop_adblock();
 
+#ifdef TCONFIG_SNMP
+			stop_snmp();
+#endif
 			stop_tomatoanon();
 			remove_conntrack();
 #ifdef TCONFIG_ZEBRA
