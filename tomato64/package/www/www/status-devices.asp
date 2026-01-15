@@ -192,6 +192,7 @@ dg.populate = function() {
 		c = a[3].slice(0, b)+'<br>'+a[3].slice(b);
 		e.lease = '<small><a href="javascript:deleteLease(\'L'+i+'\',\''+a[1]+'\',\''+a[2]+'\',\''+e.ifname+'\')" title="Delete Lease'+(e.ifname ? ' and Deauth' : '')+'" id="L'+i+'">'+c+'<\/a><\/small>';
 		e.name = a[0];
+		e.leaseSeconds = parseLeaseTime(a[3]);
 	}
 
 /* IPV6-BEGIN */
@@ -512,20 +513,29 @@ dg.sortCompare = function(a, b) {
 	var col = this.sortColumn;
 	var ra = a.getRowData();
 	var rb = b.getRowData();
-	var r;
+	var r, va, vb;
 
 	switch (col) {
-	case 1:
+	case 1: /* media */
 		r = cmpInt(ra.media, rb.media);
 	break;
-	case 3:
+	case 3: /* IP address */
 		r = cmpIP(ra.ip, rb.ip);
 	break;
-	case 5:
+	case 5: /* RSSI */
 		r = cmpInt(ra.rssi, rb.rssi);
 	break;
-	case 6:
+	case 6: /* quality */
 		r = cmpInt(ra.qual, rb.qual);
+	break;
+	case 8: /* lease */
+		va = (ra.leaseSeconds !== undefined) ? ra.leaseSeconds : Infinity;
+		vb = (rb.leaseSeconds !== undefined) ? rb.leaseSeconds : Infinity;
+
+		if (va === vb) r = 0;
+		else if (va === Infinity) r = 1;
+		else if (vb === Infinity) r = -1;
+		else r = cmpInt(va, vb);
 	break;
 	default:
 		r = cmpText(a.cells[col].innerHTML, b.cells[col].innerHTML);
@@ -538,6 +548,27 @@ dg.sortCompare = function(a, b) {
 	}
 
 	return this.sortAscending ? r : -r;
+}
+
+function parseLeaseTime(str) {
+	var days, hours, mins, secs;
+	var seconds = 0;
+
+	if (!str || str.trim() === '' || str.match(/infinite/i)) return Infinity;
+
+	days = str.match(/(\d+)\s*d/i);
+	if (days) seconds += parseInt(days[1], 10) * 86400;
+
+	hours = str.match(/(\d+)\s*h/i);
+	if (hours) seconds += parseInt(hours[1], 10) * 3600;
+
+	mins = str.match(/(\d+)\s*m/i);
+	if (mins) seconds += parseInt(mins[1], 10) * 60;
+
+	secs = str.match(/(\d+)\s*s/i);
+	if (secs) seconds += parseInt(secs[1], 10);
+
+	return seconds > 0 ? seconds : Infinity;
 }
 
 function find(mac, ip) {
