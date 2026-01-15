@@ -3077,7 +3077,7 @@ function wikiLink() {
 	else
 		page = 'status-overview';
 
-	var res = '<a href="'+url+'/'+page+'" target="_blank" rel="noopener noreferrer" title="Freshtomato Wiki">🇼</a> | <a onclick="toggleTheme()" href="#" title="Light/Dark mode">◐</a>';
+	var res = '<a href="'+url+'/'+page+'" target="_blank" rel="noopener noreferrer">Wiki</a> | <a onclick="toggleTheme()" href="#">◐</a>';
 
 	W(res);
 	var alt = cookie.get('gui_themet');
