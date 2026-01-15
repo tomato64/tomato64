@@ -4,7 +4,7 @@
  *
  * No part of this file may be used without permission.
  *
- * Fixes/updates (C) 2018 - 2025 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
  * https://freshtomato.org/
  *
  */
@@ -174,7 +174,7 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 		if ((fp = fopen(buffer, "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "pingme() {\n"
-			            "[ \"server\" == \"%s\" ] && return 0\n"
+			            "[ \"server\" = \"%s\" -o \"%d\" = \"0\" ] && return 0\n"
 			            " local i=1\n"
 			            " while :; do\n"
 			            "  ping -qc1 -W3 -I %s%d %s &>/dev/null && return 0\n"
@@ -187,7 +187,7 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 			            " logger -t openvpn-watchdog vpn%s%d stopped? Starting...\n"
 			            " service vpn%s%d restart\n"
 			            "}\n",
-			            instanceType,
+			            instanceType, atoi(getNVRAMVar("vpn_client%d_tchk", unit)),
 			            getNVRAMVar("vpn_client%d_if", unit), unit + (type == OVPN_TYPE_SERVER ? OVPN_SERVER_BASEIF : OVPN_CLIENT_BASEIF), nvram_safe_get("wan_checker"),
 			            instanceType, unit,
 			            instanceType, unit,

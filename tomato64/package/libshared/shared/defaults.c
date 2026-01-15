@@ -3,7 +3,7 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
- * Fixes/updates (C) 2018 - 2025 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
  *
  */
 
@@ -1665,6 +1665,7 @@ struct nvram_tuple router_defaults[] = {
 #endif /* TOMATO64 */
 	{ "vpn_client_eas",		""				, 0 },
 	{ "vpn_client1_poll",		"0"				, 0 },
+	{ "vpn_client1_tchk",		"0"				, 0 },	/* check if tunnel is up */
 	{ "vpn_client1_if",		"tun"				, 0 },
 	{ "vpn_client1_bridge",		"1"				, 0 },
 	{ "vpn_client1_nat",		"1"				, 0 },
@@ -1703,6 +1704,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_client1_tlsvername",	"0"				, 0 },
 	{ "vpn_client1_prio",		""				, 0 },
 	{ "vpn_client2_poll",		"0"				, 0 },
+	{ "vpn_client2_tchk",		"0"				, 0 },	/* check if tunnel is up */
 	{ "vpn_client2_if",		"tun"				, 0 },
 	{ "vpn_client2_bridge",		"1"				, 0 },
 	{ "vpn_client2_nat",		"1"				, 0 },
@@ -1742,6 +1744,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_client2_prio",		""				, 0 },
 #ifdef TCONFIG_BCMARM
 	{ "vpn_client3_poll",		"0"				, 0 },
+	{ "vpn_client3_tchk",		"0"				, 0 },	/* check if tunnel is up */
 	{ "vpn_client3_if",		"tun"				, 0 },
 	{ "vpn_client3_bridge",		"1"				, 0 },
 	{ "vpn_client3_nat",		"1"				, 0 },
