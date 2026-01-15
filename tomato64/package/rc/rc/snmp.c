@@ -44,7 +44,8 @@ void start_snmp(void)
 		            "sysDescr %s\n"
 		            "rocommunity %s\n"
 		            "extend device /bin/echo \"%s\"\n"
-		            "extend version /bin/echo \"Tomato64 %s\"\n",
+		            "extend version /bin/echo \"Tomato64 %s\"\n"
+		            "pidFile /var/run/snmpd.pid\n",
 		            nvram_get_int("snmp_port"),
 		            (location && *location ? location : "router"),
 		            (contact && *contact ? contact : "admin@tomato64"),
