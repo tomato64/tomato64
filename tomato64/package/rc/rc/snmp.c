@@ -48,8 +48,7 @@ void start_snmp(void)
 		            "sysDescr %s\n"
 		            "rocommunity %s\n"
 		            "extend device /bin/echo \"%s\"\n"
-		            "extend version /bin/echo \"Tomato64 %s\"\n"
-		            "pidFile %s\n",
+		            "extend version /bin/echo \"Tomato64 %s\"\n",
 		            nvram_get_int("snmp_port"),
 		            (location && *location ? location : "router"),
 		            (contact && *contact ? contact : "admin@tomato64"),
@@ -57,14 +56,13 @@ void start_snmp(void)
 		            (descr && *descr ? descr : "router1"),
 		            (ro && *ro ? ro : "rocommunity"),
 		            nvram_safe_get("t_model_name"),
-		            tomato_version,
-		            snmp_pid);
+		            tomato_version);
 
 		fclose(fp);
 
 		chmod(snmp_conf, 0644);
 
-		xstart("snmpd", "-c", (char *)snmp_conf);
+		xstart("snmpd", "-c", (char *)snmp_conf, "-p", (char *)snmp_pid);
 
 		syslog(LOG_INFO, "snmpd started");
 	}
