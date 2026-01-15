@@ -134,19 +134,21 @@
  
  	pppol2tp_fd_str = strdup(*argv);
  	if (pppol2tp_fd_str == NULL)
-@@ -189,10 +183,16 @@
+@@ -189,10 +183,18 @@
  
  static int connect_pppol2tp(void)
  {
 +	struct sockaddr_pppol2tp sax;
 +	socklen_t len = sizeof(sax);
++ char buffer[24];
 +
  	if(pppol2tp_fd == -1) {
  		fatal("No PPPoL2TP FD specified");
  	}
  
 +	getsockname(pppol2tp_fd, (struct sockaddr *)&sax, &len);
-+	sprintf(ppp_devnam, "l2tp (%s)", inet_ntoa(sax.pppol2tp.addr.sin_addr));
++	snprintf(buffer, sizeof(buffer), "l2tp (%s)", inet_ntoa(sax.pppol2tp.addr.sin_addr));
++ ppp_set_ifname(buffer);
 +
  	return pppol2tp_fd;
  }
