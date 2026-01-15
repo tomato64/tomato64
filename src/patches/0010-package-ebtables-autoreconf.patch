@@ -1,0 +1,24 @@
+From 8f4cb6590c4a996302f8927c52bbc76ee8125e23 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Thu, 15 Jan 2026 10:19:53 -0700
+Subject: [PATCH] package/ebtables: autoreconf
+
+---
+ package/ebtables/ebtables.mk | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/package/ebtables/ebtables.mk b/package/ebtables/ebtables.mk
+index 09a9f4ba7d..87e6197d0a 100644
+--- a/package/ebtables/ebtables.mk
++++ b/package/ebtables/ebtables.mk
+@@ -10,6 +10,7 @@ EBTABLES_LICENSE = GPL-2.0+
+ EBTABLES_LICENSE_FILES = COPYING
+ EBTABLES_CPE_ID_VENDOR = netfilter
+ EBTABLES_SELINUX_MODULES = iptables
++EBTABLES_AUTORECONF = YES
+ 
+ ifeq ($(BR2_PACKAGE_EBTABLES_UTILS_SAVE),y)
+ define EBTABLES_INSTALL_TARGET_UTILS_SAVE
+-- 
+2.47.3
+
