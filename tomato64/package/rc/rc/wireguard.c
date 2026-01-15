@@ -767,20 +767,12 @@ static int wg_set_iface_privkey(char *iface, const char *privkey)
 
 static int wg_set_iface_fwmark(char *iface, char *fwmark)
 {
-	char buffer[BUF_SIZE_16];
-	memset(buffer, 0, BUF_SIZE_16);
-
-	if (fwmark[0] == '0' && fwmark[1] == '\0')
-		snprintf(buffer, BUF_SIZE_16, "%s", fwmark);
-	else
-		snprintf(buffer, BUF_SIZE_16, "0x%s", fwmark);
-
-	if (eval("wg", "set", iface, "fwmark", buffer)) {
-		logmsg(LOG_WARNING, "unable to set wireguard interface %s fwmark to %s!", iface, buffer);
+	if (eval("wg", "set", iface, "fwmark", fwmark)) {
+		logmsg(LOG_WARNING, "unable to set wireguard interface %s fwmark to %s!", iface, fwmark);
 		return -1;
 	}
 	else
-		logmsg(LOG_DEBUG, "wireguard interface %s has had its fwmark set to %s", iface, buffer);
+		logmsg(LOG_DEBUG, "wireguard interface %s has had its fwmark set to %s", iface, fwmark);
 
 	return 0;
 }
