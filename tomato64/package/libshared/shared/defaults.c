@@ -1833,6 +1833,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wg_adns",			""				, 0 },
 	{"wg0_enable",			"0"				, 0 },
 	{"wg0_poll",			"0"				, 0 },
+	{"wg0_tchk",			"0"				, 0 },	/* check if tunnel is up */
 	{"wg0_file",			""				, 0 },
 	{"wg0_key",			""				, 0 },
 	{"wg0_endpoint",		""				, 0 },
@@ -1861,6 +1862,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wg0_prio",			""				, 0 },
 	{"wg1_enable",			"0"				, 0 },
 	{"wg1_poll",			"0"				, 0 },
+	{"wg1_tchk",			"0"				, 0 },	/* check if tunnel is up */
 	{"wg1_file",			""				, 0 },
 	{"wg1_key",			""				, 0 },
 	{"wg1_endpoint",		""				, 0 },
@@ -1889,6 +1891,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wg1_prio",			""				, 0 },
 	{"wg2_enable",			"0"				, 0 },
 	{"wg2_poll",			"0"				, 0 },
+	{"wg2_tchk",			"0"				, 0 },	/* check if tunnel is up */
 	{"wg2_file",			""				, 0 },
 	{"wg2_key",			""				, 0 },
 	{"wg2_endpoint",		""				, 0 },

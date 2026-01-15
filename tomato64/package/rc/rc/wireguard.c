@@ -1,7 +1,7 @@
 /*
  * wireguard.c
  *
- * Copyright (C) 2025 FreshTomato
+ * Copyright (C) 2025 - 2026 FreshTomato
  * https://freshtomato.org/
  *
  * This program is free software; you can redistribute it and/or
@@ -641,10 +641,10 @@ static void wg_setup_watchdog(const int unit)
 		if ((fp = fopen(buffer, "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "pingme() {\n"
-			            "[ \"3\" != \"%d\" ] && return 0\n"
+			            "[ \"3\" != \"%d\" -o \"%d\" = \"0\" ] && return 0\n"
 			            " local i=1\n"
 			            " while :; do\n"
-			            "  ping -qc1 -W3 -I wg%d 1.1.1.1 &>/dev/null && return 0\n"
+			            "  ping -qc1 -W3 -I wg%d %s &>/dev/null && return 0\n"
 			            "  [ $((i++)) -ge 3 ] && break || sleep 5\n"
 			            " done\n"
 			            " return 1\n"
@@ -655,8 +655,8 @@ static void wg_setup_watchdog(const int unit)
 			            " logger -t wg-watchdog wg%d stopped? Starting...\n"
 			            " service wireguard%d restart\n"
 			            "}\n",
-			            atoi(getNVRAMVar("wg%d_com", unit)), /* only for 'External' (3) mode */
-			            unit,
+			            atoi(getNVRAMVar("wg%d_com", unit)), /* only for 'External' (3) mode */ atoi(getNVRAMVar("wg%d_tchk", unit)),
+			            unit, nvram_safe_get("wan_checker"),
 			            unit,
 			            unit,
 			            unit);

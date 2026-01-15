@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 	FreshTomato GUI
-	Copyright (C) 2023 - 2025 pedro
+	Copyright (C) 2023 - 2026 pedro
 	https://freshtomato.org/
 
 	For use with FreshTomato Firmware only.
@@ -23,7 +23,7 @@
 <script>
 
 
-//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,wg_adns,wg0_enable,wg0_poll,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg0_rgwr,wg0_routing_val,wg0_prio,wg1_enable,wg1_poll,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg1_rgwr,wg1_routing_val,wg1_prio,wg2_enable,wg2_poll,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw,wg2_rgwr,wg2_routing_val,wg2_prio"); %>
+//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,wg_adns,wg0_enable,wg0_poll,wg0_tchk,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg0_rgwr,wg0_routing_val,wg0_prio,wg1_enable,wg1_poll,wg1_tchk,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg1_rgwr,wg1_routing_val,wg1_prio,wg2_enable,wg2_poll,wg2_tchk,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw,wg2_rgwr,wg2_routing_val,wg2_prio"); %>
 
 
 var cprefix = 'vpn_wireguard';
@@ -1806,6 +1806,7 @@ function verifyFields(focused, quiet) {
 		if (ext) E('_f_wg'+i+'_peer_ip').value = '';
 		if (ext) E('_f_wg'+i+'_route').value = '1';
 		E('_f_wg'+i+'_peer_ip').disabled = ext;
+		E('_f_wg'+i+'_tchk').disabled = !ext;
 		elem.display('wg'+i+'-peers-download', !ext);
 		elem.display('wg'+i+'-peers-generate-title', !ext);
 		elem.display('wg'+i+'-peers-generate', !ext);
@@ -1958,6 +1959,7 @@ function save(nomsg) {
 		fom['wg'+i+'_rgw'].value = fom['_f_wg'+i+'_rgw'].checked ? 1 : 0;
 		fom['wg'+i+'_nat'].value = fom['_f_wg'+i+'_nat'].checked ? 1 : 0;
 		fom['wg'+i+'_fw'].value = fom['_f_wg'+i+'_fw'].checked ? 1 : 0;
+		fom['wg'+i+'_tchk'].value = fom['_f_wg'+i+'_tchk'].checked ? 1 : 0;
 
 		/* copy values from the fields */
 		nvram['wg'+i+'_rgwr'] = E('_wg'+i+'_rgwr').value;
@@ -2114,6 +2116,7 @@ function init() {
 			W('<input type="hidden" name="'+t+'_route">');
 			W('<input type="hidden" name="'+t+'_nat">');
 			W('<input type="hidden" name="'+t+'_fw">');
+			W('<input type="hidden" name="'+t+'_tchk">');
 			W('<input type="hidden" name="'+t+'_routing_val">');
 
 			W('<ul class="tabs">');
@@ -2128,6 +2131,7 @@ function init() {
 			createFieldTable('', [
 				{ title: 'Enable on Start', name: 'f_'+t+'_enable', type: 'checkbox', value: nvram[t+'_enable'] == 1 },
 				{ title: 'Poll Interval', name: t+'_poll', type: 'text', maxlen: 2, size: 5, value: nvram[t+'_poll'], suffix: ' <small>minutes; 0 to disable<\/small>' },
+					{ title: 'Also check out the tunnel', indent: 2, name: 'f_'+t+'_tchk', type: 'checkbox', value: nvram[t+'_tchk'] != 0, suffix: ' <small>does not work in all configurations<\/small>' },
 				{ title: 'Config file', name: t+'_file', type: 'text', placeholder: 'optional', maxlen: 64, size: 64, value: nvram[t+'_file'] },
 				{ title: 'Port', name: t+'_port', type: 'text', maxlen: 5, size: 10, placeholder: (51820+i), value: nvram[t+'_port'] },
 				{ title: 'Private Key', multi: [
@@ -2145,13 +2149,13 @@ function init() {
 				{ title: 'Respond to DNS', name: 'f_'+t+'_adns', type: 'checkbox', suffix: '&nbsp;<small>enables dnsmasq to resolve queries arriving on this interface<\/small>', value: nvram.wg_adns.indexOf(''+i) >= 0 },
 				{ title: 'Routing Mode', name: 'f_'+t+'_route', type: 'select', options: [['0','Off'],['1','Auto'],['2','Custom Table']], value: nvram[t+'_route'][0] || 1, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_table" value="'+(nvram[t+'_route'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_table" maxlength="32" size="32">' },
 				{ title: 'Firewall', name: t+'_firewall', type: 'select', options: [['auto','Automatic'],['custom','Custom']], value: nvram[t+'_firewall'] },
-				{ title: 'Create NAT on tunnel', indent: 2, name: 'f_'+t+'_nat', type: 'checkbox', value: nvram[t+'_nat'] != 0, suffix: ' <small id="'+t+'_nat_warn_text">routes must be configured manually<\/small>' },
-				{ title: 'Inbound Firewall', indent: 2, name: 'f_'+t+'_fw', type: 'checkbox', value: nvram[t+'_fw'] != 0 },
+					{ title: 'Create NAT on tunnel', indent: 2, name: 'f_'+t+'_nat', type: 'checkbox', value: nvram[t+'_nat'] != 0, suffix: ' <small id="'+t+'_nat_warn_text">routes must be configured manually<\/small>' },
+					{ title: 'Inbound Firewall', indent: 2, name: 'f_'+t+'_fw', type: 'checkbox', value: nvram[t+'_fw'] != 0 },
 				null,
 				{ title: 'Type of VPN', name: t+'_com', type: 'select', options: [['0','Internal - Hub (this device) and Spoke (peers)'],['1','Internal - Full Mesh (defined Endpoint only)'],['2','Internal - Full Mesh'],['3','External - VPN Provider']], value: nvram[t+'_com'] || 0 },
 				{ title: 'Redirect Internet traffic', name: t+'_rgwr', type: 'select', options: [[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram[t+'_rgwr'] },
-				{ title: 'Priority', indent: 2, name: t+'_prio', type: 'text', maxlen: 5, size: 5, placeholder: (100 + i), suffix: '&nbsp;<small>(1 - 32766) lower number = higher priority<\/small>', value: nvram[t+'_prio'] },
-				{ title: 'Import Config from File', indent: 2, custom: '<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File"><input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')">' },
+					{ title: 'Priority', indent: 2, name: t+'_prio', type: 'text', maxlen: 5, size: 5, placeholder: (100 + i), suffix: '&nbsp;<small>(1 - 32766) lower number = higher priority<\/small>', value: nvram[t+'_prio'] },
+					{ title: 'Import Config from File', indent: 2, custom: '<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File"><input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')">' },
 				{ title: '', custom: '<div>Note: before importing the configuration, set the correct "Type of VPN" above.<\/div>' }
 			]);
 			W('<br><\/div>');
