@@ -1,0 +1,28 @@
+From b18787ade8d3f9d2277966cfcbaf9de0612a6f6a Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Fri, 16 Jan 2026 09:59:28 -0700
+Subject: [PATCH] Disable nvmem in gl-mt6000 dts file
+
+---
+ arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts b/arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts
+index 529443a1d..164751a28 100644
+--- a/arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts
++++ b/arch/arm64/boot/dts/mediatek/mt7986a-glinet-gl-mt6000.dts
+@@ -326,9 +326,11 @@ partitions {
+ 				block-partition-env {
+ 					partname = "u-boot-env";
+ 
++					/* Disabled - stock bootloader doesn't populate u-boot-env partition
+ 					nvmem-layout {
+ 						compatible = "u-boot,env";
+ 					};
++					*/
+ 				};
+ 
+ 				block-partition-factory {
+-- 
+2.47.3
+
