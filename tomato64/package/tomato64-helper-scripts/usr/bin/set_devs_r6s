@@ -64,12 +64,3 @@ fi
 
 # Load required modules
 modprobe mt7921u
-modprobe leds_gpio
-
-# Set system LED (if not in stealth mode)
-if [ "$(NG stealth_mode)" != "1" ]; then
-	# NanoPi R6S has a red system LED
-	if [ -e /sys/class/leds/red:sys/brightness ]; then
-		echo 1 > /sys/class/leds/red:sys/brightness
-	fi
-fi

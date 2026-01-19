@@ -16,8 +16,6 @@ else
 fi
 
 modprobe mt7921u
-modprobe leds_gpio
-
 
 if [ "$(NG set_macs)" != "1" ]; then
 

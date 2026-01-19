@@ -15,7 +15,6 @@ else
 fi
 
 modprobe mt7921u
-modprobe leds_gpio
 
 increment_mac() {
 	tmp=$1

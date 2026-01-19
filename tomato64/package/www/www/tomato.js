@@ -2684,6 +2684,7 @@ function navi() {
 			['IP Traffic Monitoring',	'iptraffic.asp'],
 /* TOMATO64-BEGIN */
 			['Port Labels',			'port-labels.asp'],
+			['LEDs',			'leds.asp'],
 /* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
 			['Buttons/LED',			'buttons.asp'],

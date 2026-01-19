@@ -12053,6 +12053,11 @@ static void sysinit(void)
 
 	eval("buttons");
 
+#ifdef TOMATO64
+	/* Initialize LEDs for boot sequence (heartbeat during boot) */
+	led_boot_init();
+#endif /* TOMATO64 */
+
 #ifndef TOMATO64
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 #ifdef TCONFIG_BCMARM
@@ -12148,6 +12153,11 @@ int init_main(int argc, char *argv[])
 		case SIGQUIT: /* HALT */
 		case SIGTERM: /* REBOOT */
 			led(LED_DIAG, LED_ON);
+#ifdef TOMATO64
+			/* Indicate shutdown/reboot with blinking LED */
+			if ((state == SIGTERM) || (state == SIGQUIT))
+				led_state_shutdown();
+#endif /* TOMATO64 */
 			unlink("/var/notice/sysup");
 			nvram_set("g_reboot", "1");
 
@@ -12271,6 +12281,11 @@ int init_main(int argc, char *argv[])
 #endif /* TOMATO64 */
 
 			logmsg(LOG_INFO, "%s: Tomato64 %s", nvram_safe_get("t_model_name"), tomato_version);
+
+#ifdef TOMATO64
+			/* Finalize LED setup after boot is complete */
+			led_setup_sysfs();
+#endif /* TOMATO64 */
 
 			led(LED_DIAG, LED_OFF);
 

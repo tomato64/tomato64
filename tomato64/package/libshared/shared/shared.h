@@ -414,6 +414,11 @@ extern void enable_led_wanlan(void);
 extern void do_led_bridge(int mode);
 extern void led_setup(void);
 
+/* led_sysfs.c - Tomato64 sysfs LED control */
+#ifdef TOMATO64
+#include "led_sysfs.h"
+#endif /* TOMATO64 */
+
 /* base64.c */
 extern int base64_encode(const unsigned char *in, char *out, int inlen); /* returns amount of out buffer used */
 extern int base64_decode(const char *in, unsigned char *out, int inlen); /* returns amount of out buffer used */

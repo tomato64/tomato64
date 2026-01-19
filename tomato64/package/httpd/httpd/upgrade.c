@@ -121,6 +121,9 @@ void wi_upgrade(char *url, int len, char *boundary)
 #endif /* TOMATO64_X86_64 */
 
 	led(LED_DIAG, 1);
+#ifdef TOMATO64
+	led_state_upgrade();
+#endif /* TOMATO64 */
 
 	/* create unique file */
 	if ((fd = mkstemp(fifo) < 0)) {
