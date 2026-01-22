@@ -361,12 +361,14 @@ function show() {
 	c('disk', stats.disk);
 /* TOMATO64-END */
 /* TOMATO64-WIFI-BEGIN */
+/* TOMATO64-X86_64-SKIP-BEGIN */
 /* TOMATO64-RPI4-SKIP-BEGIN */
 /* TOMATO64-R6S-SKIP-BEGIN */
 	c('wlsense', stats.wlsense);
 /* TOMATO64-R6S-SKIP-END */
 /* TOMATO64-RPI4-SKIP-END */
 	c('temps', stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F');
+/* TOMATO64-X86_64-SKIP-END */
 /* TOMATO64-WIFI-END */
 	c('uptime', stats.uptime);
 	c('time', stats.time);
@@ -613,6 +615,7 @@ function init() {
 		{ title: 'Used / Total NVRAM', rid: 'nvram_stat', text: scaleSize(nvstat.size - nvstat.free)+' / '+scaleSize(nvstat.size)+' <small>('+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%)<\/small><div class="progress-wrapper"><div class="progress-container"><div class="progress-bar" style="background-color:'+setColor(((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2))+';width:'+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%"><\/div><\/div><\/div>' },
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-WIFI-BEGIN */
+/* TOMATO64-X86_64-SKIP-BEGIN */
 		null,
 		{ title: 'CPU Temperature', rid: 'temps', text: stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F' },
 /* TOMATO64-RPI4-SKIP-BEGIN */
@@ -620,6 +623,7 @@ function init() {
 		{ title: 'Wireless Temperature', rid: 'wlsense', text: stats.wlsense }
 /* TOMATO64-R6S-SKIP-END */
 /* TOMATO64-RPI4-SKIP-END */
+/* TOMATO64-X86_64-SKIP-END */
 /* TOMATO64-WIFI-END */
 	]);
 </script>
