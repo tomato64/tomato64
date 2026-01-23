@@ -1,6 +1,11 @@
 #!/bin/sh
 . /usr/share/libubox/jshn.sh
 
+if [ ! -f /etc/board.json ]; then
+	echo "'phy_count': '0'"
+	exit 0
+fi
+
 json_load_file /etc/board.json  ## Load JSON from file
 
 device=""

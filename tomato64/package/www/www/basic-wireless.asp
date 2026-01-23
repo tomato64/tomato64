@@ -32,7 +32,9 @@ var power_loaded = [];
 var country_loaded = [];
 var macTables = [];
 
-for (let i = 0; i < wireless.phy_count; i++) {
+var phy_count = (typeof wireless !== 'undefined' && typeof wireless.phy_count !== 'undefined') ? wireless.phy_count : 0;
+
+for (let i = 0; i < phy_count; i++) {
 	devices.push(['phy'+i, 'phy'+i]);
 	mode_loaded.push(0);
 	width_loaded.push(0);
@@ -41,6 +43,8 @@ for (let i = 0; i < wireless.phy_count; i++) {
 	country_loaded.push(0);
 	macTables.push([]);
 }
+
+var hasWirelessDevices = devices.length > 0;
 
 var interfaceCount = [];
 
@@ -339,6 +343,10 @@ function refreshWidths(device) {
 function verifyFields(focused, quiet) {
 	var b;
 
+	if (!hasWirelessDevices) {
+		return 1;
+	}
+
 	/* --- visibility --- */
 
 	for (var i = 0; i < devices.length; ++i) {
@@ -513,6 +521,9 @@ function verifyFields(focused, quiet) {
 }
 
 function tabSelect(name) {
+	if (!hasWirelessDevices) {
+		return;
+	}
 	tabHigh(name);
 	for (var i = 0; i < devices.length; ++i) {
 		elem.display(devices[i][0]+'-tab', (name == devices[i][0]));
@@ -605,6 +616,7 @@ function save_pre() {
 }
 
 function save(nomsg) {
+	if (!hasWirelessDevices) return;
 	if (!save_pre()) return;
 	if (!nomsg) show(); /* update '_service' field first */
 	var fom = E('t_fom');
@@ -676,6 +688,9 @@ function save(nomsg) {
 }
 
 function earlyInit() {
+	if (!hasWirelessDevices) {
+		return;
+	}
 	tabSelect(cookie.get('wireless_device') || devices[0][0]);
 	for (var i = 0; i < devices.length; ++i) {
 		deviceSectSelect(i, cookie.get('wireless'+i+'_deviceSection') || deviceSections[0][0]);
@@ -791,9 +806,14 @@ for (i = 0; i < devices.length; ++i) {
 
 <!-- / / / -->
 
-<div class="section-title">Device Configuration</div>
-<div class="section">
 <script>
+
+if (!hasWirelessDevices) {
+	W('<div class="fields"><b>No compatible Wifi hardware detected.</b><\/div>');
+} else {
+
+W('<div class="section-title">Device Configuration</div>');
+W('<div class="section">');
 
 tabCreate.apply(this, devices);
 
@@ -847,12 +867,17 @@ for (i = 0; i < devices.length; ++i) {
 
 	W('<\/div>');
 }
+
+} /* hasWirelessDevices */
 </script>
 </div>
 
-<div class="section-title">Interface Configuration</div>
-<div class="section">
 <script>
+
+if (hasWirelessDevices) {
+
+W('<div class="section-title">Interface Configuration</div>');
+W('<div class="section">');
 
 for (var i = 0; i < devices.length; i++) {
 	W('<div id="phy'+i+'-interface-tab">');
@@ -931,11 +956,14 @@ for (var i = 0; i < devices.length; i++) {
 	}
 	W('<\/div>');
 }
+
+} /* hasWirelessDevices */
 </script>
 </div>
 
 <!-- / / / -->
 
+<div id="notes-wrapper">
 <div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<i>Device Configuration:</i><br>
@@ -1017,13 +1045,21 @@ for (var i = 0; i < devices.length; i++) {
 			Avoid channels with the "NO_IR" code, and channels with "NO_160MHZ" if wanting to use 160MHz widths. Also keep an eye in the logs for other issues/errors when starting the 5GHz radio.
 	</ul>
 </div>
+</div>
+<script>if (!hasWirelessDevices) E('notes-wrapper').style.display = 'none';</script>
 
 <!-- / / / -->
 
 <div id="footer">
 	<span id="footer-msg"></span>
-	<input type="button" value="Save" id="save-button" onclick="save()">
-	<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">
+	<script>
+	if (hasWirelessDevices) {
+		W('<input type="button" value="Save" id="save-button" onclick="save()">');
+		W('<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">');
+	} else {
+		E('footer').style.display = 'none';
+	}
+	</script>
 </div>
 
 </td></tr>
