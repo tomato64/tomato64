@@ -778,6 +778,14 @@ void store_wan_if_to_nvram(char *prefix)
 	if (strcmp(nvram_safe_get(strlcat_r(prefix, "_sta", tmp, sizeof(tmp))), "") == 0) {
 		/* vlan ID mapping */
 		p = nvram_safe_get(strlcat_r(prefix, "_ifnameX", tmp, sizeof(tmp)));
+#ifdef TOMATO64
+		/* Fallback to _ifnameX_vlan for portless WANs (PPP3G/LTE create their own interfaces) */
+		if (p[0] == '\0') {
+			int proto = get_wanx_proto(prefix);
+			if (proto == WP_PPP3G || proto == WP_LTE)
+				p = nvram_safe_get(strlcat_r(prefix, "_ifnameX_vlan", tmp, sizeof(tmp)));
+		}
+#endif /* TOMATO64 */
 		if (sscanf(p, "vlan%d", &vid) == 1) {
 			snprintf(buf, sizeof(buf), "vlan%dvid", vid);
 			vid_map = nvram_get_int(buf);
@@ -911,6 +919,10 @@ void start_wan_if(char *prefix)
 		mtu = 0;
 
 	/* Bring wan interface UP */
+#ifdef TOMATO64
+	/* PPP3G/LTE create their own interfaces - don't try to bring up placeholder interface */
+	if (wan_proto != WP_PPP3G && wan_proto != WP_LTE)
+#endif
 	_ifconfig(wan_ifname, IFUP, NULL, NULL, NULL, mtu);
 
 	/* Try to increase WAN interface MTU to allow PPPoE MTU/MRU 1500 (default 1492, with 8 byte overhead) */

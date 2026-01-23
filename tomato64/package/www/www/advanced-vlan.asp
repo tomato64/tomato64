@@ -1246,7 +1246,12 @@ REMOVE-END */
 	k = 0;
 	for (i = 1; i <= MAXWAN_NUM; ++i) {
 		j = (i > 1) ? i : '';
+/* TOMATO64-REMOVE-BEGIN */
 		if (fom['wan'+j+'_ifnameX'].value.length > 1)
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		if (fom['wan'+j+'_ifnameX'].value.length > 1 || fom['wan'+j+'_ifnameX_vlan'].value.length > 1)
+/* TOMATO64-END */
 			k++;
 		else {
 			fom['wan'+j+'_iface'].disabled = 0;
