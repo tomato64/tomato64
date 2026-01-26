@@ -499,7 +499,7 @@ void stop_nginx(void)
 
 	pid = pidof(nginx_bin);
 
-	/* wait for child of start_bittorrent to finish (if any) */
+	/* wait for child of start_nginx to finish (if any) */
 	memset(buf, 0, sizeof(buf));
 	while (f_read_string(nginx_child_pid, buf, sizeof(buf)) > 0 && atoi(buf) > 0 && ppid(atoi(buf)) > 0 && (m-- > 0)) {
 		logmsg(LOG_DEBUG, "*** %s: waiting for child process of start_nginx to end, %d secs left ...", __FUNCTION__, m);
@@ -527,10 +527,10 @@ void stop_nginx(void)
 #ifdef TCONFIG_BCMARM
 		eval("rm", "-f", php_ini_path);
 		eval("rm", "-f", php_fpm_path);
-		eval("rm", "-f", nginx_child_pid);
 #endif /* TCONFIG_BCMARM */
 	}
 
+	eval("rm", "-f", nginx_child_pid);
 #ifdef TCONFIG_BCMARM
 	if (f_exists(php_fpm_socket))
 		unlink(php_fpm_socket);
