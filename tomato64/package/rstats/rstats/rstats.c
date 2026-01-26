@@ -321,7 +321,7 @@ static void save(int quick)
 	}
 
 #ifdef TOMATO64
-	sprintf(sgz, "%s.gz", speed_fn);
+	snprintf(sgz, sizeof(sgz), "%s.gz", speed_fn);
 
 	if (save_path[0] != 0 && strcmp(save_path, "*nvram") != 0) {
 		char speed_path[256];
@@ -350,8 +350,8 @@ static void save(int quick)
 
 								strcpy(bkp, bak);
 								for (b = HI_BACK-1; b > 0; --b) {
-									sprintf(bkp + n, "_%d.bak", b + 1);
-									sprintf(bak + n, "_%d.bak", b);
+									snprintf(bkp + n, sizeof(bkp) - n, "_%d.bak", b + 1);
+									snprintf(bak + n, sizeof(bak) - n, "_%d.bak", b);
 									rename(bak, bkp);
 								}
 								if (eval("cp", "-p", speed_path, bak) == 0)
@@ -499,7 +499,7 @@ static int try_hardway_speed(const char *fname)
 		n -= 3;
 
 	for (b = HI_BACK; b > 0; --b) {
-		sprintf(fn + n, "_%d.bak", b);
+		snprintf(fn + n, sizeof(fn) - n, "_%d.bak", b);
 		found |= load_speed(fn);
 	}
 	found |= load_speed(fname);
