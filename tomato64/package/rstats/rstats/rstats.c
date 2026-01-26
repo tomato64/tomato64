@@ -14,7 +14,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
- *
  * Fixes/updates (C) 2018 - 2026 pedro
  * https://freshtomato.org/
  *
@@ -33,6 +32,7 @@
 #include <sys/ioctl.h>
 #include <stdint.h>
 #include <syslog.h>
+#include <inttypes.h>
 #ifdef USE_ZLIB
  #include <zlib.h>
 #endif
@@ -69,7 +69,7 @@
 #ifdef TOMATO64
 #define MAX_SPEED_IF	64
 #endif /* TOMATO64 */
-#define MAX_ROLLOVER	(3750UL * M) /* 3750 MByte - new rollover limit */
+#define MAX_ROLLOVER   (3750ULL * M) /* 3750 MByte - new rollover limit */
 
 #define MAX_COUNTER	2
 #define RX 		0
@@ -101,7 +101,7 @@ typedef struct {
 	char ifname[12];
 	long utime;
 	unsigned long speed[MAX_NSPEED][MAX_COUNTER];
-	unsigned long last[MAX_COUNTER];
+	uint64_t last[MAX_COUNTER];
 	int tail;
 	signed char sync;
 } speed_t;
@@ -773,7 +773,7 @@ static void save_histjs(void)
 	}
 }
 
-static void bump(data_t *data, int *tail, int max, uint32_t xnow, unsigned long *counter)
+static void bump(data_t *data, int *tail, int max, uint32_t xnow, uint64_t *counter)
 {
 	int t, i;
 
@@ -803,16 +803,16 @@ static void calc(void)
 	char prefix[] = "wanXX";
 	char *ifname;
 	char *p;
-	unsigned long counter[MAX_COUNTER];
+	uint64_t counter[MAX_COUNTER];
 	speed_t *sp;
 	speed_runtime_t *sp_rtd;
 	int i, j;
 	time_t now;
 	time_t mon;
 	struct tm *tms;
-	uint32_t c;
-	uint32_t sc;
-	unsigned long diff;
+	uint64_t c;
+	uint64_t sc;
+	uint64_t diff;
 	long tick;
 	int n;
 	char *exclude;
@@ -842,8 +842,16 @@ static void calc(void)
 			continue;
 
 		/* <rx bytes, packets, errors, dropped, fifo errors, frame errors, compressed, multicast><tx ...> */
-		if (sscanf(p + 1, "%lu%*u%*u%*u%*u%*u%*u%*u%lu", &counter[RX], &counter[TX]) != 2)
-			continue;
+		/* first we try 64-bit format (newer kernels), then fallback to 32-bit (old 2.6 kernels) */
+		if (sscanf(p + 1, "%" SCNu64 "%*u%*u%*u%*u%*u%*u%*u%" SCNu64, &counter[RX], &counter[TX]) != 2) {
+			/* fallback 32-bit */
+			unsigned long temp_rx, temp_tx;
+			if (sscanf(p + 1, "%lu%*u%*u%*u%*u%*u%*u%*u%lu", &temp_rx, &temp_tx) != 2)
+				continue;
+
+			counter[RX] = temp_rx;
+			counter[TX] = temp_tx;
+		}
 
 		sp = speed;
 		sp_rtd = speed_rtd;
@@ -907,9 +915,9 @@ static void calc(void)
 				c = counter[i];
 				sc = sp->last[i];
 				if (c < sc) { /* TX/RX bytes went backwards - figure out why */
-					diff = ((0xFFFFFFFFUL) - sc + 1UL) + c; /* rollover calculation */
+					diff = (0xFFFFFFFFFFFFFFFFULL - sc + 1ULL) + c; /* rollover calculation */
 					if (diff > MAX_ROLLOVER) {
-						diff = 0UL; /* 3750 MByte / 60 sec => 500 MBit/s maximum limit with roll-over! Try to catch unknown/unwanted traffic peaks - Part 1/2 */
+						diff = 0ULL; /* 3750 MByte / 60 sec => 500 MBit/s maximum limit with roll-over! Try to catch unknown/unwanted traffic peaks - Part 1/2 */
 					}
 					else {
 						wanup = check_wanup(prefix); /* see router/shared/misc.c */
@@ -917,7 +925,7 @@ static void calc(void)
 
 						/* see https://www.linksysinfo.org/index.php?threads/tomato-toastmans-releases.36106/post-281722 */
 						if (wanup && (wanuptime < (long)(INTERVAL + 10)))
-							diff = 0UL; /* Try to catch traffic peaks at connection startup/reconnect (xDSL/PPPoE) - Part 2/2 */
+							diff = 0ULL; /* Try to catch traffic peaks at connection startup/reconnect (xDSL/PPPoE) - Part 2/2 */
 					}
 				}
 				else
@@ -930,7 +938,7 @@ static void calc(void)
 			for (j = 0; j < n; ++j) {
 				sp->tail = (sp->tail + 1) % MAX_NSPEED;
 				for (i = 0; i < MAX_COUNTER; ++i) {
-					sp->speed[sp->tail][i] = (counter[i] / n);
+					sp->speed[sp->tail][i] = (unsigned long)(counter[i] / n);
 				}
 			}
 		}
