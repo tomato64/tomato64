@@ -186,17 +186,14 @@ static void get_speed_path(char *speed_path, int size)
 
 static int comp(const char *path, void *buffer, int size)
 {
-	char s[256];
+	char cmd[256];
 
 	if (f_write(path, buffer, size, 0, 0) != size)
 		return 0;
 
-	sprintf(s, "%s.gz", path);
-	unlink(s);
+	snprintf(cmd, sizeof(cmd), "gzip -f %s", path); /* -f to overwrite existing .gz */
 
-	sprintf(s, "gzip %s", path);
-
-	return system(s) == 0;
+	return system(cmd) == 0;
 }
 
 static void save(int quick)
@@ -232,7 +229,7 @@ static void save(int quick)
 	if (quick)
 		return;
 
-	sprintf(hgz, "%s.gz", history_fn);
+	snprintf(hgz, sizeof(hgz), "%s.gz", history_fn);
 
 	if (strcmp(save_path, "*nvram") == 0) {
 		if (!wait_action_idle(10)) {
@@ -278,8 +275,8 @@ static void save(int quick)
 
 							strcpy(bkp, bak);
 							for (b = HI_BACK-1; b > 0; --b) {
-								sprintf(bkp + n, "_%d.bak", b + 1);
-								sprintf(bak + n, "_%d.bak", b);
+								snprintf(bkp + n, sizeof(bkp) - n, "_%d.bak", b + 1);
+								snprintf(bak + n, sizeof(bak) - n, "_%d.bak", b);
 								rename(bak, bkp);
 							}
 							if (eval("cp", "-p", save_path, bak) == 0)
@@ -361,23 +358,24 @@ static void save(int quick)
 
 static int decomp(const char *fname, void *buffer, int size, int max)
 {
-	char s[256];
-	int n;
+	char cmd[256];
+	int n = 0;
 
 	logmsg(LOG_DEBUG, "*** %s: fname=%s", __FUNCTION__, fname);
 
 	unlink(uncomp_fn);
 
-	n = 0;
-	sprintf(s, "gzip -dc %s > %s", fname, uncomp_fn);
-	if (system(s) == 0) {
+	snprintf(cmd, sizeof(cmd), "gzip -dc %s > %s", fname, uncomp_fn);
+	if (system(cmd) == 0) {
 		n = f_read(uncomp_fn, buffer, size * max);
 		_dprintf("%s: n=%d\n", __FUNCTION__, n);
-		if (n <= 0) n = 0;
-			else n = n / size;
+		if (n <= 0)
+			n = 0;
+		else
+			n = n / size;
 	}
 	else
-		logmsg(LOG_DEBUG, "*** %s: %s != 0", __FUNCTION__, s);
+		logmsg(LOG_DEBUG, "*** %s: %s != 0", __FUNCTION__, cmd);
 
 	unlink(uncomp_fn);
 	memset((char *)buffer + (size * n), 0, (max - n) * size);
@@ -401,8 +399,8 @@ static int load_history(const char *fname)
 		logmsg(LOG_DEBUG, "*** %s: load failed", __FUNCTION__);
 		return 0;
 	}
-	else
-		memcpy(&history, &hist, sizeof(history));
+
+	memcpy(&history, &hist, sizeof(history));
 
 	logmsg(LOG_DEBUG, "*** %s: dailyp=%d monthlyp=%d", __FUNCTION__, history.dailyp, history.monthlyp);
 
@@ -445,7 +443,7 @@ static int try_hardway(const char *fname)
 		n -= 3;
 
 	for (b = HI_BACK; b > 0; --b) {
-		sprintf(fn + n, "_%d.bak", b);
+		snprintf(fn + n, sizeof(fn) - n, "_%d.bak", b);
 		found |= load_history(fn);
 	}
 	found |= load_history(fname);
@@ -478,7 +476,7 @@ static void load_new(void)
 {
 	char hgz[256];
 
-	sprintf(hgz, "%s.gz.new", history_fn);
+	snprintf(hgz, sizeof(hgz), "%s.gz.new", history_fn);
 	if (load_history(hgz))
 		save(0);
 
@@ -500,11 +498,11 @@ static void load(int new)
 
 	uptime = get_uptime();
 
-	strlcpy(save_path, nvram_safe_get("rstats_path"), sizeof(save_path) - 32);
+	strlcpy(save_path, nvram_safe_get("rstats_path"), sizeof(save_path));
 	if (((n = strlen(save_path)) > 0) && (save_path[n - 1] == '/')) {
 		ether_atoe(nvram_safe_get("lan_hwaddr"), mac);
-		sprintf(save_path + n, "tomato_rstats_%02x%02x%02x%02x%02x%02x.gz",
-			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+		snprintf(save_path + n, sizeof(save_path) - n, "tomato_rstats_%02x%02x%02x%02x%02x%02x.gz",
+		         mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	}
 
 	if (f_read(stime_fn, &save_utime, sizeof(save_utime)) != sizeof(save_utime))
@@ -517,11 +515,11 @@ static void load(int new)
 	logmsg(LOG_DEBUG, "*** %s: uptime = %ldm, save_utime = %ldm", __FUNCTION__, uptime / 60, save_utime / 60);
 
 #ifndef TOMATO64
-	sprintf(hgz, "%s.gz", speed_fn);
+	snprintf(hgz, sizeof(hgz), "%s.gz", speed_fn);
 	speed_count = decomp(hgz, speed, sizeof(speed[0]), MAX_SPEED_IF);
 #endif /* TOMATO64 */
 #ifdef TOMATO64
-	sprintf(sgz, "%s.gz", speed_fn);
+	snprintf(sgz, sizeof(sgz), "%s.gz", speed_fn);
 	speed_count = decomp(sgz, speed, sizeof(speed[0]), MAX_SPEED_IF);
 #endif /* TOMATO64 */
 	logmsg(LOG_DEBUG, "*** %s: speed_count = %d", __FUNCTION__, speed_count);
@@ -535,7 +533,7 @@ static void load(int new)
 	}
 #endif /* TOMATO64 */
 
-	sprintf(hgz, "%s.gz", history_fn);
+	snprintf(hgz, sizeof(hgz), "%s.gz", history_fn);
 
 	if (new) {
 		unlink(hgz);
@@ -559,7 +557,7 @@ static void load(int new)
 			bi = nvram_safe_get("rstats_data");
 			if ((n = strlen(bi)) > 0) {
 				if ((bo = malloc(base64_decoded_len(n))) != NULL) {
-					n = base64_decode(bi, (unsigned char *) bo, n);
+					n = base64_decode(bi, (unsigned char *)bo, n);
 					logmsg(LOG_DEBUG, "*** %s: nvram n=%d", __FUNCTION__, n);
 					f_write(hgz, bo, n, 0, 0);
 					free(bo);
@@ -571,7 +569,6 @@ static void load(int new)
 			i = 1;
 			while (1) {
 				if (wait_action_idle(10)) {
-
 					/* cifs quirk: try forcing refresh */
 					eval("ls", save_path);
 
@@ -722,7 +719,7 @@ static void save_datajs(FILE *f, int mode)
 		if (data[p].xtime == 0)
 			continue;
 
-		fprintf(f, "%s[0x%lx,0x%llx,0x%llx]", kn ? "," : "", (unsigned long)data[p].xtime, data[p].counter[0] / K, data[p].counter[1] / K);
+		fprintf(f, "%s[0x%lx,0x%llx,0x%llx]", kn ? "," : "", (unsigned long)data[p].xtime, data[p].counter[RX] / K, data[p].counter[TX] / K);
 		++kn;
 	}
 	fprintf(f, "];\n");
@@ -809,7 +806,7 @@ static void calc(void)
 			continue;
 
 		/* <rx bytes, packets, errors, dropped, fifo errors, frame errors, compressed, multicast><tx ...> */
-		if (sscanf(p + 1, "%lu%*u%*u%*u%*u%*u%*u%*u%lu", &counter[0], &counter[1]) != 2)
+		if (sscanf(p + 1, "%lu%*u%*u%*u%*u%*u%*u%*u%lu", &counter[RX], &counter[TX]) != 2)
 			continue;
 
 		sp = speed;
@@ -899,7 +896,7 @@ static void calc(void)
 			for (j = 0; j < n; ++j) {
 				sp->tail = (sp->tail + 1) % MAX_NSPEED;
 				for (i = 0; i < MAX_COUNTER; ++i) {
-					sp->speed[sp->tail][i] = counter[i] / n;
+					sp->speed[sp->tail][i] = (counter[i] / n);
 				}
 			}
 		}
