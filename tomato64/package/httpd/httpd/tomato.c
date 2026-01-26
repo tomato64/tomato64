@@ -1425,26 +1425,27 @@ static const nvset_t nvset_list[] = {
 
 /* web-nginx */
 #ifdef TCONFIG_NGINX
-	{"nginx_enable",		V_01				},	/* NGinX enabled */
-	{"nginx_php",			V_01				},	/* PHP enabled */
-	{"nginx_keepconf",		V_01				},	/* NGinX configuration files overwrite flag */
-	{"nginx_docroot",		V_LENGTH(0, 255)		},	/* root files path */
-	{"nginx_port",			V_PORT				},	/* listening port */
-	{"nginx_fqdn",			V_LENGTH(0, 255)		},	/* server name */
-	{"nginx_upload",		V_LENGTH(1, 1000)		},	/* upload file size limit */
-	{"nginx_remote",		V_01				},
-	{"nginx_priority",		V_LENGTH(0, 255)		},	/* server priority */
-	{"nginx_custom",		V_TEXT(0, 4096)			},	/* user window to add parameters to nginx.conf */
-	{"nginx_httpcustom",		V_TEXT(0, 4096)			},	/* user window to add parameters to nginx.conf */
-	{"nginx_servercustom",		V_TEXT(0, 4096)			},	/* user window to add parameters to nginx.conf */
-	{"nginx_phpconf",		V_TEXT(0, 4096)			},	/* user window to add parameters to php.ini */
+	{ "nginx_enable",		V_01				},	/* NGinX enabled */
+	{ "nginx_php",			V_01				},	/* PHP enabled */
+	{ "nginx_keepconf",		V_01				},	/* NGinX configuration files overwrite flag */
+	{ "nginx_docroot",		V_LENGTH(0, 255)		},	/* root files path */
+	{ "nginx_port",			V_PORT				},	/* listening port */
+	{ "nginx_fqdn",			V_LENGTH(0, 255)		},	/* server name */
+	{ "nginx_upload",		V_LENGTH(1, 1000)		},	/* upload file size limit */
+	{ "nginx_remote",		V_01				},
+	{ "nginx_priority",		V_LENGTH(0, 255)		},	/* server priority */
+	{ "nginx_custom",		V_TEXT(0, 4096)			},	/* user window to add parameters to nginx.conf */
+	{ "nginx_httpcustom",		V_TEXT(0, 4096)			},	/* user window to add parameters to nginx.conf */
+	{ "nginx_servercustom",		V_TEXT(0, 4096)			},	/* user window to add parameters to nginx.conf */
+	{ "nginx_phpconf",		V_TEXT(0, 4096)			},	/* user window to add parameters to php.ini */
 #ifdef TCONFIG_BCMARM
-	{"nginx_phpfpmconf",		V_TEXT(0, 4096)			},	/* user window to add parameters to php-fpm.conf */
+	{ "nginx_phpfpmconf",		V_TEXT(0, 4096)			},	/* user window to add parameters to php-fpm.conf */
 #endif
-	{"nginx_user",			V_LENGTH(0, 255)		},	/* user used to start nginx and spawn-fcgi/php-fpm */
-	{"nginx_override",		V_01				},	/* use user config */
-	{"nginx_overridefile",		V_TEXT(0, 4096)			},	/* path/to/user/nginx.conf */
-	{"nginx_h5aisupport",		V_01				},	/* enable h5ai support */
+	{ "nginx_user",			V_LENGTH(0, 255)		},	/* user used to start nginx and spawn-fcgi/php-fpm */
+	{ "nginx_override",		V_01				},	/* use user config */
+	{ "nginx_overridefile",		V_TEXT(0, 4096)			},	/* path/to/user/nginx.conf */
+	{ "nginx_h5aisupport",		V_01				},	/* enable h5ai support */
+	{ "nginx_sleep",		V_RANGE(1, 60)			},	/* delay at startup */
 
 /* web-mysql */
 	{ "mysql_enable",		V_01				},

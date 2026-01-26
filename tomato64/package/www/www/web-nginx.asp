@@ -25,7 +25,7 @@
 
 <script>
 
-//	<% nvram("nginx_enable,nginx_php,nginx_keepconf,nginx_port,nginx_upload,nginx_remote,nginx_fqdn,nginx_docroot,nginx_priority,nginx_custom,nginx_httpcustom,nginx_servercustom,nginx_user,nginx_phpconf,nginx_phpfpmconf,nginx_override,nginx_overridefile,nginx_h5aisupport,lan_ipaddr"); %>
+//	<% nvram("nginx_enable,nginx_php,nginx_keepconf,nginx_port,nginx_upload,nginx_remote,nginx_fqdn,nginx_docroot,nginx_priority,nginx_custom,nginx_httpcustom,nginx_servercustom,nginx_user,nginx_phpconf,nginx_phpfpmconf,nginx_override,nginx_overridefile,nginx_h5aisupport,nginx_sleep,lan_ipaddr"); %>
 
 var cprefix = 'web_nginx';
 var changed = 0;
@@ -72,6 +72,9 @@ function verifyFields(focused, quiet) {
 			ok = 0;
 		if (!v_length(E('_nginx_phpconf'), quiet || !ok, 0, 4096))
 			ok = 0;
+		if (!v_range(E('_nginx_sleep'), quiet || !ok, 1, 60))
+			ok = 0;
+
 /* BCMARM-BEGIN */
 		if (!v_length(E('_nginx_phpfpmconf'), quiet || !ok, 0, 4096))
 			ok = 0;
@@ -86,6 +89,7 @@ function verifyFields(focused, quiet) {
 		ferror.clear(E('_nginx_servercustom'));
 		ferror.clear(E('_nginx_custom'));
 		ferror.clear(E('_nginx_phpconf'));
+		ferror.clear(E('_nginx_sleep'));
 /* BCMARM-BEGIN */
 		ferror.clear(E('_nginx_phpfpmconf'));
 /* BCMARM-END */
@@ -176,6 +180,7 @@ function init() {
 	<script>
 		createFieldTable('', [
 			{ title: 'Enable on Start', name: 'f_nginx_enable', type: 'checkbox', value: nvram.nginx_enable == '1'},
+			{ title: 'Delay at startup', name: 'nginx_sleep', type: 'text', maxlen: 5, size: 7, value: nvram.nginx_sleep, suffix: ' <small>seconds; range: 1 - 60; default: 1<\/small>' },
 			{ title: 'Enable PHP support', name: 'f_nginx_php', type: 'checkbox', value: nvram.nginx_php == '1' },
 			{ title: 'Run As', name: 'nginx_user', type: 'select', options: [['root','Root'],['nobody','Nobody']], value: nvram.nginx_user },
 			{ title: 'Keep Config Files', name: 'f_nginx_keepconf', type: 'checkbox', value: nvram.nginx_keepconf == '1' },

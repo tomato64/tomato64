@@ -2002,26 +2002,27 @@ struct nvram_tuple router_defaults[] = {
 #endif /* TCONFIG_NOCAT */
 
 #ifdef TCONFIG_NGINX
-	{"nginx_enable",		"0"				, 0 },	/* NGinX enabled */
-	{"nginx_php",			"0"				, 0 },	/* PHP enabled */
-	{"nginx_keepconf",		"0"				, 0 },	/* Enable/disable keep configuration files unmodified in /etc/nginx */
-	{"nginx_docroot",		"/www"				, 0 },	/* path for server files */
-	{"nginx_port",			"85"				, 0 },	/* port to listen */
-	{"nginx_remote",		"0"				, 0 },	/* open port from WAN side */
-	{"nginx_fqdn",			"Tomato64"			, 0 },	/* server name */
-	{"nginx_upload",		"100"				, 0 },	/* upload file size limit */
-	{"nginx_priority",		"10"				, 0 },	/* server priority = worker_priority */
-	{"nginx_custom",		""				, 0 },	/* additional lines for nginx.conf */
-	{"nginx_httpcustom",		""				, 0 },	/* additional lines for nginx.conf */
-	{"nginx_servercustom",		""				, 0 },	/* additional lines for nginx.conf */
-	{"nginx_phpconf",		""				, 0 },	/* additional lines for php.ini */
+	{ "nginx_enable",		"0"				, 0 },	/* NGinX enabled */
+	{ "nginx_php",			"0"				, 0 },	/* PHP enabled */
+	{ "nginx_keepconf",		"0"				, 0 },	/* Enable/disable keep configuration files unmodified in /etc/nginx */
+	{ "nginx_docroot",		"/www"				, 0 },	/* path for server files */
+	{ "nginx_port",			"85"				, 0 },	/* port to listen */
+	{ "nginx_remote",		"0"				, 0 },	/* open port from WAN side */
+	{ "nginx_fqdn",			"Tomato64"			, 0 },	/* server name */
+	{ "nginx_upload",		"100"				, 0 },	/* upload file size limit */
+	{ "nginx_priority",		"10"				, 0 },	/* server priority = worker_priority */
+	{ "nginx_custom",		""				, 0 },	/* additional lines for nginx.conf */
+	{ "nginx_httpcustom",		""				, 0 },	/* additional lines for nginx.conf */
+	{ "nginx_servercustom",		""				, 0 },	/* additional lines for nginx.conf */
+	{ "nginx_phpconf",		""				, 0 },	/* additional lines for php.ini */
 #ifdef TCONFIG_BCMARM
-	{"nginx_phpfpmconf",		""				, 0 },	/* additional lines for php-fpm.conf */
+	{ "nginx_phpfpmconf",		""				, 0 },	/* additional lines for php-fpm.conf */
 #endif
-	{"nginx_user",			"root"				, 0 },	/* user/group */
-	{"nginx_override",		"0"				, 0 },	/* use user config */
-	{"nginx_overridefile",		"/path/to/nginx.conf"		, 0 },	/* path/to/user/nginx.conf */
-	{"nginx_h5aisupport",		"0"				, 0 },	/* enable h5ai support */
+	{ "nginx_user",			"root"				, 0 },	/* user/group */
+	{ "nginx_override",		"0"				, 0 },	/* use user config */
+	{ "nginx_overridefile",		"/path/to/nginx.conf"		, 0 },	/* path/to/user/nginx.conf */
+	{ "nginx_h5aisupport",		"0"				, 0 },	/* enable h5ai support */
+	{ "nginx_sleep",		"1"				, 0 },	/* delay at startup */
 
 	{ "mysql_enable",		"0"				, 0 },
 	{ "mysql_sleep",		"2"				, 0 },

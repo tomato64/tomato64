@@ -8,7 +8,7 @@
  * No part of this program can be used out of Tomato Firmware without owners permission.
  * This code generates the configurations files for NGINX. You can see these files in /etc/nginx/
  *
- * Fixes/updates (C) 2018 - 2025 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
  * https://freshtomato.org/
  *
  */
@@ -16,35 +16,36 @@
 
 #include "rc.h"
 
-#define nginxbin			"nginx"				/* process name */
-#define nginxname			"tomato64.local"		/* server name */
-#define nginxlogdir			"/var/log/nginx"		/* log directory */
-#define nginxlibdir			"/var/lib/nginx"		/* lib directory */
-#define nginxdir			"/etc/nginx"			/* directory to write config files */
-#define nginxdocrootdir			"/www"				/* document root */
-#define nginxrundir			"/var/run"			/* run directory */
+#define nginx_bin			"nginx"				/* process name */
+#define nginx_name			"tomato64.local"		/* server name */
+#define nginx_log_dir			"/var/log/nginx"		/* log directory */
+#define nginx_lib_dir			"/var/lib/nginx"		/* lib directory */
+#define nginx_dir			"/etc/nginx"			/* directory to write config files */
+#define nginx_docroot_dir		"/www"				/* document root */
+#define nginx_run_dir			"/var/run"			/* run directory */
 
-#define nginxconf			nginxdir"/nginx.conf"		/* config file */
-#define fastcgiconf			nginxdir"/fastcgi.conf"		/* fastcgi config file */
-#define mimetypes			nginxdir"/mime.types"		/* mime.types config */
-#define client_body_temp_path		nginxlibdir"/client"		/* temp path needed to execute nginx */
-#define fastcgi_temp_path		nginxlibdir"/fastcgi"		/* temp path needed to execute nginx fastcgi */
-#define uwsgi_temp_path			nginxlibdir"/uwsgi"		/* temp path needed to execute nginx */
-#define scgi_temp_path			nginxlibdir"/scgi"		/* temp path needed to execute nginx */
-#define nginxaccesslog			nginxlogdir"/access.log"	/* access log */
-#define nginxerrorlog			nginxlogdir"/error.log"		/* error log */
-#define nginxcustom			"#"				/* additional window for custom parameter */
+#define nginx_conf			nginx_dir"/nginx.conf"		/* config file */
+#define fastcgi_conf			nginx_dir"/fastcgi.conf"		/* fastcgi config file */
+#define mimetypes			nginx_dir"/mime.types"		/* mime.types config */
+#define client_body_temp_path		nginx_lib_dir"/client"		/* temp path needed to execute nginx */
+#define fastcgi_temp_path		nginx_lib_dir"/fastcgi"		/* temp path needed to execute nginx fastcgi */
+#define uwsgi_temp_path			nginx_lib_dir"/uwsgi"		/* temp path needed to execute nginx */
+#define scgi_temp_path			nginx_lib_dir"/scgi"		/* temp path needed to execute nginx */
+#define nginx_accesslog			nginx_log_dir"/access.log"	/* access log */
+#define nginx_errorlog			nginx_log_dir"/error.log"	/* error log */
+#define nginx_custom			"#"				/* additional window for custom parameter */
 #define nginx_master_process		"on"				/* set to "off" in developpment mode only */
-#define nginxpid			nginxrundir"/nginx.pid"		/* pid */
+#define nginx_pid			nginx_run_dir"/nginx.pid"	/* pid */
+#define nginx_child_pid			nginx_dir"/child.pid"		/* pid of child process */
 #define nginx_worker_rlimit_profile	"8192"				/* worker rlimit profile */
 #define nginx_worker_connections	"512"				/* worker_proc*512/keepalive_timeout*60 = 512 users per minute */
-#define nginssendfile			"on"				/* sendfile */
+#define nginx_sendfile			"on"				/* sendfile */
+#define nginx_fw_script			nginx_dir"/nginx-fw.sh"
+#define nginx_fw_del_script		nginx_dir"/nginx-clear-fw-tmp.sh"
 //#define nginx_multi_accept		"on"				/* specifies multiple connections for one core CPU */
 //#define nginx_keepalive_timeout	"60"				/* the server will close connections after this time */
-//#define nginxtcp_nopush		"on"				/* tcp_nopush */
-//#define nginxserver_hash_bucket_size	"128"				/* server names hash bucket size */
-#define nginx_fw_script			nginxdir"/nginx-fw.sh"
-#define nginx_fw_del_script		nginxdir"/nginx-clear-fw-tmp.sh"
+//#define nginx_tcp_nopush		"on"				/* tcp_nopush */
+//#define nginx_server_hash_bucket_size	"128"				/* server names hash bucket size */
 #define php_ini_path			"/etc/php.ini"
 #ifdef TCONFIG_BCMARM
 #define php_fpm_path			"/etc/php-fpm.conf"
@@ -69,9 +70,9 @@ unsigned int fastpath = 0;
 static void build_fastcgi_conf(void)
 {
 	/* Starting a fastcgi configuration file */
-	mkdir_if_none(nginxdir);
-	if ((fastcgi_conf_file = fopen(fastcgiconf, "w")) == NULL) {
-		logerr(__FUNCTION__, __LINE__, fastcgiconf);
+	mkdir_if_none(nginx_dir);
+	if ((fastcgi_conf_file = fopen(fastcgi_conf, "w")) == NULL) {
+		logerr(__FUNCTION__, __LINE__, fastcgi_conf);
 		return;
 	}
 
@@ -101,7 +102,7 @@ static void build_fastcgi_conf(void)
 static void build_mime_types(void)
 {
 	/* Starting the mime.types configuration file */
-	mkdir_if_none(nginxdir);
+	mkdir_if_none(nginx_dir);
 	if ((mimetypes_file = fopen(mimetypes, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, mimetypes);
 		return;
@@ -166,9 +167,9 @@ static void build_nginx_conf(void)
 	int i;		/* integer cast */
 
 	/* Starting the nginx configuration file */
-	mkdir_if_none(nginxdir);
-	if ((nginx_conf_file = fopen(nginxconf, "w")) == NULL) {
-		logerr(__FUNCTION__, __LINE__, nginxconf);
+	mkdir_if_none(nginx_dir);
+	if ((nginx_conf_file = fopen(nginx_conf, "w")) == NULL) {
+		logerr(__FUNCTION__, __LINE__, nginx_conf);
 		return;
 	}
 
@@ -177,7 +178,7 @@ static void build_nginx_conf(void)
 		i = 10; /* min = Max Performance and max= Min Performance value for worker_priority */
 
 	if ((buf = nvram_safe_get("nginx_httpcustom")) == NULL)
-		buf = nginxcustom; /* add custom config to http section */
+		buf = nginx_custom; /* add custom config to http section */
 
 	fprintf(nginx_conf_file, /* global process */
 	                         "user %s %s;\n"
@@ -209,14 +210,14 @@ static void build_nginx_conf(void)
 	                         "auto",
 	                         nginx_master_process,
 	                         i,
-	                         nginxerrorlog,
-	                         nginxpid,
+	                         nginx_errorlog,
+	                         nginx_pid,
 	                         nginx_worker_rlimit_profile,
 	                         nginx_worker_connections,
 	                         //nginx_multi_accept,
 	                         mimetypes,
-	                         fastcgiconf,
-	                         nginssendfile,
+	                         fastcgi_conf,
+	                         nginx_sendfile,
 	                         nvram_safe_get("nginx_upload"),
 	                         buf);
 
@@ -226,8 +227,8 @@ static void build_nginx_conf(void)
 	                         "server_names_hash_bucket_size\t%s;\n"
 	                         "limit_req_zone $binary_remote_addr zone=one:10m rate=1r/s;\n",
 	                         nginx_keepalive_timeout,
-	                         nginxtcp_nopush,
-	                         nginxserver_hash_bucket_size);
+	                         nginx_tcp_nopush,
+	                         nginx_server_hash_bucket_size);
 */
 
 	/* Basic Server Parameters */
@@ -236,7 +237,7 @@ static void build_nginx_conf(void)
 		i = 85; /* 0xFFFF 65535 */
 
 	if ((buf = nvram_safe_get("nginx_fqdn")) == NULL)
-		buf = nginxname;
+		buf = nginx_name;
 
 	fprintf(nginx_conf_file, "server {\n"
 	                         "listen %d;\n"
@@ -245,10 +246,10 @@ static void build_nginx_conf(void)
 	                         "location / {\n",
 	                         i,
 	                         buf,
-	                         nginxaccesslog);
+	                         nginx_accesslog);
 
 	if ((buf = nvram_safe_get("nginx_docroot")) == NULL)
-		buf = nginxdocrootdir;
+		buf = nginx_docroot_dir;
 
 	fprintf(nginx_conf_file, "root %s;\n"
 	                         "index index.html index.htm index.php %s;\n"
@@ -274,7 +275,7 @@ static void build_nginx_conf(void)
 		                         "fastcgi_pass 127.0.0.1:9000;\n"
 #endif /* TCONFIG_BCMARM */
 		                         "}\n",
-		                         fastcgiconf
+		                         fastcgi_conf
 #ifdef TCONFIG_BCMARM
 		                         ,php_fpm_socket
 #endif /* TCONFIG_BCMARM */
@@ -290,7 +291,7 @@ static void build_nginx_conf(void)
 
 	/* add custom config to server section */
 	if ((buf = nvram_safe_get("nginx_servercustom")) == NULL)
-		buf = nginxcustom;
+		buf = nginx_custom;
 
 	fprintf(nginx_conf_file, "%s"
 	                         "\n"
@@ -300,7 +301,7 @@ static void build_nginx_conf(void)
 	                         buf);
 
 	if ((buf = nvram_safe_get("nginx_custom")) == NULL)
-		buf = nginxcustom;
+		buf = nginx_custom;
 
 	fprintf(nginx_conf_file, "%s", buf);
 	fclose(nginx_conf_file);
@@ -328,7 +329,7 @@ static void build_nginx_conf(void)
 		                     "%s\n",
 		                     nvram_safe_get("nginx_upload"),
 		                     nvram_safe_get("nginx_upload"),
-		                     nginxrundir,
+		                     nginx_run_dir,
 		                     nvram_safe_get("nginx_phpconf"));
 
 		fclose(phpini_file);
@@ -395,16 +396,26 @@ static void build_nginx_firewall(void)
 /* start the nginx module according environment directives */
 void start_nginx(int force)
 {
-	int ret = 0;
+	int n, ret = 0;
+	pid_t pidof_child = 0;
+	char buf[64];
 
 	/* only if enabled or forced */
 	if (!nvram_get_int("nginx_enable") && force == 0)
 		return;
 
-	if (serialize_restart("nginx", 1))
+	if (serialize_restart(nginx_bin, 1))
 		return;
 
-	if (!f_exists(fastcgiconf))
+	memset(buf, 0, sizeof(buf));
+	if (f_read_string(nginx_child_pid, buf, sizeof(buf)) > 0 && atoi(buf) > 0 && ppid(atoi(buf)) > 0) { /* fork is still up */
+		logmsg(LOG_WARNING, "%s: another process (PID: %s) still up, aborting ...", __FUNCTION__, buf);
+		return;
+	}
+
+	logmsg(LOG_INFO, "starting nginx ...");
+
+	if (!f_exists(fastcgi_conf))
 		build_fastcgi_conf();
 
 	if (!f_exists(mimetypes))
@@ -413,12 +424,12 @@ void start_nginx(int force)
 	if (!nvram_get_int("nginx_keepconf"))
 		build_nginx_conf();
 	else {
-		if (!f_exists(nginxconf))
+		if (!f_exists(nginx_conf))
 			build_nginx_conf();
 	}
 
 	/* create directories before starting daemon */
-	mkdir_if_none(nginxlogdir);
+	mkdir_if_none(nginx_log_dir);
 	mkdir_if_none(client_body_temp_path);
 	mkdir_if_none(fastcgi_temp_path);
 	mkdir_if_none(uwsgi_temp_path);
@@ -426,13 +437,29 @@ void start_nginx(int force)
 
 	build_nginx_firewall();
 
+	/* fork new process */
+	if (fork() != 0) /* foreground process */
+		return;
+
+	pidof_child = getpid();
+
+	/* write child pid to a file */
+	memset(buf, 0, sizeof(buf));
+	snprintf(buf, sizeof(buf), "%d", pidof_child);
+	f_write_string(nginx_child_pid, buf, 0, 0);
+
+	/* wait a given time */
+	n = atoi(nvram_safe_get("nginx_sleep"));
+	if (n > 0)
+		sleep(n);
+
 	run_nginx_firewall_script();
 
 	if (nvram_get_int("nginx_php")) { /* run php-fpm/spawn-fcgi */
 #ifdef TCONFIG_BCMARM
 		ret = eval("php-fpm", "-c", php_ini_path, "-y", php_fpm_path, "-R");
 #else
-		xstart("spawn-fcgi", "-a", "127.0.0.1", "-p", "9000", "-P", nginxrundir"/php-fastcgi.pid", "-C", "2", "-u", nvram_safe_get("nginx_user"), "-g", nvram_safe_get("nginx_user"), "/usr/sbin/php-cgi");
+		xstart("spawn-fcgi", "-a", "127.0.0.1", "-p", "9000", "-P", nginx_run_dir"/php-fastcgi.pid", "-C", "2", "-u", nvram_safe_get("nginx_user"), "-g", nvram_safe_get("nginx_user"), "/usr/sbin/php-cgi");
 #endif /* TCONFIG_BCMARM */
 	}
 	else {
@@ -443,7 +470,7 @@ void start_nginx(int force)
 #endif /* TCONFIG_BCMARM */
 	}
 
-	ret |= eval(nginxbin, "-c", nvram_get_int("nginx_override") ? nvram_safe_get("nginx_overridefile") : nginxconf);
+	ret |= eval(nginx_bin, "-c", nvram_get_int("nginx_override") ? nvram_safe_get("nginx_overridefile") : nginx_conf);
 
 	if (ret) {
 #ifdef TCONFIG_BCMARM
@@ -455,18 +482,35 @@ void start_nginx(int force)
 	}
 	else
 		logmsg(LOG_INFO, "nginx is started");
+
+	/* terminate the child */
+	exit(0);
 }
 
 /* stop nginx and remove traces of the process */
 void stop_nginx(void)
 {
-	if (serialize_restart("nginx", 0))
+	pid_t pid;
+	char buf[16];
+	int m = atoi(nvram_safe_get("nginx_sleep")) + 10;
+
+	if (serialize_restart(nginx_bin, 0))
 		return;
 
-	if (pidof(nginxbin) > 0) {
-		killall_tk_period_wait(nginxbin, 50);
-		logmsg(LOG_INFO, "nginx is stopped");
+	pid = pidof(nginx_bin);
+
+	/* wait for child of start_bittorrent to finish (if any) */
+	memset(buf, 0, sizeof(buf));
+	while (f_read_string(nginx_child_pid, buf, sizeof(buf)) > 0 && atoi(buf) > 0 && ppid(atoi(buf)) > 0 && (m-- > 0)) {
+		logmsg(LOG_DEBUG, "*** %s: waiting for child process of start_nginx to end, %d secs left ...", __FUNCTION__, m);
+		sleep(1);
 	}
+
+	killall_tk_period_wait(nginx_bin, 50);
+
+	if (pid > 0)
+		logmsg(LOG_INFO, "nginx is stopped");
+
 #ifdef TCONFIG_BCMARM
 	killall_tk_period_wait("php-fpm", 50);
 #else
@@ -479,20 +523,22 @@ void stop_nginx(void)
 	simple_unlock("firewall");
 
 	if (!nvram_get_int("nginx_keepconf")) {
-		eval("rm", "-rf", nginxdir);
+		eval("rm", "-rf", nginx_dir);
 #ifdef TCONFIG_BCMARM
 		eval("rm", "-f", php_ini_path);
 		eval("rm", "-f", php_fpm_path);
+		eval("rm", "-f", nginx_child_pid);
 #endif /* TCONFIG_BCMARM */
 	}
+
 #ifdef TCONFIG_BCMARM
 	if (f_exists(php_fpm_socket))
 		unlink(php_fpm_socket);
 	if (f_exists(php_fpm_pid))
 		unlink(php_fpm_pid);
 #endif /* TCONFIG_BCMARM */
-	if (f_exists(nginxpid))
-		unlink(nginxpid);
+	if (f_exists(nginx_pid))
+		unlink(nginx_pid);
 }
 
 void run_nginx_firewall_script(void)
