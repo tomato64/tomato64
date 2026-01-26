@@ -33,6 +33,9 @@
 #include <sys/ioctl.h>
 #include <stdint.h>
 #include <syslog.h>
+#ifdef USE_ZLIB
+ #include <zlib.h>
+#endif
 
 #include <bcmnvram.h>
 #include <shutils.h>
@@ -123,7 +126,9 @@ volatile int restarted = 1;
 
 const char history_fn[]       = "/var/lib/misc/rstats-history";
 const char speed_fn[]         = "/var/lib/misc/rstats-speed";
-const char uncomp_fn[]        = "/var/tmp/rstats-uncomp";
+#ifndef USE_ZLIB
+ const char uncomp_fn[]        = "/var/tmp/rstats-uncomp";
+#endif
 const char source_fn[]        = "/var/lib/misc/rstats-source";
 const char historyjs_fn[]     = "/var/spool/rstats-history.js";
 const char historyjs_tmp_fn[] = "/var/tmp/rstats-history.js";
@@ -186,6 +191,21 @@ static void get_speed_path(char *speed_path, int size)
 
 static int comp(const char *path, void *buffer, int size)
 {
+#ifdef USE_ZLIB
+	char gzpath[256];
+	int written, ret;
+
+	snprintf(gzpath, sizeof(gzpath), "%s.gz", path);
+	gzFile gf = gzopen(gzpath, "wb9");
+	if (!gf)
+		return 0;
+
+	written = gzwrite(gf, buffer, size);
+	ret = (written > 0 && written == size);
+	gzclose(gf);
+
+	return ret;
+#else
 	char cmd[256];
 
 	if (f_write(path, buffer, size, 0, 0) != size)
@@ -194,6 +214,7 @@ static int comp(const char *path, void *buffer, int size)
 	snprintf(cmd, sizeof(cmd), "gzip -f %s", path); /* -f to overwrite existing .gz */
 
 	return system(cmd) == 0;
+#endif
 }
 
 static void save(int quick)
@@ -358,11 +379,25 @@ static void save(int quick)
 
 static int decomp(const char *fname, void *buffer, int size, int max)
 {
-	char cmd[256];
 	int n = 0;
+#ifndef USE_ZLIB
+	char cmd[256];
+#endif
 
 	logmsg(LOG_DEBUG, "*** %s: fname=%s", __FUNCTION__, fname);
 
+#ifdef USE_ZLIB
+	gzFile gf = gzopen(fname, "rb");
+	if (gf) {
+		n = gzread(gf, buffer, (unsigned)(size * max));
+		gzclose(gf);
+
+		if (n <= 0)
+			n = 0;
+		else
+			n /= size;
+	}
+#else
 	unlink(uncomp_fn);
 
 	snprintf(cmd, sizeof(cmd), "gzip -dc %s > %s", fname, uncomp_fn);
@@ -372,12 +407,13 @@ static int decomp(const char *fname, void *buffer, int size, int max)
 		if (n <= 0)
 			n = 0;
 		else
-			n = n / size;
+			n /= size;
 	}
 	else
 		logmsg(LOG_DEBUG, "*** %s: %s != 0", __FUNCTION__, cmd);
 
 	unlink(uncomp_fn);
+#endif
 	memset((char *)buffer + (size * n), 0, (max - n) * size);
 
 	return n;
