@@ -2,7 +2,9 @@
  * mysql.c
  *
  * Copyright (C) 2014 bwq518, Hyzoom
- * Fixes/updates (C) 2018 - 2022 pedro
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
  *
  */
 
@@ -79,8 +81,6 @@ void start_mysql(int force)
 		logmsg(LOG_WARNING, "%s: another process (PID: %s) still up, aborting ...", __FUNCTION__, tmp1);
 		return;
 	}
-
-	logmsg(LOG_INFO, "starting mysqld ...");
 
 	if (nvram_match("mysql_binary", "internal"))
 		strlcpy(pbi, "/usr/bin", sizeof(pbi));
@@ -240,11 +240,13 @@ void start_mysql(int force)
 
 	/* wait a given time for partition to be mounted, etc */
 	n = atoi(nvram_safe_get("mysql_sleep"));
-	if (n > 0)
+	if (n > 0 && n < 60) {
+		logmsg(LOG_INFO, "mysqld - delaying start by %d seconds ...", n);
 		sleep(n);
+	}
 
 	/* clean mysql_log */
-	system("/bin/rm -f "mysql_log);
+	eval("rm", "-f", mysql_log);
 	f_write(mysql_log, NULL, 0, 0, 0644);
 
 	/* check for datadir */
@@ -347,7 +349,7 @@ void start_mysql(int force)
 
 		killall_tk_period_wait("mysqld", 50);
 		sleep(1);
-		system("/bin/rm -f "mysql_pid" "mysql_passwd);
+		eval("rm", "-f", mysql_pid, mysql_passwd);
 
 		logmsg(LOG_DEBUG, "*** %s: root password successfully (re-)initialized", __FUNCTION__);
 		nvram_set("mysql_init_rootpass", "0");
@@ -374,7 +376,7 @@ void start_mysql(int force)
 		memset(tmp1, 0, sizeof(tmp1));
 		snprintf(tmp1, sizeof(tmp1), "%s/mysql -uroot -p\"%s\" < %s >> %s 2>&1", pbi, nvram_safe_get("mysql_passwd"), mysql_anyhost, mysql_log);
 		system(tmp1);
-		system("/bin/rm -f "mysql_anyhost);
+		eval("rm", "-f", mysql_anyhost);
 	}
 
 	eval("mkdir", "-p", nginx_docroot);
@@ -385,11 +387,11 @@ END:
 	if (pidof("mysqld") > 0) {
 		logmsg(LOG_INFO, "mysqld started");
 		setup_mysql_watchdog();
-		unlink(mysql_child_pid);
+		eval("rm", "-f", mysql_child_pid);
 	}
 	else {
 		logmsg(LOG_ERR, "starting mysqld failed - check configuration ...");
-		unlink(mysql_child_pid);
+		eval("rm", "-f", mysql_child_pid);
 		stop_mysql();
 	}
 
@@ -437,7 +439,7 @@ void stop_mysql(void)
 		logmsg(LOG_INFO, "mysqld stopped");
 
 	/* clean-up */
-	system("/bin/rm -f "mysql_pid);
 	unlink(mysql_conf_link);
-	system("/bin/rm -rf "mysql_etc_dir);
+	eval("rm", "-f", mysql_pid);
+	eval("rm", "-rf", mysql_etc_dir);
 }
