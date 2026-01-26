@@ -413,8 +413,6 @@ void start_nginx(int force)
 		return;
 	}
 
-	logmsg(LOG_INFO, "starting nginx ...");
-
 	if (!f_exists(fastcgi_conf))
 		build_fastcgi_conf();
 
@@ -450,8 +448,10 @@ void start_nginx(int force)
 
 	/* wait a given time */
 	n = atoi(nvram_safe_get("nginx_sleep"));
-	if (n > 0)
+	if (n > 0 && n < 60) {
+		logmsg(LOG_INFO, "nginx - delaying start by %d seconds ...", n);
 		sleep(n);
+	}
 
 	run_nginx_firewall_script();
 
@@ -480,8 +480,10 @@ void start_nginx(int force)
 #endif
 		stop_nginx();
 	}
-	else
+	else {
 		logmsg(LOG_INFO, "nginx is started");
+		eval("rm", "-f", nginx_child_pid);
+	}
 
 	/* terminate the child */
 	exit(0);
@@ -530,15 +532,12 @@ void stop_nginx(void)
 #endif /* TCONFIG_BCMARM */
 	}
 
-	eval("rm", "-f", nginx_child_pid);
 #ifdef TCONFIG_BCMARM
-	if (f_exists(php_fpm_socket))
-		unlink(php_fpm_socket);
-	if (f_exists(php_fpm_pid))
-		unlink(php_fpm_pid);
+	eval("rm", "-f", php_fpm_socket);
+	eval("rm", "-f", php_fpm_pid);
 #endif /* TCONFIG_BCMARM */
-	if (f_exists(nginx_pid))
-		unlink(nginx_pid);
+	eval("rm", "-f", nginx_child_pid);
+	eval("rm", "-f", nginx_pid);
 }
 
 void run_nginx_firewall_script(void)
