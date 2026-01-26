@@ -1842,6 +1842,7 @@ static const nvset_t nvset_list[] = {
 	{ "wg0_enable",			V_01				},
 	{ "wg0_poll",			V_RANGE(0, 30)			},
 	{ "wg0_tchk",			V_01				},	/* check if tunnel is up */
+	{ "wg0_sleep",			V_RANGE(1, 60)			},	/* delay at startup */
 	{ "wg0_file",			V_TEXT(0, 64)			},
 	{ "wg0_key",			V_TEXT(0, 44)			},
 	{ "wg0_endpoint",		V_NONE				},
@@ -1873,8 +1874,9 @@ static const nvset_t nvset_list[] = {
 	{ "wg0_routing_val",		V_NONE				},
 	{ "wg0_prio",			V_NONE				},
 	{ "wg1_enable",			V_01				},
-	{ "wg1_tchk",			V_01				},	/* check if tunnel is up */
 	{ "wg1_poll",			V_RANGE(0, 30)			},
+	{ "wg1_tchk",			V_01				},	/* check if tunnel is up */
+	{ "wg1_sleep",			V_RANGE(1, 60)			},	/* delay at startup */
 	{ "wg1_file",			V_TEXT(0, 64)			},
 	{ "wg1_key",			V_TEXT(0, 44)			},
 	{ "wg1_endpoint",		V_NONE				},
@@ -1908,6 +1910,7 @@ static const nvset_t nvset_list[] = {
 	{ "wg2_enable",			V_01				},
 	{ "wg2_poll",			V_RANGE(0, 30)			},
 	{ "wg2_tchk",			V_01				},	/* check if tunnel is up */
+	{ "wg2_sleep",			V_RANGE(1, 60)			},	/* delay at startup */
 	{ "wg2_file",			V_TEXT(0, 64)			},
 	{ "wg2_key",			V_TEXT(0, 44)			},
 	{ "wg2_endpoint",		V_NONE				},
