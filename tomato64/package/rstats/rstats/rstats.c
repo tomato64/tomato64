@@ -241,7 +241,7 @@ static void save(int quick)
 
 		if ((n = f_read_alloc(hgz, &bi, 20 * 1024)) > 0) {
 			if ((bo = malloc(base64_encoded_len(n) + 1)) != NULL) {
-				n = base64_encode(bi, bo, n);
+				n = base64_encode((unsigned char *)bi, bo, n);
 				bo[n] = 0;
 				nvram_set("rstats_data", bo);
 				if (!nvram_match("debug_nocommit", "1"))
