@@ -854,9 +854,7 @@ static void calc(void)
 			sp->sync = -1;
 			/* reset previous counters on first calc() to prevent wrong rollover */
 			if (restarted > 0) {
-				for (i = 0; i < MAX_COUNTER; ++i) {
-					sp->last[i] = counter[i];
-				}
+				memcpy(sp->last, counter, sizeof(sp->last));
 			}
 
 			tick = uptime - sp->utime;
