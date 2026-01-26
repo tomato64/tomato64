@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2011 shibby
  *
- * Fixes/updates (C) 2018 - 2025 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
  * https://freshtomato.org/
  *
  */
@@ -108,8 +108,6 @@ void start_bittorrent(int force)
 		logmsg(LOG_WARNING, "%s: another process (PID: %s) still up, aborting ...", __FUNCTION__, buf2);
 		return;
 	}
-
-	logmsg(LOG_INFO, "starting transmission-daemon ...");
 
 	/* collecting data */
 	if (nvram_get_int("bt_rpc_enable"))              { pb = "true"; } else { pb = "false"; }
@@ -257,8 +255,10 @@ void start_bittorrent(int force)
 
 	/* wait a given time for partition to be mounted, etc */
 	n = atoi(nvram_safe_get("bt_sleep"));
-	if (n > 0)
+	if (n > 0 && n < 60) {
+		logmsg(LOG_INFO, "transmission-daemon - delaying start by %d seconds ...", n);
 		sleep(n);
+	}
 
 	/* only now prepare subdirs */
 	mkdir_if_none(pk);
@@ -315,11 +315,11 @@ void start_bittorrent(int force)
 	if (pidof("transmission-da") > 0) {
 		logmsg(LOG_INFO, "transmission-daemon started");
 		setup_tr_watchdog();
-		unlink(tr_child_pid);
+		eval("rm", "-f", tr_child_pid);
 	}
 	else {
 		logmsg(LOG_ERR, "starting transmission-daemon failed - check configuration ...");
-		unlink(tr_child_pid);
+		eval("rm", "-f", tr_child_pid);
 		stop_bittorrent();
 	}
 
@@ -356,7 +356,7 @@ void stop_bittorrent(void)
 	run_del_firewall_script(tr_fw_script, tr_fw_del_script);
 
 	/* clean-up */
-	system("/bin/rm -rf "tr_dir);
+	eval("rm", "-rf", tr_dir);
 	simple_unlock("firewall");
 
 	/* restore default buffers */
