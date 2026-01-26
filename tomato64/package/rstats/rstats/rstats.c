@@ -935,7 +935,7 @@ static void calc(void)
 		if (((uptime - sp->utime) > (10 * SMIN)) || (find_word(exclude, sp->ifname))) {
 			logmsg(LOG_DEBUG, "*** %s: #%d removing. > time limit or excluded", __FUNCTION__, i);
 			--speed_count;
-			memcpy(sp, sp + 1, (speed_count - i) * sizeof(speed[0]));
+			memmove(sp, sp + 1, (speed_count - i) * sizeof(speed[0]));
 		}
 		else {
 			logmsg(LOG_DEBUG, "*** %s: %s not found setting sync=1 #%d", __FUNCTION__, sp->ifname, i);
