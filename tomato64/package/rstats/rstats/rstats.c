@@ -1,20 +1,25 @@
 /*
+ *
+ * rstats
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
+ */
 
-	rstats
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-
-	This program is free software; you can redistribute it and/or
-	modify it under the terms of the GNU General Public License
-	as published by the Free Software Foundation; either version 2
-	of the License, or (at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -90,16 +95,6 @@ typedef struct {
 } history_t;
 
 typedef struct {
-	uint32_t id;
-
-	data_t daily[62];
-	int dailyp;
-
-	data_t monthly[12];
-	int monthlyp;
-} history_v0_t;
-
-typedef struct {
 	char ifname[12];
 	long utime;
 	unsigned long speed[MAX_NSPEED][MAX_COUNTER];
@@ -126,10 +121,16 @@ volatile int gotuser = 0;
 volatile int gotterm = 0;
 volatile int restarted = 1;
 
-const char history_fn[] = "/var/lib/misc/rstats-history";
-const char speed_fn[] = "/var/lib/misc/rstats-speed";
-const char uncomp_fn[] = "/var/tmp/rstats-uncomp";
-const char source_fn[] = "/var/lib/misc/rstats-source";
+const char history_fn[]       = "/var/lib/misc/rstats-history";
+const char speed_fn[]         = "/var/lib/misc/rstats-speed";
+const char uncomp_fn[]        = "/var/tmp/rstats-uncomp";
+const char source_fn[]        = "/var/lib/misc/rstats-source";
+const char historyjs_fn[]     = "/var/spool/rstats-history.js";
+const char historyjs_tmp_fn[] = "/var/tmp/rstats-history.js";
+const char speedjs_fn[]       = "/var/spool/rstats-speed.js";
+const char speedjs_tmp_fn[]   = "/var/tmp/rstats-speed.js";
+const char load_fn[]          = "/var/tmp/rstats-load";
+const char stime_fn[]         = "/var/lib/misc/rstats-stime";
 
 
 static int get_stime(void)
@@ -220,7 +221,7 @@ static void save(int quick)
 
 	logmsg(LOG_DEBUG, "*** %s: quick=%d", __FUNCTION__, quick);
 
-	f_write("/var/lib/misc/rstats-stime", &save_utime, sizeof(save_utime), 0, 0);
+	f_write(stime_fn, &save_utime, sizeof(save_utime), 0, 0);
 
 	comp(speed_fn, speed, sizeof(speed[0]) * speed_count);
 	comp(history_fn, &history, sizeof(history));
@@ -506,7 +507,7 @@ static void load(int new)
 			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	}
 
-	if (f_read("/var/lib/misc/rstats-stime", &save_utime, sizeof(save_utime)) != sizeof(save_utime))
+	if (f_read(stime_fn, &save_utime, sizeof(save_utime)) != sizeof(save_utime))
 		save_utime = 0;
 
 	t = uptime + get_stime();
@@ -646,7 +647,7 @@ static void save_speedjs(long next)
 	int sfd;
 	struct ifreq ifr;
 
-	if ((f = fopen("/var/tmp/rstats-speed.js", "w")) == NULL)
+	if ((f = fopen(speedjs_tmp_fn, "w")) == NULL)
 		return;
 
 	logmsg(LOG_DEBUG, "*** %s: speed_count = %d", __FUNCTION__, speed_count);
@@ -693,7 +694,7 @@ static void save_speedjs(long next)
 
 	fclose(f);
 
-	rename("/var/tmp/rstats-speed.js", "/var/spool/rstats-speed.js");
+	rename(speedjs_tmp_fn, speedjs_fn);
 }
 
 static void save_datajs(FILE *f, int mode)
@@ -731,11 +732,11 @@ static void save_histjs(void)
 {
 	FILE *f;
 
-	if ((f = fopen("/var/tmp/rstats-history.js", "w")) != NULL) {
+	if ((f = fopen(historyjs_tmp_fn, "w")) != NULL) {
 		save_datajs(f, DAILY);
 		save_datajs(f, MONTHLY);
 		fclose(f);
-		rename("/var/tmp/rstats-history.js", "/var/spool/rstats-history.js");
+		rename(historyjs_tmp_fn, historyjs_fn);
 	}
 }
 
@@ -883,7 +884,7 @@ static void calc(void)
 						wanup = check_wanup(prefix); /* see router/shared/misc.c */
 						wanuptime = check_wanup_time(prefix); /* see router/shared/misc.c */
 
-						/* see https://www.linksysinfo.org/index.php?threads/tomato-toastmans-releases.36106/page-39#post-281722 */
+						/* see https://www.linksysinfo.org/index.php?threads/tomato-toastmans-releases.36106/post-281722 */
 						if (wanup && (wanuptime < (long)(INTERVAL + 10)))
 							diff = 0UL; /* Try to catch traffic peaks at connection startup/reconnect (xDSL/PPPoE) - Part 2/2 */
 					}
@@ -929,7 +930,7 @@ static void calc(void)
 	}
 	fclose(f);
 
-	/* cleanup stale entries */
+	/* cleanup stale entries + save if needed */
 	for (i = 0; i < speed_count; ++i) {
 		sp = &speed[i];
 		if (sp->sync == -1) {
@@ -957,7 +958,6 @@ static void calc(void)
 	if (restarted > 0)
 		restarted = 0;
 }
-
 
 static void sig_handler(int sig)
 {
@@ -1000,7 +1000,7 @@ int main(int argc, char *argv[])
 	}
 
 	clear_history();
-	unlink("/var/tmp/rstats-load");
+	unlink(load_fn);
 
 	sa.sa_handler = sig_handler;
 	sa.sa_flags = 0;
@@ -1018,7 +1018,7 @@ int main(int argc, char *argv[])
 		while (uptime < z) {
 			sleep(z - uptime);
 			if (gothup) {
-				if (unlink("/var/tmp/rstats-load") == 0)
+				if (unlink(load_fn) == 0)
 					load_new();
 				else
 					save(0);
