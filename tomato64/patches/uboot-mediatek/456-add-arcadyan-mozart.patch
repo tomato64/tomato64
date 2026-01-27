@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/configs/mt7988a_arcadyan_mozart_defconfig
-@@ -0,0 +1,119 @@
+@@ -0,0 +1,115 @@
 +CONFIG_ARM=y
 +CONFIG_SYS_HAS_NONCACHED_MEMORY=y
 +CONFIG_POSITION_INDEPENDENT=y
@@ -13,11 +13,11 @@
 +CONFIG_DEFAULT_DEVICE_TREE="mt7988a-arcadyan-mozart"
 +CONFIG_OF_LIBFDT_OVERLAY=y
 +CONFIG_TARGET_MT7988=y
++CONFIG_SYS_LOAD_ADDR=0x50000000
 +CONFIG_PRE_CON_BUF_ADDR=0x4007EF00
 +CONFIG_DEBUG_UART_BASE=0x11000000
 +CONFIG_DEBUG_UART_CLOCK=40000000
 +CONFIG_ENV_OFFSET_REDUND=0x440000
-+CONFIG_SYS_LOAD_ADDR=0x50000000
 +CONFIG_PCI=y
 +CONFIG_DEBUG_UART=y
 +CONFIG_AHCI=y
@@ -32,6 +32,7 @@
 +CONFIG_LOGLEVEL=7
 +CONFIG_PRE_CONSOLE_BUFFER=y
 +CONFIG_LOG=y
++# CONFIG_BOARD_INIT is not set
 +CONFIG_BOARD_LATE_INIT=y
 +CONFIG_HUSH_PARSER=y
 +CONFIG_SYS_PROMPT="MT7988> "
@@ -48,19 +49,16 @@
 +CONFIG_CMD_PWM=y
 +CONFIG_CMD_GPT=y
 +CONFIG_CMD_MMC=y
-+CONFIG_CMD_MTD=y
 +CONFIG_CMD_PART=y
 +CONFIG_CMD_PCI=y
-+CONFIG_CMD_SF_TEST=y
-+CONFIG_CMD_USB=y
-+CONFIG_CMD_DHCP=y
 +CONFIG_CMD_TFTPSRV=y
 +CONFIG_CMD_RARP=y
-+CONFIG_CMD_PING=y
 +CONFIG_CMD_CDP=y
 +CONFIG_CMD_SNTP=y
-+CONFIG_CMD_DNS=y
 +CONFIG_CMD_LINK_LOCAL=y
++CONFIG_CMD_DHCP=y
++CONFIG_CMD_DNS=y
++CONFIG_CMD_PING=y
 +CONFIG_CMD_PXE=y
 +CONFIG_CMD_CACHE=y
 +CONFIG_CMD_PSTORE=y
@@ -75,20 +73,18 @@
 +CONFIG_OF_EMBED=y
 +CONFIG_ENV_OVERWRITE=y
 +CONFIG_ENV_IS_IN_MMC=y
-+CONFIG_SYS_REDUNDAND_ENVIRONMENT=y
-+CONFIG_SYS_RELOC_GD_ENV_ADDR=y
-+CONFIG_USE_DEFAULT_ENV_FILE=y
-+CONFIG_DEFAULT_ENV_FILE="arcadyan_mozart_env"
++CONFIG_ENV_REDUNDANT=y
++CONFIG_ENV_RELOC_GD_ENV_ADDR=y
++CONFIG_ENV_USE_DEFAULT_ENV_TEXT_FILE=y
++CONFIG_ENV_DEFAULT_ENV_TEXT_FILE="defenvs/arcadyan_mozart_env"
 +CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
 +CONFIG_VERSION_VARIABLE=y
-+CONFIG_NET_RANDOM_ETHADDR=y
 +CONFIG_NETCONSOLE=y
 +CONFIG_USE_IPADDR=y
 +CONFIG_IPADDR="192.168.1.1"
 +CONFIG_USE_SERVERIP=y
 +CONFIG_SERVERIP="192.168.1.254"
-+CONFIG_REGMAP=y
-+CONFIG_SYSCON=y
++CONFIG_NET_RANDOM_ETHADDR=y
 +CONFIG_BUTTON=y
 +CONFIG_BUTTON_GPIO=y
 +CONFIG_CLK=y
@@ -116,13 +112,13 @@
 +CONFIG_RAM=y
 +CONFIG_SCSI=y
 +CONFIG_DM_SERIAL=y
++CONFIG_SERIAL_RX_BUFFER=y
 +CONFIG_MTK_SERIAL=y
 +CONFIG_ZSTD=y
 +CONFIG_HEXDUMP=y
-+CONFIG_LMB_MAX_REGIONS=64
 --- /dev/null
-+++ b/arcadyan_mozart_env
-@@ -0,0 +1,55 @@
++++ b/defenvs/arcadyan_mozart_env
+@@ -0,0 +1,59 @@
 +ipaddr=192.168.1.1
 +serverip=192.168.1.254
 +loadaddr=0x50000000
@@ -132,6 +128,7 @@
 +bootconf_extra=
 +bootdelay=0
 +bootfile=openwrt-mediatek-filogic-arcadyan_mozart-initramfs.itb
++bootfile_gpt=openwrt-mediatek-filogic-arcadyan_mozart-emmc-gpt.bin
 +bootfile_bl2=openwrt-mediatek-filogic-arcadyan_mozart-emmc-preloader.bin
 +bootfile_fip=openwrt-mediatek-filogic-arcadyan_mozart-emmc-bl31-uboot.fip
 +bootfile_upg=openwrt-mediatek-filogic-arcadyan_mozart-squashfs-sysupgrade.itb
@@ -150,8 +147,9 @@
 +bootmenu_5=Load recovery system via TFTP then write to eMMC.=setenv noboot 1 ; setenv replacevol 1 ; run boot_tftp_recovery ; setenv noboot ; setenv replacevol ; run bootmenu_confirm_return
 +bootmenu_6=[31mLoad BL31+U-Boot FIP via TFTP then write to eMMC.[0m=run boot_tftp_write_fip ; run bootmenu_confirm_return
 +bootmenu_7=[31mLoad BL2 preloader via TFTP then write to eMMC.[0m=run boot_tftp_write_bl2 ; run bootmenu_confirm_return
-+bootmenu_8=Reboot.=reset
-+bootmenu_9=Reset all settings to factory defaults.=run reset_factory ; reset
++bootmenu_8=[31mLoad GPT Table via TFTP then write to eMMC.[0m=run boot_tftp_write_gpt ; run bootmenu_confirm_return
++bootmenu_9=Reboot.=reset
++bootmenu_10=Reset all settings to factory defaults.=run reset_factory ; reset
 +boot_first=if button reset ; then led $bootled_rec on ; run boot_tftp_recovery ; setenv flag_recover 1 ; run boot_default ; fi ; bootmenu
 +boot_default=if env exists flag_recover ; then else run bootcmd ; fi ; run boot_recovery ; setenv replacevol 1 ; run boot_tftp_forever
 +boot_production=led $bootled_pwr on ; run emmc_read_production && bootm $loadaddr#$bootconf#$bootconf_extra ; led $bootled_pwr off
@@ -161,6 +159,7 @@
 +boot_tftp_production=tftpboot $loadaddr $bootfile_upg && env exists replacevol && iminfo $loadaddr && run emmc_write_production ; if env exists noboot ; then else bootm $loadaddr#$bootconf#$bootconf_extra ; fi
 +boot_tftp_recovery=tftpboot $loadaddr $bootfile && env exists replacevol && iminfo $loadaddr && run emmc_write_recovery ; if env exists noboot ; then else bootm $loadaddr#$bootconf ; fi
 +boot_tftp_write_fip=tftpboot $loadaddr $bootfile_fip && run emmc_write_fip
++boot_tftp_write_gpt=tftpboot $loadaddr $bootfile_gpt && run emmc_write_gpt
 +boot_tftp_write_bl2=tftpboot $loadaddr $bootfile_bl2 && run emmc_write_bl2
 +boot_tftp=tftpboot $loadaddr $bootfile && bootm $loadaddr#$bootconf
 +mmc_write_vol=imszb $loadaddr image_size && test 0x$image_size -le 0x$part_size && mmc erase 0x$part_addr 0x$image_size && mmc write $loadaddr 0x$part_addr 0x$image_size
@@ -170,6 +169,7 @@
 +reset_factory=eraseenv && reset
 +emmc_read_production=part start mmc 0 $part_default part_addr && part size mmc 0 $part_default part_size && run mmc_read_vol
 +emmc_read_recovery=part start mmc 0 $part_recovery part_addr && part size mmc 0 $part_recovery part_size && run mmc_read_vol
++emmc_write_gpt=mmc erase 0x0 0x22 && mmc write $fileaddr 0x0 0x22
 +emmc_write_bl2=mmc partconf 0 1 1 1 && mmc erase 0x0 0x400 && mmc write $fileaddr 0x0 0x400 ; mmc partconf 0 1 1 0
 +emmc_write_fip=mmc erase 0x3400 0x2000 && mmc write $fileaddr 0x3400 0x2000 && mmc erase 0x2000 0x800
 +emmc_write_production=part start mmc 0 $part_default part_addr && part size mmc 0 $part_default part_size && run mmc_write_vol
@@ -225,7 +225,7 @@
 +		wps {
 +			label = "reset";
 +			linux,code = <KEY_RESTART>;
-+			gpios = <&gpio 143 GPIO_ACTIVE_LOW>;
++			gpios = <&pio 143 GPIO_ACTIVE_LOW>;
 +		};
 +	};
 +
@@ -234,17 +234,17 @@
 +
 +		led-red {
 +			label = "red:status";
-+			gpios = <&gpio 29 GPIO_ACTIVE_HIGH>;
++			gpios = <&pio 29 GPIO_ACTIVE_HIGH>;
 +		};
 +
 +		led-green {
 +			label = "blue:status";
-+			gpios = <&gpio 30 GPIO_ACTIVE_HIGH>;
++			gpios = <&pio 30 GPIO_ACTIVE_HIGH>;
 +		};
 +		
 +		led-blue {
 +			label = "blue:status";
-+			gpios = <&gpio 31 GPIO_ACTIVE_HIGH>;
++			gpios = <&pio 31 GPIO_ACTIVE_HIGH>;
 +		};
 +	};
 +};
@@ -253,7 +253,7 @@
 +	status = "okay";
 +};
 +
-+&eth {
++&eth0 {
 +	status = "okay";
 +	mediatek,gmac-id = <0>;
 +	phy-mode = "usxgmii";
@@ -266,7 +266,7 @@
 +	};
 +};
 +
-+&pinctrl {
++&pio {
 +	mmc0_pins_default: mmc0default {
 +		mux {
 +			function = "flash";

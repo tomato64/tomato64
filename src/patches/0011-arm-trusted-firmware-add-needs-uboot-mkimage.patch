@@ -1,0 +1,34 @@
+arm-trusted-firmware: add option to depend on host-uboot-tools for mkimage
+
+Some ATF platform builds (e.g. Mediatek) require mkimage to produce
+bl2.img. Add a NEEDS_UBOOT_MKIMAGE config option similar to NEEDS_DTC.
+
+--- a/boot/arm-trusted-firmware/Config.in
++++ b/boot/arm-trusted-firmware/Config.in
+@@ -253,6 +253,13 @@
+ 	  Select this option if your ATF board configuration
+ 	  requires the Device Tree compiler to be available.
+
++config BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_UBOOT_MKIMAGE
++	bool "Needs mkimage"
++	select BR2_PACKAGE_HOST_UBOOT_TOOLS
++	help
++	  Select this option if your ATF board configuration
++	  requires mkimage from u-boot-tools to be available.
++
+ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_ARM32_TOOLCHAIN
+ 	bool "Needs arm-none-eabi toolchain"
+ 	depends on BR2_aarch64
+--- a/boot/arm-trusted-firmware/arm-trusted-firmware.mk
++++ b/boot/arm-trusted-firmware/arm-trusted-firmware.mk
+@@ -37,6 +37,10 @@
+ ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-dtc
+ endif
+
++ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_UBOOT_MKIMAGE),y)
++ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-uboot-tools
++endif
++
+ ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_ARM32_TOOLCHAIN),y)
+ ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-arm-gnu-toolchain
+ endif

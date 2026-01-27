@@ -39,7 +39,7 @@
 +		reset {
 +			label = "reset";
 +			linux,code = <KEY_RESTART>;
-+			gpios = <&gpio 1 GPIO_ACTIVE_LOW>;
++			gpios = <&pio 1 GPIO_ACTIVE_LOW>;
 +		};
 +	};
 +
@@ -48,42 +48,42 @@
 +
 +		wifi2g {
 +			label = "green:wifi2g";
-+			gpios = <&gpio 30 GPIO_ACTIVE_LOW>;
++			gpios = <&pio 30 GPIO_ACTIVE_LOW>;
 +		};
 +
 +		wifi5g {
 +			label = "green:wifi5g";
-+			gpios = <&gpio 38 GPIO_ACTIVE_LOW>;
++			gpios = <&pio 38 GPIO_ACTIVE_LOW>;
 +		};
 +
 +		5g_led1 {
 +			label = "green:5g:led1";
-+			gpios = <&gpio 6 GPIO_ACTIVE_LOW>;
++			gpios = <&pio 6 GPIO_ACTIVE_LOW>;
 +		};
 +
 +		5g_led2 {
 +			label = "green:5g:led2";
-+			gpios = <&gpio 7 GPIO_ACTIVE_LOW>;
++			gpios = <&pio 7 GPIO_ACTIVE_LOW>;
 +		};
 +
 +		5g_led3 {
 +			label = "green:5g:led3";
-+			gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
++			gpios = <&pio 8 GPIO_ACTIVE_LOW>;
 +		};
 +
 +		5g_led4 {
 +			label = "green:5g:led4";
-+			gpios = <&gpio 4 GPIO_ACTIVE_HIGH>;
++			gpios = <&pio 4 GPIO_ACTIVE_HIGH>;
 +		};
 +
 +		power {
 +			label = "green:power";
-+			gpios = <&gpio 39 GPIO_ACTIVE_LOW>;
++			gpios = <&pio 39 GPIO_ACTIVE_LOW>;
 +		};
 +
 +		wan {
 +			label = "green:wan";
-+			gpios = <&gpio 31 GPIO_ACTIVE_LOW>;
++			gpios = <&pio 31 GPIO_ACTIVE_LOW>;
 +		};
 +	};
 +};
@@ -115,7 +115,7 @@
 +	status = "okay";
 +};
 +
-+&pinctrl {
++&pio {
 +	mmc0_pins_default: mmc0-pins-default {
 +		mux {
 +			function = "flash";
@@ -160,24 +160,26 @@
 +CONFIG_DEFAULT_DEVICE_TREE="mt7981-glinet-gl-x3000"
 +CONFIG_OF_LIBFDT_OVERLAY=y
 +CONFIG_TARGET_MT7981=y
++CONFIG_SYS_LOAD_ADDR=0x46000000
 +CONFIG_DEBUG_UART_BASE=0x11002000
 +CONFIG_DEBUG_UART_CLOCK=40000000
-+CONFIG_SYS_LOAD_ADDR=0x46000000
 +CONFIG_DEBUG_UART=y
 +CONFIG_ENV_VARS_UBOOT_CONFIG=y
 +# CONFIG_EXPERT is not set
++# CONFIG_EFI_LOADER is not set
 +CONFIG_FIT=y
 +# CONFIG_BOOTSTD is not set
 +# CONFIG_LEGACY_IMAGE_FORMAT is not set
 +CONFIG_AUTOBOOT_MENU_SHOW=y
 +CONFIG_USE_BOOTCOMMAND=y
 +CONFIG_DEFAULT_FDT_FILE="mediatek/mt7981-glinet-gl-x3000.dtb"
++CONFIG_SYS_CBSIZE=512
++CONFIG_SYS_PBSIZE=1049
 +CONFIG_LOGLEVEL=7
++# CONFIG_BOARD_INIT is not set
 +CONFIG_BOARD_LATE_INIT=y
 +CONFIG_HUSH_PARSER=y
 +CONFIG_SYS_PROMPT="MT7981> "
-+CONFIG_SYS_CBSIZE=512
-+CONFIG_SYS_PBSIZE=1049
 +CONFIG_CMD_CPU=y
 +CONFIG_CMD_LICENSE=y
 +# CONFIG_BOOTM_NETBSD is not set
@@ -200,14 +202,14 @@
 +CONFIG_CMD_PART=y
 +CONFIG_CMD_READ=y
 +CONFIG_CMD_WRITE=y
-+CONFIG_CMD_DHCP=y
 +CONFIG_CMD_TFTPSRV=y
 +CONFIG_CMD_RARP=y
-+CONFIG_CMD_PING=y
 +CONFIG_CMD_CDP=y
 +CONFIG_CMD_SNTP=y
-+CONFIG_CMD_DNS=y
 +CONFIG_CMD_LINK_LOCAL=y
++CONFIG_CMD_DHCP=y
++CONFIG_CMD_DNS=y
++CONFIG_CMD_PING=y
 +CONFIG_CMD_PXE=y
 +CONFIG_CMD_CACHE=y
 +CONFIG_CMD_PSTORE=y
@@ -218,8 +220,8 @@
 +CONFIG_PARTITION_TYPE_GUID=y
 +CONFIG_ENV_OVERWRITE=y
 +CONFIG_ENV_IS_IN_MMC=y
-+CONFIG_USE_DEFAULT_ENV_FILE=y
-+CONFIG_DEFAULT_ENV_FILE="glinet_gl-x3000_env"
++CONFIG_ENV_USE_DEFAULT_ENV_TEXT_FILE=y
++CONFIG_ENV_DEFAULT_ENV_TEXT_FILE="defenvs/glinet_gl-x3000_env"
 +CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
 +CONFIG_NET_RANDOM_ETHADDR=y
 +CONFIG_REGMAP=y
@@ -243,13 +245,11 @@
 +CONFIG_DM_REGULATOR=y
 +CONFIG_DM_REGULATOR_FIXED=y
 +CONFIG_DM_SERIAL=y
++CONFIG_SERIAL_RX_BUFFER=y
 +CONFIG_MTK_SERIAL=y
 +CONFIG_HEXDUMP=y
-+# CONFIG_EFI_LOADER is not set
-+CONFIG_LMB_MAX_REGIONS=64
-+# CONFIG_TOOLS_LIBCRYPTO is not set
 --- /dev/null
-+++ b/glinet_gl-x3000_env
++++ b/defenvs/glinet_gl-x3000_env
 @@ -0,0 +1,26 @@
 +ipaddr=192.168.1.1
 +serverip=192.168.1.254

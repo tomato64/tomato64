@@ -1,0 +1,53 @@
+From 98da53e493ec6553e35c0b99a1548fa988ba2cc5 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Tue, 27 Jan 2026 22:14:17 -0700
+Subject: [PATCH] Tomato64 Mediatek Uboot Adjustments
+
+---
+ defenvs/bananapi_bpi-r3-mini_emmc_env | 2 +-
+ defenvs/bananapi_bpi-r3_emmc_env      | 2 +-
+ defenvs/bananapi_bpi-r3_sdmmc_env     | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/defenvs/bananapi_bpi-r3-mini_emmc_env b/defenvs/bananapi_bpi-r3-mini_emmc_env
+index 80f9ed19..5315d1ff 100644
+--- a/defenvs/bananapi_bpi-r3-mini_emmc_env
++++ b/defenvs/bananapi_bpi-r3-mini_emmc_env
+@@ -2,7 +2,7 @@ ipaddr=192.168.1.1
+ serverip=192.168.1.254
+ loadaddr=0x46000000
+ console=earlycon=uart8250,mmio32,0x11002000 console=ttyS0
+-bootargs=root=/dev/fit0 rootwait
++bootargs=root=/dev/mmcblk0p5 rootwait
+ bootcmd=if pstore check ; then run boot_recovery ; else run boot_emmc ; fi
+ bootconf=config-mt7986a-bananapi-bpi-r3-mini
+ bootdelay=0
+diff --git a/defenvs/bananapi_bpi-r3_emmc_env b/defenvs/bananapi_bpi-r3_emmc_env
+index 12924761..57e9abb7 100644
+--- a/defenvs/bananapi_bpi-r3_emmc_env
++++ b/defenvs/bananapi_bpi-r3_emmc_env
+@@ -2,7 +2,7 @@ ipaddr=192.168.1.1
+ serverip=192.168.1.254
+ loadaddr=0x46000000
+ console=earlycon=uart8250,mmio32,0x11002000 console=ttyS0
+-bootargs=root=/dev/fit0 rootwait
++bootargs=root=/dev/mmcblk0p6 rootwait
+ bootcmd=if pstore check ; then run boot_recovery ; else run boot_emmc ; fi
+ bootconf=config-mt7986a-bananapi-bpi-r3
+ bootconf_base=config-mt7986a-bananapi-bpi-r3
+diff --git a/defenvs/bananapi_bpi-r3_sdmmc_env b/defenvs/bananapi_bpi-r3_sdmmc_env
+index 2304342c..83372f81 100644
+--- a/defenvs/bananapi_bpi-r3_sdmmc_env
++++ b/defenvs/bananapi_bpi-r3_sdmmc_env
+@@ -2,7 +2,7 @@ ipaddr=192.168.1.1
+ serverip=192.168.1.254
+ loadaddr=0x46000000
+ console=earlycon=uart8250,mmio32,0x11002000 console=ttyS0
+-bootargs=root=/dev/fit0 rootwait
++bootargs=root=/dev/mmcblk0p6 rootwait
+ bootcmd=if pstore check ; then run boot_recovery ; else run boot_sdmmc ; fi
+ bootconf=config-mt7986a-bananapi-bpi-r3
+ bootconf_base=config-mt7986a-bananapi-bpi-r3
+-- 
+2.47.3
+

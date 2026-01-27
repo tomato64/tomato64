@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MEDIATEK_BOOTLOADERS_VERSION = 2f118ccddd78f3597b2cd5a7ac9c32980e34fc18
+MEDIATEK_BOOTLOADERS_VERSION = v25.12.0-rc3
 MEDIATEK_BOOTLOADERS_SITE = $(call github,tomato64,mediatek-bootloaders,$(MEDIATEK_BOOTLOADERS_VERSION))
 
 define MEDIATEK_BOOTLOADERS_INSTALL_TARGET_CMDS
