@@ -1,23 +1,26 @@
 /*
-
-	cstats
-	Copyright (C) 2011-2012 Augusto Bott
-
-	based on rstats
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-
-	This program is free software; you can redistribute it and/or
-	modify it under the terms of the GNU General Public License
-	as published by the Free Software Foundation; either version 2
-	of the License, or (at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-*/
+ *
+ * cstats
+ * Copyright (C) 2011-2012 Augusto Bott
+ *
+ * based on rstats
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
+ */
 
 
 /* needed by logmsg() */
@@ -55,9 +58,15 @@
 #define HI_BACK		5
 
 
-const char history_fn[] = "/var/lib/misc/cstats-history";
-const char uncomp_fn[] = "/var/tmp/cstats-uncomp";
-const char source_fn[] = "/var/lib/misc/cstats-source";
+const char history_fn[]       = "/var/lib/misc/cstats-history";
+const char uncomp_fn[]        = "/var/tmp/cstats-uncomp";
+const char source_fn[]        = "/var/lib/misc/cstats-source";
+const char historyjs_fn[]     = "/var/spool/cstats-history.js";
+const char historyjs_tmp_fn[] = "/var/tmp/cstats-history.js";
+const char speedjs_fn[]       = "/var/spool/cstats-speed.js";
+const char speedjs_tmp_fn[]   = "/var/tmp/cstats-speed.js";
+const char load_fn[]          = "/var/tmp/cstats-load";
+const char stime_fn[]         = "/var/lib/misc/cstats-stime";
 
 typedef struct {
 	int mode;

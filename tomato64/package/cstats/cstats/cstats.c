@@ -1,23 +1,26 @@
 /*
-
-	cstats
-	Copyright (C) 2011-2012 Augusto Bott
-
-	based on rstats
-	Copyright (C) 2006-2009 Jonathan Zarate
-
-
-	This program is free software; you can redistribute it and/or
-	modify it under the terms of the GNU General Public License
-	as published by the Free Software Foundation; either version 2
-	of the License, or (at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-*/
+ *
+ * cstats
+ * Copyright (C) 2011-2012 Augusto Bott
+ *
+ * based on rstats
+ * Copyright (C) 2006-2009 Jonathan Zarate
+ *
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
+ */
 
 
 #include <stdio.h>
@@ -140,7 +143,7 @@ static void save(int quick) {
 
 	logmsg(LOG_DEBUG, "*** %s: quick=%d", __FUNCTION__, quick);
 
-	f_write("/var/lib/misc/cstats-stime", &save_utime, sizeof(save_utime), 0, 0);
+	f_write(stime_fn, &save_utime, sizeof(save_utime), 0, 0);
 
 	n = save_history_from_tree(history_fn);
 	logmsg(LOG_DEBUG, "*** %s: saved %d records from tree on file %s", __FUNCTION__, n, history_fn);
@@ -333,7 +336,7 @@ static void load(int new) {
 		sprintf(save_path + n, "tomato_cstats_%02x%02x%02x%02x%02x%02x.gz", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	}
 
-	if (f_read("/var/lib/misc/cstats-stime", &save_utime, sizeof(save_utime)) != sizeof(save_utime))
+	if (f_read(stime_fn, &save_utime, sizeof(save_utime)) != sizeof(save_utime))
 		save_utime = 0;
 
 	t = uptime + get_stime();
@@ -437,7 +440,7 @@ void Node_print_speedjs(Node *self, void *t) {
 static void save_speedjs(long next) {
 	FILE *f;
 
-	if ((f = fopen("/var/tmp/cstats-speed.js", "w")) == NULL)
+	if ((f = fopen(speedjs_tmp_fn, "w")) == NULL)
 		return;
 
 	node_print_mode_t info;
@@ -451,7 +454,7 @@ static void save_speedjs(long next) {
 
 	fclose(f);
 
-	rename("/var/tmp/cstats-speed.js", "/var/spool/cstats-speed.js");
+	rename(speedjs_tmp_fn, speedjs_fn);
 }
 
 void Node_print_datajs(Node *self, void *t) {
@@ -494,11 +497,11 @@ static void save_datajs(FILE *f, int mode) {
 static void save_histjs(void) {
 	FILE *f;
 
-	if ((f = fopen("/var/tmp/cstats-history.js", "w")) != NULL) {
+	if ((f = fopen(historyjs_tmp_fn, "w")) != NULL) {
 		save_datajs(f, DAILY);
 		save_datajs(f, MONTHLY);
 		fclose(f);
-		rename("/var/tmp/cstats-history.js", "/var/spool/cstats-history.js");
+		rename(historyjs_tmp_fn, historyjs_fn);
 	}
 }
 
@@ -788,7 +791,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	unlink("/var/tmp/cstats-load");
+	unlink(load_fn);
 
 	sa.sa_handler = sig_handler;
 	sa.sa_flags = 0;
@@ -806,7 +809,7 @@ int main(int argc, char *argv[]) {
 		while (uptime < z) {
 			sleep(z - uptime);
 			if (gothup) {
-				if (unlink("/var/tmp/cstats-load") == 0)
+				if (unlink(load_fn) == 0)
 					load_new();
 				else
 					save(0);
