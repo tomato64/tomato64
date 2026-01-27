@@ -59,17 +59,13 @@
 #define MAX_NDAILY	62
 #ifndef TOMATO64
 #define MAX_NMONTHLY	25
-#endif /* TOMATO64 */
-#ifdef TOMATO64
-#define MAX_NMONTHLY	121
-#endif /* TOMATO64 */
-#ifndef TOMATO64
 #define MAX_SPEED_IF	32
 #endif /* TOMATO64 */
 #ifdef TOMATO64
+#define MAX_NMONTHLY	121
 #define MAX_SPEED_IF	64
 #endif /* TOMATO64 */
-#define MAX_ROLLOVER   (3750ULL * M) /* 3750 MByte - new rollover limit */
+#define MAX_ROLLOVER	(3750ULL * M) /* 3750 MByte - new rollover limit */
 
 #define MAX_COUNTER	2
 #define RX 		0
