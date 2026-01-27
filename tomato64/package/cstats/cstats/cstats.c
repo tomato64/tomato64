@@ -50,6 +50,9 @@ long uptime;
 volatile int gothup = 0;
 volatile int gotuser = 0;
 volatile int gotterm = 0;
+static int node_count = 0; /* active node counter */
+
+Tree tree = TREE_INITIALIZER(Node_compare);
 
 #ifdef DEBUG_CSTATS
 void Node_print(Node *self, FILE *stream) {
@@ -67,12 +70,31 @@ void Tree_info(void) {
 }
 #endif
 
+static void free_all_nodes(void) {
+	Node *node;
+	while (tree.th_root != NULL) {
+		node = tree.th_root;
+		TREE_REMOVE(&tree, _Node, linkage, node);
+		free(node);
+		node_count--;
+	}
+	node_count = 0;
+}
+
 Node *Node_new(char *ipaddr) {
 	Node *self;
 	if ((self = malloc(sizeof(Node))) != NULL) {
 		memset(self, 0, sizeof(Node));
 		self->id = CURRENT_ID;
 		strncpy(self->ipaddr, ipaddr, INET_ADDRSTRLEN);
+
+		if (node_count >= MAX_NODES) {
+			logmsg(LOG_WARNING, "*** %s: max nodes reached (%d), skipping %s", __FUNCTION__, MAX_NODES, ipaddr);
+			free(self);
+			return NULL;
+		}
+		node_count++;
+
 		logmsg(LOG_DEBUG, "*** %s: new node ip=%s, version=%d, sizeof(Node)=%d (bytes)", __FUNCTION__, self->ipaddr, self->id, sizeof(Node));
 	}
 
@@ -82,8 +104,6 @@ Node *Node_new(char *ipaddr) {
 int Node_compare(Node *lhs, Node *rhs) {
 	return strncmp(lhs->ipaddr, rhs->ipaddr, INET_ADDRSTRLEN);
 }
-
-Tree tree = TREE_INITIALIZER(Node_compare);
 
 static int get_stime(void) {
 	int t;
@@ -243,6 +263,7 @@ static int load_history_to_tree(const char *fname) {
 					logmsg(LOG_DEBUG, "*** %s: removing/reloading new data for ip %s", __FUNCTION__, ptr->ipaddr);
 					TREE_REMOVE(&tree, _Node, linkage, ptr);
 					free(ptr);
+					node_count--;
 					ptr = NULL;
 				}
 
@@ -250,23 +271,25 @@ static int load_history_to_tree(const char *fname) {
 
 				ptr = TREE_FIND(&tree, _Node, linkage, &tmp);
 
-				memcpy(ptr->daily, &tmp.daily, sizeof(data_t) * MAX_NDAILY);
-				ptr->dailyp = tmp.dailyp;
-				memcpy(ptr->monthly, &tmp.monthly, sizeof(data_t) * MAX_NMONTHLY);
-				ptr->monthlyp = tmp.monthlyp;
+				if (ptr) {  /* Node_new could return NULL at limit */
+					memcpy(ptr->daily, &tmp.daily, sizeof(data_t) * MAX_NDAILY);
+					ptr->dailyp = tmp.dailyp;
+					memcpy(ptr->monthly, &tmp.monthly, sizeof(data_t) * MAX_NMONTHLY);
+					ptr->monthlyp = tmp.monthlyp;
 
-				ptr->utime = tmp.utime;
-				memcpy(ptr->speed, &tmp.speed, sizeof(uint64_t) * MAX_NSPEED * MAX_COUNTER);
-				memcpy(ptr->last, &tmp.last, sizeof(uint64_t) * MAX_COUNTER);
-				ptr->tail = tmp.tail;
-				ptr->sync = -1;
+					ptr->utime = tmp.utime;
+					memcpy(ptr->speed, &tmp.speed, sizeof(uint64_t) * MAX_NSPEED * MAX_COUNTER);
+					memcpy(ptr->last, &tmp.last, sizeof(uint64_t) * MAX_COUNTER);
+					ptr->tail = tmp.tail;
+					ptr->sync = -1;
 
-				if (ptr->utime > uptime) {
-					ptr->utime = uptime;
-					ptr->sync = 1;
+					if (ptr->utime > uptime) {
+						ptr->utime = uptime;
+						ptr->sync = 1;
+					}
+
+					++n;
 				}
-
-				++n;
 			}
 			else
 				logmsg(LOG_DEBUG, "*** %s: data for ip '%s' version %d not loaded (current version is %d)", __FUNCTION__, tmp.ipaddr, tmp.id, CURRENT_ID);
@@ -330,6 +353,11 @@ static void load(int new) {
 	int n;
 	char hgz[256];
 	unsigned char mac[6];
+
+	if (new) {
+		free_all_nodes(); /* clear old data with --new */
+		node_count = 0;
+	}
 
 	uptime = get_uptime();
 
@@ -451,17 +479,14 @@ static void save_speedjs(long next) {
 		return;
 	}
 
-	node_print_mode_t info;
-	info.mode = 0;
+	node_print_mode_t info = {0};
 	info.stream = f;
-	info.kn = 0;
 
 	fprintf(f, "\nspeed_history = {\n");
 	TREE_FORWARD_APPLY(&tree, _Node, linkage, Node_print_speedjs, &info);
 	fprintf(f, "%s_next: %ld};\n", info.kn ? "},\n" : "", ((next >= 1) ? next : 1));
 
 	fclose(f);
-
 	rename(speedjs_tmp_fn, speedjs_fn);
 }
 
@@ -493,10 +518,10 @@ void Node_print_datajs(Node *self, void *t) {
 }
 
 static void save_datajs(FILE *f, int mode) {
-	node_print_mode_t info;
+	node_print_mode_t info = {0};
 	info.mode = mode;
 	info.stream = f;
-	info.kn = 0;
+
 	fprintf(f, "\n%s_history = [\n", (mode == DAILY) ? "daily" : "monthly");
 	TREE_FORWARD_APPLY(&tree, _Node, linkage, Node_print_datajs, &info);
 	fprintf(f, "\n];\n");
@@ -609,7 +634,7 @@ static void calc(void) {
 
 			counter[RX] = tx;
 			counter[TX] = rx;
-			ipaddr=ip;
+			ipaddr = ip;
 
 			strncpy(test.ipaddr, ipaddr, INET_ADDRSTRLEN);
 			ptr = TREE_FIND(&tree, _Node, linkage, &test);
@@ -622,14 +647,16 @@ static void calc(void) {
 					logmsg(LOG_DEBUG, "*** %s: new ip: %s", __FUNCTION__, ipaddr);
 					TREE_INSERT(&tree, _Node, linkage, Node_new(ipaddr));
 					ptr = TREE_FIND(&tree, _Node, linkage, &test);
-					ptr->sync = 1;
-					ptr->utime = uptime;
+					if (ptr) {
+						ptr->sync = 1;
+						ptr->utime = uptime;
+					}
 				}
 #ifdef DEBUG_CSTATS
 				Tree_info();
 #endif
 				logmsg(LOG_DEBUG, "*** %s: sync[%s]=%d", __FUNCTION__, ptr->ipaddr, ptr->sync);
-				if (ptr->sync) {
+				if (ptr && ptr->sync) {
 					logmsg(LOG_DEBUG, "*** %s: sync[%s] changed to -1", __FUNCTION__, ptr->ipaddr);
 					ptr->sync = -1;
 #ifdef DEBUG_CSTATS
@@ -639,18 +666,12 @@ static void calc(void) {
 #endif
 					memcpy(ptr->last, counter, sizeof(ptr->last));
 					memset(counter, 0, sizeof(counter));
-#ifdef DEBUG_CSTATS
-					for (i = 0; i < MAX_COUNTER; ++i) {
-						logmsg(LOG_DEBUG, "*** %s: counter[%d]=%llu ptr->last[%d]=%llu", __FUNCTION__, i, counter[i], i, ptr->last[i]);
-					}
-#endif
 				}
-				else {
+				else if (ptr) {
 #ifdef DEBUG_CSTATS
 					logmsg(LOG_DEBUG, "*** %s: sync[%s] = %d ", __FUNCTION__, ptr->ipaddr, ptr->sync);
 #endif
 					ptr->sync = -1;
-					logmsg(LOG_DEBUG, "*** %s: sync[%s] = %d ", __FUNCTION__, ptr->ipaddr, ptr->sync);
 					tick = uptime - ptr->utime;
 					n = tick / INTERVAL;
 					if (n < 1) {
@@ -679,7 +700,7 @@ static void calc(void) {
 								/* see https://www.linksysinfo.org/index.php?threads/tomato-toastmans-releases.36106/page-39#post-281722 */
 							}
 							else
-								 diff = c - sc;
+								diff = c - sc;
 
 							ptr->last[i] = c;
 							counter[i] = diff;
@@ -700,7 +721,7 @@ static void calc(void) {
 					}
 				}
 
-				if (nvram_get_int("ntp_ready")) { /* Skip this if the time&date is not set yet */
+				if (ptr && nvram_get_int("ntp_ready")) { /* Skip this if the time&date is not set yet */
 #ifdef DEBUG_CSTATS
 					logmsg(LOG_DEBUG, "*** %s: calling bump %s ptr->dailyp=%d", __FUNCTION__, ptr->ipaddr, ptr->dailyp);
 #endif
@@ -735,7 +756,7 @@ static void calc(void) {
 				logmsg(LOG_DEBUG, "*** %s: excluding '%s'", __FUNCTION__, ptr->ipaddr);
 				TREE_REMOVE(&tree, _Node, linkage, ptr);
 				free(ptr);
-				ptr = NULL;
+				node_count--;
 			}
 		}
 	}
@@ -752,14 +773,8 @@ static void calc(void) {
 
 	logmsg(LOG_DEBUG, "*** %s: ====================================", __FUNCTION__);
 
-	if (exclude) {
-		free(exclude);
-		exclude = NULL;
-	}
-	if (include) {
-		free(include);
-		include = NULL;
-	}
+	if (exclude) free(exclude);
+	if (include) free(include);
 }
 
 static void sig_handler(int sig) {
@@ -830,6 +845,7 @@ int main(int argc, char *argv[]) {
 			}
 			if (gotterm) {
 				save(!nvram_match("cstats_sshut", "1"));
+				free_all_nodes();
 				exit(0);
 			}
 			if (gotuser == 1) {

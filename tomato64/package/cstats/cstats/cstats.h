@@ -56,6 +56,7 @@
 #define CURRENT_ID	ID_V2
 
 #define HI_BACK		5
+#define MAX_NODES	2000 /* maximum number of IPs tracked – memory protection */
 
 
 const char history_fn[]       = "/var/lib/misc/cstats-history";
