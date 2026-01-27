@@ -117,12 +117,16 @@ static int save_history_from_tree(const char *fname) {
 		TREE_FORWARD_APPLY(&tree, _Node, linkage, Node_save, &info);
 		fclose(f);
 
-		snprintf(cmd, sizeof(cmd), "%s.gz", fname);
-		unlink(cmd);
-
-		if (rename(uncomp_fn, fname) == 0) {
-			snprintf(cmd, sizeof(cmd), "gzip %s", fname);
-			system(cmd);
+		/* direct compression to .gz file – safer */
+		snprintf(cmd, sizeof(cmd), "gzip -c %s > %s.gz", uncomp_fn, fname);
+		if (system(cmd) == 0) {
+			unlink(uncomp_fn);
+		}
+		else {
+			logmsg(LOG_ERR, "*** %s: gzip failed for %s", __FUNCTION__, fname);
+			/* optional: leave uncompressed as backup */
+			// rename(uncomp_fn, fname);
+			unlink(uncomp_fn);
 		}
 	}
 
