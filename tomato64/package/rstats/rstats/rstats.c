@@ -193,7 +193,7 @@ static int comp(const char *path, void *buffer, int size)
 {
 #ifdef USE_ZLIB
 	char gzpath[256];
-	int written, ret;
+	int written, err;
 
 	snprintf(gzpath, sizeof(gzpath), "%s.gz", path);
 	gzFile gf = gzopen(gzpath, "wb9");
@@ -201,10 +201,13 @@ static int comp(const char *path, void *buffer, int size)
 		return 0;
 
 	written = gzwrite(gf, buffer, size);
-	ret = (written > 0 && written == size);
-	gzclose(gf);
+	if (written != size) {
+		gzclose(gf);
+		return 0;
+	}
 
-	return ret;
+	err = gzclose(gf);
+	return (err == Z_OK);
 #else
 	char cmd[256];
 
