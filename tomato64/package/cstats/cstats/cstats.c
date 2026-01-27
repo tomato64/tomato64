@@ -771,25 +771,26 @@ static void sig_handler(int sig) {
 }
 
 int main(int argc, char *argv[]) {
-
 	struct sigaction sa;
 	long z;
-	int new;
+	int new = 0;
 
 	if (fork() != 0)
 		return 0;
+
+	/* proper daemonization */
+	setsid();
+	chdir("/");
+	close(0); close(1); close(2);
 
 	openlog("cstats", LOG_PID, LOG_USER);
 
 	//logmsg(LOG_INFO, "cstats - Copyright (C) 2011-2012 Augusto Bott");
 	//logmsg(LOG_INFO, "based on rstats - Copyright (C) 2006-2009 Jonathan Zarate");
 
-	new = 0;
-	if (argc > 1) {
-		if (strcmp(argv[1], "--new") == 0) {
-			new = 1;
-			logmsg(LOG_DEBUG, "*** %s: new=1", __FUNCTION__);
-		}
+	if (argc > 1 && strcmp(argv[1], "--new") == 0) {
+		new = 1;
+		logmsg(LOG_DEBUG, "*** %s: new=1", __FUNCTION__);
 	}
 
 	unlink(load_fn);
