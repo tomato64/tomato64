@@ -105,7 +105,7 @@ void Node_save(Node *self, void *t) {
 static int save_history_from_tree(const char *fname) {
 	FILE *f;
 	node_print_mode_t info;
-	char s[256];
+	char cmd[256];
 
 	info.kn = 0;
 	logmsg(LOG_DEBUG, "*** %s: fname=%s", __FUNCTION__, fname);
@@ -117,12 +117,12 @@ static int save_history_from_tree(const char *fname) {
 		TREE_FORWARD_APPLY(&tree, _Node, linkage, Node_save, &info);
 		fclose(f);
 
-		sprintf(s, "%s.gz", fname);
-		unlink(s);
+		snprintf(cmd, sizeof(cmd), "%s.gz", fname);
+		unlink(cmd);
 
 		if (rename(uncomp_fn, fname) == 0) {
-			sprintf(s, "gzip %s", fname);
-			system(s);
+			snprintf(cmd, sizeof(cmd), "gzip %s", fname);
+			system(cmd);
 		}
 	}
 
@@ -154,7 +154,7 @@ static void save(int quick) {
 	if (quick)
 		return;
 
-	sprintf(hgz, "%s.gz", history_fn);
+	snprintf(hgz, sizeof(hgz), "%s.gz", history_fn);
 
 	if (save_path[0] != 0) {
 		strcpy(tmp, save_path);
@@ -179,8 +179,8 @@ static void save(int quick) {
 
 							strcpy(bkp, bak);
 							for (b = HI_BACK-1; b > 0; --b) {
-								sprintf(bkp + n, "_%d.bak", b + 1);
-								sprintf(bak + n, "_%d.bak", b);
+								snprintf(bkp + n, sizeof(bkp) - n, "_%d.bak", b + 1);
+								snprintf(bak + n, sizeof(bak) - n, "_%d.bak", b);
 								rename(bak, bkp);
 							}
 							if (eval("cp", "-p", save_path, bak) == 0)
@@ -207,7 +207,7 @@ static void save(int quick) {
 static int load_history_to_tree(const char *fname) {
 	int n;
 	FILE *f;
-	char s[256];
+	char cmd[256];
 	Node tmp;
 	Node *ptr;
 	char *exclude;
@@ -217,8 +217,8 @@ static int load_history_to_tree(const char *fname) {
 	unlink(uncomp_fn);
 
 	n = -1;
-	sprintf(s, "gzip -dc %s > %s", fname, uncomp_fn);
-	if (system(s) == 0) {
+	snprintf(cmd, sizeof(cmd), "gzip -dc %s > %s", fname, uncomp_fn);
+	if (system(cmd) == 0) {
 		if ((f = fopen(uncomp_fn, "rb")) != NULL) {
 			n = 0;
 			while (fread(&tmp, sizeof(Node), 1, f) > 0) {
@@ -268,7 +268,7 @@ static int load_history_to_tree(const char *fname) {
 		}
 	}
 	else
-		logmsg(LOG_DEBUG, "*** %s: %s != 0", __FUNCTION__, s);
+		logmsg(LOG_DEBUG, "*** %s: %s != 0", __FUNCTION__, cmd);
 
 	unlink(uncomp_fn);
 
@@ -301,7 +301,7 @@ static int try_hardway(const char *fname) {
 		n -= 3;
 
 	for (b = HI_BACK; b > 0; --b) {
-		sprintf(fn + n, "_%d.bak", b);
+		snprintf(fn + n, sizeof(fn) - n, "_%d.bak", b);
 		found |= load_history(fn);
 	}
 	found |= load_history(fname);
@@ -312,7 +312,7 @@ static int try_hardway(const char *fname) {
 static void load_new(void) {
 	char hgz[256];
 
-	sprintf(hgz, "%s.gz.new", history_fn);
+	snprintf(hgz, sizeof(hgz), "%s.gz.new", history_fn);
 	if (load_history(hgz) >= 0)
 		save(0);
 
@@ -333,7 +333,8 @@ static void load(int new) {
 	strlcpy(save_path, nvram_safe_get("cstats_path"), sizeof(save_path) - 32);
 	if (((n = strlen(save_path)) > 0) && (save_path[n - 1] == '/')) {
 		ether_atoe(nvram_safe_get("lan_hwaddr"), mac);
-		sprintf(save_path + n, "tomato_cstats_%02x%02x%02x%02x%02x%02x.gz", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+		snprintf(save_path + n, sizeof(save_path) - n, "tomato_cstats_%02x%02x%02x%02x%02x%02x.gz",
+		         mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	}
 
 	if (f_read(stime_fn, &save_utime, sizeof(save_utime)) != sizeof(save_utime))
@@ -345,7 +346,7 @@ static void load(int new) {
 
 	logmsg(LOG_DEBUG, "*** %s: uptime = %lum, save_utime = %lum", __FUNCTION__, uptime / 60, save_utime / 60);
 
-	sprintf(hgz, "%s.gz", history_fn);
+	snprintf(hgz, sizeof(hgz), "%s.gz", history_fn);
 
 	if (new) {
 		unlink(hgz);
@@ -479,7 +480,7 @@ void Node_print_datajs(Node *self, void *t) {
 		if (data[p].xtime == 0)
 			continue;
 
-		fprintf(info->stream, "%s[0x%lx,'%s',%llu,%llu]", info->kn ? "," : "", (unsigned long)data[p].xtime, self->ipaddr, data[p].counter[0] / K, data[p].counter[1] / K);
+		fprintf(info->stream, "%s[0x%lx,'%s',%llu,%llu]", info->kn ? "," : "", (unsigned long)data[p].xtime, self->ipaddr, data[p].counter[RX] / K, data[p].counter[TX] / K);
 		info->kn++;
 	}
 }
@@ -573,7 +574,7 @@ static void calc(void) {
 	char ip[INET_ADDRSTRLEN];
 	char br;
 
-	char name[] = "/proc/net/ipt_account/lanX";
+	char name[64];
 
 	for (br = 0 ; br < BRIDGE_COUNT; br++) {
 		char bridge[2] = "0";
@@ -582,7 +583,7 @@ static void calc(void) {
 		else
 			strcpy(bridge, "");
 
-		sprintf(name, "/proc/net/ipt_account/lan%s", bridge);
+		snprintf(name, sizeof(name), "/proc/net/ipt_account/lan%s", bridge);
 
 		if ((f = fopen(name, "r")) == NULL)
 			continue;
@@ -596,8 +597,8 @@ static void calc(void) {
 			if (find_word(exclude, ip))
 				continue;
 
-			counter[0] = tx;
-			counter[1] = rx;
+			counter[RX] = tx;
+			counter[TX] = rx;
 			ipaddr=ip;
 
 			strncpy(test.ipaddr, ipaddr, INET_ADDRSTRLEN);
