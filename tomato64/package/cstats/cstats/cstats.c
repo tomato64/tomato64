@@ -222,57 +222,58 @@ static int load_history_to_tree(const char *fname) {
 
 	n = -1;
 	snprintf(cmd, sizeof(cmd), "gzip -dc %s > %s", fname, uncomp_fn);
-	if (system(cmd) == 0) {
-		if ((f = fopen(uncomp_fn, "rb")) != NULL) {
-			n = 0;
-			while (fread(&tmp, sizeof(Node), 1, f) > 0) {
-				if ((find_word(exclude, tmp.ipaddr))) {
-					logmsg(LOG_DEBUG, "*** %s: not loading excluded ip '%s'", __FUNCTION__, tmp.ipaddr);
-					continue;
-				}
+	if (system(cmd) != 0) {
+		logmsg(LOG_ERR, "*** %s: decompress failed: %s", __FUNCTION__, cmd);
+		return -1;
+	}
 
-				if (tmp.id == CURRENT_ID) {
-					logmsg(LOG_DEBUG, "*** %s: found data for ip %s", __FUNCTION__, tmp.ipaddr);
-
-					ptr = TREE_FIND(&tree, _Node, linkage, &tmp);
-					if (ptr) {
-						logmsg(LOG_DEBUG, "*** %s: removing/reloading new data for ip %s", __FUNCTION__, ptr->ipaddr);
-						TREE_REMOVE(&tree, _Node, linkage, ptr);
-						free(ptr);
-						ptr = NULL;
-					}
-
-					TREE_INSERT(&tree, _Node, linkage, Node_new(tmp.ipaddr));
-
-					ptr = TREE_FIND(&tree, _Node, linkage, &tmp);
-
-					memcpy(ptr->daily, &tmp.daily, sizeof(data_t) * MAX_NDAILY);
-					ptr->dailyp = tmp.dailyp;
-					memcpy(ptr->monthly, &tmp.monthly, sizeof(data_t) * MAX_NMONTHLY);
-					ptr->monthlyp = tmp.monthlyp;
-
-					ptr->utime = tmp.utime;
-					memcpy(ptr->speed, &tmp.speed, sizeof(uint64_t) * MAX_NSPEED * MAX_COUNTER);
-					memcpy(ptr->last, &tmp.last, sizeof(uint64_t) * MAX_COUNTER);
-					ptr->tail = tmp.tail;
-					ptr->sync = -1;
-
-					if (ptr->utime > uptime) {
-						ptr->utime = uptime;
-						ptr->sync = 1;
-					}
-
-					++n;
-				}
-				else
-					logmsg(LOG_DEBUG, "*** %s: data for ip '%s' version %d not loaded (current version is %d)", __FUNCTION__, tmp.ipaddr, tmp.id, CURRENT_ID);
+	if ((f = fopen(uncomp_fn, "rb")) != NULL) {
+		n = 0;
+		while (fread(&tmp, sizeof(Node), 1, f) > 0) {
+			if ((find_word(exclude, tmp.ipaddr))) {
+				logmsg(LOG_DEBUG, "*** %s: not loading excluded ip '%s'", __FUNCTION__, tmp.ipaddr);
+				continue;
 			}
 
-		fclose(f);
+			if (tmp.id == CURRENT_ID) {
+				logmsg(LOG_DEBUG, "*** %s: found data for ip %s", __FUNCTION__, tmp.ipaddr);
+
+				ptr = TREE_FIND(&tree, _Node, linkage, &tmp);
+				if (ptr) {
+					logmsg(LOG_DEBUG, "*** %s: removing/reloading new data for ip %s", __FUNCTION__, ptr->ipaddr);
+					TREE_REMOVE(&tree, _Node, linkage, ptr);
+					free(ptr);
+					ptr = NULL;
+				}
+
+				TREE_INSERT(&tree, _Node, linkage, Node_new(tmp.ipaddr));
+
+				ptr = TREE_FIND(&tree, _Node, linkage, &tmp);
+
+				memcpy(ptr->daily, &tmp.daily, sizeof(data_t) * MAX_NDAILY);
+				ptr->dailyp = tmp.dailyp;
+				memcpy(ptr->monthly, &tmp.monthly, sizeof(data_t) * MAX_NMONTHLY);
+				ptr->monthlyp = tmp.monthlyp;
+
+				ptr->utime = tmp.utime;
+				memcpy(ptr->speed, &tmp.speed, sizeof(uint64_t) * MAX_NSPEED * MAX_COUNTER);
+				memcpy(ptr->last, &tmp.last, sizeof(uint64_t) * MAX_COUNTER);
+				ptr->tail = tmp.tail;
+				ptr->sync = -1;
+
+				if (ptr->utime > uptime) {
+					ptr->utime = uptime;
+					ptr->sync = 1;
+				}
+
+				++n;
+			}
+			else
+				logmsg(LOG_DEBUG, "*** %s: data for ip '%s' version %d not loaded (current version is %d)", __FUNCTION__, tmp.ipaddr, tmp.id, CURRENT_ID);
 		}
+
+		fclose(f);
 	}
-	else
-		logmsg(LOG_DEBUG, "*** %s: %s != 0", __FUNCTION__, cmd);
 
 	unlink(uncomp_fn);
 
@@ -445,8 +446,10 @@ void Node_print_speedjs(Node *self, void *t) {
 static void save_speedjs(long next) {
 	FILE *f;
 
-	if ((f = fopen(speedjs_tmp_fn, "w")) == NULL)
+	if ((f = fopen(speedjs_tmp_fn, "w")) == NULL) {
+		logmsg(LOG_ERR, "*** %s: cannot open %s for writing (%s)", __FUNCTION__, speedjs_tmp_fn, strerror(errno));
 		return;
+	}
 
 	node_print_mode_t info;
 	info.mode = 0;
@@ -502,12 +505,15 @@ static void save_datajs(FILE *f, int mode) {
 static void save_histjs(void) {
 	FILE *f;
 
-	if ((f = fopen(historyjs_tmp_fn, "w")) != NULL) {
-		save_datajs(f, DAILY);
-		save_datajs(f, MONTHLY);
-		fclose(f);
-		rename(historyjs_tmp_fn, historyjs_fn);
+	if ((f = fopen(historyjs_tmp_fn, "w")) == NULL) {
+		logmsg(LOG_ERR, "*** %s: cannot open %s for writing (%s)", __FUNCTION__, historyjs_tmp_fn, strerror(errno));
+		return;
 	}
+
+	save_datajs(f, DAILY);
+	save_datajs(f, MONTHLY);
+	fclose(f);
+	rename(historyjs_tmp_fn, historyjs_fn);
 }
 
 static void bump(data_t *data, int *tail, int max, uint32_t xnow, uint64_t *counter) {
