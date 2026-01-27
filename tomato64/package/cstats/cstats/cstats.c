@@ -181,8 +181,8 @@ static void save(int quick) {
 	snprintf(hgz, sizeof(hgz), "%s.gz", history_fn);
 
 	if (save_path[0] != 0) {
-		strcpy(tmp, save_path);
-		strcat(tmp, ".tmp");
+		strlcpy(tmp, save_path, sizeof(tmp));
+		strlcat(tmp, ".tmp", sizeof(tmp));
 
 		for (i = 15; i > 0; --i) {
 			if (!wait_action_idle(10))
@@ -196,12 +196,12 @@ static void save(int quick) {
 						now = time(0);
 						tms = localtime(&now);
 						if (lastbak != tms->tm_yday) {
-							strcpy(bak, save_path);
+							strlcpy(bak, save_path, sizeof(bak));
 							n = strlen(bak);
 							if ((n > 3) && (strcmp(bak + (n - 3), ".gz") == 0))
 								n -= 3;
 
-							strcpy(bkp, bak);
+							strlcpy(bkp, bak, sizeof(bkp));
 							for (b = HI_BACK-1; b > 0; --b) {
 								snprintf(bkp + n, sizeof(bkp) - n, "_%d.bak", b + 1);
 								snprintf(bak + n, sizeof(bak) - n, "_%d.bak", b);
@@ -323,7 +323,7 @@ static int try_hardway(const char *fname) {
 	char fn[256];
 	int n, b, found = 0;
 
-	strcpy(fn, fname);
+	strlcpy(fn, fname, sizeof(fn));
 	n = strlen(fn);
 	if ((n > 3) && (strcmp(fn + (n - 3), ".gz") == 0))
 		n -= 3;
@@ -616,7 +616,7 @@ static void calc(void) {
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			strlcpy(bridge, "", sizeof(bridge));
 
 		snprintf(name, sizeof(name), "/proc/net/ipt_account/lan%s", bridge);
 
