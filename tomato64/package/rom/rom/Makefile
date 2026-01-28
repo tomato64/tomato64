@@ -140,4 +140,10 @@ else
 	rm -f $(INSTALLDIR)/rom/etc/fw_env.config-bpir3
 endif
 
+ifeq ($(PLATFORM_BPIR3MINI),y)
+	mv $(INSTALLDIR)/rom/etc/fw_env.config-bpir3mini $(INSTALLDIR)/rom/etc/fw_env.config
+else
+	rm -f $(INSTALLDIR)/rom/etc/fw_env.config-bpir3mini
+endif
+
 .PHONY: dummy
