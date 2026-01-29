@@ -39,6 +39,9 @@
 #include <shutils.h>
 #include <shared.h>
 #include <tree.h>
+#ifdef USE_ZLIB
+ #include <zlib.h>
+#endif
 
 #include "cstats.h"
 
@@ -114,8 +117,22 @@ int Node_compare(Node *lhs, Node *rhs)
 void Node_save(Node *self, void *t)
 {
 	node_print_mode_t *info = (node_print_mode_t *)t;
+#ifdef USE_ZLIB
+	int written, errnum;
+	const char *errmsg;
+
+	written = gzwrite(info->gzstream, self, sizeof(Node));
+	if (written != sizeof(Node)) {
+		errmsg = gzerror(info->gzstream, &errnum);
+		logmsg(LOG_ERR, "*** %s: gzwrite failed for Node %s: %s (errnum=%d)", __FUNCTION__, self->ipaddr, errmsg, errnum);
+		info->kn = -1;
+		return;
+	}
+	info->kn++;
+#else
 	if (fwrite(self, sizeof(Node), 1, info->stream) > 0)
 		info->kn++;
+#endif
 }
 
 static int get_stime(void)
@@ -132,32 +149,62 @@ static int get_stime(void)
 
 static int save_history_from_tree(const char *fname)
 {
-	FILE *f;
 	node_print_mode_t info;
-	char cmd[256];
+	char hgz[256];
 
 	info.kn = 0;
 	logmsg(LOG_DEBUG, "*** %s: fname=%s", __FUNCTION__, fname);
 
-	unlink(uncomp_fn);
-	if ((f = fopen(uncomp_fn, "wb")) != NULL) {
-		info.mode = 0;
-		info.stream = f;
-		TREE_FORWARD_APPLY(&tree, _Node, linkage, Node_save, &info);
-		fclose(f);
+	snprintf(hgz, sizeof(hgz), "%s.gz", fname);
 
-		/* direct compression to .gz file – safer */
-		snprintf(cmd, sizeof(cmd), "gzip -c %s > %s.gz", uncomp_fn, fname);
-		if (system(cmd) == 0) {
-			unlink(uncomp_fn);
-		}
-		else {
-			logmsg(LOG_ERR, "*** %s: gzip failed for %s", __FUNCTION__, fname);
-			/* optional: leave uncompressed as backup */
-			// rename(uncomp_fn, fname);
-			unlink(uncomp_fn);
-		}
+#ifdef USE_ZLIB
+	gzFile f;
+	int err;
+
+	if (!(f = gzopen(hgz, "wb8"))) {
+		logmsg(LOG_ERR, "*** %s: cannot open %s for writing (%s)", __FUNCTION__, hgz, strerror(errno));
+		return -1;
 	}
+	info.mode = 0;
+	info.gzstream = f;
+	TREE_FORWARD_APPLY(&tree, _Node, linkage, Node_save, &info);
+	if (info.kn == -1) {
+		gzclose(f);
+		return -1;
+	}
+	err = gzclose(f);
+		if (err != Z_OK) {
+		logmsg(LOG_ERR, "*** %s: gzclose failed for %s: error %d", __FUNCTION__, hgz, err);
+		return -1;
+	}
+#else
+	FILE *f;
+	char cmd[256];
+
+	unlink(uncomp_fn);
+
+	if (!(f = fopen(uncomp_fn, "wb"))) {
+		logmsg(LOG_ERR, "*** %s: cannot open %s for writing (%s)", __FUNCTION__, uncomp_fn, strerror(errno));
+		return -1;
+	}
+	info.mode = 0;
+	info.stream = f;
+	TREE_FORWARD_APPLY(&tree, _Node, linkage, Node_save, &info);
+	fclose(f);
+
+	/* direct compression to .gz file â€“ safer */
+	snprintf(cmd, sizeof(cmd), "gzip -c %s > %s", uncomp_fn, hgz);
+	if (system(cmd) == 0) {
+		unlink(uncomp_fn);
+	}
+	else {
+		logmsg(LOG_ERR, "*** %s: gzip failed for %s", __FUNCTION__, fname);
+		/* optional: leave uncompressed as backup */
+		// rename(uncomp_fn, fname);
+		unlink(uncomp_fn);
+		return -1;
+	}
+#endif
 
 	return info.kn;
 }
@@ -236,8 +283,14 @@ static void save(int quick)
 static int load_history_to_tree(const char *fname)
 {
 	int n;
+#ifdef USE_ZLIB
+	gzFile f;
+	int read_bytes, errnum, err;
+	const char *errmsg;
+#else
 	FILE *f;
 	char cmd[256];
+#endif
 	Node tmp;
 	Node *ptr;
 	char *exclude;
@@ -247,16 +300,85 @@ static int load_history_to_tree(const char *fname)
 	unlink(uncomp_fn);
 
 	n = -1;
+
+#ifdef USE_ZLIB
+	if (!(f = gzopen(fname, "rb"))) {
+		logmsg(LOG_ERR, "*** %s: cannot open %s for reading (%s)", __FUNCTION__, fname, strerror(errno));
+		return -1;
+	}
+	n = 0;
+	while (1) {
+		read_bytes = gzread(f, &tmp, sizeof(Node));
+		if (read_bytes == 0)
+			break; /* EOF */
+
+		if (read_bytes != sizeof(Node)) {
+			errmsg = gzerror(f, &errnum);
+			logmsg(LOG_ERR, "*** %s: gzread failed: %s (errnum=%d, read_bytes=%d)", __FUNCTION__, errmsg, errnum, read_bytes);
+			gzclose(f);
+			return -1;
+		}
+
+		if (find_word(exclude, tmp.ipaddr)) {
+			logmsg(LOG_DEBUG, "*** %s: not loading excluded ip '%s'", __FUNCTION__, tmp.ipaddr);
+			continue;
+		}
+
+		if (tmp.id == CURRENT_ID) {
+			logmsg(LOG_DEBUG, "*** %s: found data for ip %s", __FUNCTION__, tmp.ipaddr);
+
+			ptr = TREE_FIND(&tree, _Node, linkage, &tmp);
+			if (ptr) {
+				logmsg(LOG_DEBUG, "*** %s: removing/reloading new data for ip %s", __FUNCTION__, ptr->ipaddr);
+				TREE_REMOVE(&tree, _Node, linkage, ptr);
+				free(ptr);
+				node_count--;
+				ptr = NULL;
+			}
+
+			TREE_INSERT(&tree, _Node, linkage, Node_new(tmp.ipaddr));
+
+			ptr = TREE_FIND(&tree, _Node, linkage, &tmp);
+
+			if (ptr) { /* Node_new could return NULL at limit */
+				memcpy(ptr->daily, &tmp.daily, sizeof(data_t) * MAX_NDAILY);
+				ptr->dailyp = tmp.dailyp;
+				memcpy(ptr->monthly, &tmp.monthly, sizeof(data_t) * MAX_NMONTHLY);
+				ptr->monthlyp = tmp.monthlyp;
+
+				ptr->utime = tmp.utime;
+				memcpy(ptr->speed, &tmp.speed, sizeof(uint64_t) * MAX_NSPEED * MAX_COUNTER);
+				memcpy(ptr->last, &tmp.last, sizeof(uint64_t) * MAX_COUNTER);
+				ptr->tail = tmp.tail;
+				ptr->sync = -1;
+
+				if (ptr->utime > uptime) {
+					ptr->utime = uptime;
+					ptr->sync = 1;
+				}
+
+				++n;
+			}
+		}
+		else
+			logmsg(LOG_DEBUG, "*** %s: data for ip '%s' version %d not loaded (current version is %d)", __FUNCTION__, tmp.ipaddr, tmp.id, CURRENT_ID);
+	}
+	err = gzclose(f);
+	if (err != Z_OK) {
+		logmsg(LOG_ERR, "*** %s: gzclose failed for %s: error %d", __FUNCTION__, fname, err);
+		return -1;
+	}
+#else
 	snprintf(cmd, sizeof(cmd), "gzip -dc %s > %s", fname, uncomp_fn);
 	if (system(cmd) != 0) {
 		logmsg(LOG_ERR, "*** %s: decompress failed: %s", __FUNCTION__, cmd);
 		return -1;
 	}
 
-	if ((f = fopen(uncomp_fn, "rb")) != NULL) {
+	if ((f = fopen(uncomp_fn, "rb"))) {
 		n = 0;
 		while (fread(&tmp, sizeof(Node), 1, f) > 0) {
-			if ((find_word(exclude, tmp.ipaddr))) {
+			if (find_word(exclude, tmp.ipaddr)) {
 				logmsg(LOG_DEBUG, "*** %s: not loading excluded ip '%s'", __FUNCTION__, tmp.ipaddr);
 				continue;
 			}
@@ -305,6 +427,7 @@ static int load_history_to_tree(const char *fname)
 	}
 
 	unlink(uncomp_fn);
+#endif
 
 	if (n == -1)
 		logmsg(LOG_DEBUG, "*** %s: Failed to parse the data file!", __FUNCTION__);
@@ -358,7 +481,7 @@ static void load_new(void)
 
 static void load(int new)
 {
-	int i, n; 
+	int i, n;
 	long t;
 	char hgz[256];
 	unsigned char mac[6];
@@ -486,7 +609,7 @@ static void save_speedjs(long next)
 {
 	FILE *f;
 
-	if ((f = fopen(speedjs_tmp_fn, "w")) == NULL) {
+	if (!(f = fopen(speedjs_tmp_fn, "w"))) {
 		logmsg(LOG_ERR, "*** %s: cannot open %s for writing (%s)", __FUNCTION__, speedjs_tmp_fn, strerror(errno));
 		return;
 	}
@@ -545,7 +668,7 @@ static void save_histjs(void)
 {
 	FILE *f;
 
-	if ((f = fopen(historyjs_tmp_fn, "w")) == NULL) {
+	if (!(f = fopen(historyjs_tmp_fn, "w"))) {
 		logmsg(LOG_ERR, "*** %s: cannot open %s for writing (%s)", __FUNCTION__, historyjs_tmp_fn, strerror(errno));
 		return;
 	}
@@ -593,21 +716,20 @@ static void calc(void)
 {
 	FILE *f;
 	char buf[512];
+	char ip[INET_ADDRSTRLEN];
+	char name[64];
 	char *ipaddr = NULL;
 	uint64_t counter[MAX_COUNTER];
-	int i, j;
-	time_t now;
-	time_t mon;
+	int i, j, n;
+	time_t now, mon;
 	struct tm *tms;
-	uint64_t c;
-	uint64_t sc;
-	uint64_t diff;
+	uint64_t tx, rx;
+	uint64_t c, sc, diff;
 	long tick;
-	int n;
 	char *exclude = NULL;
 	char *include = NULL;
 	char prefix[] = "wan"; /* not yet mwan ready, assume wan */
-
+	char br;
 	Node *ptr = NULL;
 	Node test;
 
@@ -617,17 +739,9 @@ static void calc(void)
 	now = time(0);
 
 	exclude = strdup(nvram_safe_get("cstats_exclude"));
-	logmsg(LOG_DEBUG, "*** %s: cstats_exclude='%s'", __FUNCTION__, exclude);
-
 	include = strdup(nvram_safe_get("cstats_include"));
-	logmsg(LOG_DEBUG, "*** %s: cstats_include='%s'", __FUNCTION__, include);
 
-	uint64_t tx;
-	uint64_t rx;
-	char ip[INET_ADDRSTRLEN];
-	char br;
-
-	char name[64];
+	logmsg(LOG_DEBUG, "*** %s: cstats_exclude=[%s] cstats_include=[%s]", __FUNCTION__, exclude, include);
 
 	for (br = 0 ; br < BRIDGE_COUNT; br++) {
 		char bridge[2] = "0";
@@ -638,14 +752,14 @@ static void calc(void)
 
 		snprintf(name, sizeof(name), "/proc/net/ipt_account/lan%s", bridge);
 
-		if ((f = fopen(name, "r")) == NULL)
+		if (!(f = fopen(name, "r")))
 			continue;
 
 		while (fgets(buf, sizeof(buf), f)) {
 			if (sscanf(buf, "ip = %s bytes_src = %llu %*u %*u %*u %*u packets_src = %*u %*u %*u %*u %*u bytes_dst = %llu %*u %*u %*u %*u packets_dst = %*u %*u %*u %*u %*u time = %*u", ip, &rx, &tx) != 3)
 				continue;
 
-			logmsg(LOG_DEBUG, "*** %s: %s tx=%llu rx=%llu", __FUNCTION__, ip, tx, rx);
+			logmsg(LOG_DEBUG, "*** %s: ip=[%s] tx=[%llu] rx=[%llu]", __FUNCTION__, ip, tx, rx);
 
 			if (find_word(exclude, ip))
 				continue;

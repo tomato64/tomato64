@@ -56,7 +56,7 @@
 #define CURRENT_ID	ID_V2
 
 #define HI_BACK		5
-#define MAX_NODES	2000 /* maximum number of IPs tracked – memory protection */
+#define MAX_NODES	2000 /* maximum number of IPs tracked - memory protection */
 
 
 const char history_fn[]       = "/var/lib/misc/cstats-history";
@@ -72,7 +72,12 @@ const char stime_fn[]         = "/var/lib/misc/cstats-stime";
 typedef struct {
 	int mode;
 	int kn;
-	FILE *stream;
+	union {
+#ifdef USE_ZLIB
+		gzFile gzstream;
+#endif
+		FILE *stream;
+	};
 } node_print_mode_t;
 
 typedef struct {
@@ -104,4 +109,5 @@ typedef TREE_HEAD(_Tree, _Node) Tree;
 TREE_DEFINE(_Node, linkage);
 
 int Node_compare(Node *lhs, Node *rhs);
+
 Node *Node_new(char *ipaddr);

@@ -1,5 +1,6 @@
 ALL_CPPFLAGS = -fPIC
 ALL_CPPFLAGS += -std=gnu17
+ALL_CPPFLAGS += -DUSE_ZLIB
 ALL_CPPFLAGS += -DTOMATO64
 ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared
 ALL_CPPFLAGS += -I$(BR2_EXTERNAL_TOMATO64_PATH)/package/libshared/shared/include
@@ -11,7 +12,7 @@ ALL_CFLAGS = -fPIC
 ALL_CFLAGS += $(CFLAGS)
 
 ALL_LDFLAGS = -fPIC
-ALL_LDFLAGS += -lshared -lnvram
+ALL_LDFLAGS += -lshared -lnvram -lz
 ALL_LDFLAGS += $(LDFLAGS)
 
 ifeq ($(TOMATO_EXPERIMENTAL),1)
