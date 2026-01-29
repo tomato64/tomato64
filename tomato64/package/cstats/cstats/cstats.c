@@ -55,22 +55,26 @@ static int node_count = 0; /* active node counter */
 Tree tree = TREE_INITIALIZER(Node_compare);
 
 #ifdef DEBUG_CSTATS
-void Node_print(Node *self, FILE *stream) {
+void Node_print(Node *self, FILE *stream)
+{
 	fprintf(stream, "%s", self->ipaddr);
 }
 
-void Node_printer(Node *self, void *stream) {
+void Node_printer(Node *self, void *stream)
+{
 	Node_print(self, (FILE *)stream);
 	fprintf((FILE *)stream, " ");
 }
 
-void Tree_info(void) {
+void Tree_info(void)
+{
 	TREE_FORWARD_APPLY(&tree, _Node, linkage, Node_printer, stdout);
 	logmsg(LOG_DEBUG, "Tree depth = %d", TREE_DEPTH(&tree, linkage));
 }
 #endif
 
-static void free_all_nodes(void) {
+static void free_all_nodes(void)
+{
 	Node *node;
 	while (tree.th_root != NULL) {
 		node = tree.th_root;
@@ -81,7 +85,8 @@ static void free_all_nodes(void) {
 	node_count = 0;
 }
 
-Node *Node_new(char *ipaddr) {
+Node *Node_new(char *ipaddr)
+{
 	Node *self;
 	if ((self = malloc(sizeof(Node))) != NULL) {
 		memset(self, 0, sizeof(Node));
@@ -101,11 +106,20 @@ Node *Node_new(char *ipaddr) {
 	return self;
 }
 
-int Node_compare(Node *lhs, Node *rhs) {
+int Node_compare(Node *lhs, Node *rhs)
+{
 	return strncmp(lhs->ipaddr, rhs->ipaddr, INET_ADDRSTRLEN);
 }
 
-static int get_stime(void) {
+void Node_save(Node *self, void *t)
+{
+	node_print_mode_t *info = (node_print_mode_t *)t;
+	if (fwrite(self, sizeof(Node), 1, info->stream) > 0)
+		info->kn++;
+}
+
+static int get_stime(void)
+{
 	int t;
 	t = nvram_get_int("cstats_stime");
 	if (t < 1)
@@ -116,13 +130,8 @@ static int get_stime(void) {
 	return t * SHOUR;
 }
 
-void Node_save(Node *self, void *t) {
-	node_print_mode_t *info = (node_print_mode_t *)t;
-	if (fwrite(self, sizeof(Node), 1, info->stream) > 0)
-		info->kn++;
-}
-
-static int save_history_from_tree(const char *fname) {
+static int save_history_from_tree(const char *fname)
+{
 	FILE *f;
 	node_print_mode_t info;
 	char cmd[256];
@@ -153,14 +162,10 @@ static int save_history_from_tree(const char *fname) {
 	return info.kn;
 }
 
-static void save(int quick) {
-	int i;
-	int n;
-	int b;
-	char hgz[256];
-	char tmp[256];
-	char bak[256];
-	char bkp[256];
+static void save(int quick)
+{
+	int i, n, b;
+	char hgz[256], tmp[256], bak[256], bkp[256];
 	time_t now;
 	struct tm *tms;
 	static int lastbak = -1;
@@ -228,7 +233,8 @@ static void save(int quick) {
 	}
 }
 
-static int load_history_to_tree(const char *fname) {
+static int load_history_to_tree(const char *fname)
+{
 	int n;
 	FILE *f;
 	char cmd[256];
@@ -308,7 +314,8 @@ static int load_history_to_tree(const char *fname) {
 	return n;
 }
 
-static int load_history(const char *fname) {
+static int load_history(const char *fname)
+{
 	logmsg(LOG_DEBUG, "*** %s: fname=%s", __FUNCTION__, fname);
 
 	return load_history_to_tree(fname);
@@ -319,7 +326,8 @@ static int load_history(const char *fname) {
  * retry the requested one again last. In case the drive mounts while
  * we are trying to find a good version.
  */
-static int try_hardway(const char *fname) {
+static int try_hardway(const char *fname)
+{
 	char fn[256];
 	int n, b, found = 0;
 
@@ -337,7 +345,8 @@ static int try_hardway(const char *fname) {
 	return found;
 }
 
-static void load_new(void) {
+static void load_new(void)
+{
 	char hgz[256];
 
 	snprintf(hgz, sizeof(hgz), "%s.gz.new", history_fn);
@@ -347,10 +356,10 @@ static void load_new(void) {
 	unlink(hgz);
 }
 
-static void load(int new) {
-	int i;
+static void load(int new)
+{
+	int i, n; 
 	long t;
-	int n;
 	char hgz[256];
 	unsigned char mac[6];
 
@@ -422,7 +431,8 @@ static void load(int new) {
 	}
 }
 
-int speed_empty(Node *node) {
+int speed_empty(Node *node)
+{
 	int i, j;
 	/* iterate over the entire speed[i][j] two-dimensional array
 	 * and look for any entries (counters) that are non-zero.
@@ -438,7 +448,8 @@ int speed_empty(Node *node) {
 	return 1;
 }
 
-void Node_print_speedjs(Node *self, void *t) {
+void Node_print_speedjs(Node *self, void *t)
+{
 	int j, k, p;
 	uint64_t total, tmax;
 	uint64_t n;
@@ -471,7 +482,8 @@ void Node_print_speedjs(Node *self, void *t) {
 	info->kn++;
 }
 
-static void save_speedjs(long next) {
+static void save_speedjs(long next)
+{
 	FILE *f;
 
 	if ((f = fopen(speedjs_tmp_fn, "w")) == NULL) {
@@ -490,7 +502,8 @@ static void save_speedjs(long next) {
 	rename(speedjs_tmp_fn, speedjs_fn);
 }
 
-void Node_print_datajs(Node *self, void *t) {
+void Node_print_datajs(Node *self, void *t)
+{
 	data_t *data;
 	int p, max, k;
 
@@ -517,7 +530,8 @@ void Node_print_datajs(Node *self, void *t) {
 	}
 }
 
-static void save_datajs(FILE *f, int mode) {
+static void save_datajs(FILE *f, int mode)
+{
 	node_print_mode_t info = {0};
 	info.mode = mode;
 	info.stream = f;
@@ -527,7 +541,8 @@ static void save_datajs(FILE *f, int mode) {
 	fprintf(f, "\n];\n");
 }
 
-static void save_histjs(void) {
+static void save_histjs(void)
+{
 	FILE *f;
 
 	if ((f = fopen(historyjs_tmp_fn, "w")) == NULL) {
@@ -541,7 +556,8 @@ static void save_histjs(void) {
 	rename(historyjs_tmp_fn, historyjs_fn);
 }
 
-static void bump(data_t *data, int *tail, int max, uint32_t xnow, uint64_t *counter) {
+static void bump(data_t *data, int *tail, int max, uint32_t xnow, uint64_t *counter)
+{
 	int t, i;
 
 	t = *tail;
@@ -563,7 +579,8 @@ static void bump(data_t *data, int *tail, int max, uint32_t xnow, uint64_t *coun
 	}
 }
 
-void Node_housekeeping(Node *self, void *info) {
+void Node_housekeeping(Node *self, void *info)
+{
 	if (self) {
 		if (self->sync == -1)
 			self->sync = 0;
@@ -572,7 +589,8 @@ void Node_housekeeping(Node *self, void *info) {
 	}
 }
 
-static void calc(void) {
+static void calc(void)
+{
 	FILE *f;
 	char buf[512];
 	char *ipaddr = NULL;
@@ -777,7 +795,8 @@ static void calc(void) {
 	if (include) free(include);
 }
 
-static void sig_handler(int sig) {
+static void sig_handler(int sig)
+{
 	switch (sig) {
 	case SIGTERM:
 	case SIGINT:
@@ -795,7 +814,8 @@ static void sig_handler(int sig) {
 	}
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	struct sigaction sa;
 	long z;
 	int new = 0;
