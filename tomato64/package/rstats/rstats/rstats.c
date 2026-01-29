@@ -217,17 +217,12 @@ static int comp(const char *path, void *buffer, int size)
 
 static void save(int quick)
 {
-	int i;
+	int i, n, b;
 	char *bi, *bo;
-	int n;
-	int b;
-	char hgz[256];
+	char hgz[256], tmp[256], bak[256], bkp[256];
 #ifdef TOMATO64
 	char sgz[256];
 #endif /* TOMATO64 */
-	char tmp[256];
-	char bak[256];
-	char bkp[256];
 	time_t now;
 	struct tm *tms;
 	static int lastbak = -1;
@@ -302,8 +297,8 @@ static void save(int quick)
 								lastbak = tms->tm_yday;
 						}
 					}
-					logmsg(LOG_DEBUG, "*** %s: rename %s %s", __FUNCTION__, tmp, save_path);
 
+					logmsg(LOG_DEBUG, "*** %s: rename %s %s", __FUNCTION__, tmp, save_path);
 					if (rename(tmp, save_path) == 0) {
 						logmsg(LOG_DEBUG, "*** %s: rename ok", __FUNCTION__);
 						break;
@@ -517,10 +512,9 @@ static void load_new(void)
 
 static void load(int new)
 {
-	int i;
+	int i, n;
 	long t;
 	char *bi, *bo;
-	int n;
 	char hgz[256];
 #ifdef TOMATO64
 	char sgz[256];
@@ -664,13 +658,11 @@ static void load(int new)
 
 static void save_speedjs(long next)
 {
-	int i, j, k;
+	int j, k, p, i;
 	speed_t *sp;
-	int p;
 	FILE *f;
-	uint64_t total;
-	uint64_t tmax;
-	unsigned long n;
+	uint64_t total, tmax;
+	uint64_t n;
 	char c;
 	int up;
 	int sfd;
@@ -697,7 +689,6 @@ static void save_speedjs(long next)
 		}
 
 		fprintf(f, "%s'%s': { up: %d", i ? " },\n" : "", sp->ifname, up);
-
 		for (j = 0; j < MAX_COUNTER; ++j) {
 			total = tmax = 0;
 			c = j ? 't' : 'r';
@@ -706,7 +697,7 @@ static void save_speedjs(long next)
 			for (k = 0; k < MAX_NSPEED; ++k) {
 				p = (p + 1) % MAX_NSPEED;
 				n = sp->speed[p][j];
-				fprintf(f, "%s%lu", k ? "," : "", n);
+				fprintf(f, "%s%llu", k ? "," : "", n);
 				total += n;
 				if (n > tmax)
 					tmax = n;
