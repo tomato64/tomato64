@@ -1910,9 +1910,9 @@ void start_ntpd(void)
 {
 	FILE *f;
 	char *servers, *ptr;
-	int servers_len = 0, ntp_updates_int = 0, index = 2, ret;
+	int servers_len = 0, ntp_updates_int = 0, index = 2, off, i;
 	char *ntpd_argv[] = { "/usr/sbin/ntpd", "-t", NULL, NULL, NULL, NULL, NULL, NULL }; /* -ddddddd -q -S /sbin/ntpd_synced -l */
-	pid_t pid;
+	char cmd[256];
 
 	if (serialize_restart("ntpd", 1))
 		return;
@@ -1971,15 +1971,22 @@ void start_ntpd(void)
 				ntpd_argv[index++] = "-l";
 		}
 
-		ret = _eval(ntpd_argv, NULL, 0, &pid);
+		memset(cmd, 0, sizeof(cmd)); /* reset */
+		off = snprintf(cmd, sizeof(cmd), "sh -c 'ulimit -c 0 -e 15 -r 15 -l 64 -m 8192 -n 512 -s 8192 -u 16 -v 8192; %s", ntpd_argv[0]);
+		for (i = 1; ntpd_argv[i]; ++i)
+			off += snprintf(cmd + off, sizeof(cmd) - off, " %s", ntpd_argv[i]);
+
+		snprintf(cmd + off, sizeof(cmd) - off, "'");
+		system(cmd);
 
 		if (!nvram_contains_word("debug_norestart", "ntpd"))
 			pid_ntpd = -2;
 
-		if (ret)
-			logmsg(LOG_ERR, "starting ntpd failed ...");
-		else
+		sleep(1);
+		if (pidof("ntpd") > 0)
 			logmsg(LOG_INFO, "ntpd is started");
+		else
+			logmsg(LOG_ERR, "starting ntpd failed ...");
 	}
 }
 
