@@ -1182,7 +1182,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "ttb_url",			"http://ttb.mooo.com http://ttb.ath.cx http://ttb.ddnsfree.com", 0 },	/* Tomato Themes Base - default URL */
 #endif
 	{ "web_svg",			"1"				, 0 },
-	{ "telnetd_eas",		"1"				, 0 },
+	{ "telnetd_eas",		"0"				, 0 },
 	{ "telnetd_port",		"23"				, 0 },
 	{ "sshd_eas",			"1"				, 0 },	/* enable sshd by default */
 	{ "sshd_pass",			"1"				, 0 },
