@@ -32,7 +32,6 @@
 #include <sys/ioctl.h>
 #include <stdint.h>
 #include <syslog.h>
-#include <inttypes.h>
 #ifdef USE_ZLIB
  #include <zlib.h>
 #endif
@@ -839,16 +838,8 @@ static void calc(void)
 			continue;
 
 		/* <rx bytes, packets, errors, dropped, fifo errors, frame errors, compressed, multicast><tx ...> */
-		/* first we try 64-bit format (newer kernels), then fallback to 32-bit (old 2.6 kernels) */
-		if (sscanf(p + 1, "%" SCNu64 "%*u%*u%*u%*u%*u%*u%*u%" SCNu64, &counter[RX], &counter[TX]) != 2) {
-			/* fallback 32-bit */
-			unsigned long temp_rx, temp_tx;
-			if (sscanf(p + 1, "%lu%*u%*u%*u%*u%*u%*u%*u%lu", &temp_rx, &temp_tx) != 2)
-				continue;
-
-			counter[RX] = temp_rx;
-			counter[TX] = temp_tx;
-		}
+		if (sscanf(p + 1, "%llu%*u%*u%*u%*u%*u%*u%*u%llu", &counter[RX], &counter[TX]) != 2)
+			continue;
 
 		sp = speed;
 		sp_rtd = speed_rtd;
