@@ -379,12 +379,8 @@ static void save(int quick)
 static int decomp(const char *fname, void *buffer, int size, int max)
 {
 	int n = 0;
-#ifndef USE_ZLIB
-	char cmd[256];
-#endif
 
 	logmsg(LOG_DEBUG, "*** %s: fname=%s", __FUNCTION__, fname);
-
 #ifdef USE_ZLIB
 	gzFile gf = gzopen(fname, "rb");
 	if (gf) {
@@ -397,6 +393,8 @@ static int decomp(const char *fname, void *buffer, int size, int max)
 			n /= size;
 	}
 #else
+	char cmd[256];
+
 	unlink(uncomp_fn);
 
 	snprintf(cmd, sizeof(cmd), "gzip -dc %s > %s", fname, uncomp_fn);
@@ -533,7 +531,7 @@ static void load(int new)
 
 	uptime = get_uptime();
 
-	strlcpy(save_path, nvram_safe_get("rstats_path"), sizeof(save_path));
+	strlcpy(save_path, nvram_safe_get("rstats_path"), sizeof(save_path) - 32);
 	if (((n = strlen(save_path)) > 0) && (save_path[n - 1] == '/')) {
 		ether_atoe(nvram_safe_get("lan_hwaddr"), mac);
 		snprintf(save_path + n, sizeof(save_path) - n, "tomato_rstats_%02x%02x%02x%02x%02x%02x.gz",
