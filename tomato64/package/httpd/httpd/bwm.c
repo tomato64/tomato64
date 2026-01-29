@@ -203,12 +203,12 @@ void asp_netdev(int argc, char **argv)
 void asp_iptmon(int argc, char **argv)
 {
 	FILE *a;
-	int64_t tx, rx;
+	uint64_t tx, rx;
 	char sa[256];
 	char *exclude, *include;
-	char ip[INET6_ADDRSTRLEN];
+	char ip[INET_ADDRSTRLEN];
 	char br, wholenetstatsline;
-	char name[] = "/proc/net/ipt_account/lanX";
+	char name[32];
 	char comma = ' ';
 
 	exclude = nvram_safe_get("cstats_exclude");
@@ -234,8 +234,10 @@ void asp_iptmon(int argc, char **argv)
 			fgets(sa, sizeof(sa), a); /* network */
 
 		while (fgets(sa, sizeof(sa), a)) {
-			if(sscanf(sa, "ip = %s bytes_src = %llu %*u %*u %*u %*u packets_src = %*u %*u %*u %*u %*u bytes_dst = %llu %*u %*u %*u %*u packets_dst = %*u %*u %*u %*u %*u time = %*u", ip, &tx, &rx) != 3)
+			if (sscanf(sa, "ip = %s bytes_src = %llu %*u %*u %*u %*u packets_src = %*u %*u %*u %*u %*u bytes_dst = %llu %*u %*u %*u %*u packets_dst = %*u %*u %*u %*u %*u time = %*u", ip, &tx, &rx) != 3)
 				continue;
+
+			logmsg(LOG_DEBUG, "*** %s: ip=[%s] bytes_src=[%llu] bytes_dst=[%llu]", __FUNCTION__, ip, tx, rx);
 
 			if (find_word(exclude, ip)) {
 				wholenetstatsline = 0;
