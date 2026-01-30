@@ -112,6 +112,7 @@ speed_runtime_t speed_rtd[MAX_SPEED_IF];
 int speed_count;
 long save_utime;
 char save_path[96];
+char speed_save_path[96];
 long uptime;
 
 volatile int gothup = 0;
@@ -144,45 +145,6 @@ static int get_stime(void)
 
 	return t * SHOUR;
 }
-
-#ifdef TOMATO64
-/* Generate speed path from save_path by appending _speed */
-static void get_speed_path(char *speed_path, int size)
-{
-	int n;
-	char *ext;
-
-	speed_path[0] = 0;
-
-	if (save_path[0] == 0 || strcmp(save_path, "*nvram") == 0)
-		return;
-
-	n = strlen(save_path);
-	if (n == 0)
-		return;
-
-	/* If path ends with /, use same directory with different filename */
-	if (save_path[n - 1] == '/') {
-		unsigned char mac[6];
-		ether_atoe(nvram_safe_get("lan_hwaddr"), mac);
-		snprintf(speed_path, size, "%stomato_rstats_speed_%02x%02x%02x%02x%02x%02x.gz",
-			save_path, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-	}
-	else {
-		/* File path - insert _speed before extension or at end */
-		ext = strrchr(save_path, '.');
-		if (ext && (strcmp(ext, ".gz") == 0)) {
-			/* Has .gz extension - insert _speed before it */
-			n = ext - save_path;
-			snprintf(speed_path, size, "%.*s_speed%s", n, save_path, ext);
-		}
-		else {
-			/* No extension - append _speed */
-			snprintf(speed_path, size, "%s_speed", save_path);
-		}
-	}
-}
-#endif /* TOMATO64 */
 
 static int comp(const char *path, void *buffer, int size)
 {
@@ -226,15 +188,10 @@ static void save(int quick)
 	int i, n, b;
 	char *bi, *bo;
 	char hgz[256], tmp[256], bak[256], bkp[256];
-#ifdef TOMATO64
-	char sgz[256];
-#endif /* TOMATO64 */
+	char speed_hgz[256], speed_tmp[256], speed_bak[256], speed_bkp[256];
 	time_t now;
 	struct tm *tms;
 	static int lastbak = -1;
-#ifdef TOMATO64
-	static int lastbak_speed = -1;
-#endif /* TOMATO64 */
 
 	logmsg(LOG_DEBUG, "*** %s: quick=%d", __FUNCTION__, quick);
 
@@ -307,6 +264,45 @@ static void save(int quick)
 					logmsg(LOG_DEBUG, "*** %s: rename %s %s", __FUNCTION__, tmp, save_path);
 					if (rename(tmp, save_path) == 0) {
 						logmsg(LOG_DEBUG, "*** %s: rename ok", __FUNCTION__);
+
+						/* speed */
+						snprintf(speed_hgz, sizeof(speed_hgz), "%s.gz", speed_fn);
+						strlcpy(speed_tmp, speed_save_path, sizeof(speed_tmp));
+						strlcat(speed_tmp, ".tmp", sizeof(speed_tmp));
+
+						logmsg(LOG_DEBUG, "*** %s: cp %s %s", __FUNCTION__, speed_hgz, speed_tmp);
+
+						if (eval("cp", speed_hgz, speed_tmp) == 0) {
+							logmsg(LOG_DEBUG, "*** %s: copy ok for speed", __FUNCTION__);
+							if (!nvram_match("rstats_bak", "0")) {
+								now = time(0);
+								tms = localtime(&now);
+								if (lastbak != tms->tm_yday) {
+									strlcpy(speed_bak, speed_save_path, sizeof(speed_bak));
+									n = strlen(speed_bak);
+
+									if ((n > 3) && (strcmp(speed_bak + (n - 3), ".gz") == 0))
+										n -= 3;
+
+									strlcpy(speed_bkp, speed_bak, sizeof(speed_bkp));
+									for (b = HI_BACK-1; b > 0; --b) {
+										snprintf(speed_bkp + n, sizeof(speed_bkp) - n, "_%d.bak", b + 1);
+										snprintf(speed_bak + n, sizeof(speed_bak) - n, "_%d.bak", b);
+										rename(speed_bak, speed_bkp);
+									}
+
+									if (eval("cp", "-p", speed_save_path, speed_bak) == 0)
+										lastbak = tms->tm_yday;
+								}
+							}
+							logmsg(LOG_DEBUG, "*** %s: rename %s %s", __FUNCTION__, speed_tmp, speed_save_path);
+
+							if (rename(speed_tmp, speed_save_path) == 0) {
+								logmsg(LOG_DEBUG, "*** %s: rename ok for speed", __FUNCTION__);
+							}
+						}
+						/* --- */
+
 						break;
 					}
 				}
@@ -318,62 +314,6 @@ static void save(int quick)
 				break;
 		}
 	}
-
-#ifdef TOMATO64
-	snprintf(sgz, sizeof(sgz), "%s.gz", speed_fn);
-
-	if (save_path[0] != 0 && strcmp(save_path, "*nvram") != 0) {
-		char speed_path[256];
-		get_speed_path(speed_path, sizeof(speed_path));
-
-		if (speed_path[0] != 0) {
-			strcpy(tmp, speed_path);
-			strcat(tmp, ".tmp");
-
-			for (i = 15; i > 0; --i) {
-				if (!wait_action_idle(10))
-					logmsg(LOG_DEBUG, "*** %s: busy, not saving speed", __FUNCTION__);
-				else {
-					logmsg(LOG_DEBUG, "*** %s: cp %s %s", __FUNCTION__, sgz, tmp);
-					if (eval("cp", sgz, tmp) == 0) {
-						logmsg(LOG_DEBUG, "*** %s: copy ok (speed)", __FUNCTION__);
-
-						if (!nvram_match("rstats_bak", "0")) {
-							now = time(0);
-							tms = localtime(&now);
-							if (lastbak_speed != tms->tm_yday) {
-								strcpy(bak, speed_path);
-								n = strlen(bak);
-								if ((n > 3) && (strcmp(bak + (n - 3), ".gz") == 0))
-									n -= 3;
-
-								strcpy(bkp, bak);
-								for (b = HI_BACK-1; b > 0; --b) {
-									snprintf(bkp + n, sizeof(bkp) - n, "_%d.bak", b + 1);
-									snprintf(bak + n, sizeof(bak) - n, "_%d.bak", b);
-									rename(bak, bkp);
-								}
-								if (eval("cp", "-p", speed_path, bak) == 0)
-									lastbak_speed = tms->tm_yday;
-							}
-						}
-						logmsg(LOG_DEBUG, "*** %s: rename %s %s", __FUNCTION__, tmp, speed_path);
-
-						if (rename(tmp, speed_path) == 0) {
-							logmsg(LOG_DEBUG, "*** %s: rename ok (speed)", __FUNCTION__);
-							break;
-						}
-					}
-				}
-
-				/* might not be ready */
-				sleep(3);
-				if (gotterm)
-					break;
-			}
-		}
-	}
-#endif /* TOMATO64 */
 }
 
 static int decomp(const char *fname, void *buffer, int size, int max)
@@ -443,7 +383,6 @@ static int load_history(const char *fname)
 	return 1;
 }
 
-#ifdef TOMATO64
 static int load_speed(const char *fname)
 {
 	int count;
@@ -451,24 +390,16 @@ static int load_speed(const char *fname)
 	logmsg(LOG_DEBUG, "*** %s: fname=%s", __FUNCTION__, fname);
 
 	count = decomp(fname, speed, sizeof(speed[0]), MAX_SPEED_IF);
-	if (count <= 0) {
-		logmsg(LOG_DEBUG, "*** %s: load failed", __FUNCTION__);
-		return 0;
-	}
 
-	logmsg(LOG_DEBUG, "*** %s: speed_count=%d", __FUNCTION__, count);
-	speed_count = count;
-
-	return 1;
+	return count;
 }
-#endif /* TOMATO64 */
 
 /* Try loading from the backup versions.
  * We'll try from oldest to newest, then
  * retry the requested one again last.  In case the drive mounts while
  * we are trying to find a good version.
  */
-static int try_hardway(const char *fname)
+static int try_hardway(const char *fname, const int is_speed)
 {
 	char fn[256];
 	int n, b, found = 0;
@@ -480,33 +411,22 @@ static int try_hardway(const char *fname)
 
 	for (b = HI_BACK; b > 0; --b) {
 		snprintf(fn + n, sizeof(fn) - n, "_%d.bak", b);
-		found |= load_history(fn);
+		if (is_speed) {
+			if (load_speed(fn) > 0)
+				found = 1;
+		} else
+			found |= load_history(fn);
 	}
-	found |= load_history(fname);
 
-	return found;
-}
-
-#ifdef TOMATO64
-static int try_hardway_speed(const char *fname)
-{
-	char fn[256];
-	int n, b, found = 0;
-
-	strcpy(fn, fname);
-	n = strlen(fn);
-	if ((n > 3) && (strcmp(fn + (n - 3), ".gz") == 0))
-		n -= 3;
-
-	for (b = HI_BACK; b > 0; --b) {
-		snprintf(fn + n, sizeof(fn) - n, "_%d.bak", b);
-		found |= load_speed(fn);
+	if (is_speed) {
+		if (load_speed(fname) > 0)
+			found = 1;
 	}
-	found |= load_speed(fname);
+	else
+		found |= load_history(fname);
 
-	return found;
+	return is_speed ? (found ? speed_count : 0) : found;
 }
-#endif /* TOMATO64 */
 
 static void load_new(void)
 {
@@ -522,12 +442,10 @@ static void load_new(void)
 static void load(int new)
 {
 	int i, n;
+	int speed_loaded;
 	long t;
 	char *bi, *bo;
-	char hgz[256];
-#ifdef TOMATO64
-	char sgz[256];
-#endif /* TOMATO64 */
+	char hgz[256], speed_hgz[256];
 	char sp[sizeof(save_path)];
 	unsigned char mac[6];
 
@@ -540,6 +458,20 @@ static void load(int new)
 		         mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	}
 
+	/* speed */
+	strlcpy(speed_save_path, nvram_safe_get("rstats_path"), sizeof(speed_save_path) - 32);
+	if (((n = strlen(speed_save_path)) > 0) && (speed_save_path[n - 1] == '/')) {
+		snprintf(speed_save_path + n, sizeof(speed_save_path) - n, "tomato_rstatss_%02x%02x%02x%02x%02x%02x.gz",
+		         mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	}
+	else {
+		if ((n > 3) && (strcmp(speed_save_path + (n - 3), ".gz") == 0))
+			speed_save_path[n - 3] = 0;
+
+		strlcat(speed_save_path, "-s.gz", sizeof(speed_save_path));
+	}
+	/* --- */
+
 	if (f_read(stime_fn, &save_utime, sizeof(save_utime)) != sizeof(save_utime))
 		save_utime = 0;
 
@@ -549,29 +481,41 @@ static void load(int new)
 
 	logmsg(LOG_DEBUG, "*** %s: uptime = %ldm, save_utime = %ldm", __FUNCTION__, uptime / 60, save_utime / 60);
 
-#ifndef TOMATO64
-	snprintf(hgz, sizeof(hgz), "%s.gz", speed_fn);
-	speed_count = decomp(hgz, speed, sizeof(speed[0]), MAX_SPEED_IF);
-#endif /* TOMATO64 */
-#ifdef TOMATO64
-	snprintf(sgz, sizeof(sgz), "%s.gz", speed_fn);
-	speed_count = decomp(sgz, speed, sizeof(speed[0]), MAX_SPEED_IF);
-#endif /* TOMATO64 */
+	/* speed */
+	speed_loaded = 0;
+	if (save_path[0] != 0 && strcmp(save_path, "*nvram") != 0) {
+		speed_count = load_speed(speed_save_path);
+		if (speed_count > 0) {
+			speed_loaded = 1;
+		}
+		else {
+			speed_count = try_hardway(speed_save_path, 1);
+			if (speed_count > 0)
+				speed_loaded = 1;
+		}
+	}
+	if (!speed_loaded) {
+		snprintf(speed_hgz, sizeof(speed_hgz), "%s.gz", speed_fn);
+		speed_count = decomp(speed_hgz, speed, sizeof(speed[0]), MAX_SPEED_IF);
+	}
+
 	logmsg(LOG_DEBUG, "*** %s: speed_count = %d", __FUNCTION__, speed_count);
 
-#ifndef TOMATO64
 	for (i = 0; i < speed_count; ++i) {
 		if (speed[i].utime > uptime) {
 			speed[i].utime = uptime;
 			speed[i].sync = 1;
 		}
 	}
-#endif /* TOMATO64 */
+	/* --- */
 
 	snprintf(hgz, sizeof(hgz), "%s.gz", history_fn);
 
 	if (new) {
 		unlink(hgz);
+		if (save_path[0] != 0 && strcmp(save_path, "*nvram") != 0)
+			unlink(speed_save_path);
+
 		save_utime = 0;
 		return;
 	}
@@ -613,7 +557,7 @@ static void load(int new)
 					 * maybe it's corrupted (like 0 bytes long).
 					 * In these cases, try the backup files.
 					 */
-					if (load_history(save_path) || try_hardway(save_path)) {
+					if (load_history(save_path) || try_hardway(save_path, 0)) {
 						f_write_string(source_fn, save_path, 0, 0);
 						break;
 					}
@@ -634,35 +578,6 @@ static void load(int new)
 			}
 		}
 	}
-
-#ifdef TOMATO64
-	/* Load speed from custom path if configured (not nvram - too large for libnvram 16KB read limit) */
-	if (save_path[0] != 0 && strcmp(save_path, "*nvram") != 0) {
-		char speed_path[256];
-
-		get_speed_path(speed_path, sizeof(speed_path));
-
-		if (speed_path[0] != 0) {
-			/* Try to load speed file once - if it doesn't exist, start fresh immediately */
-			if (load_speed(speed_path) || try_hardway_speed(speed_path)) {
-				logmsg(LOG_DEBUG, "*** %s: loaded speed from %s", __FUNCTION__, speed_path);
-			} else {
-				/* Speed file doesn't exist - start fresh (normal for new installs or after migration) */
-				logmsg(LOG_INFO, "*** %s: no speed file found, starting fresh", __FUNCTION__);
-				speed_count = 0;
-				memset(speed, 0, sizeof(speed));
-			}
-		}
-	}
-
-	/* Ensure speed data is loaded and synced */
-	for (i = 0; i < speed_count; ++i) {
-		if (speed[i].utime > uptime) {
-			speed[i].utime = uptime;
-			speed[i].sync = 1;
-		}
-	}
-#endif /* TOMATO64 */
 }
 
 static void save_speedjs(long next)
