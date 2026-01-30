@@ -187,21 +187,27 @@ static void get_speed_path(char *speed_path, int size)
 static int comp(const char *path, void *buffer, int size)
 {
 #ifdef USE_ZLIB
+	gzFile f;
 	char gzpath[256];
 	int written, err;
 
 	snprintf(gzpath, sizeof(gzpath), "%s.gz", path);
-	gzFile gf = gzopen(gzpath, "wb9");
-	if (!gf)
+	if (!(f = gzopen(gzpath, "wb8"))) {
+		logmsg(LOG_ERR, "*** %s: cannot open %s for writing (%s)", __FUNCTION__, gzpath, strerror(errno));
 		return 0;
-
-	written = gzwrite(gf, buffer, size);
+	}
+	written = gzwrite(f, buffer, size);
 	if (written != size) {
-		gzclose(gf);
+		gzclose(f);
 		return 0;
 	}
 
-	err = gzclose(gf);
+	err = gzclose(f);
+	if (err != Z_OK) {
+		logmsg(LOG_ERR, "*** %s: gzclose failed for %s: error %d", __FUNCTION__, gzpath, err);
+		return 0;
+	}
+
 	return (err == Z_OK);
 #else
 	char cmd[256];
@@ -376,16 +382,19 @@ static int decomp(const char *fname, void *buffer, int size, int max)
 
 	logmsg(LOG_DEBUG, "*** %s: fname=%s", __FUNCTION__, fname);
 #ifdef USE_ZLIB
-	gzFile gf = gzopen(fname, "rb");
-	if (gf) {
-		n = gzread(gf, buffer, (unsigned)(size * max));
-		gzclose(gf);
+	gzFile f;
+
+	if ((f = gzopen(fname, "rb"))) {
+		n = gzread(f, buffer, (unsigned)(size * max));
+		gzclose(f);
 
 		if (n <= 0)
 			n = 0;
 		else
 			n /= size;
 	}
+	else
+		logmsg(LOG_DEBUG, "*** %s: cannot open %s for reading (%s)", __FUNCTION__, fname, strerror(errno));
 #else
 	char cmd[256];
 
@@ -668,7 +677,7 @@ static void save_speedjs(long next)
 	int sfd;
 	struct ifreq ifr;
 
-	if ((f = fopen(speedjs_tmp_fn, "w")) == NULL)
+	if (!(f = fopen(speedjs_tmp_fn, "w")))
 		return;
 
 	logmsg(LOG_DEBUG, "*** %s: speed_count = %d", __FUNCTION__, speed_count);
@@ -752,7 +761,7 @@ static void save_histjs(void)
 {
 	FILE *f;
 
-	if ((f = fopen(historyjs_tmp_fn, "w")) != NULL) {
+	if ((f = fopen(historyjs_tmp_fn, "w"))) {
 		save_datajs(f, DAILY);
 		save_datajs(f, MONTHLY);
 		fclose(f);
@@ -810,7 +819,7 @@ static void calc(void)
 	now = time(0);
 	exclude = nvram_safe_get("rstats_exclude");
 
-	if ((f = fopen("/proc/net/dev", "r")) == NULL)
+	if (!(f = fopen("/proc/net/dev", "r")))
 		return;
 
 	fgets(buf, sizeof(buf), f); /* header */
