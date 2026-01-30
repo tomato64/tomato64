@@ -47,7 +47,8 @@ var hostnamecache = [];
 var ref = new TomatoRefresh('update.cgi', 'exec=iptmon', updateInt);
 
 ref.refresh = function(text) {
-	var c, i, h, n, j, k, l;
+	var c, i, h, n, j, k, l, p;
+	var rxDelta, txDelta;
 
 	watchdogReset();
 
@@ -73,11 +74,29 @@ ref.refresh = function(text) {
 			if ((p = prev[i]) != null) {
 				h = speed_history[i];
 
+				if (c.rx < p.rx) {
+					if (p.rx > 0x7FFFFFFF) /* previous value was large, probably overflow */
+						rxDelta = c.rx + (0xFFFFFFFF - p.rx + 0x00000001);
+					else /* probably interface reset - use previous delta or 0 */
+						rxDelta = (h.rx.length > 0) ? h.rx[h.rx.length - 1] : 0;
+				}
+				else
+					rxDelta = c.rx - p.rx;
+
+				if (c.tx < p.tx) {
+					if (p.tx > 0x7FFFFFFF) /* previous value was large, probably overflow */
+						txDelta = c.tx + (0xFFFFFFFF - p.tx + 0x00000001);
+					else /* probably interface reset - use previous delta or 0 */
+						txDelta = (h.tx.length > 0) ? h.tx[h.tx.length - 1] : 0;
+				}
+				else
+					txDelta = c.tx - p.tx;
+
 				h.rx.splice(0, 1);
-				h.rx.push((c.rx < p.rx) ? (c.rx + (0xFFFFFFFF - p.rx + 0x00000001)) : (c.rx - p.rx));
+				h.rx.push(rxDelta);
 
 				h.tx.splice(0, 1);
-				h.tx.push((c.tx < p.tx) ? (c.tx + (0xFFFFFFFF - p.tx + 0x00000001)) : (c.tx - p.tx));
+				h.tx.push(txDelta);
 			}
 			else if (!speed_history[i]) {
 				speed_history[i] = {};
