@@ -1,1 +1,1 @@
-root=/dev/mmcblk0p3 rootwait rootflags=rw,sync,barrier,data=journal console=tty1 console=ttyAMA0,115200 fsck.repair=yes
+root=/dev/mmcblk0p3 rootwait rootflags=rw,sync,barrier,data=journal fsck.repair=yes console=ttyAMA0,115200 earlycon=pl011,mmio32,0xfe201000 keep_bootcon
