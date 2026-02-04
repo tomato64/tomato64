@@ -4,6 +4,18 @@ set -e
 
 . /usr/sbin/nvram_ops
 
+# Usage: wait_for_interface <interface_name>
+# Returns 0 on success, 1 on timeout
+wait_for_interface() {
+	local iface=$1
+	local timeout=100  # 10 seconds (100 * 0.1s)
+	while [ $timeout -gt 0 ] && [ ! -d "/sys/class/net/$iface" ]; do
+		sleep 0.1
+		timeout=$((timeout - 1))
+	done
+	[ -d "/sys/class/net/$iface" ]
+}
+
 increment_mac() {
 	tmp=$1
 	tmp=$(echo $tmp |  tr '[:lower:]' '[:upper:]' | tr -d ':')
@@ -13,6 +25,22 @@ increment_mac() {
 	tmp=$(echo $tmp | sed 's/../&:/g;s/:$//')
 	echo "$tmp"
 }
+
+# Wait for ethernet interfaces to be ready
+if ! wait_for_interface eth0; then
+	logger -t set_devs_mt6000 "ERROR: eth0 did not appear after 10 seconds"
+fi
+
+if ! wait_for_interface eth1; then
+	logger -t set_devs_mt6000 "ERROR: eth1 did not appear after 10 seconds"
+fi
+
+# Wait for DSA switch port interfaces
+for p in 1 2 3 4 5; do
+	if ! wait_for_interface "lan$p"; then
+		logger -t set_devs_mt6000 "WARNING: lan$p did not appear after 10 seconds"
+	fi
+done
 
 mac=$(ifconfig eth0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
 mac1=$(ifconfig eth1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
