@@ -3,7 +3,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 #
 # Copyright (C) 2015 shibby
 #
-# changes/fixes: 2018 - 2025 by pedro
+# changes/fixes: 2018 - 2026 by pedro
 # https://freshtomato.org/
 #
 
@@ -113,6 +113,13 @@ mwwatchdogRun() {
 				}
 			}
 
+			# check if interface exists before accessing /sys (safety)
+			[ ! -d "/sys/class/net/$IFACE" ] && {
+				$LOGD "interface $IFACE does not exist in sysfs. Skipping..."
+				echo "0" > "$STATE_FILE"
+				continue
+			}
+
 			DEFAULT_ROUTE_FRAGMENT=$(ip route | grep default | cut -d' ' -f2-)
 			GATEWAY_FRAGMENT="via $(NG "$PREFIX"_gateway)"
 			[ "$ISPPPD" -eq 1 ] && GATEWAY_FRAGMENT=""
@@ -120,11 +127,13 @@ mwwatchdogRun() {
 			# add routes
 			for IP in $IPLIST; do
 				[ -n "$DEFAULT_ROUTE_FRAGMENT" ] && {
-					$LOGD ip route add "$IP" $DEFAULT_ROUTE_FRAGMENT
-					ip route add "$IP" $DEFAULT_ROUTE_FRAGMENT 2>/dev/null
+					ROUTE_EXEC="ip route add $IP $DEFAULT_ROUTE_FRAGMENT"
+					$LOGD $ROUTE_EXEC
+					$ROUTE_EXEC &>/dev/null
 				}
-				$LOGD ip route add "$IP" dev "$IFACE" $GATEWAY_FRAGMENT metric 50000
-				ip route add "$IP" dev "$IFACE" $GATEWAY_FRAGMENT metric 50000 2>/dev/null
+				ROUTE_EXEC="ip route add $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000"
+				$LOGD $ROUTE_EXEC
+				$ROUTE_EXEC &>/dev/null
 			done
 
 			$LOGD "start test for: $IFACE ..."
@@ -139,11 +148,13 @@ mwwatchdogRun() {
 			# remove routes
 			for IP in $IPLIST; do
 				[ -n "$DEFAULT_ROUTE_FRAGMENT" ] && {
-					$LOGD ip route del "$IP" $DEFAULT_ROUTE_FRAGMENT
-					ip route del "$IP" $DEFAULT_ROUTE_FRAGMENT 2>/dev/null
+					ROUTE_EXEC="ip route del $IP $DEFAULT_ROUTE_FRAGMENT"
+					$LOGD $ROUTE_EXEC
+					$ROUTE_EXEC &>/dev/null
 				}
-				$LOGD ip route del "$IP" dev "$IFACE" $GATEWAY_FRAGMENT metric 50000
-				ip route del "$IP" dev "$IFACE" $GATEWAY_FRAGMENT metric 50000 2>/dev/null
+				ROUTE_EXEC="ip route del $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000"
+				$LOGD $ROUTE_EXEC
+				$ROUTE_EXEC &>/dev/null
 			done
 
 			# handle WAN down
@@ -153,14 +164,14 @@ mwwatchdogRun() {
 					echo "0" > "$STATE_FILE"
 					switch4g "$PREFIX"
 				} || {
-					[ "$PREFIX" = "wan" ] && [ "$MWAN" -gt 1 ] && PREFIX_MWAN="wan1" # "wan" means restart all WANs, but we only want restart one
+					[ "$PREFIX" == "wan" -a "$MWAN" -gt 1 ] && PREFIX_MWAN="wan1" # "wan" means restart all WANs, but we only want restart one
 
-					if [ "$(NG action_service)" = "wan-restart" ] || [ "$(NG action_service)" = "$PREFIX_MWAN-restart" ] || [ "$(NG action_service)" = "wan-restart-c" ] || [ "$(NG action_service)" = "$PREFIX_MWAN-restart-c" ]; then
+					if [ "$(NG action_service)" == "wan-restart" -o "$(NG action_service)" == $PREFIX_MWAN"-restart" -o "$(NG action_service)" == "wan-restart-c" -o "$(NG action_service)" == $PREFIX_MWAN"-restart-c" ]; then
 						$LOGI "Connection $PREFIX_LOG DOWN - Reconnect is already in progress ..."
 					else
 						echo "0" > "$STATE_FILE"
 
-						if ([ "$PROTO" = "pppoe" ] || [ "$PROTO" = "pptp" ] || [ "$PROTO" = "l2tp" ] || [ "$PROTO" = "ppp3g" ]) && [ "$DEMAND" -eq 1 ] && [ "$ISPPPD" -eq 0 ]; then
+						if [ "$PROTO" == "pppoe" -o "$PROTO" == "pptp" -o "$PROTO" == "l2tp" -o "$PROTO" == "ppp3g" ] && [ "$DEMAND" -eq 1 -a "$ISPPPD" -eq 0 ]; then
 							$LOGI "Killing orphaned connect-on-demand listen process ..."
 							LISTEN_PID=$(ps | grep '[l]isten' | grep "$PREFIX" | awk '{print $1}' | head -1)
 							if [ -n "$LISTEN_PID" ]; then
@@ -179,7 +190,7 @@ mwwatchdogRun() {
 				}
 			else
 				# handle WAN up
-				[ "$PROTO" = "dhcp" ] && [ "$(cat "$STATE_FILE" 2>/dev/null || echo 1)" -eq 0 ] && dhcpFix "$PREFIX" # connected + DHCP + previous status - disconnected? release/renew
+				[ "$PROTO" == "dhcp" -a "$(cat "$STATE_FILE" 2>/dev/null || echo 1 )" -eq 0 ] && dhcpFix "$PREFIX" # connected + DHCP + previous status - disconnected? release/renew
 				$LOGD "Connection $PREFIX_LOG is functioning"
 				echo "1" > "$STATE_FILE"
 			fi
@@ -191,16 +202,38 @@ cktracert() {
 	local RXBYTES1 RXBYTES2 IP
 	# minimum bytes indicating working WAN
 	local RXBYTES_MIN_DIFF=$(NG mwan_diff)
+	# ensure minimum sensible value
+	[ -z "$RXBYTES_MIN_DIFF" ] || [ "$RXBYTES_MIN_DIFF" -lt 100 ] && RXBYTES_MIN_DIFF=100
+	# double the value for connections other than LTE and PPP3G
+	[ "$PROTO" != "lte" -a "$PROTO" != "ppp3g" ] && RXBYTES_MIN_DIFF=$((RXBYTES_MIN_DIFF*2))
 
 	for IP in $IPLIST; do
-		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null)
+		# fallback to 0 on read failure + debug log
+		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null || echo 0)
+		RXBYTES1=${RXBYTES1:-0}
+		[ "$RXBYTES1" = "0" ] && $LOGD "failed to read initial rx_bytes for $IFACE (using 0)"
+
 		traceroute -i "$IFACE" -n -w 1 -m 10 -q 1 -z 1 "$IP" 2>/dev/null
 		sleep 1
-		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null)
-		[ "$RXBYTES2" -gt $((RXBYTES1 + RXBYTES_MIN_DIFF)) ] && { RESULT=1; break; }
+
+		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null || echo 0)
+		RXBYTES2=${RXBYTES2:-0}
+		[ "$RXBYTES2" = "0" ] && $LOGD "failed to read final rx_bytes for $IFACE (using 0)"
+
+		# simple wrap-around handling (for 32-bit counters)
+		if [ "$RXBYTES2" -ge "$RXBYTES1" ]; then
+			if [ "$((RXBYTES2 - RXBYTES1))" -gt "$RXBYTES_MIN_DIFF" ]; then
+				RESULT=1; break
+			fi
+		else
+			# possible wrap-around
+			if [ "$((RXBYTES2 + 4294967296 - RXBYTES1))" -gt "$RXBYTES_MIN_DIFF" ]; then
+				RESULT=1; break
+			fi
+		fi
 	done
 
-	[ "$RESULT" -gt 0 ] && $LOGD "tracert test result for: $IFACE - OK" || $LOGD "tracert test result for: $IFACE - FAILED!"
+	[ "$RESULT" -gt 0 ] && $LOGD "tracert test result for: $IFACE - OK [transfer: $((RXBYTES2-RXBYTES1))]" || $LOGD "tracert test result for: $IFACE - FAILED! [transfer: $((RXBYTES2-RXBYTES1))]"
 }
 
 ckping() {
@@ -218,11 +251,15 @@ ckping() {
 
 # BBT-BEGIN
 ckcurl() {
-	local IP i=0
+	local IP i=0 target
 
 	for IP in $IPLIST; do
 		i=$((i+1))
-		curl "$IP" --interface "$IFACE" --connect-timeout $((i+3)) -ksfI -o /dev/null 2>/dev/null && RESULT=$((RESULT+1))
+		# add http:// prefix for better HTTP compatibility; add --max-time and --location
+		target="$IP"
+		echo "$IP" | grep -qE '^([0-9]{1,3}\.){3}[0-9]{1,3}$' && target="http://$IP"
+
+		curl "$target" --interface "$IFACE" --connect-timeout $((i+3)) --max-time $((i+5)) -ksfIL -o /dev/null 2>/dev/null && RESULT=$((RESULT+1))
 		[ "$RESULT" -gt 0 ] && break
 		sleep $i
 	done
