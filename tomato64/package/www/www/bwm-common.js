@@ -147,6 +147,9 @@ function switchAvg(n) {
 
 function tabSelect(name) {
 	if (!updating)
+		if (svgReady && (typeof top.clearSelection === 'function'))
+			top.clearSelection();
+
 		showTab(name);
 }
 

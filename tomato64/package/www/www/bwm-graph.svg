@@ -9,15 +9,19 @@
 	No part of this file may be used without permission.
 -->
 <?xml-stylesheet type="text/css" href="tomato.css" ?>
+<!-- ADVTHEMES-BEGIN -->
 <% css('svg-css'); %>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" onload="init(evt)" onmousemove="mMove(evt)" onclick="mClick(evt)" width="100%" height="100%" id="svg">
+<!-- ADVTHEMES-END -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" onload="init(evt)" onmousemove="mMove(evt); mMoveSelection(evt)" onmousedown="mDown(evt)" onmouseup="mUp(evt)" onclick="mClick(evt)" width="100%" height="100%" id="svg">
 
 <style type="text/css">
 * {
 	cursor: pointer;
 }
 </style>
+<!-- ADVTHEMES-BEGIN -->
 <% css('svg-js'); %>
+<!-- ADVTHEMES-END -->
 <script type="text/ecmascript"><![CDATA[
 
 //	<% nvram("web_css,web_adv_scripts"); %>
@@ -42,6 +46,16 @@ var xpstVis = 1;
 var ignoreNext = 0;
 var eraseL = 0;
 var samp = 1;
+
+/* Range selection variables */
+var selectionActive = false;
+var selectionStartX = 0;
+var selectionEndX = 0;
+var selectionRect = null;
+var selectionInfo = null;
+var selectionInfoBack = null;
+var rxDataGlobal = [];
+var txDataGlobal = [];
 
 function E(id) {
 	return document.getElementById(id);
@@ -104,14 +118,22 @@ function init(evt) {
 
 	time24 = ((new Date(2000, 0, 1, 23, 0, 0, 0)).toLocaleString().indexOf('23') != -1);
 
+	/* Initialize selection elements */
+	selectionRect = E('selectionRect');
+	selectionInfo = E('selectionInfo');
+	selectionInfoBack = E('selectionInfoBack');
+
 	top.updateSVG = updateSVG;
+	top.clearSelection = clearSelection;
 	top.svgReady = 1;
 	top.initData();
 
+/* ADVTHEMES-BEGIN */
 	if (nvram.web_adv_scripts == 1) {
 		if (typeof resize_graph !== 'undefined')
 			resize_graph();
 	}
+/* ADVTHEMES-END */
 }
 
 function drawData(poly, data, mode, color) {
@@ -159,6 +181,10 @@ function drawData(poly, data, mode, color) {
 function updateSVG(rxData, txData, maxValue, mode, rxColor, txColor, intv, maxLen, dataD, avgSamp, unitSamp, clock) {
 	var x, y, z, i;
 	var v, e;
+
+	/* Store data globally for selection calculations */
+	rxDataGlobal = rxData;
+	txDataGlobal = txData;
 
 	maxV = maxValue;
 	interval = intv;
@@ -339,6 +365,11 @@ function mClick(evt) {
 	if (maxV <= 0)
 		return;
 
+	/* Don't show cross if this was end of selection drag */
+	var dragDistance = Math.abs(selectionStartX - selectionEndX);
+	if (dragDistance > 5)
+		return;
+
 	crossH = evt.clientX;
 	crossV = vY(evt.clientY);
 	setText(crossText, xps(crossV));
@@ -352,6 +383,192 @@ function toggleXpst() {
 	E('svg-xpst').setAttribute('display', (xpstVis ^= 1) ? 'block' : 'none');
 	ignoreNext = 1;
 }
+
+/* range selection functions */
+function mDown(evt) {
+	if (maxV <= 0)
+		return;
+
+	/* hide previous selection info */
+	hideSelectionInfo();
+
+	selectionActive = true;
+	selectionStartX = evt.clientX;
+	selectionEndX = evt.clientX;
+
+	/* show selection rectangle */
+	selectionRect.setAttribute('display', 'block');
+	updateSelectionRect();
+}
+
+function mUp(evt) {
+	if (!selectionActive)
+		return;
+
+	selectionActive = false;
+	selectionEndX = evt.clientX;
+
+	/* calculate and display range statistics */
+	calculateRangeStats();
+}
+
+function mMoveSelection(evt) {
+	if (selectionActive) {
+		selectionEndX = evt.clientX;
+		updateSelectionRect();
+	}
+}
+
+function updateSelectionRect() {
+	var x1 = Math.min(selectionStartX, selectionEndX);
+	var x2 = Math.max(selectionStartX, selectionEndX);
+	var width = x2 - x1;
+
+	if (width < 2) {
+		selectionRect.setAttribute('display', 'none');
+		return;
+	}
+
+	selectionRect.setAttribute('x', x1);
+	selectionRect.setAttribute('width', width);
+	selectionRect.setAttribute('display', 'block');
+}
+
+function calculateRangeStats() {
+	var x1 = Math.min(selectionStartX, selectionEndX);
+	var x2 = Math.max(selectionStartX, selectionEndX);
+	var width = x2 - x1;
+
+	if (width < 2) {
+		hideSelectionInfo();
+		return;
+	}
+
+	/* convert X coordinates to data indices */
+	var idx1 = Math.floor((vWidth - x2) / advX);
+	var idx2 = Math.floor((vWidth - x1) / advX);
+
+	/* calculate data range (from end of array) */
+	var startIdx = Math.max(0, rxDataGlobal.length - maxL + idx1);
+	var endIdx = Math.min(rxDataGlobal.length, rxDataGlobal.length - maxL + idx2);
+
+	if (startIdx >= endIdx || startIdx < 0 || endIdx > rxDataGlobal.length) {
+		hideSelectionInfo();
+		return;
+	}
+
+	/* sum up data in range */
+	var rxTotal = 0;
+	var txTotal = 0;
+	var samples = 0;
+
+	for (var i = startIdx; i < endIdx; i++) {
+		if (i >= 0 && i < rxDataGlobal.length) {
+			rxTotal += rxDataGlobal[i];
+			txTotal += txDataGlobal[i];
+			samples++;
+		}
+	}
+
+	/* calculate time range */
+	var timeSpanSeconds = samples * interval;
+	var timeStart = pointTime(x1);
+	var timeEnd = pointTime(x2);
+
+	/* format output */
+	var infoText = 'Range: ' + timeStart + ' - ' + timeEnd + ' (' + formatTime(timeSpanSeconds) + ')';
+	infoText += '\\nRX: ' + scaleSize(rxTotal) + ' (' + xps(rxTotal / timeSpanSeconds) + ')';
+	infoText += '\\nTX: ' + scaleSize(txTotal) + ' (' + xps(txTotal / timeSpanSeconds) + ')';
+
+	/* display info */
+	showSelectionInfo(infoText, (x1 + x2) / 2);
+}
+
+function formatTime(seconds) {
+	if (seconds < 60)
+		return seconds + 's';
+
+	var minutes = Math.floor(seconds / 60);
+	var secs = seconds % 60;
+
+	if (minutes < 60)
+		return minutes + 'm ' + secs + 's';
+
+	var hours = Math.floor(minutes / 60);
+	var mins = minutes % 60;
+	return hours + 'h ' + mins + 'm ' + secs + 's';
+}
+
+function scaleSize(bytes) {
+	if (bytes < 1024)
+		return bytes.toFixed(2) + ' B';
+
+	bytes /= 1024;
+	if (bytes < 1024)
+		return bytes.toFixed(2) + ' KB';
+
+	bytes /= 1024;
+	if (bytes < 1024)
+		return bytes.toFixed(2) + ' MB';
+
+	bytes /= 1024;
+	return bytes.toFixed(2) + ' GB';
+}
+
+function showSelectionInfo(text, centerX) {
+	var lines = text.split('\\n');
+	var lineHeight = 15;
+	var padding = 10;
+	var boxHeight = (lines.length * lineHeight) + (padding * 2);
+	var boxWidth = 325;
+
+	/* position info box */
+	var boxX = centerX - (boxWidth / 2);
+	var boxY = 10;
+
+	/* keep box on screen */
+	if (boxX < 5)
+		boxX = 5;
+	if (boxX + boxWidth > vWidth - 5)
+		boxX = vWidth - boxWidth - 5;
+
+	/* clear previous content */
+	while (selectionInfo.firstChild)
+		selectionInfo.removeChild(selectionInfo.firstChild);
+
+	/* create text lines */
+	for (var i = 0; i < lines.length; i++) {
+		var textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+		textEl.setAttribute('x', boxX + padding);
+		textEl.setAttribute('y', boxY + padding + (i * lineHeight) + 12);
+		textEl.setAttribute('class', 'svg-text');
+		setText(textEl, lines[i]);
+		selectionInfo.appendChild(textEl);
+	}
+
+	/* update background */
+	selectionInfoBack.setAttribute('x', boxX);
+	selectionInfoBack.setAttribute('y', boxY);
+	selectionInfoBack.setAttribute('width', boxWidth);
+	selectionInfoBack.setAttribute('height', boxHeight);
+	selectionInfoBack.setAttribute('display', 'block');
+	selectionInfo.setAttribute('display', 'block');
+}
+
+function hideSelectionInfo() {
+	selectionRect.setAttribute('display', 'none');
+	selectionInfoBack.setAttribute('display', 'none');
+	selectionInfo.setAttribute('display', 'none');
+}
+
+/* export clearSelection function for external access */
+function clearSelection() {
+	hideSelectionInfo();
+	selectionActive = false;
+	selectionStartX = 0;
+	selectionEndX = 0;
+}
+
 ]]></script>
 <rect x="0" y="0" width="100%" height="100%" class="svg-rect" />
 
@@ -422,5 +639,10 @@ function toggleXpst() {
 	<text x="0" y="-50" id="svg-crossTime" />
 	<text x="0" y="0" id="svg-crossText" />
 </g>
+
+<!-- Range selection elements -->
+<rect id="selectionRect" x="0" y="0" width="0" height="100%" display="none" />
+<rect id="selectionInfoBack" x="0" y="0" width="0" height="0" display="none" class="svg-textback" />
+<g id="selectionInfo" display="none"></g>
 
 </svg>

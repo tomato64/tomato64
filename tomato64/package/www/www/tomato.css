@@ -1994,6 +1994,12 @@ span.pptpsvg {
 	fill: #000;
 }
 
+#selectionRect {
+	fill: #999999;
+	fill-opacity: 0.2;
+	pointer-events: none;
+}
+
 .svg-line {
 	stroke: #d0d0d0;
 	stroke-width: 1px;
