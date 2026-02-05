@@ -4,7 +4,7 @@
  * Copyright (C) 2007-2009 Jonathan Zarate
  *
  * Licensed under GNU GPL v2 or later versions.
- * Fixes/updates (C) 2018 - 2025 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
  *
  */
 
@@ -111,28 +111,34 @@ static void route_adddel(const char *ip, unsigned int add)
 		logmsg(LOG_DEBUG, "*** IN %s: add=[%d] ip=[%s] ifname=[%s] - %s routes ...", __FUNCTION__, add, ip, ifname, (add ? "adding" : "deleting"));
 
 		memset(buf, 0, sizeof(buf)); /* reset */
-		snprintf(buf, sizeof(buf), "/tmp/ppp/pppd%s", sPrefix);
+		strlcpy(buf, "/tmp/ppp/pppd", sizeof(buf));
+		strlcat(buf, sPrefix, sizeof(buf));
 		if (!f_exists(buf)) { /* not pppd */
 			memset(buf, 0, sizeof(buf)); /* reset */
 			memset(buf2, 0, sizeof(buf2)); /* reset */
-			snprintf(buf, sizeof(buf), "%s_gateway", sPrefix);
+			strlcpy(buf, sPrefix, sizeof(buf));
+			strlcat(buf, "_gateway", sizeof(buf));
 			snprintf(buf2, sizeof(buf2), "via %s", nvram_safe_get(buf)); /* gateway_fragment */
 		}
 		else
 			buf2[0] = '\0';
 
-		memset(buf, 0, sizeof(buf)); /* reset */
 		system("ip route | grep default | cut -d' ' -f2- > " MDU_ROUTE_FN);
+		memset(buf, 0, sizeof(buf)); /* reset */
 		if (f_read_string(MDU_ROUTE_FN, buf, sizeof(buf)) > 2) { /* default_route_fragment */
 			memset(cmd, 0, sizeof(cmd)); /* reset */
-			snprintf(cmd, sizeof(cmd), "ip route %s %s %s", (add ? "add" : "del"), ip, buf);
-			logmsg(LOG_DEBUG, "*** %s: %s (%s), cmd=%s", __FUNCTION__, sPrefix, ifname, cmd);
+			if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s %s", (add ? "add" : "del"), ip, buf) >= sizeof(cmd))
+				logmsg(LOG_WARNING, "*** %s: route cmd truncated", __FUNCTION__);
+
+			logmsg(LOG_DEBUG, "*** %s: cmd=%s", __FUNCTION__, cmd);
 			system(cmd);
 		}
 
 		memset(cmd, 0, sizeof(cmd)); /* reset */
-		snprintf(cmd, sizeof(cmd), "ip route %s %s dev %s %s metric 50000", (add ? "add" : "del"), ip, ifname, buf2);
-		logmsg(LOG_DEBUG, "*** %s: %s (%s), cmd=%s", __FUNCTION__, sPrefix, ifname, cmd);
+		if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s dev %s %s metric 50000", (add ? "add" : "del"), ip, ifname, buf2) >= sizeof(cmd))
+			logmsg(LOG_WARNING, "*** %s: route cmd truncated", __FUNCTION__);
+
+		logmsg(LOG_DEBUG, "*** %s: cmd=%s", __FUNCTION__, cmd);
 		system(cmd);
 	}
 }
@@ -146,18 +152,17 @@ static int check_stop(void)
 
 static void trimamp(char *s)
 {
-	int n;
+	size_t n;
 
 	n = strlen(s);
 	if ((n > 0) && (s[--n] == '&'))
-		s[n] = 0;
+		s[n] = '\0';
 }
 
 static const char *get_option(const char *name)
 {
 	char *p;
-	int i;
-	int n;
+	int i, n;
 	FILE *f;
 	const char *c;
 	char s[384];
@@ -523,40 +528,44 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url, const char
 
 static long _http_req(const unsigned int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body)
 {
-	logmsg(LOG_DEBUG, "*** %s: IN host=[%s] query=[%s] ssl=[%d] header=[%s] auth=[%d] data=[%s] req=[%s] ifname=[%s]", __FUNCTION__, host, query, ssl, header, auth, data, req, ifname);
+	logmsg(LOG_DEBUG, "*** %s: IN host=[%s] query=[%s] ssl=[%d] header=[%s] auth=[%d] data=[%s] req=[%s] ifname=[%s]", __FUNCTION__, host, query, ssl, header, auth, data ? data : "NULL", req, ifname);
+
 #ifdef USE_LIBCURL
+	FILE *curl_wbuf = NULL;
+	FILE *curl_rbuf = NULL;
 	char url[HALF_BLOB];
 	char ip[INET6_ADDRSTRLEN];
 	char *ip_ret;
-	FILE *curl_wbuf = NULL;
-	FILE *curl_rbuf = NULL;
 	CURLcode r;
-	int trys, stop = 0;
+	int trys;
+	int stop = 0;
 	long code = -1;
 	headers = NULL;
 
 	if (!static_host)
 		host = get_option_or("server", host);
 
+	/* build URL */
 	memset(url, 0, HALF_BLOB); /* reset */
-	snprintf(url, HALF_BLOB, "%s%s", host, query);
+	if (snprintf(url, sizeof(url), "%s%s", host, query) >= (int)sizeof(url))
+		logmsg(LOG_WARNING, "*** %s: URL truncated", __FUNCTION__);
 
-	memset(ip, 0, INET6_ADDRSTRLEN); /* reset */
-	/* resolve IP to add/remove routes first */
+	memset(ip, 0, sizeof(ip)); /* reset */
+	/* resolve IP for routing if MultiWAN */
 	if (ifname[0] != '\0') {
 		logmsg(LOG_DEBUG, "*** %s: resolving IP of server %s ...", __FUNCTION__, host);
 		ip_ret = curl_resolve_ip(ssl, url, header);
-		if (strcmp(ip_ret, "0")) {
+		if (strcmp(ip_ret, "0") != 0) {
 			strlcpy(ip, ip_ret, INET6_ADDRSTRLEN); /* copy as it will be reused in the next request */
-			logmsg(LOG_DEBUG, "*** %s: IP=[%s] of host=[%s]", __FUNCTION__, ip, host);
+			logmsg(LOG_DEBUG, "*** %s: resolved IP=[%s]", __FUNCTION__, ip);
 		}
 		else
-			return code; /* couldn't resolve IP */
+			return code; /* couldn't resolve */
 	}
 
-	/* open a memory stream to store data */
+	/* memory stream for response body */
 	curl_wbuf = fmemopen(blob, BLOB_SIZE, "w");
-	if (curl_wbuf == NULL) {
+	if (!curl_wbuf) {
 		logmsg(LOG_ERR, M_ERROR_MEM_STREAM);
 		return -2;
 	}
@@ -588,9 +597,11 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 
 	if (data) { /* only cloudflare (for now) */
 		curl_rbuf = fmemopen(data, strlen(data), "r");
-		curl_easy_setopt(curl_handle, CURLOPT_READDATA, (void *)curl_rbuf);
-		curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, strlen(data));
-		curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 1L);
+		if (curl_rbuf) {
+			curl_easy_setopt(curl_handle, CURLOPT_READDATA, (void *)curl_rbuf);
+			curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, (long)strlen(data));
+			curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 1L);
+		}
 	}
 	else {
 		curl_easy_setopt(curl_handle, CURLOPT_READDATA, NULL);
@@ -605,37 +616,42 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	else if (!strcmp(req, "PUT"))
 		curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 1L);
 
-	/* add route if needed */
-	route_adddel(ip, 1);
+	/* add route */
+	if (ip[0] != '\0')
+		route_adddel(ip, 1);
 
 	for (trys = 4; trys > 0; --trys) {
-		errbuf[0] = 0;
+		errbuf[0] = '\0';
 		r = curl_easy_perform(curl_handle);
 		stop = check_stop();
-		if ((r != CURLE_COULDNT_CONNECT) || (stop == 1))
+		if ((r != CURLE_COULDNT_CONNECT) || (stop))
 			break;
 
 		sleep(2);
 	}
+
 	/* del route */
-	route_adddel(ip, 0);
+	if (ip[0] != '\0')
+		route_adddel(ip, 0);
 
 	curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &code);
 
-	logmsg(LOG_DEBUG, "*** %s: connected, response=[%ld]", __FUNCTION__, code);
+	logmsg(LOG_DEBUG, "*** %s: response code=%ld", __FUNCTION__, code);
 
-	if ((r == CURLE_OK) || (r == CURLE_RECV_ERROR)) /* CURLE_RECV_ERROR needed for clouflare */
+	if ((r == CURLE_OK) || (r == CURLE_RECV_ERROR)) { /* CURLE_RECV_ERROR needed for cloudflare */
 		*body = blob;
 		/* body is pointer into global blob - caller must NOT free it */
+	}
 	else {
 		memset(curl_err_str, 0, sizeof(curl_err_str));
-		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (strlen(errbuf) ? errbuf : curl_easy_strerror(r)));
-		logmsg(LOG_DEBUG, "*** %s: error - (%s)", __FUNCTION__, curl_err_str);
+		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, errbuf[0] ? errbuf : curl_easy_strerror(r));
+		logmsg(LOG_DEBUG, "*** %s: error - %s", __FUNCTION__, curl_err_str);
 	}
 
 	fclose(curl_wbuf);
 	if (curl_rbuf)
 		fclose(curl_rbuf);
+
 	if (curl_dfile) {
 		fputc('\n', curl_dfile);
 		fflush(curl_dfile);
@@ -644,235 +660,254 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	curl_slist_free_all(headers);
 	curl_cleanup();
 
-	if (stop == 1)
+	if (stop)
 		error("Force stop.");
 
 	return code;
 #else /* !USE_LIBCURL */
-	FILE *f;
-	char *request, *p, *httpv;
+	FILE *f = NULL;
+	char addrstr[INET6_ADDRSTRLEN];
+	char *request = NULL;
+	char *httpv, *colon, *body_start;
 	int port;
-	char a[512];
-	char b[512];
+	char a[512], b[512], authbuf[512];
+	const char *c_ip, *c;
 	long i;
 	struct addrinfo hints;
 	struct addrinfo *result, *rp;
 	struct timeval tv;
-	char cport[11];
-	unsigned int trys;
-	int sockfd = -1, stop = 0;
-	const char *c, *ip;
 	struct tm *stm;
 	time_t now;
-	char buf[20];
+	char cport[12], clen[32], buf[20];
+	unsigned int trys;
+	int sockfd = -1;
+	int stop = 0;
 
-	if ((strncmp(host, "updates.opendns.com", 19) == 0) || (strncmp(host, "api.cloudflare.com", 18) == 0))
-		httpv = "HTTP/1.1";
-	else
-		httpv = "HTTP/1.0";
+	httpv = (strncmp(host, "updates.opendns.com", 19) == 0 || strncmp(host, "api.cloudflare.com", 18) == 0) ? "HTTP/1.1" : "HTTP/1.0";
 
 	if (!static_host)
 		host = get_option_or("server", host);
 
-	i = strlen(query);
-	if (header)
-		i += strlen(header);
-	if (data)
-		i += strlen(data);
-	if (i > (BLOB_SIZE - 512)) /* just don't go over 512 below... */
-		return -1;
+	/* build request header */
+	strlcpy(a, req, sizeof(a));
+	strlcat(a, " ", sizeof(a));
+	strlcat(a, query, sizeof(a));
+	strlcat(a, " ", sizeof(a));
+	strlcat(a, httpv, sizeof(a));
+	strlcat(a, "\r\nHost: ", sizeof(a));
+	strlcat(a, host, sizeof(a));
+	strlcat(a, "\r\n", sizeof(a));
 
-	if (header)
-		snprintf(blob, BLOB_SIZE, "%s %s %s\r\nHost: %s\r\n", req, query, httpv, host);
-	else
-		snprintf(blob, BLOB_SIZE, "%s %s %s\r\nHost: %s\r\nUser-Agent: " AGENT "\r\nCache-Control: no-cache\r\n", req, query, httpv, host);
+	if (!header)
+		strlcat(a, "User-Agent: " AGENT "\r\nCache-Control: no-cache\r\n", sizeof(a));
 
 	if (auth) {
-		memset(a, 0, sizeof(a));
-		snprintf(a, sizeof(a), "%s:%s", get_option_required("user"), get_option_required("pass"));
+		snprintf(authbuf, sizeof(authbuf), "%s:%s", get_option_required("user"), get_option_required("pass"));
+		i = base64_encode(authbuf, b, strlen(authbuf));
+		b[i] = '\0';
+		strlcat(a, "Authorization: Basic ", sizeof(a));
+		strlcat(a, b, sizeof(a));
+		strlcat(a, "\r\n", sizeof(a));
+	}
 
-		i = base64_encode((const char *) a, b, strlen(a));
-		b[i] = 0;
-		snprintf(blob + strlen(blob), BLOB_SIZE - strlen(blob), "Authorization: Basic %s\r\n", b);
+	if (header) {
+		strlcat(a, header, sizeof(a));
+		if (header[strlen(header)-1] != '\n')
+			strlcat(a, "\r\n", sizeof(a));
 	}
-	if ((header) && ((i = strlen(header)) > 0)) {
-		strlcat(blob, header, BLOB_SIZE);
-		if (header[i - 1] != '\n')
-			strlcat(blob, "\r\n", BLOB_SIZE);
+
+	if (data) {
+		snprintf(clen, sizeof(clen), "Content-Length: %zu\r\n", strlen(data));
+		strlcat(a, clen, sizeof(a));
 	}
+
+	strlcat(a, "\r\n", sizeof(a));
 	if (data)
-		snprintf(blob + strlen(blob), BLOB_SIZE - strlen(blob), "Content-Length: %d\r\n", strlen(data));
+		strlcat(a, data, sizeof(a));
 
-	strlcat(blob, "\r\n", BLOB_SIZE);
+	if (snprintf(blob, BLOB_SIZE, "%s", a) >= BLOB_SIZE)
+		logmsg(LOG_WARNING, "*** %s: request header truncated", __FUNCTION__);
 
-	if (data)
-		strlcat(blob, data, BLOB_SIZE);
-
-	port = ssl ? 443 : 80;
-	memset(a, 0, sizeof(a));
-	strlcpy(a, host, sizeof(a));
-	if ((request = strrchr(a, ':')) != NULL) {
-		*request = 0;
-		if ((i = atoi(request + 1)) > 0)
-			port = i;
-	}
-
-	if ((request = strdup(blob)) == NULL) {
+	/* duplicate for sending */
+	request = strdup(blob);
+	if (!request) {
 		logmsg(LOG_DEBUG, "*** %s: strdup failed", __FUNCTION__);
 		return -1;
 	}
 
+	/* parse port */
+	port = ssl ? 443 : 80;
+	strlcpy(a, host, sizeof(a));
+	if ((colon = strrchr(a, ':'))) {
+		*colon = '\0';
+		port = atoi(colon + 1);
+	}
+
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET; /* connect_timeout() only supports IPv4, maybe some day... */
+#ifdef TCONFIG_IPV6
+	hints.ai_family = AF_UNSPEC; /* allow IPv4 or IPv6 */
+#else
+	hints.ai_family = AF_INET;
+#endif
 	hints.ai_socktype = SOCK_STREAM;
 
 	memset(cport, 0, sizeof(cport));
 	snprintf(cport, sizeof(cport), "%d", port);
 
 	for (trys = 4; trys > 0; --trys) {
-		logmsg(LOG_DEBUG, "*** %s: trys=%d\n", __FUNCTION__, trys);
+		logmsg(LOG_DEBUG, "*** %s: attempt %d", __FUNCTION__, 5 - trys);
 
-		for (i = 4; i > 0; --i) {
-			if (getaddrinfo(a, cport, &hints, &result) == 0) {
-				for (rp = result; rp != NULL; rp = rp->ai_next) {
-					sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-					if (sockfd == -1)
-						continue;
+		if (getaddrinfo(a, cport, &hints, &result) != 0) {
+			sleep(2);
+			continue;
+		}
 
-					if (ifname[0] != '\0') {
-						struct ifreq ifr;
-						memset(&ifr, 0, sizeof(ifr));
-						snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), ifname);
-						if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0) {
-							logmsg(LOG_DEBUG, "*** %s: can't bind to device: %s ...", __FUNCTION__, ifname);
-							continue;
-						}
-					}
+		for (rp = result; rp != NULL; rp = rp->ai_next) {
+			sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+			if (sockfd == -1)
+				continue;
 
-					char addrstr[INET_ADDRSTRLEN + 1];
-					ip = inet_ntop(rp->ai_family, &(((struct sockaddr_in *)rp->ai_addr)->sin_addr), addrstr, sizeof(addrstr));
-					if (ip == NULL)
-						continue;
-
-					logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting ...", __FUNCTION__, ip, cport);
-
-					/* add route if needed */
-					route_adddel(ip, 1);
-					if (connect_timeout(sockfd, rp->ai_addr, rp->ai_addrlen, 10) != -1) {
-						logmsg(LOG_DEBUG, "*** %s: connected", __FUNCTION__);
-						/* del route */
-						route_adddel(ip, 0);
-						stop = check_stop();
-						freeaddrinfo(result);
-						goto proceed;
-					}
-					/* del route */
-					route_adddel(ip, 0);
-
-					stop = check_stop();
-					if (stop == 1) {
-						freeaddrinfo(result);
-						goto proceed;
-					}
-
+			if (ifname[0] != '\0') {
+				struct ifreq ifr;
+				memset(&ifr, 0, sizeof(ifr));
+				strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+				if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0) {
+					logmsg(LOG_DEBUG, "*** %s: bind to device %s failed", __FUNCTION__, ifname);
 					close(sockfd);
+					continue;
 				}
+			}
+
+			/* add route */
+#ifdef TCONFIG_IPV6
+			c_ip = inet_ntop(rp->ai_family,
+			                 rp->ai_family == AF_INET ?
+			                 (void *)&((struct sockaddr_in *)rp->ai_addr)->sin_addr :
+			                 (void *)&((struct sockaddr_in6 *)rp->ai_addr)->sin6_addr,
+			                 addrstr, sizeof(addrstr));
+#else
+			c_ip = inet_ntop(rp->ai_family, &(((struct sockaddr_in *)rp->ai_addr)->sin_addr),
+			                 addrstr, sizeof(addrstr));
+#endif
+			if (c_ip)
+				route_adddel(c_ip, 1);
+
+			logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting ...", __FUNCTION__, c_ip, cport);
+
+			if (connect_timeout(sockfd, rp->ai_addr, rp->ai_addrlen, 10) != -1) {
+				logmsg(LOG_DEBUG, "*** %s: connected!", __FUNCTION__);
+				/* del route */
+				if (c_ip)
+					route_adddel(c_ip, 0);
+
 				freeaddrinfo(result);
-				sleep(2);
+				goto connected;
 			}
-		}
-		if (i <= 0)
-			return -1;
 
-proceed:
-		logmsg(LOG_DEBUG, "*** %s: proceed", __FUNCTION__);
+			/* del route */
+			if (c_ip)
+				route_adddel(c_ip, 0);
 
-		if (stop == 1) {
 			close(sockfd);
-			free(request);
-			error("Force stop.");
+			sockfd = -1;
+
+			stop = check_stop();
+			if (stop)
+				break;
 		}
 
-		tv.tv_sec = 10;
-		tv.tv_usec = 0;
-		setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
-		setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+		freeaddrinfo(result);
+		if (stop)
+			break;
 
-		if (ssl) {
-			mssl_init(NULL, NULL);
-			f = ssl_client_fopen_name(sockfd, a);
-		}
-		else
-			f = fdopen(sockfd, "r+");
-
-		if (f == NULL) {
-			logerr(__FUNCTION__, __LINE__, "error opening");
-			close(sockfd);
-			continue;
-		}
-
-		i = strlen(request);
-		if (fwrite(request, 1, i, f) != (size_t)i) {
-			logerr(__FUNCTION__, __LINE__, "error writing");
-			fclose(f);
-			close(sockfd);
-			continue;
-		}
-		logmsg(LOG_DEBUG, "*** %s: sent request", __FUNCTION__);
-
-		i = fread(blob, 1, BLOB_SIZE, f);
-		if (i <= 0) {
-			fclose(f);
-			close(sockfd);
-			logerr(__FUNCTION__, __LINE__, "error reading");
-			continue;
-		}
-		blob[i] = '\0'; /* null-terminate the string */
-
-		logmsg(LOG_DEBUG, "*** %s: recvd=[%s], i=%ld", __FUNCTION__, blob, i);
-
-		fclose(f);
-		close(sockfd);
-
-		/* make dump */
-		if ((c = get_dump_name()) != NULL) {
-			if ((f = fopen(c, "a")) != NULL) {
-				time(&now);
-				stm = localtime(&now);
-				memset(buf, 0, sizeof(buf));
-				strftime(buf, sizeof(buf), "%b %d %H:%M:%S", stm);
-
-				fprintf(f, "[%s -> %s:%d]\nREQUEST =>\n", buf, a, port);
-				fputs(request, f);
-				fputs("REPLY <=\n", f);
-				fputs(blob, f);
-				fputs("\nEND\n\n", f);
-				fclose(f);
-			}
-		}
-
-		if ((sscanf(blob, "HTTP/1.%*d %ld", &i) == 1) && (i >= 100) && (i <= 999)) {
-			logmsg(LOG_DEBUG, "*** %s: HTTP/1.* i=%ld", __FUNCTION__, i);
-			if ((p = strstr(blob, "\r\n\r\n")) != NULL)
-				p += 4;
-			else if ((p = strstr(blob, "\n\n")) != NULL)
-				p += 2;
-
-			if (p) {
-				if (body) {
-					*body = p;
-					logmsg(LOG_DEBUG, "*** %s: body=[%s] i=[%ld]", __FUNCTION__, p, i);
-				}
-				free(request);
-				return i;
-			}
-			else
-				logmsg(LOG_DEBUG, "*** %s: !p", __FUNCTION__);
-		}
+		sleep(2);
 	}
+
+	free(request);
+	if (stop)
+		error("Force stop.");
+
+connected:
+	logmsg(LOG_DEBUG, "*** %s: connected:", __FUNCTION__);
+
+	stop = check_stop();
+	if (stop) {
+		close(sockfd);
+		free(request);
+		error("Force stop.");
+	}
+
+	/* timeouts */
+	tv.tv_sec = 10;
+	tv.tv_usec = 0;
+	setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+	setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+	/* SSL or plain */
+	if (ssl) {
+		mssl_init(NULL, NULL);
+		f = ssl_client_fopen_name(sockfd, a);
+	}
+	else
+		f = fdopen(sockfd, "r+");
+
+	if (!f) {
+		logerr(__FUNCTION__, __LINE__, "error opening");
+		close(sockfd);
+		free(request);
+		return -1;
+	}
+
+	/* send request */
+	i = strlen(request);
+	if (fwrite(request, 1, i, f) != (size_t)i) {
+		logerr(__FUNCTION__, __LINE__, "error writing");
+		fclose(f);
+		free(request);
+		return -1;
+	}
+	logmsg(LOG_DEBUG, "*** %s: sent request", __FUNCTION__);
+
+	/* read response */
+	i = fread(blob, 1, BLOB_SIZE - 1, f);
+	blob[i >= 0 ? i : 0] = '\0'; /* null-terminate the string */
+
+	fclose(f);
+	close(sockfd);
 	free(request);
 
-	return -1;
+	/* make dump */
+	if ((c = get_dump_name()) != NULL) {
+		if ((f = fopen(c, "a")) != NULL) {
+			time(&now);
+			stm = localtime(&now);
+			memset(buf, 0, sizeof(buf));
+			strftime(buf, sizeof(buf), "%b %d %H:%M:%S", stm);
+
+			fprintf(f, "[%s -> %s:%d]\nREQUEST =>\n", buf, a, port);
+			fputs(request, f);
+			fputs("REPLY <=\n", f);
+			fputs(blob, f);
+			fputs("\nEND\n\n", f);
+			fclose(f);
+		}
+	}
+
+	/* parse response code and body */
+	i = -1;
+	body_start = NULL;
+	if (sscanf(blob, "HTTP/1.%*d %ld", &i) == 1 && i >= 100 && i <= 999) {
+		if ((body_start = strstr(blob, "\r\n\r\n")) != NULL)
+			body_start += 4;
+		else if ((body_start = strstr(blob, "\n\n")) != NULL)
+			body_start += 2;
+	}
+
+	if (body_start && body)
+		*body = body_start;
+
+	return i;
+
 #endif /* USE_LIBCURL */
 }
 
