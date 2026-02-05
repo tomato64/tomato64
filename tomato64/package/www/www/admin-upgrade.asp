@@ -40,7 +40,7 @@ function displayFilename() {
 
 	if (cmdresult) {
 		elem.setInnerHTML(afu_fname, '&nbsp; '+escapeText(cmdresult));
-		afu_fname.style.display = 'block'; /* inline, inline-block ? */
+		afu_fname.style.display = 'block';
 	}
 	else
 		afu_fname.style.display = 'none';
