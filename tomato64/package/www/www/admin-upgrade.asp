@@ -27,9 +27,42 @@
 
 //	<% sysinfo(); %>
 
+var cmdresult = '';
+var xob = null;
+
 function clock() {
 	var t = ((new Date()).getTime() - startTime) / 1000;
 	elem.setInnerHTML('afu-time', Math.floor(t / 60)+':'+Number(Math.floor(t % 60)).pad(2));
+}
+
+function displayFilename() {
+	var afu_fname = E('afu-fname');
+
+	if (cmdresult) {
+		elem.setInnerHTML(afu_fname, '&nbsp; '+escapeText(cmdresult));
+		afu_fname.style.display = 'block'; /* inline, inline-block ? */
+	}
+	else
+		afu_fname.style.display = 'none';
+
+	cmdresult = '';
+}
+
+function fetchFilename() {
+	if (xob)
+		return;
+
+	xob = new XmlHttp();
+	xob.onCompleted = function(text, xml) {
+		eval(text);
+		displayFilename();
+		xob = null;
+	}
+	xob.onError = function(x) {
+		xob = null;
+	}
+	var c = 'ls -1 /rom/filename 2>/dev/null | head -n1';
+	xob.post('shell.cgi', 'action=execute&command='+escapeCGI(c.replace(/\r/g, '')));
 }
 
 function upgrade() {
@@ -212,6 +245,7 @@ function earlyInit() {
 	}
 /* JFFS2-END */
 	insOvl();
+	fetchFilename();
 }
 </script>
 </head>
@@ -266,6 +300,15 @@ function earlyInit() {
 				<td>&nbsp; <% version(1); %><% version(4); %></td>
 /* TOMATO64-END */
 			</tr>
+
+/* TOMATO64-REMOVE-BEGIN */
+			<tr>
+				<td>Current Filename:</td>
+				<td id="afu-fname"></td>
+			</tr>
+/* TOMATO64-REMOVE-END */
+
+
 			<tr>
 				<td>Free Memory:</td>
 				<td id="afu-size"></td>
