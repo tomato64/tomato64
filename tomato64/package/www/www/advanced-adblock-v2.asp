@@ -22,6 +22,8 @@
 var cprefix = 'advanced_adblock';
 var adblockg = new TomatoGrid();
 var adblock_refresh = cookie.get(cprefix+'_refresh');
+var cmdresult = '';
+var cmd1 = cmd2 = null;
 
 adblockg.exist = function(f, v) {
 	var data = this.getAllData();
@@ -118,13 +120,18 @@ function init() {
 	eventHandler();
 }
 
-function adblockMe(command) {
-	var c = '/usr/sbin/adblock '+command ;
-	if (command == 'snapshot')
+function adblockMe(str) {
+	if (str == 'snapshot')
 		alert('Result saved in /tmp/adblock.snapshot.$now');
 
-	var cmd = new XmlHttp();
-	cmd.post('shell.cgi', 'action=execute&command='+escapeCGI(c.replace(/\r/g, '')));
+	if (cmd1)
+		return;
+
+	cmd1 = new XmlHttp();
+
+	var c = '/usr/sbin/adblock '+str ;
+	cmd1.post('shell.cgi', 'action=execute&command='+escapeCGI(c.replace(/\r/g, '')));
+	cmd1 = null;
 	setTimeout(function() { adblockStatus(); }, 500);
 }
 
@@ -134,17 +141,20 @@ function displayStatus() {
 }
 
 function adblockStatus() {
-	cmd = new XmlHttp();
-	cmd.onCompleted = function(text, xml) {
+	if (cmd2)
+		return;
+
+	cmd2 = new XmlHttp();
+	cmd2.onCompleted = function(text, xml) {
 		eval(text);
 		displayStatus();
+		cmd2 = null;
 	}
-	cmd.onError = function(x) {
-		cmdresult = 'ERROR: '+x;
-		displayStatus();
+	cmd2.onError = function(x) {
+		cmd2 = null;
 	}
-	var commands = '/usr/sbin/adblock status-gui';
-	cmd.post('shell.cgi', 'action=execute&command='+escapeCGI(commands.replace(/\r/g, '')));
+	var c = '/usr/sbin/adblock status-gui';
+	cmd2.post('shell.cgi', 'action=execute&command='+escapeCGI(c.replace(/\r/g, '')));
 }
 
 function earlyInit() {
