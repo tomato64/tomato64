@@ -16,6 +16,10 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * $Id: mtd.h,v 1.8 2009/12/02 20:02:50 Exp $
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
  */
 
 #ifndef _mtd_h_

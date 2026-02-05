@@ -31,7 +31,8 @@
  *
  * Modified for Tomato Firmware
  * Portions, Copyright (C) 2006-2009 Jonathan Zarate
- * Fixes/updates (C) 2018 - 2025 pedro
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
  * https://freshtomato.org/
  *
  */

@@ -3,7 +3,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 #
 # Kill Switch FQDNs (type 3) helper script
 #
-# Copyright by pedro 2025
+# Copyright by pedro 2025 - 2026
 # https://freshtomato.org/
 #
 

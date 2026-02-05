@@ -3,7 +3,8 @@
  *
  * Copyright (C) 2011 shibby
  *
- * changes, fixes 2020 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
  *
  */
 

@@ -5,7 +5,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 #
 # - changes/fixes
 # - add support for rndis protocol
-# Copyright (C) 2018 - 2025 by pedro
+# Copyright (C) 2018 - 2026 pedro
 # https://freshtomato.org/
 #
 

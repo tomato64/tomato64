@@ -1,3 +1,10 @@
+/*
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <sys/sysinfo.h>

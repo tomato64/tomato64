@@ -3,7 +3,8 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 #
 # VPN Client up down script
 #
-# 2019 - 2020 by pedro
+# changes/fixes: 2018 - 2026 pedro
+# https://freshtomato.org/
 #
 
 

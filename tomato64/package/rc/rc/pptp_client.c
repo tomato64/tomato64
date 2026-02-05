@@ -2,7 +2,7 @@
  * PPTP CLIENT start/stop and configuration for Tomato
  * by Jean-Yves Avenard (c) 2008-2011
  *
- * Fixes/updates (C) 2018 - 2025 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
  * https://freshtomato.org/
  *
  */

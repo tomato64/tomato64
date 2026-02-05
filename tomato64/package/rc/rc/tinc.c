@@ -3,7 +3,7 @@
  * Copyright (C) 2014-2021 Lance Fredrickson
  * lancethepants@gmail.com
  *
- * Fixes/updates (C) 2018 - 2025 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
  * https://freshtomato.org/
  *
  */

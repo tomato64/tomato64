@@ -2,7 +2,9 @@
  *
  * Multi WAN
  * By Arctic QQ:317869867 E-Mail:zengchen228@vip.qq.com
- * Fixes/updates (C) 2018 - 2025 pedro
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
  *
  */
 

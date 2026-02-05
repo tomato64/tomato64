@@ -10,7 +10,12 @@
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
  * $Id: shutils.h,v 1.8 2005/03/07 08:35:32 kanki Exp $
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
  */
+
 
 #ifndef _shutils_h_
 #define _shutils_h_

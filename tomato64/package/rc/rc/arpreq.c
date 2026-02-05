@@ -1,3 +1,9 @@
+/*
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
+ */
+
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>

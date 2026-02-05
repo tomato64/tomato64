@@ -18,7 +18,8 @@
 /*
  *
  * Modified for FreshTomato Firmware
- * Fixes/updates (C) 2018 - 2023 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
  *
  */
 

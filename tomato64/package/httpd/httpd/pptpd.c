@@ -4,7 +4,7 @@
  * PPTP Server Support
  * Copyright (C) 2012 Augusto Bott
  *
- * Fixes/updates (C) 2018 - 2025 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
  * https://freshtomato.org/
  *
  * This program is free software; you can redistribute it and/or

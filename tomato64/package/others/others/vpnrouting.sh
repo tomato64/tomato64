@@ -3,7 +3,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 #
 # VPN Client selective routing up down script
 #
-# Copyright by pedro 2019 - 2025
+# Copyright by pedro 2019 - 2026
 # https://freshtomato.org/
 #
 

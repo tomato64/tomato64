@@ -1,10 +1,13 @@
 /*
-
-	Tomato Firmware modified - AKA: ugly hacks
-	Copyright (C) 2007 Augusto Bott
-	Modified by Tomasz S³odkowicz for SDHC/MMC driver v2.0.1
-
-*/
+ *
+ * Tomato Firmware modified - AKA: ugly hacks
+ * Copyright (C) 2007 Augusto Bott
+ * Modified by Tomasz S³odkowicz for SDHC/MMC driver v2.0.1
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
+ */
 
 
 #include "rc.h"

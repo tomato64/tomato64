@@ -2,9 +2,12 @@
  *
  * Tomato Firmware
  * USB Support Module
- * Fixes/updates (C) 2018 - 2022 pedro
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
  *
  */
+
 
 #include <string.h>
 #include <stdio.h>

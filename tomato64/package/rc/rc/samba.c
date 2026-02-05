@@ -18,7 +18,7 @@
 /*
  *
  * FreshTomato Firmware
- * Fixes/updates (C) 2018 - 2025 pedro
+ * Fixes/updates (C) 2018 - 2026 pedro
  *
  */
 

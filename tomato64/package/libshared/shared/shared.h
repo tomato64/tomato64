@@ -1,3 +1,10 @@
+/*
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
+ */
+
 #ifndef __SHARED_H__
 #define __SHARED_H__
 

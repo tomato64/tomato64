@@ -10,6 +10,10 @@
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
  * $Id: interface.c,v 1.13 2005/03/07 08:35:32 kanki Exp $
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
  */
 
 

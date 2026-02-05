@@ -10,6 +10,10 @@
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
  * $Id: rc.h,v 1.39 2005/03/29 02:00:06 honor Exp $
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
  */
 
 
