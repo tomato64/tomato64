@@ -14,11 +14,12 @@ No part of this file may be used without permission.
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="tomato.js?rel=<% version(); %>"></script>
+<script src="grid-backup.js?rel=<% version(); %>"></script>
 <script src="protocols.js?rel=<% version(); %>"></script>
 
 <script>
 
-//	<% nvram("pbr_rules"); %>
+//	<% nvram("pbr_rules,t_model_name,os_version"); %>
 
 var class1 = [[1,'WAN0'],[2,'WAN1']
 /* MULTIWAN-BEGIN */
@@ -281,6 +282,9 @@ function init() {
 <div class="section-title">Rules</div>
 <div class="section">
 	<div class="tomato-grid" id="pbr-grid"></div>
+	<input type="button" value="Backup" id="backup-button" onclick="backupGrid()">
+	<input type="button" value="Restore" id="restore-button" onclick="restoreGrid()">
+	<input type="button" value="Clear Table" id="clear-button" onclick="clearGrid()">
 </div>
 
 <!-- / / / -->

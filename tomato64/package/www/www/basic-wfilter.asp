@@ -20,10 +20,11 @@
 <% css(); %>
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
+<script src="grid-backup.js?rel=<% version(); %>"></script>
 
 <script>
 
-//	<% nvram("wl_maclist,macnames"); %>
+//	<% nvram("wl_maclist,macnames,t_model_name,os_version"); %>
 
 var smg = new TomatoGrid();
 
@@ -161,6 +162,9 @@ function init() {
 <div class="section-title">Wireless Client Filter</div>
 <div class="section">
 	<div class="tomato-grid" id="sm-grid"></div>
+	<input type="button" value="Backup" id="backup-button" onclick="backupGrid()">
+	<input type="button" value="Restore" id="restore-button" onclick="restoreGrid()">
+	<input type="button" value="Clear Table" id="clear-button" onclick="clearGrid()">
 </div>
 
 <!-- / / / -->

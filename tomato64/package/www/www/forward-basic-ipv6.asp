@@ -16,10 +16,11 @@
 <% css(); %>
 <script src="isup.jsx?_http_id=<% nv(http_id); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
+<script src="grid-backup.js?rel=<% version(); %>"></script>
 
 <script>
 
-//	<% nvram("ipv6_portforward"); %>
+//	<% nvram("ipv6_portforward,t_model_name,os_version"); %>
 
 function show() {
 	elem.setInnerHTML('notice_container', '<div id="notice">'+isup.notice_ip6tables.replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
@@ -172,6 +173,9 @@ function init() {
 <div class="section-title">IPv6 Port Forwarding</div>
 <div class="section">
 	<div class="tomato-grid" id="fo-grid6"></div>
+	<input type="button" value="Backup" id="backup-button" onclick="backupGrid()">
+	<input type="button" value="Restore" id="restore-button" onclick="restoreGrid()">
+	<input type="button" value="Clear Table" id="clear-button" onclick="clearGrid()">
 </div>
 
 <!-- / / / -->

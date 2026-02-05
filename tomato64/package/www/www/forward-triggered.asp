@@ -15,10 +15,11 @@
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="tomato.js?rel=<% version(); %>"></script>
+<script src="grid-backup.js?rel=<% version(); %>"></script>
 
 <script>
 
-//	<% nvram("trigforward"); %>
+//	<% nvram("trigforward,t_model_name,os_version"); %>
 
 var tg = new TomatoGrid();
 
@@ -148,6 +149,9 @@ function init() {
 <div class="section-title">Triggered Port Forwarding</div>
 <div class="section">
 	<div class="tomato-grid" id="tg-grid"></div>
+	<input type="button" value="Backup" id="backup-button" onclick="backupGrid()">
+	<input type="button" value="Restore" id="restore-button" onclick="restoreGrid()">
+	<input type="button" value="Clear Table" id="clear-button" onclick="clearGrid()">
 </div>
 
 <!-- / / / -->

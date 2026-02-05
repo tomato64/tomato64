@@ -2370,7 +2370,8 @@ input[type="button"][value="Add to Peers"],
 input[type="button"][value="Clean"],
 input[type="button"][value^="Generate"],
 input[type="button"][value^="Continue for"],
-input[type="button"][value^="Become"] {
+input[type="button"][value^="Become"],
+input[type="button"][value^="Clear Table"] {
 	background-position: 12px;
 	background-repeat: no-repeat;
 	background-size: 18px 18px;
@@ -2485,7 +2486,8 @@ input[type="button"][value^="Import"] {
 }
 
 input[type="button"][value^="Format"],
-input[type="button"][value="Clean"] {
+input[type="button"][value="Clean"],
+input[type="button"][value="Clear Table"] {
 	background-image: var(--icon-button-erase);
 }
 

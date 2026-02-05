@@ -15,11 +15,12 @@
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="tomato.js?rel=<% version(); %>"></script>
+<script src="grid-backup.js?rel=<% version(); %>"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
 
 <script>
 
-//	<% nvram ("lan_ifname,lan_access");%>
+//	<% nvram ("lan_ifname,lan_access,t_model_name,os_version");%>
 
 var cprefix = 'advanced_access';
 
@@ -229,6 +230,9 @@ function init() {
 <div class="section-title">LAN Access</div>
 <div class="section">
 	<div class="tomato-grid" id="la-grid"></div>
+	<input type="button" value="Backup" id="backup-button" onclick="backupGrid()">
+	<input type="button" value="Restore" id="restore-button" onclick="restoreGrid()">
+	<input type="button" value="Clear Table" id="clear-button" onclick="clearGrid()">
 </div>
 
 <!-- / / / -->

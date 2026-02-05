@@ -19,10 +19,11 @@
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="tomato.js?rel=<% version(); %>"></script>
+<script src="grid-backup.js?rel=<% version(); %>"></script>
 
 <script>
 
-//	<% nvram("lan_ipaddr,lan_netmask,dhcpd_static,cstats_include,dhcpd_slt"); %>
+//	<% nvram("lan_ipaddr,lan_netmask,dhcpd_static,cstats_include,dhcpd_slt,t_model_name,os_version"); %>
 
 var cprefix = 'basic_static';
 
@@ -367,6 +368,9 @@ function init() {
 <div class="section-title">DHCP Reservation</div>
 <div class="section">
 	<div class="tomato-grid" id="bs-grid"></div>
+	<input type="button" value="Backup" id="backup-button" onclick="backupGrid()">
+	<input type="button" value="Restore" id="restore-button" onclick="restoreGrid()">
+	<input type="button" value="Clear Table" id="clear-button" onclick="clearGrid()">
 </div>
 
 <!-- / / / -->
