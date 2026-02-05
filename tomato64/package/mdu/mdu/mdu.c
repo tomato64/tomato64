@@ -51,6 +51,7 @@
 #define M_TOOSOON		"Update was too soon or too frequent."
 #define M_ERROR_GET_IP		"Error obtaining IP address."
 #define M_ERROR_MEM_STREAM	"Failed to open memory stream."
+#define M_ERROR_MEM_ALLOC	"Memory allocation failed."
 #define M_SAME_IP		"The IP address is the same."
 #define M_SAME_RECORD		"Record already up-to-date."
 #define M_DOWN			"Server temporarily down or under maintenance."
@@ -1710,13 +1711,13 @@ static void update_cloudflare(const unsigned int ssl)
 	const char *zone;
 	const char *host;
 	char query[QUARTER_BLOB];
-	char *body;
+	char *body = NULL;
+	char *body_copy = NULL;
 	long s;
 	const char *addr;
-	int prox, r;
+	int prox, r, current_proxied;
 	char *find;
 	char *found;
-	char *body_copy;
 	char data[QUARTER_BLOB];
 
 	/* +opt */
@@ -1731,25 +1732,30 @@ static void update_cloudflare(const unsigned int ssl)
 
 	if (s == -1)
 		error(M_ERROR_GET_IP);
-	else if (s == -2 )
+	else if (s == -2)
 		error(M_ERROR_MEM_STREAM);
 
 	body_copy = remove_spaces(body);
+	if (!body_copy)
+		error(M_ERROR_MEM_ALLOC);
 
 	r = cloudflare_errorcheck(s, "GET", body_copy);
 
 	addr = get_address(1);
 	prox = get_option_onoff("wildcard", 0);
-	if (r == 1) {
-		if (get_option_onoff("backmx", 0))
+
+	if (r == 1) { /* no existing record - create with POST */
+		if (get_option_onoff("backmx", 0)) {
 			snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records", zone);
+			/* continue to PUT/POST logic below */
+		}
 		else {
 			free(body_copy);
 			error(M_INVALID_HOST);
 		}
 	}
-	else if (r == 0) {
-		/* check the current IP to see if we actually need to update */
+	else if (r == 0) { /* record exists */
+		/* check if IP actually changed */
 		find = "\"content\":\"";
 		if ((found = strstr(body_copy, find)) == NULL) {
 			free(body_copy);
@@ -1758,24 +1764,16 @@ static void update_cloudflare(const unsigned int ssl)
 
 		found += strlen(find);
 		if (strncmp(addr, found, strlen(addr)) == 0) {
-			if (strstr(body_copy, "\"proxiable\":true") != NULL) {
-				if (strstr(body_copy, "\"proxied\":true") != NULL) {
-					if (prox) {
-						free(body_copy);
-						success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
-					}
-				}
-				else if (!prox) {
-					free(body_copy);
-					success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
-				}
-			}
-			else {
+			/* IP is the same - check proxied flag consistency */
+			current_proxied = (strstr(body_copy, "\"proxied\":true") != NULL);
+			if ((prox && current_proxied) || (!prox && !current_proxied)) {
 				free(body_copy);
-				success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
+				success_msg(M_SAME_RECORD, 1); /* update cookie and exit */
 			}
+			/* if proxied flag differs, we still need to update */
 		}
 
+		/* extract record ID */
 		find = "\"id\":\"";
 		if ((found = strstr(body_copy, find)) == NULL) {
 			free(body_copy);
@@ -1783,32 +1781,37 @@ static void update_cloudflare(const unsigned int ssl)
 		}
 
 		found += strlen(find);
-		*strchr(found, '"') = 0; /* assume we can find the closing quote */
+		*strchr(found, '"') = '\0'; /* truncate at closing quote */
 
 		snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records/%s", zone, found);
 	}
 	else {
+		/* r == -1 - error already handled inside cloudflare_errorcheck */
 		free(body_copy);
 		error(M_UNKNOWN_ERROR__D, r);
 	}
 
 	free(body_copy);
+	body_copy = NULL;
 
-	/* +opt +opt */
+	/* prepare JSON payload */
 	snprintf(data, QUARTER_BLOB, "{\"content\":\"%s\",\"name\":\"%s\",\"proxied\":%s,\"type\":\"A\"}", addr, host, (prox ? "true" : "false"));
 
-	s = _http_req(ssl, 1, "api.cloudflare.com", "PUT", query, header, 0, data, &body);
+	/* POST for create, PUT for update */
+	s = _http_req(ssl, 1, "api.cloudflare.com", (r == 1) ? "POST" : "PUT", query, header, 0, data, &body);
 
 	if (s == -1)
 		error(M_ERROR_GET_IP);
-	else if (s == -2 )
+	else if (s == -2)
 		error(M_ERROR_MEM_STREAM);
 
 	body_copy = remove_spaces(body);
+	if (!body_copy)
+		error(M_ERROR_MEM_ALLOC);
 
-	r = cloudflare_errorcheck(s, "PUT", body_copy);
+	r = cloudflare_errorcheck(s, (r == 1) ? "POST" : "PUT", body_copy);
 
-	free(body_copy);
+	free(body_copy); /* always free before exit */
 
 	if (r != 0)
 		error(M_UNKNOWN_ERROR__D, r);
