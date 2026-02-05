@@ -193,12 +193,11 @@ function verifyFields(focused, quiet) {
 }
 
 function save() {
-	var fom, path, en, e, aj;
+	var fom, path, en, e;
 
 	if (!verifyFields(null, 0))
 		return;
 
-	aj = 1;
 	en = E('_f_rstats_enable').checked;
 	fom = E('t_fom');
 	fom._service.value = 'rstats-restart';
@@ -220,7 +219,7 @@ function save() {
 
 		if (E('_f_new').checked) {
 			fom._service.value = 'rstatsnew-restart';
-			aj = 0;
+			E('_f_new').checked = 0; /* reset */
 		}
 	}
 
@@ -234,7 +233,7 @@ function save() {
 
 	fields.disableAll(E('backup-section'), 1);
 	fields.disableAll(E('restore-section'), 1);
-	form.submit(fom, aj);
+	form.submit(fom, 1);
 	if (en) {
 		fields.disableAll(E('backup-section'), 0);
 		fields.disableAll(E('restore-section'), 0);
