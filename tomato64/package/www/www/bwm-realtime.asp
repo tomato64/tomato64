@@ -94,6 +94,11 @@ ref.refresh = function(text) {
 
 				h.tx.splice(0, 1);
 				h.tx.push(txDelta);
+
+				if (typeof(h.count) == 'undefined')
+					h.count = 0;
+				if (h.count < updateMaxL)
+					h.count++;
 			}
 			else if (!speed_history[i]) {
 				speed_history[i] = {};
@@ -164,10 +169,12 @@ function init() {
 			if ((nvram.web_svg != '0') && (nvram.rstats_enable == '1')) {
 				var vWidth = 760;
 				var vHeight = 300;
+/* ADVTHEMES-BEGIN */
 				if (nvram.web_css.match(/at-/g)) {
 					vWidth = 1200;
 					vHeight = 500;
 				}
+/* ADVTHEMES-END */
 				W('<div id="graph"><embed src="bwm-graph.svg?vwidth='+vWidth+'&vheight='+vHeight+'" type="image/svg+xml" style="width:'+vWidth+'px;height:'+vHeight+'px"><\/embed><\/div>');
 			}
 		</script>

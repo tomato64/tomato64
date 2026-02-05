@@ -230,8 +230,9 @@ function loadData() {
 						h.tx_max = t;
 					h.tx_total += t;
 				}
-				h.rx_avg = h.rx_total / (h.count ? h.count : updateMaxL);
-				h.tx_avg = h.tx_total / (h.count ? h.count : updateMaxL);
+				var samples = (h.count && h.count < updateMaxL) ? h.count : updateMaxL;
+				h.rx_avg = h.rx_total / samples;
+				h.tx_avg = h.tx_total / samples;
 			}
 
 			if (updateDiv > 1) {
