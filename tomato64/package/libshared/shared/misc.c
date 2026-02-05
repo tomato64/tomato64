@@ -1204,58 +1204,73 @@ int connect_timeout(int fd, const struct sockaddr *addr, socklen_t len, int time
 	fd_set fds;
 	struct timeval tv;
 	int flags;
-	socklen_t n;
+	socklen_t optlen;
+	int optval;
 	int r;
 
-	if (((flags = fcntl(fd, F_GETFL, 0)) < 0) ||
-		(fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)) {
-		logmsg(LOG_DEBUG, "*** %s: error in F_*ETFL %d", __FUNCTION__, fd);
+	/* save original flags and set non-blocking */
+	if ((flags = fcntl(fd, F_GETFL, 0)) < 0 ||
+		fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+		logmsg(LOG_DEBUG, "*** %s: fcntl F_GETFL/F_SETFL failed on fd %d", __FUNCTION__, fd);
 		return -1;
 	}
 
+	/* initiate non-blocking connect */
 	if (connect(fd, addr, len) < 0) {
-		logmsg(LOG_DEBUG, "*** %s: connect %d = <0", __FUNCTION__, fd);
-
 		if (errno != EINPROGRESS) {
-			logmsg(LOG_DEBUG, "*** %s: error in connect %d errno=%d", __FUNCTION__, fd, errno);
-			return -1;
+		logmsg(LOG_DEBUG, "*** %s: immediate connect failed on fd %d (errno=%d)", __FUNCTION__, fd, errno);
+		goto restore_flags;
 		}
+		/* EINPROGRESS - normal for non-blocking, proceed to select */
+	}
+	else {
+		/* connect succeeded immediately */
+		goto restore_flags;
+	}
 
-		while (1) {
-			tv.tv_sec = timeout;
-			tv.tv_usec = 0;
-			FD_ZERO(&fds);
-			FD_SET(fd, &fds);
-			r = select(fd + 1, NULL, &fds, NULL, &tv);
-			if (r == 0) {
-				logmsg(LOG_DEBUG, "*** %s: timeout in select %d", __FUNCTION__, fd);
-				return -1;
+	/* wait for writability (connect completion) with timeout */
+	while (1) {
+		tv.tv_sec = timeout;
+		tv.tv_usec = 0;
+
+		FD_ZERO(&fds);
+		FD_SET(fd, &fds);
+
+		r = select(fd + 1, NULL, &fds, NULL, &tv);
+		if (r > 0) {
+			/* socket became writable - check SO_ERROR */
+			optval = 0;
+			optlen = sizeof(optval);
+			if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0 || optval != 0) {
+				logmsg(LOG_DEBUG, "*** %s: connect failed (SO_ERROR=%d) on fd %d", __FUNCTION__, optval, fd);
+				goto restore_flags;
 			}
-			else if (r < 0) {
-				if (errno != EINTR) {
-					logmsg(LOG_DEBUG, "*** %s: error in select %d", __FUNCTION__, fd);
-					return -1;
-				}
-				/* loop */
+			/* success */
+			break;
+		}
+		else if (r == 0) {
+			/* timeout */
+			logmsg(LOG_DEBUG, "*** %s: connect timeout after %ds on fd %d", __FUNCTION__, timeout, fd);
+			goto restore_flags;
+		}
+		else { /* r < 0 */
+			if (errno == EINTR) {
+				/* interrupted by signal - retry select */
+				continue;
 			}
-			else {
-				r = 0;
-				n = sizeof(r);
-				if ((getsockopt(fd, SOL_SOCKET, SO_ERROR, &r, &n) < 0) || (r != 0)) {
-					logmsg(LOG_DEBUG, "*** %s: error in SO_ERROR %d", __FUNCTION__, fd);
-					return -1;
-				}
-				break;
-			}
+			logmsg(LOG_DEBUG, "*** %s: select error on fd %d (errno=%d)", __FUNCTION__, fd, errno);
+			goto restore_flags;
 		}
 	}
 
+restore_flags:
+	/* restore original flags */
 	if (fcntl(fd, F_SETFL, flags) < 0) {
-		logmsg(LOG_DEBUG, "*** %s: error in F_*ETFL %d", __FUNCTION__, fd);
+		logmsg(LOG_DEBUG, "*** %s: fcntl restore flags failed on fd %d", __FUNCTION__, fd);
 		return -1;
 	}
 
-	logmsg(LOG_DEBUG, "*** %s: OK %d", __FUNCTION__, fd);
+	logmsg(LOG_DEBUG, "*** %s: connect successful on fd %d", __FUNCTION__, fd);
 
 	return 0;
 }
