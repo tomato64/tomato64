@@ -588,16 +588,16 @@ void asp_etherstates(int argc, char **argv)
 			while (fgets(s, sizeof(s), f)) {
 				if (sscanf(s, "Port %d: %s", &p, b) == 2) {
 					snprintf(a, sizeof(a), "port%d", p);
-					web_printf("%s\t%s: '%s'", n ? ",\n" : "", a, b);
+					web_printf("%s%s: '%s'", n ? "," : "", a, b);
 					n++;
 				}
 			}
 			fclose(f);
 		}
-		web_puts("\n};\n");
+		web_puts("};\n");
 	}
 	else
-		web_puts("\netherstates = {\tport0: 'disabled'\n};\n");
+		web_puts("\netherstates = {port0: 'disabled'};\n");
 }
 
 void asp_anonupdate(int argc, char **argv)
@@ -617,15 +617,15 @@ void asp_anonupdate(int argc, char **argv)
 				else
 					continue;
 
-				web_printf("%s\t%s: '%s'", n ? ",\n" : "", a, b);
+				web_printf("%s%s: '%s'", n ? "," : "", a, b);
 				n++;
 			}
 			fclose(f);
 		}
-		web_puts("\n};\n");
+		web_puts("};\n");
 	}
 	else
-		web_puts("\nanonupdate = {\tupdate: 'no'\n};\n");
+		web_puts("\nanonupdate = {update: 'no'};\n");
 }
 
 void asp_sysinfo(int argc, char **argv)

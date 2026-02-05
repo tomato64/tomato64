@@ -340,8 +340,8 @@ void asp_nvstat(int argc, char **argv)
 	}
 
 #if defined(TCONFIG_BCMARM) && (CONFIG_NVRAM_SIZE == 32) /* WORKAROUND for DIR868L to show 32 KB threshold at the GUI that should not be crossed right now! (you still can cross it...) */
-	web_printf("\nnvstat = { size: %d, free: %d };\n", (CONFIG_NVRAM_SIZE * 0x0400), (CONFIG_NVRAM_SIZE * 0x0400) - used);
+	web_printf("\nnvstat = {size: %d,free: %d };\n", (CONFIG_NVRAM_SIZE * 0x0400), (CONFIG_NVRAM_SIZE * 0x0400) - used);
 #else
-	web_printf("\nnvstat = { size: %d, free: %d };\n", NVRAM_SPACE, NVRAM_SPACE - used);
+	web_printf("\nnvstat = {size: %d,free: %d };\n", NVRAM_SPACE, NVRAM_SPACE - used);
 #endif
 }
