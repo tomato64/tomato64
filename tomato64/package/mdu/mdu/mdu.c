@@ -21,6 +21,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/stat.h>
+#include <ctype.h>
 
 #include <bcmnvram.h>
 #include <shutils.h>
@@ -104,7 +105,7 @@ static void route_adddel(const char *ip, unsigned int add)
 {
 	char cmd[256];
 	char buf[64];
-	char buf2[64];
+	char buf2[128];
 
 	if (ifname[0] != '\0' && nvram_get_int("mwan_num") > 1) { /* only for MultiWAN */
 		logmsg(LOG_DEBUG, "*** IN %s: add=[%d] ip=[%s] ifname=[%s] - %s routes ...", __FUNCTION__, add, ip, ifname, (add ? "adding" : "deleting"));
@@ -117,6 +118,8 @@ static void route_adddel(const char *ip, unsigned int add)
 			snprintf(buf, sizeof(buf), "%s_gateway", sPrefix);
 			snprintf(buf2, sizeof(buf2), "via %s", nvram_safe_get(buf)); /* gateway_fragment */
 		}
+		else
+			buf2[0] = '\0';
 
 		memset(buf, 0, sizeof(buf)); /* reset */
 		system("ip route | grep default | cut -d' ' -f2- > " MDU_ROUTE_FN);
@@ -138,10 +141,7 @@ static int check_stop(void)
 {
 	char buf[8];
 
-	if (f_read(MDU_STOP_FN, buf, sizeof(buf)) > 0) /* check if we have to stop */
-		return 1;
-
-	return 0;
+	return (f_read(MDU_STOP_FN, buf, sizeof(buf)) >  0); /* check if we have to stop */
 }
 
 static void trimamp(char *s)
@@ -626,6 +626,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 
 	if ((r == CURLE_OK) || (r == CURLE_RECV_ERROR)) /* CURLE_RECV_ERROR needed for clouflare */
 		*body = blob;
+		/* body is pointer into global blob - caller must NOT free it */
 	else {
 		memset(curl_err_str, 0, sizeof(curl_err_str));
 		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (strlen(errbuf) ? errbuf : curl_easy_strerror(r)));
@@ -882,16 +883,20 @@ static long http_req(const unsigned int ssl, int static_host, const char *host, 
 
 static int read_tmaddr(const char *name, long *tm, char *addr)
 {
-	char s[64];
+	char s[192];
 
 	logmsg(LOG_DEBUG, "*** %s: IN cachename: %s", __FUNCTION__, name);
 
 	memset(s, 0, sizeof(s)); /* reset */
 	if (f_read_string(name, s, sizeof(s)) > 0) {
-		if (sscanf(s, "%ld,%15s", tm, addr) == 2) {
-			logmsg(LOG_DEBUG, "*** %s: s=%s tm=%ld addr=%s", __FUNCTION__, s, *tm, addr);
-
-			if ((tm > 0) && (inet_addr(addr) != INADDR_NONE))
+		if (sscanf(s, "%ld,%63s", tm, addr) == 2) {
+			logmsg(LOG_DEBUG, "*** %s: tm=%ld addr=%s", __FUNCTION__, *tm, addr);
+			if (*tm > 0 && (inet_pton(AF_INET, addr, &(struct in_addr){0}) == 1 ||
+#ifdef TCONFIG_IPV6
+			                inet_pton(AF_INET6, addr, &(struct in6_addr){0}) == 1))
+#else
+			                0))
+#endif
 				return 1;
 		}
 		else
@@ -904,14 +909,21 @@ static int read_tmaddr(const char *name, long *tm, char *addr)
 static const char *get_address(int required)
 {
 	char *body;
-	struct in_addr ia;
+	struct in_addr ipv4;
+#ifdef TCONFIG_IPV6
+	struct in6_addr ipv6;
+#endif
 	const char *c;
-	char *p, *q;
-	char s[64];
-	char cache_name[64];
-	static char addr[16];
-	long ut, et;
-	int rows, service_num, n;
+	const void *src;
+	char *p, *end;
+	char s[192];
+	char cache_name[128];
+	char normalized[64];
+	static char addr[64];
+	long ut, et, af, expire;
+	int rows, service_num, n, i, j, temp, max_tries;
+	int indices[ASIZE(services)];
+	size_t len;
 
 	/* addr is present in the config */
 	if ((c = get_option("addr")) != NULL) {
@@ -923,68 +935,105 @@ static const char *get_address(int required)
 
 			if (read_tmaddr(cache_name, &et, addr)) {
 				if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE)) {
-					logmsg(LOG_DEBUG, "*** %s: OUT using cached address %s from %s. Expires in %ld seconds", __FUNCTION__, addr, cache_name, (et - ut));
+					logmsg(LOG_DEBUG, "*** %s: OUT using cached address %s from %s (expires in %ld s)", __FUNCTION__, addr, cache_name, (et - ut));
 					return addr;
 				}
 			}
 
 			rows = ASIZE(services);
-			n = 5; /* try 5 times on different checkers, if no response it means (probably) WAN is down - wait */
-			while (n-- > 0) {
-				srand(time(0));
-				service_num = (rand() % (rows));
-				if (http_req(0, 1, services[service_num][0], services[service_num][1], NULL, 0, &body) == 200) { /* do not use ssl */
+
+			/* Fisher-Yates shuffle */
+			for (i = 0; i < rows; i++) indices[i] = i;
+			srand(time(NULL) ^ (unsigned int)ut);
+			for (i = rows - 1; i > 0; i--) {
+				j = rand() % (i + 1);
+				temp = indices[i];
+				indices[i] = indices[j];
+				indices[j] = temp;
+			}
+
+			max_tries = (rows < 5) ? rows : 5; /* try 5 times on different checkers, if no response it means (probably) WAN is down - wait */
+
+			for (n = 0; n < max_tries; n++) {
+				service_num = indices[n];
+
+				body = NULL;
+				if (http_req(0, 1, services[service_num][0], services[service_num][1], NULL, 0, &body) == 200 && body) { /* do not use ssl */
+					/* body points to global blob - no free needed */
 					if ((p = strstr(body, "Address:")) != NULL) /* dyndns */
 						p += 8;
 					else /* the rest */
 						p = body;
 
-					/* sanitize */
-					while (*p == ' ')
+					while (*p && isspace((unsigned char)*p))
 						++p;
 
-					q = p;
+					if (*p == '\0')
+						continue;
 
-					while (((*q >= '0') && (*q <= '9')) || (*q == '.'))
-						++q;
+					end = p + strcspn(p, " \t\r\n");
+					len = end - p;
 
-					memset(addr, 0, sizeof(addr)); /* reset */
-					strncpy(addr, p, (q - p));
-					q = NULL;
+					if ((len == 0) || (len >= sizeof(addr))) {
+						logmsg(LOG_DEBUG, "*** %s: invalid length from %s", __FUNCTION__, services[service_num][0]);
+						continue;
+					}
 
+					/* copy with null-termination */
+					memcpy(addr, p, len);
+					addr[len] = '\0';
+
+					/* strip square brackets for IPv6 if present */
+					if (addr[0] == '[') {
+						memmove(addr, addr + 1, len);
+						len--;
+						addr[len] = '\0';
+					}
+					if (len > 0 && addr[len - 1] == ']')
+						addr[len - 1] = '\0';
+
+					/* validate and normalize */
+					af = 0;
+					src = NULL;
+
+					if (inet_pton(AF_INET, addr, &ipv4) == 1) {
+						af = AF_INET;
+						src = &ipv4;
+					}
+#ifdef TCONFIG_IPV6
+					else if (inet_pton(AF_INET6, addr, &ipv6) == 1) {
+						af = AF_INET6;
+						src = &ipv6;
+					}
+#endif
 					/* write to cache if addr is OK */
-					if ((ia.s_addr = inet_addr(addr)) != INADDR_NONE) {
-						q = inet_ntoa(ia);
-						memset(s, 0, sizeof(s));
-						snprintf(s, sizeof(s), "%ld,%s", ut + DDNS_IP_CACHE, q);
+					memset(normalized, 0, sizeof(normalized));
+					if (af != 0 && inet_ntop(af, src, normalized, sizeof(normalized))) {
+						expire = ut + DDNS_IP_CACHE;
+						snprintf(s, sizeof(s), "%ld,%s", expire, normalized);
 						f_write_string(cache_name, s, 0, 0);
 
-						logmsg(LOG_DEBUG, "*** %s: OUT used %s service; time,address (%s) saved to %s q=[%s]", __FUNCTION__, services[service_num][0], s, cache_name, q);
+						strlcpy(addr, normalized, sizeof(addr));
+
+						logmsg(LOG_DEBUG, "*** %s: detected %s via %s, cached as %s until %ld", __FUNCTION__, normalized, services[service_num][0], s, expire);
+
 						success_msg("Update successful.", 0); /* do not exit! */
 
-						return q;
+						return addr;
 					}
-				}
-				else {
-					if (n == 0) {
-#ifdef USE_LIBCURL
-						logmsg(LOG_DEBUG, "*** %s: %s (%s)", __FUNCTION__, curl_err_str, services[service_num][0]);
-						error(curl_err_str);
-#else
-						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s)", __FUNCTION__, services[service_num][0]);
-						error(M_ERROR_GET_IP);
-#endif
-					}
-					else {
-#ifdef USE_LIBCURL
-						logmsg(LOG_DEBUG, "*** %s: %s (%s) - trying another one ...", __FUNCTION__, curl_err_str, services[service_num][0]);
-#else
-						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s) - trying another one ...", __FUNCTION__, services[service_num][0]);
-#endif
-						sleep(1); /* for srand() */
-					}
+
+					logmsg(LOG_DEBUG, "*** %s: invalid address format from %s: %s", __FUNCTION__, services[service_num][0], addr);
 				}
 			}
+
+			/* all attempts failed */
+#ifdef USE_LIBCURL
+			logmsg(LOG_DEBUG, "*** %s: %s (%s) after %d attempts", __FUNCTION__, curl_err_str, services[service_num][0], n);
+			error(curl_err_str);
+#else
+			logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s) after %d attempts", __FUNCTION__, services[service_num][0], n);
+			error(M_ERROR_GET_IP);
+#endif
 		}
 		return c;
 	}
