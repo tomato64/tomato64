@@ -199,7 +199,7 @@ mwwatchdogRun() {
 }
 
 cktracert() {
-	local RXBYTES1 RXBYTES2 IP
+	local RXBYTES1 RXBYTES2 IP DIFF COND
 	# minimum bytes indicating working WAN
 	local RXBYTES_MIN_DIFF=$(NG mwan_diff)
 	# ensure minimum sensible value
@@ -213,27 +213,32 @@ cktracert() {
 		RXBYTES1=${RXBYTES1:-0}
 		[ "$RXBYTES1" = "0" ] && $LOGD "failed to read initial rx_bytes for $IFACE (using 0)"
 
-		traceroute -i "$IFACE" -n -w 1 -m 10 -q 1 -z 1 "$IP" 2>/dev/null
+		traceroute -i "$IFACE" -n -w 1 -m 10 -q 1 -z 1 "$IP" &>/dev/null
 		sleep 1
 
 		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null || echo 0)
 		RXBYTES2=${RXBYTES2:-0}
 		[ "$RXBYTES2" = "0" ] && $LOGD "failed to read final rx_bytes for $IFACE (using 0)"
 
-		# simple wrap-around handling (for 32-bit counters)
-		if [ "$RXBYTES2" -ge "$RXBYTES1" ]; then
-			if [ "$((RXBYTES2 - RXBYTES1))" -gt "$RXBYTES_MIN_DIFF" ]; then
-				RESULT=1; break
-			fi
-		else
-			# possible wrap-around
-			if [ "$((RXBYTES2 + 4294967296 - RXBYTES1))" -gt "$RXBYTES_MIN_DIFF" ]; then
-				RESULT=1; break
-			fi
+		RESULT=$(awk -v r1="$RXBYTES1" -v r2="$RXBYTES2" -v min="$RXBYTES_MIN_DIFF" 'BEGIN {
+			if (r2 < r1) {
+				# interface reset
+				print "0", "1"
+				exit
+			}
+				diff = r2 - r1
+				print diff, (diff > min ? "1" : "0")
+		}')
+
+		DIFF=$(echo "$RESULT" | awk '{print $1}')
+		COND=$(echo "$RESULT" | awk '{print $2}')
+
+		if [ "$COND" = "1" ]; then
+			RESULT=1; break
 		fi
 	done
 
-	[ "$RESULT" -gt 0 ] && $LOGD "tracert test result for: $IFACE - OK [transfer: $((RXBYTES2-RXBYTES1))]" || $LOGD "tracert test result for: $IFACE - FAILED! [transfer: $((RXBYTES2-RXBYTES1))]"
+	[ "$RESULT" -gt 0 ] && $LOGD "tracert test result for: $IFACE - OK [transfer: $DIFF]" || $LOGD "tracert test result for: $IFACE - FAILED! [transfer: $DIFF]"
 }
 
 ckping() {
