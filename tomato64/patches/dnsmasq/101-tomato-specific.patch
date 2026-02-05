@@ -1,6 +1,6 @@
 --- dnsmasq/src/config.h
 +++ dnsmasq/src/config.h
-@@ -82,6 +82,10 @@
+@@ -85,6 +85,10 @@
     NOTE: when enabling or disabling this, be sure to delete any old
     leases file, otherwise dnsmasq may get very confused.
  
@@ -11,7 +11,7 @@
  HAVE_TFTP
     define this to get dnsmasq's built-in TFTP server.
  
-@@ -354,6 +358,10 @@
+@@ -371,6 +375,10 @@
  #undef HAVE_LOOP
  #endif
  
@@ -22,7 +22,7 @@
  #ifdef NO_DUMPFILE
  #undef HAVE_DUMPFILE
  #endif
-@@ -435,6 +443,9 @@
+@@ -452,6 +460,9 @@
  "no-"
  #endif
  "nftset "
@@ -79,7 +79,7 @@
  
  /* Declare static char *compiler_opts  in config.h */
  #define DNSMASQ_COMPILE_OPTS
-@@ -1610,8 +1648,22 @@
+@@ -1618,8 +1656,22 @@
  	/* Note: this may leave TCP-handling processes with the old file still open.
  	   Since any such process will die in CHILD_LIFETIME or probably much sooner,
  	   we leave them logging to the old file. */
@@ -102,7 +102,7 @@
  	break;
  
        case EVENT_NEWADDR:
-@@ -1655,6 +1707,12 @@
+@@ -1663,6 +1715,12 @@
  	    close(daemon->helperfd);
  	  }
  #endif
@@ -117,7 +117,7 @@
  	  fclose(daemon->lease_stream);
 --- dnsmasq/src/dnsmasq.h
 +++ dnsmasq/src/dnsmasq.h
-@@ -1648,6 +1648,12 @@
+@@ -1680,6 +1680,12 @@
  int icmp_ping(struct in_addr addr);
  int delay_dhcp(time_t start, int sec, int fd, uint32_t addr, unsigned short id);
  #endif
@@ -132,7 +132,7 @@
  void send_event(int fd, int event, int data, char *msg);
 --- dnsmasq/src/lease.c
 +++ dnsmasq/src/lease.c
-@@ -113,12 +113,15 @@
+@@ -141,12 +141,15 @@
  
  	ei = atol(daemon->dhcp_buff3);
  
@@ -149,7 +149,7 @@
  #else
  	/* strictly time_t is opaque, but this hack should work on all sane systems,
  	   even when sizeof(time_t) == 8 */
-@@ -268,7 +271,16 @@
+@@ -298,7 +301,16 @@
  	    continue;
  #endif
  
@@ -166,7 +166,7 @@
  	  ourprintf(&err, "%u ", lease->length);
  #else
  	  ourprintf(&err, "%lu ", (unsigned long)lease->expires);
-@@ -312,12 +324,21 @@
+@@ -342,12 +354,21 @@
  	      if (!(lease->flags & (LEASE_TA | LEASE_NA)))
  		continue;
  
@@ -189,7 +189,7 @@
  	      inet_ntop(AF_INET6, &lease->addr6, daemon->addrbuff, ADDRSTRLEN);
  	 
  	      ourprintf(&err, "%s%u %s ", (lease->flags & LEASE_TA) ? "T" : "",
-@@ -1225,4 +1246,67 @@
+@@ -1343,4 +1364,67 @@
  }
  #endif
  
@@ -207,7 +207,7 @@
 +    while (fgets(buf, sizeof(buf), f)) {
 +	buf[strcspn(buf, "\n")] = 0;
 +	inet_aton(buf, &ia);
-+	if (lease = lease_find_by_addr(ia)) {
++	if ((lease = lease_find_by_addr(ia))) {
 +	  lease_prune(lease, 0);
 +	  lease_update_file(now);
 +	  lease_update_dns(0);
