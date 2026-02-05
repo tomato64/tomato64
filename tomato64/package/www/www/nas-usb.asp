@@ -64,7 +64,7 @@ function umountHost(a, host) {
 		_forceRefresh();
 	}
 
-	xob.post('usbcmd.cgi', 'remove=' + host);
+	xob.post('usbcmd.cgi', 'remove='+host);
 }
 
 function mountHost(a, host) {
@@ -93,10 +93,10 @@ function mountHost(a, host) {
 		_forceRefresh();
 	}
 
-	xob.post('usbcmd.cgi', 'mount=' + host);
+	xob.post('usbcmd.cgi', 'mount='+host);
 }
 
-var ref = new TomatoRefresh('update.cgi', 'exec=usbdevices', 0, 'nas_usb_refresh');
+var ref = new TomatoRefresh('update.cgi', 'exec=usbdevices', 5);
 
 ref.refresh = function(text) {
 	try {
@@ -112,24 +112,11 @@ ref.refresh = function(text) {
 
 var dg = new TomatoGrid();
 
-dg.sortCompare = function(a, b) {
-	var col = this.sortColumn;
-	var ra = a.getRowData();
-	var rb = b.getRowData();
-	var r;
-
-	switch (col) {
-	case 1:
-		if (ra.type == 'Storage' && ra.type == rb.type)
-			r = cmpInt(ra.host, rb.host);
-		else
-			r = cmpText(ra.host, rb.host);
-		break;
-	default:
-		r = cmpText(a.cells[col].innerHTML, b.cells[col].innerHTML);
-	}
-
-	return this.sortAscending ? r : -r;
+dg.setup = function() {
+	this.init('usb-grid', 'sort');
+	this.headerSet(['Type', 'Host', 'Description', 'Mounted?']);
+	this.populate();
+	this.sort(1);
 }
 
 dg.populate = function() {
@@ -168,13 +155,13 @@ dg.populate = function() {
 			s = '<br>';
 		else {
 			if (xob)
-				s = ((e.is_mounted == 0) ? 'No' : 'Yes') + '<br><small>Please wait...<\/small>';
+				s = ((e.is_mounted == 0) ? 'No' : 'Yes')+'<br><small>Please wait...<\/small>';
 			else if (e.is_mounted == 0)
-				s = 'No<br><small class="pics"><a href="javascript:mountHost(\'L' + i + '\',\'' + e.host + '\')" title="Mount all Partitions of Storage Device" id="L' + i + '">[ Mount ]<\/a><\/small>';
+				s = 'No<br><small class="pics"><a href="javascript:mountHost(\'L'+i+'\',\''+e.host+'\')" title="Mount all Partitions of Storage Device" id="L'+i+'">[ Mount ]<\/a><\/small>';
 			else
-				s = 'Yes<br><small class="pics"><a href="javascript:umountHost(\'L' + i + '\',\'' + e.host + '\')" title="Safely Remove Storage Device" id="L' + i + '">[ Unmount ]<\/a><\/small>';
+				s = 'Yes<br><small class="pics"><a href="javascript:umountHost(\'L'+i+'\',\''+e.host+'\')" title="Safely Remove Storage Device" id="L'+i+'">[ Unmount ]<\/a><\/small>';
 		}
-		desc = (e.vendor + ' ' + e.product).trim(); /* + (e.serial == '' ? '' : '<br>Serial No: ' + e.serial); */
+		desc = (e.vendor+' '+e.product).trim()+(!e.serial ? '' : ' [Serial No: '+e.serial+']');
 		if (e.discs) {
 			for (j = 0; j <= e.discs.length - 1; ++j) {
 				d = e.discs[j];
@@ -182,13 +169,13 @@ dg.populate = function() {
 				for (k = 0; k <= parts.length - 1; ++k) {
 					p = parts[k];
 					if (p) {
-						desc = desc + '<small><br>Partition \'' + p[0] + '\'' + (p[3] != '' ? ' ' + p[3] : '') +
-							((p[5] != 0) ? ' (' + doScaleSize(p[5], 0) + 
-							((p[1] == 1) ? ' / ' + doScaleSize(p[6], 0) + ' free' : '') +
-							')' : '') + ' is ' +
-							((p[1] != 0) ? '' : 'not ') + ((p[3] == 'swap') ? 'active' : 'mounted') +
-							((p[2] != '') ? ' on ' + p[2] : '');
-						desc = desc + '<\/small>';
+						desc = desc+'<small><br>Partition \''+p[0]+'\''+(p[3] != '' ? ' '+p[3] : '')+
+							((p[5] != 0) ? ' ('+doScaleSize(p[5], 0)+ 
+							((p[1] == 1) ? ' / '+doScaleSize(p[6], 0)+' free' : '')+
+							')' : '')+' is '+
+							((p[1] != 0) ? '' : 'not ')+((p[3] == 'swap') ? 'active' : 'mounted')+
+							((p[2] != '') ? ' on '+p[2] : '');
+						desc = desc+'<\/small>';
 					}
 				}
 			}
@@ -199,22 +186,24 @@ dg.populate = function() {
 	list = [];
 }
 
-dg.setup = function() {
-	this.init('usb-grid', 'sort');
-	this.headerSet(['Type', 'Host', 'Description', 'Mounted?']);
-	this.populate();
-	this.sort(1);
-}
+dg.sortCompare = function(a, b) {
+	var col = this.sortColumn;
+	var ra = a.getRowData();
+	var rb = b.getRowData();
+	var r;
 
-function earlyInit() {
-	dg.setup();
-	verifyFields(null, true);
-	insOvl();
-}
+	switch (col) {
+	case 1:
+		if (ra.type == 'Storage' && ra.type == rb.type)
+			r = cmpInt(ra.host, rb.host);
+		else
+			r = cmpText(ra.host, rb.host);
+		break;
+	default:
+		r = cmpText(a.cells[col].innerHTML, b.cells[col].innerHTML);
+	}
 
-function init() {
-	dg.recolor();
-	ref.initPage();
+	return this.sortAscending ? r : -r;
 }
 
 function verifyFields(focused, quiet) {
@@ -340,8 +329,15 @@ function save() {
 	form.submit(fom, 1);
 }
 
-function submit_complete() {
-	reloadPage();
+function earlyInit() {
+	dg.setup();
+	verifyFields(null, true);
+	insOvl();
+}
+
+function init() {
+	dg.recolor();
+	ref.start();
 }
 </script>
 </head>
@@ -483,7 +479,7 @@ function submit_complete() {
 <div class="section">
 	<div class="tomato-grid" id="usb-grid"></div>
 	<div id="usb-controls">
-		<script>genStdRefresh(1,0,'ref.toggle()');</script>
+		<img src="spin.svg" id="refresh-spinner" alt="">
 	</div>
 </div>
 
