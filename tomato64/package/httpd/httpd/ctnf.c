@@ -117,7 +117,11 @@ void asp_ctcount(int argc, char **argv)
 #endif
 				if (rip != 0) {
 					/* src=x.x.x.x dst=x.x.x.x  DIR_ORIGINAL */
+#ifdef TOMATO64
+					if ((p = strstr(t, "src=")) == NULL)
+#else
 					if ((p = strstr(t + 14, "src=")) == NULL)
+#endif /* TOMATO64 */
 						continue;
 
 					if ((inet_addr(p + 4) & mask) == lan) {
@@ -133,7 +137,11 @@ void asp_ctcount(int argc, char **argv)
 				t = s + 12;
 
 				if (rip != 0) {
+#ifdef TOMATO64
+					if ((p = strstr(t, "src=")) == NULL)
+#else
 					if ((p = strstr(t + 14, "src=")) == NULL)
+#endif /* TOMATO64 */
 						continue;
 
 					if (sscanf(p, "src=%s dst=%s", src, dst) != 2)
@@ -154,6 +162,14 @@ void asp_ctcount(int argc, char **argv)
 			if (mode == 0) {
 				/* count connections per state */
 				if (strncmp(t, "tcp", 3) == 0) {
+#ifdef TOMATO64
+					/* Flow-offloaded TCP entries lack a state string;
+					 * check for [OFFLOAD]/[HW_OFFLOAD] first.
+					 */
+					if (strstr(s, "OFFLOAD]") != NULL)
+						count[1]++; /* ESTABLISHED */
+					else
+#endif /* TOMATO64 */
 					for (i = 9; i >= 0; --i) {
 						if (strstr(s, states[i]) != NULL) {
 							count[i]++;
@@ -276,6 +292,28 @@ void asp_ctdump(int argc, char **argv)
 
 			if ((findmark != -1) && (mark != findmark))
 				continue;
+#ifdef TOMATO64
+#ifdef TCONFIG_IPV6
+			if (sscanf(s, "%*s %u %*s %u %u", &family, &proto, &time) != 3) {
+				/* Flow-offloaded entries lack the timeout field */
+				if (sscanf(s, "%*s %u %*s %u", &family, &proto) != 2)
+					continue;
+				time = 0;
+			}
+
+			if ((p = strstr(s + 14, "src=")) == NULL)
+				continue;
+#else
+			if (sscanf(s, "%*s %u %u", &proto, &time) != 2) {
+				if (sscanf(s, "%*s %u", &proto) != 1)
+					continue;
+				time = 0;
+			}
+
+			if ((p = strstr(s + 7, "src=")) == NULL)
+				continue;
+#endif
+#else /* TOMATO64 */
 #ifdef TCONFIG_IPV6
 			if (sscanf(s, "%*s %u %*s %u %u", &family, &proto, &time) != 3)
 				continue;
@@ -289,6 +327,7 @@ void asp_ctdump(int argc, char **argv)
 			if ((p = strstr(s + 14, "src=")) == NULL)
 				continue;
 #endif
+#endif /* TOMATO64 */
 			if (sscanf(p, "src=%s dst=%s %n", src, dst, &x) != 2)
 				continue;
 
@@ -448,6 +487,22 @@ void asp_ctrate(int argc, char **argv)
 
 	/* a = current, b = previous */
 	while (fgets(sa, sizeof(sa), a)) {
+#ifdef TOMATO64
+#ifdef TCONFIG_IPV6
+		if (sscanf(sa, "%*s %u %*s %u %u", &a_fam, &a_proto, &a_time) != 3) {
+			/* Flow-offloaded entries lack the timeout field */
+			if (sscanf(sa, "%*s %u %*s %u", &a_fam, &a_proto) != 2)
+				continue;
+			a_time = 0;
+		}
+#else
+		if (sscanf(sa, "%*s %u %u", &a_proto, &a_time) != 2) {
+			if (sscanf(sa, "%*s %u", &a_proto) != 1)
+				continue;
+			a_time = 0;
+		}
+#endif
+#else /* TOMATO64 */
 #ifdef TCONFIG_IPV6
 		if (sscanf(sa, "%*s %u %*s %u %u", &a_fam, &a_proto, &a_time) != 3)
 			continue;
@@ -455,6 +510,7 @@ void asp_ctrate(int argc, char **argv)
 		if (sscanf(sa, "%*s %u %u", &a_proto, &a_time) != 2)
 			continue;
 #endif
+#endif /* TOMATO64 */
 		if ((a_proto != 6) && (a_proto != 17))
 			continue;
 
@@ -505,6 +561,25 @@ void asp_ctrate(int argc, char **argv)
 		b_pos = ftell(b);
 		n = 0;
 		while (fgets(sb, sizeof(sb), b) && ++n < MAX_SEARCH) {
+#ifdef TOMATO64
+#ifdef TCONFIG_IPV6
+			if (sscanf(sb, "%*s %u %*s %u %u", &b_fam, &b_proto, &b_time) != 3) {
+				/* Flow-offloaded entries lack the timeout field */
+				if (sscanf(sb, "%*s %u %*s %u", &b_fam, &b_proto) != 2)
+					continue;
+				b_time = 0;
+			}
+
+			if ((b_fam != a_fam))
+				continue;
+#else
+			if (sscanf(sb, "%*s %u %u", &b_proto, &b_time) != 2) {
+				if (sscanf(sb, "%*s %u", &b_proto) != 1)
+					continue;
+				b_time = 0;
+			}
+#endif
+#else /* TOMATO64 */
 #ifdef TCONFIG_IPV6
 			if (sscanf(sb, "%*s %u %*s %u %u", &b_fam, &b_proto, &b_time) != 3)
 				continue;
@@ -515,6 +590,7 @@ void asp_ctrate(int argc, char **argv)
 			if (sscanf(sb, "%*s %u %u", &b_proto, &b_time) != 2)
 				continue;
 #endif
+#endif /* TOMATO64 */
 			if ((b_proto != a_proto))
 				continue;
 
