@@ -567,8 +567,7 @@ static int wg_quick_iface(char *iface, const char *file, const int up)
 	else
 		logmsg(LOG_DEBUG, "wireguard interface %s from file %s set %s", iface, file, up_down);
 
-	stop_dnsmasq();
-	start_dnsmasq();
+	restart_dnsmasq = 1;
 
 	return 0;
 }
@@ -1197,13 +1196,6 @@ static void wg_routing_policy(char *iface, char *route, char *fwmark, const int 
 		logmsg(LOG_INFO, "completed routing policy configuration for wireguard - interface %s - table %s", iface, fwmark);
 	}
 
-	/* restart services on start/stop if it's required */
-	if (restart_dnsmasq == 1) {
-		stop_dnsmasq();
-		start_dnsmasq();
-	}
-	if (restart_fw == 1)
-		restart_firewall();
 }
 
 static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *allowed_ips, const char *fwmark, const int add)
@@ -1526,6 +1518,10 @@ void start_wireguard(const int unit)
 
 	pidof_child = getpid();
 
+	/* forked children each have their own instance */
+	restart_dnsmasq = 0;
+	restart_fw = 0;
+
 	/* write child pid to a file */
 	memset(buffer, 0, BUF_SIZE);
 	snprintf(buffer, BUF_SIZE, "%d", pidof_child);
@@ -1645,16 +1641,32 @@ void start_wireguard(const int unit)
 
 	logmsg(LOG_INFO, "wireguard (%s) started", iface);
 
+	/* requests PID 1 to restart*/
+	if (restart_dnsmasq) {
+		logmsg(LOG_DEBUG, "*** %s: requesting dnsmasq restart from init", __FUNCTION__);
+		stop_service("dnsmasq");
+		start_service("dnsmasq");
+		restart_dnsmasq = 0;
+	}
+	if (restart_fw) {
+		logmsg(LOG_DEBUG, "*** %s: requesting firewall restart from init", __FUNCTION__);
+		simple_lock("firewall");
+		stop_service("firewall");
+		start_service("firewall");
+		simple_unlock("firewall");
+		restart_fw = 0;
+	}
+
 	eval("rm", "-f", wg_child_pid);
 
 	/* terminate the child */
-	exit(0);
+	_exit(0);
 
 out:
 	stop_wireguard(unit);
 
 	/* terminate the child */
-	exit(0);
+	_exit(0);
 }
 
 void stop_wireguard(const int unit)
@@ -1752,6 +1764,31 @@ void stop_wireguard(const int unit)
 	run_del_firewall_script(buffer, WG_DIR_DEL_SCRIPT);
 	eval("rm", "-rf", buffer);
 	simple_unlock("firewall");
+
+	/* restart if needed; PID 1 can restart directly , child must send request to pid 1 */
+	if (restart_dnsmasq) {
+		if (getpid() == 1) {
+			stop_dnsmasq();
+			start_dnsmasq();
+		}
+		else {
+			stop_service("dnsmasq");
+			start_service("dnsmasq");
+		}
+		restart_dnsmasq = 0;
+	}
+	if (restart_fw) {
+		simple_lock("firewall");
+		if (getpid() == 1) {
+			restart_firewall();
+		}
+		else {
+			stop_service("firewall");
+			start_service("firewall");
+		}
+		simple_unlock("firewall");
+		restart_fw = 0;
+	}
 
 	eval("rm", "-f", wg_child_pid);
 
