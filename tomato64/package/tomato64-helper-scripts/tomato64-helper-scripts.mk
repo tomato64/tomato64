@@ -16,6 +16,8 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/sbin/upgrade			$(TARGET_DIR)/sbin
 	$(INSTALL) -D -m 0755 $(@D)/sbin/zram				$(TARGET_DIR)/sbin
 
+	$(INSTALL) -D -m 0755 $(@D)/usr/sbin/net_utils			$(TARGET_DIR)/usr/sbin
+
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/expand_root_partition	$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/fudge_time			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/growpart			$(TARGET_DIR)/usr/bin

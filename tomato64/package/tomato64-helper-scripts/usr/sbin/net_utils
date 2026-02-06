@@ -1,0 +1,56 @@
+#!/bin/sh
+## Network utility functions shared across set_devs_* scripts
+
+# wait_for_interface <interface_name>
+# Polls /sys/class/net/$iface every 0.1s with a 10 second timeout
+# Returns 0 on success, 1 on timeout
+wait_for_interface() {
+	local iface=$1
+	local timeout=100  # 10 seconds (100 * 0.1s)
+	while [ $timeout -gt 0 ] && [ ! -d "/sys/class/net/$iface" ]; do
+		sleep 0.1
+		timeout=$((timeout - 1))
+	done
+	[ -d "/sys/class/net/$iface" ]
+}
+
+# increment_mac <mac_address>
+# Adds 1 to a MAC address
+# Input/output: uppercase colon-separated (e.g. AA:BB:CC:DD:EE:FF)
+increment_mac() {
+	local tmp=$1
+	tmp=$(echo $tmp | tr '[:lower:]' '[:upper:]' | tr -d ':')
+	tmp=$(printf '%d\n' 0x$tmp)
+	tmp=$(expr $tmp + 1)
+	tmp=$(printf '%X\n' $tmp)
+	tmp=$(echo $tmp | sed 's/../&:/g;s/:$//')
+	echo "$tmp"
+}
+
+# decrement_mac <mac_address>
+# Subtracts 1 from a MAC address
+# Input/output: uppercase colon-separated (e.g. AA:BB:CC:DD:EE:FF)
+decrement_mac() {
+	local tmp=$1
+	tmp=$(echo $tmp | tr '[:lower:]' '[:upper:]' | tr -d ':')
+	tmp=$(printf '%d\n' 0x$tmp)
+	tmp=$(expr $tmp - 1)
+	tmp=$(printf '%X\n' $tmp)
+	tmp=$(echo $tmp | sed 's/../&:/g;s/:$//')
+	echo "$tmp"
+}
+
+# macaddr_add <mac_address> <offset>
+# Adds an integer offset (positive or negative) to a MAC address
+# Input/output: uppercase colon-separated (e.g. AA:BB:CC:DD:EE:FF)
+macaddr_add() {
+	local mac=$1
+	local offset=$2
+
+	local mac_hex=$(echo "$mac" | tr -d ':')
+	local mac_dec=$(printf "%d" "0x${mac_hex}")
+
+	local new_dec=$((mac_dec + offset))
+
+	printf "%012X" "$new_dec" | sed 's/\(..\)/\1:/g; s/:$//'
+}

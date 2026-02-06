@@ -3,28 +3,16 @@
 set -e
 
 . /usr/sbin/nvram_ops
+. /usr/sbin/net_utils
 
-# Usage: wait_for_interface <interface_name>
-# Returns 0 on success, 1 on timeout
-wait_for_interface() {
-	local iface=$1
-	local timeout=100  # 10 seconds (100 * 0.1s)
-	while [ $timeout -gt 0 ] && [ ! -d "/sys/class/net/$iface" ]; do
-		sleep 0.1
-		timeout=$((timeout - 1))
-	done
-	[ -d "/sys/class/net/$iface" ]
-}
+# Load kernel modules early to give them time to initialize
+if [ "$(NG wed_offloading)" == "1" ]; then
+	modprobe mt7915e wed_enable=Y
+else
+	modprobe mt7915e
+fi
 
-increment_mac() {
-	tmp=$1
-	tmp=$(echo $tmp |  tr '[:lower:]' '[:upper:]' | tr -d ':')
-	tmp=$( printf '%d\n' 0x$tmp )
-	tmp=$( expr $tmp + 1 )
-	tmp=$( printf '%X\n' $tmp )
-	tmp=$(echo $tmp | sed 's/../&:/g;s/:$//')
-	echo "$tmp"
-}
+modprobe mt7921u
 
 # Wait for ethernet interfaces to be ready
 if ! wait_for_interface eth0; then
@@ -54,14 +42,3 @@ do
 	ip link set dev lan$p address $mac
 	echo "eth$p mac $mac" >> /etc/iftab
 done
-
-KERNEL_VERSION=$(uname -r)
-
-
-if [ "$(NG wed_offloading)" == "1" ]; then
-	modprobe mt7915e wed_enable=Y
-else
-	modprobe mt7915e
-fi
-
-modprobe mt7921u

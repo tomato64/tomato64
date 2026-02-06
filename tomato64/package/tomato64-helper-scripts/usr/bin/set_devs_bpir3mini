@@ -4,7 +4,9 @@ set -e
 set -x
 
 . /usr/sbin/nvram_ops
+. /usr/sbin/net_utils
 
+# Load kernel modules early to give them time to initialize
 modprobe pwm-fan
 modprobe air_en8811h
 modprobe aquantia
@@ -16,6 +18,15 @@ else
 fi
 
 modprobe mt7921u
+
+# Wait for ethernet interfaces to be ready
+if ! wait_for_interface eth0; then
+	logger -t set_devs_bpir3mini "ERROR: eth0 did not appear after 10 seconds"
+fi
+
+if ! wait_for_interface eth1; then
+	logger -t set_devs_bpir3mini "ERROR: eth1 did not appear after 10 seconds"
+fi
 
 if [ "$(NG set_macs)" != "1" ]; then
 

@@ -4,7 +4,9 @@ set -e
 set -x
 
 . /usr/sbin/nvram_ops
+. /usr/sbin/net_utils
 
+# Load kernel modules early to give them time to initialize
 modprobe pwm-fan
 modprobe aquantia
 
@@ -16,25 +18,25 @@ fi
 
 modprobe mt7921u
 
-increment_mac() {
-	tmp=$1
-	tmp=$(echo $tmp |  tr '[:lower:]' '[:upper:]' | tr -d ':')
-	tmp=$( printf '%d\n' 0x$tmp )
-	tmp=$( expr $tmp + 1 )
-	tmp=$( printf '%X\n' $tmp )
-	tmp=$(echo $tmp | sed 's/../&:/g;s/:$//')
-	echo "$tmp"
-}
+# Wait for ethernet interfaces to be ready
+if ! wait_for_interface eth0; then
+	logger -t set_devs_bpir3 "ERROR: eth0 did not appear after 10 seconds"
+fi
 
-decrement_mac() {
-	tmp=$1
-	tmp=$(echo $tmp | tr '[:lower:]' '[:upper:]' | tr -d ':')
-	tmp=$( printf '%d\n' 0x$tmp )
-	tmp=$( expr $tmp - 1 )
-	tmp=$( printf '%X\n' $tmp )
-	tmp=$(echo $tmp | sed 's/../&:/g;s/:$//')
-	echo "$tmp"
-}
+if ! wait_for_interface eth1; then
+	logger -t set_devs_bpir3 "ERROR: eth1 did not appear after 10 seconds"
+fi
+
+if ! wait_for_interface sfp2; then
+	logger -t set_devs_bpir3 "WARNING: sfp2 did not appear after 10 seconds"
+fi
+
+# Wait for DSA switch port interfaces
+for p in wan lan1 lan2 lan3 lan4; do
+	if ! wait_for_interface "$p"; then
+		logger -t set_devs_bpir3 "WARNING: $p did not appear after 10 seconds"
+	fi
+done
 
 mac=$(NG eth0macaddr)
 if [ -z "$mac" ]; then

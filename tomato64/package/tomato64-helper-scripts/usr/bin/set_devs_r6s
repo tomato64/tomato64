@@ -4,26 +4,20 @@ set -e
 set -x
 
 . /usr/sbin/nvram_ops
+. /usr/sbin/net_utils
 
+# Load kernel modules early to give them time to initialize
+modprobe mt7921u
+
+# Wait for ethernet interfaces to be ready
 # NanoPi R6S has 3 ethernet ports
 # eth2 has the constant hardware MAC (RTL8211F PHY on RGMII)
 # eth0 and eth1 are derived sequentially from eth2
-
-# Function to add offset to MAC address
-macaddr_add() {
-	local mac=$1
-	local offset=$2
-
-	# Remove colons and convert to decimal
-	local mac_hex=$(echo "$mac" | tr -d ':')
-	local mac_dec=$(printf "%d" "0x${mac_hex}")
-
-	# Add offset
-	local new_dec=$((mac_dec + offset))
-
-	# Convert back to hex and format as MAC
-	printf "%012X" "$new_dec" | sed 's/\(..\)/\1:/g; s/:$//'
-}
+for p in eth0 eth1 eth2; do
+	if ! wait_for_interface "$p"; then
+		logger -t set_devs_r6s "ERROR: $p did not appear after 10 seconds"
+	fi
+done
 
 if [ "$(NG set_macs)" != "1" ]; then
 
@@ -61,6 +55,3 @@ else
 	# eth2 already has its hardware MAC, no need to set
 
 fi
-
-# Load required modules
-modprobe mt7921u
