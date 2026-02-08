@@ -1413,7 +1413,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "smbd_user",			"nas"				, 0 },
 	{ "smbd_passwd",		""				, 0 },
 	{ "smbd_ifnames",		"br0"				, 0 },
+#ifndef TOMATO64
 	{ "smbd_protocol",		"2"				, 0 },	/* 0 - SMB1, 1 - SMB2, 2 - SMB1+SMB2 (default) */
+#else /* TOMATO64 */
+	{ "smbd_protocol",		"4"				, 0 },	/* 0 - SMB1, 1 - SMB2, 2 - SMB1+SMB2, 3 - SMB3, 4 - SMB2+SMB3 (default), 5 - SMB1+SMB2+SMB3 */
+#endif /* TOMATO64 */
 #ifdef TCONFIG_GROCTRL
 	{ "gro_disable",		"1"				, 0 },	/* GRO enalbe - 0 ; disable - 1 (default) */
 #endif
