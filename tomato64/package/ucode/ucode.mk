@@ -23,6 +23,7 @@ UCODE_CONF_OPTS = -DDEBUG_SUPPORT=OFF \
 		  -DUBUS_SUPPORT=ON \
 		  -DUCI_SUPPORT=ON \
 		  -DULOOP_SUPPORT=ON \
-		  -Dlibnl_tiny="$(STAGING_DIR)/usr/lib/libnl-tiny.so"
+		  -Dlibnl_tiny="$(STAGING_DIR)/usr/lib/libnl-tiny.so" \
+		  -Dnl_include_dir="$(STAGING_DIR)/usr/include/libnl-tiny"
 
 $(eval $(cmake-package))
