@@ -26,7 +26,7 @@
 //	<% nvram("vpn_server_eas,vpn_server_dns,vpn_server1_poll,vpn_server1_if,vpn_server1_proto,vpn_server1_port,vpn_server1_firewall,vpn_server1_sn,vpn_server1_nm,vpn_server1_local,vpn_server1_remote,vpn_server1_dhcp,vpn_server1_r1,vpn_server1_r2,vpn_server1_crypt,vpn_server1_comp,vpn_server1_digest,vpn_server1_cipher,vpn_server1_ncp_ciphers,vpn_server1_reneg,vpn_server1_hmac,vpn_server1_plan,vpn_server1_ccd,vpn_server1_c2c,vpn_server1_ccd_excl,vpn_server1_ccd_val,vpn_server1_pdns,vpn_server1_rgw,vpn_server1_userpass,vpn_server1_nocert,vpn_server1_users_val,vpn_server1_custom,vpn_server1_static,vpn_server1_ca,vpn_server1_ca_key,vpn_server1_crt,vpn_server1_crl,vpn_server1_key,vpn_server1_dh,vpn_server1_br,vpn_server1_ecdh,vpn_server2_poll,vpn_server2_if,vpn_server2_proto,vpn_server2_port,vpn_server2_firewall,vpn_server2_sn,vpn_server2_nm,vpn_server2_local,vpn_server2_remote,vpn_server2_dhcp,vpn_server2_r1,vpn_server2_r2,vpn_server2_crypt,vpn_server2_comp,vpn_server2_digest,vpn_server2_cipher,vpn_server2_ncp_ciphers,vpn_server2_reneg,vpn_server2_hmac,vpn_server2_plan,vpn_server2_ccd,vpn_server2_c2c,vpn_server2_ccd_excl,vpn_server2_ccd_val,vpn_server2_pdns,vpn_server2_rgw,vpn_server2_userpass,vpn_server2_nocert,vpn_server2_users_val,vpn_server2_custom,vpn_server2_static,vpn_server2_ca,vpn_server2_ca_key,vpn_server2_crt,vpn_server2_crl,vpn_server2_key,vpn_server2_dh,vpn_server2_br,vpn_server2_ecdh,lan_ifname"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("vpn_server_eas,vpn_server_dns,vpn_server1_poll,vpn_server1_if,vpn_server1_proto,vpn_server1_port,vpn_server1_firewall,vpn_server1_sn,vpn_server1_nm,vpn_server1_local,vpn_server1_remote,vpn_server1_dhcp,vpn_server1_r1,vpn_server1_r2,vpn_server1_crypt,vpn_server1_comp,vpn_server1_digest,vpn_server1_cipher,vpn_server1_ncp_ciphers,vpn_server1_reneg,vpn_server1_hmac,vpn_server1_plan,vpn_server1_ccd,vpn_server1_c2c,vpn_server1_ccd_excl,vpn_server1_ccd_val,vpn_server1_pdns,vpn_server1_rgw,vpn_server1_userpass,vpn_server1_nocert,vpn_server1_users_val,vpn_server1_custom,vpn_server1_static,vpn_server1_ca,vpn_server1_ca_key,vpn_server1_crt,vpn_server1_crl,vpn_server1_key,vpn_server1_dh,vpn_server1_br,vpn_server1_ecdh,vpn_server2_poll,vpn_server2_if,vpn_server2_proto,vpn_server2_port,vpn_server2_firewall,vpn_server2_sn,vpn_server2_nm,vpn_server2_local,vpn_server2_remote,vpn_server2_dhcp,vpn_server2_r1,vpn_server2_r2,vpn_server2_crypt,vpn_server2_comp,vpn_server2_digest,vpn_server2_cipher,vpn_server2_ncp_ciphers,vpn_server2_reneg,vpn_server2_hmac,vpn_server2_plan,vpn_server2_ccd,vpn_server2_c2c,vpn_server2_ccd_excl,vpn_server2_ccd_val,vpn_server2_pdns,vpn_server2_rgw,vpn_server2_userpass,vpn_server2_nocert,vpn_server2_users_val,vpn_server2_custom,vpn_server2_static,vpn_server2_ca,vpn_server2_ca_key,vpn_server2_crt,vpn_server2_crl,vpn_server2_key,vpn_server2_dh,vpn_server2_br,vpn_server2_ecdh,vpn_server3_poll,vpn_server3_if,vpn_server3_proto,vpn_server3_port,vpn_server3_firewall,vpn_server3_sn,vpn_server3_nm,vpn_server3_local,vpn_server3_remote,vpn_server3_dhcp,vpn_server3_r1,vpn_server3_r2,vpn_server3_crypt,vpn_server3_comp,vpn_server3_digest,vpn_server3_cipher,vpn_server3_ncp_ciphers,vpn_server3_reneg,vpn_server3_hmac,vpn_server3_plan,vpn_server3_ccd,vpn_server3_c2c,vpn_server3_ccd_excl,vpn_server3_ccd_val,vpn_server3_pdns,vpn_server3_rgw,vpn_server3_userpass,vpn_server3_nocert,vpn_server3_users_val,vpn_server3_custom,vpn_server3_static,vpn_server3_ca,vpn_server3_ca_key,vpn_server3_crt,vpn_server3_crl,vpn_server3_key,vpn_server3_dh,vpn_server3_br,vpn_server3_ecdh,vpn_server4_poll,vpn_server4_if,vpn_server4_proto,vpn_server4_port,vpn_server4_firewall,vpn_server4_sn,vpn_server4_nm,vpn_server4_local,vpn_server4_remote,vpn_server4_dhcp,vpn_server4_r1,vpn_server4_r2,vpn_server4_crypt,vpn_server4_comp,vpn_server4_digest,vpn_server4_cipher,vpn_server4_ncp_ciphers,vpn_server4_reneg,vpn_server4_hmac,vpn_server4_plan,vpn_server4_ccd,vpn_server4_c2c,vpn_server4_ccd_excl,vpn_server4_ccd_val,vpn_server4_pdns,vpn_server4_rgw,vpn_server4_userpass,vpn_server4_nocert,vpn_server4_users_val,vpn_server4_custom,vpn_server4_static,vpn_server4_ca,vpn_server4_ca_key,vpn_server4_crt,vpn_server4_crl,vpn_server4_key,vpn_server4_dh,vpn_server4_br,vpn_server4_ecdh,lan_ifname"); %>
+//	<% nvram("vpn_server_eas,vpn_server_dns,vpn_server1_poll,vpn_server1_if,vpn_server1_proto,vpn_server1_port,vpn_server1_firewall,vpn_server1_sn,vpn_server1_nm,vpn_server1_local,vpn_server1_remote,vpn_server1_dhcp,vpn_server1_r1,vpn_server1_r2,vpn_server1_crypt,vpn_server1_comp,vpn_server1_digest,vpn_server1_cipher,vpn_server1_ncp_ciphers,vpn_server1_reneg,vpn_server1_hmac,vpn_server1_plan,vpn_server1_ccd,vpn_server1_c2c,vpn_server1_ccd_excl,vpn_server1_ccd_val,vpn_server1_pdns,vpn_server1_rgw,vpn_server1_userpass,vpn_server1_nocert,vpn_server1_users_val,vpn_server1_custom,vpn_server1_static,vpn_server1_ca,vpn_server1_ca_key,vpn_server1_crt,vpn_server1_crl,vpn_server1_key,vpn_server1_dh,vpn_server1_br,vpn_server1_ecdh,vpn_server2_poll,vpn_server2_if,vpn_server2_proto,vpn_server2_port,vpn_server2_firewall,vpn_server2_sn,vpn_server2_nm,vpn_server2_local,vpn_server2_remote,vpn_server2_dhcp,vpn_server2_r1,vpn_server2_r2,vpn_server2_crypt,vpn_server2_comp,vpn_server2_digest,vpn_server2_cipher,vpn_server2_ncp_ciphers,vpn_server2_reneg,vpn_server2_hmac,vpn_server2_plan,vpn_server2_ccd,vpn_server2_c2c,vpn_server2_ccd_excl,vpn_server2_ccd_val,vpn_server2_pdns,vpn_server2_rgw,vpn_server2_userpass,vpn_server2_nocert,vpn_server2_users_val,vpn_server2_custom,vpn_server2_static,vpn_server2_ca,vpn_server2_ca_key,vpn_server2_crt,vpn_server2_crl,vpn_server2_key,vpn_server2_dh,vpn_server2_br,vpn_server2_ecdh,vpn_server3_poll,vpn_server3_if,vpn_server3_proto,vpn_server3_port,vpn_server3_firewall,vpn_server3_sn,vpn_server3_nm,vpn_server3_local,vpn_server3_remote,vpn_server3_dhcp,vpn_server3_r1,vpn_server3_r2,vpn_server3_crypt,vpn_server3_comp,vpn_server3_digest,vpn_server3_cipher,vpn_server3_ncp_ciphers,vpn_server3_reneg,vpn_server3_hmac,vpn_server3_plan,vpn_server3_ccd,vpn_server3_c2c,vpn_server3_ccd_excl,vpn_server3_ccd_val,vpn_server3_pdns,vpn_server3_rgw,vpn_server3_userpass,vpn_server3_nocert,vpn_server3_users_val,vpn_server3_custom,vpn_server3_static,vpn_server3_ca,vpn_server3_ca_key,vpn_server3_crt,vpn_server3_crl,vpn_server3_key,vpn_server3_dh,vpn_server3_br,vpn_server3_ecdh,vpn_server4_poll,vpn_server4_if,vpn_server4_proto,vpn_server4_port,vpn_server4_firewall,vpn_server4_sn,vpn_server4_nm,vpn_server4_local,vpn_server4_remote,vpn_server4_dhcp,vpn_server4_r1,vpn_server4_r2,vpn_server4_crypt,vpn_server4_comp,vpn_server4_digest,vpn_server4_cipher,vpn_server4_ncp_ciphers,vpn_server4_reneg,vpn_server4_hmac,vpn_server4_plan,vpn_server4_ccd,vpn_server4_c2c,vpn_server4_ccd_excl,vpn_server4_ccd_val,vpn_server4_pdns,vpn_server4_rgw,vpn_server4_userpass,vpn_server4_nocert,vpn_server4_users_val,vpn_server4_custom,vpn_server4_static,vpn_server4_ca,vpn_server4_ca_key,vpn_server4_crt,vpn_server4_crl,vpn_server4_key,vpn_server4_dh,vpn_server4_br,vpn_server4_ecdh,vpn_server1_dco,vpn_server2_dco,vpn_server3_dco,vpn_server4_dco,lan_ifname"); %>
 /* TOMATO64-END */
 
 var changed = 0, i;
@@ -674,6 +674,18 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_f_vpn_'+t+'_pdns'), auth == 'tls' && dns );
 		elem.display(PR('_vpn_'+t+'_ncp_ciphers'), auth == 'tls');
 		elem.display(PR('_vpn_'+t+'_cipher'), auth == 'secret');
+/* TOMATO64-BEGIN */
+		var proto = E('_vpn_'+t+'_proto').value;
+		var dco_vis = iface == 'tun' && auth == 'tls' && proto.indexOf('udp') >= 0;
+		elem.display(PR('_f_vpn_'+t+'_dco'), dco_vis);
+		var dco_checked = E('_f_vpn_'+t+'_dco').checked;
+		if (dco_vis && dco_checked) {
+			E('_vpn_'+t+'_comp').value = '-1';
+			E('_vpn_'+t+'_comp').disabled = 1;
+		} else {
+			E('_vpn_'+t+'_comp').disabled = 0;
+		}
+/* TOMATO64-END */
 /* KEYGEN-BEGIN */
 		elem.display(PR('_vpn_client_gen_'+t+'_button'), auth != 'custom');
 		elem.display(PR('_vpn_'+t+'_serial'), auth == 'tls' && !userpass);
@@ -798,6 +810,27 @@ function save() {
 		fom['vpn_'+t+'_users_val'].value = users;
 		fom['vpn_'+t+'_pdns'].value = E('_f_vpn_'+t+'_pdns').checked ? 1 : 0;
 		fom['vpn_'+t+'_rgw'].value = E('_f_vpn_'+t+'_rgw').checked ? 1 : 0;
+/* TOMATO64-BEGIN */
+		fom['vpn_'+t+'_dco'].value = E('_f_vpn_'+t+'_dco').checked ? 1 : 0;
+		if (E('_f_vpn_'+t+'_dco').checked) {
+			if (E('_vpn_'+t+'_comp').value != '-1') {
+				alert('DCO requires compression to be Disabled.');
+				return;
+			}
+			var ciphers = E('_vpn_'+t+'_ncp_ciphers').value;
+			if (ciphers != '') {
+				var valid_ciphers = ['AES-128-GCM','AES-192-GCM','AES-256-GCM','CHACHA20-POLY1305'];
+				var cipher_list = ciphers.split(':');
+				for (var ci = 0; ci < cipher_list.length; ci++) {
+					var c = cipher_list[ci].trim().toUpperCase();
+					if (c != '' && valid_ciphers.indexOf(c) < 0) {
+						alert('DCO only supports AEAD ciphers (AES-128-GCM, AES-256-GCM, CHACHA20-POLY1305).\nIncompatible cipher found: ' + cipher_list[ci].trim());
+						return;
+					}
+				}
+			}
+		}
+/* TOMATO64-END */
 /* KEYGEN-BEGIN */
 		var is_rsa = 0, is_ecdh = 0;
 		var ca_key = E('_vpn_'+t+'_ca_key').value;
@@ -965,6 +998,9 @@ function init() {
 /* KEYGEN-BEGIN */
 			W('<input type="hidden" name="vpn_'+t+'_ecdh">');
 /* KEYGEN-END */
+/* TOMATO64-BEGIN */
+			W('<input type="hidden" name="vpn_'+t+'_dco">');
+/* TOMATO64-END */
 
 			W('<ul class="tabs">');
 			for (j = 0; j < sections.length; j++) {
@@ -1040,6 +1076,10 @@ function init() {
 				{ title: 'Allow User/Pass Auth', name: 'f_vpn_'+t+'_userpass', type: 'checkbox', value: nvram['vpn_'+t+'_userpass'] != 0 },
 				{ title: 'Allow Only User/Pass (without cert) Auth', name: 'f_vpn_'+t+'_nocert', type: 'checkbox', value: nvram['vpn_'+t+'_nocert'] != 0 },
 				{ title: '', suffix: '<div class="tomato-grid" id="table_'+t+'_users"><\/div>' },
+/* TOMATO64-BEGIN */
+				{ title: 'Data Channel Offload (DCO)', name: 'f_vpn_'+t+'_dco', type: 'checkbox', value: nvram['vpn_'+t+'_dco'] != 0,
+					suffix: ' <small>requires TUN, UDP, and AEAD ciphers<\/small>' },
+/* TOMATO64-END */
 				{ title: 'Custom Configuration', name: 'vpn_'+t+'_custom', type: 'textarea', value: nvram['vpn_'+t+'_custom'] }
 			]);
 			W('<\/div>');

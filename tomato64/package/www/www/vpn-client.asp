@@ -24,7 +24,12 @@
 
 <script>
 
+/* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("vpn_client_eas,vpn_client1_poll,vpn_client1_tchk,vpn_client1_if,vpn_client1_bridge,vpn_client1_nat,vpn_client1_proto,vpn_client1_addr,vpn_client1_port,vpn_client1_retry,vpn_client1_firewall,vpn_client1_crypt,vpn_client1_comp,vpn_client1_cipher,vpn_client1_ncp_ciphers,vpn_client1_local,vpn_client1_remote,vpn_client1_nm,vpn_client1_reneg,vpn_client1_hmac,vpn_client1_adns,vpn_client1_rgw,vpn_client1_gw,vpn_client1_custom,vpn_client1_static,vpn_client1_ca,vpn_client1_crt,vpn_client1_key,vpn_client1_userauth,vpn_client1_username,vpn_client1_password,vpn_client1_useronly,vpn_client1_tlsremote,vpn_client1_cn,vpn_client1_br,vpn_client1_digest,vpn_client1_routing_val,vpn_client1_fw,vpn_client1_tlsvername,vpn_client1_prio,vpn_client2_poll,vpn_client2_tchk,vpn_client2_if,vpn_client2_bridge,vpn_client2_nat,vpn_client2_proto,vpn_client2_addr,vpn_client2_port,vpn_client2_retry,vpn_client2_firewall,vpn_client2_crypt,vpn_client2_comp,vpn_client2_cipher,vpn_client2_ncp_ciphers,vpn_client2_local,vpn_client2_remote,vpn_client2_nm,vpn_client2_reneg,vpn_client2_hmac,vpn_client2_adns,vpn_client2_rgw,vpn_client2_gw,vpn_client2_custom,vpn_client2_static,vpn_client2_ca,vpn_client2_crt,vpn_client2_key,vpn_client2_userauth,vpn_client2_username,vpn_client2_password,vpn_client2_useronly,vpn_client2_tlsremote,vpn_client2_cn,vpn_client2_br,vpn_client2_digest,vpn_client2_routing_val,vpn_client2_fw,vpn_client2_tlsvername,vpn_client2_prio,vpn_client3_poll,vpn_client3_tchk,vpn_client3_if,vpn_client3_bridge,vpn_client3_nat,vpn_client3_proto,vpn_client3_addr,vpn_client3_port,vpn_client3_retry,vpn_client3_firewall,vpn_client3_crypt,vpn_client3_comp,vpn_client3_cipher,vpn_client3_ncp_ciphers,vpn_client3_local,vpn_client3_remote,vpn_client3_nm,vpn_client3_reneg,vpn_client3_hmac,vpn_client3_adns,vpn_client3_rgw,vpn_client3_gw,vpn_client3_custom,vpn_client3_static,vpn_client3_ca,vpn_client3_crt,vpn_client3_key,vpn_client3_userauth,vpn_client3_username,vpn_client3_password,vpn_client3_useronly,vpn_client3_tlsremote,vpn_client3_cn,vpn_client3_br,vpn_client3_digest,vpn_client3_routing_val,vpn_client3_fw,vpn_client3_tlsvername,vpn_client3_prio,lan_ifname"); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+//	<% nvram("vpn_client_eas,vpn_client1_poll,vpn_client1_tchk,vpn_client1_if,vpn_client1_bridge,vpn_client1_nat,vpn_client1_proto,vpn_client1_addr,vpn_client1_port,vpn_client1_retry,vpn_client1_firewall,vpn_client1_crypt,vpn_client1_comp,vpn_client1_cipher,vpn_client1_ncp_ciphers,vpn_client1_local,vpn_client1_remote,vpn_client1_nm,vpn_client1_reneg,vpn_client1_hmac,vpn_client1_adns,vpn_client1_rgw,vpn_client1_gw,vpn_client1_custom,vpn_client1_static,vpn_client1_ca,vpn_client1_crt,vpn_client1_key,vpn_client1_userauth,vpn_client1_username,vpn_client1_password,vpn_client1_useronly,vpn_client1_tlsremote,vpn_client1_cn,vpn_client1_br,vpn_client1_digest,vpn_client1_routing_val,vpn_client1_fw,vpn_client1_tlsvername,vpn_client1_prio,vpn_client2_poll,vpn_client2_tchk,vpn_client2_if,vpn_client2_bridge,vpn_client2_nat,vpn_client2_proto,vpn_client2_addr,vpn_client2_port,vpn_client2_retry,vpn_client2_firewall,vpn_client2_crypt,vpn_client2_comp,vpn_client2_cipher,vpn_client2_ncp_ciphers,vpn_client2_local,vpn_client2_remote,vpn_client2_nm,vpn_client2_reneg,vpn_client2_hmac,vpn_client2_adns,vpn_client2_rgw,vpn_client2_gw,vpn_client2_custom,vpn_client2_static,vpn_client2_ca,vpn_client2_crt,vpn_client2_key,vpn_client2_userauth,vpn_client2_username,vpn_client2_password,vpn_client2_useronly,vpn_client2_tlsremote,vpn_client2_cn,vpn_client2_br,vpn_client2_digest,vpn_client2_routing_val,vpn_client2_fw,vpn_client2_tlsvername,vpn_client2_prio,vpn_client3_poll,vpn_client3_tchk,vpn_client3_if,vpn_client3_bridge,vpn_client3_nat,vpn_client3_proto,vpn_client3_addr,vpn_client3_port,vpn_client3_retry,vpn_client3_firewall,vpn_client3_crypt,vpn_client3_comp,vpn_client3_cipher,vpn_client3_ncp_ciphers,vpn_client3_local,vpn_client3_remote,vpn_client3_nm,vpn_client3_reneg,vpn_client3_hmac,vpn_client3_adns,vpn_client3_rgw,vpn_client3_gw,vpn_client3_custom,vpn_client3_static,vpn_client3_ca,vpn_client3_crt,vpn_client3_key,vpn_client3_userauth,vpn_client3_username,vpn_client3_password,vpn_client3_useronly,vpn_client3_tlsremote,vpn_client3_cn,vpn_client3_br,vpn_client3_digest,vpn_client3_routing_val,vpn_client3_fw,vpn_client3_tlsvername,vpn_client3_prio,vpn_client1_dco,vpn_client2_dco,vpn_client3_dco,lan_ifname"); %>
+/* TOMATO64-END */
 
 var changed = 0, i;
 var unitCount = OVPN_CLIENT_COUNT;
@@ -311,6 +316,18 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_vpn_'+t+'_ncp_ciphers'), auth == 'tls');
 		elem.display(PR('_vpn_'+t+'_cipher'), auth == 'secret');
 		elem.display(PR('_vpn_'+t+'_prio'), rgw > 1);
+/* TOMATO64-BEGIN */
+		var proto = E('_vpn_'+t+'_proto').value;
+		var dco_vis = iface == 'tun' && auth == 'tls' && proto.indexOf('udp') >= 0;
+		elem.display(PR('_f_vpn_'+t+'_dco'), dco_vis);
+		var dco_checked = E('_f_vpn_'+t+'_dco').checked;
+		if (dco_vis && dco_checked) {
+			E('_vpn_'+t+'_comp').value = '-1';
+			E('_vpn_'+t+'_comp').disabled = 1;
+		} else {
+			E('_vpn_'+t+'_comp').disabled = 0;
+		}
+/* TOMATO64-END */
 
 		/* Page Routing Policy */
 		elem.display(E('_vpn_'+t+'_routing_div_help'), !rtable);
@@ -380,6 +397,27 @@ function save() {
 		fom['vpn_'+t+'_tlsremote'].value = E('_f_vpn_'+t+'_tlsremote').checked ? 1 : 0;
 		fom['vpn_'+t+'_tchk'].value = E('_f_vpn_'+t+'_tchk').checked ? 1 : 0;
 		fom['vpn_'+t+'_routing_val'].value = routing;
+/* TOMATO64-BEGIN */
+		fom['vpn_'+t+'_dco'].value = E('_f_vpn_'+t+'_dco').checked ? 1 : 0;
+		if (E('_f_vpn_'+t+'_dco').checked) {
+			if (E('_vpn_'+t+'_comp').value != '-1') {
+				alert('DCO requires compression to be Disabled.');
+				return;
+			}
+			var ciphers = E('_vpn_'+t+'_ncp_ciphers').value;
+			if (ciphers != '') {
+				var valid_ciphers = ['AES-128-GCM','AES-192-GCM','AES-256-GCM','CHACHA20-POLY1305'];
+				var cipher_list = ciphers.split(':');
+				for (var ci = 0; ci < cipher_list.length; ci++) {
+					var c = cipher_list[ci].trim().toUpperCase();
+					if (c != '' && valid_ciphers.indexOf(c) < 0) {
+						alert('DCO only supports AEAD ciphers (AES-128-GCM, AES-256-GCM, CHACHA20-POLY1305).\nIncompatible cipher found: ' + cipher_list[ci].trim());
+						return;
+					}
+				}
+			}
+		}
+/* TOMATO64-END */
 
 		nvram['vpn_'+t+'_rgw'] = E('_vpn_'+t+'_rgw').value;
 	}
@@ -490,6 +528,9 @@ function init() {
 			W('<input type="hidden" name="vpn_'+t+'_tlsremote">');
 			W('<input type="hidden" name="vpn_'+t+'_tchk">');
 			W('<input type="hidden" name="vpn_'+t+'_routing_val">');
+/* TOMATO64-BEGIN */
+			W('<input type="hidden" name="vpn_'+t+'_dco">');
+/* TOMATO64-END */
 
 			W('<ul class="tabs">');
 			for (j = 0; j < sections.length; j++)
@@ -558,6 +599,10 @@ function init() {
 				{ title: 'Verify Server Certificate Name<br>(verify-x509-name)', multi: [
 					{ name: 'vpn_'+t+'_tlsvername', type: 'select', options: [[0,'No'],[1,'Common Name'],[2,'Common Name Prefix'],[3,'Subject']], value: nvram['vpn_'+t+'_tlsvername'] },
 					{ name: 'vpn_'+t+'_cn', type: 'text', maxlen: 255, size: 54, value: nvram['vpn_'+t+'_cn'], prefix: '<span id="client_'+t+'_cn">&nbsp;:&nbsp', suffix: '<\/span>'} ] },
+/* TOMATO64-BEGIN */
+				{ title: 'Data Channel Offload (DCO)', name: 'f_vpn_'+t+'_dco', type: 'checkbox', value: nvram['vpn_'+t+'_dco'] != 0,
+					suffix: ' <small>requires TUN, UDP, and AEAD ciphers<\/small>' },
+/* TOMATO64-END */
 				{ title: 'Custom Configuration', name: 'vpn_'+t+'_custom', type: 'textarea', value: nvram['vpn_'+t+'_custom'] }
 			]);
 			W('<\/div>');

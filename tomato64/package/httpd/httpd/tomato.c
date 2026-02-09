@@ -1525,6 +1525,9 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server1_dh",		V_NONE				},
 	{ "vpn_server1_br",		V_LENGTH(0, 50)			},
 	{ "vpn_server1_ecdh",		V_01				},	/* when using ECDH */
+#ifdef TOMATO64
+	{ "vpn_server1_dco",		V_01				},
+#endif /* TOMATO64 */
 	{ "vpn_server2_poll",		V_RANGE(0, 30)			},
 	{ "vpn_server2_if",		V_TEXT(3, 3)			},	/* tap, tun */
 	{ "vpn_server2_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
@@ -1565,6 +1568,9 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server2_br",		V_LENGTH(0, 50)			},
 	{ "vpn_server2_ecdh",		V_01				},	/* when using ECDH */
 #ifdef TOMATO64
+	{ "vpn_server2_dco",		V_01				},
+#endif /* TOMATO64 */
+#ifdef TOMATO64
 	{ "vpn_server3_poll",		V_RANGE(0, 30)			},
 	{ "vpn_server3_if",		V_TEXT(3, 3)			},	/* tap, tun */
 	{ "vpn_server3_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
@@ -1604,6 +1610,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server3_dh",		V_NONE				},
 	{ "vpn_server3_br",		V_LENGTH(0, 50)			},
 	{ "vpn_server3_ecdh",		V_01				},	/* when using ECDH */
+	{ "vpn_server3_dco",		V_01				},
 	{ "vpn_server4_poll",		V_RANGE(0, 30)			},
 	{ "vpn_server4_if",		V_TEXT(3, 3)			},	/* tap, tun */
 	{ "vpn_server4_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
@@ -1643,6 +1650,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server4_dh",		V_NONE				},
 	{ "vpn_server4_br",		V_LENGTH(0, 50)			},
 	{ "vpn_server4_ecdh",		V_01				},	/* when using ECDH */
+	{ "vpn_server4_dco",		V_01				},
 #endif /* TOMATO64 */
 	{ "vpn_client_eas",		V_NONE				},
 	{ "vpn_client1_poll",		V_RANGE(0, 30)			},
@@ -1684,6 +1692,9 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_client1_routing_val",	V_NONE				},
 	{ "vpn_client1_fw",		V_01				},
 	{ "vpn_client1_prio",		V_NONE				},
+#ifdef TOMATO64
+	{ "vpn_client1_dco",		V_01				},
+#endif /* TOMATO64 */
 	{ "vpn_client2_poll",		V_RANGE(0, 30)			},
 	{ "vpn_client2_tchk",		V_01				},	/* check if tunnel is up */
 	{ "vpn_client2_if",		V_TEXT(3, 3)			},	/* tap, tun */
@@ -1723,6 +1734,9 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_client2_routing_val",	V_NONE				},
 	{ "vpn_client2_fw",		V_01				},
 	{ "vpn_client2_prio",		V_NONE				},
+#ifdef TOMATO64
+	{ "vpn_client2_dco",		V_01				},
+#endif /* TOMATO64 */
 #ifdef TCONFIG_BCMARM
 	{ "vpn_client3_poll",		V_RANGE(0, 30)			},
 	{ "vpn_client3_tchk",		V_01				},	/* check if tunnel is up */
@@ -1763,6 +1777,9 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_client3_routing_val",	V_NONE				},
 	{ "vpn_client3_fw",		V_01				},
 	{ "vpn_client3_prio",		V_NONE				},
+#ifdef TOMATO64
+	{ "vpn_client3_dco",		V_01				},
+#endif /* TOMATO64 */
 #endif
 #endif /* TCONFIG_OPENVPN */
 

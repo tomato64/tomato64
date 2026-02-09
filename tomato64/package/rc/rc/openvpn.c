@@ -270,10 +270,17 @@ void start_ovpn_client(int unit)
 	ovpn_setup_dirs(OVPN_TYPE_CLIENT, unit);
 
 	/* Setup interface */
+#ifdef TOMATO64
+	/* DCO creates its own interface */
+	if (!atoi(getNVRAMVar("vpn_client%d_dco", unit))) {
+#endif /* TOMATO64 */
 	if (ovpn_setup_iface(iface, if_type, route_mode, unit, OVPN_TYPE_CLIENT)) {
 		stop_ovpn_client(unit);
 		return;
 	}
+#ifdef TOMATO64
+	}
+#endif /* TOMATO64 */
 
 	userauth = atoi(getNVRAMVar("vpn_client%d_userauth", unit));
 	useronly = userauth && atoi(getNVRAMVar("vpn_client%d_useronly", unit));
@@ -297,6 +304,16 @@ void start_ovpn_client(int unit)
 	            "persist-tun\n",
 	            unit,
 	            iface);
+
+#ifdef TOMATO64
+	/* DCO - Data Channel Offload */
+	if (atoi(getNVRAMVar("vpn_client%d_dco", unit))) {
+		modprobe("ovpn_dco_v2");
+	}
+	else {
+		fprintf(fp, "disable-dco\n");
+	}
+#endif /* TOMATO64 */
 
 	if (auth_mode == OVPN_AUTH_TLS)
 		fprintf(fp, "client\n");
@@ -784,10 +801,17 @@ void start_ovpn_server(int unit)
 	ovpn_setup_dirs(OVPN_TYPE_SERVER, unit);
 
 	/* Setup interface */
+#ifdef TOMATO64
+	/* DCO creates its own interface */
+	if (!atoi(getNVRAMVar("vpn_server%d_dco", unit))) {
+#endif /* TOMATO64 */
 	if (ovpn_setup_iface(iface, if_type, 1, unit, OVPN_TYPE_SERVER)) {
 		stop_ovpn_server(unit);
 		return;
 	}
+#ifdef TOMATO64
+	}
+#endif /* TOMATO64 */
 
 	/* Build and write config files */
 	memset(buffer, 0, BUF_SIZE);
@@ -810,6 +834,16 @@ void start_ovpn_server(int unit)
 	            unit,
 	            atoi(getNVRAMVar("vpn_server%d_port", unit)),
 	            iface);
+
+#ifdef TOMATO64
+	/* DCO - Data Channel Offload */
+	if (atoi(getNVRAMVar("vpn_server%d_dco", unit))) {
+		modprobe("ovpn_dco_v2");
+	}
+	else {
+		fprintf(fp, "disable-dco\n");
+	}
+#endif /* TOMATO64 */
 
 #ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 	if (auth_mode == OVPN_AUTH_TLS) {

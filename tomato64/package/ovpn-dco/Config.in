@@ -1,0 +1,4 @@
+config BR2_PACKAGE_OVPN_DCO
+	bool "ovpn-dco"
+	help
+	  OpenVPN Data Channel Offload kernel module

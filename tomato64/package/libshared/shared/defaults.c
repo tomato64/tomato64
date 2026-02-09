@@ -1528,6 +1528,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_server1_dh",		""				, 0 },
 	{ "vpn_server1_br",		"br0"				, 0 },
 	{ "vpn_server1_ecdh",		"0"				, 0 },
+#ifdef TOMATO64
+	{ "vpn_server1_dco",		"0"				, 0 },
+#endif /* TOMATO64 */
 	{ "vpn_server2_poll",		"0"				, 0 },
 	{ "vpn_server2_if",		"tun"				, 0 },
 	{ "vpn_server2_proto",		"udp"				, 0 },
@@ -1575,6 +1578,10 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_server2_br",		"br0"				, 0 },
 	{ "vpn_server2_ecdh",		"0"				, 0 },
 #ifdef TOMATO64
+	{ "vpn_server2_dco",		"0"				, 0 },
+
+#endif /* TOMATO64 */
+#ifdef TOMATO64
 	{ "vpn_server3_poll",		"0"				, 0 },
 	{ "vpn_server3_if",		"tun"				, 0 },
 	{ "vpn_server3_proto",		"udp"				, 0 },
@@ -1621,6 +1628,8 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_server3_dh",		""				, 0 },
 	{ "vpn_server3_br",		"br0"				, 0 },
 	{ "vpn_server3_ecdh",		"0"				, 0 },
+	{ "vpn_server3_dco",		"0"				, 0 },
+
 	{ "vpn_server4_poll",		"0"				, 0 },
 	{ "vpn_server4_if",		"tun"				, 0 },
 	{ "vpn_server4_proto",		"udp"				, 0 },
@@ -1667,6 +1676,8 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_server4_dh",		""				, 0 },
 	{ "vpn_server4_br",		"br0"				, 0 },
 	{ "vpn_server4_ecdh",		"0"				, 0 },
+	{ "vpn_server4_dco",		"0"				, 0 },
+
 #endif /* TOMATO64 */
 	{ "vpn_client_eas",		""				, 0 },
 	{ "vpn_client1_poll",		"0"				, 0 },
@@ -1708,6 +1719,10 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_client1_fw",		"1"				, 0 },
 	{ "vpn_client1_tlsvername",	"0"				, 0 },
 	{ "vpn_client1_prio",		""				, 0 },
+#ifdef TOMATO64
+	{ "vpn_client1_dco",		"0"				, 0 },
+
+#endif /* TOMATO64 */
 	{ "vpn_client2_poll",		"0"				, 0 },
 	{ "vpn_client2_tchk",		"0"				, 0 },	/* check if tunnel is up */
 	{ "vpn_client2_if",		"tun"				, 0 },
@@ -1747,6 +1762,10 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_client2_fw",		"1"				, 0 },
 	{ "vpn_client2_tlsvername",	"0"				, 0 },
 	{ "vpn_client2_prio",		""				, 0 },
+#ifdef TOMATO64
+	{ "vpn_client2_dco",		"0"				, 0 },
+
+#endif /* TOMATO64 */
 #ifdef TCONFIG_BCMARM
 	{ "vpn_client3_poll",		"0"				, 0 },
 	{ "vpn_client3_tchk",		"0"				, 0 },	/* check if tunnel is up */
@@ -1787,6 +1806,10 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpn_client3_fw",		"1"				, 0 },
 	{ "vpn_client3_tlsvername",	"0"				, 0 },
 	{ "vpn_client3_prio",		""				, 0 },
+#ifdef TOMATO64
+	{ "vpn_client3_dco",		"0"				, 0 },
+
+#endif /* TOMATO64 */
 #endif /* TCONFIG_BCMARM */
 #endif /* TCONFIG_OPENVPN */
 
