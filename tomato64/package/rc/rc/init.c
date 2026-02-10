@@ -12016,9 +12016,6 @@ static void sysinit(void)
 #ifdef TOMATO64
 	eval("/usr/bin/nic_count");
 	eval("/usr/bin/set_macs");
-#ifdef TOMATO64_X86_64
-	eval("/usr/bin/fudge_time");
-#endif /* TOMATO64_X86_64 */
 	eval("/usr/bin/start_qemu_guest");
 #endif /* TOMATO64 */
 

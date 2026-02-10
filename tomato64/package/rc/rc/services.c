@@ -2005,7 +2005,16 @@ void stop_ntpd(void)
 
 int ntpd_synced_main(int argc, char *argv[])
 {
+#ifndef TOMATO64
 	if (!nvram_match("ntp_ready", "1") && (argc == 2 && !strcmp(argv[1], "step"))) {
+#else
+	if (!nvram_match("ntp_ready", "1") && (argc == 2 && (!strcmp(argv[1], "step") || !strcmp(argv[1], "stratum")))) {
+		int lockfd = file_lock("ntp_synced");
+		if (nvram_match("ntp_ready", "1")) {
+			file_unlock(lockfd);
+			goto ntp_done;
+		}
+#endif /* TOMATO64 */
 		nvram_set("ntp_ready", "1");
 		logmsg(LOG_INFO, "initial clock set");
 
@@ -2036,7 +2045,13 @@ int ntpd_synced_main(int argc, char *argv[])
 		stop_mdns();
 		start_mdns();
 #endif
+#ifdef TOMATO64
+		file_unlock(lockfd);
+#endif /* TOMATO64 */
 	}
+#ifdef TOMATO64
+ntp_done:
+#endif /* TOMATO64 */
 
 	FILE *file;
 	char message[300];
