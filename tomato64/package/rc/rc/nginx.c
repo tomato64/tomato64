@@ -486,7 +486,7 @@ void start_nginx(int force)
 	}
 
 	/* terminate the child */
-	exit(0);
+	_exit(0);
 }
 
 /* stop nginx and remove traces of the process */
