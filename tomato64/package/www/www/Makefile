@@ -810,7 +810,7 @@ endif
 		[ -f $(INSTALLDIR)/www/$$F ] && $(BR2_EXTERNAL_TOMATO64_PATH)/package/www/www/remcoms2.sh $(INSTALLDIR)/www/$$F c; \
 	done
 
-ifneq ($(TCONFIG_BCMARM),y)
+ifneq ($(TCONFIG_TOMATO64),y)
 # use HTML compressor to compress HTML as much as possible
 #	cd $(INSTALLDIR)/www && \
 #	for F in $(wildcard *.asp); do \
