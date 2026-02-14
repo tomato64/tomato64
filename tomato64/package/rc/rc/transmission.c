@@ -324,7 +324,7 @@ void start_bittorrent(int force)
 	}
 
 	/* terminate the child */
-	exit(0);
+	_exit(0);
 }
 
 void stop_bittorrent(void)
