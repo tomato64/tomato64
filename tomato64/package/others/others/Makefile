@@ -10,7 +10,9 @@ install:
 
 ifneq ($(TCONFIG_TOMATO64),y)
 # Port health monitor/recover script
+ifeq ($(TCONFIG_BCMARM),y)
 	install -m 0700 porthealth.sh $(INSTALLDIR)/usr/sbin/porthealth.sh
+endif
 endif #TOMATO64
 
 ifeq ($(TCONFIG_USB),y)

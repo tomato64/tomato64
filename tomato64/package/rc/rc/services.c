@@ -111,6 +111,7 @@ static pid_t pid_phy_tempsense = -1;
  *   Format: enable=1,mode=monitor,max=50,hold=180,cache=60,if=l
  */
 #ifndef TOMATO64
+#ifdef TCONFIG_BCMARM
 static void stop_porthealth(void)
 {
 	/* remove cron job if present */
@@ -200,6 +201,7 @@ static void start_porthealth(void)
 	snprintf(sched, sizeof(sched), "* * * * * /usr/sbin/porthealth.sh %s max=%d hold=%d cache=%d if=%s", mode, max_i, hold_i, cache_i, ift);
 	eval("cru", "a", "porthealth", sched);
 }
+#endif
 #endif /* TOMATO64 */
 
 void add_rstats_defaults(void)
@@ -2488,7 +2490,9 @@ void start_services(void)
 #endif
 	start_cron();
 #ifndef TOMATO64
+#ifdef TCONFIG_BCMARM
 	start_porthealth(); /* cron-based */
+#endif
 #endif /* TOMATO64 */
 #ifdef TCONFIG_PPTPD
 	start_pptpd(0);
@@ -2578,7 +2582,9 @@ void stop_services(void)
 #endif
 	stop_sched();
 #ifndef TOMATO64
+#ifdef TCONFIG_BCMARM
 	stop_porthealth();
+#endif
 #endif /* TOMATO64 */
 	stop_cron();
 #ifdef TCONFIG_NGINX
@@ -3307,11 +3313,13 @@ TOP:
 	}
 
 #ifndef TOMATO64
+#ifdef TCONFIG_BCMARM
 	if (strcmp(service, "porthealth") == 0) {
 		if (act_stop) stop_porthealth();
 		if (act_start) start_porthealth();
 		goto CLEAR;
 	}
+#endif
 #endif /* TOMATO64 */
 
 #ifdef TCONFIG_USB
