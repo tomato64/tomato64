@@ -1,11 +1,14 @@
 /*
-	Tomato GUI
-	Copyright (C) 2006-2010 Jonathan Zarate
-	http://www.polarcloud.com/tomato/
-
-	For use with Tomato Firmware only.
-	No part of this file may be used without permission.
-*/
+ * Tomato GUI
+ * Copyright (C) 2006-2010 Jonathan Zarate
+ * http://www.polarcloud.com/tomato/
+ *
+ * For use with Tomato Firmware only.
+ * No part of this file may be used without permission.
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ */
 
 // -----------------------------------------------------------------------------
 
@@ -15,6 +18,8 @@ var serviceLastUp = [];
 var countButton = 0;
 
 // -----------------------------------------------------------------------------
+
+var xoboui = null;
 
 Array.prototype.find = function(v) {
 	for (var i = 0; i < this.length; ++i)
@@ -3028,22 +3033,20 @@ function toggleVisibility(where, whichone) {
 
 function spinOUI(x, which) {
 	E(which).style.display = (x ? 'inline-block' : 'none');
-	if (!x)
-		cmd = null;
+	if (!x) xoboui = null;
 }
 
 function searchOUI(n, i) {
-	if (cmd)
-		return;
+	if (xoboui) return;
 
 	spinOUI(1, 'gW_'+i);
 
-	cmd = new XmlHttp();
-	cmd.onCompleted = function(text, xml) {
+	xoboui = new XmlHttp();
+	xoboui.onCompleted = function(text, xml) {
 		eval(text);
 		displayOUI(i);
 	}
-	cmd.onError = function(x) {
+	xoboui.onError = function(x) {
 		cmdresult = 'ERROR: '+x;
 		displayOUI(i);
 	}
@@ -3053,8 +3056,8 @@ function searchOUI(n, i) {
 /* STUBBY-BEGIN */
 	var WGET="/usr/bin/wget -T 6 -q "
 /* STUBBY-END */
-	var commands = WGET+'http://api.macvendors.com/'+n+' -O /tmp/oui.txt \n /bin/cat /tmp/oui.txt';
-	cmd.post('shell.cgi', 'action=execute&command='+escapeCGI(commands.replace(/\r/g, '')));
+	var c = WGET+'http://api.macvendors.com/'+n+' -O /tmp/oui.txt \n /bin/cat /tmp/oui.txt';
+	xoboui.post('shell.cgi', 'action=execute&command='+escapeCGI(c.replace(/\r/g, '')));
 }
 
 function displayOUI(i) {
@@ -3062,7 +3065,7 @@ function displayOUI(i) {
 	if (cmdresult.indexOf('bad address') != -1)
 		cmdresult = 'No Internet! Check your Network/DNS settings!';
 	else if (cmdresult.indexOf('Not Found') == -1)
-		cmdresult = 'Manufacturer: \n'+cmdresult;
+		cmdresult = 'Manufacturer: \n'+escapeHTML(cmdresult);
 	else
 		cmdresult = 'Manufacturer not found!';
 
