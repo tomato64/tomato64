@@ -2946,6 +2946,8 @@ function peekaboo(id, show) {
 		var name = e.name;
 		o.type = show ? 'text' : 'password';
 		o.value = e.value;
+		/* preserve placeholder when swapping input types */
+		try { o.placeholder = e.placeholder; } catch (ex) {}
 		o.size = e.size;
 		o.maxLength = e.maxLength;
 		o.autocomplete = e.autocomplete;
