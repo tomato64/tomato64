@@ -2369,8 +2369,8 @@ input[type="button"][value="Copy"],
 input[type="button"][value="Add to Peers"],
 input[type="button"][value="Clean"],
 input[type="button"][value^="Generate"],
-input[type="button"][value^="Continue for"],
-input[type="button"][value^="Become"],
+input[type="button"][value^="Continue"],
+input[type="button"][value^="Support"],
 input[type="button"][value^="Clear Table"] {
 	background-position: 12px;
 	background-repeat: no-repeat;
@@ -2515,11 +2515,11 @@ input[type="button"][value^="Generate"] {
 	background-image: var(--icon-buttton-generate);
 }
 
-input[type="button"][value^="Become"] {
+input[type="button"][value^="Support"] {
 	background-image: var(--icon-buttton-donations);
 }
 
-input[type="button"][value^="Continue for"] {
+input[type="button"][value^="Continue"] {
 	background-image: var(--icon-buttton-sad);
 }
 

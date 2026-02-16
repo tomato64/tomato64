@@ -3136,13 +3136,13 @@ function insOvl() {
 
 	if (typeof(nvram) != 'undefined' && nvram.os_updated == 1) {
 		cntDiv.innerHTML = '<div id="overlay-top">Thank you for updating to the latest FreshTomato!<br><br>Your router is now secure and up-to-date. ❤️<br><br>'+
-		                   'I have difficult news to share:<br>In recent months donations have dropped to a very low level, and on top of that I am now facing serious personal financial difficulties. Without steady support I simply cannot continue active development and maintenance of FreshTomato full-time.<br><br>'+
-		                   'Unless a sufficient number of regular monthly supporters appears (enough for a project of this size and importance), I will very sadly be forced to put the entire project <b style="font-size:1.1em">on hold</b> – possibly permanently.<br>'+
-		                   'If FreshTomato is valuable to you and you want to see it live and grow, please strongly consider becoming a recurring supporter today.<br><br>'+
-		                   'Thank you for understanding.'+
+		                   'I want to sincerely thank you for the exceptional response in recent months – your donations have increased significantly and this support means the world to me.<br><br>'+
+		                   'To keep FreshTomato alive, actively developed and constantly improved, please do not stop supporting the project with regular monthly contributions.<br><br>'+
+		                   'In return, I promise to continue delivering outstanding, feature-rich and rock-solid FreshTomato firmware that you can rely on.<br><br>'+
+		                   'Thank you for being part of this journey!'+
 		                   '</div><div id="overlay-buttons">'+
-		                   '<div class="overlay-buttons-in"><input id="overlay-left-btn" type="button" value="Become a supporter"></div>'+
-		                   '<div class="overlay-buttons-in"><input id="overlay-right-btn" type="button" value="Continue for now"></div>'+
+		                   '<div class="overlay-buttons-in"><input id="overlay-left-btn" type="button" value="Support FreshTomato"></div>'+
+		                   '<div class="overlay-buttons-in"><input id="overlay-right-btn" type="button" value="Continue"></div>'+
 		                   '</div>';
 
 		function updateAndRedirect() {
