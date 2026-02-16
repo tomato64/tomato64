@@ -14,6 +14,7 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 PID=$$
 IFACE=$dev
 SERVICE=$(echo $dev | sed 's/\(tun\|tap\)1/client/;s/\(tun\|tap\)2/server/')
+NVSERV=${SERVICE:0:1}${SERVICE: -1}
 FIREWALL_ROUTING="/etc/openvpn/fw/$SERVICE-fw-routing.sh"
 DNSMASQ_IPSET="/etc/dnsmasq.ipset"
 RESTART_DNSMASQ=0
@@ -131,7 +132,7 @@ startRouting() {
 		ip route add default via $(env_get route_vpn_gateway) table $FWMARK dev $IFACE
 	fi
 
-	PRIO=$(NG vpn_"$SERVICE"_prio)
+	PRIO=$(NG vpn"$NVSERV"_prio)
 	[ -z "$PRIO" ] && PRIO=$((CID+89)) # default: 90, 91, 92 ...
 	ip rule add fwmark $FWMARK/0xf00 table $FWMARK priority $PRIO
 
@@ -151,7 +152,7 @@ startRouting() {
 # BCMARMNO-END
 
 	# example of routing_val: 1<2<8.8.8.8<1>1<1<1.2.3.4<0>1<3<domain.com<0> (enabled<type<domain_or_IP<kill_switch>)
-	for i in $(echo "$(NG vpn_"$SERVICE"_routing_val)" | tr ">" "\n"); do
+	for i in $(echo "$(NG vpn"$NVSERV"_routing_val)" | tr ">" "\n"); do
 		VAL1=$(echo $i | cut -d "<" -f1)
 		VAL2=$(echo $i | cut -d "<" -f2)
 		VAL3=$(echo $i | cut -d "<" -f3)
@@ -233,7 +234,7 @@ checkPid() {
 
 find_iface
 checkPid
-VPN_REDIR=$(NG vpn_"$SERVICE"_rgw)
+VPN_REDIR=$(NG vpn"$NVSERV"_rgw)
 
 [ "$script_type" = "route-up" -a "$VPN_REDIR" -lt 2 ] && {
 	$LOGW "skipping, $SERVICE not in routing policy mode"

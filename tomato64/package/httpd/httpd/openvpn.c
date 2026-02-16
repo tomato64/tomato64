@@ -69,7 +69,7 @@ static void prepareCAGeneration(const int serverNum, const int is_ecdh)
 	put_to_file(buffer, "");
 
 	memset(buffer, 0, sizeof(buffer));
-	snprintf(buffer, sizeof(buffer), "vpn_server%d_ca_key", serverNum);
+	snprintf(buffer, sizeof(buffer), "vpns%d_ca_key", serverNum);
 
 	if (nvram_match(buffer, "")) {
 		syslog(LOG_WARNING, "No CA KEY was saved for server %d, regenerating ...", serverNum);
@@ -103,11 +103,11 @@ static void prepareCAGeneration(const int serverNum, const int is_ecdh)
 
 		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), "%s/cakey.pem", openssl_dir);
-		put_to_file(buffer, getNVRAMVar("vpn_server%d_ca_key", serverNum));
+		put_to_file(buffer, getNVRAMVar("vpns%d_ca_key", serverNum));
 
 		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), "%s/cacert.pem", openssl_dir);
-		put_to_file(buffer, getNVRAMVar("vpn_server%d_ca", serverNum));
+		put_to_file(buffer, getNVRAMVar("vpns%d_ca", serverNum));
 	}
 }
 
@@ -352,8 +352,8 @@ void wo_ovpn_genclientconfig(char *url)
 	}
 	server = atoi(serverStr);
 
-	userauth = atoi(getNVRAMVar("vpn_server%d_userpass", server));
-	useronly = userauth && atoi(getNVRAMVar("vpn_server%d_nocert", server));
+	userauth = atoi(getNVRAMVar("vpns%d_userpass", server));
+	useronly = userauth && atoi(getNVRAMVar("vpns%d_nocert", server));
 	userid = atoi(webcgi_safeget("_userid", "0"));
 	is_ecdh = atoi(webcgi_safeget("_ecdh", "0"));
 
@@ -368,7 +368,7 @@ void wo_ovpn_genclientconfig(char *url)
 	}
 
 	memset(buffer, 0, sizeof(buffer));
-	snprintf(buffer, sizeof(buffer), "vpn_server%d_crypt", server);
+	snprintf(buffer, sizeof(buffer), "vpns%d_crypt", server);
 	if (nvram_match(buffer, "tls"))
 		tls = 1;
 
@@ -377,17 +377,17 @@ void wo_ovpn_genclientconfig(char *url)
 	            "remote %s %d\n",
 	            tomato_version,
 	            get_wanip("wan"),
-	            atoi(getNVRAMVar("vpn_server%d_port", server)));
+	            atoi(getNVRAMVar("vpns%d_port", server)));
 
 	/* Proto */
 	memset(buffer, 0, sizeof(buffer));
-	strlcpy(buffer, getNVRAMVar("vpn_server%d_proto", server), sizeof(buffer));
+	strlcpy(buffer, getNVRAMVar("vpns%d_proto", server), sizeof(buffer));
 	str_replace(buffer, "-server", "-client");
 	fprintf(fp, "proto %s\n", buffer);
 
 	/* Compression */
 	memset(buffer, 0, sizeof(buffer));
-	strlcpy(buffer, getNVRAMVar("vpn_server%d_comp", server), sizeof(buffer));
+	strlcpy(buffer, getNVRAMVar("vpns%d_comp", server), sizeof(buffer));
 	if (strcmp(buffer, "-1")) {
 		if ((!strcmp(buffer, "lz4")) || (!strcmp(buffer, "lz4-v2")))
 			fprintf(fp, "compress %s\n", buffer);
@@ -400,25 +400,25 @@ void wo_ovpn_genclientconfig(char *url)
 	}
 
 	/* Interface */
-	fprintf(fp, "dev %s\n", getNVRAMVar("vpn_server%d_if", server));
+	fprintf(fp, "dev %s\n", getNVRAMVar("vpns%d_if", server));
 
 	/* Cipher */
 	memset(buffer, 0, sizeof(buffer));
-	strlcpy(buffer, getNVRAMVar("vpn_server%d_ncp_ciphers", server), sizeof(buffer));
+	strlcpy(buffer, getNVRAMVar("vpns%d_ncp_ciphers", server), sizeof(buffer));
 	if (tls == 1) {
 		if (buffer[0] != '\0')
 			fprintf(fp, "data-ciphers %s\n", buffer);
 	}
 	else { /* secret */
 		memset(buffer, 0, sizeof(buffer));
-		snprintf(buffer, sizeof(buffer), "vpn_server%d_cipher", server);
+		snprintf(buffer, sizeof(buffer), "vpns%d_cipher", server);
 		if (!nvram_contains_word(buffer, "default"))
 			fprintf(fp, "cipher %s\n", nvram_safe_get(buffer));
 	}
 
 	/* Digest */
 	memset(buffer, 0, sizeof(buffer));
-	snprintf(buffer, sizeof(buffer), "vpn_server%d_digest", server);
+	snprintf(buffer, sizeof(buffer), "vpns%d_digest", server);
 	if (!nvram_contains_word(buffer, "default"))
 		fprintf(fp, "auth %s\n", nvram_safe_get(buffer));
 
@@ -428,14 +428,14 @@ void wo_ovpn_genclientconfig(char *url)
 		            "remote-cert-tls server\n"
 		            "\n;ca ca.pem\n"
 		            "<ca>\n%s\n</ca>\n\n",
-		            getNVRAMVar("vpn_server%d_ca", server));
+		            getNVRAMVar("vpns%d_ca", server));
 
 		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), "%s/ca.pem", ovpnc_dir);
-		put_to_file(buffer, getNVRAMVar("vpn_server%d_ca", server));
+		put_to_file(buffer, getNVRAMVar("vpns%d_ca", server));
 
 		memset(buffer, 0, sizeof(buffer));
-		snprintf(buffer, sizeof(buffer), "vpn_server%d_hmac", server);
+		snprintf(buffer, sizeof(buffer), "vpns%d_hmac", server);
 		hmac = nvram_get_int(buffer);
 		if (hmac >= 0) {
 			if (hmac == 3)
@@ -463,7 +463,7 @@ void wo_ovpn_genclientconfig(char *url)
 			if (hmac == 4) { /* tls-crypt-v2 */
 				memset(buffer, 0, sizeof(buffer));
 				snprintf(buffer, sizeof(buffer), "%s/static-server.key", ovpnc_dir);
-				put_to_file(buffer, getNVRAMVar("vpn_server%d_static", server));
+				put_to_file(buffer, getNVRAMVar("vpns%d_static", server));
 
 				memset(buffer, 0, sizeof(buffer));
 				snprintf(buffer, sizeof(buffer), "openvpn --tls-crypt-v2 %s/static-server.key --genkey tls-crypt-v2-client %s/static.key >/dev/null 2>&1", ovpnc_dir, ovpnc_dir);
@@ -483,12 +483,12 @@ void wo_ovpn_genclientconfig(char *url)
 			{ /* tls-auth / tls-crypt */
 				memset(buffer, 0, sizeof(buffer));
 				snprintf(buffer, sizeof(buffer), "%s/static.key", ovpnc_dir);
-				put_to_file(buffer, getNVRAMVar("vpn_server%d_static", server));
+				put_to_file(buffer, getNVRAMVar("vpns%d_static", server));
 
 				if (hmac == 3) /* tls-crypt */
-					fprintf(fp, "<tls-crypt>\n%s</tls-crypt>\n\n", getNVRAMVar("vpn_server%d_static", server));
+					fprintf(fp, "<tls-crypt>\n%s</tls-crypt>\n\n", getNVRAMVar("vpns%d_static", server));
 				else /* tls-auth */
-					fprintf(fp, "<tls-auth>\n%s</tls-auth>\n\n", getNVRAMVar("vpn_server%d_static", server));
+					fprintf(fp, "<tls-auth>\n%s</tls-auth>\n\n", getNVRAMVar("vpns%d_static", server));
 			}
 		}
 
@@ -496,7 +496,7 @@ void wo_ovpn_genclientconfig(char *url)
 		if (userauth) {
 			fprintf(fp, "auth-user-pass auth.txt\n");
 
-			nv = nvp = strdup(getNVRAMVar("vpn_server%d_users_val", server));
+			nv = nvp = strdup(getNVRAMVar("vpns%d_users_val", server));
 			if (nv) {
 				while (nvp && (b = strsep(&nvp, ">")) != NULL) {
 					dummy = uname = passwd = NULL;
@@ -549,29 +549,29 @@ void wo_ovpn_genclientconfig(char *url)
 		fprintf(fp, "mode p2p\n");
 
 		memset(buffer, 0, sizeof(buffer));
-		snprintf(buffer, sizeof(buffer), "vpn_server%d_if", server);
+		snprintf(buffer, sizeof(buffer), "vpns%d_if", server);
 		if (nvram_contains_word(buffer, "tap")) {
 			fprintf(fp, "ifconfig %s "
 			            "%s\n",
-			            getNVRAMVar("vpn_server%d_local", server),
-			            getNVRAMVar("vpn_server%d_nm", server));
+			            getNVRAMVar("vpns%d_local", server),
+			            getNVRAMVar("vpns%d_nm", server));
 		}
 		else {
 			fprintf(fp, "ifconfig %s "
 			            "%s\n",
-			            getNVRAMVar("vpn_server%d_remote", server),
-			            getNVRAMVar("vpn_server%d_local", server));
+			            getNVRAMVar("vpns%d_remote", server),
+			            getNVRAMVar("vpns%d_local", server));
 		}
 		if (inet_aton(nvram_safe_get("lan_ipaddr"),&lanip) && inet_aton(nvram_safe_get("lan_netmask"),&lannetmask))
 		{
 			lannet.s_addr = lanip.s_addr & lannetmask.s_addr;
 			fprintf(fp, "route %s %s\n\n", inet_ntoa(lannet), nvram_safe_get("lan_netmask"));
 		}
-		fprintf(fp, ";secret static.key\n<secret>\n%s</secret>\n\n", getNVRAMVar("vpn_server%d_static", server));
+		fprintf(fp, ";secret static.key\n<secret>\n%s</secret>\n\n", getNVRAMVar("vpns%d_static", server));
 
 		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), "%s/static.key", ovpnc_dir);
-		put_to_file(buffer, getNVRAMVar("vpn_server%d_static", server));
+		put_to_file(buffer, getNVRAMVar("vpns%d_static", server));
 	}
 
 	fprintf(fp, "keepalive 15 60\n"

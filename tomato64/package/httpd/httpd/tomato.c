@@ -299,13 +299,13 @@ const aspapi_t aspapi[] = {
 	{ "bwl_lan" #i "_prio",		V_RANGE(0, 5)			},
 #ifdef TCONFIG_OPENVPN
  #define BRIDGE_BLOCK_OPENVPN(i) \
-	{ "vpn_server1_plan" #i,	V_01				}, \
+	{ "vpns1_plan" #i,		V_01				}, \
 /* #ifndef TOMATO64 \
-	{ "vpn_server2_plan" #i,	V_01				},
+	{ "vpns2_plan" #i,		V_01				},
    #else */ \
-	{ "vpn_server2_plan" #i,	V_01				}, \
-	{ "vpn_server3_plan" #i,	V_01				}, \
-	{ "vpn_server4_plan" #i,	V_01				},
+	{ "vpns2_plan" #i,		V_01				}, \
+	{ "vpns3_plan" #i,		V_01				}, \
+	{ "vpns4_plan" #i,		V_01				},
 /* #endif TOMATO64 */ \
 #else
  #define BRIDGE_BLOCK_OPENVPN(i)
@@ -1483,302 +1483,301 @@ static const nvset_t nvset_list[] = {
 
 #ifdef TCONFIG_OPENVPN
 /* openvpn */
-	{ "vpn_debug",			V_01				},
-	{ "vpn_server_eas",		V_NONE				},
-	{ "vpn_server_dns",		V_NONE				},
-	{ "vpn_server1_poll",		V_RANGE(0, 30)			},
-	{ "vpn_server1_if",		V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpn_server1_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
-	{ "vpn_server1_port",		V_PORT				},
-	{ "vpn_server1_firewall",	V_TEXT(0, 8)			},	/* auto, external, custom */
-	{ "vpn_server1_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpn_server1_comp",		V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
-	{ "vpn_server1_cipher",		V_TEXT(0, 16)			},
-	{ "vpn_server1_ncp_ciphers",	V_TEXT(0, 128)			},
-	{ "vpn_server1_digest",		V_TEXT(0, 15)			},
-	{ "vpn_server1_dhcp",		V_01				},
-	{ "vpn_server1_r1",		V_IP				},
-	{ "vpn_server1_r2",		V_IP				},
-	{ "vpn_server1_sn",		V_IP				},
-	{ "vpn_server1_nm",		V_IP				},
-	{ "vpn_server1_local",		V_IP				},
-	{ "vpn_server1_remote",		V_IP				},
-	{ "vpn_server1_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpn_server1_hmac",		V_RANGE(-1, 4)			},
-	{ "vpn_server1_plan",		V_01				},
-	{ "vpn_server1_pdns",		V_01				},
-	{ "vpn_server1_rgw",		V_01				},
-	{ "vpn_server1_userpass",	V_01				},
-	{ "vpn_server1_nocert",		V_01				},
-	{ "vpn_server1_users_val",	V_NONE				},
-	{ "vpn_server1_custom",		V_NONE				},
-	{ "vpn_server1_ccd",		V_01				},
-	{ "vpn_server1_c2c",		V_01				},
-	{ "vpn_server1_ccd_excl",	V_01				},
-	{ "vpn_server1_ccd_val",	V_NONE				},
-	{ "vpn_server1_static",		V_NONE				},
-	{ "vpn_server1_ca",		V_NONE				},
-	{ "vpn_server1_ca_key",		V_NONE				},
-	{ "vpn_server1_crt",		V_NONE				},
-	{ "vpn_server1_crl",		V_NONE				},	/* certificate revocation list */
-	{ "vpn_server1_key",		V_NONE				},
-	{ "vpn_server1_dh",		V_NONE				},
-	{ "vpn_server1_br",		V_LENGTH(0, 50)			},
-	{ "vpn_server1_ecdh",		V_01				},	/* when using ECDH */
+	{ "vpns_eas",			V_NONE				},
+	{ "vpns_dns",			V_NONE				},
+	{ "vpns1_poll",			V_RANGE(0, 30)			},
+	{ "vpns1_if",			V_TEXT(3, 3)			},	/* tap, tun */
+	{ "vpns1_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
+	{ "vpns1_port",			V_PORT				},
+	{ "vpns1_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
+	{ "vpns1_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
+	{ "vpns1_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
+	{ "vpns1_cipher",		V_TEXT(0, 16)			},
+	{ "vpns1_ncp_ciphers",		V_TEXT(0, 128)			},
+	{ "vpns1_digest",		V_TEXT(0, 15)			},
+	{ "vpns1_dhcp",			V_01				},
+	{ "vpns1_r1",			V_IP				},
+	{ "vpns1_r2",			V_IP				},
+	{ "vpns1_sn",			V_IP				},
+	{ "vpns1_nm",			V_IP				},
+	{ "vpns1_local",		V_IP				},
+	{ "vpns1_remote",		V_IP				},
+	{ "vpns1_reneg",		V_RANGE(-1, 2147483647)		},
+	{ "vpns1_hmac",			V_RANGE(-1, 4)			},
+	{ "vpns1_plan",			V_01				},
+	{ "vpns1_pdns",			V_01				},
+	{ "vpns1_rgw",			V_01				},
+	{ "vpns1_userpass",		V_01				},
+	{ "vpns1_nocert",		V_01				},
+	{ "vpns1_users_val",		V_NONE				},
+	{ "vpns1_custom",		V_NONE				},
+	{ "vpns1_ccd",			V_01				},
+	{ "vpns1_c2c",			V_01				},
+	{ "vpns1_ccd_excl",		V_01				},
+	{ "vpns1_ccd_val",		V_NONE				},
+	{ "vpns1_static",		V_NONE				},
+	{ "vpns1_ca",			V_NONE				},
+	{ "vpns1_ca_key",		V_NONE				},
+	{ "vpns1_crt",			V_NONE				},
+	{ "vpns1_crl",			V_NONE				},	/* certificate revocation list */
+	{ "vpns1_key",			V_NONE				},
+	{ "vpns1_dh",			V_NONE				},
+	{ "vpns1_br",			V_LENGTH(0, 50)			},
+	{ "vpns1_ecdh",			V_01				},	/* when using ECDH */
 #ifdef TOMATO64
-	{ "vpn_server1_dco",		V_01				},
+	{ "vpns1_dco",			V_01				},
 #endif /* TOMATO64 */
-	{ "vpn_server2_poll",		V_RANGE(0, 30)			},
-	{ "vpn_server2_if",		V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpn_server2_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
-	{ "vpn_server2_port",		V_PORT				},
-	{ "vpn_server2_firewall",	V_TEXT(0, 8)			},	/* auto, external, custom */
-	{ "vpn_server2_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpn_server2_comp",		V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
-	{ "vpn_server2_cipher",		V_TEXT(0, 16)			},
-	{ "vpn_server2_ncp_ciphers",	V_TEXT(0, 128)			},
-	{ "vpn_server2_digest",		V_TEXT(0, 15)			},
-	{ "vpn_server2_dhcp",		V_01				},
-	{ "vpn_server2_r1",		V_IP				},
-	{ "vpn_server2_r2",		V_IP				},
-	{ "vpn_server2_sn",		V_IP				},
-	{ "vpn_server2_nm",		V_IP				},
-	{ "vpn_server2_local",		V_IP				},
-	{ "vpn_server2_remote",		V_IP				},
-	{ "vpn_server2_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpn_server2_hmac",		V_RANGE(-1, 4)			},
-	{ "vpn_server2_plan",		V_01				},
-	{ "vpn_server2_pdns",		V_01				},
-	{ "vpn_server2_rgw",		V_01				},
-	{ "vpn_server2_userpass",	V_01				},
-	{ "vpn_server2_nocert",		V_01				},
-	{ "vpn_server2_users_val",	V_NONE				},
-	{ "vpn_server2_custom",		V_NONE				},
-	{ "vpn_server2_ccd",		V_01				},
-	{ "vpn_server2_c2c",		V_01				},
-	{ "vpn_server2_ccd_excl",	V_01				},
-	{ "vpn_server2_ccd_val",	V_NONE				},
-	{ "vpn_server2_static",		V_NONE				},
-	{ "vpn_server2_ca",		V_NONE				},
-	{ "vpn_server2_ca_key",		V_NONE				},
-	{ "vpn_server2_crt",		V_NONE				},
-	{ "vpn_server2_crl",		V_NONE				},	/* certificate revocation list */
-	{ "vpn_server2_key",		V_NONE				},
-	{ "vpn_server2_dh",		V_NONE				},
-	{ "vpn_server2_br",		V_LENGTH(0, 50)			},
-	{ "vpn_server2_ecdh",		V_01				},	/* when using ECDH */
+	{ "vpns2_poll",			V_RANGE(0, 30)			},
+	{ "vpns2_if",			V_TEXT(3, 3)			},	/* tap, tun */
+	{ "vpns2_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
+	{ "vpns2_port",			V_PORT				},
+	{ "vpns2_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
+	{ "vpns2_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
+	{ "vpns2_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
+	{ "vpns2_cipher",		V_TEXT(0, 16)			},
+	{ "vpns2_ncp_ciphers",		V_TEXT(0, 128)			},
+	{ "vpns2_digest",		V_TEXT(0, 15)			},
+	{ "vpns2_dhcp",			V_01				},
+	{ "vpns2_r1",			V_IP				},
+	{ "vpns2_r2",			V_IP				},
+	{ "vpns2_sn",			V_IP				},
+	{ "vpns2_nm",			V_IP				},
+	{ "vpns2_local",		V_IP				},
+	{ "vpns2_remote",		V_IP				},
+	{ "vpns2_reneg",		V_RANGE(-1, 2147483647)		},
+	{ "vpns2_hmac",			V_RANGE(-1, 4)			},
+	{ "vpns2_plan",			V_01				},
+	{ "vpns2_pdns",			V_01				},
+	{ "vpns2_rgw",			V_01				},
+	{ "vpns2_userpass",		V_01				},
+	{ "vpns2_nocert",		V_01				},
+	{ "vpns2_users_val",		V_NONE				},
+	{ "vpns2_custom",		V_NONE				},
+	{ "vpns2_ccd",			V_01				},
+	{ "vpns2_c2c",			V_01				},
+	{ "vpns2_ccd_excl",		V_01				},
+	{ "vpns2_ccd_val",		V_NONE				},
+	{ "vpns2_static",		V_NONE				},
+	{ "vpns2_ca",			V_NONE				},
+	{ "vpns2_ca_key",		V_NONE				},
+	{ "vpns2_crt",			V_NONE				},
+	{ "vpns2_crl",			V_NONE				},	/* certificate revocation list */
+	{ "vpns2_key",			V_NONE				},
+	{ "vpns2_dh",			V_NONE				},
+	{ "vpns2_br",			V_LENGTH(0, 50)			},
+	{ "vpns2_ecdh",			V_01				},	/* when using ECDH */
 #ifdef TOMATO64
-	{ "vpn_server2_dco",		V_01				},
+	{ "vpns2_dco",			V_01				},
 #endif /* TOMATO64 */
 #ifdef TOMATO64
-	{ "vpn_server3_poll",		V_RANGE(0, 30)			},
-	{ "vpn_server3_if",		V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpn_server3_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
-	{ "vpn_server3_port",		V_PORT				},
-	{ "vpn_server3_firewall",	V_TEXT(0, 8)			},	/* auto, external, custom */
-	{ "vpn_server3_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpn_server3_comp",		V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
-	{ "vpn_server3_cipher",		V_TEXT(0, 16)			},
-	{ "vpn_server3_ncp_ciphers",	V_TEXT(0, 128)			},
-	{ "vpn_server3_digest",		V_TEXT(0, 15)			},
-	{ "vpn_server3_dhcp",		V_01				},
-	{ "vpn_server3_r1",		V_IP				},
-	{ "vpn_server3_r2",		V_IP				},
-	{ "vpn_server3_sn",		V_IP				},
-	{ "vpn_server3_nm",		V_IP				},
-	{ "vpn_server3_local",		V_IP				},
-	{ "vpn_server3_remote",		V_IP				},
-	{ "vpn_server3_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpn_server3_hmac",		V_RANGE(-1, 4)			},
-	{ "vpn_server3_plan",		V_01				},
-	{ "vpn_server3_pdns",		V_01				},
-	{ "vpn_server3_rgw",		V_01				},
-	{ "vpn_server3_userpass",	V_01				},
-	{ "vpn_server3_nocert",		V_01				},
-	{ "vpn_server3_users_val",	V_NONE				},
-	{ "vpn_server3_custom",		V_NONE				},
-	{ "vpn_server3_ccd",		V_01				},
-	{ "vpn_server3_c2c",		V_01				},
-	{ "vpn_server3_ccd_excl",	V_01				},
-	{ "vpn_server3_ccd_val",	V_NONE				},
-	{ "vpn_server3_static",		V_NONE				},
-	{ "vpn_server3_ca",		V_NONE				},
-	{ "vpn_server3_ca_key",		V_NONE				},
-	{ "vpn_server3_crt",		V_NONE				},
-	{ "vpn_server3_crl",		V_NONE				},	/* certificate revocation list */
-	{ "vpn_server3_key",		V_NONE				},
-	{ "vpn_server3_dh",		V_NONE				},
-	{ "vpn_server3_br",		V_LENGTH(0, 50)			},
-	{ "vpn_server3_ecdh",		V_01				},	/* when using ECDH */
-	{ "vpn_server3_dco",		V_01				},
-	{ "vpn_server4_poll",		V_RANGE(0, 30)			},
-	{ "vpn_server4_if",		V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpn_server4_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
-	{ "vpn_server4_port",		V_PORT				},
-	{ "vpn_server4_firewall",	V_TEXT(0, 8)			},	/* auto, external, custom */
-	{ "vpn_server4_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpn_server4_comp",		V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
-	{ "vpn_server4_cipher",		V_TEXT(0, 16)			},
-	{ "vpn_server4_ncp_ciphers",	V_TEXT(0, 128)			},
-	{ "vpn_server4_digest",		V_TEXT(0, 15)			},
-	{ "vpn_server4_dhcp",		V_01				},
-	{ "vpn_server4_r1",		V_IP				},
-	{ "vpn_server4_r2",		V_IP				},
-	{ "vpn_server4_sn",		V_IP				},
-	{ "vpn_server4_nm",		V_IP				},
-	{ "vpn_server4_local",		V_IP				},
-	{ "vpn_server4_remote",		V_IP				},
-	{ "vpn_server4_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpn_server4_hmac",		V_RANGE(-1, 4)			},
-	{ "vpn_server4_plan",		V_01				},
-	{ "vpn_server4_pdns",		V_01				},
-	{ "vpn_server4_rgw",		V_01				},
-	{ "vpn_server4_userpass",	V_01				},
-	{ "vpn_server4_nocert",		V_01				},
-	{ "vpn_server4_users_val",	V_NONE				},
-	{ "vpn_server4_custom",		V_NONE				},
-	{ "vpn_server4_ccd",		V_01				},
-	{ "vpn_server4_c2c",		V_01				},
-	{ "vpn_server4_ccd_excl",	V_01				},
-	{ "vpn_server4_ccd_val",	V_NONE				},
-	{ "vpn_server4_static",		V_NONE				},
-	{ "vpn_server4_ca",		V_NONE				},
-	{ "vpn_server4_ca_key",		V_NONE				},
-	{ "vpn_server4_crt",		V_NONE				},
-	{ "vpn_server4_crl",		V_NONE				},	/* certificate revocation list */
-	{ "vpn_server4_key",		V_NONE				},
-	{ "vpn_server4_dh",		V_NONE				},
-	{ "vpn_server4_br",		V_LENGTH(0, 50)			},
-	{ "vpn_server4_ecdh",		V_01				},	/* when using ECDH */
-	{ "vpn_server4_dco",		V_01				},
+	{ "vpns3_poll",			V_RANGE(0, 30)			},
+	{ "vpns3_if",			V_TEXT(3, 3)			},	/* tap, tun */
+	{ "vpns3_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
+	{ "vpns3_port",			V_PORT				},
+	{ "vpns3_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
+	{ "vpns3_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
+	{ "vpns3_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
+	{ "vpns3_cipher",		V_TEXT(0, 16)			},
+	{ "vpns3_ncp_ciphers",		V_TEXT(0, 128)			},
+	{ "vpns3_digest",		V_TEXT(0, 15)			},
+	{ "vpns3_dhcp",			V_01				},
+	{ "vpns3_r1",			V_IP				},
+	{ "vpns3_r2",			V_IP				},
+	{ "vpns3_sn",			V_IP				},
+	{ "vpns3_nm",			V_IP				},
+	{ "vpns3_local",		V_IP				},
+	{ "vpns3_remote",		V_IP				},
+	{ "vpns3_reneg",		V_RANGE(-1, 2147483647)		},
+	{ "vpns3_hmac",			V_RANGE(-1, 4)			},
+	{ "vpns3_plan",			V_01				},
+	{ "vpns3_pdns",			V_01				},
+	{ "vpns3_rgw",			V_01				},
+	{ "vpns3_userpass",		V_01				},
+	{ "vpns3_nocert",		V_01				},
+	{ "vpns3_users_val",		V_NONE				},
+	{ "vpns3_custom",		V_NONE				},
+	{ "vpns3_ccd",			V_01				},
+	{ "vpns3_c2c",			V_01				},
+	{ "vpns3_ccd_excl",		V_01				},
+	{ "vpns3_ccd_val",		V_NONE				},
+	{ "vpns3_static",		V_NONE				},
+	{ "vpns3_ca",			V_NONE				},
+	{ "vpns3_ca_key",		V_NONE				},
+	{ "vpns3_crt",			V_NONE				},
+	{ "vpns3_crl",			V_NONE				},	/* certificate revocation list */
+	{ "vpns3_key",			V_NONE				},
+	{ "vpns3_dh",			V_NONE				},
+	{ "vpns3_br",			V_LENGTH(0, 50)			},
+	{ "vpns3_ecdh",			V_01				},	/* when using ECDH */
+	{ "vpns3_dco",			V_01				},
+	{ "vpns4_poll",			V_RANGE(0, 30)			},
+	{ "vpns4_if",			V_TEXT(3, 3)			},	/* tap, tun */
+	{ "vpns4_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
+	{ "vpns4_port",			V_PORT				},
+	{ "vpns4_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
+	{ "vpns4_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
+	{ "vpns4_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
+	{ "vpns4_cipher",		V_TEXT(0, 16)			},
+	{ "vpns4_ncp_ciphers",		V_TEXT(0, 128)			},
+	{ "vpns4_digest",		V_TEXT(0, 15)			},
+	{ "vpns4_dhcp",			V_01				},
+	{ "vpns4_r1",			V_IP				},
+	{ "vpns4_r2",			V_IP				},
+	{ "vpns4_sn",			V_IP				},
+	{ "vpns4_nm",			V_IP				},
+	{ "vpns4_local",		V_IP				},
+	{ "vpns4_remote",		V_IP				},
+	{ "vpns4_reneg",		V_RANGE(-1, 2147483647)		},
+	{ "vpns4_hmac",			V_RANGE(-1, 4)			},
+	{ "vpns4_plan",			V_01				},
+	{ "vpns4_pdns",			V_01				},
+	{ "vpns4_rgw",			V_01				},
+	{ "vpns4_userpass",		V_01				},
+	{ "vpns4_nocert",		V_01				},
+	{ "vpns4_users_val",		V_NONE				},
+	{ "vpns4_custom",		V_NONE				},
+	{ "vpns4_ccd",			V_01				},
+	{ "vpns4_c2c",			V_01				},
+	{ "vpns4_ccd_excl",		V_01				},
+	{ "vpns4_ccd_val",		V_NONE				},
+	{ "vpns4_static",		V_NONE				},
+	{ "vpns4_ca",			V_NONE				},
+	{ "vpns4_ca_key",		V_NONE				},
+	{ "vpns4_crt",			V_NONE				},
+	{ "vpns4_crl",			V_NONE				},	/* certificate revocation list */
+	{ "vpns4_key",			V_NONE				},
+	{ "vpns4_dh",			V_NONE				},
+	{ "vpns4_br",			V_LENGTH(0, 50)			},
+	{ "vpns4_ecdh",			V_01				},	/* when using ECDH */
+	{ "vpns4_dco",			V_01				},
 #endif /* TOMATO64 */
-	{ "vpn_client_eas",		V_NONE				},
-	{ "vpn_client1_poll",		V_RANGE(0, 30)			},
-	{ "vpn_client1_tchk",		V_01				},	/* check if tunnel is up */
-	{ "vpn_client1_if",		V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpn_client1_bridge",		V_01				},
-	{ "vpn_client1_nat",		V_01				},
-	{ "vpn_client1_proto",		V_TEXT(3, 11)			},	/* udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client */
-	{ "vpn_client1_addr",		V_NONE				},
-	{ "vpn_client1_port",		V_PORT				},
-	{ "vpn_client1_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
-	{ "vpn_client1_firewall",	V_TEXT(0, 6)			},	/* auto, custom */
-	{ "vpn_client1_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpn_client1_comp",		V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
-	{ "vpn_client1_cipher",		V_TEXT(0, 16)			},
-	{ "vpn_client1_ncp_ciphers",	V_TEXT(0, 128)			},
-	{ "vpn_client1_digest",		V_TEXT(0, 15)			},
-	{ "vpn_client1_local",		V_IP				},
-	{ "vpn_client1_remote",		V_IP				},
-	{ "vpn_client1_nm",		V_IP				},
-	{ "vpn_client1_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpn_client1_hmac",		V_RANGE(-1, 4)			},
-	{ "vpn_client1_adns",		V_RANGE(0, 3)			},
-	{ "vpn_client1_rgw",		V_RANGE(0, 3)			},
-	{ "vpn_client1_gw",		V_TEXT(0, 15)			},
-	{ "vpn_client1_custom",		V_NONE				},
-	{ "vpn_client1_static",		V_NONE				},
-	{ "vpn_client1_ca",		V_NONE				},
-	{ "vpn_client1_crt",		V_NONE				},
-	{ "vpn_client1_key",		V_NONE				},
-	{ "vpn_client1_userauth",	V_01				},
-	{ "vpn_client1_username",	V_TEXT(0, 50)			},
-	{ "vpn_client1_password",	V_TEXT(0, 70)			},
-	{ "vpn_client1_useronly",	V_01				},
-	{ "vpn_client1_tlsremote",	V_01				},	/* remote-cert-tls server */
-	{ "vpn_client1_tlsvername",	V_RANGE(0, 3)			},	/* verify-x509-name: 0 - disabled, 1 - Common Name, 2 - Common Name Prefix, 3 - Subject */
-	{ "vpn_client1_cn",		V_NONE				},
-	{ "vpn_client1_br",		V_LENGTH(0, 50)			},
-	{ "vpn_client1_routing_val",	V_NONE				},
-	{ "vpn_client1_fw",		V_01				},
-	{ "vpn_client1_prio",		V_NONE				},
+	{ "vpnc_eas",			V_NONE				},
+	{ "vpnc1_poll",			V_RANGE(0, 30)			},
+	{ "vpnc1_tchk",			V_01				},	/* check if tunnel is up */
+	{ "vpnc1_if",			V_TEXT(3, 3)			},	/* tap, tun */
+	{ "vpnc1_bridge",		V_01				},
+	{ "vpnc1_nat",			V_01				},
+	{ "vpnc1_proto",		V_TEXT(3, 11)			},	/* udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client */
+	{ "vpnc1_addr",			V_NONE				},
+	{ "vpnc1_port",			V_PORT				},
+	{ "vpnc1_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
+	{ "vpnc1_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
+	{ "vpnc1_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
+	{ "vpnc1_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
+	{ "vpnc1_cipher",		V_TEXT(0, 16)			},
+	{ "vpnc1_ncp_ciphers",		V_TEXT(0, 128)			},
+	{ "vpnc1_digest",		V_TEXT(0, 15)			},
+	{ "vpnc1_local",		V_IP				},
+	{ "vpnc1_remote",		V_IP				},
+	{ "vpnc1_nm",			V_IP				},
+	{ "vpnc1_reneg",		V_RANGE(-1, 2147483647)		},
+	{ "vpnc1_hmac",			V_RANGE(-1, 4)			},
+	{ "vpnc1_adns",			V_RANGE(0, 3)			},
+	{ "vpnc1_rgw",			V_RANGE(0, 3)			},
+	{ "vpnc1_gw",			V_TEXT(0, 15)			},
+	{ "vpnc1_custom",		V_NONE				},
+	{ "vpnc1_static",		V_NONE				},
+	{ "vpnc1_ca",			V_NONE				},
+	{ "vpnc1_crt",			V_NONE				},
+	{ "vpnc1_key",			V_NONE				},
+	{ "vpnc1_userauth",		V_01				},
+	{ "vpnc1_username",		V_TEXT(0, 50)			},
+	{ "vpnc1_password",		V_TEXT(0, 70)			},
+	{ "vpnc1_useronly",		V_01				},
+	{ "vpnc1_tlsremote",		V_01				},	/* remote-cert-tls server */
+	{ "vpnc1_tlsvername",		V_RANGE(0, 3)			},	/* verify-x509-name: 0 - disabled, 1 - Common Name, 2 - Common Name Prefix, 3 - Subject */
+	{ "vpnc1_cn",			V_NONE				},
+	{ "vpnc1_br",			V_LENGTH(0, 50)			},
+	{ "vpnc1_routing_val",		V_NONE				},
+	{ "vpnc1_fw",			V_01				},
+	{ "vpnc1_prio",			V_NONE				},
 #ifdef TOMATO64
-	{ "vpn_client1_dco",		V_01				},
+	{ "vpnc1_dco",			V_01				},
 #endif /* TOMATO64 */
-	{ "vpn_client2_poll",		V_RANGE(0, 30)			},
-	{ "vpn_client2_tchk",		V_01				},	/* check if tunnel is up */
-	{ "vpn_client2_if",		V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpn_client2_bridge",		V_01				},
-	{ "vpn_client2_nat",		V_01				},
-	{ "vpn_client2_proto",		V_TEXT(3, 11)			},	/* udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client */
-	{ "vpn_client2_addr",		V_NONE				},
-	{ "vpn_client2_port",		V_PORT				},
-	{ "vpn_client2_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
-	{ "vpn_client2_firewall",	V_TEXT(0, 6)			},	/* auto, custom */
-	{ "vpn_client2_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpn_client2_comp",		V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
-	{ "vpn_client2_cipher",		V_TEXT(0, 16)			},
-	{ "vpn_client2_ncp_ciphers",	V_TEXT(0, 128)			},
-	{ "vpn_client2_digest",		V_TEXT(0, 15)			},
-	{ "vpn_client2_local",		V_IP				},
-	{ "vpn_client2_remote",		V_IP				},
-	{ "vpn_client2_nm",		V_IP				},
-	{ "vpn_client2_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpn_client2_hmac",		V_RANGE(-1, 4)			},
-	{ "vpn_client2_adns",		V_RANGE(0, 3)			},
-	{ "vpn_client2_rgw",		V_RANGE(0, 3)			},
-	{ "vpn_client2_gw",		V_TEXT(0, 15)			},
-	{ "vpn_client2_custom",		V_NONE				},
-	{ "vpn_client2_static",		V_NONE				},
-	{ "vpn_client2_ca",		V_NONE				},
-	{ "vpn_client2_crt",		V_NONE				},
-	{ "vpn_client2_key",		V_NONE				},
-	{ "vpn_client2_userauth",	V_01				},
-	{ "vpn_client2_username",	V_TEXT(0, 50)			},
-	{ "vpn_client2_password",	V_TEXT(0, 70)			},
-	{ "vpn_client2_useronly",	V_01				},
-	{ "vpn_client2_tlsremote",	V_01				},	/* remote-cert-tls server */
-	{ "vpn_client2_tlsvername",	V_RANGE(0, 3)			},	/* verify-x509-name: 0 - disabled, 1 - Common Name, 2 - Common Name Prefix, 3 - Subject */
-	{ "vpn_client2_cn",		V_NONE				},
-	{ "vpn_client2_br",		V_LENGTH(0, 50)			},
-	{ "vpn_client2_routing_val",	V_NONE				},
-	{ "vpn_client2_fw",		V_01				},
-	{ "vpn_client2_prio",		V_NONE				},
+	{ "vpnc2_poll",			V_RANGE(0, 30)			},
+	{ "vpnc2_tchk",			V_01				},	/* check if tunnel is up */
+	{ "vpnc2_if",			V_TEXT(3, 3)			},	/* tap, tun */
+	{ "vpnc2_bridge",		V_01				},
+	{ "vpnc2_nat",			V_01				},
+	{ "vpnc2_proto",		V_TEXT(3, 11)			},	/* udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client */
+	{ "vpnc2_addr",			V_NONE				},
+	{ "vpnc2_port",			V_PORT				},
+	{ "vpnc2_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
+	{ "vpnc2_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
+	{ "vpnc2_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
+	{ "vpnc2_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
+	{ "vpnc2_cipher",		V_TEXT(0, 16)			},
+	{ "vpnc2_ncp_ciphers",		V_TEXT(0, 128)			},
+	{ "vpnc2_digest",		V_TEXT(0, 15)			},
+	{ "vpnc2_local",		V_IP				},
+	{ "vpnc2_remote",		V_IP				},
+	{ "vpnc2_nm",			V_IP				},
+	{ "vpnc2_reneg",		V_RANGE(-1, 2147483647)		},
+	{ "vpnc2_hmac",			V_RANGE(-1, 4)			},
+	{ "vpnc2_adns",			V_RANGE(0, 3)			},
+	{ "vpnc2_rgw",			V_RANGE(0, 3)			},
+	{ "vpnc2_gw",			V_TEXT(0, 15)			},
+	{ "vpnc2_custom",		V_NONE				},
+	{ "vpnc2_static",		V_NONE				},
+	{ "vpnc2_ca",			V_NONE				},
+	{ "vpnc2_crt",			V_NONE				},
+	{ "vpnc2_key",			V_NONE				},
+	{ "vpnc2_userauth",		V_01				},
+	{ "vpnc2_username",		V_TEXT(0, 50)			},
+	{ "vpnc2_password",		V_TEXT(0, 70)			},
+	{ "vpnc2_useronly",		V_01				},
+	{ "vpnc2_tlsremote",		V_01				},	/* remote-cert-tls server */
+	{ "vpnc2_tlsvername",		V_RANGE(0, 3)			},	/* verify-x509-name: 0 - disabled, 1 - Common Name, 2 - Common Name Prefix, 3 - Subject */
+	{ "vpnc2_cn",			V_NONE				},
+	{ "vpnc2_br",			V_LENGTH(0, 50)			},
+	{ "vpnc2_routing_val",		V_NONE				},
+	{ "vpnc2_fw",			V_01				},
+	{ "vpnc2_prio",			V_NONE				},
 #ifdef TOMATO64
-	{ "vpn_client2_dco",		V_01				},
+	{ "vpnc2_dco",		V_01				},
 #endif /* TOMATO64 */
 #ifdef TCONFIG_BCMARM
-	{ "vpn_client3_poll",		V_RANGE(0, 30)			},
-	{ "vpn_client3_tchk",		V_01				},	/* check if tunnel is up */
-	{ "vpn_client3_if",		V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpn_client3_bridge",		V_01				},
-	{ "vpn_client3_nat",		V_01				},
-	{ "vpn_client3_proto",		V_TEXT(3, 11)			},	/* udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client */
-	{ "vpn_client3_addr",		V_NONE				},
-	{ "vpn_client3_port",		V_PORT				},
-	{ "vpn_client3_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
-	{ "vpn_client3_firewall",	V_TEXT(0, 6)			},	/* auto, custom */
-	{ "vpn_client3_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpn_client3_comp",		V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
-	{ "vpn_client3_cipher",		V_TEXT(0, 16)			},
-	{ "vpn_client3_ncp_ciphers",	V_TEXT(0, 128)			},
-	{ "vpn_client3_digest",		V_TEXT(0, 15)			},
-	{ "vpn_client3_local",		V_IP				},
-	{ "vpn_client3_remote",		V_IP				},
-	{ "vpn_client3_nm",		V_IP				},
-	{ "vpn_client3_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpn_client3_hmac",		V_RANGE(-1, 4)			},
-	{ "vpn_client3_adns",		V_RANGE(0, 3)			},
-	{ "vpn_client3_rgw",		V_RANGE(0, 3)			},
-	{ "vpn_client3_gw",		V_TEXT(0, 15)			},
-	{ "vpn_client3_custom",		V_NONE				},
-	{ "vpn_client3_static",		V_NONE				},
-	{ "vpn_client3_ca",		V_NONE				},
-	{ "vpn_client3_crt",		V_NONE				},
-	{ "vpn_client3_key",		V_NONE				},
-	{ "vpn_client3_userauth",	V_01				},
-	{ "vpn_client3_username",	V_TEXT(0, 50)			},
-	{ "vpn_client3_password",	V_TEXT(0, 70)			},
-	{ "vpn_client3_useronly",	V_01				},
-	{ "vpn_client3_tlsremote",	V_01				},	/* remote-cert-tls server */
-	{ "vpn_client3_tlsvername",	V_RANGE(0, 3)			},	/* verify-x509-name: 0 - disabled, 1 - Common Name, 2 - Common Name Prefix, 3 - Subject */
-	{ "vpn_client3_cn",		V_NONE				},
-	{ "vpn_client3_br",		V_LENGTH(0, 50)			},
-	{ "vpn_client3_routing_val",	V_NONE				},
-	{ "vpn_client3_fw",		V_01				},
-	{ "vpn_client3_prio",		V_NONE				},
+	{ "vpnc3_poll",			V_RANGE(0, 30)			},
+	{ "vpnc3_tchk",			V_01				},	/* check if tunnel is up */
+	{ "vpnc3_if",			V_TEXT(3, 3)			},	/* tap, tun */
+	{ "vpnc3_bridge",		V_01				},
+	{ "vpnc3_nat",			V_01				},
+	{ "vpnc3_proto",		V_TEXT(3, 11)			},	/* udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client */
+	{ "vpnc3_addr",			V_NONE				},
+	{ "vpnc3_port",			V_PORT				},
+	{ "vpnc3_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
+	{ "vpnc3_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
+	{ "vpnc3_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
+	{ "vpnc3_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
+	{ "vpnc3_cipher",		V_TEXT(0, 16)			},
+	{ "vpnc3_ncp_ciphers",		V_TEXT(0, 128)			},
+	{ "vpnc3_digest",		V_TEXT(0, 15)			},
+	{ "vpnc3_local",		V_IP				},
+	{ "vpnc3_remote",		V_IP				},
+	{ "vpnc3_nm",			V_IP				},
+	{ "vpnc3_reneg",		V_RANGE(-1, 2147483647)		},
+	{ "vpnc3_hmac",			V_RANGE(-1, 4)			},
+	{ "vpnc3_adns",			V_RANGE(0, 3)			},
+	{ "vpnc3_rgw",			V_RANGE(0, 3)			},
+	{ "vpnc3_gw",			V_TEXT(0, 15)			},
+	{ "vpnc3_custom",		V_NONE				},
+	{ "vpnc3_static",		V_NONE				},
+	{ "vpnc3_ca",			V_NONE				},
+	{ "vpnc3_crt",			V_NONE				},
+	{ "vpnc3_key",			V_NONE				},
+	{ "vpnc3_userauth",		V_01				},
+	{ "vpnc3_username",		V_TEXT(0, 50)			},
+	{ "vpnc3_password",		V_TEXT(0, 70)			},
+	{ "vpnc3_useronly",		V_01				},
+	{ "vpnc3_tlsremote",		V_01				},	/* remote-cert-tls server */
+	{ "vpnc3_tlsvername",		V_RANGE(0, 3)			},	/* verify-x509-name: 0 - disabled, 1 - Common Name, 2 - Common Name Prefix, 3 - Subject */
+	{ "vpnc3_cn",			V_NONE				},
+	{ "vpnc3_br",			V_LENGTH(0, 50)			},
+	{ "vpnc3_routing_val",		V_NONE				},
+	{ "vpnc3_fw",			V_01				},
+	{ "vpnc3_prio",			V_NONE				},
 #ifdef TOMATO64
-	{ "vpn_client3_dco",		V_01				},
+	{ "vpnc3_dco",			V_01				},
 #endif /* TOMATO64 */
 #endif
 #endif /* TCONFIG_OPENVPN */

@@ -566,9 +566,9 @@ void kill_switch(_tf_ipt_write ipt_write)
 	/* proceed routing_val */
 	for (i = 0; i < n; i++) {
 		kd = (strcmp(kind[i], "wg") == 0 ? 0 : 1);
-		routing_key = (kd ? "vpn_client%u_routing_val" : "wg%u_routing_val");
-		rgw_key =     (kd ? "vpn_client%u_rgw"         : "wg%u_rgwr");
-		iface_fmt =   (kd ? "tun1%u"                   : "wg%u");
+		routing_key = (kd ? "vpnc%u_routing_val" : "wg%u_routing_val");
+		rgw_key =     (kd ? "vpnc%u_rgw"         : "wg%u_rgwr");
+		iface_fmt =   (kd ? "tun1%u"             : "wg%u");
 
 		mwan_num = nvram_get_int("mwan_num");
 		if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
@@ -577,7 +577,7 @@ void kill_switch(_tf_ipt_write ipt_write)
 		for (unit = kd; unit <= (kd ? OVPN_CLIENT_MAX : WG_INTERFACE_MAX); ++unit) {
 			/* only apply kill switch rules if in PBR mode! */
 			if (kd) { /* ovpn */
-				if ((atoi(getNVRAMVar(rgw_key, unit)) < VPN_RGW_POLICY) || (strcmp(getNVRAMVar("vpn_client%u_if", unit), "tun") != 0)) /* proper policy mode and if: 'tun' */
+				if ((atoi(getNVRAMVar(rgw_key, unit)) < VPN_RGW_POLICY) || (strcmp(getNVRAMVar("vpnc%u_if", unit), "tun") != 0)) /* proper policy mode and if: 'tun' */
 					continue;
 			}
 			else { /* wireguard */
