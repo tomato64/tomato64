@@ -651,6 +651,11 @@ extern void write_ovpn_dnsmasq_config(FILE*);
 extern int write_ovpn_resolv(FILE*);
 #endif
 
+/* format.c */
+#ifdef TOMATO64
+extern void nvram_format_compat(void);
+#endif /* TOMATO64 */
+
 /* wireguard.c */
 #ifdef TCONFIG_WIREGUARD
 #define WG_KEY_LEN 32

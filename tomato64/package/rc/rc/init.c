@@ -12011,6 +12011,11 @@ static void sysinit(void)
 #ifdef TCONFIG_BCMBSD
 	del_bsd_defaults(); /* remove BSD (smart connect / band steering) nvram values if feature is disabled! */
 #endif /* TCONFIG_BCMBSD */
+
+#ifdef TOMATO64
+	nvram_format_compat(); /* migrate renamed NVRAM variables */
+#endif /* TOMATO64 */
+
 	init_nvram();
 
 #ifdef TOMATO64
