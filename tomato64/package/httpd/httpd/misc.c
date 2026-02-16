@@ -574,6 +574,7 @@ void asp_jiffies(int argc, char **argv)
 
 void asp_etherstates(int argc, char **argv)
 {
+#ifndef TOMATO64
 	FILE *f;
 	char line[128], state[32], router_name[64], ports_var[32], wan_state[16];
 	char *wan_ifname, *ports_str, *tmp;
@@ -831,6 +832,62 @@ void asp_etherstates(int argc, char **argv)
 	}
 
 	web_puts("};\n");
+#else /* TOMATO64 */
+	char path[64];
+	char buf[32];
+	char speed[16], duplex[4];
+	int port;
+	unsigned n;
+
+	if (!nvram_match("lan_state", "1")) {
+		web_puts("\netherstates = {port0: 'disabled'};\n");
+		return;
+	}
+
+	web_puts("\netherstates = {");
+	n = 0;
+
+	for (port = 0; port <= 8; port++) {
+		snprintf(path, sizeof(path), "/sys/class/net/eth%d", port);
+
+		/* skip non-existent interfaces */
+		if (access(path, F_OK) != 0)
+			continue;
+
+		/* check link state */
+		snprintf(path, sizeof(path), "/sys/class/net/eth%d/carrier", port);
+		if (f_read_string(path, buf, sizeof(buf)) <= 0 || atoi(buf) != 1) {
+			web_printf("%sport%d: 'DOWN'", n ? "," : "", port);
+			n++;
+			continue;
+		}
+
+		/* read speed */
+		speed[0] = '\0';
+		snprintf(path, sizeof(path), "/sys/class/net/eth%d/speed", port);
+		if (f_read_string(path, buf, sizeof(buf)) > 0)
+			snprintf(speed, sizeof(speed), "%d", atoi(buf));
+
+		/* read duplex */
+		duplex[0] = '\0';
+		snprintf(path, sizeof(path), "/sys/class/net/eth%d/duplex", port);
+		if (f_read_string(path, buf, sizeof(buf)) > 0) {
+			if (buf[0] == 'f' || buf[0] == 'F')
+				strlcpy(duplex, "FD", sizeof(duplex));
+			else if (buf[0] == 'h' || buf[0] == 'H')
+				strlcpy(duplex, "HD", sizeof(duplex));
+		}
+
+		if (speed[0] && duplex[0])
+			web_printf("%sport%d: '%s%s'", n ? "," : "", port, speed, duplex);
+		else
+			web_printf("%sport%d: 'DOWN'", n ? "," : "", port);
+
+		n++;
+	}
+
+	web_puts("};\n");
+#endif /* TOMATO64 */
 }
 
 void asp_anonupdate(int argc, char **argv)
