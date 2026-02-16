@@ -225,7 +225,7 @@ void start_ovpn_client(int unit)
 #endif
 
 	memset(buffer, 0, BUF_SIZE);
-	snprintf(buffer, BUF_SIZE, "vpnc%d", unit);
+	snprintf(buffer, BUF_SIZE, "vpnclient%d", unit);
 	if (serialize_restart(buffer, 1))
 		return;
 
