@@ -84,7 +84,6 @@ char *f_argv[32];
 int f_argc = -1;
 
 static void save_cookie(void);
-static void error(const char *fmt, ...);
 
 /* this should be in nvram so you can add/edit/remove checkers, but we have so little nvram it's impossible... */
 static char services[][2][23] = { /* remember: the number in the third square bracket must be (len + 1) of the longest string */
@@ -165,9 +164,8 @@ static void trimamp(char *s)
 
 static const char *get_option(const char *name)
 {
-	char *p, *key_end, *entry, *value;
+	char *p;
 	int i, n;
-	size_t entry_len;
 	FILE *f;
 	const char *c;
 	char s[384];
@@ -178,60 +176,26 @@ static const char *get_option(const char *name)
 			if ((f = fopen(c, "r")) != NULL) {
 				while (fgets(s, sizeof(s), f)) {
 					p = s;
-
-					/* trim leading whitespace */
-					while (*p && isspace((unsigned char)*p))
-						++p;
-
-					if ((*p == '\0') || (*p == '#')) /* blank line or comment */
-						continue;
-
-					/* trim trailing whitespace */
-					key_end = p + strlen(p) - 1;
-					while (key_end > p && isspace((unsigned char)*key_end))
-						--key_end;
-
-					*(key_end + 1) = '\0';
-
-					/* optional -- prefix */
-					if (p[0] == '-' && p[1] == '-')
+					if ((s[0] == '-') && (s[1] == '-'))
 						p += 2;
 
-					/* find the end of the key (first space/tab) */
-					key_end = p;
-					while (*key_end && !isspace((unsigned char)*key_end))
-						++key_end;
+					if ((c = strchr(p, ' ')) != NULL) {
+						n = strlen(p);
+						if (p[n - 1] == '\n')
+							p[n - 1] = 0;
 
-					if (*key_end == '\0') {
-						/* option with no value – e.g. "wildcard" */
-						if ((p = strdup(p)) == NULL) {
-							fclose(f);
-							error(M_ERROR_MEM_ALLOC);
-						}
+						n = strlen(c + 1);
+						if (n <= 0)
+							continue;
+						if (n >= MAX_OPTION_LENGTH)
+							exit(88);
+						if ((p = strdup(p)) == NULL)
+							exit(99);
+
 						f_argv[f_argc++] = p;
 						if ((unsigned int)f_argc >= ASIZE(f_argv))
 							break;
-
-						continue;
 					}
-
-					*key_end = '\0';
-					value = key_end + 1;
-					while (*value && isspace((unsigned char)*value))
-						++value;
-
-					/* save the entire "key value" as one string */
-					entry_len = strlen(p) + 1 + strlen(value) + 1;
-					entry = malloc(entry_len);
-					if (!entry) {
-						fclose(f);
-						error(M_ERROR_MEM_ALLOC);
-					}
-					snprintf(entry, entry_len, "%s %s", p, value);
-
-					f_argv[f_argc++] = entry;
-					if ((unsigned int)f_argc >= ASIZE(f_argv))
-						break;
 				}
 				fclose(f);
 			}
@@ -241,22 +205,22 @@ static const char *get_option(const char *name)
 	n = strlen(name);
 	for (i = 0; i < f_argc; ++i) {
 		c = f_argv[i];
-		if (strncmp(c, name, n) == 0 && ((c[n] == ' ') || (c[n] == '\0'))) {
-			return c + n + (c[n] == ' ' ? 1 : 0); /* skip spaces if present */
-		}
+		if ((strncmp(c, name, n) == 0) && (c[n] == ' '))
+			return c + n + 1;
 	}
 
-	/* fallback to command line */
 	for (i = 0; i < g_argc; ++i) {
 		p = g_argv[i];
-		if (p[0] == '-' && p[1] == '-' && strcmp(p + 2, name) == 0) {
-			if ((++i >= g_argc) || (strlen(g_argv[i]) >= MAX_OPTION_LENGTH))
-				break;
+		if ((p[0] == '-') && (p[1] == '-')) {
+			if (strcmp(p + 2, name) == 0) {
+				++i;
+				if ((i >= g_argc) || (strlen(g_argv[i]) >= MAX_OPTION_LENGTH))
+					break;
 
-			return g_argv[i];
+				return g_argv[i];
+			}
 		}
 	}
-
 	return NULL;
 }
 
@@ -946,6 +910,7 @@ connected:
 		*body = body_start;
 
 	return i;
+
 #endif /* USE_LIBCURL */
 }
 
