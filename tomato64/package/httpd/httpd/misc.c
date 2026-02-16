@@ -575,29 +575,262 @@ void asp_jiffies(int argc, char **argv)
 void asp_etherstates(int argc, char **argv)
 {
 	FILE *f;
-	char s[32], a[8], b[16];
-	unsigned n;
-	int p;
+	char line[128], state[32], router_name[64], ports_var[32], wan_state[16];
+	char *wan_ifname, *ports_str, *tmp;
+	int vport, vport_last, port_num, port_count, router_match;
+	int i, j;
+	static const char ports_disabled[] = "\netherstates = {port0: 'disabled'};\n";
+#ifdef TCONFIG_BCMARM
+	/* ARM routers with WAN on Port 4 */
+	static const char *arm_port4_routers[] = {
+		"Netgear AC1450",
+		"Netgear R6200v2",
+		"Netgear R6250",
+		"Netgear R6300v2",
+		"RT-AC56U",
+		"RT-AC56S",
+		"RT-AC3100",
+		"RT-AC88U",
+		"DIR868L",
+		"EA6200",
+		"EA6350v1",
+		"EA6350v2",
+		"EA6400",
+		"EA6500v2",
+		"EA6700",
+		"R7900",
+		"R8000",
+		NULL
+	};
+#else
+	/* MIPS routers with WAN on Port 4 */
+	static const char *mips_port4_routers[] = {
+		"RT-N10P",
+		"RT-N12 A1",
+		"RT-N12 B1",
+		"RT-N12 C1",
+		"RT-N12 D1",
+		"RT-N12 HP",
+		"RT-N15U",
+		"RT-N53",
+		"RT-N53 A1",
+		"Share Max N300 (F7D3301/F7D7301) v1",
+		"Play Max / N600 HD (F7D4301/F7D8301) v1",
+		"WNDR3400",
+		"WNDR3400v2",
+		"WNDR3400v3",
+		"R6300 V1",
+		"Share N300 (F7D3302/F7D7302) v1",
+		"Play N600 (F7D4302/F7D8302) v1",
+		"N600 DB Wireless N+",
+		"Dir-620 C1",
+		"E800 v1.0",
+		"E900 v1.0",
+		"E1200 v1.0",
+		"E1200 v2.0",
+		"E1500 v1.0",
+		"E1550 v1.0",
+		"E2500 v1.0",
+		"E2500 v1/v2/v3",
+		"E3200 v1.0",
+		"E4200 v1",
+		"WNDR3700v3",
+		"WNDR4000",
+		"WNDR4500 V1",
+		"WNDR4500 V2",
+		NULL
+	};
+#endif
+	/* port state storage */
+	typedef struct {
+		int port_num;
+		char state[16];
+	} port_state_t;
 
-	if (nvram_match("lan_state", "1")) {
-		web_puts("\netherstates = {");
+	port_state_t ports[16];
+	port_state_t temp;
 
-		system("/usr/sbin/ethstate");
-		n = 0;
-		if ((f = fopen("/tmp/ethernet.state", "r"))) {
-			while (fgets(s, sizeof(s), f)) {
-				if (sscanf(s, "Port %d: %s", &p, b) == 2) {
-					snprintf(a, sizeof(a), "port%d", p);
-					web_printf("%s%s: '%s'", n ? "," : "", a, b);
-					n++;
+	/* variables for port parsing */
+	char *ports_copy;
+	char *token, *last_token;
+	char *saveptr;
+
+	/* initialize variables */
+	last_token = NULL;
+	vport = 0;
+	vport_last = 0;
+	port_count = 0;
+	router_match = 0;
+	memset(wan_state, 0, sizeof(wan_state));
+
+	if (!nvram_match("lan_state", "1")) {
+		web_puts(ports_disabled);
+		return;
+	}
+
+	/* get router name */
+	tmp = nvram_safe_get("t_fix1");
+	memset(router_name, 0, sizeof(router_name));
+	strlcpy(router_name, tmp, sizeof(router_name));
+
+	/* get WAN interface name */
+	wan_ifname = nvram_safe_get("wan_ifname");
+
+	/* build nvram variable name for ports */
+	memset(ports_var, 0, sizeof(ports_var));
+	snprintf(ports_var, sizeof(ports_var), "%sports", wan_ifname);
+	ports_str = nvram_safe_get(ports_var);
+
+	/* parse VPORT (first port number) and VPORTLAST (last port number) */
+	if (ports_str && strlen(ports_str) > 0) {
+		ports_copy = strdup(ports_str);
+
+		/* Get first port */
+		token = strtok_r(ports_copy, " \t", &saveptr);
+		if (token) {
+			while (*token && !isdigit(*token))
+				token++;
+
+			if (*token)
+				vport = atoi(token);
+
+			last_token = token;
+		}
+
+		/* get last port */
+		while ((token = strtok_r(NULL, " \t", &saveptr)) != NULL) {
+			last_token = token;
+		}
+		if (last_token) {
+			while (*last_token && !isdigit(*last_token))
+				last_token++;
+
+			if (*last_token)
+				vport_last = atoi(last_token);
+		}
+
+		free(ports_copy);
+	}
+
+	/* determine WAN port based on router model if VPORTLAST == VPORT */
+	if ((vport_last == vport) || (vport_last == 0)) {
+		/* check if router uses Port 4 for WAN */
+#ifdef TCONFIG_BCMARM
+		for (i = 0; arm_port4_routers[i] != NULL; i++) {
+			if (strcmp(router_name, arm_port4_routers[i]) == 0) {
+#else
+		for (i = 0; mips_port4_routers[i] != NULL; i++) {
+			if (strcmp(router_name, mips_port4_routers[i]) == 0) {
+#endif
+				router_match = 1;
+				break;
+			}
+		}
+		vport = router_match ? 4 : 0;
+	}
+
+	/* execute robocfg and parse output */
+	if (!(f = popen("robocfg showports 2>/dev/null", "r"))) {
+		web_puts(ports_disabled);
+		return;
+	}
+
+	/* read and parse robocfg output */
+	while (fgets(line, sizeof(line), f)) {
+		if (strstr(line, "Port ") == line) {
+			if (sscanf(line, "Port %d: %s", &port_num, state) == 2) {
+				/* skip management ports 7 and 8 */
+				if ((port_num == 7) || (port_num == 8))
+					continue;
+#ifndef TCONFIG_EXTSW
+				/* skip port 5 if no extended switch */
+				if (port_num == 5)
+					continue;
+#endif
+				/* store WAN port state separately */
+				if (port_num == vport) {
+					strlcpy(wan_state, state, sizeof(wan_state));
+					continue;
+				}
+#ifdef TCONFIG_BCMARM
+				/* skip specific ports for special routers */
+				if (strcmp(router_name, "MiWiFi") == 0) {
+					if ((port_num == 1) || (port_num == 3))
+						continue;
+				}
+				if (strcmp(router_name, "AC15") == 0) {
+					if (port_num == 1)
+						continue;
+				}
+#endif
+				/* store LAN port */
+				if (port_count < 16) {
+					ports[port_count].port_num = port_num;
+					strlcpy(ports[port_count].state, state, sizeof(ports[port_count].state));
+					port_count++;
 				}
 			}
-			fclose(f);
 		}
-		web_puts("};\n");
 	}
-	else
-		web_puts("\netherstates = {port0: 'disabled'};\n");
+	pclose(f);
+
+	/* check if we need to invert port order */
+	if (nvram_get_int("lan_invert") == 1) {
+#ifdef TCONFIG_EXTSW
+		/* for extended switch: sort ports 0-3 in reverse, then add port 5 */
+
+		/* bubble sort in reverse order (only for ports 0-3) */
+		for (i = 0; i < port_count - 1; i++) {
+			for (j = 0; j < port_count - i - 1; j++) {
+				if (ports[j].port_num < 5 && ports[j + 1].port_num < 5) {
+					if (ports[j].port_num < ports[j + 1].port_num) {
+						temp = ports[j];
+						ports[j] = ports[j + 1];
+						ports[j + 1] = temp;
+					}
+				}
+			}
+		}
+		/* move port 5 to end if present */
+		for (i = 0; i < port_count; i++) {
+			if (ports[i].port_num == 5) {
+				temp = ports[i];
+
+				for (j = i; j < port_count - 1; j++) {
+					ports[j] = ports[j + 1];
+				}
+				ports[port_count-1] = temp;
+				break;
+			}
+		}
+#else
+		/* simple reverse sort for non-extended switch */
+		for (i = 0; i < port_count - 1; i++) {
+			for (j = 0; j < port_count - i - 1; j++) {
+				if (ports[j].port_num < ports[j + 1].port_num) {
+					temp = ports[j];
+					ports[j] = ports[j + 1];
+					ports[j + 1] = temp;
+				}
+			}
+		}
+#endif
+	}
+
+	/* output the result */
+	web_puts("\netherstates = {");
+
+	/* WAN port is always Port 0 in output */
+	web_printf("port0: '%s'", wan_state[0] ? wan_state : "DOWN");
+
+	/* output LAN ports as Port 1, 2, 3, ... */
+	j = 1;
+	for (i = 0; i < port_count; i++) {
+		web_printf(",port%d: '%s'", j, ports[i].state);
+		j++;
+	}
+
+	web_puts("};\n");
 }
 
 void asp_anonupdate(int argc, char **argv)
@@ -825,7 +1058,7 @@ void asp_activeroutes(int argc, char **argv)
 					goto OUT;
 				}
 				addr6x[i++] = *p++;
-				if (!((i+1) % 5))
+				if (!((i + 1) % 5))
 					addr6x[i++] = ':';
 			} while (i < 40 + 28 + 7);
 

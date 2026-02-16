@@ -89,23 +89,6 @@ else
 	sed -i $(INSTALLDIR)/usr/sbin/ttb -e "/STUBBYNO-BEGIN/,/STUBBYNO-END/d"
 endif
 
-# Ethernet state report
-	install -m 0700 ethstate $(INSTALLDIR)/usr/sbin
-ifneq ($(TCONFIG_BCMARM),y)
-	sed -i $(INSTALLDIR)/usr/sbin/ethstate -e "/BCMARM-BEGIN/,/BCMARM-END/d"
-else
-	sed -i $(INSTALLDIR)/usr/sbin/ethstate -e "/BCMARMNO-BEGIN/,/BCMARMNO-END/d"
-endif
-
-# Ethernet state report mod for RTL8365MB switch (RT-AC88U)
-ifneq ($(TCONFIG_TOMATO64),y)
-ifneq ($(TCONFIG_EXTSW),y)
-	sed -i $(INSTALLDIR)/usr/sbin/ethstate -e "/EXTSW-BEGIN/,/EXTSW-END/d"
-else
-	sed -i $(INSTALLDIR)/usr/sbin/ethstate -e "/EXTSW-NO-BEGIN/,/EXTSW-NO-END/d"
-endif
-endif #TOMATO64
-
 # stealthMode
 ifneq ($(TCONFIG_BCMARM),y)
 ifneq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
@@ -228,14 +211,12 @@ endif #TOMATO64
 
 # clean up
 	cd $(INSTALLDIR)/usr/sbin && \
-		for F in tomatoanon adblock ttb optware-install.sh entware-install.sh vpnrouting.sh ethstate mymotd switch4g webmon_bkp; do \
+		for F in tomatoanon adblock ttb optware-install.sh entware-install.sh vpnrouting.sh mymotd switch4g webmon_bkp; do \
 			[ -f $(INSTALLDIR)/usr/sbin/$$F ] && sed -i $$F \
 			-e "/STUBBY-BEGIN/d"	-e "/STUBBY-END/d" \
 			-e "/STUBBYNO-BEGIN/d"	-e "/STUBBYNO-END/d" \
 			-e "/BCMARM-BEGIN/d"	-e "/BCMARM-END/d" \
 			-e "/BCMARMNO-BEGIN/d"	-e "/BCMARMNO-END/d" \
-			-e "/EXTSW-BEGIN/d"	-e "/EXTSW-END/d" \
-			-e "/EXTSW-NO-BEGIN/d"	-e "/EXTSW-NO-END/d" \
 			-e "/BBT-BEGIN/d"	-e "/BBT-END/d" \
 			-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 			-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
@@ -245,7 +226,7 @@ endif #TOMATO64
 
 ifneq ($(TCONFIG_BCMARM),y)
 	cd $(INSTALLDIR)/usr/sbin && \
-		for F in switch3g switch4g wwansignal mwwatchdog ntp2ip tomatoanon adblock ttb ethstate mymotd sysinfo-helper linkagg webmon_bkp optware-install.sh entware-install.sh updown-client.sh vpnrouting.sh cru sysinfo stealthMode gencert.sh; do \
+		for F in switch3g switch4g wwansignal mwwatchdog ntp2ip tomatoanon adblock ttb mymotd sysinfo-helper linkagg webmon_bkp optware-install.sh entware-install.sh updown-client.sh vpnrouting.sh cru sysinfo stealthMode gencert.sh; do \
 			[ -f $(INSTALLDIR)/usr/sbin/$$F ] && { \
 				sed -i $$F -e "/^#!/p" -e "/^\s*#/d"; \
 				sed -i $$F -e '/^\/\*\s*$$/,/\*\//! { s/^\s\+//; s/\s\+$$//; /^$$/d }'; \
