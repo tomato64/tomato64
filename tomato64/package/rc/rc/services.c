@@ -1913,9 +1913,15 @@ void start_ntpd(void)
 {
 	FILE *f;
 	char *servers, *ptr;
+#ifndef TOMATO64
 	int servers_len = 0, ntp_updates_int = 0, index = 2, off, i;
+#else
+	int servers_len = 0, ntp_updates_int = 0, index = 2;
+#endif
 	char *ntpd_argv[] = { "/usr/sbin/ntpd", "-t", NULL, NULL, NULL, NULL, NULL, NULL }; /* -ddddddd -q -S /sbin/ntpd_synced -l */
+#ifndef TOMATO64
 	char cmd[256];
+#endif
 
 	if (serialize_restart("ntpd", 1))
 		return;
@@ -1974,6 +1980,7 @@ void start_ntpd(void)
 				ntpd_argv[index++] = "-l";
 		}
 
+#ifndef TOMATO64
 		memset(cmd, 0, sizeof(cmd)); /* reset */
 		off = snprintf(cmd, sizeof(cmd), "sh -c 'ulimit -c 0 -e 15 -r 15 -l 64 -m 8192 -n 512 -s 8192 -u 16 -v 8192; %s", ntpd_argv[0]);
 		for (i = 1; ntpd_argv[i]; ++i)
@@ -1981,6 +1988,9 @@ void start_ntpd(void)
 
 		snprintf(cmd + off, sizeof(cmd) - off, "'");
 		system(cmd);
+#else
+		_eval(ntpd_argv, NULL, 0, NULL);
+#endif /* TOMATO64 */
 
 		if (!nvram_contains_word("debug_norestart", "ntpd"))
 			pid_ntpd = -2;
