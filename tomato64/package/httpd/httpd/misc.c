@@ -865,8 +865,11 @@ void asp_etherstates(int argc, char **argv)
 		/* read speed */
 		speed[0] = '\0';
 		snprintf(path, sizeof(path), "/sys/class/net/eth%d/speed", port);
-		if (f_read_string(path, buf, sizeof(buf)) > 0)
-			snprintf(speed, sizeof(speed), "%d", atoi(buf));
+		if (f_read_string(path, buf, sizeof(buf)) > 0) {
+			int spd = atoi(buf);
+			if (spd > 0)
+				snprintf(speed, sizeof(speed), "%d", spd);
+		}
 
 		/* read duplex */
 		duplex[0] = '\0';
@@ -881,7 +884,8 @@ void asp_etherstates(int argc, char **argv)
 		if (speed[0] && duplex[0])
 			web_printf("%sport%d: '%s%s'", n ? "," : "", port, speed, duplex);
 		else
-			web_printf("%sport%d: 'DOWN'", n ? "," : "", port);
+			/* carrier is up but speed/duplex unknown (bridge or virtual NIC) */
+			web_printf("%sport%d: 'Unknown!'", n ? "," : "", port);
 
 		n++;
 	}
