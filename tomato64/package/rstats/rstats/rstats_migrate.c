@@ -146,13 +146,25 @@ static int migrate_history(const char *old_file, const char *new_file)
 	/* Copy header */
 	new_hist.id = old_hist.id;
 	new_hist.dailyp = old_hist.dailyp;
-	new_hist.monthlyp = old_hist.monthlyp;
 
 	/* Copy daily data (same size in both formats) */
 	memcpy(new_hist.daily, old_hist.daily, sizeof(old_hist.daily));
 
-	/* Copy monthly data (old data goes into beginning of new array) */
-	memcpy(new_hist.monthly, old_hist.monthly, sizeof(old_hist.monthly));
+	{
+		int old_p = old_hist.monthlyp;
+		int count = 0;
+		int k;
+
+		for (k = OLD_MAX_NMONTHLY; k > 0; --k) {
+			old_p = (old_p + 1) % OLD_MAX_NMONTHLY;
+			if (old_hist.monthly[old_p].xtime != 0) {
+				new_hist.monthly[count] = old_hist.monthly[old_p];
+				count++;
+			}
+		}
+		/* monthlyp points to the most-recent (last linearized) entry */
+		new_hist.monthlyp = (count > 0) ? (count - 1) : 0;
+	}
 
 	/* Write new format */
 	if (compress_file(new_file, &new_hist, sizeof(new_hist)) < 0) {
@@ -160,6 +172,7 @@ static int migrate_history(const char *old_file, const char *new_file)
 	}
 
 	printf("  New file written successfully\n");
+	printf("  Monthly pointer: %d -> %d (linearized)\n", old_hist.monthlyp, new_hist.monthlyp);
 	printf("  File sizes: Old=%zu bytes, New=%zu bytes\n",
 		sizeof(old_hist), sizeof(new_hist));
 	printf("  Capacity expanded: +%d months available for future data\n",
