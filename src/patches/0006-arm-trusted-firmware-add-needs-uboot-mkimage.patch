@@ -1,14 +1,24 @@
-arm-trusted-firmware: add option to depend on host-uboot-tools for mkimage
+From 5627bc83845260d69397a427f1dadfbb99ae7f0a Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Thu, 19 Feb 2026 22:42:49 -0700
+Subject: [PATCH] arm-trusted-firmware: add option to depend on
+ host-uboot-tools for mkimage
 
 Some ATF platform builds (e.g. Mediatek) require mkimage to produce
 bl2.img. Add a NEEDS_UBOOT_MKIMAGE config option similar to NEEDS_DTC.
+---
+ boot/arm-trusted-firmware/Config.in               | 7 +++++++
+ boot/arm-trusted-firmware/arm-trusted-firmware.mk | 4 ++++
+ 2 files changed, 11 insertions(+)
 
+diff --git a/boot/arm-trusted-firmware/Config.in b/boot/arm-trusted-firmware/Config.in
+index 70fdec5c2a..5449372b18 100644
 --- a/boot/arm-trusted-firmware/Config.in
 +++ b/boot/arm-trusted-firmware/Config.in
-@@ -253,6 +253,13 @@
+@@ -273,6 +273,13 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_DTC
  	  Select this option if your ATF board configuration
  	  requires the Device Tree compiler to be available.
-
+ 
 +config BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_UBOOT_MKIMAGE
 +	bool "Needs mkimage"
 +	select BR2_PACKAGE_HOST_UBOOT_TOOLS
@@ -19,12 +29,14 @@ bl2.img. Add a NEEDS_UBOOT_MKIMAGE config option similar to NEEDS_DTC.
  config BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_ARM32_TOOLCHAIN
  	bool "Needs arm-none-eabi toolchain"
  	depends on BR2_aarch64
+diff --git a/boot/arm-trusted-firmware/arm-trusted-firmware.mk b/boot/arm-trusted-firmware/arm-trusted-firmware.mk
+index b81ce0d827..bacfc5a7e2 100644
 --- a/boot/arm-trusted-firmware/arm-trusted-firmware.mk
 +++ b/boot/arm-trusted-firmware/arm-trusted-firmware.mk
-@@ -37,6 +37,10 @@
+@@ -33,6 +33,10 @@ ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_DTC),y)
  ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-dtc
  endif
-
+ 
 +ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_UBOOT_MKIMAGE),y)
 +ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-uboot-tools
 +endif
@@ -32,3 +44,6 @@ bl2.img. Add a NEEDS_UBOOT_MKIMAGE config option similar to NEEDS_DTC.
  ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_ARM32_TOOLCHAIN),y)
  ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-arm-gnu-toolchain
  endif
+-- 
+2.47.3
+

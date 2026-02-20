@@ -1,6 +1,6 @@
 --- iperf/src/iperf.h
 +++ iperf/src/iperf.h
-@@ -325,6 +325,8 @@
+@@ -328,6 +328,8 @@
      char     *logfile;				/* --logfile option */
      FILE     *outfile;
  
@@ -11,7 +11,7 @@
      int       listener;
 --- iperf/src/iperf_api.c
 +++ iperf/src/iperf_api.c
-@@ -1134,6 +1134,7 @@
+@@ -1159,6 +1159,7 @@
  #endif
  	{"pidfile", required_argument, NULL, 'I'},
  	{"logfile", required_argument, NULL, OPT_LOGFILE},
@@ -19,7 +19,7 @@
  	{"forceflush", no_argument, NULL, OPT_FORCEFLUSH},
  	{"get-server-output", no_argument, NULL, OPT_GET_SERVER_OUTPUT},
  	{"udp-counters-64bit", no_argument, NULL, OPT_UDP_COUNTERS_64BIT},
-@@ -1192,7 +1193,7 @@
+@@ -1217,7 +1218,7 @@
      FILE *ptr_file;
  #endif /* HAVE_SSL */
  
@@ -28,7 +28,7 @@
          switch (flag) {
              case 'p':
  		portno = atoi(optarg);
-@@ -1631,6 +1632,9 @@
+@@ -1688,6 +1689,9 @@
  	    case OPT_LOGFILE:
  		test->logfile = strdup(optarg);
  		break;
@@ -38,7 +38,7 @@
  	    case OPT_FORCEFLUSH:
  		test->forceflush = 1;
  		break;
-@@ -3648,6 +3652,44 @@
+@@ -3755,6 +3759,44 @@
      }
  }
  
@@ -83,7 +83,7 @@
  /**
   * Print intermediate results during a test (interval report).
   * Uses print_interval_results to print the results for each stream,
-@@ -4439,6 +4481,7 @@
+@@ -4551,6 +4593,7 @@
          case STREAM_RUNNING:
              /* print interval results for each stream */
              iperf_print_intermediate(test);
@@ -91,7 +91,7 @@
              break;
          case TEST_END:
          case DISPLAY_RESULTS:
-@@ -5066,6 +5109,18 @@
+@@ -5178,6 +5221,18 @@
      return 0;
  }
  
@@ -112,15 +112,15 @@
  {
 --- iperf/src/iperf_api.h
 +++ iperf/src/iperf_api.h
-@@ -103,6 +103,7 @@
- #define OPT_USE_PKCS1_PADDING 30
- #define OPT_CNTL_KA 31
+@@ -106,6 +106,7 @@
  #define OPT_SKIP_RX_COPY 32
-+#define OPT_INTERVAL_LOG 33
+ #define OPT_JSON_STREAM_FULL_OUTPUT 33
+ #define OPT_SERVER_MAX_DURATION 34
++#define OPT_INTERVAL_LOG 35
  
  /* states */
  #define TEST_START 1
-@@ -375,6 +376,7 @@
+@@ -382,6 +383,7 @@
  int iperf_create_pidfile(struct iperf_test *);
  int iperf_delete_pidfile(struct iperf_test *);
  void iperf_check_total_rate(struct iperf_test *, iperf_size_t);
@@ -141,9 +141,9 @@
  
 --- iperf/src/iperf_locale.c
 +++ iperf/src/iperf_locale.c
-@@ -119,6 +119,7 @@
-                            "  -J, --json                output in JSON format\n"
+@@ -120,6 +120,7 @@
                             "  --json-stream             output in line-delimited JSON format\n"
+                            "  --json-stream-full-output output in JSON format with JSON streams enabled\n"
                             "  --logfile f               send output to a log file\n"
 +                           "  --intervalfile f          interval file to report current progress\n"
                             "  --forceflush              force flushing output at every interval\n"
