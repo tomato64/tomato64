@@ -2,5 +2,6 @@ config BR2_PACKAGE_FSTOOLS
 	bool "fstools"
 	depends on BR2_aarch64
 	select BR2_PACKAGE_LIBUBOX
+	select BR2_PACKAGE_UTIL_LINUX_LIBBLKID
 	help
 	  OpenWrt filesystem utilities

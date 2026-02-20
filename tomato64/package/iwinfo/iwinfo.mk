@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-IWINFO_VERSION = 2ebef3da84e8e35e54657eb8d7e493a9a144da4d
+IWINFO_VERSION = f5dd57a84cc31a403a1383dd14944fa2e2b5824a
 IWINFO_SITE = https://git.openwrt.org/project/iwinfo.git
 IWINFO_SITE_METHOD = git
 IWINFO_DEPENDENCIES = libnl-tiny libubox ubus libuci

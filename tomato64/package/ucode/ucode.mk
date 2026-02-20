@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-UCODE_VERSION = f7c2b97a82e8b505bf4b2c0d8883b5116e1960f9
+UCODE_VERSION = 85922056ef7abeace3cca3ab28bc1ac2d88e31b1
 UCODE_SITE = $(call github,jow-,ucode,$(UCODE_VERSION))
 UCODE_LICENSE = GPL-2.0
 UCODE_DEPENDENCIES = libubox ubus libuci libnl-tiny libmd

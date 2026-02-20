@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-UDEBUG_VERSION = 75f39cd4a8067a6f0503c2f1c83c6b1af733a6f2
+UDEBUG_VERSION = 875e1a7af6ca9d86524d18169c3a79f4a1920053
 UDEBUG_SITE = https://git.openwrt.org/project/udebug.git
 UDEBUG_SITE_METHOD=git
 UDEBUG_DEPENDENCIES = ubus ucode

@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MAC80211_VERSION = 6.18
+MAC80211_VERSION = 6.18.7
 MAC80211_SOURCE = backports-$(MAC80211_VERSION).tar.zst
 MAC80211_SITE = https://github.com/openwrt/backports/releases/download/backports-v$(MAC80211_VERSION)
 MAC80211_LICENSE = GPL-3.0
