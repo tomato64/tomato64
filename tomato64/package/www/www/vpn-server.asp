@@ -399,13 +399,13 @@ function updateStaticKey(num) {
 
 	disableKeyButtons(num, true);
 	changed = 1;
-	elem.display(E('server'+num+'_static_progress_div'), true);
+	elem.display(E('vpns'+num+'_static_progress_div'), true);
 	keyGenRequest = new XmlHttp();
 
 	keyGenRequest.onCompleted = function(text, xml) {
 		E('_vpns'+num+'_static').value = text;
 		keyGenRequest = null;
-		elem.display(E('server'+num+'_static_progress_div'), false);
+		elem.display(E('vpns'+num+'_static_progress_div'), false);
 		disableKeyButtons(num, false);
 	}
 	keyGenRequest.onError = function(ex) { keyGenRequest = null; }
@@ -422,13 +422,13 @@ function generateDHParams(num) {
 	if (confirm('WARNING: DH Parameters generation can take a long time.\nIf it freezes, refresh the page and try again.\n\nDo you want to proceed?')) {
 		changed = 1;
 		disableKeyButtons(num, true);
-		elem.display(E('server'+num+'_dh_progress_div'), true);
+		elem.display(E('vpns'+num+'_dh_progress_div'), true);
 		keyGenRequest = new XmlHttp();
 
 		keyGenRequest.onCompleted = function(text, xml) {
 			E('_f_vpns'+num+'_dh').value = text;
 			keyGenRequest = null;
-			elem.display(E('server'+num+'_dh_progress_div'), false);
+			elem.display(E('vpns'+num+'_dh_progress_div'), false);
 			disableKeyButtons(num, false);
 		}
 		keyGenRequest.onError = function(ex) { keyGenRequest = null; }
@@ -540,10 +540,10 @@ function downloadClientConfig(num) {
 		}
 	}
 
-	elem.display(E('server'+num+'_gen_progress_div'), true);
+	elem.display(E('vpns'+num+'_gen_progress_div'), true);
 	keyGenRequest = new XmlHttp();
 	keyGenRequest.onCompleted = function(text, xml) {
-		elem.display(E('server'+num+'_gen_progress_div'), false);
+		elem.display(E('vpns'+num+'_gen_progress_div'), false);
 		keyGenRequest = null;
 
 		var dlFileFakeLink = document.createElement('a');
