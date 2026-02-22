@@ -377,6 +377,9 @@ extern int volume_id_probe_ntfs();
 extern int volume_id_probe_hfs_hfsplus();
 #endif
 extern int volume_id_probe_exfat();
+#ifdef TOMATO64
+extern int volume_id_probe_btrfs();
+#endif /* TOMATO64 */
 extern int volume_id_probe_linux_swap();
 
 /* magic for ext2/3/4 detection */
@@ -459,6 +462,10 @@ char *find_label_or_uuid(char *dev_name, char *label, char *uuid)
 	/* detect exfat */
 	else if (!id.error && volume_id_probe_exfat(&id) == 0)
 		fstype = "exfat";
+#ifdef TOMATO64
+	else if (!id.error && volume_id_probe_btrfs(&id) == 0)
+		fstype = "btrfs";
+#endif /* TOMATO64 */
 	/* -> unknown FS */
 	else if (!id.error)
 		fstype = "unknown";

@@ -58,6 +58,7 @@ $(BUSYBOX_DIR)/util-linux/volume_id/util2.o \
 $(BUSYBOX_DIR)/util-linux/volume_id/fat.o \
 $(BUSYBOX_DIR)/util-linux/volume_id/ntfs.o \
 $(BUSYBOX_DIR)/util-linux/volume_id/exfat.o \
+$(BUSYBOX_DIR)/util-linux/volume_id/btrfs.o \
 $(BUSYBOX_DIR)/util-linux/volume_id/linux_swap.o
 
 all: libshared.so libshared.a
