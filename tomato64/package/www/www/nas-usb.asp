@@ -209,10 +209,6 @@ dg.sortCompare = function(a, b) {
 function verifyFields(focused, quiet) {
 
 /* TOMATO64-BEGIN */
-	E('_f_usb').checked = 1;
-	E('_f_usb3').checked = 1;
-	E('_f_usb2').checked = 1;
-	E('_f_ohci').checked = 1;
 	E('_f_storage').checked = 1;
 	E('_f_ext4').checked = 1;
 	E('_f_ntfs').checked = 1;
@@ -224,9 +220,11 @@ function verifyFields(focused, quiet) {
 	var b = !E('_f_usb').checked;
 	var a = !E('_f_storage').checked;
 
+/* TOMATO64-REMOVE-BEGIN */
 	E('_f_uhci').disabled = b || nvram.usb_uhci == -1;
 	E('_f_ohci').disabled = b || nvram.usb_ohci == -1;
 	E('_f_usb2').disabled = b;
+/* TOMATO64-REMOVE-END */
 	E('_f_usb3').disabled = b || nvram.usb_usb3 == -1;
 	E('_f_print').disabled = b;
 	E('_f_storage').disabled = b;
@@ -288,9 +286,16 @@ function save() {
 
 	fom = E('t_fom');
 	fom.usb_enable.value = E('_f_usb').checked ? 1 : 0;
+/* TOMATO64-REMOVE-BEGIN */
 	fom.usb_uhci.value = nvram.usb_uhci == -1 ? -1 : (E('_f_uhci').checked ? 1 : 0);
 	fom.usb_ohci.value = nvram.usb_ohci == -1 ? -1 : (E('_f_ohci').checked ? 1 : 0);
 	fom.usb_usb2.value = E('_f_usb2').checked ? 1 : 0;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	fom.usb_uhci.value = -1;
+	fom.usb_ohci.value = 1;
+	fom.usb_usb2.value = 1;
+/* TOMATO64-END */
 
 	if (nvram.usb_usb3 == 0 && E('_f_usb3').checked) {
 		alert('Please note that enabling USB 3.0 may adversely affect your 2.4G wireless range');
@@ -397,11 +402,13 @@ function init() {
 		createFieldTable('', [
 			{ title: 'Core USB Support', name: 'f_usb', type: 'checkbox', value: nvram.usb_enable == 1 },
 				{ title: 'USB 3.0 Support', indent: 2, name: 'f_usb3', type: 'checkbox', value: nvram.usb_usb3 == 1 },
+/* TOMATO64-REMOVE-BEGIN */
 				{ title: 'USB 2.0 Support', indent: 2, name: 'f_usb2', type: 'checkbox', value: nvram.usb_usb2 == 1 },
 				{ title: 'USB 1.1 Support', indent: 2, multi: [
 					{ suffix: '&nbsp; OHCI &nbsp;&nbsp;&nbsp;', name: 'f_ohci', type: 'checkbox', value: nvram.usb_ohci == 1 },
 					{ suffix: '&nbsp; UHCI &nbsp;',	name: 'f_uhci', type: 'checkbox', value: nvram.usb_uhci == 1 }
 			] },
+/* TOMATO64-REMOVE-END */
 			null,
 			{ title: 'USB Printer Support', name: 'f_print', type: 'checkbox', value: nvram.usb_printer == 1 },
 				{ title: 'Bidirectional copying', indent: 2, name: 'f_bprint', type: 'checkbox', value: nvram.usb_printer_bidirect == 1 },

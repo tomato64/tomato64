@@ -65,6 +65,112 @@
 int umount_mountpoint(struct mntent *mnt, uint flags);
 int uswap_mountpoint(struct mntent *mnt, uint flags);
 
+#ifdef TOMATO64
+/* Control USB root hub authorization via sysfs.
+ * usb_type: 0 = all root hubs, 3 = USB3 root hubs only (speed >= 5000)
+ * authorize: 0 = deauthorize (disable), 1 = authorize (enable)
+ */
+static void usb_authorize_roothubs(int usb_type, int authorize)
+{
+	DIR *dir;
+	struct dirent *entry;
+	char path[128];
+	char speed[16];
+	const char *val = authorize ? "1" : "0";
+
+	if (!(dir = opendir("/sys/bus/usb/devices")))
+		return;
+
+	while ((entry = readdir(dir))) {
+		char cur[4];
+
+		/* root hubs are named usb1, usb2, etc. */
+		if (strncmp(entry->d_name, "usb", 3) != 0)
+			continue;
+
+		if (usb_type == 3) {
+			/* only target USB3 root hubs */
+			snprintf(path, sizeof(path), "/sys/bus/usb/devices/%s/speed", entry->d_name);
+			if (f_read_string(path, speed, sizeof(speed)) <= 0)
+				continue;
+			if (atoi(speed) < 5000)
+				continue;
+		}
+
+		snprintf(path, sizeof(path), "/sys/bus/usb/devices/%s/authorized", entry->d_name);
+
+		/* only write if current state differs from desired */
+		if (f_read_string(path, cur, sizeof(cur)) > 0 && *cur == *val)
+			continue;
+
+		f_write_string(path, val, 0, 0);
+	}
+	closedir(dir);
+}
+
+/* Control USB3 SuperSpeed port power via sysfs.
+ * Powers off/on individual ports under USB3 root hubs using the port
+ * "disable" attribute, which controls USB_PORT_FEAT_POWER.
+ * When a USB3 port is powered off, connected devices fall back to their
+ * USB2 peer port and operate at Hi-Speed instead of SuperSpeed.
+ */
+static void usb3_port_power(int enable)
+{
+	DIR *devdir, *portdir;
+	struct dirent *entry, *pentry;
+	char path[256];
+	char speed[16];
+	char hubname[16];
+	int busnum;
+
+	if (!(devdir = opendir("/sys/bus/usb/devices")))
+		return;
+
+	while ((entry = readdir(devdir))) {
+		if (strncmp(entry->d_name, "usb", 3) != 0)
+			continue;
+
+		/* only target USB3 root hubs (speed >= 5000) */
+		snprintf(path, sizeof(path), "/sys/bus/usb/devices/%s/speed", entry->d_name);
+		if (f_read_string(path, speed, sizeof(speed)) <= 0)
+			continue;
+		if (atoi(speed) < 5000)
+			continue;
+
+		/* get bus number from "usbN" */
+		busnum = atoi(entry->d_name + 3);
+
+		/* ports are under usbN/N-0:1.0/N-portM/ */
+		snprintf(hubname, sizeof(hubname), "%d-0:1.0", busnum);
+		snprintf(path, sizeof(path), "/sys/bus/usb/devices/%s/%s", entry->d_name, hubname);
+
+		if (!(portdir = opendir(path)))
+			continue;
+
+		while ((pentry = readdir(portdir))) {
+			char prefix[16];
+			char cur[4];
+			const char *val = enable ? "0" : "1";
+
+			snprintf(prefix, sizeof(prefix), "usb%d-port", busnum);
+			if (strncmp(pentry->d_name, prefix, strlen(prefix)) != 0)
+				continue;
+
+			snprintf(path, sizeof(path), "/sys/bus/usb/devices/%s/%s/%s/disable",
+				 entry->d_name, hubname, pentry->d_name);
+
+			/* only write if current state differs from desired */
+			if (f_read_string(path, cur, sizeof(cur)) > 0 && *cur == *val)
+				continue;
+
+			f_write_string(path, val, 0, 0);
+		}
+		closedir(portdir);
+	}
+	closedir(devdir);
+}
+#endif /* TOMATO64 */
+
 /* Adjust bdflush parameters.
  * Do this here, because Tomato doesn't have the sysctl command.
  * With these values, a disk block should be written to disk within 2 seconds.
@@ -539,6 +645,23 @@ void start_usb(void)
 		if (nvram_match("log_wm", "1") && nvram_match("webmon_bkp", "1"))
 			xstart("service", "firewall", "restart");
 	}
+
+#ifdef TOMATO64
+	/* For Tomato64, USB is built into the kernel. Use sysfs
+	 * to control USB instead of module loading. */
+	if (!nvram_get_int("usb_enable")) {
+		/* disable all USB via root hub deauthorization */
+		usb_authorize_roothubs(0, 0);
+	}
+	else {
+		/* ensure all root hubs are authorized first */
+		usb_authorize_roothubs(0, 1);
+
+		/* control USB3 SuperSpeed port power;
+		 * disabled ports cause devices to fall back to USB2 Hi-Speed */
+		usb3_port_power(nvram_get_int("usb_usb3") == 1);
+	}
+#endif /* TOMATO64 */
 }
 
 void stop_usb(void)
@@ -577,7 +700,7 @@ void stop_usb(void)
 	if ((disabled) || (nvram_get_int("usb_usb2") != 1))
 		modprobe_r(USB20_MOD);
 #ifdef TCONFIG_BCMARM
-	if ((disabled) || (nvram_get_int("usb_xhci") != 1))
+	if ((disabled) || (nvram_get_int("usb_usb3") != 1))
 		modprobe_r(USB30_MOD);
 
 	/* check USB LED */
@@ -620,6 +743,13 @@ void stop_usb(void)
 	if (nvram_match("boardtype", "0x052b")) /* Netgear WNR3500L v2 - disable USB port */
 		xstart("gpio", "disable", "20");
 #endif /* TCONFIG_BCMARM */
+
+#ifdef TOMATO64
+	if (disabled)
+		usb_authorize_roothubs(0, 0);
+	else if (nvram_get_int("usb_usb3") != 1)
+		usb3_port_power(0);
+#endif /* TOMATO64 */
 }
 
 int mount_r(char *mnt_dev, char *mnt_dir, char *type)

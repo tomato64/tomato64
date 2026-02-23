@@ -11550,7 +11550,8 @@ static int init_nvram(void)
 	nvram_set("t_model_name", s);
 #else
 	features = SUP_1000ET;
-	nvram_set("usb_usb3", "1");
+	if (nvram_is_empty("usb_usb3"))
+		nvram_set("usb_usb3", "1");
 #ifdef TOMATO64_X86_64
 	nvram_set("t_model_name", "x86_64");
 #endif /* TOMATO64_X86_64 */
