@@ -1320,7 +1320,11 @@ struct nvram_tuple router_defaults[] = {
 #endif /* TOMATO64 */
 	{ "usb_usb2",			"1"				, 0 },
 #ifdef TCONFIG_BCMARM
+#ifndef TOMATO64
 	{ "usb_usb3",			"0"				, 0 },
+#else
+	{ "usb_usb3",			"1"				, 0 },
+#endif /* TOMATO64 */
 #endif
 #ifdef TCONFIG_MICROSD
 	{ "usb_mmc",			"-1"				, 0 },
