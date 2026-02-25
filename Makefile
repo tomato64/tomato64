@@ -1,4 +1,4 @@
-BUILDROOT_VERSION = 2026.02-rc1
+BUILDROOT_VERSION = 2026.02-rc2
 BUILDROOT_TARBALL = ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSION).tar.xz
 BUILDROOT_URL = https://github.com/tomato64/buildroot-release/releases/download/$(BUILDROOT_VERSION)
 X86_64_KERNEL_VERSION=$(shell grep "BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE" tomato64/configs/tomato64_defconfig | cut -d '"' -f2)
