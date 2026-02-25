@@ -50,7 +50,10 @@ comm -23 "$DISK_FILES" "$ARCHIVE_FILTERED" > "$TO_DELETE"
 
 # Delete files that weren't in the archive
 while read -r filepath; do
-	[ -n "$filepath" ] && rm -f "/$filepath" 2>/dev/null
+	[ -n "$filepath" ] || continue
+	# Preserve iftab if present
+	[ "$filepath" = "rom/etc/iftab" ] && continue
+	rm -f "/$filepath" 2>/dev/null
 done < "$TO_DELETE"
 
 # Remove empty directories
