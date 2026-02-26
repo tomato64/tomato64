@@ -3361,6 +3361,18 @@ var PortNames = {
 				2: '2'
 			};
 		}
+		else if (model === 'FriendlyElec NanoPi R5S') {
+			this._hardwareLabels = {
+				0: 'WAN',
+				1: 'LAN1',
+				2: 'LAN2'
+			};
+			this._vlanLabels = {
+				0: 'WAN',
+				1: '1',
+				2: '2'
+			};
+		}
 		else { /* x86_64 or device not yet configured */
 			this._hardwareLabels = {
 				0: 'eth0',

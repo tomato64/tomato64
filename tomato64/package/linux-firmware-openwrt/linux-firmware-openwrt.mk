@@ -18,8 +18,8 @@ define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
 endef
 endif
 
-# RTL8169/RTL8125 firmware for Realtek 1G/2.5G NICs (NanoPi R6S)
-ifeq ($(BR2_PACKAGE_PLATFORM_R6S),y)
+# RTL8169/RTL8125 firmware for Realtek 1G/2.5G NICs (NanoPi R6S/R5S)
+ifneq ($(BR2_PACKAGE_PLATFORM_R6S)$(BR2_PACKAGE_PLATFORM_R5S),)
 define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/lib/firmware/rtl_nic
 	cp $(@D)/rtl_nic/rtl810* $(TARGET_DIR)/lib/firmware/rtl_nic

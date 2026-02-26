@@ -44,9 +44,9 @@
  * ============================================================================
  */
 
-#if defined(TOMATO64_R6S)
+#if defined(TOMATO64_R6S) || defined(TOMATO64_R5S)
 /*
- * NanoPi R6S LEDs:
+ * NanoPi R6S / R5S LEDs:
  * - red:power    = System power indicator
  * - green:wan    = WAN port activity
  * - green:lan-1  = LAN port 1 activity
@@ -691,9 +691,9 @@ void led_state_shutdown(void)
  */
 static void led_setup_network(void)
 {
-#if defined(TOMATO64_R6S)
+#if defined(TOMATO64_R6S) || defined(TOMATO64_R5S)
 	/*
-	 * NanoPi R6S:
+	 * NanoPi R6S / R5S:
 	 * - eth0 = WAN
 	 * - eth1 = LAN port 1
 	 * - eth2 = LAN port 2

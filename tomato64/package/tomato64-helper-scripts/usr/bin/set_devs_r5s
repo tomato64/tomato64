@@ -1,0 +1,78 @@
+#!/bin/sh
+
+set -e
+set -x
+
+. /usr/sbin/nvram_ops
+. /usr/sbin/net_utils
+
+# Load kernel modules early to give them time to initialize
+modprobe mt7921u
+
+# Wait for ethernet interfaces to be ready
+# NanoPi R5S has 3 ethernet ports
+# Kernel default naming (GMAC probes last):
+#   eth0 = PCIe RTL8125B #1 (physical LAN1)
+#   eth1 = PCIe RTL8125B #2 (physical LAN2)
+#   eth2 = GMAC0 (physical WAN) - has the constant hardware MAC
+#
+# We rename via iftab+ifrename so that:
+#   eth0 = WAN (GMAC)
+#   eth1 = LAN1 (PCIe #1)
+#   eth2 = LAN2 (PCIe #2)
+for p in eth0 eth1 eth2; do
+	if ! wait_for_interface "$p"; then
+		logger -t set_devs_r5s "ERROR: $p did not appear after 10 seconds"
+	fi
+done
+
+if [ "$(NG set_macs)" != "1" ]; then
+
+	# eth2 has the constant hardware MAC (GMAC0 with RTL8211F PHY on RGMII) - use it as base
+	basemac=$(cat /sys/class/net/eth2/address | tr '[:lower:]' '[:upper:]')
+
+	# Derive MACs: eth0(WAN) = base, eth1(LAN1) = base+1, eth2(LAN2) = base+2
+	eth0macaddr="$basemac"
+	eth1macaddr=$(macaddr_add "$basemac" 1)
+	eth2macaddr=$(macaddr_add "$basemac" 2)
+
+	NS "eth0macaddr=$eth0macaddr"
+	NS "eth1macaddr=$eth1macaddr"
+	NS "eth2macaddr=$eth2macaddr"
+
+	# Apply MAC addresses to current kernel-named interfaces
+	# eth2 (GMAC) already has basemac, will become eth0 after ifrename
+	# eth0 (PCIe #1) gets base+1, will become eth1 after ifrename
+	# eth1 (PCIe #2) gets base+2, will become eth2 after ifrename
+	ip link set dev eth0 address "$eth1macaddr"
+	ip link set dev eth1 address "$eth2macaddr"
+
+	# Write iftab for ifrename: map MACs to desired interface names
+	echo "eth0 mac $eth0macaddr" > /etc/iftab
+	echo "eth1 mac $eth1macaddr" >> /etc/iftab
+	echo "eth2 mac $eth2macaddr" >> /etc/iftab
+
+	# Set WAN MAC (eth0 is WAN on Tomato64)
+	for i in wan_hwaddr wan_mac; do
+		NS "${i}=$eth0macaddr"
+	done
+
+	# Set LAN MAC (eth1 and eth2 are LAN)
+	NS "lan_hwaddr=$eth1macaddr"
+
+	NS set_macs=1
+
+else
+
+	# Apply stored MAC addresses to current kernel-named interfaces
+	# Kernel names are still eth0=PCIe1, eth1=PCIe2, eth2=GMAC
+	ip link set dev eth0 address "$(NG eth1macaddr)"
+	ip link set dev eth1 address "$(NG eth2macaddr)"
+	# eth2 (GMAC) already has its hardware MAC
+
+	# Write iftab for ifrename
+	echo "eth0 mac $(NG eth0macaddr)" > /etc/iftab
+	echo "eth1 mac $(NG eth1macaddr)" >> /etc/iftab
+	echo "eth2 mac $(NG eth2macaddr)" >> /etc/iftab
+
+fi

@@ -119,6 +119,11 @@ function upgrade() {
 			regex: /r6s(?!\d)/i,
 			name: 'R6S',
 			message: 'r6s'
+		},
+		'FriendlyElec NanoPi R5S': {
+			regex: /r5s(?!\d)/i,
+			name: 'R5S',
+			message: 'r5s'
 		}
 	};
 

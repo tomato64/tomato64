@@ -35,6 +35,9 @@ bpi-r3: .configure-bpi-r3
 bpi-r3-mini: .configure-bpi-r3-mini
 	make -C src/buildroot
 
+r5s: .configure-r5s
+	make -C src/buildroot
+
 r6s: .configure-r6s
 	make -C src/buildroot
 
@@ -61,6 +64,9 @@ bpi-r3-menuconfig: .configure-bpi-r3
 
 	make -C src/buildroot menuconfig
 bpi-r3-mini-menuconfig: .configure-bpi-r3-mini
+	make -C src/buildroot menuconfig
+
+r5s-menuconfig: .configure-r5s
 	make -C src/buildroot menuconfig
 
 r6s-menuconfig: .configure-r6s
@@ -99,6 +105,11 @@ distclean:
 	@echo bpi-r3-mini > .target
 	@touch $@
 
+.configure-r5s: .download-rockchip-kernel .patch
+	make -C src/buildroot BR2_EXTERNAL=../../tomato64 r5s_defconfig
+	@echo r5s > .target
+	@touch $@
+
 .configure-r6s: .download-rockchip-kernel .patch
 	make -C src/buildroot BR2_EXTERNAL=../../tomato64 r6s_defconfig
 	@echo r6s > .target
@@ -135,8 +146,8 @@ endif
 ifeq (,$(wildcard ${ROCKCHIP_KERNEL_PATCH}))
 	wget -O ${ROCKCHIP_KERNEL_PATCH} https://github.com/tomato64/openwrt-rockchip-kernel/releases/download/${ROCKCHIP_KERNEL_VERSION}/00001-openwrt-rockchip-kernel-${ROCKCHIP_KERNEL_VERSION}.patch
 endif
-	mkdir -p tomato64/board/arm64/r6s/linux-patches
-	cp ${ROCKCHIP_KERNEL_PATCH} tomato64/board/arm64/r6s/linux-patches/
+	mkdir -p tomato64/board/arm64/common/linux-patches-rockchip
+	cp ${ROCKCHIP_KERNEL_PATCH} tomato64/board/arm64/common/linux-patches-rockchip
 	@touch $@
 
 .download-x86_64-kernel:

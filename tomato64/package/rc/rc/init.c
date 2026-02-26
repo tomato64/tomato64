@@ -11570,6 +11570,9 @@ static int init_nvram(void)
 #ifdef TOMATO64_R6S
 	nvram_set("t_model_name", "FriendlyElec NanoPi R6S");
 #endif /* TOMATO64_R6S */
+#ifdef TOMATO64_R5S
+	nvram_set("t_model_name", "FriendlyElec NanoPi R5S");
+#endif /* TOMATO64_R5S */
 #endif /* TOMATO64 */
 #ifndef CONFIG_BCMWL6A
 	nvram_set("pa0maxpwr", "400"); /* allow Tx power up tp 400 mW, needed for ND only */
@@ -11918,13 +11921,16 @@ static void sysinit(void)
 #ifdef TOMATO64_R6S
 	eval("set_devs_r6s");
 #endif /* TOMATO64_R6S */
+#ifdef TOMATO64_R5S
+	eval("set_devs_r5s");
+#endif /* TOMATO64_R5S */
 	eval("set_devs");
 
 	/* Expand filesystem parition to fill disk */
 	if (!nvram_get_int("fs_expanded")) {
-#if defined(TOMATO64_X86_64) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI) || defined(TOMATO64_RPI4) || defined(TOMATO64_R6S)
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI) || defined(TOMATO64_RPI4) || defined(TOMATO64_R6S) || defined(TOMATO64_R5S)
 		eval("expand_root_partition");
-#endif /* TOMATO64_X86_64 || TOMATO64_BPIR3 || TOMATO64_BPIR3MINI || TOMATO64_R6S */
+#endif /* TOMATO64_X86_64 || TOMATO64_BPIR3 || TOMATO64_BPIR3MINI || TOMATO64_R6S || TOMATO64_R5S */
 #ifdef TOMATO64_MT6000
 		eval("resize2fs", "/dev/mmcblk0p7");
 #endif /* TOMATO64_MT6000 */

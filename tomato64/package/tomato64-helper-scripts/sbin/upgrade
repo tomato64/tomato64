@@ -178,4 +178,33 @@ if [ -f /boot/friendlyarm_nanopi-r6s-kernel.bin ] && [ "$(NG "t_model_name")" ==
 	printf "image successfully flashed\n"
 fi
 
+# NanoPi R5S
+if [ -f /boot/friendlyarm_nanopi-r5s-kernel.bin ] && [ "$(NG "t_model_name")" == "FriendlyElec NanoPi R5S" ]; then
+	ROOT_DEV=$(findmnt -n -o SOURCE /)
+	BOOT_DISK=$(echo "$ROOT_DEV" | sed 's|/dev/||; s|p[0-9]*$||')
+
+	# Update kernel partition (p1) - ext4 filesystem containing kernel.img and boot.scr
+	MOUNT_POINT=$(mktemp -d)
+	mount -t ext4 /dev/${BOOT_DISK}p1 "$MOUNT_POINT"
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d" returned during mounting kernel partition' "$result"
+		rmdir "$MOUNT_POINT"
+		exit
+	fi
+	cp /boot/friendlyarm_nanopi-r5s-kernel.bin "$MOUNT_POINT/kernel.img"
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d" returned during kernel copy' "$result"
+		umount "$MOUNT_POINT"
+		rmdir "$MOUNT_POINT"
+		exit
+	fi
+	sync
+	umount "$MOUNT_POINT"
+	rmdir "$MOUNT_POINT"
+
+	printf "image successfully flashed\n"
+fi
+
 sync

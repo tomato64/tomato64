@@ -165,6 +165,9 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 #elif TOMATO64_R6S
 	strlcpy(system_type, "Rockchip RK3588S", buf_system_type_sz);
 	strlcpy(cpuclk, "2400", buf_cpuclk_sz);
+#elif TOMATO64_R5S
+	strlcpy(system_type, "Rockchip RK3568", buf_system_type_sz);
+	strlcpy(cpuclk, "2000", buf_cpuclk_sz);
 #else
 	strlcpy(system_type, "MediaTek Filogic 830", buf_system_type_sz);
 	strlcpy(cpuclk, "2000", buf_cpuclk_sz);
@@ -227,6 +230,8 @@ void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
 	strlcpy(cpumodel, "ARM Cortex-A72", buf_cpumodel_sz);
 #elif TOMATO64_R6S
 	strlcpy(cpumodel, "ARM Cortex-A76 / A55", buf_cpumodel_sz);
+#elif TOMATO64_R5S
+	strlcpy(cpumodel, "ARM Cortex-A55", buf_cpumodel_sz);
 #else
 	strlcpy(cpumodel, "MediaTek MT7986AV (Cortex-A53)", buf_cpumodel_sz);
 #endif
