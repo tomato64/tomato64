@@ -13,7 +13,12 @@ MAC80211_INSTALL_STAGING = YES
 
 define MAC80211_BUILD_CMDS
 
-	cp $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/.config $(@D)
+	cp $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/config_base $(@D)/.config
+
+	# x86_64
+	$(if $(BR2_PACKAGE_PLATFORM_X86_64), \
+		cat $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/config_x86_64 >> $(@D)/.config; \
+	)
 
 	$(TARGET_MAKE_ENV) \
 	$(MAKE) \
@@ -94,5 +99,16 @@ define MAC80211_INSTALL_STAGING_CMDS
         cp -r $(@D)/drivers/net/wireless/ath/*.h $(STAGING_DIR)/usr/include/mac80211/ath/
         rm -f $(STAGING_DIR)/usr/include/mac80211-backport/linux/module.h
 endef
+
+# Install iwlwifi modules for x86_64 only
+ifeq ($(BR2_PACKAGE_PLATFORM_X86_64),y)
+define MAC80211_INSTALL_IWLWIFI
+	$(INSTALL) $(@D)/drivers/net/wireless/intel/iwlwifi/iwlwifi.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/drivers/net/wireless/intel/iwlwifi/dvm/iwldvm.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/drivers/net/wireless/intel/iwlwifi/mvm/iwlmvm.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/drivers/net/wireless/intel/iwlwifi/mld/iwlmld.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+endef
+MAC80211_POST_INSTALL_TARGET_HOOKS += MAC80211_INSTALL_IWLWIFI
+endif
 
 $(eval $(generic-package))
