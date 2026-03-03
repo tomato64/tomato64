@@ -55,3 +55,7 @@ else
 	# eth2 already has its hardware MAC, no need to set
 
 fi
+
+# Disable EEE on both 2.5GbE ports (eth0 and eth1, both RTL8125B).
+ethtool --set-eee eth0 eee off 2>/dev/null || true
+ethtool --set-eee eth1 eee off 2>/dev/null || true

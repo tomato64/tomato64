@@ -76,3 +76,7 @@ else
 	echo "eth2 mac $(NG eth2macaddr)" >> /etc/iftab
 
 fi
+
+# Disable EEE on both 2.5GbE ports (pre-rename kernel names eth0 and eth1, both RTL8125B).
+ethtool --set-eee eth0 eee off 2>/dev/null || true
+ethtool --set-eee eth1 eee off 2>/dev/null || true
