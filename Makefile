@@ -1,12 +1,12 @@
 BUILDROOT_VERSION = 2026.02-rc2
 BUILDROOT_TARBALL = ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSION).tar.xz
 BUILDROOT_URL = https://github.com/tomato64/buildroot-release/releases/download/$(BUILDROOT_VERSION)
-X86_64_KERNEL_VERSION=$(shell grep "BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE" tomato64/configs/tomato64_defconfig | cut -d '"' -f2)
-X86_64_KERNEL_PATCH=${HOME}/buildroot-src/x86_64-kernel/00001-openwrt-x86_64-kernel-${X86_64_KERNEL_VERSION}.patch
-MEDIATEK_KERNEL_VERSION=$(shell grep "BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE" tomato64/configs/mt6000_defconfig | cut -d '"' -f2)
-MEDIATEK_KERNEL_PATCH=${HOME}/buildroot-src/mediatek-kernel/00001-openwrt-mediatek-kernel-${MEDIATEK_KERNEL_VERSION}.patch
-ROCKCHIP_KERNEL_VERSION=$(shell grep "BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE" tomato64/configs/r6s_defconfig | cut -d '"' -f2)
-ROCKCHIP_KERNEL_PATCH=${HOME}/buildroot-src/rockchip-kernel/00001-openwrt-rockchip-kernel-${ROCKCHIP_KERNEL_VERSION}.patch
+export TOMATO64_KERNEL_VERSION = 6.12.71
+TOMATO64_KERNEL_REVISION = 0
+TOMATO64_KERNEL_REVISION := $(if $(filter-out 0,$(TOMATO64_KERNEL_REVISION)),-$(TOMATO64_KERNEL_REVISION))
+X86_64_KERNEL_PATCH=${HOME}/buildroot-src/x86_64-kernel/00001-openwrt-x86_64-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
+MEDIATEK_KERNEL_PATCH=${HOME}/buildroot-src/mediatek-kernel/00001-openwrt-mediatek-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
+ROCKCHIP_KERNEL_PATCH=${HOME}/buildroot-src/rockchip-kernel/00001-openwrt-rockchip-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 
 # Default target: continue building the last configured device, or x86_64 if none
 default:
@@ -136,7 +136,7 @@ endif
 .download-mediatek-kernel:
 	mkdir -p ${HOME}/buildroot-src/mediatek-kernel
 ifeq (,$(wildcard ${MEDIATEK_KERNEL_PATCH}))
-	wget -O ${MEDIATEK_KERNEL_PATCH} https://github.com/tomato64/openwrt-mediatek-kernel/releases/download/${MEDIATEK_KERNEL_VERSION}/00001-openwrt-mediatek-kernel-${MEDIATEK_KERNEL_VERSION}.patch
+	wget -O ${MEDIATEK_KERNEL_PATCH} https://github.com/tomato64/openwrt-mediatek-kernel/releases/download/${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}/00001-openwrt-mediatek-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 endif
 	cp ${MEDIATEK_KERNEL_PATCH} tomato64/board/arm64/common/linux-patches-mt/
 	@touch $@
@@ -144,7 +144,7 @@ endif
 .download-rockchip-kernel:
 	mkdir -p ${HOME}/buildroot-src/rockchip-kernel
 ifeq (,$(wildcard ${ROCKCHIP_KERNEL_PATCH}))
-	wget -O ${ROCKCHIP_KERNEL_PATCH} https://github.com/tomato64/openwrt-rockchip-kernel/releases/download/${ROCKCHIP_KERNEL_VERSION}/00001-openwrt-rockchip-kernel-${ROCKCHIP_KERNEL_VERSION}.patch
+	wget -O ${ROCKCHIP_KERNEL_PATCH} https://github.com/tomato64/openwrt-rockchip-kernel/releases/download/${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}/00001-openwrt-rockchip-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 endif
 	mkdir -p tomato64/board/arm64/common/linux-patches-rockchip
 	cp ${ROCKCHIP_KERNEL_PATCH} tomato64/board/arm64/common/linux-patches-rockchip
@@ -153,7 +153,7 @@ endif
 .download-x86_64-kernel:
 	mkdir -p ${HOME}/buildroot-src/x86_64-kernel
 ifeq (,$(wildcard ${X86_64_KERNEL_PATCH}))
-	wget -O ${X86_64_KERNEL_PATCH} https://github.com/tomato64/openwrt-x86_64-kernel/releases/download/${X86_64_KERNEL_VERSION}/00001-openwrt-x86_64-kernel-${X86_64_KERNEL_VERSION}.patch
+	wget -O ${X86_64_KERNEL_PATCH} https://github.com/tomato64/openwrt-x86_64-kernel/releases/download/${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}/00001-openwrt-x86_64-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 endif
 	mkdir -p tomato64/board/x86_64/linux-patches
 	cp ${X86_64_KERNEL_PATCH} tomato64/board/x86_64/linux-patches/
