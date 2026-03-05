@@ -1,6 +1,6 @@
-From 53f463d4d837b027e6de3d4041e87de3adecae09 Mon Sep 17 00:00:00 2001
+From 4d575038015a3c55821d9ba7a1db071d381ae7d3 Mon Sep 17 00:00:00 2001
 From: lancethepants <lancethepants@gmail.com>
-Date: Fri, 20 Feb 2026 10:31:58 -0700
+Date: Thu, 5 Mar 2026 14:58:17 -0700
 Subject: [PATCH] mac80211
 
 ---
@@ -162,7 +162,7 @@ Subject: [PATCH] mac80211
  local-symbols                                 |   13 +-
  net/mac80211/airtime.c                        |   87 +-
  net/mac80211/cfg.c                            |   58 +-
- net/mac80211/chan.c                           |   28 +-
+ net/mac80211/chan.c                           |   32 +-
  net/mac80211/debugfs.c                        |   40 +-
  net/mac80211/debugfs_key.c                    |    9 +-
  net/mac80211/debugfs_netdev.c                 |    3 +-
@@ -190,7 +190,7 @@ Subject: [PATCH] mac80211
  net/wireless/sysfs.c                          |   27 +-
  net/wireless/trace.h                          |    4 +
  net/wireless/util.c                           |    3 +
- 186 files changed, 14543 insertions(+), 2184 deletions(-)
+ 186 files changed, 14546 insertions(+), 2185 deletions(-)
  create mode 100644 compat_version
  create mode 100644 drivers/net/wireless/ath/ath11k/wmi.c.orig
  create mode 100644 drivers/net/wireless/ath/ath9k/hsr.c
@@ -610,11 +610,11 @@ index d4f3340..651ab63 100644
  }
 diff --git a/compat_version b/compat_version
 new file mode 100644
-index 0000000..42253ca
+index 0000000..152dd5d
 --- /dev/null
 +++ b/compat_version
 @@ -0,0 +1 @@
-+compat-wireless-6.18.7-1-v25.12.0-rc5
++compat-wireless-6.18.7-1-openwrt-25.12
 diff --git a/drivers/bus/mhi/host/trace.h b/drivers/bus/mhi/host/trace.h
 index 3e0c417..059ed3c 100644
 --- a/drivers/bus/mhi/host/trace.h
@@ -20999,10 +20999,27 @@ index 5267fc2..54a4687 100644
  
  	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
 diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 7f8799f..bf00beb 100644
+index 7f8799f..5425041 100644
 --- a/net/mac80211/chan.c
 +++ b/net/mac80211/chan.c
-@@ -644,10 +644,11 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+@@ -441,13 +441,15 @@ static void ieee80211_chan_bw_change(struct ieee80211_local *local,
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sta, &local->sta_list,
+ 				list) {
+-		struct ieee80211_sub_if_data *sdata = sta->sdata;
++		struct ieee80211_sub_if_data *sdata;
+ 		enum ieee80211_sta_rx_bandwidth new_sta_bw;
+ 		unsigned int link_id;
+ 
+ 		if (!ieee80211_sdata_running(sta->sdata))
+ 			continue;
+ 
++		sdata = get_bss_sdata(sta->sdata);
++
+ 		for (link_id = 0; link_id < ARRAY_SIZE(sta->sdata->link); link_id++) {
+ 			struct ieee80211_link_data *link =
+ 				rcu_dereference(sdata->link[link_id]);
+@@ -644,10 +646,11 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
  	return NULL;
  }
  
@@ -21015,7 +21032,7 @@ index 7f8799f..bf00beb 100644
  	struct ieee80211_link_data *link;
  	struct ieee80211_channel *chan;
  	int radio_idx;
-@@ -658,14 +659,25 @@ bool ieee80211_is_radar_required(struct ieee80211_local *local,
+@@ -658,14 +661,25 @@ bool ieee80211_is_radar_required(struct ieee80211_local *local,
  		return false;
  
  	for_each_sdata_link(local, link) {
