@@ -388,9 +388,11 @@ function show() {
 /* TOMATO64-X86_64-SKIP-BEGIN */
 /* TOMATO64-RPI4-SKIP-BEGIN */
 /* TOMATO64-R6S-SKIP-BEGIN */
+/* TOMATO64-BCM53XX-SKIP-BEGIN */
 /* TOMATO64-R5S-SKIP-BEGIN */
 	c('wlsense', stats.wlsense);
 /* TOMATO64-R5S-SKIP-END */
+/* TOMATO64-BCM53XX-SKIP-END */
 /* TOMATO64-R6S-SKIP-END */
 /* TOMATO64-RPI4-SKIP-END */
 	c('temps', stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F');
@@ -646,9 +648,11 @@ function init() {
 		{ title: 'CPU Temperature', rid: 'temps', text: stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F' },
 /* TOMATO64-RPI4-SKIP-BEGIN */
 /* TOMATO64-R6S-SKIP-BEGIN */
+/* TOMATO64-BCM53XX-SKIP-BEGIN */
 /* TOMATO64-R5S-SKIP-BEGIN */
 		{ title: 'Wireless Temperature', rid: 'wlsense', text: stats.wlsense }
 /* TOMATO64-R5S-SKIP-END */
+/* TOMATO64-BCM53XX-SKIP-END */
 /* TOMATO64-R6S-SKIP-END */
 /* TOMATO64-RPI4-SKIP-END */
 /* TOMATO64-X86_64-SKIP-END */

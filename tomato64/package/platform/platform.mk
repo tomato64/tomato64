@@ -38,4 +38,13 @@ ifeq ($(BR2_PACKAGE_PLATFORM_R5S),y)
 export PLATFORM_R5S=y
 endif
 
+ifeq ($(BR2_PACKAGE_PLATFORM_ARM),y)
+export PLATFORM_ARM=y
+export PLATFORM_WIFI=y
+endif
+
+ifeq ($(BR2_PACKAGE_PLATFORM_BCM53XX),y)
+export PLATFORM_BCM53XX=y
+endif
+
 $(eval $(generic-package))

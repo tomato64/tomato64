@@ -1,0 +1,91 @@
+#!/bin/sh
+
+set -e
+set -x
+
+. /usr/sbin/nvram_ops
+. /usr/sbin/net_utils
+
+# BCM53XX devices use DSA (Distributed Switch Architecture)
+# The kernel creates: eth0 (gmac0 CPU port), eth1 (gmac1), eth2 (gmac2),
+#                     wan, lan1-lan4 (switch ports)
+# Tomato64 convention: WAN=eth0, LAN1=eth1, LAN2=eth2, etc.
+#
+# Problem: eth0/eth1/eth2 (GMAC interfaces) collide with desired DSA port
+# names. We assign unique MACs to all interfaces so ifrename can rename them:
+#   eth0 (gmac0, CPU port)   -> switch0  (basemac+10)
+#   eth1 (gmac1, unused)     -> gmac1    (basemac+11)
+#   eth2 (gmac2, unused)     -> gmac2    (basemac+12)
+#   wan                      -> eth0     (basemac)
+#   lan1                     -> eth1     (basemac+1)
+#   lan2                     -> eth2     (basemac+2)
+#   lan3                     -> eth3     (basemac+3)
+#   lan4                     -> eth4     (basemac+4)
+
+# Wait for the CPU port
+if ! wait_for_interface eth0; then
+	logger -t set_devs_bcm53xx "ERROR: eth0 did not appear after 10 seconds"
+fi
+
+# Wait for secondary GMAC interfaces
+wait_for_interface eth1 5 2>/dev/null || true
+wait_for_interface eth2 5 2>/dev/null || true
+
+# Wait for DSA WAN and LAN ports
+wait_for_interface wan 5 2>/dev/null || true
+for p in lan1 lan2 lan3 lan4; do
+	wait_for_interface "$p" 2 2>/dev/null || true
+done
+
+# Read base MAC from eth0 (gmac0 CPU port)
+basemac=$(cat /sys/class/net/eth0/address 2>/dev/null | tr '[:lower:]' '[:upper:]')
+
+if [ -z "$basemac" ]; then
+	logger -t set_devs_bcm53xx "ERROR: Could not read eth0 MAC address"
+	basemac="00:00:00:00:00:00"
+fi
+
+# Compute MACs for GMAC interfaces (offset +10..+12 to avoid collisions)
+switch0mac=$(macaddr_add "$basemac" 10)
+gmac1mac=$(macaddr_add "$basemac" 11)
+gmac2mac=$(macaddr_add "$basemac" 12)
+
+# Compute MACs for DSA ports
+wanmac="$basemac"
+lan1mac=$(macaddr_add "$basemac" 1)
+lan2mac=$(macaddr_add "$basemac" 2)
+lan3mac=$(macaddr_add "$basemac" 3)
+lan4mac=$(macaddr_add "$basemac" 4)
+
+# Reassign GMAC MACs to unique values (must happen every boot)
+ip link set dev eth0 address "$switch0mac"
+[ -d /sys/class/net/eth1 ] && ip link set dev eth1 address "$gmac1mac"
+[ -d /sys/class/net/eth2 ] && ip link set dev eth2 address "$gmac2mac"
+
+# Set MACs on DSA switch port interfaces
+ip link set dev wan address "$wanmac"
+ip link set dev lan1 address "$lan1mac"
+ip link set dev lan2 address "$lan2mac"
+ip link set dev lan3 address "$lan3mac"
+ip link set dev lan4 address "$lan4mac"
+
+# Write iftab for ifrename: map MACs to desired final names
+echo "switch0 mac $switch0mac" > /etc/iftab
+echo "gmac1 mac $gmac1mac" >> /etc/iftab
+echo "gmac2 mac $gmac2mac" >> /etc/iftab
+echo "eth0 mac $wanmac" >> /etc/iftab
+echo "eth1 mac $lan1mac" >> /etc/iftab
+echo "eth2 mac $lan2mac" >> /etc/iftab
+echo "eth3 mac $lan3mac" >> /etc/iftab
+echo "eth4 mac $lan4mac" >> /etc/iftab
+
+if [ "$(NG set_macs)" != "1" ]; then
+	NS "eth0macaddr=$wanmac"
+
+	for i in wan_hwaddr wan_mac; do
+		NS "${i}=$wanmac"
+	done
+	NS "lan_hwaddr=$lan1mac"
+
+	NS set_macs=1
+fi

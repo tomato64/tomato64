@@ -27,7 +27,11 @@ static void sched(const char *key, int resched)
 	char w[32];
 	int i;
 	struct tm tm;
+#ifndef TOMATO64
 	long tt, qq;
+#else
+	time_t tt, qq;
+#endif
 
 	/* en,time,days */
 	if ((sscanf(nvram_safe_get(key), "%d,%d,%d", &en, &t, &dow) != 3) || (!en)) {
@@ -39,7 +43,11 @@ static void sched(const char *key, int resched)
 		memset(s, 0, sizeof(s));
 		snprintf(s, sizeof(s), "%s_last", key);
 		memset(w, 0, sizeof(w));
+#ifndef TOMATO64
 		snprintf(w, sizeof(w), "%ld", time(0));
+#else
+		snprintf(w, sizeof(w), "%lld", (long long)time(0));
+#endif /* TOMATO64 */
 		nvram_set(s, w);
 
 		if (t >= -5)
@@ -74,7 +82,11 @@ static void sched(const char *key, int resched)
 
 			memset(s, 0, sizeof(s));
 			snprintf(s, sizeof(s), "%s_last", key);
+#ifndef TOMATO64
 			qq = strtoul(nvram_safe_get(s), NULL, 10);
+#else
+			qq = strtoull(nvram_safe_get(s), NULL, 10);
+#endif /* TOMATO64 */
 			if ((qq + t) > tt)
 				tt = qq;
 

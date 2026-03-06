@@ -52,11 +52,13 @@ void wi_upgrade(char *url, int len, char *boundary)
 	unsigned int reset;
 	const char *error = "Error reading file";
 #ifdef TOMATO64
+#ifndef TOMATO64_BCM53XX
 	struct statvfs disk;
 	statvfs("/", &disk);
 	float f_bavail = disk.f_bavail;
 	float f_frsize = disk.f_frsize;
 	float available_space = f_bavail * f_frsize;
+#endif /* TOMATO64_BCM53XX */
 #endif /* TOMATO64 */
 #ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
@@ -83,10 +85,12 @@ void wi_upgrade(char *url, int len, char *boundary)
 	}
 
 #ifdef TOMATO64
+#ifndef TOMATO64_BCM53XX
 	if ((float) len > available_space) {
 		error = "Insufficient disk space to extract update";
 		goto ERROR;
 	}
+#endif /* TOMATO64_BCM53XX */
 #endif /* TOMATO64 */
 
 	if ((tmp = malloc(len)) == NULL) {

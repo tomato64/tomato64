@@ -2,6 +2,7 @@
 .download-mediatek-kernel
 .download-rockchip-kernel
 .download-x86_64-kernel
+.download-bcm53xx-kernel
 .extract-buildroot
 .patch
 .prepatch
@@ -13,6 +14,7 @@
 .configure-rpi4
 .configure-r6s
 .configure-r5s
+.configure-bcm53xx
 .target
 *.gcom
 hotplug2.rules
@@ -20,3 +22,4 @@ src/
 00001-openwrt-mediatek-kernel-*
 00001-openwrt-rockchip-kernel-*
 00001-openwrt-x86_64-kernel-*
+00001-openwrt-bcm53xx-kernel-*

@@ -7,6 +7,7 @@ TOMATO64_KERNEL_REVISION := $(if $(filter-out 0,$(TOMATO64_KERNEL_REVISION)),-$(
 X86_64_KERNEL_PATCH=${HOME}/buildroot-src/x86_64-kernel/00001-openwrt-x86_64-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 MEDIATEK_KERNEL_PATCH=${HOME}/buildroot-src/mediatek-kernel/00001-openwrt-mediatek-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 ROCKCHIP_KERNEL_PATCH=${HOME}/buildroot-src/rockchip-kernel/00001-openwrt-rockchip-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
+BCM53XX_KERNEL_PATCH=${HOME}/buildroot-src/bcm53xx-kernel/00001-openwrt-bcm53xx-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 
 # Default target: continue building the last configured device, or x86_64 if none
 default:
@@ -41,6 +42,9 @@ r5s: .configure-r5s
 r6s: .configure-r6s
 	make -C src/buildroot
 
+bcm53xx: .configure-bcm53xx
+	make -C src/buildroot
+
 menuconfig:
 	@if [ -f .target ]; then \
 		$(MAKE) $$(cat .target)-menuconfig; \
@@ -70,6 +74,9 @@ r5s-menuconfig: .configure-r5s
 	make -C src/buildroot menuconfig
 
 r6s-menuconfig: .configure-r6s
+	make -C src/buildroot menuconfig
+
+bcm53xx-menuconfig: .configure-bcm53xx
 	make -C src/buildroot menuconfig
 
 distclean:
@@ -115,6 +122,11 @@ distclean:
 	@echo r6s > .target
 	@touch $@
 
+.configure-bcm53xx: .download-bcm53xx-kernel .patch
+	make -C src/buildroot BR2_EXTERNAL=../../tomato64 bcm53xx_defconfig
+	@echo bcm53xx > .target
+	@touch $@
+
 .patch: .extract-buildroot
 	for patch in $(sort $(wildcard src/patches/*.patch)); do \
 		patch -p1 -d src/buildroot < $$patch; \
@@ -148,6 +160,15 @@ ifeq (,$(wildcard ${ROCKCHIP_KERNEL_PATCH}))
 endif
 	mkdir -p tomato64/board/arm64/common/linux-patches-rockchip
 	cp ${ROCKCHIP_KERNEL_PATCH} tomato64/board/arm64/common/linux-patches-rockchip
+	@touch $@
+
+.download-bcm53xx-kernel:
+	mkdir -p ${HOME}/buildroot-src/bcm53xx-kernel
+ifeq (,$(wildcard ${BCM53XX_KERNEL_PATCH}))
+	wget -O ${BCM53XX_KERNEL_PATCH} https://github.com/tomato64/openwrt-bcm53xx-kernel/releases/download/${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}/00001-openwrt-bcm53xx-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
+endif
+	mkdir -p tomato64/board/arm/bcm53xx/linux-patches
+	cp ${BCM53XX_KERNEL_PATCH} tomato64/board/arm/bcm53xx/linux-patches/
 	@touch $@
 
 .download-x86_64-kernel:

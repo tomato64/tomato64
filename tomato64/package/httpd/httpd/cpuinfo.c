@@ -194,6 +194,26 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 		snprintf(cputemp, buf_cputemp_sz, "");
 	}
 #endif /* TOMATO64_ARM64 */
+#ifdef TOMATO64_ARM
+	strlcpy(system_type, "Broadcom BCM47xx/53xx", buf_system_type_sz);
+	strlcpy(cpuclk, "1000", buf_cpuclk_sz);
+
+	FILE *f;
+	char buffer[8];
+	int temp;
+	const char cmd[] = "sensors -A cpu_thermal-virtual-0 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/\xc2\xb0C//'";
+	if ((f = popen(cmd, "r"))) {
+		if (fgets(buffer, sizeof(buffer), f) != NULL) {
+			buffer[strcspn(buffer, "\n")] = 0;
+			temp = (int)(atof(buffer) + 0.5);
+			snprintf(cputemp, buf_cputemp_sz, "%d", temp);
+		}
+		pclose(f);
+	}
+	else {
+		snprintf(cputemp, buf_cputemp_sz, "");
+	}
+#endif /* TOMATO64_ARM */
 }
 
 #ifdef TOMATO64
@@ -236,6 +256,9 @@ void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
 	strlcpy(cpumodel, "MediaTek MT7986AV (Cortex-A53)", buf_cpumodel_sz);
 #endif
 #endif /* TOMATO64_ARM64 */
+#ifdef TOMATO64_ARM
+	strlcpy(cpumodel, "ARM Cortex-A9", buf_cpumodel_sz);
+#endif /* TOMATO64_ARM */
 }
 #endif /* TOMATO64 */
 

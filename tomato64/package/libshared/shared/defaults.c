@@ -2272,6 +2272,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_R5S
 	{ "lan_ifnames",		"eth1 eth2"			, 0 },
 #endif /* TOMATO64_R5S */
+#ifdef TOMATO64_BCM53XX
+	{ "lan_ifnames",		"eth1 eth2 eth3 eth4"		, 0 },
+#endif /* TOMATO64_BCM53XX */
 	{ "lan_ifnames_vlan",		"vlan1"				, 0 },
 
 	{ "boardflags",			"0x0100"			, 0 },
@@ -2297,6 +2300,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_R5S
 	{ "vlan1ports",			"1 2 9*"			, 0 },
 #endif /* TOMATO64_R5S */
+#ifdef TOMATO64_BCM53XX
+	{ "vlan1ports",			"1 2 3 4 9*"			, 0 },
+#endif /* TOMATO64_BCM53XX */
 #ifdef TOMATO64_WIFI
 	{"wifi_sta_list",		""				, 0 },
 	{"wifi_phy_count",		"0"				, 0 },	/* Detected PHY count (cleared on boot) */
@@ -2314,6 +2320,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy_count_expected",	"0"				, 0 },	/* R6S: no built-in WiFi */
 #elif defined(TOMATO64_R5S)
 	{"wifi_phy_count_expected",	"0"				, 0 },	/* R5S: no built-in WiFi */
+#elif defined(TOMATO64_BCM53XX)
+	{"wifi_phy_count_expected",	"0"				, 0 },	/* BCM53XX: WiFi disabled in kernel */
 #elif defined(TOMATO64_X86_64)
 	{"wifi_phy_count_expected",	"0"				, 0 },	/* x86_64: optional WiFi (add-in cards) */
 #else

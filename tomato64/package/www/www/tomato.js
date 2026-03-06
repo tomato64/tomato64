@@ -3373,6 +3373,23 @@ var PortNames = {
 				2: '2'
 			};
 		}
+		else if (/BCM47|BCM53|RT-AC56U|RT-AC68U|WZR-1750DHP|EA6300|EA6500|RT-N18U|WZR-600DHP2|WZR-900DHP|RT-AC3200|RT-AC87U|WXR-1900DHP|EA9200|R7000|R7900|R8000|Archer C9|RT-AC3100|RT-AC5300|RT-AC88U|DIR-885L|DIR-890L|EA9500|R8500|Phicomm K3|DWL-8610AP/i.test(model)) {
+			/* BCM53XX devices: standard 4 LAN + 1 WAN */
+			this._hardwareLabels = {
+				0: 'WAN',
+				1: 'LAN1',
+				2: 'LAN2',
+				3: 'LAN3',
+				4: 'LAN4'
+			};
+			this._vlanLabels = {
+				0: 'WAN',
+				1: '1',
+				2: '2',
+				3: '3',
+				4: '4'
+			};
+		}
 		else { /* x86_64 or device not yet configured */
 			this._hardwareLabels = {
 				0: 'eth0',

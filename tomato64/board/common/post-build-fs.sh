@@ -42,6 +42,13 @@ then
 	ln -sf /usr/bin/uci $TARGET_DIR/sbin/uci
 fi
 
+if grep -q ^BR2_arm=y ${BR2_CONFIG}
+then
+	ln -sf /lib/ld-musl-arm.so.1 $TARGET_DIR/usr/bin/ldd
+	ln -sf /usr/bin/uci $TARGET_DIR/sbin/uci
+	mkdir -p $TARGET_DIR/romfs $TARGET_DIR/overlay
+fi
+
 # symlink openssl since Tomato expects it in a non-standard place
 ln -sf /usr/bin/openssl $TARGET_DIR/usr/sbin/openssl
 

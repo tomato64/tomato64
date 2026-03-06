@@ -220,6 +220,33 @@ switch (nvram['t_model_name']) {
 	case 'Raspberry Pi 4 Model B':
 	case 'FriendlyElec NanoPi R6S':
 	case 'FriendlyElec NanoPi R5S':
+	case 'Asus RT-AC56U (BCM4708)':
+	case 'Asus RT-AC68U (BCM4708)':
+	case 'Buffalo WZR-1750DHP (BCM4708)':
+	case 'Linksys EA6300 V1':
+	case 'Linksys EA6500 V2':
+	case 'Netgear R6250 V1 (BCM4708)':
+	case 'Netgear R6300 V2 (BCM4708)':
+	case 'Asus RT-N18U (BCM47081)':
+	case 'Buffalo WZR-600DHP2 (BCM47081)':
+	case 'Buffalo WZR-900DHP (BCM47081)':
+	case 'ASUS RT-AC3200':
+	case 'Asus RT-AC87U':
+	case 'Buffalo WXR-1900DHP':
+	case 'Linksys EA9200':
+	case 'Netgear R7000':
+	case 'Netgear R7900':
+	case 'Netgear R8000 (BCM4709)':
+	case 'TP-LINK Archer C9 V1':
+	case 'ASUS RT-AC3100':
+	case 'ASUS RT-AC5300':
+	case 'ASUS RT-AC88U':
+	case 'D-Link DIR-885L':
+	case 'D-Link DIR-890L':
+	case 'Linksys EA9500':
+	case 'Netgear R8500':
+	case 'Phicomm K3':
+	case 'D-Link DWL-8610AP':
 /* TOMATO64-END */
 		COL_P0N = '0';
 		COL_P1N = '1';

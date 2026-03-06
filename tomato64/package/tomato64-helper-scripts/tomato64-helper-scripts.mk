@@ -13,7 +13,11 @@ TOMATO64_HELPER_SCRIPTS_LICENSE = MIT
 define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/sbin/poweroff			$(TARGET_DIR)/sbin
 	$(INSTALL) -D -m 0755 $(@D)/sbin/shutdown			$(TARGET_DIR)/sbin
-	$(INSTALL) -D -m 0755 $(@D)/sbin/upgrade			$(TARGET_DIR)/sbin
+	if [ "$(BR2_PACKAGE_PLATFORM_BCM53XX)" = "y" ]; then \
+		$(INSTALL) -D -m 0755 $(@D)/sbin/upgrade_bcm53xx	$(TARGET_DIR)/sbin/upgrade; \
+	else \
+		$(INSTALL) -D -m 0755 $(@D)/sbin/upgrade		$(TARGET_DIR)/sbin/upgrade; \
+	fi
 	$(INSTALL) -D -m 0755 $(@D)/sbin/zram				$(TARGET_DIR)/sbin
 
 	$(INSTALL) -D -m 0755 $(@D)/usr/sbin/net_utils			$(TARGET_DIR)/usr/sbin
@@ -29,6 +33,7 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_rpi4		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_r6s		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_r5s		$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_bcm53xx		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_macs			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/setup-tomato64		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/start_qemu_guest		$(TARGET_DIR)/usr/bin

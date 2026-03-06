@@ -209,6 +209,10 @@ ifeq ($(PLATFORM_ARM64),y)
 	install -m 0700 entware-install-AARCH64.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
 endif #PLATFORM_ARM64
 
+ifeq ($(PLATFORM_ARM),y)
+	install -m 0700 entware-install-ARM.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
+endif #PLATFORM_ARM
+
 else #TOMATO64
 	sed -i $(INSTALLDIR)/usr/sbin/adblock -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/usr/sbin/mymotd -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"

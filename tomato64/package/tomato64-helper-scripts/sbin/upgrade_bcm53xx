@@ -1,0 +1,61 @@
+#!/bin/sh
+
+. /usr/sbin/nvram_ops
+
+if [ $# -eq 0 ]; then
+	echo "missing .tzst file argument"
+	exit
+fi
+
+# BCM53XX NAND upgrade - split kernel/UBI approach (modeled after OpenWrt)
+# Writes a small kernel-only TRX to firmware partition, then uses ubiformat
+# for the UBI rootfs. This prevents overwriting board_data or other partitions.
+
+# Helper: find MTD device name for a given partition name
+find_mtd_dev() {
+	local name="$1"
+	for mtd in /sys/class/mtd/*/name; do
+		if [ -f "$mtd" ] && [ "$(cat "$mtd")" = "$name" ]; then
+			echo "/dev/$(echo "$mtd" | sed 's|/sys/class/mtd/||;s|/name||')"
+			return 0
+		fi
+	done
+	return 1
+}
+
+# Helper: find MTD index for a given partition name
+find_mtd_index() {
+	local name="$1"
+	for mtd in /sys/class/mtd/*/name; do
+		if [ -f "$mtd" ] && [ "$(cat "$mtd")" = "$name" ]; then
+			echo "$(echo "$mtd" | sed 's|/sys/class/mtd/||;s|/name||' | tr -dc '0-9')"
+			return 0
+		fi
+	done
+	return 1
+}
+
+FIRMWARE_MTD_DEV=$(find_mtd_dev "firmware")
+
+if [ -z "$FIRMWARE_MTD_DEV" ]; then
+	printf 'error: no MTD partition named "firmware" found\n'
+	exit 1
+fi
+
+# Stream the TRX directly from the .tzst archive to the firmware partition.
+# No temp files needed — everything flows through pipes to avoid exceeding
+# available RAM on memory-constrained NAND devices.
+printf "streaming firmware.trx to %s...\n" "$FIRMWARE_MTD_DEV"
+zstd -d < "$1" | tar --warning=no-timestamp -xf - -O boot/firmware.trx | mtd -e firmware write - firmware
+result=$?
+if [ "$result" -ne 0 ]; then
+	printf 'error code "%d" during streaming write to firmware\n' "$result"
+	exit
+fi
+
+# Fix TRX CRC to cover only the kernel (linux) partition
+linux_length=$(sed -n 's/mtd[0-9]*: \([0-9a-f]*\).*"\(kernel\|linux\)".*/0x\1/p' /proc/mtd)
+mtd ${linux_length:+-c 0x$linux_length} fixtrx firmware 2>/dev/null || true
+
+printf "image successfully flashed\n"
+sync

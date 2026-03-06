@@ -1,0 +1,5 @@
+config BR2_PACKAGE_MTD_OPENWRT
+	bool "mtd-openwrt"
+	select BR2_PACKAGE_LIBUBOX
+	help
+	  OpenWrt MTD utility for firmware flashing and TRX CRC repair.

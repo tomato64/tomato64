@@ -11576,6 +11576,21 @@ static int init_nvram(void)
 #ifdef TOMATO64_R5S
 	nvram_set("t_model_name", "FriendlyElec NanoPi R5S");
 #endif /* TOMATO64_R5S */
+#ifdef TOMATO64_BCM53XX
+	{
+		FILE *f = fopen("/proc/device-tree/model", "r");
+		if (f) {
+			char dtmodel[128] = {0};
+			if (fgets(dtmodel, sizeof(dtmodel), f))
+				nvram_set("t_model_name", dtmodel);
+			else
+				nvram_set("t_model_name", "BCM53XX");
+			fclose(f);
+		} else {
+			nvram_set("t_model_name", "BCM53XX");
+		}
+	}
+#endif /* TOMATO64_BCM53XX */
 #endif /* TOMATO64 */
 #ifndef CONFIG_BCMWL6A
 	nvram_set("pa0maxpwr", "400"); /* allow Tx power up tp 400 mW, needed for ND only */
@@ -11896,10 +11911,12 @@ static void sysinit(void)
 #ifdef TOMATO64_RPI4
 	eval("mount_nvram");
 #endif /* TOMATO64_RPI4 */
+#ifndef TOMATO64_BCM53XX
 	/* Mount filesystem rw */
 	if (!nvram_get_int("fs_mount_ro")) {
 		eval("mount", "-o", "remount,rw", "/");
 	}
+#endif /* TOMATO64_BCM53XX */
 
 #ifdef TOMATO64_X86_64
 	if ((fp = fopen("/etc/fstab", "w"))) {
@@ -11927,6 +11944,39 @@ static void sysinit(void)
 #ifdef TOMATO64_R5S
 	eval("set_devs_r5s");
 #endif /* TOMATO64_R5S */
+#ifdef TOMATO64_BCM53XX
+	eval("touch", "/tmp/.preinit");
+	eval("mount_root");
+	/* Fix TRX CRC - recalculate to cover only kernel partition so UBI
+	 * overlay writes don't invalidate it. Safe to run every boot since
+	 * mtd_fixtrx exits early if CRC is already correct.
+	 */
+	{
+		char ksize[32] = {0};
+		FILE *fp_mtd = fopen("/proc/mtd", "r");
+		if (fp_mtd) {
+			char line[128];
+			while (fgets(line, sizeof(line), fp_mtd)) {
+				if (strstr(line, "\"kernel\"") || strstr(line, "\"linux\"")) {
+					char *p = strchr(line, ':');
+					if (p) {
+						p++;
+						while (*p == ' ') p++;
+						snprintf(ksize, sizeof(ksize), "0x%.*s",
+							 (int)strcspn(p, " "), p);
+					}
+					break;
+				}
+			}
+			fclose(fp_mtd);
+		}
+		if (ksize[0])
+			eval("mtd", "-c", ksize, "fixtrx", "firmware");
+		else
+			eval("mtd", "fixtrx", "firmware");
+	}
+	eval("set_devs_bcm53xx");
+#endif /* TOMATO64_BCM53XX */
 	eval("set_devs");
 
 	/* Expand filesystem parition to fill disk */
@@ -12282,6 +12332,9 @@ int init_main(int argc, char *argv[])
 			 * last one as ssh telnet httpd samba etc can fail to load until start_wan_done
 			 */
 			start_wan();
+#ifdef TOMATO64_BCM53XX
+			eval("mount_root", "done");
+#endif /* TOMATO64_BCM53XX */
 
 #ifndef TOMATO64
 			if (wds_enable()) {
