@@ -256,6 +256,14 @@ do
 	uci set "wireless.radio${i}.country=$(NG wifi_phy${i}_country)"
 	uci set "wireless.radio${i}.cell_density=0"
 	uci set "wireless.radio${i}.noscan=$(NG wifi_phy${i}_noscan)"
+	# Apply custom device UCI options and raw hostapd lines
+	NG wifi_phy${i}_custom | while IFS= read -r line; do
+		case "$line" in
+			''|'#'*) ;;
+			'hostapd:'*) uci add_list "wireless.radio${i}.hostapd_options=${line#hostapd:}" ;;
+			*) uci set "wireless.radio${i}.${line}" ;;
+		esac
+	done
 
 	# For each device interface
 	for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)));
@@ -280,6 +288,14 @@ do
 				uci set "wireless.phy${i}iface${j}.bridge=$(NG wifi_phy${i}iface${j}_network)"
 				print_ifname ${i} ${j}
 				print_mac_filter ${i} ${j}
+			# Apply custom interface UCI options and raw hostapd lines (AP mode)
+			NG wifi_phy${i}iface${j}_custom | while IFS= read -r line; do
+				case "$line" in
+					''|'#'*) ;;
+					'hostapd:'*) uci add_list "wireless.phy${i}iface${j}.hostapd_options=${line#hostapd:}" ;;
+					*) uci set "wireless.phy${i}iface${j}.${line}" ;;
+				esac
+			done
 			fi
 
 			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "sta" ] || [ "$(NG "wifi_phy${i}iface${j}_mode")" == "bridge" ];
@@ -296,6 +312,14 @@ do
 				uci set "wireless.phy${i}iface${j}.isolate=$(NG wifi_phy${i}iface${j}_isolate)"
 				print_ifname_client ${i} ${j}
 				print_mac_filter ${i} ${j}
+				# Apply custom interface UCI options and raw wpa_supplicant lines (STA/bridge mode)
+				NG wifi_phy${i}iface${j}_custom | while IFS= read -r line; do
+					case "$line" in
+						''|'#'*) ;;
+						'wpa:'*) uci add_list "wireless.phy${i}iface${j}.wpa_supplicant_options=${line#wpa:}" ;;
+						*) uci set "wireless.phy${i}iface${j}.${line}" ;;
+					esac
+				done
 			fi
 		fi
 	done

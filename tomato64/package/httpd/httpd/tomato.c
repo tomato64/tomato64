@@ -2043,6 +2043,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0_power",		V_TEXT(0, 2)			},	/* 0 - 30+ */
 	{"wifi_phy0_country",		V_TEXT(0, 2)			},	/* 2 Digit Country Code */
 	{"wifi_phy0_ifaces",		V_RANGE(0, 16)			},
+	{"wifi_phy0_custom",		V_NONE				},	/* Custom hostapd device config */
 
 	{"wifi_phy1_band",		V_TEXT(2, 2)			},	/* 2G, 5G, 6G */
 	{"wifi_phy1_mode",		V_TEXT(1, 6)			},	/* n, ac, ax, be, legacy */
@@ -2053,6 +2054,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1_power",		V_TEXT(0, 2)			},	/* 0 - 30+ */
 	{"wifi_phy1_country",		V_TEXT(0, 2)			},	/* 2 Digit Country Code */
 	{"wifi_phy1_ifaces",		V_RANGE(0, 16)			},
+	{"wifi_phy1_custom",		V_NONE				},	/* Custom hostapd device config */
 
 	{"wifi_phy2_band",		V_TEXT(2, 2)			},	/* 2G, 5G, 6G */
 	{"wifi_phy2_mode",		V_TEXT(1, 6)			},	/* n, ac, ax, be, legacy */
@@ -2063,6 +2065,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2_power",		V_TEXT(0, 2)			},	/* 0 - 30+ */
 	{"wifi_phy2_country",		V_TEXT(0, 2)			},	/* 2 Digit Country Code */
 	{"wifi_phy2_ifaces",		V_RANGE(0, 16)			},
+	{"wifi_phy2_custom",		V_NONE				},	/* Custom hostapd device config */
 
 	{"wifi_phy0iface0_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface0_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2080,6 +2083,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface0_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface0_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface0_maclist",	V_NONE				},
+	{"wifi_phy0iface0_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface1_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface1_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2097,6 +2101,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface1_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface1_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface1_maclist",	V_NONE				},
+	{"wifi_phy0iface1_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface2_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface2_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2114,6 +2119,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface2_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface2_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface2_maclist",	V_NONE				},
+	{"wifi_phy0iface2_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface3_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface3_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2131,6 +2137,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface3_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface3_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface3_maclist",	V_NONE				},
+	{"wifi_phy0iface3_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface4_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface4_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2148,6 +2155,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface4_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface4_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface4_maclist",	V_NONE				},
+	{"wifi_phy0iface4_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface5_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface5_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2165,6 +2173,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface5_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface5_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface5_maclist",	V_NONE				},
+	{"wifi_phy0iface5_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface6_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface6_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2182,6 +2191,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface6_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface6_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface6_maclist",	V_NONE				},
+	{"wifi_phy0iface6_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface7_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface7_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2199,6 +2209,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface7_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface7_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface7_maclist",	V_NONE				},
+	{"wifi_phy0iface7_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface8_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface8_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2216,6 +2227,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface8_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface8_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface8_maclist",	V_NONE				},
+	{"wifi_phy0iface8_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface9_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface9_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2233,6 +2245,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface9_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface9_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface9_maclist",	V_NONE				},
+	{"wifi_phy0iface9_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface10_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface10_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2250,6 +2263,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface10_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface10_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface10_maclist",	V_NONE				},
+	{"wifi_phy0iface10_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface11_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface11_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2267,6 +2281,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface11_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface11_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface11_maclist",	V_NONE				},
+	{"wifi_phy0iface11_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface12_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface12_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2284,6 +2299,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface12_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface12_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface12_maclist",	V_NONE				},
+	{"wifi_phy0iface12_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface13_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface13_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2301,6 +2317,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface13_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface13_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface13_maclist",	V_NONE				},
+	{"wifi_phy0iface13_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface14_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface14_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2318,6 +2335,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface14_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface14_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface14_maclist",	V_NONE				},
+	{"wifi_phy0iface14_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy0iface15_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy0iface15_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2335,6 +2353,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy0iface15_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy0iface15_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy0iface15_maclist",	V_NONE				},
+	{"wifi_phy0iface15_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface0_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface0_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2352,6 +2371,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface0_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface0_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface0_maclist",	V_NONE				},
+	{"wifi_phy1iface0_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface1_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface1_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2369,6 +2389,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface1_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface1_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface1_maclist",	V_NONE				},
+	{"wifi_phy1iface1_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface2_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface2_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2386,6 +2407,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface2_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface2_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface2_maclist",	V_NONE				},
+	{"wifi_phy1iface2_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface3_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface3_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2403,6 +2425,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface3_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface3_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface3_maclist",	V_NONE				},
+	{"wifi_phy1iface3_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface4_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface4_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2420,6 +2443,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface4_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface4_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface4_maclist",	V_NONE				},
+	{"wifi_phy1iface4_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface5_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface5_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2437,6 +2461,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface5_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface5_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface5_maclist",	V_NONE				},
+	{"wifi_phy1iface5_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface6_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface6_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2454,6 +2479,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface6_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface6_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface6_maclist",	V_NONE				},
+	{"wifi_phy1iface6_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface7_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface7_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2471,6 +2497,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface7_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface7_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface7_maclist",	V_NONE				},
+	{"wifi_phy1iface7_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface8_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface8_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2488,6 +2515,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface8_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface8_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface8_maclist",	V_NONE				},
+	{"wifi_phy1iface8_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface9_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface9_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2505,6 +2533,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface9_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface9_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface9_maclist",	V_NONE				},
+	{"wifi_phy1iface9_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface10_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface10_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2522,6 +2551,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface10_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface10_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface10_maclist",	V_NONE				},
+	{"wifi_phy1iface10_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface11_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface11_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2539,6 +2569,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface11_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface11_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface11_maclist",	V_NONE				},
+	{"wifi_phy1iface11_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface12_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface12_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2556,6 +2587,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface12_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface12_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface12_maclist",	V_NONE				},
+	{"wifi_phy1iface12_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface13_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface13_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2573,6 +2605,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface13_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface13_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface13_maclist",	V_NONE				},
+	{"wifi_phy1iface13_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface14_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface14_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2590,6 +2623,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface14_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface14_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface14_maclist",	V_NONE				},
+	{"wifi_phy1iface14_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy1iface15_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy1iface15_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2607,6 +2641,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy1iface15_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy1iface15_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy1iface15_maclist",	V_NONE				},
+	{"wifi_phy1iface15_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface0_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface0_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2624,6 +2659,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface0_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface0_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface0_maclist",	V_NONE				},
+	{"wifi_phy2iface0_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface1_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface1_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2641,6 +2677,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface1_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface1_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface1_maclist",	V_NONE				},
+	{"wifi_phy2iface1_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface2_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface2_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2658,6 +2695,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface2_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface2_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface2_maclist",	V_NONE				},
+	{"wifi_phy2iface2_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface3_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface3_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2675,6 +2713,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface3_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface3_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface3_maclist",	V_NONE				},
+	{"wifi_phy2iface3_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface4_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface4_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2692,6 +2731,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface4_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface4_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface4_maclist",	V_NONE				},
+	{"wifi_phy2iface4_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface5_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface5_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2709,6 +2749,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface5_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface5_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface5_maclist",	V_NONE				},
+	{"wifi_phy2iface5_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface6_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface6_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2726,6 +2767,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface6_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface6_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface6_maclist",	V_NONE				},
+	{"wifi_phy2iface6_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface7_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface7_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2743,6 +2785,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface7_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface7_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface7_maclist",	V_NONE				},
+	{"wifi_phy2iface7_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface8_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface8_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2760,6 +2803,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface8_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface8_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface8_maclist",	V_NONE				},
+	{"wifi_phy2iface8_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface9_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface9_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2777,6 +2821,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface9_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface9_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface9_maclist",	V_NONE				},
+	{"wifi_phy2iface9_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface10_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface10_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2794,6 +2839,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface10_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface10_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface10_maclist",	V_NONE				},
+	{"wifi_phy2iface10_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface11_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface11_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2811,6 +2857,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface11_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface11_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface11_maclist",	V_NONE				},
+	{"wifi_phy2iface11_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface12_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface12_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2828,6 +2875,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface12_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface12_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface12_maclist",	V_NONE				},
+	{"wifi_phy2iface12_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface13_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface13_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2845,6 +2893,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface13_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface13_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface13_maclist",	V_NONE				},
+	{"wifi_phy2iface13_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface14_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface14_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2862,6 +2911,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface14_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface14_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface14_maclist",	V_NONE				},
+	{"wifi_phy2iface14_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"wifi_phy2iface15_enable",	V_RANGE(0, 1)			},
 	{"wifi_phy2iface15_mode",	V_TEXT(2, 7)			},	/* Access Point, Client, etc */
@@ -2879,6 +2929,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_phy2iface15_ifname",	V_TEXT(0, 15)			},
 	{"wifi_phy2iface15_macfilter",	V_TEXT(0, 5)			},
 	{"wifi_phy2iface15_maclist",	V_NONE				},
+	{"wifi_phy2iface15_custom",	V_NONE				},	/* Custom hostapd interface config */
 
 	{"flow_offloading",		V_RANGE(0, 2)			},
 	{"wed_offloading",		V_RANGE(0, 1)			},
