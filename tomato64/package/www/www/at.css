@@ -2607,6 +2607,11 @@ td.adblock-td2 {
 	font-size: 1.1em;
 }
 
+.clear-search-btn {
+	top: 51%;
+	font-size: 26px;
+}
+
 /* SVG */
 #svg text {
 	font: 13px monospace;

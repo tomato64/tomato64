@@ -333,22 +333,35 @@ function onTableScroll() {
 	150);
 }
 
+function toggleClearButton() {
+	var input = E('log-find-text');
+	var clearBtn = E('clear-search-btn');
+	if (input.value.length > 0)
+		clearBtn.style.display = 'inline-block';
+	else
+		clearBtn.style.display = 'none';
+}
+
+function clearSearch() {
+	E('log-find-text').value = '';
+	currentSearch = '';
+	E('log-occurence-span').style.display = 'none';
+	toggleClearButton();
+	logGrid.populate();
+	scrollToBottom();
+}
+
 function onKeyUpEvent(event) {
 	if (event.defaultPrevented)
 		return;
 
 	var key = event.key || event.keyCode;
-	if (key === 'Escape' || key === 'Esc' || key === 27) {
-		E('log-find-text').value = '';
-		currentSearch = '';
-		E('log-occurence-span').style.display = 'none';
-		logGrid.populate();
-		scrollToBottom();
-	}
+	if (key === 'Escape' || key === 'Esc' || key === 27) clearSearch();
 }
 
 var onInputEvent = debounce(function() {
 	currentSearch = E('log-find-text').value;
+	toggleClearButton();
 	logGrid.populate();
 	if (currentSearch.length == 0) {
 		E('log-occurence-span').style.display = 'none';
@@ -389,7 +402,7 @@ function init() {
 	logHeaderGrid.setup();
 	logGrid.setup();
 
-	addEvent(E('log-find-text'), 'input', onInputEvent);
+	addEvent(E('log-find-text'), 'input', function() { toggleClearButton(); onInputEvent(); });
 	addEvent(document, 'keyup', onKeyUpEvent);
 
 	ref.initPage(0, 1);
@@ -439,7 +452,10 @@ function init() {
 			&nbsp; &nbsp;
 			<span>
 				Find in syslog: &nbsp;
-				<input type="text" id="log-find-text" autocomplete="off" maxlength="64" title="Press Escape to clear search; use '-' in front to make a negative search">
+				<span class="search-input-wrapper">
+					<input type="text" id="log-find-text" autocomplete="off" maxlength="64" title="Press Escape to clear search; use '-' in front to make a negative search">
+					<button type="button" id="clear-search-btn" class="clear-search-btn" onclick="clearSearch()" title="Clear search">⦻</button>
+				</span>
 				<span style="display:none" id="log-occurence-span">Occurences: <b><span id="log-occurence-value"></span></b></span>
 			</span>
 
