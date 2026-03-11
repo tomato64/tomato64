@@ -3142,7 +3142,7 @@ function insOvl() {
 		                   'Thank you for being part of this journey!'+
 		                   '</div><div id="overlay-buttons">'+
 		                   '<div class="overlay-buttons-in"><input id="overlay-left-btn" type="button" value="Support FreshTomato"></div>'+
-		                   '<div class="overlay-buttons-in"><input id="overlay-right-btn" type="button" value="Continue"></div>'+
+		                   '<div class="overlay-buttons-in"><input id="overlay-right-btn" type="button" value="Continue..."></div>'+
 		                   '</div>';
 
 		function updateAndRedirect() {
