@@ -1596,7 +1596,9 @@ static int print_wlinfo_callback(int phy, int iface, const char *ifname, void *u
 
 	/* Get key */
 	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%diface%d_key", phy, iface);
-	const char *key = nvram_safe_get(nvram_key);
+	char *key = utf8_to_js_string(nvram_safe_get(nvram_key));
+	if (!key)
+		key = strdup("");
 
 	/* Print comma separator for all entries after the first */
 	if (*first_entry)
@@ -1605,6 +1607,8 @@ static int print_wlinfo_callback(int phy, int iface, const char *ifname, void *u
 	/* Output format: ['Access Point','encryption','MODE','width MHz','network','broadcast','key'] */
 	web_printf("['Access Point','%s','%s','%s MHz','%s','%d','%s']",
 	           encryption, mode_upper, width, network, broadcast, key);
+
+	free(key);
 
 	*first_entry = 1;
 	return 0; /* Continue iteration */
@@ -1718,7 +1722,9 @@ static int print_wif_callback(int phy, int iface, const char *ifname, void *user
 
 	/* Get ESSID from nvram */
 	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%diface%d_essid", phy, iface);
-	const char *essid = nvram_safe_get(nvram_key);
+	char *essid = utf8_to_js_string(nvram_safe_get(nvram_key));
+	if (!essid)
+		essid = strdup("");
 
 	/* Calculate subunit (-1 for iface=0, else iface) */
 	subunit = (iface == 0) ? -1 : iface;
@@ -1730,6 +1736,8 @@ static int print_wif_callback(int phy, int iface, const char *ifname, void *user
 	/* Output format: ['ifname','phy_str',phy_num,subunit,'essid','hwaddr',up,max_vifs,'mode','bssid'] */
 	web_printf("['%s','%d',%d,%d,'%s','%s',1,16,'ap','%s']",
 	           ifname, phy, phy, subunit, essid, mac, mac);
+
+	free(essid);
 
 	*first_entry = 1;
 	return 0; /* Continue iteration */
