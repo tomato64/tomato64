@@ -428,7 +428,7 @@ function earlyInit() {
 
 		t = tabs[i][0];
 
-		routingTables[i].init('table_'+t+'_routing','sort', 0,[ { type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+		routingTables[i].init('table_'+t+'_routing','sort', 60,[ { type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 		                                                        { type: 'select', options: [[1,'From Source IP'],[2,'To Destination IP'],[3,'To Domain']] },
 		                                                        { type: 'text', maxlen: 50 },
 		                                                        { type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' }]);
