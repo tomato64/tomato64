@@ -926,34 +926,29 @@ static void wg_iface_post_down(const int unit)
 	wg_iface_script(unit, "postdown");
 }
 
-static int wg_set_peer_psk(char *iface, char *pubkey, const char *presharedkey)
+static void wg_set_peer_psk(char *iface, char *pubkey, const char *presharedkey)
 {
 	FILE *fp;
 	char buffer[BUF_SIZE];
-	int err = 0;
 
 	/* write preshared key to file */
-	memset(buffer, 0, BUF_SIZE);
 	snprintf(buffer, BUF_SIZE, WG_KEYS_DIR"/%s.psk", iface);
 
 	if (!(fp = fopen(buffer, "w"))) {
 		logmsg(LOG_WARNING, "cannot open file for writing: %s (%s)", buffer, strerror(errno));
-		return -1;
+		return;
 	}
 	fprintf(fp, "%s", presharedkey);
 	fclose(fp);
 
 	if (eval("wg", "set", iface, "peer", pubkey, "preshared-key", buffer)) {
 		logmsg(LOG_WARNING, "unable to add preshared key to peer %s on wireguard interface %s!", pubkey, iface);
-		err = -1;
 	}
 	else
 		logmsg(LOG_DEBUG, "preshared key has been added to peer %s on wireguard interface %s", pubkey, iface);
 
 	/* remove file for security */
 	remove(buffer);
-
-	return err;
 }
 
 static int wg_set_peer_keepalive(char *iface, char *pubkey, char *keepalive)
