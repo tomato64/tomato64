@@ -58,7 +58,7 @@ else
 	resolvers_md="$${resolvers_path}/public-resolvers.md"; \
 	resolvers_file="$${resolvers_path}/dnscrypt-resolvers.csv"; \
 	resolvers_file_tmp="$${resolvers_file}.tmp"; \
-	resolvers_url="https://download.dnscrypt.info/resolvers-list/v2/public-resolvers.md"; \
+	resolvers_url="https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/public-resolvers.md"; \
 	count=0; \
 	while [ $${count} -lt 6 ]; do \
 	    printf "\nRetrieving the list of public DNSCrypt resolvers...\n"; \
