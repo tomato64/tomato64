@@ -865,36 +865,32 @@ static int wg_set_iface_up(char *iface)
 	return -1;
 }
 
-static int wg_iface_script(const int unit, const char *script_name)
+static void wg_iface_script(const int unit, const char *script_name)
 {
 	char *script;
 	char buffer[BUF_SIZE_32];
-	char path[BUF_SIZE_64];
+	char path[FILENAME_MAX];
 	FILE *fp;
 
-	memset(buffer, 0, BUF_SIZE_32);
 	snprintf(buffer, BUF_SIZE_32, "wg%d_%s", unit, script_name);
-
 	script = nvram_safe_get(buffer);
 
 	if (strcmp(script, "") != 0) {
 		/* build path */
-		memset(path, 0, BUF_SIZE_64);
-		snprintf(path, BUF_SIZE_64, WG_SCRIPTS_DIR"/wg%d-%s.sh", unit, script_name);
+		snprintf(path, FILENAME_MAX, WG_SCRIPTS_DIR"/wg%d-%s.sh", unit, script_name);
 
 		if (!(fp = fopen(path, "w"))) {
 			logmsg(LOG_WARNING, "unable to open %s for writing!", path);
-			return -1;
+			return;
 		}
-		fprintf(fp, "#!/bin/sh\n%s\n", script);
+		fprintf(fp, "#!/bin/sh\n%s\n", script); /* write the content */
 		fclose(fp);
 
 		/* replace %i with interface */
-		memset(buffer, 0, BUF_SIZE_32);
 		snprintf(buffer, BUF_SIZE_32, "wg%d", unit);
 		if (replace_in_file(path, "%i", buffer) != 0) {
 			logmsg(LOG_WARNING, "unable to substitute interface name in %s script for wireguard interface wg%d!", script_name, unit);
-			return -1;
+			return;
 		}
 		else
 			logmsg(LOG_DEBUG, "interface substitution in %s script for wireguard interface wg%d has executed successfully", script_name, unit);
@@ -903,13 +899,11 @@ static int wg_iface_script(const int unit, const char *script_name)
 		chmod(path, (S_IRUSR | S_IWUSR | S_IXUSR));
 		if (eval(path)) {
 			logmsg(LOG_WARNING, "unable to execute %s script for wireguard interface wg%d!", script_name, unit);
-			return -1;
+			return;
 		}
 		else
 			logmsg(LOG_DEBUG, "%s script for wireguard interface wg%d has executed successfully", script_name, unit);
 	}
-
-	return 0;
 }
 
 static void wg_iface_pre_up(const int unit)
