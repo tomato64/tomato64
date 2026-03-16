@@ -1,7 +1,7 @@
-From b90d18b689b6b9d8fe81d822cd79cb863257bc28 Mon Sep 17 00:00:00 2001
+From 4355309e0bdfd95e5e20d310770b1397eeaa4612 Mon Sep 17 00:00:00 2001
 From: Jan Engelhardt <jengelh@inai.de>
 Date: Mon, 2 Dec 2019 20:52:04 +0100
-Subject: [PATCH] 2.0.11 to 1.1.2026
+Subject: [PATCH] 2.0.11 to 2.11.2026
 
 ---
  Makefile.am          |   9 +-
@@ -10,7 +10,8 @@ Subject: [PATCH] 2.0.11 to 1.1.2026
  ebtables-save.in     |  19 +-
  ebtables.c           |   4 +-
  libebtc.c            |  62 +++---
- 6 files changed, 293 insertions(+), 281 deletions(-)
+ useful_functions.c   |   5 +-
+ 7 files changed, 296 insertions(+), 283 deletions(-)
 
 diff --git a/Makefile.am b/Makefile.am
 index b879941..05556d2 100644
@@ -1428,6 +1429,22 @@ index 2a9ab87..1cc1016 100644
  	strcpy(t->t->u.name, t->name);
  	t->t->target_size = EBT_ALIGN(t->size);
  	t->init(t->t);
+diff --git a/useful_functions.c b/useful_functions.c
+index 133ae2f..7378fc9 100644
+--- a/useful_functions.c
++++ b/useful_functions.c
+@@ -364,8 +364,9 @@ static struct in6_addr *parse_ip6_mask(char *mask)
+ 	if (bits != 0) {
+ 		char *p = (char *)&maskaddr;
+ 		memset(p, 0xff, bits / 8);
+-		memset(p + (bits / 8) + 1, 0, (128 - bits) / 8);
+-		p[bits / 8] = 0xff << (8 - (bits & 7));
++		memset(p + (bits + 7) / 8, 0, (128 - bits) / 8);
++		if (bits & 7)
++			p[bits / 8] = 0xff << (8 - (bits & 7));
+ 		return &maskaddr;
+ 	}
+ 
 -- 
 2.47.3
 
