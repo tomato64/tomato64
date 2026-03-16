@@ -1633,31 +1633,33 @@ void start_wireguard(const int unit)
 			goto out;
 
 		/* add stored peers */
-		nvp = nv = strdup(getNVRAMVar("wg%d_peers", unit));
-		if (nv) {
-			mode = atoi(getNVRAMVar("wg%d_com", unit));
-
-			while ((b = strsep(&nvp, ">")) != NULL) {
-				if (vstrsep(b, "<", &priv, &name, &ep, &key, &psk, &ip, &aip, &ka) < 8)
-					continue;
-
-				/* build peer allowed ips */
-				memset(buffer, 0, BUF_SIZE);
-				if (aip[0] == '\0')
-					snprintf(buffer, BUF_SIZE, "%s", ip);
-				else if (ip[0] == '\0')
-					snprintf(buffer, BUF_SIZE, "%s", aip);
-				else
-					snprintf(buffer, BUF_SIZE, "%s,%s", ip, aip);
-
-				/* add peer to interface (and route) */
-				if (priv[0] == '1') /* peer has private key? */
-					wg_add_peer_privkey(unit, iface, key, buffer, psk, (mode == 3 ? ka : rka), ep, fwmark);
-				else
-					wg_add_peer(unit, iface, key, buffer, psk, (mode == 3 ? ka : rka), ep, fwmark, port);
-			}
-			free(nv);
+		nv = nvp = strdup(getNVRAMVar("wg%d_peers", unit));
+		if (!nv) {
+			logmsg(LOG_WARNING, "%s: strdup failed for wg%d peers (out of memory)", __FUNCTION__, unit);
+			goto out;
 		}
+		mode = atoi(getNVRAMVar("wg%d_com", unit));
+
+		while ((b = strsep(&nvp, ">")) != NULL) {
+			if (vstrsep(b, "<", &priv, &name, &ep, &key, &psk, &ip, &aip, &ka) < 8)
+				continue;
+
+			/* build peer allowed ips */
+			memset(buffer, 0, BUF_SIZE);
+			if (aip[0] == '\0')
+				snprintf(buffer, BUF_SIZE, "%s", ip);
+			else if (ip[0] == '\0')
+				snprintf(buffer, BUF_SIZE, "%s", aip);
+			else
+				snprintf(buffer, BUF_SIZE, "%s,%s", ip, aip);
+
+			/* add peer to interface (and route) */
+			if (priv[0] == '1') /* peer has private key? */
+				wg_add_peer_privkey(unit, iface, key, buffer, psk, (mode == 3 ? ka : rka), ep, fwmark);
+			else
+				wg_add_peer(unit, iface, key, buffer, psk, (mode == 3 ? ka : rka), ep, fwmark, port);
+		}
+		free(nv);
 
 		eval("ip", "route", "flush", "cache");
 
