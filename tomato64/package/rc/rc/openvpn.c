@@ -345,27 +345,6 @@ void start_ovpn_client(int unit)
 	if (atoi(getNVRAMVar("vpnc%d_nobind", unit)) > 0)
 		fprintf(fp, "nobind\n");
 
-	/* Compression */
-	memset(buffer, 0, BUF_SIZE);
-	strlcpy(buffer, getNVRAMVar("vpnc%d_comp", unit), BUF_SIZE);
-	if (strcmp(buffer, "-1")) {
-#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
-		if ((!strcmp(buffer, "lz4")) || (!strcmp(buffer, "lz4-v2")))
-			fprintf(fp, "compress %s\n", buffer);
-		else
-#endif
-		     if (!strcmp(buffer, "yes"))
-			fprintf(fp, "compress lzo\n");
-		else if (!strcmp(buffer, "adaptive"))
-			fprintf(fp, "comp-lzo adaptive\n");
-#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
-		else if ((!strcmp(buffer, "stub")) || (!strcmp(buffer, "stub-v2")))
-			fprintf(fp, "compress %s\n", buffer);
-#endif
-		else if (!strcmp(buffer, "no"))
-			fprintf(fp, "compress\n");	/* Disable, but can be overriden */
-	}
-
 	/* Cipher */
 	memset(buffer, 0, BUF_SIZE);
 	strlcpy(buffer, getNVRAMVar("vpnc%d_ncp_ciphers", unit), BUF_SIZE);
@@ -930,23 +909,7 @@ void start_ovpn_server(int unit)
 	if (!nvram_contains_word(buffer, "default"))
 		fprintf(fp, "auth %s\n", nvram_safe_get(buffer));
 
-	/* Compression */
-	memset(buffer, 0, BUF_SIZE);
-	strlcpy(buffer, getNVRAMVar("vpns%d_comp", unit), BUF_SIZE);
-	if (strcmp(buffer, "-1")) {
-#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
-		if (!strcmp(buffer, "lz4") || !strcmp(buffer, "lz4-v2"))
-			fprintf(fp, "compress %s\n", buffer);
-		else
-#endif
-		     if (!strcmp(buffer, "yes"))
-			fprintf(fp, "compress lzo\n");
-		else if (!strcmp(buffer, "adaptive"))
-			fprintf(fp, "comp-lzo adaptive\n");
-		else if (!strcmp(buffer, "no"))
-			fprintf(fp, "compress\n");	/* Disable, but client can override if desired */
-	}
-
+	/* Renegotiate data channel key after at most max seconds */
 	if ((nvl = atol(getNVRAMVar("vpns%d_reneg", unit))) >= 0)
 		fprintf(fp, "reneg-sec %ld\n", nvl);
 

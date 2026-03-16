@@ -24,10 +24,10 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("vpns_eas,vpns_dns,vpns1_poll,vpns1_if,vpns1_proto,vpns1_port,vpns1_firewall,vpns1_sn,vpns1_nm,vpns1_local,vpns1_remote,vpns1_dhcp,vpns1_r1,vpns1_r2,vpns1_crypt,vpns1_comp,vpns1_digest,vpns1_cipher,vpns1_ncp_ciphers,vpns1_reneg,vpns1_hmac,vpns1_plan,vpns1_ccd,vpns1_c2c,vpns1_ccd_excl,vpns1_ccd_val,vpns1_pdns,vpns1_rgw,vpns1_userpass,vpns1_nocert,vpns1_users_val,vpns1_custom,vpns1_static,vpns1_ca,vpns1_ca_key,vpns1_crt,vpns1_crl,vpns1_key,vpns1_dh,vpns1_br,vpns1_ecdh,vpns2_poll,vpns2_if,vpns2_proto,vpns2_port,vpns2_firewall,vpns2_sn,vpns2_nm,vpns2_local,vpns2_remote,vpns2_dhcp,vpns2_r1,vpns2_r2,vpns2_crypt,vpns2_comp,vpns2_digest,vpns2_cipher,vpns2_ncp_ciphers,vpns2_reneg,vpns2_hmac,vpns2_plan,vpns2_ccd,vpns2_c2c,vpns2_ccd_excl,vpns2_ccd_val,vpns2_pdns,vpns2_rgw,vpns2_userpass,vpns2_nocert,vpns2_users_val,vpns2_custom,vpns2_static,vpns2_ca,vpns2_ca_key,vpns2_crt,vpns2_crl,vpns2_key,vpns2_dh,vpns2_br,vpns2_ecdh,lan_ifname"); %>
+//	<% nvram("vpns_eas,vpns_dns,vpns1_poll,vpns1_if,vpns1_proto,vpns1_port,vpns1_firewall,vpns1_sn,vpns1_nm,vpns1_local,vpns1_remote,vpns1_dhcp,vpns1_r1,vpns1_r2,vpns1_crypt,vpns1_digest,vpns1_cipher,vpns1_ncp_ciphers,vpns1_reneg,vpns1_hmac,vpns1_plan,vpns1_ccd,vpns1_c2c,vpns1_ccd_excl,vpns1_ccd_val,vpns1_pdns,vpns1_rgw,vpns1_userpass,vpns1_nocert,vpns1_users_val,vpns1_custom,vpns1_static,vpns1_ca,vpns1_ca_key,vpns1_crt,vpns1_crl,vpns1_key,vpns1_dh,vpns1_br,vpns1_ecdh,vpns2_poll,vpns2_if,vpns2_proto,vpns2_port,vpns2_firewall,vpns2_sn,vpns2_nm,vpns2_local,vpns2_remote,vpns2_dhcp,vpns2_r1,vpns2_r2,vpns2_crypt,vpns2_digest,vpns2_cipher,vpns2_ncp_ciphers,vpns2_reneg,vpns2_hmac,vpns2_plan,vpns2_ccd,vpns2_c2c,vpns2_ccd_excl,vpns2_ccd_val,vpns2_pdns,vpns2_rgw,vpns2_userpass,vpns2_nocert,vpns2_users_val,vpns2_custom,vpns2_static,vpns2_ca,vpns2_ca_key,vpns2_crt,vpns2_crl,vpns2_key,vpns2_dh,vpns2_br,vpns2_ecdh,lan_ifname"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("vpns_eas,vpns_dns,vpns1_poll,vpns1_if,vpns1_proto,vpns1_port,vpns1_firewall,vpns1_sn,vpns1_nm,vpns1_local,vpns1_remote,vpns1_dhcp,vpns1_r1,vpns1_r2,vpns1_crypt,vpns1_comp,vpns1_digest,vpns1_cipher,vpns1_ncp_ciphers,vpns1_reneg,vpns1_hmac,vpns1_plan,vpns1_ccd,vpns1_c2c,vpns1_ccd_excl,vpns1_ccd_val,vpns1_pdns,vpns1_rgw,vpns1_userpass,vpns1_nocert,vpns1_users_val,vpns1_custom,vpns1_static,vpns1_ca,vpns1_ca_key,vpns1_crt,vpns1_crl,vpns1_key,vpns1_dh,vpns1_br,vpns1_ecdh,vpns2_poll,vpns2_if,vpns2_proto,vpns2_port,vpns2_firewall,vpns2_sn,vpns2_nm,vpns2_local,vpns2_remote,vpns2_dhcp,vpns2_r1,vpns2_r2,vpns2_crypt,vpns2_comp,vpns2_digest,vpns2_cipher,vpns2_ncp_ciphers,vpns2_reneg,vpns2_hmac,vpns2_plan,vpns2_ccd,vpns2_c2c,vpns2_ccd_excl,vpns2_ccd_val,vpns2_pdns,vpns2_rgw,vpns2_userpass,vpns2_nocert,vpns2_users_val,vpns2_custom,vpns2_static,vpns2_ca,vpns2_ca_key,vpns2_crt,vpns2_crl,vpns2_key,vpns2_dh,vpns2_br,vpns2_ecdh,vpns3_poll,vpns3_if,vpns3_proto,vpns3_port,vpns3_firewall,vpns3_sn,vpns3_nm,vpns3_local,vpns3_remote,vpns3_dhcp,vpns3_r1,vpns3_r2,vpns3_crypt,vpns3_comp,vpns3_digest,vpns3_cipher,vpns3_ncp_ciphers,vpns3_reneg,vpns3_hmac,vpns3_plan,vpns3_ccd,vpns3_c2c,vpns3_ccd_excl,vpns3_ccd_val,vpns3_pdns,vpns3_rgw,vpns3_userpass,vpns3_nocert,vpns3_users_val,vpns3_custom,vpns3_static,vpns3_ca,vpns3_ca_key,vpns3_crt,vpns3_crl,vpns3_key,vpns3_dh,vpns3_br,vpns3_ecdh,vpns4_poll,vpns4_if,vpns4_proto,vpns4_port,vpns4_firewall,vpns4_sn,vpns4_nm,vpns4_local,vpns4_remote,vpns4_dhcp,vpns4_r1,vpns4_r2,vpns4_crypt,vpns4_comp,vpns4_digest,vpns4_cipher,vpns4_ncp_ciphers,vpns4_reneg,vpns4_hmac,vpns4_plan,vpns4_ccd,vpns4_c2c,vpns4_ccd_excl,vpns4_ccd_val,vpns4_pdns,vpns4_rgw,vpns4_userpass,vpns4_nocert,vpns4_users_val,vpns4_custom,vpns4_static,vpns4_ca,vpns4_ca_key,vpns4_crt,vpns4_crl,vpns4_key,vpns4_dh,vpns4_br,vpns4_ecdh,vpns1_dco,vpns2_dco,vpns3_dco,vpns4_dco,lan_ifname"); %>
+//	<% nvram("vpns_eas,vpns_dns,vpns1_poll,vpns1_if,vpns1_proto,vpns1_port,vpns1_firewall,vpns1_sn,vpns1_nm,vpns1_local,vpns1_remote,vpns1_dhcp,vpns1_r1,vpns1_r2,vpns1_crypt,vpns1_digest,vpns1_cipher,vpns1_ncp_ciphers,vpns1_reneg,vpns1_hmac,vpns1_plan,vpns1_ccd,vpns1_c2c,vpns1_ccd_excl,vpns1_ccd_val,vpns1_pdns,vpns1_rgw,vpns1_userpass,vpns1_nocert,vpns1_users_val,vpns1_custom,vpns1_static,vpns1_ca,vpns1_ca_key,vpns1_crt,vpns1_crl,vpns1_key,vpns1_dh,vpns1_br,vpns1_ecdh,vpns2_poll,vpns2_if,vpns2_proto,vpns2_port,vpns2_firewall,vpns2_sn,vpns2_nm,vpns2_local,vpns2_remote,vpns2_dhcp,vpns2_r1,vpns2_r2,vpns2_crypt,vpns2_digest,vpns2_cipher,vpns2_ncp_ciphers,vpns2_reneg,vpns2_hmac,vpns2_plan,vpns2_ccd,vpns2_c2c,vpns2_ccd_excl,vpns2_ccd_val,vpns2_pdns,vpns2_rgw,vpns2_userpass,vpns2_nocert,vpns2_users_val,vpns2_custom,vpns2_static,vpns2_ca,vpns2_ca_key,vpns2_crt,vpns2_crl,vpns2_key,vpns2_dh,vpns2_br,vpns2_ecdh,vpns3_poll,vpns3_if,vpns3_proto,vpns3_port,vpns3_firewall,vpns3_sn,vpns3_nm,vpns3_local,vpns3_remote,vpns3_dhcp,vpns3_r1,vpns3_r2,vpns3_crypt,vpns3_digest,vpns3_cipher,vpns3_ncp_ciphers,vpns3_reneg,vpns3_hmac,vpns3_plan,vpns3_ccd,vpns3_c2c,vpns3_ccd_excl,vpns3_ccd_val,vpns3_pdns,vpns3_rgw,vpns3_userpass,vpns3_nocert,vpns3_users_val,vpns3_custom,vpns3_static,vpns3_ca,vpns3_ca_key,vpns3_crt,vpns3_crl,vpns3_key,vpns3_dh,vpns3_br,vpns3_ecdh,vpns4_poll,vpns4_if,vpns4_proto,vpns4_port,vpns4_firewall,vpns4_sn,vpns4_nm,vpns4_local,vpns4_remote,vpns4_dhcp,vpns4_r1,vpns4_r2,vpns4_crypt,vpns4_digest,vpns4_cipher,vpns4_ncp_ciphers,vpns4_reneg,vpns4_hmac,vpns4_plan,vpns4_ccd,vpns4_c2c,vpns4_ccd_excl,vpns4_ccd_val,vpns4_pdns,vpns4_rgw,vpns4_userpass,vpns4_nocert,vpns4_users_val,vpns4_custom,vpns4_static,vpns4_ca,vpns4_ca_key,vpns4_crt,vpns4_crl,vpns4_key,vpns4_dh,vpns4_br,vpns4_ecdh,vpns1_dco,vpns2_dco,vpns3_dco,vpns4_dco,lan_ifname"); %>
 /* TOMATO64-END */
 
 var changed = 0, i;
@@ -642,9 +642,6 @@ function verifyFields(focused, quiet) {
 		var ccd = E('_f_'+t+'_ccd').checked;
 		var userpass = E('_f_'+t+'_userpass').checked;
 		var dns = E('_f_'+t+'_dns').checked;
-/* SIZEOPTMORE-BEGIN */
-		var comp = E('_'+t+'_comp').value;
-/* SIZEOPTMORE-END */
 
 		elem.display(PR('_'+t+'_ca'), PR('_'+t+'_ca_key'), PR('_'+t+'_ca_key_div_help'),
 /* KEYGEN-BEGIN */
@@ -679,13 +676,6 @@ function verifyFields(focused, quiet) {
 		var proto = E('_'+t+'_proto').value;
 		var dco_vis = iface == 'tun' && auth == 'tls' && proto.indexOf('udp') >= 0;
 		elem.display(PR('_f_'+t+'_dco'), dco_vis);
-		var dco_checked = E('_f_'+t+'_dco').checked;
-		if (dco_vis && dco_checked) {
-			E('_'+t+'_comp').value = '-1';
-			E('_'+t+'_comp').disabled = 1;
-		} else {
-			E('_'+t+'_comp').disabled = 0;
-		}
 /* TOMATO64-END */
 /* KEYGEN-BEGIN */
 		elem.display(PR('_vpn_client_gen_'+t+'_button'), auth != 'custom');
@@ -814,10 +804,6 @@ function save() {
 /* TOMATO64-BEGIN */
 		fom[t+'_dco'].value = E('_f_'+t+'_dco').checked ? 1 : 0;
 		if (E('_f_'+t+'_dco').checked) {
-			if (E('_'+t+'_comp').value != '-1') {
-				alert('DCO requires compression to be Disabled.');
-				return;
-			}
 			var ciphers = E('_'+t+'_ncp_ciphers').value;
 			if (ciphers != '') {
 				var valid_ciphers = ['AES-128-GCM','AES-192-GCM','AES-256-GCM','CHACHA20-POLY1305'];
@@ -1060,11 +1046,6 @@ function init() {
 				{ title: 'Advertise DNS to clients', name: 'f_'+t+'_pdns', type: 'checkbox', value: nvram[t+'_pdns'] != 0 },
 				{ title: 'Data ciphers', name: t+'_ncp_ciphers', type: 'text', size: 70, maxlen: 127, value: nvram[t+'_ncp_ciphers'] },
 				{ title: 'Cipher', name: t+'_cipher', type: 'select', options: ciphers, value: nvram[t+'_cipher'] },
-				{ title: 'Compression', name: t+'_comp', type: 'select', options: [['-1','Disabled'],['no','None']
-/* SIZEOPTMORE-BEGIN */
-				         ,['lz4','LZ4'],['lz4-v2','LZ4-V2']
-/* SIZEOPTMORE-END */
-				         ], value: nvram[t+'_comp'] },
 				{ title: 'TLS Renegotiation Time', name: t+'_reneg', type: 'text', maxlen: 10, size: 7, value: nvram[t+'_reneg'], suffix: ' <small> seconds; -1 for default<\/small>' },
 				{ title: 'Manage Client-Specific Options', name: 'f_'+t+'_ccd', type: 'checkbox', value: nvram[t+'_ccd'] != 0 },
 				{ title: 'Allow Client<->Client', name: 'f_'+t+'_c2c', type: 'checkbox', value: nvram[t+'_c2c'] != 0 },

@@ -1495,7 +1495,6 @@ struct nvram_tuple router_defaults[] = {
 #else
 	{ "vpns1_crypt",		"tls"				, 0 },
 #endif
-	{ "vpns1_comp",			"-1"				, 0 },
 	{ "vpns1_cipher",		"AES-128-CBC"			, 0 },
 #ifdef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "vpns1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
@@ -1544,7 +1543,6 @@ struct nvram_tuple router_defaults[] = {
 #else
 	{ "vpns2_crypt",		"tls"				, 0 },
 #endif
-	{ "vpns2_comp",			"-1"				, 0 },
 	{ "vpns2_cipher",		"AES-128-CBC"			, 0 },
 #ifdef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "vpns2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
@@ -1595,7 +1593,6 @@ struct nvram_tuple router_defaults[] = {
 #else
 	{ "vpns3_crypt",		"tls"				, 0 },
 #endif
-	{ "vpns3_comp",			"-1"				, 0 },
 	{ "vpns3_cipher",		"AES-128-CBC"			, 0 },
 #ifdef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "vpns3_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
@@ -1643,7 +1640,6 @@ struct nvram_tuple router_defaults[] = {
 #else
 	{ "vpns4_crypt",		"tls"				, 0 },
 #endif
-	{ "vpns4_comp",			"-1"				, 0 },
 	{ "vpns4_cipher",		"AES-128-CBC"			, 0 },
 #ifdef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "vpns4_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
@@ -1695,7 +1691,6 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpnc1_rg",			"0"				, 0 },
 	{ "vpnc1_firewall",		"auto"				, 0 },
 	{ "vpnc1_crypt",		"tls"				, 0 },
-	{ "vpnc1_comp",			"-1"				, 0 },
 	{ "vpnc1_cipher",		"default"			, 0 },
 #ifdef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "vpnc1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
@@ -1738,7 +1733,6 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpnc2_rg",			"0"				, 0 },
 	{ "vpnc2_firewall",		"auto"				, 0 },
 	{ "vpnc2_crypt",		"tls"				, 0 },
-	{ "vpnc2_comp",			"-1"				, 0 },
 	{ "vpnc2_cipher",		"default"			, 0 },
 #ifdef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "vpnc2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
@@ -1782,7 +1776,6 @@ struct nvram_tuple router_defaults[] = {
 	{ "vpnc3_rg",			"0"				, 0 },
 	{ "vpnc3_firewall",		"auto"				, 0 },
 	{ "vpnc3_crypt",		"tls"				, 0 },
-	{ "vpnc3_comp",			"-1"				, 0 },
 	{ "vpnc3_cipher",		"default"			, 0 },
 #ifdef TCONFIG_OPTIMIZE_SIZE_MORE
 	{ "vpnc3_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },

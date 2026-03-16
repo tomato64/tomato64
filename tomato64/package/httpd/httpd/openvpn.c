@@ -385,20 +385,6 @@ void wo_ovpn_genclientconfig(char *url)
 	str_replace(buffer, "-server", "-client");
 	fprintf(fp, "proto %s\n", buffer);
 
-	/* Compression */
-	memset(buffer, 0, sizeof(buffer));
-	strlcpy(buffer, getNVRAMVar("vpns%d_comp", server), sizeof(buffer));
-	if (strcmp(buffer, "-1")) {
-		if ((!strcmp(buffer, "lz4")) || (!strcmp(buffer, "lz4-v2")))
-			fprintf(fp, "compress %s\n", buffer);
-		else if (!strcmp(buffer, "yes"))
-			fprintf(fp, "compress lzo\n");
-		else if (!strcmp(buffer, "adaptive"))
-			fprintf(fp, "comp-lzo adaptive\n");
-		else if (!strcmp(buffer, "no"))
-			fprintf(fp, "compress\n"); /* disable, but can be overriden */
-	}
-
 	/* Interface */
 	fprintf(fp, "dev %s\n", getNVRAMVar("vpns%d_if", server));
 

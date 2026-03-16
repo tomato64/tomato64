@@ -1491,7 +1491,6 @@ static const nvset_t nvset_list[] = {
 	{ "vpns1_port",			V_PORT				},
 	{ "vpns1_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
 	{ "vpns1_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpns1_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
 	{ "vpns1_cipher",		V_TEXT(0, 16)			},
 	{ "vpns1_ncp_ciphers",		V_TEXT(0, 128)			},
 	{ "vpns1_digest",		V_TEXT(0, 15)			},
@@ -1533,7 +1532,6 @@ static const nvset_t nvset_list[] = {
 	{ "vpns2_port",			V_PORT				},
 	{ "vpns2_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
 	{ "vpns2_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpns2_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
 	{ "vpns2_cipher",		V_TEXT(0, 16)			},
 	{ "vpns2_ncp_ciphers",		V_TEXT(0, 128)			},
 	{ "vpns2_digest",		V_TEXT(0, 15)			},
@@ -1576,7 +1574,6 @@ static const nvset_t nvset_list[] = {
 	{ "vpns3_port",			V_PORT				},
 	{ "vpns3_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
 	{ "vpns3_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpns3_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
 	{ "vpns3_cipher",		V_TEXT(0, 16)			},
 	{ "vpns3_ncp_ciphers",		V_TEXT(0, 128)			},
 	{ "vpns3_digest",		V_TEXT(0, 15)			},
@@ -1616,7 +1613,6 @@ static const nvset_t nvset_list[] = {
 	{ "vpns4_port",			V_PORT				},
 	{ "vpns4_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
 	{ "vpns4_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpns4_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
 	{ "vpns4_cipher",		V_TEXT(0, 16)			},
 	{ "vpns4_ncp_ciphers",		V_TEXT(0, 128)			},
 	{ "vpns4_digest",		V_TEXT(0, 15)			},
@@ -1663,7 +1659,6 @@ static const nvset_t nvset_list[] = {
 	{ "vpnc1_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
 	{ "vpnc1_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
 	{ "vpnc1_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpnc1_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
 	{ "vpnc1_cipher",		V_TEXT(0, 16)			},
 	{ "vpnc1_ncp_ciphers",		V_TEXT(0, 128)			},
 	{ "vpnc1_digest",		V_TEXT(0, 15)			},
@@ -1705,7 +1700,6 @@ static const nvset_t nvset_list[] = {
 	{ "vpnc2_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
 	{ "vpnc2_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
 	{ "vpnc2_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpnc2_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
 	{ "vpnc2_cipher",		V_TEXT(0, 16)			},
 	{ "vpnc2_ncp_ciphers",		V_TEXT(0, 128)			},
 	{ "vpnc2_digest",		V_TEXT(0, 15)			},
@@ -1748,7 +1742,6 @@ static const nvset_t nvset_list[] = {
 	{ "vpnc3_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
 	{ "vpnc3_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
 	{ "vpnc3_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpnc3_comp",			V_TEXT(0, 8)			},	/* yes, no, adaptive, lz4 */
 	{ "vpnc3_cipher",		V_TEXT(0, 16)			},
 	{ "vpnc3_ncp_ciphers",		V_TEXT(0, 128)			},
 	{ "vpnc3_digest",		V_TEXT(0, 15)			},
