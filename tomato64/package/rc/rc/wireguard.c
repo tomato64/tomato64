@@ -500,80 +500,97 @@ static void wg_build_firewall(const int unit, const char *port) {
 	}
 }
 
-static void wg_build_routing(const int unit, const char *fwmark, const char *fwmark_mask, const char *wgrouting_mark) {
+static void wg_build_routing(const int unit, const char *fwmark_mask, const char *wgrouting_mark) {
 	FILE *fp;
 	char *enable, *type, *value, *kswitch;
 	char *nv, *nvp, *b;
 	char buffer[BUF_SIZE_64];
-	int policy;
+	int policy, rules_count;
 	domain_list_t my_domains;
 
-	memset(buffer, 0, BUF_SIZE_64);
 	snprintf(buffer, BUF_SIZE_64, WG_FW_DIR"/wg%d-fw-routing.sh", unit);
 
-	/* script with routing policy rules */
-	if ((fp = fopen(buffer, "w"))) {
-		fprintf(fp, "#!/bin/sh\n"
-		            "\n# Routing\n"
-		            "iptables -t mangle -A PREROUTING -m set --match-set %s dst,src -j MARK --set-mark %s\n",
-		            wgrouting_mark, fwmark_mask);
-
-		if (init_domain_list(&my_domains) != 0) {
-			logmsg(LOG_WARNING, "cannot initialize domain list");
-			fclose(fp);
-			eval("rm", "-rf", buffer);
-			return;
-		}
-
-		/* example of routing_val: 1<2<8.8.8.8<1>1<1<1.2.3.4<0>1<3<domain.com<0> (enabled<type<domain_or_IP<kill_switch>) */
-		nv = nvp = strdup(getNVRAMVar("wg%d_routing_val", unit));
-
-		while (nvp && (b = strsep(&nvp, ">")) != NULL) {
-			enable = type = value = kswitch = NULL;
-
-			/* enable<type<domain_or_IP<kill_switch> */
-			if ((vstrsep(b, "<", &enable, &type, &value, &kswitch)) < 4)
-				continue;
-
-			/* check if rule is enabled and type is set and IP/domain is set */
-			if ((atoi(enable) != 1) || (*type == '\0') || (*value == '\0'))
-				continue;
-
-			policy = atoi(type);
-			switch (policy) {
-			case 1: /* from source */
-				logmsg(LOG_INFO, "type: %d - add %s (wg%d)", policy, value, unit);
-				if (strstr(value, "-")) /* range */
-					fprintf(fp, "iptables -t mangle -A PREROUTING -m iprange --src-range %s -j MARK --set-mark %s\n", value, fwmark_mask);
-				else
-					fprintf(fp, "iptables -t mangle -A PREROUTING -s %s -j MARK --set-mark %s\n", value, fwmark_mask);
-				break;
-			case 2: /* to destination */
-				logmsg(LOG_INFO, "type: %d - add %s (wg%d)", policy, value, unit);
-				fprintf(fp, "iptables -t mangle -A PREROUTING -d %s -j MARK --set-mark %s\n", value, fwmark_mask);
-				break;
-			case 3: /* to domain */
-				logmsg(LOG_INFO, "type: %d - add %s (wg%d)", policy, value, unit);
-				add_domain(&my_domains, value);
-				restart_dnsmasq = 1;
-				break;
-			default:
-				continue;
-			}
-		}
-		if (nv)
-			free(nv);
-
-		fclose(fp);
-		chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
-
-		if (my_domains.count) {
-			update_dnsmasq_ipset(wgrouting_mark, &my_domains, 1);
-			free_domain_list(&my_domains);
-		}
-
-		restart_fw = 1;
+	if (!(fp = fopen(buffer, "w"))) {
+		logmsg(LOG_WARNING, "cannot open file for writing: %s (%s)", dmipset, strerror(errno));
+		return;
 	}
+
+	/* script with routing policy rules */
+	fprintf(fp, "#!/bin/sh\n"
+	            "\n# Routing\n"
+	            "iptables -t mangle -A PREROUTING -m set --match-set %s dst,src -j MARK --set-mark %s\n",
+	            wgrouting_mark, fwmark_mask);
+
+	if (init_domain_list(&my_domains) != 0) {
+		logmsg(LOG_WARNING, "cannot initialize domain list");
+		fclose(fp);
+		eval("rm", "-f", buffer);
+		return;
+	}
+
+	logmsg(LOG_INFO, "start adding routing rules for wg%d (if any) ...", unit);
+	rules_count = 0;
+
+	/* example of routing_val: 1<2<8.8.8.8<1>1<1<1.2.3.4<0>1<3<domain.com<0> (enabled<type<domain_or_IP<kill_switch>) */
+	nv = nvp = strdup(getNVRAMVar("wg%d_routing_val", unit));
+	if (!nv) {
+		logmsg(LOG_WARNING, "%s: strdup failed for wg%d routing_val (out of memory)", __FUNCTION__, unit);
+		fclose(fp);
+		eval("rm", "-f", buffer);
+		free_domain_list(&my_domains);
+		return;
+	}
+	while ((b = strsep(&nvp, ">")) != NULL) {
+		enable = type = value = kswitch = NULL;
+
+		/* enable<type<domain_or_IP<kill_switch> */
+		if ((vstrsep(b, "<", &enable, &type, &value, &kswitch)) < 4)
+			continue;
+
+		/* check if rule is enabled and type is set and IP/domain is set */
+		if ((atoi(enable) != 1) || (*type == '\0') || (*value == '\0'))
+			continue;
+
+		policy = atoi(type);
+		switch (policy) {
+		case 1: /* from source */
+			logmsg(LOG_INFO, "type: %d - add %s (wg%d)", policy, value, unit);
+			if (strstr(value, "-")) /* range */
+				fprintf(fp, "iptables -t mangle -A PREROUTING -m iprange --src-range %s -j MARK --set-mark %s\n", value, fwmark_mask);
+			else
+				fprintf(fp, "iptables -t mangle -A PREROUTING -s %s -j MARK --set-mark %s\n", value, fwmark_mask);
+			rules_count++;
+			break;
+		case 2: /* to destination */
+			logmsg(LOG_INFO, "type: %d - add %s (wg%d)", policy, value, unit);
+			fprintf(fp, "iptables -t mangle -A PREROUTING -d %s -j MARK --set-mark %s\n", value, fwmark_mask);
+			rules_count++;
+			break;
+		case 3: /* to domain */
+			logmsg(LOG_INFO, "type: %d - add %s (wg%d)", policy, value, unit);
+			add_domain(&my_domains, value);
+			restart_dnsmasq = 1;
+			rules_count++;
+			break;
+		default:
+			continue;
+		}
+	}
+	if (nv)
+		free(nv);
+
+	if (rules_count > 0)
+		logmsg(LOG_INFO, "added %d routing rule(s) for wg%d", rules_count, unit);
+
+	fclose(fp);
+	chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
+
+	if (my_domains.count) {
+		update_dnsmasq_ipset(wgrouting_mark, &my_domains, 1);
+	}
+	free_domain_list(&my_domains);
+
+	restart_fw = 1;
 }
 
 static int wg_quick_iface(char *iface, const char *file, const int up)
@@ -1229,7 +1246,7 @@ static void wg_routing_policy(char *iface, char *route, char *fwmark, const int 
 
 		eval("ipset", "create", wgrouting_mark, "hash:ip");
 
-		wg_build_routing(atoi(&iface[2]), fwmark, fwmark_mask, wgrouting_mark);
+		wg_build_routing(atoi(&iface[2]), fwmark_mask, wgrouting_mark);
 
 		logmsg(LOG_INFO, "completed routing policy configuration for wireguard - interface %s - table %s", iface, fwmark);
 	}
