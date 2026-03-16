@@ -746,7 +746,7 @@ static int wg_create_iface(char *iface)
 
 static int wg_set_iface_addr(char *iface, const char *addr)
 {
-	char *nv, *nv_orig, *b;
+	char *nv, *nvp, *b;
 
 	/* Flush all addresses from interface */
 	if (eval("ip", "addr", "flush", "dev", iface)) {
@@ -757,21 +757,21 @@ static int wg_set_iface_addr(char *iface, const char *addr)
 		logmsg(LOG_DEBUG, "successfully flushed wireguard interface %s", iface);
 
 	/* Set wireguard interface address(es) */
-	nv = nv_orig = strdup(addr);
-	while (nv && (b = strsep(&nv, ",")) != NULL) {
+	nv = nvp = strdup(addr);
+	if (!nv) {
+		logmsg(LOG_WARNING, "%s: strdup failed for %s (out of memory)", __FUNCTION__, iface);
+		return -1;
+	}
+	while ((b = strsep(&nvp, ",")) != NULL) {
 		if (eval("ip", "addr", "add", b, "dev", iface)) {
 			logmsg(LOG_WARNING, "unable to add wireguard interface %s address of %s!", iface, b);
-			if (nv_orig)
-				free(nv_orig);
-
+			free(nv);
 			return -1;
 		}
 		else
 			logmsg(LOG_DEBUG, "wireguard interface %s has had address %s add to it", iface, b);
 	}
-
-	if (nv_orig)
-		free(nv_orig);
+	free(nv);
 
 	return 0;
 }
