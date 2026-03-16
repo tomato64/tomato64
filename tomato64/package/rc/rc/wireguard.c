@@ -1250,12 +1250,11 @@ static void wg_routing_policy(char *iface, char *route, char *fwmark, const int 
 
 		logmsg(LOG_INFO, "completed routing policy configuration for wireguard - interface %s - table %s", iface, fwmark);
 	}
-
 }
 
 static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *allowed_ips, const char *fwmark, const int add)
 {
-	char *aip, *aip_orig, *b, *table, *rt, *tp, *ip, *nm;
+	char *aip, *aipp, *b, *table, *rt, *tp, *ip, *nm;
 	int parsed, route_type = 1;
 	char buffer[BUF_SIZE_32];
 	char table_buf[BUF_SIZE_32];
@@ -1264,56 +1263,61 @@ static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *a
 	table = rt = NULL;
 
 	tp = b = strdup(getNVRAMVar("wg%d_route", unit));
-	if (tp) {
-		parsed = vstrsep(b, "|", &rt, &table);
-
-		if (!rt || rt[0] == '\0') {
-			logmsg(LOG_WARNING, "invalid route format for wg%d: missing routetype in '%s'", unit, tp);
-			/* use default route_type = 1, table = NULL */
-		}
-		else if (parsed == 1) {
-			route_type = atoi(rt);
-			table = NULL;
-		}
-		else {
-			route_type = atoi(rt);
-			strlcpy(table_buf, table, BUF_SIZE_32);
-			table = table_buf;
-		}
-		free(tp);
+	if (!tp) {
+		logmsg(LOG_WARNING, "%s: strdup failed for wg%d route (out of memory)", __FUNCTION__, unit);
+		return;
 	}
+	parsed = vstrsep(b, "|", &rt, &table);
+
+	if ((!rt) || (rt[0] == '\0')) {
+		logmsg(LOG_WARNING, "invalid route format for wg%d: missing routetype in '%s'", unit, tp);
+		/* use default route_type = 1, table = NULL */
+	}
+	else if (parsed == 1) {
+		route_type = atoi(rt);
+		table = NULL;
+	}
+	else {
+		route_type = atoi(rt);
+		strlcpy(table_buf, table, BUF_SIZE_32);
+		table = table_buf;
+	}
+	free(tp);
 
 	logmsg(LOG_DEBUG, "*** %s: routing: iface=[%s] route_type=[%d] table=[%s]", __FUNCTION__, iface, route_type, table);
 
 	/* check which routing type the user specified */
-	if (route_type > 0) { /* !off */
-		aip = aip_orig = strdup(allowed_ips);
-		while (aip && (b = strsep(&aip, ",")) != NULL) {
-			memset(buffer, 0, BUF_SIZE_32);
-			snprintf(buffer, BUF_SIZE_32, "%s", b);
+	if (route_type <= 0)
+		return; /* !off */
 
-			if ((vstrsep(b, "/", &ip, &nm) == 2) && (atoi(nm) == 0)) { /* default route */
-				if (atoi(getNVRAMVar("wg%d_rgwr", unit)) >= VPN_RGW_POLICY) { /* routing policy+ */
-					/* we don't want to mark packets for PBR */
-					if (add)
-						wg_set_iface_fwmark(iface, "0");
+	aip = aipp = strdup(allowed_ips);
+	if (!aip) {
+		logmsg(LOG_WARNING, "%s: strdup failed for wg%d allowed_ips (out of memory)", __FUNCTION__, unit);
+		return;
+	}
+	while ((b = strsep(&aipp, ",")) != NULL) {
+		snprintf(buffer, BUF_SIZE_32, "%s", b);
 
-					logmsg(LOG_DEBUG, "*** %s: running wg_routing_policy() iface=[%s] route=[%s] fwmark=[%s] add=[%d]", __FUNCTION__, iface, buffer, fwmark, add);
-					wg_routing_policy(iface, buffer, (char *)fwmark, add);
-				}
-				else {
-					logmsg(LOG_DEBUG, "*** %s: running wg_route_peer_default() iface=[%s] route=[%s] fwmark=[%s] add=[%d]", __FUNCTION__, iface, buffer, fwmark, add);
-					wg_route_peer_default(iface, buffer, (char *)fwmark, add);
-				}
+		if ((vstrsep(b, "/", &ip, &nm) == 2) && (atoi(nm) == 0)) { /* default route */
+			if (atoi(getNVRAMVar("wg%d_rgwr", unit)) >= VPN_RGW_POLICY) { /* routing policy+ */
+				/* we don't want to mark packets for PBR */
+				if (add)
+					wg_set_iface_fwmark(iface, "0");
+
+				logmsg(LOG_DEBUG, "*** %s: running wg_routing_policy() iface=[%s] route=[%s] fwmark=[%s] add=[%d]", __FUNCTION__, iface, buffer, fwmark, add);
+				wg_routing_policy(iface, buffer, (char *)fwmark, add);
 			}
-			else { /* std route */
-				logmsg(LOG_DEBUG, "*** %s: running wg_route_peer() iface=[%s] route=[%s] table=[%s] add=[%d]", __FUNCTION__, iface, buffer, (route_type == 1 || !table) ? "-" : table, add);
-				wg_route_peer(iface, buffer, (route_type == 1) ? NULL : table, add);
+			else {
+				logmsg(LOG_DEBUG, "*** %s: running wg_route_peer_default() iface=[%s] route=[%s] fwmark=[%s] add=[%d]", __FUNCTION__, iface, buffer, fwmark, add);
+				wg_route_peer_default(iface, buffer, (char *)fwmark, add);
 			}
 		}
-		if (aip_orig)
-			free(aip_orig);
+		else { /* std route */
+			logmsg(LOG_DEBUG, "*** %s: running wg_route_peer() iface=[%s] route=[%s] table=[%s] add=[%d]", __FUNCTION__, iface, buffer, (route_type == 1 || !table) ? "-" : table, add);
+			wg_route_peer(iface, buffer, (route_type == 1) ? NULL : table, add);
+		}
 	}
+	free(aip);
 }
 
 static void wg_set_peer_allowed_ips(char *iface, char *pubkey, char *allowed_ips, const char *fwmark)
