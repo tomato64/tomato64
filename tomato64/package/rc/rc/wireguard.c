@@ -354,8 +354,7 @@ static int replace_in_file(const char *filename, const char *old_str, const char
 		return -1;
 	}
 
-	memset(tmp_filename, 0, FILENAME_MAX);
-	snprintf(tmp_filename, FILENAME_MAX, "/tmp/%s.tmp", filename);
+	snprintf(tmp_filename, FILENAME_MAX, "%s.tmp", filename);
 	if (!(fp_out = fopen(tmp_filename, "w"))) {
 		logmsg(LOG_WARNING, "could not create temporary file: %s (%s)", tmp_filename, strerror(errno));
 		fclose(fp_in);
@@ -385,7 +384,7 @@ static int replace_in_file(const char *filename, const char *old_str, const char
 
 	if (rename(tmp_filename, filename) != 0) {
 		logmsg(LOG_WARNING, "failed to overwrite %s: %s", filename, strerror(errno));
-		eval("rm", "-rf", tmp_filename);
+		unlink(tmp_filename);
 		return -1;
 	}
 
