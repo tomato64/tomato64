@@ -211,7 +211,7 @@ endif #TOMATO64
 
 # clean up
 	cd $(INSTALLDIR)/usr/sbin && \
-		for F in tomatoanon adblock ttb optware-install.sh entware-install.sh vpnrouting.sh mymotd switch4g webmon_bkp; do \
+		for F in tomatoanon adblock ttb optware-install.sh entware-install.sh vpnrouting.sh mymotd switch4g mwwatchdog webmon_bkp; do \
 			[ -f $(INSTALLDIR)/usr/sbin/$$F ] && sed -i $$F \
 			-e "/STUBBY-BEGIN/d"	-e "/STUBBY-END/d" \
 			-e "/STUBBYNO-BEGIN/d"	-e "/STUBBYNO-END/d" \
@@ -224,7 +224,7 @@ endif #TOMATO64
 			|| true; \
 		done
 
-ifneq ($(TCONFIG_BCMARM),y)
+ifneq ($(TCONFIG_TOMATO64),y)
 	cd $(INSTALLDIR)/usr/sbin && \
 		for F in switch3g switch4g wwansignal mwwatchdog ntp2ip tomatoanon adblock ttb mymotd sysinfo-helper linkagg webmon_bkp optware-install.sh entware-install.sh updown-client.sh vpnrouting.sh cru sysinfo stealthMode gencert.sh; do \
 			[ -f $(INSTALLDIR)/usr/sbin/$$F ] && { \
@@ -241,6 +241,6 @@ ifeq ($(or $(TCONFIG_BT),$(TCONFIG_NGINX)),y)
 			} || true; \
 	done
 endif
-endif # TCONFIG_BCMARM
+endif #TOMATO64
 
 clean:
