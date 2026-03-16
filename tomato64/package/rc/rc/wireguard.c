@@ -1834,21 +1834,22 @@ void stop_wireguard(const int unit)
 		logmsg(LOG_INFO, "wireguard (%s) stopped", iface);
 }
 
-void write_wg_dnsmasq_config(FILE* f)
+void write_wg_dnsmasq_config(FILE* fp)
 {
-	char buf[BUF_SIZE], device[BUF_SIZE_32];
-	char *pos, *fn;
+	char buf[BUF_SIZE];
+	char *pos, *fn, *saveptr, *endptr, ch;
 	DIR *dir;
 	struct dirent *file;
-	int cur;
+	int cur, num;
 
 	/* add interface(s) to dns config */
 	strlcpy(buf, nvram_safe_get("wg_adns"), BUF_SIZE);
-	for (pos = strtok(buf, ","); pos != NULL; pos = strtok(NULL, ",")) {
-		cur = atoi(pos);
-		if (cur || cur == 0) {
+	for (pos = strtok_r(buf, ",", &saveptr); pos != NULL; pos = strtok_r(NULL, ",", &saveptr)) {
+		errno = 0;
+		cur = (int)strtol(pos, &endptr, 10);
+		if (errno == 0 && endptr != pos && *endptr == '\0' && cur >= 0) {
 			logmsg(LOG_DEBUG, "*** %s: adding server wg%d interface to Dnsmasq config", __FUNCTION__, cur);
-			fprintf(f, "interface=wg%d\n", cur);
+			fprintf(fp, "interface=wg%d\n", cur);
 		}
 	}
 
@@ -1862,10 +1863,9 @@ void write_wg_dnsmasq_config(FILE* f)
 		if (fn[0] == '.')
 			continue;
 
-		if (sscanf(fn, "%s.conf", device) == 1) {
-			memset(buf, 0, BUF_SIZE);
+		if (sscanf(fn, "wg%d.con%c", &num, &ch) == 2 && ch == 'f') {
 			snprintf(buf, BUF_SIZE, "%s/%s", WG_DNS_DIR, fn);
-			if (fappend(f, buf) == -1) {
+			if (fappend(fp, buf) == -1) {
 				logmsg(LOG_WARNING, "fappend failed for %s (%s)", buf, strerror(errno));
 				continue;
 			}
