@@ -726,7 +726,7 @@ void start_ovpn_server(int unit)
 #ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 	FILE *ccd;
 	char *br_ipaddr, *br_netmask;
-	char *chp, *route;
+	char *chp, *route, *ccd_val;
 	int nvi, i, ip[4], nm[4];
 	int c2c = 0;
 	int dont_push_active = 0;
@@ -951,10 +951,14 @@ void start_ovpn_server(int unit)
 				return;
 			}
 
-			memset(buffer, 0, BUF_SIZE);
 			snprintf(buffer, BUF_SIZE, "vpns%d_ccd_val", unit);
-			strlcpy(buffer, nvram_safe_get(buffer), BUF_SIZE);
-			chp = strtok(buffer, ">");
+			ccd_val = strdup(nvram_safe_get(buffer));
+			if (!ccd_val) {
+				logmsg(LOG_ERR, "strdup failed for ccd_val");
+				stop_ovpn_server(unit);
+				return;
+			}
+			chp = strtok(ccd_val, ">");
 			while (chp != NULL) {
 				nvi = strlen(chp);
 
@@ -1010,6 +1014,7 @@ void start_ovpn_server(int unit)
 				chp = strtok(NULL, ">");
 			}
 			logmsg(LOG_DEBUG, "*** %s: CCD processing complete", __FUNCTION__);
+			free(ccd_val);
 		}
 
 		if (atoi(getNVRAMVar("vpns%d_userpass", unit))) {
