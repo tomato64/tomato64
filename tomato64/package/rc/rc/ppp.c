@@ -53,7 +53,8 @@
 int ipup_main(int argc, char **argv)
 {
 	char *wan_ifname;
-	int proto;
+	int proto, old_ck_pause = 0;
+	int check_mwandog = nvram_get_int("mwan_cktime");
 	char prefix[] = "wanXX";
 	char tmp[100], tmp2[32];
 	char ppplink_file[32];
@@ -73,6 +74,21 @@ int ipup_main(int argc, char **argv)
 	if ((!wan_ifname) || (!*wan_ifname))
 		return -1;
 
+	/* check mwwatchdog enabled - part 1 of 2 */
+	if (check_mwandog) {
+		memset(tmp2, 0, sizeof(tmp2));
+		snprintf(tmp2, sizeof(tmp2), "%s_ck_pause", prefix);
+		old_ck_pause = nvram_get_int(tmp2); /* save old value */
+		nvram_set(tmp2, "1"); /* skip checking on this WAN until start_wan_done() finished! */
+		logmsg(LOG_DEBUG, "*** %s: set %s_ck_pause=1 to skip checking on this WAN (multiwan watchdog)", __FUNCTION__, prefix);
+	}
+
+	/* Note: User can set multi wan init state file with value "0" or "1" (default value)
+	 * see function mwan_state_files(void)
+	 * use nvram set mwan_state_init=0
+	 * to set state file with value "0" instead of "1"
+	 */
+	
 	nvram_set(strlcat_r(prefix, "_iface", tmp, sizeof(tmp)), wan_ifname); /* ppp# */
 	nvram_set(strlcat_r(prefix, "_pppd_pid", tmp, sizeof(tmp)), safe_getenv("PPPD_PID"));
 
@@ -139,6 +155,14 @@ int ipup_main(int argc, char **argv)
 
 	logmsg(LOG_DEBUG, "*** OUT %s: to start_wan_done, ifname=%s prefix=%s ...", __FUNCTION__, wan_ifname, prefix);
 	start_wan_done(wan_ifname, prefix);
+
+	/* check mwwatchdog enabled - part 2 of 2 */
+	if (check_mwandog && !old_ck_pause) {
+		memset(tmp2, 0, sizeof(tmp2));
+		snprintf(tmp2, sizeof(tmp2), "%s_ck_pause", prefix);
+		nvram_set(tmp2, "0"); /* reset and check WAN XY with mwwatchdog again */
+		logmsg(LOG_DEBUG, "*** %s: set %s_ck_pause=0 to check this WAN (multiwan watchdog)", __FUNCTION__, prefix);
+	}
 
 	return 0;
 }
@@ -252,6 +276,8 @@ int ip6up_main(int argc, char **argv)
 	if (!wait_action_idle(10))
 		return -1;
 
+	/* ToDo: check mwwatchdog enabled for case IPv6! missing so far! */
+	
 	wan_ifname = safe_getenv("IFNAME");
 	strlcpy(prefix, safe_getenv("LINKNAME"), sizeof(prefix));
 	logmsg(LOG_DEBUG, "*** %s: wan_ifname = %s, prefix = %s.", __FUNCTION__, wan_ifname, prefix);

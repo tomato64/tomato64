@@ -176,7 +176,7 @@ void mwan_table_add(char *sPrefix)
 	char cmd[256];
 	char buf[32];
 
-	logmsg(LOG_DEBUG, "*** %s IN", __FUNCTION__);
+	logmsg(LOG_DEBUG, "*** %s IN for %s", __FUNCTION__, sPrefix);
 
 	/* delete already existed table first */
 	mwan_table_del(sPrefix);

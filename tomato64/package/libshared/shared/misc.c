@@ -693,7 +693,7 @@ state:
 		fscanf(f, "%d", &up);
 		fclose(f);
 	}
-
+	logmsg(LOG_DEBUG, "*** %s: state of %s is %d", __FUNCTION__, prefix, up);
 	return up;
 }
 
