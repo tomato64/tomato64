@@ -92,30 +92,37 @@ static void free_domain_list(domain_list_t *list)
 }
 
 /* add domain to the list */
-static int add_domain(domain_list_t *list, const char *domain)
+static void add_domain(domain_list_t *list, const char *domain)
 {
-	char **temp_domains;
+	char **newdomains;
+	int newcap;
 
 	/* check if increase the array size is needed */
 	if (list->count >= list->capacity - 1) { /* -1 for NULL at the end */
-		list->capacity *= 2;
-		temp_domains = (char**)realloc(list->domains, list->capacity * sizeof(char*));
-		if (!temp_domains)
-			return -1;
-
-		list->domains = temp_domains;
+		newcap = list->capacity * 2;
+		newdomains = realloc(list->domains, newcap * sizeof(char*));
+		if (!newdomains) {
+			logmsg(LOG_WARNING, "%s: realloc failed (capacity=%d, domain='%s') - skipping domain (out of memory)", __FUNCTION__, newcap, domain);
+			return;
+		}
+		list->domains = newdomains;
+		list->capacity = newcap;
+		logmsg(LOG_DEBUG, "%s: capacity increased to %d", __FUNCTION__, list->capacity);
 	}
 
 	/* allocate memory for the new domain */
 	list->domains[list->count] = (char*)malloc((strlen(domain) + 1) * sizeof(char));
-	if (!list->domains[list->count])
-		return -1;
+	if (!list->domains[list->count]) {
+		logmsg(LOG_WARNING, "%s: malloc failed for domain '%s' (out of memory) - skipping", __FUNCTION__, domain);
+		return;
+	}
 
 	/* copy domain */
 	strlcpy(list->domains[list->count], domain, strlen(domain) + 1);
 	list->count++;
 
-	return 0;
+	if (list->count < list->capacity)
+		list->domains[list->count] = NULL;
 }
 
 /* add/remove domains in dnsmasq config file */
