@@ -118,24 +118,24 @@ static int add_domain(domain_list_t *list, const char *domain)
 	return 0;
 }
 
-static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, int add)
+/* add/remove domains in dnsmasq config file */
+static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, const int add)
 {
 	FILE *fp_read, *fp_write;
-	char line[MAX_LINE], new_line[MAX_LINE];
-	char temp_file[64], domain_entry[128];
-	char *pos, *tag_pos;
-	int found, tag_found, i, domain_count = 0;
+	char line[MAX_LINE], new_line[MAX_LINE], line_backup[MAX_LINE];
+	char temp_file[BUF_SIZE_64], domain_entry[BUF_SIZE_128];
+	char *pos, *tag_pos, *saveptr;
+	int found, tag_found, i, domain_count = 0, truncated;
 
-	/* count domains if adding */
+	if (!tag || !*tag)
+		return;
+
+	/* list and domains are required only when adding entries */
 	if (add) {
-		if (!list || !list->domains || list->count == 0)
+		if ((!list) || (!list->domains) || (list->count == 0))
 			return;
 
-		if (list->domains && list->count < list->capacity)
-			list->domains[list->count] = NULL;
-
-		while (list->domains[domain_count] != NULL)
-		domain_count++;
+		domain_count = list->count;
 	}
 
 	if (!f_exists(dmipset))
@@ -147,8 +147,7 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, int add)
 	}
 
 	/* create temporary file path */
-	memset(temp_file, 0, sizeof(temp_file));
-	snprintf(temp_file, sizeof(temp_file), "%s.tmp", dmipset);
+	snprintf(temp_file, BUF_SIZE_64, "%s.tmp", dmipset);
 	if (!(fp_write = fopen(temp_file, "w"))) {
 		logmsg(LOG_WARNING, "cannot open file for writing: %s (%s)", temp_file, strerror(errno));
 		fclose(fp_read);
@@ -156,7 +155,6 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, int add)
 	}
 
 	/* process existing file */
-	memset(line, 0, MAX_LINE);
 	while (fgets(line, MAX_LINE, fp_read)) {
 		/* remove newline */
 		pos = strchr(line, '\n');
@@ -181,13 +179,18 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, int add)
 
 		/* extract domain */
 		*pos = '\0';
-		memset(domain_entry, 0, sizeof(domain_entry));
-		strlcpy(domain_entry, line + 7, sizeof(domain_entry));
+		memset(domain_entry, 0, BUF_SIZE_128);
+		strlcpy(domain_entry, line + 7, BUF_SIZE_128);
 		*pos = '/';
 
-		/* check if this domain should be processed */
+		/* note: found is intentionally not checked when removing (add=0).
+		 * tag is removed from ALL matching lines in the file, regardless of
+		 * the domain list. list/domains are used only to scope additions,
+		 * not removals - removing a tag cleans it globally across all domains.
+		 */
 		found = 0;
 		if (add && list->domains) {
+			/* no rewind needed — list->domains is an in-memory array */
 			for (i = 0; i < domain_count; i++) {
 				if (strcmp(domain_entry, list->domains[i]) == 0) {
 					found = 1;
@@ -200,55 +203,82 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, int add)
 		tag_pos = pos + 1;
 		tag_found = 0;
 
+		/* backup original line before strtok_r destroys it */
+		strlcpy(line_backup, line, MAX_LINE);
+
 		/* create a copy to work with */
+		truncated = 0;
 		memset(new_line, 0, MAX_LINE);
-		strlcpy(new_line, "ipset=/", MAX_LINE);
-		strlcat(new_line, domain_entry, MAX_LINE);
-		strlcat(new_line, "/", MAX_LINE);
+		if ((strlcpy(new_line, "ipset=/", MAX_LINE) >= MAX_LINE) || (strlcat(new_line, domain_entry, MAX_LINE) >= MAX_LINE) || (strlcat(new_line, "/", MAX_LINE) >= MAX_LINE)) {
+			logmsg(LOG_WARNING, "ipset line too long for domain: %s, keeping original", domain_entry);
+			fprintf(fp_write, "%s\n", line_backup);
+			continue;
+		}
 
 		/* parse and rebuild tags */
-		pos = strtok(tag_pos, ",");
-		while (pos) {
+		pos = strtok_r(tag_pos, ",", &saveptr);
+		while (pos && !truncated) {
 			if (strcmp(pos, tag) == 0) {
 				tag_found = 1;
 				if (!add) {
-					/* skip this tag when removing */
-					pos = strtok(NULL, ",");
+					/* intentional: remove tag globally, not scoped to domain list */
+					pos = strtok_r(NULL, ",", &saveptr);
 					continue;
 				}
 			}
 
 			/* add tag to new line */
-			if (strlen(new_line) > strlen("ipset=/") + strlen(domain_entry) + 1)
-				strlcat(new_line, ",", MAX_LINE);
+			if (strlen(new_line) > strlen("ipset=/") + strlen(domain_entry) + 1) {
+				if (strlcat(new_line, ",", MAX_LINE) >= MAX_LINE) {
+					logmsg(LOG_WARNING, "ipset line too long for domain: %s, keeping original", domain_entry);
+					fprintf(fp_write, "%s\n", line_backup);
+					truncated = 1;
+					break;
+				}
+			}
 
-			strlcat(new_line, pos, MAX_LINE);
-			pos = strtok(NULL, ",");
+			if (strlcat(new_line, pos, MAX_LINE) >= MAX_LINE) {
+				logmsg(LOG_WARNING, "ipset line too long for domain: %s, keeping original", domain_entry);
+				fprintf(fp_write, "%s\n", line_backup);
+				truncated = 1;
+				break;
+			}
+
+			pos = strtok_r(NULL, ",", &saveptr);
 		}
+
+		if (truncated)
+			continue;
 
 		/* add our tag if adding and not found, and this domain is in our list */
 		if (add && found && !tag_found) {
-			if (strlen(new_line) > strlen("ipset=/") + strlen(domain_entry) + 1)
-				strlcat(new_line, ",", MAX_LINE);
+			if (strlen(new_line) > strlen("ipset=/") + strlen(domain_entry) + 1) {
+				if (strlcat(new_line, ",", MAX_LINE) >= MAX_LINE) {
+					logmsg(LOG_WARNING, "ipset line too long for domain: %s, keeping original", domain_entry);
+					fprintf(fp_write, "%s\n", line_backup);
+					continue;
+				}
+			}
 
-			strlcat(new_line, tag, MAX_LINE);
+			if (strlcat(new_line, tag, MAX_LINE) >= MAX_LINE) {
+				logmsg(LOG_WARNING, "ipset line too long for domain: %s, keeping original", domain_entry);
+				fprintf(fp_write, "%s\n", line_backup);
+				continue;
+			}
 		}
 
 		/* write line if it has tags after the domain */
 		if (strlen(new_line) > strlen("ipset=/") + strlen(domain_entry) + 1)
 			fprintf(fp_write, "%s\n", new_line);
-
 	}
 
 	/* add new entries for domains not found in file */
 	if (add && list->domains) {
-		rewind(fp_read); /* reset file pointer to beginning */
-
 		for (i = 0; i < domain_count; i++) {
 			found = 0;
+			rewind(fp_read); /* reset file pointer to beginning */
 
 			/* check if domain was already processed */
-			memset(line, 0, MAX_LINE);
 			while (fgets(line, MAX_LINE, fp_read)) {
 				pos = strchr(line, '\n');
 				if (pos)
