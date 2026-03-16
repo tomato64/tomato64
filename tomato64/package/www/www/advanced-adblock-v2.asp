@@ -49,6 +49,17 @@ adblockg.verifyFields = function(row, quiet) {
 
 	return ok;
 }
+
+function bytesToMB(b){
+	const v=parseInt(b,10);
+	return v>0?(Math.round(v/1048576*100)/100)+'':''
+}
+
+function mbToBytes(m){
+	const v=parseFloat(String(m||'').trim());
+	return v>0?Math.round(v*1048576):''
+}
+
 function verifyFields(focused, quiet) {
 	var ok = 1;
 	cookie.set(cprefix+'_refresh', adblock_refresh);
@@ -102,7 +113,7 @@ function save() {
 	var fom = E('t_fom');
 	fom.adblock_enable.value = E('_f_adblock_enable').checked ? 1 : 0;
 	fom.adblock_logs.value = fom.f_adblock_logs.value;
-	fom.adblock_limit.value = fom.f_adblock_limit.value;
+	fom.adblock_limit.value = mbToBytes(fom.f_adblock_limit.value);
 	fom.adblock_path.value = fom.f_adblock_path.value.replace(/\/+$/, '');
 	fom.adblock_blacklist.value = blacklist;
 	form.submit(fom, 1);
@@ -260,7 +271,7 @@ function sortDomains(element) {
 		createFieldTable('', [
 			{ title: 'Enable', name: 'f_adblock_enable', type: 'checkbox', value: nvram.adblock_enable != '0' },
 			{ title: 'Max Log Level', indent: 2, name: 'f_adblock_logs', type: 'select', options: [[0,'Only Basic'],[3,'3 Error (default)'],[4,'4 Warning'],[5,'5 Notification'],[6,'6 Info'],[7,'7 Debug + trace mode']], value: nvram.adblock_logs },
-			{ title: 'Blockfile size limit', indent: 2, name: 'f_adblock_limit', type: 'text', placeholder: 'empty = reset', maxlen: 32, size: 15, suffix: '&nbsp;<small>Bytes<\/small>', value: nvram.adblock_limit },
+			{ title: 'Blockfile size limit', indent: 2, name: 'f_adblock_limit', type: 'text', placeholder: 'empty = reset', maxlen: 32, size: 15, suffix: '&nbsp;<small>MB<\/small>', value: bytesToMB(nvram.adblock_limit) },
 			{ title: 'Custom path (optional)', indent: 2, name: 'f_adblock_path', type: 'text', placeholder: 'empty = /tmp', maxlen: 64, size: 15, suffix: '<small>/adblock/<\/small>', value: nvram.adblock_path }
 		]);
 	</script>
@@ -333,7 +344,7 @@ function sortDomains(element) {
 	<ul>
 		<li><b>Updated information on tested adblock lists can be found at <a href="https://wiki.freshtomato.org/doku.php/adblock_dns_filtering" class="new_window">this page</a></b></li>
 		<li><b>Enable</b> - Used to activate/deactivate the adblock function. When enable is set the script runs after a save, a manual Load/Update, it autostart at boot and set autoupdate to run daily at a random time between 3am and 6am (excluding mins 59,00,01).</li>
-		<li><b>Blockfile size limit</b> - Defined in Bytes, it's an automatically calculated hard limit for the dnsmasq.adblock file. This limit can be overwritten manually. Removing the number and saving will trigger an internal calculation performed at the next run.</li>
+		<li><b>Blockfile size limit</b> - Displayed in MB (stored in Bytes) and acts as an automatically calculated hard limit for the dnsmasq.adblock file. This limit can be overwritten manually. Removing the number and saving will trigger an internal calculation performed at the next run.</li>
 		<li><b>Custom path</b> - Optional, allows to save the potentially large adblock files on permanent storage like USB/CIFS/etc. This indirectly also means lower RAM usage and additional list control to avoid downloads/processing when not necessary.</li>
 		<li><b>Blacklist URL & Group-of-lists</b> - Supported blacklist can come in multiple format. as long as they are text and with maximum one domain reference per line. Empty lines and lines starting with "#" or "!" are always ignored. A particular note on the Group-of-lists format where the content of the defined list contains references to external URLs e.g.<br><code>[https://provider.com/badaddresses.txt] --> containing a list of URLs</code>.</li>
 		<li><b>Blacklist Custom</b> - Optional, newline separated: domain1.com domain2.com domain3.com. It also accepts external files as a source e.g. <code>/mnt/usb/blacklist</code>, with one domain per line. Prepending a '+' to the domain will force a removal of all the child domains from the blocklist file keeping only the custom defined one (blocking all its subdomains).</li>
