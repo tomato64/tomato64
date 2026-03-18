@@ -44,6 +44,13 @@ ifneq ($(TCONFIG_BBT),y)
 	sed -i $(INSTALLDIR)/usr/sbin/mwwatchdog -e "/BBT-BEGIN/,/BBT-END/d"
 endif
 
+# Only add IPv6 support to mwwatchdog if IPv6 is configured in.
+ifneq ($(TCONFIG_IPV6),y)
+	sed -i $(INSTALLDIR)/usr/sbin/mwwatchdog -e "/IPV6-BEGIN/,/IPV6-END/d"
+else
+	sed -i $(INSTALLDIR)/usr/sbin/mwwatchdog -e "/IPV6NO-BEGIN/,/IPV6NO-END/d"
+endif
+
 # ntp2ip
 ifeq ($(or $(TCONFIG_DNSCRYPT),$(TCONFIG_STUBBY)),y)
 	install -m 0700 ntp2ip $(INSTALLDIR)/usr/sbin
@@ -218,6 +225,8 @@ endif #TOMATO64
 			-e "/BCMARM-BEGIN/d"	-e "/BCMARM-END/d" \
 			-e "/BCMARMNO-BEGIN/d"	-e "/BCMARMNO-END/d" \
 			-e "/BBT-BEGIN/d"	-e "/BBT-END/d" \
+			-e "/IPV6-BEGIN/d"	-e "/IPV6-END/d" \
+			-e "/IPV6NO-BEGIN/d"	-e "/IPV6NO-END/d" \
 			-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 			-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
 			-e "/TOMATO64-X86_64-BEGIN/d"	-e "/TOMATO64-X86_64-END/d" \

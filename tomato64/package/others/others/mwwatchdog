@@ -12,7 +12,6 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 
 PID=$$
 PIDFILE="/var/run/mwwatchdog.pid"
-IPLISTFILE="/tmp/mwwatchdog.iplist"
 BADIPLISTFILE="/tmp/mwwatchdog.badips"
 IPLIST=""
 BADIPLIST=""
@@ -32,49 +31,69 @@ while [ $i -le $MWAN ]; do
 	i=$((i+1))
 done
 
-timeout() {
-	local cmd_pid t=$1 elapsed=0
-	shift
-	("$@") &
-	cmd_pid=$!
-	# poll every second - busybox ash 'wait PID' does not reliably return early when the child exits, causing the full timeout to always elapse
-	while kill -0 "$cmd_pid" 2>/dev/null && [ $elapsed -lt $t ]; do
-		sleep 1
-		elapsed=$((elapsed+1))
-	done
-	if kill -0 "$cmd_pid" 2>/dev/null; then
-		kill "$cmd_pid" 2>/dev/null
-		wait "$cmd_pid" 2>/dev/null
-		return 124
-	fi
-	wait "$cmd_pid" 2>/dev/null
-	return $?
-}
-
 findHost() {
-	local host ip dst hostlist FOUND_IPS="" RES_IPS=""
+	local host dst hostlist tmpdir idx
 	dst=$(NG mwan_ckdst)
 	hostlist=$(echo "$dst" | sed 's/,/ /g')
 
+	tmpdir="/tmp/.mwwatchdog_r.$$"
+	mkdir -p "$tmpdir"
+
+	# Launch all resolutions in parallel so total wait = max(individual), not sum
+	# Each job writes a tagged result file: "R <ip>" for resolved, "E <ip>" for explicit IPs (passed through without resolution)
+	idx=0
 	for host in $hostlist; do
+		idx=$((idx+1))
 		if echo "$host" | grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+[a-zA-Z]{2,6}' >/dev/null 2>&1; then
-			# resolve domain name
-			ip=$(nslookup "$host" 2>/dev/null | tail -n +5 | grep -v '::' | awk '{print $3}' | tail -1)
-			# skip empty results - a failed nslookup must not pollute the list
-			[ -n "$ip" ] && {
-				FOUND_IPS="${FOUND_IPS} $ip"
-				RES_IPS="${RES_IPS} $ip"
-			}
+			# resolve domain name in background
+			(
+				# run nslookup to a temp file so we avoid holding a pipe write-end open - using timeout() in a pipeline keeps the pipe open for the full timeout duration even when nslookup exits early
+				( nslookup "$host" > "$tmpdir/ns_$idx" 2>/dev/null; printf 'x' > "$tmpdir/done_$idx" ) &
+				bg_pid=$!
+				elapsed=0
+				# poll for done-flag file (1s granularity) - avoids kill -0 zombie false-positives which would cause the full timeout to always elapse
+				while [ ! -f "$tmpdir/done_$idx" ] && [ $elapsed -lt 5 ]; do
+					sleep 1
+					elapsed=$((elapsed+1))
+				done
+				# timed out - kill the nslookup subshell (nslookup orphans harmlessly)
+				[ ! -f "$tmpdir/done_$idx" ] && kill "$bg_pid" 2>/dev/null && wait "$bg_pid" 2>/dev/null
+				rm -f "$tmpdir/done_$idx"
+# IPV6-BEGIN
+				[ -n "$(NG ipv6_service)" ] && {
+					# anchor on 'Name:' line - skips DNS server header entirely, no need to filter 127.x; take last address, IPv4 or IPv6
+					ip=$(awk '/^Name:/{f=1;next} f && /^Address/{print $3}' "$tmpdir/ns_$idx" 2>/dev/null | tail -1)
+				} ||
+# IPV6-END
+				{
+					# anchor on 'Name:' line, then extract last IPv4 only
+					ip=$(awk '/^Name:/{f=1;next} f{print}' "$tmpdir/ns_$idx" 2>/dev/null | grep -oE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' | tail -1)
+				}
+				rm -f "$tmpdir/ns_$idx"
+				printf '%s' "R ${ip}" > "$tmpdir/$idx"
+			) &
 		else
-			# treat as IP address
-			FOUND_IPS="${FOUND_IPS} $host"
+			# explicit IP - write immediately, no background job needed
+			printf '%s' "E $host" > "$tmpdir/$idx"
 		fi
 	done
 
-	# write results because we're in subshell
-	echo "$FOUND_IPS" > "$IPLISTFILE"
-	# resolved-only list for DNS filtering in parent (explicit IPs are intentional check targets and must never be removed regardless of DNS config)
-	echo "$RES_IPS" > "${IPLISTFILE}.resolved"
+	# wait for all parallel nslookup jobs
+	wait
+
+	# collect results preserving original order
+	idx=0
+	for host in $hostlist; do
+		idx=$((idx+1))
+		[ -f "$tmpdir/$idx" ] || continue
+		line=$(cat "$tmpdir/$idx")
+		case "$line" in
+			R\ *) ip="${line#R }"; [ -n "$ip" ] && { IPLIST="$IPLIST $ip"; RESOLVED_IPS="$RESOLVED_IPS $ip"; } ;;
+			E\ *) IPLIST="$IPLIST ${line#E }" ;;
+		esac
+	done
+
+	rm -rf "$tmpdir"
 }
 
 dhcpFix() {
@@ -215,7 +234,7 @@ mwwatchdogRun() {
 }
 
 cktracert() {
-	local RXBYTES1 RXBYTES2 IP DIFF COND RES
+	local RXBYTES1 RXBYTES2 IP DIFF COND RES TR_CMD
 	# minimum bytes indicating working WAN
 	local RXBYTES_MIN_DIFF=$(NG mwan_diff)
 	# ensure minimum sensible value
@@ -229,10 +248,17 @@ cktracert() {
 		RXBYTES1=${RXBYTES1:-0}
 		[ "$RXBYTES1" = "0" ] && $LOGD "failed to read initial rx_bytes for $IFACE (using 0)"
 
+		# select traceroute command based on address family
+# IPV6-BEGIN
+		echo "$IP" | grep -q ':' && TR_CMD="traceroute6" || TR_CMD="traceroute"
+# IPV6-END
+# IPV6NO-BEGIN
+		TR_CMD="traceroute"
+# IPV6NO-END
 		if [ "$ISPPPD" -eq 1 ]; then
-			traceroute -s "$SOURCE_ADDR" -n -w 1 -m 10 -q 1 -z 1 "$IP" 2>/dev/null
+			$TR_CMD -s "$SOURCE_ADDR" -n -w 1 -m 10 -q 1 -z 1 "$IP" 2>/dev/null
 		else
-			traceroute -i "$IFACE" -n -w 1 -m 10 -q 1 -z 1 "$IP" 2>/dev/null
+			$TR_CMD -i "$IFACE" -n -w 1 -m 10 -q 1 -z 1 "$IP" 2>/dev/null
 		fi
 		sleep 1
 
@@ -262,15 +288,22 @@ cktracert() {
 }
 
 ckping() {
-	local IP i=0
+	local IP PING_CMD i=0
 
 	for IP in $IPLIST; do
 		i=$((i+1))
+		# select ping command based on address family
+# IPV6-BEGIN
+		echo "$IP" | grep -q ':' && PING_CMD="ping6" || PING_CMD="ping"
+# IPV6-END
+# IPV6NO-BEGIN
+		PING_CMD="ping"
+# IPV6NO-END
 		# 0 means 100% loss - no packages received
 		if [ "$ISPPPD" -eq 1 ]; then
-			ping -c $((i+1)) -A -W $((i+2)) -q -I "$SOURCE_ADDR" "$IP" >/dev/null 2>&1 && RESULT=$((RESULT+1))
+			$PING_CMD -c $((i+1)) -A -W $((i+2)) -q -I "$SOURCE_ADDR" "$IP" >/dev/null 2>&1 && RESULT=$((RESULT+1))
 		else
-			ping -c $((i+1)) -A -W $((i+2)) -q -I "$IFACE" "$IP" >/dev/null 2>&1 && RESULT=$((RESULT+1))
+			$PING_CMD -c $((i+1)) -A -W $((i+2)) -q -I "$IFACE" "$IP" >/dev/null 2>&1 && RESULT=$((RESULT+1))
 		fi
 		[ "$RESULT" -gt 0 ] && break
 	done
@@ -280,13 +313,21 @@ ckping() {
 
 # BBT-BEGIN
 ckcurl() {
-	local IP i=0 target
+	local IP target i=0
 
 	for IP in $IPLIST; do
 		i=$((i+1))
-		# add http:// prefix for better HTTP compatibility; add --max-time and --location
-		target="$IP"
-		echo "$IP" | grep -qE '^([0-9]{1,3}\.){3}[0-9]{1,3}$' && target="http://$IP"
+		# build target URL: IPv4 gets http:// prefix, IPv6 gets brackets per RFC 2732
+# IPV6-BEGIN
+		if echo "$IP" | grep -q ':'; then
+			target="http://[$IP]"
+		else
+			target="http://$IP"
+		fi
+# IPV6-END
+# IPV6NO-BEGIN
+		echo "$IP" | grep -qv ':' && target="http://$IP" || target="$IP"
+# IPV6NO-END
 
 		curl "$target" --interface "$IFACE" --connect-timeout $((i+3)) --max-time $((i+5)) -ksfIL -o /dev/null 2>/dev/null && RESULT=$((RESULT+1))
 		[ "$RESULT" -gt 0 ] && break
@@ -332,7 +373,7 @@ checkPid() {
 		fi
 	fi
 
-	echo $PID > $PIDFILE || {
+	echo $PID > "$PIDFILE" || {
 		$LOGE "could not create PID file"
 		exit 0
 	}
@@ -386,13 +427,9 @@ case "$1" in
 			checkPid
 			checkPidSwitch
 			mwanJob
-
-			# run with a 10 sec timeout to not hang
-			timeout 10 findHost
-			[ -f "$IPLISTFILE" ] && IPLIST=$(cat "$IPLISTFILE")
+			findHost
 
 			# filter out DNS IPs - but ONLY from resolved hostnames, never from explicit IPs the user configured (those are intentional check targets)
-			[ -f "${IPLISTFILE}.resolved" ] && RESOLVED_IPS=$(cat "${IPLISTFILE}.resolved")
 			if [ -n "$RESOLVED_IPS" ]; then
 				# build DNS list once (pad with spaces for exact whole-IP matching)
 				DNS_LIST=" $(nvram show 2>/dev/null | grep -E '^wan.?_dns=' | cut -f2 -d= | tr '\n' ' ')"
@@ -412,8 +449,6 @@ case "$1" in
 			[ -z "$IPLIST" ] && IPLIST="$(NG wan_checker)"
 
 			mwwatchdogRun
-			rm -f "$IPLISTFILE"
-			rm -f "${IPLISTFILE}.resolved"
 		fi
 		;;
 esac
