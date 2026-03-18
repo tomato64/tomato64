@@ -21,6 +21,7 @@
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="interfaces.js?rel=<% version(); %>"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
+<script src="ethernet-icon.js?_http_id=<% nv(http_id); %>"></script>
 <script>
 var lastjiffiestotal = 0, lastjiffiesidle = 0, lastjiffiesusage = 100;
 </script>
@@ -228,36 +229,59 @@ function ethstates() {
 
 	var state = [];
 	var u, uidx, code = '', v = 0;
-	var code ='<div class="section-title">Ethernet Ports State<\/div><div class="section"><table class="fields"><tr>';
+	var portsDiv = E('ports');
 
-	/* WANs */
-	for (uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
-		u = (uidx > 1) ? uidx : '';
+	if (!portsDiv._ether_ports_built) {
+		code ='<div class="section-title">Ethernet Ports State<\/div><div class="section"><table class="fields"><tr>';
 
-		if ((nvram['wan'+u+'_sta'] == '')
+		/* WANs */
+		for (uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
+			u = (uidx > 1) ? uidx : '';
+
+			if ((nvram['wan'+u+'_sta'] == '')
 /* USB-BEGIN */
-		    && (nvram['wan'+u+'_proto'] != 'lte') && (nvram['wan'+u+'_proto'] != 'ppp3g')
+			    && (nvram['wan'+u+'_proto'] != 'lte') && (nvram['wan'+u+'_proto'] != 'ppp3g')
 /* USB-END */
-		) {
-			code += '<td class="title indent2"><b>WAN'+(uidx - 1)+'<\/b><\/td>';
-			++v;
+			) {
+				code += '<td class="title indent2"><b>WAN'+(uidx - 1)+'<\/b><\/td>';
+				++v;
+			}
 		}
-	}
-	/* LANs - both cases: 4 Ports OR 8 Ports for RT-AC88U with RTL8365MB switch (EXTSW=y) */
-	for (uidx = v; uidx <= MAX_PORT_ID; ++uidx)
-		code += '<td class="title indent2"><b>LAN'+(v > 0 ? ((uidx < 5) ? (uidx - 1) : '4-7' ) : ((uidx < 5) ? (uidx) : '5-8' ))+'<\/b><\/td>';
+		/* LANs - both cases: 4 Ports OR 8 Ports for RT-AC88U with RTL8365MB switch (EXTSW=y) */
+		for (uidx = v; uidx <= MAX_PORT_ID; ++uidx)
+			code += '<td class="title indent2"><b>LAN'+(v > 0 ? ((uidx < 5) ? (uidx - 1) : '4-7' ) : ((uidx < 5) ? (uidx) : '5-8' ))+'<\/b><\/td>';
 
-	code += '<td class="content"><\/td><\/tr><tr>';
+		code += '<td class="content"><\/td><\/tr><tr>';
+		for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
+			code += '<td class="title indent2"><span class="eth-icon" id="ethsvg_'+uidx+'"><\/span><span id="ethcap_'+uidx+'"><\/span><\/td>';
+		}
+
+		code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="6" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
+		portsDiv.innerHTML = code;
+		portsDiv._ether_ports_built = 1;
+	}
+
 	for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
 		port = etherstates['port'+uidx];
-
+		if (port === undefined) continue;
 		state = _ethstates(port);
+		var p = (state[0] || '').split('_');
+		var sp = p[1] || '';
+		var du = p[2] || '';
+		var spn = parseInt(sp, 10);
+		if (!isFinite(spn) || (spn <= 0)) spn = 0;
+		sp = '' + spn;
+		du = (du || '').toUpperCase();
+		if ((du !== 'FD') && (du !== 'HD')) du = 'HD';
+		var o = E('ethsvg_' + uidx);
+		var captionText = renderEthIcon(o, sp, du, '');
+		if (o)
+			o.title = state[1] || '';
 
-		code += '<td class="title indent2"><img id="'+state[0]+'_'+uidx+'" src="'+state[0]+'.gif" alt=""><br>'+(stats.lan_desc == '1' ? state[1] : '')+'<\/td>';
+		var cap = E('ethcap_' + uidx);
+		if (cap)
+			cap.innerHTML = (stats.lan_desc == '1') ? (state[1] || '') : '';
 	}
-
-	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="6" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
-	E('ports').innerHTML = code;
 }
 /* TOMATO64-REMOVE-END */
 
@@ -498,7 +522,6 @@ function show() {
 }
 
 function earlyInit() {
-	show();
 	insOvl();
 }
 
@@ -540,6 +563,7 @@ function init() {
 	ref.initPage(1000, 5);
 
 	eventHandler();
+	show();
 }
 </script>
 </head>

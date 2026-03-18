@@ -20,7 +20,7 @@
 	March 2015 Tvlz
 	https://bitbucket.org/tvlz/tvlz-advanced-vlan/
 
-	** Last Updated - May 15 2024 - pedro **
+	** Last Updated - Dec 13 2025 - rs232 **
 
 	For use with Tomato Firmware only.
 	No part of this file may be used without permission.
@@ -36,6 +36,11 @@
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
 <script src="interfaces.js?rel=<% version(); %>"></script>
+/* TOMATO64-SKIP-BEGIN */
+<script src="ethernet-icon.js?_http_id=<% nv(http_id); %>"></script>
+<script src="vpn.js?_http_id=<% nv(http_id); %>"></script>
+/* TOMATO64-SKIP-END */
+
 
 <script>
 /* TOMATO64-BEGIN */
@@ -43,9 +48,9 @@
 wl_ifaces=[];
 /* TOMATO64-END */
 
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 //	<% nvram ("t_model_name,vlan0ports,vlan1ports,vlan2ports,vlan3ports,vlan4ports,vlan5ports,vlan6ports,vlan7ports,vlan8ports,vlan9ports,vlan10ports,vlan11ports,vlan12ports,vlan13ports,vlan14ports,vlan15ports,vlan0hwname,vlan1hwname,vlan2hwname,vlan3hwname,vlan4hwname,vlan5hwname,vlan6hwname,vlan7hwname,vlan8hwname,vlan9hwname,vlan10hwname,vlan11hwname,vlan12hwname,vlan13hwname,vlan14hwname,vlan15hwname,wan_ifnameX,manual_boot_nv,boardtype,boardflags,lan_ifname,lan_ifnames,vlan0vid,vlan1vid,vlan2vid,vlan3vid,vlan4vid,vlan5vid,vlan6vid,vlan7vid,vlan8vid,vlan9vid,vlan10vid,vlan11vid,vlan12vid,vlan13vid,vlan14vid,vlan15vid,model,wl_ssid,wl_radio,wl_net_mode,wl_nband");%>
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 
 /* TOMATO64-BEGIN */
 //	<% nvram ("t_model_name,nics,vlan0ports,vlan1ports,vlan2ports,vlan3ports,vlan4ports,vlan5ports,vlan6ports,vlan7ports,vlan8ports,vlan9ports,vlan10ports,vlan11ports,vlan12ports,vlan13ports,vlan14ports,vlan15ports,vlan0hwname,vlan1hwname,vlan2hwname,vlan3hwname,vlan4hwname,vlan5hwname,vlan6hwname,vlan7hwname,vlan8hwname,vlan9hwname,vlan10hwname,vlan11hwname,vlan12hwname,vlan13hwname,vlan14hwname,vlan15hwname,wan_ifnameX,wan_ifnameX_vlan,manual_boot_nv,boardtype,boardflags,lan_ifname,lan_ifnames,lan_ifnames_vlan,vlan0vid,vlan1vid,vlan2vid,vlan3vid,vlan4vid,vlan5vid,vlan6vid,vlan7vid,vlan8vid,vlan9vid,vlan10vid,vlan11vid,vlan12vid,vlan13vid,vlan14vid,vlan15vid,model,wl_ssid,wl_radio,wl_net_mode,wl_nband");%>
@@ -56,6 +61,86 @@ var port_vlan_supported = 0;
 var trunk_vlan_supported = 1; /* Enable on all routers */
 var unknown_router = 0;
 
+/* TOMATO64-SKIP-BEGIN */
+/* REMOVE-BEGIN
+	Bind-mount/dev mode note:
+	In firmware builds, router/www/Makefile strips conditional blocks (e.g. EXTSW-*, MULTIWAN-*).
+	When this page is served raw, those markers remain, so feature-specific logic must be guarded
+	at runtime to prevent mutually-exclusive blocks from running together.
+*/
+var hasExtSw = (nvram['t_model_name'] == 'Asus RT-AC88U');
+var hasMultiWan = ((typeof MAXWAN_NUM !== 'undefined') && (MAXWAN_NUM > 2));
+/* REMOVE-END */
+
+function calcWanPortCount() {
+	var count = 0;
+	var maxWan = parseInt(nvram.mwan_num, 10);
+	if (isNaN(maxWan) || (maxWan < 0)) maxWan = 0;
+
+	for (var uidx = 1; uidx <= maxWan; ++uidx) {
+		var u = (uidx > 1) ? uidx : '';
+		if ((nvram['wan'+u+'_sta'] == '') && (nvram['wan'+u+'_proto'] != 'lte') && (nvram['wan'+u+'_proto'] != 'ppp3g'))
+			++count;
+	}
+	return count;
+}
+
+function portCaption(i) {
+	var wanCount = calcWanPortCount();
+
+	var orig;
+	if (i < wanCount)
+		orig = (i === 0 && (nvram.model == 'DSL-AC68U')) ? 'DSL' : ('WAN' + i);
+
+/* REMOVE-BEGIN */
+	if (hasExtSw && (i == 5))
+		orig = (wanCount > 0) ? 'LAN4-7' : 'LAN5-8';
+/* REMOVE-END */
+
+	if (!orig)
+		orig = (wanCount > 0) ? ('LAN' + (i - 1)) : ('LAN' + i);
+
+	/* Return only first and last character when the caption is longer than 1
+	 * (e.g. "LAN0" -> "L0", "WAN1" -> "W1"). Single-char captions stay
+	 * as-is.
+	 */
+	if (orig && orig.length > 1)
+		return String(orig).charAt(0) + String(orig).charAt(orig.length - 1);
+
+	return orig;
+}
+
+/* caption/rendering is handled by ethernet-icon.js (renderEthIcon)
+   keep the VLAN page markup minimal and call into renderEthIcon() from show() */
+
+function show() {
+	var state = [];
+	var port = etherstates.port0;
+	if (port == 'disabled')
+		return 0;
+
+	for (var i = 0 ; i <= MAX_PORT_ID ; i++) {
+		port = etherstates['port'+i];
+		if (port === undefined) continue;
+		state = _ethstates(port);
+		var p = (state[0] || '').split('_');
+		var sp = p[1] || '';
+		var du = p[2] || '';
+		var spn = parseInt(sp, 10);
+		if (!isFinite(spn) || (spn <= 0)) spn = 0;
+		sp = '' + spn;
+		du = (du || '').toUpperCase();
+		if ((du !== 'FD') && (du !== 'HD')) du = 'HD';
+		var cap = portCaption(i);
+		var o = E('ethsvg_' + i);
+		var captionText = renderEthIcon(o, sp, du, cap);
+		if (o)
+			o.title = captionText || state[1] || '';
+	}
+}
+/* TOMATO64-SKIP-END */
+
+/* TOMATO64-BEGIN */
 function show() {
 	var state = [];
 	var port = etherstates.port0;
@@ -68,6 +153,7 @@ function show() {
 		elem.setInnerHTML('vport_'+i, '<img src="'+state[0]+'.gif" id="'+state[0]+'_'+i+'" title="'+state[1]+'" alt="">');
 	}
 }
+/* TOMATO64-END */
 
 /* does not seem to be strictly necessary for boardflags as it's supposed to be a bitmap */
 nvram['boardflags'] = ((nvram['boardflags'].toLowerCase().indexOf('0x') != -1) ? '0x' : '')+String('0000'+((nvram['boardflags'].toLowerCase()).replace('0x',''))).slice(-4);
@@ -200,38 +286,43 @@ switch (nvram['t_model_name']) {
 var COL_VID = 0;
 var COL_MAP = 1;
 var COL_P0  = 2;
-var COL_P0T = 3;
-var COL_P1  = 4;
-var COL_P1T = 5;
-var COL_P2  = 6;
-var COL_P2T = 7;
-var COL_P3  = 8;
-var COL_P3T = 9;
-var COL_P4  = 10;
-var COL_P4T = 11;
-/* TOMATO64-REMOVE-BEGIN */
+var COL_P1  = 3;
+var COL_P2  = 4;
+var COL_P3  = 5;
+var COL_P4  = 6;
+/* TOMATO64-SKIP-BEGIN */
+var COL_P5;
+var COL_VID_DEF;
+var COL_BRI;
 /* EXTSW-NO-BEGIN */
-var COL_VID_DEF = 12;
-var COL_BRI = 13;
+/* REMOVE-BEGIN */
+if (!hasExtSw) {
+/* REMOVE-END */
+COL_VID_DEF = 7;
+COL_BRI = 8;
+/* REMOVE-BEGIN */
+}
+/* REMOVE-END */
 /* EXTSW-NO-END */
 /* EXTSW-BEGIN */
-var COL_P5  = 12;
-var COL_P5T = 13;
-var COL_VID_DEF = 14;
-var COL_BRI = 15;
+/* REMOVE-BEGIN */
+if (hasExtSw) {
+/* REMOVE-END */
+COL_P5  = 7;
+COL_VID_DEF = 8;
+COL_BRI = 9;
+/* REMOVE-BEGIN */
+}
+/* REMOVE-END */
 /* EXTSW-END */
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
-var COL_P5  = 12;
-var COL_P5T = 13;
-var COL_P6  = 14;
-var COL_P6T = 15;
-var COL_P7  = 16;
-var COL_P7T = 17;
-var COL_P8  = 18;
-var COL_P8T = 19;
-var COL_VID_DEF = 20;
-var COL_BRI = 21;
+var COL_P5  = 7;
+var COL_P6  = 8;
+var COL_P7  = 9;
+var COL_P8  = 10;
+var COL_VID_DEF = 11;
+var COL_BRI = 12;
 /* TOMATO64-END */
 
 /* set to either 5 or 8 when nvram settings are read (FastE or GigE routers) */
@@ -241,75 +332,86 @@ var SWITCH_INTERNAL_PORT = 0;
 if (port_vlan_supported) {
 	var vlg = new TomatoGrid();
 	vlg.setup = function() {
-		this.init('vlan-grid', '', (MAX_VLAN_ID + 1), [
+		var portOptions = trunk_vlan_supported ? [[0,''],[1,'🌕 On'],[2,'🌓 Tag']] : [[0,'Off'],[1,'On 🌕']];
+		var cols = [
 			{ type: 'select', options: [[0,'0'],[1,'1'],[2,'2'],[3,'3'],[4,'4'],[5,'5'],[6,'6'],[7,'7'],[8,'8'],[9,'9'],[10,'10'],[11,'11'],[12,'12'],[13,'13'],[14,'14'],[15,'15']], prefix: '<div class="centered">', suffix: '<\/div>' },
 			{ type: 'text', maxlen: 4, prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-/* TOMATO64-REMOVE-BEGIN */
+			{ type: 'select', options: portOptions, prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'select', options: portOptions, prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'select', options: portOptions, prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'select', options: portOptions, prefix: '<div class="centered">', suffix: '<\/div>' },
+			{ type: 'select', options: portOptions, prefix: '<div class="centered">', suffix: '<\/div>' }
+		];
+
+/* TOMATO64-SKIP-BEGIN */
 /* EXTSW-BEGIN */
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+/* REMOVE-BEGIN */
+		if (hasExtSw)
+/* REMOVE-END */
+		cols.push({ type: 'select', options: portOptions, prefix: '<div class="centered">', suffix: '<\/div>' });
 /* EXTSW-END */
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-			{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-/* TOMATO64-END */
-/* TOMATO64-REMOVE-BEGIN */
-			{ type: 'select', options: [[1,'none'],[2,'WAN0 bridge'],[3,'LAN0 (br0)'],[4,'LAN1 (br1)'],[5,'LAN2 (br2)'],[6,'LAN3 (br3)'],[7,'WAN1 bridge'],
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-			{ type: 'select', options: [[1,'none'],[2,'WAN0 bridge'],[3,'LAN0 (br0)'],[4,'LAN1 (br1)'],[5,'LAN2 (br2)'],[6,'LAN3 (br3)'],[7,'LAN4 (br4)'],[8,'LAN5 (br5)'],[9,'LAN6 (br6)'],[10,'LAN7 (br7)'],[11,'WAN1 bridge'],
-/* TOMATO64-END */
-/* MULTIWAN-BEGIN */
-/* TOMATO64-REMOVE-BEGIN */
-				[8,'WAN2 bridge'],[9,'WAN3 bridge']
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-				[12,'WAN2 bridge'],[13,'WAN3 bridge']
-/* TOMATO64-END */
-/* MULTIWAN-END */
-				], prefix: '<div class="centered">', suffix: '<\/div>' }]);
+/* TOMATO64-SKIP-END */
 
 /* TOMATO64-BEGIN */
-		/* Build headers dynamically using PortNames */
-		var headers = ['<br><br>VLAN', '<br><br>VID'];
+		cols.push({ type: 'select', options: portOptions, prefix: '<div class="centered">', suffix: '<\/div>' });
+		cols.push({ type: 'select', options: portOptions, prefix: '<div class="centered">', suffix: '<\/div>' });
+		cols.push({ type: 'select', options: portOptions, prefix: '<div class="centered">', suffix: '<\/div>' });
+		cols.push({ type: 'select', options: portOptions, prefix: '<div class="centered">', suffix: '<\/div>' });
+/* TOMATO64-END */
+
+		/* Default VLAN */
+		cols.push({ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' });
+
+/* TOMATO64-SKIP-BEGIN */
+		var bridgeOptions = [[1,'none'],[2,'WAN0'],[3,'LAN0 (br0)'],[4,'LAN1 (br1)'],[5,'LAN2 (br2)'],[6,'LAN3 (br3)'],[7,'WAN1']];
+/* MULTIWAN-BEGIN */
+/* REMOVE-BEGIN */
+		if (hasMultiWan)
+/* REMOVE-END */
+		bridgeOptions.push([8,'WAN2'],[9,'WAN3']);
+/* MULTIWAN-END */
+/* TOMATO64-SKIP-END */
+/* TOMATO64-BEGIN */
+		var bridgeOptions = [[1,'none'],[2,'WAN0'],[3,'LAN0 (br0)'],[4,'LAN1 (br1)'],[5,'LAN2 (br2)'],[6,'LAN3 (br3)'],[7,'LAN4 (br4)'],[8,'LAN5 (br5)'],[9,'LAN6 (br6)'],[10,'LAN7 (br7)'],[11,'WAN1']];
+/* MULTIWAN-BEGIN */
+		bridgeOptions.push([12,'WAN2'],[13,'WAN3']);
+/* MULTIWAN-END */
+/* TOMATO64-END */
+		cols.push({ type: 'select', options: bridgeOptions, prefix: '<div class="centered">', suffix: '<\/div>' });
+
+		this.init('vlan-grid', 'sort', (MAX_VLAN_ID + 1), cols);
+
+/* TOMATO64-SKIP-BEGIN */
+		var ethIconScale = 100; /* percentage */
+		var ethIconW = Math.round(46 * ethIconScale / 100);
+		var ethIconH = Math.round(35 * ethIconScale / 100);
+
+		var headers = ['VLAN', 'VID',
+		               '<div id="vport_0"><span class="eth-icon" id="ethsvg_0" data-w="'+ethIconW+'" data-h="'+ethIconH+'"><\/span><\/div>',
+		               '<div id="vport_1"><span class="eth-icon" id="ethsvg_1" data-w="'+ethIconW+'" data-h="'+ethIconH+'"><\/span><\/div>',
+		               '<div id="vport_2"><span class="eth-icon" id="ethsvg_2" data-w="'+ethIconW+'" data-h="'+ethIconH+'"><\/span><\/div>',
+		               '<div id="vport_3"><span class="eth-icon" id="ethsvg_3" data-w="'+ethIconW+'" data-h="'+ethIconH+'"><\/span><\/div>',
+		               '<div id="vport_4"><span class="eth-icon" id="ethsvg_4" data-w="'+ethIconW+'" data-h="'+ethIconH+'"><\/span><\/div>'
+		];
+/* EXTSW-BEGIN */
+/* REMOVE-BEGIN */
+		if (hasExtSw)
+/* REMOVE-END */
+		headers.push('<div id="vport_5"><span class="eth-icon" id="ethsvg_5" data-w="'+ethIconW+'" data-h="'+ethIconH+'"><\/span><\/div>');
+/* EXTSW-END */
+		headers.push('Native<br>VLAN', 'Bridge');
+		this.headerSet(headers);
+/* TOMATO64-SKIP-END */
+
+/* TOMATO64-BEGIN */
+		var headers = ['VLAN', 'VID'];
 		for (var i = 0; i <= MAX_PORT_ID; i++) {
 			var label = (typeof PortNames !== 'undefined' && PortNames.getVlanLabel) ? PortNames.getVlanLabel(i) : i.toString();
 			headers.push('<div id="vport_'+i+'"><img src="eth_off.gif" id="eth_off_'+(i+1)+'" alt=""><\/div>'+label);
-			headers.push('<br>Tag<br>'+label);
 		}
-		headers.push('<br>Default<br>VLAN', 'VLAN to<br>bridge<br>mapping');
+		headers.push('Native<br>VLAN', 'Bridge');
 		this.headerSet(headers);
 /* TOMATO64-END */
-/* TOMATO64-REMOVE-BEGIN */
-		this.headerSet(['<br><br>VLAN', '<br><br>VID',
-		                '<div id="vport_0"><img src="eth_off.gif" id="eth_off_1" alt=""><\/div>'+(nvram.model == 'DSL-AC68U' ? 'DSL' : 'WAN'), '<br>Tag<br>'+(nvram.model == 'DSL-AC68U' ? 'DSL' : 'WAN'),
-		                '<div id="vport_1"><img src="eth_off.gif" id="eth_off_2" alt=""><\/div>1', '<br>Tag<br>1',
-		                '<div id="vport_2"><img src="eth_off.gif" id="eth_off_3" alt=""><\/div>2', '<br>Tag<br>2',
-		                '<div id="vport_3"><img src="eth_off.gif" id="eth_off_4" alt=""><\/div>3', '<br>Tag<br>3',
-		                '<div id="vport_4"><img src="eth_off.gif" id="eth_off_5" alt=""><\/div>4', '<br>Tag<br>4',
-/* EXTSW-BEGIN */
-		                '<div id="vport_5"><img src="eth_off.gif" id="eth_off_6" alt=""><\/div>5-8', '<br>Tag<br>5-8',
-/* EXTSW-END */
-		                '<br>Default<br>VLAN', 'VLAN to<br>bridge<br>mapping']);
-/* TOMATO64-REMOVE-END */
 
 		vlg.populate();
 		vlg.canDelete = false;
@@ -318,46 +420,36 @@ if (port_vlan_supported) {
 		vlg.resetNewEditor();
 
 /* TOMATO64-BEGIN */
-		/* Hide unused port columns based on nics count */
 		var nicCount = nvram.nics ? parseInt(nvram.nics) : (MAX_PORT_ID + 1);
-		/* Only hide columns if we have fewer ports than MAX_PORT_ID */
 		if (nicCount <= MAX_PORT_ID) {
-			/* Clear checkbox values for non-existent ports to prevent lingering config */
 			var data = this.getAllData();
 			for (var row = 0; row < data.length; row++) {
 				for (var i = nicCount; i <= MAX_PORT_ID; i++) {
-					var portCol = eval('COL_P' + i);
-					var tagCol = eval('COL_P' + i + 'T');
-					data[row][portCol] = 0;
-					data[row][tagCol] = 0;
+					data[row][2 + i] = 0;
 				}
 			}
-			/* Reinsert cleaned data */
 			this.removeAllData();
 			for (var row = 0; row < data.length; row++) {
 				this.insertData(-1, data[row]);
 			}
 
-			/* Hide the columns with CSS */
 			var style = document.createElement('style');
 			style.type = 'text/css';
 			var rules = '';
-			/* Limit ethernet icon size in headers for devices with few ports */
-			rules += 'div#vlan-grid tr.header div[id^="vport_"] img[id^="eth_"] { width: 24px !important; height: auto !important; padding: 0 !important; padding-bottom: 0 !important; }\n';
-			/* Hide port columns beyond the device's port count */
+			rules += 'div#vlan-grid tr.header div[id^="vport_"] img[id^="eth_"] { max-width: 35px !important; height: auto !important; padding: 0 !important; padding-bottom: 0 !important; }\n';
 			for (var i = nicCount; i <= MAX_PORT_ID; i++) {
-				/* Each port has 2 columns (port checkbox + tag checkbox) */
-				/* Columns are: VLAN(0), VID(1), then ports starting at column 2 */
-				var portColIdx = 2 + (i * 2);
-				var tagColIdx = portColIdx + 1;
-				rules += '#vlan-grid th:nth-child(' + (portColIdx + 1) + '), ';
-				rules += '#vlan-grid td:nth-child(' + (portColIdx + 1) + '), ';
-				rules += '#vlan-grid th:nth-child(' + (tagColIdx + 1) + '), ';
-				rules += '#vlan-grid td:nth-child(' + (tagColIdx + 1) + ') { display: none; }\n';
+				var colIdx = 2 + i;
+				rules += '#vlan-grid th:nth-child(' + (colIdx + 1) + '), ';
+				rules += '#vlan-grid td:nth-child(' + (colIdx + 1) + ') { display: none; }\n';
 			}
 			style.innerHTML = rules;
 			document.head.appendChild(style);
 		}
+
+		var nativeStyle = document.createElement('style');
+		nativeStyle.type = 'text/css';
+		nativeStyle.innerHTML = '#vlan-grid th:nth-child(' + (COL_VID_DEF + 1) + '), #vlan-grid td:nth-child(' + (COL_VID_DEF + 1) + ') { display: none; }';
+		document.head.appendChild(nativeStyle);
 /* TOMATO64-END */
 	}
 
@@ -369,9 +461,9 @@ if (port_vlan_supported) {
 
 		for (var i = 0 ; i <= MAX_BRIDGE_ID ; i++) {
 			var j = (i == 0) ? '' : i.toString();
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 			var l = nvram['lan'+j+'_ifnames'].split(' ');
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
 			var l = nvram['lan'+j+'_ifnames_vlan'].split(' ');
 /* TOMATO64-END */
@@ -400,25 +492,28 @@ REMOVE-END */
 		}
 
 /* WAN port */
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
+		if ((typeof nvram['wan_ifnameX'] === 'string') && (nvram['wan_ifnameX'].indexOf('vlan') != -1))
 		bridged[parseInt(nvram['wan_ifnameX'].replace('vlan',''))] = '2';
+		if ((typeof nvram['wan2_ifnameX'] === 'string') && (nvram['wan2_ifnameX'].indexOf('vlan') != -1))
 		bridged[parseInt(nvram['wan2_ifnameX'].replace('vlan',''))] = '7';
-/* TOMATO64-REMOVE-END */
+/* MULTIWAN-BEGIN */
+/* REMOVE-BEGIN */
+		if (hasMultiWan) {
+/* REMOVE-END */
+		if ((typeof nvram['wan3_ifnameX'] === 'string') && (nvram['wan3_ifnameX'].indexOf('vlan') != -1))
+		bridged[parseInt(nvram['wan3_ifnameX'].replace('vlan',''))] = '8';
+		if ((typeof nvram['wan4_ifnameX'] === 'string') && (nvram['wan4_ifnameX'].indexOf('vlan') != -1))
+		bridged[parseInt(nvram['wan4_ifnameX'].replace('vlan',''))] = '9';
+/* REMOVE-BEGIN */
+		}
+/* REMOVE-END */
+/* MULTIWAN-END */
+/* TOMATO64-SKIP-END */
 
 /* TOMATO64-BEGIN */
 		bridged[parseInt(nvram['wan_ifnameX_vlan'].replace('vlan',''))] = '2';
 		bridged[parseInt(nvram['wan2_ifnameX_vlan'].replace('vlan',''))] = '11';
-/* TOMATO64-END */
-
-
-/* TOMATO64-REMOVE-BEGIN */
-/* MULTIWAN-BEGIN */
-		bridged[parseInt(nvram['wan3_ifnameX'].replace('vlan',''))] = '8';
-		bridged[parseInt(nvram['wan4_ifnameX'].replace('vlan',''))] = '9';
-/* MULTIWAN-END */
-/* TOMATO64-REMOVE-END */
-
-/* TOMATO64-BEGIN */
 /* MULTIWAN-BEGIN */
 		bridged[parseInt(nvram['wan3_ifnameX_vlan'].replace('vlan',''))] = '12';
 		bridged[parseInt(nvram['wan4_ifnameX_vlan'].replace('vlan',''))] = '13';
@@ -446,26 +541,36 @@ REMOVE-END */
 					if ((nvram['vlan'+i+'ports']).indexOf('*') != -1)
 						SWITCH_INTERNAL_PORT = (nvram['vlan'+i+'ports']).charAt((nvram['vlan'+i+'ports']).indexOf('*') - 1);
 
-					vlg.insertData(-1, [ i.toString(),
+					var pt = function(n) {
+						return (port[n] == '1') ? (((trunk_vlan_supported) && (tagged[n] == '1')) ? '2' : '1') : '0';
+					}
+
+					var row = [
+						i.toString(),
 						((nvram['vlan'+i+'vid'] != '') && (nvram['vlan'+i+'vid'] > 0)) ? (nvram['vlan'+i+'vid']).toString() : '0',
-						port[COL_P0N], tagged[COL_P0N],
-						port[COL_P1N], tagged[COL_P1N],
-						port[COL_P2N], tagged[COL_P2N],
-						port[COL_P3N], tagged[COL_P3N],
-						port[COL_P4N], tagged[COL_P4N],
-/* TOMATO64-REMOVE-BEGIN */
+						pt(COL_P0N),
+						pt(COL_P1N),
+						pt(COL_P2N),
+						pt(COL_P3N),
+						pt(COL_P4N)
+					];
+/* TOMATO64-SKIP-BEGIN */
 /* EXTSW-BEGIN */
-						port[COL_P5N], tagged[COL_P5N],
+/* REMOVE-BEGIN */
+					if (hasExtSw)
+/* REMOVE-END */
+					row.push(pt(COL_P5N));
 /* EXTSW-END */
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
-						port[COL_P5N], tagged[COL_P5N],
-						port[COL_P6N], tagged[COL_P6N],
-						port[COL_P7N], tagged[COL_P7N],
-						port[COL_P8N], tagged[COL_P8N],
+					row.push(pt(COL_P5N));
+					row.push(pt(COL_P6N));
+					row.push(pt(COL_P7N));
+					row.push(pt(COL_P8N));
 /* TOMATO64-END */
-						(((nvram['vlan'+i+'ports']).indexOf('*') != -1) ? '1' : '0'),
-						(bridged[i] != null) ? bridged[i] : '1' ]);
+					row.push((((nvram['vlan'+i+'ports']).indexOf('*') != -1) ? '1' : '0'));
+					row.push((bridged[i] != null) ? bridged[i] : '1');
+					vlg.insertData(-1, row);
 				}
 			}
 		}
@@ -493,9 +598,9 @@ REMOVE-END */
 	}
 
 	vlg.countWan2 = function() {
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 		return this.countElem(COL_BRI, 7);
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
 		return this.countElem(COL_BRI, 11);
 /* TOMATO64-END */
@@ -503,18 +608,18 @@ REMOVE-END */
 
 /* MULTIWAN-BEGIN */
 	vlg.countWan3 = function() {
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 		return this.countElem(COL_BRI, 8);
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
 		return this.countElem(COL_BRI, 12);
 /* TOMATO64-END */
 	}
 
 	vlg.countWan4 = function() {
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 		return this.countElem(COL_BRI, 9);
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
 		return this.countElem(COL_BRI, 13);
 /* TOMATO64-END */
@@ -540,160 +645,58 @@ REMOVE-END */
 		if (!v_range(f[COL_MAP], quiet, 0, 4094))
 			valid = 0;
 
-		if ((trunk_vlan_supported) && (f[COL_P0].checked == 1))
-			f[COL_P0T].disabled = 0;
-		else {
-			f[COL_P0T].disabled = 1;
-			f[COL_P0T].checked = 0;
-		}
-		if ((trunk_vlan_supported) && (f[COL_P1].checked == 1))
-			f[COL_P1T].disabled = 0;
-		else {
-			f[COL_P1T].disabled = 1;
-			f[COL_P1T].checked = 0;
-		}
-		if ((trunk_vlan_supported) && (f[COL_P2].checked == 1))
-			f[COL_P2T].disabled = 0;
-		else {
-			f[COL_P2T].disabled = 1;
-			f[COL_P2T].checked = 0;
-		}
-		if ((trunk_vlan_supported) && (f[COL_P3].checked == 1))
-			f[COL_P3T].disabled = 0;
-		else {
-			f[COL_P3T].disabled = 1;
-			f[COL_P3T].checked = 0;
-		}
-		if ((trunk_vlan_supported) && (f[COL_P4].checked == 1))
-			f[COL_P4T].disabled = 0;
-		else {
-			f[COL_P4T].disabled = 1;
-			f[COL_P4T].checked = 0;
-		}
-/* TOMATO64-REMOVE-BEGIN */
-/* EXTSW-BEGIN */
-		if ((trunk_vlan_supported) && (f[COL_P5].checked == 1))
-			f[COL_P5T].disabled = 0;
-		else {
-			f[COL_P5T].disabled = 1;
-			f[COL_P5T].checked = 0;
-		}
-/* EXTSW-END */
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-		if ((trunk_vlan_supported) && (f[COL_P5].checked == 1))
-			f[COL_P5T].disabled = 0;
-		else {
-			f[COL_P5T].disabled = 1;
-			f[COL_P5T].checked = 0;
-		}
-		if ((trunk_vlan_supported) && (f[COL_P6].checked == 1))
-			f[COL_P6T].disabled = 0;
-		else {
-			f[COL_P6T].disabled = 1;
-			f[COL_P6T].checked = 0;
-		}
-		if ((trunk_vlan_supported) && (f[COL_P7].checked == 1))
-			f[COL_P7T].disabled = 0;
-		else {
-			f[COL_P7T].disabled = 1;
-			f[COL_P7T].checked = 0;
-		}
-		if ((trunk_vlan_supported) && (f[COL_P8].checked == 1))
-			f[COL_P8T].disabled = 0;
-		else {
-			f[COL_P8T].disabled = 1;
-			f[COL_P8T].checked = 0;
-		}
-/* TOMATO64-END */
-
 		/* Modifications to enable Native VLAN support (allow one untagged vlan per port) by default */
 		var err_vlan = 'Only one untagged VLAN per port is allowed (Native VLAN)';
-		if ((f[COL_P0].checked == 1) && (this.countElem(COL_P0, 1) > 0)) {
-			if (((this.countElem(COL_P0,1)-1) >= this.countElem(COL_P0T,1)) && (f[COL_P0T].checked == 0)) {
-				ferror.set(f[COL_P0T], err_vlan, quiet);
-				valid = 0;
-			}
-			else
-				ferror.clear(f[COL_P0T]);
-		}
-		if ((f[COL_P1].checked == 1) && (this.countElem(COL_P1, 1) > 0)) {
-			if (((this.countElem(COL_P1, 1) - 1) >= this.countElem(COL_P1T, 1)) && (f[COL_P1T].checked == 0)) {
-				ferror.set(f[COL_P1T], err_vlan, quiet);
-				valid = 0;
-			}
-			else
-				ferror.clear(f[COL_P1T]);
-		}
-		if ((f[COL_P2].checked == 1) && (this.countElem(COL_P2, 1) > 0)) {
-			if (((this.countElem(COL_P2, 1) - 1) >= this.countElem(COL_P2T, 1)) && (f[COL_P2T].checked == 0)) {
-				ferror.set(f[COL_P2T], err_vlan, quiet);
-				valid = 0;
-			}
-			else
-				ferror.clear(f[COL_P2T]);
-		}
-		if ((f[COL_P3].checked == 1) && (this.countElem(COL_P3, 1) > 0)) {
-			if (((this.countElem(COL_P3, 1) - 1) >= this.countElem(COL_P3T, 1)) && (f[COL_P3T].checked == 0)) {
-				ferror.set(f[COL_P3T], err_vlan, quiet);
-				valid = 0;
-			}
-			else
-				ferror.clear(f[COL_P3T]);
-		}
-		if ((f[COL_P4].checked == 1) && (this.countElem(COL_P4, 1) > 0)) {
-			if (((this.countElem(COL_P4, 1) - 1) >= this.countElem(COL_P4T, 1)) && (f[COL_P4T].checked == 0)) {
-				ferror.set(f[COL_P4T], err_vlan, quiet);
-				valid = 0;
-			}
-			else
-				ferror.clear(f[COL_P4T]);
-		}
-/* TOMATO64-REMOVE-BEGIN */
-/* EXTSW-BEGIN */
-		if ((f[COL_P5].checked == 1) && (this.countElem(COL_P5, 1) > 0)) {
-			if (((this.countElem(COL_P5, 1) - 1) >= this.countElem(COL_P5T, 1)) && (f[COL_P5T].checked == 0)) {
-				ferror.set(f[COL_P5T], err_vlan, quiet);
-				valid = 0;
-			}
-			else
-				ferror.clear(f[COL_P5T]);
-		}
-/* EXTSW-END */
-/* TOMATO64-REMOVE-END */
+		var old = ((row == this.editor) && this.source) ? this.source.getRowData() : null;
+		var oldP0 = (old && (old.length > COL_P0)) ? old[COL_P0] : '0';
+		var oldP1 = (old && (old.length > COL_P1)) ? old[COL_P1] : '0';
+		var oldP2 = (old && (old.length > COL_P2)) ? old[COL_P2] : '0';
+		var oldP3 = (old && (old.length > COL_P3)) ? old[COL_P3] : '0';
+		var oldP4 = (old && (old.length > COL_P4)) ? old[COL_P4] : '0';
+		var oldP5 = (old && (old.length > COL_P5)) ? old[COL_P5] : '0';
+/* TOMATO64-SKIP-BEGIN */
+/* REMOVE-BEGIN */
+		if (!hasExtSw)
+			oldP5 = '0';
+/* REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
-		if ((f[COL_P5].checked == 1) && (this.countElem(COL_P5, 1) > 0)) {
-			if (((this.countElem(COL_P5, 1) - 1) >= this.countElem(COL_P5T, 1)) && (f[COL_P5T].checked == 0)) {
-				ferror.set(f[COL_P5T], err_vlan, quiet);
-				valid = 0;
+		var oldP6 = (old && (old.length > COL_P6)) ? old[COL_P6] : '0';
+		var oldP7 = (old && (old.length > COL_P7)) ? old[COL_P7] : '0';
+		var oldP8 = (old && (old.length > COL_P8)) ? old[COL_P8] : '0';
+/* TOMATO64-END */
+		var me = this;
+		var checkNative = function(col, oldVal) {
+			if (f[col].value == '1') {
+				if ((me.countElem(col, 1) - ((oldVal == '1') ? 1 : 0)) > 0) {
+					ferror.set(f[col], err_vlan, quiet);
+					valid = 0;
+				}
+				else
+					ferror.clear(f[col]);
 			}
 			else
-				ferror.clear(f[COL_P5T]);
+				ferror.clear(f[col]);
 		}
-		if ((f[COL_P6].checked == 1) && (this.countElem(COL_P6, 1) > 0)) {
-			if (((this.countElem(COL_P6, 1) - 1) >= this.countElem(COL_P6T, 1)) && (f[COL_P6T].checked == 0)) {
-				ferror.set(f[COL_P6T], err_vlan, quiet);
-				valid = 0;
-			}
-			else
-				ferror.clear(f[COL_P6T]);
-		}
-		if ((f[COL_P7].checked == 1) && (this.countElem(COL_P7, 1) > 0)) {
-			if (((this.countElem(COL_P7, 1) - 1) >= this.countElem(COL_P7T, 1)) && (f[COL_P7T].checked == 0)) {
-				ferror.set(f[COL_P7T], err_vlan, quiet);
-				valid = 0;
-			}
-			else
-				ferror.clear(f[COL_P7T]);
-		}
-		if ((f[COL_P8].checked == 1) && (this.countElem(COL_P8, 1) > 0)) {
-			if (((this.countElem(COL_P8, 1) - 1) >= this.countElem(COL_P8T, 1)) && (f[COL_P8T].checked == 0)) {
-				ferror.set(f[COL_P8T], err_vlan, quiet);
-				valid = 0;
-			}
-			else
-				ferror.clear(f[COL_P8T]);
-		}
+
+		checkNative(COL_P0, oldP0);
+		checkNative(COL_P1, oldP1);
+		checkNative(COL_P2, oldP2);
+		checkNative(COL_P3, oldP3);
+		checkNative(COL_P4, oldP4);
+/* TOMATO64-SKIP-BEGIN */
+/* EXTSW-BEGIN */
+/* REMOVE-BEGIN */
+		if (hasExtSw)
+/* REMOVE-END */
+		checkNative(COL_P5, oldP5);
+/* EXTSW-END */
+/* TOMATO64-SKIP-END */
+/* TOMATO64-BEGIN */
+		checkNative(COL_P5, oldP5);
+		checkNative(COL_P6, oldP6);
+		checkNative(COL_P7, oldP7);
+		checkNative(COL_P8, oldP8);
 /* TOMATO64-END */
 
 		if (this.countDefaultVID() > 0) {
@@ -722,9 +725,9 @@ REMOVE-END */
 		else
 			ferror.clear(f[COL_BRI]);
 
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 		if ((this.countWan2() > 0) && (f[COL_BRI].selectedIndex == 6)) {
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
 		if ((this.countWan2() > 0) && (f[COL_BRI].selectedIndex == 10)) {
 /* TOMATO64-END */
@@ -735,9 +738,9 @@ REMOVE-END */
 			ferror.clear(f[COL_BRI]);
 
 /* MULTIWAN-BEGIN */
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 		if ((this.countWan3() > 0) && (f[COL_BRI].selectedIndex == 7)) {
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
 		if ((this.countWan3() > 0) && (f[COL_BRI].selectedIndex == 11)) {
 /* TOMATO64-END */
@@ -747,9 +750,9 @@ REMOVE-END */
 		else
 			ferror.clear(f[COL_BRI]);
 
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 		if ((this.countWan4() > 0) && (f[COL_BRI].selectedIndex == 8)) {
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
 		if ((this.countWan4() > 0) && (f[COL_BRI].selectedIndex == 12)) {
 /* TOMATO64-END */
@@ -760,9 +763,9 @@ REMOVE-END */
 			ferror.clear(f[COL_BRI]);
 /* MULTIWAN-END */
 
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 		for (var i = 0; i < 4; i++) {
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
 		for (var i = 0; i < 8; i++) {
 /* TOMATO64-END */
@@ -778,112 +781,95 @@ REMOVE-END */
 	}
 
 	vlg.dataToView = function(data) {
-		return [data[COL_VID],
+		var pv = function(v) {
+			v = v.toString();
+			return (v == '1') ? '🌕' : ((v == '2') ? '🌓' : '');
+		}
+		var view = [
+			data[COL_VID],
 			((data[COL_MAP].toString() == '') || (data[COL_MAP].toString() == '0')) ? (data[COL_VID] * 1).toString() : data[COL_MAP].toString(),
-			(data[COL_P0].toString() != '0') ? '&#x2b50' : '',
-			(data[COL_P0T].toString() != '0') ? '&#x1f530' : '',
-			(data[COL_P1].toString() != '0') ? '&#x2b50' : '',
-			(data[COL_P1T].toString() != '0') ? '&#x1f530' : '',
-			(data[COL_P2].toString() != '0') ? '&#x2b50' : '',
-			(data[COL_P2T].toString() != '0') ? '&#x1f530' : '',
-			(data[COL_P3].toString() != '0') ? '&#x2b50' : '',
-			(data[COL_P3T].toString() != '0') ? '&#x1f530' : '',
-			(data[COL_P4].toString() != '0') ? '&#x2b50' : '',
-			(data[COL_P4T].toString() != '0') ? '&#x1f530' : '',
-/* TOMATO64-REMOVE-BEGIN */
+			pv(data[COL_P0]),
+			pv(data[COL_P1]),
+			pv(data[COL_P2]),
+			pv(data[COL_P3]),
+			pv(data[COL_P4])
+		];
+/* TOMATO64-SKIP-BEGIN */
 /* EXTSW-BEGIN */
-			(data[COL_P5].toString() != '0') ? '&#x2b50' : '',
-			(data[COL_P5T].toString() != '0') ? '&#x1f530' : '',
+/* REMOVE-BEGIN */
+		if (hasExtSw)
+/* REMOVE-END */
+		view.push(pv(data[COL_P5]));
 /* EXTSW-END */
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
-			(data[COL_P5].toString() != '0') ? '&#x2b50' : '',
-			(data[COL_P5T].toString() != '0') ? '&#x1f530' : '',
-			(data[COL_P6].toString() != '0') ? '&#x2b50' : '',
-			(data[COL_P6T].toString() != '0') ? '&#x1f530' : '',
-			(data[COL_P7].toString() != '0') ? '&#x2b50' : '',
-			(data[COL_P7T].toString() != '0') ? '&#x1f530' : '',
-			(data[COL_P8].toString() != '0') ? '&#x2b50' : '',
-			(data[COL_P8T].toString() != '0') ? '&#x1f530' : '',
+		view.push(pv(data[COL_P5]));
+		view.push(pv(data[COL_P6]));
+		view.push(pv(data[COL_P7]));
+		view.push(pv(data[COL_P8]));
 /* TOMATO64-END */
-			(data[COL_VID_DEF].toString() != '0') ? '&#x1f6a9' : '',
-/* TOMATO64-REMOVE-BEGIN */
-			['','WAN0 bridge','LAN0 (br0)','LAN1 (br1)','LAN2 (br2)','LAN3 (br3)','WAN1 bridge'
-/* TOMATO64-REMOVE-END */
+		view.push(
+			(data[COL_VID_DEF].toString() != '0') ? '🌑' : '',
+/* TOMATO64-SKIP-BEGIN */
+			['','WAN0','LAN0 (br0)','LAN1 (br1)','LAN2 (br2)','LAN3 (br3)','WAN1'
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
-			['','WAN0 bridge','LAN0 (br0)','LAN1 (br1)','LAN2 (br2)','LAN3 (br3)','LAN4 (br4)','LAN5 (br5)','LAN6 (br6)','LAN7 (br7)','WAN1 bridge'
+			['','WAN0','LAN0 (br0)','LAN1 (br1)','LAN2 (br2)','LAN3 (br3)','LAN4 (br4)','LAN5 (br5)','LAN6 (br6)','LAN7 (br7)','WAN1'
 /* TOMATO64-END */
 /* MULTIWAN-BEGIN */
-			,'WAN2 bridge','WAN3 bridge'
+			,'WAN2','WAN3'
 /* MULTIWAN-END */
-			][data[COL_BRI] - 1]];
+			][data[COL_BRI] - 1]
+		);
+		return view;
 	}
 
 	vlg.dataToFieldValues = function (data) {
-		return [data[COL_VID],
-			data[COL_MAP],
-			(data[COL_P0] != 0) ? 'checked' : '',
-			(data[COL_P0T] != 0) ? 'checked' : '',
-			(data[COL_P1] != 0) ? 'checked' : '',
-			(data[COL_P1T] != 0) ? 'checked' : '',
-			(data[COL_P2] != 0) ? 'checked' : '',
-			(data[COL_P2T] != 0) ? 'checked' : '',
-			(data[COL_P3] != 0) ? 'checked' : '',
-			(data[COL_P3T] != 0) ? 'checked' : '',
-			(data[COL_P4] != 0) ? 'checked' : '',
-			(data[COL_P4T] != 0) ? 'checked' : '',
-/* TOMATO64-REMOVE-BEGIN */
+		var values = [data[COL_VID], data[COL_MAP], data[COL_P0], data[COL_P1], data[COL_P2], data[COL_P3], data[COL_P4]];
+/* TOMATO64-SKIP-BEGIN */
 /* EXTSW-BEGIN */
-			(data[COL_P5] != 0) ? 'checked' : '',
-			(data[COL_P5T] != 0) ? 'checked' : '',
+/* REMOVE-BEGIN */
+		if (hasExtSw)
+/* REMOVE-END */
+		values.push(data[COL_P5]);
 /* EXTSW-END */
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
-			(data[COL_P5] != 0) ? 'checked' : '',
-			(data[COL_P5T] != 0) ? 'checked' : '',
-			(data[COL_P6] != 0) ? 'checked' : '',
-			(data[COL_P6T] != 0) ? 'checked' : '',
-			(data[COL_P7] != 0) ? 'checked' : '',
-			(data[COL_P7T] != 0) ? 'checked' : '',
-			(data[COL_P8] != 0) ? 'checked' : '',
-			(data[COL_P8T] != 0) ? 'checked' : '',
-			(data[COL_VID_DEF] != 0) ? 'checked' : '',
+		values.push(data[COL_P5]);
+		values.push(data[COL_P6]);
+		values.push(data[COL_P7]);
+		values.push(data[COL_P8]);
 /* TOMATO64-END */
-			data[COL_BRI]];
+		values.push((data[COL_VID_DEF] != 0) ? 1 : 0, data[COL_BRI]);
+		return values;
 	}
 
 	vlg.fieldValuesToData = function(row) {
 		var f = fields.getAll(row);
-		return [f[COL_VID].value,
+		var data = [f[COL_VID].value,
 			f[COL_MAP].value,
-			f[COL_P0].checked ? 1 : 0,
-			f[COL_P0T].checked ? 1 : 0,
-			f[COL_P1].checked ? 1 : 0,
-			f[COL_P1T].checked ? 1 : 0,
-			f[COL_P2].checked ? 1 : 0,
-			f[COL_P2T].checked ? 1 : 0,
-			f[COL_P3].checked ? 1 : 0,
-			f[COL_P3T].checked ? 1 : 0,
-			f[COL_P4].checked ? 1 : 0,
-			f[COL_P4T].checked ? 1 : 0,
-/* TOMATO64-REMOVE-BEGIN */
+			parseInt(f[COL_P0].value, 10) || 0,
+			parseInt(f[COL_P1].value, 10) || 0,
+			parseInt(f[COL_P2].value, 10) || 0,
+			parseInt(f[COL_P3].value, 10) || 0,
+			parseInt(f[COL_P4].value, 10) || 0
+		];
+/* TOMATO64-SKIP-BEGIN */
 /* EXTSW-BEGIN */
-			f[COL_P5].checked ? 1 : 0,
-			f[COL_P5T].checked ? 1 : 0,
+/* REMOVE-BEGIN */
+		if (hasExtSw)
+/* REMOVE-END */
+		data.push(parseInt(f[COL_P5].value, 10) || 0);
 /* EXTSW-END */
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
-			f[COL_P5].checked ? 1 : 0,
-			f[COL_P5T].checked ? 1 : 0,
-			f[COL_P6].checked ? 1 : 0,
-			f[COL_P6T].checked ? 1 : 0,
-			f[COL_P7].checked ? 1 : 0,
-			f[COL_P7T].checked ? 1 : 0,
-			f[COL_P8].checked ? 1 : 0,
-			f[COL_P8T].checked ? 1 : 0,
+		data.push(parseInt(f[COL_P5].value, 10) || 0);
+		data.push(parseInt(f[COL_P6].value, 10) || 0);
+		data.push(parseInt(f[COL_P7].value, 10) || 0);
+		data.push(parseInt(f[COL_P8].value, 10) || 0);
 /* TOMATO64-END */
-			f[COL_VID_DEF].checked ? 1 : 0,
-			f[COL_BRI].value];
+		data.push(f[COL_VID_DEF].checked ? 1 : 0, f[COL_BRI].value);
+		return data;
 	}
 
 	vlg.onCancel = function() {
@@ -943,14 +929,32 @@ REMOVE-END */
 	}
 
 	vlg.sortCompare = function(a, b) {
-		var obj = TGO(a);
-		var col = obj.sortColumn;
-		if (this.sortColumn == 0)
-			var r = cmpInt(parseInt(a.cells[col].innerHTML), parseInt(b.cells[col].innerHTML));
-		else
-			var r = cmpText(a.cells[col].innerHTML, b.cells[col].innerHTML);
+		var col = this.sortColumn;
+		var ra = a.getRowData();
+		var rb = b.getRowData();
+		var r;
 
-		return obj.sortAscending ? r : -r;
+		switch (col) {
+		case COL_VID:
+			/* VLAN (loc) */
+			r = cmpInt(parseInt(ra[COL_VID], 10), parseInt(rb[COL_VID], 10));
+		break;
+		case COL_MAP:
+			/* VID (net) */
+			r = cmpInt(parseInt(ra[COL_MAP], 10), parseInt(rb[COL_MAP], 10));
+		break;
+		case COL_BRI:
+			/* Bridge */
+			r = cmpInt(parseInt(ra[COL_BRI], 10), parseInt(rb[COL_BRI], 10));
+		break;
+		default:
+			r = cmpText(a.cells[col].innerHTML, b.cells[col].innerHTML);
+		}
+
+		if (r == 0)
+			r = cmpInt(parseInt(ra[COL_VID], 10), parseInt(rb[COL_VID], 10));
+
+		return this.sortAscending ? r : -r;
 	}
 
 	vlg.resetNewEditor = function() {
@@ -973,41 +977,24 @@ REMOVE-END */
 		for (var i = 0; i <= MAX_VLAN_ID ; i++)
 			f[COL_VID].options[i].disabled = (this.countVID(i) > 0);
 
-		f[COL_P0].checked = 0;
-		f[COL_P0T].checked = 0;
-		f[COL_P0T].disabled = 1;
-		f[COL_P1].checked = 0;
-		f[COL_P1T].checked = 0;
-		f[COL_P1T].disabled = 1;
-		f[COL_P2].checked = 0;
-		f[COL_P2T].checked = 0;
-		f[COL_P2T].disabled = 1;
-		f[COL_P3].checked = 0;
-		f[COL_P3T].checked = 0;
-		f[COL_P3T].disabled = 1;
-		f[COL_P4].checked = 0;
-		f[COL_P4T].checked = 0;
-		f[COL_P4T].disabled = 1;
-/* TOMATO64-REMOVE-BEGIN */
+		f[COL_P0].value = '0';
+		f[COL_P1].value = '0';
+		f[COL_P2].value = '0';
+		f[COL_P3].value = '0';
+		f[COL_P4].value = '0';
+/* TOMATO64-SKIP-BEGIN */
 /* EXTSW-BEGIN */
-		f[COL_P5].checked = 0;
-		f[COL_P5T].checked = 0;
-		f[COL_P5T].disabled = 1;
+/* REMOVE-BEGIN */
+		if (hasExtSw)
+/* REMOVE-END */
+		f[COL_P5].value = '0';
 /* EXTSW-END */
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
-		f[COL_P5].checked = 0;
-		f[COL_P5T].checked = 0;
-		f[COL_P5T].disabled = 1;
-		f[COL_P6].checked = 0;
-		f[COL_P6T].checked = 0;
-		f[COL_P6T].disabled = 1;
-		f[COL_P7].checked = 0;
-		f[COL_P7T].checked = 0;
-		f[COL_P7T].disabled = 1;
-		f[COL_P8].checked = 0;
-		f[COL_P8T].checked = 0;
-		f[COL_P8T].disabled = 1;
+		f[COL_P5].value = '0';
+		f[COL_P6].value = '0';
+		f[COL_P7].value = '0';
+		f[COL_P8].value = '0';
 /* TOMATO64-END */
 		f[COL_VID_DEF].checked = 0;
 		if (this.countDefaultVID() > 0)
@@ -1048,6 +1035,13 @@ function save() {
 
 	var i, j, k, p, d, e, v = '';
 	var fom = E('t_fom');
+	var maxWan = MAXWAN_NUM;
+/* TOMATO64-SKIP-BEGIN */
+/* REMOVE-BEGIN */
+	if (!hasMultiWan)
+		maxWan = 2;
+/* REMOVE-END */
+/* TOMATO64-SKIP-END */
 
 	/* wipe out relevant fields just in case this is not the first time we try to submit */
 	for (i = 0 ; i <= MAX_VLAN_ID ; i++) {
@@ -1064,7 +1058,7 @@ function save() {
 /* TOMATO64-END */
 	}
 
-	for (i = 1; i <= MAXWAN_NUM; ++i) {
+	for (i = 1; i <= maxWan; ++i) {
 		j = (i > 1) ? i : '';
 		fom['wan'+j+'_ifnameX'].value = '';
 /* TOMATO64-BEGIN */
@@ -1085,48 +1079,54 @@ function save() {
 	for (i = 0; i < d.length; ++i) {
 		p = '';
 		p += (d[i][COL_P0].toString() != '0') ? COL_P0N : '';
-		p += ((trunk_vlan_supported) && (d[i][COL_P0T].toString() != '0')) ? 't' : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P0].toString() == '2')) ? 't' : '';
 		p += trailingSpace(p);
 
 		p += (d[i][COL_P1].toString() != '0') ? COL_P1N : '';
-		p += ((trunk_vlan_supported) && (d[i][COL_P1T].toString() != '0')) ? 't' : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P1].toString() == '2')) ? 't' : '';
 		p += trailingSpace(p);
 
 		p += (d[i][COL_P2].toString() != '0') ? COL_P2N : '';
-		p += ((trunk_vlan_supported) && (d[i][COL_P2T].toString() != '0')) ? 't' : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P2].toString() == '2')) ? 't' : '';
 		p += trailingSpace(p);
 
 		p += (d[i][COL_P3].toString() != '0') ? COL_P3N : '';
-		p += ((trunk_vlan_supported) && (d[i][COL_P3T].toString() != '0')) ? 't' : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P3].toString() == '2')) ? 't' : '';
 		p += trailingSpace(p);
 
 		p += (d[i][COL_P4].toString() != '0') ? COL_P4N : '';
-		p += ((trunk_vlan_supported) && (d[i][COL_P4T].toString() != '0')) ? 't' : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P4].toString() == '2')) ? 't' : '';
 		p += trailingSpace(p);
 
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 /* EXTSW-BEGIN */
+/* REMOVE-BEGIN */
+		if (hasExtSw) {
+/* REMOVE-END */
 		p += (d[i][COL_P5].toString() != '0') ? COL_P5N : '';
-		p += ((trunk_vlan_supported) && (d[i][COL_P5T].toString() != '0')) ? 't' : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P5].toString() == '2')) ? 't' : '';
 		p += trailingSpace(p);
+/* REMOVE-BEGIN */
+		}
+/* REMOVE-END */
 /* EXTSW-END */
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 
 /* TOMATO64-BEGIN */
 		p += (d[i][COL_P5].toString() != '0') ? COL_P5N : '';
-		p += ((trunk_vlan_supported) && (d[i][COL_P5T].toString() != '0')) ? 't' : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P5].toString() == '2')) ? 't' : '';
 		p += trailingSpace(p);
 
 		p += (d[i][COL_P6].toString() != '0') ? COL_P6N : '';
-		p += ((trunk_vlan_supported) && (d[i][COL_P6T].toString() != '0')) ? 't' : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P6].toString() == '2')) ? 't' : '';
 		p += trailingSpace(p);
 
 		p += (d[i][COL_P7].toString() != '0') ? COL_P7N : '';
-		p += ((trunk_vlan_supported) && (d[i][COL_P7T].toString() != '0')) ? 't' : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P7].toString() == '2')) ? 't' : '';
 		p += trailingSpace(p);
 
 		p += (d[i][COL_P8].toString() != '0') ? COL_P8N : '';
-		p += ((trunk_vlan_supported) && (d[i][COL_P8T].toString() != '0')) ? 't' : '';
+		p += ((trunk_vlan_supported) && (d[i][COL_P8].toString() == '2')) ? 't' : '';
 		p += trailingSpace(p);
 /* TOMATO64-END */
 
@@ -1140,66 +1140,78 @@ function save() {
 		v += (d[i][COL_VID_DEF].toString() != '0') ? d[i][0] : '';
 
 		fom['vlan'+d[i][COL_VID]+'ports'].value = p;
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 		if ((nvram['t_model_name'] == 'Netgear R7900') || (nvram['t_model_name'] == 'Netgear R8000'))
 			fom['vlan'+d[i][COL_VID]+'hwname'].value = 'et2';
 		else if ((nvram['t_model_name'] == 'Asus RT-AC5300') || (nvram['t_model_name'] == 'Asus RT-AC88U'))
 			fom['vlan'+d[i][COL_VID]+'hwname'].value = 'et1';
 		else
 			fom['vlan'+d[i][COL_VID]+'hwname'].value = 'et0';
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 
 		fom['vlan'+d[i][COL_VID]+'vid'].value = ((d[i][COL_MAP].toString() != '') && (d[i][COL_MAP].toString() != '0')) ? d[i][COL_MAP] : '';
 
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 		fom['wan_ifnameX'].value += (d[i][COL_BRI] == '2') ? 'vlan'+d[i][0] : '';
 		fom['lan_ifnames'].value += (d[i][COL_BRI] == '3') ? 'vlan'+d[i][0] : '';
-/* TOMATO64-REMOVE-END */
+/* REMOVE-BEGIN
+		fom['lan_ifnames'].value += trailingSpace(fom['lan_ifnames'].value);
+		alert('vlan'+d[i][0]+'ports='+fom['vlan'+d[i][0]+'ports'].value+'\nvlan'+d[i][0]+'hwname='+fom['vlan'+d[i][0]+'hwname'].value);
+REMOVE-END */
+		fom['lan1_ifnames'].value += (d[i][COL_BRI] == '4') ? 'vlan'+d[i][0] : '';
+		fom['lan2_ifnames'].value += (d[i][COL_BRI] == '5') ? 'vlan'+d[i][0] : '';
+		fom['lan3_ifnames'].value += (d[i][COL_BRI] == '6') ? 'vlan'+d[i][0] : '';
+		fom['wan2_ifnameX'].value += (d[i][COL_BRI] == '7') ? 'vlan'+d[i][0] : '';
+/* MULTIWAN-BEGIN */
+/* REMOVE-BEGIN */
+		if (hasMultiWan) {
+/* REMOVE-END */
+		fom['wan3_ifnameX'].value += (d[i][COL_BRI] == '8') ? 'vlan'+d[i][0] : '';
+		fom['wan4_ifnameX'].value += (d[i][COL_BRI] == '9') ? 'vlan'+d[i][0] : '';
+/* REMOVE-BEGIN */
+		}
+/* REMOVE-END */
+/* MULTIWAN-END */
+/* TOMATO64-SKIP-END */
 
 /* TOMATO64-BEGIN */
 		fom['wan_ifnameX_vlan'].value += (d[i][COL_BRI] == '2') ? 'vlan'+d[i][0] : '';
 		fom['lan_ifnames_vlan'].value += (d[i][COL_BRI] == '3') ? 'vlan'+d[i][0] : '';
 
 		for(var port=0; port <= MAX_PORT_ID; port++) {
-			if (d[i][eval("COL_P" + port)] == 1) {
-				if(d[i][eval("COL_P" + port + "T")] == 1) {
-					if ((d[i][COL_MAP].toString() != '') && (d[i][COL_MAP].toString() != '0')) {
-						var vid = d[i][COL_MAP].toString()
-					} else {
-						var vid = d[i][COL_VID].toString()
-					}
-
-					fom['vlan'+d[i][COL_VID]+'hwname'].value += 'eth' + port + " ";
-					fom['wan_ifnameX'].value += (d[i][COL_BRI] == '2') ? 'eth' + port + '.' + vid : '';
-					fom['lan_ifnames'].value += (d[i][COL_BRI] == '3') ? 'eth' + port + '.' + vid + ' ' : '';
-					fom['lan1_ifnames'].value += (d[i][COL_BRI] == '4') ? 'eth' + port + '.' + vid + ' ' : '';
-					fom['lan2_ifnames'].value += (d[i][COL_BRI] == '5') ? 'eth' + port + '.' + vid + ' ' : '';
-					fom['lan3_ifnames'].value += (d[i][COL_BRI] == '6') ? 'eth' + port + '.' + vid + ' ' : '';
-					fom['lan4_ifnames'].value += (d[i][COL_BRI] == '7') ? 'eth' + port + '.' + vid + ' ' : '';
-					fom['lan5_ifnames'].value += (d[i][COL_BRI] == '8') ? 'eth' + port + '.' + vid + ' ' : '';
-					fom['lan6_ifnames'].value += (d[i][COL_BRI] == '9') ? 'eth' + port + '.' + vid + ' ' : '';
-					fom['lan7_ifnames'].value += (d[i][COL_BRI] == '10') ? 'eth' + port + '.' + vid + ' ' : '';
-					fom['wan2_ifnameX'].value += (d[i][COL_BRI] == '11') ? 'eth' + port + '.' + vid : '';
+			if (d[i][2 + port] == 1) {
+				fom['wan_ifnameX'].value += (d[i][COL_BRI] == '2') ? 'eth' + port : '';
+				fom['lan_ifnames'].value += (d[i][COL_BRI] == '3') ? 'eth' + port + ' ' : '';
+				fom['lan1_ifnames'].value += (d[i][COL_BRI] == '4') ? 'eth' + port + ' ' : '';
+				fom['lan2_ifnames'].value += (d[i][COL_BRI] == '5') ? 'eth' + port + ' ' : '';
+				fom['lan3_ifnames'].value += (d[i][COL_BRI] == '6') ? 'eth' + port + ' ' : '';
+				fom['lan4_ifnames'].value += (d[i][COL_BRI] == '7') ? 'eth' + port + ' ' : '';
+				fom['lan5_ifnames'].value += (d[i][COL_BRI] == '8') ? 'eth' + port + ' ' : '';
+				fom['lan6_ifnames'].value += (d[i][COL_BRI] == '9') ? 'eth' + port + ' ' : '';
+				fom['lan7_ifnames'].value += (d[i][COL_BRI] == '10') ? 'eth' + port + ' ' : '';
+				fom['wan2_ifnameX'].value += (d[i][COL_BRI] == '11') ? 'eth' + port : '';
 /* MULTIWAN-BEGIN */
-					fom['wan3_ifnameX'].value += (d[i][COL_BRI] == '12') ? 'eth' + port + '.' + vid : '';
-					fom['wan4_ifnameX'].value += (d[i][COL_BRI] == '13') ? 'eth' + port + '.' + vid : '';
+				fom['wan3_ifnameX'].value += (d[i][COL_BRI] == '12') ? 'eth' + port : '';
+				fom['wan4_ifnameX'].value += (d[i][COL_BRI] == '13') ? 'eth' + port : '';
 /* MULTIWAN-END */
-				} else {
-					fom['wan_ifnameX'].value += (d[i][COL_BRI] == '2') ? 'eth' + port : '';
-					fom['lan_ifnames'].value += (d[i][COL_BRI] == '3') ? 'eth' + port + ' ' : '';
-					fom['lan1_ifnames'].value += (d[i][COL_BRI] == '4') ? 'eth' + port + ' ' : '';
-					fom['lan2_ifnames'].value += (d[i][COL_BRI] == '5') ? 'eth' + port + ' ' : '';
-					fom['lan3_ifnames'].value += (d[i][COL_BRI] == '6') ? 'eth' + port + ' ' : '';
-					fom['lan4_ifnames'].value += (d[i][COL_BRI] == '7') ? 'eth' + port + ' ' : '';
-					fom['lan5_ifnames'].value += (d[i][COL_BRI] == '8') ? 'eth' + port + ' ' : '';
-					fom['lan6_ifnames'].value += (d[i][COL_BRI] == '9') ? 'eth' + port + ' ' : '';
-					fom['lan7_ifnames'].value += (d[i][COL_BRI] == '10') ? 'eth' + port + ' ' : '';
-					fom['wan2_ifnameX'].value += (d[i][COL_BRI] == '11') ? 'eth' + port : '';
+			}
+			else if (d[i][2 + port] == 2) {
+				var vid = ((d[i][COL_MAP].toString() != '') && (d[i][COL_MAP].toString() != '0')) ? d[i][COL_MAP].toString() : d[i][COL_VID].toString();
+				fom['vlan'+d[i][COL_VID]+'hwname'].value += 'eth' + port + ' ';
+				fom['wan_ifnameX'].value += (d[i][COL_BRI] == '2') ? 'eth' + port + '.' + vid : '';
+				fom['lan_ifnames'].value += (d[i][COL_BRI] == '3') ? 'eth' + port + '.' + vid + ' ' : '';
+				fom['lan1_ifnames'].value += (d[i][COL_BRI] == '4') ? 'eth' + port + '.' + vid + ' ' : '';
+				fom['lan2_ifnames'].value += (d[i][COL_BRI] == '5') ? 'eth' + port + '.' + vid + ' ' : '';
+				fom['lan3_ifnames'].value += (d[i][COL_BRI] == '6') ? 'eth' + port + '.' + vid + ' ' : '';
+				fom['lan4_ifnames'].value += (d[i][COL_BRI] == '7') ? 'eth' + port + '.' + vid + ' ' : '';
+				fom['lan5_ifnames'].value += (d[i][COL_BRI] == '8') ? 'eth' + port + '.' + vid + ' ' : '';
+				fom['lan6_ifnames'].value += (d[i][COL_BRI] == '9') ? 'eth' + port + '.' + vid + ' ' : '';
+				fom['lan7_ifnames'].value += (d[i][COL_BRI] == '10') ? 'eth' + port + '.' + vid + ' ' : '';
+				fom['wan2_ifnameX'].value += (d[i][COL_BRI] == '11') ? 'eth' + port + '.' + vid : '';
 /* MULTIWAN-BEGIN */
-					fom['wan3_ifnameX'].value += (d[i][COL_BRI] == '12') ? 'eth' + port : '';
-					fom['wan4_ifnameX'].value += (d[i][COL_BRI] == '13') ? 'eth' + port : '';
+				fom['wan3_ifnameX'].value += (d[i][COL_BRI] == '12') ? 'eth' + port + '.' + vid : '';
+				fom['wan4_ifnameX'].value += (d[i][COL_BRI] == '13') ? 'eth' + port + '.' + vid : '';
 /* MULTIWAN-END */
-				}
 			}
 		}
 		fom['vlan'+d[i][COL_VID]+'hwname'].value = fom['vlan'+d[i][COL_VID]+'hwname'].value.trim();
@@ -1211,45 +1223,29 @@ function save() {
 		fom['lan5_ifnames'].value = fom['lan5_ifnames'].value.trim();
 		fom['lan6_ifnames'].value = fom['lan6_ifnames'].value.trim();
 		fom['lan7_ifnames'].value = fom['lan7_ifnames'].value.trim();
-/* TOMATO64-END */
 
-/* REMOVE-BEGIN
-		fom['lan_ifnames'].value += trailingSpace(fom['lan_ifnames'].value);
-		alert('vlan'+d[i][0]+'ports='+fom['vlan'+d[i][0]+'ports'].value+'\nvlan'+d[i][0]+'hwname='+fom['vlan'+d[i][0]+'hwname'].value);
-REMOVE-END */
-/* TOMATO64-REMOVE-BEGIN */
-		fom['lan1_ifnames'].value += (d[i][COL_BRI] == '4') ? 'vlan'+d[i][0] : '';
-		fom['lan2_ifnames'].value += (d[i][COL_BRI] == '5') ? 'vlan'+d[i][0] : '';
-		fom['lan3_ifnames'].value += (d[i][COL_BRI] == '6') ? 'vlan'+d[i][0] : '';
-		fom['wan2_ifnameX'].value += (d[i][COL_BRI] == '7') ? 'vlan'+d[i][0] : '';
+		fom['lan1_ifnames_vlan'].value += (d[i][COL_BRI] == '4') ? 'vlan'+d[i][0] : '';
+		fom['lan2_ifnames_vlan'].value += (d[i][COL_BRI] == '5') ? 'vlan'+d[i][0] : '';
+		fom['lan3_ifnames_vlan'].value += (d[i][COL_BRI] == '6') ? 'vlan'+d[i][0] : '';
+		fom['lan4_ifnames_vlan'].value += (d[i][COL_BRI] == '7') ? 'vlan'+d[i][0] : '';
+		fom['lan5_ifnames_vlan'].value += (d[i][COL_BRI] == '8') ? 'vlan'+d[i][0] : '';
+		fom['lan6_ifnames_vlan'].value += (d[i][COL_BRI] == '9') ? 'vlan'+d[i][0] : '';
+		fom['lan7_ifnames_vlan'].value += (d[i][COL_BRI] == '10') ? 'vlan'+d[i][0] : '';
+		fom['wan2_ifnameX_vlan'].value += (d[i][COL_BRI] == '11') ? 'vlan'+d[i][0] : '';
 /* MULTIWAN-BEGIN */
-		fom['wan3_ifnameX'].value += (d[i][COL_BRI] == '8') ? 'vlan'+d[i][0] : '';
-		fom['wan4_ifnameX'].value += (d[i][COL_BRI] == '9') ? 'vlan'+d[i][0] : '';
-/* MULTIWAN-END */
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-                fom['lan1_ifnames_vlan'].value += (d[i][COL_BRI] == '4') ? 'vlan'+d[i][0] : '';
-                fom['lan2_ifnames_vlan'].value += (d[i][COL_BRI] == '5') ? 'vlan'+d[i][0] : '';
-                fom['lan3_ifnames_vlan'].value += (d[i][COL_BRI] == '6') ? 'vlan'+d[i][0] : '';
-                fom['lan4_ifnames_vlan'].value += (d[i][COL_BRI] == '7') ? 'vlan'+d[i][0] : '';
-                fom['lan5_ifnames_vlan'].value += (d[i][COL_BRI] == '8') ? 'vlan'+d[i][0] : '';
-                fom['lan6_ifnames_vlan'].value += (d[i][COL_BRI] == '9') ? 'vlan'+d[i][0] : '';
-                fom['lan7_ifnames_vlan'].value += (d[i][COL_BRI] == '10') ? 'vlan'+d[i][0] : '';
-                fom['wan2_ifnameX_vlan'].value += (d[i][COL_BRI] == '11') ? 'vlan'+d[i][0] : '';
-/* MULTIWAN-BEGIN */
-                fom['wan3_ifnameX_vlan'].value += (d[i][COL_BRI] == '12') ? 'vlan'+d[i][0] : '';
-                fom['wan4_ifnameX_vlan'].value += (d[i][COL_BRI] == '13') ? 'vlan'+d[i][0] : '';
+		fom['wan3_ifnameX_vlan'].value += (d[i][COL_BRI] == '12') ? 'vlan'+d[i][0] : '';
+		fom['wan4_ifnameX_vlan'].value += (d[i][COL_BRI] == '13') ? 'vlan'+d[i][0] : '';
 /* MULTIWAN-END */
 /* TOMATO64-END */
 	}
 
 	/* count active WANs / wipe out relevant fields for inactive or just disabled WAN - needed in various places for the proper operation of FW */
 	k = 0;
-	for (i = 1; i <= MAXWAN_NUM; ++i) {
+	for (i = 1; i <= maxWan; ++i) {
 		j = (i > 1) ? i : '';
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 		if (fom['wan'+j+'_ifnameX'].value.length > 1)
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
 		if (fom['wan'+j+'_ifnameX'].value.length > 1 || fom['wan'+j+'_ifnameX_vlan'].value.length > 1)
 /* TOMATO64-END */
@@ -1351,8 +1347,6 @@ function earlyInit() {
 	if (unknown_router == 1)
 		E('unknown_router').style.display = 'block';
 
-	show();
-
 	verifyFields(null, 1);
 	insOvl();
 }
@@ -1362,6 +1356,23 @@ function init() {
 		E('sesdiv').style.display = 'block';
 		vlg.recolor();
 		vlg.resetNewEditor();
+/* TOMATO64-SKIP-BEGIN */
+/* REMOVE-BEGIN */
+		if (!hasMultiWan) {
+			var fom = E('t_fom');
+			if (fom['wan3_ifnameX']) { fom['wan3_ifnameX'].disabled = 1; fom['wan3_ifnameX'].value = ''; }
+			if (fom['wan4_ifnameX']) { fom['wan4_ifnameX'].disabled = 1; fom['wan4_ifnameX'].value = ''; }
+			if (fom['wan3_iface']) { fom['wan3_iface'].disabled = 1; fom['wan3_iface'].value = ''; }
+			if (fom['wan4_iface']) { fom['wan4_iface'].disabled = 1; fom['wan4_iface'].value = ''; }
+			if (fom['wan3_ifname']) { fom['wan3_ifname'].disabled = 1; fom['wan3_ifname'].value = ''; }
+			if (fom['wan4_ifname']) { fom['wan4_ifname'].disabled = 1; fom['wan4_ifname'].value = ''; }
+			if (fom['wan3_hwaddr']) { fom['wan3_hwaddr'].disabled = 1; fom['wan3_hwaddr'].value = ''; }
+			if (fom['wan4_hwaddr']) { fom['wan4_hwaddr'].disabled = 1; fom['wan4_hwaddr'].value = ''; }
+			if (fom['wan3_proto']) { fom['wan3_proto'].disabled = 1; fom['wan3_proto'].value = ''; }
+			if (fom['wan4_proto']) { fom['wan4_proto'].disabled = 1; fom['wan4_proto'].value = ''; }
+		}
+/* REMOVE-END */
+/* TOMATO64-SKIP-END */
 		var c;
 		if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
 			toggleVisibility(cprefix, 'notes');
@@ -1372,6 +1383,7 @@ function init() {
 	up.initPage(250, 5);
 
 	eventHandler();
+	show();
 }
 </script>
 </head>
@@ -1427,18 +1439,22 @@ function init() {
 <input type="hidden" name="vlan14hwname">
 <input type="hidden" name="vlan15hwname">
 <input type="hidden" name="wan_ifnameX">
-<input type="hidden" name="wan2_ifnameX">
-/* TOMATO64-BEGIN */
+<!-- TOMATO64-BEGIN -->
 <input type="hidden" name="wan_ifnameX_vlan">
+<!-- TOMATO64-END -->
+<input type="hidden" name="wan2_ifnameX">
+<!-- TOMATO64-BEGIN -->
 <input type="hidden" name="wan2_ifnameX_vlan">
-/* TOMATO64-END */
+<!-- TOMATO64-END -->
 <!-- MULTIWAN-BEGIN -->
 <input type="hidden" name="wan3_ifnameX">
-<input type="hidden" name="wan4_ifnameX">
-/* TOMATO64-BEGIN */
+<!-- TOMATO64-BEGIN -->
 <input type="hidden" name="wan3_ifnameX_vlan">
+<!-- TOMATO64-END -->
+<input type="hidden" name="wan4_ifnameX">
+<!-- TOMATO64-BEGIN -->
 <input type="hidden" name="wan4_ifnameX_vlan">
-/* TOMATO64-END */
+<!-- TOMATO64-END -->
 <input type="hidden" name="wan3_iface" value="" disabled="disabled">
 <input type="hidden" name="wan4_iface" value="" disabled="disabled">
 <input type="hidden" name="wan3_ifname" value="" disabled="disabled">
@@ -1462,7 +1478,7 @@ function init() {
 <input type="hidden" name="lan1_ifnames">
 <input type="hidden" name="lan2_ifnames">
 <input type="hidden" name="lan3_ifnames">
-/* TOMATO64-BEGIN */
+<!-- TOMATO64-BEGIN -->
 <input type="hidden" name="lan4_ifnames">
 <input type="hidden" name="lan5_ifnames">
 <input type="hidden" name="lan6_ifnames">
@@ -1475,7 +1491,7 @@ function init() {
 <input type="hidden" name="lan5_ifnames_vlan">
 <input type="hidden" name="lan6_ifnames_vlan">
 <input type="hidden" name="lan7_ifnames_vlan">
-/* TOMATO64-END */
+<!-- TOMATO64-END -->
 <input type="hidden" name="vlan0vid">
 <input type="hidden" name="vlan1vid">
 <input type="hidden" name="vlan2vid">
@@ -1518,9 +1534,8 @@ function init() {
 
 <!-- / / / -->
 
-/* TOMATO64-REMOVE-BEGIN */
-	<div class="section-title">VLAN Wireless</div>
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-BEGIN */
+	<div class="section-title">Wireless bridging</div>
 	<div class="section">
 		<script>
 			var f = [];
@@ -1531,54 +1546,60 @@ function init() {
 					if (nvram['wl'+u+'_radio'] != '1' || nvram['wl'+u+'_net_mode'] == 'disabled')
 						ssid = '<s title="Disabled!" style="cursor:help">'+ssid+'<\/s>';
 
-					f.push( { title: 'Bridge '+wl_display_ifname(uidx), name: 'f_bridge_wlan'+uidx+'_to', type: 'select',
-					          options: [[0,'LAN0 (br0)'],[1,'LAN1 (br1)'],[2,'LAN2 (br2)'],[3,'LAN3 (br3)'],[4,'none']], prefix: 'to &nbsp;&nbsp;&nbsp;', suffix: '&nbsp; SSID: '+ssid, value: 4 } );
+					f.push( { title: wl_display_ifname(uidx), name: 'f_bridge_wlan'+uidx+'_to', type: 'select',
+								options: [[0,'LAN0 (br0)'],[1,'LAN1 (br1)'],[2,'LAN2 (br2)'],[3,'LAN3 (br3)'],[4,'none']], suffix: '&nbsp;&nbsp;⇔&nbsp; SSID: '+ssid, value: 4, prefix: '⇔ &nbsp;&nbsp;&nbsp;' } );
 				}
 			}
 			createFieldTable('', f);
+		</script>
+	</div>
+/* TOMATO64-SKIP-END */
+/* TOMATO64-BEGIN */
+	<div class="section">
+		<script>
 			if (port_vlan_supported)
 				vlg.setup();
 		</script>
 	</div>
+/* TOMATO64-END */
 
 <!-- / / / -->
 
 	<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 	<div class="section" id="sesdiv_notes" style="display:none">
-		<div>If you notice that the order of the LAN Ports are incorrectly mapped, <a href="http://www.linksysinfo.org/index.php?threads/can-vlan-gui-port-order-be-corrected.70160/#post-247634"> <b>please follow these instructions to get it corrected.</b></a></div>
+		<div>*** If you notice that the order of the LAN Ports are incorrect, try the <a href="basic-network.asp">Invert Ports Order</a> first, if not read <a href="http://www.linksysinfo.org/index.php?threads/can-vlan-gui-port-order-be-corrected.70160/#post-247634" target="_blank" rel="noopener noreferrer"> <b>this</b></a> ***</div>
 		<br>
-		<i>VLAN Ethernet:</i> Assignments of physical ethernet interfaces to predefined LAN bridges.<br>
+		VLAN Ethernet:
 		<ul>
-			<li><b>VLAN</b> - Unique identifier of a VLAN.</li>
-			<li><b>VID</b> - Allows overriding 'traditional' VLAN/VID mapping with arbitrary VIDs for each VLAN (set to '0' to use 'regular' VLAN/VID mappings instead).</li>
-			<li><b>1-4 &amp; WAN</b> - Which ethernet ports on the router chassis should be members of this VLAN.</li>
-			<li><b>Tag</b> - Enable 802.1Q tagging of ethernet frames on a particular port/VLAN</li>
-			<li><b>Default VLAN</b> - VLAN ID assigned to untagged frames received by the router.</li>
-			<li><b>VLAN to Bridge mapping</b> - One and only one VLAN can be assigned to a bridge. Do not confuse Ethernet WAN (physical port) with WAN bridge (logical interface), they might or might not map onto each other</li>
+			<li><b>VLAN</b>: Locally unique identifier</li>
+			<li><b>VID</b>: Override default VLAN/VID mapping with custom VID (0 = default)</li>
+			<li><b>Per-port setting</b>: Off = empty, Untagged = 🌕, Tagged = 🌓</li>
+			<li><b>Native VLAN</b>: Default VLAN for untagged ingress frames = 🌑</li>
+			<li><b>Bridge</b>: One VLAN per bridge. WAN bridge (logical) ≠ WAN port (physical)</li>
 		</ul>
-/* TOMATO64-REMOVE-BEGIN */
+/* TOMATO64-SKIP-BEGIN */
 		<br>
-		<i>VLAN Wireless:</i> Assignments of wireless interfaces to predefined LAN bridges.<br>
+		Wireless bridging:
 		<ul>
-			<li><b>Bridge $wireless_if to $lan_bridge</b> - For each wireless interface define (physical or virtual) specify to what LAN bridge this has to map</li>
+			<li><b>Wireless interface to LAN bridge</b> - Maps each wireless interface (physical/virtual) to its LAN bridge</li>
 		</ul>
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-END */
 		<br>
-		<i>Other relevant notes/hints:</i><br>
+		Tips:
 		<ul>
-/* TOMATO64-REMOVE-BEGIN */
-			<li>You should probably cross check things on <a href="basic-network.asp">Basic/Network</a> and <a href="advanced-wlanvifs.asp">Advanced/Virtual Wireless</a></li>
-			<li>Be mindful some Tomato64 releases might use VID 0 as default others VID 1.</li>
-/* TOMATO64-REMOVE-END */
+/* TOMATO64-SKIP-BEGIN */
+			<li>Cross check settings on the <a href="basic-network.asp">Network</a> and <a href="advanced-wlanvifs.asp">Virtual Wireless</a> pages</li>
+/* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
-			<li>You should probably cross check things on <a href="basic-network.asp">Basic/Network</a></li>
+			<li>Cross check settings on the <a href="basic-network.asp">Network</a> page</li>
 /* TOMATO64-END */
-			<li>One VID <i>must</i> be assigned to the WAN bridge.</li>
+			<li>Default VID: 0 (some releases) or 1</li>
+			<li>Assign one VID to WAN bridges</li>
+			<li>Select one default VID</li>
 			<script>
-				W('<li>One VID <i>must<\/i> be selected as the default VLAN.<\/li>\n');
 				if (trunk_vlan_supported) {
-					W('<li>To prevent 802.1Q compatibility issues, avoid using VID "0" as 802.1Q specifies that frames with a tag of "0" do not belong to any VLAN (the tag contains only user priority information).<\/li>\n');
-					W('<li>If you trunk with other vendors be mindful some discourage from using VID "1" as it might be specially reserved (for management purposes).<\/li>\n');
+					W('<li>Avoid VID 0: 802.1Q treats it as untagged (priority only).<\/li>\n');
+					W('<li>Trunking tip: Skip VID 1 (often reserved for management by other vendors).<\/li>\n');
 				}
 			</script>
 		</ul>
