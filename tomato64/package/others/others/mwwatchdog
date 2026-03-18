@@ -17,6 +17,7 @@ BADIPLISTFILE="/tmp/mwwatchdog.badips"
 IPLIST=""
 BADIPLIST=""
 RESOLVED_IPS=""
+SOURCE_ADDR=""
 MWAN=$(NG mwan_num)
 MWANTABLE="wan"
 LOGI="logger -t mwwatchdog[$PID]"
@@ -139,14 +140,14 @@ mwwatchdogRun() {
 			GATEWAY_FRAGMENT="via $(NG "$PREFIX"_gateway)"
 			[ "$ISPPPD" -eq 1 ] && { GATEWAY_FRAGMENT=""; SOURCE_ADDR=$(NG "$PREFIX"_ppp_get_ip); }
 
-			# add routes
+			# add routes (see rc/mwan.c for mwwatchdog proto)
 			for IP in $IPLIST; do
 				[ -n "$DEFAULT_ROUTE_FRAGMENT" ] && {
-					ROUTE_EXEC="ip route add $IP $DEFAULT_ROUTE_FRAGMENT"
+					ROUTE_EXEC="ip route add $IP $DEFAULT_ROUTE_FRAGMENT proto mwwatchdog"
 					$LOGD $ROUTE_EXEC
 					$ROUTE_EXEC &>/dev/null
 				}
-				ROUTE_EXEC="ip route add $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000"
+				ROUTE_EXEC="ip route add $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000 proto mwwatchdog"
 				$LOGD $ROUTE_EXEC
 				$ROUTE_EXEC &>/dev/null
 			done
@@ -160,14 +161,14 @@ mwwatchdogRun() {
 # BBT-END
 			esac
 
-			# remove routes
+			# remove routes (see rc/mwan.c for mwwatchdog proto)
 			for IP in $IPLIST; do
 				[ -n "$DEFAULT_ROUTE_FRAGMENT" ] && {
-					ROUTE_EXEC="ip route del $IP $DEFAULT_ROUTE_FRAGMENT"
+					ROUTE_EXEC="ip route del $IP $DEFAULT_ROUTE_FRAGMENT proto mwwatchdog"
 					$LOGD $ROUTE_EXEC
 					$ROUTE_EXEC &>/dev/null
 				}
-				ROUTE_EXEC="ip route del $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000"
+				ROUTE_EXEC="ip route del $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000 proto mwwatchdog"
 				$LOGD $ROUTE_EXEC
 				$ROUTE_EXEC &>/dev/null
 			done

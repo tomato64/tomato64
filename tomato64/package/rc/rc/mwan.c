@@ -462,6 +462,12 @@ int mwan_route_main(int argc, char **argv)
 		fclose(fp);
 	}
 
+	/* add special type of proto for mwwatchdog to easily recognize it in 'ip route show table main' (OpenVPN/wireguard PBR) */
+	if ((fp = fopen("/etc/iproute2/rt_protos", "w")) != NULL) {
+		fprintf(fp, "99    mwwatchdog\n");
+		fclose(fp);
+	}
+
 	mwan_num = nvram_get_int("mwan_num");
 	if ((mwan_num == 1) || (mwan_num > MWAN_MAX))
 		return 0;
