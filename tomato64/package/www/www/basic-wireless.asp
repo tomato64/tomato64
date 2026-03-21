@@ -209,6 +209,7 @@ function displayChannels(device) {
 	var channel = '';
 	var channels = [];
 	var result = cmdresult.split('\n');
+	var selectedBand = E('_wifi_'+devices[device][0]+'_band').value;
 
 	channels.push(['auto', 'auto']);
 	for (var i = 0; i < result.length; i++) {
@@ -216,6 +217,19 @@ function displayChannels(device) {
 			var result2 = result[i].split(/\s+/);
 			if ((result2[0] == '*') || (result2[0] == ''))
 				result2.shift();
+
+			/* filter channels to only show those matching the selected band */
+			var freq = parseFloat(result2[0]);
+			var channelBand;
+			if (freq < 3)
+				channelBand = '2g';
+			else if (freq < 5.9)
+				channelBand = '5g';
+			else
+				channelBand = '6g';
+
+			if (channelBand !== selectedBand)
+				continue;
 
 			channel = result2[6].substring(0, result2[6].length - 1);
 			channels.push([channel, channel + ' (' + result2[0] + ' ' + result2[4].substring(0, result2[4].length - 1) + ')']);
