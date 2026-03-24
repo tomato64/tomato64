@@ -38,6 +38,9 @@
 #define BRIDGE_COUNT		8
 #endif /* TOMATO64 */
 
+#define WIFI_PHY_COUNT		3
+#define WIFI_IFACE_COUNT	16
+
 #define	MTD_DEV(arg)		"/dev/mtd"#arg
 #define	MTD_BLKDEV(arg)		"/dev/mtdblock"#arg
 #define	DEV_GPIO(arg)		"/dev/gpio"#arg
