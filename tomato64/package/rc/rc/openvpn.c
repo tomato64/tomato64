@@ -1393,9 +1393,9 @@ void write_ovpn_dnsmasq_config(FILE *fp)
 		errno = 0;
 		cur = (int)strtol(pos, &endptr, 10);
 		if (errno == 0 && endptr != pos && *endptr == '\0' && cur >= 0) {
-			logmsg(LOG_DEBUG, "%s: adding server %d interface to dns config", __FUNCTION__, num);
-			snprintf(nv, BUF_SIZE_16, "vpns%d_if", num);
-			fprintf(fp, "interface=%s%d\n", nvram_safe_get(nv), OVPN_SERVER_BASEIF + num);
+			logmsg(LOG_DEBUG, "%s: adding server %d interface to dns config", __FUNCTION__, cur);
+			snprintf(nv, BUF_SIZE_16, "vpns%d_if", cur);
+			fprintf(fp, "interface=%s%d\n", nvram_safe_get(nv), OVPN_SERVER_BASEIF + cur);
 		}
 	}
 
