@@ -254,7 +254,7 @@ do
 	print_legacy_rates ${i}
 	uci set "wireless.radio${i}.txpower=$(NG wifi_phy${i}_power)"
 	uci set "wireless.radio${i}.country=$(NG wifi_phy${i}_country)"
-	uci set "wireless.radio${i}.cell_density=0"
+	uci set "wireless.radio${i}.cell_density=$(NG wifi_phy${i}_cell_density)"
 	uci set "wireless.radio${i}.noscan=$(NG wifi_phy${i}_noscan)"
 
 	# Apply custom device UCI options and raw hostapd lines

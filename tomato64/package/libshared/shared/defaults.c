@@ -364,6 +364,7 @@ struct nvram_tuple bsd_defaults[] = {
 	{"wifi_phy" #p "_channel",	"auto"			, 0 }, \
 	{"wifi_phy" #p "_width",	width			, 0 }, \
 	{"wifi_phy" #p "_brates",	""			, 0 }, \
+	{"wifi_phy" #p "_cell_density",	"0"			, 0 }, \
 	{"wifi_phy" #p "_noscan",	""			, 0 }, \
 	{"wifi_phy" #p "_power",	""			, 0 }, \
 	{"wifi_phy" #p "_country",	""			, 0 }, \

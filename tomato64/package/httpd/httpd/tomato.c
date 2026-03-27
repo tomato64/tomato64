@@ -351,6 +351,7 @@ const aspapi_t aspapi[] = {
 	{"wifi_phy" #p "_channel",	V_TEXT(1, 4)			}, /* 1 - 165+, auto */ \
 	{"wifi_phy" #p "_width",	V_TEXT(2, 3)			}, /* 20, 40, 80, 160, 320 */ \
 	{"wifi_phy" #p "_brates",	V_NONE				}, /* legacy b rates */ \
+	{"wifi_phy" #p "_cell_density",	V_RANGE(0, 3)			}, /* Coverage cell density */ \
 	{"wifi_phy" #p "_noscan",	V_NONE				}, /* Force 40MHz mode */ \
 	{"wifi_phy" #p "_power",	V_TEXT(0, 2)			}, /* 0 - 30+ */ \
 	{"wifi_phy" #p "_country",	V_TEXT(0, 2)			}, /* 2 Digit Country Code */ \
