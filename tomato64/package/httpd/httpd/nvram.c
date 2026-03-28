@@ -165,7 +165,11 @@ void asp_nvram(int argc, char **argv)
 {
 	char *list;
 	char *p, *k;
+#ifndef TOMATO64
 	char buf[32];
+#else
+	char buf[64];
+#endif /* TOMATO64 */
 	unsigned int i;
 
 	if ((argc != 1) || ((list = strdup(argv[0])) == NULL))
@@ -180,6 +184,41 @@ void asp_nvram(int argc, char **argv)
 			continue;
 		if (strcmp(k, "wl_unit") == 0)
 			continue;
+
+#ifdef TOMATO64
+		/* "wifi" trigger — expand all phy and iface variables, grouped by phy */
+		if (strcmp(k, "wifi") == 0) {
+			static const char *phy_suffixes[] = {
+				"_band", "_mode", "_channel", "_width", "_brates",
+				"_cell_density", "_noscan", "_power", "_country",
+				"_ifaces", "_custom"
+			};
+			static const char *iface_suffixes[] = {
+				"_enable", "_mode", "_essid", "_bssid", "_network",
+				"_hidden", "_wmm", "_uapsd", "_encryption", "_cipher",
+				"_key", "_isolate", "_br_isolate", "_ifname",
+				"_macfilter", "_maclist", "_custom"
+			};
+			unsigned int phy, ifc, s;
+			for (phy = 0; phy < WIFI_PHY_COUNT; phy++) {
+				for (s = 0; s < ASIZE(phy_suffixes); s++) {
+					snprintf(buf, sizeof(buf), "wifi_phy%u%s", phy, phy_suffixes[s]);
+					web_printf("\t'%s': '", buf);
+					web_putj_utf8(nvram_safe_get(buf));
+					web_puts("',\n");
+				}
+				for (ifc = 0; ifc < WIFI_IFACE_COUNT; ifc++) {
+					for (s = 0; s < ASIZE(iface_suffixes); s++) {
+						snprintf(buf, sizeof(buf), "wifi_phy%uiface%u%s", phy, ifc, iface_suffixes[s]);
+						web_printf("\t'%s': '", buf);
+						web_putj_utf8(nvram_safe_get(buf));
+						web_puts("',\n");
+					}
+				}
+			}
+			continue; /* skip base output — "wifi" is not a real NVRAM var */
+		}
+#endif /* TOMATO64 */
 
 		web_printf("\t'%s': '", k);
 		web_putj_utf8(nvram_safe_get(k));
