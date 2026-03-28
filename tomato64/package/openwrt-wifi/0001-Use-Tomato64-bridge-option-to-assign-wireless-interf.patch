@@ -1,16 +1,5 @@
-From fd09614faa4c9406b6f23bebcf31cd943d4be4ab Mon Sep 17 00:00:00 2001
-From: lancethepants <lancethepants@gmail.com>
-Date: Tue, 3 Feb 2026 22:45:02 -0700
-Subject: [PATCH] Use Tomato64 bridge option to assign wireless interfaces to
- bridges
-
----
- .../usr/share/schema/wireless.wifi-iface.json |  4 ++++
- .../files/lib/netifd/wireless-device.uc       | 20 ++++++++++++++++---
- 2 files changed, 21 insertions(+), 3 deletions(-)
-
 diff --git a/package/network/config/wifi-scripts/files-ucode/usr/share/schema/wireless.wifi-iface.json b/package/network/config/wifi-scripts/files-ucode/usr/share/schema/wireless.wifi-iface.json
-index f5507305bd..a10aa7a48c 100644
+index 75ec3a3bdb..affab4dea0 100644
 --- a/package/network/config/wifi-scripts/files-ucode/usr/share/schema/wireless.wifi-iface.json
 +++ b/package/network/config/wifi-scripts/files-ucode/usr/share/schema/wireless.wifi-iface.json
 @@ -188,6 +188,10 @@
@@ -25,16 +14,34 @@ index f5507305bd..a10aa7a48c 100644
  			"description": "Specifies the path the CA certificate used for authentication",
  			"type": "string"
 diff --git a/package/network/config/wifi-scripts/files/lib/netifd/wireless-device.uc b/package/network/config/wifi-scripts/files/lib/netifd/wireless-device.uc
-index 428db6ee6a..b9a60b8493 100644
+index 768a421480..aceac809ad 100644
 --- a/package/network/config/wifi-scripts/files/lib/netifd/wireless-device.uc
 +++ b/package/network/config/wifi-scripts/files/lib/netifd/wireless-device.uc
-@@ -123,9 +123,14 @@ function wdev_config_init(wdev)
+@@ -79,6 +79,16 @@ function handle_link(dev, data, up)
+ 			link_ext: true,
+ 			up,
+ 		});
++
++//	Tomato64: handle direct bridge assignment via 'bridge' UCI option.
++//	Mirrors what netifd.interface_handle_link does for 'option network',
++//	but uses the bridge name directly since we bypass netifd network lookup.
++	if (data.bridge) {
++		if (up)
++			system(`ip link set "${dev}" master "${data.bridge}"`);
++		else
++			system(`ip link set "${dev}" nomaster`);
++	}
+ }
+ 
+ function wdev_config_init(wdev)
+@@ -123,9 +133,15 @@ function wdev_config_init(wdev)
  			vlans, stas,
  		};
  
 -		for (let net in vif.config.network)
 -			if (netifd.interface_get_bridge(net, iface))
 -				break;
++//		Tomato64: use 'bridge' UCI option directly instead of netifd network lookup.
 +//		for (let net in vif.config.network)
 +//			if (netifd.interface_get_bridge(net, iface))
 +//				break;
@@ -46,12 +53,12 @@ index 428db6ee6a..b9a60b8493 100644
  	}
  
  	wdev.handler_config = {
-@@ -356,6 +361,15 @@ function wdev_update_disabled_vifs(wdev)
+@@ -361,6 +377,15 @@ function wdev_update_disabled_vifs(wdev)
  			cache[name] = ifindex;
  		else
  			delete cache[name];
 +
-+		/* Tomato64: Detect bridge config changes */
++//		Tomato64: detect 'bridge' UCI option changes so config_change fires on bridge update
 +		let bridge_cache_key = name + "_bridge";
 +		if (vif.config.bridge != cache[bridge_cache_key])
 +			changed = true;
@@ -62,6 +69,3 @@ index 428db6ee6a..b9a60b8493 100644
  	}
  
  	if (changed || !is_equal(prev_disabled, disabled))
--- 
-2.47.3
-

@@ -376,7 +376,9 @@ const aspapi_t aspapi[] = {
 	{"wifi_phy" #p "iface" #i "_ifname",		V_TEXT(0, 15)	}, \
 	{"wifi_phy" #p "iface" #i "_macfilter",		V_TEXT(0, 5)	}, \
 	{"wifi_phy" #p "iface" #i "_maclist",		V_NONE		}, \
-	{"wifi_phy" #p "iface" #i "_custom",		V_NONE		}, /* Custom hostapd interface config */
+	{"wifi_phy" #p "iface" #i "_custom",		V_NONE		}, /* Custom hostapd interface config */ \
+	{"wifi_phy" #p "iface" #i "_mesh_fwding",	V_RANGE(0, 1)	}, /* Forward mesh peer traffic */ \
+	{"wifi_phy" #p "iface" #i "_mesh_rssi_threshold", V_RANGE(-255, 1) }, /* RSSI threshold; 0=off, 1=driver default */
 
 /* All 16 ifaces for a given phy */
 #define WIFI_PHY_IFACES(p) \

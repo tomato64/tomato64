@@ -394,56 +394,81 @@ function verifyFields(focused, quiet) {
 		for (var j = 0; j < interfaceCount[i]; ++j) {
 			t = 'phy'+i+'iface'+j;
 
-			// Show and Hide fields for ap and sta modes
+			var iface_mode = E('_wifi_'+t+'_mode').value;
+
+			// ESSID row: relabel to "Mesh ID" in mesh mode, restore in other modes
+			var essid_el = E('_wifi_'+t+'_essid');
+			var essid_row = PR(essid_el);
+			if (essid_row) {
+				var title_cell = essid_row.querySelector('td.title') || essid_row.cells[0];
+				if (title_cell) title_cell.textContent = (iface_mode == 'mesh') ? 'Mesh ID' : 'ESSID';
+			}
+
+			// General tab: show/hide fields per mode
 			b = E('_wifi_'+t+'_bssid');
 			c = E('_wifi_'+t+'_network');
 			d = E('_f_wifi_'+t+'_hidden');
 			e = E('_f_wifi_'+t+'_wmm');
 			f = E('_f_wifi_'+t+'_uapsd');
-			if (E('_wifi_'+t+'_mode').value == 'ap') {
-				b.disabled = 1;
-				PR(b).style.display = 'none';
 
-				c.disabled = 0;
-				PR(c).style.display = '';
-				d.disabled = 0;
-				PR(d).style.display = '';
-				e.disabled = 0;
-				PR(e).style.display = '';
+			// BSSID: sta and bridge only
+			var show_bssid = (iface_mode == 'sta' || iface_mode == 'bridge');
+			b.disabled = show_bssid ? 0 : 1;
+			PR(b).style.display = show_bssid ? '' : 'none';
 
-				// UAPSD is visible only if WMM is checked
-				if (e.checked) {
-					f.disabled = 0;
-					PR(f).style.display = '';
-				} else {
-					f.disabled = 1;
-					PR(f).style.display = 'none';
-				}
+			// Network/bridge: ap, bridge, mesh (not sta — sta uses routing)
+			var show_network = (iface_mode == 'ap' || iface_mode == 'bridge' || iface_mode == 'mesh');
+			c.disabled = show_network ? 0 : 1;
+			PR(c).style.display = show_network ? '' : 'none';
 
-			} else if (E('_wifi_'+t+'_mode').value == 'sta') {
-				b.disabled = 0;
-				PR(b).style.display = '';
+			// Hide ESSID, WMM, U-APSD: AP only
+			var ap_only = (iface_mode == 'ap');
+			d.disabled = ap_only ? 0 : 1;
+			PR(d).style.display = ap_only ? '' : 'none';
+			e.disabled = ap_only ? 0 : 1;
+			PR(e).style.display = ap_only ? '' : 'none';
 
-				c.disabled = 1;
-				PR(c).style.display = 'none';
-				d.disabled = 1;
-				PR(d).style.display = 'none';
-				e.disabled = 1;
-				PR(e).style.display = 'none';
+			// U-APSD: visible only when AP mode and WMM is checked
+			if (ap_only && e.checked) {
+				f.disabled = 0;
+				PR(f).style.display = '';
+			} else {
 				f.disabled = 1;
 				PR(f).style.display = 'none';
-			} else if (E('_wifi_'+t+'_mode').value == 'bridge') {
-				b.disabled = 0;
-				PR(b).style.display = '';
+			}
 
-				c.disabled = 0;
-				PR(c).style.display = '';
-				d.disabled = 1;
-				PR(d).style.display = 'none';
-				e.disabled = 1;
-				PR(e).style.display = 'none';
-				f.disabled = 1;
-				PR(f).style.display = 'none';
+			// Advanced tab: isolate and br_isolate are AP-only; mesh fields are mesh-only
+			var adv_isolate = E('_f_wifi_'+t+'_isolate');
+			var adv_br_isolate = E('_f_wifi_'+t+'_br_isolate');
+			var adv_mesh_fwding = E('_f_wifi_'+t+'_mesh_fwding');
+			var adv_mesh_rssi = E('_wifi_'+t+'_mesh_rssi_threshold');
+
+			adv_isolate.disabled = ap_only ? 0 : 1;
+			PR(adv_isolate).style.display = ap_only ? '' : 'none';
+			adv_br_isolate.disabled = ap_only ? 0 : 1;
+			PR(adv_br_isolate).style.display = ap_only ? '' : 'none';
+
+			var is_mesh = (iface_mode == 'mesh');
+			adv_mesh_fwding.disabled = is_mesh ? 0 : 1;
+			PR(adv_mesh_fwding).style.display = is_mesh ? '' : 'none';
+			adv_mesh_rssi.disabled = is_mesh ? 0 : 1;
+			PR(adv_mesh_rssi).style.display = is_mesh ? '' : 'none';
+
+			// Rebuild encryption dropdown: mesh restricts to SAE or open only
+			var enc_sel = E('_wifi_'+t+'_encryption');
+			var current_enc = enc_sel.value;
+			var enc_options = is_mesh
+				? [['sae','WPA3-SAE (recommended)'],['none','No Encryption (open)']]
+				: security_modes;
+			var enc_buf = '';
+			for (var m = 0; m < enc_options.length; ++m) {
+				enc_buf += '<option value="' + enc_options[m][0] + '"' +
+					((enc_options[m][0] == current_enc) ? ' selected' : '') +
+					'>' + enc_options[m][1] + '<\/option>';
+			}
+			enc_sel.innerHTML = enc_buf;
+			if (is_mesh && current_enc != 'sae' && current_enc != 'none') {
+				enc_sel.value = 'none';
 			}
 
 
@@ -647,6 +672,7 @@ function save(nomsg) {
 			E('wifi_'+t+'_uapsd').value = E('_f_wifi_'+t+'_uapsd').checked ? 1 : 0;
 			E('wifi_'+t+'_isolate').value = E('_f_wifi_'+t+'_isolate').checked ? 1 : "";
 			E('wifi_'+t+'_br_isolate').value = E('_f_wifi_'+t+'_br_isolate').checked ? 1 : "";
+			E('wifi_'+t+'_mesh_fwding').value = E('_f_wifi_'+t+'_mesh_fwding').checked ? 1 : 0;
 
 			var macdata = macTables[i][j].getAllData();
 			var macs = '';
@@ -921,6 +947,7 @@ for (var i = 0; i < devices.length; i++) {
 		W('<input type="hidden" id="wifi_'+t+'_isolate" name="wifi_'+t+'_isolate">');
 		W('<input type="hidden" id="wifi_'+t+'_br_isolate" name="wifi_'+t+'_br_isolate">');
 		W('<input type="hidden" id="wifi_'+t+'_maclist" name="wifi_'+t+'_maclist">');
+		W('<input type="hidden" id="wifi_'+t+'_mesh_fwding" name="wifi_'+t+'_mesh_fwding">');
 
 		W('<ul class="tabs">');
 		for (var k = 0; k < interfaceSections.length; k++) {
@@ -932,7 +959,7 @@ for (var i = 0; i < devices.length; i++) {
 
 		createFieldTable('', [
 			{ title: 'Enable', name: 'f_wifi_'+t+'_enable', type: 'checkbox', value: nvram['wifi_'+t+'_enable'] == 1 },
-			{ title: 'Mode', name: 'wifi_'+t+'_mode', type: 'select', options: [['ap', 'Access Point'],['sta','Client'],['bridge','Wireless Ethernet Bridge']], value: nvram['wifi_'+t+'_mode'] },
+			{ title: 'Mode', name: 'wifi_'+t+'_mode', type: 'select', options: [['ap', 'Access Point'],['sta','Client'],['bridge','Wireless Ethernet Bridge'],['mesh','802.11s Mesh Point']], value: nvram['wifi_'+t+'_mode'] },
 			{ title: 'ESSID', name: 'wifi_'+t+'_essid', type: 'text', maxlen: 32, size: 34, value: nvram['wifi_'+t+'_essid'] },
 			{ title: 'BSSID', name: 'wifi_'+t+'_bssid', type: 'text', maxlen: 17, size: 34, value: nvram['wifi_'+t+'_bssid'] },
 			{ title: 'Network', name: 'wifi_'+t+'_network', type: 'select', options: networks, value: nvram['wifi_'+t+'_network'] },
@@ -962,6 +989,9 @@ for (var i = 0; i < devices.length; i++) {
 		createFieldTable('', [
 			{ title: 'Isolate Clients', name: 'f_wifi_'+t+'_isolate', type: 'checkbox', value: nvram['wifi_'+t+'_isolate'] == 1 },
 			{ title: 'Isolate Bridge Port', name: 'f_wifi_'+t+'_br_isolate', type: 'checkbox', value: nvram['wifi_'+t+'_br_isolate'] == 1 },
+			{ title: 'Forward mesh peer traffic', name: 'f_wifi_'+t+'_mesh_fwding', type: 'checkbox', value: nvram['wifi_'+t+'_mesh_fwding'] == 1 },
+			{ title: 'RSSI Threshold', name: 'wifi_'+t+'_mesh_rssi_threshold', type: 'text', maxlen: 4, size: 6, value: nvram['wifi_'+t+'_mesh_rssi_threshold'],
+				suffix: '&nbsp;<small>dBm. 0=disabled, 1=driver default, -255 to -10 = signal floor<\/small>' },
 			{ title: 'Interface name', name: 'wifi_'+t+'_ifname', type: 'text', maxlen: 15, size: 17, value: nvram['wifi_'+t+'_ifname'] },
 			{ title: 'Custom Configuration', name: 'wifi_'+t+'_custom', type: 'textarea', value: nvram['wifi_'+t+'_custom'],
 				attrib: 'style="width:40em"' }
@@ -1016,16 +1046,15 @@ for (var i = 0; i < devices.length; i++) {
 		<li><b>General Setup</b></li>
 		<ul>
 			<li><b>Enable</b> - Enables this interface.</li>
-			<li><b>Mode</b> - Currently 'Access Point' and 'Client' are supported.</li>
+			<li><b>Mode</b> - Interface operating mode.</li>
 			<ul>
 				<li><b>Access Point</b> - Creates a wireless network for devices to join.</li>
-				<li><b>Client</b> - Connects to another wireless network. This connections can then be shared wired or wirelessly.</li>
+				<li><b>Client</b> - Connects to another wireless network. This connection can then be shared wired or wirelessly.</li>
+				<li><b>Wireless Ethernet Bridge</b> - Bridges an upstream wireless network to the LAN.</li>
+				<li><b>802.11s Mesh Point</b> - Creates a self-forming, self-healing mesh network using the 802.11s standard.</li>
 			</ul>
-			<li><b>ESSID</b> - The broadcasted SSID of the wireless network.</li>
-				<ul>
-					<li><b>Client</b> - In client mode this is the name of the SSID you want to connect to.</li>
-				</ul>
-			<li><b>BSSID</b> - Available in Client mode and is optional. This specifies the MAC address of the Wireless SSID network you want to connect to. This is useful for situations where there may be multiple APs with the same SSID and you want to connect to a specific one.</li>
+			<li><b>ESSID / Mesh ID</b> - The network name. In 802.11s Mesh mode this field is relabeled "Mesh ID" and sets the mesh network identifier — all nodes in the same mesh must share it. In Client mode this is the SSID to connect to.</li>
+			<li><b>BSSID</b> - Available in Client and Bridge mode and is optional. This specifies the MAC address of the Wireless SSID network you want to connect to. This is useful for situations where there may be multiple APs with the same SSID and you want to connect to a specific one.</li>
 			<li><b>Network</b> - Which network/bridge this interface will join.</li>
 			<li><b>Hide ESSID</b> - Disables the broadcasting of beacon frames if checked and hides the ESSID.</li>
 			<li><b>WMM Mode</b> - Enables WMM. Where Wi-Fi Multimedia (WMM) Mode QoS is disabled, clients may be limited to 802.11a/802.11g rates. Required for 802.11n/802.11ac/802.11ax.</li>
@@ -1047,7 +1076,9 @@ for (var i = 0; i < devices.length; i++) {
 			<li><b>Isolate Clients</b> - Isolates wireless clients from each other, </li>
 			<li><b>Isolate Bridge Port</b> - Isolates wireless clients from each other on the AP's bridge. (i.e. 2.4ghz and 5ghz radios on the same AP.)</li>
 			<li><b>Interface name</b> - Specifies a custom name for the Wi-Fi interface, which is otherwise automatically named.</li>
-			<li><b>Custom Configuration</b> - Custom interface config options, one per line. Format: <tt>key=value</tt>.<br>To pass directly to hostapd (AP): <tt>hostapd:key=value</tt>.<br>For wpa_supplicant (STA/bridge): <tt>wpa:key=value</tt>.</li>
+			<li><b>Forward mesh peer traffic</b> - Enables 802.11s layer-2 forwarding between mesh peers. Recommended on for most deployments.</li>
+			<li><b>RSSI Threshold</b> - Minimum signal strength (dBm) required to establish a mesh peer link. 0 = disabled, 1 = use driver default, negative values (e.g. -70) set an explicit dBm floor.</li>
+			<li><b>Custom Configuration</b> - Custom interface config options, one per line. Format: <tt>key=value</tt>.<br>To pass directly to hostapd (AP): <tt>hostapd:key=value</tt>.<br>For wpa_supplicant (STA/bridge/mesh): <tt>wpa:key=value</tt>.</li>
 		</ul>
 	</ul>
 	<br>

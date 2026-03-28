@@ -197,7 +197,8 @@ void asp_nvram(int argc, char **argv)
 				"_enable", "_mode", "_essid", "_bssid", "_network",
 				"_hidden", "_wmm", "_uapsd", "_encryption", "_cipher",
 				"_key", "_isolate", "_br_isolate", "_ifname",
-				"_macfilter", "_maclist", "_custom"
+				"_macfilter", "_maclist", "_custom",
+				"_mesh_fwding", "_mesh_rssi_threshold"
 			};
 			unsigned int phy, ifc, s;
 			for (phy = 0; phy < WIFI_PHY_COUNT; phy++) {

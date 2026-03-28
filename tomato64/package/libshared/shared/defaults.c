@@ -389,7 +389,9 @@ struct nvram_tuple bsd_defaults[] = {
 	{"wifi_phy" #p "iface" #i "_ifname",		""		, 0 }, \
 	{"wifi_phy" #p "iface" #i "_macfilter",		""		, 0 }, \
 	{"wifi_phy" #p "iface" #i "_maclist",		""		, 0 }, \
-	{"wifi_phy" #p "iface" #i "_custom",		""		, 0 },
+	{"wifi_phy" #p "iface" #i "_custom",		""		, 0 }, \
+	{"wifi_phy" #p "iface" #i "_mesh_fwding",	"1"		, 0 }, \
+	{"wifi_phy" #p "iface" #i "_mesh_rssi_threshold", "0"	, 0 },
 
 /* All 16 ifaces for a given phy (all generic/disabled) */
 #define WIFI_DEF_PHY_IFACES(p) \
@@ -2343,6 +2345,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface0_macfilter",	""				, 0 },
 	{"wifi_phy0iface0_maclist",	""				, 0 },
 	{"wifi_phy0iface0_custom",	""				, 0 },
+	{"wifi_phy0iface0_mesh_fwding",	"1"				, 0 },
+	{"wifi_phy0iface0_mesh_rssi_threshold", "0"			, 0 },
 
 	/* phy0 ifaces 1-15: generic disabled defaults */
 	WIFI_DEF_PHY0_IFACES_1_15

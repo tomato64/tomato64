@@ -192,6 +192,19 @@ print_ifname_client() {
 	client_ifaces=$(echo "$client_ifaces" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 }
 
+print_ifname_mesh() {
+
+	if [ ! -z "$(NG wifi_phy${1}iface${2}_ifname)" ];
+	then
+		uci set "wireless.phy${1}iface${2}.ifname=$(NG wifi_phy${1}iface${2}_ifname)"
+		client_ifaces="$client_ifaces $(NG wifi_phy${1}iface${2}_ifname)"
+	else
+		uci set "wireless.phy${1}iface${2}.ifname=phy${1}-mesh${2}"
+		client_ifaces="$client_ifaces phy${1}-mesh${2}"
+	fi
+	client_ifaces=$(echo "$client_ifaces" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+}
+
 print_mac_filter() {
 
 	if [ ! -z "$(NG wifi_phy${1}iface${2}_macfilter)" ] && [ ! -z "$(NG wifi_phy${1}iface${2}_maclist)" ];
@@ -269,62 +282,71 @@ do
 	# For each device interface
 	for j in $(seq 0 1 $(($(NG "wifi_phy${i}_ifaces") - 1)));
 	do
-		# If interface is enabled
-		if [ $(NG "wifi_phy${i}iface${j}_enable") -eq 1 ];
-		then
-			# If interface is an Access Point
-			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "ap" ];
-			then
-				start_hostapd=1
+		# Skip disabled interfaces
+		[ $(NG "wifi_phy${i}iface${j}_enable") -eq 1 ] || continue
 
-				uci set "wireless.phy${i}iface${j}=wifi-iface"
-				uci set "wireless.phy${i}iface${j}.device=radio${i}"
-				uci set "wireless.phy${i}iface${j}.mode=$(NG wifi_phy${i}iface${j}_mode)"
-				uci set "wireless.phy${i}iface${j}.ssid=$(NG wifi_phy${i}iface${j}_essid)"
-				uci set "wireless.phy${i}iface${j}.ocv=0"
-				print_wmm ${i} ${j}
-				print_encryption ${i} ${j}
-				uci set "wireless.phy${i}iface${j}.hidden=$(NG wifi_phy${i}iface${j}_hidden)"
-				uci set "wireless.phy${i}iface${j}.isolate=$(NG wifi_phy${i}iface${j}_isolate)"
-				uci set "wireless.phy${i}iface${j}.bridge=$(NG wifi_phy${i}iface${j}_network)"
-				print_ifname ${i} ${j}
-				print_mac_filter ${i} ${j}
+		iface_mode="$(NG "wifi_phy${i}iface${j}_mode")"
 
-				# Apply custom interface UCI options and raw hostapd lines (AP mode)
-				NG wifi_phy${i}iface${j}_custom | while IFS= read -r line; do
-					case "$line" in
-						''|'#'*) ;;
-						'hostapd:'*) uci add_list "wireless.phy${i}iface${j}.hostapd_options=${line#hostapd:}" ;;
-						*) uci set "wireless.phy${i}iface${j}.${line}" ;;
-					esac
-				done
-			fi
+		# === Layer 1: Common to all modes ===
+		uci set "wireless.phy${i}iface${j}=wifi-iface"
+		uci set "wireless.phy${i}iface${j}.device=radio${i}"
 
-			if [ "$(NG "wifi_phy${i}iface${j}_mode")" == "sta" ] || [ "$(NG "wifi_phy${i}iface${j}_mode")" == "bridge" ];
-			then
-				start_wpa_supplicant=1
+		# === Layer 2: Mode-unique settings ===
+		if [ "$iface_mode" == "ap" ]; then
+			start_hostapd=1
+			uci set "wireless.phy${i}iface${j}.mode=ap"
+			uci set "wireless.phy${i}iface${j}.ssid=$(NG wifi_phy${i}iface${j}_essid)"
+			uci set "wireless.phy${i}iface${j}.ocv=0"
+			print_ifname ${i} ${j}
 
-				uci set "wireless.phy${i}iface${j}=wifi-iface"
-				uci set "wireless.phy${i}iface${j}.device=radio${i}"
-				uci set "wireless.phy${i}iface${j}.mode=sta"
-				uci set "wireless.phy${i}iface${j}.ssid=$(NG wifi_phy${i}iface${j}_essid)"
-				uci set "wireless.phy${i}iface${j}.bssid=$(NG wifi_phy${i}iface${j}_bssid)"
-				print_encryption ${i} ${j}
-				uci set "wireless.phy${i}iface${j}.hidden=$(NG wifi_phy${i}iface${j}_hidden)"
-				uci set "wireless.phy${i}iface${j}.isolate=$(NG wifi_phy${i}iface${j}_isolate)"
-				print_ifname_client ${i} ${j}
-				print_mac_filter ${i} ${j}
-				# Apply custom interface UCI options and raw wpa_supplicant lines (STA/bridge mode)
+		elif [ "$iface_mode" == "sta" ] || [ "$iface_mode" == "bridge" ]; then
+			start_wpa_supplicant=1
+			uci set "wireless.phy${i}iface${j}.mode=sta"
+			uci set "wireless.phy${i}iface${j}.ssid=$(NG wifi_phy${i}iface${j}_essid)"
+			uci set "wireless.phy${i}iface${j}.bssid=$(NG wifi_phy${i}iface${j}_bssid)"
+			print_ifname_client ${i} ${j}
 
-				NG wifi_phy${i}iface${j}_custom | while IFS= read -r line; do
-					case "$line" in
-						''|'#'*) ;;
-						'wpa:'*) uci add_list "wireless.phy${i}iface${j}.wpa_supplicant_options=${line#wpa:}" ;;
-						*) uci set "wireless.phy${i}iface${j}.${line}" ;;
-					esac
-				done
-			fi
+		elif [ "$iface_mode" == "mesh" ]; then
+			start_wpa_supplicant=1
+			uci set "wireless.phy${i}iface${j}.mode=mesh"
+			uci set "wireless.phy${i}iface${j}.mesh_id=$(NG wifi_phy${i}iface${j}_essid)"
+
+			mesh_fwding=$(NG wifi_phy${i}iface${j}_mesh_fwding)
+			[ -n "$mesh_fwding" ] && uci set "wireless.phy${i}iface${j}.mesh_fwding=${mesh_fwding}"
+
+			mesh_rssi=$(NG wifi_phy${i}iface${j}_mesh_rssi_threshold)
+			[ -n "$mesh_rssi" ] && [ "$mesh_rssi" != "0" ] && \
+				uci set "wireless.phy${i}iface${j}.mesh_rssi_threshold=${mesh_rssi}"
+
+			print_ifname_mesh ${i} ${j}
 		fi
+
+		# === Layer 3a: Shared by AP, bridge, and mesh — bridge to LAN ===
+		if [ "$iface_mode" == "ap" ] || [ "$iface_mode" == "bridge" ] || [ "$iface_mode" == "mesh" ]; then
+			uci set "wireless.phy${i}iface${j}.bridge=$(NG wifi_phy${i}iface${j}_network)"
+		fi
+
+		# === Layer 3b: AP-only settings (hostapd features) ===
+		if [ "$iface_mode" == "ap" ]; then
+			print_wmm ${i} ${j}
+			uci set "wireless.phy${i}iface${j}.hidden=$(NG wifi_phy${i}iface${j}_hidden)"
+			uci set "wireless.phy${i}iface${j}.isolate=$(NG wifi_phy${i}iface${j}_isolate)"
+			print_mac_filter ${i} ${j}
+		fi
+
+		# === Layer 4: Shared by all modes ===
+		print_encryption ${i} ${j}
+
+		# Custom config: hostapd: prefix for AP, wpa: prefix for STA/bridge/mesh, bare key=value for all
+		NG wifi_phy${i}iface${j}_custom | while IFS= read -r line; do
+			case "$line" in
+				''|'#'*) ;;
+				'hostapd:'*) uci add_list "wireless.phy${i}iface${j}.hostapd_options=${line#hostapd:}" ;;
+				'wpa:'*) uci add_list "wireless.phy${i}iface${j}.wpa_supplicant_options=${line#wpa:}" ;;
+				*) uci set "wireless.phy${i}iface${j}.${line}" ;;
+			esac
+		done
+
 	done
 done
 uci commit wireless
