@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-JSONPATH_VERSION = f4fe702d0e8d9f8704b42f5d5c10950470ada231
+JSONPATH_VERSION = b9034210bd331749673416c6bf389cccd4e23610
 JSONPATH_SITE = https://git.openwrt.org/project/jsonpath.git
 JSONPATH_SITE_METHOD=git
 JSONPATH_DEPENDENCIES = libubox json-c

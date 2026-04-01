@@ -15,7 +15,7 @@ index 127abf432c..f1ac7208e0 100644
 @@ -1,2 +1,2 @@
  # Locally calculated
 -sha256  c4432d4f902bd0a2974d3fe76620bbb5e04b9d52e55701829aa12507651bc4d9  libubox-ecddb31dc34d89be5c9dc4595a4c58070eb090e4-git4.tar.gz
-+sha256  af5e53dd92a01e53fc20bb58e5d39b25c4f5ce9c16509765f85ba8f09af9503f  libubox-1aa36ee774c8db4d7a396903e0d2e1fb79ee8bf1-git4.tar.gz
++sha256  eb4a53e2efc704f169357ae208ac59b952f7e8da2405d6d0a2d20e9125d4f8a0  libubox-815633847cd32ffe6da28943cbeb37edc88265c8-git4.tar.gz
 diff --git a/package/libubox/libubox.mk b/package/libubox/libubox.mk
 index 8710720287..addedf688f 100644
 --- a/package/libubox/libubox.mk
@@ -25,7 +25,7 @@ index 8710720287..addedf688f 100644
  ################################################################################
  
 -LIBUBOX_VERSION = ecddb31dc34d89be5c9dc4595a4c58070eb090e4
-+LIBUBOX_VERSION = 1aa36ee774c8db4d7a396903e0d2e1fb79ee8bf1
++LIBUBOX_VERSION = 815633847cd32ffe6da28943cbeb37edc88265c8
  LIBUBOX_SITE = https://git.openwrt.org/project/libubox.git
  LIBUBOX_SITE_METHOD = git
  LIBUBOX_LICENSE = ISC, BSD-3-Clause

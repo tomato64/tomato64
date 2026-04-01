@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MT76_VERSION = eb567bc7f9b692bbf1ddfe31dd740861c58ec85b
+MT76_VERSION = 39c960c3ada558b4c2e7915772483d3731573d09
 MT76_SITE = $(call github,openwrt,mt76,$(MT76_VERSION))
 MT76_LICENSE = GPL-2.0
 MT76_DEPENDENCIES = linux mac80211
