@@ -42,6 +42,22 @@ ifneq ($(TCONFIG_MULTIWAN),y)
 	done
 endif
 
+# Distinguish the VLAN version page that needs to be added
+ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM) $(TCONFIG_TOMATO64)),)
+	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+else
+	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/RTNPLUS-NO-BEGIN/,/RTNPLUS-NO-END/d"
+endif
+ifeq ($(filter y,$(TCONFIG_BCMARM) $(TCONFIG_TOMATO64)),)
+	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+else
+	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
+endif
+ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_MIPSR2),$(TCONFIG_TOMATO64)),y)
+	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/MIPSR2P-NO-BEGIN/,/MIPSR2P-NO-END/d"
+else
+	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/MIPSR2P-BEGIN/,/MIPSR2P-END/d"
+endif
 # Only include external switch options if EXTSW is enabled (RT-AC88U)
 ifneq ($(TCONFIG_EXTSW),y)
 	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/EXTSW-BEGIN/,/EXTSW-END/d"
@@ -80,6 +96,11 @@ else
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
 	sed -i $(INSTALLDIR)/www/isup.jsx -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
  endif
+endif
+
+# Only include the Zebra options if Zebra is configured in.
+ifneq ($(TCONFIG_ZEBRA),y)
+	sed -i $(INSTALLDIR)/www/advanced-routing.asp -e "/ZEBRA-BEGIN/,/ZEBRA-END/d"
 endif
 
 # Only include EMF options if EMF is configured in.
@@ -373,6 +394,13 @@ ifneq ($(TCONFIG_SNMP),y)
 	rm -f $(INSTALLDIR)/www/admin-snmp.asp
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/SNMP-BEGIN/,/SNMP-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/SNMP-BEGIN/,/SNMP-END/d"
+endif
+
+# Only include the mmc pages if SDHC is compiled in
+ifneq ($(TCONFIG_SDHC),y)
+	rm -f $(INSTALLDIR)/www/admin-sdhc.asp || true
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/SDHC-BEGIN/,/SDHC-END/d"
+	sed -i $(INSTALLDIR)/www/about.asp -e "/SDHC-BEGIN/,/SDHC-END/d"
 endif
 
 # Only include the dnssec option if is compiled in
@@ -802,6 +830,8 @@ endif
 		-e "/EXTSW-BEGIN/d"	-e "/EXTSW-END/d" \
 		-e "/EXTSW-NO-BEGIN/d"	-e "/EXTSW-NO-END/d" \
 		-e "/USBAP-BEGIN/d"	-e "/USBAP-END/d" \
+		-e "/MIPSR2P-BEGIN/d"	-e "/MIPSR2P-END/d" \
+		-e "/MIPSR2P-NO-BEGIN/d" -e "/MIPSR2P-NO-END/d" \
 		-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 		-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
 		-e "/TOMATO64-SKIP-BEGIN/d"	-e "/TOMATO64-SKIP-END/d" \
