@@ -359,7 +359,7 @@ var SWITCH_INTERNAL_PORT = 0;
 if (port_vlan_supported) {
 	var vlg = new TomatoGrid();
 	vlg.setup = function() {
-		var portOptions = trunk_vlan_supported ? [[0,''],[1,'🌕 On'],[2,'🌓 Tag']] : [[0,'Off'],[1,'On 🌕']];
+		var portOptions = ((trunk_vlan_supported) || (PORT_VLAN_SUPPORT_OVERRIDE)) ? [[0,''],[1,'🌕 On'],[2,'🌓 Tag']] : [[0,'Off'],[1,'On 🌕']];
 		var cols = [
 			{ type: 'select', options: [[0,'0'],[1,'1'],[2,'2'],[3,'3'],[4,'4'],[5,'5'],[6,'6'],[7,'7'],[8,'8'],[9,'9'],[10,'10'],[11,'11'],[12,'12'],[13,'13'],[14,'14'],[15,'15']], prefix: '<div class="centered">', suffix: '<\/div>' },
 			{ type: 'text', maxlen: 4, prefix: '<div class="centered">', suffix: '<\/div>' },
@@ -520,17 +520,23 @@ REMOVE-END */
 
 /* WAN port */
 /* TOMATO64-SKIP-BEGIN */
+/* REMOVE-BEGIN */
 		if ((typeof nvram['wan_ifnameX'] === 'string') && (nvram['wan_ifnameX'].indexOf('vlan') != -1))
+/* REMOVE-END */
 		bridged[parseInt(nvram['wan_ifnameX'].replace('vlan',''))] = '2';
+/* REMOVE-BEGIN */
 		if ((typeof nvram['wan2_ifnameX'] === 'string') && (nvram['wan2_ifnameX'].indexOf('vlan') != -1))
+/* REMOVE-END */
 		bridged[parseInt(nvram['wan2_ifnameX'].replace('vlan',''))] = '7';
 /* MULTIWAN-BEGIN */
 /* REMOVE-BEGIN */
 		if (hasMultiWan) {
-/* REMOVE-END */
 		if ((typeof nvram['wan3_ifnameX'] === 'string') && (nvram['wan3_ifnameX'].indexOf('vlan') != -1))
+/* REMOVE-END */
 		bridged[parseInt(nvram['wan3_ifnameX'].replace('vlan',''))] = '8';
+/* REMOVE-BEGIN */
 		if ((typeof nvram['wan4_ifnameX'] === 'string') && (nvram['wan4_ifnameX'].indexOf('vlan') != -1))
+/* REMOVE-END */
 		bridged[parseInt(nvram['wan4_ifnameX'].replace('vlan',''))] = '9';
 /* REMOVE-BEGIN */
 		}
@@ -658,29 +664,90 @@ REMOVE-END */
 	}
 
 	vlg.verifyFields = function(row, quiet) {
-		var valid = 1;
+/* TOMATO64-REMOVE-BEGIN */
+		var i, j, old, oldP0, oldP1, oldP2, oldP3, oldP4, oldP5, me, checkNative, valid = 1;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		var i, j, old, oldP0, oldP1, oldP2, oldP3, oldP4, oldP5, oldP6, oldP7, oldP8, me, checkNative, valid = 1;
+/* TOMATO64-END */
 		var f = fields.getAll(row);
 
-		for (var i=0; i<= MAX_VLAN_ID ; i++)
+		for (i = 0; i<= MAX_VLAN_ID ; i++)
 			f[COL_VID].options[i].disabled = (this.countVID(i) > 0);
 
-		for (var i=0; i <= MAX_BRIDGE_ID; i++) {
-			var j = (i == 0) ? '' : i.toString();
+		for (i = 0; i <= MAX_BRIDGE_ID; i++) {
+			j = (i == 0) ? '' : i.toString();
 			f[COL_BRI].options[i+2].disabled = (nvram['lan'+j+'_ifname'].length < 1);
 		}
 
 		if (!v_range(f[COL_MAP], quiet, 0, 4094))
 			valid = 0;
 
+		function countNativeInForm(excludeCol) {
+			var ports = [COL_P0, COL_P1, COL_P2, COL_P3, COL_P4
+/* TOMATO64-SKIP-BEGIN */
+/* EXTSW-BEGIN */
+			             , COL_P5
+/* EXTSW-END */
+/* TOMATO64-SKIP-END */
+/* TOMATO64-BEGIN */
+			             , COL_P5, COL_P6, COL_P7, COL_P8
+/* TOMATO64-END */
+			];
+
+			var total = 0;
+			for (var i = 0; i < ports.length; i++) {
+				var col = ports[i];
+				if (col === excludeCol) continue;
+				if (parseInt(f[col].value, 10) === 1)
+					total++;
+			}
+			return total;
+		}
+
+		/* enforce trunk VLAN rules */
+		function enforcePortState(col) {
+			var val = parseInt(f[col].value, 10);
+			var trunkAllowed = (trunk_vlan_supported || PORT_VLAN_SUPPORT_OVERRIDE);
+
+			if (f[col].options.length > 2)
+				f[col].options[2].disabled = !trunkAllowed;
+
+			if (!trunkAllowed && val === 2) {
+				if (countNativeInForm(col) > 0)
+					f[col].value = '0';
+				else
+					f[col].value = '1';
+			}
+			if (val !== 0 && val !== 1 && val !== 2)
+				f[col].value = '0';
+		}
+		enforcePortState(COL_P0);
+		enforcePortState(COL_P1);
+		enforcePortState(COL_P2);
+		enforcePortState(COL_P3);
+		enforcePortState(COL_P4);
+/* TOMATO64-SKIP-BEGIN */
+/* EXTSW-BEGIN */
+		enforcePortState(COL_P5);
+/* EXTSW-END */
+/* TOMATO64-SKIP-END */
+/* TOMATO64-BEGIN */
+		enforcePortState(COL_P5);
+		enforcePortState(COL_P6);
+		enforcePortState(COL_P7);
+		enforcePortState(COL_P8);
+/* TOMATO64-END */
+
 		/* Modifications to enable Native VLAN support (allow one untagged vlan per port) by default */
 		var err_vlan = 'Only one untagged VLAN per port is allowed (Native VLAN)';
-		var old = ((row == this.editor) && this.source) ? this.source.getRowData() : null;
-		var oldP0 = (old && (old.length > COL_P0)) ? old[COL_P0] : '0';
-		var oldP1 = (old && (old.length > COL_P1)) ? old[COL_P1] : '0';
-		var oldP2 = (old && (old.length > COL_P2)) ? old[COL_P2] : '0';
-		var oldP3 = (old && (old.length > COL_P3)) ? old[COL_P3] : '0';
-		var oldP4 = (old && (old.length > COL_P4)) ? old[COL_P4] : '0';
-		var oldP5 = (old && (old.length > COL_P5)) ? old[COL_P5] : '0';
+		old = ((row == this.editor) && this.source) ? this.source.getRowData() : null;
+		oldP0 = (old && (old.length > COL_P0)) ? old[COL_P0] : '0';
+		oldP1 = (old && (old.length > COL_P1)) ? old[COL_P1] : '0';
+		oldP2 = (old && (old.length > COL_P2)) ? old[COL_P2] : '0';
+		oldP3 = (old && (old.length > COL_P3)) ? old[COL_P3] : '0';
+		oldP4 = (old && (old.length > COL_P4)) ? old[COL_P4] : '0';
+		oldP5 = (old && (old.length > COL_P5)) ? old[COL_P5] : '0';
 /* TOMATO64-SKIP-BEGIN */
 /* REMOVE-BEGIN */
 		if (!hasExtSw)
@@ -688,12 +755,12 @@ REMOVE-END */
 /* REMOVE-END */
 /* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
-		var oldP6 = (old && (old.length > COL_P6)) ? old[COL_P6] : '0';
-		var oldP7 = (old && (old.length > COL_P7)) ? old[COL_P7] : '0';
-		var oldP8 = (old && (old.length > COL_P8)) ? old[COL_P8] : '0';
+		oldP6 = (old && (old.length > COL_P6)) ? old[COL_P6] : '0';
+		oldP7 = (old && (old.length > COL_P7)) ? old[COL_P7] : '0';
+		oldP8 = (old && (old.length > COL_P8)) ? old[COL_P8] : '0';
 /* TOMATO64-END */
-		var me = this;
-		var checkNative = function(col, oldVal) {
+		me = this;
+		checkNative = function(col, oldVal) {
 			if (f[col].value == '1') {
 				if ((me.countElem(col, 1) - ((oldVal == '1') ? 1 : 0)) > 0) {
 					ferror.set(f[col], err_vlan, quiet);
@@ -791,10 +858,10 @@ REMOVE-END */
 /* MULTIWAN-END */
 
 /* TOMATO64-SKIP-BEGIN */
-		for (var i = 0; i < 4; i++) {
+		for (i = 0; i < 4; i++) {
 /* TOMATO64-SKIP-END */
 /* TOMATO64-BEGIN */
-		for (var i = 0; i < 8; i++) {
+		for (i = 0; i < 8; i++) {
 /* TOMATO64-END */
 			if ((this.countLan(i) > 0) && (f[COL_BRI].selectedIndex == (i + 2))) {
 				ferror.set(f[COL_BRI], 'One and only one VID can be used for LAN'+i+' (br'+i+') at any time', quiet);

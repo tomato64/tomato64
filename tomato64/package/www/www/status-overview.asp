@@ -21,7 +21,7 @@
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="interfaces.js?rel=<% version(); %>"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
-<script src="ethernet-icon.js?_http_id=<% nv(http_id); %>"></script>
+<script src="ethernet-icon.js?rel=<% version(); %>"></script>
 <script>
 var lastjiffiestotal = 0, lastjiffiesidle = 0, lastjiffiesusage = 100;
 </script>
