@@ -149,7 +149,8 @@ td#content a:hover {
 	background-color: var(--tomato-accent-color);
 }
 
-.content > small {
+.content > small,
+.content > span > small {
 	font-size: smaller;
 	padding-left: 0.5em;
 }

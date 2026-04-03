@@ -23,7 +23,7 @@
 <script>
 
 
-//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,wg_adns,wg0_enable,wg0_poll,wg0_tchk,wg0_sleep,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg0_rgwr,wg0_routing_val,wg0_prio,wg1_enable,wg1_poll,wg1_tchk,wg1_sleep,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg1_rgwr,wg1_routing_val,wg1_prio,wg2_enable,wg2_poll,wg2_tchk,wg2_sleep,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw,wg2_rgwr,wg2_routing_val,wg2_prio"); %>
+//	<% nvram("wan_ipaddr,wan_hostname,wan_domain,lan_ifname,lan_ipaddr,lan_netmask,wg_adns,wg0_enable,wg0_poll,wg0_tchk,wg0_tunchk,wg0_sleep,wg0_file,wg0_ip,wg0_fwmark,wg0_mtu,wg0_preup,wg0_postup,wg0_predown,wg0_postdown,wg0_aip,wg0_dns,wg0_peer_dns,wg0_ka,wg0_port,wg0_key,wg0_endpoint,wg0_com,wg0_lan,wg0_rgw,wg0_peers,wg0_route,wg0_firewall,wg0_nat,wg0_fw,wg0_rgwr,wg0_routing_val,wg0_prio,wg1_enable,wg1_poll,wg1_tchk,wg1_tunchk,wg1_sleep,wg1_file,wg1_ip,wg1_fwmark,wg1_mtu,wg1_preup,wg1_postup,wg1_predown,wg1_postdown,wg1_aip,wg1_dns,wg1_peer_dns,wg1_ka,wg1_port,wg1_key,wg1_endpoint,wg1_com,wg1_lan,wg1_rgw,wg1_peers,wg1_route,wg1_firewall,wg1_nat,wg1_fw,wg1_rgwr,wg1_routing_val,wg1_prio,wg2_enable,wg2_poll,wg2_tchk,wg2_tunchk,wg2_sleep,wg2_file,wg2_ip,wg2_fwmark,wg2_mtu,wg2_preup,wg2_postup,wg2_predown,wg2_postdown,wg2_aip,wg2_dns,wg2_peer_dns,wg2_ka,wg2_port,wg2_key,wg2_endpoint,wg2_com,wg2_lan,wg2_rgw,wg2_peers,wg2_route,wg2_firewall,wg2_nat,wg2_fw,wg2_rgwr,wg2_routing_val,wg2_prio"); %>
 
 
 var cprefix = 'vpn_wireguard';
@@ -82,6 +82,8 @@ ferror.show = function(e) {
 	var section = id.slice(4);
 	if (section == 'table_routing')
 		section = 'wg-policy'; /* special case */
+	if (section == 'tunchk_span')
+		section = 'wg-config'; /* special case */
 
 	tabSelect(tab);
 	sectSelect(tab.substr(2), section);
@@ -1724,6 +1726,11 @@ function verifyFields(focused, quiet) {
 		if (!v_range('_'+t+'_poll', quiet || !ok, 0, 30))
 			ok = 0;
 
+		/* verify IP for checker */
+		var ipc = E('_'+t+'_tunchk');
+		if (E('_f_'+t+'_tchk').checked && ipc.value != '' && !v_ip(ipc, quiet || !ok, 1))
+			ok = 0;
+
 		/* verify valid port */
 		port = E('_'+t+'_port');
 		if (port.value != '' && !v_port('_'+t+'_port', quiet || !ok)) {
@@ -1808,7 +1815,6 @@ function verifyFields(focused, quiet) {
 		if (ext) E('_f_'+t+'_peer_ip').value = '';
 		if (ext) E('_f_'+t+'_route').value = '1';
 		E('_f_'+t+'_peer_ip').disabled = ext;
-		E('_f_'+t+'_tchk').disabled = !ext;
 		elem.display(t+'-peers-download', !ext);
 		elem.display(t+'-peers-generate-title', !ext);
 		elem.display(t+'-peers-generate', !ext);
@@ -1819,6 +1825,7 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_'+t+'_rgwr'), ext);
 		elem.display(E(t+'_nat_warn_text'), ext && !nat);
 		elem.display(PR('_'+t+'_prio'), ext && rgwr);
+		elem.display(E(t+'-tunchk_span'), E('_f_'+t+'_tchk').checked);
 
 		/* Page Routing Policy */
 		elem.display(E('_'+t+'_routing_div_help'), (!ext) || (ext && !rgwr));
@@ -1969,6 +1976,7 @@ function save(nomsg) {
 		fom[t+'_nat'].value = fom['_f_'+t+'_nat'].checked ? 1 : 0;
 		fom[t+'_fw'].value = fom['_f_'+t+'_fw'].checked ? 1 : 0;
 		fom[t+'_tchk'].value = fom['_f_'+t+'_tchk'].checked ? 1 : 0;
+		if (!E('_f_'+t+'_tchk').checked) fom[t+'_tunchk'].value = ''; /* reset IP if not needed */
 
 		/* copy values from the fields */
 		nvram[t+'_rgwr'] = E('_'+t+'_rgwr').value;
@@ -2140,7 +2148,9 @@ function init() {
 			createFieldTable('', [
 				{ title: 'Enable on Start', name: 'f_'+t+'_enable', type: 'checkbox', value: nvram[t+'_enable'] == 1 },
 				{ title: 'Poll Interval', name: t+'_poll', type: 'text', maxlen: 2, size: 5, value: nvram[t+'_poll'], suffix: ' <small>minutes; 0 to disable<\/small>' },
-					{ title: 'Also check out the tunnel', indent: 2, name: 'f_'+t+'_tchk', type: 'checkbox', value: nvram[t+'_tchk'] != 0, suffix: ' <small>pings <% nv("wan_checker"); %> through tunnel (nvram wan_checker)<\/small>' },
+					{ title: 'Also check out the tunnel', indent: 2, multi: [
+						{ name: 'f_'+t+'_tchk', type: 'checkbox', value: nvram[t+'_tchk'] != 0 },
+						{ name: t+'_tunchk', type: 'text', placeholder: '<% nv('wan_checker'); %>', maxlen: 15, size: 17, value: nvram[t+'_tunchk'], prefix: '<span id="'+t+'-tunchk_span">&nbsp;&nbsp;', suffix: ' <small>IP to ping (empty = default)<\/small><\/span>'} ] },
 				{ title: 'Delay at startup', name: t+'_sleep', type: 'text', maxlen: 5, size: 7, value: nvram[t+'_sleep'], suffix: ' <small>seconds; range: 1 - 99; default: 1<\/small>' },
 				{ title: 'Config file', name: t+'_file', type: 'text', placeholder: 'optional', maxlen: 64, size: 64, value: nvram[t+'_file'] },
 				{ title: 'Port', name: t+'_port', type: 'text', maxlen: 5, size: 10, placeholder: (51820+i), value: nvram[t+'_port'] },

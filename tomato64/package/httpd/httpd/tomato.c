@@ -1716,6 +1716,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpnc_eas",			V_NONE				},
 	{ "vpnc1_poll",			V_RANGE(0, 30)			},
 	{ "vpnc1_tchk",			V_01				},	/* check if tunnel is up */
+	{ "vpnc1_tunchk",		V_TEXT(0, 15)			},	/* IP to check the tunnel */
 	{ "vpnc1_if",			V_TEXT(3, 3)			},	/* tap, tun */
 	{ "vpnc1_bridge",		V_01				},
 	{ "vpnc1_nat",			V_01				},
@@ -1757,6 +1758,7 @@ static const nvset_t nvset_list[] = {
 #endif /* TOMATO64 */
 	{ "vpnc2_poll",			V_RANGE(0, 30)			},
 	{ "vpnc2_tchk",			V_01				},	/* check if tunnel is up */
+	{ "vpnc2_tunchk",		V_TEXT(0, 15)			},	/* IP to check the tunnel */
 	{ "vpnc2_if",			V_TEXT(3, 3)			},	/* tap, tun */
 	{ "vpnc2_bridge",		V_01				},
 	{ "vpnc2_nat",			V_01				},
@@ -1799,6 +1801,7 @@ static const nvset_t nvset_list[] = {
 #ifdef TCONFIG_BCMARM
 	{ "vpnc3_poll",			V_RANGE(0, 30)			},
 	{ "vpnc3_tchk",			V_01				},	/* check if tunnel is up */
+	{ "vpnc3_tunchk",		V_TEXT(0, 15)			},	/* IP to check the tunnel */
 	{ "vpnc3_if",			V_TEXT(3, 3)			},	/* tap, tun */
 	{ "vpnc3_bridge",		V_01				},
 	{ "vpnc3_nat",			V_01				},
@@ -1921,6 +1924,7 @@ static const nvset_t nvset_list[] = {
 	{ "wg0_enable",			V_01				},
 	{ "wg0_poll",			V_RANGE(0, 30)			},
 	{ "wg0_tchk",			V_01				},	/* check if tunnel is up */
+	{ "wg0_tunchk",			V_TEXT(0, 15)			},	/* IP to check the tunnel */
 	{ "wg0_sleep",			V_RANGE(1, 99)			},	/* delay at startup */
 	{ "wg0_file",			V_TEXT(0, 64)			},
 	{ "wg0_key",			V_TEXT(0, 44)			},
@@ -1955,6 +1959,7 @@ static const nvset_t nvset_list[] = {
 	{ "wg1_enable",			V_01				},
 	{ "wg1_poll",			V_RANGE(0, 30)			},
 	{ "wg1_tchk",			V_01				},	/* check if tunnel is up */
+	{ "wg1_tunchk",			V_TEXT(0, 15)			},	/* IP to check the tunnel */
 	{ "wg1_sleep",			V_RANGE(1, 99)			},	/* delay at startup */
 	{ "wg1_file",			V_TEXT(0, 64)			},
 	{ "wg1_key",			V_TEXT(0, 44)			},
@@ -1989,6 +1994,7 @@ static const nvset_t nvset_list[] = {
 	{ "wg2_enable",			V_01				},
 	{ "wg2_poll",			V_RANGE(0, 30)			},
 	{ "wg2_tchk",			V_01				},	/* check if tunnel is up */
+	{ "wg2_tunchk",			V_TEXT(0, 15)			},	/* IP to check the tunnel */
 	{ "wg2_sleep",			V_RANGE(1, 99)			},	/* delay at startup */
 	{ "wg2_file",			V_TEXT(0, 64)			},
 	{ "wg2_key",			V_TEXT(0, 44)			},

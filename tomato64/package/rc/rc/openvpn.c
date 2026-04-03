@@ -177,7 +177,7 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 			            "logger -t openvpn-watchdog vpn%s%d stopped? Starting...\n"
 			            "service vpn%s%d restart\n",
 			            instanceType, atoi(getNVRAMVar("vpnc%d_tchk", unit)),
-			            getNVRAMVar("vpnc%d_if", unit), unit + (type == OVPN_TYPE_SERVER ? OVPN_SERVER_BASEIF : OVPN_CLIENT_BASEIF), nvram_safe_get("wan_checker"),
+			            getNVRAMVar("vpnc%d_if", unit), unit + (type == OVPN_TYPE_SERVER ? OVPN_SERVER_BASEIF : OVPN_CLIENT_BASEIF), (getNVRAMVar("vpnc%d_tunchk", unit) ? getNVRAMVar("vpnc%d_tunchk", unit) : nvram_safe_get("wan_checker")),
 			            instanceType, unit,
 			            instanceType, unit,
 			            instanceType, unit);

@@ -25,10 +25,10 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("vpnc_eas,vpnc1_poll,vpnc1_tchk,vpnc1_if,vpnc1_bridge,vpnc1_nat,vpnc1_proto,vpnc1_addr,vpnc1_port,vpnc1_retry,vpnc1_firewall,vpnc1_crypt,vpnc1_cipher,vpnc1_ncp_ciphers,vpnc1_local,vpnc1_remote,vpnc1_nm,vpnc1_reneg,vpnc1_hmac,vpnc1_adns,vpnc1_rgw,vpnc1_gw,vpnc1_custom,vpnc1_static,vpnc1_ca,vpnc1_crt,vpnc1_key,vpnc1_userauth,vpnc1_username,vpnc1_password,vpnc1_useronly,vpnc1_tlsremote,vpnc1_cn,vpnc1_br,vpnc1_digest,vpnc1_routing_val,vpnc1_fw,vpnc1_tlsvername,vpnc1_prio,vpnc2_poll,vpnc2_tchk,vpnc2_if,vpnc2_bridge,vpnc2_nat,vpnc2_proto,vpnc2_addr,vpnc2_port,vpnc2_retry,vpnc2_firewall,vpnc2_crypt,vpnc2_cipher,vpnc2_ncp_ciphers,vpnc2_local,vpnc2_remote,vpnc2_nm,vpnc2_reneg,vpnc2_hmac,vpnc2_adns,vpnc2_rgw,vpnc2_gw,vpnc2_custom,vpnc2_static,vpnc2_ca,vpnc2_crt,vpnc2_key,vpnc2_userauth,vpnc2_username,vpnc2_password,vpnc2_useronly,vpnc2_tlsremote,vpnc2_cn,vpnc2_br,vpnc2_digest,vpnc2_routing_val,vpnc2_fw,vpnc2_tlsvername,vpnc2_prio,vpnc3_poll,vpnc3_tchk,vpnc3_if,vpnc3_bridge,vpnc3_nat,vpnc3_proto,vpnc3_addr,vpnc3_port,vpnc3_retry,vpnc3_firewall,vpnc3_crypt,vpnc3_cipher,vpnc3_ncp_ciphers,vpnc3_local,vpnc3_remote,vpnc3_nm,vpnc3_reneg,vpnc3_hmac,vpnc3_adns,vpnc3_rgw,vpnc3_gw,vpnc3_custom,vpnc3_static,vpnc3_ca,vpnc3_crt,vpnc3_key,vpnc3_userauth,vpnc3_username,vpnc3_password,vpnc3_useronly,vpnc3_tlsremote,vpnc3_cn,vpnc3_br,vpnc3_digest,vpnc3_routing_val,vpnc3_fw,vpnc3_tlsvername,vpnc3_prio,lan_ifname"); %>
+//	<% nvram("vpnc_eas,vpnc1_poll,vpnc1_tchk,vpnc1_tunchk,vpnc1_if,vpnc1_bridge,vpnc1_nat,vpnc1_proto,vpnc1_addr,vpnc1_port,vpnc1_retry,vpnc1_firewall,vpnc1_crypt,vpnc1_cipher,vpnc1_ncp_ciphers,vpnc1_local,vpnc1_remote,vpnc1_nm,vpnc1_reneg,vpnc1_hmac,vpnc1_adns,vpnc1_rgw,vpnc1_gw,vpnc1_custom,vpnc1_static,vpnc1_ca,vpnc1_crt,vpnc1_key,vpnc1_userauth,vpnc1_username,vpnc1_password,vpnc1_useronly,vpnc1_tlsremote,vpnc1_cn,vpnc1_br,vpnc1_digest,vpnc1_routing_val,vpnc1_fw,vpnc1_tlsvername,vpnc1_prio,vpnc2_poll,vpnc2_tchk,vpnc2_tunchk,vpnc2_if,vpnc2_bridge,vpnc2_nat,vpnc2_proto,vpnc2_addr,vpnc2_port,vpnc2_retry,vpnc2_firewall,vpnc2_crypt,vpnc2_cipher,vpnc2_ncp_ciphers,vpnc2_local,vpnc2_remote,vpnc2_nm,vpnc2_reneg,vpnc2_hmac,vpnc2_adns,vpnc2_rgw,vpnc2_gw,vpnc2_custom,vpnc2_static,vpnc2_ca,vpnc2_crt,vpnc2_key,vpnc2_userauth,vpnc2_username,vpnc2_password,vpnc2_useronly,vpnc2_tlsremote,vpnc2_cn,vpnc2_br,vpnc2_digest,vpnc2_routing_val,vpnc2_fw,vpnc2_tlsvername,vpnc2_prio,vpnc3_poll,vpnc3_tchk,vpnc3_tunchk,vpnc3_if,vpnc3_bridge,vpnc3_nat,vpnc3_proto,vpnc3_addr,vpnc3_port,vpnc3_retry,vpnc3_firewall,vpnc3_crypt,vpnc3_cipher,vpnc3_ncp_ciphers,vpnc3_local,vpnc3_remote,vpnc3_nm,vpnc3_reneg,vpnc3_hmac,vpnc3_adns,vpnc3_rgw,vpnc3_gw,vpnc3_custom,vpnc3_static,vpnc3_ca,vpnc3_crt,vpnc3_key,vpnc3_userauth,vpnc3_username,vpnc3_password,vpnc3_useronly,vpnc3_tlsremote,vpnc3_cn,vpnc3_br,vpnc3_digest,vpnc3_routing_val,vpnc3_fw,vpnc3_tlsvername,vpnc3_prio,lan_ifname"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("vpnc_eas,vpnc1_poll,vpnc1_tchk,vpnc1_if,vpnc1_bridge,vpnc1_nat,vpnc1_proto,vpnc1_addr,vpnc1_port,vpnc1_retry,vpnc1_firewall,vpnc1_crypt,vpnc1_cipher,vpnc1_ncp_ciphers,vpnc1_local,vpnc1_remote,vpnc1_nm,vpnc1_reneg,vpnc1_hmac,vpnc1_adns,vpnc1_rgw,vpnc1_gw,vpnc1_custom,vpnc1_static,vpnc1_ca,vpnc1_crt,vpnc1_key,vpnc1_userauth,vpnc1_username,vpnc1_password,vpnc1_useronly,vpnc1_tlsremote,vpnc1_cn,vpnc1_br,vpnc1_digest,vpnc1_routing_val,vpnc1_fw,vpnc1_tlsvername,vpnc1_prio,vpnc2_poll,vpnc2_tchk,vpnc2_if,vpnc2_bridge,vpnc2_nat,vpnc2_proto,vpnc2_addr,vpnc2_port,vpnc2_retry,vpnc2_firewall,vpnc2_crypt,vpnc2_cipher,vpnc2_ncp_ciphers,vpnc2_local,vpnc2_remote,vpnc2_nm,vpnc2_reneg,vpnc2_hmac,vpnc2_adns,vpnc2_rgw,vpnc2_gw,vpnc2_custom,vpnc2_static,vpnc2_ca,vpnc2_crt,vpnc2_key,vpnc2_userauth,vpnc2_username,vpnc2_password,vpnc2_useronly,vpnc2_tlsremote,vpnc2_cn,vpnc2_br,vpnc2_digest,vpnc2_routing_val,vpnc2_fw,vpnc2_tlsvername,vpnc2_prio,vpnc3_poll,vpnc3_tchk,vpnc3_if,vpnc3_bridge,vpnc3_nat,vpnc3_proto,vpnc3_addr,vpnc3_port,vpnc3_retry,vpnc3_firewall,vpnc3_crypt,vpnc3_cipher,vpnc3_ncp_ciphers,vpnc3_local,vpnc3_remote,vpnc3_nm,vpnc3_reneg,vpnc3_hmac,vpnc3_adns,vpnc3_rgw,vpnc3_gw,vpnc3_custom,vpnc3_static,vpnc3_ca,vpnc3_crt,vpnc3_key,vpnc3_userauth,vpnc3_username,vpnc3_password,vpnc3_useronly,vpnc3_tlsremote,vpnc3_cn,vpnc3_br,vpnc3_digest,vpnc3_routing_val,vpnc3_fw,vpnc3_tlsvername,vpnc3_prio,vpnc1_dco,vpnc2_dco,vpnc3_dco,lan_ifname"); %>
+//	<% nvram("vpnc_eas,vpnc1_poll,vpnc1_tchk,vpnc1_tunchk,vpnc1_if,vpnc1_bridge,vpnc1_nat,vpnc1_proto,vpnc1_addr,vpnc1_port,vpnc1_retry,vpnc1_firewall,vpnc1_crypt,vpnc1_cipher,vpnc1_ncp_ciphers,vpnc1_local,vpnc1_remote,vpnc1_nm,vpnc1_reneg,vpnc1_hmac,vpnc1_adns,vpnc1_rgw,vpnc1_gw,vpnc1_custom,vpnc1_static,vpnc1_ca,vpnc1_crt,vpnc1_key,vpnc1_userauth,vpnc1_username,vpnc1_password,vpnc1_useronly,vpnc1_tlsremote,vpnc1_cn,vpnc1_br,vpnc1_digest,vpnc1_routing_val,vpnc1_fw,vpnc1_tlsvername,vpnc1_prio,vpnc2_poll,vpnc2_tchk,vpnc2_tunchk,vpnc2_if,vpnc2_bridge,vpnc2_nat,vpnc2_proto,vpnc2_addr,vpnc2_port,vpnc2_retry,vpnc2_firewall,vpnc2_crypt,vpnc2_cipher,vpnc2_ncp_ciphers,vpnc2_local,vpnc2_remote,vpnc2_nm,vpnc2_reneg,vpnc2_hmac,vpnc2_adns,vpnc2_rgw,vpnc2_gw,vpnc2_custom,vpnc2_static,vpnc2_ca,vpnc2_crt,vpnc2_key,vpnc2_userauth,vpnc2_username,vpnc2_password,vpnc2_useronly,vpnc2_tlsremote,vpnc2_cn,vpnc2_br,vpnc2_digest,vpnc2_routing_val,vpnc2_fw,vpnc2_tlsvername,vpnc2_prio,vpnc3_poll,vpnc3_tchk,vpnc3_tunchk,vpnc3_if,vpnc3_bridge,vpnc3_nat,vpnc3_proto,vpnc3_addr,vpnc3_port,vpnc3_retry,vpnc3_firewall,vpnc3_crypt,vpnc3_cipher,vpnc3_ncp_ciphers,vpnc3_local,vpnc3_remote,vpnc3_nm,vpnc3_reneg,vpnc3_hmac,vpnc3_adns,vpnc3_rgw,vpnc3_gw,vpnc3_custom,vpnc3_static,vpnc3_ca,vpnc3_crt,vpnc3_key,vpnc3_userauth,vpnc3_username,vpnc3_password,vpnc3_useronly,vpnc3_tlsremote,vpnc3_cn,vpnc3_br,vpnc3_digest,vpnc3_routing_val,vpnc3_fw,vpnc3_tlsvername,vpnc3_prio,vpnc1_dco,vpnc2_dco,vpnc3_dco,lan_ifname"); %>
 /* TOMATO64-END */
 
 var changed = 0, i;
@@ -266,6 +266,12 @@ function verifyFields(focused, quiet) {
 			ok = 0;
 		if (!v_range('_'+t+'_reneg', quiet || !ok, -1, 2147483647))
 			ok = 0;
+
+		/* verify IP for checker */
+		var ipc = E('_'+t+'_tunchk');
+		if (E('_f_'+t+'_tchk').checked && ipc.value.length > 0 && !v_ip(ipc, quiet || !ok, 1))
+			ok = 0;
+
 		if (E('_'+t+'_gw').value.length > 0 && !v_ip('_'+t+'_gw', quiet || !ok, 1))
 			ok = 0;
 	}
@@ -315,6 +321,7 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_'+t+'_ncp_ciphers'), auth == 'tls');
 		elem.display(PR('_'+t+'_cipher'), auth == 'secret');
 		elem.display(PR('_'+t+'_prio'), rgw > 1);
+		elem.display(E(t+'-tunchk_span'), E('_f_'+t+'_tchk').checked);
 /* TOMATO64-BEGIN */
 		var proto = E('_'+t+'_proto').value;
 		var dco_vis = iface == 'tun' && auth == 'tls' && proto.indexOf('udp') >= 0;
@@ -378,7 +385,7 @@ function save() {
 
 		var routedata = routingTables[i].getAllData();
 		var routing = '';
-		for (j = 0; j < routedata.length; ++j)
+		for (var j = 0; j < routedata.length; ++j)
 			routing += routedata[j].join('<')+'>';
 
 		fom[t+'_bridge'].value = E('_f_'+t+'_bridge').checked ? 1 : 0;
@@ -389,6 +396,7 @@ function save() {
 		fom[t+'_tlsremote'].value = E('_f_'+t+'_tlsremote').checked ? 1 : 0;
 		fom[t+'_tchk'].value = E('_f_'+t+'_tchk').checked ? 1 : 0;
 		fom[t+'_routing_val'].value = routing;
+		if (!E('_f_'+t+'_tchk').checked) fom[t+'_tunchk'].value = ''; /* reset IP if not needed */
 /* TOMATO64-BEGIN */
 		fom[t+'_dco'].value = E('_f_'+t+'_dco').checked ? 1 : 0;
 		if (E('_f_'+t+'_dco').checked) {
@@ -570,7 +578,9 @@ function init() {
 			W('<div id="'+t+'-advanced">');
 			createFieldTable('', [
 				{ title: 'Poll Interval', name: t+'_poll', type: 'text', maxlen: 2, size: 5, value: nvram[t+'_poll'], suffix: ' <small>minutes; 0 to disable<\/small>' },
-					{ title: 'Also check out the tunnel', indent: 2, name: 'f_'+t+'_tchk', type: 'checkbox', value: nvram[t+'_tchk'] != 0, suffix: ' <small>pings <% nv("wan_checker"); %> through tunnel (nvram wan_checker)<\/small>' },
+					{ title: 'Also check out the tunnel', indent: 2, multi: [
+						{ name: 'f_'+t+'_tchk', type: 'checkbox', value: nvram[t+'_tchk'] != 0 },
+						{ name: t+'_tunchk', type: 'text', placeholder: '<% nv('wan_checker'); %>', maxlen: 15, size: 17, value: nvram[t+'_tunchk'], prefix: '<span id="'+t+'-tunchk_span">&nbsp;&nbsp;', suffix: ' <small>IP to ping (empty = default)<\/small><\/span>'} ] },
 				{ title: 'Redirect Internet traffic', multi: [
 					{ name: t+'_rgw', type: 'select', options: [[0,'No'],[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram[t+'_rgw'] },
 					{ name: t+'_gw', type: 'text', maxlen: 15, size: 17, value: nvram[t+'_gw'], prefix: '<span id="'+t+'_gateway"> &nbsp;Gateway:&nbsp', suffix: '<\/span>'} ] },
@@ -583,7 +593,7 @@ function init() {
 				{ title: 'Verify Certificate<br>(remote-cert-tls server)', name: 'f_'+t+'_tlsremote', type: 'checkbox', value: nvram[t+'_tlsremote'] != 0 },
 				{ title: 'Verify Server Certificate Name<br>(verify-x509-name)', multi: [
 					{ name: t+'_tlsvername', type: 'select', options: [[0,'No'],[1,'Common Name'],[2,'Common Name Prefix'],[3,'Subject']], value: nvram[t+'_tlsvername'] },
-					{ name: t+'_cn', type: 'text', maxlen: 255, size: 54, value: nvram[t+'_cn'], prefix: '<span id="client_'+t+'_cn">&nbsp;:&nbsp', suffix: '<\/span>'} ] },
+					{ name: t+'_cn', type: 'text', maxlen: 255, size: 54, value: nvram[t+'_cn'], prefix: '<span id="client_'+t+'_cn">&nbsp;:&nbsp;', suffix: '<\/span>'} ] },
 /* TOMATO64-BEGIN */
 				{ title: 'Data Channel Offload (DCO)', name: 'f_'+t+'_dco', type: 'checkbox', value: nvram[t+'_dco'] != 0,
 					suffix: ' <small>requires TUN, UDP, and AEAD ciphers<\/small>' },

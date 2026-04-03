@@ -698,7 +698,7 @@ static void wg_setup_watchdog(const int unit)
 		if ((fp = fopen(buffer, "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "pingme() {\n"
-			            " [ \"3\" != \"%d\" -o \"%d\" = \"0\" ] && return 0\n"
+			            " [ \"%d\" = \"0\" ] && return 0\n"
 			            " local i=1 delay=3\n"
 			            " while [ $i -le 4 ]; do\n"
 			            "  ping -qc1 -W2 -I wg%d %s &>/dev/null && return 0\n"
@@ -719,8 +719,8 @@ static void wg_setup_watchdog(const int unit)
 			            "[ \"$ISUP\" = \"unknown\" -o \"$ISUP\" = \"up\" ] && pingme && exit 0\n"
 			            "logger -t wg-watchdog wg%d stopped? Restarting ...\n"
 			            "service wireguard%d restart\n",
-			            atoi(getNVRAMVar("wg%d_com", unit)), /* only for 'External' (3) mode */ atoi(getNVRAMVar("wg%d_tchk", unit)),
-			            unit, nvram_safe_get("wan_checker"),
+			            atoi(getNVRAMVar("wg%d_tchk", unit)),
+			            unit, (getNVRAMVar("wg%d_tunchk", unit) ? getNVRAMVar("wg%d_tunchk", unit) : nvram_safe_get("wan_checker")),
 			            unit,
 			            unit,
 			            unit,
