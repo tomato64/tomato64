@@ -37,8 +37,7 @@ function internalWiFI(interface) {
 	return new Promise(function(resolve, reject) {
 		var cmd = new XmlHttp();
 		cmd.onCompleted = function(text, xml) {
-			var result = text.replace(/\x0a/g, ' ');
-			resolve(result);
+			resolve(text);
 		};
 		cmd.onError = function(x) {
 			var error = 'ERROR: '+x.replace(/\x0a/g, ' ');
@@ -49,7 +48,142 @@ function internalWiFI(interface) {
 	});
 }
 
-var res0a, res1a, res2a;
+function runShell(command) {
+	return new Promise(function(resolve, reject) {
+		var cmd = new XmlHttp();
+		cmd.onCompleted = function(text, xml) {
+			resolve(text);
+		};
+		cmd.onError = function(x) {
+			var error = 'ERROR: '+x.replace(/\x0a/g, ' ');
+			reject(error);
+		};
+		cmd.post('shell.cgi', 'action=execute&command='+encodeURIComponent(String(command || '').replace(/\r/g, '')));
+	});
+}
+
+function decodeWlStatus(text) {
+	return String(text || '')
+		.replace(/\r/g, '')
+		.replace(/\x0a/g, ' ')
+		.replace(/\\x([0-9A-Fa-f]{2})/g, function(match, p1) {
+			return String.fromCharCode(parseInt(p1, 16));
+		});
+}
+
+function parseWlScanResults(text) {
+	var out = [];
+	var t = String(text || '').replace(/\r/g, '');
+	var blocks = t.split(/(?=SSID:\s*")/);
+
+	for (var b = 0; b < blocks.length; b++) {
+		var block = blocks[b];
+		if (!block.trim()) continue;
+
+		var ssidM = block.match(/SSID:\s*"([^\"]*)"/);
+		var bssidM = block.match(/BSSID:\s*([0-9A-Fa-f:]{17})/);
+		if (!bssidM) continue;
+		var bssid = bssidM[1];
+
+		var rssiM = block.match(/RSSI:\s*(-?\d+)\s*dBm/);
+		var priM = block.match(/Primary channel:\s*(\d+)/);
+		var chanM = block.match(/\bChannel:\s*(\d+)\b/i);
+		var csLine = block.match(/Chanspec:\s*([^\n]+)/i);
+		var csStr = csLine ? csLine[1] : '';
+		var csFreqM = csStr.match(/(\d+(?:\.\d+)?)GHz/i);
+		var csChanM = csStr.match(/channel\s*(\d+)/i);
+		var csWidthM = csStr.match(/(\d+)MHz/i);
+		var modeM = block.match(/Mode:\s*([^\n]+)/i);
+		var bwM = block.match(/Bandwidth:\s*(\d+)\s*MHz/i);
+
+		var ssid = ssidM ? ssidM[1] : '';
+		var rssi = rssiM ? parseInt(rssiM[1], 10) : -999;
+		var control = priM ? priM[1] : (csChanM ? csChanM[1] : (chanM ? chanM[1] : ''));
+		var central = csChanM ? csChanM[1] : control;
+		var width = '20';
+		if (csWidthM)
+			width = csWidthM[1];
+		else if (bwM)
+			width = bwM[1];
+		else if (modeM) {
+			var mode = modeM[1];
+			if (mode.match(/80/))
+				width = '80';
+			else if (mode.match(/40/))
+				width = '40';
+			else if (mode.match(/160/))
+				width = '160';
+		}
+		else if (csChanM && priM) {
+			var diff = Math.abs(parseInt(csChanM[1], 10) - parseInt(priM[1], 10));
+			if (diff >= 14)
+				width = '160';
+			else if (diff >= 6)
+				width = '80';
+			else if (diff >= 2)
+				width = '40';
+		}
+		var freq = csFreqM ? csFreqM[1] : '';
+		if (freq) {
+			if (freq.indexOf('2') === 0)
+				freq = '2.4';
+			else if (freq.indexOf('5') === 0)
+				freq = '5';
+		}
+
+		if (!control || rssi == -999)
+			continue;
+
+		if (!freq)
+			freq = (parseInt(control, 10) > 35) ? '5' : '2.4';
+
+		out.push([ bssid, ssid, rssi, control, width, 100, '', '', '', freq, central, 0 ]);
+	}
+	return out;
+}
+
+function fetchShellScanResults() {
+	var ifnames = [];
+	if ((Number(wl0.radio.value) === 1) && wl0.ifname.value)
+		ifnames.push(wl0.ifname.value);
+
+	if ((Number(wl1.radio.value) === 1) && wl1.ifname.value)
+		ifnames.push(wl1.ifname.value);
+
+	if ((Number(wl2.radio.value) === 1) && wl2.ifname.value)
+		ifnames.push(wl2.ifname.value);
+
+	var cmds = [];
+	for (var i = 0; i < ifnames.length; i++) {
+		var ifn = ifnames[i];
+		cmds.push(runShell('/usr/sbin/wl -i '+ifn+' scan >/dev/null 2>&1; sleep 2; /usr/sbin/wl -i '+ifn+' scanresults'));
+	}
+
+	if (!cmds.length)
+		return Promise.resolve([]);
+
+	return Promise.all(cmds).then(function(texts) {
+		var merged = [];
+		var seen = {};
+		for (var i = 0; i < texts.length; i++) {
+			var parsed = parseWlScanResults(decodeWlStatus(texts[i]));
+			for (var j = 0; j < parsed.length; j++) {
+				var row = parsed[j];
+				if (!row || !row[0] || seen[row[0]])
+					continue;
+
+				seen[row[0]] = 1;
+				merged.push(row);
+			}
+		}
+		return merged;
+	}, function(err) {
+		console.error('wl scanresults fallback failed:', err);
+		return [];
+	});
+}
+
+var res0a = '', res1a = '', res2a = '';
 var wl0 = {
 	ifname: { value: nvram.wl0_ifname },
 	band:   { value: nvram.wl0_nband },
@@ -69,29 +203,31 @@ var wl2 = {
 	mode:   { value: nvram.wl2_mode },
 	closed: { value: nvram.wl2_closed } }
 
-var res0 = internalWiFI(wl0.ifname.value);
-var res1 = internalWiFI(wl1.ifname.value);
-var res2 = internalWiFI(wl2.ifname.value);
-res0.then(function(res) {
-	res0a = res.replace(/\\x([0-9A-Fa-f]{2})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16)));
-}).catch(function(error) {
-	console.error('Error fetching result for eth1:', error);
-});
-res1.then(function(res) {
-	res1a = res.replace(/\\x([0-9A-Fa-f]{2})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16)));
-}).catch(function(error) {
-	console.error('Error fetching result for eth2:', error);
-});
-res2.then(function(res) {
-	res2a = res.replace(/\\x([0-9A-Fa-f]{2})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16)));
-}).catch(function(error) {
-	console.error('Error fetching result for eth3:', error);
-});
-
-if (parseInt(nvram.wl0_nband) === 1) {
+if ((parseInt(nvram.wl0_nband) === 1) && wl1.ifname.value) {
 	var temp = wl0;
 	wl0 = wl1;
 	wl1 = temp;
+}
+
+function refreshInternalWiFi() {
+	function fetch(ifname, enabled, assign, label) {
+		if (!enabled || !ifname) {
+			assign('');
+			return Promise.resolve();
+		}
+		return internalWiFI(ifname).then(function(text) {
+			assign(decodeWlStatus(text));
+		}, function(err) {
+			console.error('Error fetching wl status for '+label+':', err);
+			assign('');
+		});
+	}
+
+	return Promise.all([
+		fetch(wl0.ifname.value, Number(wl0.radio.value) === 1, function(v) { res0a = v; }, 'wl0'),
+		fetch(wl1.ifname.value, Number(wl1.radio.value) === 1, function(v) { res1a = v; }, 'wl1'),
+		fetch(wl2.ifname.value, Number(wl2.radio.value) === 1, function(v) { res2a = v; }, 'wl2')
+	]);
 }
 /* ADVTHEMES-BEGIN */
 function resize_graph(id) {
@@ -109,6 +245,8 @@ function resize_graph(id) {
 
 		dest.setAttribute("width", hsize);
 		dest.setAttribute("height", vsize);
+		dest.setAttribute("viewBox", "0 0 "+hsize+" "+vsize);
+		doit();
 	});
 	observer.observe(graph);
 }
@@ -121,11 +259,72 @@ function hexToDecimal(hexColor) {
 	return red+', '+green+', '+blue;
 }
 
+var SVG_NS = 'http://www.w3.org/2000/svg';
+
+function svgEl(tag, attrs) {
+	var el = document.createElementNS(SVG_NS, tag);
+	if (attrs) {
+		for (var k in attrs)
+			if (attrs.hasOwnProperty(k))
+				el.setAttribute(k, attrs[k]);
+	}
+	return el;
+}
+
+function svgSize(svg) {
+	return {
+		w: Number(svg.getAttribute('width')) || svg.clientWidth || hsize,
+		h: Number(svg.getAttribute('height')) || svg.clientHeight || vsize
+	};
+}
+
 function redraw() {
 	clearCanvas('ellipses2');
 	clearCanvas('ellipses5');
 	drawBoard('ellipses2');
 	drawBoard('ellipses5');
+}
+
+function drawBaseCoordinates() {
+	var max2 = div24 - 2;
+	drawCoordinates('ellipses2', -2, max2, 1, 13, div24, 1);
+	drawCoordinates('ellipses5', 28, 184, 36, 180, div5, 4);
+}
+
+function setLoadingOverlay(id, show) {
+	var ov = E('loading'+id);
+	if (!ov)
+		return;
+
+	ov.style.display = show ? 'flex' : 'none';
+}
+
+function updateLoadingOverlays() {
+	var ellipses2Div = E('tomato-chart2');
+	var ellipses5Div = E('tomato-chart5');
+	var show2 = ellipses2Div && (ellipses2Div.style.display !== 'none');
+	var show5 = ellipses5Div && (ellipses5Div.style.display !== 'none');
+	setLoadingOverlay('2', show2 && !scanReady);
+	setLoadingOverlay('5', show5 && !scanReady);
+}
+
+function updateFreqFilterOptions(setDefault) {
+	var sel = E('freq-filter');
+	if (!sel)
+		return;
+
+	var has24 = (Number(wl0.radio.value) === 1);
+	var has5 = ((Number(wl1.radio.value) === 1) || (Number(wl2.radio.value) === 1));
+	var filterDiv = sel.closest('td');
+
+	if (has24 && has5) {
+		if (filterDiv) filterDiv.style.display = '';
+		if (setDefault) sel.value = '0';
+	}
+	else {
+		if (filterDiv) filterDiv.style.display = 'none';
+		if (setDefault) sel.value = has5 ? '5' : '2.4';
+	}
 }
 
 function recolor() {
@@ -139,6 +338,7 @@ function doit() {
 	ssidshow = E('ssid-show').value;
 	ssidlimit = E('ssid-limit').value;
 	var filter = E('freq-filter').value;
+	updateFreqFilterOptions();
 	if (ssidlimit > 40)
 		ssidlimit = 40;
 
@@ -150,19 +350,23 @@ function doit() {
 
 	var ellipses2Div = E('tomato-chart2');
 	var ellipses5Div = E('tomato-chart5');
-	if (filter == 2.4 && wl0.radio.value == 1) {
-		ellipses2Div.style.display = 'block';
-		ellipses5Div.style.display = 'none';
-	} else if (filter == 5 && wl1.radio.value == 1) {
-		ellipses2Div.style.display = 'none';
-		ellipses5Div.style.display = 'block';
-	} else if  ( filter == 0 && wl0.radio.value == 1 && wl1.radio.value == 1) {
-		ellipses2Div.style.display = 'block';
-		ellipses5Div.style.display = 'block';
-	} else  {
-		ellipses2Div.style.display = 'none';
+	var has24 = (Number(wl0.radio.value) === 1);
+	var has5 = ((Number(wl1.radio.value) === 1) || (Number(wl2.radio.value) === 1));
+
+	if (filter == 2.4) {
+		ellipses2Div.style.display = has24 ? 'block' : 'none';
 		ellipses5Div.style.display = 'none';
 	}
+	else if (filter == 5) {
+		ellipses2Div.style.display = 'none';
+		ellipses5Div.style.display = has5 ? 'block' : 'none';
+	}
+	else {
+		ellipses2Div.style.display = has24 ? 'block' : 'none';
+		ellipses5Div.style.display = has5 ? 'block' : 'none';
+	}
+
+	updateLoadingOverlays();
 }
 
 var colors = [
@@ -209,18 +413,77 @@ var colors = [
 	'#556B2F'  /* DarkOliveGreen */
 ];
 var wlscandata = [];
+var scanReady = false;
 var entries = [];
 var dayOfWeek = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var cmd = null;
 var ref = new TomatoRefresh('update.cgi', 'exec=wlscan', 0, 'tools_wlsurvey_refresh');
 
+function wlHasBand(freq) {
+	if (!wlscandata || !wlscandata.length)
+		return false;
+
+	for (var i = 0; i < wlscandata.length; i++) {
+		if (wlscandata[i] && (wlscandata[i][9] == freq))
+			return true;
+	}
+	return false;
+}
+
+function renderNoData() {
+	redraw();
+	drawBaseCoordinates();
+	updateLoadingOverlays();
+}
+
 ref.refresh = function(text) {
+	var prevScan = wlscandata;
 	try {
 		eval(text);
 	}
 	catch (ex) {
+		console.error('wlscan refresh eval failed:', ex);
+		wlscandata = prevScan;
 	}
-	doit();
+
+	var isError = (wlscandata && (wlscandata.length == 1) && (!wlscandata[0][0]));
+	var hasData = (wlscandata && wlscandata.length && !isError);
+
+	if (isError) {
+		if (!scanReady) {
+			renderNoData();
+			return;
+		}
+		wlscandata = prevScan;
+	}
+	else if (hasData) {
+		scanReady = true;
+	}
+	else if (scanReady && wlscandata && (wlscandata.length === 0)) {
+		wlscandata = prevScan;
+	}
+
+	var enabled24 = (Number(wl0.radio.value) === 1);
+	var enabled5 = ((Number(wl1.radio.value) === 1) || (Number(wl2.radio.value) === 1));
+	var hasBand24 = wlHasBand('2.4');
+	var hasBand5 = wlHasBand('5');
+	var needsFallback = (enabled24 && !hasBand24) || (enabled5 && !hasBand5);
+
+	var scanP = Promise.resolve();
+	if (needsFallback || (!scanReady && (!wlscandata || (wlscandata.length === 0)))) {
+		scanP = fetchShellScanResults().then(function(list) {
+			if (list && list.length) {
+				wlscandata = list;
+				scanReady = true;
+			}
+		});
+	}
+
+	Promise.all([refreshInternalWiFi(), scanP]).then(function() {
+		doit();
+	}, function() {
+		doit();
+	});
 }
 var sg = new TomatoGrid();
 
@@ -232,113 +495,135 @@ sg.setup = function() {
 }
 
 function drawNoise(board, style) {
-	var noise1, noise2, noise;
-	var canvas = E(board);
-	var ctx = canvas.getContext('2d');
-	if (wl0.radio.value == 1 && board == 'ellipses2') {
-		if (res0a !== null) noise = ((-wl0.noise - 10) * (canvas.height / 100) * (10 / vdiv));
-		var noiseV = Number(wl0.noise);
+	var noise, noiseV;
+	var svg = E(board);
+	var sz = svgSize(svg);
+
+	if ((Number(wl0.radio.value) === 1) && (board == 'ellipses2') && res0a && (wl0.noise != null)) {
+		noise = ((-wl0.noise - 10) * (sz.h / 100) * (10 / vdiv));
+		noiseV = Number(wl0.noise);
 	}
-	if (wl1.radio.value == 1 && board == 'ellipses5') {
-		res1 = String(res1).replace(/\\x0a/g, ',').match(/\d+/g);
-		if (res1a !== null) noise = ((-wl1.noise - 10) * (canvas.height / 100) * (10 / vdiv));
-		var noiseV = Number(wl1.noise);
+	if ((Number(wl1.radio.value) === 1) && (board == 'ellipses5') && res1a && (wl1.noise != null)) {
+		noise = ((-wl1.noise - 10) * (sz.h / 100) * (10 / vdiv));
+		noiseV = Number(wl1.noise);
 	}
-	if (wl2.radio.value == 1 && board == 'ellipses5') {
-		res2 = String(res2).replace(/\\x0a/g, ',').match(/\d+/g);
-		if (res2a !== null) noise = ((-wl2.noise - 10) * (canvas.height / 100) * (10 / vdiv));
-		var noiseV = Number(wl2.noise);
+	if ((Number(wl2.radio.value) === 1) && (board == 'ellipses5') && res2a && (wl2.noise != null)) {
+		noise = ((-wl2.noise - 10) * (sz.h / 100) * (10 / vdiv));
+		noiseV = Number(wl2.noise);
 	}
 
-	if (typeof noise1 !== 'undefined' && typeof noise2 !== 'undefined')
-		noise = Math.max(noise1, noise2);
+	if (!noise)
+		return;
 
-	ctx.beginPath();
-	ctx.save();
-	if (noise != 0) {
-		ctx.lineWidth = 0.2;
-		ctx.moveTo(0, noise + 1);
-		ctx.lineTo(canvas.width, noise + 1);
-		ctx.strokeStyle = 'rgba(80,0,0,0.5)';
-		var density = (style / 100);
-		ctx.fillStyle = 'rgba(189,158,0'+','+density / 3+')';
-		ctx.stroke();
-		ctx.fillRect(0, noise, canvas.width, noise);
-		ctx.fillStyle = '#660000';
-		ctx.textBaseline = 'center';
-		ctx.textAlign = 'right';
-		ctx.fillText('noise '+noiseV, (canvas.width - 14), noise);
-		ctx.fill();
-	}
-	ctx.restore();
-	ctx.closePath();
+	var density = (style / 100);
+	svg.appendChild(svgEl('line', {
+		x1: 0, y1: noise + 1,
+		x2: sz.w, y2: noise + 1,
+		stroke: 'rgba(80,0,0,0.5)',
+		'stroke-width': 0.2
+	}));
+	svg.appendChild(svgEl('rect', {
+		x: 0, y: noise,
+		width: sz.w,
+		height: noise,
+		fill: 'rgba(189,158,0,'+(density / 3)+')'
+	}));
+	svg.appendChild(svgEl('text', {
+		x: (sz.w - 16),
+		y: noise,
+		fill: '#660000',
+		'font-size': 10,
+		'font-family': 'Arial Narrow',
+		'font-weight': 'normal',
+		'pointer-events': 'none',
+		'text-anchor': 'end',
+		'dominant-baseline': 'middle'
+	})).appendChild(document.createTextNode('noise '+noiseV));
 }
 
 function drawEllipse(c = -100, m = 20, q, col, ssid, noise, style, sshow) {
+	var mf, cf, rf;
+	var svg;
+	var sz;
 	if (c < 35) {
-		var canvas = E('ellipses2');
-		var ctx = canvas.getContext('2d');
+		svg = E('ellipses2');
+		sz = svgSize(svg);
 		if (m == 20)
-			mf = (canvas.width / div24) * 2.20;
+			mf = (sz.w / div24) * 2.20;
 		else if (m == 40)
-			mf = (canvas.width / div24) * 4.2;
+			mf = (sz.w / div24) * 4.2;
 
 		if (c == 1)
-			cf = (canvas.width / div24) * 3;
+			cf = (sz.w / div24) * 3;
 		else if (c == 14)
-			cf = (canvas.width / div24) * 18;
+			cf = (sz.w / div24) * 18;
 		else
-			cf = ((canvas.width / div24) * 3) + ((canvas.width / div24) * (c - 1));
+			cf = ((sz.w / div24) * 3) + ((sz.w / div24) * (c - 1));
 
-		rf = q * (canvas.height / 100) * (10 / vdiv);
+		rf = q * (sz.h / 100) * (10 / vdiv);
 	}
 	else if (c > 35) {
-		var canvas  = E('ellipses5');
-		var ctx = canvas.getContext('2d');
+		svg  = E('ellipses5');
+		sz = svgSize(svg);
+		m = parseInt(m, 10);
 		var cc = c;
+		var xStep = (sz.w / (184 - 28));
 		if (m == 20)
-			mf = ((canvas.width / div5) * 0.5);
-		else if (m == 40) {
-			mf = ((canvas.width / div5) * 1);
-			cc = c;
-		}
-		else if (m == 80) {
-			mf = ((canvas.width / div5) * 2);
-			cc = c;
-		}
+			mf = xStep * 2;
+		else if (m == 40)
+			mf = xStep * 4;
+		else if (m == 80)
+			mf = xStep * 8;
+		else if (m == 160)
+			mf = xStep * 16;
+		else
+			mf = xStep * 2;
+
 		cc = cc - 36 + 4;
-		cf = (canvas.width / div5) + ((canvas.width / div5) * (cc / 4));
-		rf = q * (canvas.height / 100) * (10 / vdiv); /* adapt calculation for -10 to -100 only */
+		cf = (sz.w / div5) + ((sz.w / div5) * (cc / 4));
+		rf = q * (sz.h / 100) * (10 / vdiv); /* adapt calculation for -10 to -100 only */
 	}
-	ctx.beginPath();
-	ctx.save();
+	if (!svg)
+		return;
+
 	var decimalColor = hexToDecimal(col);
-	ctx.ellipse(cf, vsize, mf, rf, 0, 0, 2 * Math.PI, false);
-	ctx.strokeStyle = 'rgba('+decimalColor+', 1)';
-	if (style == '0') {
-		ctx.fillStyle = 'rgba('+decimalColor+', 0)';
-		ctx.lineWidth = 1;
-	}
-	else {
-		var density = (style / 100);
-		ctx.fillStyle = 'rgba('+decimalColor+', '+density+')';
-	}
-	ctx.stroke();
-	ctx.fill();
-	ctx.restore();
-	ctx.save();
-	ctx.fillStyle = '#000000';
-	ctx.font = sshow+'px Arial';
-	ctx.textAlign = 'center';
-	ctx.textBaseline = 'middle';
+	var strokeWidth = 1;
+	var fillAlpha = 0;
+	if (style != '0')
+		fillAlpha = (style / 100);
+
+	svg.appendChild(svgEl('ellipse', {
+		cx: cf,
+		cy: sz.h,
+		rx: mf,
+		ry: rf,
+		stroke: 'rgba('+decimalColor+', 1)',
+		'stroke-width': strokeWidth,
+		fill: 'rgba('+decimalColor+', '+fillAlpha+')'
+	}));
+
 	var lines = ssid.split('¬');
-	ctx.fillText(lines[0], cf, (vsize + 1 + sshow / 2) - rf);
-	if (typeof lines[1] !== 'undefined' ) {
-		ctx.fillText(lines[1], cf, (vsize + 1 + sshow * 1.5) - rf);
-		ctx.fillText(lines[2], cf, (vsize + 1 + sshow * 2.5) - rf);
+	if (sshow != '0') {
+		var y0 = (sz.h + 1 + (sshow / 2)) - rf;
+		var t = svgEl('text', {
+			x: cf,
+			y: y0,
+			fill: '#000000',
+			'font-size': sshow,
+			'font-family': 'Arial',
+			'pointer-events': 'none',
+			'text-anchor': 'middle',
+			'dominant-baseline': 'middle'
+		});
+		t.appendChild(document.createTextNode(lines[0] || ''));
+		if (typeof lines[1] !== 'undefined') {
+			t.appendChild(svgEl('tspan', { x: cf, dy: sshow }));
+			t.lastChild.appendChild(document.createTextNode(lines[1] || ''));
+			t.appendChild(svgEl('tspan', { x: cf, dy: sshow }));
+			t.lastChild.appendChild(document.createTextNode(lines[2] || ''));
+		}
+		svg.appendChild(t);
 	}
-	ctx.restore();
-	ctx.closePath();
 }
 
 sg.populate = function(style, sshow, filter) {
@@ -348,18 +633,31 @@ sg.populate = function(style, sshow, filter) {
 
 	redraw();
 
+	if (!scanReady && (!wlscandata || (wlscandata.length === 0))) {
+		drawBaseCoordinates();
+		setMsg('');
+		updateLoadingOverlays();
+		return;
+	}
+
 	var lim2 = 1;
 	var lim5 = 1;
 	var col2 = 0;
 	var col5 = colors.length - 1;
 
 	if ((wlscandata.length == 1) && (!wlscandata[0][0])) {
-		setMsg('error: '+wlscandata[0][1]);
+		drawBaseCoordinates();
+		setMsg('');
 		return;
 	}
 
 	drawFT();
 	wlscandata.sort((b, a) => a[2] - b[2]);
+
+	var currentBSSIDs = {};
+	for (i = 0; i < wlscandata.length; ++i) {
+		if (wlscandata[i][0]) currentBSSIDs[wlscandata[i][0]] = true;
+	}
 
 	for (i = 0; i < wlscandata.length; ++i) {
 		s = wlscandata[i];
@@ -378,7 +676,7 @@ sg.populate = function(style, sshow, filter) {
 		}
 		e.lastSeen = new Date();
 		e.bssid = s[0];
-		if (s[1] === '')
+		if (!s[1])
 			e.ssid = '🕶️';
 		else
 			e.ssid = s[1];
@@ -480,9 +778,7 @@ sg.populate = function(style, sshow, filter) {
 		          (e.qual < 0 ? '' : '<small>'+e.qual+'<\/small><br><img src="bar'+MIN(MAX(Math.floor(e.qual / 12), 1), 6)+'.gif" id="bar_'+i+'" alt="">'),
 		          ''+e.control+'/'+e.channel, '<small>'+e.cap, '<\/small>'+e.rates], false);
 	}
-	var max2 = div24 - 2 ;
-	drawCoordinates('ellipses2', -2, max2, 1, 13, div24, 1); /* min, max, display min, display max, total num, increment */
-	drawCoordinates('ellipses5', 28, 184, 36, 180, div5, 4);
+	drawBaseCoordinates();
 	s = '';
 	if (useAjax())
 		s = added+' added, '+removed+' removed, ';
@@ -491,7 +787,7 @@ sg.populate = function(style, sshow, filter) {
 	s += '<br><br><small>Last updated: '+(new Date()).toWHMS()+'<\/small>';
 	setMsg(s);
 
-	wlscandata = [];
+	updateLoadingOverlays();
 }
 
 sg.sortCompare = function(a, b) {
@@ -540,83 +836,55 @@ function setMsg(msg) {
 }
 
 function drawFT(show) {
-	var noiseMatch, ssidMatch, bssidMatch, rssiMatch, channelMatch, chanspecMatch;
+	function parseStatus(wl, status) {
+		var m;
+		if (!status)
+			return;
 
-	if (typeof res0a === 'undefined')
-		return;
+		m = status.match(/noise: (-?\d+)/);
+		wl.noise = m ? m[1] : null;
+		m = status.match(/SSID: "([^"]*)"/);
+		wl.ssid = m ? m[1] : '';
+		m = status.match(/BSSID: (\S+)/);
+		wl.bssid = m ? m[1] : null;
 
-	noiseMatch = res0a.match(/noise: (-?\d+)/);
-	wl0.noise = noiseMatch ? noiseMatch[1] : null;
-	ssidMatch = res0a.match(/SSID: "([^"]+)"/);
-	wl0.ssid = ssidMatch ? ssidMatch[1] : null;
-	bssidMatch = res0a.match(/BSSID: (\S+)/);
-	wl0.bssid = bssidMatch ? bssidMatch[1] : null;
-	if (wl0.mode.value === 'ap')
-		wl0.rssi = -10;
-	else {
-		rssiMatch = res0a.match(/RSSI:\s*(-?\d+)\s*dBm/);
-		wl0.rssi = rssiMatch ? parseInt(rssiMatch[1], 10) : null;
+		if (wl.mode.value === 'ap')
+			wl.rssi = -10;
+		else {
+			m = status.match(/RSSI:\s*(-?\d+)\s*dBm/);
+			wl.rssi = m ? parseInt(m[1], 10) : null;
+		}
+		m = status.match(/Primary channel: (\d+)/);
+		wl.controlchannel = m ? m[1] : null;
+		m = status.match(/Chanspec: (\d+(?:\.\d+)?)GHz channel (\d+) (\d+)MHz/);
+		wl.centralchannel = m ? m[2] : null;
+		wl.width = m ? m[3] : null;
 	}
-	channelMatch = res0a.match(/Primary channel: (\d+)/);
-	wl0.controlchannel = channelMatch ? channelMatch[1] : null;
-	chanspecMatch = res0a.match(/Chanspec: (\d+(?:\.\d+)?)GHz channel (\d+) (\d+)MHz/);
-	wl0.centralchannel = chanspecMatch ? chanspecMatch[2] : null;
-	wl0.width = chanspecMatch ? chanspecMatch[3] : null;
-	noiseMatch = res1a.match(/noise: (-?\d+)/);
-	wl1.noise = noiseMatch ? noiseMatch[1] : null;
-	ssidMatch = res1a.match(/SSID: "([^"]+)"/);
-	wl1.ssid = ssidMatch ? ssidMatch[1] : null;
-	bssidMatch = res1a.match(/BSSID: (\S+)/);
-	wl1.bssid = bssidMatch ? bssidMatch[1] : null;
-	if (wl1.mode.value === 'ap')
-		wl1.rssi = -10;
-	else {
-		rssiMatch = res1a.match(/RSSI:\s*(-?\d+)\s*dBm/);
-		wl1.rssi = rssiMatch ? parseInt(rssiMatch[1], 10) : null;
+
+	function pushInternal(wl) {
+		var freq = (Number(wl.band.value) === 1) ? '5' : '2.4';
+		if ((Number(wl.radio.value) !== 1) || !wl.bssid)
+			return;
+
+		var internal = [ wl.bssid, wl.ssid, wl.rssi, wl.controlchannel, wl.width, 100, '', '', '', freq, wl.centralchannel, 0 ];
+		for (var i = 0; i < wlscandata.length; ++i) {
+			if (wlscandata[i] && (wlscandata[i][0] === wl.bssid))
+				return;
+		}
+		wlscandata.push(internal);
 	}
-	channelMatch = res1a.match(/Primary channel: (\d+)/);
-	wl1.controlchannel = channelMatch ? channelMatch[1] : null;
-	chanspecMatch = res1a.match(/Chanspec: (\d+(?:\.\d+)?)GHz channel (\d+) (\d+)MHz/);
-	wl1.centralchannel = chanspecMatch ? chanspecMatch[2] : null;
-	wl1.width = chanspecMatch ? chanspecMatch[3] : null;
-	noiseMatch = res2a.match(/noise: (-?\d+)/);
-	wl2.noise = noiseMatch ? noiseMatch[1] : null;
-	ssidMatch = res2a.match(/SSID: "([^"]+)"/);
-	wl2.ssid = ssidMatch ? ssidMatch[1] : null;
-	bssidMatch = res2a.match(/BSSID: (\S+)/);
-	wl2.bssid = bssidMatch ? bssidMatch[1] : null;
-	wl2.bssid = bssidMatch ? bssidMatch[1] : null;
-	if (wl2.mode.value === 'ap')
-		wl2.rssi = -10;
-	else {
-		rssiMatch = res2a.match(/RSSI:\s*(-?\d+)\s*dBm/);
-		wl2.rssi = rssiMatch ? parseInt(rssiMatch[1], 10) : null;
-	}
-	channelMatch = res2a.match(/Primary channel: (\d+)/);
-	wl2.controlchannel = channelMatch ? channelMatch[1] : null;
-	chanspecMatch = res2a.match(/Chanspec: (\d+(?:\.\d+)?)GHz channel (\d+) (\d+)MHz/);
-	wl2.centralchannel = chanspecMatch ? chanspecMatch[2] : null;
-	wl2.width = chanspecMatch ? chanspecMatch[3] : null;
-	if (Number(wl0.radio.value) === 1) {
-		var internalWl0 = [ wl0.bssid, wl0.ssid, wl0.rssi, wl0.controlchannel, wl0.width, 100, '', '', '', '2.4', wl0.centralchannel, 0 ];
-		if (wlscandata.find(obj => obj.bssid === wl0.bssid.value) == -1)
-			wlscandata.push(internalWl0);
-	}
-	if (Number(wl1.radio.value) === 1) {
-		var internalWl1 = [ wl1.bssid, wl1.ssid, wl1.rssi, wl1.controlchannel, wl1.width, 100, '', '', '', '5', wl1.centralchannel, 0 ];
-		if (wlscandata.find(obj => obj.bssid === wl1.bssid.value) == -1)
-			wlscandata.push(internalWl1);
-	}
-	if (Number(wl2.radio.value) === 1) {
-		var internalWl2 = [ wl2.bssid, wl2.ssid, wl2.rssi, wl2.controlchannel, wl2.width, 100, '', '', '', '5', wl2.centralchannel, 0 ];
-		if (wlscandata.find(obj => obj.bssid === wl2.bssid.value) == -1)
-			wlscandata.push(internalWl2);
-	}
+
+	parseStatus(wl0, res0a);
+	parseStatus(wl1, res1a);
+	parseStatus(wl2, res2a);
+	pushInternal(wl0);
+	pushInternal(wl1);
+	pushInternal(wl2);
 }
 
 function drawCoordinates(a, b, c, d, e, f, g) {
-	var canvas = E(a);
-	var ctx = canvas.getContext('2d');
+	var svg = E(a);
+	var sz = svgSize(svg);
 	var minX = b;
 	var maxX = c;
 	var minV = d;
@@ -625,13 +893,14 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 	var incrementX = g;
 	var fontSize = 10;
 	var fontFamily = 'Arial Narrow';
-	ctx.font = fontSize+'px '+fontFamily;
-	/* draw x-axis */
-	ctx.beginPath();
-	ctx.moveTo(0, canvas.height);
-	ctx.lineTo(canvas.width, canvas.height);
-	ctx.fillStyle = 'black';
-	ctx.textBaseline = 'bottom';
+
+	svg.appendChild(svgEl('line', {
+		x1: 0, y1: sz.h - 0.05,
+		x2: sz.w, y2: sz.h - 0.05,
+		stroke: 'black',
+		'stroke-width': 1
+	}));
+
 	if (a == 'ellipses2') {
 		for (var i = 0; i <= numDivisions; i++) {
 			var x;
@@ -643,14 +912,30 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 				x = minX + i * incrementX;
 
 			if (x >= 1 && x <= 13) {
-				var xPos = (canvas.width / (maxX - minX)) * (x - minX);
-				ctx.textAlign = 'center';
-				ctx.fillText(x, xPos, canvas.height + 2);
+				var xPos = (sz.w / (maxX - minX)) * (x - minX);
+				svg.appendChild(svgEl('text', {
+					x: xPos,
+					y: sz.h,
+					fill: 'black',
+					'font-size': fontSize,
+					'font-family': fontFamily,
+					'pointer-events': 'none',
+					'text-anchor': 'middle',
+					'dominant-baseline': 'text-after-edge'
+				})).appendChild(document.createTextNode(x));
 			}
 		}
-		ctx.textAlign = 'center';
-		xPos = (canvas.width / (maxX - minX)) * 18
-		ctx.fillText(14, xPos, canvas.height + 2);
+		xPos = (sz.w / (maxX - minX)) * 18;
+		svg.appendChild(svgEl('text', {
+			x: xPos,
+			y: sz.h,
+			fill: 'black',
+			'font-size': fontSize,
+			'font-family': fontFamily,
+			'pointer-events': 'none',
+			'text-anchor': 'middle',
+			'dominant-baseline': 'text-after-edge'
+		})).appendChild(document.createTextNode(14));
 	}
 	else if (a == 'ellipses5') {
 		for (var i = 0; i <= numDivisions; i++) {
@@ -663,9 +948,17 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 				x = minX + (i + 1) * incrementX;
 
 			if ((x > 32 && x <= 64) || (x >= 100 && x <= 144)) {
-				var xPos = (canvas.width / (maxX - minX)) * (x - minX);
-				ctx.textAlign = 'center';
-				ctx.fillText(x, xPos, canvas.height + 2);
+				var xPos = (sz.w / (maxX - minX)) * (x - minX);
+				svg.appendChild(svgEl('text', {
+					x: xPos,
+					y: sz.h,
+					fill: 'black',
+					'font-size': fontSize,
+					'font-family': fontFamily,
+					'pointer-events': 'none',
+					'text-anchor': 'middle',
+					'dominant-baseline': 'text-after-edge'
+				})).appendChild(document.createTextNode(x));
 			}
 		}
 		for (var i = 0; i <= div5; i++) {
@@ -678,9 +971,17 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 				x = 33 + (i + 1) * 4;
 
 			if (x >= 149 && x <= 177) {
-				var xPos = (canvas.width / (184 - 33)) * (x - 33);
-				ctx.textAlign = 'center';
-				ctx.fillText(x, xPos, canvas.height + 2);
+				var xPos = (sz.w / (184 - 33)) * (x - 33);
+				svg.appendChild(svgEl('text', {
+					x: xPos,
+					y: sz.h,
+					fill: 'black',
+					'font-size': fontSize,
+					'font-family': fontFamily,
+					'pointer-events': 'none',
+					'text-anchor': 'middle',
+					'dominant-baseline': 'text-after-edge'
+				})).appendChild(document.createTextNode(x));
 			}
 		}
 	}
@@ -689,68 +990,98 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 		var y = -10 * i;
 
 		if (y !== -10 && y >= -90) {
-			var yPos = (canvas.height / (vdiv * 10)) * (-y - 10);
-
-			ctx.textBaseline = 'middle';
-			ctx.fillText(y.toString(), 7, yPos);
-			ctx.fillText(y.toString(), hsize - 7, yPos);
+			var yPos = (sz.h / (vdiv * 10)) * (-y - 10);
+			svg.appendChild(svgEl('text', {
+				x: 1,
+				y: yPos,
+				fill: 'black',
+				'font-size': fontSize,
+				'font-family': fontFamily,
+				'pointer-events': 'none',
+				'text-anchor': 'start',
+				'dominant-baseline': 'middle'
+			})).appendChild(document.createTextNode(y.toString()));
+			svg.appendChild(svgEl('text', {
+				x: sz.w - 1,
+				y: yPos,
+				fill: 'black',
+				'font-size': fontSize,
+				'font-family': fontFamily,
+				'pointer-events': 'none',
+				'text-anchor': 'end',
+				'dominant-baseline': 'middle'
+			})).appendChild(document.createTextNode(y.toString()));
 		}
 	}
 }
 
 function drawBoard(can) {
 	var p = 0;
-	var canvas = E(can);
-	var ctx = canvas.getContext('2d');
-	ctx.beginPath();
+	var svg = E(can);
+	var sz = svgSize(svg);
+	var frag = document.createDocumentFragment();
+	var w = sz.w;
+	var h = sz.h;
+	var gridColor = (can == 'ellipses2') ? '#f2f2f2' : '#f4f4f4';
+	var shade = 'rgba(112,66,20,0.06)';
+
 	if (can == 'ellipses2') {
-		for (var x = 0; x <= hsize; x += (canvas.width / div24)) {
-			ctx.moveTo(0.5 + x + p, p);
-			ctx.lineTo(0.5 + x + p, vsize + p);
+		for (var x = 0; x <= hsize; x += (w / div24)) {
+			frag.appendChild(svgEl('line', {
+				x1: 0.5 + x + p, y1: p,
+				x2: 0.5 + x + p, y2: vsize + p,
+				stroke: gridColor,
+				'stroke-width': 1
+			}));
 		}
-		for (var x = 0; x <= vsize; x += (canvas.height / vdiv)) {
-			ctx.moveTo(p, 0.5 + x + p);
-			ctx.lineTo(hsize + p, 0.5 + x + p);
+		for (var x = 0; x <= vsize; x += (h / vdiv)) {
+			frag.appendChild(svgEl('line', {
+				x1: p, y1: 0.5 + x + p,
+				x2: hsize + p, y2: 0.5 + x + p,
+				stroke: gridColor,
+				'stroke-width': 1
+			}));
 		}
-		ctx.strokeStyle = '#f2f2f2';
-		ctx.stroke();
-		ctx.rect(0, 0, canvas.width / div24 * 3, vsize);
-		ctx.rect(canvas.width / div24 * 15, 0, canvas.width / div24 * 11, vsize);
-		ctx.fillStyle = 'rgba(112,66,20,0.06)';
-		ctx.fill();
-		ctx.rect(canvas.width / div24 * 13, 0, canvas.width / div24 * 15, vsize);
-		ctx.fillStyle = 'rgba(112,66,20,0.06)';
-		ctx.fill();
+		frag.appendChild(svgEl('rect', { x: 0, y: 0, width: (w / div24) * 3, height: vsize, fill: shade }));
+		frag.appendChild(svgEl('rect', { x: (w / div24) * 15, y: 0, width: (w / div24) * 11, height: vsize, fill: shade }));
+		frag.appendChild(svgEl('rect', { x: (w / div24) * 13, y: 0, width: (w / div24) * 15, height: vsize, fill: shade }));
 	}
 	else if (can == 'ellipses5') {
-		for (var x = 0; x <= hsize; x += (canvas.width / div5)) {
-			ctx.moveTo(0.5 + x + p, p);
-			ctx.lineTo(0.5 + x + p, vsize + p);
+		for (var x = 0; x <= hsize; x += (w / div5)) {
+			frag.appendChild(svgEl('line', {
+				x1: 0.5 + x + p, y1: p,
+				x2: 0.5 + x + p, y2: vsize + p,
+				stroke: gridColor,
+				'stroke-width': 1
+			}));
 		}
-		for (var x = 0; x <= vsize; x += (canvas.height / vdiv)) {
-			ctx.moveTo(p, 0.5 + x + p);
-			ctx.lineTo(hsize + p, 0.5 + x + p);
+		for (var x = 0; x <= vsize; x += (h / vdiv)) {
+			frag.appendChild(svgEl('line', {
+				x1: p, y1: 0.5 + x + p,
+				x2: hsize + p, y2: 0.5 + x + p,
+				stroke: gridColor,
+				'stroke-width': 1
+			}));
 		}
-		ctx.strokeStyle = '#f4f4f4';
-		ctx.stroke();
-		ctx.rect(0, 0, (canvas.width / div5) * 2, vsize);
-		ctx.rect(canvas.width / div5 * 9, 0, canvas.width / div5 * 9, vsize);
-		ctx.rect(canvas.width / div5 * 37, 0, canvas.width, vsize);
-		ctx.fillStyle = 'rgba(112,66,20,0.06)';
-		ctx.fill();
-		ctx.rect(canvas.width / div5 * 29.3, 0, canvas.width / div5 * 0.6, vsize);
-		ctx.fillStyle = 'rgba(112,66,20,0.06)';
-		ctx.fill();
+		frag.appendChild(svgEl('rect', { x: 0, y: 0, width: (w / div5) * 2, height: vsize, fill: shade }));
+		frag.appendChild(svgEl('rect', { x: (w / div5) * 9, y: 0, width: (w / div5) * 9, height: vsize, fill: shade }));
+		frag.appendChild(svgEl('rect', { x: (w / div5) * 37, y: 0, width: w, height: vsize, fill: shade }));
+		frag.appendChild(svgEl('rect', { x: (w / div5) * 29.3, y: 0, width: (w / div5) * 0.6, height: vsize, fill: shade }));
 	}
-	ctx.closePath();
+
+	svg.appendChild(frag);
 }
 
 function clearCanvas(canvas) {
-	canvas = E(canvas);
-	var ctx = canvas.getContext('2d');
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.fillStyle = '#fdfdfd';
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	var svg = E(canvas);
+	while (svg.firstChild)
+		svg.removeChild(svg.firstChild);
+
+	var sz = svgSize(svg);
+	if (!svg.getAttribute('viewBox'))
+		svg.setAttribute('viewBox', '0 0 '+sz.w+' '+sz.h);
+
+	svg.appendChild(svgEl('rect', { x: 0, y: 0, width: sz.w, height: sz.h, fill: '#fdfdfd' }));
 }
 
 function earlyInit() {
@@ -771,10 +1102,12 @@ function init() {
 	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
 		toggleVisibility(cprefix, 'notes');
 
-	E('expire-time').selectedIndex = cookie.get(cprefix+'_expire_time') || 9;
+	E('expire-time').selectedIndex = cookie.get(cprefix+'_expire_time') || 5;
 	E('ssid-limit').value = cookie.get(cprefix+'_ssid_limit') || 20;
 	E('fill-style').selectedIndex = cookie.get(cprefix+'_fill_style') || 7;
 	E('ssid-show').selectedIndex = cookie.get(cprefix+'_ssid_show') || 4;
+
+	updateFreqFilterOptions(true);
 
 	var ellipses2Div = E('tomato-chart2');
 	var ellipses5Div = E('tomato-chart5');
@@ -795,11 +1128,33 @@ function init() {
 /* ADVTHEMES-END */
 	sg.recolor();
 
-	ref.initPage(0, 1);
+	renderNoData();
+
+	ref.initPage(0, 15);
 	if (!ref.running)
 		ref.once = 1;
 
 	ref.start();
+
+	/* fast-poll every 1 second until we have results for all enabled bands */
+	var pollCount = 0;
+	var fastPoll = setInterval(function() {
+		pollCount++;
+		var has24 = (Number(wl0.radio.value) === 1);
+		var has5 = ((Number(wl1.radio.value) === 1) || (Number(wl2.radio.value) === 1));
+		var got24 = false, got5 = false;
+
+		for (var i = 0; i < wlscandata.length; i++) {
+			if (wlscandata[i][9] == '2.4') got24 = true;
+			if (wlscandata[i][9] == '5') got5 = true;
+		}
+
+		var ready = (!has24 || got24) && (!has5 || got5);
+		if (ready || pollCount > 10)
+			clearInterval(fastPoll);
+		else
+			ref.refresh('');
+	}, 1000);
 }
 </script>
 </head>
@@ -820,13 +1175,13 @@ function init() {
 <div class="section">
 	<div id="tomato-chart2">Channel Congestion: <b>2.4 GHz</b><br>
 		<script>
-			W('<div id="graph2"><canvas id="ellipses2" width="'+hsize+'" height="'+vsize+'" style="border:0px"><\/canvas><\/div>');
+			W('<div id="graph2" style="position:relative"><div id="loading2" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none">Loading... <img src="spin.svg" alt="" style="transform:scale(3);filter:opacity(0.2);padding-left: 20px"><\/div><svg id="ellipses2" width="'+hsize+'" height="'+vsize+'" viewBox="0 0 '+hsize+' '+vsize+'" xmlns="http://www.w3.org/2000/svg" style="border:0px"><\/svg><\/div>');
 		</script>
 	</div>
 	<br>
 	<div id="tomato-chart5">Channel Congestion: <b>5 GHz</b><br>
 		<script>
-			W('<div id="graph5"><canvas id="ellipses5" width="'+hsize+'" height="'+vsize+'" style="border:0px"><\/canvas><\/div>');
+			W('<div id="graph5" style="position:relative"><div id="loading5" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none">Loading... <img src="spin.svg" alt="" style="transform:scale(3);filter:opacity(0.2);padding-left: 20px;"><\/div><svg id="ellipses5" width="'+hsize+'" height="'+vsize+'" viewBox="0 0 '+hsize+' '+vsize+'" xmlns="http://www.w3.org/2000/svg" style="border:0px"><\/svg><\/div>');
 		</script>
 	</div>
 	<br>
