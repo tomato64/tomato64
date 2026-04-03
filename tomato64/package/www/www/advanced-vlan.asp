@@ -1803,7 +1803,7 @@ function init() {
 				if ((trunk_vlan_supported) || (nvram.trunk_vlan_so == '1')) {
 /* MIPSR2P-NO-END */
 					W('<li>Avoid VID 0: 802.1Q treats it as untagged (priority only).<\/li>\n');
-					W('<li>Trunking tip: Skip VID 1 (often reserved for management by other vendors).<\/li>\n');				}
+					W('<li>Trunking tip: Skip VID 1 (often reserved for management by other vendors).<\/li>\n');
 				}
 			</script>
 		</ul>
