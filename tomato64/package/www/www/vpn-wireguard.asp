@@ -1879,7 +1879,7 @@ function verifyFields(focused, quiet) {
 		if (!v_range('_wg'+i+'_ka', quiet || !ok, 0, 99)) ok = 0;
 
 		/* verify delay time */
-		if (!v_range('_wg'+i+'_sleep', quiet || !ok, 1, 60)) ok = 0;
+		if (!v_range('_wg'+i+'_sleep', quiet || !ok, 1, 99)) ok = 0;
 
 		/* verify peer dns */
 		var peer_dns = E('_wg'+i+'_peer_dns');
@@ -2135,7 +2135,7 @@ function init() {
 				{ title: 'Enable on Start', name: 'f_'+t+'_enable', type: 'checkbox', value: nvram[t+'_enable'] == 1 },
 				{ title: 'Poll Interval', name: t+'_poll', type: 'text', maxlen: 2, size: 5, value: nvram[t+'_poll'], suffix: ' <small>minutes; 0 to disable<\/small>' },
 					{ title: 'Also check out the tunnel', indent: 2, name: 'f_'+t+'_tchk', type: 'checkbox', value: nvram[t+'_tchk'] != 0, suffix: ' <small>pings <% nv("wan_checker"); %> through tunnel (nvram wan_checker)<\/small>' },
-				{ title: 'Delay at startup', name: t+'_sleep', type: 'text', maxlen: 5, size: 7, value: nvram[t+'_sleep'], suffix: ' <small>seconds; range: 1 - 60; default: 1<\/small>' },
+				{ title: 'Delay at startup', name: t+'_sleep', type: 'text', maxlen: 5, size: 7, value: nvram[t+'_sleep'], suffix: ' <small>seconds; range: 1 - 99; default: 1<\/small>' },
 				{ title: 'Config file', name: t+'_file', type: 'text', placeholder: 'optional', maxlen: 64, size: 64, value: nvram[t+'_file'] },
 				{ title: 'Port', name: t+'_port', type: 'text', maxlen: 5, size: 10, placeholder: (51820+i), value: nvram[t+'_port'] },
 				{ title: 'Private Key', multi: [
