@@ -892,7 +892,7 @@ static void wg_setup_watchdog(const int unit)
 	if ((nvi = atoi(getNVRAMVar("wg%d_poll", unit))) > 0) {
 		snprintf(buffer, BUF_SIZE_64, WG_SCRIPTS_DIR"/watchdog-wg%d.sh", unit);
 
-		val = getNVRAMVar("vpnc%d_tunchk", unit);
+		val = getNVRAMVar("wg%d_tunchk", unit);
 		ipchk = (val && *val) ? val : nvram_safe_get("wan_checker");
 
 		if ((fp = fopen(buffer, "w"))) {
