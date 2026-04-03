@@ -804,6 +804,9 @@ static const nvset_t nvset_list[] = {
 #ifdef TCONFIG_BCMNAT
 	{ "bcmnat_disable",		V_01				},
 #endif
+#ifdef TCONFIG_BCMARM
+	{ "porthealth_cfg",		V_LENGTH(0, 128)		},
+#endif
 #ifdef TOMATO64
 	{ "zram_enable",		V_01				},
 	{ "zram_size",			V_RANGE(0, 32768)		},	/* 0 = auto, max 32GB */

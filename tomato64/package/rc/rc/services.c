@@ -108,7 +108,7 @@ static pid_t pid_phy_tempsense = -1;
  * - Managed via cron (cru)
  * - Script installed at: /usr/sbin/porthealth.sh
  * - Settings in nvram: porthealth_cfg
- *   Format: enable=1,mode=monitor,max=50,hold=180,cache=60,if=l
+ *   Format: enable=1,mode=monitor,max=10,hold=180,cache=900,if=l
  */
 #ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
@@ -130,9 +130,9 @@ static void start_porthealth(void)
 	char *k;
 	char *v;
 	int enable = 0;
-	int max_i = 50;
+	int max_i = 10;
 	int hold_i = 180;
-	int cache_i = 60;
+	int cache_i = 900;
 	const char *cfg;
 
 	stop_porthealth();

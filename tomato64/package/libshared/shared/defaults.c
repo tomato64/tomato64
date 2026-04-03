@@ -1087,6 +1087,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "mdns_reflector",		"1"				, 0 },
 	{ "mdns_debug",			"0"				, 0 },
 #endif
+#ifdef TCONFIG_BCMARM
+	{ "porthealth_cfg",		""				, 0 },
+#endif
 
 /* advanced-firewall */
 	{ "nf_loopback",		"0"				, 0 },

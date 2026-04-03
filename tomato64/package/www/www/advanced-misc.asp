@@ -34,7 +34,7 @@ function _phTrim(s) {
 
 function _phCfg() {
 	var cfg = nvram.porthealth_cfg || '';
-	var o = { enable: 0, mode: 'monitor', max: 50, hold: 180, cache: 60, ift: 'l' };
+	var o = { enable: 0, mode: 'monitor', max: 10, hold: 180, cache: 9000, ift: 'l' };
 	var parts, i, kv, k, v;
 
 	cfg = _phTrim(cfg);
@@ -56,9 +56,9 @@ function _phCfg() {
 
 	if ((o.mode != 'monitor') && (o.mode != 'recover') && (o.mode != 'disable')) o.mode = 'monitor';
 	if ((o.ift != 'l') && (o.ift != 'w') && (o.ift != 'a')) o.ift = 'l';
-	o.max = fixInt(o.max, 1, 100000, 50);
+	o.max = fixInt(o.max, 1, 100000, 10);
 	o.hold = fixInt(o.hold, 1, 86400, 180);
-	o.cache = fixInt(o.cache, 0, 86400, 60);
+	o.cache = fixInt(o.cache, 0, 86400, 900);
 
 	return o;
 }
@@ -217,10 +217,10 @@ function save() {
 			{ title: 'Port Health', text: '<small>Monitors switch ports 0-4; VLAN role comes from robocfg show.<\/small>' },
 			{ title: 'Enable', name: 'f_porthealth_enable', type: 'checkbox', value: ph.enable == 1 },
 			{ title: 'Mode', name: 'f_porthealth_mode', type: 'select', value: ph.mode, options: [['monitor','Monitor (log only)'],['recover','Recover (step down speed)'],['disable','Disable port']] },
-			{ title: 'Ports', name: 'f_porthealth_if', type: 'select', value: ph.ift, options: [['l','LAN only'],['w','WAN only'],['a','LAN + WAN']] },
-			{ title: 'Max Errors / Minute', name: 'f_porthealth_max', type: 'text', value: ph.max, maxlen: 6, size: 8 },
-			{ title: 'Hold Time (seconds)', name: 'f_porthealth_hold', type: 'text', value: ph.hold, maxlen: 6, size: 8, suffix: ' <small>(recover mode only)<\/small>' },
-			{ title: 'Cache TTL (seconds)', name: 'f_porthealth_cache', type: 'text', value: ph.cache, maxlen: 6, size: 8, suffix: ' <small>(0 disables caching)<\/small>' }
+			{ title: 'Ports', name: 'f_porthealth_if', type: 'select', value: ph.ift, options: [['l','LAN only'],['w','WAN only'],['a', 'LAN + WAN']] },
+			{ title: 'Max Errors / Minute', name: 'f_porthealth_max', type: 'text', value: ph.max, maxlen: 6, size: 8, suffix: ' <small>(default: 10)<\/small>' },
+			{ title: 'Hold Time (seconds)', name: 'f_porthealth_hold', type: 'text', value: ph.hold, maxlen: 6, size: 8, suffix: ' <small>(recover mode only; default: 180)<\/small>' },
+			{ title: 'Cache TTL (seconds)', name: 'f_porthealth_cache', type: 'text', value: ph.cache, maxlen: 6, size: 8, suffix: ' <small>(0 disables caching; default: 900)<\/small>' }
 /* TOMATO64-REMOVE-END */
 		]);
 	</script>
