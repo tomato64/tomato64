@@ -4923,9 +4923,12 @@ static int init_nvram(void)
 			nvram_set("wl0_channel", "6");
 			nvram_set("wl0_nctrlsb", "lower");
 			nvram_set("wl1_channel", "36");
-			nvram_set("wl1_nbw","40");
-			nvram_set("wl1_nbw_cap", "1");
-			nvram_set("wl1_nctrlsb", "lower");
+			/* default to 20MHz on 5GHz for wl_high USB radio stability.
+			 * 40MHz causes frequent crashes under load (issue #3).
+			 */
+			nvram_set("wl1_nbw", "20");
+			nvram_set("wl1_nbw_cap", "0");
+			nvram_set("wl1_nctrlsb", "none");
 		}
 
 		/* WNDR3400v3 adjust default values for wl_txq_thresh, et_txq_thresh and wl_rpcq_rxthresh (--> explicitly for WiFi modules) */

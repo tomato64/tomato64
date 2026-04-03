@@ -889,6 +889,9 @@ void restart_wl(void)
 #ifdef TCONFIG_BCMARM
 	/* get router model */
 	int model = get_model();
+#elif defined(TCONFIG_BLINK)
+	/* get router model for MIPS RT-N builds */
+	int model = get_model();
 #endif
 
 #if defined(TCONFIG_EBTABLES) && (defined(TCONFIG_BCMARM) || !defined(TCONFIG_BCMWL6)) /* for all branches, except SDK6 mips (RT-AC) */
@@ -965,6 +968,13 @@ void restart_wl(void)
 						}
 						if (unit == 0) {
 							led(LED_WLAN, LED_ON); /* enable WLAN LED for 2.4 GHz */
+#ifdef TCONFIG_BLINK
+							/* WNDR3400v3: single blue WiFi LED is on GPIO 18 (LED_5G).
+							 * GPIO 17 (LED_WLAN) has no visible LED on v3.
+							 * Also light LED_5G so 2.4GHz activity is visible (issue #4). */
+							if (model == MODEL_WNDR3400v3)
+								led(LED_5G, LED_ON);
+#endif
 							wlan_cnt++; /* count all wlan units / subunits */
 							if (wlan_cnt < 2) strlcpy(blink_wlan_ifname, ifname, sizeof(blink_wlan_ifname));
 						}
