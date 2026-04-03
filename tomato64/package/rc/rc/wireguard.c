@@ -370,13 +370,13 @@ static int replace_in_file(const char *filename, const char *old_str, const char
 	size_t new_len = new_str ? strlen(new_str) : 0;
 
 	if (!(fp_in = fopen(filename, "r"))) {
-		logmsg(LOG_WARNING, "cannot open file for reading: %s (%s)", filename, strerror(errno));
+		logmsg(LOG_ERR, "cannot open file for reading: %s (%s)", filename, strerror(errno));
 		return -1;
 	}
 
 	snprintf(tmp_filename, FILENAME_MAX, "%s.tmp", filename);
 	if (!(fp_out = fopen(tmp_filename, "w"))) {
-		logmsg(LOG_WARNING, "could not create temporary file: %s (%s)", tmp_filename, strerror(errno));
+		logmsg(LOG_ERR, "could not create temporary file: %s (%s)", tmp_filename, strerror(errno));
 		fclose(fp_in);
 		return -1;
 	}
@@ -403,7 +403,7 @@ static int replace_in_file(const char *filename, const char *old_str, const char
 	fclose(fp_out);
 
 	if (rename(tmp_filename, filename) != 0) {
-		logmsg(LOG_WARNING, "failed to overwrite %s: %s", filename, strerror(errno));
+		logmsg(LOG_ERR, "failed to overwrite %s: %s", filename, strerror(errno));
 		unlink(tmp_filename);
 		return -1;
 	}
