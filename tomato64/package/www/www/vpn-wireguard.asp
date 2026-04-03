@@ -1667,10 +1667,10 @@ function verifyFWMark(fwmark) {
 }
 
 function verifyFields(focused, quiet) {
-	var i, ok = 1;
-	tgHideIcons();
+	var i, j, t, port, priority, ok = 1;
 	var externalall_mode_enabled = -1;
 	var restart = 1;
+	tgHideIcons();
 
 	for (i = 0; i < WG_INTERFACE_COUNT; i++) {
 		if (focused && focused == E('_f_wg'+i+'_enable')) /* except on/off */
@@ -1710,8 +1710,10 @@ function verifyFields(focused, quiet) {
 	}
 
 	for (i = 0; i < WG_INTERFACE_COUNT; i++) {
+		t = tabs[i][0];
+
 		/* check for active 'External - VPN Provider' + 'Redirect Internet traffic' set to 'All' + 'Enable On Start' */
-		if (E('_wg'+i+'_com').value == 3 && E('_wg'+i+'_rgwr').value == 1 && E('_f_wg'+i+'_enable').checked) { /* enabled */
+		if (E('_'+t+'_com').value == 3 && E('_'+t+'_rgwr').value == 1 && E('_f_'+t+'_enable').checked) { /* enabled */
 			if (externalall_mode_enabled != -1 && externalall_mode_enabled != i) {
 				alert('Only one wireguard instance can be run on router start ("Enable on Start" option) in "External - VPN Provider" mode with "Redirect Internet traffic" set to "All"!');
 				E('_f_wg'+externalall_mode_enabled+'_enable').checked = 0;
@@ -1719,26 +1721,26 @@ function verifyFields(focused, quiet) {
 			}
 		}
 
-		if (!v_range('_wg'+i+'_poll', quiet || !ok, 0, 30))
+		if (!v_range('_'+t+'_poll', quiet || !ok, 0, 30))
 			ok = 0;
 
 		/* verify valid port */
-		var port = E('_wg'+i+'_port');
-		if (port.value != '' && !v_port('_wg'+i+'_port', quiet || !ok)) {
+		port = E('_'+t+'_port');
+		if (port.value != '' && !v_port('_'+t+'_port', quiet || !ok)) {
 			ferror.set(port, 'The interface port must be a valid port', quiet || !ok);
 			ok = 0;
 		}
 		else {
 			ferror.clear(port);
 			if (port.value == '')
-				E('_f_wg'+i+'_peer_port').value = (51820 + i);
+				E('_f_'+t+'_peer_port').value = (51820 + i);
 			else
-				E('_f_wg'+i+'_peer_port').value = port.value;
+				E('_f_'+t+'_peer_port').value = port.value;
 		}
 
 		/* verify priority */
-		var priority = E('_wg'+i+'_prio');
-		if (priority.value != '' && !v_range('_wg'+i+'_prio', quiet || !ok, 1, 32766)) {
+		priority = E('_'+t+'_prio');
+		if (priority.value != '' && !v_range('_'+t+'_prio', quiet || !ok, 1, 32766)) {
 			ferror.set(priority, 'The priority must be in the range 1 - 32766', quiet || !ok);
 			ok = 0;
 		}
@@ -1746,17 +1748,17 @@ function verifyFields(focused, quiet) {
 			ferror.clear(priority);
 
 		/* disable lan checkbox if lan is not in use */
-		for (var j = 0; j <= MAX_BRIDGE_ID; ++j) {
-			t = (j == 0 ? '' : j);
+		for (j = 0; j <= MAX_BRIDGE_ID; ++j) {
+			s = (j == 0 ? '' : j);
 
-			if (nvram['lan'+t+'_ifname.length'] < 1) {
-				E('_f_wg'+i+'_lan'+j).checked = 0;
-				E('_f_wg'+i+'_lan'+j).disabled = 1;
+			if (nvram['lan'+s+'_ifname.length'] < 1) {
+				E('_f_'+t+'_lan'+j).checked = 0;
+				E('_f_'+t+'_lan'+j).disabled = 1;
 			}
 		}
 
 		/* verify interface private key */
-		var privkey = E('_wg'+i+'_key');
+		var privkey = E('_'+t+'_key');
 		if (privkey.value != '' && !window.wireguard.validateBase64Key(privkey.value)) {
 			ferror.set(privkey, 'A valid private key is required for the interface', quiet || !ok);
 			ok = 0;
@@ -1765,15 +1767,15 @@ function verifyFields(focused, quiet) {
 			ferror.clear(privkey);
 
 		/* calculate interface pubkey */
-		E('_wg'+i+'_pubkey').disabled = true;
+		E('_'+t+'_pubkey').disabled = true;
 		var pubkey = window.wireguard.generatePublicKey(privkey.value);
 		if (pubkey == false)
 			pubkey = '';
 
-		E('_wg'+i+'_pubkey').value = pubkey;
+		E('_'+t+'_pubkey').value = pubkey;
 
 		/* autopopulate IP if it's empty */
-		var ip = E('_wg'+i+'_ip');
+		var ip = E('_'+t+'_ip');
 		if (ip.value == '') {
 			ip.value = '10.'+(10 + i)+'.0.1/24';
 			ferror.clear(ip);
@@ -1783,7 +1785,7 @@ function verifyFields(focused, quiet) {
 			var ip_valid = true;
 			if (ip.value != '') {
 				var cidrs = ip.value.split(',')
-				for (var j = 0; j < cidrs.length; j++) {
+				for (j = 0; j < cidrs.length; j++) {
 					var cidr = cidrs[j].trim();
 					if (!cidr.match(/^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$/)) {
 						ip_valid = false;
@@ -1799,30 +1801,30 @@ function verifyFields(focused, quiet) {
 				ferror.clear(ip);
 		}
 
-		var fw = E('_wg'+i+'_firewall').value;
-		var nat = E('_f_wg'+i+'_nat').checked;
-		var ext = E('_wg'+i+'_com').value == 3; /* 'External - VPN Provider' */
-		var rgwr = (E('_wg'+i+'_rgwr').value == 2 || E('_wg'+i+'_rgwr').value == 3);
-		if (ext) E('_f_wg'+i+'_peer_ip').value = '';
-		if (ext) E('_f_wg'+i+'_route').value = '1';
-		E('_f_wg'+i+'_peer_ip').disabled = ext;
-		E('_f_wg'+i+'_tchk').disabled = !ext;
-		elem.display('wg'+i+'-peers-download', !ext);
-		elem.display('wg'+i+'-peers-generate-title', !ext);
-		elem.display('wg'+i+'-peers-generate', !ext);
-		elem.display(PR('_wg'+i+'_firewall'), ext);
-		elem.display(PR('_f_wg'+i+'_route'), !ext);
-		elem.display(PR('_f_wg'+i+'_nat'), fw != 'custom' && ext);
-		elem.display(PR('_f_wg'+i+'_fw'), fw != 'custom' && ext);
-		elem.display(PR('_wg'+i+'_rgwr'), ext);
-		elem.display(E('wg'+i+'_nat_warn_text'), ext && !nat);
-		elem.display(PR('_wg'+i+'_prio'), ext && rgwr);
+		var fw = E('_'+t+'_firewall').value;
+		var nat = E('_f_'+t+'_nat').checked;
+		var ext = E('_'+t+'_com').value == 3; /* 'External - VPN Provider' */
+		var rgwr = (E('_'+t+'_rgwr').value == 2 || E('_'+t+'_rgwr').value == 3);
+		if (ext) E('_f_'+t+'_peer_ip').value = '';
+		if (ext) E('_f_'+t+'_route').value = '1';
+		E('_f_'+t+'_peer_ip').disabled = ext;
+		E('_f_'+t+'_tchk').disabled = !ext;
+		elem.display(t+'-peers-download', !ext);
+		elem.display(t+'-peers-generate-title', !ext);
+		elem.display(t+'-peers-generate', !ext);
+		elem.display(PR('_'+t+'_firewall'), ext);
+		elem.display(PR('_f_'+t+'_route'), !ext);
+		elem.display(PR('_f_'+t+'_nat'), fw != 'custom' && ext);
+		elem.display(PR('_f_'+t+'_fw'), fw != 'custom' && ext);
+		elem.display(PR('_'+t+'_rgwr'), ext);
+		elem.display(E(t+'_nat_warn_text'), ext && !nat);
+		elem.display(PR('_'+t+'_prio'), ext && rgwr);
 
 		/* Page Routing Policy */
-		elem.display(E('_wg'+i+'_routing_div_help'), (!ext) || (ext && !rgwr));
+		elem.display(E('_'+t+'_routing_div_help'), (!ext) || (ext && !rgwr));
 
 		/* verify interface dns */
-		var dns = E('_wg'+i+'_dns');
+		var dns = E('_'+t+'_dns');
 		if (dns.value != '' && !verifyDNS(dns.value)) {
 			ferror.set(dns, 'DNS Servers must be a comma separated list of IPs');
 			ok = 0;
@@ -1831,7 +1833,7 @@ function verifyFields(focused, quiet) {
 			ferror.clear(dns);
 
 		/* verify interface fwmark */
-		var fwmark = E('_wg'+i+'_fwmark');
+		var fwmark = E('_'+t+'_fwmark');
 		if (fwmark.value && !verifyFWMark(fwmark.value)) {
 			ferror.set(fwmark, 'The interface FWMark must be a hexadecimal number of 8 characters or 0', quiet || !ok);
 			ok = 0;
@@ -1840,7 +1842,7 @@ function verifyFields(focused, quiet) {
 			ferror.clear(fwmark);
 
 		/* autopopulate mtu if it's empty */
-		var mtu = E('_wg'+i+'_mtu');
+		var mtu = E('_'+t+'_mtu');
 		if (mtu.value == '') {
 			mtu.value = '1420';
 			ferror.clear(mtu);
@@ -1856,13 +1858,13 @@ function verifyFields(focused, quiet) {
 		}
 
 		/* hide/show custom endpoint based on option selected */
-		var endpoint = E('_f_wg'+i+'_endpoint');
-		var custom_endpoint = E('_f_wg'+i+'_custom_endpoint');
+		var endpoint = E('_f_'+t+'_endpoint');
+		var custom_endpoint = E('_f_'+t+'_custom_endpoint');
 		elem.display(custom_endpoint, (endpoint.value == 2));
 
 		/* hide/show custom table based on option selected */
-		var route = E('_f_wg'+i+'_route');
-		var custom_table = E('_f_wg'+i+'_custom_table');
+		var route = E('_f_'+t+'_route');
+		var custom_table = E('_f_'+t+'_custom_table');
 		if (route.value == 2) {
 			elem.display(custom_table, true);
 			if (!custom_table.value.match(/^ *[-\+]?\d+ *$/))
@@ -1876,13 +1878,13 @@ function verifyFields(focused, quiet) {
 		}
 
 		/* verify interface keep alive */
-		if (!v_range('_wg'+i+'_ka', quiet || !ok, 0, 99)) ok = 0;
+		if (!v_range('_'+t+'_ka', quiet || !ok, 0, 99)) ok = 0;
 
 		/* verify delay time */
-		if (!v_range('_wg'+i+'_sleep', quiet || !ok, 1, 99)) ok = 0;
+		if (!v_range('_'+t+'_sleep', quiet || !ok, 1, 99)) ok = 0;
 
 		/* verify peer dns */
-		var peer_dns = E('_wg'+i+'_peer_dns');
+		var peer_dns = E('_'+t+'_peer_dns');
 		if (peer_dns.value != '' && !verifyDNS(peer_dns.value)) {
 			ferror.set(peer_dns, 'DNS Servers must be a comma separated list of IPs');
 			ok = 0;
@@ -1891,7 +1893,7 @@ function verifyFields(focused, quiet) {
 			ferror.clear(peer_dns);
 
 		/* verify interface allowed ips */
-		var allowed_ips = E('_wg'+i+'_aip')
+		var allowed_ips = E('_'+t+'_aip')
 		var aip_valid = true;
 		if (allowed_ips.value != '') {
 			var cidrs = allowed_ips.value.split(',')
@@ -1911,8 +1913,8 @@ function verifyFields(focused, quiet) {
 			ferror.clear(allowed_ips);
 
 		/*** peer key checking stuff ***/
-		var peer_privkey = E('_f_wg'+i+'_peer_privkey');
-		var peer_pubkey = E('_f_wg'+i+'_peer_pubkey');
+		var peer_privkey = E('_f_'+t+'_peer_privkey');
+		var peer_pubkey = E('_f_'+t+'_peer_pubkey');
 		peer_privkey.disabled = false;
 		peer_pubkey.disabled = false;
 
@@ -1935,82 +1937,86 @@ function save(nomsg) {
 
 	if (!nomsg) show(); /* update '_service' field first */
 
-	E('wg_adns').value = '';
 	var fom = E('t_fom');
+
+	fom.wg_adns.value = '';
+
 	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
 		if (routingTables[i].isEditing())
 			return;
 
-		var privkey = E('_wg'+i+'_key').value;
-		nvram['wg'+i+'_key'] = privkey;
+		var t = tabs[i][0];
+
+		var privkey = E('_'+t+'_key').value;
+		nvram[t+'_key'] = privkey;
 
 		var data = peerTables[i].getAllData();
 		var s = '';
 		for (var j = 0; j < data.length; ++j)
 			s += data[j].join('<')+'>';
 
-		fom['wg'+i+'_peers'].value = s;
-		nvram['wg'+i+'_peers'] = s;
+		fom[t+'_peers'].value = s;
+		nvram[t+'_peers'] = s;
 
 		var routedata = routingTables[i].getAllData();
 		s = '';
 		for (j = 0; j < routedata.length; ++j)
 			s += routedata[j].join('<')+'>';
 
-		fom['wg'+i+'_routing_val'].value = s;
-		fom['wg'+i+'_enable'].value = fom['_f_wg'+i+'_enable'].checked ? 1 : 0;
-		fom['wg'+i+'_rgw'].value = fom['_f_wg'+i+'_rgw'].checked ? 1 : 0;
-		fom['wg'+i+'_nat'].value = fom['_f_wg'+i+'_nat'].checked ? 1 : 0;
-		fom['wg'+i+'_fw'].value = fom['_f_wg'+i+'_fw'].checked ? 1 : 0;
-		fom['wg'+i+'_tchk'].value = fom['_f_wg'+i+'_tchk'].checked ? 1 : 0;
+		fom[t+'_routing_val'].value = s;
+		fom[t+'_enable'].value = fom['_f_'+t+'_enable'].checked ? 1 : 0;
+		fom[t+'_rgw'].value = fom['_f_'+t+'_rgw'].checked ? 1 : 0;
+		fom[t+'_nat'].value = fom['_f_'+t+'_nat'].checked ? 1 : 0;
+		fom[t+'_fw'].value = fom['_f_'+t+'_fw'].checked ? 1 : 0;
+		fom[t+'_tchk'].value = fom['_f_'+t+'_tchk'].checked ? 1 : 0;
 
 		/* copy values from the fields */
-		nvram['wg'+i+'_rgwr'] = E('_wg'+i+'_rgwr').value;
-		nvram['wg'+i+'_com'] = E('_wg'+i+'_com').value;
+		nvram[t+'_rgwr'] = E('_'+t+'_rgwr').value;
+		nvram[t+'_com'] = E('_'+t+'_com').value;
 
 		/* set properly value of Push LANX to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = LAN3 */
-		fom['wg'+i+'_lan'].value = 0; /* init with 0 and check */
-		if (fom['_f_wg'+i+'_lan0'].checked)
-			fom['wg'+i+'_lan'].value |= 1;
-		if (fom['_f_wg'+i+'_lan1'].checked)
-			fom['wg'+i+'_lan'].value |= 2;
-		if (fom['_f_wg'+i+'_lan2'].checked)
-			fom['wg'+i+'_lan'].value |= 4;
-		if (fom['_f_wg'+i+'_lan3'].checked)
-			fom['wg'+i+'_lan'].value |= 8;
+		fom[t+'_lan'].value = 0; /* init with 0 and check */
+		if (fom['_f_'+t+'_lan0'].checked)
+			fom[t+'_lan'].value |= 1;
+		if (fom['_f_'+t+'_lan1'].checked)
+			fom[t+'_lan'].value |= 2;
+		if (fom['_f_'+t+'_lan2'].checked)
+			fom[t+'_lan'].value |= 4;
+		if (fom['_f_'+t+'_lan3'].checked)
+			fom[t+'_lan'].value |= 8;
 /* TOMATO64-BEGIN */
-		if (fom['_f_wg'+i+'_lan4'].checked)
-			fom['wg'+i+'_lan'].value |= 16;
-		if (fom['_f_wg'+i+'_lan5'].checked)
-			fom['wg'+i+'_lan'].value |= 32;
-		if (fom['_f_wg'+i+'_lan6'].checked)
-			fom['wg'+i+'_lan'].value |= 64;
-		if (fom['_f_wg'+i+'_lan7'].checked)
-			fom['wg'+i+'_lan'].value |= 128;
+		if (fom['_f_'+t+'_lan4'].checked)
+			fom[t+'_lan'].value |= 16;
+		if (fom['_f_'+t+'_lan5'].checked)
+			fom[t+'_lan'].value |= 32;
+		if (fom['_f_'+t+'_lan6'].checked)
+			fom[t+'_lan'].value |= 64;
+		if (fom['_f_'+t+'_lan7'].checked)
+			fom[t+'_lan'].value |= 128;
 /* TOMATO64-END */
 
-		if (E('_f_wg'+i+'_adns').checked)
-			E('wg_adns').value += i+',';
+		if (E('_f_'+t+'_adns').checked)
+			fom.wg_adns.value += i+',';
 
-		var endpoint = E('_f_wg'+i+'_endpoint');
-		var custom_endpoint = E('_f_wg'+i+'_custom_endpoint');
+		var endpoint = E('_f_'+t+'_endpoint');
+		var custom_endpoint = E('_f_'+t+'_custom_endpoint');
 		var endpoint_output = endpoint.value+'';
 		if (endpoint.value == 2)
 			endpoint_output += '|'+custom_endpoint.value;
 
-		fom['wg'+i+'_endpoint'].value = endpoint_output;
-		nvram['wg'+i+'_endpoint'] = endpoint_output;
+		fom[t+'_endpoint'].value = endpoint_output;
+		nvram[t+'_endpoint'] = endpoint_output;
 
-		var route = E('_f_wg'+i+'_route');
-		var custom_table = E('_f_wg'+i+'_custom_table');
+		var route = E('_f_'+t+'_route');
+		var custom_table = E('_f_'+t+'_custom_table');
 		var route_output = route.value+'';
 		if (route.value == 2)
 			route_output += '|'+custom_table.value;
 
-		fom['wg'+i+'_route'].value = route_output;
-		nvram['wg'+i+'_route'] = route_output;
+		fom[t+'_route'].value = route_output;
+		nvram[t+'_route'] = route_output;
 
-		var qrcode = E('wg'+i+'_qrcode');
+		var qrcode = E(t+'_qrcode');
 		if (qrcode.style.display != 'none') {
 			var row = qrcode.getAttribute('row_id');
 			var content = genPeerGridConfig(i, row);
