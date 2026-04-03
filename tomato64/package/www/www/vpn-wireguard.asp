@@ -2150,7 +2150,7 @@ function init() {
 				{ title: 'Poll Interval', name: t+'_poll', type: 'text', maxlen: 2, size: 5, value: nvram[t+'_poll'], suffix: ' <small>minutes; 0 to disable<\/small>' },
 					{ title: 'Also check out the tunnel', indent: 2, multi: [
 						{ name: 'f_'+t+'_tchk', type: 'checkbox', value: nvram[t+'_tchk'] != 0 },
-						{ name: t+'_tunchk', type: 'text', placeholder: '<% nv('wan_checker'); %>', maxlen: 15, size: 17, value: nvram[t+'_tunchk'], prefix: '<span id="'+t+'-tunchk_span">&nbsp;&nbsp;', suffix: ' <small>IP to ping (empty = default)<\/small><\/span>'} ] },
+						{ name: t+'_tunchk', type: 'text', placeholder: '<% nv('wan_checker'); %>', maxlen: 15, size: 17, value: nvram[t+'_tunchk'], prefix: '<span id="'+t+'-tunchk_span">&nbsp;&nbsp;', suffix: ' <small>IP to ping<\/small><\/span>'} ] },
 				{ title: 'Delay at startup', name: t+'_sleep', type: 'text', maxlen: 5, size: 7, value: nvram[t+'_sleep'], suffix: ' <small>seconds; range: 1 - 99; default: 1<\/small>' },
 				{ title: 'Config file', name: t+'_file', type: 'text', placeholder: 'optional', maxlen: 64, size: 64, value: nvram[t+'_file'] },
 				{ title: 'Port', name: t+'_port', type: 'text', maxlen: 5, size: 10, placeholder: (51820+i), value: nvram[t+'_port'] },

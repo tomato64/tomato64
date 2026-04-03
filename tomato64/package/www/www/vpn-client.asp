@@ -580,7 +580,7 @@ function init() {
 				{ title: 'Poll Interval', name: t+'_poll', type: 'text', maxlen: 2, size: 5, value: nvram[t+'_poll'], suffix: ' <small>minutes; 0 to disable<\/small>' },
 					{ title: 'Also check out the tunnel', indent: 2, multi: [
 						{ name: 'f_'+t+'_tchk', type: 'checkbox', value: nvram[t+'_tchk'] != 0 },
-						{ name: t+'_tunchk', type: 'text', placeholder: '<% nv('wan_checker'); %>', maxlen: 15, size: 17, value: nvram[t+'_tunchk'], prefix: '<span id="'+t+'-tunchk_span">&nbsp;&nbsp;', suffix: ' <small>IP to ping (empty = default)<\/small><\/span>'} ] },
+						{ name: t+'_tunchk', type: 'text', placeholder: '<% nv('wan_checker'); %>', maxlen: 15, size: 17, value: nvram[t+'_tunchk'], prefix: '<span id="'+t+'-tunchk_span">&nbsp;&nbsp;', suffix: ' <small>IP to ping<\/small><\/span>'} ] },
 				{ title: 'Redirect Internet traffic', multi: [
 					{ name: t+'_rgw', type: 'select', options: [[0,'No'],[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram[t+'_rgw'] },
 					{ name: t+'_gw', type: 'text', maxlen: 15, size: 17, value: nvram[t+'_gw'], prefix: '<span id="'+t+'_gateway"> &nbsp;Gateway:&nbsp', suffix: '<\/span>'} ] },
