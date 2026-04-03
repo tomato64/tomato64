@@ -9,7 +9,7 @@
 	--tomato-shadow-color: 255, 255, 255;
 	--tomato-controls-border: 1px solid var(--tomato-container-background);
 	--tomato-controls-border-radius: 4px;
-	--tomato-controls-size: 20px;
+	--tomato-controls-size: 22px;
 }
 
 td#navi a.indent1[href*=about]:hover:after {
