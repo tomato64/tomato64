@@ -689,11 +689,15 @@ static void wg_setup_watchdog(const int unit)
 	FILE *fp;
 	char buffer[BUF_SIZE_64], buffer2[BUF_SIZE_64];
 	char taskname[BUF_SIZE_32];
+	const char *val, *ipchk;
 	int nvi;
 
 	if ((nvi = atoi(getNVRAMVar("wg%d_poll", unit))) > 0) {
 		memset(buffer, 0, BUF_SIZE_64);
 		snprintf(buffer, BUF_SIZE_64, WG_SCRIPTS_DIR"/watchdog%d.sh", unit);
+
+		val = getNVRAMVar("vpnc%d_tunchk", unit);
+		ipchk = (val && *val) ? val : nvram_safe_get("wan_checker");
 
 		if ((fp = fopen(buffer, "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
@@ -720,7 +724,7 @@ static void wg_setup_watchdog(const int unit)
 			            "logger -t wg-watchdog wg%d stopped? Restarting ...\n"
 			            "service wireguard%d restart\n",
 			            atoi(getNVRAMVar("wg%d_tchk", unit)),
-			            unit, (getNVRAMVar("wg%d_tunchk", unit) ? getNVRAMVar("wg%d_tunchk", unit) : nvram_safe_get("wan_checker")),
+			            unit, ipchk,
 			            unit,
 			            unit,
 			            unit,
