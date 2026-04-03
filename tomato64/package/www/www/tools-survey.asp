@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <!--
-	Tomato GUI
-	Copyright (C) 2006-2010 Jonathan Zarate
-	http://www.polarcloud.com/tomato/
+	FreshTomato GUI
+	Copyright (C) 2018 - 2026 pedro
+	https://freshtomato.org/
 
-	For use with Tomato Firmware only.
+	For use with FreshTomato Firmware only.
 	No part of this file may be used without permission.
 -->
 <html lang="en-GB">
@@ -33,6 +33,9 @@ if (nvram.web_css.match(/at-/g)) {
 	hsize = 1200;
 }
 /* ADVTHEMES-END */
+var SVG_NS = 'http://www.w3.org/2000/svg';
+var observers = {};
+
 function internalWiFI(interface) {
 	return new Promise(function(resolve, reject) {
 		var cmd = new XmlHttp();
@@ -237,18 +240,26 @@ function resize_graph(id) {
 	}
 
 	var graph = E('graph'+id);
+	if (!graph) return;
 	var dest = E('ellipses'+id);
 
-	const observer = new ResizeObserver(entries => {
-		hsize = graph.clientWidth - 10;
-		vsize = parseInt(hsize * 0.35);
+	if (observers[id]) {
+		observers[id].disconnect();
+	}
 
-		dest.setAttribute("width", hsize);
-		dest.setAttribute("height", vsize);
-		dest.setAttribute("viewBox", "0 0 "+hsize+" "+vsize);
+	const observer = new ResizeObserver(entries => {
+		const width = graph.clientWidth;
+		if (!width || width <= 10) return;
+		hsize = width - 10;
+		vsize = Math.max(0, parseInt(hsize * 0.35));
+
+		dest.setAttribute('width', hsize);
+		dest.setAttribute('height', vsize);
+		dest.setAttribute('viewBox', '0 0 '+hsize+' '+vsize);
 		doit();
 	});
 	observer.observe(graph);
+	observers[id] = observer;
 }
 /* ADVTHEMES-END */
 function hexToDecimal(hexColor) {
@@ -258,8 +269,6 @@ function hexToDecimal(hexColor) {
 	var blue = parseInt(hexColor.substring(4, 6), 16);
 	return red+', '+green+', '+blue;
 }
-
-var SVG_NS = 'http://www.w3.org/2000/svg';
 
 function svgEl(tag, attrs) {
 	var el = document.createElementNS(SVG_NS, tag);
@@ -529,12 +538,9 @@ function drawNoise(board, style) {
 		fill: 'rgba(189,158,0,'+(density / 3)+')'
 	}));
 	svg.appendChild(svgEl('text', {
-		x: (sz.w - 16),
+		x: (sz.w - 22),
 		y: noise,
-		fill: '#660000',
-		'font-size': 10,
-		'font-family': 'Arial Narrow',
-		'font-weight': 'normal',
+		'class': 'svg-text',
 		'pointer-events': 'none',
 		'text-anchor': 'end',
 		'dominant-baseline': 'middle'
@@ -552,6 +558,8 @@ function drawEllipse(c = -100, m = 20, q, col, ssid, noise, style, sshow) {
 			mf = (sz.w / div24) * 2.20;
 		else if (m == 40)
 			mf = (sz.w / div24) * 4.2;
+		else
+			mf = (sz.w / div24) * 2.20;
 
 		if (c == 1)
 			cf = (sz.w / div24) * 3;
@@ -608,13 +616,12 @@ function drawEllipse(c = -100, m = 20, q, col, ssid, noise, style, sshow) {
 		var t = svgEl('text', {
 			x: cf,
 			y: y0,
-			fill: '#000000',
-			'font-size': sshow,
-			'font-family': 'Arial',
+			'class': 'svg-ssid',
 			'pointer-events': 'none',
 			'text-anchor': 'middle',
 			'dominant-baseline': 'middle'
 		});
+		t.style.setProperty('font-size', sshow+'px', 'important');
 		t.appendChild(document.createTextNode(lines[0] || ''));
 		if (typeof lines[1] !== 'undefined') {
 			t.appendChild(svgEl('tspan', { x: cf, dy: sshow }));
@@ -725,8 +732,8 @@ sg.populate = function(style, sshow, filter) {
 	for (i = 0; i < entries.length; ++i) {
 		var seen, m, mac;
 		e = entries[i];
-		const startIndex = e.channel.indexOf("<small>") + 7; // Find the index of "<small>" and add 7 to skip it
-		const endIndex = e.channel.indexOf(" GHz"); // Find the index of " GHz"
+		const startIndex = e.channel.indexOf("<small>") + 7; /* find the index of "<small>" and add 7 to skip it */
+		const endIndex = e.channel.indexOf(" GHz"); /* find the index of " GHz" */
 		var frequency = e.channel.substring(startIndex, endIndex);
 		if (filter != frequency && filter != 0)
 			continue
@@ -891,8 +898,6 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 	var maxV = e;
 	var numDivisions = f;
 	var incrementX = g;
-	var fontSize = 10;
-	var fontFamily = 'Arial Narrow';
 
 	svg.appendChild(svgEl('line', {
 		x1: 0, y1: sz.h - 0.05,
@@ -916,9 +921,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 				svg.appendChild(svgEl('text', {
 					x: xPos,
 					y: sz.h,
-					fill: 'black',
-					'font-size': fontSize,
-					'font-family': fontFamily,
+					'class': 'svg-text',
 					'pointer-events': 'none',
 					'text-anchor': 'middle',
 					'dominant-baseline': 'text-after-edge'
@@ -929,9 +932,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 		svg.appendChild(svgEl('text', {
 			x: xPos,
 			y: sz.h,
-			fill: 'black',
-			'font-size': fontSize,
-			'font-family': fontFamily,
+			'class': 'svg-text',
 			'pointer-events': 'none',
 			'text-anchor': 'middle',
 			'dominant-baseline': 'text-after-edge'
@@ -952,9 +953,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 				svg.appendChild(svgEl('text', {
 					x: xPos,
 					y: sz.h,
-					fill: 'black',
-					'font-size': fontSize,
-					'font-family': fontFamily,
+					'class': 'svg-text',
 					'pointer-events': 'none',
 					'text-anchor': 'middle',
 					'dominant-baseline': 'text-after-edge'
@@ -975,9 +974,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 				svg.appendChild(svgEl('text', {
 					x: xPos,
 					y: sz.h,
-					fill: 'black',
-					'font-size': fontSize,
-					'font-family': fontFamily,
+					'class': 'svg-text',
 					'pointer-events': 'none',
 					'text-anchor': 'middle',
 					'dominant-baseline': 'text-after-edge'
@@ -994,9 +991,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 			svg.appendChild(svgEl('text', {
 				x: 1,
 				y: yPos,
-				fill: 'black',
-				'font-size': fontSize,
-				'font-family': fontFamily,
+				'class': 'svg-text',
 				'pointer-events': 'none',
 				'text-anchor': 'start',
 				'dominant-baseline': 'middle'
@@ -1004,9 +999,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 			svg.appendChild(svgEl('text', {
 				x: sz.w - 1,
 				y: yPos,
-				fill: 'black',
-				'font-size': fontSize,
-				'font-family': fontFamily,
+				'class': 'svg-text',
 				'pointer-events': 'none',
 				'text-anchor': 'end',
 				'dominant-baseline': 'middle'
@@ -1022,7 +1015,6 @@ function drawBoard(can) {
 	var frag = document.createDocumentFragment();
 	var w = sz.w;
 	var h = sz.h;
-	var gridColor = (can == 'ellipses2') ? '#f2f2f2' : '#f4f4f4';
 	var shade = 'rgba(112,66,20,0.06)';
 
 	if (can == 'ellipses2') {
@@ -1030,16 +1022,14 @@ function drawBoard(can) {
 			frag.appendChild(svgEl('line', {
 				x1: 0.5 + x + p, y1: p,
 				x2: 0.5 + x + p, y2: vsize + p,
-				stroke: gridColor,
-				'stroke-width': 1
+				'class': 'svg-line a'
 			}));
 		}
 		for (var x = 0; x <= vsize; x += (h / vdiv)) {
 			frag.appendChild(svgEl('line', {
 				x1: p, y1: 0.5 + x + p,
 				x2: hsize + p, y2: 0.5 + x + p,
-				stroke: gridColor,
-				'stroke-width': 1
+				'class': 'svg-line a'
 			}));
 		}
 		frag.appendChild(svgEl('rect', { x: 0, y: 0, width: (w / div24) * 3, height: vsize, fill: shade }));
@@ -1051,16 +1041,14 @@ function drawBoard(can) {
 			frag.appendChild(svgEl('line', {
 				x1: 0.5 + x + p, y1: p,
 				x2: 0.5 + x + p, y2: vsize + p,
-				stroke: gridColor,
-				'stroke-width': 1
+				'class': 'svg-line a'
 			}));
 		}
 		for (var x = 0; x <= vsize; x += (h / vdiv)) {
 			frag.appendChild(svgEl('line', {
 				x1: p, y1: 0.5 + x + p,
 				x2: hsize + p, y2: 0.5 + x + p,
-				stroke: gridColor,
-				'stroke-width': 1
+				'class': 'svg-line a'
 			}));
 		}
 		frag.appendChild(svgEl('rect', { x: 0, y: 0, width: (w / div5) * 2, height: vsize, fill: shade }));
@@ -1081,7 +1069,7 @@ function clearCanvas(canvas) {
 	if (!svg.getAttribute('viewBox'))
 		svg.setAttribute('viewBox', '0 0 '+sz.w+' '+sz.h);
 
-	svg.appendChild(svgEl('rect', { x: 0, y: 0, width: sz.w, height: sz.h, fill: '#fdfdfd' }));
+	svg.appendChild(svgEl('rect', { x: 0, y: 0, width: sz.w, height: sz.h, 'class': 'svg-rect' }));
 }
 
 function earlyInit() {
@@ -1175,13 +1163,13 @@ function init() {
 <div class="section">
 	<div id="tomato-chart2">Channel Congestion: <b>2.4 GHz</b><br>
 		<script>
-			W('<div id="graph2" style="position:relative"><div id="loading2" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none">Loading... <img src="spin.svg" alt="" style="transform:scale(3);filter:opacity(0.2);padding-left: 20px"><\/div><svg id="ellipses2" width="'+hsize+'" height="'+vsize+'" viewBox="0 0 '+hsize+' '+vsize+'" xmlns="http://www.w3.org/2000/svg" style="border:0px"><\/svg><\/div>');
+			W('<div id="graph2" style="position:relative"><div id="loading2" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none">Loading... <img src="spin.svg" alt="" style="transform:scale(3);filter:opacity(0.2);padding-left: 20px"><\/div><svg id="ellipses2" width="'+hsize+'" height="'+vsize+'" viewBox="0 0 '+hsize+' '+vsize+'" xmlns="'+SVG_NS+'" style="border:0px"><\/svg><\/div>');
 		</script>
 	</div>
 	<br>
 	<div id="tomato-chart5">Channel Congestion: <b>5 GHz</b><br>
 		<script>
-			W('<div id="graph5" style="position:relative"><div id="loading5" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none">Loading... <img src="spin.svg" alt="" style="transform:scale(3);filter:opacity(0.2);padding-left: 20px;"><\/div><svg id="ellipses5" width="'+hsize+'" height="'+vsize+'" viewBox="0 0 '+hsize+' '+vsize+'" xmlns="http://www.w3.org/2000/svg" style="border:0px"><\/svg><\/div>');
+			W('<div id="graph5" style="position:relative"><div id="loading5" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none">Loading... <img src="spin.svg" alt="" style="transform:scale(3);filter:opacity(0.2);padding-left: 20px;"><\/div><svg id="ellipses5" width="'+hsize+'" height="'+vsize+'" viewBox="0 0 '+hsize+' '+vsize+'" xmlns="'+SVG_NS+'" style="border:0px"><\/svg><\/div>');
 		</script>
 	</div>
 	<br>

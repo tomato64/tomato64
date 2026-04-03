@@ -638,8 +638,7 @@ div#ports {
 	margin-top: 20px;
 }
 
-div#ports:empty,
-div#ports:blank {
+div#ports:empty {
 	display: none;
 }
 
@@ -2559,7 +2558,8 @@ td.adblock-td2 {
 }
 
 /* SVG */
-#svg text {
+#svg text,
+.svg-text {
 	font: 13px monospace;
 }
 

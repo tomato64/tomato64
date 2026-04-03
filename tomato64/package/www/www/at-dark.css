@@ -58,7 +58,9 @@ img[src^="rp"] {
 }
 
 /* SVG */
-#svg text {
+#svg text,
+.svg-text,
+.svg-ssid {
 	fill: #c9c9c9;
 }
 

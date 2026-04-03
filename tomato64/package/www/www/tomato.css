@@ -2025,8 +2025,14 @@ span.pptpsvg {
 /* PPTPD-END */
 
 /* SVG */
-#svg text {
+#svg text,
+.svg-text {
 	font: 11px monospace;
+	fill: #000;
+}
+
+.svg-ssid {
+	font-family: monospace;
 	fill: #000;
 }
 
