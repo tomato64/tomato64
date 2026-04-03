@@ -1110,7 +1110,8 @@ static void wg_init_table(char *iface, char *fwmark)
 	FILE *fp;
 	char route[BUF_SIZE];
 	char cmd[BUF_SIZE_64];
-	unsigned int i, n_ifaces;
+	unsigned int i, n_ifaces, skip;
+	char *nl;
 	int routing = atoi(getNVRAMVar("wg%d_rgwr", atoi(&iface[2])));
 
 	logmsg(LOG_INFO, "creating wireguard (wg%d) routing table (mode %d)", atoi(&iface[2]), routing);
@@ -1135,8 +1136,8 @@ static void wg_init_table(char *iface, char *fwmark)
 			n_ifaces = ASIZE(vpn_ifaces);
 
 			while (fgets(route, BUF_SIZE, fp)) {
-				char *nl = strchr(route, '\n');
-				unsigned int skip = 0;
+				nl = strchr(route, '\n');
+				skip = 0;
 
 				if (nl)
 					*nl = '\0';
