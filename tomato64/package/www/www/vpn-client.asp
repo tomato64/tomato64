@@ -570,7 +570,7 @@ function init() {
 			W('<div id="'+t+'-advanced">');
 			createFieldTable('', [
 				{ title: 'Poll Interval', name: t+'_poll', type: 'text', maxlen: 2, size: 5, value: nvram[t+'_poll'], suffix: ' <small>minutes; 0 to disable<\/small>' },
-					{ title: 'Also check out the tunnel', indent: 2, name: 'f_'+t+'_tchk', type: 'checkbox', value: nvram[t+'_tchk'] != 0, suffix: ' <small>does not work in all configurations<\/small>' },
+					{ title: 'Also check out the tunnel', indent: 2, name: 'f_'+t+'_tchk', type: 'checkbox', value: nvram[t+'_tchk'] != 0, suffix: ' <small>pings <% nv("wan_checker"); %> through tunnel (nvram wan_checker)<\/small>' },
 				{ title: 'Redirect Internet traffic', multi: [
 					{ name: t+'_rgw', type: 'select', options: [[0,'No'],[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram[t+'_rgw'] },
 					{ name: t+'_gw', type: 'text', maxlen: 15, size: 17, value: nvram[t+'_gw'], prefix: '<span id="'+t+'_gateway"> &nbsp;Gateway:&nbsp', suffix: '<\/span>'} ] },
