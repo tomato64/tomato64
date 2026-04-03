@@ -1541,7 +1541,6 @@ function init() {
 		E('sesdiv').style.display = 'block';
 		vlg.recolor();
 		vlg.resetNewEditor();
-		vlg.verifyFields(null, 1);
 		var c;
 		if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
 			toggleVisibility(cprefix, 'notes');
