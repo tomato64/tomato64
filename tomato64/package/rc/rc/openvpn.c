@@ -161,19 +161,21 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 		if ((fp = fopen(buffer, "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "pingme() {\n"
-			            "[ \"server\" = \"%s\" -o \"%d\" = \"0\" ] && return 0\n"
-			            " local i=1\n"
-			            " while :; do\n"
-			            "  ping -qc1 -W3 -I %s%d %s &>/dev/null && return 0\n"
-			            "  [ $((i++)) -ge 3 ] && break || sleep 5\n"
+			            " [ \"server\" = \"%s\" -o \"%d\" = \"0\" ] && return 0\n"
+			            " local i=1 delay=3\n"
+			            " while [ $i -le 4 ]; do\n"
+			            "  ping -qc1 -W2 -I %s%d %s &>/dev/null && return 0\n"
+			            "  sleep $delay\n"
+			            "  delay=$((delay * 2))\n"
+			            "  i=$((i + 1))\n"
 			            " done\n"
 			            " return 1\n"
 			            "}\n"
-			            "[ \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
-			            " pidof vpn%s%d &>/dev/null && pingme && exit 0\n"
-			            " logger -t openvpn-watchdog vpn%s%d stopped? Starting...\n"
-			            " service vpn%s%d restart\n"
-			            "}\n",
+			            "[ \"$(nvram get g_upgrade)\" = \"1\" -o \"$(nvram get g_reboot)\" = \"1\" ] && exit 0\n"
+			            "ip route | grep -q \"^default\" || exit 0\n"
+			            "pidof vpn%s%d &>/dev/null && pingme && exit 0\n"
+			            "logger -t openvpn-watchdog vpn%s%d stopped? Starting...\n"
+			            "service vpn%s%d restart\n",
 			            instanceType, atoi(getNVRAMVar("vpnc%d_tchk", unit)),
 			            getNVRAMVar("vpnc%d_if", unit), unit + (type == OVPN_TYPE_SERVER ? OVPN_SERVER_BASEIF : OVPN_CLIENT_BASEIF), nvram_safe_get("wan_checker"),
 			            instanceType, unit,
