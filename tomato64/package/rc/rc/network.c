@@ -1855,6 +1855,8 @@ void start_lan(void)
 #ifndef TOMATO64
 			wlconf(lan_ifname, -1, -1);
 #endif /* TOMATO64 */
+			free(lan_ifname); /* fix: lan_ifname was leaked in this branch */
+			continue;
 		}
 		else {
 			close(sfd);
