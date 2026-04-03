@@ -128,11 +128,12 @@ static void add_domain(domain_list_t *list, const char *domain)
 /* add/remove domains in dnsmasq config file */
 static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, const int add)
 {
-	FILE *fp_read, *fp_write;
+	FILE *fp_read = NULL, *fp_write = NULL;
 	char line[MAX_LINE], new_line[MAX_LINE], line_backup[MAX_LINE];
-	char temp_file[BUF_SIZE_64], domain_entry[BUF_SIZE_128];
+	char temp_file[BUF_SIZE_64], dirbuf[BUF_SIZE_64], domain_entry[BUF_SIZE_128];
 	char *pos, *tag_pos, *saveptr;
-	int found, tag_found, i, domain_count = 0, truncated;
+	int found, tag_found, i, domain_count = 0, truncated, dfd;
+	int *domain_seen = NULL;
 
 	if (!tag || !*tag)
 		return;
@@ -143,22 +144,29 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, const int
 			return;
 
 		domain_count = list->count;
+		domain_seen = calloc(domain_count, sizeof(int));
+		if (!domain_seen) {
+			logmsg(LOG_ERR, "domain_seen allocation failed");
+			return;
+		}
 	}
+
+	/* lock */
+	simple_lock("dnsmasq");
 
 	if (!f_exists(dmipset))
 		f_write(dmipset, NULL, 0, 0, 0);
 
 	if (!(fp_read = fopen(dmipset, "r"))) {
-		logmsg(LOG_WARNING, "cannot open file for reading: %s (%s)", dmipset, strerror(errno));
-		return;
+		logmsg(LOG_ERR, "cannot open file for reading: %s (%s)", dmipset, strerror(errno));
+		goto cleanup;
 	}
 
 	/* create temporary file path */
 	snprintf(temp_file, BUF_SIZE_64, "%s.tmp", dmipset);
 	if (!(fp_write = fopen(temp_file, "w"))) {
-		logmsg(LOG_WARNING, "cannot open file for writing: %s (%s)", temp_file, strerror(errno));
-		fclose(fp_read);
-		return;
+		logmsg(LOG_ERR, "cannot open file for writing: %s (%s)", temp_file, strerror(errno));
+		goto cleanup;
 	}
 
 	/* process existing file */
@@ -188,6 +196,11 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, const int
 		*pos = '\0';
 		memset(domain_entry, 0, BUF_SIZE_128);
 		strlcpy(domain_entry, line + 7, BUF_SIZE_128);
+
+		/* normalize dnsmasq wildcard entries (.example.com -> example.com) */
+		if (domain_entry[0] == '.')
+			memmove(domain_entry, domain_entry + 1, strlen(domain_entry) + 1);
+
 		*pos = '/';
 
 		/* note: found is intentionally not checked when removing (add=0).
@@ -201,6 +214,7 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, const int
 			for (i = 0; i < domain_count; i++) {
 				if (strcmp(domain_entry, list->domains[i]) == 0) {
 					found = 1;
+					domain_seen[i] = 1;
 					break;
 				}
 			}
@@ -225,6 +239,9 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, const int
 		/* parse and rebuild tags */
 		pos = strtok_r(tag_pos, ",", &saveptr);
 		while (pos && !truncated) {
+			while (*pos == ' ')
+				pos++;
+
 			if (strcmp(pos, tag) == 0) {
 				tag_found = 1;
 				if (!add) {
@@ -282,42 +299,38 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, const int
 	/* add new entries for domains not found in file */
 	if (add && list->domains) {
 		for (i = 0; i < domain_count; i++) {
-			found = 0;
-			rewind(fp_read); /* reset file pointer to beginning */
-
-			/* check if domain was already processed */
-			while (fgets(line, MAX_LINE, fp_read)) {
-				pos = strchr(line, '\n');
-				if (pos)
-					*pos = '\0';
-
-				if (strncmp(line, "ipset=/", 7) == 0) {
-					pos = strchr(line + 7, '/');
-					if (pos) {
-						*pos = '\0';
-						if (strcmp(line + 7, list->domains[i]) == 0) {
-							found = 1;
-							break;
-						}
-						*pos = '/';
-					}
-				}
-			}
-
-			/* add new entry if domain not found */
-			if (!found)
+			if (!domain_seen[i])
+				/* add new entry if domain not found */
 				fprintf(fp_write, "ipset=/%s/%s\n", list->domains[i], tag);
 		}
 	}
 
-	fclose(fp_read);
-	fclose(fp_write);
-
 	/* replace original file with temporary file */
 	if (rename(temp_file, dmipset) != 0) {
-		logmsg(LOG_WARNING, "cannot rename file: %s (%s)", dmipset, strerror(errno));
+		logmsg(LOG_ERR, "cannot rename file: %s (%s)", dmipset, strerror(errno));
 		unlink(temp_file);
 	}
+	else {
+		strlcpy(dirbuf, dmipset, BUF_SIZE_64);
+		dfd = open(dirname(dirbuf), O_DIRECTORY);
+		if (dfd >= 0) {
+			fsync(dfd);
+			close(dfd);
+		}
+	}
+
+cleanup:
+	if (fp_read)
+		fclose(fp_read);
+	if (fp_write) {
+		fsync(fileno(fp_write));
+		fclose(fp_write);
+	}
+
+	free(domain_seen);
+
+	/* unlock */
+	simple_unlock("dnsmasq");
 }
 
 static int file_contains(const char *filename, const char *pattern)
