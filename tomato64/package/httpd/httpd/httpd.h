@@ -41,6 +41,7 @@ extern int web_putc(char c);
 extern void web_puts(const char *buffer);
 extern void web_putj(const char *buffer);
 extern void web_putj_utf8(const char *buffer);
+extern void web_putj_nvram(const char *varname, const char *value);
 extern void web_puth(const char *buffer);
 extern int web_write(const char *buffer, int len);
 extern int web_read(void *buffer, int len);

@@ -58,6 +58,16 @@ void web_putj_utf8(const char *buffer)
 	}
 }
 
+/* output a JS variable assignment with a safely escaped string value.
+ * uses web_puts for the template and web_putj for the value to prevent XSS.
+ */
+void web_putj_nvram(const char *varname, const char *value)
+{
+	web_printf("\n%s = '", varname);
+	web_putj(value);
+	web_puts("';");
+}
+
 void web_puth(const char *buffer)
 {
 	char *p;
