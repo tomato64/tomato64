@@ -698,22 +698,32 @@ static void wg_setup_watchdog(const int unit)
 		if ((fp = fopen(buffer, "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
 			            "pingme() {\n"
-			            "[ \"3\" != \"%d\" -o \"%d\" = \"0\" ] && return 0\n"
-			            " local i=1\n"
-			            " while :; do\n"
-			            "  ping -qc1 -W3 -I wg%d %s &>/dev/null && return 0\n"
-			            "  [ $((i++)) -ge 3 ] && break || sleep 5\n"
+			            " [ \"3\" != \"%d\" -o \"%d\" = \"0\" ] && return 0\n"
+			            " local i=1 delay=3\n"
+			            " while [ $i -le 4 ]; do\n"
+			            "  ping -qc1 -W2 -I wg%d %s &>/dev/null && return 0\n"
+			            "  sleep $delay\n"
+			            "  delay=$((delay * 2))\n"
+			            "  i=$((i + 1))\n"
 			            " done\n"
 			            " return 1\n"
 			            "}\n"
-			            "ISUP=$(cat /sys/class/net/wg%d/operstate)\n"
-			            "[ \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
-			            " [ \"$ISUP\" == \"unknown\" -o \"$ISUP\" == \"up\" ] && pingme && exit 0\n"
-			            " logger -t wg-watchdog wg%d stopped? Starting...\n"
+			            "[ \"$(nvram get g_upgrade)\" = \"1\" -o \"$(nvram get g_reboot)\" = \"1\" ] && exit 0\n"
+			            "ip route | grep -q \"^default\" || exit 0\n"
+			            "[ -r /sys/class/net/wg%d/operstate ] || {\n"
+			            " logger -t wg-watchdog wg%d interface missing? Restarting ...\n"
 			            " service wireguard%d restart\n"
-			            "}\n",
+			            " exit 0\n"
+			            "}\n"
+			            "ISUP=$(cat /sys/class/net/wg%d/operstate)\n"
+			            "[ \"$ISUP\" = \"unknown\" -o \"$ISUP\" = \"up\" ] && pingme && exit 0\n"
+			            "logger -t wg-watchdog wg%d stopped? Restarting ...\n"
+			            "service wireguard%d restart\n",
 			            atoi(getNVRAMVar("wg%d_com", unit)), /* only for 'External' (3) mode */ atoi(getNVRAMVar("wg%d_tchk", unit)),
 			            unit, nvram_safe_get("wan_checker"),
+			            unit,
+			            unit,
+			            unit,
 			            unit,
 			            unit,
 			            unit);
