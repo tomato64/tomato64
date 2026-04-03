@@ -504,7 +504,7 @@ var PORT_VLAN_SUPPORT_OVERRIDE = 0;
 if (port_vlan_supported) {
 	var vlg = new TomatoGrid();
 	vlg.setup = function() {
-		var portOptions = ((trunk_vlan_supported) || (PORT_VLAN_SUPPORT_OVERRIDE)) ? [[0,''],[1,'🌕 On'],[2,'🌓 Tag']] : [[0,'Off'],[1,'On 🌕']];
+		var portOptions = [[0,''],[1,'🌕 On'],[2,'🌓 Tag']];
 		var cols = [
 			{ type: 'select', options: [[0,'0'],[1,'1'],[2,'2'],[3,'3'],[4,'4'],[5,'5'],[6,'6'],[7,'7'],[8,'8'],[9,'9'],[10,'10'],[11,'11'],[12,'12'],[13,'13'],[14,'14'],[15,'15']], prefix: '<div class="centered">', suffix: '<\/div>' },
 			{ type: 'text', maxlen: 4, prefix: '<div class="centered">', suffix: '<\/div>' },
@@ -695,7 +695,7 @@ REMOVE-END */
 						SWITCH_INTERNAL_PORT = (nvram['vlan'+i+'ports']).charAt((nvram['vlan'+i+'ports']).indexOf('*') - 1);
 
 					var pt = function(n) {
-						return (port[n] == '1') ? (((trunk_vlan_supported) && (tagged[n] == '1')) ? '2' : '1') : '0';
+						return (port[n] == '1') ? ((((trunk_vlan_supported) || (PORT_VLAN_SUPPORT_OVERRIDE)) && (tagged[n] == '1')) ? '2' : '1') : '0';
 					}
 
 					var row = [
@@ -800,28 +800,6 @@ REMOVE-END */
 		if (!v_range(f[COL_MAP], quiet, 0, 4094))
 			valid = 0;
 
-		function countNativeInForm(excludeCol) {
-			var ports = [COL_P0, COL_P1, COL_P2, COL_P3, COL_P4
-/* TOMATO64-SKIP-BEGIN */
-/* EXTSW-BEGIN */
-			             , COL_P5
-/* EXTSW-END */
-/* TOMATO64-SKIP-END */
-/* TOMATO64-BEGIN */
-			             , COL_P5, COL_P6, COL_P7, COL_P8
-/* TOMATO64-END */
-			];
-
-			var total = 0;
-			for (var i = 0; i < ports.length; i++) {
-				var col = ports[i];
-				if (col === excludeCol) continue;
-				if (parseInt(f[col].value, 10) === 1)
-					total++;
-			}
-			return total;
-		}
-
 		/* enforce trunk VLAN rules */
 		function enforcePortState(col) {
 			var val = parseInt(f[col].value, 10);
@@ -830,12 +808,9 @@ REMOVE-END */
 			if (f[col].options.length > 2)
 				f[col].options[2].disabled = !trunkAllowed;
 
-			if (!trunkAllowed && val === 2) {
-				if (countNativeInForm(col) > 0)
-					f[col].value = '0';
-				else
+			if (!trunkAllowed && val === 2)
 					f[col].value = '1';
-			}
+
 			if (val !== 0 && val !== 1 && val !== 2)
 				f[col].value = '0';
 		}
@@ -1566,6 +1541,7 @@ function init() {
 		E('sesdiv').style.display = 'block';
 		vlg.recolor();
 		vlg.resetNewEditor();
+		vlg.verifyFields(null, 1);
 		var c;
 		if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
 			toggleVisibility(cprefix, 'notes');
