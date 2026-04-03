@@ -97,12 +97,19 @@ static void add_domain(domain_list_t *list, const char *domain)
 	char **newdomains;
 	int newcap;
 
+	if (!domain || !*domain)
+		return;
+
+	/* normalize dnsmasq wildcard format (.example.com -> example.com) */
+	if (domain[0] == '.')
+		domain++;
+
 	/* check if increase the array size is needed */
 	if (list->count >= list->capacity - 1) { /* -1 for NULL at the end */
 		newcap = list->capacity * 2;
 		newdomains = realloc(list->domains, newcap * sizeof(char*));
 		if (!newdomains) {
-			logmsg(LOG_WARNING, "%s: realloc failed (capacity=%d, domain='%s') - skipping domain (out of memory)", __FUNCTION__, newcap, domain);
+			logmsg(LOG_ERR, "%s: realloc failed (capacity=%d, domain='%s') - skipping domain (out of memory)", __FUNCTION__, newcap, domain);
 			return;
 		}
 		list->domains = newdomains;
@@ -113,7 +120,7 @@ static void add_domain(domain_list_t *list, const char *domain)
 	/* allocate memory for the new domain */
 	list->domains[list->count] = (char*)malloc((strlen(domain) + 1) * sizeof(char));
 	if (!list->domains[list->count]) {
-		logmsg(LOG_WARNING, "%s: malloc failed for domain '%s' (out of memory) - skipping", __FUNCTION__, domain);
+		logmsg(LOG_ERR, "%s: malloc failed for domain '%s' (out of memory) - skipping", __FUNCTION__, domain);
 		return;
 	}
 
