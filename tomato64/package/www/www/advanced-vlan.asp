@@ -1729,6 +1729,8 @@ function init() {
 				}
 			}
 			createFieldTable('', f);
+			if (port_vlan_supported)
+				vlg.setup();
 		</script>
 	</div>
 /* TOMATO64-SKIP-END */
@@ -1771,8 +1773,8 @@ function init() {
 			<li><b>Native VLAN</b>: Default VLAN for untagged ingress frames = 🌑</li>
 			<li><b>Bridge</b>: One VLAN per bridge. WAN bridge (logical) ≠ WAN port (physical)</li>
 		</ul>
-<!-- RTNPLUS-NO-BEGIN -->
 		<br>
+<!-- RTNPLUS-NO-BEGIN -->
 		<div><i>VID Offset:</i> First 802.1Q VLAN tag to be used as <i>base/initial tag/VID</i> for VLAN and VID assignments. This allows using VIDs larger than 15 on (older) devices, in contiguous blocks/ranges with up to 16 VLANs/VIDs. Set to '0' (zero) to disable this feature and VLANs will have the very same/identical value for its VID, as usual (from 0 to 15).</div>
 		<br>
 <!-- RTNPLUS-NO-END -->
