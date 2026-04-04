@@ -29,6 +29,7 @@
 var cprefix = 'vpn_wireguard';
 var changed = 0, i;
 var serviceType = 'wireguard';
+var script_warn = 'Although a snapshot mechanism is applied during startup, introducing custom routing while WireGuard is running and then saving the configuration may corrupt the routing table!';
 for (i = 0; i < WG_INTERFACE_COUNT; i++) serviceLastUp.push('0');
 
 function RouteGrid() {return this;}
@@ -2252,10 +2253,10 @@ function init() {
 			W('<div id="'+t+'-wg-scripts">');
 			W('<div class="section-title">Custom Interface Scripts<\/div>');
 			createFieldTable('', [
-				{ title: 'Pre-Up Script', name: t+'_preup', type: 'textarea', value: nvram[t+'_preup'] },
-				{ title: 'Post-Up Script', name: t+'_postup', type: 'textarea', value: nvram[t+'_postup'] },
-				{ title: 'Pre-Down Script', name: t+'_predown', type: 'textarea', value: nvram[t+'_predown'] },
-				{ title: 'Post-Down Script', name: t+'_postdown', type: 'textarea', value: nvram[t+'_postdown'] }
+				{ title: 'Pre-Up Script', name: t+'_preup', type: 'textarea', placeholder: script_warn, value: nvram[t+'_preup'] },
+				{ title: 'Post-Up Script', name: t+'_postup', type: 'textarea', placeholder: script_warn, value: nvram[t+'_postup'] },
+				{ title: 'Pre-Down Script', name: t+'_predown', type: 'textarea', placeholder: script_warn, value: nvram[t+'_predown'] },
+				{ title: 'Post-Down Script', name: t+'_postdown', type: 'textarea', placeholder: script_warn, value: nvram[t+'_postdown'] }
 			]);
 			W('<\/div>');
 			/* scripts tab stop */
