@@ -557,6 +557,11 @@ ifeq ($(TCONFIG_OPENVPN),y)
  endif
 endif
 
+# add porthealth only on ARM routers
+ifneq ($(TCONFIG_BCMARM),y)
+	sed -i $(INSTALLDIR)/www/advanced-misc.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+endif
+
 # add a note about WL Survey issue only on ARM routers
 ifneq ($(TCONFIG_BCMARM),y)
 	sed -i $(INSTALLDIR)/www/tools-survey.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
