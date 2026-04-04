@@ -1968,7 +1968,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wg1_enable",			"0"				, 0 },
 	{"wg1_poll",			"0"				, 0 },
 	{"wg1_tchk",			"0"				, 0 },	/* check if tunnel is up */
-	{"wg2_tunchk",			""				, 0 },	/* IP to check the tunnel */
+	{"wg1_tunchk",			""				, 0 },	/* IP to check the tunnel */
 	{"wg1_sleep",			"1"				, 0 },	/* delay at startup */
 	{"wg1_file",			""				, 0 },
 	{"wg1_key",			""				, 0 },
@@ -1999,7 +1999,7 @@ struct nvram_tuple router_defaults[] = {
 	{"wg2_enable",			"0"				, 0 },
 	{"wg2_poll",			"0"				, 0 },
 	{"wg2_tchk",			"0"				, 0 },	/* check if tunnel is up */
-	{"wg3_tunchk",			""				, 0 },	/* IP to check the tunnel */
+	{"wg2_tunchk",			""				, 0 },	/* IP to check the tunnel */
 	{"wg2_sleep",			"1"				, 0 },	/* delay at startup */
 	{"wg2_file",			""				, 0 },
 	{"wg2_key",			""				, 0 },
