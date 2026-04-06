@@ -515,7 +515,11 @@ static void shutdn(int rb)
 
 #ifdef TOMATO64
 	system("/bin/umount -a -d -r");
+#ifdef TOMATO64_HAS_POWEROFF
 	reboot(rb ? RB_AUTOBOOT : RB_POWER_OFF);
+#else
+	reboot(rb ? RB_AUTOBOOT : RB_HALT_SYSTEM);
+#endif /* TOMATO64_HAS_POWEROFF */
 #else
 	reboot(rb ? RB_AUTOBOOT : RB_HALT_SYSTEM);
 #endif /* TOMATO64 */

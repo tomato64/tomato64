@@ -14,6 +14,10 @@ export PLATFORM_ARM64=y
 export PLATFORM_WIFI=y
 endif
 
+ifeq ($(BR2_PACKAGE_PLATFORM_HAS_POWEROFF),y)
+export PLATFORM_HAS_POWEROFF=y
+endif
+
 ifeq ($(BR2_PACKAGE_PLATFORM_MT6000),y)
 export PLATFORM_MT6000=y
 endif
