@@ -1,18 +1,11 @@
 <!DOCTYPE html>
 <!--
-	Tomato GUI
-	Copyright (C) 2006-2007 Jonathan Zarate
-	http://www.polarcloud.com/tomato/
+	FreshTomato GUI
+	Copyright (C) 2018 - 2026 pedro
+	https://freshtomato.org/
 
-	Virtual Wireless Interfaces web interface & extensions
-	Copyright (C) 2012 Augusto Bott
-	http://code.google.com/p/tomato-sdhc-vlan/
-	Some portions Copyright (C) Jean-Yves Avenard
-	mailto:jean-yves@avenard.org
-
-	For use with Tomato Firmware only.
+	For use with FreshTomato Firmware only.
 	No part of this file may be used without permission.
-	LAN Access admin module by Augusto Bott
 -->
 <html lang="en-GB">
 <head>
@@ -26,9 +19,11 @@
 <script src="interfaces.js?rel=<% version(); %>"></script>
 <script src="wireless.js?rel=<% version(); %>"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
+<!-- BCMARM-BEGIN -->
 <script>
 var lastjiffiestotal = 0, lastjiffiesidle = 0, lastjiffiesusage = 100;
 </script>
+<!-- BCMARM-END -->
 <script src="status-data.jsx?_http_id=<% nv(http_id); %>"></script>
 
 <script>
@@ -479,7 +474,9 @@ REMOVE-END */
 	var lan3_ifnames = nvram['lan3_ifnames'];
 	var wl0_vifs = nvram['wl0_vifs'];
 	var wl1_vifs = nvram['wl1_vifs'];
+/* BCMARM-BEGIN */
 	var wl2_vifs = nvram['wl2_vifs'];
+/* BCMARM-END */
 
 	for (var vidx = 0; vidx < vifs_deleted.length; ++vidx) {
 		var u = vifs_deleted[vidx];
@@ -496,8 +493,10 @@ REMOVE-END */
 			wl0_vifs = wl0_vifs.replace('wl'+u, '');
 		if (typeof(wl1_vifs) != 'undefined')
 			wl1_vifs = wl1_vifs.replace('wl'+u, '');
+/* BCMARM-BEGIN */
 		if (typeof(wl2_vifs) != 'undefined')
 			wl2_vifs = wl2_vifs.replace('wl'+u, '');
+/* BCMARM-END */
 
 		s += 'nvram unset wl'+u+'_wme\n';
 		s += 'nvram unset wl'+u+'_bss_maxassoc\n';
@@ -514,8 +513,10 @@ REMOVE-END */
 			s += 'nvram set wl0_vifs="'+wl0_vifs+'"\n';
 		if (typeof(wl1_vifs) != 'undefined')
 			s += 'nvram set wl1_vifs="'+wl1_vifs+'"\n';
+/* BCMARM-BEGIN */
 		if (typeof(wl2_vifs) != 'undefined')
 			s += 'nvram set wl2_vifs="'+wl2_vifs+'"\n';
+/* BCMARM-END */
 	}
 	post_pre_submit_form(s);
 }
@@ -859,7 +860,12 @@ REMOVE-END */
 				case 'nac-mixed':
 				case 'ac-only':
 /* BCMWL6-END */
+/* RTNPLUS-BEGIN */
 					if ((nphy || acphy) && (a.value == 'tkip') && (sm2.indexOf('wpa') != -1)) {
+/* RTNPLUS-END */
+/* RTNPLUS-NO-BEGIN */
+					if (nphy && (a.value == 'tkip') && (sm2.indexOf('wpa') != -1)) {
+/* RTNPLUS-NO-END */
 						ferror.set(a, 'TKIP encryption is not supported with WPA / WPA2 in N and/or AC mode.', quiet || !ok);
 						ok = 0;
 					}
@@ -944,7 +950,12 @@ REMOVE-END */
 		}
 
 		/* range */
+/* RTNPLUS-BEGIN */
 		a = [['_wpa_gtk_rekey', 0, 2592000], ['_radius_port', 1, 65535]];
+/* RTNPLUS-END */
+/* RTNPLUS-NO-BEGIN */
+		a = [['_wpa_gtk_rekey', 60, 7200], ['_radius_port', 1, 65535]];
+/* RTNPLUS-NO-END */
 		for (i = a.length - 1; i >= 0; --i) {
 			v = a[i];
 			if ((wl_vis[vidx]['_wl'+v[0]]) && (!v_range('_wl'+u+v[0], quiet || !ok, v[1], v[2])))
@@ -1180,7 +1191,12 @@ REMOVE-END */
 					E('_wl'+u+'_gmode').value = 0;
 					break;
 				case 'g-only':
+/* RTNPLUS-BEGIN */
 					E('_wl'+u+'_gmode').value = 2;
+/* RTNPLUS-END */
+/* RTNPLUS-NO-BEGIN */
+					E('_wl'+u+'_gmode').value = 4;
+/* RTNPLUS-NO-END */
 /* BCMWL6-BEGIN */
 					E('_wl'+u+'_bss_opmode_cap_reqd').value = 1; /* client must advertise ERP / 11g cap. to be able to join */
 /* BCMWL6-END */
@@ -1550,7 +1566,12 @@ function init() {
 					{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_wpa_psk', type: 'password', maxlen: 64, size: 66, peekaboo: 1,
 						suffix: ' <input type="button" id="_f_wl'+u+'_psk_random1" value="Random" onclick="random_psk(\'_wl'+u+'_wpa_psk\')">', value: nvram['wl'+u+'_wpa_psk'] },
 					{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_radius_key', type: 'password', maxlen: 80, size: 32, peekaboo: 1, suffix: ' <input type="button" id="_f_wl'+u+'_psk_random2" value="Random" onclick="random_psk(\'_wl'+u+'_radius_key\')">', value: nvram['wl'+u+'_radius_key'] },
+/* RTNPLUS-BEGIN */
 					{ title: 'Group Key Renewal', indent: 2, name: 'wl'+u+'_wpa_gtk_rekey', type: 'text', maxlen: 7, size: 9, suffix: '&nbsp; <small>seconds<\/small>', value: (nvram['wl'+u+'_wpa_gtk_rekey'] || '3600') },
+/* RTNPLUS-END */
+/* RTNPLUS-NO-BEGIN */
+					{ title: 'Group Key Renewal', indent: 2, name: 'wl'+u+'_wpa_gtk_rekey', type: 'text', maxlen: 4, size: 6, suffix: '&nbsp; <small>seconds<\/small>', value: (nvram['wl'+u+'_wpa_gtk_rekey'] || '3600') },
+/* RTNPLUS-NO-END */
 					{ title: 'Radius Server', indent: 2, multi: [
 						{ name: 'wl'+u+'_radius_ipaddr', type: 'text', maxlen: 15, size: 17, value: nvram['wl'+u+'_radius_ipaddr'] },
 						{ name: 'wl'+u+'_radius_port', type: 'text', maxlen: 5, size: 7, prefix: ' : ', value: (nvram['wl'+u+'_radius_port'] || '1812') } ] },
