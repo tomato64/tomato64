@@ -924,7 +924,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 					'class': 'svg-text',
 					'pointer-events': 'none',
 					'text-anchor': 'middle',
-					'dominant-baseline': 'text-after-edge'
+					'dy': '-0.2em'
 				})).appendChild(document.createTextNode(x));
 			}
 		}
@@ -935,7 +935,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 			'class': 'svg-text',
 			'pointer-events': 'none',
 			'text-anchor': 'middle',
-			'dominant-baseline': 'text-after-edge'
+			'dy': '-0.2em'
 		})).appendChild(document.createTextNode(14));
 	}
 	else if (a == 'ellipses5') {
@@ -956,7 +956,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 					'class': 'svg-text',
 					'pointer-events': 'none',
 					'text-anchor': 'middle',
-					'dominant-baseline': 'text-after-edge'
+					'dy': '-0.2em'
 				})).appendChild(document.createTextNode(x));
 			}
 		}
@@ -977,7 +977,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 					'class': 'svg-text',
 					'pointer-events': 'none',
 					'text-anchor': 'middle',
-					'dominant-baseline': 'text-after-edge'
+					'dy': '-0.2em'
 				})).appendChild(document.createTextNode(x));
 			}
 		}
