@@ -1,0 +1,37 @@
+From 97ceb56821b5c1a23ef763bf98e55c6e09ccd846 Mon Sep 17 00:00:00 2001
+From: Bernd Kuhls <bernd@kuhls.net>
+Date: Thu, 26 Feb 2026 21:36:58 +0100
+Subject: [PATCH] package/transmission: bump version to 4.1.1
+
+https://github.com/transmission/transmission/releases/tag/4.1.1
+
+Signed-off-by: Bernd Kuhls <bernd@kuhls.net>
+Signed-off-by: Julien Olivain <ju.o@free.fr>
+---
+ package/transmission/transmission.hash | 2 +-
+ package/transmission/transmission.mk   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/package/transmission/transmission.hash b/package/transmission/transmission.hash
+index b6dcaf9ae54..d554f8034ef 100644
+--- a/package/transmission/transmission.hash
++++ b/package/transmission/transmission.hash
+@@ -1,4 +1,4 @@
+ # From https://transmissionbt.com/download
+-sha256  dcd28c1c9e6126229c4c17dbc9e95c9fd4aed7e76f4a1f2a74604c8cddec49d6  transmission-4.1.0.tar.xz
++sha256  e743283ee03a42c4d0b08fed2bd52b554aa6c9f65b4d4d45b795c32d98762a79  transmission-4.1.1.tar.xz
+ # Locally calculated
+ sha256  9715b55d11caa499d34a6e23498c766fe1ece4ace57777553313e27d688dee78  COPYING
+diff --git a/package/transmission/transmission.mk b/package/transmission/transmission.mk
+index e4b6d8d1893..b7e204dfce8 100644
+--- a/package/transmission/transmission.mk
++++ b/package/transmission/transmission.mk
+@@ -4,7 +4,7 @@
+ #
+ ################################################################################
+ 
+-TRANSMISSION_VERSION = 4.1.0
++TRANSMISSION_VERSION = 4.1.1
+ TRANSMISSION_SOURCE = transmission-$(TRANSMISSION_VERSION).tar.xz
+ TRANSMISSION_SITE = https://github.com/transmission/transmission/releases/download/$(TRANSMISSION_VERSION)
+ TRANSMISSION_DEPENDENCIES = \
