@@ -463,7 +463,6 @@ var COL_P2  = 4;
 var COL_P3  = 5;
 var COL_P4  = 6;
 /* TOMATO64-SKIP-BEGIN */
-var COL_P5;
 var COL_VID_DEF;
 var COL_BRI;
 /* EXTSW-NO-BEGIN */
@@ -471,7 +470,7 @@ COL_VID_DEF = 7;
 COL_BRI = 8;
 /* EXTSW-NO-END */
 /* EXTSW-BEGIN */
-COL_P5  = 7;
+COL_P5 = 7;
 COL_VID_DEF = 8;
 COL_BRI = 9;
 /* EXTSW-END */
@@ -1187,7 +1186,40 @@ function trailingSpace(s) {
 
 function verifyFields(focused, quiet) {
 /* MIPSR2P-NO-BEGIN */
-	PORT_VLAN_SUPPORT_OVERRIDE=(E('_f_trunk_vlan_so').checked ? 1 : 0);
+	/* sync active editor before validation */
+	if (typeof vlg != 'undefined' && vlg.isEditing()) {
+		/* try to save edited row */
+		if (!vlg.onOK()) {
+			return 0;
+		}
+	}
+
+	PORT_VLAN_SUPPORT_OVERRIDE = (E('_f_trunk_vlan_so').checked ? 1 : 0);
+
+	/* enforce no-tag when trunk unsupported and override disabled */
+	if ((!trunk_vlan_supported) && (!PORT_VLAN_SUPPORT_OVERRIDE) && (typeof vlg != 'undefined')) {
+		var data = vlg.getAllData();
+		var changed = false;
+
+		for (var i = 0; i < data.length; ++i) {
+			/* port columns */
+			for (var col = COL_P0; col <= COL_P4; ++col) {
+				if (data[i][col] == 2) { /* only Tag */
+					data[i][col] = 1; /* downgrade Tag -> On */
+					changed = true;
+				}
+			}
+		}
+
+		if (changed) {
+			vlg.removeAllData();
+
+			for (var i = 0; i < data.length; ++i) {
+				vlg.insertData(-1, data[i]);
+			}
+			vlg.recolor();
+		}
+	}
 /* MIPSR2P-NO-END */
 	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 		var wlan = E('_f_bridge_wlan'+uidx+'_to');
