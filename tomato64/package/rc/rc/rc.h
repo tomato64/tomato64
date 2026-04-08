@@ -309,6 +309,8 @@ extern void stop_adblock(void);
 #ifdef TOMATO64
 extern void start_zram(void);
 extern void stop_zram(void);
+extern void start_cpufreq(void);
+extern void stop_cpufreq(void);
 #endif
 #ifdef TCONFIG_ZEBRA
 extern void start_zebra(void);

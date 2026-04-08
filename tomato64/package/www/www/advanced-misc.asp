@@ -22,7 +22,8 @@
 //	<% nvram("t_features,wait_time,wan_speed,jumbo_frame_enable,jumbo_frame_size,ctf_disable,bcmnat_disable,porthealth_cfg"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("t_features,wait_time,wan_speed,jumbo_frame_enable,jumbo_frame_size,ctf_disable,bcmnat_disable,zram_enable,zram_size,zram_priority,zram_comp_algo"); %>
+//	<% nvram("t_features,wait_time,wan_speed,jumbo_frame_enable,jumbo_frame_size,ctf_disable,bcmnat_disable,zram_enable,zram_size,zram_priority,zram_comp_algo,cpu_governor"); %>
+//	<% cpufreq(); %>
 /* TOMATO64-END */
 
 et1000 = features('1000et');
@@ -158,6 +159,21 @@ function save() {
 		}
 	}
 	else { /* continue without reboot */
+/* TOMATO64-BEGIN */
+		if (typeof cpufreq !== 'undefined' && cpufreq.supported && fom.cpu_governor.value != (nvram.cpu_governor || cpufreq.current_governor)) {
+			fom._service.value = 'cpufreq-restart';
+			/* ajax save — update the "Current: X" label and cached state so
+			   subsequent saves compare against the new value and the UI reflects
+			   reality without a manual refresh. The cpufreq-restart service writes
+			   sysfs immediately, so this optimistic update matches actual state by
+			   the time xhr returns. */
+			var newGov = fom.cpu_governor.value;
+			var cur = E('_cpu_governor_current');
+			if (cur) cur.innerHTML = newGov;
+			cpufreq.current_governor = newGov;
+			nvram.cpu_governor = newGov;
+		}
+/* TOMATO64-END */
 		form.submit(fom, 1);
 	}
 }
@@ -192,6 +208,7 @@ function save() {
 <input type="hidden" name="bcmnat_disable">
 <!-- BCMNAT-END -->
 <!-- TOMATO64-BEGIN -->
+<input type="hidden" name="_service" value="">
 <input type="hidden" name="zram_enable">
 <!-- TOMATO64-END -->
 /* TOMATO64-REMOVE-BEGIN */
@@ -272,6 +289,46 @@ function save() {
 	</div>
 
 </div>
+<!-- TOMATO64-END -->
+
+<!-- TOMATO64-BEGIN -->
+<script>
+if (typeof cpufreq !== 'undefined' && cpufreq.supported) {
+	W('<div class="section-title">CPU Frequency Governor<\/div>');
+	W('<div class="section">');
+	var govOpts = [];
+	for (var i = 0; i < cpufreq.available_governors.length; i++) {
+		var g = cpufreq.available_governors[i];
+		govOpts.push([g, g.charAt(0).toUpperCase() + g.slice(1)]);
+	}
+	createFieldTable('', [
+		{ title: 'CPU Governor', name: 'cpu_governor', type: 'select',
+			options: govOpts,
+			value: nvram.cpu_governor || cpufreq.current_governor,
+			suffix: ' <small>Current: <span id="_cpu_governor_current">' + cpufreq.current_governor + '<\/span><\/small>' }
+	]);
+
+	/* Descriptions for all possible Linux cpufreq governors — only those in
+	   available_governors for this device will be rendered. */
+	var govDesc = {
+		'performance':  'always run at maximum frequency',
+		'powersave':    'always run at minimum frequency',
+		'ondemand':     'scale up quickly under load',
+		'conservative': 'scale up gradually under load',
+		'schedutil':    'frequency chosen by the kernel scheduler',
+		'userspace':    'frequency controlled manually from userspace'
+	};
+	var noteHtml = '<div class="note-spacer"><small>Controls how the CPU adjusts its clock speed.';
+	for (var j = 0; j < cpufreq.available_governors.length; j++) {
+		var gn = cpufreq.available_governors[j];
+		if (govDesc[gn])
+			noteHtml += '<br><b>' + gn + '<\/b> - ' + govDesc[gn];
+	}
+	noteHtml += '<\/small><\/div>';
+	W(noteHtml);
+	W('<\/div>');
+}
+</script>
 <!-- TOMATO64-END -->
 
 <!-- / / / -->

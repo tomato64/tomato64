@@ -1551,3 +1551,44 @@ void asp_dnscrypt_presets(int argc, char **argv)
 	fclose(fp);
 }
 #endif
+
+#ifdef TOMATO64
+void asp_cpufreq(int argc, char **argv)
+{
+	char buf[256];
+	char gov[64];
+	char *p, *token;
+	int first;
+
+	web_puts("\ncpufreq = {\n");
+
+	if (f_read_string("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors", buf, sizeof(buf)) <= 0) {
+		web_puts("\tsupported: 0\n};\n");
+		return;
+	}
+
+	/* trim trailing whitespace */
+	for (p = buf + strlen(buf) - 1; p >= buf && (*p == ' ' || *p == '\n'); p--)
+		*p = '\0';
+
+	web_puts("\tsupported: 1,\n");
+
+	gov[0] = '\0';
+	if (f_read_string("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", gov, sizeof(gov)) > 0) {
+		for (p = gov + strlen(gov) - 1; p >= gov && (*p == ' ' || *p == '\n'); p--)
+			*p = '\0';
+	}
+	web_printf("\tcurrent_governor: '%s',\n", gov);
+
+	web_puts("\tavailable_governors: [");
+	first = 1;
+	p = buf;
+	while ((token = strsep(&p, " ")) != NULL) {
+		if (*token == '\0')
+			continue;
+		web_printf("%s'%s'", first ? "" : ",", token);
+		first = 0;
+	}
+	web_puts("]\n};\n");
+}
+#endif /* TOMATO64 */

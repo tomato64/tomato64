@@ -787,6 +787,34 @@ void stop_zram(void)
 {
 	xstart("/sbin/zram", "stop");
 }
+
+void start_cpufreq(void)
+{
+	char path[128];
+	const char *governor;
+	int i;
+
+	if (nvram_get_int("g_upgrade") || nvram_get_int("g_reboot"))
+		return;
+
+	governor = nvram_safe_get("cpu_governor");
+	if (*governor == '\0')
+		return;	/* empty = use kernel default */
+
+	/* apply to all CPUs */
+	for (i = 0; i < 128; i++) {
+		snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_governor", i);
+		if (f_write_string(path, governor, 0, 0) <= 0)
+			break;	/* no more CPUs with cpufreq */
+	}
+
+	logmsg(LOG_INFO, "cpufreq: set governor to '%s'", governor);
+}
+
+void stop_cpufreq(void)
+{
+	/* no-op: governor persists until changed */
+}
 #endif /* TOMATO64 */
 
 #ifdef TCONFIG_IPV6
@@ -2466,6 +2494,7 @@ void start_services(void)
 #endif
 #ifdef TOMATO64
 	start_zram();
+	start_cpufreq();
 #endif
 	if (once) {
 		once = 0;
@@ -2630,6 +2659,7 @@ void stop_services(void)
 #endif /* TOMATO64_WIFI */
 #ifdef TOMATO64
 	stop_zram();
+	stop_cpufreq();
 #endif
 }
 
@@ -2797,6 +2827,12 @@ TOP:
 	if (strcmp(service, "zram") == 0) {
 		if (act_stop) stop_zram();
 		if (act_start) start_zram();
+		goto CLEAR;
+	}
+
+	if (strcmp(service, "cpufreq") == 0) {
+		if (act_stop) stop_cpufreq();
+		if (act_start) start_cpufreq();
 		goto CLEAR;
 	}
 #endif

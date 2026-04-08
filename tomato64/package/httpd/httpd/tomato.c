@@ -187,6 +187,9 @@ const aspapi_t aspapi[] = {
 #ifdef TCONFIG_DNSCRYPT
 	{ "dnscrypt_presets",		asp_dnscrypt_presets		},
 #endif
+#ifdef TOMATO64
+	{ "cpufreq",			asp_cpufreq			},
+#endif
 	{ NULL,				NULL				}
 };
 
@@ -812,6 +815,7 @@ static const nvset_t nvset_list[] = {
 	{ "zram_size",			V_RANGE(0, 32768)		},	/* 0 = auto, max 32GB */
 	{ "zram_priority",		V_RANGE(-1, 32767)		},	/* swap priority */
 	{ "zram_comp_algo",		V_LENGTH(1, 16)			},	/* compression algorithm name */
+	{ "cpu_governor",		V_LENGTH(0, 16)			},	/* CPU frequency governor */
 #endif
 
 /* advanced-vlan */

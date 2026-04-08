@@ -1053,6 +1053,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "zram_size",			"0"				, 0 },	/* 0 = auto (50% of RAM) */
 	{ "zram_priority",		"100"				, 0 },
 	{ "zram_comp_algo",		"lz4"				, 0 },
+	{ "cpu_governor",		""				, 0 },	/* empty = use kernel default */
 #endif /* TOMATO64 */
 
 /* advanced-dhcpdns */
