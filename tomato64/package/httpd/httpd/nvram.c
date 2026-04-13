@@ -198,7 +198,15 @@ void asp_nvram(int argc, char **argv)
 				"_hidden", "_wmm", "_uapsd", "_encryption", "_cipher",
 				"_key", "_isolate", "_br_isolate", "_ifname",
 				"_macfilter", "_maclist", "_custom",
-				"_mesh_fwding", "_mesh_rssi_threshold"
+				"_mesh_fwding", "_mesh_rssi_threshold",
+				"_ieee80211r", "_nasid", "_mobility_domain",
+				"_reassociation_deadline", "_ft_over_ds",
+				"_ft_psk_generate_local", "_r0_key_lifetime",
+				"_r1_key_holder", "_pmk_r1_push", "_r0kh", "_r1kh",
+				"_ieee80211k", "_rrm_neighbor_report", "_rrm_beacon_report",
+				"_time_advertisement", "_time_zone",
+				"_wnm_sleep_mode", "_wnm_sleep_mode_no_keys",
+				"_bss_transition", "_proxy_arp"
 			};
 			unsigned int phy, ifc, s;
 			for (phy = 0; phy < WIFI_PHY_COUNT; phy++) {

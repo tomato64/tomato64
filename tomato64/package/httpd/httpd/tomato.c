@@ -381,7 +381,27 @@ const aspapi_t aspapi[] = {
 	{"wifi_phy" #p "iface" #i "_maclist",		V_NONE		}, \
 	{"wifi_phy" #p "iface" #i "_custom",		V_NONE		}, /* Custom hostapd interface config */ \
 	{"wifi_phy" #p "iface" #i "_mesh_fwding",	V_RANGE(0, 1)	}, /* Forward mesh peer traffic */ \
-	{"wifi_phy" #p "iface" #i "_mesh_rssi_threshold", V_RANGE(-255, 1) }, /* RSSI threshold; 0=off, 1=driver default */
+	{"wifi_phy" #p "iface" #i "_mesh_rssi_threshold", V_RANGE(-255, 1) }, /* RSSI threshold; 0=off, 1=driver default */ \
+	{"wifi_phy" #p "iface" #i "_ieee80211r",		V_01			}, /* 802.11r Fast Transition */ \
+	{"wifi_phy" #p "iface" #i "_nasid",			V_TEXT(0, 48)		}, /* NAS ID / R0KH-ID */ \
+	{"wifi_phy" #p "iface" #i "_mobility_domain",		V_TEXT(0, 4)		}, /* 4-char hex */ \
+	{"wifi_phy" #p "iface" #i "_reassociation_deadline",	V_TEXT(0, 5)		}, /* 1000-65535 TUs */ \
+	{"wifi_phy" #p "iface" #i "_ft_over_ds",		V_RANGE(0, 1)		}, /* 0=over-air, 1=over-DS */ \
+	{"wifi_phy" #p "iface" #i "_ft_psk_generate_local",	V_01			}, \
+	{"wifi_phy" #p "iface" #i "_r0_key_lifetime",		V_TEXT(0, 10)		}, /* minutes */ \
+	{"wifi_phy" #p "iface" #i "_r1_key_holder",		V_TEXT(0, 12)		}, /* 6-octet hex */ \
+	{"wifi_phy" #p "iface" #i "_pmk_r1_push",		V_01			}, \
+	{"wifi_phy" #p "iface" #i "_r0kh",			V_NONE			}, /* DynamicList */ \
+	{"wifi_phy" #p "iface" #i "_r1kh",			V_NONE			}, /* DynamicList */ \
+	{"wifi_phy" #p "iface" #i "_ieee80211k",		V_01			}, /* 802.11k RRM */ \
+	{"wifi_phy" #p "iface" #i "_rrm_neighbor_report",	V_01			}, \
+	{"wifi_phy" #p "iface" #i "_rrm_beacon_report",		V_01			}, \
+	{"wifi_phy" #p "iface" #i "_time_advertisement",	V_RANGE(0, 2)		}, /* 0=off, 2=UTC */ \
+	{"wifi_phy" #p "iface" #i "_time_zone",			V_TEXT(0, 64)		}, \
+	{"wifi_phy" #p "iface" #i "_wnm_sleep_mode",		V_01			}, /* 802.11v WNM sleep */ \
+	{"wifi_phy" #p "iface" #i "_wnm_sleep_mode_no_keys",	V_01			}, \
+	{"wifi_phy" #p "iface" #i "_bss_transition",		V_01			}, /* 802.11v BSS transition */ \
+	{"wifi_phy" #p "iface" #i "_proxy_arp",			V_01			}, /* 802.11v ProxyARP */
 
 /* All 16 ifaces for a given phy */
 #define WIFI_PHY_IFACES(p) \

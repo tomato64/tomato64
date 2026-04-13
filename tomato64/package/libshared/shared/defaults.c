@@ -391,7 +391,27 @@ struct nvram_tuple bsd_defaults[] = {
 	{"wifi_phy" #p "iface" #i "_maclist",		""		, 0 }, \
 	{"wifi_phy" #p "iface" #i "_custom",		""		, 0 }, \
 	{"wifi_phy" #p "iface" #i "_mesh_fwding",	"1"		, 0 }, \
-	{"wifi_phy" #p "iface" #i "_mesh_rssi_threshold", "0"	, 0 },
+	{"wifi_phy" #p "iface" #i "_mesh_rssi_threshold", "0"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_ieee80211r",		"0"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_nasid",			""	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_mobility_domain",		""	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_reassociation_deadline",	""	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_ft_over_ds",		"0"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_ft_psk_generate_local",	"1"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_r0_key_lifetime",		""	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_r1_key_holder",		""	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_pmk_r1_push",		"0"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_r0kh",			""	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_r1kh",			""	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_ieee80211k",		"0"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_rrm_neighbor_report",	"1"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_rrm_beacon_report",		"1"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_time_advertisement",	"0"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_time_zone",			""	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_wnm_sleep_mode",		"0"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_wnm_sleep_mode_no_keys",	"0"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_bss_transition",		"0"	, 0 }, \
+	{"wifi_phy" #p "iface" #i "_proxy_arp",			"0"	, 0 },
 
 /* All 16 ifaces for a given phy (all generic/disabled) */
 #define WIFI_DEF_PHY_IFACES(p) \
@@ -2365,6 +2385,26 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface0_custom",	""				, 0 },
 	{"wifi_phy0iface0_mesh_fwding",	"1"				, 0 },
 	{"wifi_phy0iface0_mesh_rssi_threshold", "0"			, 0 },
+	{"wifi_phy0iface0_ieee80211r",			"0"		, 0 },
+	{"wifi_phy0iface0_nasid",			""		, 0 },
+	{"wifi_phy0iface0_mobility_domain",		""		, 0 },
+	{"wifi_phy0iface0_reassociation_deadline",	""		, 0 },
+	{"wifi_phy0iface0_ft_over_ds",			"0"		, 0 },
+	{"wifi_phy0iface0_ft_psk_generate_local",	"1"		, 0 },
+	{"wifi_phy0iface0_r0_key_lifetime",		""		, 0 },
+	{"wifi_phy0iface0_r1_key_holder",		""		, 0 },
+	{"wifi_phy0iface0_pmk_r1_push",			"0"		, 0 },
+	{"wifi_phy0iface0_r0kh",			""		, 0 },
+	{"wifi_phy0iface0_r1kh",			""		, 0 },
+	{"wifi_phy0iface0_ieee80211k",			"0"		, 0 },
+	{"wifi_phy0iface0_rrm_neighbor_report",		"1"		, 0 },
+	{"wifi_phy0iface0_rrm_beacon_report",		"1"		, 0 },
+	{"wifi_phy0iface0_time_advertisement",		"0"		, 0 },
+	{"wifi_phy0iface0_time_zone",			""		, 0 },
+	{"wifi_phy0iface0_wnm_sleep_mode",		"0"		, 0 },
+	{"wifi_phy0iface0_wnm_sleep_mode_no_keys",	"0"		, 0 },
+	{"wifi_phy0iface0_bss_transition",		"0"		, 0 },
+	{"wifi_phy0iface0_proxy_arp",			"0"		, 0 },
 
 	/* phy0 ifaces 1-15: generic disabled defaults */
 	WIFI_DEF_PHY0_IFACES_1_15

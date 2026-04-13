@@ -61,7 +61,8 @@ var interfaceSections = [
 	['general', 'General Setup'],
 	['security', 'Wireless Security'],
 	['filter', 'MAC-Filter'],
-	['advanced', 'Advanced Settings']
+	['advanced', 'Advanced Settings'],
+	['roaming', 'WLAN Roaming']
 ];
 
 var security_modes = [
@@ -454,6 +455,47 @@ function verifyFields(focused, quiet) {
 			adv_mesh_rssi.disabled = is_mesh ? 0 : 1;
 			PR(adv_mesh_rssi).style.display = is_mesh ? '' : 'none';
 
+			// === Roaming tab (802.11r / 11k / 11v): AP-only, encryption-gated ===
+			var enc_val = E('_wifi_'+t+'_encryption').value;
+			var r_enc_allowed = (enc_val == 'wpa2' || enc_val == 'wpa3' || enc_val == 'wpa3-mixed' ||
+			                     enc_val == 'wpa3-192' || enc_val == 'psk2' || enc_val == 'psk-mixed' ||
+			                     enc_val == 'sae' || enc_val == 'sae-mixed');
+			var r_psk = (enc_val == 'psk2' || enc_val == 'psk-mixed');
+			var r_enabled = E('_f_wifi_'+t+'_ieee80211r').checked;
+			var k_enabled = E('_f_wifi_'+t+'_ieee80211k').checked;
+
+			function _roamShow(id, show) {
+				var el = E(id);
+				if (!el) return;
+				el.disabled = show ? 0 : 1;
+				PR(el).style.display = show ? '' : 'none';
+			}
+			// 11r flag itself
+			_roamShow('_f_wifi_'+t+'_ieee80211r', ap_only && r_enc_allowed);
+			var r_show = ap_only && r_enc_allowed && r_enabled;
+			_roamShow('_wifi_'+t+'_nasid', r_show);
+			_roamShow('_wifi_'+t+'_mobility_domain', r_show);
+			_roamShow('_wifi_'+t+'_reassociation_deadline', r_show);
+			_roamShow('_wifi_'+t+'_ft_over_ds', r_show);
+			_roamShow('_f_wifi_'+t+'_ft_psk_generate_local', r_show && r_psk);
+			_roamShow('_wifi_'+t+'_r0_key_lifetime', r_show);
+			_roamShow('_wifi_'+t+'_r1_key_holder', r_show);
+			_roamShow('_f_wifi_'+t+'_pmk_r1_push', r_show);
+			_roamShow('_wifi_'+t+'_r0kh', r_show);
+			_roamShow('_wifi_'+t+'_r1kh', r_show);
+			// 11k
+			_roamShow('_f_wifi_'+t+'_ieee80211k', ap_only);
+			_roamShow('_f_wifi_'+t+'_rrm_neighbor_report', ap_only && k_enabled);
+			_roamShow('_f_wifi_'+t+'_rrm_beacon_report', ap_only && k_enabled);
+			// 11v
+			_roamShow('_wifi_'+t+'_time_advertisement', ap_only);
+			var tadv = E('_wifi_'+t+'_time_advertisement').value;
+			_roamShow('_wifi_'+t+'_time_zone', ap_only && tadv == '2');
+			_roamShow('_f_wifi_'+t+'_wnm_sleep_mode', ap_only);
+			_roamShow('_f_wifi_'+t+'_wnm_sleep_mode_no_keys', ap_only);
+			_roamShow('_f_wifi_'+t+'_bss_transition', ap_only);
+			_roamShow('_f_wifi_'+t+'_proxy_arp', ap_only);
+
 			// Rebuild encryption dropdown: mesh restricts to SAE or open only
 			var enc_sel = E('_wifi_'+t+'_encryption');
 			var current_enc = enc_sel.value;
@@ -673,6 +715,22 @@ function save(nomsg) {
 			E('wifi_'+t+'_isolate').value = E('_f_wifi_'+t+'_isolate').checked ? 1 : "";
 			E('wifi_'+t+'_br_isolate').value = E('_f_wifi_'+t+'_br_isolate').checked ? 1 : "";
 			E('wifi_'+t+'_mesh_fwding').value = E('_f_wifi_'+t+'_mesh_fwding').checked ? 1 : 0;
+			E('wifi_'+t+'_ieee80211r').value = E('_f_wifi_'+t+'_ieee80211r').checked ? 1 : 0;
+			E('wifi_'+t+'_ft_psk_generate_local').value = E('_f_wifi_'+t+'_ft_psk_generate_local').checked ? 1 : 0;
+			E('wifi_'+t+'_pmk_r1_push').value = E('_f_wifi_'+t+'_pmk_r1_push').checked ? 1 : 0;
+			E('wifi_'+t+'_ieee80211k').value = E('_f_wifi_'+t+'_ieee80211k').checked ? 1 : 0;
+			E('wifi_'+t+'_rrm_neighbor_report').value = E('_f_wifi_'+t+'_rrm_neighbor_report').checked ? 1 : 0;
+			E('wifi_'+t+'_rrm_beacon_report').value = E('_f_wifi_'+t+'_rrm_beacon_report').checked ? 1 : 0;
+			E('wifi_'+t+'_wnm_sleep_mode').value = E('_f_wifi_'+t+'_wnm_sleep_mode').checked ? 1 : 0;
+			E('wifi_'+t+'_wnm_sleep_mode_no_keys').value = E('_f_wifi_'+t+'_wnm_sleep_mode_no_keys').checked ? 1 : 0;
+			E('wifi_'+t+'_bss_transition').value = E('_f_wifi_'+t+'_bss_transition').checked ? 1 : 0;
+			E('wifi_'+t+'_proxy_arp').value = E('_f_wifi_'+t+'_proxy_arp').checked ? 1 : 0;
+
+			/* r0kh/r1kh: convert newline-separated textarea back to '>'-separated */
+			var r0kh_el = E('_wifi_'+t+'_r0kh');
+			if (r0kh_el) r0kh_el.value = r0kh_el.value.split(/\r?\n/).filter(function(s){return s.length>0;}).join('>');
+			var r1kh_el = E('_wifi_'+t+'_r1kh');
+			if (r1kh_el) r1kh_el.value = r1kh_el.value.split(/\r?\n/).filter(function(s){return s.length>0;}).join('>');
 
 			var macdata = macTables[i][j].getAllData();
 			var macs = '';
@@ -948,6 +1006,16 @@ for (var i = 0; i < devices.length; i++) {
 		W('<input type="hidden" id="wifi_'+t+'_br_isolate" name="wifi_'+t+'_br_isolate">');
 		W('<input type="hidden" id="wifi_'+t+'_maclist" name="wifi_'+t+'_maclist">');
 		W('<input type="hidden" id="wifi_'+t+'_mesh_fwding" name="wifi_'+t+'_mesh_fwding">');
+		W('<input type="hidden" id="wifi_'+t+'_ieee80211r" name="wifi_'+t+'_ieee80211r">');
+		W('<input type="hidden" id="wifi_'+t+'_ft_psk_generate_local" name="wifi_'+t+'_ft_psk_generate_local">');
+		W('<input type="hidden" id="wifi_'+t+'_pmk_r1_push" name="wifi_'+t+'_pmk_r1_push">');
+		W('<input type="hidden" id="wifi_'+t+'_ieee80211k" name="wifi_'+t+'_ieee80211k">');
+		W('<input type="hidden" id="wifi_'+t+'_rrm_neighbor_report" name="wifi_'+t+'_rrm_neighbor_report">');
+		W('<input type="hidden" id="wifi_'+t+'_rrm_beacon_report" name="wifi_'+t+'_rrm_beacon_report">');
+		W('<input type="hidden" id="wifi_'+t+'_wnm_sleep_mode" name="wifi_'+t+'_wnm_sleep_mode">');
+		W('<input type="hidden" id="wifi_'+t+'_wnm_sleep_mode_no_keys" name="wifi_'+t+'_wnm_sleep_mode_no_keys">');
+		W('<input type="hidden" id="wifi_'+t+'_bss_transition" name="wifi_'+t+'_bss_transition">');
+		W('<input type="hidden" id="wifi_'+t+'_proxy_arp" name="wifi_'+t+'_proxy_arp">');
 
 		W('<ul class="tabs">');
 		for (var k = 0; k < interfaceSections.length; k++) {
@@ -965,7 +1033,7 @@ for (var i = 0; i < devices.length; i++) {
 			{ title: 'Network', name: 'wifi_'+t+'_network', type: 'select', options: networks, value: nvram['wifi_'+t+'_network'] },
 			{ title: 'Hide ESSID', name: 'f_wifi_'+t+'_hidden', type: 'checkbox', value: nvram['wifi_'+t+'_hidden'] == 1 },
 			{ title: 'WMM Mode', name: 'f_wifi_'+t+'_wmm', type: 'checkbox', value: nvram['wifi_'+t+'_wmm'] == 1 },
-			{ title: 'U-APSD', indent: 2, name: 'f_wifi_'+t+'_uapsd', type: 'checkbox', value: nvram['wifi_'+t+'_uapsd'] == 1, suffix: '&nbsp; <small>Unscheduled Automatic Power Save Delivery<\/small>' }
+			{ title: 'U-APSD', indent: 2, name: 'f_wifi_'+t+'_uapsd', type: 'checkbox', value: nvram['wifi_'+t+'_uapsd'] == 1, suffix: '&nbsp; <small>Unscheduled Automatic Power Save Delivery<\/small><\/div>' }
 		]);
 		W('<\/div>');
 
@@ -991,10 +1059,55 @@ for (var i = 0; i < devices.length; i++) {
 			{ title: 'Isolate Bridge Port', name: 'f_wifi_'+t+'_br_isolate', type: 'checkbox', value: nvram['wifi_'+t+'_br_isolate'] == 1 },
 			{ title: 'Forward mesh peer traffic', name: 'f_wifi_'+t+'_mesh_fwding', type: 'checkbox', value: nvram['wifi_'+t+'_mesh_fwding'] == 1 },
 			{ title: 'RSSI Threshold', name: 'wifi_'+t+'_mesh_rssi_threshold', type: 'text', maxlen: 4, size: 6, value: nvram['wifi_'+t+'_mesh_rssi_threshold'],
-				suffix: '&nbsp;<small>dBm. 0=disabled, 1=driver default, -255 to -10 = signal floor<\/small>' },
+				suffix: '&nbsp;<small>dBm. 0=disabled, 1=driver default, -255 to -10 = signal floor<\/small><\/div>' },
 			{ title: 'Interface name', name: 'wifi_'+t+'_ifname', type: 'text', maxlen: 15, size: 17, value: nvram['wifi_'+t+'_ifname'] },
 			{ title: 'Custom Configuration', name: 'wifi_'+t+'_custom', type: 'textarea', value: nvram['wifi_'+t+'_custom'],
 				attrib: 'style="width:40em"' }
+		]);
+		W('<\/div>');
+
+		W('<div id="'+t+'-roaming">');
+		createFieldTable('', [
+			{ title: '802.11r Fast Transition', name: 'f_wifi_'+t+'_ieee80211r', type: 'checkbox', value: nvram['wifi_'+t+'_ieee80211r'] == 1,
+				suffix: '<div class="notice"><small>Enables fast roaming among access points that belong to the same Mobility Domain<\/small><\/div>' },
+			{ title: 'NAS ID', name: 'wifi_'+t+'_nasid', type: 'text', maxlen: 48, size: 34, value: nvram['wifi_'+t+'_nasid'],
+				suffix: '<div class="notice"><small>Used for two different purposes: RADIUS NAS ID and 802.11r R0KH-ID<\/small><\/div>' },
+			{ title: 'Mobility Domain', name: 'wifi_'+t+'_mobility_domain', type: 'text', maxlen: 4, size: 6, value: nvram['wifi_'+t+'_mobility_domain'],
+				suffix: '<div class="notice"><small>4-character hexadecimal ID<\/small><\/div>' },
+			{ title: 'Reassociation Deadline', name: 'wifi_'+t+'_reassociation_deadline', type: 'text', maxlen: 5, size: 7, value: nvram['wifi_'+t+'_reassociation_deadline'],
+				suffix: '<div class="notice"><small>time units (TUs / 1.024 ms) [1000-65535], default 20000<\/small><\/div>' },
+			{ title: 'FT protocol', name: 'wifi_'+t+'_ft_over_ds', type: 'select', options: [['0','FT over the Air'],['1','FT over DS']], value: nvram['wifi_'+t+'_ft_over_ds'] },
+			{ title: 'Generate PMK locally', name: 'f_wifi_'+t+'_ft_psk_generate_local', type: 'checkbox', value: nvram['wifi_'+t+'_ft_psk_generate_local'] == 1,
+				suffix: '<div class="notice"><small>When using a PSK, the PMK can be automatically generated. When enabled, the R0/R1 key options below are not applied.<\/small><\/div>' },
+			{ title: 'R0 Key Lifetime', name: 'wifi_'+t+'_r0_key_lifetime', type: 'text', maxlen: 10, size: 12, value: nvram['wifi_'+t+'_r0_key_lifetime'],
+				suffix: '<div class="notice"><small>minutes, default 10000<\/small><\/div>' },
+			{ title: 'R1 Key Holder', name: 'wifi_'+t+'_r1_key_holder', type: 'text', maxlen: 12, size: 14, value: nvram['wifi_'+t+'_r1_key_holder'],
+				suffix: '<div class="notice"><small>6-octet identifier as a hex string - no colons<\/small><\/div>' },
+			{ title: 'PMK R1 Push', name: 'f_wifi_'+t+'_pmk_r1_push', type: 'checkbox', value: nvram['wifi_'+t+'_pmk_r1_push'] == 1 },
+			{ title: 'External R0 Key Holder List', name: 'wifi_'+t+'_r0kh', type: 'textarea', value: nvram['wifi_'+t+'_r0kh'].replace(/>/g, '\n'),
+				attrib: 'style="width:40em"',
+				suffix: '<div class="notice"><small>One entry per line. Format: MAC-address,NAS-Identifier,256-bit key as hex string<\/small><\/div>' },
+			{ title: 'External R1 Key Holder List', name: 'wifi_'+t+'_r1kh', type: 'textarea', value: nvram['wifi_'+t+'_r1kh'].replace(/>/g, '\n'),
+				attrib: 'style="width:40em"',
+				suffix: '<div class="notice"><small>One entry per line. Format: MAC-address,R1KH-ID as 6 octets with colons,256-bit key as hex string<\/small><\/div>' },
+			{ title: '802.11k RRM', name: 'f_wifi_'+t+'_ieee80211k', type: 'checkbox', value: nvram['wifi_'+t+'_ieee80211k'] == 1,
+				suffix: '<div class="notice"><small>Radio Resource Measurement - Sends beacons to assist roaming. Not all clients support this.<\/small><\/div>' },
+			{ title: 'Neighbour Report', name: 'f_wifi_'+t+'_rrm_neighbor_report', type: 'checkbox', value: nvram['wifi_'+t+'_rrm_neighbor_report'] == 1,
+				suffix: '<div class="notice"><small>802.11k: Enable neighbor report via radio measurements.<\/small><\/div>' },
+			{ title: 'Beacon Report', name: 'f_wifi_'+t+'_rrm_beacon_report', type: 'checkbox', value: nvram['wifi_'+t+'_rrm_beacon_report'] == 1,
+				suffix: '<div class="notice"><small>802.11k: Enable beacon report via radio measurements.<\/small><\/div>' },
+			{ title: 'Time advertisement', name: 'wifi_'+t+'_time_advertisement', type: 'select', options: [['0','Disabled'],['2','Enabled']], value: nvram['wifi_'+t+'_time_advertisement'],
+				suffix: '<div class="notice"><small>802.11v: Time Advertisement in management frames.<\/small><\/div>' },
+			{ title: 'Time zone', name: 'wifi_'+t+'_time_zone', type: 'text', maxlen: 64, size: 34, value: nvram['wifi_'+t+'_time_zone'],
+				suffix: '<div class="notice"><small>802.11v: Local Time Zone Advertisement in management frames.<\/small><\/div>' },
+			{ title: 'WNM Sleep Mode', name: 'f_wifi_'+t+'_wnm_sleep_mode', type: 'checkbox', value: nvram['wifi_'+t+'_wnm_sleep_mode'] == 1,
+				suffix: '<div class="notice"><small>802.11v: Wireless Network Management (WNM) Sleep Mode (extended sleep mode for stations).<\/small><\/div>' },
+			{ title: 'WNM Sleep Mode Fixes', name: 'f_wifi_'+t+'_wnm_sleep_mode_no_keys', type: 'checkbox', value: nvram['wifi_'+t+'_wnm_sleep_mode_no_keys'] == 1,
+				suffix: '<div class="notice"><small>802.11v: WNM Sleep Mode Fixes: Prevents reinstallation attacks.<\/small><\/div>' },
+			{ title: 'BSS Transition', name: 'f_wifi_'+t+'_bss_transition', type: 'checkbox', value: nvram['wifi_'+t+'_bss_transition'] == 1,
+				suffix: '<div class="notice"><small>802.11v: Basic Service Set (BSS) transition management.<\/small><\/div>' },
+			{ title: 'ProxyARP', name: 'f_wifi_'+t+'_proxy_arp', type: 'checkbox', value: nvram['wifi_'+t+'_proxy_arp'] == 1,
+				suffix: '<div class="notice"><small>802.11v: Proxy ARP enables non-AP STA to remain in power-save for longer.<\/small><\/div>' }
 		]);
 		W('<\/div>');
 

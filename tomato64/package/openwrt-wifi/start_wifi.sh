@@ -332,6 +332,91 @@ do
 			uci set "wireless.phy${i}iface${j}.hidden=$(NG wifi_phy${i}iface${j}_hidden)"
 			uci set "wireless.phy${i}iface${j}.isolate=$(NG wifi_phy${i}iface${j}_isolate)"
 			print_mac_filter ${i} ${j}
+
+			# === 802.11r Fast Transition (AP-only) ===
+			# Only emit UCI entries when enabled — hostapd.sh applies set_default otherwise,
+			# matching LuCI's rmempty=true behavior.
+			ft_enabled="$(NG wifi_phy${i}iface${j}_ieee80211r)"
+			iface_enc="$(NG wifi_phy${i}iface${j}_encryption)"
+			case "$iface_enc" in
+				wpa2|wpa3|wpa3-mixed|wpa3-192|psk2|psk-mixed|sae|sae-mixed) ft_allowed=1 ;;
+				*) ft_allowed=0 ;;
+			esac
+			if [ "$ft_enabled" = "1" ] && [ "$ft_allowed" = "1" ]; then
+				uci set "wireless.phy${i}iface${j}.ieee80211r=1"
+
+				nasid="$(NG wifi_phy${i}iface${j}_nasid)"
+				[ -n "$nasid" ] && uci set "wireless.phy${i}iface${j}.nasid=${nasid}"
+
+				mobility_domain="$(NG wifi_phy${i}iface${j}_mobility_domain)"
+				[ -n "$mobility_domain" ] && uci set "wireless.phy${i}iface${j}.mobility_domain=${mobility_domain}"
+
+				reassoc="$(NG wifi_phy${i}iface${j}_reassociation_deadline)"
+				[ -n "$reassoc" ] && uci set "wireless.phy${i}iface${j}.reassociation_deadline=${reassoc}"
+
+				ft_over_ds="$(NG wifi_phy${i}iface${j}_ft_over_ds)"
+				[ -n "$ft_over_ds" ] && uci set "wireless.phy${i}iface${j}.ft_over_ds=${ft_over_ds}"
+
+				# ft_psk_generate_local: only emit when user disabled it (default is 1 for PSK)
+				case "$iface_enc" in
+					psk2|psk-mixed)
+						[ "$(NG wifi_phy${i}iface${j}_ft_psk_generate_local)" = "0" ] && \
+							uci set "wireless.phy${i}iface${j}.ft_psk_generate_local=0"
+						;;
+				esac
+
+				r0_lifetime="$(NG wifi_phy${i}iface${j}_r0_key_lifetime)"
+				[ -n "$r0_lifetime" ] && uci set "wireless.phy${i}iface${j}.r0_key_lifetime=${r0_lifetime}"
+
+				r1_holder="$(NG wifi_phy${i}iface${j}_r1_key_holder)"
+				[ -n "$r1_holder" ] && uci set "wireless.phy${i}iface${j}.r1_key_holder=${r1_holder}"
+
+				[ "$(NG wifi_phy${i}iface${j}_pmk_r1_push)" = "1" ] && \
+					uci set "wireless.phy${i}iface${j}.pmk_r1_push=1"
+
+				# r0kh / r1kh are '>'-separated NVRAM lists; only emit when non-empty
+				r0kh_nv="$(NG wifi_phy${i}iface${j}_r0kh)"
+				if [ -n "$r0kh_nv" ]; then
+					uci -q delete "wireless.phy${i}iface${j}.r0kh"
+					printf '%s\n' "$r0kh_nv" | tr '>' '\n' | while IFS= read -r entry; do
+						[ -n "$entry" ] && uci add_list "wireless.phy${i}iface${j}.r0kh=${entry}"
+					done
+				fi
+				r1kh_nv="$(NG wifi_phy${i}iface${j}_r1kh)"
+				if [ -n "$r1kh_nv" ]; then
+					uci -q delete "wireless.phy${i}iface${j}.r1kh"
+					printf '%s\n' "$r1kh_nv" | tr '>' '\n' | while IFS= read -r entry; do
+						[ -n "$entry" ] && uci add_list "wireless.phy${i}iface${j}.r1kh=${entry}"
+					done
+				fi
+			fi
+
+			# === 802.11k Radio Resource Measurement (AP-only) ===
+			if [ "$(NG wifi_phy${i}iface${j}_ieee80211k)" = "1" ]; then
+				uci set "wireless.phy${i}iface${j}.ieee80211k=1"
+				# rrm_neighbor_report/rrm_beacon_report default to 1 when 11k=1, so only
+				# emit when user explicitly disabled them.
+				[ "$(NG wifi_phy${i}iface${j}_rrm_neighbor_report)" = "0" ] && \
+					uci set "wireless.phy${i}iface${j}.rrm_neighbor_report=0"
+				[ "$(NG wifi_phy${i}iface${j}_rrm_beacon_report)" = "0" ] && \
+					uci set "wireless.phy${i}iface${j}.rrm_beacon_report=0"
+			fi
+
+			# === 802.11v Wireless Network Management (AP-only) ===
+			# All default-off; only emit when enabled (mirrors LuCI rmempty=true).
+			if [ "$(NG wifi_phy${i}iface${j}_time_advertisement)" = "2" ]; then
+				uci set "wireless.phy${i}iface${j}.time_advertisement=2"
+				time_zone="$(NG wifi_phy${i}iface${j}_time_zone)"
+				[ -n "$time_zone" ] && uci set "wireless.phy${i}iface${j}.time_zone=${time_zone}"
+			fi
+			[ "$(NG wifi_phy${i}iface${j}_wnm_sleep_mode)" = "1" ] && \
+				uci set "wireless.phy${i}iface${j}.wnm_sleep_mode=1"
+			[ "$(NG wifi_phy${i}iface${j}_wnm_sleep_mode_no_keys)" = "1" ] && \
+				uci set "wireless.phy${i}iface${j}.wnm_sleep_mode_no_keys=1"
+			[ "$(NG wifi_phy${i}iface${j}_bss_transition)" = "1" ] && \
+				uci set "wireless.phy${i}iface${j}.bss_transition=1"
+			[ "$(NG wifi_phy${i}iface${j}_proxy_arp)" = "1" ] && \
+				uci set "wireless.phy${i}iface${j}.proxy_arp=1"
 		fi
 
 		# === Layer 4: Shared by all modes ===
