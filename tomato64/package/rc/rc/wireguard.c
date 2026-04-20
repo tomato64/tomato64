@@ -32,7 +32,6 @@
 #define LOGMSG_NVDEBUG		"wireguard_debug"
 
 #define IF_SIZE			8
-#define PEER_COUNT		3
 #define MAX_LINE		1024
 #define WG_SCRIPT_START		0
 #define WG_SCRIPT_STOP		1
