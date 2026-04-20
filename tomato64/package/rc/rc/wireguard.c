@@ -104,6 +104,11 @@ static int wg_script_init(const int unit)
 	                       "WG_TAG=\"wg%d-start.sh\"\n"
 	                       "run_cmd() {\n"
 	                       " set +e\n"
+	                       " custom_msg=\"\"\n"
+	                       " if [ \"$1\" = \"--msg\" ]; then\n"
+	                       "  custom_msg=\"$2\"\n"
+	                       "  shift 2\n"
+	                       " fi\n"
 	                       " output=$(\"$@\" 2>&1)\n"
 	                       " rc=$?\n"
 	                       " set -e\n"
@@ -114,7 +119,11 @@ static int wg_script_init(const int unit)
 	                       "    return 0\n"
 	                       "    ;;\n"
 	                       "   *)\n"
-	                       "    logger -p ERROR -t $WG_TAG \"command failed: $* rc=$rc msg=$output\"\n"
+	                       "    if [ -n \"$custom_msg\" ]; then\n"
+	                       "     logger -p ERROR -t $WG_TAG \"command failed: $custom_msg\"\n"
+	                       "    else\n"
+	                       "     logger -p ERROR -t $WG_TAG \"command failed: $* rc=$rc msg=$output\"\n"
+	                       "    fi\n"
 	                       "    return $rc\n"
 	                       "    ;;\n"
 	                       "  esac\n"
@@ -1198,17 +1207,17 @@ static int wg_set_peer_endpoint(const int unit, char *iface, char *pubkey, const
 
 static void wg_route_peer(const int unit, char *iface, char *route, char *table, const int add)
 {
+	const char *msg = "when using mask, check if the entry is correct (for the /24-31 mask the last IP octet must be 0, for the /9-16 mask the last two octets must be 0, etc.)";
+
 	if (table != NULL) {
 		if (add)
-			/* On error: when using mask, check if the entry is correct (for the /24-31 mask the last IP octet must be 0, for the /9-16 mask the last two octets must be 0, etc.) */
-			wg_script_add(unit, WG_SCRIPT_START, "run_cmd ip route replace %s dev %s table %s", route, iface, table);
+			wg_script_add(unit, WG_SCRIPT_START, "run_cmd --msg \"%s\" ip route replace %s dev %s table %s", msg, route, iface, table);
 		else
 			wg_script_add(unit, WG_SCRIPT_STOP,  "run_cmd ip route delete %s dev %s table %s", route, iface, table);
 	}
 	else {
 		if (add)
-			/* On error: when using mask, check if the entry is correct (for the /24-31 mask the last IP octet must be 0, for the /9-16 mask the last two octets must be 0, etc.) */
-			wg_script_add(unit, WG_SCRIPT_START, "run_cmd ip route replace %s dev %s", route, iface);
+			wg_script_add(unit, WG_SCRIPT_START, "run_cmd --msg \"%s\" ip route replace %s dev %s", msg, route, iface);
 		else
 			wg_script_add(unit, WG_SCRIPT_STOP,  "run_cmd ip route delete %s dev %s", route, iface);
 	}
