@@ -46,6 +46,18 @@
 #define	DEV_GPIO(arg)		"/dev/gpio"#arg
 
 #ifdef TCONFIG_BCMARM
+ #define OVPN_CLIENT_COUNT	3
+#else
+ #define OVPN_CLIENT_COUNT	2
+#endif
+#ifndef TOMATO64
+#define OVPN_SERVER_COUNT	2
+#else
+#define OVPN_SERVER_COUNT	4
+#endif /* TOMATO64 */
+#define WG_INTERFACE_COUNT	3
+
+#ifdef TCONFIG_BCMARM
 #define DISABLE_SYSLOG_OSM	0
 #define DISABLE_SYSLOG_OS	0
 #else

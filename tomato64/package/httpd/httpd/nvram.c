@@ -132,8 +132,11 @@ static const char *xifs_once(void)
 void asp_jsdefaults(int argc, char **argv)
 {
 	/* global javascript variables */
-	web_printf("\nMAX_BRIDGE_ID = %d;\nMAX_VLAN_ID = %d;\nMAXWAN_NUM = %d;\nMAX_PORT_ID = %d\n",
-	           (BRIDGE_COUNT - 1), (TOMATO_VLANNUM - 1), MWAN_MAX, MAX_PORT_ID);
+	web_printf("\nMAX_BRIDGE_ID = %d;\nMAX_VLAN_ID = %d;\nMAXWAN_NUM = %d;\nMAX_PORT_ID = %d;\n"
+	            "OVPN_CLIENT_COUNT = %d;\nOVPN_SERVER_COUNT = %d;\nWG_INTERFACE_COUNT = %d;\n",
+	           (BRIDGE_COUNT - 1), (TOMATO_VLANNUM - 1), MWAN_MAX, MAX_PORT_ID,
+	           OVPN_CLIENT_COUNT, OVPN_SERVER_COUNT, WG_INTERFACE_COUNT
+	           );
 
 	web_puts(xifs_once());
 }
