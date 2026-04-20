@@ -84,7 +84,7 @@ function refreshBandWidth(uidx) {
 
 function refreshChannels(uidx) {
 	if (refresher[uidx] != null) return;
-	if (u >= wl_ifaces.length) return;
+	if (uidx >= wl_ifaces.length) return;
 	var u = wl_unit(uidx);
 
 	refresher[uidx] = new XmlHttp();
