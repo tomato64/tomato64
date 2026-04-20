@@ -267,16 +267,55 @@ function joinAddr(a) {
 }
 
 function random_x(max) {
-	var c = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-	var s = '';
-	while (max-- > 0) s += c.substr(Math.floor(c.length * Math.random()), 1);
+	var lower = 'abcdefghijklmnopqrstuvwxyz';
+	var upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	var digits = '0123456789';
+	var specials = '!@#$%^&*-_+=';
+	var all = lower+upper+digits+specials;
+	var chars = [];
+	var pct = Math.round(max * 0.16);
 
-	return s;
+	/* ensure 16% of each character type */
+	for (var i = 0; i < pct; ++i) {
+		chars.push(upper.charAt(Math.floor(Math.random() * upper.length)));
+		chars.push(lower.charAt(Math.floor(Math.random() * lower.length)));
+		chars.push(digits.charAt(Math.floor(Math.random() * digits.length)));
+		chars.push(specials.charAt(Math.floor(Math.random() * specials.length)));
+	}
+
+	/* fill remainder with random characters */
+	while (chars.length < max)
+		chars.push(all.charAt(Math.floor(Math.random() * all.length)));
+
+	/* shuffle with Fisher-Yates */
+	for (var i = chars.length - 1; i > 0; --i) {
+		var j = Math.floor(Math.random() * (i + 1));
+		var temp = chars[i];
+		chars[i] = chars[j];
+		chars[j] = temp;
+	}
+
+	return chars.join('');
 }
 
-function random_psk(id) {
+function random_psk(id, selectId) {
 	var e = E(id);
-	e.value = random_x(63);
+	var sel = selectId ? E(selectId) : null;
+	var val = sel ? sel.value : '';
+
+	if (sel) sel.selectedIndex = 0;
+
+	if (val === 'clear') {
+		e.value = '';
+		ferror.clear(e);
+		return;
+	}
+
+	var len = parseInt(val, 10) || 0;
+	if (len < 8 || len > 63)
+		len = Math.floor(Math.random() * 56) + 8;
+
+	e.value = random_x(len);
 	verifyFields(null, 1);
 }
 
@@ -308,8 +347,10 @@ function v_wep(e, quiet) {
 /* compatible w/ Linksys' and Netgear's (key 1) method for 128-bits */
 function generate_wep(u) {
 	function _wepgen(pass, i) {
-		while (pass.length < 64) pass += pass;
-		return hex_md5(pass.substr(0, 64)).substr(i, (E('_wl'+u+'_wep_bit').value == 128) ? 26 : 10);
+		var seed = pass || '';
+		if (!seed.length) return '';
+		while (seed.length < 64) seed += seed;
+		return hex_md5(seed.substr(0, 64)).substr(i, (E('_wl'+u+'_wep_bit').value == 128) ? 26 : 10);
 	}
 
 	var e = E('_wl'+u+'_passphrase');

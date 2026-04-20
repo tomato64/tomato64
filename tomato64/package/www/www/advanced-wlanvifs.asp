@@ -530,6 +530,8 @@ function error_pre_submit_form() {
 	footermsg.innerHTML = '<tt>'+escapeText(cmdresult)+'<\/tt>';
 	footermsg.style.display = 'inline';
 
+	cmd = null;
+
 	cmdresult = '';
 }
 
@@ -539,10 +541,12 @@ function post_pre_submit_form(s) {
 
 	cmd = new XmlHttp();
 	cmd.onCompleted = function(text, xml) {
+		cmd = null;
 		form.submit(E('t_fom'), 1);
 	}
 	cmd.onError = function(x) {
 		cmdresult = 'ERROR: '+x;
+		cmd = null;
 		error_pre_submit_form();
 	}
 
@@ -1565,9 +1569,9 @@ function init() {
 						options: [['disabled','Disabled'],['wep','WEP (legacy)'],['wpa_personal','WPA Personal (deprecated)'],['wpa_enterprise','WPA Enterprise (deprecated)'],['wpa2_personal','WPA2 Personal'],['wpa2_enterprise','WPA2 Enterprise'],['wpaX_personal','WPA / WPA2 Personal (deprecated)'],['wpaX_enterprise','WPA / WPA2 Enterprise (deprecated)'],['radius','Radius']],
 						value: nvram['wl'+u+'_security_mode'] },
 					{ title: 'Encryption', indent: 2, name: 'wl'+u+'_crypto', type: 'select', options: [['tkip','TKIP'],['aes','AES'],['tkip+aes','TKIP / AES']], value: nvram['wl'+u+'_crypto'] },
-					{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_wpa_psk', type: 'password', maxlen: 64, size: 66, peekaboo: 1,
-						suffix: ' <input type="button" id="_f_wl'+u+'_psk_random1" value="Random" onclick="random_psk(\'_wl'+u+'_wpa_psk\')">', value: nvram['wl'+u+'_wpa_psk'] },
-					{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_radius_key', type: 'password', maxlen: 80, size: 32, peekaboo: 1, suffix: ' <input type="button" id="_f_wl'+u+'_psk_random2" value="Random" onclick="random_psk(\'_wl'+u+'_radius_key\')">', value: nvram['wl'+u+'_radius_key'] },
+					{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_wpa_psk', type: 'password', maxlen: 63, size: 34, peekaboo: 1, placeholder: ' < case sensitive >',
+						suffix: ' <select id="_f_wl'+u+'_psk_random1" onchange="random_psk(\'_wl'+u+'_wpa_psk\', \'_f_wl'+u+'_psk_random1\')" style="width:auto"><option value="default" style="color:grey" selected>Random<\/option><option value="clear">Clear<\/option><option value="8">8 chars<\/option><option value="10">10 chars<\/option><option value="12">12 chars<\/option><option value="14">14 chars<\/option><option value="16">16 chars<\/option><option value="18">18 chars<\/option><option value="24">24 chars<\/option><option value="32">32 chars<\/option><option value="48">48 chars<\/option><option value="63">63 chars<\/option><\/select>', value: nvram['wl'+u+'_wpa_psk'] },
+					{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_radius_key', type: 'password', maxlen: 80, size: 32, peekaboo: 1, placeholder: ' < case sensitive >', suffix: ' <select id="_f_wl'+u+'_psk_random2" onchange="random_psk(\'_wl'+u+'_radius_key\', \'_f_wl'+u+'_psk_random2\')" style="width:auto"><option value="default" style="color:grey" selected>Random<\/option><option value="clear">Clear<\/option><option value="8">8 chars<\/option><option value="10">10 chars<\/option><option value="12">12 chars<\/option><option value="16">16 chars<\/option><option value="24">24 chars<\/option><option value="32">32 chars<\/option><option value="48">48 chars<\/option><option value="63">63 chars<\/option><\/select>', value: nvram['wl'+u+'_radius_key'] },
 /* RTNPLUS-BEGIN */
 					{ title: 'Group Key Renewal', indent: 2, name: 'wl'+u+'_wpa_gtk_rekey', type: 'text', maxlen: 7, size: 9, suffix: '&nbsp; <small>seconds<\/small>', value: (nvram['wl'+u+'_wpa_gtk_rekey'] || '3600') },
 /* RTNPLUS-END */

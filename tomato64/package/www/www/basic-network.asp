@@ -251,7 +251,7 @@ lg.verifyFields = function(row, quiet) {
 	else
 		ferror.clear(f[0]);
 /* valid IP address? */
-	if (!v_ip(f[2], quiet || !ok)) 
+	if (!v_ip(f[2], quiet || !ok))
 		ok = 0;
 /* if we have a properly defined IP address - 0.0.0.0 is NOT a valid IP address for our intents/purposes! */
 	if ((f[2].value != '') && (f[2].value != '0.0.0.0')) {
@@ -360,7 +360,7 @@ lg.verifyFields = function(row, quiet) {
 /* lease time */
 		if (parseInt(f[7].value*1) == 0)
 			f[7].value = 1440; /* from nvram/defaults.c */
-		if (!v_mins(f[7], quiet || !ok, 1, 10080)) 
+		if (!v_mins(f[7], quiet || !ok, 1, 10080))
 			ok = 0;
 	}
 	else {
@@ -2190,11 +2190,11 @@ function init() {
 					value: nvram['wl'+u+'_security_mode'] },
 				{ title: 'Encryption', indent: 2, name: 'wl'+u+'_crypto', type: 'select',
 					options: [['tkip','TKIP'],['aes','AES'],['tkip+aes','TKIP / AES']], value: nvram['wl'+u+'_crypto'] },
-				{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_wpa_psk', type: 'password', maxlen: 64, size: 66, peekaboo: 1,
-					suffix: ' <input type="button" id="_f_wl'+u+'_psk_random1" value="Random" onclick="random_psk(\'_wl'+u+'_wpa_psk\')">',
+				{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_wpa_psk', type: 'password', placeholder: ' < case sensitive >', maxlen: 63, size: 34, peekaboo: 1,
+					suffix: ' <select id="_f_wl'+u+'_psk_random1" onchange="random_psk(\'_wl'+u+'_wpa_psk\', \'_f_wl'+u+'_psk_random1\')" style="width:auto"><option value="default" style="color:grey" selected>Random<\/option><option value="clear">Clear<\/option><option value="8">8 chars<\/option><option value="10">10 chars<\/option><option value="12">12 chars<\/option><option value="14">14 chars<\/option><option value="16">16 chars<\/option><option value="18">18 chars<\/option><option value="20">20 chars<\/option><option value="24">24 chars<\/option><option value="32">32 chars<\/option><option value="48">48 chars<\/option><option value="63">63 chars<\/option><\/select>',
 					value: nvram['wl'+u+'_wpa_psk'] },
-				{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_radius_key', type: 'password', maxlen: 80, size: 32, peekaboo: 1,
-					suffix: ' <input type="button" id="_f_wl'+u+'_psk_random2" value="Random" onclick="random_psk(\'_wl'+u+'_radius_key\')">',
+				{ title: 'Shared Key', indent: 2, name: 'wl'+u+'_radius_key', type: 'password', maxlen: 80, size: 34, peekaboo: 1,
+					suffix: ' <select id="_f_wl'+u+'_psk_random2" onchange="random_psk(\'_wl'+u+'_radius_key\', \'_f_wl'+u+'_psk_random2\')" style="width:auto"><option value="default" style="color:grey" selected>Random<\/option><option value="clear">Clear<\/option><option value="8">8 chars<\/option><option value="10">10 chars<\/option><option value="12">12 chars<\/option><option value="16">16 chars<\/option><option value="24">24 chars<\/option><option value="32">32 chars<\/option><option value="48">48 chars<\/option><option value="63">63 chars<\/option><\/select>',
 					value: nvram['wl'+u+'_radius_key'] },
 /* RTNPLUS-NO-BEGIN */
 				{ title: 'Group Key Renewal', indent: 2, name: 'wl'+u+'_wpa_gtk_rekey', type: 'text', maxlen: 4, size: 6, suffix: '&nbsp; <small>seconds<\/small>',
