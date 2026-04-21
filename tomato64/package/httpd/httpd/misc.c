@@ -219,7 +219,66 @@ void asp_lanip(int argc, char **argv)
  */
 void asp_psup(int argc, char **argv)
 {
-	if (argc == 1)
+	int i;
+	char buf[16];
+	const char isup[] = "isup.";
+	const char c[] = "=parseInt('";
+	const char e[] = "');\n";
+
+	if (argc != 1)
+		return;
+
+	/* special case: print all */
+	if (strcmp(argv[0], "all") == 0) {
+		/* always */
+		web_printf("\n%sdropbear%s%d%s", isup, c, pidof("dropbear") > 0, e);
+		web_printf("%stelnetd%s%d%s", isup, c, pidof("telnetd") > 0, e);
+		web_printf("%sminiupnpd%s%d%s", isup, c, pidof("miniupnpd") > 0, e);
+		web_printf("%sdnsmasq%s%d%s", isup, c, pidof("dnsmasq") > 0, e);
+#ifdef TCONFIG_NGINX
+		web_printf("%snginx%s%d%s", isup, c, pidof("nginx") > 0, e);
+		web_printf("%smysqld%s%d%s", isup, c, pidof("mysqld") > 0, e);
+#endif
+#ifdef TCONFIG_MEDIA_SERVER
+		web_printf("%sminidlna%s%d%s", isup, c, pidof("minidlna") > 0, e);
+#endif
+#ifdef TCONFIG_TINC
+		web_printf("%stincd%s%d%s", isup, c, pidof("tincd") > 0, e);
+#endif
+#ifdef TCONFIG_BBT
+		web_printf("%stransmission%s%d%s", isup, c, pidof("transmission-da") > 0, e);
+#endif
+#ifdef TCONFIG_SAMBASRV
+		web_printf("%ssamba%s%d%s", isup, c, pidof("smbd") > 0, e);
+#endif
+#ifdef TCONFIG_FTP
+		web_printf("%sftpd%s%d%s", isup, c, pidof("vsftpd") > 0, e);
+#endif
+#ifdef TCONFIG_TOR
+		web_printf("%stor%s%d%s", isup, c, pidof("tor") > 0, e);
+#endif
+#ifdef TCONFIG_PPTPD
+		web_printf("%spptpclient%s%d%s", isup, c, pidof("pptpclient") > 0, e);
+		web_printf("%spptpd%s%d%s", isup, c, pidof("pptpd") > 0, e);
+#endif
+#ifdef TCONFIG_OPENVPN
+		for (i = 1; i <= OVPN_CLIENT_COUNT; i++) {
+			snprintf(buf, sizeof(buf), "vpnclient%d", i);
+			web_printf("%s%s%s%d%s", isup, buf, c, pidof(buf) > 0, e);
+		}
+		for (i = 1; i <= OVPN_SERVER_COUNT; i++) {
+			snprintf(buf, sizeof(buf), "vpnserver%d", i);
+			web_printf("%s%s%s%d%s", isup, buf, c, pidof(buf) > 0, e);
+		}
+#endif
+#ifdef TCONFIG_WIREGUARD
+		for (i = 0; i < WG_INTERFACE_COUNT; i++) {
+			snprintf(buf, sizeof(buf), "wg%d", i);
+			web_printf("%swireguard%d%s%d%s", isup, i, c, pidof(buf) > 0, e);
+		}
+#endif
+	}
+	else
 		web_printf("%d", pidof(argv[0]) > 0);
 }
 
