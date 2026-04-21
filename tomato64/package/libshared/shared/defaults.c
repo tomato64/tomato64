@@ -36,7 +36,19 @@
 #if BRIDGE_COUNT < 1 || BRIDGE_COUNT > 16
  #error "Unsupported BRIDGE_COUNT range"
 #endif
-
+#ifdef TCONFIG_OPENVPN
+ #if OVPN_CLIENT_COUNT < 1 || OVPN_CLIENT_COUNT > 10
+  #error "Unsupported OVPN_CLIENT_COUNT range"
+ #endif
+ #if OVPN_SERVER_COUNT < 1 || OVPN_SERVER_COUNT > 6
+  #error "Unsupported OVPN_SERVER_COUNT range"
+ #endif
+#endif
+#ifdef TCONFIG_WIREGUARD
+ #if WG_INTERFACE_COUNT < 1 || WG_INTERFACE_COUNT > 8
+  #error "Unsupported WG_INTERFACE_COUNT range"
+ #endif
+#endif
 
 struct nvram_tuple rstats_defaults[] = {
 	{ "rstats_path",		""				, 0 },
@@ -435,6 +447,186 @@ struct nvram_tuple bsd_defaults[] = {
 	WIFI_DEF_IFACE_BLOCK(0, 13) \
 	WIFI_DEF_IFACE_BLOCK(0, 14) \
 	WIFI_DEF_IFACE_BLOCK(0, 15)
+
+#ifdef TCONFIG_OPENVPN
+ #define OVPNS_OCTET_1  "6"
+ #define OVPNS_OCTET_2  "7"
+ #define OVPNS_OCTET_3  "8"
+ #define OVPNS_OCTET_4  "9"
+ #define OVPNS_OCTET_5  "10"
+ #define OVPNS_OCTET_6  "11"
+ #define OVPNS_LOCAL_EXPAND(i) OVPNS_OCTET_##i
+ #define OVPNS_LOCAL_OCTET(i)  OVPNS_LOCAL_EXPAND(i)
+
+ #define OVPNP_OCTET_1  "1194"
+ #define OVPNP_OCTET_2  "1195"
+ #define OVPNP_OCTET_3  "1196"
+ #define OVPNP_OCTET_4  "1197"
+ #define OVPNP_OCTET_5  "1198"
+ #define OVPNP_OCTET_6  "1199"
+ #define OVPNP_LOCAL_EXPAND(i) OVPNP_OCTET_##i
+ #define OVPNP_LOCAL_OCTET(i)  OVPNP_LOCAL_EXPAND(i)
+
+ #define OVPNS_BLOCK_CORE(i) \
+	{ "vpns" #i "_poll",		"0"				, 0 }, \
+	{ "vpns" #i "_if",		"tun"				, 0 }, \
+	{ "vpns" #i "_proto",		"udp"				, 0 }, \
+	{ "vpns" #i "_port",		OVPNP_LOCAL_OCTET(i)		, 0 }, \
+	{ "vpns" #i "_firewall",	"auto"				, 0 }, \
+	{ "vpns" #i "_cipher",		"AES-128-CBC"			, 0 }, \
+	{ "vpns" #i "_digest",		"default"			, 0 }, \
+	{ "vpns" #i "_dhcp",		"1"				, 0 }, \
+	{ "vpns" #i "_r1",		"192.168.1.50"			, 0 }, \
+	{ "vpns" #i "_r2",		"192.168.1.55"			, 0 }, \
+	{ "vpns" #i "_sn",		"10." OVPNS_LOCAL_OCTET(i) ".0.0", 0 }, \
+	{ "vpns" #i "_nm",		"255.255.255.0"			, 0 }, \
+	{ "vpns" #i "_local",		"10." OVPNS_LOCAL_OCTET(i) ".0.1", 0 }, \
+	{ "vpns" #i "_remote",		"10." OVPNS_LOCAL_OCTET(i) ".0.2", 0 }, \
+	{ "vpns" #i "_reneg",		"-1"				, 0 }, \
+	{ "vpns" #i "_hmac",		"-1"				, 0 }, \
+	{ "vpns" #i "_plan",		""				, 0 }, \
+	{ "vpns" #i "_pdns",		"0"				, 0 }, \
+	{ "vpns" #i "_ccd",		"0"				, 0 }, \
+	{ "vpns" #i "_c2c",		"0"				, 0 }, \
+	{ "vpns" #i "_ccd_excl",	"0"				, 0 }, \
+	{ "vpns" #i "_ccd_val",		""				, 0 }, \
+	{ "vpns" #i "_rgw",		"0"				, 0 }, \
+	{ "vpns" #i "_userpass",	"0"				, 0 }, \
+	{ "vpns" #i "_nocert",		"0"				, 0 }, \
+	{ "vpns" #i "_custom",		""				, 0 }, \
+	{ "vpns" #i "_static",		""				, 0 }, \
+	{ "vpns" #i "_ca",		""				, 0 }, \
+	{ "vpns" #i "_ca_key",		""				, 0 }, \
+	{ "vpns" #i "_crt",		""				, 0 }, \
+	{ "vpns" #i "_crl",		""				, 0 }, \
+	{ "vpns" #i "_key",		""				, 0 }, \
+	{ "vpns" #i "_dh",		""				, 0 }, \
+	{ "vpns" #i "_br",		"br0"				, 0 }, \
+/* #ifdef TOMATO64 */ \
+	{ "vpns" #i "_dco",		"0"				, 0 }, \
+/* #endif TOMATO64 */ \
+	{ "vpns" #i "_ecdh",		"0"				, 0 },
+ #ifdef TCONFIG_OPTIMIZE_SIZE_MORE
+  #define OVPNS_BLOCK_CIPH(i) \
+	{ "vpns" #i "_crypt",		"secret"			, 0 }, \
+	{ "vpns" #i "_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+ #else
+  #define OVPNS_BLOCK_CIPH(i) \
+	{ "vpns" #i "_crypt",		"tls"				, 0 }, \
+	{ "vpns" #i "_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+ #endif
+ #define OVPNS_BLOCK(i) \
+	OVPNS_BLOCK_CORE(i) \
+	OVPNS_BLOCK_CIPH(i)
+
+ #define OVPNC_OCTET_1  "12"
+ #define OVPNC_OCTET_2  "13"
+ #define OVPNC_OCTET_3  "14"
+ #define OVPNC_OCTET_4  "15"
+ #define OVPNC_OCTET_5  "16"
+ #define OVPNC_OCTET_6  "17"
+ #define OVPNC_OCTET_7  "18"
+ #define OVPNC_OCTET_8  "19"
+ #define OVPNC_OCTET_9  "20"
+ #define OVPNC_OCTET_10  "21"
+ #define OVPNC_LOCAL_EXPAND(i) OVPNC_OCTET_##i
+ #define OVPNC_LOCAL_OCTET(i)  OVPNC_LOCAL_EXPAND(i)
+
+ #define OVPNC_BLOCK_CORE(i) \
+	{ "vpnc" #i "_poll",		"0"				, 0 }, \
+	{ "vpnc" #i "_tchk",		"0"				, 0 },	/* check if tunnel is up */ \
+	{ "vpnc" #i "_tunchk",		""				, 0 },	/* IP to check the tunnel */ \
+	{ "vpnc" #i "_if",		"tun"				, 0 }, \
+	{ "vpnc" #i "_bridge",		"1"				, 0 }, \
+	{ "vpnc" #i "_nat",		"1"				, 0 }, \
+	{ "vpnc" #i "_proto",		"udp"				, 0 }, \
+	{ "vpnc" #i "_addr",		""				, 0 }, \
+	{ "vpnc" #i "_port",		"1194"				, 0 }, \
+	{ "vpnc" #i "_retry",		"30"				, 0 }, \
+	{ "vpnc" #i "_rg",		"0"				, 0 }, \
+	{ "vpnc" #i "_firewall",	"auto"				, 0 }, \
+	{ "vpnc" #i "_crypt",		"tls"				, 0 }, \
+	{ "vpnc" #i "_cipher",		"default"			, 0 }, \
+	{ "vpnc" #i "_digest",		"default"			, 0 }, \
+	{ "vpnc" #i "_local",		"10." OVPNC_LOCAL_OCTET(i) ".0.2", 0 }, \
+	{ "vpnc" #i "_remote",		"10." OVPNC_LOCAL_OCTET(i) ".0.1", 0 }, \
+	{ "vpnc" #i "_nm",		"255.255.255.0"			, 0 }, \
+	{ "vpnc" #i "_reneg",		"-1"				, 0 }, \
+	{ "vpnc" #i "_hmac",		"-1"				, 0 }, \
+	{ "vpnc" #i "_adns",		"0"				, 0 }, \
+	{ "vpnc" #i "_rgw", 		"0"				, 0 }, \
+	{ "vpnc" #i "_gw",		""				, 0 }, \
+	{ "vpnc" #i "_custom",		""				, 0 }, \
+	{ "vpnc" #i "_static",		""				, 0 }, \
+	{ "vpnc" #i "_ca",		""				, 0 }, \
+	{ "vpnc" #i "_crt",		""				, 0 }, \
+	{ "vpnc" #i "_key",		""				, 0 }, \
+	{ "vpnc" #i "_br",		"br0"				, 0 }, \
+	{ "vpnc" #i "_nobind",		"1"				, 0 }, \
+	{ "vpnc" #i "_routing_val",	""				, 0 }, \
+	{ "vpnc" #i "_fw",		"1"				, 0 }, \
+	{ "vpnc" #i "_tlsvername",	"0"				, 0 }, \
+/* #ifdef TOMATO64 */ \
+	{ "vpnc" #i "_dco",		"0"				, 0 }, \
+/* #endif TOMATO64 */ \
+	{ "vpnc" #i "_prio",		""				, 0 },
+ #ifdef TCONFIG_OPTIMIZE_SIZE_MORE
+  #define OVPNC_BLOCK_CIPH(i) \
+	{ "vpnc" #i "_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+ #else
+  #define OVPNC_BLOCK_CIPH(i) \
+	{ "vpnc" #i "_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
+ #endif
+ #define OVPNC_BLOCK(i) \
+	OVPNC_BLOCK_CORE(i) \
+	OVPNC_BLOCK_CIPH(i)
+#endif /* TCONFIG_OPENVPN */
+
+#ifdef TCONFIG_WIREGUARD
+ #define WG_OCTET_0  "22"
+ #define WG_OCTET_1  "23"
+ #define WG_OCTET_2  "24"
+ #define WG_OCTET_3  "25"
+ #define WG_OCTET_4  "26"
+ #define WG_OCTET_5  "27"
+ #define WG_OCTET_6  "28"
+ #define WG_OCTET_7  "29"
+ #define WG_LOCAL_EXPAND(i) WG_OCTET_##i
+ #define WG_LOCAL_OCTET(i)  WG_LOCAL_EXPAND(i)
+
+ #define WG_BLOCK(i) \
+	{"wg" #i "_enable",		"0"				, 0 }, \
+	{"wg" #i "_poll",		"0"				, 0 }, \
+	{"wg" #i "_tchk",		"0"				, 0 },	/* check if tunnel is up */ \
+	{"wg" #i "_tunchk",		""				, 0 },	/* IP to check the tunnel */ \
+	{"wg" #i "_sleep",		"1"				, 0 },	/* delay at startup */ \
+	{"wg" #i "_file",		""				, 0 }, \
+	{"wg" #i "_key",		""				, 0 }, \
+	{"wg" #i "_endpoint",		""				, 0 }, \
+	{"wg" #i "_port",		""				, 0 }, \
+	{"wg" #i "_ip",			"10." WG_LOCAL_OCTET(i) ".0.1/24", 0 }, \
+	{"wg" #i "_fwmark",		"0"				, 0 }, \
+	{"wg" #i "_mtu",		"1420"				, 0 }, \
+	{"wg" #i "_preup",		""				, 0 }, \
+	{"wg" #i "_postup",		""				, 0 }, \
+	{"wg" #i "_predown",		""				, 0 }, \
+	{"wg" #i "_postdown",		""				, 0 }, \
+	{"wg" #i "_aip",		""				, 0 }, \
+	{"wg" #i "_dns",		""				, 0 }, \
+	{"wg" #i "_ka",			"0"				, 0 }, \
+	{"wg" #i "_com",		"0"				, 0 }, \
+	{"wg" #i "_lan",		"0"				, 0 },	/* push LANX for wg0 to peers: bit 0 = LAN0, bit 1 = LAN1, etc. */ \
+	{"wg" #i "_rgw",		"0"				, 0 }, \
+	{"wg" #i "_route",		""				, 0 }, \
+	{"wg" #i "_peer_dns",		""				, 0 }, \
+	{"wg" #i "_peers",		""				, 0 }, \
+	{"wg" #i "_firewall",		"auto"				, 0 },	/* auto, custom */ \
+	{"wg" #i "_nat",		"1"				, 0 }, \
+	{"wg" #i "_fw",			"1"				, 0 }, \
+	{"wg" #i "_rgwr",		"1"				, 0 }, \
+	{"wg" #i "_routing_val",	""				, 0 }, \
+	{"wg" #i "_prio",		""				, 0 },
+#endif /* TCONFIG_WIREGUARD */
 
 struct nvram_tuple router_defaults[] = {
 	{ "restore_defaults",		"0"				, 0 },	/* Set to 0 to not restore defaults on boot */
@@ -1568,331 +1760,7 @@ struct nvram_tuple router_defaults[] = {
 /* vpn */
 	{ "vpns_eas",			""				, 0 },
 	{ "vpns_dns",			""				, 0 },
-	{ "vpns1_poll",			"0"				, 0 },
-	{ "vpns1_if",			"tun"				, 0 },
-	{ "vpns1_proto",		"udp"				, 0 },
-	{ "vpns1_port",			"1194"				, 0 },
-	{ "vpns1_firewall",		"auto"				, 0 },
-#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
-	{ "vpns1_crypt",		"secret"			, 0 },
-#else
-	{ "vpns1_crypt",		"tls"				, 0 },
-#endif
-	{ "vpns1_cipher",		"AES-128-CBC"			, 0 },
-#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
-	{ "vpns1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#else
-	{ "vpns1_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#endif
-	{ "vpns1_digest",		"default"			, 0 },
-	{ "vpns1_dhcp",			"1"				, 0 },
-	{ "vpns1_r1",			"192.168.1.50"			, 0 },
-	{ "vpns1_r2",			"192.168.1.55"			, 0 },
-	{ "vpns1_sn",			"10.6.0.0"			, 0 },
-	{ "vpns1_nm",			"255.255.255.0"			, 0 },
-	{ "vpns1_local",		"10.6.0.1"			, 0 },
-	{ "vpns1_remote",		"10.6.0.2"			, 0 },
-	{ "vpns1_reneg",		"-1"				, 0 },
-	{ "vpns1_hmac",			"-1"				, 0 },
-	{ "vpns1_plan",			""				, 0 },
-	{ "vpns1_pdns",			"0"				, 0 },
-	{ "vpns1_ccd",			"0"				, 0 },
-	{ "vpns1_c2c",			"0"				, 0 },
-	{ "vpns1_ccd_excl",		"0"				, 0 },
-	{ "vpns1_ccd_val",		""				, 0 },
-	{ "vpns1_rgw",			"0"				, 0 },
-	{ "vpns1_userpass",		"0"				, 0 },
-	{ "vpns1_nocert",		"0"				, 0 },
-	{ "vpns1_custom",		""				, 0 },
-	{ "vpns1_static",		""				, 0 },
-	{ "vpns1_ca",			""				, 0 },
-	{ "vpns1_ca_key",		""				, 0 },
-	{ "vpns1_crt",			""				, 0 },
-	{ "vpns1_crl",			""				, 0 },
-	{ "vpns1_key",			""				, 0 },
-	{ "vpns1_dh",			""				, 0 },
-	{ "vpns1_br",			"br0"				, 0 },
-	{ "vpns1_ecdh",			"0"				, 0 },
-#ifdef TOMATO64
-	{ "vpns1_dco",			"0"				, 0 },
-#endif /* TOMATO64 */
-	{ "vpns2_poll",			"0"				, 0 },
-	{ "vpns2_if",			"tun"				, 0 },
-	{ "vpns2_proto",		"udp"				, 0 },
-	{ "vpns2_port",			"1195"				, 0 },
-	{ "vpns2_firewall",		"auto"				, 0 },
-#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
-	{ "vpns2_crypt",		"secret"			, 0 },
-#else
-	{ "vpns2_crypt",		"tls"				, 0 },
-#endif
-	{ "vpns2_cipher",		"AES-128-CBC"			, 0 },
-#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
-	{ "vpns2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#else
-	{ "vpns2_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#endif
-	{ "vpns2_digest",		"default"			, 0 },
-	{ "vpns2_dhcp",			"1"				, 0 },
-	{ "vpns2_r1",			"192.168.1.50"			, 0 },
-	{ "vpns2_r2",			"192.168.1.55"			, 0 },
-	{ "vpns2_sn",			"10.7.0.0"			, 0 },
-	{ "vpns2_nm",			"255.255.255.0"			, 0 },
-	{ "vpns2_local",		"10.7.0.1"			, 0 },
-	{ "vpns2_remote",		"10.7.0.2"			, 0 },
-	{ "vpns2_reneg",		"-1"				, 0 },
-	{ "vpns2_hmac",			"-1"				, 0 },
-	{ "vpns2_plan",			""				, 0 },
-	{ "vpns2_pdns",			"0"				, 0 },
-	{ "vpns2_ccd",			"0"				, 0 },
-	{ "vpns2_c2c",			"0"				, 0 },
-	{ "vpns2_ccd_excl",		"0"				, 0 },
-	{ "vpns2_ccd_val",		""				, 0 },
-	{ "vpns2_rgw",			"0"				, 0 },
-	{ "vpns2_userpass",		"0"				, 0 },
-	{ "vpns2_nocert",		"0"				, 0 },
-	{ "vpns2_custom",		""				, 0 },
-	{ "vpns2_static",		""				, 0 },
-	{ "vpns2_ca",			""				, 0 },
-	{ "vpns2_ca_key",		""				, 0 },
-	{ "vpns2_crt",			""				, 0 },
-	{ "vpns2_crl",			""				, 0 },
-	{ "vpns2_key",			""				, 0 },
-	{ "vpns2_dh",			""				, 0 },
-	{ "vpns2_br",			"br0"				, 0 },
-	{ "vpns2_ecdh",			"0"				, 0 },
-#ifdef TOMATO64
-	{ "vpns2_dco",			"0"				, 0 },
-
-#endif /* TOMATO64 */
-#ifdef TOMATO64
-	{ "vpns3_poll",			"0"				, 0 },
-	{ "vpns3_if",			"tun"				, 0 },
-	{ "vpns3_proto",		"udp"				, 0 },
-	{ "vpns3_port",			"1196"				, 0 },
-	{ "vpns3_firewall",		"auto"				, 0 },
-#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
-	{ "vpns3_crypt",		"secret"			, 0 },
-#else
-	{ "vpns3_crypt",		"tls"				, 0 },
-#endif
-	{ "vpns3_cipher",		"AES-128-CBC"			, 0 },
-#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
-	{ "vpns3_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#else
-	{ "vpns3_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#endif
-	{ "vpns3_digest",		"default"			, 0 },
-	{ "vpns3_dhcp",			"1"				, 0 },
-	{ "vpns3_r1",			"192.168.1.50"			, 0 },
-	{ "vpns3_r2",			"192.168.1.55"			, 0 },
-	{ "vpns3_sn",			"10.8.0.0"			, 0 },
-	{ "vpns3_nm",			"255.255.255.0"			, 0 },
-	{ "vpns3_local",		"10.8.0.1"			, 0 },
-	{ "vpns3_remote",		"10.8.0.2"			, 0 },
-	{ "vpns3_reneg",		"-1"				, 0 },
-	{ "vpns3_hmac",			"-1"				, 0 },
-	{ "vpns3_plan",			""				, 0 },
-	{ "vpns3_pdns",			"0"				, 0 },
-	{ "vpns3_ccd",			"0"				, 0 },
-	{ "vpns3_c2c",			"0"				, 0 },
-	{ "vpns3_ccd_excl",		"0"				, 0 },
-	{ "vpns3_ccd_val",		""				, 0 },
-	{ "vpns3_rgw",			"0"				, 0 },
-	{ "vpns3_userpass",		"0"				, 0 },
-	{ "vpns3_nocert",		"0"				, 0 },
-	{ "vpns3_custom",		""				, 0 },
-	{ "vpns3_static",		""				, 0 },
-	{ "vpns3_ca",			""				, 0 },
-	{ "vpns3_ca_key",		""				, 0 },
-	{ "vpns3_crt",			""				, 0 },
-	{ "vpns3_crl",			""				, 0 },
-	{ "vpns3_key",			""				, 0 },
-	{ "vpns3_dh",			""				, 0 },
-	{ "vpns3_br",			"br0"				, 0 },
-	{ "vpns3_ecdh",			"0"				, 0 },
-	{ "vpns3_dco",			"0"				, 0 },
-
-	{ "vpns4_poll",			"0"				, 0 },
-	{ "vpns4_if",			"tun"				, 0 },
-	{ "vpns4_proto",		"udp"				, 0 },
-	{ "vpns4_port",			"1197"				, 0 },
-	{ "vpns4_firewall",		"auto"				, 0 },
-#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
-	{ "vpns4_crypt",		"secret"			, 0 },
-#else
-	{ "vpns4_crypt",		"tls"				, 0 },
-#endif
-	{ "vpns4_cipher",		"AES-128-CBC"			, 0 },
-#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
-	{ "vpns4_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#else
-	{ "vpns4_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#endif
-	{ "vpns4_digest",		"default"			, 0 },
-	{ "vpns4_dhcp",			"1"				, 0 },
-	{ "vpns4_r1",			"192.168.1.50"			, 0 },
-	{ "vpns4_r2",			"192.168.1.55"			, 0 },
-	{ "vpns4_sn",			"10.9.0.0"			, 0 },
-	{ "vpns4_nm",			"255.255.255.0"			, 0 },
-	{ "vpns4_local",		"10.9.0.1"			, 0 },
-	{ "vpns4_remote",		"10.9.0.2"			, 0 },
-	{ "vpns4_reneg",		"-1"				, 0 },
-	{ "vpns4_hmac",			"-1"				, 0 },
-	{ "vpns4_plan",			""				, 0 },
-	{ "vpns4_pdns",			"0"				, 0 },
-	{ "vpns4_ccd",			"0"				, 0 },
-	{ "vpns4_c2c",			"0"				, 0 },
-	{ "vpns4_ccd_excl",		"0"				, 0 },
-	{ "vpns4_ccd_val",		""				, 0 },
-	{ "vpns4_rgw",			"0"				, 0 },
-	{ "vpns4_userpass",		"0"				, 0 },
-	{ "vpns4_nocert",		"0"				, 0 },
-	{ "vpns4_custom",		""				, 0 },
-	{ "vpns4_static",		""				, 0 },
-	{ "vpns4_ca",			""				, 0 },
-	{ "vpns4_ca_key",		""				, 0 },
-	{ "vpns4_crt",			""				, 0 },
-	{ "vpns4_crl",			""				, 0 },
-	{ "vpns4_key",			""				, 0 },
-	{ "vpns4_dh",			""				, 0 },
-	{ "vpns4_br",			"br0"				, 0 },
-	{ "vpns4_ecdh",			"0"				, 0 },
-	{ "vpns4_dco",			"0"				, 0 },
-
-#endif /* TOMATO64 */
 	{ "vpnc_eas",			""				, 0 },
-	{ "vpnc1_poll",			"0"				, 0 },
-	{ "vpnc1_tchk",			"0"				, 0 },	/* check if tunnel is up */
-	{ "vpnc1_tunchk",		""				, 0 },	/* IP to check the tunnel */
-	{ "vpnc1_if",			"tun"				, 0 },
-	{ "vpnc1_bridge",		"1"				, 0 },
-	{ "vpnc1_nat",			"1"				, 0 },
-	{ "vpnc1_proto",		"udp"				, 0 },
-	{ "vpnc1_addr",			""				, 0 },
-	{ "vpnc1_port",			"1194"				, 0 },
-	{ "vpnc1_retry",		"30"				, 0 },
-	{ "vpnc1_rg",			"0"				, 0 },
-	{ "vpnc1_firewall",		"auto"				, 0 },
-	{ "vpnc1_crypt",		"tls"				, 0 },
-	{ "vpnc1_cipher",		"default"			, 0 },
-#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
-	{ "vpnc1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#else
-	{ "vpnc1_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#endif
-	{ "vpnc1_digest",		"default"			, 0 },
-	{ "vpnc1_local",		"10.8.0.2"			, 0 },
-	{ "vpnc1_remote",		"10.8.0.1"			, 0 },
-	{ "vpnc1_nm",			"255.255.255.0"			, 0 },
-	{ "vpnc1_reneg",		"-1"				, 0 },
-	{ "vpnc1_hmac",			"-1"				, 0 },
-	{ "vpnc1_adns",			"0"				, 0 },
-	{ "vpnc1_rgw", 			"0"				, 0 },
-	{ "vpnc1_gw",			""				, 0 },
-	{ "vpnc1_custom",		""				, 0 },
-	{ "vpnc1_static",		""				, 0 },
-	{ "vpnc1_ca",			""				, 0 },
-	{ "vpnc1_crt",			""				, 0 },
-	{ "vpnc1_key",			""				, 0 },
-	{ "vpnc1_br",			"br0"				, 0 },
-	{ "vpnc1_nobind",		"1"				, 0 },
-	{ "vpnc1_routing_val",		""				, 0 },
-	{ "vpnc1_fw",			"1"				, 0 },
-	{ "vpnc1_tlsvername",		"0"				, 0 },
-	{ "vpnc1_prio",			""				, 0 },
-#ifdef TOMATO64
-	{ "vpnc1_dco",			"0"				, 0 },
-
-#endif /* TOMATO64 */
-	{ "vpnc2_poll",			"0"				, 0 },
-	{ "vpnc2_tchk",			"0"				, 0 },	/* check if tunnel is up */
-	{ "vpnc2_tunchk",		""				, 0 },	/* IP to check the tunnel */
-	{ "vpnc2_if",			"tun"				, 0 },
-	{ "vpnc2_bridge",		"1"				, 0 },
-	{ "vpnc2_nat",			"1"				, 0 },
-	{ "vpnc2_proto",		"udp"				, 0 },
-	{ "vpnc2_addr",			""				, 0 },
-	{ "vpnc2_port",			"1194"				, 0 },
-	{ "vpnc2_retry",		"30"				, 0 },
-	{ "vpnc2_rg",			"0"				, 0 },
-	{ "vpnc2_firewall",		"auto"				, 0 },
-	{ "vpnc2_crypt",		"tls"				, 0 },
-	{ "vpnc2_cipher",		"default"			, 0 },
-#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
-	{ "vpnc2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#else
-	{ "vpnc2_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#endif
-	{ "vpnc2_digest",		"default"			, 0 },
-	{ "vpnc2_local",		"10.9.0.2"			, 0 },
-	{ "vpnc2_remote",		"10.9.0.1"			, 0 },
-	{ "vpnc2_nm",			"255.255.255.0"			, 0 },
-	{ "vpnc2_reneg",		"-1"				, 0 },
-	{ "vpnc2_hmac",			"-1"				, 0 },
-	{ "vpnc2_adns",			"0"				, 0 },
-	{ "vpnc2_rgw",			"0"				, 0 },
-	{ "vpnc2_gw",			""				, 0 },
-	{ "vpnc2_custom",		""				, 0 },
-	{ "vpnc2_static",		""				, 0 },
-	{ "vpnc2_ca",			""				, 0 },
-	{ "vpnc2_crt",			""				, 0 },
-	{ "vpnc2_key",			""				, 0 },
-	{ "vpnc2_br",			"br0"				, 0 },
-	{ "vpnc2_nobind",		"1"				, 0 },
-	{ "vpnc2_routing_val",		""				, 0 },
-	{ "vpnc2_fw",			"1"				, 0 },
-	{ "vpnc2_tlsvername",		"0"				, 0 },
-	{ "vpnc2_prio",			""				, 0 },
-#ifdef TOMATO64
-	{ "vpnc2_dco",			"0"				, 0 },
-
-#endif /* TOMATO64 */
-#ifdef TCONFIG_BCMARM
-	{ "vpnc3_poll",			"0"				, 0 },
-	{ "vpnc3_tchk",			"0"				, 0 },	/* check if tunnel is up */
-	{ "vpnc3_tunchk",		""				, 0 },	/* IP to check the tunnel */
-	{ "vpnc3_if",			"tun"				, 0 },
-	{ "vpnc3_bridge",		"1"				, 0 },
-	{ "vpnc3_nat",			"1"				, 0 },
-	{ "vpnc3_proto",		"udp"				, 0 },
-	{ "vpnc3_addr",			""				, 0 },
-	{ "vpnc3_port",			"1194"				, 0 },
-	{ "vpnc3_retry",		"30"				, 0 },
-	{ "vpnc3_rg",			"0"				, 0 },
-	{ "vpnc3_firewall",		"auto"				, 0 },
-	{ "vpnc3_crypt",		"tls"				, 0 },
-	{ "vpnc3_cipher",		"default"			, 0 },
-#ifdef TCONFIG_OPTIMIZE_SIZE_MORE
-	{ "vpnc3_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#else
-	{ "vpnc3_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
-#endif
-	{ "vpnc3_digest",		"default"			, 0 },
-	{ "vpnc3_local",		"10.10.0.2"			, 0 },
-	{ "vpnc3_remote",		"10.10.0.1"			, 0 },
-	{ "vpnc3_nm",			"255.255.255.0"			, 0 },
-	{ "vpnc3_reneg",		"-1"				, 0 },
-	{ "vpnc3_hmac",			"-1"				, 0 },
-	{ "vpnc3_adns",			"0"				, 0 },
-	{ "vpnc3_rgw",			"0"				, 0 },
-	{ "vpnc3_gw",			""				, 0 },
-	{ "vpnc3_custom",		""				, 0 },
-	{ "vpnc3_static",		""				, 0 },
-	{ "vpnc3_ca",			""				, 0 },
-	{ "vpnc3_crt",			""				, 0 },
-	{ "vpnc3_key",			""				, 0 },
-	{ "vpnc3_br",			"br0"				, 0 },
-	{ "vpnc3_nobind",		"1"				, 0 },
-	{ "vpnc3_routing_val",		""				, 0 },
-	{ "vpnc3_fw",			"1"				, 0 },
-	{ "vpnc3_tlsvername",		"0"				, 0 },
-	{ "vpnc3_prio",			""				, 0 },
-#ifdef TOMATO64
-	{ "vpnc3_dco",			"0"				, 0 },
-
-#endif /* TOMATO64 */
-#endif /* TCONFIG_BCMARM */
 #endif /* TCONFIG_OPENVPN */
 
 #ifdef TCONFIG_PPTPD
@@ -1941,99 +1809,6 @@ struct nvram_tuple router_defaults[] = {
 
 #ifdef TCONFIG_WIREGUARD
 	{"wg_adns",			""				, 0 },
-	{"wg0_enable",			"0"				, 0 },
-	{"wg0_poll",			"0"				, 0 },
-	{"wg0_tchk",			"0"				, 0 },	/* check if tunnel is up */
-	{"wg0_tunchk",			""				, 0 },	/* IP to check the tunnel */
-	{"wg0_sleep",			"1"				, 0 },	/* delay at startup */
-	{"wg0_file",			""				, 0 },
-	{"wg0_key",			""				, 0 },
-	{"wg0_endpoint",		""				, 0 },
-	{"wg0_port",			""				, 0 },
-	{"wg0_ip",			"10.11.0.1/24"			, 0 },
-	{"wg0_fwmark",			"0"				, 0 },
-	{"wg0_mtu",			"1420"				, 0 },
-	{"wg0_preup",			""				, 0 },
-	{"wg0_postup",			""				, 0 },
-	{"wg0_predown",			""				, 0 },
-	{"wg0_postdown",		""				, 0 },
-	{"wg0_aip",			""				, 0 },
-	{"wg0_dns",			""				, 0 },
-	{"wg0_ka",			"0"				, 0 },
-	{"wg0_com",			"0"				, 0 },
-	{"wg0_lan",			"0"				, 0 },	/* push LANX for wg0 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
-	{"wg0_rgw",			"0"				, 0 },
-	{"wg0_route",			""				, 0 },
-	{"wg0_peer_dns",		""				, 0 },
-	{"wg0_peers",			""				, 0 },
-	{"wg0_firewall",		"auto"				, 0 },	/* auto, custom */
-	{"wg0_nat",			"1"				, 0 },
-	{"wg0_fw",			"1"				, 0 },
-	{"wg0_rgwr",			"1"				, 0 },
-	{"wg0_routing_val",		""				, 0 },
-	{"wg0_prio",			""				, 0 },
-	{"wg1_enable",			"0"				, 0 },
-	{"wg1_poll",			"0"				, 0 },
-	{"wg1_tchk",			"0"				, 0 },	/* check if tunnel is up */
-	{"wg1_tunchk",			""				, 0 },	/* IP to check the tunnel */
-	{"wg1_sleep",			"1"				, 0 },	/* delay at startup */
-	{"wg1_file",			""				, 0 },
-	{"wg1_key",			""				, 0 },
-	{"wg1_endpoint",		""				, 0 },
-	{"wg1_port",			""				, 0 },
-	{"wg1_ip",			"10.12.0.1/24"			, 0 },
-	{"wg1_fwmark",			"0"				, 0 },
-	{"wg1_mtu",			"1420"				, 0 },
-	{"wg1_preup",			""				, 0 },
-	{"wg1_postup",			""				, 0 },
-	{"wg1_predown",			""				, 0 },
-	{"wg1_postdown",		""				, 0 },
-	{"wg1_aip",			""				, 0 },
-	{"wg1_dns",			""				, 0 },
-	{"wg1_ka",			"0"				, 0 },
-	{"wg1_com",			"0"				, 0 },
-	{"wg1_lan",			"0"				, 0 },	/* push LANX for wg1 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
-	{"wg1_rgw",			"0"				, 0 },
-	{"wg1_route",			""				, 0 },
-	{"wg1_peer_dns",		""				, 0 },
-	{"wg1_peers",			""				, 0 },
-	{"wg1_firewall",		"auto"				, 0 },	/* auto, custom */
-	{"wg1_nat",			"1"				, 0 },
-	{"wg1_fw",			"1"				, 0 },
-	{"wg1_rgwr",			"1"				, 0 },
-	{"wg1_routing_val",		""				, 0 },
-	{"wg1_prio",			""				, 0 },
-	{"wg2_enable",			"0"				, 0 },
-	{"wg2_poll",			"0"				, 0 },
-	{"wg2_tchk",			"0"				, 0 },	/* check if tunnel is up */
-	{"wg2_tunchk",			""				, 0 },	/* IP to check the tunnel */
-	{"wg2_sleep",			"1"				, 0 },	/* delay at startup */
-	{"wg2_file",			""				, 0 },
-	{"wg2_key",			""				, 0 },
-	{"wg2_endpoint",		""				, 0 },
-	{"wg2_port",			""				, 0 },
-	{"wg2_ip",			"10.13.0.1/24"			, 0 },
-	{"wg2_fwmark",			"0"				, 0 },
-	{"wg2_mtu",			"1420"				, 0 },
-	{"wg2_preup",			""				, 0 },
-	{"wg2_postup",			""				, 0 },
-	{"wg2_predown",			""				, 0 },
-	{"wg2_postdown",		""				, 0 },
-	{"wg2_aip",			""				, 0 },
-	{"wg2_dns",			""				, 0 },
-	{"wg2_ka",			"0"				, 0 },
-	{"wg2_com",			"0"				, 0 },
-	{"wg2_lan",			"0"				, 0 },	/* push LANX for wg2 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
-	{"wg2_rgw",			"0"				, 0 },
-	{"wg2_route",			""				, 0 },
-	{"wg2_peer_dns",		""				, 0 },
-	{"wg2_peers",			""				, 0 },
-	{"wg2_firewall",		"auto"				, 0 },	/* auto, custom */
-	{"wg2_nat",			"1"				, 0 },
-	{"wg2_fw",			"1"				, 0 },
-	{"wg2_rgwr",			"1"				, 0 },
-	{"wg2_routing_val",		""				, 0 },
-	{"wg2_prio",			""				, 0 },
 #endif /* TCONFIG_WIREGUARD */
 
 #ifdef TCONFIG_BT
@@ -2257,6 +2032,82 @@ struct nvram_tuple router_defaults[] = {
 #if BRIDGE_COUNT >= 16
  BRIDGE_BLOCK(15)
 #endif
+#ifdef TCONFIG_OPENVPN
+ #if OVPN_CLIENT_COUNT >= 1
+  OVPNC_BLOCK(1)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 2
+  OVPNC_BLOCK(2)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 3
+  OVPNC_BLOCK(3)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 4
+  OVPNC_BLOCK(4)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 5
+  OVPNC_BLOCK(5)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 6
+  OVPNC_BLOCK(6)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 7
+  OVPNC_BLOCK(7)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 8
+  OVPNC_BLOCK(8)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 9
+  OVPNC_BLOCK(9)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 10
+  OVPNC_BLOCK(10)
+ #endif
+ #if OVPN_SERVER_COUNT >= 1
+  OVPNS_BLOCK(1)
+ #endif
+ #if OVPN_SERVER_COUNT >= 2
+  OVPNS_BLOCK(2)
+ #endif
+ #if OVPN_SERVER_COUNT >= 3
+  OVPNS_BLOCK(3)
+ #endif
+ #if OVPN_SERVER_COUNT >= 4
+  OVPNS_BLOCK(4)
+ #endif
+ #if OVPN_SERVER_COUNT >= 5
+  OVPNS_BLOCK(5)
+ #endif
+ #if OVPN_SERVER_COUNT >= 6
+  OVPNS_BLOCK(6)
+ #endif
+#endif /* TCONFIG_OPENVPN */
+#ifdef TCONFIG_WIREGUARD
+ #if WG_INTERFACE_COUNT >= 1
+  WG_BLOCK(0)
+ #endif
+ #if WG_INTERFACE_COUNT >= 2
+  WG_BLOCK(1)
+ #endif
+ #if WG_INTERFACE_COUNT >= 3
+  WG_BLOCK(2)
+ #endif
+ #if WG_INTERFACE_COUNT >= 4
+  WG_BLOCK(3)
+ #endif
+ #if WG_INTERFACE_COUNT >= 5
+  WG_BLOCK(4)
+ #endif
+ #if WG_INTERFACE_COUNT >= 6
+  WG_BLOCK(5)
+ #endif
+ #if WG_INTERFACE_COUNT >= 7
+  WG_BLOCK(6)
+ #endif
+ #if WG_INTERFACE_COUNT >= 8
+  WG_BLOCK(7)
+ #endif
+#endif /* TCONFIG_WIREGUARD */
 
 #ifdef TOMATO64
 	{ "set_macs",			"0"				, 0 },
