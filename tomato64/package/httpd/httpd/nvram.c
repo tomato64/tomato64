@@ -153,6 +153,7 @@ static const char *skip_lan_vars[] = { "lan_hwaddr", "lan_hwnames", "lan_dhcp", 
  *   "wan_", "dr_wan_"
  *   "lan_", "dhcpd_", "udpxy_lan", "upnp_lan", "multicast_lan", "dr_lan_", "bwl_lan_", "dhcp_lease", "dnsmasq_pxelan"
  *   "vpnc_", "vpns_"
+ *   "wg_"
  * - these variables only need the basic value entered in the nvram call in .asp scripts, without additional wanX/lanX
  *
  * WARNING! When you add another lan/wan related variable to nvram/asp files, and this is not so obvious,
@@ -248,6 +249,20 @@ void asp_nvram(int argc, char **argv)
 
 			for (i = 1; i <= OVPN_SERVER_COUNT; i++) {
 				snprintf(buf, sizeof(buf), "vpns%u%s", i, k + 4);
+				web_printf("\t'%s': '", buf);
+				web_putj_utf8(nvram_safe_get(buf));
+				web_puts("',\n");
+			}
+			continue;
+		}
+#endif
+#ifdef TCONFIG_WIREGUARD
+		if (strncmp(k, "wg_", 3) == 0) {
+			if (strncmp(k, "wg_adns", 7) == 0)
+				goto list;
+
+			for (i = 0; i < WG_INTERFACE_COUNT; i++) {
+				snprintf(buf, sizeof(buf), "wg%u%s", i, k + 2);
 				web_printf("\t'%s': '", buf);
 				web_putj_utf8(nvram_safe_get(buf));
 				web_puts("',\n");
