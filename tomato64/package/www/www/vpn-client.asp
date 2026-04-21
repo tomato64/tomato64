@@ -1,14 +1,10 @@
 <!DOCTYPE html>
 <!--
-	Tomato GUI
-	Copyright (C) 2006-2008 Jonathan Zarate
-	http://www.polarcloud.com/tomato/
+	FreshTomato GUI
+	Copyright (C) 2018 - 2026 pedro
+	https://freshtomato.org/
 
-	Portions Copyright (C) 2008-2010 Keith Moyer, tomatovpn@keithmoyer.com
-	Portions Copyright (C) 2010-2011 Jean-Yves Avenard, jean-yves@avenard.org
-	Copyright (C) 2018 - 2026 pedro https://freshtomato.org/
-
-	For use with Tomato Firmware only.
+	For use with FreshTomato Firmware only.
 	No part of this file may be used without permission.
 -->
 <html lang="en-GB">
@@ -25,10 +21,10 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("vpnc_eas,vpnc1_poll,vpnc1_tchk,vpnc1_tunchk,vpnc1_if,vpnc1_bridge,vpnc1_nat,vpnc1_proto,vpnc1_addr,vpnc1_port,vpnc1_retry,vpnc1_firewall,vpnc1_crypt,vpnc1_cipher,vpnc1_ncp_ciphers,vpnc1_local,vpnc1_remote,vpnc1_nm,vpnc1_reneg,vpnc1_hmac,vpnc1_adns,vpnc1_rgw,vpnc1_gw,vpnc1_custom,vpnc1_static,vpnc1_ca,vpnc1_crt,vpnc1_key,vpnc1_userauth,vpnc1_username,vpnc1_password,vpnc1_useronly,vpnc1_tlsremote,vpnc1_cn,vpnc1_br,vpnc1_digest,vpnc1_routing_val,vpnc1_fw,vpnc1_tlsvername,vpnc1_prio,vpnc2_poll,vpnc2_tchk,vpnc2_tunchk,vpnc2_if,vpnc2_bridge,vpnc2_nat,vpnc2_proto,vpnc2_addr,vpnc2_port,vpnc2_retry,vpnc2_firewall,vpnc2_crypt,vpnc2_cipher,vpnc2_ncp_ciphers,vpnc2_local,vpnc2_remote,vpnc2_nm,vpnc2_reneg,vpnc2_hmac,vpnc2_adns,vpnc2_rgw,vpnc2_gw,vpnc2_custom,vpnc2_static,vpnc2_ca,vpnc2_crt,vpnc2_key,vpnc2_userauth,vpnc2_username,vpnc2_password,vpnc2_useronly,vpnc2_tlsremote,vpnc2_cn,vpnc2_br,vpnc2_digest,vpnc2_routing_val,vpnc2_fw,vpnc2_tlsvername,vpnc2_prio,vpnc3_poll,vpnc3_tchk,vpnc3_tunchk,vpnc3_if,vpnc3_bridge,vpnc3_nat,vpnc3_proto,vpnc3_addr,vpnc3_port,vpnc3_retry,vpnc3_firewall,vpnc3_crypt,vpnc3_cipher,vpnc3_ncp_ciphers,vpnc3_local,vpnc3_remote,vpnc3_nm,vpnc3_reneg,vpnc3_hmac,vpnc3_adns,vpnc3_rgw,vpnc3_gw,vpnc3_custom,vpnc3_static,vpnc3_ca,vpnc3_crt,vpnc3_key,vpnc3_userauth,vpnc3_username,vpnc3_password,vpnc3_useronly,vpnc3_tlsremote,vpnc3_cn,vpnc3_br,vpnc3_digest,vpnc3_routing_val,vpnc3_fw,vpnc3_tlsvername,vpnc3_prio,lan_ifname"); %>
+//	<% nvram("vpnc_eas,vpnc_poll,vpnc_tchk,vpnc_tunchk,vpnc_if,vpnc_bridge,vpnc_nat,vpnc_proto,vpnc_addr,vpnc_port,vpnc_retry,vpnc_firewall,vpnc_crypt,vpnc_cipher,vpnc_ncp_ciphers,vpnc_local,vpnc_remote,vpnc_nm,vpnc_reneg,vpnc_hmac,vpnc_adns,vpnc_rgw,vpnc_gw,vpnc_custom,vpnc_static,vpnc_ca,vpnc_crt,vpnc_key,vpnc_userauth,vpnc_username,vpnc_password,vpnc_useronly,vpnc_tlsremote,vpnc_cn,vpnc_br,vpnc_digest,vpnc_routing_val,vpnc_fw,vpnc_tlsvername,vpnc_prio,lan_ifname"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("vpnc_eas,vpnc1_poll,vpnc1_tchk,vpnc1_tunchk,vpnc1_if,vpnc1_bridge,vpnc1_nat,vpnc1_proto,vpnc1_addr,vpnc1_port,vpnc1_retry,vpnc1_firewall,vpnc1_crypt,vpnc1_cipher,vpnc1_ncp_ciphers,vpnc1_local,vpnc1_remote,vpnc1_nm,vpnc1_reneg,vpnc1_hmac,vpnc1_adns,vpnc1_rgw,vpnc1_gw,vpnc1_custom,vpnc1_static,vpnc1_ca,vpnc1_crt,vpnc1_key,vpnc1_userauth,vpnc1_username,vpnc1_password,vpnc1_useronly,vpnc1_tlsremote,vpnc1_cn,vpnc1_br,vpnc1_digest,vpnc1_routing_val,vpnc1_fw,vpnc1_tlsvername,vpnc1_prio,vpnc2_poll,vpnc2_tchk,vpnc2_tunchk,vpnc2_if,vpnc2_bridge,vpnc2_nat,vpnc2_proto,vpnc2_addr,vpnc2_port,vpnc2_retry,vpnc2_firewall,vpnc2_crypt,vpnc2_cipher,vpnc2_ncp_ciphers,vpnc2_local,vpnc2_remote,vpnc2_nm,vpnc2_reneg,vpnc2_hmac,vpnc2_adns,vpnc2_rgw,vpnc2_gw,vpnc2_custom,vpnc2_static,vpnc2_ca,vpnc2_crt,vpnc2_key,vpnc2_userauth,vpnc2_username,vpnc2_password,vpnc2_useronly,vpnc2_tlsremote,vpnc2_cn,vpnc2_br,vpnc2_digest,vpnc2_routing_val,vpnc2_fw,vpnc2_tlsvername,vpnc2_prio,vpnc3_poll,vpnc3_tchk,vpnc3_tunchk,vpnc3_if,vpnc3_bridge,vpnc3_nat,vpnc3_proto,vpnc3_addr,vpnc3_port,vpnc3_retry,vpnc3_firewall,vpnc3_crypt,vpnc3_cipher,vpnc3_ncp_ciphers,vpnc3_local,vpnc3_remote,vpnc3_nm,vpnc3_reneg,vpnc3_hmac,vpnc3_adns,vpnc3_rgw,vpnc3_gw,vpnc3_custom,vpnc3_static,vpnc3_ca,vpnc3_crt,vpnc3_key,vpnc3_userauth,vpnc3_username,vpnc3_password,vpnc3_useronly,vpnc3_tlsremote,vpnc3_cn,vpnc3_br,vpnc3_digest,vpnc3_routing_val,vpnc3_fw,vpnc3_tlsvername,vpnc3_prio,vpnc1_dco,vpnc2_dco,vpnc3_dco,lan_ifname"); %>
+//	<% nvram("vpnc_eas,vpnc_poll,vpnc_tchk,vpnc_tunchk,vpnc_if,vpnc_bridge,vpnc_nat,vpnc_proto,vpnc_addr,vpnc_port,vpnc_retry,vpnc_firewall,vpnc_crypt,vpnc_cipher,vpnc_ncp_ciphers,vpnc_local,vpnc_remote,vpnc_nm,vpnc_reneg,vpnc_hmac,vpnc_adns,vpnc_rgw,vpnc_gw,vpnc_custom,vpnc_static,vpnc_ca,vpnc_crt,vpnc_key,vpnc_userauth,vpnc_username,vpnc_password,vpnc_useronly,vpnc_tlsremote,vpnc_cn,vpnc_br,vpnc_digest,vpnc_routing_val,vpnc_fw,vpnc_tlsvername,vpnc_prio,vpnc_dco,lan_ifname"); %>
 /* TOMATO64-END */
 
 var changed = 0, i;
@@ -197,7 +193,7 @@ RouteGrid.prototype.verifyFields = function(row, quiet) {
 }
 
 function verifyFields(focused, quiet) {
-	var i, ok = 1;
+	var i, j, t, s, ok = 1;
 	var restart = 1;
 	tgHideIcons();
 
@@ -232,7 +228,7 @@ function verifyFields(focused, quiet) {
 
 	/* Element verification */
 	for (i = 0; i < tabs.length; ++i) {
-		var t = tabs[i][0];
+		t = tabs[i][0];
 
 		if (!v_range('_'+t+'_poll', quiet || !ok, 0, 30))
 			ok = 0;
@@ -355,10 +351,10 @@ function verifyFields(focused, quiet) {
 	}
 
 	for (i = 0; i < tabs.length; ++i) {
-		for (var j = 0; j <= MAX_BRIDGE_ID; ++j) {
-			t = (j == 0  ? '' : j);
+		for (j = 0; j <= MAX_BRIDGE_ID; ++j) {
+			s = (j == 0  ? '' : j);
 
-			if (nvram['lan'+t+'_ifname'].length < 1)
+			if (nvram['lan'+s+'_ifname'].length < 1)
 				E('_vpnc'+(i + 1)+'_br').options[j].disabled = 1;
 		}
 	}
@@ -531,20 +527,21 @@ function init() {
 /* TOMATO64-END */
 
 			W('<ul class="tabs">');
-			for (j = 0; j < sections.length; j++)
+			for (var j = 0; j < sections.length; j++)
 				W('<li><a href="javascript:sectSelect('+i+',\''+sections[j][0]+'\')" id="'+t+'-'+sections[j][0]+'-tab">'+sections[j][1]+'<\/a><\/li>');
 			W('<\/ul><div class="tabs-bottom"><\/div>');
 
 			W('<div id="'+t+'-basic">');
+			var brOptions = [];
+			for (j = 0; j <= MAX_BRIDGE_ID; j++) {
+				var label = 'LAN'+j+' (br'+j+')';
+				if (j == 0) label += '*';
+				brOptions.push(['br'+j, label]);
+			}
 			createFieldTable('', [
 				{ title: 'Enable on Start', name: 'f_'+t+'_eas', type: 'checkbox', value: nvram.vpnc_eas.indexOf(''+(i + 1)) >= 0 },
 				{ title: 'Interface Type', name: t+'_if', type: 'select', options: [['tap','TAP'],['tun','TUN']], value: nvram[t+'_if'] },
-/* TOMATO64-REMOVE-BEGIN */
-					{ title: 'Bridge TAP with', indent: 2, name: t+'_br', type: 'select', options: [['br0','LAN (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)']], value: nvram[t+'_br'], suffix: ' <small>* default<\/small>' },
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-					{ title: 'Bridge TAP with', indent: 2, name: t+'_br', type: 'select', options: [['br0','LAN (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)'],['br4','LAN4 (br4)'],['br5','LAN5 (br5)'],['br6','LAN6 (br6)'],['br7','LAN7 (br7)']], value: nvram[t+'_br'], suffix: ' <small>* default<\/small>' },
-/* TOMATO64-END */
+					{ title: 'Bridge TAP with', indent: 2, name: t+'_br', type: 'select', options: brOptions, value: nvram[t+'_br'], suffix: ' <small>* default<\/small>' },
 				{ title: 'Protocol', name: t+'_proto', type: 'select', options: [['udp','UDP'],['tcp-client','TCP'],['udp4','UDP4'],['tcp4-client','TCP4'],['udp6','UDP6'],['tcp6-client','TCP6']], value: nvram[t+'_proto'] },
 				{ title: 'Server Address/Port', multi: [
 					{ name: t+'_addr', type: 'text', maxlen: 60, size: 17, value: nvram[t+'_addr'] },

@@ -306,19 +306,6 @@ const aspapi_t aspapi[] = {
 	{ "bwl_lan" #i "_dlr",		V_RANGE(0, 99999999)		}, \
 	{ "bwl_lan" #i "_ulr",		V_RANGE(0, 99999999)		}, \
 	{ "bwl_lan" #i "_prio",		V_RANGE(0, 5)			},
-#ifdef TCONFIG_OPENVPN
- #define BRIDGE_BLOCK_OPENVPN(i) \
-	{ "vpns1_plan" #i,		V_01				}, \
-/* #ifndef TOMATO64 \
-	{ "vpns2_plan" #i,		V_01				},
-   #else */ \
-	{ "vpns2_plan" #i,		V_01				}, \
-	{ "vpns3_plan" #i,		V_01				}, \
-	{ "vpns4_plan" #i,		V_01				},
-/* #endif TOMATO64 */ \
-#else
- #define BRIDGE_BLOCK_OPENVPN(i)
-#endif
 #ifdef TCONFIG_PROXY
  #define BRIDGE_BLOCK_PROXY(i) \
 	{ "multicast_lan" #i,		V_01				}, /* on LANX (brX) */ \
@@ -342,7 +329,6 @@ const aspapi_t aspapi[] = {
 
 #define BRIDGE_BLOCK(i) \
 	BRIDGE_BLOCK_CORE(i) \
-	BRIDGE_BLOCK_OPENVPN(i) \
 	BRIDGE_BLOCK_PROXY(i) \
 	BRIDGE_BLOCK_ZEBRA(i) \
 	BRIDGE_BLOCK_USB_EXTRAS(i)
@@ -1596,7 +1582,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpns1_remote",		V_IP				},
 	{ "vpns1_reneg",		V_RANGE(-1, 2147483647)		},
 	{ "vpns1_hmac",			V_RANGE(-1, 4)			},
-	{ "vpns1_plan",			V_01				},
+	{ "vpns1_plan",			V_NONE				},
 	{ "vpns1_pdns",			V_01				},
 	{ "vpns1_rgw",			V_01				},
 	{ "vpns1_userpass",		V_01				},
@@ -1637,7 +1623,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpns2_remote",		V_IP				},
 	{ "vpns2_reneg",		V_RANGE(-1, 2147483647)		},
 	{ "vpns2_hmac",			V_RANGE(-1, 4)			},
-	{ "vpns2_plan",			V_01				},
+	{ "vpns2_plan",			V_NONE				},
 	{ "vpns2_pdns",			V_01				},
 	{ "vpns2_rgw",			V_01				},
 	{ "vpns2_userpass",		V_01				},
@@ -1679,7 +1665,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpns3_remote",		V_IP				},
 	{ "vpns3_reneg",		V_RANGE(-1, 2147483647)		},
 	{ "vpns3_hmac",			V_RANGE(-1, 4)			},
-	{ "vpns3_plan",			V_01				},
+	{ "vpns3_plan",			V_NONE				},
 	{ "vpns3_pdns",			V_01				},
 	{ "vpns3_rgw",			V_01				},
 	{ "vpns3_userpass",		V_01				},
@@ -1718,7 +1704,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpns4_remote",		V_IP				},
 	{ "vpns4_reneg",		V_RANGE(-1, 2147483647)		},
 	{ "vpns4_hmac",			V_RANGE(-1, 4)			},
-	{ "vpns4_plan",			V_01				},
+	{ "vpns4_plan",			V_NONE				},
 	{ "vpns4_pdns",			V_01				},
 	{ "vpns4_rgw",			V_01				},
 	{ "vpns4_userpass",		V_01				},

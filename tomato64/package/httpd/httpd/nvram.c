@@ -144,19 +144,15 @@ void asp_jsdefaults(int argc, char **argv)
 static const char *chk_wan_vars[]  = { "wan_", "dr_wan_" };
 static const char *skip_wan_vars[] = { "wan_dhcp_pass", "wan_domain", "wan_hostname", "wan_speed", "wan_wins" };
 
-#ifndef TOMATO64
-static const char *chk_lan_vars[]  = { "lan_", "dhcpd_", "udpxy_lan", "upnp_lan", "multicast_lan", "dr_lan_", "bwl_lan_", "dhcp_lease", "dnsmasq_pxelan", "vpns1_plan", "vpns2_plan" };
-#endif /* TOMATO64 */
-#ifdef TOMATO64
-static const char *chk_lan_vars[]  = { "lan_", "dhcpd_", "udpxy_lan", "upnp_lan", "multicast_lan", "dr_lan_", "bwl_lan_", "dhcp_lease", "dnsmasq_pxelan", "vpns1_plan", "vpns2_plan", "vpns3_plan", "vpns4_plan" };
-#endif /* TOMATO64 */
+static const char *chk_lan_vars[]  = { "lan_", "dhcpd_", "udpxy_lan", "upnp_lan", "multicast_lan", "dr_lan_", "bwl_lan_", "dhcp_lease", "dnsmasq_pxelan" };
 static const char *skip_lan_vars[] = { "lan_hwaddr", "lan_hwnames", "lan_dhcp", "lan_gateway", "lan_state", "lan_desc", "lan_invert", "lan_access", "dhcpd_static", "dhcpd_slt", "dhcpd_dmdns", "dhcpd_lmax", "dhcpd_gwmode" };
 
 /* <% nvram("x,y,z"); %> ---> nvram = {'x': '1','y': '2','z': '3'};
  *
  * special cases:
  *   "wan_", "dr_wan_"
- *   "lan_", "dhcpd_", "udpxy_lan", "upnp_lan", "multicast_lan", "dr_lan_", "bwl_lan_", "dhcp_lease", "dnsmasq_pxelan", "vpns1_plan", "vpns2_plan"
+ *   "lan_", "dhcpd_", "udpxy_lan", "upnp_lan", "multicast_lan", "dr_lan_", "bwl_lan_", "dhcp_lease", "dnsmasq_pxelan"
+ *   "vpnc_", "vpns_"
  * - these variables only need the basic value entered in the nvram call in .asp scripts, without additional wanX/lanX
  *
  * WARNING! When you add another lan/wan related variable to nvram/asp files, and this is not so obvious,
@@ -185,6 +181,7 @@ void asp_nvram(int argc, char **argv)
 	while ((k = strsep(&p, ",")) != NULL) {
 		if (*k == 0)
 			continue;
+
 		if (strcmp(k, "wl_unit") == 0)
 			continue;
 
@@ -232,6 +229,34 @@ void asp_nvram(int argc, char **argv)
 		}
 #endif /* TOMATO64 */
 
+#ifdef TCONFIG_OPENVPN
+		if (strncmp(k, "vpnc_", 5) == 0) {
+			if (strncmp(k, "vpnc_eas", 8) == 0)
+				goto list;
+
+			for (i = 1; i <= OVPN_CLIENT_COUNT; i++) {
+				snprintf(buf, sizeof(buf), "vpnc%u%s", i, k + 4);
+				web_printf("\t'%s': '", buf);
+				web_putj_utf8(nvram_safe_get(buf));
+				web_puts("',\n");
+			}
+			continue;
+		}
+		if (strncmp(k, "vpns_", 5) == 0) {
+			if ((strncmp(k, "vpns_eas", 8) == 0) || (strncmp(k, "vpns_dns", 8) == 0))
+				goto list;
+
+			for (i = 1; i <= OVPN_SERVER_COUNT; i++) {
+				snprintf(buf, sizeof(buf), "vpns%u%s", i, k + 4);
+				web_printf("\t'%s': '", buf);
+				web_putj_utf8(nvram_safe_get(buf));
+				web_puts("',\n");
+			}
+			continue;
+		}
+#endif
+
+list:
 		web_printf("\t'%s': '", k);
 		web_putj_utf8(nvram_safe_get(k));
 		web_puts("',\n");
@@ -243,7 +268,6 @@ void asp_nvram(int argc, char **argv)
 
 			for (i = 2; i <= (MWAN_MAX < 4 ? 4 : MWAN_MAX); i++) {
 			//for (i = 2; i <= MWAN_MAX; i++) { /* TODO: fix all .asp scripts (iteration by MAXWAN_NUM) to enable this */
-				memset(buf, 0, sizeof(buf));
 				if (strncmp(k, "wan_", 4) == 0)
 					snprintf(buf, sizeof(buf), "wan%u%s", i, k + 3);
 				else if (strncmp(k, "dr_wan_", 7) == 0)
@@ -264,7 +288,6 @@ void asp_nvram(int argc, char **argv)
 
 			for (i = 1; i < (BRIDGE_COUNT < 4 ? 4 : BRIDGE_COUNT); i++) {
 			//for (i = 1; i < BRIDGE_COUNT; i++) { /* TODO: fix all .asp scripts (iteration by MAX_BRIDGE_ID) to enable this */
-				memset(buf, 0, sizeof(buf));
 				if (strncmp(k, "lan_", 4) == 0)
 					snprintf(buf, sizeof(buf), "lan%u%s", i, k + 3);
 				else if (strncmp(k, "udpxy_lan", 9) == 0)
@@ -283,16 +306,6 @@ void asp_nvram(int argc, char **argv)
 					snprintf(buf, sizeof(buf), "dhcp%u%s", i, k + 4);
 				else if (strncmp(k, "dnsmasq_pxelan", 14) == 0)
 					snprintf(buf, sizeof(buf), "dnsmasq_pxelan%u", i);
-				else if (strncmp(k, "vpns1_plan", 16) == 0)
-					snprintf(buf, sizeof(buf), "vpns1_plan%u", i);
-				else if (strncmp(k, "vpns2_plan", 16) == 0)
-					snprintf(buf, sizeof(buf), "vpns2_plan%u", i);
-#ifdef TOMATO64
-				else if (strncmp(k, "vpns3_plan", 16) == 0)
-					snprintf(buf, sizeof(buf), "vpns3_plan%u", i);
-				else if (strncmp(k, "vpns4_plan", 16) == 0)
-					snprintf(buf, sizeof(buf), "vpns4_plan%u", i);
-#endif /* TOMATO64 */
 				else
 					continue;
 

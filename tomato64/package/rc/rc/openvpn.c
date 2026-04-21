@@ -680,7 +680,7 @@ void start_ovpn_server(int unit)
 	char *br_ipaddr, *br_netmask;
 	char *chp, *route, *ccd_val;
 	int nvi, i, ip[4], nm[4];
-	int c2c = 0;
+	int plan, c2c = 0;
 	int dont_push_active = 0;
 	int push_lan[BRIDGE_COUNT] = {0};
 #endif
@@ -857,9 +857,11 @@ void start_ovpn_server(int unit)
 	if (auth_mode == OVPN_AUTH_TLS) {
 		if (if_type == OVPN_IF_TUN) {
 			/* push LANs */
+			snprintf(buffer, BUF_SIZE, "vpns%d_plan", unit);
+			plan = nvram_get_int(buffer);
+
 			for (i = 0; i < BRIDGE_COUNT; i++) {
-				snprintf(buffer, BUF_SIZE, (i == 0 ? "vpns%d_plan" : "vpns%d_plan%d"), unit, i);
-				if (nvram_get_int(buffer)) {
+				if (plan & (1 << i)) {
 					int ret3 = 0, ret4 = 0;
 
 					ret3 = sscanf(getNVRAMVar((i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);

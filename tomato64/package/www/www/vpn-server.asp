@@ -1,13 +1,10 @@
 <!DOCTYPE html>
 <!--
-	Tomato GUI
-	Copyright (C) 2006-2008 Jonathan Zarate
-	http://www.polarcloud.com/tomato/
+	FreshTomato GUI
+	Copyright (C) 2018 - 2026 pedro
+	https://freshtomato.org/
 
-	Portions Copyright (C) 2008-2010 Keith Moyer, tomatovpn@keithmoyer.com
-	Copyright (C) 2018 - 2026 pedro https://freshtomato.org/
-
-	For use with Tomato Firmware only.
+	For use with FreshTomato Firmware only.
 	No part of this file may be used without permission.
 -->
 <html lang="en-GB">
@@ -24,10 +21,10 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("vpns_eas,vpns_dns,vpns1_poll,vpns1_if,vpns1_proto,vpns1_port,vpns1_firewall,vpns1_sn,vpns1_nm,vpns1_local,vpns1_remote,vpns1_dhcp,vpns1_r1,vpns1_r2,vpns1_crypt,vpns1_digest,vpns1_cipher,vpns1_ncp_ciphers,vpns1_reneg,vpns1_hmac,vpns1_plan,vpns1_ccd,vpns1_c2c,vpns1_ccd_excl,vpns1_ccd_val,vpns1_pdns,vpns1_rgw,vpns1_userpass,vpns1_nocert,vpns1_users_val,vpns1_custom,vpns1_static,vpns1_ca,vpns1_ca_key,vpns1_crt,vpns1_crl,vpns1_key,vpns1_dh,vpns1_br,vpns1_ecdh,vpns2_poll,vpns2_if,vpns2_proto,vpns2_port,vpns2_firewall,vpns2_sn,vpns2_nm,vpns2_local,vpns2_remote,vpns2_dhcp,vpns2_r1,vpns2_r2,vpns2_crypt,vpns2_digest,vpns2_cipher,vpns2_ncp_ciphers,vpns2_reneg,vpns2_hmac,vpns2_plan,vpns2_ccd,vpns2_c2c,vpns2_ccd_excl,vpns2_ccd_val,vpns2_pdns,vpns2_rgw,vpns2_userpass,vpns2_nocert,vpns2_users_val,vpns2_custom,vpns2_static,vpns2_ca,vpns2_ca_key,vpns2_crt,vpns2_crl,vpns2_key,vpns2_dh,vpns2_br,vpns2_ecdh,lan_ifname"); %>
+//	<% nvram("vpns_eas,vpns_dns,vpns_poll,vpns_if,vpns_proto,vpns_port,vpns_firewall,vpns_sn,vpns_nm,vpns_local,vpns_remote,vpns_dhcp,vpns_r1,vpns_r2,vpns_crypt,vpns_digest,vpns_cipher,vpns_ncp_ciphers,vpns_reneg,vpns_hmac,vpns_plan,vpns_ccd,vpns_c2c,vpns_ccd_excl,vpns_ccd_val,vpns_pdns,vpns_rgw,vpns_userpass,vpns_nocert,vpns_users_val,vpns_custom,vpns_static,vpns_ca,vpns_ca_key,vpns_crt,vpns_crl,vpns_key,vpns_dh,vpns_br,vpns_ecdh,lan_ifname"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("vpns_eas,vpns_dns,vpns1_poll,vpns1_if,vpns1_proto,vpns1_port,vpns1_firewall,vpns1_sn,vpns1_nm,vpns1_local,vpns1_remote,vpns1_dhcp,vpns1_r1,vpns1_r2,vpns1_crypt,vpns1_digest,vpns1_cipher,vpns1_ncp_ciphers,vpns1_reneg,vpns1_hmac,vpns1_plan,vpns1_ccd,vpns1_c2c,vpns1_ccd_excl,vpns1_ccd_val,vpns1_pdns,vpns1_rgw,vpns1_userpass,vpns1_nocert,vpns1_users_val,vpns1_custom,vpns1_static,vpns1_ca,vpns1_ca_key,vpns1_crt,vpns1_crl,vpns1_key,vpns1_dh,vpns1_br,vpns1_ecdh,vpns2_poll,vpns2_if,vpns2_proto,vpns2_port,vpns2_firewall,vpns2_sn,vpns2_nm,vpns2_local,vpns2_remote,vpns2_dhcp,vpns2_r1,vpns2_r2,vpns2_crypt,vpns2_digest,vpns2_cipher,vpns2_ncp_ciphers,vpns2_reneg,vpns2_hmac,vpns2_plan,vpns2_ccd,vpns2_c2c,vpns2_ccd_excl,vpns2_ccd_val,vpns2_pdns,vpns2_rgw,vpns2_userpass,vpns2_nocert,vpns2_users_val,vpns2_custom,vpns2_static,vpns2_ca,vpns2_ca_key,vpns2_crt,vpns2_crl,vpns2_key,vpns2_dh,vpns2_br,vpns2_ecdh,vpns3_poll,vpns3_if,vpns3_proto,vpns3_port,vpns3_firewall,vpns3_sn,vpns3_nm,vpns3_local,vpns3_remote,vpns3_dhcp,vpns3_r1,vpns3_r2,vpns3_crypt,vpns3_digest,vpns3_cipher,vpns3_ncp_ciphers,vpns3_reneg,vpns3_hmac,vpns3_plan,vpns3_ccd,vpns3_c2c,vpns3_ccd_excl,vpns3_ccd_val,vpns3_pdns,vpns3_rgw,vpns3_userpass,vpns3_nocert,vpns3_users_val,vpns3_custom,vpns3_static,vpns3_ca,vpns3_ca_key,vpns3_crt,vpns3_crl,vpns3_key,vpns3_dh,vpns3_br,vpns3_ecdh,vpns4_poll,vpns4_if,vpns4_proto,vpns4_port,vpns4_firewall,vpns4_sn,vpns4_nm,vpns4_local,vpns4_remote,vpns4_dhcp,vpns4_r1,vpns4_r2,vpns4_crypt,vpns4_digest,vpns4_cipher,vpns4_ncp_ciphers,vpns4_reneg,vpns4_hmac,vpns4_plan,vpns4_ccd,vpns4_c2c,vpns4_ccd_excl,vpns4_ccd_val,vpns4_pdns,vpns4_rgw,vpns4_userpass,vpns4_nocert,vpns4_users_val,vpns4_custom,vpns4_static,vpns4_ca,vpns4_ca_key,vpns4_crt,vpns4_crl,vpns4_key,vpns4_dh,vpns4_br,vpns4_ecdh,vpns1_dco,vpns2_dco,vpns3_dco,vpns4_dco,lan_ifname"); %>
+//	<% nvram("vpns_eas,vpns_dns,vpns_poll,vpns_if,vpns_proto,vpns_port,vpns_firewall,vpns_sn,vpns_nm,vpns_local,vpns_remote,vpns_dhcp,vpns_r1,vpns_r2,vpns_crypt,vpns_digest,vpns_cipher,vpns_ncp_ciphers,vpns_reneg,vpns_hmac,vpns_plan,vpns_ccd,vpns_c2c,vpns_ccd_excl,vpns_ccd_val,vpns_pdns,vpns_rgw,vpns_userpass,vpns_nocert,vpns_users_val,vpns_custom,vpns_static,vpns_ca,vpns_ca_key,vpns_crt,vpns_crl,vpns_key,vpns_dh,vpns_br,vpns_ecdh,vpns_dco,lan_ifname"); %>
 /* TOMATO64-END */
 
 var changed = 0, i;
@@ -564,7 +561,7 @@ function downloadClientConfig(num) {
 /* KEYGEN-END */
 
 function verifyFields(focused, quiet) {
-	var i, j, t, ok = 1;
+	var i, j, t, s, ok = 1;
 	var restart = 1;
 	tgHideIcons();
 
@@ -656,11 +653,11 @@ function verifyFields(focused, quiet) {
 /* KEYGEN-BEGIN */
 		elem.display(PR('_vpn_keygen_'+t+'_button'), auth == 'tls');
 /* KEYGEN-END */
-		elem.display(PR('_'+t+'_sn'), PR('_f_'+t+'_plan'), PR('_f_'+t+'_plan1'),
-/* TOMATO64-BEGIN */
-		             PR('_f_'+t+'_plan4'), PR('_f_'+t+'_plan5'), PR('_f_'+t+'_plan6'), PR('_f_'+t+'_plan7'),
-/* TOMATO64-END */
-		             PR('_f_'+t+'_plan2'), PR('_f_'+t+'_plan3'), auth == 'tls' && iface == 'tun');
+		var planFields = [];
+		for (j = 0; j <= MAX_BRIDGE_ID; j++) {
+			planFields.push(PR('_f_'+t+'_plan'+j));
+		}
+		elem.display.apply(elem, [PR('_'+t+'_sn')].concat(planFields).concat([auth == 'tls' && iface == 'tun']));
 		elem.display(PR('_f_'+t+'_dhcp'), auth == 'tls' && iface == 'tap');
 		elem.display(PR('_'+t+'_br'), iface == 'tap');
 		elem.display(E(t+'_range'), !dhcp);
@@ -714,13 +711,13 @@ function verifyFields(focused, quiet) {
 
 	for (i = 0; i < tabs.length; ++i) {
 		for (j = 0; j <= MAX_BRIDGE_ID; ++j) {
-			t = (j == 0 ? '' : j);
+			s = (j == 0 ? '' : j);
 
-			if (nvram['lan'+t+'_ifname'].length < 1) {
+			if (nvram['lan'+s+'_ifname'].length < 1) {
 				E('_vpns'+(i + 1)+'_br').options[j].disabled = 1;
 				/* also disable and un-check push lanX (*_plan) */
-				E('_f_vpns'+(i + 1)+'_plan'+t).checked = 0;
-				E('_f_vpns'+(i + 1)+'_plan'+t).disabled = 1;
+				E('_f_vpns'+(i + 1)+'_plan'+j).checked = 0;
+				E('_f_vpns'+(i + 1)+'_plan'+j).disabled = 1;
 			}
 		}
 	}
@@ -732,7 +729,7 @@ function save() {
 	if (!verifyFields(null, 0))
 		return;
 
-	var i, j, t, n;
+	var i, j, t, n, u, c, el;
 	var fom = E('t_fom');
 
 	fom.vpns_eas.value = '';
@@ -768,7 +765,7 @@ function save() {
 		var data = ccdTables[i].getAllData();
 		var ccd = '';
 		for (j = 0; j < data.length; ++j) {
-			var c = data[j].join('<')+'>';
+			c = data[j].join('<')+'>';
 			n = c.indexOf("<");
 			ccd += c.substring(n + 1);
 		}
@@ -776,22 +773,18 @@ function save() {
 		var userdata = usersTables[i].getAllData();
 		var users = '';
 		for (j = 0; j < userdata.length; ++j) {
-			var u = userdata[j].join('<')+'>';
+			u = userdata[j].join('<')+'>';
 			n = u.indexOf('<');
 			users += u.substring(n + 1);
 		}
 
 		fom[t+'_dhcp'].value = E('_f_'+t+'_dhcp').checked ? 1 : 0;
-		fom[t+'_plan'].value = E('_f_'+t+'_plan').checked ? 1 : 0;
-		fom[t+'_plan1'].value = E('_f_'+t+'_plan1').checked ? 1 : 0;
-		fom[t+'_plan2'].value = E('_f_'+t+'_plan2').checked ? 1 : 0;
-		fom[t+'_plan3'].value = E('_f_'+t+'_plan3').checked ? 1 : 0;
-/* TOMATO64-BEGIN */
-		fom[t+'_plan4'].value = E('_f_'+t+'_plan4').checked ? 1 : 0;
-		fom[t+'_plan5'].value = E('_f_'+t+'_plan5').checked ? 1 : 0;
-		fom[t+'_plan6'].value = E('_f_'+t+'_plan6').checked ? 1 : 0;
-		fom[t+'_plan7'].value = E('_f_'+t+'_plan7').checked ? 1 : 0;
-/* TOMATO64-END */
+		fom[t+'_plan'].value = 0;
+		for (j = 0; j <= MAX_BRIDGE_ID; j++) {
+			el = E('_f_'+t+'_plan'+j);
+			if (el && el.checked)
+				fom[t+'_plan'].value |= (1 << j);
+		}
 		fom[t+'_ccd'].value = E('_f_'+t+'_ccd').checked ? 1 : 0;
 		fom[t+'_c2c'].value = E('_f_'+t+'_c2c').checked ? 1 : 0;
 		fom[t+'_ccd_excl'].value = E('_f_'+t+'_ccd_excl').checked ? 1 : 0;
@@ -959,15 +952,6 @@ function init() {
 			W('<div id="'+t+'-tab">');
 			W('<input type="hidden" name="'+t+'_dhcp">');
 			W('<input type="hidden" name="'+t+'_plan">');
-			W('<input type="hidden" name="'+t+'_plan1">');
-			W('<input type="hidden" name="'+t+'_plan2">');
-			W('<input type="hidden" name="'+t+'_plan3">');
-/* TOMATO64-BEGIN */
-			W('<input type="hidden" name="'+t+'_plan4">');
-			W('<input type="hidden" name="'+t+'_plan5">');
-			W('<input type="hidden" name="'+t+'_plan6">');
-			W('<input type="hidden" name="'+t+'_plan7">');
-/* TOMATO64-END */
 			W('<input type="hidden" name="'+t+'_ccd">');
 			W('<input type="hidden" name="'+t+'_c2c">');
 			W('<input type="hidden" name="'+t+'_ccd_excl">');
@@ -986,23 +970,22 @@ function init() {
 /* TOMATO64-END */
 
 			W('<ul class="tabs">');
-			for (j = 0; j < sections.length; j++) {
+			for (var j = 0; j < sections.length; j++) {
 				W('<li><a href="javascript:sectSelect('+i+',\''+sections[j][0]+'\')" id="'+t+'-'+sections[j][0]+'-tab">'+sections[j][1]+'<\/a><\/li>');
 			}
 			W('<\/ul><div class="tabs-bottom"><\/div>');
 
 			W('<div id="'+t+'-basic">');
+			var brOptions = [];
+			for (j = 0; j <= MAX_BRIDGE_ID; j++) {
+				var label = 'LAN'+j+' (br'+j+')';
+				if (j == 0) label += '*';
+				brOptions.push(['br'+j, label]);
+			}
 			createFieldTable('', [
 				{ title: 'Enable on Start', name: 'f_'+t+'_eas', type: 'checkbox', value: nvram.vpns_eas.indexOf(''+(i + 1)) >= 0 },
 				{ title: 'Interface Type', name: t+'_if', type: 'select', options: [['tap','TAP'],['tun','TUN']], value: nvram[t+'_if'] },
-/* TOMATO64-REMOVE-BEGIN */
-					{ title: 'Bridge TAP with', indent: 2, name: t+'_br', type: 'select', options: [['br0','LAN0 (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)']],
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-					{ title: 'Bridge TAP with', indent: 2, name: t+'_br', type: 'select', options: [['br0','LAN0 (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)'],
-																['br4','LAN4 (br4)'],['br5','LAN5 (br5)'],['br6','LAN6 (br6)'],['br7','LAN7 (br7)']],
-/* TOMATO64-END */
-						value: nvram[t+'_br'], suffix: ' <small>* default<\/small> ' },
+					{ title: 'Bridge TAP with', indent: 2, name: t+'_br', type: 'select', options: brOptions, value: nvram[t+'_br'], suffix: ' <small>* default<\/small>' },
 				{ title: 'Protocol', name: t+'_proto', type: 'select', options: [['udp','UDP'],['tcp-server','TCP'],['udp4','UDP4'],['tcp4-server','TCP4'],['udp6','UDP6'],['tcp6-server','TCP6']], value: nvram[t+'_proto'] },
 				{ title: 'Port', name: t+'_port', type: 'text', maxlen: 5, size: 10, value: nvram[t+'_port'] },
 				{ title: 'Firewall', name: t+'_firewall', type: 'select', options: [['auto','Automatic'],['external','External Only'],['custom','Custom']], value: nvram[t+'_firewall'] },
@@ -1028,19 +1011,14 @@ function init() {
 			W('<\/div>');
 
 			W('<div id="'+t+'-advanced">');
-			createFieldTable('', [
+			var advancedFields = [
 				null,
-				{ title: 'Poll Interval', name: t+'_poll', type: 'text', maxlen: 2, size: 5, value: nvram[t+'_poll'], suffix: ' <small>minutes; 0 to disable<\/small>' },
-				{ title: 'Push LAN0 (br0) to clients', name: 'f_'+t+'_plan', type: 'checkbox', value: nvram[t+'_plan'] != 0 },
-				{ title: 'Push LAN1 (br1) to clients', name: 'f_'+t+'_plan1', type: 'checkbox', value: nvram[t+'_plan1'] != 0 },
-				{ title: 'Push LAN2 (br2) to clients', name: 'f_'+t+'_plan2', type: 'checkbox', value: nvram[t+'_plan2'] != 0 },
-				{ title: 'Push LAN3 (br3) to clients', name: 'f_'+t+'_plan3', type: 'checkbox', value: nvram[t+'_plan3'] != 0 },
-/* TOMATO64-BEGIN */
-				{ title: 'Push LAN4 (br4) to clients', name: 'f_'+t+'_plan4', type: 'checkbox', value: nvram[t+'_plan4'] != 0 },
-				{ title: 'Push LAN5 (br5) to clients', name: 'f_'+t+'_plan5', type: 'checkbox', value: nvram[t+'_plan5'] != 0 },
-				{ title: 'Push LAN6 (br6) to clients', name: 'f_'+t+'_plan6', type: 'checkbox', value: nvram[t+'_plan6'] != 0 },
-				{ title: 'Push LAN7 (br7) to clients', name: 'f_'+t+'_plan7', type: 'checkbox', value: nvram[t+'_plan7'] != 0 },
-/* TOMATO64-END */
+				{ title: 'Poll Interval', name: t+'_poll', type: 'text', maxlen: 2, size: 5, value: nvram[t+'_poll'], suffix: ' <small>minutes; 0 to disable<\/small>' }
+			];
+			for (j = 0; j <= MAX_BRIDGE_ID; j++) {
+				advancedFields.push({ title: 'Push LAN'+j+' (br'+j+') to peers', name: 'f_'+t+'_plan'+j, type: 'checkbox', value: (nvram[t+'_plan'] & (1 << j)) != 0 });
+			}
+			advancedFields.push(
 				{ title: 'Direct clients to<br>redirect Internet traffic', name: 'f_'+t+'_rgw', type: 'checkbox', value: nvram[t+'_rgw'] != 0 },
 				{ title: 'Respond to DNS', name: 'f_'+t+'_dns', type: 'checkbox', value: nvram.vpns_dns.indexOf(''+(i + 1)) >= 0 },
 				{ title: 'Advertise DNS to clients', name: 'f_'+t+'_pdns', type: 'checkbox', value: nvram[t+'_pdns'] != 0 },
@@ -1059,7 +1037,8 @@ function init() {
 					suffix: ' <small>requires TUN, UDP, and AEAD ciphers<\/small>' },
 /* TOMATO64-END */
 				{ title: 'Custom Configuration', name: t+'_custom', type: 'textarea', value: nvram[t+'_custom'] }
-			]);
+			);
+			createFieldTable('', advancedFields);
 			W('<\/div>');
 
 			W('<div id="'+t+'-keys">');
