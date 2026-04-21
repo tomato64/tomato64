@@ -46,6 +46,19 @@
 #if WIFI_IFACE_COUNT < 1 || WIFI_IFACE_COUNT > 16
  #error "Unsupported WIFI_IFACE_COUNT range"
 #endif
+#ifdef TCONFIG_OPENVPN
+ #if OVPN_CLIENT_COUNT < 1 || OVPN_CLIENT_COUNT > 10
+  #error "Unsupported OVPN_CLIENT_COUNT range"
+ #endif
+ #if OVPN_SERVER_COUNT < 1 || OVPN_SERVER_COUNT > 6
+  #error "Unsupported OVPN_SERVER_COUNT range"
+ #endif
+#endif
+#ifdef TCONFIG_WIREGUARD
+ #if WG_INTERFACE_COUNT < 1 || WG_INTERFACE_COUNT > 8
+  #error "Unsupported WG_INTERFACE_COUNT range"
+ #endif
+#endif
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OS
@@ -412,6 +425,133 @@ const aspapi_t aspapi[] = {
 #define WIFI_BLOCK(p) \
 	WIFI_PHY_BLOCK(p) \
 	WIFI_PHY_IFACES(p)
+
+#ifdef TCONFIG_OPENVPN
+ #define OVPNS_BLOCK(i) \
+	{ "vpns" #i "_poll",		V_RANGE(0, 30)			}, \
+	{ "vpns" #i "_if",		V_TEXT(3, 3)			},	/* tap, tun */ \
+	{ "vpns" #i "_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */ \
+	{ "vpns" #i "_port",		V_PORT				}, \
+	{ "vpns" #i "_firewall",	V_TEXT(0, 8)			},	/* auto, external, custom */ \
+	{ "vpns" #i "_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */ \
+	{ "vpns" #i "_cipher",		V_TEXT(0, 16)			}, \
+	{ "vpns" #i "_ncp_ciphers",	V_TEXT(0, 128)			}, \
+	{ "vpns" #i "_digest",		V_TEXT(0, 15)			}, \
+	{ "vpns" #i "_dhcp",		V_01				}, \
+	{ "vpns" #i "_r1",		V_IP				}, \
+	{ "vpns" #i "_r2",		V_IP				}, \
+	{ "vpns" #i "_sn",		V_IP				}, \
+	{ "vpns" #i "_nm",		V_IP				}, \
+	{ "vpns" #i "_local",		V_IP				}, \
+	{ "vpns" #i "_remote",		V_IP				}, \
+	{ "vpns" #i "_reneg",		V_RANGE(-1, 2147483647)		}, \
+	{ "vpns" #i "_hmac",		V_RANGE(-1, 4)			}, \
+	{ "vpns" #i "_plan",		V_NONE				}, \
+	{ "vpns" #i "_pdns",		V_01				}, \
+	{ "vpns" #i "_rgw",		V_01				}, \
+	{ "vpns" #i "_userpass",	V_01				}, \
+	{ "vpns" #i "_nocert",		V_01				}, \
+	{ "vpns" #i "_users_val",	V_NONE				}, \
+	{ "vpns" #i "_custom",		V_NONE				}, \
+	{ "vpns" #i "_ccd",		V_01				}, \
+	{ "vpns" #i "_c2c",		V_01				}, \
+	{ "vpns" #i "_ccd_excl",	V_01				}, \
+	{ "vpns" #i "_ccd_val",		V_NONE				}, \
+	{ "vpns" #i "_static",		V_NONE				}, \
+	{ "vpns" #i "_ca",		V_NONE				}, \
+	{ "vpns" #i "_ca_key",		V_NONE				}, \
+	{ "vpns" #i "_crt",		V_NONE				}, \
+	{ "vpns" #i "_crl",		V_NONE				},	/* certificate revocation list */ \
+	{ "vpns" #i "_key",		V_NONE				}, \
+	{ "vpns" #i "_dh",		V_NONE				}, \
+	{ "vpns" #i "_br",		V_LENGTH(0, 50)			}, \
+/* #ifdef TOMATO64 */ \
+	{ "vpns" #i "_dco",		V_01				}, \
+/* #endif TOMATO64 */ \
+	{ "vpns" #i "_ecdh",		V_01				},	/* when using ECDH */
+
+ #define OVPNC_BLOCK(i) \
+	{ "vpnc" #i "_poll",		V_RANGE(0, 30)			}, \
+	{ "vpnc" #i "_tchk",		V_01				},	/* check if tunnel is up */ \
+	{ "vpnc" #i "_tunchk",		V_TEXT(0, 15)			},	/* IP to check the tunnel */ \
+	{ "vpnc" #i "_if",		V_TEXT(3, 3)			},	/* tap, tun */ \
+	{ "vpnc" #i "_bridge",		V_01				}, \
+	{ "vpnc" #i "_nat",		V_01				}, \
+	{ "vpnc" #i "_proto",		V_TEXT(3, 11)			},	/* udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client */ \
+	{ "vpnc" #i "_addr",		V_NONE				}, \
+	{ "vpnc" #i "_port",		V_PORT				}, \
+	{ "vpnc" #i "_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */ \
+	{ "vpnc" #i "_firewall",	V_TEXT(0, 6)			},	/* auto, custom */ \
+	{ "vpnc" #i "_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */ \
+	{ "vpnc" #i "_cipher",		V_TEXT(0, 16)			}, \
+	{ "vpnc" #i "_ncp_ciphers",	V_TEXT(0, 128)			}, \
+	{ "vpnc" #i "_digest",		V_TEXT(0, 15)			}, \
+	{ "vpnc" #i "_local",		V_IP				}, \
+	{ "vpnc" #i "_remote",		V_IP				}, \
+	{ "vpnc" #i "_nm",		V_IP				}, \
+	{ "vpnc" #i "_reneg",		V_RANGE(-1, 2147483647)		}, \
+	{ "vpnc" #i "_hmac",		V_RANGE(-1, 4)			}, \
+	{ "vpnc" #i "_adns",		V_RANGE(0, 3)			}, \
+	{ "vpnc" #i "_rgw",		V_RANGE(0, 3)			}, \
+	{ "vpnc" #i "_gw",		V_TEXT(0, 15)			}, \
+	{ "vpnc" #i "_custom",		V_NONE				}, \
+	{ "vpnc" #i "_static",		V_NONE				}, \
+	{ "vpnc" #i "_ca",		V_NONE				}, \
+	{ "vpnc" #i "_crt",		V_NONE				}, \
+	{ "vpnc" #i "_key",		V_NONE				}, \
+	{ "vpnc" #i "_userauth",	V_01				}, \
+	{ "vpnc" #i "_username",	V_TEXT(0, 50)			}, \
+	{ "vpnc" #i "_password",	V_TEXT(0, 70)			}, \
+	{ "vpnc" #i "_useronly",	V_01				}, \
+	{ "vpnc" #i "_tlsremote",	V_01				},	/* remote-cert-tls server */ \
+	{ "vpnc" #i "_tlsvername",	V_RANGE(0, 3)			},	/* verify-x509-name: 0 - disabled, 1 - Common Name, 2 - Common Name Prefix, 3 - Subject */ \
+	{ "vpnc" #i "_cn",		V_NONE				}, \
+	{ "vpnc" #i "_br",		V_LENGTH(0, 50)			}, \
+	{ "vpnc" #i "_routing_val",	V_NONE				}, \
+	{ "vpnc" #i "_fw",		V_01				}, \
+/* #ifdef TOMATO64 */ \
+	{ "vpnc" #i "_dco",		V_01				}, \
+/* #endif TOMATO64 */ \
+	{ "vpnc" #i "_prio",		V_NONE				},
+#endif /* TCONFIG_OPENVPN */
+#ifdef TCONFIG_WIREGUARD
+#define WG_BLOCK(i) \
+	{ "wg" #i "_enable",		V_01				}, \
+	{ "wg" #i "_poll",		V_RANGE(0, 30)			}, \
+	{ "wg" #i "_tchk",		V_01				},	/* check if tunnel is up */ \
+	{ "wg" #i "_tunchk",		V_TEXT(0, 15)			},	/* IP to check the tunnel */ \
+	{ "wg" #i "_sleep",		V_RANGE(1, 99)			},	/* delay at startup */ \
+	{ "wg" #i "_file",		V_TEXT(0, 64)			}, \
+	{ "wg" #i "_key",		V_TEXT(0, 44)			}, \
+	{ "wg" #i "_endpoint",		V_NONE				}, \
+	{ "wg" #i "_port",		V_NONE				}, \
+	{ "wg" #i "_ip",		V_TEXT(0, 32)			}, \
+	{ "wg" #i "_fwmark",		V_TEXT(0, 8)			}, \
+	{ "wg" #i "_mtu",		V_RANGE(0, 1500)		}, \
+	{ "wg" #i "_preup",		V_NONE				}, \
+	{ "wg" #i "_postup",		V_NONE				}, \
+	{ "wg" #i "_predown",		V_NONE				}, \
+	{ "wg" #i "_postdown",		V_NONE				}, \
+	{ "wg" #i "_aip",		V_TEXT(0, 128)			}, \
+	{ "wg" #i "_dns",		V_NONE				}, \
+	{ "wg" #i "_ka",		V_RANGE(0, 99)			}, \
+	{ "wg" #i "_com",		V_RANGE(0, 3)			}, \
+/* #ifndef TOMATO64 \
+	{ "wg" #i "_lan",		V_RANGE(0, 15)			},	/ * push LANX for wg0 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 * / \
+   #else */ \
+	{ "wg" #i "_lan",		V_RANGE(0, 255)			},	/* push LANX for wg0 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */ \
+/* #endif TOMATO64 */ \
+	{ "wg" #i "_rgw",		V_01				}, \
+	{ "wg" #i "_route",		V_NONE				}, \
+	{ "wg" #i "_peer_dns",		V_TEXT(0, 128)			}, \
+	{ "wg" #i "_peers",		V_NONE				}, \
+	{ "wg" #i "_firewall",		V_TEXT(0, 6)			},	/* auto, custom */ \
+	{ "wg" #i "_nat",		V_01				}, \
+	{ "wg" #i "_fw",		V_01				}, \
+	{ "wg" #i "_rgwr",		V_RANGE(1, 3)			}, \
+	{ "wg" #i "_routing_val",	V_NONE				}, \
+	{ "wg" #i "_prio",		V_NONE				},
+#endif /* TCONFIG_WIREGUARD */
 
 static const nvset_t nvset_list[] = {
 /* basic-ident */
@@ -1564,297 +1704,7 @@ static const nvset_t nvset_list[] = {
 /* openvpn */
 	{ "vpns_eas",			V_NONE				},
 	{ "vpns_dns",			V_NONE				},
-	{ "vpns1_poll",			V_RANGE(0, 30)			},
-	{ "vpns1_if",			V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpns1_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
-	{ "vpns1_port",			V_PORT				},
-	{ "vpns1_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
-	{ "vpns1_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpns1_cipher",		V_TEXT(0, 16)			},
-	{ "vpns1_ncp_ciphers",		V_TEXT(0, 128)			},
-	{ "vpns1_digest",		V_TEXT(0, 15)			},
-	{ "vpns1_dhcp",			V_01				},
-	{ "vpns1_r1",			V_IP				},
-	{ "vpns1_r2",			V_IP				},
-	{ "vpns1_sn",			V_IP				},
-	{ "vpns1_nm",			V_IP				},
-	{ "vpns1_local",		V_IP				},
-	{ "vpns1_remote",		V_IP				},
-	{ "vpns1_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpns1_hmac",			V_RANGE(-1, 4)			},
-	{ "vpns1_plan",			V_NONE				},
-	{ "vpns1_pdns",			V_01				},
-	{ "vpns1_rgw",			V_01				},
-	{ "vpns1_userpass",		V_01				},
-	{ "vpns1_nocert",		V_01				},
-	{ "vpns1_users_val",		V_NONE				},
-	{ "vpns1_custom",		V_NONE				},
-	{ "vpns1_ccd",			V_01				},
-	{ "vpns1_c2c",			V_01				},
-	{ "vpns1_ccd_excl",		V_01				},
-	{ "vpns1_ccd_val",		V_NONE				},
-	{ "vpns1_static",		V_NONE				},
-	{ "vpns1_ca",			V_NONE				},
-	{ "vpns1_ca_key",		V_NONE				},
-	{ "vpns1_crt",			V_NONE				},
-	{ "vpns1_crl",			V_NONE				},	/* certificate revocation list */
-	{ "vpns1_key",			V_NONE				},
-	{ "vpns1_dh",			V_NONE				},
-	{ "vpns1_br",			V_LENGTH(0, 50)			},
-	{ "vpns1_ecdh",			V_01				},	/* when using ECDH */
-#ifdef TOMATO64
-	{ "vpns1_dco",			V_01				},
-#endif /* TOMATO64 */
-	{ "vpns2_poll",			V_RANGE(0, 30)			},
-	{ "vpns2_if",			V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpns2_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
-	{ "vpns2_port",			V_PORT				},
-	{ "vpns2_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
-	{ "vpns2_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpns2_cipher",		V_TEXT(0, 16)			},
-	{ "vpns2_ncp_ciphers",		V_TEXT(0, 128)			},
-	{ "vpns2_digest",		V_TEXT(0, 15)			},
-	{ "vpns2_dhcp",			V_01				},
-	{ "vpns2_r1",			V_IP				},
-	{ "vpns2_r2",			V_IP				},
-	{ "vpns2_sn",			V_IP				},
-	{ "vpns2_nm",			V_IP				},
-	{ "vpns2_local",		V_IP				},
-	{ "vpns2_remote",		V_IP				},
-	{ "vpns2_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpns2_hmac",			V_RANGE(-1, 4)			},
-	{ "vpns2_plan",			V_NONE				},
-	{ "vpns2_pdns",			V_01				},
-	{ "vpns2_rgw",			V_01				},
-	{ "vpns2_userpass",		V_01				},
-	{ "vpns2_nocert",		V_01				},
-	{ "vpns2_users_val",		V_NONE				},
-	{ "vpns2_custom",		V_NONE				},
-	{ "vpns2_ccd",			V_01				},
-	{ "vpns2_c2c",			V_01				},
-	{ "vpns2_ccd_excl",		V_01				},
-	{ "vpns2_ccd_val",		V_NONE				},
-	{ "vpns2_static",		V_NONE				},
-	{ "vpns2_ca",			V_NONE				},
-	{ "vpns2_ca_key",		V_NONE				},
-	{ "vpns2_crt",			V_NONE				},
-	{ "vpns2_crl",			V_NONE				},	/* certificate revocation list */
-	{ "vpns2_key",			V_NONE				},
-	{ "vpns2_dh",			V_NONE				},
-	{ "vpns2_br",			V_LENGTH(0, 50)			},
-	{ "vpns2_ecdh",			V_01				},	/* when using ECDH */
-#ifdef TOMATO64
-	{ "vpns2_dco",			V_01				},
-#endif /* TOMATO64 */
-#ifdef TOMATO64
-	{ "vpns3_poll",			V_RANGE(0, 30)			},
-	{ "vpns3_if",			V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpns3_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
-	{ "vpns3_port",			V_PORT				},
-	{ "vpns3_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
-	{ "vpns3_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpns3_cipher",		V_TEXT(0, 16)			},
-	{ "vpns3_ncp_ciphers",		V_TEXT(0, 128)			},
-	{ "vpns3_digest",		V_TEXT(0, 15)			},
-	{ "vpns3_dhcp",			V_01				},
-	{ "vpns3_r1",			V_IP				},
-	{ "vpns3_r2",			V_IP				},
-	{ "vpns3_sn",			V_IP				},
-	{ "vpns3_nm",			V_IP				},
-	{ "vpns3_local",		V_IP				},
-	{ "vpns3_remote",		V_IP				},
-	{ "vpns3_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpns3_hmac",			V_RANGE(-1, 4)			},
-	{ "vpns3_plan",			V_NONE				},
-	{ "vpns3_pdns",			V_01				},
-	{ "vpns3_rgw",			V_01				},
-	{ "vpns3_userpass",		V_01				},
-	{ "vpns3_nocert",		V_01				},
-	{ "vpns3_users_val",		V_NONE				},
-	{ "vpns3_custom",		V_NONE				},
-	{ "vpns3_ccd",			V_01				},
-	{ "vpns3_c2c",			V_01				},
-	{ "vpns3_ccd_excl",		V_01				},
-	{ "vpns3_ccd_val",		V_NONE				},
-	{ "vpns3_static",		V_NONE				},
-	{ "vpns3_ca",			V_NONE				},
-	{ "vpns3_ca_key",		V_NONE				},
-	{ "vpns3_crt",			V_NONE				},
-	{ "vpns3_crl",			V_NONE				},	/* certificate revocation list */
-	{ "vpns3_key",			V_NONE				},
-	{ "vpns3_dh",			V_NONE				},
-	{ "vpns3_br",			V_LENGTH(0, 50)			},
-	{ "vpns3_ecdh",			V_01				},	/* when using ECDH */
-	{ "vpns3_dco",			V_01				},
-	{ "vpns4_poll",			V_RANGE(0, 30)			},
-	{ "vpns4_if",			V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpns4_proto",		V_TEXT(3, 11)			},	/* udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server */
-	{ "vpns4_port",			V_PORT				},
-	{ "vpns4_firewall",		V_TEXT(0, 8)			},	/* auto, external, custom */
-	{ "vpns4_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpns4_cipher",		V_TEXT(0, 16)			},
-	{ "vpns4_ncp_ciphers",		V_TEXT(0, 128)			},
-	{ "vpns4_digest",		V_TEXT(0, 15)			},
-	{ "vpns4_dhcp",			V_01				},
-	{ "vpns4_r1",			V_IP				},
-	{ "vpns4_r2",			V_IP				},
-	{ "vpns4_sn",			V_IP				},
-	{ "vpns4_nm",			V_IP				},
-	{ "vpns4_local",		V_IP				},
-	{ "vpns4_remote",		V_IP				},
-	{ "vpns4_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpns4_hmac",			V_RANGE(-1, 4)			},
-	{ "vpns4_plan",			V_NONE				},
-	{ "vpns4_pdns",			V_01				},
-	{ "vpns4_rgw",			V_01				},
-	{ "vpns4_userpass",		V_01				},
-	{ "vpns4_nocert",		V_01				},
-	{ "vpns4_users_val",		V_NONE				},
-	{ "vpns4_custom",		V_NONE				},
-	{ "vpns4_ccd",			V_01				},
-	{ "vpns4_c2c",			V_01				},
-	{ "vpns4_ccd_excl",		V_01				},
-	{ "vpns4_ccd_val",		V_NONE				},
-	{ "vpns4_static",		V_NONE				},
-	{ "vpns4_ca",			V_NONE				},
-	{ "vpns4_ca_key",		V_NONE				},
-	{ "vpns4_crt",			V_NONE				},
-	{ "vpns4_crl",			V_NONE				},	/* certificate revocation list */
-	{ "vpns4_key",			V_NONE				},
-	{ "vpns4_dh",			V_NONE				},
-	{ "vpns4_br",			V_LENGTH(0, 50)			},
-	{ "vpns4_ecdh",			V_01				},	/* when using ECDH */
-	{ "vpns4_dco",			V_01				},
-#endif /* TOMATO64 */
 	{ "vpnc_eas",			V_NONE				},
-	{ "vpnc1_poll",			V_RANGE(0, 30)			},
-	{ "vpnc1_tchk",			V_01				},	/* check if tunnel is up */
-	{ "vpnc1_tunchk",		V_TEXT(0, 15)			},	/* IP to check the tunnel */
-	{ "vpnc1_if",			V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpnc1_bridge",		V_01				},
-	{ "vpnc1_nat",			V_01				},
-	{ "vpnc1_proto",		V_TEXT(3, 11)			},	/* udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client */
-	{ "vpnc1_addr",			V_NONE				},
-	{ "vpnc1_port",			V_PORT				},
-	{ "vpnc1_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
-	{ "vpnc1_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
-	{ "vpnc1_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpnc1_cipher",		V_TEXT(0, 16)			},
-	{ "vpnc1_ncp_ciphers",		V_TEXT(0, 128)			},
-	{ "vpnc1_digest",		V_TEXT(0, 15)			},
-	{ "vpnc1_local",		V_IP				},
-	{ "vpnc1_remote",		V_IP				},
-	{ "vpnc1_nm",			V_IP				},
-	{ "vpnc1_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpnc1_hmac",			V_RANGE(-1, 4)			},
-	{ "vpnc1_adns",			V_RANGE(0, 3)			},
-	{ "vpnc1_rgw",			V_RANGE(0, 3)			},
-	{ "vpnc1_gw",			V_TEXT(0, 15)			},
-	{ "vpnc1_custom",		V_NONE				},
-	{ "vpnc1_static",		V_NONE				},
-	{ "vpnc1_ca",			V_NONE				},
-	{ "vpnc1_crt",			V_NONE				},
-	{ "vpnc1_key",			V_NONE				},
-	{ "vpnc1_userauth",		V_01				},
-	{ "vpnc1_username",		V_TEXT(0, 50)			},
-	{ "vpnc1_password",		V_TEXT(0, 70)			},
-	{ "vpnc1_useronly",		V_01				},
-	{ "vpnc1_tlsremote",		V_01				},	/* remote-cert-tls server */
-	{ "vpnc1_tlsvername",		V_RANGE(0, 3)			},	/* verify-x509-name: 0 - disabled, 1 - Common Name, 2 - Common Name Prefix, 3 - Subject */
-	{ "vpnc1_cn",			V_NONE				},
-	{ "vpnc1_br",			V_LENGTH(0, 50)			},
-	{ "vpnc1_routing_val",		V_NONE				},
-	{ "vpnc1_fw",			V_01				},
-	{ "vpnc1_prio",			V_NONE				},
-#ifdef TOMATO64
-	{ "vpnc1_dco",			V_01				},
-#endif /* TOMATO64 */
-	{ "vpnc2_poll",			V_RANGE(0, 30)			},
-	{ "vpnc2_tchk",			V_01				},	/* check if tunnel is up */
-	{ "vpnc2_tunchk",		V_TEXT(0, 15)			},	/* IP to check the tunnel */
-	{ "vpnc2_if",			V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpnc2_bridge",		V_01				},
-	{ "vpnc2_nat",			V_01				},
-	{ "vpnc2_proto",		V_TEXT(3, 11)			},	/* udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client */
-	{ "vpnc2_addr",			V_NONE				},
-	{ "vpnc2_port",			V_PORT				},
-	{ "vpnc2_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
-	{ "vpnc2_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
-	{ "vpnc2_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpnc2_cipher",		V_TEXT(0, 16)			},
-	{ "vpnc2_ncp_ciphers",		V_TEXT(0, 128)			},
-	{ "vpnc2_digest",		V_TEXT(0, 15)			},
-	{ "vpnc2_local",		V_IP				},
-	{ "vpnc2_remote",		V_IP				},
-	{ "vpnc2_nm",			V_IP				},
-	{ "vpnc2_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpnc2_hmac",			V_RANGE(-1, 4)			},
-	{ "vpnc2_adns",			V_RANGE(0, 3)			},
-	{ "vpnc2_rgw",			V_RANGE(0, 3)			},
-	{ "vpnc2_gw",			V_TEXT(0, 15)			},
-	{ "vpnc2_custom",		V_NONE				},
-	{ "vpnc2_static",		V_NONE				},
-	{ "vpnc2_ca",			V_NONE				},
-	{ "vpnc2_crt",			V_NONE				},
-	{ "vpnc2_key",			V_NONE				},
-	{ "vpnc2_userauth",		V_01				},
-	{ "vpnc2_username",		V_TEXT(0, 50)			},
-	{ "vpnc2_password",		V_TEXT(0, 70)			},
-	{ "vpnc2_useronly",		V_01				},
-	{ "vpnc2_tlsremote",		V_01				},	/* remote-cert-tls server */
-	{ "vpnc2_tlsvername",		V_RANGE(0, 3)			},	/* verify-x509-name: 0 - disabled, 1 - Common Name, 2 - Common Name Prefix, 3 - Subject */
-	{ "vpnc2_cn",			V_NONE				},
-	{ "vpnc2_br",			V_LENGTH(0, 50)			},
-	{ "vpnc2_routing_val",		V_NONE				},
-	{ "vpnc2_fw",			V_01				},
-	{ "vpnc2_prio",			V_NONE				},
-#ifdef TOMATO64
-	{ "vpnc2_dco",		V_01				},
-#endif /* TOMATO64 */
-#ifdef TCONFIG_BCMARM
-	{ "vpnc3_poll",			V_RANGE(0, 30)			},
-	{ "vpnc3_tchk",			V_01				},	/* check if tunnel is up */
-	{ "vpnc3_tunchk",		V_TEXT(0, 15)			},	/* IP to check the tunnel */
-	{ "vpnc3_if",			V_TEXT(3, 3)			},	/* tap, tun */
-	{ "vpnc3_bridge",		V_01				},
-	{ "vpnc3_nat",			V_01				},
-	{ "vpnc3_proto",		V_TEXT(3, 11)			},	/* udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client */
-	{ "vpnc3_addr",			V_NONE				},
-	{ "vpnc3_port",			V_PORT				},
-	{ "vpnc3_retry",		V_RANGE(-1, 32767)		},	/* -1 infinite, 0 disabled, >= 1 custom */
-	{ "vpnc3_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
-	{ "vpnc3_crypt",		V_TEXT(0, 6)			},	/* tls, secret, custom */
-	{ "vpnc3_cipher",		V_TEXT(0, 16)			},
-	{ "vpnc3_ncp_ciphers",		V_TEXT(0, 128)			},
-	{ "vpnc3_digest",		V_TEXT(0, 15)			},
-	{ "vpnc3_local",		V_IP				},
-	{ "vpnc3_remote",		V_IP				},
-	{ "vpnc3_nm",			V_IP				},
-	{ "vpnc3_reneg",		V_RANGE(-1, 2147483647)		},
-	{ "vpnc3_hmac",			V_RANGE(-1, 4)			},
-	{ "vpnc3_adns",			V_RANGE(0, 3)			},
-	{ "vpnc3_rgw",			V_RANGE(0, 3)			},
-	{ "vpnc3_gw",			V_TEXT(0, 15)			},
-	{ "vpnc3_custom",		V_NONE				},
-	{ "vpnc3_static",		V_NONE				},
-	{ "vpnc3_ca",			V_NONE				},
-	{ "vpnc3_crt",			V_NONE				},
-	{ "vpnc3_key",			V_NONE				},
-	{ "vpnc3_userauth",		V_01				},
-	{ "vpnc3_username",		V_TEXT(0, 50)			},
-	{ "vpnc3_password",		V_TEXT(0, 70)			},
-	{ "vpnc3_useronly",		V_01				},
-	{ "vpnc3_tlsremote",		V_01				},	/* remote-cert-tls server */
-	{ "vpnc3_tlsvername",		V_RANGE(0, 3)			},	/* verify-x509-name: 0 - disabled, 1 - Common Name, 2 - Common Name Prefix, 3 - Subject */
-	{ "vpnc3_cn",			V_NONE				},
-	{ "vpnc3_br",			V_LENGTH(0, 50)			},
-	{ "vpnc3_routing_val",		V_NONE				},
-	{ "vpnc3_fw",			V_01				},
-	{ "vpnc3_prio",			V_NONE				},
-#ifdef TOMATO64
-	{ "vpnc3_dco",			V_01				},
-#endif /* TOMATO64 */
-#endif
 #endif /* TCONFIG_OPENVPN */
 
 #ifdef TCONFIG_PPTPD
@@ -1934,112 +1784,7 @@ static const nvset_t nvset_list[] = {
 #ifdef TCONFIG_WIREGUARD
 /* wireguard */
 	{ "wg_adns",			V_NONE				},
-	{ "wg0_enable",			V_01				},
-	{ "wg0_poll",			V_RANGE(0, 30)			},
-	{ "wg0_tchk",			V_01				},	/* check if tunnel is up */
-	{ "wg0_tunchk",			V_TEXT(0, 15)			},	/* IP to check the tunnel */
-	{ "wg0_sleep",			V_RANGE(1, 99)			},	/* delay at startup */
-	{ "wg0_file",			V_TEXT(0, 64)			},
-	{ "wg0_key",			V_TEXT(0, 44)			},
-	{ "wg0_endpoint",		V_NONE				},
-	{ "wg0_port",			V_NONE				},
-	{ "wg0_ip",			V_TEXT(0, 32)			},
-	{ "wg0_fwmark",			V_TEXT(0, 8)			},
-	{ "wg0_mtu",			V_RANGE(0, 1500)		},
-	{ "wg0_preup",			V_NONE				},
-	{ "wg0_postup",			V_NONE				},
-	{ "wg0_predown",		V_NONE				},
-	{ "wg0_postdown",		V_NONE				},
-	{ "wg0_aip",			V_TEXT(0, 128)			},
-	{ "wg0_dns",			V_NONE				},
-	{ "wg0_ka",			V_RANGE(0, 99)			},
-	{ "wg0_com",			V_RANGE(0, 3)			},
-#ifndef TOMATO64
-	{ "wg0_lan",			V_RANGE(0, 15)			},	/* push LANX for wg0 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
-#else
-	{ "wg0_lan",			V_RANGE(0, 255)			},	/* push LANX for wg0 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
-#endif /* TOMATO64 */
-	{ "wg0_rgw",			V_01				},
-	{ "wg0_route",			V_NONE				},
-	{ "wg0_peer_dns",		V_TEXT(0, 128)			},
-	{ "wg0_peers",			V_NONE				},
-	{ "wg0_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
-	{ "wg0_nat",			V_01				},
-	{ "wg0_fw",			V_01				},
-	{ "wg0_rgwr",			V_RANGE(1, 3)			},
-	{ "wg0_routing_val",		V_NONE				},
-	{ "wg0_prio",			V_NONE				},
-	{ "wg1_enable",			V_01				},
-	{ "wg1_poll",			V_RANGE(0, 30)			},
-	{ "wg1_tchk",			V_01				},	/* check if tunnel is up */
-	{ "wg1_tunchk",			V_TEXT(0, 15)			},	/* IP to check the tunnel */
-	{ "wg1_sleep",			V_RANGE(1, 99)			},	/* delay at startup */
-	{ "wg1_file",			V_TEXT(0, 64)			},
-	{ "wg1_key",			V_TEXT(0, 44)			},
-	{ "wg1_endpoint",		V_NONE				},
-	{ "wg1_port",			V_NONE				},
-	{ "wg1_ip",			V_TEXT(0, 32)			},
-	{ "wg1_fwmark",			V_TEXT(0, 8)			},
-	{ "wg1_mtu",			V_RANGE(0, 1500)		},
-	{ "wg1_preup",			V_NONE				},
-	{ "wg1_postup",			V_NONE				},
-	{ "wg1_predown",		V_NONE				},
-	{ "wg1_postdown",		V_NONE				},
-	{ "wg1_aip",			V_TEXT(0, 128)			},
-	{ "wg1_dns",			V_NONE				},
-	{ "wg1_ka",			V_RANGE(0, 99)			},
-	{ "wg1_com",			V_RANGE(0, 3)			},
-#ifndef TOMATO64
-	{ "wg1_lan",			V_RANGE(0, 15)			},	/* push LANX for wg1 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
-#else
-	{ "wg1_lan",			V_RANGE(0, 255)			},	/* push LANX for wg1 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
-#endif /* TOMATO64 */
-	{ "wg1_rgw",			V_01				},
-	{ "wg1_route",			V_NONE				},
-	{ "wg1_peer_dns",		V_TEXT(0, 128)			},
-	{ "wg1_peers",			V_NONE				},
-	{ "wg1_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
-	{ "wg1_nat",			V_01				},
-	{ "wg1_fw",			V_01				},
-	{ "wg1_rgwr",			V_RANGE(1, 3)			},
-	{ "wg1_routing_val",		V_NONE				},
-	{ "wg1_prio",			V_NONE				},
-	{ "wg2_enable",			V_01				},
-	{ "wg2_poll",			V_RANGE(0, 30)			},
-	{ "wg2_tchk",			V_01				},	/* check if tunnel is up */
-	{ "wg2_tunchk",			V_TEXT(0, 15)			},	/* IP to check the tunnel */
-	{ "wg2_sleep",			V_RANGE(1, 99)			},	/* delay at startup */
-	{ "wg2_file",			V_TEXT(0, 64)			},
-	{ "wg2_key",			V_TEXT(0, 44)			},
-	{ "wg2_endpoint",		V_NONE				},
-	{ "wg2_port",			V_NONE				},
-	{ "wg2_ip",			V_TEXT(0, 32)			},
-	{ "wg2_fwmark",			V_TEXT(0, 8)			},
-	{ "wg2_mtu",			V_RANGE(0, 1500)		},
-	{ "wg2_preup",			V_NONE				},
-	{ "wg2_postup",			V_NONE				},
-	{ "wg2_predown",		V_NONE				},
-	{ "wg2_postdown",		V_NONE				},
-	{ "wg2_aip",			V_TEXT(0, 128)			},
-	{ "wg2_dns",			V_NONE				},
-	{ "wg2_ka",			V_RANGE(0, 99)			},
-	{ "wg2_com",			V_RANGE(0, 3)			},
-#ifndef TOMATO64
-	{ "wg2_lan",			V_RANGE(0, 15)			},	/* push LANX for wg2 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
-#else
-	{ "wg2_lan",			V_RANGE(0, 255)			},	/* push LANX for wg2 to peers: bit 0 = LAN0, bit 1 = LAN1, bit 2 = LAN2, bit 3 = WAN3 */
-#endif /* TOMATO64 */
-	{ "wg2_rgw",			V_01				},
-	{ "wg2_route",			V_NONE				},
-	{ "wg2_peer_dns",		V_TEXT(0, 128)			},
-	{ "wg2_peers",			V_NONE				},
-	{ "wg2_firewall",		V_TEXT(0, 6)			},	/* auto, custom */
-	{ "wg2_nat",			V_01				},
-	{ "wg2_fw",			V_01				},
-	{ "wg2_rgwr",			V_RANGE(1, 3)			},
-	{ "wg2_routing_val",		V_NONE				},
-	{ "wg2_prio",			V_NONE				},
-#endif
+#endif /* TCONFIG_WIREGUARD */
 #if MWAN_MAX >= 2
  WAN_BLOCK(2)
 #endif
@@ -2106,6 +1851,82 @@ static const nvset_t nvset_list[] = {
 #if BRIDGE_COUNT >= 16
  BRIDGE_BLOCK(15)
 #endif
+#ifdef TCONFIG_OPENVPN
+ #if OVPN_CLIENT_COUNT >= 1
+  OVPNC_BLOCK(1)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 2
+  OVPNC_BLOCK(2)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 3
+  OVPNC_BLOCK(3)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 4
+  OVPNC_BLOCK(4)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 5
+  OVPNC_BLOCK(5)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 6
+  OVPNC_BLOCK(6)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 7
+  OVPNC_BLOCK(7)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 8
+  OVPNC_BLOCK(8)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 9
+  OVPNC_BLOCK(9)
+ #endif
+ #if OVPN_CLIENT_COUNT >= 10
+  OVPNC_BLOCK(10)
+ #endif
+ #if OVPN_SERVER_COUNT >= 1
+  OVPNS_BLOCK(1)
+ #endif
+ #if OVPN_SERVER_COUNT >= 2
+  OVPNS_BLOCK(2)
+ #endif
+ #if OVPN_SERVER_COUNT >= 3
+  OVPNS_BLOCK(3)
+ #endif
+ #if OVPN_SERVER_COUNT >= 4
+  OVPNS_BLOCK(4)
+ #endif
+ #if OVPN_SERVER_COUNT >= 5
+  OVPNS_BLOCK(5)
+ #endif
+ #if OVPN_SERVER_COUNT >= 6
+  OVPNS_BLOCK(6)
+ #endif
+#endif /* TCONFIG_OPENVPN */
+#ifdef TCONFIG_WIREGUARD
+ #if WG_INTERFACE_COUNT >= 1
+  WG_BLOCK(0)
+ #endif
+ #if WG_INTERFACE_COUNT >= 2
+  WG_BLOCK(1)
+ #endif
+ #if WG_INTERFACE_COUNT >= 3
+  WG_BLOCK(2)
+ #endif
+ #if WG_INTERFACE_COUNT >= 4
+  WG_BLOCK(3)
+ #endif
+ #if WG_INTERFACE_COUNT >= 5
+  WG_BLOCK(4)
+ #endif
+ #if WG_INTERFACE_COUNT >= 6
+  WG_BLOCK(5)
+ #endif
+ #if WG_INTERFACE_COUNT >= 7
+  WG_BLOCK(6)
+ #endif
+ #if WG_INTERFACE_COUNT >= 8
+  WG_BLOCK(7)
+ #endif
+#endif /* TCONFIG_WIREGUARD */
 
 #ifdef TOMATO64
 	{"wifi_sta_list",		V_NONE				},	/* Wireless Station Mode */
