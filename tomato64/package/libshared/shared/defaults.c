@@ -355,6 +355,7 @@ struct nvram_tuple bsd_defaults[] = {
 	BRIDGE_BLOCK_ZEBRA(i) \
 	BRIDGE_BLOCK_USB_EXTRAS(i)
 
+#ifdef TOMATO64
 /* WiFi per-PHY defaults (parameterized for band/width differences) */
 #define WIFI_DEF_PHY_BLOCK(p, band, width) \
 	{"wifi_phy" #p "_band",		band			, 0 }, \
@@ -447,6 +448,7 @@ struct nvram_tuple bsd_defaults[] = {
 	WIFI_DEF_IFACE_BLOCK(0, 13) \
 	WIFI_DEF_IFACE_BLOCK(0, 14) \
 	WIFI_DEF_IFACE_BLOCK(0, 15)
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_OPENVPN
  #define OVPNS_OCTET_1  "6"
@@ -577,6 +579,7 @@ struct nvram_tuple bsd_defaults[] = {
   #define OVPNC_BLOCK_CIPH(i) \
 	{ "vpnc" #i "_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC", 0 },
  #endif
+
  #define OVPNC_BLOCK(i) \
 	OVPNC_BLOCK_CORE(i) \
 	OVPNC_BLOCK_CIPH(i)
@@ -1245,6 +1248,9 @@ struct nvram_tuple router_defaults[] = {
 #endif
 #ifdef TCONFIG_BCMNAT
 	{ "bcmnat_disable",		"1"				, 0 },
+#endif
+#ifdef TCONFIG_BCMARM
+	{ "porthealth_cfg",		""				, 0 },
 #endif
 #ifdef TOMATO64
 	{ "zram_enable",		"0"				, 0 },
