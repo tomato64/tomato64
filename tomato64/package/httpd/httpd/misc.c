@@ -276,7 +276,7 @@ void asp_psup(int argc, char **argv)
 #ifdef TCONFIG_WIREGUARD
 		for (i = 0; i < WG_INTERFACE_COUNT; i++) {
 			snprintf(buf, sizeof(buf), "wg%d", i);
-			web_printf("%swireguard%d%s%d%s", isup, i, c, pidof(buf) > 0, e);
+			web_printf("%swireguard%d%s%d%s", isup, i, c, wg_status(buf), e);
 		}
 #endif
 	}

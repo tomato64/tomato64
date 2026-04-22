@@ -28,7 +28,7 @@
 #define LOGMSG_NVDEBUG	"wg_debug"
 
 
-static int wg_status(char *iface)
+int wg_status(char *iface)
 {
 	FILE *fp;
 	char buffer[BUF_SIZE_64];
@@ -47,10 +47,4 @@ static int wg_status(char *iface)
 	}
 
 	return status;
-}
-
-void asp_wgstat(int argc, char **argv)
-{
-	if (argc == 1)
-		web_printf("%d", wg_status(argv[0]));
 }
