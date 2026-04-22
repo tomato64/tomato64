@@ -1580,6 +1580,14 @@ TomatoGrid.prototype = {
 						else
 							s += '>';
 					break;
+						case 'display':
+							s += '<span'+attrib+'>';
+							if (which == 'edit')
+								s += escapeHTML(''+values[vi]);
+							else if (typeof f.value != 'undefined')
+								s += escapeHTML(''+f.value);
+							s += '</span>';
+						break;
 					case 'clear':
 						s += '';
 					break;
