@@ -185,19 +185,18 @@ int web_read(void *buffer, int len)
 
 int web_read_x(void *buffer, int len)
 {
-	int n, t = 0;
+	int n, total = 0;
 
-	while (len > 0) {
-		n = web_read(buffer, len);
+	while (total < len) {
+		n = web_read((char *)buffer + total, len - total);
+
 		if (n <= 0)
-			return len;
+			return -1; /* error or EOF */
 
-		buffer += n;
-		len -= n;
-		t += n;
+		total += n;
 	}
 
-	return t;
+	return total; /* == len on success */
 }
 
 int web_eat(int max)

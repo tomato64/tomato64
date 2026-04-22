@@ -2012,7 +2012,7 @@ static void wi_generic_noid(char *url, int len, char *boundary)
 			exit(1);
 		}
 
-		if (web_read_x(post_buf, len) != len)
+		if (web_read_x(post_buf, len) < 0)
 			exit(1);
 
 		post_buf[len] = 0;
@@ -2044,7 +2044,7 @@ static void wi_cgi_bin(char *url, int len, char *boundary)
 				logmsg(LOG_CRIT, "Unable to allocate post buffer");
 				exit(1);
 			}
-			if (web_read_x(post_buf, len) != len)
+			if (web_read_x(post_buf, len) < 0)
 				exit(1);
 
 			post_buf[len] = 0;
