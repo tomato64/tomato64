@@ -40,12 +40,14 @@
 #if BRIDGE_COUNT < 1 || BRIDGE_COUNT > 16
  #error "Unsupported BRIDGE_COUNT range"
 #endif
-#if WIFI_PHY_COUNT < 1 || WIFI_PHY_COUNT > 10
- #error "Unsupported WIFI_PHY_COUNT range"
-#endif
-#if WIFI_IFACE_COUNT < 1 || WIFI_IFACE_COUNT > 16
- #error "Unsupported WIFI_IFACE_COUNT range"
-#endif
+#ifdef TOMATO64
+ #if WIFI_PHY_COUNT < 1 || WIFI_PHY_COUNT > 10
+  #error "Unsupported WIFI_PHY_COUNT range"
+ #endif
+ #if WIFI_IFACE_COUNT < 1 || WIFI_IFACE_COUNT > 16
+  #error "Unsupported WIFI_IFACE_COUNT range"
+ #endif
+#endif /* TOMATO64 */
 #ifdef TCONFIG_OPENVPN
  #if OVPN_CLIENT_COUNT < 1 || OVPN_CLIENT_COUNT > 10
   #error "Unsupported OVPN_CLIENT_COUNT range"
@@ -346,6 +348,7 @@ const aspapi_t aspapi[] = {
 	BRIDGE_BLOCK_ZEBRA(i) \
 	BRIDGE_BLOCK_USB_EXTRAS(i)
 
+#ifdef TOMATO64
 /* WiFi per-PHY variables */
 #define WIFI_PHY_BLOCK(p) \
 	{"wifi_phy" #p "_band",		V_TEXT(2, 2)			}, /* 2G, 5G, 6G */ \
@@ -425,6 +428,7 @@ const aspapi_t aspapi[] = {
 #define WIFI_BLOCK(p) \
 	WIFI_PHY_BLOCK(p) \
 	WIFI_PHY_IFACES(p)
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_OPENVPN
  #define OVPNS_BLOCK(i) \
