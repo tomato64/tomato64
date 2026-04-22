@@ -82,6 +82,46 @@ void nvram_format_compat(void)
 			need_commit = 1;
 		}
 	}
+/***********************************************************
+ * OpenVPN plan (bitmask migration)
+ ***********************************************************/
+	{
+		char key[64], val[16];
+		int i, j, mask;
+
+		for (i = 1; i <= OVPN_SERVER_MAX; i++) {
+			/* check if migration is needed:
+			 * vpnsX_plan1 exists ONLY in old format
+			 */
+			snprintf(key, sizeof(key), "vpns%d_plan1", i);
+
+			if (nvram_get(key) == NULL)
+				continue; /* already migrated */
+
+			/* build bitmask from old variables */
+			mask = 0;
+			for (j = 0; j < BRIDGE_COUNT; j++) {
+				snprintf(key, sizeof(key), (j == 0 ? "vpns%d_plan" : "vpns%d_plan%d"), i, j);
+
+				if (nvram_get_int(key)) {
+					mask |= (1 << j);
+				}
+			}
+
+			/* store new bitmask */
+			snprintf(key, sizeof(key), "vpns%d_plan", i);
+			snprintf(val, sizeof(val), "%d", mask);
+			nvram_set(key, val);
+
+			/* remove old variables (plan1, plan2, ...) */
+			for (j = 1; j < BRIDGE_COUNT; j++) {
+				snprintf(key, sizeof(key), "vpns%d_plan%d", i, j);
+				nvram_unset(key);
+			}
+
+			need_commit = 1;
+		}
+	}
 #endif /* TCONFIG_OPENVPN */
 
 	if (need_commit) {
