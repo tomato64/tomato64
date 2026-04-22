@@ -87,8 +87,21 @@ void wo_backup(char *url)
 	char msg[64];
 	int fd;
 
+	/* create secure temporary file */
 	if ((fd = mkstemp(file)) < 0)
 		exit(1);
+
+	/*
+	 * ensure fd is not inherited across exec (extra safety)
+	 * even though we close it below, this protects against future changes.
+	 */
+	fcntl(fd, F_SETFD, FD_CLOEXEC);
+
+	/*
+	 * close immediately - we only need the filename.
+	 * prevents descriptor leak into _eval() child.
+	 */
+	close(fd);
 
 	args[2] = file;
 	snprintf(msg, sizeof(msg), ">%s.msg", file);
@@ -103,7 +116,7 @@ void wo_backup(char *url)
 		parse_asp("error.asp");
 	}
 
-	close(fd);
+	/* cleanup */
 	unlink(file);
 	unlink(msg + 1);
 }
