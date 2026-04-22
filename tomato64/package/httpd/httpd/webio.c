@@ -161,14 +161,26 @@ int web_write(const char *buffer, int len)
 int web_read(void *buffer, int len)
 {
 	int r;
+
 	if (len <= 0)
 		return 0;
 
-	while ((r = fread(buffer, 1, len, connfp)) == 0) {
-		if (errno != EINTR) return -1;
-	}
+	for (;;) {
+		r = fread(buffer, 1, len, connfp);
 
-	return r;
+		if (r > 0)
+			return r;
+
+		if (r == 0) {
+			if (feof(connfp))
+				return 0; /* EOF */
+
+			if (errno == EINTR)
+				continue;
+
+			return -1; /* real error */
+		}
+	}
 }
 
 int web_read_x(void *buffer, int len)
