@@ -270,8 +270,9 @@ void asp_nvram(int argc, char **argv)
 			continue;
 		}
 #endif
-
+#if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
 list:
+#endif
 		web_printf("\t'%s': '", k);
 		web_putj_utf8(nvram_safe_get(k));
 		web_puts("',\n");

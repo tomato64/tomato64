@@ -219,11 +219,13 @@ void asp_lanip(int argc, char **argv)
  */
 void asp_psup(int argc, char **argv)
 {
-	int i;
-	char buf[16];
 	const char isup[] = "isup.";
 	const char c[] = "=parseInt('";
 	const char e[] = "');\n";
+#if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
+	int i;
+	char buf[16];
+#endif
 
 	if (argc != 1)
 		return;
