@@ -175,7 +175,7 @@ static int _unlock_erase(const char *mtdname, int erase)
 	if ((mf = mtd_open(mtdname, &mi)) >= 0) {
 #endif
 			r = 1;
-#if 1
+
 			ei.length = mi.erasesize;
 			for (ei.start = 0; ei.start < mi.size; ei.start += mi.erasesize) {
 				printf("%sing 0x%x - 0x%x\n", erase ? "Eras" : "Unlock", ei.start, (ei.start + ei.length) - 1);
@@ -214,24 +214,6 @@ static int _unlock_erase(const char *mtdname, int erase)
 					}
 				}
 			}
-#else /* 1 */
-			ei.start = 0;
-			ei.length = mi.size;
-
-			printf("%sing 0x%x - 0x%x\n", erase ? "Eras" : "Unlock", ei.start, ei.length - 1);
-			fflush(stdout);
-
-			if (ioctl(mf, MEMUNLOCK, &ei) != 0) {
-				perror("MEMUNLOCK");
-				r = 0;
-			}
-			else if (erase) {
-				if (ioctl(mf, MEMERASE, &ei) != 0) {
-					perror("MEMERASE");
-					r = 0;
-				}
-			}
-#endif /* 1 */
 
 			/* checkme: */
 			char buf[2];
@@ -352,11 +334,7 @@ int mtd_write_main_old(int argc, char *argv[])
 	fseek( f, 0, SEEK_SET);
 	_dprintf("*** %s: file len=0x%lu\n", __FUNCTION__, filelen);
 
-#ifdef TCONFIG_BCMARM
 	if ((mf = mtd_open_old(dev, &mi)) < 0) {
-#else
-	if ((mf = mtd_open(dev, &mi)) < 0) {
-#endif
 		snprintf(msg_buf, sizeof(msg_buf), "Error opening MTD device. (errno %d (%s))", errno, strerror(errno));
 		error = msg_buf;
 		goto ERROR;
