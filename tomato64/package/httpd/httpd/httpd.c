@@ -527,13 +527,55 @@ void do_file(char *path)
 {
 	FILE *f;
 	char buf[1024];
-	int nr;
-	if ((f = fopen(path, "r"))) {
-		while ((nr = fread(buf, 1, sizeof(buf), f)) > 0)
-			web_write(buf, nr);
+	ssize_t nr;
+	int fd;
+	struct stat st;
 
-		fclose(f);
+	/* security */
+	if (strstr(path, ".."))
+		return;
+
+	/* open file safely (no symlink if possible) */
+#ifdef O_NOFOLLOW
+	fd = open(path, O_RDONLY | O_NOFOLLOW);
+#else
+	fd = open(path, O_RDONLY);
+#endif
+
+	if (fd < 0)
+		return;
+
+	/* validate file type */
+	if (fstat(fd, &st) != 0) {
+		close(fd);
+		return;
 	}
+
+	/* only allow regular files */
+	if (!S_ISREG(st.st_mode)) {
+		close(fd);
+		return;
+	}
+
+	/* optional: size limit (prevent insane reads) */
+	if (st.st_size > (10 * 1024 * 1024)) { /* 10MB limit */
+		close(fd);
+		return;
+	}
+
+	/* convert to FILE* */
+	if ((f = fdopen(fd, "r")) == NULL) {
+		close(fd);
+		return;
+	}
+
+	/* stream file */
+	while ((nr = fread(buf, 1, sizeof(buf), f)) > 0) {
+		if (web_write(buf, nr) < 0)
+			break;
+	}
+
+	fclose(f); /* also closes fd */
 }
 
 static void handle_request(void)
