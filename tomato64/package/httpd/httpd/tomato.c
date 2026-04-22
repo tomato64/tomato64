@@ -18,6 +18,7 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include <ctype.h>
+#include <fcntl.h>
 
 #define	V_NONE			VT_NONE,	{ }, 			{ }
 #define V_01			VT_RANGE,	{ .l = 0 },		{ .l = 1 }
@@ -2064,10 +2065,14 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 	char webQueryFile[] = "/tmp/.wqXXXXXX";
 	char cmd[sizeof(webExecFile) + 10];
 	FILE *f;
-	int fe, fq = -1;
+	int fe = -1, fq = -1;
 
+	/* create temporary script file */
 	if ((fe = mkstemp(webExecFile)) < 0)
 		exit(1);
+
+	/* prevent fd leak into exec (extra safety) */
+	fcntl(fe, F_SETFD, FD_CLOEXEC);
 
 	if (query) {
 		if ((fq = mkstemp(webQueryFile)) < 0) {
@@ -2075,8 +2080,10 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 			unlink(webExecFile);
 			exit(1);
 		}
+		fcntl(fq, F_SETFD, FD_CLOEXEC);
 	}
 
+	/* write shell wrapper script */
 	if ((f = fdopen(fe, "wb"))) {
 		fprintf(f,
 			"#!/bin/sh\n"
@@ -2093,7 +2100,9 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 #endif
 			command ? "" : "./", command ? command : url,
 			query ? "<" : "", query ? webQueryFile : "");
-		fclose(f);
+
+		fclose(f);   /* also closes fe */
+		fe = -1;
 	}
 	else {
 		close(fe);
@@ -2106,12 +2115,15 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 		exit(1);
 	}
 
+	/* make script executable */
 	chmod(webExecFile, 0700);
 
+	/* write query data if present */
 	if (query) {
 		if ((f = fdopen(fq, "wb"))) {
 			fprintf(f, "%s\n", query);
-			fclose(f);
+			fclose(f);   /* closes fq */
+			fq = -1;
 		}
 		else {
 			unlink(webExecFile);
@@ -2121,10 +2133,17 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 		}
 	}
 
+	/*
+	 * execute script via shell
+	 * NOTE: do NOT change to execvp(argv) – UI depends on full shell semantics
+	 */
 	snprintf(cmd, sizeof(cmd), "%s 2>&1", webExecFile);
 	web_pipecmd(cmd, wof);
-	unlink(webQueryFile);
+
+	/* cleanup temp files */
 	unlink(webExecFile);
+	if (query)
+		unlink(webQueryFile);
 }
 
 static void wo_cgi_bin(char *url)
