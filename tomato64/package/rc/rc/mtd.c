@@ -300,9 +300,7 @@ int mtd_write_main_old(int argc, char *argv[])
 	int mf = -1;
 	mtd_info_t mi;
 	erase_info_t ei;
-#ifdef TCONFIG_BCMARM
 	struct code_header;
-#endif
 	FILE *f;
 	unsigned char *buf = NULL, *p, *bounce_buf = NULL;
 	const char *error;
