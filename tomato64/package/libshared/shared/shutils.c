@@ -358,10 +358,14 @@ EXIT:
 		}
 	}
 
-	// execute command
+	/* execute command */
 
 	p = nvram_safe_get("env_path");
-	snprintf(s, sizeof(s), "%s%s/sbin:/bin:/usr/sbin:/usr/bin:/opt/sbin:/opt/bin", *p ? p : "", *p ? ":" : "");
+	if (p && *p)
+		snprintf(s, sizeof(s), "%s:/sbin:/bin:/usr/sbin:/usr/bin:/opt/sbin:/opt/bin", p);
+	else
+		snprintf(s, sizeof(s), "/sbin:/bin:/usr/sbin:/usr/bin:/opt/sbin:/opt/bin");
+
 	setenv("PATH", s, 1);
 
 	alarm(timeout);
