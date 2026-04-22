@@ -245,12 +245,17 @@ void redirect(const char *path)
 int skip_header(int *len)
 {
 	char buf[2048];
+	int l;
 
 	while (*len > 0) {
 		if (!web_getline(buf, MIN((unsigned int) *len, sizeof(buf))))
 			break;
 
-		*len -= strlen(buf);
+		l = strlen(buf);
+		if (l > *len)
+			l = *len;
+
+		*len -= l;
 		if ((strcmp(buf, "\n") == 0) || (strcmp(buf, "\r\n") == 0))
 			return 1;
 	}
