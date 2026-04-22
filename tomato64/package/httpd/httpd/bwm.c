@@ -97,6 +97,10 @@ void wi_statsrestore(char *url, int len, char *boundary)
 	}
 
 	n = web_read(buf, len);
+	if (n <= 0) {
+		error = "Error reading file";
+		goto exit;
+	}
 	len -= n;
 
 	snprintf(tmp, sizeof(tmp), "%s.new", file);
