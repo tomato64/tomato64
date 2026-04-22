@@ -20,6 +20,11 @@ define MAC80211_BUILD_CMDS
 		cat $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/config_x86_64 >> $(@D)/.config; \
 	)
 
+	# R76S (RTW88 SDIO for optional onboard RTL8822CS WiFi module)
+	$(if $(BR2_PACKAGE_PLATFORM_R76S), \
+		cat $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/config_rockchip >> $(@D)/.config; \
+	)
+
 	$(TARGET_MAKE_ENV) \
 	$(MAKE) \
 	-C $(@D) \
@@ -109,6 +114,17 @@ define MAC80211_INSTALL_IWLWIFI
 	$(INSTALL) $(@D)/drivers/net/wireless/intel/iwlwifi/mld/iwlmld.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 endef
 MAC80211_POST_INSTALL_TARGET_HOOKS += MAC80211_INSTALL_IWLWIFI
+endif
+
+# Install RTW88 SDIO (RTL8822CS) modules for R76S (optional onboard WiFi module)
+ifeq ($(BR2_PACKAGE_PLATFORM_R76S),y)
+define MAC80211_INSTALL_RTW88
+	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw88/rtw88_core.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw88/rtw88_sdio.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw88/rtw88_8822c.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw88/rtw88_8822cs.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+endef
+MAC80211_POST_INSTALL_TARGET_HOOKS += MAC80211_INSTALL_RTW88
 endif
 
 $(eval $(generic-package))

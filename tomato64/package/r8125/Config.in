@@ -1,0 +1,7 @@
+config BR2_PACKAGE_R8125
+	bool "r8125"
+	depends on BR2_PACKAGE_PLATFORM_R76S
+	help
+	  Realtek RTL8125 2.5GbE PCIe Linux vendor driver
+	  (out-of-tree replacement for the in-kernel r8169 driver on
+	  RTL8125-family NICs, used on the NanoPi R76S).

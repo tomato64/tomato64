@@ -29,6 +29,23 @@ define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
 endef
 endif
 
+# Realtek 1G/2.5G NIC + RTL8822CS SDIO WiFi firmware for NanoPi R76S
+# (WiFi module is optional but firmware is always installed so it works if present)
+# rtw8822c_{fw,wow_fw}.bin match OpenWrt package/firmware/linux-firmware/realtek.mk
+# (rtl8822ce-firmware package; same firmware is used for 8822CE and 8822CS).
+ifeq ($(BR2_PACKAGE_PLATFORM_R76S),y)
+define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
+	mkdir -p $(TARGET_DIR)/lib/firmware/rtl_nic
+	cp $(@D)/rtl_nic/rtl810*  $(TARGET_DIR)/lib/firmware/rtl_nic
+	cp $(@D)/rtl_nic/rtl812*  $(TARGET_DIR)/lib/firmware/rtl_nic
+	cp $(@D)/rtl_nic/rtl8168* $(TARGET_DIR)/lib/firmware/rtl_nic
+	cp $(@D)/rtl_nic/rtl84*   $(TARGET_DIR)/lib/firmware/rtl_nic
+	mkdir -p $(TARGET_DIR)/lib/firmware/rtw88
+	cp $(@D)/rtw88/rtw8822c_fw.bin     $(TARGET_DIR)/lib/firmware/rtw88
+	cp $(@D)/rtw88/rtw8822c_wow_fw.bin $(TARGET_DIR)/lib/firmware/rtw88
+endef
+endif
+
 # MediaTek Bluetooth + Intel WiFi firmware for x86_64
 ifeq ($(BR2_PACKAGE_PLATFORM_X86_64),y)
 define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS

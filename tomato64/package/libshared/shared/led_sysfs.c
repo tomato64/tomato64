@@ -60,6 +60,20 @@ static const char * const managed_leds[] = {
 	NULL
 };
 
+#elif defined(TOMATO64_R76S)
+/*
+ * NanoPi R76S LEDs (2-port device):
+ * - red:power    = System power indicator
+ * - green:wan    = WAN port activity
+ * - green:lan    = LAN port activity
+ */
+static const char * const managed_leds[] = {
+	"red:power",
+	"green:wan",
+	"green:lan",
+	NULL
+};
+
 #elif defined(TOMATO64_MT6000)
 /*
  * GL.iNet GL-MT6000 LEDs:
@@ -706,6 +720,18 @@ static void led_setup_network(void)
 
 	if (led_exists("green:lan-2"))
 		led_set_netdev("green:lan-2", "eth2", 1, 1, 1);
+
+#elif defined(TOMATO64_R76S)
+	/*
+	 * NanoPi R76S (after set_devs_r76s rename):
+	 * - eth0 = WAN
+	 * - eth1 = LAN
+	 */
+	if (led_exists("green:wan"))
+		led_set_netdev("green:wan", "eth0", 1, 1, 1);
+
+	if (led_exists("green:lan"))
+		led_set_netdev("green:lan", "eth1", 1, 1, 1);
 
 #elif defined(TOMATO64_BPIR3MINI)
 	/*

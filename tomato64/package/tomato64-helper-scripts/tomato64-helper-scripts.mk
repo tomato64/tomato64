@@ -33,6 +33,7 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_rpi4		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_r6s		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_r5s		$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_r76s		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_bcm53xx		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_macs			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/setup-tomato64		$(TARGET_DIR)/usr/bin

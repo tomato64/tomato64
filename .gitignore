@@ -13,6 +13,7 @@
 .configure-bpi-r3-mini
 .configure-rpi4
 .configure-r6s
+.configure-r76s
 .configure-r5s
 .configure-bcm53xx
 .target

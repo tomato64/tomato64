@@ -654,11 +654,11 @@ struct nvram_tuple router_defaults[] = {
 
 	{ "lan_state",			"1"				, 0 },	/* Show Ethernet LAN ports state (0|1) */
 	{ "lan_desc",			"1"				, 0 },	/* Show Ethernet LAN ports state (0|1) */
-#if defined(TOMATO64_BPIR3MINI) || defined(TOMATO64_R6S) || defined(TOMATO64_R5S)
+#if defined(TOMATO64_BPIR3MINI) || defined(TOMATO64_R6S) || defined(TOMATO64_R5S) || defined(TOMATO64_R76S)
 	{ "lan_invert",			"1"				, 0 },	/* Invert Ethernet LAN ports state (0|1) */
 #else
 	{ "lan_invert",			"0"				, 0 },	/* Invert Ethernet LAN ports state (0|1) */
-#endif /* TOMATO64_BPIR3MINI || TOMATO64_R6S || TOMATO64_R5S */
+#endif /* TOMATO64_BPIR3MINI || TOMATO64_R6S || TOMATO64_R5S || TOMATO64_R76S */
 
 	{ "mwan_num",			"1"				, 0 },
 	{ "mwan_init",			"0"				, 0 },
@@ -2145,6 +2145,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_R5S
 	{ "lan_ifnames",		"eth1 eth2"			, 0 },
 #endif /* TOMATO64_R5S */
+#ifdef TOMATO64_R76S
+	{ "lan_ifnames",		"eth1"				, 0 },
+#endif /* TOMATO64_R76S */
 #ifdef TOMATO64_BCM53XX
 	{ "lan_ifnames",		"eth1 eth2 eth3 eth4"		, 0 },
 #endif /* TOMATO64_BCM53XX */
@@ -2173,6 +2176,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_R5S
 	{ "vlan1ports",			"1 2 9*"			, 0 },
 #endif /* TOMATO64_R5S */
+#ifdef TOMATO64_R76S
+	{ "vlan1ports",			"1 9*"				, 0 },
+#endif /* TOMATO64_R76S */
 #ifdef TOMATO64_BCM53XX
 	{ "vlan1ports",			"1 2 3 4 9*"			, 0 },
 #endif /* TOMATO64_BCM53XX */
@@ -2193,6 +2199,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy_count_expected",	"0"				, 0 },	/* R6S: no built-in WiFi */
 #elif defined(TOMATO64_R5S)
 	{"wifi_phy_count_expected",	"0"				, 0 },	/* R5S: no built-in WiFi */
+#elif defined(TOMATO64_R76S)
+	{"wifi_phy_count_expected",	"0"				, 0 },	/* R76S: optional RTL8822CS WiFi module (not expected by default) */
 #elif defined(TOMATO64_BCM53XX)
 	{"wifi_phy_count_expected",	"0"				, 0 },	/* BCM53XX: WiFi disabled in kernel */
 #elif defined(TOMATO64_X86_64)

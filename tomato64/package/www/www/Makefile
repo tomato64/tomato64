@@ -698,6 +698,10 @@ ifeq ($(PLATFORM_R5S),y)
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-R5S-SKIP-BEGIN/,/TOMATO64-R5S-SKIP-END/d"
 endif
 
+ifeq ($(PLATFORM_R76S),y)
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-R76S-SKIP-BEGIN/,/TOMATO64-R76S-SKIP-END/d"
+endif
+
 ifeq ($(PLATFORM_BCM53XX),y)
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-BCM53XX-SKIP-BEGIN/,/TOMATO64-BCM53XX-SKIP-END/d"
 endif
@@ -855,6 +859,7 @@ endif
 		-e "/TOMATO64-RPI4-SKIP-BEGIN/d"	-e "/TOMATO64-RPI4-SKIP-END/d" \
 		-e "/TOMATO64-R6S-SKIP-BEGIN/d"	-e "/TOMATO64-R6S-SKIP-END/d" \
 		-e "/TOMATO64-R5S-SKIP-BEGIN/d"	-e "/TOMATO64-R5S-SKIP-END/d" \
+		-e "/TOMATO64-R76S-SKIP-BEGIN/d"	-e "/TOMATO64-R76S-SKIP-END/d" \
 		-e "/TOMATO64-BCM53XX-SKIP-BEGIN/d"	-e "/TOMATO64-BCM53XX-SKIP-END/d" \
 		-e "/TOMATO64-X86_64-SKIP-BEGIN/d"	-e "/TOMATO64-X86_64-SKIP-END/d" \
 		|| true; \

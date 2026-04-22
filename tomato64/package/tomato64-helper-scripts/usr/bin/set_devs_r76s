@@ -1,0 +1,79 @@
+#!/bin/sh
+
+set -e
+set -x
+
+. /usr/sbin/nvram_ops
+. /usr/sbin/net_utils
+
+# Load the Realtek vendor 2.5GbE driver before waiting for eth interfaces.
+modprobe r8125
+
+# Load optional wireless kernel modules. R76S ships with an optional onboard
+# RTL8822CS SDIO WiFi module; mt7921u supports USB WiFi dongles.
+modprobe rtw88_8822cs 2>/dev/null || true
+modprobe mt7921u      2>/dev/null || true
+
+# Wait for ethernet interfaces to be ready.
+# NanoPi R76S has 2 ethernet ports.
+# Kernel default naming (per OpenWrt 02_network):
+#   eth0 = GMAC (onboard 1GbE, physical LAN port)
+#   eth1 = PCIe (2.5GbE RTL8125 family, physical WAN port)
+# RK3576 has no hardware-burned MACs; the kernel assigns random MACs to both
+# interfaces on each boot.
+#
+# We rename via iftab+ifrename so Tomato64 sees the standard convention:
+#   eth0 = WAN
+#   eth1 = LAN
+for p in eth0 eth1; do
+	if ! wait_for_interface "$p"; then
+		logger -t set_devs_r76s "ERROR: $p did not appear after 10 seconds"
+	fi
+done
+
+if [ "$(NG set_macs)" != "1" ]; then
+
+	# First boot: capture whatever the kernel assigned to eth0 as our base
+	# and derive the WAN MAC. These get persisted to NVRAM and are the
+	# source of truth for every subsequent boot.
+	basemac=$(cat /sys/class/net/eth0/address | tr '[:lower:]' '[:upper:]')
+
+	# Tomato naming: eth0(WAN) = base+1, eth1(LAN) = base
+	eth0macaddr=$(macaddr_add "$basemac" 1)
+	eth1macaddr="$basemac"
+
+	NS "eth0macaddr=$eth0macaddr"
+	NS "eth1macaddr=$eth1macaddr"
+
+	# Set WAN MAC (Tomato eth0 is WAN)
+	for i in wan_hwaddr wan_mac; do
+		NS "${i}=$eth0macaddr"
+	done
+
+	# Set LAN MAC (Tomato eth1 is LAN)
+	NS "lan_hwaddr=$eth1macaddr"
+
+	NS set_macs=1
+
+fi
+
+# Apply stored MACs to the current kernel-named interfaces on every boot.
+# Kernel eth0 becomes Tomato eth1 (LAN) after ifrename, so give it eth1macaddr.
+# Kernel eth1 becomes Tomato eth0 (WAN) after ifrename, so give it eth0macaddr.
+ip link set dev eth0 address "$(NG eth1macaddr)"
+ip link set dev eth1 address "$(NG eth0macaddr)"
+
+# Write iftab for ifrename: map MACs to desired interface names
+echo "eth0 mac $(NG eth0macaddr)" >  /etc/iftab
+echo "eth1 mac $(NG eth1macaddr)" >> /etc/iftab
+
+# Disable EEE on the 2.5GbE PCIe ports1
+ethtool --set-eee eth0 eee off 2>/dev/null || true
+ethtool --set-eee eth1 eee off 2>/dev/null || true
+
+# Pin ethernet IRQs to big A72 cores (CPUs 4-7) on RK3576.
+# For some reason the the device locks interrupts to cpu0 (a53 core)
+# and can't be changed. Hopefully this if fixed in the futture. When 
+# it is we can enable the following commands
+#set_interface_core 10 "eth0" || true
+#set_interface_core 20 "eth1" || true

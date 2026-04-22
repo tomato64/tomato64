@@ -11,6 +11,7 @@ Supported devices:
 | **Mediatek** | Banana Pi BPI-R3 Mini |
 | **Rockchip** | NanoPi R6S |
 | **Rockchip** | NanoPi R5S |
+| **Rockchip** | NanoPi R76S |
 | **Broadcom** | Raspberry Pi 4 |
 
 ---
@@ -34,6 +35,7 @@ make bpi-r3-mini (Banana Pi BPI-R3 Mini)
 # Rockchip
 make r6s (NanoPi R6S)
 make r5s (NanoPi R5S)
+make r76s (NanoPi R76S)
 
 # Broadcom
 make rpi4 (Raspberry Pi 4)

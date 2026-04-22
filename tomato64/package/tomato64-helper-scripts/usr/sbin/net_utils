@@ -54,3 +54,43 @@ macaddr_add() {
 
 	printf "%012X" "$new_dec" | sed 's/\(..\)/\1:/g; s/:$//'
 }
+
+# get_device_irq <device>
+# Looks up the first IRQ number associated with a netdev (or driver string)
+# in /proc/interrupts. Polls for up to 10 seconds since IRQs may not be
+# registered the moment the netdev appears in sysfs.
+# Echoes the IRQ number on success; returns 1 on timeout.
+get_device_irq() {
+	local device="$1"
+	local line
+	local seconds=0
+
+	while [ "$seconds" -le 10 ]; do
+		line=$(grep -E -m 1 "${device}\$" /proc/interrupts) && break
+		seconds=$((seconds + 2))
+		sleep 2
+	done
+	[ -n "$line" ] || return 1
+	echo "$line" | sed 's/:.*//' | tr -d ' '
+}
+
+# set_interface_core <hex_mask> <interface> [<irq_lookup_name>]
+# Pins all IRQs matching <irq_lookup_name> (default: <interface>) to the CPUs
+# in <hex_mask>. Mask is written verbatim to /proc/irq/<N>/smp_affinity, which
+# the kernel parses as hex (e.g. "10" -> 0x10 -> CPU 4).
+set_interface_core() {
+	local core_mask="$1"
+	local interface="$2"
+	local device="${3:-$interface}"
+	local irq
+
+	irq=$(get_device_irq "$device") || {
+		logger -t net_utils "set_interface_core: no IRQ found for $device"
+		return 1
+	}
+
+	if ! echo "$core_mask" > "/proc/irq/${irq}/smp_affinity" 2>/dev/null; then
+		logger -t net_utils "set_interface_core: failed to write smp_affinity for IRQ $irq ($device)"
+		return 1
+	fi
+}

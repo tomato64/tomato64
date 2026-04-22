@@ -1,0 +1,40 @@
+From ada472cba3ccb24ebef67610ed67a7f9a3b01e44 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Wed, 29 Apr 2026 14:02:36 -0600
+Subject: [PATCH] r8125: drop err log when MAC registers are unprogrammed
+
+SoC-integrated PCIe NICs (e.g. RK3576 on the NanoPi R76S) have nothing
+burned into the RTL8125 MAC0/BACKUP_ADDR registers, so on every boot the
+driver reads all zeros and emits
+
+  r8125 0000:01:00.0 (unnamed net_device) (uninitialized): \
+    Invalid ether addr 00:00:00:00:00:00
+
+at err level. The driver immediately falls back to eth_random_addr() and
+already logs "Random ether addr ..." at info level, which is sufficient
+to describe what happened. Userspace then re-applies the persisted MAC.
+
+Drop the err log to avoid scaring users on platforms where this is the
+expected, designed-for path rather than a hardware fault.
+
+Signed-off-by: Lance Fredrickson <lancethepants@gmail.com>
+---
+ src/r8125_n.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/src/r8125_n.c b/src/r8125_n.c
+index 3d77597..dfb647f 100755
+--- a/src/r8125_n.c
++++ b/src/r8125_n.c
+@@ -15385,8 +15385,6 @@ rtl8125_get_mac_address(struct net_device *dev)
+         *(u16*)&mac_addr[4] = RTL_R16(tp, BACKUP_ADDR1_8125);
+ 
+         if (!is_valid_ether_addr(mac_addr)) {
+-                netif_err(tp, probe, dev, "Invalid ether addr %pM\n",
+-                          mac_addr);
+                 eth_random_addr(mac_addr);
+                 dev->addr_assign_type = NET_ADDR_RANDOM;
+                 netif_info(tp, probe, dev, "Random ether addr %pM\n",
+-- 
+2.47.3
+

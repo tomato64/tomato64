@@ -11583,6 +11583,9 @@ static int init_nvram(void)
 #ifdef TOMATO64_R5S
 	nvram_set("t_model_name", "FriendlyElec NanoPi R5S");
 #endif /* TOMATO64_R5S */
+#ifdef TOMATO64_R76S
+	nvram_set("t_model_name", "FriendlyElec NanoPi R76S");
+#endif /* TOMATO64_R76S */
 #ifdef TOMATO64_BCM53XX
 	{
 		FILE *f = fopen("/proc/device-tree/model", "r");
@@ -11951,6 +11954,9 @@ static void sysinit(void)
 #ifdef TOMATO64_R5S
 	eval("set_devs_r5s");
 #endif /* TOMATO64_R5S */
+#ifdef TOMATO64_R76S
+	eval("set_devs_r76s");
+#endif /* TOMATO64_R76S */
 #ifdef TOMATO64_BCM53XX
 	eval("touch", "/tmp/.preinit");
 	eval("mount_root");
@@ -11988,9 +11994,9 @@ static void sysinit(void)
 
 	/* Expand filesystem parition to fill disk */
 	if (!nvram_get_int("fs_expanded")) {
-#if defined(TOMATO64_X86_64) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI) || defined(TOMATO64_RPI4) || defined(TOMATO64_R6S) || defined(TOMATO64_R5S)
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI) || defined(TOMATO64_RPI4) || defined(TOMATO64_R6S) || defined(TOMATO64_R5S) || defined(TOMATO64_R76S)
 		eval("expand_root_partition");
-#endif /* TOMATO64_X86_64 || TOMATO64_BPIR3 || TOMATO64_BPIR3MINI || TOMATO64_R6S || TOMATO64_R5S */
+#endif /* TOMATO64_X86_64 || TOMATO64_BPIR3 || TOMATO64_BPIR3MINI || TOMATO64_R6S || TOMATO64_R5S || TOMATO64_R76S */
 #ifdef TOMATO64_MT6000
 		eval("resize2fs", "/dev/mmcblk0p7");
 #endif /* TOMATO64_MT6000 */

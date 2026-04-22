@@ -1,0 +1,14 @@
+# R76S-specific mac80211 backports config for Tomato64
+#
+# Appended after config_base for R76S builds only.
+#
+# Realtek RTW88 SDIO driver for the optional onboard RTL8822CS WiFi module
+# shipped on the NanoPi R76S.
+#
+# Reference: OpenWrt package/kernel/mac80211/realtek.mk
+
+CPTCFG_RTW88=m
+CPTCFG_RTW88_CORE=m
+CPTCFG_RTW88_SDIO=m
+CPTCFG_RTW88_8822C=m
+CPTCFG_RTW88_8822CS=m

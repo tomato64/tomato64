@@ -42,6 +42,9 @@ r5s: .configure-r5s
 r6s: .configure-r6s
 	make -C src/buildroot
 
+r76s: .configure-r76s
+	make -C src/buildroot
+
 bcm53xx: .configure-bcm53xx
 	make -C src/buildroot
 
@@ -74,6 +77,9 @@ r5s-menuconfig: .configure-r5s
 	make -C src/buildroot menuconfig
 
 r6s-menuconfig: .configure-r6s
+	make -C src/buildroot menuconfig
+
+r76s-menuconfig: .configure-r76s
 	make -C src/buildroot menuconfig
 
 bcm53xx-menuconfig: .configure-bcm53xx
@@ -120,6 +126,11 @@ distclean:
 .configure-r6s: .download-rockchip-kernel .patch
 	make -C src/buildroot BR2_EXTERNAL=../../tomato64 r6s_defconfig
 	@echo r6s > .target
+	@touch $@
+
+.configure-r76s: .download-rockchip-kernel .patch
+	make -C src/buildroot BR2_EXTERNAL=../../tomato64 r76s_defconfig
+	@echo r76s > .target
 	@touch $@
 
 .configure-bcm53xx: .download-bcm53xx-kernel .patch

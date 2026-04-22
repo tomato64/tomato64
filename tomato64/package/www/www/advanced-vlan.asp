@@ -194,6 +194,7 @@ switch (nvram['t_model_name']) {
 	case 'Raspberry Pi 4 Model B':
 	case 'FriendlyElec NanoPi R6S':
 	case 'FriendlyElec NanoPi R5S':
+	case 'FriendlyElec NanoPi R76S':
 	case 'Asus RT-AC56U (BCM4708)':
 	case 'Asus RT-AC68U (BCM4708)':
 	case 'Buffalo WZR-1750DHP (BCM4708)':
