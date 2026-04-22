@@ -55,22 +55,59 @@ int f_read(const char *path, void *buffer, int max)
 int f_write(const char *path, const void *buffer, int len, unsigned flags, unsigned cmode)
 {
 	static const char nl = '\n';
-	int f;
-	int r = -1;
+	int f, r;
+	int total = 0;
 	mode_t m;
 
 	m = umask(0);
-	if (cmode == 0) cmode = 0666;
-	if ((f = open(path, (flags & FW_APPEND) ? (O_WRONLY|O_CREAT|O_APPEND) : (O_WRONLY|O_CREAT|O_TRUNC), cmode)) >= 0) {
-		if ((buffer == NULL) || ((r = write(f, buffer, len)) == len)) {
-			if (flags & FW_NEWLINE) {
-				if (write(f, &nl, 1) == 1) ++r;
-			}
-		}
-		close(f);
+	if (cmode == 0)
+		cmode = 0666;
+
+	f = open(path, (flags & FW_APPEND) ? (O_WRONLY|O_CREAT|O_APPEND) : (O_WRONLY|O_CREAT|O_TRUNC), cmode);
+
+	if (f < 0) {
+		umask(m);
+		return -1;
 	}
+
+	/* write full buffer */
+	while (total < len) {
+		r = write(f, (const char *)buffer + total, len - total);
+
+		if (r > 0) {
+			total += r;
+			continue;
+		}
+
+		if (r < 0 && errno == EINTR)
+			continue;
+
+		close(f);
+		umask(m);
+		return -1;
+	}
+
+	/* FW_NEWLINE: append '\n' (do NOT use for binary data) */
+	if (flags & FW_NEWLINE) {
+		for (;;) {
+			r = write(f, &nl, 1);
+			if (r == 1)
+				break;
+
+			if (r < 0 && errno == EINTR)
+				continue;
+
+			close(f);
+			umask(m);
+			return -1;
+		}
+		total++;
+	}
+
+	close(f);
 	umask(m);
-	return r;
+
+	return total;
 }
 
 int f_read_string(const char *path, char *buffer, int max)
