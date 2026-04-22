@@ -24,7 +24,7 @@ void wi_uploadsplash(char *url, int len, char *boundary)
 	char tmp[255];
 	char *buf, *p;
 	const char *error;
-	int n;
+	int n, blen;
 
 	//check_id();
 
@@ -46,8 +46,22 @@ void wi_uploadsplash(char *url, int len, char *boundary)
 	}
 
 	n = web_read(buf, len);
+	if (n <= 0) {
+		error = "Error reading file";
+		goto ERROR;
+	}
 	len -= n;
-	n = n - strlen(boundary)-6;
+
+	/* ensure boundary trimming is safe */
+	if (boundary) {
+		blen = strlen(boundary) + 6;
+		if (n <= blen) {
+			error = "Invalid file";
+			goto ERROR;
+		}
+		n -= blen;
+	}
+
 	syslog(LOG_INFO, "boundary %s, len %d", boundary, strlen(boundary));
 
 	if ((p = nvram_get("NC_DocumentRoot")) == NULL)
