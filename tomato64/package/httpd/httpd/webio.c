@@ -243,9 +243,16 @@ static void _web_putfile(FILE *f, wofilter_t wof)
 {
 	char buf[2048];
 	int nr;
+	int total = 0;
+	int max = 10 * 1024 * 1024; /* 10MB limit */
 
 	while ((nr = fread(buf, 1, sizeof(buf) - 1, f)) > 0) {
+		/* enforce output limit */
+		if (total + nr > max)
+			nr = max - total;
+
 		buf[nr] = 0;
+
 		switch (wof) {
 		case WOF_JAVASCRIPT:
 			web_putj_utf8(buf);
@@ -257,6 +264,11 @@ static void _web_putfile(FILE *f, wofilter_t wof)
 			web_puts(buf);
 			break;
 		}
+
+		total += nr;
+
+		if (total >= max)
+			break;
 	}
 }
 
@@ -264,24 +276,24 @@ int web_putfile(const char *fname, wofilter_t wof)
 {
 	FILE *f;
 
-	if ((f = fopen(fname, "r")) != NULL) {
-		_web_putfile(f, wof);
-		fclose(f);
-		return 1;
-	}
+	if ((f = fopen(fname, "r")) == NULL)
+		return 0;
 
-	return 0;
+	_web_putfile(f, wof);
+	fclose(f);
+
+	return 1;
 }
 
 int web_pipecmd(const char *cmd, wofilter_t wof)
 {
 	FILE *f;
 
-	if ((f = popen(cmd, "r")) != NULL) {
-		_web_putfile(f, wof);
-		pclose(f);
-		return 1;
-	}
+	if ((f = popen(cmd, "r")) == NULL)
+		return 0;
 
-	return 0;
+	_web_putfile(f, wof);
+	pclose(f);
+
+	return 1;
 }
