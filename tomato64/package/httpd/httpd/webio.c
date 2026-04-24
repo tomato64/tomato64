@@ -139,23 +139,28 @@ int _web_printf(wofilter_t wof, const char *format, ...)
 int web_write(const char *buffer, int len)
 {
 	int n = len;
-	int r = 0;
 
 	while (n > 0) {
-		r = fwrite(buffer, 1, n, connfp);
-#ifndef TOMATO64
-		if ((r == 0) && (errno != EINTR))
-			return -1;
-#else
-		if (ferror(connfp) != 0)
-			return -1;
-#endif /* TOMATO64 */
+		size_t r = fwrite(buffer, 1, n, connfp);
 
-		buffer += r;
-		n -= r;
+		if (r > 0) {
+			buffer += r;
+			n -= r;
+			continue;
+		}
+
+		/* r == 0: either EINTR or a real error. ferror is sticky,
+		 * so clear it on EINTR before retrying.
+		 */
+		if (ferror(connfp) && errno == EINTR) {
+			clearerr(connfp);
+			continue;
+		}
+
+		return -1;
 	}
 
-	return r;
+	return len;
 }
 
 int web_read(void *buffer, int len)
