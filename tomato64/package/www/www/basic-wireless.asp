@@ -18,7 +18,7 @@
 
 <script>
 
-//	<% nvram("wifi_sta_list,wan_sta,wifi,lan_ifname"); %>
+//	<% nvram("wifi_sta_list,wan_sta,wifi,lan_ifname,t_model_name,os_version"); %>
 //	<% wireless(); %>
 
 var cprefix = 'basic_wireless';
@@ -867,6 +867,71 @@ MacGrid.prototype.resetNewEditor = function() {
 	f[1].value = '';
 }
 
+function macListBackup(i, j) {
+	var t = 'phy'+i+'iface'+j;
+	var gridId = 'table_'+t+'_maclist';
+	var grid = E(gridId).gridObj;
+	var b = { nextpage: 'basic_wireless', grids: {} };
+	b.grids[gridId] = grid.getAllData();
+
+	var model = (nvram.t_model_name || 'unknown').replace(/[^a-zA-Z0-9_\-\.]+/g, '_');
+	var v = nvram.os_version || 'unknown';
+	var vm = v.match(/\d{4}\.\d+/);
+	var version = (vm ? vm[0] : v).replace(/[^a-zA-Z0-9_\-\.]+/g, '_');
+	var d = new Date();
+	var ts = d.getFullYear()+'-'+(('0'+(d.getMonth()+1)).slice(-2))+'-'+(('0'+d.getDate()).slice(-2))+'_'+(('0'+d.getHours()).slice(-2))+(('0'+d.getMinutes()).slice(-2));
+	var fn = model+'-'+version+'-basic_wireless-'+t+'-backup-'+ts+'.json';
+
+	var a = document.createElement('a');
+	a.href = 'data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(b, null, 2));
+	a.download = fn;
+	a.style.display = 'none';
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+}
+
+function macListRestore(i, j) {
+	var grid = E('table_phy'+i+'iface'+j+'_maclist').gridObj;
+	var fi = document.createElement('input');
+	fi.type = 'file';
+	fi.accept = '.json,application/json';
+	fi.style.display = 'none';
+	document.body.appendChild(fi);
+	fi.onchange = function(e) {
+		var f = e.target.files[0];
+		if (!f) return;
+		var r = new FileReader();
+		r.onerror = function() { alert('Failed to read backup file.'); };
+		r.onload = function(x) {
+			try {
+				var b = JSON.parse(x.target.result);
+				if (b.nextpage !== 'basic_wireless') { alert('Restore denied! This backup is not for basic-wireless.'); return; }
+				var rows = null;
+				if (b.grids) {
+					for (var k in b.grids) { if (Array.isArray(b.grids[k])) { rows = b.grids[k]; break; } }
+				}
+				if (!rows) { alert('No backup data found.'); return; }
+				if (grid.removeAllData) grid.removeAllData();
+				rows.forEach(function(row) { grid.insertData(-1, row); });
+				alert('Successfully restored MAC list for phy '+i+' interface '+j+'.\n\nThis will not be permanent until you click the \'Save\' button at the bottom.');
+			}
+			catch(ex) { alert('Restore failed: '+(ex.message || ex)); }
+		};
+		r.readAsText(f);
+	};
+	fi.click();
+}
+
+function macListClear(i, j) {
+	if (!confirm('Are you sure you want to remove ALL entries from the MAC list for phy '+i+' interface '+j+'?\n\nThis will not be permanent until you click the \'Save\' button at the bottom.')) return;
+	var grid = E('table_phy'+i+'iface'+j+'_maclist').gridObj;
+	if (grid && grid.removeAllData) {
+		grid.removeAllData();
+		grid.recolor();
+	}
+}
+
 </script>
 </head>
 
@@ -1049,7 +1114,11 @@ for (var i = 0; i < devices.length; i++) {
 		W('<div id="'+t+'-filter">');
 		createFieldTable('', [
 			{ title: 'MAC Address Filter', name: 'wifi_'+t+'_macfilter', type: 'select', options: [['', 'Disable'],['allow', 'Allow listed only'],['deny', 'Allow all except listed']], value: nvram['wifi_'+t+'_macfilter'] },
-			{ title: 'MAC-List', suffix: '<div class="tomato-grid" id="table_'+t+'_maclist"><\/div>' },
+			{ title: 'MAC-List', suffix:
+				'<div class="tomato-grid" id="table_'+t+'_maclist"><\/div>' +
+				'<input type="button" value="Backup" onclick="macListBackup('+i+','+j+')">' +
+				'<input type="button" value="Restore" onclick="macListRestore('+i+','+j+')">' +
+				'<input type="button" value="Clear Table" onclick="macListClear('+i+','+j+')">' },
 		]);
 		W('<\/div>');
 
