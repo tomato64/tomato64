@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-LINUX_FIRMWARE_OPENWRT_VERSION = 20251125
+LINUX_FIRMWARE_OPENWRT_VERSION = 20260221
 LINUX_FIRMWARE_OPENWRT_SOURCE = linux-firmware-$(LINUX_FIRMWARE_OPENWRT_VERSION).tar.xz
 LINUX_FIRMWARE_OPENWRT_SITE = $(BR2_KERNEL_MIRROR)/linux/kernel/firmware
 
