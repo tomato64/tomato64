@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-NETSNMP_TOMATO_VERSION = 5.9.3
+NETSNMP_TOMATO_VERSION = 5.9.5.2
 NETSNMP_TOMATO_SITE = https://downloads.sourceforge.net/project/net-snmp/net-snmp/$(NETSNMP_TOMATO_VERSION)
 NETSNMP_TOMATO_SOURCE = net-snmp-$(NETSNMP_TOMATO_VERSION).tar.gz
 NETSNMP_TOMATO_LICENSE = Various BSD-like
