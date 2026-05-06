@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-NGINX_TOMATO_VERSION = 1.26.2
+NGINX_TOMATO_VERSION = 1.28.3
 NGINX_TOMATO_SOURCE = nginx-$(NGINX_TOMATO_VERSION).tar.gz
 NGINX_TOMATO_SITE = https://nginx.org/download
 NGINX_TOMATO_LICENSE = BSD-2-Clause
