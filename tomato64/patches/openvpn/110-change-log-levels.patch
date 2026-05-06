@@ -1,6 +1,6 @@
 --- openvpn/src/openvpn/ssl.c
 +++ openvpn/src/openvpn/ssl.c
-@@ -2633,7 +2633,7 @@
+@@ -2458,7 +2458,7 @@
      dmsg(D_TLS_DEBUG_MED, "STATE S_ACTIVE");
  
      ks->established = now;
@@ -9,18 +9,18 @@
      {
          print_details(&ks->ks_ssl, "Control Channel:");
      }
-@@ -3102,7 +3102,7 @@
-                 && ks->n_packets >= session->opt->renegotiate_packets)
-             || (packet_id_close_to_wrapping(&ks->crypto_options.packet_id.send))))
+@@ -3021,7 +3021,7 @@
+     /* Should we trigger a soft reset? -- new key, keeps old key for a while */
+     if (ks->state >= S_GENERATED_KEYS && should_trigger_renegotiation(session, ks))
      {
--        msg(D_TLS_DEBUG_LOW, "TLS: soft reset sec=%d/%d bytes=" counter_format
-+        msg(D_SHOW_PARMS, "TLS: soft reset sec=%d/%d bytes=" counter_format
-             "/%d pkts=" counter_format "/%d",
-             (int) (now - ks->established), session->opt->renegotiate_seconds,
-             ks->n_bytes, session->opt->renegotiate_bytes,
+-        msg(D_TLS_DEBUG_LOW,
++        msg(D_SHOW_PARMS,
+             "TLS: soft reset sec=%d/%d bytes=" counter_format "/%" PRIi64 " pkts=" counter_format
+             "/%" PRIi64 " aead_limit_send=%" PRIu64 "/%" PRIu64 " aead_limit_recv=%" PRIu64
+             "/%" PRIu64,
 --- openvpn/src/openvpn/ssl_verify.c
 +++ openvpn/src/openvpn/ssl_verify.c
-@@ -350,7 +350,7 @@
+@@ -343,7 +343,7 @@
      {
          if (SUCCESS == x509_verify_cert_ku(peer_cert, opt->remote_cert_ku, MAX_PARMS))
          {
@@ -29,7 +29,7 @@
          }
          else
          {
-@@ -364,7 +364,7 @@
+@@ -357,7 +357,7 @@
      {
          if (SUCCESS == x509_verify_cert_eku(peer_cert, opt->remote_cert_eku))
          {
@@ -38,16 +38,16 @@
          }
          else
          {
-@@ -384,7 +384,7 @@
-                  && strncmp(opt->verify_x509_name, common_name,
-                             strlen(opt->verify_x509_name)) == 0) )
-         {
--            msg(D_HANDSHAKE, "VERIFY X509NAME OK: %s", subject);
-+            msg(D_SHOW_PARMS, "VERIFY X509NAME OK: %s", subject);
+@@ -394,7 +394,7 @@
+             msg(D_HANDSHAKE, err_fmt, match_str, opt->verify_x509_name);
+             return FAILURE;
          }
-         else
-         {
-@@ -791,7 +791,7 @@
+-        msg(D_HANDSHAKE, "VERIFY X509NAME OK: %s", subject);
++        msg(D_SHOW_PARMS, "VERIFY X509NAME OK: %s", subject);
+     }
+ 
+     return SUCCESS;
+@@ -788,7 +788,7 @@
          }
      }
  
@@ -58,7 +58,7 @@
  
 --- openvpn/src/openvpn/ssl_verify_openssl.c
 +++ openvpn/src/openvpn/ssl_verify_openssl.c
-@@ -753,7 +753,7 @@
+@@ -765,7 +765,7 @@
      {
          int i;
  
@@ -67,21 +67,21 @@
          for (i = 0; SUCCESS != fFound && i < sk_ASN1_OBJECT_num(eku); i++)
          {
              ASN1_OBJECT *oid = sk_ASN1_OBJECT_value(eku, i);
-@@ -761,7 +761,7 @@
+@@ -773,7 +773,7 @@
  
              if (SUCCESS != fFound && OBJ_obj2txt(szOid, sizeof(szOid), oid, 0) != -1)
              {
--                msg(D_HANDSHAKE, "++ Certificate has EKU (str) %s, expects %s",
-+                msg(D_SHOW_PARMS, "++ Certificate has EKU (str) %s, expects %s",
-                     szOid, expected_oid);
+-                msg(D_HANDSHAKE, "++ Certificate has EKU (str) %s, expects %s", szOid,
++                msg(D_SHOW_PARMS, "++ Certificate has EKU (str) %s, expects %s", szOid,
+                     expected_oid);
                  if (!strcmp(expected_oid, szOid))
                  {
-@@ -770,7 +770,7 @@
+@@ -782,7 +782,7 @@
              }
              if (SUCCESS != fFound && OBJ_obj2txt(szOid, sizeof(szOid), oid, 1) != -1)
              {
--                msg(D_HANDSHAKE, "++ Certificate has EKU (oid) %s, expects %s",
-+                msg(D_SHOW_PARMS, "++ Certificate has EKU (oid) %s, expects %s",
-                     szOid, expected_oid);
+-                msg(D_HANDSHAKE, "++ Certificate has EKU (oid) %s, expects %s", szOid,
++                msg(D_SHOW_PARMS, "++ Certificate has EKU (oid) %s, expects %s", szOid,
+                     expected_oid);
                  if (!strcmp(expected_oid, szOid))
                  {

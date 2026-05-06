@@ -294,7 +294,7 @@ void start_ovpn_client(int unit)
 #ifdef TOMATO64
 	/* DCO - Data Channel Offload */
 	if (atoi(getNVRAMVar("vpnc%d_dco", unit))) {
-		modprobe("ovpn_dco_v2");
+		modprobe("ovpn");
 	}
 	else {
 		fprintf(fp, "disable-dco\n");
@@ -764,7 +764,7 @@ void start_ovpn_server(int unit)
 #ifdef TOMATO64
 	/* DCO - Data Channel Offload */
 	if (atoi(getNVRAMVar("vpns%d_dco", unit))) {
-		modprobe("ovpn_dco_v2");
+		modprobe("ovpn");
 	}
 	else {
 		fprintf(fp, "disable-dco\n");

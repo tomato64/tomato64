@@ -1,0 +1,44 @@
+diff --git a/package/openvpn/Config.in b/package/openvpn/Config.in
+index 77afc9eaf4..e2735dae03 100644
+--- a/package/openvpn/Config.in
++++ b/package/openvpn/Config.in
+@@ -1,6 +1,7 @@
+ config BR2_PACKAGE_OPENVPN
+ 	bool "openvpn"
+ 	depends on BR2_USE_MMU # fork()
++	depends on BR2_TOOLCHAIN_HAS_SYNC_4 # libcap-ng
+ 	select BR2_PACKAGE_LIBCAP_NG
+ 	select BR2_PACKAGE_OPENSSL if !BR2_PACKAGE_MBEDTLS
+ 	select BR2_PACKAGE_LIBOPENSSL_ENABLE_DES if BR2_PACKAGE_LIBOPENSSL
+diff --git a/package/openvpn/openvpn.hash b/package/openvpn/openvpn.hash
+index 1fad2163c8..438212a4bb 100644
+--- a/package/openvpn/openvpn.hash
++++ b/package/openvpn/openvpn.hash
+@@ -1,3 +1,3 @@
+ # Locally calculated after checking signature
+-sha256  4cc8e63f710d3001493b13d8a32cf22a214d5e4f71dd37d93831e2fd3208b370  openvpn-2.6.17.tar.gz
++sha256  18db05f3d5eee3663db1914590044e5f96ff5cd47b6e7846c6a350806c23dbce  openvpn-2.7.4.tar.gz
+ sha256  edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6  COPYRIGHT.GPL
+diff --git a/package/openvpn/openvpn.mk b/package/openvpn/openvpn.mk
+index 9740374bee..68f0d30e4c 100644
+--- a/package/openvpn/openvpn.mk
++++ b/package/openvpn/openvpn.mk
+@@ -4,7 +4,7 @@
+ #
+ ################################################################################
+ 
+-OPENVPN_VERSION = 2.6.17
++OPENVPN_VERSION = 2.7.4
+ OPENVPN_SITE = https://swupdate.openvpn.net/community/releases
+ OPENVPN_DEPENDENCIES = host-pkgconf libcap-ng
+ OPENVPN_LICENSE = GPL-2.0
+@@ -16,6 +16,9 @@ OPENVPN_CONF_OPTS = \
+ 	$(if $(BR2_STATIC_LIBS),--disable-plugins)
+ OPENVPN_CONF_ENV = NETSTAT=/bin/netstat
+ 
++# workaround for static_assert on uclibc-ng < 1.0.42
++OPENVPN_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -Dstatic_assert=_Static_assert"
++
+ ifeq ($(BR2_PACKAGE_LIBNL)$(BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_16),yy)
+ OPENVPN_CONF_OPTS += --enable-dco
+ OPENVPN_DEPENDENCIES += libnl
