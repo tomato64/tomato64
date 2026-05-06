@@ -8,13 +8,18 @@ LINUX_FIRMWARE_OPENWRT_VERSION = 20260221
 LINUX_FIRMWARE_OPENWRT_SOURCE = linux-firmware-$(LINUX_FIRMWARE_OPENWRT_VERSION).tar.xz
 LINUX_FIRMWARE_OPENWRT_SITE = $(BR2_KERNEL_MIRROR)/linux/kernel/firmware
 
-# Airoha EN7581 and Inside-Secure EIP-197 crypto firmware for BPI-R3 Mini
+# Airoha EN8811H 2.5G PHY + Inside-Secure EIP-197 crypto firmware for BPI-R3 Mini
+# EN8811H filenames match OpenWrt package/firmware/linux-firmware/airoha.mk
+# (airoha-en8811h-firmware); other airoha/* blobs in this tarball are for
+# unrelated SoCs (EN7581, AN7583, AN8811HB) and aren't needed on BPI-R3 Mini.
 ifeq ($(BR2_PACKAGE_PLATFORM_BPIR3MINI),y)
 define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
-	mkdir -p $(TARGET_DIR)/lib/firmware
-	cp -r $(@D)/airoha $(TARGET_DIR)/lib/firmware
-	cp -r $(@D)/inside-secure $(TARGET_DIR)/lib/firmware
-	cp $(@D)/airoha/* $(BINARIES_DIR)
+	mkdir -p $(TARGET_DIR)/lib/firmware/airoha
+	cp $(@D)/airoha/EthMD32.dm.bin  $(TARGET_DIR)/lib/firmware/airoha
+	cp $(@D)/airoha/EthMD32.DSP.bin $(TARGET_DIR)/lib/firmware/airoha
+	mkdir -p $(TARGET_DIR)/lib/firmware/inside-secure/eip197_minifw
+	cp $(@D)/inside-secure/eip197_minifw/ifpp.bin $(TARGET_DIR)/lib/firmware/inside-secure/eip197_minifw
+	cp $(@D)/inside-secure/eip197_minifw/ipue.bin $(TARGET_DIR)/lib/firmware/inside-secure/eip197_minifw
 endef
 endif
 
