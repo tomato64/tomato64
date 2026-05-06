@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PHP_TOMATO_VERSION = 8.4.15
+PHP_TOMATO_VERSION = 8.5.5
 PHP_TOMATO_SITE = https://www.php.net/distributions
 PHP_TOMATO_SOURCE = php-$(PHP_TOMATO_VERSION).tar.xz
 PHP_TOMATO_INSTALL_STAGING = YES
@@ -15,6 +15,9 @@ PHP_TOMATO_LICENSE = PHP-3.01
 PHP_TOMATO_LICENSE_FILES = LICENSE
 PHP_TOMATO_CPE_ID_VENDOR = php
 
+# Only affects the Windows operating system
+PHP_TOMATO_IGNORE_CVES += CVE-2024-3566
+
 PHP_TOMATO_CONF_OPTS = \
 	--mandir=/usr/share/man \
 	--infodir=/usr/share/info \
@@ -23,9 +26,11 @@ PHP_TOMATO_CONF_OPTS = \
 	--with-external-pcre \
 	--without-pear \
 	--with-config-file-path=/etc \
+	--disable-opcache-jit \
 	--disable-phpdbg \
 	--disable-rpath
 PHP_TOMATO_CONF_ENV = \
+	ac_cv_func_mprotect=yes \
 	EXTRA_LIBS="$(PHP_TOMATO_EXTRA_LIBS)"
 
 ifeq ($(BR2_STATIC_LIBS),y)
@@ -75,16 +80,12 @@ PHP_TOMATO_CXXFLAGS = $(TARGET_CXXFLAGS)
 
 # The OPcache extension isn't cross-compile friendly
 # Throw some defines here to avoid patching heavily
-ifeq ($(BR2_PACKAGE_PHP_TOMATO_EXT_OPCACHE),y)
-PHP_TOMATO_CONF_OPTS += --enable-opcache --disable-opcache-jit
-PHP_TOMATO_CONF_ENV += ac_cv_func_mprotect=yes
 PHP_TOMATO_CFLAGS += \
 	-DHAVE_SHM_IPC \
 	-DHAVE_SHM_MMAP_ANON \
 	-DHAVE_SHM_MMAP_ZERO \
 	-DHAVE_SHM_MMAP_POSIX \
 	-DHAVE_SHM_MMAP_FILE
-endif
 
 # We need to force dl "detection"
 ifeq ($(BR2_STATIC_LIBS),)
