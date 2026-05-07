@@ -17,44 +17,15 @@
 
 //	<% nvram("usb_apcupsd"); %>
 
-function clientSideInclude(id, url) {
-	var req = false;
-	/* For Safari, Firefox, and other non-MS browsers */
-	if (window.XMLHttpRequest) {
-		try {
-			req = new XMLHttpRequest();
-		} catch (e) {
-			req = false;
-		}
-	}
-	else if (window.ActiveXObject) {
-		/* For Internet Explorer on Windows */
-		try {
-			req = new ActiveXObject("Msxml2.XMLHTTP");
-		} catch (e) {
-			try {
-				req = new ActiveXObject("Microsoft.XMLHTTP");
-			} catch (e) {
-				req = false;
-			}
-		}
-	}
-	var element = E(id);
+var ref = new TomatoRefresh('/ext/cgi-bin/tomatoups.cgi', '', 3, 'nas_ups');
 
-	if (!element) {
-		alert("Bad id " + id + "passed to clientSideInclude. You need a div or span element with this id in your page.");
-		return;
-	}
+ref.refresh = function(text) {
+	E('ups-status').innerHTML = text;
 
-	if (req) {
-		/* Synchronous request, wait till we have it all */
-		req.open('GET', url, false);
-		req.send(null);
-		element.innerHTML = req.responseText;
-	}
-	else {
-		element.innerHTML = "Sorry, your browser does not support XMLHTTPRequest objects.";
-	}
+	var http = new XmlHttp();
+	http.onCompleted = function(t) { E('ups-data').innerHTML = t; };
+	http.onError = function() { };
+	http.get('/ext/cgi-bin/tomatodata.cgi', null);
 }
 
 function init() {
@@ -62,10 +33,12 @@ function init() {
 		E('upsmonitor').style.display = 'none';
 		E('upsstatus').style.display = 'block';
 		E('note-disabled').style.display = 'block';
+		E('footer').style.display = 'none';
 		return;
 	}
-	clientSideInclude('ups-status', '/ext/cgi-bin/tomatoups.cgi');
-	clientSideInclude('ups-data', '/ext/cgi-bin/tomatodata.cgi');
+	ref.initPage(0, 3);
+	if (!ref.running) ref.once = 1;
+	ref.start();
 }
 </script>
 </head>
@@ -103,7 +76,9 @@ function init() {
 <!-- / / / -->
 
 <div id="footer">
-	&nbsp;
+	<img src="spin.svg" alt="" id="refresh-spinner">
+	<script>genStdTimeList('refresh-time', 'One off', 0);</script>
+	<input type="button" value="Refresh" onclick="ref.toggle()" id="refresh-button">
 </div>
 
 </td></tr>
