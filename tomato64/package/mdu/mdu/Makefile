@@ -13,7 +13,7 @@ ALL_CFLAGS = -fPIC
 ALL_CFLAGS += $(CFLAGS)
 
 ALL_LDFLAGS = -fPIC
-ALL_LDFLAGS += -Wl,--start-group -lcurl -lssl -lcrypto -lshared -lnvram -Wl,--end-group
+ALL_LDFLAGS += -lcurl -lshared -lnvram
 ALL_LDFLAGS += $(LDFLAGS)
 
 ifeq ($(TOMATO_EXPERIMENTAL),1)
