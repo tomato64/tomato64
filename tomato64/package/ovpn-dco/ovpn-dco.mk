@@ -13,11 +13,8 @@ OVPN_DCO_DEPENDENCIES = linux
 OVPN_DCO_NOSTDINC_FLAGS = \
 	-I$(@D)/include \
 	-I$(@D)/compat-include \
-	-include $(@D)/linux-compat.h
-
-ifeq ($(BR2_PACKAGE_PLATFORM_RPI4),y)
-OVPN_DCO_NOSTDINC_FLAGS += -DOVPN_MODULE_VERSION='\"ovpn-backports-$(OVPN_DCO_VERSION)\"'
-endif
+	-include $(@D)/linux-compat.h \
+	-DOVPN_MODULE_VERSION='\"ovpn-backports-$(OVPN_DCO_VERSION)\"'
 
 define OVPN_DCO_BUILD_CMDS
 	$(TARGET_MAKE_ENV) $(MAKE) \
