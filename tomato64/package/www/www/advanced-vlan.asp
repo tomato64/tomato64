@@ -1803,7 +1803,9 @@ function init() {
 				</script>
 <!-- MIPSR2P-NO-END -->
 			</li>
+/* TOMATO64-REMOVE-BEGIN */
 			<li><b>Native VLAN</b>: Default VLAN for untagged ingress frames = 🌑</li>
+/* TOMATO64-REMOVE-END */
 			<li><b>Bridge</b>: One VLAN per bridge. WAN bridge (logical) ≠ WAN port (physical)</li>
 		</ul>
 		<br>
@@ -1826,7 +1828,9 @@ function init() {
 /* TOMATO64-BEGIN */
 			<li>Cross check settings on the <a href="basic-network.asp">Network</a> page</li>
 /* TOMATO64-END */
+/* TOMATO64-REMOVE-BEGIN */
 			<li>Default VID: 0 (some releases) or 1</li>
+/* TOMATO64-REMOVE-END */
 			<li>Assign one VID to WAN bridges</li>
 			<li>Select one default VID</li>
 			<script>
