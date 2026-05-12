@@ -17,6 +17,8 @@ define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/lib/firmware/airoha
 	cp $(@D)/airoha/EthMD32.dm.bin  $(TARGET_DIR)/lib/firmware/airoha
 	cp $(@D)/airoha/EthMD32.DSP.bin $(TARGET_DIR)/lib/firmware/airoha
+	cp $(@D)/airoha/EthMD32.dm.bin  $(BINARIES_DIR)
+	cp $(@D)/airoha/EthMD32.DSP.bin $(BINARIES_DIR)
 	mkdir -p $(TARGET_DIR)/lib/firmware/inside-secure/eip197_minifw
 	cp $(@D)/inside-secure/eip197_minifw/ifpp.bin $(TARGET_DIR)/lib/firmware/inside-secure/eip197_minifw
 	cp $(@D)/inside-secure/eip197_minifw/ipue.bin $(TARGET_DIR)/lib/firmware/inside-secure/eip197_minifw
