@@ -540,12 +540,8 @@ void do_file(char *path)
 	if (strstr(path, ".."))
 		return;
 
-	/* open file safely (no symlink if possible) */
-#ifdef O_NOFOLLOW
-	fd = open(path, O_RDONLY | O_NOFOLLOW);
-#else
+	/* symlink traversal is required by callers of this function */
 	fd = open(path, O_RDONLY);
-#endif
 
 	if (fd < 0)
 		return;
