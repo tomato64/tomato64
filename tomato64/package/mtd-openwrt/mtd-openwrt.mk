@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MTD_OPENWRT_VERSION = v25.12.3
+MTD_OPENWRT_VERSION = v25.12.4
 MTD_OPENWRT_SITE = https://github.com/openwrt/openwrt.git
 MTD_OPENWRT_SITE_METHOD = git
 MTD_OPENWRT_LICENSE = GPL-2.0+

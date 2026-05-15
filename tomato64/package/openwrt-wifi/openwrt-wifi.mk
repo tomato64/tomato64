@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-OPENWRT_WIFI_VERSION = v25.12.3
+OPENWRT_WIFI_VERSION = v25.12.4
 OPENWRT_WIFI_SITE = https://github.com/openwrt/openwrt.git
 #OPENWRT_WIFI_SITE = https://git.openwrt.org/openwrt/openwrt.git
 OPENWRT_WIFI_SITE_METHOD = git
