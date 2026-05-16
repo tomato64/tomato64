@@ -171,6 +171,9 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 #elif TOMATO64_R76S
 	strlcpy(system_type, "Rockchip RK3576", buf_system_type_sz);
 	strlcpy(cpuclk, "2200", buf_cpuclk_sz);
+#elif TOMATO64_MT3600BE
+	strlcpy(system_type, "MediaTek MT7987A", buf_system_type_sz);
+	strlcpy(cpuclk, "2000", buf_cpuclk_sz);
 #else
 	strlcpy(system_type, "MediaTek Filogic 830", buf_system_type_sz);
 	strlcpy(cpuclk, "2000", buf_cpuclk_sz);

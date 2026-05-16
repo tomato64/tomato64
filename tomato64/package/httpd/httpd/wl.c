@@ -1504,16 +1504,14 @@ static int print_wlbands(int idx, int unit, int subunit, void *param)
 static int print_wlbands_callback(int phy, int iface, const char *ifname, void *user_data)
 {
 	int *first_entry = (int *)user_data;
-	char phy_name[32];
 	char nvram_key[64];
 	const char *band;
 
-	/* Get PHY name from iwinfo */
-	if (wlhelper_get_iwinfo_field(ifname, "PHY name:", phy_name, sizeof(phy_name)) != 0)
-		return 0; /* Skip this interface, continue iteration */
-
-	/* Get band from nvram */
-	snprintf(nvram_key, sizeof(nvram_key), "wifi_%s_band", phy_name);
+	/* Band is keyed by the logical phy index, matching the nvram wifi_phy<N>_band
+	 * variables. Don't derive it from iwinfo's "PHY name:" — on single-wiphy
+	 * multi-radio parts every logical phy reports the same real wiphy (e.g.
+	 * phy0), which would collapse the radios onto a single band. */
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%d_band", phy);
 	band = nvram_get(nvram_key);
 
 	if (!band)
@@ -1940,8 +1938,13 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 	char phy1_F[8];
 	int phy0_temp, phy1_temp;
 
+#if defined(TOMATO64_MT3600BE)
+	const char phy0_cmd[] = "sensors -A mt7996_phy0.0-pci-0100 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
+	const char phy1_cmd[] = "sensors -A mt7996_phy0.1-pci-0100 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
+#else
 	const char phy0_cmd[] = "sensors -A mt7915_phy0-isa-0000 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
 	const char phy1_cmd[] = "sensors -A mt7915_phy1-isa-0000 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
+#endif
 
 	if ((f = popen(phy0_cmd, "r"))) {
 		if (fgets(buffer, sizeof(buffer), f) != NULL) {

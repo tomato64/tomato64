@@ -96,13 +96,13 @@ void wi_upgrade(char *url, int len, char *boundary)
 	const char *error = "Error reading file";
 	int complete = 1;
 #ifdef TOMATO64
-#ifndef TOMATO64_BCM53XX
+#if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
 	struct statvfs disk;
 	statvfs("/", &disk);
 	float f_bavail = disk.f_bavail;
 	float f_frsize = disk.f_frsize;
 	float available_space = f_bavail * f_frsize;
-#endif /* TOMATO64_BCM53XX */
+#endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
 #endif /* TOMATO64 */
 #ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
@@ -111,7 +111,10 @@ void wi_upgrade(char *url, int len, char *boundary)
 	char *args[] = { "mtd-write", "-w", "-i", fifo, "-d", "linux", NULL };
 #endif
 #else /* TOMATO64 */
-	char *args[] = { "upgrade", fifo, NULL };
+	/* args[2] = factory-reset flag, filled in below from _reset. Only
+	 * MT3600BE's /sbin/upgrade reads it; other devices ignore extra args
+	 * and rely on httpd's post-flash "rm /nvram/*". */
+	char *args[] = { "upgrade", fifo, "0", NULL };
 #endif /* TOMATO64 */
 
 
@@ -119,6 +122,11 @@ void wi_upgrade(char *url, int len, char *boundary)
 	check_id(url);
 
 	reset = (strcmp(webcgi_safeget("_reset", "0"), "1") == 0);
+
+#ifdef TOMATO64
+	if (reset)
+		args[2] = "1";
+#endif /* TOMATO64 */
 
 	/* Skip HTTP headers */
 	if (!skip_header(&len))
@@ -135,12 +143,12 @@ void wi_upgrade(char *url, int len, char *boundary)
 	}
 
 #ifdef TOMATO64
-#ifndef TOMATO64_BCM53XX
+#if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
 	if ((float) len > available_space) {
 		error = "Insufficient disk space to extract update";
 		goto ERROR;
 	}
-#endif /* TOMATO64_BCM53XX */
+#endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
 #endif /* TOMATO64 */
 
 	/*
@@ -312,6 +320,15 @@ void wo_flash(char *url)
 	if (rboot) {
 		set_action(ACT_REBOOT);
 		sync();
+#ifdef TOMATO64_MT3600BE
+		/* The detached tomato64-sysupgrade owns the flash + reboot. httpd
+		 * must NOT umount/reboot here; if it stayed alive it would keep
+		 * the squashfs busy and break the flash. Just show the page; the
+		 * launcher's stage2 kill_remaining will terminate httpd. */
+		parse_asp("/tmp/reboot.asp");
+		web_close();
+		return;
+#endif /* TOMATO64_MT3600BE */
 #ifdef TOMATO64_X86_64
 		if (fastreboot)
 			parse_asp("/tmp/reboot-fast.asp");

@@ -77,8 +77,10 @@ function upgrade() {
 		alert('Expecting a ".bin" or ".trx" file');
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-	if (name.search(/\.(tzst)$/i) == -1) {
-		alert('Expecting a ".tzst" file');
+	var fwExt = (nvram.t_model_name == 'GL.iNet GL-MT3600BE') ? /-sysupgrade\.bin$/i : /\.tzst$/i;
+	var fwExtMsg = (nvram.t_model_name == 'GL.iNet GL-MT3600BE') ? '"-sysupgrade.bin"' : '".tzst"';
+	if (name.search(fwExt) == -1) {
+		alert('Expecting a '+fwExtMsg+' file');
 /* TOMATO64-END */
 		return;
 	}
@@ -99,6 +101,11 @@ function upgrade() {
 			regex: /gl-mt6000/i,
 			name: 'GL-MT6000',
 			message: 'gl-mt6000'
+		},
+		'GL.iNet GL-MT3600BE': {
+			regex: /gl-mt3600be/i,
+			name: 'GL-MT3600BE',
+			message: 'gl-mt3600be'
 		},
 		'Banana Pi BPI-R3': {
 			regex: /bpi-r3(?!-mini)/i,
@@ -333,7 +340,7 @@ function earlyInit() {
 			<div class="afu-form">Select a valid <a href="https://freshtomato.org/downloads/">firmware</a> to install (.trx or .bin):</div>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-			<div class="afu-form">Select a valid <a href="https://tomato64.org/files/">firmware</a> to install (.tzst):</div>
+			<div class="afu-form">Select a valid <a href="https://tomato64.org/files/">firmware</a> to install (<script>document.write(nvram.t_model_name == 'GL.iNet GL-MT3600BE' ? '-sysupgrade.bin' : '.tzst');</script>):</div>
 /* TOMATO64-END */
 			<form name="form_upgrade" method="post" action="upgrade.cgi" enctype="multipart/form-data">
 				<div class="afu-form">

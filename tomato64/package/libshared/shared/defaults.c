@@ -356,10 +356,17 @@ struct nvram_tuple bsd_defaults[] = {
 	BRIDGE_BLOCK_USB_EXTRAS(i)
 
 #ifdef TOMATO64
+/* Default WiFi mode per device (WiFi 7 hardware defaults to "be", others to "ax") */
+#if defined(TOMATO64_MT3600BE)
+#define WIFI_DEFAULT_MODE	"be"
+#else
+#define WIFI_DEFAULT_MODE	"ax"
+#endif
+
 /* WiFi per-PHY defaults (parameterized for band/width differences) */
 #define WIFI_DEF_PHY_BLOCK(p, band, width) \
 	{"wifi_phy" #p "_band",		band			, 0 }, \
-	{"wifi_phy" #p "_mode",		"ax"			, 0 }, \
+	{"wifi_phy" #p "_mode",		WIFI_DEFAULT_MODE	, 0 }, \
 	{"wifi_phy" #p "_channel",	"auto"			, 0 }, \
 	{"wifi_phy" #p "_width",	width			, 0 }, \
 	{"wifi_phy" #p "_brates",	""			, 0 }, \
@@ -2130,6 +2137,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_MT6000
 	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 eth5"	, 0 },
 #endif /* TOMATO64_MT6000 */
+#ifdef TOMATO64_MT3600BE
+	{ "lan_ifnames",		"eth1"				, 0 },
+#endif /* TOMATO64_MT3600BE */
 #ifdef TOMATO64_BPIR3
 	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 eth5 eth6"	, 0 },
 #endif /* TOMATO64_BPIR3 */
@@ -2161,6 +2171,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_MT6000
 	{ "vlan1ports",			"1 2 3 4 5 9*"			, 0 },
 #endif /* TOMATO64_MT6000 */
+#ifdef TOMATO64_MT3600BE
+	{ "vlan1ports",			"1 9*"				, 0 },
+#endif /* TOMATO64_MT3600BE */
 #ifdef TOMATO64_BPIR3
 	{ "vlan1ports",			"1 2 3 4 5 6 9*"		, 0 },
 #endif /* TOMATO64_BPIR3 */
@@ -2189,6 +2202,8 @@ struct nvram_tuple router_defaults[] = {
 	/* Expected PHY count - device-specific constant */
 #if defined(TOMATO64_MT6000)
 	{"wifi_phy_count_expected",	"2"				, 0 },	/* MT6000: 2.4GHz + 5GHz */
+#elif defined(TOMATO64_MT3600BE)
+	{"wifi_phy_count_expected",	"2"				, 0 },	/* MT3600BE: MT7990 2.4GHz + 5GHz */
 #elif defined(TOMATO64_BPIR3)
 	{"wifi_phy_count_expected",	"2"				, 0 },	/* BPI-R3: 2.4GHz + 5GHz */
 #elif defined(TOMATO64_BPIR3MINI)
@@ -2213,7 +2228,7 @@ struct nvram_tuple router_defaults[] = {
 	WIFI_DEF_PHY_BLOCK(0, "2g", "20")
 
 	/* phy0iface0: special defaults (enabled on certain devices, Tomato64 SSID set) */
-#if defined(TOMATO64_MT6000) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI)
+#if defined(TOMATO64_MT6000) || defined(TOMATO64_MT3600BE) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI)
 	{"wifi_phy0iface0_enable",	"1"				, 0 },
 #else
 	{"wifi_phy0iface0_enable",	"0"				, 0 },

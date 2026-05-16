@@ -2,6 +2,7 @@
 
 . /usr/sbin/nvram_ops
 . /usr/share/libubox/jshn.sh
+. /usr/bin/phy-map.sh
 
 (
 	# Depends on util-linux flock
@@ -13,16 +14,14 @@
 
 	/sbin/wifi config
 
-	# Count PHYs from board.json and store in nvram for efficient lookups
+	# Count logical PHYs from board.json and store in nvram for efficient lookups.
+	# Logical phys flatten single-wiphy multi-radio parts (see phy-map.sh), so the
+	# count matches the phyN numbering used by the UI, start_wifi.sh and the C
+	# status helpers (which read wifi_phy_count).
 	if [ -e /etc/board.json ]; then
 		json_load_file /etc/board.json
-		phycount=0
-
-		# Count PHY entries using json_for_each_item
-		count_phy() {
-			phycount=$((phycount + 1))
-		}
-		json_for_each_item count_phy wlan
+		phycount=$(emit_logical_phys | wc -l | tr -d ' ')
+		[ -z "$phycount" ] && phycount=0
 
 		# Get expected minimum PHY count from nvram
 		# This is a constant set per-device in libshared/shared/defaults.c

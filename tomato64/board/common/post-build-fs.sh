@@ -42,6 +42,14 @@ then
 	ln -sf /usr/bin/uci $TARGET_DIR/sbin/uci
 fi
 
+# Squashfs + UBI overlay device: fstools mount_root/fopivot needs these
+# real mountpoint dirs in the rootfs (same as the BR2_arm/bcm53xx branch
+# below). MT3600BE is aarch64 so it doesn't get them from that branch.
+if grep -q ^BR2_PACKAGE_PLATFORM_MT3600BE=y ${BR2_CONFIG}
+then
+	mkdir -p $TARGET_DIR/romfs $TARGET_DIR/overlay
+fi
+
 if grep -q ^BR2_arm=y ${BR2_CONFIG}
 then
 	ln -sf /lib/ld-musl-arm.so.1 $TARGET_DIR/usr/bin/ldd

@@ -1,0 +1,4 @@
+# From OpenWrt package/utils/mtd-utils/Makefile (PKG_HASH)
+sha256  2db102908b232406ccb20719c0f43b61196aef4534493419fbf98a273c598c10  mtd-utils-2.3.0.tar.bz2
+# Locally calculated (GPLv2 text, identical across mtd-utils releases)
+sha256  dcc100d4161cc0b7177545ab6e47216f84857cda3843847c792a25289852dcaa  COPYING

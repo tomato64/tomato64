@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+# GL-MT3600BE upgrade glue (installed as /sbin/upgrade on this device).
+# httpd's wi_upgrade runs:  /sbin/upgrade <fifo> <reset>
+# We drain the FIFO into tmpfs, validate, then launch the real flasher
+# detached so it reparents to init (pid 1) - otherwise stage2's
+# kill_remaining would skip httpd and leave the squashfs busy.
+
+ARCHIVE="$1"
+RESET="${2:-0}"
+IMG=/tmp/tomato64-sysupgrade.bin
+BOARD_DIR="sysupgrade-glinet_gl-mt3600be"
+
+if [ -z "$ARCHIVE" ]; then
+	echo "missing firmware argument"
+	exit 1
+fi
+
+# Drain the one-shot FIFO into a tmpfs file (the launcher needs a seekable
+# file). A trailing multipart boundary is harmless - tar stops at EOF.
+rm -f "$IMG"
+cat "$ARCHIVE" > "$IMG"
+if [ ! -s "$IMG" ]; then
+	echo "error: empty firmware upload"
+	exit 1
+fi
+
+# Fail-fast on a wrong file (the UI's filename regex is loose) so httpd
+# sees the error while still waiting on us.
+members="$(tar tf "$IMG" 2>/dev/null)"
+for need in "$BOARD_DIR/CONTROL" "$BOARD_DIR/kernel" "$BOARD_DIR/root"; do
+	if ! echo "$members" | grep -qx "$need"; then
+		echo "error: not a GL-MT3600BE sysupgrade image (missing $need)"
+		echo "upload tomato64-gl-mt3600be-sysupgrade.bin"
+		rm -f "$IMG"
+		exit 1
+	fi
+done
+echo "image accepted - flash starting, router will reboot when done"
+
+# Detach so the launcher reparents to init (pid 1) - kill_remaining will
+# then kill httpd instead of skipping it, freeing the squashfs/overlay.
+if command -v setsid >/dev/null 2>&1; then
+	setsid /sbin/tomato64-sysupgrade "$IMG" "$RESET" </dev/null >/dev/console 2>&1 &
+else
+	( /sbin/tomato64-sysupgrade "$IMG" "$RESET" </dev/null >/dev/console 2>&1 & ) &
+fi
+
+exit 0

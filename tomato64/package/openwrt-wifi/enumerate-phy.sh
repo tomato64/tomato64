@@ -1,5 +1,6 @@
 #!/bin/sh
 . /usr/share/libubox/jshn.sh
+. /usr/bin/phy-map.sh
 
 if [ ! -f /etc/board.json ]; then
 	echo "'phy_count': '0'"
@@ -10,6 +11,7 @@ json_load_file /etc/board.json  ## Load JSON from file
 
 device=""
 band=""
+var=""
 count=0
 
 modes(){
@@ -18,7 +20,7 @@ modes(){
 
 bands(){
 
-	band=${2}
+	band=${1}
 	json_select ${band}
 	echo "'${device}_${band}': '1',"
 
@@ -52,26 +54,43 @@ bands(){
 	json_select ..
 }
 
-dump_item() {
+# Walk logical phys (flattens single-wiphy multi-radio parts; see phy-map.sh).
+# Each logical phy maps the UI's phyN onto an underlying board.json phy plus the
+# band(s) it owns. Capability flags always come from info.bands.<BAND>; the
+# radio entry only selects which band(s) a logical phy exposes.
+emit_logical_phys > /tmp/.enum_phy_map
+
+while IFS='|' read -r lphy phy_key ridx phy_bands path; do
+	[ -z "$lphy" ] && continue
 
 	count=$((count+1))
-	device=${2}
-	json_select ${device}
-	json_get_var var path
-	echo "'${device}_path': '${var}',"
+	device="phy${lphy}"
+	echo "'${device}_path': '${path}',"
+	# Real kernel wiphy name (board.json key == /sys/class/ieee80211/<name>). On
+	# single-wiphy multi-radio parts several logical phys share one wiphy, so the
+	# web UI must query iwinfo against this name, not phy<logical-index>.
+	echo "'${device}_phyname': '${phy_key}',"
 
+	json_select wlan
+	json_select "${phy_key}"
 	json_select info
+
 	json_get_var var antenna_rx
 	echo "'${device}_rx': '${var}',"
 
 	json_get_var var antenna_tx
 	echo "'${device}_tx': '${var}',"
 
-	json_for_each_item "bands" "bands"
+	json_select bands
+	for b in $phy_bands; do
+		bands "$b"
+	done
+	json_select ..   ## back to info
 
-	json_select ..
-	json_select ..
-}
+	json_select ..   ## back to phy
+	json_select ..   ## back to wlan
+	json_select ..   ## back to root
+done < /tmp/.enum_phy_map
 
-json_for_each_item "dump_item" "wlan"
+rm -f /tmp/.enum_phy_map
 echo "'phy_count': '${count}'"

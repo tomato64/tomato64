@@ -7,6 +7,7 @@ Supported devices:
 | **x86_64** | x86_64_v2 (UEFI) |
 | **x86_64** | x86_64_v1 (BIOS) |
 | **Mediatek** | GL.iNet GL-MT6000/Flint 2 |
+| **Mediatek** | GL.iNet GL-MT3600BE |
 | **Mediatek** | Banana Pi BPI-R3 |
 | **Mediatek** | Banana Pi BPI-R3 Mini |
 | **Rockchip** | NanoPi R6S |
@@ -29,6 +30,7 @@ make legacy (x86_64_v1 bios)
 
 # Mediatek
 make mt6000 (GL.iNet GL-MT6000/Flint 2)
+make mt3600be (GL.iNet GL-MT3600BE)
 make bpi-r3 (Banana Pi BPI-R3)
 make bpi-r3-mini (Banana Pi BPI-R3 Mini)
 

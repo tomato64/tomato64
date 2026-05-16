@@ -32,6 +32,7 @@ define MT76_BUILD_CMDS
 	CONFIG_MT76_CONNAC_LIB=m \
 	$(if $(BR2_PACKAGE_PLATFORM_MEDIATEK),CONFIG_MT7915E=m) \
 	$(if $(BR2_PACKAGE_PLATFORM_MEDIATEK),CONFIG_MT798X_WMAC=y) \
+	$(if $(BR2_PACKAGE_PLATFORM_MT3600BE),CONFIG_MT7996E=m) \
 	CONFIG_MT792x_LIB=m \
 	CONFIG_MT792x_USB=m \
 	CONFIG_MT7921_COMMON=m \
@@ -85,7 +86,9 @@ endef
 MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_X86_64_MODULES
 endif
 
+# mt7986a Filogic devices (MT6000 / BPI-R3 / BPI-R3 Mini): built-in mt7915e
 ifeq ($(BR2_PACKAGE_PLATFORM_MEDIATEK),y)
+ifneq ($(BR2_PACKAGE_PLATFORM_MT3600BE),y)
 define MT76_INSTALL_MEDIATEK_MODULES
 	$(INSTALL) $(@D)/mt7915/mt7915e.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 endef
@@ -101,6 +104,24 @@ define MT76_INSTALL_MEDIATEK_FIRMWARE
 	$(INSTALL) $(@D)/firmware/mt7986_wo_1.bin			$(TARGET_DIR)/lib/firmware/mediatek
 endef
 MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_MEDIATEK_FIRMWARE
+endif
+endif
+
+# GL-MT3600BE (mt7987a): MT7990 WiFi on PCIe, handled by the mt7996e driver
+ifeq ($(BR2_PACKAGE_PLATFORM_MT3600BE),y)
+define MT76_INSTALL_MT3600BE_MODULES
+	$(INSTALL) $(@D)/mt7996/mt7996e.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+endef
+MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_MT3600BE_MODULES
+
+define MT76_INSTALL_MT3600BE_FIRMWARE
+	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7990_eeprom.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7990_eeprom_2i5i.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7990_rom_patch.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7990_wm.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+endef
+MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_MT3600BE_FIRMWARE
 endif
 
 $(eval $(generic-package))

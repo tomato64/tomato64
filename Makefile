@@ -27,6 +27,9 @@ legacy: .configure-legacy
 mt6000: .configure-mt6000
 	make -C src/buildroot
 
+mt3600be: .configure-mt3600be
+	make -C src/buildroot
+
 rpi4: .configure-rpi4
 	make -C src/buildroot
 
@@ -62,6 +65,9 @@ legacy-menuconfig: .configure-legacy
 	make -C src/buildroot menuconfig
 
 mt6000-menuconfig: .configure-mt6000
+	make -C src/buildroot menuconfig
+
+mt3600be-menuconfig: .configure-mt3600be
 	make -C src/buildroot menuconfig
 
 rpi4-menuconfig: .configure-rpi4
@@ -101,6 +107,11 @@ distclean:
 .configure-mt6000: .download-mediatek-kernel .patch
 	make -C src/buildroot BR2_EXTERNAL=../../tomato64 mt6000_defconfig
 	@echo mt6000 > .target
+	@touch $@
+
+.configure-mt3600be: .download-mediatek-kernel .patch
+	make -C src/buildroot BR2_EXTERNAL=../../tomato64 mt3600be_defconfig
+	@echo mt3600be > .target
 	@touch $@
 
 .configure-rpi4: .patch

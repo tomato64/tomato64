@@ -2,6 +2,7 @@
 
 . /usr/sbin/nvram_ops
 . /usr/share/libubox/jshn.sh
+. /usr/bin/phy-map.sh
 
 # Script mode: "reload" or "start" (default)
 MODE="${1:-start}"
@@ -32,23 +33,25 @@ touch /etc/config/wireless
 
 json_load_file /etc/board.json
 
+# Flatten board.json into ordered logical phys (see phy-map.sh). Each line maps a
+# logical phy index to its underlying board phy, radio index and path. This is
+# the single source of truth shared with enumerate-phy.sh and wlconfig.
+emit_logical_phys > /tmp/.lphy_map
+
 phycount=0
 start_hostapd=0
 start_wpa_supplicant=0
 client_ifaces=""
 error=0
 
-count_phy() {
-        phycount=$((phycount+1))
-}
-
 print_phy_path() {
-	json_select wlan
-	json_select phy${1}
-	json_get_var var path
-	uci set "wireless.radio${1}.path=${var}"
-	json_select ..
-	json_select ..
+	local path ridx
+	path=$(awk -F'|' -v i="${1}" '$1==i{print $5}' /tmp/.lphy_map)
+	ridx=$(awk -F'|' -v i="${1}" '$1==i{print $3}' /tmp/.lphy_map)
+	uci set "wireless.radio${1}.path=${path}"
+	# Multi-radio single-wiphy parts need the radio index to pick the right radio
+	# under a shared phy; whole-phy parts ("-") omit it.
+	[ "$ridx" != "-" ] && uci set "wireless.radio${1}.radio=${ridx}"
 }
 
 print_htmode() {
@@ -241,7 +244,8 @@ manage_relayd() {
 	done
 }
 
-json_for_each_item "count_phy" "wlan"
+phycount=$(wc -l < /tmp/.lphy_map | tr -d ' ')
+[ -z "$phycount" ] && phycount=0
 
 # Validate PHY count
 if [ $phycount -eq 0 ]; then

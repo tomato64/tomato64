@@ -9,12 +9,26 @@ TOMATO64_HELPER_SCRIPTS_SITE = $(BR2_EXTERNAL_TOMATO64_PATH)/package/tomato64-he
 TOMATO64_HELPER_SCRIPTS_SITE_METHOD = local
 TOMATO64_HELPER_SCRIPTS_LICENSE = MIT
 
+# MT3600BE only: tomato64-init-stub is a static pid-1 re-exec target used
+# during sysupgrade so the squashfs mmaps in /romfs are released. Must be
+# static; see header in tomato64-init-stub.c.
+define TOMATO64_HELPER_SCRIPTS_BUILD_CMDS
+	if [ "$(BR2_PACKAGE_PLATFORM_MT3600BE)" = "y" ]; then \
+		$(TARGET_CC) $(TARGET_CFLAGS) -static -Os -s -Wall \
+			-o $(@D)/tomato64-init-stub \
+			$(@D)/tomato64-init-stub.c ; \
+	fi
+endef
+
 # Make this smarter at some point
 define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/sbin/poweroff			$(TARGET_DIR)/sbin
 	$(INSTALL) -D -m 0755 $(@D)/sbin/shutdown			$(TARGET_DIR)/sbin
 	if [ "$(BR2_PACKAGE_PLATFORM_BCM53XX)" = "y" ]; then \
 		$(INSTALL) -D -m 0755 $(@D)/sbin/upgrade_bcm53xx	$(TARGET_DIR)/sbin/upgrade; \
+	elif [ "$(BR2_PACKAGE_PLATFORM_MT3600BE)" = "y" ]; then \
+		$(INSTALL) -D -m 0755 $(@D)/sbin/upgrade_mt3600be	$(TARGET_DIR)/sbin/upgrade; \
+		$(INSTALL) -D -m 0755 $(@D)/tomato64-init-stub		$(TARGET_DIR)/sbin/tomato64-init-stub; \
 	else \
 		$(INSTALL) -D -m 0755 $(@D)/sbin/upgrade		$(TARGET_DIR)/sbin/upgrade; \
 	fi
@@ -28,6 +42,7 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/nic_count			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_mt6000		$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_mt3600be		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_bpir3		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_bpir3mini		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_rpi4		$(TARGET_DIR)/usr/bin
@@ -42,6 +57,9 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_jumbo_frame		$(TARGET_DIR)/usr/bin
 
 	# WiFi shell scripts - Still in use
+	# phy-map.sh: shared logical-PHY enumeration sourced by wlconfig, wlmotd,
+	# wl_bridge_isolate and the openwrt-wifi scripts (start_wifi.sh/enumerate-phy.sh).
+	$(INSTALL) -D -m 0644 $(@D)/usr/bin/phy-map.sh			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlconfig			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlmotd			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wl_bridge_isolate		$(TARGET_DIR)/usr/bin

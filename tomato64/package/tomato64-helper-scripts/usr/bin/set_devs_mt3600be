@@ -1,0 +1,67 @@
+#!/bin/sh
+
+#set -e
+#set -x
+
+. /usr/sbin/nvram_ops
+. /usr/sbin/net_utils
+
+# GL-MT3600BE (Mediatek mt7987a): 2 ethernet ports, NO DSA switch.
+#
+# mtk_eth_soc names the netdevs by mac@N, and OpenWrt's board.d for this
+# device uses "ucidef_set_interfaces_lan_wan eth1 eth0" (lan=$1, wan=$2):
+#   eth0 = gmac0 (mac@0, external 2.5G PHY phy@7, label-mac-device) = WAN
+#   eth1 = gmac1 (mac@1, internal 2.5G PHY phy@f)                   = LAN
+# That already matches Tomato64's convention (WAN=eth0, LAN=eth1...), so
+# NO interface swap/rename is needed - unlike the BPI-R3 Mini whose ports
+# the kernel enumerates the other way round.
+#
+# Per-port MACs are assigned in-kernel from the "Factory" nvmem partition
+# (macaddr_factory_4000 cell 0/1); we only record them in nvram and pin the
+# (identity) names via /etc/iftab.
+
+# Load kernel modules early. These MUST NOT be fatal: a WiFi/PHY driver
+# problem must not abort this script before the ethernet/nvram setup
+# (that would take down wired connectivity too).
+modprobe pwm-fan 2>/dev/null || true
+
+# WiFi: MT7990 on PCIe is handled by the mt7996e driver family (NOT mt7915e)
+modprobe mt7996e 2>/dev/null || logger -t set_devs_mt3600be "WARNING: mt7996e failed to load"
+
+# USB WiFi dongles (parity with the other Mediatek devices)
+modprobe mt7921u 2>/dev/null || true
+
+# Wait for ethernet interfaces to be ready
+if ! wait_for_interface eth0; then
+	logger -t set_devs_mt3600be "ERROR: eth0 did not appear after 10 seconds"
+fi
+
+if ! wait_for_interface eth1; then
+	logger -t set_devs_mt3600be "ERROR: eth1 did not appear after 10 seconds"
+fi
+
+if [ "$(NG set_macs)" != "1" ]; then
+
+	eth0macaddr="$(cat /sys/class/net/eth0/address | tr '[:lower:]' '[:upper:]')"
+	eth1macaddr="$(cat /sys/class/net/eth1/address | tr '[:lower:]' '[:upper:]')"
+
+	NS "eth0macaddr=$eth0macaddr"
+	NS "eth1macaddr=$eth1macaddr"
+
+	echo "eth0 mac $eth0macaddr" >> /etc/iftab
+	echo "eth1 mac $eth1macaddr" >> /etc/iftab
+
+	# eth0 is WAN
+	for i in wan_hwaddr wan_mac;
+	do
+		NS ${i}=`ifconfig eth0 | grep -o -E ..:..:..:..:..:..`
+	done
+
+	NS et0macaddr=`ifconfig eth0 | grep -o -E ..:..:..:..:..:..`
+
+	NS set_macs=1
+else
+
+	echo "eth0 mac $(NG eth0macaddr)" >> /etc/iftab
+	echo "eth1 mac $(NG eth1macaddr)" >> /etc/iftab
+fi

@@ -549,6 +549,24 @@ static void handle_reap(int sig)
 	raise(SIGALRM);
 }
 
+#ifdef TOMATO64_MT3600BE
+/* Sysupgrade re-exec hook: execve pid1 into the static stub in tmpfs to
+ * drop its /romfs mmaps so nand_upgrade_prepare_ubi can free the rootfs
+ * ubiblock. Triggered by SIGURG from /sbin/tomato64-sysupgrade. */
+static void handle_tomato64_reexec(int sig)
+{
+	static const char *path = "/tmp/tomato64-init-stub";
+	struct stat st;
+	char *new_argv[] = { (char *)path, NULL };
+	char *new_envp[] = { NULL };
+
+	if (stat(path, &st) != 0 || !S_ISREG(st.st_mode) || access(path, X_OK) != 0)
+		return;
+
+	execve(path, new_argv, new_envp);
+}
+#endif /* TOMATO64_MT3600BE */
+
 static int check_nv(const char *name, const char *value)
 {
 	const char *p;
@@ -11568,6 +11586,9 @@ static int init_nvram(void)
 #ifdef TOMATO64_MT6000
 	nvram_set("t_model_name", "GL.iNet GL-MT6000");
 #endif /* TOMATO64_MT6000 */
+#ifdef TOMATO64_MT3600BE
+	nvram_set("t_model_name", "GL.iNet GL-MT3600BE");
+#endif /* TOMATO64_MT3600BE */
 #ifdef TOMATO64_BPIR3
 	nvram_set("t_model_name", "Banana Pi BPI-R3");
 #endif /* TOMATO64_BPIR3 */
@@ -11904,59 +11925,16 @@ static void sysinit(void)
 #else
 	eval("/etc/init.d/S10mdev", "start");
 
-#ifdef TOMATO64_WIFI
-	/* Clear WiFi PHY count before hotplug2 starts detecting PHYs */
-	nvram_set("wifi_phy_count", "0");
-#endif
+#ifdef TOMATO64_MT3600BE
+	eval("touch", "/tmp/.preinit");
+	eval("mount_root");
 
-	start_hotplug2();
-
-#ifdef TOMATO64_X86_64
-	eval("mount_nvram");
-	if (d_exists("/sys/firmware/efi"))
-		nvram_set("t_boot_type", "uefi");
-	else
-		nvram_set("t_boot_type", "bios");
-#endif /* TOMATO64_X86_64 */
-#ifdef TOMATO64_RPI4
-	eval("mount_nvram");
-#endif /* TOMATO64_RPI4 */
-#ifndef TOMATO64_BCM53XX
-	/* Mount filesystem rw */
-	if (!nvram_get_int("fs_mount_ro")) {
-		eval("mount", "-o", "remount,rw", "/");
+	if (access("/sysupgrade.tgz", F_OK) == 0) {
+		fprintf(stderr, "## Restoring upgraded configuration ... ##\n");
+		eval("tar", "-xzf", "/sysupgrade.tgz", "-C", "/");
+		unlink("/sysupgrade.tgz");
 	}
-#endif /* TOMATO64_BCM53XX */
-
-#ifdef TOMATO64_X86_64
-	if ((fp = fopen("/etc/fstab", "w"))) {
-		fprintf(fp, "LABEL=opt /opt ext4 defaults 0 0\n");
-		fclose(fp);
-	}
-	eval("mount", "-a");
-#endif /* TOMATO64_X86_64 */
-
-#ifdef TOMATO64_MT6000
-	eval("set_devs_mt6000");
-#endif /* TOMATO64_MT6000 */
-#ifdef TOMATO64_BPIR3
-	eval("set_devs_bpir3");
-#endif /* TOMATO64_BPIR3 */
-#ifdef TOMATO64_BPIR3MINI
-	eval("set_devs_bpir3mini");
-#endif /* TOMATO64_BPIR3MINI */
-#ifdef TOMATO64_RPI4
-	eval("set_devs_rpi4");
-#endif /* TOMATO64_RPI4 */
-#ifdef TOMATO64_R6S
-	eval("set_devs_r6s");
-#endif /* TOMATO64_R6S */
-#ifdef TOMATO64_R5S
-	eval("set_devs_r5s");
-#endif /* TOMATO64_R5S */
-#ifdef TOMATO64_R76S
-	eval("set_devs_r76s");
-#endif /* TOMATO64_R76S */
+#endif /* TOMATO64_MT3600BE */
 #ifdef TOMATO64_BCM53XX
 	eval("touch", "/tmp/.preinit");
 	eval("mount_root");
@@ -11988,6 +11966,65 @@ static void sysinit(void)
 		else
 			eval("mtd", "fixtrx", "firmware");
 	}
+#endif /* TOMATO64_BCM53XX */
+
+#ifdef TOMATO64_WIFI
+	/* Clear WiFi PHY count before hotplug2 starts detecting PHYs */
+	nvram_set("wifi_phy_count", "0");
+#endif
+
+	start_hotplug2();
+
+#ifdef TOMATO64_X86_64
+	eval("mount_nvram");
+	if (d_exists("/sys/firmware/efi"))
+		nvram_set("t_boot_type", "uefi");
+	else
+		nvram_set("t_boot_type", "bios");
+#endif /* TOMATO64_X86_64 */
+#ifdef TOMATO64_RPI4
+	eval("mount_nvram");
+#endif /* TOMATO64_RPI4 */
+#if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
+	/* Mount filesystem rw */
+	if (!nvram_get_int("fs_mount_ro")) {
+		eval("mount", "-o", "remount,rw", "/");
+	}
+#endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
+
+#ifdef TOMATO64_X86_64
+	if ((fp = fopen("/etc/fstab", "w"))) {
+		fprintf(fp, "LABEL=opt /opt ext4 defaults 0 0\n");
+		fclose(fp);
+	}
+	eval("mount", "-a");
+#endif /* TOMATO64_X86_64 */
+
+#ifdef TOMATO64_MT6000
+	eval("set_devs_mt6000");
+#endif /* TOMATO64_MT6000 */
+#ifdef TOMATO64_BPIR3
+	eval("set_devs_bpir3");
+#endif /* TOMATO64_BPIR3 */
+#ifdef TOMATO64_BPIR3MINI
+	eval("set_devs_bpir3mini");
+#endif /* TOMATO64_BPIR3MINI */
+#ifdef TOMATO64_RPI4
+	eval("set_devs_rpi4");
+#endif /* TOMATO64_RPI4 */
+#ifdef TOMATO64_R6S
+	eval("set_devs_r6s");
+#endif /* TOMATO64_R6S */
+#ifdef TOMATO64_R5S
+	eval("set_devs_r5s");
+#endif /* TOMATO64_R5S */
+#ifdef TOMATO64_R76S
+	eval("set_devs_r76s");
+#endif /* TOMATO64_R76S */
+#ifdef TOMATO64_MT3600BE
+	eval("set_devs_mt3600be");
+#endif /* TOMATO64_MT3600BE */
+#ifdef TOMATO64_BCM53XX
 	eval("set_devs_bcm53xx");
 #endif /* TOMATO64_BCM53XX */
 	eval("set_devs");
@@ -12029,6 +12066,13 @@ static void sysinit(void)
 		signal(fatalsigs[i], handle_fatalsigs);
 	}
 	signal(SIGCHLD, handle_reap);
+
+#ifdef TOMATO64_MT3600BE
+	/* Sysupgrade re-exec hook (see handle_tomato64_reexec). SIGURG is
+	 * unused by rc and not in initsigs; SIGRTMIN would be silently
+	 * swallowed by musl (it reserves signals 32-34 internally). */
+	signal(SIGURG, handle_tomato64_reexec);
+#endif /* TOMATO64_MT3600BE */
 
 	/* ctf must be loaded prior to any other modules */
 	if (nvram_invmatch("ctf_disable", "1"))
@@ -12345,9 +12389,9 @@ int init_main(int argc, char *argv[])
 			 * last one as ssh telnet httpd samba etc can fail to load until start_wan_done
 			 */
 			start_wan();
-#ifdef TOMATO64_BCM53XX
+#if defined(TOMATO64_BCM53XX) || defined(TOMATO64_MT3600BE)
 			eval("mount_root", "done");
-#endif /* TOMATO64_BCM53XX */
+#endif /* TOMATO64_BCM53XX || TOMATO64_MT3600BE */
 
 #ifndef TOMATO64
 			if (wds_enable()) {

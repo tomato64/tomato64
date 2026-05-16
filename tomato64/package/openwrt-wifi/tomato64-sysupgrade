@@ -1,0 +1,114 @@
+#!/bin/sh
+#
+# tomato64-sysupgrade - GL-MT3600BE launcher for the OpenWrt sysupgrade flow.
+# Replaces procd's "ubus call system sysupgrade" + /sbin/upgraded: validates
+# the image, stages the /nvram backup, signals pid1 to drop its squashfs
+# mmaps, then exec's the unmodified OpenWrt stage2 -> nand_do_upgrade.
+#
+# MUST be started detached (caller uses `setsid ... &`) so stage2's
+# kill_remaining sees pid1 as our parent and skips us while killing httpd.
+#
+# $1 = OpenWrt sysupgrade image (already in tmpfs).
+# $2 = "1" -> factory reset; anything else -> keep /nvram.
+
+IMG="$1"
+RESET="${2:-0}"
+
+BOARD="glinet,gl-mt3600be"
+BOARD_DIR="sysupgrade-glinet_gl-mt3600be"
+CONF_TGZ="/tmp/sysupgrade.tgz"
+
+log() { echo "tomato64-sysupgrade: $*" > /dev/console 2>/dev/null; echo "tomato64-sysupgrade: $*"; }
+
+# Wait for the glue to exit so we are reparented to init (pid 1) before
+# anything destructive, and so httpd can finish showing the wait page.
+sleep 3
+
+if [ -z "$IMG" ] || [ ! -s "$IMG" ]; then
+	log "ERROR: missing or empty image '$IMG' - aborting, system untouched"
+	exit 1
+fi
+
+# Validate it's the right sysupgrade tar for this board (replaces fwtool
+# metadata check; trailer-tolerant unlike fwtool's read-from-EOF).
+members="$(tar tf "$IMG" 2>/dev/null)"
+for need in "$BOARD_DIR/CONTROL" "$BOARD_DIR/kernel" "$BOARD_DIR/root"; do
+	if ! echo "$members" | grep -qx "$need"; then
+		log "ERROR: '$IMG' is not a $BOARD sysupgrade image (missing $need)"
+		log "Upload tomato64-gl-mt3600be-sysupgrade.bin - aborting, system untouched"
+		exit 1
+	fi
+done
+log "validated $BOARD sysupgrade image"
+
+# board_name/model so OpenWrt's platform.sh case-match resolves correctly.
+mkdir -p /tmp/sysinfo
+[ -s /tmp/sysinfo/board_name ] || echo "$BOARD" > /tmp/sysinfo/board_name
+[ -s /tmp/sysinfo/model ]      || echo "GL.iNet GL-MT3600BE" > /tmp/sysinfo/model
+
+# Back up /nvram (the live overlay-merged view). Survives the ramfs pivot
+# because supivot does mount-move on /tmp. Consumed by our nand_restore_config.
+rm -f "$CONF_TGZ"
+if [ "$RESET" = "1" ]; then
+	log "factory reset requested - settings will NOT be preserved"
+elif [ -d /nvram ]; then
+	tar -czf "$CONF_TGZ" -C / nvram 2>/dev/null
+	if [ -s "$CONF_TGZ" ]; then
+		log "config backup staged ($(wc -c < "$CONF_TGZ") bytes)"
+	else
+		rm -f "$CONF_TGZ"
+		log "WARNING: could not back up /nvram - settings will reset"
+	fi
+fi
+
+# Disable rc's check_services() watchdog so kill_remaining doesn't loop on
+# respawned daemons (hotplug2/dnsmasq/crond). Equivalent of OpenWrt's
+# `ubus call service delete` loop. Must happen AFTER the backup above so
+# the flag doesn't end up in the restored /nvram.
+nvram set g_upgrade=1
+log "supervisor respawn disabled (g_upgrade=1)"
+
+# Re-exec pid1 (rc) into a static stub in tmpfs to drop its /romfs mmaps -
+# until those go away, the squashfs superblock keeps /dev/ubiblock0_1
+# claimed and nand_upgrade_prepare_ubi fails. Equivalent of OpenWrt
+# procd's "chroot prefix; execvp /sbin/upgraded". Static is load-bearing:
+# a dynamic stub re-mmaps /romfs/lib/libc.so via PT_INTERP.
+STUB_SRC=/sbin/tomato64-init-stub
+STUB_DST=/tmp/tomato64-init-stub
+if [ ! -x "$STUB_SRC" ]; then
+	log "ERROR: $STUB_SRC missing - cannot release pid1 squashfs mmap; aborting"
+	rm -f "$IMG" "$CONF_TGZ"
+	exit 1
+fi
+cp "$STUB_SRC" "$STUB_DST" && chmod 0755 "$STUB_DST"
+log "signalling pid1 (rc) to re-exec into $STUB_DST"
+# SIGURG (=23) is unused by rc and not in initsigs; SIGRTMIN would be
+# silently swallowed by musl (it reserves signals 32-34 internally).
+kill -23 1 2>/dev/null
+i=0
+while [ "$i" -lt 10 ]; do
+	[ "$(readlink /proc/1/exe 2>/dev/null)" = "$STUB_DST" ] && break
+	sleep 1
+	i=$((i + 1))
+done
+if [ "$(readlink /proc/1/exe 2>/dev/null)" = "$STUB_DST" ]; then
+	log "pid1 re-exec confirmed - squashfs reference dropped"
+else
+	log "ERROR: pid1 did not re-exec (/proc/1/exe still '$(readlink /proc/1/exe 2>/dev/null)'); aborting"
+	rm -f "$IMG" "$CONF_TGZ"
+	exit 1
+fi
+
+# Pin the UBI layout. Matches nand.sh defaults; set explicitly for clarity.
+export CI_UBIPART="ubi"
+export CI_KERNPART="kernel"
+export CI_ROOTPART="rootfs"
+
+# Hand off to the stock OpenWrt stage2 -> do_stage2 -> nand_do_upgrade ->
+# our nand_restore_config override -> reboot. We exec so the surviving
+# process IS stage2 (ppid = init).
+log "handing off to OpenWrt stage2 (RAM pivot + nand flash)"
+exec /lib/upgrade/stage2 "$IMG" /lib/upgrade/do_stage2
+
+log "ERROR: failed to exec /lib/upgrade/stage2"
+exit 1

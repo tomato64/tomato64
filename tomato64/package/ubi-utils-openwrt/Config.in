@@ -1,0 +1,8 @@
+config BR2_PACKAGE_UBI_UTILS_OPENWRT
+	bool "ubi-utils-openwrt"
+	select BR2_PACKAGE_UTIL_LINUX
+	select BR2_PACKAGE_UTIL_LINUX_LIBUUID
+	help
+	  OpenWrt's UBI userspace utilities (mtd-utils ubi-utils, version
+	  pinned to the release OpenWrt ships) for KERNEL_IN_UBI sysupgrade
+	  on SPI-NAND devices.

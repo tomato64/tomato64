@@ -22,6 +22,10 @@ ifeq ($(BR2_PACKAGE_PLATFORM_MT6000),y)
 export PLATFORM_MT6000=y
 endif
 
+ifeq ($(BR2_PACKAGE_PLATFORM_MT3600BE),y)
+export PLATFORM_MT3600BE=y
+endif
+
 ifeq ($(BR2_PACKAGE_PLATFORM_BPIR3),y)
 export PLATFORM_BPIR3=y
 endif

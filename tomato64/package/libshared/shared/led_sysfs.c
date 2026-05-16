@@ -86,6 +86,18 @@ static const char * const managed_leds[] = {
 	NULL
 };
 
+#elif defined(TOMATO64_MT3600BE)
+/*
+ * GL.iNet GL-MT3600BE LEDs:
+ * - white:status = Status indicator (GPIO 49)
+ * - blue:status  = Status indicator (GPIO 48)
+ */
+static const char * const managed_leds[] = {
+	"white:status",
+	"blue:status",
+	NULL
+};
+
 #elif defined(TOMATO64_BPIR3)
 /*
  * Banana Pi BPI-R3 LEDs:

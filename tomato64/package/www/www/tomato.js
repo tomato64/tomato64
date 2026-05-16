@@ -3313,6 +3313,14 @@ var PortNames = {
 				5: '5'
 			};
 		}
+		else if (model === 'GL.iNet GL-MT3600BE') {
+			this._hardwareLabels = {
+				0: 'WAN',
+				1: 'LAN'
+			};
+			/* VLAN labels same as hardware labels for this device */
+			this._vlanLabels = this._hardwareLabels;
+		}
 		else if (model === 'Banana Pi BPI-R3') {
 			this._hardwareLabels = {
 				0: 'SFP1',

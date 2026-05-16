@@ -53,6 +53,18 @@ define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
 endef
 endif
 
+# MediaTek MT7987 built-in 2.5G Ethernet PHY firmware for GL-MT3600BE.
+# Required for the internal i2p5g PHY (gmac1) to initialise - without it the
+# LAN port will not link. Filenames match OpenWrt
+# package/firmware/linux-firmware/mediatek.mk (mt7987-2p5g-phy-firmware).
+ifeq ($(BR2_PACKAGE_PLATFORM_MT3600BE),y)
+define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
+	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7987
+	cp $(@D)/mediatek/mt7987/i2p5ge-phy-DSPBitTb.bin $(TARGET_DIR)/lib/firmware/mediatek/mt7987
+	cp $(@D)/mediatek/mt7987/i2p5ge-phy-pmb.bin      $(TARGET_DIR)/lib/firmware/mediatek/mt7987
+endef
+endif
+
 # MediaTek Bluetooth + Intel WiFi firmware for x86_64
 ifeq ($(BR2_PACKAGE_PLATFORM_X86_64),y)
 define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS

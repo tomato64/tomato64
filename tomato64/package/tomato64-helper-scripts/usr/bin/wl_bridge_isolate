@@ -8,11 +8,10 @@
 
 json_load_file /etc/board.json
 
-phycount=0
-
-count_phy() {
-        phycount=$((phycount+1))
-}
+# Logical phy count (flattens single-wiphy multi-radio parts) is cached in nvram
+# by wlconfig; use it so phyN numbering matches the rest of the WiFi stack.
+phycount=$(NG wifi_phy_count)
+[ -z "$phycount" ] && phycount=0
 
 print_ifname() {
 
@@ -25,8 +24,6 @@ print_ifname() {
 }
 
 first_entry=0
-
-json_for_each_item "count_phy" "wlan"
 
 # For each wireless device
 for i in $(seq 0 1 $(($phycount - 1)))

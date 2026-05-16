@@ -151,7 +151,7 @@ function refreshCountry(device) {
 		cmdresult = 'ERROR: ' + x;
 		displayCountry(device);
 	}
-	var c = 'iwinfo phy'+device+' countrylist';
+	var c = 'iwinfo '+wireless['phy'+device+'_phyname']+' countrylist';
 	cmd.post('shell.cgi', 'action=execute&command=' + escapeCGI(c.replace(/\r/g, '')));
 }
 
@@ -202,7 +202,7 @@ function refreshPower(device) {
 		cmdresult = 'ERROR: ' + x;
 		displayPower(device);
 	}
-	var c = 'iwinfo phy'+device+' txpowerlist';
+	var c = 'iwinfo '+wireless['phy'+device+'_phyname']+' txpowerlist';
 	cmd.post('shell.cgi', 'action=execute&command=' + escapeCGI(c.replace(/\r/g, '')));
 }
 
@@ -262,7 +262,7 @@ function refreshChannels(device) {
 		cmdresult = 'ERROR: ' + x;
 		displayChannels(device);
 	}
-	var c = 'iwinfo phy'+device+' freqlist';
+	var c = 'iwinfo '+wireless['phy'+device+'_phyname']+' freqlist';
 	cmd.post('shell.cgi', 'action=execute&command=' + escapeCGI(c.replace(/\r/g, '')));
 }
 
@@ -281,8 +281,10 @@ function refreshModes(device) {
 		m.push(['legacy', 'Legacy']);
 		if (eval('wireless.'+t+'_2G_ht') == 1) m.push(['n', 'N']);
 		if (eval('wireless.'+t+'_2G_he') == 1) m.push(['ax', 'AX']);
+		if (eval('wireless.'+t+'_2G_eht') == 1) m.push(['be', 'BE']);
 	}
 	if (selected == '5g') {
+		m.push(['legacy', 'Legacy']);
 		if (eval('wireless.'+t+'_5G_ht') == 1) m.push(['n', 'N']);
 		if (eval('wireless.'+t+'_5G_vht') == 1) m.push(['ac', 'AC']);
 		if (eval('wireless.'+t+'_5G_he') == 1) m.push(['ax', 'AX']);
