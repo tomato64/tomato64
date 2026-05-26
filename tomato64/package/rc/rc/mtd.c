@@ -286,7 +286,8 @@ int mtd_write_main_old(int argc, char *argv[])
 	FILE *f;
 	unsigned char *buf = NULL, *p, *bounce_buf = NULL;
 	const char *error;
-	long wlen, n;
+	long wlen;
+	size_t n;
 	unsigned long filelen = 0, unit_len;
 	struct sysinfo si;
 	uint32 ofs;
@@ -482,7 +483,7 @@ int mtd_write_main(int argc, char *argv[])
 	char *buf = NULL;
 	const char *error;
 	uint32 total;
-	uint32 n;
+	size_t  n;
 	struct sysinfo si;
 	uint32 ofs;
 	char c;
@@ -582,7 +583,7 @@ int mtd_write_main(int argc, char *argv[])
 
 		/* read (formatted) Netgear CHK header (now that we know how long it is) */
 		// rewind(f); /* disabled, not working for some reason? Adjust structure above to account for this */
-		if (safe_fread(&netgear_hdr, 1, n-sizeof(sig)-sizeof(n), f) != (int) (n-sizeof(sig)-sizeof(n))) {
+		if (safe_fread(&netgear_hdr, 1, n-sizeof(sig)-sizeof(n), f) != (n-sizeof(sig)-sizeof(n))) {
 			goto ERROR;
 		}
 		else
@@ -594,7 +595,7 @@ int mtd_write_main(int argc, char *argv[])
 			error = "Not enough memory";
 			goto ERROR;
 		}
-		if (safe_fread(buf, 1, n, f) != (int) n) {
+		if (safe_fread(buf, 1, n, f) != n) {
 			goto ERROR;
 		}
 		free(buf);
@@ -735,7 +736,7 @@ int mtd_write_main(int argc, char *argv[])
 
 	for (ei.start = 0; ei.start < total; ei.start += ei.length) {
 		n = MIN(ei.length, trx.len) - ofs;
-		if (safe_fread(buf + ofs, 1, n, f) != (int) n) {
+		if (safe_fread(buf + ofs, 1, n, f) != n) {
 			error = "Error reading file";
 			break;
 		}

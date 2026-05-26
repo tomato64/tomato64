@@ -99,7 +99,7 @@ extern void killall_and_waitfor(const char *name, int loop, int killtime);
  * @param	stream	file stream
  * @return	number of items successfully read
  */
-extern int safe_fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+extern size_t safe_fread(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 /*
  * fwrite() with automatic retry on syscall interrupt
@@ -109,7 +109,7 @@ extern int safe_fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
  * @param	stream	file stream
  * @return	number of items successfully written
  */
-extern int safe_fwrite(const void *ptr, size_t size, int nmemb, FILE *stream);
+extern size_t safe_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 /*
  * Convert Ethernet address string representation to binary data

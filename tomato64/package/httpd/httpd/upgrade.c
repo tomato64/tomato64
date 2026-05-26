@@ -90,7 +90,8 @@ void wi_upgrade(char *url, int len, char *boundary)
 	char fifo[] = "/tmp/flashXXXXXX";
 	uint8 buf[1024];
 	pid_t pid = -1;
-	int fd = -1, m, retries = 100;
+	int fd = -1, retries = 100;
+	size_t m;
 	int status;
 	unsigned int reset;
 	const char *error = "Error reading file";
