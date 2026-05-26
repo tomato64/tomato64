@@ -46,15 +46,11 @@ static void update(int num, int *dirty, int force)
 
 	logmsg(LOG_DEBUG, "*** %s: IN num=[%d] dirty=[%d] force=[%d]", __FUNCTION__, num, *dirty, force);
 
-	memset(ddnsx, 0, sizeof(ddnsx));
 	snprintf(ddnsx, sizeof(ddnsx), "ddnsx%d", num);
-
-	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "%s_ip", ddnsx);
 
 	wan = 0;
 	for (n = 1; n <= MWAN_MAX; n++) {
-		memset(v, 0, sizeof(v));
 		snprintf(v, sizeof(v), (n == 1 ? "wan" : "wan%d"), n);
 		if (nvram_match(s, v))
 			wan = 1;
@@ -65,22 +61,18 @@ static void update(int num, int *dirty, int force)
 	else
 		strlcpy(prefix, "wan", sizeof(prefix)); /* default */
 
-	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "ddns%d", num);
 	eval("cru", "d", s);
 	logmsg(LOG_DEBUG, "*** %s: cru d %s", __FUNCTION__, s);
 
-	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "ddnsf%d", num);
 	eval("cru", "d", s);
 	logmsg(LOG_DEBUG, "*** %s: cru d %s", __FUNCTION__, s);
 
-	memset(ddnsx_path, 0, sizeof(ddnsx_path));
 	snprintf(ddnsx_path, sizeof(ddnsx_path), "/var/lib/mdu/%s", ddnsx);
 	strlcpy(config, nvram_safe_get(ddnsx), sizeof(config));
 
 	mkdir("/var/lib/mdu", 0700);
-	memset(msg_fn, 0, sizeof(msg_fn));
 	snprintf(msg_fn, sizeof(msg_fn), "%s.msg", ddnsx_path);
 
 	if ((vstrsep(config, "<", &serv, &user, &host, &wild, &mx, &bmx, &cust) < 7) || (*serv == 0)) {
@@ -99,18 +91,15 @@ static void update(int num, int *dirty, int force)
 		return;
 	}
 
-	memset(cache_nv, 0, sizeof(cache_nv));
 	snprintf(cache_nv, sizeof(cache_nv), "%s_cache", ddnsx);
 	if (force) {
 		logmsg(LOG_DEBUG, "*** %s: force=1", __FUNCTION__);
 		nvram_set(cache_nv, "");
 	}
 
-	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "ddns%d", num);
 	simple_lock(s);
 
-	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "%s_ip", ddnsx);
 	strlcpy(ip, nvram_safe_get(s), sizeof(ip));
 
@@ -127,12 +116,10 @@ static void update(int num, int *dirty, int force)
 	}
 
 	/* copy content of nvram cache to a file cache */
-	memset(cache_fn, 0, sizeof(cache_fn));
 	snprintf(cache_fn, sizeof(cache_fn), "%s.cache", ddnsx_path);
 	f_write_string(cache_fn, nvram_safe_get(cache_nv), 0, 0);
 
 	/* if nvram cache is empty, the 'Force next update' option is probably checked - reset also cache file .extip */
-	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "%s.extip", ddnsx_path);
 	if (strcmp(nvram_safe_get(cache_nv), "") == 0)
 		f_write(s, NULL, 0, 0, 0);
@@ -142,7 +129,6 @@ static void update(int num, int *dirty, int force)
 		f_write(msg_fn, NULL, 0, 0, 0);
 	}
 
-	memset(conf_fn, 0, sizeof(conf_fn));
 	snprintf(conf_fn, sizeof(conf_fn), "%s.conf", ddnsx_path);
 	if ((f = fopen(conf_fn, "w")) == NULL)
 		goto CLEANUP;
@@ -183,7 +169,6 @@ static void update(int num, int *dirty, int force)
 	exitcode = eval("mdu", "--service", serv, "--conf", conf_fn);
 	logmsg(LOG_DEBUG, "*** mdu >>>>>>> %s: service: %s config: %s; exitcode: %d", __FUNCTION__, serv, conf_fn, exitcode);
 
-	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "%s_errors", ddnsx);
 	if ((exitcode == 1) || (exitcode == 2)) {
 		if (force)
@@ -198,7 +183,6 @@ static void update(int num, int *dirty, int force)
 				goto CLEANUP;
 			}
 		}
-		memset(v, 0, sizeof(v));
 		snprintf(v, sizeof(v), "%d", errors);
 		nvram_set(s, v);
 		goto SCHED;
@@ -219,14 +203,12 @@ static void update(int num, int *dirty, int force)
 	if (!nvram_match(cache_nv, s)) { /* nvram cache is different than this in file */
 		nvram_set(cache_nv, s);
 
-		memset(v, 0, sizeof(v));
 		snprintf(v, sizeof(v), "%s_save", ddnsx);
 		if (nvram_get_int(v) && (strstr(serv, "dyndns") == 0))
 			*dirty = 1;
 	}
 
 	n = 28;
-	memset(v, 0, sizeof(v));
 	snprintf(v, sizeof(v), "%s_refresh", ddnsx);
 	if ((p = nvram_safe_get(v)) && (*p))
 		n = atoi(p);
@@ -246,9 +228,7 @@ static void update(int num, int *dirty, int force)
 
 		tm = localtime(&t);
 
-		memset(s, 0, sizeof(s));
 		snprintf(s, sizeof(s), "ddnsf%d", num);
-		memset(v, 0, sizeof(v));
 		snprintf(v, sizeof(v), "%d %d %d %d * ddns-update %d force", tm->tm_min, tm->tm_hour, tm->tm_mday, tm->tm_mon + 1, num);
 
 		logmsg(LOG_DEBUG, "*** %s: cru a %s %s", __FUNCTION__, s, v);
@@ -260,14 +240,12 @@ static void update(int num, int *dirty, int force)
 SCHED:
 		logmsg(LOG_DEBUG, "*** %s: add scheduler [external checker] ...", __FUNCTION__);
 
-		memset(s, 0, sizeof(s));
 		snprintf(s, sizeof(s), "%s_cktime", ddnsx);
 		n = ((nvram_get_int(s) ? nvram_get_int(s) : 10) + (errors * 2));
 		if ((exitcode == 1) || (exitcode == 2)) {
 			if (exitcode == 2) /* special case [update_dua()]: server down */
 				n = 30;
 
-			memset(s, 0, sizeof(s));
 			snprintf(s, sizeof(s), "#RETRY %d %d", n, errors); /* should be localized in basic-ddns.asp */
 			f_write_string(msg_fn, s, FW_APPEND, 0);
 			logmsg(LOG_DEBUG, "*** %s: msg='retry n=%d errors=%d'", __FUNCTION__, n, errors);
@@ -276,9 +254,7 @@ SCHED:
 		t = time(0) + (n * 60); /* minutes */
 		tm = localtime(&t);
 
-		memset(s, 0, sizeof(s));
 		snprintf(s, sizeof(s), "ddns%d", num);
-		memset(v, 0, sizeof(v));
 		snprintf(v, sizeof(v), "%d * * * * ddns-update %d", tm->tm_min, num);
 
 		logmsg(LOG_DEBUG, "*** %s: cru a %s %s", __FUNCTION__, s, v);
@@ -287,7 +263,6 @@ SCHED:
 	}
 
 CLEANUP:
-	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "ddns%d", num);
 	simple_unlock(s);
 
@@ -333,7 +308,8 @@ void start_ddns(void)
 
 	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
 
-	system("cru l | grep ddns-update | wc -l >" CRU_TMP_FN);
+	eval("cru", "l", "|", "grep", "ddns-update", "|", "wc", "-l", ">", CRU_TMP_FN);
+
 	memset(tmp, 0, sizeof(tmp));
 	f_read(CRU_TMP_FN, tmp, sizeof(tmp));
 
