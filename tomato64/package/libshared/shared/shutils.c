@@ -30,23 +30,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <errno.h>
-#ifndef TOMATO64
-#include <error.h>
-#endif /* TOMATO64 */
 #include <fcntl.h>
-#include <limits.h>
 #include <unistd.h>
 #include <signal.h>
-#include <string.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/wait.h>
-#include <termios.h>
-#include <sys/ioctl.h>
 #include <syslog.h>
 #include <wlioctl.h>
+#ifdef TOMATO64
+#include <limits.h>
+#endif /* TOMATO64 */
 #if 0
+ #include <sys/stat.h>
+ #include <termios.h>
+ #include <sys/ioctl.h>
+ #include <limits.h>
+ #include <error.h>
  #include <sys/time.h>
  #include <assert.h>
  #include <sys/sysinfo.h>
@@ -54,9 +53,8 @@
  #include <typedefs.h>
 #endif /* 0 */
 
-#include <bcmnvram.h>
-
 #include <shutils.h>
+#include <bcmnvram.h>
 #ifdef TCONFIG_BCMBSD
  #include <dirent.h>
  #include <ctype.h>
@@ -70,18 +68,23 @@
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OS
 #define LOGMSG_NVDEBUG	"shutils_debug"
 
+/*
+ * FreshTomato targets are small. 256 is usually enough and avoids a larger
+ * sysconf()/getdtablesize() dependency. increase this if the platform can
+ * keep higher-numbered descriptors open
+ */
+#define EVAL_CLOSE_MAX	256
+
 
 /*
  * Concatenates NULL-terminated list of arguments into a single
- * commmand and executes it
+ * command and executes it.
  *
- * @param  argv     argument list
- * @param  path     NULL, ">output", or ">>output"
- * @param  timeout  seconds to wait before timing out or 0 for no timeout
- * @param  ppid     NULL to wait for child termination or pointer to pid
- * @return          return value of executed command or errno
- *
- * Ref: https://www.open-std.org/jtc1/sc22/WG15/docs/rr/9945-2/9945-2-28.html
+ * @param argv     argument list; argv[0] must be non-NULL and non-empty
+ * @param path     NULL, ">output", ">>output", or a legacy plain output path
+ * @param timeout  seconds before SIGALRM in child, or 0 for no timeout
+ * @param ppid     NULL to wait for child termination, or pointer to child pid
+ * @return         child exit code, 128 + signal number, or errno-style failure
  */
 int _eval(char *const argv[], const char *path, int timeout, int *ppid)
 {
@@ -89,140 +92,340 @@ int _eval(char *const argv[], const char *path, int timeout, int *ppid)
 	sighandler_t chld = SIG_IGN;
 	pid_t pid, w;
 	int status = 0;
-	int fd;
-	int flags;
+	int fd = -1;
+	int flags = 0;
 	int sig;
 	int n;
+	int saved_errno;
 	const char *p;
+	const char *redir;
 	char s[256];
 
+	/*
+	 * Make the async-call result deterministic for the caller.
+	 * On success the parent will overwrite this with the real child pid.
+	 */
+	if (ppid)
+		*ppid = -1;
+
+	/*
+	 * execvp() requires argv and argv[0].
+	 * Returning EINVAL here is cheaper and clearer than forking a child
+	 * which would immediately fail.
+	 */
+	if (!argv || !argv[0] || !argv[0][0])
+		return EINVAL;
+
 	if (!ppid) {
-		/* block SIGCHLD */
-		sigemptyset(&set);
-		sigaddset(&set, SIGCHLD);
-		sigprocmask(SIG_BLOCK, &set, &sigmask);
-		/*  without this we cannot rely on waitpid() to tell what happened to our children */
+		/*
+		 * In synchronous mode we wait for our child.
+		 *
+		 * Block SIGCHLD and temporarily restore the default SIGCHLD
+		 * handler. Without this, an inherited SIG_IGN or custom handler
+		 * could reap the child before waitpid() sees it.
+		 */
+		if ((sigemptyset(&set) < 0) ||
+		    (sigaddset(&set, SIGCHLD) < 0) ||
+		    (sigprocmask(SIG_BLOCK, &set, &sigmask) < 0)) {
+			status = errno;
+			logerr(__FUNCTION__, __LINE__, "sigprocmask");
+			return status;
+		}
+
 		chld = signal(SIGCHLD, SIG_DFL);
+		if (chld == SIG_ERR) {
+			status = errno;
+			logerr(__FUNCTION__, __LINE__, "signal");
+			sigprocmask(SIG_SETMASK, &sigmask, NULL);
+			return status;
+		}
 	}
 
 	pid = fork();
 	if (pid == -1) {
-		logerr(__FUNCTION__, __LINE__, "fork");
 		status = errno;
+		logerr(__FUNCTION__, __LINE__, "fork");
 		goto EXIT;
 	}
+
 	if (pid != 0) {
-		/* parent */
+		/*
+		 * Parent process.
+		 *
+		 * In asynchronous mode we only return the child pid and do not
+		 * wait. Signal state was not modified in this mode.
+		 */
 		if (ppid) {
-			*ppid = pid;
+			*ppid = (int)pid;
 			return 0;
 		}
-		do {
-			if ((w = waitpid(pid, &status, 0)) == -1) {
+
+		/*
+		 * Wait until the direct child either exits normally or is
+		 * killed by a signal. Retry waitpid() on EINTR because unrelated
+		 * signals may interrupt the wait.
+		 */
+		for (;;) {
+			w = waitpid(pid, &status, 0);
+			if (w == pid)
+				break;
+
+			if (w == -1) {
+				if (errno == EINTR)
+					continue;
+
 				status = errno;
 				logerr(__FUNCTION__, __LINE__, "waitpid");
 				goto EXIT;
 			}
-		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
+		}
 
-		if (WIFEXITED(status)) status = WEXITSTATUS(status);
+		/*
+		 * Return a shell-like status:
+		 *   normal exit      -> exit code
+		 *   killed by signal -> 128 + signal number
+		 */
+		if (WIFEXITED(status))
+			status = WEXITSTATUS(status);
+		else if (WIFSIGNALED(status))
+			status = 128 + WTERMSIG(status);
+		else
+			status = ECHILD;
+
 EXIT:
 		if (!ppid) {
-			/* restore signals */
+			/*
+			 * Restore the original signal mask and SIGCHLD handler
+			 * in the parent.
+			 */
 			sigprocmask(SIG_SETMASK, &sigmask, NULL);
 			signal(SIGCHLD, chld);
-			/* reap zombies */
+
+			/*
+			 * Preserve the original behaviour of this function:
+			 * reap any other pending zombies after our child exits.
+			 */
 			chld_reap(0);
 		}
+
 		return status;
 	}
 
-	/* child */
+	/*
+	 * Child process.
+	 *
+	 * From here on we must avoid returning to the caller. The child either
+	 * successfully execs argv[0], or exits with an errno-style value.
+	 */
 
-	/* reset signal handlers */
-	for (sig = 0; sig < (_NSIG - 1); sig++)
+	/*
+	 * Reset inherited signal handlers.
+	 *
+	 * Signal number 0 is not a real signal handler target, so start from 1.
+	 * _NSIG is the upper bound, so valid signal numbers are below _NSIG.
+	 * SIGKILL and SIGSTOP cannot be caught, ignored or reset.
+	 */
+	for (sig = 1; sig < _NSIG; ++sig) {
+		if ((sig == SIGKILL) || (sig == SIGSTOP))
+			continue;
+
 		signal(sig, SIG_DFL);
+	}
 
-	/* unblock signals if called from signal handler */
+	/*
+	 * Unblock all signals in the child.
+	 * This is important if _eval() was called while signals were masked.
+	 */
 	sigemptyset(&set);
 	sigprocmask(SIG_SETMASK, &set, NULL);
 
+	/*
+	 * Detach the child from the caller's session where possible.
+	 * Failure is not fatal here; execvp() can still proceed.
+	 */
 	setsid();
 
+	/*
+	 * Ensure stdin, stdout and stderr are valid before execvp().
+	 *
+	 * Without this, the executed program could accidentally open a file,
+	 * socket or device as fd 0, 1 or 2 and then treat it as stdio.
+	 */
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
-	open("/dev/null", O_RDONLY);
-	open("/dev/null", O_WRONLY);
-	open("/dev/null", O_WRONLY);
+
+	fd = open("/dev/null", O_RDWR);
+	if (fd >= 0) {
+		dup2(fd, STDIN_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		dup2(fd, STDERR_FILENO);
+
+		if (fd > STDERR_FILENO)
+			close(fd);
+	}
 
 	if (nvram_match("debug_logeval", "1")) {
 		pid = getpid();
 
-		cprintf("_eval +%ld pid=%d ", get_uptime(), pid);
+		/*
+		 * Log the command line for debugging.
+		 * This keeps the original FreshTomato behaviour.
+		 */
+		cprintf("_eval +%ld pid=%ld ", get_uptime(), (long)pid);
 		for (n = 0; argv[n]; ++n)
 			cprintf("%s ", argv[n]);
 
 		cprintf("\n");
 
-		if ((fd = open("/dev/console", O_RDWR | O_NONBLOCK)) >= 0) {
+		/*
+		 * Prefer /dev/console for debug stdio.
+		 * O_NONBLOCK avoids a possible block on device open.
+		 */
+		fd = open("/dev/console", O_RDWR | O_NONBLOCK);
+		if (fd >= 0) {
 			dup2(fd, STDIN_FILENO);
 			dup2(fd, STDOUT_FILENO);
 			dup2(fd, STDERR_FILENO);
+
+			if (fd > STDERR_FILENO)
+				close(fd);
 		}
 		else {
-			sprintf(s, "/tmp/eval.%d", pid);
-			if ((fd = open(s, O_CREAT | O_RDWR | O_NONBLOCK, 0600)) >= 0) {
-				dup2(fd, STDOUT_FILENO);
-				dup2(fd, STDERR_FILENO);
+			/*
+			 * Fallback to a per-process debug file.
+			 *
+			 * The filename is predictable, so use O_EXCL to avoid
+			 * reusing an existing file and O_NOFOLLOW to avoid
+			 * following a symlink.
+			 */
+			n = snprintf(s, sizeof(s), "/tmp/eval.%ld", (long)pid);
+			if ((n >= 0) && (n < (int)sizeof(s))) {
+				fd = open(s, O_WRONLY | O_CREAT | O_EXCL | O_NONBLOCK | O_NOFOLLOW, 0600);
+				if (fd >= 0) {
+					dup2(fd, STDOUT_FILENO);
+					dup2(fd, STDERR_FILENO);
+
+					if (fd > STDERR_FILENO)
+						close(fd);
+				}
 			}
 		}
-		if (fd > STDERR_FILENO)
-			close(fd);
 	}
 
-	/* Redirect stdout & stderr to <path> */
+	/*
+	 * Redirect stdout and stderr to path, if requested.
+	 *
+	 * Supported forms:
+	 *   >file   overwrite file
+	 *   >>file  append to file
+	 *   file    legacy compatibility; treated as overwrite
+	 */
 	if (path) {
+		redir = path;
 		flags = O_WRONLY | O_CREAT | O_NONBLOCK;
-		if (*path == '>') {
-			++path;
-			if (*path == '>') {
-				++path;
-				/* >>path, append */
+
+		if (*redir == '>') {
+			++redir;
+
+			if (*redir == '>') {
+				++redir;
+				/* >>path: append */
 				flags |= O_APPEND;
 			}
 			else {
-				/* >path, overwrite */
+				/* >path: overwrite */
 				flags |= O_TRUNC;
 			}
 		}
-		
-		if ((fd = open(path, flags, 0644)) < 0) {
-			logerr(__FUNCTION__, __LINE__, path);
+		else {
+			/*
+			 * Preserve support for callers that pass a plain path.
+			 * Use O_TRUNC so old longer content cannot remain at
+			 * the end of a shorter new output.
+			 */
+			flags |= O_TRUNC;
+		}
+
+		if (!*redir) {
+			errno = EINVAL;
+			logerr(__FUNCTION__, __LINE__, "redirect path");
 		}
 		else {
-			dup2(fd, STDOUT_FILENO);
-			dup2(fd, STDERR_FILENO);
-			close(fd);
+			fd = open(redir, flags, 0644);
+			if (fd < 0) {
+				logerr(__FUNCTION__, __LINE__, redir);
+			}
+			else {
+				dup2(fd, STDOUT_FILENO);
+				dup2(fd, STDERR_FILENO);
+
+				if (fd > STDERR_FILENO)
+					close(fd);
+			}
 		}
 	}
 
-	/* execute command */
-
+	/*
+	 * Build PATH for execvp().
+	 *
+	 * env_path can extend the default firmware search path. If the final
+	 * string would not fit into the fixed buffer, fall back to the known
+	 * default instead of using a truncated PATH.
+	 */
 	p = nvram_safe_get("env_path");
-	if (p && *p)
-		snprintf(s, sizeof(s), "%s:/sbin:/bin:/usr/sbin:/usr/bin:/opt/sbin:/opt/bin", p);
-	else
+	if (p && *p) {
+		n = snprintf(s, sizeof(s), "%s:/sbin:/bin:/usr/sbin:/usr/bin:/opt/sbin:/opt/bin", p);
+		if ((n < 0) || (n >= (int)sizeof(s))) {
+			snprintf(s, sizeof(s), "/sbin:/bin:/usr/sbin:/usr/bin:/opt/sbin:/opt/bin");
+		}
+	}
+	else {
 		snprintf(s, sizeof(s), "/sbin:/bin:/usr/sbin:/usr/bin:/opt/sbin:/opt/bin");
+	}
 
-	setenv("PATH", s, 1);
+	/*
+	 * If PATH cannot be set, do not continue with an inherited or unknown
+	 * PATH. Exit with the real errno from setenv().
+	 */
+	if (setenv("PATH", s, 1) < 0) {
+		saved_errno = errno;
+		logerr(__FUNCTION__, __LINE__, "setenv PATH");
+		_exit(saved_errno);
+	}
 
-	alarm(timeout);
+	/*
+	 * Avoid leaking parent file descriptors into the executed command.
+	 * This is intentionally done after all local open()/dup2() operations.
+	 */
+	for (fd = STDERR_FILENO + 1; fd < EVAL_CLOSE_MAX; ++fd)
+		close(fd);
+
+	/*
+	 * Set or clear the child alarm.
+	 *
+	 * The alarm survives execvp(), so the executed program receives
+	 * SIGALRM if it runs longer than timeout seconds.
+	 */
+	if (timeout > 0)
+		alarm(timeout);
+	else
+		alarm(0);
+
+	/*
+	 * Replace the child process image with the requested command.
+	 */
 	execvp(argv[0], argv);
+
+	/*
+	 * execvp() returns only on error.
+	 * Save errno before calling logerr(), because logging may change errno.
+	 */
+	saved_errno = errno;
 
 	logerr(__FUNCTION__, __LINE__, argv[0]);
 
-	_exit(errno);
+	_exit(saved_errno);
 }
 
 /*
