@@ -247,7 +247,7 @@ extern void gen_urandom(char *buf1, unsigned char *buf2, size_t buf_sz, const un
 #define EFH_PRINT		0x00000080 /* output partition list to the web response */
 
 extern struct mntent *findmntents(char *file, int swp, int (*func)(struct mntent *mnt, uint flags), uint flags);
-extern char *find_label_or_uuid(char *dev_name, char *label, char *uuid);
+extern char *find_label_or_uuid(char *dev_name, char *label, size_t label_sz, char *uuid, size_t uuid_sz);
 extern void add_remove_usbhost(char *host, int add);
 typedef int (*host_exec)(char *dev_name, int host_num, char *dsc_name, char *pt_name, uint flags);
 extern int exec_for_host(int host, int obsolete, uint flags, host_exec func);

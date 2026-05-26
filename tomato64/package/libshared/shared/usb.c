@@ -97,6 +97,7 @@ int is_no_partition(const char *discname)
 		while (fgets(line, sizeof(line), procpt)) {
 			if (sscanf(line, " %d %d %d %[^\n ]", &ma, &mi, &sz, ptname) != 4)
 				continue;
+
 			if (strstr(ptname, discname))
 				count++;
 		}
@@ -202,7 +203,7 @@ int exec_for_host(int host, int obsolete, uint flags, host_exec func)
 	int host_no;		/* SCSI controller/host */
 	struct dirent *dp;
 	FILE *prt_fp;
-	int siz;
+	size_t siz;
 	char line[256];
 	char hostbuf[16];
 	int result = 0;
@@ -214,20 +215,24 @@ int exec_for_host(int host, int obsolete, uint flags, host_exec func)
 	 * /sys/bus/scsi/devices/<host_no>:x:x:x/block:[sda|sdb|...]
 	 */
 	if ((usb_dev_disc = opendir("/sys/bus/scsi/devices"))) {
-		sprintf(hostbuf, "%d:", host);
+		snprintf(hostbuf, sizeof(hostbuf), "%d:", host);
 
 		while ((dp = readdir(usb_dev_disc))) {
 			if (host >= 0 && strncmp(dp->d_name, hostbuf, strlen(hostbuf)) != 0)
 				continue;
+
 			if (sscanf(dp->d_name, "%d:%*s:%*s:%*s", &host_no) != 1)
 				continue;
-			sprintf(bfr, "/sys/bus/scsi/devices/%s", dp->d_name);
+
+			snprintf(bfr, sizeof(bfr), "/sys/bus/scsi/devices/%s", dp->d_name);
 			if ((dir_host = opendir(bfr))) {
 				while ((dp = readdir(dir_host))) {
 					if (strncmp(dp->d_name, "block:", 6) != 0)
 						continue;
-					strncpy(dsname, dp->d_name + 6, sizeof(dsname));
-					siz = strlen(dsname);
+
+					siz = strlcpy(dsname, dp->d_name + 6, sizeof(dsname));
+					if (siz >= sizeof(dsname))
+						continue;
 
 					flags |= EFH_1ST_DISC;
 					if (func && (prt_fp = fopen("/proc/partitions", "r"))) {
@@ -236,7 +241,8 @@ int exec_for_host(int host, int obsolete, uint flags, host_exec func)
 								if (strncmp(ptname, dsname, siz) == 0) {
 									if ((strcmp(ptname, dsname) == 0) && !is_no_partition(dsname))
 										continue;
-									sprintf(line, "/dev/%s", ptname);
+
+									snprintf(line, sizeof(line), "/dev/%s", ptname);
 									result = (*func)(line, host_no, dsname, ptname, flags) || result;
 									flags &= ~(EFH_1ST_HOST | EFH_1ST_DISC);
 								}
@@ -279,6 +285,7 @@ static inline int is_same_device(char *fsname, dev_t file_rdev, dev_t file_dev, 
 			if (file_dev && ((file_dev == st_buf.st_dev) &&
 				(file_ino == st_buf.st_ino)))
 				return 1;
+
 			/* Check for [swap]file being on the device. */
 			if (file_dev == 0 && file_ino == 0 && file_rdev == st_buf.st_dev)
 				return 1;
@@ -312,11 +319,10 @@ struct mntent *findmntents(char *file, int swp, int (*func)(struct mntent *mnt, 
 		if (strcmp(mnt->mnt_fsname, "rootfs") == 0)
 			continue;
 
-		if (strcmp(file, mnt->mnt_fsname) == 0 ||
-		    strcmp(file, mnt->mnt_dir) == 0 ||
-		    is_same_device(mnt->mnt_fsname, file_rdev , file_dev, file_ino)) {
+		if (strcmp(file, mnt->mnt_fsname) == 0 || strcmp(file, mnt->mnt_dir) == 0 || is_same_device(mnt->mnt_fsname, file_rdev , file_dev, file_ino)) {
 			if (func == NULL)
 				break;
+
 			(*func)(mnt, flags);
 		}
 	}
@@ -374,7 +380,7 @@ extern int volume_id_probe_ext();
 extern int volume_id_probe_vfat();
 extern int volume_id_probe_ntfs();
 #ifdef HFS
-extern int volume_id_probe_hfs_hfsplus();
+ extern int volume_id_probe_hfs_hfsplus();
 #endif
 extern int volume_id_probe_exfat();
 #ifdef TOMATO64
@@ -413,7 +419,7 @@ int check_magic(char *buf, char *magic)
 /* Put the label in *label and uuid in *uuid.
  * Return fstype if determined.
  */
-char *find_label_or_uuid(char *dev_name, char *label, char *uuid)
+char *find_label_or_uuid(char *dev_name, char *label, size_t label_sz, char *uuid, size_t uuid_sz)
 {
 	struct volume_id id;
 	char *fstype = NULL;
@@ -435,9 +441,9 @@ char *find_label_or_uuid(char *dev_name, char *label, char *uuid)
 	/* detect ext2/3/4 */
 	else if (!id.error && volume_id_probe_ext(&id) == 0) {
 		if (id.sbbuf[0x438] == 0x53 && id.sbbuf[0x439] == 0xEF) {
-			if(check_magic((char *) &id.sbbuf[0x45c], "ext3_chk"))
+			if (check_magic((char *)&id.sbbuf[0x45c], "ext3_chk"))
 				fstype = "ext3";
-			else if(check_magic((char *) &id.sbbuf[0x45c], "ext4_chk"))
+			else if (check_magic((char *)&id.sbbuf[0x45c], "ext4_chk"))
 				fstype = "ext4";
 			else
 				fstype = "ext2";
@@ -449,11 +455,12 @@ char *find_label_or_uuid(char *dev_name, char *label, char *uuid)
 #ifdef HFS
 	/* detect hfs */
 	else if (!id.error && volume_id_probe_hfs_hfsplus(&id) == 0) {
-		if ((!memcmp(id.sbbuf+1032, "HFSJ", 4)) || (!memcmp(id.sbbuf+1032, "H+", 2)) || (!memcmp(id.sbbuf+1024, "H+", 2)) || (!memcmp(id.sbbuf+1024, "HX", 2))) {
+		if ((!memcmp(id.sbbuf + 1032, "HFSJ", 4)) || (!memcmp(id.sbbuf + 1032, "H+", 2)) ||
+		    (!memcmp(id.sbbuf + 1024, "H+", 2)) || (!memcmp(id.sbbuf + 1024, "HX", 2))) {
 			if (id.sbbuf[1025] == 0x58)
-				fstype = "hfsplus";	/* hfs+jx */
+				fstype = "hfsplus"; /* hfs+jx */
 			else
-				fstype = "hfsplus";	/* hfs+j */
+				fstype = "hfsplus"; /* hfs+j */
 		}
 		else
 			fstype = "hfs";
@@ -473,10 +480,10 @@ char *find_label_or_uuid(char *dev_name, char *label, char *uuid)
 	volume_id_free_buffer(&id);
 
 	if (label && (*id.label != 0))
-		strcpy(label, id.label);
+		strlcpy(label, id.label, sizeof(label));
 
 	if (uuid && (*id.uuid != 0))
-		strcpy(uuid, id.uuid);
+		strlcpy(uuid, id.uuid, sizeof(uuid));
 
 	close(id.fd);
 

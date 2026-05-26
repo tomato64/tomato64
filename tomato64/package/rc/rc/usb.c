@@ -1098,7 +1098,7 @@ int mount_partition(char *dev_name, int host_num, char *dsc_name, char *pt_name,
 	static char *swp_argv[] = { "swapon", "-a", NULL };
 	struct mntent *mnt;
 
-	if ((type = find_label_or_uuid(dev_name, the_label, uuid)) == NULL)
+	if ((type = find_label_or_uuid(dev_name, the_label, sizeof(the_label), uuid, sizeof(uuid))) == NULL)
 		return 0;
 
 	if (f_exists("/etc/fstab")) {

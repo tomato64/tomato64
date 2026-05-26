@@ -57,7 +57,7 @@ static int is_partition_mounted(char *dev_name, int host_num, char *dsc_name, ch
 	uint64_t size, fsize;
 	int is_mounted = 0;
 
-	type = find_label_or_uuid(dev_name, the_label, NULL);
+	type = find_label_or_uuid(dev_name, the_label, sizeof(the_label), NULL, 0);
 	if (*the_label == 0)
 		strlcpy(the_label, pt_name, sizeof(the_label));
 
