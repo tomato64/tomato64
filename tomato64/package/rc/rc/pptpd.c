@@ -363,7 +363,7 @@ void stop_pptpd(void)
 	run_del_firewall_script(PPTPD_FW_SCRIPT, PPTPD_FW_DEL_SCRIPT);
 
 	/* clean-up */
-	system("/bin/rm -rf "PPTPD_DIR);
+	eval("rm", "-rf", PPTPD_DIR);
 	simple_unlock("firewall");
 }
 
