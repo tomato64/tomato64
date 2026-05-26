@@ -1092,48 +1092,54 @@ int add_to_list(const char *name, char *list, int listsize)
 	return 0;
 }
 
-/* Utility function to remove duplicate entries in a space separated list
+/*
+ * Remove duplicate words from a space-separated list in place.
+ *
+ * The function walks through the input list and builds a temporary output
+ * list containing only the first occurrence of each word. Duplicate entries
+ * are skipped. The resulting list is then copied back into the original
+ * buffer.
+ *
+ * @param  inlist       Space-separated list to deduplicate in place
+ * @param  inlist_size  Max size the list can occupy
+ * @return              Pointer to the modified input list on success, NULL on error
  */
-
-char *
-remove_dups(char *inlist, int inlist_size)
+char *remove_dups(char *inlist, int inlist_size)
 {
-	char name[256], *next = NULL;
-	char *outlist;
+	char name[256];
+	char *next, *outlist;
+	int ret;
 
-	if (!inlist_size)
+	if (inlist == NULL || inlist_size <= 0)
 		return NULL;
 
-	if (!inlist)
+	if (strnlen(inlist, (size_t)inlist_size) == (size_t)inlist_size)
 		return NULL;
 
-	outlist = (char *) malloc(inlist_size);
+	outlist = (char *)malloc((size_t)inlist_size);
+	if (outlist == NULL)
+		return NULL;
 
-	if (!outlist) return NULL;
+	memset(outlist, 0, (size_t)inlist_size);
 
-	memset(outlist, 0, inlist_size);
+	next = NULL;
 
-	foreach(name, inlist, next)
-	{
-		if (!find_in_list(outlist, name))
-		{
-			if (strlen(outlist) == 0)
-			{
-				snprintf(outlist, inlist_size, "%s", name);
-			}
-			else
-			{
-				strncat(outlist, " ", inlist_size - strlen(outlist));
-				strncat(outlist, name, inlist_size - strlen(outlist));
-			}
+	foreach(name, inlist, next) {
+		if (name[0] == '\0')
+			continue;
+
+		ret = add_to_list(name, outlist, inlist_size);
+		if (ret != 0) {
+			free(outlist);
+			return NULL;
 		}
 	}
 
-	strncpy(inlist, outlist, inlist_size);
+	strlcpy(inlist, outlist, (size_t)inlist_size);
 
 	free(outlist);
-	return inlist;
 
+	return inlist;
 }
 
 char *find_smallest_in_list(char *haystack) {
