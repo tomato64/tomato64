@@ -24,6 +24,7 @@
 const char ovpnc_dir[]   = "/tmp/ovpnclientconfig";
 const char openssl_dir[] = "/tmp/openssl";
 
+#ifdef TCONFIG_KEYGEN
 /*
  * validate domain name contains only safe characters
  * prevents command injection when wan_domain is interpolated into shell commands
@@ -49,7 +50,6 @@ static int is_safe_domain_arg(const char *s)
 	return 1;
 }
 
-#ifdef TCONFIG_KEYGEN
 static void put_to_file(const char *filePath, const char *content)
 {
 	FILE *fkey;
