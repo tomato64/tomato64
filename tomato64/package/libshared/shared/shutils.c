@@ -1289,57 +1289,70 @@ int nvifname_to_osifname(const char *nvifname, char *osifname_buf, int osifname_
 	return 0;
 }
 
-
-/* osifname_to_nvifname()
- * Convert the OS interface name to the name we use internally(NVRAM, GUI, etc.)
- * This is the Linux version of this function
-
- * @param osifname pointer to osifname to be converted
- * @param nvifname_buf storage for the converted ifname
- * @param nvifname_buf_len length of storage for nvifname_buf
+/*
+ * Convert an OS interface name to the internal/NVRAM interface name.
+ *
+ * Some interface names are already internal-facing and are copied directly.
+ * Otherwise, the function searches known primary and multi-instance wireless
+ * NVRAM interface mappings and returns the matching wlX or wlX.Y name.
+ *
+ * @param  osifname          OS interface name to convert
+ * @param  nvifname_buf      Output buffer for the internal/NVRAM name
+ * @param  nvifname_buf_len  Size of nvifname_buf
+ * @return                   0 on success, -1 on error
  */
-int
-osifname_to_nvifname(const char *osifname, char *nvifname_buf,
-                     int nvifname_buf_len)
+int osifname_to_nvifname(const char *osifname, char *nvifname_buf, int nvifname_buf_len)
 {
 	char varname[NVRAM_MAX_PARAM_LEN];
-	int pri, sec;
+	size_t buflen;
+	int pri, sec, ret;
 
-	/* Bail if we get a NULL or empty string */
-
-	if ((!osifname) || (!*osifname) || (!nvifname_buf))
-	{
+	if (osifname == NULL || *osifname == '\0' ||
+	    nvifname_buf == NULL || nvifname_buf_len <= 0)
 		return -1;
-	}
 
-	memset(nvifname_buf, 0, nvifname_buf_len);
+	buflen = (size_t)nvifname_buf_len;
+	nvifname_buf[0] = '\0';
 
 	if (strstr(osifname, "wl") || strstr(osifname, "br") ||
-	     strstr(osifname, "wds")) {
-		strncpy(nvifname_buf, osifname, nvifname_buf_len);
+	    strstr(osifname, "wds")) {
+		if (strlcpy(nvifname_buf, osifname, buflen) >= buflen)
+			return -1;
 		return 0;
 	}
 
 	/* look for interface name on the primary interfaces first */
 	for (pri = 0; pri < MAX_NVPARSE; pri++) {
-		snprintf(varname, sizeof(varname),
-					"wl%d_ifname", pri);
+		ret = snprintf(varname, sizeof(varname), "wl%d_ifname", pri);
+		if (ret < 0 || (size_t)ret >= sizeof(varname))
+			return -1;
+
 		if (nvram_match(varname, (char *)osifname)) {
-					snprintf(nvifname_buf, nvifname_buf_len, "wl%d", pri);
-					return 0;
-				}
+			ret = snprintf(nvifname_buf, buflen, "wl%d", pri);
+			if (ret < 0 || (size_t)ret >= buflen)
+				return -1;
+
+			return 0;
+		}
 	}
 
 	/* look for interface name on the multi-instance interfaces */
-	for (pri = 0; pri < MAX_NVPARSE; pri++)
+	for (pri = 0; pri < MAX_NVPARSE; pri++) {
 		for (sec = 0; sec < MAX_NVPARSE; sec++) {
-			snprintf(varname, sizeof(varname),
-					"wl%d.%d_ifname", pri, sec);
+			ret = snprintf(varname, sizeof(varname),
+			               "wl%d.%d_ifname", pri, sec);
+			if (ret < 0 || (size_t)ret >= sizeof(varname))
+				return -1;
+
 			if (nvram_match(varname, (char *)osifname)) {
-				snprintf(nvifname_buf, nvifname_buf_len, "wl%d.%d", pri, sec);
+				ret = snprintf(nvifname_buf, buflen, "wl%d.%d", pri, sec);
+				if (ret < 0 || (size_t)ret >= buflen)
+					return -1;
+
 				return 0;
 			}
 		}
+	}
 
 	return -1;
 }
