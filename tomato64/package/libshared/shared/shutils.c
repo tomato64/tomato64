@@ -851,33 +851,32 @@ get_bridged_interfaces(char *bridge_name)
  * Search a string backwards for a set of characters
  * This is the reverse version of strspn()
  *
- * @param	s	string to search backwards
- * @param	accept	set of chars for which to search
- * @return	number of characters in the trailing segment of s
- *		which consist only of characters from accept.
+ * @param  s       string to search backwards
+ * @param  accept  set of chars for which to search
+ * @return         number of characters in the trailing segment of s
+ *                 which consist only of characters from accept
  */
-static size_t
-sh_strrspn(const char *s, const char *accept)
+static size_t sh_strrspn(const char *s, const char *accept)
 {
 	const char *p;
-	size_t accept_len = strlen(accept);
-	int i;
+	size_t accept_len, count;
 
-
-	if (s[0] == '\0')
+	if (s == NULL || accept == NULL)
 		return 0;
 
+	accept_len = strlen(accept);
 	p = s + strlen(s);
-	i = 0;
+	count = 0;
 
-	do {
-		p--;
-		if (memchr(accept, *p, accept_len) == NULL)
+	while (p != s) {
+		--p;
+		if (memchr(accept, (unsigned char)*p, accept_len) == NULL)
 			break;
-		i++;
-	} while (p != s);
 
-	return i;
+		++count;
+	}
+
+	return count;
 }
 
 /*
