@@ -2027,7 +2027,7 @@ span.pptpsvg {
 /* SVG */
 #svg text,
 .svg-text {
-	font: 11px monospace;
+	font: 10px monospace;
 	fill: #000;
 }
 
