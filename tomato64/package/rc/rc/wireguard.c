@@ -68,6 +68,8 @@ typedef struct {
 	char epilog_buf[512];
 } wg_script_ctx_t;
 
+typedef void (*wg_route_cb_t)(const int unit, const char *iface, const char *route);
+
 static wg_script_ctx_t wg_script_ctx[WG_INTERFACE_MAX];
 unsigned int restart_dnsmasq = 0;
 unsigned int restart_fw = 0;
@@ -1249,66 +1251,176 @@ static void wg_route_bridges(const int unit)
 	}
 }
 
+static int wg_route_has_dev(const char *route, const char *iface)
+{
+	const char *p;
+	size_t len;
+
+	if (!route || !iface || !*iface)
+		return 0;
+
+	len = strlen(iface);
+
+	p = route;
+
+	if (strncmp(p, "dev ", 4) == 0) {
+		p += 4;
+
+		if ((strncmp(p, iface, len) == 0) && ((p[len] == '\0') || (p[len] == ' ') || (p[len] == '\t')))
+			return 1;
+	}
+
+	while ((p = strstr(p, " dev ")) != NULL) {
+		p += 5;
+
+		if ((strncmp(p, iface, len) == 0) && ((p[len] == '\0') || (p[len] == ' ') || (p[len] == '\t')))
+			return 1;
+	}
+
+	return 0;
+}
+
+static void wg_process_routes(const int unit, FILE *fp, const char *iface, int strict, wg_route_cb_t cb)
+{
+	char line[BUF_SIZE];
+	char route[BUF_SIZE];
+	char *p;
+	size_t len, left;
+	int ret;
+	int have_route = 0;
+	int route_match = 0;
+
+	route[0] = '\0';
+
+	while (fgets(line, BUF_SIZE, fp)) {
+		line[strcspn(line, "\n")] = '\0';
+
+		if (!line[0])
+			continue;
+
+		p = line;
+
+		/*
+		 * Continuation line of a multipath route, e.g.:
+		 *
+		 *     nexthop via 192.168.1.254 dev eth3 weight 100
+		 *
+		 * It belongs to the previous route and must not be handled
+		 * as an independent route.
+		 */
+		if ((*p == ' ') || (*p == '\t')) {
+			while ((*p == ' ') || (*p == '\t'))
+				p++;
+
+			if (!have_route)
+				continue;
+
+			/*
+			 * In strict mode keep only nexthops that belong to iface.
+			 * This protects us even if "ip route show ... dev iface"
+			 * returns a multipath route containing more than one dev.
+			 */
+			if (strict && !wg_route_has_dev(p, iface))
+				continue;
+
+			len = strlen(route);
+			left = BUF_SIZE - len;
+
+			ret = snprintf(route + len, left, " %s", p);
+			if ((ret < 0) || ((size_t)ret >= left)) {
+				wg_script_add(unit, WG_SCRIPT_START, "logger -p ERR -t \"$WG_TAG\" \"route too long while creating wireguard routing table for %s\" || true", iface);
+
+				route[0] = '\0';
+				have_route = 0;
+				route_match = 0;
+				continue;
+			}
+
+			if (!strict || wg_route_has_dev(p, iface))
+				route_match = 1;
+
+			continue;
+		}
+
+		/* New route starts, so flush previous complete route first. */
+		if (have_route && (!strict || route_match))
+			cb(unit, iface, route);
+
+		ret = snprintf(route, BUF_SIZE, "%s", line);
+		if ((ret < 0) || ((size_t)ret >= sizeof(route))) {
+			wg_script_add(unit, WG_SCRIPT_START, "logger -p ERR -t \"$WG_TAG\" \"route too long while creating wireguard routing table for %s\" || true", iface);
+
+			route[0] = '\0';
+			have_route = 0;
+			route_match = 0;
+			continue;
+		}
+
+		have_route = 1;
+		route_match = strict ? wg_route_has_dev(route, iface) : 1;
+	}
+
+	if (have_route && (!strict || route_match))
+		cb(unit, iface, route);
+}
+
+static void wg_add_strict_route(const int unit, const char *iface, const char *route)
+{
+	wg_script_ctx_t *ctx = &wg_script_ctx[unit];
+
+	/*
+	 * Do NOT append "dev iface" here.
+	 * The route already contains dev/nexthop dev information.
+	 */
+	wg_script_add(unit, WG_SCRIPT_START, "run_cmd ip route replace table %s %s", ctx->fwmark, route);
+}
+
+static void wg_add_policy_route(const int unit, const char *iface, const char *route)
+{
+	wg_script_ctx_t *ctx = &wg_script_ctx[unit];
+	unsigned int i, n_ifaces;
+
+	/* skip default and other unneeded routes */
+	if ((strncmp(route, "default ", 8) == 0) || (strncmp(route, "0.0.0.0/1 ", 10) == 0) || (strncmp(route, "128.0.0.0/1 ", 12) == 0) || (strstr(route, "proto mwwatchdog")))
+		return;
+
+	/* skip vpn ifaces */
+	n_ifaces = ASIZE(vpn_ifaces);
+
+	for (i = 0; i < n_ifaces; i++) {
+		if (vpn_ifaces[i] == NULL)
+			break;
+
+		if (strstr(route, vpn_ifaces[i]))
+			return;
+	}
+
+	wg_script_add(unit, WG_SCRIPT_START, "run_cmd ip route replace table %s %s", ctx->fwmark, route);
+}
+
 static void wg_init_table(const int unit, char *iface)
 {
 	wg_script_ctx_t *ctx = &wg_script_ctx[unit];
 	FILE *fp;
-	char route[BUF_SIZE];
 	char cmd[BUF_SIZE_64];
-	unsigned int i, n_ifaces, skip;
-	char *nl;
 	int routing = atoi(getNVRAMVar("wg%d_rgwr", unit));
 
-	wg_script_add(unit, WG_SCRIPT_START, "logger -p INFO -t \"$WG_TAG\" \"creating wireguard (wg%d) routing table %s (mode %d)\" || true", unit, ctx->fwmark, routing);
+	wg_script_add(unit, WG_SCRIPT_START,
+		"logger -p INFO -t \"$WG_TAG\" \"creating wireguard (wg%d) routing table %s (mode %d)\" || true", unit, ctx->fwmark, routing);
 
 	/* strict - copy routes from main routing table only for this interface */
 	if (routing == VPN_RGW_POLICY_STRICT) {
 		snprintf(cmd, BUF_SIZE_64, "ip route show table main dev %s", iface);
 
 		if ((fp = popen(cmd, "r")) != NULL) {
-			while (fgets(route, BUF_SIZE, fp)) {
-				route[strcspn(route, "\n")] = '\0';
-
-				/* START (we don't need it for STOP) */
-				wg_script_add(unit, WG_SCRIPT_START, "run_cmd ip route replace table %s %s dev %s", ctx->fwmark, route, iface);
-			}
+			wg_process_routes(unit, fp, iface, 1, wg_add_strict_route);
 			pclose(fp);
 		}
 	}
-	/* standard mode - copy routes from main routing table (exclude vpns and all default gateways) */
+	/* standard mode - copy routes from main routing table except vpns/defaults */
 	else if (routing == VPN_RGW_POLICY) {
-		if ((fp = popen("ip route show table main", "r"))) {
-			n_ifaces = ASIZE(vpn_ifaces);
-
-			while (fgets(route, BUF_SIZE, fp)) {
-				skip = 0;
-				nl = strchr(route, '\n');
-
-				if (nl)
-					*nl = '\0';
-
-				/* skip default and other uneeded routes */
-				if ((strncmp(route, "default ", 8) == 0) || (strncmp(route, "0.0.0.0/1 ", 10) == 0) ||
-				    (strncmp(route, "128.0.0.0/1 ", 12) == 0) || (strstr(route, "proto mwwatchdog")))
-					continue;
-
-				/* skip vpn ifaces */
-				for (i = 0; i < n_ifaces; i++) {
-					if (vpn_ifaces[i] == NULL)
-						break;
-
-					if (strstr(route, vpn_ifaces[i])) {
-						skip = 1;
-						break;
-					}
-				}
-
-				if (skip)
-					continue;
-
-				/* START (we don't need it for STOP) */
-				wg_script_add(unit, WG_SCRIPT_START, "run_cmd ip route replace table %s %s", ctx->fwmark, route);
-			}
+		if ((fp = popen("ip route show table main", "r")) != NULL) {
+			wg_process_routes(unit, fp, iface, 0, wg_add_policy_route);
 			pclose(fp);
 		}
 	}
