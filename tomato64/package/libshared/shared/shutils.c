@@ -1724,39 +1724,31 @@ wl_ether_etoa(const struct ether_addr *n)
 #endif
 
 /* Find partition with defined name and return partition number as an integer */
-int getMTD(char *name)
+int getMTD(const char *name)
 {
-	char buf[32];
-	int device = -1;
-	char dev[32];
-	char size[32];
-	char esize[32];
-	char n[32];
-	char line[128];
+	char line[128], dev[32], size[32], esize[32], part_name[64];
+	int mtdnum, device = -1;
 	FILE *fp;
 
-	snprintf(buf, sizeof(buf)-1, "\"%s\"", name);
-	fp = fopen("/proc/mtd", "rb");
+	if (!name)
+		return -1;
 
-	if (!fp)
-		return device;
+	if (!(fp = fopen("/proc/mtd", "r")))
+		return -1;
 
-	while (!feof(fp)) {
-		fgets(line, sizeof(line)-1, fp);
+	while (fgets(line, sizeof(line), fp)) {
+		if (sscanf(line, "%31s %31s %31s \"%63[^\"]\"", dev, size, esize, part_name) != 4)
+			continue;
 
-		if (sscanf(line, "%s %s %s %s", dev, size, esize, n) < 4)
-			break;
-		if (!strcmp(n, buf)) {
-			if (dev[4] == ':') {
-				device = dev[3] - '0';
-			} else {
-				device = 10 + (dev[4] - '0');
-			}
+		if (strcmp(part_name, name) != 0)
+			continue;
 
+		if (sscanf(dev, "mtd%d:", &mtdnum) == 1) {
+			device = mtdnum;
 			break;
 		}
 	}
-
 	fclose(fp);
+
 	return device;
 }
