@@ -678,14 +678,16 @@ void cprintf(const char *format, ...)
 #else
 	if (nvram_match("debug_cprintf", "1")) {
 #endif
-		if((nfd = open("/dev/console", O_WRONLY | O_NONBLOCK)) > 0){
-			if((f = fdopen(nfd, "w")) != NULL){
+		if ((nfd = open("/dev/console", O_WRONLY | O_NONBLOCK)) >= 0) {
+			if ((f = fdopen(nfd, "w")) != NULL) {
 				va_start(args, format);
 				vfprintf(f, format, args);
 				va_end(args);
 				fclose(f);
 			}
-			close(nfd);
+			else {
+				close(nfd);
+			}
 		}
 	}
 
