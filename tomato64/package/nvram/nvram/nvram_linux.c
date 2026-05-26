@@ -162,7 +162,7 @@ _nvram_set(const char *name, const char *value)
 {
 	size_t count = strlen(name) + 1;
 	char tmp[100], *buf = tmp;
-	int ret;
+	unsigned int ret;
 
 	if ((ret = nvram_init(NULL)))
 		return ret;
