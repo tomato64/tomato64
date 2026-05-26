@@ -60,6 +60,7 @@ extern void asp_nvstat(int argc, char **argv);
 extern void asp_jsdefaults(int argc, char **argv);
 
 /* misc.c */
+extern int is_ascii_alnum(unsigned char c);
 extern char *js_string(const char *s);
 extern char *html_string(const char *s);
 extern char *unix_string(const char *s);

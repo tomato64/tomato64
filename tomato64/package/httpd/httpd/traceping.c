@@ -25,7 +25,7 @@ static int check_addr(const char *addr, int max)
 	p = addr;
 	while (*p) {
 		c = *p;
-		if ((!isalnum(c)) && (c != '.') && (c != '-') && (c != ':'))
+		if ((!is_ascii_alnum(c)) && (c != '.') && (c != '-') && (c != ':'))
 			return 0; /* give IPv6 address a chance */
 		++p;
 	}
