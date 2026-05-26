@@ -193,48 +193,6 @@ static inline char * strcat_r(const char *s1, const char *s2, char *buf)
 	     (word)[strcspn((word), " ")] = '\0', \
 	     next = strchr(next, ' '))
 
-/* Copy each token in wordlist delimited by ascii_58 into word */
-#define foreach_58(word, wordlist, next) \
-		for (next = &wordlist[strspn(wordlist, ":")], \
-				strncpy(word, next, sizeof(word)), \
-				word[strcspn(word, ":")] = '\0', \
-				word[sizeof(word) - 1] = '\0', \
-				next = strchr(next, ':'); \
-				strlen(word); \
-				next = next ? &next[strspn(next, ":")] : "", \
-				strncpy(word, next, sizeof(word)), \
-				word[strcspn(word, ":")] = '\0', \
-				word[sizeof(word) - 1] = '\0', \
-				next = strchr(next, ':'))
-
-/* Copy each token in wordlist delimited by ascii_60 into word */
-#define foreach_60(word, wordlist, next) \
-	for (next = &wordlist[strspn(wordlist, "<")], \
-	     strncpy(word, next, sizeof(word)), \
-	     word[strcspn(word, "<")] = '\0', \
-	     word[sizeof(word) - 1] = '\0', \
-	     next = strchr(next, '<'); \
-	     strlen(word); \
-	     next = next ? &next[strspn(next, "<")] : "", \
-	     strncpy(word, next, sizeof(word)), \
-	     word[strcspn(word, "<")] = '\0', \
-	     word[sizeof(word) - 1] = '\0', \
-	     next = strchr(next, '<'))
-
-/* Copy each token in wordlist delimited by ascii_62 into word */
-#define foreach_62(word, wordlist, next) \
-	for (next = &wordlist[strspn(wordlist, ">")], \
-	     strncpy(word, next, sizeof(word)), \
-	     word[strcspn(word, ">")] = '\0', \
-	     word[sizeof(word) - 1] = '\0', \
-	     next = strchr(next, '>'); \
-	     strlen(word); \
-	     next = next ? &next[strspn(next, ">")] : "", \
-	     strncpy(word, next, sizeof(word)), \
-	     word[strcspn(word, ">")] = '\0', \
-	     word[sizeof(word) - 1] = '\0', \
-	     next = strchr(next, '>'))
-
 /* Return NUL instead of NULL if undefined */
 #define safe_getenv(s) (getenv(s) ? : "")
 
