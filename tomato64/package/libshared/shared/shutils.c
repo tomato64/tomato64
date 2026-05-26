@@ -976,36 +976,34 @@ int get_ifname_unit(const char *ifname, int *unit, int *subunit)
 /* In the space-separated/null-terminated list(haystack), try to
  * locate the string "needle"
  */
-char *
-find_in_list(const char *haystack, const char *needle)
+char *find_in_list(const char *haystack, const char *needle)
 {
-	const char *ptr = haystack;
-	int needle_len = 0;
-	int haystack_len = 0;
-	int len = 0;
+	const char *ptr;
+	size_t needle_len, len;
 
 	if (!haystack || !needle || !*haystack || !*needle)
 		return NULL;
 
 	needle_len = strlen(needle);
-	haystack_len = strlen(haystack);
+	ptr = haystack;
 
-	while (*ptr != 0 && ptr < &haystack[haystack_len])
-	{
+	while (*ptr) {
 		/* consume leading spaces */
 		ptr += strspn(ptr, " ");
+		if (!*ptr)
+			break;
 
 		/* what's the length of the next word */
 		len = strcspn(ptr, " ");
 
-		if ((needle_len == len) && (!strncmp(needle, ptr, len)))
-			return (char*) ptr;
+		if (needle_len == len && strncmp(needle, ptr, len) == 0)
+			return (char *)ptr;
 
 		ptr += len;
 	}
+
 	return NULL;
 }
-
 
 /**
  *	remove_from_list
