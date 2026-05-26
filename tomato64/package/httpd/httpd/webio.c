@@ -138,53 +138,83 @@ int _web_printf(wofilter_t wof, const char *format, ...)
 
 int web_write(const char *buffer, int len)
 {
-	int n = len;
+	size_t n;
+	size_t r;
+
+	/* nothing to write; also protects the cast to size_t below */
+	if (len <= 0)
+		return 0;
+
+	n = (size_t)len;
 
 	while (n > 0) {
-		size_t r = fwrite(buffer, 1, n, connfp);
+		/*
+		 * clear errno before fwrite(), so a stale errno value from an
+		 * earlier call is not mistaken for the cause of this result
+		 */
+		errno = 0;
+
+		r = fwrite(buffer, 1, n, connfp);
 
 		if (r > 0) {
+			/* partial writes are valid; continue until all bytes are written */
 			buffer += r;
 			n -= r;
 			continue;
 		}
 
-		/* r == 0: either EINTR or a real error. ferror is sticky,
-		 * so clear it on EINTR before retrying.
+		/*
+		 * fwrite() returns 0 on failure here. If the operation was
+		 * interrupted by a signal, clear the stream error flag and retry
 		 */
 		if (ferror(connfp) && errno == EINTR) {
 			clearerr(connfp);
 			continue;
 		}
 
+		/* real write error, or an unexpected zero-byte write */
 		return -1;
 	}
 
+	/* return the total number of bytes requested */
 	return len;
 }
 
 int web_read(void *buffer, int len)
 {
-	int r;
+	size_t r;
 
+	/* nothing to read; also protects the cast to size_t below */
 	if (len <= 0)
 		return 0;
 
 	for (;;) {
-		r = fread(buffer, 1, len, connfp);
+		/*
+		 * clear errno before fread(), so a stale errno value from an
+		 * earlier call is not mistaken for the cause of this result
+		 */
+		errno = 0;
+
+		r = fread(buffer, 1, (size_t)len, connfp);
 
 		if (r > 0)
-			return r;
+			return (int)r;
 
-		if (r == 0) {
-			if (feof(connfp))
-				return 0; /* EOF */
+		/* EOF is a clean connection close / end of input */
+		if (feof(connfp))
+			return 0;
 
-			if (errno == EINTR)
-				continue;
-
-			return -1; /* real error */
+		/*
+		 * if the read was interrupted by a signal, clear the stream
+		 * error flag and retry the same read
+		 */
+		if (ferror(connfp) && errno == EINTR) {
+			clearerr(connfp);
+			continue;
 		}
+
+		/* real read error, or an unexpected zero-byte read without EOF */
+		return -1;
 	}
 }
 
