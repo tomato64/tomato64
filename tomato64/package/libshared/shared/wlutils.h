@@ -15,11 +15,13 @@
 #ifndef _wlutils_h_
 #define _wlutils_h_
 
-#include <shared.h>
-
 #include <typedefs.h>
-#include <proto/ethernet.h>
 #include <wlioctl.h>
+#include <shared.h>
+#ifdef TCONFIG_BCMARM
+ #include <proto/ethernet.h>
+#endif
+
 
 /*
  * Pass a wlioctl request to the specified interface.
