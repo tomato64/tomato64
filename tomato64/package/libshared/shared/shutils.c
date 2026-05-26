@@ -512,44 +512,67 @@ size_t safe_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 }
 
 /*
- * Returns the process ID.
+ * Return the process ID for a process started with the specified pathname.
  *
- * @param	name	pathname used to start the process.  Do not include the
- *                      arguments.
- * @return	pid
+ * The function scans /proc, reads each process cmdline, and compares the
+ * first command-line entry with the requested name. Command-line arguments
+ * are ignored.
+ *
+ * @param  name  Pathname used to start the process, without arguments
+ * @return       Process ID on success, -1 on error or if not found
  */
-pid_t
-get_pid_by_name(char *name)
+pid_t get_pid_by_name(const char *name)
 {
-	pid_t           pid = -1;
-	DIR             *dir;
-	struct dirent   *next;
+	DIR *dir;
+	struct dirent *next;
+	pid_t pid;
+	size_t n;
 
-	if ((dir = opendir("/proc")) == NULL) {
+	if (name == NULL || *name == '\0')
+		return -1;
+
+	dir = opendir("/proc");
+	if (dir == NULL) {
 		logerr(__FUNCTION__, __LINE__, "/proc");
 		return -1;
 	}
+
+	pid = -1;
 
 	while ((next = readdir(dir)) != NULL) {
 		FILE *fp;
 		char filename[256];
 		char buffer[256];
+		char *endptr;
+		long val;
+		int ret;
 
-		/* If it isn't a number, we don't want it */
-		if (!isdigit(*next->d_name))
+		if (!isdigit((unsigned char)next->d_name[0]))
 			continue;
 
-		sprintf(filename, "/proc/%s/cmdline", next->d_name);
+		val = strtol(next->d_name, &endptr, 10);
+		if (*endptr != '\0' || val <= 0)
+			continue;
+
+		ret = snprintf(filename, sizeof(filename),
+		               "/proc/%s/cmdline", next->d_name);
+		if (ret < 0 || (size_t)ret >= sizeof(filename))
+			continue;
+
 		fp = fopen(filename, "r");
-		if (!fp) {
+		if (fp == NULL)
 			continue;
-		}
-		buffer[0] = '\0';
-		fgets(buffer, 256, fp);
+
+		n = fread(buffer, 1, sizeof(buffer) - 1, fp);
 		fclose(fp);
 
-		if (!strcmp(name, buffer)) {
-			pid = strtol(next->d_name, NULL, 0);
+		if (n == 0)
+			continue;
+
+		buffer[n] = '\0';
+
+		if (strcmp(name, buffer) == 0) {
+			pid = (pid_t)val;
 			break;
 		}
 	}
