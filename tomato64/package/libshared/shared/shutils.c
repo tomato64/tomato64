@@ -1142,30 +1142,56 @@ char *remove_dups(char *inlist, int inlist_size)
 	return inlist;
 }
 
-char *find_smallest_in_list(char *haystack) {
-	char *ptr = haystack;
-	char *smallest = ptr;
-	int haystack_len = strlen(haystack);
-	int len = 0;
+/*
+ * Find the lexicographically smallest word in a space-separated list.
+ *
+ * The function scans a NUL-terminated, space-separated list and returns
+ * a pointer to the first occurrence of the smallest word. Leading and
+ * repeated spaces are ignored. The returned pointer refers to the original
+ * input buffer.
+ *
+ * @param  haystack  Space-separated list to search
+ * @return           Pointer to the smallest word in haystack, NULL on error
+ *                   or if the list is empty
+ */
+char *find_smallest_in_list(char *haystack)
+{
+	char *ptr;
+	char *smallest;
+	size_t len, smallest_len, cmp_len;
+	int ret;
 
-	if (!haystack || !*haystack || !haystack_len)
+	if (haystack == NULL)
 		return NULL;
 
-	while (*ptr != 0 && ptr < &haystack[haystack_len]) {
+	ptr = haystack + strspn(haystack, " ");
+	if (*ptr == '\0')
+		return NULL;
+
+	smallest = ptr;
+	smallest_len = strcspn(ptr, " ");
+	ptr += smallest_len;
+
+	while (*ptr != '\0') {
 		/* consume leading spaces */
 		ptr += strspn(ptr, " ");
+		if (*ptr == '\0')
+			break;
 
 		/* what's the length of the next word */
 		len = strcspn(ptr, " ");
+		cmp_len = (len < smallest_len) ? len : smallest_len;
 
-		/* if this item/word is 'smaller', update our pointer */
-		if ((strncmp(smallest, ptr, len) > 0)) {
+		ret = strncmp(ptr, smallest, cmp_len);
+		if (ret < 0 || (ret == 0 && len < smallest_len)) {
 			smallest = ptr;
+			smallest_len = len;
 		}
 
 		ptr += len;
 	}
-	return (char*) smallest;
+
+	return smallest;
 }
 
 char *sort_list(char *inlist, int inlist_size) {
