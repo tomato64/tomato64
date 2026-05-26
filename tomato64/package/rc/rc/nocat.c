@@ -153,7 +153,6 @@ void start_nocat(void)
 	char splashfile[255];
 	char logofile[255];
 	char iconfile[255];
-	char cmd[255];
 	char *p;
 
 	if ((!nvram_match("NC_enable", "1")) || (!nvram_match("mwan_num", "1")))
@@ -167,25 +166,16 @@ void start_nocat(void)
 	if ((p = nvram_get("NC_DocumentRoot")) == NULL)
 		p = "/tmp/splashd";
 
-	memset(splashfile, 0, sizeof(splashfile));
 	snprintf(splashfile, sizeof(splashfile), "%s/splash.html", p);
-	memset(logofile, 0, sizeof(logofile));
 	snprintf(logofile, sizeof(logofile), "%s/style.css", p);
-	memset(iconfile, 0, sizeof(iconfile));
 	snprintf(iconfile, sizeof(iconfile), "%s/favicon.ico", p);
 
 	if (!f_exists(splashfile)) {
 		nvram_get_file("NC_SplashFile", splashfile, 8192);
 		if (!f_exists(splashfile)) {
-			memset(cmd, 0, sizeof(cmd));
-			snprintf(cmd, sizeof(cmd), "cp /www/splash.html %s", splashfile);
-			system(cmd);
-			memset(cmd, 0, sizeof(cmd));
-			snprintf(cmd, sizeof(cmd), "cp /www/style.css %s", logofile);
-			system(cmd);
-			memset(cmd, 0, sizeof(cmd));
-			snprintf(cmd, sizeof(cmd), "cp /www/favicon.ico %s", iconfile);
-			system(cmd);
+			eval("cp", "/www/splash.html", splashfile);
+			eval("cp", "/www/style.css", logofile);
+			eval("cp", "/www/favicon.ico", iconfile);
 		}
 	}
 
@@ -237,9 +227,9 @@ void stop_nocat(void)
 	if (f_exists(NOCAT_SCRIPTS"/uninitialize.fw"))
 		eval(NOCAT_SCRIPTS"/uninitialize.fw");
 
-	system("rm -f "NOCAT_LEASES);
-	system("rm -f "NOCAT_START_SCRIPT);
-	system("rm -f "NOCAT_LOGFILE);
+	eval("rm", "-f", NOCAT_LEASES);
+	eval("rm", "-f", NOCAT_START_SCRIPT);
+	eval("rm", "-f", NOCAT_LOGFILE);
 
 	if (pid > 0)
 		start_wan();
