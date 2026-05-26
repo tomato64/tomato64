@@ -369,38 +369,42 @@ extern void volume_id_free_buffer();
 extern int volume_id_probe_ext();
 extern int volume_id_probe_vfat();
 extern int volume_id_probe_ntfs();
-#ifdef HFS
+#ifdef TCONFIG_BCMARM
+ #ifdef HFS
  extern int volume_id_probe_hfs_hfsplus();
-#endif
+ #endif
 extern int volume_id_probe_exfat();
+#endif /* TCONFIG_BCMARM */
 #ifdef TOMATO64
 extern int volume_id_probe_btrfs();
 #endif /* TOMATO64 */
 extern int volume_id_probe_linux_swap();
 
 /* magic for ext2/3/4 detection */
-int check_magic(char *buf, char *magic)
+int check_magic(const unsigned char *buf, const char *magic)
 {
+	unsigned char compat = buf[0];
+	unsigned char incompat = buf[4];
+	unsigned char ro_compat = buf[8];
+
 	if (!strncmp(magic, "ext3_chk", 8)) {
-		if (!((*buf)&4))
+		if (!(compat & 4))
 			return 0;
-		if (*(buf+4) >= 0x40)
+		if (incompat >= 0x40)
 			return 0;
-		if (*(buf+8) >= 8)
+		if (ro_compat >= 8)
 			return 0;
 		return 1;
 	}
 
 	if (!strncmp(magic, "ext4_chk", 8)) {
-		if (!((*buf)&4))
+		if (!(compat & 4))
 			return 0;
-		if (*(buf+4) > 0x3F)
+		if (incompat >= 0x40)
 			return 1;
-		if (*(buf+4) >= 0x40)
-			return 0;
-		if (*(buf+8) <= 7)
-			return 0;
-		return 1;
+		if (ro_compat > 7)
+			return 1;
+		return 0;
 	}
 
 	return 0;
@@ -413,6 +417,7 @@ char *find_label_or_uuid(char *dev_name, char *label, size_t label_sz, char *uui
 {
 	struct volume_id id;
 	char *fstype = NULL;
+	const unsigned char *ext_flags = NULL;
 
 	memset(&id, 0x00, sizeof(id));
 	if (label) *label = 0;
@@ -431,9 +436,11 @@ char *find_label_or_uuid(char *dev_name, char *label, size_t label_sz, char *uui
 	/* detect ext2/3/4 */
 	else if (!id.error && volume_id_probe_ext(&id) == 0) {
 		if (id.sbbuf[0x438] == 0x53 && id.sbbuf[0x439] == 0xEF) {
-			if (check_magic((char *)&id.sbbuf[0x45c], "ext3_chk"))
+			ext_flags = &id.sbbuf[0x45c];
+
+			if (check_magic(ext_flags, "ext3_chk"))
 				fstype = "ext3";
-			else if (check_magic((char *)&id.sbbuf[0x45c], "ext4_chk"))
+			else if (check_magic(ext_flags, "ext4_chk"))
 				fstype = "ext4";
 			else
 				fstype = "ext2";
@@ -442,7 +449,8 @@ char *find_label_or_uuid(char *dev_name, char *label, size_t label_sz, char *uui
 	/* detect ntfs */
 	else if (!id.error && volume_id_probe_ntfs(&id) == 0)
 		fstype = "ntfs";
-#ifdef HFS
+#ifdef TCONFIG_BCMARM
+ #ifdef HFS
 	/* detect hfs */
 	else if (!id.error && volume_id_probe_hfs_hfsplus(&id) == 0) {
 		if ((!memcmp(id.sbbuf + 1032, "HFSJ", 4)) || (!memcmp(id.sbbuf + 1032, "H+", 2)) ||
@@ -455,10 +463,11 @@ char *find_label_or_uuid(char *dev_name, char *label, size_t label_sz, char *uui
 		else
 			fstype = "hfs";
 	}
-#endif
+ #endif
 	/* detect exfat */
 	else if (!id.error && volume_id_probe_exfat(&id) == 0)
 		fstype = "exfat";
+#endif /* TCONFIG_BCMARM */
 #ifdef TOMATO64
 	else if (!id.error && volume_id_probe_btrfs(&id) == 0)
 		fstype = "btrfs";
