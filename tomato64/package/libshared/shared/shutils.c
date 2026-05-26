@@ -247,8 +247,6 @@ int _eval(char *const argv[], const char *path, int timeout, int *ppid)
 	int n;
 	const char *p;
 	char s[256];
-	//char *cpu0_argv[32] = { "taskset", "-c", "0"};
-	//char *cpu1_argv[32] = { "taskset", "-c", "1"};
 
 	if (!ppid) {
 		// block SIGCHLD
@@ -521,6 +519,7 @@ size_t safe_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
  * @param  name  Pathname used to start the process, without arguments
  * @return       Process ID on success, -1 on error or if not found
  */
+#ifdef TCONFIG_BCMBSD
 pid_t get_pid_by_name(const char *name)
 {
 	DIR *dir;
@@ -581,6 +580,7 @@ pid_t get_pid_by_name(const char *name)
 
 	return pid;
 }
+#endif /* TCONFIG_BCMBSD */
 
 /* ether_atoe() helper */
 static int hexval(unsigned char c)
@@ -1832,24 +1832,39 @@ int _vstrsep(char *buf, const char *sep, ...)
 	return n;
 }
 
+/*
+ * Convert an Ethernet address to a printable string.
+ *
+ * The function formats the address as uppercase hexadecimal octets separated
+ * by colons. The returned pointer refers to a static internal buffer and is
+ * overwritten by each subsequent call.
+ *
+ * @param  n  Ethernet address to convert
+ * @return    Pointer to the formatted address string, or NULL on error
+ */
 #ifdef CONFIG_BCMWL5
-char *
-wl_ether_etoa(const struct ether_addr *n)
+char *wl_ether_etoa(const struct ether_addr *n)
 {
 	static char etoa_buf[ETHER_ADDR_LEN * 3];
-	char *c = etoa_buf;
-	int i;
+	int ret;
 
-	for (i = 0; i < ETHER_ADDR_LEN; i++) {
-		if (i)
-			*c++ = ':';
-		c += sprintf(c, "%02X", n->octet[i] & 0xff);
-	}
+	if (n == NULL)
+		return NULL;
+
+	ret = snprintf(etoa_buf, sizeof(etoa_buf),
+	               "%02X:%02X:%02X:%02X:%02X:%02X",
+	               n->octet[0] & 0xff, n->octet[1] & 0xff,
+	               n->octet[2] & 0xff, n->octet[3] & 0xff,
+	               n->octet[4] & 0xff, n->octet[5] & 0xff);
+	if (ret < 0 || (size_t)ret >= sizeof(etoa_buf))
+		return NULL;
+
 	return etoa_buf;
 }
-#endif
+#endif /* CONFIG_BCMWL5 */
 
 /* Find partition with defined name and return partition number as an integer */
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 int getMTD(const char *name)
 {
 	char line[128], dev[32], size[32], esize[32], part_name[64];
@@ -1878,3 +1893,4 @@ int getMTD(const char *name)
 
 	return device;
 }
+#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */

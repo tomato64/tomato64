@@ -473,8 +473,12 @@ extern int dhd_bssiovar_setint(char *ifname, char *iovar, int bssidx, int val);
 #endif
 
 /* shutils.c */
-extern pid_t get_pid_by_name(const char *name); /* Returns the process ID */
-extern int getMTD(const char *name); /* Find partition with defined name and return partition number as an integer */
+#ifdef TCONFIG_BCMBSD
+ extern pid_t get_pid_by_name(const char *name); /* Returns the process ID */
+#endif
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+ extern int getMTD(const char *name); /* Find partition with defined name and return partition number as an integer */
+#endif
 
 /* mdu.c/ddns.c */
 #define MDU_STOP_FN		"/var/lib/mdu/mdu-stop"

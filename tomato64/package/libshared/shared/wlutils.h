@@ -125,5 +125,8 @@ extern int wl_bssiovar_set(char *ifname, char *iovar, int bssidx, void *param, i
 extern int wl_bssiovar_setint(char *ifname, char *iovar, int bssidx, int val);
 #endif
 
-extern char * wl_ether_etoa(const struct ether_addr *n);
+#ifdef CONFIG_BCMWL5
+ extern char *wl_ether_etoa(const struct ether_addr *n);
+#endif
+
 #endif /* _wlutils_h_ */
