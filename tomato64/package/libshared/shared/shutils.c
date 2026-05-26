@@ -1243,46 +1243,50 @@ ure_any_enabled(void)
 #define WL_DEV_NAME "wl"
 #define WDS_DEV_NAME	"wds"
 
-/**
- *	 nvifname_to_osifname()
- *  The intent here is to provide a conversion between the OS interface name
- *  and the device name that we keep in NVRAM.
- * This should eventually be placed in a Linux specific file with other
- * OS abstraction functions.
-
- * @param nvifname pointer to ifname to be converted
- * @param osifname_buf storage for the converted osifname
- * @param osifname_buf_len length of storage for osifname_buf
+/*
+ * Convert an internal/NVRAM interface name to the OS interface name.
+ *
+ * Some interface names are already OS-facing and are copied directly.
+ * Otherwise, the function looks up the corresponding "<nvifname>_ifname"
+ * NVRAM variable and copies its value to the output buffer.
+ *
+ * @param  nvifname          Internal/NVRAM interface name to convert
+ * @param  osifname_buf      Output buffer for the OS interface name
+ * @param  osifname_buf_len  Size of osifname_buf
+ * @return                   0 on success, -1 on error
  */
-int
-nvifname_to_osifname(const char *nvifname, char *osifname_buf,
-                     int osifname_buf_len)
+int nvifname_to_osifname(const char *nvifname, char *osifname_buf, int osifname_buf_len)
 {
 	char varname[NVRAM_MAX_PARAM_LEN];
 	char *ptr;
+	size_t buflen;
+	int ret;
 
-	/* Bail if we get a NULL or empty string */
-	if ((!nvifname) || (!*nvifname) || (!osifname_buf)) {
+	if (nvifname == NULL || *nvifname == '\0' ||
+	    osifname_buf == NULL || osifname_buf_len <= 0)
 		return -1;
-	}
 
-	memset(osifname_buf, 0, osifname_buf_len);
+	buflen = (size_t)osifname_buf_len;
+	osifname_buf[0] = '\0';
 
 	if (strstr(nvifname, "eth") || strstr(nvifname, ".")) {
-		strncpy(osifname_buf, nvifname, osifname_buf_len);
+		if (strlcpy(osifname_buf, nvifname, buflen) >= buflen)
+			return -1;
 		return 0;
 	}
 
-	snprintf(varname, sizeof(varname), "%s_ifname", nvifname);
+	ret = snprintf(varname, sizeof(varname), "%s_ifname", nvifname);
+	if (ret < 0 || (size_t)ret >= sizeof(varname))
+		return -1;
+
 	ptr = nvram_get(varname);
-	if (ptr) {
-		/* Bail if the string is empty */
-		if (!*ptr) return -1;
-		strncpy(osifname_buf, ptr, osifname_buf_len);
-		return 0;
-	}
+	if (ptr == NULL || *ptr == '\0')
+		return -1;
 
-	return -1;
+	if (strlcpy(osifname_buf, ptr, buflen) >= buflen)
+		return -1;
+
+	return 0;
 }
 
 
