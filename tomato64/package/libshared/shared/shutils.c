@@ -559,25 +559,57 @@ get_pid_by_name(char *name)
 	return pid;
 }
 
+/* ether_atoe() helper */
+static int hexval(unsigned char c)
+{
+	if (c >= '0' && c <= '9')
+		return c - '0';
+	if (c >= 'a' && c <= 'f')
+		return c - 'a' + 10;
+	if (c >= 'A' && c <= 'F')
+		return c - 'A' + 10;
+
+	return -1;
+}
+
 /*
  * Convert Ethernet address string representation to binary data
- * @param	a	string in xx:xx:xx:xx:xx:xx notation
- * @param	e	binary data
- * @return	TRUE if conversion was successful and FALSE otherwise
+ * @param a  string in xx:xx:xx:xx:xx:xx notation
+ * @param e  binary data
+ * @return   TRUE if conversion was successful and FALSE otherwise
  */
-int
-ether_atoe(const char *a, unsigned char *e)
+int ether_atoe(const char *a, unsigned char *e)
 {
-	char *c = (char *) a;
-	int i = 0;
+	int i;
 
-	memset(e, 0, ETHER_ADDR_LEN);
-	for (;;) {
-		e[i++] = (unsigned char) strtoul(c, &c, 16);
-		if (!*c++ || i == ETHER_ADDR_LEN)
-			break;
+	if (!a || !e)
+		return 0;
+
+	for (i = 0; i < ETHER_ADDR_LEN; i++) {
+		int hi = hexval((unsigned char)a[0]);
+		int lo = hexval((unsigned char)a[1]);
+
+		if (hi < 0 || lo < 0)
+			goto fail;
+
+		e[i] = (unsigned char)((hi << 4) | lo);
+		a += 2;
+
+		if (i < ETHER_ADDR_LEN - 1) {
+			if (*a++ != ':')
+				goto fail;
+		}
+		else if (*a) {
+			goto fail;
+		}
 	}
-	return (i == ETHER_ADDR_LEN);
+
+	return 1;
+
+fail:
+	memset(e, 0, ETHER_ADDR_LEN);
+
+	return 0;
 }
 
 /*
