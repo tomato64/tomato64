@@ -334,7 +334,7 @@ void add_remove_usbhost(char *host, int add)
 	/* don't use value from /proc/sys/kernel/hotplug 
 	 * since it may be overriden by a user
 	 */
-	system("/sbin/hotplug usb");
+	eval("hotplug", "usb");
 
 	unsetenv("INTERFACE");
 	unsetenv("PRODUCT");
