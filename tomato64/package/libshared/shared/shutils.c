@@ -1050,45 +1050,44 @@ int remove_from_list(const char *name, char *list, int listsize)
 	return EINVAL;
 }
 
-/**
- *		add_to_list
- *	Add the specified interface(string) to the list as long as
- *	it will fit in the space left in the list.
-
- *	NOTE: If item is already in list, it won't be added again.
-
- *	@param name Name of interface to be added to the list
- *	@param list List to modify
- *	@param listsize Max size the list can occupy
-
- *	@return	error code
+/*
+ * Add the specified interface(string) to the list as long as
+ * it will fit in the space left in the list.
+ *
+ * NOTE: If item is already in list, it won't be added again.
+ *
+ * @param  name      Name of interface to be added to the list
+ * @param  list      List to modify
+ * @param  listsize  Max size the list can occupy
+ * @return           error code
  */
-int
-add_to_list(const char *name, char *list, int listsize)
+int add_to_list(const char *name, char *list, int listsize)
 {
-	int listlen = 0;
-	int namelen = 0;
+	size_t listlen;
+	size_t namelen;
+	size_t need_space;
 
-	if (!list || !name || (listsize <= 0))
+	if (list == NULL || name == NULL || listsize <= 0 || *name == '\0')
 		return EINVAL;
 
-	listlen = strlen(list);
+	listlen = strnlen(list, (size_t)listsize);
+	if (listlen == (size_t)listsize)
+		return EINVAL;
+
 	namelen = strlen(name);
 
-	/* is the item already in the list? */
 	if (find_in_list(list, name))
 		return 0;
 
-	if (listsize <= listlen + namelen + 1 /* space */ + 1 /* NULL */)
+	need_space = (listlen != 0 && list[listlen - 1] != ' ') ? 1 : 0;
+
+	if (namelen >= (size_t)listsize - listlen - need_space)
 		return EMSGSIZE;
 
-	/* add a space if the list isn't empty and it doesn't already have space */
-	if (list[0] != 0 && list[listlen-1] != ' ')
-	{
-		list[listlen++] = 0x20;
-	}
+	if (need_space)
+		list[listlen++] = ' ';
 
-	strncpy(&list[listlen], name, namelen + 1 /* terminate */);
+	memcpy(&list[listlen], name, namelen + 1);
 
 	return 0;
 }
