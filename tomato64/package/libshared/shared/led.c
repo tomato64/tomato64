@@ -3,6 +3,9 @@
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
  *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
  */
 
 
@@ -27,9 +30,9 @@
 
 
 #ifdef TCONFIG_AC3200
-const char *led_names[] = {"wlan", "diag", "white", "amber", "dmz", "aoss", "bridge", "usb", "usb3", "5g", "52g"};
+ const char *led_names[] = {"wlan", "diag", "white", "amber", "dmz", "aoss", "bridge", "usb", "usb3", "5g", "52g"};
 #else
-const char *led_names[] = {"wlan", "diag", "white", "amber", "dmz", "aoss", "bridge", "usb", "usb3", "5g"};
+ const char *led_names[] = {"wlan", "diag", "white", "amber", "dmz", "aoss", "bridge", "usb", "usb3", "5g"};
 #endif
 
 static int _gpio_ioctl(int f, int gpioreg, unsigned int mask, unsigned int val)
@@ -155,15 +158,15 @@ int do_led(int which, int mode)
 //				   WLAN  DIAG  WHITE AMBER   DMZ  AOSS  BRIDGE USB2 USB3    5G   52G
 //				   ----  ----  ----- -----   ---  ----  ------ ---- ----    --   ---
 #ifdef TCONFIG_AC3200
-#ifdef TCONFIG_AC5300
+ #ifdef TCONFIG_AC5300
 	static int ac5300[]	= { 254,   -4,     5,  255,   19,    3,   21,   16,   17,  254,  254 };
-#endif
+ #endif
 	static int ac3200[]	= { 254,  -15,     5,  255,   14,    3,  254,  255,  255,  254,  254 };
 	static int r8000[]	= {  13,    3,     8,  255,  -14,  -15,  254,   18,   17,   12,   16 };
 #elif defined(CONFIG_BCMWL6A)
-#ifdef TCONFIG_BCM714
+ #ifdef TCONFIG_BCM714
 	static int ac3100[]	= { 254,   -4,     5,  255,   19,    3,   21,   16,   17,  254}; /* also for RT-AC88U */
-#endif /* TCONFIG_BCM714 */
+ #endif /* TCONFIG_BCM714 */
 	static int ac67u[]	= { 254,  255,     5,  255,  255,    0,  254,  255,  255,  254};
 	static int dslac68u[]	= { 254,  255,     4,  255,  255,    3,  254,    0,   14,  254};
 	static int ac68u[]	= { 254,  255,     4,  255,  255,    3,  254,    0,   14,  254};
@@ -223,14 +226,14 @@ int do_led(int which, int mode)
 		switch (model) {
 #ifdef TCONFIG_AC3200
 			case MODEL_RTAC3200:
-#ifdef TCONFIG_AC5300
+ #ifdef TCONFIG_AC5300
 			case MODEL_RTAC5300:
-#endif /* TCONFIG_AC5300 */
+ #endif /* TCONFIG_AC5300 */
 #elif defined(CONFIG_BCMWL6A)
-#ifdef TCONFIG_BCM714
+ #ifdef TCONFIG_BCM714
 			case MODEL_RTAC3100:
 			case MODEL_RTAC88U:
-#endif /* TCONFIG_BCM714 */
+ #endif /* TCONFIG_BCM714 */
 			case MODEL_AC15:
 			case MODEL_AC18:
 			case MODEL_RTN18U:
@@ -262,7 +265,7 @@ int do_led(int which, int mode)
 
 	switch (nvram_match("led_override", "1") ? MODEL_UNKNOWN : model) {
 #ifdef TCONFIG_AC3200
-#ifdef TCONFIG_AC5300
+ #ifdef TCONFIG_AC5300
 	case MODEL_RTAC5300:
 		b = ac5300[which];
 		if ((which == LED_WLAN) ||
@@ -281,7 +284,7 @@ int do_led(int which, int mode)
 			}
 		}
 		break;
-#endif /* TCONFIG_AC5300 */
+ #endif /* TCONFIG_AC5300 */
 	case MODEL_RTAC3200:
 		b = ac3200[which];
 		if ((which == LED_WLAN) ||
@@ -329,7 +332,7 @@ int do_led(int which, int mode)
 		}
 		break;
 #elif defined(CONFIG_BCMWL6A)
-#ifdef TCONFIG_BCM714
+ #ifdef TCONFIG_BCM714
 	case MODEL_RTAC3100:
 	case MODEL_RTAC88U:
 		b = ac3100[which];
@@ -347,7 +350,7 @@ int do_led(int which, int mode)
 			}
 		}
 		break;
-#endif /* TCONFIG_BCM714 */
+ #endif /* TCONFIG_BCM714 */
 	case MODEL_RTAC67U:
 		b = ac67u[which];
 		if ((which == LED_WLAN) ||
@@ -751,14 +754,14 @@ SET:
 
 void disable_led_wanlan(void)
 {
-	system("/usr/sbin/et robowr 0x0 0x18 0x0100"); /* turn off all LAN and WAN LEDs Part 1/2 */
-	system("/usr/sbin/et robowr 0x0 0x1a 0x0100"); /* turn off all LAN and WAN LEDs Part 2/2 */
+	eval("et", "robowr", "0x0", "0x18", "0x0100"); /* turn off all LAN and WAN LEDs Part 1/2 */
+	eval("et", "robowr", "0x0", "0x1a", "0x0100"); /* turn off all LAN and WAN LEDs Part 2/2 */
 }
 
 void enable_led_wanlan(void)
 {
-	system("/usr/sbin/et robowr 0x0 0x18 0x01ff"); /* turn on all LAN and WAN LEDs Part 1/2 */
-	system("/usr/sbin/et robowr 0x0 0x1a 0x01ff"); /* turn on all LAN and WAN LEDs Part 2/2 */
+	eval("et", "robowr", "0x0", "0x18", "0x01ff"); /* turn on all LAN and WAN LEDs Part 1/2 */
+	eval("et", "robowr", "0x0", "0x1a", "0x01ff"); /* turn on all LAN and WAN LEDs Part 2/2 */
 }
 
 void do_led_bridge(int mode)
@@ -788,13 +791,13 @@ void led_setup(void)
 		/* turn off non GPIO LEDs and some special cases like power LED - - do_led(...) will take care of the other ones */
 		switch (model) {
 #ifdef TCONFIG_AC3200
-#ifdef TCONFIG_AC5300
+ #ifdef TCONFIG_AC5300
 		case MODEL_RTAC5300:
 			set_gpio(GPIO_03, T_HIGH); /* disable power led */
 			set_gpio(GPIO_04, T_LOW); /* disable button led */
 			disable_led_wanlan();
 			break;
-#endif /* TCONFIG_AC5300 */
+ #endif /* TCONFIG_AC5300 */
 		case MODEL_R8000:
 			set_gpio(GPIO_03, T_HIGH); /* disable power led color amber */
 			disable_led_wanlan();
@@ -805,14 +808,14 @@ void led_setup(void)
 			disable_led_wanlan();
 			break;
 #elif defined(CONFIG_BCMWL6A)
-#ifdef TCONFIG_BCM714
+ #ifdef TCONFIG_BCM714
 		case MODEL_RTAC3100:
 		case MODEL_RTAC88U:
 			set_gpio(GPIO_03, T_HIGH); /* disable power led */
 			set_gpio(GPIO_04, T_LOW); /* disable button led */
 			disable_led_wanlan();
 			break;
-#endif /* TCONFIG_BCM714 */
+ #endif /* TCONFIG_BCM714 */
 		case MODEL_DIR868L:
 			set_gpio(GPIO_00, T_HIGH); /* disable power led color amber */
 			break;
@@ -1005,71 +1008,71 @@ void do_led_nongpio(int model, int which, int mode)
 {
 	switch (model) {
 #ifdef TCONFIG_AC3200
-#ifdef TCONFIG_AC5300
+ #ifdef TCONFIG_AC5300
 	case MODEL_RTAC5300:
 		if (which == LED_WLAN) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth1 ledbh 9 1"); /* 2.4 GHz - eth1, see Asus SRC */
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth1 ledbh 9 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth1", "ledbh", "9", "1"); /* 2.4 GHz - eth1, see Asus SRC */
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth1", "ledbh", "9", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		else if (which == LED_5G) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth2 ledbh 9 1"); /* 5 GHz - eth2, see Asus SRC */
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth2 ledbh 9 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth2", "ledbh", "9", "1"); /* 5 GHz - eth2, see Asus SRC */
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth2", "ledbh", "9", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		else if (which == LED_52G) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth3 ledbh 9 1"); /* second 5 GHz - eth3, see Asus SRC */
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth3 ledbh 9 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth3", "ledbh", "9", "1"); /* second 5 GHz - eth3, see Asus SRC */
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth3", "ledbh", "9", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		break;
-#endif /* TCONFIG_AC5300 */
+ #endif /* TCONFIG_AC5300 */
 	case MODEL_RTAC3200:
 		if (which == LED_WLAN) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth2 ledbh 10 1"); /* 2.4 GHz - eth2, see Asus SRC */
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth2 ledbh 10 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth2", "ledbh", "10", "1"); /* 2.4 GHz - eth2, see Asus SRC */
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth2", "ledbh", "10", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		else if (which == LED_5G) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth1 ledbh 10 1"); /* 5 GHz - eth1, see Asus SRC */
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth1 ledbh 10 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth1", "ledbh", "10", "1"); /* 5 GHz - eth1, see Asus SRC */
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth1", "ledbh", "10", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		else if (which == LED_52G) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth3 ledbh 10 1"); /* second 5 GHz - eth3, see Asus SRC */
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth3 ledbh 10 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth3", "ledbh", "10", "1"); /* second 5 GHz - eth3, see Asus SRC */
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth3", "ledbh", "10", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		break;
 #elif defined(CONFIG_BCMWL6A)
-#ifdef TCONFIG_BCM714
+ #ifdef TCONFIG_BCM714
 	case MODEL_RTAC3100:
 	case MODEL_RTAC88U:
 		if (which == LED_WLAN) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth1 ledbh 9 1"); /* 2.4 GHz - eth1, see Asus SRC */
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth1 ledbh 9 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth1", "ledbh", "9", "1"); /* 2.4 GHz - eth1, see Asus SRC */
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth1", "ledbh", "9", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		else if (which == LED_5G) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth2 ledbh 9 1"); /* 5 GHz - eth2, see Asus SRC */
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth2 ledbh 9 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth2", "ledbh", "9", "1"); /* 5 GHz - eth2, see Asus SRC */
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth2", "ledbh", "9", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		break;
-#endif /* TCONFIG_BCM714 */
+ #endif /* TCONFIG_BCM714 */
 	case MODEL_AC15:
 	case MODEL_AC18:
 	case MODEL_RTN18U:
 		if (which == LED_WLAN) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth1 ledbh 10 7");
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth1 ledbh 10 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth1", "ledbh", "10", "7");
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth1", "ledbh", "10", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		break;
 	case MODEL_RTAC56U:
 		if (which == LED_WLAN) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth1 ledbh 3 1");
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth1 ledbh 3 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth1", "ledbh", "3", "1");
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth1", "ledbh", "3", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		break;
@@ -1080,13 +1083,13 @@ void do_led_nongpio(int model, int which, int mode)
 	case MODEL_RTAC68UV3:
 	case MODEL_RTAC1900P:
 		if (which == LED_WLAN) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth1 ledbh 10 1");
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth1 ledbh 10 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth1", "ledbh", "10", "1");
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth1", "ledbh", "10", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		else if (which == LED_5G) {
-			if (mode == LED_ON) system("/usr/sbin/wl -i eth2 ledbh 10 1");
-			else if (mode == LED_OFF) system("/usr/sbin/wl -i eth2 ledbh 10 0");
+			if      (mode == LED_ON)    eval("wl", "-i", "eth2", "ledbh", "10", "1");
+			else if (mode == LED_OFF)   eval("wl", "-i", "eth2", "ledbh", "10", "0");
 			else if (mode == LED_PROBE) return;
 		}
 		break;
