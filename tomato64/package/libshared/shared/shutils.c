@@ -1005,46 +1005,49 @@ char *find_in_list(const char *haystack, const char *needle)
 	return NULL;
 }
 
-/**
- *	remove_from_list
- *	Remove the specified word from the list.
+/*
+ * Remove the specified word from the list.
 
- *	@param name word to be removed from the list
- *	@param list Space separated list to modify
- *	@param listsize Max size the list can occupy
-
- *	@return	error code
+ * @param  name      word to be removed from the list
+ * @param  list      Space separated list to modify
+ * @param  listsize  Max size the list can occupy
+ * @return           error code
  */
-int
-remove_from_list(const char *name, char *list, int listsize)
+int remove_from_list(const char *name, char *list, int listsize)
 {
-	int namelen = 0;
-	char *occurrence = list;
+	char *occurrence;
+	size_t namelen, tail_len;
 
-	if (!list || !name || (listsize <= 0))
+	if (list == NULL || name == NULL || listsize <= 0 || *name == '\0')
+		return EINVAL;
+
+	/* ensure list is NUL-terminated within listsize */
+	if (strnlen(list, (size_t)listsize) == (size_t)listsize)
 		return EINVAL;
 
 	namelen = strlen(name);
-	occurrence = find_in_list(occurrence, name);
 
-	if (!occurrence)
+	occurrence = find_in_list(list, name);
+	if (occurrence == NULL)
 		return EINVAL;
 
-	/* last item in list? */
-	if (occurrence[namelen] == 0)
-	{
-		/* only item in list? */
+	/* last item in list */
+	if (occurrence[namelen] == '\0') {
 		if (occurrence != list)
 			occurrence--;
-		occurrence[0] = 0;
-	}
-	else if (occurrence[namelen] == ' ')
-	{
-		strncpy(occurrence, &occurrence[namelen+1 /* space */],
-		        strlen(&occurrence[namelen+1 /* space */]) +1 /* terminate */);
+
+		*occurrence = '\0';
+		return 0;
 	}
 
-	return 0;
+	/* first or middle item, followed by a space */
+	if (occurrence[namelen] == ' ') {
+		tail_len = strlen(&occurrence[namelen + 1]) + 1;
+		memmove(occurrence, &occurrence[namelen + 1], tail_len);
+		return 0;
+	}
+
+	return EINVAL;
 }
 
 /**
