@@ -882,35 +882,40 @@ static size_t sh_strrspn(const char *s, const char *accept)
 /*
  * Parse the unit and subunit from an interface string such as wlXX or wlXX.YY
  *
- * @param	ifname	interface string to parse
- * @param	unit	pointer to return the unit number, may pass NULL
- * @param	subunit	pointer to return the subunit number, may pass NULL
- * @return	Returns 0 if the string ends with digits or digits.digits, -1 otherwise.
- *		If ifname ends in digits.digits, then unit and subuint are set
- *		to the first and second values respectively. If ifname ends
- *		in just digits, unit is set to the value, and subunit is set
- *		to -1. On error both unit and subunit are -1. NULL may be passed
- *		for unit and/or subuint to ignore the value.
+ * @param  ifname   interface string to parse
+ * @param  unit     pointer to return the unit number, may pass NULL
+ * @param  subunit  pointer to return the subunit number, may pass NULL
+ * @return          Returns 0 if the string ends with digits or digits.digits, -1 otherwise.
+ *                  If ifname ends in digits.digits, then unit and subuint are set
+ *                  to the first and second values respectively. If ifname ends
+ *                  in just digits, unit is set to the value, and subunit is set
+ *                  to -1. On error both unit and subunit are -1. NULL may be passed
+ *                  for unit and/or subuint to ignore the value.
  */
-int
-get_ifname_unit(const char* ifname, int *unit, int *subunit)
+int get_ifname_unit(const char *ifname, int *unit, int *subunit)
 {
 	const char digits[] = "0123456789";
 	char str[64];
 	char *p;
-	size_t ifname_len = strlen(ifname);
-	size_t len;
+	size_t ifname_len, len;
 	unsigned long val;
+	int u, su;
+
+	u = -1;
+	su = -1;
 
 	if (unit)
 		*unit = -1;
 	if (subunit)
 		*subunit = -1;
 
-	if (ifname_len + 1 > sizeof(str))
+	if (ifname == NULL)
 		return -1;
 
-	strcpy(str, ifname);
+	if (strlcpy(str, ifname, sizeof(str)) >= sizeof(str))
+		return -1;
+
+	ifname_len = strlen(str);
 
 	/* find the trailing digit chars */
 	len = sh_strrspn(str, digits);
@@ -921,39 +926,49 @@ get_ifname_unit(const char* ifname, int *unit, int *subunit)
 
 	/* point to the beginning of the last integer and convert */
 	p = str + (ifname_len - len);
-	val = strtoul(p, NULL, 10);
 
-	/* if we are at the beginning of the string, or the previous
-	 * character is not a '.', then we have the unit number and
-	 * we are done parsing
-	 */
+	errno = 0;
+	val = strtoul(p, NULL, 10);
+	if (errno == ERANGE || val > INT_MAX)
+		return -1;
+
+	/* no ".subunit" suffix: trailing number is the unit */
 	if (p == str || p[-1] != '.') {
+		u = (int)val;
+
 		if (unit)
-			*unit = val;
-		return 0;
-	} else {
+			*unit = u;
 		if (subunit)
-			*subunit = val;
+			*subunit = su;
+
+		return 0;
 	}
 
-	/* chop off the '.NNN' and get the unit number */
+	/* trailing number is subunit */
+	su = (int)val;
+
+	/* chop off the ".NNN" and get the unit number */
 	p--;
-	p[0] = '\0';
+	*p = '\0';
 
-	/* find the trailing digit chars */
+	/* find the trailing digit chars before the dot */
 	len = sh_strrspn(str, digits);
-
-	/* fail if there were no trailing digits */
 	if (len == 0)
 		return -1;
 
-	/* point to the beginning of the last integer and convert */
 	p = p - len;
-	val = strtoul(p, NULL, 10);
 
-	/* save the unit number */
+	errno = 0;
+	val = strtoul(p, NULL, 10);
+	if (errno == ERANGE || val > INT_MAX)
+		return -1;
+
+	u = (int)val;
+
 	if (unit)
-		*unit = val;
+		*unit = u;
+	if (subunit)
+		*subunit = su;
 
 	return 0;
 }
