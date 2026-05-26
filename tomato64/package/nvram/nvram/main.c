@@ -17,6 +17,13 @@
  *
  * $Id: main.c 325698 2012-04-04 12:40:07Z $
  */
+/*
+ *
+ * Fixes/updates (C) 2018 - 2026 pedro
+ * https://freshtomato.org/
+ *
+ */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,13 +49,13 @@ int print_error(int rv, char *infile, const char *outfile)
 	switch(rv) {
 		case INFILE_NOT_READABLE:
 			fprintf(stderr, "Cannot read input file \"%s\"\n", infile);
-			return -1 * rv;
+			return 1;
 		case OUTFILE_NOT_WRITABLE:
 			fprintf(stderr, "Cannot write to output file \"%s\"\n", outfile);
-			return -1 * rv;
+			return 1;
 		case INVALID_CFG_FORMAT:
 			fprintf(stderr, "Invalid cfg file format for \"%s\"\n", infile);
-			return -1 * rv;
+			return 1;
 		default:
 			fprintf(stderr, "Wrote %d bytes to %s\n", rv, outfile);
 			return 0;
@@ -203,14 +210,14 @@ void usage(void)
 	                "commit | erase | show | save <filename> | restore <filename> |\n"
 	                "convert <infile.cfg> <outfile.txt>\n");
 
-	exit(0);
+	exit(1);
 }
 
 /* NVRAM utility */
 int main(int argc, char **argv)
 {
 	char *name, *value, buf[MAX_NVRAM_SPACE];
-	int size, ret;
+	int size, res, ret = 0;
 
 	/* skip program name */
 	--argc;
@@ -267,8 +274,8 @@ int main(int argc, char **argv)
 			if (*++argv) {
 				name = *argv;
 				if (*++argv) {
-					ret = nvram_restore_to_file(name, *argv, buf);
-					print_error(ret, name, (const char *)*argv);
+					res = nvram_restore_to_file(name, *argv, buf);
+					ret = print_error(res, name, (const char *)*argv);
 				}
 			}
 		}
@@ -276,5 +283,5 @@ int main(int argc, char **argv)
 			usage();
 	}
 
-	return 0;
+	return ret;
 }
