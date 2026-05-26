@@ -956,6 +956,10 @@ static long http_req(const unsigned int ssl, int static_host, const char *host, 
 static int read_tmaddr(const char *name, long *tm, char *addr)
 {
 	char s[192];
+	struct in_addr ipv4;
+#ifdef TCONFIG_IPV6
+	struct in6_addr ipv6;
+#endif
 
 	logmsg(LOG_DEBUG, "*** %s: IN cachename: %s", __FUNCTION__, name);
 
@@ -963,13 +967,14 @@ static int read_tmaddr(const char *name, long *tm, char *addr)
 	if (f_read_string(name, s, sizeof(s)) > 0) {
 		if (sscanf(s, "%ld,%63s", tm, addr) == 2) {
 			logmsg(LOG_DEBUG, "*** %s: tm=%ld addr=%s", __FUNCTION__, *tm, addr);
-			if (*tm > 0 && (inet_pton(AF_INET, addr, &(struct in_addr){0}) == 1 ||
+
+			if (*tm > 0 && (inet_pton(AF_INET, addr, &ipv4) == 1
 #ifdef TCONFIG_IPV6
-			                inet_pton(AF_INET6, addr, &(struct in6_addr){0}) == 1))
-#else
-			                0))
+			                || inet_pton(AF_INET6, addr, &ipv6) == 1
 #endif
+			   )) {
 				return 1;
+			}
 		}
 		else
 			logmsg(LOG_DEBUG, "*** %s: unknown=%s", __FUNCTION__, s);
