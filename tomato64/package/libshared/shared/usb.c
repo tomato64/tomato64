@@ -9,28 +9,17 @@
  */
 
 
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include <ctype.h>
 #include <sys/stat.h>
-#include <stdarg.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <dirent.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <sys/sysinfo.h>
-#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
 #ifdef TOMATO64
 #include <limits.h>
 #endif /* TOMATO64 */
-
-#include <bcmnvram.h>
-#include <bcmdevs.h>
-#include <wlutils.h>
 
 #include "shutils.h"
 #include "shared.h"
@@ -201,6 +190,7 @@ int exec_for_host(int host, int obsolete, uint flags, host_exec func)
 	char ptname[32];	/* Will be: discDN_PN */
 	char dsname[16];	/* Will be: discDN */
 	int host_no;		/* SCSI controller/host */
+	int bus, target, lun;
 	struct dirent *dp;
 	FILE *prt_fp;
 	size_t siz;
@@ -221,7 +211,7 @@ int exec_for_host(int host, int obsolete, uint flags, host_exec func)
 			if (host >= 0 && strncmp(dp->d_name, hostbuf, strlen(hostbuf)) != 0)
 				continue;
 
-			if (sscanf(dp->d_name, "%d:%*s:%*s:%*s", &host_no) != 1)
+			if (sscanf(dp->d_name, "%d:%d:%d:%d", &host_no, &bus, &target, &lun) != 4)
 				continue;
 
 			snprintf(bfr, sizeof(bfr), "/sys/bus/scsi/devices/%s", dp->d_name);
@@ -236,9 +226,9 @@ int exec_for_host(int host, int obsolete, uint flags, host_exec func)
 
 					flags |= EFH_1ST_DISC;
 					if (func && (prt_fp = fopen("/proc/partitions", "r"))) {
-						while (fgets(line, sizeof(line) - 2, prt_fp)) {
-							if (sscanf(line, " %*s %*s %*s %s", ptname) == 1) {
-								if (strncmp(ptname, dsname, siz) == 0) {
+						while (fgets(line, sizeof(line), prt_fp)) {
+							if (sscanf(line, " %*s %*s %*s %31s", ptname) == 1) {
+								if (strncmp(ptname, dsname, siz) == 0 && (ptname[siz] == '\0' || isdigit((unsigned char)ptname[siz]))) {
 									if ((strcmp(ptname, dsname) == 0) && !is_no_partition(dsname))
 										continue;
 
