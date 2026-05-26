@@ -36,7 +36,7 @@ function _phTrim(s) {
 
 function _phCfg() {
 	var cfg = nvram.porthealth_cfg || '';
-	var o = { enable: 0, mode: 'monitor', max: 10, hold: 180, cache: 9000, ift: 'l' };
+	var o = { enable: 0, mode: 'monitor', max: 10, hold: 180, cache: 900, ift: 'l' };
 	var parts, i, kv, k, v;
 
 	cfg = _phTrim(cfg);
