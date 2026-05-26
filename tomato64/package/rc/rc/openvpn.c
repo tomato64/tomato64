@@ -286,7 +286,9 @@ void start_ovpn_client(int unit)
 	            "daemon openvpn-client%d\n"
 	            "dev %s\n"
 	            "txqueuelen 1000\n"
+#ifndef TCONFIG_BCMARM
 	            "persist-key\n"
+#endif
 	            "persist-tun\n",
 	            unit,
 	            iface);
