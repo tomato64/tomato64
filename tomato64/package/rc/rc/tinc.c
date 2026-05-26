@@ -340,7 +340,7 @@ void stop_tinc(void)
 	simple_lock("firewall");
 	run_del_firewall_script(TINC_FW_SCRIPT, TINC_FW_DEL_SCRIPT);
 
-	system("/bin/rm -rf "TINC_DIR);
+	eval("rm", "-rf", TINC_DIR);
 	simple_unlock("firewall");
 }
 
