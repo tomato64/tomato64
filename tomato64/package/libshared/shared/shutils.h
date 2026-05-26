@@ -125,7 +125,7 @@ extern int ether_atoe(const char *a, unsigned char *e);
  * @param	a	string in xx:xx:xx:xx:xx:xx notation
  * @return	a
  */
-extern char * ether_etoa(const unsigned char *e, char *a);
+extern char *ether_etoa(const unsigned char *e, char *a);
 
 /*
  * Concatenate two strings together into a caller supplied buffer
