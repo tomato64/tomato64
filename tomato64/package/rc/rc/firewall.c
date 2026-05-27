@@ -1530,9 +1530,11 @@ static void filter_forward(void)
 	if (nvram_get_int("upnp_enable") & 3) {
 		/* IPv4 - upnp chain for filter */
 		ipt_write(":upnp - [0:0]\n");
-		for (i = 0; i < (unsigned int) wanfaces[0].count; ++i) {
-			if (*(wanfaces[0].iface[i].name))
-				ipt_write("-A FORWARD -i %s -j upnp\n", wanfaces[0].iface[i].name);
+		for (j = 1; j <= MWAN_MAX; j++) {
+			for (i = 0; i < wanfaces[j - 1].count; ++i) {
+				if (*(wanfaces[j - 1].iface[i].name))
+					ipt_write("-A FORWARD -i %s -j upnp\n", wanfaces[j - 1].iface[i].name);
+			}
 		}
 #ifdef TCONFIG_IPV6
 		/* IPv6 - MINIUPNPD chain for filter6 */
