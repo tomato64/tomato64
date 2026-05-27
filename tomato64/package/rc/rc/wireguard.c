@@ -391,7 +391,7 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, const int
 		 */
 		found = 0;
 		if (add && list->domains) {
-			/* no rewind needed — list->domains is an in-memory array */
+			/* no rewind needed - list->domains is an in-memory array */
 			for (i = 0; i < domain_count; i++) {
 				if (strcmp(domain_entry, list->domains[i]) == 0) {
 					found = 1;
@@ -642,6 +642,20 @@ static void wg_build_firewall(const int unit)
 			            ctx->port, chain_in_accept,
 			            unit, chain_in_accept,
 			            unit);
+		}
+
+		/* Clamp TCP MSS to PMTU of WireGuard interface (IPv4 & IPv6) */
+		if (!nvram_get_int("tcp_clamp_disable")) {
+			fprintf(fp, "run iptables -t mangle -I FORWARD -o wg%d -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
+			            "run iptables -t mangle -I FORWARD -i wg%d -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n",
+			            unit, unit);
+#ifdef TCONFIG_IPV6
+			if (ipv6_enabled()) {
+				fprintf(fp, "run ip6tables -t mangle -I FORWARD -o wg%d -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
+				            "run ip6tables -t mangle -I FORWARD -i wg%d -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n",
+				            unit, unit);
+			}
+#endif
 		}
 
 		if (!nvram_get_int("ctf_disable")) { /* bypass CTF if enabled */
@@ -2118,7 +2132,7 @@ void stop_wireguard(const int unit)
 			wg_set_port(unit);
 			wg_set_fwmark(unit);
 
-			/* safety net — no logs */
+			/* safety net - no logs */
 			if (atoi(getNVRAMVar("wg%d_rgwr", unit)) >= VPN_RGW_POLICY) {
 				snprintf(fwmark_mask, BUF_SIZE_16, "%s/0xf00", ctx->fwmark);
 				eval("ip", "rule", "delete", "fwmark", fwmark_mask, "table", ctx->fwmark);
