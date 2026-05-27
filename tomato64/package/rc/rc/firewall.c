@@ -520,6 +520,136 @@ int ipt_ndpi(const char *v, char *opt, const size_t buf_sz)
 }
 #endif /* TOMATO64 */
 
+/*
+ * Remove existing cstats ipt_account rules from the live FORWARD chain.
+ *
+ * This is used as a narrow fallback after iptables-restore fails while
+ * cstats is enabled. It handles stale ipt_account state after LAN
+ * address/netmask changes, where an existing --aname, for example "lan",
+ * may still be associated with an old --aaddr network.
+ *
+ * The function intentionally avoids shell pipelines. It dumps the current
+ * filter table with iptables-save, parses FORWARD rules in C, and deletes
+ * only rules matching "-m account" with LAN account names: lan, lan1, ...
+ */
+static void ipt_account_cleanup(void)
+{
+	FILE *fp;
+	char tmp[] = "/tmp/ipt_account_cleanup.XXXXXX";
+	char path[64], line[1024], copy[1024], lanN[8];
+	char *argv[64], *del_argv[64];
+	char *save_argv[] = { "iptables-save", "-t", "filter", NULL };
+	char *p;
+	const char *aname;
+	int fd;
+	int argc, i, n, br;
+	int have_account, have_lan_aname;
+
+	fd = mkstemp(tmp);
+	if (fd < 0)
+		return;
+
+	close(fd);
+
+	snprintf(path, sizeof(path), ">%s", tmp);
+
+	if (_eval(save_argv, path, 0, NULL) != 0) {
+		unlink(tmp);
+		return;
+	}
+
+	fp = fopen(tmp, "r");
+	if (!fp) {
+		unlink(tmp);
+		return;
+	}
+
+	while (fgets(line, sizeof(line), fp)) {
+		strlcpy(copy, line, sizeof(copy));
+
+		p = copy;
+		argc = 0;
+
+		while (*p) {
+			while ((*p == ' ') || (*p == '\t') || (*p == '\r') || (*p == '\n'))
+				p++;
+
+			if (!*p)
+				break;
+
+			if (argc >= (int)(sizeof(argv) / sizeof(argv[0]) - 1))
+				break;
+
+			argv[argc++] = p;
+
+			while (*p && (*p != ' ') && (*p != '\t') && (*p != '\r') && (*p != '\n'))
+				p++;
+
+			if (*p)
+				*p++ = '\0';
+		}
+
+		argv[argc] = NULL;
+
+		if (argc < 6)
+			continue;
+
+		if ((strcmp(argv[0], "-A") != 0) || (strcmp(argv[1], "FORWARD") != 0))
+			continue;
+
+		have_account = 0;
+		have_lan_aname = 0;
+
+		for (i = 2; i < argc; i++) {
+			if ((strcmp(argv[i], "-m") == 0) && ((i + 1) < argc) && (strcmp(argv[i + 1], "account") == 0)) {
+				have_account = 1;
+				i++;
+				continue;
+			}
+
+			if ((strcmp(argv[i], "--aname") == 0) && ((i + 1) < argc)) {
+				aname = argv[i + 1];
+
+				for (br = 0; br < BRIDGE_COUNT; br++) {
+					if (br)
+						snprintf(lanN, sizeof(lanN), "lan%d", br);
+					else
+						snprintf(lanN, sizeof(lanN), "lan");
+
+					if (strcmp(aname, lanN) == 0) {
+						have_lan_aname = 1;
+						break;
+					}
+				}
+
+				i++;
+				continue;
+			}
+		}
+
+		if (!have_account || !have_lan_aname)
+			continue;
+
+		if (argc >= (int)(sizeof(del_argv) / sizeof(del_argv[0]) - 1))
+			continue;
+
+		del_argv[0] = "iptables";
+		del_argv[1] = "-D";
+		del_argv[2] = "FORWARD";
+
+		n = 3;
+		for (i = 2; i < argc; i++)
+			del_argv[n++] = argv[i];
+
+		del_argv[n] = NULL;
+
+		_eval(del_argv, NULL, 0, NULL);
+	}
+
+	fclose(fp);
+	unlink(tmp);
+}
+
 static void ipt_account(void) {
 	struct in_addr ipaddr, netmask, network;
 	char lanN_ifname[] = "lanXX_ifname";
@@ -528,10 +658,6 @@ static void ipt_account(void) {
 	char lanN[] = "lanXX";
 	char netaddrnetmask[] = "255.255.255.255/255.255.255.255 ";
 	char br;
-	/* If the IP Address changes, the below rule will cause things to choke, and blocking rules don't get applied
-	 * As a workaround, flush the entire FORWARD chain
-	 */
-	eval("iptables", "-F", "FORWARD");
 
 	for (br = 0 ; br < BRIDGE_COUNT; br++) {
 		char bridge[2];
@@ -2032,6 +2158,9 @@ int start_firewall(void)
 			n = 4;
 		}
 		else {
+			if (nvram_match("cstats_enable", "1"))
+				ipt_account_cleanup();
+
 			syslog(LOG_INFO, "iptables-restore failed - retrying in %d secs...", n*n);
 			sleep(n * n);
 		}
