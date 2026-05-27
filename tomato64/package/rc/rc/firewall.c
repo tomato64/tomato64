@@ -1961,7 +1961,7 @@ int start_firewall(void)
 				c = nvram_safe_get(buf);
 
 				/* mcast needs rp filter to be turned off only for non default iface */
-				if (!(nvram_match("multicast_pass", "1")) || !(nvram_match("udpxy_enable", "1")) || (strcmp(wanface[n - 1], c) == 0))
+				if (!(nvram_match("multicast_pass", "1") || nvram_match("udpxy_enable", "1")) || (strcmp(wanface[n - 1], c) == 0))
 					c = NULL;
 
 				/* in gateway mode, rp_filter blocks pbr */
