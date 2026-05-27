@@ -131,6 +131,91 @@ int f_write_procsysnet(const char *path, const char *value)
 	return f_write_string(syspath, value, 0, 0);
 }
 
+#if defined(TCONFIG_NGINX) || defined(TCONFIG_BT)
+int f_write_escaped(FILE *fp, int mode, const char *s1, const char *s2)
+{
+	static const char hex[] = "0123456789abcdef";
+	const char *s;
+	unsigned char c;
+	int part, json, esc;
+
+	if (!fp)
+		return -1;
+
+	if ((mode != FWESC_JSON) && (mode != FWESC_LINE))
+		return -1;
+
+	json = (mode == FWESC_JSON);
+
+	if (json)
+		fputc('"', fp);
+
+	for (part = 0; part < 2; ++part) {
+		s = part ? s2 : s1;
+		if (!s)
+			continue;
+
+		while (*s) {
+			c = (unsigned char)*s++;
+			esc = 0;
+
+			if (json && ((c == '"') || (c == '\\'))) {
+				esc = c;
+			}
+			else {
+				switch (c) {
+				case '\n':
+					esc = 'n';
+					break;
+				case '\r':
+					esc = 'r';
+					break;
+				case '\t':
+					esc = 't';
+					break;
+				case '\b':
+					if (json)
+						esc = 'b';
+					break;
+				case '\f':
+					if (json)
+						esc = 'f';
+					break;
+				}
+			}
+
+			if (esc) {
+				fputc('\\', fp);
+				fputc(esc, fp);
+			}
+			else if ((c < 0x20) || (!json && (c == 0x7f))) {
+				fputc('\\', fp);
+
+				if (json) {
+					fputc('u', fp);
+					fputc('0', fp);
+					fputc('0', fp);
+				}
+				else {
+					fputc('x', fp);
+				}
+
+				fputc(hex[(c >> 4) & 0x0f], fp);
+				fputc(hex[c & 0x0f], fp);
+			}
+			else {
+				fputc(c, fp);
+			}
+		}
+	}
+
+	if (json)
+		fputc('"', fp);
+
+	return ferror(fp) ? -1 : 0;
+}
+#endif /* TCONFIG_NGINX || TCONFIG_BT */
+
 static int _f_read_alloc(const char *path, char **buffer, int max, int z)
 {
 	unsigned long n;

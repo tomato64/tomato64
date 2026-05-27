@@ -130,23 +130,23 @@ extern const char *tomato_nightly;
 #endif
 
 #ifdef TCONFIG_MULTIWAN
-#define MWAN_MAX	4
+#define MWAN_MAX		4
 #else
-#define MWAN_MAX	2
+#define MWAN_MAX		2
 #endif
 
 #ifndef TOMATO64
 #ifdef TCONFIG_EXTSW
-#define MAX_PORT_ID	5
+#define MAX_PORT_ID		5
 #else
-#define MAX_PORT_ID	4
+#define MAX_PORT_ID		4
 #endif
 #else
-#define MAX_PORT_ID	8
+#define MAX_PORT_ID		8
 #endif /* TOMATO64 */
 
 #if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
-#define TOMATO_VLANNUM	16
+#define TOMATO_VLANNUM		16
 #endif
 
 enum {
@@ -340,6 +340,10 @@ extern int ppid(int pid);
 #define FW_CREATE		0
 #define FW_APPEND		1
 #define FW_NEWLINE		2
+#if defined(TCONFIG_NGINX) || defined(TCONFIG_BT)
+#define FWESC_JSON		1
+#define FWESC_LINE		2
+#endif
 extern unsigned long f_size(const char *path);
 extern int f_exists(const char *file);
 extern int d_exists(const char *file);
@@ -348,6 +352,9 @@ extern int f_write(const char *file, const void *buffer, int len, unsigned flags
 extern int f_read_string(const char *file, char *buffer, int max); /* returns bytes read, not including term; max includes term */
 extern int f_write_string(const char *file, const char *buffer, unsigned flags, unsigned cmode);
 extern int f_write_procsysnet(const char *path, const char *value);
+#if defined(TCONFIG_NGINX) || defined(TCONFIG_BT)
+extern int f_write_escaped(FILE *fp, int mode, const char *s1, const char *s2);
+#endif
 extern int f_read_alloc(const char *path, char **buffer, int max);
 extern int f_read_alloc_string(const char *path, char **buffer, int max);
 #ifdef TOMATO64

@@ -143,6 +143,20 @@ static int mysql_to_hex(char *dst, size_t dstlen, const char *src)
 	return 0;
 }
 
+static int mysql_conf_write_escaped(FILE *fp, const char *key, const char *value)
+{
+	if (fprintf(fp, "%-17s = ", key) < 0)
+		return -1;
+
+	if (f_write_escaped(fp, FWESC_LINE, value, NULL) < 0)
+		return -1;
+
+	if (fputc('\n', fp) == EOF)
+		return -1;
+
+	return ferror(fp) ? -1 : 0;
+}
+
 static void setup_mysql_watchdog(void)
 {
 	FILE *fp;
@@ -150,7 +164,6 @@ static void setup_mysql_watchdog(void)
 	int nvi;
 
 	if ((nvi = nvram_get_int("mysql_check_time")) > 0) {
-		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), mysql_etc_dir"/watchdog.sh");
 
 		if ((fp = fopen(buffer, "w"))) {
@@ -162,7 +175,6 @@ static void setup_mysql_watchdog(void)
 			fclose(fp);
 			chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
 
-			memset(buffer2, 0, sizeof(buffer2));
 			snprintf(buffer2, sizeof(buffer2), "*/%d * * * * %s", nvi, buffer);
 			eval("cru", "a", "CheckMySQL", buffer2);
 		}
@@ -217,7 +229,6 @@ void start_mysql(int force)
 		strlcpy(tmp1, nvram_safe_get("mysql_dlroot"), sizeof(tmp1));
 		trimstr(tmp1);
 		if (tmp1[0] != '/') {
-			memset(tmp2, 0, sizeof(tmp2));
 			snprintf(tmp2, sizeof(tmp2), "/%s", tmp1);
 			strlcpy(tmp1, tmp2, sizeof(tmp1));
 		}
@@ -240,7 +251,7 @@ void start_mysql(int force)
 		strlcpy(pdatadir, "data", sizeof(pdatadir));
 		nvram_set("mysql_datadir", "data");
 	}
-	memset(full_datadir, 0, sizeof(full_datadir));
+
 	if (pdatadir[0] == '/')
 		snprintf(full_datadir, sizeof(full_datadir), "%s%s", ppr, pdatadir);
 	else
@@ -254,7 +265,7 @@ void start_mysql(int force)
 		strlcpy (ptmpdir, "tmp", sizeof(ptmpdir));
 		nvram_set("mysql_tmpdir", "tmp");
 	}
-	memset(full_tmpdir, 0, sizeof(full_tmpdir));
+
 	if (ptmpdir[0] == '/')
 		snprintf(full_tmpdir, sizeof(full_tmpdir), "%s%s", ppr, ptmpdir);
 	else
@@ -276,21 +287,22 @@ void start_mysql(int force)
 	}
 
 	fprintf(fp, "[client]\n"
-	            "port             = %s\n"
+	            "port             = %d\n"
 	            "socket           = /var/run/mysqld.sock\n\n"
 	            "[mysqld]\n"
 	            "user             = root\n"
 	            "socket           = /var/run/mysqld.sock\n"
-	            "port             = %s\n"
-	            "basedir          = %s\n\n"
-	            "datadir          = %s\n"
-	            "tmpdir           = %s\n\n"
-	            "skip-external-locking\n",
-	            nvram_safe_get("mysql_port"),
-	            nvram_safe_get("mysql_port"),
-	            basedir,
-	            full_datadir,
-	            full_tmpdir);
+	            "port             = %d\n",
+	            nvram_get_int("mysql_port"),
+	            nvram_get_int("mysql_port"));
+
+	if ((mysql_conf_write_escaped(fp, "basedir", basedir) < 0) || (fputc('\n', fp) == EOF) ||
+	    (mysql_conf_write_escaped(fp, "datadir", full_datadir) < 0) ||
+	    (mysql_conf_write_escaped(fp, "tmpdir", full_tmpdir) < 0) || (fputs("\nskip-external-locking\n", fp) == EOF)) {
+		logerr(__FUNCTION__, __LINE__, mysql_conf);
+		fclose(fp);
+		return;
+	}
 
 	if (nvram_get_int("mysql_allow_anyhost"))
 		fprintf(fp, "bind-address         = 0.0.0.0\n");
@@ -301,16 +313,16 @@ void start_mysql(int force)
 	fprintf(fp, "default-storage-engine=MYISAM\n"
 	            "innodb=OFF\n");
 
-	fprintf(fp, "key_buffer_size      = %sM\n"
-	            "max_allowed_packet   = %sM\n"
-	            "thread_stack         = %sK\n"
-	            "thread_cache_size    = %s\n\n"
-	            "table_open_cache     = %s\n"
-	            "sort_buffer_size     = %sK\n"
-	            "read_buffer_size     = %sK\n"
-	            "read_rnd_buffer_size = %sK\n"
-	            "query_cache_size     = %sM\n"
-	            "max_connections      = %s\n\n"
+	fprintf(fp, "key_buffer_size      = %dM\n"
+	            "max_allowed_packet   = %dM\n"
+	            "thread_stack         = %dK\n"
+	            "thread_cache_size    = %d\n\n"
+	            "table_open_cache     = %d\n"
+	            "sort_buffer_size     = %dK\n"
+	            "read_buffer_size     = %dK\n"
+	            "read_rnd_buffer_size = %dK\n"
+	            "query_cache_size     = %dM\n"
+	            "max_connections      = %d\n\n"
 	            "#The following items are from mysql_server_custom\n"
 	            "%s\n"
 	            "#end of mysql_server_custom\n\n"
@@ -321,16 +333,16 @@ void start_mysql(int force)
 	            "[isamchk]\n"
 	            "key_buffer_size      = 8M\n"
 	            "sort_buffer_size     = 8M\n\n",
-	            nvram_safe_get("mysql_key_buffer"),
-	            nvram_safe_get("mysql_max_allowed_packet"),
-	            nvram_safe_get("mysql_thread_stack"),
-	            nvram_safe_get("mysql_thread_cache_size"),
-	            nvram_safe_get("mysql_table_open_cache"),
-	            nvram_safe_get("mysql_sort_buffer_size"),
-	            nvram_safe_get("mysql_read_buffer_size"),
-	            nvram_safe_get("mysql_read_rnd_buffer_size"),
-	            nvram_safe_get("mysql_query_cache_size"),
-	            nvram_safe_get("mysql_max_connections"),
+	            nvram_get_int("mysql_key_buffer"),
+	            nvram_get_int("mysql_max_allowed_packet"),
+	            nvram_get_int("mysql_thread_stack"),
+	            nvram_get_int("mysql_thread_cache_size"),
+	            nvram_get_int("mysql_table_open_cache"),
+	            nvram_get_int("mysql_sort_buffer_size"),
+	            nvram_get_int("mysql_read_buffer_size"),
+	            nvram_get_int("mysql_read_rnd_buffer_size"),
+	            nvram_get_int("mysql_query_cache_size"),
+	            nvram_get_int("mysql_max_connections"),
 	            nvram_safe_get("mysql_server_custom"));
 
 	fclose(fp);
@@ -352,12 +364,11 @@ void start_mysql(int force)
 	pidof_child = getpid();
 
 	/* write child pid to a file */
-	memset(tmp1, 0, sizeof(tmp1));
 	snprintf(tmp1, sizeof(tmp1), "%d", pidof_child);
 	f_write_string(mysql_child_pid, tmp1, 0, 0);
 
 	/* wait a given time for partition to be mounted, etc */
-	n = atoi(nvram_safe_get("mysql_sleep"));
+	n = nvram_get_int("mysql_sleep");
 	if (n > 0 && n < 60) {
 		logmsg(LOG_INFO, "mysqld - delaying start by %d seconds ...", n);
 		sleep(n);
@@ -391,7 +402,6 @@ void start_mysql(int force)
 
 #ifndef TOMATO64
 	/* check for tables_priv.MYD */
-	memset(tmp1, 0, sizeof(tmp1));
 	snprintf(tmp1, sizeof(tmp1), "%s/mysql/tables_priv.MYD", full_datadir);
 	if (!f_exists(tmp1)) {
 		new_install = 1;
@@ -401,7 +411,6 @@ void start_mysql(int force)
 	}
 #else
 	/* check for tables_priv.MAD (MariaDB uses Aria engine for system tables) */
-	memset(tmp1, 0, sizeof(tmp1));
 	snprintf(tmp1, sizeof(tmp1), "%s/mysql/tables_priv.MAD", full_datadir);
 	if (!f_exists(tmp1)) {
 		new_install = 1;
@@ -554,7 +563,7 @@ void start_mysql(int force)
 		eval("rm", "-f", mysql_anyhost);
 	}
 
-	eval("mkdir", "-p", nginx_docroot);
+	mkdir_if_none(nginx_docroot);
 	eval("cp", "-p", "/www/adminer.php", nginx_docroot);
 	sleep(1);
 
@@ -580,7 +589,7 @@ void stop_mysql(void)
 	char pbi[128], buf[512];
 	char *argv[8];
 	int rc;
-	int m = atoi(nvram_safe_get("mysql_sleep")) + 70;
+	int m = nvram_get_int("mysql_sleep") + 70;
 
 	if (serialize_restart("mysqld", 0))
 		return;

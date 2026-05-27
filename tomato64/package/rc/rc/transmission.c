@@ -24,60 +24,10 @@
 #define LOGMSG_NVDEBUG	"transmission_debug"
 
 
-static void json_write_string(FILE *fp, const char *s1, const char *s2)
-{
-	const char *s;
-	unsigned char c;
-	int part;
-
-	fputc('"', fp);
-
-	for (part = 0; part < 2; ++part) {
-		s = (part == 0) ? s1 : s2;
-		if (!s)
-			continue;
-
-		while (*s) {
-			c = (unsigned char)*s++;
-
-			switch (c) {
-			case '"':
-				fputs("\\\"", fp);
-				break;
-			case '\\':
-				fputs("\\\\", fp);
-				break;
-			case '\b':
-				fputs("\\b", fp);
-				break;
-			case '\f':
-				fputs("\\f", fp);
-				break;
-			case '\n':
-				fputs("\\n", fp);
-				break;
-			case '\r':
-				fputs("\\r", fp);
-				break;
-			case '\t':
-				fputs("\\t", fp);
-				break;
-			default:
-				if (c < 0x20)
-					fprintf(fp, "\\u%04x", (unsigned int)c);
-				else
-					fputc(c, fp);
-				break;
-			}
-		}
-	}
-	fputc('"', fp);
-}
-
 static void json_write_setting(FILE *fp, const char *key, const char *value1, const char *value2)
 {
 	fprintf(fp, "\"%s\": ", key);
-	json_write_string(fp, value1, value2);
+	f_write_escaped(fp, FWESC_JSON, value1, value2);
 	fputs(",\n", fp);
 }
 
