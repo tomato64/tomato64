@@ -2916,8 +2916,8 @@ TOP:
 
 	if ((strcmp(service, "upnp") == 0) || (strcmp(service, "miniupnpd") == 0)) {
 		if (act_stop) stop_upnp();
-		if (act_start) start_upnp();
 		restart_firewall(); /* always restart */
+		if (act_start) start_upnp();
 		goto CLEAR;
 	}
 
