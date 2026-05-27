@@ -12258,7 +12258,7 @@ int init_main(int argc, char *argv[])
 
 	/* set unique system id */
 	if (!f_exists("/etc/machine-id"))
-		system("echo $(nvram get lan_hwaddr) | md5sum | cut -b -32 > /etc/machine-id");
+		eval("/bin/sh", "-c", "printf '%s\n' \"$(nvram get lan_hwaddr)\" | md5sum | cut -b -32 > /etc/machine-id");
 
 	state = SIGUSR2; /* START */
 
