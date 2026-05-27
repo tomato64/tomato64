@@ -1998,6 +1998,7 @@ int start_firewall(void)
 	if ((ipt_file = fopen(ipt_fname, "w")) == NULL) {
 		notice_set("iptables", "Unable to create iptables restore file!");
 		simple_unlock("firewall");
+		simple_unlock("restrictions");
 		return 0;
 	}
 
@@ -2005,7 +2006,10 @@ int start_firewall(void)
 	if (ipv6_enabled) {
 		if ((ip6t_file = fopen(ip6t_fname, "w")) == NULL) {
 			notice_set("ip6tables", "Unable to create ip6tables restore file!");
+			fclose(ipt_file);
+			ipt_file = NULL;
 			simple_unlock("firewall");
+			simple_unlock("restrictions");
 			return 0;
 		}
 #ifndef TOMATO64
