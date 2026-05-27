@@ -434,7 +434,7 @@ int ipt_layer7(const char *v, char *opt, const size_t buf_sz)
 
 				++p;
 			}
-			if (((p - layer7_in) / sizeof(char *)) < 50)
+			if (p < layer7_in + 50)
 				*p = strdup(opt);
 		}
 	}
