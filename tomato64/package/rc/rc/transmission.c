@@ -31,7 +31,6 @@ static void setup_tr_watchdog(void)
 	int nvi;
 
 	if ((nvi = nvram_get_int("bt_check_time")) > 0) {
-		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), tr_dir"/watchdog.sh");
 
 		if ((fp = fopen(buffer, "w"))) {
@@ -43,7 +42,6 @@ static void setup_tr_watchdog(void)
 			fclose(fp);
 			chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
 
-			memset(buffer2, 0, sizeof(buffer2));
 			snprintf(buffer2, sizeof(buffer2), "*/%d * * * * %s", nvi, buffer);
 			eval("cru", "a", "CheckTransmission", buffer2);
 		}
@@ -92,7 +90,7 @@ void start_bittorrent(int force)
 	FILE *fp;
 	char *pb, *pc, *pd, *pe, *pf, *ph, *pi, *pj, *pk, *pl, *pm, *pn, *po, *pp, *pr, *pt, *pu;
 	char *whitelistEnabled;
-	char buf[256], buf2[64];
+	char buf[256], buf2[64], settings_dir[256], log_path[256];
 	int n;
 	pid_t pidof_child = 0;
 
@@ -242,7 +240,6 @@ void start_bittorrent(int force)
 	pidof_child = getpid();
 
 	/* write child pid to a file */
-	memset(buf2, 0, sizeof(buf2));
 	snprintf(buf2, sizeof(buf2), "%d", pidof_child);
 	f_write_string(tr_child_pid, buf2, 0, 0);
 
@@ -262,11 +259,9 @@ void start_bittorrent(int force)
 
 	/* only now prepare subdirs */
 	mkdir_if_none(pk);
-	memset(buf, 0, sizeof(buf));
 	snprintf(buf, sizeof(buf), "%s/.settings", pk);
 	mkdir_if_none(buf);
 	if (nvram_get_int("bt_incomplete")) {
-		memset(buf, 0, sizeof(buf));
 		snprintf(buf, sizeof(buf), "%s/.incomplete", pk);
 		mkdir_if_none(buf);
 	}
@@ -274,41 +269,38 @@ void start_bittorrent(int force)
 	/* TBD: need better regex, trim triple commas, be safe for passwords etc */
 	eval("sed", "-i", "s/,,\\s/, /g", tr_settings);
 
-	memset(buf, 0, sizeof(buf));
-	snprintf(buf, sizeof(buf), "cp "tr_settings" %s/.settings", pk);
-	system(buf);
+	snprintf(buf, sizeof(buf), "%s/.settings", pk);
+	eval("cp", tr_settings, buf);
 
-	memset(buf, 0, sizeof(buf));
 	snprintf(buf, sizeof(buf), "%s/.settings/blocklists", pk);
 	eval("rm", "-rf", buf);
 
-	memset(buf, 0, sizeof(buf));
 	if (nvram_get_int("bt_blocklist")) {
+		snprintf(buf, sizeof(buf), "%s/.settings/blocklists/level1.gz", pk);
 #ifdef TCONFIG_STUBBY
-		snprintf(buf, sizeof(buf), "wget %s -O %s/.settings/blocklists/level1.gz", nvram_safe_get("bt_blocklist_url"), pk);
+		eval("wget", nvram_safe_get("bt_blocklist_url"), "-O", buf);
 #else
-		snprintf(buf, sizeof(buf), "wget --no-check-certificate %s -O %s/.settings/blocklists/level1.gz", nvram_safe_get("bt_blocklist_url"), pk);
+		eval("wget", "--no-check-certificate", nvram_safe_get("bt_blocklist_url"), "-O", buf);
 #endif
-		system(buf);
-
-		memset(buf, 0, sizeof(buf));
-		snprintf(buf, sizeof(buf), "gunzip %s/.settings/blocklists/level1.gz", pk);
-		system(buf);
+		eval("gunzip", buf);
 	}
 
 	run_bt_firewall_script();
 
-	memset(buf2, 0, sizeof(buf2));
-	if (nvram_get_int("bt_log"))
-		snprintf(buf2, sizeof(buf2), "-e %s/transmission.log", nvram_safe_get("bt_log_path"));
+	snprintf(buf, sizeof(buf), "%s/transmission-daemon", pn);
+	snprintf(settings_dir, sizeof(settings_dir), "%s/.settings", pk);
 
-	memset(buf, 0, sizeof(buf));
+	setenv("EVENT_NOEPOLL", "1", 1);
 #ifdef TCONFIG_STUBBY
-	snprintf(buf, sizeof(buf), "EVENT_NOEPOLL=1; export EVENT_NOEPOLL; CURL_CA_BUNDLE=/etc/ssl/cert.pem; export CURL_CA_BUNDLE; %s/transmission-daemon -g %s/.settings %s", pn, pk, buf2);
-#else
-	snprintf(buf, sizeof(buf), "EVENT_NOEPOLL=1; export EVENT_NOEPOLL; %s/transmission-daemon -g %s/.settings %s", pn, pk, buf2);
+	setenv("CURL_CA_BUNDLE", "/etc/ssl/cert.pem", 1);
 #endif
-	system(buf);
+
+	if (nvram_get_int("bt_log")) {
+		snprintf(log_path, sizeof(log_path), "%s/transmission.log", nvram_safe_get("bt_log_path"));
+		eval(buf, "-g", settings_dir, "-e", log_path);
+	}
+	else
+		eval(buf, "-g", settings_dir);
 
 	sleep(1);
 
