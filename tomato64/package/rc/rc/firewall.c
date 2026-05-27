@@ -570,6 +570,8 @@ static void ipt_webmon(void)
 	int wmtype, clear, i, j;
 	char t[512];
 	char src[128];
+	char webdomain[100];
+	char websearch[100];
 	char *p, *c;
 	int ok;
 
@@ -650,9 +652,6 @@ static void ipt_webmon(void)
 			p = c + 1;
 		} while (*p);
 	}
-
-	char webdomain[100];
-	char websearch[100];
 
 	if (nvram_match("webmon_bkp", "1")) {
 		xstart( "/usr/sbin/webmon_bkp", "add" ); /* add jobs to cru */
@@ -1300,8 +1299,11 @@ static void filter_forward(void)
 	char dst[128];
 	char src[128];
 	char buffer[512], dmz1[32], dmz2[32];
+	char lanAccess[(BRIDGE_COUNT * BRIDGE_COUNT) + 1];
+	const char *d, *sbr, *saddr, *dbr, *daddr, *desc;
 	char *p, *c;
 	char br, br2;
+	char *nv, *nvp, *b;
 	char lanN_ifname[] = "lanXX_ifname";
 	char lanN_ifname2[] = "lanXX_ifname";
 	unsigned int i, j;
@@ -1327,12 +1329,9 @@ static void filter_forward(void)
 			ip46t_write(ipv6_enabled, "-A FORWARD -i %s -o %s -j ACCEPT\n", lanface[i], lanface[i]); /* accept all lan to lan */
 	}
 
-	char lanAccess[(BRIDGE_COUNT * BRIDGE_COUNT) + 1];
 	memset(lanAccess, '0', sizeof(lanAccess));
 	lanAccess[BRIDGE_COUNT * BRIDGE_COUNT] = '\0';
 
-	const char *d, *sbr, *saddr, *dbr, *daddr, *desc;
-	char *nv, *nvp, *b;
 	nvp = nv = strdup(nvram_safe_get("lan_access"));
 	if (nv) {
 		while ((b = strsep(&nvp, ">")) != NULL) {
@@ -1357,9 +1356,11 @@ static void filter_forward(void)
 
 			ip46t_flagged_write(ipv6_enabled, src_f & dst_f, "-A FORWARD -i %s%s -o %s%s %s %s -j ACCEPT\n", "br", sbr, "br", dbr, src, dst);
 
-			if ((strcmp(src, "") == 0) && (strcmp(dst, "") == 0))
-				lanAccess[((*sbr - 48) + (*dbr - 48) * BRIDGE_COUNT)] = '1';
-
+			if ((strcmp(src, "") == 0) && (strcmp(dst, "") == 0) &&
+			    (*sbr >= '0') && (*sbr < '0' + BRIDGE_COUNT) &&
+			    (*dbr >= '0') && (*dbr < '0' + BRIDGE_COUNT)) {
+				lanAccess[((*sbr - '0') + (*dbr - '0') * BRIDGE_COUNT)] = '1';
+			}
 		}
 	}
 	free(nv);
@@ -1754,7 +1755,7 @@ int start_firewall(void)
 	char s[64], buf[16];
 	char *c;
 	char *wanface[MWAN_MAX];
-	int n;
+	int n, enable_rp_filter;
 	int wanproto;
 	char *iptrestore_argv[] = { "iptables-restore", (char *)ipt_fname, NULL };
 #ifdef TCONFIG_IPV6
@@ -1919,7 +1920,7 @@ int start_firewall(void)
 				continue;
 
 			snprintf(s, sizeof(s), "/proc/sys/net/ipv4/conf/%s/rp_filter", dirent->d_name);
-			bool enable_rp_filter = 1;
+			enable_rp_filter = 1;
 
 			for (n = 1; n <= MWAN_MAX; n++) {
 				snprintf(buf, sizeof(buf), (n == 1 ? "wan_ifname" : "wan%d_ifname"), n);
