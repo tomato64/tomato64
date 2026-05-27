@@ -83,15 +83,21 @@
 #include <wlutils.h>
 #include "tomato.h"
 #ifdef TCONFIG_HTTPS
-#include "mssl.h"
- #ifdef USE_OPENSSL
-  #include <openssl/opensslv.h>
-   #ifdef TTYD_PROXY
-    #include <openssl/ssl.h>
-   #endif /* TTYD_PROXY */
- #endif
-#define HTTPS_CRT_VER		"1"
+ #include "mssl.h"
+  #ifdef USE_OPENSSL
+   #include <openssl/opensslv.h>
+    #ifdef TTYD_PROXY
+     #include <openssl/ssl.h>
+    #endif /* TTYD_PROXY */
+  #endif
+ #define HTTPS_CRT_VER		"1"
 #endif
+#include <sys/ioctl.h>
+#ifndef TOMATO64
+#include <linux/compiler.h>
+#endif /* TOMATO64 */
+#include <sys/sysmacros.h>
+#include <mtd/mtd-user.h>
 
 #ifndef TOMATO64
 #define HTTP_MAX_LISTENERS	16
@@ -109,6 +115,11 @@
 #define MAX_CONN_TIMEOUT	30
 #define USER_DEFAULT		"root"
 #define PASS_DEFAULT		"admin"
+
+#define DO_FILE_MAX_BYTES	(10UL * 1024UL * 1024UL)
+#define CFE_MTD_PATH		"/dev/mtd0ro"
+#define MTD_CHAR_MAJOR		90
+#define CFE_MTD0RO_MINOR	1
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE		0
@@ -528,55 +539,151 @@ static int match(const char *pattern, const char *string)
 	return 0; /* none of the patterns matched */
 }
 
+/*
+ * Validate whether an already opened descriptor may be served as a CFE dump.
+ *
+ * do_file() normally serves regular files only. /dev/mtd0ro is the only
+ * intentional exception: it is a read-only MTD character device used to
+ * download the bootloader/CFE image.
+ *
+ * This helper keeps that exception narrow. It allows the descriptor only if:
+ *   - the requested path is exactly /dev/mtd0ro,
+ *   - the opened object is a character device,
+ *   - its device number matches the expected MTD0 read-only node,
+ *   - it responds to MEMGETINFO as a real MTD device,
+ *   - the reported MTD size is non-zero and within the global transfer limit.
+ *
+ * Returns 1 when the descriptor is allowed and stores the readable byte limit
+ * in *limit. Returns 0 otherwise.
+ */
+static int is_allowed_cfe_mtd(int fd, const char *path, const struct stat *st, unsigned long *limit)
+{
+	mtd_info_t mi;
+
+	if ((path == NULL) || (st == NULL) || (limit == NULL))
+		return 0;
+
+	if (strcmp(path, CFE_MTD_PATH) != 0)
+		return 0;
+
+	if (!S_ISCHR(st->st_mode))
+		return 0;
+
+	if ((major(st->st_rdev) != MTD_CHAR_MAJOR) || (minor(st->st_rdev) != CFE_MTD0RO_MINOR))
+		return 0;
+
+	memset(&mi, 0, sizeof(mi));
+
+	if (ioctl(fd, MEMGETINFO, &mi) != 0)
+		return 0;
+
+	if ((mi.size == 0) || (mi.size > DO_FILE_MAX_BYTES))
+		return 0;
+
+	*limit = (unsigned long)mi.size;
+
+	return 1;
+}
+
+/*
+ * Serve a local file to the HTTP client.
+ *
+ * For normal web paths this function only serves regular files. This avoids
+ * exposing special files such as devices, FIFOs, sockets or procfs/sysfs nodes.
+ *
+ * Symlink traversal is intentionally allowed because some existing callers
+ * depend on it. Basic path traversal using ".." is still rejected before open().
+ *
+ * The only non-regular file allowed is /dev/mtd0ro, used for CFE download.
+ * That path is validated separately by is_allowed_cfe_mtd() and is streamed
+ * only up to the size reported by the MTD MEMGETINFO ioctl.
+ *
+ * The function uses open()/fstat()/read() instead of fopen()/fread() so the
+ * opened object can be validated before data is sent and so a strict transfer
+ * limit can be enforced for both regular files and MTD devices.
+ */
 void do_file(char *path)
 {
-	FILE *f;
 	char buf[1024];
 	ssize_t nr;
+	size_t want;
 	int fd;
 	struct stat st;
+	unsigned long limit, sent;
 
-	/* security */
+	if ((path == NULL) || (path[0] == '\0'))
+		return;
+
+	/* reject basic directory traversal */
 	if (strstr(path, ".."))
 		return;
 
-	/* symlink traversal is required by callers of this function */
-	fd = open(path, O_RDONLY);
+	/*
+	 * O_NONBLOCK avoids blocking indefinitely on some special files before
+	 * fstat() can reject them. It has no effect for regular files.
+	 */
+	fd = open(path, O_RDONLY | O_NONBLOCK);
 
 	if (fd < 0)
 		return;
 
-	/* validate file type */
 	if (fstat(fd, &st) != 0) {
 		close(fd);
 		return;
 	}
 
-	/* only allow regular files */
-	if (!S_ISREG(st.st_mode)) {
+	if (S_ISREG(st.st_mode)) {
+		/*
+		 * regular files use st_size as the transfer limit.
+		 * this prevents accidental or malicious oversized downloads.
+		 */
+		if ((st.st_size < 0) || (st.st_size > (off_t)DO_FILE_MAX_BYTES)) {
+			close(fd);
+			return;
+		}
+
+		limit = (unsigned long)st.st_size;
+	}
+	else if (!is_allowed_cfe_mtd(fd, path, &st, &limit)) {
+		/*
+		 * reject all non-regular files except the explicitly validated
+		 * /dev/mtd0ro CFE download case.
+		 */
 		close(fd);
 		return;
 	}
 
-	/* optional: size limit (prevent insane reads) */
-	if (st.st_size > (10 * 1024 * 1024)) { /* 10MB limit */
-		close(fd);
-		return;
-	}
+	/*
+	 * stream at most 'limit' bytes. for regular files this is st_size.
+	 * for /dev/mtd0ro this is the size reported by MEMGETINFO.
+	 */
+	sent = 0;
 
-	/* convert to FILE* */
-	if ((f = fdopen(fd, "r")) == NULL) {
-		close(fd);
-		return;
-	}
+	while (sent < limit) {
+		want = sizeof(buf);
 
-	/* stream file */
-	while ((nr = fread(buf, 1, sizeof(buf), f)) > 0) {
+		if ((limit - sent) < (unsigned long)want)
+			want = (size_t)(limit - sent);
+
+		nr = read(fd, buf, want);
+
+		if (nr == 0)
+			break;
+
+		if (nr < 0) {
+			if (errno == EINTR)
+				continue;
+
+			break;
+		}
+
 		if (web_write(buf, nr) < 0)
 			break;
+
+		sent += (unsigned long)nr;
 	}
 
-	fclose(f); /* also closes fd */
+	close(fd);
 }
 
 static void handle_request(void)
