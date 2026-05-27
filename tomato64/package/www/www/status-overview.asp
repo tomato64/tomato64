@@ -221,6 +221,22 @@ function c(id, htm) {
 	E(id).cells[1].innerHTML = htm;
 }
 
+function calcWanPortCount() {
+	var count = 0;
+
+	for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
+		var u = (uidx > 1) ? uidx : '';
+		if ((nvram['wan'+u+'_proto'] != 'disabled')
+/* USB-BEGIN */
+		    && (nvram['wan'+u+'_proto'] != 'lte') && (nvram['wan'+u+'_proto'] != 'ppp3g')
+/* USB-END */
+		)
+			++count;
+	}
+
+	return count;
+}
+
 /* TOMATO64-REMOVE-BEGIN */
 function ethstates() {
 	var port = etherstates.port0;
@@ -235,18 +251,9 @@ function ethstates() {
 		code ='<div class="section-title">Ethernet Ports State<\/div><div class="section"><table class="fields"><tr>';
 
 		/* WANs */
-		for (uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
-			u = (uidx > 1) ? uidx : '';
-
-			if ((nvram['wan'+u+'_sta'] == '')
-/* USB-BEGIN */
-			    && (nvram['wan'+u+'_proto'] != 'lte') && (nvram['wan'+u+'_proto'] != 'ppp3g')
-/* USB-END */
-			) {
-				code += '<td class="title indent2"><b>WAN'+(uidx - 1)+'<\/b><\/td>';
-				++v;
-			}
-		}
+		v = calcWanPortCount();
+		for (uidx = 0; uidx < v; ++uidx)
+			code += '<td class="title indent2"><b>WAN'+uidx+'<\/b><\/td>';
 		/* LANs - both cases: 4 Ports OR 8 Ports for RT-AC88U with RTL8365MB switch (EXTSW=y) */
 		for (uidx = v; uidx <= MAX_PORT_ID; ++uidx)
 			code += '<td class="title indent2"><b>LAN'+(v > 0 ? ((uidx < 5) ? (uidx - 1) : '4-7' ) : ((uidx < 5) ? (uidx) : '5-8' ))+'<\/b><\/td>';
