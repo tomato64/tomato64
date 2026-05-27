@@ -992,7 +992,7 @@ static void nat_table(void)
 
 #ifdef TCONFIG_SNMP
 	if (nvram_match("snmp_enable", "1") && nvram_match("snmp_remote", "1"))
-		ipt_write("-A %s -p tcp --dport %s -j DNAT --to-destination %s\n", chain_wan_prerouting, nvram_safe_get("snmp_port"), lanaddr[0]);
+		ipt_write("-A %s -p udp --dport %s -j DNAT --to-destination %s\n", chain_wan_prerouting, nvram_safe_get("snmp_port"), lanaddr[0]);
 #endif
 
 	if (is_anywanup()) {
