@@ -1012,6 +1012,11 @@ void start_ipv6_tunnel(void)
 			break;
 	}
 
+	if (wan_unit > mwan_num) {
+		logmsg(LOG_DEBUG, "*** %s: no active WAN interface found", __FUNCTION__);
+		return;
+	}
+
 	service = get_ipv6_service();
 	tun_dev = (char *)get_wan6face();
 	wanip = (char *)get_wanip(wan_prefix);
@@ -1082,6 +1087,7 @@ void start_6rd_tunnel(void)
 	char tmp[256];
 	FILE *f;
 	char wan_prefix[] = "wanXX";
+	char *wan_6rd;
 	int wan_unit, mwan_num;
 
 	mwan_num = nvram_get_int("mwan_num");
@@ -1092,6 +1098,11 @@ void start_6rd_tunnel(void)
 		get_wan_prefix(wan_unit, wan_prefix);
 		if (check_wanup(wan_prefix))
 			break;
+	}
+
+	if (wan_unit > mwan_num) {
+		logmsg(LOG_DEBUG, "*** %s: no active WAN interface found", __FUNCTION__);
+		return;
 	}
 
 	service = get_ipv6_service();
@@ -1109,8 +1120,8 @@ void start_6rd_tunnel(void)
 	}
 	else {
 		logmsg(LOG_DEBUG, "*** %s: starting 6rd tunnel using automatic settings", __FUNCTION__);
-		char *wan_6rd = nvram_safe_get("wan_6rd");
-		if (sscanf(wan_6rd, "%d %d %s %s", &mask_len,  &prefix_len, prefix, relay) < 4) {
+		wan_6rd = nvram_safe_get("wan_6rd");
+		if (sscanf(wan_6rd, "%d %d %45s %15s", &mask_len, &prefix_len, prefix, relay) < 4) {
 			logmsg(LOG_DEBUG, "*** %s: wan_6rd string is missing or invalid (%s)", __FUNCTION__, wan_6rd);
 			return;
 		}
@@ -1129,6 +1140,14 @@ void start_6rd_tunnel(void)
 		logmsg(LOG_DEBUG, "*** %s: invalid combination of mask_len and prefix_len!", __FUNCTION__);
 		return;
 	}
+	if (inet_pton(AF_INET6, prefix, &prefix_addr) != 1) {
+		logmsg(LOG_DEBUG, "*** %s: invalid 6rd prefix (%s)", __FUNCTION__, prefix);
+		return;
+	}
+	if (inet_pton(AF_INET, relay, &relay_addr) != 1) {
+		logmsg(LOG_DEBUG, "*** %s: invalid 6rd relay (%s)", __FUNCTION__, relay);
+		return;
+	}
 
 	snprintf(tmp, sizeof(tmp), "ping -q -c 2 %s | grep packet", relay);
 	if ((f = popen(tmp, "r")) == NULL) {
@@ -1144,7 +1163,11 @@ void start_6rd_tunnel(void)
 	}
 
 	/* get relay prefix from border relay address and mask */
-	netmask_addr.s_addr = htonl(0xffffffff << (32 - mask_len));
+	if (mask_len == 0)
+		netmask_addr.s_addr = 0;
+	else
+		netmask_addr.s_addr = htonl(0xffffffff << (32 - mask_len));
+
 	inet_aton(relay, &relay_addr);
 	relay_prefix_addr.s_addr = relay_addr.s_addr & netmask_addr.s_addr;
 
@@ -1169,7 +1192,7 @@ void start_6rd_tunnel(void)
 
 	snprintf(tmp_ipv6, sizeof(tmp_ipv6), "%s/%d", prefix, prefix_len);
 	snprintf(tmp_ipv4, sizeof(tmp_ipv4), "%s/%d", inet_ntoa(relay_prefix_addr), mask_len);
-	eval("ip", "tunnel" "6rd", "dev", (char *)tun_dev, "6rd-prefix", tmp_ipv6, "6rd-relay_prefix", tmp_ipv4);
+	eval("ip", "tunnel", "6rd", "dev", (char *)tun_dev, "6rd-prefix", tmp_ipv6, "6rd-relay_prefix", tmp_ipv4);
 
 	/* bring up the link */
 	eval("ip", "link", "set", "dev", (char *)tun_dev, "mtu", (char *)mtu, "up");
