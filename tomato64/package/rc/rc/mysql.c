@@ -22,6 +22,7 @@
 #define mysql_pid		"/var/run/mysqld.pid"
 #define mysql_log		"/var/log/mysql.log"
 #define mysql_dflt_dir		"/tmp/mysql"
+#define mysql_ready_timeout	30
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
@@ -115,6 +116,35 @@ static int mysql_eval_bin_pwd(const char *dir, const char *name, char *argv[], c
 	}
 
 	return rc;
+}
+
+static int mysql_wait_ready(const char *dir, const char *password, int timeout)
+{
+	char *argv[8];
+	int i;
+	int rc;
+
+	if (timeout <= 0)
+		timeout = 1;
+
+	for (i = 0; i < timeout; ++i) {
+		argv[1] = "-uroot";
+		argv[2] = "--socket=/var/run/mysqld.sock";
+		argv[3] = "ping";
+		argv[4] = NULL;
+
+		if (password)
+			rc = mysql_eval_bin_pwd(dir, "mysqladmin", argv, NULL, password);
+		else
+			rc = mysql_eval_bin(dir, "mysqladmin", argv, NULL, 0);
+
+		if (rc == 0)
+			return 0;
+
+		sleep(1);
+	}
+
+	return ETIMEDOUT;
 }
 
 static int mysql_to_hex(char *dst, size_t dstlen, const char *src)
@@ -457,7 +487,14 @@ void start_mysql(int force)
 			logmsg(LOG_ERR, "%s: failed to start mysqld for password initialization: %d", __FUNCTION__, rc);
 			goto END;
 		}
-		sleep(2);
+
+		rc = mysql_wait_ready(pbi, NULL, mysql_ready_timeout);
+		if (rc != 0) {
+			logmsg(LOG_ERR, "%s: mysqld did not become ready for password initialization: %d", __FUNCTION__, rc);
+			killall_tk_period_wait("mysqld", 50);
+			eval("rm", "-f", mysql_pid);
+			goto END;
+		}
 
 		f_write_string(mysql_log, "=========mysql --execute password update====================", FW_APPEND | FW_NEWLINE, 0);
 
@@ -548,7 +585,12 @@ void start_mysql(int force)
 	}
 
 	if (anyhost == 1) {
-		sleep(3);
+		rc = mysql_wait_ready(pbi, nvram_safe_get("mysql_passwd"), mysql_ready_timeout);
+		if (rc != 0) {
+			logmsg(LOG_ERR, "%s: mysqld did not become ready: %d", __FUNCTION__, rc);
+			goto END;
+		}
+
 		f_write_string(mysql_log, "=========mysql --execute allow-anyhost====================", FW_APPEND | FW_NEWLINE, 0);
 
 		argv[1] = "-uroot";
