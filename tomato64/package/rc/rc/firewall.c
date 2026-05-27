@@ -211,6 +211,7 @@ void ipt_log_unresolved(const char *addr, const char *addrtype, const char *cate
 int ipt_addr(char *addr, int maxlen, const char *s, const char *dir, int af, int strict, const char *categ, const char *name)
 {
 	char p[INET6_ADDRSTRLEN * 2];
+	const char *addrtype;
 	int r = 0;
 
 	if ((s) && (*s) && (*dir)) {
@@ -241,7 +242,8 @@ int ipt_addr(char *addr, int maxlen, const char *s, const char *dir, int af, int
 	}
 
 	if (((r == 0) || (strict && ((r & af) != af))) && (categ && *categ)) {
-		ipt_log_unresolved(s, categ, name, (af & IPT_V4 & ~r) ? "IPv4" : ((af & IPT_V6 & ~r) ? "IPv6" : NULL));
+		addrtype = (af & IPT_V4 & ~r) ? "IPv4" : ((af & IPT_V6 & ~r) ? "IPv6" : NULL);
+		ipt_log_unresolved(s, addrtype, categ, name);
 	}
 
 	return (r & af);
