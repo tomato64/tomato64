@@ -92,7 +92,7 @@ function redraw() {
 			b = monthly_history[i];
 
 			if (E('_f_ignorezeroes').checked)
-				if ((b[2] < 1) || (b[3] < 1))
+				if ((b[2] < 1) && (b[3] < 1))
 					continue;
 
 			if (E('_f_begin_date').value.toString() != '0') {
