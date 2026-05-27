@@ -734,9 +734,11 @@ void start_irqbalance(void)
 #ifdef TCONFIG_FANCTRL
 void start_phy_tempsense()
 {
-	stop_phy_tempsense();
 	/* renice to high priority (10) - avoid revs fluctuations on high CPU load */
 	char *phy_tempsense_argv[] = { "nice", "-n", "-10", "phy_tempsense", NULL };
+
+	stop_phy_tempsense();
+
 	_eval(phy_tempsense_argv, NULL, 0, &pid_phy_tempsense);
 }
 
@@ -1473,6 +1475,11 @@ void start_zebra(void)
 	char *lan3_rx = nvram_safe_get("dr_lan3_rx");
 	char *wan_tx = nvram_safe_get("dr_wan_tx");
 	char *wan_rx = nvram_safe_get("dr_wan_rx");
+	char *lan_ifname = nvram_safe_get("lan_ifname");
+	char *lan1_ifname = nvram_safe_get("lan1_ifname");
+	char *lan2_ifname = nvram_safe_get("lan2_ifname");
+	char *lan3_ifname = nvram_safe_get("lan3_ifname");
+	char *wan_ifname = nvram_safe_get("wan_ifname");
 
 	if (serialize_restart("zebra", 1))
 		return;
@@ -1491,12 +1498,6 @@ void start_zebra(void)
 		logerr(__FUNCTION__, __LINE__, ripdcfg);
 		return;
 	}
-
-	char *lan_ifname = nvram_safe_get("lan_ifname");
-	char *lan1_ifname = nvram_safe_get("lan1_ifname");
-	char *lan2_ifname = nvram_safe_get("lan2_ifname");
-	char *lan3_ifname = nvram_safe_get("lan3_ifname");
-	char *wan_ifname = nvram_safe_get("wan_ifname");
 
 	fprintf(fp, "router rip\n");
 
@@ -1604,6 +1605,7 @@ void stop_zebra(void)
 
 void start_syslog(void)
 {
+	struct stat sb;
 	char *argv[20];
 	int argc;
 	char *nv;
@@ -1686,7 +1688,7 @@ void start_syslog(void)
 		if (!(nvram_get_int("log_file_custom"))) {
 			argv[argc++] = "-s";
 			argv[argc++] = rot_siz;
-			struct stat sb;
+
 			if (lstat(log_default, &sb) != -1)
 				if (S_ISLNK(sb.st_mode))
 					remove(log_default);
@@ -1749,6 +1751,9 @@ void start_igmp_proxy(void)
 	int wan_unit, mwan_num, count = 0;
 	int ret = 1;
 	int i, enabled_interface;
+	char lanN_ifname[] = "lanXX_ifname";
+	char multicast_lanN[] = "multicast_lanXX";
+	char br;
 
 	mwan_num = nvram_get_int("mwan_num");
 	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
@@ -1825,10 +1830,6 @@ void start_igmp_proxy(void)
 				unlink(igmpcfg);
 				return;
 			}
-
-			char lanN_ifname[] = "lanXX_ifname";
-			char multicast_lanN[] = "multicast_lanXX";
-			char br;
 
 			for (br = 0; br < BRIDGE_COUNT; br++) {
 				char bridge[2];
@@ -2052,6 +2053,16 @@ void stop_ntpd(void)
 
 int ntpd_synced_main(int argc, char *argv[])
 {
+	FILE *file;
+	char message[300];
+	char *stratum = safe_getenv("stratum");
+	char *offset = safe_getenv("offset");
+	char *freq_drift_ppm = safe_getenv("freq_drift_ppm");
+	char *poll_interval = safe_getenv("poll_interval");
+	char *server_hostname = safe_getenv("server_hostname");
+	char *server_ip = safe_getenv("server_ip");
+	char *discipline_jitter = safe_getenv("discipline_jitter");
+
 #ifndef TOMATO64
 	if (!nvram_match("ntp_ready", "1") && (argc == 2 && !strcmp(argv[1], "step"))) {
 #else
@@ -2099,16 +2110,6 @@ int ntpd_synced_main(int argc, char *argv[])
 #ifdef TOMATO64
 ntp_done:
 #endif /* TOMATO64 */
-
-	FILE *file;
-	char message[300];
-	char *stratum = safe_getenv("stratum");
-	char *offset = safe_getenv("offset");
-	char *freq_drift_ppm = safe_getenv("freq_drift_ppm");
-	char *poll_interval = safe_getenv("poll_interval");
-	char *server_hostname = safe_getenv("server_hostname");
-	char *server_ip = safe_getenv("server_ip");
-	char *discipline_jitter = safe_getenv("discipline_jitter");
 
 	snprintf(message, sizeof(message), "Server: %s (%s)\n"
 					   "Poll Interval: %ss\n"
@@ -2382,10 +2383,6 @@ static void stop_media_server(void)
 void start_haveged(void)
 {
 	pid_t pid;
-
-	if (serialize_restart("haveged", 1))
-		return;
-
 	char *cmd_argv[] = { "haveged",
 	                     "-r", "0",             /* 0 = run as daemon */
 	                     "-w", "1024",          /* write_wakeup_threshold [bits] */
@@ -2396,6 +2393,9 @@ void start_haveged(void)
 #endif
 #endif /* TOMATO64 */
 	                     NULL };
+
+	if (serialize_restart("haveged", 1))
+		return;
 
 	_eval(cmd_argv, NULL, 0, &pid);
 }
