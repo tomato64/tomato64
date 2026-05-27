@@ -401,13 +401,54 @@ void restart_firewall(void)
 }
 
 #ifdef TCONFIG_DNSCRYPT
+static void start_dnscrypt_instance(const char *dnscrypt_local, const char *dnscrypt_resolv)
+{
+	char *argv[20];
+	int argc;
+
+	argc = 0;
+	argv[argc++] = "dnscrypt-proxy";
+	argv[argc++] = "-d";
+
+	if (nvram_get_int("dnscrypt_ephemeral_keys"))
+		argv[argc++] = "-E";
+
+	argv[argc++] = "-a";
+	argv[argc++] = (char *)dnscrypt_local;
+	argv[argc++] = "-m";
+	argv[argc++] = nvram_safe_get("dnscrypt_log");
+
+	if (nvram_get_int("dnscrypt_manual")) {
+		argv[argc++] = "-N";
+		argv[argc++] = nvram_safe_get("dnscrypt_provider_name");
+		argv[argc++] = "-k";
+		argv[argc++] = nvram_safe_get("dnscrypt_provider_key");
+		argv[argc++] = "-r";
+		argv[argc++] = nvram_safe_get("dnscrypt_resolver_address");
+	}
+	else {
+		argv[argc++] = "-R";
+		argv[argc++] = nvram_safe_get("dnscrypt_resolver");
+		argv[argc++] = "-L";
+		argv[argc++] = (char *)dnscrypt_resolv;
+	}
+
+	if (nvram_get_int("dnsmasq_edns_size") < 1252) {
+		argv[argc++] = "-e";
+		argv[argc++] = nvram_safe_get("dnsmasq_edns_size");
+	}
+
+	argv[argc] = NULL;
+
+	_eval(argv, NULL, 0, NULL);
+}
+
 void start_dnscrypt(void)
 {
 	const static char *dnscrypt_resolv = "/etc/dnscrypt-resolvers.csv";
 	const static char *dnscrypt_resolv_alt = "/etc/dnscrypt-resolvers-alt.csv";
 	char dnscrypt_local[30];
-	char *dnscrypt_ekeys;
-	char *edns1, *edns2;
+	const char *resolv;
 
 	if (!nvram_get_int("dnscrypt_proxy"))
 		return;
@@ -415,46 +456,15 @@ void start_dnscrypt(void)
 	if (serialize_restart("dnscrypt-proxy", 1))
 		return;
 
+	resolv = f_exists(dnscrypt_resolv_alt) ? dnscrypt_resolv_alt : dnscrypt_resolv;
+
 	snprintf(dnscrypt_local, sizeof(dnscrypt_local), "127.0.0.1:%s", nvram_safe_get("dnscrypt_port"));
+	start_dnscrypt_instance(dnscrypt_local, resolv);
 
-	dnscrypt_ekeys = nvram_get_int("dnscrypt_ephemeral_keys") ? "-E" : "";
-	edns1 = nvram_get_int("dnsmasq_edns_size") < 1252 ? "-e" : ""; /* in case of EDNS packet size is set lower than 1252 in dnsmasq, set it also for dnscrypt-proxy */
-	edns2 = nvram_get_int("dnsmasq_edns_size") < 1252 ? nvram_safe_get("dnsmasq_edns_size") : "";
-
-	if (nvram_get_int("dnscrypt_manual"))
-		eval("dnscrypt-proxy", "-d", dnscrypt_ekeys,
-		     "-a", dnscrypt_local,
-		     "-m", nvram_safe_get("dnscrypt_log"),
-		     "-N", nvram_safe_get("dnscrypt_provider_name"),
-		     "-k", nvram_safe_get("dnscrypt_provider_key"),
-		     "-r", nvram_safe_get("dnscrypt_resolver_address"),
-		     edns1, edns2);
-	else
-		eval("dnscrypt-proxy", "-d", dnscrypt_ekeys,
-		     "-a", dnscrypt_local,
-		     "-m", nvram_safe_get("dnscrypt_log"),
-		     "-R", nvram_safe_get("dnscrypt_resolver"),
-		     edns1, edns2,
-		     "-L", f_exists(dnscrypt_resolv_alt) ? (char *) dnscrypt_resolv_alt : (char *) dnscrypt_resolv);
 #ifdef TCONFIG_IPV6
 	if (get_ipv6_service()) { /* when ipv6 enabled */
 		snprintf(dnscrypt_local, sizeof(dnscrypt_local), "::1:%s", nvram_safe_get("dnscrypt_port"));
-
-		if (nvram_get_int("dnscrypt_manual"))
-			eval("dnscrypt-proxy", "-d", dnscrypt_ekeys,
-			     "-a", dnscrypt_local,
-			     "-m", nvram_safe_get("dnscrypt_log"),
-			     "-N", nvram_safe_get("dnscrypt_provider_name"),
-			     "-k", nvram_safe_get("dnscrypt_provider_key"),
-			     "-r", nvram_safe_get("dnscrypt_resolver_address"),
-			     edns1, edns2);
-		else
-			eval("dnscrypt-proxy", "-d", dnscrypt_ekeys,
-			     "-a", dnscrypt_local,
-			     "-m", nvram_safe_get("dnscrypt_log"),
-			     "-R", nvram_safe_get("dnscrypt_resolver"),
-			     edns1, edns2,
-			     "-L", f_exists(dnscrypt_resolv_alt) ? (char *) dnscrypt_resolv_alt : (char *) dnscrypt_resolv);
+		start_dnscrypt_instance(dnscrypt_local, resolv);
 	}
 #endif
 }
@@ -673,6 +683,8 @@ void generate_mdns_config(void)
 
 void start_mdns(void)
 {
+	int debug;
+
 	if (nvram_get_int("g_upgrade") || nvram_get_int("g_reboot"))
 		return;
 
@@ -685,12 +697,22 @@ void start_mdns(void)
 	mkdir_if_none(avahicfgpath);
 	mkdir_if_none(avahisrvpath);
 
+	debug = nvram_get_int("mdns_debug");
+
 	/* alternative (user) configuration file */
-	if (f_exists(avahicfgalt))
-		eval("avahi-daemon", "-D", "-f", (char *)avahicfgalt, (nvram_get_int("mdns_debug") ? "--debug" : NULL));
+	if (f_exists(avahicfgalt)) {
+		if (debug)
+			eval("avahi-daemon", "-D", "-f", (char *)avahicfgalt, "--debug");
+		else
+			eval("avahi-daemon", "-D", "-f", (char *)avahicfgalt);
+	}
 	else {
 		generate_mdns_config();
-		eval("avahi-daemon", "-D", (nvram_get_int("mdns_debug") ? "--debug" : NULL));
+
+		if (debug)
+			eval("avahi-daemon", "-D", "--debug");
+		else
+			eval("avahi-daemon", "-D");
 	}
 }
 
@@ -953,7 +975,10 @@ void start_httpd(void)
 		chdir("/www");
 
 	sleep(1);
-	ret = eval("httpd", (nvram_get_int("http_nocache") ? "-N" : ""));
+	if (nvram_get_int("http_nocache"))
+		ret = eval("httpd", "-N");
+	else
+		ret = eval("httpd");
 	chdir("/");
 
 	if (ret)
@@ -1428,7 +1453,10 @@ void start_cron(void)
 {
 	stop_cron();
 
-	eval("crond", (nvram_contains_word("log_events", "crond") ? NULL : "-l"), "9");
+	if (nvram_contains_word("log_events", "crond"))
+		eval("crond");
+	else
+		eval("crond", "-l", "9");
 
 	if (!nvram_contains_word("debug_norestart", "crond"))
 		pid_crond = -2;
@@ -1882,8 +1910,9 @@ void stop_igmp_proxy(void)
 void start_udpxy(void)
 {
 	char wan_prefix[] = "wan"; /* not yet mwan ready, use wan for now */
-	char buffer[32], buffer2[16];
-	int i, bind_lan = 0;
+	char buffer[32], buffer2[16], lan_ifname[32];
+	char *argv[12];
+	int i, argc, bind_lan;
 
 	/* only if enabled */
 	if (!nvram_get_int("udpxy_enable"))
@@ -1895,36 +1924,49 @@ void start_udpxy(void)
 		else
 			snprintf(buffer, sizeof(buffer), "%s", get_wanface(wan_prefix)); /* copy wanface to buffer */
 
+		bind_lan = 0;
+		lan_ifname[0] = '\0';
+
 		/* check interface to listen on */
 		/* check udpxy enabled/selected for br0 - br3 */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			int ret1 = 0, ret2 = 0;
+
 			snprintf(buffer2, sizeof(buffer2), (i == 0 ? "udpxy_lan" : "udpxy_lan%d"), i);
 			ret1 = nvram_match(buffer2, "1");
+
 			snprintf(buffer2, sizeof(buffer2), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
 			ret2 = strcmp(nvram_safe_get(buffer2), "") != 0;
+
 			if (ret1 && ret2) {
 				snprintf(buffer2, sizeof(buffer2), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
-#ifdef TOMATO64
-				eval("udpxy", "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-a", nvram_safe_get(buffer2), "-m", buffer, (nvram_get_int("udpxy_stats") ? "-S" : ""));
-#else
-				eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-a", nvram_safe_get(buffer2), "-m", buffer);
-#endif /* TOMATO64 */
+				strlcpy(lan_ifname, nvram_safe_get(buffer2), sizeof(lan_ifname));
 				bind_lan = 1;
 				break; /* start udpxy only once and only for one lanX */
 			}
 		}
-		/* address/interface to listen on: default = 0.0.0.0 */
-		if (!bind_lan)
-#ifdef TOMATO64
-		{
-			eval("udpxy", "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-m", buffer, (nvram_get_int("udpxy_stats") ? "-S" : ""));
+
+		argc = 0;
+		argv[argc++] = "udpxy";
+
+		if (nvram_get_int("udpxy_stats"))
+			argv[argc++] = "-S";
+
+		argv[argc++] = "-p";
+		argv[argc++] = nvram_safe_get("udpxy_port");
+		argv[argc++] = "-c";
+		argv[argc++] = nvram_safe_get("udpxy_clients");
+
+		if (bind_lan) {
+			argv[argc++] = "-a";
+			argv[argc++] = lan_ifname;
 		}
-#else
-		{
-			eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-m", buffer);
-		}
-#endif /* TOMATO64 */
+
+		argv[argc++] = "-m";
+		argv[argc++] = buffer;
+		argv[argc] = NULL;
+
+		(void)_eval(argv, NULL, 0, NULL);
 	}
 }
 
@@ -2023,9 +2065,9 @@ void start_ntpd(void)
 
 		sh_argv[sh_index] = NULL;
 
-		_eval(sh_argv, NULL, 0, NULL);
+		(void)_eval(sh_argv, NULL, 0, NULL);
 #else
-		_eval(ntpd_argv, NULL, 0, NULL);
+		(void)_eval(ntpd_argv, NULL, 0, NULL);
 #endif /* TOMATO64 */
 
 		if (!nvram_contains_word("debug_norestart", "ntpd"))
