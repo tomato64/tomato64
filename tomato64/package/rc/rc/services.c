@@ -754,7 +754,7 @@ void start_irqbalance(void)
 #endif /* TCONFIG_IRQBALANCE */
 
 #ifdef TCONFIG_FANCTRL
-void start_phy_tempsense()
+void start_phy_tempsense(void)
 {
 	/* renice to high priority (10) - avoid revs fluctuations on high CPU load */
 	char *phy_tempsense_argv[] = { "nice", "-n", "-10", "phy_tempsense", NULL };
@@ -764,7 +764,7 @@ void start_phy_tempsense()
 	_eval(phy_tempsense_argv, NULL, 0, &pid_phy_tempsense);
 }
 
-void stop_phy_tempsense()
+void stop_phy_tempsense(void)
 {
 	pid_phy_tempsense = -1;
 	killall_tk_period_wait("phy_tempsense", 50);
@@ -787,7 +787,7 @@ void start_adblock(int update)
 		xstart(adblockexe, "delay");
 }
 
-void stop_adblock()
+void stop_adblock(void)
 {
 	xstart(adblockexe, "stop");
 }
