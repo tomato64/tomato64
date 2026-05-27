@@ -922,6 +922,7 @@ void dns_to_resolv(void)
 		}
 		else {
 			logerr(__FUNCTION__, __LINE__, dmresolv);
+			umask(m);
 			return;
 		}
 		umask(m);
