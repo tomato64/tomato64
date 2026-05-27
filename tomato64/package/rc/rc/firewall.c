@@ -1388,7 +1388,7 @@ static void filter_forward(void)
 	/* IPv4 IPSec */
 	if (nvram_match("ipsec_pass", "1") || nvram_match("ipsec_pass", "3")) {
 		for (j = 1; j <= MWAN_MAX; j++) {
-			for (i = 0; i < (unsigned int) wanfaces[j - 1].count; ++i) {
+			for (i = 0; i < (unsigned int)wanfaces[j - 1].count; ++i) {
 				if (*(wanfaces[j - 1].iface[i].name))
 					ipt_write("-A FORWARD -i %s -p esp -j ACCEPT\n"				/* ESP */
 					          "-A FORWARD -i %s -p ah -j ACCEPT\n"				/* AH */
@@ -1460,7 +1460,7 @@ static void filter_forward(void)
 
 	/* IPv4 */
 	for (j = 1; j <= MWAN_MAX; j++) {
-		for (i = 0; i < (unsigned int) wanfaces[j - 1].count; ++i) {
+		for (i = 0; i < (unsigned int)wanfaces[j - 1].count; ++i) {
 			if (*(wanfaces[j - 1].iface[i].name))
 				ipt_write("-A FORWARD -i %s -j wanin\n"			/* generic from wan */
 				          "-A FORWARD -o %s -j wanout\n",		/* generic to wan */
@@ -1506,7 +1506,7 @@ static void filter_forward(void)
 		/* IPv4 - upnp chain for filter */
 		ipt_write(":upnp - [0:0]\n");
 		for (j = 1; j <= MWAN_MAX; j++) {
-			for (i = 0; i < wanfaces[j - 1].count; ++i) {
+			for (i = 0; i < (unsigned int)wanfaces[j - 1].count; ++i) {
 				if (*(wanfaces[j - 1].iface[i].name))
 					ipt_write("-A FORWARD -i %s -j upnp\n", wanfaces[j - 1].iface[i].name);
 			}
