@@ -24,6 +24,93 @@
 #define LOGMSG_NVDEBUG	"transmission_debug"
 
 
+static void json_write_string(FILE *fp, const char *s1, const char *s2)
+{
+	const char *s;
+	unsigned char c;
+	int part;
+
+	fputc('"', fp);
+
+	for (part = 0; part < 2; ++part) {
+		s = (part == 0) ? s1 : s2;
+		if (!s)
+			continue;
+
+		while (*s) {
+			c = (unsigned char)*s++;
+
+			switch (c) {
+			case '"':
+				fputs("\\\"", fp);
+				break;
+			case '\\':
+				fputs("\\\\", fp);
+				break;
+			case '\b':
+				fputs("\\b", fp);
+				break;
+			case '\f':
+				fputs("\\f", fp);
+				break;
+			case '\n':
+				fputs("\\n", fp);
+				break;
+			case '\r':
+				fputs("\\r", fp);
+				break;
+			case '\t':
+				fputs("\\t", fp);
+				break;
+			default:
+				if (c < 0x20)
+					fprintf(fp, "\\u%04x", (unsigned int)c);
+				else
+					fputc(c, fp);
+				break;
+			}
+		}
+	}
+	fputc('"', fp);
+}
+
+static void json_write_setting(FILE *fp, const char *key, const char *value1, const char *value2)
+{
+	fprintf(fp, "\"%s\": ", key);
+	json_write_string(fp, value1, value2);
+	fputs(",\n", fp);
+}
+
+static int json_custom_is_space(char c)
+{
+	return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
+}
+
+static int json_write_custom_settings(FILE *fp, const char *custom)
+{
+	const char *start;
+	const char *end;
+
+	if (!custom)
+		return 0;
+
+	start = custom;
+	while (*start && (json_custom_is_space(*start) || *start == ','))
+		start++;
+
+	end = start + strlen(start);
+	while (end > start && (json_custom_is_space(*(end - 1)) || *(end - 1) == ','))
+		end--;
+
+	if (end <= start)
+		return 0;
+
+	fwrite(start, 1, (size_t)(end - start), fp);
+	fputs(",\n", fp);
+
+	return 1;
+}
+
 static void setup_tr_watchdog(void)
 {
 	FILE *fp;
@@ -62,24 +149,24 @@ static void build_tr_firewall(void)
 
 	/* open BT port */
 	fprintf(p, "#!/bin/sh\n"
-	           "iptables -A INPUT -p tcp --dport %s -j %s\n"
-	           "iptables -A INPUT -p udp --dport %s -j %s\n",
-	            nvram_safe_get("bt_port"), chain_in_accept,
-	            nvram_safe_get("bt_port"), chain_in_accept);
+	           "iptables -A INPUT -p tcp --dport %d -j %s\n"
+	           "iptables -A INPUT -p udp --dport %d -j %s\n",
+	            nvram_get_int("bt_port"), chain_in_accept,
+	            nvram_get_int("bt_port"), chain_in_accept);
 #ifdef TCONFIG_IPV6
 	if (ipv6_enabled())
-		fprintf(p, "ip6tables -A INPUT -p tcp --dport %s -j %s\n"
-		           "ip6tables -A INPUT -p udp --dport %s -j %s\n",
-		           nvram_safe_get("bt_port"), chain_in_accept,
-		           nvram_safe_get("bt_port"), chain_in_accept);
+		fprintf(p, "ip6tables -A INPUT -p tcp --dport %d -j %s\n"
+		           "ip6tables -A INPUT -p udp --dport %d -j %s\n",
+		           nvram_get_int("bt_port"), chain_in_accept,
+		           nvram_get_int("bt_port"), chain_in_accept);
 #endif
 
 	/* GUI WAN access */
 	if (nvram_get_int("bt_rpc_wan"))
-		fprintf(p, "iptables -A INPUT -p tcp --dport %s -j %s\n"
-		           "iptables -t nat -A WANPREROUTING -p tcp --dport %s -j DNAT --to-destination %s\n", /* nat table */
-		            nvram_safe_get("bt_port_gui"), chain_in_accept,
-		            nvram_safe_get("bt_port_gui"), nvram_safe_get("lan_ipaddr"));
+		fprintf(p, "iptables -A INPUT -p tcp --dport %d -j %s\n"
+		           "iptables -t nat -A WANPREROUTING -p tcp --dport %d -j DNAT --to-destination %s\n", /* nat table */
+		            nvram_get_int("bt_port_gui"), chain_in_accept,
+		            nvram_get_int("bt_port_gui"), nvram_safe_get("lan_ipaddr"));
 
 	fclose(p);
 	chmod(tr_fw_script, 0744);
@@ -88,11 +175,12 @@ static void build_tr_firewall(void)
 void start_bittorrent(int force)
 {
 	FILE *fp;
-	char *pb, *pc, *pd, *pe, *pf, *ph, *pi, *pj, *pk, *pl, *pm, *pn, *po, *pp, *pr, *pt, *pu;
-	char *whitelistEnabled;
+	const char *pb, *pc, *pd, *pe, *pf, *ph, *pi, *pj, *pk, *pl, *pm, *pn, *po, *pp, *pr, *pt, *pu;
+	const char *whitelistEnabled, *custom;
 	char buf[256], buf2[64], settings_dir[256], log_path[256];
 	int n;
 	pid_t pidof_child = 0;
+	pid_t child;
 
 	/* only if enabled or forced */
 	if (!nvram_get_int("bt_enable") && force == 0)
@@ -140,6 +228,8 @@ void start_bittorrent(int force)
 		whitelistEnabled = "true";
 	}
 
+	custom = nvram_safe_get("bt_custom");
+
 	/* writing data to file */
 	mkdir_if_none(tr_dir);
 	if (!(fp = fopen(tr_settings, "w"))) {
@@ -148,28 +238,41 @@ void start_bittorrent(int force)
 	}
 
 	fprintf(fp, "{\n"
-	            "\"peer-port\": %s,\n"
+	            "\"peer-port\": %d,\n"
 	            "\"speed-limit-down-enabled\": %s,\n"
 	            "\"speed-limit-up-enabled\": %s,\n"
-	            "\"speed-limit-down\": %s,\n"
-	            "\"speed-limit-up\": %s,\n"
+	            "\"speed-limit-down\": %d,\n"
+	            "\"speed-limit-up\": %d,\n"
 	            "\"rpc-enabled\": %s,\n"
-	            "\"rpc-port\": %s,\n"
+	            "\"rpc-port\": %d,\n"
 	            "\"rpc-bind-address\": \"0.0.0.0\",\n"
 	            "\"rpc-whitelist\": \"*\",\n"
 	            "\"rpc-whitelist-enabled\": %s,\n"
 	            "\"rpc-host-whitelist\": \"*\",\n"
-	            "\"rpc-host-whitelist-enabled\": %s,\n"
-	            "\"rpc-username\": \"%s\",\n"
-	            "\"rpc-password\": \"%s\",\n"
-	            "\"download-dir\": \"%s\",\n"
-	            "\"incomplete-dir-enabled\": \"%s\",\n"
-	            "\"incomplete-dir\": \"%s/.incomplete\",\n"
-	            "\"watch-dir\": \"%s\",\n"
-	            "\"watch-dir-enabled\": %s,\n"
-	            "\"peer-limit-global\": %s,\n"
-	            "\"peer-limit-per-torrent\": %s,\n"
-	            "\"upload-slots-per-torrent\": %s,\n"
+	            "\"rpc-host-whitelist-enabled\": %s,\n",
+	            nvram_get_int("bt_port"),
+	            pc,
+	            pd,
+	            nvram_get_int("bt_dl"),
+	            nvram_get_int("bt_ul"),
+	            pb,
+	            nvram_get_int("bt_port_gui"),
+	            whitelistEnabled,
+	            whitelistEnabled);
+
+	json_write_setting(fp, "rpc-username", nvram_safe_get("bt_login"), NULL);
+	json_write_setting(fp, "rpc-password", nvram_safe_get("bt_password"), NULL);
+	json_write_setting(fp, "download-dir", nvram_safe_get("bt_dir"), NULL);
+
+	fprintf(fp, "\"incomplete-dir-enabled\": %s,\n", pe);
+
+	json_write_setting(fp, "incomplete-dir", nvram_safe_get("bt_dir"), "/.incomplete");
+	json_write_setting(fp, "watch-dir", nvram_safe_get("bt_dir"), NULL);
+
+	fprintf(fp, "\"watch-dir-enabled\": %s,\n"
+	            "\"peer-limit-global\": %d,\n"
+	            "\"peer-limit-per-torrent\": %d,\n"
+	            "\"upload-slots-per-torrent\": %d,\n"
 	            "\"dht-enabled\": %s,\n"
 	            "\"pex-enabled\": %s,\n"
 	            "\"lpd-enabled\": %s,\n"
@@ -177,36 +280,12 @@ void start_bittorrent(int force)
 	            "\"ratio-limit-enabled\": %s,\n"
 	            "\"ratio-limit\": %s,\n"
 	            "\"idle-seeding-limit-enabled\": %s,\n"
-	            "\"idle-seeding-limit\": %s,\n"
-	            "\"blocklist-enabled\": %s,\n"
-	            "\"blocklist-url\": \"%s\",\n"
-	            "\"download-queue-enabled\": %s,\n"
-	            "\"download-queue-size\": %s,\n"
-	            "\"seed-queue-enabled\": %s,\n"
-	            "\"seed-queue-size\": %s,\n"
-	            "\"message-level\": %s,\n"
-	            "%s%s"
-	            "\"rpc-authentication-required\": %s\n"
-	            "}\n",
-	            nvram_safe_get( "bt_port"),
-	            pc,
-	            pd,
-	            nvram_safe_get("bt_dl"),
-	            nvram_safe_get("bt_ul"),
-	            pb,
-	            nvram_safe_get("bt_port_gui"),
-	            whitelistEnabled,
-	            whitelistEnabled,
-	            nvram_safe_get("bt_login"),
-	            nvram_safe_get("bt_password"),
-	            nvram_safe_get("bt_dir"),
-	            pe,
-	            nvram_safe_get("bt_dir"),
-	            nvram_safe_get("bt_dir"),
+	            "\"idle-seeding-limit\": %d,\n"
+	            "\"blocklist-enabled\": %s,\n",
 	            pf,
-	            nvram_safe_get("bt_peer_limit_global"),
-	            nvram_safe_get("bt_peer_limit_per_torrent"),
-	            nvram_safe_get("bt_ul_slot_per_torrent"),
+	            nvram_get_int("bt_peer_limit_global"),
+	            nvram_get_int("bt_peer_limit_per_torrent"),
+	            nvram_get_int("bt_ul_slot_per_torrent"),
 	            pi,
 	            pj,
 	            po,
@@ -214,19 +293,32 @@ void start_bittorrent(int force)
 	            ph,
 	            nvram_safe_get("bt_ratio"),
 	            pr,
-	            nvram_safe_get("bt_ratio_idle"),
-	            pm,
-	            nvram_safe_get("bt_blocklist_url"),
+	            nvram_get_int("bt_ratio_idle"),
+	            pm);
+
+	json_write_setting(fp, "blocklist-url", nvram_safe_get("bt_blocklist_url"), NULL);
+
+	fprintf(fp, "\"download-queue-enabled\": %s,\n"
+	            "\"download-queue-size\": %d,\n"
+	            "\"seed-queue-enabled\": %s,\n"
+	            "\"seed-queue-size\": %d,\n"
+	            "\"message-level\": %d,\n",
 	            pt,
-	            nvram_safe_get("bt_dl_queue_size"),
+	            nvram_get_int("bt_dl_queue_size"),
 	            pu,
-	            nvram_safe_get("bt_ul_queue_size"),
-	            nvram_safe_get("bt_message"),
-	            nvram_safe_get("bt_custom"),
-	            (strcmp(nvram_safe_get("bt_custom"), "") ? ",\n" : ""),
+	            nvram_get_int("bt_ul_queue_size"),
+	            nvram_get_int("bt_message"));
+
+	json_write_custom_settings(fp, custom);
+
+	fprintf(fp, "\"rpc-authentication-required\": %s\n"
+	            "}\n",
 	            pl);
 
-	fclose(fp);
+	if (fclose(fp) != 0) {
+		logerr(__FUNCTION__, __LINE__, tr_settings);
+		return;
+	}
 
 	chmod(tr_settings, 0644);
 
@@ -234,7 +326,12 @@ void start_bittorrent(int force)
 	build_tr_firewall();
 
 	/* fork new process */
-	if (fork() != 0) /* foreground process */
+	child = fork();
+	if (child < 0) {
+		logerr(__FUNCTION__, __LINE__, "fork");
+		return;
+	}
+	if (child != 0) /* foreground process */
 		return;
 
 	pidof_child = getpid();
@@ -247,7 +344,7 @@ void start_bittorrent(int force)
 	f_write_procsysnet("core/rmem_max", "4194304");
 	f_write_procsysnet("core/wmem_max", "2080768");
 	memset(buf2, 0, sizeof(buf2));
-	if (f_read_string("/proc/sys/net/ipv4/tcp_adv_win_scale", buf2, sizeof(buf2)) > 0 && atoi(buf2) > 0);
+	if (f_read_string("/proc/sys/net/ipv4/tcp_adv_win_scale", buf2, sizeof(buf2)) > 0 && atoi(buf2) > 0)
 		f_write_procsysnet("ipv4/tcp_adv_win_scale", "4");
 
 	/* wait a given time for partition to be mounted, etc */
@@ -266,9 +363,6 @@ void start_bittorrent(int force)
 		mkdir_if_none(buf);
 	}
 
-	/* TBD: need better regex, trim triple commas, be safe for passwords etc */
-	eval("sed", "-i", "s/,,\\s/, /g", tr_settings);
-
 	snprintf(buf, sizeof(buf), "%s/.settings", pk);
 	eval("cp", tr_settings, buf);
 
@@ -276,6 +370,8 @@ void start_bittorrent(int force)
 	eval("rm", "-rf", buf);
 
 	if (nvram_get_int("bt_blocklist")) {
+		mkdir_if_none(buf);
+
 		snprintf(buf, sizeof(buf), "%s/.settings/blocklists/level1.gz", pk);
 #ifdef TCONFIG_STUBBY
 		eval("wget", nvram_safe_get("bt_blocklist_url"), "-O", buf);
@@ -353,15 +449,15 @@ void stop_bittorrent(void)
 
 	/* restore default buffers */
 	memset(buf, 0, sizeof(buf));
-	if (f_read_string("/proc/sys/net/core/rmem_default", buf, sizeof(buf)) > 0 && atoi(buf) > 0);
+	if (f_read_string("/proc/sys/net/core/rmem_default", buf, sizeof(buf)) > 0 && atoi(buf) > 0)
 		f_write_procsysnet("core/rmem_max", buf);
 
 	memset(buf, 0, sizeof(buf));
-	if (f_read_string("/proc/sys/net/core/wmem_default", buf, sizeof(buf)) > 0 && atoi(buf) > 0);
+	if (f_read_string("/proc/sys/net/core/wmem_default", buf, sizeof(buf)) > 0 && atoi(buf) > 0)
 		f_write_procsysnet("core/wmem_max", buf);
 
 	memset(buf, 0, sizeof(buf));
-	if (f_read_string("/proc/sys/net/ipv4/tcp_adv_win_scale", buf, sizeof(buf)) > 0 && atoi(buf) > 0);
+	if (f_read_string("/proc/sys/net/ipv4/tcp_adv_win_scale", buf, sizeof(buf)) > 0 && atoi(buf) > 0)
 		f_write_procsysnet("ipv4/tcp_adv_win_scale", "2");
 }
 
