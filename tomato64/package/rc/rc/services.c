@@ -2223,9 +2223,10 @@ static void start_media_server(int force)
 	int port, https;
 	pid_t pid;
 	char *dbdir;
-	char *argv[] = { "minidlna", "-f", "/etc/minidlna.conf", "-r", "-P", "/var/run/minidlna.pid", NULL, NULL };
+	char *argv[10];
+	char *conf_file;
 	static int once = 1;
-	int ret, index = 4, i;
+	int ret, index, i;
 	char *msi;
 	unsigned char ea[ETHER_ADDR_LEN];
 	char serial[18], uuident[37];
@@ -2240,22 +2241,10 @@ static void start_media_server(int force)
 	if (serialize_restart("minidlna", 1))
 		return;
 
-	if (!nvram_get_int("ms_sas")) { /* scan media at startup? */
-		once = 0;
-		argv[index - 1] = NULL;
-	}
-	else if (!once) /* already scanned */
-		argv[index - 1] = NULL;
+	conf_file = f_exists("/etc/minidlna.alt") ? "/etc/minidlna.alt" : "/etc/minidlna.conf";
 
-	if (nvram_get_int("ms_rescan")) { /* rescan on the next run? */
-		argv[index - 1] = "-R";
-		nvram_unset("ms_rescan");
-	}
-
-	if (f_exists("/etc/minidlna.alt"))
-		argv[2] = "/etc/minidlna.alt";
-	else {
-		if ((f = fopen(argv[2], "w")) != NULL) {
+	if (!f_exists("/etc/minidlna.alt")) {
+		if ((f = fopen(conf_file, "w")) != NULL) {
 			port = nvram_get_int("ms_port");
 			https = nvram_get_int("https_enable");
 			msi = nvram_safe_get("ms_ifname");
@@ -2273,7 +2262,8 @@ static void start_media_server(int force)
 			snprintf(uuident, sizeof(uuident), "4d696e69-444c-164e-9d41-%02x%02x%02x%02x%02x%02x", ea[0], ea[1], ea[2], ea[3], ea[4], ea[5]);
 
 			if (strlen(msi)) {
-				buffer3[0] = '\0'; /* reset */
+				buffer3[0] = '\0';
+
 				for (i = 0; i < BRIDGE_COUNT; i++) {
 					snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
 					snprintf(buffer2, sizeof(buffer2), "br%d", i);
@@ -2318,28 +2308,53 @@ static void start_media_server(int force)
 			           nvram_safe_get("ms_custom"));
 
 			/* media directories */
-			if ((buf = strdup(nvram_safe_get("ms_dirs"))) && (*buf)) {
-				/* path<restricted[A|V|P|] */
-				p = buf;
-				while ((q = strsep(&p, ">")) != NULL) {
-					if ((vstrsep(q, "<", &path, &restricted) < 1) || (!path) || (!*path))
-						continue;
+			buf = strdup(nvram_safe_get("ms_dirs"));
+			if (buf) {
+				if (*buf) {
+					/* path<restricted[A|V|P|] */
+					p = buf;
+					while ((q = strsep(&p, ">")) != NULL) {
+						if ((vstrsep(q, "<", &path, &restricted) < 1) || (!path) || (!*path))
+							continue;
 
-					fprintf(f, "media_dir=%s%s%s\n",
-						restricted ? : "", (restricted && *restricted) ? "," : "", path);
+						fprintf(f, "media_dir=%s%s%s\n",
+							restricted ? : "", (restricted && *restricted) ? "," : "", path);
+					}
 				}
 				free(buf);
 			}
 			fclose(f);
 		}
 		else {
-			logerr(__FUNCTION__, __LINE__, argv[2]);
+			logerr(__FUNCTION__, __LINE__, conf_file);
 			return;
 		}
 	}
 
+	index = 0;
+	argv[index++] = "minidlna";
+	argv[index++] = "-f";
+	argv[index++] = conf_file;
+
+	if (nvram_get_int("ms_rescan")) { /* rescan on the next run? */
+		argv[index++] = "-R";
+		nvram_unset("ms_rescan");
+	}
+	else if (nvram_get_int("ms_sas")) { /* scan media at startup? */
+		if (once)
+			argv[index++] = "-r";
+	}
+	else {
+		once = 0;
+	}
+
+	argv[index++] = "-P";
+	argv[index++] = "/var/run/minidlna.pid";
+
 	if (nvram_get_int("ms_debug"))
 		argv[index++] = "-v";
+
+	argv[index] = NULL;
 
 	ret = _eval(argv, NULL, 0, &pid);
 	sleep(1);
