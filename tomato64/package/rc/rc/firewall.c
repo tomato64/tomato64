@@ -828,7 +828,7 @@ static void mangle_table(void)
 
 	for (j = 1; j <= MWAN_MAX; j++) {
 		for (i = 0; i < wanfaces[j - 1].count; ++i) {
-			if ((*(wanfaces[j - 1].iface[i].name)) && (wanup[0])) {
+			if ((*(wanfaces[j - 1].iface[i].name)) && (wanup[j - 1])) {
 				/* Drop incoming packets which destination IP address is to our LAN side directly */
 				for (n = 0; n < BRIDGE_COUNT; n++) {
 					if ((strcmp(lanaddr[n], "") != 0 && strcmp(lanmask[n], "") != 0) || (n == 0)) /* note: ipt will correct lanaddr[0] */
