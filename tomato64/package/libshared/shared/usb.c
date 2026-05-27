@@ -479,10 +479,10 @@ char *find_label_or_uuid(char *dev_name, char *label, size_t label_sz, char *uui
 	volume_id_free_buffer(&id);
 
 	if (label && (*id.label != 0))
-		strlcpy(label, id.label, sizeof(label));
+		strlcpy(label, id.label, label_sz);
 
 	if (uuid && (*id.uuid != 0))
-		strlcpy(uuid, id.uuid, sizeof(uuid));
+		strlcpy(uuid, id.uuid, uuid_sz);
 
 	close(id.fd);
 
