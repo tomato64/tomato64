@@ -31,6 +31,46 @@ typedef struct
 
 static waninfo_t wan_info;
 
+static void mwan_argv_to_cmd(char *const argv[], char *cmd, const size_t cmd_sz)
+{
+	int i, n, off, rem;
+
+	if (cmd_sz == 0)
+		return;
+
+	cmd[0] = '\0';
+	off = 0;
+
+	for (i = 0; argv[i]; ++i) {
+		rem = (int)cmd_sz - off;
+		if (rem <= 1)
+			break;
+
+		n = snprintf(cmd + off, rem, "%s%s", (i == 0) ? "" : " ", argv[i]);
+		if ((n < 0) || (n >= rem)) {
+			cmd[cmd_sz - 1] = '\0';
+			break;
+		}
+
+		off += n;
+	}
+}
+
+static int mwan_eval(char *const argv[], const char *func, const char *prefix)
+{
+	char cmd[2048];
+
+	mwan_argv_to_cmd(argv, cmd, sizeof(cmd));
+
+	if (prefix)
+		logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", func, prefix, cmd);
+	else
+		logmsg(LOG_DEBUG, "*** %s: cmd=[%s]", func, cmd);
+
+	return _eval(argv, NULL, 0, NULL);
+}
+
+
 int get_sta_wan_prefix(char *sPrefix, const size_t buf_sz)
 {
 	int mwan_num;
@@ -136,33 +176,31 @@ void mwan_table_del(char *sPrefix)
 {
 	int wan_unit;
 	int i;
-	char cmd[256];
+	char table[12];
+	char pref[12];
+	char *rule_del_argv[] = { "ip", "rule", "del", "table", table, "pref", pref, NULL };
 
 	logmsg(LOG_DEBUG, "*** %s IN", __FUNCTION__);
 
 	wan_unit = get_wan_unit(sPrefix);
 	get_wan_info(sPrefix); /* get the current wan infos to work with */
 
+	snprintf(table, sizeof(table), "%d", wan_unit);
+
 	/* ip rule del table WAN1 pref 101 (gateway); table: 1 to 4; pref: 101 to 104 */
-	memset(cmd, 0, sizeof(cmd));
-	snprintf(cmd, sizeof(cmd), "ip rule del table %d pref 10%d", wan_unit, wan_unit);
-	logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, sPrefix, cmd);
-	system(cmd);
-	
+	snprintf(pref, sizeof(pref), "10%d", wan_unit);
+	mwan_eval(rule_del_argv, __FUNCTION__, sPrefix);
+
 	/* ip rule del table WAN1 pref 111 (dns); table: 1 to 4; pref: 111 to 114 */
 	/* delete only active & valid DNS; two options right now: only AUTO DNS server (1x DNS) or Manual DNS server (2x DNS) (see GUI basic-network.asp) */
 	for (i = 0 ; i < wan_info.dns->count; ++i) {
-		memset(cmd, 0, sizeof(cmd));
-		snprintf(cmd, sizeof(cmd), "ip rule del table %d pref 11%d", wan_unit, wan_unit);
-		logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, sPrefix, cmd);
-		system(cmd);
+		snprintf(pref, sizeof(pref), "11%d", wan_unit);
+		mwan_eval(rule_del_argv, __FUNCTION__, sPrefix);
 	}
 
 	/* ip rule del fwmark 0x100/0xf00 table 1 pref 121 (mark); table: 1 to 4; pref: 121 to 124 */
-	memset(cmd, 0, sizeof(cmd));
-	snprintf(cmd, sizeof(cmd), "ip rule del table %d pref 12%d", wan_unit, wan_unit);
-	logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, sPrefix, cmd);
-	system(cmd);
+	snprintf(pref, sizeof(pref), "12%d", wan_unit);
+	mwan_eval(rule_del_argv, __FUNCTION__, sPrefix);
 
 	logmsg(LOG_DEBUG, "*** %s OUT", __FUNCTION__);
 }
@@ -173,8 +211,24 @@ void mwan_table_add(char *sPrefix)
 	int mwan_num, wan_unit, proto;
 	int wanid;
 	int i;
-	char cmd[256];
-	char buf[32];
+	char table[12];
+	char pref[12];
+	char mark[16];
+	char wanid_s[12];
+	char cidr[32];
+	char nexthop[32];
+	char nvram_var[16];
+	char *lan_ifname;
+	char *lan_ipaddr;
+	char *lan_netmask;
+	char *route_dst;
+	char *rule_from_argv[] = { "ip", "rule", "add", "from", wan_info.wan_ipaddr, "table", table, "pref", pref, NULL };
+	char *rule_dns_argv[] = { "ip", "rule", "add", "to", NULL, "table", table, "pref", pref, NULL };
+	char *rule_mark_argv[] = { "ip", "rule", "add", "fwmark", mark, "table", table, "pref", pref, NULL };
+	char *route_link_argv[] = { "ip", "route", "append", NULL, "dev", wan_info.wan_name, "proto", "kernel", "scope", "link", "src", wan_info.wan_ipaddr, "table", wanid_s, NULL };
+	char *route_lan_argv[] = { "ip", "route", "append", cidr, "dev", NULL, "proto", "kernel", "scope", "link", "src", NULL, "table", table, NULL };
+	char *route_lo_argv[] = { "ip", "route", "append", "127.0.0.0/8", "dev", "lo", "scope", "link", "table", table, NULL };
+	char *route_default_argv[] = { "ip", "route", "append", "default", "via", nexthop, "dev", wan_info.wan_name, "table", table, NULL };
 
 	logmsg(LOG_DEBUG, "*** %s IN for %s", __FUNCTION__, sPrefix);
 
@@ -188,84 +242,64 @@ void mwan_table_add(char *sPrefix)
 	wan_unit = get_wan_unit(sPrefix);
 	get_wan_info(sPrefix); /* get the current wan infos to work with */
 	proto = get_wanx_proto(sPrefix);
+	snprintf(table, sizeof(table), "%d", wan_unit);
 
 	if (check_wanup(sPrefix)) {
 		/* ip rule add from WAN_IP table route_id pref 10X */
-		memset(cmd, 0, sizeof(cmd));
-		snprintf(cmd, sizeof(cmd), "ip rule add from %s table %d pref 10%d", wan_info.wan_ipaddr, wan_unit, wan_unit);
-		logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, sPrefix, cmd);
-		system(cmd);
-		
+		snprintf(pref, sizeof(pref), "10%d", wan_unit);
+		mwan_eval(rule_from_argv, __FUNCTION__, sPrefix);
+
 		/* set the routing rules of DNS */
 		for (i = 0; i < wan_info.dns->count; ++i) {
-			memset(cmd, 0, sizeof(cmd));
-			snprintf(cmd, sizeof(cmd), "ip rule add to %s table %d pref 11%d", inet_ntoa(wan_info.dns->dns[i].addr), wan_unit, wan_unit);
-			logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, sPrefix, cmd);
-			system(cmd);
+			snprintf(pref, sizeof(pref), "11%d", wan_unit);
+			rule_dns_argv[4] = inet_ntoa(wan_info.dns->dns[i].addr);
+			mwan_eval(rule_dns_argv, __FUNCTION__, sPrefix);
 		}
 
 		/* ip rule add fwmark 0x100/0xf00 table 1 pref 121 */
-		memset(cmd, 0, sizeof(cmd));
-		snprintf(cmd, sizeof(cmd), "ip rule add fwmark 0x%d00/0xf00 table %d pref 12%d", wan_unit, wan_unit, wan_unit);
-		logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, sPrefix, cmd);
-		system(cmd);
+		snprintf(mark, sizeof(mark), "0x%d00/0xf00", wan_unit);
+		snprintf(pref, sizeof(pref), "12%d", wan_unit);
+		mwan_eval(rule_mark_argv, __FUNCTION__, sPrefix);
 
 		for (wanid = 1; wanid <= mwan_num; ++wanid) {
 			/* ip route add 10.0.10.1 dev ppp3 proto kernel scope link table route_id */
-			memset(cmd, 0, sizeof(cmd));
+			snprintf(wanid_s, sizeof(wanid_s), "%d", wanid);
+
 			if ((proto == WP_DHCP) || (proto == WP_LTE) || (proto == WP_STATIC)) {
-				memset(buf, 0, sizeof(buf));
-				get_cidr(wan_info.wan_ipaddr, wan_info.wan_netmask, buf, sizeof(buf));
-				snprintf(cmd, sizeof(cmd), "ip route append %s dev %s proto kernel scope link src %s table %d", buf, wan_info.wan_name, wan_info.wan_ipaddr, wanid);
+				get_cidr(wan_info.wan_ipaddr, wan_info.wan_netmask, cidr, sizeof(cidr));
+				route_dst = cidr;
 			}
 			else
-				snprintf(cmd, sizeof(cmd), "ip route append %s dev %s proto kernel scope link src %s table %d", wan_info.wan_gateway, wan_info.wan_name, wan_info.wan_ipaddr, wanid);
+				route_dst = wan_info.wan_gateway;
 
-			logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, sPrefix, cmd);
-			system(cmd);
+			route_link_argv[3] = route_dst;
+			mwan_eval(route_link_argv, __FUNCTION__, sPrefix);
 		}
 
 		/* ip route add 192.168.1.0/24 dev br0 proto kernel scope link  src 192.168.1.1  table 2 */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			char nvram_var[16];
-			char* lan_ifname;
-			char* lan_ipaddr;
-			char* lan_netmask;
-
-			memset(nvram_var, 0, sizeof(nvram_var));
 			snprintf(nvram_var, sizeof(nvram_var), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
 			lan_ifname = nvram_safe_get(nvram_var);
-			memset(nvram_var, 0, sizeof(nvram_var));
 			snprintf(nvram_var, sizeof(nvram_var), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
 			lan_ipaddr = nvram_safe_get(nvram_var);
-			memset(nvram_var, 0, sizeof(nvram_var));
 			snprintf(nvram_var, sizeof(nvram_var), (i == 0 ? "lan_netmask" : "lan%d_netmask"), i);
 			lan_netmask = nvram_safe_get(nvram_var);
 
 			if ((lan_ifname[0] == '\0') || (lan_ipaddr[0] == '\0') || (lan_netmask[0] == '\0'))
 				continue;
 
-			memset(buf, 0, sizeof(buf));
-			get_cidr(lan_ipaddr, lan_netmask, buf, sizeof(buf));
-			memset(cmd, 0, sizeof(cmd));
-			snprintf(cmd, sizeof(cmd), "ip route append %s dev %s proto kernel scope link src %s table %d", buf, lan_ifname, lan_ipaddr, wan_unit);
-			logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, sPrefix, cmd);
-			system(cmd);
+			get_cidr(lan_ipaddr, lan_netmask, cidr, sizeof(cidr));
+			route_lan_argv[5] = lan_ifname;
+			route_lan_argv[11] = lan_ipaddr;
+			mwan_eval(route_lan_argv, __FUNCTION__, sPrefix);
 		}
 
 		/* ip route add 127.0.0.0/8 dev lo scope link table 1 */
-		memset(cmd, 0, sizeof(cmd));
-		snprintf(cmd, sizeof(cmd), "ip route append 127.0.0.0/8 dev lo scope link table %d", wan_unit);
-		logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, sPrefix, cmd);
-		system(cmd);
+		mwan_eval(route_lo_argv, __FUNCTION__, sPrefix);
 
 		/* ip route add default via 10.0.10.1 dev ppp3 table route_id */
-		memset(cmd, 0, sizeof(cmd));
-		memset(buf, 0, sizeof(buf));
-		get_wan_ip(proto, buf, sizeof(buf));
-		snprintf(cmd, sizeof(cmd), "ip route append default via %s dev %s table %d", buf, wan_info.wan_name, wan_unit);
-		logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, sPrefix, cmd);
-		system(cmd);
+		get_wan_ip(proto, nexthop, sizeof(nexthop));
+		mwan_eval(route_default_argv, __FUNCTION__, sPrefix);
 	}
 
 	logmsg(LOG_DEBUG, "*** %s OUT", __FUNCTION__);
@@ -286,7 +320,6 @@ void mwan_state_files(void)
 		memset(prefix, 0, sizeof(prefix));
 		get_wan_prefix(wan_unit, prefix);
 
-		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), "/var/lib/misc/%s_state", prefix);
 		if ((f = fopen(tmp, "r")) == NULL) {
 			/* if file does not exist then we create it with value "0".
@@ -356,10 +389,16 @@ void mwan_status_update(void)
 void mwan_load_balance(void)
 {
 	int mwan_num, wan_unit, proto, wan_default, wan_weight = 0, not_allwan_down = 0;
+	int argc, nh;
 	char prefix[16];
-	char cmd[256];
-	char lb_cmd[2048];
 	char buf[32];
+	char cmd[2048];
+	char via[MWAN_MAX][32];
+	char dev[MWAN_MAX][16];
+	char weight[MWAN_MAX][12];
+	char del_via[32];
+	char *del_route_argv[] = { "ip", "route", "del", "default", "via", del_via, "dev", wan_info.wan_name, NULL };
+	char *lb_argv[8 + (MWAN_MAX * 8)];
 	unsigned int i;
 
 	mwan_num = nvram_get_int("mwan_num");
@@ -370,31 +409,44 @@ void mwan_load_balance(void)
 
 	mwan_status_update();
 
-	memset(lb_cmd, 0, sizeof(lb_cmd)); /* loadbalancing cmd */
-	strlcpy(lb_cmd, "ip route replace default scope global", sizeof(lb_cmd));
+	argc = 0;
+	nh = 0;
+	lb_argv[argc++] = "ip";
+	lb_argv[argc++] = "route";
+	lb_argv[argc++] = "replace";
+	lb_argv[argc++] = "default";
+	lb_argv[argc++] = "scope";
+	lb_argv[argc++] = "global";
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
-		memset(prefix, 0, sizeof(prefix));
 		get_wan_prefix(wan_unit, prefix);
 		get_wan_info(prefix);
 		proto = get_wanx_proto(prefix);
-		memset(buf, 0, sizeof(buf));
 		get_wan_ip(proto, buf, sizeof(buf));
 
 		if (check_wanup(prefix) && (mwan_curr[wan_unit - 1] == '2')) { /* up and actively routing WAN */
 			if (wan_info.wan_weight == 0) /* override weight for failover interface */
 				wan_info.wan_weight = 1;
 
-			memset(cmd, 0, sizeof(cmd));
-			snprintf(cmd, sizeof(cmd), " nexthop via %s dev %s weight %d", buf, wan_info.wan_name, wan_info.wan_weight);
-			strlcat(lb_cmd, cmd, sizeof(lb_cmd));
+			strlcpy(via[nh], buf, sizeof(via[nh]));
+			strlcpy(dev[nh], wan_info.wan_name, sizeof(dev[nh]));
+			snprintf(weight[nh], sizeof(weight[nh]), "%d", wan_info.wan_weight);
+
+			lb_argv[argc++] = "nexthop";
+			lb_argv[argc++] = "via";
+			lb_argv[argc++] = via[nh];
+			lb_argv[argc++] = "dev";
+			lb_argv[argc++] = dev[nh];
+			lb_argv[argc++] = "weight";
+			lb_argv[argc++] = weight[nh];
+
+			++nh;
 		}
+
 		/* ip route del default via 10.0.10.1 dev ppp3 (from main route table) */
 		if (strcmp(wan_info.wan_name, "none")) { /* skip disabled / disconnected ppp WAN */
-			memset(cmd, 0, sizeof(cmd));
-			snprintf(cmd, sizeof(cmd), "ip route del default via %s dev %s", buf, wan_info.wan_name);
-			logmsg(LOG_DEBUG, "*** %s: PREFIX=[%s], cmd=[%s]", __FUNCTION__, prefix, cmd);
-			system(cmd);
+			strlcpy(del_via, buf, sizeof(del_via));
+			mwan_eval(del_route_argv, __FUNCTION__, prefix);
 		}
 	}
 
@@ -407,12 +459,13 @@ void mwan_load_balance(void)
 	}
 
 	if (not_allwan_down) {
-		logmsg(LOG_DEBUG, "*** %s: LOAD BALANCING: cmd=[%s]", __FUNCTION__, lb_cmd);
+		lb_argv[argc] = NULL;
+		mwan_argv_to_cmd(lb_argv, cmd, sizeof(cmd));
+		logmsg(LOG_DEBUG, "*** %s: LOAD BALANCING: cmd=[%s]", __FUNCTION__, cmd);
 	}
 	else {
 		wan_default = 1; /* first assume that main wan is WAN0 */
 		for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
-			memset(prefix, 0, sizeof(prefix));
 			get_wan_prefix(wan_unit, prefix);
 			get_wan_info(prefix);
 
@@ -425,21 +478,30 @@ void mwan_load_balance(void)
 			}
 		}
 
-		memset(prefix, 0, sizeof(prefix));
 		get_wan_prefix(wan_default, prefix);
 		get_wan_info(prefix);
 		proto = get_wanx_proto(prefix);
 
-		memset(cmd, 0, sizeof(cmd));
-		memset(buf, 0, sizeof(buf));
 		get_wan_ip(proto, buf, sizeof(buf));
-		snprintf(cmd, sizeof(cmd), " nexthop via %s dev %s weight %d", buf, wan_info.wan_name, wan_info.wan_weight);
-		strlcat(lb_cmd, cmd, sizeof(lb_cmd));
 
-		logmsg(LOG_DEBUG, "*** %s: EMERGENCY ROUTE: cmd=[%s]", __FUNCTION__, lb_cmd);
+		strlcpy(via[nh], buf, sizeof(via[nh]));
+		strlcpy(dev[nh], wan_info.wan_name, sizeof(dev[nh]));
+		snprintf(weight[nh], sizeof(weight[nh]), "%d", wan_info.wan_weight);
+
+		lb_argv[argc++] = "nexthop";
+		lb_argv[argc++] = "via";
+		lb_argv[argc++] = via[nh];
+		lb_argv[argc++] = "dev";
+		lb_argv[argc++] = dev[nh];
+		lb_argv[argc++] = "weight";
+		lb_argv[argc++] = weight[nh];
+		lb_argv[argc] = NULL;
+
+		mwan_argv_to_cmd(lb_argv, cmd, sizeof(cmd));
+		logmsg(LOG_DEBUG, "*** %s: EMERGENCY ROUTE: cmd=[%s]", __FUNCTION__, cmd);
 	}
 	/* always execute lb_cmd: if all wans are down - add default route via WAN with highest weight */
-	system(lb_cmd);
+	_eval(lb_argv, NULL, 0, NULL);
 
 	logmsg(LOG_DEBUG, "*** %s: OUT, mwan_curr=%s", __FUNCTION__, mwan_curr);
 }
