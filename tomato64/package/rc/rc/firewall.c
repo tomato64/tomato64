@@ -489,8 +489,6 @@ static void ipt_ndpi_inbound(void)
 
 int ipt_ndpi(const char *v, char *opt, const size_t buf_sz)
 {
-	char s[128];
-
 	*opt = 0;
 	if (*v == 0)
 		return 0;
