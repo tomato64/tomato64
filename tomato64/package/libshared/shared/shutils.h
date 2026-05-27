@@ -33,6 +33,7 @@
 
 
 extern int _eval(char *const argv[], const char *path, int timeout, pid_t *ppid);
+extern int eval_cmdline(const char *cmd, const char *path, int timeout, int *ppid);
 
 extern size_t safe_fread(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 extern size_t safe_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);

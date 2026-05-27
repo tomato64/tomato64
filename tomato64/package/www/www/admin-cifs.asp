@@ -61,7 +61,7 @@ function verifyFields(focused, quiet) {
 		if (!b) {
 			if ((!v_nodelim(unc, quiet, 'UNC')) || (!v_nodelim(user, quiet, 'username')) || (!v_nodelim(pass, quiet, 'password')) ||
 				 (!v_nodelim(servern, quiet, 'Netbios name')) ||
-				 (!v_nodelim(dom, quiet, 'domain')) || (!v_nodelim(exec, quiet, 'exec path'))) return 0;
+				 (!v_nodelim(dom, quiet, 'domain')) || (!v_nodelim(exec, quiet, 'exec path | & "'))) return 0;
 
 			if ((!v_length(user, quiet, 1)) || (!v_length(pass, quiet, 1))) return 0;
 

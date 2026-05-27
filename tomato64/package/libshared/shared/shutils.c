@@ -75,6 +75,10 @@
  */
 #define EVAL_CLOSE_MAX	256
 
+#if defined(TCONFIG_CIFS) || defined(TCONFIG_JFFS2)
+ #define EVAL_CMDLINE_MAX_ARGS 10
+#endif /* TCONFIG_CIFS || TCONFIG_JFFS2 */
+
 
 /*
  * Concatenates NULL-terminated list of arguments into a single
@@ -427,6 +431,72 @@ EXIT:
 
 	_exit(saved_errno);
 }
+
+#if defined(TCONFIG_CIFS) || defined(TCONFIG_JFFS2)
+/*
+ * eval_cmdline - Parse and execute a command line string.
+ *
+ * This function takes a command line string, splits it into individual
+ * arguments separated by spaces, and passes the resulting argument vector
+ * to _eval() for execution.
+ *
+ * Parameters:
+ * @cmd:     Command line string to execute. Must not be NULL or empty.
+ * @path:    Optional path passed to _eval().
+ * @timeout: Execution timeout passed to _eval().
+ * @ppid:    Optional pointer used by _eval() to store the process ID.
+ *
+ * Return:
+ * Returns 0 or the value returned by _eval() on success.
+ * Returns EINVAL if the command string is NULL, empty, or contains no arguments.
+ * Returns ENOMEM if memory allocation fails.
+ * Returns E2BIG if the number of parsed arguments exceeds the supported limit.
+ *
+ * Notes:
+ * This function performs simple space-based tokenization only. It does not
+ * support shell-style quoting, escaping, environment variable expansion,
+ * globbing, or other shell features.
+ */
+int eval_cmdline(const char *cmd, const char *path, int timeout, int *ppid)
+{
+	char *buf, *p, *arg;
+	char *argv[EVAL_CMDLINE_MAX_ARGS];
+	int argc, ret;
+
+	if (!cmd || !*cmd)
+		return EINVAL;
+
+	buf = strdup(cmd);
+	if (!buf)
+		return ENOMEM;
+
+	p = buf;
+	argc = 0;
+
+	while ((arg = strsep(&p, " ")) != NULL) {
+		if (!*arg)
+			continue;
+
+		if (argc >= (EVAL_CMDLINE_MAX_ARGS - 1)) {
+			free(buf);
+			return E2BIG;
+		}
+		argv[argc++] = arg;
+	}
+
+	argv[argc] = NULL;
+
+	if (argc == 0) {
+		free(buf);
+		return EINVAL;
+	}
+	ret = _eval(argv, path, timeout, ppid);
+
+	free(buf);
+
+	return ret;
+}
+#endif /* TCONFIG_CIFS || TCONFIG_JFFS2 */
 
 /*
  * fread() with automatic retry on syscall interrupt

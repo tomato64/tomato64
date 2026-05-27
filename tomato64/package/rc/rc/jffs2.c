@@ -167,7 +167,7 @@ void start_jffs2(void)
 
 	if ((p = nvram_safe_get("jffs2_exec")) && (*p)) {
 		chdir("/jffs");
-		system(p);
+		eval_cmdline(p, NULL, 0, NULL);
 		chdir("/");
 	}
 	run_userfile("/jffs", ".autorun", "/jffs", 3);
