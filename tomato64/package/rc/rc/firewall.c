@@ -722,10 +722,10 @@ static void raw_table(void)
 
 static void mangle_table(void)
 {
-	int ttl, i;
+	int ttl, i, j;
 #ifdef TCONFIG_BCMARM
 	char lan_class[32];
-	int j, n;
+	int n;
 #endif	/* TCONFIG_BCMARM */
 	char *p;
 	char *wanface[MWAN_MAX];
@@ -802,15 +802,26 @@ static void mangle_table(void)
 	}
 
 	/* Clamp TCP MSS to PMTU of WAN interface (IPv4 & IPv6) */
-	if (!nvram_get_int("tcp_clamp_disable"))
-		ip46t_write(ipv6_enabled, "-I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n");
+	if (!nvram_get_int("tcp_clamp_disable")) {
+		for (j = 1; j <= MWAN_MAX; j++) {
+			for (i = 0; i < wanfaces[j - 1].count; ++i) {
+				if (*(wanfaces[j - 1].iface[i].name)) {
+					ipt_write("-I FORWARD -o %s -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n", wanfaces[j - 1].iface[i].name);
+				}
+			}
+		}
+#ifdef TCONFIG_IPV6
+		if (ipv6_enabled && *wan6face) {
+			ip6t_write("-I FORWARD -o %s -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n", wan6face);
+		}
+#endif
+	}
 	else
 		syslog(LOG_INFO, "Firewall: No Clamping of TCP MSS to PMTU of WAN interface"); /* Ex.: case MTU 1500 for ISPs that support RFC 4638 */
 
 #ifdef TCONFIG_BCMARM
 	/* set mark for NAT loopback to work if CTF is enabled! (bypass) */
-	if (!nvram_get_int("ctf_disable") &&
-	    !nvram_get_int("nf_loopback")) { /* only for NAT loopback ALL (0 (default)) */
+	if (!nvram_get_int("ctf_disable") && !nvram_get_int("nf_loopback")) { /* only for NAT loopback ALL (0 (default)) */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			if ((strcmp(lanface[i], "") != 0) && (strcmp(lanaddr[i], "") != 0)) { /* check LAN setup */
 				ip2class(lanaddr[i], lanmask[i], lan_class, sizeof(lan_class));
@@ -862,7 +873,7 @@ static void nat_table(void)
 	ipt_bwlimit(2);
 
 	for (j = 1; j <= MWAN_MAX; j++) {
-		for (i = 0; i < wanfaces[j -1].count; ++i) {
+		for (i = 0; i < wanfaces[j - 1].count; ++i) {
 			if (*(wanfaces[j - 1].iface[i].name)) {
 				/* chain_wan_prerouting */
 				if (wanup[j - 1])
