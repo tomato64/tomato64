@@ -510,7 +510,7 @@ int ipt_ndpi(const char *v, char *opt, const size_t buf_sz)
 
 				++p;
 			}
-			if (((p - ndpi_in) / sizeof(char *)) < 50)
+			if (p < ndpi_in + 50)
 				*p = strdup(opt);
 		}
 	}
