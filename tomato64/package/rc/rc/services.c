@@ -1112,11 +1112,12 @@ void start_6rd_tunnel(void)
 	struct in6_addr prefix_addr, local_prefix_addr;
 	char local_prefix[INET6_ADDRSTRLEN];
 	char tmp_ipv6[INET6_ADDRSTRLEN + 4], tmp_ipv4[INET_ADDRSTRLEN + 4];
-	char tmp[256];
+	char tmp[256], ping_file[64];
 	FILE *f;
+	char *ping_argv[6];
 	char wan_prefix[] = "wanXX";
 	char *wan_6rd;
-	int wan_unit, mwan_num;
+	int wan_unit, mwan_num, ping_ok;
 
 	mwan_num = nvram_get_int("mwan_num");
 	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
@@ -1177,15 +1178,35 @@ void start_6rd_tunnel(void)
 		return;
 	}
 
-	snprintf(tmp, sizeof(tmp), "ping -q -c 2 %s | grep packet", relay);
-	if ((f = popen(tmp, "r")) == NULL) {
-		logmsg(LOG_DEBUG, "*** %s: error obtaining data", __FUNCTION__);
+	snprintf(ping_file, sizeof(ping_file), "/tmp/6rd_ping.%ld", (long)getpid());
+
+	ping_argv[0] = "ping";
+	ping_argv[1] = "-q";
+	ping_argv[2] = "-c";
+	ping_argv[3] = "2";
+	ping_argv[4] = relay;
+	ping_argv[5] = NULL;
+
+	_eval(ping_argv, ping_file, 0, NULL);
+
+	if ((f = fopen(ping_file, "r")) == NULL) {
+		logmsg(LOG_DEBUG, "*** %s: error obtaining ping data", __FUNCTION__);
+		unlink(ping_file);
 		return;
 	}
-	fgets(tmp, sizeof(tmp), f);
-	pclose(f);
 
-	if (strstr(tmp, " 0% packet loss") == NULL) {
+	ping_ok = 0;
+	while (fgets(tmp, sizeof(tmp), f) != NULL) {
+		if (strstr(tmp, " 0% packet loss") != NULL) {
+			ping_ok = 1;
+			break;
+		}
+	}
+
+	fclose(f);
+	unlink(ping_file);
+
+	if (!ping_ok) {
 		logmsg(LOG_DEBUG, "*** %s: failed to ping border relay", __FUNCTION__);
 		return;
 	}
@@ -1966,7 +1987,7 @@ void start_udpxy(void)
 		argv[argc++] = buffer;
 		argv[argc] = NULL;
 
-		(void)_eval(argv, NULL, 0, NULL);
+		_eval(argv, NULL, 0, NULL);
 	}
 }
 
@@ -2065,9 +2086,9 @@ void start_ntpd(void)
 
 		sh_argv[sh_index] = NULL;
 
-		(void)_eval(sh_argv, NULL, 0, NULL);
+		_eval(sh_argv, NULL, 0, NULL);
 #else
-		(void)_eval(ntpd_argv, NULL, 0, NULL);
+		_eval(ntpd_argv, NULL, 0, NULL);
 #endif /* TOMATO64 */
 
 		if (!nvram_contains_word("debug_norestart", "ntpd"))
@@ -2189,7 +2210,10 @@ static void stop_rstats(void)
 		if (pidz < 0)
 			pidz = pidof("cp");
 
-		ppidz = ppid(ppid(pidz));
+		ppidz = -1;
+		if (pidz > 0)
+			ppidz = ppid(ppid(pidz));
+
 		if ((m > 0) && (pidz > 0) && (pid == ppidz)) {
 			logmsg(LOG_DEBUG, "*** %s: (PID %d) shutting down, waiting for helper process to complete (PID %d, PPID %d)", __FUNCTION__, pid, pidz, ppidz);
 			--m;
@@ -2231,7 +2255,10 @@ static void stop_cstats(void)
 		if (pidz < 0)
 			pidz = pidof("cp");
 
-		ppidz = ppid(ppid(pidz));
+		ppidz = -1;
+		if (pidz > 0)
+			ppidz = ppid(ppid(pidz));
+
 		if ((m > 0) && (pidz > 0) && (pid == ppidz)) {
 			logmsg(LOG_DEBUG, "*** %s: (PID %d) shutting down, waiting for helper process to complete (PID %d, PPID %d)", __FUNCTION__, pid, pidz, ppidz);
 			--m;
