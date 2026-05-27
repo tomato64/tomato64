@@ -1825,11 +1825,7 @@ int start_firewall(void)
 	f_write_procsysnet("ipv4/tcp_retries2", "5");
 	f_write_procsysnet("ipv4/tcp_syn_retries", "3");
 	f_write_procsysnet("ipv4/tcp_synack_retries", "3");
-#if defined(TCONFIG_BCMARM)
-	f_write_procsysnet("ipv4/tcp_tw_recycle", "0");
-#else
-	f_write_procsysnet("ipv4/tcp_tw_recycle", "1");
-#endif
+	f_write_procsysnet("ipv4/tcp_tw_recycle", "0"); /* Do not use tcp_tw_recycle=1 any more because this creates issues with dropped packets since kernel 4.12 */
 	f_write_procsysnet("ipv4/tcp_tw_reuse", "1");
 
 	/* DoS-related tweaks */
