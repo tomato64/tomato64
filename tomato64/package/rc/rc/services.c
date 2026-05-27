@@ -415,7 +415,6 @@ void start_dnscrypt(void)
 	if (serialize_restart("dnscrypt-proxy", 1))
 		return;
 
-	memset(dnscrypt_local, 0, sizeof(dnscrypt_local));
 	snprintf(dnscrypt_local, sizeof(dnscrypt_local), "127.0.0.1:%s", nvram_safe_get("dnscrypt_port"));
 
 	dnscrypt_ekeys = nvram_get_int("dnscrypt_ephemeral_keys") ? "-E" : "";
@@ -439,7 +438,6 @@ void start_dnscrypt(void)
 		     "-L", f_exists(dnscrypt_resolv_alt) ? (char *) dnscrypt_resolv_alt : (char *) dnscrypt_resolv);
 #ifdef TCONFIG_IPV6
 	if (get_ipv6_service()) { /* when ipv6 enabled */
-		memset(dnscrypt_local, 0, sizeof(dnscrypt_local));
 		snprintf(dnscrypt_local, sizeof(dnscrypt_local), "::1:%s", nvram_safe_get("dnscrypt_port"));
 
 		if (nvram_get_int("dnscrypt_manual"))
@@ -640,7 +638,6 @@ void generate_mdns_config(void)
 	            ipv6_enabled() ? "yes" : "no");
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%d"), i);
 		if ((check_wanup(tmp)) || (i == 1))
 			fprintf(fp, "%s%s", (i == 1 ? "" : ","), get_wanface(tmp));
@@ -1100,7 +1097,6 @@ void start_6rd_tunnel(void)
 	service = get_ipv6_service();
 	wanip = get_wanip(wan_prefix);
 	tun_dev = get_wan6face();
-	memset(mtu, 0, sizeof(mtu));
 	snprintf(mtu, sizeof(mtu), "%d", (nvram_get_int("wan_mtu") > 0) ? (nvram_get_int("wan_mtu") - 20) : 1280);
 
 	/* maybe we can merge the ipv6_6rd_* variables into a single ipv_6rd_string (ala wan_6rd) to save nvram space? */
@@ -1134,7 +1130,6 @@ void start_6rd_tunnel(void)
 		return;
 	}
 
-	memset(tmp, 0, sizeof(tmp));
 	snprintf(tmp, sizeof(tmp), "ping -q -c 2 %s | grep packet", relay);
 	if ((f = popen(tmp, "r")) == NULL) {
 		logmsg(LOG_DEBUG, "*** %s: error obtaining data", __FUNCTION__);
@@ -1225,10 +1220,8 @@ void start_ipv6(void)
 		/* HINT: "ipv6_accept_ra" bit 0 ==> used for wan, "ipv6_accept_ra" bit 1 ==> used for lan interfaces (br0...br3) */
 		/* check lanX / brX if available */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			memset(buffer, 0, sizeof(buffer));
 			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
 			if (strcmp(nvram_safe_get(buffer), "") != 0) {
-				memset(buffer, 0, sizeof(buffer));
 				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
 				if (((nvram_get_int("ipv6_accept_ra") & 0x02) != 0) && !nvram_get_int("ipv6_radvd") && !nvram_get_int("ipv6_dhcpd"))
 					/* accept_ra for brX */
@@ -1316,7 +1309,6 @@ void start_upnp(void)
 		upnp_port = 0;
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%d"), i);
 		if ((check_wanup(tmp)) || (i == 1))
 			fprintf(f, "ext_ifname=%s\n", get_wanface(tmp));
@@ -1361,11 +1353,9 @@ void start_upnp(void)
 	fprintf(f, "%s\n", nvram_safe_get("upnp_custom"));
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[2] = "0";
-		if (br != 0)
-			bridge[0] += br;
-		else
-			memset(bridge, 0, sizeof(bridge));
+		char bridge[2];
+		bridge[0] = br ? '0' + br : '\0';
+		bridge[1] = '\0';
 
 		snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge);
 		snprintf(lanN_netmask, sizeof(lanN_netmask), "lan%s_netmask", bridge);
@@ -1703,7 +1693,6 @@ void start_syslog(void)
 		/* used to be available in syslogd -m */
 		n = nvram_get_int("log_mark");
 		if (n > 0) {
-			memset(rem, 0, sizeof(rem));
 			/* n is in minutes */
 			if (n < 60)
 				snprintf(rem, sizeof(rem), "*/%d * * * *", n);
@@ -1712,7 +1701,6 @@ void start_syslog(void)
 			else
 				snprintf(rem, sizeof(rem), "0 0 */%d * *", n / (60 * 24));
 
-			memset(s, 0, sizeof(s));
 			snprintf(s, sizeof(s), "%s logger -p syslog.info -- -- MARK --", rem);
 			eval("cru", "a", "syslogdmark", s);
 		}
@@ -1787,21 +1775,18 @@ void start_igmp_proxy(void)
 					/* check for allowed remote network address, see note at GUI advanced-firewall.asp */
 					if ((nvram_get("multicast_altnet_1") != NULL) || (nvram_get("multicast_altnet_2") != NULL) || (nvram_get("multicast_altnet_3") != NULL)) {
 						if (((nv = nvram_get("multicast_altnet_1")) != NULL) && (*nv)) {
-							memset(igmp_buffer, 0, sizeof(igmp_buffer)); /* reset */
 							snprintf(igmp_buffer, sizeof(igmp_buffer),"%s", nv); /* copy to buffer */
 							fprintf(fp, "\taltnet %s\n", igmp_buffer); /* with the following format: a.b.c.d/n - Example: altnet 10.0.0.0/16 */
 							logmsg(LOG_INFO, "igmpproxy: multicast_altnet_1 = %s", igmp_buffer);
 						}
 
 						if (((nv = nvram_get("multicast_altnet_2")) != NULL) && (*nv)) {
-							memset(igmp_buffer, 0, sizeof(igmp_buffer)); /* reset */
 							snprintf(igmp_buffer, sizeof(igmp_buffer),"%s", nv); /* copy to buffer */
 							fprintf(fp, "\taltnet %s\n", igmp_buffer); /* with the following format: a.b.c.d/n - Example: altnet 10.0.0.0/16 */
 							logmsg(LOG_INFO, "igmpproxy: multicast_altnet_2 = %s", igmp_buffer);
 						}
 
 						if (((nv = nvram_get("multicast_altnet_3")) != NULL) && (*nv)) {
-							memset(igmp_buffer, 0, sizeof(igmp_buffer)); /* reset */
 							snprintf(igmp_buffer, sizeof(igmp_buffer),"%s", nv); /* copy to buffer */
 							fprintf(fp, "\taltnet %s\n", igmp_buffer); /* with the following format: a.b.c.d/n - Example: altnet 10.0.0.0/16 */
 							logmsg(LOG_INFO, "igmpproxy: multicast_altnet_3 = %s", igmp_buffer);
@@ -1822,11 +1807,9 @@ void start_igmp_proxy(void)
 			char br;
 
 			for (br = 0; br < BRIDGE_COUNT; br++) {
-				char bridge[2] = "0";
-				if (br != 0)
-					bridge[0] += br;
-				else
-					memset(bridge, 0, sizeof(bridge));
+				char bridge[2];
+				bridge[0] = br ? '0' + br : '\0';
+				bridge[1] = '\0';
 
 				snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
 				snprintf(multicast_lanN, sizeof(multicast_lanN), "multicast_lan%s", bridge);
@@ -1882,7 +1865,6 @@ void start_udpxy(void)
 		return;
 
 	if ((check_wanup(wan_prefix)) && (get_wanx_proto(wan_prefix) != WP_DISABLED)) {
-		memset(buffer, 0, sizeof(buffer)); /* reset */
 		if (strlen(nvram_safe_get("udpxy_wanface")) > 0)
 			snprintf(buffer, sizeof(buffer), "%s", nvram_safe_get("udpxy_wanface")); /* user entered upstream interface */
 		else
@@ -1892,14 +1874,11 @@ void start_udpxy(void)
 		/* check udpxy enabled/selected for br0 - br3 */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			int ret1 = 0, ret2 = 0;
-			memset(buffer2, 0, sizeof(buffer2));
 			snprintf(buffer2, sizeof(buffer2), (i == 0 ? "udpxy_lan" : "udpxy_lan%d"), i);
 			ret1 = nvram_match(buffer2, "1");
-			memset(buffer2, 0, sizeof(buffer2));
 			snprintf(buffer2, sizeof(buffer2), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
 			ret2 = strcmp(nvram_safe_get(buffer2), "") != 0;
 			if (ret1 && ret2) {
-				memset(buffer2, 0, sizeof(buffer2));
 				snprintf(buffer2, sizeof(buffer2), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
 #ifdef TOMATO64
 				eval("udpxy", "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-a", nvram_safe_get(buffer2), "-m", buffer, (nvram_get_int("udpxy_stats") ? "-S" : ""));
@@ -1941,14 +1920,12 @@ void start_ntpd(void)
 {
 	FILE *f;
 	char *servers, *ptr;
-#ifndef TOMATO64
-	int servers_len = 0, ntp_updates_int = 0, index = 2, off, i;
-#else
-	int servers_len = 0, ntp_updates_int = 0, index = 2;
-#endif
+	const char *ntp_server;
+	int servers_len = 0, ntp_updates_int = 0, index = 2, i;
 	char *ntpd_argv[] = { "/usr/sbin/ntpd", "-t", NULL, NULL, NULL, NULL, NULL, NULL }; /* -ddddddd -q -S /sbin/ntpd_synced -l */
 #ifndef TOMATO64
-	char cmd[256];
+	char *sh_argv[12];
+	int sh_index;
 #endif
 
 	if (serialize_restart("ntpd", 1))
@@ -1967,17 +1944,17 @@ void start_ntpd(void)
 	 * ntpd as separate parameters. this code should continue to work if GUI is changed to only store 1 value in the NVRAM var
 	 */
 	if (ntp_updates_int >= 0) { /* -1 = never */
-		servers_len = strlen(nvram_safe_get("ntp_server"));
+		ntp_server = nvram_safe_get("ntp_server");
+		servers_len = strlen(ntp_server);
 
 		/* allocating memory dynamically both so we don't waste memory, and in case of unanticipatedly long server name in nvram */
 		if ((servers = malloc(servers_len + 1)) == NULL) {
 			logmsg(LOG_ERR, "ntpd: failed allocating memory, exiting");
 			return; /* just get out if we couldn't allocate memory */
 		}
-		memset(servers, 0, servers_len + 1);
 
 		/* get the space separated list of ntp servers */
-		strlcpy(servers, nvram_safe_get("ntp_server"), servers_len + 1);
+		strlcpy(servers, ntp_server, servers_len + 1);
 
 		/* put the servers into the ntp config file */
 		if ((f = fopen("/etc/ntp.conf", "w")) != NULL) {
@@ -1990,6 +1967,7 @@ void start_ntpd(void)
 		}
 		else {
 			logerr(__FUNCTION__, __LINE__, "/etc/ntp.conf");
+			free(servers);
 			return;
 		}
 
@@ -2009,13 +1987,18 @@ void start_ntpd(void)
 		}
 
 #ifndef TOMATO64
-		memset(cmd, 0, sizeof(cmd)); /* reset */
-		off = snprintf(cmd, sizeof(cmd), "sh -c 'ulimit -c 0 -e 15 -r 15 -l 64 -m 8192 -n 512 -s 8192 -u 16 -v 8192; %s", ntpd_argv[0]);
-		for (i = 1; ntpd_argv[i]; ++i)
-			off += snprintf(cmd + off, sizeof(cmd) - off, " %s", ntpd_argv[i]);
+		sh_index = 0;
+		sh_argv[sh_index++] = "/bin/sh";
+		sh_argv[sh_index++] = "-c";
+		sh_argv[sh_index++] = "ulimit -c 0 -e 15 -r 15 -l 64 -m 8192 -n 512 -s 8192 -u 16 -v 8192; exec \"$@\"";
+		sh_argv[sh_index++] = "ntpd";
 
-		snprintf(cmd + off, sizeof(cmd) - off, "'");
-		system(cmd);
+		for (i = 0; ntpd_argv[i]; ++i)
+			sh_argv[sh_index++] = ntpd_argv[i];
+
+		sh_argv[sh_index] = NULL;
+
+		_eval(sh_argv, NULL, 0, NULL);
 #else
 		_eval(ntpd_argv, NULL, 0, NULL);
 #endif /* TOMATO64 */
@@ -2266,11 +2249,9 @@ static void start_media_server(int force)
 			snprintf(uuident, sizeof(uuident), "4d696e69-444c-164e-9d41-%02x%02x%02x%02x%02x%02x", ea[0], ea[1], ea[2], ea[3], ea[4], ea[5]);
 
 			if (strlen(msi)) {
-				memset(buffer3, 0, sizeof(buffer3)); /* reset */
+				buffer3[0] = '\0'; /* reset */
 				for (i = 0; i < BRIDGE_COUNT; i++) {
-					memset(buffer, 0, sizeof(buffer)); /* reset */
 					snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
-					memset(buffer2, 0, sizeof(buffer2)); /* reset */
 					snprintf(buffer2, sizeof(buffer2), "br%d", i);
 					if ((strlen(nvram_safe_get(buffer)) > 0) && (strstr(msi, buffer2) != NULL)) { /* bridge is up & present in 'ms_ifname' */
 						if (strlen(buffer3) > 0)
@@ -2568,9 +2549,9 @@ void start_services(void)
 #if 0 /* see load_wl() for dhd_msg_level */
 #ifdef TCONFIG_BCM7
 	if (!nvram_get_int("debug_wireless")) { /* suppress dhd debug messages (default 0x01) */
-		system("/usr/sbin/dhd -i eth1 msglevel 0x00");
-		system("/usr/sbin/dhd -i eth2 msglevel 0x00");
-		system("/usr/sbin/dhd -i eth3 msglevel 0x00");
+		eval("dhd", "-i", "eth1", "msglevel", "0x00");
+		eval("dhd", "-i", "eth2", "msglevel", "0x00");
+		eval("dhd", "-i", "eth3", "msglevel", "0x00");
 	}
 #endif
 #endif
@@ -2752,10 +2733,8 @@ TOP:
 #endif /* TCONFIG_BCMBSD */
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(buffer2, 0, sizeof(buffer2));
 		snprintf(buffer2, sizeof(buffer2), (i == 1 ? "dhcpc_wan" : "dhcpc_wan%d"), i);
 		if (strcmp(service, buffer2) == 0) {
-			memset(buffer2, 0, sizeof(buffer2));
 			snprintf(buffer2, sizeof(buffer2), (i == 1 ? "wan" : "wan%d"), i);
 			if (act_stop) stop_dhcpc(buffer2);
 			if (act_start) start_dhcpc(buffer2);
@@ -2895,14 +2874,12 @@ TOP:
 	if (strcmp(service, "qos") == 0) {
 		if (act_stop) {
 			for (i = 1; i <= MWAN_MAX; i++) {
-				memset(buffer2, 0, sizeof(buffer2));
 				snprintf(buffer2, sizeof(buffer2), (i == 1 ? "wan" : "wan%d"), i);
 				stop_qos(buffer2);
 			}
 		}
 		if (act_start) {
 			for (i = 1; i <= MWAN_MAX; i++) {
-				memset(buffer2, 0, sizeof(buffer2));
 				snprintf(buffer2, sizeof(buffer2), (i == 1 ? "wan" : "wan%d"), i);
 				if ((check_wanup(buffer2)) || (i == 1))
 					start_qos(buffer2);
@@ -3116,7 +3093,6 @@ TOP:
 #endif
 			do_static_routes(0); /* remove old '_saved' */
 			for (i = 0; i < BRIDGE_COUNT; i++) {
-				memset(buffer2, 0, sizeof(buffer2));
 				snprintf(buffer2, sizeof(buffer2), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
 				if ((i == 0) || (strcmp(nvram_safe_get(buffer2), "") != 0))
 					eval("brctl", "stp", nvram_safe_get(buffer2), "0");
@@ -3128,10 +3104,8 @@ TOP:
 			start_zebra();
 #endif
 			for (i = 0; i < BRIDGE_COUNT; i++) {
-				memset(buffer2, 0, sizeof(buffer2));
 				snprintf(buffer2, sizeof(buffer2), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
 				if ((i == 0) || (strcmp(nvram_safe_get(buffer2), "") != 0)) {
-					memset(buffer3, 0, sizeof(buffer3));
 					snprintf(buffer3, sizeof(buffer3), (i == 0 ? "lan_stp" : "lan%d_stp"), i);
 					eval("brctl", "stp", nvram_safe_get(buffer2), nvram_safe_get(buffer3));
 				}
@@ -3155,7 +3129,6 @@ TOP:
 			rename("/tmp/ppp/wan_log", "/tmp/ppp/wan_log.~");
 			start_wan();
 			for (i = 1; i <= MWAN_MAX; i++) {
-				memset(buffer2, 0, sizeof(buffer2));
 				snprintf(buffer2, sizeof(buffer2), (i == 1 ? "wan" : "wan%d"), i);
 				sleep(5);
 				force_to_dial(buffer2);
@@ -3165,10 +3138,8 @@ TOP:
 	}
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(buffer2, 0, sizeof(buffer2));
 		snprintf(buffer2, sizeof(buffer2), "wan%d", i);
 		if (strcmp(service, buffer2) == 0) {
-			memset(buffer2, 0, sizeof(buffer2));
 			snprintf(buffer2, sizeof(buffer2), (i == 1 ? "wan" : "wan%d"), i);
 			if (act_stop) stop_wan_if(buffer2);
 			if (act_start) {
