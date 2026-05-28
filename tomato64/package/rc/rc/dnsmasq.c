@@ -434,6 +434,9 @@ static void write_static_reservations(FILE *f, FILE *hf, int do_dhcpd_hosts, con
 	const char *mac, *ip, *name, *bind;
 	struct in_addr in4;
 	unsigned char ea[ETHER_ADDR_LEN];
+	char mac_copy[64];
+	char *m_save, *m_tok;
+	int macs_ok;
 
 	/* add dhcp reservations
 	 *
@@ -458,8 +461,24 @@ static void write_static_reservations(FILE *f, FILE *hf, int do_dhcpd_hosts, con
 		if (hf && *ip && *name)
 			fprintf(hf, "%s %s\n", ip, name);
 
+		/* validate MAC(s) - dhcpd_static may carry a single MAC or a pair joined by ',' for one reservation */
+		macs_ok = 0;
+		if (mac && *mac) {
+			m_save = NULL;
+			strlcpy(mac_copy, mac, sizeof(mac_copy));
+			macs_ok = 1;
+			for (m_tok = strtok_r(mac_copy, ",", &m_save);
+			     m_tok != NULL;
+			     m_tok = strtok_r(NULL, ",", &m_save)) {
+				if (!ether_atoe(m_tok, ea)) {
+					macs_ok = 0;
+					break;
+				}
+			}
+		}
+
 		/* add to dnsmasq conf */
-		if (do_dhcpd_hosts > 0 && ether_atoe(mac, ea)) {
+		if (do_dhcpd_hosts > 0 && macs_ok) {
 			if (*ip)
 				fprintf(f, "dhcp-host=%s,%s", mac, ip);
 			else if (*name)
