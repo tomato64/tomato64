@@ -1,4 +1,4 @@
-BUILDROOT_VERSION = 2026.02.1
+BUILDROOT_VERSION = 2026.05-rc3
 BUILDROOT_TARBALL = ${HOME}/buildroot-src/buildroot/buildroot-$(BUILDROOT_VERSION).tar.xz
 BUILDROOT_URL = https://github.com/tomato64/buildroot-release/releases/download/$(BUILDROOT_VERSION)
 export TOMATO64_KERNEL_VERSION = 6.12.87

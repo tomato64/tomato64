@@ -1,6 +1,6 @@
 --- iperf/src/iperf.h
 +++ iperf/src/iperf.h
-@@ -328,6 +328,8 @@
+@@ -336,6 +336,8 @@
      char     *logfile;				/* --logfile option */
      FILE     *outfile;
  
@@ -11,7 +11,7 @@
      int       listener;
 --- iperf/src/iperf_api.c
 +++ iperf/src/iperf_api.c
-@@ -1159,6 +1159,7 @@
+@@ -1163,6 +1163,7 @@
  #endif
  	{"pidfile", required_argument, NULL, 'I'},
  	{"logfile", required_argument, NULL, OPT_LOGFILE},
@@ -19,7 +19,7 @@
  	{"forceflush", no_argument, NULL, OPT_FORCEFLUSH},
  	{"get-server-output", no_argument, NULL, OPT_GET_SERVER_OUTPUT},
  	{"udp-counters-64bit", no_argument, NULL, OPT_UDP_COUNTERS_64BIT},
-@@ -1217,7 +1218,7 @@
+@@ -1223,7 +1224,7 @@
      FILE *ptr_file;
  #endif /* HAVE_SSL */
  
@@ -28,7 +28,7 @@
          switch (flag) {
              case 'p':
  		portno = atoi(optarg);
-@@ -1688,6 +1689,9 @@
+@@ -1702,6 +1703,9 @@
  	    case OPT_LOGFILE:
  		test->logfile = strdup(optarg);
  		break;
@@ -38,7 +38,7 @@
  	    case OPT_FORCEFLUSH:
  		test->forceflush = 1;
  		break;
-@@ -3755,6 +3759,44 @@
+@@ -3826,6 +3839,44 @@
      }
  }
  
@@ -83,7 +83,7 @@
  /**
   * Print intermediate results during a test (interval report).
   * Uses print_interval_results to print the results for each stream,
-@@ -4551,6 +4593,7 @@
+@@ -4626,6 +4668,7 @@
          case STREAM_RUNNING:
              /* print interval results for each stream */
              iperf_print_intermediate(test);
@@ -91,7 +91,7 @@
              break;
          case TEST_END:
          case DISPLAY_RESULTS:
-@@ -5178,6 +5221,18 @@
+@@ -5261,6 +5304,18 @@
      return 0;
  }
  
@@ -112,15 +112,15 @@
  {
 --- iperf/src/iperf_api.h
 +++ iperf/src/iperf_api.h
-@@ -106,6 +106,7 @@
- #define OPT_SKIP_RX_COPY 32
+@@ -107,6 +107,7 @@
  #define OPT_JSON_STREAM_FULL_OUTPUT 33
  #define OPT_SERVER_MAX_DURATION 34
-+#define OPT_INTERVAL_LOG 35
+ #define OPT_GSRO 35
++#define OPT_INTERVAL_LOG 36
  
  /* states */
  #define TEST_START 1
-@@ -382,6 +383,7 @@
+@@ -383,6 +384,7 @@
  int iperf_create_pidfile(struct iperf_test *);
  int iperf_delete_pidfile(struct iperf_test *);
  void iperf_check_total_rate(struct iperf_test *, iperf_size_t);

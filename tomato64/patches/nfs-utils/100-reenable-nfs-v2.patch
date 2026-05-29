@@ -8,7 +8,7 @@ diff -Naur nfs-utils-2.8.2.orig/nfs.conf nfs-utils-2.8.2/nfs.conf
 +# vers2=n
  # vers3=y
  # vers4=y
- # vers4.0=y
+ # vers4.0=n
 diff -Naur nfs-utils-2.8.2.orig/utils/mount/configfile.c nfs-utils-2.8.2/utils/mount/configfile.c
 --- nfs-utils-2.8.2.orig/utils/mount/configfile.c	2025-03-18 10:03:23.979072181 -0600
 +++ nfs-utils-2.8.2/utils/mount/configfile.c	2025-03-18 10:03:34.479070462 -0600
