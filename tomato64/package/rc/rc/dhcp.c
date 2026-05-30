@@ -712,7 +712,11 @@ void start_dhcpc(char *prefix)
 	}
 
 	memset(cmd, 0, sizeof(cmd));
+#ifndef TOMATO64
 	snprintf(cmd, sizeof(cmd), "udhcpc -i %s -b -s /sbin/dhcpc-event -p %s %s %s %s %s %s %s %s",
+#else /* TOMATO64 */
+	snprintf(cmd, sizeof(cmd), "udhcpc -i %s -b -A 5 -s /sbin/dhcpc-event -p %s %s %s %s %s %s %s %s",
+#endif /* TOMATO64 */
 	                           ifname,
 	                           pid_file,
 	                           tmp,
