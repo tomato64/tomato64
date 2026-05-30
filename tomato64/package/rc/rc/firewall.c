@@ -2247,6 +2247,9 @@ int start_firewall(void)
 	unlink("/var/webmon/domain");
 	unlink("/var/webmon/search");
 
+	/* The following run_*_firewall_script() scripts handle their own locking */
+	simple_unlock("firewall");
+
 #ifdef TCONFIG_PPTPD
 	run_pptpd_firewall_script();
 #endif
@@ -2276,6 +2279,9 @@ int start_firewall(void)
 #ifdef TCONFIG_WIREGUARD
 	run_vpn_firewall_scripts("wg");
 #endif
+
+	/* Re-acquire the firewall lock for the remainder of start_firewall */
+	simple_lock("firewall");
 
 	fix_chain_in_drop();
 
