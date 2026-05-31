@@ -886,6 +886,9 @@ static const applets_t applets[] = {
 #ifdef TOMATO64
 	{ "arpbind",			arpbind_main			},
 #endif /* TOMATO64 */
+#ifdef TOMATO64
+	{ "dhcpc-carrier",		dhcpc_carrier_main		},
+#endif /* TOMATO64 */
 	{ "dhcpc-event",		dhcpc_event_main		},
 	{ "dhcpc-release",		dhcpc_release_main		},
 	{ "dhcpc-renew",		dhcpc_renew_main		},

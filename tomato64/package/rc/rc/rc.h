@@ -282,6 +282,9 @@ extern void ndp_proxy(const char *ifname, int enable);
 #endif /* TCONFIG_IPV6 */
 
 /* dhcpc.c */
+#ifdef TOMATO64
+extern int dhcpc_carrier_main(int argc, char **argv);
+#endif /* TOMATO64 */
 extern int dhcpc_event_main(int argc, char **argv);
 extern int dhcpc_release_main(int argc, char **argv);
 extern int dhcpc_renew_main(int argc, char **argv);

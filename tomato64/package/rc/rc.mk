@@ -50,6 +50,7 @@ define RC_INSTALL_TARGET_CMDS
 	ln -sf rc $(TARGET_DIR)/sbin/listen
 	ln -sf rc $(TARGET_DIR)/sbin/ppp_event
 	ln -sf rc $(TARGET_DIR)/sbin/ntpd_synced
+	ln -sf rc $(TARGET_DIR)/sbin/dhcpc-carrier
 	ln -sf rc $(TARGET_DIR)/sbin/dhcpc-event
 	ln -sf rc $(TARGET_DIR)/sbin/dhcpc-release
 	ln -sf rc $(TARGET_DIR)/sbin/dhcpc-renew

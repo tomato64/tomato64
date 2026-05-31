@@ -43,6 +43,9 @@
 #include <sys/sysinfo.h>
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
+#ifdef TOMATO64
+#include <sys/prctl.h>	/* dhcpc_carrier_main: PR_SET_NAME */
+#endif /* TOMATO64 */
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OS
@@ -681,10 +684,61 @@ void stop_dhcpc_lan(void)
 	unlink(pid_file);
 }
 
+#ifdef TOMATO64
+/* dhcpc-carrier <ifname> <pidfile> <udhcpc> [udhcpc args...]
+ *
+ * Helper run as a forked child of start_dhcpc (so it never blocks boot): wait up
+ * to ~6s for <ifname> to gain carrier, then exec the udhcpc that follows so its
+ * initial DISCOVER burst lands on a live link instead of being wasted at
+ * carrier=0 */
+
+/* SIGUSR1 = renew: catch it so a renew during the wait launches udhcpc now
+ * instead of terminating us and stranding the WAN. SIGUSR2/SIGTERM keep the
+ * default action (terminate), correctly cancelling a pending bring-up. */
+
+static volatile sig_atomic_t carrier_launch_now = 0;
+static void carrier_sigusr1(int sig) { carrier_launch_now = 1; }
+
+int dhcpc_carrier_main(int argc, char **argv)
+{
+	char cpath[96], cbuf[8];
+	int cw, n;
+	FILE *fp;
+
+	if (argc < 4)
+		return EINVAL;
+
+	/* Present as "udhcpc" for this whole pid, not just after the exec below */
+	prctl(PR_SET_NAME, "udhcpc", 0, 0, 0);
+
+	signal(SIGUSR1, carrier_sigusr1);
+
+	if ((fp = fopen(argv[2], "w")) != NULL) {
+		fprintf(fp, "%d", getpid());
+		fclose(fp);
+	}
+
+	snprintf(cpath, sizeof(cpath), "/sys/class/net/%s/carrier", argv[1]);
+	n = f_read_string(cpath, cbuf, sizeof(cbuf)); /* "1\n" up, "0\n" down, <=0 unreadable */
+	for (cw = 0; (n > 0) && (cbuf[0] == '0') && (cw < 60) && !carrier_launch_now; cw++) { /* up to ~6s */
+		usleep(100000); /* 100ms */
+		cbuf[0] = 0;
+		n = f_read_string(cpath, cbuf, sizeof(cbuf));
+	}
+
+	execvp(argv[3], &argv[3]);
+	logerr(__FUNCTION__, __LINE__, argv[3]); /* only reached if exec failed */
+	return errno;
+}
+#endif /* TOMATO64 */
+
 void start_dhcpc(char *prefix)
 {
 	char pid_file[64];
 	char cmd[512];
+#ifdef TOMATO64
+	char wrapped[sizeof(cmd) + 128]; /* room to prepend the dhcpc-carrier helper */
+#endif /* TOMATO64 */
 	char tmp[64];
 	char *ifname;
 	int proto;
@@ -734,7 +788,17 @@ void start_dhcpc(char *prefix)
 
 	logmsg(LOG_DEBUG, "*** %s: prefix=%s cmd=%s", __FUNCTION__, prefix, cmd);
 
+#ifndef TOMATO64
 	for (argv[argc = 0] = strtok(cmd, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
+#else /* TOMATO64 */
+	/* Run udhcpc through the dhcpc-carrier helper: it forks (so boot is never
+	 * blocked), waits up to ~6s for the WAN iface to gain carrier, then execs the
+	 * udhcpc command so its first DISCOVER lands on a live link. */
+
+	snprintf(wrapped, sizeof(wrapped), "/sbin/dhcpc-carrier %s %s %s", ifname, pid_file, cmd);
+	for (argv[argc = 0] = strtok(wrapped, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
+#endif /* TOMATO64 */
+
 	_eval(argv, NULL, 0, &pid);
 }
 
