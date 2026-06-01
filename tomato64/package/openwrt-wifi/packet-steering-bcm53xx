@@ -1,0 +1,34 @@
+#!/bin/sh
+
+. /usr/sbin/nvram_ops
+
+# First arg is packet_steering (passed by the wrapper); fall back to NVRAM.
+packet_steering="${1:-$(NG packet_steering)}"
+flow_offloading="$(NG flow_offloading)"   # 0=None 1=SW 2=HW
+
+CPU_PORT="switch0"   # gmac0 DSA conduit (kernel eth0, renamed by set_devs_bcm53xx)
+
+# LAN bridges: Tomato supports up to 8 (lan_ifname, lan1_ifname..lan7_ifname),
+# each holding a bridge name (br0, br1, ...). Don't assume br0.
+LAN_BRIDGES="$(NG lan_ifname)"
+for i in 1 2 3 4 5 6 7; do
+	LAN_BRIDGES="$LAN_BRIDGES $(NG lan${i}_ifname)"
+done
+
+set_rps() { [ -e "/sys/class/net/$1/queues/rx-0/rps_cpus" ] && echo "$2" > "/sys/class/net/$1/queues/rx-0/rps_cpus"; }
+
+set_bridges() {
+	for br in $LAN_BRIDGES; do
+		[ -n "$br" ] && set_rps "$br" "$1"
+	done
+}
+
+[ "$packet_steering" != "1" ] && { set_bridges 0; set_rps "$CPU_PORT" 0; exit 0; }
+
+if [ "${flow_offloading:-0}" = "2" ]; then        # HW offloading
+	set_bridges 0; set_rps "$CPU_PORT" 0
+elif [ "${flow_offloading:-0}" = "1" ]; then      # SW offloading
+	set_bridges 0; set_rps "$CPU_PORT" 2
+else                                              # Default
+	set_bridges 2; set_rps "$CPU_PORT" 0
+fi

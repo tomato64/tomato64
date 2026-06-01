@@ -2291,7 +2291,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "ctf_disable",		"1"				, 0 },
 	{ "flow_offloading",		"0"				, 0 },
 	{ "wed_offloading",		"0"				, 0 },
+#ifdef TOMATO64_X86_64
+	{ "packet_steering",		"0"				, 0 },
+#else
 	{ "packet_steering",		"1"				, 0 },
+#endif /* TOMATO64_X86_64 */
 	{ "steering_flows",		"0"				, 0 },
 	{ "steering_flows_custom",	"0"				, 0 },
 	{ "tty_login",			"1"				, 0 },

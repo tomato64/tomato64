@@ -98,6 +98,12 @@ define OPENWRT_WIFI_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/packet-steering $(TARGET_DIR)/usr/bin/
 	$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/hostapd_event $(TARGET_DIR)/usr/bin/
 
+	# Platform-specific packet steering override (preferred over the generic .uc)
+	if [ "$(BR2_PACKAGE_PLATFORM_BCM53XX)" = "y" ]; then \
+		$(INSTALL) -d $(TARGET_DIR)/usr/libexec/platform; \
+		$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/packet-steering-bcm53xx $(TARGET_DIR)/usr/libexec/platform/packet-steering.sh; \
+	fi
+
 	# OpenWrt sysupgrade framework
 	if [ "$(BR2_PACKAGE_PLATFORM_MT3600BE)" = "y" ]; then \
 		$(INSTALL) -d $(TARGET_DIR)/lib/upgrade; \

@@ -15,4 +15,8 @@ if [ "$packet_steering" != "0" ]; then
 	[ "${steering_flows:-0}" -gt 0 ] && opts="-l $steering_flows"
 fi
 
-/usr/libexec/network/packet-steering.uc $opts "$packet_steering"
+if [ -e /usr/libexec/platform/packet-steering.sh ]; then
+	/usr/libexec/platform/packet-steering.sh "$packet_steering"
+else
+	/usr/libexec/network/packet-steering.uc $opts "$packet_steering"
+fi
