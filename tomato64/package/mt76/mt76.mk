@@ -31,8 +31,11 @@ define MT76_BUILD_CMDS
 	KERNELRELEASE=$(LINUX_VERSION) \
 	CONFIG_MT76_CONNAC_LIB=m \
 	$(if $(BR2_PACKAGE_PLATFORM_MEDIATEK),CONFIG_MT7915E=m) \
+	$(if $(BR2_PACKAGE_PLATFORM_X86_64),CONFIG_MT7915E=m) \
 	$(if $(BR2_PACKAGE_PLATFORM_MEDIATEK),CONFIG_MT798X_WMAC=y) \
 	$(if $(BR2_PACKAGE_PLATFORM_MT3600BE),CONFIG_MT7996E=m) \
+	$(if $(BR2_PACKAGE_PLATFORM_BPIR3),CONFIG_MT7996E=m) \
+	$(if $(BR2_PACKAGE_PLATFORM_X86_64),CONFIG_MT7996E=m) \
 	CONFIG_MT792x_LIB=m \
 	CONFIG_MT792x_USB=m \
 	CONFIG_MT7921_COMMON=m \
@@ -122,6 +125,39 @@ define MT76_INSTALL_MT3600BE_FIRMWARE
 	$(INSTALL) $(@D)/firmware/mt7996/mt7990_wm.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
 endef
 MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_MT3600BE_FIRMWARE
+endif
+
+ifneq ($(BR2_PACKAGE_PLATFORM_X86_64)$(BR2_PACKAGE_PLATFORM_BPIR3),)
+define MT76_INSTALL_PCIE_MODULES
+	$(INSTALL) $(@D)/mt7915/mt7915e.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/mt7996/mt7996e.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+endef
+MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_PCIE_MODULES
+
+define MT76_INSTALL_PCIE_FIRMWARE
+	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7996
+
+	# MT7916 firmware (e.g. AsiaRF AW7916-AED and compatible cards)
+	$(INSTALL) $(@D)/firmware/mt7916_wa.bin				$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/mt7916_wm.bin				$(TARGET_DIR)/lib/firmware/mediatek
+	$(INSTALL) $(@D)/firmware/mt7916_rom_patch.bin			$(TARGET_DIR)/lib/firmware/mediatek
+
+	# MT7992 firmware - base + "23" (2x2 + 3x3) variant (e.g. AsiaRF AW7991-AE2 / MT7991 and compatible cards)
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_dsp.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_eeprom.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_eeprom_2i5i.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_eeprom_2i5e.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_rom_patch.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_wa.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_wm.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_dsp_23.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_eeprom_23.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_eeprom_23_2i5i.bin	$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_rom_patch_23.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_wa_23.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_wm_23.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+endef
+MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_PCIE_FIRMWARE
 endif
 
 $(eval $(generic-package))
