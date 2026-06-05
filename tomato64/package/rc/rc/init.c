@@ -12029,6 +12029,10 @@ static void sysinit(void)
 #endif /* TOMATO64_BCM53XX */
 	eval("set_devs");
 
+#ifdef TOMATO64_WIFI
+	eval("wlconfig");
+#endif /* TOMATO64_WIFI */
+
 	/* Expand filesystem parition to fill disk */
 	if (!nvram_get_int("fs_expanded")) {
 #if defined(TOMATO64_X86_64) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI) || defined(TOMATO64_RPI4) || defined(TOMATO64_R6S) || defined(TOMATO64_R5S) || defined(TOMATO64_R76S)
