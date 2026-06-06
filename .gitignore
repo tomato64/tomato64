@@ -3,6 +3,7 @@
 .download-rockchip-kernel
 .download-x86_64-kernel
 .download-bcm53xx-kernel
+.download-armsr-kernel
 .extract-buildroot
 .patch
 .prepatch
@@ -17,6 +18,7 @@
 .configure-r76s
 .configure-r5s
 .configure-bcm53xx
+.configure-armsr
 .target
 *.gcom
 hotplug2.rules
@@ -25,3 +27,4 @@ src/
 00001-openwrt-rockchip-kernel-*
 00001-openwrt-x86_64-kernel-*
 00001-openwrt-bcm53xx-kernel-*
+00001-openwrt-armsr-kernel-*

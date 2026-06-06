@@ -174,6 +174,24 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 #elif TOMATO64_MT3600BE
 	strlcpy(system_type, "MediaTek MT7987A", buf_system_type_sz);
 	strlcpy(cpuclk, "2000", buf_cpuclk_sz);
+#elif TOMATO64_ARMSR
+	strlcpy(system_type, "ARM64 SystemReady", buf_system_type_sz);
+	/* arm64 has no "cpu MHz" in /proc/cpuinfo; read the live clock from
+	 * cpufreq when a driver is present (real HW / CPPC-capable VMs). Leave
+	 * empty otherwise (e.g. a plain VM) - the status page hides the row. */
+	cpuclk[0] = '\0';
+	{
+		FILE *cf = fopen("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq", "r");
+		if (cf) {
+			char fbuf[32];
+			if (fgets(fbuf, sizeof(fbuf), cf)) {
+				long khz = atol(fbuf);
+				if (khz > 0)
+					snprintf(cpuclk, buf_cpuclk_sz, "%ld", khz / 1000);
+			}
+			fclose(cf);
+		}
+	}
 #else
 	strlcpy(system_type, "MediaTek Filogic 830", buf_system_type_sz);
 	strlcpy(cpuclk, "2000", buf_cpuclk_sz);
@@ -260,6 +278,25 @@ void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
 	strlcpy(cpumodel, "ARM Cortex-A55", buf_cpumodel_sz);
 #elif TOMATO64_R76S
 	strlcpy(cpumodel, "ARM Cortex-A72 / A53", buf_cpumodel_sz);
+#elif TOMATO64_ARMSR
+	{
+		/* armsr runs on VMs and varied UEFI hardware; read the real core
+		 * name from lscpu, fall back to a generic label when unknown */
+		FILE *fcpu;
+		char line[128];
+
+		cpumodel[0] = '\0';
+		if ((fcpu = popen("lscpu | sed -n 's/^Model name:[[:space:]]*//p' | head -1", "r"))) {
+			if (fgets(line, sizeof(line), fcpu) != NULL) {
+				line[strcspn(line, "\n")] = 0;
+				if (line[0] != '\0' && strcmp(line, "-") != 0)
+					strlcpy(cpumodel, line, buf_cpumodel_sz);
+			}
+			pclose(fcpu);
+		}
+		if (cpumodel[0] == '\0')
+			strlcpy(cpumodel, "Generic ARM64", buf_cpumodel_sz);
+	}
 #else
 	strlcpy(cpumodel, "MediaTek MT7986AV (Cortex-A53)", buf_cpumodel_sz);
 #endif

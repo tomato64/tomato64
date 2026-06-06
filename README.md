@@ -14,6 +14,7 @@ Supported devices:
 | **Rockchip** | NanoPi R5S |
 | **Rockchip** | NanoPi R76S |
 | **Broadcom** | Raspberry Pi 4 |
+| **ARM64 SystemReady** | ARM64 UEFI (QEMU/Proxmox VM or UEFI hardware) |
 
 ---
 
@@ -41,6 +42,9 @@ make r76s (NanoPi R76S)
 
 # Broadcom
 make rpi4 (Raspberry Pi 4)
+
+# ARM64 SystemReady
+make armsr (ARM64 UEFI - QEMU/Proxmox VM or UEFI hardware)
 
 make distclean (between builds)
 ```

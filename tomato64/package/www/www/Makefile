@@ -712,6 +712,10 @@ ifeq ($(PLATFORM_X86_64),y)
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-X86_64-SKIP-BEGIN/,/TOMATO64-X86_64-SKIP-END/d"
 endif
 
+ifeq ($(PLATFORM_ARMSR),y)
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-ARMSR-SKIP-BEGIN/,/TOMATO64-ARMSR-SKIP-END/d"
+endif
+
 # Only include TFTP if it is compiled in
 ifneq ($(TCONFIG_USB_EXTRAS),y)
 	sed -i $(INSTALLDIR)/www/advanced-dhcpdns.asp -e "/TFTP-BEGIN/,/TFTP-END/d"
@@ -864,6 +868,7 @@ endif
 		-e "/TOMATO64-R76S-SKIP-BEGIN/d"	-e "/TOMATO64-R76S-SKIP-END/d" \
 		-e "/TOMATO64-BCM53XX-SKIP-BEGIN/d"	-e "/TOMATO64-BCM53XX-SKIP-END/d" \
 		-e "/TOMATO64-X86_64-SKIP-BEGIN/d"	-e "/TOMATO64-X86_64-SKIP-END/d" \
+		-e "/TOMATO64-ARMSR-SKIP-BEGIN/d"	-e "/TOMATO64-ARMSR-SKIP-END/d" \
 		|| true; \
 	done
 

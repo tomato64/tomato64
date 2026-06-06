@@ -8,6 +8,7 @@ X86_64_KERNEL_PATCH=${HOME}/buildroot-src/x86_64-kernel/00001-openwrt-x86_64-ker
 MEDIATEK_KERNEL_PATCH=${HOME}/buildroot-src/mediatek-kernel/00001-openwrt-mediatek-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 ROCKCHIP_KERNEL_PATCH=${HOME}/buildroot-src/rockchip-kernel/00001-openwrt-rockchip-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 BCM53XX_KERNEL_PATCH=${HOME}/buildroot-src/bcm53xx-kernel/00001-openwrt-bcm53xx-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
+ARMSR_KERNEL_PATCH=${HOME}/buildroot-src/armsr-kernel/00001-openwrt-armsr-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 
 # Default target: continue building the last configured device, or x86_64 if none
 default:
@@ -51,6 +52,9 @@ r76s: .configure-r76s
 bcm53xx: .configure-bcm53xx
 	make -C src/buildroot
 
+armsr: .configure-armsr
+	make -C src/buildroot
+
 menuconfig:
 	@if [ -f .target ]; then \
 		$(MAKE) $$(cat .target)-menuconfig; \
@@ -89,6 +93,9 @@ r76s-menuconfig: .configure-r76s
 	make -C src/buildroot menuconfig
 
 bcm53xx-menuconfig: .configure-bcm53xx
+	make -C src/buildroot menuconfig
+
+armsr-menuconfig: .configure-armsr
 	make -C src/buildroot menuconfig
 
 distclean:
@@ -149,6 +156,11 @@ distclean:
 	@echo bcm53xx > .target
 	@touch $@
 
+.configure-armsr: .download-armsr-kernel .patch
+	make -C src/buildroot BR2_EXTERNAL=../../tomato64 armsr_defconfig
+	@echo armsr > .target
+	@touch $@
+
 .patch: .extract-buildroot
 	for patch in $(sort $(wildcard src/patches/*.patch)); do \
 		patch -p1 -d src/buildroot < $$patch; \
@@ -200,6 +212,15 @@ ifeq (,$(wildcard ${X86_64_KERNEL_PATCH}))
 endif
 	mkdir -p tomato64/board/x86_64/linux-patches
 	cp ${X86_64_KERNEL_PATCH} tomato64/board/x86_64/linux-patches/
+	@touch $@
+
+.download-armsr-kernel:
+	mkdir -p ${HOME}/buildroot-src/armsr-kernel
+ifeq (,$(wildcard ${ARMSR_KERNEL_PATCH}))
+	wget -O ${ARMSR_KERNEL_PATCH} https://github.com/tomato64/openwrt-armsr-kernel/releases/download/${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}/00001-openwrt-armsr-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
+endif
+	mkdir -p tomato64/board/arm64/armsr/linux-patches
+	cp ${ARMSR_KERNEL_PATCH} tomato64/board/arm64/armsr/linux-patches/
 	@touch $@
 
 .DEFAULT:

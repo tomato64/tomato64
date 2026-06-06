@@ -59,4 +59,8 @@ ifeq ($(BR2_PACKAGE_PLATFORM_BCM53XX),y)
 export PLATFORM_BCM53XX=y
 endif
 
+ifeq ($(BR2_PACKAGE_PLATFORM_ARMSR),y)
+export PLATFORM_ARMSR=y
+endif
+
 $(eval $(generic-package))

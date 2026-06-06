@@ -97,6 +97,11 @@ function upgrade() {
 			name: 'x86_64',
 			message: 'x86_64'
 		},
+		'ARM64 SystemReady': {
+			regex: /armsr/i,
+			name: 'armsr',
+			message: 'armsr'
+		},
 		'GL.iNet GL-MT6000': {
 			regex: /gl-mt6000/i,
 			name: 'GL-MT6000',

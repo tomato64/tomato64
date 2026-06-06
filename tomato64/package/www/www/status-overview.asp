@@ -393,6 +393,7 @@ function show() {
 /* TOMATO64-END */
 /* TOMATO64-WIFI-BEGIN */
 /* TOMATO64-X86_64-SKIP-BEGIN */
+/* TOMATO64-ARMSR-SKIP-BEGIN */
 /* TOMATO64-RPI4-SKIP-BEGIN */
 /* TOMATO64-R6S-SKIP-BEGIN */
 /* TOMATO64-BCM53XX-SKIP-BEGIN */
@@ -405,6 +406,7 @@ function show() {
 /* TOMATO64-R6S-SKIP-END */
 /* TOMATO64-RPI4-SKIP-END */
 	c('temps', stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F');
+/* TOMATO64-ARMSR-SKIP-END */
 /* TOMATO64-X86_64-SKIP-END */
 /* TOMATO64-WIFI-END */
 	c('uptime', stats.uptime);
@@ -632,7 +634,7 @@ function init() {
 /* TOMATO64-BEGIN */
 		{ title: 'CPU', text: stats.cpumodel },
 		{ title: 'CPU Cores', text: stats.cpucount },
-		{ title: 'CPU Frequency', rid: 'cpumhz', text: stats.cpumhz },
+		{ title: 'CPU Frequency', rid: 'cpumhz', text: stats.cpumhz, hidden: (stats.cpumhz == '') },
 /* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
 		{ title: 'CPU Frequency', text: stats.cpumhz, suffix: ' <small>(dual-core)<\/small>' },
@@ -653,6 +655,7 @@ function init() {
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-WIFI-BEGIN */
 /* TOMATO64-X86_64-SKIP-BEGIN */
+/* TOMATO64-ARMSR-SKIP-BEGIN */
 		null,
 		{ title: 'CPU Temperature', rid: 'temps', text: stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F' },
 /* TOMATO64-RPI4-SKIP-BEGIN */
@@ -666,6 +669,7 @@ function init() {
 /* TOMATO64-BCM53XX-SKIP-END */
 /* TOMATO64-R6S-SKIP-END */
 /* TOMATO64-RPI4-SKIP-END */
+/* TOMATO64-ARMSR-SKIP-END */
 /* TOMATO64-X86_64-SKIP-END */
 /* TOMATO64-WIFI-END */
 	]);

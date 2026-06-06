@@ -61,7 +61,7 @@ stats.flashsize = sysinfo.flashsize+' MB';
 stats.cpumhz = sysinfo.cpuclk+'-core)';
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-stats.cpumhz = sysinfo.cpuclk+' MHz';
+stats.cpumhz = sysinfo.cpuclk ? sysinfo.cpuclk+' MHz' : '';
 /* TOMATO64-END */
 stats.cputemp = sysinfo.cputemp+'°';
 stats.systemtype = sysinfo.systemtype;

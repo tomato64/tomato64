@@ -188,6 +188,7 @@ switch (nvram['t_model_name']) {
 	case 'Asus RT-AC5300':
 /* TOMATO64-BEGIN */
 	case 'x86_64':
+	case 'ARM64 SystemReady':
 	case 'GL.iNet GL-MT6000':
 	case 'GL.iNet GL-MT3600BE':
 	case 'Banana Pi BPI-R3':

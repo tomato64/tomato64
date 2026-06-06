@@ -68,6 +68,10 @@ if [ -f /boot/bzImage ] && [ "$(NG "t_model_name")" == "x86_64" ]; then
 	printf "image successfully flashed\n"
 fi
 
+if [ -f /boot/Image ] && [ "$(NG "t_model_name")" == "ARM64 SystemReady" ]; then
+	printf "image successfully flashed\n"
+fi
+
 # GL-MT6000
 if [ -f /boot/glinet_gl-mt6000-kernel.bin ] && [ "$(NG "t_model_name")" == "GL.iNet GL-MT6000" ]; then
 

@@ -2131,9 +2131,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "wan_ifnameX_vlan",		"vlan0"				, 0 },
 
 	{ "lan_ifname",			"br0"				, 0 },
-#ifdef TOMATO64_X86_64
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_ARMSR)
 	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 eth5 eth6 eth7 eth8"	, 0 },
-#endif /* TOMATO64_X86_64 */
+#endif /* TOMATO64_X86_64 || TOMATO64_ARMSR */
 #ifdef TOMATO64_MT6000
 	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 eth5"	, 0 },
 #endif /* TOMATO64_MT6000 */
@@ -2165,9 +2165,9 @@ struct nvram_tuple router_defaults[] = {
 
 	{ "boardflags",			"0x0100"			, 0 },
 	{ "vlan0ports",			"0 9"				, 0 },
-#ifdef TOMATO64_X86_64
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_ARMSR)
 	{ "vlan1ports",			"1 2 3 4 5 6 7 8 9*"		, 0 },
-#endif /* TOMATO64_X86_64 */
+#endif /* TOMATO64_X86_64 || TOMATO64_ARMSR */
 #ifdef TOMATO64_MT6000
 	{ "vlan1ports",			"1 2 3 4 5 9*"			, 0 },
 #endif /* TOMATO64_MT6000 */
@@ -2220,6 +2220,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy_count_expected",	"0"				, 0 },	/* BCM53XX: WiFi disabled in kernel */
 #elif defined(TOMATO64_X86_64)
 	{"wifi_phy_count_expected",	"0"				, 0 },	/* x86_64: optional WiFi (add-in cards) */
+#elif defined(TOMATO64_ARMSR)
+	{"wifi_phy_count_expected",	"0"				, 0 },	/* armsr: ARM64 SystemReady, optional USB WiFi */
 #else
 	{"wifi_phy_count_expected",	"0"				, 0 },	/* Unknown device: no wifi by default */
 #endif
@@ -2291,11 +2293,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "ctf_disable",		"1"				, 0 },
 	{ "flow_offloading",		"0"				, 0 },
 	{ "wed_offloading",		"0"				, 0 },
-#ifdef TOMATO64_X86_64
-	{ "packet_steering",		"0"				, 0 },
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_ARMSR)
+	{ "packet_steering",		"0"				, 0 },	/* x86_64 + armsr (VM): off, follows OpenWrt */
 #else
 	{ "packet_steering",		"1"				, 0 },
-#endif /* TOMATO64_X86_64 */
+#endif /* TOMATO64_X86_64 || TOMATO64_ARMSR */
 	{ "steering_flows",		"0"				, 0 },
 	{ "steering_flows_custom",	"0"				, 0 },
 	{ "tty_login",			"1"				, 0 },
