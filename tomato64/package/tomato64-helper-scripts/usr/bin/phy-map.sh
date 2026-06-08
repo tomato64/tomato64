@@ -63,5 +63,11 @@ _lphy_phy() {
 
 emit_logical_phys() {
 	_LPHY_IDX=0
+	# Bail out when board.json has no "wlan" container (e.g. an empty "{}" on
+	# WiFi-less devices). jshn's json_for_each_item would otherwise fall into its
+	# default branch and invoke the callback once with an empty key, fabricating a
+	# phantom logical phy.
+	json_get_type _w_type wlan
+	[ "$_w_type" = "object" ] || [ "$_w_type" = "array" ] || return 0
 	json_for_each_item _lphy_phy wlan
 }
