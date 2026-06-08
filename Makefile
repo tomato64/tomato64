@@ -184,6 +184,12 @@ endif
 ifeq (,$(wildcard ${MEDIATEK_KERNEL_PATCH}))
 	wget -O ${MEDIATEK_KERNEL_PATCH} https://github.com/tomato64/openwrt-mediatek-kernel/releases/download/${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}/00001-openwrt-mediatek-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 endif
+	@if [ ! -s ${MEDIATEK_KERNEL_PATCH} ]; then \
+		echo "ERROR: mediatek kernel patch is missing or empty: ${MEDIATEK_KERNEL_PATCH}"; \
+		echo "       Removing the bad file so it will be re-downloaded on the next run."; \
+		rm -f ${MEDIATEK_KERNEL_PATCH}; \
+		exit 1; \
+	fi
 	cp ${MEDIATEK_KERNEL_PATCH} tomato64/board/arm64/common/linux-patches-mt/
 	@touch $@
 
@@ -192,6 +198,12 @@ endif
 ifeq (,$(wildcard ${ROCKCHIP_KERNEL_PATCH}))
 	wget -O ${ROCKCHIP_KERNEL_PATCH} https://github.com/tomato64/openwrt-rockchip-kernel/releases/download/${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}/00001-openwrt-rockchip-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 endif
+	@if [ ! -s ${ROCKCHIP_KERNEL_PATCH} ]; then \
+		echo "ERROR: rockchip kernel patch is missing or empty: ${ROCKCHIP_KERNEL_PATCH}"; \
+		echo "       Removing the bad file so it will be re-downloaded on the next run."; \
+		rm -f ${ROCKCHIP_KERNEL_PATCH}; \
+		exit 1; \
+	fi
 	mkdir -p tomato64/board/arm64/common/linux-patches-rockchip
 	cp ${ROCKCHIP_KERNEL_PATCH} tomato64/board/arm64/common/linux-patches-rockchip
 	@touch $@
@@ -201,6 +213,12 @@ endif
 ifeq (,$(wildcard ${BCM53XX_KERNEL_PATCH}))
 	wget -O ${BCM53XX_KERNEL_PATCH} https://github.com/tomato64/openwrt-bcm53xx-kernel/releases/download/${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}/00001-openwrt-bcm53xx-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 endif
+	@if [ ! -s ${BCM53XX_KERNEL_PATCH} ]; then \
+		echo "ERROR: bcm53xx kernel patch is missing or empty: ${BCM53XX_KERNEL_PATCH}"; \
+		echo "       Removing the bad file so it will be re-downloaded on the next run."; \
+		rm -f ${BCM53XX_KERNEL_PATCH}; \
+		exit 1; \
+	fi
 	mkdir -p tomato64/board/arm/bcm53xx/linux-patches
 	cp ${BCM53XX_KERNEL_PATCH} tomato64/board/arm/bcm53xx/linux-patches/
 	@touch $@
@@ -210,6 +228,12 @@ endif
 ifeq (,$(wildcard ${X86_64_KERNEL_PATCH}))
 	wget -O ${X86_64_KERNEL_PATCH} https://github.com/tomato64/openwrt-x86_64-kernel/releases/download/${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}/00001-openwrt-x86_64-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 endif
+	@if [ ! -s ${X86_64_KERNEL_PATCH} ]; then \
+		echo "ERROR: x86_64 kernel patch is missing or empty: ${X86_64_KERNEL_PATCH}"; \
+		echo "       Removing the bad file so it will be re-downloaded on the next run."; \
+		rm -f ${X86_64_KERNEL_PATCH}; \
+		exit 1; \
+	fi
 	mkdir -p tomato64/board/x86_64/linux-patches
 	cp ${X86_64_KERNEL_PATCH} tomato64/board/x86_64/linux-patches/
 	@touch $@
@@ -219,6 +243,12 @@ endif
 ifeq (,$(wildcard ${ARMSR_KERNEL_PATCH}))
 	wget -O ${ARMSR_KERNEL_PATCH} https://github.com/tomato64/openwrt-armsr-kernel/releases/download/${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}/00001-openwrt-armsr-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 endif
+	@if [ ! -s ${ARMSR_KERNEL_PATCH} ]; then \
+		echo "ERROR: armsr kernel patch is missing or empty: ${ARMSR_KERNEL_PATCH}"; \
+		echo "       Removing the bad file so it will be re-downloaded on the next run."; \
+		rm -f ${ARMSR_KERNEL_PATCH}; \
+		exit 1; \
+	fi
 	mkdir -p tomato64/board/arm64/armsr/linux-patches
 	cp ${ARMSR_KERNEL_PATCH} tomato64/board/arm64/armsr/linux-patches/
 	@touch $@
