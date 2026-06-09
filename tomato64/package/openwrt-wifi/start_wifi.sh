@@ -249,8 +249,15 @@ phycount=$(wc -l < /tmp/.lphy_map | tr -d ' ')
 
 # Validate PHY count
 if [ $phycount -eq 0 ]; then
-	logger -p user.error "No WiFi PHYs found in board.json, aborting WiFi start"
-	exit 1
+	# Re-read here: expected_phys from the start-mode block above isn't set in reload mode.
+	expected_phys=$(NG wifi_phy_count_expected)
+	[ -z "$expected_phys" ] && expected_phys=0
+	if [ $expected_phys -gt 0 ]; then
+		logger -p user.error "Expected $expected_phys WiFi PHY(s) but none found in board.json, aborting WiFi start"
+		exit 1
+	fi
+	logger -p user.info "No WiFi hardware present, skipping WiFi start"
+	exit 0
 fi
 
 # Cross-check with nvram
