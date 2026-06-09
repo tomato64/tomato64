@@ -1932,11 +1932,18 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 
 	FILE *f;
 	char buffer[8];
-	char phy0_C[8];
-	char phy0_F[8];
-	char phy1_C[8];
-	char phy1_F[8];
+	char phy0_C[8] = "";
+	char phy0_F[8] = "";
+	char phy1_C[8] = "";
+	char phy1_F[8] = "";
 	int phy0_temp, phy1_temp;
+
+#ifdef TOMATO64_ARMSR
+	/* ARMSR runs on VMs / untested hardware with no mt76 PHY sensors;
+	 * skip the probe and return a safe placeholder like x86_64 does. */
+	strlcpy(buf, "--", buf_sz);
+	return buf;
+#endif
 
 #if defined(TOMATO64_MT3600BE)
 	const char phy0_cmd[] = "sensors -A mt7996_phy0.0-pci-0100 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
@@ -1955,10 +1962,6 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 		}
 		pclose(f);
 	}
-	else {
-		snprintf(phy0_C, sizeof(phy0_C), "");
-		snprintf(phy0_F, sizeof(phy0_F), "");
-	}
 
 	if ((f = popen(phy1_cmd, "r"))) {
 		if (fgets(buffer, sizeof(buffer), f) != NULL) {
@@ -1968,10 +1971,6 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 			snprintf(phy1_F, sizeof(phy1_F), "%d", mround((phy1_temp * 1.8f) + 32));
 		}
 		pclose(f);
-	}
-	else {
-		snprintf(phy1_C, sizeof(phy1_C), "");
-		snprintf(phy1_F, sizeof(phy1_F), "");
 	}
 
 	snprintf(buf, buf_sz, "phy0: 2.4G - %s&#176;C&nbsp;/&nbsp;%s&#176;F&nbsp;&nbsp;&nbsp;&nbsp;phy1: 5G - %s&#176;C&nbsp;/&nbsp;%s&#176;F", phy0_C, phy0_F, phy1_C, phy1_F);
