@@ -1,0 +1,166 @@
+diff --git a/common.c b/common.c
+index 34b0257..80ce5c6 100644
+--- a/common.c
++++ b/common.c
+@@ -102,6 +102,7 @@ struct in6_ifreq {
+ 
+ int foreground;
+ int debug_thresh;
++int duid_type = 1;	/* DUID-LLT = 1 (default), DUID-LL = 3; set via -T */
+ 
+ static int dhcp6_count_list(struct dhcp6_list *);
+ static int in6_matchflags(struct sockaddr *, char *, int);
+@@ -1016,7 +1017,6 @@ get_duid(const char *idfile, struct duid *duid)
+ {
+ 	FILE *fp = NULL;
+ 	uint16_t len = 0, hwtype;
+-	struct dhcp6opt_duid_type1 *dp; /* we only support the type1 DUID */
+ 	char tmpbuf[256];	/* DUID should be no more than 256 bytes */
+ 
+ 	if ((fp = fopen(idfile, "r")) == NULL && errno != ENOENT)
+@@ -1037,7 +1037,7 @@ get_duid(const char *idfile, struct duid *duid)
+ 			    "failed to get a hardware address");
+ 			goto fail;
+ 		}
+-		len = l + sizeof(struct dhcp6opt_duid_type1);
++		len = l + sizeof(union dhcp6opt_duid_type);
+ 	}
+ 
+ 	memset(duid, 0, sizeof(*duid));
+@@ -1058,15 +1058,35 @@ get_duid(const char *idfile, struct duid *duid)
+ 		    "extracted an existing DUID from %s: %s",
+ 		    idfile, duidstr(duid));
+ 	} else {
+-		uint64_t t64;
+-
+-		dp = (struct dhcp6opt_duid_type1 *)duid->duid_id;
+-		dp->dh6_duid1_type = htons(1); /* type 1 */
+-		dp->dh6_duid1_hwtype = htons(hwtype);
+-		/* time is Jan 1, 2000 (UTC), modulo 2^32 */
+-		t64 = (uint64_t)(time(NULL) - 946684800);
+-		dp->dh6_duid1_time = htonl((u_long)(t64 & 0xffffffff));
+-		memcpy((void *)(dp + 1), tmpbuf, (len - sizeof(*dp)));
++		int hwlen = len - sizeof(union dhcp6opt_duid_type);
++
++		/* we only support the type 1 (DUID-LLT) and type 3 (DUID-LL) */
++		switch (duid_type) {
++		case 1: {
++			uint64_t t64;
++			struct dhcp6opt_duid_type1 *dp;
++
++			duid->duid_len = hwlen + sizeof(struct dhcp6opt_duid_type1);
++			dp = (struct dhcp6opt_duid_type1 *)duid->duid_id;
++			dp->dh6_duid1_type = htons(1); /* type 1 */
++			dp->dh6_duid1_hwtype = htons(hwtype);
++			/* time is Jan 1, 2000 (UTC), modulo 2^32 */
++			t64 = (uint64_t)(time(NULL) - 946684800);
++			dp->dh6_duid1_time = htonl((u_long)(t64 & 0xffffffff));
++			memcpy((void *)(dp + 1), tmpbuf, hwlen);
++			break;
++		}
++		case 3: {
++			struct dhcp6opt_duid_type3 *dp;
++
++			duid->duid_len = hwlen + sizeof(struct dhcp6opt_duid_type3);
++			dp = (struct dhcp6opt_duid_type3 *)duid->duid_id;
++			dp->dh6_duid3_type = htons(3); /* type 3 */
++			dp->dh6_duid3_hwtype = htons(hwtype);
++			memcpy((void *)(dp + 1), tmpbuf, hwlen);
++			break;
++		}
++		}
+ 
+ 		d_printf(LOG_DEBUG, FNAME, "generated a new DUID: %s",
+ 		    duidstr(duid));
+diff --git a/common.h b/common.h
+index 7ef0ac2..2c85dd1 100644
+--- a/common.h
++++ b/common.h
+@@ -124,6 +124,7 @@ extern int foreground;
+ extern int debug_thresh;
+ extern char *device;
+ extern int opt_norelease;
++extern int duid_type;	/* DUID-LLT = 1 (default), DUID-LL = 3 */
+ 
+ /* search option for dhcp6_find_listval() */
+ #define MATCHLIST_PREFIXLEN 0x1
+diff --git a/dhcp6.h b/dhcp6.h
+index 263d5ad..44161ff 100644
+--- a/dhcp6.h
++++ b/dhcp6.h
+@@ -319,7 +319,7 @@ struct dhcp6opt {
+ 	/* type-dependent data follows */
+ } __attribute__ ((__packed__));
+ 
+-/* DUID type 1 */
++/* DUID type 1 (DUID-LLT) */
+ struct dhcp6opt_duid_type1 {
+ 	uint16_t dh6_duid1_type;
+ 	uint16_t dh6_duid1_hwtype;
+@@ -327,6 +327,26 @@ struct dhcp6opt_duid_type1 {
+ 	/* link-layer address follows */
+ } __attribute__ ((__packed__));
+ 
++/* DUID type 2 (DUID-EN) */
++struct dhcp6opt_duid_type2 {
++	uint16_t dh6_duid2_type;
++	uint32_t dh6_duid2_enterprise_number;
++	/* identifier follows */
++} __attribute__ ((__packed__));
++
++/* DUID type 3 (DUID-LL) */
++struct dhcp6opt_duid_type3 {
++	uint16_t dh6_duid3_type;
++	uint16_t dh6_duid3_hwtype;
++	/* link-layer address follows */
++} __attribute__ ((__packed__));
++
++union dhcp6opt_duid_type {
++	struct dhcp6opt_duid_type1	d1;
++	struct dhcp6opt_duid_type2	d2;
++	struct dhcp6opt_duid_type3	d3;
++};
++
+ /* Status Code */
+ struct dhcp6opt_stcode {
+ 	uint16_t dh6_stcode_type;
+diff --git a/dhcp6c.c b/dhcp6c.c
+index 821ad03..7ed7db7 100644
+--- a/dhcp6c.c
++++ b/dhcp6c.c
+@@ -67,6 +67,7 @@
+ #include <stdlib.h>
+ #include <unistd.h>
+ #include <string.h>
++#include <strings.h>	/* strcasecmp() for the -T option */
+ #include <err.h>
+ #include <ifaddrs.h>
+ #include <fcntl.h>
+@@ -164,11 +165,17 @@ main(int argc, char *argv[])
+ 	else
+ 		progname++;
+ 
+-	while ((ch = getopt(argc, argv, "c:dDfinp:t")) != -1) {
++	while ((ch = getopt(argc, argv, "c:dDfinp:tT:")) != -1) {
+ 		switch (ch) {
+ 		case 'c':
+ 			conffile = optarg;
+ 			break;
++		case 'T':
++			if (!strcasecmp(optarg, "LL"))
++				duid_type = 3;		/* DUID-LL */
++			else if (!strcasecmp(optarg, "LLT"))
++				duid_type = 1;		/* DUID-LLT */
++			break;
+ 		case 'd':
+ 			debug = 1;
+ 			break;
+@@ -280,7 +287,7 @@ static void
+ usage(void)
+ {
+ 	fprintf(stderr, "usage: dhcp6c [-c configfile] [-dDfint] "
+-	    "[-p pid-file] [interfaces...]\n");
++	    "[-T LL|LLT] [-p pid-file] [interfaces...]\n");
+ }
+ 
+ /*------------------------------------------------------------*/

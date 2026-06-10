@@ -1,0 +1,13 @@
+config BR2_PACKAGE_DHCPV6_OPNSENSE
+	bool "dhcpv6-opnsense"
+	select BR2_PACKAGE_LIBSHARED
+	select BR2_PACKAGE_LIBNVRAM
+	help
+	  WIDE-DHCPv6 client (dhcp6c) based on the actively maintained
+	  OPNsense fork, with Tomato64 nvram/GUI integration.
+
+	  Drop-in replacement for the legacy "dhcpv6" (dhcpv6-tomato)
+	  package. Uses the same /etc/dhcp6c.conf format and the same
+	  command-line interface (including -T LL|LLT DUID type selection,
+	  restored on top of the upstream fork), so no rc/GUI changes are
+	  required. Provides /usr/sbin/dhcp6c.

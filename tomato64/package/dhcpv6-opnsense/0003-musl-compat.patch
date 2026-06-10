@@ -1,0 +1,104 @@
+diff --git a/addrconf.c b/addrconf.c
+index 01efc1c..13ad88b 100644
+--- a/addrconf.c
++++ b/addrconf.c
+@@ -48,6 +48,7 @@
+ 
+ #include <errno.h>
+ #include <syslog.h>
++#include <time.h>
+ #include <string.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+diff --git a/common.c b/common.c
+index b78a7da..018ec86 100644
+--- a/common.c
++++ b/common.c
+@@ -75,6 +75,7 @@
+ #include <stdio.h>
+ #include <stdarg.h>
+ #include <syslog.h>
++#include <time.h>
+ #include <stdlib.h>
+ #include <unistd.h>
+ #include <string.h>
+@@ -108,6 +109,30 @@ int foreground;
+ int debug_thresh;
+ int duid_type = 1;	/* DUID-LLT = 1 (default), DUID-LL = 3; set via -T */
+ 
++#ifdef TOMATO
++/*
++ * The upstream fork assumes the platform libc provides the BSD arc4random
++ * family. musl (and some others) do not, so supply a minimal, unbiased
++ * arc4random_uniform() backed by getentropy() when building for Tomato64.
++ */
++uint32_t
++arc4random_uniform(uint32_t upper_bound)
++{
++	uint32_t r, min;
++
++	if (upper_bound < 2)
++		return (0);
++
++	min = -upper_bound % upper_bound;	/* 2^32 % upper_bound */
++	for (;;) {
++		if (getentropy(&r, sizeof(r)) != 0)
++			r = (uint32_t)random();	/* fallback, non-fatal */
++		if (r >= min)
++			return (r % upper_bound);
++	}
++}
++#endif /* TOMATO */
++
+ static int dhcp6_count_list(struct dhcp6_list *);
+ static int in6_matchflags(struct sockaddr *, char *, int);
+ static ssize_t dnsencode(const char *, char *, size_t);
+diff --git a/common.h b/common.h
+index 2c85dd1..219f794 100644
+--- a/common.h
++++ b/common.h
+@@ -196,5 +196,8 @@ size_t strlcpy(char *, const char *, size_t);
+ 
+ int get_val32(char **bpp, int *lenp, uint32_t *valp);
+ int get_val(char **bpp, int *lenp, void *valp, size_t vallen);
++#ifdef TOMATO
++uint32_t arc4random_uniform(uint32_t);	/* shim for libcs (musl) lacking it */
++#endif
+ 
+ #endif
+diff --git a/dhcp6c.c b/dhcp6c.c
+index 7ed7db7..458ea45 100644
+--- a/dhcp6c.c
++++ b/dhcp6c.c
+@@ -34,6 +34,7 @@
+ #include <sys/socket.h>
+ #include <sys/uio.h>
+ #include <sys/queue.h>
++#include <sys/file.h>	/* flock(), LOCK_EX */
+ #include <errno.h>
+ #include <limits.h>
+ #if TIME_WITH_SYS_TIME
+diff --git a/prefixconf.c b/prefixconf.c
+index 0420003..62b3ce1 100644
+--- a/prefixconf.c
++++ b/prefixconf.c
+@@ -49,6 +49,7 @@
+ 
+ #include <errno.h>
+ #include <syslog.h>
++#include <time.h>
+ #include <string.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+diff --git a/timer.c b/timer.c
+index 4e5c964..16ec448 100644
+--- a/timer.c
++++ b/timer.c
+@@ -37,6 +37,7 @@
+ 
+ #include <unistd.h>
+ #include <syslog.h>
++#include <time.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #if defined(__NetBSD__) || defined(__OpenBSD__)

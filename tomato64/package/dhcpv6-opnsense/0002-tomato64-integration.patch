@@ -1,0 +1,131 @@
+diff --git a/common.c b/common.c
+index 80ce5c6..b78a7da 100644
+--- a/common.c
++++ b/common.c
+@@ -88,6 +88,10 @@
+ #include "common.h"
+ #include "timer.h"
+ 
++#ifdef TOMATO
++#include <ipv6_shared.h>
++#endif
++
+ #ifdef __linux__
+ /* from /usr/include/linux/ipv6.h */
+ 
+@@ -1016,6 +1020,10 @@ int
+ get_duid(const char *idfile, struct duid *duid)
+ {
+ 	FILE *fp = NULL;
++#ifdef TOMATO
++	FILE *fp2 = NULL;
++	char duid_buf[TOMATO_DUID_MAX_LEN] = { 0 };
++#endif
+ 	uint16_t len = 0, hwtype;
+ 	char tmpbuf[256];	/* DUID should be no more than 256 bytes */
+ 
+@@ -1092,6 +1100,19 @@ get_duid(const char *idfile, struct duid *duid)
+ 		    duidstr(duid));
+ 	}
+ 
++#ifdef TOMATO
++	/* expose the DUID to the web GUI (status-overview.asp) */
++	if ((fp2 = fopen(TOMATO_DUID_GUI, "w+")) == NULL) { /* if file already exists override it (empty it) */
++		d_printf(LOG_ERR, FNAME, "failed to open TOMATO_DUID_GUI file for save");
++	}
++	else {
++		snprintf(duid_buf, TOMATO_DUID_MAX_LEN - 1, "%s", duidstr(duid));
++		duid_buf[TOMATO_DUID_MAX_LEN - 1] = '\0';
++		fputs(duid_buf, fp2);
++		fclose(fp2);
++	}
++#endif
++
+ 	/* save the (new) ID to the file for next time */
+ 	if (!fp) {
+ 		if ((fp = fopen(idfile, "w+")) == NULL) {
+@@ -1268,6 +1289,9 @@ gethwid(char *buf, int len, const char *ifname, uint16_t *hwtypep)
+ 	struct sockaddr_ll *sll;
+ #endif
+ 	ssize_t l;
++#ifdef TOMATO
++	const char first_ethernet[] = "eth0";
++#endif
+ 
+ #ifdef __sun__
+ 	if (ifname == NULL) {
+@@ -1291,6 +1315,16 @@ gethwid(char *buf, int len, const char *ifname, uint16_t *hwtypep)
+ 	}
+ #endif
+ 
++#ifdef TOMATO
++	/*
++	 * For a DUID-LL/LLT we want a stable hardware address. Pin the lookup
++	 * to the first ethernet rather than letting it match whatever link
++	 * layer interface getifaddrs() happens to return first (fixes #113).
++	 */
++	if (ifname == NULL)
++		ifname = first_ethernet;
++#endif
++
+ 	if (getifaddrs(&ifap) < 0)
+ 		return (-1);
+ 
+@@ -3480,6 +3514,9 @@ safefile(const char *path)
+ 
+ 	switch (s.st_mode & S_IFMT) {
+ 	case S_IFREG:
++#ifdef TOMATO
++	case S_IFLNK:	/* /sbin/dhcp6c-state is a symlink to /sbin/rc */
++#endif
+ 		break;
+ 	default:
+ 		d_printf(LOG_NOTICE, FNAME, "%s is an invalid file type 0x%o",
+diff --git a/prefixconf.c b/prefixconf.c
+index d42c241..0420003 100644
+--- a/prefixconf.c
++++ b/prefixconf.c
+@@ -63,6 +63,11 @@
+ #include "dhcp6c_ia.h"
+ #include "prefixconf.h"
+ 
++#ifdef TOMATO
++#include <bcmnvram.h>
++#include <ipv6_shared.h>
++#endif
++
+ TAILQ_HEAD(siteprefix_list, siteprefix);
+ struct iactl_pd {
+ 	struct iactl common;
+@@ -148,6 +153,9 @@ update_prefix(struct ia *ia, struct dhcp6_prefix *pinfo,
+ 	struct siteprefix *sp;
+ 	struct timeval timo;
+ 	int spcreate = 0;
++#ifdef TOMATO
++	char nvramstr[16];
++#endif
+ 
+ 	/*
+ 	 * A client discards any addresses for which the preferred
+@@ -213,6 +221,21 @@ update_prefix(struct ia *ia, struct dhcp6_prefix *pinfo,
+ 	    in6addr2str(&pinfo->addr, 0), pinfo->plen,
+ 	    pinfo->pltime, pinfo->vltime);
+ 
++#ifdef TOMATO
++	/* expose the delegated prefix lifetimes to Tomato (LAN IPv6 lease time) */
++	if (pinfo->pltime <= ONEMONTH_LIFETIME)
++		snprintf(nvramstr, sizeof(nvramstr), "%d", pinfo->pltime);
++	else
++		snprintf(nvramstr, sizeof(nvramstr), "%d", INFINITE_LIFETIME);
++	nvram_set("ipv6_pd_pltime", nvramstr);
++
++	if (pinfo->vltime <= ONEMONTH_LIFETIME)
++		snprintf(nvramstr, sizeof(nvramstr), "%d", pinfo->vltime);
++	else
++		snprintf(nvramstr, sizeof(nvramstr), "%d", INFINITE_LIFETIME);
++	nvram_set("ipv6_pd_vltime", nvramstr);
++#endif /* TOMATO */
++
+ 	/* update prefix interfaces if necessary */
+ 	if (sp->prefix.vltime != 0) {
+ 		if (spcreate) {
