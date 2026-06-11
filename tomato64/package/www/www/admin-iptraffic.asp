@@ -240,7 +240,7 @@ function save() {
 		fom.cstats_path.value = path;
 
 		if (E('_f_new').checked) {
-			fom._service.value = 'cstatsnew-restart';
+			fom._service.value = 'cstatsnew-restart,firewall-restart';
 			E('_f_new').checked = 0; /* reset */
 		}
 	}
