@@ -1,3 +1,6 @@
 #!/bin/sh
 
+# Remove any stale socket left by a previous ttyd so the new instance can bind
+rm -f /var/run/ttyd.sock
+
 start-stop-daemon -b -S -n ttyd -x /usr/bin/ttyd -- -i /var/run/ttyd.sock -W -t disableLeaveAlert=true -t cursorStyle=bar -t titleFixed="console" /bin/login -f root

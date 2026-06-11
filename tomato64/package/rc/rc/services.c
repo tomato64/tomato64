@@ -1001,7 +1001,7 @@ void stop_httpd(void)
 		logmsg(LOG_INFO, "httpd is stopped");
 	}
 #ifdef TOMATO64
-	killall("ttyd", SIGTERM);
+	killall_tk_period_wait("ttyd", 50);
 #endif /* TOMATO64 */
 }
 
