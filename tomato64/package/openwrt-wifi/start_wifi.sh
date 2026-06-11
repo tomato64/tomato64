@@ -612,10 +612,16 @@ if [ "$MODE" = "start" ]; then
 			fi
 		done
 
-		while ! hostapd_cli -s /var/run/hostapd/ -i global ping > /dev/null 2>&1; do
+		hostapd_ping_timeout=50
+		while [ $hostapd_ping_timeout -gt 0 ] && ! hostapd_cli -s /var/run/hostapd/ -i global ping > /dev/null 2>&1; do
 			sleep .1
+			hostapd_ping_timeout=$((hostapd_ping_timeout - 1))
 		done
-		/usr/sbin/hostapd_cli -B -s /var/run/hostapd/ -i global -a /usr/bin/hostapd_event
+		if hostapd_cli -s /var/run/hostapd/ -i global ping > /dev/null 2>&1; then
+			/usr/sbin/hostapd_cli -B -s /var/run/hostapd/ -i global -a /usr/bin/hostapd_event
+		else
+			logger -p user.error "hostapd global control interface did not respond within timeout, event monitor not started"
+		fi
 	fi
 
 	# Start relayd for wireless bridge interfaces
