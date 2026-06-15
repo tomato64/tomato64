@@ -79,6 +79,10 @@ extern int post;
 static void asp_discovery(int argc, char **argv);
 #endif
 static void asp_css(int argc, char **argv);
+#ifdef TOMATO64
+static void asp_inline_css(int argc, char **argv);
+static void asp_inline_favicon(int argc, char **argv);
+#endif /* TOMATO64 */
 static void asp_resmsg(int argc, char **argv);
 static void asp_resreset(int argc, char **argv);
 
@@ -191,6 +195,10 @@ const aspapi_t aspapi[] = {
 	{ "calc6rdlocalprefix",		asp_calc6rdlocalprefix		},
 #endif
 	{ "css",			asp_css				},
+#ifdef TOMATO64
+	{ "inline_css",			asp_inline_css			},
+	{ "inline_favicon",		asp_inline_favicon		},
+#endif /* TOMATO64 */
 #if defined(TCONFIG_BCMARM) || defined(TCONFIG_MIPSR2)
 	{ "discovery",			asp_discovery			},
 #endif
@@ -2250,6 +2258,55 @@ static void asp_css(int argc, char **argv)
 	}
 #endif
 }
+
+#ifdef TOMATO64
+/* Emit the active CSS inline in a <style> block instead of linking to it */
+static void asp_inline_css(int argc, char **argv)
+{
+	const char *css = nvram_safe_get("web_css");
+	char path[64];
+
+	web_puts("<style>");
+
+	/* base stylesheet */
+	if (!web_putfile("/tmp/tomato.css", WOF_NONE))
+		web_putfile("/www/tomato.css", WOF_NONE);
+
+	/* active theme: skip default "tomato" and the remote "online" theme;
+	 * reject names with path separators/dots as a guard for the file read */
+	if (strcmp(css, "tomato") != 0 && strcmp(css, "online") != 0 && !strpbrk(css, "/.")) {
+		snprintf(path, sizeof(path), "/tmp/%s.css", css);
+		if (!web_putfile(path, WOF_NONE)) {
+			snprintf(path, sizeof(path), "/www/%s.css", css);
+			web_putfile(path, WOF_NONE);
+		}
+	}
+
+	web_puts("</style>");
+}
+
+/* Emit the favicon inline as a data: URI instead of letting the browser fetch */
+static void asp_inline_favicon(int argc, char **argv)
+{
+	unsigned char raw[16384];
+	char *b64;
+	int n, elen;
+
+	if ((n = f_read("/tmp/favicon.ico", raw, sizeof(raw))) <= 0)
+		n = f_read("/www/favicon.ico", raw, sizeof(raw));
+
+	if (n > 0 && (b64 = malloc(base64_encoded_len(n) + 1)) != NULL) {
+		elen = base64_encode(raw, b64, n);
+		b64[elen] = '\0';
+		web_puts("<link rel=\"icon\" type=\"image/png\" href=\"data:image/png;base64,");
+		web_puts(b64);
+		web_puts("\">");
+		free(b64);
+	}
+	else
+		web_puts("<link rel=\"icon\" href=\"data:,\">");
+}
+#endif /* TOMATO64 */
 
 #if defined(TCONFIG_BCMARM) || defined(TCONFIG_MIPSR2)
 static void asp_discovery(int argc, char **argv)

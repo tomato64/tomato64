@@ -11,10 +11,19 @@ No part of this file may be used without permission.
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Shutting down...</title>
+/* TOMATO64-REMOVE-BEGIN */
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="tomato.js"></script>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+<% inline_favicon(); %>
+<% inline_css(); %>
+/* TOMATO64-END */
 <script>
+/* TOMATO64-BEGIN */
+function E(e) { return document.getElementById(e); }
+/* TOMATO64-END */
 var n = 31;
 function tick() {
 	if (--n > 0) {

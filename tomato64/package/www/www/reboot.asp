@@ -4,8 +4,14 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Rebooting...</title>
+/* TOMATO64-REMOVE-BEGIN */
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+<% inline_favicon(); %>
+<% inline_css(); %>
+/* TOMATO64-END */
 <script>
 /* TOMATO64-REMOVE-BEGIN */
 var n = 90 + parseInt('0<% nv("wait_time"); %>');
