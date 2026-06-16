@@ -91,6 +91,10 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 	char *next;
 	char buff[1024];
 	char title[128], value[512];
+#ifdef TOMATO64_X86_64
+	double mhz_sum = 0.0;
+	int mhz_count = 0;
+#endif /* TOMATO64_X86_64 */
 
 	memset(buff, 0, sizeof(buff));
 	if ((fd = fopen("/proc/cpuinfo", "r"))) {
@@ -126,8 +130,13 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 				strlcpy(cpuclk, value, buf_cpuclk_sz);
 #endif
 #ifdef TOMATO64
-			if (strncmp_ex(title, "cpu MHz") == 0)
+			if (strncmp_ex(title, "cpu MHz") == 0) {
 				strlcpy(cpuclk, value, buf_cpuclk_sz);
+#ifdef TOMATO64_X86_64
+				mhz_sum += atof(value);
+				mhz_count++;
+#endif /* TOMATO64_X86_64 */
+			}
 #endif /* TOMATO64 */
 		}
 		fclose(fd);
@@ -158,6 +167,47 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 		fclose(fd);
 	}
 #endif
+#ifdef TOMATO64_X86_64
+	/* Report the average of the per-core "cpu MHz" values from /proc/cpuinfo */
+	if (mhz_count > 0)
+		snprintf(cpuclk, buf_cpuclk_sz, "%d", (int)(mhz_sum / mhz_count + 0.5));
+
+	/* CPU package temperature straight from hwmon sysfs (coretemp on Intel, k10temp on AMD) */
+	cputemp[0] = '\0';
+	{
+		int i;
+		char path[128], namebuf[32];
+
+		for (i = 0; i < 32; i++) {
+			FILE *nf;
+
+			snprintf(path, sizeof(path), "/sys/class/hwmon/hwmon%d/name", i);
+			if (!(nf = fopen(path, "r")))
+				continue;	/* numbering may have gaps; keep scanning */
+
+			namebuf[0] = '\0';
+			if (fgets(namebuf, sizeof(namebuf), nf))
+				namebuf[strcspn(namebuf, "\n")] = 0;
+			fclose(nf);
+
+			if (strcmp(namebuf, "coretemp") == 0 || strcmp(namebuf, "k10temp") == 0) {
+				FILE *tf;
+
+				snprintf(path, sizeof(path), "/sys/class/hwmon/hwmon%d/temp1_input", i);
+				if ((tf = fopen(path, "r"))) {
+					char tbuf[16];
+					if (fgets(tbuf, sizeof(tbuf), tf)) {
+						long milli = atol(tbuf);
+						if (milli > 0)
+							snprintf(cputemp, buf_cputemp_sz, "%ld", (milli + 500) / 1000);
+					}
+					fclose(tf);
+				}
+				break;
+			}
+		}
+	}
+#endif /* TOMATO64_X86_64 */
 #ifdef TOMATO64_ARM64
 #if TOMATO64_RPI4
 	strlcpy(system_type, "Broadcom BCM2711", buf_system_type_sz);

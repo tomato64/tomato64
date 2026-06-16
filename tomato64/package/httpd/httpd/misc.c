@@ -1001,7 +1001,11 @@ void asp_sysinfo(int argc, char **argv)
 	char cpu_model[64];
 #endif /* TOMATO64 */
 	char system_type[64];
+#ifndef TOMATO64
 	char cpuclk[32];
+#else
+	char cpuclk[32] = "";
+#endif /* TOMATO64 */
 #ifndef TOMATO64
 	char cfe_version[16];
 #endif /* TOMATO64 */
@@ -1010,7 +1014,11 @@ void asp_sysinfo(int argc, char **argv)
 #endif
 
 #ifdef TCONFIG_BCMARM
+#ifndef TOMATO64
 	char cputemp[8];
+#else
+	char cputemp[8] = "";
+#endif /* TOMATO64 */
 	char sa[128];
 	FILE *a;
 	char *e = NULL;

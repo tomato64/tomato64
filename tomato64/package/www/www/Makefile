@@ -688,32 +688,11 @@ else
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
 endif
 
-ifeq ($(PLATFORM_RPI4),y)
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-RPI4-SKIP-BEGIN/,/TOMATO64-RPI4-SKIP-END/d"
-endif
-
-ifeq ($(PLATFORM_R6S),y)
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-R6S-SKIP-BEGIN/,/TOMATO64-R6S-SKIP-END/d"
-endif
-
-ifeq ($(PLATFORM_R5S),y)
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-R5S-SKIP-BEGIN/,/TOMATO64-R5S-SKIP-END/d"
-endif
-
-ifeq ($(PLATFORM_R76S),y)
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-R76S-SKIP-BEGIN/,/TOMATO64-R76S-SKIP-END/d"
-endif
-
-ifeq ($(PLATFORM_BCM53XX),y)
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-BCM53XX-SKIP-BEGIN/,/TOMATO64-BCM53XX-SKIP-END/d"
-endif
-
-ifeq ($(PLATFORM_X86_64),y)
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-X86_64-SKIP-BEGIN/,/TOMATO64-X86_64-SKIP-END/d"
-endif
-
-ifeq ($(PLATFORM_ARMSR),y)
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-ARMSR-SKIP-BEGIN/,/TOMATO64-ARMSR-SKIP-END/d"
+# Wireless Temperature row: keep only on devices whose WiFi PHYs expose a
+# temperature sensor (PLATFORM_HAS_WLTEMP); drop it everywhere else.
+ifeq ($(PLATFORM_HAS_WLTEMP),y)
+else
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-WLTEMP-BEGIN/,/TOMATO64-WLTEMP-END/d"
 endif
 
 # Only include TFTP if it is compiled in
@@ -862,13 +841,7 @@ endif
 		-e "/TOMATO64-X86_64-BEGIN/d"	-e "/TOMATO64-X86_64-END/d" \
 		-e "/TOMATO64-ARM64-BEGIN/d"	-e "/TOMATO64-ARM64-END/d" \
 		-e "/TOMATO64-WIFI-BEGIN/d"	-e "/TOMATO64-WIFI-END/d" \
-		-e "/TOMATO64-RPI4-SKIP-BEGIN/d"	-e "/TOMATO64-RPI4-SKIP-END/d" \
-		-e "/TOMATO64-R6S-SKIP-BEGIN/d"	-e "/TOMATO64-R6S-SKIP-END/d" \
-		-e "/TOMATO64-R5S-SKIP-BEGIN/d"	-e "/TOMATO64-R5S-SKIP-END/d" \
-		-e "/TOMATO64-R76S-SKIP-BEGIN/d"	-e "/TOMATO64-R76S-SKIP-END/d" \
-		-e "/TOMATO64-BCM53XX-SKIP-BEGIN/d"	-e "/TOMATO64-BCM53XX-SKIP-END/d" \
-		-e "/TOMATO64-X86_64-SKIP-BEGIN/d"	-e "/TOMATO64-X86_64-SKIP-END/d" \
-		-e "/TOMATO64-ARMSR-SKIP-BEGIN/d"	-e "/TOMATO64-ARMSR-SKIP-END/d" \
+		-e "/TOMATO64-WLTEMP-BEGIN/d"	-e "/TOMATO64-WLTEMP-END/d" \
 		|| true; \
 	done
 
