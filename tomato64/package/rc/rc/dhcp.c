@@ -858,6 +858,7 @@ int dhcp6c_state_main(int argc, char **argv)
 		start_httpd();
 		stop_upnp();
 		start_upnp();
+		start_arpbind(); /* refresh static IPv6 neighbor bindings with the new prefix */
 	}
 
 	/* check DNS - change/new ? */

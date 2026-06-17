@@ -1305,13 +1305,17 @@ div[id$="peers-grid"] .co2,
 }
 
 #bs-grid .co2,
-#bs-grid .co4 {
-	width: 80px;
+#bs-grid .co5 {
+	width: 65px;
 	text-align: center;
 }
 
 #bs-grid .co3 {
 	width: 120px;
+}
+
+#bs-grid .co4 {
+	width: 190px;
 }
 
 #vlan-grid .co2 {

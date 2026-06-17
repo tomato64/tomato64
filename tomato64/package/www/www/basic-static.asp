@@ -23,11 +23,21 @@
 
 <script>
 
-//	<% nvram("lan_ipaddr,lan_netmask,dhcpd_static,cstats_include,dhcpd_slt,t_model_name,os_version"); %>
+//	<% nvram("lan_ipaddr,lan_netmask,dhcpd_static,cstats_include,dhcpd_slt,ipv6_service,t_model_name,os_version"); %>
 
 var cprefix = 'basic_static';
 
 autonum = aton(nvram.lan_ipaddr) & aton(nvram.lan_netmask);
+
+/* IPV6-BEGIN */
+/* host-identifier ("suffix") only when the upper 64 bits are zero, e.g. ::50 */
+function isIPv6Suffix(ip) {
+	var x = ExpandIPv6Address(ip);
+	if (!x) return false;
+	var g = x.split(':');
+	return (parseInt(g[0], 16) == 0 && parseInt(g[1], 16) == 0 && parseInt(g[2], 16) == 0 && parseInt(g[3], 16) == 0);
+}
+/* IPV6-END */
 
 var sg = new TomatoGrid();
 
@@ -44,7 +54,8 @@ sg.resetNewEditor = function() {
 			f[0].value = c[0];
 			f[1].value = mac_null;
 			f[3].value = c[1];
-			f[5].value = c[2];
+			f[4].value = '';
+			f[6].value = c[2];
 			return;
 		}
 	}
@@ -53,8 +64,9 @@ sg.resetNewEditor = function() {
 	f[1].value = mac_null;
 	f[2].disabled = 1;
 	f[2].checked = 0;
-	f[4].checked = 0;
-	f[5].value = '';
+	f[4].value = '';
+	f[5].checked = 0;
+	f[6].value = '';
 
 	n = 10;
 	do {
@@ -69,21 +81,28 @@ sg.resetNewEditor = function() {
 }
 
 sg.setup = function() {
+	/* IPv6 reservations are only usable on IPv6 builds; grey out the field otherwise */
+	var ipv6_attrib = 'disabled';
+/* IPV6-BEGIN */
+	ipv6_attrib = '';
+/* IPV6-END */
+
 	this.init('bs-grid', 'sort', 250, [
 		{ multi: [ { type: 'text', maxlen: 17 }, { type: 'text', maxlen: 17 } ] },
 		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 		{ type: 'text', maxlen: 17 },
+		{ type: 'text', maxlen: 46, attrib: ipv6_attrib },
 		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 		{ type: 'text', maxlen: 50 } ] );
 
-	this.headerSet(['MAC Address', 'Static arp', 'IP Address', 'IPTraffic', 'Hostname']);
+	this.headerSet(['MAC Address', 'Static arp', 'IPv4 Address', 'IPv6 Address', 'IPTraffic', 'Hostname']);
 
 	var ipt = nvram.cstats_include.split(',');
 	var s = nvram.dhcpd_static.split('>');
 	for (var i = 0; i < s.length; ++i) {
 		var h = '0';
 		var t = s[i].split('<');
-		if (t.length == 4) {
+		if (t.length >= 4) {
 			var d = t[0].split(',');
 			for (var j = 0; j < ipt.length; ++j) {
 				if (t[1].length > 0 && t[1] == ipt[j]) {
@@ -92,7 +111,7 @@ sg.setup = function() {
 				}
 			}
 
-			this.insertData(-1, [d[0], ((d.length >= 2) ? d[1] : mac_null), t[3], t[1], h, t[2]]);
+			this.insertData(-1, [d[0], ((d.length >= 2) ? d[1] : mac_null), t[3], t[1], ((t.length >= 5) ? t[4] : ''), h, t[2]]);
 		}
 	}
 	this.sort(2);
@@ -117,7 +136,7 @@ sg.existMAC = function(mac) {
 }
 
 sg.existName = function(name) {
-	return this.exist(5, name);
+	return this.exist(6, name);
 }
 
 sg.inStatic = function(n) {
@@ -133,20 +152,21 @@ sg.dataToView = function(data) {
 	v.push((s == '') ? '<center><small><i>(unset)<\/i><\/small><\/center>' : s);
 	v.push((data[2].toString() != '0') ? '<small><i>Enabled<\/i><\/small>' : '');
 	v.push(escapeHTML(''+data[3]));
-	v.push((data[4].toString() != '0') ? '<small><i>Enabled<\/i><\/small>' : '');
-	v.push(escapeHTML(''+data[5]));
+	v.push(escapeHTML(''+data[4]));
+	v.push((data[5].toString() != '0') ? '<small><i>Enabled<\/i><\/small>' : '');
+	v.push(escapeHTML(''+data[6]));
 
 	return v;
 }
 
 sg.dataToFieldValues = function (data) {
-	return ([data[0],data[1],(data[2].toString() != '0') ? 'checked' : '',data[3],(data[4].toString() != '0') ? 'checked' : '',data[5]]);
+	return ([data[0],data[1],(data[2].toString() != '0') ? 'checked' : '',data[3],data[4],(data[5].toString() != '0') ? 'checked' : '',data[6]]);
 }
 
 sg.fieldValuesToData = function(row) {
 	var f = fields.getAll(row);
 
-	return ([f[0].value,f[1].value,f[2].checked ? '1' : '0',f[3].value,f[4].checked ? '1' : '0',f[5].value]);
+	return ([f[0].value,f[1].value,f[2].checked ? '1' : '0',f[3].value,f[4].value,f[5].checked ? '1' : '0',f[6].value]);
 }
 
 sg.sortCompare = function(a, b) {
@@ -164,11 +184,14 @@ sg.sortCompare = function(a, b) {
 			r = cmpIP(da[3], db[3]);
 		break;
 		case 3:
-			r = cmpInt(da[4], db[4]);
+			r = cmpText(da[4], db[4]);
+		break;
+		case 4:
+			r = cmpInt(da[5], db[5]);
 		break;
 	}
 	if (r == 0)
-		r = cmpText(da[5], db[5]);
+		r = cmpText(da[6], db[6]);
 
 	return this.sortAscending ? r : -r;
 }
@@ -225,24 +248,44 @@ sg.verifyFields = function(row, quiet) {
 		}
 	}
 
+/* IPV6-BEGIN */
+	if (f[4].value != '') {
+		if (!v_ipv6_addr(f[4], 1)) {
+			ferror.set(f[4], 'Invalid IPv6 address', quiet);
+			return 0;
+		}
+
+		/* a full address breaks if the prefix changes; nudge toward a suffix */
+		if ((!quiet) && (nvram.ipv6_service == 'native-pd') && (!isIPv6Suffix(f[4].value))) {
+			if (!confirm('This looks like a full IPv6 address, but your IPv6 service uses a dynamically delegated prefix. The reservation may stop working after the prefix changes; a suffix such as ::50 adapts automatically.\n\nClick OK to keep the full address, or Cancel to edit it.'))
+				return 0;
+		}
+
+		if (this.exist(4, f[4].value)) {
+			ferror.set(f[4], 'Duplicate IPv6 address', quiet);
+			return 0;
+		}
+	}
+/* IPV6-END */
+
 /* REMOVE-BEGIN
-	if (!v_hostname(f[5], quiet, 5))
+	if (!v_hostname(f[6], quiet, 6))
 		return 0;
 REMOVE-END */
 
-	s = f[5].value.trim().replace(/\s+/g, ' ');
+	s = f[6].value.trim().replace(/\s+/g, ' ');
 
 	if (s.length > 0) {
 		if (f[3].value == '') {
 			if (s.search(/^[a-zA-Z0-9_\-]+$/) == -1) {
-				ferror.set(f[5], 'Invalid hostname. Only a single hostname containing the characters "A-Z 0-9 - _" is allowed', quiet);
+				ferror.set(f[6], 'Invalid hostname. Only a single hostname containing the characters "A-Z 0-9 - _" is allowed', quiet);
 				return 0;
 			}
 		}
 		else {
 			if (s.indexOf('.') != -1) {
 				if (s.search(/^[a-zA-Z0-9_\-\.]+$/) == -1) {
-					ferror.set(f[5], 'Invalid hostname. Only a single hostname containing the characters "A-Z 0-9 - _ ." is allowed', quiet);
+					ferror.set(f[6], 'Invalid hostname. Only a single hostname containing the characters "A-Z 0-9 - _ ." is allowed', quiet);
 					return 0;
 				}
 				if (!quiet) {
@@ -252,28 +295,28 @@ REMOVE-END */
 			}
 			else {
 				if (s.search(/^[a-zA-Z0-9_\- ]+$/) == -1) {
-					ferror.set(f[5], 'Invalid hostname. Only characters "A-Z 0-9 - _" are allowed', quiet);
+					ferror.set(f[6], 'Invalid hostname. Only characters "A-Z 0-9 - _" are allowed', quiet);
 					return 0;
 				}
 			}
 		}
 		if (this.existName(s)) {
-			ferror.set(f[5], 'Duplicate hostname', quiet);
+			ferror.set(f[6], 'Duplicate hostname', quiet);
 			return 0;
 		}
-		f[5].value = s;
+		f[6].value = s;
 	}
 
 	if (isMAC0(f[0].value)) {
 		if (s == '') {
 			s = 'Both MAC address and name fields must not be empty';
 			ferror.set(f[0], s, 1);
-			ferror.set(f[5], s, quiet);
+			ferror.set(f[6], s, quiet);
 			return 0;
 		}
 		else {
 			ferror.clear(f[0]);
-			ferror.clear(f[5]);
+			ferror.clear(f[6]);
 		}
 	}
 
@@ -314,8 +357,8 @@ function save() {
 		if (!isMAC0(d[1]))
 			sdhcp += ','+d[1];
 
-		sdhcp += '<'+d[3]+'<'+d[5]+'<'+d[2]+'>';
-		if (d[4] == '1')
+		sdhcp += '<'+d[3]+'<'+d[6]+'<'+d[2]+'<'+d[4]+'>';
+		if (d[5] == '1')
 			ipt += ((ipt.length > 0) ? ',' : '')+d[3];
 	}
 
@@ -393,7 +436,8 @@ function init() {
 	<ul>
 		<li><b>MAC Address</b> - Unique identifier associated to a network interface on this particular device.</li>
 		<li><b>Static arp</b> - Enforce static ARP binding of this particular IP/MAC address pair.</li>
-		<li><b>IP Address</b> - Network address assigned to this device on the local network.</li>
+		<li><b>IPv4 Address</b> - IPv4 address assigned to this device on the local network.</li>
+		<li><b>IPv6 Address</b> - IPv6 address assigned to this device on the local network. Enter a host suffix such as <i>::50</i> (recommended) and the current LAN prefix is substituted automatically, or a fully-specified address for a static prefix.</li>
 		<li><b>IPTraffic</b> - Keep track of bandwidth usage for this IP address.</li>
 		<li><b>Hostname</b> - Human-readable nickname/label assigned to this device on the network.</li>
 	</ul>
@@ -401,6 +445,7 @@ function init() {
 		<li><small><b>Other relevant notes/hints:</b></small>
 			<ul>
 				<li><small>To associate a name to a MAC address (useful for the Device list page) while retaining dynamic DHCP allocation, just leave the IP address field empty.</small></li>
+				<li><small>IPv6 reservations require stateful DHCPv6 ("Announce IPv6 on LAN (DHCP)" enabled on the <a href="advanced-dhcpdns.asp">Advanced DHCP/DNS/TFTP</a> page); Prefer the <i>::suffix</i> form, since a fully-specified address stops matching when a dynamically delegated prefix changes. Note that some devices (e.g. Android) only use SLAAC and will ignore a DHCPv6 reservation.</small></li>
 				<li><small>To specify multiple hostnames for a device, separate them with spaces (not available when IP address is empty).</small></li>
 				<li><small>To enable/enforce static ARP binding for a particular device, it must have only one MAC associated with that particular IP address (i.e. you can't have two MAC addresses linked to the same hostname/device in the table above).</small></li>
 				<li><small>When ARP binding is enabled for a particular MAC/IP address pair, that device will always be shown as "active" in the <a href="tools-wol.asp">Wake On LAN</a> table.</small></li>

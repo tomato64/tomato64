@@ -431,8 +431,11 @@ static FILE *write_static_hosts(void)
 static void write_static_reservations(FILE *f, FILE *hf, int do_dhcpd_hosts, const char *sdhcp_lease)
 {
 	char *nve, *nvp, *p;
-	const char *mac, *ip, *name, *bind;
+	const char *mac, *ip, *name, *bind, *ip6;
 	struct in_addr in4;
+#ifdef TCONFIG_IPV6
+	struct in6_addr in6;
+#endif
 	unsigned char ea[ETHER_ADDR_LEN];
 	char mac_copy[64];
 	char *m_save, *m_tok;
@@ -440,16 +443,17 @@ static void write_static_reservations(FILE *f, FILE *hf, int do_dhcpd_hosts, con
 
 	/* add dhcp reservations
 	 *
-	 * FORMAT (static ARP binding after hostname):
-	 * 00:aa:bb:cc:dd:ee<123.123.123.123<xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xyz<a>
+	 * FORMAT (static ARP binding after hostname; [ ] denotes an optional IPv6 reservation):
+	 * 00:aa:bb:cc:dd:ee<123.123.123.123<xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xyz<a[<::50]>
 	 * 00:aa:bb:cc:dd:ee,00:aa:bb:cc:dd:ee<123.123.123.123<xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xyz<a>
 	 */
 
 	nve = nvp = strdup(nvram_safe_get("dhcpd_static"));
 	while (nvp && (p = strsep(&nvp, ">")) != NULL) {
-		mac = ip = name = bind = NULL;
+		mac = ip = name = bind = ip6 = NULL;
 
-		if ((vstrsep(p, "<", &mac, &ip, &name, &bind)) < 4)
+		/* minimum 4 fields required (5th, IPv6, is optional) */
+		if ((vstrsep(p, "<", &mac, &ip, &name, &bind, &ip6)) < 4)
 			continue;
 
 		/* validate IP */
@@ -457,9 +461,23 @@ static void write_static_reservations(FILE *f, FILE *hf, int do_dhcpd_hosts, con
 		    (in4.s_addr == INADDR_LOOPBACK) || (in4.s_addr == INADDR_BROADCAST))) /* invalid IP (if any) */
 			continue;
 
-		/* add to hosts file */
-		if (hf && *ip && *name)
-			fprintf(hf, "%s %s\n", ip, name);
+#ifdef TCONFIG_IPV6
+		/* validate IPv6 */
+		if (ip6 && *ip6 && (inet_pton(AF_INET6, ip6, &in6) <= 0))
+			ip6 = NULL;
+#else
+		ip6 = NULL; /* no IPv6 support in this build */
+#endif
+
+		/* add to hosts file (gives the reservation forward A/AAAA and reverse PTR records) */
+		if (hf && *name) {
+			if (*ip)
+				fprintf(hf, "%s %s\n", ip, name);
+#ifdef TCONFIG_IPV6
+			if (ip6 && *ip6)
+				fprintf(hf, "%s %s\n", ip6, name);
+#endif
+		}
 
 		/* validate MAC(s) - dhcpd_static may carry a single MAC or a pair joined by ',' for one reservation */
 		macs_ok = 0;
@@ -478,13 +496,22 @@ static void write_static_reservations(FILE *f, FILE *hf, int do_dhcpd_hosts, con
 		}
 
 		/* add to dnsmasq conf */
-		if (do_dhcpd_hosts > 0 && macs_ok) {
-			if (*ip)
-				fprintf(f, "dhcp-host=%s,%s", mac, ip);
-			else if (*name)
-				fprintf(f, "dhcp-host=%s,%s", mac, name);
+		if (do_dhcpd_hosts > 0 && macs_ok && (*ip || (ip6 && *ip6) || *name)) {
+			int have_addr = 0;
 
-			if (((*ip) || (*name)) && (nvram_get_int("dhcpd_slt") != 0))
+			fprintf(f, "dhcp-host=%s", mac);
+			if (*ip) {
+				fprintf(f, ",%s", ip);
+				have_addr = 1;
+			}
+			if (ip6 && *ip6) {
+				fprintf(f, ",[%s]", ip6);
+				have_addr = 1;
+			}
+			if (!have_addr && *name)
+				fprintf(f, ",%s", name);
+
+			if (nvram_get_int("dhcpd_slt") != 0)
 				fprintf(f, ",%s", sdhcp_lease);
 
 			fprintf(f, "\n");
