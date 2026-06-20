@@ -109,6 +109,13 @@ ifneq ($(TCONFIG_EMF),y)
 	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/EMF-BEGIN/,/EMF-END/d"
 endif
 
+# Only include the Full Cone NAT target option if FULLCONENAT is configured in.
+ifneq ($(TCONFIG_FULLCONENAT),y)
+	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/FULLCONENAT-BEGIN/,/FULLCONENAT-END/d"
+else
+	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/FULLCONENAT-NO-BEGIN/,/FULLCONENAT-NO-END/d"
+endif
+
 # Only include NTFS settings if NTFS support is configured in.
 ifneq ($(TCONFIG_NTFS),y)
 	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/NTFS-BEGIN/,/NTFS-END/d"

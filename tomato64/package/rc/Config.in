@@ -161,6 +161,16 @@ config BR2_PACKAGE_RC_EBTABLES
 	select BR2_PACKAGE_EBTABLES
 	select BR2_PACKAGE_EBTABLES_UTILS_RESTORE
 
+config BR2_PACKAGE_RC_FULLCONENAT
+	bool "Enable Full Cone NAT"
+	default y
+	select BR2_PACKAGE_FULLCONENAT
+	help
+	  Build the xt_FULLCONENAT target and add a FULLCONENAT option to
+	  the NAT target selector (advanced-firewall). Provides
+	  RFC3489-compatible full cone NAT for UDP (other protocols behave
+	  like MASQUERADE).
+
 config BR2_PACKAGE_RC_HAVEGED
 	bool "Enable HAVEGED"
 	select BR2_PACKAGE_HAVEGED

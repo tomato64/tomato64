@@ -388,7 +388,12 @@ function init() {
 	<script>
 		createFieldTable('', [
 			{ title: 'NAT loopback', name: 'nf_loopback', type: 'select', options: [[0,'All'],[1,'Forwarded Only'],[2,'Disabled']], value: fixInt(nvram.nf_loopback, 0, 2, 1) },
+/* FULLCONENAT-BEGIN */
+			{ title: 'NAT target', name: 'ne_snat', type: 'select', options: [[0,'MASQUERADE'],[1,'SNAT'],[2,'FULLCONENAT']], value: nvram.ne_snat }
+/* FULLCONENAT-END */
+/* FULLCONENAT-NO-BEGIN */
 			{ title: 'NAT target', name: 'ne_snat', type: 'select', options: [[0,'MASQUERADE'],[1,'SNAT']], value: nvram.ne_snat }
+/* FULLCONENAT-NO-END */
 		]);
 	</script>
 </div>

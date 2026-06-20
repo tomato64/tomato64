@@ -1,0 +1,16 @@
+config BR2_PACKAGE_FULLCONENAT
+	bool "fullconenat"
+	depends on BR2_LINUX_KERNEL
+	select BR2_PACKAGE_IPTABLES
+	help
+	  RFC3489-compatible full cone NAT for netfilter.
+
+	  Builds the xt_FULLCONENAT kernel module, which turns
+	  MASQUERADE into full cone SNAT. Only UDP traffic gets true
+	  full-cone behaviour; for other protocols FULLCONENAT is
+	  equivalent to MASQUERADE.
+
+	  https://github.com/llccd/netfilter-full-cone-nat
+
+comment "fullconenat needs a Linux kernel to be built"
+	depends on !BR2_LINUX_KERNEL

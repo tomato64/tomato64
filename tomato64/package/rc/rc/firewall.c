@@ -294,6 +294,15 @@ static void foreach_wan_nat(int wanXup, wanface_list_t wanXfaces, char *p)
 
 	for (i = 0; i < wanXfaces.count; ++i) {
 		if (*(wanXfaces.iface[i].name)) {
+#if defined(TOMATO64) && defined(TCONFIG_FULLCONENAT)
+			/* ne_snat == 2: full cone NAT (xt_FULLCONENAT), a drop-in
+			 * replacement for MASQUERADE. Only UDP gets RFC3489 full-cone
+			 * behaviour; other protocols are handled like MASQUERADE. */
+			if (wanXup && (nvram_get_int("ne_snat") == 2)) {
+				ipt_write("-A POSTROUTING %s -o %s -j FULLCONENAT\n", p, wanXfaces.iface[i].name);
+				continue;
+			}
+#endif /* TOMATO64 && TCONFIG_FULLCONENAT */
 			if ((!wanXup) || (nvram_get_int("ne_snat") != 1))
 				ipt_write("-A POSTROUTING %s -o %s -j MASQUERADE\n", p, wanXfaces.iface[i].name);
 			else
@@ -1073,6 +1082,24 @@ static void nat_table(void)
 		}
 	}
 
+#if defined(TOMATO64) && defined(TCONFIG_FULLCONENAT)
+	/* Full cone NAT inbound restore. This mirrors the POSTROUTING FULLCONENAT
+	 * rule (see foreach_wan_nat): the PREROUTING target restores the NAT
+	 * mapping for unsolicited inbound packets, which is what makes the mapping
+	 * endpoint-independent. Without it the NAT degrades to symmetric.
+	 * Emitted after the WANPREROUTING and upnp jumps so explicit port forwards
+	 * and UPnP/NAT-PMP forwards take precedence on any port collision;
+	 * FULLCONENAT only restores stored mappings for ports not already forwarded. */
+	if (nvram_get_int("ne_snat") == 2) {
+		for (j = 1; j <= MWAN_MAX; j++) {
+			for (i = 0; i < wanfaces[j - 1].count; ++i) {
+				if (*(wanfaces[j - 1].iface[i].name) && wanup[j - 1])
+					ipt_write("-A PREROUTING -i %s -j FULLCONENAT\n", wanfaces[j - 1].iface[i].name);
+			}
+		}
+	}
+#endif /* TOMATO64 && TCONFIG_FULLCONENAT */
+
 #ifdef TCONFIG_TOR
 	/* TOR */
 	if (nvram_match("tor_enable", "1") && nvram_match("tor_solve_only", "0")) {
@@ -1149,6 +1176,11 @@ static void nat_table(void)
 		break;
 	}
 #endif
+
+#if defined(TOMATO64) && defined(TCONFIG_FULLCONENAT)
+	if (nvram_get_int("ne_snat") == 2)
+		modprobe("xt_FULLCONENAT");
+#endif /* TOMATO64 && TCONFIG_FULLCONENAT */
 
 	for (j = 1; j <= MWAN_MAX; j++) {
 		foreach_wan_nat(wanup[j - 1], wanfaces[j - 1], p);
@@ -1435,10 +1467,22 @@ static void filter_forward(void)
 	unsigned int i, j;
 
 #ifdef TOMATO64
-	if (nvram_match("flow_offloading", "1")) {
-		ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED -j FLOWOFFLOAD\n");
-	} else if (nvram_match("flow_offloading", "2")) {
-		ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED -j FLOWOFFLOAD --hw\n");
+	{
+		const char *fc_udp = "";
+#ifdef TCONFIG_FULLCONENAT
+		/* Full cone NAT (ne_snat == 2) and flow offload are mutually exclusive
+		 * for UDP: an offloaded UDP flow bypasses the netfilter slow path,
+		 * which breaks full-cone mapping maintenance (inbound packets from a
+		 * new source no longer reach xt_FULLCONENAT). Keep UDP off the offload
+		 * fast path so the full-cone target sees every UDP packet. */
+		if (nvram_get_int("ne_snat") == 2)
+			fc_udp = "! -p udp ";
+#endif /* TCONFIG_FULLCONENAT */
+		if (nvram_match("flow_offloading", "1")) {
+			ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED %s-j FLOWOFFLOAD\n", fc_udp);
+		} else if (nvram_match("flow_offloading", "2")) {
+			ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED %s-j FLOWOFFLOAD --hw\n", fc_udp);
+		}
 	}
 #endif /* TOMATO64 */
 
@@ -1510,6 +1554,25 @@ static void filter_forward(void)
 	            ":wanin - [0:0]\n"
 	            ":wanout - [0:0]\n"
 	            "-A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT\n"); /* already established or related (via helper) */
+
+#if defined(TOMATO64) && defined(TCONFIG_FULLCONENAT)
+	/* Full cone NAT: accept unsolicited inbound UDP that the PREROUTING
+	 * FULLCONENAT target restored (DNAT'd) to a LAN client. Such packets come
+	 * from a new external source, so they are a NEW conntrack flow and would
+	 * otherwise be dropped by the default-DROP FORWARD policy (Tomato only
+	 * accepts RELATED,ESTABLISHED and explicit port forwards). Accepting the
+	 * DNAT conntrack state here is what makes the mapping a true full cone -
+	 * any external host may reach the mapped port. UDP only, matching the
+	 * module (other protos behave as MASQUERADE). */
+	if (nvram_get_int("ne_snat") == 2) {
+		for (j = 1; j <= MWAN_MAX; j++) {
+			for (i = 0; i < (unsigned int)wanfaces[j - 1].count; ++i) {
+				if (*(wanfaces[j - 1].iface[i].name))
+					ipt_write("-A FORWARD -i %s -p udp -m conntrack --ctstate DNAT -j ACCEPT\n", wanfaces[j - 1].iface[i].name);
+			}
+		}
+	}
+#endif /* TOMATO64 && TCONFIG_FULLCONENAT */
 
 	/* IPv4 IPSec */
 	if (nvram_match("ipsec_pass", "1") || nvram_match("ipsec_pass", "3")) {

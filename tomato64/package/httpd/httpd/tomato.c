@@ -923,7 +923,11 @@ static const nvset_t nvset_list[] = {
 	{ "fw_strict_input",		V_01				},
 	{ "ne_syncookies",		V_01				},
 	{ "DSCP_fix_enable",		V_01				},
+#if defined(TOMATO64) && defined(TCONFIG_FULLCONENAT)
+	{ "ne_snat",			V_RANGE(0, 2)			},	/* 0=MASQUERADE, 1=SNAT, 2=FULLCONENAT */
+#else
 	{ "ne_snat",			V_01				},
+#endif /* TOMATO64 && TCONFIG_FULLCONENAT */
 	{ "wan_dhcp_pass",		V_01				},
 	{ "ipsec_pass",			V_RANGE(0, 3)			},	/* Enable IPSec Passthrough */
 	{ "fw_blackhole",		V_01				},	/* MTU black hole detection */
