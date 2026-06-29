@@ -10,6 +10,11 @@ ROCKCHIP_KERNEL_PATCH=${HOME}/buildroot-src/rockchip-kernel/00001-openwrt-rockch
 BCM53XX_KERNEL_PATCH=${HOME}/buildroot-src/bcm53xx-kernel/00001-openwrt-bcm53xx-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 ARMSR_KERNEL_PATCH=${HOME}/buildroot-src/armsr-kernel/00001-openwrt-armsr-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 
+# Build-progress indicator in the terminal title bar (see tomato64/scripts/progress.sh).
+BR2_BUILD = rm -rf src/buildroot/output/.build-progress; \
+            export BR2_PROGRESS_TOTAL=$$($(CURDIR)/tomato64/scripts/progress.sh --total src/buildroot); \
+            make -C src/buildroot BR2_INSTRUMENTATION_SCRIPTS=$(CURDIR)/tomato64/scripts/progress.sh
+
 # Default target: continue building the last configured device, or x86_64 if none
 default:
 	@if [ -f .target ]; then \
@@ -20,40 +25,40 @@ default:
 
 # x86_64 UEFI (explicit target)
 x86_64: .configure
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 legacy: .configure-legacy
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 mt6000: .configure-mt6000
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 mt3600be: .configure-mt3600be
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 rpi4: .configure-rpi4
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 bpi-r3: .configure-bpi-r3
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 bpi-r3-mini: .configure-bpi-r3-mini
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 r5s: .configure-r5s
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 r6s: .configure-r6s
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 r76s: .configure-r76s
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 bcm53xx: .configure-bcm53xx
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 armsr: .configure-armsr
-	make -C src/buildroot
+	$(BR2_BUILD)
 
 menuconfig:
 	@if [ -f .target ]; then \
