@@ -91,9 +91,8 @@ void alias_from_pcimap(FILE *fp, char *prefix) {
 	
 	unsigned long vendor, device, sub_vendor, sub_device, class_type, class_mask;
 	
-	filename = xmalloc(strlen(prefix) + strlen("modules.pcimap") + 2);
-	strcpy(filename, prefix);
-	strcat(filename, "/modules.pcimap");
+	filename = xmalloc(strlen(prefix) + strlen("/modules.pcimap") + 1);
+	snprintf(filename, strlen(prefix) + strlen("/modules.pcimap") + 1, "%s/modules.pcimap", prefix);
 	
 	if (map_file(filename, &pcimap)) {
 		free(filename);
@@ -238,9 +237,8 @@ void alias_from_usbmap(FILE *fp, char *prefix) {
 	unsigned long cmin, cmax;
 	int len, ndigits;
 	
-	filename = xmalloc(strlen(prefix) + strlen("modules.usbmap") + 2);
-	strcpy(filename, prefix);
-	strcat(filename, "/modules.usbmap");
+	filename = xmalloc(strlen(prefix) + strlen("/modules.usbmap") + 1);
+	snprintf(filename, strlen(prefix) + strlen("/modules.usbmap") + 1, "%s/modules.usbmap", prefix);
 	
 	if (map_file(filename, &usbmap)) {
 		free(filename);
@@ -380,9 +378,8 @@ void alias_from_ieee1394map(FILE *fp, char *prefix) {
 	
 	unsigned long match_flags, vendor, product, specifier, version;
 	
-	filename = xmalloc(strlen(prefix) + strlen("modules.ieee1394map") + 2);
-	strcpy(filename, prefix);
-	strcat(filename, "/modules.ieee1394map");
+	filename = xmalloc(strlen(prefix) + strlen("/modules.ieee1394map") + 1);
+	snprintf(filename, strlen(prefix) + strlen("/modules.ieee1394map") + 1, "%s/modules.ieee1394map", prefix);
 	
 	if (map_file(filename, &ieee1394map)) {
 		free(filename);
@@ -460,9 +457,8 @@ void alias_from_isapnpmap(FILE *fp, char *prefix) {
 	unsigned char vendor_sig[3], vendor[2], function[2];
 	unsigned char card_vendor_sig[3], card_vendor[2], card_device[2];
 	
-	filename = xmalloc(strlen(prefix) + strlen("modules.isapnpmap") + 2);
-	strcpy(filename, prefix);
-	strcat(filename, "/modules.isapnpmap");
+	filename = xmalloc(strlen(prefix) + strlen("/modules.isapnpmap") + 1);
+	snprintf(filename, strlen(prefix) + strlen("/modules.isapnpmap") + 1, "%s/modules.isapnpmap", prefix);
 	
 	if (map_file(filename, &isapnpmap)) {
 		free(filename);
