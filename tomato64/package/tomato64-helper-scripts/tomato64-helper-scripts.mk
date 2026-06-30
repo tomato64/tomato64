@@ -9,11 +9,11 @@ TOMATO64_HELPER_SCRIPTS_SITE = $(BR2_EXTERNAL_TOMATO64_PATH)/package/tomato64-he
 TOMATO64_HELPER_SCRIPTS_SITE_METHOD = local
 TOMATO64_HELPER_SCRIPTS_LICENSE = MIT
 
-# MT3600BE only: tomato64-init-stub is a static pid-1 re-exec target used
-# during sysupgrade so the squashfs mmaps in /romfs are released. Must be
-# static; see header in tomato64-init-stub.c.
+# NAND/UBI targets (MT3600BE, BCM53XX): tomato64-init-stub is a static pid-1
+# re-exec target used during sysupgrade so the squashfs mmaps in /romfs are
+# released. Must be static; see header in tomato64-init-stub.c.
 define TOMATO64_HELPER_SCRIPTS_BUILD_CMDS
-	if [ "$(BR2_PACKAGE_PLATFORM_MT3600BE)" = "y" ]; then \
+	if [ "$(BR2_PACKAGE_PLATFORM_MT3600BE)" = "y" -o "$(BR2_PACKAGE_PLATFORM_BCM53XX)" = "y" ]; then \
 		$(TARGET_CC) $(TARGET_CFLAGS) -static -Os -s -Wall \
 			-o $(@D)/tomato64-init-stub \
 			$(@D)/tomato64-init-stub.c ; \
@@ -26,6 +26,7 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/sbin/shutdown			$(TARGET_DIR)/sbin
 	if [ "$(BR2_PACKAGE_PLATFORM_BCM53XX)" = "y" ]; then \
 		$(INSTALL) -D -m 0755 $(@D)/sbin/upgrade_bcm53xx	$(TARGET_DIR)/sbin/upgrade; \
+		$(INSTALL) -D -m 0755 $(@D)/tomato64-init-stub		$(TARGET_DIR)/sbin/tomato64-init-stub; \
 	elif [ "$(BR2_PACKAGE_PLATFORM_MT3600BE)" = "y" ]; then \
 		$(INSTALL) -D -m 0755 $(@D)/sbin/upgrade_mt3600be	$(TARGET_DIR)/sbin/upgrade; \
 		$(INSTALL) -D -m 0755 $(@D)/tomato64-init-stub		$(TARGET_DIR)/sbin/tomato64-init-stub; \

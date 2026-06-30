@@ -104,17 +104,29 @@ define OPENWRT_WIFI_INSTALL_TARGET_CMDS
 		$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/packet-steering-bcm53xx $(TARGET_DIR)/usr/libexec/platform/packet-steering.sh; \
 	fi
 
-	# OpenWrt sysupgrade framework
-	if [ "$(BR2_PACKAGE_PLATFORM_MT3600BE)" = "y" ]; then \
+	# OpenWrt sysupgrade framework (shared by all NAND/UBI targets). The
+	# board-agnostic core (common.sh/nand.sh/stage2/do_stage2) and the
+	# Tomato64 overrides (zz-tomato64.sh) are byte-for-byte identical across
+	# devices; only platform.sh and the launcher differ per target.
+	if [ "$(BR2_PACKAGE_PLATFORM_MT3600BE)" = "y" -o "$(BR2_PACKAGE_PLATFORM_BCM53XX)" = "y" ]; then \
 		$(INSTALL) -d $(TARGET_DIR)/lib/upgrade; \
 		$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/upgrade/common.sh	$(TARGET_DIR)/lib/upgrade/common.sh; \
 		$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/upgrade/nand.sh	$(TARGET_DIR)/lib/upgrade/nand.sh; \
 		$(INSTALL) -m 0755 $(@D)/package/base-files/files/lib/upgrade/stage2	$(TARGET_DIR)/lib/upgrade/stage2; \
 		$(INSTALL) -m 0755 $(@D)/package/base-files/files/lib/upgrade/do_stage2	$(TARGET_DIR)/lib/upgrade/do_stage2; \
-		$(INSTALL) -m 0644 $(@D)/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh	$(TARGET_DIR)/lib/upgrade/platform.sh; \
 		$(INSTALL) -m 0644 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/lib-upgrade-zz-tomato64.sh	$(TARGET_DIR)/lib/upgrade/zz-tomato64.sh; \
 		$(INSTALL) -d $(TARGET_DIR)/sbin; \
+	fi
+	# MT3600BE: filogic platform.sh (sysupgrade-tar flow) + tar-validating launcher
+	if [ "$(BR2_PACKAGE_PLATFORM_MT3600BE)" = "y" ]; then \
+		$(INSTALL) -m 0644 $(@D)/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh	$(TARGET_DIR)/lib/upgrade/platform.sh; \
 		$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/tomato64-sysupgrade	$(TARGET_DIR)/sbin/tomato64-sysupgrade; \
+	fi
+	# BCM53XX: bcm53xx platform.sh (TRX -> platform_do_upgrade_nand_trx) +
+	# otrx-validating launcher.
+	if [ "$(BR2_PACKAGE_PLATFORM_BCM53XX)" = "y" ]; then \
+		$(INSTALL) -m 0644 $(@D)/target/linux/bcm53xx/base-files/lib/upgrade/platform.sh	$(TARGET_DIR)/lib/upgrade/platform.sh; \
+		$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/tomato64-sysupgrade-bcm53xx	$(TARGET_DIR)/sbin/tomato64-sysupgrade-bcm53xx; \
 	fi
 endef
 

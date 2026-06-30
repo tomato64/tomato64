@@ -48,9 +48,16 @@ UBI_IMG="$BINARIES_DIR/rootfs.ubi"
 ubinize -p "$BLOCKSIZE" -m "$PAGESIZE" -o "$UBI_IMG" "$UBINIZE_CFG"
 
 # Step 2: Create ubi_mark (EOF marker for UBI attach)
-# Matches OpenWrt's ubi_mark: 0xdeadc0de
+# Matches OpenWrt's ubi_mark: 0xdeadc0de. The kernel's UBI attach (patch
+# 500-UBI-Detect-EOF-mark-and-erase-all-remaining-blocks) reads this as a
+# PEB EC-header magic and erases every block behind it, wiping stale UBI data
+# left by a prior install (otherwise UBI attach fails with "bad image sequence
+# number" when a raw write / CFE / FreshTomato flash leaves old PEBs).
+# Use OCTAL escapes: this script runs under /bin/sh (dash on Debian), whose
+# printf does NOT support \xNN - '\xde...' there emits the literal ASCII text
+# "\xde\xad\xc0\xde", producing a broken marker. \ddd octal is POSIX-portable.
 UBI_MARK="$BINARIES_DIR/ubi_mark"
-printf '\xde\xad\xc0\xde' > "$UBI_MARK"
+printf '\336\255\300\336' > "$UBI_MARK"
 
 # Clean up any previous TRX files
 rm -f $BINARIES_DIR/*.trx
@@ -95,30 +102,30 @@ done
 # Cleanup UBI build artifacts
 rm -f "$UBINIZE_CFG" "$UBI_IMG" "$UBI_MARK"
 
-# Create per-device update archives
-for TRX in $BINARIES_DIR/*.trx; do
+# Publish a per-device update image. The artifact is the bare Broadcom TRX -
+# the native sysupgrade container that CFE/u-boot recovery accepts AND that the
+# in-system upgrade consumes (via otrx/mtd, which are length-aware). We do NOT
+# wrap it in a .tzst: httpd streams the raw multipart POST body (trailing
+# boundary included) into the upgrade FIFO, and modern zstd refuses to
+# decompress a stream with trailing data - whereas every TRX-aware tool just
+# reads the header length and ignores the trailer. One artifact, no zstd.
+# Only the DTB-named build outputs (bcm4708-..., bcm47094-..., etc.) - never a
+# published <device>.trx from a previous run left in a non-clean images dir.
+for TRX in $BINARIES_DIR/bcm*.trx; do
 	[ -f "$TRX" ] || continue
 
 	DTB_NAME=$(basename "$TRX" .trx)
 	# Extract device name (remove broadcom-bcmXXXX- prefix)
 	DEVICE_NAME=$(echo "$DTB_NAME" | sed 's/^bcm[0-9]*-//')
-	UPDATE_DIR="$BINARIES_DIR/update-${DEVICE_NAME}"
 
-	rm -rf "$UPDATE_DIR"
-	mkdir -p "$UPDATE_DIR/boot"
+	# Clean per-device name, e.g. netgear-r7000.trx. One generic artifact per
+	# device, used for BOTH first-time install and in-system upgrade (no
+	# confusing bcmXXXX- DTB prefix, no "-update" - it is not upgrade-only).
+	DEVICE_IMAGE="$BINARIES_DIR/${DEVICE_NAME}.trx"
+	rm -f "$DEVICE_IMAGE"
+	mv "$TRX" "$DEVICE_IMAGE"
 
-	# Copy TRX as firmware.trx (the upgrade script looks for this)
-	cp "$TRX" "$UPDATE_DIR/boot/firmware.trx"
-
-	# Create the update archive
-	DEVICE_ARCHIVE="$BINARIES_DIR/${DEVICE_NAME}-update.tzst"
-	rm -f "$DEVICE_ARCHIVE"
-
-	tar -C "$UPDATE_DIR" -cf - boot/ | zstd -19 -o "$DEVICE_ARCHIVE"
-
-	rm -rf "$UPDATE_DIR"
-
-	echo "=== Created $DEVICE_ARCHIVE ==="
+	echo "=== Created $DEVICE_IMAGE ==="
 done
 
 exit 0

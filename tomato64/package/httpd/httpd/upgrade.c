@@ -284,7 +284,9 @@ ERROR2:
 		eval("mtd-erase", "-d", "nvram");
 #endif
 #else /* TOMATO64 */
+#if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
 		system("rm /nvram/*");
+#endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
 #endif /* TOMATO64 */
 
 	}
@@ -321,15 +323,11 @@ void wo_flash(char *url)
 	if (rboot) {
 		set_action(ACT_REBOOT);
 		sync();
-#ifdef TOMATO64_MT3600BE
-		/* The detached tomato64-sysupgrade owns the flash + reboot. httpd
-		 * must NOT umount/reboot here; if it stayed alive it would keep
-		 * the squashfs busy and break the flash. Just show the page; the
-		 * launcher's stage2 kill_remaining will terminate httpd. */
+#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BCM53XX)
 		parse_asp("/tmp/reboot.asp");
 		web_close();
 		return;
-#endif /* TOMATO64_MT3600BE */
+#endif /* TOMATO64_MT3600BE || TOMATO64_BCM53XX */
 #ifdef TOMATO64_X86_64
 		if (fastreboot)
 			parse_asp("/tmp/reboot-fast.asp");

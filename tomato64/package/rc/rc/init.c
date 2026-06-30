@@ -549,10 +549,10 @@ static void handle_reap(int sig)
 	raise(SIGALRM);
 }
 
-#ifdef TOMATO64_MT3600BE
+#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BCM53XX)
 /* Sysupgrade re-exec hook: execve pid1 into the static stub in tmpfs to
  * drop its /romfs mmaps so nand_upgrade_prepare_ubi can free the rootfs
- * ubiblock. Triggered by SIGURG from /sbin/tomato64-sysupgrade. */
+ * ubiblock. Triggered by SIGURG from /sbin/tomato64-sysupgrade(-bcm53xx). */
 static void handle_tomato64_reexec(int sig)
 {
 	static const char *path = "/tmp/tomato64-init-stub";
@@ -565,7 +565,7 @@ static void handle_tomato64_reexec(int sig)
 
 	execve(path, new_argv, new_envp);
 }
-#endif /* TOMATO64_MT3600BE */
+#endif /* TOMATO64_MT3600BE || TOMATO64_BCM53XX */
 
 static int check_nv(const char *name, const char *value)
 {
@@ -11928,19 +11928,21 @@ static void sysinit(void)
 #else
 	eval("/etc/init.d/S10mdev", "start");
 
-#ifdef TOMATO64_MT3600BE
+#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BCM53XX)
 	eval("touch", "/tmp/.preinit");
 	eval("mount_root");
 
+	/* Restore the /nvram backup staged by the OpenWrt sysupgrade flow (the
+	 * launcher's nand_restore_config places it at the rootfs_data root;
+	 * fstools renames it to /sysupgrade.tgz on this first boot). Must run
+	 * before any nvram reads. */
 	if (access("/sysupgrade.tgz", F_OK) == 0) {
 		fprintf(stderr, "## Restoring upgraded configuration ... ##\n");
 		eval("tar", "-xzf", "/sysupgrade.tgz", "-C", "/");
 		unlink("/sysupgrade.tgz");
 	}
-#endif /* TOMATO64_MT3600BE */
+#endif /* TOMATO64_MT3600BE || TOMATO64_BCM53XX */
 #ifdef TOMATO64_BCM53XX
-	eval("touch", "/tmp/.preinit");
-	eval("mount_root");
 	/* Fix TRX CRC - recalculate to cover only kernel partition so UBI
 	 * overlay writes don't invalidate it. Safe to run every boot since
 	 * mtd_fixtrx exits early if CRC is already correct.
@@ -12074,12 +12076,12 @@ static void sysinit(void)
 	}
 	signal(SIGCHLD, handle_reap);
 
-#ifdef TOMATO64_MT3600BE
+#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BCM53XX)
 	/* Sysupgrade re-exec hook (see handle_tomato64_reexec). SIGURG is
 	 * unused by rc and not in initsigs; SIGRTMIN would be silently
 	 * swallowed by musl (it reserves signals 32-34 internally). */
 	signal(SIGURG, handle_tomato64_reexec);
-#endif /* TOMATO64_MT3600BE */
+#endif /* TOMATO64_MT3600BE || TOMATO64_BCM53XX */
 
 	/* ctf must be loaded prior to any other modules */
 	if (nvram_invmatch("ctf_disable", "1"))

@@ -30,6 +30,55 @@
 var cmdresult = '';
 var xob = null;
 
+/* TOMATO64-BEGIN */
+// BCM53XX devices: t_model_name comes from the device tree; map model -> update
+// filename slug. Defined once at module scope so both upgrade() (filename
+// validation) and the firmware-hint text below stay in sync. These devices ship
+// a bare ".trx" sysupgrade image (the native Broadcom firmware container), not a
+// ".tzst" wrapper.
+var bcm53xxDevices = {
+	'Asus RT-AC56U (BCM4708)': 'asus-rt-ac56u',
+	'Asus RT-AC68U (BCM4708)': 'asus-rt-ac68u',
+	'Buffalo WZR-1750DHP (BCM4708)': 'buffalo-wzr-1750dhp',
+	'Linksys EA6300 V1': 'linksys-ea6300-v1',
+	'Linksys EA6500 V2': 'linksys-ea6500-v2',
+	'Netgear R6250 V1 (BCM4708)': 'netgear-r6250',
+	'Netgear R6300 V2 (BCM4708)': 'netgear-r6300-v2',
+	'Asus RT-N18U (BCM47081)': 'asus-rt-n18u',
+	'Buffalo WZR-600DHP2 (BCM47081)': 'buffalo-wzr-600dhp2',
+	'Buffalo WZR-900DHP (BCM47081)': 'buffalo-wzr-900dhp',
+	'ASUS RT-AC3200': 'asus-rt-ac3200',
+	'Asus RT-AC87U': 'asus-rt-ac87u',
+	'Buffalo WXR-1900DHP': 'buffalo-wxr-1900dhp',
+	'Linksys EA9200': 'linksys-ea9200',
+	'Netgear R7000': 'netgear-r7000',
+	'Netgear R7900': 'netgear-r7900',
+	'Netgear R8000 (BCM4709)': 'netgear-r8000',
+	'TP-LINK Archer C9 V1': 'tplink-archer-c9-v1',
+	'ASUS RT-AC3100': 'asus-rt-ac3100',
+	'ASUS RT-AC5300': 'asus-rt-ac5300',
+	'ASUS RT-AC88U': 'asus-rt-ac88u',
+	'D-Link DIR-885L': 'dlink-dir-885l',
+	'D-Link DIR-890L': 'dlink-dir-890l',
+	'Linksys EA9500': 'linksys-panamera',
+	'Netgear R8500': 'netgear-r8500',
+	'Phicomm K3': 'phicomm-k3',
+	'D-Link DWL-8610AP': 'dlink-dwl-8610ap'
+};
+
+// Expected update-file extension for the current model:
+//   MT3600BE -> OpenWrt sysupgrade tar (-sysupgrade.bin)
+//   BCM53XX  -> bare Broadcom TRX (.trx)
+//   others   -> Tomato64 update archive (.tzst)
+function fwExpectedExt(model) {
+	if (model == 'GL.iNet GL-MT3600BE')
+		return { re: /-sysupgrade\.bin$/i, msg: '-sysupgrade.bin' };
+	if (model in bcm53xxDevices)
+		return { re: /\.trx$/i, msg: '.trx' };
+	return { re: /\.tzst$/i, msg: '.tzst' };
+}
+/* TOMATO64-END */
+
 function clock() {
 	var t = ((new Date()).getTime() - startTime) / 1000;
 	elem.setInnerHTML('afu-time', Math.floor(t / 60)+':'+Number(Math.floor(t % 60)).pad(2));
@@ -77,10 +126,9 @@ function upgrade() {
 		alert('Expecting a ".bin" or ".trx" file');
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-	var fwExt = (nvram.t_model_name == 'GL.iNet GL-MT3600BE') ? /-sysupgrade\.bin$/i : /\.tzst$/i;
-	var fwExtMsg = (nvram.t_model_name == 'GL.iNet GL-MT3600BE') ? '"-sysupgrade.bin"' : '".tzst"';
-	if (name.search(fwExt) == -1) {
-		alert('Expecting a '+fwExtMsg+' file');
+	var fwExpected = fwExpectedExt(nvram.t_model_name);
+	if (name.search(fwExpected.re) == -1) {
+		alert('Expecting a "'+fwExpected.msg+'" file');
 /* TOMATO64-END */
 		return;
 	}
@@ -144,38 +192,8 @@ function upgrade() {
 		}
 	};
 
-	// BCM53XX devices: model name comes from device tree, map to update filename pattern
-	var bcm53xxDevices = {
-		'Asus RT-AC56U (BCM4708)': 'asus-rt-ac56u',
-		'Asus RT-AC68U (BCM4708)': 'asus-rt-ac68u',
-		'Buffalo WZR-1750DHP (BCM4708)': 'buffalo-wzr-1750dhp',
-		'Linksys EA6300 V1': 'linksys-ea6300-v1',
-		'Linksys EA6500 V2': 'linksys-ea6500-v2',
-		'Netgear R6250 V1 (BCM4708)': 'netgear-r6250',
-		'Netgear R6300 V2 (BCM4708)': 'netgear-r6300-v2',
-		'Asus RT-N18U (BCM47081)': 'asus-rt-n18u',
-		'Buffalo WZR-600DHP2 (BCM47081)': 'buffalo-wzr-600dhp2',
-		'Buffalo WZR-900DHP (BCM47081)': 'buffalo-wzr-900dhp',
-		'ASUS RT-AC3200': 'asus-rt-ac3200',
-		'Asus RT-AC87U': 'asus-rt-ac87u',
-		'Buffalo WXR-1900DHP': 'buffalo-wxr-1900dhp',
-		'Linksys EA9200': 'linksys-ea9200',
-		'Netgear R7000': 'netgear-r7000',
-		'Netgear R7900': 'netgear-r7900',
-		'Netgear R8000 (BCM4709)': 'netgear-r8000',
-		'TP-LINK Archer C9 V1': 'tplink-archer-c9-v1',
-		'ASUS RT-AC3100': 'asus-rt-ac3100',
-		'ASUS RT-AC5300': 'asus-rt-ac5300',
-		'ASUS RT-AC88U': 'asus-rt-ac88u',
-		'D-Link DIR-885L': 'dlink-dir-885l',
-		'D-Link DIR-890L': 'dlink-dir-890l',
-		'Linksys EA9500': 'linksys-panamera',
-		'Netgear R8500': 'netgear-r8500',
-		'Phicomm K3': 'phicomm-k3',
-		'D-Link DWL-8610AP': 'dlink-dwl-8610ap'
-	};
-
-	// Add BCM53XX devices to the devices object
+	// Add BCM53XX devices to the devices object (bcm53xxDevices is defined at
+	// module scope above so the firmware-hint text can share it)
 	for (var bcmModel in bcm53xxDevices) {
 		var slug = bcm53xxDevices[bcmModel];
 		devices[bcmModel] = {
@@ -345,7 +363,7 @@ function earlyInit() {
 			<div class="afu-form">Select a valid <a href="https://freshtomato.org/downloads/">firmware</a> to install (.trx or .bin):</div>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-			<div class="afu-form">Select a valid <a href="https://tomato64.org/files/">firmware</a> to install (<script>document.write(nvram.t_model_name == 'GL.iNet GL-MT3600BE' ? '-sysupgrade.bin' : '.tzst');</script>):</div>
+			<div class="afu-form">Select a valid <a href="https://tomato64.org/files/">firmware</a> to install (<script>document.write(fwExpectedExt(nvram.t_model_name).msg);</script>):</div>
 /* TOMATO64-END */
 			<form name="form_upgrade" method="post" action="upgrade.cgi" enctype="multipart/form-data">
 				<div class="afu-form">

@@ -1,61 +1,116 @@
 #!/bin/sh
+#
+# BCM53XX upgrade glue (installed as /sbin/upgrade on this device).
+# httpd's wi_upgrade runs:  /sbin/upgrade <fifo> <reset>
+#
+# The artifact is a bare TRX (*.trx). httpd streams the raw multipart POST body
+# into the FIFO, so the data is "<TRX bytes> + trailing multipart boundary".
+# That trailer is harmless: otrx/mtd read the partition lengths from the TRX
+# header and ignore anything past them. (This is why we dropped the old .tzst
+# wrapper - modern zstd refuses to decompress a stream with trailing data.)
+#
+# Two flash strategies, chosen by available RAM:
+#
+#  * RELIABLE (>= ~200 MB RAM): drain the TRX into tmpfs, validate, then launch
+#    tomato64-sysupgrade-bcm53xx detached -> stage2 RAM pivot -> our streaming
+#    nand_do_upgrade (ubiformat). Bad-block-safe, preserves UBI erase counters
+#    and (via sysupgrade.tgz) settings.
+#
+#  * STREAMING FALLBACK (< ~200 MB RAM, e.g. R6250/R6300v2/RT-N18U/AC56U with
+#    128 MB): the reliable path needs the whole ~97 MB image staged in RAM,
+#    which a 128 MB device cannot do. So we stream the TRX straight to the
+#    "firmware" mtd (erase-first raw write) - the legacy bcm53xx behaviour.
+#    This is LOSSY: it resets UBI erase counters and wipes settings, and a raw
+#    write is not as bad-block-robust as ubiformat. It is the only way to flash
+#    in-system on these low-RAM parts; otherwise use CFE/TFTP recovery.
 
-. /usr/sbin/nvram_ops
+ARCHIVE="$1"
+RESET="${2:-0}"
+IMG=/tmp/firmware.trx
 
-if [ $# -eq 0 ]; then
-	echo "missing .tzst file argument"
-	exit
-fi
-
-# BCM53XX NAND upgrade - split kernel/UBI approach (modeled after OpenWrt)
-# Writes a small kernel-only TRX to firmware partition, then uses ubiformat
-# for the UBI rootfs. This prevents overwriting board_data or other partitions.
-
-# Helper: find MTD device name for a given partition name
-find_mtd_dev() {
-	local name="$1"
-	for mtd in /sys/class/mtd/*/name; do
-		if [ -f "$mtd" ] && [ "$(cat "$mtd")" = "$name" ]; then
-			echo "/dev/$(echo "$mtd" | sed 's|/sys/class/mtd/||;s|/name||')"
-			return 0
-		fi
-	done
-	return 1
-}
-
-# Helper: find MTD index for a given partition name
-find_mtd_index() {
-	local name="$1"
-	for mtd in /sys/class/mtd/*/name; do
-		if [ -f "$mtd" ] && [ "$(cat "$mtd")" = "$name" ]; then
-			echo "$(echo "$mtd" | sed 's|/sys/class/mtd/||;s|/name||' | tr -dc '0-9')"
-			return 0
-		fi
-	done
-	return 1
-}
-
-FIRMWARE_MTD_DEV=$(find_mtd_dev "firmware")
-
-if [ -z "$FIRMWARE_MTD_DEV" ]; then
-	printf 'error: no MTD partition named "firmware" found\n'
+if [ -z "$ARCHIVE" ]; then
+	echo "missing firmware argument"
 	exit 1
 fi
 
-# Stream the TRX directly from the .tzst archive to the firmware partition.
-# No temp files needed — everything flows through pipes to avoid exceeding
-# available RAM on memory-constrained NAND devices.
-printf "streaming firmware.trx to %s...\n" "$FIRMWARE_MTD_DEV"
-zstd -d < "$1" | tar --warning=no-timestamp -xf - -O boot/firmware.trx | mtd -e firmware write - firmware
-result=$?
-if [ "$result" -ne 0 ]; then
-	printf 'error code "%d" during streaming write to firmware\n' "$result"
-	exit
+# RAM gate. MemTotal(kB): 256 MB parts report ~245000, 128 MB parts ~120000.
+# Threshold 200000 keeps ~50 MB headroom over the reliable path's ~145 MB peak.
+MEM_TOTAL=$(sed -n 's/^MemTotal:[[:space:]]*\([0-9]*\).*/\1/p' /proc/meminfo)
+[ -z "$MEM_TOTAL" ] && MEM_TOTAL=0
+
+if [ "$MEM_TOTAL" -lt 200000 ]; then
+	# ---- STREAMING FALLBACK (low RAM) ----------------------------------
+	# Open the FIFO once (fd 3): peek the first 4 bytes for the TRX magic (we
+	# cannot otrx-check a stream), then re-emit them + the streamed remainder
+	# so no bytes are lost. "HDR0" is plain ASCII, so it round-trips through
+	# $(...) and printf. A single open avoids any close/reopen FIFO race.
+	exec 3< "$ARCHIVE"
+	MAGIC=$(dd bs=4 count=1 <&3 2>/dev/null)
+	if [ "$MAGIC" != "HDR0" ]; then
+		echo "error: not a Broadcom TRX firmware (bad magic)"
+		echo "upload a tomato64 bcm53xx *.trx"
+		exec 3<&-
+		exit 1
+	fi
+	echo "low memory (${MEM_TOTAL} kB): streaming raw flash - settings WILL reset"
+
+	# Erase + write the whole TRX (kernel + UBI) to "firmware" from the FIFO.
+	# The trailing multipart boundary lands in the spare area past the UBI and
+	# is ignored. No staging -> ~0 extra RAM.
+	if ! { printf 'HDR0'; cat <&3; } | mtd -e firmware write - firmware; then
+		echo "error: streaming flash to firmware failed"
+		exec 3<&-
+		exit 1
+	fi
+	exec 3<&-
+
+	# Recompute the TRX CRC to cover only the kernel ("linux") partition, so
+	# later rootfs_data writes to the UBI region don't invalidate it for CFE.
+	# (init.c also does this every boot; belt and suspenders.)
+	LINUX_LEN=$(sed -n 's/^mtd[0-9]*:[[:space:]]*\([0-9a-f]*\).*"\(linux\|kernel\)".*/\1/p' /proc/mtd | head -1)
+	mtd ${LINUX_LEN:+-c 0x$LINUX_LEN} fixtrx firmware 2>/dev/null || true
+	sync
+
+	echo "image flashed - rebooting"
+	# Reboot detached + delayed so httpd can return the reboot page first.
+	(sleep 3; sync; reboot -f) >/dev/null 2>&1 &
+	exit 0
 fi
 
-# Fix TRX CRC to cover only the kernel (linux) partition
-linux_length=$(sed -n 's/mtd[0-9]*: \([0-9a-f]*\).*"\(kernel\|linux\)".*/0x\1/p' /proc/mtd)
-mtd ${linux_length:+-c 0x$linux_length} fixtrx firmware 2>/dev/null || true
+# ---- RELIABLE PATH (>= ~200 MB RAM) ----------------------------------------
+# Drain the one-shot FIFO into a seekable tmpfs file. A failure here on a
+# >=200 MB device is unexpected (out of tmpfs); fail safe rather than
+# half-flash.
+rm -f "$IMG"
+if ! cat "$ARCHIVE" > "$IMG"; then
+	echo "error: could not stage firmware to /tmp (out of RAM?)"
+	echo "flash the *.trx via CFE/TFTP recovery (e.g. nmrpflash) instead"
+	rm -f "$IMG"
+	exit 1
+fi
+if [ ! -s "$IMG" ]; then
+	echo "error: empty firmware upload"
+	rm -f "$IMG"
+	exit 1
+fi
 
-printf "image successfully flashed\n"
-sync
+# Validate the TRX before anything detaches/erases. otrx check verifies the
+# HDR0 magic + CRC over the header-declared length and is trailer-tolerant, so
+# it passes despite the multipart boundary appended by httpd.
+if ! otrx check "$IMG" >/dev/null 2>&1; then
+	echo "error: not a valid Broadcom TRX firmware image"
+	echo "upload a tomato64 bcm53xx *.trx"
+	rm -f "$IMG"
+	exit 1
+fi
+echo "image accepted - flash starting, router will reboot when done"
+
+# Detach so the launcher reparents to init (pid 1) - kill_remaining will then
+# kill httpd instead of skipping it, freeing the squashfs/overlay.
+if command -v setsid >/dev/null 2>&1; then
+	setsid /sbin/tomato64-sysupgrade-bcm53xx "$IMG" "$RESET" </dev/null >/dev/console 2>&1 &
+else
+	( /sbin/tomato64-sysupgrade-bcm53xx "$IMG" "$RESET" </dev/null >/dev/console 2>&1 & ) &
+fi
+
+exit 0

@@ -3,7 +3,6 @@ BR2_cortex_a9=y
 BR2_TOOLCHAIN_BUILDROOT_VENDOR="tomato64"
 BR2_TOOLCHAIN_BUILDROOT_MUSL=y
 BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_6_12=y
-BR2_BINUTILS_VERSION_2_45_X=y
 BR2_BINUTILS_GPROFNG=y
 BR2_GCC_VERSION_15_X=y
 BR2_TOOLCHAIN_BUILDROOT_CXX=y
@@ -47,8 +46,7 @@ BR2_TARGET_ROOTFS_SQUASHFS=y
 BR2_TARGET_ROOTFS_SQUASHFS_BS_1024K=y
 # BR2_TARGET_ROOTFS_SQUASHFS_PAD is not set
 BR2_TARGET_ROOTFS_SQUASHFS4_XZ=y
-BR2_TARGET_ROOTFS_TAR_ZSTD=y
-BR2_TARGET_ROOTFS_TAR_OPTIONS="--exclude='./bkp' --exclude='./cifs1' --exclude='./cifs2' --exclude='./dev' --exclude='./etc' --exclude='./home' --exclude='./jffs' --exclude='./lib64' --exclude='./media' --exclude='./mmc' --exclude='./mnt' --exclude='./nas' --exclude='./nvram' --exclude='./opt' --exclude='./proc' --exclude='./root' --exclude='./sys' --exclude='./tftpboot' --exclude='./var'"
+# BR2_TARGET_ROOTFS_TAR is not set
 BR2_PACKAGE_HOST_MTD=y
 # BR2_PACKAGE_RC_DOCKER is not set
 BR2_PACKAGE_PLATFORM_BCM53XX=y
