@@ -1,0 +1,35 @@
+From 7019df638aca926c89600e605dc2702b18c05af8 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Thu, 2 Jul 2026 09:59:18 -0600
+Subject: [PATCH] ubus
+
+---
+ package/ubus/ubus.hash | 2 +-
+ package/ubus/ubus.mk   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/package/ubus/ubus.hash b/package/ubus/ubus.hash
+index 3d8206b974..7776ea37b8 100644
+--- a/package/ubus/ubus.hash
++++ b/package/ubus/ubus.hash
+@@ -1,3 +1,3 @@
+ # Locally calculated
+-sha256  f625bda868133e28749b9eed64f9c3a838c75594e46a6a536e7e3582fe4da8e3  ubus-3cc98db1a422dcf560f2d6347fd410f17565a89d-git4.tar.gz
++sha256  785dedac8844c304e853c5d108c94a173bec7fba090a704588365312569425f3  ubus-24864e7840b3a02a9ef76284a373f6b2f00b8a9b-git4.tar.gz
+ sha256  a3caa6c0e90c87b7c97c2ac3d0c0d416082ef777215faec2e9b24ea6e68f6988  ubusd_acl.h
+diff --git a/package/ubus/ubus.mk b/package/ubus/ubus.mk
+index c0f0264065..f316afbf9d 100644
+--- a/package/ubus/ubus.mk
++++ b/package/ubus/ubus.mk
+@@ -4,7 +4,7 @@
+ #
+ ################################################################################
+ 
+-UBUS_VERSION = 3cc98db1a422dcf560f2d6347fd410f17565a89d
++UBUS_VERSION = 24864e7840b3a02a9ef76284a373f6b2f00b8a9b
+ UBUS_SITE = https://git.openwrt.org/project/ubus.git
+ UBUS_SITE_METHOD = git
+ 
+-- 
+2.47.3
+

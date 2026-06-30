@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-FSTOOLS_VERSION = 8d377aa627be1ae538f8cdeb3295c0c39b9b1d90
+FSTOOLS_VERSION = 16718b6e3c0fc7db7be6ae5848db0eae88ac8a8b
 FSTOOLS_SITE = 	https://git.openwrt.org/project/fstools.git
 FSTOOLS_SITE_METHOD=git
 FSTOOLS_DEPENDENCIES = libubox util-linux
