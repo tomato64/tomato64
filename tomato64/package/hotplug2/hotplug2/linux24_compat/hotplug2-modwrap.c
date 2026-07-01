@@ -101,10 +101,8 @@ int main(int argc, char *argv[]) {
 	 *
 	 * "/lib/modules/" + "/" + "\0" 
 	 */
-	filename = xmalloc(strlen(MODULES_PATH) + strlen(unamebuf.release) + strlen(MODULES_ALIAS));
-	strcpy(filename, MODULES_PATH);
-	strcat(filename, unamebuf.release);
-	strcat(filename, MODULES_ALIAS);
+	filename = xmalloc(strlen(MODULES_PATH) + strlen(unamebuf.release) + strlen(MODULES_ALIAS) + 1);
+	snprintf(filename, strlen(MODULES_PATH) + strlen(unamebuf.release) + strlen(MODULES_ALIAS) + 1, "%s%s%s", MODULES_PATH, unamebuf.release, MODULES_ALIAS);
 	
 	if (map_file(filename, &aliasmap)) {
 		ERROR("map_file", "Unable to map file: `%s'.", filename);
@@ -159,6 +157,7 @@ int main(int argc, char *argv[]) {
 			if (execute(argv)) {
 				ERROR("execute", "Error during exection of: `%s'.", argv[0]);
 			}
+			argv[argc - 1] = match_alias;
 		}
 		
 		free(cur_alias);
