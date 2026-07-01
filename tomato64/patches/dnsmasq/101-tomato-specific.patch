@@ -229,7 +229,7 @@
 +	    inet_ntop(AF_INET, &lease->addr, buf, ADDRSTRLEN);
 +
 +	  fprintf(f, "%lu %02X:%02X:%02X:%02X:%02X:%02X %s %s\n",
-+	              lease->expires - now,
++	              (lease->expires == 0) ? 0UL : (unsigned long)(lease->expires - now),
 +	              lease->hwaddr[0], lease->hwaddr[1], lease->hwaddr[2], lease->hwaddr[3], lease->hwaddr[4], lease->hwaddr[5],
 +	              buf,
 +	              ((lease->hostname) && (strlen(lease->hostname) > 0)) ? lease->hostname : "*");
