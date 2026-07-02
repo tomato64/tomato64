@@ -63,10 +63,30 @@ printf '\336\255\300\336' > "$UBI_MARK"
 rm -f $BINARIES_DIR/*.trx
 
 # Step 3: Process each DTB to create a device-specific TRX
-# BCM53XX TRX-NAND layout (matches OpenWrt trx-nand):
-#   Partition 1: LZMA-compressed kernel+DTB (padded to 4MB)
+# BCM53XX TRX-NAND layout (based on OpenWrt trx-nand):
+#   Partition 1: LZMA-compressed kernel+DTB (padded to KERNEL_BUDGET)
 #   Partition 2: UBI image (squashfs + overlay volumes)
 #   Appended: ubi_mark EOF marker
+#
+# KERNEL_BUDGET is the FIXED size otrx pads partition 1 to (via -b). It becomes
+# the "linux" mtd partition size the bcm53xx TRX parser derives from offset[1],
+# and the in-system upgrade (lib-upgrade-zz-tomato64.sh) refuses any kernel that
+# doesn't fit the currently-installed "linux" partition. So this must exceed the
+# actual compressed kernel with headroom to spare:
+#   * OpenWrt ships ~3MB kernels and pads to 4MB - never crosses it.
+#   * Tomato64 builds far more into the kernel (~6.4MB and growing). A 4MB pad is
+#     a no-op there: otrx ignores -b once the kernel is bigger and floats the UBI
+#     to the next 128K boundary past the actual kernel, so "linux" hugs the
+#     kernel with ZERO headroom. Every 128K of growth then shifts the partition
+#     and breaks in-place upgrade from the previous build ("new kernel doesn't
+#     fit linux - aborting").
+# We pin an 8MB budget so kernels can grow up to ~8MB without changing the
+# layout. CROSSING this budget requires a ONE-TIME CFE/U-Boot recovery reflash
+# of every deployed device (a bigger "linux" cannot be established by the safe
+# in-place streaming path - it can only grow the partition on a full write, and
+# Tomato64 disabled OpenWrt's bad-block-unaware whole-image fallback). Keep it a
+# multiple of 0x20000 (128K erase block).
+KERNEL_BUDGET=0x800000
 for DTB in $BINARIES_DIR/*.dtb; do
 	[ -f "$DTB" ] || continue
 
@@ -83,12 +103,12 @@ for DTB in $BINARIES_DIR/*.dtb; do
 		-d16 \
 		"$BINARIES_DIR/${DTB_NAME}-kernel.lzma"
 
-	# Create TRX: kernel (4MB padded) + UBI + ubi_mark
+	# Create TRX: kernel (padded to KERNEL_BUDGET) + UBI + ubi_mark
 	# -a 0x20000: align to 128KB NAND erase block
-	# -b 0x400000: pad kernel partition to 4MB
+	# -b $KERNEL_BUDGET: pad kernel partition to the fixed budget (see above)
 	# -A ubi_mark: append EOF marker after UBI
 	otrx create "$BINARIES_DIR/${DTB_NAME}.trx" \
-		-f "$BINARIES_DIR/${DTB_NAME}-kernel.lzma" -a 0x20000 -b 0x400000 \
+		-f "$BINARIES_DIR/${DTB_NAME}-kernel.lzma" -a 0x20000 -b $KERNEL_BUDGET \
 		-f "$UBI_IMG" \
 		-A "$UBI_MARK" -a 0x20000
 
