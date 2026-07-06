@@ -348,6 +348,11 @@ function ethstates() {
 		if (labels.custom) {
 			portLabel = '<small class="port-label-custom">'+escapeHTML(labels.custom)+'<\/small><br>';
 		}
+		/* Show the internal ethX port name on non-x86_64 devices */
+		var internal = 'eth'+p;
+		if (labels.hardware != internal) {
+			portLabel += '<small class="port-label-internal">'+internal+'<\/small><br>';
+		}
 		portLabel += '<b>'+labels.hardware+'<\/b>';
 		code += '<td class="title indent2" style="vertical-align:bottom">'+portLabel+'<\/td>';
 		var wan = get_wan(p);
