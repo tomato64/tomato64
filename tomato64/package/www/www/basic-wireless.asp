@@ -206,13 +206,88 @@ function refreshPower(device) {
 	cmd.post('shell.cgi', 'action=execute&command=' + escapeCGI(c.replace(/\r/g, '')));
 }
 
+/* channel/width gating: a channel is offered at a bonded width only if its whole 802.11 bonding block is enabled, so impossible combos (e.g. 132-144 @ 160 MHz) are never listed */
+var bonding5g = {
+	80:  [[36,40,44,48],[52,56,60,64],[100,104,108,112],[116,120,124,128],[132,136,140,144],[149,153,157,161],[165,169,173,177]],
+	160: [[36,40,44,48,52,56,60,64],[100,104,108,112,116,120,124,128],[149,153,157,161,165,169,173,177]]
+};
+
+/* candidate bonding blocks the channel could be primary for; valid if any one is fully enabled (6 GHz 320 MHz yields two, for the overlapping 320-1/320-2 arrangements) */
+function bondingGroups(chan, width, band) {
+	if (band == '5g') {
+		var groups = bonding5g[width];
+		if (!groups)
+			return [];
+		for (var g = 0; g < groups.length; g++)
+			if (groups[g].indexOf(chan) >= 0)
+				return [groups[g]];
+		return [];
+	}
+	if (band == '6g') {
+		/* 6 GHz: channels 1,5,9,...,233 on a clean grid spaced 4 apart */
+		if (((chan - 1) % 4) != 0)
+			return [];
+		var n = width / 20;                 /* 20 MHz sub-channels in the block */
+		var idx = (chan - 1) / 4;           /* 0-based 20 MHz index             */
+		var bases = [];
+		if (width == 320) {                     /* two overlapping 320 MHz arrangements */
+			bases.push(Math.floor(idx / 16) * 16);              /* 320-1 */
+			if (idx >= 8)
+				bases.push(8 + Math.floor((idx - 8) / 16) * 16); /* 320-2 */
+		} else {
+			bases.push(Math.floor(idx / n) * n);
+		}
+		var out = [];
+		for (var bi = 0; bi < bases.length; bi++) {
+			var grp = [];
+			for (var k = 0; k < n; k++)
+				grp.push((bases[bi] + k) * 4 + 1);
+			out.push(grp);
+		}
+		return out;
+	}
+	return [];                              /* 2.4 GHz never bonds beyond 40 MHz */
+}
+
+function channelValidForWidth(rec, width, band, avail) {
+	if (!width || width <= 20)
+		return true;                            /* 20 MHz / legacy: everything */
+	if (width == 40)
+		return !(rec.no40m && rec.no40p);       /* needs one usable bond dir   */
+	if (band == '2g')
+		return true;                            /* no 80+ MHz on 2.4 GHz       */
+	var candidates = bondingGroups(rec.num, width, band);
+	if (!candidates.length)
+		return false;
+	for (var c = 0; c < candidates.length; c++) {
+		var grp = candidates[c], ok = true;
+		for (var k = 0; k < grp.length; k++)
+			if (!avail[grp[k]]) {
+				ok = false;
+				break;
+			}
+		if (ok)
+			return true;                    /* valid via at least one arrangement */
+	}
+	return false;
+}
+
 function displayChannels(device) {
 	var channel = '';
 	var channels = [];
 	var result = cmdresult.split('\n');
-	var selectedBand = E('_wifi_'+devices[device][0]+'_band').value;
+	var dev = devices[device][0];
+	var selectedBand = E('_wifi_'+dev+'_band').value;
 
-	channels.push(['auto', 'auto']);
+	/* the selected width drives the channel list; disabled/legacy width means 20 MHz (no gating) */
+	var widthEl = E('_wifi_'+dev+'_width');
+	var width = (widthEl && !widthEl.disabled) ? parseInt(widthEl.value) : 20;
+	if (!width)
+		width = 20;
+
+	/* pass 1: collect the band's channels and the set of enabled channel numbers */
+	var raw = [];
+	var avail = {};
 	for (var i = 0; i < result.length; i++) {
 		if (result[i] !== "") {
 			var result2 = result[i].split(/\s+/);
@@ -233,8 +308,21 @@ function displayChannels(device) {
 				continue;
 
 			channel = result2[6].substring(0, result2[6].length - 1);
-			channels.push([channel, channel + ' (' + result2[0] + ' ' + result2[4].substring(0, result2[4].length - 1) + ')']);
+			raw.push({
+				num: parseInt(channel),
+				label: channel + ' (' + result2[0] + ' ' + result2[4].substring(0, result2[4].length - 1) + ')',
+				no40m: result[i].indexOf('NO_HT40-') >= 0,
+				no40p: result[i].indexOf('NO_HT40+') >= 0
+			});
+			avail[parseInt(channel)] = 1;
 		}
+	}
+
+	/* pass 2: keep 'auto' plus only channels valid as a primary at this width */
+	channels.push(['auto', 'auto']);
+	for (var i = 0; i < raw.length; i++) {
+		if (channelValidForWidth(raw[i], width, selectedBand, avail))
+			channels.push([raw[i].num, raw[i].label]);
 	}
 
 	t = devices[device][0];
