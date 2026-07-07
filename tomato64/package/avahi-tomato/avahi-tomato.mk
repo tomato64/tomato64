@@ -21,6 +21,9 @@ AVAHI_TOMATO_IGNORE_CVES += CVE-2021-26720
 # 0001-Fix-NULL-pointer-crashes-from-175.patch
 AVAHI_TOMATO_IGNORE_CVES += CVE-2021-36217
 
+# 0017-core-refuse-to-accept-publish-flags-where-both-wide-area-and-multicast-are-set.patch
+AVAHI_TOMATO_IGNORE_CVES += CVE-2026-34933
+
 AVAHI_TOMATO_CONF_ENV = \
 	avahi_cv_sys_cxx_works=yes \
 	DATADIRNAME=share
