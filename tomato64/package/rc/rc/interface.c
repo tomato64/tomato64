@@ -321,8 +321,6 @@ void start_vlan(void)
 	/* set vlan i/f name to style "vlan<ID>" */
 #ifndef TOMATO64
 	eval("vconfig", "set_name_type", "VLAN_PLUS_VID_NO_PAD");
-#else
-	eval("vconfig", "set_name_type", "VLAN_NAME_TYPE_RAW_PLUS_VID_NO_PAD");
 #endif /* TOMATO64 */
 
 	/* create vlan interfaces */
@@ -420,24 +418,18 @@ void start_vlan(void)
 	close(s);
 }
 
-/* stop/rem vlan interface(s) based on nvram settings */
+/* stop/rem vlan interface(s) */
 void stop_vlan(void)
 {
+#ifndef TOMATO64
 	int i;
 	int vid_map;
 	char nvvar_name[16];
 	char vlan_id[16];
 	char *hwname;
-#ifdef TOMATO64
-	char *hwnames, *p;
-	char iface_name[16];
-#endif /* TOMATO64 */
-
-#ifndef TOMATO64
 #if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
 	int vlan0tag = nvram_get_int("vlan0tag");
 #endif
-#endif /* TOMATO64 */
 
 	if ((strtoul(nvram_safe_get("boardflags"), NULL, 0) & BFL_ENETVLAN) == 0)
 		return;
@@ -445,43 +437,54 @@ void stop_vlan(void)
 	for (i = 0; i < TOMATO_VLANNUM; i ++) {
 		/* get the address of the EMAC on which the VLAN sits */
 		snprintf(nvvar_name, sizeof(nvvar_name), "vlan%dhwname", i);
-#ifndef TOMATO64
 		if (!(hwname = nvram_get(nvvar_name)))
 			continue;
-#endif /* TOMATO64 */
-#ifdef TOMATO64
-		hwnames = nvram_get(nvvar_name);
-		if (hwnames == NULL || hwnames[0] == '\0')
-			continue;
-#endif /* TOMATO64 */
 
 		/* vlan ID mapping */
 		snprintf(nvvar_name, sizeof(nvvar_name), "vlan%dvid", i);
 		vid_map = nvram_get_int(nvvar_name);
 		if ((vid_map < 1) || (vid_map > 4094)) {
-#ifndef TOMATO64
 #if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */
 			vid_map = vlan0tag | i;
 #else
 			vid_map = i;
 #endif
-#else
-			vid_map = i;
-#endif /* TOMATO64 */
 		}
 
 		/* remove the VLAN interface */
-#ifdef TOMATO64
-		p = hwnames;
-		while ((hwname = strsep(&p, " ")) != NULL) {
-			snprintf(iface_name, sizeof(iface_name), "%s.%d", hwname, vid_map);
-			eval("ip", "link", "delete", iface_name);
-		}
-#endif /* TOMATO64 */
-#ifndef TOMATO64
 		snprintf(vlan_id, sizeof(vlan_id), "vlan%d", vid_map);
 
 		eval("vconfig", "rem", vlan_id);
-#endif /* TOMATO64 */
 	}
+#else /* TOMATO64 */
+	/*
+	 * Sweep by enumeration: delete every 802.1Q VLAN netdev that currently
+	 * exists (as listed by the 8021q module in /proc/net/vlan/config), rather
+	 * than only the ones the present NVRAM describes.
+	 */
+	FILE *f;
+	char line[256];
+	char iface_name[32];
+
+	if ((f = fopen("/proc/net/vlan/config", "r")) == NULL)
+		return; /* 8021q not loaded / no VLANs -> nothing to tear down */
+
+	while (fgets(line, sizeof(line), f) != NULL) {
+		/* data rows look like "eth0.5  | 5  | eth0"; skip anything without a '|' (headers, "Name-Type:") */
+		if (strchr(line, '|') == NULL)
+			continue;
+
+		/* first whitespace-delimited token is the VLAN device name */
+		if (sscanf(line, "%31s", iface_name) != 1)
+			continue;
+
+		/* skip the "VLAN Dev name | VLAN ID" header row */
+		if (strcmp(iface_name, "VLAN") == 0)
+			continue;
+
+		eval("ip", "link", "delete", iface_name);
+	}
+
+	fclose(f);
+#endif /* TOMATO64 */
 }
