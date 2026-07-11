@@ -19,9 +19,10 @@ define NDPI_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/ndpi-netfilter/ipt/libxt_ndpi.so $(TARGET_DIR)/usr/lib/xtables
 
 	cd $(@D)/ndpi-netfilter/src && \
-	make -C $(LINUX_DIR) M="$$PWD" modules_install \
+	make -C $(LINUX_DIR) M="$$PWD" $(LINUX_MAKE_FLAGS) modules_install \
 	INSTALL_MOD_PATH=$(TARGET_DIR) \
-	INSTALL_MOD_DIR=extra
+	INSTALL_MOD_DIR=extra \
+	INSTALL_MOD_STRIP=1
 endef
 
 $(eval $(autotools-package))

@@ -28,9 +28,10 @@ endef
 
 define OVPN_DCO_INSTALL_TARGET_CMDS
 	cd $(@D)/drivers/net/ovpn && \
-	make -C $(LINUX_DIR) M="$$PWD" modules_install \
+	make -C $(LINUX_DIR) M="$$PWD" $(LINUX_MAKE_FLAGS) modules_install \
 	INSTALL_MOD_PATH=$(TARGET_DIR) \
-	INSTALL_MOD_DIR=extra
+	INSTALL_MOD_DIR=extra \
+	INSTALL_MOD_STRIP=1
 endef
 
 $(eval $(generic-package))

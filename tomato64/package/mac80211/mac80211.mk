@@ -127,4 +127,12 @@ endef
 MAC80211_POST_INSTALL_TARGET_HOOKS += MAC80211_INSTALL_RTW88
 endif
 
+# .ko are hand-copied (not modules_install), so strip debug info here.
+# Runs last to cover the platform-conditional module hooks above.
+define MAC80211_STRIP_MODULES
+	find $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi -name '*.ko' \
+		-exec $(TARGET_CROSS)strip --strip-debug {} +
+endef
+MAC80211_POST_INSTALL_TARGET_HOOKS += MAC80211_STRIP_MODULES
+
 $(eval $(generic-package))

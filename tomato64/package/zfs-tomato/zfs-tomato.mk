@@ -94,9 +94,10 @@ endef
 
 define ZFS_TOMATO_INSTALL_TARGET_CMDS
 	cd $(ZFS_TOMATO_DIR)/module && \
-	make -C $(LINUX_DIR) M="$$PWD" modules_install \
+	make -C $(LINUX_DIR) M="$$PWD" $(LINUX_MAKE_FLAGS) modules_install \
 	INSTALL_MOD_PATH=$(TARGET_DIR) \
-	INSTALL_MOD_DIR=extra
+	INSTALL_MOD_DIR=extra \
+	INSTALL_MOD_STRIP=1
 
 	$(INSTALL) -D $(@D)/zfs $(TARGET_DIR)/usr/sbin
 	$(INSTALL) -D $(@D)/zpool $(TARGET_DIR)/usr/sbin

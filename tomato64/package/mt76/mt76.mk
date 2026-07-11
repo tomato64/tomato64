@@ -160,4 +160,12 @@ endef
 MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_PCIE_FIRMWARE
 endif
 
+# .ko are hand-copied (not modules_install), so strip debug info here.
+# Runs last to cover the platform-conditional module hooks above.
+define MT76_STRIP_MODULES
+	find $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi -name '*.ko' \
+		-exec $(TARGET_CROSS)strip --strip-debug {} +
+endef
+MT76_POST_INSTALL_TARGET_HOOKS += MT76_STRIP_MODULES
+
 $(eval $(generic-package))

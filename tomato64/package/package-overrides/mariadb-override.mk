@@ -16,7 +16,7 @@ override define MARIADB_INSTALL_TARGET_CMDS
 	ln -sf mariadb-admin					$(TARGET_DIR)/usr/bin/mysqladmin
 
 	$(INSTALL) -D $(@D)/client/mariadb-dump			$(TARGET_DIR)/usr/bin
-	ln -sf mariadb-dump					$(TARGET_DIR)/usr/bin/mysldump
+	ln -sf mariadb-dump					$(TARGET_DIR)/usr/bin/mysqldump
 
 	$(INSTALL) -D $(@D)/sql/mariadbd			$(TARGET_DIR)/usr/sbin
 	ln -sf /usr/sbin/mariadbd				$(TARGET_DIR)/usr/sbin/mysqld
