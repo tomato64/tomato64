@@ -149,4 +149,16 @@ define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
 endef
 endif
 
+# Realtek RTW89 firmware for RTL8832BU / RTL8852BU USB Wi-Fi 6 adapters (all
+# targets). The rtw89_8852bu driver (enabled in the mac80211 package) requests
+# rtw89/rtw8852b_fw-1.bin; RTL8832BU shares the 8852b firmware. Installed via an
+# unconditional post-install hook because the per-platform INSTALL_TARGET_CMDS
+# above are mutually exclusive. Filename matches OpenWrt
+# package/firmware/linux-firmware/realtek.mk (rtl8852be-firmware).
+define LINUX_FIRMWARE_OPENWRT_INSTALL_RTW89
+	mkdir -p $(TARGET_DIR)/lib/firmware/rtw89
+	cp $(@D)/rtw89/rtw8852b_fw-1.bin $(TARGET_DIR)/lib/firmware/rtw89
+endef
+LINUX_FIRMWARE_OPENWRT_POST_INSTALL_TARGET_HOOKS += LINUX_FIRMWARE_OPENWRT_INSTALL_RTW89
+
 $(eval $(generic-package))

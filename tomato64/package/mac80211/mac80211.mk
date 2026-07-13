@@ -127,6 +127,19 @@ endef
 MAC80211_POST_INSTALL_TARGET_HOOKS += MAC80211_INSTALL_RTW88
 endif
 
+# Install RTW89 USB (Wi-Fi 6) modules for all targets. Drives Realtek RTL8832BU /
+# RTL8852BU USB adapters (RTL8832BU = USB ID 0bda:b832, handled by rtw89_8852bu).
+# Enabled in config_base, so built for every platform; autoloads via hotplug2
+# coldplug + modalias, same path as the mt76 USB (mt7921u/mt7925u) drivers.
+define MAC80211_INSTALL_RTW89
+	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw89/rtw89_core.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw89/rtw89_usb.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw89/rtw89_8852b.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw89/rtw89_8852b_common.ko	$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw89/rtw89_8852bu.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+endef
+MAC80211_POST_INSTALL_TARGET_HOOKS += MAC80211_INSTALL_RTW89
+
 # .ko are hand-copied (not modules_install), so strip debug info here.
 # Runs last to cover the platform-conditional module hooks above.
 define MAC80211_STRIP_MODULES

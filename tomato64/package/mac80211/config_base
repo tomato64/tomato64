@@ -71,3 +71,16 @@ CPTCFG_ATH9K_PCI=y
 # Broadcom LED support — enabled by OpenWrt when CONFIG_LEDS_TRIGGERS=y (broadcom.mk)
 CPTCFG_B43_LEDS=y
 CPTCFG_B43LEGACY_LEDS=y
+
+# Realtek RTW89 USB (Wi-Fi 6) — RTL8832BU / RTL8852BU USB adapters.
+# Full module chain listed explicitly (rather than relying on Kconfig select),
+# matching the RTW88 fragment style in config_rockchip. RTL8832BU (USB ID
+# 0bda:b832) is driven by the rtw89_8852bu module. USB dependency is met by the
+# target kernel's CONFIG_USB=y. Modules are installed in mac80211.mk
+# (MAC80211_INSTALL_RTW89) and firmware in linux-firmware-openwrt.mk.
+CPTCFG_RTW89=m
+CPTCFG_RTW89_CORE=m
+CPTCFG_RTW89_USB=m
+CPTCFG_RTW89_8852B=m
+CPTCFG_RTW89_8852B_COMMON=m
+CPTCFG_RTW89_8852BU=m
