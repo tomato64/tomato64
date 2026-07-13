@@ -1,0 +1,29 @@
+From: Tomato64 <noreply@tomato64>
+Subject: [PATCH] cap SOLICIT/INFORMATION-REQUEST retransmit backoff
+
+The OPNsense/RFC 8415 value for SOL_MAX_RT (and INF_MAX_RT) is 1 hour
+(3600000 ms). With exponential backoff, if the ISP ignores the first few
+Solicits at boot (upstream not ready yet), the retransmit interval can
+balloon toward the 1h cap (256s -> 512s -> 1024s...), so the next Solicit
+may not go out for 8-17 minutes. Users see IPv6 "take 7-10 minutes to come
+up after boot".
+
+The legacy tomato64/dhcpv6 (WIDE) base capped both at 120000 ms (120s), so
+a missed Solicit was re-tried at worst every 2 minutes. Restore that cap to
+keep IPv6 acquisition prompt at boot.
+
+--- a/dhcp6.h
++++ b/dhcp6.h
+@@ -73,10 +73,10 @@
+ /* timer parameters (msec, unless explicitly commented) */
+ #define SOL_MAX_DELAY	1000
+ #define SOL_TIMEOUT	1000
+-#define SOL_MAX_RT	3600000
++#define SOL_MAX_RT	120000
+ #define INF_MAX_DELAY	1000
+ #define INF_TIMEOUT	1000
+-#define INF_MAX_RT	3600000
++#define INF_MAX_RT	120000
+ #define REQ_TIMEOUT	1000
+ #define REQ_MAX_RT	30000
+ #define REQ_MAX_RC	10	/* Max Request retry attempts */
