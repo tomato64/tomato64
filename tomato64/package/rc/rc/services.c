@@ -2068,6 +2068,9 @@ void start_ntpd(void)
 
 			if (nvram_get_int("ntpd_enable")) /* enable local NTP server */
 				ntpd_argv[index++] = "-l";
+
+			/* add daily restart to cron */
+			eval("cru", "a", "ntpd_restart", "11 4 * * * /sbin/ntpd_restart");
 		}
 
 		ret = _eval(ntpd_argv, NULL, 0, NULL);
@@ -2086,6 +2089,9 @@ void stop_ntpd(void)
 {
 	if (serialize_restart("ntpd", 0))
 		return;
+
+	/* always try to remove from cron */
+	eval("cru", "d", "ntpd_restart");
 
 	pid_ntpd = -1;
 	if (pidof("ntpd") > 0) {
@@ -2173,6 +2179,14 @@ ntp_done:
 
 	fprintf(file,"%s", message);
 	fclose(file);
+	return 0;
+}
+
+int ntpd_restart_main(int argc, char *argv[])
+{
+	logmsg(LOG_INFO, "ntpd: daily service restart");
+	stop_ntpd();
+	start_ntpd();
 	return 0;
 }
 

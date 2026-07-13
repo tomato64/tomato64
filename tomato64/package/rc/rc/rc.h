@@ -342,6 +342,7 @@ extern void set_tz(void);
 extern void start_ntpd(void);
 extern void stop_ntpd(void);
 extern int ntpd_synced_main(int argc, char *argv[]);
+extern int ntpd_restart_main(int argc, char *argv[]);
 extern void check_services(void);
 extern void exec_service(void);
 extern int service_main(int argc, char *argv[]);

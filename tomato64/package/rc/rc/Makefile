@@ -263,6 +263,7 @@ endif
 ifeq ($(TCONFIG_ROAM),y)
 	@cd $(INSTALLDIR)/sbin && ln -sf rc roamast
 endif
+	@cd $(INSTALLDIR)/sbin && ln -sf rc ntpd_restart
 
 clean:
 	rm -f rc *.o .*.depend

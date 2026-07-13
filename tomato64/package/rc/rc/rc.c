@@ -919,6 +919,7 @@ static const applets_t applets[] = {
 	{ "rctest",			rctest_main			},
 #endif
 	{ "ntpd_synced",		ntpd_synced_main		},
+	{ "ntpd_restart",		ntpd_restart_main		},
 #ifdef TCONFIG_ROAM
 	{ "roamast",			roam_assistant_main		},
 #endif
