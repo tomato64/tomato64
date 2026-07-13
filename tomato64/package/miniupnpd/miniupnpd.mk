@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MINIUPNPD_VERSION = 2.3.7
+MINIUPNPD_VERSION = 2.3.10
 MINIUPNPD_SITE = https://github.com/miniupnp/miniupnp/releases/download/miniupnpd_$(subst .,_,$(MINIUPNPD_VERSION))
 MINIUPNPD_LICENSE = BSD-3-Clause
 MINIUPNPD_DEPENDENCIES = iptables
@@ -19,6 +19,7 @@ define MINIUPNPD_CONFIGURE_CMDS
 	--portinuse \
 	--disable-pppconn \
 	--firewall=iptables \
+	--disable-tests \
 	--iptablespath=$(IPTABLES_DIR) \
 	--ipv6
 endef

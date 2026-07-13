@@ -1,13 +1,16 @@
-diff -Naur miniupnpd-2.3.7.orig/configure miniupnpd-2.3.7/configure
---- miniupnpd-2.3.7.orig/configure	2024-08-11 12:40:29.734155012 -0600
-+++ miniupnpd-2.3.7/configure	2024-08-11 12:45:07.642536852 -0600
-@@ -671,19 +671,19 @@
- fi
+--- miniupnpd/configure
++++ miniupnpd/configure
+@@ -771,23 +771,23 @@
+ esac
  
  # UUID API
--case $OS_NAME in
--	OpenWrt)
--		echo "#define LIB_UUID" >> ${CONFIGFILE}
+-case $OS_FAMILY in
+-	Linux)
+-		if pkg_detect uuid; then
+-			echo "#define LIB_UUID" >> ${CONFIGFILE}
+-		else
+-			echo "Warning: uuid pkg-config not found"
+-		fi
 -		;;
 -	*)
 -		if grep uuid_create /usr/include/uuid.h > /dev/null 2>&1 ; then
@@ -18,9 +21,13 @@ diff -Naur miniupnpd-2.3.7.orig/configure miniupnpd-2.3.7/configure
 -		fi
 -		;;
 -esac
-+#case $OS_NAME in
-+#	OpenWrt)
-+#		echo "#define LIB_UUID" >> ${CONFIGFILE}
++#case $OS_FAMILY in
++#	Linux)
++#		if pkg_detect uuid; then
++#			echo "#define LIB_UUID" >> ${CONFIGFILE}
++#		else
++#			echo "Warning: uuid pkg-config not found"
++#		fi
 +#		;;
 +#	*)
 +#		if grep uuid_create /usr/include/uuid.h > /dev/null 2>&1 ; then
@@ -32,5 +39,5 @@ diff -Naur miniupnpd-2.3.7.orig/configure miniupnpd-2.3.7/configure
 +#		;;
 +#esac
  
- # set V6SOCKETS_ARE_V6ONLY to 0 if it was not set above
- if [ -z "$V6SOCKETS_ARE_V6ONLY" ] ; then
+ # OpenSSL : only with IGDv2 enabled
+ if [ -n "$HTTPS" ] && [ -n "$IGD2" ] ; then
