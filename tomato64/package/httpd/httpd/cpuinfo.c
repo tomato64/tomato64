@@ -222,7 +222,7 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 	strlcpy(system_type, "Rockchip RK3576", buf_system_type_sz);
 	strlcpy(cpuclk, "2200", buf_cpuclk_sz);
 #elif TOMATO64_MT3600BE
-	strlcpy(system_type, "MediaTek MT7987A", buf_system_type_sz);
+	strlcpy(system_type, "MediaTek Filogic 850", buf_system_type_sz);
 	strlcpy(cpuclk, "2000", buf_cpuclk_sz);
 #elif TOMATO64_ARMSR
 	strlcpy(system_type, "ARM64 SystemReady", buf_system_type_sz);
@@ -347,6 +347,8 @@ void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
 		if (cpumodel[0] == '\0')
 			strlcpy(cpumodel, "Generic ARM64", buf_cpumodel_sz);
 	}
+#elif TOMATO64_MT3600BE
+	strlcpy(cpumodel, "MediaTek MT7987AV (Cortex-A53)", buf_cpumodel_sz);
 #else
 	strlcpy(cpumodel, "MediaTek MT7986AV (Cortex-A53)", buf_cpumodel_sz);
 #endif
