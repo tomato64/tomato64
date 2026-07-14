@@ -776,7 +776,18 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	/* parse port */
 	port = ssl ? 443 : 80;
 	strlcpy(a, host, sizeof(a));
-	if ((colon = strrchr(a, ':'))) {
+	if (a[0] == '[') {
+		char *end = strchr(a, ']');
+
+		if (end) {
+			if (end[1] == ':' && end[2] != '\0')
+				port = atoi(end + 2);
+
+			*end = '\0';
+			memmove(a, a + 1, strlen(a));
+		}
+	}
+	else if ((colon = strrchr(a, ':')) != NULL && strchr(a, ':') == colon) {
 		*colon = '\0';
 		port = atoi(colon + 1);
 	}
@@ -789,12 +800,31 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 #endif
 	hints.ai_socktype = SOCK_STREAM;
 
+	{
+		struct in_addr ipv4_addr;
+#ifdef TCONFIG_IPV6
+		struct in6_addr ipv6_addr;
+#endif
+
+		if (inet_pton(AF_INET, a, &ipv4_addr) == 1) {
+			hints.ai_family = AF_INET;
+			hints.ai_flags = AI_NUMERICHOST;
+		}
+#ifdef TCONFIG_IPV6
+		else if (inet_pton(AF_INET6, a, &ipv6_addr) == 1) {
+			hints.ai_family = AF_INET6;
+			hints.ai_flags = AI_NUMERICHOST;
+		}
+#endif
+	}
+
 	memset(cport, 0, sizeof(cport));
 	snprintf(cport, sizeof(cport), "%d", port);
 
 	for (trys = 4; trys > 0; --trys) {
 		logmsg(LOG_DEBUG, "*** %s: attempt %d", __FUNCTION__, 5 - trys);
 
+		result = NULL;
 		if (getaddrinfo(a, cport, &hints, &result) != 0) {
 			sleep(2);
 			continue;
@@ -830,7 +860,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 			if (c_ip)
 				route_adddel(c_ip, 1);
 
-			logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting ...", __FUNCTION__, c_ip, cport);
+			logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting ...", __FUNCTION__, c_ip ? c_ip : "unknown", cport);
 
 			if (connect_timeout(sockfd, rp->ai_addr, rp->ai_addrlen, 10) != -1) {
 				logmsg(LOG_DEBUG, "*** %s: connected!", __FUNCTION__);
@@ -854,7 +884,8 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 				break;
 		}
 
-		freeaddrinfo(result);
+		if (result)
+			freeaddrinfo(result);
 		if (stop)
 			break;
 
@@ -864,6 +895,8 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	free(request);
 	if (stop)
 		error("Force stop.");
+
+	return -1;
 
 connected:
 	logmsg(LOG_DEBUG, "*** %s: connected:", __FUNCTION__);
@@ -912,7 +945,6 @@ connected:
 
 	fclose(f);
 	close(sockfd);
-	free(request);
 
 	/* make dump */
 	if ((c = get_dump_name()) != NULL) {
@@ -930,6 +962,8 @@ connected:
 			fclose(f);
 		}
 	}
+
+	free(request);
 
 	/* parse response code and body */
 	i = -1;
