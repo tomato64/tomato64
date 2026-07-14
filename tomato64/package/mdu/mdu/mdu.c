@@ -449,6 +449,11 @@ static void curl_setup(const unsigned int ssl)
 		error("libcurl initialization failure.");
 
 #ifndef TCONFIG_STUBBY
+	/*
+	 * This build does not ship a CA bundle/store, so certificate verification
+	 * cannot be enabled here. Builds with CA support rely on libcurl defaults:
+	 * CURLOPT_SSL_VERIFYPEER=1 and CURLOPT_SSL_VERIFYHOST=2.
+	 */
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
 	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
