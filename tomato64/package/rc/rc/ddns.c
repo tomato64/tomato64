@@ -41,6 +41,7 @@ static void update(int num, int *dirty, int force)
 	char msg_fn[32];
 	char ip[32];
 	int exitcode, errors;
+	int cold_extip;
 	FILE *f;
 	char prefix[] = "wanXX";
 
@@ -115,12 +116,22 @@ static void update(int num, int *dirty, int force)
 		logmsg(LOG_DEBUG, "*** %s: inet_addr ip: %s", __FUNCTION__, ip);
 	}
 
+	/* cold boot/start: do not trust persistent cookie until checker cache exists */
+	cold_extip = 0;
+	snprintf(s, sizeof(s), "%s.extip", ddnsx_path);
+	if ((ip[0] == '@') && !f_exists(s))
+		cold_extip = 1;
+
 	/* copy content of nvram cache to a file cache */
 	snprintf(cache_fn, sizeof(cache_fn), "%s.cache", ddnsx_path);
-	f_write_string(cache_fn, nvram_safe_get(cache_nv), 0, 0);
+	if (cold_extip) {
+		logmsg(LOG_DEBUG, "*** %s: cold external checker cache, ignoring nvram cookie", __FUNCTION__);
+		f_write(cache_fn, NULL, 0, 0, 0);
+	}
+	else
+		f_write_string(cache_fn, nvram_safe_get(cache_nv), 0, 0);
 
 	/* if nvram cache is empty, the 'Force next update' option is probably checked - reset also cache file .extip */
-	snprintf(s, sizeof(s), "%s.extip", ddnsx_path);
 	if (strcmp(nvram_safe_get(cache_nv), "") == 0)
 		f_write(s, NULL, 0, 0, 0);
 
