@@ -1233,7 +1233,7 @@ static const char *get_address(int required)
 			logmsg(LOG_DEBUG, "*** %s: %s (%s) after %d attempts", __FUNCTION__, curl_err_str, services[service_num][0], n);
 			error(curl_err_str);
 #else
-			logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s) after %d attempts", __FUNCTION__, services[service_num][0], n);
+			logmsg(LOG_DEBUG, "*** %s: %s (%s) after %d attempts", __FUNCTION__, M_ERROR_GET_IP, services[service_num][0], n);
 			error(M_ERROR_GET_IP);
 #endif
 		}
@@ -2163,7 +2163,7 @@ static void check_cookie(void)
 		return;
 	}
 
-	logmsg(LOG_DEBUG, "*** %s: " M_SAME_IP " (%s)", __FUNCTION__, c);
+	logmsg(LOG_DEBUG, "*** %s: %s (%s)", __FUNCTION__, M_SAME_IP, c);
 	puts(M_SAME_IP);
 	save_msg(M_SAME_IP);
 
