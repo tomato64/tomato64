@@ -11980,6 +11980,10 @@ static void sysinit(void)
 
 	start_hotplug2();
 
+#ifdef TOMATO64
+	eval("/sbin/udevtrigger");
+#endif /* TOMATO64 */
+
 #ifdef TOMATO64_X86_64
 	eval("mount_nvram");
 	if (d_exists("/sys/firmware/efi"))
