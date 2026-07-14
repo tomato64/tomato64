@@ -524,13 +524,18 @@ static struct curl_slist *curl_headers(const char *header)
 	return headers;
 }
 
-static char *curl_resolve_ip(const unsigned int ssl, const char *url, const char *header)
+static int curl_resolve_ip(const unsigned int ssl, const char *url, const char *header, char *ip_buf, size_t ip_buf_sz)
 {
-	char *ip;
+	char *ip = NULL;
 	CURLcode r;
 	int trys, stop = 0;
-	unsigned int ok = 0;
+	int ok = 0;
 	headers = NULL;
+
+	if ((!ip_buf) || (ip_buf_sz == 0))
+		return -1;
+
+	ip_buf[0] = '\0';
 
 	curl_setup(ssl);
 
@@ -556,8 +561,12 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url, const char
 		sleep(2);
 	}
 
-	if (((r == CURLE_OK) || (r == CURLE_RECV_ERROR)) && !curl_easy_getinfo(curl_handle, CURLINFO_PRIMARY_IP, &ip) && ip) /* CURLE_RECV_ERROR needed for clouflare */
-		ok = 1;
+	if (((r == CURLE_OK) || (r == CURLE_RECV_ERROR)) && !curl_easy_getinfo(curl_handle, CURLINFO_PRIMARY_IP, &ip) && ip) { /* CURLE_RECV_ERROR needed for clouflare */
+		if (strlcpy(ip_buf, ip, ip_buf_sz) < ip_buf_sz)
+			ok = 1;
+		else
+			logmsg(LOG_WARNING, "*** %s: resolved IP truncated", __FUNCTION__);
+	}
 	else {
 		memset(curl_err_str, 0, sizeof(curl_err_str));
 		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (strlen(errbuf) ? errbuf : curl_easy_strerror(r)));
@@ -570,9 +579,9 @@ static char *curl_resolve_ip(const unsigned int ssl, const char *url, const char
 	if (stop == 1)
 		error("Force stop.");
 
-	logmsg(LOG_DEBUG, "*** %s: OUT IP=[%s]", __FUNCTION__, (ok ? ip : "unknown"));
+	logmsg(LOG_DEBUG, "*** %s: OUT IP=[%s]", __FUNCTION__, (ok ? ip_buf : "unknown"));
 
-	return ok ? ip : "0";
+	return ok ? 0 : -1;
 }
 #endif /* USE_LIBCURL */
 
@@ -589,7 +598,6 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	FILE *curl_rbuf = NULL;
 	char url[HALF_BLOB];
 	char ip[INET6_ADDRSTRLEN];
-	char *ip_ret;
 	CURLcode r;
 	int trys;
 	int stop = 0;
@@ -608,11 +616,8 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	/* resolve IP for routing if MultiWAN */
 	if (ifname[0] != '\0') {
 		logmsg(LOG_DEBUG, "*** %s: resolving IP of server %s ...", __FUNCTION__, host);
-		ip_ret = curl_resolve_ip(ssl, url, header);
-		if (strcmp(ip_ret, "0") != 0) {
-			strlcpy(ip, ip_ret, INET6_ADDRSTRLEN); /* copy as it will be reused in the next request */
+		if (curl_resolve_ip(ssl, url, header, ip, sizeof(ip)) == 0)
 			logmsg(LOG_DEBUG, "*** %s: resolved IP=[%s]", __FUNCTION__, ip);
-		}
 		else
 			return code; /* couldn't resolve */
 	}
