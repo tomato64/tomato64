@@ -1221,8 +1221,6 @@ static const char *get_address(int required)
 
 						logmsg(LOG_DEBUG, "*** %s: detected %s via %s, cached as %s until %ld", __FUNCTION__, normalized, services[service_num][0], s, expire);
 
-						success_msg("Update successful.", 0); /* do not exit! */
-
 						return addr;
 					}
 
@@ -1834,7 +1832,7 @@ static char *remove_spaces(const char *body)
 	/* allocate memory for the new string (plus null terminator) */
 	copy = (char *)malloc(length + 1);
 	if (!copy)
-		error("memory allocation failed");
+		error(M_ERROR_MEM_ALLOC);
 
 	/* copy non-space characters to the new string */
 	for (i = 0; body[i] != '\0'; i++) {
@@ -2167,6 +2165,7 @@ static void check_cookie(void)
 
 	logmsg(LOG_DEBUG, "*** %s: " M_SAME_IP " (%s)", __FUNCTION__, c);
 	puts(M_SAME_IP);
+	save_msg(M_SAME_IP);
 
 	logmsg(LOG_DEBUG, "*** %s: EXIT", __FUNCTION__);
 
