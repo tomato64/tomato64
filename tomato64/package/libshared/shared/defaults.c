@@ -661,6 +661,9 @@ struct nvram_tuple router_defaults[] = {
 
 	{ "lan_state",			"1"				, 0 },	/* Show Ethernet LAN ports state (0|1) */
 	{ "lan_desc",			"1"				, 0 },	/* Show Ethernet LAN ports state (0|1) */
+#ifndef TOMATO64
+	{ "eth_desc",			""				, 0 },	/* Ethernet port custom descriptions (MAX_PORT_ID+1 entries, separated by %) */
+#endif /* TOMATO64 */
 #if defined(TOMATO64_BPIR3MINI) || defined(TOMATO64_R6S) || defined(TOMATO64_R5S) || defined(TOMATO64_R76S)
 	{ "lan_invert",			"1"				, 0 },	/* Invert Ethernet LAN ports state (0|1) */
 #else

@@ -238,17 +238,50 @@ function calcWanPortCount() {
 }
 
 /* TOMATO64-REMOVE-BEGIN */
+function ethDescClean(s) {
+	return (s || '').replace(/[%\r\n]/g, '').substring(0, 8);
+}
+
+function ethDescKey(ev, e) {
+	ev = ev || window.event;
+	if (((ev.which || ev.keyCode) == 13 || (ev.keyCode == 27)) && e) {
+		e.blur();
+		return false;
+	}
+	return true;
+}
+
+function editEthDesc(i) {
+	var e = E('ethdesc_'+i);
+	if (!e)
+		return false;
+
+	e.focus();
+	try {
+		e.select();
+	}
+	catch (ex) {
+	}
+	return false;
+}
+
 function ethstates() {
 	var port = etherstates.port0;
 	if (port == 'disabled')
 		return 0;
 
 	var state = [];
+	var ed = (nvram.eth_desc || '').split('%');
 	var u, uidx, code = '', v = 0;
 	var portsDiv = E('ports');
 
 	if (!portsDiv._ether_ports_built) {
 		code ='<div class="section-title">Ethernet Ports State<\/div><div class="section"><table class="fields"><tr>';
+
+		for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
+			code += '<td class="title indent2"><input type="text" id="ethdesc_'+uidx+'" maxlength="12" value="'+escapeHTML(ethDescClean(ed[uidx]))+'" placeholder="Click to edit" title="Click to edit" onkeydown="return ethDescKey(event, this)" onblur="saveEthDesc()" style="text-align:center;width:7em;max-width:100%;border:0;background:transparent;cursor:pointer"><\/td>';
+		}
+		code += '<td class="content"><\/td><\/tr><tr>';
 
 		/* WANs */
 		v = calcWanPortCount();
@@ -260,7 +293,7 @@ function ethstates() {
 
 		code += '<td class="content"><\/td><\/tr><tr>';
 		for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
-			code += '<td class="title indent2"><span class="eth-icon" id="ethsvg_'+uidx+'"><\/span><span id="ethcap_'+uidx+'"><\/span><\/td>';
+			code += '<td class="title indent2" onclick="return editEthDesc('+uidx+')" title="Click to edit port name" style="cursor:pointer"><span class="eth-icon" id="ethsvg_'+uidx+'"><\/span><span id="ethcap_'+uidx+'"><\/span><\/td>';
 		}
 
 		code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="6" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
@@ -289,6 +322,24 @@ function ethstates() {
 		if (cap)
 			cap.innerHTML = (stats.lan_desc == '1') ? (state[1] || '') : '';
 	}
+}
+
+function saveEthDesc() {
+	var i, e, v, d = [];
+	for (i = 0; i <= MAX_PORT_ID; ++i) {
+		e = E('ethdesc_'+i);
+		if (!e) continue;
+		v = ethDescClean(e.value);
+		if (e.value != v) e.value = v;
+		d.push(v);
+	}
+	d = d.join('%');
+	if ((nvram.eth_desc || '') == d)
+		return;
+
+	nvram.eth_desc = d;
+	var cmd = new XmlHttp();
+	cmd.post('shell.cgi', 'action=execute&command='+escapeCGI(('nvram set eth_desc="'+d.replace(/["\\$`]/g, '\\$&')+'"\nnvram commit').replace(/\r/g, '')));
 }
 /* TOMATO64-REMOVE-END */
 

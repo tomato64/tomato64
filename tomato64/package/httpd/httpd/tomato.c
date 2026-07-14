@@ -714,6 +714,9 @@ static const nvset_t nvset_list[] = {
 
 	{ "lan_state",			V_01				},
 	{ "lan_desc",			V_01				},
+#ifndef TOMATO64
+	{ "eth_desc",			V_LENGTH(0, 120)		},
+#endif /* TOMATO64 */
 	{ "lan_invert",			V_01				},
 	{ "lan_dhcp",			V_01				},	/* DHCP client [0|1] - obtain a LAN (br0) IP via DHCP */
 	{ "lan_proto",			V_WORD				},	/* static, dhcp */
