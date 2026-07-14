@@ -132,7 +132,7 @@ static void route_adddel(const char *ip, unsigned int add)
 		if (f_read_string(MDU_ROUTE_FN, buf, sizeof(buf)) > 2) { /* default_route_fragment */
 			memset(cmd, 0, sizeof(cmd)); /* reset */
 			if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s %s", (add ? "add" : "del"), ip, buf) >= sizeof(cmd))
-				logmsg(LOG_WARNING, "*** %s: route cmd truncated", __FUNCTION__);
+				logmsg(LOG_ERR, "%s: route cmd truncated", __FUNCTION__);
 
 			logmsg(LOG_DEBUG, "*** %s: cmd=%s", __FUNCTION__, cmd);
 			system(cmd);
@@ -140,7 +140,7 @@ static void route_adddel(const char *ip, unsigned int add)
 
 		memset(cmd, 0, sizeof(cmd)); /* reset */
 		if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s dev %s %s metric 50000", (add ? "add" : "del"), ip, ifname, buf2) >= sizeof(cmd))
-			logmsg(LOG_WARNING, "*** %s: route cmd truncated", __FUNCTION__);
+			logmsg(LOG_ERR, "%s: route cmd truncated", __FUNCTION__);
 
 		logmsg(LOG_DEBUG, "*** %s: cmd=%s", __FUNCTION__, cmd);
 		system(cmd);
@@ -263,7 +263,7 @@ static const char *get_option_required(const char *name)
 	if ((p = get_option(name)) != NULL)
 		return p;
 
-	logmsg(LOG_DEBUG, "required option --%s is missing", name);
+	logmsg(LOG_ERR, "required option --%s is missing", name);
 	fprintf(stderr, "Required option --%s is missing.\n", name);
 
 	exit(2);
@@ -285,7 +285,7 @@ static int get_option_onoff(const char *name, int def)
 	if ((strcmp(p, "off") == 0) || (strcmp(p, "0") == 0))
 		return 0;
 
-	logmsg(LOG_DEBUG, "--%s requires the value off/on or 0/1", name);
+	logmsg(LOG_ERR, "--%s requires the value off/on or 0/1", name);
 	fprintf(stderr, "--%s requires the value off/on or 0/1.\n", name);
 
 	exit(2);
@@ -574,12 +574,12 @@ static int curl_resolve_ip(const unsigned int ssl, const char *url, const char *
 		if (strlcpy(ip_buf, ip, ip_buf_sz) < ip_buf_sz)
 			ok = 1;
 		else
-			logmsg(LOG_WARNING, "*** %s: resolved IP truncated", __FUNCTION__);
+			logmsg(LOG_ERR, "%s: resolved IP truncated", __FUNCTION__);
 	}
 	else {
 		memset(curl_err_str, 0, sizeof(curl_err_str));
 		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (strlen(errbuf) ? errbuf : curl_easy_strerror(r)));
-		logmsg(LOG_DEBUG, "*** %s: error - (%s)", __FUNCTION__, curl_err_str);
+		logmsg(LOG_ERR, "%s: error - (%s)", __FUNCTION__, curl_err_str);
 	}
 
 	curl_cleanup();
@@ -618,7 +618,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	/* build URL */
 	memset(url, 0, HALF_BLOB); /* reset */
 	if (snprintf(url, sizeof(url), "%s%s", host, query) >= (int)sizeof(url))
-		logmsg(LOG_WARNING, "*** %s: URL truncated", __FUNCTION__);
+		logmsg(LOG_ERR, "%s: URL truncated", __FUNCTION__);
 
 	memset(ip, 0, sizeof(ip)); /* reset */
 	/* resolve IP for routing if MultiWAN */
@@ -712,7 +712,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	else {
 		memset(curl_err_str, 0, sizeof(curl_err_str));
 		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, errbuf[0] ? errbuf : curl_easy_strerror(r));
-		logmsg(LOG_DEBUG, "*** %s: error - %s", __FUNCTION__, curl_err_str);
+		logmsg(LOG_ERR, "%s: error - %s", __FUNCTION__, curl_err_str);
 	}
 
 	fclose(curl_wbuf);
@@ -786,13 +786,13 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		pass_len = strlen(pass);
 
 		if (user_len > (size_t) - 1 - pass_len - 2) {
-			logmsg(LOG_DEBUG, "*** %s: authentication data too long", __FUNCTION__);
+			logmsg(LOG_ERR, "%s: authentication data too long", __FUNCTION__);
 			return -1;
 		}
 
 		auth_len = user_len + 1 + pass_len;
 		if (auth_len > ((((size_t) - 1) - 1) / 4) * 3) {
-			logmsg(LOG_DEBUG, "*** %s: authentication data too long", __FUNCTION__);
+			logmsg(LOG_ERR, "%s: authentication data too long", __FUNCTION__);
 			return -1;
 		}
 		auth64_len = ((auth_len + 2) / 3) * 4 + 1;
@@ -802,7 +802,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		if (!authbuf || !auth64) {
 			free(authbuf);
 			free(auth64);
-			logmsg(LOG_DEBUG, "*** %s: malloc failed", __FUNCTION__);
+			logmsg(LOG_ERR, "%s: malloc failed", __FUNCTION__);
 			return -1;
 		}
 
@@ -811,7 +811,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		if ((i < 0) || ((size_t)i >= auth64_len)) {
 			free(authbuf);
 			free(auth64);
-			logmsg(LOG_DEBUG, "*** %s: base64 encoding failed", __FUNCTION__);
+			logmsg(LOG_ERR, "%s: base64 encoding failed", __FUNCTION__);
 			return -1;
 		}
 		auth64[i] = '\0';
@@ -842,14 +842,14 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 #undef APPEND_REQUEST
 
 	if (request_truncated) {
-		logmsg(LOG_WARNING, "*** %s: request header truncated", __FUNCTION__);
+		logmsg(LOG_ERR, "%s: request header truncated", __FUNCTION__);
 		return -1;
 	}
 
 	/* duplicate for sending */
 	request = strdup(blob);
 	if (!request) {
-		logmsg(LOG_DEBUG, "*** %s: strdup failed", __FUNCTION__);
+		logmsg(LOG_ERR, "%s: strdup failed", __FUNCTION__);
 		return -1;
 	}
 
@@ -1095,7 +1095,7 @@ static int read_tmaddr(const char *name, long *tm, char *addr, size_t addr_sz)
 #endif
 			   )) {
 				if (strlen(parsed_addr) >= addr_sz) {
-					logmsg(LOG_DEBUG, "*** %s: address does not fit destination buffer", __FUNCTION__);
+					logmsg(LOG_ERR, "%s: address does not fit destination buffer", __FUNCTION__);
 					return 0;
 				}
 
@@ -1179,7 +1179,7 @@ static const char *get_address(int required)
 					len = end - p;
 
 					if ((len == 0) || (len >= sizeof(addr))) {
-						logmsg(LOG_DEBUG, "*** %s: invalid length from %s", __FUNCTION__, services[service_num][0]);
+						logmsg(LOG_WARNING, "%s: invalid length from %s", __FUNCTION__, services[service_num][0]);
 						continue;
 					}
 
@@ -1226,7 +1226,7 @@ static const char *get_address(int required)
 						return addr;
 					}
 
-					logmsg(LOG_DEBUG, "*** %s: invalid address format from %s: %s", __FUNCTION__, services[service_num][0], addr);
+					logmsg(LOG_WARNING, "%s: invalid address format from %s: %s", __FUNCTION__, services[service_num][0], addr);
 				}
 			}
 
