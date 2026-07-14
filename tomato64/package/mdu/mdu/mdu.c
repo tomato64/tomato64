@@ -1879,6 +1879,36 @@ static int cloudflare_errorcheck(const int code, const char *req, char *body)
 	return -1;
 }
 
+static const char *cloudflare_record_type(const char *addr)
+{
+	struct in_addr ipv4;
+#ifdef TCONFIG_IPV6
+	struct in6_addr ipv6;
+#endif
+
+	if (inet_pton(AF_INET, addr, &ipv4) == 1)
+		return "A";
+#ifdef TCONFIG_IPV6
+	if (inet_pton(AF_INET6, addr, &ipv6) == 1)
+		return "AAAA";
+#endif
+
+	return NULL;
+}
+
+static int cloudflare_content_matches(const char *content, const char *addr)
+{
+	const char *quote;
+	size_t len;
+
+	quote = strchr(content, '"');
+	if (quote == NULL)
+		return 0;
+
+	len = quote - content;
+	return (strlen(addr) == len) && (strncmp(addr, content, len) == 0);
+}
+
 /* warning! doesn't work (in libcurl version) with dump enabled! */
 static void update_cloudflare(const unsigned int ssl)
 {
@@ -1890,6 +1920,7 @@ static void update_cloudflare(const unsigned int ssl)
 	char *body_copy = NULL;
 	long s;
 	const char *addr;
+	const char *record_type;
 	int prox, r, current_proxied;
 	char *find;
 	char *found;
@@ -1900,8 +1931,14 @@ static void update_cloudflare(const unsigned int ssl)
 
 	zone = get_option_required("url");
 	host = get_option_required("host");
+	addr = get_address(1);
+	prox = get_option_onoff("wildcard", 0);
+	record_type = cloudflare_record_type(addr);
+	if (record_type == NULL)
+		error(M_INVALID_PARAM__S, "addr");
+
 	/* +opt +opt */
-	snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records?type=A&name=%s&order=name&direction=asc", zone, host);
+	snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records?type=%s&name=%s&order=name&direction=asc", zone, record_type, host);
 
 	s = http_req(ssl, 1, "api.cloudflare.com", query, header, 0, &body);
 
@@ -1915,9 +1952,6 @@ static void update_cloudflare(const unsigned int ssl)
 		error(M_ERROR_MEM_ALLOC);
 
 	r = cloudflare_errorcheck(s, "GET", body_copy);
-
-	addr = get_address(1);
-	prox = get_option_onoff("wildcard", 0);
 
 	if (r == 1) { /* no existing record - create with POST */
 		if (get_option_onoff("backmx", 0)) {
@@ -1938,7 +1972,7 @@ static void update_cloudflare(const unsigned int ssl)
 		}
 
 		found += strlen(find);
-		if (strncmp(addr, found, strlen(addr)) == 0) {
+		if (cloudflare_content_matches(found, addr)) {
 			/* IP is the same - check proxied flag consistency */
 			current_proxied = (strstr(body_copy, "\"proxied\":true") != NULL);
 			if ((prox && current_proxied) || (!prox && !current_proxied)) {
@@ -1977,7 +2011,7 @@ static void update_cloudflare(const unsigned int ssl)
 	body_copy = NULL;
 
 	/* prepare JSON payload */
-	snprintf(data, QUARTER_BLOB, "{\"content\":\"%s\",\"name\":\"%s\",\"proxied\":%s,\"type\":\"A\"}", addr, host, (prox ? "true" : "false"));
+	snprintf(data, QUARTER_BLOB, "{\"content\":\"%s\",\"name\":\"%s\",\"proxied\":%s,\"type\":\"%s\"}", addr, host, (prox ? "true" : "false"), record_type);
 
 	/* POST for create, PUT for update */
 	s = _http_req(ssl, 1, "api.cloudflare.com", (r == 1) ? "POST" : "PUT", query, header, 0, data, &body);
