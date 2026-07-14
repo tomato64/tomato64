@@ -37,7 +37,7 @@
 #endif
 
 #define VERSION			"2.2"
-#define AGENT			"Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/109.0"
+#define AGENT			"curl/8.20.0"
 #define MAX_OPTION_LENGTH	256
 #define BLOB_SIZE		(4 * 1024)
 #define HALF_BLOB		(BLOB_SIZE >> 1)
