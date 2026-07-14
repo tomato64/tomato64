@@ -987,9 +987,11 @@ static long http_req(const unsigned int ssl, int static_host, const char *host, 
 	return _http_req(ssl, static_host, host, "GET", get, header, auth, NULL, body);
 }
 
-static int read_tmaddr(const char *name, long *tm, char *addr)
+static int read_tmaddr(const char *name, long *tm, char *addr, size_t addr_sz)
 {
 	char s[192];
+	char parsed_addr[INET6_ADDRSTRLEN];
+	char extra[2];
 	struct in_addr ipv4;
 #ifdef TCONFIG_IPV6
 	struct in6_addr ipv6;
@@ -997,16 +999,28 @@ static int read_tmaddr(const char *name, long *tm, char *addr)
 
 	logmsg(LOG_DEBUG, "*** %s: IN cachename: %s", __FUNCTION__, name);
 
-	memset(s, 0, sizeof(s)); /* reset */
-	if (f_read_string(name, s, sizeof(s)) > 0) {
-		if (sscanf(s, "%ld,%63s", tm, addr) == 2) {
-			logmsg(LOG_DEBUG, "*** %s: tm=%ld addr=%s", __FUNCTION__, *tm, addr);
+	if ((addr == NULL) || (addr_sz == 0))
+		return 0;
 
-			if (*tm > 0 && (inet_pton(AF_INET, addr, &ipv4) == 1
+	memset(s, 0, sizeof(s)); /* reset */
+	memset(parsed_addr, 0, sizeof(parsed_addr));
+	memset(extra, 0, sizeof(extra));
+
+	if (f_read_string(name, s, sizeof(s)) > 0) {
+		if (sscanf(s, "%ld,%45s%1s", tm, parsed_addr, extra) == 2) {
+			logmsg(LOG_DEBUG, "*** %s: tm=%ld addr=%s", __FUNCTION__, *tm, parsed_addr);
+
+			if (*tm > 0 && (inet_pton(AF_INET, parsed_addr, &ipv4) == 1
 #ifdef TCONFIG_IPV6
-			                || inet_pton(AF_INET6, addr, &ipv6) == 1
+			                || inet_pton(AF_INET6, parsed_addr, &ipv6) == 1
 #endif
 			   )) {
+				if (strlen(parsed_addr) >= addr_sz) {
+					logmsg(LOG_DEBUG, "*** %s: address does not fit destination buffer", __FUNCTION__);
+					return 0;
+				}
+
+				strlcpy(addr, parsed_addr, addr_sz);
 				return 1;
 			}
 		}
@@ -1044,7 +1058,7 @@ static const char *get_address(int required)
 
 			strlcpy(cache_name, get_option_required("addrcache"), sizeof(cache_name));
 
-			if (read_tmaddr(cache_name, &et, addr)) {
+			if (read_tmaddr(cache_name, &et, addr, sizeof(addr))) {
 				if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE)) {
 					logmsg(LOG_DEBUG, "*** %s: OUT using cached address %s from %s (expires in %ld s)", __FUNCTION__, addr, cache_name, (et - ut));
 					return addr;
@@ -2019,12 +2033,12 @@ static void update_custom(void)
 static void check_cookie(void)
 {
 	const char *c;
-	char addr[16];
+	char addr[INET6_ADDRSTRLEN];
 	long tm;
 
 	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
 
-	if (((c = get_option("cookie")) == NULL) || (!read_tmaddr(c, &tm, addr))) {
+	if (((c = get_option("cookie")) == NULL) || (!read_tmaddr(c, &tm, addr, sizeof(addr)))) {
 		logmsg(LOG_DEBUG, "*** %s: no cookie", __FUNCTION__);
 		return;
 	}
