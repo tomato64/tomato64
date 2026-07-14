@@ -472,37 +472,53 @@ static void curl_setup(const unsigned int ssl)
 
 static struct curl_slist *curl_headers(const char *header)
 {
-	char *sub = NULL;
-	struct curl_slist *tmp = NULL;
-	size_t n = strlen(header);
+	const char *start, *end;
+	struct curl_slist *tmp;
+	char *line;
+	size_t line_len;
+
 	headers = NULL;
 
 	if (!header)
 		return NULL;
 
-	sub = strstr(header, "\r\n");
-	while (sub || (n > 0)) {
-		if (sub)
-			sub = NULL;
-		if (header) {
-			tmp = curl_slist_append(headers, header);
+	start = header;
+	while (*start) {
+		end = strchr(start, '\n');
+		if (end)
+			line_len = end - start;
+		else
+			line_len = strlen(start);
+
+		if (line_len && (start[line_len - 1] == '\r'))
+			line_len--;
+
+		if (line_len) {
+			line = malloc(line_len + 1);
+			if (!line) {
+				curl_slist_free_all(headers);
+				curl_cleanup();
+				error(M_ERROR_MEM_ALLOC);
+			}
+
+			memcpy(line, start, line_len);
+			line[line_len] = '\0';
+
+			tmp = curl_slist_append(headers, line);
+			free(line);
 			if (tmp == NULL) {
 				curl_slist_free_all(headers);
 				curl_cleanup();
 				error("libcurl header failure.");
 			}
-		}
-		if (sub) {
-			n -= sub + 2 - header;
-			headers = tmp;
-			header = sub + 2;
-			*sub = '\r';
-			sub = strstr(header, "\r\n");
-		}
-		else {
-			n = 0;
+
 			headers = tmp;
 		}
+
+		if (!end)
+			break;
+
+		start = end + 1;
 	}
 
 	return headers;
