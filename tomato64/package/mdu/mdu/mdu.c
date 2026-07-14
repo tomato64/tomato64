@@ -972,7 +972,6 @@ connected:
 	blob[i >= 0 ? i : 0] = '\0'; /* null-terminate the string */
 
 	fclose(f);
-	close(sockfd);
 
 	/* make dump */
 	if ((c = get_dump_name()) != NULL) {
