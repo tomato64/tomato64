@@ -770,7 +770,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	APPEND_REQUEST(httpv);
 	APPEND_REQUEST("\r\nHost: ");
 	APPEND_REQUEST(host);
-	APPEND_REQUEST("\r\n");
+	APPEND_REQUEST("\r\nConnection: close\r\n");
 
 	if (!header)
 		APPEND_REQUEST("User-Agent: " AGENT "\r\nCache-Control: no-cache\r\n");
