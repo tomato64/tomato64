@@ -2059,7 +2059,14 @@ static void update_custom(void)
 	char buffer[INET6_ADDRSTRLEN];
 #endif /* TCONFIG_IPV6 */
 
-	/* https://user:pass@domain:port/path?query */
+	/*
+	 * Custom URL format:
+	 *   http[s]://domain[:port]/path?query
+	 *
+	 * URL userinfo (user:pass@) is not parsed here. If present, it is
+	 * only used as an authentication marker; http_req() still reads the
+	 * Basic authentication credentials from the user/pass options.
+	 */
 
 	strlcpy(url, get_option_required("url"), sizeof(url));
 	https = 0;
