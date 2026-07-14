@@ -742,6 +742,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	size_t user_len, pass_len, auth_len, auth64_len;
 	const char *c_ip, *c;
 	long i;
+	int request_truncated = 0;
 	struct addrinfo hints;
 	struct addrinfo *result, *rp;
 	struct timeval tv;
@@ -758,17 +759,25 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		host = get_option_or("server", host);
 
 	/* build request header */
-	strlcpy(a, req, sizeof(a));
-	strlcat(a, " ", sizeof(a));
-	strlcat(a, query, sizeof(a));
-	strlcat(a, " ", sizeof(a));
-	strlcat(a, httpv, sizeof(a));
-	strlcat(a, "\r\nHost: ", sizeof(a));
-	strlcat(a, host, sizeof(a));
-	strlcat(a, "\r\n", sizeof(a));
+#define APPEND_REQUEST(s) \
+	do { \
+		if (strlcat(blob, (s), BLOB_SIZE) >= BLOB_SIZE) \
+			request_truncated = 1; \
+	} while (0)
+
+	memset(blob, 0, BLOB_SIZE);
+	if (strlcpy(blob, req, BLOB_SIZE) >= BLOB_SIZE)
+		request_truncated = 1;
+	APPEND_REQUEST(" ");
+	APPEND_REQUEST(query);
+	APPEND_REQUEST(" ");
+	APPEND_REQUEST(httpv);
+	APPEND_REQUEST("\r\nHost: ");
+	APPEND_REQUEST(host);
+	APPEND_REQUEST("\r\n");
 
 	if (!header)
-		strlcat(a, "User-Agent: " AGENT "\r\nCache-Control: no-cache\r\n", sizeof(a));
+		APPEND_REQUEST("User-Agent: " AGENT "\r\nCache-Control: no-cache\r\n");
 
 	if (auth) {
 		user = get_option_required("user");
@@ -807,31 +816,35 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		}
 		auth64[i] = '\0';
 
-		strlcat(a, "Authorization: Basic ", sizeof(a));
-		strlcat(a, auth64, sizeof(a));
-		strlcat(a, "\r\n", sizeof(a));
+		APPEND_REQUEST("Authorization: Basic ");
+		APPEND_REQUEST(auth64);
+		APPEND_REQUEST("\r\n");
 
 		free(authbuf);
 		free(auth64);
 	}
 
 	if (header) {
-		strlcat(a, header, sizeof(a));
+		APPEND_REQUEST(header);
 		if (header[strlen(header)-1] != '\n')
-			strlcat(a, "\r\n", sizeof(a));
+			APPEND_REQUEST("\r\n");
 	}
 
 	if (data) {
 		snprintf(clen, sizeof(clen), "Content-Length: %zu\r\n", strlen(data));
-		strlcat(a, clen, sizeof(a));
+		APPEND_REQUEST(clen);
 	}
 
-	strlcat(a, "\r\n", sizeof(a));
+	APPEND_REQUEST("\r\n");
 	if (data)
-		strlcat(a, data, sizeof(a));
+		APPEND_REQUEST(data);
 
-	if (snprintf(blob, BLOB_SIZE, "%s", a) >= BLOB_SIZE)
+#undef APPEND_REQUEST
+
+	if (request_truncated) {
 		logmsg(LOG_WARNING, "*** %s: request header truncated", __FUNCTION__);
+		return -1;
+	}
 
 	/* duplicate for sending */
 	request = strdup(blob);
