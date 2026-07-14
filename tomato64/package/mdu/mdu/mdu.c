@@ -1155,7 +1155,7 @@ static const char *get_address(int required)
 				service_num = indices[n];
 
 				body = NULL;
-				if (http_req(0, 1, services[service_num][0], services[service_num][1], NULL, 0, &body) == 200 && body) { /* do not use ssl */
+				if (http_req(1, 1, services[service_num][0], services[service_num][1], NULL, 0, &body) == 200 && body) { /* use ssl */
 					/* body points to global blob - no free needed */
 					if ((p = strstr(body, "Address:")) != NULL) /* dyndns */
 						p += 8;
