@@ -736,7 +736,10 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	char *request = NULL;
 	char *httpv, *colon, *body_start;
 	int port;
-	char a[512], b[512], authbuf[512];
+	char a[512];
+	char *authbuf, *auth64;
+	const char *user, *pass;
+	size_t user_len, pass_len, auth_len, auth64_len;
 	const char *c_ip, *c;
 	long i;
 	struct addrinfo hints;
@@ -768,12 +771,48 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		strlcat(a, "User-Agent: " AGENT "\r\nCache-Control: no-cache\r\n", sizeof(a));
 
 	if (auth) {
-		snprintf(authbuf, sizeof(authbuf), "%s:%s", get_option_required("user"), get_option_required("pass"));
-		i = base64_encode(authbuf, b, strlen(authbuf));
-		b[i] = '\0';
+		user = get_option_required("user");
+		pass = get_option_required("pass");
+		user_len = strlen(user);
+		pass_len = strlen(pass);
+
+		if (user_len > (size_t) - 1 - pass_len - 2) {
+			logmsg(LOG_DEBUG, "*** %s: authentication data too long", __FUNCTION__);
+			return -1;
+		}
+
+		auth_len = user_len + 1 + pass_len;
+		if (auth_len > ((((size_t) - 1) - 1) / 4) * 3) {
+			logmsg(LOG_DEBUG, "*** %s: authentication data too long", __FUNCTION__);
+			return -1;
+		}
+		auth64_len = ((auth_len + 2) / 3) * 4 + 1;
+
+		authbuf = malloc(auth_len + 1);
+		auth64 = malloc(auth64_len);
+		if (!authbuf || !auth64) {
+			free(authbuf);
+			free(auth64);
+			logmsg(LOG_DEBUG, "*** %s: malloc failed", __FUNCTION__);
+			return -1;
+		}
+
+		snprintf(authbuf, auth_len + 1, "%s:%s", user, pass);
+		i = base64_encode(authbuf, auth64, auth_len);
+		if ((i < 0) || ((size_t)i >= auth64_len)) {
+			free(authbuf);
+			free(auth64);
+			logmsg(LOG_DEBUG, "*** %s: base64 encoding failed", __FUNCTION__);
+			return -1;
+		}
+		auth64[i] = '\0';
+
 		strlcat(a, "Authorization: Basic ", sizeof(a));
-		strlcat(a, b, sizeof(a));
+		strlcat(a, auth64, sizeof(a));
 		strlcat(a, "\r\n", sizeof(a));
+
+		free(authbuf);
+		free(auth64);
 	}
 
 	if (header) {
