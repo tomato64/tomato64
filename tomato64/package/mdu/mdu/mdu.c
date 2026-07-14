@@ -418,10 +418,21 @@ static int curl_dump_cb(CURL *handle, curl_infotype type, char *data, size_t siz
 
 static void curl_cleanup()
 {
-	if (curl_dfile)
-		fclose(curl_dfile);
+	if (headers) {
+		curl_slist_free_all(headers);
+		headers = NULL;
+	}
 
-	curl_easy_cleanup(curl_handle);
+	if (curl_dfile) {
+		fclose(curl_dfile);
+		curl_dfile = NULL;
+	}
+
+	if (curl_handle) {
+		curl_easy_cleanup(curl_handle);
+		curl_handle = NULL;
+	}
+
 	curl_global_cleanup();
 }
 
@@ -496,7 +507,6 @@ static struct curl_slist *curl_headers(const char *header)
 		if (line_len) {
 			line = malloc(line_len + 1);
 			if (!line) {
-				curl_slist_free_all(headers);
 				curl_cleanup();
 				error(M_ERROR_MEM_ALLOC);
 			}
@@ -507,7 +517,6 @@ static struct curl_slist *curl_headers(const char *header)
 			tmp = curl_slist_append(headers, line);
 			free(line);
 			if (tmp == NULL) {
-				curl_slist_free_all(headers);
 				curl_cleanup();
 				error("libcurl header failure.");
 			}
@@ -573,7 +582,6 @@ static int curl_resolve_ip(const unsigned int ssl, const char *url, const char *
 		logmsg(LOG_DEBUG, "*** %s: error - (%s)", __FUNCTION__, curl_err_str);
 	}
 
-	curl_slist_free_all(headers);
 	curl_cleanup();
 
 	if (stop == 1)
@@ -716,7 +724,6 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		fflush(curl_dfile);
 	}
 
-	curl_slist_free_all(headers);
 	curl_cleanup();
 
 	if (stop)
