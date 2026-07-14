@@ -1178,12 +1178,19 @@ static int get_address6(char *buf, const size_t buf_sz)
 }
 #endif /* TCONFIG_IPV6 */
 
-static void append_addr_option(char *buffer, const char *format)
+static void append_addr_option(char *buffer, size_t buffer_sz, const char *format)
 {
 	const char *c;
+	size_t len;
 
-	if ((c = get_address(0)) != NULL)
-		snprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), format, c);
+	if ((c = get_address(0)) == NULL)
+		return;
+
+	len = strlen(buffer);
+	if (len >= buffer_sz)
+		return;
+
+	snprintf(buffer + len, buffer_sz - len, format, c);
 }
 
 /*
@@ -1236,7 +1243,7 @@ static void update_dua(const char *type, const unsigned int ssl, const char *ser
 		snprintf(query + strlen(query), sizeof(query) - strlen(query), "mx=%s&backmx=%s&", p, (get_option_onoff("backmx", 0)) ? "YES" : "NO");
 
 	/* +opt */
-	append_addr_option(query, "myip=%s&");
+	append_addr_option(query, sizeof(query), "myip=%s&");
 
 	if (get_option_onoff("wildcard", 0))
 		strlcat(query, "wildcard=ON", sizeof(query));
@@ -1357,7 +1364,7 @@ static void update_namecheap(const unsigned int ssl)
 	snprintf(query, sizeof(query), "/update?host=%s&domain=%s&password=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
 
 	/* +opt */
-	append_addr_option(query, "&ip=%s");
+	append_addr_option(query, sizeof(query), "&ip=%s");
 
 	r = http_req(ssl, 0, "dynamicdns.park-your-domain.com", query, NULL, 0, &body);
 	if (r == 200) {
@@ -1439,7 +1446,7 @@ static void update_enom(const unsigned int ssl)
 	snprintf(query, sizeof(query), "/interface.asp?Command=SetDNSHost&HostName=%s&Zone=%s&DomainPassword=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
 
 	/* +opt */
-	append_addr_option(query, "&Address=%s");
+	append_addr_option(query, sizeof(query), "&Address=%s");
 
 	r = http_req(ssl, 0, "dynamic.name-services.com", query, NULL, 0, &body);
 	if (r == 200) {
@@ -1495,7 +1502,7 @@ static void update_dnsexit(const unsigned int ssl)
 	snprintf(query, sizeof(query), "/RemoteUpdate.sv?login=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
 
 	/* +opt */
-	append_addr_option(query, "&myip=%s");
+	append_addr_option(query, sizeof(query), "&myip=%s");
 
 	r = http_req(ssl, 0, "update.dnsexit.com", query, NULL, 0, &body);
 	if (r == 200) { /* (\d+)=.+ */
@@ -1558,7 +1565,7 @@ static void update_zoneedit(const unsigned int ssl)
 	snprintf(query, sizeof(query), "/auth/dynamic.html?host=%s", get_option_required("host"));
 
 	/* +opt */
-	append_addr_option(query, "&dnsto=%s");
+	append_addr_option(query, sizeof(query), "&dnsto=%s");
 
 	r = http_req(ssl, 0, "dynamic.zoneedit.com", query, NULL, 1, &body);
 	switch (r) {
@@ -1626,7 +1633,7 @@ static void update_afraid(const unsigned int ssl)
 	snprintf(query, sizeof(query), "/dynamic/update.php?%s", get_option_required("ahash"));
 
 	/* +opt */
-	append_addr_option(query, "&address=%s");
+	append_addr_option(query, sizeof(query), "&address=%s");
 
 	r = http_req(ssl, 0, "freedns.afraid.org", query, NULL, 0, &body);
 	if (r == 200) {
@@ -1913,7 +1920,7 @@ static void update_duckdns(const unsigned int ssl)
 	memset(query, 0, sizeof(query));
 	snprintf(query, sizeof(query), "/update?domains=%s&token=%s", get_option_required("host"), get_option_required("ahash"));
 
-	append_addr_option(query, "&ip=%s");
+	append_addr_option(query, sizeof(query), "&ip=%s");
 
 	r = http_req(ssl, 0, "www.duckdns.org", query, NULL, 0, &body);
 	if (r == 200) {
