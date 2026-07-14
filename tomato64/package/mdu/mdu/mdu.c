@@ -1175,7 +1175,7 @@ static const char *get_address(int required)
 					if (*p == '\0')
 						continue;
 
-					end = p + strcspn(p, " \t\r\n");
+					end = p + strcspn(p, " \t\r\n<");
 					len = end - p;
 
 					if ((len == 0) || (len >= sizeof(addr))) {
