@@ -221,27 +221,7 @@ function c(id, htm) {
 	E(id).cells[1].innerHTML = htm;
 }
 
-function calcWanPortCount() {
-	var count = 0;
-
-	for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
-		var u = (uidx > 1) ? uidx : '';
-		if ((nvram['wan'+u+'_proto'] != 'disabled')
-/* USB-BEGIN */
-		    && (nvram['wan'+u+'_proto'] != 'lte') && (nvram['wan'+u+'_proto'] != 'ppp3g')
-/* USB-END */
-		)
-			++count;
-	}
-
-	return count;
-}
-
 /* TOMATO64-REMOVE-BEGIN */
-function ethDescClean(s) {
-	return (s || '').replace(/[%\r\n]/g, '').substring(0, 8);
-}
-
 function ethDescKey(ev, e) {
 	ev = ev || window.event;
 	if (((ev.which || ev.keyCode) == 13 || (ev.keyCode == 27)) && e) {
@@ -272,37 +252,37 @@ function ethstates() {
 
 	var state = [];
 	var ed = (nvram.eth_desc || '').split('%');
-	var u, uidx, code = '', v = 0;
+	var uidx, displayIndex, code = '';
 	var portsDiv = E('ports');
 
 	if (!portsDiv._ether_ports_built) {
 		code ='<div class="section-title">Ethernet Ports State<\/div><div class="section"><table class="fields"><tr>';
 
 		for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
-			code += '<td class="title indent2"><input type="text" id="ethdesc_'+uidx+'" maxlength="12" value="'+escapeHTML(ethDescClean(ed[uidx]))+'" placeholder="Click to edit" title="Click to edit" onkeydown="return ethDescKey(event, this)" onblur="saveEthDesc()" style="text-align:center;width:7em;max-width:100%;border:0;background:transparent;cursor:pointer"><\/td>';
+			displayIndex = displayPortIndex(uidx);
+			code += '<td class="title indent2"><input type="text" id="ethdesc_'+displayIndex+'" maxlength="12" value="'+escapeHTML(ethDescClean(ed[displayIndex]))+'" placeholder="Click to edit" title="Click to edit" onkeydown="return ethDescKey(event, this)" onblur="saveEthDesc()" style="text-align:center;width:7em;max-width:100%;border:0;background:transparent;cursor:pointer"><\/td>';
 		}
 		code += '<td class="content"><\/td><\/tr><tr>';
 
-		/* WANs */
-		v = calcWanPortCount();
-		for (uidx = 0; uidx < v; ++uidx)
-			code += '<td class="title indent2"><b>WAN'+uidx+'<\/b><\/td>';
-		/* LANs - both cases: 4 Ports OR 8 Ports for RT-AC88U with RTL8365MB switch (EXTSW=y) */
-		for (uidx = v; uidx <= MAX_PORT_ID; ++uidx)
-			code += '<td class="title indent2"><b>LAN'+(v > 0 ? ((uidx < 5) ? (uidx - 1) : '4-7' ) : ((uidx < 5) ? (uidx) : '5-8' ))+'<\/b><\/td>';
+		for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
+			displayIndex = displayPortIndex(uidx);
+			code += '<td class="title indent2"><b>'+portCaption(displayIndex)+'<\/b><\/td>';
+		}
 
 		code += '<td class="content"><\/td><\/tr><tr>';
 		for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
-			code += '<td class="title indent2" onclick="return editEthDesc('+uidx+')" title="Click to edit port name" style="cursor:pointer"><span class="eth-icon" id="ethsvg_'+uidx+'"><\/span><span id="ethcap_'+uidx+'"><\/span><\/td>';
+			displayIndex = displayPortIndex(uidx);
+			code += '<td class="title indent2" onclick="return editEthDesc('+displayIndex+')" title="Click to edit port name" style="cursor:pointer"><span class="eth-icon" id="ethsvg_'+displayIndex+'"><\/span><span id="ethcap_'+displayIndex+'"><\/span><\/td>';
 		}
 
-		code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="6" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
+		code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="'+(MAX_PORT_ID + 2)+'" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
 		portsDiv.innerHTML = code;
 		portsDiv._ether_ports_built = 1;
 	}
 
 	for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
-		port = etherstates['port'+uidx];
+		displayIndex = displayPortIndex(uidx);
+		port = etherstates['port'+displayIndex];
 		if (port === undefined) continue;
 		state = _ethstates(port);
 		var p = (state[0] || '').split('_');
@@ -310,15 +290,16 @@ function ethstates() {
 		var du = p[2] || '';
 		var spn = parseInt(sp, 10);
 		if (!isFinite(spn) || (spn <= 0)) spn = 0;
-		sp = '' + spn;
+		sp = ''+spn;
 		du = (du || '').toUpperCase();
 		if ((du !== 'FD') && (du !== 'HD')) du = 'HD';
-		var o = E('ethsvg_' + uidx);
-		var captionText = renderEthIcon(o, sp, du, '');
+		var capText = portCaption(displayIndex);
+		var o = E('ethsvg_'+displayIndex);
+		renderEthIcon(o, sp, du, '');
 		if (o)
-			o.title = state[1] || '';
+			o.title = state[1] || capText;
 
-		var cap = E('ethcap_' + uidx);
+		var cap = E('ethcap_'+displayIndex);
 		if (cap)
 			cap.innerHTML = (stats.lan_desc == '1') ? (state[1] || '') : '';
 	}

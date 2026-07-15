@@ -58,12 +58,6 @@ ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_MIPSR2),$(TCONFIG_TOMATO64)),y)
 else
 	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/MIPSR2P-BEGIN/,/MIPSR2P-END/d"
 endif
-# Only include external switch options if EXTSW is enabled (RT-AC88U)
-ifneq ($(TCONFIG_EXTSW),y)
-	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/EXTSW-BEGIN/,/EXTSW-END/d"
-else
-	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/EXTSW-NO-BEGIN/,/EXTSW-NO-END/d"
-endif
 
 # Only include the CIFS pages if CIFS is configured in.
 ifneq ($(TCONFIG_CIFS),y)
@@ -271,7 +265,6 @@ ifneq ($(TCONFIG_USB),y)
 	rm -f $(INSTALLDIR)/www/wwan-sms.asp
 	sed -i $(INSTALLDIR)/www/tomato.css -e "/USB-BEGIN/,/USB-END/d"
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/USB-BEGIN/,/USB-END/d"
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/USB-BEGIN/,/USB-END/d"
 	sed -i $(INSTALLDIR)/www/admin-buttons.asp -e "/USB-BEGIN/,/USB-END/d"
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/USB-BEGIN/,/USB-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/USB-BEGIN/,/USB-END/d"
@@ -286,7 +279,6 @@ ifeq ($(TCONFIG_REMOVE_USBAPP),y)
 	rm -f $(INSTALLDIR)/www/wwan-sms.asp
 	sed -i $(INSTALLDIR)/www/tomato.css -e "/USB-BEGIN/,/USB-END/d"
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/USB-BEGIN/,/USB-END/d"
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/USB-BEGIN/,/USB-END/d"
 	sed -i $(INSTALLDIR)/www/admin-buttons.asp -e "/USB-BEGIN/,/USB-END/d"
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/USB-BEGIN/,/USB-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/USB-BEGIN/,/USB-END/d"
@@ -837,8 +829,6 @@ endif
 		-e "/WIREGUARD-BEGIN/d"	-e "/WIREGUARD-END/d" \
 		-e "/DDNS4CLS-BEGIN/d"	-e "/DDNS4CLS-END/d" \
 		-e "/DDNS2CLS-BEGIN/d"	-e "/DDNS2CLS-END/d" \
-		-e "/EXTSW-BEGIN/d"	-e "/EXTSW-END/d" \
-		-e "/EXTSW-NO-BEGIN/d"	-e "/EXTSW-NO-END/d" \
 		-e "/USBAP-BEGIN/d"	-e "/USBAP-END/d" \
 		-e "/MIPSR2P-BEGIN/d"	-e "/MIPSR2P-END/d" \
 		-e "/MIPSR2P-NO-BEGIN/d" -e "/MIPSR2P-NO-END/d" \

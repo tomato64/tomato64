@@ -3132,6 +3132,76 @@ function anon_update() {
 }
 
 /* TOMATO64-REMOVE-BEGIN */
+function calcWanPortCount() {
+	var count = 0;
+	var maxWan = parseInt(nvram.mwan_num, 10);
+	if (!isFinite(maxWan) || (maxWan < 1))
+		maxWan = 1;
+
+	for (var uidx = 1; uidx <= maxWan; ++uidx) {
+		var u = (uidx > 1) ? uidx : '';
+		var proto = nvram['wan'+u+'_proto'];
+
+		if ((proto != 'disabled')
+/* USB-BEGIN */
+		    && (proto != 'lte') && (proto != 'ppp3g')
+/* USB-END */
+		)
+			++count;
+	}
+
+	return count;
+}
+
+function ethDescClean(s) {
+	return (s || '').replace(/[%\r\n]/g, '').substring(0, 8);
+}
+
+function portDescription(i) {
+	var idx = parseInt(i, 10);
+	if (!isFinite(idx))
+		return i;
+
+	var wanCount = calcWanPortCount();
+
+	if (idx < wanCount)
+		return 'WAN'+idx;
+
+	/* Keep labels in sync between Status > Overview and Advanced > VLAN.
+	 * On 8-port devices the external switch is represented as a grouped
+	 * logical port.
+	 */
+	return 'LAN'+(wanCount > 0 ? ((idx < 5) ? (idx - 1) : '4-7') : ((idx < 5) ? idx : '5-8'));
+}
+
+function displayPortIndex(i) {
+	var idx = parseInt(i, 10);
+	if (!isFinite(idx))
+		return i;
+
+	return idx;
+}
+
+function portCaption(i, shorten) {
+	var idx = parseInt(i, 10);
+
+	if ((idx === 0) && (nvram.model == 'DSL-AC68U'))
+		return 'DLS';
+
+	var orig = portDescription(i);
+
+	if (!shorten)
+		return orig;
+
+	/* Keep captions compact for small VLAN header icons:
+	 * "LAN0" -> "L0", "WAN1" -> "W1", "LAN4-7" -> "L7".
+	 */
+	if (orig && orig.length > 1)
+		return String(orig).charAt(0) + String(orig).charAt(orig.length - 1);
+
+	return orig;
+}
+
 function insOvl() {
 	var ovlDiv, cntDiv;
 	var xox = null;
