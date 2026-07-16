@@ -155,21 +155,25 @@ mwwatchdogRun() {
 				continue
 			}
 
-			DEFAULT_ROUTE_FRAGMENT=$(ip route | grep default | cut -d' ' -f2-)
-			GATEWAY_FRAGMENT="via $(NG "$PREFIX"_gateway)"
-			[ "$ISPPPD" -eq 1 ] && { GATEWAY_FRAGMENT=""; SOURCE_ADDR=$(NG "$PREFIX"_ppp_get_ip); }
+			[ "$ISPPPD" -eq 1 ] && SOURCE_ADDR=$(NG "$PREFIX"_ppp_get_ip)
 
-			# add routes (see rc/mwan.c for mwwatchdog proto)
-			for IP in $IPLIST; do
-				[ -n "$DEFAULT_ROUTE_FRAGMENT" ] && {
-					ROUTE_EXEC="ip route add $IP $DEFAULT_ROUTE_FRAGMENT proto mwwatchdog"
+			[ "$MWAN" -gt 1 ] && {
+				DEFAULT_ROUTE_FRAGMENT=$(ip route | grep default | cut -d' ' -f2-)
+				GATEWAY_FRAGMENT="via $(NG "$PREFIX"_gateway)"
+				[ "$ISPPPD" -eq 1 ] && GATEWAY_FRAGMENT=""
+
+				# add routes (see rc/mwan.c for mwwatchdog proto)
+				for IP in $IPLIST; do
+					[ -n "$DEFAULT_ROUTE_FRAGMENT" ] && {
+						ROUTE_EXEC="ip route add $IP $DEFAULT_ROUTE_FRAGMENT proto mwwatchdog"
+						$LOGD $ROUTE_EXEC
+						$ROUTE_EXEC &>/dev/null
+					}
+					ROUTE_EXEC="ip route add $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000 proto mwwatchdog"
 					$LOGD $ROUTE_EXEC
 					$ROUTE_EXEC &>/dev/null
-				}
-				ROUTE_EXEC="ip route add $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000 proto mwwatchdog"
-				$LOGD $ROUTE_EXEC
-				$ROUTE_EXEC &>/dev/null
-			done
+				done
+			}
 
 			$LOGD "start test for: $IFACE ..."
 			case "$METHOD" in
@@ -180,17 +184,19 @@ mwwatchdogRun() {
 # BBT-END
 			esac
 
-			# remove routes (see rc/mwan.c for mwwatchdog proto)
-			for IP in $IPLIST; do
-				[ -n "$DEFAULT_ROUTE_FRAGMENT" ] && {
-					ROUTE_EXEC="ip route del $IP $DEFAULT_ROUTE_FRAGMENT proto mwwatchdog"
+			[ "$MWAN" -gt 1 ] && {
+				# remove routes (see rc/mwan.c for mwwatchdog proto)
+				for IP in $IPLIST; do
+					[ -n "$DEFAULT_ROUTE_FRAGMENT" ] && {
+						ROUTE_EXEC="ip route del $IP $DEFAULT_ROUTE_FRAGMENT proto mwwatchdog"
+						$LOGD $ROUTE_EXEC
+						$ROUTE_EXEC &>/dev/null
+					}
+					ROUTE_EXEC="ip route del $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000 proto mwwatchdog"
 					$LOGD $ROUTE_EXEC
 					$ROUTE_EXEC &>/dev/null
-				}
-				ROUTE_EXEC="ip route del $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000 proto mwwatchdog"
-				$LOGD $ROUTE_EXEC
-				$ROUTE_EXEC &>/dev/null
-			done
+				done
+			}
 
 			# handle WAN down
 			if [ "$RESULT" -eq 0 ]; then
