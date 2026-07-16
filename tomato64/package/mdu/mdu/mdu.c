@@ -123,6 +123,7 @@ static int mdu_mwan_route_enabled(void)
 	return (ifname[0] != '\0') && (nvram_get_int("mwan_num") > 1);
 }
 
+#if defined(USE_LIBCURL) || defined(TCONFIG_IPV6)
 static int mdu_http_af(void)
 {
 	if (mdu_http_force_af)
@@ -133,6 +134,7 @@ static int mdu_http_af(void)
 
 	return 0;
 }
+#endif /* USE_LIBCURL || TCONFIG_IPV6 */
 
 static int mdu_addr_family(const char *ip, char *normalized, size_t normalized_sz)
 {
@@ -182,7 +184,7 @@ static int mdu_ddns_auto_af(void)
 
 	return AF_INET;
 }
-#endif
+#endif /* TCONFIG_IPV6 */
 
 static int mdu_eval(const char *cmd, const char *path)
 {
@@ -802,7 +804,6 @@ static int mdu_resolve_ip(const unsigned int ssl, const char *host, char *ip_buf
 
 	return 0;
 }
-
 #endif /* USE_LIBCURL */
 
 static long _http_req(const unsigned int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body)
