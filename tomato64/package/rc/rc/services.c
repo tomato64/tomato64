@@ -3653,7 +3653,7 @@ void stop_service(const char *name)
 }
 
 #ifdef TCONFIG_BCMBSD
-int start_bsd(void)
+void start_bsd(void)
 {
 	int ret;
 	int bsd_enable = nvram_get_int("smart_connect_x");
@@ -3690,11 +3690,9 @@ int start_bsd(void)
 
 	stop_bsd();
 
-	/* 0 = off, 1 = on (all-band), 2 = 5 GHz only! (no support, maybe later) */
 	if (!bsd_enable) {
-		ret = -1;
 		logmsg(LOG_INFO, "wireless band steering disabled");
-		return ret;
+		return;
 	}
 	else
 		ret = eval("/usr/sbin/bsd");
@@ -3703,8 +3701,6 @@ int start_bsd(void)
 		logmsg(LOG_ERR, "starting wireless band steering failed ...");
 	else
 		logmsg(LOG_INFO, "wireless band steering is started");
-
-	return ret;
 }
 
 void stop_bsd(void)
