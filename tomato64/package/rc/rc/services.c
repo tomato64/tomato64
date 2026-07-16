@@ -503,9 +503,10 @@ void start_stubby(void)
 
 	mkdir_if_none("/etc/stubby");
 
+
 	/* alternative (user) configuration file */
 	if (f_exists(stubby_conf_alt)) {
-		eval("stubby", "-g", "-C", (char *)stubby_conf_alt);
+		eval("stubby", "-g", "-v", nvram_safe_get("stubby_log"), "-C", (char *)stubby_conf_alt);
 		return;
 	}
 
@@ -518,7 +519,7 @@ void start_stubby(void)
 		fprintf(fc, "%s\n", nvram_safe_get("stubby_custom"));
 		fclose(fc);
 
-		eval("stubby", "-g", "-C", (char *)stubby_conf_custom);
+		eval("stubby", "-g", "-v", nvram_safe_get("stubby_log"), "-C", (char *)stubby_conf_custom);
 		return;
 	}
 
