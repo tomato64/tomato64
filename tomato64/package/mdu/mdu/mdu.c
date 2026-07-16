@@ -960,6 +960,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	size_t user_len, pass_len, auth_len, auth64_len;
 	const char *c_ip, *c;
 	long i;
+	size_t header_len;
 	int request_truncated = 0;
 	struct addrinfo hints;
 	struct addrinfo *result, *rp;
@@ -1042,8 +1043,9 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	}
 
 	if (header) {
+		header_len = strlen(header);
 		APPEND_REQUEST(header);
-		if (header[strlen(header)-1] != '\n')
+		if ((header_len == 0) || (header[header_len - 1] != '\n'))
 			APPEND_REQUEST("\r\n");
 	}
 
