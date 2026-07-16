@@ -34,6 +34,7 @@ void copy_css_files(void)
 {
 	DIR *d;
 	struct dirent *de;
+	struct stat st;
 	char src[128];
 	const char *name;
 	int len;
@@ -47,19 +48,20 @@ void copy_css_files(void)
 		if (de->d_type == DT_DIR)
 			continue;
 
-		snprintf(src, sizeof(src), "/www/%s", name);
+		len = strlen(name);
+		if ((len <= 4) || (strcmp(name + len - 4, ".css") != 0))
+			continue;
+
+		snprintf(src, sizeof(src), "/www/%.122s", name);
 
 		if (de->d_type == DT_UNKNOWN) {
-			struct stat st;
 			if ((stat(src, &st) != 0) || (!S_ISREG(st.st_mode)))
 				continue;
 		}
 
-		len = strlen(name);
-		if (len > 4 && strcmp(name + len - 4, ".css") == 0) {
-			eval("cp", src, "/tmp");
-		}
+		eval("cp", src, "/tmp");
 	}
+
 	closedir(d);
 }
 

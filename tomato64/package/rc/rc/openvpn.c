@@ -676,7 +676,8 @@ void start_ovpn_client(int unit)
 
 #if defined(TCONFIG_BCMARM) && defined(TCONFIG_BCMSMP)
 	/* Spread clients on cpu 1,0 or 1,2,3,0 (in that order) */
-	snprintf(cpulist, sizeof(cpulist), "%d", (unit & cpu_num));
+	cpulist[0] = '0' + (unit & cpu_num);
+	cpulist[1] = '\0';
 	taskset_ret = cpu_eval(NULL, cpulist, buffer, "--cd", buffer2, "--config", "config.ovpn");
 
 	if (taskset_ret)
@@ -1303,7 +1304,8 @@ void start_ovpn_server(int unit)
 
 #if defined(TCONFIG_BCMARM) && defined(TCONFIG_BCMSMP)
 	/* Spread servers on cpu 1,0 or 1,2 (in that order) */
-	snprintf(cpulist, sizeof(cpulist), "%d", (unit & cpu_num));
+	cpulist[0] = '0' + (unit & cpu_num);
+	cpulist[1] = '\0';
 	taskset_ret = cpu_eval(NULL, cpulist, buffer, "--cd", buffer2, "--config", "config.ovpn");
 
 	if (taskset_ret)
@@ -1511,7 +1513,7 @@ void write_ovpn_dnsmasq_config(FILE *fp)
 
 		/* check for .conf files */
 		if (sscanf(fn, "client%d.con%c", &num, &ch) == 2 && ch == 'f') {
-			snprintf(buf, BUF_SIZE, "%s/%s", OVPN_DNS_DIR, fn);
+			snprintf(buf, BUF_SIZE, "%s/%.238s", OVPN_DNS_DIR, fn);
 			if (fappend(fp, buf) == -1) {
 				logmsg(LOG_WARNING, "fappend failed for %s (%s)", buf, strerror(errno));
 				continue;
@@ -1543,7 +1545,7 @@ int write_ovpn_resolv(FILE *fp)
 			continue;
 
 		if (sscanf(fn, "client%d.resol%c", &num, &ch) == 2 && ch == 'v') {
-			snprintf(buf, BUF_SIZE, "%s/%s", OVPN_DNS_DIR, fn);
+			snprintf(buf, BUF_SIZE, "%s/%.238s", OVPN_DNS_DIR, fn);
 			if (fappend(fp, buf) == -1) {
 				logmsg(LOG_WARNING, "fappend failed for %s (%s)", buf, strerror(errno));
 				continue;

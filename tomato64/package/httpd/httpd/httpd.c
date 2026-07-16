@@ -1341,7 +1341,10 @@ static void start_ssl(void)
 		}
 		erase_cert();
 
-		logmsg(retry ? LOG_WARNING : LOG_ERR, "unable to start SSL");
+		if (retry)
+			logmsg(LOG_WARNING, "unable to start SSL");
+		else
+			logmsg(LOG_ERR, "unable to start SSL");
 
 		if (!retry) {
 			file_unlock(lock);

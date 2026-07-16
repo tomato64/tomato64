@@ -385,8 +385,8 @@ static int wlconf(char *ifname, int unit, int subunit)
 #endif
 #ifdef TCONFIG_BCMBSD
 	char word[128], *next;
-	char prefix[] = "wlXXXXXXX_";
-	char prefix2[] = "wlXXXXXXX_";
+	char prefix[] = "wlXXXXXXXXXX_";
+	char prefix2[] = "wlXXXXXXXXXX_";
 	char tmp2[128];
 	int wlif_count = 0;
 	int i = 0;
@@ -1530,7 +1530,7 @@ void enable_ipv6(int enable)
 				/* do nothing */
 			}
 			else {
-				snprintf(s, sizeof(s), "ipv6/conf/%s/disable_ipv6", dirent->d_name);
+				snprintf(s, sizeof(s), "ipv6/conf/%.104s/disable_ipv6", dirent->d_name);
 				f_write_procsysnet(s, enable ? "0" : "1");
 			}
 		}

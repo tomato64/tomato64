@@ -2104,7 +2104,7 @@ int start_firewall(void)
 			if ((strcmp(dirent->d_name, ".") == 0) || (strcmp(dirent->d_name, "..") == 0))
 				continue;
 
-			snprintf(s, sizeof(s), "/proc/sys/net/ipv4/conf/%s/rp_filter", dirent->d_name);
+			snprintf(s, sizeof(s), "/proc/sys/net/ipv4/conf/%.29s/rp_filter", dirent->d_name);
 			enable_rp_filter = 1;
 
 			for (n = 1; n <= MWAN_MAX; n++) {

@@ -212,7 +212,7 @@ int exec_for_host(int host, int obsolete, uint flags, host_exec func)
 			if (sscanf(dp->d_name, "%d:%d:%d:%d", &host_no, &bus, &target, &lun) != 4)
 				continue;
 
-			snprintf(bfr, sizeof(bfr), "/sys/bus/scsi/devices/%s", dp->d_name);
+			snprintf(bfr, sizeof(bfr), "/sys/bus/scsi/devices/%d:%d:%d:%d", host_no, bus, target, lun);
 			if ((dir_host = opendir(bfr))) {
 				while ((dp = readdir(dir_host))) {
 					if (strncmp(dp->d_name, "block:", 6) != 0)

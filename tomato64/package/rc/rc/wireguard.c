@@ -2222,7 +2222,7 @@ void write_wg_dnsmasq_config(FILE* fp)
 			continue;
 
 		if (sscanf(fn, "wg%d.con%c", &num, &ch) == 2 && ch == 'f') {
-			snprintf(buf, BUF_SIZE, "%s/%s", WG_DNS_DIR, fn);
+			snprintf(buf, BUF_SIZE, "%s/%.236s", WG_DNS_DIR, fn);
 			if (fappend(fp, buf) == -1) {
 				logmsg(LOG_WARNING, "fappend failed for %s (%s)", buf, strerror(errno));
 				continue;

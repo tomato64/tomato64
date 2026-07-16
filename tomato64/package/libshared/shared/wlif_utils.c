@@ -201,7 +201,7 @@ get_real_mac(char *mac, int maclen)
 unsigned char *
 get_wlmacstr_by_unit(char *unit)
 {
-	char tmptr[] = "wlXXXXX_hwaddr";
+	char tmptr[] = "wlXXX.XX_hwaddr";
 	char *macaddr;
 
 	sprintf(tmptr, "wl%s_hwaddr", unit);
@@ -234,7 +234,7 @@ int
 get_wlname_by_mac(unsigned char *mac, char *wlname)
 {
 	char eabuf[18];
-	char tmptr[] = "wlXXXXX_hwaddr";
+	char tmptr[] = "wlXXX.XX_hwaddr";
 	char *wl_hw;
 	int i, j;
 
