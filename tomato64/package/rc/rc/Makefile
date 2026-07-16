@@ -87,7 +87,7 @@ OBJS := rc.o init.o interface.o network.o wan.o services.o dhcp.o \
 
 OBJS += wifi.o
 
-# mtd.o buttons.o wnas.o
+# mtd.o buttons.o wnas.o bcmutils.o
 
 ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_BLINK)),y)
 OBJS += blink.o blink_br.o
@@ -95,10 +95,6 @@ endif
 
 ifeq ($(TCONFIG_ROAM),y)
 OBJS += roamast.o
-endif
-
-ifeq ($(TCONFIG_BCMARM),y)
-OBJS += bcmutils.o
 endif
 
 ifeq ($(TCONFIG_BCMWL6),y)
@@ -179,10 +175,6 @@ endif
 
 ifeq ($(TCONFIG_TOR),y)
 OBJS += tor.o
-endif
-
-ifeq ($(TCONFIG_BCMARM),y)
-vpath %.c $(SRCBASE)/shared
 endif
 
 all: rc
