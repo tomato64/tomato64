@@ -378,18 +378,6 @@ extern int volume_id_probe_btrfs();
 #endif /* TOMATO64 */
 extern int volume_id_probe_linux_swap();
 
-/* busybox 1.38 moved this to libbb, add local copy */
-void format_uuid_DCE_37_chars(char *dst37, const uint8_t *buf)
-{
-	sprintf(dst37,
-		"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-		buf[0], buf[1], buf[2], buf[3],
-		buf[4], buf[5],
-		buf[6], buf[7],
-		buf[8], buf[9],
-		buf[10], buf[11], buf[12], buf[13], buf[14], buf[15]);
-}
-
 /* magic for ext2/3/4 detection */
 int check_magic(const unsigned char *buf, const char *magic)
 {

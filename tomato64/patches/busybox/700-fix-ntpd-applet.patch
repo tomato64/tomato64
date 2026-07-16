@@ -1,0 +1,15 @@
+--- busybox/networking/ntpd.c
++++ busybox/networking/ntpd.c
+@@ -585,8 +585,10 @@ d_to_lfp(l_fixedpt_t *lfp, double d)
+ {
+ 	uint32_t intl;
+ 	uint32_t frac;
+-	intl = (uint32_t)(time_t)d;
+-	frac = (uint32_t)((d - (time_t)d) * 0xffffffff);
++	if (d >= (double)(1ULL << 32))
++		d -= (double)(1ULL << 32);
++	intl = (uint32_t)d;
++	frac = (uint32_t)((d - intl) * 0xffffffff);
+ 	lfp->int_partl = htonl(intl);
+ 	lfp->fractionl = htonl(frac);
+ }

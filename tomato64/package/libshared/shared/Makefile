@@ -74,7 +74,8 @@ ALL_CFLAGS += -DDEBUG_LOGMSG
 endif
 
 OBJS = shutils.o wl.o wl_linux.o linux_timer.o defaults.o id.o misc.o \
-       led.o led_sysfs.o version.o base64.o files.o strings.o process.o nvparse.o usb.o
+       led.o led_sysfs.o version.o base64.o files.o strings.o process.o nvparse.o \
+       bb_uuid.o usb.o
 
 OBJS += \
 $(BUSYBOX_DIR)/util-linux/volume_id/ext.o \
