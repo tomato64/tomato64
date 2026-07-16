@@ -884,10 +884,14 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	else if (!strcmp(req, "PUT")) {
 		if (data) { /* only cloudflare (for now) */
 			curl_rbuf = fmemopen(data, strlen(data), "r");
-			if (curl_rbuf) {
-				curl_easy_setopt(curl_handle, CURLOPT_READDATA, (void *)curl_rbuf);
-				curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, (long)strlen(data));
+			if (!curl_rbuf) {
+				logmsg(LOG_ERR, M_ERROR_MEM_STREAM);
+				fclose(curl_wbuf);
+				curl_cleanup();
+				return -2;
 			}
+			curl_easy_setopt(curl_handle, CURLOPT_READDATA, (void *)curl_rbuf);
+			curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, (long)strlen(data));
 		}
 		curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 1L);
 	}
