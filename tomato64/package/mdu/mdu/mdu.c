@@ -24,6 +24,7 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#include <netdb.h>
 
 #include <bcmnvram.h>
 #include <shutils.h>
@@ -32,7 +33,6 @@
 #ifdef USE_LIBCURL
  #include <curl/curl.h>
 #else
- #include <netdb.h>
  #include "mssl.h"
 #endif
 
@@ -75,6 +75,7 @@
 
 char *blob = NULL;
 char ifname[16];
+static int mdu_addrcheck_af = 0;
 char sPrefix[8];
 int error_exitcode = 1;
 int g_argc;
@@ -87,7 +88,7 @@ static void save_cookie(void);
 static void error(const char *fmt, ...);
 
 /* this should be in nvram so you can add/edit/remove checkers, but we have so little nvram it's impossible... */
-static char services[][2][23] = { /* remember: the number in the third square bracket must be (len + 1) of the longest string */
+static const char services4[][2][23] = { /* remember: the number in the third square bracket must be (len + 1) of the longest string */
 /*	  service			path */
 	{ "api.ipify.org",		"/"	},	/* txt */
 	{ "checkip.amazonaws.com",	"/"	},	/* txt */
@@ -105,41 +106,124 @@ static char services[][2][23] = { /* remember: the number in the third square br
 	{ "icanhazip.com",		"/"	}	/* txt */
 };
 
+#ifdef TCONFIG_IPV6
+static const char services6[][2][23] = {
+/*	  service			path */
+	{ "api6.ipify.org",		"/"	},	/* txt */
+	{ "6.ident.me",			"/"	},	/* txt */
+	{ "v6.ident.me",		"/"	},	/* txt */
+	{ "6.tnedi.me",			"/"	},	/* txt */
+	{ "v6.api.ipinfo.io",		"/ip"	},	/* txt */
+	{ "ipv6.icanhazip.com",	"/"		}	/* txt */
+};
+#endif
+
+static int mdu_mwan_route_enabled(void)
+{
+	return (ifname[0] != '\0') && (nvram_get_int("mwan_num") > 1);
+}
+
+static int mdu_http_af(void)
+{
+	if (mdu_addrcheck_af)
+		return mdu_addrcheck_af;
+
+	if (mdu_mwan_route_enabled())
+		return AF_INET;
+
+	return 0;
+}
+
+static int mdu_addr_family(const char *ip, char *normalized, size_t normalized_sz)
+{
+	struct in_addr ipv4;
+#ifdef TCONFIG_IPV6
+	struct in6_addr ipv6;
+#endif
+	const void *src;
+	int af;
+
+	if (!ip)
+		return 0;
+
+	af = 0;
+	src = NULL;
+
+	if (inet_pton(AF_INET, ip, &ipv4) == 1) {
+		af = AF_INET;
+		src = &ipv4;
+	}
+#ifdef TCONFIG_IPV6
+	else if (inet_pton(AF_INET6, ip, &ipv6) == 1) {
+		af = AF_INET6;
+		src = &ipv6;
+	}
+#endif
+
+	if (!af)
+		return 0;
+
+	if (normalized && ((normalized_sz == 0) || !inet_ntop(af, src, normalized, normalized_sz)))
+		return 0;
+
+	return af;
+}
+
+#ifdef TCONFIG_IPV6
+static int mdu_ipv6_ddns_allowed(void)
+{
+	return (sPrefix[0] == '\0') || (strcmp(sPrefix, "wan") == 0);
+}
+
+static int mdu_ddns_auto_af(void)
+{
+	if (get_ipv6_service() && mdu_ipv6_ddns_allowed())
+		return AF_INET6;
+
+	return AF_INET;
+}
+#endif
+
+
 static void route_adddel(const char *ip, unsigned int add)
 {
 	char cmd[256];
 	char buf[64];
 	char buf2[128];
 
-	if (ifname[0] != '\0' && nvram_get_int("mwan_num") > 1) { /* only for MultiWAN */
-		logmsg(LOG_DEBUG, "*** IN %s: add=[%d] ip=[%s] ifname=[%s] - %s routes ...", __FUNCTION__, add, ip, ifname, (add ? "adding" : "deleting"));
+	if (!mdu_mwan_route_enabled()) /* only for MultiWAN */
+		return;
 
-		strlcpy(buf, "/tmp/ppp/pppd", sizeof(buf));
-		strlcat(buf, sPrefix, sizeof(buf));
-		if (!f_exists(buf)) { /* not pppd */
-			strlcpy(buf, sPrefix, sizeof(buf));
-			strlcat(buf, "_gateway", sizeof(buf));
-			snprintf(buf2, sizeof(buf2), "via %s", nvram_safe_get(buf)); /* gateway_fragment */
-		}
-		else
-			buf2[0] = '\0';
+	if (mdu_addr_family(ip, NULL, 0) != AF_INET) /* route_adddel() is IPv4-only */
+		return;
 
-		system("ip route | grep default | cut -d' ' -f2- > " MDU_ROUTE_FN);
-		memset(buf, 0, sizeof(buf)); /* reset */
-		if (f_read_string(MDU_ROUTE_FN, buf, sizeof(buf)) > 2) { /* default_route_fragment */
-			if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s %s", (add ? "add" : "del"), ip, buf) >= sizeof(cmd))
-				logmsg(LOG_ERR, "%s: route cmd truncated", __FUNCTION__);
+	logmsg(LOG_DEBUG, "*** IN %s: add=[%d] ip=[%s] ifname=[%s] - %s routes ...", __FUNCTION__, add, ip, ifname, (add ? "adding" : "deleting"));
 
-			logmsg(LOG_DEBUG, "*** %s: cmd=%s", __FUNCTION__, cmd);
-			system(cmd);
-		}
+	strlcpy(buf, "/tmp/ppp/pppd", sizeof(buf));
+	strlcat(buf, sPrefix, sizeof(buf));
+	if (!f_exists(buf)) { /* not pppd */
+		strlcpy(buf, sPrefix, sizeof(buf));
+		strlcat(buf, "_gateway", sizeof(buf));
+		snprintf(buf2, sizeof(buf2), "via %s", nvram_safe_get(buf)); /* gateway_fragment */
+	}
+	else
+		buf2[0] = '\0';
 
-		if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s dev %s %s metric 50000", (add ? "add" : "del"), ip, ifname, buf2) >= sizeof(cmd))
+	system("ip route | grep default | cut -d' ' -f2- > " MDU_ROUTE_FN);
+	memset(buf, 0, sizeof(buf)); /* reset */
+	if (f_read_string(MDU_ROUTE_FN, buf, sizeof(buf)) > 2) { /* default_route_fragment */
+		if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s %s", (add ? "add" : "del"), ip, buf) >= sizeof(cmd))
 			logmsg(LOG_ERR, "%s: route cmd truncated", __FUNCTION__);
 
 		logmsg(LOG_DEBUG, "*** %s: cmd=%s", __FUNCTION__, cmd);
 		system(cmd);
 	}
+
+	if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s dev %s %s metric 50000", (add ? "add" : "del"), ip, ifname, buf2) >= sizeof(cmd))
+		logmsg(LOG_ERR, "%s: route cmd truncated", __FUNCTION__);
+
+	logmsg(LOG_DEBUG, "*** %s: cmd=%s", __FUNCTION__, cmd);
+	system(cmd);
 }
 
 static int check_stop(void)
@@ -156,6 +240,46 @@ static void trimamp(char *s)
 	n = strlen(s);
 	if ((n > 0) && (s[--n] == '&'))
 		s[n] = '\0';
+}
+
+static int mdu_parse_host_port(const char *host, unsigned int ssl, char *name, size_t name_sz, int *port)
+{
+	char *colon;
+	int parsed_port;
+
+	if ((!host) || (!name) || (name_sz == 0) || (!port))
+		return -1;
+
+	if (strlcpy(name, host, name_sz) >= name_sz) {
+		logmsg(LOG_ERR, "%s: hostname truncated", __FUNCTION__);
+		return -1;
+	}
+
+	parsed_port = ssl ? 443 : 80;
+
+	if (name[0] == '[') {
+		char *end = strchr(name, ']');
+
+		if (!end)
+			return -1;
+
+		if (end[1] == ':' && end[2] != '\0')
+			parsed_port = atoi(end + 2);
+
+		*end = '\0';
+		memmove(name, name + 1, strlen(name));
+	}
+	else if ((colon = strrchr(name, ':')) != NULL && strchr(name, ':') == colon) {
+		*colon = '\0';
+		parsed_port = atoi(colon + 1);
+	}
+
+	if (name[0] == '\0')
+		return -1;
+
+	*port = parsed_port;
+
+	return 0;
 }
 
 static const char *get_option(const char *name)
@@ -462,6 +586,16 @@ static void curl_setup(const unsigned int ssl)
 	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 20L);
 	curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
 	curl_easy_setopt(curl_handle, CURLOPT_ERRORBUFFER, errbuf);
+	switch (mdu_http_af()) {
+	case AF_INET:
+		curl_easy_setopt(curl_handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+		break;
+#ifdef TCONFIG_IPV6
+	case AF_INET6:
+		curl_easy_setopt(curl_handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V6);
+		break;
+#endif
+	}
 
 	if ((dump = get_dump_name()) != NULL) {
 		if ((curl_dfile = fopen(dump, "a")) != NULL) {
@@ -533,63 +667,78 @@ static struct curl_slist *curl_headers(const char *header)
 	return headers;
 }
 
-static int curl_resolve_ip(const unsigned int ssl, const char *url, const char *header, char *ip_buf, size_t ip_buf_sz)
+static int mdu_resolve_ip(const unsigned int ssl, const char *host, char *ip_buf, size_t ip_buf_sz, char *resolve_buf, size_t resolve_buf_sz)
 {
-	char *ip = NULL;
-	CURLcode r;
-	int trys, stop = 0;
-	int ok = 0;
-	headers = NULL;
+	struct addrinfo hints;
+	struct addrinfo *result;
+	struct addrinfo *rp;
+	struct sockaddr_in *sin;
+	char name[512];
+	char cport[12];
+	int port;
+	int r;
+	int ok;
 
-	if ((!ip_buf) || (ip_buf_sz == 0))
+	if ((!ip_buf) || (ip_buf_sz == 0) || (!resolve_buf) || (resolve_buf_sz == 0))
 		return -1;
 
 	ip_buf[0] = '\0';
+	resolve_buf[0] = '\0';
+	result = NULL;
+	ok = 0;
 
-	curl_setup(ssl);
-
-	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
-
-	if (header)
-		headers = curl_headers(header);
-	else
-		headers = curl_headers("User-Agent: " AGENT "\r\nCache-Control: no-cache");
-
-	curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
-
-	if (ifname[0] != '\0')
-		curl_easy_setopt(curl_handle, CURLOPT_INTERFACE, ifname);
-
-	for (trys = 4; trys > 0; --trys) {
-		errbuf[0] = 0;
-		r = curl_easy_perform(curl_handle);
-		stop = check_stop();
-		if ((r != CURLE_COULDNT_CONNECT) || (stop == 1))
-			break;
-
-		sleep(2);
+	if (mdu_parse_host_port(host, ssl, name, sizeof(name), &port) != 0) {
+		logmsg(LOG_ERR, "%s: invalid host [%s]", __FUNCTION__, host ? host : "NULL");
+		return -1;
 	}
 
-	if (((r == CURLE_OK) || (r == CURLE_RECV_ERROR)) && !curl_easy_getinfo(curl_handle, CURLINFO_PRIMARY_IP, &ip) && ip) { /* CURLE_RECV_ERROR needed for clouflare */
-		if (strlcpy(ip_buf, ip, ip_buf_sz) < ip_buf_sz)
-			ok = 1;
-		else
-			logmsg(LOG_ERR, "%s: resolved IP truncated", __FUNCTION__);
-	}
-	else {
-		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (strlen(errbuf) ? errbuf : curl_easy_strerror(r)));
+	snprintf(cport, sizeof(cport), "%d", port);
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+
+	r = getaddrinfo(name, cport, &hints, &result);
+	if (r != 0) {
+		snprintf(curl_err_str, sizeof(curl_err_str), "getaddrinfo error (%d) - %s.", r, gai_strerror(r));
 		logmsg(LOG_ERR, "%s: error - (%s)", __FUNCTION__, curl_err_str);
+		return -1;
 	}
 
-	curl_cleanup();
+	for (rp = result; rp != NULL; rp = rp->ai_next) {
+		if (rp->ai_family != AF_INET)
+			continue;
 
-	if (stop == 1)
-		error("Force stop.");
+		sin = (struct sockaddr_in *)rp->ai_addr;
+		if (!inet_ntop(AF_INET, &sin->sin_addr, ip_buf, ip_buf_sz)) {
+			ip_buf[0] = '\0';
+			continue;
+		}
 
-	logmsg(LOG_DEBUG, "*** %s: OUT IP=[%s]", __FUNCTION__, (ok ? ip_buf : "unknown"));
+		if ((size_t)snprintf(resolve_buf, resolve_buf_sz, "%s:%d:%s", name, port, ip_buf) >= resolve_buf_sz) {
+			logmsg(LOG_ERR, "%s: CURLOPT_RESOLVE entry truncated", __FUNCTION__);
+			ip_buf[0] = '\0';
+			resolve_buf[0] = '\0';
+			continue;
+		}
 
-	return ok ? 0 : -1;
+		ok = 1;
+		break;
+	}
+
+	freeaddrinfo(result);
+
+	if (!ok) {
+		snprintf(curl_err_str, sizeof(curl_err_str), "Cannot resolve IPv4 address for %s.", name);
+		logmsg(LOG_ERR, "%s: error - (%s)", __FUNCTION__, curl_err_str);
+		return -1;
+	}
+
+	logmsg(LOG_DEBUG, "*** %s: OUT IP=[%s]", __FUNCTION__, ip_buf);
+
+	return 0;
 }
+
 #endif /* USE_LIBCURL */
 
 static long _http_req(const unsigned int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body)
@@ -603,8 +752,10 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 #ifdef USE_LIBCURL
 	FILE *curl_wbuf = NULL;
 	FILE *curl_rbuf = NULL;
+	struct curl_slist *resolve = NULL;
 	char url[HALF_BLOB];
 	char ip[INET6_ADDRSTRLEN];
+	char resolve_buf[512];
 	CURLcode r;
 	int trys;
 	int stop = 0;
@@ -619,10 +770,11 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		logmsg(LOG_ERR, "%s: URL truncated", __FUNCTION__);
 
 	ip[0] = '\0';
+	resolve_buf[0] = '\0';
 	/* resolve IP for routing if MultiWAN */
-	if (ifname[0] != '\0') {
-		logmsg(LOG_DEBUG, "*** %s: resolving IP of server %s ...", __FUNCTION__, host);
-		if (curl_resolve_ip(ssl, url, header, ip, sizeof(ip)) == 0)
+	if (mdu_mwan_route_enabled()) {
+		logmsg(LOG_DEBUG, "*** %s: resolving IPv4 of server %s ...", __FUNCTION__, host);
+		if (mdu_resolve_ip(ssl, host, ip, sizeof(ip), resolve_buf, sizeof(resolve_buf)) == 0)
 			logmsg(LOG_DEBUG, "*** %s: resolved IP=[%s]", __FUNCTION__, ip);
 		else
 			return code; /* couldn't resolve */
@@ -639,6 +791,18 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	curl_setup(ssl);
 
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+
+	if (resolve_buf[0] != '\0') {
+		resolve = curl_slist_append(NULL, resolve_buf);
+		if (!resolve) {
+			fclose(curl_wbuf);
+			if (curl_rbuf)
+				fclose(curl_rbuf);
+			curl_cleanup();
+			error(M_ERROR_MEM_ALLOC);
+		}
+		curl_easy_setopt(curl_handle, CURLOPT_RESOLVE, resolve);
+	}
 
 	if (header)
 		headers = curl_headers(header);
@@ -721,6 +885,12 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		fflush(curl_dfile);
 	}
 
+	if (resolve) {
+		curl_easy_setopt(curl_handle, CURLOPT_RESOLVE, NULL);
+		curl_slist_free_all(resolve);
+		resolve = NULL;
+	}
+
 	curl_cleanup();
 
 	if (stop)
@@ -731,7 +901,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	FILE *f = NULL;
 	char addrstr[INET6_ADDRSTRLEN];
 	char *request = NULL;
-	char *httpv, *colon, *body_start;
+	char *httpv, *body_start;
 	int port;
 	char a[512];
 	char *authbuf, *auth64;
@@ -850,27 +1020,14 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	}
 
 	/* parse port */
-	port = ssl ? 443 : 80;
-	strlcpy(a, host, sizeof(a));
-	if (a[0] == '[') {
-		char *end = strchr(a, ']');
-
-		if (end) {
-			if (end[1] == ':' && end[2] != '\0')
-				port = atoi(end + 2);
-
-			*end = '\0';
-			memmove(a, a + 1, strlen(a));
-		}
-	}
-	else if ((colon = strrchr(a, ':')) != NULL && strchr(a, ':') == colon) {
-		*colon = '\0';
-		port = atoi(colon + 1);
+	if (mdu_parse_host_port(host, ssl, a, sizeof(a), &port) != 0) {
+		free(request);
+		return -1;
 	}
 
 	memset(&hints, 0, sizeof(hints));
 #ifdef TCONFIG_IPV6
-	hints.ai_family = AF_UNSPEC; /* allow IPv4 or IPv6 */
+	hints.ai_family = mdu_http_af() ? mdu_http_af() : AF_UNSPEC;
 #else
 	hints.ai_family = AF_INET;
 #endif
@@ -882,12 +1039,12 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		struct in6_addr ipv6_addr;
 #endif
 
-		if (inet_pton(AF_INET, a, &ipv4_addr) == 1) {
+		if ((hints.ai_family != AF_INET6) && (inet_pton(AF_INET, a, &ipv4_addr) == 1)) {
 			hints.ai_family = AF_INET;
 			hints.ai_flags = AI_NUMERICHOST;
 		}
 #ifdef TCONFIG_IPV6
-		else if (inet_pton(AF_INET6, a, &ipv6_addr) == 1) {
+		else if ((hints.ai_family != AF_INET) && (inet_pton(AF_INET6, a, &ipv6_addr) == 1)) {
 			hints.ai_family = AF_INET6;
 			hints.ai_flags = AI_NUMERICHOST;
 		}
@@ -1066,10 +1223,6 @@ static int read_tmaddr(const char *name, long *tm, char *addr, size_t addr_sz)
 	char s[192];
 	char parsed_addr[INET6_ADDRSTRLEN];
 	char extra[2];
-	struct in_addr ipv4;
-#ifdef TCONFIG_IPV6
-	struct in6_addr ipv6;
-#endif
 
 	logmsg(LOG_DEBUG, "*** %s: IN cachename: %s", __FUNCTION__, name);
 
@@ -1082,19 +1235,8 @@ static int read_tmaddr(const char *name, long *tm, char *addr, size_t addr_sz)
 		if (sscanf(s, "%ld,%45s%1s", tm, parsed_addr, extra) == 2) {
 			logmsg(LOG_DEBUG, "*** %s: tm=%ld addr=%s", __FUNCTION__, *tm, parsed_addr);
 
-			if (*tm > 0 && (inet_pton(AF_INET, parsed_addr, &ipv4) == 1
-#ifdef TCONFIG_IPV6
-			                || inet_pton(AF_INET6, parsed_addr, &ipv6) == 1
-#endif
-			   )) {
-				if (strlen(parsed_addr) >= addr_sz) {
-					logmsg(LOG_ERR, "%s: address does not fit destination buffer", __FUNCTION__);
-					return 0;
-				}
-
-				strlcpy(addr, parsed_addr, addr_sz);
+			if (*tm > 0 && mdu_addr_family(parsed_addr, addr, addr_sz))
 				return 1;
-			}
 		}
 		else
 			logmsg(LOG_DEBUG, "*** %s: unknown=%s", __FUNCTION__, s);
@@ -1103,132 +1245,232 @@ static int read_tmaddr(const char *name, long *tm, char *addr, size_t addr_sz)
 	return 0;
 }
 
-static const char *get_address(int required)
+static void set_addr_cache_name(char *cache_name, size_t cache_name_sz, int want_af)
+{
+	strlcpy(cache_name, get_option_required("addrcache"), cache_name_sz);
+#ifdef TCONFIG_IPV6
+	strlcat(cache_name, (want_af == AF_INET6) ? ".6" : ".4", cache_name_sz);
+#endif
+}
+
+static void replace_path_token(char *path, size_t path_sz, char *token, size_t token_len, const char *value)
+{
+	size_t off, cur_len, tail_len, value_len;
+
+	if ((path == NULL) || (token == NULL) || (value == NULL))
+		return;
+
+	off = token - path;
+	cur_len = strlen(path);
+	if ((off > cur_len) || (token_len > (cur_len - off)))
+		return;
+
+	value_len = strlen(value);
+	tail_len = cur_len - off - token_len;
+
+	if ((off + value_len + tail_len) >= path_sz)
+		error(M_INVALID_PARAM__S, "url");
+
+	memmove(path + off + value_len, path + off + token_len, tail_len + 1);
+	memcpy(path + off, value, value_len);
+}
+
+#ifdef TCONFIG_IPV6
+static int custom_url_uses_ip6(void)
+{
+	const char *service;
+	const char *url;
+	const char *host;
+	const char *path;
+
+	service = get_option("service");
+	if (!service || ((strcmp(service, "wget") != 0) && (strcmp(service, "custom") != 0)))
+		return 0;
+
+	url = get_option("url");
+	if (!url)
+		return 0;
+
+	if (strncasecmp(url, "https://", 8) == 0)
+		host = url + 8;
+	else if (strncasecmp(url, "http://", 7) == 0)
+		host = url + 7;
+	else
+		return 0;
+
+	path = strchr(host, '/');
+	return path && (strstr(path, "@IP6") != NULL);
+}
+#endif
+
+static const char *get_address_checked(int want_af)
 {
 	char *body;
-	struct in_addr ipv4;
-#ifdef TCONFIG_IPV6
-	struct in6_addr ipv6;
-#endif
-	const char *c;
-	const void *src;
+	const char (*services)[2][23];
 	char *p, *end;
 	char s[192];
 	char cache_name[128];
 	char normalized[64];
 	static char addr[64];
-	long ut, et, af, expire;
+	long ut, et, expire, code;
+	int af;
 	int rows, service_num, n, i, j, temp, max_tries;
-	int indices[ASIZE(services)];
+#ifdef TCONFIG_IPV6
+	int indices[(ASIZE(services4) > ASIZE(services6)) ? ASIZE(services4) : ASIZE(services6)];
+	char saved_ifname[sizeof(ifname)];
+#else
+	int indices[ASIZE(services4)];
+#endif
 	size_t len;
+
+#ifdef USE_LIBCURL
+	curl_err_str[0] = '\0';
+#endif
+	ut = get_uptime();
+	services = services4;
+	rows = ASIZE(services4);
+	service_num = 0;
+
+#ifdef TCONFIG_IPV6
+	saved_ifname[0] = '\0';
+	if (want_af == AF_INET6) {
+		services = services6;
+		rows = ASIZE(services6);
+
+		/*
+		 * IPv6 is router-wide in Tomato; do not reuse IPv4 MultiWAN
+		 * binding/routing logic for checker calls.
+		 */
+		if (ifname[0] != '\0') {
+			strlcpy(saved_ifname, ifname, sizeof(saved_ifname));
+			ifname[0] = '\0';
+		}
+	}
+#endif
+
+	set_addr_cache_name(cache_name, sizeof(cache_name), want_af);
+	if (read_tmaddr(cache_name, &et, addr, sizeof(addr))) {
+		if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE) && (mdu_addr_family(addr, NULL, 0) == want_af)) {
+#ifdef TCONFIG_IPV6
+			if (saved_ifname[0] != '\0')
+				strlcpy(ifname, saved_ifname, sizeof(ifname));
+#endif
+			logmsg(LOG_DEBUG, "*** %s: OUT using cached address %s from %s (expires in %ld s)", __FUNCTION__, addr, cache_name, (et - ut));
+			return addr;
+		}
+	}
+
+	/* Fisher-Yates shuffle */
+	for (i = 0; i < rows; i++) indices[i] = i;
+	srand(time(NULL) ^ (unsigned int)ut);
+	for (i = rows - 1; i > 0; i--) {
+		j = rand() % (i + 1);
+		temp = indices[i];
+		indices[i] = indices[j];
+		indices[j] = temp;
+	}
+
+	max_tries = (rows < 5) ? rows : 5; /* try 5 times on different checkers, if no response it means (probably) WAN is down - wait */
+
+	for (n = 0; n < max_tries; n++) {
+		service_num = indices[n];
+
+		body = NULL;
+#ifdef USE_LIBCURL
+		curl_err_str[0] = '\0';
+#endif
+		mdu_addrcheck_af = want_af;
+		code = http_req(1, 1, services[service_num][0], services[service_num][1], NULL, 0, &body); /* use ssl */
+		mdu_addrcheck_af = 0;
+
+		if (code == 200 && body) {
+			/* body points to global blob - no free needed */
+			if ((p = strstr(body, "Address:")) != NULL) /* dyndns */
+				p += 8;
+			else /* the rest */
+				p = body;
+
+			while (*p && isspace((unsigned char)*p))
+				++p;
+
+			if (*p == '\0')
+				continue;
+
+			end = p + strcspn(p, " \t\r\n<");
+			len = end - p;
+
+			if ((len == 0) || (len >= sizeof(addr))) {
+				logmsg(LOG_WARNING, "%s: invalid length from %s", __FUNCTION__, services[service_num][0]);
+				continue;
+			}
+
+			/* copy with null-termination */
+			memcpy(addr, p, len);
+			addr[len] = '\0';
+
+			/* strip square brackets for IPv6 if present */
+			if (addr[0] == '[') {
+				memmove(addr, addr + 1, len);
+				len--;
+				addr[len] = '\0';
+			}
+			if (len > 0 && addr[len - 1] == ']')
+				addr[len - 1] = '\0';
+
+			/* validate, normalize and keep only the requested family */
+			af = mdu_addr_family(addr, normalized, sizeof(normalized));
+			if (af == want_af) {
+				expire = ut + DDNS_IP_CACHE;
+				snprintf(s, sizeof(s), "%ld,%s", expire, normalized);
+				f_write_string(cache_name, s, 0, 0);
+
+				strlcpy(addr, normalized, sizeof(addr));
+#ifdef TCONFIG_IPV6
+				if (saved_ifname[0] != '\0')
+					strlcpy(ifname, saved_ifname, sizeof(ifname));
+#endif
+				logmsg(LOG_DEBUG, "*** %s: detected %s via %s, cached as %s until %ld", __FUNCTION__, normalized, services[service_num][0], s, expire);
+
+				return addr;
+			}
+
+			logmsg(LOG_WARNING, "%s: unexpected address from %s: %s", __FUNCTION__, services[service_num][0], addr);
+		}
+	}
+
+#ifdef TCONFIG_IPV6
+	if (saved_ifname[0] != '\0')
+		strlcpy(ifname, saved_ifname, sizeof(ifname));
+#endif
+
+	/* all attempts failed */
+#ifdef USE_LIBCURL
+	if (curl_err_str[0]) {
+		logmsg(LOG_DEBUG, "*** %s: %s (%s) after %d attempts", __FUNCTION__, curl_err_str, services[service_num][0], n);
+		error(curl_err_str);
+	}
+#endif
+	logmsg(LOG_DEBUG, "*** %s: %s (%s) after %d attempts", __FUNCTION__, M_ERROR_GET_IP, services[service_num][0], n);
+	error(M_ERROR_GET_IP);
+
+	return NULL;
+}
+
+static const char *get_address(int required)
+{
+	const char *c;
 
 	/* addr is present in the config */
 	if ((c = get_option("addr")) != NULL) {
 		/* do not use custom IP address, run IP checker */
 		if (*c == '@') {
-			ut = get_uptime();
-
-			strlcpy(cache_name, get_option_required("addrcache"), sizeof(cache_name));
-
-			if (read_tmaddr(cache_name, &et, addr, sizeof(addr))) {
-				if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE)) {
-					logmsg(LOG_DEBUG, "*** %s: OUT using cached address %s from %s (expires in %ld s)", __FUNCTION__, addr, cache_name, (et - ut));
-					return addr;
-				}
-			}
-
-			rows = ASIZE(services);
-
-			/* Fisher-Yates shuffle */
-			for (i = 0; i < rows; i++) indices[i] = i;
-			srand(time(NULL) ^ (unsigned int)ut);
-			for (i = rows - 1; i > 0; i--) {
-				j = rand() % (i + 1);
-				temp = indices[i];
-				indices[i] = indices[j];
-				indices[j] = temp;
-			}
-
-			max_tries = (rows < 5) ? rows : 5; /* try 5 times on different checkers, if no response it means (probably) WAN is down - wait */
-
-			for (n = 0; n < max_tries; n++) {
-				service_num = indices[n];
-
-				body = NULL;
-				if (http_req(1, 1, services[service_num][0], services[service_num][1], NULL, 0, &body) == 200 && body) { /* use ssl */
-					/* body points to global blob - no free needed */
-					if ((p = strstr(body, "Address:")) != NULL) /* dyndns */
-						p += 8;
-					else /* the rest */
-						p = body;
-
-					while (*p && isspace((unsigned char)*p))
-						++p;
-
-					if (*p == '\0')
-						continue;
-
-					end = p + strcspn(p, " \t\r\n<");
-					len = end - p;
-
-					if ((len == 0) || (len >= sizeof(addr))) {
-						logmsg(LOG_WARNING, "%s: invalid length from %s", __FUNCTION__, services[service_num][0]);
-						continue;
-					}
-
-					/* copy with null-termination */
-					memcpy(addr, p, len);
-					addr[len] = '\0';
-
-					/* strip square brackets for IPv6 if present */
-					if (addr[0] == '[') {
-						memmove(addr, addr + 1, len);
-						len--;
-						addr[len] = '\0';
-					}
-					if (len > 0 && addr[len - 1] == ']')
-						addr[len - 1] = '\0';
-
-					/* validate and normalize */
-					af = 0;
-					src = NULL;
-
-					if (inet_pton(AF_INET, addr, &ipv4) == 1) {
-						af = AF_INET;
-						src = &ipv4;
-					}
 #ifdef TCONFIG_IPV6
-					else if (inet_pton(AF_INET6, addr, &ipv6) == 1) {
-						af = AF_INET6;
-						src = &ipv6;
-					}
-#endif
-					/* write to cache if addr is OK */
-					if (af != 0 && inet_ntop(af, src, normalized, sizeof(normalized))) {
-						expire = ut + DDNS_IP_CACHE;
-						snprintf(s, sizeof(s), "%ld,%s", expire, normalized);
-						f_write_string(cache_name, s, 0, 0);
-
-						strlcpy(addr, normalized, sizeof(addr));
-
-						logmsg(LOG_DEBUG, "*** %s: detected %s via %s, cached as %s until %ld", __FUNCTION__, normalized, services[service_num][0], s, expire);
-
-						return addr;
-					}
-
-					logmsg(LOG_WARNING, "%s: invalid address format from %s: %s", __FUNCTION__, services[service_num][0], addr);
-				}
-			}
-
-			/* all attempts failed */
-#ifdef USE_LIBCURL
-			logmsg(LOG_DEBUG, "*** %s: %s (%s) after %d attempts", __FUNCTION__, curl_err_str, services[service_num][0], n);
-			error(curl_err_str);
+			return get_address_checked(mdu_ddns_auto_af());
 #else
-			logmsg(LOG_DEBUG, "*** %s: %s (%s) after %d attempts", __FUNCTION__, M_ERROR_GET_IP, services[service_num][0], n);
-			error(M_ERROR_GET_IP);
+			return get_address_checked(AF_INET);
 #endif
 		}
+
 		return c;
 	}
 
@@ -1236,30 +1478,26 @@ static const char *get_address(int required)
 }
 
 #ifdef TCONFIG_IPV6
-static int get_address6(char *buf, const size_t buf_sz)
+static const char *get_address6(void)
 {
-	const char *lanif;
-	int n, ret = 0;
+	if (!get_ipv6_service())
+		error("IPv6 DDNS is disabled.");
 
-	memset(buf, 0, buf_sz); /* reset */
+	if (!mdu_ipv6_ddns_allowed())
+		error("IPv6 DDNS is supported only on the first WAN.");
 
-	for (n = 1; n < 5; n++) {
-		lanif = getifaddr(nvram_safe_get("lan_ifname"), AF_INET6, 0); /* get global address */
-
-		if (lanif != NULL) {
-			strlcpy(buf, lanif, buf_sz);
-			ret = 1;
-			logmsg(LOG_DEBUG, "*** %s: - valid global IPv6 address %s after %d secs ...", __FUNCTION__, lanif, (n - 1) * (n - 1));
-			break; /* All OK and break here */
-		}
-
-		logmsg(LOG_DEBUG, "*** %s: - no global IPv6 address yet, retrying in %d secs ...", __FUNCTION__, n * n);
-		sleep(n * n); /* try up to 30 sec */
-	}
-
-	return ret;
+	return get_address_checked(AF_INET6);
 }
 #endif /* TCONFIG_IPV6 */
+
+static const char *get_update_address(int required)
+{
+#ifdef TCONFIG_IPV6
+	if (custom_url_uses_ip6())
+		return get_address6();
+#endif
+	return get_address(required);
+}
 
 static void append_addr_option(char *buffer, size_t buffer_sz, const char *format)
 {
@@ -1865,17 +2103,14 @@ static int cloudflare_errorcheck(const int code, const char *req, char *body)
 
 static const char *cloudflare_record_type(const char *addr)
 {
-	struct in_addr ipv4;
-#ifdef TCONFIG_IPV6
-	struct in6_addr ipv6;
-#endif
-
-	if (inet_pton(AF_INET, addr, &ipv4) == 1)
+	switch (mdu_addr_family(addr, NULL, 0)) {
+	case AF_INET:
 		return "A";
 #ifdef TCONFIG_IPV6
-	if (inet_pton(AF_INET6, addr, &ipv6) == 1)
+	case AF_INET6:
 		return "AAAA";
 #endif
+	}
 
 	return NULL;
 }
@@ -2049,14 +2284,13 @@ static void update_custom(void)
 	long r;
 	char *c;
 	char url[256];
-	char s[256];
 	int https;
 	char *host;
 	char path[256];
 	char *p;
 	char *body;
 #ifdef TCONFIG_IPV6
-	char buffer[INET6_ADDRSTRLEN];
+	const char *addr6;
 #endif /* TCONFIG_IPV6 */
 
 	/*
@@ -2084,29 +2318,16 @@ static void update_custom(void)
 	strlcpy(path, p, sizeof(path));
 	*p = 0;
 
+	if ((c = strstr(path, "@IP6")) != NULL) {
 #ifdef TCONFIG_IPV6
-	/* check for "@IP6" first but only if IPv6 is enabled! */
-	if (ipv6_enabled() && ((c = strstr(path, "@IP6")) != NULL)) {
-
-		/* try to get IPv6 address */
-		if (get_address6(buffer, sizeof(buffer))) {
-			size_t sizeOfPath = sizeof(path);
-			strlcpy(s, c + 4, sizeof(s));
-			strlcpy(c, buffer, sizeOfPath - strnlen(path, sizeOfPath) + 4); /*  space left in path is the sizeof the array - the currently used chars + 4 as @IP6 gets replaced */
-			strlcat(c, s, sizeOfPath - strnlen(path, sizeOfPath)); /* space left is the size of the path array - the currently used chars (which now include the IP address) */
-		}
-		else {
-			error("Unable to get global IPv6 address (br0)");
-		}
-	}
-	else
+		addr6 = get_address6();
+		replace_path_token(path, sizeof(path), c, 4, addr6);
+#else
+		error("IPv6 support not compiled in.");
 #endif /* TCONFIG_IPV6 */
-	if ((c = strstr(path, "@IP")) != NULL) {
-		size_t sizeOfPath = sizeof(path);
-		strlcpy(s, c + 3, sizeof(s));
-		strlcpy(c, get_address(1), sizeOfPath - strnlen(path, sizeOfPath) + 3); /*  space left in path is the sizeof the array - the currently used chars + 3 as @IP gets replaced */
-		strlcat(c, s, sizeOfPath - strnlen(path, sizeOfPath)); /* space left is the size of the path array - the currently used chars (which now include the IP address) */
 	}
+	else if ((c = strstr(path, "@IP")) != NULL)
+		replace_path_token(path, sizeof(path), c, 3, get_address(1));
 
 	logmsg(LOG_DEBUG, "*** %s: host: %s, path: %s", __FUNCTION__, host, path);
 
@@ -2146,7 +2367,7 @@ static void check_cookie(void)
 		return;
 	}
 
-	if ((c = get_address(0)) == NULL) {
+	if ((c = get_update_address(0)) == NULL) {
 		logmsg(LOG_DEBUG, "*** %s: no address specified", __FUNCTION__);
 		return;
 	}
@@ -2182,7 +2403,7 @@ static void save_cookie(void)
 		return;
 	}
 
-	if ((c = get_address(0)) == NULL) {
+	if ((c = get_update_address(0)) == NULL) {
 		logmsg(LOG_DEBUG, "*** %s: no address specified", __FUNCTION__);
 		return;
 	}
