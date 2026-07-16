@@ -285,6 +285,27 @@ static void trimamp(char *s)
 		s[n] = '\0';
 }
 
+static void mdu_appendf(char *buf, size_t buf_sz, const char *fmt, ...)
+{
+	va_list args;
+	size_t len;
+	int r;
+
+	if ((buf == NULL) || (buf_sz == 0))
+		error("request truncated");
+
+	len = strlen(buf);
+	if (len >= buf_sz)
+		error("request truncated");
+
+	va_start(args, fmt);
+	r = vsnprintf(buf + len, buf_sz - len, fmt, args);
+	va_end(args);
+
+	if ((r < 0) || ((size_t)r >= (buf_sz - len)))
+		error("request truncated");
+}
+
 static int mdu_parse_host_port(const char *host, unsigned int ssl, char *name, size_t name_sz, int *port)
 {
 	char *colon;
@@ -809,8 +830,10 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		host = get_option_or("server", host);
 
 	/* build URL */
-	if (snprintf(url, sizeof(url), "%s%s", host, query) >= (int)sizeof(url))
+	if (snprintf(url, sizeof(url), "%s%s", host, query) >= (int)sizeof(url)) {
 		logmsg(LOG_ERR, "%s: URL truncated", __FUNCTION__);
+		return -1;
+	}
 
 	ip[0] = '\0';
 	resolve_buf[0] = '\0';
@@ -1584,9 +1607,9 @@ static void append_addr_value(char *buffer, size_t buffer_sz, const char *format
 
 	len = strlen(buffer);
 	if (len >= buffer_sz)
-		return;
+		error("request truncated");
 
-	snprintf(buffer + len, buffer_sz - len, format, addr);
+	mdu_appendf(buffer, buffer_sz, format, addr);
 }
 
 static void append_addr_option(char *buffer, size_t buffer_sz, const char *format)
@@ -1632,21 +1655,23 @@ static void update_dua(const char *type, const unsigned int ssl, const char *ser
 	char *body;
 	int saved_http_af;
 
+	query[0] = '\0';
+
 	/* +opt */
-	snprintf(query, sizeof(query), "%s?", path ? path : get_option_required("path"));
+	mdu_appendf(query, sizeof(query), "%s?", path ? path : get_option_required("path"));
 
 	/* +opt */
 	if (type)
-		snprintf(query + strlen(query), sizeof(query) - strlen(query), "system=%s&", type);
+		mdu_appendf(query, sizeof(query), "system=%s&", type);
 
 	/* +opt */
 	p = reqhost ? get_option_required("host") : get_option("host");
 	if (p)
-		snprintf(query + strlen(query), sizeof(query) - strlen(query), "hostname=%s&", p);
+		mdu_appendf(query, sizeof(query), "hostname=%s&", p);
 
 	/* +opt */
 	if (((p = get_option("mx")) != NULL) && (*p))
-		snprintf(query + strlen(query), sizeof(query) - strlen(query), "mx=%s&backmx=%s&", p, (get_option_onoff("backmx", 0)) ? "YES" : "NO");
+		mdu_appendf(query, sizeof(query), "mx=%s&backmx=%s&", p, (get_option_onoff("backmx", 0)) ? "YES" : "NO");
 
 	/* +opt */
 	if (addr_af == AF_INET)
@@ -1655,7 +1680,7 @@ static void update_dua(const char *type, const unsigned int ssl, const char *ser
 		append_addr_option(query, sizeof(query), "myip=%s&");
 
 	if (get_option_onoff("wildcard", 0))
-		strlcat(query, "wildcard=ON", sizeof(query));
+		mdu_appendf(query, sizeof(query), "wildcard=ON");
 
 	trimamp(query);
 
@@ -1775,7 +1800,8 @@ static void update_namecheap(const unsigned int ssl)
 	char query[2048];
 
 	/* +opt +opt +opt */
-	snprintf(query, sizeof(query), "/update?host=%s&domain=%s&password=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
+	query[0] = '\0';
+	mdu_appendf(query, sizeof(query), "/update?host=%s&domain=%s&password=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
 
 	/* +opt */
 	append_addr_option(query, sizeof(query), "&ip=%s");
@@ -1856,7 +1882,8 @@ static void update_enom(const unsigned int ssl)
 	/* http://dynamic.name-services.com/interface.asp?Command=SetDNSHost&HostName=test&Zone=test.com&Address=1.2.3.4&DomainPassword=password */
 
 	/* +opt +opt +opt */
-	snprintf(query, sizeof(query), "/interface.asp?Command=SetDNSHost&HostName=%s&Zone=%s&DomainPassword=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
+	query[0] = '\0';
+	mdu_appendf(query, sizeof(query), "/interface.asp?Command=SetDNSHost&HostName=%s&Zone=%s&DomainPassword=%s", get_option_required("host"), get_option("user") ? : get_option_required("domain"), get_option_required("pass"));
 
 	/* +opt */
 	append_addr_option(query, sizeof(query), "&Address=%s");
@@ -1911,7 +1938,8 @@ static void update_dnsexit(const unsigned int ssl)
 	char query[2048];
 
 	/* +opt +opt +opt */
-	snprintf(query, sizeof(query), "/RemoteUpdate.sv?login=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
+	query[0] = '\0';
+	mdu_appendf(query, sizeof(query), "/RemoteUpdate.sv?login=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
 
 	/* +opt */
 	append_addr_option(query, sizeof(query), "&myip=%s");
@@ -1973,7 +2001,8 @@ static void update_zoneedit(const unsigned int ssl)
 	char query[2048];
 
 	/* +opt */
-	snprintf(query, sizeof(query), "/auth/dynamic.html?host=%s", get_option_required("host"));
+	query[0] = '\0';
+	mdu_appendf(query, sizeof(query), "/auth/dynamic.html?host=%s", get_option_required("host"));
 
 	/* +opt */
 	append_addr_option(query, sizeof(query), "&dnsto=%s");
@@ -2040,7 +2069,8 @@ static void update_afraid(const unsigned int ssl)
 	char query[2048];
 
 	/* +opt */
-	snprintf(query, sizeof(query), "/dynamic/update.php?%s", get_option_required("ahash"));
+	query[0] = '\0';
+	mdu_appendf(query, sizeof(query), "/dynamic/update.php?%s", get_option_required("ahash"));
 
 	/* +opt */
 	append_addr_option(query, sizeof(query), "&address=%s");
@@ -2241,7 +2271,8 @@ static void update_cloudflare(const unsigned int ssl)
 	char data[QUARTER_BLOB];
 
 	/* +opt */
-	snprintf(header, HALF_BLOB, "User-Agent: " AGENT "\r\nAuthorization: Bearer %s\r\nContent-Type: application/json\r\nCache-Control: no-cache", get_option_required("pass"));
+	header[0] = '\0';
+	mdu_appendf(header, HALF_BLOB, "User-Agent: " AGENT "\r\nAuthorization: Bearer %s\r\nContent-Type: application/json\r\nCache-Control: no-cache", get_option_required("pass"));
 
 	zone = get_option_required("url");
 	host = get_option_required("host");
@@ -2252,7 +2283,8 @@ static void update_cloudflare(const unsigned int ssl)
 		error(M_INVALID_PARAM__S, "addr");
 
 	/* +opt +opt */
-	snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records?type=%s&name=%s&order=name&direction=asc", zone, record_type, host);
+	query[0] = '\0';
+	mdu_appendf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records?type=%s&name=%s&order=name&direction=asc", zone, record_type, host);
 
 	s = http_req(ssl, 1, "api.cloudflare.com", query, header, 0, &body);
 
@@ -2269,7 +2301,8 @@ static void update_cloudflare(const unsigned int ssl)
 
 	if (r == 1) { /* no existing record - create with POST */
 		if (get_option_onoff("backmx", 0)) {
-			snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records", zone);
+			query[0] = '\0';
+			mdu_appendf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records", zone);
 			/* continue to PUT/POST logic below */
 		}
 		else {
@@ -2313,7 +2346,8 @@ static void update_cloudflare(const unsigned int ssl)
 			*quote = '\0'; /* truncate at closing quote */
 		}
 
-		snprintf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records/%s", zone, found);
+		query[0] = '\0';
+		mdu_appendf(query, QUARTER_BLOB, "/client/v4/zones/%s/dns_records/%s", zone, found);
 	}
 	else {
 		/* r == -1 - error already handled inside cloudflare_errorcheck */
@@ -2325,7 +2359,8 @@ static void update_cloudflare(const unsigned int ssl)
 	body_copy = NULL;
 
 	/* prepare JSON payload */
-	snprintf(data, QUARTER_BLOB, "{\"content\":\"%s\",\"name\":\"%s\",\"proxied\":%s,\"type\":\"%s\"}", addr, host, (prox ? "true" : "false"), record_type);
+	data[0] = '\0';
+	mdu_appendf(data, QUARTER_BLOB, "{\"content\":\"%s\",\"name\":\"%s\",\"proxied\":%s,\"type\":\"%s\"}", addr, host, (prox ? "true" : "false"), record_type);
 
 	/* POST for create, PUT for update */
 	s = _http_req(ssl, 1, "api.cloudflare.com", (r == 1) ? "POST" : "PUT", query, header, 0, data, &body);
@@ -2358,7 +2393,8 @@ static void update_duckdns(const unsigned int ssl)
 	char *body;
 	char query[2048];
 
-	snprintf(query, sizeof(query), "/update?domains=%s&token=%s", get_option_required("host"), get_option_required("ahash"));
+	query[0] = '\0';
+	mdu_appendf(query, sizeof(query), "/update?domains=%s&token=%s", get_option_required("host"), get_option_required("ahash"));
 
 	append_addr_option(query, sizeof(query), "&ip=%s");
 
@@ -2397,7 +2433,9 @@ static void update_custom(void)
 	 * Basic authentication credentials from the user/pass options.
 	 */
 
-	strlcpy(url, get_option_required("url"), sizeof(url));
+	if (strlcpy(url, get_option_required("url"), sizeof(url)) >= sizeof(url))
+		error(M_INVALID_PARAM__S, "url");
+
 	https = 0;
 	host = url + 7;
 	if (strncasecmp(url, "https://", 8) == 0) {
@@ -2410,7 +2448,9 @@ static void update_custom(void)
 	if ((p = strchr(host, '/')) == NULL)
 		error(M_INVALID_PARAM__S, "url");
 
-	strlcpy(path, p, sizeof(path));
+	if (strlcpy(path, p, sizeof(path)) >= sizeof(path))
+		error(M_INVALID_PARAM__S, "url");
+
 	*p = 0;
 
 	if ((c = strstr(path, "@IP6")) != NULL) {
