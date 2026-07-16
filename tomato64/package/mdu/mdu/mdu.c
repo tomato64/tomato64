@@ -184,12 +184,45 @@ static int mdu_ddns_auto_af(void)
 }
 #endif
 
+static int mdu_eval(const char *cmd, const char *path)
+{
+	char buf[256];
+	char *argv[24];
+	char *p, *arg;
+	int argc, r;
+
+	if (strlcpy(buf, cmd, sizeof(buf)) >= sizeof(buf)) {
+		logmsg(LOG_ERR, "%s: command truncated", __FUNCTION__);
+		return -1;
+	}
+
+	argc = 0;
+	p = buf;
+	while ((arg = strsep(&p, " \t")) != NULL) {
+		if (*arg == '\0')
+			continue;
+
+		if (argc >= ((int)ASIZE(argv) - 1)) {
+			logmsg(LOG_ERR, "%s: too many arguments: %s", __FUNCTION__, cmd);
+			return -1;
+		}
+		argv[argc++] = arg;
+	}
+	argv[argc] = NULL;
+
+	r = _eval(argv, path, 0, NULL);
+	if (r != 0)
+		logmsg(LOG_ERR, "%s: route cmd failed rc=%d: %s", __FUNCTION__, r, cmd);
+
+	return r;
+}
 
 static void route_adddel(const char *ip, unsigned int add)
 {
 	char cmd[256];
 	char buf[64];
 	char buf2[128];
+	char *p;
 
 	if (!mdu_mwan_route_enabled()) /* only for MultiWAN */
 		return;
@@ -209,21 +242,31 @@ static void route_adddel(const char *ip, unsigned int add)
 	else
 		buf2[0] = '\0';
 
-	system("ip route | grep default | cut -d' ' -f2- > " MDU_ROUTE_FN);
+	strlcpy(cmd, "ip route show default", sizeof(cmd));
 	memset(buf, 0, sizeof(buf)); /* reset */
-	if (f_read_string(MDU_ROUTE_FN, buf, sizeof(buf)) > 2) { /* default_route_fragment */
-		if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s %s", (add ? "add" : "del"), ip, buf) >= sizeof(cmd))
+	if ((mdu_eval(cmd, MDU_ROUTE_FN) == 0) && (f_read_string(MDU_ROUTE_FN, buf, sizeof(buf)) > 2)) { /* default_route_fragment */
+		if ((p = strpbrk(buf, "\r\n")) != NULL)
+			*p = '\0';
+
+		if (strncmp(buf, "default ", 8) == 0)
+			memmove(buf, buf + 8, strlen(buf + 8) + 1);
+
+		if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s %s", (add ? "add" : "del"), ip, buf) >= sizeof(cmd)) {
 			logmsg(LOG_ERR, "%s: route cmd truncated", __FUNCTION__);
+			return;
+		}
 
 		logmsg(LOG_DEBUG, "*** %s: cmd=%s", __FUNCTION__, cmd);
-		system(cmd);
+		mdu_eval(cmd, NULL);
 	}
 
-	if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s dev %s %s metric 50000", (add ? "add" : "del"), ip, ifname, buf2) >= sizeof(cmd))
+	if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s dev %s %s metric 50000", (add ? "add" : "del"), ip, ifname, buf2) >= sizeof(cmd)) {
 		logmsg(LOG_ERR, "%s: route cmd truncated", __FUNCTION__);
+		return;
+	}
 
 	logmsg(LOG_DEBUG, "*** %s: cmd=%s", __FUNCTION__, cmd);
-	system(cmd);
+	mdu_eval(cmd, NULL);
 }
 
 static int check_stop(void)
