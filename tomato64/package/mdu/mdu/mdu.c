@@ -75,7 +75,7 @@
 
 char *blob = NULL;
 char ifname[16];
-static int mdu_addrcheck_af = 0;
+static int mdu_http_force_af = 0;
 char sPrefix[8];
 int error_exitcode = 1;
 int g_argc;
@@ -125,8 +125,8 @@ static int mdu_mwan_route_enabled(void)
 
 static int mdu_http_af(void)
 {
-	if (mdu_addrcheck_af)
-		return mdu_addrcheck_af;
+	if (mdu_http_force_af)
+		return mdu_http_force_af;
 
 	if (mdu_mwan_route_enabled())
 		return AF_INET;
@@ -1422,9 +1422,9 @@ static const char *get_address_checked(int want_af)
 #ifdef USE_LIBCURL
 		curl_err_str[0] = '\0';
 #endif
-		mdu_addrcheck_af = want_af;
+		mdu_http_force_af = want_af;
 		code = http_req(1, 1, services[service_num][0], services[service_num][1], NULL, 0, &body); /* use ssl */
-		mdu_addrcheck_af = 0;
+		mdu_http_force_af = 0;
 
 		if (code == 200 && body) {
 			/* body points to global blob - no free needed */
@@ -1520,6 +1520,23 @@ static const char *get_address(int required)
 	return required ? get_option_required("addr") : NULL;
 }
 
+static const char *get_address4(int required)
+{
+	const char *c;
+
+	if ((c = get_option("addr")) != NULL) {
+		if (*c == '@')
+			return get_address_checked(AF_INET);
+
+		if (mdu_addr_family(c, NULL, 0) != AF_INET)
+			error(M_INVALID_PARAM__S, "addr");
+
+		return c;
+	}
+
+	return required ? get_option_required("addr") : NULL;
+}
+
 #ifdef TCONFIG_IPV6
 static const char *get_address6(void)
 {
@@ -1535,6 +1552,12 @@ static const char *get_address6(void)
 
 static const char *get_update_address(int required)
 {
+	const char *service;
+
+	service = get_option("service");
+	if (service && (strcmp(service, "heipv6tb") == 0))
+		return get_address4(required);
+
 #ifdef TCONFIG_IPV6
 	if (custom_url_uses_ip6())
 		return get_address6();
@@ -1542,19 +1565,28 @@ static const char *get_update_address(int required)
 	return get_address(required);
 }
 
-static void append_addr_option(char *buffer, size_t buffer_sz, const char *format)
+static void append_addr_value(char *buffer, size_t buffer_sz, const char *format, const char *addr)
 {
-	const char *c;
 	size_t len;
 
-	if ((c = get_address(0)) == NULL)
+	if (addr == NULL)
 		return;
 
 	len = strlen(buffer);
 	if (len >= buffer_sz)
 		return;
 
-	snprintf(buffer + len, buffer_sz - len, format, c);
+	snprintf(buffer + len, buffer_sz - len, format, addr);
+}
+
+static void append_addr_option(char *buffer, size_t buffer_sz, const char *format)
+{
+	append_addr_value(buffer, buffer_sz, format, get_address(0));
+}
+
+static void append_addr4_option(char *buffer, size_t buffer_sz, const char *format)
+{
+	append_addr_value(buffer, buffer_sz, format, get_address4(0));
 }
 
 /*
@@ -1582,12 +1614,13 @@ static void append_addr_option(char *buffer, size_t buffer_sz, const char *forma
 	Authorization: Basic username:pass
 	User-Agent: Company - Device - Version Number
 */
-static void update_dua(const char *type, const unsigned int ssl, const char *server, const char *path, int reqhost)
+static void update_dua(const char *type, const unsigned int ssl, const char *server, const char *path, int reqhost, int addr_af)
 {
 	const char *p;
 	char query[2048];
 	long r;
 	char *body;
+	int saved_http_af;
 
 	/* +opt */
 	snprintf(query, sizeof(query), "%s?", path ? path : get_option_required("path"));
@@ -1606,14 +1639,23 @@ static void update_dua(const char *type, const unsigned int ssl, const char *ser
 		snprintf(query + strlen(query), sizeof(query) - strlen(query), "mx=%s&backmx=%s&", p, (get_option_onoff("backmx", 0)) ? "YES" : "NO");
 
 	/* +opt */
-	append_addr_option(query, sizeof(query), "myip=%s&");
+	if (addr_af == AF_INET)
+		append_addr4_option(query, sizeof(query), "myip=%s&");
+	else
+		append_addr_option(query, sizeof(query), "myip=%s&");
 
 	if (get_option_onoff("wildcard", 0))
 		strlcat(query, "wildcard=ON", sizeof(query));
 
 	trimamp(query);
 
+	saved_http_af = mdu_http_force_af;
+	if (addr_af)
+		mdu_http_force_af = addr_af;
+
 	r = http_req(ssl, 0, server ? server : get_option_required("server"), query, NULL, 1, &body);
+
+	mdu_http_force_af = saved_http_af;
 	switch (r) {
 	case 200:
 		if ((strstr(body, "dnserr")) || (strstr(body, "911"))) {
@@ -2532,43 +2574,43 @@ int main(int argc, char *argv[])
 	logmsg(LOG_DEBUG, "*** %s: proceeding DDNS server update [service: %s ] ...", __FUNCTION__, p);
 
 	if (strcmp(p, "changeip") == 0)
-		update_dua("dyndns", 1, "nic.changeip.com", "/nic/update", 1);
+		update_dua("dyndns", 1, "nic.changeip.com", "/nic/update", 1, 0);
 	else if (strcmp(p, "cloudflare") == 0)
 		update_cloudflare(1);
 	else if (strcmp(p, "dnsexit") == 0)
 		update_dnsexit(1);
 	else if (strcmp(p, "dnshenet") == 0)
-		update_dua(NULL, 1, "dyn.dns.he.net", "/nic/update", 0);
+		update_dua(NULL, 1, "dyn.dns.he.net", "/nic/update", 0, 0);
 	else if (strcmp(p, "dnsomatic") == 0)
-		update_dua(NULL, 1, "updates.dnsomatic.com", "/nic/update", 0);
+		update_dua(NULL, 1, "updates.dnsomatic.com", "/nic/update", 0, 0);
 	else if (strcmp(p, "dyndns") == 0)
-		update_dua("dyndns", 1, "members.dyndns.org", "/nic/update", 1);
+		update_dua("dyndns", 1, "members.dyndns.org", "/nic/update", 1, 0);
 	else if (strcmp(p, "dyndns-static") == 0)
-		update_dua("statdns", 1, "members.dyndns.org", "/nic/update", 1);
+		update_dua("statdns", 1, "members.dyndns.org", "/nic/update", 1, 0);
 	else if (strcmp(p, "dyndns-custom") == 0)
-		update_dua("custom", 1, "members.dyndns.org", "/nic/update", 1);
+		update_dua("custom", 1, "members.dyndns.org", "/nic/update", 1, 0);
 	else if (strcmp(p, "easydns") == 0)
-		update_dua(NULL, 1, "members.easydns.com", "/dyn/dyndns.php", 1);
+		update_dua(NULL, 1, "members.easydns.com", "/dyn/dyndns.php", 1, 0);
 	else if (strcmp(p, "enom") == 0)
 		update_enom(1); /* fixed cert */
 	else if (strcmp(p, "afraid") == 0)
 		update_afraid(1);
 	else if (strcmp(p, "heipv6tb") == 0)
-		update_dua("heipv6tb", 1, "ipv4.tunnelbroker.net", "/nic/update", 1);
+		update_dua("heipv6tb", 1, "ipv4.tunnelbroker.net", "/nic/update", 1, AF_INET);
 	else if (strcmp(p, "namecheap") == 0)
 		update_namecheap(1);
 	else if (strcmp(p, "noip") == 0)
-		update_dua(NULL, 1, "dynupdate.no-ip.com", "/nic/update", 1);
+		update_dua(NULL, 1, "dynupdate.no-ip.com", "/nic/update", 1, 0);
 	else if (strcmp(p, "opendns") == 0)
-		update_dua(NULL, 1, "updates.opendns.com", "/nic/update", 0);
+		update_dua(NULL, 1, "updates.opendns.com", "/nic/update", 0, 0);
 	else if (strcmp(p, "ovh") == 0)
-		update_dua("dyndns", 1, "www.ovh.com", "/nic/update", 1);
+		update_dua("dyndns", 1, "www.ovh.com", "/nic/update", 1, 0);
 	else if (strcmp(p, "pairdomains") == 0)
-		update_dua(NULL, 1, "dynamic.pairdomains.com", "/nic/update", 1);
+		update_dua(NULL, 1, "dynamic.pairdomains.com", "/nic/update", 1, 0);
 	else if (strcmp(p, "pubyun") == 0)
-		update_dua(NULL, 0, "members.3322.org", "/dyndns/update", 1); /* bad cert */
+		update_dua(NULL, 0, "members.3322.org", "/dyndns/update", 1, 0); /* bad cert */
 	else if (strcmp(p, "pubyun-static") == 0)
-		update_dua("statdns", 0, "members.3322.org", "/dyndns/update", 1); /* bad cert */
+		update_dua("statdns", 0, "members.3322.org", "/dyndns/update", 1, 0); /* bad cert */
 	else if (strcmp(p, "zoneedit") == 0)
 		update_zoneedit(1);
 	else if (strcmp(p,  "duckdns") ==0)
