@@ -49,7 +49,7 @@ var services = [
 	['', 'None', '', ''],
 	['changeip', 'ChangeIP (https)', 'https://www.changeip.com/', 'uh', 'Email Address'],
 	['cloudflare', 'Cloudflare (https)', 'https://www.cloudflare.com/', 'phbnw', null, 'API token', null, 'Proxied', 'Create record if needed', 'Zone ID'],
-	['dnsexit', 'DNS Exit (https)', 'https://www.dnsexit.com/', 'uh'],
+	['dnsexit', 'DNS Exit (https)', 'https://www.dnsexit.com/', 'ph', null, 'API key', 'Hostname(s)'],
 	['dnshenet', 'dns.he.net (https)', 'https://dns.he.net/', 'u', 'Host name', 'DDNS key'],
 	['dnsomatic', 'DNS-O-Matic (https)', 'https://www.dnsomatic.com/', 'uj', null, null, 'Domain <small>(optional)<\/small>'],
 	['duckdns', 'Duck DNS (https)', 'https://www.duckdns.org/', 'tn', 'Domain'],

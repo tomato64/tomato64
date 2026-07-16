@@ -1017,8 +1017,11 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	APPEND_REQUEST(host);
 	APPEND_REQUEST("\r\nConnection: close\r\n");
 
-	if (!header)
+	if (!header) {
 		APPEND_REQUEST("User-Agent: " AGENT "\r\nCache-Control: no-cache\r\n");
+		if (data)
+			APPEND_REQUEST("Content-Type: application/x-www-form-urlencoded\r\n");
+	}
 
 	if (auth) {
 		user = get_option_required("user");
@@ -1913,53 +1916,53 @@ static void update_enom(const unsigned int ssl)
 
 /*
 	dnsExit
-	http://www.dnsexit.com/Direct.sv?cmd=ipClients
+	https://api.dnsexit.com/dns/ud/?apikey=API-Key
+	POST body: host=hostname[,hostname2][&ip=address]
 
 	---
 
-"HTTP/1.1 200 OK
-...
-
- HTTP/1.1 200 OK
-0=Success"
-
-" HTTP/1.1 200 OK
-11=fail to find foo.bar.com"
-
-" HTTP/1.1 200 OK
-4=Update too often. Please wait at least 8 minutes since the last update"
-
-" HTTP/1.1 200 OK" <-- extra in body?
+	{"code" : 0, "message" : "Success - some details about the update"}
+	code:0 indicates successful updates.
+	code:1 indicates IP address not changed.
+	Other returning codes indicate errors.
 */
 static void update_dnsexit(const unsigned int ssl)
 {
+	const char *p;
 	long r;
 	char *body;
-	char query[2048];
+	char query[512];
+	char data[2048];
+	int code;
 
-	/* +opt +opt +opt */
 	query[0] = '\0';
-	mdu_appendf(query, sizeof(query), "/RemoteUpdate.sv?login=%s&password=%s&host=%s", get_option_required("user"), get_option_required("pass"), get_option_required("host"));
+	mdu_appendf(query, sizeof(query), "/dns/ud/?apikey=%s", get_option_required("pass"));
 
-	/* +opt */
-	append_addr_option(query, sizeof(query), "&myip=%s");
+	data[0] = '\0';
+	mdu_appendf(data, sizeof(data), "host=%s", get_option_required("host"));
+	append_addr_option(data, sizeof(data), "&ip=%s");
 
-	r = http_req(ssl, 0, "update.dnsexit.com", query, NULL, 0, &body);
-	if (r == 200) { /* (\d+)=.+ */
-		if ((strstr(body, "0=Success")) || (strstr(body, "1=IP")))
+	r = _http_req(ssl, 1, "api.dnsexit.com", "POST", query, NULL, 0, data, &body);
+	if (r == 200) {
+		code = -1;
+		if (((p = strstr(body, "\"code\"")) != NULL) && ((p = strchr(p, ':')) != NULL)) {
+			while (isspace((unsigned char)*++p));
+
+			if (isdigit((unsigned char)*p))
+				code = atoi(p);
+		}
+
+		if (code == 0)
 			success();
 
-		if ((strstr(body, "2=Invalid")) || (strstr(body, "3=User")))
-			error(M_INVALID_AUTH);
-
-		if ((strstr(body, "10=Host")) || (strstr(body, "11=fail")))
-			error(M_INVALID_HOST);
-
-		if (strstr(body, "4=Update"))
-			error(M_TOOSOON);
+		if (code == 1)
+			success_msg(M_SAME_RECORD, 1);
 
 		error(M_UNKNOWN_RESPONSE__D, -1);
 	}
+
+	if (r == 401 || r == 403)
+		error(M_INVALID_AUTH);
 
 	error(M_UNKNOWN_ERROR__D, r);
 }
