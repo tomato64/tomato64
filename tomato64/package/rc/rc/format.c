@@ -8,6 +8,7 @@
  * If old_name exists in NVRAM, copy its value to new_name
  * and unset old_name. Returns 1 if migrated, 0 if not.
  */
+#ifdef TCONFIG_OPENVPN
 static int migrate_nv(const char *old_name, const char *new_name)
 {
 	const char *val = nvram_get(old_name);
@@ -18,6 +19,7 @@ static int migrate_nv(const char *old_name, const char *new_name)
 	}
 	return 0;
 }
+#endif /* TCONFIG_OPENVPN */
 
 void nvram_format_compat(void)
 {
