@@ -866,27 +866,31 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		curl_easy_setopt(curl_handle, CURLOPT_HTTPAUTH, CURLAUTH_NONE);
 
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)curl_wbuf);
+	curl_easy_setopt(curl_handle, CURLOPT_READDATA, NULL);
+	curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, 0L);
+	curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 0L);
+	curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, NULL);
+	curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, 0L);
 
-	if (data) { /* only cloudflare (for now) */
-		curl_rbuf = fmemopen(data, strlen(data), "r");
-		if (curl_rbuf) {
-			curl_easy_setopt(curl_handle, CURLOPT_READDATA, (void *)curl_rbuf);
-			curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, (long)strlen(data));
-			curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 1L);
+	if (!strcmp(req, "POST")) {
+		curl_easy_setopt(curl_handle, CURLOPT_POST, 1L);
+		if (data) {
+			curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, data);
+			curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, (long)strlen(data));
 		}
 	}
-	else {
-		curl_easy_setopt(curl_handle, CURLOPT_READDATA, NULL);
-		curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, 0L);
-		curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 0L);
-	}
-
-	if (!strcmp(req, "POST"))
-		curl_easy_setopt(curl_handle, CURLOPT_POST, 1L);
 	else if (!strcmp(req, "GET"))
 		curl_easy_setopt(curl_handle, CURLOPT_HTTPGET, 1L);
-	else if (!strcmp(req, "PUT"))
+	else if (!strcmp(req, "PUT")) {
+		if (data) { /* only cloudflare (for now) */
+			curl_rbuf = fmemopen(data, strlen(data), "r");
+			if (curl_rbuf) {
+				curl_easy_setopt(curl_handle, CURLOPT_READDATA, (void *)curl_rbuf);
+				curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, (long)strlen(data));
+			}
+		}
 		curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 1L);
+	}
 
 	/* add route */
 	if (ip[0] != '\0')
