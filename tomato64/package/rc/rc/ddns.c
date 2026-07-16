@@ -23,6 +23,23 @@
 #define LOGMSG_NVDEBUG	"ddns_debug"
 
 
+static void clear_extip_cache(const char *name)
+{
+#ifdef TCONFIG_IPV6
+	char s[128];
+#endif
+
+	f_write(name, NULL, 0, 0, 0);
+
+#ifdef TCONFIG_IPV6
+	snprintf(s, sizeof(s), "%s.4", name);
+	f_write(s, NULL, 0, 0, 0);
+
+	snprintf(s, sizeof(s), "%s.6", name);
+	f_write(s, NULL, 0, 0, 0);
+#endif
+}
+
 static void update(int num, int *dirty, int force)
 {
 	char config[2048];
@@ -41,7 +58,6 @@ static void update(int num, int *dirty, int force)
 	char msg_fn[32];
 	char ip[32];
 	int exitcode, errors;
-	int cold_extip;
 	FILE *f;
 	char prefix[] = "wanXX";
 
@@ -116,24 +132,15 @@ static void update(int num, int *dirty, int force)
 		logmsg(LOG_DEBUG, "*** %s: inet_addr ip: %s", __FUNCTION__, ip);
 	}
 
-	/* cold boot/start: do not trust persistent cookie until checker cache exists */
-	cold_extip = 0;
 	snprintf(s, sizeof(s), "%s.extip", ddnsx_path);
-	if ((ip[0] == '@') && !f_exists(s))
-		cold_extip = 1;
 
-	/* copy content of nvram cache to a file cache */
+	/* copy content of nvram cache to a file cache; mdu decides whether it can be trusted */
 	snprintf(cache_fn, sizeof(cache_fn), "%s.cache", ddnsx_path);
-	if (cold_extip) {
-		logmsg(LOG_DEBUG, "*** %s: cold external checker cache, ignoring nvram cookie", __FUNCTION__);
-		f_write(cache_fn, NULL, 0, 0, 0);
-	}
-	else
-		f_write_string(cache_fn, nvram_safe_get(cache_nv), 0, 0);
+	f_write_string(cache_fn, nvram_safe_get(cache_nv), 0, 0);
 
 	/* if nvram cache is empty, the 'Force next update' option is probably checked - reset also cache file .extip */
 	if (strcmp(nvram_safe_get(cache_nv), "") == 0)
-		f_write(s, NULL, 0, 0, 0);
+		clear_extip_cache(s);
 
 	if (!f_exists(msg_fn)) {
 		logmsg(LOG_DEBUG, "*** %s: !f_exist(%s) - creating ...", __FUNCTION__, msg_fn);

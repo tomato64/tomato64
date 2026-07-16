@@ -76,6 +76,7 @@
 char *blob = NULL;
 char ifname[16];
 static int mdu_http_force_af = 0;
+static int mdu_addr_cache_cold = 0;
 char sPrefix[8];
 int error_exitcode = 1;
 int g_argc;
@@ -1429,6 +1430,9 @@ static const char *get_address_checked(int want_af)
 #endif
 
 	set_addr_cache_name(cache_name, sizeof(cache_name), want_af);
+	if (!f_exists(cache_name))
+		mdu_addr_cache_cold = 1;
+
 	if (read_tmaddr(cache_name, &et, addr, sizeof(addr))) {
 		if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE) && (mdu_addr_family(addr, NULL, 0) == want_af)) {
 #ifdef TCONFIG_IPV6
@@ -2501,6 +2505,8 @@ static void check_cookie(void)
 
 	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
 
+	mdu_addr_cache_cold = 0;
+
 	if (((c = get_option("cookie")) == NULL) || (!read_tmaddr(c, &tm, addr, sizeof(addr)))) {
 		logmsg(LOG_DEBUG, "*** %s: no cookie", __FUNCTION__);
 		return;
@@ -2508,6 +2514,10 @@ static void check_cookie(void)
 
 	if ((c = get_update_address(0)) == NULL) {
 		logmsg(LOG_DEBUG, "*** %s: no address specified", __FUNCTION__);
+		return;
+	}
+	if (mdu_addr_cache_cold) {
+		logmsg(LOG_DEBUG, "*** %s: cold external checker cache, ignoring cookie", __FUNCTION__);
 		return;
 	}
 	if (strcmp(c, addr) != 0) {
