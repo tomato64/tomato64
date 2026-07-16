@@ -444,13 +444,17 @@ function calculateRangeStats() {
 		return;
 	}
 
-	/* convert X coordinates to data indices */
-	var idx1 = Math.floor((vWidth - x2) / advX);
-	var idx2 = Math.floor((vWidth - x1) / advX);
+	/* convert X coordinates to the same data indices that drawData() uses:
+	 * x = 0 is the oldest visible sample, x = vWidth is the newest one.
+	 */
+	var visibleStart = Math.max(0, rxDataGlobal.length - maxL);
+	var visibleSamples = rxDataGlobal.length - visibleStart;
+	var idx1 = Math.max(0, Math.min(visibleSamples, Math.floor(x1 / advX)));
+	var idx2 = Math.max(0, Math.min(visibleSamples, Math.ceil(x2 / advX)));
 
-	/* calculate data range (from end of array) */
-	var startIdx = Math.max(0, rxDataGlobal.length - maxL + idx1);
-	var endIdx = Math.min(rxDataGlobal.length, rxDataGlobal.length - maxL + idx2);
+	/* calculate data range; endIdx is exclusive */
+	var startIdx = visibleStart + idx1;
+	var endIdx = visibleStart + idx2;
 
 	if (startIdx >= endIdx || startIdx < 0 || endIdx > rxDataGlobal.length) {
 		hideSelectionInfo();
