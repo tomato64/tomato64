@@ -11860,7 +11860,7 @@ static void sysinit(void)
 
 	stime(&tm);
 
-	static const char *mkd[] = { "/tmp/etc", "/tmp/var", "/tmp/home", "/tmp/mnt", "/tmp/splashd",
+	static const char *mkd[] = { "/tmp/etc", "/tmp/var", "/tmp/home", "/tmp/mnt", "/tmp/splashd", "/tmp/httpd",
 	                             "/tmp/share", "/tmp/var/wwwext", "/tmp/var/wwwext/cgi-bin",
 	                             "/var/webmon", "/var/log", "/var/run", "/var/tmp", "/var/lib", "/var/lib/misc",
 	                             "/var/spool", "/var/spool/cron", "/var/spool/cron/crontabs",

@@ -116,6 +116,11 @@
 #define USER_DEFAULT		"root"
 #define PASS_DEFAULT		"admin"
 
+#define LOGIN_STAMP_PREFIX	"/tmp/httpd/httpd-gui-login-"
+#define LOGIN_LOCK_PATH		"/tmp/httpd/httpd-gui-login.lock"
+#define LOGIN_COOKIE_NAME	"tomato_gui_session"
+#define LOGIN_COOKIE_LEN	16
+
 #define DO_FILE_MAX_BYTES	(10UL * 1024UL * 1024UL)
 #define CFE_MTD_PATH		"/dev/mtd0ro"
 #define MTD_CHAR_MAJOR		90
@@ -160,6 +165,10 @@ char client_addr[INET6_ADDRSTRLEN];
 #else
 char client_addr[INET_ADDRSTRLEN];
 #endif
+
+static char login_cookie[LOGIN_COOKIE_LEN + 1];
+static char login_cookie_header[192];
+static unsigned long login_cookie_seq;
 
 static listeners_t listeners;
 static int disable_maxage = 0;
@@ -221,6 +230,11 @@ void send_header(int status, const char* header, const char* mime, int cache)
 		         "Expires: Thu, 31 Dec 1970 00:00:00 GMT\r\n"
 		         "Pragma: no-cache\r\n");
 	}
+	if (login_cookie_header[0] != '\0') {
+		web_printf("%s\r\n", login_cookie_header);
+		login_cookie_header[0] = '\0';
+	}
+
 	if (header)
 		web_printf("%s\r\n", header);
 
@@ -328,6 +342,272 @@ static void get_client_addr(void)
 	inet_ntop(clientsai.ss_family, addr, client_addr, sizeof(client_addr));
 }
 
+
+static unsigned long login_hash_add(unsigned long hash, const char *s)
+{
+	while ((s != NULL) && (*s != '\0')) {
+		hash = ((hash << 5) + hash) ^ (unsigned char)*s;
+		s++;
+	}
+
+	return hash;
+}
+
+static unsigned long login_identity_hash(void)
+{
+	unsigned long hash;
+	char port[16];
+
+	hash = 5381;
+	hash = login_hash_add(hash, authinfo);
+	hash = login_hash_add(hash, "|");
+	hash = login_hash_add(hash, client_addr);
+	hash = login_hash_add(hash, "|");
+
+	memset(port, 0, sizeof(port));
+	snprintf(port, sizeof(port), "%d:%d", http_port, do_ssl ? 1 : 0);
+	hash = login_hash_add(hash, port);
+
+	return hash;
+}
+
+static void login_session_path(char *path, size_t pathlen, const char *token)
+{
+	unsigned long hash;
+
+	hash = login_identity_hash();
+	hash = login_hash_add(hash, "|");
+	hash = login_hash_add(hash, token);
+
+	snprintf(path, pathlen, "%s%08lx", LOGIN_STAMP_PREFIX, hash);
+}
+
+static int login_cookie_char(char c)
+{
+	return (((c >= '0') && (c <= '9')) || ((c >= 'a') && (c <= 'f')));
+}
+
+static int login_cookie_value_ok(const char *s)
+{
+	int i;
+
+	if (s == NULL)
+		return 0;
+
+	for (i = 0; i < LOGIN_COOKIE_LEN; i++) {
+		if (!login_cookie_char(s[i]))
+			return 0;
+	}
+
+	return (s[LOGIN_COOKIE_LEN] == '\0');
+}
+
+static void login_cookie_parse(const char *cookie)
+{
+	const char *p;
+	int name_len;
+	int i;
+
+	if ((cookie == NULL) || (login_cookie[0] != '\0'))
+		return;
+
+	name_len = strlen(LOGIN_COOKIE_NAME);
+	p = cookie;
+
+	while (*p != '\0') {
+		while ((*p == ' ') || (*p == '\t') || (*p == ';'))
+			p++;
+
+		if ((strncmp(p, LOGIN_COOKIE_NAME, name_len) == 0) && (p[name_len] == '=')) {
+			p += name_len + 1;
+
+			for (i = 0; (i < LOGIN_COOKIE_LEN) && login_cookie_char(p[i]); i++)
+				login_cookie[i] = p[i];
+
+			login_cookie[i] = '\0';
+
+			if (i != LOGIN_COOKIE_LEN)
+				login_cookie[0] = '\0';
+
+			return;
+		}
+
+		while ((*p != '\0') && (*p != ';'))
+			p++;
+	}
+}
+
+static void login_cookie_set(const char *token)
+{
+	if ((token == NULL) || (!login_cookie_value_ok(token)))
+		return;
+
+	snprintf(login_cookie_header, sizeof(login_cookie_header),
+	         "Set-Cookie: %s=%s; Path=/; HttpOnly; SameSite=Strict",
+	         LOGIN_COOKIE_NAME, token);
+}
+
+static void login_cookie_expire(void)
+{
+	snprintf(login_cookie_header, sizeof(login_cookie_header),
+	         "Set-Cookie: %s=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict",
+	         LOGIN_COOKIE_NAME);
+}
+
+static void login_new_token(char *token, size_t tokenlen)
+{
+	unsigned long h1;
+	unsigned long h2;
+	char tmp[64];
+
+	login_cookie_seq++;
+
+	memset(tmp, 0, sizeof(tmp));
+	snprintf(tmp, sizeof(tmp), "%lu:%lu:%d:%lu",
+	         (unsigned long)time(NULL),
+	         login_cookie_seq,
+	         getpid(),
+	         (unsigned long)clock());
+
+	h1 = login_identity_hash();
+	h1 = login_hash_add(h1, "|");
+	h1 = login_hash_add(h1, tmp);
+
+	h2 = 2166136261UL;
+	h2 = login_hash_add(h2, tmp);
+	h2 = login_hash_add(h2, "|");
+	h2 = login_hash_add(h2, authinfo);
+	h2 = login_hash_add(h2, client_addr);
+
+	snprintf(token, tokenlen, "%08lx%08lx", h1, h2);
+	token[LOGIN_COOKIE_LEN] = '\0';
+}
+
+static int login_lock_acquire(void)
+{
+	struct flock fl;
+	int fd;
+	int r;
+
+	fd = open(LOGIN_LOCK_PATH, O_RDWR | O_CREAT, 0600);
+	if (fd < 0)
+		return -1;
+
+	memset(&fl, 0, sizeof(fl));
+	fl.l_type = F_WRLCK;
+	fl.l_whence = SEEK_SET;
+
+	do {
+		r = fcntl(fd, F_SETLKW, &fl);
+	} while ((r < 0) && (errno == EINTR));
+
+	if (r < 0) {
+		close(fd);
+		return -1;
+	}
+
+	return fd;
+}
+
+static void login_lock_release(int fd)
+{
+	struct flock fl;
+
+	if (fd < 0)
+		return;
+
+	memset(&fl, 0, sizeof(fl));
+	fl.l_type = F_UNLCK;
+	fl.l_whence = SEEK_SET;
+	fcntl(fd, F_SETLK, &fl);
+	close(fd);
+}
+
+static int login_create_marker(const char *token)
+{
+	char path[96];
+	int fd;
+
+	if (!login_cookie_value_ok(token))
+		return 0;
+
+	login_session_path(path, sizeof(path), token);
+
+	fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
+	if (fd < 0)
+		return 0;
+
+	close(fd);
+	return 1;
+}
+
+static int login_marker_valid(void)
+{
+	char path[96];
+	struct stat st;
+
+	if (!login_cookie_value_ok(login_cookie))
+		return 0;
+
+	login_session_path(path, sizeof(path), login_cookie);
+
+	if (lstat(path, &st) != 0)
+		return 0;
+
+	if (!S_ISREG(st.st_mode))
+		return 0;
+
+	if ((st.st_mode & 0777) != 0600)
+		return 0;
+
+	return 1;
+}
+
+static void login_session_remove(void)
+{
+	char path[96];
+	int lockfd;
+
+	login_cookie_expire();
+
+	if ((authinfo[0] == '\0') || (client_addr[0] == '\0') || (!login_cookie_value_ok(login_cookie)))
+		return;
+
+	login_session_path(path, sizeof(path), login_cookie);
+
+	lockfd = login_lock_acquire();
+	if (lockfd < 0)
+		return;
+
+	unlink(path);
+	login_lock_release(lockfd);
+}
+
+static void login_success_log_once(void)
+{
+	char token[LOGIN_COOKIE_LEN + 1];
+	int lockfd;
+
+	if ((authinfo[0] == '\0') || (client_addr[0] == '\0'))
+		return;
+
+	lockfd = login_lock_acquire();
+	if (lockfd < 0)
+		return;
+
+	if (!login_marker_valid()) {
+		memset(token, 0, sizeof(token));
+		login_new_token(token, sizeof(token));
+
+		if (login_create_marker(token)) {
+			login_cookie_set(token);
+			logmsg(LOG_INFO, "login '%s' successful (GUI) from %s:%d", authinfo, client_addr, http_port);
+		}
+	}
+
+	login_lock_release(lockfd);
+}
+
 static auth_t auth_check(const char *authorization)
 {
 	const char *u, *p;
@@ -365,6 +645,8 @@ static auth_t auth_check(const char *authorization)
 		return AUTH_OK;
 	}
 	else {
+		login_session_remove();
+
 		/* failed login msg to syslog */
 		logmsg(LOG_WARNING, "login '%s' failed (GUI) from %s:%d", authinfo, client_addr, http_port);
 	}
@@ -707,6 +989,8 @@ static void handle_request(void)
 	/* initialize variables */
 	header_sent = 0;
 	authorization = boundary = useragent = NULL;
+	login_cookie[0] = '\0';
+	login_cookie_header[0] = '\0';
 	memset(line, 0, sizeof(line));
 
 	/* parse the first line of the request */
@@ -795,6 +1079,12 @@ static void handle_request(void)
 			useragent = cp;
 			cur = cp + strlen(cp) + 1;
 			logmsg(LOG_DEBUG, "*** %s: httpd user-agent: %s", __FUNCTION__, useragent);
+		}
+		else if (strncasecmp(cur, "Cookie:", 7) == 0) {
+			cp = &cur[7];
+			cp += strspn(cp, " \t");
+			login_cookie_parse(cp);
+			cur = cp + strlen(cp) + 1;
 		}
 		else if (strncasecmp(cur, "Content-Length:", 15) == 0) {
 			cp = &cur[15];
@@ -926,6 +1216,9 @@ static void handle_request(void)
 				return;
 			}
 
+			if (handler->auth)
+				login_success_log_once();
+
 			if (handler->input)
 				handler->input(file, cl, boundary);
 
@@ -949,10 +1242,11 @@ static void handle_request(void)
 	if (strcmp(file, "logout") == 0) { /* special case */
 		wi_generic(file, cl, boundary);
 		eat_garbage();
+		login_session_remove();
 		send_authenticate();
 
 		/* send logout msg to syslog */
-		logmsg(LOG_INFO, "logout '%s' successful (GUI) %s:%d", authinfo, client_addr, http_port);
+		logmsg(LOG_INFO, "logout '%s' successful (GUI) from %s:%d", authinfo, client_addr, http_port);
 		send_error(404, NULL, "Goodbye");
 		return;
 	}
