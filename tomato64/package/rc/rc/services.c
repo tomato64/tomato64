@@ -3816,10 +3816,17 @@ static const struct svc_entry svc_table[] = {
 	{ "wan",		SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_MWAN_SUFFIX | SVCF_NO_STATUS,
 							P_NONE,		1 },
 	{ "net",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#ifdef TOMATO64
+	{ "wifi",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "zram",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "cpufreq",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#endif /* TOMATO64 */
+#ifndef TOMATO64
 	{ "wireless",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
 	{ "wl",			SVCF_NO_STATUS,		P_NONE,		0 },
 	{ "wlgui",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
 	{ "nas",		SVCF_LIST,		P_NAS,		0 },
+#endif /* TOMATO64 */
 #ifdef TCONFIG_BCMBSD
 	{ "bsd",		SVCF_LIST,		P_BSD,		0 },
 #endif
@@ -3852,9 +3859,11 @@ static const struct svc_entry svc_table[] = {
 #endif
 	{ "tomatoanon",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
 
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	{ "porthealth",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
 #endif
+#endif /* TOMATO64 */
 #ifdef TCONFIG_USB
 	{ "usb",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
 	{ "usbapps",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
