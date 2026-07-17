@@ -1405,8 +1405,7 @@ void start_upnp(void)
 	           "manufacturer_url=https://tomato64.org/\n"
 	           /* Empty strings so that 1 and 00000000 are not reported */
 	           "model_number=\n"
-	           "serial=\n"
-	           "\n",
+	           "serial=\n",
 	           upnp_port,
 	           (enable & 1) ? "yes" : "no",			/* upnp enable */
 	           (enable & 2) ? "yes" : "no",			/* pcp_pmp enable */
@@ -1454,7 +1453,7 @@ void start_upnp(void)
 				fprintf(f, "allow 1024-65535 %s/%s 1024-65535\n", lanip, lanmask);
 		}
 	}
-	fprintf(f, "\ndeny 0-65535 0.0.0.0/0 0-65535\n");
+	fprintf(f, "deny 0-65535 0.0.0.0/0 0-65535\n");
 
 	fclose(f);
 
