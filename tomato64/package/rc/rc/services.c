@@ -2748,6 +2748,10 @@ void stop_services(void)
 #endif
 }
 
+struct svc_entry;
+static const struct svc_entry *svc_find(const char *name);
+static int svc_exec_simple(const struct svc_entry *svc, int act_start, int act_stop);
+
 /* nvram "action_service" is: "service-action[-modifier]"
  * action is something like "stop" or "start" or "restart"
  * optional modifier is "c" for the "service" command-line command
@@ -2762,6 +2766,7 @@ void exec_service(void)
 	char *act;
 	char *next;
 	char *modifier;
+	const struct svc_entry *svc;
 	int action, user;
 	int i;
 	int act_start, act_stop;
@@ -2793,6 +2798,10 @@ TOP:
 	act_stop  = action & A_STOP;
 
 	user = (modifier != NULL && *modifier == 'c');
+
+	svc = svc_find(service);
+	if ((svc != NULL) && svc_exec_simple(svc, act_start, act_stop))
+		goto CLEAR;
 
 	if (strcmp(service, "rstats_nvram") == 0) {
 		if (act_stop) del_rstats_defaults();
@@ -2859,46 +2868,6 @@ TOP:
 		if (act_start) reload_dnsmasq();
 		goto CLEAR;
 	}
-
-#ifdef TCONFIG_DNSCRYPT
-	if ((strcmp(service, "dnscrypt") == 0) || (strcmp(service, "dnscrypt_proxy") == 0)) {
-		if (act_stop) stop_dnscrypt();
-		if (act_start) start_dnscrypt();
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_STUBBY
-	if (strcmp(service, "stubby") == 0) {
-		if (act_stop) stop_stubby();
-		if (act_start) start_stubby();
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_MDNS
-	if ((strcmp(service, "mdns") == 0) || (strcmp(service, "avahi_daemon") == 0)) {
-		if (act_stop) stop_mdns();
-		if (act_start) start_mdns();
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_IRQBALANCE
-	if (strcmp(service, "irqbalance") == 0) {
-		if (act_stop) stop_irqbalance();
-		if (act_start) start_irqbalance();
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_HAVEGED
-	if (strcmp(service, "haveged") == 0) {
-		if (act_stop) stop_haveged();
-		if (act_start) start_haveged();
-		goto CLEAR;
-	}
-#endif
 
 	if (strcmp(service, "adblock") == 0) {
 		if (act_stop) stop_adblock();
@@ -3002,32 +2971,6 @@ TOP:
 		goto CLEAR;
 	}
 
-	if (strcmp(service, "telnetd") == 0) {
-		if (act_stop) stop_telnetd();
-		if (act_start) start_telnetd();
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "sshd") == 0 || strcmp(service, "dropbear") == 0) {
-		if (act_stop) stop_sshd();
-		if (act_start) start_sshd();
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "httpd") == 0) {
-		if (act_stop) stop_httpd();
-		if (act_start) start_httpd();
-		goto CLEAR;
-	}
-
-#ifdef TCONFIG_IPV6
-	if (strcmp(service, "dhcp6") == 0) {
-		if (act_stop) stop_dhcp6c();
-		if (act_start) start_dhcp6c();
-		goto CLEAR;
-	}
-#endif
-
 	if (strncmp(service, "admin", 5) == 0) {
 		if (act_stop) {
 			if (!(strcmp(service, "adminnosshd") == 0))
@@ -3049,18 +2992,6 @@ TOP:
 		goto CLEAR;
 	}
 
-	if (strcmp(service, "ddns") == 0) {
-		if (act_stop) stop_ddns();
-		if (act_start) start_ddns();
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "ntpd") == 0) {
-		if (act_stop) stop_ntpd();
-		if (act_start) start_ntpd();
-		goto CLEAR;
-	}
-
 	if (strcmp(service, "logging") == 0) {
 		if (act_stop) stop_syslog();
 		if (act_start) start_syslog();
@@ -3070,18 +3001,6 @@ TOP:
 			start_cron();
 			restart_firewall();
 		}
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "crond") == 0) {
-		if (act_stop) stop_cron();
-		if (act_start) start_cron();
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "hotplug") == 0) {
-		if (act_stop) stop_hotplug2();
-		if (act_start) start_hotplug2();
 		goto CLEAR;
 	}
 
@@ -3157,38 +3076,6 @@ TOP:
 		}
 		goto CLEAR;
 	}
-
-#ifdef TCONFIG_CIFS
-	if (strcmp(service, "cifs") == 0) {
-		if (act_stop) stop_cifs();
-		if (act_start) start_cifs();
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_JFFS2
-	if (strncmp(service, "jffs", 4) == 0) { /* could be jffs/jffs2 */
-		if (act_stop) stop_jffs2();
-		if (act_start) start_jffs2();
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_ZEBRA
-	if (strcmp(service, "zebra") == 0) {
-		if (act_stop) stop_zebra();
-		if (act_start) start_zebra();
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_SDHC
-	if (strcmp(service, "mmc") == 0) {
-		if (act_stop) stop_mmc();
-		if (act_start) start_mmc();
-		goto CLEAR;
-	}
-#endif
 
 	if (strcmp(service, "routing") == 0) {
 		if (act_stop) {
@@ -3342,22 +3229,6 @@ TOP:
 	}
 #endif /* TOMATO64 */
 
-#ifdef TCONFIG_BCMBSD
-	if (strcmp(service, "bsd") == 0) {
-		if (act_stop) stop_bsd();
-		if (act_start) start_bsd();
-		goto CLEAR;
-	}
-#endif /* TCONFIG_BCMBSD */
-
-#ifdef TCONFIG_ROAM
-	if ((strcmp(service, "roamast") == 0) || (strcmp(service, "rssi") == 0)) {
-		if (act_stop) stop_roamast();
-		if (act_start) start_roamast();
-		goto CLEAR;
-	}
-#endif
-
 	if (strncmp(service, "rstats", 6) == 0) {
 		if (act_stop) stop_rstats();
 		if (act_start) {
@@ -3380,32 +3251,10 @@ TOP:
 		goto CLEAR;
 	}
 
-	if (strcmp(service, "sched") == 0) {
-		if (act_stop) stop_sched();
-		if (act_start) start_sched();
-		goto CLEAR;
-	}
-
 #ifdef TCONFIG_BT
 	if ((strcmp(service, "bittorrent") == 0) || (strcmp(service, "transmission") == 0) || (strcmp(service, "transmission_da") == 0)) {
 		if (act_stop) stop_bittorrent();
 		if (act_start) start_bittorrent(1); /* force (re)start */
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_NFS
-	if ((strcmp(service, "nfs") == 0) || (strcmp(service, "nfsd") == 0)) {
-		if (act_stop) stop_nfs();
-		if (act_start) start_nfs();
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_SNMP
-	if (strcmp(service, "snmp") == 0) {
-		if (act_stop) stop_snmp();
-		if (act_start) start_snmp();
 		goto CLEAR;
 	}
 #endif
@@ -3418,30 +3267,6 @@ TOP:
 		goto CLEAR;
 	}
 #endif
-
-#ifdef TCONFIG_UPS
-	if (strcmp(service, "ups") == 0) {
-		if (act_stop) stop_ups();
-		if (act_start) start_ups();
-		goto CLEAR;
-	}
-#endif
-
-	if (strcmp(service, "tomatoanon") == 0) {
-		if (act_stop) stop_tomatoanon();
-		if (act_start) start_tomatoanon();
-		goto CLEAR;
-	}
-
-#ifndef TOMATO64
-#ifdef TCONFIG_BCMARM
-	if (strcmp(service, "porthealth") == 0) {
-		if (act_stop) stop_porthealth();
-		if (act_start) start_porthealth();
-		goto CLEAR;
-	}
-#endif
-#endif /* TOMATO64 */
 
 #ifdef TCONFIG_USB
 	if (strcmp(service, "usb") == 0) {
@@ -3523,22 +3348,6 @@ TOP:
 	}
 #endif
 
-#ifdef TCONFIG_FANCTRL
-	if (strcmp(service, "fanctrl") == 0) {
-		if (act_stop) stop_phy_tempsense();
-		if (act_start) start_phy_tempsense();
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_NOCAT
-	if (strcmp(service, "splashd") == 0) {
-		if (act_stop) stop_nocat();
-		if (act_start) start_nocat();
-		goto CLEAR;
-	}
-#endif
-
 #ifdef TCONFIG_NGINX
 	if (strcmp(service, "nginx") == 0) {
 		if (act_stop) stop_nginx();
@@ -3556,12 +3365,6 @@ TOP:
 	if (strcmp(service, "pptpd") == 0) {
 		if (act_stop) stop_pptpd();
 		if (act_start) start_pptpd(1); /* force (re)start */
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "pptpclient") == 0) {
-		if (act_stop) stop_pptpc();
-		if (act_start) start_pptpc();
 		goto CLEAR;
 	}
 #endif
@@ -3640,6 +3443,77 @@ static void do_service(const char *name, const char *action, int user)
 #define SVCF_OVPNS_SUFFIX	0x40	/* numeric suffix is limited to OVPN_SERVER_COUNT */
 #define SVCF_WG_SUFFIX		0x80	/* numeric suffix is limited to WG_INTERFACE_COUNT */
 
+enum svc_op_id {
+	SVCOP_NONE = 0,
+	SVCOP_TELNETD,
+	SVCOP_SSHD,
+	SVCOP_HTTPD,
+	SVCOP_DDNS,
+	SVCOP_NTPD,
+	SVCOP_CROND,
+	SVCOP_HOTPLUG,
+	SVCOP_TOMATOANON,
+#ifdef TCONFIG_DNSCRYPT
+	SVCOP_DNSCRYPT,
+#endif
+#ifdef TCONFIG_STUBBY
+	SVCOP_STUBBY,
+#endif
+#ifdef TCONFIG_MDNS
+	SVCOP_MDNS,
+#endif
+#ifdef TCONFIG_IRQBALANCE
+	SVCOP_IRQBALANCE,
+#endif
+#ifdef TCONFIG_HAVEGED
+	SVCOP_HAVEGED,
+#endif
+#ifdef TCONFIG_IPV6
+	SVCOP_DHCP6,
+#endif
+#ifdef TCONFIG_CIFS
+	SVCOP_CIFS,
+#endif
+#ifdef TCONFIG_JFFS2
+	SVCOP_JFFS2,
+#endif
+#ifdef TCONFIG_ZEBRA
+	SVCOP_ZEBRA,
+#endif
+#ifdef TCONFIG_SDHC
+	SVCOP_MMC,
+#endif
+#ifdef TCONFIG_BCMBSD
+	SVCOP_BSD,
+#endif
+#ifdef TCONFIG_ROAM
+	SVCOP_ROAMAST,
+#endif
+	SVCOP_SCHED,
+#ifdef TCONFIG_NFS
+	SVCOP_NFS,
+#endif
+#ifdef TCONFIG_SNMP
+	SVCOP_SNMP,
+#endif
+#ifdef TCONFIG_UPS
+	SVCOP_UPS,
+#endif
+#ifdef TCONFIG_BCMARM
+	SVCOP_PORTHEALTH,
+#endif
+#ifdef TCONFIG_PPTPD
+	SVCOP_PPTPCLIENT,
+#endif
+#ifdef TCONFIG_FANCTRL
+	SVCOP_FANCTRL,
+#endif
+#ifdef TCONFIG_NOCAT
+	SVCOP_SPLASHD,
+#endif
+	SVCOP_MAX
+};
+
 enum svc_proc_id {
 	P_NONE = 0,
 	P_SELF,
@@ -3690,6 +3564,7 @@ struct svc_entry {
 	unsigned char flags;
 	unsigned char proc;
 	unsigned char arg;
+	unsigned char op;
 };
 
 static const char * const svc_proc_name[] = {
@@ -3757,21 +3632,21 @@ static const struct svc_entry svc_table[] = {
 	{ "dnsmasq",		SVCF_LIST,		P_DNSMASQ,	0 },
 	{ "dns",		SVCF_LIST,		P_DNSMASQ,	0 },
 #ifdef TCONFIG_DNSCRYPT
-	{ "dnscrypt",		SVCF_LIST,		P_DNSCRYPT_PROXY, 0 },
-	{ "dnscrypt_proxy",	0,			P_DNSCRYPT_PROXY, 0 },
+	{ "dnscrypt",		SVCF_LIST,		P_DNSCRYPT_PROXY, 0, SVCOP_DNSCRYPT },
+	{ "dnscrypt_proxy",	0,			P_DNSCRYPT_PROXY, 0, SVCOP_DNSCRYPT },
 #endif
 #ifdef TCONFIG_STUBBY
-	{ "stubby",		SVCF_LIST,		P_STUBBY,	0 },
+	{ "stubby",		SVCF_LIST,		P_STUBBY,	0, SVCOP_STUBBY },
 #endif
 #ifdef TCONFIG_MDNS
-	{ "mdns",		SVCF_LIST,		P_AVAHI_DAEMON, 0 },
-	{ "avahi_daemon",	0,			P_AVAHI_DAEMON, 0 },
+	{ "mdns",		SVCF_LIST,		P_AVAHI_DAEMON, 0, SVCOP_MDNS },
+	{ "avahi_daemon",	0,			P_AVAHI_DAEMON, 0, SVCOP_MDNS },
 #endif
 #ifdef TCONFIG_IRQBALANCE
-	{ "irqbalance",		SVCF_LIST,		P_IRQBALANCE,	0 },
+	{ "irqbalance",		SVCF_LIST,		P_IRQBALANCE,	0, SVCOP_IRQBALANCE },
 #endif
 #ifdef TCONFIG_HAVEGED
-	{ "haveged",		SVCF_LIST,		P_HAVEGED,	0 },
+	{ "haveged",		SVCF_LIST,		P_HAVEGED,	0, SVCOP_HAVEGED },
 #endif
 
 	{ "adblock",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
@@ -3782,34 +3657,34 @@ static const struct svc_entry svc_table[] = {
 	{ "qos",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
 	{ "upnp",		SVCF_LIST,		P_MINIUPNPD,	0 },
 	{ "miniupnpd",		0,			P_MINIUPNPD,	0 },
-	{ "telnetd",		SVCF_LIST,		P_TELNETD,	0 },
-	{ "sshd",		SVCF_LIST,		P_DROPBEAR,	0 },
-	{ "dropbear",		0,			P_DROPBEAR,	0 },
-	{ "httpd",		SVCF_LIST,		P_HTTPD,	0 },
+	{ "telnetd",		SVCF_LIST,		P_TELNETD,	0, SVCOP_TELNETD },
+	{ "sshd",		SVCF_LIST,		P_DROPBEAR,	0, SVCOP_SSHD },
+	{ "dropbear",		0,			P_DROPBEAR,	0, SVCOP_SSHD },
+	{ "httpd",		SVCF_LIST,		P_HTTPD,	0, SVCOP_HTTPD },
 #ifdef TCONFIG_IPV6
-	{ "dhcp6",		SVCF_LIST,		P_DHCP6C,	0 },
+	{ "dhcp6",		SVCF_LIST,		P_DHCP6C,	0, SVCOP_DHCP6 },
 #endif
 	{ "admin",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
 	{ "adminnosshd",	SVCF_NO_STATUS,		P_NONE,		0 },
-	{ "ddns",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "ntpd",		SVCF_LIST,		P_NTPD,		0 },
+	{ "ddns",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_DDNS },
+	{ "ntpd",		SVCF_LIST,		P_NTPD,		0, SVCOP_NTPD },
 	{ "logging",		SVCF_LIST,		P_SYSLOGD,	0 },
-	{ "crond",		SVCF_LIST,		P_CROND,	0 },
-	{ "hotplug",		SVCF_LIST,		P_HOTPLUG2,	0 },
+	{ "crond",		SVCF_LIST,		P_CROND,	0, SVCOP_CROND },
+	{ "hotplug",		SVCF_LIST,		P_HOTPLUG2,	0, SVCOP_HOTPLUG },
 	{ "upgrade",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
 
 #ifdef TCONFIG_CIFS
-	{ "cifs",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "cifs",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_CIFS },
 #endif
 #ifdef TCONFIG_JFFS2
-	{ "jffs",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "jffs2",		SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "jffs",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_JFFS2 },
+	{ "jffs2",		SVCF_NO_STATUS,		P_NONE,		0, SVCOP_JFFS2 },
 #endif
 #ifdef TCONFIG_ZEBRA
-	{ "zebra",		SVCF_LIST,		P_ZEBRA,	0 },
+	{ "zebra",		SVCF_LIST,		P_ZEBRA,	0, SVCOP_ZEBRA },
 #endif
 #ifdef TCONFIG_SDHC
-	{ "mmc",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "mmc",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_MMC },
 #endif
 
 	{ "routing",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
@@ -3830,40 +3705,40 @@ static const struct svc_entry svc_table[] = {
 	{ "nas",		SVCF_LIST,		P_NAS,		0 },
 #endif /* TOMATO64 */
 #ifdef TCONFIG_BCMBSD
-	{ "bsd",		SVCF_LIST,		P_BSD,		0 },
+	{ "bsd",		SVCF_LIST,		P_BSD,		0, SVCOP_BSD },
 #endif
 #ifdef TCONFIG_ROAM
-	{ "roamast",		SVCF_LIST,		P_ROAMAST,	0 },
-	{ "rssi",		0,			P_ROAMAST,	0 },
+	{ "roamast",		SVCF_LIST,		P_ROAMAST,	0, SVCOP_ROAMAST },
+	{ "rssi",		0,			P_ROAMAST,	0, SVCOP_ROAMAST },
 #endif
 	{ "rstats",		SVCF_LIST,		P_RSTATS,	0 },
 	{ "rstatsnew",		0,			P_RSTATS,	0 },
 	{ "cstats",		SVCF_LIST,		P_CSTATS,	0 },
 	{ "cstatsnew",		0,			P_CSTATS,	0 },
-	{ "sched",		SVCF_LIST,		P_SCHED,	0 },
+	{ "sched",		SVCF_LIST,		P_SCHED,	0, SVCOP_SCHED },
 #ifdef TCONFIG_BT
 	{ "bittorrent",	SVCF_LIST,			P_TRANSMISSION_DA, 0 },
 	{ "transmission",	0,			P_TRANSMISSION_DA, 0 },
 	{ "transmission_da",	0,			P_TRANSMISSION_DA, 0 },
 #endif
 #ifdef TCONFIG_NFS
-	{ "nfs",		SVCF_LIST,		P_NFSD,		0 },
-	{ "nfsd",		0,			P_NFSD,		0 },
+	{ "nfs",		SVCF_LIST,		P_NFSD,		0, SVCOP_NFS },
+	{ "nfsd",		0,			P_NFSD,		0, SVCOP_NFS },
 #endif
 #ifdef TCONFIG_SNMP
-	{ "snmp",		SVCF_LIST,		P_SNMPD,	0 },
+	{ "snmp",		SVCF_LIST,		P_SNMPD,	0, SVCOP_SNMP },
 #endif
 #ifdef TCONFIG_TOR
 	{ "tor",		SVCF_LIST,		P_TOR,		0 },
 #endif
 #ifdef TCONFIG_UPS
-	{ "ups",		SVCF_LIST,		P_APCUPSD,	0 },
+	{ "ups",		SVCF_LIST,		P_APCUPSD,	0, SVCOP_UPS },
 #endif
-	{ "tomatoanon",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "tomatoanon",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_TOMATOANON },
 
 #ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
-	{ "porthealth",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "porthealth",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_PORTHEALTH },
 #endif
 #endif /* TOMATO64 */
 #ifdef TCONFIG_USB
@@ -3897,10 +3772,10 @@ static const struct svc_entry svc_table[] = {
 	{ "tincd",		0,			P_TINCD,	0 },
 #endif
 #ifdef TCONFIG_FANCTRL
-	{ "fanctrl",		SVCF_LIST,		P_PHY_TEMPSENSE, 0 },
+	{ "fanctrl",		SVCF_LIST,		P_PHY_TEMPSENSE, 0, SVCOP_FANCTRL },
 #endif
 #ifdef TCONFIG_NOCAT
-	{ "splashd",		SVCF_LIST,		P_SPLASHD,	0 },
+	{ "splashd",		SVCF_LIST,		P_SPLASHD,	0, SVCOP_SPLASHD },
 #endif
 #ifdef TCONFIG_NGINX
 	{ "nginx",		SVCF_LIST,		P_NGINX,	0 },
@@ -3909,7 +3784,7 @@ static const struct svc_entry svc_table[] = {
 #endif
 #ifdef TCONFIG_PPTPD
 	{ "pptpd",		SVCF_LIST,		P_PPTPD,	0 },
-	{ "pptpclient",	SVCF_LIST,			P_PPTPCLIENT,	0 },
+	{ "pptpclient",	SVCF_LIST,			P_PPTPCLIENT,	0, SVCOP_PPTPCLIENT },
 #endif
 
 	{ NULL,			0,			P_NONE,		0 }
@@ -3987,6 +3862,102 @@ static const struct svc_entry *svc_find(const char *name)
 	}
 
 	return NULL;
+}
+
+typedef void (*svc_void_fn_t)(void);
+
+struct svc_op {
+	svc_void_fn_t stop;
+	svc_void_fn_t start;
+};
+
+#define SVC_OP(_stop, _start)	{ _stop, _start }
+
+static const struct svc_op svc_ops[] = {
+	SVC_OP(NULL, NULL),
+	SVC_OP(stop_telnetd, start_telnetd),
+	SVC_OP(stop_sshd, start_sshd),
+	SVC_OP(stop_httpd, start_httpd),
+	SVC_OP(stop_ddns, start_ddns),
+	SVC_OP(stop_ntpd, start_ntpd),
+	SVC_OP(stop_cron, start_cron),
+	SVC_OP(stop_hotplug2, start_hotplug2),
+	SVC_OP(stop_tomatoanon, start_tomatoanon),
+#ifdef TCONFIG_DNSCRYPT
+	SVC_OP(stop_dnscrypt, start_dnscrypt),
+#endif
+#ifdef TCONFIG_STUBBY
+	SVC_OP(stop_stubby, start_stubby),
+#endif
+#ifdef TCONFIG_MDNS
+	SVC_OP(stop_mdns, start_mdns),
+#endif
+#ifdef TCONFIG_IRQBALANCE
+	SVC_OP(stop_irqbalance, start_irqbalance),
+#endif
+#ifdef TCONFIG_HAVEGED
+	SVC_OP(stop_haveged, start_haveged),
+#endif
+#ifdef TCONFIG_IPV6
+	SVC_OP(stop_dhcp6c, start_dhcp6c),
+#endif
+#ifdef TCONFIG_CIFS
+	SVC_OP(stop_cifs, start_cifs),
+#endif
+#ifdef TCONFIG_JFFS2
+	SVC_OP(stop_jffs2, start_jffs2),
+#endif
+#ifdef TCONFIG_ZEBRA
+	SVC_OP(stop_zebra, start_zebra),
+#endif
+#ifdef TCONFIG_SDHC
+	SVC_OP(stop_mmc, start_mmc),
+#endif
+#ifdef TCONFIG_BCMBSD
+	SVC_OP(stop_bsd, start_bsd),
+#endif
+#ifdef TCONFIG_ROAM
+	SVC_OP(stop_roamast, start_roamast),
+#endif
+	SVC_OP(stop_sched, start_sched),
+#ifdef TCONFIG_NFS
+	SVC_OP(stop_nfs, start_nfs),
+#endif
+#ifdef TCONFIG_SNMP
+	SVC_OP(stop_snmp, start_snmp),
+#endif
+#ifdef TCONFIG_UPS
+	SVC_OP(stop_ups, start_ups),
+#endif
+#ifdef TCONFIG_BCMARM
+	SVC_OP(stop_porthealth, start_porthealth),
+#endif
+#ifdef TCONFIG_PPTPD
+	SVC_OP(stop_pptpc, start_pptpc),
+#endif
+#ifdef TCONFIG_FANCTRL
+	SVC_OP(stop_phy_tempsense, start_phy_tempsense),
+#endif
+#ifdef TCONFIG_NOCAT
+	SVC_OP(stop_nocat, start_nocat),
+#endif
+};
+
+static int svc_exec_simple(const struct svc_entry *svc, int act_start, int act_stop)
+{
+	const struct svc_op *op;
+
+	if ((svc == NULL) || (svc->op == SVCOP_NONE) || (svc->op >= SVCOP_MAX))
+		return 0;
+
+	op = &svc_ops[svc->op];
+
+	if (act_stop && (op->stop != NULL))
+		op->stop();
+	if (act_start && (op->start != NULL))
+		op->start();
+
+	return 1;
 }
 
 #ifdef TCONFIG_WIREGUARD
