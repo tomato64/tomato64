@@ -3601,150 +3601,148 @@ static const char * const svc_proc_name[] = {
 };
 
 static const struct svc_entry svc_table[] = {
-	{ "rstats_nvram",	SVCF_NO_STATUS,		P_NONE,		0 },
-	{ "cstats_nvram",	SVCF_NO_STATUS,		P_NONE,		0 },
-#ifdef TCONFIG_FTP
-	{ "ftp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "adblock",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "admin",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "adminnosshd",	SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "arpbind",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#ifdef TCONFIG_BT
+	{ "bittorrent",		SVCF_LIST,		P_TRANSMISSION_DA, 0 },
+	{ "transmission",	0,			P_TRANSMISSION_DA, 0 },
+	{ "transmission_da",	0,			P_TRANSMISSION_DA, 0 },
 #endif
-#ifdef TCONFIG_SNMP
-	{ "snmp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
-#endif
-	{ "upnp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
 #ifdef TCONFIG_BCMBSD
+	{ "bsd",		SVCF_LIST,		P_BSD,		0, SVCOP_BSD },
 	{ "bsd_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
 #endif
-
+	{ "bwlimit",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#ifdef TCONFIG_CIFS
+	{ "cifs",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_CIFS },
+#endif
+#ifdef TOMATO64
+	{ "cpufreq",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_CPUFREQ },
+#endif /* TOMATO64 */
+	{ "crond",		SVCF_LIST,		P_CROND,	0, SVCOP_CROND },
+	{ "cstats",		SVCF_LIST,		P_CSTATS,	0 },
+	{ "cstatsnew",		0,			P_CSTATS,	0 },
+	{ "cstats_nvram",	SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "ctnf",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "ddns",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_DDNS },
+#ifdef TCONFIG_IPV6
+	{ "dhcp6",		SVCF_LIST,		P_DHCP6C,	0, SVCOP_DHCP6 },
+#endif
 	{ "dhcpc_wan",		SVCF_LIST,		P_UDHCPC,	0 },
 	{ "dhcpc_wan",		SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_MWAN_SUFFIX,
 							P_UDHCPC,	2 },
-
-	{ "dnsmasq",		SVCF_LIST,		P_DNSMASQ,	0 },
 	{ "dns",		SVCF_LIST,		P_DNSMASQ,	0 },
 #ifdef TCONFIG_DNSCRYPT
 	{ "dnscrypt",		SVCF_LIST,		P_DNSCRYPT_PROXY, 0, SVCOP_DNSCRYPT },
 	{ "dnscrypt_proxy",	0,			P_DNSCRYPT_PROXY, 0, SVCOP_DNSCRYPT },
 #endif
-#ifdef TCONFIG_STUBBY
-	{ "stubby",		SVCF_LIST,		P_STUBBY,	0, SVCOP_STUBBY },
+	{ "dnsmasq",		SVCF_LIST,		P_DNSMASQ,	0 },
+#ifdef TCONFIG_FANCTRL
+	{ "fanctrl",		SVCF_LIST,		P_PHY_TEMPSENSE, 0, SVCOP_FANCTRL },
 #endif
-#ifdef TCONFIG_MDNS
-	{ "mdns",		SVCF_LIST,		P_AVAHI_DAEMON, 0, SVCOP_MDNS },
-	{ "avahi_daemon",	0,			P_AVAHI_DAEMON, 0, SVCOP_MDNS },
-#endif
-#ifdef TCONFIG_IRQBALANCE
-	{ "irqbalance",		SVCF_LIST,		P_IRQBALANCE,	0, SVCOP_IRQBALANCE },
+	{ "firewall",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#ifdef TCONFIG_FTP
+	{ "ftpd",		SVCF_LIST,		P_VSFTPD,	0 },
+	{ "vsftpd",		0,			P_VSFTPD,	0 },
+	{ "ftp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
 #endif
 #ifdef TCONFIG_HAVEGED
 	{ "haveged",		SVCF_LIST,		P_HAVEGED,	0, SVCOP_HAVEGED },
 #endif
-
-	{ "adblock",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "firewall",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "restrict",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "arpbind",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "bwlimit",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "qos",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "upnp",		SVCF_LIST,		P_MINIUPNPD,	0 },
-	{ "miniupnpd",		0,			P_MINIUPNPD,	0 },
-	{ "telnetd",		SVCF_LIST,		P_TELNETD,	0, SVCOP_TELNETD },
-	{ "sshd",		SVCF_LIST,		P_DROPBEAR,	0, SVCOP_SSHD },
-	{ "dropbear",		0,			P_DROPBEAR,	0, SVCOP_SSHD },
-	{ "httpd",		SVCF_LIST,		P_HTTPD,	0, SVCOP_HTTPD },
-#ifdef TCONFIG_IPV6
-	{ "dhcp6",		SVCF_LIST,		P_DHCP6C,	0, SVCOP_DHCP6 },
-#endif
-	{ "admin",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "adminnosshd",	SVCF_NO_STATUS,		P_NONE,		0 },
-	{ "ddns",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_DDNS },
-	{ "ntpd",		SVCF_LIST,		P_NTPD,		0, SVCOP_NTPD },
-	{ "logging",		SVCF_LIST,		P_SYSLOGD,	0 },
-	{ "crond",		SVCF_LIST,		P_CROND,	0, SVCOP_CROND },
 	{ "hotplug",		SVCF_LIST,		P_HOTPLUG2,	0, SVCOP_HOTPLUG },
-	{ "upgrade",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-
-#ifdef TCONFIG_CIFS
-	{ "cifs",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_CIFS },
+	{ "httpd",		SVCF_LIST,		P_HTTPD,	0, SVCOP_HTTPD },
+#ifdef TCONFIG_IRQBALANCE
+	{ "irqbalance",		SVCF_LIST,		P_IRQBALANCE,	0, SVCOP_IRQBALANCE },
 #endif
 #ifdef TCONFIG_JFFS2
 	{ "jffs",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_JFFS2 },
 	{ "jffs2",		SVCF_NO_STATUS,		P_NONE,		0, SVCOP_JFFS2 },
 #endif
-#ifdef TCONFIG_ZEBRA
-	{ "zebra",		SVCF_LIST,		P_ZEBRA,	0, SVCOP_ZEBRA },
-#endif
-#ifdef TCONFIG_SDHC
-	{ "mmc",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_MMC },
-#endif
-
-	{ "routing",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "ctnf",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "wan",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "wan",		SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_MWAN_SUFFIX | SVCF_NO_STATUS,
-							P_NONE,		1 },
-	{ "net",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-#ifdef TOMATO64
-	{ "wifi",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "zram",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_ZRAM },
-	{ "cpufreq",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_CPUFREQ },
-#endif /* TOMATO64 */
-#ifndef TOMATO64
-	{ "wireless",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "wl",			SVCF_NO_STATUS,		P_NONE,		0 },
-	{ "wlgui",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "nas",		SVCF_LIST,		P_NAS,		0 },
-#endif /* TOMATO64 */
-#ifdef TCONFIG_BCMBSD
-	{ "bsd",		SVCF_LIST,		P_BSD,		0, SVCOP_BSD },
-#endif
-#ifdef TCONFIG_ROAM
-	{ "roamast",		SVCF_LIST,		P_ROAMAST,	0, SVCOP_ROAMAST },
-	{ "rssi",		0,			P_ROAMAST,	0, SVCOP_ROAMAST },
-#endif
-	{ "rstats",		SVCF_LIST,		P_RSTATS,	0 },
-	{ "rstatsnew",		0,			P_RSTATS,	0 },
-	{ "cstats",		SVCF_LIST,		P_CSTATS,	0 },
-	{ "cstatsnew",		0,			P_CSTATS,	0 },
-	{ "sched",		SVCF_LIST,		P_SCHED,	0, SVCOP_SCHED },
-#ifdef TCONFIG_BT
-	{ "bittorrent",	SVCF_LIST,			P_TRANSMISSION_DA, 0 },
-	{ "transmission",	0,			P_TRANSMISSION_DA, 0 },
-	{ "transmission_da",	0,			P_TRANSMISSION_DA, 0 },
-#endif
-#ifdef TCONFIG_NFS
-	{ "nfs",		SVCF_LIST,		P_NFSD,		0, SVCOP_NFS },
-	{ "nfsd",		0,			P_NFSD,		0, SVCOP_NFS },
-#endif
-#ifdef TCONFIG_SNMP
-	{ "snmp",		SVCF_LIST,		P_SNMPD,	0, SVCOP_SNMP },
-#endif
-#ifdef TCONFIG_TOR
-	{ "tor",		SVCF_LIST,		P_TOR,		0 },
-#endif
-#ifdef TCONFIG_UPS
-	{ "ups",		SVCF_LIST,		P_APCUPSD,	0, SVCOP_UPS },
-#endif
-	{ "tomatoanon",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_TOMATOANON },
-
-#ifndef TOMATO64
-#ifdef TCONFIG_BCMARM
-	{ "porthealth",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_PORTHEALTH },
-#endif
-#endif /* TOMATO64 */
-#ifdef TCONFIG_USB
-	{ "usb",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "usbapps",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-#endif
-#ifdef TCONFIG_FTP
-	{ "ftpd",		SVCF_LIST,		P_VSFTPD,	0 },
-	{ "vsftpd",		0,			P_VSFTPD,	0 },
+	{ "logging",		SVCF_LIST,		P_SYSLOGD,	0 },
+#ifdef TCONFIG_MDNS
+	{ "mdns",		SVCF_LIST,		P_AVAHI_DAEMON, 0, SVCOP_MDNS },
+	{ "avahi_daemon",	0,			P_AVAHI_DAEMON, 0, SVCOP_MDNS },
 #endif
 #ifdef TCONFIG_MEDIA_SERVER
 	{ "media",		SVCF_LIST,		P_MINIDLNA,	0 },
 	{ "minidlna",		0,			P_MINIDLNA,	0 },
 #endif
+#ifdef TCONFIG_SDHC
+	{ "mmc",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_MMC },
+#endif
+#ifdef TCONFIG_NGINX
+	{ "mysql",		SVCF_LIST,		P_MYSQLD,	0 },
+	{ "mysqld",		0,			P_MYSQLD,	0 },
+#endif
+#ifndef TOMATO64
+	{ "nas",		SVCF_LIST,		P_NAS,		0 },
+#endif /* TOMATO64 */
+	{ "net",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#ifdef TCONFIG_NFS
+	{ "nfs",		SVCF_LIST,		P_NFSD,		0, SVCOP_NFS },
+	{ "nfsd",		0,			P_NFSD,		0, SVCOP_NFS },
+#endif
+#ifdef TCONFIG_NGINX
+	{ "nginx",		SVCF_LIST,		P_NGINX,	0 },
+#endif
+	{ "ntpd",		SVCF_LIST,		P_NTPD,		0, SVCOP_NTPD },
+#ifndef TOMATO64
+#ifdef TCONFIG_BCMARM
+	{ "porthealth",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_PORTHEALTH },
+#endif
+#endif /* TOMATO64 */
+#ifdef TCONFIG_PPTPD
+	{ "pptpclient",		SVCF_LIST,		P_PPTPCLIENT,	0, SVCOP_PPTPCLIENT },
+	{ "pptpd",		SVCF_LIST,		P_PPTPD,	0 },
+#endif
+	{ "qos",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "restrict",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#ifdef TCONFIG_ROAM
+	{ "roamast",		SVCF_LIST,		P_ROAMAST,	0, SVCOP_ROAMAST },
+	{ "rssi",		0,			P_ROAMAST,	0, SVCOP_ROAMAST },
+#endif
+	{ "routing",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "rstats",		SVCF_LIST,		P_RSTATS,	0 },
+	{ "rstatsnew",		0,			P_RSTATS,	0 },
+	{ "rstats_nvram",	SVCF_NO_STATUS,		P_NONE,		0 },
 #ifdef TCONFIG_SAMBASRV
 	{ "samba",		SVCF_LIST,		P_SMBD,		0 },
 	{ "smbd",		0,			P_SMBD,		0 },
+#endif
+	{ "sched",		SVCF_LIST,		P_SCHED,	0, SVCOP_SCHED },
+#ifdef TCONFIG_SNMP
+	{ "snmp",		SVCF_LIST,		P_SNMPD,	0, SVCOP_SNMP },
+	{ "snmp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
+#endif
+#ifdef TCONFIG_NOCAT
+	{ "splashd",		SVCF_LIST,		P_SPLASHD,	0, SVCOP_SPLASHD },
+#endif
+	{ "sshd",		SVCF_LIST,		P_DROPBEAR,	0, SVCOP_SSHD },
+	{ "dropbear",		0,			P_DROPBEAR,	0, SVCOP_SSHD },
+#ifdef TCONFIG_STUBBY
+	{ "stubby",		SVCF_LIST,		P_STUBBY,	0, SVCOP_STUBBY },
+#endif
+	{ "telnetd",		SVCF_LIST,		P_TELNETD,	0, SVCOP_TELNETD },
+#ifdef TCONFIG_TINC
+	{ "tinc",		SVCF_LIST,		P_TINCD,	0 },
+	{ "tincd",		0,			P_TINCD,	0 },
+#endif
+	{ "tomatoanon",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_TOMATOANON },
+#ifdef TCONFIG_TOR
+	{ "tor",		SVCF_LIST,		P_TOR,		0 },
+#endif
+	{ "upgrade",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "upnp",		SVCF_LIST,		P_MINIUPNPD,	0 },
+	{ "miniupnpd",		0,			P_MINIUPNPD,	0 },
+	{ "upnp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
+#ifdef TCONFIG_UPS
+	{ "ups",		SVCF_LIST,		P_APCUPSD,	0, SVCOP_UPS },
+#endif
+#ifdef TCONFIG_USB
+	{ "usb",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "usbapps",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
 #endif
 #ifdef TCONFIG_OPENVPN
 	{ "vpnclient",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_OVPNC_SUFFIX,
@@ -3752,29 +3750,27 @@ static const struct svc_entry svc_table[] = {
 	{ "vpnserver",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_OVPNS_SUFFIX,
 							P_SELF,		1 },
 #endif
+	{ "wan",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "wan",		SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_MWAN_SUFFIX | SVCF_NO_STATUS,
+							P_NONE,		1 },
+#ifdef TOMATO64
+	{ "wifi",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#endif /* TOMATO64 */
 #ifdef TCONFIG_WIREGUARD
 	{ "wireguard",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_WG_SUFFIX,
 							P_WIREGUARD,	0 },
 #endif
-#ifdef TCONFIG_TINC
-	{ "tinc",		SVCF_LIST,		P_TINCD,	0 },
-	{ "tincd",		0,			P_TINCD,	0 },
+#ifndef TOMATO64
+	{ "wireless",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "wl",			SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "wlgui",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#endif /* TOMATO64 */
+#ifdef TCONFIG_ZEBRA
+	{ "zebra",		SVCF_LIST,		P_ZEBRA,	0, SVCOP_ZEBRA },
 #endif
-#ifdef TCONFIG_FANCTRL
-	{ "fanctrl",		SVCF_LIST,		P_PHY_TEMPSENSE, 0, SVCOP_FANCTRL },
-#endif
-#ifdef TCONFIG_NOCAT
-	{ "splashd",		SVCF_LIST,		P_SPLASHD,	0, SVCOP_SPLASHD },
-#endif
-#ifdef TCONFIG_NGINX
-	{ "nginx",		SVCF_LIST,		P_NGINX,	0 },
-	{ "mysql",		SVCF_LIST,		P_MYSQLD,	0 },
-	{ "mysqld",		0,			P_MYSQLD,	0 },
-#endif
-#ifdef TCONFIG_PPTPD
-	{ "pptpd",		SVCF_LIST,		P_PPTPD,	0 },
-	{ "pptpclient",	SVCF_LIST,			P_PPTPCLIENT,	0, SVCOP_PPTPCLIENT },
-#endif
+#ifdef TOMATO64
+	{ "zram",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_ZRAM },
+#endif /* TOMATO64 */
 
 	{ NULL,			0,			P_NONE,		0 }
 };
@@ -3991,6 +3987,9 @@ static void svc_list(void)
 	int i;
 	int n;
 	int max;
+	int first;
+
+	first = 1;
 
 	for (i = 0; svc_table[i].name; i++) {
 		if (!(svc_table[i].flags & SVCF_LIST))
@@ -4001,13 +4000,26 @@ static void svc_list(void)
 			max = svc_num_suffix_max(svc_table[i].flags);
 			if (max < svc_table[i].arg)
 				continue;
-			for (n = svc_table[i].arg; n <= max; n++)
-				printf("%s%d\n", svc_table[i].name, n);
+			for (n = svc_table[i].arg; n <= max; n++) {
+				if (first)
+					first = 0;
+				else
+					putchar(' ');
+
+				printf("%s%d", svc_table[i].name, n);
+			}
 			continue;
 		}
 
-		puts(svc_table[i].name);
+		if (first)
+			first = 0;
+		else
+			putchar(' ');
+
+		fputs(svc_table[i].name, stdout);
 	}
+
+	putchar('\n');
 }
 
 static int svc_status(const char *name)
