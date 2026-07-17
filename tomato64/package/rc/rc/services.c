@@ -2749,7 +2749,7 @@ void stop_services(void)
 
 struct svc_entry;
 static const struct svc_entry *svc_find(const char *name);
-static int svc_exec_simple(const struct svc_entry *svc, int act_start, int act_stop);
+static int svc_exec_simple(const struct svc_entry *svc, const char *service, int act_start, int act_stop, int user);
 
 /* nvram "action_service" is: "service-action[-modifier]"
  * action is something like "stop" or "start" or "restart"
@@ -2760,14 +2760,13 @@ void exec_service(void)
 	const int A_START = 1;
 	const int A_STOP = 2;
 	const int A_RESTART = 1|2;
-	char buffer[128], buffer2[16], buffer3[16];
+	char buffer[128];
 	char *service;
 	char *act;
 	char *next;
 	char *modifier;
 	const struct svc_entry *svc;
 	int action, user;
-	int i;
 	int act_start, act_stop;
 
 	strlcpy(buffer, nvram_safe_get("action_service"), sizeof(buffer));
@@ -2799,384 +2798,8 @@ TOP:
 	user = (modifier != NULL && *modifier == 'c');
 
 	svc = svc_find(service);
-	if ((svc != NULL) && svc_exec_simple(svc, act_start, act_stop))
+	if ((svc != NULL) && svc_exec_simple(svc, service, act_start, act_stop, user))
 		goto CLEAR;
-
-	if (strcmp(service, "rstats_nvram") == 0) {
-		if (act_stop) del_rstats_defaults();
-		if (act_start) add_rstats_defaults();
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "cstats_nvram") == 0) {
-		if (act_stop) del_cstats_defaults();
-		if (act_start) add_cstats_defaults();
-		goto CLEAR;
-	}
-
-#ifdef TCONFIG_FTP
-	if (strcmp(service, "ftp_nvram") == 0) {
-		if (act_stop) del_ftp_defaults();
-		if (act_start) add_ftp_defaults();
-		goto CLEAR;
-	}
-#endif /* TCONFIG_FTP */
-
-#ifdef TCONFIG_SNMP
-	if (strcmp(service, "snmp_nvram") == 0) {
-		if (act_stop) del_snmp_defaults();
-		if (act_start) add_snmp_defaults();
-		goto CLEAR;
-	}
-#endif /* TCONFIG_SNMP */
-
-	if (strcmp(service, "upnp_nvram") == 0) {
-		if (act_stop) del_upnp_defaults();
-		if (act_start) add_upnp_defaults();
-		goto CLEAR;
-	}
-
-#ifdef TCONFIG_BCMBSD
-	if (strcmp(service, "bsd_nvram") == 0) {
-		if (act_stop) del_bsd_defaults();
-		if (act_start) add_bsd_defaults();
-		goto CLEAR;
-	}
-#endif /* TCONFIG_BCMBSD */
-
-	for (i = 1; i <= MWAN_MAX; i++) {
-		snprintf(buffer2, sizeof(buffer2), (i == 1 ? "dhcpc_wan" : "dhcpc_wan%d"), i);
-		if (strcmp(service, buffer2) == 0) {
-			snprintf(buffer2, sizeof(buffer2), (i == 1 ? "wan" : "wan%d"), i);
-			if (act_stop) stop_dhcpc(buffer2);
-			if (act_start) start_dhcpc(buffer2);
-			goto CLEAR;
-		}
-	}
-
-	if (strcmp(service, "dnsmasq") == 0) {
-		if (act_stop) stop_dnsmasq();
-		if (act_start && !nvram_get_int("g_upgrade")) {
-			dns_to_resolv();
-			start_dnsmasq();
-		}
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "dns") == 0) {
-		if (act_start) reload_dnsmasq();
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "adblock") == 0) {
-		if (act_stop) stop_adblock();
-		if (act_start) start_adblock(1); /* update lists immediately */
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "firewall") == 0) {
-		if (act_stop) {
-			stop_firewall();
-			stop_igmp_proxy();
-			stop_udpxy();
-		}
-		if (act_start) {
-			start_firewall();
-			start_igmp_proxy();
-			start_udpxy();
-		}
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "restrict") == 0) {
-		if (act_stop)
-			stop_firewall();
-
-		if (act_start) {
-			i = nvram_get_int("rrules_radio"); /* -1 = not used, 0 = enabled by rule, 1 = disabled by rule */
-
-			start_firewall();
-
-			/* if radio was disabled by access restriction, but no rule is handling it now, enable it */
-			if (i == 1) {
-				if (nvram_get_int("rrules_radio") < 0)
-					eval("radio", "on");
-			}
-		}
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "arpbind") == 0) {
-		if (act_stop) stop_arpbind();
-		if (act_start) start_arpbind();
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "bwlimit") == 0) {
-		if (act_stop) {
-			stop_bwlimit();
-#ifdef TCONFIG_NOCAT
-			stop_nocat();
-#endif
-		}
-		if (act_start) {
-			start_bwlimit();
-#ifdef TCONFIG_NOCAT
-			start_nocat();
-#endif
-		}
-		restart_firewall(); /* always restart */
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "qos") == 0) {
-		if (act_stop) {
-			for (i = 1; i <= MWAN_MAX; i++) {
-				snprintf(buffer2, sizeof(buffer2), (i == 1 ? "wan" : "wan%d"), i);
-				stop_qos(buffer2);
-			}
-		}
-		if (act_start) {
-			for (i = 1; i <= MWAN_MAX; i++) {
-				snprintf(buffer2, sizeof(buffer2), (i == 1 ? "wan" : "wan%d"), i);
-				if ((check_wanup(buffer2)) || (i == 1))
-					start_qos(buffer2);
-			}
-			if (nvram_get_int("qos_reset"))
-				f_write_string("/proc/net/clear_marks", "1", 0, 0);
-		}
-		restart_firewall(); /* always restart */
-		goto CLEAR;
-	}
-
-	if ((strcmp(service, "upnp") == 0) || (strcmp(service, "miniupnpd") == 0)) {
-		if (act_stop) stop_upnp();
-		restart_firewall(); /* always restart */
-		if (act_start) start_upnp();
-		goto CLEAR;
-	}
-
-	if (strncmp(service, "admin", 5) == 0) {
-		if (act_stop) {
-			if (!(strcmp(service, "adminnosshd") == 0))
-				stop_sshd();
-			stop_telnetd();
-			stop_httpd();
-		}
-		if (act_start) {
-			stop_httpd();
-			start_httpd();
-			if (!(strcmp(service, "adminnosshd") == 0))
-				create_passwd();
-			if (nvram_get_int("telnetd_eas"))
-				start_telnetd();
-			if (nvram_get_int("sshd_eas") && (!(strcmp(service, "adminnosshd") == 0)))
-				start_sshd();
-		}
-		restart_firewall(); /* always restart */
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "logging") == 0) {
-		if (act_stop) stop_syslog();
-		if (act_start) start_syslog();
-		if (!user) {
-			/* always restarted except from "service" command */
-			stop_cron();
-			start_cron();
-			restart_firewall();
-		}
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "upgrade") == 0) {
-		if (act_start) {
-			nvram_set("g_upgrade", "1");
-
-			if (nvram_get_int("webmon_bkp"))
-				xstart("/usr/sbin/webmon_bkp", "hourly"); /* make a copy before upgrade */
-
-			stop_sched();
-			stop_cron();
-#ifdef TCONFIG_NGINX
-			stop_mysql();
-			stop_nginx();
-#endif
-#ifdef TCONFIG_NFS
-			stop_nfs();
-#endif
-#ifdef TCONFIG_USB
-			restart_nas_services(1, 0); /* Samba, FTP and Media Server */
-#endif
-#ifdef TCONFIG_BT
-			stop_bittorrent();
-#endif
-#ifdef TCONFIG_NOCAT
-			stop_nocat();
-#endif
-#ifdef TCONFIG_TOR
-			stop_tor();
-#endif
-			killall("rstats", SIGTERM);
-			killall("cstats", SIGTERM);
-			killall("buttons", SIGTERM);
-			stop_upnp();
-			if (!nvram_get_int("remote_upgrade")) {
-				killall("xl2tpd", SIGTERM);
-				killall("pppd", SIGTERM);
-				stop_dnsmasq();
-				killall("udhcpc", SIGTERM);
-				stop_wan();
-			} else
-				stop_adblock();
-
-#ifdef TCONFIG_SNMP
-			stop_snmp();
-#endif
-			stop_tomatoanon();
-			remove_conntrack();
-#ifdef TCONFIG_ZEBRA
-			stop_zebra();
-#endif
-#ifdef TCONFIG_IRQBALANCE
-			stop_irqbalance();
-#endif
-#ifdef TCONFIG_MDNS
-			stop_mdns();
-#endif
-#ifdef TCONFIG_HAVEGED
-			stop_haveged();
-#endif
-			stop_jffs2();
-			stop_syslog();
-			sleep(1);
-#ifdef TCONFIG_USB
-#ifdef TCONFIG_USBAP
-			stop_wireless();
-			sleep(1);
-#endif
-			remove_storage_main(1);
-			stop_usb();
-#endif /* TCONFIG_USB */
-		}
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "routing") == 0) {
-		if (act_stop) {
-#ifdef TCONFIG_ZEBRA
-			stop_zebra();
-#endif
-			do_static_routes(0); /* remove old '_saved' */
-			for (i = 0; i < BRIDGE_COUNT; i++) {
-				snprintf(buffer2, sizeof(buffer2), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
-				if ((i == 0) || (strcmp(nvram_safe_get(buffer2), "") != 0))
-					eval("brctl", "stp", nvram_safe_get(buffer2), "0");
-			}
-		}
-		if (act_start) {
-			do_static_routes(1); /* add new */
-#ifdef TCONFIG_ZEBRA
-			start_zebra();
-#endif
-			for (i = 0; i < BRIDGE_COUNT; i++) {
-				snprintf(buffer2, sizeof(buffer2), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
-				if ((i == 0) || (strcmp(nvram_safe_get(buffer2), "") != 0)) {
-					snprintf(buffer3, sizeof(buffer3), (i == 0 ? "lan_stp" : "lan%d_stp"), i);
-					eval("brctl", "stp", nvram_safe_get(buffer2), nvram_safe_get(buffer3));
-				}
-			}
-		}
-		restart_firewall(); /* always restart */
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "ctnf") == 0) {
-		if (act_start) {
-			setup_conntrack();
-			restart_firewall(); /* always restart */
-		}
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "wan") == 0) {
-		if (act_stop) stop_wan();
-		if (act_start) {
-			rename("/tmp/ppp/wan_log", "/tmp/ppp/wan_log.~");
-			start_wan();
-			for (i = 1; i <= MWAN_MAX; i++) {
-				snprintf(buffer2, sizeof(buffer2), (i == 1 ? "wan" : "wan%d"), i);
-				sleep(5);
-				force_to_dial(buffer2);
-			}
-		}
-		goto CLEAR;
-	}
-
-	for (i = 1; i <= MWAN_MAX; i++) {
-		snprintf(buffer2, sizeof(buffer2), "wan%d", i);
-		if (strcmp(service, buffer2) == 0) {
-			snprintf(buffer2, sizeof(buffer2), (i == 1 ? "wan" : "wan%d"), i);
-			if (act_stop) stop_wan_if(buffer2);
-			if (act_start) {
-				start_wan_if(buffer2);
-				sleep(5);
-				force_to_dial(buffer2);
-			}
-			goto CLEAR;
-		}
-	}
-
-	if (strcmp(service, "net") == 0) {
-		if (act_stop) {
-#ifdef TCONFIG_USB
-			stop_nas_services();
-#endif
-#ifdef TCONFIG_PPPRELAY
-			stop_pppoerelay();
-#endif
-			stop_httpd();
-#ifdef TOMATO64_WIFI
-			stop_wifi();
-#endif /* TOMATO64_WIFI */
-#ifdef TCONFIG_MDNS
-			stop_mdns();
-#endif
-			stop_dnsmasq();
-#ifndef TOMATO64
-			stop_nas();
-#endif /* TOMATO64 */
-			stop_wan();
-			stop_arpbind();
-			stop_lan();
-			stop_vlan();
-		}
-		if (act_start) {
-			start_vlan();
-			start_lan();
-			start_arpbind();
-#ifndef TOMATO64
-			start_nas();
-#endif /* TOMATO64 */
-			start_dnsmasq();
-#ifdef TCONFIG_MDNS
-			start_mdns();
-#endif
-			start_httpd();
-#ifdef TOMATO64_WIFI
-			start_wifi();
-#endif /* TOMATO64_WIFI */
-#ifndef TOMATO64
-			start_wl();
-#endif /* TOMATO64 */
-#ifdef TCONFIG_USB
-			start_nas_services();
-#endif
-			/* last one as ssh telnet httpd samba etc can fail to load until start_wan_done */
-			start_wan();
-		}
-		goto CLEAR;
-	}
 
 #ifdef TOMATO64
 	if (strcmp(service, "wifi") == 0) {
@@ -3190,169 +2813,6 @@ TOP:
 		goto CLEAR;
 	}
 #endif /* TOMATO64 */
-
-#ifndef TOMATO64
-	if ((strcmp(service, "wireless") == 0) || (strcmp(service, "wl") == 0)) { /* for tomato user --> 'service wl start' will restart wl allways (failsafe, even if wl was not stopped!) */
-		if (act_stop) stop_wireless();
-		if (act_start) restart_wireless();
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "wlgui") == 0) { /* for GUI to restart wireless (only stop wl once!) */
-		if (act_stop) stop_wireless();
-		if (act_start) start_wireless();
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "nas") == 0) {
-		if (act_stop) stop_nas();
-		if (act_start) {
-			start_nas();
-			start_wl();
-		}
-		goto CLEAR;
-	}
-#endif /* TOMATO64 */
-
-	if (strncmp(service, "rstats", 6) == 0) {
-		if (act_stop) stop_rstats();
-		if (act_start) {
-			if (strcmp(service, "rstatsnew") == 0)
-				start_rstats(1);
-			else
-				start_rstats(0);
-		}
-		goto CLEAR;
-	}
-
-	if (strncmp(service, "cstats", 6) == 0) {
-		if (act_stop) stop_cstats();
-		if (act_start) {
-			if (strcmp(service, "cstatsnew") == 0)
-				start_cstats(1);
-			else
-				start_cstats(0);
-		}
-		goto CLEAR;
-	}
-
-#ifdef TCONFIG_BT
-	if ((strcmp(service, "bittorrent") == 0) || (strcmp(service, "transmission") == 0) || (strcmp(service, "transmission_da") == 0)) {
-		if (act_stop) stop_bittorrent();
-		if (act_start) start_bittorrent(1); /* force (re)start */
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_TOR
-	if (strcmp(service, "tor") == 0) {
-		if (act_stop) stop_tor();
-		if (act_start) start_tor(1); /* force (re)start */
-		restart_firewall(); /* always restart */
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_USB
-	if (strcmp(service, "usb") == 0) {
-		if (act_stop) stop_usb();
-		if (act_start) {
-			start_usb();
-			/* restart Samba and ftp since they may be killed by stop_usb() */
-			restart_nas_services(1, 1);
-			/* remount all partitions by simulating hotplug event */
-			add_remove_usbhost("-1", 1);
-		}
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "usbapps") == 0) {
-		if (act_stop) stop_nas_services();
-		if (act_start) start_nas_services();
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_FTP
-	if ((strcmp(service, "ftpd") == 0) || (strcmp(service, "vsftpd") == 0)) {
-		if (act_stop) stop_ftpd();
-		setup_conntrack();
-		if (act_start) start_ftpd(1); /* force (re)start */
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_MEDIA_SERVER
-	if ((strcmp(service, "media") == 0) || (strcmp(service, "minidlna") == 0)) {
-		if (act_stop) stop_media_server();
-		if (act_start) start_media_server(1); /* force (re)start */
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_SAMBASRV
-	if ((strcmp(service, "samba") == 0) || (strcmp(service, "smbd") == 0)) {
-		if (act_stop) stop_samba();
-		if (act_start) {
-			create_passwd();
-			stop_dnsmasq();
-			start_dnsmasq();
-			start_samba(1); /* force (re)start */
-		}
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_OPENVPN
-	if (strncmp(service, "vpnclient", 9) == 0) {
-		if (act_stop) stop_ovpn_client(atoi(&service[9]));
-		if (act_start) start_ovpn_client(atoi(&service[9]));
-		goto CLEAR;
-	}
-
-	if (strncmp(service, "vpnserver", 9) == 0) {
-		if (act_stop) stop_ovpn_server(atoi(&service[9]));
-		if (act_start) start_ovpn_server(atoi(&service[9]));
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_WIREGUARD
-	if (strncmp(service, "wireguard", 9) == 0) {
-		if (act_stop) stop_wireguard(atoi(&service[9]));
-		if (act_start) start_wireguard(atoi(&service[9]));
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_TINC
-	if ((strcmp(service, "tinc") == 0) || (strcmp(service, "tincd") == 0)) {
-		if (act_stop) stop_tinc();
-		if (act_start) start_tinc(1); /* force (re)start */
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_NGINX
-	if (strcmp(service, "nginx") == 0) {
-		if (act_stop) stop_nginx();
-		if (act_start) start_nginx(1); /* force (re)start */
-		goto CLEAR;
-	}
-	if ((strcmp(service, "mysql") == 0) || (strcmp(service, "mysqld") == 0)) {
-		if (act_stop) stop_mysql();
-		if (act_start) start_mysql(1); /* force (re)start */
-		goto CLEAR;
-	}
-#endif
-
-#ifdef TCONFIG_PPTPD
-	if (strcmp(service, "pptpd") == 0) {
-		if (act_stop) stop_pptpd();
-		if (act_start) start_pptpd(1); /* force (re)start */
-		goto CLEAR;
-	}
-#endif
 
 	logmsg(LOG_WARNING, "no such service: %s", service);
 
@@ -3438,6 +2898,19 @@ enum svc_op_id {
 	SVCOP_CROND,
 	SVCOP_HOTPLUG,
 	SVCOP_TOMATOANON,
+	SVCOP_ARPBIND,
+	SVCOP_RSTATS_NVRAM,
+	SVCOP_CSTATS_NVRAM,
+#ifdef TCONFIG_FTP
+	SVCOP_FTP_NVRAM,
+#endif
+#ifdef TCONFIG_SNMP
+	SVCOP_SNMP_NVRAM,
+#endif
+	SVCOP_UPNP_NVRAM,
+#ifdef TCONFIG_BCMBSD
+	SVCOP_BSD_NVRAM,
+#endif
 #ifdef TCONFIG_DNSCRYPT
 	SVCOP_DNSCRYPT,
 #endif
@@ -3502,6 +2975,65 @@ enum svc_op_id {
 #endif /* TOMATO64 */
 	SVCOP_MAX
 };
+
+#define SVCOP_SPECIAL		0x80
+#define SVCOP_RSTATS		(SVCOP_SPECIAL | 0x01)
+#define SVCOP_CSTATS		(SVCOP_SPECIAL | 0x02)
+#define SVCOP_ADBLOCK		(SVCOP_SPECIAL | 0x03)
+#define SVCOP_UPNP		(SVCOP_SPECIAL | 0x04)
+#ifdef TCONFIG_BT
+#define SVCOP_BITTORRENT	(SVCOP_SPECIAL | 0x05)
+#endif
+#ifdef TCONFIG_FTP
+#define SVCOP_FTPD		(SVCOP_SPECIAL | 0x06)
+#endif
+#ifdef TCONFIG_MEDIA_SERVER
+#define SVCOP_MEDIA		(SVCOP_SPECIAL | 0x07)
+#endif
+#ifdef TCONFIG_TINC
+#define SVCOP_TINC		(SVCOP_SPECIAL | 0x08)
+#endif
+#ifdef TCONFIG_NGINX
+#define SVCOP_NGINX		(SVCOP_SPECIAL | 0x09)
+#define SVCOP_MYSQL		(SVCOP_SPECIAL | 0x0a)
+#endif
+#ifdef TCONFIG_PPTPD
+#define SVCOP_PPTPD		(SVCOP_SPECIAL | 0x0b)
+#endif
+#ifdef TCONFIG_TOR
+#define SVCOP_TOR		(SVCOP_SPECIAL | 0x0c)
+#endif
+#ifdef TCONFIG_OPENVPN
+#define SVCOP_VPNCLIENT		(SVCOP_SPECIAL | 0x0d)
+#define SVCOP_VPNSERVER		(SVCOP_SPECIAL | 0x0e)
+#endif
+#ifdef TCONFIG_WIREGUARD
+#define SVCOP_WIREGUARD		(SVCOP_SPECIAL | 0x0f)
+#endif
+#define SVCOP_DHCPC_WAN		(SVCOP_SPECIAL | 0x10)
+#define SVCOP_WAN_IF		(SVCOP_SPECIAL | 0x11)
+#define SVCOP_DNSMASQ		(SVCOP_SPECIAL | 0x12)
+#define SVCOP_LOGGING		(SVCOP_SPECIAL | 0x13)
+#define SVCOP_CTNF		(SVCOP_SPECIAL | 0x14)
+#define SVCOP_WIRELESS		(SVCOP_SPECIAL | 0x15)
+#define SVCOP_WLGUI		(SVCOP_SPECIAL | 0x16)
+#define SVCOP_NAS		(SVCOP_SPECIAL | 0x17)
+#ifdef TCONFIG_USB
+#define SVCOP_USBAPPS		(SVCOP_SPECIAL | 0x18)
+#endif
+#ifdef TCONFIG_SAMBASRV
+#define SVCOP_SAMBA		(SVCOP_SPECIAL | 0x19)
+#endif
+#define SVCOP_FIREWALL		(SVCOP_SPECIAL | 0x1a)
+#define SVCOP_RESTRICT		(SVCOP_SPECIAL | 0x1b)
+#define SVCOP_BWLIMIT		(SVCOP_SPECIAL | 0x1c)
+#define SVCOP_QOS		(SVCOP_SPECIAL | 0x1d)
+#define SVCOP_ROUTING		(SVCOP_SPECIAL | 0x1e)
+#define SVCOP_ADMIN		(SVCOP_SPECIAL | 0x1f)
+#define SVCOP_USB		(SVCOP_SPECIAL | 0x20)
+#define SVCOP_WAN		(SVCOP_SPECIAL | 0x21)
+#define SVCOP_NET		(SVCOP_SPECIAL | 0x22)
+#define SVCOP_UPGRADE		(SVCOP_SPECIAL | 0x23)
 
 enum svc_proc_id {
 	P_NONE = 0,
@@ -3601,20 +3133,21 @@ static const char * const svc_proc_name[] = {
 };
 
 static const struct svc_entry svc_table[] = {
-	{ "adblock",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "admin",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "adminnosshd",	SVCF_NO_STATUS,		P_NONE,		0 },
-	{ "arpbind",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "adblock",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	1, SVCOP_ADBLOCK },
+	{ "adminnosshd",	SVCF_NO_STATUS,		P_NONE,		1, SVCOP_ADMIN },
+	{ "admin",		SVCF_LIST | SVCF_PREFIX | SVCF_NO_STATUS,
+							P_NONE,		0, SVCOP_ADMIN },
+	{ "arpbind",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_ARPBIND },
 #ifdef TCONFIG_BT
-	{ "bittorrent",		SVCF_LIST,		P_TRANSMISSION_DA, 0 },
-	{ "transmission",	0,			P_TRANSMISSION_DA, 0 },
-	{ "transmission_da",	0,			P_TRANSMISSION_DA, 0 },
+	{ "bittorrent",		SVCF_LIST,		P_TRANSMISSION_DA, 1, SVCOP_BITTORRENT },
+	{ "transmission",	0,			P_TRANSMISSION_DA, 1, SVCOP_BITTORRENT },
+	{ "transmission_da",	0,			P_TRANSMISSION_DA, 1, SVCOP_BITTORRENT },
 #endif
 #ifdef TCONFIG_BCMBSD
 	{ "bsd",		SVCF_LIST,		P_BSD,		0, SVCOP_BSD },
-	{ "bsd_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "bsd_nvram",		SVCF_NO_STATUS,		P_NONE,		0, SVCOP_BSD_NVRAM },
 #endif
-	{ "bwlimit",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "bwlimit",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_BWLIMIT },
 #ifdef TCONFIG_CIFS
 	{ "cifs",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_CIFS },
 #endif
@@ -3622,31 +3155,31 @@ static const struct svc_entry svc_table[] = {
 	{ "cpufreq",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_CPUFREQ },
 #endif /* TOMATO64 */
 	{ "crond",		SVCF_LIST,		P_CROND,	0, SVCOP_CROND },
-	{ "cstats",		SVCF_LIST,		P_CSTATS,	0 },
-	{ "cstatsnew",		0,			P_CSTATS,	0 },
-	{ "cstats_nvram",	SVCF_NO_STATUS,		P_NONE,		0 },
-	{ "ctnf",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "cstats",		SVCF_LIST,		P_CSTATS,	0, SVCOP_CSTATS },
+	{ "cstatsnew",		0,			P_CSTATS,	1, SVCOP_CSTATS },
+	{ "cstats_nvram",	SVCF_NO_STATUS,		P_NONE,		0, SVCOP_CSTATS_NVRAM },
+	{ "ctnf",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_CTNF },
 	{ "ddns",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_DDNS },
 #ifdef TCONFIG_IPV6
 	{ "dhcp6",		SVCF_LIST,		P_DHCP6C,	0, SVCOP_DHCP6 },
 #endif
-	{ "dhcpc_wan",		SVCF_LIST,		P_UDHCPC,	0 },
+	{ "dhcpc_wan",		SVCF_LIST,		P_UDHCPC,	1, SVCOP_DHCPC_WAN },
 	{ "dhcpc_wan",		SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_MWAN_SUFFIX,
-							P_UDHCPC,	2 },
-	{ "dns",		SVCF_LIST,		P_DNSMASQ,	0 },
+							P_UDHCPC,	2, SVCOP_DHCPC_WAN },
+	{ "dns",		SVCF_LIST,		P_DNSMASQ,	1, SVCOP_DNSMASQ },
 #ifdef TCONFIG_DNSCRYPT
 	{ "dnscrypt",		SVCF_LIST,		P_DNSCRYPT_PROXY, 0, SVCOP_DNSCRYPT },
 	{ "dnscrypt_proxy",	0,			P_DNSCRYPT_PROXY, 0, SVCOP_DNSCRYPT },
 #endif
-	{ "dnsmasq",		SVCF_LIST,		P_DNSMASQ,	0 },
+	{ "dnsmasq",		SVCF_LIST,		P_DNSMASQ,	0, SVCOP_DNSMASQ },
 #ifdef TCONFIG_FANCTRL
 	{ "fanctrl",		SVCF_LIST,		P_PHY_TEMPSENSE, 0, SVCOP_FANCTRL },
 #endif
-	{ "firewall",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "firewall",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_FIREWALL },
 #ifdef TCONFIG_FTP
-	{ "ftpd",		SVCF_LIST,		P_VSFTPD,	0 },
-	{ "vsftpd",		0,			P_VSFTPD,	0 },
-	{ "ftp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "ftpd",		SVCF_LIST,		P_VSFTPD,	1, SVCOP_FTPD },
+	{ "vsftpd",		0,			P_VSFTPD,	1, SVCOP_FTPD },
+	{ "ftp_nvram",		SVCF_NO_STATUS,		P_NONE,		0, SVCOP_FTP_NVRAM },
 #endif
 #ifdef TCONFIG_HAVEGED
 	{ "haveged",		SVCF_LIST,		P_HAVEGED,	0, SVCOP_HAVEGED },
@@ -3660,32 +3193,32 @@ static const struct svc_entry svc_table[] = {
 	{ "jffs",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_JFFS2 },
 	{ "jffs2",		SVCF_NO_STATUS,		P_NONE,		0, SVCOP_JFFS2 },
 #endif
-	{ "logging",		SVCF_LIST,		P_SYSLOGD,	0 },
+	{ "logging",		SVCF_LIST,		P_SYSLOGD,	0, SVCOP_LOGGING },
 #ifdef TCONFIG_MDNS
 	{ "mdns",		SVCF_LIST,		P_AVAHI_DAEMON, 0, SVCOP_MDNS },
 	{ "avahi_daemon",	0,			P_AVAHI_DAEMON, 0, SVCOP_MDNS },
 #endif
 #ifdef TCONFIG_MEDIA_SERVER
-	{ "media",		SVCF_LIST,		P_MINIDLNA,	0 },
-	{ "minidlna",		0,			P_MINIDLNA,	0 },
+	{ "media",		SVCF_LIST,		P_MINIDLNA,	1, SVCOP_MEDIA },
+	{ "minidlna",		0,			P_MINIDLNA,	1, SVCOP_MEDIA },
 #endif
 #ifdef TCONFIG_SDHC
 	{ "mmc",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_MMC },
 #endif
 #ifdef TCONFIG_NGINX
-	{ "mysql",		SVCF_LIST,		P_MYSQLD,	0 },
-	{ "mysqld",		0,			P_MYSQLD,	0 },
+	{ "mysql",		SVCF_LIST,		P_MYSQLD,	1, SVCOP_MYSQL },
+	{ "mysqld",		0,			P_MYSQLD,	1, SVCOP_MYSQL },
 #endif
 #ifndef TOMATO64
-	{ "nas",		SVCF_LIST,		P_NAS,		0 },
+	{ "nas",		SVCF_LIST,		P_NAS,		0, SVCOP_NAS },
 #endif /* TOMATO64 */
-	{ "net",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "net",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_NET },
 #ifdef TCONFIG_NFS
 	{ "nfs",		SVCF_LIST,		P_NFSD,		0, SVCOP_NFS },
 	{ "nfsd",		0,			P_NFSD,		0, SVCOP_NFS },
 #endif
 #ifdef TCONFIG_NGINX
-	{ "nginx",		SVCF_LIST,		P_NGINX,	0 },
+	{ "nginx",		SVCF_LIST,		P_NGINX,	1, SVCOP_NGINX },
 #endif
 	{ "ntpd",		SVCF_LIST,		P_NTPD,		0, SVCOP_NTPD },
 #ifndef TOMATO64
@@ -3695,26 +3228,26 @@ static const struct svc_entry svc_table[] = {
 #endif /* TOMATO64 */
 #ifdef TCONFIG_PPTPD
 	{ "pptpclient",		SVCF_LIST,		P_PPTPCLIENT,	0, SVCOP_PPTPCLIENT },
-	{ "pptpd",		SVCF_LIST,		P_PPTPD,	0 },
+	{ "pptpd",		SVCF_LIST,		P_PPTPD,	1, SVCOP_PPTPD },
 #endif
-	{ "qos",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "restrict",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "qos",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_QOS },
+	{ "restrict",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_RESTRICT },
 #ifdef TCONFIG_ROAM
 	{ "roamast",		SVCF_LIST,		P_ROAMAST,	0, SVCOP_ROAMAST },
 	{ "rssi",		0,			P_ROAMAST,	0, SVCOP_ROAMAST },
 #endif
-	{ "routing",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "rstats",		SVCF_LIST,		P_RSTATS,	0 },
-	{ "rstatsnew",		0,			P_RSTATS,	0 },
-	{ "rstats_nvram",	SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "routing",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_ROUTING },
+	{ "rstats",		SVCF_LIST,		P_RSTATS,	0, SVCOP_RSTATS },
+	{ "rstatsnew",		0,			P_RSTATS,	1, SVCOP_RSTATS },
+	{ "rstats_nvram",	SVCF_NO_STATUS,		P_NONE,		0, SVCOP_RSTATS_NVRAM },
 #ifdef TCONFIG_SAMBASRV
-	{ "samba",		SVCF_LIST,		P_SMBD,		0 },
-	{ "smbd",		0,			P_SMBD,		0 },
+	{ "samba",		SVCF_LIST,		P_SMBD,		1, SVCOP_SAMBA },
+	{ "smbd",		0,			P_SMBD,		1, SVCOP_SAMBA },
 #endif
 	{ "sched",		SVCF_LIST,		P_SCHED,	0, SVCOP_SCHED },
 #ifdef TCONFIG_SNMP
 	{ "snmp",		SVCF_LIST,		P_SNMPD,	0, SVCOP_SNMP },
-	{ "snmp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "snmp_nvram",		SVCF_NO_STATUS,		P_NONE,		0, SVCOP_SNMP_NVRAM },
 #endif
 #ifdef TCONFIG_NOCAT
 	{ "splashd",		SVCF_LIST,		P_SPLASHD,	0, SVCOP_SPLASHD },
@@ -3726,44 +3259,44 @@ static const struct svc_entry svc_table[] = {
 #endif
 	{ "telnetd",		SVCF_LIST,		P_TELNETD,	0, SVCOP_TELNETD },
 #ifdef TCONFIG_TINC
-	{ "tinc",		SVCF_LIST,		P_TINCD,	0 },
-	{ "tincd",		0,			P_TINCD,	0 },
+	{ "tinc",		SVCF_LIST,		P_TINCD,	1, SVCOP_TINC },
+	{ "tincd",		0,			P_TINCD,	1, SVCOP_TINC },
 #endif
 	{ "tomatoanon",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_TOMATOANON },
 #ifdef TCONFIG_TOR
-	{ "tor",		SVCF_LIST,		P_TOR,		0 },
+	{ "tor",		SVCF_LIST,		P_TOR,		1, SVCOP_TOR },
 #endif
-	{ "upgrade",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "upnp",		SVCF_LIST,		P_MINIUPNPD,	0 },
-	{ "miniupnpd",		0,			P_MINIUPNPD,	0 },
-	{ "upnp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "upgrade",		SVCF_NO_STATUS,		P_NONE,		0, SVCOP_UPGRADE },
+	{ "upnp",		SVCF_LIST,		P_MINIUPNPD,	0, SVCOP_UPNP },
+	{ "miniupnpd",		0,			P_MINIUPNPD,	0, SVCOP_UPNP },
+	{ "upnp_nvram",		SVCF_NO_STATUS,		P_NONE,		0, SVCOP_UPNP_NVRAM },
 #ifdef TCONFIG_UPS
 	{ "ups",		SVCF_LIST,		P_APCUPSD,	0, SVCOP_UPS },
 #endif
 #ifdef TCONFIG_USB
-	{ "usb",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "usbapps",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "usb",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_USB },
+	{ "usbapps",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_USBAPPS },
 #endif
 #ifdef TCONFIG_OPENVPN
 	{ "vpnclient",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_OVPNC_SUFFIX,
-							P_SELF,		1 },
+							P_SELF,		1, SVCOP_VPNCLIENT },
 	{ "vpnserver",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_OVPNS_SUFFIX,
-							P_SELF,		1 },
+							P_SELF,		1, SVCOP_VPNSERVER },
 #endif
-	{ "wan",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "wan",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_WAN },
 	{ "wan",		SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_MWAN_SUFFIX | SVCF_NO_STATUS,
-							P_NONE,		1 },
+							P_NONE,		1, SVCOP_WAN_IF },
 #ifdef TOMATO64
 	{ "wifi",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
 #endif /* TOMATO64 */
 #ifdef TCONFIG_WIREGUARD
 	{ "wireguard",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_WG_SUFFIX,
-							P_WIREGUARD,	0 },
+							P_WIREGUARD,	0, SVCOP_WIREGUARD },
 #endif
 #ifndef TOMATO64
-	{ "wireless",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "wl",			SVCF_NO_STATUS,		P_NONE,		0 },
-	{ "wlgui",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "wireless",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_WIRELESS },
+	{ "wl",			SVCF_NO_STATUS,		P_NONE,		0, SVCOP_WIRELESS },
+	{ "wlgui",		SVCF_NO_STATUS, P_NONE,	0, SVCOP_WLGUI },
 #endif /* TOMATO64 */
 #ifdef TCONFIG_ZEBRA
 	{ "zebra",		SVCF_LIST,		P_ZEBRA,	0, SVCOP_ZEBRA },
@@ -3868,6 +3401,19 @@ static const struct svc_op svc_ops[] = {
 	SVC_OP(stop_cron, start_cron),
 	SVC_OP(stop_hotplug2, start_hotplug2),
 	SVC_OP(stop_tomatoanon, start_tomatoanon),
+	SVC_OP(stop_arpbind, start_arpbind),
+	SVC_OP(del_rstats_defaults, add_rstats_defaults),
+	SVC_OP(del_cstats_defaults, add_cstats_defaults),
+#ifdef TCONFIG_FTP
+	SVC_OP(del_ftp_defaults, add_ftp_defaults),
+#endif
+#ifdef TCONFIG_SNMP
+	SVC_OP(del_snmp_defaults, add_snmp_defaults),
+#endif
+	SVC_OP(del_upnp_defaults, add_upnp_defaults),
+#ifdef TCONFIG_BCMBSD
+	SVC_OP(del_bsd_defaults, add_bsd_defaults),
+#endif
 #ifdef TCONFIG_DNSCRYPT
 	SVC_OP(stop_dnscrypt, start_dnscrypt),
 #endif
@@ -3932,11 +3478,480 @@ static const struct svc_op svc_ops[] = {
 #endif /* TOMATO64 */
 };
 
-static int svc_exec_simple(const struct svc_entry *svc, int act_start, int act_stop)
+static int svc_exec_simple(const struct svc_entry *svc, const char *service, int act_start, int act_stop, int user)
 {
 	const struct svc_op *op;
+	char ifname[16];
+	char stp[16];
+	int i;
+	int n;
 
-	if ((svc == NULL) || (svc->op == SVCOP_NONE) || (svc->op >= SVCOP_MAX))
+	if ((svc == NULL) || (svc->op == SVCOP_NONE))
+		return 0;
+
+	if (svc->op & SVCOP_SPECIAL) {
+		switch (svc->op) {
+		case SVCOP_ADMIN:
+			if (act_stop) {
+				if (!svc->arg)
+					stop_sshd();
+				stop_telnetd();
+				stop_httpd();
+			}
+			if (act_start) {
+				stop_httpd();
+				start_httpd();
+				if (!svc->arg)
+					create_passwd();
+				if (nvram_get_int("telnetd_eas"))
+					start_telnetd();
+				if (nvram_get_int("sshd_eas") && !svc->arg)
+					start_sshd();
+			}
+			restart_firewall(); /* always restart */
+			return 1;
+#ifdef TCONFIG_USB
+		case SVCOP_USB:
+			if (act_stop)
+				stop_usb();
+			if (act_start) {
+				start_usb();
+				/* restart Samba and ftp since they may be killed by stop_usb() */
+				restart_nas_services(1, 1);
+				/* remount all partitions by simulating hotplug event */
+				add_remove_usbhost("-1", 1);
+			}
+			return 1;
+#endif
+		case SVCOP_NET:
+			if (act_stop) {
+#ifdef TCONFIG_USB
+				stop_nas_services();
+#endif
+#ifdef TCONFIG_PPPRELAY
+				stop_pppoerelay();
+#endif
+				stop_httpd();
+#ifdef TOMATO64_WIFI
+				stop_wifi();
+#endif /* TOMATO64_WIFI */
+#ifdef TCONFIG_MDNS
+				stop_mdns();
+#endif
+				stop_dnsmasq();
+#ifndef TOMATO64
+				stop_nas();
+#endif /* TOMATO64 */
+				stop_wan();
+				stop_arpbind();
+				stop_lan();
+				stop_vlan();
+			}
+			if (act_start) {
+				start_vlan();
+				start_lan();
+				start_arpbind();
+#ifndef TOMATO64
+				start_nas();
+#endif /* TOMATO64 */
+				start_dnsmasq();
+#ifdef TCONFIG_MDNS
+				start_mdns();
+#endif
+				start_httpd();
+#ifdef TOMATO64_WIFI
+				start_wifi();
+#endif /* TOMATO64_WIFI */
+#ifndef TOMATO64
+				start_wl();
+#endif /* TOMATO64 */
+#ifdef TCONFIG_USB
+				start_nas_services();
+#endif
+				/* last one as ssh, telnet, httpd, samba, etc can fail to load until start_wan_done */
+				start_wan();
+			}
+			return 1;
+		case SVCOP_UPGRADE:
+			if (act_start) {
+				nvram_set("g_upgrade", "1");
+
+				if (nvram_get_int("webmon_bkp"))
+					xstart("/usr/sbin/webmon_bkp", "hourly"); /* make a copy before upgrade */
+
+				stop_sched();
+				stop_cron();
+#ifdef TCONFIG_NGINX
+				stop_mysql();
+				stop_nginx();
+#endif
+#ifdef TCONFIG_NFS
+				stop_nfs();
+#endif
+#ifdef TCONFIG_USB
+				restart_nas_services(1, 0); /* Samba, FTP and Media Server */
+#endif
+#ifdef TCONFIG_BT
+				stop_bittorrent();
+#endif
+#ifdef TCONFIG_NOCAT
+				stop_nocat();
+#endif
+#ifdef TCONFIG_TOR
+				stop_tor();
+#endif
+				killall("rstats", SIGTERM);
+				killall("cstats", SIGTERM);
+				killall("buttons", SIGTERM);
+				stop_upnp();
+				if (!nvram_get_int("remote_upgrade")) {
+					killall("xl2tpd", SIGTERM);
+					killall("pppd", SIGTERM);
+					stop_dnsmasq();
+					killall("udhcpc", SIGTERM);
+					stop_wan();
+				} else
+					stop_adblock();
+
+#ifdef TCONFIG_SNMP
+				stop_snmp();
+#endif
+				stop_tomatoanon();
+				remove_conntrack();
+#ifdef TCONFIG_ZEBRA
+				stop_zebra();
+#endif
+#ifdef TCONFIG_IRQBALANCE
+				stop_irqbalance();
+#endif
+#ifdef TCONFIG_MDNS
+				stop_mdns();
+#endif
+#ifdef TCONFIG_HAVEGED
+				stop_haveged();
+#endif
+				stop_jffs2();
+				stop_syslog();
+				sleep(1);
+#ifdef TCONFIG_USB
+#ifdef TCONFIG_USBAP
+				stop_wireless();
+				sleep(1);
+#endif
+				remove_storage_main(1);
+				stop_usb();
+#endif /* TCONFIG_USB */
+			}
+			return 1;
+		case SVCOP_FIREWALL:
+			if (act_stop) {
+				stop_firewall();
+				stop_igmp_proxy();
+				stop_udpxy();
+			}
+			if (act_start) {
+				start_firewall();
+				start_igmp_proxy();
+				start_udpxy();
+			}
+			return 1;
+		case SVCOP_RESTRICT:
+			if (act_stop)
+				stop_firewall();
+
+			if (act_start) {
+				i = nvram_get_int("rrules_radio"); /* -1 = not used, 0 = enabled by rule, 1 = disabled by rule */
+
+				start_firewall();
+
+				/* if radio was disabled by access restriction, but no rule is handling it now, enable it */
+				if (i == 1) {
+					if (nvram_get_int("rrules_radio") < 0)
+						eval("radio", "on");
+				}
+			}
+			return 1;
+		case SVCOP_BWLIMIT:
+			if (act_stop) {
+				stop_bwlimit();
+#ifdef TCONFIG_NOCAT
+				stop_nocat();
+#endif
+			}
+			if (act_start) {
+				start_bwlimit();
+#ifdef TCONFIG_NOCAT
+				start_nocat();
+#endif
+			}
+			restart_firewall(); /* always restart */
+			return 1;
+		case SVCOP_QOS:
+			if (act_stop) {
+				for (i = 1; i <= MWAN_MAX; i++) {
+					snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%d"), i);
+					stop_qos(ifname);
+				}
+			}
+			if (act_start) {
+				for (i = 1; i <= MWAN_MAX; i++) {
+					snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%d"), i);
+					if ((check_wanup(ifname)) || (i == 1))
+						start_qos(ifname);
+				}
+				if (nvram_get_int("qos_reset"))
+					f_write_string("/proc/net/clear_marks", "1", 0, 0);
+			}
+			restart_firewall(); /* always restart */
+			return 1;
+		case SVCOP_ROUTING:
+			if (act_stop) {
+#ifdef TCONFIG_ZEBRA
+				stop_zebra();
+#endif
+				do_static_routes(0); /* remove old '_saved' */
+				for (i = 0; i < BRIDGE_COUNT; i++) {
+					snprintf(ifname, sizeof(ifname), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+					if ((i == 0) || (strcmp(nvram_safe_get(ifname), "") != 0))
+						eval("brctl", "stp", nvram_safe_get(ifname), "0");
+				}
+			}
+			if (act_start) {
+				do_static_routes(1); /* add new */
+#ifdef TCONFIG_ZEBRA
+				start_zebra();
+#endif
+				for (i = 0; i < BRIDGE_COUNT; i++) {
+					snprintf(ifname, sizeof(ifname), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+					if ((i == 0) || (strcmp(nvram_safe_get(ifname), "") != 0)) {
+						snprintf(stp, sizeof(stp), (i == 0 ? "lan_stp" : "lan%d_stp"), i);
+						eval("brctl", "stp", nvram_safe_get(ifname), nvram_safe_get(stp));
+					}
+				}
+			}
+			restart_firewall(); /* always restart */
+			return 1;
+		case SVCOP_DNSMASQ:
+			if (svc->arg) {
+				if (act_start)
+					reload_dnsmasq();
+				return 1;
+			}
+			if (act_stop)
+				stop_dnsmasq();
+			if (act_start && !nvram_get_int("g_upgrade")) {
+				dns_to_resolv();
+				start_dnsmasq();
+			}
+			return 1;
+		case SVCOP_LOGGING:
+			if (act_stop)
+				stop_syslog();
+			if (act_start)
+				start_syslog();
+			if (!user) { /* always restarted except from "service" command */
+				stop_cron();
+				start_cron();
+				restart_firewall();
+			}
+			return 1;
+		case SVCOP_CTNF:
+			if (act_start) {
+				setup_conntrack();
+				restart_firewall();
+			}
+			return 1;
+		case SVCOP_WIRELESS: /* for tomato user --> 'service wl start' will restart wl allways (failsafe, even if wl was not stopped!) */
+			if (act_stop)
+				stop_wireless();
+			if (act_start)
+				restart_wireless();
+			return 1;
+		case SVCOP_WLGUI: /* for GUI to restart wireless (only stop wl once!) */
+			if (act_stop)
+				stop_wireless();
+			if (act_start)
+				start_wireless();
+			return 1;
+		case SVCOP_NAS:
+			if (act_stop)
+				stop_nas();
+			if (act_start) {
+				start_nas();
+				start_wl();
+			}
+			return 1;
+#ifdef TCONFIG_USB
+		case SVCOP_USBAPPS:
+			if (act_stop)
+				stop_nas_services();
+			if (act_start)
+				start_nas_services();
+			return 1;
+#endif
+#ifdef TCONFIG_SAMBASRV
+		case SVCOP_SAMBA:
+			if (act_stop)
+				stop_samba();
+			if (act_start) {
+				create_passwd();
+				stop_dnsmasq();
+				start_dnsmasq();
+				start_samba(svc->arg);
+			}
+			return 1;
+#endif
+		case SVCOP_RSTATS:
+			if (act_stop)
+				stop_rstats();
+			if (act_start)
+				start_rstats(svc->arg);
+			return 1;
+		case SVCOP_CSTATS:
+			if (act_stop)
+				stop_cstats();
+			if (act_start)
+				start_cstats(svc->arg);
+			return 1;
+		case SVCOP_ADBLOCK:
+			if (act_stop)
+				stop_adblock();
+			if (act_start)
+				start_adblock(svc->arg);
+			return 1;
+		case SVCOP_UPNP:
+			if (act_stop)
+				stop_upnp();
+			restart_firewall();
+			if (act_start)
+				start_upnp();
+			return 1;
+#ifdef TCONFIG_BT
+		case SVCOP_BITTORRENT:
+			if (act_stop)
+				stop_bittorrent();
+			if (act_start)
+				start_bittorrent(svc->arg);
+			return 1;
+#endif
+#ifdef TCONFIG_FTP
+		case SVCOP_FTPD:
+			if (act_stop)
+				stop_ftpd();
+			setup_conntrack();
+			if (act_start)
+				start_ftpd(svc->arg);
+			return 1;
+#endif
+#ifdef TCONFIG_MEDIA_SERVER
+		case SVCOP_MEDIA:
+			if (act_stop)
+				stop_media_server();
+			if (act_start)
+				start_media_server(svc->arg);
+			return 1;
+#endif
+#ifdef TCONFIG_TINC
+		case SVCOP_TINC:
+			if (act_stop)
+				stop_tinc();
+			if (act_start)
+				start_tinc(svc->arg);
+			return 1;
+#endif
+#ifdef TCONFIG_NGINX
+		case SVCOP_NGINX:
+			if (act_stop)
+				stop_nginx();
+			if (act_start)
+				start_nginx(svc->arg);
+			return 1;
+		case SVCOP_MYSQL:
+			if (act_stop)
+				stop_mysql();
+			if (act_start)
+				start_mysql(svc->arg);
+			return 1;
+#endif
+#ifdef TCONFIG_PPTPD
+		case SVCOP_PPTPD:
+			if (act_stop)
+				stop_pptpd();
+			if (act_start)
+				start_pptpd(svc->arg);
+			return 1;
+#endif
+#ifdef TCONFIG_TOR
+		case SVCOP_TOR:
+			if (act_stop)
+				stop_tor();
+			if (act_start)
+				start_tor(svc->arg);
+			restart_firewall();
+			return 1;
+#endif
+#ifdef TCONFIG_OPENVPN
+		case SVCOP_VPNCLIENT:
+			n = atoi(service + 9);
+			if (act_stop)
+				stop_ovpn_client(n);
+			if (act_start)
+				start_ovpn_client(n);
+			return 1;
+		case SVCOP_VPNSERVER:
+			n = atoi(service + 9);
+			if (act_stop)
+				stop_ovpn_server(n);
+			if (act_start)
+				start_ovpn_server(n);
+			return 1;
+#endif
+#ifdef TCONFIG_WIREGUARD
+		case SVCOP_WIREGUARD:
+			n = atoi(service + 9);
+			if (act_stop)
+				stop_wireguard(n);
+			if (act_start)
+				start_wireguard(n);
+			return 1;
+#endif
+		case SVCOP_DHCPC_WAN:
+			n = (service[9] == '\0') ? 1 : atoi(service + 9);
+			snprintf(ifname, sizeof(ifname), (n == 1 ? "wan" : "wan%d"), n);
+			if (act_stop)
+				stop_dhcpc(ifname);
+			if (act_start)
+				start_dhcpc(ifname);
+			return 1;
+		case SVCOP_WAN:
+			if (act_stop)
+				stop_wan();
+			if (act_start) {
+				rename("/tmp/ppp/wan_log", "/tmp/ppp/wan_log.~");
+				start_wan();
+				for (i = 1; i <= MWAN_MAX; i++) {
+					snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%d"), i);
+					sleep(5);
+					force_to_dial(ifname);
+				}
+			}
+			return 1;
+		case SVCOP_WAN_IF:
+			n = atoi(service + 3);
+			snprintf(ifname, sizeof(ifname), (n == 1 ? "wan" : "wan%d"), n);
+			if (act_stop)
+				stop_wan_if(ifname);
+			if (act_start) {
+				start_wan_if(ifname);
+				sleep(5);
+				force_to_dial(ifname);
+			}
+			return 1;
+		}
+		return 0;
+	}
+
+	if (svc->op >= SVCOP_MAX)
 		return 0;
 
 	op = &svc_ops[svc->op];
