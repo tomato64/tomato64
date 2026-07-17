@@ -3631,12 +3631,466 @@ static void do_service(const char *name, const char *action, int user)
 		logmsg(LOG_DEBUG, "*** %s: OUT waited %d second(s) for execution of 'action_service': [%s]", __FUNCTION__, ((200 - n) / 10), s);
 }
 
+#define SVCF_LIST		0x01	/* show in "service list" */
+#define SVCF_PREFIX		0x02	/* match name as a prefix */
+#define SVCF_NO_STATUS		0x04	/* no single daemon process */
+#define SVCF_NUM_SUFFIX		0x08	/* prefix must be followed by a number */
+#define SVCF_MWAN_SUFFIX	0x10	/* numeric suffix is limited to MWAN_MAX */
+#define SVCF_OVPNC_SUFFIX	0x20	/* numeric suffix is limited to OVPN_CLIENT_COUNT */
+#define SVCF_OVPNS_SUFFIX	0x40	/* numeric suffix is limited to OVPN_SERVER_COUNT */
+#define SVCF_WG_SUFFIX		0x80	/* numeric suffix is limited to WG_INTERFACE_COUNT */
+
+enum svc_proc_id {
+	P_NONE = 0,
+	P_SELF,
+	P_AVAHI_DAEMON,
+	P_APCUPSD,
+	P_BSD,
+	P_CROND,
+	P_CSTATS,
+	P_DHCP6C,
+	P_DNSCRYPT_PROXY,
+	P_DNSMASQ,
+	P_DROPBEAR,
+	P_HAVEGED,
+	P_HOTPLUG2,
+	P_HTTPD,
+	P_IRQBALANCE,
+	P_MINIDLNA,
+	P_MINIUPNPD,
+	P_MYSQLD,
+	P_NAS,
+	P_NFSD,
+	P_NGINX,
+	P_NTPD,
+	P_PHY_TEMPSENSE,
+	P_PPTPCLIENT,
+	P_PPTPD,
+	P_ROAMAST,
+	P_RSTATS,
+	P_SCHED,
+	P_SMBD,
+	P_SNMPD,
+	P_SPLASHD,
+	P_STUBBY,
+	P_SYSLOGD,
+	P_TELNETD,
+	P_TINCD,
+	P_TOR,
+	P_TRANSMISSION_DA,
+	P_UDHCPC,
+	P_VSFTPD,
+	P_ZEBRA,
+	P_MAX
+};
+
+struct svc_entry {
+	const char *name;
+	unsigned char flags;
+	unsigned char proc;
+	unsigned char arg;
+};
+
+static const char * const svc_proc_name[] = {
+	NULL,
+	NULL,			/* P_SELF: use requested service name */
+	"avahi-daemon",
+	"apcupsd",
+	"bsd",
+	"crond",
+	"cstats",
+	"dhcp6c",
+	"dnscrypt-proxy",
+	"dnsmasq",
+	"dropbear",
+	"haveged",
+	"hotplug2",
+	"httpd",
+	"irqbalance",
+	"minidlna",
+	"miniupnpd",
+	"mysqld",
+	"nas",
+	"nfsd",
+	"nginx",
+	"ntpd",
+	"phy_tempsense",
+	"pptpclient",
+	"pptpd",
+	"roamast",
+	"rstats",
+	"sched",
+	"smbd",
+	"snmpd",
+	"splashd",
+	"stubby",
+	"syslogd",
+	"telnetd",
+	"tincd",
+	"tor",
+	"transmission-da",
+	"udhcpc",
+	"vsftpd",
+	"zebra"
+};
+
+static const struct svc_entry svc_table[] = {
+	{ "rstats_nvram",	SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "cstats_nvram",	SVCF_NO_STATUS,		P_NONE,		0 },
+#ifdef TCONFIG_FTP
+	{ "ftp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
+#endif
+#ifdef TCONFIG_SNMP
+	{ "snmp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
+#endif
+	{ "upnp_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
+#ifdef TCONFIG_BCMBSD
+	{ "bsd_nvram",		SVCF_NO_STATUS,		P_NONE,		0 },
+#endif
+
+	{ "dhcpc_wan",		SVCF_LIST,		P_UDHCPC,	0 },
+	{ "dhcpc_wan",		SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_MWAN_SUFFIX,
+							P_UDHCPC,	2 },
+
+	{ "dnsmasq",		SVCF_LIST,		P_DNSMASQ,	0 },
+	{ "dns",		SVCF_LIST,		P_DNSMASQ,	0 },
+#ifdef TCONFIG_DNSCRYPT
+	{ "dnscrypt",		SVCF_LIST,		P_DNSCRYPT_PROXY, 0 },
+	{ "dnscrypt_proxy",	0,			P_DNSCRYPT_PROXY, 0 },
+#endif
+#ifdef TCONFIG_STUBBY
+	{ "stubby",		SVCF_LIST,		P_STUBBY,	0 },
+#endif
+#ifdef TCONFIG_MDNS
+	{ "mdns",		SVCF_LIST,		P_AVAHI_DAEMON, 0 },
+	{ "avahi_daemon",	0,			P_AVAHI_DAEMON, 0 },
+#endif
+#ifdef TCONFIG_IRQBALANCE
+	{ "irqbalance",		SVCF_LIST,		P_IRQBALANCE,	0 },
+#endif
+#ifdef TCONFIG_HAVEGED
+	{ "haveged",		SVCF_LIST,		P_HAVEGED,	0 },
+#endif
+
+	{ "adblock",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "firewall",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "restrict",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "arpbind",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "bwlimit",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "qos",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "upnp",		SVCF_LIST,		P_MINIUPNPD,	0 },
+	{ "miniupnpd",		0,			P_MINIUPNPD,	0 },
+	{ "telnetd",		SVCF_LIST,		P_TELNETD,	0 },
+	{ "sshd",		SVCF_LIST,		P_DROPBEAR,	0 },
+	{ "dropbear",		0,			P_DROPBEAR,	0 },
+	{ "httpd",		SVCF_LIST,		P_HTTPD,	0 },
+#ifdef TCONFIG_IPV6
+	{ "dhcp6",		SVCF_LIST,		P_DHCP6C,	0 },
+#endif
+	{ "admin",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "adminnosshd",	SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "ddns",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "ntpd",		SVCF_LIST,		P_NTPD,		0 },
+	{ "logging",		SVCF_LIST,		P_SYSLOGD,	0 },
+	{ "crond",		SVCF_LIST,		P_CROND,	0 },
+	{ "hotplug",		SVCF_LIST,		P_HOTPLUG2,	0 },
+	{ "upgrade",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+
+#ifdef TCONFIG_CIFS
+	{ "cifs",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#endif
+#ifdef TCONFIG_JFFS2
+	{ "jffs",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "jffs2",		SVCF_NO_STATUS,		P_NONE,		0 },
+#endif
+#ifdef TCONFIG_ZEBRA
+	{ "zebra",		SVCF_LIST,		P_ZEBRA,	0 },
+#endif
+#ifdef TCONFIG_SDHC
+	{ "mmc",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#endif
+
+	{ "routing",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "ctnf",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "wan",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "wan",		SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_MWAN_SUFFIX | SVCF_NO_STATUS,
+							P_NONE,		1 },
+	{ "net",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "wireless",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "wl",			SVCF_NO_STATUS,		P_NONE,		0 },
+	{ "wlgui",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "nas",		SVCF_LIST,		P_NAS,		0 },
+#ifdef TCONFIG_BCMBSD
+	{ "bsd",		SVCF_LIST,		P_BSD,		0 },
+#endif
+#ifdef TCONFIG_ROAM
+	{ "roamast",		SVCF_LIST,		P_ROAMAST,	0 },
+	{ "rssi",		0,			P_ROAMAST,	0 },
+#endif
+	{ "rstats",		SVCF_LIST,		P_RSTATS,	0 },
+	{ "rstatsnew",		0,			P_RSTATS,	0 },
+	{ "cstats",		SVCF_LIST,		P_CSTATS,	0 },
+	{ "cstatsnew",		0,			P_CSTATS,	0 },
+	{ "sched",		SVCF_LIST,		P_SCHED,	0 },
+#ifdef TCONFIG_BT
+	{ "bittorrent",	SVCF_LIST,			P_TRANSMISSION_DA, 0 },
+	{ "transmission",	0,			P_TRANSMISSION_DA, 0 },
+	{ "transmission_da",	0,			P_TRANSMISSION_DA, 0 },
+#endif
+#ifdef TCONFIG_NFS
+	{ "nfs",		SVCF_LIST,		P_NFSD,		0 },
+	{ "nfsd",		0,			P_NFSD,		0 },
+#endif
+#ifdef TCONFIG_SNMP
+	{ "snmp",		SVCF_LIST,		P_SNMPD,	0 },
+#endif
+#ifdef TCONFIG_TOR
+	{ "tor",		SVCF_LIST,		P_TOR,		0 },
+#endif
+#ifdef TCONFIG_UPS
+	{ "ups",		SVCF_LIST,		P_APCUPSD,	0 },
+#endif
+	{ "tomatoanon",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+
+#ifdef TCONFIG_BCMARM
+	{ "porthealth",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#endif
+#ifdef TCONFIG_USB
+	{ "usb",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "usbapps",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+#endif
+#ifdef TCONFIG_FTP
+	{ "ftpd",		SVCF_LIST,		P_VSFTPD,	0 },
+	{ "vsftpd",		0,			P_VSFTPD,	0 },
+#endif
+#ifdef TCONFIG_MEDIA_SERVER
+	{ "media",		SVCF_LIST,		P_MINIDLNA,	0 },
+	{ "minidlna",		0,			P_MINIDLNA,	0 },
+#endif
+#ifdef TCONFIG_SAMBASRV
+	{ "samba",		SVCF_LIST,		P_SMBD,		0 },
+	{ "smbd",		0,			P_SMBD,		0 },
+#endif
+#ifdef TCONFIG_OPENVPN
+	{ "vpnclient",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_OVPNC_SUFFIX,
+							P_SELF,		1 },
+	{ "vpnserver",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_OVPNS_SUFFIX,
+							P_SELF,		1 },
+#endif
+#ifdef TCONFIG_WIREGUARD
+	{ "wireguard",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_WG_SUFFIX | SVCF_NO_STATUS,
+							P_NONE,		0 },
+#endif
+#ifdef TCONFIG_TINC
+	{ "tinc",		SVCF_LIST,		P_TINCD,	0 },
+	{ "tincd",		0,			P_TINCD,	0 },
+#endif
+#ifdef TCONFIG_FANCTRL
+	{ "fanctrl",		SVCF_LIST,		P_PHY_TEMPSENSE, 0 },
+#endif
+#ifdef TCONFIG_NOCAT
+	{ "splashd",		SVCF_LIST,		P_SPLASHD,	0 },
+#endif
+#ifdef TCONFIG_NGINX
+	{ "nginx",		SVCF_LIST,		P_NGINX,	0 },
+	{ "mysql",		SVCF_LIST,		P_MYSQLD,	0 },
+	{ "mysqld",		0,			P_MYSQLD,	0 },
+#endif
+#ifdef TCONFIG_PPTPD
+	{ "pptpd",		SVCF_LIST,		P_PPTPD,	0 },
+	{ "pptpclient",	SVCF_LIST,			P_PPTPCLIENT,	0 },
+#endif
+
+	{ NULL,			0,			P_NONE,		0 }
+};
+
+static int svc_num_suffix_max(unsigned char flags)
+{
+	if (flags & SVCF_MWAN_SUFFIX)
+		return MWAN_MAX;
+#ifdef TCONFIG_OPENVPN
+	if (flags & SVCF_OVPNC_SUFFIX)
+		return OVPN_CLIENT_COUNT;
+	if (flags & SVCF_OVPNS_SUFFIX)
+		return OVPN_SERVER_COUNT;
+#endif
+#ifdef TCONFIG_WIREGUARD
+	if (flags & SVCF_WG_SUFFIX)
+		return WG_INTERFACE_COUNT - 1;
+#endif
+
+	return -1;
+}
+
+static int svc_num_suffix_ok(const char *s, unsigned char flags, unsigned char min)
+{
+	const char *p;
+	int n;
+	int max;
+
+	if (*s == '\0')
+		return 0;
+
+	for (p = s; *p; p++) {
+		if ((*p < '0') || (*p > '9'))
+			return 0;
+	}
+
+	n = atoi(s);
+	if (n < min)
+		return 0;
+
+	max = svc_num_suffix_max(flags);
+	if ((max >= 0) && (n > max))
+		return 0;
+
+	return 1;
+}
+
+static int svc_match(const struct svc_entry *e, const char *name)
+{
+	const char *suffix;
+	int len;
+
+	if (!(e->flags & SVCF_PREFIX))
+		return (strcmp(name, e->name) == 0);
+
+	len = strlen(e->name);
+	if (strncmp(name, e->name, len) != 0)
+		return 0;
+
+	suffix = name + len;
+	if (e->flags & SVCF_NUM_SUFFIX)
+		return svc_num_suffix_ok(suffix, e->flags, e->arg);
+
+	return 1;
+}
+
+static const struct svc_entry *svc_find(const char *name)
+{
+	int i;
+
+	for (i = 0; svc_table[i].name; i++) {
+		if (svc_match(&svc_table[i], name))
+			return &svc_table[i];
+	}
+
+	return NULL;
+}
+
+static const char *svc_proc_name_for(const struct svc_entry *e, const char *name)
+{
+	if ((e == NULL) || (e->flags & SVCF_NO_STATUS) || (e->proc == P_NONE))
+		return NULL;
+
+	if (e->proc == P_SELF)
+		return name;
+
+	if (e->proc >= P_MAX)
+		return NULL;
+
+	return svc_proc_name[e->proc];
+}
+
+static void svc_list(void)
+{
+	int i;
+	int n;
+	int max;
+
+	for (i = 0; svc_table[i].name; i++) {
+		if (!(svc_table[i].flags & SVCF_LIST))
+			continue;
+
+		if ((svc_table[i].flags & SVCF_PREFIX) &&
+		    (svc_table[i].flags & SVCF_NUM_SUFFIX)) {
+			max = svc_num_suffix_max(svc_table[i].flags);
+			if (max < svc_table[i].arg)
+				continue;
+			for (n = svc_table[i].arg; n <= max; n++)
+				printf("%s%d\n", svc_table[i].name, n);
+			continue;
+		}
+
+		puts(svc_table[i].name);
+	}
+}
+
+static int svc_status(const char *name)
+{
+	const struct svc_entry *e;
+	const char *proc;
+	pid_t pid;
+
+	e = svc_find(name);
+	proc = svc_proc_name_for(e, name);
+
+	if (proc == NULL) {
+		printf("%s: no process status available\n", name);
+		return 0;
+	}
+
+	pid = pidof(proc);
+	if (pid > 0) {
+		printf("%s: running (pid %d)\n", name, (int)pid);
+		return 0;
+	}
+
+	printf("%s: stopped\n", name);
+	return 1;
+}
+
+static void svc_help(const char *prog)
+{
+	printf(
+		"Usage:  %s <service> start|stop|restart|status\n"
+		"        %s list\n"
+		"        %s help\n"
+		"\n"
+		"  start    Start the service\n"
+		"  stop     Stop the service\n"
+		"  restart  Restart the service\n"
+		"  status   Show process status when available\n"
+		"  list     Show public service names\n",
+		prog, prog, prog);
+}
+
 int service_main(int argc, char *argv[])
 {
-	if (argc != 3)
-		usage_exit(argv[0], "<service> <action>");
+	const struct svc_entry *svc;
+	const char *action;
 
-	do_service(argv[1], argv[2], 1);
+	if ((argc < 2) || (strcmp(argv[1], "help") == 0)) {
+		svc_help(argv[0]);
+		return 0;
+	}
+
+	if ((argc == 2) && (strcmp(argv[1], "list") == 0)) {
+		svc_list();
+		return 0;
+	}
+
+	if (argc != 3)
+		usage_exit(argv[0], "<service> <action> | list | help");
+
+	svc = svc_find(argv[1]);
+	if (svc == NULL) {
+		fprintf(stderr, "%s: unknown service '%s'\n", argv[0], argv[1]);
+		return 1;
+	}
+
+	action = argv[2];
+	if (strcmp(action, "status") == 0)
+		return svc_status(argv[1]);
+
+	if ((strcmp(action, "start") != 0) &&
+	    (strcmp(action, "stop") != 0) &&
+	    (strcmp(action, "restart") != 0)) {
+		fprintf(stderr, "%s: unknown action '%s'\n", argv[0], action);
+		return 1;
+	}
+
+	do_service(argv[1], action, 1);
 	printf("\nDone.\n");
 
 	return 0;
