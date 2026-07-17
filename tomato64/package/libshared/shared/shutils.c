@@ -1479,6 +1479,112 @@ int wg_status(char *iface)
 }
 #endif
 
+static int tc_qdisc_line_matches(const char *line, const char *kind)
+{
+	const char *p;
+	size_t len;
+
+	if ((line == NULL) || (kind == NULL) || (*kind == '\0'))
+		return 0;
+
+	p = strstr(line, "qdisc ");
+	if (p == NULL)
+		return 0;
+
+	p += 6;
+	len = strlen(kind);
+
+	if (strncmp(p, kind, len) != 0)
+		return 0;
+
+	p += len;
+	if ((*p != ' ') && (*p != '\t'))
+		return 0;
+
+	if (strstr(line, " 1:") == NULL)
+		return 0;
+
+	if (strstr(line, " root") == NULL)
+		return 0;
+
+	return 1;
+}
+
+static int tc_qdisc_status(const char *dev, const char *kind1, const char *kind2)
+{
+	FILE *fp;
+	char path[64], line[256];
+	char *argv[6];
+	int status;
+
+	status = 0;
+
+	if ((dev == NULL) || (*dev == '\0'))
+		return 0;
+
+	snprintf(path, sizeof(path), "/tmp/.tc_qdisc_status.%d", (int)getpid());
+
+	argv[0] = "tc";
+	argv[1] = "qdisc";
+	argv[2] = "show";
+	argv[3] = "dev";
+	argv[4] = (char *)dev;
+	argv[5] = NULL;
+
+	if (_eval(argv, path, 0, NULL) != 0) {
+		unlink(path);
+		return 0;
+	}
+
+	fp = fopen(path, "r");
+	if (fp != NULL) {
+		while (fgets(line, sizeof(line), fp) != NULL) {
+			if ((tc_qdisc_line_matches(line, kind1)) || (tc_qdisc_line_matches(line, kind2))) {
+				status = 1;
+				break;
+			}
+		}
+		fclose(fp);
+	}
+
+	unlink(path);
+
+	return status;
+}
+
+int bwlimit_status(void)
+{
+	return tc_qdisc_status("br0", "htb", NULL);
+}
+
+static int qos_prefix_status(char *prefix)
+{
+	const char *wanface;
+
+	if ((prefix == NULL) || (*prefix == '\0'))
+		return 0;
+
+	wanface = get_wanface(prefix);
+	if ((wanface == NULL) || (*wanface == '\0'))
+		return 0;
+
+	return tc_qdisc_status(wanface, "htb", "cake");
+}
+
+int qos_status(void)
+{
+	char prefix[16];
+	int i;
+
+	for (i = 1; i <= MWAN_MAX; i++) {
+		snprintf(prefix, sizeof(prefix), (i == 1 ? "wan" : "wan%d"), i);
+		if (qos_prefix_status(prefix))
+			return 1;
+	}
+
+	return 0;
+}
+
 /* ============================ UNUSED ============================ */
 
 #if 0

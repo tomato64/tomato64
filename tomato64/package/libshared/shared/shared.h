@@ -489,6 +489,8 @@ extern int dhd_bssiovar_setint(char *ifname, char *iovar, int bssidx, int val);
 #ifdef TCONFIG_WIREGUARD
 extern int wg_status(char *iface);
 #endif
+extern int bwlimit_status(void);
+extern int qos_status(void);
 
 /* mdu.c/ddns.c */
 #define MDU_STOP_FN		"/var/lib/mdu/mdu-stop"
