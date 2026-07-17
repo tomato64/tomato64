@@ -74,6 +74,12 @@ typedef ULONG_PTR uintptr;
 #define TYPEDEF_UINTPTR
 typedef unsigned long long int uintptr;
 #endif
+#ifdef TOMATO64
+#if defined(__aarch64__)
+#define TYPEDEF_UINTPTR
+typedef unsigned long long int uintptr;
+#endif
+#endif /* TOMATO64 */
 
 
 #if defined(_MINOSL_)

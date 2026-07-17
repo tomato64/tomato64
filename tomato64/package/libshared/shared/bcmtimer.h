@@ -21,8 +21,14 @@
 #include <time.h>
 
 /* timer ID */
+#ifndef TOMATO64
 typedef unsigned int bcm_timer_module_id;
 typedef unsigned int bcm_timer_id;
+#else /* TOMATO64: pointer-width handles so 64-bit timer_t/pointers aren't truncated */
+#include <stdint.h>
+typedef uintptr_t bcm_timer_module_id;
+typedef uintptr_t bcm_timer_id;
+#endif /* TOMATO64 */
 
 /* timer callback */
 typedef void (*bcm_timer_cb)(bcm_timer_id id, int data);

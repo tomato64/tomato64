@@ -478,10 +478,17 @@ static void print_event_queue()
 	int i = 0;
 
 	for (event = event_queue; event; event = event->next) {
+#ifndef TOMATO64
 		printf("#%d (0x%x)->0x%x: \t%d sec %d usec\t%p\n",
 		       i++, (unsigned int) event, (unsigned int) event->next, (int)
 		       event->it_value.tv_sec,
 		       (int) event->it_value.tv_usec, event->func);
+#else /* TOMATO64: %p for pointers to avoid 64-bit truncation */
+		printf("#%d (%p)->%p: \t%d sec %d usec\t%p\n",
+		       i++, (void *) event, (void *) event->next, (int)
+		       event->it_value.tv_sec,
+		       (int) event->it_value.tv_usec, event->func);
+#endif /* TOMATO64 */
 		if (i > g_maxevents) {
 			printf("...(giving up)\n");
 			break;
