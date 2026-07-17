@@ -1452,6 +1452,33 @@ pid_t get_pid_by_name(const char *name)
 }
 #endif /* TCONFIG_BCMBSD */
 
+#ifdef TCONFIG_WIREGUARD
+int wg_status(char *iface)
+{
+	FILE *fp;
+	char buffer[BUF_SIZE_64];
+	int status;
+
+	status = 0;
+
+	if ((iface == NULL) || (*iface == '\0'))
+		return 0;
+
+	snprintf(buffer, BUF_SIZE_64, "/sys/class/net/%s/operstate", iface);
+
+	if ((fp = fopen(buffer, "r"))) {
+		if (fgets(buffer, BUF_SIZE_64, fp)) {
+			buffer[strcspn(buffer, "\n")] = 0;
+			if ((strcmp(buffer, "unknown") == 0) || (strcmp(buffer, "up") == 0))
+				status = 1;
+		}
+		fclose(fp);
+	}
+
+	return status;
+}
+#endif
+
 /* ============================ UNUSED ============================ */
 
 #if 0

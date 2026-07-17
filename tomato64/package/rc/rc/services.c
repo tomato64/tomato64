@@ -3681,6 +3681,7 @@ enum svc_proc_id {
 	P_UDHCPC,
 	P_VSFTPD,
 	P_ZEBRA,
+	P_WIREGUARD,
 	P_MAX
 };
 
@@ -3731,7 +3732,8 @@ static const char * const svc_proc_name[] = {
 	"transmission-da",
 	"udhcpc",
 	"vsftpd",
-	"zebra"
+	"zebra",
+	NULL			/* P_WIREGUARD: handled by wg_status("wgN") */
 };
 
 static const struct svc_entry svc_table[] = {
@@ -3887,8 +3889,8 @@ static const struct svc_entry svc_table[] = {
 							P_SELF,		1 },
 #endif
 #ifdef TCONFIG_WIREGUARD
-	{ "wireguard",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_WG_SUFFIX | SVCF_NO_STATUS,
-							P_NONE,		0 },
+	{ "wireguard",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUFFIX | SVCF_WG_SUFFIX,
+							P_WIREGUARD,	0 },
 #endif
 #ifdef TCONFIG_TINC
 	{ "tinc",		SVCF_LIST,		P_TINCD,	0 },
@@ -3987,6 +3989,25 @@ static const struct svc_entry *svc_find(const char *name)
 	return NULL;
 }
 
+#ifdef TCONFIG_WIREGUARD
+static int svc_wireguard_status(const char *name)
+{
+	char iface[8];
+	int unit;
+
+	unit = atoi(name + 9);
+	snprintf(iface, sizeof(iface), "wg%d", unit);
+
+	if (wg_status(iface)) {
+		printf("%s: running (%s)\n", name, iface);
+		return 0;
+	}
+
+	printf("%s: stopped (%s)\n", name, iface);
+	return 1;
+}
+#endif
+
 static const char *svc_proc_name_for(const struct svc_entry *e, const char *name)
 {
 	if ((e == NULL) || (e->flags & SVCF_NO_STATUS) || (e->proc == P_NONE))
@@ -4032,6 +4053,11 @@ static int svc_status(const char *name)
 	pid_t pid;
 
 	e = svc_find(name);
+
+#ifdef TCONFIG_WIREGUARD
+	if ((e != NULL) && (e->proc == P_WIREGUARD))
+		return svc_wireguard_status(name);
+#endif
 	proc = svc_proc_name_for(e, name);
 
 	if (proc == NULL) {

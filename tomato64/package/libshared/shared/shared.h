@@ -486,6 +486,9 @@ extern int dhd_bssiovar_setint(char *ifname, char *iovar, int bssidx, int val);
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
  extern int getMTD(const char *name); /* Find partition with defined name and return partition number as an integer */
 #endif
+#ifdef TCONFIG_WIREGUARD
+extern int wg_status(char *iface);
+#endif
 
 /* mdu.c/ddns.c */
 #define MDU_STOP_FN		"/var/lib/mdu/mdu-stop"
