@@ -2874,20 +2874,6 @@ TOP:
 		goto CLEAR;
 	}
 
-#ifdef TOMATO64
-	if (strcmp(service, "zram") == 0) {
-		if (act_stop) stop_zram();
-		if (act_start) start_zram();
-		goto CLEAR;
-	}
-
-	if (strcmp(service, "cpufreq") == 0) {
-		if (act_stop) stop_cpufreq();
-		if (act_start) start_cpufreq();
-		goto CLEAR;
-	}
-#endif
-
 	if (strcmp(service, "firewall") == 0) {
 		if (act_stop) {
 			stop_firewall();
@@ -3510,6 +3496,10 @@ enum svc_op_id {
 #ifdef TCONFIG_NOCAT
 	SVCOP_SPLASHD,
 #endif
+#ifdef TOMATO64
+	SVCOP_ZRAM,
+	SVCOP_CPUFREQ,
+#endif /* TOMATO64 */
 	SVCOP_MAX
 };
 
@@ -3694,8 +3684,8 @@ static const struct svc_entry svc_table[] = {
 	{ "net",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
 #ifdef TOMATO64
 	{ "wifi",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "zram",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
-	{ "cpufreq",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
+	{ "zram",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_ZRAM },
+	{ "cpufreq",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0, SVCOP_CPUFREQ },
 #endif /* TOMATO64 */
 #ifndef TOMATO64
 	{ "wireless",		SVCF_LIST | SVCF_NO_STATUS, P_NONE,	0 },
@@ -3940,6 +3930,10 @@ static const struct svc_op svc_ops[] = {
 #ifdef TCONFIG_NOCAT
 	SVC_OP(stop_nocat, start_nocat),
 #endif
+#ifdef TOMATO64
+	SVC_OP(stop_zram, start_zram),
+	SVC_OP(stop_cpufreq, start_cpufreq),
+#endif /* TOMATO64 */
 };
 
 static int svc_exec_simple(const struct svc_entry *svc, int act_start, int act_stop)
