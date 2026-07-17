@@ -244,6 +244,8 @@ void asp_psup(int argc, char **argv)
 		web_printf("%stelnetd%s%d%s", isup, c, pidof("telnetd") > 0, e);
 		web_printf("%sminiupnpd%s%d%s", isup, c, pidof("miniupnpd") > 0, e);
 		web_printf("%sdnsmasq%s%d%s", isup, c, pidof("dnsmasq") > 0, e);
+		web_printf("%sqos%s%d%s", isup, c, qos_status(), e);
+		web_printf("%sbwl%s%d%s", isup, c, bwlimit_status(), e);
 #ifdef TCONFIG_NGINX
 		web_printf("%snginx%s%d%s", isup, c, pidof("nginx") > 0, e);
 		web_printf("%smysqld%s%d%s", isup, c, pidof("mysqld") > 0, e);

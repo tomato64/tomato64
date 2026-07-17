@@ -3516,6 +3516,18 @@ static void svc_list(void)
 	putchar('\n');
 }
 
+static int svc_bool_status(const char *name, int running)
+{
+	if (running) {
+		printf("%s: running\n", name);
+		return 0;
+	}
+
+	printf("%s: stopped\n", name);
+
+	return 1;
+}
+
 static int svc_status(const char *name)
 {
 	const struct svc_entry *e;
@@ -3523,6 +3535,15 @@ static int svc_status(const char *name)
 	pid_t pid;
 
 	e = svc_find(name);
+
+	if (e != NULL) {
+		switch (e->op) {
+		case SVCOP_BWLIMIT:
+			return svc_bool_status(name, bwlimit_status());
+		case SVCOP_QOS:
+			return svc_bool_status(name, qos_status());
+		}
+	}
 
 #ifdef TCONFIG_WIREGUARD
 	if ((e != NULL) && (e->proc == P_WIREGUARD))
@@ -3556,7 +3577,7 @@ static void svc_help(const char *prog)
 		"  start    Start the service\n"
 		"  stop     Stop the service\n"
 		"  restart  Restart the service\n"
-		"  status   Show process status when available\n"
+		"  status   Show runtime status when available\n"
 		"  list     Show public service names\n",
 		prog, prog, prog);
 }

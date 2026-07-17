@@ -27,8 +27,4 @@ isup.notice_jffs = '<% notice("jffs"); %>';
 isup.time = '<% time(); %>';
 isup.ntp = '<% ntp(); %>';
 
-/* it should be done in a different way, but for now it's ok */
-isup.qos = <% nv("qos_enable"); %>;
-isup.bwl = <% nv("bwl_enable"); %>;
-
 //	<% psup("all"); %>
