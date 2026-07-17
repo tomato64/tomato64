@@ -3240,6 +3240,7 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				restart_firewall();
 			}
 			return 1;
+#ifndef TOMATO64
 		case SVCOP_WIRELESS: /* for tomato user --> 'service wl start' will restart wl allways (failsafe, even if wl was not stopped!) */
 			if (act_stop)
 				stop_wireless();
@@ -3260,6 +3261,7 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				start_wl();
 			}
 			return 1;
+#endif /* TOMATO64 */
 #ifdef TCONFIG_USB
 		case SVCOP_USBAPPS:
 			if (act_stop)

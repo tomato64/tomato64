@@ -170,9 +170,11 @@ enum svc_op_id {
 #ifdef TCONFIG_UPS
 	SVCOP_UPS,
 #endif
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	SVCOP_PORTHEALTH,
 #endif
+#endif /* TOMATO64 */
 #ifdef TCONFIG_PPTPD
 	SVCOP_PPTPCLIENT,
 #endif
@@ -542,9 +544,11 @@ static const struct svc_op svc_ops[] = {
 #ifdef TCONFIG_UPS
 	SVC_OP(stop_ups, start_ups),
 #endif
+#ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
 	SVC_OP(stop_porthealth, start_porthealth),
 #endif
+#endif /* TOMATO64 */
 #ifdef TCONFIG_PPTPD
 	SVC_OP(stop_pptpc, start_pptpc),
 #endif
