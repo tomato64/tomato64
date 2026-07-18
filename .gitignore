@@ -21,7 +21,6 @@
 .configure-armsr
 .target
 *.gcom
-hotplug2.rules
 src/
 00001-openwrt-mediatek-kernel-*
 00001-openwrt-rockchip-kernel-*

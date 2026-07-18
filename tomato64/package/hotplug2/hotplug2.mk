@@ -22,7 +22,7 @@ endef
 
 define HOTPLUG2_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/hotplug2 $(TARGET_DIR)/sbin
-	$(INSTALL) -D -m 0644 $(@D)/examples/hotplug2.rules-2.6kernel $(BR2_EXTERNAL_TOMATO64_PATH)/package/rom/rom/rom/etc/hotplug2.rules
+	$(INSTALL) -D -m 0644 $(@D)/examples/hotplug2.rules-2.6kernel $(TARGET_DIR)/rom/etc/hotplug2.rules
 endef
 
 $(eval $(generic-package))
