@@ -9,7 +9,8 @@ all:
 clean:
 
 install:
-	rm -rf $(INSTALLDIR)/www
+#	rm -rf $(INSTALLDIR)/www
+# /www is shared: apcupsd installs its CGIs into www/apcupsd, so wiping the tree drops them on a partial www rebuild. Everything below overwrites in place.
 	mkdir -p $(INSTALLDIR)/www
 
 	cp *.gif *.png *.ico *.html *.php robots.txt $(INSTALLDIR)/www
@@ -867,4 +868,6 @@ ifneq ($(TCONFIG_TOMATO64),y)
 	done
 endif
 
-	chmod 0644 $(INSTALLDIR)/www/*
+#	chmod 0644 $(INSTALLDIR)/www/*
+# Only our own top-level files: the glob would also hit the apcupsd subdir and strip its +x, making the CGIs unreachable.
+	find $(INSTALLDIR)/www -maxdepth 1 -type f -exec chmod 0644 {} +

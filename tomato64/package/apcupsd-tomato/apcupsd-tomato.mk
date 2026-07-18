@@ -12,7 +12,7 @@ APCUPSD_TOMATO_CPE_ID_VENDOR = apcupsd
 APCUPSD_TOMATO_SELINUX_MODULES = apache apcupsd
 APCUPSD_TOMATO_CONF_OPTS = --disable-test
 
-APCUPSD_TOMATO_DEPENDENCIES += host-autoconf-269 libusb libusb-compat www
+APCUPSD_TOMATO_DEPENDENCIES += host-autoconf-269 libusb libusb-compat
 
 APCUPSD_TOMATO_CONF_ENV += ac_cv_path_usbcfg=$(STAGING_DIR)/usr/bin/libusb-config
 
