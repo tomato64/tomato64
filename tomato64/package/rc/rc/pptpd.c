@@ -108,12 +108,16 @@ static void build_pptpd_firewall(void)
 	            "echo \"$PPPD_PID $1 $5 $6 $PEERNAME $(date +%%s)\" >> "PPTPD_CONNECTED"\n"
 	            "iptables -I INPUT -i $1 -j %s\n"
 	            "iptables -I FORWARD -i $1 -j ACCEPT\n"
-	            "iptables -I FORWARD -o $1 -j ACCEPT\n"
-	            "iptables -I FORWARD -i $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
-	            "iptables -I FORWARD -o $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
-	            "iptables -t nat -I PREROUTING -i $1 -p udp -m udp --sport 9 -j DNAT --to-destination %s\n" /* rule for wake on lan over pptp tunnel */
+	            "iptables -I FORWARD -o $1 -j ACCEPT\n",
+	            chain_in_accept);
+
+	/* Clamp TCP MSS to PMTU of PPTPD interface (IPv4) */
+	if (!nvram_get_int("tcp_clamp_disable"))
+		fprintf(fp, "iptables -t mangle -I FORWARD -i $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
+		            "iptables -t mangle -I FORWARD -o $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n");
+
+	fprintf(fp, "iptables -t nat -I PREROUTING -i $1 -p udp -m udp --sport 9 -j DNAT --to-destination %s\n" /* rule for wake on lan over pptp tunnel */
 	            "%s\n",
-	            chain_in_accept,
 	            bcast,
 	            nvram_safe_get("pptpd_ipup_script"));
 #ifdef TCONFIG_BCMARM
@@ -132,8 +136,13 @@ static void build_pptpd_firewall(void)
 	            "grep -v $1 "PPTPD_CONNECTED" > "PPTPD_CONNECTED".new\n"
 	            "mv "PPTPD_CONNECTED".new "PPTPD_CONNECTED"\n"
 	            "iptables -D FORWARD -i $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
-	            "iptables -D FORWARD -o $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
-	            "iptables -D INPUT -i $1 -j %s\n"
+	            "iptables -D FORWARD -o $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n");
+
+	if (!nvram_get_int("tcp_clamp_disable"))
+		fprintf(fp, "iptables -t mangle -D FORWARD -o $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
+		            "iptables -t mangle -D FORWARD -i $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n");
+
+	fprintf(fp, "iptables -D INPUT -i $1 -j %s\n"
 	            "iptables -D FORWARD -i $1 -j ACCEPT\n"
 	            "iptables -D FORWARD -o $1 -j ACCEPT\n"
 	            "iptables -t nat -D PREROUTING -i $1 -p udp -m udp --sport 9 -j DNAT --to-destination %s\n" /* rule for wake on lan over pptp tunnel */
