@@ -110,6 +110,7 @@ static void build_pptpd_firewall(void)
 	            "iptables -I FORWARD -i $1 -j ACCEPT\n"
 	            "iptables -I FORWARD -o $1 -j ACCEPT\n"
 	            "iptables -I FORWARD -i $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
+	            "iptables -I FORWARD -o $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
 	            "iptables -t nat -I PREROUTING -i $1 -p udp -m udp --sport 9 -j DNAT --to-destination %s\n" /* rule for wake on lan over pptp tunnel */
 	            "%s\n",
 	            chain_in_accept,
@@ -131,6 +132,7 @@ static void build_pptpd_firewall(void)
 	            "grep -v $1 "PPTPD_CONNECTED" > "PPTPD_CONNECTED".new\n"
 	            "mv "PPTPD_CONNECTED".new "PPTPD_CONNECTED"\n"
 	            "iptables -D FORWARD -i $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
+	            "iptables -D FORWARD -o $1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
 	            "iptables -D INPUT -i $1 -j %s\n"
 	            "iptables -D FORWARD -i $1 -j ACCEPT\n"
 	            "iptables -D FORWARD -o $1 -j ACCEPT\n"
