@@ -935,13 +935,19 @@ static void mangle_table(void)
 		for (j = 1; j <= MWAN_MAX; j++) {
 			for (i = 0; i < wanfaces[j - 1].count; ++i) {
 				if (*(wanfaces[j - 1].iface[i].name)) {
-					ipt_write("-I FORWARD -o %s -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n", wanfaces[j - 1].iface[i].name);
+					ipt_write("-I FORWARD -o %s -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
+					          "-I FORWARD -i %s -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n",
+					          wanfaces[j - 1].iface[i].name,
+					          wanfaces[j - 1].iface[i].name);
 				}
 			}
 		}
 #ifdef TCONFIG_IPV6
 		if (ipv6_enabled && *wan6face) {
-			ip6t_write("-I FORWARD -o %s -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n", wan6face);
+			ip6t_write("-I FORWARD -o %s -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n"
+			           "-I FORWARD -i %s -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n",
+			           wan6face,
+			           wan6face);
 		}
 #endif
 	}
