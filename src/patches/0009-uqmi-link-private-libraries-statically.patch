@@ -1,0 +1,35 @@
+From 9d9b1523ceca0309e916464f5110001770ea94af Mon Sep 17 00:00:00 2001
+From: pedro <pedro311@gmail.com>
+Date: Sat, 1 Aug 2026 14:18:29 +0200
+Subject: [PATCH] uqmi: link private libraries statically
+
+Buildroot enables 'BUILD_SHARED_LIBS' for dynamically linked CMake
+packages, causing uqmi's private 'common' and 'qmigen' libraries to be
+built as shared objects.
+
+The upstream install rules install only the uqmi executable, leaving it
+with unresolved runtime dependencies on 'libcommon.so' and 'libqmigen.so'.
+
+Build the private libraries statically into the uqmi executable. External
+dependencies such as json-c and libubox remain dynamically linked.
+
+---
+ /package/uqmi/uqmi.mk                 | 9 ++++++++-----------
+ 1 file changed, 1 insertions(+), 0 deletions(-)
+
+--- a/package/uqmi/uqmi.mk
++++ b/package/uqmi/uqmi.mk
+@@ -11,4 +11,13 @@ UQMI_LICENSE = LGPL-2.0+
+ UQMI_LICENSE_FILES = uqmi/uqmi.c
+ UQMI_DEPENDENCIES = json-c libubox
+
++# uqmi defines the private common and qmigen libraries without an explicit
++# library type. Buildroot normally passes BUILD_SHARED_LIBS=ON, making the
++# executable depend on libcommon.so and libqmigen.so. Upstream installs only
++# the uqmi executable, so those private libraries are missing from the target.
++#
++# Build the private libraries statically into uqmi. BUILD_STATIC remains OFF,
++# therefore external dependencies such as json-c and libubox stay dynamic.
++UQMI_CONF_OPTS = -DBUILD_SHARED_LIBS=OFF
++
+ $(eval $(cmake-package))
