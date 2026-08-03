@@ -5,8 +5,7 @@
 ################################################################################
 
 WSDD2_VERSION = 1.8.7
-WSDD2_SITE = https://github.com/Netgear/wsdd2/archive/refs/tags
-WSDD2_SOURCE = $(WSDD2_VERSION).tar.gz
+WSDD2_SITE = $(call github,tomato64,wsdd2,$(WSDD2_VERSION))
 WSDD2_INSTALL_STAGING = YES
 WSDD2_LICENSE = GPL-3.0+
 
