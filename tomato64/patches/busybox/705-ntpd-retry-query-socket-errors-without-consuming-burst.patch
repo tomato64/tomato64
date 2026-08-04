@@ -1,0 +1,124 @@
+From 030d5d49a396a77750160b8df7e15f1ebecb8510 Mon Sep 17 00:00:00 2001
+From: pedro311 <pedro311@gmail.com>
+Date: Tue, 21 Jul 2026 18:08:46 +0000
+Subject: [PATCH 2/3] ntpd: retry query socket errors without consuming burst
+ (patch)
+
+xsocket_type() and xbind() terminate the applet on failure. Temporary
+resource exhaustion or address-family transitions should not kill a
+long-running time daemon.
+
+Use non-fatal socket() and bind() calls, close partial state, and
+schedule RETRY_INTERVAL on failure.
+
+Return whether a query was actually sent and decrement the initial
+burst countdown only in that case. DNS, socket, bind, and send errors
+therefore no longer consume the startup sample budget.
+---
+ busybox/networking/ntpd.c | 53 +++++++++++++++++++++++----------------
+ 1 file changed, 32 insertions(+), 21 deletions(-)
+
+diff --git busybox/networking/ntpd.c busybox/networking/ntpd.c
+index 920da6b..16f177b 100644
+--- busybox/networking/ntpd.c
++++ busybox/networking/ntpd.c
+@@ -895,11 +895,11 @@ hashes_differ(peer_t *p, const msg_t *msg)
+ }
+ #endif
+ 
+-static void
++static int
+ send_query_to_peer(peer_t *p)
+ {
+ 	if (!p->p_lsa)
+-		return;
++		return 0;
+ 
+ 	/* Why do we need to bind()?
+ 	 * See what happens when we don't bind:
+@@ -921,23 +921,37 @@ send_query_to_peer(peer_t *p)
+ 
+ 	if (p->p_fd == -1) {
+ 		int fd, family;
+-		len_and_sockaddr *local_lsa;
++		len_and_sockaddr local_lsa;
+ 
+ 		family = p->p_lsa->u.sa.sa_family;
+-		p->p_fd = fd = xsocket_type(&local_lsa, family, SOCK_DGRAM);
+-		/* local_lsa has "null" address and port 0 now.
+-		 * bind() ensures we have a *particular port* selected by kernel
+-		 * and remembered in p->p_fd, thus later recv(p->p_fd)
++		fd = socket(family, SOCK_DGRAM, 0);
++		if (fd < 0) {
++			bb_perror_msg("can't create query socket for %s", p->p_dotted);
++			set_next(p, RETRY_INTERVAL);
++			return 0;
++		}
++
++		/* Use a wildcard address and port 0 for the peer's family.
++		 * bind() ensures we have a particular port selected by the
++		 * kernel and remembered in p->p_fd, thus later recv(p->p_fd)
+ 		 * receives only packets sent to this port.
+ 		 */
++		memset(&local_lsa, 0, sizeof(local_lsa));
++		local_lsa.len = p->p_lsa->len;
++		local_lsa.u.sa.sa_family = family;
+ 		PROBE_LOCAL_ADDR
+-		xbind(fd, &local_lsa->u.sa, local_lsa->len);
++		if (bind(fd, &local_lsa.u.sa, local_lsa.len) != 0) {
++			bb_perror_msg("can't bind query socket for %s", p->p_dotted);
++			close(fd);
++			set_next(p, RETRY_INTERVAL);
++			return 0;
++		}
+ 		PROBE_LOCAL_ADDR
++		p->p_fd = fd;
+ #if ENABLE_FEATURE_IPV6
+ 		if (family == AF_INET)
+ #endif
+ 			setsockopt_int(fd, IPPROTO_IP, IP_TOS, IPTOS_DSCP_AF21);
+-		free(local_lsa);
+ 	}
+ 
+ 	/* Emit message _before_ attempted send. Think of a very short
+@@ -991,10 +1005,11 @@ send_query_to_peer(peer_t *p)
+ 		 * that we are flooding the peer.
+ 		 */
+ 		set_next(p, RETRY_INTERVAL);
+-		return;
++		return 0;
+ 	}
+ 
+ 	set_next(p, RESPONSE_INTERVAL);
++	return 1;
+ }
+ 
+ /* Note that there is no provision to prevent several run_scripts
+@@ -2601,17 +2616,13 @@ int ntpd_main(int argc UNUSED_PARAM, char **argv)
+ 
+ 			if (p->next_action_time <= G.cur_time) {
+ 				if (p->p_fd == -1) {
+-					/* Do not consume the initial burst countdown until
+-					 * hostname resolution has produced an address.
+-					 */
+-					if (p->p_lsa) {
+-						/* Time to send new req */
+-						if (cnt != 0 && --cnt == 0) {
+-							VERB4 bb_simple_error_msg("disabling burst mode");
+-							G.polladj_count = 0;
+-							G.poll_exp = MINPOLL;
+-						}
+-						send_query_to_peer(p);
++					/* Count only requests which were actually sent. */
++					if (send_query_to_peer(p)
++					 && cnt != 0 && --cnt == 0
++					) {
++						VERB4 bb_simple_error_msg("disabling burst mode");
++						G.polladj_count = 0;
++						G.poll_exp = MINPOLL;
+ 					}
+ 				} else {
+ 					/* Timed out waiting for reply */
+-- 
+2.47.3
+
