@@ -23,10 +23,10 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,fw_strict_input,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_quickleave,multicast_custom,lan_ifname,udpxy_enable,udpxy_lan,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole"); %>
+//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,fw_strict_input,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_quickleave,multicast_custom,lan_ifname,udpxy_enable,udpxy_lan,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole,tcp_clamp_disable"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,fw_strict_input,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_quickleave,multicast_custom,lan_ifname,udpxy_enable,udpxy_lan,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole,flow_offloading,wed_offloading,packet_steering,steering_flows,steering_flows_custom"); %>
+//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,fw_strict_input,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_quickleave,multicast_custom,lan_ifname,udpxy_enable,udpxy_lan,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole,tcp_clamp_disable,flow_offloading,wed_offloading,packet_steering,steering_flows,steering_flows_custom"); %>
 /* TOMATO64-END */
 
 var cprefix = 'advanced_firewall';
@@ -246,6 +246,7 @@ function save() {
 	fom.force_igmpv2.value = fom._f_force_igmpv2.checked ? 1 : 0;
 	fom.wan_dhcp_pass.value = fom._f_wan_dhcp_pass.checked ? 1 : 0;
 	fom.fw_blackhole.value = fom._f_fw_blackhole.checked ? 1 : 0;
+	fom.tcp_clamp_disable.value = fom._f_tcp_clamp_disable.checked ? 0 : 1;
 
 /* TOMATO64-WIFI-BEGIN */
 	if (fom.wed_offloading.value != nvram.wed_offloading) {
@@ -332,6 +333,7 @@ function init() {
 <input type="hidden" name="force_igmpv2">
 <input type="hidden" name="wan_dhcp_pass">
 <input type="hidden" name="fw_blackhole">
+<input type="hidden" name="tcp_clamp_disable">
 
 <!-- / / / -->
 
@@ -340,7 +342,7 @@ function init() {
 	<script>
 		createFieldTable('', [
 			{ title: 'WAN interfaces respond to Ping and Traceroute', name: 'f_icmp', type: 'checkbox', value: nvram.block_wan == '0' },
-			{ title: 'Limit communication to', multi: [
+			{ title: 'Limit communication to', indent: 2, multi: [
 				{ name: 'f_icmp_limit', type: 'checkbox', value: nvram.block_wan_limit != '0' },
 				{ name: 'f_icmp_limit_icmp', type: 'text', maxlen: 3, size: 3, prefix: ' &nbsp;', suffix: ' &nbsp;<small>request per second<\/small>', value: fixInt(nvram.block_wan_limit_icmp || 1, 1, 300, 5) } ] },
 			null,
@@ -349,6 +351,8 @@ function init() {
 			null,
 			{ title: 'Allow DHCP spoofing', name: 'f_wan_dhcp_pass', type: 'checkbox', value: nvram.wan_dhcp_pass == 1 },
 			{ title: 'Smart MTU black hole detection', name: 'f_fw_blackhole', type: 'checkbox', value: nvram.fw_blackhole == 1 },
+			null,
+			{ title: 'TCP MSS Clamping', name: 'f_tcp_clamp_disable', type: 'checkbox', value: nvram.tcp_clamp_disable != '1' },
 			null,
 			{ title: 'Bridge Gateway Isolation', name: 'fw_strict_input', type: 'select', options: [[0,'Disabled'],[1,'Enabled']], value: nvram.fw_strict_input, suffix: ' &nbsp;<small>Blocks devices from accessing gateway IPs on other bridges<\/small>' }
 		]);

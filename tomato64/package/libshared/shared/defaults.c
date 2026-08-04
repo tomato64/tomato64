@@ -1329,6 +1329,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "ne_snat",			"0"				, 0 },	/* use SNAT instead of MASQUERADE */
 	{ "wan_dhcp_pass",		"0"				, 0 },	/* allow DHCP responses */
 	{ "fw_blackhole",		"1"				, 0 },	/* MTU black hole detection */
+	{ "tcp_clamp_disable",		"0"				, 0 },	/* Adjust TCP MSS for forwarded traffic on WAN and VPN interfaces to avoid MTU-related connection issues. */
 
 /* advanced-routing */
 	{ "routes_static",		""				, 0 },

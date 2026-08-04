@@ -934,6 +934,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan_dhcp_pass",		V_01				},
 	{ "ipsec_pass",			V_RANGE(0, 3)			},	/* Enable IPSec Passthrough */
 	{ "fw_blackhole",		V_01				},	/* MTU black hole detection */
+	{ "tcp_clamp_disable",		V_01				},	/* Adjust TCP MSS for forwarded traffic on WAN and VPN interfaces to avoid MTU-related connection issues. */
 #ifdef TCONFIG_EMF
 	{ "emf_entry",			V_NONE				},
 	{ "emf_uffp_entry",		V_NONE				},
