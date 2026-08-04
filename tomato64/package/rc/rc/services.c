@@ -2066,12 +2066,15 @@ void start_ntpd(void)
 		if (nvram_contains_word("log_events", "ntp")) /* add verbose (doesn't work right now) */
 			ntpd_argv[index++] = "-ddddddd";
 
+		/* Register the synchronization hook before the first update.
+		 * In one-shot mode BusyBox must run it before exiting.
+		 */
+		ntpd_argv[index++] = "-S";
+		ntpd_argv[index++] = "/sbin/ntpd_synced";
+
 		if (ntp_updates_int == 0) /* only at startup, then quit */
 			ntpd_argv[index++] = "-q";
 		else if (ntp_updates_int >= 1) { /* auto adjusted timing by ntpd since it doesn't currently implement minpoll and maxpoll */
-			ntpd_argv[index++] = "-S";
-			ntpd_argv[index++] = "/sbin/ntpd_synced";
-
 			if (nvram_get_int("ntpd_enable")) /* enable local NTP server */
 				ntpd_argv[index++] = "-l";
 
@@ -2117,19 +2120,40 @@ int ntpd_synced_main(int argc, char *argv[])
 	char *server_hostname = safe_getenv("server_hostname");
 	char *server_ip = safe_getenv("server_ip");
 	char *discipline_jitter = safe_getenv("discipline_jitter");
+	char *end;
+	unsigned long stratum_num;
+	int initial_sync = 0;
+	int became_ready = 0;
+	int lock;
 
-#ifndef TOMATO64
-	if (!nvram_match("ntp_ready", "1") && (argc == 2 && !strcmp(argv[1], "step"))) {
-#else
-	if (!nvram_match("ntp_ready", "1") && (argc == 2 && (!strcmp(argv[1], "step") || !strcmp(argv[1], "stratum")))) {
-		int lockfd = file_lock("ntp_synced");
-		if (nvram_match("ntp_ready", "1")) {
-			file_unlock(lockfd);
-			goto ntp_done;
+	if (argc == 2) {
+		if (!strcmp(argv[1], "step")) {
+			initial_sync = 1;
 		}
-#endif /* TOMATO64 */
-		nvram_set("ntp_ready", "1");
-		logmsg(LOG_INFO, "initial clock set");
+		else if (!strcmp(argv[1], "stratum")) {
+			stratum_num = strtoul(stratum, &end, 10);
+			if (*stratum != '\0' && *end == '\0'
+			 && stratum_num > 0 && stratum_num < 16
+			) {
+				initial_sync = 1;
+			}
+		}
+	}
+
+	/* A step may be followed almost immediately by a stratum hook.
+	 * Serialize the transition so dependent services are restarted once.
+	 */
+	if (initial_sync) {
+		lock = file_lock("ntpd_synced");
+		if (!nvram_match("ntp_ready", "1")) {
+			nvram_set("ntp_ready", "1");
+			became_ready = 1;
+		}
+		file_unlock(lock);
+	}
+
+	if (became_ready) {
+		logmsg(LOG_INFO, "initial clock synchronized");
 
 		stop_httpd();
 		start_httpd();
@@ -2158,13 +2182,7 @@ int ntpd_synced_main(int argc, char *argv[])
 		stop_mdns();
 		start_mdns();
 #endif
-#ifdef TOMATO64
-		file_unlock(lockfd);
-#endif /* TOMATO64 */
 	}
-#ifdef TOMATO64
-ntp_done:
-#endif /* TOMATO64 */
 
 	snprintf(message, sizeof(message), "Server: %s (%s)\n"
 					   "Poll Interval: %ss\n"
