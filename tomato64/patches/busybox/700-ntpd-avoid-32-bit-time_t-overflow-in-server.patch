@@ -1,0 +1,41 @@
+From afa31abb26e21aae16a93342dd4984a667e4c151 Mon Sep 17 00:00:00 2001
+From: pedro311 <pedro311@gmail.com>
+Date: Sat, 18 Jul 2026 14:46:39 +0000
+Subject: [PATCH 1/4] ntpd: avoid 32-bit time_t overflow in server timestamps
+
+d_to_lfp() receives seconds since 1900.  Even current timestamps are
+larger than INT32_MAX, so converting them through a signed 32-bit
+time_t has undefined behavior.  On affected targets the conversion can
+produce 0x7fffffff, causing the server to send an invalid timestamp.
+
+Reduce second-era timestamps to the 32-bit NTP seconds field before the
+floating-to-integer conversion.  This keeps the conversion in range on
+both 32-bit and 64-bit time_t systems and preserves the existing
+1970-2106 era handling.
+
+Fixes: 85acf71d2579 ("ntpd: make NTP client and server Y2036/2038-ready")
+Signed-off-by: pedro311 <pedro311@gmail.com>
+---
+ busybox/networking/ntpd.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/networking/ntpd.c b/networking/ntpd.c
+index 595000b..af37eb5 100644
+--- busybox/networking/ntpd.c
++++ busybox/networking/ntpd.c
+@@ -585,8 +585,10 @@ d_to_lfp(l_fixedpt_t *lfp, double d)
+ {
+ 	uint32_t intl;
+ 	uint32_t frac;
+-	intl = (uint32_t)(time_t)d;
+-	frac = (uint32_t)((d - (time_t)d) * 0xffffffff);
++	if (d >= (double)(1ULL << 32))
++		d -= (double)(1ULL << 32);
++	intl = (uint32_t)d;
++	frac = (uint32_t)((d - (double)intl) * 0xffffffff);
+ 	lfp->int_partl = htonl(intl);
+ 	lfp->fractionl = htonl(frac);
+ }
+-- 
+2.47.3
+

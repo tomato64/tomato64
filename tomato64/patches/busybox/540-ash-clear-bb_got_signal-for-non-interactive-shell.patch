@@ -20,8 +20,8 @@ Signed-off-by: Seo Suchan <tjtncks@gmail.com>
 
 diff --git a/shell/ash.c b/shell/ash.c
 index fb887f31b..3eb73eaa4 100644
---- a/shell/ash.c
-+++ b/shell/ash.c
+--- busybox/shell/ash.c
++++ busybox/shell/ash.c
 @@ -9608,6 +9608,9 @@ dotrap(void)
  		savestatus = status;
  	}

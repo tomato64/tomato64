@@ -1,0 +1,33 @@
+From c1c0180073b035f8ec4fffd68460d2ac35ce8d1b Mon Sep 17 00:00:00 2001
+From: pedro <pedro311@gmail.com>
+Date: Sun, 19 Jul 2026 19:19:14 +0200
+Subject: [PATCH 3/3] ntpd: check get_sock_lsa() in server receive path
+
+get_sock_lsa() returns NULL when getsockname() fails.  The NTP server
+receive path dereferences the result unconditionally and would crash
+without a diagnostic.
+
+Fail with the underlying getsockname() error instead of dereferencing a
+NULL pointer.
+
+Signed-off-by: pedro311 <pedro311@gmail.com>
+---
+ busybox/networking/ntpd.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/networking/ntpd.c b/networking/ntpd.c
+index b8464f7da..0684ad461 100644
+--- busybox/networking/ntpd.c
++++ busybox/networking/ntpd.c
+@@ -2141,6 +2141,8 @@ recv_and_process_client_pkt(void /*int fd*/)
+ 	l_fixedpt_t      query_xmttime;
+ 
+ 	to = get_sock_lsa(G_listen_fd);
++	if (!to)
++		bb_simple_perror_msg_and_die("getsockname");
+ 	from = xzalloc(to->len);
+ 
+ 	size = recv_from_to(G_listen_fd, &msg, sizeof(msg), MSG_DONTWAIT, from, &to->u.sa, to->len);
+-- 
+2.39.5
+

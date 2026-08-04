@@ -1,6 +1,6 @@
 --- busybox/coreutils/df.c
 +++ busybox/coreutils/df.c
-@@ -239,6 +239,10 @@
+@@ -242,6 +242,10 @@
  
  		mount_point = mount_entry->mnt_dir;
  		fs_type = mount_entry->mnt_type;

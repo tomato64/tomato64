@@ -76,7 +76,7 @@
  void volume_id_set_label_string(struct volume_id *id, const uint8_t *buf, size_t count)
  {
  	unsigned i;
-@@ -263,3 +269,4 @@
+@@ -271,3 +277,4 @@
  	id->seekbuf_len = 0;
  	id->seekbuf_off = 0; /* paranoia */
  }

@@ -55,7 +55,7 @@
  	uint32_t xid;
 --- busybox/networking/udhcp/dhcpd.c
 +++ busybox/networking/udhcp/dhcpd.c
-@@ -976,7 +976,8 @@
+@@ -1002,7 +1002,8 @@
  	if (udhcp_read_interface(server_data.interface,
  			&server_data.ifindex,
  			(server_data.server_nip == 0 ? &server_data.server_nip : NULL),
