@@ -414,6 +414,75 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 	}
 }
 
+function updateWanProtoOptions() {
+	var enabledAfter = [];
+	var curr_mwan_num = parseInt(E('_mwan_num').value, 10);
+	var haveEnabledAfter = 0;
+	var disabledBefore = 0;
+	var i, u, uidx, proto;
+
+	if (isNaN(curr_mwan_num) || (curr_mwan_num < 1))
+		curr_mwan_num = 1;
+	else if (curr_mwan_num > MAXWAN_NUM)
+		curr_mwan_num = MAXWAN_NUM;
+
+	/*
+	 * WANs must form one continuous enabled prefix followed by an optional
+	 * disabled suffix. Examples: ON/ON/OFF and ON/OFF/OFF are valid;
+	 * ON/OFF/ON is not.
+	 */
+	for (uidx = curr_mwan_num; uidx >= 1; --uidx) {
+		u = (uidx > 1) ? uidx : '';
+		proto = E('_wan'+u+'_proto');
+		enabledAfter[uidx] = haveEnabledAfter;
+		if (proto.value != 'disabled')
+			haveEnabledAfter = 1;
+	}
+
+	for (uidx = 1; uidx <= curr_mwan_num; ++uidx) {
+		u = (uidx > 1) ? uidx : '';
+		proto = E('_wan'+u+'_proto');
+
+		for (i = 0; i < proto.options.length; ++i) {
+			if (proto.options[i].value == 'disabled')
+				proto.options[i].disabled = enabledAfter[uidx];
+			else
+				proto.options[i].disabled = disabledBefore;
+		}
+
+		if (proto.value == 'disabled')
+			disabledBefore = 1;
+	}
+}
+
+function verifyWanProtoOrder(quiet) {
+	var curr_mwan_num = parseInt(E('_mwan_num').value, 10);
+	var disabledSeen = 0;
+	var ok = 1;
+	var u, uidx, proto;
+
+	if (isNaN(curr_mwan_num) || (curr_mwan_num < 1))
+		curr_mwan_num = 1;
+	else if (curr_mwan_num > MAXWAN_NUM)
+		curr_mwan_num = MAXWAN_NUM;
+
+	for (uidx = 1; uidx <= curr_mwan_num; ++uidx) {
+		u = (uidx > 1) ? uidx : '';
+		proto = E('_wan'+u+'_proto');
+		ferror.clear(proto);
+
+		if (disabledSeen && (proto.value != 'disabled')) {
+			ferror.set(proto, 'WANs must be enabled consecutively. Enable the preceding WAN or disable this WAN.', quiet);
+			ok = 0;
+		}
+
+		if (proto.value == 'disabled')
+			disabledSeen = 1;
+	}
+
+	return ok;
+}
+
 function verifyFields(focused, quiet) {
 	var i;
 	var ok = 1;
@@ -726,6 +795,10 @@ function verifyFields(focused, quiet) {
 
 		}
 	}
+
+	updateWanProtoOptions();
+	if (!verifyWanProtoOrder(quiet))
+		ok = 0;
 
 	for (uidx = 1; uidx <= MAXWAN_NUM; ++uidx) {
 		u = (uidx > 1) ? uidx : '';
