@@ -1,0 +1,60 @@
+From d68a394c56add5565c1d663c727b15c58c177028 Mon Sep 17 00:00:00 2001
+From: pedro311 <pedro311@gmail.com>
+Date: Tue, 21 Jul 2026 18:08:53 +0000
+Subject: [PATCH 3/3] ntpd: run the -S hook before exiting in -q mode
+ (patch)
+
+The usage text says that -S PROG is run after stepping time and on a
+stratum change. In -q mode update_local_clock() exited before either
+hook, so callers could not reliably learn that one-shot synchronization
+had completed.
+
+Run the existing step hook after a successful clock step and emit a
+stratum hook when the accepted offset requires no step, then exit.
+---
+ busybox/networking/ntpd.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+
+diff --git busybox/networking/ntpd.c busybox/networking/ntpd.c
+index 16f177b..388ddfb 100644
+--- busybox/networking/ntpd.c
++++ busybox/networking/ntpd.c
+@@ -1607,15 +1607,16 @@ update_local_clock(peer_t *p)
+ 		VERB4 bb_error_msg("stepping time by %+f; poll_exp=MINPOLL", offset);
+ 		if (!step_time(offset))
+ 			return 0;
+-		if (option_mask32 & OPT_q) {
+-			/* We were only asked to set time once. Done. */
+-			exit(0);
+-		}
+ 
+ 		clamp_pollexp_and_set_MAXSTRAT();
+ 
+ 		run_script("step", offset);
+ 
++		if (option_mask32 & OPT_q) {
++			/* We were only asked to set time once. Done. */
++			exit(0);
++		}
++
+ 		recv_time += offset;
+ 
+ 		abs_offset = offset = 0;
+@@ -1623,9 +1624,12 @@ update_local_clock(peer_t *p)
+ 	} else { /* abs_offset <= STEP_THRESHOLD */
+ 
+ 		if (option_mask32 & OPT_q) {
+-			/* We were only asked to set time once.
+-			 * The clock is precise enough, no need to step.
++			/* We were only asked to set time once.  The clock is
++			 * precise enough, so report synchronization without
++			 * stepping it.
+ 			 */
++			G.stratum = p->lastpkt_stratum + 1;
++			run_script("stratum", offset);
+ 			exit(0);
+ 		}
+ 
+-- 
+2.47.3
+
