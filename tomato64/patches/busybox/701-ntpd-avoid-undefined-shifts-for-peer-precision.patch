@@ -20,7 +20,7 @@ diff --git a/networking/ntpd.c b/networking/ntpd.c
 index 4d48f3ddc..49bf0d863 100644
 --- busybox/networking/ntpd.c
 +++ busybox/networking/ntpd.c
-@@ -480,9 +480,23 @@ struct globals {
+@@ -481,9 +481,23 @@ struct globals {
  
  static double LOG2D(int a)
  {

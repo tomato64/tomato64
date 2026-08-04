@@ -23,7 +23,7 @@ diff --git a/networking/ntpd.c b/networking/ntpd.c
 index 595000b..af37eb5 100644
 --- busybox/networking/ntpd.c
 +++ busybox/networking/ntpd.c
-@@ -583,8 +583,10 @@ d_to_lfp(l_fixedpt_t *lfp, double d)
+@@ -584,8 +584,10 @@ d_to_lfp(l_fixedpt_t *lfp, double d)
  {
  	uint32_t intl;
  	uint32_t frac;

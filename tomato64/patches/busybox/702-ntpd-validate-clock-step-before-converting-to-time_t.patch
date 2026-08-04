@@ -20,7 +20,7 @@ diff --git a/networking/ntpd.c b/networking/ntpd.c
 index 49bf0d863..b8464f7da 100644
 --- busybox/networking/ntpd.c
 +++ busybox/networking/ntpd.c
-@@ -1060,7 +1060,7 @@ static void run_script(const char *action, double offset)
+@@ -1072,7 +1072,7 @@ static void run_script(const char *action, double offset)
  	free(env7);
  }
  
@@ -29,7 +29,7 @@ index 49bf0d863..b8464f7da 100644
  step_time(double offset)
  {
  	llist_t *item;
-@@ -1079,8 +1079,22 @@ step_time(double offset)
+@@ -1091,8 +1091,22 @@ step_time(double offset)
  	 * a more complex code would be needed.
  	 */
  	dtime = tvc.tv_sec + (1.0e-6 * tvc.tv_usec) + offset;
@@ -53,7 +53,7 @@ index 49bf0d863..b8464f7da 100644
  	xsettimeofday(&tvn);
  
  	VERB2 {
-@@ -1117,6 +1131,7 @@ step_time(double offset)
+@@ -1129,6 +1143,7 @@ step_time(double offset)
  			set_next(pp, RETRY_INTERVAL);
  		}
  	}
@@ -61,7 +61,7 @@ index 49bf0d863..b8464f7da 100644
  }
  
  static void clamp_pollexp_and_set_MAXSTRAT(void)
-@@ -1558,7 +1573,8 @@ update_local_clock(peer_t *p)
+@@ -1570,7 +1585,8 @@ update_local_clock(peer_t *p)
  		 * intervals.
  		 */
  		VERB4 bb_error_msg("stepping time by %+f; poll_exp=MINPOLL", offset);

@@ -1,33 +1,63 @@
 --- busybox/networking/ntpd.c
 +++ busybox/networking/ntpd.c
-@@ -985,7 +985,12 @@
+@@ -169,6 +169,7 @@
+ #define RESPONSE_INTERVAL 16    /* wait for reply up to N secs */
+ #define HOSTNAME_INTERVAL  4    /* hostname lookup failed. Wait N * peer->dns_errors secs for next try */
+ #define DNS_ERRORS_CAP  0x3f    /* peer->dns_errors is in [0..63] */
++#define PERIODIC_SCRIPT_INTERVAL 60 /* run the periodic -S hook every N seconds */
+ 
+ /* Step threshold (sec). std ntpd uses 0.128.
+  */
+@@ -984,13 +985,29 @@
+  */
  static void run_script(const char *action, double offset)
  {
++	peer_t *peer;
++	const char *server_hostname;
++	const char *server_ip;
  	char *argv[3];
 -	char *env1, *env2, *env3, *env4;
 +	char *env1, *env2, *env3, *env4, *env5, *env6, *env7;
-+
-+	struct sockaddr_in sa;
-+	char server_ip[INET_ADDRSTRLEN];
-+	sa = G.last_update_peer->p_lsa->u.sin;
-+	inet_ntop(AF_INET, &(sa.sin_addr), server_ip, INET_ADDRSTRLEN);
  
  	G.last_script_run = G.cur_time;
  
-@@ -1006,6 +1011,12 @@
+ 	if (!G.script_name)
+ 		return;
++
++	/*
++	 * The periodic hook can run before the first peer is selected.
++	 * Keep peer-related variables present, but empty in that case.
++	 */
++	peer = G.last_update_peer;
++	server_hostname = "";
++	server_ip = "";
++	if (peer) {
++		server_hostname = peer->p_hostname;
++		if (peer->p_dotted)
++			server_ip = peer->p_dotted;
++	}
+ 
+ 	argv[0] = (char*) G.script_name;
+ 	argv[1] = (char*) action;
+@@ -1006,9 +1023,15 @@
  	putenv(env3);
  	env4 = xasprintf("%s=%f", "offset", offset);
  	putenv(env4);
-+	env5 = xasprintf("%s=%s", "server_hostname", G.last_update_peer->p_hostname);
+-	/* Other items of potential interest: selected peer,
++	env5 = xasprintf("%s=%s", "server_hostname", server_hostname);
 +	putenv(env5);
 +	env6 = xasprintf("%s=%s", "server_ip", server_ip);
 +	putenv(env6);
 +	env7 = xasprintf("%s=%f", "discipline_jitter", G.discipline_jitter);
 +	putenv(env7);
- 	/* Other items of potential interest: selected peer,
++	/* Other items of potential interest:
  	 * rootdelay, reftime, rootdisp, refid, ntp_status,
- 	 * last_update_offset, last_update_recv_time, discipline_jitter,
-@@ -1021,10 +1032,16 @@
+-	 * last_update_offset, last_update_recv_time, discipline_jitter,
++	 * last_update_offset, last_update_recv_time,
+ 	 * how many peers have reachable_bits = 0?
+ 	 */
+ 
+@@ -1021,10 +1044,16 @@
  	unsetenv("freq_drift_ppm");
  	unsetenv("poll_interval");
  	unsetenv("offset");
@@ -44,12 +74,21 @@
  }
  
  static NOINLINE void
-@@ -2602,7 +2619,7 @@
+@@ -2515,7 +2544,7 @@
+ 
+ 		/* Nothing between here and poll() blocks for any significant time */
+ 
+-		nextaction = G.last_script_run + (11*60);
++		nextaction = G.last_script_run + PERIODIC_SCRIPT_INTERVAL;
+ 		if (nextaction < G.cur_time + 1)
+ 			nextaction = G.cur_time + 1;
+ 
+@@ -2602,7 +2631,7 @@
  			if (bb_got_signal)
  				break; /* poll was interrupted by a signal */
  
 -			if (G.cur_time - G.last_script_run > 11*60) {
-+			if (G.cur_time - G.last_script_run > 60) {
++			if (G.cur_time - G.last_script_run >= PERIODIC_SCRIPT_INTERVAL) {
  				/* Useful for updating battery-backed RTC and such */
  				run_script("periodic", G.last_update_offset);
  				gettime1900d(); /* sets G.cur_time */
