@@ -2015,8 +2015,8 @@ void start_ntpd(void)
 	FILE *f;
 	char *servers, *ptr;
 	const char *ntp_server;
-	int servers_len = 0, ntp_updates_int = 0, index = 2, ret;
-	char *ntpd_argv[] = { "/usr/sbin/ntpd", "-t", NULL, NULL, NULL, NULL, NULL, NULL }; /* -ddddddd -q -S /sbin/ntpd_synced -l */
+	int servers_len = 0, ntp_updates_int = 0, index = 1, ret;
+	char *ntpd_argv[] = { "/usr/sbin/ntpd", NULL, NULL, NULL, NULL, NULL, NULL }; /* -ddddddd -q -S /sbin/ntpd_synced -l */
 
 	if (serialize_restart("ntpd", 1))
 		return;
