@@ -1415,9 +1415,7 @@ int wl_sta_prepare(void)
 		goto CLEANUP;
 	}
 
-	mwan_num = nvram_get_int("mwan_num");
-	if (mwan_num < 1 || mwan_num > MWAN_MAX)
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 		get_wan_prefix(wan_unit, wan_prefix);
@@ -2056,6 +2054,7 @@ void do_static_routes(int add)
 	char *dest, *mask, *gateway, *metric, *if_tmp, *ifname;
 	int r, found_lan;
 	unsigned int i;
+	unsigned int mwan_num = add ? mwan_active_num() : mwan_configured_num();
 	char name[8], ip[16], proto_key[16], ip_key[32], if_key[16];
 	char *modem_ip, *end;
 	unsigned char c;
@@ -2129,7 +2128,7 @@ void do_static_routes(int add)
 	}
 	free(buf);
 
-	for (i = 1; i <= MWAN_MAX; i++) {
+	for (i = 1; i <= mwan_num; i++) {
 		memset(name, 0, sizeof(name));
 		snprintf(name, sizeof(name), (i == 1 ? "wan" : "wan%u"), i);
 

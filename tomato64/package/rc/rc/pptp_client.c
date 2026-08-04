@@ -375,7 +375,7 @@ static void pptpc_add_table(void)
 
 	pptpc_del_table();
 
-	mwan_num = nvram_get_int("mwan_num");
+	mwan_num = mwan_active_num();
 
 	/*
 	 * RULES

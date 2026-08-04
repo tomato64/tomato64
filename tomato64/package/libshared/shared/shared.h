@@ -491,6 +491,8 @@ extern int wg_status(char *iface);
 #endif
 extern int bwlimit_status(void);
 extern int qos_status(void);
+extern unsigned int mwan_configured_num(void);
+extern unsigned int mwan_active_num(void);
 
 /* mdu.c/ddns.c */
 #define MDU_STOP_FN		"/var/lib/mdu/mdu-stop"

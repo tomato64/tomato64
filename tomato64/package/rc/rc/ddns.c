@@ -375,7 +375,7 @@ void stop_ddns(void)
 	killall("ddns-update", SIGKILL);
 
 	/* prevent mdu from leaving unwanted routing (only in MultiWAN mode) */
-	if (nvram_get_int("mwan_num") > 1 && pidof("mdu") > 0 && !nvram_get_int("g_upgrade") && !nvram_get_int("g_reboot")) {
+	if (mwan_active_num() > 1 && pidof("mdu") > 0 && !nvram_get_int("g_upgrade") && !nvram_get_int("g_reboot")) {
 		f_write_string(MDU_STOP_FN, "1", 0, 0); /* create stop file */
 		while (pidof("mdu") > 0 && (m-- > 0)) {
 			logmsg(LOG_DEBUG, "*** %s: waiting for mdu to end, %d secs left ...", __FUNCTION__, m);

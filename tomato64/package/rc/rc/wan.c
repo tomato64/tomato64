@@ -267,6 +267,7 @@ static void stop_ppp(char *prefix)
 {
 	char buffer[64], ifname[8];
 	unsigned int i, not_allwan_l2tp = 1;
+	unsigned int mwan_num = mwan_active_num();
 
 	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), "/tmp/ppp/%s_link", prefix);
@@ -288,7 +289,7 @@ static void stop_ppp(char *prefix)
 	//killall_tk_period_wait("ipv6-down", 50);
 #endif
 
-	for (i = 1; i <= MWAN_MAX; i++) {
+	for (i = 1; i <= mwan_num; i++) {
 		memset(ifname, 0, sizeof(ifname));
 		sprintf(ifname, (i == 1 ? "wan" : "wan%u"), i);
 		if (get_wanx_proto(ifname) == WP_L2TP) {
@@ -352,18 +353,7 @@ inline void stop_pptp(char *prefix)
 
 void start_pptp(char *prefix)
 {
-	int num = 0; /* wan */
-	unsigned int i;
-	char ifname[8];
-
-	for (i = 2; i <= MWAN_MAX; i++) {
-		memset(ifname, 0, sizeof(ifname));
-		snprintf(ifname, sizeof(ifname), "wan%u", i);
-		if (!strcmp(prefix, ifname)) {
-			num = i - 1;
-			break;
-		}
-	}
+	int num = get_wan_unit(prefix) - 1; /* ppp unit */
 
 	if (!using_dhcpc(prefix))
 		stop_dhcpc(prefix);
@@ -386,11 +376,9 @@ void preset_wan(char *ifname, char *gw, char *netmask, char *prefix)
 	int proto;
 	int mwan_num;
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
-	if (mwan_num == 1) {
+	if (mwan_num <= 1) {
 		/* Delete default route */
 		route_del(ifname, 0, NULL, NULL, NULL);
 
@@ -542,6 +530,7 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 	char ppp_optfile[64];
 	char tmp[64], ifname[8];
 	unsigned int i;
+	unsigned int mwan_num = mwan_active_num();
 
 	/* Generate XL2TPD configuration file */
 	memset(xl2tp_file, 0, sizeof(xl2tp_file));
@@ -562,7 +551,7 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 	            "\n");
 
 	/* LACS */
-	for (i = 1; i <= MWAN_MAX; ++i) {
+	for (i = 1; i <= mwan_num; ++i) {
 		memset(ifname, 0, sizeof(ifname));
 		snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%u"), i);
 		if (!strcmp(nvram_safe_get(strlcat_r(ifname, "_proto", tmp, sizeof(tmp))), "l2tp")) {
@@ -617,9 +606,7 @@ void start_l2tp(char *prefix)
 {
 	char tmp[100];
 	int demand;
-	int num = 0; /* wan */
-	unsigned int i;
-	char ifname[8];
+	int num = get_wan_unit(prefix) - 1; /* ppp unit */
 
 	if (!using_dhcpc(prefix)) /* As for PPTP */
 		stop_dhcpc(prefix);
@@ -628,15 +615,6 @@ void start_l2tp(char *prefix)
 
 	if (config_l2tp() != 0) /* Generate L2TP daemon config */
 		return;
-
-	for (i = 2; i <= MWAN_MAX; i++) {
-		memset(ifname, 0, sizeof(ifname));
-		snprintf(ifname, sizeof(ifname), "wan%u", i);
-		if (!strcmp(prefix, ifname)) {
-			num = i - 1;
-			break;
-		}
-	}
 
 	if (config_pppd(WP_L2TP, num, prefix) != 0) /* ppp options */
 		return;
@@ -849,7 +827,6 @@ void start_wan_if(char *prefix)
 	char tmp[128], tmp2[32];
 	int jumbo_enable = 0;
 	struct vlan_ioctl_args ifv;
-	unsigned int i;
 
 	do_connect_file(1, prefix);
 
@@ -966,16 +943,8 @@ void start_wan_if(char *prefix)
 			stop_dhcpc(prefix);
 			start_dhcpc(prefix);
 		}
-		else {
-			for (i = 1; i <= MWAN_MAX; i++) {
-				memset(tmp2, 0, sizeof(tmp2));
-				snprintf(tmp2, sizeof(tmp2), (i == 1 ? "wan" : "wan%u"), i);
-				if (!strcmp(prefix, tmp2)) {
-					start_pppoe(PPPOEWAN(i), prefix);
-					break;
-				}
-			}
-		}
+		else
+			start_pppoe(PPPOEWAN(get_wan_unit(prefix)), prefix);
 		break;
 	case WP_DHCP:
 	case WP_LTE:
@@ -1039,23 +1008,27 @@ void start_wan(void)
 	int wan_unit;
 	char prefix[] = "wanXX";
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
-	logmsg(LOG_INFO, "MultiWAN: MWAN is %d (max %d)", mwan_num, MWAN_MAX);
+	logmsg(LOG_INFO, "MultiWAN: %d active WAN(s) (max %d)", mwan_num, MWAN_MAX);
 
-	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
-		get_wan_prefix(wan_unit, prefix);
-		start_wan_if(prefix);
-		logmsg(LOG_DEBUG, "*** MultiWAN: %s: (unit: %d), prefix = %s", __FUNCTION__, wan_unit, prefix);
+	if (mwan_num == 0) {
+		/* Preserve disabled-WAN initialization used by AP/WET/MB modes. */
+		start_wan_if("wan");
+	}
+	else {
+		for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
+			get_wan_prefix(wan_unit, prefix);
+			start_wan_if(prefix);
+			logmsg(LOG_DEBUG, "*** MultiWAN: %s: (unit: %d), prefix = %s", __FUNCTION__, wan_unit, prefix);
+		}
 	}
 
 	start_firewall();
 	set_host_domain_name();
 
-	/* only start mwanroute if it's not already up! */
-	if (pidof("mwanroute") < 0) {
+	/* only start mwanroute for active Multi-WAN setups */
+	if ((mwan_num > 1) && (pidof("mwanroute") < 0)) {
 		logmsg(LOG_DEBUG, "*** %s: mwanroute not found, launch process", __FUNCTION__);
 		xstart("mwanroute");
 	}
@@ -1175,9 +1148,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 
 	sysinfo(&si);
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
 	memset(tmp, 0, sizeof(tmp));
 	snprintf(tmp, sizeof(tmp), "/var/lib/misc/%s_time", prefix);
@@ -1185,7 +1156,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 
 	proto = get_wanx_proto(prefix);
 
-	if (mwan_num == 1) {
+	if (mwan_num <= 1) {
 		/* Delete default interface route */
 		if (proto == WP_PPTP || proto == WP_L2TP || (proto == WP_PPPOE && using_dhcpc(prefix))) /* Delete MAN default route */
 			route_del(NULL, 0, NULL, NULL, NULL);
@@ -1202,7 +1173,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 				/* Possibly gateway is over the bridge, try adding a route to gateway first */
 				route_add(wan_ifname, 0, gw, NULL, "255.255.255.255");
 
-			if (mwan_num == 1) {
+			if (mwan_num <= 1) {
 				n = 5;
 				while ((route_add(wan_ifname, 0, "0.0.0.0", gw, "0.0.0.0") == 1) && (n--)) {
 					sleep(1);
@@ -1386,12 +1357,9 @@ void stop_wan_if(char *prefix)
 
 	char tmp[100];
 
-	int mwan_num = nvram_get_int("mwan_num");
+	int mwan_num = mwan_active_num();
 
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
-
-	if ((strcmp(prefix, "wan") == 0) && (mwan_num == 1)) { /* check for "wan" prefix AND only 1x wan (single-wan) */
+	if ((strcmp(prefix, "wan") == 0) && (mwan_num <= 1)) { /* check for "wan" prefix AND zero/one active wan */
 		stop_upnp();
 		logmsg(LOG_DEBUG, "*** %s: stop miniupnp (Case: Single-WAN)", __FUNCTION__);
 	}
@@ -1462,6 +1430,7 @@ void stop_wan(void)
 {
 	char buf[16];
 	unsigned int i;
+	unsigned int mwan_num = mwan_configured_num();
 
 	logmsg(LOG_DEBUG, "*** IN: %s", __FUNCTION__);
 
@@ -1492,7 +1461,7 @@ void stop_wan(void)
 	stop_adblock();
 	clear_resolv();
 
-	for (i = 1; i <= MWAN_MAX; i++) {
+	for (i = 1; i <= mwan_num; i++) {
 		memset(buf, 0, sizeof(buf));
 		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%u"), i);
 		stop_wan_if(buf);

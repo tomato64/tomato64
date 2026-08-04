@@ -61,8 +61,8 @@ void ipt_routerpolicy(void)
 	COMMIT
 	*/
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num == 1 || mwan_num > MWAN_MAX))
+	mwan_num = mwan_active_num();
+	if (mwan_num <= 1)
 		return;
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {

@@ -79,9 +79,7 @@ int get_sta_wan_prefix(char *sPrefix, const size_t buf_sz)
 	char tmp[32];
 	int found = 0;
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 		memset(prefix, 0, sizeof(prefix));
@@ -235,8 +233,8 @@ void mwan_table_add(char *sPrefix)
 	/* delete already existed table first */
 	mwan_table_del(sPrefix);
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num == 1) || (mwan_num > MWAN_MAX))
+	mwan_num = mwan_active_num();
+	if (mwan_num <= 1)
 		return;
 
 	wan_unit = get_wan_unit(sPrefix);
@@ -312,8 +310,8 @@ void mwan_state_files(void)
 	char tmp[64];
 	FILE *f;
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num == 1) || (mwan_num > MWAN_MAX))
+	mwan_num = mwan_active_num();
+	if (mwan_num <= 1)
 		return;
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
@@ -339,8 +337,10 @@ void mwan_status_update(void)
 	unsigned int i;
 	char prefix[16];
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num == 1) || (mwan_num > MWAN_MAX))
+	mwan_num = mwan_active_num();
+	memset(mwan_curr, '0', MWAN_MAX);
+
+	if (mwan_num <= 1)
 		return;
 
 	logmsg(LOG_DEBUG, "*** %s: IN, mwan_curr=%s", __FUNCTION__, mwan_curr);
@@ -359,7 +359,7 @@ void mwan_status_update(void)
 			mwan_curr[wan_unit - 1] = '0'; /* disconnected */
 	}
 
-	for (i = 1; i <= MWAN_MAX; i++) { /* let's stick to our iteration (1 ---> <= MWAN_MAX) */
+	for (i = 1; i <= (unsigned int)mwan_num; i++) {
 		if (mwan_curr[i - 1] >= '2') {
 			allwan_down = 0;
 			break;
@@ -401,8 +401,8 @@ void mwan_load_balance(void)
 	char *lb_argv[8 + (MWAN_MAX * 8)];
 	unsigned int i;
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num == 1) || (mwan_num > MWAN_MAX))
+	mwan_num = mwan_active_num();
+	if (mwan_num <= 1)
 		return;
 
 	logmsg(LOG_DEBUG, "*** %s: IN, mwan_curr=%s", __FUNCTION__, mwan_curr);
@@ -451,7 +451,7 @@ void mwan_load_balance(void)
 	}
 
 	/* check if all down */
-	for (i = 1; i <= MWAN_MAX; i++) { /* let's stick to our iteration (1 ---> <= MWAN_MAX) */
+	for (i = 1; i <= (unsigned int)mwan_num; i++) {
 		if (mwan_curr[i - 1] != '0') {
 			not_allwan_down = 1;
 			break;
@@ -530,13 +530,13 @@ int mwan_route_main(int argc, char **argv)
 		fclose(fp);
 	}
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num == 1) || (mwan_num > MWAN_MAX))
+	mwan_num = mwan_active_num();
+	if (mwan_num <= 1)
 		return 0;
 
 	logmsg(LOG_DEBUG, "*** %s: MWAN: mwanroute launched", __FUNCTION__);
 
-	while(1) {
+	while (mwan_active_num() > 1) {
 		mwan_status_update();
 
 		if (strcmp(mwan_last, mwan_curr)) {
@@ -549,4 +549,6 @@ int mwan_route_main(int argc, char **argv)
 		strlcpy(mwan_last, mwan_curr, sizeof(mwan_last));
 		sleep(check_time);
 	}
+
+	return 0;
 }

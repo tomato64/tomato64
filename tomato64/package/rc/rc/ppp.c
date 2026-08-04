@@ -179,9 +179,7 @@ int ipdown_main(int argc, char **argv)
 	struct in_addr ipaddr;
 	int mwan_num;
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
 	if (!wait_action_idle(10))
 		return -1;
@@ -219,7 +217,7 @@ int ipdown_main(int argc, char **argv)
 			nvram_set(strlcat_r(prefix, "_gateway_get", tmp, sizeof(tmp)), nvram_safe_get(strlcat_r(prefix, "_gateway", tmp2, sizeof(tmp2))));
 			logmsg(LOG_DEBUG, "*** %s: restore default gateway: nvram_set(%s_gateway_get, %s)", __FUNCTION__, prefix, nvram_safe_get(strlcat_r(prefix, "_gateway", tmp, sizeof(tmp))));
 
-			if (mwan_num == 1) {
+			if (mwan_num <= 1) {
 				/* set default route to gateway if specified */
 				route_del(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, "0.0.0.0", nvram_safe_get(strlcat_r(prefix, "_gateway", tmp2, sizeof(tmp2))), "0.0.0.0");
 				route_add(nvram_safe_get(strlcat_r(prefix, "_ifname", tmp, sizeof(tmp))), 0, "0.0.0.0", nvram_safe_get(strlcat_r(prefix, "_gateway", tmp2, sizeof(tmp2))), "0.0.0.0");

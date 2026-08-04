@@ -570,9 +570,7 @@ void kill_switch(_tf_ipt_write ipt_write)
 		rgw_key =     (kd ? "vpnc%u_rgw"         : "wg%u_rgwr");
 		iface_fmt =   (kd ? "tun1%u"             : "wg%u");
 
-		mwan_num = nvram_get_int("mwan_num");
-		if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-			mwan_num = 1;
+		mwan_num = mwan_active_num();
 
 		for (unit = kd; unit <= (kd ? OVPN_CLIENT_MAX : WG_INTERFACE_MAX); ++unit) {
 			/* only apply kill switch rules if in PBR mode! */

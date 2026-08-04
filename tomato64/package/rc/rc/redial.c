@@ -75,9 +75,7 @@ int redial_main(int argc, char **argv)
 
 	strlcpy(prefix_mwan, prefix, sizeof(prefix_mwan));
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
 	proto = get_wanx_proto(prefix);
 	if (proto == WP_PPPOE || proto == WP_PPP3G || proto == WP_PPTP || proto == WP_L2TP)

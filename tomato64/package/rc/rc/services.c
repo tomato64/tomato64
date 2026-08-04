@@ -637,6 +637,7 @@ void generate_mdns_config(void)
 	FILE *fp;
 	char avahi_config[80], tmp[8];
 	unsigned int i;
+	unsigned int mwan_num = mwan_active_num();
 
 	snprintf(avahi_config, sizeof(avahi_config), "%s/%s", avahicfgpath, avahicfg);
 
@@ -653,7 +654,7 @@ void generate_mdns_config(void)
 	            "deny-interfaces=",
 	            ipv6_enabled() ? "yes" : "no");
 
-	for (i = 1; i <= MWAN_MAX; i++) {
+	for (i = 1; i <= mwan_num; i++) {
 		snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%d"), i);
 		if ((check_wanup(tmp)) || (i == 1))
 			fprintf(fp, "%s%s", (i == 1 ? "" : ","), get_wanface(tmp));
@@ -876,9 +877,7 @@ void dns_to_resolv(void)
 	int exclusive = 0;
 	char tmp[64];
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 		get_wan_prefix(wan_unit, wan_prefix);
@@ -1036,9 +1035,7 @@ void start_ipv6_tunnel(void)
 	char wan_prefix[] = "wanXX";
 	int wan_unit, mwan_num;
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 		get_wan_prefix(wan_unit, wan_prefix);
@@ -1125,9 +1122,7 @@ void start_6rd_tunnel(void)
 	char *wan_6rd;
 	int wan_unit, mwan_num, ping_ok;
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 		get_wan_prefix(wan_unit, wan_prefix);
@@ -1354,6 +1349,7 @@ void start_upnp(void)
 	char *lanip, *lanmask, *lanifname;
 	char br;
 	unsigned int i;
+	unsigned int mwan_num = mwan_active_num();
 
 	enable = nvram_get_int("upnp_enable");
 
@@ -1386,7 +1382,7 @@ void start_upnp(void)
 	if ((upnp_port < 0) || (upnp_port >= 0xFFFF))
 		upnp_port = 0;
 
-	for (i = 1; i <= MWAN_MAX; i++) {
+	for (i = 1; i <= mwan_num; i++) {
 		snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%d"), i);
 		if ((check_wanup(tmp)) || (i == 1))
 			fprintf(f, "ext_ifname=%s\n", get_wanface(tmp));
@@ -1810,9 +1806,7 @@ void start_igmp_proxy(void)
 	char multicast_lanN[] = "multicast_lanXX";
 	char br;
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
 	/* only if enabled */
 	if (!nvram_get_int("multicast_pass"))
@@ -2982,6 +2976,8 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 	char stp[16];
 	int i;
 	int n;
+	unsigned int mwan_num = mwan_active_num();
+	unsigned int mwan_configured = mwan_configured_num();
 
 	if ((svc == NULL) || (svc->op == SVCOP_NONE))
 		return 0;
@@ -3185,13 +3181,13 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 			return 1;
 		case SVCOP_QOS:
 			if (act_stop) {
-				for (i = 1; i <= MWAN_MAX; i++) {
+				for (i = 1; i <= (int)mwan_configured; i++) {
 					snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%d"), i);
 					stop_qos(ifname);
 				}
 			}
 			if (act_start) {
-				for (i = 1; i <= MWAN_MAX; i++) {
+				for (i = 1; i <= (int)mwan_num; i++) {
 					snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%d"), i);
 					if ((check_wanup(ifname)) || (i == 1))
 						start_qos(ifname);
@@ -3428,7 +3424,7 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 			if (act_start) {
 				rename("/tmp/ppp/wan_log", "/tmp/ppp/wan_log.~");
 				start_wan();
-				for (i = 1; i <= MWAN_MAX; i++) {
+				for (i = 1; i <= (int)mwan_num; i++) {
 					snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%d"), i);
 					sleep(5);
 					force_to_dial(ifname);

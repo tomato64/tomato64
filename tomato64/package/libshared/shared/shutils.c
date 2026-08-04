@@ -1585,6 +1585,32 @@ int qos_status(void)
 	return 0;
 }
 
+unsigned int mwan_configured_num(void)
+{
+	int configured = nvram_get_int("mwan_num");
+
+	if ((configured < 1) || (configured > MWAN_MAX))
+		configured = 1;
+
+	return (unsigned int)configured;
+}
+
+unsigned int mwan_active_num(void)
+{
+	char prefix[16];
+	unsigned int i;
+	unsigned int configured = mwan_configured_num();
+
+	for (i = 1; i <= configured; ++i) {
+		get_wan_prefix(i, prefix);
+
+		if (get_wanx_proto(prefix) == WP_DISABLED)
+			break;
+	}
+
+	return i - 1;
+}
+
 /* ============================ UNUSED ============================ */
 
 #if 0

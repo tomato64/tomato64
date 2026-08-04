@@ -401,6 +401,7 @@ static FILE *write_static_hosts(void)
 {
 	FILE *hf;
 	unsigned int i;
+	unsigned int mwan_num = mwan_active_num();
 	char tmp[32];
 	const char *router_ip, *hostname, *p;
 
@@ -414,7 +415,7 @@ static FILE *write_static_hosts(void)
 		else if ((hostname = nvram_safe_get("lan_hostname")) && (*hostname)) /* FIXME: it has to be implemented (lan_hostname is always empty) */
 			fprintf(hf, "%s %s\n", router_ip, hostname);
 #endif
-		for (i = 1; i <= MWAN_MAX; i++) {
+		for (i = 1; i <= mwan_num; i++) {
 			memset(tmp, 0, sizeof(tmp));
 			snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%u"), i);
 			p = get_wanip(tmp);
@@ -739,9 +740,7 @@ void start_dnsmasq(void) {
 		return;
 	}
 
-	mwan_num = nvram_get_int("mwan_num");
-	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
-		mwan_num = 1;
+	mwan_num = mwan_active_num();
 
 	write_basic_config(f);
 	write_tor_dns(f);

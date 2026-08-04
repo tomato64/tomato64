@@ -155,7 +155,7 @@ void start_nocat(void)
 	char iconfile[255];
 	char *p;
 
-	if ((!nvram_match("NC_enable", "1")) || (!nvram_match("mwan_num", "1")))
+	if ((!nvram_match("NC_enable", "1")) || (mwan_active_num() != 1))
 		return;
 
 	if (serialize_restart("splashd", 1))

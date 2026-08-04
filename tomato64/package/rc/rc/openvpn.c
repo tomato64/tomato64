@@ -885,9 +885,7 @@ void start_ovpn_server(int unit)
 	}
 
 	/* Proto */
-	mwan_num = nvram_get_int("mwan_num"); /* check active WANs num */
-	if (mwan_num < 1)
-		mwan_num = 1;
+	mwan_num = mwan_active_num(); /* check active WANs num */
 
 	snprintf(buffer, BUF_SIZE, "vpns%d_proto", unit);
 	fprintf(fp, "proto %s\n", nvram_safe_get(buffer)); /* full dual-stack functionality starting with OpenVPN 2.4.0 */
