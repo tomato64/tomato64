@@ -1,0 +1,16 @@
+--- pppd/pppd/sys-linux.c
++++ pppd/pppd/sys-linux.c
+@@ -141,6 +141,13 @@ AC_CONFIG_FILES([
+ /* IFLA_PPP_DEV_FD is declared as enum when IFLA_PPP_MAX is defined */
+ #define IFLA_PPP_DEV_FD 1
+ #endif
++
++/* linux kernel versions prior to VRF support do not define/support IFLA_VRF_*.
++ * IFLA_VRF_TABLE is declared as enum when IFLA_VRF_MAX is defined.
++ */
++#ifndef IFLA_VRF_MAX
++#define IFLA_VRF_TABLE 1
++#endif
+ 
+ #include "pppd-private.h"
+ #include "options.h"

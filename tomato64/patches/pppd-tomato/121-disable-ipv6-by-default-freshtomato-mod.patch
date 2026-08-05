@@ -1,6 +1,6 @@
 --- pppd/pppd/ipv6cp.c
 +++ pppd/pppd/ipv6cp.c
-@@ -312,7 +312,7 @@
+@@ -318,7 +318,7 @@
      ipv6cp_close,
      ipv6cp_printpkt,
      NULL,

@@ -12,7 +12,7 @@ Signed-off-by: Jo-Philipp Wich <jo@mein.io>
 
 --- pppd/pppd/main.c
 +++ pppd/pppd/main.c
-@@ -1150,7 +1150,8 @@
+@@ -1159,7 +1159,8 @@
  	}
  	notice("Modem hangup");
  	hungup = 1;

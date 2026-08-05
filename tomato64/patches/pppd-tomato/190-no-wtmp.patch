@@ -1,6 +1,6 @@
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -3005,6 +3005,7 @@
+@@ -2996,6 +2996,7 @@
  
  void logwtmp (const char *line, const char *name, const char *host)
  {
@@ -8,7 +8,7 @@
      struct utmp ut, *utp;
      pid_t  mypid = getpid();
  #if __GLIBC__ < 2
-@@ -3070,6 +3071,7 @@
+@@ -3061,6 +3062,7 @@
  	close (wtmp);
      }
  #endif

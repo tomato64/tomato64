@@ -21,7 +21,7 @@
  
  
  struct option_value {
-@@ -406,6 +407,10 @@
+@@ -419,6 +420,10 @@
      { "mo-timeout", o_int, &maxoctets_timeout,
        "Check for traffic limit every N seconds", OPT_PRIO | OPT_LLIMIT | 1 },
  

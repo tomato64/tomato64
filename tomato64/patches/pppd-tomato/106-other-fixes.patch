@@ -90,7 +90,7 @@
  
 --- pppd/pppd/plugins/pppol2tp/pppol2tp.c
 +++ pppd/pppd/plugins/pppol2tp/pppol2tp.c
-@@ -127,14 +127,8 @@
+@@ -128,14 +128,8 @@
  
  static int setdevname_pppol2tp(char **argv)
  {
@@ -107,7 +107,7 @@
  
  	if (device_got_set)
  		return 0;
-@@ -142,21 +136,21 @@
+@@ -143,21 +137,21 @@
  	if (!ppp_int_option(*argv, &pppol2tp_fd))
  		return 0;
  
@@ -134,7 +134,7 @@
  
  	pppol2tp_fd_str = strdup(*argv);
  	if (pppol2tp_fd_str == NULL)
-@@ -189,10 +183,18 @@
+@@ -190,10 +184,18 @@
  
  static int connect_pppol2tp(void)
  {

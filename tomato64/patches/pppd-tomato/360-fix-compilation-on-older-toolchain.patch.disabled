@@ -1,6 +1,6 @@
 --- pppd/pppd/main.c
 +++ pppd/pppd/main.c
-@@ -1595,10 +1595,14 @@
+@@ -1604,10 +1604,14 @@
  	kill_my_pg(sig);
      notify(sigreceived, sig);
      if (waiting) {
@@ -15,7 +15,7 @@
      }
  }
  
-@@ -1619,10 +1623,14 @@
+@@ -1628,10 +1632,14 @@
  	kill_my_pg(sig);
      notify(sigreceived, sig);
      if (waiting) {
@@ -30,7 +30,7 @@
      }
  }
  
-@@ -1636,10 +1644,14 @@
+@@ -1645,10 +1653,14 @@
  {
      got_sigchld = 1;
      if (waiting) {
@@ -45,7 +45,7 @@
      }
  }
  
-@@ -1673,10 +1685,14 @@
+@@ -1682,10 +1694,14 @@
  {
      got_sigusr2 = 1;
      if (waiting) {

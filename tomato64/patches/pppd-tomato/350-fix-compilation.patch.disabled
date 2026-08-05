@@ -1,27 +1,26 @@
 --- pppd/pppd/plugins/pppol2tp/pppol2tp.c
 +++ pppd/pppd/plugins/pppol2tp/pppol2tp.c
-@@ -38,7 +38,8 @@
+@@ -50,7 +50,7 @@
+ #include <linux/if_pppox.h>
+ #include <linux/if_pppol2tp.h>
  
- #include <linux/version.h>
- #include <linux/sockios.h>
 -#include <linux/ppp-ioctl.h>
-+#include <linux/ppp_defs.h>
 +#include <linux/if_ppp.h>
  
- #ifndef aligned_u64
- /* should be defined in sys/types.h */
+ #include <pppd/pppd.h>
+ #include <pppd/options.h>
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -122,7 +122,8 @@
- #include <netinet/in.h>
- #include <arpa/inet.h>
+@@ -153,7 +153,8 @@
+ 
+ #include "multilink.h"
  
 -#include <linux/ppp-ioctl.h>
 +#include <linux/ppp_defs.h>
 +#include <linux/if_ppp.h>
  
- #include <linux/netlink.h>
- #include <linux/rtnetlink.h>
+ #ifdef PPP_WITH_FILTER
+ #include <pcap-bpf.h>
 --- pppd/pppstats/pppstats.c
 +++ pppd/pppstats/pppstats.c
 @@ -68,7 +68,7 @@

@@ -8,7 +8,7 @@
  char	path_net_init[MAXPATHLEN]; /* pathname of net-init script */
  char	path_net_preup[MAXPATHLEN];/* pathname of net-pre-up script */
  char	path_net_down[MAXPATHLEN]; /* pathname of net-down script */
-@@ -310,6 +311,9 @@
+@@ -314,6 +315,9 @@
      { "unit", o_int, &req_unit,
        "PPP interface unit number to use if possible",
        OPT_PRIO | OPT_LLIMIT, 0, 0 },
@@ -40,7 +40,7 @@
  extern char	path_net_down[]; /* pathname of net-down script */
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -925,18 +925,15 @@
+@@ -1020,18 +1020,15 @@
  		return -1;
  	}
  

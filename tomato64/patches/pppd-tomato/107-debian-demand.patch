@@ -137,7 +137,7 @@
  	} else {
 --- pppd/pppd/ipcp.c
 +++ pppd/pppd/ipcp.c
-@@ -1915,7 +1915,7 @@
+@@ -1930,7 +1930,7 @@
  		    proxy_arp_set[f->unit] = 1;
  
  	}
@@ -148,7 +148,7 @@
      } else {
 --- pppd/pppd/ipv6cp.c
 +++ pppd/pppd/ipv6cp.c
-@@ -1338,7 +1338,7 @@
+@@ -1344,7 +1344,7 @@
  		if (sif6defaultroute(f->unit, go->ourid, ho->hisid))
  		    default_route_set[f->unit] = 1;
  	}
@@ -159,7 +159,7 @@
      } else {
 --- pppd/pppd/pppd-private.h
 +++ pppd/pppd/pppd-private.h
-@@ -372,7 +372,7 @@
+@@ -377,7 +377,7 @@
  void demand_block(void);	/* set all NPs to queue up packets */
  void demand_unblock(void); /* set all NPs to pass packets */
  void demand_discard(void); /* set all NPs to discard packets */
