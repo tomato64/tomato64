@@ -40,7 +40,7 @@
 +    if (hex_next) {
 +	hex_next = 0;
 +	hex = (strcmp(s, "ON") == 0);
-+	return;
++	return 0;
 +    }
  
      /*
@@ -90,6 +90,14 @@
  
 --- pppd/pppd/plugins/pppol2tp/pppol2tp.c
 +++ pppd/pppd/plugins/pppol2tp/pppol2tp.c
+@@ -31,6 +31,7 @@
+ #include <sys/time.h>
+ #include <sys/types.h>
+ #include <netinet/in.h>
++#include <arpa/inet.h>
+ #include <signal.h>
+ #include <stdbool.h>
+ #include <stdarg.h>
 @@ -128,14 +128,8 @@
  
  static int setdevname_pppol2tp(char **argv)

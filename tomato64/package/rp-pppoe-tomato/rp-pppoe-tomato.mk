@@ -23,8 +23,7 @@ RP_PPPOE_TOMATO_CONF_ENV = \
 	rpppoe_cv_pack_bitfields=rev \
 	ac_cv_path_PPPD=$(PPPD_TOMATO_DIR)/pppd
 
-RP_PPPOE_TOMATO_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -I$(PPPD_TOMATO_DIR)/include -Wno-implicit-function-declaration"
-# gcc-14 fix needed
+RP_PPPOE_TOMATO_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -I$(PPPD_TOMATO_DIR)/include"
 
 define RP_PPPOE_TOMATO_INSTALL_TARGET_CMDS
 	$(INSTALL) -D $(@D)/src/rp-pppoe.so \
