@@ -11854,6 +11854,12 @@ static void sysinit(void)
 	mknod("/dev/pts/0", S_IRWXU|S_IFCHR, makedev(136, 0));
 	mknod("/dev/pts/1", S_IRWXU|S_IFCHR, makedev(136, 1));
 	mount("devpts", "/dev/pts", "devpts", MS_MGC_VAL, NULL);
+#ifdef TOMATO64
+	symlink("/proc/self/fd", "/dev/fd");
+	symlink("/proc/self/fd/0", "/dev/stdin");
+	symlink("/proc/self/fd/1", "/dev/stdout");
+	symlink("/proc/self/fd/2", "/dev/stderr");
+#endif /* TOMATO64 */
 
 	if (console_init())
 		noconsole = 1;
