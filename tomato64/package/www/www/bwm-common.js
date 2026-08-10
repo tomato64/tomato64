@@ -190,6 +190,33 @@ function showTab(name) {
 	}
 }
 
+function getNetworkInterfaceLabel(ifname) {
+	var i, p, proto;
+
+	for (i = 0; i <= MAX_BRIDGE_ID; ++i) {
+		p = 'lan'+(i ? i : '');
+		if (nvram[p+'_ifname'] == ifname)
+			return 'LAN'+i+' <small>['+ifname+']<\/small>';
+	}
+
+	for (i = 1; i <= MAXWAN_NUM; ++i) {
+		p = 'wan'+(i > 1 ? i : '');
+		proto = nvram[p+'_proto'];
+
+		if (((proto == 'pppoe') || (proto == 'ppp3g') || (proto == 'pptp') || (proto == 'l2tp')) && (nvram[p+'_iface'] == ifname))
+			return 'WAN'+(i - 1)+' <small>['+ifname+']<\/small>';
+	}
+
+	for (i = 1; i <= MAXWAN_NUM; ++i) {
+		p = 'wan'+(i > 1 ? i : '');
+
+		if ((nvram[p+'_proto'] != 'disabled') && (nvram[p+'_ifname'] == ifname))
+			return 'WAN'+(i - 1)+' <small>['+ifname+']<\/small>';
+	}
+
+	return null;
+}
+
 function loadData() {
 	var old;
 	var t, e;
@@ -263,61 +290,9 @@ function loadData() {
 			else if (wl_ifidx(i) >= 0) {
 				t = 'WL <small>['+wl_display_ifname(wl_ifidx(i))+']<\/small>';
 			}
-			/* LAN label */
-			else if (nvram.lan_ifname == i)
-				t = 'LAN0 <small>['+i+']<\/small>';
-			else if (nvram.lan1_ifname == i)
-				t = 'LAN1 <small>['+i+']<\/small>';
-			else if (nvram.lan2_ifname == i)
-				t = 'LAN2 <small>['+i+']<\/small>';
-			else if (nvram.lan3_ifname == i)
-				t = 'LAN3 <small>['+i+']<\/small>';
-/* TOMATO64-BEGIN */
-			else if (nvram.lan4_ifname == i)
-				t = 'LAN4 <small>['+i+']<\/small>';
-			else if (nvram.lan5_ifname == i)
-				t = 'LAN5 <small>['+i+']<\/small>';
-			else if (nvram.lan6_ifname == i)
-				t = 'LAN6 <small>['+i+']<\/small>';
-			else if (nvram.lan7_ifname == i)
-				t = 'LAN7 <small>['+i+']<\/small>';
-/* TOMATO64-END */
-			/* WAN label (for PPP wan_iface) */
-			else if ((nvram.wan_proto == 'pppoe') || (nvram.wan_proto == 'ppp3g') || (nvram.wan_proto == 'pptp') || (nvram.wan_proto == 'l2tp')
-			         || (nvram.wan2_proto == 'pppoe') || (nvram.wan2_proto == 'ppp3g') || (nvram.wan2_proto == 'pptp') || (nvram.wan2_proto == 'l2tp')
-/* MULTIWAN-BEGIN */
-			         || (nvram.wan3_proto == 'pppoe') || (nvram.wan3_proto == 'ppp3g') || (nvram.wan3_proto == 'pptp') || (nvram.wan3_proto == 'l2tp')
-			         || (nvram.wan4_proto == 'pppoe') || (nvram.wan4_proto == 'ppp3g') || (nvram.wan4_proto == 'pptp') || (nvram.wan4_proto == 'l2tp')
-/* MULTIWAN-END */
-			) {
-				if (nvram.wan_iface == i)
-					t = 'WAN0 <small>['+i+']<\/small>';
-				else if (nvram.wan2_iface == i)
-					t = 'WAN1 <small>['+i+']<\/small>';
-/* MULTIWAN-BEGIN */
-				else if (nvram.wan3_iface == i)
-					t = 'WAN2 <small>['+i+']<\/small>';
-				else if (nvram.wan4_iface == i)
-					t = 'WAN3 <small>['+i+']<\/small>';
-/* MULTIWAN-END */
-			}
-			/* WAN label (for wan_ifname) */
-			else if ((nvram.wan_proto != 'disabled') || (nvram.wan2_proto != 'disabled')
-/* MULTIWAN-BEGIN */
-			         || (nvram.wan3_proto != 'disabled') || (nvram.wan4_proto != 'disabled')
-/* MULTIWAN-END */
-			) {
-				if (nvram.wan_ifname == i)
-					t = 'WAN0 <small>['+i+']<\/small>';
-				else if (nvram.wan2_ifname == i)
-					t = 'WAN1 <small>['+i+']<\/small>';
-/* MULTIWAN-BEGIN */
-				else if (nvram.wan3_ifname == i)
-					t = 'WAN2 <small>['+i+']<\/small>';
-				else if (nvram.wan4_ifname == i)
-					t = 'WAN3 <small>['+i+']<\/small>';
-/* MULTIWAN-END */
-			}
+			/* LAN/WAN label */
+			else if ((e = getNetworkInterfaceLabel(i)) != null)
+				t = e;
 			tabs.push(['speed-tab-'+i, t]);
 		}
 
