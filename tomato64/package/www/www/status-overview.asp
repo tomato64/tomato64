@@ -777,7 +777,8 @@ function init() {
 				s += '<b>br'+i+'<\/b> (LAN'+i+') - Disabled';
 			}
 			t += ((t.length > 0) && (t.charAt(t.length - 1) != ' ')) ? '<br>' : '';
-			t += '<b>br'+i+'<\/b> (LAN'+i+') - '+nvram['lan'+j+'_ipaddr']+'/'+numberOfBitsOnNetMask(nvram['lan'+j+'_netmask']);
+			t += '<b>br'+i+'<\/b> (LAN'+i+') - '+nvram['lan'+j+'_ipaddr'];
+			if (nvram['lan'+j+'_netmask'].length > 0) t += '/'+numberOfBitsOnNetMask(nvram['lan'+j+'_netmask']);
 		}
 	}
 
