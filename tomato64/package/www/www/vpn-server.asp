@@ -474,7 +474,7 @@ function disableKeyButtons(num, state) {
 	E('_vpn_keygen_static_vpns'+num+'_button').disabled = state;
 /* KEYGEN-BEGIN */
 	E('_vpn_keygen_vpns'+num+'_button').disabled = state;
-	E('_vpn_dhgen_vpns'+num+'_button').disabled = state;
+	E('_vpn_dhgen_vpns'+num+'_button').disabled = state || E('_f_vpns'+num+'_ecdh').checked;
 /* KEYGEN-END */
 }
 
