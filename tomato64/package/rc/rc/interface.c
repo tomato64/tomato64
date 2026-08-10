@@ -169,7 +169,8 @@ static int route_manip(int cmd, char *name, int metric, char *dst, char *gateway
 
 	if (ioctl(s, cmd, &rt) < 0) {
 		err = errno;
-		if (cmd == SIOCADDRT)
+		/* An existing identical route is not an operational error. */
+		if ((cmd == SIOCADDRT) && (err != EEXIST))
 			logerr(__FUNCTION__, __LINE__, name ? : "");
 	}
 

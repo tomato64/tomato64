@@ -2051,7 +2051,7 @@ void do_static_routes(int add)
 	char *buf;
 	char *p, *q;
 	char *dest, *mask, *gateway, *metric, *if_tmp, *ifname;
-	int r, found_lan;
+	int r, err, found_lan;
 	unsigned int i;
 	unsigned int mwan_num = add ? mwan_active_num() : mwan_configured_num();
 	char name[8], ip[16], proto_key[16], ip_key[32], if_key[16];
@@ -2106,18 +2106,26 @@ void do_static_routes(int add)
 			}
 		}
 
-		logmsg(LOG_WARNING, "Static route %s: ifname=%s, metric=%s, dest=%s, gateway=%s, mask=%s", (add ? "added" : "deleted"), ifname, metric, dest, gateway, mask);
 
 		if (add) {
 			for (r = 3; r >= 0; --r) {
-				if (route_add(ifname, atoi(metric), dest, gateway, mask) == 0)
+				err = route_add(ifname, atoi(metric), dest, gateway, mask);
+				if (err == 0) {
+					logmsg(LOG_WARNING, "Static route added: ifname=%s, metric=%s, dest=%s, gateway=%s, mask=%s", ifname, metric, dest, gateway, mask);
 					break;
+				}
+				if (err == EEXIST) {
+					logmsg(LOG_DEBUG, "Static route already exists: ifname=%s, metric=%s, dest=%s, gateway=%s, mask=%s", ifname, metric, dest, gateway, mask);
+					break;
+				}
 
 				sleep(1);
 			}
 		}
-		else
+		else {
+			logmsg(LOG_WARNING, "Static route deleted: ifname=%s, metric=%s, dest=%s, gateway=%s, mask=%s", ifname, metric, dest, gateway, mask);
 			route_del(ifname, atoi(metric), dest, gateway, mask);
+		}
 	}
 	free(buf);
 
