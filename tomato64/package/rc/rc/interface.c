@@ -272,7 +272,10 @@ static int ipv6_route_manip(int cmd, const char *name, int metric, const char *d
 
 	if (ioctl(s, cmd, &rt) < 0) {
 		err = errno;
-		logerr(__FUNCTION__, __LINE__, name ? : "");
+		/* Existing routes on add and missing routes on delete are expected. */
+		if (!(((cmd == SIOCADDRT) && (err == EEXIST)) ||
+		      ((cmd == SIOCDELRT) && (err == ESRCH))))
+			logerr(__FUNCTION__, __LINE__, name ? : "");
 	}
 
 error:

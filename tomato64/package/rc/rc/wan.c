@@ -1061,7 +1061,7 @@ void start_wan6(const char *wan_ifname)
 			strlcpy(gateway, nvram_safe_get("ipv6_llremote_custom"), sizeof(gateway));
 			if (*gateway && (inet_pton(AF_INET6, gateway, &addr) == 1)) { /* check for valid IPv6 address */
 				ret = ipv6_route_add(wan_ifname, IPV6_METRIC_GW_LOW_INT, "::/0", gateway);
-				logmsg(LOG_INFO, "DHCPV6-PD - add default route ::/0 via gateway %s (user provided) on wan_ifname: %s - status: %s", gateway, wan_ifname, (ret == 0 ? "OK" : "ERROR"));
+				logmsg(LOG_INFO, "DHCPV6-PD - add default route ::/0 via gateway %s (user provided) on wan_ifname: %s - status: %s", gateway, wan_ifname, (((ret == 0) || (ret == EEXIST)) ? "OK" : "ERROR"));
 			}
 			else {
 				ret = eval("ip", "-6", "route", "add", "::/0", "dev", (char *)wan_ifname, "metric", IPV6_METRIC_GW_LOW);
