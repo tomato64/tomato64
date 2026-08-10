@@ -91,7 +91,7 @@ function toggle(service, isup) {
 function verifyFields(focused, quiet) {
 	var ok = 1;
 	var a, b, c;
-	var i;
+	var i, remoteMode;
 
 	var o = (E('_web_css').value == 'online');
 	var p = nvram.ttb_css;
@@ -129,8 +129,8 @@ function verifyFields(focused, quiet) {
 	elem.display(E('web_css_warn'), s);
 
 	a = E('_f_http_local');
-	b = E('_f_http_remote').value;
-	if ((a.value != 3) && (b != 0) && (a.value != b)) {
+	remoteMode = E('_f_http_remote').value;
+	if ((a.value != 3) && (remoteMode != 0) && (a.value != remoteMode)) {
 		ferror.set(a, 'The local HTTP/HTTPS must also be enabled when using remote access', quiet || !ok);
 		ok = 0;
 	}
@@ -172,22 +172,19 @@ function verifyFields(focused, quiet) {
 		ok = 0;
 	}
 /* HTTPS-END */
-	b = b != 0;
+	b = remoteMode != 0;
 	a = E('_http_wanport');
 	elem.display(PR(a), b);
 	if (b) {
 		if (!v_port(a, quiet || !ok)) ok = 0;
-		if ((a.value == 80) || (a.value == 443)) {
-			ferror.set(a, 'Ports 80 and 443 are not allowed for remote GUI access', quiet || !ok);
-			ok = 0;
-		}
-		if (a.value == E('_http_lanport').value) {
-			ferror.set(a, 'Ports for local and remote GUI access cannot be the same', quiet || !ok);
-			ok = 0;
-		}
 /* HTTPS-BEGIN */
-		if (a.value == E('_https_lanport').value) {
-			ferror.set(a, 'Ports for local and remote GUI access cannot be the same', quiet || !ok);
+		/*
+		 * Sharing a port is valid only when the local and remote
+		 * listeners use the same protocol.
+		 */
+		if (((remoteMode == 1) && ((E('_f_http_local').value & 2) != 0) && (a.value == E('_https_lanport').value)) ||
+		    ((remoteMode == 2) && ((E('_f_http_local').value & 1) != 0) && (a.value == E('_http_lanport').value))) {
+			ferror.set(a, 'Remote GUI port conflicts with the local GUI port for the other protocol', quiet || !ok);
 			ok = 0;
 		}
 /* HTTPS-END */
@@ -251,11 +248,44 @@ function verifyFields(focused, quiet) {
 	return ok;
 }
 
+function confirmRemoteAccessRisks() {
+	var a = E('_http_wanport');
+	var remoteMode = parseInt(E('_f_http_remote').value, 10);
+	var remotePort = parseInt(a.value, 10);
+	var localPort = parseInt(E('_http_lanport').value, 10);
+	var protocol = 'HTTP';
+	var warnings = [];
+
+	if (remoteMode == 0)
+		return 1;
+
+/* HTTPS-BEGIN */
+	if (remoteMode == 2) {
+		protocol = 'HTTPS';
+		localPort = parseInt(E('_https_lanport').value, 10);
+	}
+/* HTTPS-END */
+
+	if ((remotePort == 80) || (remotePort == 443))
+		warnings.push('Port '+remotePort+' is a standard web port and is commonly scanned by automated attacks.');
+
+	if (remotePort == localPort)
+		warnings.push('The same port will be used for local and remote '+protocol+' access.');
+
+	if ((warnings.length != 0) &&
+	    !confirm('WARNING:\n\n- '+warnings.join('\n- ')+'\n\nDo you want to proceed and accept this configuration?')) {
+		ferror.set(a, 'Action cancelled: remote GUI port risk not accepted.', 0);
+		return 0;
+	}
+
+	return 1;
+}
+
 function save() {
 	var fom, rem, loc, a, b, i;
 	var local = 0, remote = 0;
 
-	if (!verifyFields(null, 0))
+	if (!verifyFields(null, 0) || !confirmRemoteAccessRisks())
 		return;
 
 	fom = E('t_fom');
@@ -495,7 +525,7 @@ function init() {
 				        (nvram.remote_mgt_https == 1) ? 2 :
 /* HTTPS-END */
 				        1) : 0 },
-				{ title: 'Port', indent: 2, name: 'http_wanport', type: 'text', maxlen: 5, size: 7, suffix: '&nbsp;<small>not allowed: 80 and 443<\/small>', value: fixPort(nvram.http_wanport, 8080) },
+				{ title: 'Port', indent: 2, name: 'http_wanport', type: 'text', maxlen: 5, size: 7, suffix: '&nbsp;<small>standard ports 80 and 443 are not recommended<\/small>', value: fixPort(nvram.http_wanport, 8080) },
 /* HTTPS-BEGIN */
 			null,
 			{ title: 'SSL Certificate', rid: 'row_sslcert' },
