@@ -878,6 +878,9 @@ void dns_to_resolv(void)
 	char tmp[64];
 
 	mwan_num = mwan_active_num();
+	/* WAN0 stores static DNS settings even when WAN is disabled. */
+	if (mwan_num == 0)
+		mwan_num = 1;
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 		get_wan_prefix(wan_unit, wan_prefix);

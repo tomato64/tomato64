@@ -399,6 +399,10 @@ static FILE *write_static_hosts(void)
 	char tmp[32];
 	const char *router_ip, *hostname, *p;
 
+	/* WAN0 remains available in DNS configuration for AP-only mode. */
+	if (mwan_num == 0)
+		mwan_num = 1;
+
 	/* write static lease entries & create hosts file */
 	router_ip = nvram_safe_get("lan_ipaddr");
 
@@ -731,6 +735,9 @@ void start_dnsmasq(void) {
 	}
 
 	mwan_num = mwan_active_num();
+	/* WAN0 stores static DNS settings even when WAN is disabled. */
+	if (mwan_num == 0)
+		mwan_num = 1;
 
 	write_basic_config(f);
 	write_tor_dns(f);
