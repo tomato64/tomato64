@@ -29,7 +29,7 @@ LOGW="logger -p WARN -t switch4g[$PID]"
 
 
 [ -z "$PREFIX" ] && {
-	echo "usage: $0 INTERFACE [connect|disconnect|signal|reset]"
+	echo "usage: switch4g INTERFACE [connect|disconnect|signal|reset]"
 	exit 0
 }
 
@@ -350,11 +350,10 @@ connect() {
 				sleep 1
 				dhcpc-renew $PREFIX
 			fi
-		else
-			$LOGI "4G MODEM - WAN IFACE not ready ($IFA) [$COUNT] ..."
-			COUNT=$((COUNT+1))
-			sleep 2
 		fi
+		$LOGI "4G MODEM - WAN IFACE not ready ($IFA) [$COUNT] ..."
+		COUNT=$((COUNT+1))
+		sleep 2
 	done
 
 	[ "$DONE" -eq 0 ] && {
