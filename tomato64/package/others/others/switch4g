@@ -22,6 +22,7 @@ STATEFILE="/var/lib/misc/$PREFIX_state"
 PATHDIAG="/sys/bus/usb/devices"
 PATHWAN="/sys/class/net"
 MODE=$(NG "$PREFIX"_proto)
+MTYPE=$(NG "$PREFIX"_modem_type)
 COUNT_KILL=0
 LOGI="logger -t switch4g[$PID]"
 LOGE="logger -p ERROR -t switch4g[$PID]"
@@ -70,7 +71,6 @@ getBandText() {
 }
 
 connect() {
-	MTYPE=$(NG "$PREFIX"_modem_type)
 	DEVNR=$(NG "$PREFIX"_modem_dev)
 	APN=$(NG "$PREFIX"_modem_apn)
 	SPEED=$(NG "$PREFIX"_modem_speed)
@@ -834,6 +834,22 @@ setPIN() {
 	fi
 }
 
+detect() {
+	# modem not yet detected
+	[ ! -f $READYFILE ] && {
+		switchMode
+		searchWAN
+
+		# only for non-hilink
+		case "$MTYPE" in
+			non-hilink|huawei-non-hilink|hw-ether|qmi_wwan)
+				searchDiag
+				setPIN
+			;;
+		esac
+	}
+}
+
 uqmiCall() {
 	# for now, it's the only way to prevent uqmi hangups on two different calls at the same time and on the same device: https://forum.openwrt.org/viewtopic.php?id=63559
 	# OPTION: 1 - connect, 2 - background, no option - normal use
@@ -922,6 +938,7 @@ wayOut() {
 case "$2" in
 	connect)
 		checkPid 1
+		detect
 		connect
 	;;
 	disconnect)
@@ -938,21 +955,7 @@ case "$2" in
 	;;
 	*)
 		checkPid 1
-
-		# modem not yet detected
-		[ ! -f $READYFILE ] && {
-			switchMode
-			searchWAN
-
-			# only for non-hilink
-			case "$MTYPE" in
-				non-hilink|huawei-non-hilink|hw-ether|qmi_wwan)
-					searchDiag
-					setPIN
-				;;
-			esac
-		}
-
+		detect
 		connect
 	;;
 esac
