@@ -2066,12 +2066,12 @@ void do_static_routes(int add)
 	else
 		nvram_unset("routes_static_saved");
 
-	ifname = nvram_safe_get("wan_ifname"); /* default */
 	p = buf;
 	while ((q = strsep(&p, ">")) != NULL) {
 		if (vstrsep(q, "<", &dest, &gateway, &mask, &metric, &if_tmp) < 5)
 			continue;
 
+		ifname = nvram_safe_get("wan_ifname"); /* default for each route */
 		found_lan = 0;
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			/* LAN, LAN1, LAN2, LAN3 set in advanced-routing.asp */
