@@ -421,7 +421,9 @@ int wan_led(int mode) /* mode: 0 - OFF, 1 - ON */
 	model = get_model();
 
 	/* check router model according to shared/led.c table, LED WHITE */
-	if ((model == MODEL_RTN18U)
+	if (
+#ifdef TCONFIG_BCMARM
+	    (model == MODEL_RTN18U)
 	    || (model == MODEL_R7000)
 	    || (model == MODEL_EX6200)
 	    || (model == MODEL_EX7000)
@@ -464,6 +466,39 @@ int wan_led(int mode) /* mode: 0 - OFF, 1 - ON */
 	    || (model == MODEL_RTAC3200)
 	    || (model == MODEL_R8000)
 #endif
+#else /* !TCONFIG_BCMARM */
+	    (model == MODEL_WRT54G) ||
+	    (model == MODEL_WRTSL54GS) ||
+	    (model == MODEL_DIR320) ||
+	    (model == MODEL_WL1600GL) ||
+	    (model == MODEL_WRT310Nv1) ||
+	    (model == MODEL_WRT160Nv1) ||
+	    (model == MODEL_WNR3500L) ||
+	    (model == MODEL_WRT160Nv3) ||
+	    (model == MODEL_WRT320N) ||
+	    (model == MODEL_WRT610Nv2) ||
+	    (model == MODEL_E4200)
+#ifdef TCONFIG_BCMWL6
+	    || (model == MODEL_WNR3500LV2) ||
+	    (model == MODEL_WNDR4000) ||
+	    (model == MODEL_WNDR3400) ||
+	    (model == MODEL_F9K1102) ||
+	    (model == MODEL_E900) ||
+	    (model == MODEL_E1500) ||
+	    (model == MODEL_E1550) ||
+	    (model == MODEL_E2500) ||
+	    (model == MODEL_E1000v2) ||
+	    (model == MODEL_RTN12B1) ||
+	    (model == MODEL_RTN12C1) ||
+	    (model == MODEL_RTN12HP) ||
+	    (model == MODEL_RTN15U) ||
+	    (model == MODEL_D1800H) ||
+	    (model == MODEL_TDN6) ||
+	    (model == MODEL_WNDR4500) ||
+	    (model == MODEL_WNDR4500V2) ||
+	    (model == MODEL_DIR865L)
+#endif /* TCONFIG_BCMWL6 */
+#endif /* TCONFIG_BCMARM */
 	) {
 		led(LED_WHITE, mode);
 	}
@@ -1045,22 +1080,26 @@ void set_radio(int on, int unit)
 	if (!on) {
 		if (unit == 0)
 			led(LED_WLAN, LED_OFF);
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 		if (unit == 1)
 			led(LED_5G, LED_OFF);
 #ifdef TCONFIG_AC3200
 		if (unit == 2)
 			led(LED_52G, LED_OFF);
-#endif
+#endif /* TCONFIG_AC3200 */
+#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
 	}
 	else {
 		if (unit == 0)
 			led(LED_WLAN, LED_ON);
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 		if (unit == 1)
 			led(LED_5G, LED_ON);
 #ifdef TCONFIG_AC3200
 		if (unit == 2)
 			led(LED_52G, LED_ON);
-#endif
+#endif /* TCONFIG_AC3200 */
+#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
 	}
 #else /* WL_BSS_INFO_VERSION >= 108 */
 	n = on ? 0 : WL_RADIO_SW_DISABLE;
