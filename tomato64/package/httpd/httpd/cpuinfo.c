@@ -144,7 +144,7 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 
 #ifdef TCONFIG_BCMARM
 	memset(buff, 0, sizeof(buff));
-	system("/usr/sbin/sysinfo-helper");
+	eval("/usr/sbin/sysinfo-helper");
 	if ((fd = fopen("/tmp/sysinfo-helper", "r"))) {
 		while (fgets(buff, sizeof(buff), fd)) {
 			next = buff;
