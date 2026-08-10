@@ -1231,7 +1231,7 @@ static void wg_route_peer(const int unit, char *iface, char *route, char *table,
 	}
 	else {
 		if (add)
-			wg_script_add(unit, WG_SCRIPT_START, "run_cmd --msg \"%s\" ip route replace %s dev %s", msg, route, iface);
+			wg_script_add(unit, WG_SCRIPT_START, "run_cmd --msg \"%s\" ip route add %s dev %s", msg, route, iface);
 		else
 			wg_script_add(unit, WG_SCRIPT_STOP,  "run_cmd ip route delete %s dev %s", route, iface);
 	}
