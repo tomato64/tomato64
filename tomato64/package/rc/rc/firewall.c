@@ -183,23 +183,6 @@ static int dmz_dst(char *s, const size_t buf_sz)
 	return 1;
 }
 
-void lan_ip(char *buffer, char *ret, const size_t buf_sz)
-{
-	char *nv, *p;
-	char s[32];
-
-	if (buf_sz)
-		ret[0] = '\0';
-
-	if ((nv = nvram_get(buffer)) != NULL) {
-		strlcpy(s, nv, sizeof(s));
-		if ((p = strrchr(s, '.')) != NULL) {
-			*p = 0;
-			strlcpy(ret, s, buf_sz);
-		}
-	}
-}
-
 void ipt_log_unresolved(const char *addr, const char *addrtype, const char *categ, const char *name)
 {
 	char *pre, *post;
@@ -1463,7 +1446,7 @@ static void filter_forward(void)
 {
 	char dst[128];
 	char src[128];
-	char buffer[512], dmz1[32], dmz2[32];
+	char buffer[512];
 	char lanAccess[(BRIDGE_COUNT * BRIDGE_COUNT) + 1];
 	const char *d, *sbr, *saddr, *dbr, *daddr, *desc;
 	char *p, *c;
@@ -1728,20 +1711,8 @@ static void filter_forward(void)
 #endif
 		if (dmz_dst(dst, sizeof(dst))) {
 			dmz_ifname[0] = '\0';
-			for (i = 0; i < BRIDGE_COUNT; i++) {
-				if (strcmp(lanface[i], "") != 0) { /* LAN is enabled */
-					snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
-					lan_ip(buffer, dmz1, sizeof(dmz1));
-					lan_ip("dmz_ipaddr", dmz2, sizeof(dmz2));
-
-					if (strcmp(dmz1, dmz2) == 0 && strcmp(lanface[i], "") != 0) {
-						strlcpy(dmz_ifname, lanface[i], sizeof(dmz_ifname));
-						break;
-					}
-				}
-			}
-			if (strcmp(dmz_ifname, "") == 0)
-				strlcpy(dmz_ifname, lanface[0], sizeof(dmz_ifname)); /* empty? set default (primary) */
+			if (!lan_ifname_for_ipv4(dst, dmz_ifname, sizeof(dmz_ifname)))
+				strlcpy(dmz_ifname, lanface[0], sizeof(dmz_ifname)); /* preserve legacy fallback */
 
 			strlcpy(buffer, nvram_safe_get("dmz_sip"), sizeof(buffer));
 			p = buffer;

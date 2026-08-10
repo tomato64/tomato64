@@ -515,6 +515,7 @@ static inline void stop_ddns(void) { };
 #endif
 
 /* misc.c */
+extern int lan_ifname_for_ipv4(const char *ip, char *ifname, size_t len);
 extern void usage_exit(const char *cmd, const char *help) __attribute__ ((noreturn));
 #define modprobe(mod, args...) ({ char *argv[] = { "modprobe", "-s", mod, ## args, NULL }; _eval(argv, NULL, 0, NULL); })
 extern int modprobe_r(const char *mod);

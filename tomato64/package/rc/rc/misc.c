@@ -31,6 +31,45 @@
 #define LOGMSG_NVDEBUG	"misc_debug"
 
 
+/* find the LAN bridge interface that owns this IPv4 (subnet match) */
+int lan_ifname_for_ipv4(const char *ip, char *ifname, size_t len)
+{
+	struct in_addr a, lan, mask;
+	const char *lanip, *lanmask, *lanif;
+	char ipkey[24], mkey[24], ifkey[24], num[4];
+	unsigned int i;
+
+	if (inet_pton(AF_INET, ip, &a) <= 0)
+		return 0;
+
+	for (i = 0; i < BRIDGE_COUNT; i++) {
+		if (i == 0)
+			num[0] = '\0';
+		else
+			snprintf(num, sizeof(num), "%u", i);
+
+		snprintf(ipkey, sizeof(ipkey), "lan%s_ipaddr", num);
+		snprintf(mkey, sizeof(mkey), "lan%s_netmask", num);
+		snprintf(ifkey, sizeof(ifkey), "lan%s_ifname", num);
+
+		lanif = nvram_safe_get(ifkey);
+		lanip = nvram_safe_get(ipkey);
+		lanmask = nvram_safe_get(mkey);
+
+		if (!*lanif || !*lanip || !*lanmask)
+			continue;
+		if ((inet_pton(AF_INET, lanip, &lan) <= 0) || (inet_pton(AF_INET, lanmask, &mask) <= 0))
+			continue;
+
+		if ((a.s_addr & mask.s_addr) == (lan.s_addr & mask.s_addr)) {
+			strlcpy(ifname, lanif, len);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 void usage_exit(const char *cmd, const char *help)
 {
 	fprintf(stderr, "Usage: %s %s\n", cmd, help);
