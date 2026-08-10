@@ -1463,11 +1463,12 @@ void hotplug_usb(void)
 	int is_block = strcmp(getenv("SUBSYSTEM") ? : "", "block") == 0;
 	char *scsi_host = getenv("SCSI_HOST");
 
-	logmsg(LOG_DEBUG, "*** %s: %s hotplug INTERFACE=%s ACTION=%s PRODUCT=%s HOST=%s DEVICE=%s\n", __FUNCTION__, getenv("SUBSYSTEM") ? : "USB", interface, action, product, scsi_host, device);
+	logmsg(LOG_DEBUG, "*** %s: %s hotplug INTERFACE=%s ACTION=%s PRODUCT=%s HOST=%s DEVICE=%s\n", __FUNCTION__, getenv("SUBSYSTEM") ? : "USB", interface ? : "", action ? : "", product ? : "", scsi_host ? : "", device ? : "");
 
 	if (!nvram_get_int("usb_enable"))
 		return;
-	if ((!action) || ((!interface || !product) && !is_block))
+
+	if ((!action) || ((!interface || !product) && !is_block) || (is_block && !device))
 		return;
 
 #ifdef TOMATO64
