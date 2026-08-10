@@ -679,7 +679,7 @@ modemReset() {
 
 setPIN() {
 	local PIN=$(NG "$PREFIX"_modem_pin)
-	local IS_DONE=0 COUNT=1 PIN_STATUS PIN_VERIFY_TRIES PIN_EXT_STATUS=0 PINVAL STATUS
+	local IS_DONE=0 COUNT=1 PIN_STATUS PIN_VERIFY_TRIES PIN_EXT_STATUS=0 PINVAL SIM_STATE STATUS
 
 	$LOGI "4G MODEM - waiting for SIM initialization"
 
@@ -749,32 +749,40 @@ setPIN() {
 				fi
 			done
 
-			# check if UIM application is stuck in illegal state
+			# Check the UIM state first, then fall back to the legacy PIN status.
+			# Some modems report an illegal or unsupported UIM state even though
+			# the legacy DMS command returns a valid SIM status.
 			COUNT=1
 			while true; do
-				STATUS=$(uqmiCall "-t 2000 --uim-get-sim-state" | cut -d "," -f2 | cut -d ":" -f2 | tr -d '"')
+				STATUS=$(uqmiCall "-t 2000 --uim-get-sim-state")
+				SIM_STATE=$(echo "$STATUS" | sed -n 's/.*"card_application_state"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 
-				# SIM card is either completely absent or state is labeled as illegal
-				# try to power-cycle the SIM card to recover from this state
-				if [ -z "$STATUS" ] || [ "$STATUS" = "illegal" ]; then
-					$LOGI "4G MODEM - SIM in illegal state: Power-cycling SIM"
+				[ -n "$SIM_STATE" ] && [ "$SIM_STATE" != "illegal" ] && break
 
-					# try to reset SIM application
-					uqmiCall "-t 1000 --uim-power-off --uim-slot 1"
-					sleep 3
-					uqmiCall "-t 1000 --uim-power-on --uim-slot 1"
+				STATUS=$(uqmiCall "-t 1000 --get-pin-status")
+				PIN_STATUS=$(echo "$STATUS" | sed -n 's/.*"pin1_status"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 
-					if [ "$COUNT" -lt 10 ]; then
-						COUNT=$((COUNT+1))
-						sleep 5
-						continue
-					fi
+				case "$PIN_STATUS" in
+					disabled|blocked|not_verified|verified)
+						break
+					;;
+				esac
 
-					# recovery failed
-					wayOut "4G MODEM - SIM recovery failed!"
-				else
-					break
+				$LOGI "4G MODEM - SIM state invalid (${SIM_STATE:-unknown}): Power-cycling SIM"
+
+				# try to reset SIM application
+				uqmiCall "-t 1000 --uim-power-off --uim-slot 1"
+				sleep 3
+				uqmiCall "-t 1000 --uim-power-on --uim-slot 1"
+
+				if [ "$COUNT" -lt 10 ]; then
+					COUNT=$((COUNT+1))
+					sleep 5
+					continue
 				fi
+
+				# recovery failed
+				wayOut "4G MODEM - SIM recovery failed!"
 			done
 
 			# verify pin
