@@ -1297,7 +1297,7 @@ void start_ipv6(void)
 		/* check lanX / brX if available */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
-			if (strcmp(nvram_safe_get(buffer), "") != 0) {
+			if (strcmp(nvram_safe_get(buffer), "") != 0 && strcmp(nvram_safe_get(buffer), "0.0.0.0") != 0) {
 				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
 				if (((nvram_get_int("ipv6_accept_ra") & 0x02) != 0) && !nvram_get_int("ipv6_radvd") && !nvram_get_int("ipv6_dhcpd"))
 					/* accept_ra for brX */

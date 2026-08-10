@@ -68,6 +68,37 @@ static int check_bridge_modes(void) {
 	return 0;
 }
 
+static const char *bridge_nvram_get(unsigned int bridge, const char *suffix, char *key, const size_t key_size)
+{
+	if (bridge == 0)
+		snprintf(key, key_size, "lan_%s", suffix);
+	else
+		snprintf(key, key_size, "lan%u_%s", bridge, suffix);
+
+	return nvram_safe_get(key);
+}
+
+static int bridge_has_l3(unsigned int bridge)
+{
+	char key[32];
+	const char *ipaddr = bridge_nvram_get(bridge, "ipaddr", key, sizeof(key));
+
+	return (*ipaddr && (strcmp(ipaddr, "0.0.0.0") != 0));
+}
+
+static void write_l2_bridge_exclusions(FILE *f)
+{
+	unsigned int bridge;
+	char key[32];
+	const char *ifname;
+
+	for (bridge = 0; bridge < BRIDGE_COUNT; bridge++) {
+		ifname = bridge_nvram_get(bridge, "ifname", key, sizeof(key));
+		if ((*ifname) && (strncmp(ifname, "br", 2) == 0) && !bridge_has_l3(bridge))
+			fprintf(f, "except-interface=%s\n", ifname);
+	}
+}
+
 static void write_basic_config(FILE *f)
 {
 	const char *nv;
@@ -256,6 +287,9 @@ static void write_dhcp_ignore(FILE *f)
 
 	/* ignore DHCP requests from unknown devices for given LAN */
 	for (i = 0; i < BRIDGE_COUNT; i++) {
+		if (!bridge_has_l3(i))
+			continue;
+
 		snprintf(buf, sizeof(buf), (i == 0 ? "dhcpd_ostatic" : "dhcpd%u_ostatic"), i);
 		if (nvram_get_int(buf))
 			fprintf(f, "dhcp-ignore=tag:br%u,tag:!known\n", i);
@@ -296,6 +330,10 @@ static void write_dhcp_ranges(FILE *f, int *do_dhcpd_hosts, int *do_dns_ptr, cha
 		snprintf(lanN_netmask, sizeof(lanN_netmask), "lan%s_netmask", bridge);
 		snprintf(dhcpdN_startip, sizeof(dhcpdN_startip), "dhcpd%s_startip", bridge);
 		snprintf(dhcpdN_endip, sizeof(dhcpdN_endip), "dhcpd%s_endip", bridge);
+
+		/* 0.0.0.0 marks a pure L2 bridge: do not bind DNS, DHCP or RA to it. */
+		if (!bridge_has_l3(br) || !*nvram_safe_get(lanN_ifname))
+			continue;
 
 		do_dhcpd = nvram_match(lanN_proto, "dhcp");
 		if (do_dhcpd) {
@@ -523,10 +561,25 @@ static void write_static_reservations(FILE *f, FILE *hf, int do_dhcpd_hosts, con
 static void write_ipv6_config(FILE *f)
 {
 #ifdef TCONFIG_IPV6
-	if (ipv6_enabled()) {
-		char mtu_str[16] = { 0 };
+	if (ipv6_enabled() && (nvram_get_int("ipv6_radvd") || nvram_get_int("ipv6_dhcpd"))) {
+		unsigned int bridge;
+		char key[32], mtu_str[16] = { 0 };
+		const char *ifname;
+		int have_l3_bridge = 0;
 		int ipv6_lease = 0; /* DHCP IPv6 lease time */
 		int service = get_ipv6_service();
+		char lease_unit = 'h';
+
+		for (bridge = 0; bridge < BRIDGE_COUNT; bridge++) {
+			ifname = bridge_nvram_get(bridge, "ifname", key, sizeof(key));
+			if (bridge_has_l3(bridge) && (*ifname) && (strncmp(ifname, "br", 2) == 0)) {
+				have_l3_bridge = 1;
+				break;
+			}
+		}
+
+		if (!have_l3_bridge)
+			return;
 
 		/* get mtu for IPv6 --> only for "wan" (no multiwan support) */
 		switch (service) {
@@ -543,53 +596,46 @@ static void write_ipv6_config(FILE *f)
 			break;
 		}
 
-		/* Router Advertisements - enable-ra should be enabled in both cases (SLAAC and/or DHCPv6) */
-		if (nvram_get_int("ipv6_radvd") || nvram_get_int("ipv6_dhcpd")) {
-			fprintf(f, "enable-ra\n");
-			if (nvram_get_int("ipv6_fast_ra"))
-				fprintf(f, "ra-param=br*, mtu:%s, 15, 600\n", mtu_str); /* interface = br*, mtu = XYZ, ra-interval = 15 sec, router-lifetime = 600 sec (10 min) */
-			else /* default case */
-				fprintf(f, "ra-param=br*, mtu:%s, 60, 1200\n", mtu_str); /* interface = br*, mtu = XYZ, ra-interval = 60 sec, router-lifetime = 1200 sec (20 min) */
-		}
-
 		/* check for DHCPv6 PD (and use IPv6 preferred lifetime in that case) */
 		if (service == IPV6_NATIVE_DHCP) {
 			ipv6_lease = nvram_get_int("ipv6_pd_pltime"); /* get IPv6 preferred lifetime (seconds) */
 			if ((ipv6_lease < IPV6_MIN_LIFETIME) || (ipv6_lease > ONEMONTH_LIFETIME)) /* check lease time and limit the range (120 sec up to one month) */
 				ipv6_lease = IPV6_MIN_LIFETIME;
-
-			/* only SLAAC and NO DHCPv6 */
-			if ((nvram_get_int("ipv6_radvd")) && (!nvram_get_int("ipv6_dhcpd")))
-				fprintf(f, "dhcp-range=::, constructor:br*, ra-names, ra-stateless, 64, %ds\n", ipv6_lease);
-
-			/* only DHCPv6 and NO SLAAC */
-			if ((nvram_get_int("ipv6_dhcpd")) && (!nvram_get_int("ipv6_radvd")))
-				fprintf(f, "dhcp-range=::2, ::FFFF:FFFF, constructor:br*, 64, %ds\n", ipv6_lease);
-
-			/* SLAAC and DHCPv6 (2 IPv6 IPs) */
-			if ((nvram_get_int("ipv6_radvd")) && (nvram_get_int("ipv6_dhcpd")))
-				fprintf(f, "dhcp-range=::2, ::FFFF:FFFF, constructor:br*, ra-names, 64, %ds\n", ipv6_lease);
+			lease_unit = 's';
 		}
 		else {
 			ipv6_lease = nvram_get_int("ipv6_lease_time"); /* get DHCP IPv6 lease time via GUI */
 			if ((ipv6_lease < 1) || (ipv6_lease > 720)) /* check lease time and limit the range (1...720 hours, 30 days should be enough) */
 				ipv6_lease = 12;
-
-			/* only SLAAC and NO DHCPv6 */
-			if ((nvram_get_int("ipv6_radvd")) && (!nvram_get_int("ipv6_dhcpd")))
-				fprintf(f, "dhcp-range=::, constructor:br*, ra-names, ra-stateless, 64, %dh\n", ipv6_lease);
-
-			/* only DHCPv6 and NO SLAAC */
-			if ((nvram_get_int("ipv6_dhcpd")) && (!nvram_get_int("ipv6_radvd")))
-				fprintf(f, "dhcp-range=::2, ::FFFF:FFFF, constructor:br*, 64, %dh\n", ipv6_lease);
-
-			/* SLAAC and DHCPv6 (2 IPv6 IPs) */
-			if ((nvram_get_int("ipv6_radvd")) && (nvram_get_int("ipv6_dhcpd")))
-				fprintf(f, "dhcp-range=::2, ::FFFF:FFFF, constructor:br*, ra-names, 64, %dh\n", ipv6_lease);
 		}
 
-		/* check for SLAAC and/or DHCPv6 */
-		if ((nvram_get_int("ipv6_radvd")) || (nvram_get_int("ipv6_dhcpd"))) {
+		/* Router Advertisements and DHCPv6 are configured only on L3 bridges. */
+		fprintf(f, "enable-ra\n");
+		for (bridge = 0; bridge < BRIDGE_COUNT; bridge++) {
+			ifname = bridge_nvram_get(bridge, "ifname", key, sizeof(key));
+			if (!bridge_has_l3(bridge) || !*ifname || (strncmp(ifname, "br", 2) != 0))
+				continue;
+
+			if (nvram_get_int("ipv6_fast_ra"))
+				fprintf(f, "ra-param=%s, mtu:%s, 15, 600\n", ifname, mtu_str); /* ra-interval = 15 sec, router-lifetime = 600 sec (10 min) */
+			else
+				fprintf(f, "ra-param=%s, mtu:%s, 60, 1200\n", ifname, mtu_str); /* ra-interval = 60 sec, router-lifetime = 1200 sec (20 min) */
+
+			/* only SLAAC and NO DHCPv6 */
+			if (nvram_get_int("ipv6_radvd") && !nvram_get_int("ipv6_dhcpd"))
+				fprintf(f, "dhcp-range=::, constructor:%s, ra-names, ra-stateless, 64, %d%c\n", ifname, ipv6_lease, lease_unit);
+
+			/* only DHCPv6 and NO SLAAC */
+			if (nvram_get_int("ipv6_dhcpd") && !nvram_get_int("ipv6_radvd"))
+				fprintf(f, "dhcp-range=::2, ::FFFF:FFFF, constructor:%s, 64, %d%c\n", ifname, ipv6_lease, lease_unit);
+
+			/* SLAAC and DHCPv6 (2 IPv6 IPs) */
+			if (nvram_get_int("ipv6_radvd") && nvram_get_int("ipv6_dhcpd"))
+				fprintf(f, "dhcp-range=::2, ::FFFF:FFFF, constructor:%s, ra-names, 64, %d%c\n", ifname, ipv6_lease, lease_unit);
+		}
+
+		/* DHCPv6 DNS servers */
+		{
 			char dns6[MAX_DNS6_SERVER_LAN][INET6_ADDRSTRLEN] = {{ 0 }, { 0 }};
 			char word[INET6_ADDRSTRLEN], *next = NULL;
 			struct in6_addr addr;
@@ -638,7 +684,7 @@ static void write_tftp_config(FILE *f)
 			snprintf(key, sizeof(key), (i == 0 ? "dnsmasq_pxelan" : "dnsmasq_pxelan%u"), i);
 			snprintf(lan_ifname, sizeof(lan_ifname), (i == 0 ? "lan_ifname" : "lan%u_ifname"), i);
 
-			if (nvram_get_int(key) && strlen(nvram_safe_get(lan_ifname)) > 0) {
+			if (bridge_has_l3(i) && nvram_get_int(key) && strlen(nvram_safe_get(lan_ifname)) > 0) {
 				snprintf(lan_ip, sizeof(lan_ip), (i == 0 ? "lan_ipaddr" : "lan%u_ipaddr"), i);
 				fprintf(f, "dhcp-boot=pxelinux.0,,%s\n", nvram_safe_get(lan_ip));
 			}
@@ -700,8 +746,12 @@ static void start_dnsmasq_wet(void)
 		nv = nvram_safe_get(lanN_ifname);
 
 		if (strncmp(nv, "br", 2) == 0) {
-			fprintf(f, "interface=%s\n", nv);
-			fprintf(f, "no-dhcp-interface=%s\n", nv);
+			if (bridge_has_l3(br)) {
+				fprintf(f, "interface=%s\n", nv);
+				fprintf(f, "no-dhcp-interface=%s\n", nv);
+			}
+			else
+				fprintf(f, "except-interface=%s\n", nv);
 		}
 	}
 
@@ -740,6 +790,7 @@ void start_dnsmasq(void) {
 		mwan_num = 1;
 
 	write_basic_config(f);
+	write_l2_bridge_exclusions(f);
 	write_tor_dns(f);
 	write_wan_dns(f, mwan_num);
 	write_dhcp_ignore(f);

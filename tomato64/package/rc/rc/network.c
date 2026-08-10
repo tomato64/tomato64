@@ -1891,6 +1891,14 @@ void start_lan(void)
 		strlcat(tmp2, "_netmask", sizeof(tmp2));
 		ifconfig(lan_ifname, IFUP | IFF_ALLMULTI, nvram_safe_get(tmp), nvram_safe_get(tmp2));
 
+#ifdef TCONFIG_IPV6
+		/* 0.0.0.0 marks a pure L2 bridge; keep the kernel from creating IPv6 addresses on it. */
+		if (nvram_match(tmp, "0.0.0.0")) {
+			snprintf(nv, sizeof(nv), "ipv6/conf/%s/disable_ipv6", lan_ifname);
+			f_write_procsysnet(nv, "1");
+		}
+#endif
+
 		config_loopback();
 		do_static_routes(1);
 
