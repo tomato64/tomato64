@@ -128,6 +128,56 @@ isDiag() {
 	TTYS=$(ls -d $PATHDIAG/$DEVICENAME/${DEVICENAME}*/tty?* 2>/dev/null | sed -e "s/.*\/\//.*/" -e "s/.*\//\/dev\//" | tr "\n" " " | sed -e "s/  */ /g" -e "s,^ *,,;s, *$,,")
 }
 
+bindUsbserialGeneric() {
+	local BIND_VENDOR="$1" BIND_PRODUCT="$2"
+	local USBSERIAL_MODULE=0
+
+	[ -n "$BIND_VENDOR" ] && [ -n "$BIND_PRODUCT" ] || return 1
+
+	# Dynamic IDs work with current kernels and also cover configurations
+	# where the usbserial core is built in.
+	modprobe usbserial 2>/dev/null
+	if [ -w /sys/bus/usb-serial/drivers/generic/new_id ]; then
+		$LOGI "3G MODEM - binding usbserial generic driver ($BIND_VENDOR:$BIND_PRODUCT)"
+		echo "$BIND_VENDOR $BIND_PRODUCT" > /sys/bus/usb-serial/drivers/generic/new_id 2>/dev/null
+		sleep 1
+		isDiag # --> TTYS
+
+		[ -n "$TTYS" ] && {
+			MODULE="usbserial"
+			$LOGI "3G MODEM found - using usbserial generic driver"
+			return 0
+		}
+	fi
+
+	# Some older kernels expose generic/new_id but do not reprobe the
+	# generic driver correctly. If usbserial is a module, reload it with
+	# the legacy vendor/product parameters.
+	grep -q '^usbserial ' /proc/modules 2>/dev/null && USBSERIAL_MODULE=1
+
+	if [ "$USBSERIAL_MODULE" -eq 1 ]; then
+		modprobe -r usbserial 2>/dev/null
+
+		# Do not rely on the modprobe exit status. Some older modprobe
+		# implementations return an error after removing the module.
+		if ! grep -q '^usbserial ' /proc/modules 2>/dev/null; then
+			$LOGI "3G MODEM - loading usbserial module ($BIND_VENDOR:$BIND_PRODUCT)"
+			modprobe usbserial vendor=0x$BIND_VENDOR product=0x$BIND_PRODUCT 2>/dev/null ||
+				insmod usbserial vendor=0x$BIND_VENDOR product=0x$BIND_PRODUCT
+			sleep 1
+			isDiag # --> TTYS
+
+			[ -n "$TTYS" ] && {
+				MODULE="usbserial"
+				$LOGI "3G MODEM found - using usbserial module"
+				return 0
+			}
+		fi
+	fi
+
+	return 1
+}
+
 searchDiag() {
 	local MODULES="cdc-acm option sierra"
 	local PATHDIAG="/sys/bus/usb/devices"
@@ -154,38 +204,21 @@ searchDiag() {
 		} || {
 			$LOGI "3G MODEM not found by $MODULES module. Trying usbserial ..."
 
-			lsmod | grep -q usbserial && {
-				echo "$VENDOR $PRODUCT" > /sys/bus/usb-serial/drivers/generic/new_id
-			} || {
-				[ -n "$VENDOR" -a -n "$PRODUCT" ] && {
-					$LOGI "3G MODEM - loading usbserial module ($VENDOR:$PRODUCT)"
-					insmod usbserial vendor=0x$VENDOR product=0x$PRODUCT
-				} || {
-					# VENDOR/PRODUCT unknown, so try for every possible device...
-					for DEVICENAME in $(ls /sys/bus/usb/devices/ | grep -v ":" | grep "-"); do
-						PATHDEV="$PATHDIAG/$DEVICENAME"
-						[ -f "$PATHDEV/idVendor" -a -f "$PATHDEV/idProduct" -a -f "$PATHDEV/uevent" ] || continue # skip
+			if [ -n "$VENDOR" ] && [ -n "$PRODUCT" ]; then
+				bindUsbserialGeneric "$VENDOR" "$PRODUCT"
+			else
+				# VENDOR/PRODUCT unknown, so try every possible device.
+				for DEVICENAME in $(ls /sys/bus/usb/devices/ | grep -v ":" | grep "-"); do
+					PATHDEV="$PATHDIAG/$DEVICENAME"
+					[ -f "$PATHDEV/idVendor" ] && [ -f "$PATHDEV/idProduct" ] && [ -f "$PATHDEV/uevent" ] || continue # skip
 
-						VENDOR=$(cat "$PATHDEV/idVendor")	# vendor
-						PRODUCT=$(cat "$PATHDEV/idProduct")	# product
-						$LOGI "3G MODEM - try to load usbserial module ($VENDOR:$PRODUCT) for device $DEVICENAME ..."
+					VENDOR=$(cat "$PATHDEV/idVendor")	# vendor
+					PRODUCT=$(cat "$PATHDEV/idProduct")	# product
+					$LOGI "3G MODEM - try USB serial drivers ($VENDOR:$PRODUCT) for device $DEVICENAME ..."
 
-						modprobe -r usbserial
-						insmod usbserial vendor=0x$VENDOR product=0x$PRODUCT
-						sleep 1
-						isDiag # --> TTYS
-						[ -n "$TTYS" ] && {
-							# found
-							$LOGI "3G MODEM found - using usbserial module"
-							break
-						}
-					done
-				}
-				sleep 1
-
-				isDiag # --> TTYS
-				[ -n "$TTYS" ] && MODULE="usbserial"
-			}
+					bindUsbserialGeneric "$VENDOR" "$PRODUCT" && break
+				done
+			fi
 		}
 	}
 
@@ -208,7 +241,7 @@ searchDiag() {
 
 findPath() {
 	case "$MODULE" in
-		cdc-acm)		MPATH="/sys/bus/usb/drivers/cdc_acm/new_id" ;;
+		cdc-acm|cdc_acm)	MPATH="/sys/bus/usb/drivers/cdc_acm/new_id"; MODULE="cdc-acm" ;;
 		option)			MPATH="/sys/bus/usb-serial/drivers/option1/new_id" ;;
 		sierra)			MPATH="/sys/bus/usb-serial/drivers/sierra/new_id" ;;
 		usbserial_generic)	MPATH="/sys/bus/usb-serial/drivers/generic/new_id"; MODULE="usbserial" ;;
