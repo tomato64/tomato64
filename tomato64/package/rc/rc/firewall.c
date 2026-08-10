@@ -357,7 +357,8 @@ char **layer7_in;
  */
 static void ipt_layer7_inbound(void)
 {
-	int en, i, j;
+	int en, i;
+	unsigned int j;
 	char **p;
 
 	if (!layer7_in) return;
@@ -686,7 +687,8 @@ static void save_webmon(void)
 
 static void ipt_webmon(void)
 {
-	int wmtype, clear, i, j;
+	int wmtype, clear, i;
+	unsigned int j;
 	char t[512];
 	char src[128];
 	char webdomain[100];
@@ -835,7 +837,8 @@ static void raw_table(void)
 
 static void mangle_table(void)
 {
-	int ttl, i, j;
+	int ttl, i;
+	unsigned int j;
 #ifdef TCONFIG_BCMARM
 	char lan_class[32];
 	int n;
@@ -872,20 +875,20 @@ static void mangle_table(void)
 		else
 			p = NULL;
 
-		for (i = 1; i <= mwan_count; i++) {
-			wanface[i - 1] = wanfaces[i - 1].iface[0].name;
+		for (j = 1; j <= mwan_count; j++) {
+			wanface[j - 1] = wanfaces[j - 1].iface[0].name;
 		}
 
 		if (p) {
 			modprobe("xt_HL");
 
-			for (i = 1; i <= mwan_count; i++) {
-				if (wanup[i - 1] && *wanface[i - 1]) {
+			for (j = 1; j <= mwan_count; j++) {
+				if (wanup[j - 1] && *wanface[j - 1]) {
 					/* set TTL on primary WANx iface only */
 					ipt_write("-I PREROUTING -i %s -j TTL --ttl-%s %d\n"
 					          "-I POSTROUTING -o %s -j TTL --ttl-%s %d\n",
-					          wanface[i - 1], p, ttl,
-					          wanface[i - 1], p, ttl);
+					          wanface[j - 1], p, ttl,
+					          wanface[j - 1], p, ttl);
 				}
 			}
 
@@ -907,9 +910,9 @@ static void mangle_table(void)
 		if (nvram_match("DSCP_fix_enable", "1")) {
 			modprobe("xt_DSCP");
 
-			for (i = 1; i <= mwan_count; i++) {
-				if (wanup[i - 1] && *wanface[i - 1])
-					ipt_write("-I PREROUTING -i %s -j DSCP --set-dscp 0\n", wanface[i - 1]);
+			for (j = 1; j <= mwan_count; j++) {
+				if (wanup[j - 1] && *wanface[j - 1])
+					ipt_write("-I PREROUTING -i %s -j DSCP --set-dscp 0\n", wanface[j - 1]);
 			}
 		}
 	}
@@ -975,7 +978,8 @@ static void nat_table(void)
 	char src[64];
 	char t[512];
 	char *p, *c, *b;
-	int i, j;
+	int i;
+	unsigned int j;
 	char proto_key[16], ip_key[24], if_key[16], name[8];
 #ifndef TCONFIG_BCMARM
 	int n;
@@ -1181,8 +1185,8 @@ static void nat_table(void)
 	pptpc_firewall("POSTROUTING", p, ipt_write);
 #endif
 
-	for (i = 1; i <= mwan_count; i++) {
-		snprintf(name, sizeof(name), (i == 1 ? "wan" : "wan%d"), i);
+	for (j = 1; j <= mwan_count; j++) {
+		snprintf(name, sizeof(name), (j == 1 ? "wan" : "wan%u"), j);
 		snprintf(proto_key, sizeof(proto_key), "%s_proto", name);
 		snprintf(ip_key, sizeof(ip_key), "%s_modem_ipaddr", name);
 		snprintf(if_key, sizeof(if_key), "%s_ifname", name);
@@ -1221,6 +1225,7 @@ static void filter_input(void)
 	char *sec;
 	char *hit;
 	int i, n;
+	unsigned int mwan;
 	char *p, *c;
 	char lanN_ifname[] = "lanXX_ifname";
 	char lanN_ifname2[] = "lanXX_ifname";
@@ -1232,8 +1237,8 @@ static void filter_input(void)
 	ipt_bwlimit(3);
 #endif
 
-	for (i = 1; i <= mwan_count; i++) {
-		foreach_wan_input(wanup[i - 1], wanfaces[i - 1]);
+	for (mwan = 1; mwan <= mwan_count; mwan++) {
+		foreach_wan_input(wanup[mwan - 1], wanfaces[mwan - 1]);
 	}
 
 	ipt_write("-A INPUT -m state --state INVALID -j DROP\n"
@@ -1365,8 +1370,8 @@ static void filter_input(void)
 	 * of security, so allow to disable it via nvram variable.
 	 */
 	if (nvram_invmatch("wan_dhcp_pass", "0")) {
-		for (n = 1; n <= mwan_count; n++) {
-			snprintf(buf, sizeof(buf), (n == 1 ? "wan" : "wan%d"), n);
+		for (mwan = 1; mwan <= mwan_count; mwan++) {
+			snprintf(buf, sizeof(buf), (mwan == 1 ? "wan" : "wan%u"), mwan);
 			if (using_dhcpc(buf)) {
 				ipt_write("-A INPUT -p udp --sport 67 --dport 68 -j %s\n", chain_in_accept);
 				break;
@@ -1923,6 +1928,7 @@ int start_firewall(void)
 	char *c;
 	char *wanface[MWAN_MAX];
 	int n, enable_rp_filter;
+	unsigned int mwan;
 	int wanproto;
 	char *iptrestore_argv[] = { "iptables-restore", (char *)ipt_fname, NULL };
 #ifdef TCONFIG_IPV6
@@ -1936,9 +1942,9 @@ int start_firewall(void)
 	memset(wanup, 0, sizeof(wanup));
 	memset(wanfaces, 0, sizeof(wanfaces));
 
-	for (n = 1; n <= mwan_count; n++) {
-		snprintf(s, sizeof(s), (n == 1 ? "wan" : "wan%d"), n);
-		wanup[n - 1] = check_wanup(s);
+	for (mwan = 1; mwan <= mwan_count; mwan++) {
+		snprintf(s, sizeof(s), (mwan == 1 ? "wan" : "wan%u"), mwan);
+		wanup[mwan - 1] = check_wanup(s);
 	}
 
 	ipv6_enabled = ipv6_enabled();
@@ -2058,10 +2064,10 @@ int start_firewall(void)
 		strlcpy(lanmask[n], nvram_safe_get(buf), sizeof(lanmask[n]));
 	}
 
-	for (n = 1; n <= mwan_count; n++) {
-		snprintf(buf, sizeof(buf), (n == 1 ? "wan" : "wan%d"), n);
-		memcpy(&wanfaces[n - 1], get_wanfaces(buf), sizeof(wanfaces[n - 1]));
-		wanface[n - 1] = wanfaces[n - 1].iface[0].name;
+	for (mwan = 1; mwan <= mwan_count; mwan++) {
+		snprintf(buf, sizeof(buf), (mwan == 1 ? "wan" : "wan%u"), mwan);
+		memcpy(&wanfaces[mwan - 1], get_wanfaces(buf), sizeof(wanfaces[mwan - 1]));
+		wanface[mwan - 1] = wanfaces[mwan - 1].iface[0].name;
 	}
 
 #ifdef TCONFIG_IPV6
@@ -2089,16 +2095,16 @@ int start_firewall(void)
 			snprintf(s, sizeof(s), "/proc/sys/net/ipv4/conf/%.29s/rp_filter", dirent->d_name);
 			enable_rp_filter = 1;
 
-			for (n = 1; n <= mwan_count; n++) {
-				snprintf(buf, sizeof(buf), (n == 1 ? "wan_ifname" : "wan%d_ifname"), n);
+			for (mwan = 1; mwan <= mwan_count; mwan++) {
+				snprintf(buf, sizeof(buf), (mwan == 1 ? "wan_ifname" : "wan%u_ifname"), mwan);
 				c = nvram_safe_get(buf);
 
 				/* mcast needs rp filter to be turned off only for non default iface */
-				if (!(nvram_match("multicast_pass", "1") || nvram_match("udpxy_enable", "1")) || (strcmp(wanface[n - 1], c) == 0))
+				if (!(nvram_match("multicast_pass", "1") || nvram_match("udpxy_enable", "1")) || (strcmp(wanface[mwan - 1], c) == 0))
 					c = NULL;
 
 				/* in gateway mode, rp_filter blocks pbr */
-				if ((c != NULL && strcmp(dirent->d_name, c) == 0) || (strcmp(dirent->d_name, wanface[n - 1]) == 0)) {
+				if ((c != NULL && strcmp(dirent->d_name, c) == 0) || (strcmp(dirent->d_name, wanface[mwan - 1]) == 0)) {
 					enable_rp_filter = 0;
 					break;
 				}
