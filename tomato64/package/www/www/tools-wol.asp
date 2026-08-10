@@ -22,7 +22,11 @@
 
 //	<% nvram("dhcpd_static,lan_ifname"); %>
 
-var lan_ifnames = [nvram.lan_ifname, nvram.lan1_ifname, nvram.lan2_ifname, nvram.lan3_ifname];
+var lan_ifnames = [];
+for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+	var suffix = (i > 0) ? i : '';
+	lan_ifnames.push(nvram['lan'+suffix+'_ifname']);
+}
 var refresher = null;
 var running = 0;
 
