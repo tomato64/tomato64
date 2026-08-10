@@ -57,8 +57,17 @@ signal3g() {
 	$LOGS "MODEM Signal Strength: RSSI $RSSI dBm"
 }
 
+jsonGet() {
+	local JSON="$1" KEY="$2"
+
+	printf '%s\n' "$JSON" | sed -n \
+		-e "s/.*\"$KEY\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" \
+		-e "s/.*\"$KEY\"[[:space:]]*:[[:space:]]*\([-+0-9.][^,}]*\).*/\1/p" | head -n 1
+}
+
+
 signal4g() {
-	local HCSQ SPEED VALUE CERSSI LOCINFO MCC RSSI RSRP LAC CID SINR ECIO RSRQ CQI1 CQI2 BAND OPERATOR="" BBAND="" i
+	local HCSQ SPEED VALUE CERSSI LOCINFO MCC MCC_CODE MNC_CODE MCCMNC SIGNAL RSSI RSRP LAC CID SINR ECIO RSRQ CQI1 CQI2 BAND OPERATOR="" BBAND="" i
 	local DIAGSFILE="/tmp/switch4g_$PREFIX.diags"
 
 	if [ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ]; then
@@ -178,32 +187,42 @@ signal4g() {
 	elif [ "$MTYPE" == "qmi_wwan" ]; then
 		[ -f "$DIAGSFILE" ] || return
 		SIGNAL=$(uqmiCall "-t 1000 --get-signal-info")
-		SPEED=$(echo "$SIGNAL" | cut -d '"' -f4)
+		SPEED=$(jsonGet "$SIGNAL" type)
 		MCC=$(uqmiCall "-t 1000 --get-serving-system")
-		MCCMNC=$(echo "$MCC" | cut -d "," -f2 | cut -d ":" -f2)$(printf "%02d" $(echo "$MCC" | cut -d "," -f3 | cut -d ":" -f2))
+		MCC_CODE=$(jsonGet "$MCC" plmn_mcc)
+		MNC_CODE=$(jsonGet "$MCC" plmn_mnc)
+		OPERATOR=$(jsonGet "$MCC" plmn_description)
 
-		OPERATOR=$(echo "$MCC" | cut -d "," -f4 | cut -d ":" -f2 | tr -d '"')
+		if [ -n "$MCC_CODE" ] && [ -n "$MNC_CODE" ]; then
+			MCCMNC="${MCC_CODE}$(printf "%02d" "$MNC_CODE")"
+		else
+			MCCMNC="unknown"
+		fi
+
+		[ -n "$OPERATOR" ] || OPERATOR="$MCCMNC"
 		$LOGS "MODEM Current Operator: $OPERATOR"
 
 		case "$SPEED" in
 			"lte")
-				RSSI=$(echo "$SIGNAL" | cut -d "," -f2 | cut -d ":" -f2)
-				RSRQ=$(echo "$SIGNAL" | cut -d "," -f3 | cut -d ":" -f2)
-				RSRP=$(echo "$SIGNAL" | cut -d "," -f4 | cut -d ":" -f2)
-				SINR=$(echo "$SIGNAL" | cut -d ":" -f6 | cut -d "}" -f1 | cut -c1-4)
+				RSSI=$(jsonGet "$SIGNAL" rssi)
+				RSRQ=$(jsonGet "$SIGNAL" rsrq)
+				RSRP=$(jsonGet "$SIGNAL" rsrp)
+				SINR=$(jsonGet "$SIGNAL" snr)
+				[ -n "$SINR" ] || SINR=$(jsonGet "$SIGNAL" sinr)
 				$LOGS "MODEM Current Mode: LTE"
 				$LOGS "MODEM Signal Strength: RSSI $RSSI dBm, RSRP $RSRP dBm, RSRQ $RSRQ dB, SINR $SINR dB"
 				$LOGS "MODEM BTS: MCCMNC $MCCMNC"
 			;;
 			"wcdma" | "umts")
-				RSSI=$(echo "$SIGNAL" | cut -d "," -f2 | cut -d ":" -f2)
-				ECIO=$(echo "$SIGNAL" | cut -d ":" -f4 | cut -d "}" -f1)
-				$LOGS "MODEM Current Mode: $(echo $SPEED | tr '[a-z]' '[A-Z]')"
+				RSSI=$(jsonGet "$SIGNAL" rssi)
+				ECIO=$(jsonGet "$SIGNAL" ecio)
+				$LOGS "MODEM Current Mode: $(echo "$SPEED" | tr '[a-z]' '[A-Z]')"
 				$LOGS "MODEM Signal Strength: RSSI $RSSI dBm, ECIO $ECIO dB"
 				$LOGS "MODEM BTS: MCCMNC $MCCMNC"
 			;;
 			"gsm")
-				RSSI=$(echo "$SIGNAL" | cut -d ":" -f3 | cut -d "}" -f1)
+				RSSI=$(jsonGet "$SIGNAL" signal)
+				[ -n "$RSSI" ] || RSSI=$(jsonGet "$SIGNAL" rssi)
 				$LOGS "MODEM Current Mode: GSM"
 				$LOGS "MODEM Signal Strength: RSSI $RSSI dBm"
 				$LOGS "MODEM BTS: MCCMNC $MCCMNC"
