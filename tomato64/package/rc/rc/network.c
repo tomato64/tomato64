@@ -2127,8 +2127,8 @@ void do_static_routes(int add)
 			}
 		}
 		else {
-			logmsg(LOG_WARNING, "Static route deleted: ifname=%s, metric=%s, dest=%s, gateway=%s, mask=%s", ifname, metric, dest, gateway, mask);
-			route_del(ifname, atoi(metric), dest, gateway, mask);
+			if (route_del(ifname, atoi(metric), dest, gateway, mask) > 0)
+				logmsg(LOG_WARNING, "Static route deleted: ifname=%s, metric=%s, dest=%s, gateway=%s, mask=%s", ifname, metric, dest, gateway, mask);
 		}
 	}
 	free(buf);

@@ -169,8 +169,9 @@ static int route_manip(int cmd, char *name, int metric, char *dst, char *gateway
 
 	if (ioctl(s, cmd, &rt) < 0) {
 		err = errno;
-		/* An existing identical route is not an operational error. */
-		if ((cmd == SIOCADDRT) && (err != EEXIST))
+		/* Existing routes on add and missing routes on delete are expected. */
+		if (!(((cmd == SIOCADDRT) && (err == EEXIST)) ||
+		      ((cmd == SIOCDELRT) && (err == ESRCH))))
 			logerr(__FUNCTION__, __LINE__, name ? : "");
 	}
 
@@ -200,11 +201,15 @@ int route_add(char *name, int metric, char *dst, char *gateway, char *genmask)
 	return route_manip(SIOCADDRT, name, (metric + 1), dst, gateway, genmask);
 }
 
-void route_del(char *name, int metric, char *dst, char *gateway, char *genmask)
+int route_del(char *name, int metric, char *dst, char *gateway, char *genmask)
 {
+	int count = 0;
+
 	while (route_manip(SIOCDELRT, name, (metric + 1), dst, gateway, genmask) == 0) { /* del all! */
-		//
+		count++;
 	}
+
+	return count;
 }
 
 /* configure loopback interface */
