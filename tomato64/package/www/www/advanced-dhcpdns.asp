@@ -294,6 +294,83 @@ function joinIPv6Addr(a) {
 }
 /* IPV6-END */
 
+function addService(fom, service) {
+	if (fom._service.value == '*')
+		return;
+
+	if (fom._service.value.length)
+		fom._service.value += ',';
+
+	fom._service.value += service;
+}
+
+function finishSave(fom, retries) {
+	/* Wait for the first asynchronous submit to complete. */
+	if (form.xhttp) {
+		setTimeout(() => finishSave(fom, retries), 500);
+		return;
+	}
+
+	/* Allow slower routers a little more time to restart dnsmasq. */
+	if (!isup.dnsmasq && retries > 0) {
+		setTimeout(() => finishSave(fom, retries - 1), 1000);
+		return;
+	}
+
+	fom.dnsmasq_safe.value = isup.dnsmasq ? 0 : 1;
+
+	/*
+	 * dnsmasq has already been restarted successfully by the first submit.
+	 * Start a fresh service list so it is not restarted a second time.
+	 */
+	fom._service.value = '';
+
+	if ((fom.dhcpc_minpkt.value != nvram.dhcpc_minpkt) || (fom.dhcpc_custom.value != nvram.dhcpc_custom)) {
+		nvram.dhcpc_minpkt = fom.dhcpc_minpkt.value;
+		nvram.dhcpc_custom = fom.dhcpc_custom.value;
+		fom._service.value = '*'; /* special case: restart all */
+	}
+	else if (fom.dnsmasq_safe.value == 1) {
+		addService(fom, 'dnsmasq-restart'); /* start dnsmasq if safe mode is set */
+	}
+
+	if (fom.dns_intcpt.value != nvram.dns_intcpt) {
+		nvram.dns_intcpt = fom.dns_intcpt.value;
+		addService(fom, 'firewall-restart'); /* special case: restart FW */
+	}
+
+	if (fom.wan_wins.value != nvram.wan_wins) { /* special case: restart vpnservers/pptpd if up */
+		nvram.wan_wins = fom.wan_wins.value;
+/* OPENVPN-BEGIN */
+		for (var i = 1; i <= OVPN_SERVER_COUNT; ++i) {
+			if (isup['vpnserver'+i])
+				addService(fom, 'vpnserver'+i+'-restart');
+		}
+/* OPENVPN-END */
+/* PPTPD-BEGIN */
+		if (isup.pptpd)
+			addService(fom, 'pptpd-restart');
+/* PPTPD-END */
+	}
+/* MDNS-BEGIN */
+	if ((fom.mdns_enable.value != nvram.mdns_enable) || (fom.mdns_reflector.value != nvram.mdns_reflector)) {
+		nvram.mdns_enable = fom.mdns_enable.value;
+		nvram.mdns_reflector = fom.mdns_reflector.value;
+		if (fom.mdns_enable.value == 1)
+			addService(fom, 'mdns-restart'); /* special case: re/start avahi */
+		else
+			addService(fom, 'mdns-stop'); /* special case: stop avahi */
+	}
+/* MDNS-END */
+	fom.dnsmasq_norestart.value = 0;
+	form.submit(fom, 1);
+
+	if (fom.dnsmasq_safe.value == 1)
+		alert('Warning! Dnsmasq Custom configuration contains a disruptive syntax error.\nThe Custom configuration is now excluded to allow dnsmasq to operate');
+
+	waitforme = 0; /* now you can leave the page... */
+}
+
 function save() {
 	if (!verifyFields(null, 0))
 		return;
@@ -419,61 +496,8 @@ function save() {
 	fom._service.value = 'dnsmasq-restart';
 	form.submit(fom, 1);
 
-	/* timeout of 5 seconds should be enough also for slower routers. I hope... */
-	setTimeout(() => {
-		if (!isup.dnsmasq) /* if not up, use safe mode */
-			fom.dnsmasq_safe.value = 1;
-
-		if ((fom.dhcpc_minpkt.value != nvram.dhcpc_minpkt) || (fom.dhcpc_custom.value != nvram.dhcpc_custom)) {
-			nvram.dhcpc_minpkt = fom.dhcpc_minpkt.value;
-			nvram.dhcpc_custom = fom.dhcpc_custom.value;
-			fom._service.value = '*'; /* special case: restart all */
-		}
-		else if (fom.dnsmasq_safe.value == 1) {
-			fom._service.value = 'dnsmasq-restart'; /* start dnsmasq if safe mode is set */
-		}
-
-		if (fom.dns_intcpt.value != nvram.dns_intcpt) {
-			nvram.dns_intcpt = fom.dns_intcpt.value;
-			if (fom._service.value != '*')
-				fom._service.value += ',firewall-restart'; /* special case: restart FW */
-		}
-
-		if (fom.wan_wins.value != nvram.wan_wins) { /* special case: restart vpnservers/pptpd if up */
-			nvram.wan_wins = fom.wan_wins.value;
-			if (fom._service.value != '*') {
-/* OPENVPN-BEGIN */
-				if (isup.vpnserver1)
-					fom._service.value += ',vpnserver1-restart';
-				if (isup.vpnserver2)
-					fom._service.value += ',vpnserver2-restart';
-/* OPENVPN-END */
-/* PPTPD-BEGIN */
-				if (isup.pptpd)
-					fom._service.value += ',pptpd-restart';
-/* PPTPD-END */
-			}
-		}
-/* MDNS-BEGIN */
-		if ((fom.mdns_enable.value != nvram.mdns_enable) || (fom.mdns_reflector.value != nvram.mdns_reflector)) {
-			nvram.mdns_enable = fom.mdns_enable.value;
-			nvram.mdns_reflector = fom.mdns_reflector.value;
-			if (fom._service.value != '*') {
-				if (fom.mdns_enable.value == 1)
-					fom._service.value += ',mdns-restart'; /* special case: re/start avahi */
-				else
-					fom._service.value += ',mdns-stop'; /* special case: stop avahi */
-			}
-		}
-/* MDNS-END */
-		fom.dnsmasq_norestart.value = 0;
-		form.submit(fom, 1);
-
-		if (fom.dnsmasq_safe.value == 1)
-			alert('Warning! Dnsmasq Custom configuration contains a disruptive syntax error.\nThe Custom configuration is now excluded to allow dnsmasq to operate');
-
-		waitforme = 0; /* now you can leave the page... */
-	}, 5000);
+	/* Check the result after five seconds and retry briefly on slower routers. */
+	setTimeout(() => finishSave(fom, 5), 5000);
 }
 
 function init() {
