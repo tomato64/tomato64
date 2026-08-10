@@ -237,18 +237,12 @@ function save() {
 }
 
 function init() {
-/* BCMARM-BEGIN */
-	if (((c = cookie.get(cprefix + '_notes_vis')) != null) && (c == '1')) {
-		toggleVisibility(cprefix, 'notes');
-	}
-	eventHandler();
-/* BCMARM-END */
-/* BCMARM-NO-BEGIN */
 /* BCMWL6-BEGIN */
 	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
 		toggleVisibility(cprefix, 'notes');
+
+	eventHandler();
 /* BCMWL6-END */
-/* BCMARM-NO-END */
 }
 </script>
 </head>
@@ -384,7 +378,7 @@ function init() {
 						value: nvram['wl'+u+'_txpwr'] },
 /* BCMARM-END */
 /* BCMARM-NO-BEGIN */
-				{ title: 'Transmit Power', name: 'wl'+u+'_txpwr', type: 'text', maxlen: 4, size: 5,
+				{ title: 'Transmit Power', name: 'wl'+u+'_txpwr', type: 'text', maxlen: 3, size: 5,
 					suffix: hp ?
 						' <small>mW (before amplification)<\/small>&nbsp;&nbsp;<small>(range: 5 - 251; default: 10)<\/small>' :
 						' <small>mW<\/small>&nbsp;&nbsp;<small>(range: 5 - 400, override regulatory and other limitations; use 0 for country default)<\/small>',
