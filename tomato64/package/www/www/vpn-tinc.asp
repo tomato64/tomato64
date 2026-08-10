@@ -508,7 +508,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Status</div>
+<div class="section-title">Tinc Mesh VPN Status</div>
 <div class="section">
 	<div class="fields">
 		<span id="_tinc_notice"></span><input type="button" id="_tinc_button">&nbsp; <img src="spin.svg" alt="" id="spin">

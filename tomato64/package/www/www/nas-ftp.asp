@@ -309,7 +309,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Status</div>
+<div class="section-title">FTP Server Status</div>
 <div class="section">
 	<div class="fields">
 		<span id="_ftpd_notice"></span><input type="button" id="_ftpd_button" value="">

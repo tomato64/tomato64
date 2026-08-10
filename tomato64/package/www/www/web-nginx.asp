@@ -164,7 +164,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Status</div>
+<div class="section-title">Nginx Status</div>
 <div class="section">
 	<div class="fields">
 		<span id="_nginx_notice"></span><input type="button" id="_nginx_button">

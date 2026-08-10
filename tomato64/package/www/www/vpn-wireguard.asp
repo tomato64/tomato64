@@ -2085,7 +2085,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Status</div>
+<div class="section-title">Wireguard Status</div>
 <div class="section">
 	<div class="fields">
 		<script>

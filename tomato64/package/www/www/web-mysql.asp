@@ -213,7 +213,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Status</div>
+<div class="section-title">MySQL Server Status</div>
 <div class="section">
 	<div class="fields">
 		<span id="_mysqld_notice"></span><input type="button" id="_mysqld_button">

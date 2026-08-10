@@ -290,7 +290,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Status</div>
+<div class="section-title">Media Server Status</div>
 <div class="section">
 	<div class="fields">
 		<span id="_minidlna_notice"></span><input type="button" id="_minidlna_button" value="">

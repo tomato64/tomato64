@@ -171,7 +171,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Status</div>
+<div class="section-title">TOR Status</div>
 <div class="section">
 	<div class="fields">
 		<span id="_tor_notice"></span>
