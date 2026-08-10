@@ -4,6 +4,11 @@ unexport GIT_DIR
 HASH=$(shell git rev-parse HEAD)
 HASH_SHORT=$(shell git rev-parse --short HEAD)
 
+# Seven-character commit ID embedded in the GUI during image creation.
+# It may be overridden by the build environment, e.g. GIT_HASH=1234567.
+GIT_HASH ?= $(shell hash=$$(git -C "$(CURDIR)" rev-parse --verify HEAD 2>/dev/null); \
+	if [ -n "$$hash" ]; then printf '%.7s' "$$hash"; else printf 'unknown'; fi)
+
 all:
 
 clean:
@@ -34,6 +39,9 @@ install:
 			-e "/^<!--$$/,/^-->$$/d" \
 			-e "/^<!--$$/,/^-->$$/! { s,^\s\+, , }" $$F > $(INSTALLDIR)/www/$$F; \
 	done
+
+# Replace the build-time placeholder after about.asp has been copied/squashed.
+	sed -i $(INSTALLDIR)/www/about.asp -e "s,@GIT_HASH@,$(GIT_HASH),g"
 
 # Only include MultiWAN options if MULTIWAN is configured in.
 ifneq ($(TCONFIG_MULTIWAN),y)
