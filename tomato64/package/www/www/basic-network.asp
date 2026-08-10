@@ -1972,28 +1972,18 @@ REMOVE-END */
 function earlyInit() {
 	var mwan = E('_mwan_num');
 /* TOMATO64-REMOVE-BEGIN */
-	if (nvram.wan_ifnameX.length < 1)
-		mwan.options[0].disabled = 1;
-	if (nvram.wan2_ifnameX.length < 1)
-		mwan.options[1].disabled = 1;
-/* MULTIWAN-BEGIN */
-	if (nvram.wan3_ifnameX.length < 1)
-		mwan.options[2].disabled = 1;
-	if (nvram.wan4_ifnameX.length < 1)
-		mwan.options[3].disabled = 1;
-/* MULTIWAN-END */
+	for (var uidx = 1; uidx <= MAXWAN_NUM; ++uidx) {
+		var u = (uidx > 1) ? uidx : '';
+		if (nvram['wan'+u+'_ifnameX'].length < 1)
+			mwan.options[uidx - 1].disabled = 1;
+	}
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-	if (nvram.wan_ifnameX.length < 1 && nvram.wan_ifnameX_vlan.length < 1)
-		mwan.options[0].disabled = 1;
-	if (nvram.wan2_ifnameX.length < 1 && nvram.wan2_ifnameX_vlan.length < 1)
-		mwan.options[1].disabled = 1;
-/* MULTIWAN-BEGIN */
-	if (nvram.wan3_ifnameX.length < 1 && nvram.wan3_ifnameX_vlan.length < 1)
-		mwan.options[2].disabled = 1;
-	if (nvram.wan4_ifnameX.length < 1 && nvram.wan4_ifnameX_vlan.length < 1)
-		mwan.options[3].disabled = 1;
-/* MULTIWAN-END */
+	for (var uidx = 1; uidx <= MAXWAN_NUM; ++uidx) {
+		var u = (uidx > 1) ? uidx : '';
+		if (nvram['wan'+u+'_ifnameX'].length < 1 && nvram['wan'+u+'_ifnameX_vlan'].length < 1)
+			mwan.options[uidx - 1].disabled = 1;
+	}
 /* TOMATO64-END */
 
 	verifyFields(null, 1);
@@ -2071,12 +2061,13 @@ function init() {
 		}
 	}
 	ckdst = nvram.mwan_ckdst.split(',');
+	var mwanOptions = [];
+	for (var uidx = 1; uidx <= MAXWAN_NUM; ++uidx)
+		mwanOptions.push([uidx.toString(), uidx+' WAN']);
+
 	createFieldTable('', [
-		{ title: 'Number of logical WANs', name: 'mwan_num', type: 'select', options: [['1','1 WAN'],['2','2 WAN']
-/* MULTIWAN-BEGIN */
-											   ,['3','3 WAN'],['4','4 WAN']
-/* MULTIWAN-END */
-			], value: nvram.mwan_num, suffix: '&nbsp; <small>Please configure <a href="advanced-vlan.asp">VLAN<\/a> first<\/small>' },
+		{ title: 'Number of logical WANs', name: 'mwan_num', type: 'select', options: mwanOptions,
+			value: nvram.mwan_num, suffix: '&nbsp; <small>Please configure <a href="advanced-vlan.asp">VLAN<\/a> first<\/small>' },
 		{ title: 'Tune route cache', name: 'f_mwan_tune_gc', type: 'checkbox', suffix: '&nbsp; <small>for multiwan in load balancing mode<\/small>', value: (nvram['mwan_tune_gc'] == 1) },
 		{ title: 'Check connections every', name: 'mwan_cktime', type: 'select', options: [
 			['0','Disabled'],['30','30 seconds'],['60','1 minute*'],['120','2 minutes'],['180','3 minutes'],
