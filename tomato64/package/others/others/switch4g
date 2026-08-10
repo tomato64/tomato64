@@ -549,6 +549,55 @@ isDiag() {
 	TTYS=$(ls -d $PATHDIAG/$DEVICENAME/${DEVICENAME}*/tty?* 2>/dev/null | sed -e "s/.*\\/\\//.*/g" -e "s/.*\\//\\/dev\\//g" | tr "\n" " " | sed -e "s/  */ /g" -e "s,^ *,,; s, *$,,")
 }
 
+bindUsbserialGeneric() {
+	local BIND_VENDOR="$1" BIND_PRODUCT="$2"
+	local USBSERIAL_MODULE=0
+
+	[ -n "$BIND_VENDOR" ] && [ -n "$BIND_PRODUCT" ] || return 1
+
+	# Dynamic IDs work with current kernels and also cover configurations
+	# where the usbserial core is built in.
+	modprobe usbserial 2>/dev/null
+	if [ -w /sys/bus/usb-serial/drivers/generic/new_id ]; then
+		$LOGI "4G MODEM - binding usbserial generic driver ($BIND_VENDOR:$BIND_PRODUCT)"
+		echo "$BIND_VENDOR $BIND_PRODUCT" > /sys/bus/usb-serial/drivers/generic/new_id 2>/dev/null
+		sleep 1
+		isDiag # --> TTYS
+
+		[ -n "$TTYS" ] && {
+			$LOGI "4G MODEM - found: using usbserial generic driver"
+			return 0
+		}
+	fi
+
+	# Some older kernels expose generic/new_id but do not reprobe the
+	# generic driver correctly. If usbserial is a module, reload it with
+	# the legacy vendor/product parameters.
+	grep -q '^usbserial ' /proc/modules 2>/dev/null && USBSERIAL_MODULE=1
+	modprobe -r option 2>/dev/null
+
+	if [ "$USBSERIAL_MODULE" -eq 1 ]; then
+		modprobe -r usbserial 2>/dev/null
+
+		# Do not rely on the modprobe exit status. Some older implementations
+		# return an error even though the module has been removed.
+		if ! grep -q '^usbserial ' /proc/modules 2>/dev/null; then
+			$LOGI "4G MODEM - loading usbserial module ($BIND_VENDOR:$BIND_PRODUCT)"
+			modprobe usbserial vendor=0x$BIND_VENDOR product=0x$BIND_PRODUCT 2>/dev/null ||
+				insmod usbserial vendor=0x$BIND_VENDOR product=0x$BIND_PRODUCT
+			sleep 1
+			isDiag # --> TTYS
+
+			[ -n "$TTYS" ] && {
+				$LOGI "4G MODEM - found: using usbserial module"
+				return 0
+			}
+		fi
+	fi
+
+	return 1
+}
+
 searchDiag() {
 	DEVNR=""
 	local TTYS="" UQMIRET="" UQMIPID=""
@@ -562,37 +611,30 @@ searchDiag() {
 		non-hilink|huawei-non-hilink|hw-ether)
 			isDiag # --> TTYS
 
+			# Prefer the dedicated modem serial driver before falling back to
+			# the generic usbserial driver.
 			if [ -z "$TTYS" ]; then
-				if [ "$(lsmod | grep usbserial | wc -l)" -gt 0 ] && [ -n "$VENDOR" ] && [ -n "$PRODUCT" ]; then
-					$LOGI "4G MODEM - add ($VENDOR:$PRODUCT) to already loaded usbserial module"
-					echo "$VENDOR $PRODUCT" > /sys/bus/usb-serial/drivers/generic/new_id
-				elif [ -n "$VENDOR" ] && [ -n "$PRODUCT" ]; then
-					$LOGI "4G MODEM - loading usbserial module ($VENDOR:$PRODUCT)"
-					insmod usbserial vendor=0x$VENDOR product=0x$PRODUCT
+				modprobe option 2>/dev/null
+				sleep 1
+				isDiag # --> TTYS
+			fi
+
+			if [ -z "$TTYS" ]; then
+				if [ -n "$VENDOR" ] && [ -n "$PRODUCT" ]; then
+					bindUsbserialGeneric "$VENDOR" "$PRODUCT"
 				else
-					# VENDOR/PRODUCT unknown, so try for every possible device...
+					# VENDOR/PRODUCT unknown, so try every possible device.
 					for DEVICENAME in $(ls "$PATHDIAG"/ | grep -v ":" | grep "-"); do
 						PATHDEV="$PATHDIAG/$DEVICENAME"
-						[ -f $PATHDEV/idVendor ] && [ -f $PATHDEV/idProduct ] && [ -f $PATHDEV/uevent ] || continue # skip
+						[ -f "$PATHDEV/idVendor" ] && [ -f "$PATHDEV/idProduct" ] && [ -f "$PATHDEV/uevent" ] || continue # skip
 
-						VENDOR=$(cat "$PATHDEV"/idVendor 2>/dev/null)	# vendor
-						PRODUCT=$(cat "$PATHDEV"/idProduct 2>/dev/null)	# product
-						$LOGI "4G MODEM - try to load usbserial module ($VENDOR:$PRODUCT) for device $DEVICENAME ..."
+						VENDOR=$(cat "$PATHDEV/idVendor" 2>/dev/null)	# vendor
+						PRODUCT=$(cat "$PATHDEV/idProduct" 2>/dev/null)	# product
+						$LOGI "4G MODEM - try USB serial drivers ($VENDOR:$PRODUCT) for device $DEVICENAME ..."
 
-						modprobe -r usbserial
-						insmod usbserial vendor=0x$VENDOR product=0x$PRODUCT
-						sleep 1
-						isDiag # --> TTYS
-						[ -n "$TTYS" ] && {
-							# found
-							$LOGI "4G MODEM - found: using usbserial module"
-							break
-						}
+						bindUsbserialGeneric "$VENDOR" "$PRODUCT" && break
 					done
 				fi
-				sleep 1
-
-				isDiag # --> TTYS
 			fi
 
 			if [ -n "$TTYS" ]; then
