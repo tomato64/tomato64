@@ -54,84 +54,96 @@ endif
 ifneq ($(TCONFIG_DNSCRYPT),y)
 	rm -f $(INSTALLDIR)/rom/etc/dnscrypt-resolvers.csv
 else
-	@resolvers_path=$(INSTALLDIR)"/rom/etc"; \
-	resolvers_md="$${resolvers_path}/public-resolvers.md"; \
+	@resolvers_path="$(INSTALLDIR)/rom/etc"; \
 	resolvers_file="$${resolvers_path}/dnscrypt-resolvers.csv"; \
+	resolvers_download="$${resolvers_file}.download"; \
+	resolvers_signature="$${resolvers_download}.minisig"; \
 	resolvers_file_tmp="$${resolvers_file}.tmp"; \
-	resolvers_url="https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/public-resolvers.md"; \
-	count=0; \
-	while [ $${count} -lt 6 ]; do \
-	    printf "\nRetrieving the list of public DNSCrypt resolvers...\n"; \
-	    /usr/bin/wget --secure-protocol=TLSv1_2 -T 10 -t 1 "$${resolvers_url}" -O "$${resolvers_md}"; \
+	resolvers_url="https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v1/dnscrypt-resolvers.csv"; \
+	resolvers_signature_url="$${resolvers_url}.minisig"; \
+	minisign_key="RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3"; \
+	err_file="../../error_download_dnscrypt_resolvers"; \
+	use_local_copy() { \
+	    ret="$$(date): $$1 Using bundled dnscrypt-resolvers.csv file."; \
+	    printf "\n\n%s\n\n" "$${ret}"; \
+	    echo "$${ret}" >> "$${err_file}"; \
+	    rm -f "$${resolvers_download}" "$${resolvers_signature}" "$${resolvers_file_tmp}"; \
+	    cp rom/etc/dnscrypt-resolvers.csv "$${resolvers_file}"; \
 	    if [ $${?} -ne 0 ]; then \
-		count=`expr $${count} + 1`; \
-		if [ $${count} -gt 5 ]; then \
-		    err_file="../../error_download_dnscrypt_resolvers"; \
-		    ret=$$(date)": DNSCrypt resolvers list download error, check your internet connection! Using recently downloaded file!"; \
-		    printf "\n\n"$${ret}"\n\n"; \
-		    echo $${ret} >> $${err_file}; \
-		    cp rom/etc/dnscrypt-resolvers.csv $${resolvers_file}; \
-		    if [ $${?} -ne 0 ]; then \
-			ret=$$(date)": No local copy of the dnscrypt-resolvers.csv file has been found, aborting!"; \
-			printf "\n\n"$${ret}"\n\n"; \
-			echo $${ret} >> $${err_file}; \
-			exit 1; \
+		ret="$$(date): No bundled dnscrypt-resolvers.csv file has been found, aborting!"; \
+		printf "\n\n%s\n\n" "$${ret}"; \
+		echo "$${ret}" >> "$${err_file}"; \
+		exit 1; \
+	    fi; \
+	}; \
+	if ! command -v minisign >/dev/null 2>&1; then \
+	    use_local_copy "Minisign is not installed; downloaded resolver list cannot be authenticated."; \
+	else \
+	    count=0; \
+	    while [ $${count} -lt 6 ]; do \
+		printf "\nRetrieving the list of public DNSCrypt resolvers and its signature...\n"; \
+		if /usr/bin/wget --secure-protocol=TLSv1_2 -T 10 -t 1 "$${resolvers_url}" -O "$${resolvers_download}" && \
+		   /usr/bin/wget --secure-protocol=TLSv1_2 -T 10 -t 1 "$${resolvers_signature_url}" -O "$${resolvers_signature}"; then \
+		    printf "\nVerifying the DNSCrypt resolvers signature...\n"; \
+		    if minisign -Vm "$${resolvers_download}" -x "$${resolvers_signature}" -P "$${minisign_key}"; then \
+			printf "\nNormalizing the DNSCrypt resolvers CSV...\n"; \
+			if LC_ALL=C awk ' \
+			    { \
+				line = $$0; \
+				sub(/\r$$/, "", line); \
+				out = ""; \
+				quoted = 0; \
+				for (i = 1; i <= length(line); i++) { \
+				    c = substr(line, i, 1); \
+				    if (c == "\"") { \
+					if (quoted && substr(line, i + 1, 1) == "\"") { \
+					    out = out "\""; \
+					    i++; \
+					} \
+					else { \
+					    quoted = !quoted; \
+					} \
+				    } \
+				    else if (c == "," && quoted) { \
+					out = out ";"; \
+				    } \
+				    else { \
+					out = out c; \
+				    } \
+				} \
+				if (quoted) exit 2; \
+				print out; \
+			    }' "$${resolvers_download}" > "$${resolvers_file_tmp}" && \
+			   LC_ALL=C awk -F, ' \
+			    NR == 1 { \
+				if ($$1 != "Name" || NF != 14) exit 1; \
+			    } \
+			    NF != 14 { exit 1; } \
+			    END { if (NR < 2) exit 1; }' "$${resolvers_file_tmp}"; then \
+			    sed -i "s/'/\\\'/g" "$${resolvers_file_tmp}"; \
+			    mv -f "$${resolvers_file_tmp}" "$${resolvers_file}"; \
+			    rm -f "$${resolvers_download}" "$${resolvers_signature}"; \
+			    printf "\nDone\n\n"; \
+			    count=6; \
+			else \
+			    use_local_copy "Authenticated DNSCrypt resolvers list is not a valid 14-column CSV."; \
+			    count=6; \
+			fi; \
+		    else \
+			use_local_copy "DNSCrypt resolvers signature verification failed."; \
+			count=6; \
+		    fi; \
+		else \
+		    rm -f "$${resolvers_download}" "$${resolvers_signature}"; \
+		    count=$$((count + 1)); \
+		    if [ $${count} -gt 5 ]; then \
+			use_local_copy "DNSCrypt resolvers list or signature download error, check your internet connection!"; \
+		    else \
+			sleep 2; \
 		    fi; \
 		fi; \
-		sleep 2; \
-	    else \
-		# Parse the v2 resolvers file into v1 csv (based on John Bacho script: https://github.com/john9527/asuswrt-merlin/commit/35858017ed807d7f087cd0318d32fe2889eae23a); \
-		printf "\nParsing the list of public DNSCrypt resolvers...please wait\n"; \
-		sdns_decode="/tmp/sdns_decode.dat"; \
-		echo "Name,\"Full name\",\"Description\",\"Location\",\"Coordinates\",URL,Version,DNSSEC validation,No logs,Namecoin,Resolver address,Provider name,Provider public key,Provider public key TXT record" > $${resolvers_file_tmp}; \
-\
-		oldifs=$${IFS}; \
-		IFS=$$'\n'; \
-		for sdns in $$(cat $${resolvers_md} | grep -E '^sdns|^##'); do \
-		    echo $${sdns} | grep -q "##" >/dev/null 2>&1; \
-		    if [ $${?} -eq 0 ]; then \
-			desc=$$(echo $${sdns} | sed -r 's/.{3}//'); \
-			continue; \
-		    fi; \
-\
-		    sdns=$$(echo $${sdns} | sed -r 's/.{7}//'); \
-		    echo $${sdns}== | tr -- "-_ " "+/=" | base64 -d > $${sdns_decode}; \
-\
-		    type=$$(dd bs=1 count=1 skip=0 <$${sdns_decode} 2>/dev/null | hexdump -e '1/1 "%d"'); \
-		    if [ $${type} -ne 1 ]; then continue; fi; \
-\
-		    props=$$(dd bs=1 count=1 skip=1 <$${sdns_decode} 2>/dev/null | hexdump -e '1/1 "%d"'); \
-		    if [ $$(( $${props}&1 )) -eq 1 ]; then dnssec="yes"; else dnssec="no"; fi; \
-		    if [ $$(( $${props}&2 )) -eq 2 ]; then logs="yes"; else logs="no"; fi; \
-		    if [ $$(( $${props}&4 )) -eq 4 ]; then filter="yes"; else filter="no"; fi; \
-\
-		    addr_length=$$(dd bs=1 count=1 skip=9 <$${sdns_decode} 2>/dev/null | hexdump -e '1/1 "%d"'); \
-		    address=$$(dd bs=1 count=$${addr_length} skip=10 <$${sdns_decode} 2>/dev/null); \
-\
-		    let pk_length_offset=10+$${addr_length}; \
-		    pk_length=$$(dd bs=1 count=1 skip=$${pk_length_offset} <$${sdns_decode} 2>/dev/null | hexdump -e '1/1 "%d"'); \
-		    let pk_offset=$${pk_length_offset}+1; \
-		    pk=$$(dd bs=1 count=$${pk_length} skip=$${pk_offset} <$${sdns_decode} 2>/dev/null | hexdump -e '1/2 "%04X:"' | sed 's/\(.\)\(.\)\(.\)\(.\)\(.\)/\3\4\1\2\5/g' | sed 's/.$$//'); \
-\
-		    let name_length_offset=$${pk_offset}+$${pk_length}; \
-		    name_length=$$(dd bs=1 count=1 skip=$${name_length_offset} <$${sdns_decode} 2>/dev/null | hexdump -e '1/1 "%d"'); \
-		    let name_offset=$${name_length_offset}+1; \
-		    name=$$(dd bs=1 count=$${name_length} skip=$${name_offset} <$${sdns_decode} 2>/dev/null); \
-\
-		    echo $${name} | grep -q "cryptostorm" >/dev/null 2>&1; \
-		    if [ $${?} -eq 0 ]; then namecoin="yes"; else namecoin="no"; fi; \
-\
-		    echo "$${desc},$${desc},,,,,1,$${dnssec},$${logs},$${namecoin},$${address},$${name},$${pk}," >> $${resolvers_file_tmp}; \
-		done; \
-		IFS=$${oldifs}; \
-		sed -i "s/'/\\\'/g" "$${resolvers_file_tmp}"; \
-		mv -f "$${resolvers_file_tmp}" "$${resolvers_file}" > /dev/null 2>&1; \
-		rm -rf $${sdns_decode}; \
-		rm -f $${resolvers_md}; \
-		printf "\nDone\n\n"; \
-		count=6; \
-	    fi; \
-	done
+	    done; \
+	fi
 endif
 
 ifeq ($(PLATFORM_BPIR3),y)

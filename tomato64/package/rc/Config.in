@@ -141,6 +141,7 @@ config BR2_PACKAGE_RC_DNSCRYPT
 	bool "Enable DNSCRYPT"
 	default y
 	select BR2_PACKAGE_DNSCRYPT_PROXY
+	select BR2_PACKAGE_HOST_MINISIGN
 
 config BR2_PACKAGE_RC_DNSSEC
 	bool "Enable DNSSEC"

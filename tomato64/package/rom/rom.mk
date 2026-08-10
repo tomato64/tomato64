@@ -15,6 +15,10 @@ ifeq ($(BR2_PACKAGE_COMGT_TOMATO),y)
 ROM_DEPENDENCIES += comgt-tomato
 endif
 
+ifeq ($(BR2_PACKAGE_RC_DNSCRYPT),y)
+ROM_DEPENDENCIES += host-minisign
+endif
+
 define ROM_BUILD_CMDS
 	patch -d $(@D) -p1 < $(BR2_EXTERNAL_TOMATO64_PATH)/package/rom/001-remove-ldd-env.patch 
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) BUILD_DIR=$(BUILD_DIR) -C $(@D) all
