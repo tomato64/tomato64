@@ -332,28 +332,25 @@ connect() {
 	COUNT=1
 
 	while [ "$DONE" -eq 0 ] && [ "$COUNT" -lt 6 ]; do
-		dhcpc-release $PREFIX
+		dhcpc-release "$PREFIX"
 		sleep 1
-		dhcpc-renew $PREFIX
-		sleep 1
+		dhcpc-renew "$PREFIX"
 
-		# is IF up?
-		if ifconfig "$IFA" &>/dev/null; then
-			# IF has an IP address assigned?
-			if ifconfig "$IFA" | grep -q 'inet addr'; then
+		# Check immediately, then wait up to two seconds for an address.
+		for WAIT in 0 1 2; do
+			if ifconfig "$IFA" 2>/dev/null | grep -q 'inet addr'; then
 				$LOGI "4G MODEM - WAN IFACE configured ($IFA)"
 				DONE=1
 				break
-			else
-				# TODO: IP is up only every 2nd attempt - temporary fix
-				dhcpc-release $PREFIX
-				sleep 1
-				dhcpc-renew $PREFIX
 			fi
-		fi
+
+			[ "$WAIT" -lt 2 ] && sleep 1
+		done
+
+		[ "$DONE" -eq 1 ] && break
+
 		$LOGI "4G MODEM - WAN IFACE not ready ($IFA) [$COUNT] ..."
 		COUNT=$((COUNT+1))
-		sleep 2
 	done
 
 	[ "$DONE" -eq 0 ] && {
