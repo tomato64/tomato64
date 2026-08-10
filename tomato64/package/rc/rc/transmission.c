@@ -24,19 +24,159 @@
 #define LOGMSG_NVDEBUG	"transmission_debug"
 
 
-static void json_write_setting(FILE *fp, const char *key, const char *value1, const char *value2)
-{
-	fprintf(fp, "\"%s\": ", key);
-	f_write_escaped(fp, FWESC_JSON, value1, value2);
-	fputs(",\n", fp);
-}
-
 static int json_custom_is_space(char c)
 {
 	return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
 }
 
-static int json_write_custom_settings(FILE *fp, const char *custom)
+static const char *json_custom_skip_space(const char *p)
+{
+	while (*p && json_custom_is_space(*p))
+		p++;
+
+	return p;
+}
+
+static const char *json_custom_skip_string(const char *p)
+{
+	if (*p != '"')
+		return NULL;
+
+	for (++p; *p; ++p) {
+		if (*p == '\\') {
+			if (*(p + 1) == '\0')
+				return NULL;
+
+			++p;
+		}
+		else if (*p == '"')
+			return p + 1;
+	}
+
+	return NULL;
+}
+
+static const char *json_custom_skip_value(const char *p)
+{
+	int depth = 0;
+
+	p = json_custom_skip_space(p);
+
+	if (*p == '"')
+		return json_custom_skip_string(p);
+
+	if (*p == '{' || *p == '[') {
+		do {
+			if (*p == '"') {
+				p = json_custom_skip_string(p);
+				if (!p)
+					return NULL;
+
+				continue;
+			}
+
+			if (*p == '{' || *p == '[')
+				++depth;
+			else if (*p == '}' || *p == ']')
+				--depth;
+
+			++p;
+		} while (*p && depth > 0);
+
+		return (depth == 0) ? p : NULL;
+	}
+
+	while (*p && *p != ',')
+		++p;
+
+	return p;
+}
+
+static int json_custom_has_key(const char *custom, const char *key)
+{
+	const char *p;
+	const char *key_start;
+	const char *key_end;
+	const char *next;
+	size_t key_len;
+
+	if (!custom || !*custom)
+		return 0;
+
+	key_len = strlen(key);
+	p = custom;
+
+	for (;;) {
+		while (*p && (json_custom_is_space(*p) || *p == ','))
+			++p;
+
+		if (!*p)
+			return 0;
+		if (*p != '"')
+			return 0;
+
+		key_start = p + 1;
+		next = json_custom_skip_string(p);
+		if (!next)
+			return 0;
+		key_end = next - 1;
+
+		p = json_custom_skip_space(next);
+		if (*p != ':')
+			return 0;
+
+		if ((size_t)(key_end - key_start) == key_len && memcmp(key_start, key, key_len) == 0)
+			return 1;
+
+		p = json_custom_skip_value(p + 1);
+		if (!p)
+			return 0;
+
+		p = json_custom_skip_space(p);
+		if (*p && *p != ',')
+			return 0;
+	}
+
+	return 0;
+}
+
+static void json_write_separator(FILE *fp, int *first)
+{
+	if (!*first)
+		fputs(",\n", fp);
+	else
+		*first = 0;
+}
+
+static void json_write_raw_setting(FILE *fp, int *first, const char *custom, const char *key, const char *value)
+{
+	if (json_custom_has_key(custom, key))
+		return;
+
+	json_write_separator(fp, first);
+	fprintf(fp, "\"%s\": %s", key, value);
+}
+
+static void json_write_int_setting(FILE *fp, int *first, const char *custom, const char *key, int value)
+{
+	if (json_custom_has_key(custom, key))
+		return;
+
+	json_write_separator(fp, first);
+	fprintf(fp, "\"%s\": %d", key, value);
+}
+
+static void json_write_string_setting(FILE *fp, int *first, const char *custom, const char *key, const char *value1, const char *value2)
+{
+	if (json_custom_has_key(custom, key))
+		return;
+
+	json_write_separator(fp, first);
+	fprintf(fp, "\"%s\": ", key);
+	f_write_escaped(fp, FWESC_JSON, value1, value2);
+}
+
+static int json_write_custom_settings(FILE *fp, int *first, const char *custom)
 {
 	const char *start;
 	const char *end;
@@ -55,8 +195,8 @@ static int json_write_custom_settings(FILE *fp, const char *custom)
 	if (end <= start)
 		return 0;
 
+	json_write_separator(fp, first);
 	fwrite(start, 1, (size_t)(end - start), fp);
-	fputs(",\n", fp);
 
 	return 1;
 }
@@ -128,7 +268,7 @@ void start_bittorrent(int force)
 	const char *pb, *pc, *pd, *pe, *pf, *ph, *pi, *pj, *pk, *pl, *pm, *pn, *po, *pp, *pr, *pt, *pu;
 	const char *whitelistEnabled, *custom;
 	char buf[256], buf2[64], settings_dir[256], log_path[256];
-	int n;
+	int n, first_setting = 1;
 	pid_t pidof_child = 0;
 	pid_t child;
 
@@ -187,83 +327,52 @@ void start_bittorrent(int force)
 		return;
 	}
 
-	fprintf(fp, "{\n"
-	            "\"peer-port\": %d,\n"
-	            "\"speed-limit-down-enabled\": %s,\n"
-	            "\"speed-limit-up-enabled\": %s,\n"
-	            "\"speed-limit-down\": %d,\n"
-	            "\"speed-limit-up\": %d,\n"
-	            "\"rpc-enabled\": %s,\n"
-	            "\"rpc-port\": %d,\n"
-	            "\"rpc-bind-address\": \"0.0.0.0\",\n"
-	            "\"rpc-whitelist\": \"*\",\n"
-	            "\"rpc-whitelist-enabled\": %s,\n"
-	            "\"rpc-host-whitelist\": \"*\",\n"
-	            "\"rpc-host-whitelist-enabled\": %s,\n",
-	            nvram_get_int("bt_port"),
-	            pc,
-	            pd,
-	            nvram_get_int("bt_dl"),
-	            nvram_get_int("bt_ul"),
-	            pb,
-	            nvram_get_int("bt_port_gui"),
-	            whitelistEnabled,
-	            whitelistEnabled);
+	fprintf(fp, "{\n");
 
-	json_write_setting(fp, "rpc-username", nvram_safe_get("bt_login"), NULL);
-	json_write_setting(fp, "rpc-password", nvram_safe_get("bt_password"), NULL);
-	json_write_setting(fp, "download-dir", nvram_safe_get("bt_dir"), NULL);
+	json_write_int_setting(fp, &first_setting, custom, "peer-port", nvram_get_int("bt_port"));
+	json_write_raw_setting(fp, &first_setting, custom, "speed-limit-down-enabled", pc);
+	json_write_raw_setting(fp, &first_setting, custom, "speed-limit-up-enabled", pd);
+	json_write_int_setting(fp, &first_setting, custom, "speed-limit-down", nvram_get_int("bt_dl"));
+	json_write_int_setting(fp, &first_setting, custom, "speed-limit-up", nvram_get_int("bt_ul"));
+	json_write_raw_setting(fp, &first_setting, custom, "rpc-enabled", pb);
+	json_write_int_setting(fp, &first_setting, custom, "rpc-port", nvram_get_int("bt_port_gui"));
+	json_write_string_setting(fp, &first_setting, custom, "rpc-bind-address", "0.0.0.0", NULL);
+	json_write_string_setting(fp, &first_setting, custom, "rpc-whitelist", "*", NULL);
+	json_write_raw_setting(fp, &first_setting, custom, "rpc-whitelist-enabled", whitelistEnabled);
+	json_write_string_setting(fp, &first_setting, custom, "rpc-host-whitelist", "*", NULL);
+	json_write_raw_setting(fp, &first_setting, custom, "rpc-host-whitelist-enabled", whitelistEnabled);
 
-	fprintf(fp, "\"incomplete-dir-enabled\": %s,\n", pe);
+	json_write_string_setting(fp, &first_setting, custom, "rpc-username", nvram_safe_get("bt_login"), NULL);
+	json_write_string_setting(fp, &first_setting, custom, "rpc-password", nvram_safe_get("bt_password"), NULL);
+	json_write_string_setting(fp, &first_setting, custom, "download-dir", nvram_safe_get("bt_dir"), NULL);
 
-	json_write_setting(fp, "incomplete-dir", nvram_safe_get("bt_dir"), "/.incomplete");
-	json_write_setting(fp, "watch-dir", nvram_safe_get("bt_dir"), NULL);
+	json_write_raw_setting(fp, &first_setting, custom, "incomplete-dir-enabled", pe);
+	json_write_string_setting(fp, &first_setting, custom, "incomplete-dir", nvram_safe_get("bt_dir"), "/.incomplete");
+	json_write_string_setting(fp, &first_setting, custom, "watch-dir", nvram_safe_get("bt_dir"), NULL);
 
-	fprintf(fp, "\"watch-dir-enabled\": %s,\n"
-	            "\"peer-limit-global\": %d,\n"
-	            "\"peer-limit-per-torrent\": %d,\n"
-	            "\"upload-slots-per-torrent\": %d,\n"
-	            "\"dht-enabled\": %s,\n"
-	            "\"pex-enabled\": %s,\n"
-	            "\"lpd-enabled\": %s,\n"
-	            "\"utp-enabled\": %s,\n"
-	            "\"ratio-limit-enabled\": %s,\n"
-	            "\"ratio-limit\": %s,\n"
-	            "\"idle-seeding-limit-enabled\": %s,\n"
-	            "\"idle-seeding-limit\": %d,\n"
-	            "\"blocklist-enabled\": %s,\n",
-	            pf,
-	            nvram_get_int("bt_peer_limit_global"),
-	            nvram_get_int("bt_peer_limit_per_torrent"),
-	            nvram_get_int("bt_ul_slot_per_torrent"),
-	            pi,
-	            pj,
-	            po,
-	            pp,
-	            ph,
-	            nvram_safe_get("bt_ratio"),
-	            pr,
-	            nvram_get_int("bt_ratio_idle"),
-	            pm);
+	json_write_raw_setting(fp, &first_setting, custom, "watch-dir-enabled", pf);
+	json_write_int_setting(fp, &first_setting, custom, "peer-limit-global", nvram_get_int("bt_peer_limit_global"));
+	json_write_int_setting(fp, &first_setting, custom, "peer-limit-per-torrent", nvram_get_int("bt_peer_limit_per_torrent"));
+	json_write_int_setting(fp, &first_setting, custom, "upload-slots-per-torrent", nvram_get_int("bt_ul_slot_per_torrent"));
+	json_write_raw_setting(fp, &first_setting, custom, "dht-enabled", pi);
+	json_write_raw_setting(fp, &first_setting, custom, "pex-enabled", pj);
+	json_write_raw_setting(fp, &first_setting, custom, "lpd-enabled", po);
+	json_write_raw_setting(fp, &first_setting, custom, "utp-enabled", pp);
+	json_write_raw_setting(fp, &first_setting, custom, "ratio-limit-enabled", ph);
+	json_write_raw_setting(fp, &first_setting, custom, "ratio-limit", nvram_safe_get("bt_ratio"));
+	json_write_raw_setting(fp, &first_setting, custom, "idle-seeding-limit-enabled", pr);
+	json_write_int_setting(fp, &first_setting, custom, "idle-seeding-limit", nvram_get_int("bt_ratio_idle"));
+	json_write_raw_setting(fp, &first_setting, custom, "blocklist-enabled", pm);
+	json_write_string_setting(fp, &first_setting, custom, "blocklist-url", nvram_safe_get("bt_blocklist_url"), NULL);
+	json_write_raw_setting(fp, &first_setting, custom, "download-queue-enabled", pt);
+	json_write_int_setting(fp, &first_setting, custom, "download-queue-size", nvram_get_int("bt_dl_queue_size"));
+	json_write_raw_setting(fp, &first_setting, custom, "seed-queue-enabled", pu);
+	json_write_int_setting(fp, &first_setting, custom, "seed-queue-size", nvram_get_int("bt_ul_queue_size"));
+	json_write_int_setting(fp, &first_setting, custom, "message-level", nvram_get_int("bt_message"));
+	json_write_raw_setting(fp, &first_setting, custom, "rpc-authentication-required", pl);
 
-	json_write_setting(fp, "blocklist-url", nvram_safe_get("bt_blocklist_url"), NULL);
-
-	fprintf(fp, "\"download-queue-enabled\": %s,\n"
-	            "\"download-queue-size\": %d,\n"
-	            "\"seed-queue-enabled\": %s,\n"
-	            "\"seed-queue-size\": %d,\n"
-	            "\"message-level\": %d,\n",
-	            pt,
-	            nvram_get_int("bt_dl_queue_size"),
-	            pu,
-	            nvram_get_int("bt_ul_queue_size"),
-	            nvram_get_int("bt_message"));
-
-	json_write_custom_settings(fp, custom);
-
-	fprintf(fp, "\"rpc-authentication-required\": %s\n"
-	            "}\n",
-	            pl);
+	json_write_custom_settings(fp, &first_setting, custom);
+	fprintf(fp, "\n}\n");
 
 	if (fclose(fp) != 0) {
 		logerr(__FUNCTION__, __LINE__, tr_settings);
@@ -317,18 +426,18 @@ void start_bittorrent(int force)
 	eval("cp", tr_settings, buf);
 
 	snprintf(buf, sizeof(buf), "%s/.settings/blocklists", pk);
-	eval("rm", "-rf", buf);
 
 	if (nvram_get_int("bt_blocklist")) {
 		mkdir_if_none(buf);
 
+		/* keep user-managed blocklists intact; only update the GUI-managed file */
 		snprintf(buf, sizeof(buf), "%s/.settings/blocklists/level1.gz", pk);
 #ifdef TCONFIG_STUBBY
 		eval("wget", nvram_safe_get("bt_blocklist_url"), "-O", buf);
 #else
 		eval("wget", "--no-check-certificate", nvram_safe_get("bt_blocklist_url"), "-O", buf);
 #endif
-		eval("gunzip", buf);
+		eval("gunzip", "-f", buf);
 	}
 
 	run_bt_firewall_script();
