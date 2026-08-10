@@ -139,14 +139,17 @@ function init() {
 <div class="section-title"><span class="pptpsvg">&nbsp;</span>PPTP Client Configuration</div>
 <div class="section">
 	<script>
+		var wan_options = [];
+		for (var uidx = 1; uidx <= MAXWAN_NUM; ++uidx) {
+			var u = (uidx > 1) ? uidx : '';
+			wan_options.push(['wan'+u, 'WAN'+(uidx - 1)]);
+		}
+		wan_options.push(['none', 'none']);
+
 		createFieldTable('', [
 			{ title: 'Enable on Start', name: 'f_pptpc_eas', type: 'checkbox', value: nvram.pptpc_eas != 0 },
 			{ title: 'Bind to', name: 'pptpc_usewan', type: 'select',
-				options: [['wan','WAN0'],['wan2','WAN1'],
-/* MULTIWAN-BEGIN */
-					['wan3','WAN2'],['wan4','WAN3'],
-/* MULTIWAN-END */
-					['none','none']], value: nvram.pptpc_usewan },
+				options: wan_options, value: nvram.pptpc_usewan },
 			{ title: 'Server Address', name: 'pptpc_srvip', type: 'text', maxlen: 50, size: 27, value: nvram.pptpc_srvip },
 			{ title: 'Username ', name: 'pptpc_username', type: 'text', maxlen: 50, size: 54, value: nvram.pptpc_username },
 			{ title: 'Password ', name: 'pptpc_passwd', type: 'password', maxlen: 50, size: 54, peekaboo: 1, value: nvram.pptpc_passwd },
