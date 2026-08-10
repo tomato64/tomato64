@@ -373,7 +373,10 @@ function verifyFields(focused, quiet) {
 function save() {
 	var fom, i, j, k, l, m, s, data, a, b, op;
 	var setopendns = [0, 0];
-	var bits = [1, 2, 4, 8];
+	var bits = [];
+
+	for (i = 0; i < MAXWAN_NUM; ++i)
+		bits.push(1 << i);
 
 	if (!verifyFields(null, 0))
 		return;
@@ -576,17 +579,14 @@ function init() {
 
 <input type="hidden" name="_nextpage" value="basic-ddns.asp">
 <input type="hidden" name="_service" value="ddns-restart">
-<input type="hidden" name="wan_dns" value="" disabled="disabled">
-<input type="hidden" name="wan2_dns" value="" disabled="disabled">
-<input type="hidden" name="wan_dns_auto" value="" disabled="disabled">
-<input type="hidden" name="wan2_dns_auto" value="" disabled="disabled">
+<script>
+	for (var uidx = 1; uidx <= MAXWAN_NUM; ++uidx) {
+		var u = (uidx > 1) ? uidx : '';
+		W('<input type="hidden" name="wan'+u+'_dns" value="" disabled="disabled">');
+		W('<input type="hidden" name="wan'+u+'_dns_auto" value="" disabled="disabled">');
+	}
+</script>
 <input type="hidden" name="ddnsx_custom_if">
-<!-- MULTIWAN-BEGIN -->
-<input type="hidden" name="wan3_dns" value="" disabled="disabled">
-<input type="hidden" name="wan4_dns" value="" disabled="disabled">
-<input type="hidden" name="wan3_dns_auto" value="" disabled="disabled">
-<input type="hidden" name="wan4_dns_auto" value="" disabled="disabled">
-<!-- MULTIWAN-END -->
 <input type="hidden" name="ddnsx0" value="">
 <input type="hidden" name="ddnsx1" value="">
 <input type="hidden" name="ddnsx0_cache" value="" disabled="disabled">
@@ -617,7 +617,11 @@ function init() {
 <!-- / / / -->
 
 <script>
-	var i, v, u, h, s, a;
+	var i, j, v, u, h, s, a, wan;
+	var wanIpSources = [];
+
+	for (i = 1; i <= MAXWAN_NUM; ++i)
+		wanIpSources.push('wan'+((i > 1) ? i : ''));
 
 	for (i = 0; i < clients_num; ++i) {
 		W('<div class="section-title">Dynamic DNS Client '+(i + 1)+'<\/div><div class="section">');
@@ -634,11 +638,32 @@ function init() {
 		h = (v[0] == '');
 
 		s = eval('ddnsx'+i+'_ip_get');
-		a = (s != '') && (s != 'wan') && (s != 'wan2')
-/* MULTIWAN-BEGIN */
-		    && (s != 'wan3') && (s != 'wan4')
-/* MULTIWAN-END */
+		a = (s != '') && (wanIpSources.indexOf(s) < 0)
 		    && (s.indexOf('@') != 0) && (s != '0.0.0.0') && (s != '10.1.1.1');
+
+		var opendnsWanFields = [];
+		var wanIpOptions = [];
+
+		for (j = 1; j <= MAXWAN_NUM; ++j) {
+			wan = (j > 1) ? j : '';
+			opendnsWanFields.push({
+				title: 'WAN'+(j - 1), indent: 2,
+				name: 'f_opendns'+i+'_wan'+wan, type: 'checkbox',
+				value: (nvram['ddnsx'+i+'_opendns'] & (1 << (j - 1))),
+				suffix: '<span id="opendns_info'+i+j+'">&nbsp;<\/span>',
+				hidden: 1
+			});
+			wanIpOptions.push(['wan'+wan, 'Use WAN'+(j - 1)+' IP']);
+		}
+
+		for (j = 1; j <= MAXWAN_NUM; ++j)
+			wanIpOptions.push(['@'+j, 'External WAN'+(j - 1)+' IP checker']);
+
+		wanIpOptions.push(
+			['0.0.0.0','Offline (0.0.0.0)'],
+			['10.1.1.1','Offline (10.1.1.1)'],
+			['custom','Custom IP Address...']
+		);
 
 		createFieldTable('', [
 			{ title: 'Service', name: 'f_service'+i, type: 'select', options: services, value: v[0] },
@@ -652,27 +677,14 @@ function init() {
 				{ title: 'Wildcard', indent: 2, name: 'f_wild'+i, type: 'checkbox', value: v[3] != '0', hidden: 1 },
 			{ title: 'MX', name: 'f_mx'+i, type: 'text', maxlen: 32, size: 35, value: v[4], hidden: 1 },
 				{ title: 'Backup MX', indent: 2, name: 'f_bmx'+i, type: 'checkbox', value: v[5] != '0', hidden: 1 },
-			{ title: 'Use as DNS', name: 'f_opendns'+i, type: 'checkbox', value: (nvram['ddnsx'+i+'_opendns'] > 0), suffix: '<span id="opendns_info'+i+'">not available when using <a href="advanced-dhcpdns.asp">Stubby/dnscrypt-proxy<\/a><\/span>', hidden: 1 },
-				{ title: 'WAN0', indent: 2, name: 'f_opendns'+i+'_wan', type: 'checkbox', value: (nvram['ddnsx'+i+'_opendns'] & 0x01), suffix: '<span id="opendns_info'+i+'1">&nbsp;<\/span>', hidden: 1 },
-				{ title: 'WAN1', indent: 2, name: 'f_opendns'+i+'_wan2', type: 'checkbox', value: (nvram['ddnsx'+i+'_opendns'] & 0x02), suffix: '<span id="opendns_info'+i+'2">&nbsp;<\/span>', hidden: 1 },
-/* MULTIWAN-BEGIN */
-				{ title: 'WAN2', indent: 2, name: 'f_opendns'+i+'_wan3', type: 'checkbox', value: (nvram['ddnsx'+i+'_opendns'] & 0x04), suffix: '<span id="opendns_info'+i+'3">&nbsp;<\/span>', hidden: 1 },
-				{ title: 'WAN3', indent: 2, name: 'f_opendns'+i+'_wan4', type: 'checkbox', value: (nvram['ddnsx'+i+'_opendns'] & 0x08), suffix: '<span id="opendns_info'+i+'4">&nbsp;<\/span>', hidden: 1 },
-/* MULTIWAN-END */
+			{ title: 'Use as DNS', name: 'f_opendns'+i, type: 'checkbox', value: (nvram['ddnsx'+i+'_opendns'] > 0), suffix: '<span id="opendns_info'+i+'">not available when using <a href="advanced-dhcpdns.asp">Stubby/dnscrypt-proxy<\/a><\/span>', hidden: 1 }
+		].concat(opendnsWanFields, [
 			{ title: 'Token', name: 'f_token'+i, type: 'text', maxlen: 255, size: 80, value: v[6], hidden: 1 },
 			{ title: 'Save state when IP changes (nvram commit)', name: 'f_ddnsx'+i+'_save', type: 'checkbox', value: nvram['ddnsx'+i+'_save'] == 1, hidden: 1 },
 			{ title: 'Force next update', name: 'f_force'+i, type: 'checkbox', value: 0, hidden: 1 },
 			{ title: '', rid: 'spacer1_'+i },
 			{ title: 'IP address', multi: [
-				{ name: 'f_ddnsx'+i+'_wanip', type: 'select', options: [['wan','Use WAN0 IP'],['wan2','Use WAN1 IP' ],
-/* MULTIWAN-BEGIN */
-					['wan3','Use WAN2 IP' ],['wan4','Use WAN3 IP' ],
-/* MULTIWAN-END */
-					['@1','External WAN0 IP checker'],['@2','External WAN1 IP checker'],
-/* MULTIWAN-BEGIN */
-					['@3','External WAN2 IP checker'],['@4','External WAN3 IP checker'],
-/* MULTIWAN-END */
-					['0.0.0.0','Offline (0.0.0.0)'],['10.1.1.1','Offline (10.1.1.1)'],['custom','Custom IP Address...']], value: (a ? 'custom' : s) },
+				{ name: 'f_ddnsx'+i+'_wanip', type: 'select', options: wanIpOptions, value: (a ? 'custom' : s) },
 				{ name: 'f_ddnsx'+i+'_custom_if', type: 'text', maxlen: 6, size: 6, prefix: '<span id="nsx_'+i+'_custom_if"><span id="note_cktime1_'+i+'a">interface:<\/span>', suffix: '<\/span>', value: nvram['ddnsx_custom_if'] },
 				{ name: 'f_ddnsx'+i+'_cktime', type: 'text', maxlen: 5, size: 6, prefix: '<span id="nsx_'+i+'_cktime"><span id="note_cktime1_'+i+'b">every:<\/span>', suffix: '<span id="note_cktime2_'+i+'">mins (5 - 99999, default: 10)<\/span><\/span>', value: nvram['ddnsx'+i+'_cktime'] } ] },
 				{ title: 'Custom IP address', indent: 2, name: 'f_custom_ip'+i, type: 'text', maxlen: 15, size: 20, value: (a ? s : ''), hidden: !a },
@@ -680,7 +692,7 @@ function init() {
 			{ title: '', rid: 'spacer2_'+i },
 			{ title: 'Last IP Address', custom: '<span id="str-update'+i+'"><\/span>', rid: 'last-update'+i, hidden: 1 },
 			{ title: 'Last Result', custom: '<span id="str-response'+i+'"><\/span>', rid: 'last-response'+i, hidden: h }
-		]);
+		]));
 
 		W('<\/div>');
 	}
