@@ -18,7 +18,6 @@
 
 /* Max number of log lines for GUI to display */
 #define MAX_LOG_LINES		4000
-#define SYSLOG_DOWNLOAD_MAX	(10UL * 1024UL * 1024UL)
 #define SYSLOG_MAX_ROTATIONS	99
 
 /* Size of each input chunk to be read and allocate for. */
@@ -413,5 +412,6 @@ void wo_syslog(char *url)
 	get_logfilename(lfn, sizeof(lfn));
 
 	send_header(200, NULL, mime_binary, 0);
-	stream_syslog_files(lfn, SYSLOG_DOWNLOAD_MAX);
+	/* Syslog downloads may legitimately exceed the generic 10 MB output cap. */
+	stream_syslog_files(lfn, 0);
 }
