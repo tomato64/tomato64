@@ -22,8 +22,8 @@
 
 var cprefix = 'status_log';
 
-var currentSearch = '';
-var negativeSearch = 0;
+var searchGroups = [];
+var highlightRegex = null;
 var currentFilterValue = 0;
 var currentlyScrolling = false;
 var scrollingDetectorTimeout;
@@ -88,23 +88,12 @@ logGrid.populate = function() {
 		if (entriesMode != 0)
 			messagesToAdd = messagesToAdd.slice(-1 * entriesMode - 1);
 
-		var localSearch;
-		if (currentSearch) {
-			localSearch = currentSearch;
-			if (localSearch.substr(0, 1) == '-') {
-				localSearch = localSearch.substr(1);
-				negativeSearch = 1;
-			}
-			else
-				negativeSearch = 0;
-		}
-
 		var count = 0;
 		for (var index = 0; index < messagesToAdd.length; ++index) {
 			if (messagesToAdd[index]) {
 				var logLineMap = getLogLineParsedMap(messagesToAdd[index]);
 				if ((currentFilterValue == 0) || (E('maxlevel').checked ? (currentFilterValue >= logLineMap[LINE_PARSE_MAP_LEVEL_ATTR_POS][1]) : (currentFilterValue == logLineMap[LINE_PARSE_MAP_LEVEL_ATTR_POS][1]))) {
-						if (!localSearch || containsSearch(logLineMap, localSearch)) {
+						if (!searchGroups.length || containsSearch(logLineMap)) {
 							var row = createHighlightedRow(logLineMap);
 							this.insert(-1, row, row, true);
 							count++;
@@ -113,7 +102,7 @@ logGrid.populate = function() {
 			}
 		}
 
-		E('log-occurence-span').style.display = (currentSearch ? 'inline' : 'none');
+		E('log-occurence-span').style.display = (searchGroups.length ? 'inline' : 'none');
 		elem.setInnerHTML('log-occurence-value', count);
 		if (time.indexOf('Not Available') === -1)
 			elem.setInnerHTML('log-refresh-time', time.match(/(\d+\:\d+\:\d+)\s(.*)/i)[1]+' - Last Refreshed');
@@ -173,16 +162,64 @@ var criticalRegex = new RegExp(/^(.*?)crit.*/i);
 var emergencyRegex = new RegExp(/^(.*?)emer.*/i);
 var debugRegex = new RegExp(/^(.*?)debu.*/i);
 
-function containsSearch(logLineMap, text) {
-	var ret = (String(logLineMap[LINE_PARSE_MAP_DATE_POS]).toUpperCase().indexOf(text.toUpperCase()) >= 0 ||
-		   String(logLineMap[LINE_PARSE_MAP_FACILITY_POS]).toUpperCase().indexOf(text.toUpperCase()) >= 0 ||
-		   String(logLineMap[LINE_PARSE_MAP_LEVEL_PROCESS_POS]).toUpperCase().indexOf(text.toUpperCase()) >= 0 ||
-		   String(logLineMap[LINE_PARSE_MAP_LEVEL_MESSAGE_POS]).toUpperCase().indexOf(text.toUpperCase()) >= 0);
+function escapeRegex(text) {
+	return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
-	if (negativeSearch == 1)
-		return !ret;
-	else
-		return ret;
+/* Space-separated groups are ANDed; "|" joins alternatives; leading "-" excludes a group. */
+function parseSearch(text) {
+	var tokens = text.toLowerCase().match(/\S+/g) || [];
+	var highlighted = [];
+
+	searchGroups = [];
+
+	for (var i = 0; i < tokens.length; ++i) {
+		var exclude = tokens[i].charAt(0) == '-';
+		var token = exclude ? tokens[i].substr(1) : tokens[i];
+		var alternatives = token.split('|');
+		var terms = [];
+
+		for (var j = 0; j < alternatives.length; ++j) {
+			if (!alternatives[j])
+				continue;
+
+			terms.push(alternatives[j]);
+			if (!exclude)
+				highlighted.push(escapeRegex(alternatives[j]));
+		}
+
+		if (terms.length)
+			searchGroups.push({ exclude: exclude, terms: terms });
+	}
+
+	highlightRegex = highlighted.length ? new RegExp('('+highlighted.join('|')+')', 'gi') : null;
+}
+
+function containsSearch(logLineMap) {
+	var rowText = [
+		logLineMap[LINE_PARSE_MAP_DATE_POS] || '',
+		logLineMap[LINE_PARSE_MAP_FACILITY_POS] || '',
+		logLineMap[LINE_PARSE_MAP_LEVEL_POS] || '',
+		logLineMap[LINE_PARSE_MAP_LEVEL_PROCESS_POS] || '',
+		logLineMap[LINE_PARSE_MAP_LEVEL_MESSAGE_POS] || ''
+	].join(' ').toLowerCase();
+
+	for (var i = 0; i < searchGroups.length; ++i) {
+		var group = searchGroups[i];
+		var found = false;
+
+		for (var j = 0; j < group.terms.length; ++j) {
+			if (rowText.indexOf(group.terms[j]) >= 0) {
+				found = true;
+				break;
+			}
+		}
+
+		if ((!group.exclude && !found) || (group.exclude && found))
+			return false;
+	}
+
+	return true;
 }
 
 function getLevelColor(level) {
@@ -241,40 +278,33 @@ function createHighlightedRow(logLineMap) {
 	         generateHighlightSpan(logLineMap[LINE_PARSE_MAP_FACILITY_POS], 'co2', null),
 	         generateHighlightSpan(logLineMap[LINE_PARSE_MAP_LEVEL_POS], 'co3', logLineMap[LINE_PARSE_MAP_LEVEL_ATTR_POS][0]),
 	         generateHighlightSpan(logLineMap[LINE_PARSE_MAP_LEVEL_PROCESS_POS], 'co4', null),
-	         generateHighlightSpan(escapeHTML(''+logLineMap[LINE_PARSE_MAP_LEVEL_MESSAGE_POS]), 'co5', null)
+	         generateHighlightSpan(logLineMap[LINE_PARSE_MAP_LEVEL_MESSAGE_POS], 'co5', null)
 	];
 }
 
 function generateHighlightSpan(innerText, classN, customStyle) {
-	var newText = document.createElement('td');
-	newText.className = classN;
+	var cell = document.createElement('td');
+	var text = String(innerText == null ? '' : innerText);
+	var parts = highlightRegex ? text.split(highlightRegex) : [text];
+
+	cell.className = classN;
 	if (customStyle)
-		newText.className += ' '+customStyle;
+		cell.className += ' '+customStyle;
 
-	var indexOfSearch = innerText.toUpperCase().indexOf(currentSearch.toUpperCase());
-	if (indexOfSearch == -1)
-		elem.setInnerHTML(newText, innerText);
-	else {
-		var sizeOfSearch = currentSearch.length;
+	for (var i = 0; i < parts.length; ++i) {
+		var textNode = document.createTextNode(parts[i]);
 
-		var stringBeforeFound = '';
-		if (indexOfSearch != 0) {
-			stringBeforeFound = innerText.substring(0, indexOfSearch);
-			newText.innerHTML += stringBeforeFound;
+		if (i % 2) {
+			var span = document.createElement('span');
+			span.style.backgroundColor = 'yellow';
+			span.appendChild(textNode);
+			cell.appendChild(span);
 		}
-
-		var highlightedString = innerText.substring(indexOfSearch, indexOfSearch + sizeOfSearch);
-		if (highlightedString)
-			newText.innerHTML += '<span style="background-color:yellow">'+highlightedString+'<\/span>';
-
-		var stringAfterFound = '';
-		if (indexOfSearch + sizeOfSearch < innerText.length) {
-			stringAfterFound = innerText.substring(indexOfSearch + sizeOfSearch, innerText.length);
-			newText.innerHTML += stringAfterFound;
-		}
+		else
+			cell.appendChild(textNode);
 	}
 
-	return newText;
+	return cell;
 }
 
 function filterLevelChanged() {
@@ -344,7 +374,8 @@ function toggleClearButton() {
 
 function clearSearch() {
 	E('log-find-text').value = '';
-	currentSearch = '';
+	searchGroups = [];
+	highlightRegex = null;
 	E('log-occurence-span').style.display = 'none';
 	toggleClearButton();
 	logGrid.populate();
@@ -360,10 +391,10 @@ function onKeyUpEvent(event) {
 }
 
 var onInputEvent = debounce(function() {
-	currentSearch = E('log-find-text').value;
+	parseSearch(E('log-find-text').value);
 	toggleClearButton();
 	logGrid.populate();
-	if (currentSearch.length == 0) {
+	if (!searchGroups.length) {
 		E('log-occurence-span').style.display = 'none';
 		scrollToBottom();
 	}
@@ -453,10 +484,10 @@ function init() {
 			<span>
 				Find in syslog: &nbsp;
 				<span class="search-input-wrapper">
-					<input type="text" id="log-find-text" autocomplete="off" maxlength="64" title="Press Escape to clear search; use '-' in front to make a negative search">
+					<input type="text" id="log-find-text" autocomplete="off" maxlength="64" title="Space: AND; |: OR; -term: exclude; Escape: clear search">
 					<button type="button" id="clear-search-btn" class="clear-search-btn" onclick="clearSearch()" title="Clear search">⦻</button>
 				</span>
-				<span style="display:none" id="log-occurence-span">Occurences: <b><span id="log-occurence-value"></span></b></span>
+				<span style="display:none" id="log-occurence-span">Occurrences: <b><span id="log-occurence-value"></span></b></span>
 			</span>
 
 		</div>
