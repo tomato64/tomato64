@@ -370,6 +370,9 @@ void preset_wan(char *ifname, char *gw, char *netmask, char *prefix)
 
 	mwan_num = mwan_active_num();
 
+	/* Try adding a host route to gateway first */
+	route_add(ifname, 0, gw, NULL, "255.255.255.255");
+
 	if (mwan_num <= 1) {
 		/* Delete default route */
 		route_del(ifname, 0, NULL, NULL, NULL);
@@ -380,9 +383,6 @@ void preset_wan(char *ifname, char *gw, char *netmask, char *prefix)
 			sleep(1);
 		}
 	}
-
-	/* Try adding a host route to gateway first */
-	route_add(ifname, 0, gw, NULL, "255.255.255.255");
 
 	/* Add routes to dns servers as well for demand ppp to work */
 	in_addr_t mask = inet_addr(netmask);
