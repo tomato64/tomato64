@@ -284,17 +284,23 @@ function save() {
 /* HTTPS-END */
 
 	/* prepare redirect url */
-	i = 0;
-	if (location.port == '') {
-		if (location.protocol == 'https:')
-			i = 443;
-		else
-			i = 80;
-	}
+	i = parseInt(location.port || ((location.protocol == 'https:') ? 443 : 80), 10);
 
-	if ((rem != 0) && (location.hostname != nvram.lan_ipaddr) && (location.port == nvram.http_wanport))
+	/*
+	 * Detect how the current page was reached from the active NVRAM
+	 * configuration. The form already contains the new settings here.
+	 */
+	if ((nvram.remote_management == 1) && (location.hostname != nvram.lan_ipaddr) && (i == parseInt(nvram.http_wanport, 10))
+/* HTTPS-BEGIN */
+	    && ((location.protocol == 'https:') == (nvram.remote_mgt_https == 1))
+/* HTTPS-END */
+	    )
 		remote = 1;
-	else if ((loc != 0) && ((location.port == nvram.http_lanport) || (location.port == nvram.https_lanport) || (i == nvram.http_lanport) || (i == nvram.https_lanport)))
+	else if (((location.protocol == 'http:') && (nvram.http_enable == 1) && (i == parseInt(nvram.http_lanport, 10)))
+/* HTTPS-BEGIN */
+	         || ((location.protocol == 'https:') && (nvram.https_enable == 1) && (i == parseInt(nvram.https_lanport, 10)))
+/* HTTPS-END */
+	         )
 		local = 1;
 
 	if (location.protocol == 'https:') {
@@ -312,13 +318,13 @@ function save() {
 	if (a == 's') {
 		if (local && fom.https_lanport.value != 443)
 			b += ':'+fom.https_lanport.value;
-		else if (remote && fom.http_wanport != 443)
+		else if (remote && parseInt(fom.http_wanport.value, 10) != 443)
 			b += ':'+fom.http_wanport.value;
 	}
 	else {
 		if (local && fom.http_lanport.value != 80)
 			b += ':'+fom.http_lanport.value;
-		else if (remote && fom.http_wanport != 80)
+		else if (remote && parseInt(fom.http_wanport.value, 10) != 80)
 			b += ':'+fom.http_wanport.value;
 	}
 	fom._nextpage.value = b+'/admin-access.asp';
