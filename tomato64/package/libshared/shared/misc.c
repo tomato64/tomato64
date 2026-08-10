@@ -293,37 +293,77 @@ int wl_client(int unit, int subunit)
 		);
 }
 
+static int append_ifnames(char *dst, size_t size, const char *src, int add_space)
+{
+	size_t dst_len, src_len, avail;
+
+	if ((dst == NULL) || (src == NULL) || (size == 0))
+		return -1;
+
+	dst_len = strlen(dst);
+	if (dst_len >= size)
+		return -1;
+
+	src_len = strlen(src);
+	avail = size - dst_len - 1;
+
+	/* Do not append a partial interface name/list. */
+	if ((src_len > avail) || (add_space && (src_len == avail)))
+		return -1;
+
+	strlcat(dst, src, size);
+	if (add_space)
+		strlcat(dst, " ", size);
+
+	return 0;
+}
+
 int foreach_wif(int include_vifs, void *param,
 	int (*func)(int idx, int unit, int subunit, void *param))
 {
-	char ifnames[BUF_SIZE_64 * BRIDGE_COUNT]; /* increase size depending on bridge count */
+	char ifnames[BUF_SIZE_64 * BRIDGE_COUNT] = { 0 }; /* increase size depending on bridge count */
 	char name[BUF_SIZE_64], ifname[BUF_SIZE_64], *next = NULL;
 	int unit = -1, subunit = -1;
 	int i, ret = 0;
-	size_t pos = 0;
 
 	/* LAN interfaces */
 	for (i = 0; i < BRIDGE_COUNT; i++) {
 		snprintf(name, sizeof(name), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
-		pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get(name));
+		if (append_ifnames(ifnames, sizeof(ifnames), nvram_safe_get(name), 1) < 0)
+			goto list_full;
 	}
 
 	/* WAN interfaces */
 	for (i = 1; i <= MWAN_MAX; i++) {
 		snprintf(name, sizeof(name), (i == 1 ? "wan_ifnames" : "wan%d_ifnames"), i);
-		pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get(name));
+		if (append_ifnames(ifnames, sizeof(ifnames), nvram_safe_get(name), 1) < 0)
+			goto list_full;
 	}
 
 	/* WL interfaces */
 #ifdef TCONFIG_AC3200
-	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl2_ifname"));
-	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl2_vifs"));
+	if (append_ifnames(ifnames, sizeof(ifnames), nvram_safe_get("wl2_ifname"), 1) < 0)
+		goto list_full;
+	if (append_ifnames(ifnames, sizeof(ifnames), nvram_safe_get("wl2_vifs"), 1) < 0)
+		goto list_full;
 #endif /* TCONFIG_AC3200 */
-	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl_ifname"));
-	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl0_ifname"));
-	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl0_vifs"));
-	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get("wl1_ifname"));
-	pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s",  nvram_safe_get("wl1_vifs"));
+	if (append_ifnames(ifnames, sizeof(ifnames), nvram_safe_get("wl_ifname"), 1) < 0)
+		goto list_full;
+	if (append_ifnames(ifnames, sizeof(ifnames), nvram_safe_get("wl0_ifname"), 1) < 0)
+		goto list_full;
+	if (append_ifnames(ifnames, sizeof(ifnames), nvram_safe_get("wl0_vifs"), 1) < 0)
+		goto list_full;
+	if (append_ifnames(ifnames, sizeof(ifnames), nvram_safe_get("wl1_ifname"), 1) < 0)
+		goto list_full;
+	if (append_ifnames(ifnames, sizeof(ifnames), nvram_safe_get("wl1_vifs"), 0) < 0)
+		goto list_full;
+
+	goto list_ready;
+
+list_full:
+	logmsg(LOG_WARNING, "%s: interface list exceeds buffer size (%zu bytes)", __FUNCTION__, sizeof(ifnames));
+
+list_ready:
 
 	remove_dups(ifnames, sizeof(ifnames));
 	sort_list(ifnames, sizeof(ifnames));
