@@ -493,7 +493,7 @@ switchMe() {
 searchWAN() {
 	# search WAN interface (usbX, ethX, wwanX)
 	WAN="" WANS="" # global
-	local FOUND=0 MODULE
+	local FOUND=0 MODULE WDM WDM_PATH
 
 	for MODULE in $MODULES; do
 		modprobe $MODULE
@@ -505,7 +505,18 @@ searchWAN() {
 
 			# check if interface has our MODULE
 			[ "$(grep -s ^DRIVER $PATHWAN/$WAN/device/uevent | cut -d "=" -f2)" = "$MODULE" ] && {
-				WANS="$WANS $WAN:$(ls $PATHWAN/$WAN/device/ | grep usb | cut -d ":" -f2)"
+				WDM=""
+				for WDM_PATH in \
+					"$PATHWAN/$WAN/device/usbmisc"/cdc-wdm[0-9]* \
+					"$PATHWAN/$WAN/device"/usb:cdc-wdm[0-9]*; do
+					[ -e "$WDM_PATH" ] || continue
+
+					WDM=${WDM_PATH##*/}
+					WDM=${WDM#usb:}
+					break
+				done
+
+				WANS="$WANS $WAN${WDM:+:$WDM}"
 				$LOGI "4G MODEM - found WAN(s): $WANS"
 				FOUND=1
 			}
@@ -593,7 +604,10 @@ searchDiag() {
 			fi
 		;;
 		qmi_wwan)
-			TTYS=$(ls -d $PATHDIAG/$DEVICENAME/${DEVICENAME}*/usb:cdc-wdm?* 2>/dev/null | sed -e "s/.*\\/\\//.*/g" -e "s/.*://g")
+			TTYS=$(ls -d \
+				"$PATHDIAG/$DEVICENAME"/"${DEVICENAME}"*/usbmisc/cdc-wdm[0-9]* \
+				"$PATHDIAG/$DEVICENAME"/"${DEVICENAME}"*/usb:cdc-wdm[0-9]* \
+				2>/dev/null | sed -e 's|.*/||' -e 's/^usb://' | sort -u)
 
 			if [ -n "$TTYS" ]; then
 				$LOGI "4G MODEM - DIAG(s) found ($TTYS)"
