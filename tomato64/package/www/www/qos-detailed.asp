@@ -35,6 +35,19 @@ var colors = ['F08080','E6E6FA','0066CC','8FBC8F','FAFAD2','ADD8E6','9ACD32','E0
 var filterip = [];
 var filteripe = [];
 
+var lanGateways = [];
+var lanBroadcasts = [];
+for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+	var p = 'lan'+(i ? i : '');
+	var ip = nvram[p+'_ipaddr'];
+	var netmask = nvram[p+'_netmask'];
+
+	if (ip)
+		lanGateways.push(ip);
+	if (ip && netmask)
+		lanBroadcasts.push(getBroadcastAddress(getNetworkAddress(ip, netmask), netmask));
+}
+
 if ((viewClass = '<% cgi_get("class"); %>') == '')
 	viewClass = -1;
 else if ((isNaN(viewClass *= 1)) || (viewClass < 0) || (viewClass > 10))
@@ -253,19 +266,13 @@ ref.refresh = function(text) {
 		b = ctdump[i];
 
 		if (E('_f_excludegw').checked) {
-			if ((b[2] == nvram.lan_ipaddr) || (b[3] == nvram.lan_ipaddr) ||
-				(b[2] == nvram.lan1_ipaddr) || (b[3] == nvram.lan1_ipaddr) ||
-				(b[2] == nvram.lan2_ipaddr) || (b[3] == nvram.lan2_ipaddr) ||
-				(b[2] == nvram.lan3_ipaddr) || (b[3] == nvram.lan3_ipaddr) ||
+			if ((lanGateways.indexOf(b[2]) != -1) || (lanGateways.indexOf(b[3]) != -1) ||
 				(b[2] == '127.0.0.1') || (b[3] == '127.0.0.1'))
 				continue;
 		}
 
 		if (E('_f_excludebcast').checked) {
-			if ((b[3] == getBroadcastAddress(getNetworkAddress(nvram.lan_ipaddr,nvram.lan_netmask),nvram.lan_netmask)) ||
-				(b[3] == getBroadcastAddress(getNetworkAddress(nvram.lan1_ipaddr,nvram.lan1_netmask),nvram.lan1_netmask)) ||
-				(b[3] == getBroadcastAddress(getNetworkAddress(nvram.lan2_ipaddr,nvram.lan2_netmask),nvram.lan2_netmask)) ||
-				(b[3] == getBroadcastAddress(getNetworkAddress(nvram.lan3_ipaddr,nvram.lan3_netmask),nvram.lan3_netmask)) ||
+			if ((lanBroadcasts.indexOf(b[3]) != -1) ||
 				(b[3] == '255.255.255.255') || (b[3] == '0.0.0.0'))
 				continue;
 		}
