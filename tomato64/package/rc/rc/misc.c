@@ -148,7 +148,6 @@ void run_userfile(char *folder, char *extension, const char *arg1, int wtime)
 	n = scandir(folder, &namelist, endswith_filter, alphasort);
 	if (n >= 0) {
 		for (i = 0; i < n; ++i) {
-			memset(buf, 0, (PATH_MAX + 1));
 			snprintf(buf, (PATH_MAX + 1), "%s/%s", folder, namelist[i]->d_name);
 			execute_with_maxwait(argv, (strchr(namelist[i]->d_name, '&') ? 0 : wtime));
 			free(namelist[i]);
@@ -217,7 +216,6 @@ void run_nvscript(const char *nv, const char *arg1, int wtime)
 		script = nvram_get(nv);
 
 		if ((script) && (*script != 0)) {
-			memset(s, 0, (PATH_MAX + 1));
 			snprintf(s, (PATH_MAX + 1), "/tmp/%s.sh", nv);
 			if ((f = fopen(s, "w")) != NULL) {
 				fputs("#!/bin/sh\n", f);
@@ -233,7 +231,6 @@ void run_nvscript(const char *nv, const char *arg1, int wtime)
 			}
 		}
 
-		memset(s, 0, (PATH_MAX + 1));
 		snprintf(s, (PATH_MAX + 1), ".%s", nv);
 		if (strncmp("sch_c", nv, 5) == 0)
 			check_dirs = 0;
@@ -262,13 +259,11 @@ static void write_ct_timeout(const char *type, const char *name, unsigned int va
 	char buf[128];
 	char v[16];
 
-	memset(buf, 0, sizeof(buf));
 #ifndef TOMATO64
 	snprintf(buf, sizeof(buf), "ipv4/netfilter/ip_conntrack_%s_timeout%s%s", type, ((name && name[0]) ? "_" : ""), (name ? name : ""));
 #else
 	snprintf(buf, sizeof(buf), "netfilter/nf_conntrack_%s_timeout%s%s", type, ((name && name[0]) ? "_" : ""), (name ? name : ""));
 #endif /* TOMATO64 */
-	memset(v, 0, sizeof(v));
 	snprintf(v, sizeof(v), "%u", val);
 
 	f_write_procsysnet(buf, v);
@@ -288,7 +283,6 @@ static unsigned int read_ct_timeout(const char *type, const char *name)
 	unsigned int val = 0;
 	char v[16];
 
-	memset(buf, 0, sizeof(buf));
 #ifndef TOMATO64
 	snprintf(buf, sizeof(buf), "/proc/sys/net/ipv4/netfilter/ip_conntrack_%s_timeout%s%s", type, ((name && name[0]) ? "_" : ""), (name ? name : ""));
 #else
@@ -341,7 +335,6 @@ void setup_conntrack(void)
 		v[6] = read_tcp_timeout("close");
 		v[7] = read_tcp_timeout("close_wait");
 		v[8] = read_tcp_timeout("last_ack");
-		memset(buf, 0, sizeof(buf));
 		snprintf(buf, sizeof(buf), "0 %u %u %u %u %u %u %u %u 0", v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8]);
 		nvram_set("ct_tcp_timeout", buf);
 	}
@@ -354,7 +347,6 @@ void setup_conntrack(void)
 	else {
 		v[0] = read_udp_timeout(NULL);
 		v[1] = read_udp_timeout("stream");
-		memset(buf, 0, sizeof(buf));
 		snprintf(buf, sizeof(buf), "%u %u", v[0], v[1]);
 		nvram_set("ct_udp_timeout", buf);
 	}
@@ -367,7 +359,6 @@ void setup_conntrack(void)
 	else {
 		v[0] = read_ct_timeout("generic", NULL);
 		v[1] = read_ct_timeout("icmp", NULL);
-		memset(buf, 0, sizeof(buf));
 		snprintf(buf, sizeof(buf), "%u %u", v[0], v[1]);
 		nvram_set("ct_timeout", buf);
 	}
@@ -421,7 +412,6 @@ void setup_conntrack(void)
 	if (nvram_match("ftp_enable", "1") && (i > 0) && (i != 21)) {
 		char ports[32];
 
-		memset(ports, 0, sizeof(ports));
 		snprintf(ports, sizeof(ports), "ports=21,%d", i);
 		ct_modprobe_r("ftp");
 		ct_modprobe("ftp", ports);

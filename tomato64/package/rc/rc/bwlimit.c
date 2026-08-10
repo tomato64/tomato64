@@ -184,7 +184,6 @@ void ipt_bwlimit(int chain)
 			continue;
 		
 		address_checker(&address_type, ipaddr_old, ipaddr, sizeof(ipaddr));
-		memset(seq, 0, sizeof(seq));
 		snprintf(seq, sizeof(seq), "0x%x/0xff00000", iSeq << 20);
 		iSeq++;
 

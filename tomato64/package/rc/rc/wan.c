@@ -76,7 +76,6 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 
 	/* Generate options file */
 	char ppp_optfile[256];
-	memset(ppp_optfile, 0, sizeof(ppp_optfile));
 	snprintf(ppp_optfile, sizeof(ppp_optfile), "/tmp/ppp/%s_options", prefix);
 	if ((fp = fopen(ppp_optfile, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, ppp_optfile);
@@ -159,7 +158,6 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 	case WP_PPP3G: ;
 		/* Generate chat file */
 		char ppp3g_chatfile[256];
-		memset(ppp3g_chatfile, 0, sizeof(ppp3g_chatfile));
 		snprintf(ppp3g_chatfile, sizeof(ppp3g_chatfile), "/tmp/ppp/%s_connect.chat", prefix);
 
 		if ((cfp = fopen(ppp3g_chatfile, "w")) == NULL) {
@@ -269,15 +267,12 @@ static void stop_ppp(char *prefix)
 	unsigned int i, not_allwan_l2tp = 1;
 	unsigned int mwan_num = mwan_active_num();
 
-	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), "/tmp/ppp/%s_link", prefix);
 	unlink(buffer);
 	/* Fix switching wan type from UI error (stale options file) */
-	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), "/tmp/ppp/%s_options", prefix);
 	unlink(buffer);
 
-	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), "pppd%s", prefix);
 
 	/* Race condition on start_pppoe in ip-up on boot, primary pp(poe/tp) wan will not reach start_wan_done on secondary ppp(oe/3g) start */
@@ -290,7 +285,6 @@ static void stop_ppp(char *prefix)
 #endif
 
 	for (i = 1; i <= mwan_num; i++) {
-		memset(ifname, 0, sizeof(ifname));
 		sprintf(ifname, (i == 1 ? "wan" : "wan%u"), i);
 		if (get_wanx_proto(ifname) == WP_L2TP) {
 			not_allwan_l2tp = 0;
@@ -320,10 +314,8 @@ static void run_pppd(char *prefix)
 	char pppd_path[256];
 	char ppp_optfile[256];
 
-	memset(pppd_path, 0, sizeof(pppd_path));
-	snprintf(pppd_path, sizeof(pppd_path), "/tmp/ppp/pppd%s", prefix);
 
-	memset(ppp_optfile, 0, sizeof(ppp_optfile));
+	snprintf(pppd_path, sizeof(pppd_path), "/tmp/ppp/pppd%s", prefix);
 	snprintf(ppp_optfile, sizeof(ppp_optfile), "/tmp/ppp/%s_options", prefix);
 
 	symlink("/usr/sbin/pppd", pppd_path);
@@ -533,7 +525,6 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 	unsigned int mwan_num = mwan_active_num();
 
 	/* Generate XL2TPD configuration file */
-	memset(xl2tp_file, 0, sizeof(xl2tp_file));
 	snprintf(xl2tp_file, sizeof(xl2tp_file), "/etc/xl2tpd.conf");
  	if ((fp = fopen(xl2tp_file, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, xl2tp_file);
@@ -552,10 +543,8 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 
 	/* LACS */
 	for (i = 1; i <= mwan_num; ++i) {
-		memset(ifname, 0, sizeof(ifname));
 		snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%u"), i);
 		if (!strcmp(nvram_safe_get(strlcat_r(ifname, "_proto", tmp, sizeof(tmp))), "l2tp")) {
-			memset(ppp_optfile, 0, sizeof(ppp_optfile));
 			snprintf(ppp_optfile, sizeof(ppp_optfile), "/tmp/ppp/%s_options", ifname);
 
 			fprintf(fp, "[lac %s]\n"
@@ -578,7 +567,6 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 			            nvram_safe_get(strlcat_r(ifname, "_xl2tpd_custom", tmp, sizeof(tmp))));
 
 			/* append custom config file (if any) */
-			memset(xl2tp_file, 0, sizeof(xl2tp_file));
 			snprintf(xl2tp_file, sizeof(xl2tp_file), "/etc/%s_xl2tpd.custom", ifname);
 			fappend(fp, xl2tp_file);
 		}
@@ -593,10 +581,9 @@ inline void stop_l2tp(char *prefix)
 	char l2tp_file[64];
 	char dconnects[64];
 
-	memset(l2tp_file, 0, sizeof(l2tp_file));
 	snprintf(l2tp_file, sizeof(l2tp_file), "/var/run/l2tp-control");
-	memset(dconnects, 0, sizeof(dconnects));
 	snprintf(dconnects, sizeof(dconnects), "d %s", prefix);
+
 	f_write_string(l2tp_file, dconnects, 0, 0);	/* Disconnect current session first */
 	sleep(1);					/* Wait ip-down scripts to finish graceful */
 	stop_ppp(prefix);				/* Unlink ppp files in /tmp/ppp (used by mwan.c) and stop daemon */
@@ -649,15 +636,12 @@ void force_to_dial(char *prefix)
 	char connects[64];
 	char dgw[64];
 
-	memset(dgw, 0, sizeof(dgw));
 	snprintf(dgw, sizeof(dgw), "10.112.112.%d", 111 + get_wan_unit(prefix)); /* 10.112.112.112-115 for ppp0-3 */
 	sleep(1);
 
 	switch (get_wanx_proto(prefix)) {
 	case WP_L2TP:
-		memset(l2tp_file, 0, sizeof(l2tp_file));
 		snprintf(l2tp_file, sizeof(l2tp_file), "/var/run/l2tp-control");
-		memset(connects, 0, sizeof(connects));
 		snprintf(connects, sizeof(connects), "c %s", prefix);
 		f_write_string(l2tp_file, connects, 0, 0);
 		break;
@@ -686,7 +670,6 @@ static void _do_wan_routes(char *ifname, char *nvname, int metric, int add)
 		char *ipaddr, *gateway, *nmask;
 
 		ipaddr = nmask = strsep(&tmp, " ");
-		memset(netmask, 0, sizeof(netmask));
 		strlcpy(netmask, "255.255.255.255", sizeof(netmask));
 
 		if (nmask) {
@@ -695,7 +678,6 @@ static void _do_wan_routes(char *ifname, char *nvname, int metric, int add)
 				bits = strtol(nmask, &nmask, 10);
 				if (bits >= 1 && bits <= 32) {
 					mask.s_addr = htonl(0xffffffff << (32 - bits));
-					memset(netmask, 0, sizeof(netmask));
 					strlcpy(netmask, inet_ntoa(mask), sizeof(netmask));
 				}
 			}
@@ -888,7 +870,6 @@ void start_wan_if(char *prefix)
 		else if (mtu < 576)
 			mtu = 576;
 	}
-	memset(buf, 0, sizeof(buf));
 	snprintf(buf, sizeof(buf), "%d", mtu);
 	nvram_set(strlcat_r(prefix, "_mtu", tmp, sizeof(tmp)), buf);
 	nvram_set(strlcat_r(prefix, "_run_mtu", tmp, sizeof(tmp)), buf);
@@ -1150,7 +1131,6 @@ void start_wan_done(char *wan_ifname, char *prefix)
 
 	mwan_num = mwan_active_num();
 
-	memset(tmp, 0, sizeof(tmp));
 	snprintf(tmp, sizeof(tmp), "/var/lib/misc/%s_time", prefix);
 	f_write(tmp, &si.uptime, sizeof(si.uptime), 0, 0);
 
@@ -1225,10 +1205,8 @@ void start_wan_done(char *wan_ifname, char *prefix)
 	 */
 	get_wan_prefix(nvram_get_int("wan_primary"), pw); /* Get current primary wan name */
 	if (!check_wanup(pw)) { /* If primary wan offline, set current as primary */
-		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), "%d", get_wan_unit(prefix));
 		nvram_set("wan_primary", tmp);
-		memset(pw, 0, sizeof(pw));
 		strlcpy(pw, prefix, sizeof(pw));
 	}
 
@@ -1279,7 +1257,6 @@ void start_wan_done(char *wan_ifname, char *prefix)
 
 	if (wanup) {
 		char wan_unit_str[16];
-		memset(wan_unit_str, 0, sizeof(wan_unit_str));
 		snprintf(wan_unit_str, sizeof(wan_unit_str), "%d", get_wan_unit(prefix));
 
 		notice_set(prefix, "");
@@ -1397,7 +1374,6 @@ void stop_wan_if(char *prefix)
 	foreach(name, nvram_safe_get(strlcat_r(prefix, "_ifnames", tmp, sizeof(tmp))), next)
 		ifconfig(name, 0, "0.0.0.0", NULL);
 
-	memset(tmp, 0, sizeof(tmp));
 	snprintf(tmp, sizeof(tmp), "/var/notice/%s", prefix);
 	unlink(tmp);
 
@@ -1462,7 +1438,6 @@ void stop_wan(void)
 	clear_resolv();
 
 	for (i = 1; i <= mwan_num; i++) {
-		memset(buf, 0, sizeof(buf));
 		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%u"), i);
 		stop_wan_if(buf);
 	}

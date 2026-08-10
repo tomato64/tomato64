@@ -375,7 +375,6 @@ static void update_dnsmasq_ipset(const char *tag, domain_list_t *list, const int
 
 		/* extract domain */
 		*pos = '\0';
-		memset(domain_entry, 0, BUF_SIZE_128);
 		strlcpy(domain_entry, line + 7, BUF_SIZE_128);
 
 		/* normalize dnsmasq wildcard entries (.example.com -> example.com) */

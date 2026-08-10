@@ -413,7 +413,6 @@ void rast_retrieve_bs_data(int bssidx, int vifidx)
 	else
 		strlcpy(wlif_name, bssinfo[bssidx].wlif_name, sizeof(wlif_name));
 
-	memset(ioctl_buf, 0, sizeof(ioctl_buf));
 	strlcpy(ioctl_buf, "bs_data", sizeof(ioctl_buf));
 	ret = wl_ioctl(wlif_name, WLC_GET_VAR, ioctl_buf, sizeof(ioctl_buf));
 	if (ret < 0) {

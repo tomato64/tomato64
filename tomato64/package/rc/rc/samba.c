@@ -93,9 +93,7 @@ static void enable_gro(int interval)
 	lan_ifnames = nvram_safe_get("lan_ifnames");
 	foreach(lan_ifname, lan_ifnames, next) {
 		if (!strncmp(lan_ifname, "vlan", 4)) {
-			memset(path, 0, sizeof(path));
 			snprintf(path, sizeof(path), ">>/proc/net/vlan/%s", lan_ifname);
-			memset(parm, 0, sizeof(parm));
 			snprintf(parm, sizeof(parm), "-gro %d", interval);
 			argv[1] = parm;
 			_eval(argv, path, 0, NULL);
@@ -169,9 +167,7 @@ void start_samba(int force)
 	if (strlen(si)) {
 		memset(buffer3, 0, sizeof(buffer3)); /* reset */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			memset(buffer, 0, sizeof(buffer)); /* reset */
 			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
-			memset(buffer2, 0, sizeof(buffer2)); /* reset */
 			snprintf(buffer2, sizeof(buffer2), "br%d", i);
 			if ((strlen(nvram_safe_get(buffer)) > 0) && (strstr(si, buffer2) != NULL)) { /* bridge is up & present in 'smbd_ifnames' */
 				if (strlen(buffer3) > 0)
@@ -299,7 +295,6 @@ void start_samba(int force)
 
 	nv = nvram_safe_get("smbd_cpage");
 	if (*nv) {
-		memset(nlsmod, 0, sizeof(nlsmod));
 		snprintf(nlsmod, sizeof(nlsmod), "nls_cp%s", nv);
 
 		nv = nvram_safe_get("smbd_nlsmod");

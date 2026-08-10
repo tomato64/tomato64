@@ -76,7 +76,6 @@ int ipup_main(int argc, char **argv)
 
 	/* check mwwatchdog enabled - part 1 of 2 */
 	if (check_mwandog) {
-		memset(tmp2, 0, sizeof(tmp2));
 		snprintf(tmp2, sizeof(tmp2), "%s_ck_pause", prefix);
 		old_ck_pause = nvram_get_int(tmp2); /* save old value */
 		nvram_set(tmp2, "1"); /* skip checking on this WAN until start_wan_done() finished! */
@@ -96,7 +95,6 @@ int ipup_main(int argc, char **argv)
 	 *   <interface name>  <tty device>  <speed> <local IP address> <remote IP address> <ipparam>
 	 *   ppp1              vlan1         0       71.135.98.32       151.164.184.87      0
 	 */
-	memset(ppplink_file, 0, sizeof(ppplink_file));
 	snprintf(ppplink_file, sizeof(ppplink_file), "/tmp/ppp/%s_link", prefix);
 	f_write_string(ppplink_file, argv[1], 0, 0);
 
@@ -158,7 +156,6 @@ int ipup_main(int argc, char **argv)
 
 	/* check mwwatchdog enabled - part 2 of 2 */
 	if (check_mwandog && !old_ck_pause) {
-		memset(tmp2, 0, sizeof(tmp2));
 		snprintf(tmp2, sizeof(tmp2), "%s_ck_pause", prefix);
 		nvram_set(tmp2, "0"); /* reset and check WAN XY with mwwatchdog again */
 		logmsg(LOG_DEBUG, "*** %s: set %s_ck_pause=0 to check this WAN (multiwan watchdog)", __FUNCTION__, prefix);
@@ -186,7 +183,6 @@ int ipdown_main(int argc, char **argv)
 
 	strlcpy(prefix, safe_getenv("LINKNAME"), sizeof(prefix));
 
-	memset(ppplink_file, 0, sizeof(ppplink_file));
 	snprintf(ppplink_file, sizeof(ppplink_file), "/tmp/ppp/%s_link", prefix);
 	unlink(ppplink_file);
 
@@ -331,7 +327,6 @@ int pppevent_main(int argc, char **argv)
 				return 1;
 
 			if ((strcmp(argv[i], "PAP_AUTH_FAIL") == 0) || (strcmp(argv[i], "CHAP_AUTH_FAIL") == 0)) {
-				memset(ppplog_file, 0, sizeof(ppplog_file));
 				snprintf(ppplog_file, sizeof(ppplog_file), "/tmp/ppp/%s_log", prefix);
 				f_write_string(ppplog_file, argv[i], 0, 0);
 				notice_set(prefix, "Authentication failed");

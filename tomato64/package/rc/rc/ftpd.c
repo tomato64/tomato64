@@ -29,8 +29,6 @@ static char *get_full_storage_path(char *val)
 	static char buf[128];
 	int len;
 
-	memset(buf, 0, sizeof(buf));
-
 	if (val[0] == '/')
 		len = snprintf(buf, sizeof(buf), "%s", val);
 	else
@@ -144,7 +142,6 @@ void start_ftpd(int force)
 
 	if (nvram_get_int("ftp_super")) {
 		/* rights */
-		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), "%s/%s", vsftpd_users, "admin");
 		if ((f = fopen(tmp, "w")) == NULL) {
 			logerr(__FUNCTION__, __LINE__, tmp);
@@ -164,7 +161,6 @@ void start_ftpd(int force)
 		            "anon_umask=022\n");
 
 		/* rights */
-		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), "%s/ftp", vsftpd_users);
 		if ((f = fopen(tmp, "w")) == NULL) {
 			logerr(__FUNCTION__, __LINE__, tmp);
@@ -303,7 +299,6 @@ void start_ftpd(int force)
 				root_dir = nvram_safe_get("ftp_pubroot");
 
 			/* directory */
-			memset(tmp, 0, sizeof(tmp));
 			if (strncmp(rights, "Private", 7) == 0) {
 				snprintf(tmp, sizeof(tmp), "%s/%s", nvram_storage_path("ftp_pvtroot"), user);
 				mkdir_if_none(tmp);
@@ -314,7 +309,6 @@ void start_ftpd(int force)
 			fprintf(fp, "%s:%s:0:0:%s:%s:/sbin/nologin\n", user, crypt(pass, "$1$"), user, tmp);
 
 			/* rights */
-			memset(tmp, 0, sizeof(tmp));
 			snprintf(tmp, sizeof(tmp), "%s/%s", vsftpd_users, user);
 			if ((f = fopen(tmp, "w")) == NULL) {
 				logerr(__FUNCTION__, __LINE__, tmp);

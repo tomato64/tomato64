@@ -52,7 +52,6 @@ static void prep_qosstr(char *prefix)
 	char buf[8];
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(buf, 0, sizeof(buf));
 		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%d"), i);
 		if (!strcmp(prefix, buf)) {
 			snprintf(buf, sizeof(buf), (i == 1 ? "/etc/wan_qos" : "/etc/wan%d_qos"), i);
@@ -424,7 +423,6 @@ void ipt_qos(void)
 #endif /* TOMATO64 */
 
 	for (i = 2; i <= (int)mwan_num; i++) { /* always add rules for 1st WAN, so doesn't matter if it's up */
-		memset(s, 0, sizeof(s));
 		snprintf(s, sizeof(s), "wan%d", i);
 		wanup[i - 1] = check_wanup(s);
 	}
@@ -460,7 +458,6 @@ void ipt_qos(void)
 #endif /* TCONFIG_IPV6 */
 
 	inuse |= (1 << i) | 1; /* default and highest are always built */
-	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "%d", inuse);
 	nvram_set("qos_inuse", s);
 
@@ -579,11 +576,8 @@ void start_qos(char *prefix)
 	x = nvram_get_int("ne_vegas");
 	if (x) {
 		char alpha[10], beta[10], gamma[10];
-		memset(alpha, 0, sizeof(alpha));
 		snprintf(alpha, sizeof(alpha), "alpha=%d", nvram_get_int("ne_valpha"));
-		memset(beta, 0, sizeof(beta));
 		snprintf(beta, sizeof(beta), "beta=%d", nvram_get_int("ne_vbeta"));
-		memset(gamma, 0, sizeof(gamma));
 		snprintf(gamma, sizeof(gamma), "gamma=%d", nvram_get_int("ne_vgamma"));
 		modprobe("tcp_vegas", alpha, beta, gamma);
 		f_write_procsysnet("ipv4/tcp_congestion_control", "vegas");

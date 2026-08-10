@@ -37,7 +37,6 @@ static void tinc_setup_watchdog(void)
 	int nvi;
 
 	if ((nvi = nvram_get_int("tinc_poll")) > 0) {
-		memset(buffer, 0, sizeof(buffer));
 		snprintf(buffer, sizeof(buffer), TINC_DIR"/watchdog.sh");
 
 		if ((fp = fopen(buffer, "w"))) {
@@ -54,7 +53,6 @@ static void tinc_setup_watchdog(void)
 			fclose(fp);
 			chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
 
-			memset(buffer2, 0, sizeof(buffer2));
 			snprintf(buffer2, sizeof(buffer2), "*/%d * * * * %s", nvi, buffer);
 			eval("cru", "a", "CheckTincDaemon", buffer2);
 		}
@@ -177,7 +175,6 @@ void start_tinc(int force)
 		if (vstrsep(b, "<", &connecto, &name, &address, &port, &compression, &subnet, &rsa, &ed25519, &custom) < 9)
 			continue;
 
-		memset(buffer, 0, (BUF_SIZE));
 		snprintf(buffer, sizeof(buffer), TINC_HOSTS"/%s", name);
 		if (!(hp = fopen(buffer, "w"))) {
 			logerr(__FUNCTION__, __LINE__, buffer);

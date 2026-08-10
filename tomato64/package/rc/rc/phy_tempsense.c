@@ -180,7 +180,6 @@ static void phy_tempsense_mon()
 	if (!base)
 		nvram_set("fanctrl_dutycycle_ex", "0");
 	else {
-		memset(w, 0, sizeof(w));
 		snprintf(w, sizeof(w), "%d", base);
 		nvram_set("fanctrl_dutycycle_ex", w);
 	}

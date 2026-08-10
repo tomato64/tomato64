@@ -132,7 +132,6 @@ void ipt_routerpolicy(void)
 			if (*active != '1')
 				continue;
 
-			memset(msrt, 0, sizeof(msrt));
 			if (atoi(srt_type) == 1)
 				snprintf(msrt, sizeof(msrt), "-s %s", srt_addr);
 			else if (atoi(srt_type) == 2)
@@ -187,7 +186,6 @@ void ipt_routerpolicy(void)
 					if (inet_ntop(AF_INET, &ipv->sin_addr, buf, sizeof(buf)) == NULL)
 						continue;
 
-					memset(mdst, 0, sizeof(mdst));
 					snprintf(mdst, sizeof(mdst), "-d %s", buf);
 
 					msport = (strchr(srt_port, ',') != NULL) ? " -m multiport --sports " : " --sport ";

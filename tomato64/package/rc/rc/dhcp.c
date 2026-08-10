@@ -65,10 +65,7 @@ static void expires(unsigned int seconds, char *prefix)
 	char buf[64];
 
 	sysinfo(&info);
-	memset(s, 0, sizeof(s));
 	snprintf(s, sizeof(s), "%u", (unsigned int)info.uptime + seconds);
-
-	memset(buf, 0, sizeof(buf));
 	snprintf(buf, sizeof(buf), "/var/lib/misc/dhcpc-%s.expires", prefix);
 	f_write_string(buf, s, 0, 0);
 }
@@ -77,7 +74,6 @@ static void do_renew_file(unsigned int renew, char *prefix)
 {
 	char buf[64];
 
-	memset(buf, 0, sizeof(buf));
 	snprintf(buf, sizeof(buf), "/var/lib/misc/%s_dhcpc.renewing", prefix);
 
 	if (renew)
@@ -90,7 +86,6 @@ void do_connect_file(unsigned int connect, char *prefix)
 {
 	char buf[64];
 
-	memset(buf, 0, sizeof(buf));
 	snprintf(buf, sizeof(buf), "/var/lib/misc/%s.connecting", prefix);
 
 	if (connect)
@@ -253,7 +248,6 @@ static int bound(char *ifname, int renew, char *prefix)
 		case WP_PPPOE:
 			logmsg(LOG_DEBUG, "*** %s: start_pppoe(%s) ...", __FUNCTION__, prefix);
 			for (i = 1; i <= MWAN_MAX; i++) {
-				memset(tmp, 0, sizeof(tmp));
 				snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%d"), i);
 				if (!strcmp(prefix, tmp)) {
 					start_pppoe(PPPOEWAN(i), prefix);
@@ -353,21 +347,16 @@ int dhcpc_event_main(int argc, char **argv)
 	if (ifname == NULL)
 		return EINVAL;
 
-	memset(tmp, 0, sizeof(tmp));
 	strlcpy(prefix, "wan", sizeof(prefix)); /* default */
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(name, 0, sizeof(name));
 		snprintf(name, sizeof(name), (i == 1 ? "wan" : "wan%u"), i);
-
-		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), "%s_ifname", name);
 		if (nvram_match(tmp, ifname)) {
 			strlcpy(prefix, name, sizeof(prefix));
 			break; /* found prefix (ifname) - break */
 		}
 
-		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), "%s_iface", name);
 		if (nvram_match(tmp, ifname)) {
 			strlcpy(prefix, name, sizeof(prefix));
@@ -409,7 +398,6 @@ int dhcpc_release_main(int argc, char **argv)
 	if (!using_dhcpc(prefix))
 		return 1;
 
-	memset(pid_file, 0, sizeof(pid_file));
 	snprintf(pid_file, sizeof(pid_file), "/var/run/udhcpc-%s.pid", prefix);
 	if (kill_pidfile_s(pid_file, SIGUSR2) == 0)
 		sleep(2);
@@ -443,7 +431,6 @@ int dhcpc_renew_main(int argc, char **argv)
 	if (!using_dhcpc(prefix))
 		return 1;
 
-	memset(pid_file, 0, sizeof(pid_file));
 	snprintf(pid_file, sizeof(pid_file), "/var/run/udhcpc-%s.pid", prefix);
 	if (kill_pidfile_s(pid_file, SIGUSR1) == 0)
 		do_renew_file(1, prefix);
@@ -648,7 +635,6 @@ void start_dhcpc_lan(void)
 		return;
 	}
 
-	memset(pid_file, 0, sizeof(pid_file));
 	snprintf(pid_file, sizeof(pid_file), "/var/run/udhcpc-lan.pid");
 
 	memset(tmp, 0, sizeof(tmp));
@@ -657,7 +643,6 @@ void start_dhcpc_lan(void)
 		strlcat(tmp, nvram_safe_get("wan_hostname"), sizeof(tmp));
 	}
 
-	memset(cmd, 0, sizeof(cmd));
 	snprintf(cmd, sizeof(cmd), "/sbin/udhcpc -i %s -s /sbin/dhcpc-event-lan -p %s %s %s",
 	                           ifname,
 	                           pid_file,
@@ -677,7 +662,6 @@ void stop_dhcpc_lan(void)
 
 	killall("dhcpc-event-lan", SIGTERM);
 
-	memset(pid_file, 0, sizeof(pid_file));
 	snprintf(pid_file, sizeof(pid_file), "/var/run/udhcpc-lan.pid");
 	kill_pidfile_s(pid_file, SIGUSR2);
 	kill_pidfile_s(pid_file, SIGTERM);
@@ -756,7 +740,6 @@ void start_dhcpc(char *prefix)
 	if ((proto == WP_DHCP) || (proto == WP_LTE))
 		nvram_set(strlcat_r(prefix, "_iface", tmp, sizeof(tmp)), ifname);
 
-	memset(pid_file, 0, sizeof(pid_file));
 	snprintf(pid_file, sizeof(pid_file), "/var/run/udhcpc-%s.pid", prefix);
 
 	memset(tmp, 0, sizeof(tmp));
@@ -765,7 +748,6 @@ void start_dhcpc(char *prefix)
 		strlcat(tmp, nvram_safe_get("wan_hostname"), sizeof(tmp));
 	}
 
-	memset(cmd, 0, sizeof(cmd));
 #ifndef TOMATO64
 	snprintf(cmd, sizeof(cmd), "udhcpc -i %s -b -s /sbin/dhcpc-event -p %s %s %s %s %s %s %s %s",
 #else /* TOMATO64 */
@@ -808,7 +790,6 @@ void stop_dhcpc(char *prefix)
 
 	killall("dhcpc-event", SIGTERM);
 
-	memset(pid_file, 0, sizeof(pid_file));
 	snprintf(pid_file, sizeof(pid_file), "/var/run/udhcpc-%s.pid", prefix);
 	if (kill_pidfile_s(pid_file, SIGUSR2) == 0) /* release */
 		sleep(2);
@@ -965,14 +946,12 @@ void start_dhcp6c(void)
 			if (i >= BRIDGE_COUNT_IPV6_MAX) /* Stop here if we reach this limit */
 				break;
 
-			memset(buf, 0, sizeof(buf));
 			snprintf(buf, sizeof(buf), "lan%u_ipaddr", i);
 
 			/* more IPv6 /64 networks possible --> for LAN1 to LANX */
 			if ((ipv6_vlan & (1U << (i - 1))) && /* Check GUI */
 			    ((1U << prefix_len) > i) && /* Check prefix - x IPv6 /64 networks possible */
 			    (strcmp(nvram_safe_get(buf), "") != 0)) { /* check lanX_ipaddr */
-				memset(buf, 0, sizeof(buf));
 				snprintf(buf, sizeof(buf), "lan%u_ifname", i);
 
 				fprintf(f, " prefix-interface %s {\n"

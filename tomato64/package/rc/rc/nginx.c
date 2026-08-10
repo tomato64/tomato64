@@ -442,7 +442,6 @@ void start_nginx(int force)
 	pidof_child = getpid();
 
 	/* write child pid to a file */
-	memset(buf, 0, sizeof(buf));
 	snprintf(buf, sizeof(buf), "%d", pidof_child);
 	f_write_string(nginx_child_pid, buf, 0, 0);
 

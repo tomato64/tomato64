@@ -106,7 +106,6 @@ int rcheck_main(int argc, char *argv[])
 	count = 0;
 	radio = foreach_wif(0, NULL, radio_on) ? -1 : -2;
 	for (nrule = 0; nrule < MAX_NRULES; ++nrule) {
-		memset(buf, 0, sizeof(buf));
 		snprintf(buf, sizeof(buf), "rrule%d", nrule);
 		if ((p = nvram_get(buf)) == NULL)
 			continue;
@@ -139,7 +138,6 @@ int rcheck_main(int argc, char *argv[])
 				radio = !insch;
 		}
 		else {
-			memset(buf, 0, sizeof(buf));
 			snprintf(buf, sizeof(buf), "r%s%02d", (comp != '|') ? "dev" : "res", nrule);
 
 			r = eval("iptables", "-D", "restrict", "-j", buf);
@@ -174,7 +172,6 @@ int rcheck_main(int argc, char *argv[])
 			activated &= ~n;
 	}
 
-	memset(buf, 0, sizeof(buf));
 	snprintf(buf, sizeof(buf), "%llx", activated);
 	nvram_set("rrules_activated", buf);
 
@@ -235,7 +232,6 @@ void ipt_restrictions(void)
 	unsched_restrictions();
 
 	for (nrule = 0; nrule < MAX_NRULES; ++nrule) {
-		memset(buf, 0, sizeof(buf));
 		snprintf(buf, sizeof(buf), "rrule%d", nrule);
 		if ((p = nvram_get(buf)) == NULL)
 			continue;
@@ -272,7 +268,6 @@ void ipt_restrictions(void)
 			            "-I INPUT 1 ! -i lo -p tcp --dport 53 -j restrict\n");
 		}
 
-		memset(reschain, 0, sizeof(reschain));
 		snprintf(reschain, sizeof(reschain), "rres%02d", nrule);
 		ip46t_write(ipv6_enabled, ":%s - [0:0]\n", reschain);
 
@@ -397,7 +392,6 @@ void ipt_restrictions(void)
 		}
 
 		if (*comps) {
-			memset(nextchain, 0, sizeof(nextchain));
 			if (blockall) {
 				ip46t_write(ipv6_enabled, "-X %s\n", reschain);	/* chain not needed */
 				snprintf(nextchain, sizeof(nextchain), "-j %s", chain_out_drop);
@@ -406,7 +400,6 @@ void ipt_restrictions(void)
 				snprintf(nextchain, sizeof(nextchain), "-g %s", reschain);
 
 			ex = 0;
-			memset(devchain, 0, sizeof(devchain));
 			snprintf(devchain, sizeof(devchain), "rdev%02d", nrule);
 			ip46t_write(ipv6_enabled, ":%s - [0:0]\n", devchain);
 

@@ -252,7 +252,6 @@ static void set_lan_hostname(const char *wan_hostname)
 		/* derive from et0 mac address */
 		s = nvram_get("lan_hwaddr");
 		if (s && strlen(s) >= 17) {
-			memset(buf, 0, sizeof(buf));
 			snprintf(buf, sizeof(buf), "FT-%c%c%c%c%c%c%c%c%c%c%c%c", s[0], s[1], s[3], s[4], s[6], s[7], s[9], s[10], s[12], s[13], s[15], s[16]);
 
 			if ((f = fopen("/proc/sys/kernel/hostname", "w"))) {
@@ -268,10 +267,8 @@ static void set_lan_hostname(const char *wan_hostname)
 		fprintf(f, "127.0.0.1 localhost\n");
 
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			memset(buf, 0, sizeof(buf));
 			snprintf(buf, sizeof(buf), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
 			if ((s = nvram_get(buf)) && (*s)) {
-				memset(buf2, 0, sizeof(buf2));
 				snprintf(buf2, sizeof(buf2), "%d", i);
 				fprintf(f, "%s %s %s-lan%s\n", s, (i == 0 ? lan_hostname : ""), lan_hostname, (i == 0 ? "" : buf2));
 			}
@@ -942,7 +939,6 @@ void restart_wl(void)
 					else if (wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit)))
 						continue;
 
-					memset(prefix, 0, sizeof(prefix));
 					snprintf(prefix, sizeof(prefix), "wl%d_", unit);
 					if (nvram_match(strlcat_r(prefix, "radio", tmp, sizeof(tmp)), "0")) {
 						eval("wlconf", ifname, "down");
@@ -1450,11 +1446,8 @@ int wl_sta_prepare(void)
 	/* check bridges and remove sta interface from the interface list */
 	if (sta) {
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			memset(buffer, 0, sizeof(buffer));
 			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
 			if (strcmp(nvram_safe_get(buffer), "") != 0) { /* check brX */
-				memset(buffer, 0, sizeof(buffer));
-				memset(tmp, 0, sizeof(tmp));
 				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
 				snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get(buffer));
 
@@ -1476,7 +1469,6 @@ CLEANUP:
 	/* case 2: setup/interface changed */
 	else if (sta && !nvram_match("wlc_ifname", wl_sta)) {
 		wlc = nvram_safe_get("wlc_ifname");
-		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get("lan_ifnames"));
 
 		if (!add_to_list(wlc, tmp, sizeof(tmp))) {
@@ -1491,7 +1483,6 @@ CLEANUP:
 	/* case 4: no client anymore */
 	else if (!sta && strlen(nvram_safe_get("wlc_ifname"))) {
 		wlc = nvram_safe_get("wlc_ifname");
-		memset(tmp, 0, sizeof(tmp));
 		snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get("lan_ifnames"));
 
 		if (!add_to_list(wlc, tmp, sizeof(tmp))) {
@@ -2076,10 +2067,8 @@ void do_static_routes(int add)
 		found_lan = 0;
 		for (i = 0; i < BRIDGE_COUNT; i++) {
 			/* LAN, LAN1, LAN2, LAN3 set in advanced-routing.asp */
-			memset(name, 0, sizeof(name));
 			snprintf(name, sizeof(name), (i == 0 ? "LAN" : "LAN%u"), i);
 			if (strcmp(if_tmp, name) == 0) {
-				memset(if_key, 0, sizeof(if_key));
 				snprintf(if_key, sizeof(if_key), (i == 0 ? "lan_ifname" : "lan%u_ifname"), i);
 				ifname = nvram_safe_get(if_key); /* set */
 				found_lan = 1;
@@ -2093,19 +2082,15 @@ void do_static_routes(int add)
 			 */
 			for (i = 1; i <= MWAN_MAX; i++) {
 				/* WAN, WAN2, WAN3, WAN4 set in advanced-routing.asp */
-				memset(name, 0, sizeof(name));
 				snprintf(name, sizeof(name), (i == 1 ? "WAN" : "WAN%u"), i);
 				if (strcmp(if_tmp, name) == 0) {
-					memset(if_key, 0, sizeof(if_key));
 					snprintf(if_key, sizeof(if_key), (i == 1 ? "wan_iface" : "wan%u_iface"), i);
 					ifname = nvram_safe_get(if_key); /* set */
 					break;
 				}
 				/* MAN, MAN2, MAN3, MAN4 set in advanced-routing.asp */
-				memset(name, 0, sizeof(name));
 				snprintf(name, sizeof(name), (i == 1 ? "MAN" : "MAN%u"), i);
 				if (strcmp(if_tmp, name) == 0) {
-					memset(if_key, 0, sizeof(if_key));
 					snprintf(if_key, sizeof(if_key), (i == 1 ? "wan_ifname" : "wan%u_ifname"), i);
 					ifname = nvram_safe_get(if_key); /* set */
 					break;
@@ -2129,12 +2114,7 @@ void do_static_routes(int add)
 	free(buf);
 
 	for (i = 1; i <= mwan_num; i++) {
-		memset(name, 0, sizeof(name));
 		snprintf(name, sizeof(name), (i == 1 ? "wan" : "wan%u"), i);
-
-		memset(proto_key, 0, sizeof(proto_key));
-		memset(ip_key, 0, sizeof(ip_key));
-		memset(if_key, 0, sizeof(if_key));
 		snprintf(proto_key, sizeof(proto_key), "%s_proto", name);
 		snprintf(ip_key, sizeof(ip_key), "%s_modem_ipaddr", name);
 		snprintf(if_key, sizeof(if_key), "%s_ifname", name);
@@ -2148,7 +2128,6 @@ void do_static_routes(int add)
 
 		end = rindex(modem_ip, '.') + 1;
 		c = atoi(end);
-		memset(ip, 0, sizeof(ip));
 		snprintf(ip, sizeof(ip), "%.*s%hhu", (end - modem_ip), modem_ip, (unsigned char)(c ^ 1 ^ ((c & 2) ^ ((c & 1) << 1))));
 
 		eval("ip", "addr", add ? "add" : "del", ip, "peer", modem_ip, "dev", nvram_safe_get(if_key));

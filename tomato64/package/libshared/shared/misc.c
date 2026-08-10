@@ -46,7 +46,6 @@ void get_wan_prefix(int iWan_unit, char *sPrefix)
 
 	strcpy(sPrefix, "wan");
 	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(wanstr, 0, sizeof(wanstr));
 		snprintf(wanstr, sizeof(wanstr), (i == 1 ? "wan" : "wan%d"), i);
 
 		if (iWan_unit == i)
@@ -60,7 +59,6 @@ int get_wan_unit(const char *sPrefix)
 	unsigned int i, ret = 1;
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(wanstr, 0, sizeof(wanstr));
 		snprintf(wanstr, sizeof(wanstr), (i == 1 ? "wan" : "wan%u"), i);
 
 		if (!strcmp(sPrefix, wanstr)) {
@@ -306,14 +304,12 @@ int foreach_wif(int include_vifs, void *param,
 
 	/* LAN interfaces */
 	for (i = 0; i < BRIDGE_COUNT; i++) {
-		memset(name, 0, sizeof(name)); /* reset */
 		snprintf(name, sizeof(name), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
 		pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get(name));
 	}
 
 	/* WAN interfaces */
 	for (i = 1; i <= MWAN_MAX; i++) {
-		memset(name, 0, sizeof(name)); /* reset */
 		snprintf(name, sizeof(name), (i == 1 ? "wan_ifnames" : "wan%d_ifnames"), i);
 		pos += snprintf(ifnames + pos, sizeof(ifnames) - pos, "%s ", nvram_safe_get(name));
 	}
@@ -443,13 +439,13 @@ int wan_led_off(char *prefix) /* off WAN LED only if no other WAN active */
 	int f, up, proto, mwan_num, i;
 	struct ifreq ifr;
 	int count = 0; /* initialize with zero */
+	FILE *f_tmp;
 
 	mwan_num = nvram_get_int("mwan_num");
 	if (mwan_num < 1 || mwan_num > MWAN_MAX)
 		mwan_num = 1;
 
 	for (i = 1; i <= mwan_num; i++) {
-		memset(wanstr, 0, sizeof(wanstr));
 		snprintf(wanstr, sizeof(wanstr), (i == 1 ? "wan" : "wan%d"), i);
 
 		up = 0; /* default is 0 (LED_OFF) */
@@ -507,8 +503,7 @@ int wan_led_off(char *prefix) /* off WAN LED only if no other WAN active */
 			case WP_PPTP:
 			case WP_PPPOE:
 			case WP_PPP3G:
-				memset(ppplink_file , 0, sizeof(ppplink_file));
-				FILE *f_tmp = NULL;
+				f_tmp = NULL;
 				snprintf(ppplink_file, sizeof(ppplink_file), "/tmp/ppp/%s_link", wanstr);
 				if ((f_tmp = fopen(ppplink_file, "r")) != NULL) { /* have PPP link, assume ON */
 					up = 1;
@@ -541,7 +536,6 @@ long check_wanup_time(char *prefix)
 	char wanuptime_file[64];
 
 	sysinfo(&si); /* get time */
-	memset(wanuptime_file, 0, sizeof(wanuptime_file)); /* reset */
 	snprintf(wanuptime_file, sizeof(wanuptime_file), "/var/lib/misc/%s_time", prefix);
 
 	if (f_read(wanuptime_file, &uptime, sizeof(uptime)) == sizeof(uptime)) {
@@ -577,7 +571,6 @@ int check_wanup(char *prefix)
 	}
 
 	if ((proto == WP_PPTP) || (proto == WP_L2TP) || (proto == WP_PPPOE) || (proto == WP_PPP3G)) {
-		memset(ppplink_file, 0, sizeof(ppplink_file));
 		snprintf(ppplink_file, sizeof(ppplink_file), "/tmp/ppp/%s_link", prefix);
 
 		if (f_read_string(ppplink_file, buf1, sizeof(buf1)) > 0) {
@@ -587,7 +580,6 @@ int check_wanup(char *prefix)
 			if (f_read_string(buf2, buf1, sizeof(buf1)) > 0) {
 				name = psname(atoi(buf1), buf2, sizeof(buf2));
 
-				memset(pppd_name, 0, sizeof(pppd_name));
 				if (proto == WP_L2TP)
 					strlcpy(pppd_name, "pppd", sizeof(pppd_name));
 				else
@@ -678,14 +670,12 @@ int check_wanup(char *prefix)
 	}
 
 state:
-	memset(buf1, 0, sizeof(buf1));
 	snprintf(buf1, sizeof(buf1), "%s_ck_pause", prefix);
 
 	if (up) { /* also check result from mwwatchdog */
 		if ((nvram_get_int("mwan_cktime") == 0) || (nvram_get_int(buf1))) /* skip checking on this WAN */
 			return up;
 
-		memset(buf1, 0, sizeof(buf1));
 		snprintf(buf1, sizeof(buf1), "/var/lib/misc/%s_state", prefix);
 		if ((f = fopen(buf1, "r")) == NULL) /* no state file? so probably wan is just up */
 			return up;
@@ -711,8 +701,6 @@ const dns_list_t *get_dns(char *prefix)
 
 	dns.count = 0;
 
-	memset(s, 0, sizeof(s)); /* reset */
-	memset(tmp, 0, sizeof(tmp)); /* reset */
 	if (nvram_get_int(strlcat_r(prefix, "_dns_auto", tmp, sizeof(tmp))))
 		snprintf(s, sizeof(s), " %s", nvram_safe_get(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp))));
 	else {
@@ -730,7 +718,6 @@ const dns_list_t *get_dns(char *prefix)
 		}
 		else {
 			/* add received DNS servers to the static DNS server list */
-			memset(tmp, 0, sizeof(tmp)); /* reset */
 			logmsg(LOG_DEBUG, "*** %s: adding received servers (%s) to the static DNS server list", __FUNCTION__, nvram_safe_get(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp))));
 			snprintf(s + strlen(s), sizeof(s) - strlen(s), " %s", nvram_safe_get(strlcat_r(prefix, "_get_dns", tmp, sizeof(tmp))));
 		}
@@ -1193,7 +1180,6 @@ void nvram_commit_x(void)
 char *getNVRAMVar(const char *text, const int unit)
 {
 	char buffer[256];
-	memset(buffer, 0, sizeof(buffer));
 	snprintf(buffer, sizeof(buffer), text, unit);
 
 	return nvram_safe_get(buffer);
@@ -1284,7 +1270,6 @@ void gen_urandom(char *buf1, unsigned char *buf2, size_t buf_sz, const unsigned 
 {
 	unsigned long long sn = 0;
 
-	memset((buf1 ? buf1 : (char *)buf2), 0, buf_sz);
 	if (buf1) {
 		f_read("/dev/urandom", &sn, sizeof(sn));
 		if (addtid)
@@ -1292,6 +1277,8 @@ void gen_urandom(char *buf1, unsigned char *buf2, size_t buf_sz, const unsigned 
 		else
 			snprintf(buf1, buf_sz, "%llu", sn & 0x7FFFFFFFFFFFFFFFULL);
 	}
-	else
+	else {
+		memset((char *)buf2, 0, buf_sz);
 		f_read("/dev/urandom", buf2, buf_sz);
+	}
 }

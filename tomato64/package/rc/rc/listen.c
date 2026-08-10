@@ -345,7 +345,6 @@ int listen_main(int argc, char *argv[])
 		return 0;
 
 	if (pid == 0) {	/* forked process */
-		memset(pid_file, 0, sizeof(pid_file));
 		snprintf(pid_file, sizeof(pid_file), "/var/run/listen-%s.pid", prefix);
 
 		/* read / write pid */

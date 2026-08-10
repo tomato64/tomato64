@@ -129,7 +129,6 @@ void fix_chain_in_drop(void)
 
 	/* if logging - readd the logdrop rule at the end of the INPUT chain */
 	if (*chain_in_drop == 'l') {
-		memset(buf, 0, BUF_SIZE_8); /* reset */
 		snprintf(buf, BUF_SIZE_8, "%s", chain_in_drop);
 
 		eval("iptables", "-D", "INPUT", "-j", buf);
@@ -168,7 +167,6 @@ int serialize_restart(char *service, int start)
 	pid_t pid, pid_rc = getpid();
 
 	/* replace '-' with '_' otherwise exec_service() will fail */
-	memset(s, 0, BUF_SIZE_32); /* reset */
 	strlcpy(s, service, BUF_SIZE_32);
 	if ((pos = strstr(s, "-")) != NULL) {
 		index = pos - s;
@@ -191,7 +189,6 @@ int serialize_restart(char *service, int start)
 #ifdef TCONFIG_WIREGUARD
 		/* special case: wireguard */
 		if (strncmp(service, "wireguard", 9) == 0) {
-			memset(s, 0, BUF_SIZE_32); /* reset */
 			snprintf(s, BUF_SIZE_32, "wg%d", atoi(&service[9]));
 			if (if_nametoindex(s)) {
 				logmsg(LOG_WARNING, "service: %s already running; interface %s is up", service, s);
@@ -559,7 +556,6 @@ void kill_switch(_tf_ipt_write ipt_write)
 	mkdir_if_none(ks_dir);
 
 	/* open FQDN file for writing */
-	memset(buf, 0, BUF_SIZE_64); /* reset */
 	snprintf(buf, BUF_SIZE_64, "%s/%s", ks_dir, ks_fqdns_fn);
 	fp = fopen(buf, "w");
 
@@ -613,12 +609,10 @@ void kill_switch(_tf_ipt_write ipt_write)
 						continue;
 
 					/* find WAN IF */
-					memset(wan_if, 0, BUF_SIZE_16); /* reset */
 					snprintf(wan_if, BUF_SIZE_16, "%s", get_wanface(wan_prefix));
 					if ((!*wan_if) || (strcmp(wan_if, "") == 0))
 						continue;
 
-					memset(val, 0, BUF_SIZE_64); /* reset */
 					snprintf(val, BUF_SIZE_64, "%s", value); /* copy IP/domain to buffer */
 
 					/* "From Source IP" */
@@ -626,7 +620,6 @@ void kill_switch(_tf_ipt_write ipt_write)
 						/* find correct bridge for given IP */
 						type1_added = 0;
 						for (br = 0; br < BRIDGE_COUNT; br++) {
-							memset(buf, 0, BUF_SIZE_64); /* reset */
 							snprintf(buf, BUF_SIZE_64, (br == 0 ? "lan_ipaddr" : "lan%u_ipaddr"), br);
 
 							/* add only for active LAN */
@@ -645,7 +638,6 @@ void kill_switch(_tf_ipt_write ipt_write)
 							buf[j] = '\0';
 
 							/* get first 3 octets from LAN IP */
-							memset(buf2, 0, BUF_SIZE_64); /* reset */
 							snprintf(buf2, BUF_SIZE_64, "%s", lan_ip);
 							if ((c = strrchr(buf2, '.')))
 								*(c + 1) = 0;
@@ -657,13 +649,11 @@ void kill_switch(_tf_ipt_write ipt_write)
 								/* check IP or IP range and prepare mask (if needed, for IP) */
 								ret = check_string(val, sip, BUF_SIZE_64);
 								if (ret != 0) { /* only IPv4 or IPv4 range */
-									memset(buf2, 0, BUF_SIZE_64); /* reset */
 									if (ret == 2) /* IP range */
 										snprintf(buf2, BUF_SIZE_64, "-m iprange --src-range %s", sip);
 									else
 										snprintf(buf2, BUF_SIZE_64, "-s %s", sip);
 
-									memset(buf, 0, BUF_SIZE_64); /* reset */
 									snprintf(buf, BUF_SIZE_64, "br%u", br); /* copy brX to buffer */
 									logmsg(LOG_INFO, "Kill-Switch: type: %d - add '%s'", policy_type, sip);
 
@@ -678,7 +668,6 @@ void kill_switch(_tf_ipt_write ipt_write)
 
 					/* "To Destination IP" (2) / "To Domain" (3) */
 					else if ((policy_type == 2) || (policy_type == 3)) {
-						memset(buf, 0, BUF_SIZE_64); /* reset */
 						snprintf(buf, BUF_SIZE_64, iface_fmt, unit); /* find the VPN IF */
 
 						memset(sip, 0, BUF_SIZE_64); /* reset */
@@ -805,7 +794,6 @@ void run_vpn_firewall_scripts(const char *kind)
 		if ((fa[0] == '.') || (strcmp(fa, (strcmp(kind, "wg") == 0 ? WG_DIR_DEL_SCRIPT : OVPN_DEL_SCRIPT)) == 0))
 			continue;
 
-		memset(buf, 0, BUF_SIZE_64);
 		snprintf(buf, BUF_SIZE_64, "%s/", (strcmp(kind, "wg") == 0 ? WG_FW_DIR : OVPN_FW_DIR));
 		strlcat(buf, fa, BUF_SIZE_64);
 
@@ -985,7 +973,6 @@ int main(int argc, char **argv)
 
 		realpath(argv[0], tmp);
 		if ((strncmp(tmp, "/tmp/", 5) != 0) && (argc < 32)) {
-			memset(tmp, 0, BUF_SIZE);
 			snprintf(tmp, BUF_SIZE, "%s%s", "/tmp/", base);
 			if (f_exists(tmp)) {
 				cprintf("[rc] override: %s\n", tmp);

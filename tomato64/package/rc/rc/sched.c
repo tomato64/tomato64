@@ -40,9 +40,7 @@ static void sched(const char *key, int resched)
 	}
 
 	if (resched) {
-		memset(s, 0, sizeof(s));
 		snprintf(s, sizeof(s), "%s_last", key);
-		memset(w, 0, sizeof(w));
 #ifndef TOMATO64
 		snprintf(w, sizeof(w), "%ld", time(0));
 #else
@@ -65,13 +63,11 @@ static void sched(const char *key, int resched)
 	}
 
 	if (t >= 0) { /* specific time */
-		memset(s, 0, sizeof(s));
 		snprintf(s, sizeof(s), "%d %d * * %s sched %s", t % 60, t / 60, w + 1, key);
 	}
 	else { /* every ... */
 		t = -t;
 		if (t <= 5) { /* 1 to 5m = a simple cron job */
-			memset(s, 0, sizeof(s));
 			snprintf(s, sizeof(s), "*/%d * * * %s sched %s", t, w + 1, key);
 		}
 		else {
@@ -80,7 +76,6 @@ static void sched(const char *key, int resched)
 			tt = time(0) + 59;
 			tm = *localtime(&tt);
 
-			memset(s, 0, sizeof(s));
 			snprintf(s, sizeof(s), "%s_last", key);
 #ifndef TOMATO64
 			qq = strtoul(nvram_safe_get(s), NULL, 10);
@@ -100,7 +95,6 @@ static void sched(const char *key, int resched)
 				tt += 60;
 			}
 
-			memset(s, 0, sizeof(s));
 			snprintf(s, sizeof(s), "%d %d %d %d * sched %s", tm.tm_min, tm.tm_hour, tm.tm_mday, tm.tm_mon + 1, key);
 		}
 	}
@@ -150,7 +144,6 @@ int sched_main(int argc, char *argv[])
 
 						signal(SIGCHLD, chld_reap);
 
-						memset(s, 0, sizeof(s));
 						snprintf(s, sizeof(s), "%s_cmd", argv[1]);
 						run_nvscript(s, "", 60);
 					}
