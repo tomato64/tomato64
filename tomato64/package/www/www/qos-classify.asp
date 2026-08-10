@@ -510,9 +510,9 @@ function earlyInit() {
 	if (nvram.qos_enable != 1)
 		E('qos-note1').style.display = 'block';
 /* BCMARM-BEGIN */
-	else if (nvram.qos_mode == 2 && nvram.qos_cake_prio_mode == 0)
+	else if (nvram.qos_enable == 1 && nvram.qos_mode == 2 && nvram.qos_cake_prio_mode == 0)
 		E('qos-note2').style.display = 'block';
-	else if (nvram.qos_mode == 1 && nvram.qos_classify == 0)
+	else if (nvram.qos_enable == 1 && nvram.qos_mode == 1 && nvram.qos_classify == 0)
 		E('qos-note3').style.display = 'block';
 /* BCMARM-END */
 	else

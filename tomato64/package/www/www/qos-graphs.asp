@@ -106,20 +106,24 @@ function showData() {
 }
 
 function earlyInit() {
-	if ((nvram.qos_enable != '1')
 /* BCMARM-BEGIN */
-		|| (nvram.qos_enable == '1' && nvram.qos_mode == '2')
+	if ((nvram.qos_enable != '1') || (nvram.qos_enable == '1' && nvram.qos_mode == '2')) { /* off or cake */
 /* BCMARM-END */
-	) { /* off or cake */
+/* BCMARM-NO-BEGIN */
+	if (nvram.qos_enable != '1') {
+/* BCMARM-NO-END */
 		E('qosstats').style.display = 'none';
 		E('qosstatsoff').style.display = 'block';
 
+/* BCMARM-BEGIN */
 		if (nvram.qos_enable != '1')
 			E('note-disabled').style.display = 'block';
-/* BCMARM-BEGIN */
 		else
 			E('note-cake').style.display = 'block';
 /* BCMARM-END */
+/* BCMARM-NO-BEGIN */
+		E('note-disabled').style.display = 'block';
+/* BCMARM-NO-END */
 
 		E('refresh-time').setAttribute('disabled', 'disabled');
 		E('refresh-button').setAttribute('disabled', 'disabled');
@@ -127,11 +131,7 @@ function earlyInit() {
 		return;
 	}
 
-	E('qosstats').style.display = 'block';
-	E('qosstatsoff').style.display = 'none';
-
 	showData();
-
 	checkSVG();
 	ref.initPage(2000, 5);
 	if (!ref.running)

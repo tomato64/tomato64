@@ -18,14 +18,19 @@
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
 <script>
 
+/* BCMARM-BEGIN */
+//	<% nvram("t_model_name,wl_security_mode,wl_auth,wl_bcn,wl_dtim,wl_frag,wl_frameburst,wl_gmode_protection,wl_plcphdr,wl_rate,wl_rateset,wl_rts,wl_wme,wl_wme_no_ack,wl_wme_apsd,wl_txpwr,wl_mrate,t_features,wl_distance,wl_psta_inact,wl_mode,wl_maxassoc,wl_bss_maxassoc,wlx_hpamp,wlx_hperx,wl_reg_mode,wl_country_code,0:ccode,1:ccode,2:ccode,pci/1/1/ccode,pci/2/1/ccode,pci/3/1/ccode,wl_country_rev,0:regrev,1:regrev,2:regrev,pci/1/1/regrev,pci/2/1/regrev,pci/3/1/regrev,wl_btc_mode,wl_mimo_preamble,wl_obss_coex,wl_mitigation,wl_mitigation_ac,wl_nband,wl_phytype,wl_corerev,wl_igs,wl_wmf_bss_enable,wl_wmf_ucigmp_query,wl_wmf_mdata_sendup,wl_wmf_ucast_upnp,wl_wmf_igmpq_filter,wl_optimizexbox,wl_atf,wl_turbo_qam,wl_txbf,wl_txbf_bfr_cap,wl_txbf_bfe_cap,wl_itxbf,wl_txbf_imp,wl_mumimo,wl_mu_features,wl_mfp,wl_user_rssi"); %>
+/* BCMARM-END */
+/* BCMARM-NO-BEGIN */
 //	<% nvram("t_model_name,wl_security_mode,wl_auth,wl_bcn,wl_dtim,wl_frag,wl_frameburst,wl_gmode_protection,wl_plcphdr,wl_rate,wl_rateset,wl_rts,wl_wme,wl_wme_no_ack,wl_wme_apsd,wl_txpwr,wl_mrate,t_features,wl_distance,wl_psta_inact,wl_mode,wl_maxassoc,wl_bss_maxassoc,wlx_hpamp,wlx_hperx,wl_reg_mode,wl_country_code,0:ccode,1:ccode,2:ccode,pci/1/1/ccode,pci/2/1/ccode,pci/3/1/ccode,sb/1/ccode,wl_country_rev,0:regrev,1:regrev,2:regrev,pci/1/1/regrev,pci/2/1/regrev,pci/3/1/regrev,sb/1/regrev,wl_btc_mode,wl_mimo_preamble,wl_obss_coex,wl_mitigation,wl_mitigation_ac,wl_nband,wl_phytype,wl_corerev,wl_igs,wl_wmf_bss_enable,wl_wmf_ucigmp_query,wl_wmf_mdata_sendup,wl_wmf_ucast_upnp,wl_wmf_igmpq_filter,wl_optimizexbox,wl_atf,wl_turbo_qam,wl_txbf,wl_txbf_bfr_cap,wl_txbf_bfe_cap,wl_itxbf,wl_txbf_imp,wl_mumimo,wl_mu_features,wl_mfp,wl_user_rssi,wl_afterburner,wl_antdiv,wl_txant"); %>
+/* BCMARM-NO-END */
 
 //	<% wlcountries(); %>
 
 hp = features('hpamp');
 nphy = features('11n');
 /* BCMARM-BEGIN */
-acwave2 = features('11acwave2');
+acwave2 = features('11acwave2'); /* for MU-MIMO (and NITRO QAM support 2,4 GHz & 5 GHz) SDK7.14 */
 /* BCMARM-END */
 /* BCMWL6-BEGIN */
 var cprefix = 'advanced_wireless';
@@ -99,19 +104,39 @@ function save() {
 /* BCMWL6-BEGIN */
 			var c_rev = E('_wl'+u+'_country_rev').value;
 /* BCMWL6-END */
+
 			n = E('_f_wl'+u+'_distance').value * 1;
 			E('_wl'+u+'_distance').value = n ? n : '';
 
 			/* check if wireless country settings will be changed */
+/* BCMARM-BEGIN */
+			if (nvram['wl'+u+'_country_code'] != c_code || nvram['wl'+u+'_country_rev'] != c_rev)
+				router_reboot = 1;
+/* BCMARM-END */
+/* BCMARM-NO-BEGIN */
 			if (nvram['wl'+u+'_country_code'] != c_code
 /* BCMWL6-BEGIN */
-			|| nvram['wl'+u+'_country_rev'] != c_rev
+			    || nvram['wl'+u+'_country_rev'] != c_rev
 /* BCMWL6-END */
-			)
+			   )
 				router_reboot = 1;
+/* BCMARM-NO-END */
 
-/* BCMWL6-BEGIN */
+/* BCMARM-BEGIN */
+			if (nvram[+u+':ccode'].length > 0) /* check short version */
+				E('_'+u+':ccode').value = c_code;
+
+			if (nvram['pci/'+u_pci+'/1/ccode'].length > 0) /* check long version */
+				E('_pci/'+u_pci+'/1/ccode').value = c_code;
+
+			if (nvram[+u+':regrev'].length > 0)
+				E('_'+u+':regrev').value = c_rev;
+
+			if (nvram['pci/'+u_pci+'/1/regrev'].length > 0)
+				E('_pci/'+u_pci+'/1/regrev').value = c_rev;
+/* BCMARM-END */
 /* BCMARM-NO-BEGIN */
+/* BCMWL6-BEGIN */
 			if ((nvram['sb/1/ccode'].length > 0) && (nvram['sb/1/regrev'].length > 0)) {
 				if (u_sb == 1) {
 					E('_sb/'+u_sb+'/ccode').value = c_code;
@@ -120,34 +145,27 @@ function save() {
 				else if (u_sb == 2) {
 					if (nvram['0:ccode'].length > 0)
 						E('_0:ccode').value = c_code;
-
 					if (nvram['pci/1/1/ccode'].length > 0)
 						E('_pci/1/1/ccode').value = c_code;
-
 					if (nvram['0:regrev'].length > 0)
 						E('_0:regrev').value = c_rev;
-
 					if (nvram['pci/1/1/regrev'].length > 0)
 						E('_pci/1/1/regrev').value = c_rev;
 				}
 			}
 			else {
-/* BCMARM-NO-END */
 				if (nvram[+u+':ccode'].length > 0) /* check short version */
 					E('_'+u+':ccode').value = c_code;
-
 				if (nvram['pci/'+u_pci+'/1/ccode'].length > 0) /* check long version */
 					E('_pci/'+u_pci+'/1/ccode').value = c_code;
-
 				if (nvram[+u+':regrev'].length > 0)
 					E('_'+u+':regrev').value = c_rev;
-
 				if (nvram['pci/'+u_pci+'/1/regrev'].length > 0)
 					E('_pci/'+u_pci+'/1/regrev').value = c_rev;
-/* BCMARM-NO-BEGIN */
 			}
-/* BCMARM-NO-END */
 /* BCMWL6-END */
+/* BCMARM-NO-END */
+
 			E('_wl'+u+'_nmode_protection').value = E('_wl'+u+'_gmode_protection').value;
 
 /* BCMARM-BEGIN */
@@ -219,13 +237,18 @@ function save() {
 }
 
 function init() {
+/* BCMARM-BEGIN */
+	if (((c = cookie.get(cprefix + '_notes_vis')) != null) && (c == '1')) {
+		toggleVisibility(cprefix, 'notes');
+	}
+	eventHandler();
+/* BCMARM-END */
+/* BCMARM-NO-BEGIN */
 /* BCMWL6-BEGIN */
 	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
 		toggleVisibility(cprefix, 'notes');
 /* BCMWL6-END */
-/* BCMARM-BEGIN */
-	eventHandler();
-/* BCMARM-END */
+/* BCMARM-NO-END */
 }
 </script>
 </head>
@@ -260,29 +283,25 @@ function init() {
 			var u_sb = (u + 1);
 /* BCMARM-NO-END */
 /* BCMWL6-END */
+
 			W('<input type="hidden" id="_wl'+u+'_distance" name="wl'+u+'_distance">');
 /* BCMWL6-BEGIN */
 /* BCMARM-NO-BEGIN */
 			if (nvram['sb/'+u_sb+'/ccode'])
 				W('<input type="hidden" id="_sb/'+u_sb+'/ccode" name="sb/'+u_sb+'/ccode">');
-
 			if (nvram['sb/'+u_sb+'/regrev'])
 				W('<input type="hidden" id="_sb/'+u_sb+'/regrev" name="sb/'+u_sb+'/regrev">');
 /* BCMARM-NO-END */
 			if (nvram[+u+':ccode'])
 				W('<input type="hidden" id="_'+u+':ccode" name="'+u+':ccode">');
-
 			if (nvram['pci/'+u_pci+'/1/ccode'])
 				W('<input type="hidden" id="_pci/'+u_pci+'/1/ccode" name="pci/'+u_pci+'/1/ccode">');
-
 			if (nvram[+u+':regrev'])
 				W('<input type="hidden" id="_'+u+':regrev" name="'+u+':regrev">');
-
 			if (nvram['pci/'+u_pci+'/1/regrev'])
 				W('<input type="hidden" id="_pci/'+u_pci+'/1/regrev" name="pci/'+u_pci+'/1/regrev">');
 /* BCMWL6-END */
 			W('<input type="hidden" id="_wl'+u+'_nmode_protection" name="wl'+u+'_nmode_protection">');
-			W('<input type="hidden" id="_wl'+u+'_bss_maxassoc" name="wl'+u+'_bss_maxassoc">');
 /* BCMARM-BEGIN */
 			W('<input type="hidden" id="_wl'+u+'_txbf_bfr_cap" name="wl'+u+'_txbf_bfr_cap">');
 			W('<input type="hidden" id="_wl'+u+'_txbf_bfe_cap" name="wl'+u+'_txbf_bfe_cap">');
@@ -290,6 +309,9 @@ function init() {
 /* BCMWL714-BEGIN */
 			W('<input type="hidden" id="_wl'+u+'_mu_features" name="wl'+u+'_mu_features">');
 /* BCMWL714-END */
+/* BCMARM-END */
+			W('<input type="hidden" id="_wl'+u+'_bss_maxassoc" name="wl'+u+'_bss_maxassoc">');
+/* BCMARM-BEGIN */
 /* EMF-BEGIN */
 			W('<input type="hidden" id="_wl'+u+'_igs" name="wl'+u+'_igs">');
 			W('<input type="hidden" id="_wl'+u+'_wmf_ucigmp_query" name="wl'+u+'_wmf_ucigmp_query">');
@@ -321,11 +343,16 @@ function init() {
 /* BCMWL6-BEGIN */
 				{ title: 'Country Rev', name: 'wl'+u+'_country_rev', type: 'text', maxlen: 3, size: 7, suffix: ' <small>(range: 0 - 999)<\/small>', value: nvram['wl'+u+'_country_rev'] },
 /* BCMWL6-END */
-				{ title: 'Bluetooth Coexistence', name: 'wl'+u+'_btc_mode', type: 'select', options: [['0','Disable *'],['1','Enable'],['2','Preemption']],
+/* BCMARM-BEGIN */
+				{ title: 'Bluetooth Coexistence', name: 'wl'+u+'_btc_mode', type: 'select', options: [['0', 'Disable *'],['1', 'Enable'],['2', 'Preemption']], value: nvram['wl'+u+'_btc_mode'], hidden: (nvram['wl'+u+'_nband'] == 1) },
+/* BCMARM-END */
+/* BCMARM-NO-BEGIN */
+				{ title: 'Bluetooth Coexistence', name: 'wl'+u+'_btc_mode', type: 'select', options: [['0', 'Disable *'],['1', 'Enable'],['2', 'Preemption']],
 /* RTNPLUS-BEGIN */
 					hidden: (nvram['wl'+u+'_nband'] == 1),
 /* RTNPLUS-END */
 					value: nvram['wl'+u+'_btc_mode'] },
+/* BCMARM-NO-END */
 				{ title: 'Distance / ACK Timing', name: 'f_wl'+u+'_distance', type: 'text', maxlen: 5, size: 7, suffix: ' <small>meters<\/small>&nbsp;&nbsp;<small>(range: 0 - 99999; 0 = use default)<\/small>', value: (nvram['wl'+u+'_distance'] == '') ? '0' : nvram['wl'+u+'_distance'] },
 /* BCMARM-BEGIN */
 				{ title: 'Inactivity Timer', name: 'wl'+u+'_psta_inact', type: 'text', maxlen: 4, size: 6, suffix: ' <small>(range: 60 - 3600 seconds; default: 0 (disabled))<\/small>', value: nvram['wl'+u+'_psta_inact'], hidden: (nvram['wl'+u+'_mode'] != 'psta') },
@@ -349,26 +376,34 @@ function init() {
 				{ title: 'Receive Antenna', name: 'wl'+u+'_antdiv', type: 'select', options: [['3','Auto *'],['1','A'],['0','B']], value: nvram['wl'+u+'_antdiv'] },
 				{ title: 'Transmit Antenna', name: 'wl'+u+'_txant', type: 'select', options: [['3','Auto *'],['1','A'],['0','B']], value: nvram['wl'+u+'_txant'] },
 /* BCMARM-NO-END */
+/* BCMARM-BEGIN */
 				{ title: 'Transmit Power', name: 'wl'+u+'_txpwr', type: 'text', maxlen: 4, size: 5,
 					suffix: hp ?
 						' <small>mW (before amplification)<\/small>&nbsp;&nbsp;<small>(range: 5 - 251; default: 10)<\/small>' :
-/* BCMARM-BEGIN */
 						' <small>mW<\/small>&nbsp;&nbsp;<small>(range: 5 - 1000, override regulatory and other limitations; use 0 for country default)<\/small>',
+						value: nvram['wl'+u+'_txpwr'] },
 /* BCMARM-END */
 /* BCMARM-NO-BEGIN */
+				{ title: 'Transmit Power', name: 'wl'+u+'_txpwr', type: 'text', maxlen: 4, size: 5,
+					suffix: hp ?
+						' <small>mW (before amplification)<\/small>&nbsp;&nbsp;<small>(range: 5 - 251; default: 10)<\/small>' :
 						' <small>mW<\/small>&nbsp;&nbsp;<small>(range: 5 - 400, override regulatory and other limitations; use 0 for country default)<\/small>',
-/* BCMARM-NO-END */
 						value: nvram['wl'+u+'_txpwr'] },
+/* BCMARM-NO-END */
 				{ title: 'Transmission Rate', name: 'wl'+u+'_rate', type: 'select', options: [['0','Auto *'],['1000000','1 Mbps'],['2000000','2 Mbps'],['5500000','5.5 Mbps'],['6000000','6 Mbps'],['9000000','9 Mbps'],['11000000','11 Mbps'],['12000000','12 Mbps'],['18000000','18 Mbps'],['24000000','24 Mbps'],['36000000','36 Mbps'],['48000000','48 Mbps'],['54000000','54 Mbps']], value: nvram['wl'+u+'_rate'] },
-				{ title: 'Interference Mitigation', name: 'wl'+u+'_mitigation', type: 'select', options: [['0','None *'],['1','Non-WLAN'],['2','WLAN Manual'],['3','WLAN Auto']
-/* RTNPLUS-BEGIN */
-					,['4','WLAN Auto with Noise Reduction']
-/* RTNPLUS-END */
-					],
 /* BCMARM-BEGIN */
-					hidden: (nvram['wl'+u+'_phytype'] == 'v'),
+				{ title: 'Interference Mitigation', name: 'wl'+u+'_mitigation', type: 'select', options: [['0','None *'],['1','Non-WLAN'],['2','WLAN Manual'],['3','WLAN Auto'],['4','WLAN Auto with Noise Reduction']], value: nvram['wl'+u+'_mitigation'], hidden: (nvram['wl'+u+'_phytype'] == 'v') },
 /* BCMARM-END */
+/* BCMARM-NO-BEGIN */
+				{ title: 'Interference Mitigation', name: 'wl'+u+'_mitigation', type: 'select',
+/* RTNPLUS-BEGIN */
+					options: [['0','None *'],['1','Non-WLAN'],['2','WLAN Manual'],['3','WLAN Auto'],['4','WLAN Auto with Noise Reduction']],
+/* RTNPLUS-END */
+/* RTNPLUS-NO-BEGIN */
+					options: [['0','None *'],['1','Non-WLAN'],['2','WLAN Manual'],['3','WLAN Auto']],
+/* RTNPLUS-NO-END */
 					value: nvram['wl'+u+'_mitigation'] },
+/* BCMARM-NO-END */
 /* BCMARM-BEGIN */
 				{ title: 'AC-PHY Interference Mitigation', name: 'wl'+u+'_mitigation_ac', type: 'select', options: [['0','None *'],['1','desense based on glitch count (opt. 1)'],['2','limit pktgain based on hwaci (opt. 2)'],['4','limit pktgain based on w2/nb (opt. 3)'],['3','opt. 1 AND opt. 2'],['5','opt. 1 AND opt. 3'],['6','opt. 2 AND opt. 3'],['7','opt. 1 AND opt. 2 AND opt. 3']],
 					value: nvram['wl'+u+'_mitigation_ac'], hidden: (nvram['wl'+u+'_phytype'] != 'v') },
@@ -376,21 +411,24 @@ function init() {
 				{ title: 'WMM', name: 'wl'+u+'_wme', type: 'select', options: [['auto','Auto'],['off','Disable'],['on','Enable *']], value: nvram['wl'+u+'_wme'] },
 				{ title: 'No ACK', name: 'wl'+u+'_wme_no_ack', indent: 2, type: 'select', options: [['off','Disable *'],['on','Enable']], value: nvram['wl'+u+'_wme_no_ack'] },
 				{ title: 'APSD Mode', name: 'wl'+u+'_wme_apsd', indent: 2, type: 'select', options: [['off','Disable'],['on','Enable *']], value: nvram['wl'+u+'_wme_apsd'] },
-				{ title: 'Wireless Multicast Forwarding', name: 'wl'+u+'_wmf_bss_enable', type: 'select', options: [['0','Disable *'],['1','Enable']], value: nvram['wl'+u+'_wmf_bss_enable'] }
 /* BCMARM-BEGIN */
-				,{ title: 'Modulation Scheme (Requires Wireless Network Mode set to Auto)', name: 'wl'+u+'_turbo_qam', type: 'select', options: [['0','Up to MCS 7 (802.11n)'],['1','Up to MCS 9 (TurboQAM/256-QAM) *']
+				{ title: 'Wireless Multicast Forwarding', name: 'wl'+u+'_wmf_bss_enable', type: 'select', options: [['0','Disable *'],['1','Enable']], value: nvram['wl'+u+'_wmf_bss_enable'] },
+				{ title: 'Modulation Scheme (Requires Wireless Network Mode set to Auto)', name: 'wl'+u+'_turbo_qam', type: 'select', options: [['0','Up to MCS 7 (802.11n)'],['1','Up to MCS 9 (TurboQAM/256-QAM) *']
 /* BCMWL714-BEGIN */
 					,['2','Up to MCS 11 (NitroQAM/1024-QAM)']
 /* BCMWL714-END */
-					], value: nvram['wl'+u+'_turbo_qam'], hidden: (!acwave2 && ((nvram['wl'+u+'_phytype'] != 'v') || (nvram['wl'+u+'_nband'] == 1))) }
-				,{ title: 'Explicit beamforming', name: 'wl'+u+'_txbf', type: 'select', options: [['0','Disable'],['1','Enable *']], value: nvram['wl'+u+'_txbf'], hidden: (nvram['wl'+u+'_corerev'] < 40) }
-				,{ title: 'Universal/Implicit beamforming', name: 'wl'+u+'_itxbf', type: 'select', options: [['0','Disable'],['1','Enable *']], value: nvram['wl'+u+'_itxbf'], hidden: (nvram['wl'+u+'_corerev'] < 40) }
+					], value: nvram['wl'+u+'_turbo_qam'], hidden: (!acwave2 && ((nvram['wl'+u+'_phytype'] != 'v') || (nvram['wl'+u+'_nband'] == 1))) },
+				{ title: 'Explicit beamforming', name: 'wl'+u+'_txbf', type: 'select', options: [['0','Disable'],['1','Enable *']], value: nvram['wl'+u+'_txbf'], hidden: (nvram['wl'+u+'_corerev'] < 40) },
+				{ title: 'Universal/Implicit beamforming', name: 'wl'+u+'_itxbf', type: 'select', options: [['0','Disable'],['1','Enable *']], value: nvram['wl'+u+'_itxbf'], hidden: (nvram['wl'+u+'_corerev'] < 40) },
 /* BCMWL714-BEGIN */
-				,{ title: 'MU-MIMO', name: 'wl'+u+'_mumimo', type: 'select', options: [['0','Disable *'],['1','Enable']], value: nvram['wl'+u+'_mumimo'] }
+				{ title: 'MU-MIMO', name: 'wl'+u+'_mumimo', type: 'select', options: [['0','Disable *'],['1','Enable']], value: nvram['wl'+u+'_mumimo'] },
 /* BCMWL714-END */
-				,{ title: 'Optimized for Xbox', name: 'wl'+u+'_optimizexbox', type: 'select', options: [['0','Disable *'],['1','Enable']], suffix: ' <small>(Default will enable LDPC cap.)<\/small>', value: nvram['wl'+u+'_optimizexbox'], hidden: (nvram['wl'+u+'_phytype'] != 'v') }
-				,{ title: 'Air Time Fairness', name: 'wl'+u+'_atf', type: 'select', options: [['0','Disable *'],['1','Enable']], value: nvram['wl'+u+'_atf'] }
+				{ title: 'Optimized for Xbox', name: 'wl'+u+'_optimizexbox', type: 'select', options: [['0','Disable *'],['1','Enable']], suffix: ' <small>(Default will enable LDPC cap.)<\/small>', value: nvram['wl'+u+'_optimizexbox'], hidden: (nvram['wl'+u+'_phytype'] != 'v') },
+				{ title: 'Air Time Fairness', name: 'wl'+u+'_atf', type: 'select', options: [['0','Disable *'],['1','Enable']], value: nvram['wl'+u+'_atf'] }
 /* BCMARM-END */
+/* BCMARM-NO-BEGIN */
+				{ title: 'Wireless Multicast Forwarding', name: 'wl'+u+'_wmf_bss_enable', type: 'select', options: [['0','Disable *'],['1','Enable']], value: nvram['wl'+u+'_wmf_bss_enable'] }
+/* BCMARM-NO-END */
 			]);
 			W('<\/div>');
 		}
@@ -403,12 +441,11 @@ function init() {
 
 <!-- / / / -->
 
-<!-- BCMWL6-BEGIN -->
+<!-- BCMARM-BEGIN -->
 <div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<i>Country / Region and Country Rev EXAMPLES:</i><br>
 	<ul>
-<!-- BCMARM-BEGIN -->
 		<li><b>EU / 13</b> - Country: EU (Europe) AND Country Rev: 13 (Asus default setup for Germany and SDK6 router RT-N18U, RT-AC56U, RT-AC68U C1)</li>
 		<li><b>EU / 33</b> - Country: EU (Europe) AND Country Rev: 33 (Asus default setup for Germany and SDK6 router RT-AC66U_B1)</li>
 		<li><b>US / 0</b> - Country: US (USA) AND Country Rev: 0 (Asus default setup for USA and SDK6 router RT-AC68U A1/A2)</li>
@@ -417,16 +454,6 @@ function init() {
 		<li><b>Q2 / 40</b> - Country: Q2 (USA) AND Country Rev: 40 (Asus default setup for USA and SDK6 router RT-AC68U B1/B2)</li>
 		<li><b>Q2 / 61</b> - Country: Q2 (USA) AND Country Rev: 61 (Asus default setup for USA and SDK6 router RT-AC66U_B1 / RT-AC1750_B1)</li>
 		<li><b>SG / 12</b> - Country: SG (Singapore) AND Country Rev: 12 (default *)</li>
-<!-- BCMARM-END -->
-<!-- BCMARM-NO-BEGIN -->
-		<li><b>EU / 4</b> - Country: EU (Europe) AND Country Rev: 4</li>
-		<li><b>EU / 13</b> - Country: EU (Europe) AND Country Rev: 13</li>
-		<li><b>PL / 2</b> - Country: PL (Poland) AND Country Rev: 2</li>
-		<li><b>DE / 3</b> - Country: DE (Germany) AND Country Rev: 3</li>
-		<li><b>US / 10</b> - Country: US (USA) AND Country Rev: 10</li>
-		<li><b>CN / 1</b> - Country: CN (China) AND Country Rev: 1</li>
-		<li><b>TW / 4</b> - Country: TW (Taiwan) AND Country Rev: 4</li>
-<!-- BCMARM-NO-END -->
 	</ul>
 
 	<i>Further Notes:</i><br>
@@ -434,20 +461,43 @@ function init() {
 		<li>Please select the same country code and rev for all wireless interfaces and have a look at the <a href="https://wiki.freshtomato.org/doku.php/advanced-wireless#country_region" class="new_window">FT Wiki</a></li>
 		<li>Country code AND rev define the possible channel list, power and other regulations</li>
 		<li>Leave default values if you are not sure what you are doing!</li>
-<!-- BCMARM-BEGIN -->
 		<li>Info: wireless driver supports ~2000 combinations</li>
 		<li>Inactivity Timer: Media Bridge Mode will create a virtual interface wlX.Y for every client device connected to the router. Remove virtual interface(s) after inactivity again.</li>
+<!-- ROAM-BEGIN -->
+		<li>Roaming Assistant: Do not enable wireless bandsteering (BSD) at the same time!</li>
+<!-- ROAM-END -->
+	</ul>
+</div>
+
 <!-- BCMARM-END -->
 <!-- BCMARM-NO-BEGIN -->
+<!-- BCMWL6-BEGIN -->
+<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
+<div class="section" id="sesdiv_notes" style="display:none">
+	<i>Country / Region and Country Rev EXAMPLES:</i><br>
+	<ul>
+		<li><b>EU / 4</b> - Country: EU (Europe) AND Country Rev: 4</li>
+		<li><b>EU / 13</b> - Country: EU (Europe) AND Country Rev: 13</li>
+		<li><b>PL / 2</b> - Country: PL (Poland) AND Country Rev: 2</li>
+		<li><b>DE / 3</b> - Country: DE (Germany) AND Country Rev: 3</li>
+		<li><b>US / 10</b> - Country: US (USA) AND Country Rev: 10</li>
+		<li><b>CN / 1</b> - Country: CN (China) AND Country Rev: 1</li>
+		<li><b>TW / 4</b> - Country: TW (Taiwan) AND Country Rev: 4</li>
+	</ul>
+
+	<i>Further Notes:</i><br>
+	<ul>
+		<li>Please select the same country code and rev for all wireless interfaces and have a look at the <a href="https://wiki.freshtomato.org/doku.php/advanced-wireless#country_region" class="new_window">FT Wiki</a></li>
+		<li>Country code AND rev define the possible channel list, power and other regulations</li>
+		<li>Leave default values if you are not sure what you are doing!</li>
 		<li>Info: initial country rev depends on bootloader/CFE default value</li>
-<!-- BCMARM-NO-END -->
 <!-- ROAM-BEGIN -->
 		<li>Roaming Assistant: Do not enable wireless bandsteering (BSD) at the same time!</li>
 <!-- ROAM-END -->
 	</ul>
 </div>
 <!-- BCMWL6-END -->
-
+<!-- BCMARM-NO-END -->
 <!-- / / / -->
 
 <div id="footer">

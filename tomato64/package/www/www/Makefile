@@ -84,6 +84,7 @@ else
 	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
 	sed -i $(INSTALLDIR)/www/admin-buttons.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
+	sed -i $(INSTALLDIR)/www/qos-graphs.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
 	sed -i $(INSTALLDIR)/www/qos-settings.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
 	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
@@ -263,6 +264,7 @@ ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
 else
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTNPLUS-NO-BEGIN/,/RTNPLUS-NO-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-wlanvifs.asp -e "/RTNPLUS-NO-BEGIN/,/RTNPLUS-NO-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/RTNPLUS-NO-BEGIN/,/RTNPLUS-NO-END/d"
 endif
 
 # Only include IPv6 options if IPv6 is configured in.
@@ -366,7 +368,7 @@ ifneq ($(TCONFIG_BCMARM),y)
 endif
 
 # Only for RT-N+ (enable SDK6 country code + rev selection also for newer SDK5 wl driver 5.100.x and up)
-ifneq ($(TCONFIG_BLINK),y)
+ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
 	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
 endif
 
@@ -813,7 +815,7 @@ endif
 
 # clean up
 	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.asp *.js *.jsx *.html) tomato.css; do \
+	for F in $(wildcard *.asp *.js *.jsx *.html *.svg) tomato.css; do \
 		[ -f $(INSTALLDIR)/www/$$F ] && sed -i $$F \
 		-e "/USB-BEGIN/d"	-e "/USB-END/d" \
 		-e "/UPS-BEGIN/d"	-e "/UPS-END/d" \
