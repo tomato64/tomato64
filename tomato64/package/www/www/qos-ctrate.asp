@@ -29,6 +29,19 @@ var cprefix = 'qos_ctrate';
 var filterip = [];
 var filteripe = [];
 
+var lanGateways = [];
+var lanBroadcasts = [];
+for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+	var p = 'lan'+(i ? i : '');
+	var ip = nvram[p+'_ipaddr'];
+	var netmask = nvram[p+'_netmask'];
+
+	if (ip)
+		lanGateways.push(ip);
+	if (ip && netmask)
+		lanBroadcasts.push(getBroadcastAddress(getNetworkAddress(ip, netmask), netmask));
+}
+
 readDelay = fixInt('<% cgi_get('delay'); %>', 2, 30, 2);
 
 var queue = [];
@@ -252,31 +265,13 @@ ref.refresh = function(text) {
 		b = ctrate[i];
 
 		if (E('_f_excludegw').checked) {
-			if ((b[1] == nvram.lan_ipaddr) || (b[2] == nvram.lan_ipaddr) ||
-			    (b[1] == nvram.lan1_ipaddr) || (b[2] == nvram.lan1_ipaddr) ||
-			    (b[1] == nvram.lan2_ipaddr) || (b[2] == nvram.lan2_ipaddr) ||
-			    (b[1] == nvram.lan3_ipaddr) || (b[2] == nvram.lan3_ipaddr) ||
-/* TOMATO64-BEGIN */
-			    (b[1] == nvram.lan4_ipaddr) || (b[2] == nvram.lan4_ipaddr) ||
-			    (b[1] == nvram.lan5_ipaddr) || (b[2] == nvram.lan5_ipaddr) ||
-			    (b[1] == nvram.lan6_ipaddr) || (b[2] == nvram.lan6_ipaddr) ||
-			    (b[1] == nvram.lan7_ipaddr) || (b[2] == nvram.lan7_ipaddr) ||
-/* TOMATO64-END */
+			if ((lanGateways.indexOf(b[1]) != -1) || (lanGateways.indexOf(b[2]) != -1) ||
 			    (b[1] == '127.0.0.1') || (b[2] == '127.0.0.1'))
 				continue;
 		}
 
 		if (E('_f_excludebcast').checked) {
-			if ((b[2] == getBroadcastAddress(getNetworkAddress(nvram.lan_ipaddr,nvram.lan_netmask),nvram.lan_netmask)) ||
-			    (b[2] == getBroadcastAddress(getNetworkAddress(nvram.lan1_ipaddr,nvram.lan1_netmask),nvram.lan1_netmask)) ||
-			    (b[2] == getBroadcastAddress(getNetworkAddress(nvram.lan2_ipaddr,nvram.lan2_netmask),nvram.lan2_netmask)) ||
-			    (b[2] == getBroadcastAddress(getNetworkAddress(nvram.lan3_ipaddr,nvram.lan3_netmask),nvram.lan3_netmask)) ||
-/* TOMATO64-BEGIN */
-			    (b[2] == getBroadcastAddress(getNetworkAddress(nvram.lan4_ipaddr,nvram.lan4_netmask),nvram.lan4_netmask)) ||
-			    (b[2] == getBroadcastAddress(getNetworkAddress(nvram.lan5_ipaddr,nvram.lan5_netmask),nvram.lan5_netmask)) ||
-			    (b[2] == getBroadcastAddress(getNetworkAddress(nvram.lan6_ipaddr,nvram.lan6_netmask),nvram.lan6_netmask)) ||
-			    (b[2] == getBroadcastAddress(getNetworkAddress(nvram.lan7_ipaddr,nvram.lan7_netmask),nvram.lan7_netmask)) ||
-/* TOMATO64-END */
+			if ((lanBroadcasts.indexOf(b[2]) != -1) ||
 			    (b[2] == '255.255.255.255') || (b[2] == '0.0.0.0'))
 				continue;
 		}
