@@ -25,6 +25,10 @@
 
 var cprefix = 'splashd';
 
+var bridgeOptions = [];
+for (var i = 0; i <= MAX_BRIDGE_ID; ++i)
+	bridgeOptions.push(['br'+i, 'LAN'+i+' (br'+i+')'+(i == 0 ? '*' : '')]);
+
 function fix(name) {
 	var i;
 
@@ -71,24 +75,10 @@ function verifyFields(focused, quiet) {
 	E('_NC_BridgeLAN').disabled = !a;
 
 	var bridge = E('_NC_BridgeLAN');
-	if (nvram.lan_ifname.length < 1)
-		bridge.options[0].disabled = 1;
-	if (nvram.lan1_ifname.length < 1)
-		bridge.options[1].disabled = 1;
-	if (nvram.lan2_ifname.length < 1)
-		bridge.options[2].disabled = 1;
-	if (nvram.lan3_ifname.length < 1)
-		bridge.options[3].disabled = 1;
-/* TOMATO64-BEGIN */
-	if (nvram.lan4_ifname.length < 1)
-		bridge.options[4].disabled = 1;
-	if (nvram.lan5_ifname.length < 1)
-		bridge.options[5].disabled = 1;
-	if (nvram.lan6_ifname.length < 1)
-		bridge.options[6].disabled = 1;
-	if (nvram.lan7_ifname.length < 1)
-		bridge.options[7].disabled = 1;
-/* TOMATO64-END */
+	for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+		var n = (i == 0) ? '' : i.toString();
+		bridge.options[i].disabled = (nvram['lan'+n+'_ifname'].length < 1);
+	}
 
 	if ((E('_f_NC_ForcedRedirect').checked) && (!v_length('_NC_HomePage', quiet, 1, 255)))
 		return 0;
@@ -162,12 +152,7 @@ function init() {
 			<script>
 			createFieldTable('', [
 				{ title: 'Enable', name: 'f_NC_enable', type: 'checkbox', value: nvram.NC_enable == '1' },
-/* TOMATO64-REMOVE-BEGIN */
-				{ title: 'Interface', multi: [ { name: 'NC_BridgeLAN', type: 'select', options: [ ['br0','LAN0 (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)'] ], value: nvram.NC_BridgeLAN, suffix: '&nbsp; <small>* default<\/small> ' } ] },
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-				{ title: 'Interface', multi: [ { name: 'NC_BridgeLAN', type: 'select', options: [ ['br0','LAN0 (br0)*'],['br1','LAN1 (br1)'],['br2','LAN2 (br2)'],['br3','LAN3 (br3)'],['br4','LAN4 (br4)'],['br5','LAN5 (br5)'],['br6','LAN6 (br6)'],['br7','LAN7 (br7)'] ], value: nvram.NC_BridgeLAN, suffix: '&nbsp; <small>* default<\/small> ' } ] },
-/* TOMATO64-END */
+				{ title: 'Interface', multi: [ { name: 'NC_BridgeLAN', type: 'select', options: bridgeOptions, value: nvram.NC_BridgeLAN, suffix: '&nbsp; <small>* default<\/small> ' } ] },
 				{ title: 'Gateway Name', name: 'NC_GatewayName', type: 'text', maxlen: 255, size: 34, value: nvram.NC_GatewayName },
 				{ title: 'Captive Site Forwarding', name: 'f_NC_ForcedRedirect', type: 'checkbox', value: (nvram.NC_ForcedRedirect == '1') },
 				{ title: 'Home Page', name: 'NC_HomePage', type: 'text', maxlen: 255, size: 34, value: nvram.NC_HomePage },
