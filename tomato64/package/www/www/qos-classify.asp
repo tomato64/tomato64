@@ -36,6 +36,7 @@ function show() {
 
 var abc = nvram.qos_classnames.split(' ');
 
+/* BCMARM-BEGIN */
 if (nvram.qos_mode == 2) {
 	var position;
 	if (nvram.qos_cake_prio_mode == 1 || nvram.qos_cake_prio_mode == 4)
@@ -52,6 +53,7 @@ if (nvram.qos_mode == 2) {
 	for (var i = position + 1; i < abc.length; i++)
 		abc[i] = '- unused -';
 }
+/* BCMARM-END */
 
 /* TOMATO64-REMOVE-BEGIN */
 var ipp2p = [[0,'IPP2P (disabled)'],[0xFFF,'All IPP2P filters'],[1,'AppleJuice'],[2,'Ares'],[4,'BitTorrent'],[8,'Direct Connect'],
@@ -507,10 +509,12 @@ function save() {
 function earlyInit() {
 	if (nvram.qos_enable != 1)
 		E('qos-note1').style.display = 'block';
-	else if (nvram.qos_enable == 1 && nvram.qos_mode == 2 && nvram.qos_cake_prio_mode == 0)
+/* BCMARM-BEGIN */
+	else if (nvram.qos_mode == 2 && nvram.qos_cake_prio_mode == 0)
 		E('qos-note2').style.display = 'block';
-	else if (nvram.qos_enable == 1 && nvram.qos_mode == 1 && nvram.qos_classify == 0)
+	else if (nvram.qos_mode == 1 && nvram.qos_classify == 0)
 		E('qos-note3').style.display = 'block';
+/* BCMARM-END */
 	else
 		E('qos-cl-grid').style.display = 'block';
 
@@ -546,8 +550,10 @@ function init() {
 
 <div class="section-title">Traffic classification</div>
 <div class="note-disabled" id="qos-note1"><b>QoS disabled.</b><br><br><a href="qos-settings.asp">Enable &raquo;</a></div>
+<!-- BCMARM-BEGIN -->
 <div class="note-disabled" id="qos-note2"><b>CAKE is currently set in single class queue mode, in single class an automatic fair usage policy per IP is applied and classification settings not used.</b></div>
 <div class="note-disabled" id="qos-note3"><b>QoS classification is disabled.</b></div>
+<!-- BCMARM-END -->
 
 <!-- / / / -->
 

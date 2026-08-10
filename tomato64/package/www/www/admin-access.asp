@@ -128,10 +128,12 @@ function verifyFields(focused, quiet) {
 	catch (ex) {
 	}
 
+/* ADVTHEMES-BEGIN */
 	var s = (E('_web_css').value.match(/at-/g))
 	elem.display(PR('_f_web_adv_scripts'), s);
 	/* Warn if modern browser is required */
 	elem.display(E('web_css_warn'), s);
+/* ADVTHEMES-END */
 
 	a = E('_f_http_local');
 	remoteMode = E('_f_http_remote').value;
@@ -381,8 +383,10 @@ function save() {
 	fom.remote_upgrade.value = fom._f_remote_upgrade.checked ? 1 : 0;
 	fom.http_wanport_bfm.value = fom._f_http_wanport_bfm.checked ? 1 : 0;
 
+/* ADVTHEMES-BEGIN */
 	a = (fom._web_css.value.match(/at-/g));
 	fom.web_adv_scripts.value = (fom._f_web_adv_scripts.checked && a) ? 1 : 0;
+/* ADVTHEMES-END */
 
 	fom.telnetd_eas.value = fom._f_telnetd_eas.checked ? 1 : 0;
 
@@ -390,14 +394,18 @@ function save() {
 	fom.sshd_pass.value = fom._f_sshd_pass.checked ? 1 : 0;
 	fom.sshd_remote.value = fom._f_sshd_remote.checked ? 1 : 0;
 	fom.sshd_motd.value = fom._f_sshd_motd.checked ? 1 : 0;
+/* SIZEOPTMORE-BEGIN */
 	fom.sshd_forwarding.value = fom._f_sshd_forwarding.checked ? 1 : 0;
+/* SIZEOPTMORE-END */
 /* JFFS2-BEGIN */
 	fom.jffs2_auto_unmount.value = fom._f_jffs2_auto_unmount.checked ? 1 : 0;
 /* JFFS2-END */
 
 	/* do not restart sshd if no changes in its configuration */
 	if ((fom.sshd_pass.value == nvram.sshd_pass) && (fom.sshd_remote.value == nvram.sshd_remote) && (fom.sshd_motd.value == nvram.sshd_motd) &&
+/* SIZEOPTMORE-BEGIN */
 	    (fom.sshd_forwarding.value == nvram.sshd_forwarding) &&
+/* SIZEOPTMORE-END */
 	    (fom._set_password_1.value == "**********") && (fom._sshd_rport.value == nvram.sshd_rport) && (fom._sshd_port.value == nvram.sshd_port) && (fom._sshd_authkeys.value == nvram.sshd_authkeys)) {
 		fom._service.value = 'adminnosshd-restart';
 	}
@@ -475,7 +483,9 @@ function init() {
 /* TOMATO64-WIFI-END */
 <input type="hidden" name="remote_upgrade">
 <input type="hidden" name="http_wanport_bfm">
+<!-- ADVTHEMES-BEGIN -->
 <input type="hidden" name="web_adv_scripts">
+<!-- ADVTHEMES-END -->
 <input type="hidden" name="telnetd_eas">
 <input type="hidden" name="sshd_eas">
 <input type="hidden" name="sshd_pass">
@@ -483,7 +493,9 @@ function init() {
 <input type="hidden" name="sshd_motd">
 <input type="hidden" name="ne_shlimit">
 <input type="hidden" name="rmgt_sip">
+<!-- SIZEOPTMORE-BEGIN -->
 <input type="hidden" name="sshd_forwarding">
+<!-- SIZEOPTMORE-END -->
 <input type="hidden" name="web_mx">
 <!-- JFFS2-BEGIN -->
 <input type="hidden" name="jffs2_auto_unmount">
@@ -543,18 +555,51 @@ function init() {
 				options: [['default','Default: /www'], ['jffs', 'Custom: /jffs/www (Experts Only!)'], ['opt', 'Custom: /opt/www (Experts Only!)'], ['tmp', 'Custom: /tmp/www (Experts Only!)']], suffix: '<br>&nbsp;<small>Please be sure of your decision before change this settings!<\/small>', value: nvram.web_dir },
 			{ title: 'Theme UI', name: 'web_css', type: 'select',
 /* TOMATO64-REMOVE-BEGIN */
-				options: [['default','Default'],['usbred','USB Red'],['red','Tomato'],['black','Black'],['blue','Blue'],['bluegreen','Blue &amp; Green (Lighter)'],['bluegreen2','Blue &amp; Green (Darker)'],
-					  ['brown','Brown'],['cyan','Cyan'],['olive','Olive'],['pumpkin','Pumpkin'],['asus','Asus RT-N16'],['rtn66u','Asus RT-N66U'],['asusred','Asus Red'],['linksysred','Linksys Red'],
-					  ['at-dark','Advanced Dark'],['at-red','Advanced Red'],['at-blue','Advanced Blue'],['at-green','Advanced Green'],
+				options: [
+					  ['default','Default'],
+/* BCMARM-BEGIN */
+					  ['usbred','USB Red'],
+/* BCMARM-END */
+					  ['red','Tomato'],
+/* BCMARM-BEGIN */
+					  ['black','Black'],
+					  ['blue','Blue'],
+					  ['bluegreen','Blue &amp; Green (Lighter)'],
+					  ['bluegreen2','Blue &amp; Green (Darker)'],
+					  ['brown','Brown'],
+					  ['cyan','Cyan'],
+					  ['olive','Olive'],
+					  ['pumpkin','Pumpkin'],
+					  ['asus','Asus RT-N16'],
+					  ['rtn66u','Asus RT-N66U'],
+					  ['asusred','Asus Red'],
+					  ['linksysred','Linksys Red'],
+/* BCMARM-END */
+/* ADVTHEMES-BEGIN */
+					  ['at-dark','Advanced Dark'],
+					  ['at-red','Advanced Red'],
+					  ['at-blue','Advanced Blue'],
+					  ['at-green','Advanced Green'],
+/* ADVTHEMES-END */
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 				options: [['red','Tomato'],['black','Black'],['blue','Blue'],['bluegreen','Blue &amp; Green (Lighter)'],['bluegreen2','Blue &amp; Green (Darker)'],
 					  ['brown','Brown'],['cyan','Cyan'],['olive','Olive'],['pumpkin','Pumpkin'],['usbred','USB Red'],['usbblack','USB Black'],
 					  ['asus','Asus RT-N16'],['rtn66u','Asus RT-N66U'],['asusred','Asus Red'],['linksysred','Linksys Red'],
+/* ADVTHEMES-BEGIN */
 					  ['at-dark','Advanced Dark'],['at-red','Advanced Red'],['at-blue','Advanced Blue'],['at-green','Advanced Green'],
+/* ADVTHEMES-END */
 /* TOMATO64-END */
-					  ['ext/custom','Custom (ext/custom.css)'], ['online', 'Online from TTB (TomatoThemeBase)']], suffix: '&nbsp;<small id="web_css_warn">requires a modern browser<\/small>', value: nvram.web_css },
+					  ['ext/custom','Custom (ext/custom.css)'],
+					  ['online','Online from TTB (TomatoThemeBase)']
+					],
+/* ADVTHEMES-BEGIN */
+					suffix: '&nbsp;<small id="web_css_warn" style="display:none">requires a modern browser<\/small>',
+/* ADVTHEMES-END */
+					value: nvram.web_css },
+/* ADVTHEMES-BEGIN */
 				{ title: 'Dynamic BW/IPT/WL charts', indent: 2, name: 'f_web_adv_scripts', type: 'checkbox', suffix: '&nbsp;<small>JS based, supported only by modern browsers<\/small>', value: nvram.web_adv_scripts == 1 },
+/* ADVTHEMES-END */
 				{ title: 'TTB theme name', indent: 2, name: 'ttb_css', type: 'text', maxlen: 25, size: 35, suffix: '&nbsp;<small>TTB theme <a href="https://freshtomato.org/tomatothemebase/wp-content/uploads/themes.txt" class="new_window">list<\/a> and full <a href="https://freshtomato.org/tomatothemebase/" class="new_window">gallery<\/a><\/small>', value: nvram.ttb_css },
 /* USB-BEGIN */
 				{ title: 'TTB save folder', indent: 2, name: 'ttb_loc', type: 'text', maxlen: 35, size: 35, suffix: '&nbsp;/TomatoThemeBase <small>optional<\/small>', placeholder: 'empty = /tmp', value: nvram.ttb_loc },
@@ -585,7 +630,9 @@ function init() {
 			{ title: 'Extended MOTD', name: 'f_sshd_motd', type: 'checkbox', value: nvram.sshd_motd == 1 },
 			{ title: 'Allow Password Login', name: 'f_sshd_pass', type: 'checkbox', value: nvram.sshd_pass == 1 },
 			{ title: 'LAN Port', name: 'sshd_port', type: 'text', maxlen: 5, size: 7, value: nvram.sshd_port },
+/* SIZEOPTMORE-BEGIN */
 			{ title: 'Port Forwarding', name: 'f_sshd_forwarding', type: 'checkbox', value: nvram.sshd_forwarding == 1 },
+/* SIZEOPTMORE-END */
 			{ title: 'WAN Access', name: 'f_sshd_remote', type: 'checkbox', value: nvram.sshd_remote == 1 },
 				{ title: 'WAN Port', indent: 2, name: 'sshd_rport', type: 'text', maxlen: 5, size: 7, value: nvram.sshd_rport },
 			{ title: 'Authorized Keys', name: 'sshd_authkeys', type: 'textarea', value: nvram.sshd_authkeys }

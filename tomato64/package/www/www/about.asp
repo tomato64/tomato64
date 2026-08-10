@@ -53,6 +53,7 @@ function init() {
 	<br>
 	<hr>
 	<br>
+<!-- OPTSIZE-BEGIN -->
 
 <!-- / / / -->
 
@@ -160,6 +161,7 @@ function init() {
 	<b>"Toastman" features:</b><br>
 	- Configurable QOS class names<br>
 	- Comprehensive QOS rule examples set by default<br>
+	- TC-ATM overhead calculation - patch by tvlz<br>
 	- GPT support for HDD by Yaniv Hamo<br>
 	- Tools-System refresh timer<br>
 	<i>Copyright (C) 2011 Toastman</i><br>
@@ -191,6 +193,20 @@ function init() {
 <!-- OPENVPN-END -->
 <!-- VPN-END -->
 
+	<b>"Tiomo" features:</b><br>
+	- IMQ based QOS Ingress<br>
+	- Incoming Class Bandwidth pie chart<br>
+	<i>Copyright (C) 2012 Tiomo</i><br>
+	<br>
+
+<!-- SDHC-BEGIN -->
+	<b>"Slodki" feature:</b><br>
+	- SDHC integration and GUI<br>
+	<i>Copyright (C) 2009 Tomasz Słodkowicz</i><br>
+	<a href="http://gemini.net.pl/~slodki/tomato-sdhc.html" class="new_window">tomato-sdhc</a><br>
+	<br>
+<!-- SDHC-END -->
+
 <!-- NGINX-BEGIN -->
 	<b>Tomato-hyzoom feature:</b><br>
 	- MySQL Server integration and GUI<br>
@@ -211,7 +227,9 @@ function init() {
 <!-- IPERF-BEGIN -->
 	- IPerf integration<br>
 <!-- IPERF-END -->
+<!-- TERMLIB-BEGIN -->
 	- termlib based system command line<br>
+<!-- TERMLIB-END -->
 <!-- OPENVPN-BEGIN -->
 	- OpenVPN client config generator<br>
 <!-- OPENVPN-END -->
@@ -220,6 +238,7 @@ function init() {
 	<i>Copyright (C) 2017-2019 Michał Obrembski</i><br>
 	<a href="mailto:michal.o@szerszen.com">michal.o@szerszen.com</a><br>
 	<br>
+<!-- OPTSIZE-END -->
 
 	<b>Special thanks:</b><br>
 	We want to express our gratitude to all people not mentioned here but contributed with patches, new models additions, bug solving and updates to Tomato firmware.<br>

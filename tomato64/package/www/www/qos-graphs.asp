@@ -106,14 +106,20 @@ function showData() {
 }
 
 function earlyInit() {
-	if ((nvram.qos_enable != '1') || (nvram.qos_enable == '1' && nvram.qos_mode == '2')) { /* off or cake */
+	if ((nvram.qos_enable != '1')
+/* BCMARM-BEGIN */
+		|| (nvram.qos_enable == '1' && nvram.qos_mode == '2')
+/* BCMARM-END */
+	) { /* off or cake */
 		E('qosstats').style.display = 'none';
 		E('qosstatsoff').style.display = 'block';
 
 		if (nvram.qos_enable != '1')
 			E('note-disabled').style.display = 'block';
+/* BCMARM-BEGIN */
 		else
 			E('note-cake').style.display = 'block';
+/* BCMARM-END */
 
 		E('refresh-time').setAttribute('disabled', 'disabled');
 		E('refresh-button').setAttribute('disabled', 'disabled');
@@ -121,7 +127,11 @@ function earlyInit() {
 		return;
 	}
 
+	E('qosstats').style.display = 'block';
+	E('qosstatsoff').style.display = 'none';
+
 	showData();
+
 	checkSVG();
 	ref.initPage(2000, 5);
 	if (!ref.running)
@@ -241,7 +251,9 @@ function earlyInit() {
 <!-- / / / -->
 
 <div class="note-disabled" id="note-disabled"><b>QoS disabled.</b><br><br><a href="qos-settings.asp">Enable &raquo;</a></div>
+<!-- BCMARM-BEGIN -->
 <div class="note-disabled" id="note-cake"><b>Statistics not available in Cake mode.</b><br><br><a href="qos-settings.asp">Change mode &raquo;</a></div>
+<!-- BCMARM-END -->
 
 <!-- / / / -->
 

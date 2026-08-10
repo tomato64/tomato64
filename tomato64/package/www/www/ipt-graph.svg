@@ -9,7 +9,9 @@
 	No part of this file may be used without permission.
 -->
 <?xml-stylesheet type="text/css" href="tomato.css"?>
+<!-- ADVTHEMES-BEGIN -->
 <% css('svg-css'); %>
+<!-- ADVTHEMES-END -->
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="init(evt)" onmouseout="mOut()" width="100%" height="100%" id="svg">
 <script xlink:href="svg.js" />
 <script type='text/ecmascript'><![CDATA[

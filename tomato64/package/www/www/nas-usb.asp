@@ -17,7 +17,7 @@
 
 <script>
 
-//	<% nvram("usb_enable,usb_uhci,usb_ohci,usb_usb2,usb_usb3,usb_mmc,usb_storage,usb_printer,usb_printer_bidirect,usb_automount,usb_fs_ext4,usb_fs_fat,usb_fs_exfat,usb_fs_zfs,usb_fs_zfs_automount,zfs_mount_script,usb_fs_ntfs,usb_ntfs_driver,usb_fs_hfs,usb_hfs_driver,script_usbmount,script_usbumount,script_usbhotplug,idle_enable,usb_apcupsd,usb_apcupsd_custom"); %>
+//	<% nvram("usb_enable,usb_uhci,usb_ohci,usb_usb2,usb_usb3,usb_mmc,usb_storage,usb_printer,usb_printer_bidirect,usb_automount,usb_fs_ext3,usb_fs_ext4,usb_fs_fat,usb_fs_exfat,usb_fs_zfs,usb_fs_zfs_automount,zfs_mount_script,usb_fs_ntfs,usb_ntfs_driver,usb_fs_hfs,usb_hfs_driver,script_usbmount,script_usbumount,script_usbhotplug,idle_enable,usb_apcupsd,usb_apcupsd_custom"); %>
 
 //	<% usbdevices(); %>
 
@@ -225,7 +225,9 @@ function verifyFields(focused, quiet) {
 	E('_f_ohci').disabled = b || nvram.usb_ohci == -1;
 	E('_f_usb2').disabled = b;
 /* TOMATO64-REMOVE-END */
+/* BCMARM-BEGIN */
 	E('_f_usb3').disabled = b || nvram.usb_usb3 == -1;
+/* BCMARM-END */
 	E('_f_print').disabled = b;
 	E('_f_storage').disabled = b;
 
@@ -234,9 +236,15 @@ function verifyFields(focused, quiet) {
 	elem.display(PR('_f_mmc'), nvram.usb_mmc != -1);
 /* MICROSD-END */
 
+/* BCMARM-BEGIN */
 	E('_f_ext4').disabled = b || a;
-	E('_f_fat').disabled = b || a;
 	E('_f_exfat').disabled = b || a;
+/* BCMARM-END */
+/* BCMARM-NO-BEGIN */
+	E('_f_ext3').disabled = b || a;
+/* BCMARM-NO-END */
+
+	E('_f_fat').disabled = b || a;
 	E('_f_idle_enable').disabled = b || a;
 /* UPS-BEGIN */
 	E('_f_usb_apcupsd').disabled = b;
@@ -245,13 +253,17 @@ function verifyFields(focused, quiet) {
 /* NTFS-BEGIN */
 	E('_f_ntfs').disabled = b || a;
 /* TOMATO64-REMOVE-BEGIN */
+/* BCMARM-BEGIN */
 	E('_usb_ntfs_driver').disabled = b || a || !E('_f_ntfs').checked;
+/* BCMARM-END */
 /* TOMATO64-REMOVE-END */
 /* NTFS-END */
 /* HFS-BEGIN */
 	E('_f_hfs').disabled = b || a;
 /* TOMATO64-REMOVE-BEGIN */
+/* BCMARM-BEGIN */
 	E('_usb_hfs_driver').disabled = b || a || !E('_f_hfs').checked;
+/* BCMARM-END */
 /* TOMATO64-REMOVE-END */
 /* HFS-END */
 /* ZFS-BEGIN */
@@ -297,23 +309,27 @@ function save() {
 	fom.usb_usb2.value = 1;
 /* TOMATO64-END */
 
+/* BCMARM-BEGIN */
 	if (nvram.usb_usb3 == 0 && E('_f_usb3').checked) {
 		alert('Please note that enabling USB 3.0 may adversely affect your 2.4G wireless range');
 		nvram.usb_usb3 = 1; /* reset */
 	}
 	fom.usb_usb3.value = E('_f_usb3').checked ? 1 : 0;
-
+/* BCMARM-END */
 	fom.usb_storage.value = E('_f_storage').checked ? 1 : 0;
 	fom.usb_printer.value = E('_f_print').checked ? 1 : 0;
 	fom.usb_printer_bidirect.value = E('_f_bprint').checked ? 1 : 0;
-
 /* MICROSD-BEGIN */
 	fom.usb_mmc.value = nvram.usb_mmc == -1 ? -1 : (E('_f_mmc').checked ? 1 : 0);
 /* MICROSD-END */
-
+/* BCMARM-BEGIN */
 	fom.usb_fs_ext4.value = E('_f_ext4').checked ? 1 : 0;
-	fom.usb_fs_fat.value = E('_f_fat').checked ? 1 : 0;
 	fom.usb_fs_exfat.value = E('_f_exfat').checked ? 1 : 0;
+/* BCMARM-END */
+/* BCMARM-NO-BEGIN */
+	fom.usb_fs_ext3.value = E('_f_ext3').checked ? 1 : 0;
+/* BCMARM-NO-END */
+	fom.usb_fs_fat.value = E('_f_fat').checked ? 1 : 0;
 /* NTFS-BEGIN */
 	fom.usb_fs_ntfs.value = E('_f_ntfs').checked ? 1 : 0;
 /* NTFS-END */
@@ -367,16 +383,23 @@ function init() {
 <input type="hidden" name="usb_uhci">
 <input type="hidden" name="usb_ohci">
 <input type="hidden" name="usb_usb2">
+<!-- BCMARM-BEGIN -->
 <input type="hidden" name="usb_usb3">
+<!-- BCMARM-END -->
 <!-- MICROSD-BEGIN -->
 <input type="hidden" name="usb_mmc">
 <!-- MICROSD-END -->
 <input type="hidden" name="usb_storage">
 <input type="hidden" name="usb_printer">
 <input type="hidden" name="usb_printer_bidirect">
+<!-- BCMARM-BEGIN -->
 <input type="hidden" name="usb_fs_ext4">
-<input type="hidden" name="usb_fs_fat">
 <input type="hidden" name="usb_fs_exfat">
+<!-- BCMARM-END -->
+<!-- BCMARM-NO-BEGIN -->
+<input type="hidden" name="usb_fs_ext3">
+<!-- BCMARM-NO-END -->
+<input type="hidden" name="usb_fs_fat">
 <!-- NTFS-BEGIN -->
 <input type="hidden" name="usb_fs_ntfs">
 <!-- NTFS-END -->
@@ -401,7 +424,9 @@ function init() {
 	<script>
 		createFieldTable('', [
 			{ title: 'Core USB Support', name: 'f_usb', type: 'checkbox', value: nvram.usb_enable == 1 },
+/* BCMARM-BEGIN */
 				{ title: 'USB 3.0 Support', indent: 2, name: 'f_usb3', type: 'checkbox', value: nvram.usb_usb3 == 1 },
+/* BCMARM-END */
 /* TOMATO64-REMOVE-BEGIN */
 				{ title: 'USB 2.0 Support', indent: 2, name: 'f_usb2', type: 'checkbox', value: nvram.usb_usb2 == 1 },
 				{ title: 'USB 1.1 Support', indent: 2, multi: [
@@ -415,12 +440,19 @@ function init() {
 			null,
 			{ title: 'USB Storage Support', name: 'f_storage', type: 'checkbox', value: nvram.usb_storage == 1 },
 				{ title: 'File Systems Support', indent: 2, multi: [
+/* BCMARM-BEGIN */
 					{ suffix: '&nbsp; Ext2 / Ext3 / Ext4 * &nbsp;&nbsp;&nbsp;', name: 'f_ext4', type: 'checkbox', value: nvram.usb_fs_ext4 == 1 },
+/* BCMARM-END */
+/* BCMARM-NO-BEGIN */
+					{ suffix: '&nbsp; Ext2 / Ext3 &nbsp;&nbsp;&nbsp;', name: 'f_ext3', type: 'checkbox', value: nvram.usb_fs_ext3 == 1 },
+/* BCMARM-NO-END */
 /* NTFS-BEGIN */
 					{ suffix: '&nbsp; NTFS &nbsp;&nbsp;&nbsp;', name: 'f_ntfs', type: 'checkbox', value: nvram.usb_fs_ntfs == 1 },
 /* NTFS-END */
-					{ suffix: '&nbsp; FAT &nbsp;', name: 'f_fat', type: 'checkbox', value: nvram.usb_fs_fat == 1 },
-					{ suffix: '&nbsp; exFAT &nbsp;', name: 'f_exfat', type: 'checkbox', value: nvram.usb_fs_exfat == 1 }
+					{ suffix: '&nbsp; FAT &nbsp;', name: 'f_fat', type: 'checkbox', value: nvram.usb_fs_fat == 1 }
+/* BCMARM-BEGIN */
+					,{ suffix: '&nbsp; exFAT &nbsp;', name: 'f_exfat', type: 'checkbox', value: nvram.usb_fs_exfat == 1 }
+/* BCMARM-END */
 /* HFS-BEGIN */
 					,{ suffix: '&nbsp; HFS / HFS+ &nbsp;', name: 'f_hfs', type: 'checkbox', value: nvram.usb_fs_hfs == 1 }
 /* HFS-END */
@@ -430,6 +462,7 @@ function init() {
 /* ZFS-END */
 				] },
 /* TOMATO64-REMOVE-BEGIN */
+/* BCMARM-BEGIN */
 /* NTFS-BEGIN */
 				{ title: 'NTFS Driver', indent: 2, name: 'usb_ntfs_driver', type: 'select', options: [
 					['ntfs3g','Open NTFS-3G driver'],
@@ -449,6 +482,7 @@ function init() {
 /* TUXERAHFS-END */
 				], value: nvram.usb_hfs_driver },
 /* HFS-END */
+/* BCMARM-END */
 /* TOMATO64-REMOVE-END */
 /* MICROSD-BEGIN */
 				{ title: 'SD/MMC Card Support', indent: 2, name: 'f_mmc', type: 'checkbox', value: nvram.usb_mmc == 1 },
@@ -474,7 +508,9 @@ function init() {
 /* UPS-END */
 			{ title: 'Hotplug script<br><small>(called when any USB device is attached or removed)<\/small>', name: 'script_usbhotplug', type: 'textarea', value: nvram.script_usbhotplug },
 			null,
+/* BCMARM-BEGIN */
 			{ text: '<small>* incomplete because of old kernel version: add \'-O^metadata_csum\' when you create ext4 filesystem.<\/small>' },
+/* BCMARM-END */
 			{ text: '<small>Some of the changes will take effect only after a restart.<\/small>' }
 		]);
 	</script>

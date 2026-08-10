@@ -22,9 +22,11 @@
 <script src="interfaces.js?rel=<% version(); %>"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
 <script src="ethernet-icon.js?rel=<% version(); %>"></script>
+<!-- BCMARM-BEGIN -->
 <script>
 var lastjiffiestotal = 0, lastjiffiesidle = 0, lastjiffiesusage = 100;
 </script>
+<!-- BCMARM-END -->
 <script src="status-data.jsx?_http_id=<% nv(http_id); %>"></script>
 <!-- USB-BEGIN -->
 <script src="wwan_parser.js?rel=<% version(); %>"></script>
@@ -423,10 +425,14 @@ function show() {
 	anon_update();
 
 	c('cpu', stats.cpuload);
+/* BCMARM-BEGIN */
 	c('cpupercent', stats.cpupercent);
+/* BCMARM-END */
+/* RTNPLUS-BEGIN */
 /* TOMATO64-WLTEMP-BEGIN */
 	c('wlsense', stats.wlsense);
 /* TOMATO64-WLTEMP-END */
+/* RTNPLUS-END */
 /* TOMATO64-BEGIN */
 	c('cpumhz', stats.cpumhz);
 	c('disk', stats.disk);
@@ -660,14 +666,21 @@ function init() {
 		{ title: 'CPU Frequency', rid: 'cpumhz', text: stats.cpumhz, hidden: (stats.cpumhz == '') },
 /* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
+/* BCMARM-BEGIN */
 		{ title: 'CPU Frequency', text: stats.cpumhz, suffix: ' <small>(dual-core)<\/small>' },
+/* BCMARM-END */
+/* BCMARM-NO-BEGIN */
+		{ title: 'CPU Frequency', text: stats.cpumhz },
+/* BCMARM-NO-END */
 		{ title: 'Flash Size', text: stats.flashsize },
 /* TOMATO64-REMOVE-END */
 		null,
 		{ title: 'Time', rid: 'time', text: stats.time },
 		{ title: 'Uptime', rid: 'uptime', text: stats.uptime },
 		{ title: 'CPU Load <small>(1 / 5 / 15 mins)<\/small>', rid: 'cpu', text: stats.cpuload },
+/* BCMARM-BEGIN */
 		{ title: 'CPU Usage', rid: 'cpupercent', text: stats.cpupercent },
+/* BCMARM-END */
 		{ title: 'Used / Total RAM', rid: 'memory', text: stats.memory },
 		{ title: 'Used / Total Swap', rid: 'swap', text: stats.swap, hidden: (stats.swap == '') },
 /* TOMATO64-BEGIN */
@@ -683,9 +696,11 @@ function init() {
 /* TOMATO64-BEGIN */
 		{ title: 'CPU Temperature', rid: 'temps', text: stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F', hidden: (stats.cputemp == '' || stats.cputemp == '°') },
 /* TOMATO64-END */
+/* RTNPLUS-BEGIN */
 /* TOMATO64-WLTEMP-BEGIN */
 		{ title: 'Wireless Temperature', rid: 'wlsense', text: stats.wlsense }
 /* TOMATO64-WLTEMP-END */
+/* RTNPLUS-END */
 	]);
 </script>
 </div>

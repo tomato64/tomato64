@@ -43,6 +43,52 @@ install:
 # Replace the build-time placeholder after about.asp has been copied/squashed.
 	sed -i $(INSTALLDIR)/www/about.asp -e "s,@GIT_HASH@,$(GIT_HASH),g"
 
+# Remove legacy ARM-only themes from MIPS images
+ifneq ($(TCONFIG_BCMARM),y)
+	rm -f \
+		$(INSTALLDIR)/www/asus-bg.png \
+		$(INSTALLDIR)/www/asus.css \
+		$(INSTALLDIR)/www/asus.png \
+		$(INSTALLDIR)/www/asusred.css \
+		$(INSTALLDIR)/www/asusred_logo.png \
+		$(INSTALLDIR)/www/black.css \
+		$(INSTALLDIR)/www/blue.css \
+		$(INSTALLDIR)/www/bluegreen.css \
+		$(INSTALLDIR)/www/bluegreen2.css \
+		$(INSTALLDIR)/www/brown.css \
+		$(INSTALLDIR)/www/cyan.css \
+		$(INSTALLDIR)/www/linksysred.css \
+		$(INSTALLDIR)/www/linksysred_logo.png \
+		$(INSTALLDIR)/www/olive.css \
+		$(INSTALLDIR)/www/pumpkin.css \
+		$(INSTALLDIR)/www/red_bg.gif \
+		$(INSTALLDIR)/www/rtn66u.css \
+		$(INSTALLDIR)/www/rtn66u.png \
+		$(INSTALLDIR)/www/tomatousb.png \
+		$(INSTALLDIR)/www/usbred.css \
+		$(INSTALLDIR)/www/white_arrow.gif
+endif
+
+# Distinguish version
+ifneq ($(TCONFIG_BCMARM),y)
+	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+	sed -i $(INSTALLDIR)/www/admin-buttons.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+	sed -i $(INSTALLDIR)/www/qos-classify.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+	sed -i $(INSTALLDIR)/www/qos-graphs.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+	sed -i $(INSTALLDIR)/www/qos-settings.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+else
+	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
+	sed -i $(INSTALLDIR)/www/admin-buttons.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
+	sed -i $(INSTALLDIR)/www/qos-settings.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
+	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
+endif
+
 # Only include MultiWAN options if MULTIWAN is configured in.
 ifneq ($(TCONFIG_MULTIWAN),y)
 	cd $(INSTALLDIR)/www && \
@@ -213,6 +259,7 @@ ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
 	sed -i $(INSTALLDIR)/www/basic-ipv6.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-wlanvifs.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 else
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTNPLUS-NO-BEGIN/,/RTNPLUS-NO-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-wlanvifs.asp -e "/RTNPLUS-NO-BEGIN/,/RTNPLUS-NO-END/d"
@@ -494,13 +541,13 @@ ifeq ($(TCONFIG_OPENVPN),y)
  endif
 endif
 
-# Only include the Termlib based tools-shell.asp option if it is compiled in
+# Only include the Termlib based tools-shell-legacy.asp option if it is compiled in
 ifneq ($(TCONFIG_TERMLIB),y)
 	rm -f $(INSTALLDIR)/www/termlib_min.js
-	sed -i $(INSTALLDIR)/www/tools-shell.asp -e "/TERMLIB-BEGIN/,/TERMLIB-END/d"
+	sed -i $(INSTALLDIR)/www/tools-shell-legacy.asp -e "/TERMLIB-BEGIN/,/TERMLIB-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/TERMLIB-BEGIN/,/TERMLIB-END/d"
 else
-	sed -i $(INSTALLDIR)/www/tools-shell.asp -e "/TERMLIB0-BEGIN/,/TERMLIB0-END/d"
+	sed -i $(INSTALLDIR)/www/tools-shell-legacy.asp -e "/TERMLIB0-BEGIN/,/TERMLIB0-END/d"
 endif
 
 # Only include more info on about.asp page if size opt is not required
@@ -853,7 +900,7 @@ endif
 
 # remove C-style comments from java, asp and css files. All "control" comments have been processed by now.
 	for F in $(wildcard *.js *.jsx *.asp *.css); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(BR2_EXTERNAL_TOMATO64_PATH)/package/www/www/remcoms2.sh $(INSTALLDIR)/www/$$F c; \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(BR2_EXTERNAL_TOMATO64_PATH)/package/www/www/remcoms2.sh $(INSTALLDIR)/www/$$F c || true; \
 	done
 
 ifneq ($(TCONFIG_TOMATO64),y)

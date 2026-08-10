@@ -30,6 +30,7 @@ function show() {
 		E('qosnotice').style.display = 'none';
 }
 
+/* BCMARM-BEGIN */
 function checkQoSMode() {
 	if (E('qos_cake_prio_mode').value != '0') {
 		E('cakesms').style.display = 'block';
@@ -38,6 +39,7 @@ function checkQoSMode() {
 		E('_f_qos_classify').disabled = true;
 	}
 }
+/* BCMARM-END */
 
 var classNames = nvram.qos_classnames.split(' ');
 
@@ -72,7 +74,10 @@ function verifyClassCeilingAndRate(bandwidthString, rateString, ceilingString, r
 }
 
 function verifyFields(focused, quiet) {
-	var i, e, b, f, a;
+	var i, e, b, f;
+/* BCMARM-BEGIN */
+	var a;
+/* BCMARM-END */
 
 	for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
 		var u = (uidx > 1) ? uidx : '';
@@ -99,6 +104,7 @@ function verifyFields(focused, quiet) {
 			f[i].disabled = b;
 	}
 
+/* BCMARM-BEGIN */
 	E('qos_cake_prio_mode').addEventListener('change', checkQoSMode);
 	checkQoSMode();
 
@@ -131,6 +137,7 @@ function verifyFields(focused, quiet) {
 				f[i].disabled = !classify;
 		}
 	}
+/* BCMARM-END */
 
 	var abg = ['alpha', 'beta', 'gamma'];
 	b = E('_f_ne_vegas').checked;
@@ -141,6 +148,7 @@ function verifyFields(focused, quiet) {
 			return 0;
 	}
 
+/* BCMARM-BEGIN */
 	if (typeof(qos_def) == 'undefined')
 		qos_def = E('_qos_default').value;
 	if (typeof(qos_pfi) == 'undefined')
@@ -161,6 +169,7 @@ function verifyFields(focused, quiet) {
 		qos_def = E('_qos_default').value;
 		qos_pfi = E('_qos_pfifo').value;
 	}
+/* BCMARM-END */
 
 	return 1;
 }
@@ -177,8 +186,10 @@ function save() {
 	fom.qos_icmp.value = fom._f_qos_icmp.checked ? 1 : 0;
 	fom.qos_udp.value = fom._f_qos_udp.checked ? 1 : 0;
 	fom.qos_reset.value = fom._f_qos_reset.checked ? 1 : 0;
+/* BCMARM-BEGIN */
 	fom.qos_classify.value = fom._f_qos_classify.checked ? 1 : 0;
 	fom.qos_cake_wash.value = fom._f_qos_cake_wash.checked ? 1 : 0;
+/* BCMARM-END */
 
 	qos = [];
 	for (i = 1; i < 11; ++i)
@@ -266,8 +277,10 @@ function init() {
 <input type="hidden" name="qos_orates">
 <input type="hidden" name="qos_irates">
 <input type="hidden" name="qos_reset">
+<!-- BCMARM-BEGIN -->
 <input type="hidden" name="qos_classify">
 <input type="hidden" name="qos_cake_wash">
+<!-- BCMARM-END -->
 <input type="hidden" name="ne_vegas">
 
 <!-- / / / -->
@@ -288,7 +301,9 @@ function init() {
 
 		createFieldTable('', [
 			{ title: 'Enable QoS', name: 'f_qos_enable', type: 'checkbox', value: nvram.qos_enable == '1' },
+/* BCMARM-BEGIN */
 			{ title: 'QoS mode', name: 'qos_mode', type: 'select', options: [['1','HTB limiter + leaf qdisc scheduler (classic/SQM)'],['2','CAKE AQM']], value: nvram.qos_mode },
+/* BCMARM-END */
 			{ title: 'Prioritize small packets with these control flags', multi: [
 				{ suffix: ' ACK &nbsp;', name: 'f_qos_ack', type: 'checkbox', value: nvram.qos_ack == '1' },
 				{ suffix: ' SYN &nbsp;', name: 'f_qos_syn', type: 'checkbox', value: nvram.qos_syn == '1' },
@@ -297,15 +312,23 @@ function init() {
 			] },
 			{ title: 'Prioritize ICMP', name: 'f_qos_icmp', type: 'checkbox', value: nvram.qos_icmp == '1' },
 			{ title: 'No Ingress QoS for UDP', name: 'f_qos_udp', type: 'checkbox', value: nvram.qos_udp == '1', suffix: '&nbsp; <small>Usually unwanted, use with caution<\/small>' },
+/* BCMARM-BEGIN */
 			{ title: 'Classify traffic', name: 'f_qos_classify', type: 'checkbox', value: nvram.qos_classify == '1' },
+/* BCMARM-END */
 			{ title: 'Reset class when changing settings', name: 'f_qos_reset', type: 'checkbox', value: nvram.qos_reset == '1' },
 			{ title: 'Default class', name: 'qos_default', type: 'select', options: classList, value: nvram.qos_default },
+
+/* BCMARM-BEGIN */
 			{ title: 'Qdisc Scheduler', name: 'qos_pfifo', type: 'select', options: [['0','sfq'],['1','pfifo'],['2','codel'],['3','fq_codel']], value: nvram.qos_pfifo },
 			null,
 			{ title: 'CAKE mode', name: 'qos_cake_prio_mode', id: 'qos_cake_prio_mode', type: 'select', options: [
 				['0','Single class [besteffort] - no classification is involved'],['1','8 priority classes [diffserv8] - DSCP'],['2','4 priority classes [diffserv4] - DSCP'],['3','3 priority classes [diffserv3] - DSCP'],['4','8 priority classes [precedence] - ToS based - discouraged']
-				], value: nvram.qos_cake_prio_mode, suffix: '<div id=cakesms>&nbsp;<small>You might now define the traffic classification.<\/small><\/div>'},
+				], value: nvram.qos_cake_prio_mode, suffix: '<div id=cakesms>&nbsp;<small>You might now define the traffic classification.<\/small><\/div>' },
 			{ title: 'CAKE wash', name: 'f_qos_cake_wash', type: 'checkbox', value: nvram.qos_cake_wash == '1', suffix: '&nbsp; <small>Forces the clearing of diffserv marking for inbound packets<\/small>' }
+/* BCMARM-END */
+/* BCMARM-NO-BEGIN */
+			{ title: 'Qdisc Scheduler', name: 'qos_pfifo', type: 'select', options: [['0','sfq'],['1','pfifo']], value: nvram.qos_pfifo }
+/* BCMARM-NO-END */
 		]);
 	</script>
 </div>
@@ -315,7 +338,9 @@ function init() {
 <div class="section-title">Encapsulation Settings</div>
 <div class="section">
 	<script>
+/* BCMARM-BEGIN */
 		const encap_options = [['0','None'],['1','ATM (ADSL)'],['2','PTM (most VDSL2)']];
+/* BCMARM-END */
 
 		const overhead_options = [['0','None'],
 		                          ['8','8-RFC2684/RFC1483 Routed VC-Mux'],
@@ -323,10 +348,14 @@ function init() {
 		                          ['14','14-PPPoA LLC/Snap'],
 		                          ['16','16-RFC2684/RFC1483 Routed LLC/Snap'],
 		                          ['24','24-RFC2684/RFC1483 Bridged VC-Mux'],
+/* BCMARM-BEGIN */
 		                          ['30','30-PPPoE PTM (VDSL2)'],
+/* BCMARM-END */
 		                          ['32','32-PPPoE VC-Mux'],
 		                          ['32','32-RFC2684/RFC1483 Bridged LLC/Snap'],
+/* BCMARM-BEGIN */
 		                          ['34','34-PPPoE PTM (VDSL2) + VLAN'],
+/* BCMARM-END */
 		                          ['40','40-PPPoE LLC/Snap'],
 		                          ['48','48-PPPoE LLC/Snap + VLAN']
 		                         ];
@@ -334,13 +363,25 @@ function init() {
 		const encap_fields = [];
 		for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
 			var u = (uidx > 1) ? uidx : '';
+
+/* BCMARM-BEGIN */
 			encap_fields.push({
 				title: 'WAN'+(uidx - 1), multi: [
 					{ name: 'wan'+u+'_qos_encap', type: 'select', options: encap_options, value: nvram['wan'+u+'_qos_encap'], suffix: ' ' },
-					{ name: 'wan'+u+'_qos_overhead', type: 'select', options: overhead_options, value: nvram['wan'+u+'_qos_overhead']},
+					{ name: 'wan'+u+'_qos_overhead', type: 'select', options: overhead_options, value: nvram['wan'+u+'_qos_overhead'] }
 				]
 			});
+/* BCMARM-END */
+/* BCMARM-NO-BEGIN */
+			encap_fields.push({
+				title: 'Overhead Value - WAN'+(uidx - 1), name: 'wan'+u+'_qos_overhead', type: 'select', options: overhead_options, value: nvram['wan'+u+'_qos_overhead']
+			});
+			encap_fields.push(null);
+/* BCMARM-NO-END */
 		}
+/* BCMARM-NO-BEGIN */
+		encap_fields.pop();
+/* BCMARM-NO-END */
 		createFieldTable('', encap_fields);
 	</script>
 </div>
