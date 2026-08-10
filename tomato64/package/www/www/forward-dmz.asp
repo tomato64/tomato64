@@ -30,52 +30,53 @@ function show() {
 }
 
 function verifyFields(focused, quiet) {
-	var sip, dip, off;
+	var sip, dip, ra, off;
 
 	off = !E('_f_dmz_enable').checked;
 
-	dip = E('_f_dmz_ipaddr')
+	dip = E('_f_dmz_ipaddr');
 	dip.disabled = off;
 
 	sip = E('_f_dmz_sip');
 	sip.disabled = off;
 
-	sip = E('_f_dmz_ra');
-	sip.disabled = off;
+	ra = E('_f_dmz_ra');
+	ra.disabled = off;
 
 	if (off) {
 		ferror.clearAll(dip, sip);
 		return 1;
 	}
 
-	if (nvram.dmz_enable) {
-		dip.value = dip.value.trim();
+	dip.value = dip.value.trim();
 
-		if (!v_ip(dip, quiet))
-			return 0;
+	if (!v_ip(dip, quiet))
+		return 0;
 
-		if (lanip.indexOf(dip.value.substr(0, dip.value.lastIndexOf('.'))) == -1) {
-			ferror.set(dip, 'The specified IP address is outside the range of any enabled LAN', quiet);
-			return 0;
-		}
+	if (lanip.indexOf(dip.value.substr(0, dip.value.lastIndexOf('.'))) == -1) {
+		ferror.set(dip, 'The specified IP address is outside the range of any enabled LAN', quiet);
+		return 0;
 	}
 
-	if ((sip.value.length) && (!v_iptaddr(sip, quiet, 15)))
+	sip.value = sip.value.trim();
+	if (sip.value.length && !v_iptaddr(sip, quiet, 15))
 		return 0;
 
 	return 1;
 }
 
 function save() {
+	var fom;
+
 	if (!verifyFields(null, 0))
 		return;
 
-	var fom = E('t_fom');
-	fom.dmz_enable.value = fom.f_dmz_enable.checked ? 1 : 0;
+	fom = E('t_fom');
+	fom.dmz_enable.value = E('_f_dmz_enable').checked ? 1 : 0;
 	nvram.dmz_enable = fom.dmz_enable.value;
-	fom.dmz_ra.value = fom._f_dmz_ra.checked ? 1 : 0;
-	fom. dmz_ipaddr.value = fom._f_dmz_ipaddr.value;
-	fom.dmz_sip.value = fom.f_dmz_sip.value.split(/\s*,\s*/).join(',');
+	fom.dmz_ra.value = E('_f_dmz_ra').checked ? 1 : 0;
+	fom.dmz_ipaddr.value = E('_f_dmz_ipaddr').value;
+	fom.dmz_sip.value = E('_f_dmz_sip').value.split(/\s*,\s*/).join(',');
 
 	form.submit(fom, 1);
 }
