@@ -29,6 +29,11 @@ var shlimit = nvram.ne_shlimit.split(',');
 if (shlimit.length != 3)
 	shlimit = [0,3,60];
 
+function bridgeHasManagementAddress(i) {
+	var ip = nvram['lan'+i+'_ipaddr'] || '';
+	return (nvram['lan'+i+'_ifname'] == 'br'+i) && (ip != '') && (ip != '0.0.0.0');
+}
+
 var xmenus = [['Status','status'],['Bandwidth','bwm'],['IP Traffic','ipt'],['Tools','tools'],['Basic','basic'],['Advanced','advanced'],['Port Forwarding','forward'],['QoS','qos'],['Misc','misc'],
 /* USB-BEGIN */
               ['USB and NAS','nas'],
@@ -143,7 +148,7 @@ function verifyFields(focused, quiet) {
 /* TOMATO64-WIFI-END */
 
 	for (i = 1; i <= MAX_BRIDGE_ID; i++)
-		elem.display(PR('_f_http_lan'+i+'_listener'), (nvram['lan'+i+'_ifname'] == 'br'+i+'') && (a.value != 0));
+		elem.display(PR('_f_http_lan'+i+'_listener'), bridgeHasManagementAddress(i) && (a.value != 0));
 
 /* IPV6-BEGIN */
 	elem.display(PR('_f_http_ipv6'), (!nvram.ipv6_service == '') && (a.value != 0));
@@ -292,7 +297,7 @@ function save() {
 
 	fom.http_lan_listeners.value = 0; /* init with 0 and check */
 	for (i = 1; i <= MAX_BRIDGE_ID; i++) {
-		if (fom['_f_http_lan'+i+'_listener'].checked)
+		if (bridgeHasManagementAddress(i) && fom['_f_http_lan'+i+'_listener'].checked)
 			fom.http_lan_listeners.value = fom.http_lan_listeners.value | (2 ** (i - 1)); /* set hex value bit, listener enabled for LAN(i) */
 	}
 /* IPV6-BEGIN */
@@ -560,7 +565,7 @@ function init() {
 		];
 
 		for (i = 1; i <= MAX_BRIDGE_ID; i++)
-			m.splice(i+3, 0, { title: 'Listen on LAN'+i+' (br'+i+')', name: 'f_http_lan'+i+'_listener', type: 'checkbox', value: (nvram.http_lan_listeners & (2 ** (i - 1)))},);
+			m.splice(i+3, 0, { title: 'Listen on LAN'+i+' (br'+i+')', name: 'f_http_lan'+i+'_listener', type: 'checkbox', value: bridgeHasManagementAddress(i) && (nvram.http_lan_listeners & (2 ** (i - 1)))},);
 
 		var webmx = get_config('web_mx', '').toLowerCase();
 		for (var i = 0; i < xmenus.length; ++i)

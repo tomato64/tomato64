@@ -763,7 +763,8 @@ function init() {
 	for (var i = 0 ; i <= MAX_BRIDGE_ID ; i++) {
 		var j = (i == 0) ? '' : i.toString();
 		if (nvram['lan'+j+'_ifname'].length > 0) {
-			if (nvram['lan'+j+'_proto'] == 'dhcp') {
+			var l2Only = (nvram['lan'+j+'_ipaddr'] == '0.0.0.0');
+			if (!l2Only && (nvram['lan'+j+'_proto'] == 'dhcp')) {
 				if ((!fixIP(nvram.dhcpd_startip)) || (!fixIP(nvram.dhcpd_endip))) {
 					var x = nvram['lan'+j+'_ipaddr'].split('.').splice(0, 3).join('.')+'.';
 					nvram['dhcpd'+j+'_startip'] = x + 2;
@@ -774,41 +775,44 @@ function init() {
 			}
 			else {
 				s += ((s.length > 0) && (s.charAt(s.length - 1) != ' ')) ? '<br>' : '';
-				s += '<b>br'+i+'<\/b> (LAN'+i+') - Disabled';
+				s += '<b>br'+i+'<\/b> (LAN'+i+') - '+(l2Only ? 'Disabled (L2 only)' : 'Disabled');
 			}
 			t += ((t.length > 0) && (t.charAt(t.length - 1) != ' ')) ? '<br>' : '';
-			t += '<b>br'+i+'<\/b> (LAN'+i+') - '+nvram['lan'+j+'_ipaddr'];
-			if (nvram['lan'+j+'_netmask'].length > 0) t += '/'+numberOfBitsOnNetMask(nvram['lan'+j+'_netmask']);
+			t += '<b>br'+i+'<\/b> (LAN'+i+') - ';
+			if (l2Only)
+				t += 'L2 only';
+			else {
+				t += nvram['lan'+j+'_ipaddr'];
+				if (fixIP(nvram['lan'+j+'_netmask']))
+					t += '/'+numberOfBitsOnNetMask(nvram['lan'+j+'_netmask']);
+			}
 		}
 	}
 
-	createFieldTable('', [
+	var lanFields = [
 		{ title: 'Router MAC Address', text: nvram.lan_hwaddr },
 		{ title: 'Router IP Addresses', text: t },
-		{ title: 'Gateway', text: nvram.lan_gateway, ignore: nvram.wan_proto != 'disabled' },
+		{ title: 'Gateway', text: nvram.lan_gateway, ignore: nvram.wan_proto != 'disabled' }
+	];
 /* IPV6-BEGIN */
-		{ title: 'LAN (br0) IPv6 Address', rid: 'ip6_lan', text: stats.ip6_lan, hidden: (stats.ip6_lan == '') },
-		{ title: 'LAN (br0) IPv6 LL Address', rid: 'ip6_lan_ll', text: stats.ip6_lan_ll, hidden: (stats.ip6_lan_ll == '') },
-		{ title: 'LAN1 (br1) IPv6 Address', rid: 'ip6_lan1', text: stats.ip6_lan1, hidden: (stats.ip6_lan1 == '') },
-		{ title: 'LAN1 (br1) IPv6 LL Address', rid: 'ip6_lan1_ll', text: stats.ip6_lan1_ll, hidden: (stats.ip6_lan1_ll == '') },
-		{ title: 'LAN2 (br2) IPv6 Address', rid: 'ip6_lan2', text: stats.ip6_lan2, hidden: (stats.ip6_lan2 == '') },
-		{ title: 'LAN2 (br2) IPv6 LL Address', rid: 'ip6_lan2_ll', text: stats.ip6_lan2_ll, hidden: (stats.ip6_lan2_ll == '') },
-		{ title: 'LAN3 (br3) IPv6 Address', rid: 'ip6_lan3', text: stats.ip6_lan3, hidden: (stats.ip6_lan3 == '') },
-		{ title: 'LAN3 (br3) IPv6 LL Address', rid: 'ip6_lan3_ll', text: stats.ip6_lan3_ll, hidden: (stats.ip6_lan3_ll == '') },
-/* TOMATO64-BEGIN */
-		{ title: 'LAN4 (br4) IPv6 Address', rid: 'ip6_lan4', text: stats.ip6_lan4, hidden: (stats.ip6_lan4 == '') },
-		{ title: 'LAN4 (br4) IPv6 LL Address', rid: 'ip6_lan4_ll', text: stats.ip6_lan4_ll, hidden: (stats.ip6_lan4_ll == '') },
-		{ title: 'LAN5 (br5) IPv6 Address', rid: 'ip6_lan5', text: stats.ip6_lan5, hidden: (stats.ip6_lan5 == '') },
-		{ title: 'LAN5 (br5) IPv6 LL Address', rid: 'ip6_lan5_ll', text: stats.ip6_lan5_ll, hidden: (stats.ip6_lan5_ll == '') },
-		{ title: 'LAN6 (br6) IPv6 Address', rid: 'ip6_lan6', text: stats.ip6_lan6, hidden: (stats.ip6_lan6 == '') },
-		{ title: 'LAN6 (br6) IPv6 LL Address', rid: 'ip6_lan6_ll', text: stats.ip6_lan6_ll, hidden: (stats.ip6_lan6_ll == '') },
-		{ title: 'LAN7 (br7) IPv6 Address', rid: 'ip6_lan7', text: stats.ip6_lan7, hidden: (stats.ip6_lan7 == '') },
-		{ title: 'LAN7 (br7) IPv6 LL Address', rid: 'ip6_lan7_ll', text: stats.ip6_lan7_ll, hidden: (stats.ip6_lan7_ll == '') },
-/* TOMATO64-END */
+	for (var i = 0 ; i <= MAX_BRIDGE_ID; i++) {
+		var j = (i == 0) ? '' : i.toString();
+		var ip6Rid = 'ip6_lan'+j;
+		var ip6LlRid = ip6Rid+'_ll';
+		var ip6Address = stats[ip6Rid] || '';
+		var ip6LlAddress = stats[ip6LlRid] || '';
+		var l2Only = (nvram['lan'+j+'_ipaddr'] == '0.0.0.0');
+		var title = 'LAN'+j+' (br'+i+') IPv6';
+
+		lanFields.push({ title: title+' Address', rid: ip6Rid, text: ip6Address, hidden: (ip6Address == '') || l2Only });
+		lanFields.push({ title: title+' LL Address', rid: ip6LlRid, text: ip6LlAddress, hidden: (ip6LlAddress == '') || l2Only });
+	}
 /* IPV6-END */
+	lanFields.push(
 		{ title: 'DNS', rid: 'dns', text: nvram.wan_dns, ignore: nvram.wan_proto != 'disabled' },
 		{ title: 'DHCP', text: s }
-	]);
+	);
+	createFieldTable('', lanFields);
 </script>
 </div>
 

@@ -92,8 +92,10 @@ lg.setup = function() {
 					nvram['dhcpd'+j+'_endip'] = getAddress('0.0.0.50', n);
 				}
 			}
-			lg.insertData(-1, [i.toString(), nvram['lan'+j+'_stp'], nvram['lan'+j+'_ipaddr'], nvram['lan'+j+'_netmask'], (nvram['lan'+j+'_proto'] == 'dhcp') ? 1 : 0, nvram['dhcpd'+j+'_startip'], 
-			                   nvram['dhcpd'+j+'_endip'], (nvram['lan'+j+'_proto'] == 'dhcp') ? (((nvram['dhcp'+j+'_lease']) * 1 == 0) ? '1440' : (nvram['dhcp'+j+'_lease']).toString()) : '']) ;
+			var l2Only = (nvram['lan'+j+'_ipaddr'] == '0.0.0.0');
+			lg.insertData(-1, [i.toString(), nvram['lan'+j+'_stp'], nvram['lan'+j+'_ipaddr'], l2Only ? '' : nvram['lan'+j+'_netmask'], l2Only ? 0 : ((nvram['lan'+j+'_proto'] == 'dhcp') ? 1 : 0),
+			                   l2Only ? '' : nvram['dhcpd'+j+'_startip'], l2Only ? '' : nvram['dhcpd'+j+'_endip'],
+			                   (!l2Only && (nvram['lan'+j+'_proto'] == 'dhcp')) ? (((nvram['dhcp'+j+'_lease']) * 1 == 0) ? '1440' : (nvram['dhcp'+j+'_lease']).toString()) : '']) ;
 			numBridges++;
 		}
 	}
@@ -105,6 +107,11 @@ lg.setup = function() {
 }
 
 lg.dataToView = function(data) {
+	if (data[2].toString() == '0.0.0.0') {
+		return ['br'+data[0],
+			(data[1].toString() == '1') ? '&#x2b50' : '', 'L2 only', '-', '', '-', ''];
+	}
+
 	return ['br'+data[0],
 		(data[1].toString() == '1') ? '&#x2b50' : '', data[2], data[3],
 		(data[4].toString() == '1') ? '&#x2b50' : '',
@@ -226,6 +233,9 @@ lg.countOverlappingNetworks = function (ip) {
 	var data = this.getAllData();
 	var total = 0;
 	for (var i = 0; i < data.length; ++i) {
+		if (data[i][2] == '0.0.0.0')
+			continue;
+
 		var net = getNetworkAddress(data[i][2], data[i][3]);
 		var brd = getBroadcastAddress(net, data[i][3]);
 		total += (net != '0.0.0.0' ? (((aton(ip) <= aton(brd)) && (aton(ip) >= aton(net))) ? 1 : 0) : 0);
@@ -255,6 +265,7 @@ lg.verifyFields = function(row, quiet) {
 		ok = 0;
 /* if we have a properly defined IP address - 0.0.0.0 is NOT a valid IP address for our intents/purposes! */
 	if ((f[2].value != '') && (f[2].value != '0.0.0.0')) {
+		f[3].disabled = 0;
 /* allow DHCP to be enabled */
 		f[4].disabled = 0;
 /* validate netmask */
@@ -292,6 +303,17 @@ lg.verifyFields = function(row, quiet) {
 		}
 	}
 	else {
+		if (f[2].value == '0.0.0.0') {
+			f[3].value = '';
+			f[3].disabled = 1;
+			f[5].value = '';
+			f[6].value = '';
+			f[7].value = '';
+			ferror.clear(f[3]);
+		}
+		else
+			f[3].disabled = 0;
+
 		f[4].checked = 0;
 		f[4].disabled = 1;
 	}
@@ -1821,6 +1843,14 @@ function save() {
 		}
 
 		j = (parseInt(d[i][0]) == 0) ? '' : d[i][0].toString();
+		if (d[i][2] == '0.0.0.0') {
+			d[i][3] = '';
+			d[i][4] = 0;
+			d[i][5] = '';
+			d[i][6] = '';
+			d[i][7] = '';
+		}
+
 		fom['lan'+j+'_ifname'].value = 'br'+d[i][0];
 		fom['lan'+j+'_stp'].value = d[i][1];
 		fom['lan'+j+'_ipaddr'].value = d[i][2];
@@ -1844,8 +1874,8 @@ REMOVE-END */
 
 	e = E('footer-msg');
 	d = fixIP(fom['lan_ipaddr'].value);
-	if ((fom['lan_ifname'].value != 'br0') || (!d)) {
-		e.innerHTML = 'Bridge br0 must be always defined';
+	if ((fom['lan_ifname'].value != 'br0') || (!d) || (d == '0.0.0.0')) {
+		e.innerHTML = 'Bridge br0 must be always defined with an IPv4 address';
 		e.style.display = 'inline-block';
 		setTimeout(
 			function() {
@@ -2159,6 +2189,7 @@ function init() {
 <div class="section-title" id="section-lan">LAN</div>
 <div class="section">
 <div class="tomato-grid" id="lan-grid"></div>
+<div><small><b>Note:</b> Set a secondary bridge IP address to 0.0.0.0 to use it as L2 only. Netmask and DHCP settings are cleared automatically.</small></div>
 <script>
 	lg.setup();
 
