@@ -179,6 +179,22 @@ static int route_manip(int cmd, char *name, int metric, char *dst, char *gateway
 	return err;
 }
 
+int route_error_retryable(int err)
+{
+	switch (err) {
+	case EINTR:
+	case EAGAIN:
+	case ENOMEM:
+	case ENOBUFS:
+	case ENODEV:
+	case ENETDOWN:
+	case ENETUNREACH:
+		return 1;
+	default:
+		return 0;
+	}
+}
+
 int route_add(char *name, int metric, char *dst, char *gateway, char *genmask)
 {
 	return route_manip(SIOCADDRT, name, (metric + 1), dst, gateway, genmask);

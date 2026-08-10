@@ -1909,7 +1909,7 @@ void start_lan(void)
 			char *gateway = nvram_safe_get("lan_gateway") ;
 			if ((*gateway) && (strcmp(gateway, "0.0.0.0") != 0)) {
 				int tries = 5;
-				while ((route_add(lan_ifname, 0, "0.0.0.0", gateway, "0.0.0.0") != 0) && (tries-- > 0))
+				while (route_error_retryable(route_add(lan_ifname, 0, "0.0.0.0", gateway, "0.0.0.0")) && (tries-- > 0))
 					sleep(1);
 
 				logmsg(LOG_DEBUG, "*** %s: add gateway=%s tries=%d", __FUNCTION__, gateway, tries);
@@ -2119,7 +2119,11 @@ void do_static_routes(int add)
 					break;
 				}
 
-				sleep(1);
+				if (!route_error_retryable(err))
+					break;
+
+				if (r > 0)
+					sleep(1);
 			}
 		}
 		else {

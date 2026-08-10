@@ -173,6 +173,7 @@ static inline int ifconfig(const char *name, int flags, const char *addr, const 
 	return _ifconfig(name, flags, addr, netmask, NULL, 0);
 }
 extern int route_add(char *name, int metric, char *dst, char *gateway, char *genmask);
+extern int route_error_retryable(int err);
 extern void route_del(char *name, int metric, char *dst, char *gateway, char *genmask);
 extern void config_loopback(void);
 extern void start_vlan(void);

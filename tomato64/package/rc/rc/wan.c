@@ -364,7 +364,7 @@ void preset_wan(char *ifname, char *gw, char *netmask, char *prefix)
 	struct in_addr ipaddr;
 	char tmp[100];
 	char word[100], *next;
-	int i, ret;
+	int i;
 	int proto;
 	int mwan_num;
 
@@ -376,7 +376,7 @@ void preset_wan(char *ifname, char *gw, char *netmask, char *prefix)
 
 		/* Set default route to gateway if specified */
 		i = 5;
-		while ((ret = route_add(ifname, 1, "0.0.0.0", gw, "0.0.0.0") != 0) && (i--)) {
+		while (route_error_retryable(route_add(ifname, 1, "0.0.0.0", gw, "0.0.0.0")) && (i--)) {
 			sleep(1);
 		}
 	}
@@ -1155,7 +1155,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 
 			if (mwan_num <= 1) {
 				n = 5;
-				while ((route_add(wan_ifname, 0, "0.0.0.0", gw, "0.0.0.0") == 1) && (n--)) {
+				while (route_error_retryable(route_add(wan_ifname, 0, "0.0.0.0", gw, "0.0.0.0")) && (n--)) {
 					sleep(1);
 				}
 			}
