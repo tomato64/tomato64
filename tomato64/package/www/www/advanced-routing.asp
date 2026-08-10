@@ -23,16 +23,46 @@
 
 //	<% activeroutes(); %>
 
-/* TOMATO64-REMOVE-BEGIN */
-var static_options = [['LAN','LAN0'],['LAN1','LAN1'],['LAN2','LAN2'],['LAN3','LAN3'],['WAN','WAN0'],['MAN','MAN0'],['WAN2','WAN1'],['MAN2','MAN1']
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-var static_options = [['LAN','LAN0'],['LAN1','LAN1'],['LAN2','LAN2'],['LAN3','LAN3'],['LAN4','LAN4'],['LAN5','LAN5'],['LAN6','LAN6'],['LAN7','LAN7'],['WAN','WAN0'],['MAN','MAN0'],['WAN2','WAN1'],['MAN2','MAN1']
-/* TOMATO64-END */
-/* MULTIWAN-BEGIN */
-                      ,['WAN3','WAN2'],['MAN3','MAN2'],['WAN4','WAN3'],['MAN4','MAN3']
-/* MULTIWAN-END */
-		     ];
+var static_options = [];
+var static_ifaces = [];
+
+for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+	var p = i ? i : '';
+	static_options.push(['LAN'+p, 'LAN'+i]);
+	static_ifaces.push('LAN'+p);
+}
+
+for (var i = 1; i <= MAXWAN_NUM; ++i) {
+	var p = (i > 1) ? i : '';
+	static_options.push(['WAN'+p, 'WAN'+(i - 1)]);
+	static_options.push(['MAN'+p, 'MAN'+(i - 1)]);
+	static_ifaces.push('WAN'+p);
+	static_ifaces.push('MAN'+p);
+}
+
+var static_route_re = new RegExp(
+	'^(.+)<(.+)<(.+)<(\\d+)<(' + static_ifaces.join('|') + ')<(.*)$'
+);
+
+function label_iface(ifname) {
+	var i, p;
+
+	for (i = 0; i <= MAX_BRIDGE_ID; ++i) {
+		p = 'lan'+(i ? i : '');
+		if (ifname == nvram[p+'_ifname'])
+			return ifname+' (LAN'+i+')';
+	}
+
+	for (i = 1; i <= MAXWAN_NUM; ++i) {
+		p = 'wan'+(i > 1 ? i : '');
+		if (ifname == nvram[p+'_iface'])
+			return ifname+' (WAN'+(i - 1)+')';
+		if (ifname == nvram[p+'_ifname'])
+			return ifname+' (MAN'+(i - 1)+')';
+	}
+
+	return ifname;
+}
 
 var ara = new TomatoGrid();
 
@@ -43,42 +73,7 @@ ara.setup = function() {
 	this.headerSet(['Destination','Gateway / Next Hop','Subnet Mask','Metric','Interface']);
 	for (i = 0; i < activeroutes.length; ++i) {
 		a = activeroutes[i];
-		if (a[0] == nvram.lan_ifname)
-			a[0] += ' (LAN0)';
-		else if (a[0] == nvram.lan1_ifname)
-			a[0] += ' (LAN1)';
-		else if (a[0] == nvram.lan2_ifname)
-			a[0] += ' (LAN2)';
-		else if (a[0] == nvram.lan3_ifname)
-			a[0] += ' (LAN3)';
-/* TOMATO64-BEGIN */
-		else if (a[0] == nvram.lan4_ifname)
-			a[0] += ' (LAN4)';
-		else if (a[0] == nvram.lan5_ifname)
-			a[0] += ' (LAN5)';
-		else if (a[0] == nvram.lan6_ifname)
-			a[0] += ' (LAN6)';
-		else if (a[0] == nvram.lan7_ifname)
-			a[0] += ' (LAN7)';
-/* TOMATO64-END */
-		else if (a[0] == nvram.wan_iface)
-			a[0] += ' (WAN0)';
-		else if (a[0] == nvram.wan_ifname)
-			a[0] += ' (MAN0)';
-		else if (a[0] == nvram.wan2_iface)
-			a[0] += ' (WAN1)';
-		else if (a[0] == nvram.wan2_ifname)
-			a[0] += ' (MAN1)';
-/* MULTIWAN-BEGIN */
-		else if (a[0] == nvram.wan3_iface)
-			a[0] += ' (WAN2)';
-		else if (a[0] == nvram.wan3_ifname)
-			a[0] += ' (MAN2)';
-		else if (a[0] == nvram.wan4_iface)
-			a[0] += ' (WAN3)';
-		else if (a[0] == nvram.wan4_ifname)
-			a[0] += ' (MAN3)';
-/* MULTIWAN-END */
+		a[0] = label_iface(a[0]);
 		this.insertData(-1, [a[1],a[2],a[3],a[4],a[0]]);
 	}
 }
@@ -94,12 +89,7 @@ ars.setup = function() {
 	var routes = nvram.routes_static.split('>');
 	for (var i = 0; i < routes.length; ++i) {
 		var r;
-/* TOMATO64-REMOVE-BEGIN */
-		if (r = routes[i].match(/^(.+)<(.+)<(.+)<(\d+)<(LAN|LAN1|LAN2|LAN3|WAN|MAN|WAN2|MAN2|WAN3|MAN3|WAN4|MAN4)<(.*)$/)) {
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-		if (r = routes[i].match(/^(.+)<(.+)<(.+)<(\d+)<(LAN|LAN1|LAN2|LAN3|LAN4|LAN5|LAN6|LAN7|WAN|MAN|WAN2|MAN2|WAN3|MAN3|WAN4|MAN4)<(.*)$/)) {
-/* TOMATO64-END */
+		if (r = routes[i].match(static_route_re)) {
 			this.insertData(-1, [r[1],r[2],r[3],r[4],r[5],r[6]]);
 		}
 	}
@@ -108,50 +98,14 @@ ars.setup = function() {
 }
 
 ars.resetNewEditor = function() {
-	var i, e;
+	var i, p, e;
 
 	e = fields.getAll(this.newEditor);
 
-	if (nvram.lan_ifname.length < 1)
-		e[4].options[0].disabled = 1;
-	else
-		e[4].options[0].disabled = 0;
-
-	if (nvram.lan1_ifname.length < 1)
-		e[4].options[1].disabled = 1;
-	else
-		e[4].options[1].disabled = 0;
-
-	if (nvram.lan2_ifname.length < 1)
-		e[4].options[2].disabled = 1;
-	else
-		e[4].options[2].disabled = 0;
-
-	if (nvram.lan3_ifname.length < 1)
-		e[4].options[3].disabled = 1;
-	else
-		e[4].options[3].disabled = 0;
-/* TOMATO64-BEGIN */
-	if (nvram.lan4_ifname.length < 1)
-		e[4].options[4].disabled = 1;
-	else
-		e[4].options[4].disabled = 0;
-
-	if (nvram.lan5_ifname.length < 1)
-		e[4].options[5].disabled = 1;
-	else
-		e[4].options[5].disabled = 0;
-
-	if (nvram.lan6_ifname.length < 1)
-		e[4].options[6].disabled = 1;
-	else
-		e[4].options[6].disabled = 0;
-
-	if (nvram.lan7_ifname.length < 1)
-		e[4].options[7].disabled = 1;
-	else
-		e[4].options[7].disabled = 0;
-/* TOMATO64-END */
+	for (i = 0; i <= MAX_BRIDGE_ID; ++i) {
+		p = 'lan'+(i ? i : '');
+		e[4].options[i].disabled = (nvram[p+'_ifname'].length < 1);
+	}
 
 	ferror.clearAll(e);
 	for (i = 0; i < e.length; ++i) {
@@ -192,27 +146,23 @@ function fix_iface(in_if) {
 
 function verifyFields(focused, quiet) {
 /* ZEBRA-BEGIN */
-	E('_f_dr_lan').disabled = (nvram.lan_ifname.length < 1);
-	if (E('_f_dr_lan').disabled)
-		E('_f_dr_lan').checked = false;
-	E('_f_dr_lan1').disabled = (nvram.lan1_ifname.length < 1);
-	if (E('_f_dr_lan1').disabled)
-		E('_f_dr_lan1').checked = false;
-	E('_f_dr_lan2').disabled = (nvram.lan2_ifname.length < 1);
-	if (E('_f_dr_lan2').disabled)
-		E('_f_dr_lan2').checked = false;
-	E('_f_dr_lan3').disabled = (nvram.lan3_ifname.length < 1);
-	if (E('_f_dr_lan3').disabled)
-		E('_f_dr_lan3').checked = false;
-	for (uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
-		u = (uidx>1) ? uidx : '';
-		E('_f_dr_wan'+u).disabled = (nvram['wan'+u+'_proto'] == 'disabled');
-		if (E('_f_dr_wan'+u).disabled)
-			E('_f_dr_wan'+u).checked = false;
+	var i, p, u, uidx, field;
+
+	for (i = 0; i <= MAX_BRIDGE_ID; ++i) {
+		p = i ? i : '';
+		field = E('_f_dr_lan'+p);
+		field.disabled = (nvram['lan'+p+'_ifname'].length < 1);
+		if (field.disabled)
+			field.checked = false;
 	}
-	for (uidx = 4; uidx > nvram.mwan_num; --uidx){
-		u = (uidx>1) ? uidx : '';
-		E('_f_dr_wan'+u).disabled = 1;
+
+	for (uidx = 1; uidx <= MAXWAN_NUM; ++uidx) {
+		u = (uidx > 1) ? uidx : '';
+		field = E('_f_dr_wan'+u);
+		field.disabled = (uidx > nvram.mwan_num) ||
+			(nvram['wan'+u+'_proto'] == 'disabled');
+		if (field.disabled)
+			field.checked = false;
 	}
 /* ZEBRA-END */
 	return 1;
@@ -238,16 +188,17 @@ function save() {
 	fom._service.value = ((fom.dhcpc_33.value != nvram.dhcpc_33) || (fom.dhcpc_121.value != nvram.dhcpc_121)) ? 'wan-restart' : 'routing-restart';
 
 /* ZEBRA-BEGIN */
-	fom.dr_lan_tx.value = fom.dr_lan_rx.value = (E('_f_dr_lan').checked) ? '1 2' : '0';
-	fom.dr_lan1_tx.value = fom.dr_lan1_rx.value = (E('_f_dr_lan1').checked) ? '1 2' : '0';
-	fom.dr_lan2_tx.value = fom.dr_lan2_rx.value = (E('_f_dr_lan2').checked) ? '1 2' : '0';
-	fom.dr_lan3_tx.value = fom.dr_lan3_rx.value = (E('_f_dr_lan3').checked) ? '1 2' : '0';
-	fom.dr_wan_tx.value = fom.dr_wan_rx.value = (E('_f_dr_wan').checked) ? '1 2' : '0';
-	fom.dr_wan2_tx.value = fom.dr_wan2_rx.value = (E('_f_dr_wan2').checked) ? '1 2' : '0';
-/* MULTIWAN-BEGIN */
-	fom.dr_wan3_tx.value = fom.dr_wan3_rx.value = (E('_f_dr_wan3').checked) ? '1 2' : '0';
-	fom.dr_wan4_tx.value = fom.dr_wan4_rx.value = (E('_f_dr_wan4').checked) ? '1 2' : '0';
-/* MULTIWAN-END */
+	for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+		var p = i ? i : '';
+		fom['dr_lan'+p+'_tx'].value = fom['dr_lan'+p+'_rx'].value =
+			E('_f_dr_lan'+p).checked ? '1 2' : '0';
+	}
+
+	for (var uidx = 1; uidx <= MAXWAN_NUM; ++uidx) {
+		var u = (uidx > 1) ? uidx : '';
+		fom['dr_wan'+u+'_tx'].value = fom['dr_wan'+u+'_rx'].value =
+			E('_f_dr_wan'+u).checked ? '1 2' : '0';
+	}
 /* ZEBRA-END */
 
 	form.submit(fom, 1);
@@ -285,24 +236,19 @@ function init() {
 <input type="hidden" name="dhcpc_33">
 <input type="hidden" name="dhcpc_121">
 <!-- ZEBRA-BEGIN -->
-<input type="hidden" name="dr_lan_tx">
-<input type="hidden" name="dr_lan_rx">
-<input type="hidden" name="dr_lan1_tx">
-<input type="hidden" name="dr_lan1_rx">
-<input type="hidden" name="dr_lan2_tx">
-<input type="hidden" name="dr_lan2_rx">
-<input type="hidden" name="dr_lan3_tx">
-<input type="hidden" name="dr_lan3_rx">
-<input type="hidden" name="dr_wan_tx">
-<input type="hidden" name="dr_wan_rx">
-<input type="hidden" name="dr_wan2_tx">
-<input type="hidden" name="dr_wan2_rx">
-<!-- MULTIWAN-BEGIN -->
-<input type="hidden" name="dr_wan3_tx">
-<input type="hidden" name="dr_wan3_rx">
-<input type="hidden" name="dr_wan4_tx">
-<input type="hidden" name="dr_wan4_rx">
-<!-- MULTIWAN-END -->
+<script>
+for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+	var p = i ? i : '';
+	W('<input type="hidden" name="dr_lan'+p+'_tx">');
+	W('<input type="hidden" name="dr_lan'+p+'_rx">');
+}
+
+for (var uidx = 1; uidx <= MAXWAN_NUM; ++uidx) {
+	var u = (uidx > 1) ? uidx : '';
+	W('<input type="hidden" name="dr_wan'+u+'_tx">');
+	W('<input type="hidden" name="dr_wan'+u+'_rx">');
+}
+</script>
 <!-- ZEBRA-END -->
 
 <!-- / / / -->
@@ -327,23 +273,34 @@ function init() {
 <div class="section-title">WAN Miscellaneous</div>
 <div class="section">
 	<script>
-		createFieldTable('', [
+		var routing_fields = [];
 /* ZEBRA-BEGIN */
-			{ title: 'RIPv1 &amp; v2' },
-			{ title: 'LAN', indent: 2, name: 'f_dr_lan', type: 'checkbox', value: ((nvram.dr_lan_rx != '0') && (nvram.dr_lan_rx != '')) },
-			{ title: 'LAN1', indent: 2, name: 'f_dr_lan1', type: 'checkbox', value: ((nvram.dr_lan1_rx != '0') && (nvram.dr_lan1_rx != '')) },
-			{ title: 'LAN2', indent: 2, name: 'f_dr_lan2', type: 'checkbox', value: ((nvram.dr_lan2_rx != '0') && (nvram.dr_lan2_rx != '')) },
-			{ title: 'LAN3', indent: 2, name: 'f_dr_lan3', type: 'checkbox', value: ((nvram.dr_lan3_rx != '0') && (nvram.dr_lan3_rx != '')) },
-			{ title: 'WAN', indent: 2, name: 'f_dr_wan', type: 'checkbox', value: ((nvram.dr_wan_rx != '0') && (nvram.dr_wan_rx != '')) },
-			{ title: 'WAN2', indent: 2, name: 'f_dr_wan2', type: 'checkbox', value: ((nvram.dr_wan2_rx != '0') && (nvram.dr_wan2_rx != '')) },
-/* MULTIWAN-BEGIN */
-			{ title: 'WAN3', indent: 2, name: 'f_dr_wan3', type: 'checkbox', value: ((nvram.dr_wan3_rx != '0') && (nvram.dr_wan3_rx != '')) },
-			{ title: 'WAN4', indent: 2, name: 'f_dr_wan4', type: 'checkbox', value: ((nvram.dr_wan4_rx != '0') && (nvram.dr_wan4_rx != '')) },
-/* MULTIWAN-END */
+		routing_fields.push({ title: 'RIPv1 &amp; v2' });
+
+		for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+			var p = i ? i : '';
+			routing_fields.push({
+				title: 'LAN'+p, indent: 2,
+				name: 'f_dr_lan'+p, type: 'checkbox',
+				value: ((nvram['dr_lan'+p+'_rx'] != '0') && (nvram['dr_lan'+p+'_rx'] != ''))
+			});
+		}
+
+		for (var uidx = 1; uidx <= MAXWAN_NUM; ++uidx) {
+			var u = (uidx > 1) ? uidx : '';
+			routing_fields.push({
+				title: 'WAN'+u, indent: 2,
+				name: 'f_dr_wan'+u, type: 'checkbox',
+				value: ((nvram['dr_wan'+u+'_rx'] != '0') && (nvram['dr_wan'+u+'_rx'] != ''))
+			});
+		}
 /* ZEBRA-END */
+		routing_fields.push(
 			{ title: 'Accept DHCP Static Route<br>(option 33)', name: 'f_dhcpc_33', type: 'checkbox', value: nvram.dhcpc_33 != 0 },
 			{ title: 'Accept DHCP Classless Routes<br>(option 121)', name: 'f_dhcpc_121', type: 'checkbox', value: nvram.dhcpc_121 != 0 }
-		]);
+		);
+
+		createFieldTable('', routing_fields);
 	</script>
 </div>
 
