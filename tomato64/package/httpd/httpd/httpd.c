@@ -1279,6 +1279,7 @@ static void start_ssl(void)
 {
 	int i, lock, ok, retry, save;
 	char t[32];
+	char *cat_argv[] = { "cat", "/etc/key.pem", "/etc/cert.pem", NULL };
 
 	lock = file_lock("httpd");
 
@@ -1306,7 +1307,7 @@ static void start_ssl(void)
 			if (save && nvram_match("crt_ver", HTTPS_CRT_VER)) {
 				if (nvram_get_file("https_crt_file", "/tmp/cert.tgz", 8192)) {
 					if (eval("tar", "-xzf", "/tmp/cert.tgz", "-C", "/", "etc/cert.pem", "etc/key.pem") == 0) {
-						system("cat /etc/key.pem /etc/cert.pem > /etc/server.pem");
+						_eval(cat_argv, ">/etc/server.pem", 0, NULL);
 
 #if defined(USE_OPENSSL) && OPENSSL_VERSION_NUMBER >= 0x10100000L
 						/* check key and cert pair, if they are mismatched, regenerate key and cert */
