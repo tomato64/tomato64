@@ -18,6 +18,8 @@
 
 /* Max number of log lines for GUI to display */
 #define MAX_LOG_LINES		4000
+#define SYSLOG_DOWNLOAD_MAX	(10UL * 1024UL * 1024UL)
+#define SYSLOG_MAX_ROTATIONS	99
 
 /* Size of each input chunk to be read and allocate for. */
 #ifndef READALL_CHUNK
@@ -320,37 +322,96 @@ static int webmon_ok(int searches)
 	return 0;
 }
 
+static int stream_syslog_file(const char *path, unsigned long *remaining, int limited)
+{
+	FILE *f;
+	char buf[2048];
+	size_t nr, want;
+
+	if ((f = fopen(path, "r")) == NULL)
+		return 1;
+
+	while (!limited || (*remaining > 0)) {
+		want = sizeof(buf);
+
+		if (limited && (*remaining < (unsigned long)want))
+			want = (size_t)*remaining;
+
+		nr = fread(buf, 1, want, f);
+		if (nr == 0)
+			break;
+
+		if (web_write(buf, (int)nr) < 0) {
+			fclose(f);
+			return 0;
+		}
+
+		if (limited)
+			*remaining -= (unsigned long)nr;
+	}
+
+	fclose(f);
+
+	return 1;
+}
+
+static void stream_syslog_files(const char *lfn, unsigned long max)
+{
+	char file[320];
+	unsigned long remaining = max;
+	int i, keep, limited = (max != 0);
+
+	keep = nvram_get_int("log_file_keep");
+	if (keep < 0)
+		keep = 0;
+	else if (keep > SYSLOG_MAX_ROTATIONS)
+		keep = SYSLOG_MAX_ROTATIONS;
+
+	/* Rotated files are numbered newest to oldest (.0 ... .N).
+	 * Send them oldest first, then the active logfile.
+	 */
+	for (i = keep - 1; i >= 0; --i) {
+		if (limited && (remaining == 0))
+			return;
+
+		snprintf(file, sizeof(file), "%s.%d", lfn, i);
+		if (!stream_syslog_file(file, &remaining, limited))
+			return;
+	}
+
+	if (!limited || (remaining > 0))
+		stream_syslog_file(lfn, &remaining, limited);
+}
+
 void wo_syslog(char *url)
 {
-	char lfn[256], s[256], file[64];
-	const char *suffix;
-
-	get_logfilename(lfn, sizeof(lfn));
+	char lfn[256], file[64];
+	int searches;
 
 	if (strncmp(url, "webmon_", 7) == 0) {
-		/* Validate the url suffix contains only safe characters to prevent
-		 * path traversal via e.g. "webmon_../sensitive_file"
-		 */
-		suffix = url + 7;
-		if (strspn(suffix, "abcdefghijklmnopqrstuvwxyz_") != strlen(suffix)) {
+		if (strcmp(url, "webmon_recent_domains") == 0)
+			searches = 0;
+		else if (strcmp(url, "webmon_recent_searches") == 0)
+			searches = 1;
+		else {
 			send_error(400, NULL, NULL);
 			return;
 		}
 
-		snprintf(file, sizeof(file), "/proc/%s", url);
-		if (!webmon_ok(strstr(url, "searches") != NULL))
+		if (!webmon_ok(searches))
 			return;
 
+		snprintf(file, sizeof(file), "/proc/%s", url);
 		send_header(200, NULL, mime_binary, 0);
 		do_file(file);
+		return;
 	}
-	else {
-		/* syslog */
-		if (!logok())
-			return;
 
-		send_header(200, NULL, mime_binary, 0);
-		snprintf(s, sizeof(s), "cat $(ls -1rv %s %s.* 2>/dev/null)", lfn, lfn);
-		web_pipecmd(s, WOF_NONE);
-	}
+	if (!logok())
+		return;
+
+	get_logfilename(lfn, sizeof(lfn));
+
+	send_header(200, NULL, mime_binary, 0);
+	stream_syslog_files(lfn, SYSLOG_DOWNLOAD_MAX);
 }
