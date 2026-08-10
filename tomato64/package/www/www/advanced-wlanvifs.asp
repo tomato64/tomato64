@@ -45,6 +45,17 @@ var wmo = {'ap':'Access Point','apwds':'Access Point + WDS','sta':'Wireless Clie
 	   };
 var macmode = {'disabled':'Disabled','deny':'Block','allow':'Permit'};
 
+var bridgeOptions = [];
+var bridgeNames = [];
+for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+	var label = 'LAN'+i+' (br'+i+')';
+	bridgeOptions.push([i, label]);
+	bridgeNames.push(label);
+}
+var bridgeNone = MAX_BRIDGE_ID + 1;
+bridgeOptions.push([bridgeNone, 'none']);
+bridgeNames.push('none');
+
 var tabs = [['overview','Overview']];
 
 var xob = null;
@@ -85,7 +96,7 @@ wlg.setup = function() {
 		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
 		{ type: 'text', maxlen: 32, size: 34, prefix: '<div class="centered">', suffix: '<\/div>' },
 		{ type: 'select', options: wl_modes_available , prefix: '<div class="centered">', suffix: '<\/div>' },
-		{ type: 'select', options: [[0,'LAN0 (br0)'],[1,'LAN1 (br1)'],[2,'LAN2 (br2)'],[3,'LAN3 (br3)'],[4,'none']] },
+		{ type: 'select', options: bridgeOptions },
 		{ type: 'select', options: [['disabled','Disabled'],['deny','Block'],['allow','Permit']] }
 	]);
 
@@ -149,16 +160,12 @@ REMOVE-END */
 		f[3].options[i].disabled = (f[3].options[i].value != 'ap');
 	}
 
-	if (nvram.lan_ifname.length < 1)
-		f[4].options[0].disabled = 1;
-	if (nvram.lan1_ifname.length < 1)
-		f[4].options[1].disabled = 1;
-	if (nvram.lan2_ifname.length < 1)
-		f[4].options[2].disabled = 1;
-	if (nvram.lan3_ifname.length < 1)
-		f[4].options[3].disabled = 1;
+	for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+		var p = 'lan'+(i ? i : '')+'_ifname';
+		f[4].options[i].disabled = ((nvram[p] || '').length < 1);
+	}
 
-	f[4].selectedIndex = 4;
+	f[4].value = bridgeNone;
 	f[5].selectedIndex = 0;
 	ferror.clearAll(fields.getAll(this.newEditor));
 }
@@ -174,7 +181,7 @@ wlg.dataToView = function(data) {
 	return ([ifname,(data[1] == 1) ? '&#x2b50' : '',
 	                 data[2] || '<small><i>(unset)<\/i><\/small>',
 	                 wmo[data[3]] || '<small><i>(unset)<\/i><\/small>',
-	                 ['LAN0 (br0)','LAN1 (br1)','LAN2 (br2)','LAN3 (br3)','none' ][data[4]],
+	                 bridgeNames[data[4]],
 	                 macmode[data[5]] || macmode[nvram['wl'+data[0].toString()+'_macmode']]
 	       ]);
 }
@@ -339,14 +346,10 @@ wlg.verifyFields = function(row, quiet) {
 	var ok = 1;
 	var f = fields.getAll(row);
 
-	if (nvram.lan_ifname.length < 1)
-		f[4].options[0].disabled = 1;
-	if (nvram.lan1_ifname.length < 1)
-		f[4].options[1].disabled = 1;
-	if (nvram.lan2_ifname.length < 1)
-		f[4].options[2].disabled = 1;
-	if (nvram.lan3_ifname.length < 1)
-		f[4].options[3].disabled = 1;
+	for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+		var p = 'lan'+(i ? i : '')+'_ifname';
+		f[4].options[i].disabled = ((nvram[p] || '').length < 1);
+	}
 
 	if (f[0].value.indexOf('.') < 0) {
 /* REMOVE-BEGIN
@@ -468,10 +471,11 @@ REMOVE-END */
 	}
 
 	/* Clean-up deleted interfaces */
-	var lan_ifnames = nvram['lan_ifnames'];
-	var lan1_ifnames = nvram['lan1_ifnames'];
-	var lan2_ifnames = nvram['lan2_ifnames'];
-	var lan3_ifnames = nvram['lan3_ifnames'];
+	var lan_ifnames = [];
+	for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+		var p = 'lan'+(i ? i : '')+'_ifnames';
+		lan_ifnames[i] = nvram[p] || '';
+	}
 	var wl0_vifs = nvram['wl0_vifs'];
 	var wl1_vifs = nvram['wl1_vifs'];
 /* BCMARM-BEGIN */
@@ -484,10 +488,8 @@ REMOVE-END */
 			if (elem[i].name.indexOf('wl'+u) == 0)
 				s += 'nvram unset '+elem[i].name+'\n';
 		}
-		lan_ifnames = lan_ifnames.replace('wl'+u, '');
-		lan1_ifnames = lan1_ifnames.replace('wl'+u, '');
-		lan2_ifnames = lan2_ifnames.replace('wl'+u, '');
-		lan3_ifnames = lan3_ifnames.replace('wl'+u, '');
+		for (var j = 0; j <= MAX_BRIDGE_ID; ++j)
+			lan_ifnames[j] = lan_ifnames[j].replace('wl'+u, '');
 
 		if (typeof(wl0_vifs) != 'undefined')
 			wl0_vifs = wl0_vifs.replace('wl'+u, '');
@@ -504,10 +506,10 @@ REMOVE-END */
 		s += 'nvram unset wl'+u+'_maclist\n';
 	}
 	if (vifs_deleted.length > 0) {
-		s += 'nvram set lan_ifnames="'+lan_ifnames+'"\n';
-		s += 'nvram set lan1_ifnames="'+lan1_ifnames+'"\n';
-		s += 'nvram set lan2_ifnames="'+lan2_ifnames+'"\n';
-		s += 'nvram set lan3_ifnames="'+lan3_ifnames+'"\n';
+		for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+			var p = 'lan'+(i ? i : '')+'_ifnames';
+			s += 'nvram set '+p+'="'+lan_ifnames[i]+'"\n';
+		}
 
 		if (typeof(wl0_vifs) != 'undefined')
 			s += 'nvram set wl0_vifs="'+wl0_vifs+'"\n';
@@ -1092,7 +1094,7 @@ REMOVE-END */
 			continue;
 		}
 
-		if (vifs_defined[vif][11]*1 != 4) {
+		if (vifs_defined[vif][11]*1 != bridgeNone) {
 			var x = (vifs_defined[vif][11] == '0') ? '' : vifs_defined[vif][11].toString();
 			fom['lan'+x+'_ifnames'].value += ' '+vifs_defined[vif][1];
 			fom['lan'+x+'_ifnames'].value = fom['lan'+x+'_ifnames'].value.trim();
@@ -1293,7 +1295,7 @@ function earlyInit() {
 
 	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 		var u = wl_fface(uidx).toString();
-		var bridged = 4;
+		var bridged = bridgeNone;
 		if (u) {
 			var wmode = (((nvram['wl'+u+'_mode']) == 'ap') && ((nvram['wl'+u+'_wds_enable']) == '1')) ? 'apwds': (nvram['wl'+u+'_mode']);
 
@@ -1399,10 +1401,12 @@ function init() {
 <input type="hidden" name="_nextwait" value="10">
 <input type="hidden" name="_service" value="wlgui-restart">
 <input type="hidden" name="_force_commit" value="1">
-<input type="hidden" name="lan_ifnames" value="">
-<input type="hidden" name="lan1_ifnames" value="">
-<input type="hidden" name="lan2_ifnames" value="">
-<input type="hidden" name="lan3_ifnames" value="">
+<script>
+for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
+	var p = 'lan'+(i ? i : '')+'_ifnames';
+	W('<input type="hidden" name="'+p+'" value="">');
+}
+</script>
 <input type="hidden" name="wl_macmode" value="">
 
 <!-- / / / -->
