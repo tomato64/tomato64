@@ -1306,7 +1306,7 @@ function earlyInit() {
 				}
 			}
 
-			var wlvifs = ((wl_ifaces[uidx][7] > 4) ? '4' : wl_ifaces[uidx][7].toString());
+			var wlvifs = wl_ifaces[uidx][7].toString();
 			vifs_defined.push([
 				u.toString(),			/* fface == wl_ifaces[uidx][1] */
 				wl_ifaces[uidx][0],
@@ -1322,7 +1322,6 @@ function earlyInit() {
 				bridged,
 				nvram['wl'+u+'_macmode'] || 'disabled' /* Wireless Filter */
 			]);
-			/* max_no_vifs = max_no_vifs+((wl_ifaces[uidx][7] > 4) ? 4 : wl_ifaces[uidx][7]); */
 			max_no_vifs = max_no_vifs + parseInt(wlvifs);
 		}
 	}
@@ -1335,8 +1334,6 @@ function earlyInit() {
 		var total = vifs_defined[uidx][10] * 1;
 		if (isNaN(total))
 			continue;
-		if (total >= 4)
-			total = 4;
 
 		W('#spin'+vifs_defined[uidx][2]+', \n');
 
@@ -1467,7 +1464,7 @@ function init() {
 					<ul>
 						<li>When creating/defining a new wireless VIF, its MAC address will be shown (incorrectly) as '00:00:00:00:00:00', as it's unknown at that moment (until network is restarted and this page is reloaded).</li>
 						<li>When saving changes, the MAC addresses of all defined non-primary wireless VIFs could sometimes be (already) <i>set</i> but might be <i>recreated</i> by the WL driver (so that previously defined/saved settings might need to be updated/changed accordingly on <a href="advanced-mac.asp">Advanced/MAC Address</a> after saving settings and rebooting your router).</li>
-						<li>This web interface allows configuring a maximum of 4 VIFs for each physical wireless interface available - up to 3 extra VIFs can be defined in addition to the primary VIF (<i>on devices with multiple VIF capabilities</i>).</li>
+						<li>This web interface allows configuring up to the number of VIFs reported as supported by the wireless driver for each physical wireless interface (the primary VIF is included in this limit).</li>
 						<li>By definition, configuration settings for the <i>primary VIF</i> of any physical wireless interfaces shouldn't be touched here (use the <a href="basic-network.asp">Basic/Network</a> page instead).</li>
 						<li>Wireless clients will not be able to communicate with each other if setting <b>AP Isolation</b> is enabled.</li>
 					</ul>

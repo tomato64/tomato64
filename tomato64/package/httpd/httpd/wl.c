@@ -1663,14 +1663,12 @@ static int print_wif(int idx, int unit, int subunit, void *param)
 		snprintf(unit_str, sizeof(unit_str), "%d", unit);
 
 		max_no_vifs = 1;
-		wl_iovar_get(nvram_safe_get(wl_nvname("ifname", unit, 0)), "cap", (void *)caps, WLC_IOCTL_SMLEN);
-		foreach(cap, caps, next) {
-			if (!strcmp(cap, "mbss16"))
-				max_no_vifs = 16;
-			if (!strcmp(cap, "mbss8"))
-				max_no_vifs = 8;
-			if (!strcmp(cap, "mbss4"))
-				max_no_vifs = 4;
+		if (wl_iovar_get(nvram_safe_get(wl_nvname("ifname", unit, 0)), "cap", (void *)caps, WLC_IOCTL_SMLEN) == 0) {
+			foreach(cap, caps, next) {
+				if (!strcmp(cap, "mbss16")) max_no_vifs = 16;
+				if (!strcmp(cap, "mbss8"))  max_no_vifs = 8;
+				if (!strcmp(cap, "mbss4"))  max_no_vifs = 4;
+			}
 		}
 	}
 
