@@ -1518,33 +1518,36 @@ void stop_hotplug2(void)
 void start_zebra(void)
 {
 	FILE *fp;
-
-	char *lan_tx = nvram_safe_get("dr_lan_tx");
-	char *lan_rx = nvram_safe_get("dr_lan_rx");
-	char *lan1_tx = nvram_safe_get("dr_lan1_tx");
-	char *lan1_rx = nvram_safe_get("dr_lan1_rx");
-	char *lan2_tx = nvram_safe_get("dr_lan2_tx");
-	char *lan2_rx = nvram_safe_get("dr_lan2_rx");
-	char *lan3_tx = nvram_safe_get("dr_lan3_tx");
-	char *lan3_rx = nvram_safe_get("dr_lan3_rx");
+	int i, enabled;
+	char lan_tx[32];
+	char lan_rx[32];
+	char lan_ifname[32];
+	const char *tx;
+	const char *rx;
+	const char *ifname;
 	char *wan_tx = nvram_safe_get("dr_wan_tx");
 	char *wan_rx = nvram_safe_get("dr_wan_rx");
-	char *lan_ifname = nvram_safe_get("lan_ifname");
-	char *lan1_ifname = nvram_safe_get("lan1_ifname");
-	char *lan2_ifname = nvram_safe_get("lan2_ifname");
-	char *lan3_ifname = nvram_safe_get("lan3_ifname");
 	char *wan_ifname = nvram_safe_get("wan_ifname");
 
 	if (serialize_restart("zebra", 1))
 		return;
 
-	if ((*lan_tx == '0') && (*lan_rx == '0') &&
-	    (*lan1_tx == '0') && (*lan1_rx == '0') &&
-	    (*lan2_tx == '0') && (*lan2_rx == '0') &&
-	    (*lan3_tx == '0') && (*lan3_rx == '0') &&
-	    (*wan_tx == '0') && (*wan_rx == '0')) {
-		return;
+	enabled = ((*wan_tx != '0') || (*wan_rx != '0'));
+
+	if (!enabled) {
+		for (i = 0; i < BRIDGE_COUNT; ++i) {
+			snprintf(lan_tx, sizeof(lan_tx), (i == 0 ? "dr_lan_tx" : "dr_lan%d_tx"), i);
+			snprintf(lan_rx, sizeof(lan_rx), (i == 0 ? "dr_lan_rx" : "dr_lan%d_rx"), i);
+
+			if ((*nvram_safe_get(lan_tx) != '0') || (*nvram_safe_get(lan_rx) != '0')) {
+				enabled = 1;
+				break;
+			}
+		}
 	}
+
+	if (!enabled)
+		return;
 
 	f_write(zebracfg, NULL, 0, 0, 0); /* blank */
 
@@ -1555,45 +1558,33 @@ void start_zebra(void)
 
 	fprintf(fp, "router rip\n");
 
-	if (strcmp(lan_ifname, "") != 0)
-		fprintf(fp, "network %s\n", lan_ifname);
-	if (strcmp(lan1_ifname, "") != 0)
-		fprintf(fp, "network %s\n", lan1_ifname);
-	if (strcmp(lan2_ifname, "") != 0)
-		fprintf(fp, "network %s\n", lan2_ifname);
-	if (strcmp(lan3_ifname, "") != 0)
-		fprintf(fp, "network %s\n", lan3_ifname);
+	for (i = 0; i < BRIDGE_COUNT; ++i) {
+		snprintf(lan_ifname, sizeof(lan_ifname), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+		ifname = nvram_safe_get(lan_ifname);
+
+		if (strcmp(ifname, "") != 0)
+			fprintf(fp, "network %s\n", ifname);
+	}
 
 	fprintf(fp, "network %s\n", wan_ifname);
 	fprintf(fp, "redistribute connected\n");
 
-	if (strcmp(lan_ifname, "") != 0) {
-		fprintf(fp, "interface %s\n", lan_ifname);
-		if (*lan_tx != '0')
-			fprintf(fp, "ip rip send version %s\n", lan_tx);
-		if (*lan_rx != '0')
-			fprintf(fp, "ip rip receive version %s\n", lan_rx);
-	}
-	if (strcmp(lan1_ifname, "") != 0) {
-		fprintf(fp, "interface %s\n", lan1_ifname);
-		if (*lan1_tx != '0')
-			fprintf(fp, "ip rip send version %s\n", lan1_tx);
-		if (*lan1_rx != '0')
-			fprintf(fp, "ip rip receive version %s\n", lan1_rx);
-	}
-	if (strcmp(lan2_ifname, "") != 0) {
-		fprintf(fp, "interface %s\n", lan2_ifname);
-		if (*lan2_tx != '0')
-			fprintf(fp, "ip rip send version %s\n", lan2_tx);
-		if (*lan2_rx != '0')
-			fprintf(fp, "ip rip receive version %s\n", lan2_rx);
-	}
-	if (strcmp(lan3_ifname, "") != 0) {
-		fprintf(fp, "interface %s\n", lan3_ifname);
-		if (*lan3_tx != '0')
-			fprintf(fp, "ip rip send version %s\n", lan3_tx);
-		if (*lan3_rx != '0')
-			fprintf(fp, "ip rip receive version %s\n", lan3_rx);
+	for (i = 0; i < BRIDGE_COUNT; ++i) {
+		snprintf(lan_tx, sizeof(lan_tx), (i == 0 ? "dr_lan_tx" : "dr_lan%d_tx"), i);
+		snprintf(lan_rx, sizeof(lan_rx), (i == 0 ? "dr_lan_rx" : "dr_lan%d_rx"), i);
+		snprintf(lan_ifname, sizeof(lan_ifname), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+
+		tx = nvram_safe_get(lan_tx);
+		rx = nvram_safe_get(lan_rx);
+		ifname = nvram_safe_get(lan_ifname);
+
+		if (strcmp(ifname, "") != 0) {
+			fprintf(fp, "interface %s\n", ifname);
+			if (*tx != '0')
+				fprintf(fp, "ip rip send version %s\n", tx);
+			if (*rx != '0')
+				fprintf(fp, "ip rip receive version %s\n", rx);
+		}
 	}
 
 	fprintf(fp, "interface %s\n", wan_ifname);
@@ -1605,30 +1596,23 @@ void start_zebra(void)
 
 	fprintf(fp, "router rip\n");
 
-	if (strcmp(lan_ifname, "") != 0) {
-		if (*lan_tx == '0')
-			fprintf(fp, "distribute-list private out %s\n", lan_ifname);
-		if (*lan_rx == '0')
-			fprintf(fp, "distribute-list private in %s\n", lan_ifname);
+	for (i = 0; i < BRIDGE_COUNT; ++i) {
+		snprintf(lan_tx, sizeof(lan_tx), (i == 0 ? "dr_lan_tx" : "dr_lan%d_tx"), i);
+		snprintf(lan_rx, sizeof(lan_rx), (i == 0 ? "dr_lan_rx" : "dr_lan%d_rx"), i);
+		snprintf(lan_ifname, sizeof(lan_ifname), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+
+		tx = nvram_safe_get(lan_tx);
+		rx = nvram_safe_get(lan_rx);
+		ifname = nvram_safe_get(lan_ifname);
+
+		if (strcmp(ifname, "") != 0) {
+			if (*tx == '0')
+				fprintf(fp, "distribute-list private out %s\n", ifname);
+			if (*rx == '0')
+				fprintf(fp, "distribute-list private in %s\n", ifname);
+		}
 	}
-	if (strcmp(lan1_ifname, "") != 0) {
-		if (*lan1_tx == '0')
-			fprintf(fp, "distribute-list private out %s\n", lan1_ifname);
-		if (*lan1_rx == '0')
-			fprintf(fp, "distribute-list private in %s\n", lan1_ifname);
-	}
-	if (strcmp(lan2_ifname, "") != 0) {
-		if (*lan2_tx == '0')
-			fprintf(fp, "distribute-list private out %s\n", lan2_ifname);
-		if (*lan2_rx == '0')
-			fprintf(fp, "distribute-list private in %s\n", lan2_ifname);
-	}
-	if (strcmp(lan3_ifname, "") != 0) {
-		if (*lan3_tx == '0')
-			fprintf(fp, "distribute-list private out %s\n", lan3_ifname);
-		if (*lan3_rx == '0')
-			fprintf(fp, "distribute-list private in %s\n", lan3_ifname);
-	}
+
 	if (*wan_tx == '0')
 		fprintf(fp, "distribute-list private out %s\n", wan_ifname);
 	if (*wan_rx == '0')
