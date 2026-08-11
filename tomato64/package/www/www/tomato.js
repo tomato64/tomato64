@@ -2271,6 +2271,10 @@ function W(s) {
 	document.write(s);
 }
 
+function writeFooter() {
+	W('<div id="footer"><span id="footer-msg"></span><input type="button" value="Save" id="save-button" onclick="save()"><input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();"></div>');
+}
+
 function E(e) {
 	return (typeof(e) == 'string') ? document.getElementById(e) : e;
 }

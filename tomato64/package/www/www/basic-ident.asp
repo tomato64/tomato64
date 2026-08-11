@@ -65,11 +65,7 @@ function save() {
 
 <!-- / / / -->
 
-<div id="footer">
-	<span id="footer-msg"></span>
-	<input type="button" value="Save" id="save-button" onclick="save()">
-	<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">
-</div>
+<script>writeFooter();</script>
 
 </td></tr>
 </table>
