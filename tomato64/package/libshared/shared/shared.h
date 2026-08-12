@@ -448,6 +448,14 @@ extern void led_setup(void);
 #include "led_sysfs.h"
 #endif /* TOMATO64 */
 
+/* ndpi.c - Tomato64 nDPI protocol table */
+#ifdef TOMATO64
+extern int ndpi_proto_valid(const char *name); /* 1 = usable, 0 = not, -1 = table unavailable */
+extern int ndpi_proto_list_valid(const char *v, char *bad, const size_t bad_sz); /* as stored in a rule */
+extern const char *const *ndpi_proto_names(void); /* sorted, NULL terminated, owned by the library */
+extern void ndpi_migrate_rules(void); /* rewrite rules naming a renamed protocol */
+#endif /* TOMATO64 */
+
 /* base64.c */
 extern int base64_encode(const unsigned char *in, char *out, int inlen); /* returns amount of out buffer used */
 extern int base64_decode(const char *in, unsigned char *out, int inlen); /* returns amount of out buffer used */

@@ -12355,6 +12355,9 @@ int init_main(int argc, char *argv[])
 			start_lan();
 			start_arpbind();
 			mwan_state_files();
+#ifdef TOMATO64
+			ndpi_migrate_rules(); /* before the firewall is built from them */
+#endif /* TOMATO64 */
 			start_services();
 
 #ifndef TOMATO64

@@ -268,7 +268,11 @@ void ipt_qos(void)
 #ifdef TOMATO64
 		/* ndpi */
 		memset(app, 0, sizeof(app));
-		ipt_ndpi(ndpi, app, sizeof(app));
+		/* drop the whole rule on an unusable protocol - writing it without the
+		 * match would classify every packet into this rule's class instead
+		 */
+		if (ipt_ndpi(ndpi, app, sizeof(app)) == -1)
+			continue;
 
 		if (app[0]) {
 			strlcat(saddr, app, sizeof(saddr));

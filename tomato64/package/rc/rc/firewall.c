@@ -483,9 +483,19 @@ static void ipt_ndpi_inbound(void)
 
 int ipt_ndpi(const char *v, char *opt, const size_t buf_sz)
 {
+	char bad[32];
+
 	*opt = 0;
 	if (*v == 0)
 		return 0;
+
+	/* the protocol table only exists once the module is loaded */
+	modprobe("xt_ndpi");
+
+	if (!ndpi_proto_list_valid(v, bad, sizeof(bad))) {
+		syslog(LOG_ERR, "nDPI %s was not found", bad);
+		return -1;
+	}
 
 	snprintf(opt, buf_sz, " -m ndpi --proto %s", v);
 
@@ -507,8 +517,6 @@ int ipt_ndpi(const char *v, char *opt, const size_t buf_sz)
 				*p = strdup(opt);
 		}
 	}
-
-	modprobe("xt_ndpi");
 
 	return 1;
 }

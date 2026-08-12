@@ -768,20 +768,18 @@ void asp_layer7(int argc, char **argv)
 #ifdef TOMATO64
 void asp_ndpi(int argc, char **argv)
 {
-	FILE *f;
-	char proto[50];
+	const char *const *proto;
 	int first = 1;
 
-	const char cmd[] = "/usr/sbin/iptables -m ndpi --help |/usr/bin/tail -n +$(( 1 + $(/usr/sbin/iptables -m ndpi --help |/bin/grep -n \"Enabled protocols\"|/usr/bin/tail -n1|/usr/bin/cut -d: -f1) )) |/usr/bin/xargs -n1";
+	/* the protocol table lives in /proc/net/xt_ndpi/, which the module only
+	 * creates once it is loaded, and nothing loads it until a rule needs it
+	 */
+	eval("modprobe", "-s", "xt_ndpi");
 
 	web_puts("\nndpi = [");
-	if ((f = popen(cmd, "r")) != NULL) {
-		while (fgets(proto, sizeof(proto), f)) {
-			proto[strcspn(proto, "\n")] = '\0';
-			web_printf("%s'%s'", first ? "" : ",", proto);
-			first = 0;
-		}
-		pclose(f);
+	for (proto = ndpi_proto_names(); (proto != NULL) && (*proto != NULL); ++proto) {
+		web_printf("%s'%s'", first ? "" : ",", *proto);
+		first = 0;
 	}
 	web_puts("];\n");
 }
