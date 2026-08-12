@@ -319,17 +319,6 @@ function earlyInit() {
 	insOvl();
 }
 
-function joinIPv6Addr(a) {
-	var r, i, s;
-
-	r = [];
-	for (i = 0; i < a.length; ++i) {
-		s = CompressIPv6Address(a[i]);
-		if ((s) && (s != '')) r.push(s);
-	}
-
-	return r.join(' ');
-}
 
 function save() {
 	var a, b, c;

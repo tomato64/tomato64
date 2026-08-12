@@ -742,6 +742,18 @@ function CompressIPv6Address(ip) {
 	return ip;
 }
 
+function joinIPv6Addr(a) {
+	var r, i, s;
+
+	r = [];
+	for (i = 0; i < a.length; ++i) {
+		s = CompressIPv6Address(a[i]);
+		if ((s) && (s != '')) r.push(s);
+	}
+
+	return r.join(' ');
+}
+
 function ZeroIPv6PrefixBits(ip, prefix_length) {
 	var b, c, m, n;
 	ip = ExpandIPv6Address(ip);

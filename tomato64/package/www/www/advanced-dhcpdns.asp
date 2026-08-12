@@ -274,19 +274,6 @@ function verifyFields(focused, quiet) {
 	return 1;
 }
 
-/* IPV6-BEGIN */
-function joinIPv6Addr(a) {
-	var r, i, s;
-
-	r = [];
-	for (i = 0; i < a.length; ++i) {
-		s = CompressIPv6Address(a[i]);
-		if ((s) && (s != '')) r.push(s);
-	}
-
-	return r.join(' ');
-}
-/* IPV6-END */
 
 function addService(fom, service) {
 	if (fom._service.value == '*')
