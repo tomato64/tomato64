@@ -411,9 +411,7 @@ function init() {
 <div class="section-title">DHCP Reservation</div>
 <div class="section">
 	<div class="tomato-grid" id="bs-grid"></div>
-	<input type="button" value="Backup" id="backup-button" onclick="backupGrid()">
-	<input type="button" value="Restore" id="restore-button" onclick="restoreGrid()">
-	<input type="button" value="Clear Table" id="clear-button" onclick="clearGrid()">
+	<script>writeGridButtons();</script>
 </div>
 
 <!-- / / / -->

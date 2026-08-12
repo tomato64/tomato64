@@ -1,4 +1,8 @@
 var sufGridMsg = '\n\nThis will not be permanent until you click the \'Save\' button at the bottom.';
+
+function writeGridButtons() {
+	W('<input type="button" value="Backup" id="backup-button" onclick="backupGrid()"><input type="button" value="Restore" id="restore-button" onclick="restoreGrid()"><input type="button" value="Clear Table" id="clear-button" onclick="clearGrid()">');
+}
 function getNextpage() {
 	var f, i, a;
 	f = (window.fields && fields.getAll) ? fields.getAll(document.body) : [];

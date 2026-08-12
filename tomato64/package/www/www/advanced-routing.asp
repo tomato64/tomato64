@@ -263,9 +263,7 @@ for (var uidx = 1; uidx <= MAXWAN_NUM; ++uidx) {
 <div class="section-title">Static Routing Table</div>
 <div class="section">
 	<div class="tomato-grid" id="ars-grid"></div>
-	<input type="button" value="Backup" id="backup-button" onclick="backupGrid()">
-	<input type="button" value="Restore" id="restore-button" onclick="restoreGrid()">
-	<input type="button" value="Clear Table" id="clear-button" onclick="clearGrid()">
+	<script>writeGridButtons();</script>
 </div>
 
 <!-- / / / -->
