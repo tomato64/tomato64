@@ -120,18 +120,6 @@ ref.refresh = function(text) {
 	--updating;
 }
 
-function watchdog() {
-	watchdogReset();
-	ref.stop();
-	wdogWarn.style.display = '';
-}
-
-function watchdogReset() {
-	if (wdog) clearTimeout(wdog)
-	wdog = setTimeout(watchdog, 5000*updateInt);
-	wdogWarn.style.display = 'none';
-}
-
 function init() {
 	if (nvram.rstats_enable != '1') return;
 	speed_history = [];

@@ -47,6 +47,8 @@ var hostnamecache = [];
 
 var ref = new TomatoRefresh('update.cgi', 'exec=bandwidth&arg0=speed&arg1=ipt');
 
+initRefreshControls(ref);
+
 ref.refresh = function(text) {
 	++updating;
 	try {
@@ -96,45 +98,6 @@ ref.refresh = function(text) {
 REMOVE-END */
 	}
 	--updating;
-}
-
-ref.initX = function() {
-	var a;
-
-	a = fixInt(cookie.get(cprefix+'refresh'), 0, 1, 1);
-	if (a) {
-		ref.refreshTime = 100;
-		ref.toggleX();
-	}
-}
-
-ref.toggleX = function() {
-	this.toggle();
-	this.showState();
-	cookie.set(cprefix+'refresh', this.running ? 1 : 0);
-}
-
-ref.showState = function() {
-	E('refresh-button').value = this.running ? 'Stop' : 'Start';
-}
-
-function showHours() {
-	if (hours == lastHours)
-		return;
-
-	showSelectedOption('hr', lastHours, hours);
-	lastHours = hours;
-}
-
-function switchHours(h) {
-	if ((!svgReady) || (updating))
-		return;
-
-	hours = h;
-	updateMaxL = (1440 / 24) * hours;
-	showHours();
-	loadData();
-	cookie.set(cprefix+'hrs', hours);
 }
 
 function verifyFields(focused, quiet) {

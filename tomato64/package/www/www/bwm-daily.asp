@@ -51,11 +51,6 @@ function genData() {
 	w.document.close();
 }
 
-function getYMD(n) {
-	// [y,m,d]
-	return [(((n >> 16) & 0xFF) + 1900), ((n >>> 8) & 0xFF), (n & 0xFF)];
-}
-
 function redraw() {
 	var h;
 	var grid;

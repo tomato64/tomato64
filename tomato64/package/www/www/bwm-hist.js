@@ -2,6 +2,11 @@ var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov',
 var snames = [' KB',' MB',' GB'];
 var scale = 2;
 
+function getYMD(n) {
+	/* [y,m,d] */
+	return [(((n >> 16) & 0xFF) + 1900), ((n >>> 8) & 0xFF), (n & 0xFF)];
+}
+
 function rescale(n, z) {
 	if ((z) && (n == 0))
 		return '-';
