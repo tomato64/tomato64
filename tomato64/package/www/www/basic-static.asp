@@ -51,10 +51,12 @@ sg.resetNewEditor = function() {
 		cookie.set('addstatic', '', 0);
 		c = c.split(',');
 		if (c.length == 3) {
+			/* check if IPv4 or IPv6 */
+			var v6 = (c[1].indexOf(':') != -1);
 			f[0].value = c[0];
 			f[1].value = mac_null;
-			f[3].value = c[1];
-			f[4].value = '';
+			f[3].value = v6 ? '' : c[1];
+			f[4].value = v6 ? c[1] : '';
 			f[6].value = c[2];
 			return;
 		}

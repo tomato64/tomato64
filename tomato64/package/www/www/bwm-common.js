@@ -376,7 +376,7 @@ function populateCache() {
 		s = nvram.dhcpd_static.split('>');
 		for (var i = 0; i < s.length; ++i) {
 			var t = s[i].split('<');
-			if ((t.length == 4) && (t[2] != ''))
+			if ((t.length >= 4) && (t[2] != ''))
 				hostnamecache[t[1]] = t[2].split(' ').splice(0,1);
 		}
 	}

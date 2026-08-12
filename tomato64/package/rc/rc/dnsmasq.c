@@ -510,7 +510,8 @@ static void write_static_reservations(FILE *f, FILE *hf, int do_dhcpd_hosts, con
 			if (*ip)
 				fprintf(hf, "%s %s\n", ip, name);
 #ifdef TCONFIG_IPV6
-			if (ip6 && *ip6)
+			/* skip a suffix-only reservation (e.g. ::50) in the hosts file - dnsmasq fills in the prefix at lease time */
+			if (ip6 && *ip6 && (in6.s6_addr32[0] || in6.s6_addr32[1]))
 				fprintf(hf, "%s %s\n", ip6, name);
 #endif
 		}
