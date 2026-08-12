@@ -808,9 +808,7 @@ function earlyInit() {
 }
 
 function init() {
-	var c;
-	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
-	toggleVisibility(cprefix, 'notes');
+	restoreVisibility(cprefix, 'notes');
 	dg.recolor();
 
 	ref.initPage(3000, 3);
@@ -874,7 +872,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
+<script>writeToggleSectionTitle('Notes', 'notes');</script>
 <div class="section" id="sesdiv_notes" style="display:none">
 <b>Device List</b>
 <ul>

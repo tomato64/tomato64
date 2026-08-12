@@ -3045,6 +3045,15 @@ function toggleVisibility(where, whichone) {
 	}
 }
 
+function restoreVisibility(where, whichone) {
+	if (cookie.get(where+'_'+whichone+'_vis') == '1')
+		toggleVisibility(where, whichone);
+}
+
+function writeToggleSectionTitle(title, whichone, id) {
+	W('<div class="section-title"'+(id ? ' id="'+id+'"' : '')+'>'+title+' <small><i><a href="javascript:toggleVisibility(cprefix,\''+whichone+'\');" id="toggleLink-'+whichone+'"><span id="sesdiv_'+whichone+'_showhide">(Show)</span></a></i></small></div>');
+}
+
 function spinOUI(x, which) {
 	E(which).style.display = (x ? 'inline-block' : 'none');
 	if (!x) xoboui = null;

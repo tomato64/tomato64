@@ -1370,13 +1370,10 @@ function init() {
 
 	tabSelect(cookie.get(cprefix+'_tab') || tabs[0][0]);
 
-	var c;
 
-	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
-		toggleVisibility(cprefix, 'notes');
+	restoreVisibility(cprefix, 'notes');
 
-	if (((c = cookie.get(cprefix+'_details_vis')) != null) && (c == '1'))
-		toggleVisibility(cprefix, 'details');
+	restoreVisibility(cprefix, 'details');
 
 	wlg.setup();
 	eventHandler();
@@ -1426,7 +1423,7 @@ for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
 
 <!-- / / / -->
 
-		<div class="section-title">Wireless Interfaces Details <small><i><a href="javascript:toggleVisibility(cprefix,'details');" id="toggleLink-details"><span id="sesdiv_details_showhide">(Show)</span></a></i></small></div>
+		<script>writeToggleSectionTitle('Wireless Interfaces Details', 'details');</script>
 		<div class="section" id="sesdiv_details" style="display:none">
 			<script>
 				for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
@@ -1442,7 +1439,7 @@ for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
 
 <!-- / / / -->
 
-		<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
+		<script>writeToggleSectionTitle('Notes', 'notes');</script>
 		<div class="section" id="sesdiv_notes" style="display:none">
 			<ul>
 				<li><b>Warning!</b> Avoid using 'virtual interfaces' on interface in Wireless Ethernet Bridge or Media Bridge mode due to possible problems.</li>

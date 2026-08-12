@@ -346,9 +346,7 @@ function init() {
 	E('_f_shortcuts').checked = (((c = cookie.get(cprefix + '_shortcuts')) != null) && (c == '1'));
 	E('_f_ignorezeroes').checked = (((c = cookie.get(cprefix + '_ignorezeroes')) != null) && (c == '1'));
 
-	if (((c = cookie.get(cprefix + '_options_vis')) != null) && (c == '1')) {
-		toggleVisibility(cprefix, 'options');
-	}
+	restoreVisibility(cprefix, 'options');
 
 	dg.setup();
 
@@ -439,7 +437,7 @@ function verifyFields(focused, quiet) {
 		<div class="tomato-grid" id="bwm-grid"></div>
 	</div>
 
-	<div class="section-title">Options <small><i><a href="javascript:toggleVisibility(cprefix,'options');" id="toggleLink-options"><span id="sesdiv_options_showhide">(Show)</span></a></i></small></div>
+	<script>writeToggleSectionTitle('Options', 'options');</script>
 	<div class="section" id="sesdiv_options" style="display:none">
 		<script>
 			var c;

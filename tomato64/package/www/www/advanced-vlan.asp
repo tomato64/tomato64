@@ -1300,9 +1300,7 @@ function init() {
 		E('sesdiv').style.display = 'block';
 		vlg.recolor();
 		vlg.resetNewEditor();
-		var c;
-		if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
-			toggleVisibility(cprefix, 'notes');
+		restoreVisibility(cprefix, 'notes');
 	}
 	else
 		E('notice-msg').innerHTML = '<div id="notice">The feature is not supported on this router.<\/div>';
@@ -1439,7 +1437,7 @@ for (var i = 0; i <= MAX_BRIDGE_ID; ++i)
 	</div>
 <!-- MIPSR2P-NO-END -->
 
-	<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
+	<script>writeToggleSectionTitle('Notes', 'notes');</script>
 	<div class="section" id="sesdiv_notes" style="display:none">
 		<div>*** If you notice that the order of the LAN Ports are incorrect, try the <a href="basic-network.asp">Invert Ports Order</a> first, if not read <a href="https://www.linksysinfo.org/index.php?threads/can-vlan-gui-port-order-be-corrected.70160/#post-247634" target="_blank" rel="noopener noreferrer"> <b>this</b></a> ***</div>
 		<br>

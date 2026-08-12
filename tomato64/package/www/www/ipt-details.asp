@@ -329,9 +329,7 @@ function init() {
 
 	filteripe_before = filteripe;
 
-	if (((c = cookie.get(cprefix + '_options_vis')) != null) && (c == '1')) {
-		toggleVisibility(cprefix, 'options');
-	}
+	restoreVisibility(cprefix, 'options');
 
 	scale = fixInt(cookie.get(cprefix + '_scale'), 0, 2, 0);
 
@@ -432,7 +430,7 @@ function verifyFields(focused, quiet) {
 		<div id="loading">Loading...</div>
 	</div>
 
-	<div class="section-title">Options <small><i><a href="javascript:toggleVisibility(cprefix,'options');" id="toggleLink-options"><span id="sesdiv_options_showhide">(Show)</span></a></i></small></div>
+	<script>writeToggleSectionTitle('Options', 'options');</script>
 	<div class="section" id="sesdiv_options" style="display:none">
 		<script>
 			var c;

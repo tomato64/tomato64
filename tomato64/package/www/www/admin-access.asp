@@ -447,12 +447,10 @@ function earlyInit() {
 }
 
 function init() {
-	var c;
 
 	E('http_lan_listener_names').innerHTML = bridgeListenerNames();
 
-	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
-		toggleVisibility(cprefix, 'notes');
+	restoreVisibility(cprefix, 'notes');
 
 	changed = 0;
 	up.initPage(250, 5);
@@ -706,7 +704,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
+<script>writeToggleSectionTitle('Notes', 'notes');</script>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<i>SSH Daemon (dropbear) also accepts additional configuration in the following files:</i><br>
 	<ul>

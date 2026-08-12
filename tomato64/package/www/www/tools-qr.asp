@@ -141,9 +141,7 @@ function togglePwd() {
 }
 
 function init() {
-	var c;
-	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
-		toggleVisibility(cprefix, 'notes')
+	restoreVisibility(cprefix, 'notes');
 
 	var tabSelectParamter = window.location.search.substr(1).split('=');
 /* TOMATO64-REMOVE-BEGIN */
@@ -226,7 +224,7 @@ function init() {
 
 <!-- / / / -->
 
-<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
+<script>writeToggleSectionTitle('Notes', 'notes');</script>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
 		<li><b>Show WIFI logo</b> - Select this to make the standard WiFi logo appear in the page/print</li>
