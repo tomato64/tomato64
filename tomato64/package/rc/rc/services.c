@@ -1806,7 +1806,7 @@ void start_igmp_proxy(void)
 	else if ((fp = fopen(igmpcfg, "w")) != NULL) {
 		fprintf(fp, "user nobody\n"); /* drop privileges */
 
-		/* check that lan, lan1, lan2 and lan3 are not selected and use custom config */
+		/* check that no LAN bridge is selected and use custom config */
 		/* The configuration file must define one (or more) upstream interface(s) and one or more downstream interfaces,
 		 * see https://github.com/pali/igmpproxy/commit/b55e0125c79fc9dbc95c6d6ab1121570f0c6f80f and
 		 * see https://github.com/pali/igmpproxy/blob/master/igmpproxy.conf

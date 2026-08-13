@@ -1276,23 +1276,20 @@ void start_wan_done(char *wan_ifname, char *prefix)
 #ifndef TCONFIG_BCMARM
 		/* We don't need STP after wireless led is lighted */
 		if (check_hw_type() == HW_BCM4702) {
-			eval("brctl", "stp", nvram_safe_get("lan_ifname"), "0");
-			if (nvram_match("lan_stp", "1")) 
-				eval("brctl", "stp", nvram_safe_get("lan_ifname"), "1");
-			if (strcmp(nvram_safe_get("lan1_ifname"),"") != 0) {
-				eval("brctl", "stp", nvram_safe_get("lan1_ifname"), "0");
-				if (nvram_match("lan1_stp", "1")) 
-					eval("brctl", "stp", nvram_safe_get("lan1_ifname"), "1");
-			}
-			if (strcmp(nvram_safe_get("lan2_ifname"),"") != 0) {
-				eval("brctl", "stp", nvram_safe_get("lan2_ifname"), "0");
-				if (nvram_match("lan2_stp", "1")) 
-					eval("brctl", "stp", nvram_safe_get("lan2_ifname"), "1");
-			}
-			if (strcmp(nvram_safe_get("lan3_ifname"),"") != 0) {
-				eval("brctl", "stp", nvram_safe_get("lan3_ifname"), "0");
-				if (nvram_match("lan3_stp", "1")) 
-					eval("brctl", "stp", nvram_safe_get("lan3_ifname"), "1");
+			int br;
+			char ifname_key[24], stp_key[24];
+			const char *ifname;
+
+			for (br = 0; br < BRIDGE_COUNT; br++) {
+				snprintf(ifname_key, sizeof(ifname_key), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
+				snprintf(stp_key, sizeof(stp_key), (br == 0 ? "lan_stp" : "lan%d_stp"), br);
+
+				ifname = nvram_safe_get(ifname_key);
+				if ((br == 0) || (*ifname != '\0')) {
+					eval("brctl", "stp", ifname, "0");
+					if (nvram_match(stp_key, "1"))
+						eval("brctl", "stp", ifname, "1");
+				}
 			}
 		}
 #endif

@@ -114,10 +114,7 @@ void ipt_routerpolicy(void)
 				1 = ip
 				3 = domain
 			wanx:
-				1 = wan1
-				2 = wan2
-				3 = wan3
-				4 = wan3
+				1..MWAN_MAX = WAN unit
 
 			iptables -t mangle -A WAN_PBR -p tcp -s 192.168.1.100 --sport 80 -d 220.249.92.18 --dport 80 -j MARK --set-mark-return 0x200/0xf00
 			iptables -t mangle -A WAN_PBR -p tcp -s 192.168.1.1 -m multiport --dports 80:90,40 -d 220.249.92.168 -m multiport --sports 10:90,30 -j MARK --set-mark-return 0x200/0xf00
@@ -138,13 +135,14 @@ void ipt_routerpolicy(void)
 				snprintf(msrt, sizeof(msrt), "-m mac --mac-source %s", srt_addr);
 
 			memset(jump, 0, sizeof(jump));
-			if (atoi(wanx) >= 1 && atoi(wanx) <= 4) {
+			wan_unit = atoi(wanx);
+			if (wan_unit >= 1 && wan_unit <= mwan_num) {
 				/* wanup check fail, drop the rule */
-				get_wan_prefix(atoi(wanx), prefix);
+				get_wan_prefix(wan_unit, prefix);
 				if (!check_wanup(prefix))
 					continue;
 
-				snprintf(jump, sizeof(jump), "WAN_%s", wanx);
+				snprintf(jump, sizeof(jump), "WAN_%d", wan_unit);
 			}
 			else
 				continue;
