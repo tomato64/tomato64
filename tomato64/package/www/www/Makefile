@@ -91,14 +91,6 @@ else
 	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
 endif
 
-# Only include MultiWAN options if MULTIWAN is configured in.
-ifneq ($(TCONFIG_MULTIWAN),y)
-	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.asp *.js); do \
-		sed -i $$F -e "/MULTIWAN-BEGIN/,/MULTIWAN-END/d"; \
-	done
-endif
-
 # Distinguish the VLAN version page that needs to be added
 ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM) $(TCONFIG_TOMATO64)),)
 	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
@@ -891,7 +883,6 @@ endif
 		-e "/PARAGON-BEGIN/d"	-e "/PARAGON-END/d" \
 		-e "/TUXERA-BEGIN/d"	-e "/TUXERA-END/d" \
 		-e "/TUXERAHFS-BEGIN/d"	-e "/TUXERAHFS-END/d" \
-		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d" \
 		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d" \
 		-e "/ADBLOCK-BEGIN/d"	-e "/ADBLOCK-END/d" \
 		-e "/OUI-BEGIN/d"	-e "/OUI-END/d" \
