@@ -282,8 +282,7 @@ list:
 			if (in_arr(k, skip_wan_vars, ASIZE(skip_wan_vars), 0)) /* do not display these vars for other wans */
 				continue;
 
-			for (i = 2; i <= (MWAN_MAX < 4 ? 4 : MWAN_MAX); i++) {
-			//for (i = 2; i <= MWAN_MAX; i++) { /* TODO: fix all .asp scripts (iteration by MAXWAN_NUM) to enable this */
+			for (i = 2; i <= MWAN_MAX; i++) {
 				if (strncmp(k, "wan_", 4) == 0)
 					snprintf(buf, sizeof(buf), "wan%u%s", i, k + 3);
 				else if (strncmp(k, "dr_wan_", 7) == 0)
@@ -302,8 +301,7 @@ list:
 			if (in_arr(k, skip_lan_vars, ASIZE(skip_lan_vars), 0)) /* do not display these vars for other lans */
 				continue;
 
-			for (i = 1; i < (BRIDGE_COUNT < 4 ? 4 : BRIDGE_COUNT); i++) {
-			//for (i = 1; i < BRIDGE_COUNT; i++) { /* TODO: fix all .asp scripts (iteration by MAX_BRIDGE_ID) to enable this */
+			for (i = 1; i < BRIDGE_COUNT; i++) {
 				if (strncmp(k, "lan_", 4) == 0)
 					snprintf(buf, sizeof(buf), "lan%u%s", i, k + 3);
 				else if (strncmp(k, "udpxy_lan", 9) == 0)
