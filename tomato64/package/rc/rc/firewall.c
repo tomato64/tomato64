@@ -45,7 +45,9 @@ char lanface[BRIDGE_COUNT][IFNAMSIZ + 1];
 char wan6face[IFNAMSIZ + 1];
 #endif
 
+#ifdef TCONFIG_DMZ
 char dmz_ifname[IFNAMSIZ + 1];
+#endif
 static int can_enable_fastnat;
 
 #ifdef DEBUG_IPTFILE
@@ -163,6 +165,7 @@ void enable_blackhole_detection(void)
 	f_write_procsysnet("ipv4/tcp_base_mss", (enabled ? "1024" : "512"));
 }
 
+#ifdef TCONFIG_DMZ
 static int dmz_dst(char *s, const size_t buf_sz)
 {
 	struct in_addr ia;
@@ -182,6 +185,12 @@ static int dmz_dst(char *s, const size_t buf_sz)
 
 	return 1;
 }
+
+static int dmz_remote_access(void)
+{
+	return nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra");
+}
+#endif /* TCONFIG_DMZ */
 
 void ipt_log_unresolved(const char *addr, const char *addrtype, const char *categ, const char *name)
 {
@@ -1041,8 +1050,9 @@ static void nat_table(void)
 		/* ICMP packets are always redirected to INPUT chains */
 		ipt_write("-A %s -p icmp -j DNAT --to-destination %s\n", chain_wan_prerouting, lanaddr[0]);
 
+#ifdef TCONFIG_DMZ
 		/* force remote access to the router if DMZ is enabled */
-		if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra")) {
+		if (dmz_remote_access()) {
 			strlcpy(t, nvram_safe_get("rmgt_sip"), sizeof(t));
 			p = t;
 			do {
@@ -1063,6 +1073,7 @@ static void nat_table(void)
 				p = c + 1;
 			} while (*p);
 		}
+#endif /* TCONFIG_DMZ */
 		ipt_forward(IPT_TABLE_NAT);
 		ipt_triggered(IPT_TABLE_NAT);
 	}
@@ -1151,6 +1162,7 @@ static void nat_table(void)
 #endif
 
 	if (is_anywanup()) {
+#ifdef TCONFIG_DMZ
 		if (dmz_dst(dst, sizeof(dst))) {
 			strlcpy(t, nvram_safe_get("dmz_sip"), sizeof(t));
 			p = t;
@@ -1167,6 +1179,7 @@ static void nat_table(void)
 				p = c + 1;
 			} while (*p);
 		}
+#endif /* TCONFIG_DMZ */
 	}
 
 	p = "";
@@ -1281,9 +1294,11 @@ static void filter_input(void)
 		          "-A wwwlimit -m recent --update --hitcount 20 --seconds 3 --name www -j %s\n",
 		          chain_in_drop);
 
-		if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra"))
+#ifdef TCONFIG_DMZ
+		if (dmz_remote_access())
 			ipt_write("-A INPUT -p tcp --dport %d -m state --state NEW -j wwwlimit\n", web_lanport);
 		else
+#endif
 			ipt_write("-A INPUT -p tcp --dport %s -m state --state NEW -j wwwlimit\n", nvram_safe_get("http_wanport"));
 	}
 
@@ -1395,16 +1410,20 @@ static void filter_input(void)
 
 		if (ipt_source(p, s, "remote management", NULL)) {
 			if (remotemanage) {
-				if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra"))
+#ifdef TCONFIG_DMZ
+				if (dmz_remote_access())
 					ipt_write("-A INPUT -p tcp %s --dport %d -j %s\n", s, web_lanport, chain_in_accept);
 				else
+#endif
 					ipt_write("-A INPUT -p tcp %s --dport %s -j %s\n", s, nvram_safe_get("http_wanport"), chain_in_accept);
 			}
 
 			if (nvram_get_int("sshd_remote")) {
-				if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra"))
+#ifdef TCONFIG_DMZ
+				if (dmz_remote_access())
 					ipt_write("-A INPUT -p tcp %s --dport %s -j %s\n", s, nvram_safe_get("sshd_port"), chain_in_accept);
 				else
+#endif
 					ipt_write("-A INPUT -p tcp %s --dport %s -j %s\n", s, nvram_safe_get("sshd_rport"), chain_in_accept);
 			}
 		}
@@ -1722,6 +1741,7 @@ static void filter_forward(void)
 		if (ipv6_enabled)
 			ip6t_forward();
 #endif
+#ifdef TCONFIG_DMZ
 		if (dmz_dst(dst, sizeof(dst))) {
 			dmz_ifname[0] = '\0';
 			if (!lan_ifname_for_ipv4(dst, dmz_ifname, sizeof(dmz_ifname)))
@@ -1742,6 +1762,7 @@ static void filter_forward(void)
 				p = c + 1;
 			} while (*p);
 		}
+#endif /* TCONFIG_DMZ */
 	}
 	/* default policy: DROP */
 }
@@ -1831,9 +1852,11 @@ static void filter6_input(void)
 		           "-A wwwlimit -m recent --update --hitcount 20 --seconds 3 --name www -j %s\n",
 		           chain_in_drop);
 
-		if (nvram_get_int("dmz_enable") && nvram_get_int("dmz_ra"))
+#ifdef TCONFIG_DMZ
+		if (dmz_remote_access())
 			ip6t_write("-A INPUT -p tcp --dport %d -m state --state NEW -j wwwlimit\n", web_lanport);
 		else
+#endif
 			ip6t_write("-A INPUT -p tcp --dport %s -m state --state NEW -j wwwlimit\n", nvram_safe_get("http_wanport"));
 	}
 
@@ -2269,7 +2292,9 @@ int start_firewall(void)
 	sched_restrictions();
 	enable_ip_forward();
 
+#ifdef TCONFIG_DMZ
 	led(LED_DMZ, dmz_dst(NULL, 0));
+#endif
 
 #ifdef TCONFIG_IPV6
 #ifndef TOMATO64

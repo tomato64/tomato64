@@ -1202,11 +1202,16 @@ static const nvset_t nvset_list[] = {
 	{ "wl_wmf_bss_enable",		V_01				},	/* Wireless Multicast Forwarding Enable/Disable */
 #endif /* TCONFIG_BCMARM */
 
+#ifdef TCONFIG_DMZ
 /* forward-dmz */
 	{ "dmz_enable",			V_01				},
 	{ "dmz_ipaddr",			V_LENGTH(0, 15)			},
+#ifdef TCONFIG_DMZMAC
+	{ "dmz_macaddr",		V_LENGTH(0, 17)			},
+#endif
 	{ "dmz_sip",			V_LENGTH(0, 512)		},
 	{ "dmz_ra",			V_01				},
+#endif /* TCONFIG_DMZ */
 
 /* forward-upnp */
 	{ "upnp_enable",		V_NUM				},

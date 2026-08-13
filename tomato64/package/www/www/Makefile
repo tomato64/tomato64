@@ -227,6 +227,24 @@ ifneq ($(TCONFIG_NOCAT),y)
 	sed -i $(INSTALLDIR)/www/about.asp -e "/NOCAT-BEGIN/,/NOCAT-END/d"
 endif
 
+# Only include DMZ forwarding when configured.
+ifneq ($(TCONFIG_DMZ),y)
+	rm -f $(INSTALLDIR)/www/forward-dmz.asp
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/\['DMZ',[[:space:]]*'dmz\.asp'\],/d"
+else
+ ifneq ($(TCONFIG_DMZMAC),y)
+	sed -i $(INSTALLDIR)/www/forward-dmz.asp \
+		-e "/DMZMAC-BEGIN/,/DMZMAC-END/d" \
+		-e "/DMZMAC-NO-BEGIN/d" \
+		-e "/DMZMAC-NO-END/d"
+ else
+	sed -i $(INSTALLDIR)/www/forward-dmz.asp \
+		-e "/DMZMAC-NO-BEGIN/,/DMZMAC-NO-END/d" \
+		-e "/DMZMAC-BEGIN/d" \
+		-e "/DMZMAC-END/d"
+ endif
+endif
+
 # only add php-fpm part for ARM routers
 ifneq ($(TCONFIG_BCMARM),y)
 	sed -i $(INSTALLDIR)/www/web-nginx.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"

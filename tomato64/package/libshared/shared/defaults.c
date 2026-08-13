@@ -1376,10 +1376,15 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TCONFIG_IPV6
 	{ "ipv6_portforward",		""				, 0 },
 #endif
+#ifdef TCONFIG_DMZ
 	{ "dmz_enable",			"0"				, 0 },
 	{ "dmz_ipaddr",			"0"				, 0 },
+#ifdef TCONFIG_DMZMAC
+	{ "dmz_macaddr",		""				, 0 },
+#endif
 	{ "dmz_sip",			""				, 0 },
 	{ "dmz_ra",			"1"				, 0 },
+#endif /* TCONFIG_DMZ */
 
 /* forward-upnp */
 	{ "upnp_enable",		"0"				, 0 },

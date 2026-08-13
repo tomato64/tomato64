@@ -464,6 +464,210 @@ static FILE *write_static_hosts(void)
 	return hf;
 }
 
+#ifdef TCONFIG_DMZMAC
+static int dmz_valid_mac(const char *mac, unsigned char ea[ETHER_ADDR_LEN])
+{
+	unsigned int i;
+	int nonzero = 0;
+
+	if (!ether_atoe(mac, ea))
+		return 0;
+
+	/* Only individual, non-zero Ethernet addresses make sense here. */
+	if (ea[0] & 0x01)
+		return 0;
+
+	for (i = 0; i < ETHER_ADDR_LEN; i++) {
+		if (ea[i]) {
+			nonzero = 1;
+			break;
+		}
+	}
+
+	return nonzero;
+}
+
+/*
+ * Validate a dhcpd_static MAC list the same way write_static_reservations()
+ * does. Return 1 if target is present, 0 if it is not, and -1 if the list
+ * itself is invalid and would not generate a dhcp-host entry.
+ */
+static int dmz_mac_list_state(const char *list, const unsigned char target[ETHER_ADDR_LEN])
+{
+	unsigned char ea[ETHER_ADDR_LEN];
+	char copy[64], *save, *mac;
+	int matched = 0;
+
+	if (!list || !*list)
+		return -1;
+
+	strlcpy(copy, list, sizeof(copy));
+	save = NULL;
+
+	for (mac = strtok_r(copy, ",", &save); mac != NULL; mac = strtok_r(NULL, ",", &save)) {
+		if (!ether_atoe(mac, ea))
+			return -1;
+
+		if (memcmp(ea, target, ETHER_ADDR_LEN) == 0)
+			matched = 1;
+	}
+
+	return matched;
+}
+
+static int dmz_dhcp_enabled_for_ip(const char *ip, const struct in_addr *addr, char *ifname_out, const size_t ifname_len)
+{
+	struct in_addr lan, mask, network, broadcast;
+	char ifname[IFNAMSIZ + 1];
+	char num[4], ifkey[24], ipkey[24], maskkey[24], protokey[24];
+	unsigned int i;
+
+	if (!lan_ifname_for_ipv4(ip, ifname, sizeof(ifname)))
+		return 0;
+
+	for (i = 0; i < BRIDGE_COUNT; i++) {
+		if (i == 0)
+			num[0] = '\0';
+		else
+			snprintf(num, sizeof(num), "%u", i);
+
+		snprintf(ifkey, sizeof(ifkey), "lan%s_ifname", num);
+		if (strcmp(nvram_safe_get(ifkey), ifname) != 0)
+			continue;
+
+		snprintf(protokey, sizeof(protokey), "lan%s_proto", num);
+		if (!nvram_match(protokey, "dhcp"))
+			return 0;
+
+		snprintf(ipkey, sizeof(ipkey), "lan%s_ipaddr", num);
+		snprintf(maskkey, sizeof(maskkey), "lan%s_netmask", num);
+		if ((inet_pton(AF_INET, nvram_safe_get(ipkey), &lan) != 1) ||
+		    (inet_pton(AF_INET, nvram_safe_get(maskkey), &mask) != 1))
+			return 0;
+
+		network.s_addr = lan.s_addr & mask.s_addr;
+		broadcast.s_addr = network.s_addr | ~mask.s_addr;
+
+		if ((addr->s_addr == lan.s_addr) ||
+		    (addr->s_addr == network.s_addr) ||
+		    (addr->s_addr == broadcast.s_addr))
+			return 0;
+
+		if (ifname_out)
+			strlcpy(ifname_out, ifname, ifname_len);
+
+		return 1;
+	}
+
+	return 0;
+}
+
+static int dmz_static_reservation_state(const unsigned char target_mac[ETHER_ADDR_LEN], const struct in_addr *target_ip, const char *target_ifname)
+{
+	char *nve, *nvp, *p;
+	const char *mac, *ip, *name, *bind, *ip6;
+	struct in_addr in4;
+	char ifname[IFNAMSIZ + 1];
+	int mac_state, same_mac, state = 0;
+
+	nve = nvp = strdup(nvram_safe_get("dhcpd_static"));
+	while (nvp && (p = strsep(&nvp, ">")) != NULL) {
+		mac = ip = name = bind = ip6 = NULL;
+
+		if ((vstrsep(p, "<", &mac, &ip, &name, &bind, &ip6)) < 4)
+			continue;
+
+		mac_state = dmz_mac_list_state(mac, target_mac);
+		if (mac_state < 0)
+			continue;
+		same_mac = (mac_state > 0);
+
+		if (!ip || !*ip)
+			continue;
+
+		if (inet_pton(AF_INET, ip, &in4) != 1)
+			continue;
+
+		if (same_mac) {
+			if (in4.s_addr != target_ip->s_addr) {
+				/*
+				 * dnsmasq allows multiple dhcp-host entries for the same
+				 * MAC when their addresses belong to different subnets.
+				 */
+				if (lan_ifname_for_ipv4(ip, ifname, sizeof(ifname)) && strcmp(ifname, target_ifname) != 0)
+					continue;
+
+				state = -1;
+				break;
+			}
+			state = 1;
+		}
+		else if (in4.s_addr == target_ip->s_addr) {
+			state = -1;
+			break;
+		}
+	}
+
+	if (nve)
+		free(nve);
+
+	return state;
+}
+
+static void write_dmz_reservation(FILE *f, const char *sdhcp_lease)
+{
+	const char *mac, *ip;
+	struct in_addr in4;
+	unsigned char ea[ETHER_ADDR_LEN];
+	char canonical_mac[18], target_ifname[IFNAMSIZ + 1];
+	int state;
+
+	if (!nvram_get_int("dmz_enable"))
+		return;
+
+	mac = nvram_safe_get("dmz_macaddr");
+	if (!*mac)
+		return;
+
+	ip = nvram_safe_get("dmz_ipaddr");
+
+	if (!dmz_valid_mac(mac, ea)) {
+		logmsg(LOG_WARNING, "DMZ: invalid MAC address '%s'; DHCP reservation not added", mac);
+		return;
+	}
+
+	if ((inet_pton(AF_INET, ip, &in4) != 1) ||
+	    (in4.s_addr == INADDR_ANY) ||
+	    (in4.s_addr == INADDR_LOOPBACK) ||
+	    (in4.s_addr == INADDR_BROADCAST)) {
+		logmsg(LOG_WARNING, "DMZ: invalid IPv4 address '%s'; DHCP reservation not added", ip);
+		return;
+	}
+
+	if (!dmz_dhcp_enabled_for_ip(ip, &in4, target_ifname, sizeof(target_ifname))) {
+		logmsg(LOG_WARNING, "DMZ: IPv4 address '%s' is not on a DHCP-enabled LAN; DHCP reservation not added", ip);
+		return;
+	}
+
+	state = dmz_static_reservation_state(ea, &in4, target_ifname);
+	if (state < 0) {
+		logmsg(LOG_WARNING, "DMZ: MAC/IP conflicts with Static DHCP; DHCP reservation not added");
+		return;
+	}
+	if (state > 0)
+		return;
+
+	ether_etoa(ea, canonical_mac);
+	fprintf(f, "dhcp-host=%s,%s", canonical_mac, ip);
+
+	if (nvram_get_int("dhcpd_slt") != 0)
+		fprintf(f, ",%s", sdhcp_lease);
+
+	fprintf(f, "\n");
+}
+#endif /* TCONFIG_DMZMAC */
+
+
 static void write_static_reservations(FILE *f, FILE *hf, int do_dhcpd_hosts, const char *sdhcp_lease)
 {
 	char *nve, *nvp, *p;
@@ -799,6 +1003,9 @@ void start_dnsmasq(void) {
 
 	hf = write_static_hosts();
 	write_static_reservations(f, hf, do_dhcpd_hosts, sdhcp_lease);
+#ifdef TCONFIG_DMZMAC
+	write_dmz_reservation(f, sdhcp_lease);
+#endif /* TCONFIG_DMZMAC */
 
 	if (hf) {
 		/* add directory with additional hosts files */

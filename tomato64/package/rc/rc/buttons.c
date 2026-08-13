@@ -620,8 +620,10 @@ int buttons_main(int argc, char *argv[])
 				led(ses_led, LED_ON);
 #endif /* TCONFIG_BLINK */
 
+#ifdef TCONFIG_DMZ
 			if ((ses_led == LED_DMZ) && (nvram_get_int("dmz_enable") > 0))
 				led(LED_DMZ, LED_ON); /* turn LED_DMZ back on if used for feedback */
+#endif
 
 #ifdef CONFIG_BCMWL6A
 			/* turn LED_AOSS (Power LED for Asus Router; WPS LED for Tenda Router AC15/AC18; Netgear Logo LED for EX7000/EX6200) back on if used for feedback (WPS Button); Check Startup LED setting (bit 2 used for LED_AOSS) */

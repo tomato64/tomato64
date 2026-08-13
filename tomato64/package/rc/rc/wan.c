@@ -1020,7 +1020,9 @@ void start_wan(void)
 	}
 
 	led(LED_DIAG, LED_OFF);
+#ifdef TCONFIG_DMZ
 	led(LED_DMZ, nvram_match("dmz_enable", "1"));
+#endif
 }
 
 #ifdef TCONFIG_IPV6
