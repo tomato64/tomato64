@@ -556,12 +556,13 @@ static int hexval(unsigned char c)
 /*
  * Convert Ethernet address string representation to binary data
  *
- * @param  a  string in xx:xx:xx:xx:xx:xx notation
+ * @param  a  string in xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx notation
  * @param  e  binary data
  * @return    TRUE if conversion was successful and FALSE otherwise
  */
 int ether_atoe(const char *a, unsigned char *e)
 {
+	char sep = '\0';
 	int i;
 
 	if (!a || !e)
@@ -578,8 +579,16 @@ int ether_atoe(const char *a, unsigned char *e)
 		a += 2;
 
 		if (i < ETHER_ADDR_LEN - 1) {
-			if (*a++ != ':')
+			if (i == 0) {
+				sep = *a;
+				if (sep != ':' && sep != '-')
+					goto fail;
+			}
+			else if (*a != sep) {
 				goto fail;
+			}
+
+			a++;
 		}
 		else if (*a) {
 			goto fail;
