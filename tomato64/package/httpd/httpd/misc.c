@@ -458,24 +458,21 @@ static void print_ipv6_infos(void) /* show IPv6 DUID and addresses: wan, dns, la
 
 	/* check LAN */
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[2] = "0";
-		if (br != 0)
-			bridge[0] += br;
-		else
-			memset(bridge, 0, sizeof(bridge));
+		char lanN[] = "lanXX";
+		snprintf(lanN, sizeof(lanN), (br == 0 ? "lan" : "lan%d"), br);
 
 		memset(buffer2, 0, sizeof(buffer2));
-		snprintf(buffer2, sizeof(buffer2), "lan%s_ipaddr", bridge);
+		snprintf(buffer2, sizeof(buffer2), "%s_ipaddr", lanN);
 		if (strcmp(nvram_safe_get(buffer2), "") != 0) {
 			/* check LANx IPv6 address and copy to buffer */
 			memset(buffer2, 0, sizeof(buffer2));
-			snprintf(buffer2, sizeof(buffer2), "lan%s_ifname", bridge);
+			snprintf(buffer2, sizeof(buffer2), "%s_ifname", lanN);
 			p_tmp = NULL;
 			p_tmp = getifaddr(nvram_safe_get(buffer2), AF_INET6, 0); /* global address */
 			if (p_tmp != NULL) {
 				memset(buffer, 0, sizeof(buffer));
 				snprintf(buffer, sizeof(buffer), "%s", p_tmp);
-				web_printf("\tip6_lan%s: '%s',\n", bridge, buffer);
+				web_printf("\tip6_%s: '%s',\n", lanN, buffer);
 			}
 			/* check LAN IPv6 link local address and copy to buffer */
 			p_tmp = NULL;
@@ -483,7 +480,7 @@ static void print_ipv6_infos(void) /* show IPv6 DUID and addresses: wan, dns, la
 			if (p_tmp != NULL) {
 				memset(buffer, 0, sizeof(buffer));
 				snprintf(buffer, sizeof(buffer), "%s", p_tmp);
-				web_printf("\tip6_lan%s_ll: '%s',\n", bridge, buffer);
+				web_printf("\tip6_%s_ll: '%s',\n", lanN, buffer);
 			}
 		}
 	}

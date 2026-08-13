@@ -51,22 +51,16 @@ static void iptraffic_conntrack_init(void)
 #endif /* TOMATO64 */
 
 	for(br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[2] = "0";
-		if (br != 0)
-			bridge[0] += br;
-		else
-			memset(bridge, 0, sizeof(bridge));
-
 		memset(sa, 0, sizeof(sa));
-		snprintf(sa, sizeof(sa), "lan%s_ifname", bridge);
+		snprintf(sa, sizeof(sa), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
 
 		if (strcmp(nvram_safe_get(sa), "") != 0) {
 			memset(sa, 0, sizeof(sa));
-			snprintf(sa, sizeof(sa), "lan%s_ipaddr", bridge);
+			snprintf(sa, sizeof(sa), (br == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), br);
 			rip[br] = inet_addr(nvram_safe_get(sa));
 
 			memset(sa, 0, sizeof(sa));
-			snprintf(sa, sizeof(sa), "lan%s_netmask", bridge);
+			snprintf(sa, sizeof(sa), (br == 0 ? "lan_netmask" : "lan%d_netmask"), br);
 			mask[br] = inet_addr(nvram_safe_get(sa));
 			lan[br] = rip[br] & mask[br];
 		}
@@ -158,7 +152,7 @@ void asp_iptraffic(int argc, char **argv)
 	char comma, br;
 	Node tmp;
 	Node *ptr;
-	char name[] = "/proc/net/ipt_account/lanX";
+	char name[] = "/proc/net/ipt_account/lanXX";
 
 	exclude = nvram_safe_get("cstats_exclude");
 
@@ -168,13 +162,7 @@ void asp_iptraffic(int argc, char **argv)
 	comma = ' ';
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[2] = "0";
-		if (br != 0)
-			bridge[0] += br;
-		else
-			memset(bridge, 0, sizeof(bridge));
-
-		snprintf(name, sizeof(name), "/proc/net/ipt_account/lan%s", bridge);
+		snprintf(name, sizeof(name), (br == 0 ? "/proc/net/ipt_account/lan" : "/proc/net/ipt_account/lan%d"), br);
 
 		if (!(a = fopen(name, "r")))
 			continue;

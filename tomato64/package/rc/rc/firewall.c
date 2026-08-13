@@ -671,16 +671,12 @@ static void ipt_account(void) {
 	char br;
 
 	for (br = 0 ; br < BRIDGE_COUNT; br++) {
-		char bridge[2];
-		bridge[0] = br ? '0' + br : '\0';
-		bridge[1] = '\0';
-
-		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
+		snprintf(lanN_ifname, sizeof(lanN_ifname), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
 
 		if (strcmp(nvram_safe_get(lanN_ifname), "") != 0) {
-			snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge);
-			snprintf(lanN_netmask, sizeof(lanN_netmask), "lan%s_netmask", bridge);
-			snprintf(lanN, sizeof(lanN), "lan%s", bridge);
+			snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), (br == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), br);
+			snprintf(lanN_netmask, sizeof(lanN_netmask), (br == 0 ? "lan_netmask" : "lan%d_netmask"), br);
+			snprintf(lanN, sizeof(lanN), (br == 0 ? "lan" : "lan%d"), br);
 
 			inet_aton(nvram_safe_get(lanN_ipaddr), &ipaddr);
 			inet_aton(nvram_safe_get(lanN_netmask), &netmask);
@@ -1318,24 +1314,16 @@ static void filter_input(void)
 
 	if (nvram_get_int("fw_strict_input")) {
 		for (br = 0; br < BRIDGE_COUNT; br++) {
-			char bridge[2];
-			bridge[0] = br ? '0' + br : '\0';
-			bridge[1] = '\0';
-
-			snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
+			snprintf(lanN_ifname, sizeof(lanN_ifname), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
 			if (strncmp(nvram_safe_get(lanN_ifname), "br", 2) == 0) {
 				for (br2 = 0; br2 < BRIDGE_COUNT; br2++) {
 					if (br == br2)
 						continue;
 
-					char bridge2[2];
-					bridge2[0] = br2 ? '0' + br2 : '\0';
-					bridge2[1] = '\0';
-
-					snprintf(lanN_ifname2, sizeof(lanN_ifname2), "lan%s_ifname", bridge2);
+					snprintf(lanN_ifname2, sizeof(lanN_ifname2), (br2 == 0 ? "lan_ifname" : "lan%d_ifname"), br2);
 					if (strncmp(nvram_safe_get(lanN_ifname2), "br", 2) == 0) {
 
-						snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge2);
+						snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), (br2 == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), br2);
 
 						ipt_write("-A INPUT -i %s -d %s -j DROP\n", nvram_safe_get(lanN_ifname), nvram_safe_get(lanN_ipaddr));
 					}
@@ -1474,6 +1462,20 @@ static void filter_input(void)
 	/* default policy: DROP */
 }
 
+/* parse a LAN bridge id as stored in lan_access, ie. "0" ... "15"; -1 if not a valid bridge */
+static int lan_access_bridge_id(const char *s)
+{
+	char *endp;
+	long id;
+
+	if ((s == NULL) || (*s == '\0'))
+		return -1;
+
+	id = strtol(s, &endp, 10);
+
+	return ((*endp == '\0') && (id >= 0) && (id < BRIDGE_COUNT)) ? (int)id : -1;
+}
+
 static void filter_forward(void)
 {
 	char dst[128];
@@ -1537,22 +1539,21 @@ static void filter_forward(void)
 			 * 5.6.7.8 = dst addr
 			 * desc = desc
 			 */
-			int src_f, dst_f;
+			int src_f, dst_f, sbr_id, dbr_id;
 
 			if ((vstrsep(b, "<", &d, &sbr, &saddr, &dbr, &daddr, &desc) < 6) || (*d != '1'))
+				continue;
+			if (((sbr_id = lan_access_bridge_id(sbr)) < 0) || ((dbr_id = lan_access_bridge_id(dbr)) < 0))
 				continue;
 			if (!(src_f = ipt_addr(src, sizeof(src), saddr, "src", (IPT_V4 | IPT_V6), 0, "LAN access", desc)))
 				continue;
 			if (!(dst_f = ipt_addr(dst, sizeof(dst), daddr, "dst", (IPT_V4 | IPT_V6), 0, "LAN access", desc)))
 				continue;
 
-			ip46t_flagged_write(ipv6_enabled, src_f & dst_f, "-A FORWARD -i %s%s -o %s%s %s %s -j ACCEPT\n", "br", sbr, "br", dbr, src, dst);
+			ip46t_flagged_write(ipv6_enabled, src_f & dst_f, "-A FORWARD -i br%d -o br%d %s %s -j ACCEPT\n", sbr_id, dbr_id, src, dst);
 
-			if ((strcmp(src, "") == 0) && (strcmp(dst, "") == 0) &&
-			    (*sbr >= '0') && (*sbr < '0' + BRIDGE_COUNT) &&
-			    (*dbr >= '0') && (*dbr < '0' + BRIDGE_COUNT)) {
-				lanAccess[((*sbr - '0') + (*dbr - '0') * BRIDGE_COUNT)] = '1';
-			}
+			if ((strcmp(src, "") == 0) && (strcmp(dst, "") == 0))
+				lanAccess[(sbr_id + dbr_id * BRIDGE_COUNT)] = '1';
 		}
 	}
 	free(nv);
@@ -1611,11 +1612,7 @@ static void filter_forward(void)
 	}
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[2];
-		bridge[0] = br ? '0' + br : '\0';
-		bridge[1] = '\0';
-
-		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
+		snprintf(lanN_ifname, sizeof(lanN_ifname), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
 		if (strncmp(nvram_safe_get(lanN_ifname), "br", 2) == 0) {
 			for (br2 = 0; br2 < BRIDGE_COUNT; br2++) {
 				if (br == br2)
@@ -1624,11 +1621,7 @@ static void filter_forward(void)
 				if (lanAccess[((br)+(br2) * BRIDGE_COUNT)] == '1')
 					continue;
 
-				char bridge2[2];
-				bridge2[0] = br2 ? '0' + br2 : '\0';
-				bridge2[1] = '\0';
-
-				snprintf(lanN_ifname2, sizeof(lanN_ifname2), "lan%s_ifname", bridge2);
+				snprintf(lanN_ifname2, sizeof(lanN_ifname2), (br2 == 0 ? "lan_ifname" : "lan%d_ifname"), br2);
 
 				if (strncmp(nvram_safe_get(lanN_ifname2), "br", 2) == 0)
 					ip46t_write(ipv6_enabled, "-A FORWARD -i %s -o %s -j DROP\n", nvram_safe_get(lanN_ifname), nvram_safe_get(lanN_ifname2));
@@ -1693,11 +1686,7 @@ static void filter_forward(void)
 #endif
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[2];
-		bridge[0] = br ? '0' + br : '\0';
-		bridge[1] = '\0';
-
-		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
+		snprintf(lanN_ifname, sizeof(lanN_ifname), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
 		if (strncmp(nvram_safe_get(lanN_ifname), "br", 2) == 0)
 			ip46t_write(ipv6_enabled, "-A FORWARD -i %s -j %s\n", nvram_safe_get(lanN_ifname), chain_out_accept);
 	}

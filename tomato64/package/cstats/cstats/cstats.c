@@ -744,13 +744,7 @@ static void calc(void)
 	logmsg(LOG_DEBUG, "*** %s: cstats_exclude=[%s] cstats_include=[%s]", __FUNCTION__, exclude, include);
 
 	for (br = 0 ; br < BRIDGE_COUNT; br++) {
-		char bridge[2] = "0";
-		if (br != 0)
-			bridge[0] += br;
-		else
-			strlcpy(bridge, "", sizeof(bridge));
-
-		snprintf(name, sizeof(name), "/proc/net/ipt_account/lan%s", bridge);
+		snprintf(name, sizeof(name), (br == 0 ? "/proc/net/ipt_account/lan" : "/proc/net/ipt_account/lan%d"), br);
 
 		if (!(f = fopen(name, "r")))
 			continue;
