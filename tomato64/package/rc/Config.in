@@ -121,6 +121,26 @@ menuconfig BR2_PACKAGE_RC
 
 if BR2_PACKAGE_RC
 
+comment "Network limits"
+
+config BR2_PACKAGE_RC_MWAN_MAX
+	int "Maximum number of WAN interfaces"
+	range 1 8
+	default 4
+	help
+	  Compile-time upper bound on WAN interfaces. Replaces the old
+	  MultiWan on/off switch; 4 preserves the previous behaviour.
+
+config BR2_PACKAGE_RC_BRIDGE_COUNT
+	int "Number of LAN bridges"
+	range 1 16
+	default 8
+	help
+	  Compile-time number of LAN bridges (br0..brN-1). 8 preserves the
+	  previous Tomato64 behaviour; upstream Tomato uses 4.
+
+comment "Features"
+
 config BR2_PACKAGE_RC_ADBLOCK
 	bool "Enable Adblock"
 	depends on BR2_PACKAGE_RC_HTTPS
@@ -225,10 +245,6 @@ config BR2_PACKAGE_RC_MDNS
 	bool "Enable MDNS"
 	default y
 	select BR2_PACKAGE_AVAHI_TOMATO
-
-config BR2_PACKAGE_RC_MULTIWAN
-	bool "Enable MultiWan"
-	default y
 
 config BR2_PACKAGE_RC_NANO
 	bool "Enable Nano"

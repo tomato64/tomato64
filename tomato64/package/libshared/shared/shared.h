@@ -32,11 +32,7 @@
 
 #define ASIZE(array)		(sizeof(array) / sizeof(array[0]))
 
-#ifndef TOMATO64
-#define BRIDGE_COUNT		4
-#else
-#define BRIDGE_COUNT		8
-#endif /* TOMATO64 */
+#define BRIDGE_COUNT		TCONFIG_BRIDGE_COUNT
 
 #define WIFI_PHY_COUNT		3
 #define WIFI_IFACE_COUNT	16
@@ -129,11 +125,7 @@ extern const char *tomato_nightly;
 #define	IPV6_6RD_DHCP		7
 #endif
 
-#ifdef TCONFIG_MULTIWAN
-#define MWAN_MAX		4
-#else
-#define MWAN_MAX		2
-#endif
+#define MWAN_MAX		TCONFIG_MWAN_MAX
 
 #ifndef TOMATO64
 #ifdef TCONFIG_EXTSW

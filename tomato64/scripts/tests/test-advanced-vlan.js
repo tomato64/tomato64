@@ -66,8 +66,8 @@ const fail = m => { failures.push(m); };
  *   BRIDGE_COUNT 8   -> MAX_BRIDGE_ID 7
  *   TOMATO_VLANNUM 16-> MAX_VLAN_ID   15
  *   MAX_PORT_ID  8
- *   MWAN_MAX     4 with TCONFIG_MULTIWAN, else 2
- * Both MultiWAN variants are exercised.
+ *   MWAN_MAX     TCONFIG_MWAN_MAX (default 4, range 1..8)
+ * Two WAN-count variants are exercised.
  */
 const CONFIGS = [
 	{ name: 'multiwan', MAX_BRIDGE_ID: 7, MAX_VLAN_ID: 15, MAX_PORT_ID: 8, MAXWAN_NUM: 4 },
