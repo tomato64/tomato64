@@ -455,40 +455,14 @@ function show() {
 	elem.display('ip6_wan_dns1', stats.ip6_wan_dns1 != '');
 	c('ip6_wan_dns2', stats.ip6_wan_dns2);
 	elem.display('ip6_wan_dns2', stats.ip6_wan_dns2 != '');
-	c('ip6_lan', stats.ip6_lan);
-	elem.display('ip6_lan', stats.ip6_lan != '');
-	c('ip6_lan_ll', stats.ip6_lan_ll);
-	elem.display('ip6_lan_ll', stats.ip6_lan_ll != '');
-	c('ip6_lan1', stats.ip6_lan1);
-	elem.display('ip6_lan1', stats.ip6_lan1 != '');
-	c('ip6_lan1_ll', stats.ip6_lan1_ll);
-	elem.display('ip6_lan1_ll', stats.ip6_lan1_ll != '');
-	c('ip6_lan2', stats.ip6_lan2);
-	elem.display('ip6_lan2', stats.ip6_lan2 != '');
-	c('ip6_lan2_ll', stats.ip6_lan2_ll);
-	elem.display('ip6_lan2_ll', stats.ip6_lan2_ll != '');
-	c('ip6_lan3', stats.ip6_lan3);
-	elem.display('ip6_lan3', stats.ip6_lan3 != '');
-	c('ip6_lan3_ll', stats.ip6_lan3_ll);
-	elem.display('ip6_lan3_ll', stats.ip6_lan3_ll != '');
-/* TOMATO64-BEGIN */
-	c('ip6_lan4', stats.ip6_lan4);
-	elem.display('ip6_lan4', stats.ip6_lan4 != '');
-	c('ip6_lan4_ll', stats.ip6_lan4_ll);
-	elem.display('ip6_lan4_ll', stats.ip6_lan4_ll != '');
-	c('ip6_lan5', stats.ip6_lan5);
-	elem.display('ip6_lan5', stats.ip6_lan5 != '');
-	c('ip6_lan5_ll', stats.ip6_lan5_ll);
-	elem.display('ip6_lan5_ll', stats.ip6_lan5_ll != '');
-	c('ip6_lan6', stats.ip6_lan6);
-	elem.display('ip6_lan6', stats.ip6_lan6 != '');
-	c('ip6_lan6_ll', stats.ip6_lan6_ll);
-	elem.display('ip6_lan6_ll', stats.ip6_lan6_ll != '');
-	c('ip6_lan7', stats.ip6_lan7);
-	elem.display('ip6_lan7', stats.ip6_lan7 != '');
-	c('ip6_lan7_ll', stats.ip6_lan7_ll);
-	elem.display('ip6_lan7_ll', stats.ip6_lan7_ll != '');
-/* TOMATO64-END */
+	for (var bridgeId = 0; bridgeId <= MAX_BRIDGE_ID; ++bridgeId) {
+		var bridgeSuffix = (bridgeId == 0) ? '' : bridgeId.toString();
+		var ip6Lan = 'ip6_lan'+bridgeSuffix;
+		c(ip6Lan, stats[ip6Lan]);
+		elem.display(ip6Lan, stats[ip6Lan] != '');
+		c(ip6Lan+'_ll', stats[ip6Lan+'_ll']);
+		elem.display(ip6Lan+'_ll', stats[ip6Lan+'_ll'] != '');
+	}
 /* IPV6-END */
 
 	for (uidx = 1; uidx <= nvram.mwan_num; ++uidx) {

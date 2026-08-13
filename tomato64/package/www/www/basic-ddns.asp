@@ -164,7 +164,9 @@ function verifyFields(focused, quiet) {
 	var data, b, e, ok = 1;
 	var op;
 	var enabled;
-	var used_wans = [0, 0, 0, 0];
+	var used_wans = [];
+	for (i = 0; i < MAXWAN_NUM; ++i)
+		used_wans.push(0);
 	var count_enabled_wans = 0;
 	var txt = 'not available when <a href="advanced-dhcpdns.asp">\'Use received DNS with user-entered DNS\'<\/a> is enabled';
 	var set_custom_if = '';
@@ -480,7 +482,7 @@ REMOVE-END */
 
 			if (data[0] == 'opendns') {
 				setopendns[i] = fom['_f_opendns'+i].checked;
-				/* set the ddnsxX_opendns value correctly: bit 0 = WAN0, bit 1 = WAN1, bit 2 = WAN2, bit 3 = WAN3 */
+				/* set one bit per WAN in ddnsxX_opendns */
 				if (setopendns[i]) { /* only if 'Use as DNS' is checked */
 					l = 0;
 					for (j = 1; j <= MAXWAN_NUM; j++) {

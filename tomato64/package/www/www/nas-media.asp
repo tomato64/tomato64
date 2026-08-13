@@ -317,12 +317,9 @@ function init() {
 		}
 
 		var lan_arr = nvram.ms_ifname.split(',');
-/* TOMATO64-REMOVE-BEGIN */
-		var ms_lan = [0,0,0,0];
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
-		var ms_lan = [0,0,0,0,0,0,0,0];
-/* TOMATO64-END */
+		var ms_lan = [];
+		for (var i = 0; i <= MAX_BRIDGE_ID; ++i)
+			ms_lan.push(0);
 		for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
 			for (var j = 0; j < lan_arr.length; ++j) {
 				if (lan_arr[j] == 'br'+i.toString())
@@ -330,18 +327,12 @@ function init() {
 			}
 		}
 
-		createFieldTable('', [
-			{ title: 'Enable on Start', name: 'f_ms_enable', type: 'checkbox', value: nvram.ms_enable == 1 },
-				{ title: 'LAN0', name: 'f_ms_lan0', type: 'checkbox', value: ms_lan[0] == 1 },
-				{ title: 'LAN1', name: 'f_ms_lan1', type: 'checkbox', value: ms_lan[1] == 1 },
-				{ title: 'LAN2', name: 'f_ms_lan2', type: 'checkbox', value: ms_lan[2] == 1 },
-				{ title: 'LAN3', name: 'f_ms_lan3', type: 'checkbox', value: ms_lan[3] == 1 },
-/* TOMATO64-BEGIN */
-				{ title: 'LAN4', name: 'f_ms_lan4', type: 'checkbox', value: ms_lan[4] == 1 },
-				{ title: 'LAN5', name: 'f_ms_lan5', type: 'checkbox', value: ms_lan[5] == 1 },
-				{ title: 'LAN6', name: 'f_ms_lan6', type: 'checkbox', value: ms_lan[6] == 1 },
-				{ title: 'LAN7', name: 'f_ms_lan7', type: 'checkbox', value: ms_lan[7] == 1 },
-/* TOMATO64-END */
+		var f = [
+			{ title: 'Enable on Start', name: 'f_ms_enable', type: 'checkbox', value: nvram.ms_enable == 1 }
+		];
+		for (var i = 0; i <= MAX_BRIDGE_ID; ++i)
+			f.push({ title: 'LAN'+i, name: 'f_ms_lan'+i, type: 'checkbox', value: ms_lan[i] == 1 });
+		f.push(
 			{ title: 'Port', name: 'ms_port', type: 'text', maxlen: 5, size: 6, value: nvram.ms_port, suffix: ' <small>range: 0 - 65535; default (random) set 0<\/small>' },
 			{ title: 'Database Location', multi: [
 				{ name: 'f_loc', type: 'select', options: [['','RAM (Temporary)'],
@@ -358,7 +349,8 @@ function init() {
 			{ title: 'TiVo Support', name: 'f_ms_tivo', type: 'checkbox', value: nvram.ms_tivo == 1 },
 			{ title: 'Strictly adhere to DLNA standards', name: 'f_ms_stdlna', type: 'checkbox', value: nvram.ms_stdlna == 1 },
 			{ title: 'Custom configuration', name: 'ms_custom', type: 'textarea', value: nvram.ms_custom }
-		]);
+		);
+		createFieldTable('', f);
 	</script>
 
 	<small>* media scan may take considerable time to complete.</small>
