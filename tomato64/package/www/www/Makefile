@@ -176,7 +176,7 @@ endif
 
 # Only include Paragon NTFS settings if Paragon is configured in.
 ifneq ($(TCONFIG_UFSDA),y)
- ifneq ($(TCONFIG_UFSDN),y)
+ ifneq ($(TCONFIG_UFSD),y)
 	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/PARAGON-BEGIN/,/PARAGON-END/d"
  endif
 endif

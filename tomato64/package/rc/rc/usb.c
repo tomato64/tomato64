@@ -223,7 +223,7 @@ static void remove_usb_storage_module(void)
 	modprobe_r("vfat");
 	modprobe_r("fat");
 	modprobe_r("exfat");
-#if defined(TCONFIG_UFSDA) || defined(TCONFIG_UFSDN)
+#if defined(TCONFIG_UFSDA) || defined(TCONFIG_UFSD)
 	modprobe_r("ufsd");
 #endif
 #ifdef TCONFIG_TUXERA
@@ -527,10 +527,10 @@ void start_usb(void)
 				modprobe("exfat");
 #endif
 
-#if defined(TCONFIG_UFSDA) || defined(TCONFIG_UFSDN)
+#ifdef TCONFIG_UFSDA
 			if (nvram_get_int("usb_fs_ntfs") && nvram_match("usb_ntfs_driver", "paragon"))
 				modprobe("ufsd");
-#elif TCONFIG_UFSD
+#elif defined(TCONFIG_UFSD)
 			if (nvram_get_int("usb_fs_ntfs"))
 				modprobe("ufsd");
 #endif
@@ -854,7 +854,7 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 #ifndef TOMATO64
 					if (nvram_match("usb_ntfs_driver", "ntfs3g"))
 						ret = eval("ntfs-3g", "-o", options, mnt_dev, mnt_dir);
-#  if defined(TCONFIG_UFSDA) || defined(TCONFIG_UFSDN)
+#  ifdef TCONFIG_UFSDA
 					else if (nvram_match("usb_ntfs_driver", "paragon"))
 						ret = eval("mount", "-t", "ufsd", "-o", options, "-o", "force", mnt_dev, mnt_dir);
 #  endif
