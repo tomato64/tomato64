@@ -2,6 +2,10 @@
 export HAVE_TOMATO=y
 export TCONFIG_TOMATO64=y
 
+ifeq ($(BR2_PACKAGE_RC_ADBLOCK),y)
+export TCONFIG_ADBLOCK=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_BT),y)
 export TCONFIG_BT=y
 endif

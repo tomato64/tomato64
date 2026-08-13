@@ -516,18 +516,24 @@ ifneq ($(TCONFIG_IPERF),y)
 	sed -i $(INSTALLDIR)/www/about.asp -e "/IPERF-BEGIN/,/IPERF-END/d"
 endif
 
+# Only include Adblock if it is configured in
+ifeq ($(TCONFIG_ADBLOCK),y)
 # Only include Adblock v2 if it is required (not for MIPS R1)
-ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_MIPSR2)),y)
+ ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_MIPSR2)),y)
 	rm -f $(INSTALLDIR)/www/advanced-adblock-v1.asp
 	mv $(INSTALLDIR)/www/advanced-adblock-v2.asp $(INSTALLDIR)/www/advanced-adblock.asp || true
-else
+ else
 	rm -f $(INSTALLDIR)/www/advanced-adblock-v2.asp
 	mv $(INSTALLDIR)/www/advanced-adblock-v1.asp $(INSTALLDIR)/www/advanced-adblock.asp || true
+ endif
+else
+	rm -f $(INSTALLDIR)/www/advanced-adblock-v1.asp
+	rm -f $(INSTALLDIR)/www/advanced-adblock-v2.asp
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/ADBLOCK-BEGIN/,/ADBLOCK-END/d"
 endif
 
 # Only include the https option if it is compiled in
 ifneq ($(TCONFIG_HTTPS),y)
-	rm -f $(INSTALLDIR)/www/advanced-adblock.asp
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/HTTPS-BEGIN/,/HTTPS-END/d" -e "/OUI-BEGIN/,/OUI-END/d"
 	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/OUI-BEGIN/,/OUI-END/d"
 	sed -i $(INSTALLDIR)/www/tools-survey.asp -e "/OUI-BEGIN/,/OUI-END/d"
@@ -869,6 +875,7 @@ endif
 		-e "/TUXERAHFS-BEGIN/d"	-e "/TUXERAHFS-END/d" \
 		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d" \
 		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d" \
+		-e "/ADBLOCK-BEGIN/d"	-e "/ADBLOCK-END/d" \
 		-e "/OUI-BEGIN/d"	-e "/OUI-END/d" \
 		-e "/KEYGEN-BEGIN/d"	-e "/KEYGEN-END/d" \
 		-e "/TERMLIB-BEGIN/d"	-e "/TERMLIB-END/d" \

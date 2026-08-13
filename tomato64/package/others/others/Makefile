@@ -75,7 +75,7 @@ else
 endif
 
 # Adblock
-ifeq ($(TCONFIG_HTTPS),y)
+ifeq ($(TCONFIG_ADBLOCK),y)
 # Only include Adblock v2 if it is required (not for MIPS R1)
 ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_MIPSR2)),y)
 	install -m 0700 adblock-v2 $(INSTALLDIR)/usr/sbin/adblock

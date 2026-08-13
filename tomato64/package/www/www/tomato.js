@@ -2622,7 +2622,9 @@ function navi() {
 			['DHCP/DNS/TFTP',		'dhcpdns.asp'],
 			['Firewall',			'firewall.asp'],
 /* HTTPS-BEGIN */
+/* ADBLOCK-BEGIN */
 			['Adblock',			'adblock.asp'],
+/* ADBLOCK-END */
 /* HTTPS-END */
 			['MAC Addresses',		'mac.asp'],
 			['Miscellaneous',		'misc.asp'],

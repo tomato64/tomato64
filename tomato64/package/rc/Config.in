@@ -121,6 +121,11 @@ menuconfig BR2_PACKAGE_RC
 
 if BR2_PACKAGE_RC
 
+config BR2_PACKAGE_RC_ADBLOCK
+	bool "Enable Adblock"
+	depends on BR2_PACKAGE_RC_HTTPS
+	default y
+
 config BR2_PACKAGE_RC_BT
 	bool "Enable Bittorrent"
 	default y

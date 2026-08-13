@@ -1222,7 +1222,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "fw_nat_tuning",		"0"				, 0 },	/* tcp/udp buffers: 0 - small (default), 1 - medium, 2 - large */
 
 /* advanced-adblock */
-#ifdef TCONFIG_HTTPS
+#ifdef TCONFIG_ADBLOCK
 	{ "adblock_enable",		"0"				, 0 },
 #if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE_MORE)
 	{ "adblock_blacklist",		""				, 0 },
@@ -1234,7 +1234,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "adblock_logs",		"3"				, 0 },
 	{ "adblock_limit",		""				, 0 },
 	{ "adblock_path",		""				, 0 },
-#endif /* TCONFIG_HTTPS */
+#endif /* TCONFIG_ADBLOCK */
 
 /* advanced-mac */
 	{ "wan_mac",			""				, 0 },
