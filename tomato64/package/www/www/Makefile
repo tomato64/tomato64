@@ -528,7 +528,9 @@ endif
 # Only include the https option if it is compiled in
 ifneq ($(TCONFIG_HTTPS),y)
 	rm -f $(INSTALLDIR)/www/advanced-adblock.asp
-	sed -i $(INSTALLDIR)/www/tomato.js -e "/HTTPS-BEGIN/,/HTTPS-END/d"
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/HTTPS-BEGIN/,/HTTPS-END/d" -e "/OUI-BEGIN/,/OUI-END/d"
+	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/OUI-BEGIN/,/OUI-END/d"
+	sed -i $(INSTALLDIR)/www/tools-survey.asp -e "/OUI-BEGIN/,/OUI-END/d"
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
 # depends on USB and NAS pages - only if USB Support is configured in
  ifeq ($(TCONFIG_USB),y)
@@ -867,6 +869,7 @@ endif
 		-e "/TUXERAHFS-BEGIN/d"	-e "/TUXERAHFS-END/d" \
 		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d" \
 		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d" \
+		-e "/OUI-BEGIN/d"	-e "/OUI-END/d" \
 		-e "/KEYGEN-BEGIN/d"	-e "/KEYGEN-END/d" \
 		-e "/TERMLIB-BEGIN/d"	-e "/TERMLIB-END/d" \
 		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d" \

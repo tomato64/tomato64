@@ -397,8 +397,11 @@ dg.populate = function() {
 		e = list[i];
 
 		if ((e.mac.match(/^(..):(..):(..)/)) && e.proto != 'pppoe' && e.proto != 'pptp' && e.proto != 'l2tp') {
-			b = '<a href="javascript:searchOUI(\''+RegExp.$1+'-'+RegExp.$2+'-'+RegExp.$3+'\','+i+')" title="OUI Search">'+e.mac+'<\/a><div style="display:none" id="gW_'+i+'">&nbsp; <img src="spin.svg" alt="" style="vertical-align:middle"><\/div>'+
-			    '<br><small class="pics">'+
+			b = e.mac;
+/* OUI-BEGIN */
+			b = '<a href="javascript:searchOUI(\''+RegExp.$1+'-'+RegExp.$2+'-'+RegExp.$3+'\','+i+')" title="OUI Search">'+e.mac+'<\/a><div style="display:none" id="gW_'+i+'">&nbsp; <img src="spin.svg" alt="" style="vertical-align:middle"><\/div>';
+/* OUI-END */
+			b += '<br><small class="pics">'+
 			    '<a href="javascript:addStatic('+i+')" title="DHCP Reservation">[DR]<\/a> '+
 			    '<a href="javascript:addbwlimit('+i+')" title="BW Limiter">[BWL]<\/a> '+
 			    '<a href="javascript:addRestrict('+i+')" title="Access Restriction">[AR]<\/a>';

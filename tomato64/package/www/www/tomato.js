@@ -19,7 +19,9 @@ var countButton = 0;
 
 // -----------------------------------------------------------------------------
 
+/* OUI-BEGIN */
 var xoboui = null;
+/* OUI-END */
 
 Array.prototype.find = function(v) {
 	for (var i = 0; i < this.length; ++i)
@@ -3066,6 +3068,7 @@ function writeToggleSectionTitle(title, whichone, id) {
 	W('<div class="section-title"'+(id ? ' id="'+id+'"' : '')+'>'+title+' <small><i><a href="javascript:toggleVisibility(cprefix,\''+whichone+'\');" id="toggleLink-'+whichone+'"><span id="sesdiv_'+whichone+'_showhide">(Show)</span></a></i></small></div>');
 }
 
+/* OUI-BEGIN */
 function spinOUI(x, which) {
 	E(which).style.display = (x ? 'inline-block' : 'none');
 	if (!x) xoboui = null;
@@ -3107,6 +3110,7 @@ function displayOUI(i) {
 	alert(cmdresult);
 	cmdresult = '';
 }
+/* OUI-END */
 
 function wikiLink() {
 	const url = 'https://tomato64.org/wiki';
