@@ -95,33 +95,38 @@ function bclone(which) {
 }
 
 function checkUniqueMac() {
-	var uidx, u1, u2, a1, a2;
+	var uidx, uidx2, u1, u2, a1, a2;
+	var retValue = 1;
 
 	for (uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
-		for (uidx2 = uidx; uidx2 <= nvram.mwan_num; ++ uidx2 ) {
-			u1 = (uidx > 1) ? uidx : '';
-			a1 = E('_f_wan'+u+'_hwaddr');
+		u1 = (uidx > 1) ? uidx : '';
+		a1 = E('_f_wan'+u1+'_hwaddr');
+		for (uidx2 = uidx + 1; uidx2 <= nvram.mwan_num; ++uidx2) {
 			u2 = (uidx2 > 1) ? uidx2 : '';
-			a2 = E('_f_wan'+u+'_hwaddr');
+			a2 = E('_f_wan'+u2+'_hwaddr');
 			if (a1 && a2 && (a1.value == a2.value)) {
 				ferror.set(a1, 'Addresses must be unique', true);
 				ferror.set(a2, 'Addresses must be unique', true);
+				retValue = 0;
 			}
 		}
 	}
 
-	for (uidx = 0; uidx <= wl_ifaces.length; ++uidx) {
-		for (uidx2 = uidx; uidx2 <= wl_ifaces.length; ++ uidx2 ) {
-			if (uidx != uidx2) {
-				a1 = E('_f_wl'+uidx+'_hwaddr');
-				a2 = E('_f_wl'+uidx2+'_hwaddr');
-				if (a1 && a2 && (a1.value == a2.value)) {
-					ferror.set(a1, 'Addresses must be unique', true);
-					ferror.set(a2, 'Addresses must be unique', true);
-				}
+	for (uidx = 0; uidx < wl_ifaces.length; ++uidx) {
+		u1 = wl_fface(uidx);
+		a1 = E('_f_wl'+u1+'_hwaddr');
+		for (uidx2 = uidx + 1; uidx2 < wl_ifaces.length; ++uidx2) {
+			u2 = wl_fface(uidx2);
+			a2 = E('_f_wl'+u2+'_hwaddr');
+			if (a1 && a2 && (a1.value == a2.value)) {
+				ferror.set(a1, 'Addresses must be unique', true);
+				ferror.set(a2, 'Addresses must be unique', true);
+				retValue = 0;
 			}
 		}
 	}
+
+	return retValue;
 }
 
 function verifyFields(focused, quiet) {
@@ -138,9 +143,9 @@ function verifyFields(focused, quiet) {
 		u = wl_fface(uidx);
 		a = E('_f_wl'+u+'_hwaddr');
 		if (!v_mac(a, quiet)) retValue = 0;
-
-		checkUniqueMac();
 	}
+
+	if (!checkUniqueMac()) retValue = 0;
 
 	return retValue;
 }
