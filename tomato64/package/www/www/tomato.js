@@ -2656,6 +2656,12 @@ function navi() {
 			['View Details',		'detailed.asp'],
 			['Transfer Rates',		'ctrate.asp'],
 		]],
+/* QUOTAS-BEGIN */
+		['Quotas',			'quota', 0, [
+			['Settings',			'settings.asp'],
+			['Usage',			'usage.asp'],
+		]],
+/* QUOTAS-END */
 		['Misc',			'misc', 0, [
 			['Access Restriction',		'restrict.asp'],
 			['Bandwidth Limiter',		'bwlimit.asp'],

@@ -111,6 +111,12 @@ ifneq ($(findstring -DTTYD_PROXY,$(ALL_CPPFLAGS)),)
 OBJS += ttyd.o
 endif
 
+ifeq ($(TCONFIG_QUOTAS),y)
+ALL_CPPFLAGS += -DTCONFIG_QUOTAS
+ALL_LDFLAGS += -liptbwctl
+OBJS += quotas.o
+endif
+
 all: httpd
 
 httpd: $(OBJS)

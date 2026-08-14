@@ -11,6 +11,10 @@ HTTPD_INSTALL_STAGING = YES
 HTTPD_LICENSE = tomato
 HTTPD_DEPENDENCIES = libnvram libshared libmssl openssl
 
+ifeq ($(BR2_PACKAGE_GARGOYLE_QUOTAS),y)
+HTTPD_DEPENDENCIES += gargoyle-quotas
+endif
+
 define HTTPD_BUILD_CMDS
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)
 endef

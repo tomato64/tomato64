@@ -1895,6 +1895,15 @@ struct nvram_tuple router_defaults[] = {
 	{ "bwl_lan_udp",		"0"				, 0 },	/* unlimited */
 	{ "bwl_lan_prio",		"3"				, 0 },
 
+#ifdef TOMATO64
+/* bandwidth quotas (xt_bandwidth) */
+	{ "quota_enable",		"0"				, 0 },
+	{ "quota_rules",		""				, 0 },
+	{ "quota_nextid",		"1"				, 0 },
+	{ "quota_path",			""				, 0 },
+	{ "quota_stime",		"4"				, 0 },	/* save interval, hours */
+#endif /* TOMATO64 */
+
 #ifdef TCONFIG_NOCAT
 	{ "NC_enable",			"0"				, 0 },	/* enable NoCatSplash */
 	{ "NC_Verbosity",		"2"				, 0 },

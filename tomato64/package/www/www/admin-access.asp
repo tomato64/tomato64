@@ -44,6 +44,9 @@ function bridgeListenerNames() {
 }
 
 var xmenus = [['Status','status'],['Bandwidth','bwm'],['IP Traffic','ipt'],['Tools','tools'],['Basic','basic'],['Advanced','advanced'],['Port Forwarding','forward'],['QoS','qos'],['Misc','misc'],
+/* QUOTAS-BEGIN */
+              ['Quotas','quota'],
+/* QUOTAS-END */
 /* USB-BEGIN */
               ['USB and NAS','nas'],
 /* USB-END */

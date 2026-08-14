@@ -6,6 +6,10 @@ ifeq ($(BR2_PACKAGE_RC_ADBLOCK),y)
 export TCONFIG_ADBLOCK=y
 endif
 
+ifeq ($(BR2_PACKAGE_RC_QUOTAS),y)
+export TCONFIG_QUOTAS=y
+endif
+
 ifeq ($(BR2_PACKAGE_RC_BT),y)
 export TCONFIG_BT=y
 endif

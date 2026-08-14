@@ -868,6 +868,10 @@ static void mangle_table(void)
 		ipt_qos();
 		/* 1 for mangle */
 		ipt_bwlimit(1);
+#ifdef TOMATO64
+		/* after qos/bwlimit so an exceeded quota gets the last word */
+		ipt_quotas();
+#endif /* TOMATO64 */
 
 		p = nvram_safe_get("nf_ttl");
 		if (strncmp(p, "c:", 2) == 0) {
@@ -1969,6 +1973,15 @@ int start_firewall(void)
 
 	ipv6_enabled = ipv6_enabled();
 
+#ifdef TOMATO64
+	/*
+	 * Hand the quota counters to disk and drop the live bandwidth rules
+	 * before anything is generated - the ids they hold would otherwise make
+	 * iptables-restore reject the whole mangle table. See quotas.c.
+	 */
+	quotas_pre_restore();
+#endif /* TOMATO64 */
+
 	/* NAT performance tweaks
 	 * These values can be overriden later if needed via firewall script
 	 */
@@ -2322,6 +2335,11 @@ int start_firewall(void)
 
 	/* The following run_*_firewall_script() scripts handle their own locking */
 	simple_unlock("firewall");
+
+#ifdef TOMATO64
+	/* rules exist now, so saved quota usage can be pushed back into them */
+	start_quotas();
+#endif /* TOMATO64 */
 
 #ifdef TCONFIG_PPTPD
 	run_pptpd_firewall_script();

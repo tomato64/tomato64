@@ -215,6 +215,11 @@ extern void ctvbuf(FILE *f);
 extern void asp_iptmon(int argc, char **argv);
 extern void asp_iptraffic(int argc, char **argv);
 
+#ifdef TCONFIG_QUOTAS
+/* quotas.c */
+extern void asp_quotas(int argc, char **argv);
+#endif
+
 #ifdef TCONFIG_NOCAT
 /* nocat.c */
 extern void wi_uploadsplash(char *url, int len, char *boundary);

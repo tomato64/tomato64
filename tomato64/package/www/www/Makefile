@@ -237,6 +237,15 @@ else
  endif
 endif
 
+# Bandwidth quotas: the pages need the xt_bandwidth counters, which are only
+# reachable when the gargoyle-quotas package supplied libiptbwctl to httpd.
+ifneq ($(TCONFIG_QUOTAS),y)
+	rm -f $(INSTALLDIR)/www/quota-settings.asp
+	rm -f $(INSTALLDIR)/www/quota-usage.asp
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/QUOTAS-BEGIN/,/QUOTAS-END/d"
+	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/QUOTAS-BEGIN/,/QUOTAS-END/d"
+endif
+
 # only add php-fpm part for ARM routers
 ifneq ($(TCONFIG_BCMARM),y)
 	sed -i $(INSTALLDIR)/www/web-nginx.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"

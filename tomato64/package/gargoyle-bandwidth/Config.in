@@ -1,0 +1,19 @@
+config BR2_PACKAGE_GARGOYLE_BANDWIDTH
+	bool "gargoyle-bandwidth"
+	depends on BR2_LINUX_KERNEL
+	select BR2_PACKAGE_IPTABLES
+	help
+	  Gargoyle xt_bandwidth netfilter match.
+
+	  Builds the libxt_bandwidth.so iptables/ip6tables extension and
+	  enables CONFIG_NETFILTER_XT_BANDWIDTH, so the xt_bandwidth module
+	  (patched into the kernel by 0007-xt-bandwidth.patch) is built too.
+
+	  The match does efficient in-kernel per-id / per-IP byte accounting
+	  and is the foundation for Gargoyle-style bandwidth monitoring and
+	  quotas.
+
+	  Originally from Gargoyle router firmware (gargoyle-router.com).
+
+comment "gargoyle-bandwidth needs a Linux kernel to be built"
+	depends on !BR2_LINUX_KERNEL

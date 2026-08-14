@@ -361,6 +361,25 @@ config BR2_PACKAGE_RC_PROXY
 	select BR2_PACKAGE_UDPXY
 	select BR2_PACKAGE_IGMPPROXY
 
+config BR2_PACKAGE_RC_QUOTAS
+	bool "Enable Bandwidth Quotas"
+	default y
+	select BR2_PACKAGE_GARGOYLE_BANDWIDTH
+	select BR2_PACKAGE_GARGOYLE_TIMERANGE
+	select BR2_PACKAGE_GARGOYLE_QUOTAS
+	help
+	  Per-host and per-network bandwidth quotas (block or throttle when
+	  a data cap is exceeded), with the Bandwidth Quotas / Quota Usage
+	  web pages.
+
+	  Pulls in the three pieces the feature needs: gargoyle-bandwidth
+	  (the xt_bandwidth match that does the accounting), gargoyle-
+	  timerange (xt_timerange, for time-of-day windows) and gargoyle-
+	  quotas (libiptbwctl + quota_backup, the userspace counter plumbing).
+	  Sets TCONFIG_QUOTAS, which gates the quota code in rc, httpd and www.
+
+	  Originally from Gargoyle router firmware (gargoyle-router.com).
+
 config BR2_PACKAGE_RC_SNMP
 	bool "Enable SNMP"
 	default y

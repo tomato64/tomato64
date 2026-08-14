@@ -1,0 +1,19 @@
+config BR2_PACKAGE_GARGOYLE_TIMERANGE
+	bool "gargoyle-timerange"
+	depends on BR2_LINUX_KERNEL
+	select BR2_PACKAGE_IPTABLES
+	help
+	  Gargoyle xt_timerange netfilter match.
+
+	  Builds the libxt_timerange.so iptables/ip6tables extension and
+	  enables CONFIG_NETFILTER_XT_TIMERANGE, so the xt_timerange module
+	  (patched into the kernel by 0008-xt-timerange.patch) is built too.
+
+	  The match tests packets against hours-of-day, days-of-week and
+	  weekly time ranges; it is used by Gargoyle to make bandwidth quotas
+	  active only during chosen on-peak / off-peak windows.
+
+	  Originally from Gargoyle router firmware (gargoyle-router.com).
+
+comment "gargoyle-timerange needs a Linux kernel to be built"
+	depends on !BR2_LINUX_KERNEL

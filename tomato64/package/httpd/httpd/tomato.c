@@ -143,6 +143,10 @@ const aspapi_t aspapi[] = {
 	{ "iptraffic",			asp_iptraffic			},
 	{ "iptmon",			asp_iptmon			},
 
+#ifdef TCONFIG_QUOTAS
+	{ "quotas",			asp_quotas			},
+#endif
+
 #ifdef TOMATO64
 	{ "ndpi",			asp_ndpi			},
 	{ "wireless",			asp_wireless			},
@@ -1595,6 +1599,15 @@ static const nvset_t nvset_list[] = {
 	{ "bwl_lan_udp",		V_RANGE(0, 100)			},
 	{ "bwl_lan_prio",		V_RANGE(0, 5)			},
 
+#ifdef TOMATO64
+/* bandwidth quotas */
+	{ "quota_enable",		V_01				},
+	{ "quota_rules",		V_LENGTH(0, 8192)		},
+	{ "quota_nextid",		V_NUM				},
+	{ "quota_path",			V_LENGTH(0, 48)			},
+	{ "quota_stime",		V_RANGE(1, 24)			},
+#endif /* TOMATO64 */
+
 #ifdef TCONFIG_BT
 /* nas-transmission */
 	{ "bt_enable",			V_01				},
@@ -2153,7 +2166,7 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 
 	/*
 	 * execute script via shell
-	 * NOTE: do NOT change to execvp(argv) – UI depends on full shell semantics
+	 * NOTE: do NOT change to execvp(argv) ï¿½ UI depends on full shell semantics
 	 */
 	snprintf(cmd, sizeof(cmd), "%s 2>&1", webExecFile);
 	web_pipecmd(cmd, wof);

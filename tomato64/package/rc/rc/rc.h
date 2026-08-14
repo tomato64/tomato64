@@ -689,6 +689,17 @@ extern void ipt_bwlimit(int chain);
 extern void start_bwlimit(void);
 extern void stop_bwlimit(void);
 
+#ifdef TOMATO64
+/* quotas.c */
+extern void ipt_quotas(void);
+extern int quota_clock_valid(void);
+extern void quotas_pre_restore(void);
+extern void start_quotas(void);
+extern void stop_quotas(void);
+extern void start_quota_shaping(void);
+extern void stop_quota_shaping(void);
+#endif /* TOMATO64 */
+
 /* arpbind.c */
 extern void start_arpbind(void);
 extern void stop_arpbind(void);

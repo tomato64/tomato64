@@ -86,6 +86,7 @@ OBJS := rc.o init.o interface.o network.o wan.o services.o dhcp.o \
 	dnsmasq.o format.o
 
 OBJS += wifi.o
+OBJS += quotas.o
 
 # mtd.o buttons.o wnas.o bcmutils.o
 

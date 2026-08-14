@@ -2155,6 +2155,17 @@ int ntpd_synced_main(int argc, char *argv[])
 		stop_mdns();
 		start_mdns();
 #endif
+#ifdef TOMATO64
+		/*
+		 * Bandwidth quotas are time-based, so ipt_quotas() refuses to build
+		 * its rules until the clock is set. This is that moment - rebuild the
+		 * firewall so the quota rules come up with a correct reset boundary
+		 * and their saved usage is restored. Runs once per boot (became_ready
+		 * gates this whole block). No-op when quotas are disabled.
+		 */
+		if (nvram_get_int("quota_enable"))
+			restart_firewall();
+#endif /* TOMATO64 */
 	}
 
 	snprintf(message, sizeof(message), "Server: %s (%s)\n"
@@ -2671,6 +2682,15 @@ void stop_services(void)
 	clear_resolv();
 	stop_rstats();
 	stop_cstats();
+#ifdef TOMATO64
+	/*
+	 * Same reason rstats/cstats are stopped here: flush what has accumulated
+	 * since the last periodic save. Must happen while the bandwidth rules are
+	 * still loaded - the counters live in the kernel match, not in a file -
+	 * and before remove_storage_main() unmounts a USB quota_path.
+	 */
+	stop_quotas();
+#endif /* TOMATO64 */
 #ifdef TCONFIG_FANCTRL
 	stop_phy_tempsense();
 #endif
