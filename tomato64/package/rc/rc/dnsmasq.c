@@ -318,12 +318,18 @@ static void write_dhcp_ranges(FILE *f, int *do_dhcpd_hosts, int *do_dns_ptr, cha
 	do_dns = *do_dns_ptr;
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		snprintf(lanN_proto, sizeof(lanN_proto), (br == 0 ? "lan_proto" : "lan%d_proto"), br);
-		snprintf(lanN_ifname, sizeof(lanN_ifname), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
-		snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), (br == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), br);
-		snprintf(lanN_netmask, sizeof(lanN_netmask), (br == 0 ? "lan_netmask" : "lan%d_netmask"), br);
-		snprintf(dhcpdN_startip, sizeof(dhcpdN_startip), (br == 0 ? "dhcpd_startip" : "dhcpd%d_startip"), br);
-		snprintf(dhcpdN_endip, sizeof(dhcpdN_endip), (br == 0 ? "dhcpd_endip" : "dhcpd%d_endip"), br);
+		char bridge[2] = "0";
+		if (br != 0)
+			bridge[0] += br;
+		else
+			memset(bridge, 0, sizeof(bridge));
+
+		snprintf(lanN_proto, sizeof(lanN_proto), "lan%s_proto", bridge);
+		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
+		snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge);
+		snprintf(lanN_netmask, sizeof(lanN_netmask), "lan%s_netmask", bridge);
+		snprintf(dhcpdN_startip, sizeof(dhcpdN_startip), "dhcpd%s_startip", bridge);
+		snprintf(dhcpdN_endip, sizeof(dhcpdN_endip), "dhcpd%s_endip", bridge);
 
 		/* 0.0.0.0 marks a pure L2 bridge: do not bind DNS, DHCP or RA to it. */
 		if (!bridge_has_l3(br) || !*nvram_safe_get(lanN_ifname))
@@ -341,7 +347,7 @@ static void write_dhcp_ranges(FILE *f, int *do_dhcpd_hosts, int *do_dns_ptr, cha
 			fprintf(f, "interface=%s\n", nvram_safe_get(lanN_ifname));
 
 			/* DHCP lease time */
-			snprintf(dhcpN_lease, sizeof(dhcpN_lease), (br == 0 ? "dhcp_lease" : "dhcp%d_lease"), br);
+			snprintf(dhcpN_lease, sizeof(dhcpN_lease), "dhcp%s_lease", bridge);
 			dhcp_lease = nvram_get_int(dhcpN_lease);
 			if (dhcp_lease <= 0)
 				dhcp_lease = 1440;
@@ -935,7 +941,13 @@ static void start_dnsmasq_wet(void)
 	           4096);
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		snprintf(lanN_ifname, sizeof(lanN_ifname), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
+		char bridge[2] = "0";
+		if (br != 0)
+			bridge[0] += br;
+		else
+			memset(bridge, 0, sizeof(bridge));
+
+		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
 		nv = nvram_safe_get(lanN_ifname);
 
 		if (strncmp(nv, "br", 2) == 0) {

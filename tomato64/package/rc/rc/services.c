@@ -1430,10 +1430,14 @@ void start_upnp(void)
 	fprintf(f, "%s\n", nvram_safe_get("upnp_custom"));
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), (br == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), br);
-		snprintf(lanN_netmask, sizeof(lanN_netmask), (br == 0 ? "lan_netmask" : "lan%d_netmask"), br);
-		snprintf(lanN_ifname, sizeof(lanN_ifname), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
-		snprintf(upnp_lanN, sizeof(upnp_lanN), (br == 0 ? "upnp_lan" : "upnp_lan%d"), br);
+		char bridge[2];
+		bridge[0] = br ? '0' + br : '\0';
+		bridge[1] = '\0';
+
+		snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge);
+		snprintf(lanN_netmask, sizeof(lanN_netmask), "lan%s_netmask", bridge);
+		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
+		snprintf(upnp_lanN, sizeof(upnp_lanN), "upnp_lan%s", bridge);
 
 		lanip = nvram_safe_get(lanN_ipaddr);
 		lanmask = nvram_safe_get(lanN_netmask);
@@ -1864,8 +1868,12 @@ void start_igmp_proxy(void)
 			}
 
 			for (br = 0; br < BRIDGE_COUNT; br++) {
-				snprintf(lanN_ifname, sizeof(lanN_ifname), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
-				snprintf(multicast_lanN, sizeof(multicast_lanN), (br == 0 ? "multicast_lan" : "multicast_lan%d"), br);
+				char bridge[2];
+				bridge[0] = br ? '0' + br : '\0';
+				bridge[1] = '\0';
+
+				snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
+				snprintf(multicast_lanN, sizeof(multicast_lanN), "multicast_lan%s", bridge);
 
 				if ((strcmp(nvram_safe_get(multicast_lanN), "1") == 0) && (strcmp(nvram_safe_get(lanN_ifname), "") != 0)) {
 				/*

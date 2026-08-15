@@ -69,19 +69,23 @@ static void write_ovpn_cstats_rules(FILE *fp, const char *iface, const char *dir
 	char lanN_netmask[] = "lanXX_netmask";
 	char lanN[] = "lanXX";
 	char netaddrnetmask[] = "255.255.255.255/255.255.255.255";
+	char bridge[2];
 	char br;
 
 	if (!nvram_match("cstats_enable", "1"))
 		return;
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		snprintf(lanN_ifname, sizeof(lanN_ifname), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
+		bridge[0] = br ? '0' + br : '\0';
+		bridge[1] = '\0';
+
+		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
 		if (strcmp(nvram_safe_get(lanN_ifname), "") == 0)
 			continue;
 
-		snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), (br == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), br);
-		snprintf(lanN_netmask, sizeof(lanN_netmask), (br == 0 ? "lan_netmask" : "lan%d_netmask"), br);
-		snprintf(lanN, sizeof(lanN), (br == 0 ? "lan" : "lan%d"), br);
+		snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge);
+		snprintf(lanN_netmask, sizeof(lanN_netmask), "lan%s_netmask", bridge);
+		snprintf(lanN, sizeof(lanN), "lan%s", bridge);
 
 		if (!inet_aton(nvram_safe_get(lanN_ipaddr), &ipaddr))
 			continue;
