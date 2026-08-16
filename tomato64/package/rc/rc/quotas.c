@@ -51,6 +51,8 @@
 
 #include <arpa/inet.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <time.h>
 #include <dirent.h>
@@ -161,6 +163,27 @@
 #define QUOTA_ACT_BLOCK		0
 #define QUOTA_ACT_THROTTLE	1
 
+/*
+ * "active" field: when the quota is in force. See quota_active_args().
+ *
+ * An empty field - which is every record written before this existed - means
+ * always, and emits no match at all.
+ */
+#define QUOTA_ACTIVE_ONLY	"only"		/* meter only inside the window */
+#define QUOTA_ACTIVE_EXCEPT	"except"	/* meter everywhere but the window */
+
+#define QUOTA_DAY_SECS		86400L
+#define QUOTA_WEEK_SECS		(7L * QUOTA_DAY_SECS)
+
+/*
+ * Most ranges we will hand to libxt_timerange. Its struct holds a fixed
+ * ranges[51] and its own bound check is off by a mile ("range_index > 100"),
+ * so the ceiling has to be ours. Each range costs two entries plus a
+ * terminator, and one that wraps midnight is split into two on the way in,
+ * so 12 is comfortably inside 51 and far more windows than a GUI can want.
+ */
+#define QUOTA_RANGE_MAX		12
+
 /* per-rule throttle speeds for start_quota_shaping, written as ipt_quotas runs */
 #ifndef QUOTA_SHAPE_FILE
 #define QUOTA_SHAPE_FILE	QUOTA_IDS_DIR "/shaping"
@@ -176,7 +199,7 @@ enum {
 };
 
 /* has the wall clock been set this boot? see QUOTA_CLOCK_VALID_MIN */
-int quota_clock_valid(void)
+static int quota_clock_valid(void)
 {
 	return time(NULL) >= QUOTA_CLOCK_VALID_MIN;
 }
@@ -313,6 +336,429 @@ static void quota_reset_args(char *buf, size_t bufsz, const char *reset, const c
 	snprintf(buf, bufsz, " --reset_interval %s --reset_time %ld", reset, offset);
 }
 
+/*
+ * Every target Tomato64 builds for defines SYS_settimeofday, but a newer
+ * asm-generic ABI can carry only the time32 name. We always pass a NULL
+ * timeval, so the two differ in nothing that reaches us. Same shape as the
+ * fallback in Gargoyle's libnftbwctl.
+ */
+#ifndef SYS_settimeofday
+# ifdef __NR_settimeofday
+#  define SYS_settimeofday	__NR_settimeofday
+# elif defined(__NR_settimeofday_time32)
+#  define SYS_settimeofday	__NR_settimeofday_time32
+# endif
+#endif
+
+#ifndef SYS_gettimeofday
+# ifdef __NR_gettimeofday
+#  define SYS_gettimeofday	__NR_gettimeofday
+# elif defined(__NR_gettimeofday_time32)
+#  define SYS_gettimeofday	__NR_gettimeofday_time32
+# endif
+#endif
+
+/*
+ * Push the local timezone offset into the kernel's sys_tz.
+ *
+ * Both quota modules read local time as "UTC minus sys_tz.tz_minuteswest":
+ * xt_timerange to decide whether it is inside a rule's active window, and
+ * xt_bandwidth to place a counter's reset boundary. Nothing in a stock Linux
+ * userspace sets sys_tz, so it sits at zero and both of them compute UTC.
+ *
+ * Gargoyle handles this inside its iptables extensions, which call
+ * settimeofday(&tv, &tz) from their final_check() as a side effect of parsing a
+ * rule. That does not work here: musl's settimeofday() ignores its timezone
+ * argument outright - it forwards to clock_settime(CLOCK_REALTIME), which has no
+ * timezone concept, and never issues SYS_settimeofday. So the offset is computed
+ * and thrown away, and a quota with a window is evaluated hours off. Gargoyle
+ * ran into the same thing when they moved to nftables and reached for the raw
+ * syscall too (see set_kernel_timezone() in their libnftbwctl).
+ *
+ * Hence doing it here rather than patching the extension: the timezone is a
+ * property of the system, set once by whoever owns it, not something an iptables
+ * match should reach out and change while it parses arguments.
+ *
+ * Two calls, both with tv == NULL, which needs explaining:
+ *
+ *  - tv must be NULL. The syscall takes a struct __kernel_old_timeval, whose
+ *    tv_sec is a 32-bit long on a 32-bit target, while musl's struct timeval
+ *    carries a 64-bit time_t (musl 1.2 made time_t 64-bit everywhere). Handing
+ *    the kernel the wrong shape would have it read a garbage timestamp and set
+ *    the clock to it. struct timezone is two ints on every target, so passing
+ *    only that is safe. Note Gargoyle's nftables version reads a tv and then
+ *    passes NULL anyway, so its comment about the warp no longer describes it.
+ *
+ *  - but tv == NULL is exactly what arms the warp: on the first
+ *    timezone-carrying call the kernel decides the RTC must be keeping local
+ *    time and shifts the clock by the offset (timekeeping_warp_clock(), which
+ *    also latches persistent_clock_is_local). It only does that once, and only
+ *    when the offset it just stored is non-zero. So spend that one first call on
+ *    a zero offset, where the warp is a no-op, and set the real offset on the
+ *    second, by which point firsttime is already clear.
+ *
+ * The window between the two calls is a few microseconds in which sys_tz reads
+ * as UTC. The modules consult it per packet, so at worst one packet is judged
+ * against the wrong clock, once per timezone change.
+ *
+ * Setting it is the whole job - nothing has to be rebuilt afterwards. Both
+ * modules follow sys_tz on their own: xt_timerange reads it for every packet,
+ * and xt_bandwidth re-reads it inside its own match path (at most once a second)
+ * and walks every counter's previous_reset/next_reset across the delta when it
+ * moves. See check_for_timezone_shift() and shift_timezone_of_id() in
+ * board/common/linux-patches/0007-xt-bandwidth.patch. Gargoyle relies on exactly
+ * this and never restarts its firewall for a timezone change either.
+ */
+void quota_set_kernel_tz(void)
+{
+	struct timezone tz;
+	struct timezone cur;
+	time_t now;
+	struct tm gm, loc;
+	long west;
+
+	/*
+	 * The clock has to be real first. sysinit deliberately parks it at the epoch
+	 * (stime() with a zero time_t in init.c) and only NTP moves it, so the
+	 * set_tz() that runs during boot gets here with the clock reading January
+	 * 1970 - and localtime_r() then resolves the timezone's STANDARD offset,
+	 * because that is what the DST rules say about January. Committing that in
+	 * summer leaves every window and every reset boundary an hour early for the
+	 * life of the boot. So decline, and let the callers that run after sync
+	 * (ipt_quotas, the NTP hook, the periodic tick) put the real value in.
+	 */
+	if (!quota_clock_valid()) {
+		logmsg(LOG_DEBUG, "*** %s: clock not set yet, leaving kernel timezone alone", __FUNCTION__);
+		return;
+	}
+
+	time(&now);
+	if (gmtime_r(&now, &gm) == NULL || localtime_r(&now, &loc) == NULL)
+		return;
+
+	/*
+	 * Minutes west of Greenwich, from the difference between the two broken-down
+	 * times. They can land on different days, so fold that in off the day of the
+	 * year - and off the year itself for the one night where that wraps.
+	 */
+	west = ((long)gm.tm_hour * 60 + gm.tm_min) - ((long)loc.tm_hour * 60 + loc.tm_min);
+	if (gm.tm_yday != loc.tm_yday)
+		west += (gm.tm_year > loc.tm_year || (gm.tm_year == loc.tm_year && gm.tm_yday > loc.tm_yday)) ? 1440 : -1440;
+
+	/* the kernel's own bound; past this it just returns EINVAL */
+	if (west > 15 * 60 || west < -15 * 60) {
+		syslog(LOG_WARNING, "quotas: implausible timezone offset %ld minutes, leaving kernel timezone alone", west);
+		return;
+	}
+
+	/*
+	 * What the kernel is holding now. gettimeofday hands sys_tz back in its
+	 * second argument - the raw syscall again, since musl's wrapper drops that
+	 * one too - and NULL tv keeps the timeval ABI out of it, exactly as above.
+	 *
+	 * Worth the extra syscall: the tick runs this every hour, and reading first
+	 * turns the overwhelmingly common "nothing moved" case into no writes at all.
+	 */
+	memset(&cur, 0, sizeof(cur));
+	if (syscall(SYS_gettimeofday, NULL, &cur) == 0 && cur.tz_minuteswest == (int)west)
+		return;
+
+	/* burn the kernel's one-shot warp on a zero offset - see above */
+	memset(&tz, 0, sizeof(tz));
+	if (syscall(SYS_settimeofday, NULL, &tz) != 0) {
+		syslog(LOG_WARNING, "quotas: could not set kernel timezone (%m), quota windows and resets will use UTC");
+		return;
+	}
+
+	tz.tz_minuteswest = (int)west;
+	tz.tz_dsttime = 0;
+	if (syscall(SYS_settimeofday, NULL, &tz) != 0) {
+		syslog(LOG_WARNING, "quotas: could not set kernel timezone (%m), quota windows and resets will use UTC");
+		return;
+	}
+
+	/* rare - once at boot and twice a year - and the one line that explains a
+	   quota window suddenly behaving differently, so log it unconditionally */
+	syslog(LOG_INFO, "quotas: kernel timezone offset %d -> %ld minutes west", cur.tz_minuteswest, west);
+}
+
+static const char *quota_daynames[7] = { "sun", "mon", "tue", "wed", "thu", "fri", "sat" };
+
+/* index of a three-letter day prefix, -1 if it is not one */
+static int quota_day_index(const char *s)
+{
+	int i;
+
+	for (i = 0; i < 7; i++) {
+		if (!strncasecmp(s, quota_daynames[i], 3))
+			return i;
+	}
+
+	return -1;
+}
+
+/*
+ * One end of a time range: "HH", "HH:MM" or "HH:MM:SS", prefixed with a day
+ * ("Sun 22:00") when this is a weekly range. Returns seconds from the start of
+ * the day - or of the week - and -1 for anything that is not exactly that.
+ *
+ * Deliberately stricter than libxt_timerange's parse_time(), which runs the
+ * text through sscanf("%ld") and keeps whatever it gets. We only emit what we
+ * have already read ourselves, so a field that reaches iptables is one we know
+ * parses to the value we intended.
+ */
+static long quota_parse_clock(const char *s, int weekly)
+{
+	static const long mult[3] = { 3600L, 60L, 1L };
+	long secs = 0;
+	int i;
+
+	while (*s == ' ' || *s == '\t')
+		s++;
+
+	if (weekly) {
+		int day = quota_day_index(s);
+
+		if (day < 0)
+			return -1;
+
+		secs = day * QUOTA_DAY_SECS;
+		s += 3;
+		while (*s == ' ' || *s == '\t')
+			s++;
+	}
+
+	for (i = 0; i < 3; i++) {
+		char *end;
+		long part;
+
+		if (!isdigit((unsigned char)*s))
+			return -1;
+
+		part = strtol(s, &end, 10);
+		if ((end - s) > 2)		/* HH/MM/SS, never a bare second count */
+			return -1;
+
+		secs += part * mult[i];
+		s = end;
+		if (*s != ':')
+			break;
+		s++;
+	}
+
+	while (*s == ' ' || *s == '\t')
+		s++;
+	if (*s != '\0')
+		return -1;
+
+	return (secs <= (weekly ? QUOTA_WEEK_SECS : QUOTA_DAY_SECS)) ? secs : -1;
+}
+
+/*
+ * Validate a range list - "02:00-06:00,22:30-23:00", or for a weekly range
+ * "Fri 18:00-Sun 23:59" - against what libxt_timerange will actually accept.
+ *
+ * This is a hard requirement, not belt and braces. The extension is vendored
+ * from Gargoyle and trusts its input: parse_time_ranges() returns NULL when the
+ * pieces overlap or when they cover the whole day/week, and then walks that
+ * NULL itself two lines later; a piece without exactly two endpoints leaves
+ * malloc'd memory uninitialised and reads it back; and more ranges than its
+ * fixed array holds run off the end of the struct. All three are reachable from
+ * a config, all three land in iptables-restore, and iptables-restore dying
+ * takes the whole mangle table with it - not just the quota. So rc emits a
+ * timerange match only once it has proved the extension will survive it.
+ */
+static int quota_valid_ranges(const char *spec, int weekly)
+{
+	char buf[320];
+	long start[QUOTA_RANGE_MAX], end[QUOTA_RANGE_MAX];
+	long span = weekly ? QUOTA_WEEK_SECS : QUOTA_DAY_SECS;
+	long covered = 0;
+	char *g, *p, *dash;
+	int n = 0;
+	int i, j;
+
+	if (strlcpy(buf, spec, sizeof(buf)) >= sizeof(buf))
+		return 0;
+
+	g = buf;
+	while ((p = strsep(&g, ",")) != NULL) {
+		if (n >= QUOTA_RANGE_MAX)
+			return 0;
+
+		/* exactly one dash, so exactly two endpoints */
+		if ((dash = strchr(p, '-')) == NULL || strchr(dash + 1, '-') != NULL)
+			return 0;
+
+		*dash = '\0';
+		if ((start[n] = quota_parse_clock(p, weekly)) < 0)
+			return 0;
+		if ((end[n] = quota_parse_clock(dash + 1, weekly)) < 0)
+			return 0;
+		if (start[n] == end[n])		/* empty, or the whole span - neither is a window */
+			return 0;
+
+		n++;
+	}
+	if (n == 0)
+		return 0;
+
+	/*
+	 * libxt's own overlap test, reproduced so that the two agree exactly: a
+	 * range whose end is before its start wraps past midnight (or Sunday), so
+	 * it is compared with the span added on.
+	 */
+	for (i = 0; i < n; i++) {
+		long e1 = end[i] < start[i] ? end[i] + span : end[i];
+
+		covered += e1 - start[i];
+
+		for (j = 0; j < n; j++) {
+			long e2;
+
+			if (j == i)
+				continue;
+
+			e2 = end[j] < start[j] ? end[j] + span : end[j];
+			if (start[i] < e2 && e1 > start[j])
+				return 0;
+		}
+	}
+
+	/* covering everything is the NULL-return case, and just means "always" */
+	if (covered >= span)
+		return 0;
+
+	return 1;
+}
+
+/*
+ * Validate a weekday list, "Sun,Mon,Tue" or "all".
+ *
+ * Length matters as much as spelling: parse_weekdays() memcpy()s three bytes
+ * out of every token before it compares them, so a shorter token reads past the
+ * end of the string.
+ */
+static int quota_valid_weekdays(const char *spec)
+{
+	char buf[64];
+	char *g, *p;
+	int n = 0;
+
+	if (strlcpy(buf, spec, sizeof(buf)) >= sizeof(buf))
+		return 0;
+
+	g = buf;
+	while ((p = strsep(&g, ",")) != NULL) {
+		while (*p == ' ' || *p == '\t')
+			p++;
+
+		if (strlen(p) < 3)
+			return 0;
+		if (quota_day_index(p) < 0 && strncasecmp(p, "all", 3))
+			return 0;
+
+		n++;
+	}
+
+	return (n > 0);
+}
+
+/*
+ * "Quota is active" - the record's 8th field - into an iptables timerange match.
+ *
+ * Encoding is "<mode>|<hours>|<weekdays>|<weekly_ranges>":
+ *
+ *   mode      QUOTA_ACTIVE_ONLY to meter only inside the window,
+ *             QUOTA_ACTIVE_EXCEPT to meter everything outside it (the match is
+ *             negated). Empty, absent or unrecognised means always active and
+ *             no match is emitted - which is exactly what every record written
+ *             before this field existed decodes to.
+ *   hours     times of day, "02:00-06:00[,...]"
+ *   weekdays  "Sun,Mon,..." or "all"
+ *   weekly    ranges across a whole week, "Fri 18:00-Sun 23:59[,...]"
+ *
+ * weekly is exclusive with hours/weekdays - libxt_timerange rejects the
+ * combination outright (see the flags tests in its parse()) and would leave us
+ * with a rule that never loads - so weekly wins and the other two are dropped,
+ * which is also the only combination Gargoyle's own UI can produce.
+ *
+ * The match goes on the same rule as -m bandwidth, and ahead of it, so outside
+ * the active window traffic is neither counted nor enforced. That is the point
+ * of the feature (an off-peak window that does not eat the allowance) and it is
+ * what Gargoyle does. quota_emit() explains why the order is not optional.
+ *
+ * Anything that fails validation degrades to always-active with a syslog line,
+ * rather than being silently narrowed or dropping the quota altogether - the
+ * same choice the rule id makes a few hundred lines down.
+ */
+static void quota_active_args(char *buf, size_t bufsz, const char *active, const char *idstr)
+{
+	char spec[384];
+	char *g, *mode, *hours, *weekdays, *weekly;
+	const char *neg;
+	size_t n;
+
+	*buf = '\0';
+
+	if (active == NULL || *active == '\0')
+		return;
+
+	if (strlcpy(spec, active, sizeof(spec)) >= sizeof(spec)) {
+		syslog(LOG_WARNING, "quotas: rule %s: active window too long, treating as always", idstr);
+		return;
+	}
+
+	g = spec;
+	mode = strsep(&g, "|");
+	hours = strsep(&g, "|");
+	weekdays = strsep(&g, "|");
+	weekly = strsep(&g, "|");
+
+	if (hours == NULL)
+		hours = "";
+	if (weekdays == NULL)
+		weekdays = "";
+	if (weekly == NULL)
+		weekly = "";
+
+	if (!strcmp(mode, QUOTA_ACTIVE_EXCEPT))
+		neg = "! ";
+	else if (!strcmp(mode, QUOTA_ACTIVE_ONLY))
+		neg = "";
+	else
+		return;			/* always, or a mode this build does not know */
+
+	if (*weekly) {
+		if (!quota_valid_ranges(weekly, 1)) {
+			syslog(LOG_WARNING, "quotas: rule %s: bad weekly range \"%s\", treating as always", idstr, weekly);
+			return;
+		}
+		snprintf(buf, bufsz, " -m timerange %s--weekly_ranges \"%s\"", neg, weekly);
+
+		return;
+	}
+
+	/* a window with nothing in it is just "always", whichever way it is worded */
+	if (!*hours && !*weekdays)
+		return;
+
+	if (*hours && !quota_valid_ranges(hours, 0)) {
+		syslog(LOG_WARNING, "quotas: rule %s: bad hours \"%s\", treating as always", idstr, hours);
+		return;
+	}
+	if (*weekdays && !quota_valid_weekdays(weekdays)) {
+		syslog(LOG_WARNING, "quotas: rule %s: bad weekdays \"%s\", treating as always", idstr, weekdays);
+		return;
+	}
+
+	n = snprintf(buf, bufsz, " -m timerange %s", neg);
+	if (*hours && n < bufsz)
+		n += snprintf(buf + n, bufsz - n, "--hours \"%s\"", hours);
+	if (*weekdays && n < bufsz)
+		snprintf(buf + n, bufsz - n, "%s--weekdays \"%s\"", *hours ? " " : "", weekdays);
+}
+
 /* leading set bits of a host-order netmask = prefix length */
 static int quota_mask_bits(unsigned int mask)
 {
@@ -427,19 +873,34 @@ static void quota_lan_subnet(char *buf, size_t bufsz)
  * over_mark/over_mask is what to write when the rule is over its cap: the death
  * mark (block) or a throttle band (limit speed). ipt_quotas resolves it per cap
  * and direction; quota_emit just stamps it on.
+ *
+ * activeargs is the rule's timerange match, empty when the quota is always
+ * active. It rides on the same rule as the bandwidth match on purpose: outside
+ * the window nothing matches, so the traffic is neither metered nor enforced.
+ *
+ * It MUST come before -m bandwidth, which is why it is a separate argument
+ * rather than something the caller could append to resetargs. The bandwidth
+ * match is not a passive test - evaluating it adds skb->len to the counter as a
+ * side effect. iptables walks the matches left to right and stops at the first
+ * one that fails, so a timerange placed after the bandwidth match lets every
+ * packet be counted before the clock is consulted: the quota fills up outside
+ * its own window and only enforcement is suppressed. Ordered this way the clock
+ * is checked first and the counter is never touched. Gargoyle does the same.
  */
 static void quota_emit(const char *chain, const char *id, const char *type, const char *subnet,
-                       const char *limit, const char *resetargs, const char *skip_test,
-                       char **addrs, int naddrs, const char *dirs,
+                       const char *limit, const char *resetargs, const char *activeargs,
+                       const char *skip_test, char **addrs, int naddrs, const char *dirs,
                        const char *over_mark, const char *over_mask)
 {
 	char addr_test[128];
-	char match[512];
+	char match[1024];
 	const char *d;
 	int i;
 
-	snprintf(match, sizeof(match), " -m bandwidth --id \"%s\" --type %s%s --greater_than %s%s",
-	         id, type, subnet, limit, resetargs);
+	/* activeargs first - see the ordering note above; it already carries its
+	   own leading space, and is empty for an always-active quota */
+	snprintf(match, sizeof(match), "%s -m bandwidth --id \"%s\" --type %s%s --greater_than %s%s",
+	         activeargs, id, type, subnet, limit, resetargs);
 
 	if (naddrs == 0) {	/* whole-LAN or catch-all quota, no address test */
 		/*
@@ -506,6 +967,7 @@ void ipt_quotas(void)
 	char addr_test[128];
 	char idbuf[64];
 	char resetargs[128];
+	char activeargs[512];
 	char subnet[64];
 	char lansub[32];
 	char skip_test[64];
@@ -563,6 +1025,15 @@ void ipt_quotas(void)
 		syslog(LOG_INFO, "quotas: clock not set yet, deferring quota rules until time sync");
 		return;
 	}
+
+	/*
+	 * The clock is good, and the rules are about to be inserted. Make sure the
+	 * kernel timezone is right first: xt_bandwidth reads it in checkentry to fix
+	 * each counter's next reset, so getting it wrong here is baked in until the
+	 * next firewall restart. The boot-time set_tz() cannot do this because the
+	 * clock is still at the epoch then - see quota_set_kernel_tz().
+	 */
+	quota_set_kernel_tz();
 
 	/*
 	 * Quotas and the bandwidth limiter can run at the same time. Block-on-exceed
@@ -787,6 +1258,7 @@ void ipt_quotas(void)
 			}
 
 			quota_reset_args(resetargs, sizeof(resetargs), reset, rday, rhour);
+			quota_active_args(activeargs, sizeof(activeargs), active, idstr);
 
 			/* catch-all quotas only apply to hosts nothing else metered */
 			memset(skip_test, 0, sizeof(skip_test));
@@ -834,7 +1306,7 @@ void ipt_quotas(void)
 					fprintf(idf, "%s\n", idbuf);
 				quota_emit("quota_in", idbuf,
 				           shared ? "combined" : "individual_dst",
-				           "", dlimit, resetargs, skip_test, addrs, naddrs, "d",
+				           "", dlimit, resetargs, activeargs, skip_test, addrs, naddrs, "d",
 				           dmark, dmask);
 			}
 
@@ -849,7 +1321,7 @@ void ipt_quotas(void)
 					fprintf(idf, "%s\n", idbuf);
 				quota_emit("quota_out", idbuf,
 				           shared ? "combined" : "individual_src",
-				           "", ulimit, resetargs, skip_test, addrs, naddrs, "s",
+				           "", ulimit, resetargs, activeargs, skip_test, addrs, naddrs, "s",
 				           umark, umask);
 			}
 
@@ -875,7 +1347,7 @@ void ipt_quotas(void)
 				if (idf)
 					fprintf(idf, "%s\n", idbuf);
 				quota_emit("quota_comb", idbuf, ctype, csub,
-				           climit, resetargs, skip_test, addrs, naddrs, "sd",
+				           climit, resetargs, activeargs, skip_test, addrs, naddrs, "sd",
 				           cmark, cmask);
 			}
 
@@ -991,7 +1463,7 @@ static int quota_read_bands(struct quota_band *b, int max, int *has_dl, int *has
  * band reaches the shaping file its device is guaranteed free, and re-checking
  * here would only risk disagreeing with what the marks already committed to.
  */
-void start_quota_shaping(void)
+static void start_quota_shaping(void)
 {
 	struct quota_band bands[QUOTA_MARK_BAND_MAX + 1];
 	char brdev[BRIDGE_COUNT][IFNAMSIZ];
@@ -1110,7 +1582,7 @@ void start_quota_shaping(void)
 }
 
 /* tear down the penalty classes; safe if the script was never written */
-void stop_quota_shaping(void)
+static void stop_quota_shaping(void)
 {
 	if (f_exists(quota_shaping_script))
 		eval((char *)quota_shaping_script, "stop");
@@ -1279,8 +1751,9 @@ void start_quotas(void)
 	char sched[160];
 	int stime;
 
-	/* leave no cron job behind if quotas got turned off */
+	/* leave no cron job behind if quotas got turned off - both of them */
 	eval("cru", "d", "quota_backup");
+	eval("cru", "d", "quota_tz");
 
 	if (!nvram_get_int("quota_enable")) {
 		stop_quota_shaping();		/* clear any classes a prior config left */
@@ -1307,8 +1780,54 @@ void start_quotas(void)
 	if (stime < 1 || stime > 24)
 		stime = 4;
 
-	snprintf(sched, sizeof(sched), "0 */%d * * * /usr/sbin/quota_backup save %s", stime, dir);
+	/*
+	 * Two jobs, at deliberately different rates - see quota_tick_main().
+	 *
+	 * The snapshot writes to storage, so it stays on the interval the user chose.
+	 * The timezone check is two syscalls and has to be frequent to be any use:
+	 * DST transitions land on the hour, so :00 and :01 catch one within a minute.
+	 *
+	 * Gargoyle runs its equivalent seven times an hour. It needs that rate because
+	 * it has no clock-validity guard and recovers a bad boot-time offset only by
+	 * asking again; we decline until the clock is real, so hourly is enough.
+	 */
+	snprintf(sched, sizeof(sched), "0 */%d * * * /sbin/quota_tick save", stime);
 	eval("cru", "a", "quota_backup", sched);
+	eval("cru", "a", "quota_tz", "0,1 * * * * /sbin/quota_tick tz");
+}
+
+/*
+ * Periodic tick, from the two cron jobs start_quotas() installs.
+ *
+ * "tz" (hourly) re-derives the kernel timezone, so a DST transition is picked up
+ * on a router that has been up since before it. Nothing else recomputes sys_tz
+ * once the firewall is built: a box that came up in February would otherwise run
+ * an hour out from March to November. Setting it is all that is required - both
+ * modules track sys_tz themselves, see the note above quota_set_kernel_tz().
+ *
+ * "save" (every quota_stime hours) takes the usage snapshot, which is what this
+ * job has always been for. It refreshes the timezone too, since it is free next
+ * to writing the counters out.
+ *
+ * No argument means save, so a crontab left over from an older build - where
+ * this applet took none - keeps doing what it used to.
+ */
+int quota_tick_main(int argc, char *argv[])
+{
+	char dir[80];
+
+	if (!nvram_get_int("quota_enable"))
+		return 0;
+
+	quota_set_kernel_tz();
+
+	if (argc > 1 && !strcmp(argv[1], "tz"))
+		return 0;
+
+	quota_backup_dir(dir, sizeof(dir));
+	eval("/usr/sbin/quota_backup", "save", dir);
+
+	return 0;
 }
 
 /*
@@ -1326,6 +1845,7 @@ void stop_quotas(void)
 	char dir[80];
 
 	eval("cru", "d", "quota_backup");
+	eval("cru", "d", "quota_tz");
 	stop_quota_shaping();
 
 	/*
@@ -1352,5 +1872,7 @@ void ipt_quotas(void) { }
 void quotas_pre_restore(void) { }
 void start_quotas(void) { }
 void stop_quotas(void) { }
+void quota_set_kernel_tz(void) { }
+int quota_tick_main(int argc, char *argv[]) { return 0; }
 
 #endif /* TCONFIG_QUOTAS */

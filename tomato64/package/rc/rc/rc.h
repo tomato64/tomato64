@@ -690,14 +690,17 @@ extern void start_bwlimit(void);
 extern void stop_bwlimit(void);
 
 #ifdef TOMATO64
-/* quotas.c */
+/* quotas.c
+ * Every one of these has a no-op stub for builds without TCONFIG_QUOTAS, so the
+ * call sites stay unconditional - see the foot of quotas.c. Anything without a
+ * stub is static in quotas.c and belongs there; do not add a declaration here
+ * without adding the stub too, or a quotas-off build fails at link time. */
 extern void ipt_quotas(void);
-extern int quota_clock_valid(void);
 extern void quotas_pre_restore(void);
 extern void start_quotas(void);
 extern void stop_quotas(void);
-extern void start_quota_shaping(void);
-extern void stop_quota_shaping(void);
+extern void quota_set_kernel_tz(void);
+extern int quota_tick_main(int argc, char *argv[]);
 #endif /* TOMATO64 */
 
 /* arpbind.c */

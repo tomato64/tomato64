@@ -5,6 +5,12 @@
 	Bandwidth quotas. Ported from the quota feature of Gargoyle router
 	firmware (gargoyle-router.com).
 
+	Layout follows the WireGuard peers tab (vpn-wireguard.asp): the configured
+	quotas sit in a grid, and a vertical editor underneath adds to it or - when
+	you click a row - loads that row back for editing. A quota carries sixteen
+	controls, which no grid row has the width for, and this keeps them on one
+	page with one Save.
+
 	This file exists only in Tomato64 and has no upstream Tomato
 	counterpart, so it carries no TOMATO64 guards.
 -->
@@ -16,22 +22,15 @@
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <style>
-/* Column widths for the quota grid. Auto table layout, so these bias the
-   header and data cells; the editor inputs are sized (size=) to match. The
-   limit columns need little room, so give the spare width to Applies To. */
+/* Column widths for the quota list. Every cell is rendered text - editing
+   happens in the form below - so the columns only have to read well. */
 #quota-grid .co1 { width: 4%; text-align: center; }	/* On (star) */
-#quota-grid .co2 { width: 24%; }			/* Applies To */
-#quota-grid .co3,
-#quota-grid .co4,
-#quota-grid .co5 { width: 8%; }				/* Download / Upload / Combined */
-#quota-grid .co6 { width: 15%; }			/* Resets */
-#quota-grid .co7 { width: 12%; }			/* When Exceeded */
-#quota-grid .co8 { width: 13%; }			/* Description */
-/* the download/upload penalty-speed inputs stack vertically under the action
-   dropdown (block display puts each on its own line, keeping them out of the
-   Description column); refreshActionControls toggles display none/'' to hide
-   them for the Block action, and '' falls back to this block rule */
-#quota-grid .q-spd { display: block; white-space: nowrap; }
+#quota-grid .co2 { width: 22%; }			/* Applies To */
+#quota-grid .co3 { width: 18%; }			/* Limits */
+#quota-grid .co4 { width: 15%; }			/* Resets */
+#quota-grid .co5 { width: 15%; }			/* Active */
+#quota-grid .co6 { width: 12%; }			/* When Exceeded */
+#quota-grid .co7 { width: 14%; }			/* Description */
 </style>
 <script src="tomato.js?rel=<% version(); %>"></script>
 
@@ -73,10 +72,11 @@ for (var i = 1; i <= 31; ++i)
 	quota_monthday.push([i+'', i+'']);
 
 /*
- * The "on" dropdown is built with this superset (0-31) so it can hold any
- * stored day at editor-creation time - a weekly rule's value can be 0
- * (Sunday), a monthly rule's 1-31. refreshResetControls() then narrows and
- * relabels it to weekdays or days-of-month for the chosen reset interval.
+ * The "On" dropdown is built with this superset (0-31) so it can hold any
+ * stored day when a row is loaded for editing - a weekly rule's value can be 0
+ * (Sunday), a monthly rule's 1-31, and an hourly or daily rule keeps whatever
+ * it had even though rc ignores it. refreshEditor() then narrows and relabels
+ * it for the chosen reset interval.
  */
 var quota_dayopt = [];
 for (var i = 0; i <= 31; ++i)
@@ -93,13 +93,35 @@ var quota_action = [
 	['1','Limit Speed']
 ];
 
+/* when the quota is in force - the "mode" half of the active field */
+var quota_active = [
+	['always', 'Always'],
+	['only',   'Only during...'],
+	['except', 'At all times except...']
+];
+
+/* which controls describe the window */
+var quota_active_type = [
+	['hours',          'these hours'],
+	['days',           'these days'],
+	['days_and_hours', 'these days and hours'],
+	['weekly_range',   'these times of the week']
+];
+
 /* Limits are entered in the unit the user picks and stored as bytes, because
    that is what the xt_bandwidth match counts in. */
 var quota_unit = [['1048576','MB'],['1073741824','GB']];
 
+/* three-letter day names, the only spelling libxt_timerange's parse_weekdays
+   understands (it compares exactly three bytes, lowercased) */
+var QUOTA_DAYNAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+/* must match QUOTA_RANGE_MAX in rc/quotas.c */
+var QUOTA_RANGE_MAX = 12;
+
 function bytesToStr(v) {
 	if (v == '' || v == '0')
-		return 'Unlimited';
+		return '';
 	v = v * 1;
 	if (v >= 1073741824 && (v % 1073741824) == 0)
 		return (v / 1073741824) + ' GB';
@@ -111,11 +133,11 @@ function bytesToStr(v) {
 
 /* value + unit select -> bytes, '' when left blank (= unlimited) */
 function limitToBytes(vf, uf) {
-	var v = vf.value.trim();
+	var v = E(vf).value.trim();
 	if (v == '')
 		return '';
 
-	return '' + Math.round(v * (uf.value * 1));
+	return '' + Math.round(v * (E(uf).value * 1));
 }
 
 /* bytes -> [value, unit] for editing */
@@ -133,16 +155,20 @@ function bytesToLimit(v) {
  * Rule ids.
  *
  * A rule's saved usage is filed under an id it carries in its own record, not
- * under its position in the list - deleting, reordering or disabling a rule
- * must not hand its consumption to a neighbour, and rc prunes usage files by
- * id, so an id must never be reused. quota_nextid is the high-water mark; it
- * is submitted with the form so the allocation survives the save.
+ * under its position in the list - deleting, reordering or disabling a rule must
+ * not hand its consumption to a neighbour, and rc prunes usage files by id, so an
+ * id must never be reused. quota_nextid is the high-water mark; it is submitted
+ * with the rules that consumed it.
  *
- * A fresh id is issued in exactly two cases: a new rule, and a rule whose
- * address changed (it now meters someone else, so it starts from zero -
- * Gargoyle gets the same effect with an ignore_backup_at_next_restore flag).
- * Editing a limit, schedule, description or action keeps the id, and with it
- * the usage accumulated so far.
+ * A fresh id is issued in exactly two cases: a new rule, and a rule whose address
+ * changed (it now meters someone else, so it starts from zero). Editing a limit,
+ * schedule, window, description or action keeps the id, and with it the usage
+ * accumulated so far.
+ *
+ * Ids are backfilled onto every rule as the grid is populated. A record written
+ * before ids existed falls back in rc to its position in the list, so a
+ * backfilled id could otherwise collide with some other rule's position - and
+ * xt_bandwidth answers a duplicate --id by rejecting the whole mangle table.
  */
 var quota_nextid = (nvram.quota_nextid * 1) || 1;
 
@@ -150,12 +176,6 @@ function quotaNewId() {
 	return '' + (quota_nextid++);
 }
 
-/*
- * Keep the counter ahead of every id already in use. It should be there
- * already - both are written by the same save - but if the rules ever landed
- * without the counter, reissuing a live id would give two rules the same
- * --id, and xt_bandwidth answers that by rejecting the whole mangle table.
- */
 function quotaBumpId(id) {
 	var n = id * 1;
 
@@ -163,74 +183,366 @@ function quotaBumpId(id) {
 		quota_nextid = n + 1;
 }
 
-var qg = new TomatoGrid();
+/* ---------------------------------------------------------------- *
+ * Active window
+ *
+ * Stored in field 8 as "<mode>|<hours>|<weekdays>|<weekly_ranges>",
+ * empty for always. Read by quota_active_args() in rc/quotas.c.
+ * ---------------------------------------------------------------- */
 
-qg.setup = function() {
-	/*
-	 * The editor has 16 controls but a row only displays 8 values - a limit
-	 * and its unit belong in one cell, as do the scope and its host list, the
-	 * three reset controls, and the exceeded action with its two speed inputs.
-	 * TomatoGrid builds exactly one <td> per entry in this list and has no
-	 * colspan, so anything grouped for display has to be grouped here too with
-	 * "multi" (see qos-classify.asp) or the saved rows will not line up under
-	 * the header.
-	 *
-	 * fields.getAll() still returns the controls flattened in this order, so
-	 * the f[0]..f[15] indexes used below are unaffected by the grouping:
-	 *   0 enable  1 scope  2 hosts  3-4 dl+unit  5-6 ul+unit  7-8 comb+unit
-	 *   9 reset  10 day  11 hour  12 action  13 tdl  14 tul  15 description
-	 */
-	this.init('quota-grid', '', 40, [
-		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
-		{ multi: [
-			{ type: 'select', options: quota_scope },
-			{ type: 'text', maxlen: 128, attrib: 'size="30"', prefix: '<span class="q-hosts"><br>', suffix: '<\/span>' } ] },
-		{ multi: [
-			{ type: 'text', maxlen: 10, attrib: 'size="7"' },
-			{ type: 'select', options: quota_unit, prefix: '&nbsp;' } ] },
-		{ multi: [
-			{ type: 'text', maxlen: 10, attrib: 'size="7"' },
-			{ type: 'select', options: quota_unit, prefix: '&nbsp;' } ] },
-		{ multi: [
-			{ type: 'text', maxlen: 10, attrib: 'size="7"' },
-			{ type: 'select', options: quota_unit, prefix: '&nbsp;' } ] },
-		{ multi: [
-			{ type: 'select', options: quota_reset },
-			{ type: 'select', options: quota_dayopt, prefix: '<span class="q-on">&nbsp;on&nbsp;', suffix: '<\/span>' },
-			{ type: 'select', options: quota_hour, prefix: '<span class="q-at">&nbsp;at&nbsp;', suffix: '<\/span>' } ] },
-		{ multi: [
-			{ type: 'select', options: quota_action },
-			{ type: 'text', maxlen: 8, attrib: 'size="6"', prefix: '<span class="q-spd">&#x2193;&nbsp;', suffix: '<small> kbit\/s<\/small><\/span>' },
-			{ type: 'text', maxlen: 8, attrib: 'size="6"', prefix: '<span class="q-spd">&#x2191;&nbsp;', suffix: '<small> kbit\/s<\/small><\/span>' } ] },
-		{ type: 'text', maxlen: 31 }]);
+/*
+ * One end of a range: "HH", "HH:MM", "HH:MM:SS", prefixed with a day for a
+ * weekly range ("Sun 22:00"). Returns seconds from the start of the day (or of
+ * the week), -1 for anything else.
+ *
+ * A deliberate mirror of quota_parse_clock() in rc/quotas.c. rc validates
+ * independently and silently falls back to "always" on anything it rejects, so
+ * if the two ever disagree the user gets a quota that quietly ignores its
+ * window. Keep them in step.
+ */
+function quotaParseClock(s, weekly) {
+	var mult = [3600, 60, 1];
+	var secs = 0;
 
-	this.headerSet(['On','Applies To','Download','Upload','Combined',
-	                'Resets','When Exceeded','Description']);
+	s = s.replace(/^\s+/, '');
 
-	/* enabled<ip<dlimit<ulimit<climit<reset<rday<rhour<active<action<desc<tdl<tul<id
-	   - tdl/tul are absent on a record saved before speed limits, id on one saved
-	   before rule ids; backfill both so every row here is the current shape */
-	var rules = nvram.quota_rules.split('>');
-	for (var i = 0; i < rules.length; ++i) {
-		var t = rules[i].split('<');
-		if (t.length != 11 && t.length != 13 && t.length != 14)
-			continue;
+	if (weekly) {
+		var day = -1;
+		for (var i = 0; i < 7; ++i)
+			if (s.substr(0, 3).toLowerCase() == QUOTA_DAYNAMES[i].toLowerCase()) {
+				day = i;
+				break;
+			}
+		if (day < 0)
+			return -1;
 
-		while (t.length < 13)
-			t.push('');
-		if (t.length < 14)
-			t.push(quotaNewId());
-		else
-			quotaBumpId(t[13]);
-
-		this.insertData(-1, t);
+		secs = day * 86400;
+		s = s.substr(3).replace(/^\s+/, '');
 	}
-	this.showNewEditor();
-	this.resetNewEditor();
+
+	for (var i = 0; i < 3; ++i) {
+		var m = s.match(/^(\d{1,2})/);	/* HH/MM/SS, never a bare second count */
+		if (m == null)
+			return -1;
+
+		secs += (m[1] * 1) * mult[i];
+		s = s.substr(m[1].length);
+		if (s.charAt(0) != ':')
+			break;
+		s = s.substr(1);
+	}
+
+	s = s.replace(/\s+$/, '');
+	if (s != '')
+		return -1;
+
+	return (secs <= (weekly ? 604800 : 86400)) ? secs : -1;
 }
 
-/* grid row (14 stored fields) -> the 16 editor widgets; the id has no widget */
-qg.dataToFieldValues = function(row) {
+/*
+ * Validate a range list - "02:00-06:00,22:30-23:00", or weekly
+ * "Fri 18:00-Sun 23:00" - exactly as quota_valid_ranges() does in rc/quotas.c,
+ * which in turn mirrors what libxt_timerange will accept. Overlapping or
+ * whole-span lists are refused: they are meaningless as a window, and the
+ * extension used to crash on them.
+ */
+function quotaValidRanges(spec, weekly) {
+	var span = weekly ? 604800 : 86400;
+	var pieces = spec.split(',');
+	var start = [], end = [];
+	var covered = 0;
+	var i, j;
+
+	if (pieces.length > QUOTA_RANGE_MAX)
+		return 0;
+
+	for (i = 0; i < pieces.length; ++i) {
+		var d = pieces[i].indexOf('-');
+		/* exactly one dash, so exactly two endpoints */
+		if (d < 0 || pieces[i].indexOf('-', d + 1) >= 0)
+			return 0;
+
+		var a = quotaParseClock(pieces[i].substr(0, d), weekly);
+		var b = quotaParseClock(pieces[i].substr(d + 1), weekly);
+		if (a < 0 || b < 0 || a == b)
+			return 0;
+
+		start.push(a);
+		end.push(b);
+	}
+	if (start.length == 0)
+		return 0;
+
+	/* a range whose end precedes its start wraps past midnight (or Sunday) */
+	for (i = 0; i < start.length; ++i) {
+		var e1 = end[i] < start[i] ? end[i] + span : end[i];
+
+		covered += e1 - start[i];
+
+		for (j = 0; j < start.length; ++j) {
+			if (j == i)
+				continue;
+
+			var e2 = end[j] < start[j] ? end[j] + span : end[j];
+			if (start[i] < e2 && e1 > start[j])
+				return 0;
+		}
+	}
+
+	/* covering everything is not a window, it is "always" */
+	if (covered >= span)
+		return 0;
+
+	return 1;
+}
+
+/* the editor controls -> the stored active field */
+function fieldsToActive() {
+	var mode = E('_f_q_active').value;
+	if (mode == 'always')
+		return '';
+
+	var type = E('_f_q_atype').value;
+	var hours = '', days = '', weekly = '';
+
+	if (type == 'weekly_range')
+		weekly = E('_f_q_weekly').value.trim();
+	else {
+		if (type == 'hours' || type == 'days_and_hours')
+			hours = E('_f_q_hours').value.trim();
+		if (type == 'days' || type == 'days_and_hours') {
+			var a = [];
+			for (var i = 0; i < 7; ++i)
+				if (E('_f_q_day' + i).checked)
+					a.push(QUOTA_DAYNAMES[i]);
+			days = a.join(',');
+		}
+	}
+
+	return mode + '|' + hours + '|' + days + '|' + weekly;
+}
+
+/* the stored active field -> the editor controls */
+function activeToFields(active) {
+	var t = (active || '').split('|');
+	var mode = t[0] || '';
+	var hours = t[1] || '';
+	var days = t[2] || '';
+	var weekly = t[3] || '';
+
+	if (mode != 'only' && mode != 'except') {
+		mode = 'always';
+		hours = days = weekly = '';
+	}
+
+	/* which set of controls describes this window - the same mapping Gargoyle
+	   derives from which of its three fields are populated */
+	var type = 'hours';
+	if (weekly != '')
+		type = 'weekly_range';
+	else if (hours != '' && days != '')
+		type = 'days_and_hours';
+	else if (days != '')
+		type = 'days';
+
+	E('_f_q_active').value = mode;
+	E('_f_q_atype').value = type;
+	E('_f_q_hours').value = hours;
+	E('_f_q_weekly').value = weekly;
+
+	for (var i = 0; i < 7; ++i)
+		E('_f_q_day' + i).checked = 0;
+	if (days != '') {
+		var dl = days.split(',');
+		for (var i = 0; i < dl.length; ++i) {
+			var d = dl[i].trim().substr(0, 3).toLowerCase();
+			if (d == 'all') {
+				for (var j = 0; j < 7; ++j)
+					E('_f_q_day' + j).checked = 1;
+				break;
+			}
+			for (var j = 0; j < 7; ++j)
+				if (d == QUOTA_DAYNAMES[j].toLowerCase())
+					E('_f_q_day' + j).checked = 1;
+		}
+	}
+}
+
+/* a one-line summary of the window, for the grid's Active column */
+function activeToStr(a) {
+	var t = (a || '').split('|');
+	var mode = t[0] || '';
+
+	if (mode != 'only' && mode != 'except')
+		return 'Always';
+
+	var hours = t[1] || '';
+	var days = t[2] || '';
+	var weekly = t[3] || '';
+	var what = weekly;
+	if (what == '') {
+		what = days;
+		if (hours != '')
+			what = (what == '') ? hours : (what + ' ' + hours);
+	}
+	if (what == '')
+		return 'Always';
+
+	return (mode == 'only' ? 'Only ' : 'Except ') + '<small>' + escapeHTML(what) + '<\/small>';
+}
+
+/* ---------------------------------------------------------------- *
+ * The grid
+ * ---------------------------------------------------------------- */
+
+function QuotaGrid() { return this; }
+QuotaGrid.prototype = new TomatoGrid;
+
+var qg = new QuotaGrid();
+
+QuotaGrid.prototype.setup = function() {
+	/*
+	 * editorFields has to be non-null for TomatoGrid to treat rows as editable -
+	 * that is what gives each row its delete control and routes a click into
+	 * edit() below. The descriptors themselves are never rendered: showNewEditor()
+	 * is never called, so there is no inline editor row, and edit() is overridden
+	 * to load the form underneath instead. Same arrangement as the WireGuard
+	 * peers grid.
+	 *
+	 * "move" adds the up/down/move-to controls. Order is not cosmetic here: two
+	 * Limit Speed rules that both cover a host each write the throttle band with
+	 * the same full-byte mask, so the LAST one to match sets the speed. Blocking
+	 * is a single bit and so order-free, as is a block alongside a limit - the
+	 * bits are disjoint and the drop wins either way. Reordering is safe for the
+	 * counters: usage is filed under the rule's id, never its position.
+	 */
+	this.init('quota-grid', 'move', 500, [
+		{ type: 'text' }, { type: 'text' }, { type: 'text' }, { type: 'text' },
+		{ type: 'text' }, { type: 'text' }, { type: 'text' }
+	]);
+	this.headerSet(['On','Applies To','Limits','Resets','Active','When Exceeded','Description']);
+
+	if (nvram.quota_rules != '') {
+		var raw = nvram.quota_rules.split('>');
+		for (var i = 0; i < raw.length; ++i) {
+			var t = raw[i].split('<');
+			/* 11 fields predates the penalty speeds, 13 the rule id */
+			if (t.length != 11 && t.length != 13 && t.length != 14)
+				continue;
+
+			while (t.length < 13)
+				t.push('');
+			if (t.length < 14)
+				t.push(quotaNewId());
+			else
+				quotaBumpId(t[13]);
+
+			this.insertData(-1, t);
+		}
+	}
+}
+
+/*
+ * row is the full 14-field record. These are inserted as HTML (TomatoGrid's own
+ * dataToView escapes for you, an override has to do it itself), so anything the
+ * user typed has to be escaped on the way out. A star marks an enabled rule (as
+ * on forward-basic.asp) - clearer than a greyed-out checkbox.
+ */
+QuotaGrid.prototype.dataToView = function(row) {
+	var scope = row[1];
+	var who = scope;
+	if (scope.substr(0, QUOTA_SHARED_PREFIX.length) == QUOTA_SHARED_PREFIX)
+		who = 'Shared pool: ' + scope.substr(QUOTA_SHARED_PREFIX.length);
+	else
+		for (var i = 0; i < quota_scope.length; ++i) {
+			if (quota_scope[i][0] == scope) {
+				who = quota_scope[i][1];
+				break;
+			}
+		}
+
+	/* the three caps as one cell */
+	var lim = [];
+	if (bytesToStr(row[2]) != '')
+		lim.push('&#x2193;' + escapeHTML(bytesToStr(row[2])));
+	if (bytesToStr(row[3]) != '')
+		lim.push('&#x2191;' + escapeHTML(bytesToStr(row[3])));
+	if (bytesToStr(row[4]) != '')
+		lim.push('&#x21c5;' + escapeHTML(bytesToStr(row[4])));
+
+	/* friendly reset label, then only the parts that apply (see the editor:
+	   hourly has no day/hour, daily has an hour, weekly/monthly have both) */
+	var when = row[5];
+	for (var ri = 0; ri < quota_reset.length; ++ri)
+		if (quota_reset[ri][0] == row[5]) { when = quota_reset[ri][1]; break; }
+
+	if (row[5] == 'week')
+		when += ' (' + quota_weekday[(row[6] * 1) % 7][1] + ')';
+	else if (row[5] == 'month')
+		when += ' (day ' + row[6] + ')';
+	if (row[5] != 'hour')
+		when += ' @ ' + (row[7] < 10 ? '0' : '') + row[7] + ':00';
+
+	/* When Exceeded: Block, or Limit with the down/up penalty speeds */
+	var act = 'Block';
+	if (row[9] == '1') {
+		var dl = (row[11] || '') != '' ? '&#x2193;' + escapeHTML(row[11]) : '';
+		var ul = (row[12] || '') != '' ? '&#x2191;' + escapeHTML(row[12]) : '';
+		act = 'Limit <small>' + dl + (dl && ul ? ' ' : '') + ul + ' kbit\/s<\/small>';
+	}
+
+	return [(row[0] != '0' ? '&#x2b50' : ''),
+	        escapeHTML(who), lim.length ? lim.join(' ') : '<i>none<\/i>',
+	        when, activeToStr(row[8]), act, escapeHTML(row[10])];
+}
+
+/* clicking a row loads it into the editor below, rather than opening an
+   inline editor - see the note in setup() */
+/*
+ * The row currently loaded into the editor, held as the <tr> itself rather than
+ * as its position. Move Up/Down/Move-to reorder the element, and Delete can
+ * remove a row above it, so any index captured when editing began is stale by
+ * the time Save is pressed - it would write the quota into whichever rule had
+ * since slid into that slot.
+ */
+var editRow = null;
+
+QuotaGrid.prototype.edit = function(cell) {
+	var row = PR(cell);
+
+	dataToFields(row.getRowData());
+	editRow = row;
+
+	var b = E('quota-add-button');
+	b.value = 'Save Quota';
+	b.setAttribute('onclick', 'saveQuota()');
+	E('quota-editing').style.display = '';
+	E('_f_q_desc').focus();
+}
+
+QuotaGrid.prototype.rowDel = function(e) {
+	/* deleting the row being edited leaves the editor pointing at nothing */
+	if (e == editRow)
+		clearFields();
+
+	this.moving = null;
+	e.parentNode.removeChild(e);
+	this.recolor();
+	this.rpHide();
+}
+
+/* the delete control calls rpDel(), which in TomatoGrid does not route through
+   rowDel() - so send it there, or the editor is never told the row went away */
+QuotaGrid.prototype.rpDel = function(e) {
+	this.rowDel(PR(e));
+}
+
+/* ---------------------------------------------------------------- *
+ * The editor
+ * ---------------------------------------------------------------- */
+
+/* a 14-field record -> the editor controls */
+function dataToFields(row) {
 	var scope = row[1];
 	var hosts = '';
 	if (scope.substr(0, QUOTA_SHARED_PREFIX.length) == QUOTA_SHARED_PREFIX) {
@@ -246,121 +558,93 @@ qg.dataToFieldValues = function(row) {
 	var u = bytesToLimit(row[3]);
 	var c = bytesToLimit(row[4]);
 
-	/* tdl/tul (row[11], row[12]) are absent on a pre-throttle record */
-	return [row[0] == 1, scope, hosts,
-	        d[0], d[1], u[0], u[1], c[0], c[1],
-	        row[5], row[6] == '' ? '1' : row[6], row[7] == '' ? '0' : row[7],
-	        row[9], row[11] || '', row[12] || '', row[10]];
+	E('_f_q_on').checked = (row[0] != '0');
+	E('_f_q_desc').value = row[10];
+	E('_f_q_scope').value = scope;
+	E('_f_q_hosts').value = hosts;
+	E('_f_q_dl').value = d[0]; E('_f_q_dlu').value = d[1];
+	E('_f_q_ul').value = u[0]; E('_f_q_ulu').value = u[1];
+	E('_f_q_cl').value = c[0]; E('_f_q_clu').value = c[1];
+	E('_f_q_reset').value = row[5] == '' ? 'hour' : row[5];
+	E('_f_q_action').value = row[9] == '' ? '0' : row[9];
+	E('_f_q_tdl').value = row[11] || '';
+	E('_f_q_tul').value = row[12] || '';
+	activeToFields(row[8]);
+
+	/*
+	 * The day dropdown carries whichever list the reset interval calls for, so
+	 * narrow it first and only then hand it the stored value - otherwise a
+	 * weekday 0 would be rejected by the 1-31 list still in place.
+	 */
+	refreshEditor();
+	E('_f_q_rday').value = row[6] == '' ? '1' : row[6];
+	E('_f_q_rhour').value = row[7] == '' ? '0' : row[7];
+	refreshEditor();
+
+	/* the id travels with the row, invisibly - see the note above quotaNewId */
+	E('_f_q_id').value = row[13] || '';
+	E('_f_q_ip').value = row[1];
 }
 
-qg.fieldValuesToData = function(row) {
-	var f = fields.getAll(row);
-	var scope = f[1].value;
+/* the editor controls -> a 14-field record */
+function fieldsToData() {
+	var scope = E('_f_q_scope').value;
 	var ip;
 	if (scope == 'HOSTS')
-		ip = f[2].value.trim();
+		ip = E('_f_q_hosts').value.trim();
 	else if (scope == 'HOSTS_SHARED')
-		ip = QUOTA_SHARED_PREFIX + f[2].value.trim();
+		ip = QUOTA_SHARED_PREFIX + E('_f_q_hosts').value.trim();
 	else
 		ip = scope;
 
 	/* speeds only mean anything for the Limit action; store blank otherwise so
 	   flipping back to Block doesn't leave stale numbers behind */
-	var limit = (f[12].value == '1');
-	var tdl = limit ? f[13].value.trim() : '';
-	var tul = limit ? f[14].value.trim() : '';
+	var limit = (E('_f_q_action').value == '1');
+	var tdl = limit ? E('_f_q_tdl').value.trim() : '';
+	var tul = limit ? E('_f_q_tul').value.trim() : '';
 
-	/*
-	 * Keep the id when an existing rule is edited, unless its address changed -
-	 * then it meters someone else and has to start clean. Adding a rule gets a
-	 * brand new id.
-	 *
-	 * this.source is the row being edited; it is null when adding, but test the
-	 * editor we were handed as well. Two rules sharing an id is not a cosmetic
-	 * problem - xt_bandwidth refuses a duplicate --id and iptables-restore then
-	 * rejects the whole mangle table.
-	 */
-	var old = (row == this.editor && this.source && this.source.getRowData) ?
-	          this.source.getRowData() : null;
-	var id = (old && old[1] == ip && old[13]) ? old[13] : quotaNewId();
+	/* keep the id when an existing rule is edited, unless its address changed -
+	   then it meters someone else and has to start clean */
+	var oldid = E('_f_q_id').value;
+	var id = (oldid != '' && E('_f_q_ip').value == ip) ? oldid : quotaNewId();
 
-	/* field 8 (active) stays empty until the timerange match is wired up.
-	   Order: enabled<ip<dl<ul<comb<reset<rday<rhour<active<action<desc<tdl<tul<id */
-	return [f[0].checked ? '1' : '0', ip,
-	        limitToBytes(f[3], f[4]), limitToBytes(f[5], f[6]), limitToBytes(f[7], f[8]),
-	        f[9].value, f[10].value, f[11].value, '', f[12].value, f[15].value, tdl, tul, id];
+	return [E('_f_q_on').checked ? '1' : '0', ip,
+	        limitToBytes('_f_q_dl', '_f_q_dlu'),
+	        limitToBytes('_f_q_ul', '_f_q_ulu'),
+	        limitToBytes('_f_q_cl', '_f_q_clu'),
+	        E('_f_q_reset').value, E('_f_q_rday').value, E('_f_q_rhour').value,
+	        fieldsToActive(), E('_f_q_action').value, E('_f_q_desc').value,
+	        tdl, tul, id];
 }
 
-qg.dataToView = function(row) {
-	var scope = row[1];
-	var who = scope;
-	if (scope.substr(0, QUOTA_SHARED_PREFIX.length) == QUOTA_SHARED_PREFIX)
-		who = 'Shared pool: ' + scope.substr(QUOTA_SHARED_PREFIX.length);
-	else
-		for (var i = 0; i < quota_scope.length; ++i) {
-			if (quota_scope[i][0] == scope) {
-				who = quota_scope[i][1];
-				break;
-			}
-		}
+function clearFields() {
+	E('_f_q_on').checked = 1;	/* new rules default to enabled (as on forward-basic.asp) */
+	E('_f_q_desc').value = '';
+	E('_f_q_scope').value = QUOTA_ALL;
+	E('_f_q_hosts').value = '';
+	E('_f_q_dl').value = ''; E('_f_q_dlu').value = '1073741824';
+	E('_f_q_ul').value = ''; E('_f_q_ulu').value = '1073741824';
+	E('_f_q_cl').value = ''; E('_f_q_clu').value = '1073741824';
+	E('_f_q_reset').value = 'hour';	/* top option, and hides the day/hour dropdowns */
+	E('_f_q_rday').value = '1';
+	E('_f_q_rhour').value = '0';
+	E('_f_q_action').value = '0';	/* Block */
+	E('_f_q_tdl').value = '';
+	E('_f_q_tul').value = '';
+	activeToFields('');
+	E('_f_q_id').value = '';
+	E('_f_q_ip').value = '';
 
-	/* friendly reset label, then only the parts that apply (see the editor:
-	   hourly has no day/hour, daily has an hour, weekly/monthly have both) */
-	var when = row[5];
-	for (var ri = 0; ri < quota_reset.length; ++ri)
-		if (quota_reset[ri][0] == row[5]) { when = quota_reset[ri][1]; break; }
+	ferror.clearAll(fields.getAll(E('quota-editor')));
 
-	if (row[5] == 'week')
-		when += ' (' + quota_weekday[(row[6] * 1) % 7][1] + ')';
-	else if (row[5] == 'month')
-		when += ' (day ' + row[6] + ')';
-	if (row[5] != 'hour')
-		when += ' @ ' + (row[7] < 10 ? '0' : '') + row[7] + ':00';
+	editRow = null;
 
-	/*
-	 * One cell per header column - see the note on the field list above.
-	 * These are inserted as HTML (TomatoGrid's own dataToView escapes for
-	 * you, an override has to do it itself), so anything the user typed has
-	 * to be escaped on the way out. A star marks an enabled rule (as on
-	 * forward-basic.asp) - clearer than a greyed-out checkbox.
-	 */
-	/* When Exceeded: Block, or Limit with the down/up penalty speeds */
-	var act = 'Block';
-	if (row[9] == '1') {
-		var dl = (row[11] || '') != '' ? '&#x2193;' + escapeHTML(row[11]) : '';
-		var ul = (row[12] || '') != '' ? '&#x2191;' + escapeHTML(row[12]) : '';
-		act = 'Limit <small>' + dl + (dl && ul ? ' ' : '') + ul + ' kbit\/s<\/small>';
-	}
+	var b = E('quota-add-button');
+	b.value = 'Add Quota';
+	b.setAttribute('onclick', 'addQuota()');
+	E('quota-editing').style.display = 'none';
 
-	return [(row[0] != '0' ? '&#x2b50' : ''),
-	        escapeHTML(who), bytesToStr(row[2]), bytesToStr(row[3]), bytesToStr(row[4]),
-	        when, act, escapeHTML(row[10])];
-}
-
-qg.resetNewEditor = function() {
-	var f = fields.getAll(this.newEditor);
-	ferror.clearAll(f);
-
-	f[0].checked = 1;	/* new rules default to enabled (as on forward-basic.asp) */
-	f[1].value = QUOTA_ALL;
-	f[2].value = '';
-	f[3].value = ''; f[4].value = '1073741824';
-	f[5].value = ''; f[6].value = '1073741824';
-	f[7].value = ''; f[8].value = '1073741824';
-	f[9].value = 'hour';	/* top option, and hides the day/hour dropdowns for a cleaner default */
-	f[10].value = '1';
-	f[11].value = '0';
-	f[12].value = '0';	/* action: Block */
-	f[13].value = '';	/* download speed (kbit/s) */
-	f[14].value = '';	/* upload speed (kbit/s) */
-	f[15].value = '';	/* description */
-
-	this.onScopeChange();
-}
-
-/* true for the scopes that take a typed host/subnet list */
-function quotaScopeHasHosts(v) {
-	return (v == 'HOSTS' || v == 'HOSTS_SHARED');
+	refreshEditor();
 }
 
 /* rebuild a <select>'s options, keeping the given value if it still exists */
@@ -374,52 +658,56 @@ function quotaSetOpts(sel, opts, keep) {
 		sel.selectedIndex = 0;
 }
 
+function showRow(id, vis) {
+	PR(E(id)).style.display = vis ? 'table-row' : 'none';
+}
+
+/* true for the scopes that take a typed host/subnet list */
+function quotaScopeHasHosts(v) {
+	return (v == 'HOSTS' || v == 'HOSTS_SHARED');
+}
+
 /*
- * Show only the reset parts that matter for the chosen interval - matching
- * Gargoyle and what rc actually reads (see quota_reset_args):
+ * Show only the controls that mean anything for the current selections.
+ *
+ * Reset (matching Gargoyle and what quota_reset_args() actually reads):
  *   hour  - resets at the top of the hour; day and hour are ignored -> hide both
  *   day   - resets at the chosen hour             -> hide the day, keep the hour
  *   week  - day is a day of the week (0=Sunday)   -> show both, weekday names
  *   month - day is a day of the month (1-31)      -> show both, 1-31
  */
-function refreshResetControls(f) {
-	var rt = f[9].value;
+function refreshEditor() {
+	var rt = E('_f_q_reset').value;
 
 	if (rt == 'week')
-		quotaSetOpts(f[10], quota_weekday, (f[10].value * 1 <= 6) ? f[10].value : '0');
+		quotaSetOpts(E('_f_q_rday'), quota_weekday, (E('_f_q_rday').value * 1 <= 6) ? E('_f_q_rday').value : '0');
 	else if (rt == 'month')
-		quotaSetOpts(f[10], quota_monthday, (f[10].value * 1 >= 1) ? f[10].value : '1');
+		quotaSetOpts(E('_f_q_rday'), quota_monthday, (E('_f_q_rday').value * 1 >= 1) ? E('_f_q_rday').value : '1');
+	else
+		quotaSetOpts(E('_f_q_rday'), quota_dayopt, E('_f_q_rday').value);
 
-	f[10].parentNode.style.display = (rt == 'week' || rt == 'month') ? '' : 'none';
-	f[11].parentNode.style.display = (rt == 'hour') ? 'none' : '';
+	showRow('_f_q_hosts', quotaScopeHasHosts(E('_f_q_scope').value));
+	showRow('_f_q_rday', (rt == 'week' || rt == 'month'));
+	showRow('_f_q_rhour', (rt != 'hour'));
+
+	/* active window: the type selector and then only its own controls */
+	var timed = (E('_f_q_active').value != 'always');
+	var at = E('_f_q_atype').value;
+	showRow('_f_q_atype', timed);
+	showRow('_f_q_day0', timed && (at == 'days' || at == 'days_and_hours'));
+	showRow('_f_q_hours', timed && (at == 'hours' || at == 'days_and_hours'));
+	showRow('_f_q_weekly', timed && (at == 'weekly_range'));
+
+	/* the two penalty speeds only apply to the Limit action */
+	var limit = (E('_f_q_action').value == '1');
+	showRow('_f_q_tdl', limit);
+	showRow('_f_q_tul', limit);
 }
 
-/* the two penalty-speed inputs only apply to the Limit action */
-function refreshActionControls(f) {
-	var limit = (f[12].value == '1');
-	f[13].parentNode.style.display = limit ? '' : 'none';
-	f[14].parentNode.style.display = limit ? '' : 'none';
-}
-
-/* the IP list only makes sense for an explicit host quota */
-qg.onScopeChange = function() {
-	var rows = [this.newEditor];
-	if (this.editor)
-		rows.push(this.editor);
-
-	for (var r = 0; r < rows.length; ++r) {
-		if (!rows[r])
-			continue;
-		var f = fields.getAll(rows[r]);
-		if (f.length < 16)
-			continue;
-		/* the host/subnet box only applies to the two "these host(s)" scopes;
-		   hide it (with its line break) otherwise, like the reset controls */
-		f[2].parentNode.style.display = quotaScopeHasHosts(f[1].value) ? '' : 'none';
-		refreshResetControls(f);
-		refreshActionControls(f);
-	}
-}
+/* ---------------------------------------------------------------- *
+ * Host validation - a quota may name an IP, a range or a CIDR subnet
+ * on any LAN bridge.
+ * ---------------------------------------------------------------- */
 
 /*
  * Validate a host entry against EVERY configured LAN bridge, not just the
@@ -518,11 +806,15 @@ function v_quota_hostlist(e, quiet) {
 	return true;
 }
 
-qg.verifyFields = function(row, quiet) {
-	var f = fields.getAll(row);
+/*
+ * Validate the editor. Deliberately separate from verifyFields(), which every
+ * control calls on every keystroke: an empty editor is a perfectly normal state
+ * for this page, so it must not light up red until you actually try to add.
+ */
+function verifyQuotaFields(quiet) {
 	var ok = 1;
 
-	this.onScopeChange();
+	refreshEditor();
 
 	/*
 	 * The host scopes need an address list; a shared pool is where listing
@@ -531,67 +823,147 @@ qg.verifyFields = function(row, quiet) {
 	 * arrives from the WAN with the host's MAC nowhere in the packet, so only
 	 * uploads could ever match. Gargoyle is IP-only for the same reason.
 	 */
-	if (quotaScopeHasHosts(f[1].value)) {
-		if (f[2].value.trim() == '') {
-			ferror.set(f[2], 'You must specify an IP address, range or subnet', quiet);
+	if (quotaScopeHasHosts(E('_f_q_scope').value)) {
+		if (E('_f_q_hosts').value.trim() == '') {
+			ferror.set('_f_q_hosts', 'You must specify an IP address, range or subnet', quiet);
 			ok = 0;
 		}
-		else if (!v_quota_hostlist(f[2], quiet)) {
+		else if (!v_quota_hostlist('_f_q_hosts', quiet))
 			ok = 0;
-		}
 	}
 	else
-		ferror.clear(f[2]);
+		ferror.clear('_f_q_hosts');
 
 	/* at least one cap, otherwise the quota can never be exceeded */
-	var caps = [[f[3], f[4]], [f[5], f[6]], [f[7], f[8]]];
+	var caps = ['_f_q_dl', '_f_q_ul', '_f_q_cl'];
 	var any = 0;
 	for (var i = 0; i < caps.length; ++i) {
-		var v = caps[i][0].value.trim();
-		if (v == '') {
-			ferror.clear(caps[i][0]);
+		if (E(caps[i]).value.trim() == '') {
+			ferror.clear(caps[i]);
 			continue;
 		}
-		if (!v_range(caps[i][0], quiet, 1, 999999)) {
+		if (!v_range(caps[i], quiet, 1, 999999)) {
 			ok = 0;
 			continue;
 		}
 		any = 1;
 	}
 	if (ok && !any) {
-		ferror.set(f[3], 'Set at least one of the download, upload or combined limits', quiet);
+		ferror.set('_f_q_dl', 'Set at least one of the download, upload or combined limits', quiet);
 		ok = 0;
 	}
 
 	/*
 	 * Limit-speed rules need both a download and an upload penalty speed, the
 	 * way Gargoyle does: a combined cap can only throttle when both directions
-	 * are shapeable, and rc reads each direction's speed independently. Clear
-	 * the fields when Block is selected so a stale value can't block a save.
+	 * are shapeable, and rc reads each direction's speed independently.
 	 */
-	if (f[12].value == '1') {
-		if (!v_range(f[13], quiet, 1, 10000000))
+	if (E('_f_q_action').value == '1') {
+		if (!v_range('_f_q_tdl', quiet, 1, 10000000))
 			ok = 0;
-		if (!v_range(f[14], quiet, 1, 10000000))
+		if (!v_range('_f_q_tul', quiet, 1, 10000000))
 			ok = 0;
 	}
 	else {
-		ferror.clear(f[13]);
-		ferror.clear(f[14]);
+		ferror.clear('_f_q_tdl');
+		ferror.clear('_f_q_tul');
+	}
+
+	/*
+	 * The active window, checked the same way rc will check it. rc falls back to
+	 * "always" on anything it cannot read, without telling anyone but the syslog -
+	 * so catching it here is the difference between an error message and a quota
+	 * that quietly ignores its schedule.
+	 */
+	if (E('_f_q_active').value != 'always') {
+		var at = E('_f_q_atype').value;
+
+		if (at == 'weekly_range') {
+			if (!quotaValidRanges(E('_f_q_weekly').value.trim(), 1)) {
+				ferror.set('_f_q_weekly', 'Expected up to ' + QUOTA_RANGE_MAX + ' non-overlapping ranges, e.g. "Fri 18:00-Sun 23:00". A window covering the whole week is the same as Always.', quiet);
+				ok = 0;
+			}
+			else
+				ferror.clear('_f_q_weekly');
+		}
+		else {
+			if (at == 'hours' || at == 'days_and_hours') {
+				if (!quotaValidRanges(E('_f_q_hours').value.trim(), 0)) {
+					ferror.set('_f_q_hours', 'Expected up to ' + QUOTA_RANGE_MAX + ' non-overlapping ranges, e.g. "02:00-06:00,22:30-23:00". A window covering the whole day is the same as Always.', quiet);
+					ok = 0;
+				}
+				else
+					ferror.clear('_f_q_hours');
+			}
+			else
+				ferror.clear('_f_q_hours');
+
+			if (at == 'days' || at == 'days_and_hours') {
+				var nd = 0;
+				for (var i = 0; i < 7; ++i)
+					if (E('_f_q_day' + i).checked)
+						nd++;
+				if (nd == 0) {
+					ferror.set('_f_q_day0', 'Select at least one day', quiet);
+					ok = 0;
+				}
+				else
+					ferror.clear('_f_q_day0');
+			}
+			else
+				ferror.clear('_f_q_day0');
+		}
+	}
+	else {
+		ferror.clear('_f_q_hours');
+		ferror.clear('_f_q_weekly');
+		ferror.clear('_f_q_day0');
 	}
 
 	/* records are ">" separated and fields "<" separated - neither may appear */
-	if (!v_nodelim(f[15], quiet, 'Description', 1))
+	if (!v_nodelim('_f_q_desc', quiet, 'Description', 1))
 		ok = 0;
 
 	return ok;
 }
+
+function addQuota() {
+	if (!verifyQuotaFields(0))
+		return;
+
+	qg.insertData(-1, fieldsToData());
+	clearFields();
+}
+
+function saveQuota() {
+	if (editRow == null)		/* the row was deleted while it was being edited */
+		return;
+	if (!verifyQuotaFields(0))
+		return;
+
+	/* read the position now, from the element - it may have been moved since */
+	var row = editRow;
+	var at = row.rowIndex;
+	var data = fieldsToData();
+
+	/* replace in place so the list keeps its order; rowDel() clears the editor,
+	   which is why the record and position are captured first */
+	qg.rowDel(row);
+	qg.insertData(at, data);
+	clearFields();
+}
+
+/* ---------------------------------------------------------------- *
+ * Page
+ * ---------------------------------------------------------------- */
 
 function verifyFields(focused, quiet) {
 	var a = !E('_f_quota_enable').checked;
 
 	E('_quota_path').disabled = a;
 	E('_quota_stime').disabled = a;
+
+	refreshEditor();
 
 	/*
 	 * Quotas and the bandwidth limiter can now run together - block rules always
@@ -608,14 +980,14 @@ function verifyFields(focused, quiet) {
 }
 
 function save() {
-	if (qg.isEditing())
+	if (E('quota-add-button').value != 'Add Quota' &&
+	    !confirm('The quota in the editor has not been added to the list. Save anyway and discard it?'))
 		return;
 
 	var data = qg.getAllData();
 	var rules = '';
-	var i;
 
-	for (i = 0; i < data.length; ++i)
+	for (var i = 0; i < data.length; ++i)
 		rules += (i ? '>' : '') + data[i].join('<');
 
 	var fom = E('t_fom');
@@ -628,6 +1000,7 @@ function save() {
 
 function earlyInit() {
 	qg.setup();
+	clearFields();
 	verifyFields(null, 1);
 	insOvl();
 }
@@ -662,6 +1035,11 @@ function init() {
 <input type="hidden" name="quota_rules">
 <input type="hidden" name="quota_nextid">
 
+<!-- the edited row's id and address, so fieldsToData() can tell an edit that
+     keeps its usage from one that has been pointed at a different host -->
+<input type="hidden" id="_f_q_id" value="">
+<input type="hidden" id="_f_q_ip" value="">
+
 <!-- / / / -->
 
 <div class="section-title">Bandwidth Quotas</div>
@@ -677,8 +1055,75 @@ function init() {
 			  suffix: ' <small>hours<\/small>' }
 		]);
 	</script>
+</div>
 
+<!-- / / / -->
+
+<div class="section-title">Quotas</div>
+<div class="section">
 	<div class="tomato-grid" id="quota-grid"></div>
+	<div class="about"><small>Click a quota to load it into the editor below.</small></div>
+</div>
+
+<!-- / / / -->
+
+<div class="section-title">Quota Editor <small id="quota-editing" style="display:none"><i>(editing an existing quota)</i></small></div>
+<div class="section" id="quota-editor">
+	<script>
+		/* createFieldTable wires onchange/onclick to verifyFields(this, 1) on every
+		   control it builds, and verifyFields() calls refreshEditor(), so the
+		   show/hide cascade needs no per-field handlers. Values are all set by
+		   clearFields() from earlyInit(), so none are supplied here. */
+		createFieldTable('', [
+			{ title: 'Enabled', name: 'f_q_on', type: 'checkbox', value: 1 },
+			{ title: 'Description', name: 'f_q_desc', type: 'text', maxlen: 31, size: 40, value: '' },
+
+			{ title: 'Applies To', name: 'f_q_scope', type: 'select', options: quota_scope, value: QUOTA_ALL },
+				{ title: 'Host(s)', indent: 2, name: 'f_q_hosts', type: 'text', maxlen: 128, size: 48, value: '',
+				  suffix: ' <small>IP, range or subnet; separate several with commas<\/small>' },
+
+			{ title: 'Download Limit', multi: [
+				{ name: 'f_q_dl', type: 'text', maxlen: 10, size: 10, value: '' },
+				{ name: 'f_q_dlu', type: 'select', options: quota_unit, value: '1073741824', prefix: '&nbsp;',
+				  suffix: ' <small>leave blank for unlimited<\/small>' } ] },
+			{ title: 'Upload Limit', multi: [
+				{ name: 'f_q_ul', type: 'text', maxlen: 10, size: 10, value: '' },
+				{ name: 'f_q_ulu', type: 'select', options: quota_unit, value: '1073741824', prefix: '&nbsp;' } ] },
+			{ title: 'Combined Limit', multi: [
+				{ name: 'f_q_cl', type: 'text', maxlen: 10, size: 10, value: '' },
+				{ name: 'f_q_clu', type: 'select', options: quota_unit, value: '1073741824', prefix: '&nbsp;',
+				  suffix: ' <small>up and down metered together<\/small>' } ] },
+
+			{ title: 'Resets', name: 'f_q_reset', type: 'select', options: quota_reset, value: 'hour' },
+				{ title: 'On', indent: 2, name: 'f_q_rday', type: 'select', options: quota_dayopt, value: '1' },
+				{ title: 'At', indent: 2, name: 'f_q_rhour', type: 'select', options: quota_hour, value: '0' },
+
+			{ title: 'Quota is Active', name: 'f_q_active', type: 'select', options: quota_active, value: 'always' },
+				{ title: '', indent: 2, name: 'f_q_atype', type: 'select', options: quota_active_type, value: 'hours' },
+				{ title: 'Days', indent: 2, multi: [
+					{ name: 'f_q_day0', type: 'checkbox', suffix: ' Sun &nbsp; ', value: 0 },
+					{ name: 'f_q_day1', type: 'checkbox', suffix: ' Mon &nbsp; ', value: 0 },
+					{ name: 'f_q_day2', type: 'checkbox', suffix: ' Tue &nbsp; ', value: 0 },
+					{ name: 'f_q_day3', type: 'checkbox', suffix: ' Wed &nbsp; ', value: 0 },
+					{ name: 'f_q_day4', type: 'checkbox', suffix: ' Thu &nbsp; ', value: 0 },
+					{ name: 'f_q_day5', type: 'checkbox', suffix: ' Fri &nbsp; ', value: 0 },
+					{ name: 'f_q_day6', type: 'checkbox', suffix: ' Sat', value: 0 } ] },
+				{ title: 'Hours', indent: 2, name: 'f_q_hours', type: 'text', maxlen: 160, size: 48, value: '',
+				  suffix: ' <small>e.g. 02:00-06:00,22:30-23:00<\/small>' },
+				{ title: 'Times', indent: 2, name: 'f_q_weekly', type: 'text', maxlen: 160, size: 48, value: '',
+				  suffix: ' <small>e.g. Fri 18:00-Sun 23:00<\/small>' },
+
+			{ title: 'When Exceeded', name: 'f_q_action', type: 'select', options: quota_action, value: '0' },
+				{ title: 'Download Speed', indent: 2, name: 'f_q_tdl', type: 'text', maxlen: 8, size: 10, value: '',
+				  suffix: ' <small>kbit\/s<\/small>' },
+				{ title: 'Upload Speed', indent: 2, name: 'f_q_tul', type: 'text', maxlen: 8, size: 10, value: '',
+				  suffix: ' <small>kbit\/s<\/small>' }
+		]);
+	</script>
+	<div class="fields">
+		<input type="button" value="Add Quota" id="quota-add-button" onclick="addQuota()">
+		<input type="button" value="Clear" id="quota-clear-button" onclick="clearFields()">
+	</div>
 </div>
 
 <!-- / / / -->
@@ -686,6 +1131,8 @@ function init() {
 <div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
+		<li>Build a quota in the editor and press <b>Add Quota</b>. Click a row in the list to load it back for editing, then press <b>Save Quota</b>. Nothing reaches the router until you press <b>Save</b> at the foot of the page.</li>
+		<li>Hover a row for its controls: <b>move up</b>, <b>move down</b>, <b>move</b> (then click where it should go) and <b>delete</b>. Order matters only when two <b>Limit Speed</b> quotas cover the same traffic and both are over their cap - the one further down the list sets the speed. Blocking is unaffected by order, and a block always wins over a speed limit. Reordering never disturbs recorded usage, which is filed under the quota itself rather than its position.</li>
 		<li><b>Applies To</b> - listed in the same order as the drop-down:
 			<ul>
 				<li><b>Entire Local Network</b> - one shared counter for all LAN traffic.</li>
@@ -695,9 +1142,11 @@ function init() {
 				<li><b>All Hosts without a Quota (shared)</b> - as above, but they share a single counter between them.</li>
 			</ul>
 		</li>
-		<li>Limits are per reset period. Leave a limit blank for unlimited.</li>
+		<li>Limits are per reset period (&#x2193; download, &#x2191; upload, &#x21c5; combined). Leave a limit blank for unlimited, but set at least one.</li>
 		<li>Usage is kept in kernel memory. Set <b>Save Usage To</b> to a path on JFFS or USB storage for it to survive a reboot.</li>
+		<li><b>Quota is Active</b> - restrict when the quota counts and enforces. Traffic outside the window is neither metered nor blocked, so an off-peak window is a free allowance rather than a second quota. Ranges may cross midnight (22:00-02:00) and must not overlap.</li>
 		<li><b>When Exceeded</b> - <b>Block Internet Access</b> drops the traffic, or <b>Limit Speed</b> caps it to the download (&#x2193;) and upload (&#x2191;) speeds you set, in kbit/s. Speed limiting needs the queue it shapes on to be free: downloads need the Bandwidth Limiter off, uploads (and combined limits) need both the Limiter and QoS off - otherwise that direction falls back to blocking.</li>
+		<li>Changing a quota's address starts its usage from zero, since it now meters a different host. Every other edit keeps the usage accumulated so far.</li>
 	</ul>
 </div>
 

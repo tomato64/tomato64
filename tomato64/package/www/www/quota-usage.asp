@@ -54,7 +54,10 @@ var rules = [];
 		var r = {
 			enabled: t[0], ip: t[1],
 			limit: { d: t[2], u: t[3], c: t[4] },
-			reset: t[5], desc: t[10],
+			/* rday/rhour qualify the reset interval, active is the time window;
+			   all three sit inside the original 11 fields, so even the oldest
+			   record carries them */
+			reset: t[5], rday: t[6], rhour: t[7], active: t[8], desc: t[10],
 			/* tdl/tul (t[11], t[12]) are absent on a pre-throttle record, the
 			   id (t[13]) on one saved before rule ids existed - such a record
 			   has no counters to look up until quota-settings.asp backfills it */
@@ -109,14 +112,96 @@ function pct(used, limit) {
 	return Math.min(100, Math.round((used / limit) * 100));
 }
 
+/*
+ * The bar and its percentage live in separate cells of a fixed-layout table, so
+ * they line up down the page instead of starting wherever the host and byte
+ * count happened to end. The bar fills its cell rather than carrying its own
+ * width, which is what keeps every rule's bars the same length.
+ */
 function bar(p) {
 	if (p < 0)
-		return '<small>no limit<\/small>';
+		return '';
 
 	var cls = (p >= 100) ? 'q-over' : ((p >= 80) ? 'q-warn' : 'q-ok');
 
-	return '<div class="q-bar"><div class="q-fill ' + cls + '" style="width:' + p + '%"><\/div><\/div>' +
-	       '<small>' + p + '%<\/small>';
+	return '<div class="q-bar"><div class="q-fill ' + cls + '" style="width:' + p + '%"><\/div><\/div>';
+}
+
+function pctText(p) {
+	return (p < 0) ? '<small>no limit<\/small>' : (p + '%');
+}
+
+var quota_dow = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function hourLabel(h) {
+	h = h * 1;
+	if (isNaN(h) || h < 0 || h > 23)
+		h = 0;
+
+	return (h < 10 ? '0' : '') + h + ':00';
+}
+
+/*
+ * When the counter rolls over, spelling out only the parts rc actually reads -
+ * see quota_reset_args(): hourly ignores both the day and the hour, daily uses
+ * the hour, weekly and monthly use both. The clamping matches it too, so a
+ * hand-edited record reads the way it will behave.
+ *
+ * Returns the value only; the "Resets" label is a column of its own.
+ */
+function resetLabel(r) {
+	var d;
+
+	switch (r.reset) {
+	case 'hour':
+		return 'hourly';
+	case 'day':
+		return 'daily at ' + hourLabel(r.rhour);
+	case 'week':
+		d = r.rday * 1;
+		if (isNaN(d) || d < 0 || d > 6)
+			d = 0;
+
+		return 'weekly on ' + quota_dow[d] + ' at ' + hourLabel(r.rhour);
+	case 'month':
+		d = r.rday * 1;
+		if (isNaN(d) || d < 1 || d > 31)
+			d = 1;
+
+		return 'monthly on day ' + d + ' at ' + hourLabel(r.rhour);
+	}
+
+	return 'every ' + r.reset;
+}
+
+/*
+ * The active window - field 8, "<mode>|<hours>|<weekdays>|<weekly_ranges>". Empty
+ * means always, which is the normal case and gets no row of its own; a window
+ * very much does, since it is the reason a counter can sit still while traffic
+ * flows. See quota_active_args() in rc/quotas.c.
+ *
+ * Returns the value only; the "Active" label is a column of its own.
+ */
+function activeLabel(a) {
+	var t = (a || '').split('|');
+	var mode = t[0] || '';
+
+	if (mode != 'only' && mode != 'except')
+		return '';
+
+	var hours = t[1] || '';
+	var days = t[2] || '';
+	var weekly = t[3] || '';
+	var what = weekly;
+	if (what == '') {
+		what = days;
+		if (hours != '')
+			what = (what == '') ? hours : (what + ' ' + hours);
+	}
+	if (what == '')
+		return '';
+
+	return (mode == 'only' ? 'only ' : 'except ') + what;
 }
 
 function render() {
@@ -144,19 +229,51 @@ function render() {
 
 		shown++;
 
-		/* how the rule behaves once over quota: block, or limit to its speeds */
-		var overtxt = '(resets every ' + escapeHTML(r.reset) + ')';
+		/* the title carries the identity only - everything else is a fact row
+		   inside the table below, so it lines up instead of trailing a
+		   description whose length varies from rule to rule */
+		buf.push('<div class="section-title">' +
+		         (r.desc != '' ? escapeHTML(r.desc) + ' &mdash; ' : '') +
+		         escapeHTML(scopeLabel(r.ip)) + '<\/div>');
+		buf.push('<div class="section">');
+
+		/*
+		 * One fixed-layout table per rule, so the fact rows, the cap headings
+		 * and every host row share the same columns - and because the widths
+		 * are fixed rather than content-driven, they line up from rule to rule
+		 * as well.
+		 */
+		buf.push('<table class="q-table">' +
+		         '<col class="q-c-host"><col class="q-c-used"><col class="q-c-bar"><col class="q-c-pct">');
+
+		/*
+		 * The facts that decide when the counters move and what happens when
+		 * they run out. Each is only shown when it says something: an always-on
+		 * quota has no window to report, and the over-quota speeds only exist
+		 * for the Limit action.
+		 *
+		 * The name takes the first two columns and the value the last two, so
+		 * every value starts exactly where the Reset button and the bars below
+		 * it do. A long value simply runs past the end of the table rather than
+		 * wrapping inside its cell (see .q-fval) - nothing sits to the right of
+		 * the table, so there is nothing for it to collide with.
+		 */
+		var facts = [['Resets', escapeHTML(resetLabel(r))]];
+		var act = activeLabel(r.active);
+		if (act != '')
+			facts.push(['Active', escapeHTML(act)]);
 		if (r.action == '1') {
 			var dl = r.tdl != '' ? '↓' + escapeHTML(r.tdl) : '';
 			var ul = r.tul != '' ? '↑' + escapeHTML(r.tul) : '';
-			overtxt += ' — over quota: limit ' + dl + (dl && ul ? '/' : '') + ul + ' kbit/s';
+			facts.push(['Over quota', 'limit ' + dl + (dl && ul ? '/' : '') + ul + ' kbit/s']);
 		}
+		else
+			facts.push(['Over quota', 'block']);
 
-		buf.push('<div class="section-title">' +
-		         (r.desc != '' ? escapeHTML(r.desc) + ' &mdash; ' : '') +
-		         escapeHTML(scopeLabel(r.ip)) +
-		         ' <small>' + overtxt + '<\/small><\/div>');
-		buf.push('<div class="section">');
+		for (k = 0; k < facts.length; ++k)
+			buf.push('<tr class="q-fact">' +
+			         '<td class="q-fname" colspan="2">' + facts[k][0] + '<\/td>' +
+			         '<td class="q-fval" colspan="2">' + facts[k][1] + '<\/td><\/tr>');
 
 		for (k = 0; k < caps.length; ++k) {
 			var cap = caps[k];
@@ -167,28 +284,37 @@ function render() {
 			var id = 'quota_' + r.id + '_' + cap;
 			var entries = byId[id] || [];
 
-			buf.push('<div class="q-cap"><b>' + cap_name[cap] + '<\/b> ' +
-			         '<small>limit ' + qsize(limit) + '<\/small> ' +
+			/*
+			 * The cap heading uses the grid too: the name and its limit share
+			 * the first two columns, and the Reset button sits in the bar
+			 * column so it lands directly above the bars it clears. Spanning
+			 * two columns rather than one keeps "limit 512.00 MB" from
+			 * overflowing a fixed 7em cell.
+			 */
+			buf.push('<tr class="q-caprow">' +
+			         '<td colspan="2"><b>' + cap_name[cap] + '<\/b> ' +
+			         '<small>limit ' + qsize(limit) + '<\/small><\/td>' +
+			         '<td class="q-barcell">' +
 			         '<input type="button" value="Reset" onclick="resetOne(\'' + id + '\')">' +
-			         '<\/div>');
+			         '<\/td><td><\/td><\/tr>');
 
 			if (entries.length == 0) {
-				buf.push('<div class="q-row"><i>no usage recorded yet<\/i><\/div>');
+				buf.push('<tr><td colspan="4" class="q-none"><i>no usage recorded yet<\/i><\/td><\/tr>');
 				continue;
 			}
 
 			/* biggest consumer first */
 			entries.sort(function(a, b) { return b[1] - a[1]; });
 
-			buf.push('<table class="q-table">');
 			for (j = 0; j < entries.length; ++j) {
 				var p = pct(entries[j][1], limit);
 				buf.push('<tr><td class="q-ip">' + escapeHTML(entries[j][0]) + '<\/td>' +
 				         '<td class="q-used">' + qsize(entries[j][1]) + '<\/td>' +
-				         '<td class="q-pct">' + bar(p) + '<\/td><\/tr>');
+				         '<td class="q-barcell">' + bar(p) + '<\/td>' +
+				         '<td class="q-pct">' + pctText(p) + '<\/td><\/tr>');
 			}
-			buf.push('<\/table>');
 		}
+		buf.push('<\/table>');
 		buf.push('<\/div>');
 	}
 
@@ -255,17 +381,37 @@ function init() {
 </script>
 
 <style>
-.q-bar { display:inline-block; width:120px; height:10px; border:1px solid #888; vertical-align:middle; margin-right:6px; }
+/*
+ * Fixed layout with explicit column widths. Auto layout sized each table to its
+ * own contents, so the bar started at a different offset for every cap and every
+ * rule; pinning the widths is what makes the bars share a column down the page.
+ * Widths are in em so they track the theme's font rather than fighting it.
+ */
+.q-table { border-collapse:collapse; table-layout:fixed; width:36em; margin:0 0 10px 12px; }
+.q-table col.q-c-host { width:13em; }
+.q-table col.q-c-used { width:7em; }
+.q-table col.q-c-bar { width:11em; }
+.q-table col.q-c-pct { width:5em; }
+.q-table td { padding:1px 8px 1px 0; }
+/* the per-rule facts: name over the host+used columns, value over the bar+pct
+   ones, so every value starts where the Reset button and the bars start */
+.q-fact td { padding:0 8px 0 0; }
+.q-fname { color:#888; }
+/* let a long value run past the table rather than wrap inside a fixed cell -
+   "limit down/up kbit/s" is wider than the two columns it sits over */
+.q-fval { white-space:nowrap; }
+/* the cap heading spans the row, and carries the gap between one cap and the next */
+.q-caprow td { padding:8px 0 2px 0; }
+.q-ip { font-family:monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.q-used { text-align:right; }
+.q-pct { text-align:right; }
+.q-none { padding-left:12px; }
+/* fills its cell, so every bar is the same length whatever sits beside it */
+.q-bar { display:block; width:100%; height:10px; border:1px solid #888; box-sizing:border-box; }
 .q-fill { height:100%; }
 .q-ok { background:#4c9a4c; }
 .q-warn { background:#c8a000; }
 .q-over { background:#b03030; }
-.q-cap { margin:6px 0 2px 0; }
-.q-table { border-collapse:collapse; margin:2px 0 8px 12px; }
-.q-table td { padding:1px 10px 1px 0; }
-.q-ip { font-family:monospace; }
-.q-used { text-align:right; }
-.q-row { margin:2px 0 8px 12px; }
 </style>
 </head>
 

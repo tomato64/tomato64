@@ -906,6 +906,9 @@ static const applets_t applets[] = {
 #endif
 	{ "ntpd_synced",		ntpd_synced_main		},
 	{ "ntpd_restart",		ntpd_restart_main		},
+#ifdef TOMATO64
+	{ "quota_tick",			quota_tick_main			},
+#endif /* TOMATO64 */
 #ifdef TCONFIG_ROAM
 	{ "roamast",			roam_assistant_main		},
 #endif

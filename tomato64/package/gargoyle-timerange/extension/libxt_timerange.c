@@ -93,8 +93,15 @@ static int parse(	int c,
 				int range_index = 0;
 				for(range_index = 0; parsed[range_index] != -1; range_index++)
 				{
-					if(range_index > 100)
+					/* Tomato64 local fix (differs from upstream Gargoyle):
+					 * bound against the array that is actually being written.
+					 * info->ranges holds RANGE_LENGTH entries; upstream tested
+					 * for 100, so anything past 50 ran off the end of struct
+					 * xt_timerange_info. One slot is kept for the terminator
+					 * stored right after the loop. */
+					if(range_index >= RANGE_LENGTH - 1)
 					{
+						free(parsed);
 						return 0;
 					}
 					info->ranges[range_index] = parsed[range_index];
@@ -133,12 +140,15 @@ static int parse(	int c,
 				int range_index = 0;
 				for(range_index = 0; parsed[range_index] != -1; range_index++)
 				{
-					if(range_index > 100)
+					/* Tomato64 local fix (differs from upstream Gargoyle):
+					 * see the identical bound in the HOURS case above. */
+					if(range_index >= RANGE_LENGTH - 1)
 					{
+						free(parsed);
 						return 0;
 					}
 					info->ranges[range_index] = parsed[range_index];
-				
+
 				}
 				info->ranges[range_index] = -1;
 				free(parsed);
@@ -301,7 +311,10 @@ long* parse_weekdays(char* wd_str)
 	{
 		char day[4];
 		trim_flanking_whitespace(days[day_index]);
-		memcpy(day, days[day_index], 3);
+		/* Tomato64 local fix (differs from upstream Gargoyle): copy at most
+		 * what is there. An unconditional three-byte memcpy reads past the end
+		 * of any shorter token - "Su", or an empty one. */
+		snprintf(day, sizeof(day), "%s", days[day_index]);
 		free(days[day_index]);
 		day[3] = '\0';
 		to_lowercase(day);
@@ -364,8 +377,22 @@ long* parse_time_ranges(char* time_ranges, unsigned char is_weekly_range)
 	for(num_pieces = 0; pieces[num_pieces] != NULL; num_pieces++) {};
 	long *parsed = (long*)malloc( (1+(num_pieces*2)) * sizeof(long));
 
+	/* Tomato64 local fix (differs from upstream Gargoyle): give up on a failed
+	 * allocation rather than writing through the null pointer below. */
+	if(parsed == NULL)
+	{
+		int free_index;
+		for(free_index = 0; pieces[free_index] != NULL; free_index++) { free(pieces[free_index]); }
+		free(pieces);
+		return NULL;
+	}
 
-	
+	/* Tomato64 local fix (differs from upstream Gargoyle): set when a piece is
+	 * not exactly "start-end". Upstream left that piece's two slots in the
+	 * malloc'd - so uninitialised - array untouched and read them back as
+	 * timestamps further down. */
+	unsigned char malformed_piece = 0;
+
 	int piece_index = 0;
 	for(piece_index = 0; pieces[piece_index] != NULL; piece_index++)
 	{
@@ -382,13 +409,25 @@ long* parse_time_ranges(char* time_ranges, unsigned char is_weekly_range)
 
 			free( times[1] );
 		}
+		else
+		{
+			parsed[ piece_index*2 ] = 0;
+			parsed[ (piece_index*2)+1 ] = 0;
+			malformed_piece = 1;
+		}
 		if( time_count > 0) { free(times[0]); }
 
 		free(times);
 		free(pieces[piece_index]);
 	}
 	free(pieces);
-	parsed[ (num_pieces*2) ] = -1; // terminated with -1 
+	parsed[ (num_pieces*2) ] = -1; // terminated with -1
+
+	if(malformed_piece)
+	{
+		free(parsed);
+		return NULL;
+	}
 
 
 	// make sure there is no overlap -- this will invalidate ranges 
@@ -441,21 +480,30 @@ long* parse_time_ranges(char* time_ranges, unsigned char is_weekly_range)
 	}
 	else
 	{
-		// de-allocate parsed, set to NULL 
+		// de-allocate parsed, set to NULL
 		free(parsed);
-		parsed = NULL;
+		/* Tomato64 local fix (differs from upstream Gargoyle): return here.
+		 * Upstream nulled parsed and carried straight on, so the very next
+		 * statement (merge_adjacent_time_ranges) dereferenced it and the
+		 * process died. Every caller already tests the result for NULL, which
+		 * is what makes returning it the correct answer for "these ranges
+		 * overlap". */
+		return NULL;
 	}
 
-	// merge time ranges where end of first = start of second 
+	// merge time ranges where end of first = start of second
 	merge_adjacent_time_ranges(parsed, is_weekly_range);
 
 
-	// if always active, free & return NULL 
+	// if always active, free & return NULL
 	int max_multiple = is_weekly_range ? 7 : 1;
 	if(parsed[0] == 0 && parsed[1] == max_multiple*24*60*60)
 	{
 		free(parsed);
-		parsed = NULL;
+		/* Tomato64 local fix (differs from upstream Gargoyle): actually return,
+		 * as the comment above always intended. Upstream fell through to the
+		 * loop below and walked the pointer it had just nulled. */
+		return NULL;
 	}
 
 
@@ -463,9 +511,28 @@ long* parse_time_ranges(char* time_ranges, unsigned char is_weekly_range)
 	int num_range_indices=0;
 	for(num_range_indices=0; parsed[num_range_indices] != -1; num_range_indices++){}
 
+	/* Tomato64 local fix (differs from upstream Gargoyle): an empty list holds
+	 * no ranges, so there is no last element to compare against. Upstream went
+	 * straight on to read parsed[-1]. Reachable with an empty or all-separator
+	 * argument, e.g. --hours "" or --hours ",". */
+	if(num_range_indices == 0)
+	{
+		free(parsed);
+		return NULL;
+	}
+
 	long* adjusted_range = (long*)malloc((3+num_range_indices)*sizeof(long));
 	int ar_index = 0;
 	int old_index = 0;
+
+	/* Tomato64 local fix (differs from upstream Gargoyle): as above, do not
+	 * write through a failed allocation. */
+	if(adjusted_range == NULL)
+	{
+		free(parsed);
+		return NULL;
+	}
+
 	if(parsed[num_range_indices-1] < parsed[0])
 	{
 		adjusted_range[0] = 0;
@@ -495,9 +562,16 @@ long* parse_time_ranges(char* time_ranges, unsigned char is_weekly_range)
 void merge_adjacent_time_ranges(long* time_ranges, unsigned char is_weekly_range)
 {
 	int range_length = 0;
+
+	/* Tomato64 local fix (differs from upstream Gargoyle): the sole caller no
+	 * longer passes NULL here, but it used to, and this function is exported.
+	 * Cheaper to be safe than to rely on that staying true. */
+	if(time_ranges == NULL) { return; }
+
 	while(time_ranges[range_length] != -1){ range_length++; }
 	int* merged_indices = (int*)malloc((range_length+1)*sizeof(int));
-	
+	if(merged_indices == NULL) { return; }
+
 	int merged_index=0;
 	int next_index;
 	for(next_index=0; time_ranges[next_index] != -1; next_index++)

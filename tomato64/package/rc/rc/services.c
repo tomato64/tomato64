@@ -1988,6 +1988,7 @@ void set_tz(void)
 	f_write_string("/etc/TZ", nvram_safe_get("tm_tz"), (FW_CREATE | FW_NEWLINE), 0644);
 #ifdef TOMATO64
 	tzset();
+	quota_set_kernel_tz();
 #endif /* TOMATO64 */
 }
 
@@ -2164,15 +2165,11 @@ int ntpd_synced_main(int argc, char *argv[])
 		start_mdns();
 #endif
 #ifdef TOMATO64
-		/*
-		 * Bandwidth quotas are time-based, so ipt_quotas() refuses to build
-		 * its rules until the clock is set. This is that moment - rebuild the
-		 * firewall so the quota rules come up with a correct reset boundary
-		 * and their saved usage is restored. Runs once per boot (became_ready
-		 * gates this whole block). No-op when quotas are disabled.
-		 */
-		if (nvram_get_int("quota_enable"))
+		/* We can track quotas now that the time has been set */
+		if (nvram_get_int("quota_enable")) {
+			quota_set_kernel_tz();
 			restart_firewall();
+		}
 #endif /* TOMATO64 */
 	}
 

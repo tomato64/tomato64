@@ -224,6 +224,10 @@ endif
 
 	@cd $(INSTALLDIR)/sbin && ln -sf rc ntpd_synced
 
+ifeq ($(TCONFIG_QUOTAS),y)
+	@cd $(INSTALLDIR)/sbin && ln -sf rc quota_tick
+endif
+
 ifeq ($(TCONFIG_BCMARM),y)
 	@cd $(INSTALLDIR)/sbin && ln -sf rc mtd-write2
 	@cd $(INSTALLDIR)/sbin && ln -sf rc mtd-erase2
