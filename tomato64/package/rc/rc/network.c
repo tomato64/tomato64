@@ -402,11 +402,9 @@ static int wlconf(char *ifname, int unit, int subunit)
 #ifdef TCONFIG_BCMARM
 	/* set phytype */
 	if ((subunit == -1) && !wl_ioctl(ifname, WLC_GET_PHYTYPE, &phytype, sizeof(phytype))) {
-		snprintf(wl, sizeof(wl), "wl%d_", unit);
 		snprintf(buf, sizeof(buf), "%s", WLCONF_PHYTYPE2STR(phytype));
-		nvram_set(strlcat_r(wl, "phytype", tmp, sizeof(tmp)), buf);
-		logmsg(LOG_DEBUG, "*** %s: wlconf: %s = %s", __FUNCTION__, tmp, buf);
-		memset(wl, 0, sizeof(wl)); /* reset */
+		nvram_set(wl_nvname("phytype", unit, 0), buf);
+		logmsg(LOG_DEBUG, "*** %s: wlconf: wl%d_phytype = %s", __FUNCTION__, unit, buf);
 	}
 #endif
 	
@@ -869,7 +867,6 @@ void restart_wl(void)
 
 	char tmp[32];
 	char br;
-	char prefix[16] = {0};
 
 #if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
 	int wlan_cnt = 0;
@@ -924,8 +921,7 @@ void restart_wl(void)
 					else if (wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit)))
 						continue;
 
-					snprintf(prefix, sizeof(prefix), "wl%d_", unit);
-					if (nvram_match(strlcat_r(prefix, "radio", tmp, sizeof(tmp)), "0")) {
+					if (nvram_match(wl_nvname("radio", unit, 0), "0")) {
 						eval("wlconf", ifname, "down");
 					}
 					else {
@@ -1342,7 +1338,6 @@ int wl_sta_prepare(void)
 	int mwan_num;
 	int wan_unit;
 	char wan_prefix[] = "wanXX";
-	char wl_prefix[8];
 	int wl_unit = 0;
 	int i;
 	char buffer[32];
@@ -1354,8 +1349,7 @@ int wl_sta_prepare(void)
 
 	/* quick pre-check for non-sta setups (help FT with CTF on!) */
 	foreach (word, nvram_safe_get("wl_ifnames"), next) {
-		snprintf(wl_prefix, sizeof(wl_prefix), "wl%d_", wl_unit);
-		if (nvram_match(strlcat_r(wl_prefix, "mode", tmp, sizeof(tmp)), "sta")) {
+		if (nvram_match(wl_nvname("mode", wl_unit, 0), "sta")) {
 			sta = 1; /* found! */
 		}
 		wl_unit++;
@@ -1388,11 +1382,9 @@ int wl_sta_prepare(void)
 			if (wl_ioctl(wl_sta, WLC_GET_INSTANCE, &wl_unit, sizeof(wl_unit)))
 				return 0;
 
-			snprintf(wl_prefix, sizeof(wl_prefix), "wl%d_", wl_unit);
-
-			if (nvram_match(strlcat_r(wl_prefix, "mode", tmp, sizeof(tmp)), "sta") &&
-			    nvram_match(strlcat_r(wl_prefix, "radio", tmp, sizeof(tmp)), "1") &&
-			    nvram_match(strlcat_r(wl_prefix, "bss_enabled", tmp, sizeof(tmp)), "1")) { /* check for sta interface */
+			if (nvram_match(wl_nvname("mode", wl_unit, 0), "sta") &&
+			    nvram_match(wl_nvname("radio", wl_unit, 0), "1") &&
+			    nvram_match(wl_nvname("bss_enabled", wl_unit, 0), "1")) { /* check for sta interface */
 				logmsg(LOG_INFO, "Wireless WAN found: %s - wl%d", wl_sta, wl_unit);
 				sta = 1;
 				break;

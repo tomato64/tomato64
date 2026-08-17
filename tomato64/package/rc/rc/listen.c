@@ -280,21 +280,21 @@ static int listen_interface(char *interface, int wan_proto, char *prefix)
 		 */
 		switch (wan_proto) {
 			case WP_PPTP:
-				inet_aton(nvram_safe_get(strlcat_r(prefix, "_pptp_server_ip", tmp, sizeof(tmp))), &ipaddr);
+				inet_aton(prefix_nvram_get(prefix, "pptp_server_ip", tmp, sizeof(tmp)), &ipaddr);
 				break;
 			case WP_L2TP:
 #ifdef TCONFIG_L2TP
-				inet_aton(nvram_safe_get(strlcat_r(prefix, "_l2tp_server_ip", tmp, sizeof(tmp))), &ipaddr);
+				inet_aton(prefix_nvram_get(prefix, "l2tp_server_ip", tmp, sizeof(tmp)), &ipaddr);
 #endif
 				break;
 			default:
-				inet_aton(nvram_safe_get(strlcat_r(prefix, "_ipaddr", tmp, sizeof(tmp))), &ipaddr);
+				inet_aton(prefix_nvram_get(prefix, "ipaddr", tmp, sizeof(tmp)), &ipaddr);
 				break;
 		}
-		inet_aton(nvram_safe_get(strlcat_r(prefix, "_netmask", tmp, sizeof(tmp))), &netmask);
+		inet_aton(prefix_nvram_get(prefix, "netmask", tmp, sizeof(tmp)), &netmask);
 
-		logmsg(LOG_DEBUG, "*** %s: %d", __FUNCTION__, (strlcat_r(prefix, "_gateway=%08x", tmp, sizeof(tmp)), ipaddr.s_addr));
-		logmsg(LOG_DEBUG, "*** %s: %d", __FUNCTION__, (strlcat_r(prefix, "_netmask=%08x", tmp, sizeof(tmp)), netmask.s_addr));
+		logmsg(LOG_DEBUG, "*** %s: %d", __FUNCTION__, ipaddr.s_addr);
+		logmsg(LOG_DEBUG, "*** %s: %d", __FUNCTION__, netmask.s_addr);
 
 		if ((ipaddr.s_addr & netmask.s_addr) != (*(u_int32_t *)&(packet.daddr) & netmask.s_addr)) {
 			ret = L_FAIL;
