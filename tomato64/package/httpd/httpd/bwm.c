@@ -28,16 +28,12 @@ void wo_statsbackup(char *url)
 	time_t t;
 	unsigned int i;
 	const char *what, *name, *file;
+	int is_bwm;
 
 	what = webcgi_safeget("_what", "bwm");
-	if (strcmp(what, "bwm") == 0) {
-		name = "rstats";
-		file = hfn;
-	}
-	else {
-		name = "cstats";
-		file = ifn;
-	}
+	is_bwm = (strcmp(what, "bwm") == 0);
+	name = is_bwm ? "rstats" : "cstats";
+	file = is_bwm ? hfn : ifn;
 
 	if (stat(file, &st) == 0) {
 		t = st.st_mtime;
@@ -66,7 +62,7 @@ void wi_statsrestore(char *url, int len, char *boundary)
 {
 	char *buf;
 	const char *error, *what, *name, *file;
-	int n;
+	int n, is_bwm;
 	char tmp[64];
 
 	check_id(url);
@@ -76,19 +72,14 @@ void wi_statsrestore(char *url, int len, char *boundary)
 	error = "Error reading file";
 
 	what = webcgi_safeget("_what", "bwm");
-	if (strcmp(what, "bwm") == 0) {
-		name = "rstats";
-		file = hfn;
-	}
-	else {
-		name = "cstats";
-		file = ifn;
-	}
+	is_bwm = (strcmp(what, "bwm") == 0);
+	name = is_bwm ? "rstats" : "cstats";
+	file = is_bwm ? hfn : ifn;
 
 	if (!skip_header(&len))
 		goto exit;
 
-	if ((len < 64) || (len > ((strcmp(what, "bwm") == 0) ? 16384 : 131072)))
+	if ((len < 64) || (len > (is_bwm ? 16384 : 131072)))
 		goto exit;
 
 	if ((buf = malloc(len)) == NULL) {
