@@ -1101,6 +1101,13 @@ int mount_partition(char *dev_name, int host_num, char *dsc_name, char *pt_name,
 	if ((type = find_label_or_uuid(dev_name, the_label, sizeof(the_label), uuid, sizeof(uuid))) == NULL)
 		return 0;
 
+#ifndef TCONFIG_BCMARM
+	if (strcmp(type, "ext4") == 0) {
+		logmsg(LOG_WARNING, "USB ext4 fs at %s not mounted: ext4 is not supported by this kernel", dev_name);
+		return 0;
+	}
+#endif
+
 	if (f_exists("/etc/fstab")) {
 		if (strcmp(type, "swap") == 0) {
 			_eval(swp_argv, NULL, 0, NULL);
