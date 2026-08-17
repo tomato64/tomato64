@@ -2145,6 +2145,25 @@ static void set_usb_wifi_qtd_defaults(void)
 	nvram_set("qtdc1_sz", "10");
 }
 
+/*
+ * Set the common VLAN, LAN, WAN and wireless mapping for single-band models.
+ * @return  none
+ */
+static void set_singleband_network_defaults(void)
+{
+	nvram_set("vlan1hwname", "et0");
+	nvram_set("vlan2hwname", "et0");
+	nvram_set("lan_ifname", "br0");
+	nvram_set("landevs", "vlan1 wl0");
+	nvram_set("lan_ifnames", "vlan1 eth1");
+	nvram_set("wan_ifnames", "vlan2");
+	nvram_set("wan_ifnameX", "vlan2");
+	nvram_set("wandevs", "vlan2");
+	nvram_set("wl_ifnames", "eth1");
+	nvram_set("wl_ifname", "eth1");
+	nvram_set("wl0_ifname", "eth1");
+}
+
 static int init_nvram(void)
 {
 	int model;
@@ -2528,17 +2547,7 @@ static int init_nvram(void)
 			name = "Share Max N300 (F7D3301/F7D7301) v1";
 			features = SUP_SES | SUP_80211N | SUP_1000ET;
 			if (!nvram_match("t_fix1", (char *)name)) {
-				nvram_set("vlan1hwname", "et0");
-				nvram_set("vlan2hwname", "et0");
-				nvram_set("lan_ifname", "br0");
-				nvram_set("landevs", "vlan1 wl0");
-				nvram_set("lan_ifnames", "vlan1 eth1");
-				nvram_set("wan_ifnames", "vlan2");
-				nvram_set("wan_ifnameX", "vlan2");
-				nvram_set("wandevs", "vlan2");
-				nvram_set("wl_ifnames", "eth1");
-				nvram_set("wl_ifname", "eth1");
-				nvram_set("wl0_ifname", "eth1");
+				set_singleband_network_defaults();
 
 				/* misc - clean-up nvram (remove dummy values for not used second wl interface [5 GHz] ) */
 				/* save nvram space & fix saving country / rev settings (GUI: advanced-wireless.asp) */
@@ -2549,17 +2558,7 @@ static int init_nvram(void)
 			name = "Share N300 (F7D3302/F7D7302) v1";
 			features = SUP_SES | SUP_80211N;
 			if (!nvram_match("t_fix1", (char *)name)) {
-				nvram_set("vlan1hwname", "et0");
-				nvram_set("vlan2hwname", "et0");
-				nvram_set("lan_ifname", "br0");
-				nvram_set("landevs", "vlan1 wl0");
-				nvram_set("lan_ifnames", "vlan1 eth1");
-				nvram_set("wan_ifnames", "vlan2");
-				nvram_set("wan_ifnameX", "vlan2");
-				nvram_set("wandevs", "vlan2");
-				nvram_set("wl_ifnames", "eth1");
-				nvram_set("wl_ifname", "eth1");
-				nvram_set("wl0_ifname", "eth1");
+				set_singleband_network_defaults();
 
 				/* misc - clean-up nvram (remove dummy values for not used second wl interface [5 GHz] ) */
 				/* save nvram space & fix saving country / rev settings (GUI: advanced-wireless.asp) */
@@ -2600,17 +2599,7 @@ static int init_nvram(void)
 			name = "N F5D8235-4 v3";
 			features = SUP_SES | SUP_80211N | SUP_1000ET;
 			if (!nvram_match("t_fix1", (char *)name)) {
-				nvram_set("vlan1hwname", "et0");
-				nvram_set("vlan2hwname", "et0");
-				nvram_set("lan_ifname", "br0");
-				nvram_set("landevs", "vlan1 wl0");
-				nvram_set("lan_ifnames", "vlan1 eth1");
-				nvram_set("wan_ifnames", "vlan2");
-				nvram_set("wan_ifnameX", "vlan2");
-				nvram_set("wandevs", "vlan2");
-				nvram_set("wl_ifnames", "eth1");
-				nvram_set("wl_ifname", "eth1");
-				nvram_set("wl0_ifname", "eth1");
+				set_singleband_network_defaults();
 			}
 			break;
 		}
@@ -5018,17 +5007,7 @@ static int init_nvram(void)
 		nvram_set("usb_uhci", "-1");
 #endif
 		if (!nvram_match("t_fix1", (char *)name)) {
-			nvram_set("vlan1hwname", "et0");
-			nvram_set("vlan2hwname", "et0");
-			nvram_set("lan_ifname", "br0");
-			nvram_set("landevs", "vlan1 wl0");
-			nvram_set("lan_ifnames", "vlan1 eth1");
-			nvram_set("wan_ifnames", "vlan2");
-			nvram_set("wan_ifnameX", "vlan2");
-			nvram_set("wandevs", "vlan2");
-			nvram_set("wl_ifnames", "eth1");
-			nvram_set("wl_ifname", "eth1");
-			nvram_set("wl0_ifname", "eth1");
+			set_singleband_network_defaults();
 			nvram_set("wl0_vifnames", "wl0.1 wl0.2 wl0.3");
 
 			/* fix MAC addresses */
