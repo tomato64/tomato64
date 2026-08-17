@@ -2104,13 +2104,11 @@ static void set_5g_rxgain_defaults(void)
 }
 
 /*
- * Set common 5 GHz calibration defaults shared by selected AC models.
+ * Set common 5 GHz SAR and sideband calibration defaults.
  * @return  none
  */
-static void set_common_5g_calibration_defaults(void)
+static void set_5g_sideband_calibration_defaults(void)
 {
-	set_5g_rxgain_defaults();
-	nvram_set("1:sar2g", "18");
 	nvram_set("1:sar5g", "15");
 	nvram_set("1:sb20in40hrpo", "0");
 	nvram_set("1:sb20in40lrpo", "0");
@@ -2128,6 +2126,17 @@ static void set_common_5g_calibration_defaults(void)
 	nvram_set("1:sb40and80lr5gmpo", "0");
 	nvram_set("1:sromrev", "11");
 	nvram_set("1:subband5gver", "4");
+}
+
+/*
+ * Set common 5 GHz calibration defaults shared by selected AC models.
+ * @return  none
+ */
+static void set_common_5g_calibration_defaults(void)
+{
+	set_5g_rxgain_defaults();
+	nvram_set("1:sar2g", "18");
+	set_5g_sideband_calibration_defaults();
 }
 
 /*
@@ -8014,23 +8023,7 @@ static int init_nvram(void)
 				nvram_set("1:rxgains5gtrisoa0", "6");
 				nvram_set("1:rxgains5gtrisoa1", "6");
 				nvram_set("1:rxgains5gtrisoa2", "6");
-				nvram_set("1:sar5g", "15");
-				nvram_set("1:sb20in40hrpo", "0");
-				nvram_set("1:sb20in40lrpo", "0");
-				nvram_set("1:sb20in80and160hr5ghpo", "0");
-				nvram_set("1:sb20in80and160hr5glpo", "0");
-				nvram_set("1:sb20in80and160hr5gmpo", "0");
-				nvram_set("1:sb20in80and160lr5ghpo", "0");
-				nvram_set("1:sb20in80and160lr5glpo", "0");
-				nvram_set("1:sb20in80and160lr5gmpo", "0");
-				nvram_set("1:sb40and80hr5ghpo", "0");
-				nvram_set("1:sb40and80hr5glpo", "0");
-				nvram_set("1:sb40and80hr5gmpo", "0");
-				nvram_set("1:sb40and80lr5ghpo", "0");
-				nvram_set("1:sb40and80lr5glpo", "0");
-				nvram_set("1:sb40and80lr5gmpo", "0");
-				nvram_set("1:sromrev", "11");
-				nvram_set("1:subband5gver", "4");
+				set_5g_sideband_calibration_defaults();
 				nvram_set("1:tempcorrx", "0x3f");
 				nvram_set("1:tempoffset", "0");
 				nvram_set("1:tempsense_option", "0x3");
