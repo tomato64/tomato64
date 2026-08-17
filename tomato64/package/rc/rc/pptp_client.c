@@ -406,24 +406,24 @@ static void pptpc_add_table(void)
 			proto = get_wanx_proto(sPrefix);
 			if (proto == WP_DHCP || proto == WP_LTE || proto == WP_STATIC) {
 				/* wan ip/netmask, wan_iface, wan_ipaddr */
-				get_cidr(nvram_safe_get(strlcat_r(sPrefix, "_ipaddr", tmp, sizeof(tmp))), nvram_safe_get(strlcat_r(sPrefix, "_netmask", tmp, sizeof(tmp))), ip_cidr, sizeof(ip_cidr));
+				get_cidr(prefix_nvram_get(sPrefix, "ipaddr", tmp, sizeof(tmp)), prefix_nvram_get(sPrefix, "netmask", tmp, sizeof(tmp)), ip_cidr, sizeof(ip_cidr));
 
-				eval("ip", "route", "append", ip_cidr, "dev", nvram_safe_get(strlcat_r(sPrefix, "_iface", tmp, sizeof(tmp))),
-				     "proto", "kernel", "scope", "link", "src", nvram_safe_get(strlcat_r(sPrefix, "_ipaddr", tmp, sizeof(tmp))), "table", PPTPC_TABLE_NAME);
+				eval("ip", "route", "append", ip_cidr, "dev", prefix_nvram_get(sPrefix, "iface", tmp, sizeof(tmp)),
+				     "proto", "kernel", "scope", "link", "src", prefix_nvram_get(sPrefix, "ipaddr", tmp, sizeof(tmp)), "table", PPTPC_TABLE_NAME);
 			}
 			else if ((proto == WP_PPTP || proto == WP_L2TP || proto == WP_PPPOE) && using_dhcpc(sPrefix)) {
 				/* MAN: wan_gateway, wan_ifname, wan_ipaddr */
-				eval("ip", "route", "append", nvram_safe_get(strlcat_r(sPrefix, "_gateway", tmp, sizeof(tmp))), "dev", nvram_safe_get(strlcat_r(sPrefix, "_ifname", tmp, sizeof(tmp))),
-				     "proto", "kernel", "scope", "link", "src", nvram_safe_get(strlcat_r(sPrefix, "_ipaddr", tmp, sizeof(tmp))), "table", PPTPC_TABLE_NAME);
+				eval("ip", "route", "append", prefix_nvram_get(sPrefix, "gateway", tmp, sizeof(tmp)), "dev", prefix_nvram_get(sPrefix, "ifname", tmp, sizeof(tmp)),
+				     "proto", "kernel", "scope", "link", "src", prefix_nvram_get(sPrefix, "ipaddr", tmp, sizeof(tmp)), "table", PPTPC_TABLE_NAME);
 
 				/* WAN: wan_gateway_get, wan_iface, wan_ppp_get_ip */
-				eval("ip", "route", "append", nvram_safe_get(strlcat_r(sPrefix, "_gateway_get", tmp, sizeof(tmp))), "dev", nvram_safe_get(strlcat_r(sPrefix, "_iface", tmp, sizeof(tmp))),
-				     "proto", "kernel", "scope", "link", "src", nvram_safe_get(strlcat_r(sPrefix, "_ppp_get_ip", tmp, sizeof(tmp))), "table", PPTPC_TABLE_NAME);
+				eval("ip", "route", "append", prefix_nvram_get(sPrefix, "gateway_get", tmp, sizeof(tmp)), "dev", prefix_nvram_get(sPrefix, "iface", tmp, sizeof(tmp)),
+				     "proto", "kernel", "scope", "link", "src", prefix_nvram_get(sPrefix, "ppp_get_ip", tmp, sizeof(tmp)), "table", PPTPC_TABLE_NAME);
 			}
 			else {
 				/* wan gateway, wan_iface, wan_ipaddr */
-				eval("ip", "route", "append", wan_gateway(sPrefix), "dev", nvram_safe_get(strlcat_r(sPrefix, "_iface", tmp, sizeof(tmp))),
-				     "proto", "kernel", "scope", "link", "src", nvram_safe_get(strlcat_r(sPrefix, "_ipaddr", tmp, sizeof(tmp))), "table", PPTPC_TABLE_NAME);
+				eval("ip", "route", "append", wan_gateway(sPrefix), "dev", prefix_nvram_get(sPrefix, "iface", tmp, sizeof(tmp)),
+				     "proto", "kernel", "scope", "link", "src", prefix_nvram_get(sPrefix, "ipaddr", tmp, sizeof(tmp)), "table", PPTPC_TABLE_NAME);
 			}
 		}
 	}
