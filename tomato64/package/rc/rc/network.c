@@ -134,7 +134,6 @@ void wlconf_pre(void)
 {
 	int unit = 0;
 	char word[128], *next;
-	char tmp[128], prefix[] = "wlXXXXXXXXXX_";
 	char buf[16] = {0};
 	wlc_rev_info_t rev;
 #ifdef TCONFIG_BCMBSD
@@ -142,39 +141,37 @@ void wlconf_pre(void)
 #endif
 
 	foreach (word, nvram_safe_get("wl_ifnames"), next) {
-		snprintf(prefix, sizeof(prefix), "wl%d_", unit);
-
 #ifdef TCONFIG_BCMBSD
-		nvram_set(strlcat_r(prefix, "probresp_sw", tmp, sizeof(tmp)), smart_conn ? "1" : "0"); /* turn On with wireless band steering otherwise Off */
+		nvram_set(wl_nvname("probresp_sw", unit, 0), smart_conn ? "1" : "0"); /* turn On with wireless band steering otherwise Off */
 #endif
 
 		/* for TxBeamforming: get corerev for TxBF check */
 		wl_ioctl(word, WLC_GET_REVINFO, &rev, sizeof(rev));
 		snprintf(buf, sizeof(buf), "%d", rev.corerev);
-		nvram_set(strlcat_r(prefix, "corerev", tmp, sizeof(tmp)), buf);
+		nvram_set(wl_nvname("corerev", unit, 0), buf);
 
 		if (rev.corerev < 40) { /* TxBF unsupported - turn off and hide options (at the GUI) */
 			logmsg(LOG_DEBUG, "*** %s: TxBeamforming not supported for %s", __FUNCTION__, word);
-			nvram_set(strlcat_r(prefix, "txbf_bfr_cap", tmp, sizeof(tmp)), "0"); /* off = 0 */
-			nvram_set(strlcat_r(prefix, "txbf_bfe_cap", tmp, sizeof(tmp)), "0");
-			nvram_set(strlcat_r(prefix, "txbf", tmp, sizeof(tmp)), "0");
-			nvram_set(strlcat_r(prefix, "itxbf", tmp, sizeof(tmp)), "0");
-			nvram_set(strlcat_r(prefix, "txbf_imp", tmp, sizeof(tmp)), "0");
+			nvram_set(wl_nvname("txbf_bfr_cap", unit, 0), "0"); /* off = 0 */
+			nvram_set(wl_nvname("txbf_bfe_cap", unit, 0), "0");
+			nvram_set(wl_nvname("txbf", unit, 0), "0");
+			nvram_set(wl_nvname("itxbf", unit, 0), "0");
+			nvram_set(wl_nvname("txbf_imp", unit, 0), "0");
 		}
 		else {
 			/* nothing to do right now! - use default nvram config or desired user wlan setup */
 			logmsg(LOG_DEBUG, "*** %s: TxBeamforming supported for %s - corerev: %s", __FUNCTION__, word, buf);
-			logmsg(LOG_DEBUG, "*** %s: txbf_bfr_cap for %s = %s", __FUNCTION__, word, nvram_safe_get(strlcat_r(prefix, "txbf_bfr_cap", tmp, sizeof(tmp))));
-			logmsg(LOG_DEBUG, "*** %s: txbf_bfe_cap for %s = %s", __FUNCTION__, word, nvram_safe_get(strlcat_r(prefix, "txbf_bfe_cap", tmp, sizeof(tmp))));
+			logmsg(LOG_DEBUG, "*** %s: txbf_bfr_cap for %s = %s", __FUNCTION__, word, nvram_safe_get(wl_nvname("txbf_bfr_cap", unit, 0)));
+			logmsg(LOG_DEBUG, "*** %s: txbf_bfe_cap for %s = %s", __FUNCTION__, word, nvram_safe_get(wl_nvname("txbf_bfe_cap", unit, 0)));
 		}
 
-		if (nvram_match(strlcat_r(prefix, "nband", tmp, sizeof(tmp)), "1") && /* only for wlX_nband == 1 for 5 GHz */
-		    nvram_match(strlcat_r(prefix, "vreqd", tmp, sizeof(tmp)), "1") &&
-		    nvram_match(strlcat_r(prefix, "nmode", tmp, sizeof(tmp)), "-1")) { /* only for mode AUTO == -1 */
+		if (nvram_match(wl_nvname("nband", unit, 0), "1") && /* only for wlX_nband == 1 for 5 GHz */
+		    nvram_match(wl_nvname("vreqd", unit, 0), "1") &&
+		    nvram_match(wl_nvname("nmode", unit, 0), "-1")) { /* only for mode AUTO == -1 */
 
 #ifdef TCONFIG_BCM714
-			if (nvram_match(strlcat_r(prefix, "turbo_qam", tmp, sizeof(tmp)), "1") ||
-			    nvram_match(strlcat_r(prefix, "turbo_qam", tmp, sizeof(tmp)), "2")) { /* check turbo/nitro qam on or off ? (keep it simple) */
+			if (nvram_match(wl_nvname("turbo_qam", unit, 0), "1") ||
+			    nvram_match(wl_nvname("turbo_qam", unit, 0), "2")) { /* check turbo/nitro qam on or off ? (keep it simple) */
 				logmsg(LOG_DEBUG, "*** %s: set vht_features 4 for %s", __FUNCTION__, word);
 				eval("wl", "-i", word, "vht_features", "4");
 			}
@@ -187,17 +184,17 @@ void wlconf_pre(void)
 			logmsg(LOG_DEBUG, "*** %s: set vhtmode 1 for %s", __FUNCTION__, word);
 			eval("wl", "-i", word, "vhtmode", "1");
 		}
-		else if (nvram_match(strlcat_r(prefix, "nband", tmp, sizeof(tmp)), "2") && /* only for wlX_nband == 2 for 2,4 GHz */
-		         nvram_match(strlcat_r(prefix, "vreqd", tmp, sizeof(tmp)), "1") &&
-		         nvram_match(strlcat_r(prefix, "nmode", tmp, sizeof(tmp)), "-1")) { /* only for mode AUTO == -1 */
+		else if (nvram_match(wl_nvname("nband", unit, 0), "2") && /* only for wlX_nband == 2 for 2,4 GHz */
+		         nvram_match(wl_nvname("vreqd", unit, 0), "1") &&
+		         nvram_match(wl_nvname("nmode", unit, 0), "-1")) { /* only for mode AUTO == -1 */
 
 
-			if (nvram_match(strlcat_r(prefix, "turbo_qam", tmp, sizeof(tmp)), "1")) { /* check turbo qam on or off ? */
+			if (nvram_match(wl_nvname("turbo_qam", unit, 0), "1")) { /* check turbo qam on or off ? */
 				logmsg(LOG_DEBUG, "*** %s: set vht_features 3 for %s", __FUNCTION__, word);
 				eval("wl", "-i", word, "vht_features", "3");
 			}
 #ifdef TCONFIG_BCM714
-			else if (nvram_match(strlcat_r(prefix, "turbo_qam", tmp, sizeof(tmp)), "2")) { /* check nitro qam on or off ? */
+			else if (nvram_match(wl_nvname("turbo_qam", unit, 0), "2")) { /* check nitro qam on or off ? */
 				logmsg(LOG_DEBUG, "*** %s: set vht_features 7 for %s", __FUNCTION__, word);
 				eval("wl", "-i", word, "vht_features", "7");
 			}

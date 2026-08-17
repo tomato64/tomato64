@@ -3716,16 +3716,13 @@ void stop_roamast(void)
 void start_roamast(void)
 {
 	char *cmd[] = {"roamast", NULL};
-	char prefix[] = "wl_XXXX";
-	char tmp[32];
 	pid_t pid;
 	int i;
 
 	stop_roamast();
 
 	for (i = 0; i < TOMATO_WLIF_MAX; i++) {
-		snprintf(prefix, sizeof(prefix), "wl%d_", i);
-		if (nvram_get_int(strlcat_r(prefix, "user_rssi", tmp, sizeof(tmp))) != 0) {
+		if (nvram_get_int(wl_nvname("user_rssi", i, 0)) != 0) {
 			_eval(cmd, NULL, 0, &pid);
 			logmsg(LOG_INFO, "wireless roaming assistant is started");
 			break;
