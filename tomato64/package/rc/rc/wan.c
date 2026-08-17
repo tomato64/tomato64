@@ -544,7 +544,7 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 
 	/* LACS */
 	for (i = 1; i <= mwan_num; ++i) {
-		snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%u"), i);
+		get_wan_prefix(i, ifname);
 		if (!strcmp(prefix_nvram_get(ifname, "proto", tmp, sizeof(tmp)), "l2tp")) {
 			snprintf(ppp_optfile, sizeof(ppp_optfile), "/tmp/ppp/%s_options", ifname);
 
@@ -1435,7 +1435,7 @@ void stop_wan(void)
 	clear_resolv();
 
 	for (i = 1; i <= mwan_num; i++) {
-		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%u"), i);
+		get_wan_prefix(i, buf);
 		stop_wan_if(buf);
 	}
 

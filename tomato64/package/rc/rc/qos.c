@@ -52,7 +52,7 @@ static void prep_qosstr(char *prefix)
 	char buf[8];
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		snprintf(buf, sizeof(buf), (i == 1 ? "wan" : "wan%d"), i);
+		get_wan_prefix(i, buf);
 		if (!strcmp(prefix, buf)) {
 			snprintf(buf, sizeof(buf), (i == 1 ? "/etc/wan_qos" : "/etc/wan%d_qos"), i);
 			strlcpy(qosfn, buf, sizeof(qosfn));

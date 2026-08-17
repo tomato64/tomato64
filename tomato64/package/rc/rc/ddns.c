@@ -68,7 +68,7 @@ static void update(int num, int *dirty, int force)
 
 	wan = 0;
 	for (n = 1; n <= MWAN_MAX; n++) {
-		snprintf(v, sizeof(v), (n == 1 ? "wan" : "wan%d"), n);
+		get_wan_prefix(n, v);
 		if (nvram_match(s, v))
 			wan = 1;
 	}

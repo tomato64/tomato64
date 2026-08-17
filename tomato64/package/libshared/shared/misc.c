@@ -239,7 +239,7 @@ int get_wan_unit(const char *sPrefix)
 	unsigned int i, ret = 1;
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		snprintf(wanstr, sizeof(wanstr), (i == 1 ? "wan" : "wan%u"), i);
+		get_wan_prefix(i, wanstr);
 
 		if (!strcmp(sPrefix, wanstr)) {
 			ret = i;
@@ -700,7 +700,7 @@ int wan_led_off(char *prefix) /* off WAN LED only if no other WAN active */
 		mwan_num = 1;
 
 	for (i = 1; i <= mwan_num; i++) {
-		snprintf(wanstr, sizeof(wanstr), (i == 1 ? "wan" : "wan%d"), i);
+		get_wan_prefix(i, wanstr);
 
 		up = 0; /* default is 0 (LED_OFF) */
 		if (!strcmp(prefix, wanstr))

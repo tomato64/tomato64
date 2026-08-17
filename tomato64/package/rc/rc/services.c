@@ -655,7 +655,7 @@ void generate_mdns_config(void)
 	            ipv6_enabled() ? "yes" : "no");
 
 	for (i = 1; i <= mwan_num; i++) {
-		snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%d"), i);
+		get_wan_prefix(i, tmp);
 		if ((check_wanup(tmp)) || (i == 1))
 			fprintf(fp, "%s%s", (i == 1 ? "" : ","), get_wanface(tmp));
 	}
@@ -1386,7 +1386,7 @@ void start_upnp(void)
 		upnp_port = 0;
 
 	for (i = 1; i <= mwan_num; i++) {
-		snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%d"), i);
+		get_wan_prefix(i, tmp);
 		if ((check_wanup(tmp)) || (i == 1))
 			fprintf(f, "ext_ifname=%s\n", get_wanface(tmp));
 	}
@@ -3179,13 +3179,13 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 		case SVCOP_QOS:
 			if (act_stop) {
 				for (i = 1; i <= (int)mwan_configured; i++) {
-					snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%d"), i);
+					get_wan_prefix(i, ifname);
 					stop_qos(ifname);
 				}
 			}
 			if (act_start) {
 				for (i = 1; i <= (int)mwan_num; i++) {
-					snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%d"), i);
+					get_wan_prefix(i, ifname);
 					if ((check_wanup(ifname)) || (i == 1))
 						start_qos(ifname);
 				}
@@ -3422,7 +3422,7 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				rename("/tmp/ppp/wan_log", "/tmp/ppp/wan_log.~");
 				start_wan();
 				for (i = 1; i <= (int)mwan_num; i++) {
-					snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%d"), i);
+					get_wan_prefix(i, ifname);
 					sleep(5);
 					force_to_dial(ifname);
 				}

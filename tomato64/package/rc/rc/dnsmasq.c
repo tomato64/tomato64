@@ -438,7 +438,7 @@ static FILE *write_static_hosts(void)
 			fprintf(hf, "%s %s\n", router_ip, hostname);
 #endif
 		for (i = 1; i <= mwan_num; i++) {
-			snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%u"), i);
+			get_wan_prefix(i, tmp);
 			p = get_wanip(tmp);
 			if ((!*p) || (strcmp(p, "0.0.0.0") == 0))
 				p = "127.0.0.1";

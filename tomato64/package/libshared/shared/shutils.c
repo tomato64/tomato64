@@ -1586,7 +1586,7 @@ int qos_status(void)
 	int i;
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		snprintf(prefix, sizeof(prefix), (i == 1 ? "wan" : "wan%d"), i);
+		get_wan_prefix(i, prefix);
 		if (qos_prefix_status(prefix))
 			return 1;
 	}

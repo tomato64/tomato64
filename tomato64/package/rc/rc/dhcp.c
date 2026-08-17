@@ -248,7 +248,7 @@ static int bound(char *ifname, int renew, char *prefix)
 		case WP_PPPOE:
 			logmsg(LOG_DEBUG, "*** %s: start_pppoe(%s) ...", __FUNCTION__, prefix);
 			for (i = 1; i <= MWAN_MAX; i++) {
-				snprintf(tmp, sizeof(tmp), (i == 1 ? "wan" : "wan%d"), i);
+				get_wan_prefix(i, tmp);
 				if (!strcmp(prefix, tmp)) {
 					start_pppoe(PPPOEWAN(i), prefix);
 					break; /* found prefix - break */
@@ -350,7 +350,7 @@ int dhcpc_event_main(int argc, char **argv)
 	strlcpy(prefix, "wan", sizeof(prefix)); /* default */
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		snprintf(name, sizeof(name), (i == 1 ? "wan" : "wan%u"), i);
+		get_wan_prefix(i, name);
 		snprintf(tmp, sizeof(tmp), "%s_ifname", name);
 		if (nvram_match(tmp, ifname)) {
 			strlcpy(prefix, name, sizeof(prefix));
