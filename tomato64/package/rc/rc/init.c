@@ -2059,6 +2059,41 @@ static void set_pci_sg_wifi_country_defaults(void)
 }
 #endif /* CONFIG_BCMWL6A */
 
+/*
+ * Set common 5 GHz receive-gain calibration defaults for selected AC models.
+ * @return  none
+ */
+static void set_5g_rxgain_defaults(void)
+{
+	nvram_set("1:rxgains5gelnagaina0", "1");
+	nvram_set("1:rxgains5gelnagaina1", "1");
+	nvram_set("1:rxgains5gelnagaina2", "1");
+	nvram_set("1:rxgains5ghelnagaina0", "2");
+	nvram_set("1:rxgains5ghelnagaina1", "2");
+	nvram_set("1:rxgains5ghelnagaina2", "3");
+	nvram_set("1:rxgains5ghtrelnabypa0", "1");
+	nvram_set("1:rxgains5ghtrelnabypa1", "1");
+	nvram_set("1:rxgains5ghtrelnabypa2", "1");
+	nvram_set("1:rxgains5ghtrisoa0", "5");
+	nvram_set("1:rxgains5ghtrisoa1", "4");
+	nvram_set("1:rxgains5ghtrisoa2", "4");
+	nvram_set("1:rxgains5gmelnagaina0", "2");
+	nvram_set("1:rxgains5gmelnagaina1", "2");
+	nvram_set("1:rxgains5gmelnagaina2", "3");
+	nvram_set("1:rxgains5gmtrelnabypa0", "1");
+	nvram_set("1:rxgains5gmtrelnabypa1", "1");
+	nvram_set("1:rxgains5gmtrelnabypa2", "1");
+	nvram_set("1:rxgains5gmtrisoa0", "5");
+	nvram_set("1:rxgains5gmtrisoa1", "4");
+	nvram_set("1:rxgains5gmtrisoa2", "4");
+	nvram_set("1:rxgains5gtrelnabypa0", "1");
+	nvram_set("1:rxgains5gtrelnabypa1", "1");
+	nvram_set("1:rxgains5gtrelnabypa2", "1");
+	nvram_set("1:rxgains5gtrisoa0", "7");
+	nvram_set("1:rxgains5gtrisoa1", "6");
+	nvram_set("1:rxgains5gtrisoa2", "5");
+}
+
 static int init_nvram(void)
 {
 	int model;
@@ -8460,33 +8495,7 @@ static int init_nvram(void)
 			nvram_set("1:rxgains2gtrisoa0", "0");
 			nvram_set("1:rxgains2gtrisoa1", "0");
 			nvram_set("1:rxgains2gtrisoa2", "0");
-			nvram_set("1:rxgains5gelnagaina0", "1");
-			nvram_set("1:rxgains5gelnagaina1", "1");
-			nvram_set("1:rxgains5gelnagaina2", "1");
-			nvram_set("1:rxgains5ghelnagaina0", "2");
-			nvram_set("1:rxgains5ghelnagaina1", "2");
-			nvram_set("1:rxgains5ghelnagaina2", "3");
-			nvram_set("1:rxgains5ghtrelnabypa0", "1");
-			nvram_set("1:rxgains5ghtrelnabypa1", "1");
-			nvram_set("1:rxgains5ghtrelnabypa2", "1");
-			nvram_set("1:rxgains5ghtrisoa0", "5");
-			nvram_set("1:rxgains5ghtrisoa1", "4");
-			nvram_set("1:rxgains5ghtrisoa2", "4");
-			nvram_set("1:rxgains5gmelnagaina0", "2");
-			nvram_set("1:rxgains5gmelnagaina1", "2");
-			nvram_set("1:rxgains5gmelnagaina2", "3");
-			nvram_set("1:rxgains5gmtrelnabypa0", "1");
-			nvram_set("1:rxgains5gmtrelnabypa1", "1");
-			nvram_set("1:rxgains5gmtrelnabypa2", "1");
-			nvram_set("1:rxgains5gmtrisoa0", "5");
-			nvram_set("1:rxgains5gmtrisoa1", "4");
-			nvram_set("1:rxgains5gmtrisoa2", "4");
-			nvram_set("1:rxgains5gtrelnabypa0", "1");
-			nvram_set("1:rxgains5gtrelnabypa1", "1");
-			nvram_set("1:rxgains5gtrelnabypa2", "1");
-			nvram_set("1:rxgains5gtrisoa0", "7");
-			nvram_set("1:rxgains5gtrisoa1", "6");
-			nvram_set("1:rxgains5gtrisoa2", "5");
+			set_5g_rxgain_defaults();
 			nvram_set("1:sar2g", "18");
 			nvram_set("1:sar5g", "15");
 			nvram_set("1:sb20in40hrpo", "0");
@@ -9001,33 +9010,7 @@ static int init_nvram(void)
 			nvram_set("1:pdoffset80ma2", "0x0100");
 			nvram_set("1:phycal_tempdelta", "0");
 			nvram_set("1:rxchain", "7");
-			nvram_set("1:rxgains5gelnagaina0", "1");
-			nvram_set("1:rxgains5gelnagaina1", "1");
-			nvram_set("1:rxgains5gelnagaina2", "1");
-			nvram_set("1:rxgains5ghelnagaina0", "2");
-			nvram_set("1:rxgains5ghelnagaina1", "2");
-			nvram_set("1:rxgains5ghelnagaina2", "3");
-			nvram_set("1:rxgains5ghtrelnabypa0", "1");
-			nvram_set("1:rxgains5ghtrelnabypa1", "1");
-			nvram_set("1:rxgains5ghtrelnabypa2", "1");
-			nvram_set("1:rxgains5ghtrisoa0", "5");
-			nvram_set("1:rxgains5ghtrisoa1", "4");
-			nvram_set("1:rxgains5ghtrisoa2", "4");
-			nvram_set("1:rxgains5gmelnagaina0", "2");
-			nvram_set("1:rxgains5gmelnagaina1", "2");
-			nvram_set("1:rxgains5gmelnagaina2", "3");
-			nvram_set("1:rxgains5gmtrelnabypa0", "1");
-			nvram_set("1:rxgains5gmtrelnabypa1", "1");
-			nvram_set("1:rxgains5gmtrelnabypa2", "1");
-			nvram_set("1:rxgains5gmtrisoa0", "5");
-			nvram_set("1:rxgains5gmtrisoa1", "4");
-			nvram_set("1:rxgains5gmtrisoa2", "4");
-			nvram_set("1:rxgains5gtrelnabypa0", "1");
-			nvram_set("1:rxgains5gtrelnabypa1", "1");
-			nvram_set("1:rxgains5gtrelnabypa2", "1");
-			nvram_set("1:rxgains5gtrisoa0", "7");
-			nvram_set("1:rxgains5gtrisoa1", "6");
-			nvram_set("1:rxgains5gtrisoa2", "5");
+			set_5g_rxgain_defaults();
 			nvram_set("1:sar2g", "18");
 			nvram_set("1:sar5g", "15");
 			nvram_set("1:sb20in40hrpo", "0");
@@ -9194,33 +9177,7 @@ static int init_nvram(void)
 			nvram_set("1:pdoffset80ma2", "0");
 			nvram_set("1:phycal_tempdelta", "0");
 			nvram_set("1:rxchain", "7");
-			nvram_set("1:rxgains5gelnagaina0", "1");
-			nvram_set("1:rxgains5gelnagaina1", "1");
-			nvram_set("1:rxgains5gelnagaina2", "1");
-			nvram_set("1:rxgains5ghelnagaina0", "2");
-			nvram_set("1:rxgains5ghelnagaina1", "2");
-			nvram_set("1:rxgains5ghelnagaina2", "3");
-			nvram_set("1:rxgains5ghtrelnabypa0", "1");
-			nvram_set("1:rxgains5ghtrelnabypa1", "1");
-			nvram_set("1:rxgains5ghtrelnabypa2", "1");
-			nvram_set("1:rxgains5ghtrisoa0", "5");
-			nvram_set("1:rxgains5ghtrisoa1", "4");
-			nvram_set("1:rxgains5ghtrisoa2", "4");
-			nvram_set("1:rxgains5gmelnagaina0", "2");
-			nvram_set("1:rxgains5gmelnagaina1", "2");
-			nvram_set("1:rxgains5gmelnagaina2", "3");
-			nvram_set("1:rxgains5gmtrelnabypa0", "1");
-			nvram_set("1:rxgains5gmtrelnabypa1", "1");
-			nvram_set("1:rxgains5gmtrelnabypa2", "1");
-			nvram_set("1:rxgains5gmtrisoa0", "5");
-			nvram_set("1:rxgains5gmtrisoa1", "4");
-			nvram_set("1:rxgains5gmtrisoa2", "4");
-			nvram_set("1:rxgains5gtrelnabypa0", "1");
-			nvram_set("1:rxgains5gtrelnabypa1", "1");
-			nvram_set("1:rxgains5gtrelnabypa2", "1");
-			nvram_set("1:rxgains5gtrisoa0", "7");
-			nvram_set("1:rxgains5gtrisoa1", "6");
-			nvram_set("1:rxgains5gtrisoa2", "5");
+			set_5g_rxgain_defaults();
 			nvram_set("1:sar2g", "18");
 			nvram_set("1:sar5g", "15");
 			nvram_set("1:sb20in40hrpo", "0");
@@ -9395,33 +9352,7 @@ static int init_nvram(void)
 			nvram_set("1:rpcal5gb0", "41773");
 			nvram_set("1:rpcal5gb3", "42547");
 			nvram_set("1:rxchain", "7");
-			nvram_set("1:rxgains5gelnagaina0", "1");
-			nvram_set("1:rxgains5gelnagaina1", "1");
-			nvram_set("1:rxgains5gelnagaina2", "1");
-			nvram_set("1:rxgains5ghelnagaina0", "2");
-			nvram_set("1:rxgains5ghelnagaina1", "2");
-			nvram_set("1:rxgains5ghelnagaina2", "3");
-			nvram_set("1:rxgains5ghtrelnabypa0", "1");
-			nvram_set("1:rxgains5ghtrelnabypa1", "1");
-			nvram_set("1:rxgains5ghtrelnabypa2", "1");
-			nvram_set("1:rxgains5ghtrisoa0", "5");
-			nvram_set("1:rxgains5ghtrisoa1", "4");
-			nvram_set("1:rxgains5ghtrisoa2", "4");
-			nvram_set("1:rxgains5gmelnagaina0", "2");
-			nvram_set("1:rxgains5gmelnagaina1", "2");
-			nvram_set("1:rxgains5gmelnagaina2", "3");
-			nvram_set("1:rxgains5gmtrelnabypa0", "1");
-			nvram_set("1:rxgains5gmtrelnabypa1", "1");
-			nvram_set("1:rxgains5gmtrelnabypa2", "1");
-			nvram_set("1:rxgains5gmtrisoa0", "5");
-			nvram_set("1:rxgains5gmtrisoa1", "4");
-			nvram_set("1:rxgains5gmtrisoa2", "4");
-			nvram_set("1:rxgains5gtrelnabypa0", "1");
-			nvram_set("1:rxgains5gtrelnabypa1", "1");
-			nvram_set("1:rxgains5gtrelnabypa2", "1");
-			nvram_set("1:rxgains5gtrisoa0", "7");
-			nvram_set("1:rxgains5gtrisoa1", "6");
-			nvram_set("1:rxgains5gtrisoa2", "5");
+			set_5g_rxgain_defaults();
 			nvram_set("1:sb20in40hrpo", "0x0");
 			nvram_set("1:sb20in40lrpo", "0x0");
 			nvram_set("1:sb20in80and160hr5ghpo", "0x0");
