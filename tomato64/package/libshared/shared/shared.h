@@ -172,6 +172,10 @@ typedef struct {
 
 extern void chld_reap(int sig);
 extern char *prefix_nvram_get(const char *prefix, const char *suffix, char *key, const size_t key_size);
+extern void prefix_nvram_set(const char *prefix, const char *suffix, const char *value, char *key, const size_t key_size);
+extern void prefix_nvram_unset(const char *prefix, const char *suffix, char *key, const size_t key_size);
+extern int prefix_nvram_match(const char *prefix, const char *suffix, const char *value, char *key, const size_t key_size);
+extern int prefix_nvram_get_int(const char *prefix, const char *suffix, char *key, const size_t key_size);
 extern void get_bridge_suffix(unsigned int bridge, char *suffix, const size_t suffix_size);
 extern void get_bridge_prefix(unsigned int bridge, char *prefix, const size_t prefix_size);
 extern void get_bridge_nvram_key(unsigned int bridge, const char *suffix, char *key, const size_t key_size);

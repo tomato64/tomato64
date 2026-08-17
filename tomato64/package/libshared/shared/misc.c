@@ -83,6 +83,66 @@ char *prefix_nvram_get(const char *prefix, const char *suffix, char *key, const 
 }
 
 /*
+ * Sets an NVRAM value in an existing namespace prefix.
+ *
+ * @param prefix    existing namespace prefix
+ * @param suffix    NVRAM variable suffix without the separating underscore
+ * @param value     value passed to nvram_set()
+ * @param key       scratch buffer receiving the complete NVRAM key
+ * @param key_size  size of the key buffer
+ */
+void prefix_nvram_set(const char *prefix, const char *suffix, const char *value, char *key, const size_t key_size)
+{
+	get_prefix_nvram_key(prefix, suffix, key, key_size);
+	nvram_set(key, value);
+}
+
+/*
+ * Removes an NVRAM value from an existing namespace prefix.
+ *
+ * @param prefix    existing namespace prefix
+ * @param suffix    NVRAM variable suffix without the separating underscore
+ * @param key       scratch buffer receiving the complete NVRAM key
+ * @param key_size  size of the key buffer
+ */
+void prefix_nvram_unset(const char *prefix, const char *suffix, char *key, const size_t key_size)
+{
+	get_prefix_nvram_key(prefix, suffix, key, key_size);
+	nvram_unset(key);
+}
+
+/*
+ * Compares an NVRAM value in an existing namespace prefix.
+ *
+ * @param prefix    existing namespace prefix
+ * @param suffix    NVRAM variable suffix without the separating underscore
+ * @param value     comparison value passed to nvram_match()
+ * @param key       scratch buffer receiving the complete NVRAM key
+ * @param key_size  size of the key buffer
+ * @return          result returned by nvram_match()
+ */
+int prefix_nvram_match(const char *prefix, const char *suffix, const char *value, char *key, const size_t key_size)
+{
+	get_prefix_nvram_key(prefix, suffix, key, key_size);
+	return nvram_match(key, value);
+}
+
+/*
+ * Reads an integer NVRAM value from an existing namespace prefix.
+ *
+ * @param prefix    existing namespace prefix
+ * @param suffix    NVRAM variable suffix without the separating underscore
+ * @param key       scratch buffer receiving the complete NVRAM key
+ * @param key_size  size of the key buffer
+ * @return          integer value returned by nvram_get_int()
+ */
+int prefix_nvram_get_int(const char *prefix, const char *suffix, char *key, const size_t key_size)
+{
+	get_prefix_nvram_key(prefix, suffix, key, key_size);
+	return nvram_get_int(key);
+}
+
+/*
  * Formats the bridge NVRAM namespace prefix.
  *
  * @param bridge       bridge index; bridge 0 maps to "lan"
