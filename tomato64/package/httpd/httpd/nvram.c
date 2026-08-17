@@ -62,15 +62,25 @@ static int in_arr(const char *k, const char *arr[], size_t n, int allow_prefix)
 	return 0;
 }
 
+/*
+ * Emit one NVRAM entry as an UTF-8-safe JavaScript object member.
+ * @param name  NVRAM key and JavaScript object member name
+ * @return      none
+ */
+static void web_put_nvram_utf8(const char *name)
+{
+	web_printf("\t'%s': '", name);
+	web_putj_utf8(nvram_safe_get(name));
+	web_puts("',\n");
+}
+
 static int print_wlnv(int idx, int unit, int subunit, void *param)
 {
 	char *k = param;
 	char *nv;
 
 	nv = wl_nvname(k + 3, unit, subunit);
-	web_printf("\t'%s': '", nv); /* multiSSID */
-	web_putj_utf8(nvram_safe_get(nv));
-	web_puts("',\n");
+	web_put_nvram_utf8(nv); /* multiSSID */
 
 	return 1;
 }
@@ -237,9 +247,7 @@ void asp_nvram(int argc, char **argv)
 
 			for (i = 1; i <= OVPN_CLIENT_COUNT; i++) {
 				snprintf(buf, sizeof(buf), "vpnc%u%s", i, k + 4);
-				web_printf("\t'%s': '", buf);
-				web_putj_utf8(nvram_safe_get(buf));
-				web_puts("',\n");
+				web_put_nvram_utf8(buf);
 			}
 			continue;
 		}
@@ -249,9 +257,7 @@ void asp_nvram(int argc, char **argv)
 
 			for (i = 1; i <= OVPN_SERVER_COUNT; i++) {
 				snprintf(buf, sizeof(buf), "vpns%u%s", i, k + 4);
-				web_printf("\t'%s': '", buf);
-				web_putj_utf8(nvram_safe_get(buf));
-				web_puts("',\n");
+				web_put_nvram_utf8(buf);
 			}
 			continue;
 		}
@@ -263,9 +269,7 @@ void asp_nvram(int argc, char **argv)
 
 			for (i = 0; i < WG_INTERFACE_COUNT; i++) {
 				snprintf(buf, sizeof(buf), "wg%u%s", i, k + 2);
-				web_printf("\t'%s': '", buf);
-				web_putj_utf8(nvram_safe_get(buf));
-				web_puts("',\n");
+				web_put_nvram_utf8(buf);
 			}
 			continue;
 		}
@@ -273,9 +277,7 @@ void asp_nvram(int argc, char **argv)
 #if defined(TCONFIG_OPENVPN) || defined(TCONFIG_WIREGUARD)
 list:
 #endif
-		web_printf("\t'%s': '", k);
-		web_putj_utf8(nvram_safe_get(k));
-		web_puts("',\n");
+		web_put_nvram_utf8(k);
 
 		/* wanX */
 		if (in_arr(k, chk_wan_vars, ASIZE(chk_wan_vars), 1)) { /* check needed prefixes */
@@ -290,9 +292,7 @@ list:
 				else
 					continue;
 
-				web_printf("\t'%s': '", buf);
-				web_putj_utf8(nvram_safe_get(buf));
-				web_puts("',\n");
+				web_put_nvram_utf8(buf);
 			}
 		}
 
@@ -323,9 +323,7 @@ list:
 				else
 					continue;
 
-				web_printf("\t'%s': '", buf);
-				web_putj_utf8(nvram_safe_get(buf));
-				web_puts("',\n");
+				web_put_nvram_utf8(buf);
 			}
 		}
 
