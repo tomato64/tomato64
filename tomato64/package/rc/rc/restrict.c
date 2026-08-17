@@ -226,6 +226,9 @@ void ipt_restrictions(void)
 	int need_web = 0;
 	int first = 1;
 	int v4v6_ok;
+	int is_allow;
+	const char *tgt;
+	const char *tgt_web;
 
 	nvram_unset("rrules_timewarn");
 	nvram_set("rrules_radio", "-1");
@@ -245,6 +248,14 @@ void ipt_restrictions(void)
 			continue;
 
 		http_file = atoi(p);
+		
+		/* 
+		 * Bit 3 (mask 0x8) selects "All except..." whitelist mode.
+		 * Matches RETURN in whitelist mode, otherwise DROP/REJECT.
+		 */
+		is_allow = (http_file & 8) != 0;
+		tgt = is_allow ? "RETURN" : chain_out_drop;
+		tgt_web = is_allow ? "RETURN" : chain_out_reject;
 
 		/* a wireless disable rule, skip */
 		if (comps[0] == '~')
@@ -318,7 +329,7 @@ void ipt_restrictions(void)
 			proto = atoi(pproto);
 			if (proto <= -2) {
 				/* shortcut if any proto+any port */
-				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s %s -j %s\n", reschain, iptaddr, app, chain_out_drop);
+				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s %s -j %s\n", reschain, iptaddr, app, tgt);
 				continue;
 			}
 			else if ((proto == 6) || (proto == 17) || (proto == -1)) {
@@ -334,12 +345,12 @@ void ipt_restrictions(void)
 					ports[0] = 0;
 
 				if (proto != 17)
-					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p tcp %s %s %s -j %s\n", reschain, ports, iptaddr, app, chain_out_drop);
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p tcp %s %s %s -j %s\n", reschain, ports, iptaddr, app, tgt);
 				if (proto != 6)
-					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p udp %s %s %s -j %s\n", reschain, ports, iptaddr, app, chain_out_drop);
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p udp %s %s %s -j %s\n", reschain, ports, iptaddr, app, tgt);
 			}
 			else {
-				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %d %s %s -j %s\n", reschain, proto, iptaddr, app, chain_out_drop);
+				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %d %s %s -j %s\n", reschain, proto, iptaddr, app, tgt);
 			}
 		}
 
@@ -362,9 +373,9 @@ void ipt_restrictions(void)
 				p = NULL;
 
 #ifdef TCONFIG_BCMARM
-			ipt_write("-A %s -p tcp -m web --hore \"%s\" -j %s\n", reschain, http, chain_out_reject);
+			ipt_write("-A %s -p tcp -m web --hore \"%s\" -j %s\n", reschain, http, tgt_web);
 #else
-			ip46t_write(ipv6_enabled, "-A %s -p tcp -m web --hore \"%s\" -j %s\n", reschain, http, chain_out_reject);
+			ip46t_write(ipv6_enabled, "-A %s -p tcp -m web --hore \"%s\" -j %s\n", reschain, http, tgt_web);
 #endif
 			need_web = 1;
 			blockall = 0;
@@ -384,12 +395,20 @@ void ipt_restrictions(void)
 
 		if (app[0]) {
 #ifdef TCONFIG_BCMARM
-			ipt_write("-A %s -p tcp -m multiport --dports %s -m web --path \"%s\" -j %s\n", reschain, nvram_safe_get("rrulewp"), app, chain_out_reject);
+			ipt_write("-A %s -p tcp -m multiport --dports %s -m web --path \"%s\" -j %s\n", reschain, nvram_safe_get("rrulewp"), app, tgt_web);
 #else
-			ip46t_write(ipv6_enabled, "-A %s -p tcp -m multiport --dports %s -m web --path \"%s\" -j %s\n", reschain, nvram_safe_get("rrulewp"), app, chain_out_reject);
+			ip46t_write(ipv6_enabled, "-A %s -p tcp -m multiport --dports %s -m web --path \"%s\" -j %s\n", reschain, nvram_safe_get("rrulewp"), app, tgt_web);
 #endif
 			need_web = 1;
 			blockall = 0;
+		}
+
+		/* 
+		 * Fall-through action for Whitelist mode:
+		 * If it's a whitelist, anything not matching the allowed rules above drops here.
+		 */
+		if (is_allow && !blockall) {
+			ip46t_write(ipv6_enabled, "-A %s -j %s\n", reschain, chain_out_drop);
 		}
 
 		if (*comps) {

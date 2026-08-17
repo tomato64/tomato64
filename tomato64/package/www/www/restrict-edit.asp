@@ -370,6 +370,7 @@ function remove() {
 
 function verifyFields(focused, quiet) {
 	var b, e;
+	var block_type = E('_f_block_type').value;
 
 	tgHideIcons();
 
@@ -377,10 +378,10 @@ function verifyFields(focused, quiet) {
 	elem.display(PR('_f_sched_sun'), !E('_f_sched_everyday').checked);
 
 	b = E('rt_norm').checked;
-	elem.display(PR('_f_comp_all'), PR('_f_block_all'), b);
+	elem.display(PR('_f_comp_all'), PR('_f_block_type'), b);
 
 	elem.display(PR('res-comp-grid'), b && E('_f_comp_all').value != 0);
-	elem.display(PR('res-bp-grid'), PR('_f_block_http'), PR('_f_activex'), b && !E('_f_block_all').checked);
+	elem.display(PR('res-bp-grid'), PR('_f_block_http'), PR('_f_activex'), b && (block_type != 2));
 
 	ferror.clear('_f_comp_all');
 
@@ -442,10 +443,11 @@ function save() {
 		else
 			data.push('');
 
-		if (fom._f_block_all.checked)
+		if (fom._f_block_type.value == 2)
 			data.push('', '', '0');
 		else {
 			var check = 0;
+
 			a = bpg.getAllData();
 			check += a.length;
 			b = [];
@@ -460,24 +462,29 @@ function save() {
 			data.push(a);
 
 			n = 0;
+			/* Value 1 is "All Except..." (Whitelist Mode) */
+			if (fom._f_block_type.value == 1)
+				n |= 8;
+
 			if (fom._f_activex.checked)
-				n = 1;
+				n |= 1;
 			if (fom._f_flash.checked)
 				n |= 2;
 			if (fom._f_java.checked)
 				n |= 4;
 
 			data.push(n);
-			
-			if (((check + n) == 0) && (data[0] == 1)) {
-				alert('Please specify what items should be blocked');
+
+			/* Check against (n & 7) so the bit-8 whitelist flag doesn't false-trigger a pass */
+			if ((check == 0 && (n & 7) == 0) && (data[0] == 1)) {
+				alert('Please specify what items should be blocked or allowed');
 				return;
 			}
 		}
 	}
 	else {
 		data.push('~');
-		data.push('', '', '', '0');
+		data.push('', '', '0');
 	}
 
 	data.push(fom._f_desc.value);
@@ -503,7 +510,6 @@ function earlyInit() {
 
 	cg.setup();
 	var count = bpg.setup();
-	E('_f_block_all').checked = (count == 0) && (rule[7].search(/[^\s\r\n]/) == -1) && (rule[8] == 0);
 
 	verifyFields(null, 1);
 	insOvl();
@@ -566,7 +572,7 @@ function init() {
 /* TOMATO64-REMOVE-END */
 			{ title: 'Applies To', name: 'f_comp_all', type: 'select', options: [[0,'All Computers / Devices'],[1,'The Following...'],[2,'All Except...']], value: 0 },
 			{ title: '&nbsp;', text: '<div class="tomato-grid" id="res-comp-grid"><\/div>' },
-			{ title: 'Blocked Resources', name: 'f_block_all', type: 'checkbox', suffix: ' Block All Internet Access', value: 0 },
+			{ title: 'Blocked Resources', name: 'f_block_type', type: 'select', options: [[0, 'The Following...'], [1, 'All Except...'], [2, 'Block all Internet access']], value: (rule[8] & 8) ? 1 : ((rule[6] == '' && rule[7] == '' && rule[8] == 0) ? 2 : 0) },
 				{ title: 'Port / Application', indent: 2, text: '<div class="tomato-grid" id="res-bp-grid"><\/div>' },
 				{ title: 'HTTP Request', indent: 2, name: 'f_block_http', type: 'textarea', value: rule[7] },
 				{ title: 'HTTP Requested Files', indent: 2, multi: [
