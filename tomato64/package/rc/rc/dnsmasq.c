@@ -225,8 +225,7 @@ static void write_tor_dns(FILE *f)
 		for (i = 1; i < BRIDGE_COUNT; i++) {
 			snprintf(buf, sizeof(buf), "br%d", i);
 			if (nvram_match("tor_iface", buf)) {
-				snprintf(buf, sizeof(buf), "lan%d_ipaddr", i);
-				t_ip = nvram_safe_get(buf);
+				t_ip = bridge_nvram_get(i, "ipaddr", buf, sizeof(buf));
 				break;
 			}
 		}

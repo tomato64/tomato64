@@ -44,17 +44,11 @@ static int ipv6_neigh_addr(const char *ifname, const char *in, char *out, size_t
 static void stop_ndpbind(void)
 {
 	const char *lanif;
-	char ifkey[24], num[4];
+	char ifkey[24];
 	unsigned int i;
 
 	for (i = 0; i < BRIDGE_COUNT; i++) {
-		if (i == 0)
-			num[0] = '\0';
-		else
-			snprintf(num, sizeof(num), "%u", i);
-
-		snprintf(ifkey, sizeof(ifkey), "lan%s_ifname", num);
-		lanif = nvram_safe_get(ifkey);
+		lanif = bridge_nvram_get(i, "ifname", ifkey, sizeof(ifkey));
 		if (*lanif)
 			eval("ip", "-6", "neigh", "flush", "dev", (char *)lanif, "nud", "permanent");
 	}

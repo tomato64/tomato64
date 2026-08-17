@@ -847,9 +847,10 @@ void start_ovpn_server(int unit)
 				for (i = 1; i < BRIDGE_COUNT; i++) {
 					snprintf(buffer2, BUF_SIZE_32, "br%d", i);
 					if (nvram_contains_word(buffer, buffer2)) {
-						snprintf(buffer2, BUF_SIZE_32, "lan%d_ipaddr", i);
+						/* Keep nvram_get() semantics; only centralize lanN key naming. */
+						get_bridge_nvram_key(i, "ipaddr", buffer2, BUF_SIZE_32);
 						br_ipaddr = nvram_get(buffer2);
-						snprintf(buffer2, BUF_SIZE_32, "lan%d_netmask", i);
+						get_bridge_nvram_key(i, "netmask", buffer2, BUF_SIZE_32);
 						br_netmask = nvram_get(buffer2);
 						break;
 					}
@@ -917,12 +918,16 @@ void start_ovpn_server(int unit)
 
 			for (i = 0; i < BRIDGE_COUNT; i++) {
 				if (plan & (1 << i)) {
+					char *lan_ipaddr, *lan_netmask;
 					int ret3 = 0, ret4 = 0;
 
-					ret3 = sscanf(getNVRAMVar((i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
-					ret4 = sscanf(getNVRAMVar((i == 0 ? "lan_netmask" : "lan%d_netmask"), i), "%d.%d.%d.%d", &nm[0], &nm[1], &nm[2], &nm[3]);
+					/* Shared bridge lookup keeps the lan_* / lanN_* convention in one place. */
+					lan_ipaddr = bridge_nvram_get(i, "ipaddr", buffer2, BUF_SIZE_32);
+					lan_netmask = bridge_nvram_get(i, "netmask", buffer2, BUF_SIZE_32);
+					ret3 = sscanf(lan_ipaddr, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
+					ret4 = sscanf(lan_netmask, "%d.%d.%d.%d", &nm[0], &nm[1], &nm[2], &nm[3]);
 					if (ret3 == 4 && ret4 == 4) {
-						fprintf(fp, "push \"route %d.%d.%d.%d %s\"\n", ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], getNVRAMVar((i == 0 ? "lan_netmask" : "lan%d_netmask"), i));
+						fprintf(fp, "push \"route %d.%d.%d.%d %s\"\n", ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], lan_netmask);
 						push_lan[i] = 1; /* IPv4 LANX will be pushed */
 					}
 				}
@@ -1032,8 +1037,8 @@ void start_ovpn_server(int unit)
 			/* check if LANX will be pushed --> if YES, push the suitable DNS Server address */
 			for (i = 0; i < BRIDGE_COUNT; i++) {
 				if (push_lan[i] == 1) { /* push IPv4 LANx DNS */
-					snprintf(buffer, BUF_SIZE, (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
-					fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get(buffer));
+					fprintf(fp, "push \"dhcp-option DNS %s\"\n",
+					        bridge_nvram_get(i, "ipaddr", buffer, BUF_SIZE));
 					dont_push_active = 1;
 				}
 			}
@@ -1041,9 +1046,10 @@ void start_ovpn_server(int unit)
 			/* check what LAN is active before push DNS */
 			if (dont_push_active == 0) {
 				for (i = 0; i < BRIDGE_COUNT; i++) {
-					snprintf(buffer, BUF_SIZE, (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
-					if (strcmp(nvram_safe_get(buffer), "") != 0) {
-						fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get(buffer));
+					char *lan_ipaddr = bridge_nvram_get(i, "ipaddr", buffer, BUF_SIZE);
+
+					if (*lan_ipaddr) {
+						fprintf(fp, "push \"dhcp-option DNS %s\"\n", lan_ipaddr);
 						break;
 					}
 				}

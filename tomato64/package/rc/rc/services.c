@@ -1346,10 +1346,8 @@ void start_upnp(void)
 	int enable, upnp_port, https;
 	int ports[4];
 	char uuid[45];
-	char lanN_ipaddr[] = "lanXX_ipaddr";
-	char lanN_netmask[] = "lanXX_netmask";
-	char lanN_ifname[] = "lanXX_ifname";
 	char upnp_lanN[] = "upnp_lanXX";
+	char lan_prefix[12], key[24];
 	char tmp[8];
 	char *lanip, *lanmask, *lanifname;
 	char br;
@@ -1432,19 +1430,15 @@ void start_upnp(void)
 	fprintf(f, "%s\n", nvram_safe_get("upnp_custom"));
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[12];
-		get_bridge_suffix(br, bridge, sizeof(bridge));
+		/* upnp_lan is bridge zero; higher bridges use upnp_lanN. */
+		get_bridge_prefix(br, lan_prefix, sizeof(lan_prefix));
+		snprintf(upnp_lanN, sizeof(upnp_lanN), "upnp_%s", lan_prefix);
 
-		snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge);
-		snprintf(lanN_netmask, sizeof(lanN_netmask), "lan%s_netmask", bridge);
-		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
-		snprintf(upnp_lanN, sizeof(upnp_lanN), "upnp_lan%s", bridge);
+		lanip = bridge_nvram_get(br, "ipaddr", key, sizeof(key));
+		lanmask = bridge_nvram_get(br, "netmask", key, sizeof(key));
+		lanifname = bridge_nvram_get(br, "ifname", key, sizeof(key));
 
-		lanip = nvram_safe_get(lanN_ipaddr);
-		lanmask = nvram_safe_get(lanN_netmask);
-		lanifname = nvram_safe_get(lanN_ifname);
-
-		if ((strcmp(nvram_safe_get(upnp_lanN), "1") == 0) && (strcmp(lanifname, "") != 0)) {
+		if (nvram_match(upnp_lanN, "1") && *lanifname) {
 			fprintf(f, "listening_ip=%s\n", lanifname);
 
 			/* not implemented in GUI */

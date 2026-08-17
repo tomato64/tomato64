@@ -123,11 +123,8 @@ void ipt_bwlimit(int chain)
 			snprintf(buffer, sizeof(buffer), "bwl_lan%d_enable", i);
 			if (nvram_get_int(buffer) == 1) {
 
-				snprintf(buffer, sizeof(buffer), "lan%d_ipaddr", i);
-				lanX_ipaddr = nvram_safe_get(buffer);
-
-				snprintf(buffer, sizeof(buffer), "lan%d_netmask", i);
-				lanX_mask = nvram_safe_get(buffer);
+				lanX_ipaddr = (char *)bridge_nvram_get(i, "ipaddr", buffer, sizeof(buffer));
+				lanX_mask = (char *)bridge_nvram_get(i, "netmask", buffer, sizeof(buffer));
 
 				ipt_write("-A POSTROUTING ! -s %s/%s -d %s/%s -j MARK --set-mark 0x%d0/0xf0\n"
 				          "-A PREROUTING -s %s/%s ! -d %s/%s -j MARK --set-mark 0x%d0/0xf0\n",

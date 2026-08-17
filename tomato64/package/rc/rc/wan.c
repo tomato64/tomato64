@@ -1277,17 +1277,14 @@ void start_wan_done(char *wan_ifname, char *prefix)
 		/* We don't need STP after wireless led is lighted */
 		if (check_hw_type() == HW_BCM4702) {
 			int br;
-			char ifname_key[24], stp_key[24];
+			char key[24];
 			const char *ifname;
 
 			for (br = 0; br < BRIDGE_COUNT; br++) {
-				snprintf(ifname_key, sizeof(ifname_key), (br == 0 ? "lan_ifname" : "lan%d_ifname"), br);
-				snprintf(stp_key, sizeof(stp_key), (br == 0 ? "lan_stp" : "lan%d_stp"), br);
-
-				ifname = nvram_safe_get(ifname_key);
-				if ((br == 0) || (*ifname != '\0')) {
+				ifname = bridge_nvram_get(br, "ifname", key, sizeof(key));
+				if ((br == 0) || *ifname) {
 					eval("brctl", "stp", ifname, "0");
-					if (nvram_match(stp_key, "1"))
+					if (strcmp(bridge_nvram_get(br, "stp", key, sizeof(key)), "1") == 0)
 						eval("brctl", "stp", ifname, "1");
 				}
 			}
