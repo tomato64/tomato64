@@ -783,7 +783,9 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 				snprintf(options, sizeof(options), nvram_safe_get("usb_ext_opt"));
 		}
 		else if (strcmp(type, "vfat") == 0) {
-			if (nvram_invmatch("smbd_cset", ""))
+			if (nvram_match("smbd_cset", "utf8"))
+				snprintf(options, sizeof(options), "utf8");
+			else if (nvram_invmatch("smbd_cset", ""))
 				snprintf(options, sizeof(options), "iocharset=%s%s", isdigit(nvram_get("smbd_cset")[0]) ? "cp" : "", nvram_get("smbd_cset"));
 
 			if (nvram_invmatch("smbd_cpage", "")) {
