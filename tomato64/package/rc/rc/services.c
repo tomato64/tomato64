@@ -920,7 +920,7 @@ void dns_to_resolv(void)
 				dns = get_dns(wan_prefix); /* static buffer */
 				if (dns->count == 0) {
 					/* put a pseudo DNS IP to trigger Connect On Demand */
-					if (nvram_match(strlcat_r(wan_prefix, "_ppp_demand", tmp, sizeof(tmp)), "1")) {
+					if (prefix_nvram_match(wan_prefix, "ppp_demand", "1", tmp, sizeof(tmp))) {
 						switch (get_wanx_proto(wan_prefix)) {
 							case WP_PPPOE:
 							case WP_PPP3G:
@@ -933,7 +933,7 @@ void dns_to_resolv(void)
 								 * Further info: https://linksysinfo.org/index.php?threads/tomato-using-1-1-1-1-for-pppoe-connect-on-demand.74102/
 								 * Also add possibility to change that IP (198.51.100.1) in GUI by the user
 								 */
-								trig_ip = nvram_safe_get(strlcat_r(wan_prefix, "_ppp_demand_dnsip", tmp, sizeof(tmp)));
+								trig_ip = prefix_nvram_get(wan_prefix, "ppp_demand_dnsip", tmp, sizeof(tmp));
 								logmsg(LOG_DEBUG, "*** %s: no servers for %s: put a pseudo DNS (non-routable on public internet) IP %s to trigger Connect On Demand", __FUNCTION__, wan_prefix, trig_ip);
 								fprintf(f, "nameserver %s\n", trig_ip);
 								break;

@@ -438,7 +438,7 @@ int using_dhcpc(char *prefix)
 		case WP_L2TP:
 		case WP_PPTP:
 		case WP_PPPOE: /* PPPoE with MAN */
-			return nvram_get_int(strlcat_r(prefix, "_pptp_dhcp", tmp, sizeof(tmp)));
+			return prefix_nvram_get_int(prefix, "pptp_dhcp", tmp, sizeof(tmp));
 	}
 
 	return 0;
@@ -714,7 +714,7 @@ int wan_led_off(char *prefix) /* off WAN LED only if no other WAN active */
 			case WP_STATIC:
 			case WP_DHCP:
 			case WP_LTE:
-				if (!nvram_match(strlcat_r(wanstr, "_ipaddr", tmp, sizeof(tmp)), "0.0.0.0")) { /* have IP, assume ON */
+				if (!prefix_nvram_match(wanstr, "ipaddr", "0.0.0.0", tmp, sizeof(tmp))) { /* have IP, assume ON */
 					up = 1;
 					if (((f = socket(AF_INET, SOCK_DGRAM, 0)) >= 0)) { /* check interface */
 						strlcpy(ifr.ifr_name, prefix_nvram_get(wanstr, "iface", tmp, sizeof(tmp)), sizeof(ifr.ifr_name));
@@ -856,7 +856,7 @@ int check_wanup(char *prefix)
 			logmsg(LOG_DEBUG, "*** %s: error reading %s", __FUNCTION__, ppplink_file);
 		}
 	}
-	else if (!nvram_match(strlcat_r(prefix, "_ipaddr", tmp, sizeof(tmp)), "0.0.0.0")) {
+	else if (!prefix_nvram_match(prefix, "ipaddr", "0.0.0.0", tmp, sizeof(tmp))) {
 		logmsg(LOG_DEBUG, "*** %s: %s have IP, assume ON", __FUNCTION__, prefix);
 		up = 1;
 	}
@@ -955,7 +955,7 @@ const dns_list_t *get_dns(char *prefix)
 
 	dns.count = 0;
 
-	if (nvram_get_int(strlcat_r(prefix, "_dns_auto", tmp, sizeof(tmp))))
+	if (prefix_nvram_get_int(prefix, "dns_auto", tmp, sizeof(tmp)))
 		snprintf(s, sizeof(s), " %s", prefix_nvram_get(prefix, "get_dns", tmp, sizeof(tmp)));
 	else {
 		strlcpy(s, prefix_nvram_get(prefix, "dns", tmp, sizeof(tmp)), sizeof(s));

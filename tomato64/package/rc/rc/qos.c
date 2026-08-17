@@ -601,7 +601,7 @@ void start_qos(char *prefix)
 		return;
 
 	qosDefaultClassId = (nvram_get_int("qos_default") + 1) * 10;
-	incomingBWkbps = strtoul(nvram_safe_get(strlcat_r(prefix, "_qos_ibw", tmp, sizeof(tmp))), NULL, 10);
+	incomingBWkbps = strtoul(prefix_nvram_get(prefix, "qos_ibw", tmp, sizeof(tmp)), NULL, 10);
 
 	prep_qosstr(prefix);
 
@@ -622,9 +622,9 @@ void start_qos(char *prefix)
 	else
 		burst_leaf[0] = 0;
 
-	mtu = strtoul(nvram_safe_get(strlcat_r(prefix, "_mtu", tmp, sizeof(tmp))), NULL, 10);
-	bw = strtoul(nvram_safe_get(strlcat_r(prefix, "_qos_obw", tmp, sizeof(tmp))), NULL, 10);
-	overhead = strtoul(nvram_safe_get(strlcat_r(prefix, "_qos_overhead", tmp, sizeof(tmp))), NULL, 10);
+	mtu = strtoul(prefix_nvram_get(prefix, "mtu", tmp, sizeof(tmp)), NULL, 10);
+	bw = strtoul(prefix_nvram_get(prefix, "qos_obw", tmp, sizeof(tmp)), NULL, 10);
+	overhead = strtoul(prefix_nvram_get(prefix, "qos_overhead", tmp, sizeof(tmp)), NULL, 10);
 	r2q = 10;
 
 	if ((bw * 1000) / (8 * r2q) < mtu) {
@@ -678,7 +678,7 @@ void start_qos(char *prefix)
 		if (overhead > 0)
 			fprintf(f, " overhead %u", overhead);
 
-		switch (nvram_get_int(strlcat_r(prefix, "_qos_encap", tmp, sizeof(tmp)))) {
+		switch (prefix_nvram_get_int(prefix, "qos_encap", tmp, sizeof(tmp))) {
 			case 1:
 				cake_encap_root = " atm";
 				break;
@@ -728,7 +728,7 @@ void start_qos(char *prefix)
 			fprintf(f, " overhead %u", overhead);
 
 			/* HTB only supports ATM value */
-			if (nvram_get_int(strlcat_r(prefix, "_qos_encap", tmp, sizeof(tmp))))
+			if (prefix_nvram_get_int(prefix, "qos_encap", tmp, sizeof(tmp)))
 #ifdef TCONFIG_BCMARM
 				fprintf(f, " linklayer atm");
 #else
@@ -778,7 +778,7 @@ void start_qos(char *prefix)
 				fprintf(f, " overhead %u", overhead);
 
 				/* HTB only supports ATM value */
-				if (nvram_get_int(strlcat_r(prefix, "_qos_encap", tmp, sizeof(tmp))))
+				if (prefix_nvram_get_int(prefix, "qos_encap", tmp, sizeof(tmp)))
 #ifdef TCONFIG_BCMARM
 					fprintf(f, " linklayer atm");
 #else
@@ -910,7 +910,7 @@ void start_qos(char *prefix)
 					fprintf(f, " overhead %u", overhead);
 
 					/* HTB only supports ATM value */
-					if (nvram_get_int(strlcat_r(prefix, "_qos_encap", tmp, sizeof(tmp))))
+					if (prefix_nvram_get_int(prefix, "qos_encap", tmp, sizeof(tmp)))
 #ifdef TCONFIG_BCMARM
 						fprintf(f, " linklayer atm");
 #else

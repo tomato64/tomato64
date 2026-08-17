@@ -48,7 +48,7 @@ void stop_redial(char *prefix)
 {
 	char tmp[32];
 	int pid;
-	pid = nvram_get_int(strlcat_r(prefix, "_ppp_redialpid", tmp, sizeof(tmp)));
+	pid = prefix_nvram_get_int(prefix, "ppp_redialpid", tmp, sizeof(tmp));
 	if (pid > 1) {
 		while (kill(pid, SIGKILL) == 0) {
 			sleep(1);
@@ -78,12 +78,12 @@ int redial_main(int argc, char **argv)
 
 	proto = get_wanx_proto(prefix);
 	if (proto == WP_PPPOE || proto == WP_PPP3G || proto == WP_PPTP || proto == WP_L2TP)
-		if (nvram_get_int(strlcat_r(prefix, "_ppp_demand", tmp, sizeof(tmp))) != 0)
+		if (prefix_nvram_get_int(prefix, "ppp_demand", tmp, sizeof(tmp)) != 0)
 			return 0;
 
-	nvram_set(strlcat_r(prefix, "_ppp_redialpid", tmp, sizeof(tmp)), c_pid);
+	prefix_nvram_set(prefix, "ppp_redialpid", c_pid, tmp, sizeof(tmp));
 
-	tm = nvram_get_int(strlcat_r(prefix, "_ppp_redialperiod", tmp, sizeof(tmp))) ? : 30;
+	tm = prefix_nvram_get_int(prefix, "ppp_redialperiod", tmp, sizeof(tmp)) ? : 30;
 	if (tm < 5)
 		tm = 5;
 

@@ -577,7 +577,8 @@ static void start_emf(char *lan_ifname)
 	}
 	else {
 		logmsg(LOG_INFO, "EMF for %s is started", lan_ifname);
-		nvram_set(strlcat_r(lan_ifname, "_emf_active", tmp, sizeof(tmp)), "1"); /* set active */
+		/* EMF state is stored under the interface-scoped "<ifname>_emf_active" key. */
+		prefix_nvram_set(lan_ifname, "emf_active", "1", tmp, sizeof(tmp)); /* set active */
 	}
 }
 
@@ -587,7 +588,7 @@ static void stop_emf(char *lan_ifname)
 	char tmp[32] = {0};
 
 	/* check if emf is active for lan_ifname */
-	if (lan_ifname == NULL || !nvram_get_int(strlcat_r(lan_ifname, "_emf_active", tmp, sizeof(tmp))))
+	if (lan_ifname == NULL || !prefix_nvram_get_int(lan_ifname, "emf_active", tmp, sizeof(tmp)))
 		return;
 
 	/* Stop EMF for this LAN / brX */
@@ -602,7 +603,7 @@ static void stop_emf(char *lan_ifname)
 	}
 	else {
 		logmsg(LOG_INFO, "EMF for %s is stopped", lan_ifname);
-		nvram_set(strlcat_r(lan_ifname, "_emf_active", tmp, sizeof(tmp)), "0"); /* set NOT active */
+		prefix_nvram_set(lan_ifname, "emf_active", "0", tmp, sizeof(tmp)); /* set NOT active */
 	}
 }
 #endif /* TCONFIG_EMF */
