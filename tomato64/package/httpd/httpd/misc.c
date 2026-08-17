@@ -492,34 +492,15 @@ static void print_ipv6_infos(void) /* show IPv6 DUID and addresses: wan, dns, la
 		}
 	}
 
-	/* IPv6 DNS */
-	dns = nvram_safe_get("ipv6_dns"); /* check static dns first */
-
-	memset(buffer, 0, sizeof(buffer));
-	foreach(buffer, dns, next) {
-		/* verify that this is a valid IPv6 address */
-		if ((cnt == 0) && inet_pton(AF_INET6, buffer, &addr) == 1) {
-			web_printf("\tip6_wan_dns1: '%s',\n", buffer);
-			cnt++; /* found and UP */
-		}
-		else if ((cnt == 1) && inet_pton(AF_INET6, buffer, &addr) == 1) {
-			web_printf("\tip6_wan_dns2: '%s',\n", buffer);
-			cnt++;  /* found and UP */
-		}
-	}
-	if (cnt == 0) { /* check auto dns if no valid static dns found */
-		dns = nvram_safe_get("ipv6_get_dns");
+	/* Check static DNS first; use learned DNS only when no static address is valid. */
+	for (br = 0; (br < 2) && (cnt == 0); br++) {
+		dns = nvram_safe_get(br ? "ipv6_get_dns" : "ipv6_dns");
 
 		memset(buffer, 0, sizeof(buffer));
 		foreach(buffer, dns, next) {
-			/* verify that this is a valid IPv6 address */
-			if ((cnt == 0) && inet_pton(AF_INET6, buffer, &addr) == 1) {
-				web_printf("\tip6_wan_dns1: '%s',\n", buffer);
-				cnt++; /* found and UP */
-			}
-			else if ((cnt == 1) && inet_pton(AF_INET6, buffer, &addr) == 1) {
-				web_printf("\tip6_wan_dns2: '%s',\n", buffer);
-				cnt++;  /* found and UP */
+			if ((cnt < 2) && (inet_pton(AF_INET6, buffer, &addr) == 1)) {
+				cnt++;
+				web_printf("\tip6_wan_dns%d: '%s',\n", cnt, buffer);
 			}
 		}
 	}
