@@ -617,10 +617,7 @@ static void ipt_account_cleanup(void)
 				aname = argv[i + 1];
 
 				for (br = 0; br < BRIDGE_COUNT; br++) {
-					if (br)
-						snprintf(lanN, sizeof(lanN), "lan%d", br);
-					else
-						snprintf(lanN, sizeof(lanN), "lan");
+					get_bridge_prefix(br, lanN, sizeof(lanN));
 
 					if (strcmp(aname, lanN) == 0) {
 						have_lan_aname = 1;
