@@ -1990,6 +1990,32 @@ static void set_ac_wifi_channel_defaults(void)
 }
 #endif /* CONFIG_BCMWL6A */
 
+#ifdef CONFIG_BCMWL6A
+/*
+ * Set Singapore regulatory defaults in the unit-based WL6 NVRAM namespace.
+ * @return  none
+ */
+static void set_sg_wifi_country_defaults(void)
+{
+	nvram_set("0:regrev", "12");
+	nvram_set("1:regrev", "12");
+	nvram_set("0:ccode", "SG");
+	nvram_set("1:ccode", "SG");
+}
+
+/*
+ * Set Singapore regulatory defaults in the PCI-path WL6 NVRAM namespace.
+ * @return  none
+ */
+static void set_pci_sg_wifi_country_defaults(void)
+{
+	nvram_set("pci/1/1/regrev", "12");
+	nvram_set("pci/2/1/regrev", "12");
+	nvram_set("pci/1/1/ccode", "SG");
+	nvram_set("pci/2/1/ccode", "SG");
+}
+#endif /* CONFIG_BCMWL6A */
+
 static int init_nvram(void)
 {
 	int model;
@@ -3155,10 +3181,7 @@ static int init_nvram(void)
 #endif
 #else /* !TCONFIG_AC66U */
 			/* wifi country settings SDK6 */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 
@@ -3509,10 +3532,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "upper");
 
 			/* wifi country settings */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			/* fix ssid according to 5G (eth1) and 2.4G (eth2) */
 			nvram_set("wl0_ssid", "FreshTomato50");
@@ -3919,10 +3939,7 @@ static int init_nvram(void)
 			set_ac_wifi_channel_defaults();
 
 			/* wifi country settings SDK6 */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 		}
@@ -4111,10 +4128,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings SDK6 */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 		}
@@ -4303,10 +4317,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings SDK6 */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 		}
@@ -5171,10 +5182,7 @@ static int init_nvram(void)
 			set_ac_wifi_channel_defaults();
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 		}
 		break;
 	case MODEL_DSLAC68U:
@@ -5202,10 +5210,7 @@ static int init_nvram(void)
 			set_ac_wifi_channel_defaults();
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 		}
 		break;
 	case MODEL_RTAC68U:
@@ -5238,10 +5243,7 @@ static int init_nvram(void)
 			set_ac_wifi_channel_defaults();
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 		}
 		break;
 	case MODEL_RTAC68UV3:
@@ -5269,10 +5271,7 @@ static int init_nvram(void)
 			set_ac_wifi_channel_defaults();
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 
 			/* for RT-AC68U V3 - let tomato set odmpid right! value is empty? */
 			nvram_set("odmpid", "RT-AC68U");
@@ -5303,10 +5302,7 @@ static int init_nvram(void)
 			set_ac_wifi_channel_defaults();
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 		}
 		break;
 	case MODEL_RTAC66U_B1: /* also for RT-N66U_C1 and RT-AC1750_B1 */
@@ -5380,10 +5376,7 @@ static int init_nvram(void)
 			set_ac_wifi_channel_defaults();
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 
 			/* 2.4 GHz and 5 GHz defaults */
 			/* let the cfe set the init parameter for wifi modules - nothing to modify/adjust right now */
@@ -5414,10 +5407,7 @@ static int init_nvram(void)
 			set_ac_wifi_channel_defaults();
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 
 			/* 2.4 GHz and 5 GHz defaults */
 			/* let the cfe set the init parameter for wifi modules - nothing to modify/adjust right now */
@@ -5465,10 +5455,7 @@ static int init_nvram(void)
 			nvram_set("wl1_vreqd", "0"); /* do not enable vhtmode and vht_features for 2G NON-AC PHY */
 
 			/* wifi country settings */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			nvram_set("wl0_ssid", "FreshTomato50");
 			nvram_set("wl1_ssid", "FreshTomato24");
@@ -5903,10 +5890,7 @@ static int init_nvram(void)
 			set_ac_wifi_channel_defaults();
 
 			/* wifi country settings */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			/* misc wifi settings */
 			nvram_set("wl0_vreqd", "0"); /* do not enable vhtmode and vht_features for 2G NON-AC PHY */
@@ -6141,10 +6125,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			/* misc wifi settings */
 			nvram_set("wl0_vreqd", "0"); /* do not enable vhtmode and vht_features for 2G NON-AC PHY */
@@ -6368,10 +6349,7 @@ static int init_nvram(void)
 			set_ac_wifi_channel_defaults();
 
 			/* wifi country settings */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			/* misc wifi settings */
 			nvram_set("wl0_vreqd", "0"); /* do not enable vhtmode and vht_features for 2G NON-AC PHY */
@@ -6604,10 +6582,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			/* misc wifi settings */
 			nvram_set("wl0_vreqd", "0"); /* do not enable vhtmode and vht_features for 2G NON-AC PHY */
@@ -6850,10 +6825,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			/* misc wifi settings */
 			nvram_set("wl0_vreqd", "0"); /* do not enable vhtmode and vht_features for 2G NON-AC PHY */
@@ -7108,10 +7080,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			/* misc wifi settings */
 			nvram_set("wl0_vreqd", "0"); /* do not enable vhtmode and vht_features for 2G NON-AC PHY */
@@ -7349,10 +7318,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			struct nvram_tuple r7000_pci_1_1_params[] = {
 				/* 2.4 GHz defaults */
@@ -7609,10 +7575,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 
 			/* set devpath (device path) for wl driver */
 			nvram_set("devpath0", "pci/1/1/");
@@ -7881,10 +7844,7 @@ static int init_nvram(void)
 			nvram_set("wl0_vreqd", "0"); /* do not enable vhtmode and vht_features for 2G NON-AC PHY */
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 
 			/* set devpath (device path) for wl driver */
 			nvram_set("devpath0", "pci/1/1/");
@@ -8110,10 +8070,7 @@ static int init_nvram(void)
 				nvram_set("wl1_hwaddr", s);
 
 				/* wifi country settings */
-				nvram_set("0:regrev", "12");
-				nvram_set("1:regrev", "12");
-				nvram_set("0:ccode", "SG");
-				nvram_set("1:ccode", "SG");
+				set_sg_wifi_country_defaults();
 			}
 			else { /* Case DIR868L rev A1/B1 */
 
@@ -8127,10 +8084,7 @@ static int init_nvram(void)
 				nvram_set("wl1_hwaddr", s);
 
 				/* wifi country settings */
-				nvram_set("pci/1/1/regrev", "12");
-				nvram_set("pci/2/1/regrev", "12");
-				nvram_set("pci/1/1/ccode", "SG");
-				nvram_set("pci/2/1/ccode", "SG");
+				set_pci_sg_wifi_country_defaults();
 
 				/* enable 5 GHz WLAN for rev A1/B1 */
 				nvram_unset("devpath1");
@@ -8632,10 +8586,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 
 			/* 2.4 GHz module defaults */
 			nvram_set("devpath0", "pci/1/1");
@@ -8910,10 +8861,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nbw_cap", "1");
 
 			/* wifi country settings */
-			nvram_set("pci/1/1/regrev", "12");
-			nvram_set("pci/2/1/regrev", "12");
-			nvram_set("pci/1/1/ccode", "SG");
-			nvram_set("pci/2/1/ccode", "SG");
+			set_pci_sg_wifi_country_defaults();
 
 			nvram_set("wl0_ssid", "FreshTomato50");
 			nvram_set("wl1_ssid", "FreshTomato24");
@@ -9148,10 +9096,7 @@ static int init_nvram(void)
 			set_usb_boot_defaults();
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 			
 			if (nvram_match("boardnum", "20140309") ||
 			    nvram_match("boardnum", "20150309")) { /* case EA6350v1 OR EA6350v2 */
@@ -9246,10 +9191,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 
 			/* misc wifi settings */
 			nvram_set("wl0_vreqd", "0"); /* do not enable vhtmode and vht_features for 2G NON-AC PHY */
@@ -9458,10 +9400,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 
 			/* misc wifi settings */
 			nvram_set("wl0_vreqd", "0"); /* do not enable vhtmode and vht_features for 2G NON-AC PHY */
@@ -9667,10 +9606,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 
 			/* 2.4 GHz module defaults */
 			nvram_set("0:aa2g", "7");
@@ -9909,10 +9845,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* wifi country settings */
-			nvram_set("0:regrev", "12");
-			nvram_set("1:regrev", "12");
-			nvram_set("0:ccode", "SG");
-			nvram_set("1:ccode", "SG");
+			set_sg_wifi_country_defaults();
 
 			/* 2.4 GHz and 5 GHz defaults */
 			/* let the cfe set the init parameter for wifi modules - nothing to modify/adjust right now */
