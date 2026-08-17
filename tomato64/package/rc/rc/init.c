@@ -2140,6 +2140,23 @@ static void set_common_5g_calibration_defaults(void)
 }
 
 /*
+ * Set common 5 GHz temperature and radio defaults for selected AC models.
+ * @return  none
+ */
+static void set_5g_temperature_defaults(void)
+{
+	nvram_set("1:tempoffset", "0");
+	nvram_set("1:temps_hysteresis", "5");
+	nvram_set("1:temps_period", "5");
+	nvram_set("1:tempthresh", "120");
+	nvram_set("1:tssiposslope5g", "1");
+	nvram_set("1:tworangetssi5g", "0");
+	nvram_set("1:txchain", "7");
+	nvram_set("1:venid", "0x14E4");
+	nvram_set("1:xtalfreq", "40000");
+}
+
+/*
  * Set QTD parameters used by the USB wireless radio interface.
  * @return  none
  */
@@ -8959,15 +8976,7 @@ static int init_nvram(void)
 			nvram_set("1:phycal_tempdelta", "0");
 			nvram_set("1:rxchain", "7");
 			set_common_5g_calibration_defaults();
-			nvram_set("1:tempoffset", "0");
-			nvram_set("1:temps_hysteresis", "5");
-			nvram_set("1:temps_period", "5");
-			nvram_set("1:tempthresh", "120");
-			nvram_set("1:tssiposslope5g", "1");
-			nvram_set("1:tworangetssi5g", "0");
-			nvram_set("1:txchain", "7");
-			nvram_set("1:venid", "0x14E4");
-			nvram_set("1:xtalfreq", "40000");
+			set_5g_temperature_defaults();
 		}
 		nvram_set("acs_2g_ch_no_ovlp", "1");
 
@@ -9108,15 +9117,7 @@ static int init_nvram(void)
 			nvram_set("1:phycal_tempdelta", "0");
 			nvram_set("1:rxchain", "7");
 			set_common_5g_calibration_defaults();
-			nvram_set("1:tempoffset", "0");
-			nvram_set("1:temps_hysteresis", "5");
-			nvram_set("1:temps_period", "5");
-			nvram_set("1:tempthresh", "120");
-			nvram_set("1:tssiposslope5g", "1");
-			nvram_set("1:tworangetssi5g", "0");
-			nvram_set("1:txchain", "7");
-			nvram_set("1:venid", "0x14E4");
-			nvram_set("1:xtalfreq", "40000");
+			set_5g_temperature_defaults();
 		}
 		nvram_set("acs_2g_ch_no_ovlp", "1");
 
@@ -9281,15 +9282,7 @@ static int init_nvram(void)
 			nvram_set("1:sb40and80lr5gmpo", "0x0");
 			nvram_set("1:sromrev", "11");
 			nvram_set("1:subband5gver", "4");
-			nvram_set("1:tempoffset", "0");
-			nvram_set("1:temps_hysteresis", "5");
-			nvram_set("1:temps_period", "5");
-			nvram_set("1:tempthresh", "120");
-			nvram_set("1:tssiposslope5g", "1");
-			nvram_set("1:tworangetssi5g", "0");
-			nvram_set("1:txchain", "7");
-			nvram_set("1:venid", "0x14E4");
-			nvram_set("1:xtalfreq", "40000");
+			set_5g_temperature_defaults();
 		}
 		nvram_set("acs_2g_ch_no_ovlp", "1");
 
