@@ -1959,10 +1959,10 @@ void do_static_routes(int add)
 	char *buf;
 	char *p, *q;
 	char *dest, *mask, *gateway, *metric, *if_tmp, *ifname;
-	int r, err, found_lan;
+	int r, err, found_lan, proto;
 	unsigned int i;
 	unsigned int mwan_num = add ? mwan_active_num() : mwan_configured_num();
-	char name[8], ip[16], proto_key[16], ip_key[32], if_key[16];
+	char name[8], ip[16], if_key[32];
 	char *modem_ip, *end;
 	unsigned char c;
 
@@ -2042,23 +2042,21 @@ void do_static_routes(int add)
 	free(buf);
 
 	for (i = 1; i <= mwan_num; i++) {
-		snprintf(name, sizeof(name), (i == 1 ? "wan" : "wan%u"), i);
-		snprintf(proto_key, sizeof(proto_key), "%s_proto", name);
-		snprintf(ip_key, sizeof(ip_key), "%s_modem_ipaddr", name);
-		snprintf(if_key, sizeof(if_key), "%s_ifname", name);
-
-		if (!(nvram_match(proto_key, "pppoe") || nvram_match(proto_key, "dhcp") || nvram_match(proto_key, "static")))
+		get_wan_prefix(i, name);
+		proto = get_wanx_proto(name);
+		if ((proto != WP_PPPOE) && (proto != WP_DHCP) && (proto != WP_STATIC))
 			continue;
 
-		modem_ip = nvram_safe_get(ip_key);
-		if ((!modem_ip) || (!*modem_ip) || (nvram_match(ip_key, "0.0.0.0")) || (foreach_wif(1, NULL, is_sta)))
+		modem_ip = prefix_nvram_get(name, "modem_ipaddr", if_key, sizeof(if_key));
+		if ((!modem_ip) || (!*modem_ip) || (nvram_match(if_key, "0.0.0.0")) || (foreach_wif(1, NULL, is_sta)))
 			continue;
 
 		end = rindex(modem_ip, '.') + 1;
 		c = atoi(end);
 		snprintf(ip, sizeof(ip), "%.*s%hhu", (end - modem_ip), modem_ip, (unsigned char)(c ^ 1 ^ ((c & 2) ^ ((c & 1) << 1))));
 
-		eval("ip", "addr", add ? "add" : "del", ip, "peer", modem_ip, "dev", nvram_safe_get(if_key));
+		eval("ip", "addr", add ? "add" : "del", ip, "peer", modem_ip, "dev",
+		     prefix_nvram_get(name, "ifname", if_key, sizeof(if_key)));
 	}
 }
 
