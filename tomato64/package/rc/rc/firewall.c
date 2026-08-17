@@ -658,31 +658,22 @@ static void ipt_account_cleanup(void)
 
 static void ipt_account(void) {
 	struct in_addr ipaddr, netmask, network;
-	char lanN_ifname[] = "lanXX_ifname";
-	char lanN_ipaddr[] = "lanXX_ipaddr";
-	char lanN_netmask[] = "lanXX_netmask";
-	char lanN[] = "lanXX";
+	char key[32], lanN[12];
 	char netaddrnetmask[] = "255.255.255.255/255.255.255.255 ";
+	char *netmask_str;
 	char br;
 
 	for (br = 0 ; br < BRIDGE_COUNT; br++) {
-		char bridge[12];
-		get_bridge_suffix(br, bridge, sizeof(bridge));
-
-		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
-
-		if (strcmp(nvram_safe_get(lanN_ifname), "") != 0) {
-			snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge);
-			snprintf(lanN_netmask, sizeof(lanN_netmask), "lan%s_netmask", bridge);
-			snprintf(lanN, sizeof(lanN), "lan%s", bridge);
-
-			inet_aton(nvram_safe_get(lanN_ipaddr), &ipaddr);
-			inet_aton(nvram_safe_get(lanN_netmask), &netmask);
+		if (*bridge_nvram_get(br, "ifname", key, sizeof(key))) {
+			inet_aton(bridge_nvram_get(br, "ipaddr", key, sizeof(key)), &ipaddr);
+			netmask_str = bridge_nvram_get(br, "netmask", key, sizeof(key));
+			inet_aton(netmask_str, &netmask);
 
 			/* bitwise AND of ip and netmask gives the network */
 			network.s_addr = ipaddr.s_addr & netmask.s_addr;
 
-			snprintf(netaddrnetmask, sizeof(netaddrnetmask), "%s/%s", inet_ntoa(network), nvram_safe_get(lanN_netmask));
+			get_bridge_prefix(br, lanN, sizeof(lanN));
+			snprintf(netaddrnetmask, sizeof(netaddrnetmask), "%s/%s", inet_ntoa(network), netmask_str);
 
 			/* ipv4 only */
 			ipt_write("-A FORWARD -m account --aaddr %s --aname %s\n", netaddrnetmask, lanN);
@@ -1316,22 +1307,16 @@ static void filter_input(void)
 
 	if (nvram_get_int("fw_strict_input")) {
 		for (br = 0; br < BRIDGE_COUNT; br++) {
-			char bridge[12];
-			get_bridge_suffix(br, bridge, sizeof(bridge));
-
-			snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
+			get_bridge_nvram_key(br, "ifname", lanN_ifname, sizeof(lanN_ifname));
 			if (strncmp(nvram_safe_get(lanN_ifname), "br", 2) == 0) {
 				for (br2 = 0; br2 < BRIDGE_COUNT; br2++) {
 					if (br == br2)
 						continue;
 
-					char bridge2[12];
-					get_bridge_suffix(br2, bridge2, sizeof(bridge2));
-
-					snprintf(lanN_ifname2, sizeof(lanN_ifname2), "lan%s_ifname", bridge2);
+					get_bridge_nvram_key(br2, "ifname", lanN_ifname2, sizeof(lanN_ifname2));
 					if (strncmp(nvram_safe_get(lanN_ifname2), "br", 2) == 0) {
 
-						snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge2);
+						get_bridge_nvram_key(br2, "ipaddr", lanN_ipaddr, sizeof(lanN_ipaddr));
 
 						ipt_write("-A INPUT -i %s -d %s -j DROP\n", nvram_safe_get(lanN_ifname), nvram_safe_get(lanN_ipaddr));
 					}
@@ -1607,10 +1592,7 @@ static void filter_forward(void)
 	}
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[12];
-		get_bridge_suffix(br, bridge, sizeof(bridge));
-
-		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
+		get_bridge_nvram_key(br, "ifname", lanN_ifname, sizeof(lanN_ifname));
 		if (strncmp(nvram_safe_get(lanN_ifname), "br", 2) == 0) {
 			for (br2 = 0; br2 < BRIDGE_COUNT; br2++) {
 				if (br == br2)
@@ -1619,10 +1601,7 @@ static void filter_forward(void)
 				if (lanAccess[((br)+(br2) * BRIDGE_COUNT)] == '1')
 					continue;
 
-				char bridge2[12];
-				get_bridge_suffix(br2, bridge2, sizeof(bridge2));
-
-				snprintf(lanN_ifname2, sizeof(lanN_ifname2), "lan%s_ifname", bridge2);
+				get_bridge_nvram_key(br2, "ifname", lanN_ifname2, sizeof(lanN_ifname2));
 
 				if (strncmp(nvram_safe_get(lanN_ifname2), "br", 2) == 0)
 					ip46t_write(ipv6_enabled, "-A FORWARD -i %s -o %s -j DROP\n", nvram_safe_get(lanN_ifname), nvram_safe_get(lanN_ifname2));
@@ -1687,10 +1666,7 @@ static void filter_forward(void)
 #endif
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[12];
-		get_bridge_suffix(br, bridge, sizeof(bridge));
-
-		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
+		get_bridge_nvram_key(br, "ifname", lanN_ifname, sizeof(lanN_ifname));
 		if (strncmp(nvram_safe_get(lanN_ifname), "br", 2) == 0)
 			ip46t_write(ipv6_enabled, "-A FORWARD -i %s -j %s\n", nvram_safe_get(lanN_ifname), chain_out_accept);
 	}
@@ -2087,14 +2063,9 @@ int start_firewall(void)
 	chains_log_detection();
 
 	for (n = 0; n < BRIDGE_COUNT; n++) {
-		snprintf(buf, sizeof(buf), (n == 0 ? "lan_ifname" : "lan%d_ifname"), n);
-		strlcpy(lanface[n], nvram_safe_get(buf), sizeof(lanface[n]));
-
-		snprintf(buf, sizeof(buf), (n == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), n);
-		strlcpy(lanaddr[n], nvram_safe_get(buf), sizeof(lanaddr[n]));
-
-		snprintf(buf, sizeof(buf), (n == 0 ? "lan_netmask" : "lan%d_netmask"), n);
-		strlcpy(lanmask[n], nvram_safe_get(buf), sizeof(lanmask[n]));
+		strlcpy(lanface[n], bridge_nvram_get(n, "ifname", buf, sizeof(buf)), sizeof(lanface[n]));
+		strlcpy(lanaddr[n], bridge_nvram_get(n, "ipaddr", buf, sizeof(buf)), sizeof(lanaddr[n]));
+		strlcpy(lanmask[n], bridge_nvram_get(n, "netmask", buf, sizeof(buf)), sizeof(lanmask[n]));
 	}
 
 	for (mwan = 1; mwan <= mwan_count; mwan++) {

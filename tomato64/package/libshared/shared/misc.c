@@ -55,6 +55,37 @@ void get_bridge_suffix(unsigned int bridge, char *suffix, const size_t suffix_si
 }
 
 /*
+ * Formats the bridge NVRAM namespace prefix.
+ *
+ * @param bridge       bridge index; bridge 0 maps to "lan"
+ * @param prefix       destination buffer
+ * @param prefix_size  size of the destination buffer
+ */
+void get_bridge_prefix(unsigned int bridge, char *prefix, const size_t prefix_size)
+{
+	if (bridge == 0)
+		strlcpy(prefix, "lan", prefix_size);
+	else
+		snprintf(prefix, prefix_size, "lan%u", bridge);
+}
+
+/*
+ * Builds a bridge-scoped NVRAM key using the lan/lanN naming convention.
+ *
+ * @param bridge    bridge index; bridge 0 uses the unsuffixed lan namespace
+ * @param suffix    NVRAM variable suffix without the separating underscore
+ * @param key       destination buffer receiving the complete NVRAM key
+ * @param key_size  size of the key buffer
+ */
+void get_bridge_nvram_key(unsigned int bridge, const char *suffix, char *key, const size_t key_size)
+{
+	char prefix[12];
+
+	get_bridge_prefix(bridge, prefix, sizeof(prefix));
+	snprintf(key, key_size, "%s_%s", prefix, suffix);
+}
+
+/*
  * Reads a bridge-scoped NVRAM value using the lan/lanN naming convention.
  *
  * @param bridge    bridge index; bridge 0 uses the unsuffixed lan namespace
@@ -65,11 +96,7 @@ void get_bridge_suffix(unsigned int bridge, char *suffix, const size_t suffix_si
  */
 char *bridge_nvram_get(unsigned int bridge, const char *suffix, char *key, const size_t key_size)
 {
-	char bridge_suffix[12];
-
-	get_bridge_suffix(bridge, bridge_suffix, sizeof(bridge_suffix));
-	snprintf(key, key_size, "lan%s_%s", bridge_suffix, suffix);
-
+	get_bridge_nvram_key(bridge, suffix, key, key_size);
 	return nvram_safe_get(key);
 }
 

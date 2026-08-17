@@ -206,8 +206,7 @@ void asp_lanip(int argc, char **argv)
 
 	web_puts("\nvar lanip = [");
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		memset(s, 0, sizeof(s));
-		snprintf(s, sizeof(s), (br == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), br);
+		get_bridge_nvram_key(br, "ipaddr", s, sizeof(s));
 		if ((nv = nvram_get(s)) != NULL) {
 			memset(s, 0, sizeof(s));
 			snprintf(s, sizeof(s), "%s", nv);
@@ -461,14 +460,10 @@ static void print_ipv6_infos(void) /* show IPv6 DUID and addresses: wan, dns, la
 		char bridge[12];
 		get_bridge_suffix(br, bridge, sizeof(bridge));
 
-		memset(buffer2, 0, sizeof(buffer2));
-		snprintf(buffer2, sizeof(buffer2), "lan%s_ipaddr", bridge);
-		if (strcmp(nvram_safe_get(buffer2), "") != 0) {
+		if (*bridge_nvram_get(br, "ipaddr", buffer2, sizeof(buffer2))) {
 			/* check LANx IPv6 address and copy to buffer */
-			memset(buffer2, 0, sizeof(buffer2));
-			snprintf(buffer2, sizeof(buffer2), "lan%s_ifname", bridge);
 			p_tmp = NULL;
-			p_tmp = getifaddr(nvram_safe_get(buffer2), AF_INET6, 0); /* global address */
+			p_tmp = getifaddr(bridge_nvram_get(br, "ifname", buffer2, sizeof(buffer2)), AF_INET6, 0); /* global address */
 			if (p_tmp != NULL) {
 				memset(buffer, 0, sizeof(buffer));
 				snprintf(buffer, sizeof(buffer), "%s", p_tmp);
@@ -476,7 +471,7 @@ static void print_ipv6_infos(void) /* show IPv6 DUID and addresses: wan, dns, la
 			}
 			/* check LAN IPv6 link local address and copy to buffer */
 			p_tmp = NULL;
-			p_tmp = getifaddr(nvram_safe_get(buffer2), AF_INET6, 1); /* link local address */
+			p_tmp = getifaddr(bridge_nvram_get(br, "ifname", buffer2, sizeof(buffer2)), AF_INET6, 1); /* link local address */
 			if (p_tmp != NULL) {
 				memset(buffer, 0, sizeof(buffer));
 				snprintf(buffer, sizeof(buffer), "%s", p_tmp);
@@ -1486,9 +1481,9 @@ void wo_wakeup(char *url)
 
 			eval("ether-wake", "-b", "-i", nvram_safe_get("lan_ifname"), mac);
 			for (i = 1; i < BRIDGE_COUNT; i++) {
-				snprintf(buf, sizeof(buf), "lan%d_ifname", i);
-				if (strcmp(nvram_safe_get(buf), "") != 0)
-					eval("ether-wake", "-b", "-i", nvram_safe_get(buf), mac);
+				char *ifname = bridge_nvram_get(i, "ifname", buf, sizeof(buf));
+				if (*ifname)
+					eval("ether-wake", "-b", "-i", ifname, mac);
 			}
 			mac = p + 1;
 		}

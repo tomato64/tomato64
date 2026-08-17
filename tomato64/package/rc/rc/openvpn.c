@@ -64,36 +64,28 @@ typedef enum ovpn_type
 static void write_ovpn_cstats_rules(FILE *fp, const char *iface, const char *dir)
 {
 	struct in_addr ipaddr, netmask, network;
-	char lanN_ifname[] = "lanXX_ifname";
-	char lanN_ipaddr[] = "lanXX_ipaddr";
-	char lanN_netmask[] = "lanXX_netmask";
-	char lanN[] = "lanXX";
+	char key[32], lanN[12];
 	char netaddrnetmask[] = "255.255.255.255/255.255.255.255";
-	char bridge[12];
+	char *netmask_str;
 	char br;
 
 	if (!nvram_match("cstats_enable", "1"))
 		return;
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		get_bridge_suffix(br, bridge, sizeof(bridge));
-
-		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
-		if (strcmp(nvram_safe_get(lanN_ifname), "") == 0)
+		if (!*bridge_nvram_get(br, "ifname", key, sizeof(key)))
 			continue;
 
-		snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge);
-		snprintf(lanN_netmask, sizeof(lanN_netmask), "lan%s_netmask", bridge);
-		snprintf(lanN, sizeof(lanN), "lan%s", bridge);
-
-		if (!inet_aton(nvram_safe_get(lanN_ipaddr), &ipaddr))
+		if (!inet_aton(bridge_nvram_get(br, "ipaddr", key, sizeof(key)), &ipaddr))
 			continue;
 
-		if (!inet_aton(nvram_safe_get(lanN_netmask), &netmask))
+		netmask_str = bridge_nvram_get(br, "netmask", key, sizeof(key));
+		if (!inet_aton(netmask_str, &netmask))
 			continue;
 
 		network.s_addr = ipaddr.s_addr & netmask.s_addr;
-		snprintf(netaddrnetmask, sizeof(netaddrnetmask), "%s/%s", inet_ntoa(network), nvram_safe_get(lanN_netmask));
+		get_bridge_prefix(br, lanN, sizeof(lanN));
+		snprintf(netaddrnetmask, sizeof(netaddrnetmask), "%s/%s", inet_ntoa(network), netmask_str);
 
 		fprintf(fp, "iptables -I FORWARD %s %s -m account --aaddr %s --aname %s\n", dir, iface, netaddrnetmask, lanN);
 	}

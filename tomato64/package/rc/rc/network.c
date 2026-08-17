@@ -900,20 +900,10 @@ void restart_wl(void)
 #endif
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[12];
-		get_bridge_suffix(br, bridge, sizeof(bridge));
-
-		strlcpy(tmp, "lan", sizeof(tmp));
-		strlcat(tmp, bridge, sizeof(tmp));
-		strlcat(tmp, "_ifname", sizeof(tmp));
-		lan_ifname = nvram_safe_get(tmp);
+		lan_ifname = bridge_nvram_get(br, "ifname", tmp, sizeof(tmp));
 
 		if (strncmp(lan_ifname, "br", 2) == 0) {
-			strlcpy(tmp, "lan", sizeof(tmp));
-			strlcat(tmp, bridge, sizeof(tmp));
-			strlcat(tmp, "_ifnames", sizeof(tmp));
-
-			if ((lan_ifnames = strdup(nvram_safe_get(tmp))) != NULL) {
+			if ((lan_ifnames = strdup(bridge_nvram_get(br, "ifnames", tmp, sizeof(tmp)))) != NULL) {
 				p = lan_ifnames;
 				while ((ifname = strsep(&p, " ")) != NULL) {
 					while (*ifname == ' ')
@@ -1056,18 +1046,9 @@ void stop_lan_wl(void)
 #endif
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[12];
-		get_bridge_suffix(br, bridge, sizeof(bridge));
+		lan_ifname = bridge_nvram_get(br, "ifname", tmp, sizeof(tmp));
 
-		strlcpy(tmp, "lan", sizeof(tmp));
-		strlcat(tmp, bridge, sizeof(tmp));
-		strlcat(tmp, "_ifname", sizeof(tmp));
-		lan_ifname = nvram_safe_get(tmp);
-
-		strlcpy(tmp, "lan", sizeof(tmp));
-		strlcat(tmp, bridge, sizeof(tmp));
-		strlcat(tmp, "_ifnames", sizeof(tmp));
-		if ((wl_ifnames = strdup(nvram_safe_get(tmp))) != NULL) {
+		if ((wl_ifnames = strdup(bridge_nvram_get(br, "ifnames", tmp, sizeof(tmp)))) != NULL) {
 			p = wl_ifnames;
 			while ((ifname = strsep(&p, " ")) != NULL) {
 				while (*ifname == ' ')
@@ -1122,13 +1103,7 @@ void start_lan_wl(void)
 	foreach_wif(0, NULL, set_wlmac);
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[12];
-		get_bridge_suffix(br, bridge, sizeof(bridge));
-
-		strlcpy(tmp, "lan", sizeof(tmp));
-		strlcat(tmp, bridge, sizeof(tmp));
-		strlcat(tmp, "_ifname", sizeof(tmp));
-		lan_ifname = nvram_safe_get(tmp);
+		lan_ifname = bridge_nvram_get(br, "ifname", tmp, sizeof(tmp));
 
 		if (strncmp(lan_ifname, "br", 2) == 0) {
 #ifdef TCONFIG_EMF
@@ -1137,18 +1112,11 @@ void start_lan_wl(void)
 				eval("igs", "add", "bridge", lan_ifname);
 			}
 #endif
-			strlcpy(tmp, "lan", sizeof(tmp));
-			strlcat(tmp, bridge, sizeof(tmp));
-			strlcat(tmp, "_ipaddr", sizeof(tmp));
-			inet_aton(nvram_safe_get(tmp), (struct in_addr *)&ip);
-
-			strlcpy(tmp, "lan", sizeof(tmp));
-			strlcat(tmp, bridge, sizeof(tmp));
-			strlcat(tmp, "_ifnames", sizeof(tmp));
+			inet_aton(bridge_nvram_get(br, "ipaddr", tmp, sizeof(tmp)), (struct in_addr *)&ip);
 
 			sta = 0;
 
-			if ((wl_ifnames = strdup(nvram_safe_get(tmp))) != NULL) {
+			if ((wl_ifnames = strdup(bridge_nvram_get(br, "ifnames", tmp, sizeof(tmp)))) != NULL) {
 				p = wl_ifnames;
 				while ((ifname = strsep(&p, " ")) != NULL) {
 					while (*ifname == ' ')
@@ -1620,26 +1588,17 @@ void start_lan(void)
 #endif /* TOMATO64 */
 
 	for (br = 0; br <= BRIDGE_COUNT; br++) {
-		char bridge[12];
-		get_bridge_suffix(br, bridge, sizeof(bridge));
-
 		if ((sfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
 			return;
 
-		strlcpy(tmp, "lan", sizeof(tmp));
-		strlcat(tmp, bridge, sizeof(tmp));
-		strlcat(tmp, "_ifname", sizeof(tmp));
-		lan_ifname = strdup(nvram_safe_get(tmp));
+		lan_ifname = strdup(bridge_nvram_get(br, "ifname", tmp, sizeof(tmp)));
 
 		if (strncmp(lan_ifname, "br", 2) == 0) {
 			logmsg(LOG_DEBUG, "*** %s: setting up the bridge %s", __FUNCTION__, lan_ifname);
 
 			eval("brctl", "addbr", lan_ifname);
 			eval("brctl", "setfd", lan_ifname, "0");
-			strlcpy(tmp, "lan", sizeof(tmp));
-			strlcat(tmp, bridge, sizeof(tmp));
-			strlcat(tmp, "_stp", sizeof(tmp));
-			eval("brctl", "stp", lan_ifname, nvram_safe_get(tmp));
+			eval("brctl", "stp", lan_ifname, bridge_nvram_get(br, "stp", tmp, sizeof(tmp)));
 
 #ifndef TOMATO64
 #ifdef TCONFIG_EMF
@@ -1650,18 +1609,12 @@ void start_lan(void)
 #endif
 #endif /* TOMATO64 */
 
-			strlcpy(tmp, "lan", sizeof(tmp));
-			strlcat(tmp, bridge, sizeof(tmp));
-			strlcat(tmp, "_ipaddr", sizeof(tmp));
-			inet_aton(nvram_safe_get(tmp), (struct in_addr *)&ip);
+			inet_aton(bridge_nvram_get(br, "ipaddr", tmp, sizeof(tmp)), (struct in_addr *)&ip);
 
 			hwaddrset = 0;
 			sta = 0;
 
-			strlcpy(tmp, "lan", sizeof(tmp));
-			strlcat(tmp, bridge, sizeof(tmp));
-			strlcat(tmp, "_ifnames", sizeof(tmp));
-			if ((lan_ifnames = strdup(nvram_safe_get(tmp))) != NULL) {
+			if ((lan_ifnames = strdup(bridge_nvram_get(br, "ifnames", tmp, sizeof(tmp)))) != NULL) {
 				p = lan_ifnames;
 				while ((iftmp = strsep(&p, " ")) != NULL) {
 					while (*iftmp == ' ')
@@ -1856,9 +1809,7 @@ void start_lan(void)
 
 		/* Get current LAN hardware address */
 		strlcpy(ifr.ifr_name, lan_ifname, IFNAMSIZ);
-		strlcpy(tmp, "lan", sizeof(tmp));
-		strlcat(tmp, bridge, sizeof(tmp));
-		strlcat(tmp, "_hwaddr", sizeof(tmp));
+		get_bridge_nvram_key(br, "hwaddr", tmp, sizeof(tmp));
 		if (ioctl(sfd, SIOCGIFHWADDR, &ifr) == 0) {
 			nvram_set(tmp, ether_etoa((const unsigned char *)ifr.ifr_hwaddr.sa_data, eabuf));
 		}
@@ -1871,12 +1822,8 @@ void start_lan(void)
 #endif /* TOMATO64 */
 
 		/* bring up and configure LAN interface */
-		strlcpy(tmp, "lan", sizeof(tmp));
-		strlcat(tmp, bridge, sizeof(tmp));
-		strlcat(tmp, "_ipaddr", sizeof(tmp));
-		strlcpy(tmp2, "lan", sizeof(tmp2));
-		strlcat(tmp2, bridge, sizeof(tmp2));
-		strlcat(tmp2, "_netmask", sizeof(tmp2));
+		get_bridge_nvram_key(br, "ipaddr", tmp, sizeof(tmp));
+		get_bridge_nvram_key(br, "netmask", tmp2, sizeof(tmp2));
 		ifconfig(lan_ifname, IFUP | IFF_ALLMULTI, nvram_safe_get(tmp), nvram_safe_get(tmp2));
 
 #ifdef TCONFIG_IPV6
@@ -1950,20 +1897,11 @@ void stop_lan(void)
 #endif
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[12];
-		get_bridge_suffix(br, bridge, sizeof(bridge));
-
-		strlcpy(tmp, "lan", sizeof(tmp));
-		strlcat(tmp, bridge, sizeof(tmp));
-		strlcat(tmp, "_ifname", sizeof(tmp));
-		lan_ifname = nvram_safe_get(tmp);
+		lan_ifname = bridge_nvram_get(br, "ifname", tmp, sizeof(tmp));
 		ifconfig(lan_ifname, 0, NULL, NULL);
 
 		if (strncmp(lan_ifname, "br", 2) == 0) {
-			strlcpy(tmp, "lan", sizeof(tmp));
-			strlcat(tmp, bridge, sizeof(tmp));
-			strlcat(tmp, "_ifnames", sizeof(tmp));
-			if ((lan_ifnames = strdup(nvram_safe_get(tmp))) != NULL) {
+			if ((lan_ifnames = strdup(bridge_nvram_get(br, "ifnames", tmp, sizeof(tmp)))) != NULL) {
 				p = lan_ifnames;
 				while ((iftmp = strsep(&p, " ")) != NULL) {
 					while (*iftmp == ' ')
