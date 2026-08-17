@@ -924,10 +924,8 @@ int check_wanup(char *prefix)
 	}
 
 state:
-	snprintf(buf1, sizeof(buf1), "%s_ck_pause", prefix);
-
 	if (up) { /* also check result from mwwatchdog */
-		if ((nvram_get_int("mwan_cktime") == 0) || (nvram_get_int(buf1))) /* skip checking on this WAN */
+		if ((nvram_get_int("mwan_cktime") == 0) || prefix_nvram_get_int(prefix, "ck_pause", buf1, sizeof(buf1))) /* skip checking on this WAN */
 			return up;
 
 		snprintf(buf1, sizeof(buf1), "/var/lib/misc/%s_state", prefix);
@@ -959,8 +957,7 @@ const dns_list_t *get_dns(char *prefix)
 		snprintf(s, sizeof(s), " %s", prefix_nvram_get(prefix, "get_dns", tmp, sizeof(tmp)));
 	else {
 		strlcpy(s, prefix_nvram_get(prefix, "dns", tmp, sizeof(tmp)), sizeof(s));
-		snprintf(tmp, sizeof(tmp), "%s_addget", prefix);
-		if ((!nvram_get_int(tmp))
+		if ((!prefix_nvram_get_int(prefix, "addget", tmp, sizeof(tmp)))
 #ifdef TCONFIG_DNSCRYPT
 		    || (nvram_get_int("dnscrypt_proxy") && nvram_get_int("dnscrypt_priority") == 2) /* just to be sure */
 #endif

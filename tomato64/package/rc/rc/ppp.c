@@ -76,9 +76,8 @@ int ipup_main(int argc, char **argv)
 
 	/* check mwwatchdog enabled - part 1 of 2 */
 	if (check_mwandog) {
-		snprintf(tmp2, sizeof(tmp2), "%s_ck_pause", prefix);
-		old_ck_pause = nvram_get_int(tmp2); /* save old value */
-		nvram_set(tmp2, "1"); /* skip checking on this WAN until start_wan_done() finished! */
+		old_ck_pause = prefix_nvram_get_int(prefix, "ck_pause", tmp2, sizeof(tmp2)); /* save old value */
+		prefix_nvram_set(prefix, "ck_pause", "1", tmp2, sizeof(tmp2)); /* skip checking on this WAN until start_wan_done() finished! */
 		logmsg(LOG_DEBUG, "*** %s: set %s_ck_pause=1 to skip checking on this WAN (multiwan watchdog)", __FUNCTION__, prefix);
 	}
 
@@ -156,8 +155,7 @@ int ipup_main(int argc, char **argv)
 
 	/* check mwwatchdog enabled - part 2 of 2 */
 	if (check_mwandog && !old_ck_pause) {
-		snprintf(tmp2, sizeof(tmp2), "%s_ck_pause", prefix);
-		nvram_set(tmp2, "0"); /* reset and check WAN XY with mwwatchdog again */
+		prefix_nvram_set(prefix, "ck_pause", "0", tmp2, sizeof(tmp2)); /* reset and check WAN XY with mwwatchdog again */
 		logmsg(LOG_DEBUG, "*** %s: set %s_ck_pause=0 to check this WAN (multiwan watchdog)", __FUNCTION__, prefix);
 	}
 

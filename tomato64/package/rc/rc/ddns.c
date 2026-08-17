@@ -117,8 +117,7 @@ static void update(int num, int *dirty, int force)
 	snprintf(s, sizeof(s), "ddns%d", num);
 	simple_lock(s);
 
-	snprintf(s, sizeof(s), "%s_ip", ddnsx);
-	strlcpy(ip, nvram_safe_get(s), sizeof(ip));
+	strlcpy(ip, prefix_nvram_get(ddnsx, "ip", s, sizeof(s)), sizeof(ip));
 
 	if (!check_wanup(prefix)) {
 		if ((get_wanx_proto(prefix) != WP_DISABLED) || (ip[0] == 0)) {
@@ -221,14 +220,12 @@ static void update(int num, int *dirty, int force)
 	if (!nvram_match(cache_nv, s)) { /* nvram cache is different than this in file */
 		nvram_set(cache_nv, s);
 
-		snprintf(v, sizeof(v), "%s_save", ddnsx);
-		if (nvram_get_int(v) && (strstr(serv, "dyndns") == 0))
+		if (prefix_nvram_get_int(ddnsx, "save", v, sizeof(v)) && (strstr(serv, "dyndns") == 0))
 			*dirty = 1;
 	}
 
 	n = 28;
-	snprintf(v, sizeof(v), "%s_refresh", ddnsx);
-	if ((p = nvram_safe_get(v)) && (*p))
+	if ((p = prefix_nvram_get(ddnsx, "refresh", v, sizeof(v))) && (*p))
 		n = atoi(p);
 
 	if (n) {
