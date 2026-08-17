@@ -189,22 +189,19 @@ static int mysql_conf_write_escaped(FILE *fp, const char *key, const char *value
 
 static void setup_mysql_watchdog(void)
 {
-	FILE *fp;
 	char buffer[64], buffer2[64];
 	int nvi;
 
 	if ((nvi = nvram_get_int("mysql_check_time")) > 0) {
 		snprintf(buffer, sizeof(buffer), mysql_etc_dir"/watchdog.sh");
 
-		if ((fp = fopen(buffer, "w"))) {
-			fprintf(fp, "#!/bin/sh\n"
-			            "[ -z \"$(pidof mysqld)\" -a \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
-			            " logger -t mysql-watchdog mysqld stopped? Starting...\n"
-			            " service mysql restart\n"
-			            "}\n");
-			fclose(fp);
-			chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
-
+		if (f_write_string(buffer,
+		                   "#!/bin/sh\n"
+		                   "[ -z \"$(pidof mysqld)\" -a \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
+		                   " logger -t mysql-watchdog mysqld stopped? Starting...\n"
+		                   " service mysql restart\n"
+		                   "}\n",
+		                   0, (S_IRUSR | S_IWUSR | S_IXUSR)) >= 0) {
 			snprintf(buffer2, sizeof(buffer2), "*/%d * * * * %s", nvi, buffer);
 			eval("cru", "a", "CheckMySQL", buffer2);
 		}

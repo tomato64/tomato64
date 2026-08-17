@@ -32,27 +32,24 @@
 
 static void tinc_setup_watchdog(void)
 {
-	FILE *fp;
 	char buffer[64], buffer2[64];
 	int nvi;
 
 	if ((nvi = nvram_get_int("tinc_poll")) > 0) {
 		snprintf(buffer, sizeof(buffer), TINC_DIR"/watchdog.sh");
 
-		if ((fp = fopen(buffer, "w"))) {
-			fprintf(fp, "#!/bin/sh\n"
-			            "[ \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
-			            " if [ -z \"$(pidof tincd)\" ]; then\n"
-			            "  logger -t tinc tincd stopped? Starting...\n"
-			            "  service tinc restart\n"
-			            " elif [ $(tinc dump connections | grep -v localhost | wc -l ) -lt 1 ]; then\n"
-			            "  logger -t tincd[\"$(pidof tincd)\"] Restarting process to due connectivity issue\n"
-			            "  service tinc restart\n"
-			            " fi\n"
-			            "}\n");
-			fclose(fp);
-			chmod(buffer, (S_IRUSR | S_IWUSR | S_IXUSR));
-
+		if (f_write_string(buffer,
+		                   "#!/bin/sh\n"
+		                   "[ \"$(nvram get g_upgrade)\" != \"1\" -a \"$(nvram get g_reboot)\" != \"1\" ] && {\n"
+		                   " if [ -z \"$(pidof tincd)\" ]; then\n"
+		                   "  logger -t tinc tincd stopped? Starting...\n"
+		                   "  service tinc restart\n"
+		                   " elif [ $(tinc dump connections | grep -v localhost | wc -l ) -lt 1 ]; then\n"
+		                   "  logger -t tincd[\"$(pidof tincd)\"] Restarting process to due connectivity issue\n"
+		                   "  service tinc restart\n"
+		                   " fi\n"
+		                   "}\n",
+		                   0, (S_IRUSR | S_IWUSR | S_IXUSR)) >= 0) {
 			snprintf(buffer2, sizeof(buffer2), "*/%d * * * * %s", nvi, buffer);
 			eval("cru", "a", "CheckTincDaemon", buffer2);
 		}
