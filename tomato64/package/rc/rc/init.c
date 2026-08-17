@@ -2164,6 +2164,24 @@ static void set_singleband_network_defaults(void)
 	nvram_set("wl0_ifname", "eth1");
 }
 
+/*
+ * Set the common reversed-radio mapping and channel defaults used by selected AC models.
+ * @return  none
+ */
+static void set_reversed_dualband_defaults(void)
+{
+	nvram_set("wan_ifnameX", "vlan2");
+	nvram_set("wl_ifnames", "eth1 eth2");
+	nvram_set("wl_ifname", "eth1");
+	nvram_set("wl0_ifname", "eth2");
+	nvram_set("wl1_ifname", "eth1");
+	nvram_set("wl0_bw_cap", "7");
+	nvram_set("wl0_chanspec", "36/80");
+	nvram_set("wl1_bw_cap", "3");
+	nvram_set("wl1_chanspec", "1l");
+	nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
+}
+
 static int init_nvram(void)
 {
 	int model;
@@ -2995,16 +3013,7 @@ static int init_nvram(void)
 			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
 			nvram_set("wan_ifnameX", "vlan2");
 			nvram_set("wan_ifnames", "vlan2");
-			nvram_set("wan_ifnameX", "vlan2");
-			nvram_set("wl_ifnames", "eth1 eth2");
-			nvram_set("wl_ifname", "eth1");
-			nvram_set("wl0_ifname", "eth2");
-			nvram_set("wl1_ifname", "eth1");
-			nvram_set("wl0_bw_cap", "7");
-			nvram_set("wl0_chanspec", "36/80");
-			nvram_set("wl1_bw_cap", "3");
-			nvram_set("wl1_chanspec", "1l");
-			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
+			set_reversed_dualband_defaults();
 			//nvram_set("landevs", "vlan1 wl0 wl1");
 			//nvram_set("wandevs", "vlan2");
 
@@ -3616,16 +3625,7 @@ static int init_nvram(void)
 #endif
 		if (!nvram_match("t_fix1", (char *)name)) {
 			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
-			nvram_set("wan_ifnameX", "vlan2");
-			nvram_set("wl_ifnames", "eth1 eth2");
-			nvram_set("wl_ifname", "eth1");
-			nvram_set("wl0_ifname", "eth2");
-			nvram_set("wl1_ifname", "eth1");
-			nvram_set("wl0_bw_cap", "7");
-			nvram_set("wl0_chanspec", "36/80");
-			nvram_set("wl1_bw_cap", "3");
-			nvram_set("wl1_chanspec", "1l");
-			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
+			set_reversed_dualband_defaults();
 			//nvram_set("landevs", "vlan1 wl0 wl1");
 			//nvram_set("wandevs", "vlan2");
 
@@ -3657,16 +3657,7 @@ static int init_nvram(void)
 #endif
 		if (!nvram_match("t_fix1", (char *)name)) {
 			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
-			nvram_set("wan_ifnameX", "vlan2");
-			nvram_set("wl_ifnames", "eth1 eth2");
-			nvram_set("wl_ifname", "eth1");
-			nvram_set("wl0_ifname", "eth2");
-			nvram_set("wl1_ifname", "eth1");
-			nvram_set("wl0_bw_cap", "7");
-			nvram_set("wl0_chanspec", "36/80");
-			nvram_set("wl1_bw_cap", "3");
-			nvram_set("wl1_chanspec", "1l");
-			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
+			set_reversed_dualband_defaults();
 
 			/* fix WL mac's */
 			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));
