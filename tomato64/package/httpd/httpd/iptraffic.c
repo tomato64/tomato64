@@ -51,11 +51,8 @@ static void iptraffic_conntrack_init(void)
 #endif /* TOMATO64 */
 
 	for(br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[2] = "0";
-		if (br != 0)
-			bridge[0] += br;
-		else
-			memset(bridge, 0, sizeof(bridge));
+		char bridge[12];
+		get_bridge_suffix(br, bridge, sizeof(bridge));
 
 		memset(sa, 0, sizeof(sa));
 		snprintf(sa, sizeof(sa), "lan%s_ifname", bridge);
@@ -168,11 +165,8 @@ void asp_iptraffic(int argc, char **argv)
 	comma = ' ';
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[2] = "0";
-		if (br != 0)
-			bridge[0] += br;
-		else
-			memset(bridge, 0, sizeof(bridge));
+		char bridge[12];
+		get_bridge_suffix(br, bridge, sizeof(bridge));
 
 		snprintf(name, sizeof(name), "/proc/net/ipt_account/lan%s", bridge);
 

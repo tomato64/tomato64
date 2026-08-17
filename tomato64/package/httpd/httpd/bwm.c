@@ -223,11 +223,8 @@ void asp_iptmon(int argc, char **argv)
 	for (br = 0; br < BRIDGE_COUNT; br++) {
 		wholenetstatsline = 1;
 
-		char bridge[2] = "0";
-		if (br != 0)
-			bridge[0] += br;
-		else
-			memset(bridge, 0, sizeof(bridge));
+		char bridge[12];
+		get_bridge_suffix(br, bridge, sizeof(bridge));
 
 		snprintf(name, sizeof(name), "/proc/net/ipt_account/lan%s", bridge);
 

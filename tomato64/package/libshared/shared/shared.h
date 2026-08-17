@@ -171,6 +171,8 @@ typedef struct {
 } wanface_list_t;
 
 extern void chld_reap(int sig);
+extern void get_bridge_suffix(unsigned int bridge, char *suffix, const size_t suffix_size);
+extern char *bridge_nvram_get(unsigned int bridge, const char *suffix, char *key, const size_t key_size);
 extern void get_wan_prefix(int iWan_unit, char *sPrefix);
 extern int get_wan_unit(const char *sPrefix);
 extern int get_wan_unit_with_value(const char *suffix, const char *value);

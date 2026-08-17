@@ -68,16 +68,6 @@ static int check_bridge_modes(void) {
 	return 0;
 }
 
-static const char *bridge_nvram_get(unsigned int bridge, const char *suffix, char *key, const size_t key_size)
-{
-	if (bridge == 0)
-		snprintf(key, key_size, "lan_%s", suffix);
-	else
-		snprintf(key, key_size, "lan%u_%s", bridge, suffix);
-
-	return nvram_safe_get(key);
-}
-
 static int bridge_has_l3(unsigned int bridge)
 {
 	char key[32];
@@ -318,11 +308,8 @@ static void write_dhcp_ranges(FILE *f, int *do_dhcpd_hosts, int *do_dns_ptr, cha
 	do_dns = *do_dns_ptr;
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[2] = "0";
-		if (br != 0)
-			bridge[0] += br;
-		else
-			memset(bridge, 0, sizeof(bridge));
+		char bridge[12];
+		get_bridge_suffix(br, bridge, sizeof(bridge));
 
 		snprintf(lanN_proto, sizeof(lanN_proto), "lan%s_proto", bridge);
 		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
@@ -941,11 +928,8 @@ static void start_dnsmasq_wet(void)
 	           4096);
 
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[2] = "0";
-		if (br != 0)
-			bridge[0] += br;
-		else
-			memset(bridge, 0, sizeof(bridge));
+		char bridge[12];
+		get_bridge_suffix(br, bridge, sizeof(bridge));
 
 		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
 		nv = nvram_safe_get(lanN_ifname);

@@ -458,11 +458,8 @@ static void print_ipv6_infos(void) /* show IPv6 DUID and addresses: wan, dns, la
 
 	/* check LAN */
 	for (br = 0; br < BRIDGE_COUNT; br++) {
-		char bridge[2] = "0";
-		if (br != 0)
-			bridge[0] += br;
-		else
-			memset(bridge, 0, sizeof(bridge));
+		char bridge[12];
+		get_bridge_suffix(br, bridge, sizeof(bridge));
 
 		memset(buffer2, 0, sizeof(buffer2));
 		snprintf(buffer2, sizeof(buffer2), "lan%s_ipaddr", bridge);

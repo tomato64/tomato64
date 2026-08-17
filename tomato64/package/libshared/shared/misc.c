@@ -39,6 +39,40 @@
 #define LOGMSG_NVDEBUG	"misc_debug"
 
 
+/*
+ * Formats the numeric suffix used by the lan/lanN bridge namespace.
+ *
+ * @param bridge       bridge index; bridge 0 maps to an empty suffix
+ * @param suffix       destination buffer
+ * @param suffix_size  size of the destination buffer
+ */
+void get_bridge_suffix(unsigned int bridge, char *suffix, const size_t suffix_size)
+{
+	if (bridge == 0)
+		suffix[0] = '\0';
+	else
+		snprintf(suffix, suffix_size, "%u", bridge);
+}
+
+/*
+ * Reads a bridge-scoped NVRAM value using the lan/lanN naming convention.
+ *
+ * @param bridge    bridge index; bridge 0 uses the unsuffixed lan namespace
+ * @param suffix    NVRAM variable suffix without the separating underscore
+ * @param key       scratch buffer receiving the complete NVRAM key
+ * @param key_size  size of the key buffer
+ * @return          value returned by nvram_safe_get(); never NULL
+ */
+char *bridge_nvram_get(unsigned int bridge, const char *suffix, char *key, const size_t key_size)
+{
+	char bridge_suffix[12];
+
+	get_bridge_suffix(bridge, bridge_suffix, sizeof(bridge_suffix));
+	snprintf(key, key_size, "lan%s_%s", bridge_suffix, suffix);
+
+	return nvram_safe_get(key);
+}
+
 void get_wan_prefix(int iWan_unit, char *sPrefix)
 {
 	char wanstr[8];
