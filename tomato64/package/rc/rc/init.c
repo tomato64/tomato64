@@ -2130,6 +2130,21 @@ static void set_common_5g_calibration_defaults(void)
 	nvram_set("1:subband5gver", "4");
 }
 
+/*
+ * Set QTD parameters used by the USB wireless radio interface.
+ * @return  none
+ */
+static void set_usb_wifi_qtd_defaults(void)
+{
+	nvram_set("ehciirqt", "3");
+	nvram_set("qtdc_pid", "48407");
+	nvram_set("qtdc_vid", "2652");
+	nvram_set("qtdc0_ep", "4");
+	nvram_set("qtdc0_sz", "0");
+	nvram_set("qtdc1_ep", "18");
+	nvram_set("qtdc1_sz", "10");
+}
+
 static int init_nvram(void)
 {
 	int model;
@@ -2887,13 +2902,7 @@ static int init_nvram(void)
 		if (!nvram_match("t_fix1", (char *)name)) {
 #ifdef TCONFIG_USBAP
 			nvram_set("wl1_hwaddr", nvram_safe_get("0:macaddr"));
-			nvram_set("ehciirqt", "3");
-			nvram_set("qtdc_pid", "48407");
-			nvram_set("qtdc_vid", "2652");
-			nvram_set("qtdc0_ep", "4");
-			nvram_set("qtdc0_sz", "0");
-			nvram_set("qtdc1_ep", "18");
-			nvram_set("qtdc1_sz", "10");
+			set_usb_wifi_qtd_defaults();
 			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
 			nvram_set("landevs", "vlan1 wl0 wl1");
 			nvram_set("wl0_ifname", "wl0");
@@ -3184,13 +3193,7 @@ static int init_nvram(void)
 		if (!nvram_match("t_fix1", (char *)name)) {
 #ifdef TCONFIG_USBAP
 			nvram_set("wl1_hwaddr", nvram_safe_get("0:macaddr"));
-			nvram_set("ehciirqt", "3");
-			nvram_set("qtdc_pid", "48407");
-			nvram_set("qtdc_vid", "2652");
-			nvram_set("qtdc0_ep", "4");
-			nvram_set("qtdc0_sz", "0");
-			nvram_set("qtdc1_ep", "18");
-			nvram_set("qtdc1_sz", "10");
+			set_usb_wifi_qtd_defaults();
 			nvram_set("lan_ifnames", "vlan2 eth1 eth2");
 			nvram_set("landevs", "vlan2 wl0 wl1");
 			set_dualband_wireless_ifnames();
@@ -4524,13 +4527,7 @@ static int init_nvram(void)
 			nvram_set("wl0_nctrlsb", "lower");
 
 			/* set QTD params in nvram for USB wl radio IC */
-			nvram_set("ehciirqt", "3");
-			nvram_set("qtdc_pid", "48407");
-			nvram_set("qtdc_vid", "2652");
-			nvram_set("qtdc0_ep", "4");
-			nvram_set("qtdc0_sz", "0");
-			nvram_set("qtdc1_ep", "18");
-			nvram_set("qtdc1_sz", "10");
+			set_usb_wifi_qtd_defaults();
 		}
 		break;
 	case MODEL_E3200:
@@ -4564,13 +4561,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nctrlsb", "lower");
 
 			/* set QTD params in nvram for USB wl radio IC */
-			nvram_set("ehciirqt", "3");
-			nvram_set("qtdc_pid", "48407");
-			nvram_set("qtdc_vid", "2652");
-			nvram_set("qtdc0_ep", "4");
-			nvram_set("qtdc0_sz", "0");
-			nvram_set("qtdc1_ep", "18");
-			nvram_set("qtdc1_sz", "10");
+			set_usb_wifi_qtd_defaults();
 		}
 		/* E3200 adjust default values for wl_txq_thresh, et_txq_thresh and wl_rpcq_rxthresh (--> not explicitly for WiFi modules) */
 		nvram_set("et_txq_thresh", "256");
