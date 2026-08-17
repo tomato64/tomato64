@@ -752,9 +752,9 @@ static int wlshutdown_ethx_rtac5300(void)
 
 		/* 2 - check bridges and remove eth1 radio from the interface list */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+			get_bridge_nvram_key(i, "ifname", buffer, sizeof(buffer));
 			if (strcmp(nvram_safe_get(buffer), "") != 0) { /* check brX */
-				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
+				get_bridge_nvram_key(i, "ifnames", buffer, sizeof(buffer));
 				snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get(buffer));
 
 				if (!remove_from_list("eth1", tmp, sizeof(tmp))) {
@@ -806,9 +806,9 @@ static int wlshutdown_ethx_rtac5300(void)
 
 		/* 2 - check bridges and remove eth2 radio from the interface list */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+			get_bridge_nvram_key(i, "ifname", buffer, sizeof(buffer));
 			if (strcmp(nvram_safe_get(buffer), "") != 0) { /* check brX */
-				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
+				get_bridge_nvram_key(i, "ifnames", buffer, sizeof(buffer));
 				snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get(buffer));
 
 				if (!remove_from_list("eth2", tmp, sizeof(tmp))) {
@@ -858,9 +858,9 @@ static int wlshutdown_ethx_rtac5300(void)
 
 		/* 2 - check bridges and remove eth3 radio from the interface list */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+			get_bridge_nvram_key(i, "ifname", buffer, sizeof(buffer));
 			if (strcmp(nvram_safe_get(buffer), "") != 0) { /* check brX */
-				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
+				get_bridge_nvram_key(i, "ifnames", buffer, sizeof(buffer));
 				snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get(buffer));
 
 				if (!remove_from_list("eth3", tmp, sizeof(tmp))) {

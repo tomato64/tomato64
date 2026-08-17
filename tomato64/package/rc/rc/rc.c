@@ -635,10 +635,8 @@ void kill_switch(_tf_ipt_write ipt_write)
 						/* find correct bridge for given IP */
 						type1_added = 0;
 						for (br = 0; br < BRIDGE_COUNT; br++) {
-							snprintf(buf, BUF_SIZE_64, (br == 0 ? "lan_ipaddr" : "lan%u_ipaddr"), br);
-
 							/* add only for active LAN */
-							lan_ip = nvram_safe_get(buf);
+							lan_ip = bridge_nvram_get(br, "ipaddr", buf, BUF_SIZE_64);
 							if (!*lan_ip)
 								continue;
 

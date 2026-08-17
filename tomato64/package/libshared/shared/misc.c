@@ -389,8 +389,7 @@ int foreach_wif(int include_vifs, void *param,
 
 	/* LAN interfaces */
 	for (i = 0; i < BRIDGE_COUNT; i++) {
-		snprintf(name, sizeof(name), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
-		if (append_ifnames(ifnames, sizeof(ifnames), nvram_safe_get(name), 1) < 0)
+		if (append_ifnames(ifnames, sizeof(ifnames), bridge_nvram_get(i, "ifnames", name, sizeof(name)), 1) < 0)
 			goto list_full;
 	}
 

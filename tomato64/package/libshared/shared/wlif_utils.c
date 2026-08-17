@@ -342,8 +342,7 @@ wl_wlif_is_wet_ap(char *ifname)
 char *
 get_ifname_by_wlmac(unsigned char *mac, char *name)
 {
-	char nv_name[16], os_name[16], if_name[16];
-	char tmptr[] = "lanXX_ifnames";
+	char nv_name[16], os_name[16], if_name[16], tmptr[16];
 	char *ifnames, *ifname;
 	int i;
 
@@ -364,27 +363,15 @@ get_ifname_by_wlmac(unsigned char *mac, char *name)
 
 	/* find for lan */
 	for (i = 0; i < WLIFU_MAX_NO_BRIDGE; i++) {
-		if (i == 0) {
-			ifnames = nvram_get("lan_ifnames");
-			ifname = nvram_get("lan_ifname");
-			if (ifname) {
-				/* the name in ifnames may nvifname or osifname */
-				if (find_in_list(ifnames, nv_name) ||
-				    find_in_list(ifnames, os_name))
-					return ifname;
-			}
-		}
-		else {
-			sprintf(if_name, "lan%d_ifnames", i);
-			sprintf(tmptr, "lan%d_ifname", i);
-			ifnames = nvram_get(if_name);
-			ifname = nvram_get(tmptr);
-			if (ifname) {
-				/* the name in ifnames may nvifname or osifname */
-				if (find_in_list(ifnames, nv_name) ||
-				    find_in_list(ifnames, os_name))
-					return ifname;
-			}
+		get_bridge_nvram_key(i, "ifnames", if_name, sizeof(if_name));
+		get_bridge_nvram_key(i, "ifname", tmptr, sizeof(tmptr));
+		ifnames = nvram_get(if_name);
+		ifname = nvram_get(tmptr);
+		if (ifname) {
+			/* the name in ifnames may nvifname or osifname */
+			if (find_in_list(ifnames, nv_name) ||
+			    find_in_list(ifnames, os_name))
+				return ifname;
 		}
 	}
 

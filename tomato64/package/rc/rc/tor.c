@@ -35,8 +35,7 @@ void start_tor(int force) {
 		for (i = 0 ; i < BRIDGE_COUNT; i++) {
 			snprintf(buffer, sizeof(buffer), "br%d", i);
 			if (nvram_match("tor_iface", buffer)) {
-				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
-				ip = nvram_safe_get(buffer);
+				ip = bridge_nvram_get(i, "ipaddr", buffer, sizeof(buffer));
 				break;
 			}
 		}

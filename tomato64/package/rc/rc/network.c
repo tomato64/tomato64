@@ -267,7 +267,7 @@ static void set_lan_hostname(const char *wan_hostname)
 		fprintf(f, "127.0.0.1 localhost\n");
 
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			snprintf(buf, sizeof(buf), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
+			get_bridge_nvram_key(i, "ipaddr", buf, sizeof(buf));
 			if ((s = nvram_get(buf)) && (*s)) {
 				snprintf(buf2, sizeof(buf2), "%d", i);
 				fprintf(f, "%s %s %s-lan%s\n", s, (i == 0 ? lan_hostname : ""), lan_hostname, (i == 0 ? "" : buf2));
@@ -1405,9 +1405,9 @@ int wl_sta_prepare(void)
 	/* check bridges and remove sta interface from the interface list */
 	if (sta) {
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+			get_bridge_nvram_key(i, "ifname", buffer, sizeof(buffer));
 			if (strcmp(nvram_safe_get(buffer), "") != 0) { /* check brX */
-				snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifnames" : "lan%d_ifnames"), i);
+				get_bridge_nvram_key(i, "ifnames", buffer, sizeof(buffer));
 				snprintf(tmp, sizeof(tmp), "%s", nvram_safe_get(buffer));
 
 				if (!remove_from_list(wl_sta, tmp, sizeof(tmp))) {
@@ -1995,7 +1995,7 @@ void do_static_routes(int add)
 			/* LAN, LAN1, LAN2, LAN3 set in advanced-routing.asp */
 			snprintf(name, sizeof(name), (i == 0 ? "LAN" : "LAN%u"), i);
 			if (strcmp(if_tmp, name) == 0) {
-				snprintf(if_key, sizeof(if_key), (i == 0 ? "lan_ifname" : "lan%u_ifname"), i);
+				get_bridge_nvram_key(i, "ifname", if_key, sizeof(if_key));
 				ifname = nvram_safe_get(if_key); /* set */
 				found_lan = 1;
 				break;

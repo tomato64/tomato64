@@ -1514,8 +1514,7 @@ static void setup_listeners(int do_ipv6)
 #ifdef TCONFIG_IPV6
 		char *nv;
 		if (do_ipv6) {
-			snprintf(b, sizeof(b), "lan%d_ifname", i);
-			nv = nvram_safe_get(b);
+			nv = bridge_nvram_get(i, "ifname", b, sizeof(b));
 			if (strncmp(nv, "br", 2) == 0) {
 				strlcpy(ipaddr[i], getifaddr(nv, AF_INET6, 0) ? : "", sizeof(ipaddr[i]));
 			}
@@ -1525,8 +1524,7 @@ static void setup_listeners(int do_ipv6)
 		} else
 #endif /* TCONFIG_IPV6 */
 		{
-			snprintf(b, sizeof(b), "lan%d_ipaddr", i);
-			strlcpy(ipaddr[i], nvram_safe_get(b), sizeof(ipaddr[i]));
+			strlcpy(ipaddr[i], bridge_nvram_get(i, "ipaddr", b, sizeof(b)), sizeof(ipaddr[i]));
 		}
 	}
 

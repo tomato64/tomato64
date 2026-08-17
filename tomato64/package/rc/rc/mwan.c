@@ -276,12 +276,9 @@ void mwan_table_add(char *sPrefix)
 
 		/* ip route add 192.168.1.0/24 dev br0 proto kernel scope link  src 192.168.1.1  table 2 */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			snprintf(nvram_var, sizeof(nvram_var), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
-			lan_ifname = nvram_safe_get(nvram_var);
-			snprintf(nvram_var, sizeof(nvram_var), (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
-			lan_ipaddr = nvram_safe_get(nvram_var);
-			snprintf(nvram_var, sizeof(nvram_var), (i == 0 ? "lan_netmask" : "lan%d_netmask"), i);
-			lan_netmask = nvram_safe_get(nvram_var);
+			lan_ifname = bridge_nvram_get(i, "ifname", nvram_var, sizeof(nvram_var));
+			lan_ipaddr = bridge_nvram_get(i, "ipaddr", nvram_var, sizeof(nvram_var));
+			lan_netmask = bridge_nvram_get(i, "netmask", nvram_var, sizeof(nvram_var));
 
 			if ((lan_ifname[0] == '\0') || (lan_ipaddr[0] == '\0') || (lan_netmask[0] == '\0'))
 				continue;

@@ -36,25 +36,16 @@ int lan_ifname_for_ipv4(const char *ip, char *ifname, size_t len)
 {
 	struct in_addr a, lan, mask;
 	const char *lanip, *lanmask, *lanif;
-	char ipkey[24], mkey[24], ifkey[24], num[4];
+	char key[24];
 	unsigned int i;
 
 	if (inet_pton(AF_INET, ip, &a) <= 0)
 		return 0;
 
 	for (i = 0; i < BRIDGE_COUNT; i++) {
-		if (i == 0)
-			num[0] = '\0';
-		else
-			snprintf(num, sizeof(num), "%u", i);
-
-		snprintf(ipkey, sizeof(ipkey), "lan%s_ipaddr", num);
-		snprintf(mkey, sizeof(mkey), "lan%s_netmask", num);
-		snprintf(ifkey, sizeof(ifkey), "lan%s_ifname", num);
-
-		lanif = nvram_safe_get(ifkey);
-		lanip = nvram_safe_get(ipkey);
-		lanmask = nvram_safe_get(mkey);
+		lanif = bridge_nvram_get(i, "ifname", key, sizeof(key));
+		lanip = bridge_nvram_get(i, "ipaddr", key, sizeof(key));
+		lanmask = bridge_nvram_get(i, "netmask", key, sizeof(key));
 
 		if (!*lanif || !*lanip || !*lanmask)
 			continue;

@@ -264,7 +264,7 @@ lan_ifname,lan_ifnames,lan_ipaddr,lan_netmask,web_svg,web_css,cstats_enable,csta
 
 	dhcp_enabled = 0;
 	for (i = 0; i < BRIDGE_COUNT; i++) {
-		snprintf(buf, sizeof(buf), (i == 0 ? "lan_proto" : "lan%d_proto"), i);
+		get_bridge_nvram_key(i, "proto", buf, sizeof(buf));
 			if (nvram_match(buf, "dhcp")) {
 				dhcp_enabled = 1;
 				break;

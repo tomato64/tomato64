@@ -946,13 +946,13 @@ void start_dhcp6c(void)
 			if (i >= BRIDGE_COUNT_IPV6_MAX) /* Stop here if we reach this limit */
 				break;
 
-			snprintf(buf, sizeof(buf), "lan%u_ipaddr", i);
+			get_bridge_nvram_key(i, "ipaddr", buf, sizeof(buf));
 
 			/* more IPv6 /64 networks possible --> for LAN1 to LANX */
 			if ((ipv6_vlan & (1U << (i - 1))) && /* Check GUI */
 			    ((1U << prefix_len) > i) && /* Check prefix - x IPv6 /64 networks possible */
 			    (strcmp(nvram_safe_get(buf), "") != 0)) { /* check lanX_ipaddr */
-				snprintf(buf, sizeof(buf), "lan%u_ifname", i);
+				get_bridge_nvram_key(i, "ifname", buf, sizeof(buf));
 
 				fprintf(f, " prefix-interface %s {\n"
 				           "  sla-id %u;\n"

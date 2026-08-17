@@ -167,9 +167,9 @@ void start_samba(int force)
 	if (strlen(si)) {
 		memset(buffer3, 0, sizeof(buffer3)); /* reset */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			snprintf(buffer, sizeof(buffer), (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
+			char *ifname = bridge_nvram_get(i, "ifname", buffer, sizeof(buffer));
 			snprintf(buffer2, sizeof(buffer2), "br%d", i);
-			if ((strlen(nvram_safe_get(buffer)) > 0) && (strstr(si, buffer2) != NULL)) { /* bridge is up & present in 'smbd_ifnames' */
+			if (*ifname && (strstr(si, buffer2) != NULL)) { /* bridge is up & present in 'smbd_ifnames' */
 				if (strlen(buffer3) > 0)
 					strlcat(buffer3, " ", sizeof(buffer3));
 
