@@ -1052,70 +1052,43 @@ const wanface_list_t *get_wanfaces(char *prefix)
 
 	wanfaces.count = 0;
 
-	switch ((proto = get_wanx_proto(prefix))) {
-		case WP_PPTP:
-		case WP_L2TP:
-			while (wanfaces.count < 2) {
-				if (wanfaces.count == 0) {
-					ip = prefix_nvram_get(prefix, "ppp_get_ip", tmp, sizeof(tmp));
-					iface = prefix_nvram_get(prefix, "iface", tmp, sizeof(tmp));
-					if (!(*iface))
-						iface = "ppp+";
-				}
-				else /* if (wanfaces.count == 1) */ {
-					ip = prefix_nvram_get(prefix, "ipaddr", tmp, sizeof(tmp));
-					if ((!(*ip) || strcmp(ip, "0.0.0.0") == 0) && (wanfaces.count > 0))
-						iface = "";
-					else
-						iface = prefix_nvram_get(prefix, "ifname", tmp, sizeof(tmp));
-				}
-				strlcpy(wanfaces.iface[wanfaces.count].ip, ip, sizeof(wanfaces.iface[0].ip));
-				strlcpy(wanfaces.iface[wanfaces.count].name, iface, IFNAMSIZ);
-				++wanfaces.count;
-			}
-			break;
-		case WP_PPPOE:
-			if (using_dhcpc(prefix)) { /* PPPoE with MAN */
-				while (wanfaces.count < 2) {
-					if (wanfaces.count == 0) {
-						ip = prefix_nvram_get(prefix, "ppp_get_ip", tmp, sizeof(tmp));
-						iface = prefix_nvram_get(prefix, "iface", tmp, sizeof(tmp));
-						if (!(*iface)) iface = "ppp+";
-					}
-					else /* if (wanfaces.count == 1) */ {
-						ip = prefix_nvram_get(prefix, "ipaddr", tmp, sizeof(tmp));
-						if ((!(*ip) || strcmp(ip, "0.0.0.0") == 0) && (wanfaces.count > 0))
-							iface = "";
-						else
-							iface = prefix_nvram_get(prefix, "ifname", tmp, sizeof(tmp));
-					}
-					strlcpy(wanfaces.iface[wanfaces.count].ip, ip, sizeof(wanfaces.iface[0].ip));
-					strlcpy(wanfaces.iface[wanfaces.count].name, iface, IFNAMSIZ);
-					++wanfaces.count;
-				}
-			}
-			else { /* PPPoE */
-				ip = (proto == WP_DISABLED) ? "0.0.0.0" : prefix_nvram_get(prefix, "ipaddr", tmp, sizeof(tmp));
-				iface = prefix_nvram_get(prefix, "iface", tmp, sizeof(tmp));
-				if (!(*iface))
-					iface = "ppp+";
-				strlcpy(wanfaces.iface[wanfaces.count].ip, ip, sizeof(wanfaces.iface[0].ip));
-				strlcpy(wanfaces.iface[wanfaces.count++].name, iface, IFNAMSIZ);
-			}
-			break;
-		default:
-			ip = (proto == WP_DISABLED) ? "0.0.0.0" : prefix_nvram_get(prefix, "ipaddr", tmp, sizeof(tmp));
-			if (proto == WP_PPP3G) {
+	proto = get_wanx_proto(prefix);
+
+	if ((proto == WP_PPTP) || (proto == WP_L2TP) ||
+	    ((proto == WP_PPPOE) && using_dhcpc(prefix))) {
+		while (wanfaces.count < 2) {
+			if (wanfaces.count == 0) {
+				ip = prefix_nvram_get(prefix, "ppp_get_ip", tmp, sizeof(tmp));
 				iface = prefix_nvram_get(prefix, "iface", tmp, sizeof(tmp));
 				if (!(*iface))
 					iface = "ppp+";
 			}
 			else {
-				iface = prefix_nvram_get(prefix, "ifname", tmp, sizeof(tmp));
+				ip = prefix_nvram_get(prefix, "ipaddr", tmp, sizeof(tmp));
+				if (!(*ip) || strcmp(ip, "0.0.0.0") == 0)
+					iface = "";
+				else
+					iface = prefix_nvram_get(prefix, "ifname", tmp, sizeof(tmp));
 			}
+
 			strlcpy(wanfaces.iface[wanfaces.count].ip, ip, sizeof(wanfaces.iface[0].ip));
-			strlcpy(wanfaces.iface[wanfaces.count++].name, iface, IFNAMSIZ);
-			break;
+			strlcpy(wanfaces.iface[wanfaces.count].name, iface, IFNAMSIZ);
+			++wanfaces.count;
+		}
+	}
+	else {
+		ip = (proto == WP_DISABLED) ? "0.0.0.0" : prefix_nvram_get(prefix, "ipaddr", tmp, sizeof(tmp));
+
+		if ((proto == WP_PPPOE) || (proto == WP_PPP3G)) {
+			iface = prefix_nvram_get(prefix, "iface", tmp, sizeof(tmp));
+			if (!(*iface))
+				iface = "ppp+";
+		}
+		else
+			iface = prefix_nvram_get(prefix, "ifname", tmp, sizeof(tmp));
+
+		strlcpy(wanfaces.iface[wanfaces.count].ip, ip, sizeof(wanfaces.iface[0].ip));
+		strlcpy(wanfaces.iface[wanfaces.count++].name, iface, IFNAMSIZ);
 	}
 
 	return &wanfaces;
