@@ -351,7 +351,6 @@ void asp_usbdevices(int argc, char **argv)
 		return;
 	}
 
-	i = 0;
 	while ((dp = readdir(usb_dir)) != NULL) {
 		/* skip . and .. */
 		if ((strcmp(dp->d_name, ".") == 0) || (strcmp(dp->d_name, "..") == 0))
