@@ -2041,11 +2041,6 @@ void stop_lan(void)
 	logmsg(LOG_DEBUG, "*** OUT %s: %d", __FUNCTION__, __LINE__);
 }
 
-static int is_sta(int idx, int unit, int subunit, void *param)
-{
-	return (nvram_match(wl_nvname("mode", unit, subunit), "sta") && (nvram_match(wl_nvname("bss_enabled", unit, subunit), "1")));
-}
-
 void do_static_routes(int add)
 {
 	char *buf;

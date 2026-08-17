@@ -1712,22 +1712,6 @@ char *file2str(const char *path)
 	return fd2str(fd);
 }
 
-/*
- * Waits for a file descriptor to change status or unblocked signal
- * @param  fd       file descriptor
- * @param  timeout  seconds to wait before timing out or 0 for no timeout
- * @return          1 if descriptor changed status or 0 if timed out or -1 on error
- */
-int waitfor(int fd, int timeout)
-{
-	fd_set rfds;
-	struct timeval tv = { timeout, 0 };
-
-	FD_ZERO(&rfds);
-	FD_SET(fd, &rfds);
-	return select(fd + 1, &rfds, NULL, NULL, (timeout > 0) ? &tv : NULL);
-}
-
 int kill_pidfile_s_rm(char *pidfile, int sig)
 {
 	FILE *fp;

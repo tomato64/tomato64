@@ -144,6 +144,7 @@ static inline int is_psta(int idx, int unit, int subunit, void *param)
 /* rc.c */
 typedef void (*_tf_ipt_write)(const char *format, ... );
 typedef void (*_tf_ip6t_write)(const char *format, ... );
+extern int is_sta(int idx, int unit, int subunit, void *param);
 extern void chains_log_detection(void);
 extern void fix_chain_in_drop(void);
 extern int env2nv(char *env, char *nv);

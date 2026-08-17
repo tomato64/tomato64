@@ -106,6 +106,21 @@ static int rc_main(int argc, char *argv[])
 	return 0;
 }
 
+/*
+ * Checks whether a wireless interface is an enabled station interface.
+ *
+ * @param idx      wireless iterator index (unused)
+ * @param unit     wireless unit
+ * @param subunit  wireless virtual interface index
+ * @param param    wireless iterator context (unused)
+ * @return         1 when the interface is enabled in station mode, otherwise 0
+ */
+int is_sta(int idx, int unit, int subunit, void *param)
+{
+	return nvram_match(wl_nvname("mode", unit, subunit), "sta") &&
+	       nvram_match(wl_nvname("bss_enabled", unit, subunit), "1");
+}
+
 void chains_log_detection(void)
 {
 	int n;

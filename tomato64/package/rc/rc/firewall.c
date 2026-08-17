@@ -84,11 +84,6 @@ static int is_anywanup(void)
 	return ret;
 }
 
-static int is_sta(int idx, int unit, int subunit, void *param)
-{
-	return (nvram_match(wl_nvname("mode", unit, subunit), "sta") && (nvram_match(wl_nvname("bss_enabled", unit, subunit), "1")));
-}
-
 #ifdef TCONFIG_BCMARM
 void ip2class(char *lan_ip, char *netmask, char *buf, const size_t buf_sz)
 {

@@ -142,7 +142,6 @@ extern void cprintf(const char *format, ...);
 #if 0
 extern char *fd2str(int fd);
 extern char *file2str(const char *path);
-extern int waitfor(int fd, int timeout); /* see rc/init.c */
 extern int kill_pidfile_s_rm(char *pidfile, int sig);
 extern int get_ipconfig_index(char *eth_ifname);
 extern int set_ipconfig_index(char *eth_ifname, int index);
