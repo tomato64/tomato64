@@ -176,6 +176,7 @@ extern void get_bridge_prefix(unsigned int bridge, char *prefix, const size_t pr
 extern void get_bridge_nvram_key(unsigned int bridge, const char *suffix, char *key, const size_t key_size);
 extern char *bridge_nvram_get(unsigned int bridge, const char *suffix, char *key, const size_t key_size);
 extern void get_wan_prefix(int iWan_unit, char *sPrefix);
+extern char *wan_nvram_get(int wan_unit, const char *suffix, char *key, const size_t key_size);
 extern int get_wan_unit(const char *sPrefix);
 extern int get_wan_unit_with_value(const char *suffix, const char *value);
 extern int get_wan_proto(void);

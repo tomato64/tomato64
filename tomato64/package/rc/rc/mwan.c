@@ -85,7 +85,7 @@ int get_sta_wan_prefix(char *sPrefix, const size_t buf_sz)
 		memset(prefix, 0, sizeof(prefix));
 		get_wan_prefix(wan_unit, prefix);
 
-		if (strcmp(nvram_safe_get(strlcat_r(prefix, "_sta", tmp, sizeof(tmp))), "")) {
+		if (*wan_nvram_get(wan_unit, "sta", tmp, sizeof(tmp))) {
 			found = 1;
 			break;
 		}

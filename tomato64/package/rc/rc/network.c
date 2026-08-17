@@ -1377,7 +1377,7 @@ int wl_sta_prepare(void)
 
 		store_wan_if_to_nvram(wan_prefix); /* prepare wan setup very early now! */
 
-		wl_sta = nvram_safe_get(strlcat_r(wan_prefix, "_ifname", tmp, sizeof(tmp)));
+		wl_sta = wan_nvram_get(wan_unit, "ifname", tmp, sizeof(tmp));
 
 		/* Check interface len */
 		if (!strlen(wl_sta))

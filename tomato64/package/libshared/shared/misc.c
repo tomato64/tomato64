@@ -100,18 +100,49 @@ char *bridge_nvram_get(unsigned int bridge, const char *suffix, char *key, const
 	return nvram_safe_get(key);
 }
 
+/*
+ * Formats the NVRAM namespace prefix for a WAN unit.
+ *
+ * @param iWan_unit  WAN unit number; 1 maps to "wan", 2..MWAN_MAX to "wanN"
+ * @param sPrefix    destination buffer; must be large enough for "wanN"
+ */
 void get_wan_prefix(int iWan_unit, char *sPrefix)
 {
-	char wanstr[8];
-	int i;
+	if ((iWan_unit > 1) && (iWan_unit <= MWAN_MAX))
+		sprintf(sPrefix, "wan%d", iWan_unit);
+	else
+		strcpy(sPrefix, "wan");
+}
 
-	strcpy(sPrefix, "wan");
-	for (i = 1; i <= MWAN_MAX; i++) {
-		snprintf(wanstr, sizeof(wanstr), (i == 1 ? "wan" : "wan%d"), i);
+/*
+ * Builds a WAN-scoped NVRAM key.
+ *
+ * @param wan_unit  WAN unit number
+ * @param suffix    NVRAM variable suffix without the separating underscore
+ * @param key       destination buffer receiving the complete NVRAM key
+ * @param key_size  size of the key buffer
+ */
+static void get_wan_nvram_key(int wan_unit, const char *suffix, char *key, const size_t key_size)
+{
+	char prefix[8];
 
-		if (iWan_unit == i)
-			strcpy(sPrefix, wanstr);
-	}
+	get_wan_prefix(wan_unit, prefix);
+	snprintf(key, key_size, "%s_%s", prefix, suffix);
+}
+
+/*
+ * Reads a WAN-scoped NVRAM value using the wan/wanN naming convention.
+ *
+ * @param wan_unit  WAN unit number
+ * @param suffix    NVRAM variable suffix without the separating underscore
+ * @param key       scratch buffer receiving the complete NVRAM key
+ * @param key_size  size of the key buffer
+ * @return          value returned by nvram_safe_get(); never NULL
+ */
+char *wan_nvram_get(int wan_unit, const char *suffix, char *key, const size_t key_size)
+{
+	get_wan_nvram_key(wan_unit, suffix, key, key_size);
+	return nvram_safe_get(key);
 }
 
 int get_wan_unit(const char *sPrefix)

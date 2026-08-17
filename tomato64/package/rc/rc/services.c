@@ -890,7 +890,7 @@ void dns_to_resolv(void)
 		    get_wanx_proto(wan_prefix) != WP_DISABLED &&
 		    get_wanx_proto(wan_prefix) != WP_PPTP &&
 		    get_wanx_proto(wan_prefix) != WP_L2TP &&
-		    !nvram_get_int(strlcat_r(wan_prefix, "_ppp_demand", tmp, sizeof(tmp))))
+		    !atoi(wan_nvram_get(wan_unit, "ppp_demand", tmp, sizeof(tmp))))
 		{
 			logmsg(LOG_DEBUG, "*** %s: %s (proto:%d) is not UP, not P-t-P or On Demand, SKIP ADD", __FUNCTION__, wan_prefix, get_wanx_proto(wan_prefix));
 			continue;

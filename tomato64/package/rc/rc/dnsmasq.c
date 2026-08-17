@@ -250,9 +250,9 @@ static void write_wan_dns(FILE *f, const int mwan_num)
 		/* allow RFC1918 responses for server domain (fix connect PPTP/L2TP WANs) */
 		proto = get_wanx_proto(wan_prefix);
 		if (proto == WP_PPTP)
-			nv = nvram_safe_get(strlcat_r(wan_prefix, "_pptp_server_ip", key, sizeof(key)));
+			nv = wan_nvram_get(wan_unit, "pptp_server_ip", key, sizeof(key));
 		else if (proto == WP_L2TP)
-			nv = nvram_safe_get(strlcat_r(wan_prefix, "_l2tp_server_ip", key, sizeof(key)));
+			nv = wan_nvram_get(wan_unit, "l2tp_server_ip", key, sizeof(key));
 
 		if (nv && *nv)
 			fprintf(f, "rebind-domain-ok=%s\n", nv);
