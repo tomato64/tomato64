@@ -1976,6 +1976,28 @@ static void set_dualband_wireless_ifnames(void)
 }
 
 /*
+ * Set the common LAN, WAN and wireless mappings used by tri-band models.
+ * @return  none
+ */
+static void set_triband_network_defaults(void)
+{
+	nvram_set("lan_ifname", "br0");
+	nvram_set("landevs", "vlan1 wl0 wl1 wl2");
+	nvram_set("lan_ifnames", "vlan1 eth2 eth1 eth3");
+	nvram_set("wan_ifnames", "vlan2");
+	nvram_set("wan_ifnameX", "vlan2");
+	nvram_set("wandevs", "vlan2");
+	nvram_set("wl_ifnames", "eth2 eth1 eth3");
+	nvram_set("wl_ifname", "eth2");
+	nvram_set("wl0_ifname", "eth2");
+	nvram_set("wl1_ifname", "eth1");
+	nvram_set("wl2_ifname", "eth3");
+	nvram_set("wl0_vifnames", "wl0.1 wl0.2 wl0.3");
+	nvram_set("wl1_vifnames", "wl1.1 wl1.2 wl1.3");
+	nvram_set("wl2_vifnames", "wl2.1 wl2.2 wl2.3");
+}
+
+/*
  * Set the common LAN, WAN and wireless mappings used by dual-band models.
  * @return  none
  */
@@ -9625,20 +9647,7 @@ static int init_nvram(void)
 			nvram_set("lan_invert", "1");
 			nvram_set("vlan1hwname", "et0");
 			nvram_set("vlan2hwname", "et0");
-			nvram_set("lan_ifname", "br0");
-			nvram_set("landevs", "vlan1 wl0 wl1 wl2");
-			nvram_set("lan_ifnames", "vlan1 eth2 eth1 eth3");
-			nvram_set("wan_ifnames", "vlan2");
-			nvram_set("wan_ifnameX", "vlan2");
-			nvram_set("wandevs", "vlan2");
-			nvram_set("wl_ifnames", "eth2 eth1 eth3");
-			nvram_set("wl_ifname", "eth2");
-			nvram_set("wl0_ifname", "eth2");
-			nvram_set("wl1_ifname", "eth1");
-			nvram_set("wl2_ifname", "eth3");
-			nvram_set("wl0_vifnames", "wl0.1 wl0.2 wl0.3");
-			nvram_set("wl1_vifnames", "wl1.1 wl1.2 wl1.3");
-			nvram_set("wl2_vifnames", "wl2.1 wl2.2 wl2.3");
+			set_triband_network_defaults();
 
 			/* fix MAC addresses */
 			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));	/* get et0 MAC address for LAN */
@@ -9933,20 +9942,7 @@ static int init_nvram(void)
 		if (!nvram_match("t_fix1", (char *)name)) {
 			nvram_set("vlan1hwname", "et2"); /* SPECIAL case: for R8000 we use the gmac3 default setup (et2) but disabled and copy et2macaddr to et0macaddr */
 			nvram_set("vlan2hwname", "et2");
-			nvram_set("lan_ifname", "br0");
-			nvram_set("landevs", "vlan1 wl0 wl1 wl2");
-			nvram_set("lan_ifnames", "vlan1 eth2 eth1 eth3");
-			nvram_set("wan_ifnames", "vlan2");
-			nvram_set("wan_ifnameX", "vlan2");
-			nvram_set("wandevs", "vlan2");
-			nvram_set("wl_ifnames", "eth2 eth1 eth3");
-			nvram_set("wl_ifname", "eth2");
-			nvram_set("wl0_ifname", "eth2");
-			nvram_set("wl1_ifname", "eth1");
-			nvram_set("wl2_ifname", "eth3");
-			nvram_set("wl0_vifnames", "wl0.1 wl0.2 wl0.3");
-			nvram_set("wl1_vifnames", "wl1.1 wl1.2 wl1.3");
-			nvram_set("wl2_vifnames", "wl2.1 wl2.2 wl2.3");
+			set_triband_network_defaults();
 
 			/* GMAC3 variables */
 			nvram_set("fwd_cpumap", "d:x:2:169:1 d:l:5:169:1 d:u:5:163:0");
