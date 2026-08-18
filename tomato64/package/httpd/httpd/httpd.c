@@ -102,7 +102,7 @@
 #ifndef TOMATO64
 #define HTTP_MAX_LISTENERS	16
 #else
-#define HTTP_MAX_LISTENERS	36
+#define HTTP_MAX_LISTENERS	((4 * BRIDGE_COUNT) + (2 * MWAN_MAX) + 4)
 #endif /* TOMATO64 */
 #define SERVER_NAME		"httpd"
 #define PROTOCOL		"HTTP/1.0"
