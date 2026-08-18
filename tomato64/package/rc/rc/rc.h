@@ -457,6 +457,7 @@ extern int ipt_layer7(const char *v, char *opt, const size_t buf_sz);
 #endif /* TOMATO64 */
 #ifdef TOMATO64
 extern int ipt_ndpi(const char *v, char *opt, const size_t buf_sz);
+extern int ipt_ndpi_inprogress(const char *v, char *opt, const size_t buf_sz);
 #endif /* TOMATO64 */
 #define ipt_source_strict(s, src, categ, name) ipt_addr(src, 64, s, "src", IPT_V4, 1, categ, name)
 #define ipt_source(s, src, categ, name) ipt_addr(src, 64, s, "src", IPT_V4, 0, categ, name)

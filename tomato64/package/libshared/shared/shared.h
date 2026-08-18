@@ -454,6 +454,8 @@ extern void led_setup(void);
 #ifdef TOMATO64
 extern int ndpi_proto_valid(const char *name); /* 1 = usable, 0 = not, -1 = table unavailable */
 extern int ndpi_proto_list_valid(const char *v, char *bad, const size_t bad_sz); /* as stored in a rule */
+extern int ndpi_proto_dissector(const char *name); /* 1 = detected from payload, 0 = from port/address, -1 = table unavailable */
+extern int ndpi_proto_list_dissector(const char *v, char *bad, const size_t bad_sz); /* whole value usable with --inprogress */
 extern const char *const *ndpi_proto_names(void); /* sorted, NULL terminated, owned by the library */
 extern void ndpi_migrate_rules(void); /* rewrite rules naming a renamed protocol */
 #endif /* TOMATO64 */

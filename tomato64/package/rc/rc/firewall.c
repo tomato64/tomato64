@@ -524,6 +524,54 @@ int ipt_ndpi(const char *v, char *opt, const size_t buf_sz)
 
 	return 1;
 }
+
+/*
+ * Build the companion match that covers a flow while nDPI is still working it out.
+ *
+ * xt_ndpi only matches once the flow has been classified, which takes the
+ * first few packets of it. That is harmless when the verdict is DROP, since
+ * the flow is cut as soon as the protocol is known, but it deadlocks the
+ * opposite verdict: the first packet of a permitted flow is not classified
+ * yet, so it misses the RETURN rule, the fall through drops it, and the
+ * packets nDPI needed in order to classify it never arrive.
+ *
+ * --inprogress matches while detection is still running and stops matching as
+ * soon as the dissectors exclude the protocol, so a permitted flow is let
+ * through until nDPI can either confirm it, when the --proto rule takes over,
+ * or rule it out, when the fall through drops it after all.
+ *
+ * Only for protocols with a dissector: libxt_ndpi.so refuses the option for
+ * any other, and iptables-restore is all or nothing. Protocols that are known
+ * by port or address instead are classified from their first packet, so they
+ * never deadlock and have nothing to gain here.
+ *
+ * The value itself is validated, and the module loaded, by ipt_ndpi(), which
+ * is called for the same rule first. Returns 1 when opt was built, 0 when the
+ * rule has to do without it.
+ */
+int ipt_ndpi_inprogress(const char *v, char *opt, const size_t buf_sz)
+{
+	char bad[32];
+
+	*opt = 0;
+	if (*v == 0)
+		return 0;
+
+	if (!ndpi_proto_list_dissector(v, bad, sizeof(bad))) {
+		if (*bad)
+			syslog(LOG_INFO, "nDPI %s has no dissector, allowed without --inprogress", bad);
+
+		return 0;
+	}
+
+	/* a truncated protocol list is a rule iptables-restore would refuse */
+	if (snprintf(opt, buf_sz, " -m ndpi --inprogress %s", v) >= (int)buf_sz) {
+		*opt = 0;
+		return 0;
+	}
+
+	return 1;
+}
 #endif /* TOMATO64 */
 
 /*

@@ -219,6 +219,9 @@ void ipt_restrictions(void)
 #endif /* TOMATO64 */
 	char *addr_type, *addr;
 	char app[256];
+#ifdef TOMATO64
+	char app_detecting[256];
+#endif /* TOMATO64 */
 	char ports[256];
 	char iptaddr[192];
 	int http_file;
@@ -308,6 +311,11 @@ void ipt_restrictions(void)
 			memset(app, 0, sizeof(app));
 			if (ipt_ndpi(ndpi, app, sizeof(app)) == -1)
 				continue;
+
+			/* whitelist: also let the flow through while nDPI is still classifying it */
+			memset(app_detecting, 0, sizeof(app_detecting));
+			if ((is_allow) && (*app))
+				ipt_ndpi_inprogress(ndpi, app_detecting, sizeof(app_detecting));
 #endif /* TOMATO64 */
 #ifdef TCONFIG_IPV6
 			v4v6_ok = ((*app) ? 0 : IPT_V6) | IPT_V4;
@@ -330,6 +338,10 @@ void ipt_restrictions(void)
 			if (proto <= -2) {
 				/* shortcut if any proto+any port */
 				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s %s -j %s\n", reschain, iptaddr, app, tgt);
+#ifdef TOMATO64
+				if (*app_detecting)
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s %s %s -j %s\n", reschain, iptaddr, app_detecting, tgt);
+#endif /* TOMATO64 */
 				continue;
 			}
 			else if ((proto == 6) || (proto == 17) || (proto == -1)) {
@@ -348,9 +360,21 @@ void ipt_restrictions(void)
 					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p tcp %s %s %s -j %s\n", reschain, ports, iptaddr, app, tgt);
 				if (proto != 6)
 					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p udp %s %s %s -j %s\n", reschain, ports, iptaddr, app, tgt);
+#ifdef TOMATO64
+				if (*app_detecting) {
+					if (proto != 17)
+						ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p tcp %s %s %s -j %s\n", reschain, ports, iptaddr, app_detecting, tgt);
+					if (proto != 6)
+						ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p udp %s %s %s -j %s\n", reschain, ports, iptaddr, app_detecting, tgt);
+				}
+#endif /* TOMATO64 */
 			}
 			else {
 				ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %d %s %s -j %s\n", reschain, proto, iptaddr, app, tgt);
+#ifdef TOMATO64
+				if (*app_detecting)
+					ip46t_flagged_write(ipv6_enabled, v4v6_ok, "-A %s -p %d %s %s -j %s\n", reschain, proto, iptaddr, app_detecting, tgt);
+#endif /* TOMATO64 */
 			}
 		}
 

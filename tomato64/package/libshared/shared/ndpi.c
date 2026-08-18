@@ -25,6 +25,11 @@
  * synthetic "customN" name. libxt_ndpi.so rejects those exactly the way it
  * rejects an unknown name, so they are not usable here either.
  *
+ * The trailing " dpi" flag marks a protocol nDPI recognises from the payload,
+ * as opposed to one it only knows by port or address. That distinction is
+ * what "--inprogress" needs: libxt_ndpi.so refuses the option for a protocol
+ * without a dissector, and a refused option fails the whole ruleset.
+ *
  * The table cannot be read before the module is loaded - the whole
  * /proc/net/xt_ndpi/ directory is created by the module at netns init - so
  * callers must modprobe xt_ndpi first.
@@ -47,20 +52,41 @@
 #define NDPI_NAME_SIZE		32	/* kernel side prints through a char[32] */
 
 static char **ndpi_protos = NULL;	/* NULL terminated, kernel index order */
+static char *ndpi_dissector = NULL;	/* one flag per ndpi_protos entry, same order */
 static const char **ndpi_display = NULL;/* NULL terminated, sorted, for a UI list */
+
+/*
+ * Does a protocol table line end with the " dpi" flag?
+ *
+ * The kernel prints the flag as the last field of the trailing comment and
+ * then adds one more space before the newline. libxt_ndpi.so reads it at a
+ * fixed offset from the end of the line, which only works while that spacing
+ * holds, so the field is matched here after the line has been trimmed.
+ */
+static int ndpi_line_dissector(const char *line)
+{
+	size_t n = strlen(line);
+
+	while ((n > 0) && ((line[n - 1] == '\n') || (line[n - 1] == '\r') || (line[n - 1] == ' ')))
+		n--;
+
+	return ((n >= 4) && (strncmp(line + n - 4, " dpi", 4) == 0));
+}
 
 /*
  * Read the protocol table into ndpi_protos, once per process.
  *
  * Only entries the match can actually be used with are kept, which is the
  * same set libxt_ndpi.so will accept: everything that is named and not
- * disabled. Returns 1 when the table is available, 0 when it is not.
+ * disabled. The " dpi" flag of each kept entry is recorded alongside it.
+ * Returns 1 when the table is available, 0 when it is not.
  */
 static int ndpi_proto_load(void)
 {
 	FILE *fp;
 	char buf[192], mark[NDPI_NAME_SIZE], name[NDPI_NAME_SIZE];
 	char **list;
+	char *dpi;
 	unsigned int idx;
 	int n, hdr;
 
@@ -73,6 +99,12 @@ static int ndpi_proto_load(void)
 	}
 
 	if ((list = calloc(NDPI_PROTO_MAX + 1, sizeof(char *))) == NULL) {
+		fclose(fp);
+		return 0;
+	}
+
+	if ((dpi = calloc(NDPI_PROTO_MAX + 1, sizeof(char))) == NULL) {
+		free(list);
 		fclose(fp);
 		return 0;
 	}
@@ -94,6 +126,7 @@ static int ndpi_proto_load(void)
 			break;
 		if ((list[n] = strdup(name)) == NULL)
 			break;
+		dpi[n] = ndpi_line_dissector(buf);
 		n++;
 	}
 	fclose(fp);
@@ -107,11 +140,13 @@ static int ndpi_proto_load(void)
 		while (--n >= 0)
 			free(list[n]);
 		free(list);
+		free(dpi);
 
 		return 0;
 	}
 
 	ndpi_protos = list;
+	ndpi_dissector = dpi;
 
 	return 1;
 }
@@ -219,6 +254,79 @@ int ndpi_proto_list_valid(const char *v, char *bad, const size_t bad_sz)
 		r = ndpi_proto_valid(n);
 		if (r < 0) /* no protocol table, leave the rule alone */
 			break;
+		if (r == 0) {
+			strlcpy(bad, n, bad_sz);
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+/*
+ * Is a protocol one nDPI detects from the payload?
+ *
+ * Returns 1 yes, 0 no or unknown name, -1 when the protocol table is
+ * unavailable. A protocol without a dissector is recognised from the port or
+ * the address of the very first packet, so the answer also says whether the
+ * classification of a flow can lag behind its first packet at all.
+ */
+int ndpi_proto_dissector(const char *name)
+{
+	char **p;
+	int i;
+
+	if ((name == NULL) || (*name == 0))
+		return -1;
+
+	if (!ndpi_proto_load())
+		return -1;
+
+	for (i = 0, p = ndpi_protos; *p; ++p, ++i) {
+		if (strcasecmp(*p, name) == 0)
+			return ndpi_dissector[i];
+	}
+
+	return 0;
+}
+
+/*
+ * Can the whole stored value be handed to "--inprogress"?
+ *
+ * libxt_ndpi.so walks the protocol bitmask the value expands to and fails the
+ * command for the first protocol without a dissector, so every name has to
+ * carry one. Exclusions and "all" are answered no rather than expanded here:
+ * they resolve against the running library rather than against the value, and
+ * this has to fail closed. Unlike ndpi_proto_list_valid(), an unreadable
+ * protocol table is also a no - that one keeps a rule the caller already
+ * built, this one decides whether to add an option that takes the whole
+ * ruleset down when it turns out to be wrong.
+ *
+ * Returns 1 when the value is usable, 0 when it is not, and copies the name
+ * that decided it into bad, which is left empty when no single name did.
+ */
+int ndpi_proto_list_dissector(const char *v, char *bad, const size_t bad_sz)
+{
+	char list[256];
+	char *p, *n;
+	int r;
+
+	*bad = 0;
+	strlcpy(list, v, sizeof(list));
+
+	p = list;
+	while ((n = strsep(&p, ",")) != NULL) {
+		if (*n == 0)
+			continue;
+
+		if ((*n == '-') || (strcmp(n, "all") == 0)) {
+			strlcpy(bad, n, bad_sz);
+			return 0;
+		}
+
+		r = ndpi_proto_dissector(n);
+		if (r < 0) /* no protocol table, nothing can be vouched for */
+			return 0;
 		if (r == 0) {
 			strlcpy(bad, n, bad_sz);
 			return 0;
