@@ -499,7 +499,7 @@ static int ndpi_migrate_rrule(const char *name)
 	}
 	strlcpy(old, head, (size_t)(tail - head) + 1);
 
-	/* pproto<dir<pport<ndpi<addr_type<addr */
+	/* pproto<dir<pport<ndpi<host<addr_type<addr, six fields before host existed */
 	changed = ndpi_rename_field(new, sz, old, 3);
 	if (changed) {
 		sz = strlen(src) + strlen(new) + 1;

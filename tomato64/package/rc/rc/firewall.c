@@ -526,6 +526,57 @@ int ipt_ndpi(const char *v, char *opt, const size_t buf_sz)
 }
 
 /*
+ * Narrow an nDPI match to a server name.
+ *
+ * nDPI records the host of a flow from wherever the protocol carries it - the
+ * TLS SNI, the QUIC server name, the HTTP Host header - so this reaches
+ * encrypted traffic that the web match, which only ever saw plaintext HTTP,
+ * never could. The kernel side lowercases both sides and takes a substring,
+ * so "example.com" also covers www.example.com; a value wrapped in slashes is
+ * a regexp instead.
+ *
+ * xt_ndpi requires --host to accompany a protocol match rather than stand on
+ * its own, so opt must already hold one and the host only narrows it.
+ *
+ * The value reaches here from the GUI and is written straight into the
+ * iptables-restore stream, so it is held to what a host name or a regexp
+ * needs: no whitespace or quoting for the restore parser to act on, no
+ * backslash for it to eat, and none of the separators the rule itself is
+ * built from. Returns 1 when opt was narrowed, 0 when it was left alone.
+ */
+int ipt_ndpi_host(const char *v, char *opt, const size_t buf_sz)
+{
+	const char *p;
+	size_t len;
+
+	if ((*v == 0) || (*opt == 0))
+		return 0;
+
+	len = strlen(v);
+	if (len >= NDPI_HOSTNAME_MAX) {
+		syslog(LOG_ERR, "nDPI host %s is longer than %d characters", v, NDPI_HOSTNAME_MAX - 1);
+		return 0;
+	}
+
+	for (p = v; *p; ++p) {
+		if ((*p <= ' ') || (*p > '~') ||
+		    (*p == '"') || (*p == '\'') || (*p == '\\') ||
+		    (*p == '<') || (*p == '>') || (*p == '|')) {
+			syslog(LOG_ERR, "nDPI host %s contains an unusable character", v);
+			return 0;
+		}
+	}
+
+	len = strlen(opt);
+	if (snprintf(opt + len, buf_sz - len, " --host %s", v) >= (int)(buf_sz - len)) {
+		opt[len] = 0; /* a truncated rule is one iptables-restore would refuse */
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
  * Build the companion match that covers a flow while nDPI is still working it out.
  *
  * xt_ndpi only matches once the flow has been classified, which takes the

@@ -683,6 +683,36 @@ function _v_domain(e, dom, quiet) {
 	return s;
 }
 
+/* TOMATO64-BEGIN */
+/*
+ * A server name for the nDPI match.
+ *
+ * Held to what the match and the rule can carry: the xt_ndpi hostname buffer
+ * is 128 bytes, iptables-restore acts on whitespace, quoting and backslashes,
+ * and '<', '>' and '|' separate the fields of the rule this ends up in. A
+ * value wrapped in slashes is a regexp and is left to the kernel to compile.
+ */
+function v_ndpi_host(e, quiet) {
+	var v;
+
+	if ((e = E(e)) == null) return 0;
+
+	v = e.value.trim().toLowerCase();
+	if (v.length >= 128) {
+		ferror.set(e, 'Host name is too long, 127 characters maximum', quiet);
+		return 0;
+	}
+	if (v.match(/[\s"'\\<>|]/)) {
+		ferror.set(e, 'Host name cannot contain spaces, quotes, backslashes, or < > |', quiet);
+		return 0;
+	}
+
+	e.value = v;
+	ferror.clear(e);
+	return 1;
+}
+
+/* TOMATO64-END */
 function v_domain(e, quiet) {
 	var v;
 

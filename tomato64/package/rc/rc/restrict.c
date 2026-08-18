@@ -216,6 +216,8 @@ void ipt_restrictions(void)
 	char *layer7;
 #else
 	char *ndpi;
+	char *ndpi_host;
+	int nmatch;
 #endif /* TOMATO64 */
 	char *addr_type, *addr;
 	char app[256];
@@ -227,6 +229,9 @@ void ipt_restrictions(void)
 	int http_file;
 	int ex;
 	int need_web = 0;
+#ifdef TOMATO64
+	int rule_web;
+#endif /* TOMATO64 */
 	int first = 1;
 	int v4v6_ok;
 	int is_allow;
@@ -286,14 +291,28 @@ void ipt_restrictions(void)
 		ip46t_write(ipv6_enabled, ":%s - [0:0]\n", reschain);
 
 		blockall = 1;
+#ifdef TOMATO64
+		rule_web = 0;
+#endif /* TOMATO64 */
 
 		while ((q = strsep(&matches, ">")) != NULL) {
 #ifndef TOMATO64
 			if (vstrsep(q, "<", &pproto, &dir, &pport, &ipp2p, &layer7, &addr_type, &addr) < 7)
 				continue;
 #else
-			if (vstrsep(q, "<", &pproto, &dir, &pport, &ndpi, &addr_type, &addr) < 6)
+			/*
+			 * The host field was added after the fact, so a rule
+			 * written before it exists is six fields long and its
+			 * address pair lands one slot early.
+			 */
+			ndpi_host = "";
+			if ((nmatch = vstrsep(q, "<", &pproto, &dir, &pport, &ndpi, &ndpi_host, &addr_type, &addr)) < 6)
 				continue;
+			if (nmatch == 6) {
+				addr = addr_type;
+				addr_type = ndpi_host;
+				ndpi_host = "";
+			}
 #endif /* TOMATO64 */
 
 			if ((*dir != 'a') && (*dir != 's') && (*dir != 'd') && (*dir != 'x'))
@@ -312,7 +331,14 @@ void ipt_restrictions(void)
 			if (ipt_ndpi(ndpi, app, sizeof(app)) == -1)
 				continue;
 
-			/* whitelist: also let the flow through while nDPI is still classifying it */
+			ipt_ndpi_host(ndpi_host, app, sizeof(app));
+
+			/*
+			 * Whitelist: also let the flow through while nDPI is
+			 * still classifying it. Deliberately without the host,
+			 * which is not known either until the flow has been
+			 * read far enough to match the rule above.
+			 */
 			memset(app_detecting, 0, sizeof(app_detecting));
 			if ((is_allow) && (*app))
 				ipt_ndpi_inprogress(ndpi, app_detecting, sizeof(app_detecting));
@@ -403,6 +429,9 @@ void ipt_restrictions(void)
 #endif
 			need_web = 1;
 			blockall = 0;
+#ifdef TOMATO64
+			rule_web = 1;
+#endif /* TOMATO64 */
 			if (p == NULL)
 				break;
 
@@ -425,8 +454,42 @@ void ipt_restrictions(void)
 #endif
 			need_web = 1;
 			blockall = 0;
+#ifdef TOMATO64
+			rule_web = 1;
+#endif /* TOMATO64 */
 		}
 
+#ifdef TOMATO64
+		/*
+		 * Whitelist mode judges the request, not the connection.
+		 *
+		 * The web match only fires on a packet that carries an HTTP
+		 * GET/POST, so under the fall-through DROP below the handshake
+		 * of an allowed request never completes and the request itself
+		 * never gets sent. Reject the requests that were not allowed
+		 * above instead, and let the packets that carry no request at
+		 * all - the handshake, the ACKs, the body of a POST - through
+		 * on the web ports. Nothing can be served over plain HTTP
+		 * without a request, so a rejected request still ends the
+		 * conversation.
+		 */
+		if ((is_allow) && (rule_web)) {
+			char *webports = nvram_safe_get("rrulewp");
+
+			if (*webports == 0) /* multiport with no port list is a rule iptables-restore would refuse */
+				syslog(LOG_ERR, "Restrictions: rrulewp is empty, rule %d cannot allow web requests", nrule);
+			else {
+#ifdef TCONFIG_BCMARM
+				ipt_write("-A %s -p tcp -m multiport --dports %s -m web --http -j %s\n", reschain, webports, chain_out_reject);
+				ipt_write("-A %s -p tcp -m multiport --dports %s -j RETURN\n", reschain, webports);
+#else
+				ip46t_write(ipv6_enabled, "-A %s -p tcp -m multiport --dports %s -m web --http -j %s\n", reschain, webports, chain_out_reject);
+				ip46t_write(ipv6_enabled, "-A %s -p tcp -m multiport --dports %s -j RETURN\n", reschain, webports);
+#endif
+			}
+		}
+
+#endif /* TOMATO64 */
 		/* 
 		 * Fall-through action for Whitelist mode:
 		 * If it's a whitelist, anything not matching the allowed rules above drops here.

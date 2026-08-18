@@ -452,6 +452,7 @@ extern void led_setup(void);
 
 /* ndpi.c - Tomato64 nDPI protocol table */
 #ifdef TOMATO64
+#define NDPI_HOSTNAME_MAX	128 /* sizeof(xt_ndpi_mtinfo.hostname), the match truncates past it */
 extern int ndpi_proto_valid(const char *name); /* 1 = usable, 0 = not, -1 = table unavailable */
 extern int ndpi_proto_list_valid(const char *v, char *bad, const size_t bad_sz); /* as stored in a rule */
 extern int ndpi_proto_dissector(const char *name); /* 1 = detected from payload, 0 = from port/address, -1 = table unavailable */
