@@ -417,8 +417,19 @@ void ipt_qos(void)
 	if ((i < 0) || (i > 9))
 		i = 3; /* "low" */
 
+#ifndef TOMATO64
 	if (class_flag != 0)
 		class_flag = 255 << 12;
+#else
+	/* class_flag still holds whatever the last rule computed, which says nothing
+	 * about the rules before it. Any rule needing reclassification anywhere means
+	 * the connections that reach this default must stay reclassifiable too -
+	 * otherwise a connection is pinned to the default class on its first packet,
+	 * which for an nDPI rule is always before nDPI can identify it.
+	 */
+	if (sizegroup > 0)
+		class_flag = 255 << 12;
+#endif /* TOMATO64 */
 
 	class_num = i + 1;
 	class_num |= class_flag;
