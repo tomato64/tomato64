@@ -1396,7 +1396,7 @@ void check_id(const char *url)
 	}
 }
 
-static void add_listen_socket(const char *addr, int server_port, int do_ipv6, int do_ssl)
+static void add_listen_socket(const char *addr, int server_port, int do_ipv6, int do_ssl, unsigned int scope_id)
 {
 	int listenfd;
 	struct sockaddr_storage sai_stor;
@@ -1434,6 +1434,7 @@ static void add_listen_socket(const char *addr, int server_port, int do_ipv6, in
 			inet_pton(HTTPD_FAMILY, addr, &(sai->sin6_addr));
 		else
 			sai->sin6_addr = in6addr_any;
+		sai->sin6_scope_id = scope_id;
 
 		setsockopt(listenfd, IPPROTO_IPV6, IPV6_V6ONLY, &int_1, sizeof(int_1));
 	} else
@@ -1481,7 +1482,7 @@ static void listen_wan(char* wan, wanface_list_t wanXfaces, int wanport)
 			if (!(*ip) || strcmp(ip, "0.0.0.0") == 0)
 				continue;
 
-			add_listen_socket(ip, wanport, 0, nvram_get_int("remote_mgt_https"));
+			add_listen_socket(ip, wanport, 0, nvram_get_int("remote_mgt_https"), 0);
 		}
 	}
 }
@@ -1490,7 +1491,11 @@ static void setup_listeners(int do_ipv6)
 {
 	char ipaddr[BRIDGE_COUNT][INET6_ADDRSTRLEN] = {{0}};
 	int http_lan_listeners = nvram_get_int("http_lan_listeners"); /* Enable listeners: bit 0 = LAN1, bit 1 = LAN2, bit 2 = LAN3, 1 == TRUE, 0 == FALSE */
-	IF_TCONFIG_IPV6(const char *wanaddr);
+#ifdef TCONFIG_IPV6
+	char lladdr[INET6_ADDRSTRLEN] = {0};
+	const char *lan_ifname, *wanaddr;
+	unsigned int ll_scope = 0;
+#endif
 	int wanport = nvram_get_int("http_wanport");
 	IF_TCONFIG_IPV6(int wan6port = wanport);
 	int i, j, lanport;
@@ -1502,8 +1507,18 @@ static void setup_listeners(int do_ipv6)
 	 * add_listen_socket() will fall back to in6addr_any
 	 * if NULL or empty address is returned
 	 */
-	if (do_ipv6)
-		strlcpy(ipaddr[0], getifaddr(nvram_safe_get("lan_ifname"), AF_INET6, 0) ? : "", sizeof(ipaddr[0]));
+	if (do_ipv6) {
+		lan_ifname = nvram_safe_get("lan_ifname");
+		strlcpy(ipaddr[0], getifaddr((char *)lan_ifname, AF_INET6, 0) ? : "", sizeof(ipaddr[0]));
+
+		/*
+		 * A link-local bind needs the LAN interface scope. If no routable
+		 * address exists, the existing in6addr_any listener already covers
+		 * link-local traffic and a second socket would be redundant.
+		 */
+		if (*ipaddr[0] && (ll_scope = if_nametoindex(lan_ifname)) != 0)
+			strlcpy(lladdr, getifaddr((char *)lan_ifname, AF_INET6, 1) ? : "", sizeof(lladdr));
+	}
 	else
 #endif /* TCONFIG_IPV6 */
 		strlcpy(ipaddr[0], nvram_safe_get("lan_ipaddr"), sizeof(ipaddr[0]));
@@ -1530,11 +1545,11 @@ static void setup_listeners(int do_ipv6)
 
 	if (nvram_get_int("http_enable")) {
 		lanport = nvram_get_int("http_lanport");
-		add_listen_socket(ipaddr[0], lanport, do_ipv6, 0);
+		add_listen_socket(ipaddr[0], lanport, do_ipv6, 0, 0);
 		for(i = 1; i < BRIDGE_COUNT; i++)
 		{
 			if ((strcmp(ipaddr[i], "") != 0) && (http_lan_listeners & (1 << (i-1)))) /* check for LAN1, LAN2, LAN3 */
-				add_listen_socket(ipaddr[i], lanport, do_ipv6, 0);
+				add_listen_socket(ipaddr[i], lanport, do_ipv6, 0, 0);
 		}
 
 		IF_TCONFIG_IPV6(if (do_ipv6 && wanport == lanport) wan6port = 0);
@@ -1544,11 +1559,11 @@ static void setup_listeners(int do_ipv6)
 	if (nvram_get_int("https_enable")) {
 		do_ssl = 1;
 		lanport = nvram_get_int("https_lanport");
-		add_listen_socket(ipaddr[0], lanport, do_ipv6, 1);
+		add_listen_socket(ipaddr[0], lanport, do_ipv6, 1, 0);
 		for(i = 1; i < BRIDGE_COUNT; i++)
 		{
 			if ((strcmp(ipaddr[i], "") != 0) && (http_lan_listeners & (1 << (i-1)))) /* check for LAN1, LAN2, LAN3 */
-				add_listen_socket(ipaddr[i], lanport, do_ipv6, 1);
+				add_listen_socket(ipaddr[i], lanport, do_ipv6, 1, 0);
 		}
 
 		IF_TCONFIG_IPV6(if (do_ipv6 && wanport == lanport) wan6port = 0);
@@ -1561,13 +1576,13 @@ static void setup_listeners(int do_ipv6)
 #ifdef TCONFIG_IPV6
 		if (do_ipv6) {
 			if (*ipaddr[0] && wan6port)
-				add_listen_socket(ipaddr[0], wan6port, 1, nvram_get_int("remote_mgt_https"));
+				add_listen_socket(ipaddr[0], wan6port, 1, nvram_get_int("remote_mgt_https"), 0);
 
 			if (*ipaddr[0] || wan6port) {
 				/* get the IPv6 address from wan iface */
 				wanaddr = getifaddr((char *)get_wan6face(), AF_INET6, 0);
 				if (wanaddr && *wanaddr && strcmp(wanaddr, ipaddr[0]) != 0)
-					add_listen_socket(wanaddr, wanport, 1, nvram_get_int("remote_mgt_https"));
+					add_listen_socket(wanaddr, wanport, 1, nvram_get_int("remote_mgt_https"), 0);
 			}
 		} else
 #endif /* TCONFIG_IPV6 */
@@ -1579,6 +1594,21 @@ static void setup_listeners(int do_ipv6)
 			}
 		}
 	}
+#ifdef TCONFIG_IPV6
+	/*
+	 * Add the link-local socket after all existing listeners so the optional
+	 * listener cannot displace an existing one at HTTP_MAX_LISTENERS.
+	 */
+	if (do_ipv6 && *lladdr && ll_scope) {
+		if (nvram_get_int("http_enable"))
+			add_listen_socket(lladdr, nvram_get_int("http_lanport"), 1, 0, ll_scope);
+#ifdef TCONFIG_HTTPS
+		if (nvram_get_int("https_enable"))
+			add_listen_socket(lladdr, nvram_get_int("https_lanport"), 1, 1, ll_scope);
+#endif
+	}
+#endif /* TCONFIG_IPV6 */
+
 }
 
 static void close_listen_sockets(void)
@@ -1640,7 +1670,7 @@ int main(int argc, char **argv)
 				IF_TCONFIG_HTTPS(if (c == 's') do_ssl = 1);
 				IF_TCONFIG_IPV6(ip6 = (*bind && strchr(bind, ':')));
 				http_port = atoi(port);
-				add_listen_socket(bind, http_port, ip6, (c == 's'));
+				add_listen_socket(bind, http_port, ip6, (c == 's'), 0);
 
 				memset(bind, 0, sizeof(bind));
 				break;
