@@ -375,12 +375,12 @@ static int wlconf(char *ifname, int unit, int subunit)
 #ifdef TCONFIG_BCMARM
 	int phytype;
 	char buf[8] = {0};
-	char tmp[128] = {0};
 #endif
 #ifdef TCONFIG_BCMBSD
 	char word[128], *next;
 	char prefix[] = "wlXXXXXXXXXX_";
 	char prefix2[] = "wlXXXXXXXXXX_";
+	char tmp[128] = {0};
 	char tmp2[128];
 	int wlif_count = 0;
 	int i = 0;
