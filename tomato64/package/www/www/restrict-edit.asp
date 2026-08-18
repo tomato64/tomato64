@@ -66,6 +66,10 @@ var ipp2p = [[0,'IPP2P (disabled)'],[0xFFFF,'All IPP2P Filters'],[1,'AppleJuice'
 /* TOMATO64-BEGIN */
 for (i = 0; i < ndpi.length; ++i)
 	ndpi[i] = [ndpi[i],ndpi[i]];
+/* "all" matches every protocol nDPI can name, which is only useful together with
+ * a server name - it is how a rule says "this site, whatever it is speaking"
+ */
+ndpi.unshift(['all', 'Any Protocol']);
 ndpi.unshift(['', 'nDPI (disabled)']);
 /* TOMATO64-END */
 
@@ -163,7 +167,7 @@ bpg.setup = function() {
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 		{ type: 'select', prefix: '<div class="box4">', suffix: '<\/div>', options: ndpi },
-		{ type: 'text', prefix: '<div class="box5">', suffix: '<\/div>', maxlen: 127, attrib: 'placeholder="Any Host Name"' },
+		{ type: 'text', prefix: '<div class="box5">', suffix: '<\/div>', maxlen: 127, attrib: 'placeholder="Any Server Name (TLS / HTTP / QUIC / DNS)"' },
 /* TOMATO64-END */
 		{ type: 'select', prefix: '<div class="box6">', suffix: '<\/div>', options: [[0,'Any Address'],[1,'Dst IP'],[2,'Src IP']] },
 		{ type: 'text', prefix: '<div class="box7">', suffix: '<\/div>', maxlen: 64 }
@@ -269,7 +273,9 @@ bpg.dataToView = function(data) {
 		s += ', L7: '+data[4];
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-	if (data[3] != '') {
+	if (data[3] == 'all') /* only ever paired with a server name */
+		s += ', server: '+data[4];
+	else if (data[3] != '') {
 		s += ', nDPI: '+data[3];
 		if (data[4] != '')
 			s += ' @ '+data[4];
@@ -329,6 +335,10 @@ bpg.verifyFields = function(row, quiet) {
 /* TOMATO64-BEGIN */
 	if ((f[4].value != '') && (!v_ndpi_host(f[4], quiet)))
 		return 0;
+	if ((f[3].value == 'all') && (f[4].value == '')) {
+		ferror.set(f[4], 'Any Protocol matches every classified connection, enter a server name to match', quiet);
+		return 0;
+	}
 /* TOMATO64-END */
 
 /* TOMATO64-REMOVE-BEGIN */

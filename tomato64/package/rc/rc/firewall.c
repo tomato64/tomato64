@@ -577,6 +577,33 @@ int ipt_ndpi_host(const char *v, char *opt, const size_t buf_sz)
 }
 
 /*
+ * The protocols that carry a server name, as far as the running nDPI knows them.
+ *
+ * A protocol that was renamed by a library bump, or built out of it, is left out
+ * rather than taking the whole list down with it - the same hazard the protocol
+ * table exists to absorb. Returns 1 when out holds at least one protocol.
+ */
+static int ndpi_host_protocols(char *out, const size_t out_sz)
+{
+	char list[64];
+	char *rest, *name;
+	size_t n = 0;
+
+	strlcpy(list, NDPI_HOST_PROTOCOLS, sizeof(list));
+
+	*out = 0;
+	rest = list;
+	while (((name = strsep(&rest, ",")) != NULL) && (n < out_sz)) {
+		if (ndpi_proto_dissector(name) != 1)
+			continue;
+
+		n += snprintf(out + n, out_sz - n, "%s%s", n ? "," : "", name);
+	}
+
+	return (*out != 0);
+}
+
+/*
  * Build the companion match that covers a flow while nDPI is still working it out.
  *
  * xt_ndpi only matches once the flow has been classified, which takes the
@@ -603,10 +630,24 @@ int ipt_ndpi_host(const char *v, char *opt, const size_t buf_sz)
 int ipt_ndpi_inprogress(const char *v, char *opt, const size_t buf_sz)
 {
 	char bad[32];
+	char hostprotos[64];
 
 	*opt = 0;
 	if (*v == 0)
 		return 0;
+
+	/* "all" cannot be handed to --inprogress: it sweeps in the protocols that
+	 * have no dissector, which the option refuses. A rule matching every
+	 * protocol is one written for its server name, and a server name only ever
+	 * comes from a protocol that carries one, so those stand in for it here.
+	 */
+	if (strcmp(v, "all") == 0) {
+		if (!ndpi_host_protocols(hostprotos, sizeof(hostprotos))) {
+			syslog(LOG_ERR, "nDPI knows none of %s, allowed without --inprogress", NDPI_HOST_PROTOCOLS);
+			return 0;
+		}
+		v = hostprotos;
+	}
 
 	if (!ndpi_proto_list_dissector(v, bad, sizeof(bad))) {
 		if (*bad)
