@@ -124,6 +124,7 @@ void ipt_qos(void)
 	unsigned long prev_max;
 	const char *qface;
 	int sizegroup;
+	int sizechain;
 	int class_flag;
 	int rule_num;
 	unsigned int mwan_num;
@@ -143,6 +144,7 @@ void ipt_qos(void)
 	inuse = 0;
 	class_flag = 0;
 	sizegroup = 0;
+	sizechain = 0;
 	prev_max = 0;
 	rule_num = 0;
 
@@ -297,7 +299,8 @@ void ipt_qos(void)
 				else {
 					max = strtoul(p, NULL, 10);
 					snprintf(saddr + strlen(saddr), sizeof(saddr) - strlen(saddr), "%lu:%lu", min * 1024, (max * 1024) - 1);
-					if (!sizegroup) {
+					if (!sizechain) {
+						sizechain = 1;
 						/* create table of connbytes sizes, pass appropriate connections there and only continue processing them if mark was wiped */
 						ip46t_write(ipv6_enabled,
 						            ":QOSSIZE - [0:0]\n"
