@@ -1117,10 +1117,15 @@ static void mangle_table(void)
 
 static void nat_table(void)
 {
+#ifdef TCONFIG_DMZ
 	char dst[64];
+#endif
+#if defined(TCONFIG_DMZ) || defined(TCONFIG_TOR)
 	char src[64];
 	char t[512];
-	char *p, *c, *b;
+	char *c;
+#endif
+	char *p, *b;
 	int i, proto;
 	unsigned int j;
 	char key[24], name[8];
@@ -1594,10 +1599,14 @@ static void filter_forward(void)
 {
 	char dst[128];
 	char src[128];
+#ifdef TCONFIG_DMZ
 	char buffer[512];
+#endif
 	char lanAccess[(BRIDGE_COUNT * BRIDGE_COUNT) + 1];
 	const char *d, *sbr, *saddr, *dbr, *daddr, *desc;
+#ifdef TCONFIG_DMZ
 	char *p, *c;
+#endif
 	char br, br2;
 	char *nv, *nvp, *b;
 	char lanN_ifname[] = "lanXX_ifname";

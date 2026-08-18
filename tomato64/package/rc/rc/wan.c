@@ -1279,7 +1279,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 		if (check_hw_type() == HW_BCM4702) {
 			int br;
 			char key[24];
-			const char *ifname;
+			char *ifname;
 
 			for (br = 0; br < BRIDGE_COUNT; br++) {
 				ifname = bridge_nvram_get(br, "ifname", key, sizeof(key));

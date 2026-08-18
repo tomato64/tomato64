@@ -1929,6 +1929,7 @@ REBOOT: /* do a simple reboot */
 	}
 }
 
+#ifdef CONFIG_BCMWL6A
 /*
  * Set dual-band MAC defaults in the unit-based wireless NVRAM namespace.
  * @param mac      caller scratch buffer; updated to the final 5 GHz MAC
@@ -1945,7 +1946,9 @@ static void set_dualband_unit_mac_defaults(char *mac, size_t mac_len)
 	nvram_set("1:macaddr", mac);				/* fix WL mac for 5G */
 	nvram_set("wl1_hwaddr", mac);
 }
+#endif /* CONFIG_BCMWL6A */
 
+#if defined(CONFIG_BCMWL6A) || defined(TCONFIG_BLINK)
 /*
  * Set dual-band MAC defaults in the PCI-path wireless NVRAM namespace.
  * @param mac      caller scratch buffer; updated to the final 5 GHz MAC
@@ -1962,6 +1965,7 @@ static void set_dualband_pci_mac_defaults(char *mac, size_t mac_len)
 	nvram_set("pci/2/1/macaddr", mac);			/* fix WL mac for 5G */
 	nvram_set("wl1_hwaddr", mac);
 }
+#endif /* CONFIG_BCMWL6A || TCONFIG_BLINK */
 
 /*
  * Set the common dual-band wireless interface NVRAM mapping.
@@ -1975,6 +1979,7 @@ static void set_dualband_wireless_ifnames(void)
 	nvram_set("wl1_ifname", "eth2");
 }
 
+#ifdef TCONFIG_AC3200
 /*
  * Set the common LAN, WAN and wireless mappings used by tri-band models.
  * @return  none
@@ -1996,7 +2001,9 @@ static void set_triband_network_defaults(void)
 	nvram_set("wl1_vifnames", "wl1.1 wl1.2 wl1.3");
 	nvram_set("wl2_vifnames", "wl2.1 wl2.2 wl2.3");
 }
+#endif /* TCONFIG_AC3200 */
 
+#if defined(CONFIG_BCMWL6A) || defined(TCONFIG_BLINK)
 /*
  * Set the common LAN, WAN and wireless mappings used by dual-band models.
  * @return  none
@@ -2013,6 +2020,7 @@ static void set_base_dualband_network_defaults(void)
 	nvram_set("wandevs", "vlan2");
 	set_dualband_wireless_ifnames();
 }
+#endif /* CONFIG_BCMWL6A || TCONFIG_BLINK */
 
 #ifdef CONFIG_BCMWL6A
 /*
@@ -2043,7 +2051,7 @@ static void set_usb_boot_defaults(void)
 }
 #endif /* CONFIG_BCMWL6A */
 
-#ifdef CONFIG_BCMWL6A
+#if defined(CONFIG_BCMWL6A) || defined(CONFIG_BCMWL6)
 /*
  * Set the common 2.4 GHz and 5 GHz channel/bandwidth defaults used by AC models.
  * @return  none
@@ -2062,7 +2070,7 @@ static void set_ac_wifi_channel_defaults(void)
 	nvram_set("wl1_nbw_cap", "3");
 	nvram_set("wl1_nctrlsb", "lower");
 }
-#endif /* CONFIG_BCMWL6A */
+#endif /* CONFIG_BCMWL6A || CONFIG_BCMWL6 */
 
 #ifdef CONFIG_BCMWL6A
 /*
@@ -2077,6 +2085,9 @@ static void set_sg_wifi_country_defaults(void)
 	nvram_set("1:ccode", "SG");
 }
 
+#endif /* CONFIG_BCMWL6A */
+
+#if defined(CONFIG_BCMWL6A) || defined(CONFIG_BCMWL6)
 /*
  * Set Singapore regulatory defaults in the PCI-path WL6 NVRAM namespace.
  * @return  none
@@ -2088,8 +2099,9 @@ static void set_pci_sg_wifi_country_defaults(void)
 	nvram_set("pci/1/1/ccode", "SG");
 	nvram_set("pci/2/1/ccode", "SG");
 }
-#endif /* CONFIG_BCMWL6A */
+#endif /* CONFIG_BCMWL6A || CONFIG_BCMWL6 */
 
+#ifdef CONFIG_BCMWL6A
 /*
  * Set common 5 GHz receive-gain calibration defaults for selected AC models.
  * @return  none
@@ -2177,7 +2189,9 @@ static void set_5g_temperature_defaults(void)
 	nvram_set("1:venid", "0x14E4");
 	nvram_set("1:xtalfreq", "40000");
 }
+#endif /* CONFIG_BCMWL6A */
 
+#ifdef TCONFIG_BLINK
 /*
  * Set QTD parameters used by the USB wireless radio interface.
  * @return  none
@@ -2192,6 +2206,7 @@ static void set_usb_wifi_qtd_defaults(void)
 	nvram_set("qtdc1_ep", "18");
 	nvram_set("qtdc1_sz", "10");
 }
+#endif /* TCONFIG_BLINK */
 
 /*
  * Set the common VLAN, LAN, WAN and wireless mapping for single-band models.
@@ -2212,6 +2227,7 @@ static void set_singleband_network_defaults(void)
 	nvram_set("wl0_ifname", "eth1");
 }
 
+#ifdef TCONFIG_BLINK
 /*
  * Set the common reversed-radio mapping and channel defaults used by selected AC models.
  * @return  none
@@ -2229,6 +2245,7 @@ static void set_reversed_dualband_defaults(void)
 	nvram_set("wl1_chanspec", "1l");
 	nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 }
+#endif /* TCONFIG_BLINK */
 
 static int init_nvram(void)
 {
