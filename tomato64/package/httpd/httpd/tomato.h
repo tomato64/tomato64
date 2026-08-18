@@ -38,7 +38,7 @@ extern int rboot;
 extern void exec_service(const char *action);
 extern void wi_generic(char *url, int len, char *boundary);
 extern void common_redirect(void);
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 extern char* get_wl_tempsense(char *buf, const size_t buf_sz);
 #endif
 #ifdef TCONFIG_BCMARM

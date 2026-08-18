@@ -809,7 +809,7 @@ DEFAULTS_CONST DEFAULTS_TYPE DEFAULTS_MAIN[] = {
 #ifdef TCONFIG_IPV6
 	/* IPv6 parameters */
 	{ "ipv6_service",		""				},	/* [''|native|native-pd|6to4|sit|other] */
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	{ "ipv6_debug",			"0"				},	/* enable/show debug infos */
 #endif
 	{ "ipv6_duid_type",		"3"				},	/* see RFC8415 Section 11; DUID-LLT = 1, DUID-EN = 2, DUID-LL = 3 (default), DUID-UUID = 4 */
@@ -855,7 +855,7 @@ DEFAULTS_CONST DEFAULTS_TYPE DEFAULTS_MAIN[] = {
 	/* Wireless parameters */
 	{ "wl_ifname",			""				},	/* Interface name */
 	{ "wl_hwaddr",			""				},	/* MAC address */
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	{ "wl_clap_hwaddr",		""				},	/* ap mac addr for the FT client (sta/psta/wet) to connect to (default "empty" / not needed) */
 #endif
 #ifdef TCONFIG_BCMARM
@@ -875,7 +875,7 @@ DEFAULTS_CONST DEFAULTS_TYPE DEFAULTS_MAIN[] = {
 	{ "wl1_ssid",			"FreshTomato50"			},
 #endif
 	{ "wl_country_code",		""				},	/* Country (default obtained from driver) */
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	{ "wl_country_rev", 		""				},	/* Regrev Code (default obtained from driver) */
 #endif
 	{ "wl_radio",			"1"				},	/* Enable (1) or disable (0) radio */
@@ -886,7 +886,7 @@ DEFAULTS_CONST DEFAULTS_TYPE DEFAULTS_MAIN[] = {
 	{ "wl_closed",			"0"				},	/* Closed (hidden) network */
 	{ "wl_ap_isolate",		"0"				},	/* AP isolate mode */
 	{ "wl_mode",			"ap"				},	/* AP mode (ap|sta|wds) */
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	{ "wl_lazywds",			"0"				},	/* Enable "lazy" WDS mode (0|1) */
 #else
 	{ "wl_lazywds",			"1"				},	/* Enable "lazy" WDS mode (0|1) */
@@ -901,7 +901,7 @@ DEFAULTS_CONST DEFAULTS_TYPE DEFAULTS_MAIN[] = {
 	{ "wl_key3",			""				},	/* 5/13 char ASCII or 10/26 char hex */
 	{ "wl_key4",			""				},	/* 5/13 char ASCII or 10/26 char hex */
 	{ "wl_channel",			"6"				},	/* Channel number */
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	{ "wl_assoc_retry_max", 	"3"				},	/* Non-zero limit for association retries */
 #else
 	{ "wl1_channel",		"0"				},
@@ -1005,7 +1005,7 @@ DEFAULTS_CONST DEFAULTS_TYPE DEFAULTS_MAIN[] = {
 	{ "wl_nbw",			"40"				},	/* BW: 20 / 40 MHz */
 	{ "wl_nbw_cap",			"1"				},	/* BW: def 20inB and 40inA */
 	{ "wl_mimo_preamble",		"mm"				},	/* 802.11n Preamble: mm/gf/auto/gfbcm */
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	{ "wl_nctrlsb",			"lower"				},	/* N-CTRL SB (none/lower/upper) */
 #else
 	{ "wl_nctrlsb",			"upper"				},	/* N-CTRL SB (none/lower/upper) */
@@ -1066,7 +1066,7 @@ DEFAULTS_CONST DEFAULTS_TYPE DEFAULTS_MAIN[] = {
 	{ "wl_radio_pwrsave_enable",	"0"				},	/* Radio powersave enable */
 	{ "wl_radio_pwrsave_quiet_time","1800"				},	/* Quiet time for power save */
 	{ "wl_radio_pwrsave_pps",	"10"				},	/* Packets per second threshold for power save */
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	{ "wl_rxchain_pwrsave_stas_assoc_check", "1"			},	/* STAs associated before powersave */
 	{ "wl_radio_pwrsave_level",	"0"				},	/* Radio power save level */
 	{ "wl_radio_pwrsave_stas_assoc_check", "1"			},	/* STAs associated before powersave */
@@ -1080,7 +1080,7 @@ DEFAULTS_CONST DEFAULTS_TYPE DEFAULTS_MAIN[] = {
 	{ "wl_wmf_bss_enable",		"0"				},	/* Wireless Multicast Forwarding Enable/Disable */
 	{ "wl_rifs_advert",		"auto"				},	/* RIFS mode advertisement */
 	{ "wl_stbc_tx",			"auto"				},	/* Default STBC TX setting */
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	{ "wl_stbc_rx", 		"1"				},	/* Default STBC RX setting */
 #endif
 	{ "wl_mcast_regen_bss_enable",	"1"				},	/* MCAST REGEN Enable/Disable */

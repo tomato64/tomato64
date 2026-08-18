@@ -90,7 +90,7 @@ OBJS += quotas.o
 
 # mtd.o buttons.o wnas.o bcmutils.o
 
-ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_BLINK)),y)
+ifeq ($(TCONFIG_RTNPLUS),y)
 OBJS += blink.o blink_br.o
 endif
 
@@ -199,7 +199,7 @@ endif
 	@cd $(INSTALLDIR)/sbin && ln -sf rc hotplug
 	@cd $(INSTALLDIR)/sbin && ln -sf rc service
 	@cd $(INSTALLDIR)/sbin && ln -sf rc buttons
-ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_BLINK)),y)
+ifeq ($(TCONFIG_RTNPLUS),y)
 	@cd $(INSTALLDIR)/sbin && ln -sf rc blink
 	@cd $(INSTALLDIR)/sbin && ln -sf rc blink_br
 endif

@@ -92,7 +92,7 @@ else
 endif
 
 # Distinguish the VLAN version page that needs to be added
-ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM) $(TCONFIG_TOMATO64)),)
+ifeq ($(filter y,$(TCONFIG_RTNPLUS) $(TCONFIG_TOMATO64)),)
 	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 else
 	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/RTNPLUS-NO-BEGIN/,/RTNPLUS-NO-END/d"
@@ -276,7 +276,7 @@ ifneq ($(TCONFIG_ZFS),y)
 endif
 
 # only add for RT-N+ routers
-ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
+ifeq ($(TCONFIG_RTNPLUS),)
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 	sed -i $(INSTALLDIR)/www/basic-ipv6.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
@@ -390,7 +390,7 @@ ifneq ($(TCONFIG_BCMARM),y)
 endif
 
 # Only for RT-N+ (enable SDK6 country code + rev selection also for newer SDK5 wl driver 5.100.x and up)
-ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
+ifeq ($(TCONFIG_RTNPLUS),)
 	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
 endif
 
@@ -421,7 +421,7 @@ ifneq ($(TCONFIG_ROAM),y)
 endif
 
 # Only include AC stuff if needed
-ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
+ifeq ($(TCONFIG_RTNPLUS),)
 	sed -i $(INSTALLDIR)/www/wireless.js -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 endif
 

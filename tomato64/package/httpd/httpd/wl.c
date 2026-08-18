@@ -34,7 +34,7 @@
 #define LOGMSG_DISABLE		DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG		"wl_debug"
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
  #define WLC_SCAN_RESULT_BUF_LEN_TOMATO WLC_SCAN_RESULT_BUF_LEN /* 32 * 1024 */
 #else
  #define WLC_SCAN_RESULT_BUF_LEN_TOMATO WLC_IOCTL_MAXLEN /* 8192 */
@@ -933,7 +933,7 @@ void asp_wlscan(int argc, char **argv)
 		return;
 	}
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	sleep(3); /* dual-/tri-band router - scan result for 5 GHz survey after ~3 sec available - we need to wait... */
 #else
 	sleep(1); /* only 2,4 GHz - scan result after ~1 sec available */
@@ -1818,7 +1818,7 @@ void asp_wlcountries(int argc, char **argv)
 	web_puts("];\n");
 }
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 int mround(float val)
 {
 	return (int)(val + 0.5);
@@ -1974,4 +1974,4 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 	snprintf(buf, buf_sz, "phy0: 2.4G - %s&#176;C&nbsp;/&nbsp;%s&#176;F&nbsp;&nbsp;&nbsp;&nbsp;phy1: 5G - %s&#176;C&nbsp;/&nbsp;%s&#176;F", phy0_C, phy0_F, phy1_C, phy1_F);
 }
 #endif /* TOMATO64_ARM64 */
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */

@@ -778,7 +778,7 @@ static const nvset_t nvset_list[] = {
 	{ "wl_key4",			V_LENGTH(0, 26)			},
 	{ "wl_crypto",			V_LENGTH(3, 8)			},	/* tkip, aes, tkip+aes */
 	{ "wl_wpa_psk",			V_LENGTH(8, 64)			},
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	{ "wl_wpa_gtk_rekey",		V_RANGE(0, 2592000)		},	/* 0 - disabled; range 1 sec up to 30 days (2592000 sec) */
 #else
 	{ "wl_wpa_gtk_rekey",		V_RANGE(60, 7200)		},	/* keep good old range for K26 (SDK5.10) */
@@ -815,7 +815,7 @@ static const nvset_t nvset_list[] = {
 /* basic-ipv6 */
 #ifdef TCONFIG_IPV6
 	{ "ipv6_service",		V_LENGTH(0, 16)			},	/* '', native, native-pd, 6to4, sit, other */
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	{ "ipv6_debug",			V_01				},	/* enable/show debug infos */
 #endif
 	{ "ipv6_duid_type",		V_RANGE(1, 4)			},	/* see RFC8415 Section 11; DUID-LLT = 1, DUID-EN = 2, DUID-LL = 3, DUID-UUID = 4 */
@@ -1088,7 +1088,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan_mac",			V_LENGTH(0, 17)			},
 	{ "wl_macaddr",			V_LENGTH(0, 17)			},
 	{ "wl_hwaddr",			V_LENGTH(0, 17)			},
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	{ "wl_clap_hwaddr",		V_LENGTH(0, 17)			},	/* ap mac addr for the FT client (sta/psta/wet) to connect to (default "empty" / not needed) */
 #endif
 

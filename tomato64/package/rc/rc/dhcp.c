@@ -969,7 +969,7 @@ void start_dhcp6c(void)
 	}
 
 	argc = 3;
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	if (nvram_get_int("ipv6_debug"))
 		argv[argc++] = "-D";
 #endif

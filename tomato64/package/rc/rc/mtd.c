@@ -37,7 +37,7 @@
 #include <trxhdr.h>
 #include <bcmutils.h>
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 #include <bcmendian.h>
 #endif
 #ifdef TCONFIG_BCMARM
@@ -153,7 +153,7 @@ static int _unlock_erase(const char *mtdname, int erase)
 	mtd_info_t mi;
 	erase_info_t ei;
 	int r;
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	int ret, skipbb = 0;
 #endif
 
@@ -181,7 +181,7 @@ static int _unlock_erase(const char *mtdname, int erase)
 				printf("%sing 0x%x - 0x%x\n", erase ? "Eras" : "Unlock", ei.start, (ei.start + ei.length) - 1);
 				fflush(stdout);
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 				if (!skipbb) {
 					loff_t offset = ei.start;
 
@@ -200,7 +200,7 @@ static int _unlock_erase(const char *mtdname, int erase)
 						}
 					}
 				}
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */
 				if (ioctl(mf, MEMUNLOCK, &ei) != 0) {
 					//perror("MEMUNLOCK");
 					//r = 0;

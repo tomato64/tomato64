@@ -563,7 +563,7 @@ extern int mtd_unlock_erase_main(int argc, char *argv[]);
 /* buttons.c */
 extern int buttons_main(int argc, char *argv[]);
 
-#if defined(TCONFIG_BCMARM) || defined(TCONFIG_BLINK)
+#ifdef TCONFIG_RTNPLUS
 /* blink.c */
 extern int blink_main(int argc, char *argv[]);
 

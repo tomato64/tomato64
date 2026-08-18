@@ -873,7 +873,7 @@ static const applets_t applets[] = {
 	{ "mtd-unlock",			mtd_unlock_erase_main		},
 #endif
 	{ "buttons",			buttons_main			},
-#if defined(TCONFIG_BCMARM) || defined(TCONFIG_BLINK)
+#ifdef TCONFIG_RTNPLUS
 	{ "blink",			blink_main			},
 	{ "blink_br",			blink_br_main			},
 #endif

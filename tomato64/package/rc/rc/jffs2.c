@@ -115,7 +115,7 @@ void start_jffs2(void)
 	}
 
 	if ((statfs("/jffs", &sf) == 0) && (sf.f_type != 0x73717368)
-#if defined(TCONFIG_BCMARM) || defined(TCONFIG_BLINK)
+#ifdef TCONFIG_RTNPLUS
 	    && (sf.f_type != 0x71736873)
 #endif
 	) {
@@ -179,7 +179,7 @@ void stop_jffs2(void)
 		return;
 
 	if ((statfs("/jffs", &sf) == 0) && (sf.f_type != 0x73717368)
-#if defined(TCONFIG_BCMARM) || defined(TCONFIG_BLINK)
+#ifdef TCONFIG_RTNPLUS
 	    && (sf.f_type != 0x71736873)
 #endif
 	) {

@@ -1357,7 +1357,7 @@ char *wl_ether_etoa(const struct ether_addr *n)
 #endif /* CONFIG_BCMWL5 */
 
 /* Find partition with defined name and return partition number as an integer */
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 int getMTD(const char *name)
 {
 	char line[128], dev[32], size[32], esize[32], part_name[64];
@@ -1386,7 +1386,7 @@ int getMTD(const char *name)
 
 	return device;
 }
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */
 
 /*
  * Return the process ID for a process started with the specified pathname.

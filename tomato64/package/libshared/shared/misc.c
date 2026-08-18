@@ -1229,26 +1229,26 @@ void set_radio(int on, int unit)
 	if (!on) {
 		if (unit == 0)
 			led(LED_WLAN, LED_OFF);
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 		if (unit == 1)
 			led(LED_5G, LED_OFF);
 #ifdef TCONFIG_AC3200
 		if (unit == 2)
 			led(LED_52G, LED_OFF);
 #endif /* TCONFIG_AC3200 */
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */
 	}
 	else {
 		if (unit == 0)
 			led(LED_WLAN, LED_ON);
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 		if (unit == 1)
 			led(LED_5G, LED_ON);
 #ifdef TCONFIG_AC3200
 		if (unit == 2)
 			led(LED_52G, LED_ON);
 #endif /* TCONFIG_AC3200 */
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */
 	}
 #else /* WL_BSS_INFO_VERSION >= 108 */
 	n = on ? 0 : WL_RADIO_SW_DISABLE;

@@ -42,7 +42,7 @@
 #ifdef TOMATO64
 #include <sys/sysmacros.h>
 #endif /* TOMATO64 */
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 #include <bcmparams.h>
 #endif
 
@@ -115,7 +115,7 @@ static void restore_defaults(void)
 #endif
 	int restore_defaults = 0;
 #ifndef TOMATO64
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	struct sysinfo info;
 #endif
 #endif /* TOMATO64 */
@@ -144,7 +144,7 @@ static void restore_defaults(void)
 	nvram_set("os_date", tomato_buildtime);
 
 #ifndef TOMATO64
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	/* Adjust et and wl thresh value after reset (for wifi-driver and et_linux.c) */
 	if (restore_defaults) {
 		memset(&info, 0, sizeof(struct sysinfo));
@@ -172,12 +172,12 @@ static void restore_defaults(void)
 #endif
 		}
 	}
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */
 #endif /* TOMATO64 */
 }
 
 #ifndef TOMATO64
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 static void set_defaults(struct nvram_tuple *t, char *strprefix)
 {
 	char buf[256];
@@ -195,7 +195,7 @@ static void set_defaults(struct nvram_tuple *t, char *strprefix)
 		t++;
 	}
 }
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */
 #endif /* TOMATO64 */
 
 #ifndef TOMATO64
@@ -959,7 +959,7 @@ static int init_vlan_ports(void)
 	int dirty = 0;
 	int model = get_model();
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	char vlanports[] = "vlanXXXXports";
 	char vlanhw[] = "vlanXXXXhwname";
 	char vlanvid[] = "vlanXXXXvid";
@@ -986,19 +986,19 @@ static int init_vlan_ports(void)
 			}
 		}
 	}
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */
 
 	switch (model) {
 
 #ifndef TOMATO64
 #ifndef CONFIG_BCMWL6A
 
-#if !defined(TCONFIG_BLINK) && !defined(TCONFIG_BCMARM) /* RT only */
+#ifndef TCONFIG_RTNPLUS /* RT only */
 	case MODEL_RTN12:
 		dirty |= check_nv("vlan0ports", "3 2 1 0 5*"); /* L1 L2 L3 L4 CPU */
 		dirty |= check_nv("vlan1ports", "4 5"); /* WAN CPU */
 		break;
-#endif /* !TCONFIG_BLINK && !TCONFIG_BCMARM */
+#endif /* !TCONFIG_RTNPLUS */
 	case MODEL_WRT54G:
 		switch (check_hw_type()) {
 		case HW_BCM5352E: /* G v4, GS v3, v4 */
@@ -10980,14 +10980,14 @@ static void sysinit(void)
 #endif /* TOMATO64 */
 
 #ifndef TOMATO64
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 #ifdef TCONFIG_BCMARM
 	/* stealth mode */
 	if (nvram_match("stealth_mode", "0")) /* start blink_br only if stealth mode is off */
 #endif
 		/* enable LED for LAN / Bridge */
 		eval("blink_br");
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */
 #endif /* TOMATO64 */
 
 	if (!noconsole)

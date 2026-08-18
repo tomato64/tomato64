@@ -505,7 +505,7 @@ extern int dhd_bssiovar_setint(char *ifname, char *iovar, int bssidx, int val);
 #ifdef TCONFIG_BCMBSD
  extern pid_t get_pid_by_name(const char *name); /* Returns the process ID */
 #endif
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
  extern int getMTD(const char *name); /* Find partition with defined name and return partition number as an integer */
 #endif
 #ifdef TCONFIG_WIREGUARD

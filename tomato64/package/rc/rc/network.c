@@ -868,7 +868,7 @@ void restart_wl(void)
 	char tmp[32];
 	char br;
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	int wlan_cnt = 0;
 	int wlan_5g_cnt = 0;
 	char blink_wlan_ifname[32];
@@ -877,7 +877,7 @@ void restart_wl(void)
 	int wlan_52g_cnt = 0;
 	char blink_wlan_52g_ifname[32];
 #endif /* TCONFIG_AC3200 */
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */
 #ifdef TCONFIG_BCMARM
 	/* get router model */
 	int model = get_model();
@@ -927,7 +927,7 @@ void restart_wl(void)
 						eval("wlconf", ifname, "start"); /* start wl iface */
 					}
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 					/* Enable WLAN LEDs if wireless interface is enabled */
 					if (nvram_get_int(wl_nvname("radio", unit, 0))) {
 						if ((wlan_cnt == 0) && (wlan_5g_cnt == 0)
@@ -967,7 +967,7 @@ void restart_wl(void)
 						}
 #endif /* TCONFIG_AC3200 */
 					}
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */
 				}
 				free(lan_ifnames);
 			}
@@ -1006,7 +1006,7 @@ void restart_wl(void)
 	}
 #endif /* TCONFIG_BCMARM */
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	/* Finally: start blink (traffic "control" of LED) if only one unit (for each wlan) is enabled [AND stealth mode is off - ARM] */
 	if (nvram_get_int("blink_wl")
 #ifdef TCONFIG_BCMARM
@@ -1022,7 +1022,7 @@ void restart_wl(void)
 			eval("blink", blink_wlan_52g_ifname, "52g", "10", "8192");
 #endif
 	}
-#endif /* TCONFIG_BLINK || TCONFIG_BCMARM */
+#endif /* TCONFIG_RTNPLUS */
 }
 
 void stop_lan_wl(void)
@@ -1570,7 +1570,7 @@ void start_lan(void)
 #endif
 
 #ifndef TOMATO64
-#if !defined(TCONFIG_BLINK) && !defined(TCONFIG_BCMARM) /* RT only */
+#ifndef TCONFIG_RTNPLUS /* RT only */
 	int vlan0tag = nvram_get_int("vlan0tag");
 #endif
 #endif /* TOMATO64 */
@@ -1632,7 +1632,7 @@ void start_lan(void)
 						if (sscanf(ifname, "vlan%d", &vid) == 1) {
 							snprintf(tmp, sizeof(tmp), "vlan%dvid", vid);
 							vid_map = nvram_get_int(tmp);
-#if !defined(TCONFIG_BLINK) && !defined(TCONFIG_BCMARM) /* RT only */
+#ifndef TCONFIG_RTNPLUS /* RT only */
 							if ((vid_map < 1) || (vid_map > 4094)) vid_map = vlan0tag | vid;
 #else
 							if ((vid_map < 1) || (vid_map > 4094)) vid_map = vid;
@@ -1862,7 +1862,7 @@ void stop_lan(void)
 	int vid, vid_map;
 	char *iftmp;
 #ifndef TOMATO64
-#if !defined(TCONFIG_BLINK) && !defined(TCONFIG_BCMARM) /* RT only */
+#ifndef TCONFIG_RTNPLUS /* RT only */
 	int vlan0tag = nvram_get_int("vlan0tag");
 #endif
 #endif /* TOMATO64 */
@@ -1903,7 +1903,7 @@ void stop_lan(void)
 							snprintf(tmp, sizeof(tmp), "vlan%dvid", vid);
 							vid_map = nvram_get_int(tmp);
 #ifndef TOMATO64
-#if !defined(TCONFIG_BLINK) && !defined(TCONFIG_BCMARM) /* RT only */
+#ifndef TCONFIG_RTNPLUS /* RT only */
 							if ((vid_map < 1) || (vid_map > 4094)) vid_map = vlan0tag | vid;
 #else
 #endif /* TOMATO64 */
@@ -2268,7 +2268,7 @@ static int radio_join(int idx, int unit, int subunit, void *param)
 	char s[32], f[64];
 	char ifname[16];
 	char *amode, sec[16];
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 	char clap_hwaddr[32];
 #endif
 
@@ -2333,7 +2333,7 @@ static int radio_join(int idx, int unit, int subunit, void *param)
 					break;
 
 				snprintf(sec, sizeof(sec), "%s", nvram_safe_get(wl_nvname("akm", unit, subunit)));
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 				snprintf(clap_hwaddr, sizeof(clap_hwaddr), "%s", nvram_safe_get(wl_nvname("clap_hwaddr", unit, subunit))); /* get ap mac addr for the FT client to connect to */
 #endif
 
@@ -2350,7 +2350,7 @@ static int radio_join(int idx, int unit, int subunit, void *param)
 				else
 					amode = "open";
 
-#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+#ifdef TCONFIG_RTNPLUS /* RT-N+ */
 				if (strlen(clap_hwaddr) >= 17) /* BSSID=MAC (xx:xx:xx:xx:xx:xx) to scan and join */
 					eval("wl", "-i", ifname, "join", nvram_safe_get(wl_nvname("ssid", unit, subunit)), "imode", "bss", "amode", amode, "-b", clap_hwaddr);
 				else /* default case */
