@@ -168,7 +168,7 @@ function save() {
 
 /* TOMATO64-WIFI-BEGIN */
 	if (fom.wed_offloading.value != nvram.wed_offloading) {
-		if (confirm("Router must be rebooted to apply changed settings. Reboot now? (and commit changes to NVRAM)")) {
+		if (confirm("Your settings will be saved. A reboot is required for them to take effect. Reboot now? (Cancel: reboot later)")) {
 			fom._reboot.value = 1;
 			form.submit(fom, 0);
                 }
