@@ -38,6 +38,9 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/sbin/net_utils			$(TARGET_DIR)/usr/sbin
 
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/expand_root_partition	$(TARGET_DIR)/usr/bin
+	if [ "$(BR2_PACKAGE_PLATFORM_HAS_FAN)" = "y" ]; then \
+		$(INSTALL) -D -m 0755 $(@D)/usr/bin/fanctl		$(TARGET_DIR)/usr/bin; \
+	fi
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/growpart			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/mount_nvram			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/nic_count			$(TARGET_DIR)/usr/bin

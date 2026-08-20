@@ -23,7 +23,6 @@
 # Load kernel modules early. These MUST NOT be fatal: a WiFi/PHY driver
 # problem must not abort this script before the ethernet/nvram setup
 # (that would take down wired connectivity too).
-modprobe pwm-fan 2>/dev/null || true
 
 # WiFi: MT7990 on PCIe is handled by the mt7996e driver family (NOT mt7915e)
 modprobe mt7996e 2>/dev/null || logger -t set_devs_mt3600be "WARNING: mt7996e failed to load"

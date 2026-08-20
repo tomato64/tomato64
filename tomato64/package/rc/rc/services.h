@@ -187,6 +187,9 @@ enum svc_op_id {
 #ifdef TOMATO64
 	SVCOP_ZRAM,
 	SVCOP_CPUFREQ,
+#ifdef TOMATO64_HAS_FAN
+	SVCOP_FAN,
+#endif /* TOMATO64_HAS_FAN */
 #endif /* TOMATO64 */
 	SVCOP_MAX
 };
@@ -350,6 +353,9 @@ static const struct svc_entry svc_table[] = {
 	{ "dnscrypt_proxy",	0,								P_DNSCRYPT_PROXY,	0,	SVCOP_DNSCRYPT		},
 #endif
 	{ "dnsmasq",		SVCF_LIST,							P_DNSMASQ,		0,	SVCOP_DNSMASQ		},
+#ifdef TOMATO64_HAS_FAN
+	{ "fan",		SVCF_LIST | SVCF_NO_STATUS,					P_NONE,			0,	SVCOP_FAN		},
+#endif /* TOMATO64_HAS_FAN */
 #ifdef TCONFIG_FANCTRL
 	{ "fanctrl",		SVCF_LIST,							P_PHY_TEMPSENSE,	0,	SVCOP_FANCTRL		},
 #endif
@@ -567,6 +573,9 @@ static const struct svc_op svc_ops[] = {
 #ifdef TOMATO64
 	SVC_OP(stop_zram, start_zram),
 	SVC_OP(stop_cpufreq, start_cpufreq),
+#ifdef TOMATO64_HAS_FAN
+	SVC_OP(stop_fan, start_fan),
+#endif /* TOMATO64_HAS_FAN */
 #endif /* TOMATO64 */
 };
 

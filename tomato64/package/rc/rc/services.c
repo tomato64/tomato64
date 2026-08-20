@@ -843,6 +843,22 @@ void stop_cpufreq(void)
 {
 	/* no-op: governor persists until changed */
 }
+
+#ifdef TOMATO64_HAS_FAN
+void start_fan(void)
+{
+	if (nvram_get_int("g_upgrade") || nvram_get_int("g_reboot"))
+		return;
+
+	/* fanctl discovers the hardware itself and is a no-op on fanless devices */
+	xstart("/usr/bin/fanctl", "apply");
+}
+
+void stop_fan(void)
+{
+	/* no-op: the kernel keeps managing the fan from the trip points */
+}
+#endif /* TOMATO64_HAS_FAN */
 #endif /* TOMATO64 */
 
 #ifdef TCONFIG_IPV6
@@ -2569,6 +2585,9 @@ void start_services(void)
 #ifdef TOMATO64
 	start_zram();
 	start_cpufreq();
+#ifdef TOMATO64_HAS_FAN
+	start_fan();
+#endif /* TOMATO64_HAS_FAN */
 #endif
 	if (once) {
 		once = 0;
@@ -2743,6 +2762,9 @@ void stop_services(void)
 #ifdef TOMATO64
 	stop_zram();
 	stop_cpufreq();
+#ifdef TOMATO64_HAS_FAN
+	stop_fan();
+#endif /* TOMATO64_HAS_FAN */
 #endif
 }
 

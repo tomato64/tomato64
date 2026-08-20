@@ -2345,6 +2345,13 @@ DEFAULTS_CONST DEFAULTS_TYPE DEFAULTS_MAIN[] = {
 	{ "port6_label",		""				},
 	{ "port7_label",		""				},
 	{ "port8_label",		""				},
+
+#ifdef TOMATO64_HAS_FAN
+	{ "fan_mode",			"0"				},	/* 0 = kernel-managed curve, 1 = fixed manual speed */
+	{ "fan_pwm",			""				},	/* per-fan "hwmonX:N=duty|auto"; empty = every fan automatic */
+	{ "fan_trips",			""				},	/* trip overrides, "zone:trip=millidegrees" comma separated */
+	{ "fan_curve",			""				},	/* Super-I/O curve, "hwmonX:N:P=millidegrees/duty" comma separated */
+#endif /* TOMATO64_HAS_FAN */
 #endif /* TOMATO64 */
 	{ NULL, NULL }
 };

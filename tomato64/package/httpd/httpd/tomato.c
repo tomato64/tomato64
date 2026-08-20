@@ -1995,6 +1995,13 @@ static const nvset_t nvset_list[] = {
 	{ "port7_label",		V_LENGTH(0, 20)			},
 	{ "port8_label",		V_LENGTH(0, 20)			},
 
+#ifdef TOMATO64_HAS_FAN
+	{ "fan_mode",			V_01				},
+	{ "fan_pwm",			V_LENGTH(0, 256)		},	/* bare number, or "hwmonX:N=duty" list */
+	{ "fan_trips",			V_LENGTH(0, 512)		},
+	{ "fan_curve",			V_LENGTH(0, 1024)		},
+#endif /* TOMATO64_HAS_FAN */
+
 #endif /* TOMATO64 */
 
 	{ NULL }

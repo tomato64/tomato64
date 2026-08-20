@@ -1,0 +1,648 @@
+#!/bin/sh
+#
+# fanctl - fan discovery and control for Tomato64
+#
+# Everything is discovered from sysfs at run time, so one implementation covers
+# the device-tree thermal zones on the MediaTek boards (BPI-R3, BPI-R3 Mini,
+# GL-MT3600BE), the ACPI zones and Super-I/O hwmon chips on x86_64, and any
+# other fan a kernel driver happens to expose. Devices with no fan simply emit
+# no C/F records and admin-fan.asp shows its "no fan detected" notice.
+#
+# Usage:
+#   fanctl status   dump the discovered topology for admin-fan.asp
+#   fanctl apply    (re)apply the configuration persisted in nvram
+#
+# "status" prints one ';;'-delimited record per line:
+#   Z;;zone;;type;;temp;;policy;;available_policies;;mode
+#   T;;zone;;trip;;type;;temp;;hyst;;writable
+#   B;;zone;;trip;;cdev;;cdev_type		(trip -> cooling device binding)
+#   C;;cdev;;type;;cur_state;;max_state
+#   F;;hwmon;;name;;index;;pwm;;pwm_enable;;rpm;;writable
+#   L;;hwmon;;index;;cdev;;max_state;;inverted;;cooling levels
+#   A;;hwmon;;index;;point;;temp;;pwm;;writable	(chip fan curve point)
+#   X;;hwmon;;index;;kind;;raw;;label;;temp	(what drives that channel)
+# Temperatures are in millidegrees Celsius; '-' means "not available".
+#
+# A/X only appear for Super-I/O chips that run their own fan curve (nct6775,
+# it87, f71882fg). Those chips manage the fan in silicon, entirely outside the
+# kernel thermal framework - on x86 there is no cooling device bound to a
+# thermal zone, so the chip curve is the only curve there is.
+#
+# No "set -e" here on purpose: sysfs reads and writes fail routinely (a
+# read-only ACPI trip, a zone that returns -EINVAL for temp) and a single
+# failure must never abort the rest of the pass.
+
+. /usr/sbin/nvram_ops
+
+THERMAL=/sys/class/thermal
+HWMON=/sys/class/hwmon
+DEFAULTS=/tmp/fanctl.defaults
+MANUAL=/tmp/fanctl.manual
+
+# Read a sysfs attribute, printing '-' when it is missing or unreadable.
+rd() {
+	[ -r "$1" ] || { echo '-'; return 0; }
+	_v=$(cat "$1" 2>/dev/null)
+	[ -n "$_v" ] || _v='-'
+	echo "$_v"
+}
+
+# 1 when the attribute exists and is writable, 0 otherwise. Trip temperatures
+# are only writable on device-tree zones (thermal_of.c sets RW_TEMP); ACPI
+# zones expose them read-only, and the UI keys off this.
+rw() {
+	if [ -w "$1" ]; then echo 1; else echo 0; fi
+}
+
+# The pwm-fan node's cooling-levels, in order, or nothing if they cannot be
+# read. This is the only place the PWM orientation is stated: boards that invert
+# the line list the levels descending (BPI-R3 <255 40 0>, BPI-R3 Mini
+# <255 128 80 0>) so that duty 255 is off and 0 is full speed, while a normal
+# board ascends (MT3600BE <0 128 192 255>). Nothing in sysfs exposes this, so
+# read it from the DT rather than guess.
+#
+# Each entry is a big-endian u32 holding 0-255, so every fourth byte is the
+# value - which avoids needing anything cleverer than od.
+fan_levels() {
+	_dt=/sys/firmware/devicetree/base
+	[ -d "$_dt" ] || return 0
+
+	for _cf in $_dt/*/compatible; do
+		[ -f "$_cf" ] || continue
+		grep -qa 'pwm-fan' "$_cf" 2>/dev/null || continue
+		_nd=${_cf%/compatible}
+		[ -f "$_nd/cooling-levels" ] || continue
+		od -An -tu1 -v "$_nd/cooling-levels" 2>/dev/null |
+			tr -s ' ' '\n' | grep -v '^$' | awk 'NR%4==0' | tr '\n' ' '
+		return 0
+	done
+}
+
+# 1 when the fan's PWM line is inverted, i.e. a higher duty means a slower fan.
+fan_inverted() {
+	set -- $(fan_levels)
+	[ $# -ge 2 ] || { echo 0; return 0; }
+
+	eval "_last=\${$#}"
+	if [ "$1" -gt "$_last" ] 2>/dev/null; then echo 1; else echo 0; fi
+}
+
+# Strip punctuation and case so an hwmon name and a cooling device type can be
+# compared: the same driver registers "pwmfan" for hwmon (which rejects '-' in a
+# name) and "pwm-fan" for thermal, and "gpio_fan"/"gpio-fan" likewise.
+norm_name() {
+	echo "$1" | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9'
+}
+
+# The fan cooling device that belongs to an hwmon channel, or '' if it cannot be
+# established. Matched by name and only when that name is unique on both sides,
+# so two identical fans are never confused for one another - the same rule the
+# web UI uses to merge the rows.
+#
+# This matters because a device-tree fan must be driven by cooling level, not by
+# raw duty: boards with an inverted PWM line describe it with descending
+# cooling-levels (BPI-R3 <255 40 0>, BPI-R3 Mini <255 128 80 0>), and
+# pwm_fan_update_state() assumes ascending, so writing a duty makes the driver
+# record the opposite cooling state. set_cur_state() then early-returns because
+# it believes it is already there, and the fan can no longer be moved at all.
+paired_cdev() {
+	_pn=$(norm_name "$1")
+	[ -n "$_pn" ] || return 0
+
+	_hits=0
+	for _h2 in $HWMON/hwmon*; do
+		[ -d "$_h2" ] || continue
+		[ "$(norm_name "$(rd $_h2/name)")" = "$_pn" ] && _hits=$((_hits + 1))
+	done
+	[ "$_hits" = "1" ] || return 0
+
+	_hits=0
+	_match=
+	for _c2 in $(fan_cdevs); do
+		if [ "$(norm_name "$(rd $THERMAL/cooling_device$_c2/type)")" = "$_pn" ]; then
+			_hits=$((_hits + 1))
+			_match=$_c2
+		fi
+	done
+	[ "$_hits" = "1" ] && echo "$_match"
+
+	return 0
+}
+
+# Cooling device numbers whose type looks like a fan. Covers "pwm-fan",
+# "gpio-fan" and the ACPI "Fan"/"FAN0" names. A DPTF fan named INT3404 is
+# missed here, but on x86 those are driven through hwmon anyway.
+fan_cdevs() {
+	for _c in $THERMAL/cooling_device*; do
+		[ -d "$_c" ] || continue
+		case "$(rd $_c/type)" in
+			*[Ff][Aa][Nn]*) echo "${_c##*/cooling_device}" ;;
+		esac
+	done
+}
+
+# Thermal zones that drive at least one fan cooling device.
+fan_zones() {
+	_fans=" $(fan_cdevs | tr '\n' ' ')"
+	for _z in $THERMAL/thermal_zone*; do
+		[ -d "$_z" ] || continue
+		for _l in $_z/cdev*; do
+			case "$_l" in *_trip_point|*_weight) continue ;; esac
+			[ -L "$_l" ] || continue
+			_t=$(readlink "$_l")
+			_t="${_t##*/cooling_device}"
+			case "$_fans" in
+				*" $_t "*) echo "${_z##*/thermal_zone}"; break ;;
+			esac
+		done
+	done
+}
+
+status() {
+	for _z in $THERMAL/thermal_zone*; do
+		[ -d "$_z" ] || continue
+		_n=${_z##*/thermal_zone}
+		echo "Z;;$_n;;$(rd $_z/type);;$(rd $_z/temp);;$(rd $_z/policy);;$(rd $_z/available_policies);;$(rd $_z/mode)"
+
+		_i=0
+		while [ -f "$_z/trip_point_${_i}_type" ]; do
+			echo "T;;$_n;;$_i;;$(rd $_z/trip_point_${_i}_type);;$(rd $_z/trip_point_${_i}_temp);;$(rd $_z/trip_point_${_i}_hyst);;$(rw $_z/trip_point_${_i}_temp)"
+			_i=$((_i + 1))
+		done
+
+		for _l in $_z/cdev*; do
+			case "$_l" in *_trip_point|*_weight) continue ;; esac
+			[ -L "$_l" ] || continue
+			_t=$(readlink "$_l")
+			_t="${_t##*/cooling_device}"
+			echo "B;;$_n;;$(rd ${_l}_trip_point);;$_t;;$(rd $THERMAL/cooling_device$_t/type)"
+		done
+	done
+
+	for _c in $THERMAL/cooling_device*; do
+		[ -d "$_c" ] || continue
+		echo "C;;${_c##*/cooling_device};;$(rd $_c/type);;$(rd $_c/cur_state);;$(rd $_c/max_state)"
+	done
+
+	for _h in $HWMON/hwmon*; do
+		[ -d "$_h" ] || continue
+		_nm=$(rd $_h/name)
+		_i=1
+		while [ $_i -le 8 ]; do
+			if [ -f "$_h/pwm$_i" ] || [ -f "$_h/fan${_i}_input" ]; then
+				echo "F;;${_h##*/};;$_nm;;$_i;;$(rd $_h/pwm$_i);;$(rd $_h/pwm${_i}_enable);;$(rd $_h/fan${_i}_input);;$(rw $_h/pwm$_i)"
+				_pc=$(paired_cdev "$_nm")
+				[ -n "$_pc" ] && echo "L;;${_h##*/};;$_i;;$_pc;;$(rd $THERMAL/cooling_device$_pc/max_state);;$(fan_inverted);;$(fan_levels)"
+				curve "$_h" "$_i"
+			fi
+			_i=$((_i + 1))
+		done
+	done
+}
+
+# The chip's own curve for one pwm channel, plus the sensor driving it.
+# Point count varies by chip (4 on most, 6 on the original NCT6775), so probe
+# rather than assume.
+curve() {
+	_ch="$1"
+	_cn="$2"
+	_p=1
+
+	while [ -f "$_ch/pwm${_cn}_auto_point${_p}_pwm" ]; do
+		echo "A;;${_ch##*/};;$_cn;;$_p;;$(rd $_ch/pwm${_cn}_auto_point${_p}_temp);;$(rd $_ch/pwm${_cn}_auto_point${_p}_pwm);;$(rw $_ch/pwm${_cn}_auto_point${_p}_temp)"
+		_p=$((_p + 1))
+	done
+
+	# nct6775 names a single temp input by index; it87 and f71882fg use a
+	# bitmask of channels instead. Only the index form can be resolved to one
+	# reading, so the bitmask is reported raw and shown as-is.
+	if [ -f "$_ch/pwm${_cn}_temp_sel" ]; then
+		_sel=$(rd $_ch/pwm${_cn}_temp_sel)
+		case "$_sel" in
+			''|*[!0-9]*|0) echo "X;;${_ch##*/};;$_cn;;sel;;$_sel;;-;;-" ;;
+			*)
+				_lab=$(rd $_ch/temp${_sel}_label)
+				[ "$_lab" = "-" ] && _lab="temp$_sel"
+				echo "X;;${_ch##*/};;$_cn;;sel;;$_sel;;$_lab;;$(rd $_ch/temp${_sel}_input)"
+				;;
+		esac
+	elif [ -f "$_ch/pwm${_cn}_auto_channels_temp" ]; then
+		echo "X;;${_ch##*/};;$_cn;;chan;;$(rd $_ch/pwm${_cn}_auto_channels_temp);;-;;-"
+	fi
+}
+
+# Hand the fan back to the kernel, or take it away, without ever touching the
+# zone's "mode". Disabling a zone also disables its critical trip - the kernel
+# says as much ("Disabled thermal zone with critical trip point") - so manual
+# mode switches the governor to user_space instead. Critical and hot trips are
+# handled by thermal_zone_device_update() before the governor is consulted, so
+# thermal shutdown protection stays live either way.
+release_zones() {
+	for _z in $(fan_zones); do
+		_avail=$(rd $THERMAL/thermal_zone$_z/available_policies)
+		case " $_avail " in
+			*" user_space "*)
+				echo user_space > $THERMAL/thermal_zone$_z/policy 2>/dev/null
+				;;
+			*)
+				logger -t fanctl "zone $_z has no user_space governor; leaving it in charge of the fan"
+				;;
+		esac
+	done
+}
+
+restore_zones() {
+	for _z in $(fan_zones); do
+		[ "$(rd $THERMAL/thermal_zone$_z/policy)" = "user_space" ] || continue
+		_avail=$(rd $THERMAL/thermal_zone$_z/available_policies)
+		case " $_avail " in
+			*" step_wise "*) echo step_wise > $THERMAL/thermal_zone$_z/policy 2>/dev/null ;;
+		esac
+	done
+}
+
+# A duty cycle the driver will accept. nvram is not a trusted source here: the
+# httpd validator can only check fan_pwm's length now that it carries a list, so
+# anything malformed has to be rejected in this script rather than clamped -
+# clamping "777" up to 255 would spin the fan flat out because of a typo.
+pwm_valid() {
+	case "$1" in ''|*[!0-9]*) return 1 ;; esac
+	[ "$1" -le 255 ] || return 1
+
+	return 0
+}
+
+# Manual duty cycle for one pwm channel, named "hwmonX:N".
+#
+# fan_pwm is either a bare number - one speed for every fan, which is also what
+# configs saved before per-fan control contain - or a comma separated list of
+# "hwmonX:N=duty" items, where duty may be the word "auto" to leave that channel
+# under whatever was controlling it. A channel that is not named in the list
+# falls back to the bare number if the list carries one, and to "auto"
+# otherwise - a channel nobody asked for is left alone rather than driven.
+pwm_for() {
+	_want="$1"
+	_fallback=auto
+	_found=
+
+	for _p in $(echo "$_pwm" | tr ',' ' '); do
+		case "$_p" in
+			*=*)
+				[ "${_p%%=*}" = "$_want" ] || continue
+				_pv=${_p#*=}
+				if [ "$_pv" = "auto" ]; then
+					_found=auto
+				else
+					pwm_valid "$_pv" && _found=$_pv
+				fi
+				;;
+			*)
+				pwm_valid "$_p" && _fallback=$_p
+				;;
+		esac
+	done
+
+	echo "${_found:-$_fallback}"
+}
+
+# Remember what the firmware had every pwm channel doing at boot, before
+# anything here writes to it. Two consumers: leaving manual mode restores these
+# values, and assert_curve() reads the automatic mode number back out of it.
+# Taken once per boot and kept for the life of the boot (/tmp is tmpfs), so it
+# always describes the firmware's own state rather than something we set.
+#
+# This is not just tidiness. Writing pwm1 goes straight to the driver and never
+# touches the thermal core, so the core's instance->target still holds whatever
+# it last decided. When the governor is switched back, step_wise recomputes the
+# same target, hits "if (initialized && old_target == target) continue" in
+# thermal_zone_trip_update() and so never clears cdev->updated - which makes
+# thermal_cdev_update() a no-op. The fan would sit at the manual speed until a
+# trip was actually crossed. Restoring the duty cycle ourselves fixes that,
+# because pwm_fan_update_state() derives the driver's cooling state back from
+# the duty cycle, leaving driver and core agreeing again. On the Super-I/O
+# chips restoring pwm*_enable is also the only way to hand the fan back to the
+# chip's own automatic control at all.
+save_manual() {
+	[ -f "$MANUAL" ] && return 0
+
+	{
+		for _h in $HWMON/hwmon*; do
+			[ -d "$_h" ] || continue
+			_i=1
+			while [ $_i -le 8 ]; do
+				[ -w "$_h/pwm$_i" ] && echo "${_h##*/} $_i $(rd $_h/pwm${_i}_enable) $(rd $_h/pwm$_i)"
+				_i=$((_i + 1))
+			done
+		done
+
+		# device-tree fans are put back by cooling level, not duty
+		for _c in $(fan_cdevs); do
+			[ -w "$THERMAL/cooling_device$_c/cur_state" ] && \
+				echo "cdev$_c 0 - $(rd $THERMAL/cooling_device$_c/cur_state)"
+		done
+	} > "$MANUAL.new"
+
+	if [ -s "$MANUAL.new" ]; then
+		mv "$MANUAL.new" "$MANUAL"
+	else
+		rm -f "$MANUAL.new"
+	fi
+
+	return 0
+}
+
+# Put one pwm channel back the way save_manual() found it, for a channel left on
+# automatic while its neighbours are driven by hand.
+restore_channel() {
+	[ -f "$MANUAL" ] || return 0
+
+	while read -r _rh _ri _ren _rpw; do
+		[ "$_rh" = "$1" ] || continue
+		[ "$_ri" = "$2" ] || continue
+		restore_one "$_rh" "$_ri" "$_ren" "$_rpw"
+		return 0
+	done < "$MANUAL"
+
+	return 0
+}
+
+restore_manual() {
+	[ -f "$MANUAL" ] || return 0
+
+	while read -r _h _i _en _pw; do
+		[ -n "$_pw" ] || continue
+		restore_one "$_h" "$_i" "$_en" "$_pw"
+	done < "$MANUAL"
+}
+
+restore_one() {
+	case "$1" in
+		cdev[0-9]*)
+			[ "$4" = "-" ] && return 0
+			_rc=${1#cdev}
+
+			# A raw duty write goes straight to the driver, and
+			# pwm_fan_update_state() derives a cooling state from it
+			# assuming the levels ascend - so on an inverted board the
+			# driver ends up believing the opposite of the truth.
+			# set_cur_state() then early-returns because it thinks it
+			# is already there, and the fan can never be moved again.
+			# Stepping through a different state first guarantees the
+			# restoring write actually lands.
+			_rmax=$(rd $THERMAL/cooling_device$_rc/max_state)
+			case "$_rmax" in ''|*[!0-9]*) _rmax=1 ;; esac
+			_rother=$(( ($4 + 1) % (_rmax + 1) ))
+			echo "$_rother" > "$THERMAL/cooling_device$_rc/cur_state" 2>/dev/null
+			echo "$4" > "$THERMAL/cooling_device$_rc/cur_state" 2>/dev/null
+			;;
+		*)
+			[ "$3" = "-" ] || echo "$3" > "$HWMON/$1/pwm${2}_enable" 2>/dev/null
+			[ "$4" = "-" ] || echo "$4" > "$HWMON/$1/pwm$2" 2>/dev/null
+			;;
+	esac
+}
+
+# Record the firmware's own trip temperatures once per boot, before anything
+# overwrites them. The kernel keeps no copy of the original value once
+# trip_point_N_temp has been written, so without this snapshot the only way back
+# to the device-tree curve is a reboot. /tmp is a tmpfs, so the file naturally
+# disappears again on reboot.
+snapshot() {
+	[ -f "$DEFAULTS" ] && return 0
+
+	{
+		# Device-tree thermal zone trip points ("zone:trip=millidegrees").
+		for _z in $(fan_zones); do
+			_i=0
+			while [ -f "$THERMAL/thermal_zone$_z/trip_point_${_i}_type" ]; do
+				[ -w "$THERMAL/thermal_zone$_z/trip_point_${_i}_temp" ] && \
+					echo "$_z:$_i=$(rd $THERMAL/thermal_zone$_z/trip_point_${_i}_temp)"
+				_i=$((_i + 1))
+			done
+		done
+
+		# Super-I/O chip curve points ("hwmonX:N:P=millidegrees/duty").
+		# x86 has no cooling device bound to a thermal zone, so without these
+		# the snapshot would be empty there and Restore Defaults would have
+		# nothing to put back.
+		for _h in $HWMON/hwmon*; do
+			[ -d "$_h" ] || continue
+			_i=1
+			while [ $_i -le 8 ]; do
+				_p=1
+				while [ -f "$_h/pwm${_i}_auto_point${_p}_pwm" ]; do
+					[ -w "$_h/pwm${_i}_auto_point${_p}_temp" ] && \
+						echo "${_h##*/}:$_i:$_p=$(rd $_h/pwm${_i}_auto_point${_p}_temp)/$(rd $_h/pwm${_i}_auto_point${_p}_pwm)"
+					_p=$((_p + 1))
+				done
+				_i=$((_i + 1))
+			done
+		done
+	} > "$DEFAULTS.new"
+
+	# Only keep it if the hardware was actually up; otherwise leave the
+	# snapshot missing so a later run can try again rather than locking in an
+	# empty set of "defaults".
+	if [ -s "$DEFAULTS.new" ]; then
+		mv "$DEFAULTS.new" "$DEFAULTS"
+	else
+		rm -f "$DEFAULTS.new"
+	fi
+
+	return 0
+}
+
+# Write one "zone:trip=millidegrees" item.
+write_trip() {
+	case "$1" in
+		[0-9]*:[0-9]*=[0-9]*) ;;
+		*) return 0 ;;
+	esac
+
+	_z=${1%%:*}
+	_rest=${1#*:}
+	_t=${_rest%%=*}
+	_v=${_rest#*=}
+
+	# A critical trip written as 0 shuts the box down on the next poll.
+	[ "$_v" -ge 20000 ] 2>/dev/null || return 0
+	[ "$_v" -le 200000 ] 2>/dev/null || return 0
+
+	echo "$_v" > $THERMAL/thermal_zone$_z/trip_point_${_t}_temp 2>/dev/null \
+		|| logger -t fanctl "zone $_z trip $_t is not writable"
+}
+
+# Write one chip-curve item, "hwmonX:N:P=temp/pwm".
+#
+# The driver only validates the whole curve when the automatic mode is
+# (re)selected - nct6775's check_trip_points() refuses SmartFan IV with
+# "Inconsistent trip points" if temperatures or duties are not monotonically
+# non-decreasing. Individual point writes succeed regardless, so a bad curve
+# would sit there looking accepted. write_curve therefore only stages values;
+# assert_curve() re-selects the mode afterwards and reports if it was refused.
+write_curve() {
+	case "$1" in
+		hwmon*:[0-9]*:[0-9]*=[0-9]*/[0-9]*) ;;
+		*) return 0 ;;
+	esac
+
+	_key=${1%%=*}
+	_val=${1#*=}
+	_ch=${_key%%:*}
+	_rest=${_key#*:}
+	_cn=${_rest%%:*}
+	_pt=${_rest#*:}
+	_ct=${_val%%/*}
+	_cp=${_val#*/}
+
+	[ -d "$HWMON/$_ch" ] || return 0
+	pwm_valid "$_cp" || return 0
+	[ "$_ct" -ge 0 ] 2>/dev/null || return 0
+	[ "$_ct" -le 200000 ] 2>/dev/null || return 0
+
+	echo "$_ct" > "$HWMON/$_ch/pwm${_cn}_auto_point${_pt}_temp" 2>/dev/null
+	echo "$_cp" > "$HWMON/$_ch/pwm${_cn}_auto_point${_pt}_pwm" 2>/dev/null
+}
+
+# Re-select the automatic mode on every channel that has a curve and is not
+# under manual control, so the driver revalidates. The mode number is chip
+# specific (5 on nct6775, 2 on it87 and f71882fg), so use whatever the firmware
+# had at boot rather than hardcoding one.
+assert_curve() {
+	for _h in $HWMON/hwmon*; do
+		[ -d "$_h" ] || continue
+		_i=1
+		while [ $_i -le 8 ]; do
+			if [ -f "$_h/pwm${_i}_auto_point1_pwm" ] && [ -w "$_h/pwm${_i}_enable" ]; then
+				_want=$(boot_enable "${_h##*/}" "$_i")
+				# only for channels meant to be automatic
+				case "$_want" in
+					''|-|0|1) ;;
+					*)
+						if [ "$(pwm_for "${_h##*/}:$_i")" = "auto" ]; then
+							echo "$_want" > "$_h/pwm${_i}_enable" 2>/dev/null
+							[ "$(rd $_h/pwm${_i}_enable)" = "$_want" ] || \
+								logger -t fanctl "$_h pwm$_i refused mode $_want; check the curve is non-decreasing"
+						fi
+						;;
+				esac
+			fi
+			_i=$((_i + 1))
+		done
+	done
+}
+
+# The pwm*_enable value the firmware had at boot, from the manual snapshot.
+boot_enable() {
+	[ -f "$MANUAL" ] || { echo '-'; return 0; }
+
+	while read -r _bh _bi _ben _bpw; do
+		[ "$_bh" = "$1" ] || continue
+		[ "$_bi" = "$2" ] || continue
+		echo "$_ben"
+		return 0
+	done < "$MANUAL"
+
+	echo '-'
+}
+
+apply() {
+	_mode=$(NG fan_mode)
+	_pwm=$(NG fan_pwm)
+	_trips=$(NG fan_trips)
+	_curve=$(NG fan_curve)
+
+	snapshot
+
+	# The curve is rebuilt from scratch on every apply: the firmware defaults
+	# first, then the saved overrides on top. That makes the result depend
+	# only on nvram, so clearing an override puts the original trip back
+	# immediately instead of at the next reboot.
+	# save_manual() must run before anything is written: it is the record of
+	# what the firmware had, and assert_curve() reads the automatic mode out
+	# of it.
+	save_manual
+
+	if [ -f "$DEFAULTS" ]; then
+		while read -r _line; do
+			write_trip "$_line"
+			write_curve "$_line"
+		done < "$DEFAULTS"
+	fi
+
+	# Overrides are applied in both modes: they are the curve the fan falls
+	# back to when manual mode is turned off again.
+	for _item in $(echo "$_trips" | tr ',' ' '); do
+		write_trip "$_item"
+	done
+
+	for _item in $(echo "$_curve" | tr ',' ' '); do
+		write_curve "$_item"
+	done
+	assert_curve
+
+	if [ "$_mode" = "1" ]; then
+		save_manual
+
+		# A governor drives every cooling device bound to its zone, so the zone
+		# can only be released when no channel is left on automatic - there is
+		# no way to release just one. Erring towards leaving the governor in
+		# charge means a fan asked to stay automatic keeps working; the other
+		# way round it would be quietly un-governed.
+		_all_manual=1
+		for _h in $HWMON/hwmon*; do
+			[ -d "$_h" ] || continue
+			_nm=$(rd $_h/name)
+			_i=1
+			while [ $_i -le 8 ]; do
+				if [ -w "$_h/pwm$_i" ] && [ "$(pwm_for "${_h##*/}:$_i")" = "auto" ]; then
+					_all_manual=0
+				fi
+				_i=$((_i + 1))
+			done
+		done
+
+		if [ "$_all_manual" = "1" ]; then
+			release_zones
+		else
+			# Also hand the zone back, in case an earlier pass released it
+			# while everything was manual. Zones are released exactly when
+			# no channel is on automatic, whichever way we got here.
+			restore_zones
+		fi
+
+		for _h in $HWMON/hwmon*; do
+			[ -d "$_h" ] || continue
+			_nm=$(rd $_h/name)
+			_i=1
+			while [ $_i -le 8 ]; do
+				if [ -w "$_h/pwm$_i" ]; then
+					_d=$(pwm_for "${_h##*/}:$_i")
+					if [ "$_d" = "auto" ]; then
+						# Undo a previous manual pass over this
+						# channel; a no-op if it was never taken.
+						restore_channel "${_h##*/}" "$_i"
+					else
+						# 1 means manual on the Super-I/O drivers;
+						# on pwm-fan it only changes what pwm=0
+						# does, which is harmless.
+						[ -w "$_h/pwm${_i}_enable" ] && echo 1 > "$_h/pwm${_i}_enable" 2>/dev/null
+						echo "$_d" > "$_h/pwm$_i" 2>/dev/null
+					fi
+				fi
+				_i=$((_i + 1))
+			done
+		done
+	else
+		restore_zones
+		restore_manual
+	fi
+}
+
+case "$1" in
+	status) status ;;
+	apply)  apply ;;
+	*)      echo "usage: fanctl status|apply" >&2; exit 1 ;;
+esac
+
+exit 0

@@ -7,7 +7,6 @@ set -x
 . /usr/sbin/net_utils
 
 # Load kernel modules early to give them time to initialize
-modprobe pwm-fan
 modprobe air_en8811h
 modprobe aquantia
 

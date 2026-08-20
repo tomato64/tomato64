@@ -775,6 +775,13 @@ else
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
 endif
 
+# Fans page: only on devices that have a controllable fan (PLATFORM_HAS_FAN).
+ifeq ($(PLATFORM_HAS_FAN),y)
+else
+	rm -f $(INSTALLDIR)/www/admin-fans.asp
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-FAN-BEGIN/,/TOMATO64-FAN-END/d"
+endif
+
 # Wireless Temperature row: keep only on devices whose WiFi PHYs expose a
 # temperature sensor (PLATFORM_HAS_WLTEMP); drop it everywhere else.
 ifeq ($(PLATFORM_HAS_WLTEMP),y)
@@ -928,6 +935,7 @@ endif
 		-e "/TOMATO64-ARM64-BEGIN/d"	-e "/TOMATO64-ARM64-END/d" \
 		-e "/TOMATO64-WIFI-BEGIN/d"	-e "/TOMATO64-WIFI-END/d" \
 		-e "/TOMATO64-WLTEMP-BEGIN/d"	-e "/TOMATO64-WLTEMP-END/d" \
+		-e "/TOMATO64-FAN-BEGIN/d"	-e "/TOMATO64-FAN-END/d" \
 		|| true; \
 	done
 

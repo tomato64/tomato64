@@ -316,6 +316,10 @@ extern void start_zram(void);
 extern void stop_zram(void);
 extern void start_cpufreq(void);
 extern void stop_cpufreq(void);
+#ifdef TOMATO64_HAS_FAN
+extern void start_fan(void);
+extern void stop_fan(void);
+#endif /* TOMATO64_HAS_FAN */
 #endif
 #ifdef TCONFIG_ZEBRA
 extern void start_zebra(void);

@@ -2754,6 +2754,9 @@ function navi() {
 /* TOMATO64-BEGIN */
 			['Port Labels',			'port-labels.asp'],
 			['LEDs',			'leds.asp'],
+/* TOMATO64-FAN-BEGIN */
+			['Fans',			'fans.asp'],
+/* TOMATO64-FAN-END */
 /* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
 			['Buttons/LED',			'buttons.asp'],

@@ -22,6 +22,10 @@ ifeq ($(BR2_PACKAGE_PLATFORM_HAS_WLTEMP),y)
 export PLATFORM_HAS_WLTEMP=y
 endif
 
+ifeq ($(BR2_PACKAGE_PLATFORM_HAS_FAN),y)
+export PLATFORM_HAS_FAN=y
+endif
+
 ifeq ($(BR2_PACKAGE_PLATFORM_MT6000),y)
 export PLATFORM_MT6000=y
 endif
