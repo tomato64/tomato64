@@ -233,6 +233,9 @@ enum svc_proc_id {
 	P_VSFTPD,
 	P_ZEBRA,
 	P_WIREGUARD,
+#ifdef TOMATO64
+	P_WIFI,
+#endif /* TOMATO64 */
 	P_MAX
 };
 
@@ -293,6 +296,9 @@ static const char * const svc_proc_name[] = {
 	"vsftpd",
 	"zebra",
 	NULL		/* P_WIREGUARD: handled by wg_status("wgN") */
+#ifdef TOMATO64
+	, NULL		/* P_WIFI: handled by svc_wifi_status() */
+#endif /* TOMATO64 */
 };
 
 /*
@@ -456,7 +462,7 @@ static const struct svc_entry svc_table[] = {
 	{ "wan",		SVCF_LIST | SVCF_NO_STATUS,					P_NONE,			0,	SVCOP_WAN		},
 	{ "wan",		SVCF_PREFIX | SVCF_NUM_SUF | SVCF_MWAN_SUF | SVCF_NO_STATUS,	P_NONE,			1,	SVCOP_WAN_IF		},
 #ifdef TOMATO64
-	{ "wifi",		SVCF_LIST | SVCF_NO_STATUS,					P_NONE,			0 },
+	{ "wifi",		SVCF_LIST,							P_WIFI,			0 },
 #endif /* TOMATO64 */
 #ifdef TCONFIG_WIREGUARD
 	{ "wireguard",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUF | SVCF_WG_SUF	,		P_WIREGUARD,		0,	SVCOP_WIREGUARD		},

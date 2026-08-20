@@ -3460,6 +3460,49 @@ static int svc_wireguard_status(const char *name)
 }
 #endif
 
+#ifdef TOMATO64
+/* daemons started by start_wifi.sh; all of them must run for WiFi to work */
+static const char * const wifi_proc_name[] = {
+	"ubusd",
+	"netifd",
+	"wpa_supplicant",
+	"hostapd",
+	"hostapd_cli",
+	NULL
+};
+
+static int svc_wifi_status(const char *name)
+{
+	pid_t pid[sizeof(wifi_proc_name) / sizeof(wifi_proc_name[0])];
+	int i;
+	int total = 0;
+	int running = 0;
+
+	for (i = 0; wifi_proc_name[i]; i++) {
+		pid[i] = pidof(wifi_proc_name[i]);
+		if (pid[i] > 0)
+			running++;
+		total++;
+	}
+
+	if (running == total)
+		printf("%s: running (%d/%d daemons)\n", name, running, total);
+	else if (running == 0)
+		printf("%s: stopped\n", name);
+	else
+		printf("%s: degraded (%d/%d daemons running)\n", name, running, total);
+
+	for (i = 0; i < total; i++) {
+		if (pid[i] > 0)
+			printf("  %s: running (pid %d)\n", wifi_proc_name[i], (int)pid[i]);
+		else
+			printf("  %s: stopped\n", wifi_proc_name[i]);
+	}
+
+	return (running == total) ? 0 : 1;
+}
+#endif /* TOMATO64 */
+
 static const char *svc_proc_name_for(const struct svc_entry *e, const char *name)
 {
 	if ((e == NULL) || (e->flags & SVCF_NO_STATUS) || (e->proc == P_NONE))
@@ -3547,6 +3590,10 @@ static int svc_status(const char *name)
 	if ((e != NULL) && (e->proc == P_WIREGUARD))
 		return svc_wireguard_status(name);
 #endif
+#ifdef TOMATO64
+	if ((e != NULL) && (e->proc == P_WIFI))
+		return svc_wifi_status(name);
+#endif /* TOMATO64 */
 	proc = svc_proc_name_for(e, name);
 
 	if (proc == NULL) {
