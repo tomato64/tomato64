@@ -99,9 +99,13 @@ function verifyFields(focused, quiet) {
 	E('_f_udpxy_wanface').disabled = !enable_udpxy;
 
 /* TOMATO64-WIFI-BEGIN */
-	E('_wed_offloading').readonly = !(E('_flow_offloading').value == 2);
-	if (E('_flow_offloading').value != 2)
+	var hw_offload = (E('_flow_offloading').value == 2);
+
+	E('_wed_offloading').readonly = !hw_offload;
+	if (!hw_offload)
 		E('_wed_offloading').value = 0;
+
+	PR(E('_wed_offloading')).style.display = hw_offload ? '' : 'none';
 
 	var steering_on = E('_packet_steering').value != 0;
 	var steering_custom = E('_steering_flows').value == 'custom';
