@@ -13,6 +13,7 @@ BOOTFS=${BOOTFS:-ext4}
 VARFS=${VARFS:-ext4}
 DISKLABEL=${DISKLABEL:-dos}
 KERNELOPTS=${KERNELOPTS:-quiet}
+UMOUNT_TIMEOUT=${UMOUNT_TIMEOUT:-15}
 
 # default location for mounted root
 SYSROOT=${SYSROOT:-/mnt}
@@ -227,18 +228,99 @@ find_modloop_media() {
         echo "$modloop_media"
 }
 
+# Locate the installation media and mount it read-only on /mnt.
+#
+# On a CD/DVD or a dd-written USB stick the ISO9660 filesystem is a real block
+# device carrying the TOMATO64 label. Under Ventoy the ISO is only a file on
+# the stick, reachable through a device-mapper node that Ventoy creates from a
+# udev rule -- and Tomato64 runs mdev, not udevd, so that rule never fires.
+# Drive Ventoy's own hook by hand in that case.
+mount_install_media() {
+	local part= vtline= vtdisk= vtpart=
+
+	part=$(blkid | grep "TOMATO64" | awk '{print $1}' | head -n 1)
+	part=${part%:}
+
+	if [ -z "$part" ] && [ -f /ventoy/ventoy_os_param ]; then
+		echo "Ventoy boot detected, mapping the ISO image..."
+
+		if ! [ -x /ventoy/tool/vtoydump ] || ! [ -f /ventoy/hook/default/udev_disk_hook.sh ]; then
+			echo "Ventoy runtime files are missing" >&2
+			return 1
+		fi
+
+		# vtoydump prints "<disk>#<iso path>", e.g. /dev/sdb#/tomato64.iso
+		vtline=$(/ventoy/tool/vtoydump -f /ventoy/ventoy_os_param) || return 1
+		vtdisk=${vtline%%#*}
+		[ -n "$vtdisk" ] || return 1
+
+		# Ventoy always maps the ISO off the disk holding VTOYEFI (partition 2)
+		case "$vtdisk" in
+			*nvme*|*mmc*|*nbd*) vtpart="${vtdisk}p2";;
+			*)                  vtpart="${vtdisk}2";;
+		esac
+
+		/ventoy/busybox/sh /ventoy/hook/default/udev_disk_hook.sh "${vtpart#/dev/}" || return 1
+		[ -b /dev/mapper/ventoy ] || return 1
+		part=/dev/mapper/ventoy
+	fi
+
+	if [ -z "$part" ]; then
+		echo "No block device carrying the TOMATO64 label was found" >&2
+		return 1
+	fi
+
+	mount -r "$part" /mnt || return 1
+
+	if ! [ -f /mnt/tomato64.img.zst ]; then
+		echo "tomato64.img.zst not found on $part" >&2
+		umount /mnt >/dev/null 2>&1
+		return 1
+	fi
+
+	return 0
+}
+
+# Unmount a pre-existing installation's filesystems so the disk can be
+# repartitioned. A live boot mounts /nvram (mount_nvram) and /opt (LABEL=opt
+# in /etc/fstab) straight off the target disk, and umount fails immediately
+# while a filesystem is still busy -- so retry, but bound the whole thing so
+# the installer can never hang here. Prints what is still stuck and returns 1
+# if the budget runs out.
+umount_install_targets() {
+	local now= deadline= mp= stuck=
+
+	read now _ < /proc/uptime
+	deadline=$(( ${now%.*} + UMOUNT_TIMEOUT ))
+
+	while :; do
+		stuck=
+		for mp in /mnt/boot /mnt/nvram /mnt/rootfs /mnt/sda3 /mnt /nvram /opt; do
+			mountpoint -q "$mp" 2>/dev/null || continue
+			umount "$mp" >/dev/null 2>&1
+			mountpoint -q "$mp" 2>/dev/null && stuck="$stuck $mp"
+		done
+
+		[ -z "$stuck" ] && return 0
+
+		read now _ < /proc/uptime
+		[ "${now%.*}" -ge "$deadline" ] && break
+
+		sleep 1
+	done
+
+	echo "Still mounted after ${UMOUNT_TIMEOUT}s:$stuck" >&2
+	return 1
+}
+
 if [ ! -f /init ]; then
 	echo "Installation script can only be run from the ISO image"
 	exit 0
 fi
 
-umount /mnt/boot >/dev/null 2>&1
-umount /mnt/nvram >/dev/null 2>&1
-umount /mnt/rootfs >/dev/null 2>&1
-umount /mnt/sda3 >/dev/null 2>&1
-umount /mnt >/dev/null 2>&1
-umount /nvram >/dev/null 2>&1
-umount /opt >/dev/null 2>&1
+# Release the target disk before find_disks() inspects it; a partition left
+# mounted makes is_available_disk() drop the whole disk from the menu.
+umount_install_targets || true
 
 if [ "$DISK_MODE" = "none" ] || [ "$1" = "none" ]; then
 	exit 0
@@ -269,6 +351,12 @@ if [ $# -gt 0 ]; then
 		if ! [ -e "$ROOT/sys/block/$j/device" ]; then
 			die "$i is not a block device suitable for partitioning"
 		fi
+		# The interactive path gets this via is_available_disk(); named disks
+		# skip that, and writing over live mounts corrupts both the mounted
+		# filesystem and the image being written.
+		if has_mounted_part "$i"; then
+			die "$i still has mounted partitions, refusing to repartition it"
+		fi
 		diskdevs="$diskdevs $i"
 	done
 else
@@ -298,15 +386,26 @@ if [ -n "$diskdevs" ] && [ -z "$DISK_MODE" ]; then
 
 
 		if ask_yesno "Are you sure you want to use this disk? (y/n)"; then
+			# Mount the media before touching the target disk, so that a
+			# failure here cannot leave it wiped and unbootable.
+			if ! mount_install_media; then
+				die "Could not access the Tomato64 installation media."
+			fi
 
 fdisk $(echo $diskdevs) <<\EndOfAnswers >/dev/null 2>&1
 o
 w
 EndOfAnswers
 			echo "Writing image to disk $diskdevs"
-			part=$(blkid | grep "TOMATO64" | awk '{print $1}')
-			mount -r $(echo ${part%?}) /mnt
-			zstdcat /mnt/tomato64.img.zst | dd of=$(echo $diskdevs) >/dev/null 2>&1
+			rm -f /tmp/.t64_unpack_failed
+			{ zstdcat /mnt/tomato64.img.zst || touch /tmp/.t64_unpack_failed; } | \
+				dd of=$(echo $diskdevs) 2>/dev/null
+			ddstatus=$?
+			sync
+			if [ $ddstatus -ne 0 ] || [ -e /tmp/.t64_unpack_failed ]; then
+				rm -f /tmp/.t64_unpack_failed
+				die "Failed to write the image to $diskdevs."
+			fi
 			if ask_yesno "Create separate partition for /opt? (y/n)"; then
 
 fdisk $(echo $diskdevs) <<\EndOfAnswers >/dev/null 2>&1
@@ -334,14 +433,11 @@ mkfs.ext4 -L opt $(echo $part) <<\EndOfAnswers >/dev/null 2>&1
 y
 EndOfAnswers
 			fi
-			umount /mnt/boot >/dev/null 2>&1
-			umount /mnt/nvram >/dev/null 2>&1
-			umount /mnt/rootfs >/dev/null 2>&1
-			umount /mnt/sda3 >/dev/null 2>&1
-			umount /mnt >/dev/null 2>&1
-			umount /nvram >/dev/null 2>&1
-			umount /opt >/dev/null 2>&1
-			rm -rf /mnt/*
+			# Cleanup only -- the image is already written, so a stuck
+			# mount here is not fatal. Never clear /mnt while it is still
+			# mounted, though: that would delete the media's contents.
+			umount_install_targets || true
+			mountpoint -q /mnt 2>/dev/null || rm -rf /mnt/*
 			echo "Done"
 			sleep 1
 			echo "You may now reboot the computer and remove the installation media"

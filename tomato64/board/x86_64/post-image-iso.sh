@@ -36,15 +36,13 @@ LABEL linux
   KERNEL /live/bzImage
   APPEND initrd=/live/initrd boot=live net.ifnames=0
 
-LABEL linux
-  MENU LABEL Tomato64 Live [BIOS/ISOLINUX] ((Disable Microcode Loading))
-  MENU DEFAULT
+LABEL noucode
+  MENU LABEL Tomato64 Live [BIOS/ISOLINUX] (Disable Microcode Loading)
   KERNEL /live/bzImage
-  APPEND initrd=/live/initrd boot=livenet.ifnames=0 dis_ucode_ldr
+  APPEND initrd=/live/initrd boot=live net.ifnames=0 dis_ucode_ldr
 
-LABEL linux
+LABEL nomodeset
   MENU LABEL Tomato64 Live [BIOS/ISOLINUX] (nomodeset)
-  MENU DEFAULT
   KERNEL /live/bzImage
   APPEND initrd=/live/initrd boot=live net.ifnames=0 nomodeset
 EOF
