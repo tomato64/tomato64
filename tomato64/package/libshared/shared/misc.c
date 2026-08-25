@@ -501,6 +501,7 @@ static int append_ifnames(char *dst, size_t size, const char *src, int add_space
 int foreach_wif(int include_vifs, void *param,
 	int (*func)(int idx, int unit, int subunit, void *param))
 {
+#ifndef TOMATO64
 	char ifnames[BUF_SIZE_64 * BRIDGE_COUNT] = { 0 }; /* increase size depending on bridge count */
 	char name[BUF_SIZE_64], ifname[BUF_SIZE_64], *next = NULL;
 	int unit = -1, subunit = -1;
@@ -570,6 +571,9 @@ list_ready:
 		ret |= func(i++, unit, subunit, param);
 	}
 	return ret;
+#else /* TOMATO64 */
+	return 0;
+#endif /* TOMATO64 */
 }
 
 void notice_set(const char *path, const char *format, ...)
