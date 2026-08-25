@@ -244,6 +244,7 @@ ifneq ($(TCONFIG_QUOTAS),y)
 	rm -f $(INSTALLDIR)/www/quota-usage.asp
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/QUOTAS-BEGIN/,/QUOTAS-END/d"
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/QUOTAS-BEGIN/,/QUOTAS-END/d"
+	sed -i $(INSTALLDIR)/www/at.css -e "/QUOTAS-BEGIN/,/QUOTAS-END/d"
 endif
 
 # only add php-fpm part for ARM routers
