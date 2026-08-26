@@ -39,6 +39,7 @@
 
 
 #include "rc.h"
+#include <defaults.h>
 
 #include <sys/sysinfo.h>
 #include <sys/ioctl.h>
@@ -50,13 +51,6 @@
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OS
 #define LOGMSG_NVDEBUG	"dhcp_debug"
-
-/* only for mips (incl. mips RT-AC) - no support yet for struct nvram_tuple; sync to nvram default values if changed! */
-#ifndef TCONFIG_BCMARM
-#define FT_LAN_IP_ADDR	"192.168.1.1"
-#define FT_LAN_NETMASK	"255.255.255.0"
-#define FT_LAN_GATEWAY	"0.0.0.0"
-#endif /* !TCONFIG_BCMARM */
 
 static void expires(unsigned int seconds, char *prefix)
 {
@@ -485,11 +479,7 @@ static int deconfig_lan(void)
 
 	logmsg(LOG_DEBUG, "*** %s", __FUNCTION__);
 
-#ifdef TCONFIG_BCMARM
 	ifconfig(lan_ifname, IFUP | IFF_ALLMULTI, nvram_default_get("lan_ipaddr"), nvram_default_get("lan_netmask")); /* nvram (or FreshTomato) default values */
-#else /* mips */
-	ifconfig(lan_ifname, IFUP | IFF_ALLMULTI, FT_LAN_IP_ADDR, FT_LAN_NETMASK);
-#endif
 
 	expires_lan(0);
 
@@ -500,15 +490,9 @@ static int deconfig_lan(void)
 	clear_resolv();
 
 	/* completely clear old setup and bring back nvram (or FreshTomato) default values */
-#ifdef TCONFIG_BCMARM
 	nvram_set("lan_ipaddr", nvram_default_get("lan_ipaddr"));
 	nvram_set("lan_netmask", nvram_default_get("lan_netmask"));
 	nvram_set("lan_gateway", nvram_default_get("lan_gateway"));
-#else /* mips */
-	nvram_set("lan_ipaddr", FT_LAN_IP_ADDR);
-	nvram_set("lan_netmask", FT_LAN_NETMASK);
-	nvram_set("lan_gateway", FT_LAN_GATEWAY);
-#endif
 	nvram_set("wan_lease", "");
 	nvram_set("wan_dns", "");
 
