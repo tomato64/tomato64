@@ -1,7 +1,5 @@
 #include <tomato_config.h>
 
-#if defined(TCONFIG_BCMARM) || defined(NVRAM_DEFAULTS_FULL)
-
 /*
  *
  * Tomato Firmware
@@ -30,6 +28,8 @@
  #include <shutils.h>
  #include <bcmnvram.h>
 #else
+ #include <ctype.h>
+ #include <bcmnvram.h>
  #include "defaults.h"
 #endif
 #include <shared.h>
@@ -2451,84 +2451,10 @@ void nvram_restore_var(char *prefix, char *name)
 }
 
 #else /* TCONFIG_BCMARM */
-/* MIPS */
-const defaults_t if_generic[] = {
-	{ "lan_ifname",			"br0"				},
-	{ "lan_ifnames",		"eth0 eth2 eth3 eth4"		},
-	{ "wan_ifname",			"eth1"				},
-	{ "wan_ifnames",		"eth1"				},
-
-	{ NULL, NULL }
-};
-
-#define BRIDGE_BLOCK_IF_VLAN(i) \
-	{ "lan" #i "_ifname",		""				}, \
-	{ "lan" #i "_ifnames",		""				},
-
-const defaults_t if_vlan[] = {
-	{ "wan_ifname",			"vlan1"				},
-	{ "wan_ifnames",		"vlan1"				},
-	{ "lan_ifname",			"br0"				},
-	{ "lan_ifnames",		"vlan0 eth1 eth2 eth3"		},
-#if BRIDGE_COUNT >= 2
- BRIDGE_BLOCK_IF_VLAN(1)
-#endif
-#if BRIDGE_COUNT >= 3
- BRIDGE_BLOCK_IF_VLAN(2)
-#endif
-#if BRIDGE_COUNT >= 4
- BRIDGE_BLOCK_IF_VLAN(3)
-#endif
-#if BRIDGE_COUNT >= 5
- BRIDGE_BLOCK_IF_VLAN(4)
-#endif
-#if BRIDGE_COUNT >= 6
- BRIDGE_BLOCK_IF_VLAN(5)
-#endif
-#if BRIDGE_COUNT >= 7
- BRIDGE_BLOCK_IF_VLAN(6)
-#endif
-#if BRIDGE_COUNT >= 8
- BRIDGE_BLOCK_IF_VLAN(7)
-#endif
-#if BRIDGE_COUNT >= 9
- BRIDGE_BLOCK_IF_VLAN(8)
-#endif
-#if BRIDGE_COUNT >= 10
- BRIDGE_BLOCK_IF_VLAN(9)
-#endif
-#if BRIDGE_COUNT >= 11
- BRIDGE_BLOCK_IF_VLAN(10)
-#endif
-#if BRIDGE_COUNT >= 12
- BRIDGE_BLOCK_IF_VLAN(11)
-#endif
-#if BRIDGE_COUNT >= 13
- BRIDGE_BLOCK_IF_VLAN(12)
-#endif
-#if BRIDGE_COUNT >= 14
- BRIDGE_BLOCK_IF_VLAN(13)
-#endif
-#if BRIDGE_COUNT >= 15
- BRIDGE_BLOCK_IF_VLAN(14)
-#endif
-#if BRIDGE_COUNT >= 16
- BRIDGE_BLOCK_IF_VLAN(15)
-#endif
-	{ NULL, NULL }
-};
-#endif /* TCONFIG_BCMARM */
-
-#else /* TCONFIG_BCMARM || NVRAM_DEFAULTS_FULL */
-
-#include <string.h>
-#include <ctype.h>
-#include <bcmnvram.h>
-
 /*
  * Keep the historical MIPS router_defaults[] stub used by wlconf and
- * other Broadcom consumers.  The nvram utility builds the full tables
- * above by compiling this file with NVRAM_DEFAULTS_FULL.
+ * other Broadcom consumers.  The full compact defaults tables above
+ * are exported by libshared for the MIPS nvram utility.
  */
 struct nvram_tuple router_defaults[] = {
 	{ NULL, NULL, 0 }
@@ -2587,4 +2513,4 @@ char *nvram_default_get(const char *name)
 }
 #endif /* CONFIG_BCMWL6 */
 
-#endif /* TCONFIG_BCMARM || NVRAM_DEFAULTS_FULL */
+#endif /* TCONFIG_BCMARM */
