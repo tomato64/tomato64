@@ -26,6 +26,7 @@
 #define __SHARED_DEFAULTS_H__
 
 #include <tomato_config.h>
+#include <typedefs.h>
 #include <bcmnvram.h>
 
 extern struct nvram_tuple router_defaults[];
@@ -44,5 +45,9 @@ extern struct nvram_tuple snmp_defaults[];
 #ifdef TCONFIG_BCMBSD
 extern struct nvram_tuple bsd_defaults[];
 #endif
+
+char *nvram_default_get(const char *name);
+void nvram_validate_all(char *prefix, bool restore);
+void nvram_restore_var(char *prefix, char *name);
 
 #endif /* __SHARED_DEFAULTS_H__ */
