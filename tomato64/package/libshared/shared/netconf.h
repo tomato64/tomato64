@@ -29,7 +29,7 @@
 #include <typedefs.h>
 #include <proto/ethernet.h>
 
-#ifdef TCONFIG_BCMARM
+#if defined(BCMARM) || defined(TCONFIG_BCMARM)
 #include <bcmconfig.h>
 #endif
 
@@ -79,7 +79,7 @@ typedef struct _netconf_match_t {
 	uint days[2];			/* Match by day of the week (local time) (Sunday == 0) */
 	uint secs[2];			/* Match by time of day (local time) (12:00 AM == 0) */
 	struct _netconf_match_t *next, *prev;
-#ifdef TCONFIG_BCMARM
+#if defined(BCMARM) || defined(TCONFIG_BCMARM)
 	uint8 dscp;         /* Match by DSCP value */
 #endif
 } netconf_match_t;
