@@ -135,10 +135,14 @@ int wlhelper_iface_exists(const char *ifname);
  * @param nbw: Output for channel bandwidth (20, 40, 80, 160, or 0 for NOHT)
  * @param noise: Output for noise level in dBm (-99 if unknown)
  * @param rate: Output for bit rate in Mbit/s (0.0 if unknown, can be decimal like 864.6)
+ * @param center: Output for the centre channel, 0 when not reported; may be NULL
+ * @param proto: Output for the operating generation ("11ax", ...); may be NULL
+ * @param proto_size: Size of the proto buffer
  * @return: 0 on success, -1 on error
  */
 int wlhelper_get_channel_stats(const char *ifname, int *channel, int *mhz,
-                                 int *nbw, int *noise, float *rate);
+                                 int *nbw, int *noise, float *rate,
+                                 int *center, char *proto, size_t proto_size);
 
 /*
  * Station (client) information structure
@@ -215,6 +219,81 @@ typedef int (*wlhelper_iface_callback)(int phy, int iface, const char *ifname, v
  * @return: Number of interfaces processed (callback called), or -1 on error
  */
 int wlhelper_foreach_interface(int filter_flags, wlhelper_iface_callback callback, void *user_data);
+
+/*
+ * Maximum length of an SSID as reported by iwinfo (32 octets + NUL)
+ */
+#define WLHELPER_SSID_SIZE 33
+
+/*
+ * One BSS as returned by 'iwinfo <ifname> scan'
+ *
+ * The channel width and the centre channel are resolved across the
+ * HT/VHT/HE/EHT operation blocks, most capable block first, so 'width' is
+ * always one of 20/40/80/160/320 and never one of the ambiguous strings
+ * iwinfo prints ("40 MHz or higher", "20 or 40 MHz").
+ */
+struct wlhelper_scan_entry {
+	char bssid[18];                 /* AA:BB:CC:DD:EE:FF */
+	char ssid[WLHELPER_SSID_SIZE];  /* empty for a hidden BSS */
+	int signal;                     /* dBm, 0 if unknown */
+	int quality;                    /* 0..100, -1 if unknown */
+	int channel;                    /* control (primary) channel */
+	int center_chan;                /* centre channel, == channel for 20 MHz */
+	int width;                      /* 20, 40, 80, 160 or 320 */
+	int mhz;                        /* frequency of the control channel */
+	const char *band;               /* "2.4", "5" or "6" */
+	const char *proto;              /* "11a".."11be", for the 802.11 column */
+	char security[80];              /* e.g. "WPA2-Personal" */
+	char cipher[32];                /* e.g. "AES" */
+};
+
+/*
+ * Callback function type for processing each scanned BSS
+ *
+ * @param entry: The BSS just parsed (only valid during the call)
+ * @param user_data: User-provided data pointer
+ * @return: 0 to continue, non-zero to stop iteration
+ */
+typedef int (*wlhelper_scan_callback)(const struct wlhelper_scan_entry *entry, void *user_data);
+
+/*
+ * Run a site survey on an interface and iterate over the results
+ *
+ * Wraps 'iwinfo <ifname> scan'. iwinfo takes care of scanning from an AP mode
+ * radio: it queries the wpa_supplicant control socket when there is one, and
+ * otherwise spawns a temporary station vif, only taking the AP down when the
+ * driver cannot bring up a second interface.
+ *
+ * A scan blocks for several seconds, so results are cached per interface in
+ * /var/tmp and re-used for WLHELPER_SCAN_CACHE_SEC. Pass force to ignore the
+ * cache.
+ *
+ * @param ifname: Interface name to scan from (e.g. "phy0-ap0")
+ * @param force: Non-zero to bypass the result cache
+ * @param callback: Function to call for each BSS found
+ * @param user_data: User data to pass to callback
+ * @return: Number of BSSes reported, or -1 on error
+ */
+int wlhelper_foreach_scan_result(const char *ifname, int force,
+                                  wlhelper_scan_callback callback, void *user_data);
+
+/*
+ * How long a cached scan result stays usable, in seconds
+ */
+#define WLHELPER_SCAN_CACHE_SEC 10
+
+/*
+ * wlhelper_foreach_scan_result() return value for a scan the kernel refused
+ *
+ * mac80211 rejects an off-channel scan with -EBUSY while any interface holds a
+ * channel that needs radar monitoring, unless the regulatory domain permits
+ * pre-CAC (ETSI only). A 160 MHz channel on 5 GHz normally spans DFS
+ * sub-channels, so surveying is unavailable for as long as the radio stays
+ * that wide. iwinfo reports this as "Scanning not possible", as opposed to
+ * "No scan results" for a scan that ran and found nothing.
+ */
+#define WLHELPER_SCAN_REFUSED (-2)
 
 #endif /* TOMATO64 */
 

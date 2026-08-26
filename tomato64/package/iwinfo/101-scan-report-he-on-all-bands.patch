@@ -1,0 +1,56 @@
+diff --git a/iwinfo_nl80211.c b/iwinfo_nl80211.c
+index 1dd6a67..54d4536 100644
+--- a/iwinfo_nl80211.c
++++ b/iwinfo_nl80211.c
+@@ -2663,9 +2663,49 @@ static void nl80211_get_scanlist_he_operation(unsigned char len,
+ {
+ 	uint8_t offset = 6;
+ 
+-	/* 6 GHz Operation Info not present */
+-	if (!(ie[2] & 0x02))
++	/*
++	 * Only a 6 GHz BSS carries the 6 GHz Operation Info sub-field. Below
++	 * 6 GHz an HE AP describes its channel with the VHT or HT operation
++	 * element instead, so take the geometry from there rather than giving
++	 * up: the presence of this element is what marks the BSS as HE, and
++	 * without it 802.11ax on 2.4 and 5 GHz is indistinguishable from ac/n.
++	 */
++	if (!(ie[2] & 0x02)) {
++		if (e->vht_chan_info.center_chan_1) {
++			/*
++			 * VHT widths are indexed differently to HE/EHT ones:
++			 * 0 = 20/40, 1 = 80, 2 = 160, 3 = 80+80 there against
++			 * 0 = 20, 1 = 40, 2 = 80, 3 = 160, 4 = 320 here.
++			 */
++			switch (e->vht_chan_info.chan_width) {
++			case 0:
++				e->he_chan_info.chan_width = e->ht_chan_info.chan_width ? 1 : 0;
++				break;
++			case 1:
++				e->he_chan_info.chan_width = 2;
++				break;
++			default:
++				e->he_chan_info.chan_width = 3;
++				break;
++			}
++
++			e->he_chan_info.center_chan_1 = e->vht_chan_info.center_chan_1;
++			e->he_chan_info.center_chan_2 = e->vht_chan_info.center_chan_2;
++		}
++		else if (e->ht_chan_info.primary_chan) {
++			e->he_chan_info.chan_width = e->ht_chan_info.chan_width ? 1 : 0;
++
++			/* 40 MHz sits two channels either side of the primary */
++			if (e->ht_chan_info.chan_width && e->ht_chan_info.secondary_chan_off == 1)
++				e->he_chan_info.center_chan_1 = e->ht_chan_info.primary_chan + 2;
++			else if (e->ht_chan_info.chan_width && e->ht_chan_info.secondary_chan_off == 3)
++				e->he_chan_info.center_chan_1 = e->ht_chan_info.primary_chan - 2;
++			else
++				e->he_chan_info.center_chan_1 = e->ht_chan_info.primary_chan;
++		}
++
+ 		return;
++	}
+ 
+ 	/* VHT Operation Info present */
+ 	if (ie[1] & 0x40)

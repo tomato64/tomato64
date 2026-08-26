@@ -1,0 +1,35 @@
+diff --git a/iwinfo_nl80211.c b/iwinfo_nl80211.c
+index 1dd6a67..b777deb 100644
+--- a/iwinfo_nl80211.c
++++ b/iwinfo_nl80211.c
+@@ -2761,6 +2761,30 @@ static void nl80211_get_scanlist_ie(struct nlattr **bss,
+ 				e->vht_chan_info.chan_width = ie[2];
+ 				e->vht_chan_info.center_chan_1 = ie[3];
+ 				e->vht_chan_info.center_chan_2 = ie[4];
++
++				/*
++				 * Channel width 2 (160 MHz) and 3 (80+80 MHz) were
++				 * deprecated in 802.11-2016: an AP now advertises
++				 * width 1 and puts the 80 MHz centre in CCFS0 and the
++				 * wider centre in CCFS1. Without this a 160 MHz BSS
++				 * reads as 80 MHz, drawn half its real width and
++				 * centred in the wrong place.
++				 */
++				if (e->vht_chan_info.chan_width == 1 &&
++				    e->vht_chan_info.center_chan_2) {
++					int seg0 = e->vht_chan_info.center_chan_1;
++					int seg1 = e->vht_chan_info.center_chan_2;
++					int diff = (seg1 > seg0) ? (seg1 - seg0) : (seg0 - seg1);
++
++					if (diff == 8) {
++						e->vht_chan_info.chan_width = 2;
++						e->vht_chan_info.center_chan_1 = seg1;
++						e->vht_chan_info.center_chan_2 = 0;
++					}
++					else if (diff > 16) {
++						e->vht_chan_info.chan_width = 3;
++					}
++				}
+ 			}
+ 			break;
+ 		case 255: /* Extension Tag*/

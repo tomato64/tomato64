@@ -916,9 +916,146 @@ next_info:
 	return 1;
 }
 
+#ifdef TOMATO64
+#define WLSCAN_MAX_SEEN	256	/* upper bound on the BSSes we de-duplicate across radios */
+
+struct wlscan_ctx {
+	char comma;
+	int nseen;
+	int nrefused;
+	char refused[64];	/* bands the kernel would not let us scan, for the GUI */
+	char seen[WLSCAN_MAX_SEEN][18];
+};
+
+/*
+ * Note a radio the kernel refused to scan
+ *
+ * Look up which band it sits on so the message can name it, rather than making
+ * the user work out which of their radios went quiet.
+ */
+static void wlscan_note_refused(struct wlscan_ctx *ctx, const char *ifname)
+{
+	int channel, mhz, nbw, noise;
+	float rate;
+	const char *band;
+	char entry[8];
+
+	if (wlhelper_get_channel_stats(ifname, &channel, &mhz, &nbw, &noise, &rate, NULL, NULL, 0) != 0)
+		return;
+
+	if (mhz >= 2400 && mhz < 2500)
+		band = "2.4";
+	else if (mhz >= 5925)
+		band = "6";
+	else
+		band = "5";
+
+	snprintf(entry, sizeof(entry), "%s GHz", band);
+	if (strstr(ctx->refused, entry) != NULL)
+		return;
+
+	if (ctx->nrefused)
+		strlcat(ctx->refused, ", ", sizeof(ctx->refused));
+
+	strlcat(ctx->refused, entry, sizeof(ctx->refused));
+	ctx->nrefused++;
+}
+
+/* returns 1 if this BSSID was already reported by an earlier radio */
+static int wlscan_seen(struct wlscan_ctx *ctx, const char *bssid)
+{
+	int i;
+
+	/* iwinfo always formats a BSSID in upper case, so a plain compare is enough */
+	for (i = 0; i < ctx->nseen; i++) {
+		if (strcmp(ctx->seen[i], bssid) == 0)
+			return 1;
+	}
+
+	if (ctx->nseen < WLSCAN_MAX_SEEN)
+		strlcpy(ctx->seen[ctx->nseen++], bssid, sizeof(ctx->seen[0]));
+
+	return 0;
+}
+
+/* Callback for print_wlscan, emits one row of wlscandata */
+static int print_wlscan_entry(const struct wlhelper_scan_entry *e, void *user_data)
+{
+	struct wlscan_ctx *ctx = (struct wlscan_ctx *)user_data;
+	char *ssid;
+
+	/*
+	 * iwinfo reports an unknown channel as 0 and an unknown signal as 0 dBm.
+	 * Neither can be placed on the chart, so drop those BSSes rather than
+	 * drawing them at channel 0 with a full height ellipse.
+	 */
+	if ((e->channel <= 0) || (e->signal >= 0))
+		return 0; /* Continue iteration */
+
+	/* Radios overlap: a 2.4/5 GHz neighbour is seen by more than one of ours */
+	if (wlscan_seen(ctx, e->bssid))
+		return 0; /* Continue iteration */
+
+	/* Escapes quotes, backslashes and anything non-ASCII, NULL if not valid UTF-8 */
+	ssid = utf8_to_js_string(e->ssid);
+
+	/*
+	 * Same twelve fields as the Broadcom path above. The trailing BSS
+	 * capability bitmap is Broadcom specific and unused by the GUI, so it is
+	 * reported as 0 here.
+	 */
+	web_printf("%c['%s','%s',%d,%d,%d,%d,'%s','%s','%s','%s',%d,0x0]",
+	           ctx->comma, e->bssid, ssid ? ssid : "",
+	           e->signal, e->channel, e->width, (e->quality < 0) ? 0 : e->quality,
+	           e->proto, e->security, e->cipher, e->band, e->center_chan);
+	ctx->comma = ',';
+
+	free(ssid);
+
+	return 0; /* Continue iteration */
+}
+
+/* returns the number of radios surveyed */
+static int print_wlscan(struct wlscan_ctx *ctx)
+{
+	char ifname[BUF_SIZE_64];
+	int phycount, phy, iface, ifcount;
+	int scanned = 0;
+
+	phycount = wlhelper_count_phys();
+
+	for (phy = 0; phy < phycount; phy++) {
+		ifcount = wlhelper_get_iface_count(phy);
+
+		for (iface = 0; iface < ifcount && iface < 16; iface++) {
+			if (!wlhelper_is_iface_enabled(phy, iface))
+				continue;
+
+			wlhelper_get_ifname(phy, iface, ifname, sizeof(ifname));
+			if (!wlhelper_iface_exists(ifname))
+				continue;
+
+			/*
+			 * One scan per radio covers every BSS that radio can hear, so
+			 * stop at the first usable interface instead of repeating the
+			 * survey for each of its BSSIDs.
+			 */
+			if (wlhelper_foreach_scan_result(ifname, 0, print_wlscan_entry, ctx) == WLHELPER_SCAN_REFUSED)
+				wlscan_note_refused(ctx, ifname);
+
+			scanned++;
+			break;
+		}
+	}
+
+	return scanned;
+}
+#endif /* TOMATO64 */
+
 /* returns: ['bssid','ssid',channel,capabilities,rssi,noise,[rates,]],  or  [null,'error message'] */
 void asp_wlscan(int argc, char **argv)
 {
+#ifndef TOMATO64
 	scan_list_t rp;
 
 	memset(&rp, 0, sizeof(rp));
@@ -946,6 +1083,39 @@ void asp_wlscan(int argc, char **argv)
 	}
 
 	web_puts("];\n");
+#else /* TOMATO64 */
+	struct wlscan_ctx ctx;
+
+	memset(&ctx, 0, sizeof(ctx));
+	ctx.comma = ' ';
+
+	web_puts("\nwlscandata = [");
+
+	if (print_wlscan(&ctx) == 0) {
+		web_puts("[null,'Unable to start scan.']];\n");
+		return;
+	}
+
+	web_puts("];\n");
+
+	/*
+	 * The driver turned the scan down. DFS is much the most common reason -
+	 * outside ETSI a radio may not leave a channel that needs radar
+	 * monitoring, and under FCC rules every 160 MHz channel on 5 GHz covers
+	 * DFS sub-channels - but a scan already in flight or an interface that
+	 * will not come up land here too, so name the likely cause rather than
+	 * claiming to know it.
+	 */
+	web_puts("wlscanmsg = '");
+	if (ctx.nrefused)
+		web_printf("The %s band%s could not be scanned: the driver refused the request. "
+		           "This could be a result of using an FCC region, where a radio may not leave a channel that needs radar monitoring (DFS), "
+		           "and every 160 MHz channel on 5 GHz includes DFS sub-channels. "
+		           "Set Width to 80 MHz for this radio on <a href=\"basic-wireless.asp\">Basic: Wireless</a> to survey the band.",
+		           ctx.refused, (ctx.nrefused > 1) ? "s" : "");
+
+	web_puts("';\n");
+#endif /* TOMATO64 */
 }
 
 void wo_wlradio(char *url)
@@ -1173,24 +1343,95 @@ static int print_wlstats(int idx, int unit, int subunit, void *param)
 	return 0;
 }
 #else /* TOMATO64 */
+/*
+ * Name the configured security of one of our own APs
+ *
+ * A radio never hears its own BSSIDs, so the wireless survey has to describe
+ * them from configuration rather than from a scan. Use the same wording the
+ * scanned rows get, so an internal entry does not read differently from a
+ * neighbour running the same settings.
+ */
+static void wlstats_own_security(int phy, int iface, char *sec, size_t sec_size,
+                                 char *cipher, size_t cipher_size)
+{
+	static const struct { const char *nv; const char *name; } modes[] = {
+		{ "psk2",      "WPA2-Personal"      },
+		{ "sae",       "WPA3-Personal"      },
+		{ "sae-mixed", "WPA2/WPA3-Personal" },
+		{ "psk-mixed", "WPA/WPA2-Personal"  },
+		{ "psk",       "WPA-Personal"       },
+		{ "owe",       "OWE"                },
+		{ "none",      "NONE"               },
+	};
+	static const struct { const char *nv; const char *name; } ciphers[] = {
+		{ "ccmp256",   "AES-256"  },
+		{ "gcmp256",   "GCMP-256" },
+		{ "tkip+ccmp", "TKIP+AES" },
+		{ "ccmp",      "AES"      },
+		{ "gcmp",      "GCMP"     },
+		{ "tkip",      "TKIP"     },
+	};
+	char key[BUF_SIZE_64];
+	char *enc, *cip;
+	unsigned int i;
+
+	snprintf(key, sizeof(key), "wifi_phy%diface%d_encryption", phy, iface);
+	enc = nvram_safe_get(key);
+	snprintf(key, sizeof(key), "wifi_phy%diface%d_cipher", phy, iface);
+	cip = nvram_safe_get(key);
+
+	snprintf(sec, sec_size, "%s", "NONE");
+	for (i = 0; i < ASIZE(modes); i++) {
+		if (strcmp(enc, modes[i].nv) == 0) {
+			snprintf(sec, sec_size, "%s", modes[i].name);
+			break;
+		}
+	}
+
+	snprintf(cipher, cipher_size, "%s", "NONE");
+	for (i = 0; i < ASIZE(ciphers); i++) {
+		if (strcmp(cip, ciphers[i].nv) == 0) {
+			snprintf(cipher, cipher_size, "%s", ciphers[i].name);
+			return;
+		}
+	}
+
+	/* "auto", or unset: whatever the selected mode negotiates by default */
+	if (!*enc || (strcmp(enc, "none") == 0))
+		return;
+
+	snprintf(cipher, cipher_size, "%s",
+	         ((strcmp(enc, "psk") == 0) || (strcmp(enc, "psk-mixed") == 0)) ? "TKIP+AES" : "AES");
+}
+
 /* Callback for print_wlstats */
 static int print_wlstats_callback(int phy, int iface, const char *ifname, void *user_data)
 {
 	int *first_entry = (int *)user_data;
-	int channel, mhz, nbw, noise;
+	int channel, mhz, nbw, noise, center;
 	float rate;
+	char proto[8];
+	char sec[32], cipher[16];
 
 	/* Get channel statistics */
-	if (wlhelper_get_channel_stats(ifname, &channel, &mhz, &nbw, &noise, &rate) != 0)
+	if (wlhelper_get_channel_stats(ifname, &channel, &mhz, &nbw, &noise, &rate,
+	                               &center, proto, sizeof(proto)) != 0)
 		return 0; /* Skip this interface, continue iteration */
+
+	wlstats_own_security(phy, iface, sec, sizeof(sec), cipher, sizeof(cipher));
 
 	/* Print comma separator for all entries after the first */
 	if (*first_entry)
 		web_puts(",");
 
-	/* Output format: { radio: 1, client: 0, channel: X, mhz: Y, rate: Z, nbw: N, rssi: 0, noise: M, intf: 0} */
-	web_printf("{ radio: 1, client: 0, channel: %d, mhz: %d, rate: %.1f, nbw: %d, rssi: 0, noise: %d, intf: 0}",
-	           channel, mhz, rate, nbw, noise);
+	/*
+	 * Output format: { radio: 1, client: 0, channel: X, mhz: Y, rate: Z, nbw: N, rssi: 0, noise: M, intf: 0}
+	 * The trailing fields are Tomato64 additions for the wireless survey and
+	 * are keyed by name, so they do not disturb the existing readers.
+	 */
+	web_printf("{ radio: 1, client: 0, channel: %d, mhz: %d, rate: %.1f, nbw: %d, rssi: 0, noise: %d, intf: 0"
+	           ", center: %d, proto: '%s', security: '%s', cipher: '%s'}",
+	           channel, mhz, rate, nbw, noise, center, proto, sec, cipher);
 
 	*first_entry = 1;
 	return 0; /* Continue iteration */

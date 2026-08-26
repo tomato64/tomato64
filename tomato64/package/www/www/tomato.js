@@ -2617,10 +2617,8 @@ function navi() {
 			['Ping',			'ping.asp'],
 			['Traceroute',			'trace.asp'],
 			['System Commands',		'shell.asp'],
-/* TOMATO64-REMOVE-BEGIN */
-			['Wireless Survey',		'survey.asp'],
-/* TOMATO64-REMOVE-END */
 /* TOMATO64-WIFI-BEGIN */
+			['Wireless Survey',		'survey.asp'],
 /* QRCODE-BEGIN */
 			['WiFi QR Codes',		'qr.asp'],
 /* QRCODE-END */

@@ -1,0 +1,31 @@
+--- a/iwinfo_nl80211.c
++++ b/iwinfo_nl80211.c
+@@ -2755,12 +2755,24 @@
+ static void nl80211_get_scanlist_eht_operation(unsigned char len,
+ 		unsigned char *ie, struct iwinfo_scanlist_entry *e)
+ {
+-	/* EHT Operation Info not present */
+-	if (!(ie[0] & 0x01))
+-		return;
++	/*
++	 * The EHT Operation Information field is optional: an AP whose EHT
++	 * channel is already described by its HE operation element may leave it
++	 * out. The element being here at all is what marks the BSS as EHT, so
++	 * inherit that geometry rather than discarding the fact - otherwise an
++	 * 802.11be AP is indistinguishable from an 802.11ax one. HE operation
++	 * (ext 36) is ordered before EHT (ext 106), so it is already parsed, and
++	 * it already uses the same channel width encoding.
++	 */
++	if (!(ie[0] & 0x01) || len < 8) {
++		if (e->he_chan_info.center_chan_1) {
++			e->eht_chan_info.chan_width = e->he_chan_info.chan_width;
++			e->eht_chan_info.center_chan_1 = e->he_chan_info.center_chan_1;
++			e->eht_chan_info.center_chan_2 = e->he_chan_info.center_chan_2;
++		}
+ 
+-	if (len < 8)
+ 		return;
++	}
+ 
+ 	e->eht_chan_info.chan_width = ie[5] & 0x07;
+ 	e->eht_chan_info.center_chan_1 = ie[6];

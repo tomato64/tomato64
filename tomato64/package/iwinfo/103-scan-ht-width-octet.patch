@@ -1,0 +1,17 @@
+--- a/iwinfo_nl80211.c
++++ b/iwinfo_nl80211.c
+@@ -2821,7 +2821,13 @@
+ 			if (ie[1] >= 3) {
+ 				e->ht_chan_info.primary_chan = ie[2];
+ 				e->ht_chan_info.secondary_chan_off = ie[3] & 0x3;
+-				e->ht_chan_info.chan_width = (ie[4] & 0x4)>>2;
++				/*
++				 * Secondary Channel Offset and STA Channel Width are both
++				 * in HT Operation Information octet 0, not one each. Read
++				 * from ie[4] this picked up Nongreenfield HT STAs Present
++				 * instead, making the reported HT width meaningless.
++				 */
++				e->ht_chan_info.chan_width = (ie[3] & 0x4)>>2;
+ 			}
+ 			break;
+ 		case 192: /* VHT operation */
