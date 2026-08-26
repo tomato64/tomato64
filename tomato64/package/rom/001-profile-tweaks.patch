@@ -1,0 +1,19 @@
+diff -Naur rom.orig/rom/etc/profile rom/rom/etc/profile
+--- rom.orig/rom/etc/profile	2026-08-25 22:19:09.990938253 -0600
++++ rom/rom/etc/profile	2026-08-25 22:19:10.002938206 -0600
+@@ -1,13 +1,11 @@
+ export PATH="/bin:/usr/bin:/sbin:/usr/sbin:/home/$USER:/mmc/sbin:/mmc/bin:/mmc/usr/sbin:/mmc/usr/bin:/opt/sbin:/opt/bin:/opt/usr/sbin:/opt/usr/bin:`nvram get env_path`"
+ export PS1='\u@\h:\w\$ '
+ 
++[ "$PWD" = "/tmp/home/root" ] && cd /root
++
+ alias l='ls -lFA'
+ alias ll='ls -lF'
+ 
+-ldd() {
+-	LD_TRACE_LOADED_OBJECTS=1 $*;
+-}
+-
+ [ -f /jffs/etc/profile ] && . /jffs/etc/profile
+ [ -f /opt/etc/profile ] && . /opt/etc/profile
+ 
