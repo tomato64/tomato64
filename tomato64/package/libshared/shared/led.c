@@ -1176,8 +1176,10 @@ int do_led(int which, int mode)
 		break;
 	case MODEL_DIR620C1:
 		b = dir620c1[which];
+		break;
 	case MODEL_TDN60:
 		b = tdn60[which];
+		break;
 	case MODEL_TDN6:
 		b = tdn6[which];
 		break;
