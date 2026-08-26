@@ -17,27 +17,47 @@
  *
  * $Id: wl.c 470880 2014-04-16 22:00:58Z $
  */
+
+/*
+ * Wireless network adapter utilities
+ *
+ * Copyright 2005, Broadcom Corporation
+ * All Rights Reserved.
+ * 
+ * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ *
+ * $Id: wl.c,v 1.1.1.9 2005/03/07 07:31:20 kanki Exp $
+ */
+
 #include <typedefs.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/ioctl.h>
-#if	defined(__ECOS)
+#if defined(__ECOS)
 #include <sys/socket.h>
 #endif
 #include <net/if.h>
 
 #include <bcmutils.h>
 #include <wlutils.h>
+#ifdef TCONFIG_BCMARM
 #include <bcmconfig.h>
+#else
+#include <wlioctl.h>
+#endif
 
-int
-wl_probe(char *name)
+#include "shared.h"
+
+int wl_probe(char *name)
 {
 	int ret, val;
 
-#if defined(linux) || defined(__ECOS)
+#if defined(linux) || (defined(TCONFIG_BCMARM) && defined(__ECOS))
 	char buf[DEV_TYPE_LEN];
 	if ((ret = wl_get_dev_type(name, buf, DEV_TYPE_LEN)) < 0)
 		return ret;
@@ -57,10 +77,63 @@ wl_probe(char *name)
 	return ret;
 }
 
+#ifndef TCONFIG_BCMARM
+// xref: nas,wlconf,
+int wl_set_val(char *name, char *var, void *val, int len)
+{
+	char buf[WLC_IOCTL_SMLEN];
+	unsigned int buf_len;
+
+	/* check for overflow */
+	if ((buf_len = strlen(var)) + 1 + len > sizeof(buf))
+		return -1;
+	
+	strlcpy(buf, var, sizeof(buf));
+	buf_len += 1;
+
+	/* append int value onto the end of the name string */
+	memcpy(&buf[buf_len], val, len);
+	buf_len += len;
+
+	return wl_ioctl(name, WLC_SET_VAR, buf, buf_len);
+}
+
+// xref: nas,wlconf,
+int wl_get_val(char *name, char *var, void *val, int len)
+{
+	char buf[WLC_IOCTL_SMLEN];
+	int ret;
+
+	/* check for overflow */
+	if ((strlen(var) + 1 > sizeof(buf)) || ((unsigned int) len > sizeof(buf)))
+		return -1;
+	
+	strlcpy(buf, var, sizeof(buf));
+	if ((ret = wl_ioctl(name, WLC_GET_VAR, buf, sizeof(buf))))
+		return ret;
+
+	memcpy(val, buf, len);
+	return 0;
+}
+
+// xref: wlconf,
+int wl_set_int(char *name, char *var, int val)
+{
+	return wl_set_val(name, var, &val, sizeof(val));
+}
+
+#if 0	// not used
+int wl_get_int(char *name, char *var, int *val)
+{
+	return wl_get_val(name, var, val, sizeof(*val));
+}
+#endif
+#endif /* !TCONFIG_BCMARM */
+
+
 #ifdef __CONFIG_DHDAP__
 #include <dhdioctl.h>
-int
-dhd_ioctl(char *name, int cmd, void *buf, int len)
+int dhd_ioctl(char *name, int cmd, void *buf, int len)
 {
 	struct ifreq ifr;
 	dhd_ioctl_t ioc;
@@ -70,7 +143,7 @@ dhd_ioctl(char *name, int cmd, void *buf, int len)
 
 	/* open socket to kernel */
 	if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		perror("socket");
+		logerr(__FUNCTION__, __LINE__, "socket");
 		return -1;
 	}
 
@@ -89,8 +162,7 @@ dhd_ioctl(char *name, int cmd, void *buf, int len)
 	ioc.used = 0;
 	ioc.needed = 0;
 
-	strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name) - 1);
-	ifr.ifr_name[sizeof(ifr.ifr_name) - 1] = '\0';
+	strlcpy(ifr.ifr_name, name, IFNAMSIZ);
 
 	ifr.ifr_data = (caddr_t) &ioc;
 	if ((ret = ioctl(s, SIOCDEVPRIVATE, &ifr)) < 0)
@@ -101,7 +173,7 @@ dhd_ioctl(char *name, int cmd, void *buf, int len)
 			} else {
 				snprintf(buffer, sizeof(buffer), "%s: cmd=%d", name, cmd);
 			}
-			perror(buffer);
+			logerr(__FUNCTION__, __LINE__, buffer);
 		}
 	/* cleanup */
 	close(s);
@@ -114,8 +186,7 @@ dhd_ioctl(char *name, int cmd, void *buf, int len)
  * @return	0       if using dhd driver
  *          <0      otherwise
  */
-int
-dhd_probe(char *name)
+int dhd_probe(char *name)
 {
 	int ret, val;
 	val = 0;
@@ -127,7 +198,7 @@ dhd_probe(char *name)
 		ret = 0;
 	} else {
 		if (ret < 0) {
-			perror("dhd_ioctl");
+			logerr(__FUNCTION__, __LINE__, "dhd_ioctl");
 		}
 		ret = 1; /* default: WL mode */
 	}
@@ -135,13 +206,20 @@ dhd_probe(char *name)
 }
 #endif /* __CONFIG_DHDAP__ */
 
-int
-wl_iovar_getbuf(char *ifname, char *iovar, void *param, int paramlen, void *bufptr, int buflen)
+#ifndef TCONFIG_BCMARM
+#ifndef WL_BSS_INFO_VERSION
+#error WL_BSS_INFO_VERSION
+#endif
+#endif
+#if defined(TCONFIG_BCMARM) || (WL_BSS_INFO_VERSION >= 108)
+int wl_iovar_getbuf(char *ifname, char *iovar, void *param, int paramlen, void *bufptr, int buflen)
 {
 	int err;
 	uint namelen;
 	int iolen;
+#ifdef TCONFIG_BCMARM
 	uint wlc_cmd = WLC_GET_VAR;
+#endif
 
 	namelen = strlen(iovar) + 1;	 /* length of iovar name plus null */
 	iolen = namelen + paramlen;
@@ -153,14 +231,17 @@ wl_iovar_getbuf(char *ifname, char *iovar, void *param, int paramlen, void *bufp
 	memcpy(bufptr, iovar, namelen);	/* copy iovar name including null */
 	memcpy((int8*)bufptr + namelen, param, paramlen);
 
+#ifdef TCONFIG_BCMARM
 	err = wl_ioctl(ifname, wlc_cmd, bufptr, buflen);
+#else
+	err = wl_ioctl(ifname, WLC_GET_VAR, bufptr, buflen);
+#endif
 
 	return (err);
 }
 
 #ifdef __CONFIG_DHDAP__
-int
-dhd_iovar_setbuf(char *ifname, char *iovar, void *param, int paramlen, void *bufptr, unsigned int buflen)
+int dhd_iovar_setbuf(char *ifname, char *iovar, void *param, int paramlen, void *bufptr, unsigned int buflen)
 {
 	uint namelen;
 	uint iolen;
@@ -179,8 +260,7 @@ dhd_iovar_setbuf(char *ifname, char *iovar, void *param, int paramlen, void *buf
 }
 #endif /* __CONFIG_DHDAP__ */
 
-int
-wl_iovar_setbuf(char *ifname, char *iovar, void *param, int paramlen, void *bufptr, int buflen)
+int wl_iovar_setbuf(char *ifname, char *iovar, void *param, int paramlen, void *bufptr, int buflen)
 {
 	uint namelen;
 	int iolen;
@@ -199,8 +279,7 @@ wl_iovar_setbuf(char *ifname, char *iovar, void *param, int paramlen, void *bufp
 }
 
 #ifdef __CONFIG_DHDAP__
-int
-dhd_iovar_set(char *ifname, char *iovar, void *param, int paramlen)
+int dhd_iovar_set(char *ifname, char *iovar, void *param, int paramlen)
 {
 	char smbuf[WLC_IOCTL_SMLEN];
 
@@ -208,16 +287,14 @@ dhd_iovar_set(char *ifname, char *iovar, void *param, int paramlen)
 }
 #endif /* __CONFIG_DHDAP__ */
 
-int
-wl_iovar_set(char *ifname, char *iovar, void *param, int paramlen)
+int wl_iovar_set(char *ifname, char *iovar, void *param, int paramlen)
 {
 	char smbuf[WLC_IOCTL_SMLEN];
 
 	return wl_iovar_setbuf(ifname, iovar, param, paramlen, smbuf, sizeof(smbuf));
 }
 
-int
-wl_iovar_get(char *ifname, char *iovar, void *bufptr, int buflen)
+int wl_iovar_get(char *ifname, char *iovar, void *bufptr, int buflen)
 {
 	char smbuf[WLC_IOCTL_SMLEN];
 	int ret;
@@ -239,8 +316,7 @@ wl_iovar_get(char *ifname, char *iovar, void *bufptr, int buflen)
  * set named driver variable to int value
  * calling example: dhd_iovar_setint(ifname, "arate", rate)
 */
-int
-dhd_iovar_setint(char *ifname, char *iovar, int val)
+int dhd_iovar_setint(char *ifname, char *iovar, int val)
 {
 	return dhd_iovar_set(ifname, iovar, &val, sizeof(val));
 }
@@ -250,8 +326,7 @@ dhd_iovar_setint(char *ifname, char *iovar, int val)
  * set named driver variable to int value
  * calling example: wl_iovar_setint(ifname, "arate", rate)
 */
-int
-wl_iovar_setint(char *ifname, char *iovar, int val)
+int wl_iovar_setint(char *ifname, char *iovar, int val)
 {
 	return wl_iovar_set(ifname, iovar, &val, sizeof(val));
 }
@@ -260,8 +335,7 @@ wl_iovar_setint(char *ifname, char *iovar, int val)
  * get named driver variable to int value and return error indication
  * calling example: wl_iovar_getint(ifname, "arate", &rate)
  */
-int
-wl_iovar_getint(char *ifname, char *iovar, int *val)
+int wl_iovar_getint(char *ifname, char *iovar, int *val)
 {
 	return wl_iovar_get(ifname, iovar, val, sizeof(int));
 }
@@ -269,9 +343,7 @@ wl_iovar_getint(char *ifname, char *iovar, int *val)
 /*
  * format a bsscfg indexed iovar buffer
  */
-static int
-wl_bssiovar_mkbuf(char *iovar, int bssidx, void *param, int paramlen, void *bufptr, int buflen,
-                  int *plen)
+static int wl_bssiovar_mkbuf(char *iovar, int bssidx, void *param, int paramlen, void *bufptr, int buflen, int *plen)
 {
 	char *prefix = "bsscfg:";
 	int8* p;
@@ -314,12 +386,14 @@ wl_bssiovar_mkbuf(char *iovar, int bssidx, void *param, int paramlen, void *bufp
 /*
  * set named & bss indexed driver variable to buffer value
  */
-int
-wl_bssiovar_setbuf(char *ifname, char *iovar, int bssidx, void *param, int paramlen, void *bufptr,
-                   int buflen)
+int wl_bssiovar_setbuf(char *ifname, char *iovar, int bssidx, void *param, int paramlen, void *bufptr, int buflen)
 {
 	int err;
+#ifdef TCONFIG_BCMARM
 	int iolen;
+#else
+	uint iolen;
+#endif
 
 	err = wl_bssiovar_mkbuf(iovar, bssidx, param, paramlen, bufptr, buflen, &iolen);
 	if (err)
@@ -332,9 +406,7 @@ wl_bssiovar_setbuf(char *ifname, char *iovar, int bssidx, void *param, int param
 /*
  * set named & bss indexed driver variable to buffer value
  */
-int
-dhd_bssiovar_setbuf(char *ifname, char *iovar, int bssidx, void *param, int paramlen, void *bufptr,
-                   int buflen)
+int dhd_bssiovar_setbuf(char *ifname, char *iovar, int bssidx, void *param, int paramlen, void *bufptr, int buflen)
 {
 	int err;
 	int iolen;
@@ -350,12 +422,14 @@ dhd_bssiovar_setbuf(char *ifname, char *iovar, int bssidx, void *param, int para
 /*
  * get named & bss indexed driver variable buffer value
  */
-int
-wl_bssiovar_getbuf(char *ifname, char *iovar, int bssidx, void *param, int paramlen, void *bufptr,
-                   int buflen)
+int wl_bssiovar_getbuf(char *ifname, char *iovar, int bssidx, void *param, int paramlen, void *bufptr, int buflen)
 {
 	int err;
+#ifdef TCONFIG_BCMARM
 	int iolen;
+#else
+	uint iolen;
+#endif
 
 	err = wl_bssiovar_mkbuf(iovar, bssidx, param, paramlen, bufptr, buflen, &iolen);
 	if (err)
@@ -367,8 +441,7 @@ wl_bssiovar_getbuf(char *ifname, char *iovar, int bssidx, void *param, int param
 /*
  * set named & bss indexed driver variable to buffer value
  */
-int
-wl_bssiovar_set(char *ifname, char *iovar, int bssidx, void *param, int paramlen)
+int wl_bssiovar_set(char *ifname, char *iovar, int bssidx, void *param, int paramlen)
 {
 	char smbuf[WLC_IOCTL_SMLEN];
 
@@ -379,8 +452,7 @@ wl_bssiovar_set(char *ifname, char *iovar, int bssidx, void *param, int paramlen
 /*
  * set named & bss indexed driver variable to buffer value
  */
-int
-dhd_bssiovar_set(char *ifname, char *iovar, int bssidx, void *param, int paramlen)
+int dhd_bssiovar_set(char *ifname, char *iovar, int bssidx, void *param, int paramlen)
 {
 	char smbuf[WLC_IOCTL_SMLEN];
 
@@ -391,8 +463,7 @@ dhd_bssiovar_set(char *ifname, char *iovar, int bssidx, void *param, int paramle
 /*
  * get named & bss indexed driver variable buffer value
  */
-int
-wl_bssiovar_get(char *ifname, char *iovar, int bssidx, void *outbuf, int len)
+int wl_bssiovar_get(char *ifname, char *iovar, int bssidx, void *outbuf, int len)
 {
 	char smbuf[WLC_IOCTL_SMLEN];
 	int err;
@@ -413,8 +484,7 @@ wl_bssiovar_get(char *ifname, char *iovar, int bssidx, void *outbuf, int len)
 /*
  * set named & bss indexed driver variable to int value
  */
-int
-wl_bssiovar_setint(char *ifname, char *iovar, int bssidx, int val)
+int wl_bssiovar_setint(char *ifname, char *iovar, int bssidx, int val)
 {
 	return wl_bssiovar_set(ifname, iovar, bssidx, &val, sizeof(int));
 }
@@ -423,19 +493,18 @@ wl_bssiovar_setint(char *ifname, char *iovar, int bssidx, int val)
 /*
  * set named & bss indexed driver variable to int value
  */
-int
-dhd_bssiovar_setint(char *ifname, char *iovar, int bssidx, int val)
+int dhd_bssiovar_setint(char *ifname, char *iovar, int bssidx, int val)
 {
 	return dhd_bssiovar_set(ifname, iovar, bssidx, &val, sizeof(int));
 }
 #endif
+#endif /* TCONFIG_BCMARM || WL_BSS_INFO_VERSION >= 108 */
 
 /*
-void
-wl_printlasterror(char *name)
+void wl_printlasterror(char *name)
 {
 	char err_buf[WLC_IOCTL_SMLEN];
-	strcpy(err_buf, "bcmerrstr");
+	strlcpy(err_buf, "bcmerrstr", sizeof(err_buf));
 
 	fprintf(stderr, "Error: ");
 	if ( wl_ioctl(name, WLC_GET_VAR, err_buf, sizeof (err_buf)) != 0)
