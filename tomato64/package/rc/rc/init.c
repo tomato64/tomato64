@@ -19,6 +19,7 @@
 
 
 #include "rc.h"
+#include <defaults.h>
 #ifdef TCONFIG_AC3200
 #include "shared.h"
 #endif
@@ -56,9 +57,6 @@
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"init_debug"
 
-#ifdef TCONFIG_BCMARM
-extern struct nvram_tuple router_defaults[];
-#endif /* TCONFIG_BCMARM */
 int restore_defaults_fb = 0;
 
 
