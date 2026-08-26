@@ -19,6 +19,7 @@
 
 #ifndef _shutils_h_
 #define _shutils_h_
+#include <stdio.h>
 #include <shared.h>
 
 #define sin_addr(s) (((struct sockaddr_in *)(s))->sin_addr)
