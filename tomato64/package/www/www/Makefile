@@ -678,6 +678,12 @@ endif
 
 # Exclude features not supported Tomato64
 ifeq ($(TCONFIG_TOMATO64),y)
+
+	rm -f $(INSTALLDIR)/www/advanced-wireless.asp
+	rm -f $(INSTALLDIR)/www/advanced-wlanvifs.asp
+	rm -f $(INSTALLDIR)/www/basic-wfilter.asp
+	rm -f $(INSTALLDIR)/www/admin-buttons.asp
+
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/at.css -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/bwm-common.js -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
