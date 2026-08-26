@@ -1384,9 +1384,6 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TCONFIG_DMZ
 	{ "dmz_enable",			"0"				},
 	{ "dmz_ipaddr",			"0"				},
-#ifdef TCONFIG_DMZMAC
-	{ "dmz_macaddr",		""				},
-#endif
 	{ "dmz_sip",			""				},
 	{ "dmz_ra",			"1"				},
 #endif /* TCONFIG_DMZ */
