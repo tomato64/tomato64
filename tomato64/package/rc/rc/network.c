@@ -392,11 +392,15 @@ static int wlconf(char *ifname, int unit, int subunit)
 
 	logmsg(LOG_DEBUG, "*** %s: wlconf: ifname %s unit %d subunit %d", __FUNCTION__, ifname, unit, subunit);
 
-#ifndef TCONFIG_BCMARM
-	/* Tomato MIPS needs a little help here: wlconf() will not validate/restore all per-interface related variables right now; */
+#ifdef TCONFIG_MIPS_RTAC
+	/*
+	 * RT-AC uses a prebuilt wlconf which does not perform the full
+	 * per-interface defaults validation done by the RT/RT-N sources.
+	 * Keep the nvram applet pre-validation for this platform only.
+	 */
 	snprintf(wl, sizeof(wl), "--wl%d", unit);
-	eval("nvram", "validate", wl); /* sync wl_ and wlX ; (MIPS does not use nvram_tuple router_defaults; ARM branch does ... ) */
-	memset(wl, 0, sizeof(wl)); /* reset */
+	eval("nvram", "validate", wl);
+	memset(wl, 0, sizeof(wl));
 #endif
 
 #ifdef TCONFIG_BCMARM
