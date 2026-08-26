@@ -47,7 +47,9 @@ typedef struct wsec_info_s {
 	unsigned int auth;			/* shared key authentication optional (0) or required (1) */
 	unsigned int akm;			/* authentication mode */
 	unsigned int wsec;			/* encryption */
+#ifdef TCONFIG_BCMARM
 	unsigned int mfp;			/* mfp */
+#endif
 	unsigned int flags;			/* flags */
 	char osifname[IFNAMSIZ];		/* interface name */
 	unsigned char ea[ETHER_ADDR_LEN];	/* interface hw address */
@@ -83,9 +85,13 @@ extern unsigned char *get_wlmacstr_by_unit(char *unit);
 extern int get_wlname_by_mac(unsigned char *mac, char *wlname);
 extern char *get_ifname_by_wlmac(unsigned char *mac, char *name);
 extern int get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname);
+#ifdef TCONFIG_RTNPLUS
 extern bool wl_wlif_is_psta(char *ifname);
+#endif
+#ifdef TCONFIG_BCMARM
 extern bool wl_wlif_is_dwds(char *ifname);
 extern bool wl_wlif_is_psr_ap(char *ifname);
 extern bool wl_wlif_is_wet_ap(char *ifname);
+#endif
 
 #endif /* _wlif_utils_h_ */
