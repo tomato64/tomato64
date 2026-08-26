@@ -30,9 +30,9 @@
 #else
  #include <ctype.h>
  #include <bcmnvram.h>
- #include "defaults.h"
 #endif
 #include <shared.h>
+#include "defaults.h"
 #if MWAN_MAX < 1 || MWAN_MAX > 8
  #error "Unsupported MWAN_MAX range"
 #endif
@@ -54,22 +54,11 @@
 #endif
 
 /*
- * ARM uses Broadcom's larger nvram_tuple while MIPS keeps the compact
- * two-pointer defaults_t used by the nvram utility.  The common tables
- * intentionally initialize only name/key and value; all remaining ARM
- * nvram_tuple members are zero-initialized by C.
+ * Use Broadcom's nvram_tuple for all default tables. The common two-field
+ * initializers set name and value; next is zero-initialized by C.
  */
-#ifdef TCONFIG_BCMARM
- #define DEFAULTS_TYPE struct nvram_tuple
- #define DEFAULTS_CONST
- #define DEFAULTS_MAIN router_defaults
-#else
- #define DEFAULTS_TYPE defaults_t
- #define DEFAULTS_CONST const
- #define DEFAULTS_MAIN defaults
-#endif
 
-DEFAULTS_CONST DEFAULTS_TYPE rstats_defaults[] = {
+struct nvram_tuple rstats_defaults[] = {
 	{ "rstats_path",		""				},
 	{ "rstats_stime",		"48"				},
 	{ "rstats_offset",		"1"				},
@@ -80,7 +69,7 @@ DEFAULTS_CONST DEFAULTS_TYPE rstats_defaults[] = {
 	{ NULL, NULL }
 };
 
-DEFAULTS_CONST DEFAULTS_TYPE cstats_defaults[] = {
+struct nvram_tuple cstats_defaults[] = {
 	{ "cstats_path",		""				},
 	{ "cstats_stime",		"48"				},
 	{ "cstats_offset",		"1"				},
@@ -94,7 +83,7 @@ DEFAULTS_CONST DEFAULTS_TYPE cstats_defaults[] = {
 };
 
 #ifdef TCONFIG_FTP
-DEFAULTS_CONST DEFAULTS_TYPE ftp_defaults[] = {
+struct nvram_tuple ftp_defaults[] = {
 	{ "ftp_super",			"0"				},
 	{ "ftp_anonymous",		"0"				},
 	{ "ftp_dirlist",		"0"				},
@@ -118,7 +107,7 @@ DEFAULTS_CONST DEFAULTS_TYPE ftp_defaults[] = {
 #endif /* TCONFIG_FTP */
 
 #ifdef TCONFIG_SNMP
-DEFAULTS_CONST DEFAULTS_TYPE snmp_defaults[] = {
+struct nvram_tuple snmp_defaults[] = {
 	{ "snmp_port",			"161"				},
 	{ "snmp_remote",		"0"				},
 	{ "snmp_remote_sip",		""				},
@@ -134,7 +123,7 @@ DEFAULTS_CONST DEFAULTS_TYPE snmp_defaults[] = {
 #define BRIDGE_BLOCK_UPNP(i) \
 	{ "upnp_lan" #i,		""				},
 
-DEFAULTS_CONST DEFAULTS_TYPE upnp_defaults[] = {
+struct nvram_tuple upnp_defaults[] = {
 	{ "upnp_secure",		"1"				},
 	{ "upnp_port",			"0"				},
 	{ "upnp_ssdp_interval",		"900"				},	/* SSDP interval */
@@ -193,7 +182,7 @@ DEFAULTS_CONST DEFAULTS_TYPE upnp_defaults[] = {
 };
 
 #ifdef TCONFIG_BCMBSD
-DEFAULTS_CONST DEFAULTS_TYPE bsd_defaults[] = {
+struct nvram_tuple bsd_defaults[] = {
 	{ "bsd_role", 		 	"3"				},	/* Band Steer Daemon; 0:Disable, 1:Primary, 2:Helper, 3:Standalone */
 	{ "bsd_hport", 		 	"9877"				},	/* BSD helper port */
 	{ "bsd_pport", 		 	"9878"				},	/* BSD Primary port */
@@ -657,7 +646,7 @@ DEFAULTS_CONST DEFAULTS_TYPE bsd_defaults[] = {
 	{"wg" #i "_prio",		""				},
 #endif /* TCONFIG_WIREGUARD */
 
-DEFAULTS_CONST DEFAULTS_TYPE DEFAULTS_MAIN[] = {
+struct nvram_tuple router_defaults[] = {
 	{ "restore_defaults",		"0"				},	/* Set to 0 to not restore defaults on boot */
 
 	/* LAN H/W parameters */
@@ -2451,15 +2440,6 @@ void nvram_restore_var(char *prefix, char *name)
 }
 
 #else /* TCONFIG_BCMARM */
-/*
- * Keep the historical MIPS router_defaults[] stub used by wlconf and
- * other Broadcom consumers.  The full compact defaults tables above
- * are exported by libshared for the MIPS nvram utility.
- */
-struct nvram_tuple router_defaults[] = {
-	{ NULL, NULL, 0 }
-};
-
 #ifdef CONFIG_BCMWL6
 /* Translates from, for example, wl0_ (or wl0.1_) to wl_. */
 /* Only single digits are currently supported */
