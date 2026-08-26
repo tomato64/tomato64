@@ -179,7 +179,27 @@ typedef struct {
  */
 #define WPS_EAP_ADDR			"127.0.0.1"
 #define WPS_UPNPDEV_ADDR		"127.0.0.1"
+#define WPS_UI_ADDR			"127.0.0.1"
 
 #define WPS_UPNPDEV_PORT		40000
+#define WPS_UI_PORT			40500
+
+/* WPS_UI definitions */
+#define WPS_UI_CMD_NONE			0
+#define WPS_UI_CMD_START		1
+#define WPS_UI_CMD_STOP			2
+
+#define WPS_UI_METHOD_NONE		0
+#define WPS_UI_METHOD_PIN		1
+#define WPS_UI_METHOD_PBC		2
+
+#define WPS_UI_ACT_NONE			0
+#define WPS_UI_ACT_ENROLL		1
+#define WPS_UI_ACT_CONFIGAP		2
+#define WPS_UI_ACT_ADDENROLLEE		3
+
+#define WPS_UI_PBC_NONE			0
+#define WPS_UI_PBC_HW			1
+#define WPS_UI_PBC_SW			2
 
 #endif	/* __SECURITY_IPC_H__ */
