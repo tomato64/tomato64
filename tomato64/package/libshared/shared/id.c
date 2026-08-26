@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <syslog.h>
 
 #include <bcmnvram.h>
 #include <bcmdevs.h>
