@@ -30,8 +30,10 @@
 /* Maximum  number of Traffic Management rules */
 #define MAX_NUM_TRF_MGMT_RULES 10
 
+#ifdef TCONFIG_BCMARM
 /* 20 DSCP + 0x0 default */
 #define MAX_NUM_TRF_MGMT_DWM_RULES 21
+#endif
 
 #if !defined(AUTOFW_PORT_DEPRECATED)
 /*
@@ -79,14 +81,18 @@ extern bool set_filter_url(int which, const netconf_urlfilter_t *start,
 extern bool del_filter_url(int which);
 #endif /* __CONFIG_URLFILTER__ */
 
+#if defined(TCONFIG_BCMARM) || defined(TRAFFIC_MGMT)
 extern bool valid_trf_mgmt_port(const netconf_trmgmt_t *trmgmt);
 extern bool set_trf_mgmt_port(char *prefix, int which, const netconf_trmgmt_t *trmgmt);
 extern bool get_trf_mgmt_port(char *prefix, int which, netconf_trmgmt_t *trmgmt);
 extern bool del_trf_mgmt_port(char *prefix, int which);
+#endif
 
+#ifdef TCONFIG_BCMARM
 extern bool set_trf_mgmt_dwm(char *prefix, int which, const netconf_trmgmt_t *trmgmt);
 extern bool get_trf_mgmt_dwm(char *prefix, int which, netconf_trmgmt_t *trmgmt);
 extern bool del_trf_mgmt_dwm(char *prefix, int which);
+#endif
 
 /*
 * WPA/WDS per link configuration. Parameters after 'auth' are

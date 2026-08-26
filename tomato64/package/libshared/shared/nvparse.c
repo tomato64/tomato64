@@ -35,7 +35,9 @@
 #include <bcmnvram.h>
 #include <shutils.h>
 #include <nvparse.h>
+#ifdef TCONFIG_BCMARM
 #include <bcmconfig.h>
+#endif
 
 char *
 safe_snprintf(char *str, int *len, const char *fmt, ...)
@@ -937,6 +939,7 @@ del_filter_url(int which)
  * string format: prot, dscp, priority, favored, enable
  * e.g.: wlx_tm_dwmx=0,8,4,1,1
  */
+#ifdef TCONFIG_BCMARM
 bool
 get_trf_mgmt_dwm(char *prefix, int which, netconf_trmgmt_t *trm_dwm)
 {
@@ -982,11 +985,13 @@ get_trf_mgmt_dwm(char *prefix, int which, netconf_trmgmt_t *trm_dwm)
 
 	return TRUE;
 }
+#endif /* TCONFIG_BCMARM */
 
 /*
  * Parser for traffic management filter settings,  convert string to  binary structure
  * string format: proto,sr_port,dst_port,mac_adr,priority,favored,enable
  */
+#if defined(TCONFIG_BCMARM) || defined(TRAFFIC_MGMT)
 bool
 get_trf_mgmt_port(char *prefix, int which, netconf_trmgmt_t *trm)
 {
@@ -1058,12 +1063,14 @@ get_trf_mgmt_port(char *prefix, int which, netconf_trmgmt_t *trm)
 
 	return TRUE;
 }
+#endif /* TCONFIG_BCMARM || TRAFFIC_MGMT */
 
 /*
  * Parser for DWM filter, convert binary structure to string
  * string format: prot,dscp,priority,favored,enabled
  * e.g.: wlx_trf_mgmt_dwm0=0,8,4,0,1
  */
+#ifdef TCONFIG_BCMARM
 bool
 set_trf_mgmt_dwm(char *prefix, int which, const netconf_trmgmt_t *trm_dwm)
 {
@@ -1099,11 +1106,13 @@ set_trf_mgmt_dwm(char *prefix, int which, const netconf_trmgmt_t *trm_dwm)
 
 	return TRUE;
 }
+#endif /* TCONFIG_BCMARM */
 
 /*
  * Parser for traffic management filter settings,  convert binary structure to  string
  * string format: proto,sr_port,dst_port,mac_adr,priority,favored,enable
  */
+#if defined(TCONFIG_BCMARM) || defined(TRAFFIC_MGMT)
 bool
 set_trf_mgmt_port(char *prefix, int which, const netconf_trmgmt_t *trm)
 {
@@ -1155,7 +1164,9 @@ set_trf_mgmt_port(char *prefix, int which, const netconf_trmgmt_t *trm)
 
 	return TRUE;
 }
+#endif /* TCONFIG_BCMARM || TRAFFIC_MGMT */
 
+#ifdef TCONFIG_BCMARM
 bool
 del_trf_mgmt_dwm(char *prefix, int which)
 {
@@ -1164,7 +1175,9 @@ del_trf_mgmt_dwm(char *prefix, int which)
 	snprintf(name, sizeof(name), "%stm_dwm%d", prefix, which);
 	return (nvram_unset(name) == 0) ? TRUE : FALSE;
 }
+#endif /* TCONFIG_BCMARM */
 
+#if defined(TCONFIG_BCMARM) || defined(TRAFFIC_MGMT)
 bool
 del_trf_mgmt_port(char *prefix, int which)
 {
@@ -1173,6 +1186,7 @@ del_trf_mgmt_port(char *prefix, int which)
 	snprintf(name, sizeof(name), "%stm%d", prefix, which);
 	return (nvram_unset(name) == 0) ? TRUE : FALSE;
 }
+#endif /* TCONFIG_BCMARM || TRAFFIC_MGMT */
 
 /*
  * wl_wds<N> is authentication protocol dependant.
