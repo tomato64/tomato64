@@ -31,10 +31,8 @@
 #include <bcmparams.h>
 #include <bcmnvram.h>
 #include <bcmutils.h>
-#ifdef TCONFIG_RTNPLUS
 #include <netconf.h>
 #include <nvparse.h>
-#endif
 #include <shutils.h>
 #include <wlutils.h>
 #include <wlif_utils.h>

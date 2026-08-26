@@ -21,11 +21,11 @@
 
 #include "tomato_profile.h"
 #include <string.h>
+#include <shutils.h>
 #ifdef TCONFIG_BCMARM
  #include <stdio.h>
  #include <ctype.h>
  #include <wlioctl.h>
- #include <shutils.h>
  #include <bcmnvram.h>
 #else
  #include <ctype.h>
