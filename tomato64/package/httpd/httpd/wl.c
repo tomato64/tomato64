@@ -15,6 +15,8 @@
 #endif /* TOMATO64 */
 
 #include <ctype.h>
+#include <dirent.h>
+#include <limits.h>
 #include <wlutils.h>
 #include <sys/ioctl.h>
 #include <wlscan.h>
@@ -2166,11 +2168,46 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 	return buf;
 }
 #else /* TOMATO64 */
+#define SYS_CLASS_HWMON		"/sys/class/hwmon"
+
+static int hwmon_temp_c(const char *name, int *temp_c)
+{
+	DIR *dir;
+	struct dirent *de;
+	char path[sizeof(SYS_CLASS_HWMON) + NAME_MAX + sizeof("//temp1_input")], val[32];
+	long milli;
+	int ret = 0;
+
+	if ((dir = opendir(SYS_CLASS_HWMON)) == NULL)
+		return 0;
+
+	while ((de = readdir(dir)) != NULL) {
+		if (de->d_name[0] == '.')
+			continue;
+
+		snprintf(path, sizeof(path), SYS_CLASS_HWMON "/%s/name", de->d_name);
+		if (f_read_string(path, val, sizeof(val)) <= 0)
+			continue;
+
+		val[strcspn(val, "\n")] = '\0'; /* trimstr() does not strip newlines */
+		if (strcmp(val, name) != 0)
+			continue;
+
+		snprintf(path, sizeof(path), SYS_CLASS_HWMON "/%s/temp1_input", de->d_name);
+		if (f_read_string(path, val, sizeof(val)) > 0) {
+			milli = atol(val);
+			*temp_c = (int)((milli + (milli < 0 ? -500 : 500)) / 1000);
+			ret = 1;
+		}
+		break; /* name is unique, no point in scanning further */
+	}
+	closedir(dir);
+
+	return ret;
+}
+
 char* get_wl_tempsense(char *buf, const size_t buf_sz)
 {
-
-	FILE *f;
-	char buffer[8];
 	char phy0_C[8] = "";
 	char phy0_F[8] = "";
 	char phy1_C[8] = "";
@@ -2185,34 +2222,26 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 #endif
 
 #if defined(TOMATO64_MT3600BE)
-	const char phy0_cmd[] = "sensors -A mt7996_phy0.0-pci-0100 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
-	const char phy1_cmd[] = "sensors -A mt7996_phy0.1-pci-0100 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
+	const char phy0_name[] = "mt7996_phy0.0";
+	const char phy1_name[] = "mt7996_phy0.1";
 #else
-	const char phy0_cmd[] = "sensors -A mt7915_phy0-isa-0000 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
-	const char phy1_cmd[] = "sensors -A mt7915_phy1-isa-0000 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
+	const char phy0_name[] = "mt7915_phy0";
+	const char phy1_name[] = "mt7915_phy1";
 #endif
 
-	if ((f = popen(phy0_cmd, "r"))) {
-		if (fgets(buffer, sizeof(buffer), f) != NULL) {
-			buffer[strcspn(buffer, "\n")] = 0;
-			phy0_temp = mround(atof(buffer));
-			snprintf(phy0_C, sizeof(phy0_C), "%d", phy0_temp);
-			snprintf(phy0_F, sizeof(phy0_F), "%d", mround((phy0_temp * 1.8f) + 32));
-		}
-		pclose(f);
+	if (hwmon_temp_c(phy0_name, &phy0_temp)) {
+		snprintf(phy0_C, sizeof(phy0_C), "%d", phy0_temp);
+		snprintf(phy0_F, sizeof(phy0_F), "%d", mround((phy0_temp * 1.8f) + 32));
 	}
 
-	if ((f = popen(phy1_cmd, "r"))) {
-		if (fgets(buffer, sizeof(buffer), f) != NULL) {
-			buffer[strcspn(buffer, "\n")] = 0;
-			phy1_temp = mround(atof(buffer));
-			snprintf(phy1_C, sizeof(phy1_C), "%d", phy1_temp);
-			snprintf(phy1_F, sizeof(phy1_F), "%d", mround((phy1_temp * 1.8f) + 32));
-		}
-		pclose(f);
+	if (hwmon_temp_c(phy1_name, &phy1_temp)) {
+		snprintf(phy1_C, sizeof(phy1_C), "%d", phy1_temp);
+		snprintf(phy1_F, sizeof(phy1_F), "%d", mround((phy1_temp * 1.8f) + 32));
 	}
 
 	snprintf(buf, buf_sz, "phy0: 2.4G - %s&#176;C&nbsp;/&nbsp;%s&#176;F&nbsp;&nbsp;&nbsp;&nbsp;phy1: 5G - %s&#176;C&nbsp;/&nbsp;%s&#176;F", phy0_C, phy0_F, phy1_C, phy1_F);
+
+	return buf;
 }
 #endif /* TOMATO64_ARM64 */
 #endif /* TCONFIG_RTNPLUS */
