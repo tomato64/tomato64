@@ -42,6 +42,7 @@
 #include <bcmdevs.h>
 #ifdef TOMATO64
 #include <sys/sysmacros.h>
+#include <stdarg.h>
 #endif /* TOMATO64 */
 #ifdef TCONFIG_RTNPLUS /* RT-N+ */
 #include <bcmparams.h>
@@ -1305,6 +1306,10 @@ static void check_bootnv(void)
 {
 	int dirty;
 	int model;
+#ifdef TOMATO64
+	dirty = 0;
+	model = get_model();
+#endif /* TOMATO64 */
 #ifndef TOMATO64
 #ifndef TCONFIG_BCMARM
 	int hardware;
@@ -10611,6 +10616,48 @@ static inline void tune_smp_affinity(void)
 }
 #endif /* TCONFIG_BCMSMP && TCONFIG_USB */
 
+#ifdef TOMATO64
+static void log_kmsg(int level, const char *fmt, ...)
+{
+	char msg[256];
+	va_list args;
+	int n;
+
+	n = snprintf(msg, sizeof(msg), "<%d>", level);
+	if ((n < 0) || ((unsigned)n >= sizeof(msg)))
+		return;
+
+	va_start(args, fmt);
+	vsnprintf(msg + n, sizeof(msg) - n, fmt, args);
+	va_end(args);
+
+	f_write("/dev/kmsg", msg, strlen(msg), FW_APPEND, 0);
+}
+
+static int nvram_var_count(void)
+{
+	char *buf;
+	char *p;
+	int n = 0;
+
+	if ((buf = malloc(NVRAM_SPACE)) == NULL)
+		return -1;
+
+	if (nvram_getall(buf, NVRAM_SPACE) != 1) {	/* E_SUCCESS */
+		free(buf);
+		return -1;
+	}
+
+	for (p = buf; *p; p += strlen(p) + 1) {
+		n++;
+	}
+
+	free(buf);
+
+	return n;
+}
+#endif /* TOMATO64 */
+
 static void sysinit(void)
 {
 	static int noconsole = 0;
@@ -10763,16 +10810,35 @@ static void sysinit(void)
 	}
 #endif /* TOMATO64_BCM53XX */
 
-#ifdef TOMATO64_X86_64
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_RPI4)
 	eval("mount_nvram");
+#endif /* TOMATO64_X86_64 || TOMATO64_RPI4 */
+
+#ifdef TOMATO64
+	if (nvram_init(NULL) != 1) {
+		fprintf(stderr, "\n## NVRAM unavailable - settings will not persist ##\n");
+		log_kmsg(LOG_ERR, "nvram: unavailable - settings will not persist");
+	}
+	else {
+		int nvcount = nvram_var_count();
+
+		if (nvcount < 0) {
+			fprintf(stderr, "\n## NVRAM loaded, but could not be enumerated ##\n");
+			log_kmsg(LOG_ERR, "nvram: loaded, but the store could not be enumerated");
+		}
+		else {
+			fprintf(stderr, "\n## NVRAM loaded - %d variables ##\n", nvcount);
+			log_kmsg(LOG_INFO, "nvram: loaded %d variables", nvcount);
+		}
+	}
+#endif /* TOMATO64 */
+
+#ifdef TOMATO64_X86_64
 	if (d_exists("/sys/firmware/efi"))
 		nvram_set("t_boot_type", "uefi");
 	else
 		nvram_set("t_boot_type", "bios");
 #endif /* TOMATO64_X86_64 */
-#ifdef TOMATO64_RPI4
-	eval("mount_nvram");
-#endif /* TOMATO64_RPI4 */
 
 #ifdef TOMATO64_WIFI
 	/* Clear WiFi PHY count before hotplug2 starts detecting PHYs */
@@ -10784,7 +10850,7 @@ static void sysinit(void)
 #if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
 	/* Mount filesystem rw */
 	if (!nvram_get_int("fs_mount_ro")) {
-		eval("mount", "-o", "remount,rw", "/");
+		eval("mount", "-o", "remount,rw,noatime", "/");
 	}
 #endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
 
@@ -11009,10 +11075,17 @@ int init_main(int argc, char *argv[])
 	int state;
 	sigset_t sigset;
 
+#ifndef TOMATO64
 	/* failsafe? */
 	nvram_unset("debug_rc_svc");
+#endif /* TOMATO64 */
 
 	sysinit();
+
+#ifdef TOMATO64
+	/* failsafe? */
+	nvram_unset("debug_rc_svc");
+#endif /* TOMATO64 */
 
 	sigemptyset(&sigset);
 	for (i = 0; i < ASIZE(initsigs); i++) {

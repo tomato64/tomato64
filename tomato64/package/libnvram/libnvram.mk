@@ -2,23 +2,12 @@
 #
 # libnvram
 #
+# Virtual package. The implementation is chosen in Config.in; providers are
+# libnvram-c (the original C library) and libnvram-rs (Rust, shared memory).
+#
+# Everything that needs NVRAM keeps depending on plain "libnvram", so nothing
+# else in the tree has to know which one is selected.
+#
 ################################################################################
 
-LIBNVRAM_VERSION = e33692277d475d61a03e0772efeef5c829872f34
-LIBNVRAM_SITE = $(call github,tomato64,libnvram,$(LIBNVRAM_VERSION))
-LIBNVRAM_INSTALL_STAGING = YES
-LIBNVRAM_LICENSE = MIT
-
-define LIBNVRAM_BUILD_CMDS
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) libnvram.so
-endef
-
-define LIBNVRAM_INSTALL_STAGING_CMDS
-	$(INSTALL) -D -m 0755 $(@D)/libnvram.so $(STAGING_DIR)/usr/lib
-endef
-
-define LIBNVRAM_INSTALL_TARGET_CMDS
-	$(INSTALL) -D -m 0755 $(@D)/libnvram.so $(TARGET_DIR)/usr/lib
-endef
-
-$(eval $(generic-package))
+$(eval $(virtual-package))

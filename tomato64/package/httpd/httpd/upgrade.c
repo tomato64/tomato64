@@ -116,7 +116,7 @@ void wi_upgrade(char *url, int len, char *boundary)
 #else /* TOMATO64 */
 	/* args[2] = factory-reset flag, filled in below from _reset. Only
 	 * MT3600BE's /sbin/upgrade reads it; other devices ignore extra args
-	 * and rely on httpd's post-flash "rm /nvram/*". */
+	 * and rely on httpd's post-flash nvram_clear(). */
 	char *args[] = { "upgrade", fifo, "0", NULL };
 #endif /* TOMATO64 */
 
@@ -287,7 +287,7 @@ ERROR2:
 #endif
 #else /* TOMATO64 */
 #if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
-		system("rm /nvram/*");
+		nvram_clear();
 #endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
 #endif /* TOMATO64 */
 

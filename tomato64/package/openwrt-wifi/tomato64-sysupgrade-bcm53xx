@@ -77,6 +77,10 @@ rm -f "$CONF_TGZ"
 if [ "$RESET" = "1" ]; then
 	log "factory reset requested - settings will NOT be preserved"
 elif [ -d /nvram ]; then
+	# Flush pending changes first: nvram set only updates the live store, so
+	# anything the user changed since the last commit is not on disk yet and
+	# would be silently missing from the tarball.
+	nvram commit
 	tar -czf "$CONF_TGZ" -C / nvram 2>/dev/null
 	if [ -s "$CONF_TGZ" ]; then
 		log "config backup staged ($(wc -c < "$CONF_TGZ") bytes)"

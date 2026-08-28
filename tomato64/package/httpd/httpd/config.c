@@ -54,7 +54,7 @@ void wo_defaults(char *url)
 			}
 #else
 			{
-				system("rm /nvram/*");
+				nvram_clear();
 			}
 #endif /* TOMATO64 */
 

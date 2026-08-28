@@ -935,6 +935,11 @@ void erase_nvram(void)
 	eval("mtd-erase2", "nvram");
 }
 #endif
+#else /* TOMATO64 */
+int erase_nvram(void)
+{
+	return (nvram_clear() == 1) ? 0 : 1;	/* nvram_clear() returns E_SUCCESS == 1 */
+}
 #endif /* TOMATO64 */
 
 int main(int argc, char **argv)
@@ -1043,6 +1048,10 @@ int main(int argc, char **argv)
 		}
 	}
 #endif
+#else /* TOMATO64 */
+	/* the applet `nvram erase` execs */
+	if (!strcmp(base, "nvram_erase"))
+		return erase_nvram();
 #endif /* TOMATO64 */
 
 	printf("Unknown applet: %s\n", base);

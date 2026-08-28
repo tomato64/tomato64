@@ -191,6 +191,19 @@ extern int nvram_commit(void);
  */
 extern int nvram_getall(char *nvram_buf, int count);
 
+#ifdef TOMATO64
+/*
+ * Erase every NVRAM variable, in memory and on disk.
+ *
+ * Provided by libnvram (both the C and Rust implementations). Callers used to
+ * shell out to rm on the files under /nvram, which only removes the on-disk
+ * copies - under the shared-memory implementation that leaves every value
+ * live in the segment, so a later commit would write them all back.
+ * @return	E_SUCCESS on success, E_FAILURE otherwise
+ */
+extern int nvram_clear(void);
+#endif /* TOMATO64 */
+
 /*
  * Get get buff translated
  * @param	buf	string buffer would like to be translated

@@ -2,3 +2,54 @@ config BR2_PACKAGE_LIBNVRAM
 	bool "libnvram"
 	help
 	  libnvram retrives and stored key-value pairs for router configuration
+
+if BR2_PACKAGE_LIBNVRAM
+
+choice
+	prompt "libnvram implementation"
+	default BR2_PACKAGE_LIBNVRAM_RS
+	help
+	  Which implementation provides /usr/lib/libnvram.so. Both are ABI
+	  compatible; nothing else in the tree needs to change to switch,
+	  because packages depend on the virtual "libnvram".
+
+config BR2_PACKAGE_LIBNVRAM_C
+	bool "C (firmadyne-derived)"
+	select BR2_PACKAGE_HAS_LIBNVRAM
+	help
+	  The original C implementation, kept as a fallback. Stores one
+	  file per key under /nvram and writes through to disk on every
+	  nvram_set().
+
+config BR2_PACKAGE_LIBNVRAM_RS
+	bool "Rust, shared memory (libnvram-rs)"
+	select BR2_PACKAGE_HAS_LIBNVRAM
+	select BR2_PACKAGE_HOST_RUSTC
+	depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+	help
+	  Keeps the live store in a POSIX shared memory segment, so a
+	  write is visible to every process immediately and disk writes
+	  are deferred to nvram_commit() the way FreshTomato does. Returns
+	  borrowed pointers the caller never frees, so NVRAM reads no
+	  longer leak.
+
+	  Requires rc to call nvram_init() once, after the nvram
+	  partition is mounted: nothing else brings the segment up, and
+	  until it does, calls read and write the files directly.
+
+	  https://github.com/tomato64/libnvram-rs
+
+comment "Rust libnvram needs a toolchain w/ host rustc support"
+	depends on !BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+
+endchoice
+
+config BR2_PACKAGE_HAS_LIBNVRAM
+	bool
+
+config BR2_PACKAGE_PROVIDES_LIBNVRAM
+	string
+	default "libnvram-c"      if BR2_PACKAGE_LIBNVRAM_C
+	default "libnvram-rs"     if BR2_PACKAGE_LIBNVRAM_RS
+
+endif

@@ -1,6 +1,6 @@
-diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/config.h libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/config.h
---- libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/config.h	2023-09-29 14:11:30.694271110 -0600
-+++ libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/config.h	2023-09-29 14:11:57.242294987 -0600
+diff -Naur a/config.h b/config.h
+--- a/config.h	2023-12-01 12:43:27.000000000 -0700
++++ b/config.h	2026-08-29 08:50:15.677411685 -0600
 @@ -2,11 +2,11 @@
  #define INCLUDE_CONFIG_H
  
@@ -28,9 +28,9 @@ diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/config.h libnv
  
  // Define the semantics for success and failure error codes.
  #define E_FAILURE  0
-diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/Makefile libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/Makefile
---- libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/Makefile	2023-09-29 14:11:30.694271110 -0600
-+++ libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/Makefile	2023-09-29 14:11:41.090284283 -0600
+diff -Naur a/Makefile b/Makefile
+--- a/Makefile	2023-12-01 12:43:27.000000000 -0700
++++ b/Makefile	2026-08-29 08:50:15.677411685 -0600
 @@ -1,5 +1,9 @@
 -CFLAGS=-O2 -fPIC -Wall
 -LDFLAGS=-shared -nostdlib
@@ -56,9 +56,9 @@ diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/Makefile libnv
  
  clean:
  	rm -f *.o libnvram.so test
-diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/nvram.c libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/nvram.c
---- libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/nvram.c	2023-09-29 14:11:30.694271110 -0600
-+++ libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67/nvram.c	2023-09-29 14:11:41.090284283 -0600
+diff -Naur a/nvram.c b/nvram.c
+--- a/nvram.c	2023-12-01 12:43:27.000000000 -0700
++++ b/nvram.c	2026-08-29 08:50:24.249385382 -0600
 @@ -124,8 +124,8 @@
              endmntent(mnt);
          }
@@ -87,21 +87,30 @@ diff -Naur libnvram-153a64ae0b8c35ee6f01c07dfaaf63129086ee67.orig/nvram.c libnvr
  
      // Checked by certain Ralink routers
      if ((f = fopen("/var/run/nvramd.pid", "w+")) == NULL) {
-@@ -195,7 +195,7 @@
+@@ -195,7 +195,14 @@
  
      sem_unlock();
  
 -    return nvram_set_default();
 +//    return nvram_set_default();
++
++    /* Tomato64: the defaults table is rc's job, not this library's, so the
++       call above is disabled - but the function must still return a value.
++       Falling off the end of a non-void function is undefined behaviour, and
++       rc checks this result to decide whether to warn that settings will not
++       persist. */
++    return E_SUCCESS;
  }
  
  int nvram_reset(void) {
-@@ -206,7 +206,7 @@
+@@ -206,7 +213,9 @@
          return E_FAILURE;
      }
  
 -    return nvram_set_default();
 +//    return nvram_set_default();
++
++    return E_SUCCESS;                                   /* Tomato64: see nvram_init() */
  }
  
  int nvram_clear(void) {
