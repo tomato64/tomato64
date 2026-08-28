@@ -10763,13 +10763,6 @@ static void sysinit(void)
 	}
 #endif /* TOMATO64_BCM53XX */
 
-#ifdef TOMATO64_WIFI
-	/* Clear WiFi PHY count before hotplug2 starts detecting PHYs */
-	nvram_set("wifi_phy_count", "0");
-#endif
-
-	start_hotplug2();
-
 #ifdef TOMATO64_X86_64
 	eval("mount_nvram");
 	if (d_exists("/sys/firmware/efi"))
@@ -10780,6 +10773,14 @@ static void sysinit(void)
 #ifdef TOMATO64_RPI4
 	eval("mount_nvram");
 #endif /* TOMATO64_RPI4 */
+
+#ifdef TOMATO64_WIFI
+	/* Clear WiFi PHY count before hotplug2 starts detecting PHYs */
+	nvram_set("wifi_phy_count", "0");
+#endif
+
+	start_hotplug2();
+
 #if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
 	/* Mount filesystem rw */
 	if (!nvram_get_int("fs_mount_ro")) {
