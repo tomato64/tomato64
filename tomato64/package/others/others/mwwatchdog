@@ -17,7 +17,8 @@ IPLIST=""
 BADIPLIST=""
 RESOLVED_IPS=""
 SOURCE_ADDR=""
-MWAN=$(NG mwan_num)
+MWANCFG=$(NG mwan_num)
+[ -z "$MWANCFG" ] && MWANCFG=1
 MWANTABLE="wan"
 LOGI="logger -t mwwatchdog[$PID]"
 LOGE="logger -p ERROR -t mwwatchdog[$PID]"
@@ -26,9 +27,16 @@ LOGD=$([ "$(NG mwwatchdog_debug)" -gt 0 ] 2>/dev/null && echo "logger -p DEBUG -
 
 
 i=1
-while [ $i -le $MWAN ]; do
+while [ $i -le $MWANCFG ]; do
 	[ "$i" -gt 1 ] && MWANTABLE="$MWANTABLE wan$i"
 	i=$((i+1))
+done
+
+# number of active WANs: leading run of non-disabled WANs (mirrors mwan_active_num() in shared/shutils.c)
+MWAN=0
+for PFX in $MWANTABLE; do
+	[ "$(NG "$PFX"_proto)" = "disabled" ] && break
+	MWAN=$((MWAN+1))
 done
 
 findHost() {
@@ -356,7 +364,11 @@ mwwatchdogDel() {
 }
 
 mwanJob() {
-	cru l | grep -q mwanJob && cru d mwanJob || cru a mwanJob "*/1 * * * * /usr/sbin/mwwatchdog alive"
+	if [ "$MWAN" -gt 1 ]; then
+		cru l | grep -q mwanJob || cru a mwanJob "*/1 * * * * /usr/sbin/mwwatchdog alive"
+	else
+		cru l | grep -q mwanJob && cru d mwanJob
+	fi
 }
 
 mwanAlive() {
@@ -459,4 +471,5 @@ case "$1" in
 		;;
 esac
 
-rm -f "$PIDFILE" 2>/dev/null
+# only the run holding the lock may release it (add/del/alive never call checkPid)
+[ "$(cat "$PIDFILE" 2>/dev/null)" = "$PID" ] && rm -f "$PIDFILE" 2>/dev/null
