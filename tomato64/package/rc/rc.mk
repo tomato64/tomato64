@@ -31,9 +31,6 @@ define RC_INSTALL_TARGET_CMDS
 	ln -sf rc $(TARGET_DIR)/sbin/console
 	ln -sf rc $(TARGET_DIR)/sbin/hotplug
 	ln -sf rc $(TARGET_DIR)/sbin/service
-	ln -sf rc $(TARGET_DIR)/sbin/buttons
-	ln -sf rc $(TARGET_DIR)/sbin/blink
-	ln -sf rc $(TARGET_DIR)/sbin/blink_br
 	ln -sf rc $(TARGET_DIR)/sbin/phy_tempsense
 	ln -sf rc $(TARGET_DIR)/sbin/rcheck
 	ln -sf rc $(TARGET_DIR)/sbin/arpbind

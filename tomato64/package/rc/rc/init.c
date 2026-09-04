@@ -11037,7 +11037,9 @@ static void sysinit(void)
 
 	set_tz();
 
+#ifndef TOMATO64
 	eval("buttons");
+#endif /* TOMATO64 */
 
 #ifdef TOMATO64
 	/* Initialize LEDs for boot sequence (heartbeat during boot) */
@@ -11167,7 +11169,9 @@ int init_main(int argc, char *argv[])
 
 			if ((state == SIGTERM) || /* REBOOT */
 			    (state == SIGQUIT)) { /* HALT */
+#ifndef TOMATO64
 				killall("buttons", SIGTERM);
+#endif /* TOMATO64 */
 				killall("udhcpc", SIGTERM);
 				remove_conntrack();
 #ifndef TOMATO64

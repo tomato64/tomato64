@@ -3036,7 +3036,9 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 #endif
 				killall("rstats", SIGTERM);
 				killall("cstats", SIGTERM);
+#ifndef TOMATO64
 				killall("buttons", SIGTERM);
+#endif /* TOMATO64 */
 				stop_upnp();
 				if (!nvram_get_int("remote_upgrade")) {
 					killall("xl2tpd", SIGTERM);
