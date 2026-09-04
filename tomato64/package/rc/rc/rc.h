@@ -435,7 +435,9 @@ extern char wan6face[];
 #endif
 extern char lan_cclass[];
 #ifndef TOMATO64
+#ifdef TCONFIG_L7
 extern char **layer7_in;
+#endif
 #endif /* TOMATO64 */
 #ifdef TOMATO64
 extern char **ndpi_in;
@@ -457,7 +459,9 @@ extern int ipt_addr(char *addr, int maxlen, const char *s, const char *dir, int 
 extern int ipt_dscp(const char *v, char *opt, const size_t buf_sz);
 #ifndef TOMATO64
 extern int ipt_ipp2p(const char *v, char *opt, const size_t buf_sz);
+#ifdef TCONFIG_L7
 extern int ipt_layer7(const char *v, char *opt, const size_t buf_sz);
+#endif
 #endif /* TOMATO64 */
 #ifdef TOMATO64
 extern int ipt_ndpi(const char *v, char *opt, const size_t buf_sz);

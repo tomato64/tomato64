@@ -354,6 +354,7 @@ int ipt_ipp2p(const char *v, char *opt, const size_t buf_sz)
 	return 1;
 }
 
+#ifdef TCONFIG_L7
 char **layer7_in;
 
 /* This L7 matches inbound traffic, caches the results, then the L7 outbound
@@ -442,6 +443,7 @@ int ipt_layer7(const char *v, char *opt, const size_t buf_sz)
 
 	return 1;
 }
+#endif /* TCONFIG_L7 */
 #endif /* TOMATO64 */
 
 #ifdef TOMATO64
@@ -1688,7 +1690,9 @@ static void filter_forward(void)
 		ipt_restrictions();
 
 #ifndef TOMATO64
+#ifdef TCONFIG_L7
 		ipt_layer7_inbound();
+#endif
 #endif /* TOMATO64 */
 #ifdef TOMATO64
 		ipt_ndpi_inbound();
@@ -2422,7 +2426,9 @@ int start_firewall(void)
 #endif
 
 #ifndef TOMATO64
+#ifdef TCONFIG_L7
 	modprobe_r("xt_layer7");
+#endif
 #else
 	modprobe_r("xt_ndpi");
 #endif /* TOMATO64 */

@@ -258,8 +258,11 @@ void ipt_qos(void)
 		memset(app, 0, sizeof(app));
 		if (ipt_ipp2p(ipp2p, app, sizeof(app)))
 			v4v6_ok &= ~IPT_V6;
-		else
+		else {
+#ifdef TCONFIG_L7
 			ipt_layer7(layer7, app, sizeof(app));
+#endif
+		}
 
 		if (app[0]) {
 			v4v6_ok &= ~IPT_V6; /* L7 for IPv6 not working either! */

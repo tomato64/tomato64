@@ -322,8 +322,10 @@ void ipt_restrictions(void)
 			/* p2p, layer7 */
 			memset(app, 0, sizeof(app));
 			if (!ipt_ipp2p(ipp2p, app, sizeof(app))) {
+#ifdef TCONFIG_L7
 				if (ipt_layer7(layer7, app, sizeof(app)) == -1)
 					continue;
+#endif
 			}
 #else
 			/* ndpi */
