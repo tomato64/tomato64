@@ -563,6 +563,7 @@ extern int mtd_erase_old(const char *mtdname);
 extern int mtd_write_main_old(int argc, char *argv[]);
 extern int mtd_unlock_erase_main_old(int argc, char *argv[]);
 extern int mtd_write(const char *path, const char *mtd);
+extern int mtd_check_image(const char *path, const char *mtd);
 #else
 extern int mtd_write_main(int argc, char *argv[]);
 extern int mtd_unlock_erase_main(int argc, char *argv[]);

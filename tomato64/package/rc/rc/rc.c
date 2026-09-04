@@ -270,7 +270,7 @@ void run_del_firewall_script(const char *infile, char *outfile)
  * @param	out	pointer to a buffer where the function writes the normalized result
  * @param	outlen	size of the out buffer
  * @return	1 if str is a valid IPv4 or IPv4/mask; out receives a normalized string in the form A.B.C.D/n with n coerced into semantics, defaulting to /32 when absent or invalid
- *		2 if str is a valid IPv4 range “A.B.C.D-E.F.G.H” with no internal whitespace and both addresses in the same /24; out receives the unchanged “A.B.C.D-E.F.G.H”
+ *		2 if str is a valid IPv4 range ï¿½A.B.C.D-E.F.G.Hï¿½ with no internal whitespace and both addresses in the same /24; out receives the unchanged ï¿½A.B.C.D-E.F.G.Hï¿½
  * 		0 if str is something else (FQDN?)
  */
 static int check_string(const char *str, char *out, size_t outlen)
@@ -1038,14 +1038,17 @@ int main(int argc, char **argv)
 			return EINVAL;
 		}
 	}
-	/* mtd-write2 [path] [device] */
+	/* mtd-write2 [-c] [path] [device] */
 	else if (!strcmp(base, "mtd-write2")) {
-		if (argc >= 3)
-			return mtd_write(argv[1], argv[2]);
-		else {
-			fprintf(stderr, "usage: mtd-write2 [path] [device]\n");
-			return EINVAL;
+		if ((argc >= 2) && (strcmp(argv[1], "-c") == 0)) {
+			if (argc >= 4)
+				return mtd_check_image(argv[2], argv[3]);
 		}
+		else if (argc >= 3)
+			return mtd_write(argv[1], argv[2]);
+
+		fprintf(stderr, "usage: mtd-write2 [-c] [path] [device]\n");
+		return EINVAL;
 	}
 #endif
 #else /* TOMATO64 */
