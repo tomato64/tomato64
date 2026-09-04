@@ -78,6 +78,8 @@ ifneq ($(TCONFIG_BCMARM),y)
 	sed -i $(INSTALLDIR)/www/qos-classify.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
 	sed -i $(INSTALLDIR)/www/qos-graphs.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
 	sed -i $(INSTALLDIR)/www/qos-settings.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+	sed -i $(INSTALLDIR)/www/qos-detailed.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+	sed -i $(INSTALLDIR)/www/qos-ctrate.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
 	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
 	sed -i $(INSTALLDIR)/www/nas-samba.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
