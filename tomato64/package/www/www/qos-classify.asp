@@ -23,7 +23,9 @@
 //	<% nvram("qos_enable,qos_mode,qos_classnames,qos_orules,qos_cake_prio_mode,qos_classify"); %>
 
 /* TOMATO64-REMOVE-BEGIN */
+/* L7-BEGIN */
 //	<% layer7(); %>
+/* L7-END */
 /* TOMATO64-REMOVE-END */
 
 /* TOMATO64-BEGIN */
@@ -66,10 +68,12 @@ for (var i = 1; i < dscp.length - 1; ++i)
 	dscp[i][1] = 'DSCP Class '+dscp[i][1];
 
 /* TOMATO64-REMOVE-BEGIN */
+/* L7-BEGIN */
 layer7.sort();
 for (i = 0; i < layer7.length; ++i)
 	layer7[i] = [layer7[i],layer7[i]];
 layer7.unshift(['', 'Layer 7 (disabled)']);
+/* L7-END */
 /* TOMATO64-REMOVE-END */
 
 /* TOMATO64-BEGIN */
@@ -136,7 +140,12 @@ qosg.setup = function() {
 
 /* TOMATO64-REMOVE-BEGIN */
 			{ type: 'select', prefix: '<div class="x3a">', suffix: '<\/div>', options: ipp2p },
+/* L7-BEGIN */
 			{ type: 'select', prefix: '<div class="x3b">', suffix: '<\/div>', options: layer7 },
+/* L7-END */
+/* L7-NO-BEGIN */
+			{ type: 'custom', custom: '<input type="hidden" value="">' },
+/* L7-NO-END */
 /* TOMATO64-REMOVE-END */
 
 /* TOMATO64-BEGIN */
@@ -222,8 +231,10 @@ qosg.dataToView = function(data) {
 			}
 
 	}
+/* L7-BEGIN */
 	else if (data[6] != '')
 		b.push('L7: '+data[6]);
+/* L7-END */
 
 	if (data[9] != '') {
 		s = dscpClass(data[9]);

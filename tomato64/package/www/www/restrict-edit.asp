@@ -22,7 +22,9 @@
 //	<% nvram(''); %>
 
 /* TOMATO64-REMOVE-BEGIN */
+/* L7-BEGIN */
 //	<% layer7(); %>
+/* L7-END */
 /* TOMATO64-REMOVE-END */
 
 /* TOMATO64-BEGIN */
@@ -54,10 +56,12 @@ rule[4] *= 1;
 rule[8] *= 1;
 
 /* TOMATO64-REMOVE-BEGIN */
+/* L7-BEGIN */
 layer7.sort();
 for (i = 0; i < layer7.length; ++i)
 	layer7[i] = [layer7[i],layer7[i]];
 layer7.unshift(['','Layer 7 (disabled)']);
+/* L7-END */
 
 var ipp2p = [[0,'IPP2P (disabled)'],[0xFFFF,'All IPP2P Filters'],[1,'AppleJuice'],[2,'Ares'],[4,'BitTorrent'],[8,'Direct Connect'],[16,'eDonkey'],[32,'Gnutella'],
              [64,'Kazaa'],[128,'Mute'],[4096,'PPLive/UUSee'],[256,'SoulSeek'],[512,'Waste'],[1024,'WinMX'],[2048,'XDCC'],[8192,'Xunlei/QQCyclone']];
@@ -163,7 +167,12 @@ bpg.setup = function() {
 		{ type: 'text', prefix: '<div class="box3">', suffix: '<\/div>', maxlen: 32 },
 /* TOMATO64-REMOVE-BEGIN */
 		{ type: 'select', prefix: '<div class="box4">', suffix: '<\/div>', options: ipp2p },
+/* L7-BEGIN */
 		{ type: 'select', prefix: '<div class="box5">', suffix: '<\/div>', options: layer7 },
+/* L7-END */
+/* L7-NO-BEGIN */
+		{ type: 'custom', custom: '<input type="hidden" value="">' },
+/* L7-NO-END */
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 		{ type: 'select', prefix: '<div class="box4">', suffix: '<\/div>', options: ndpi },
@@ -269,8 +278,10 @@ bpg.dataToView = function(data) {
 			}
 		}
 	}
+/* L7-BEGIN */
 	else if (data[4] != '')
 		s += ', L7: '+data[4];
+/* L7-END */
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 	if (data[3] == 'all') /* only ever paired with a server name */

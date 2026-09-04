@@ -108,6 +108,16 @@ else
 	sed -i $(INSTALLDIR)/www/advanced-vlan.asp -e "/MIPSR2P-BEGIN/,/MIPSR2P-END/d"
 endif
 
+# Only expose Layer 7 controls when L7 support is configured in.
+ifneq ($(TCONFIG_L7),y)
+	sed -i $(INSTALLDIR)/www/advanced-ctnf.asp -e "/L7-BEGIN/,/L7-END/d"
+	sed -i $(INSTALLDIR)/www/qos-classify.asp -e "/L7-BEGIN/,/L7-END/d"
+	sed -i $(INSTALLDIR)/www/restrict-edit.asp -e "/L7-BEGIN/,/L7-END/d"
+else
+	sed -i $(INSTALLDIR)/www/qos-classify.asp -e "/L7-NO-BEGIN/,/L7-NO-END/d"
+	sed -i $(INSTALLDIR)/www/restrict-edit.asp -e "/L7-NO-BEGIN/,/L7-NO-END/d"
+endif
+
 # Only include the CIFS pages if CIFS is configured in.
 ifneq ($(TCONFIG_CIFS),y)
 	rm -f $(INSTALLDIR)/www/admin-cifs.asp
@@ -935,6 +945,8 @@ endif
 		-e "/USBAP-BEGIN/d"	-e "/USBAP-END/d" \
 		-e "/MIPSR2P-BEGIN/d"	-e "/MIPSR2P-END/d" \
 		-e "/MIPSR2P-NO-BEGIN/d" -e "/MIPSR2P-NO-END/d" \
+		-e "/L7-BEGIN/d"	-e "/L7-END/d" \
+		-e "/L7-NO-BEGIN/d"	-e "/L7-NO-END/d" \
 		-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 		-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
 		-e "/TOMATO64-SKIP-BEGIN/d"	-e "/TOMATO64-SKIP-END/d" \
