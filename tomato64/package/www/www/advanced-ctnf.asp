@@ -19,10 +19,12 @@
 <script>
 
 /* TOMATO64-REMOVE-BEGIN */
-//	<% nvram("ct_tcp_timeout,ct_udp_timeout,ct_timeout,ct_max,ct_hashsize,nf_ttl,nf_sip,nf_rtsp,nf_pptp,nf_h323,nf_ftp,fw_nat_tuning,ipsec_pass"); %>
 /* L7-BEGIN */
-//	<% nvram("nf_l7in"); %>
+//	<% nvram("ct_tcp_timeout,ct_udp_timeout,ct_timeout,ct_max,ct_hashsize,nf_l7in,nf_ttl,nf_sip,nf_rtsp,nf_pptp,nf_h323,nf_ftp,fw_nat_tuning,ipsec_pass"); %>
 /* L7-END */
+/* L7-NO-BEGIN */
+//	<% nvram("ct_tcp_timeout,ct_udp_timeout,ct_timeout,ct_max,ct_hashsize,nf_ttl,nf_sip,nf_rtsp,nf_pptp,nf_h323,nf_ftp,fw_nat_tuning,ipsec_pass"); %>
+/* L7-NO-END */
 /* TOMATO64-REMOVE-END */
 
 /* TOMATO64-BEGIN */

@@ -116,6 +116,7 @@ ifneq ($(TCONFIG_L7),y)
 	sed -i $(INSTALLDIR)/www/qos-classify.asp -e "/L7-BEGIN/,/L7-END/d"
 	sed -i $(INSTALLDIR)/www/restrict-edit.asp -e "/L7-BEGIN/,/L7-END/d"
 else
+	sed -i $(INSTALLDIR)/www/advanced-ctnf.asp -e "/L7-NO-BEGIN/,/L7-NO-END/d"
 	sed -i $(INSTALLDIR)/www/qos-classify.asp -e "/L7-NO-BEGIN/,/L7-NO-END/d"
 	sed -i $(INSTALLDIR)/www/restrict-edit.asp -e "/L7-NO-BEGIN/,/L7-NO-END/d"
 endif
