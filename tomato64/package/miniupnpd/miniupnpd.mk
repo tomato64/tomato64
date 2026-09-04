@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MINIUPNPD_VERSION = 2.3.10
+MINIUPNPD_VERSION = 2.3.11
 MINIUPNPD_SITE = https://github.com/miniupnp/miniupnp/releases/download/miniupnpd_$(subst .,_,$(MINIUPNPD_VERSION))
 MINIUPNPD_LICENSE = BSD-3-Clause
 MINIUPNPD_DEPENDENCIES = iptables
