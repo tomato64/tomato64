@@ -298,7 +298,7 @@ function mapConfigToFields(event) {
 			peer.psk ? peer.psk : '',
 			ip ? ip.trim() : '',
 			allowed_ips ? allowed_ips.trim() : '',
-			peer.keepalive ? 25 : 0 /* default for keepalive, user may change */
+			peer.keepalive ? peer.keepalive : 25 /* default for keepalive, user may change */
 		];
 
 		peerTables[unit].insertData(-1, data)
@@ -475,10 +475,7 @@ function mapConfig(contents) {
 					target.allowed_ips = [target.allowed_ips, value].join(',');
 				break;
 			case 'endpoint':
-				if (E('_wg'+unit+'_com').value == 3) /* 'External - VPN Provider' */
-					target.endpoint = value;
-				else
-					target.endpoint = value.split(':')[0];
+				target.endpoint = value;
 				break;
 			case 'persistentkeepalive':
 				target.keepalive = value;
@@ -665,7 +662,7 @@ PeerGrid.prototype.setup = function() {
 		{ type: 'text', maxlen: 128 },
 		{ type: 'text', maxlen: 3 }
 	]);
-	this.headerSet(['QR', 'Cfg', 'Alias','Endpoint','Private Key','Public Key','Preshared Key','IP','Allowed IPs','KA']);
+	this.headerSet(['QR', 'Cfg', 'Alias','Peer Endpoint','Private Key','Public Key','Preshared Key','Peer VPN IP','Allowed IPs','KA']);
 	this.disableNewEditor(true);
 
 	var peers = decodePeers(this.unit);
@@ -1232,6 +1229,39 @@ function genPeerGridConfig(unit, row, type) {
 	return generateWGConfig(unit, row_data[0], row_data[2], row_data[4], row_data[5].split('/')[0], port.value, fwmark.value, row_data[7], row_data[1]);
 }
 
+/*
+ * Add a default port only when an endpoint does not already specify one.
+ * WireGuard uses host:port for IPv4/FQDN and [address]:port for IPv6.
+ */
+function formatWGEndpoint(endpoint, port) {
+	var first_colon, last_colon, close_bracket;
+
+	endpoint = endpoint.trim();
+	if (endpoint == '')
+		return endpoint;
+
+	if (endpoint[0] == '[') {
+		close_bracket = endpoint.lastIndexOf(']');
+		if (close_bracket >= 0) {
+			if (endpoint.charAt(close_bracket + 1) == ':')
+				return endpoint;
+			if (close_bracket == endpoint.length - 1)
+				return endpoint+':'+port;
+		}
+	}
+
+	first_colon = endpoint.indexOf(':');
+	if (first_colon >= 0) {
+		last_colon = endpoint.lastIndexOf(':');
+		if (first_colon == last_colon)
+			return endpoint; /* IPv4/FQDN with an explicit port */
+
+		return '['+endpoint+']:'+port; /* bare IPv6 address */
+	}
+
+	return endpoint+':'+port;
+}
+
 function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive, endpoint) {
 	var [interface_ip, interface_nm] = nvram['wg'+unit+'_ip'].split(',', 1)[0].split('/', 2);
 	var content = [];
@@ -1282,7 +1312,7 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 	var port = nvram['wg'+unit+'_port'];
 	if (port == '')
 		port = (51820 + unit);
-	router_endpoint += ':'+port;
+	router_endpoint = formatWGEndpoint(router_endpoint, port);
 
 	/* build allowed ips for router peer */
 	var allowed_ips;
@@ -1369,16 +1399,8 @@ function generateWGConfig(unit, name, privkey, psk, ip, port, fwmark, keepalive,
 			if (keepalive)
 				content.push('PersistentKeepalive = '+keepalive+'\n');
 
-			if (peer[2].trim() != '') {
-				/* FQDN or IPv4 */
-				if (peer[2].indexOf('.') >= 0 && peer[2].indexOf(':') >= 0) /* has port */
-					content.push('Endpoint = '+peer[2]+'\n');
-				/* IPv6 */
-				else if (peer[2].indexOf('[') >= 0 && peer[2].indexOf(']:') >= 0) /* has port */
-					content.push('Endpoint = '+peer[2]+'\n');
-				else
-					content.push('Endpoint = '+peer[2]+':'+port+'\n');
-			}
+			if (peer[2].trim() != '')
+				content.push('Endpoint = '+formatWGEndpoint(peer[2], port)+'\n');
 		}
 	}
 
@@ -1811,6 +1833,7 @@ function verifyFields(focused, quiet) {
 		var fw = E('_'+t+'_firewall').value;
 		var nat = E('_f_'+t+'_nat').checked;
 		var ext = E('_'+t+'_com').value == 3; /* 'External - VPN Provider' */
+		PR('_f_'+t+'_peer_ka').cells[0].getElementsByTagName('label')[0].innerHTML = ext ? 'Router &rarr; Peer Keepalive' : 'Peer &rarr; Router Keepalive';
 		var rgwr = (E('_'+t+'_rgwr').value == 2 || E('_'+t+'_rgwr').value == 3);
 		if (ext) E('_f_'+t+'_peer_ip').value = '';
 		if (ext) E('_f_'+t+'_route').value = '1';
@@ -1823,6 +1846,7 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_f_'+t+'_nat'), fw != 'custom' && ext);
 		elem.display(PR('_f_'+t+'_fw'), fw != 'custom' && ext);
 		elem.display(PR('_'+t+'_rgwr'), ext);
+		elem.display(PR('_'+t+'_ka'), !ext);
 		elem.display(E(t+'_nat_warn_text'), ext && !nat);
 		elem.display(PR('_'+t+'_prio'), ext && rgwr);
 		elem.display(E(t+'-tunchk_span'), E('_f_'+t+'_tchk').checked);
@@ -1884,8 +1908,12 @@ function verifyFields(focused, quiet) {
 			ferror.clear(custom_table);
 		}
 
-		/* verify interface keep alive */
-		if (!v_range('_'+t+'_ka', quiet || !ok, 0, 99)) ok = 0;
+		/* verify keepalive sent by this router in Internal modes */
+		if (!ext) {
+			if (!v_range('_'+t+'_ka', quiet || !ok, 0, 99)) ok = 0;
+		}
+		else
+			ferror.clear(E('_'+t+'_ka'));
 
 		/* verify delay time */
 		if (!v_range('_'+t+'_sleep', quiet || !ok, 1, 99)) ok = 0;
@@ -2159,6 +2187,7 @@ function init() {
 					{ title: 'Inbound Firewall', indent: 2, name: 'f_'+t+'_fw', type: 'checkbox', value: nvram[t+'_fw'] != 0 },
 				null,
 				{ title: 'Type of VPN', name: t+'_com', type: 'select', options: [['0','Internal - Hub (this device) and Spoke (peers)'],['1','Internal - Full Mesh (defined Endpoint only)'],['2','Internal - Full Mesh'],['3','External - VPN Provider']], value: nvram[t+'_com'] || 0 },
+				{ title: 'Router &rarr; Peer Keepalive', name: t+'_ka', type: 'text', maxlen: 2, size: 4, suffix: '&nbsp;<small>0=disable, 10-99s range, 25 is a common setting<\/small>', value: nvram[t+'_ka'] },
 				{ title: 'Redirect Internet traffic', name: t+'_rgwr', type: 'select', options: [[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram[t+'_rgwr'] },
 					{ title: 'Priority', indent: 2, name: t+'_prio', type: 'text', maxlen: 5, size: 5, placeholder: (100 + i), suffix: '&nbsp;<small>(1 - 32766) lower number = higher priority<\/small>', value: nvram[t+'_prio'] },
 					{ title: 'Import Config from File', indent: 2, custom: '<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File"><input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')">' },
@@ -2171,8 +2200,7 @@ function init() {
 			W('<div id="'+t+'-wg-peersp">');
 			W('<div class="section-title">Peers Parameters <span style="font-size:0.7em">(used only to generate peer config files)<\/span><\/div>');
 			var f = [
-				{ title: 'Keepalive', name: t+'_ka', type: 'text', maxlen: 2, size: 4, suffix: '&nbsp;<small>0=disable, 10-99s range, 25 is a common setting<\/small>', value: nvram[t+'_ka'] },
-				{ title: 'Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: nvram[t+'_endpoint'][0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(nvram[t+'_endpoint'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">' },
+				{ title: 'Router Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: nvram[t+'_endpoint'][0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(nvram[t+'_endpoint'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">' },
 				{ title: 'Allowed IPs', name: t+'_aip', type: 'text', placeholder: 'CIDR format / comma separated', maxlen: 128, size: 64, value: nvram[t+'_aip'] },
 				{ title: 'DNS Servers for Peers', name: t+'_peer_dns', type: 'text', maxlen: 128, size: 64, placeholder: 'comma separated', value: nvram[t+'_peer_dns'] }
 			];
@@ -2216,13 +2244,13 @@ function init() {
 			W('<div class="section-title">Peer\'s Parameters<\/div>');
 			createFieldTable('', [
 				{ title: 'Alias', name: 'f_'+t+'_peer_alias', type: 'text', maxlen: 32, size: 32, placeholder: 'optional' },
-				{ title: 'Endpoint', name: 'f_'+t+'_peer_ep', type: 'text', maxlen: 64, size: 48, placeholder: 'optional' },
+				{ title: 'Peer Endpoint', name: 'f_'+t+'_peer_ep', type: 'text', maxlen: 64, size: 48, placeholder: 'optional' },
 				{ title: 'Private Key', name: 'f_'+t+'_peer_privkey', type: 'text', maxlen: 44, size: 48 },
 				{ title: 'Public Key', name: 'f_'+t+'_peer_pubkey', type: 'text', maxlen: 44, size: 48 },
 				{ title: 'Preshared Key', name: 'f_'+t+'_peer_psk', type: 'text', maxlen: 44, size: 48 },
-				{ title: 'VPN Interface IP', name: 'f_'+t+'_peer_ip', type: 'text', placeholder: 'CIDR format', maxlen: 64, size: 64 },
+				{ title: 'Peer VPN IP', name: 'f_'+t+'_peer_ip', type: 'text', placeholder: 'CIDR format', maxlen: 64, size: 64 },
 				{ title: 'Allowed IPs', name: 'f_'+t+'_peer_aip', type: 'text', placeholder: 'CIDR format / comma separated', maxlen: 128, size: 64 },
-				{ title: 'Keepalive', name: 'f_'+t+'_peer_ka', type: 'text', maxlen: 2, size: 4, value: '', suffix: '&nbsp;<small>0=disable, 10-99s range, 25 is a common setting<\/small>' },
+				{ title: 'Peer &rarr; Router Keepalive', name: 'f_'+t+'_peer_ka', type: 'text', maxlen: 2, size: 4, value: '', suffix: '&nbsp;<small>0=disable, 10-99s range, 25 is a common setting<\/small>' },
 				{ title: '', custom: '<input type="button" value="Add to Peers" onclick="addPeer('+i+')" id="'+t+'_peer_add"> <input type="button" value="Clean" onclick="clearPeerFields('+i+')" id="'+t+'_peer_clean">' }
 			]);
 			W('<\/div>');

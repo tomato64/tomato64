@@ -1199,15 +1199,58 @@ static int wg_set_peer_keepalive(char *iface, char *pubkey, char *keepalive)
 	return 0;
 }
 
+/*
+ * Internal peers normally omit the port and inherit the local interface
+ * port. Preserve an explicitly configured port and format bare IPv6
+ * addresses using WireGuard's [address]:port syntax.
+ */
+static int wg_format_peer_endpoint(const char *endpoint, const char *port, char *buffer, const size_t size)
+{
+	const char *first_colon, *last_colon, *close_bracket;
+	int n;
+
+	if (endpoint[0] == '[') {
+		close_bracket = strrchr(endpoint, ']');
+		if (close_bracket && close_bracket[1] == ':')
+			n = snprintf(buffer, size, "%s", endpoint);
+		else if (close_bracket && close_bracket[1] == '\0')
+			n = snprintf(buffer, size, "%s:%s", endpoint, port);
+		else
+			n = snprintf(buffer, size, "%s", endpoint);
+	}
+	else {
+		first_colon = strchr(endpoint, ':');
+		last_colon = strrchr(endpoint, ':');
+
+		if (first_colon && first_colon == last_colon)
+			n = snprintf(buffer, size, "%s", endpoint); /* IPv4/FQDN with explicit port */
+		else if (first_colon)
+			n = snprintf(buffer, size, "[%s]:%s", endpoint, port); /* bare IPv6 */
+		else
+			n = snprintf(buffer, size, "%s:%s", endpoint, port);
+	}
+
+	if (n < 0 || (size_t)n >= size) {
+		logmsg(LOG_WARNING, "wireguard peer endpoint is too long: %s", endpoint);
+		return -1;
+	}
+
+	return 0;
+}
+
 static int wg_set_peer_endpoint(const int unit, char *iface, char *pubkey, const char *endpoint)
 {
 	wg_script_ctx_t *ctx = &wg_script_ctx[unit];
-	char buffer[BUF_SIZE_64];
+	char buffer[BUF_SIZE_128];
 
-	if (atoi(getNVRAMVar("wg%d_com", unit)) == 3) /* 'External - VPN Provider' */
-		snprintf(buffer, BUF_SIZE_64, "%s", endpoint);
-	else
-		snprintf(buffer, BUF_SIZE_64, "%s:%s", endpoint, ctx->port);
+	if (atoi(getNVRAMVar("wg%d_com", unit)) == 3) { /* 'External - VPN Provider' */
+		if (strlcpy(buffer, endpoint, sizeof(buffer)) >= sizeof(buffer)) {
+			logmsg(LOG_WARNING, "wireguard peer endpoint is too long: %s", endpoint);
+			return -1;
+		}
+	}
+	else if (wg_format_peer_endpoint(endpoint, ctx->port, buffer, sizeof(buffer)))
+		return -1;
 
 	if (eval("wg", "set", iface, "peer", pubkey, "endpoint", buffer)) {
 		logmsg(LOG_WARNING, "command failed: wg set %s peer %s endpoint %s", iface, pubkey, buffer);
