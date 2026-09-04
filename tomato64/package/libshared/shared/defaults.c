@@ -1218,7 +1218,9 @@ struct nvram_tuple router_defaults[] = {
 	{ "ct_hashsize",		"2048"				},
 	{ "nf_ttl",			"0"				},
 #ifndef TOMATO64
+#ifdef TCONFIG_L7
 	{ "nf_l7in",			"1"				},
+#endif
 #else
 	{ "nf_ndpi_in",			"1"				},
 #endif /* TOMATO64 */
