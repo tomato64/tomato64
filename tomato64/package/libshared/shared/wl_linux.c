@@ -103,7 +103,7 @@ int wl_ioctl(char *name, int cmd, void *buf, int len)
 			} else {
 				snprintf(buffer, sizeof(buffer), "%s: cmd=%d", name, cmd);
 			}
-			logerr(__FUNCTION__, __LINE__, buffer);
+			perror(buffer);
 		}
 #else
 	ret = ioctl(s, SIOCDEVPRIVATE, &ifr);
