@@ -138,6 +138,16 @@ void ipt_qos(void)
 	if (!nvram_get_int("qos_enable"))
 		return;
 
+#ifdef TCONFIG_BCMARM
+	/*
+	 * QoS Details and Transfer Rates require per-connection byte counters.
+	 * Enable conntrack accounting explicitly when requested instead of
+	 * relying on xt_connbytes to enable it as a side effect.
+	 */
+	if (nvram_get_int("qos_stats"))
+		f_write_procsysnet("netfilter/nf_conntrack_acct", "1");
+#endif
+
 	mwan_num = mwan_active_num();
 	memset(wanup, 0, sizeof(wanup));
 

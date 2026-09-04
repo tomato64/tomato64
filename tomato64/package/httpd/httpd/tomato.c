@@ -1570,6 +1570,7 @@ static const nvset_t nvset_list[] = {
 #ifdef TCONFIG_BCMARM
 	{ "qos_pfifo",			V_NUM				},
 	{ "qos_classify",		V_01				},
+	{ "qos_stats",			V_01				},
 	{ "qos_cake_prio_mode",		V_NUM				},
 	{ "qos_cake_wash",		V_01				},
 #else

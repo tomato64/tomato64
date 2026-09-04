@@ -25,7 +25,7 @@
 
 <script>
 
-//	<% nvram('qos_enable,qos_classnames,lan_ipaddr,lan_netmask,t_hidelr'); %>
+//	<% nvram('qos_enable,qos_stats,qos_classnames,lan_ipaddr,lan_netmask,t_hidelr'); %>
 
 var cprefix = 'qos_detailed';
 var Unclassified = ['Unclassified'];
@@ -148,6 +148,14 @@ function verifyFields(focused, quiet) {
 
 
 function init() {
+/* BCMARM-BEGIN */
+	if (nvram.qos_stats != 1) {
+		E('stats-disabled').style.display = 'block';
+		E('stats-content').style.display = 'none';
+		return;
+	}
+/* BCMARM-END */
+
 	restoreQoSConnectionFilterState();
 
 	if (viewClass != -1)
@@ -176,6 +184,16 @@ function init() {
 
 <!-- / / / -->
 
+<!-- BCMARM-BEGIN -->
+<div id="stats-disabled" style="display:none">
+	<div class="section-title">Connection Statistics</div>
+	<div class="section">
+		<div class="fields"><div class="about">Connection statistics are disabled. Enable them in <a href="qos-settings.asp">QoS &gt; Basic Settings</a> to use QoS Details and Transfer Rates.</div></div>
+	</div>
+</div>
+<!-- BCMARM-END -->
+
+<div id="stats-content">
 <div class="section-title" id="stitle" onclick='document.location="qos-graphs.asp"' style="cursor:pointer">View Details: <span id="qos_numtotalconn"></span></div>
 <div class="section" id="grid-head">
 	<div class="tomato-grid" id="qos-det-grid"></div>
@@ -194,6 +212,7 @@ function init() {
 
 <div id="footer">
 	<script>genStdRefresh(1,1,'ref.toggle()');</script>
+</div>
 </div>
 
 </td></tr>

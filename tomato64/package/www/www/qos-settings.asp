@@ -19,7 +19,7 @@
 
 <script>
 
-//	<% nvram("qos_classnames,qos_enable,qos_mode,qos_ack,qos_syn,qos_fin,qos_rst,qos_icmp,qos_udp,qos_classify,qos_default,qos_pfifo,qos_cake_prio_mode,qos_cake_wash,wan_qos_obw,wan_qos_ibw,wan_qos_encap,wan_qos_overhead,qos_orates,qos_irates,qos_reset,ne_vegas,ne_valpha,ne_vbeta,ne_vgamma,mwan_num,ctf_disable,bcmnat_disable"); %>
+//	<% nvram("qos_classnames,qos_enable,qos_mode,qos_ack,qos_syn,qos_fin,qos_rst,qos_icmp,qos_udp,qos_classify,qos_stats,qos_default,qos_pfifo,qos_cake_prio_mode,qos_cake_wash,wan_qos_obw,wan_qos_ibw,wan_qos_encap,wan_qos_overhead,qos_orates,qos_irates,qos_reset,ne_vegas,ne_valpha,ne_vbeta,ne_vgamma,mwan_num,ctf_disable,bcmnat_disable"); %>
 
 var cprefix = 'qos_settings';
 
@@ -188,6 +188,7 @@ function save() {
 	fom.qos_reset.value = fom._f_qos_reset.checked ? 1 : 0;
 /* BCMARM-BEGIN */
 	fom.qos_classify.value = fom._f_qos_classify.checked ? 1 : 0;
+	fom.qos_stats.value = fom._f_qos_stats.checked ? 1 : 0;
 	fom.qos_cake_wash.value = fom._f_qos_cake_wash.checked ? 1 : 0;
 /* BCMARM-END */
 
@@ -277,6 +278,7 @@ function init() {
 <input type="hidden" name="qos_reset">
 <!-- BCMARM-BEGIN -->
 <input type="hidden" name="qos_classify">
+<input type="hidden" name="qos_stats">
 <input type="hidden" name="qos_cake_wash">
 <!-- BCMARM-END -->
 <input type="hidden" name="ne_vegas">
@@ -300,6 +302,7 @@ function init() {
 		createFieldTable('', [
 			{ title: 'Enable QoS', name: 'f_qos_enable', type: 'checkbox', value: nvram.qos_enable == '1' },
 /* BCMARM-BEGIN */
+			{ title: 'Enable connection statistics', name: 'f_qos_stats', type: 'checkbox', value: nvram.qos_stats == '1', suffix: '&nbsp; <small>Collect per-connection byte counters for QoS Details and Transfer Rates. Uses additional memory. Rules using "KB Transferred" may enable accounting regardless of this setting. A reboot may be required to stop kernel accounting after disabling.<\/small>' },
 			{ title: 'QoS mode', name: 'qos_mode', type: 'select', options: [['1','HTB limiter + leaf qdisc scheduler (classic/SQM)'],['2','CAKE AQM']], value: nvram.qos_mode },
 /* BCMARM-END */
 			{ title: 'Prioritize small packets with these control flags', multi: [
