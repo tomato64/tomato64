@@ -33,6 +33,8 @@
 #ifdef USE_LIBCURL
  #include <curl/curl.h>
 #else
+ #include <errno.h>
+ #include <fcntl.h>
  #include "mssl.h"
 #endif
 
@@ -807,6 +809,104 @@ static int mdu_resolve_ip(const unsigned int ssl, const char *host, char *ip_buf
 }
 #endif /* USE_LIBCURL */
 
+#ifndef USE_LIBCURL
+/*
+ * Connect a socket within a bounded time while preserving its status flags.
+ *
+ * Returns 0 only after the connection has completed successfully. On failure,
+ * returns -1 and preserves the relevant errno after restoring the socket's
+ * original file status flags.
+ */
+static int mdu_connect_timeout(int fd, const struct sockaddr *addr, socklen_t len, int timeout)
+{
+	fd_set fds;
+	struct timeval tv;
+	int flags;
+	socklen_t optlen;
+	int optval;
+	int r;
+	int result = -1;
+	int saved_errno = 0;
+
+	/* save original flags and set non-blocking */
+	if ((flags = fcntl(fd, F_GETFL, 0)) < 0 ||
+	    fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+		logmsg(LOG_DEBUG, "*** %s: fcntl F_GETFL/F_SETFL failed on fd %d", __FUNCTION__, fd);
+		return -1;
+	}
+
+	/* initiate non-blocking connect */
+	if (connect(fd, addr, len) < 0) {
+		if (errno != EINPROGRESS) {
+			saved_errno = errno;
+			logmsg(LOG_DEBUG, "*** %s: immediate connect failed on fd %d (errno=%d)", __FUNCTION__, fd, saved_errno);
+			goto restore_flags;
+		}
+	}
+	else {
+		result = 0;
+		goto restore_flags;
+	}
+
+	/* wait for connect completion */
+	while (1) {
+		tv.tv_sec = timeout;
+		tv.tv_usec = 0;
+
+		FD_ZERO(&fds);
+		FD_SET(fd, &fds);
+
+		r = select(fd + 1, NULL, &fds, NULL, &tv);
+		if (r > 0) {
+			optval = 0;
+			optlen = sizeof(optval);
+
+			if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0) {
+				saved_errno = errno;
+				logmsg(LOG_DEBUG, "*** %s: getsockopt SO_ERROR failed on fd %d (errno=%d)", __FUNCTION__, fd, saved_errno);
+				goto restore_flags;
+			}
+			if (optval != 0) {
+				saved_errno = optval;
+				logmsg(LOG_DEBUG, "*** %s: connect failed (SO_ERROR=%d) on fd %d", __FUNCTION__, saved_errno, fd);
+				goto restore_flags;
+			}
+
+			result = 0;
+			break;
+		}
+		else if (r == 0) {
+			saved_errno = ETIMEDOUT;
+			logmsg(LOG_DEBUG, "*** %s: connect timeout after %ds on fd %d", __FUNCTION__, timeout, fd);
+			goto restore_flags;
+		}
+		else {
+			if (errno == EINTR)
+				continue;
+
+			saved_errno = errno;
+			logmsg(LOG_DEBUG, "*** %s: select error on fd %d (errno=%d)", __FUNCTION__, fd, saved_errno);
+			goto restore_flags;
+		}
+	}
+
+restore_flags:
+	if (fcntl(fd, F_SETFL, flags) < 0) {
+		logmsg(LOG_DEBUG, "*** %s: fcntl restore flags failed on fd %d", __FUNCTION__, fd);
+		return -1;
+	}
+
+	if (result < 0) {
+		errno = saved_errno;
+		return -1;
+	}
+
+	logmsg(LOG_DEBUG, "*** %s: connect successful on fd %d", __FUNCTION__, fd);
+
+	return 0;
+}
+#endif /* !USE_LIBCURL */
+
 static long _http_req(const unsigned int ssl, int static_host, const char *host, const char *req, const char *query, const char *header, int auth, char *data, char **body)
 {
 	logmsg(LOG_DEBUG, "*** %s: IN host=[%s] query=[%s] ssl=[%d] header=[%s] auth=[%d] data=[%s] req=[%s] ifname=[%s]", __FUNCTION__, host, query, ssl, header, auth, data ? data : "NULL", req, ifname);
@@ -1175,7 +1275,7 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 
 			logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting ...", __FUNCTION__, c_ip ? c_ip : "unknown", cport);
 
-			if (connect_timeout(sockfd, rp->ai_addr, rp->ai_addrlen, 10) != -1) {
+			if (mdu_connect_timeout(sockfd, rp->ai_addr, rp->ai_addrlen, 10) == 0) {
 				logmsg(LOG_DEBUG, "*** %s: connected!", __FUNCTION__);
 				/* del route */
 				if (c_ip)

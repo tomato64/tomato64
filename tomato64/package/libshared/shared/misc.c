@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <sys/stat.h>
 #include <stdarg.h>
 #include <syslog.h>
@@ -1415,82 +1414,6 @@ char *getNVRAMVar(const char *text, const int unit)
 	snprintf(buffer, sizeof(buffer), text, unit);
 
 	return nvram_safe_get(buffer);
-}
-
-int connect_timeout(int fd, const struct sockaddr *addr, socklen_t len, int timeout)
-{
-	fd_set fds;
-	struct timeval tv;
-	int flags;
-	socklen_t optlen;
-	int optval;
-	int r;
-
-	/* save original flags and set non-blocking */
-	if ((flags = fcntl(fd, F_GETFL, 0)) < 0 ||
-		fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
-		logmsg(LOG_DEBUG, "*** %s: fcntl F_GETFL/F_SETFL failed on fd %d", __FUNCTION__, fd);
-		return -1;
-	}
-
-	/* initiate non-blocking connect */
-	if (connect(fd, addr, len) < 0) {
-		if (errno != EINPROGRESS) {
-		logmsg(LOG_DEBUG, "*** %s: immediate connect failed on fd %d (errno=%d)", __FUNCTION__, fd, errno);
-		goto restore_flags;
-		}
-		/* EINPROGRESS - normal for non-blocking, proceed to select */
-	}
-	else {
-		/* connect succeeded immediately */
-		goto restore_flags;
-	}
-
-	/* wait for writability (connect completion) with timeout */
-	while (1) {
-		tv.tv_sec = timeout;
-		tv.tv_usec = 0;
-
-		FD_ZERO(&fds);
-		FD_SET(fd, &fds);
-
-		r = select(fd + 1, NULL, &fds, NULL, &tv);
-		if (r > 0) {
-			/* socket became writable - check SO_ERROR */
-			optval = 0;
-			optlen = sizeof(optval);
-			if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0 || optval != 0) {
-				logmsg(LOG_DEBUG, "*** %s: connect failed (SO_ERROR=%d) on fd %d", __FUNCTION__, optval, fd);
-				goto restore_flags;
-			}
-			/* success */
-			break;
-		}
-		else if (r == 0) {
-			/* timeout */
-			logmsg(LOG_DEBUG, "*** %s: connect timeout after %ds on fd %d", __FUNCTION__, timeout, fd);
-			goto restore_flags;
-		}
-		else { /* r < 0 */
-			if (errno == EINTR) {
-				/* interrupted by signal - retry select */
-				continue;
-			}
-			logmsg(LOG_DEBUG, "*** %s: select error on fd %d (errno=%d)", __FUNCTION__, fd, errno);
-			goto restore_flags;
-		}
-	}
-
-restore_flags:
-	/* restore original flags */
-	if (fcntl(fd, F_SETFL, flags) < 0) {
-		logmsg(LOG_DEBUG, "*** %s: fcntl restore flags failed on fd %d", __FUNCTION__, fd);
-		return -1;
-	}
-
-	logmsg(LOG_DEBUG, "*** %s: connect successful on fd %d", __FUNCTION__, fd);
-
-	return 0;
 }
 
 void chld_reap(int sig)
