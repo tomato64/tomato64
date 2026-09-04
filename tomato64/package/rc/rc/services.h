@@ -449,6 +449,7 @@ static const struct svc_entry svc_table[] = {
 	{ "tomatoanon",		SVCF_LIST | SVCF_NO_STATUS,					P_NONE,			0,	SVCOP_TOMATOANON	},
 #ifdef TCONFIG_TOR
 	{ "tor",		SVCF_LIST,							P_TOR,			1,	SVCOP_TOR		},
+	{ "tor_newnym",		SVCF_NO_STATUS,							P_NONE,			0,	SVCOP_TOR		},
 #endif
 	{ "upgrade",		SVCF_NO_STATUS,							P_NONE,			0,	SVCOP_UPGRADE		},
 	{ "upnp",		SVCF_LIST,							P_MINIUPNPD,		0,	SVCOP_UPNP		},

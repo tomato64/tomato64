@@ -1792,6 +1792,7 @@ static const nvset_t nvset_list[] = {
 	{ "tor_socksport",		V_RANGE(1, 65535)		},
 	{ "tor_transport",		V_RANGE(1, 65535)		},
 	{ "tor_dnsport",		V_RANGE(1, 65535)		},
+	{ "tor_ctrlport",		V_RANGE(1, 65535)		},
 	{ "tor_datadir",		V_TEXT(0, 24)			},
 	{ "tor_iface",			V_LENGTH(0, 50)			},
 	{ "tor_users",			V_LENGTH(0, 4096)		},

@@ -540,6 +540,38 @@ size_t safe_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 	return ret;
 }
 
+#if defined(TCONFIG_NGINX) || defined(TCONFIG_TOR)
+/*
+ * Convert arbitrary binary data to a NUL-terminated lowercase hexadecimal
+ * string. The source may contain zero bytes.
+ *
+ * Returns 0 on success, EINVAL for invalid arguments, or ENAMETOOLONG when
+ * the destination buffer cannot hold two hex characters per source byte plus
+ * the terminating NUL.
+ */
+int bin2hex(char *dst, size_t dstlen, const void *src, size_t srclen)
+{
+	static const char hex[] = "0123456789abcdef";
+	const unsigned char *p = src;
+	size_t i;
+
+	if (!dst || (dstlen == 0) || (!src && (srclen != 0)))
+		return EINVAL;
+
+	if (srclen > ((dstlen - 1) / 2))
+		return ENAMETOOLONG;
+
+	for (i = 0; i < srclen; ++i) {
+		dst[i * 2] = hex[p[i] >> 4];
+		dst[(i * 2) + 1] = hex[p[i] & 0x0f];
+	}
+
+	dst[srclen * 2] = '\0';
+
+	return 0;
+}
+#endif
+
 /* ether_atoe() helper */
 static int hexval(unsigned char c)
 {

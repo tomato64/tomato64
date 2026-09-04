@@ -147,32 +147,6 @@ static int mysql_wait_ready(const char *dir, const char *password, int timeout)
 	return ETIMEDOUT;
 }
 
-static int mysql_to_hex(char *dst, size_t dstlen, const char *src)
-{
-	static const char hex[] = "0123456789abcdef";
-	unsigned char c;
-	size_t n;
-
-	if (!dst || (dstlen == 0))
-		return EINVAL;
-
-	if (!src)
-		src = "";
-
-	n = 0;
-	while (*src) {
-		if ((n + 2) >= dstlen)
-			return ENAMETOOLONG;
-
-		c = (unsigned char)*src++;
-		dst[n++] = hex[c >> 4];
-		dst[n++] = hex[c & 0x0f];
-	}
-
-	dst[n] = '\0';
-	return 0;
-}
-
 static int mysql_conf_write_escaped(FILE *fp, const char *key, const char *value)
 {
 	if (fprintf(fp, "%-17s = ", key) < 0)
@@ -222,6 +196,7 @@ void start_mysql(int force)
 	pid_t pidof_child = 0;
 	unsigned int new_install = 0;
 	char *nginx_docroot = nvram_safe_get("nginx_docroot");
+	const char *password = nvram_safe_get("mysql_passwd");
 	unsigned int anyhost = nvram_get_int("mysql_allow_anyhost");
 
 
@@ -495,7 +470,7 @@ void start_mysql(int force)
 
 		f_write_string(mysql_log, "=========mysql --execute password update====================", FW_APPEND | FW_NEWLINE, 0);
 
-		rc = mysql_to_hex(pass_hex, sizeof(pass_hex), nvram_safe_get("mysql_passwd"));
+		rc = bin2hex(pass_hex, sizeof(pass_hex), password, strlen(password));
 		if (rc != 0) {
 			logmsg(LOG_ERR, "%s: mysql password is too long", __FUNCTION__);
 			killall_tk_period_wait("mysqld", 50);

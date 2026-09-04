@@ -39,6 +39,10 @@ extern int eval_cmdline(const char *cmd, const char *path, int timeout, int *ppi
 extern size_t safe_fread(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 extern size_t safe_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
+#if defined(TCONFIG_NGINX) || defined(TCONFIG_TOR)
+extern int bin2hex(char *dst, size_t dstlen, const void *src, size_t srclen);
+#endif
+
 extern int ether_atoe(const char *a, unsigned char *e);
 extern char *ether_etoa(const unsigned char *e, char *a);
 

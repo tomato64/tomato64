@@ -2328,7 +2328,8 @@ input[type="button"][value="Clean"],
 input[type="button"][value^="Generate"],
 input[type="button"][value^="Continue"],
 input[type="button"][value^="Support"],
-input[type="button"][value^="Clear Table"] {
+input[type="button"][value^="Clear Table"],
+input[type="button"][value^="New Identity"] {
 	background-position: 12px;
 	background-repeat: no-repeat;
 	background-size: 18px 18px;
@@ -2388,7 +2389,8 @@ input[type="button"][value="Cancel"] {
 }
 
 input[type="button"][value^="Random"],
-input[type="button"][value="OUI + Random UAA"] {
+input[type="button"][value="OUI + Random UAA"],
+input[type="button"][value="New Identity"] {
 	background-image: var(--icon-button-random);
 }
 
