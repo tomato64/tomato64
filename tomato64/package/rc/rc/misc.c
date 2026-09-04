@@ -339,9 +339,12 @@ void setup_conntrack(void)
 	char buf[70];
 	int i;
 
-/* Needed for qos-detailed.asp, qos-ctrate.asp & qos-graphs.asp pages. */
 #ifdef TOMATO64
-	f_write_procsysnet("netfilter/nf_conntrack_acct", "1");
+	/* Per-connection byte counters for qos-detailed.asp & qos-ctrate.asp. */
+	if (nvram_get_int("qos_stats"))
+		f_write_procsysnet("netfilter/nf_conntrack_acct", "1");
+
+	/* Per-class HTB rate estimator for qos-graphs.asp */
 	f_write_string("/sys/module/sch_htb/parameters/htb_rate_est", "1", 0, 0);
 #endif /* TOMATO64 */
 
