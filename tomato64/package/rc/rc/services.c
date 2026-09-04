@@ -3330,6 +3330,10 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				stop_tor();
 			if (act_start)
 				start_tor(svc->arg);
+
+			if (act_start || act_stop)
+				tor_runtime_set(act_start ? 1 : 0);
+
 			restart_firewall();
 			return 1;
 #endif

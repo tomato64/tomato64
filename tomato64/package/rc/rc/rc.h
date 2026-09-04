@@ -638,6 +638,8 @@ extern void stop_snmp(void);
 
 /* tor.c */
 #ifdef TCONFIG_TOR
+extern int tor_runtime_enabled(void);
+extern void tor_runtime_set(int enabled);
 extern int tor_newnym(void);
 extern void start_tor(int force);
 extern void stop_tor(void);

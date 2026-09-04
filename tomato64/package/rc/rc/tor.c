@@ -15,13 +15,48 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
-#define tor_config	"/etc/tor.conf"
-#define tor_cookie_len	32
+#define tor_config		"/etc/tor.conf"
+#define tor_runtime_state	"/var/run/tor.state"
+#define tor_cookie_len		32
 
 /* needed by logmsg() */
-#define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
-#define LOGMSG_NVDEBUG	"tor_debug"
+#define LOGMSG_DISABLE		DISABLE_SYSLOG_OSM
+#define LOGMSG_NVDEBUG		"tor_debug"
 
+
+/*
+ * Return the desired Tor state for the current runtime session.
+ *
+ * Once initialized, /var/run/tor.state is the runtime source of truth. Before
+ * that (normally early during boot), fall back to the persistent tor_enable
+ * setting so existing boot behaviour is preserved.
+ */
+int tor_runtime_enabled(void)
+{
+	char state[2];
+
+	if (f_read_string(tor_runtime_state, state, sizeof(state)) > 0) {
+		if (state[0] == '0')
+			return 0;
+		if (state[0] == '1')
+			return 1;
+	}
+
+	return nvram_get_int("tor_enable");
+}
+
+/*
+ * Record Tor's desired state for this runtime session without changing NVRAM.
+ *
+ * The marker deliberately lives in /var/run: Start/Stop Now survives broad
+ * service and firewall restarts, while "Enable on Start" becomes authoritative
+ * again after reboot.
+ */
+void tor_runtime_set(int enabled)
+{
+	if (f_write_string(tor_runtime_state, enabled ? "1" : "0", 0, 0600) < 0)
+		logerr(__FUNCTION__, __LINE__, tor_runtime_state);
+}
 
 /*
  * Send one Tor Control Protocol command and consume its single-line reply.
@@ -71,7 +106,6 @@ static int tor_control_command(int fd, const char *command)
 
 	return (used >= 3) && (strncmp(reply, "250", 3) == 0);
 }
-
 
 /*
  * Ask the running Tor daemon for a new identity.
@@ -155,15 +189,22 @@ out:
 	return ret;
 }
 
-
 void start_tor(int force) {
 	FILE *fp;
 	char *ip;
 	char buffer[16];
 	int i;
 
-	/* only if enabled or forced */
-	if (!nvram_get_int("tor_enable") && force == 0)
+	/*
+	 * Snapshot the boot policy on first service initialization. From this point
+	 * on, changes to "Enable on Start" affect the next boot unless an explicit
+	 * Start/Stop Now action changes the runtime intent.
+	 */
+	if (!f_exists(tor_runtime_state))
+		tor_runtime_set(nvram_get_int("tor_enable"));
+
+	/* only if enabled for this runtime session or forced */
+	if (!tor_runtime_enabled() && force == 0)
 		return;
 
 	if (serialize_restart("tor", 1))
