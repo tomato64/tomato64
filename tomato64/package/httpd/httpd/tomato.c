@@ -135,7 +135,9 @@ const aspapi_t aspapi[] = {
 	{ "ident",			asp_ident			},
 	{ "lanip",			asp_lanip			},
 #ifndef TOMATO64
+#ifdef TCONFIG_L7
 	{ "layer7",			asp_layer7			},
+#endif
 #endif /* TOMATO64 */
 	{ "link_uptime",		asp_link_uptime			},
 	{ "netdev",			asp_netdev			},
@@ -865,7 +867,9 @@ static const nvset_t nvset_list[] = {
 	{ "ct_timeout",			V_LENGTH(5, 15)			},
 	{ "nf_ttl",			V_LENGTH(1, 6)			},
 #ifndef TOMATO64
+#ifdef TCONFIG_L7
 	{ "nf_l7in",			V_01				},
+#endif
 #else
 	{ "nf_ndpi_in",			V_01				},
 #endif /* TOMATO64 */

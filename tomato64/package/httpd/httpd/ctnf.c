@@ -734,6 +734,7 @@ void asp_qrate(int argc, char **argv)
 }
 
 #ifndef TOMATO64
+#ifdef TCONFIG_L7
 static void layer7_list(const char *path, int *first)
 {
 	DIR *dir;
@@ -763,6 +764,7 @@ void asp_layer7(int argc, char **argv)
 	layer7_list("/etc/l7-protocols", &first);
 	web_puts("];\n");
 }
+#endif /* TCONFIG_L7 */
 #endif /* TOMATO64 */
 
 #ifdef TOMATO64
