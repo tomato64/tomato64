@@ -19,20 +19,20 @@
 <script>
 
 //	<% nvram("wl_radio,wl_nband,wl_mode,wl_closed,wl_ifname,web_css,web_adv_scripts"); %>
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 //	<% wlifaces(); %>
 //	<% wlstats(); %>
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 
 var cprefix = 'tools_wlsurvey';
 var div24 = 21; /* 2.4GHz horizontal divisions */
 var div5 = 39; /* 5GHz horizontal divisions */
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 var div6 = 61; /* 6GHz horizontal divisions */
 var min6 = -4; /* 6GHz leftmost channel number, channels run 1..233 spaced 4 apart */
 var max6 = 240; /* 6GHz rightmost channel number */
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 var vdiv = 9; /* vertical divisions */
 var vsize = 200; /* absolute canvas height */
 var hsize = 756; /* absolute canvas width */
@@ -45,7 +45,7 @@ if (nvram.web_css.match(/at-/g)) {
 var SVG_NS = 'http://www.w3.org/2000/svg';
 var observers = {};
 
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 function internalWiFI(interface) {
 	return new Promise(function(resolve, reject) {
 		var cmd = new XmlHttp();
@@ -195,16 +195,16 @@ function fetchShellScanResults() {
 		return [];
 	});
 }
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 /* No 'wl' binary and no shell.cgi fallback: update.cgi?exec=wlscan runs iwinfo. */
 function fetchShellScanResults() {
 	return Promise.resolve([]);
 }
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 var res0a = '', res1a = '', res2a = '';
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 var wl0 = {
 	ifname: { value: nvram.wl0_ifname },
 	band:   { value: nvram.wl0_nband },
@@ -229,8 +229,8 @@ if ((parseInt(nvram.wl0_nband) === 1) && wl1.ifname.value) {
 	wl0 = wl1;
 	wl1 = temp;
 }
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 /*
  * There is no wl0_* nvram on the OpenWrt stack, so build the three radio slots
  * the rest of this page expects out of wl_ifaces + wlstats. Both are produced
@@ -308,15 +308,15 @@ function wlRadioSlot(band) {
 var wl0 = wlRadioSlot('2.4');
 var wl1 = wlRadioSlot('5');
 var wl2 = wlRadioSlot('6');
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 /* The radio slots are filled once, server side, by wlRadioSlot(). */
 function refreshInternalWiFi() {
 	return Promise.resolve();
 }
-/* TOMATO64-END */
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-NO-END */
+/* BCM53XX-BEGIN */
 function refreshInternalWiFi() {
 	function fetch(ifname, enabled, assign, label) {
 		if (!enabled || !ifname) {
@@ -337,7 +337,7 @@ function refreshInternalWiFi() {
 		fetch(wl2.ifname.value, Number(wl2.radio.value) === 1, function(v) { res2a = v; }, 'wl2')
 	]);
 }
-/* TOMATO64-REMOVE-END */
+/* BCM53XX-END */
 /* ADVTHEMES-BEGIN */
 function resize_graph(id) {
 	var targetNode = E('content');
@@ -398,19 +398,19 @@ function redraw() {
 	clearCanvas('ellipses5');
 	drawBoard('ellipses2');
 	drawBoard('ellipses5');
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 	clearCanvas('ellipses6');
 	drawBoard('ellipses6');
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 }
 
 function drawBaseCoordinates() {
 	var max2 = div24 - 2;
 	drawCoordinates('ellipses2', -2, max2, 1, 13, div24, 1);
 	drawCoordinates('ellipses5', 28, 184, 36, 180, div5, 4);
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 	drawCoordinates('ellipses6', min6, max6, 1, 233, div6, 4);
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 }
 
 function setLoadingOverlay(id, show) {
@@ -426,11 +426,11 @@ function updateLoadingOverlays() {
 	var ellipses5Div = E('tomato-chart5');
 	var show2 = ellipses2Div && (ellipses2Div.style.display !== 'none');
 	var show5 = ellipses5Div && (ellipses5Div.style.display !== 'none');
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 	setLoadingOverlay('2', show2 && !scanReady);
 	setLoadingOverlay('5', show5 && !scanReady);
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	/*
 	 * Keep spinning until either results land or the note goes up, so the
 	 * settling window reads as "still trying" rather than as an empty chart
@@ -442,7 +442,7 @@ function updateLoadingOverlays() {
 	setLoadingOverlay('2', show2 && pending);
 	setLoadingOverlay('5', show5 && pending);
 	setLoadingOverlay('6', ellipses6Div && (ellipses6Div.style.display !== 'none') && pending);
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 }
 
 function updateFreqFilterOptions(setDefault) {
@@ -450,7 +450,7 @@ function updateFreqFilterOptions(setDefault) {
 	if (!sel)
 		return;
 
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 	var has24 = (Number(wl0.radio.value) === 1);
 	var has5 = ((Number(wl1.radio.value) === 1) || (Number(wl2.radio.value) === 1));
 	var filterDiv = sel.closest('td');
@@ -463,8 +463,8 @@ function updateFreqFilterOptions(setDefault) {
 		if (filterDiv) filterDiv.style.display = 'none';
 		if (setDefault) sel.value = has5 ? '5' : '2.4';
 	}
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	var bands = wlBandsPresent();
 	var filterDiv = sel.closest('td');
 
@@ -482,10 +482,10 @@ function updateFreqFilterOptions(setDefault) {
 		if (filterDiv) filterDiv.style.display = 'none';
 		if (setDefault) sel.value = bands.length ? bands[0] : '0';
 	}
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 }
 
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 /* Bands this router has an enabled radio on, in chart order */
 function wlBandsPresent() {
 	var bands = [];
@@ -510,7 +510,7 @@ function showChartsFor(filter) {
 		div.style.display = (wanted && (bands.indexOf(charts[i][0]) >= 0)) ? 'block' : 'none';
 	}
 }
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 function recolor() {
 	colors = colors.sort(() => Math.random() - 0.5);
@@ -532,11 +532,11 @@ function doit() {
 	sg.resort();
 	drawNoise('ellipses2', fillstyle);
 	drawNoise('ellipses5', fillstyle);
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 	drawNoise('ellipses6', fillstyle);
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 	var ellipses2Div = E('tomato-chart2');
 	var ellipses5Div = E('tomato-chart5');
 	var has24 = (Number(wl0.radio.value) === 1);
@@ -554,10 +554,10 @@ function doit() {
 		ellipses2Div.style.display = has24 ? 'block' : 'none';
 		ellipses5Div.style.display = has5 ? 'block' : 'none';
 	}
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	showChartsFor(filter);
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 	updateLoadingOverlays();
 }
@@ -606,7 +606,7 @@ var colors = [
 	'#556B2F'  /* DarkOliveGreen */
 ];
 var wlscandata = [];
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 var wlscanmsg = ''; /* set by exec=wlscan when a radio could not be surveyed */
 
 var wlscanmsgSeen = 0; /* consecutive responses carrying this same message */
@@ -670,7 +670,7 @@ function showScanNote() {
 	elem.setInnerHTML(e, msg ? '<b>Note:<\/b> '+msg : '');
 	e.style.display = msg ? 'block' : 'none';
 }
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 var scanReady = false;
 var entries = [];
 var dayOfWeek = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -696,9 +696,9 @@ function renderNoData() {
 
 ref.refresh = function(text) {
 	var prevScan = wlscandata;
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 	var prevMsg = wlscanmsg;
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 	try {
 		eval(text);
 	}
@@ -706,11 +706,11 @@ ref.refresh = function(text) {
 		console.error('wlscan refresh eval failed:', ex);
 		wlscandata = prevScan;
 	}
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 	/* Only a real response counts: the fast poll re-renders with an empty body */
 	if (text)
 		noteScanResponse(prevMsg);
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 	var isError = (wlscandata && (wlscandata.length == 1) && (!wlscandata[0][0]));
 	var hasData = (wlscandata && wlscandata.length && !isError);
@@ -729,16 +729,16 @@ ref.refresh = function(text) {
 		wlscandata = prevScan;
 	}
 
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 	var enabled24 = (Number(wl0.radio.value) === 1);
 	var enabled5 = ((Number(wl1.radio.value) === 1) || (Number(wl2.radio.value) === 1));
 	var hasBand24 = wlHasBand('2.4');
 	var hasBand5 = wlHasBand('5');
 	var needsFallback = (enabled24 && !hasBand24) || (enabled5 && !hasBand5);
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	var needsFallback = false;
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 	var scanP = Promise.resolve();
 	if (needsFallback || (!scanReady && (!wlscandata || (wlscandata.length === 0)))) {
@@ -770,7 +770,7 @@ function drawNoise(board, style) {
 	var svg = E(board);
 	var sz = svgSize(svg);
 
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 	if ((Number(wl0.radio.value) === 1) && (board == 'ellipses2') && res0a && (wl0.noise != null)) {
 		noise = ((-wl0.noise - 10) * (sz.h / 100) * (10 / vdiv));
 		noiseV = Number(wl0.noise);
@@ -783,15 +783,15 @@ function drawNoise(board, style) {
 		noise = ((-wl2.noise - 10) * (sz.h / 100) * (10 / vdiv));
 		noiseV = Number(wl2.noise);
 	}
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	var wl = (board == 'ellipses2') ? wl0 : (board == 'ellipses5') ? wl1 : wl2;
 
 	if ((Number(wl.radio.value) === 1) && (wl.noise != null)) {
 		noise = ((-wl.noise - 10) * (sz.h / 100) * (10 / vdiv));
 		noiseV = Number(wl.noise);
 	}
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 	if (!noise)
 		return;
@@ -819,25 +819,25 @@ function drawNoise(board, style) {
 	})).appendChild(document.createTextNode('noise '+noiseV));
 }
 
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 function drawEllipse(c = -100, m = 20, q, col, ssid, noise, style, sshow) {
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 /*
  * 6 GHz channel numbers (1..233) overlap both the 2.4 and the 5 GHz ranges, so
  * the canvas has to be picked from the band rather than from the channel.
  */
 function drawEllipse(c = -100, m = 20, q, col, ssid, noise, style, sshow, band) {
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 	var mf, cf, rf;
 	var svg;
 	var sz;
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 	if (c < 35) {
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	if (band == '2.4') {
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 		svg = E('ellipses2');
 		sz = svgSize(svg);
 		if (m == 20)
@@ -856,12 +856,12 @@ function drawEllipse(c = -100, m = 20, q, col, ssid, noise, style, sshow, band) 
 
 		rf = q * (sz.h / 100) * (10 / vdiv);
 	}
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 	else if (c > 35) {
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	else if (band == '5') {
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 		svg  = E('ellipses5');
 		sz = svgSize(svg);
 		m = parseInt(m, 10);
@@ -882,7 +882,7 @@ function drawEllipse(c = -100, m = 20, q, col, ssid, noise, style, sshow, band) 
 		cf = (sz.w / div5) + ((sz.w / div5) * (cc / 4));
 		rf = q * (sz.h / 100) * (10 / vdiv); /* adapt calculation for -10 to -100 only */
 	}
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 	else if (band == '6') {
 		svg = E('ellipses6');
 		sz = svgSize(svg);
@@ -897,7 +897,7 @@ function drawEllipse(c = -100, m = 20, q, col, ssid, noise, style, sshow, band) 
 		cf = xStep6 * (c - min6);
 		rf = q * (sz.h / 100) * (10 / vdiv);
 	}
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 	if (!svg)
 		return;
 
@@ -949,17 +949,17 @@ sg.populate = function(style, sshow, filter) {
 
 	if (!scanReady && (!wlscandata || (wlscandata.length === 0))) {
 		drawBaseCoordinates();
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 		setMsg('');
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 		/*
 		 * Every radio was refused, so there is nothing to plot and nothing
 		 * more coming. Say why, or the page just looks broken.
 		 */
 		setMsg('');
 		showScanNote();
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 		updateLoadingOverlays();
 		return;
 	}
@@ -1006,22 +1006,22 @@ sg.populate = function(style, sshow, filter) {
 			e.ssid = s[1];
 
 		e.control = s[3];
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 		e.band = s[9];
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 		e.channel = s[10];
 		e.channel = e.channel+'<br><small>'+s[9]+' GHz<\/small><br><small>'+s[4]+' MHz<\/small>';
 		e.rssi = s[2];
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 		if (s[9] == 2.4)
 			e.snr = Number(e.rssi) + Math.abs(wl0.noise);
 		else
 			e.snr = Number(e.rssi) + Math.abs(wl1.noise);
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 		var wlb = (s[9] == '2.4') ? wl0 : (s[9] == '6') ? wl2 : wl1;
 		e.snr = (wlb.noise != null) ? (Number(e.rssi) + Math.abs(wlb.noise)) : '';
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 		e.mhz = s[4];
 		e.cap = s[7]+ '<br>'+s[8];
 		e.rates =s[6].replace('11', '');
@@ -1077,18 +1077,18 @@ sg.populate = function(style, sshow, filter) {
 			var density = (style / 100);
 
 		var colo;
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 		if (lim2 <= ssidlimit && chan[0] < 35 && col2 <= colors.length - 1) {
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 		if (lim2 <= ssidlimit && e.band == '2.4' && col2 <= colors.length - 1) {
-/* TOMATO64-END */
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-NO-END */
+/* BCM53XX-BEGIN */
 			if (e.bssid === wl0.bssid)
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 			if (isOurs(e.bssid))
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 				colo = '#aaaaaa';
 			else {
 				colo = colors[col2];
@@ -1097,25 +1097,25 @@ sg.populate = function(style, sshow, filter) {
 			lim2++;
 			var decimalColor = hexToDecimal(colo);
 			e.col = '<div style="margin:0 auto;display:block;padding:0px;width:20px;height:40px;background-color:rgba('+decimalColor+','+density+');border:1px solid black;"><\/div>';
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 			drawEllipse(chan[0], e.mhz, (100 + e.rssi), colo, e.ssid, 0, style, sshow);
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 			drawEllipse(chan[0], e.mhz, (100 + e.rssi), colo, e.ssid, 0, style, sshow, e.band);
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 		}
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 		else if (lim5 <= ssidlimit && chan[0] > 35) {
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 		else if (lim5 <= ssidlimit && (e.band == '5' || e.band == '6')) {
-/* TOMATO64-END */
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-NO-END */
+/* BCM53XX-BEGIN */
 			if ((e.bssid === wl1.bssid) || (e.bssid === wl2.bssid))
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 			if (isOurs(e.bssid))
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 				colo = '#aaaaaa';
 			else {
 				colo = colors[col5];
@@ -1124,12 +1124,12 @@ sg.populate = function(style, sshow, filter) {
 			lim5++;
 			var decimalColor = hexToDecimal(colo);
 			e.col = '<div style="margin:0 auto;display:block;padding:0px;width:20px;height:40px;background-color:rgba('+decimalColor+','+density+');border:1px solid black;"><\/div>';
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 			drawEllipse(chan[0], e.mhz, (100 + e.rssi), colo, e.ssid, 0, style, sshow);
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 			drawEllipse(chan[0], e.mhz, (100 + e.rssi), colo, e.ssid, 0, style, sshow, e.band);
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 		}
 		else {
 			e.col = '<div><\/div>';
@@ -1151,9 +1151,9 @@ sg.populate = function(style, sshow, filter) {
 	s += entries.length+' total.';
 	s += '<br><br><small>Last updated: '+(new Date()).toWHMS()+'<\/small>';
 	setMsg(s);
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 	showScanNote();
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 	updateLoadingOverlays();
 }
@@ -1230,13 +1230,13 @@ function drawFT(show) {
 	}
 
 	function pushInternal(wl) {
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 		var freq = (Number(wl.band.value) === 1) ? '5' : '2.4';
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 		/* nband cannot express 6 GHz, so take the band the slot was built for */
 		var freq = wl.freq;
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 		if ((Number(wl.radio.value) !== 1) || !wl.bssid)
 			return;
 
@@ -1248,17 +1248,17 @@ function drawFT(show) {
 		wlscandata.push(internal);
 	}
 
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 	parseStatus(wl0, res0a);
 	parseStatus(wl1, res1a);
 	parseStatus(wl2, res2a);
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-BEGIN */
 	pushInternal(wl0);
 	pushInternal(wl1);
 	pushInternal(wl2);
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	/*
 	 * wl0/wl1/wl2 describe one radio each, but a radio can carry several
 	 * BSSIDs and cannot hear any of them, so walk every enabled AP interface.
@@ -1281,7 +1281,7 @@ function drawFT(show) {
 			                  wlBandOfMhz(st.mhz), (st.center ? st.center : st.channel), 0 ]);
 		}
 	}
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 }
 
 function drawCoordinates(a, b, c, d, e, f, g) {
@@ -1377,7 +1377,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 			}
 		}
 	}
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 	else if (a == 'ellipses6') {
 		/* 6 GHz channels are 1, 5, 9 ... 233; label every fourth one */
 		for (var x = 1; x <= 233; x += 16) {
@@ -1392,7 +1392,7 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 			})).appendChild(document.createTextNode(x));
 		}
 	}
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 	/* draw y-axis */
 	for (var i = 0; i < 10; i++) {
 		var y = -10 * i;
@@ -1467,7 +1467,7 @@ function drawBoard(can) {
 		frag.appendChild(svgEl('rect', { x: (w / div5) * 37, y: 0, width: w, height: vsize, fill: shade }));
 		frag.appendChild(svgEl('rect', { x: (w / div5) * 29.3, y: 0, width: (w / div5) * 0.6, height: vsize, fill: shade }));
 	}
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 	else if (can == 'ellipses6') {
 		for (var x = 0; x <= hsize; x += (w / div6)) {
 			frag.appendChild(svgEl('line', {
@@ -1484,7 +1484,7 @@ function drawBoard(can) {
 			}));
 		}
 	}
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 	svg.appendChild(frag);
 }
@@ -1524,7 +1524,7 @@ function init() {
 
 	updateFreqFilterOptions(true);
 
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 	var ellipses2Div = E('tomato-chart2');
 	var ellipses5Div = E('tomato-chart5');
 	if (Number(wl0.radio.value) === 1 && wl0.mode.value !== '')
@@ -1536,17 +1536,17 @@ function init() {
 		ellipses5Div.style.display = 'block';
 	else
 		ellipses5Div.style.display = 'none';
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	showChartsFor(E('freq-filter').value);
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 /* ADVTHEMES-BEGIN */
 	if (nvram.web_adv_scripts == 1) {
 		resize_graph('2');
 		resize_graph('5');
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 		resize_graph('6');
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 	}
 /* ADVTHEMES-END */
 	sg.recolor();
@@ -1563,7 +1563,7 @@ function init() {
 	var pollCount = 0;
 	var fastPoll = setInterval(function() {
 		pollCount++;
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 		var has24 = (Number(wl0.radio.value) === 1);
 		var has5 = ((Number(wl1.radio.value) === 1) || (Number(wl2.radio.value) === 1));
 		var got24 = false, got5 = false;
@@ -1574,15 +1574,15 @@ function init() {
 		}
 
 		var ready = (!has24 || got24) && (!has5 || got5);
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 		var wanted = wlBandsPresent();
 		var ready = true;
 
 		for (var b = 0; b < wanted.length; b++)
 			if (!wlHasBand(wanted[b]))
 				ready = false;
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 		if (ready || pollCount > 10)
 			clearInterval(fastPoll);
 		else
@@ -1606,9 +1606,9 @@ function init() {
 
 <div class="section-title">Charts</div>
 <div class="section">
-<!-- TOMATO64-BEGIN -->
+<!-- BCM53XX-NO-BEGIN -->
 	<div class="note-warning" id="survey-note"></div>
-<!-- TOMATO64-END -->
+<!-- BCM53XX-NO-END -->
 	<div id="tomato-chart2">Channel Congestion: <b>2.4 GHz</b><br>
 		<script>
 			W('<div id="graph2" style="position:relative"><div id="loading2" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none">Loading... <img src="spin.svg" alt="" style="transform:scale(3);filter:opacity(0.2);padding-left: 20px"><\/div><svg id="ellipses2" width="'+hsize+'" height="'+vsize+'" viewBox="0 0 '+hsize+' '+vsize+'" xmlns="'+SVG_NS+'" style="border:0px"><\/svg><\/div>');
@@ -1621,29 +1621,29 @@ function init() {
 		</script>
 	</div>
 	<br>
-<!-- TOMATO64-BEGIN -->
+<!-- BCM53XX-NO-BEGIN -->
 	<div id="tomato-chart6">Channel Congestion: <b>6 GHz</b><br>
 		<script>
 			W('<div id="graph6" style="position:relative"><div id="loading6" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none">Loading... <img src="spin.svg" alt="" style="transform:scale(3);filter:opacity(0.2);padding-left: 20px;"><\/div><svg id="ellipses6" width="'+hsize+'" height="'+vsize+'" viewBox="0 0 '+hsize+' '+vsize+'" xmlns="'+SVG_NS+'" style="border:0px"><\/svg><\/div>');
 		</script>
 	</div>
 	<br>
-<!-- TOMATO64-END -->
+<!-- BCM53XX-NO-END -->
 	<div id="wl-controls">
 		<table style="border:none"><tr><td>
 			<label for="freq-filter">Display: </label>
 				<select id="freq-filter" onchange="doit();">
 					<option value="2.4">2.4 GHz</option>
 					<option value="5">5 GHz</option>
-<!-- TOMATO64-BEGIN -->
+<!-- BCM53XX-NO-BEGIN -->
 					<option value="6">6 GHz</option>
-<!-- TOMATO64-END -->
-<!-- TOMATO64-REMOVE-BEGIN -->
+<!-- BCM53XX-NO-END -->
+<!-- BCM53XX-BEGIN -->
 					<option value="0" selected>2.4 & 5 GHz</option>
-<!-- TOMATO64-REMOVE-END -->
-<!-- TOMATO64-BEGIN -->
+<!-- BCM53XX-END -->
+<!-- BCM53XX-NO-BEGIN -->
 					<option value="0" selected>All bands</option>
-<!-- TOMATO64-END -->
+<!-- BCM53XX-NO-END -->
 				</select>&nbsp;&nbsp;&nbsp;&nbsp;
 		</td><td>
 			<label for="fill-style">Style: </label>
@@ -1697,28 +1697,28 @@ function init() {
 <script>writeToggleSectionTitle('Notes', 'notes');</script>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<ul>
-<!-- TOMATO64-REMOVE-BEGIN -->
+<!-- BCM53XX-BEGIN -->
 		<script>
 			if ('<% wlclient(); %>' == '0')
 				W('<li><b>Warning:<\/b> Wireless connections to this router may be disrupted while using this tool.<br><\/li>');
 		</script>
-<!-- TOMATO64-REMOVE-END -->
-<!-- TOMATO64-BEGIN -->
+<!-- BCM53XX-END -->
+<!-- BCM53XX-NO-BEGIN -->
 		<li><b>Warning:</b> Wireless connections to this router may be disrupted while using this tool.</li>
-<!-- TOMATO64-END -->
-<!-- TOMATO64-REMOVE-BEGIN -->
+<!-- BCM53XX-NO-END -->
+<!-- BCM53XX-BEGIN -->
 <!-- BCMARM-BEGIN -->
 		<li><b>Wireless Survey:</b> will not show any results with WL filter turned on in 'permit only' mode. </li>
 <!-- BCMARM-END -->
-<!-- TOMATO64-REMOVE-END -->
+<!-- BCM53XX-END -->
 		<li><b>Internal SSID:</b> a full page reload is needed if any of the internal SSID parameters (grey ellipse) ever change.</li>
-<!-- TOMATO64-REMOVE-BEGIN -->
+<!-- BCM53XX-BEGIN -->
 		<li><b>Protocols:</b> 802.11ac based FT routers may not accurately detect 160, 240, or 320 MHz channel widths used by 802.11ax (WiFi 6) and 802.11be (WiFi 7) routers. Conversely, 802.11ax-based FT routers may misinterpret 240 or 320 MHz widths in 802.11be routers as 160 MHz. Consider these limitations when assessing network configurations for compatibility and performance.</li>
-<!-- TOMATO64-REMOVE-END -->
-<!-- TOMATO64-BEGIN -->
+<!-- BCM53XX-END -->
+<!-- BCM53XX-NO-BEGIN -->
 		<li><b>Scan duration:</b> a survey takes several seconds per radio and briefly interrupts traffic on it. Results are cached for a few seconds, so refreshing faster than that re-shows the previous scan.</li>
 		<li><b>6 GHz:</b> a 6 GHz radio can only find neighbours that advertise themselves on the preferred scanning channels or through a co-located 2.4/5 GHz AP, so this band normally reports far fewer networks than it can actually reach.</li>
-<!-- TOMATO64-END -->
+<!-- BCM53XX-NO-END -->
 	</ul>
 </div>
 

@@ -446,12 +446,12 @@ dg.populate = function() {
 
 		a = '';
 		if (e.freq != '') /* WL */
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 			a = e.ifstatus+' '+(e.ifname.indexOf('.') == -1 ? e.ifname+' (wl'+e.unit+')' : '('+e.ifname+')')+c;
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 			a = e.lan+e.wan+'('+e.ifname+')'+c;
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 		else if (e.ifname != '' && found_last == 0)
 			a = e.lan+e.wan+'('+e.ifname+')'+c;
 		else
@@ -683,12 +683,12 @@ function addStatic(n) {
 function addWF(n) {
 	var e = list[n];
 	cookie.set('addmac', [e.mac, e.name.split(',')[0]].join(','), 1);
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 	location.href = 'basic-wfilter.asp';
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	location.href = 'basic-wireless.asp';
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 }
 
 function addbwlimit(n) {
@@ -847,12 +847,12 @@ function init() {
 		var f = [];
 		for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 			var u = wl_unit(uidx);
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 			if (nvram['wl'+u+'_radio'] == 1 && wl_sunit(uidx) < 0)
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 			if (wl_sunit(uidx) < 0)
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 					f.push( { title: '<span id="nf'+u+'" title="Noise Floor"><b>Noise<\/b> '+wl_display_ifname(uidx)+'&nbsp;<b>:<\/b><\/span>', prefix: '<span id="noiseimg_'+uidx+'"><\/span>&nbsp;<span id="noise'+uidx+'">', custom: wlnoise[uidx], suffix: '<\/span>&nbsp;<small>dBm<\/small>' } );
 		}
 		createFieldTable('', f);

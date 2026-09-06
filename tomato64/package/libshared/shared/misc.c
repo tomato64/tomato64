@@ -500,11 +500,14 @@ static int append_ifnames(char *dst, size_t size, const char *src, int add_space
 int foreach_wif(int include_vifs, void *param,
 	int (*func)(int idx, int unit, int subunit, void *param))
 {
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	char ifnames[BUF_SIZE_64 * BRIDGE_COUNT] = { 0 }; /* increase size depending on bridge count */
 	char name[BUF_SIZE_64], ifname[BUF_SIZE_64], *next = NULL;
 	int unit = -1, subunit = -1;
 	int i, ret = 0;
+#ifdef TOMATO64
+	int pass, is_vif;
+#endif /* TOMATO64 */
 
 	/* LAN interfaces */
 	for (i = 0; i < BRIDGE_COUNT; i++) {
@@ -547,6 +550,7 @@ list_ready:
 	remove_dups(ifnames, sizeof(ifnames));
 	sort_list(ifnames, sizeof(ifnames));
 
+#ifndef TOMATO64
 	i = 0;
 	memset(name, 0, sizeof(name)); /* reset */
 	foreach(name, ifnames, next) {
@@ -569,10 +573,41 @@ list_ready:
 
 		ret |= func(i++, unit, subunit, param);
 	}
-	return ret;
 #else /* TOMATO64 */
-	return 0;
+	i = 0;
+	/* report every primary before any vif: the GUI indexes its per-radio arrays by callback index */
+	for (pass = 0; pass < (include_vifs ? 2 : 1); pass++) {
+		memset(name, 0, sizeof(name)); /* reset */
+		foreach(name, ifnames, next) {
+			if (nvifname_to_osifname(name, ifname, sizeof(ifname)) != 0)
+				continue;
+
+			if (wl_probe(ifname) || wl_ioctl(ifname, WLC_GET_INSTANCE, &unit, sizeof(unit)))
+				continue;
+
+			/* Convert eth name to wl name */
+			if (osifname_to_nvifname(name, ifname, sizeof(ifname)) != 0)
+				continue;
+
+			/* Slave intefaces have a '.' in the name */
+			is_vif = (strchr(ifname, '.') != NULL);
+			if (is_vif && !include_vifs)
+				continue;
+
+			if (is_vif != pass)
+				continue;
+
+			if (get_ifname_unit(ifname, &unit, &subunit) < 0)
+				continue;
+
+			ret |= func(i++, unit, subunit, param);
+		}
+	}
 #endif /* TOMATO64 */
+	return ret;
+#else /* TOMATO64 && !TOMATO64_BCM53XX */
+	return 0;
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 }
 
 void notice_set(const char *path, const char *format, ...)

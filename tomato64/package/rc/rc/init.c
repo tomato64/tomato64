@@ -197,7 +197,7 @@ static void set_defaults(struct nvram_tuple *t, char *strprefix)
 #endif /* TCONFIG_RTNPLUS */
 #endif /* TOMATO64 */
 
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 #ifdef CONFIG_BCMWL6A
 /* assign none-exist value */
 void wl_defaults(void)
@@ -251,7 +251,11 @@ void wl_defaults(void)
 	}
 	dbg("*** Restoring wireless vars - done\n");
 }
+#endif /* CONFIG_BCMWL6A */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 
+#ifndef TOMATO64
+#ifdef CONFIG_BCMWL6A
 /* For Netgear Router to set cal data (get infos at board_data --> router specifc) */
 static void setcaldata()
 {
@@ -10413,6 +10417,10 @@ static int init_nvram(void)
 			nvram_set("t_model_name", "BCM53XX");
 		}
 	}
+
+	features |= SUP_80211N | SUP_80211AC;
+
+	nvram_set("wl_ifname", "wl0");	/* first entry of wl_ifnames */
 #endif /* TOMATO64_BCM53XX */
 #endif /* TOMATO64 */
 #ifndef CONFIG_BCMWL6A
@@ -11241,7 +11249,7 @@ int init_main(int argc, char *argv[])
 #endif /* TOMATO64 */
 			start_services();
 
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 			if (restore_defaults_fb /*|| nvram_match("wireless_restart_req", "1")*/) {
 				logmsg(LOG_INFO, "%s: Tomato64 WiFi restarting ... (restore defaults)", nvram_safe_get("t_model_name"));
 				restore_defaults_fb = 0; /* reset */
@@ -11264,7 +11272,7 @@ int init_main(int argc, char *argv[])
 				}
 #endif /* TCONFIG_BCMARM */
 			}
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 			/*
 			 * last one as ssh telnet httpd samba etc can fail to load until start_wan_done
 			 */
@@ -11273,7 +11281,7 @@ int init_main(int argc, char *argv[])
 			eval("mount_root", "done");
 #endif /* TOMATO64_BCM53XX || TOMATO64_MT3600BE */
 
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 			if (wds_enable()) {
 				/* Restart NAS one more time - for some reason without
 				 * this the new driver doesn't always bring WDS up.
@@ -11281,7 +11289,7 @@ int init_main(int argc, char *argv[])
 				stop_nas();
 				start_nas();
 			}
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 
 			logmsg(LOG_INFO, "%s: Tomato64 %s", nvram_safe_get("t_model_name"), tomato_version);
 

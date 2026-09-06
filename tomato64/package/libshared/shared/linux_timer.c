@@ -177,7 +177,12 @@ void init_event_queue(int n)
 	tv.it_value.tv_usec = 0;
 
 	setitimer(ITIMER_REAL, &tv, 0);
+#ifndef TOMATO64
 	setitimer(ITIMER_REAL, 0, &tv);
+#else
+	/* read-back; 32-bit musl derefs setitimer()'s NULL new value -> SIGSEGV */
+	getitimer(ITIMER_REAL, &tv);
+#endif /* TOMATO64 */
 
 	if (tv.it_interval.tv_usec == 0)
 		tv.it_interval.tv_usec = 1;

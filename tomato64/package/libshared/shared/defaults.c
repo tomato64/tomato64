@@ -2187,7 +2187,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "lan_ifnames",		"eth1"				},
 #endif /* TOMATO64_R76S */
 #ifdef TOMATO64_BCM53XX
-	{ "lan_ifnames",		"eth1 eth2 eth3 eth4"		},
+	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 wl0 wl1"	},
+	{ "wl_ifnames",			"wl0 wl1"			},
+	{ "wl0_ifname",			"wl0"				},
+	{ "wl1_ifname",			"wl1"				},
+	{ "wl0_nband",			"2"				},	/* 2.4 GHz */
 #endif /* TOMATO64_BCM53XX */
 	{ "lan_ifnames_vlan",		"vlan1"				},
 
@@ -2245,7 +2249,7 @@ struct nvram_tuple router_defaults[] = {
 #elif defined(TOMATO64_R76S)
 	{"wifi_phy_count_expected",	"0"				},	/* R76S: optional RTL8822CS WiFi module (not expected by default) */
 #elif defined(TOMATO64_BCM53XX)
-	{"wifi_phy_count_expected",	"0"				},	/* BCM53XX: WiFi disabled in kernel */
+	{"wifi_phy_count_expected",	"0"				},	/* BCM53XX: wl driver, not mac80211 - no ieee80211 PHYs */
 #elif defined(TOMATO64_X86_64)
 	{"wifi_phy_count_expected",	"0"				},	/* x86_64: optional WiFi (add-in cards) */
 #elif defined(TOMATO64_ARMSR)

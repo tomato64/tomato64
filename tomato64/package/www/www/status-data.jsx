@@ -196,12 +196,12 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 	if (i < 0)
 		i = -i;
 
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 	stats.channel.push('<a href="tools-survey.asp">'+((i) ? i+'' : 'Auto')+((wlstats[uidx].mhz) ? ' - '+(wlstats[uidx].mhz / 1000.0).toFixed(3)+' <small>GHz</small>' : '')+'</a>'+((a < 0) ? ' <small>(scanning...)</small>' : ''));
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	stats.channel.push(((i) ? i+'' : 'Auto')+((wlstats[uidx].mhz) ? ' - '+(wlstats[uidx].mhz / 1000.0).toFixed(3)+' <small>GHz</small>' : ''));
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 	stats.interference.push((wlstats[uidx].intf >= 0) ? ((wlstats[uidx].intf) ? 'Severe' : 'Acceptable') : '');
 
 	a = wlstats[uidx].nbw * 1;
@@ -258,7 +258,17 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 		}
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 				wlstats[uidx].ifstatus = wlstats[uidx].ifstatus+' (LAN' + wl_info[uidx][4].charAt(2)+')';
+/* BCM53XX-NO-END */
+/* BCM53XX-BEGIN */
+		for (i = 0; i < xifs[0].length ; ++i) {
+			if ((' '+(nvram[xifs[0][i]+'_ifnames'] || '')+' ').indexOf(' '+wl_ifaces[uidx][0]+' ') >= 0) {
+				wlstats[uidx].ifstatus = wlstats[uidx].ifstatus+' ('+xifs[1][i]+')';
+				break;
+			}
+		}
+/* BCM53XX-END */
 /* TOMATO64-END */
 	}
 }

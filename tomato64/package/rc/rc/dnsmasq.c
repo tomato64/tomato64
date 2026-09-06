@@ -49,7 +49,7 @@ static void start_dnsmasq_wet(void);
 
 static int check_bridge_modes(void) {
 	/* check wireless ethernet bridge (wet) after stop_dnsmasq() */
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	if (foreach_wif(1, NULL, is_wet)) {
 		logmsg(LOG_INFO, "starting dnsmasq for wireless ethernet bridge mode");
 		start_dnsmasq_wet();
@@ -63,7 +63,7 @@ static int check_bridge_modes(void) {
 		return 1;
 	}
 #endif /* TCONFIG_BCMWL6 */
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 
 	return 0;
 }

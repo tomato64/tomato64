@@ -393,9 +393,9 @@ static const struct svc_entry svc_table[] = {
 	{ "mysql",		SVCF_LIST,							P_MYSQLD,		1,	SVCOP_MYSQL		},
 	{ "mysqld",		0,								P_MYSQLD,		1,	SVCOP_MYSQL		},
 #endif
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	{ "nas",		SVCF_LIST,							P_NAS,			0,	SVCOP_NAS		},
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 	{ "net",		SVCF_LIST | SVCF_NO_STATUS,					P_NONE,			0,	SVCOP_NET		},
 #ifdef TCONFIG_NFS
 	{ "nfs",		SVCF_LIST,							P_NFSD,			0,	SVCOP_NFS		},
@@ -474,11 +474,11 @@ static const struct svc_entry svc_table[] = {
 #ifdef TCONFIG_WIREGUARD
 	{ "wireguard",	SVCF_LIST | SVCF_PREFIX | SVCF_NUM_SUF | SVCF_WG_SUF	,		P_WIREGUARD,		0,	SVCOP_WIREGUARD		},
 #endif
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	{ "wireless",		SVCF_LIST | SVCF_NO_STATUS,					P_NONE,			0,	SVCOP_WIRELESS		},
 	{ "wl",			SVCF_NO_STATUS,							P_NONE,			0,	SVCOP_WIRELESS		},
 	{ "wlgui",		SVCF_NO_STATUS,							P_NONE,			0,	SVCOP_WLGUI		},
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 #ifdef TCONFIG_ZEBRA
 	{ "zebra",		SVCF_LIST,							P_ZEBRA,		0,	SVCOP_ZEBRA		},
 #endif

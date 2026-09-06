@@ -43,16 +43,16 @@ function wl_ifidxx(ifname) {
 	return -1;
 }
 
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 function wl_display_ifname(uidx) {
 	return wl_ifaces[uidx][0]+(wl_sunit(uidx) < 0 ?
 	       ' (wl'+wl_fface(uidx)+')' : '')+((wl_bands[uidx].length == 1) ?
 	       ((wl_bands[uidx][0] == '1') ? ' / 5 GHz' : ' / 2.4 GHz') : ((nvram['wl'+wl_unit(uidx)+'_nband'] == 1) ?
 	       ' / 5 GHz' : ' / 2.4 GHz'));
 }
-/* TOMATO64-REMOVE-END */
+/* BCM53XX-END */
 
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 function wl_display_ifname(uidx) {
 	let result = wl_ifaces[uidx][0];
 
@@ -78,4 +78,4 @@ function wl_display_ifname(uidx) {
 
 	return result;
 }
-/* TOMATO64-END */
+/* BCM53XX-NO-END */

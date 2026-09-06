@@ -2641,9 +2641,9 @@ function navi() {
 			['Time',			'time.asp'],
 			['DDNS',			'ddns.asp'],
 			['DHCP Reservation',		'static.asp'],
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 			['Wireless Filter',		'wfilter.asp'],
-/* TOMATO64-REMOVE-END */
+/* BCM53XX-END */
 		]],
 		['Advanced', 			'advanced', 0, [
 			['Conntrack/Netfilter',		'ctnf.asp'],
@@ -2663,10 +2663,10 @@ function navi() {
 /* TOR-END */
 			['VLAN',			'vlan.asp'],
 			['LAN Access',			'access.asp'],
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 			['Virtual Wireless',		'wlanvifs.asp'],
 			['Wireless',			'wireless.asp'],
-/* TOMATO64-REMOVE-END */
+/* BCM53XX-END */
 		]],
 		['Port Forwarding', 		'forward', 0, [
 			['Basic',			'basic.asp'],

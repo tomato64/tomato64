@@ -2535,9 +2535,9 @@ void start_services(void)
 			start_sshd();
 	}
 	start_dhcpc_lan(); /* start very early */
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	start_nas();
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 #ifdef TCONFIG_ZEBRA
 	start_zebra();
 #endif
@@ -2678,9 +2678,9 @@ void stop_services(void)
 #ifdef TCONFIG_ZEBRA
 	stop_zebra();
 #endif
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	stop_nas();
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 #ifdef TCONFIG_BCMBSD
 	stop_bsd();
 #endif
@@ -2973,9 +2973,9 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				stop_mdns();
 #endif
 				stop_dnsmasq();
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 				stop_nas();
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 				stop_wan();
 				stop_arpbind();
 				stop_lan();
@@ -2985,9 +2985,9 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				start_vlan();
 				start_lan();
 				start_arpbind();
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 				start_nas();
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 				start_dnsmasq();
 #ifdef TCONFIG_MDNS
 				start_mdns();
@@ -2996,9 +2996,9 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 #ifdef TOMATO64_WIFI
 				start_wifi();
 #endif /* TOMATO64_WIFI */
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 				start_wl();
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 #ifdef TCONFIG_USB
 				start_nas_services();
 #endif
@@ -3197,7 +3197,7 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				restart_firewall();
 			}
 			return 1;
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 		case SVCOP_WIRELESS: /* for tomato user --> 'service wl start' will restart wl allways (failsafe, even if wl was not stopped!) */
 			if (act_stop)
 				stop_wireless();
@@ -3218,7 +3218,7 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				start_wl();
 			}
 			return 1;
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 #ifdef TCONFIG_USB
 		case SVCOP_USBAPPS:
 			if (act_stop)

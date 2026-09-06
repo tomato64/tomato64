@@ -82,6 +82,10 @@ OBJS = shutils.o wl.o wl_linux.o linux_timer.o defaults.o id.o misc.o \
        led.o led_sysfs.o version.o base64.o files.o strings.o process.o nvparse.o \
        bb_uuid.o usb.o ndpi.o
 
+ifeq ($(PLATFORM_BCM53XX),y)
+OBJS += wlif_utils.o
+endif
+
 OBJS += \
 $(BUSYBOX_DIR)/util-linux/volume_id/ext.o \
 $(BUSYBOX_DIR)/util-linux/volume_id/util2.o \
@@ -114,6 +118,12 @@ clean:
 %.o: %.c
 	@echo " [shared] CC $@"
 	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ -c $<
+
+ifeq ($(PLATFORM_BCM53XX),y)
+defaults.o: defaults.c
+	@echo " [shared] CC $@ (+SDK6 wl defaults)"
+	@$(CC) $(ALL_CPPFLAGS) -DCONFIG_BCMWL5 -DCONFIG_BCMWL6 $(ALL_CFLAGS) -o $@ -c $<
+endif
 
 genversion:
 	./gen_tomato_version.h.sh

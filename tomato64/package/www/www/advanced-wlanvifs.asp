@@ -1060,8 +1060,14 @@ function save() {
 		fom['lan'+j+'_ifnames'].value = '';
 		var l = nvram['lan'+j+'_ifnames'].split(' ');
 		for (var k = 0 ; k < l.length; ++k) {
+/* BCM53XX-NO-BEGIN */
 			if (l[k].indexOf('vlan') != -1)
 				fom['lan'+j+'_ifnames'].value += l[k]+' ';
+/* BCM53XX-NO-END */
+/* BCM53XX-BEGIN */
+			if ((l[k] != '') && (l[k].indexOf('wl') != 0))
+				fom['lan'+j+'_ifnames'].value += l[k]+' ';
+/* BCM53XX-END */
 		}
 		fom['lan'+j+'_ifnames'].value = fom['lan'+j+'_ifnames'].value.trim();
 	}
@@ -1303,8 +1309,14 @@ function earlyInit() {
 				var j = (i == 0) ? '' : i.toString();
 				var l = nvram['lan'+j+'_ifnames'].split(' ');
 				for (var k = 0 ; k < l.length; k++) {
+/* BCM53XX-NO-BEGIN */
 					if(l[k].indexOf(wl_ifaces[uidx][0]) != -1)
 						bridged = i;
+/* BCM53XX-NO-END */
+/* BCM53XX-BEGIN */
+					if (l[k] == wl_ifaces[uidx][0])
+						bridged = i;
+/* BCM53XX-END */
 				}
 			}
 
@@ -1534,7 +1546,12 @@ for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
 /* only if primary VIF */
 				if (u.toString().indexOf('.') < 0) {
 					f.push (
+/* TOMATO64-REMOVE-BEGIN */
 						{ title: 'Radio Band', name: 'f_wl'+u+'_nband', type: 'select', options: bands[uidx], value: (nvram['wl'+u+'_nband'] || '0' == '0') ? bands[uidx][0][0] : nvram['wl'+u+'_nband'] },
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+						{ title: 'Radio Band', name: 'f_wl'+u+'_nband', type: 'select', options: bands[uidx], value: ((nvram['wl'+u+'_nband'] || '0') == '0') ? (bands[uidx][0] ? bands[uidx][0][0] : '0') : nvram['wl'+u+'_nband'] },
+/* TOMATO64-END */
 						{ title: 'Wireless Network Mode', name: 'wl'+u+'_net_mode', type: 'select', value: (nvram['wl'+u+'_net_mode'] == 'disabled') ? 'mixed' : nvram['wl'+u+'_net_mode'], options: [], prefix: '<span id="__wl'+u+'_net_mode">', suffix: '<\/span>' }
 					);
 				}

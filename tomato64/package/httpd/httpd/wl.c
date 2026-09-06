@@ -918,7 +918,7 @@ next_info:
 	return 1;
 }
 
-#ifdef TOMATO64
+#if defined(TOMATO64) && !defined(TOMATO64_BCM53XX)
 #define WLSCAN_MAX_SEEN	256	/* upper bound on the BSSes we de-duplicate across radios */
 
 struct wlscan_ctx {
@@ -1052,12 +1052,12 @@ static int print_wlscan(struct wlscan_ctx *ctx)
 
 	return scanned;
 }
-#endif /* TOMATO64 */
+#endif /* TOMATO64 && !TOMATO64_BCM53XX */
 
 /* returns: ['bssid','ssid',channel,capabilities,rssi,noise,[rates,]],  or  [null,'error message'] */
 void asp_wlscan(int argc, char **argv)
 {
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	scan_list_t rp;
 
 	memset(&rp, 0, sizeof(rp));
@@ -1085,7 +1085,7 @@ void asp_wlscan(int argc, char **argv)
 	}
 
 	web_puts("];\n");
-#else /* TOMATO64 */
+#else /* TOMATO64 && !TOMATO64_BCM53XX */
 	struct wlscan_ctx ctx;
 
 	memset(&ctx, 0, sizeof(ctx));
@@ -1117,7 +1117,7 @@ void asp_wlscan(int argc, char **argv)
 		           ctx.refused, (ctx.nrefused > 1) ? "s" : "");
 
 	web_puts("';\n");
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 }
 
 void wo_wlradio(char *url)
@@ -1172,14 +1172,14 @@ static int get_wlnoise(int client, int unit)
 	return v;
 }
 
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 static int print_wlnoise(int idx, int unit, int subunit, void *param)
 {
 	web_printf("%c%d", (idx == 0) ? ' ' : ',', get_wlnoise(wl_client(unit, 0), unit));
 
 	return 0;
 }
-#else /* TOMATO64 */
+#else /* TOMATO64 && !TOMATO64_BCM53XX */
 /* Callback for print_wlnoise */
 static int print_wlnoise_callback(int phy, int iface, const char *ifname, void *user_data)
 {
@@ -1207,16 +1207,16 @@ static void print_wlnoise(void)
 	                            print_wlnoise_callback,
 	                            &first_entry);
 }
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 
 void asp_wlnoise(int argc, char **argv)
 {
 	web_puts("\nwlnoise = [");
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	foreach_wif(0, NULL, print_wlnoise);
-#else /* TOMATO64 */
+#else /* TOMATO64 && !TOMATO64_BCM53XX */
 	print_wlnoise();
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 	web_puts(" ];\n");
 }
 
@@ -1241,7 +1241,7 @@ void asp_wlclient(int argc, char **argv)
 	web_puts(foreach_wif(1, NULL, not_wlclient) ? "0" : "1");
 }
 
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 static int print_wlstats(int idx, int unit, int subunit, void *param)
 {
 	int phytype;
@@ -1344,7 +1344,7 @@ static int print_wlstats(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
-#else /* TOMATO64 */
+#else /* TOMATO64 && !TOMATO64_BCM53XX */
 /*
  * Name the configured security of one of our own APs
  *
@@ -1448,18 +1448,18 @@ static void print_wlstats(void)
 	                            print_wlstats_callback,
 	                            &first_entry);
 }
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 
 void asp_wlstats(int argc, char **argv)
 {
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwlstats = [");
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	foreach_wif(include_vifs, NULL, print_wlstats);
-#else /* TOMATO64 */
+#else /* TOMATO64 && !TOMATO64_BCM53XX */
 	print_wlstats();
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 	web_puts("];\n");
 }
 
@@ -1678,7 +1678,7 @@ void asp_wlchannels(int argc, char **argv)
 	web_puts("];\n");
 }
 
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 static int print_wlbands(int idx, int unit, int subunit, void *param)
 {
 	char *phytype, *phylist, *ifname;
@@ -1742,7 +1742,7 @@ static int print_wlbands(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
-#else /* TOMATO64 */
+#else /* TOMATO64 && !TOMATO64_BCM53XX */
 /* Callback for print_wlbands */
 static int print_wlbands_callback(int phy, int iface, const char *ifname, void *user_data)
 {
@@ -1784,7 +1784,9 @@ static void print_wlbands(void)
 	                            print_wlbands_callback,
 	                            &first_entry);
 }
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 
+#ifdef TOMATO64
 /* Callback for print_wlinfo */
 static int print_wlinfo_callback(int phy, int iface, const char *ifname, void *user_data)
 {
@@ -1871,11 +1873,11 @@ void asp_wlbands(int argc, char **argv)
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwl_bands = [");
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	foreach_wif(include_vifs, NULL, print_wlbands);
-#else /* TOMATO64 */
+#else /* TOMATO64 && !TOMATO64_BCM53XX */
 	print_wlbands();
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 	web_puts(" ];\n");
 }
 
@@ -1888,7 +1890,7 @@ void asp_wlinfo(int argc, char **argv)
 }
 #endif /* TOMATO64 */
 
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 static int print_wif(int idx, int unit, int subunit, void *param)
 {
 	struct ifreq ifr;
@@ -1942,7 +1944,7 @@ static int print_wif(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
-#else /* TOMATO64 */
+#else /* TOMATO64 && !TOMATO64_BCM53XX */
 /* Callback for print_wif */
 static int print_wif_callback(int phy, int iface, const char *ifname, void *user_data)
 {
@@ -1991,18 +1993,18 @@ static void print_wif(void)
 	                            print_wif_callback,
 	                            &first_entry);
 }
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 
 void asp_wlifaces(int argc, char **argv)
 {
 	int include_vifs = (argc > 0) ? atoi(argv[0]) : 0;
 
 	web_puts("\nwl_ifaces = [");
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	foreach_wif(include_vifs, NULL, print_wif);
-#else /* TOMATO64 */
+#else /* TOMATO64 && !TOMATO64_BCM53XX */
 	print_wif();
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 	web_puts("];\n");
 }
 

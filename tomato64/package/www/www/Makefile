@@ -9,6 +9,13 @@ HASH_SHORT=$(shell git rev-parse --short HEAD)
 GIT_HASH ?= $(shell hash=$$(git -C "$(CURDIR)" rev-parse --verify HEAD 2>/dev/null); \
 	if [ -n "$$hash" ]; then printf '%.7s' "$$hash"; else printf 'unknown'; fi)
 
+ifeq ($(PLATFORM_BCM53XX),y)
+CONFIG_BCMWL5  := y
+CONFIG_BCMWL6  := y
+CONFIG_BCMWL6A := y
+endif
+
+
 all:
 
 clean:
@@ -692,9 +699,21 @@ endif
 # Exclude features not supported Tomato64
 ifeq ($(TCONFIG_TOMATO64),y)
 
+ifeq ($(PLATFORM_BCM53XX),y)
+	@# shell glob, not $(wildcard): these files are created earlier in this same
+	@# recipe, so a make-time expansion would see the tree as it was before.
+	for F in $(INSTALLDIR)/www/*.asp $(INSTALLDIR)/www/*.js $(INSTALLDIR)/www/*.jsx $(INSTALLDIR)/www/*.css; do \
+		[ -f "$$F" ] && sed -i "$$F" -e "/BCM53XX-NO-BEGIN/,/BCM53XX-NO-END/d" || true; \
+	done
+else
+	for F in $(INSTALLDIR)/www/*.asp $(INSTALLDIR)/www/*.js $(INSTALLDIR)/www/*.jsx $(INSTALLDIR)/www/*.css; do \
+		[ -f "$$F" ] && sed -i "$$F" -e "/BCM53XX-BEGIN/,/BCM53XX-END/d" || true; \
+	done
+
 	rm -f $(INSTALLDIR)/www/advanced-wireless.asp
 	rm -f $(INSTALLDIR)/www/advanced-wlanvifs.asp
 	rm -f $(INSTALLDIR)/www/basic-wfilter.asp
+endif
 	rm -f $(INSTALLDIR)/www/admin-buttons.asp
 
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
@@ -730,7 +749,6 @@ ifeq ($(TCONFIG_TOMATO64),y)
 	sed -i $(INSTALLDIR)/www/splashd.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d" || true
 	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
-	sed -i $(INSTALLDIR)/www/tools-qr.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d" || true
 	sed -i $(INSTALLDIR)/www/vpn-wireguard.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/wireless.jsx -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
@@ -767,7 +785,6 @@ else
 	sed -i $(INSTALLDIR)/www/splashd.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d" || true
 	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
-	sed -i $(INSTALLDIR)/www/tools-qr.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d" || true
 	sed -i $(INSTALLDIR)/www/vpn-wireguard.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/qos-classify.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
@@ -958,6 +975,8 @@ endif
 		-e "/TOMATO64-WIFI-BEGIN/d"	-e "/TOMATO64-WIFI-END/d" \
 		-e "/TOMATO64-WLTEMP-BEGIN/d"	-e "/TOMATO64-WLTEMP-END/d" \
 		-e "/TOMATO64-FAN-BEGIN/d"	-e "/TOMATO64-FAN-END/d" \
+		-e "/BCM53XX-BEGIN/d"		-e "/BCM53XX-END/d" \
+		-e "/BCM53XX-NO-BEGIN/d"	-e "/BCM53XX-NO-END/d" \
 		|| true; \
 	done
 

@@ -18,10 +18,10 @@
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
 
 <script>
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 /* Tomato64 doesn't handle wifi macs on this page */
 wl_ifaces=[];
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 //	<% nvram("lan_hwaddr,wan_mac,mwan_num,wl_macaddr,wl_hwaddr,wl_nband"); %>
 

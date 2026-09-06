@@ -895,9 +895,9 @@ static const applets_t applets[] = {
 #ifdef TCONFIG_IPV6
 	{ "dhcp6c-state",		dhcp6c_state_main		},
 #endif
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	{ "radio",			radio_main			},
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 	{ "led",			led_main			},
 	{ "halt",			reboothalt_main			},
 	{ "reboot",			reboothalt_main			},
@@ -905,9 +905,9 @@ static const applets_t applets[] = {
 	{ "fast-reboot",		fastreboot_main			},
 #endif /* TOMATO64_X86_64 */
 	{ "gpio",			gpio_main			},
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	{ "wldist",			wldist_main			},
-#endif /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 #ifdef TCONFIG_CIFS
 	{ "mount-cifs",			mount_cifs_main			},
 #endif

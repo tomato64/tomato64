@@ -94,6 +94,10 @@ OBJS += quotas.o
 
 # mtd.o buttons.o wnas.o bcmutils.o
 
+ifeq ($(PLATFORM_BCM53XX),y)
+OBJS += wnas.o
+endif
+
 ifeq ($(TCONFIG_RTNPLUS),y)
 OBJS += blink.o blink_br.o
 endif
@@ -275,6 +279,12 @@ size: rc
 %.o: %.c
 	@echo " [rc] CC $@"
 	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ -c $<
+
+ifeq ($(PLATFORM_BCM53XX),y)
+init.o: init.c
+	@echo " [rc] CC $@ (+CONFIG_BCMWL6A)"
+	@$(CC) $(ALL_CPPFLAGS) -DCONFIG_BCMWL6A $(ALL_CFLAGS) -o $@ -c $<
+endif
 
 pswatch: pswatch.c
 	$(CC) -o $@ $^

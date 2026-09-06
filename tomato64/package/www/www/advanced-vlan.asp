@@ -24,10 +24,10 @@
 /* TOMATO64-SKIP-END */
 
 <script>
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 /* Tomato64 doesn't handle wifi on this page */
 wl_ifaces=[];
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 /* TOMATO64-SKIP-BEGIN */
 //	<% nvram ("t_model_name,vlan0ports,vlan1ports,vlan2ports,vlan3ports,vlan4ports,vlan5ports,vlan6ports,vlan7ports,vlan8ports,vlan9ports,vlan10ports,vlan11ports,vlan12ports,vlan13ports,vlan14ports,vlan15ports,vlan0hwname,vlan1hwname,vlan2hwname,vlan3hwname,vlan4hwname,vlan5hwname,vlan6hwname,vlan7hwname,vlan8hwname,vlan9hwname,vlan10hwname,vlan11hwname,vlan12hwname,vlan13hwname,vlan14hwname,vlan15hwname,wan_ifnameX,manual_boot_nv,boardtype,boardflags,lan_ifname,lan_ifnames,vlan0tag,vlan0vid,vlan1vid,vlan2vid,vlan3vid,vlan4vid,vlan5vid,vlan6vid,vlan7vid,vlan8vid,vlan9vid,vlan10vid,vlan11vid,vlan12vid,vlan13vid,vlan14vid,vlan15vid,model,wl_ssid,wl_radio,wl_net_mode,wl_nband,boardnum,boardrev,trunk_vlan_so,mwan_num,eth_desc");%>
@@ -614,9 +614,12 @@ if (port_vlan_supported) {
 /* TOMATO64-SKIP-BEGIN */
 			var l = (nvram[p+'_ifnames'] || '').split(' ');
 /* TOMATO64-SKIP-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 			var l = (nvram[p+'_ifnames_vlan'] || '').split(' ');
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
+/* BCM53XX-BEGIN */
+			var l = (nvram[p+'_ifnames_vlan'] || '').split(' ').concat((nvram[p+'_ifnames'] || '').split(' '));
+/* BCM53XX-END */
 /* REMOVE-BEGIN
 			alert(p+'_ifnames='+l);
 REMOVE-END */
@@ -635,8 +638,14 @@ REMOVE-END */
 				}
 /* WLAN */
 				for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
+/* BCM53XX-NO-BEGIN */
 					if (l[k].indexOf(wl_ifaces[uidx][0]) != -1)
 						E('_f_bridge_wlan'+uidx+'_to').value = i;
+/* BCM53XX-NO-END */
+/* BCM53XX-BEGIN */
+					if (l[k] == wl_ifaces[uidx][0])
+						E('_f_bridge_wlan'+uidx+'_to').value = i;
+/* BCM53XX-END */
 				}
 			}
 		}
@@ -1395,7 +1404,7 @@ for (var i = 0; i <= MAX_BRIDGE_ID; ++i)
 	</div>
 <!-- RTNPLUS-NO-END -->
 
-/* TOMATO64-SKIP-BEGIN */
+/* BCM53XX-BEGIN */
 	<div class="section-title">Wireless bridging</div>
 	<div class="section">
 		<script>
@@ -1416,15 +1425,15 @@ for (var i = 0; i <= MAX_BRIDGE_ID; ++i)
 				vlg.setup();
 		</script>
 	</div>
-/* TOMATO64-SKIP-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 	<div class="section">
 		<script>
 			if (port_vlan_supported)
 				vlg.setup();
 		</script>
 	</div>
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 <!-- MIPSR2P-NO-BEGIN -->
 	<div class="section-title">Trunk VLAN support override (experimental)</div>
@@ -1463,18 +1472,18 @@ for (var i = 0; i <= MAX_BRIDGE_ID; ++i)
 		<div><i>VID Offset:</i> First 802.1Q VLAN tag to be used as <i>base/initial tag/VID</i> for VLAN and VID assignments. This allows using VIDs larger than <script>W(MAX_VLAN_ID);</script> on (older) devices, in contiguous blocks/ranges with up to <script>W(VLAN_COUNT);</script> VLANs/VIDs. Set to '0' (zero) to disable this feature and VLANs will have the very same/identical value for its VID, as usual (from 0 to <script>W(MAX_VLAN_ID);</script>).</div>
 		<br>
 <!-- RTNPLUS-NO-END -->
-/* TOMATO64-SKIP-BEGIN */
+/* BCM53XX-BEGIN */
 		Wireless bridging:
 		<ul>
 			<li><b>Wireless interface to LAN bridge</b> - Maps each wireless interface (physical/virtual) to its LAN bridge</li>
 		</ul>
-/* TOMATO64-SKIP-END */
+/* BCM53XX-END */
 		<br>
 		Tips:
 		<ul>
-/* TOMATO64-SKIP-BEGIN */
+/* BCM53XX-BEGIN */
 			<li>Cross check settings on the <a href="basic-network.asp">Network</a> and <a href="advanced-wlanvifs.asp">Virtual Wireless</a> pages</li>
-/* TOMATO64-SKIP-END */
+/* BCM53XX-END */
 /* TOMATO64-BEGIN */
 			<li>Cross check settings on the <a href="basic-network.asp">Network</a> page</li>
 /* TOMATO64-END */

@@ -149,3 +149,9 @@ endif
 %.o: %.c
 	@echo " [httpd] CC $@"
 	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ -c $<
+
+ifeq ($(PLATFORM_BCM53XX),y)
+wl.o tomato.o devlist.o: %.o: %.c
+	@echo " [httpd] CC $@ (+SDK6 wl)"
+	@$(CC) $(ALL_CPPFLAGS) -DCONFIG_BCMWL5 -DCONFIG_BCMWL6 $(ALL_CFLAGS) -o $@ -c $<
+endif

@@ -20,10 +20,10 @@
 <script src="interfaces.js?rel=<% version(); %>"></script>
 <script src="wireless.js?rel=<% version(); %>"></script>
 <script>
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 /* Tomato64 doesn't handle wifi on this page */
 wl_ifaces=[];
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 /* TOMATO64-REMOVE-BEGIN */
 //	<% nvram("dhcp_lease,dhcpd_startip,dhcpd_endip,lan_dhcp,lan_gateway,lan_ipaddr,lan_netmask,lan_proto,lan_state,lan_desc,lan_invert,wl_security_mode,wl_wds_enable,wl_channel,wl_closed,wl_crypto,wl_key,wl_key1,wl_key2,wl_key3,wl_key4,wl_clap_hwaddr,wl_lazywds,wl_mode,wl_net_mode,wl_passphrase,wl_radio,wl_radius_ipaddr,wl_radius_port,wl_ssid,wl_wds,wl_wep_bit,wl_wpa_gtk_rekey,wl_wpa_psk,wl_radius_key,wl_auth,wl_hwaddr,t_features,wl_nbw_cap,wl_nctrlsb,wl_nband,wl_phytype,lan_ifname,lan_stp,cstats_enable,wan_proto,wan_weight,wan_modem_type,wan_modem_pin,wan_modem_dev,wan_modem_init,wan_modem_apn,wan_modem_speed,wan_modem_band,wan_modem_roam,wan_ppp_username,wan_ppp_passwd,wan_ppp_service,wan_l2tp_server_ip,wan_pptp_dhcp,wan_ipaddr,wan_netmask,wan_gateway,wan_pptp_server_ip,wan_ppp_custom,wan_ppp_demand,wan_ppp_idletime,wan_ppp_demand_dnsip,wan_ppp_redialperiod,wan_pppoe_lei,wan_pppoe_lef,wan_mtu_enable,wan_mtu,wan_ppp_mlppp,wan_modem_ipaddr,wan_sta,wan_dns,wan_dns_auto,wan_ifnameX,wan_ckmtd,wan_ck_pause,mwan_num,mwan_cktime,mwan_ckdst,mwan_tune_gc,wan_hilink_ip,wan_status_script,dnscrypt_proxy,dnscrypt_priority,stubby_proxy,stubby_priority,dhcp_moveip,smart_connect_x"); %>
 /* TOMATO64-REMOVE-END */
@@ -32,7 +32,7 @@ wl_ifaces=[];
 /* TOMATO64-END */
 
 var sta_list = [];
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 function refresh_sta_list() {
 	var u, wluidx, staidx = 0;
 /* RTAC-NO-BEGIN */
@@ -51,8 +51,8 @@ function refresh_sta_list() {
 	sta_list[staidx][0] = '';
 	sta_list[staidx][1] = 'Disabled';
 }
-/* TOMATO64-REMOVE-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-END */
+/* BCM53XX-NO-BEGIN */
 function refresh_sta_list() {
 	const sta_ifaces = nvram.wifi_sta_list.split(" ");
 	for (let i = 0; i < sta_ifaces.length; i++) {
@@ -60,7 +60,7 @@ function refresh_sta_list() {
 	}
 		sta_list.push(['', 'Disabled']);
 }
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 
 var lg = new TomatoGrid();
 lg.setup = function() {
@@ -538,12 +538,22 @@ function verifyFields(focused, quiet) {
 	for (uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 		if (wl_sunit(uidx) < 0) {
 			u = wl_unit(uidx);
+/* TOMATO64-REMOVE-BEGIN */
 			if (focused == E('_f_wl'+u+'_nband')) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			if (focused && focused == E('_f_wl'+u+'_nband')) {
+/* TOMATO64-END */
 				refreshNetModes(uidx);
 				refreshChannels(uidx);
 				refreshBandWidth(uidx);
 			}
+/* TOMATO64-REMOVE-BEGIN */
 			else if (focused == E('_f_wl'+u+'_nctrlsb') || focused == E('_wl'+u+'_nbw_cap'))
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			else if (focused && (focused == E('_f_wl'+u+'_nctrlsb') || focused == E('_wl'+u+'_nbw_cap')))
+/* TOMATO64-END */
 				refreshChannels(uidx);
 		}
 	}
@@ -599,15 +609,15 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_band'] = 1;
 			vis['_wan'+u+'_modem_roam'] = 1;
 /* USB-END */
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 		if (nvram.wifi_sta_list.length > 0) {
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 			vis['_wan'+u+'_sta'] = 1;
-/* TOMATO64-BEGIN */
+/* BCM53XX-NO-BEGIN */
 		} else {
 			vis['_wan'+u+'_sta'] = 0;
 		}
-/* TOMATO64-END */
+/* BCM53XX-NO-END */
 			vis['_f_wan'+u+'_dns_1'] = 1;
 			vis['_f_wan'+u+'_dns_2'] = 1;
 			vis['_wan'+u+'_dns_auto'] = 1;
@@ -1536,7 +1546,7 @@ REMOVE-END */
 		/* sta_wl: wl0, wl1, wl2 */
 		if (sta_wl != '') {
 			wmode = E('_f_'+sta_wl+'_mode');
-/* TOMATO64-REMOVE-BEGIN */
+/* BCM53XX-BEGIN */
 			wmode.value = 'sta';
 			wmode.options[0].disabled = 1;
 			wmode.options[1].disabled = 1;
@@ -1546,7 +1556,7 @@ REMOVE-END */
 /* BCMWL6-BEGIN */
 			wmode.options[5].disabled = 1;
 /* BCMWL6-END */
-/* TOMATO64-REMOVE-END */
+/* BCM53XX-END */
 /* RTNPLUS-NO-BEGIN */
 			s_mode = E('_'+sta_wl+'_security_mode');
 			s_mode.options[2].disabled = 1;
@@ -2265,7 +2275,12 @@ function init() {
 						 ],
 					value: ((nvram['wl'+u+'_mode'] == 'ap') && (nvram['wl'+u+'_wds_enable'] == '1')) ? 'apwds' : nvram['wl'+u+'_mode'] },
 				{ title: 'Radio Band', name: 'f_wl'+u+'_nband', type: 'select', options: bands[uidx],
+/* TOMATO64-REMOVE-BEGIN */
 					value: nvram['wl'+u+'_nband'] || '0' == '0' ? bands[uidx][0][0] : nvram['wl'+u+'_nband'] },
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+					value: ((nvram['wl'+u+'_nband'] || '0') == '0') ? (bands[uidx][0] ? bands[uidx][0][0] : '0') : nvram['wl'+u+'_nband'] },
+/* TOMATO64-END */
 				{ title: 'Wireless Network Mode', name: 'wl'+u+'_net_mode', type: 'select',
 					value: (nvram['wl'+u+'_net_mode'] == 'disabled') ? 'mixed' : nvram['wl'+u+'_net_mode'],
 					options: [], prefix: '<span id="__wl'+u+'_net_mode">', suffix: '<\/span>' },

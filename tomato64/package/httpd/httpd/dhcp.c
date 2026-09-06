@@ -14,6 +14,9 @@
 #include <sys/sysinfo.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifdef TOMATO64_BCM53XX
+#include <wlutils.h>
+#endif /* TOMATO64_BCM53XX */
 
 
 void asp_dhcpc_time(int argc, char **argv)
@@ -90,8 +93,22 @@ void wo_dhcpd(char *url)
 		argv[4] = m;
 		_eval(argv, NULL, 0, &pid);
 #else
-		snprintf(buffer, sizeof(buffer), "ubus call hostapd.%s del_client '{\"addr\":\"%s\", \"reason\":1, \"deauth\":true}'", w, m);
-		system(buffer);
+#ifdef TOMATO64_BCM53XX
+		/* wl and mac80211 both run here; only a wl radio answers wl_probe() */
+		if (wl_probe(w) == 0) {
+			argv[0] = "wl";
+			argv[1] = "-i";
+			argv[2] = w;
+			argv[3] = "deauthenticate";
+			argv[4] = m;
+			_eval(argv, NULL, 0, &pid);
+		}
+		else
+#endif /* TOMATO64_BCM53XX */
+		{
+			snprintf(buffer, sizeof(buffer), "ubus call hostapd.%s del_client '{\"addr\":\"%s\", \"reason\":1, \"deauth\":true}'", w, m);
+			system(buffer);
+		}
 #endif /* TOMATO64 */
 	}
 

@@ -1,0 +1,17 @@
+config BR2_PACKAGE_BROADCOM_WL
+	bool "broadcom-wl"
+	depends on BR2_PACKAGE_PLATFORM_BCM53XX
+	select BR2_PACKAGE_LIBSHARED
+	select BR2_PACKAGE_LIBNVRAM
+	help
+	  Broadcom's wl WiFi driver and its userspace tools,
+	  for Northstar (BCM4708/4709) hardware.
+
+	  Builds wl.ko by linking FreshTomato's wl_apsta.o - a blob compiled
+	  against Linux 2.6.36 - against a shadow-struct translation layer that
+	  presents it 2.6.36 struct layouts on a 6.12 kernel. Also builds the
+	  userspace side the driver needs: wlconf (radio configuration through
+	  the driver's private ioctls), eapd and nas (WPA), and wldiag.
+
+	  These radios have no open-source driver: b43's AC-PHY support is
+	  "depends on BROKEN" and brcmfmac only handles fullmac parts.

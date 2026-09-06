@@ -110,7 +110,7 @@ static int get_wds_ifname(const struct ether_addr *ea, char *ifname)
 	return 0;
 }
 
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 static int get_wl_clients(int idx, int unit, int subunit, void *param)
 {
 	char *comma = param;
@@ -184,21 +184,21 @@ static int get_wl_clients(int idx, int unit, int subunit, void *param)
 
 	return 0;
 }
-#else /* TOMATO64 */
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
+
+#ifdef TOMATO64
+/* bcm53xx runs mac80211 alongside wl, so both emitters are built there and share the caller's comma */
 
 /* Callback function for wlhelper_foreach_station */
 static int print_station(const char *ifname, int phy,
                           const struct wlhelper_station_info *station,
                           void *user_data)
 {
-	int *first_entry = (int *)user_data;
-
-	/* Print comma separator for all entries after the first */
-	if (*first_entry)
-		web_puts(",");
+	char *comma = (char *)user_data;
 
 	/* Output format: ['ifname','MAC',signal,tx_rate,rx_rate,connected_time,phy] */
-	web_printf("['%s','%s',%d,%d,%d,%d,%d]",
+	web_printf("%c['%s','%s',%d,%d,%d,%d,%d]",
+	           *comma,
 	           ifname,
 	           station->mac,
 	           station->signal,
@@ -207,29 +207,27 @@ static int print_station(const char *ifname, int phy,
 	           station->connected_time,
 	           phy);
 
-	*first_entry = 1;
+	*comma = ',';
 	return 0; /* Continue iteration */
 }
 
-/* Callback for get_wl_clients - processes each AP interface */
+/* Callback for get_wl_clients_openwrt - processes each AP interface */
 static int get_wl_clients_callback(int phy, int iface, const char *ifname, void *user_data)
 {
-	int *first_entry = (int *)user_data;
+	char *comma = (char *)user_data;
 
 	/* Iterate through all connected stations on this interface */
-	wlhelper_foreach_station(ifname, phy, print_station, first_entry);
+	wlhelper_foreach_station(ifname, phy, print_station, comma);
 
 	return 0; /* Continue iteration */
 }
 
-void get_wl_clients(void)
+static void get_wl_clients_openwrt(char *comma)
 {
-	int first_entry = 0;
-
 	/* Iterate through all enabled AP interfaces */
 	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
 	                            get_wl_clients_callback,
-	                            &first_entry);
+	                            comma);
 }
 #endif /* TOMATO64 */
 
@@ -248,10 +246,11 @@ void asp_devlist(int argc, char **argv)
 
 	web_puts("wldev = [");
 	comma = ' ';
-#ifndef TOMATO64
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 	foreach_wif(1, &comma, get_wl_clients);
-#else /* TOMATO64 */
-	get_wl_clients();
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
+#ifdef TOMATO64
+	get_wl_clients_openwrt(&comma);
 #endif /* TOMATO64 */
 	web_puts("];\n");
 
