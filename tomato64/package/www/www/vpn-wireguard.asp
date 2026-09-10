@@ -125,21 +125,10 @@ function toggle(service, up) {
 	if (changed && !confirm('There are unsaved changes. Continue anyway?'))
 		return;
 
-	/* check for active 'External - VPN Provider' + 'Redirect Internet traffic' set to 'All' */
-	var externalall_mode_active = 0;
-	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
-		if (isup['wireguard'+i] && E('_wg'+i+'_com').value == 3 && E('_wg'+i+'_rgwr').value == 1) /* active */
-			externalall_mode_active++;
-	}
-	if (externalall_mode_active && !up && E('_wg'+service.substr(9, 1)+'_com').value == 3 && E('_wg'+service.substr(9, 1)+'_rgwr').value == 1) {
-		alert('Only one wireguard instance can be run in "External - VPN Provider" mode with "Redirect Internet traffic" set to "All"!');
-		return;
-	}
+	var id = service.substr(service.length - 1);
 
 	serviceLastUp[id] = up;
 	countButton = 0;
-
-	var id = service.substr(service.length - 1);
 	E('_'+service+'_button').disabled = 1;
 	E('spin'+id).style.display = 'inline';
 
