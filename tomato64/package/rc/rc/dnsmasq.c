@@ -39,7 +39,9 @@ const char dmcfg[]        = "/etc/dnsmasq.conf";
 const char dmcfgcustom[]  = "/etc/dnsmasq.custom";
 const char dmpid[]        = "/var/run/dnsmasq.pid";
 const char dmcfgtrust[]   = "/etc/trust-anchors.conf";
+#ifdef TCONFIG_ADBLOCK
 const char dmadblock[]    = "/etc/dnsmasq.adblock";
+#endif
 const char dmwarning[]    = "Warning! Dnsmasq Custom configuration contains a disruptive syntax error. The Custom configuration is now excluded to allow dnsmasq to operate";
 const char resolvcfg[]    = "/etc/resolv.conf";
 const char resolvcfgrom[] = "/rom/etc/resolv.conf";
@@ -896,8 +898,10 @@ static void write_debug_and_adblock(FILE *f)
 	if (nvram_get_int("dnsmasq_debug"))
 		fprintf(f, "log-queries\n");
 
+#ifdef TCONFIG_ADBLOCK
 	if ((nvram_get_int("adblock_enable")) && (f_exists(dmadblock)))
 		fprintf(f, "conf-file=%s\n", dmadblock);
+#endif
 }
 
 static void start_dnsmasq_wet(void)

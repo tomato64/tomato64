@@ -56,7 +56,9 @@
 #define LOGMSG_NVDEBUG		"services_debug"
 
 
+#ifdef TCONFIG_ADBLOCK
 const char adblockexe[]    = "/usr/sbin/adblock";
+#endif
 const char upnppath[]      = "/etc/upnp";
 const char upnpcfg[]       = "/etc/upnp/config";
 const char upnpcfgalt[]    = "/etc/upnp/config.alt";
@@ -715,6 +717,7 @@ void stop_phy_tempsense(void)
 }
 #endif /* TCONFIG_FANCTRL */
 
+#ifdef TCONFIG_ADBLOCK
 void start_adblock(int update)
 {
 	if (nvram_get_int("g_upgrade") || nvram_get_int("g_reboot"))
@@ -735,6 +738,7 @@ void stop_adblock(void)
 {
 	xstart(adblockexe, "stop");
 }
+#endif /* TCONFIG_ADBLOCK */
 
 #ifdef TOMATO64
 void start_zram(void)
@@ -3046,8 +3050,11 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 					stop_dnsmasq();
 					killall("udhcpc", SIGTERM);
 					stop_wan();
-				} else
+				}
+#ifdef TCONFIG_ADBLOCK
+				else
 					stop_adblock();
+#endif
 
 #ifdef TCONFIG_SNMP
 				stop_snmp();
@@ -3251,12 +3258,14 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 			if (act_start)
 				start_cstats(svc->arg);
 			return 1;
+#ifdef TCONFIG_ADBLOCK
 		case SVCOP_ADBLOCK:
 			if (act_stop)
 				stop_adblock();
 			if (act_start)
 				start_adblock(svc->arg);
 			return 1;
+#endif
 		case SVCOP_UPNP:
 			if (act_stop)
 				stop_upnp();

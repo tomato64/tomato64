@@ -309,8 +309,10 @@ extern void stop_cron(void);
 extern void start_phy_tempsense(void);
 extern void stop_phy_tempsense(void);
 #endif
+#ifdef TCONFIG_ADBLOCK
 extern void start_adblock(int update);
 extern void stop_adblock(void);
+#endif
 #ifdef TOMATO64
 extern void start_zram(void);
 extern void stop_zram(void);

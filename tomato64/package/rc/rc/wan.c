@@ -1309,7 +1309,9 @@ void start_wan_done(char *wan_ifname, char *prefix)
 			stop_samba();
 			start_samba(0);
 #endif
+#ifdef TCONFIG_ADBLOCK
 			start_adblock(0);
+#endif
 		}
 
 		stop_upnp();
@@ -1431,7 +1433,9 @@ void stop_wan(void)
 	nvram_set("ipv6_get_dns", "");
 #endif
 	stop_firewall();
+#ifdef TCONFIG_ADBLOCK
 	stop_adblock();
+#endif
 	clear_resolv();
 
 	for (i = 1; i <= mwan_num; i++) {

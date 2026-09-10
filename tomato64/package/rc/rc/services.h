@@ -43,7 +43,9 @@
 #define SVCOP_SPECIAL		0x80
 #define SVCOP_RSTATS		(SVCOP_SPECIAL | 0x01)
 #define SVCOP_CSTATS		(SVCOP_SPECIAL | 0x02)
+#ifdef TCONFIG_ADBLOCK
 #define SVCOP_ADBLOCK		(SVCOP_SPECIAL | 0x03)
+#endif
 #define SVCOP_UPNP		(SVCOP_SPECIAL | 0x04)
 #ifdef TCONFIG_BT
 #define SVCOP_BITTORRENT	(SVCOP_SPECIAL | 0x05)
@@ -316,7 +318,9 @@ static const char * const svc_proc_name[] = {
  * start/stop dispatcher path used by exec_service().
  */
 static const struct svc_entry svc_table[] = {
+#ifdef TCONFIG_ADBLOCK
 	{ "adblock",		SVCF_LIST | SVCF_NO_STATUS,					P_NONE,			1,	SVCOP_ADBLOCK		},
+#endif
 	{ "adminnosshd",	SVCF_NO_STATUS,							P_NONE,			1,	SVCOP_ADMIN		},
 	{ "admin",		SVCF_LIST | SVCF_PREFIX | SVCF_NO_STATUS,			P_NONE,			0,	SVCOP_ADMIN		},
 	{ "arpbind",		SVCF_LIST | SVCF_NO_STATUS,					P_NONE,			0,	SVCOP_ARPBIND		},
