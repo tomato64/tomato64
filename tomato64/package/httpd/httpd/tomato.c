@@ -2181,7 +2181,7 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 
 	/*
 	 * execute script via shell
-	 * NOTE: do NOT change to execvp(argv) – UI depends on full shell semantics
+	 * NOTE: do NOT change to execvp(argv) â€“ UI depends on full shell semantics
 	 */
 	snprintf(cmd, sizeof(cmd), "%s 2>&1", webExecFile);
 	web_pipecmd(cmd, wof);

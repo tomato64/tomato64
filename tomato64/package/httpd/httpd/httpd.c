@@ -2,7 +2,7 @@
  *
  * micro_httpd/mini_httpd
  *
- * Copyright © 1999,2000 by Jef Poskanzer <jef@acme.com>.
+ * Copyright Â© 1999,2000 by Jef Poskanzer <jef@acme.com>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

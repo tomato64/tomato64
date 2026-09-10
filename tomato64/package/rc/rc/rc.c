@@ -270,7 +270,7 @@ void run_del_firewall_script(const char *infile, char *outfile)
  * @param	out	pointer to a buffer where the function writes the normalized result
  * @param	outlen	size of the out buffer
  * @return	1 if str is a valid IPv4 or IPv4/mask; out receives a normalized string in the form A.B.C.D/n with n coerced into semantics, defaulting to /32 when absent or invalid
- *		2 if str is a valid IPv4 range �A.B.C.D-E.F.G.H� with no internal whitespace and both addresses in the same /24; out receives the unchanged �A.B.C.D-E.F.G.H�
+ *		2 if str is a valid IPv4 range "A.B.C.D-E.F.G.H" with no internal whitespace and both addresses in the same /24; out receives the unchanged "A.B.C.D-E.F.G.H"
  * 		0 if str is something else (FQDN?)
  */
 static int check_string(const char *str, char *out, size_t outlen)

@@ -6,7 +6,7 @@
 	For use with Tomato Firmware only.
 	No part of this file may be used without permission.
 	MMC admin module by Augusto Bott
-	Modified by Tomasz S�odkowicz for SDHC/MMC driver v2.0.1
+	Modified by Tomasz Słodkowicz for SDHC/MMC driver v2.0.1
 -->
 <html>
 <head>
