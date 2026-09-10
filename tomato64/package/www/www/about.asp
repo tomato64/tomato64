@@ -236,7 +236,7 @@ function init() {
 	- Build progress indicator
 	<br>
 	<i>Copyright (C) 2017-2019 Michał Obrembski</i><br>
-	<a href="mailto:michal.o@szerszen.com">michal.o@szerszen.com</a><br>
+	<a href="mailto:michal@obrembski.com">michal@obrembski.com</a><br>
 	<br>
 <!-- OPTSIZE-END -->
 
