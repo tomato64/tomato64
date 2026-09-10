@@ -436,8 +436,10 @@ function show() {
 /* TOMATO64-BEGIN */
 	c('cpumhz', stats.cpumhz);
 	c('disk', stats.disk);
-	c('temps', stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F');
 /* TOMATO64-END */
+/* BCMARM-BEGIN */
+	c('temps', stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F');
+/* BCMARM-END */
 	c('uptime', stats.uptime);
 	c('time', stats.time);
 	c('memory', stats.memory);
@@ -661,18 +663,24 @@ function init() {
 		{ title: 'Used / Total Disk', rid: 'disk', text: stats.disk },
 /* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
-		{ title: 'Used / Total NVRAM', rid: 'nvram_stat', text: scaleSize(nvstat.size - nvstat.free)+' / '+scaleSize(nvstat.size)+' <small>('+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%)<\/small><div class="progress-wrapper"><div class="progress-container"><div class="progress-bar" style="background-color:'+setColor(((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2))+';width:'+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%"><\/div><\/div><\/div>' },
+		{ title: 'Used / Total NVRAM', rid: 'nvram_stat', text: scaleSize(nvstat.size - nvstat.free)+' / '+scaleSize(nvstat.size)+' <small>('+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%)<\/small><div class="progress-wrapper"><div class="progress-container"><div class="progress-bar" style="background-color:'+setColor(((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2))+';width:'+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%"><\/div><\/div><\/div>' }
 /* TOMATO64-REMOVE-END */
-		null,
+/* BCMARM-BEGIN */
 /* TOMATO64-REMOVE-BEGIN */
-		{ title: 'CPU Temperature', rid: 'temps', text: stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F' },
+		,null,
+		{ title: 'CPU Temperature', rid: 'temps', text: stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F' }
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-		{ title: 'CPU Temperature', rid: 'temps', text: stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F', hidden: (stats.cputemp == '' || stats.cputemp == '°') },
+		null,
+		{ title: 'CPU Temperature', rid: 'temps', text: stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1) * 1.8 + 32) + '°F', hidden: (stats.cputemp == '' || stats.cputemp == '°') }
 /* TOMATO64-END */
+/* BCMARM-END */
 /* RTNPLUS-BEGIN */
+/* BCMARM-NO-BEGIN */
+		,null
+/* BCMARM-NO-END */
 /* TOMATO64-WLTEMP-BEGIN */
-		{ title: 'Wireless Temperature', rid: 'wlsense', text: stats.wlsense }
+		,{ title: 'Wireless Temperature', rid: 'wlsense', text: stats.wlsense }
 /* TOMATO64-WLTEMP-END */
 /* RTNPLUS-END */
 	]);

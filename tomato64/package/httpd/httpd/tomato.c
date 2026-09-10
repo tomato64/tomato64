@@ -145,9 +145,11 @@ const aspapi_t aspapi[] = {
 	{ "iptraffic",			asp_iptraffic			},
 	{ "iptmon",			asp_iptmon			},
 
+#ifdef TOMATO64
 #ifdef TCONFIG_QUOTAS
 	{ "quotas",			asp_quotas			},
 #endif
+#endif /* TOMATO64 */
 
 #ifdef TOMATO64
 	{ "ndpi",			asp_ndpi			},
@@ -2179,7 +2181,7 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 
 	/*
 	 * execute script via shell
-	 * NOTE: do NOT change to execvp(argv) ï¿½ UI depends on full shell semantics
+	 * NOTE: do NOT change to execvp(argv) – UI depends on full shell semantics
 	 */
 	snprintf(cmd, sizeof(cmd), "%s 2>&1", webExecFile);
 	web_pipecmd(cmd, wof);

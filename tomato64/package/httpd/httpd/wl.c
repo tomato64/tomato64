@@ -15,8 +15,10 @@
 #endif /* TOMATO64 */
 
 #include <ctype.h>
+#ifdef TOMATO64
 #include <dirent.h>
 #include <limits.h>
+#endif /* TOMATO64 */
 #include <wlutils.h>
 #include <sys/ioctl.h>
 #include <wlscan.h>

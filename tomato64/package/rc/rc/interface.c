@@ -443,7 +443,7 @@ void start_vlan(void)
 	close(s);
 }
 
-/* stop/rem vlan interface(s) */
+/* stop/rem vlan interface(s) based on nvram settings */
 void stop_vlan(void)
 {
 #ifndef TOMATO64

@@ -35,8 +35,10 @@
 
 #define BRIDGE_COUNT		TCONFIG_BRIDGE_COUNT
 
+#ifdef TOMATO64
 #define WIFI_PHY_COUNT		3
 #define WIFI_IFACE_COUNT	16
+#endif /* TOMATO64 */
 
 #define	MTD_DEV(arg)		"/dev/mtd"#arg
 #define	MTD_BLKDEV(arg)		"/dev/mtdblock"#arg
@@ -666,13 +668,13 @@ extern void do_led_bridge(int mode);
 extern void led_setup(void);
 #endif /* TCONFIG_BCMARM */
 
-/* led_sysfs.c - Tomato64 sysfs LED control */
 #ifdef TOMATO64
+/* led_sysfs.c - Tomato64 sysfs LED control */
 #include "led_sysfs.h"
 #endif /* TOMATO64 */
 
-/* ndpi.c - Tomato64 nDPI protocol table */
 #ifdef TOMATO64
+/* ndpi.c - Tomato64 nDPI protocol table */
 #define NDPI_HOSTNAME_MAX	128 /* sizeof(xt_ndpi_mtinfo.hostname), the match truncates past it */
 #define NDPI_HOST_PROTOCOLS	"tls,quic,http,dns" /* the protocols nDPI takes a server name from */
 extern int ndpi_proto_valid(const char *name); /* 1 = usable, 0 = not, -1 = table unavailable */
