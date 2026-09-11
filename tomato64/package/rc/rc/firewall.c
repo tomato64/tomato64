@@ -1630,8 +1630,14 @@ static void filter_forward(void)
 		if (nvram_match("flow_offloading", "1")) {
 			ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED %s-j FLOWOFFLOAD\n", fc_udp);
 		} else if (nvram_match("flow_offloading", "2")) {
+#ifdef TOMATO64_BCM53XX
+			modprobe("ctf");
+#endif /* TOMATO64_BCM53XX */
 			ip46t_write(ipv6_enabled, "-A FORWARD -m state --state RELATED,ESTABLISHED %s-j FLOWOFFLOAD --hw\n", fc_udp);
 		}
+#ifdef TOMATO64_BCM53XX
+		f_write_string("/sys/module/ctf/parameters/bridge", (nvram_match("flow_offloading", "2") && !foreach_wif(1, NULL, is_wet)) ? "1" : "0", 0, 0);
+#endif /* TOMATO64_BCM53XX */
 	}
 #endif /* TOMATO64 */
 

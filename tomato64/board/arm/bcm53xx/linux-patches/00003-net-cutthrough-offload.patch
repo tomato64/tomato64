@@ -1,0 +1,836 @@
+net: cut-through forwarding for bgmac, and the cache work that pays for it
+
+Northstar routes at gigabit only if the CPU stays out of the way. This adds
+a hook that lets a module forward a frame straight from a driver's receive
+path, and then removes most of the cache maintenance that the resulting
+traffic pattern no longer needs.
+
+On a Netgear R7000 the result is 945 Mbit/s both directions on *one* core,
+where the software flowtable managed about 920 and needed both cores plus
+packet steering.
+
+Deliberately one patch. It was developed as four, but each later one reworked
+regions the earlier ones had added - the transmit window is defined in terms
+of a constant a later change moved, and the receive path was restructured
+twice - so reading any single earlier patch gives an accurate picture of a
+tree that no longer exists. What ships is the combination; this is it.
+
+  1. The hook (include/linux/netdev_cutthrough.h, net/core/cutthrough.c)
+
+Drivers offer received frames with netdev_cutthrough_rx() before
+eth_type_trans(), GRO, RPS and the rest of the receive path, and forward
+ndo_setup_tc() so the netfilter flowtable's hardware-offload requests reach
+the module. It lives in net/core rather than in bgmac because two receive
+paths feed it - bgmac's NAPI poll and Broadcom's wl driver - and a built-in
+home means neither has to be loaded before the other. With nothing
+registered every entry point is a NULL check.
+
+  2. Receive: sync only the headers (bgmac)
+
+Syncing a receive buffer for the CPU is a cache operation per 32-byte line on
+this non-coherent bus, and profiling said it was where the router's CPU
+actually went: at line rate, v7_dma_inv_range, v7_dma_clean_range and the
+l2c210 equivalents were about 57% of the busy core, against 5% for the
+forwarding code that work exists to serve.
+
+Almost none of it was needed. A forwarded frame's payload is moved by DMA and
+never read by the CPU; a frame going up the stack needs its headers read
+before anything decides what to do with it. So sync BGMAC_RX_SYNC_HEAD bytes
+up front and keep the mapping live until the frame's fate is known. A frame
+handed to the stack has the rest synced first, and only as far as the frame
+extends. Broadcom's own driver did this with a 320-byte window (CTFMAPSZ).
+
+  3. Transmit: clean only what was rewritten (sk_buff bit + bgmac)
+
+A frame a cut-through forwarder took arrived by DMA and had only its headers
+rewritten, so only those are dirty. One sk_buff bit says so - it packs into
+an existing bitfield cluster, so sk_buff does not grow - and bgmac maps such
+frames without the implicit clean, writing back just the head. The bounds
+that make the claim meaningful live beside the bit in netdev_cutthrough.h, so
+the transmit and receive sides cannot drift apart.
+
+  4. Receive buffer pool (bgmac + skb_pp_recycle)
+
+What was left was the refill: a fresh fragment per frame, mapped - and
+because a recycled page may hold dirty lines from anything, that map
+invalidated all 1566 bytes - then unmapped again. Feeding the ring from a
+page_pool recycles pages and keeps them mapped, so the per-packet map and
+unmap go with it. What replaces them is a sync when a buffer is recycled, and
+the freeing side gets to say how much: skb_pp_recycle() honours the
+header-only bit and syncs NETDEV_CUTTHROUGH_DIRTY_LEN instead of the whole
+buffer. Anything past that is left stale rather than dirty, which the device
+does not care about - the driver invalidates what it is about to read.
+
+Two details that had to be right: the DMA-stall poison is written *after* the
+pool has synced the page for the device, so it needs one cache line written
+back explicitly or it sits dirty over memory the MAC is about to write; and
+it is one buffer per page, because the pool's sync offset is a property of
+the pool and a second buffer in the same page would be synced at the wrong
+one.
+
+  Measured, wired at line rate with the load pinned
+
+Turning the three switches off in turn, cache maintenance is 22.0% of CPU0
+with all of them on and 60.1% with none, cpu0 idle 79.0% against 53.5%, and
+the ordering is monotonic across all four combinations. The all-off corner
+reproduces the profile from before any of this work (v7_dma_inv_range 27.5%
+against the 26.8% recorded then), which is a good check that the switches
+really do revert to baseline behaviour.
+
+The part a user sees: with all of it off the router cannot hold line rate on
+upload - 888 Mbit/s against 945.
+
+  Runtime switches, so this can be measured on one image
+
+  /sys/module/bgmac/parameters/rx_partial_sync   receive head-only sync
+  /sys/module/bgmac/parameters/tx_partial_sync   transmit head-only clean
+  /sys/module/bgmac/parameters/rx_page_pool      page pool (takes effect on
+                                                 ring refill: ifdown/ifup, or
+                                                 bgmac.rx_page_pool=0 at boot)
+
+All default on, and rx_page_pool falls back to the page-fragment allocator by
+itself if the pool cannot be created. The forwarding module's own
+ctf.hdr_only turns off the header-only claim - and with it both the transmit
+clean and the small recycle sync - without a rebuild.
+
+diff --git a/drivers/net/ethernet/broadcom/Kconfig b/drivers/net/ethernet/broadcom/Kconfig
+index 75ca3dd..0ffecef 100644
+--- a/drivers/net/ethernet/broadcom/Kconfig
++++ b/drivers/net/ethernet/broadcom/Kconfig
+@@ -162,6 +162,7 @@ config BNX2X_SRIOV
+ 
+ config BGMAC
+ 	tristate
++	select PAGE_POOL
+ 	help
+ 	  This enables the integrated ethernet controller support for many
+ 	  Broadcom (mostly iProc) SoCs. An appropriate bus interface driver
+diff --git a/drivers/net/ethernet/broadcom/bgmac.c b/drivers/net/ethernet/broadcom/bgmac.c
+index dd0138e..691dcee 100644
+--- a/drivers/net/ethernet/broadcom/bgmac.c
++++ b/drivers/net/ethernet/broadcom/bgmac.c
+@@ -11,14 +11,29 @@
+ 
+ #include <linux/bcma/bcma.h>
+ #include <linux/etherdevice.h>
++#include <linux/netdev_cutthrough.h>
+ #include <linux/interrupt.h>
++#include <linux/moduleparam.h>
+ #include <linux/platform_data/b53.h>
+ #include <linux/bcm47xx_nvram.h>
+ #include <linux/phy.h>
+ #include <linux/phy_fixed.h>
+ #include <net/dsa.h>
++#include <net/page_pool/helpers.h>
+ #include "bgmac.h"
+ 
++/*
++ * How much of a transmitted cut-through frame can be dirty in the cache: the
++ * headers the forwarder rewrote. The bound belongs with the sk_buff bit that
++ * asserts it, so that this and the receive side cannot drift apart.
++ */
++#define BGMAC_TX_SYNC_HEAD	NETDEV_CUTTHROUGH_HDR_LEN
++
++static bool bgmac_tx_partial_sync = true;
++module_param_named(tx_partial_sync, bgmac_tx_partial_sync, bool, 0644);
++MODULE_PARM_DESC(tx_partial_sync,
++		 "Write back only rewritten headers of forwarded frames (default on)");
++
+ static bool bgmac_wait_value(struct bgmac *bgmac, u16 reg, u32 mask,
+ 			     u32 value, int timeout)
+ {
+@@ -160,8 +175,28 @@ static netdev_tx_t bgmac_dma_tx_add(struct bgmac *bgmac,
+ 		return NETDEV_TX_BUSY;
+ 	}
+ 
+-	slot->dma_addr = dma_map_single(dma_dev, skb->data, skb_headlen(skb),
+-					DMA_TO_DEVICE);
++	/*
++	 * A cut-through frame arrived by DMA and had only its headers
++	 * rewritten, so only those are dirty in the cache: map without the
++	 * implicit clean and write back just the head. Everything else is
++	 * mapped the ordinary way.
++	 */
++	if (skb->cutthrough_hdr_only && bgmac_tx_partial_sync &&
++	    skb_headlen(skb) > BGMAC_TX_SYNC_HEAD) {
++		slot->dma_addr = dma_map_single_attrs(dma_dev, skb->data,
++						      skb_headlen(skb),
++						      DMA_TO_DEVICE,
++						      DMA_ATTR_SKIP_CPU_SYNC);
++		if (likely(!dma_mapping_error(dma_dev, slot->dma_addr)))
++			dma_sync_single_range_for_device(dma_dev,
++							 slot->dma_addr, 0,
++							 BGMAC_TX_SYNC_HEAD,
++							 DMA_TO_DEVICE);
++	} else {
++		slot->dma_addr = dma_map_single(dma_dev, skb->data,
++						skb_headlen(skb),
++						DMA_TO_DEVICE);
++	}
+ 	if (unlikely(dma_mapping_error(dma_dev, slot->dma_addr)))
+ 		goto err_dma_head;
+ 
+@@ -332,6 +367,7 @@ static void bgmac_dma_rx_enable(struct bgmac *bgmac,
+ }
+ 
+ static int bgmac_dma_rx_skb_for_slot(struct bgmac *bgmac,
++				     struct bgmac_dma_ring *ring,
+ 				     struct bgmac_slot_info *slot)
+ {
+ 	struct device *dma_dev = bgmac->dma_dev;
+@@ -339,6 +375,44 @@ static int bgmac_dma_rx_skb_for_slot(struct bgmac *bgmac,
+ 	struct bgmac_rx_header *rx;
+ 	void *buf;
+ 
++	if (ring->pool) {
++		struct page *page = page_pool_dev_alloc_pages(ring->pool);
++
++		if (!page)
++			return -ENOMEM;
++
++		buf = page_address(page);
++		/*
++		 * The pool hands back pages already mapped and already synced
++		 * for the device, and slot->dma_addr means the same thing it
++		 * does below: where the receive header starts.
++		 */
++		dma_addr = page_pool_get_dma_addr(page) + BGMAC_RX_BUF_OFFSET;
++
++		/* Poison - if everything goes fine, hardware will overwrite it */
++		rx = buf + BGMAC_RX_BUF_OFFSET;
++		rx->len = cpu_to_le16(0xdead);
++		rx->flags = cpu_to_le16(0xbeef);
++
++		/*
++		 * That write came after the pool's sync, so the poison is
++		 * sitting dirty in the cache over memory the MAC is about to
++		 * write. Push that one line out. DMA_BIDIRECTIONAL is the
++		 * honest direction for a line the CPU wrote and the device
++		 * will overwrite, and it is what makes this a clean rather
++		 * than a discard.
++		 */
++		dma_sync_single_range_for_device(dma_dev, dma_addr, 0,
++						 offsetof(struct bgmac_rx_header,
++							  pad),
++						 DMA_BIDIRECTIONAL);
++
++		slot->buf = buf;
++		slot->dma_addr = dma_addr;
++
++		return 0;
++	}
++
+ 	/* Alloc skb */
+ 	buf = netdev_alloc_frag(BGMAC_RX_ALLOC_SIZE);
+ 	if (!buf)
+@@ -410,6 +484,141 @@ static void bgmac_dma_rx_poison_buf(struct device *dma_dev,
+ 				   DMA_FROM_DEVICE);
+ }
+ 
++/*
++ * Syncing a receive buffer for the CPU is a cache operation per 32-byte line
++ * on this non-coherent bus, and it dominates the forwarding profile: on a
++ * Netgear R7000 at line rate, more than half of the busy core is spent in
++ * v7_dma_inv_range and friends. Almost none of that work is needed. A frame
++ * that gets forwarded has its payload moved by DMA and never read by the CPU,
++ * and even a frame going up the stack only needs its headers read before
++ * something decides what to do with it.
++ *
++ * So sync only this much for the CPU up front. It covers the receive header
++ * (BGMAC_RX_FRAME_OFFSET) plus the deepest protocol headers the cut-through
++ * hook parses - a Broadcom switch tag, a VLAN tag, a PPPoE session header,
++ * IPv6 and TCP - which come to about 120 bytes. Anything handed to the stack
++ * has the remainder synced first. Broadcom's own driver does the same thing
++ * with a 320-byte window (CTFMAPSZ).
++ */
++#define BGMAC_RX_SYNC_HEAD	192
++
++static bool bgmac_rx_partial_sync = true;
++module_param_named(rx_partial_sync, bgmac_rx_partial_sync, bool, 0644);
++MODULE_PARM_DESC(rx_partial_sync,
++		 "Sync only packet headers for the CPU on receive (default on)");
++
++/*
++ * Where receive buffers come from. A page pool keeps its pages mapped for the
++ * device, so the per-packet dma_map_single() and its whole-buffer invalidate
++ * both disappear - and that invalidate is what is left of the cache
++ * maintenance this driver spends its time on. What replaces it is a sync when
++ * a buffer is recycled, whose length the freeing side chooses: a frame a
++ * cut-through forwarder rewrote the headers of syncs
++ * NETDEV_CUTTHROUGH_DIRTY_LEN instead of the whole buffer, because nothing
++ * past the headers can be dirty (see skb_pp_recycle()).
++ *
++ * One buffer per page, not two: the pool's sync offset is a property of the
++ * pool, so a second buffer in the same page would be synced at the wrong one.
++ *
++ * Turning this off gives the page-fragment allocator back, which is also what
++ * happens if the pool cannot be created. It takes effect when the ring is
++ * refilled, so bring the interface down and up - or boot with
++ * bgmac.rx_page_pool=0, which is the way back in if these buffers ever turn
++ * out to be handed to the MAC with something dirty still in them.
++ */
++static bool bgmac_rx_page_pool = true;
++module_param_named(rx_page_pool, bgmac_rx_page_pool, bool, 0644);
++MODULE_PARM_DESC(rx_page_pool,
++		 "Feed the receive ring from a page pool (default on; takes effect on ifdown/ifup)");
++
++static void bgmac_dma_rx_pool_destroy(struct bgmac_dma_ring *ring)
++{
++	if (ring->pool) {
++		page_pool_destroy(ring->pool);
++		ring->pool = NULL;
++	}
++}
++
++/*
++ * Called from bgmac_dma_init(), so the ring holds no buffers of ours and the
++ * parameter can be acted on. Failure is not fatal: without a pool the ring is
++ * filled from the page allocator exactly as it was before.
++ */
++static void bgmac_dma_rx_pool_init(struct bgmac *bgmac,
++				   struct bgmac_dma_ring *ring)
++{
++	struct page_pool_params pp = {
++		.order		= 0,
++		.pool_size	= BGMAC_RX_RING_SLOTS,
++		.nid		= NUMA_NO_NODE,
++		.dev		= bgmac->dma_dev,
++		.napi		= &bgmac->napi,
++		.dma_dir	= DMA_FROM_DEVICE,
++		.offset		= BGMAC_RX_BUF_OFFSET,
++		.max_len	= BGMAC_RX_BUF_SIZE,
++		.flags		= PP_FLAG_DMA_MAP | PP_FLAG_DMA_SYNC_DEV,
++	};
++	struct page_pool *pool;
++
++	/* A buffer and its skb_shared_info have to fit in one page. */
++	BUILD_BUG_ON(BGMAC_RX_ALLOC_SIZE > PAGE_SIZE);
++	/*
++	 * A recycled cut-through buffer is synced for NETDEV_CUTTHROUGH_DIRTY_LEN
++	 * from the start of the DMA region, so that has to reach past the
++	 * deepest header rewrite - which is measured from the frame, itself
++	 * BGMAC_RX_FRAME_OFFSET into the region.
++	 */
++	BUILD_BUG_ON(BGMAC_RX_FRAME_OFFSET + NETDEV_CUTTHROUGH_HDR_LEN >
++		     NETDEV_CUTTHROUGH_DIRTY_LEN);
++	BUILD_BUG_ON(NETDEV_CUTTHROUGH_DIRTY_LEN > BGMAC_RX_BUF_SIZE);
++
++	if (!READ_ONCE(bgmac_rx_page_pool)) {
++		bgmac_dma_rx_pool_destroy(ring);
++		return;
++	}
++	if (ring->pool)
++		return;
++
++	pool = page_pool_create(&pp);
++	if (IS_ERR(pool)) {
++		netdev_warn(bgmac->net_dev,
++			    "no page pool (%ld), falling back to the page allocator\n",
++			    PTR_ERR(pool));
++		return;
++	}
++	ring->pool = pool;
++}
++
++/*
++ * Drop the mapping without any cache work: every sync this path needs has
++ * already been done explicitly. On the forwarded path this runs after the
++ * frame has been handed on, which is a no-op here (dma-direct, no IOMMU).
++ */
++static void bgmac_dma_rx_unmap(struct device *dma_dev, dma_addr_t dma_addr)
++{
++	dma_unmap_single_attrs(dma_dev, dma_addr, BGMAC_RX_BUF_SIZE,
++			       DMA_FROM_DEVICE, DMA_ATTR_SKIP_CPU_SYNC);
++}
++
++/*
++ * Give up on a received buffer whose contents we are not going to use: back to
++ * the pool it came from, or to the page allocator. Whatever is in it may be
++ * anything, so the pool syncs the whole buffer for the device again.
++ */
++static void bgmac_dma_rx_drop_buf(struct bgmac_dma_ring *ring,
++				  struct device *dma_dev, void *buf,
++				  dma_addr_t dma_addr)
++{
++	if (ring->pool) {
++		page_pool_put_full_page(ring->pool, virt_to_head_page(buf),
++					true);
++		return;
++	}
++
++	bgmac_dma_rx_unmap(dma_dev, dma_addr);
++	put_page(virt_to_head_page(buf));
++}
++
+ static int bgmac_dma_rx_read(struct bgmac *bgmac, struct bgmac_dma_ring *ring,
+ 			     int weight)
+ {
+@@ -432,15 +641,29 @@ static int bgmac_dma_rx_read(struct bgmac *bgmac, struct bgmac_dma_ring *ring,
+ 		u16 len, flags;
+ 
+ 		do {
++			bool partial = READ_ONCE(bgmac_rx_partial_sync);
++
+ 			/* Prepare new skb as replacement */
+-			if (bgmac_dma_rx_skb_for_slot(bgmac, slot)) {
++			if (bgmac_dma_rx_skb_for_slot(bgmac, ring, slot)) {
+ 				bgmac_dma_rx_poison_buf(dma_dev, slot);
+ 				break;
+ 			}
+ 
+-			/* Unmap buffer to make it accessible to the CPU */
+-			dma_unmap_single(dma_dev, dma_addr,
+-					 BGMAC_RX_BUF_SIZE, DMA_FROM_DEVICE);
++			/*
++			 * Make the buffer accessible to the CPU - the head
++			 * only, unless the whole thing was asked for. The
++			 * mapping stays live until the frame's fate is known,
++			 * so that the rest can still be synced below if the
++			 * stack is going to read it.
++			 */
++			if (partial)
++				dma_sync_single_range_for_cpu(dma_dev, dma_addr,
++							      0, BGMAC_RX_SYNC_HEAD,
++							      DMA_FROM_DEVICE);
++			else
++				dma_sync_single_for_cpu(dma_dev, dma_addr,
++							BGMAC_RX_BUF_SIZE,
++							DMA_FROM_DEVICE);
+ 
+ 			/* Get info from the header */
+ 			len = le16_to_cpu(rx->len);
+@@ -450,7 +673,8 @@ static int bgmac_dma_rx_read(struct bgmac *bgmac, struct bgmac_dma_ring *ring,
+ 			if (len == 0xdead && flags == 0xbeef) {
+ 				netdev_err(bgmac->net_dev, "Found poisoned packet at slot %d, DMA issue!\n",
+ 					   ring->start);
+-				put_page(virt_to_head_page(buf));
++				bgmac_dma_rx_drop_buf(ring, dma_dev, buf,
++						      dma_addr);
+ 				bgmac->net_dev->stats.rx_errors++;
+ 				break;
+ 			}
+@@ -458,7 +682,8 @@ static int bgmac_dma_rx_read(struct bgmac *bgmac, struct bgmac_dma_ring *ring,
+ 			if (len > BGMAC_RX_ALLOC_SIZE) {
+ 				netdev_err(bgmac->net_dev, "Found oversized packet at slot %d, DMA issue!\n",
+ 					   ring->start);
+-				put_page(virt_to_head_page(buf));
++				bgmac_dma_rx_drop_buf(ring, dma_dev, buf,
++						      dma_addr);
+ 				bgmac->net_dev->stats.rx_length_errors++;
+ 				bgmac->net_dev->stats.rx_errors++;
+ 				break;
+@@ -467,24 +692,63 @@ static int bgmac_dma_rx_read(struct bgmac *bgmac, struct bgmac_dma_ring *ring,
+ 			/* Omit CRC. */
+ 			len -= ETH_FCS_LEN;
+ 
+-			skb = build_skb(buf, BGMAC_RX_ALLOC_SIZE);
++			/*
++			 * A pool buffer owns its whole page, so say so: the
++			 * true size is what the stack should account for, and
++			 * skb_shared_info lands past the end of the DMA
++			 * region either way.
++			 */
++			skb = build_skb(buf, ring->pool ? PAGE_SIZE :
++					     BGMAC_RX_ALLOC_SIZE);
+ 			if (unlikely(!skb)) {
+ 				netdev_err(bgmac->net_dev, "build_skb failed\n");
+-				put_page(virt_to_head_page(buf));
++				bgmac_dma_rx_drop_buf(ring, dma_dev, buf,
++						      dma_addr);
+ 				bgmac->net_dev->stats.rx_errors++;
+ 				break;
+ 			}
++			if (ring->pool)
++				skb_mark_for_recycle(skb);
+ 			skb_put(skb, BGMAC_RX_FRAME_OFFSET +
+ 				BGMAC_RX_BUF_OFFSET + len);
+ 			skb_pull(skb, BGMAC_RX_FRAME_OFFSET +
+ 				 BGMAC_RX_BUF_OFFSET);
+ 
+ 			skb_checksum_none_assert(skb);
+-			skb->protocol = eth_type_trans(skb, bgmac->net_dev);
+ 			bgmac->net_dev->stats.rx_bytes += len;
+ 			bgmac->net_dev->stats.rx_packets++;
+-			napi_gro_receive(&bgmac->napi, skb);
+ 			handled++;
++			if (netdev_cutthrough_rx(bgmac->net_dev, skb)) {
++				/*
++				 * Forwarded: the payload went out by DMA
++				 * without the CPU ever reading it, so it never
++				 * needed a cache operation at all. A pool
++				 * buffer stays mapped and comes back by way of
++				 * skb_pp_recycle() once it has been sent.
++				 */
++				if (!ring->pool)
++					bgmac_dma_rx_unmap(dma_dev, dma_addr);
++				break;
++			}
++			/*
++			 * The stack will read the payload, so sync the rest of
++			 * the frame - only as far as the frame actually goes,
++			 * which for a small one is not at all.
++			 */
++			if (partial) {
++				unsigned int end = BGMAC_RX_FRAME_OFFSET + len;
++
++				if (end > BGMAC_RX_SYNC_HEAD)
++					dma_sync_single_range_for_cpu(dma_dev,
++								      dma_addr,
++								      BGMAC_RX_SYNC_HEAD,
++								      end - BGMAC_RX_SYNC_HEAD,
++								      DMA_FROM_DEVICE);
++			}
++			if (!ring->pool)
++				bgmac_dma_rx_unmap(dma_dev, dma_addr);
++			skb->protocol = eth_type_trans(skb, bgmac->net_dev);
++			napi_gro_receive(&bgmac->napi, skb);
+ 		} while (0);
+ 
+ 		bgmac_dma_rx_setup_desc(bgmac, ring, ring->start);
+@@ -562,10 +826,16 @@ static void bgmac_dma_rx_ring_free(struct bgmac *bgmac,
+ 		if (!slot->dma_addr)
+ 			continue;
+ 
+-		dma_unmap_single(dma_dev, slot->dma_addr,
+-				 BGMAC_RX_BUF_SIZE,
+-				 DMA_FROM_DEVICE);
+-		put_page(virt_to_head_page(slot->buf));
++		if (ring->pool) {
++			page_pool_put_full_page(ring->pool,
++						virt_to_head_page(slot->buf),
++						false);
++		} else {
++			dma_unmap_single(dma_dev, slot->dma_addr,
++					 BGMAC_RX_BUF_SIZE,
++					 DMA_FROM_DEVICE);
++			put_page(virt_to_head_page(slot->buf));
++		}
+ 		slot->dma_addr = 0;
+ 	}
+ }
+@@ -605,9 +875,11 @@ static void bgmac_dma_free(struct bgmac *bgmac)
+ 		bgmac_dma_ring_desc_free(bgmac, &bgmac->tx_ring[i],
+ 					 BGMAC_TX_RING_SLOTS);
+ 
+-	for (i = 0; i < BGMAC_MAX_RX_RINGS; i++)
++	for (i = 0; i < BGMAC_MAX_RX_RINGS; i++) {
+ 		bgmac_dma_ring_desc_free(bgmac, &bgmac->rx_ring[i],
+ 					 BGMAC_RX_RING_SLOTS);
++		bgmac_dma_rx_pool_destroy(&bgmac->rx_ring[i]);
++	}
+ }
+ 
+ static int bgmac_dma_alloc(struct bgmac *bgmac)
+@@ -721,8 +993,10 @@ static int bgmac_dma_init(struct bgmac *bgmac)
+ 
+ 		ring->start = 0;
+ 		ring->end = 0;
++		bgmac_dma_rx_pool_init(bgmac, ring);
+ 		for (j = 0; j < BGMAC_RX_RING_SLOTS; j++) {
+-			err = bgmac_dma_rx_skb_for_slot(bgmac, &ring->slots[j]);
++			err = bgmac_dma_rx_skb_for_slot(bgmac, ring,
++							&ring->slots[j]);
+ 			if (err)
+ 				goto error;
+ 
+@@ -1257,6 +1531,12 @@ static int bgmac_change_mtu(struct net_device *net_dev, int mtu)
+ 	return 0;
+ }
+ 
++static int bgmac_setup_tc(struct net_device *net_dev, enum tc_setup_type type,
++			  void *type_data)
++{
++	return netdev_cutthrough_setup_tc(net_dev, type, type_data);
++}
++
+ static const struct net_device_ops bgmac_netdev_ops = {
+ 	.ndo_open		= bgmac_open,
+ 	.ndo_stop		= bgmac_stop,
+@@ -1266,6 +1546,7 @@ static const struct net_device_ops bgmac_netdev_ops = {
+ 	.ndo_validate_addr	= eth_validate_addr,
+ 	.ndo_eth_ioctl           = phy_do_ioctl_running,
+ 	.ndo_change_mtu		= bgmac_change_mtu,
++	.ndo_setup_tc		= bgmac_setup_tc,
+ };
+ 
+ /**************************************************
+diff --git a/drivers/net/ethernet/broadcom/bgmac.h b/drivers/net/ethernet/broadcom/bgmac.h
+index c75a00a..0482800 100644
+--- a/drivers/net/ethernet/broadcom/bgmac.h
++++ b/drivers/net/ethernet/broadcom/bgmac.h
+@@ -3,6 +3,7 @@
+ #define _BGMAC_H
+ 
+ #include <linux/netdevice.h>
++#include <net/page_pool/types.h>
+ 
+ #include "unimac.h"
+ 
+@@ -428,6 +429,14 @@ struct bgmac_dma_ring {
+ 	u16 mmio_base;
+ 	bool unaligned;
+ 
++	/*
++	 * Receive rings only: where the buffers come from, when the page pool
++	 * is in use. NULL means the plain page-fragment allocator, which is
++	 * both the fallback if the pool cannot be created and what
++	 * /sys/module/bgmac/parameters/rx_page_pool=0 selects.
++	 */
++	struct page_pool *pool;
++
+ 	struct bgmac_slot_info slots[BGMAC_RX_RING_SLOTS];
+ };
+ 
+diff --git a/include/linux/netdev_cutthrough.h b/include/linux/netdev_cutthrough.h
+new file mode 100644
+index 0000000..11ad13f
+--- /dev/null
++++ b/include/linux/netdev_cutthrough.h
+@@ -0,0 +1,78 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Cut-through forwarding hook.
++ *
++ * Lets one module take over forwarding for flows the kernel has already
++ * decided to offload, at the point a driver receives a frame - before
++ * eth_type_trans(), GRO, RPS and the rest of the receive path.
++ *
++ * Two sides:
++ *
++ *  - Drivers offer received frames with netdev_cutthrough_rx(), and forward
++ *    ndo_setup_tc() with netdev_cutthrough_setup_tc() so the netfilter
++ *    flowtable's hardware offload requests (TC_SETUP_FT) reach the module.
++ *
++ *  - The module registers with netdev_cutthrough_register().
++ *
++ * This lives in net/core rather than in one driver because more than one
++ * receive path feeds it (on Northstar: bgmac, and Broadcom's wl driver), and
++ * a built-in home means neither has to be loaded before the other.
++ *
++ * With nothing registered, every entry point is a NULL check.
++ */
++#ifndef _LINUX_NETDEV_CUTTHROUGH_H
++#define _LINUX_NETDEV_CUTTHROUGH_H
++
++#include <linux/netdevice.h>
++#include <linux/skbuff.h>
++
++/*
++ * How much of a frame a cut-through forwarder may have written.
++ *
++ * A forwarded frame arrived by DMA and had only its headers rewritten, which
++ * is what skb->cutthrough_hdr_only says. These two numbers put a bound on
++ * "only its headers", so that a driver on a non-coherent bus can write back
++ * or invalidate that much instead of the whole packet.
++ *
++ * NETDEV_CUTTHROUGH_HDR_LEN is measured from skb->data on transmit: the
++ * deepest rewrite is an Ethernet header, a VLAN tag, a PPPoE header, IPv6 and
++ * TCP, and the forwarder trims anything past the payload it does not touch.
++ *
++ * NETDEV_CUTTHROUGH_DIRTY_LEN is measured from the start of the receive
++ * buffer's DMA region, so it also has to cover whatever the driver leaves in
++ * front of the frame - a receive descriptor, alignment padding - and the fact
++ * that pushing a tag moves skb->data backwards. Generous on purpose; it is
++ * still a fifth of a 1566-byte buffer. Broadcom's own driver used 320 here
++ * (CTFMAPSZ) for the same reason.
++ */
++#define NETDEV_CUTTHROUGH_HDR_LEN	192
++#define NETDEV_CUTTHROUGH_DIRTY_LEN	320
++
++struct netdev_cutthrough_ops {
++	struct module *owner;
++
++	/*
++	 * Called for a received frame, inside an RCU read-side section.
++	 * skb->data points at the start of the Ethernet header, or, if the
++	 * driver has already run eth_type_trans(), at the payload with
++	 * skb_mac_header() naming the header. The frame is linear and its
++	 * FCS is stripped; it may carry a DSA tag.
++	 *
++	 * Return true if the skb was consumed (transmitted or freed), false
++	 * if it was left untouched for the normal receive path.
++	 */
++	bool (*rx)(struct net_device *dev, struct sk_buff *skb);
++
++	/* ndo_setup_tc(), forwarded unchanged. May sleep. */
++	int (*setup_tc)(struct net_device *dev, enum tc_setup_type type,
++			void *type_data);
++};
++
++int netdev_cutthrough_register(const struct netdev_cutthrough_ops *ops);
++void netdev_cutthrough_unregister(const struct netdev_cutthrough_ops *ops);
++
++bool netdev_cutthrough_rx(struct net_device *dev, struct sk_buff *skb);
++int netdev_cutthrough_setup_tc(struct net_device *dev, enum tc_setup_type type,
++			       void *type_data);
++
++#endif /* _LINUX_NETDEV_CUTTHROUGH_H */
+diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+index bc3a597..543fa25 100644
+--- a/include/linux/skbuff.h
++++ b/include/linux/skbuff.h
+@@ -1012,6 +1012,14 @@ struct sk_buff {
+ 	__u8			csum_not_inet:1;
+ #endif
+ 	__u8			unreadable:1;
++	/*
++	 * Set by a cut-through forwarder (see linux/netdev_cutthrough.h) on a
++	 * frame it received by DMA and only rewrote the headers of. Its
++	 * payload was never written by the CPU, so a driver transmitting it on
++	 * a non-coherent bus need only clean the head rather than the whole
++	 * packet - which on an ARM SoC is a cache operation per 32-byte line.
++	 */
++	__u8			cutthrough_hdr_only:1;
+ 	__u8			tc_depth:2;
+ #if defined(CONFIG_NET_SCHED) || defined(CONFIG_NET_XGRESS)
+ 	__u16			tc_index;	/* traffic control index */
+diff --git a/net/core/Makefile b/net/core/Makefile
+index bd733d8..9303e82 100644
+--- a/net/core/Makefile
++++ b/net/core/Makefile
+@@ -7,6 +7,8 @@ obj-y := sock.o request_sock.o skbuff.o datagram.o stream.o scm.o \
+ 	 gen_stats.o gen_estimator.o net_namespace.o secure_seq.o \
+ 	 flow_dissector.o
+ 
++obj-y += cutthrough.o
++
+ obj-$(CONFIG_SYSCTL) += sysctl_net_core.o
+ 
+ obj-y		     += dev.o dev_addr_lists.o dst.o netevent.o \
+diff --git a/net/core/cutthrough.c b/net/core/cutthrough.c
+new file mode 100644
+index 0000000..49eee8c
+--- /dev/null
++++ b/net/core/cutthrough.c
+@@ -0,0 +1,76 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Cut-through forwarding hook: see linux/netdev_cutthrough.h.
++ */
++
++#include <linux/module.h>
++#include <linux/mutex.h>
++#include <linux/netdev_cutthrough.h>
++#include <linux/rcupdate.h>
++
++static const struct netdev_cutthrough_ops __rcu *cutthrough_ops;
++static DEFINE_MUTEX(cutthrough_lock);
++
++int netdev_cutthrough_register(const struct netdev_cutthrough_ops *ops)
++{
++	int err = 0;
++
++	if (!ops || !ops->rx || !ops->setup_tc)
++		return -EINVAL;
++
++	mutex_lock(&cutthrough_lock);
++	if (rcu_access_pointer(cutthrough_ops))
++		err = -EBUSY;
++	else
++		rcu_assign_pointer(cutthrough_ops, ops);
++	mutex_unlock(&cutthrough_lock);
++
++	return err;
++}
++EXPORT_SYMBOL_GPL(netdev_cutthrough_register);
++
++void netdev_cutthrough_unregister(const struct netdev_cutthrough_ops *ops)
++{
++	mutex_lock(&cutthrough_lock);
++	if (rcu_access_pointer(cutthrough_ops) == ops)
++		RCU_INIT_POINTER(cutthrough_ops, NULL);
++	mutex_unlock(&cutthrough_lock);
++
++	/* No receive path may still be inside ops->rx() when we return. */
++	synchronize_net();
++}
++EXPORT_SYMBOL_GPL(netdev_cutthrough_unregister);
++
++bool netdev_cutthrough_rx(struct net_device *dev, struct sk_buff *skb)
++{
++	const struct netdev_cutthrough_ops *ops;
++	bool consumed = false;
++
++	rcu_read_lock();
++	ops = rcu_dereference(cutthrough_ops);
++	if (ops)
++		consumed = ops->rx(dev, skb);
++	rcu_read_unlock();
++
++	return consumed;
++}
++EXPORT_SYMBOL_GPL(netdev_cutthrough_rx);
++
++int netdev_cutthrough_setup_tc(struct net_device *dev, enum tc_setup_type type,
++			       void *type_data)
++{
++	const struct netdev_cutthrough_ops *ops;
++	int err = -EOPNOTSUPP;
++
++	mutex_lock(&cutthrough_lock);
++	ops = rcu_dereference_protected(cutthrough_ops,
++					lockdep_is_held(&cutthrough_lock));
++	if (ops && try_module_get(ops->owner)) {
++		err = ops->setup_tc(dev, type, type_data);
++		module_put(ops->owner);
++	}
++	mutex_unlock(&cutthrough_lock);
++
++	return err;
++}
++EXPORT_SYMBOL_GPL(netdev_cutthrough_setup_tc);
+diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index f769fa0..94b3f6b 100644
+--- a/net/core/skbuff.c
++++ b/net/core/skbuff.c
+@@ -51,6 +51,7 @@
+ #endif
+ #include <linux/string.h>
+ #include <linux/skbuff.h>
++#include <linux/netdev_cutthrough.h>
+ #include <linux/skbuff_ref.h>
+ #include <linux/splice.h>
+ #include <linux/cache.h>
+@@ -1047,12 +1048,42 @@ bool napi_pp_put_page(netmem_ref netmem)
+ 	return true;
+ }
+ EXPORT_SYMBOL(napi_pp_put_page);
++
++/*
++ * Same, for a buffer a cut-through forwarder only rewrote the headers of.
++ *
++ * Returning a page to its pool syncs it for the device again, because the CPU
++ * may have dirtied it while it was out. On a non-coherent bus that is a cache
++ * operation per line over the whole buffer, and for these frames nearly all of
++ * it is wasted: the payload arrived by DMA and was never written by the CPU,
++ * so nothing past the headers can be dirty. Sync only that much.
++ *
++ * Anything beyond it is left stale in the cache rather than dirty, which the
++ * device does not care about - the driver invalidates what it is about to read
++ * before it reads it.
++ */
++static bool napi_pp_put_page_hdr_only(netmem_ref netmem)
++{
++	netmem = netmem_compound_head(netmem);
++
++	if (unlikely(!netmem_is_pp(netmem)))
++		return false;
++
++	page_pool_put_netmem(netmem_get_pp(netmem), netmem,
++			     NETDEV_CUTTHROUGH_DIRTY_LEN, false);
++
++	return true;
++}
+ #endif
+ 
+ static bool skb_pp_recycle(struct sk_buff *skb, void *data)
+ {
+ 	if (!IS_ENABLED(CONFIG_PAGE_POOL) || !skb->pp_recycle)
+ 		return false;
++#if IS_ENABLED(CONFIG_PAGE_POOL)
++	if (skb->cutthrough_hdr_only)
++		return napi_pp_put_page_hdr_only(page_to_netmem(virt_to_page(data)));
++#endif
+ 	return napi_pp_put_page(page_to_netmem(virt_to_page(data)));
+ }
+ 

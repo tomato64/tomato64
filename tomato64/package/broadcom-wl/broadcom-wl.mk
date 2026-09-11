@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-BROADCOM_WL_VERSION = 4fbe232125ec0423554629d5fe7e360647c5ba81
+BROADCOM_WL_VERSION = 9477042562d71c7d97a32aee326ad8075b1640b2
 BROADCOM_WL_SITE = https://github.com/tomato64/broadcom-wl.git
 BROADCOM_WL_SITE_METHOD = git
 BROADCOM_WL_DEPENDENCIES = linux libnvram libshared

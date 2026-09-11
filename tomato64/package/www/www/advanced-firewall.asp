@@ -166,6 +166,18 @@ function save() {
 	fom.fw_blackhole.value = fom._f_fw_blackhole.checked ? 1 : 0;
 	fom.tcp_clamp_disable.value = fom._f_tcp_clamp_disable.checked ? 0 : 1;
 
+/* BCM53XX-BEGIN */
+	if (nvram.flow_offloading == 2 && fom.flow_offloading.value != 2) {
+		if (confirm("Your settings will be saved. A reboot is required for them to take effect. Reboot now? (Cancel: reboot later)")) {
+			fom._reboot.value = 1;
+			form.submit(fom, 0);
+		}
+		else { /* continue without reboot (user wants it that way) */
+			form.submit(fom, 1);
+		}
+		return;
+	}
+/* BCM53XX-END */
 /* TOMATO64-WIFI-BEGIN */
 	if (fom.wed_offloading.value != nvram.wed_offloading) {
 		if (confirm("Your settings will be saved. A reboot is required for them to take effect. Reboot now? (Cancel: reboot later)")) {

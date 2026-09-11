@@ -1,0 +1,18 @@
+config BR2_PACKAGE_CTF
+	bool "ctf"
+	depends on BR2_LINUX_KERNEL
+	depends on BR2_PACKAGE_PLATFORM_BCM53XX
+	help
+	  Cut-through forwarding for bgmac: an open-source take on
+	  Broadcom's CTF for Northstar (BCM4708/4709) routers.
+
+	  Builds ctf.ko, which makes bgmac a netfilter flowtable
+	  "hardware" offload target. Flows the flowtable offloads are
+	  forwarded straight from bgmac's receive path, skipping GRO,
+	  the DSA receive path, RPS and the netfilter ingress hook.
+	  Selected with "Hardware flow offloading" in the web UI.
+
+	  Needs the bgmac offload hook, which the bcm53xx kernel
+	  carries as linux-patches/00003-bgmac-offload-hook.patch.
+
+	  https://github.com/tomato64/ctf
