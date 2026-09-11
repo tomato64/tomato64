@@ -11413,6 +11413,17 @@ int fastreboot_main(int argc, char *argv[])
 				break;
 		}
 
+		/* conntrack, wireless, syslog and storage/USB teardown moved to upgradefinalize */
+		nvram_set("action_service", "upgradefinalize-start");
+		kill(1, SIGUSR1);
+
+		for (n = 60; n > 0; --n) {
+			sleep(1);
+
+			if (nvram_match("action_service", ""))
+				break;
+		}
+
 		unlink("/var/log/messages");
 		unlink("/var/log/messages.0");
 		sync();
