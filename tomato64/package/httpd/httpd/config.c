@@ -18,6 +18,10 @@
 #include <typedefs.h>
 #include <sys/reboot.h>
 
+/* needed by logmsg() */
+#define LOGMSG_DISABLE		DISABLE_SYSLOG_OSM
+#define LOGMSG_NVDEBUG		"config_debug"
+
 
 void wo_defaults(char *url)
 {
@@ -38,10 +42,11 @@ void wo_defaults(char *url)
 			webcgi_set("resreset", "1");
 			parse_asp("reboot.asp");
 			web_close();
-
-			/* Give the browser time to request linked reboot page assets. */
+			/* Allow linked reboot page assets to finish loading. */
 			sleep(2);
-			finalize_upgrade();
+
+			if (!finalize_upgrade())
+				logmsg(LOG_WARNING, "upgrade-finalize did not complete before timeout");
 #ifdef TOMATO64_X86_64
 			/* upgradefinalize unmounts SCSI-attached storage, which includes a SATA /nvram */
 			eval("mount_nvram");
@@ -190,7 +195,7 @@ void wi_restore(char *url, int len, char *boundary)
 
 	rboot = 1;
 
-	/* stop services and prepare system for restore */
+	/* stop non-essential services and prepare for restore */
 	prepare_upgrade();
 
 #ifdef TOMATO64_X86_64
@@ -236,14 +241,16 @@ ERROR:
 void wo_restore(char *url)
 {
 	if (rboot) {
-		set_action(ACT_REBOOT);
-		sync();
 		parse_asp("reboot.asp");
 		web_close();
-
-		/* Give the browser time to request linked reboot page assets. */
+		/* Allow linked reboot page assets to finish loading. */
 		sleep(2);
-		finalize_upgrade();
+
+		if (!finalize_upgrade())
+			logmsg(LOG_WARNING, "upgrade-finalize did not complete before timeout");
+
+		set_action(ACT_REBOOT);
+		sync();
 
 		reboot(RB_AUTOBOOT);
 

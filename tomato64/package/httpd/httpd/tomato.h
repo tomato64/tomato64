@@ -187,8 +187,8 @@ extern void asp_showsyslog(int argc, char **argv);
 extern void asp_ddnsx(int argc, char **argv);
 
 /* upgrade.c */
-extern void prepare_upgrade(void);
-extern void finalize_upgrade(void);
+extern int prepare_upgrade(void);
+extern int finalize_upgrade(void);
 extern void wi_upgrade(char *url, int len, char *boundary);
 extern void wo_flash(char *url);
 
