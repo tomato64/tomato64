@@ -39,6 +39,14 @@ void wo_defaults(char *url)
 			parse_asp("reboot.asp");
 			web_close();
 
+			/* Give the browser time to request linked reboot page assets. */
+			sleep(2);
+			finalize_upgrade();
+#ifdef TOMATO64_X86_64
+			/* upgradefinalize unmounts SCSI-attached storage, which includes a SATA /nvram */
+			eval("mount_nvram");
+#endif /* TOMATO64_X86_64 */
+
 			if (mode == 1) {
 				nvram_set("restore_defaults", "1");
 				nvram_commit();
@@ -57,12 +65,6 @@ void wo_defaults(char *url)
 				nvram_clear();
 			}
 #endif /* TOMATO64 */
-
-			if (nvram_get_int("remote_upgrade")) {
-				killall("xl2tpd", SIGTERM);
-				killall("pppd", SIGTERM);
-			}
-			sleep(2);
 
 			set_action(ACT_REBOOT);
 			sync();
@@ -239,12 +241,9 @@ void wo_restore(char *url)
 		parse_asp("reboot.asp");
 		web_close();
 
-		if (nvram_get_int("remote_upgrade")) {
-			killall("xl2tpd", SIGTERM);
-			killall("pppd", SIGTERM);
-		}
-
+		/* Give the browser time to request linked reboot page assets. */
 		sleep(2);
+		finalize_upgrade();
 
 		reboot(RB_AUTOBOOT);
 

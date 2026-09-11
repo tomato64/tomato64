@@ -81,9 +81,29 @@ void prepare_upgrade(void)
 	nvram_set("os_version_last", tomato_shortver);
 	nvram_commit();
 
-	unlink("/var/log/messages");
-	unlink("/var/log/messages.0");
 	sync();
+}
+
+void finalize_upgrade(void)
+{
+	int n;
+
+	/*
+	 * Stop the listening httpd master without killing this request worker:
+	 * it still has to finish the destructive operation after finalization.
+	 * Drop the worker's inherited web_dir cwd so an USB-backed web root
+	 * cannot keep storage busy during unmount.
+	 */
+	kill_pidfile_s("/var/run/httpd.pid", SIGTERM);
+	chdir("/");
+
+	exec_service("upgradefinalize-start");
+	for (n = 60; n > 0; --n) {
+		sleep(1);
+
+		if (nvram_match("action_service", ""))
+			break;
+	}
 }
 
 void wi_upgrade(char *url, int len, char *boundary)
@@ -338,12 +358,9 @@ void wo_flash(char *url)
 		parse_asp("/tmp/reboot.asp");
 		web_close();
 
-		if (nvram_get_int("remote_upgrade")) {
-			killall("xl2tpd", SIGTERM);
-			killall("pppd", SIGTERM);
-		}
-
+		/* Give the browser time to request linked reboot page assets. */
 		sleep(2);
+		finalize_upgrade();
 
 #ifdef TOMATO64
 		sync();

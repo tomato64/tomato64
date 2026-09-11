@@ -100,6 +100,7 @@
 #define SVCOP_WAN		(SVCOP_SPECIAL | 0x21)
 #define SVCOP_NET		(SVCOP_SPECIAL | 0x22)
 #define SVCOP_UPGRADE		(SVCOP_SPECIAL | 0x23)
+#define SVCOP_UPGRADE_FINALIZE	(SVCOP_SPECIAL | 0x24)
 
 #define SVC_OP(_stop, _start)	{ _stop, _start }
 
@@ -456,6 +457,7 @@ static const struct svc_entry svc_table[] = {
 	{ "tor_newnym",		SVCF_NO_STATUS,							P_NONE,			0,	SVCOP_TOR		},
 #endif
 	{ "upgrade",		SVCF_NO_STATUS,							P_NONE,			0,	SVCOP_UPGRADE		},
+	{ "upgradefinalize",	SVCF_NO_STATUS,							P_NONE,			0,	SVCOP_UPGRADE_FINALIZE	},
 	{ "upnp",		SVCF_LIST,							P_MINIUPNPD,		0,	SVCOP_UPNP		},
 	{ "miniupnpd",		0,								P_MINIUPNPD,		0,	SVCOP_UPNP		},
 	{ "upnp_nvram",		SVCF_NO_STATUS,							P_NONE,			0,	SVCOP_UPNP_NVRAM	},

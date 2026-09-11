@@ -188,6 +188,7 @@ extern void asp_ddnsx(int argc, char **argv);
 
 /* upgrade.c */
 extern void prepare_upgrade(void);
+extern void finalize_upgrade(void);
 extern void wi_upgrade(char *url, int len, char *boundary);
 extern void wo_flash(char *url);
 

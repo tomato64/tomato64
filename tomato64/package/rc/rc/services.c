@@ -3060,7 +3060,6 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				stop_snmp();
 #endif
 				stop_tomatoanon();
-				remove_conntrack();
 #ifdef TCONFIG_ZEBRA
 				stop_zebra();
 #endif
@@ -3074,16 +3073,57 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				stop_haveged();
 #endif
 				stop_jffs2();
+#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BCM53XX)
+				/*
+				 * OpenWrt sysupgrade (stage2) owns the flash and reboot on these
+				 * devices; httpd never reaches finalize_upgrade(). Keep the
+				 * pre-flash teardown here, as before upgradefinalize existed.
+				 */
+				remove_conntrack();
 				stop_syslog();
 				sleep(1);
 #ifdef TCONFIG_USB
-#ifdef TCONFIG_USBAP
-				stop_wireless();
-				sleep(1);
-#endif
 				remove_storage_main(1);
 				stop_usb();
 #endif /* TCONFIG_USB */
+#endif /* TOMATO64_MT3600BE || TOMATO64_BCM53XX */
+			}
+			return 1;
+		case SVCOP_UPGRADE_FINALIZE:
+			if (act_start) {
+				/*
+				 * Keep the client-facing network alive through upgrade-start so
+				 * httpd can finish the reboot response. Tear it down only after
+				 * web_close(), immediately before the MTD write.
+				 */
+				if (nvram_get_int("remote_upgrade")) {
+					killall("xl2tpd", SIGTERM);
+					killall("pppd", SIGTERM);
+					stop_dnsmasq();
+					killall("udhcpc", SIGTERM);
+					stop_wan();
+				}
+
+				remove_conntrack();
+
+				/*
+				 * Stop wireless before USB on all builds. Some MIPS models use
+				 * wl_high through USBAP, and wireless shutdown may still emit
+				 * useful diagnostics, so keep syslog alive until it completes.
+				 */
+				stop_wireless();
+				sleep(1);
+
+				stop_syslog();
+				sleep(1);
+				sync();
+
+#ifdef TCONFIG_USB
+				/* Unmount storage only after wireless and logging are down. */
+				remove_storage_main(1);
+				stop_usb();
+#endif
+				sync();
 			}
 			return 1;
 		case SVCOP_FIREWALL:
