@@ -3111,8 +3111,10 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				 * wl_high through USBAP, and wireless shutdown may still emit
 				 * useful diagnostics, so keep syslog alive until it completes.
 				 */
+#if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 				stop_wireless();
 				sleep(1);
+#endif /* !TOMATO64 || TOMATO64_BCM53XX */
 
 				stop_syslog();
 				sleep(1);
