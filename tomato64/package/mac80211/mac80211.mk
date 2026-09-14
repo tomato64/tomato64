@@ -11,6 +11,12 @@ MAC80211_LICENSE = GPL-3.0
 MAC80211_DEPENDENCIES = linux host-flex
 MAC80211_INSTALL_STAGING = YES
 
+# Exported so packages installed outside this recipe can report the wireless
+# stack version (e.g. TomatoAnon). Only set when backports is actually built.
+ifeq ($(BR2_PACKAGE_MAC80211),y)
+export MAC80211_VERSION
+endif
+
 define MAC80211_BUILD_CMDS
 
 	cp $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/config_base $(@D)/.config

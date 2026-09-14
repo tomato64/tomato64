@@ -132,7 +132,20 @@ ANON_NOTIFY=$(NG tomatoanon_notify)
 	fi
 	MODEL="$MODEL ($ENVIRONMENT)"
 # TOMATO64-X86_64-END
+# TOMATO64-REMOVE-BEGIN
 	DRIVER=$(wl ver | grep version | awk '{ print $7 }')
+# TOMATO64-REMOVE-END
+# TOMATO64-BEGIN
+# TOMATO64-BCM53XX-BEGIN
+	DRIVER=$(wl ver | grep version | awk '{ print $7 }')
+# TOMATO64-BCM53XX-END
+# TOMATO64-MAC80211-BEGIN
+	# mac80211 backports version, substituted at build time from MAC80211_VERSION
+	DRIVER="@MAC80211_VERSION@"
+	# targets without backports (rpi4, armsr) use the in-tree stack: report the kernel version
+	[ -n "$DRIVER" ] || DRIVER=$(uname -r | cut -d '-' -f1)
+# TOMATO64-MAC80211-END
+# TOMATO64-END
 	WANMAC_MD5=$(echo "$WANMAC+$LANMAC" | md5sum | awk '{ print $1 }')
 
 	[ ! "$(NG tomatoanon_id)" == "$WANMAC_MD5" ] && {

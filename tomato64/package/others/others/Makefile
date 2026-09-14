@@ -211,6 +211,15 @@ else
 	sed -i $(INSTALLDIR)/usr/sbin/tomatoanon -e "/TOMATO64-X86_64-BEGIN/,/TOMATO64-X86_64-END/d"
 endif #PLATFORM_X86_64
 
+# TomatoAnon wireless driver version: bcm53xx reports the proprietary wl driver,
+# every other target reports the mac80211 stack version (exported by mac80211.mk).
+ifeq ($(PLATFORM_BCM53XX),y)
+	sed -i $(INSTALLDIR)/usr/sbin/tomatoanon -e "/TOMATO64-MAC80211-BEGIN/,/TOMATO64-MAC80211-END/d"
+else
+	sed -i $(INSTALLDIR)/usr/sbin/tomatoanon -e "/TOMATO64-BCM53XX-BEGIN/,/TOMATO64-BCM53XX-END/d"
+	sed -i $(INSTALLDIR)/usr/sbin/tomatoanon -e "s/@MAC80211_VERSION@/$(MAC80211_VERSION)/"
+endif #PLATFORM_BCM53XX
+
 ifeq ($(PLATFORM_ARM64),y)
 	install -m 0700 entware-install-AARCH64.sh $(INSTALLDIR)/usr/sbin/entware-install.sh
 endif #PLATFORM_ARM64
@@ -240,6 +249,8 @@ endif #TOMATO64
 			-e "/TOMATO64-BEGIN/d"	-e "/TOMATO64-END/d" \
 			-e "/TOMATO64-REMOVE-BEGIN/d"	-e "/TOMATO64-REMOVE-END/d" \
 			-e "/TOMATO64-X86_64-BEGIN/d"	-e "/TOMATO64-X86_64-END/d" \
+			-e "/TOMATO64-BCM53XX-BEGIN/d"	-e "/TOMATO64-BCM53XX-END/d" \
+			-e "/TOMATO64-MAC80211-BEGIN/d"	-e "/TOMATO64-MAC80211-END/d" \
 			|| true; \
 		done
 
