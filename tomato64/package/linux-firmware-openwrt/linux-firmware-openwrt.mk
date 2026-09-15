@@ -65,6 +65,19 @@ define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
 endef
 endif
 
+# MediaTek MT7988 Wireless Ethernet Dispatch (WED) offload firmware for
+# GL-BE14000. Needed whenever mt7996e is loaded with wed_enable=Y (see
+# set_devs_be14000 / the wed_offloading nvram). Filenames match OpenWrt
+# package/firmware/linux-firmware/mediatek.mk (mt7988-wo-firmware), which is
+# in GL's DEVICE_PACKAGES for this board.
+ifeq ($(BR2_PACKAGE_PLATFORM_BE14000),y)
+define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
+	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7988
+	cp $(@D)/mediatek/mt7988/mt7988_wo_0.bin $(TARGET_DIR)/lib/firmware/mediatek/mt7988
+	cp $(@D)/mediatek/mt7988/mt7988_wo_1.bin $(TARGET_DIR)/lib/firmware/mediatek/mt7988
+endef
+endif
+
 # MediaTek Bluetooth + Intel WiFi firmware for x86_64
 ifeq ($(BR2_PACKAGE_PLATFORM_X86_64),y)
 define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS

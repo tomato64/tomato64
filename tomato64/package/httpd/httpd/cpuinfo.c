@@ -224,6 +224,9 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 #elif TOMATO64_MT3600BE
 	strlcpy(system_type, "MediaTek Filogic 850", buf_system_type_sz);
 	strlcpy(cpuclk, "2000", buf_cpuclk_sz);
+#elif TOMATO64_BE14000
+	strlcpy(system_type, "MediaTek Filogic 880", buf_system_type_sz);
+	strlcpy(cpuclk, "1800", buf_cpuclk_sz);
 #elif TOMATO64_ARMSR
 	strlcpy(system_type, "ARM64 SystemReady", buf_system_type_sz);
 	/* arm64 has no "cpu MHz" in /proc/cpuinfo; read the live clock from
@@ -349,6 +352,8 @@ void get_cpumodel(char *cpumodel, const size_t buf_cpumodel_sz)
 	}
 #elif TOMATO64_MT3600BE
 	strlcpy(cpumodel, "MediaTek MT7987AV (Cortex-A53)", buf_cpumodel_sz);
+#elif TOMATO64_BE14000
+	strlcpy(cpumodel, "MediaTek MT7988A (Cortex-A73)", buf_cpumodel_sz);
 #else
 	strlcpy(cpumodel, "MediaTek MT7986AV (Cortex-A53)", buf_cpumodel_sz);
 #endif

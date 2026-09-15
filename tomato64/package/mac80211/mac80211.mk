@@ -4,7 +4,11 @@
 #
 ################################################################################
 
+ifeq ($(BR2_PACKAGE_PLATFORM_BE14000),y)
+MAC80211_VERSION = 6.18.39
+else
 MAC80211_VERSION = 6.18.26
+endif
 MAC80211_SOURCE = backports-$(MAC80211_VERSION).tar.zst
 MAC80211_SITE = https://github.com/openwrt/backports/releases/download/backports-v$(MAC80211_VERSION)
 MAC80211_LICENSE = GPL-3.0
@@ -47,7 +51,7 @@ define MAC80211_BUILD_CMDS
 	CONFIG_SHELL="bash" \
 	V=''  \
 	cmd_syscalls= \
-	KBUILD_EXTRA_SYMBOLS="$(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/gpio-button-hotplug.symvers $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/mac80211.symvers $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/mt76.symvers" \
+	KBUILD_EXTRA_SYMBOLS="$(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/gpio-button-hotplug.symvers $(call tomato64-extra-symvers,mac80211)" \
 	LEX="flex" \
 	KERNELRELEASE=$(LINUX_VERSION) \
 	EXTRA_CFLAGS="-I$(@D)/include -fmacro-prefix-map=$(@D)=mac80211-$(MAC80211_VERSION) " \
@@ -75,7 +79,7 @@ define MAC80211_BUILD_CMDS
 	CONFIG_SHELL="bash" \
 	V=''  \
 	cmd_syscalls= \
-	KBUILD_EXTRA_SYMBOLS="$(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/gpio-button-hotplug.symvers $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/mac80211.symvers $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/mt76.symvers" \
+	KBUILD_EXTRA_SYMBOLS="$(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/gpio-button-hotplug.symvers $(call tomato64-extra-symvers,mac80211)" \
 	CC=$(TARGET_CC) \
 	LEX="flex" \
 	KERNELRELEASE=$(LINUX_VERSION) \
@@ -153,5 +157,16 @@ define MAC80211_STRIP_MODULES
 		-exec $(TARGET_CROSS)strip --strip-debug {} +
 endef
 MAC80211_POST_INSTALL_TARGET_HOOKS += MAC80211_STRIP_MODULES
+
+define MAC80211_APPLY_VERSIONED_PATCHES
+	$(APPLY_PATCHES) $(@D) $(MAC80211_PKGDIR)/patches-$(MAC80211_VERSION) \*.patch
+endef
+MAC80211_POST_PATCH_HOOKS += MAC80211_APPLY_VERSIONED_PATCHES
+
+# Publish our symbols for anything built afterwards (mt76) - see external.mk.
+define MAC80211_COLLECT_SYMVERS
+	$(call tomato64-collect-symvers,mac80211,$(@D))
+endef
+MAC80211_POST_BUILD_HOOKS += MAC80211_COLLECT_SYMVERS
 
 $(eval $(generic-package))

@@ -10385,6 +10385,9 @@ static int init_nvram(void)
 #ifdef TOMATO64_MT3600BE
 	nvram_set("t_model_name", "GL.iNet GL-MT3600BE");
 #endif /* TOMATO64_MT3600BE */
+#ifdef TOMATO64_BE14000
+	nvram_set("t_model_name", "GL.iNet GL-BE14000");
+#endif /* TOMATO64_BE14000 */
 #ifdef TOMATO64_BPIR3
 	nvram_set("t_model_name", "Banana Pi BPI-R3");
 #endif /* TOMATO64_BPIR3 */
@@ -10894,6 +10897,9 @@ static void sysinit(void)
 #ifdef TOMATO64_MT3600BE
 	eval("set_devs_mt3600be");
 #endif /* TOMATO64_MT3600BE */
+#ifdef TOMATO64_BE14000
+	eval("set_devs_be14000");
+#endif /* TOMATO64_BE14000 */
 #ifdef TOMATO64_BCM53XX
 	eval("set_devs_bcm53xx");
 #endif /* TOMATO64_BCM53XX */
@@ -10908,9 +10914,9 @@ static void sysinit(void)
 #if defined(TOMATO64_X86_64) || defined(TOMATO64_ARMSR) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI) || defined(TOMATO64_RPI4) || defined(TOMATO64_R6S) || defined(TOMATO64_R5S) || defined(TOMATO64_R76S)
 		eval("expand_root_partition");
 #endif /* TOMATO64_X86_64 || TOMATO64_ARMSR || TOMATO64_BPIR3 || TOMATO64_BPIR3MINI || TOMATO64_R6S || TOMATO64_R5S || TOMATO64_R76S */
-#ifdef TOMATO64_MT6000
-		eval("resize2fs", "/dev/mmcblk0p7");
-#endif /* TOMATO64_MT6000 */
+#if defined(TOMATO64_MT6000) || defined(TOMATO64_BE14000)
+		eval("expand_root_fs");
+#endif /* TOMATO64_MT6000 || TOMATO64_BE14000 */
 		nvram_set("fs_expanded", "1");
 	}
 #endif /* TOMATO64 */

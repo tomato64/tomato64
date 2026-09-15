@@ -1,0 +1,894 @@
+From f4a4072d84cdb9edfdcb21bd1def9193a72e778c Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Tue, 15 Sep 2026 14:07:03 -0600
+Subject: [PATCH] mt7988a-glinet-gl-be14000.dts
+
+---
+ arch/arm64/boot/dts/mediatek/Makefile         |   1 +
+ .../mediatek/mt7988a-glinet-gl-be14000.dts    | 862 ++++++++++++++++++
+ 2 files changed, 863 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/mediatek/mt7988a-glinet-gl-be14000.dts
+
+diff --git a/arch/arm64/boot/dts/mediatek/Makefile b/arch/arm64/boot/dts/mediatek/Makefile
+index 7d4c852cb..867ffecc6 100644
+--- a/arch/arm64/boot/dts/mediatek/Makefile
++++ b/arch/arm64/boot/dts/mediatek/Makefile
+@@ -25,6 +25,7 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-bananapi-bpi-r4.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-bananapi-bpi-r4-2g5.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-bananapi-bpi-r4-emmc.dtbo
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-bananapi-bpi-r4-sd.dtbo
++dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-glinet-gl-be14000.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-rfb.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-rfb-emmc.dtbo
+ dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-rfb-eth1-aqr.dtbo
+diff --git a/arch/arm64/boot/dts/mediatek/mt7988a-glinet-gl-be14000.dts b/arch/arm64/boot/dts/mediatek/mt7988a-glinet-gl-be14000.dts
+new file mode 100644
+index 000000000..d7ec1be68
+--- /dev/null
++++ b/arch/arm64/boot/dts/mediatek/mt7988a-glinet-gl-be14000.dts
+@@ -0,0 +1,862 @@
++// SPDX-License-Identifier: (GPL-2.0 OR MIT)
++/*
++ * Copyright (C) 2021 MediaTek Inc.
++ * Author: Sam.Shih <sam.shih@mediatek.com>
++ */
++
++/dts-v1/;
++#include <dt-bindings/input/input.h>
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/regulator/richtek,rt5190a-regulator.h>
++
++#include "mt7988a.dtsi"
++
++/ {
++    model = "GL.iNet GL-BE14000";
++    compatible = "glinet,gl-be14000", "mediatek,mt7988a";
++    mediatek,upgrade-firmware-part = "PARTLABEL=rootfs";
++    chosen {
++        rootdisk = <&emmc_rootfs>;
++        /* Keep GL's console/earlycon args verbatim: earlycon is what gives
++         * UART output BEFORE the 8250 driver registers ttyS0, which is the
++         * only thing that shows an early-boot panic or hang during bring-up.
++         * (earlyprintk is ARM-32 only and inert here; kept for minimal diff
++         * against GL's DTS.) 0x11000000 matches serial0's reg in mt7988a.dtsi.
++         *
++         * Note this is chosen/bootargs, which u-boot OVERWRITES if it supplies
++         * its own. If GL's u-boot stomps these, the lever is
++         * chosen/bootargs-override, which always wins (CONFIG_CMDLINE_OVERRIDE
++         * is already =y). Not set here because it would also block overriding
++         * the cmdline from the u-boot prompt during bring-up.
++         */
++        bootargs = "console=ttyS0,115200n1 loglevel=8  \
++                earlycon=uart8250,mmio32,0x11000000 \
++                earlyprintk pci=pcie_bus_perf \
++                root=PARTLABEL=rootfs rootwait \
++                rootfstype=ext4";
++    };
++
++    memory@40000000 {
++        device_type = "memory";
++        reg = <0 0x40000000 0 0x10000000>;
++    };
++
++    gpio-keys {
++        compatible = "gpio-keys";
++
++        reset {
++            label = "reset";
++            linux,code = <KEY_RESTART>;
++            gpios = <&pio 13 GPIO_ACTIVE_LOW>;
++            debounce-interval = <10>;
++        };
++
++    };
++
++    gpio-export {
++        compatible = "gpio-export";
++        usb_power {
++            gpio-export,name = "usb_power";
++            gpio-export,output = <1>;
++            gpios = <&pio 52 GPIO_ACTIVE_HIGH>;
++        };
++
++        typec_power {
++            gpio-export,name = "typec_power";
++            gpio-export,output = <1>;
++            gpios = <&pio 53 GPIO_ACTIVE_HIGH>;
++        };
++    };
++
++    wsys_adie: wsys-adie {
++    // fpga cases need to manual change adie_id / sku_type for dvt only
++        compatible = "mediatek,rebb-mt7988-adie";
++        adie_id = <7976>;
++        sku_type = <3000>;
++    };
++
++    i2c_sfp: i2c-gpio {
++        compatible = "i2c-gpio";
++
++        /* MOD_DEF2 = SDA */
++        sda-gpios = <&pio 70 GPIO_ACTIVE_HIGH>;
++
++        /* MOD_DEF1 = SCL */
++        scl-gpios = <&pio 69 GPIO_ACTIVE_HIGH>;
++
++        i2c-gpio,delay-us = <5>;   // ~100kHz
++        #address-cells = <1>;
++        #size-cells = <0>;
++    };
++
++    sfp_esp0: sfp {
++        compatible = "sff,sfp";
++        i2c-bus = <&i2c_sfp>;
++        mod-def0-gpios = <&pio 82 GPIO_ACTIVE_LOW>;
++        los-gpios = <&pio 81 GPIO_ACTIVE_HIGH>;
++        tx-fault-gpios = <&pio 37 GPIO_ACTIVE_HIGH>;
++        tx-disable-gpios = <&pio 36 GPIO_ACTIVE_HIGH>;
++        rate-select0-gpios = <&pio 83 GPIO_ACTIVE_HIGH>;
++        rate-select1-gpios = <&pio 80 GPIO_ACTIVE_HIGH>;
++        maximum-power-milliwatt = <3000>;
++    };
++
++    reg_1p8v: regulator-1p8v {
++        compatible = "regulator-fixed";
++        regulator-name = "fixed-1.8V";
++        regulator-min-microvolt = <1800000>;
++        regulator-max-microvolt = <1800000>;
++        regulator-boot-on;
++        regulator-always-on;
++    };
++
++    reg_3p3v: regulator-3p3v {
++        compatible = "regulator-fixed";
++        regulator-name = "fixed-3.3V";
++        regulator-min-microvolt = <3300000>;
++        regulator-max-microvolt = <3300000>;
++        regulator-boot-on;
++        regulator-always-on;
++    };
++
++    fan_3p3v: regulator-fan-3p3v {
++        compatible = "regulator-fixed";
++        regulator-name = "fixed-3.3V";
++        regulator-min-microvolt = <3300000>;
++        regulator-max-microvolt = <3300000>;
++        gpio = <&pio 60 GPIO_ACTIVE_HIGH>;
++        enable-active-high;
++    };
++
++    reg_5p0v: regulator-5p0v {
++        compatible = "regulator-fixed";
++        regulator-name = "fixed-5.0V";
++        regulator-min-microvolt = <5000000>;
++        regulator-max-microvolt = <5000000>;
++        regulator-boot-on;
++        regulator-always-on;
++    };
++
++    backlight: backlight {
++        compatible = "pwm-backlight";
++        pwms = <&pwm 3 50000>;
++        brightness-levels = <0    1    1    1    2    2    3    4    5    6    7
++                8    9   10   12   13   15   16   18   20   22
++                24   26   29   31   34   37   40   43   46   50
++                53   57   61   65   69   74   78   83   88   93
++                98  103  109  114  120  126  132  138  145  151
++                158  165  172  179  187  194  202  210  218  226
++                235  243  252  261  270  279  289  298  308  318
++                328  338  349  359  370  381  392  403  415  426
++                438  450  462  474  487  499  512  525  538  551
++                565  578  592  606  620  634  649  663  678  693
++                708  723  738  754  770  785  801  818  834  850
++                867  884  901  918  935  952  970  988 1006 1023
++                >;
++        default-brightness-level = <95>;
++    };
++
++    fan: pwm0-fan {
++        compatible = "pwm-fan";
++        #cooling-cells = <2>;
++        pwms = <&pwm 0 50000>;
++        fan-supply = <&fan_3p3v>;
++        interrupt-parent = <&pio>;
++        interrupts = <21 IRQ_TYPE_EDGE_RISING>;
++        /* Four states so the thermal cooling-map indices below are meaningful.
++         * GL ship a 256-entry identity ramp because their userspace daemon writes
++         * raw cooling_device states; under the kernel governor that would make
++         * state 3 mean PWM 36/255, i.e. no cooling at the 110C trip.
++         *
++         * Measured on the unit via the stock firmware's pwm-fan hwmon:
++         *   pwm    0 ->    0 rpm      pwm  150 -> 4164 rpm
++         *   pwm   80 -> 2639 rpm      pwm  200 -> 4926 rpm
++         *   pwm  127 -> 3724 rpm      pwm  240 -> 5425 rpm
++         *                             pwm  255 -> 5696 rpm
++         * Monotonic all the way to 255 with no stall, so the top state uses full
++         * duty. (GL's fan_pwm_max=127 is a noise cap, not a hardware limit.)
++         */
++        cooling-levels = <0 80 150 255>;
++    };
++};
++
++
++&pwm {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pwm0_pin &pwm3_gpio59_pin>;
++	status = "okay";
++};
++
++/* The SoC dtsi declares cpu_thermal with only a critical trip; add the active
++ * trips and bind them to the fan so the kernel thermal governor drives it.
++ * Tomato64's fanctl discovers everything through these sysfs nodes.
++ */
++&cpu_thermal {
++    trips {
++        cpu_trip_active_high: active-high {
++            temperature = <110000>;
++            hysteresis = <2000>;
++            type = "active";
++        };
++
++        cpu_trip_active_med: active-med {
++            temperature = <80000>;
++            hysteresis = <2000>;
++            type = "active";
++        };
++
++        cpu_trip_active_low: active-low {
++            temperature = <60000>;
++            hysteresis = <2000>;
++            type = "active";
++        };
++
++        cpu_trip_active_silent: active-silent {
++            temperature = <40000>;
++            hysteresis = <2000>;
++            type = "active";
++        };
++    };
++
++    cooling-maps {
++        cpu-active-high {
++            trip = <&cpu_trip_active_high>;
++            cooling-device = <&fan 3 3>;
++        };
++
++        cpu-active-med {
++            trip = <&cpu_trip_active_med>;
++            cooling-device = <&fan 2 2>;
++        };
++
++        cpu-active-low {
++            trip = <&cpu_trip_active_low>;
++            cooling-device = <&fan 1 1>;
++        };
++
++        cpu-active-silent {
++            trip = <&cpu_trip_active_silent>;
++            cooling-device = <&fan 0 0>;
++        };
++    };
++};
++
++&cpu0 {
++    proc-supply = <&rt5190_buck3>;
++};
++
++&cpu1 {
++    proc-supply = <&rt5190_buck3>;
++};
++
++&cpu2 {
++    proc-supply = <&rt5190_buck3>;
++};
++
++&cpu3 {
++    proc-supply = <&rt5190_buck3>;
++};
++
++&cci {
++    proc-supply = <&rt5190_buck3>;
++};
++
++&serial0 {
++    status = "okay";
++};
++
++&serial1 {
++    pinctrl-names = "default";
++    pinctrl-0 = <&uart1_pins>;
++    status = "disabled";
++};
++
++&serial2 {
++    pinctrl-names = "default";
++    pinctrl-0 = <&uart2_pins>;
++    status = "disabled";
++};
++
++&i2c0 {
++    pinctrl-names = "default";
++    pinctrl-0 = <&i2c0_pins>;
++    status = "okay";
++
++    rt5190a_64: rt5190a@64 {
++        compatible = "richtek,rt5190a";
++        reg = <0x64>;
++        /*interrupts-extended = <&gpio26 0 IRQ_TYPE_LEVEL_LOW>;*/
++        vin2-supply = <&rt5190_buck1>;
++        vin3-supply = <&rt5190_buck1>;
++        vin4-supply = <&rt5190_buck1>;
++
++        regulators {
++            rt5190_buck1: buck1 {
++                regulator-name = "rt5190a-buck1";
++                regulator-min-microvolt = <5090000>;
++                regulator-max-microvolt = <5090000>;
++                regulator-allowed-modes =
++                <RT5190A_OPMODE_AUTO RT5190A_OPMODE_FPWM>;
++                regulator-boot-on;
++                regulator-always-on;
++            };
++            buck2 {
++                regulator-name = "vcore";
++                regulator-min-microvolt = <600000>;
++                regulator-max-microvolt = <1400000>;
++                regulator-boot-on;
++                regulator-always-on;
++            };
++            rt5190_buck3: buck3 {
++                regulator-name = "vproc";
++                regulator-min-microvolt = <600000>;
++                regulator-max-microvolt = <1400000>;
++                regulator-boot-on;
++            };
++            buck4 {
++                regulator-name = "rt5190a-buck4";
++                regulator-min-microvolt = <850000>;
++                regulator-max-microvolt = <850000>;
++                regulator-allowed-modes =
++                <RT5190A_OPMODE_AUTO RT5190A_OPMODE_FPWM>;
++                regulator-boot-on;
++                regulator-always-on;
++            };
++            ldo {
++                regulator-name = "rt5190a-ldo";
++                regulator-min-microvolt = <1200000>;
++                regulator-max-microvolt = <1200000>;
++                regulator-boot-on;
++                regulator-always-on;
++            };
++        };
++    };
++};
++
++&i2c1 {
++    pinctrl-names = "default";
++    pinctrl-0 = <&i2c1_pins>;
++    status = "okay";
++    touchscreen@58 {
++        compatible = "hynitron,cst3530";
++        reg = <0x58>;
++        reset-gpios = <&pio 34 GPIO_ACTIVE_LOW>;
++        interrupt-parent = <&pio>;
++        interrupts = <32 IRQ_TYPE_EDGE_FALLING>;
++        status = "okay";
++    };
++};
++
++&i2c2 {
++    pinctrl-names = "default";
++    pinctrl-0 = <&i2c2_pins>;
++    status = "okay";
++};
++
++&spi0 {
++    pinctrl-names = "default";
++    pinctrl-0 = <&spi0_flash_pins>;
++    status = "disabled";
++
++    spi_nand: spi_nand@0 {
++        #address-cells = <1>;
++        #size-cells = <1>;
++        compatible = "spi-nand";
++        spi-cal-enable;
++        spi-cal-mode = "read-data";
++        spi-cal-datalen = <7>;
++        spi-cal-data = /bits/ 8 <0x53 0x50 0x49 0x4E 0x41 0x4E 0x44>;
++        spi-cal-addrlen = <5>;
++        spi-cal-addr = /bits/ 32 <0x0 0x0 0x0 0x0 0x0>;
++        reg = <0>;
++        spi-max-frequency = <52000000>;
++        spi-tx-bus-width = <4>;
++        spi-rx-bus-width = <4>;
++    };
++};
++
++&spi1 {
++	pinctrl-0 = <&spic_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++	cs_setup_time = <2>;
++    num-cs = <1>;
++	st7789p3@0 {
++		compatible = "sitronix,st7789p3";
++		reg = <0>;
++		spi-cpha;
++		spi-cpol;
++		backlight = <&backlight>;
++		buswidth = <0x8>;
++		width = <240>;
++		height = <320>;
++		rotate = <0>;
++		te-gpios = <&pio 35 GPIO_ACTIVE_HIGH>;
++		dc-gpios = <&pio 62 GPIO_ACTIVE_HIGH>;
++		reset-gpios = <&pio 68 GPIO_ACTIVE_LOW>;
++		spi-max-frequency = <52000000>;
++	};
++};
++
++&spi2 {
++    pinctrl-names = "default";
++    pinctrl-0 = <&spi2_wp_hold_gpio>;
++    status = "okay";
++};
++
++&pcie0 {
++    pinctrl-names = "default";
++    pinctrl-0 = <&pcie0_pins>;
++    clocks = <&infracfg CLK_INFRA_PCIE_PIPE_P0>,
++             <&infracfg CLK_INFRA_PCIE_GFMUX_TL_P0>,
++             <&infracfg CLK_INFRA_PCIE_PERI_26M_CK_P0>,
++             <&infracfg CLK_INFRA_133M_PCIE_CK_P0>,
++             <&topckgen CLK_TOP_PEXTP_P0_SEL>;
++    clock-names = "pl_250m", "tl_26m", "peri_26m", "top_133m",
++                  "pextp_clk";
++    status = "okay";
++
++    pcie@0,0 {
++        reg = <0x0000 0 0 0 0>;
++        device_type = "pci";
++        #address-cells = <3>;
++        #size-cells = <2>;
++        ranges;
++
++        mt7996@0,0 {
++            reg = <0x0000 0 0 0 0>;
++            compatible = "mediatek,mt7996";
++            nvmem-cells = <&eeprom_factory_0>;
++            nvmem-cell-names = "eeprom";
++        };
++    };
++};
++
++&pcie1 {
++    pinctrl-names = "default";
++    pinctrl-0 = <&pcie1_pins>;
++    clocks = <&infracfg CLK_INFRA_PCIE_PIPE_P1>,
++             <&infracfg CLK_INFRA_PCIE_GFMUX_TL_P1>,
++             <&infracfg CLK_INFRA_PCIE_PERI_26M_CK_P1>,
++             <&infracfg CLK_INFRA_133M_PCIE_CK_P1>,
++             <&topckgen CLK_TOP_PEXTP_P1_SEL>;
++    clock-names = "pl_250m", "tl_26m", "peri_26m", "top_133m",
++                  "pextp_clk";
++    status = "okay";
++};
++
++&pio {
++	pwm0_pin: pwm0-pin {
++		mux {
++			function = "pwm";
++			groups = "pwm0";
++		};
++	};
++
++	pwm3_gpio59_pin: pwm3-gpio59-pin {
++		mux {
++			function = "pwm";
++			groups = "pwm3_0";
++		};
++	};
++
++    spi2_wp_hold_gpio: spi2_wp_hold_gpio {
++        mux {
++            function = "gpio";
++            groups = "spi2", "spi2_wp_hold";
++        };
++    };
++
++    jtag_disable {
++        mux {
++            function = "gpio";
++            groups = "jtag";
++        };
++    };
++
++    mdio0_pins: mdio0-pins {
++        mux {
++            function = "mdio";
++            groups = "mdc_mdio0";
++        };
++
++        conf {
++            groups = "mdc_mdio0";
++            drive-strength = <MTK_DRIVE_10mA>;
++        };
++    };
++
++    pcie0_pins: pcie0-pins {
++        mux {
++            function = "pcie";
++            groups = "pcie_2l_0_pereset", "pcie_clk_req_n0_0",
++                 "pcie_wake_n0_0";
++        };
++    };
++
++    pcie1_pins: pcie1-pins {
++        mux {
++            function = "pcie";
++            groups = "pcie_2l_1_pereset", "pcie_clk_req_n1",
++                 "pcie_wake_n1_0";
++        };
++    };
++
++    pcie2_pins: pcie2-pins {
++        mux {
++            function = "pcie";
++            groups = "pcie_1l_0_pereset", "pcie_clk_req_n2_0",
++                 "pcie_wake_n2_0";
++        };
++    };
++
++    pcie3_pins: pcie3-pins {
++        mux {
++            function = "pcie";
++            groups = "pcie_1l_1_pereset", "pcie_clk_req_n3",
++                 "pcie_wake_n3_0";
++        };
++    };
++
++    spi0_flash_pins: spi0-pins {
++        mux {
++            function = "spi";
++            groups = "spi0", "spi0_wp_hold";
++        };
++
++        conf-pu {
++            pins = "SPI0_CSB", "SPI0_HOLD", "SPI0_WP";
++            drive-strength = <MTK_DRIVE_4mA>;
++            bias-pull-up = <MTK_PUPD_SET_R1R0_11>;
++        };
++
++        conf-pd {
++            pins = "SPI0_CLK", "SPI0_MOSI", "SPI0_MISO";
++            drive-strength = <MTK_DRIVE_4mA>;
++            bias-pull-down = <MTK_PUPD_SET_R1R0_11>;
++        };
++    };
++
++    spic_pins: spi1-pins {
++        mux {
++            function = "spi";
++            groups = "spi1";
++        };
++
++        conf-pu {
++            pins = "SPI1_CSB";
++            drive-strength = <MTK_DRIVE_4mA>;
++            bias-pull-up = <MTK_PUPD_SET_R1R0_11>;
++        };
++
++        conf-pd {
++            pins = "SPI1_CLK", "SPI1_MOSI", "SPI1_MISO";
++            drive-strength = <MTK_DRIVE_4mA>;
++            bias-pull-down = <MTK_PUPD_SET_R1R0_11>;
++        };
++    };
++
++    i2c0_pins: i2c0-pins-g0 {
++        mux {
++            function = "i2c";
++            groups = "i2c0_1";
++        };
++    };
++
++    i2c1_pins: i2c1-pins {
++        mux {
++            function = "i2c";
++            groups = "i2c1_0";
++        };
++    };
++
++    i2c2_pins: i2c2-pins {
++        mux {
++            function = "i2c";
++            groups = "i2c2_1";
++        };
++    };
++
++    uart1_pins: uart1-pins {
++        mux {
++            function = "uart";
++            groups = "tops_uart1_2";
++        };
++    };
++
++    uart2_pins: uart2-pins {
++        mux {
++            function = "uart";
++            groups = "uart2";
++        };
++    };
++
++    mmc0_pins_default: mmc0-pins-default {
++        mux {
++            function = "flash";
++            groups = "emmc_51";
++        };
++    };
++
++    mmc0_pins_uhs: mmc0-pins-uhs {
++        mux {
++            function = "flash";
++            groups = "emmc_51";
++        };
++    };
++};
++
++&watchdog {
++    status = "okay";
++};
++
++&ssusb0 {
++    status = "okay";
++    vusb33-supply = <&reg_3p3v>;
++    vusb50-supply = <&reg_5p0v>;
++};
++
++&ssusb1 {
++    status = "okay";
++    vusb33-supply = <&reg_3p3v>;
++    vusb50-supply = <&reg_5p0v>;
++};
++
++&tphy {
++    status = "okay";
++};
++
++&xsphy {
++    status = "okay";
++};
++
++&eth {
++	pinctrl-names = "default";
++	pinctrl-0 = <&mdio0_pins>;
++	status = "okay";
++};
++
++&gmac0 {
++	phy-mode = "internal";
++	phy-connection-type = "internal";
++	status = "okay";
++};
++
++&gmac1 {
++	/delete-property/ phys;
++	phy-mode = "usxgmii";
++	phy-connection-type = "usxgmii";
++	status = "okay";
++
++	fixed-link {
++		speed = <10000>;
++		full-duplex;
++		pause;
++	};
++};
++
++&usxgmiisys0 {
++	phys = <&xfi_tphy0>;
++};
++
++&usxgmiisys1 {
++	phys = <&xfi_tphy1>;
++	mediatek,force-fixed-10g;
++};
++
++&gmac2 {
++	/delete-property/ phys;
++	mac-type = "xgdm";
++	phy-mode = "usxgmii";
++	phy-connection-type = "usxgmii";
++	phy-handle = <&phy0>;
++	status = "okay";
++};
++
++&mdio_bus {
++	clock-frequency = <10500000>;
++
++	yt9224: ethernet-switch@1d {
++		compatible = "motorcomm,yt9224";
++		reg = <0x1d>;
++		dsa,member = <1 0>;
++		reset-gpios = <&pio 0 GPIO_ACTIVE_LOW>;
++		reset-assert-us = <50000>;
++		reset-deassert-us = <200000>;
++		interrupt-parent = <&pio>;
++		interrupts = <3 IRQ_TYPE_LEVEL_LOW>;
++
++		mdio {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			ethernet-phy-package@4 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				reg = <4>;
++				motorcomm,interface-mode = "internal";
++
++				yt8824_phy4: ethernet-phy@4 {
++					reg = <4>;
++				};
++
++				yt8824_phy5: ethernet-phy@5 {
++					reg = <5>;
++				};
++
++				yt8824_phy6: ethernet-phy@6 {
++					reg = <6>;
++				};
++
++				yt8824_phy7: ethernet-phy@7 {
++					reg = <7>;
++				};
++			};
++		};
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				label = "sfp";
++				phy-mode = "10gbase-r";
++				managed = "in-band-status";
++				sfp = <&sfp_esp0>;
++			};
++
++			port@4 {
++				reg = <4>;
++				label = "lan1";
++				phy-handle = <&yt8824_phy4>;
++				phy-mode = "internal";
++			};
++
++			port@5 {
++				reg = <5>;
++				label = "lan2";
++				phy-handle = <&yt8824_phy5>;
++				phy-mode = "internal";
++			};
++
++			port@6 {
++				reg = <6>;
++				label = "lan3";
++				phy-handle = <&yt8824_phy6>;
++				phy-mode = "internal";
++			};
++
++			port@7 {
++				reg = <7>;
++				label = "lan4";
++				phy-handle = <&yt8824_phy7>;
++				phy-mode = "internal";
++			};
++
++		port@8 {
++			reg = <8>;
++			ethernet = <&gmac1>;
++			phy-mode = "usxgmii";
++
++				fixed-link {
++					speed = <10000>;
++					full-duplex;
++					pause;
++				};
++			};
++		};
++	};
++
++	phy0: ethernet-phy@0 {
++		reg = <0>;
++		compatible = "ethernet-phy-ieee802.3-c45";
++		mdi-reversal = /bits/ 16 <1>;
++		reset-assert-us = <100000>;
++		reset-deassert-us = <300000>;
++		reset-gpios = <&pio 1 GPIO_ACTIVE_LOW>;
++		interrupt-parent = <&pio>;
++		interrupts = <2 IRQ_TYPE_LEVEL_LOW>;
++	};
++};
++
++&switch {
++	status = "okay";
++};
++
++&gsw_port0 {
++	label = "lan5";
++};
++
++&gsw_port1 {
++	label = "lan6";
++};
++
++&gsw_port2 {
++	label = "lan7";
++};
++
++&gsw_port3 {
++	label = "lan8";
++};
++
++&crypto {
++    status = "disabled";
++};
++
++&mmc0 {
++    pinctrl-names = "default", "state_uhs";
++    pinctrl-0 = <&mmc0_pins_default>;
++    pinctrl-1 = <&mmc0_pins_uhs>;
++    bus-width = <8>;
++    max-frequency = <200000000>;
++    cap-mmc-highspeed;
++    mmc-hs200-1_8v;
++    //mmc-hs400-1_8v;
++    //hs400-ds-delay = <0x12814>;
++    vqmmc-supply = <&reg_1p8v>;
++    vmmc-supply = <&reg_3p3v>;
++    non-removable;
++    no-sd;
++    no-sdio;
++    status = "okay";
++
++    card@0 {
++        compatible = "mmc-card";
++        reg = <0>;
++
++        block {
++            compatible = "block-device";
++            partitions {
++                block-partition-env {
++                    partname = "u-boot-env";
++                    nvmem-layout {
++                        compatible = "u-boot,env-layout";
++                    };
++                };
++
++                block-partition-factory {
++                    partname = "factory";
++
++                    nvmem-layout {
++                        compatible = "fixed-layout";
++                        #address-cells = <1>;
++                        #size-cells = <1>;
++
++                        eeprom_factory_0: eeprom@0 {
++                            reg = <0x0 0x1e00>;
++                        };
++                    };
++                };
++
++                block-partition-glcfg {
++                    partname = "glcfg";
++                };
++
++                emmc_rootfs: block-partition-rootfs {
++                    partname = "rootfs";
++                };
++            };
++        };
++    };
++};
+-- 
+2.47.3
+

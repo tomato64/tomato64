@@ -4,10 +4,15 @@
 #
 ################################################################################
 
+ifeq ($(BR2_PACKAGE_PLATFORM_BE14000),y)
+MT76_VERSION = 59676919ea408b0b13a9d23f2e2e1a1ab407fba1
+else
 MT76_VERSION = 39c960c3ada558b4c2e7915772483d3731573d09
+endif
 MT76_SITE = $(call github,openwrt,mt76,$(MT76_VERSION))
 MT76_LICENSE = GPL-2.0
 MT76_DEPENDENCIES = linux mac80211
+
 
 define MT76_BUILD_CMDS
 	$(TARGET_MAKE_ENV) \
@@ -26,7 +31,7 @@ define MT76_BUILD_CMDS
 	CONFIG_SHELL="bash" \
 	V=''  \
 	cmd_syscalls= \
-	KBUILD_EXTRA_SYMBOLS="$(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/gpio-button-hotplug.symvers $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/mac80211.symvers $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/mt76.symvers" \
+	KBUILD_EXTRA_SYMBOLS="$(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/gpio-button-hotplug.symvers $(call tomato64-extra-symvers,mt76)" \
 	CC=$(TARGET_CC) \
 	KERNELRELEASE=$(LINUX_VERSION) \
 	CONFIG_MT76_CONNAC_LIB=m \
@@ -34,6 +39,7 @@ define MT76_BUILD_CMDS
 	$(if $(BR2_PACKAGE_PLATFORM_X86_64),CONFIG_MT7915E=m) \
 	$(if $(BR2_PACKAGE_PLATFORM_MEDIATEK),CONFIG_MT798X_WMAC=y) \
 	$(if $(BR2_PACKAGE_PLATFORM_MT3600BE),CONFIG_MT7996E=m) \
+	$(if $(BR2_PACKAGE_PLATFORM_BE14000),CONFIG_MT7996E=m) \
 	$(if $(BR2_PACKAGE_PLATFORM_BPIR3),CONFIG_MT7996E=m) \
 	$(if $(BR2_PACKAGE_PLATFORM_X86_64),CONFIG_MT7996E=m) \
 	CONFIG_MT792x_LIB=m \
@@ -89,9 +95,12 @@ endef
 MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_X86_64_MODULES
 endif
 
-# mt7986a Filogic devices (MT6000 / BPI-R3 / BPI-R3 Mini): built-in mt7915e
+# mt7986a Filogic devices (MT6000 / BPI-R3 / BPI-R3 Mini): built-in mt7915e.
+# MT3600BE (MT7990) and BE14000 (MT7996) have no MT7915 and are handled by
+# their own blocks below - without excluding them here they would also pick up
+# mt7915e.ko and seven mt7986 firmware blobs they can never load.
 ifeq ($(BR2_PACKAGE_PLATFORM_MEDIATEK),y)
-ifneq ($(BR2_PACKAGE_PLATFORM_MT3600BE),y)
+ifeq ($(BR2_PACKAGE_PLATFORM_MT3600BE)$(BR2_PACKAGE_PLATFORM_BE14000),)
 define MT76_INSTALL_MEDIATEK_MODULES
 	$(INSTALL) $(@D)/mt7915/mt7915e.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 endef
@@ -125,6 +134,32 @@ define MT76_INSTALL_MT3600BE_FIRMWARE
 	$(INSTALL) $(@D)/firmware/mt7996/mt7990_wm.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
 endef
 MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_MT3600BE_FIRMWARE
+endif
+
+# GL-BE14000 (mt7988a): tri-band MT7996 on PCIe
+ifeq ($(BR2_PACKAGE_PLATFORM_BE14000),y)
+define MT76_INSTALL_BE14000_MODULES
+	$(INSTALL) $(@D)/mt7996/mt7996e.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+endef
+MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_BE14000_MODULES
+
+# Both the base and the "233" (2+3+3 stream) variant are installed: which set
+# the driver asks for is decided by the eeprom in the factory partition.
+define MT76_INSTALL_BE14000_FIRMWARE
+	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7996_dsp.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7996_eeprom.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7996_eeprom_2i5i6i.bin	$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7996_rom_patch.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7996_wa.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7996_wm.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7996_eeprom_233.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7996_eeprom_233_2i5i6i.bin	$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7996_rom_patch_233.bin	$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7996_wa_233.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7996_wm_233.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+endef
+MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_BE14000_FIRMWARE
 endif
 
 ifneq ($(BR2_PACKAGE_PLATFORM_X86_64)$(BR2_PACKAGE_PLATFORM_BPIR3),)
@@ -167,5 +202,18 @@ define MT76_STRIP_MODULES
 		-exec $(TARGET_CROSS)strip --strip-debug {} +
 endef
 MT76_POST_INSTALL_TARGET_HOOKS += MT76_STRIP_MODULES
+
+define MT76_APPLY_VERSIONED_PATCHES
+	if [ -d $(MT76_PKGDIR)/patches-$(MT76_VERSION) ]; then \
+		$(APPLY_PATCHES) $(@D) $(MT76_PKGDIR)/patches-$(MT76_VERSION) \*.patch; \
+	fi
+endef
+MT76_POST_PATCH_HOOKS += MT76_APPLY_VERSIONED_PATCHES
+
+# Publish our symbols for anything built afterwards - see external.mk.
+define MT76_COLLECT_SYMVERS
+	$(call tomato64-collect-symvers,mt76,$(@D))
+endef
+MT76_POST_BUILD_HOOKS += MT76_COLLECT_SYMVERS
 
 $(eval $(generic-package))

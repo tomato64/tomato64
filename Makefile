@@ -9,6 +9,8 @@ MEDIATEK_KERNEL_PATCH=${HOME}/buildroot-src/mediatek-kernel/00001-openwrt-mediat
 ROCKCHIP_KERNEL_PATCH=${HOME}/buildroot-src/rockchip-kernel/00001-openwrt-rockchip-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 BCM53XX_KERNEL_PATCH=${HOME}/buildroot-src/bcm53xx-kernel/00001-openwrt-bcm53xx-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
 ARMSR_KERNEL_PATCH=${HOME}/buildroot-src/armsr-kernel/00001-openwrt-armsr-kernel-${TOMATO64_KERNEL_VERSION}${TOMATO64_KERNEL_REVISION}.patch
+BE14000_KERNEL_VERSION = 6.12.103
+BE14000_KERNEL_PATCH=${HOME}/buildroot-src/be14000-kernel/00001-openwrt-be14000-kernel-$(BE14000_KERNEL_VERSION).patch
 
 # Build-progress indicator in the terminal title bar (see tomato64/scripts/progress.sh).
 BR2_BUILD = rm -rf src/buildroot/output/.build-progress; \
@@ -34,6 +36,9 @@ mt6000: .configure-mt6000
 	$(BR2_BUILD)
 
 mt3600be: .configure-mt3600be
+	$(BR2_BUILD)
+
+be14000: .configure-be14000
 	$(BR2_BUILD)
 
 rpi4: .configure-rpi4
@@ -77,6 +82,9 @@ mt6000-menuconfig: .configure-mt6000
 	make -C src/buildroot menuconfig
 
 mt3600be-menuconfig: .configure-mt3600be
+	make -C src/buildroot menuconfig
+
+be14000-menuconfig: .configure-be14000
 	make -C src/buildroot menuconfig
 
 rpi4-menuconfig: .configure-rpi4
@@ -124,6 +132,11 @@ distclean:
 .configure-mt3600be: .download-mediatek-kernel .patch
 	make -C src/buildroot BR2_EXTERNAL=../../tomato64 mt3600be_defconfig
 	@echo mt3600be > .target
+	@touch $@
+
+.configure-be14000: .download-be14000-kernel .patch
+	make -C src/buildroot BR2_EXTERNAL=../../tomato64 be14000_defconfig
+	@echo be14000 > .target
 	@touch $@
 
 .configure-rpi4: .patch
@@ -196,6 +209,20 @@ endif
 		exit 1; \
 	fi
 	cp ${MEDIATEK_KERNEL_PATCH} tomato64/board/arm64/common/linux-patches-mt/
+	@touch $@
+
+.download-be14000-kernel:
+	mkdir -p ${HOME}/buildroot-src/be14000-kernel
+ifeq (,$(wildcard ${BE14000_KERNEL_PATCH}))
+	wget -O ${BE14000_KERNEL_PATCH} https://github.com/tomato64/openwrt-be14000-kernel/releases/download/$(BE14000_KERNEL_VERSION)/00001-openwrt-be14000-kernel-$(BE14000_KERNEL_VERSION).patch
+endif
+	@if [ ! -s ${BE14000_KERNEL_PATCH} ]; then \
+		echo "ERROR: be14000 kernel patch is missing or empty: ${BE14000_KERNEL_PATCH}"; \
+		echo "       Removing the bad file so it will be re-downloaded on the next run."; \
+		rm -f ${BE14000_KERNEL_PATCH}; \
+		exit 1; \
+	fi
+	cp ${BE14000_KERNEL_PATCH} tomato64/board/arm64/be14000/linux-patches/
 	@touch $@
 
 .download-rockchip-kernel:

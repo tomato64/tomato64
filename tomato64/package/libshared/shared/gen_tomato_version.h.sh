@@ -32,6 +32,11 @@ if [ "$PLATFORM_MT3600BE" == y ]; then
 	echo "$VERSION GL-MT3600BE AIO" >>						tomato_version
 fi
 
+if [ "$PLATFORM_BE14000" == y ]; then
+	echo "#define TOMATO_VERSION		\"$VERSION GL-BE14000 AIO\"" >>	tomato_version.h
+	echo "$VERSION GL-BE14000 AIO" >>						tomato_version
+fi
+
 if [ "$PLATFORM_BPIR3" == y ]; then
 	echo "#define TOMATO_VERSION		\"$VERSION BPI-R3 AIO\"" >>		tomato_version.h
 	echo "$VERSION BPI-R3 AIO" >>							tomato_version

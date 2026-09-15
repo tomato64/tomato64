@@ -373,7 +373,14 @@ function ethstates() {
 
 	var state = [];
 	var p;
-	var code ='<div class="section-title">Ethernet Ports State<\/div><div class="section"><table class="fields"><tr>';
+	/* Devices with a lot of ports tag the table so the stylesheet can pack
+	   the columns tight enough to keep the row on the page. Give every port
+	   an equal share of the width so they spread evenly across it rather than
+	   bunching up around the longest label; it only has to be set on the
+	   first row, since the whole column follows it. */
+	var compact = PortNames.usesCompactPorts();
+	var colwidth = compact ? 'width:'+(100 / parseInt(stats.niccount, 10)).toFixed(2)+'%;' : '';
+	var code ='<div class="section-title">Ethernet Ports State<\/div><div class="section"><table class="fields'+(compact ? ' ports-compact' : '')+'"><tr>';
 	var code2 = '';
 
 	for ((nvram.lan_invert==0) ? p = 0 : p = stats.niccount - 1; (nvram.lan_invert==0) ? p <= stats.niccount - 1 : p >= 0; (nvram.lan_invert==0) ? p++ : p--) {
@@ -388,7 +395,7 @@ function ethstates() {
 			portLabel += '<small class="port-label-internal">'+internal+'<\/small><br>';
 		}
 		portLabel += '<b>'+labels.hardware+'<\/b>';
-		code += '<td class="title indent2" style="vertical-align:bottom">'+portLabel+'<\/td>';
+		code += '<td class="title indent2" style="'+colwidth+'vertical-align:bottom">'+portLabel+'<\/td>';
 		var wan = get_wan(p);
 		var lan = get_lan(p);
 		code2 += '<td class="title indent2" style="vertical-align:top"><small class="port-wan-lan">'+wan+lan+'<\/small><\/td>';
@@ -400,11 +407,13 @@ function ethstates() {
 
 		state = _ethstates(port);
 
-		code += '<td class="title indent2"><img id="'+state[0]+'_'+p+'" src="'+state[0]+'.gif" alt=""><br>'+(stats.lan_desc == '1' ? '<span style="white-space: nowrap;">'+state[1]+'</span>' : '')+'<\/td>';
+		/* The speed text ("10000Mbps Full") is the widest thing in a column,
+		   so let it wrap when packed tight instead of setting the width */
+		code += '<td class="title indent2'+(compact ? ' port-icon' : '')+'"><img id="'+state[0]+'_'+p+'" src="'+state[0]+'.gif" alt=""><br>'+(stats.lan_desc == '1' ? (compact ? '<span class="port-speed">' : '<span style="white-space: nowrap;">')+state[1]+'</span>' : '')+'<\/td>';
 	}
 
 	code += '<\/tr><tr>'+code2;
-	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="10" style="text-align:right">&raquo; <a href="admin-port-labels.asp">Port Labels<\/a> | <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
+	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="'+(parseInt(stats.niccount, 10) + 1)+'" style="text-align:right">&raquo; <a href="admin-port-labels.asp">Port Labels<\/a> | <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
 	E('ports').innerHTML = code;
 }
 /* TOMATO64-END */

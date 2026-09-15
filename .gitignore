@@ -4,6 +4,7 @@
 .download-x86_64-kernel
 .download-bcm53xx-kernel
 .download-armsr-kernel
+.download-be14000-kernel
 .extract-buildroot
 .patch
 .prepatch
@@ -11,6 +12,7 @@
 .configure-legacy
 .configure-mt6000
 .configure-mt3600be
+.configure-be14000
 .configure-bpi-r3
 .configure-bpi-r3-mini
 .configure-rpi4
@@ -27,3 +29,4 @@ src/
 00001-openwrt-x86_64-kernel-*
 00001-openwrt-bcm53xx-kernel-*
 00001-openwrt-armsr-kernel-*
+00001-openwrt-be14000-kernel-*

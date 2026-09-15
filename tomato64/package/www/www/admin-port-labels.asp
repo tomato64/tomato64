@@ -16,7 +16,7 @@
 <script src="tomato.js?rel=<% version(); %>"></script>
 
 <script>
-//	<% nvram("t_model_name,nics,port0_label,port1_label,port2_label,port3_label,port4_label,port5_label,port6_label,port7_label,port8_label"); %>
+//	<% nvram("t_model_name,nics,port0_label,port1_label,port2_label,port3_label,port4_label,port5_label,port6_label,port7_label,port8_label,port9_label"); %>
 
 var cprefix = 'admin_port_labels';
 var MAX_PORT_LABEL_LENGTH = 20;
@@ -111,6 +111,7 @@ function init() {
 <input type="hidden" name="port6_label">
 <input type="hidden" name="port7_label">
 <input type="hidden" name="port8_label">
+<input type="hidden" name="port9_label">
 
 <div class="section-title">Ethernet Port Labels</div>
 <div class="section">

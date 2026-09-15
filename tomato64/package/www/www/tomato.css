@@ -839,6 +839,48 @@ div[id^="table_client"] .centered {
 	text-align: center;
 }
 
+/* TOMATO64-BEGIN */
+/* Compact ethernet ports grid, for devices with more ports than fit a
+   page-width row (currently the 10-port GL-BE14000; status-overview.asp adds
+   the class only for those). Without this the table asks for 153px per port
+   plus a 550px trailing spacer, which overflows the page and squeezes the
+   sidebar in. The advanced theme already sizes div#ports this way - these
+   rules do the same for the classic themes. The selectors are deliberately
+   heavier than the theme stylesheets' own div#ports rules so they win
+   regardless of which theme is loaded on top of this file. */
+div#ports table.fields.ports-compact {
+	width: 100%;
+}
+
+div#ports table.fields.ports-compact td.title,
+div#ports table.fields.ports-compact td.title.indent1,
+div#ports table.fields.ports-compact td.title.indent2 {
+	width: auto;
+	padding: 1px 4px;
+}
+
+div#ports table.fields.ports-compact td.content {
+	width: 0;
+}
+
+/* Let the speed text ("10000Mbps Full") wrap instead of setting the column
+   width. The cap is generous enough to hold the longest one on a single line
+   when the column it lands in is wide enough for it. */
+div#ports table.fields.ports-compact .port-speed {
+	display: inline-block;
+	max-width: 8em;
+	line-height: 1.2;
+}
+
+/* A wrapped speed text makes its cell taller than its neighbours, and cells
+   centre their contents by default, which would leave the port icons sitting
+   at different heights across the row. Top-align them so every icon starts on
+   the same line regardless of what is written underneath it. */
+div#ports table.fields.ports-compact td.port-icon {
+	vertical-align: top;
+}
+/* TOMATO64-END */
+
 #th-grid .co1,
 #stubby-grid .co1,
 div[id$="_ccd"] .co2,

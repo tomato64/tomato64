@@ -94,6 +94,28 @@ if [ -f /boot/glinet_gl-mt6000-kernel.bin ] && [ "$(NG "t_model_name")" == "GL.i
 	printf "image successfully flashed\n"
 fi
 
+# GL-BE14000
+if [ -f /boot/glinet_gl-be14000-kernel.bin ] && [ "$(NG "t_model_name")" == "GL.iNet GL-BE14000" ]; then
+
+	export EMMC_KERNEL_BLOCKS=$(($(dd if=/boot/glinet_gl-be14000-kernel.bin of=/dev/mmcblk0p6 bs=512 2>&1 | grep "records out" | cut -d' ' -f1)))
+
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d" returned during kernel write' "$result"
+		exit
+	fi
+
+	dd if=/dev/zero of=/dev/mmcblk0p6 bs=512 seek=$EMMC_KERNEL_BLOCKS count=8 >/dev/null 2>&1
+
+	result=$?
+	if [ "$result" -ne 0 ]; then
+		printf 'error code "%d" returned during kernel padding write' "$result"
+		exit
+	fi
+
+	printf "image successfully flashed\n"
+fi
+
 # BPI-R3
 if [ -f /boot/tomato64-bananapi_bpi-r3-sysupgrade.itb ] && [ "$(NG "t_model_name")" == "Banana Pi BPI-R3" ]; then
 

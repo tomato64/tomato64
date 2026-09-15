@@ -38,6 +38,7 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/sbin/net_utils			$(TARGET_DIR)/usr/sbin
 
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/expand_root_partition	$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/expand_root_fs		$(TARGET_DIR)/usr/bin
 	if [ "$(BR2_PACKAGE_PLATFORM_HAS_FAN)" = "y" ]; then \
 		$(INSTALL) -D -m 0755 $(@D)/usr/bin/fanctl		$(TARGET_DIR)/usr/bin; \
 	fi
@@ -47,6 +48,7 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_mt6000		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_mt3600be		$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_be14000		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_bpir3		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_bpir3mini		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_rpi4		$(TARGET_DIR)/usr/bin

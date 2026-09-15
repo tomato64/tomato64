@@ -365,7 +365,7 @@ struct nvram_tuple bsd_defaults[] = {
 
 #ifdef TOMATO64
 /* Default WiFi mode per device (WiFi 7 hardware defaults to "be", others to "ax") */
-#if defined(TOMATO64_MT3600BE)
+#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BE14000)
 #define WIFI_DEFAULT_MODE	"be"
 #else
 #define WIFI_DEFAULT_MODE	"ax"
@@ -2155,7 +2155,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "fs_expanded",		"0"				},
 	{ "fs_mount_ro",		"0"				},
 
+#ifndef TOMATO64_BE14000
 	{ "wan_ifnameX",		"eth0"				},
+#else
+	{ "wan_ifnameX",		"eth1"				},
+#endif /* TOMATO64_BE14000 */
 	{ "wan_ifnameX_vlan",		"vlan0"				},
 
 	{ "lan_ifname",			"br0"				},
@@ -2168,6 +2172,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_MT3600BE
 	{ "lan_ifnames",		"eth1"				},
 #endif /* TOMATO64_MT3600BE */
+#ifdef TOMATO64_BE14000
+	{ "lan_ifnames",		"eth0 eth2 eth3 eth4 eth5 eth6 eth7 eth8 eth9"	},
+#endif /* TOMATO64_BE14000 */
 #ifdef TOMATO64_BPIR3
 	{ "lan_ifnames",		"eth1 eth2 eth3 eth4 eth5 eth6"	},
 #endif /* TOMATO64_BPIR3 */
@@ -2196,7 +2203,11 @@ struct nvram_tuple router_defaults[] = {
 	{ "lan_ifnames_vlan",		"vlan1"				},
 
 	{ "boardflags",			"0x0100"			},
+#ifndef TOMATO64_BE14000
 	{ "vlan0ports",			"0 9"				},
+#else
+	{ "vlan0ports",			"1 10"				},	/* WAN = eth1, CPU = 10 */
+#endif /* TOMATO64_BE14000 */
 #if defined(TOMATO64_X86_64) || defined(TOMATO64_ARMSR)
 	{ "vlan1ports",			"1 2 3 4 5 6 7 8 9*"		},
 #endif /* TOMATO64_X86_64 || TOMATO64_ARMSR */
@@ -2206,6 +2217,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_MT3600BE
 	{ "vlan1ports",			"1 9*"				},
 #endif /* TOMATO64_MT3600BE */
+#ifdef TOMATO64_BE14000
+	{ "vlan1ports",			"0 2 3 4 5 6 7 8 9 10*"		},
+#endif /* TOMATO64_BE14000 */
 #ifdef TOMATO64_BPIR3
 	{ "vlan1ports",			"1 2 3 4 5 6 9*"		},
 #endif /* TOMATO64_BPIR3 */
@@ -2236,6 +2250,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy_count_expected",	"2"				},	/* MT6000: 2.4GHz + 5GHz */
 #elif defined(TOMATO64_MT3600BE)
 	{"wifi_phy_count_expected",	"2"				},	/* MT3600BE: MT7990 2.4GHz + 5GHz */
+#elif defined(TOMATO64_BE14000)
+	{"wifi_phy_count_expected",	"3"				},	/* BE14000: MT7996 2.4GHz + 5GHz + 6GHz */
 #elif defined(TOMATO64_BPIR3)
 	{"wifi_phy_count_expected",	"2"				},	/* BPI-R3: 2.4GHz + 5GHz */
 #elif defined(TOMATO64_BPIR3MINI)
@@ -2262,7 +2278,7 @@ struct nvram_tuple router_defaults[] = {
 	WIFI_DEF_PHY_BLOCK(0, "2g", "20")
 
 	/* phy0iface0: special defaults (enabled on certain devices, Tomato64 SSID set) */
-#if defined(TOMATO64_MT6000) || defined(TOMATO64_MT3600BE) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI)
+#if defined(TOMATO64_MT6000) || defined(TOMATO64_MT3600BE) || defined(TOMATO64_BE14000) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI)
 	{"wifi_phy0iface0_enable",	"1"				},
 #else
 	{"wifi_phy0iface0_enable",	"0"				},
@@ -2315,9 +2331,13 @@ struct nvram_tuple router_defaults[] = {
 	WIFI_DEF_PHY_IFACES(1)
 #endif
 
-	/* PHY2: 5GHz band, all 16 ifaces generic */
+	/* PHY2: 5GHz band, all 16 ifaces generic (6GHz on tri-band MT7996) */
 #if WIFI_PHY_COUNT >= 3
+#ifndef TOMATO64_BE14000
 	WIFI_DEF_PHY_BLOCK(2, "5g", "80")
+#else
+	WIFI_DEF_PHY_BLOCK(2, "6g", "160")
+#endif /* TOMATO64_BE14000 */
 	WIFI_DEF_PHY_IFACES(2)
 #endif
 #endif /* TOMATO64_WIFI */
@@ -2343,6 +2363,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "port6_label",		""				},
 	{ "port7_label",		""				},
 	{ "port8_label",		""				},
+	{ "port9_label",		""				},
 
 #ifdef TOMATO64_HAS_FAN
 	{ "fan_mode",			"0"				},	/* 0 = kernel-managed curve, 1 = fixed manual speed */

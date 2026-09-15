@@ -1,0 +1,145 @@
+#!/bin/sh
+
+#set -e
+#set -x
+
+. /usr/sbin/nvram_ops
+. /usr/sbin/net_utils
+
+# GL-BE14000 / Flint 4 (Mediatek mt7988a): 10 front-panel ports across TWO DSA
+# switches, plus a third standalone MAC.
+#
+# What the kernel gives us:
+#
+#   eth0  gmac0  DSA conduit (CPU port) for the MT7988 built-in switch
+#   eth1  gmac1  DSA conduit (CPU port, USXGMII 10G fixed-link) for the YT9224
+#   eth2  gmac2  RTL8261C/D 10G copper PHY - standalone, this is the WAN
+#   sfp          YT9224 port 0 - 10G SFP+ cage
+#   lan1..lan4   YT9224 ports 4-7 via the YT8824 quad PHY - 2.5G
+#   lan5..lan8   MT7988 built-in switch ports 0-3         - 1G
+#
+# Tomato64 puts WAN/LAN on ethN, and this board numbers them strictly
+# left-to-right across the chassis (silkscreen: SFP+, WAN/LAN1, WAN/LAN2,
+# LAN3..LAN9), so the two kernel conduits must move out of the ethN namespace:
+#
+#   sfp   -> eth0     (10G SFP+)            basemac - 1
+#   eth2  -> eth1     (10G copper, WAN)     basemac        <- factory/label MAC
+#   lan1  -> eth2     (2.5G)                basemac + 1
+#   lan2  -> eth3     (2.5G)                basemac + 2
+#   lan3  -> eth4     (2.5G)                basemac + 3
+#   lan4  -> eth5     (2.5G)                basemac + 4
+#   lan5  -> eth6     (1G)                  basemac + 5
+#   lan6  -> eth7     (1G)                  basemac + 6
+#   lan7  -> eth8     (1G)                  basemac + 7
+#   lan8  -> eth9     (1G)                  basemac + 8
+#   eth0  -> switch0  (CPU port, built-in)  basemac + 10
+#   eth1  -> switch1  (CPU port, YT9224)    basemac + 11
+#
+# The renaming is NOT done here. As on every other board we assign a unique MAC
+# to each interface, record the name we want in /etc/iftab, and let ifrename do
+# the work - it runs from set_devs, immediately after this script. Because
+# ifrename keys on the MAC, the conduits need addresses of their own too
+# (mtk_eth_soc otherwise leaves them random), and DSA user ports all start out
+# sharing their conduit's MAC, which ifrename could not tell apart. Keying on
+# MACs also means the rename order does not matter.
+
+# Load kernel modules early. These MUST NOT be fatal: a WiFi driver problem
+# must not abort this script before the ethernet/nvram setup, or wired
+# connectivity goes down with it.
+
+# WiFi: tri-band MT7996 (2.4/5/6 GHz) on PCIe. The chip presents a second PCIe
+# endpoint (0x7991, MT7996_DEVICE_ID_2) as its HIF - same chip, not a second
+# radio, which is why the DTS enables pcie1 with no child node.
+if [ "$(NG wed_offloading)" == "1" ]; then
+	modprobe mt7996e wed_enable=Y 2>/dev/null || logger -t set_devs_be14000 "WARNING: mt7996e failed to load"
+else
+	modprobe mt7996e 2>/dev/null || logger -t set_devs_be14000 "WARNING: mt7996e failed to load"
+fi
+
+# USB WiFi dongles (parity with the other Mediatek devices)
+modprobe mt7921u 2>/dev/null || true
+modprobe mt7925u 2>/dev/null || true
+
+# Front-panel touch controller (hynitron,cst3530 on i2c-1 @ 0x58).
+# MODULE_STRIPPED=y means there is no modalias autoload, so it would never
+# bind to its DT node without an explicit load.
+modprobe cst353x 2>/dev/null || logger -t set_devs_be14000 "WARNING: cst353x failed to load"
+
+for i in eth0 eth1 eth2; do
+	if ! wait_for_interface "$i"; then
+		logger -t set_devs_be14000 "ERROR: $i did not appear after 10 seconds"
+	fi
+done
+
+for p in sfp lan1 lan2 lan3 lan4 lan5 lan6 lan7 lan8; do
+	if ! wait_for_interface "$p"; then
+		logger -t set_devs_be14000 "WARNING: $p did not appear after 10 seconds"
+	fi
+done
+
+# MAC base. Our DTS carries only the WiFi eeprom nvmem cell (eeprom_factory_0)
+# and no "mac-base" cells for ethernet, so the kernel does NOT pull port MACs
+# from the factory partition - without this every port comes up random. GL's
+# own firmware does the same in userspace (board.d: mmc_get_mac_binary
+# "factory" "0x4000"). WiFi does not collide: mt7996 takes its address from
+# eeprom offset 0x004 (MT_EE_MAC_ADDR), i.e. factory 0x0004.
+# mmcblk0p2 is the "factory" partition; the vendor GPT is left exactly as
+# shipped, so the partition number is fixed.
+basemac="$(dd if=/dev/mmcblk0p2 bs=1 skip=16384 count=6 2>/dev/null | \
+	hexdump -v -n 6 -e '5/1 "%02X:" 1/1 "%02X"')"
+
+case "$basemac" in
+	00:00:00:00:00:00|FF:FF:FF:FF:FF:FF)
+		logger -t set_devs_be14000 "ERROR: blank MAC base in factory@0x4000 ($basemac)"
+		basemac=""
+		;;
+	[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F])
+		;;
+	*)
+		logger -t set_devs_be14000 "ERROR: unusable MAC base in factory@0x4000 ('$basemac')"
+		basemac=""
+		;;
+esac
+
+if [ -z "$basemac" ]; then
+	logger -t set_devs_be14000 "ERROR: leaving kernel-assigned MACs and interface names in place"
+	exit 0
+fi
+
+# set_devs runs well before rc's start_lan(), so the ports are still
+# administratively down here - which matters because
+# eth_prepare_mac_addr_change() returns -EBUSY for a running device that does
+# not set IFF_LIVE_ADDR_CHANGE.
+: > /etc/iftab
+
+# assign_port <kernel name> <name we want> <offset from basemac>
+assign_port() {
+	_mac="$(macaddr_add "$basemac" "$3")"
+	ip link set dev "$1" address "$_mac" 2>/dev/null || \
+		logger -t set_devs_be14000 "WARNING: could not set $1 MAC to $_mac"
+	echo "$2 mac $_mac" >> /etc/iftab
+	NS "$2macaddr=$_mac"
+}
+
+# Conduits first: DSA user ports inherit their conduit's MAC, so settle the
+# conduits before overwriting each user port below.
+assign_port eth0 switch0 10
+assign_port eth1 switch1 11
+
+assign_port sfp  eth0 -1
+assign_port eth2 eth1 0
+assign_port lan1 eth2 1
+assign_port lan2 eth3 2
+assign_port lan3 eth4 3
+assign_port lan4 eth5 4
+assign_port lan5 eth6 5
+assign_port lan6 eth7 6
+assign_port lan7 eth8 7
+assign_port lan8 eth9 8
+
+# eth1 is the WAN on this board (eth0 is the SFP cage).
+for v in wan_hwaddr wan_mac et0macaddr; do
+	NS "${v}=$basemac"
+done
+
+NS set_macs=1

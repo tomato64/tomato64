@@ -1,2 +1,4 @@
 # From https://github.com/openwrt/backports/releases/download/backports-v6.18.7/
 sha256  2ad578c6cae22f192fefd44e1449725228d4109ee781998b41dcbae872554968  backports-6.18.26.tar.zst
+# From https://github.com/openwrt/backports/releases/download/backports-v6.18.39/
+sha256  8951c1e270d7c311432377bd50951cd1d5dee2b5fedf33d30db41aa8e428aeb0  backports-6.18.39.tar.zst

@@ -145,7 +145,11 @@ extern const char *tomato_nightly;
 #define MAX_PORT_ID		4
 #endif
 #else
+#ifndef TOMATO64_BE14000
 #define MAX_PORT_ID		8
+#else
+#define MAX_PORT_ID		9
+#endif /* TOMATO64_BE14000 */
 #endif /* TOMATO64 */
 
 #if !defined(CONFIG_BCMWL6) && !defined(TCONFIG_BLINK) /* only mips RT branch */

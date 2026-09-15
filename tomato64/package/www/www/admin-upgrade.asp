@@ -160,6 +160,11 @@ function upgrade() {
 			name: 'GL-MT3600BE',
 			message: 'gl-mt3600be'
 		},
+		'GL.iNet GL-BE14000': {
+			regex: /be14000/i,
+			name: 'GL-BE14000',
+			message: 'be14000'
+		},
 		'Banana Pi BPI-R3': {
 			regex: /bpi-r3(?!-mini)/i,
 			name: 'BPI-R3',

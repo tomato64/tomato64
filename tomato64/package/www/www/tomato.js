@@ -2751,7 +2751,9 @@ function navi() {
 			['IP Traffic Monitoring',	'iptraffic.asp'],
 /* TOMATO64-BEGIN */
 			['Port Labels',			'port-labels.asp'],
+/* TOMATO64-BE14000-NO-BEGIN */
 			['LEDs',			'leds.asp'],
+/* TOMATO64-BE14000-NO-END */
 /* TOMATO64-FAN-BEGIN */
 			['Fans',			'fans.asp'],
 /* TOMATO64-FAN-END */
@@ -3425,6 +3427,9 @@ var PortNames = {
 	_hardwareLabels: null,
 	// VLAN page labels (simplified versions)
 	_vlanLabels: null,
+	// Draw the ports state grid tightly, for devices with more ports than
+	// comfortably fit a page-width row. Stays false on every other device.
+	_compactPorts: false,
 
 	// Initialize hardware labels based on t_model_name
 	_initHardwareLabels: function() {
@@ -3458,6 +3463,25 @@ var PortNames = {
 			};
 			/* VLAN labels same as hardware labels for this device */
 			this._vlanLabels = this._hardwareLabels;
+		}
+		else if (model === 'GL.iNet GL-BE14000') {
+			this._hardwareLabels = {
+				0: 'SFP+',
+				1: 'WAN/LAN1',
+				2: 'WAN/LAN2',
+				3: 'LAN3',
+				4: 'LAN4',
+				5: 'LAN5',
+				6: 'LAN6',
+				7: 'LAN7',
+				8: 'LAN8',
+				9: 'LAN9'
+			};
+			/* VLAN labels same as hardware labels for this device */
+			this._vlanLabels = this._hardwareLabels;
+			/* Ten ports at the table's normal per-port width overflow the
+			   page and squeeze the sidebar */
+			this._compactPorts = true;
 		}
 		else if (model === 'Banana Pi BPI-R3') {
 			this._hardwareLabels = {
@@ -3604,6 +3628,13 @@ var PortNames = {
 			hardware: this.getHardwareLabel(port),
 			custom: this.getCustomLabel(port)
 		};
+	},
+
+	// True if this device's ports state grid should be drawn compactly
+	// (BE14000 only; every other device keeps the roomy default layout)
+	usesCompactPorts: function() {
+		this._initHardwareLabels();
+		return this._compactPorts;
 	},
 
 	// Get display name (custom label if set, otherwise hardware label)

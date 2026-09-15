@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# Grow the root filesystem to fill its existing partition.
+
+set -e
+
+root=$(rdev | awk '{print $1}')
+
+if [ -z "$root" ] || [ ! -b "$root" ]; then
+	echo "expand_root_fs: could not determine root device (got '$root')" >&2
+	exit 1
+fi
+
+resize2fs "$root"

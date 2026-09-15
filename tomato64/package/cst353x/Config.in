@@ -1,0 +1,10 @@
+config BR2_PACKAGE_CST353X
+	bool "cst353x"
+	depends on BR2_LINUX_KERNEL
+	help
+	  Driver for the Hynitron CST353X capacitive touch controller
+	  fitted behind the GL.iNet GL-BE14000's front-panel LCD.
+
+	  Builds cst353x.ko and enables evdev so touches appear on
+	  /dev/input/eventN. MODULE_STRIPPED means no modalias
+	  autoload, so set_devs_be14000 loads it explicitly.

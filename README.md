@@ -7,7 +7,7 @@
 | Manufacturer | Models |
 |---|---|
 | **Generic PC** | x86_64_v2 (UEFI), x86_64_v1 (BIOS) |
-| **GL.iNet** | Flint 2 (GL-MT6000), Beryl 7 (GL-MT3600BE) |
+| **GL.iNet** | Flint 4 (GL-BE14000), Flint 2 (GL-MT6000), Beryl 7 (GL-MT3600BE) |
 | **Banana Pi** | BPI-R3, BPI-R3 Mini |
 | **FriendlyElec** | NanoPi R5S, NanoPi R6S, NanoPi R76S |
 | **Raspberry Pi** | Raspberry Pi 4 Model B |
@@ -27,6 +27,7 @@ make (x86_64_v2 uefi)
 make legacy (x86_64_v1 bios)
 
 # GL.iNet
+make be14000 (Flint 4 / GL-BE14000)
 make mt6000 (Flint 2 / GL-MT6000)
 make mt3600be (Beryl 7 / GL-MT3600BE)
 

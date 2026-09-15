@@ -890,7 +890,7 @@ void asp_etherstates(int argc, char **argv)
 	web_puts("\netherstates = {");
 	n = 0;
 
-	for (port = 0; port <= 8; port++) {
+	for (port = 0; port <= MAX_PORT_ID; port++) {
 		snprintf(path, sizeof(path), "/sys/class/net/eth%d", port);
 
 		/* skip non-existent interfaces */

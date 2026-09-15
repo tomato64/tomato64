@@ -819,6 +819,12 @@ else
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-FAN-BEGIN/,/TOMATO64-FAN-END/d"
 endif
 
+# LEDs page: the GL-BE14000 has no LEDs at all, so drop the page and its menu entry.
+ifeq ($(PLATFORM_BE14000),y)
+	rm -f $(INSTALLDIR)/www/admin-leds.asp
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-BE14000-NO-BEGIN/,/TOMATO64-BE14000-NO-END/d"
+endif
+
 # Wireless Temperature row: keep only on devices whose WiFi PHYs expose a
 # temperature sensor (PLATFORM_HAS_WLTEMP); drop it everywhere else.
 ifeq ($(PLATFORM_HAS_WLTEMP),y)
@@ -975,6 +981,7 @@ endif
 		-e "/TOMATO64-WIFI-BEGIN/d"	-e "/TOMATO64-WIFI-END/d" \
 		-e "/TOMATO64-WLTEMP-BEGIN/d"	-e "/TOMATO64-WLTEMP-END/d" \
 		-e "/TOMATO64-FAN-BEGIN/d"	-e "/TOMATO64-FAN-END/d" \
+		-e "/TOMATO64-BE14000-NO-BEGIN/d"	-e "/TOMATO64-BE14000-NO-END/d" \
 		-e "/BCM53XX-BEGIN/d"		-e "/BCM53XX-END/d" \
 		-e "/BCM53XX-NO-BEGIN/d"	-e "/BCM53XX-NO-END/d" \
 		|| true; \

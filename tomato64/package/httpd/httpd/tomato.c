@@ -317,7 +317,7 @@ const aspapi_t aspapi[] = {
 /* #ifndef TOMATO64 \
 	{ "lan" #i "_ifnames",		V_TEXT(0, 64)			}, \
    #else */ \
-	{ "lan" #i "_ifnames",		V_TEXT(0, 100)			}, \
+	{ "lan" #i "_ifnames",		V_TEXT(0, 256)			}, \
 	{ "lan" #i "_ifnames_vlan",	V_TEXT(0, 8)			}, \
 /* #endif TOMATO64 */ \
 	{ "lan" #i "_ipaddr",		V_LENGTH(0, 15)			}, \
@@ -1029,22 +1029,22 @@ static const nvset_t nvset_list[] = {
 	{ "wan_ifnameX",		V_TEXT(0, 8)			},
 	{ "lan_ifnames",		V_TEXT(0, 64)			},
 #else
-	{ "vlan0ports",			V_TEXT(0, 29)			},
-	{ "vlan1ports",			V_TEXT(0, 29)			},
-	{ "vlan2ports",			V_TEXT(0, 29)			},
-	{ "vlan3ports",			V_TEXT(0, 29)			},
-	{ "vlan4ports",			V_TEXT(0, 29)			},
-	{ "vlan5ports",			V_TEXT(0, 29)			},
-	{ "vlan6ports",			V_TEXT(0, 29)			},
-	{ "vlan7ports",			V_TEXT(0, 29)			},
-	{ "vlan8ports",			V_TEXT(0, 29)			},
-	{ "vlan9ports",			V_TEXT(0, 29)			},
-	{ "vlan10ports",		V_TEXT(0, 29)			},
-	{ "vlan11ports",		V_TEXT(0, 29)			},
-	{ "vlan12ports",		V_TEXT(0, 29)			},
-	{ "vlan13ports",		V_TEXT(0, 29)			},
-	{ "vlan14ports",		V_TEXT(0, 29)			},
-	{ "vlan15ports",		V_TEXT(0, 29)			},
+	{ "vlan0ports",			V_TEXT(0, 40)			},
+	{ "vlan1ports",			V_TEXT(0, 40)			},
+	{ "vlan2ports",			V_TEXT(0, 40)			},
+	{ "vlan3ports",			V_TEXT(0, 40)			},
+	{ "vlan4ports",			V_TEXT(0, 40)			},
+	{ "vlan5ports",			V_TEXT(0, 40)			},
+	{ "vlan6ports",			V_TEXT(0, 40)			},
+	{ "vlan7ports",			V_TEXT(0, 40)			},
+	{ "vlan8ports",			V_TEXT(0, 40)			},
+	{ "vlan9ports",			V_TEXT(0, 40)			},
+	{ "vlan10ports",		V_TEXT(0, 40)			},
+	{ "vlan11ports",		V_TEXT(0, 40)			},
+	{ "vlan12ports",		V_TEXT(0, 40)			},
+	{ "vlan13ports",		V_TEXT(0, 40)			},
+	{ "vlan14ports",		V_TEXT(0, 40)			},
+	{ "vlan15ports",		V_TEXT(0, 40)			},
 	{ "vlan0hwname",		V_TEXT(0, 100)			},
 	{ "vlan1hwname",		V_TEXT(0, 100)			},
 	{ "vlan2hwname",		V_TEXT(0, 100)			},
@@ -1063,7 +1063,7 @@ static const nvset_t nvset_list[] = {
 	{ "vlan15hwname",		V_TEXT(0, 100)			},
 	{ "wan_ifnameX_vlan",		V_TEXT(0, 8)			},
 	{ "wan_ifnameX",		V_TEXT(0, 9)			},
-	{ "lan_ifnames",		V_TEXT(0, 100)			},
+	{ "lan_ifnames",		V_TEXT(0, 256)			},
 	{ "lan_ifnames_vlan",		V_TEXT(0, 8)			},
 #endif /* TOMATO64 */
 	{ "manual_boot_nv",		V_01				},
@@ -2002,6 +2002,7 @@ static const nvset_t nvset_list[] = {
 	{ "port6_label",		V_LENGTH(0, 20)			},
 	{ "port7_label",		V_LENGTH(0, 20)			},
 	{ "port8_label",		V_LENGTH(0, 20)			},
+	{ "port9_label",		V_LENGTH(0, 20)			},
 
 #ifdef TOMATO64_HAS_FAN
 	{ "fan_mode",			V_01				},

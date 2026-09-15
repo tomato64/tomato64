@@ -2217,6 +2217,11 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 	char phy1_C[8] = "";
 	char phy1_F[8] = "";
 	int phy0_temp, phy1_temp;
+#ifdef TOMATO64_BE14000
+	char phy2_C[8] = "";
+	char phy2_F[8] = "";
+	int phy2_temp;
+#endif /* TOMATO64_BE14000 */
 
 #ifdef TOMATO64_ARMSR
 	/* ARMSR runs on VMs / untested hardware with no mt76 PHY sensors;
@@ -2225,9 +2230,12 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 	return buf;
 #endif
 
-#if defined(TOMATO64_MT3600BE)
+#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BE14000)
 	const char phy0_name[] = "mt7996_phy0.0";
 	const char phy1_name[] = "mt7996_phy0.1";
+#ifdef TOMATO64_BE14000
+	const char phy2_name[] = "mt7996_phy0.2";
+#endif /* TOMATO64_BE14000 */
 #else
 	const char phy0_name[] = "mt7915_phy0";
 	const char phy1_name[] = "mt7915_phy1";
@@ -2243,7 +2251,16 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 		snprintf(phy1_F, sizeof(phy1_F), "%d", mround((phy1_temp * 1.8f) + 32));
 	}
 
+#ifdef TOMATO64_BE14000
+	if (hwmon_temp_c(phy2_name, &phy2_temp)) {
+		snprintf(phy2_C, sizeof(phy2_C), "%d", phy2_temp);
+		snprintf(phy2_F, sizeof(phy2_F), "%d", mround((phy2_temp * 1.8f) + 32));
+	}
+
+	snprintf(buf, buf_sz, "phy0: 2.4G - %s&#176;C&nbsp;/&nbsp;%s&#176;F&nbsp;&nbsp;&nbsp;&nbsp;phy1: 5G - %s&#176;C&nbsp;/&nbsp;%s&#176;F&nbsp;&nbsp;&nbsp;&nbsp;phy2: 6G - %s&#176;C&nbsp;/&nbsp;%s&#176;F", phy0_C, phy0_F, phy1_C, phy1_F, phy2_C, phy2_F);
+#else
 	snprintf(buf, buf_sz, "phy0: 2.4G - %s&#176;C&nbsp;/&nbsp;%s&#176;F&nbsp;&nbsp;&nbsp;&nbsp;phy1: 5G - %s&#176;C&nbsp;/&nbsp;%s&#176;F", phy0_C, phy0_F, phy1_C, phy1_F);
+#endif /* TOMATO64_BE14000 */
 
 	return buf;
 }
