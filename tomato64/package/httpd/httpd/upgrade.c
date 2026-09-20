@@ -40,8 +40,29 @@
 
 #ifndef TOMATO64
 static char upgrade_file[64];
-static unsigned int upgrade_reset;
 #endif /* TOMATO64 */
+static unsigned int upgrade_reset;
+
+#if defined(TOMATO64) && !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
+#include <stdarg.h>
+
+static void upgrade_kmsg(int level, const char *fmt, ...)
+{
+	char msg[256];
+	va_list args;
+	int n;
+
+	n = snprintf(msg, sizeof(msg), "<%d>", level);
+	if ((n < 0) || ((unsigned)n >= sizeof(msg)))
+		return;
+
+	va_start(args, fmt);
+	vsnprintf(msg + n, sizeof(msg) - n, fmt, args);
+	va_end(args);
+
+	f_write("/dev/kmsg", msg, strlen(msg), FW_APPEND, 0);
+}
+#endif /* TOMATO64 && !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
 
 
 static int wait_upgrade_service(const char *action, int timeout)
@@ -440,6 +461,7 @@ void wi_upgrade(char *url, int len, char *boundary)
 	check_id(url);
 
 	reset = (strcmp(webcgi_safeget("_reset", "0"), "1") == 0);
+	upgrade_reset = 0;
 
 #ifdef TOMATO64
 	if (reset)
@@ -486,9 +508,9 @@ void wi_upgrade(char *url, int len, char *boundary)
 	/* stop services and prepare system */
 	prepare_upgrade();
 
-#ifdef TOMATO64_X86_64
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_RPI4)
 	eval("mount_nvram");
-#endif /* TOMATO64_X86_64 */
+#endif /* TOMATO64_X86_64 || TOMATO64_RPI4 */
 
 	/* copy required UI assets to tmpfs (survive upgrade process) */
 	eval("cp", "/www/reboot.asp", "/www/favicon.ico", "/www/tomatousb_bg.png", "/tmp");
@@ -591,28 +613,13 @@ ERROR2:
 		}
 	}
 
-	/* optional NVRAM erase after successful flash */
-	if (error == NULL && reset) {
-		set_action(ACT_IDLE);
-#ifndef TOMATO64
-#ifdef TCONFIG_BCMARM
-		eval("mtd-erase2", "nvram");
-#else
-		eval("mtd-erase", "-d", "nvram");
-#endif
-#else /* TOMATO64 */
-#if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
-		nvram_clear();
-#endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
-#endif /* TOMATO64 */
-
-	}
-
 	set_action(ACT_REBOOT);
 
 	/* mtd-write output takes precedence over generic error */
 	if (resmsg_fread("/tmp/.mtd-write"))
 		error = NULL;
+
+	upgrade_reset = (error == NULL && reset);
 
 ERROR:
 	/* cleanup FIFO */
@@ -660,6 +667,21 @@ void wo_flash(char *url)
 			logmsg(LOG_WARNING, "upgrade-finalize did not complete before timeout; continuing");
 
 #ifdef TOMATO64
+#if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
+		if (upgrade_reset) {
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_RPI4)
+			eval("mount_nvram");
+#endif /* TOMATO64_X86_64 || TOMATO64_RPI4 */
+			if (nvram_clear() != 1) {
+				upgrade_kmsg(LOG_ERR, "nvram: erase failed, removing the key files directly");
+				system("rm -f /nvram/*");
+				sync();
+			}
+			else
+				upgrade_kmsg(LOG_INFO, "nvram: erased at user request");
+		}
+#endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
+
 		sync();
 		system("/bin/umount -a -d -r");
 #endif /* TOMATO64 */

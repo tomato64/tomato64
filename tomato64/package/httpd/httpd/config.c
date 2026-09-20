@@ -33,9 +33,9 @@ void wo_defaults(char *url)
 		if ((mode == 1) || (mode == 2)) {
 			prepare_upgrade();
 
-#ifdef TOMATO64_X86_64
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_RPI4)
 			eval("mount_nvram");
-#endif /* TOMATO64_X86_64 */
+#endif /* TOMATO64_X86_64 || TOMATO64_RPI4 */
 
 			led(LED_DIAG, 1);
 
@@ -47,10 +47,10 @@ void wo_defaults(char *url)
 
 			if (!finalize_upgrade())
 				logmsg(LOG_WARNING, "upgrade-finalize did not complete before timeout");
-#ifdef TOMATO64_X86_64
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_RPI4)
 			/* upgradefinalize unmounts SCSI-attached storage, which includes a SATA /nvram */
 			eval("mount_nvram");
-#endif /* TOMATO64_X86_64 */
+#endif /* TOMATO64_X86_64 || TOMATO64_RPI4 */
 
 			if (mode == 1) {
 				nvram_set("restore_defaults", "1");
@@ -198,9 +198,9 @@ void wi_restore(char *url, int len, char *boundary)
 	/* stop non-essential services and prepare for restore */
 	prepare_upgrade();
 
-#ifdef TOMATO64_X86_64
+#if defined(TOMATO64_X86_64) || defined(TOMATO64_RPI4)
 	eval("mount_nvram");
-#endif /* TOMATO64_X86_64 */
+#endif /* TOMATO64_X86_64 || TOMATO64_RPI4 */
 
 	/*
 	 * execute: nvram restore <file>
