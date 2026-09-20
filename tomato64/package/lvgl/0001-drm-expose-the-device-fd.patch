@@ -1,0 +1,32 @@
+--- a/src/drivers/display/drm/lv_linux_drm.c
++++ b/src/drivers/display/drm/lv_linux_drm.c
+@@ -252,6 +252,13 @@ void lv_linux_drm_set_file(lv_display_t
+                 hor_res, ver_res, lv_display_get_dpi(disp));
+ }
+ 
++int lv_linux_drm_get_fd(lv_display_t * disp)
++{
++    drm_dev_t * drm_dev = lv_display_get_driver_data(disp);
++
++    return drm_dev ? drm_dev->fd : -1;
++}
++
+ /**********************
+  *   STATIC FUNCTIONS
+  **********************/
+--- a/src/drivers/display/drm/lv_linux_drm.h
++++ b/src/drivers/display/drm/lv_linux_drm.h
+@@ -33,6 +33,13 @@ lv_display_t * lv_linux_drm_create(void)
+ 
+ void lv_linux_drm_set_file(lv_display_t * disp, const char * file, int64_t connector_id);
+ 
++/**
++ * Return the open DRM device file descriptor, or -1 if the display has none.
++ * Callers need it to hand DRM master to another process without disabling the
++ * pipe, which drmDropMaster() does and closing the device does not.
++ */
++int lv_linux_drm_get_fd(lv_display_t * disp);
++
+ /**********************
+  *      MACROS
+  **********************/

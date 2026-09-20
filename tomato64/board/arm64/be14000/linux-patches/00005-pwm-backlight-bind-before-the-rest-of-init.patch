@@ -1,0 +1,75 @@
+From: Tomato64 <tomato64@tomato64.org>
+Subject: [PATCH] pwm: mediatek, pwm_bl: bind before the rest of device init
+
+With the MT7988 clock drivers moved to subsys_initcall, pwm-mediatek binds
+on its first try - but pwm-backlight still does not run until every
+device_initcall ahead of it has, and drivers/video is linked after
+drivers/pci. On the GL-BE14000 that is PCIe enumeration, and the panel,
+lit by the bootloader and showing its logo, waits it out in the dark:
+
+  [ 5.163659] probe of 10048000.pwm returned 0 after 221 usecs
+  [ 5.299228] calling  mtk_pcie_driver_init+0x0/0x20 @ 1
+  [ 6.439092] probe of 0000:00:00.0 returned 0 after 424044 usecs
+  [ 7.778086] calling  pwm_backlight_driver_init+0x0/0x20 @ 1
+
+Move the provider to subsys_initcall_sync, which is after the clocks it
+needs and before every device_initcall, and the consumer to fs_initcall,
+which is after the provider. The backlight then comes up with the clocks
+rather than after the buses.
+
+Signed-off-by: Tomato64 <tomato64@tomato64.org>
+---
+--- a/drivers/pwm/pwm-mediatek.c
++++ b/drivers/pwm/pwm-mediatek.c
+@@ -414,7 +414,23 @@
+ 	},
+ 	.probe = pwm_mediatek_probe,
+ };
+-module_platform_driver(pwm_mediatek_driver);
++/*
++ * subsys_initcall_sync: after the clock drivers this needs, which are at
++ * subsys_initcall, and before every device_initcall consumer. A backlight on
++ * one of these PWMs is lit by the bootloader, and every initcall between the
++ * clocks and here is time the panel spends dark.
++ */
++static int __init pwm_mediatek_init(void)
++{
++	return platform_driver_register(&pwm_mediatek_driver);
++}
++subsys_initcall_sync(pwm_mediatek_init);
++
++static void __exit pwm_mediatek_exit(void)
++{
++	platform_driver_unregister(&pwm_mediatek_driver);
++}
++module_exit(pwm_mediatek_exit);
+ 
+ MODULE_AUTHOR("John Crispin <blogic@openwrt.org>");
+ MODULE_DESCRIPTION("MediaTek general purpose Pulse Width Modulator driver");
+--- a/drivers/video/backlight/pwm_bl.c
++++ b/drivers/video/backlight/pwm_bl.c
+@@ -701,7 +701,23 @@
+ 	.shutdown	= pwm_backlight_shutdown,
+ };
+ 
+-module_platform_driver(pwm_backlight_driver);
++/*
++ * fs_initcall, not device_initcall: drivers/video is linked after drivers/pci,
++ * so at the same level this waits behind PCIe enumeration - seconds, on a
++ * board with a slow link - while a panel the bootloader lit sits dark. The PWM
++ * providers are at subsys_initcall_sync, so this still finds one.
++ */
++static int __init pwm_backlight_init(void)
++{
++	return platform_driver_register(&pwm_backlight_driver);
++}
++fs_initcall(pwm_backlight_init);
++
++static void __exit pwm_backlight_exit(void)
++{
++	platform_driver_unregister(&pwm_backlight_driver);
++}
++module_exit(pwm_backlight_exit);
+ 
+ MODULE_DESCRIPTION("PWM based Backlight Driver");
+ MODULE_LICENSE("GPL v2");

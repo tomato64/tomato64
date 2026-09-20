@@ -1,0 +1,12 @@
+config BR2_PACKAGE_BE14000_PANEL_FIRMWARE
+	bool "be14000-panel-firmware"
+	help
+	  panel-mipi-dbi init command sequence for the Sitronix ST7789P3
+	  LCD behind the GL.iNet GL-BE14000's front panel.
+
+	  The DRM panel driver knows no panel of its own: it resets the
+	  controller and replays this sequence, read from
+	  /lib/firmware/<compatible>.bin, every time the display pipeline
+	  is enabled. Without it the panel probes and stays dark.
+
+	  Regenerate the blob with gen-panel-fw.py in this directory.

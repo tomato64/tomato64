@@ -10,6 +10,12 @@
 
 
 #include "tomato.h"
+#ifdef TOMATO64
+#include "api.h"
+#ifdef TOMATO64_BE14000
+#include "panel.h"
+#endif /* TOMATO64_BE14000 */
+#endif /* TOMATO64 */
 
 #include <sys/sysinfo.h>
 #include <sys/stat.h>
@@ -1976,6 +1982,21 @@ static const nvset_t nvset_list[] = {
 	{"wifi_sta_list",		V_NONE				},	/* Wireless Station Mode */
 	{"wifi_phy_count",		V_RANGE(0, 10)			},	/* Number of WiFi PHYs detected (set by wlconfig) */
 	{"wifi_phy_count_expected",	V_RANGE(0, 10)			},	/* Expected WiFi PHYs for this device (constant) */
+#ifdef TOMATO64_BE14000
+	{"panel_pages",			V_LENGTH(0, 256)		},	/* Front panel: page names, in swipe order */
+	{"panel_auto_lock",		V_RANGE(0, 30)			},	/* minutes; 0 never goes idle */
+	{"panel_idle_mode",		V_TEXT(2, 5)			},	/* on, blank */
+	{"panel_brightness",		V_RANGE(10, 100)		},
+	{"panel_background",		V_RANGE(0, 8)			},
+	{"panel_list_opacity",		V_RANGE(0, 100)			},
+	{"panel_clock_24h",		V_01				},
+	{"panel_temp_unit",		V_TEXT(1, 1)			},	/* c, f */
+	{"panel_scroll",		V_01				},
+	{"panel_test_pages",		V_01				},
+	{"panel_pin",			V_LENGTH(0, 6)			},
+	{"panel_latitude",		V_LENGTH(0, 12)			},
+	{"panel_longitude",		V_LENGTH(0, 12)			},
+#endif /* TOMATO64_BE14000 */
 
 #if WIFI_PHY_COUNT >= 1
  WIFI_BLOCK(0)
@@ -2819,6 +2840,13 @@ static void wo_updatelast(char *url)
 
 const struct mime_handler mime_handlers[] = {
 /*	  pattern			mime_type				cache  input(path,len,boundary)	output(path)		auth */
+#ifdef TOMATO64
+	{ "api/v1/**",			mime_json,				0,	wi_generic_noid,	wo_api,			1 },
+#ifdef TOMATO64_BE14000
+	{ "panel/screen.png",		NULL,					0,	wi_generic_noid,	wo_panel_screen,	1 },
+	{ "panel/input.cgi",		NULL,					0,	wi_generic,		wo_panel_input,		1 },
+#endif /* TOMATO64_BE14000 */
+#endif /* TOMATO64 */
 	{ "update.cgi",			mime_javascript,			0,	wi_generic,		wo_update,		1 },
 	{ "tomato.cgi",			NULL,					0,	wi_generic,		wo_tomato,		1 },
 

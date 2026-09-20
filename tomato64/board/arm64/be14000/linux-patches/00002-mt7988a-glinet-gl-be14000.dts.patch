@@ -5,8 +5,8 @@ Subject: [PATCH] mt7988a-glinet-gl-be14000.dts
 
 ---
  arch/arm64/boot/dts/mediatek/Makefile         |   1 +
- .../mediatek/mt7988a-glinet-gl-be14000.dts    | 862 ++++++++++++++++++
- 2 files changed, 863 insertions(+)
+ .../mediatek/mt7988a-glinet-gl-be14000.dts    | 905 ++++++++++++++++++
+ 2 files changed, 906 insertions(+)
  create mode 100644 arch/arm64/boot/dts/mediatek/mt7988a-glinet-gl-be14000.dts
 
 diff --git a/arch/arm64/boot/dts/mediatek/Makefile b/arch/arm64/boot/dts/mediatek/Makefile
@@ -23,10 +23,10 @@ index 7d4c852cb..867ffecc6 100644
  dtb-$(CONFIG_ARCH_MEDIATEK) += mt7988a-rfb-eth1-aqr.dtbo
 diff --git a/arch/arm64/boot/dts/mediatek/mt7988a-glinet-gl-be14000.dts b/arch/arm64/boot/dts/mediatek/mt7988a-glinet-gl-be14000.dts
 new file mode 100644
-index 000000000..d7ec1be68
+index 000000000..2b35cc33c
 --- /dev/null
 +++ b/arch/arm64/boot/dts/mediatek/mt7988a-glinet-gl-be14000.dts
-@@ -0,0 +1,862 @@
+@@ -0,0 +1,949 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/*
 + * Copyright (C) 2021 MediaTek Inc.
@@ -57,6 +57,14 @@ index 000000000..d7ec1be68
 +         * chosen/bootargs-override, which always wins (CONFIG_CMDLINE_OVERRIDE
 +         * is already =y). Not set here because it would also block overriding
 +         * the cmdline from the u-boot prompt during bring-up.
++         */
++        /*
++         * If the panel ever goes dark early in the boot again, add
++         * initcall_debug here and read dmesg: it times every probe, and a
++         * "returned 517" is a deferred probe that will not be retried until
++         * the end of init. That is how the ordering fixes in patches 00004
++         * and 00005 were found. It is noisy and slows the boot, so it does
++         * not live here.
 +         */
 +        bootargs = "console=ttyS0,115200n1 loglevel=8  \
 +                earlycon=uart8250,mmio32,0x11000000 \
@@ -182,7 +190,15 @@ index 000000000..d7ec1be68
 +                708  723  738  754  770  785  801  818  834  850
 +                867  884  901  918  935  952  970  988 1006 1023
 +                >;
-+        default-brightness-level = <95>;
++        /*
++         * Full. This is what the panel shows between pwm_bl's probe and the
++         * UI setting its own level, and it is sitting on the bootloader's
++         * logo at the time - anything lower dims the logo partway through the
++         * boot, which reads as a fault. pwm_bl cannot inherit the
++         * bootloader's duty instead, because pwm_mediatek_ops has no
++         * .get_state for the core to read it with.
++         */
++        default-brightness-level = <120>;
 +    };
 +
 +    fan: pwm0-fan {
@@ -373,6 +389,18 @@ index 000000000..d7ec1be68
 +        interrupt-parent = <&pio>;
 +        interrupts = <32 IRQ_TYPE_EDGE_FALLING>;
 +        status = "okay";
++
++        /*
++         * The panel is mounted 180 degrees against the BE10000's, so
++         * the controller's axes need the swap plus both inversions to
++         * line up with what the display shows. Consumed by
++         * touchscreen_parse_properties() in the cst353x driver.
++         */
++        touchscreen-size-x = <240>;
++        touchscreen-size-y = <320>;
++        touchscreen-swapped-x-y;
++        touchscreen-inverted-x;
++        touchscreen-inverted-y;
 +    };
 +};
 +
@@ -410,20 +438,79 @@ index 000000000..d7ec1be68
 +	status = "okay";
 +	cs_setup_time = <2>;
 +    num-cs = <1>;
-+	st7789p3@0 {
-+		compatible = "sitronix,st7789p3";
++	display@0 {
++		compatible = "glinet,gl-be14000-panel", "panel-mipi-dbi-spi";
 +		reg = <0>;
++		spi-max-frequency = <52000000>;
 +		spi-cpha;
 +		spi-cpol;
-+		backlight = <&backlight>;
-+		buswidth = <0x8>;
-+		width = <240>;
-+		height = <320>;
-+		rotate = <0>;
-+		te-gpios = <&pio 35 GPIO_ACTIVE_HIGH>;
++		write-only;
++
 +		dc-gpios = <&pio 62 GPIO_ACTIVE_HIGH>;
-+		reset-gpios = <&pio 68 GPIO_ACTIVE_LOW>;
-+		spi-max-frequency = <52000000>;
++		/*
++		 * panel-mipi-dbi asserts reset by driving the line to its
++		 * inactive value first, so the flag is ACTIVE_HIGH here even
++		 * though the panel's RESX pin is active low. The staging fbtft
++		 * driver this node used to describe had the opposite
++		 * convention.
++		 */
++		reset-gpios = <&pio 68 GPIO_ACTIVE_HIGH>;
++		/*
++		 * Not parsed by panel-mipi-dbi on 6.12 - kept so the tear
++		 * effect line is described if support lands later.
++		 */
++		te-gpios = <&pio 35 GPIO_ACTIVE_HIGH>;
++
++		/*
++		 * The bootloader draws its logo and leaves the panel running,
++		 * so the first enable skips the reset and the init sequence
++		 * and flushes the first frame over what is already there -
++		 * no blank, no reset flash. Verified on this board: with
++		 * nothing modesetting, unblanking the backlight after boot
++		 * still shows the bootloader's image.
++		 *
++		 * The bootloader leaves the panel in its own orientation and
++		 * pixel format, which is not this panel's landscape r5g6b5,
++		 * so the adopt path replays MADCTL and COLMOD before that
++		 * first flush. Without that the first frame is sideways and
++		 * smeared; it was tried. See 00003-drm-panel-mipi-dbi-adopt-
++		 * a-bootloader-initialised-panel.patch.
++		 */
++		bootloader-initialized;
++
++		/*
++		 * Deliberately no backlight phandle. pwm_backlight_initial_
++		 * power_state() blanks itself at probe when a panel points at
++		 * it, on the assumption that the panel driver will switch it
++		 * on - which here is the first modeset, nine seconds into the
++		 * boot, leaving the bootloader's logo lit by nothing. It only
++		 * skips that when it can see the PWM already running, and
++		 * pwm_mediatek_ops has no .get_state, so it never can. Without
++		 * the phandle it powers on at probe at default-brightness-level
++		 * instead. Nothing is lost: the panel UI sets brightness
++		 * through sysfs, not through DRM.
++		 */
++		format = "r5g6b5";
++
++		width-mm = <41>;
++		height-mm = <31>;
++
++		/*
++		 * The panel is physically 240x320. The init sequence in
++		 * /lib/firmware/glinet,gl-be14000-panel.bin sets MADCTL to
++		 * MV|MX (0x60), so the controller presents it as landscape.
++		 */
++		panel-timing {
++			hactive = <320>;
++			vactive = <240>;
++			hback-porch = <0>;
++			vback-porch = <0>;
++			clock-frequency = <0>;
++			hfront-porch = <0>;
++			hsync-len = <0>;
++			vfront-porch = <0>;
++			vsync-len = <0>;
++		};
 +	};
 +};
 +

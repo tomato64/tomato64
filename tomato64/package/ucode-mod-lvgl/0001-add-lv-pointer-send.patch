@@ -1,0 +1,152 @@
+Add lv.pointer_send() for driving the UI without the touchscreen
+
+A second pointer input, fed from ucode, so the panel can be worked
+remotely beside the real touchscreen. Queries that report on the
+touch now answer for whichever input raised the event being handled.
+
+Signed-off-by: Tomato64 <tomato64@tomato64.org>
+---
+--- a/ucode-lv.c
++++ b/ucode-lv.c
+@@ -23,6 +23,31 @@
+ static lv_display_t *display;
+ static lv_indev_t *indev;
+ 
++/* Second pointer, driven by lv.pointer_send() instead of by a device: the
++   panel can then be worked remotely, from a web UI showing lv.screenshot(). */
++static lv_indev_t *pointer;
++static lv_point_t pointer_at;
++static lv_indev_state_t pointer_state = LV_INDEV_STATE_RELEASED;
++
++static void
++uclv_pointer_read(lv_indev_t *drv, lv_indev_data_t *data)
++{
++	data->point = pointer_at;
++	data->state = pointer_state;
++}
++
++/*
++ * The device whose event is being handled, so a query from inside a handler
++ * answers for the input that raised it. Outside one, the touchscreen.
++ */
++static lv_indev_t *
++uclv_indev(void)
++{
++	lv_indev_t *active = lv_indev_active();
++
++	return active ? active : indev;
++}
++
+ static uint32_t
+ uclv_tick(void)
+ {
+@@ -204,18 +229,19 @@
+ {
+ 	uc_value_t *rv;
+ 	lv_point_t point;
++	lv_indev_t *dev = uclv_indev();
+ 
+-	if (!indev)
++	if (!dev)
+ 		return NULL;
+ 
+-	lv_indev_get_point(indev, &point);
++	lv_indev_get_point(dev, &point);
+ 
+ 	rv = ucv_object_new(vm);
+ 
+ 	ucv_object_add(rv, "x", ucv_int64_new(point.x));
+ 	ucv_object_add(rv, "y", ucv_int64_new(point.y));
+ 	ucv_object_add(rv, "pressed",
+-		       ucv_boolean_new(lv_indev_get_state(indev) ==
++		       ucv_boolean_new(lv_indev_get_state(dev) ==
+ 				       LV_INDEV_STATE_PRESSED));
+ 
+ 	return rv;
+@@ -232,10 +258,58 @@
+ static uc_value_t *
+ uc_lv_gesture_dir(uc_vm_t *vm, size_t nargs)
+ {
+-	if (!indev)
++	lv_indev_t *dev = uclv_indev();
++
++	if (!dev)
++		return NULL;
++
++	return ucv_int64_new(lv_indev_get_gesture_dir(dev));
++}
++
++/**
++ * uc_lv_pointer_send() - lv.pointer_send(x, y, pressed)
++ * @x: display coordinate
++ * @y: display coordinate
++ * @pressed: whether the pointer is down
++ *
++ * Feeds one pointer sample to a second input device, created on first use, so
++ * a caller elsewhere - the web UI, a test - can press, drag and swipe exactly
++ * as the touchscreen does. Each sample is read out at once rather than at the
++ * next input poll, so a tap sent as two calls in quick succession is not
++ * flattened into nothing.
++ *
++ * Return: whether the sample was taken.
++ */
++static uc_value_t *
++uc_lv_pointer_send(uc_vm_t *vm, size_t nargs)
++{
++	if (!lv_ready) {
++		uc_vm_raise_exception(vm, EXCEPTION_RUNTIME,
++				      "lv.init() has not been called");
+ 		return NULL;
++	}
++
++	if (!pointer) {
++		pointer = lv_indev_create();
++
++		if (!pointer)
++			return ucv_boolean_new(false);
+ 
+-	return ucv_int64_new(lv_indev_get_gesture_dir(indev));
++		lv_indev_set_type(pointer, LV_INDEV_TYPE_POINTER);
++		lv_indev_set_read_cb(pointer, uclv_pointer_read);
++
++		if (display)
++			lv_indev_set_display(pointer, display);
++	}
++
++	pointer_at.x = (int32_t)ucv_to_integer(uc_fn_arg(0));
++	pointer_at.y = (int32_t)ucv_to_integer(uc_fn_arg(1));
++	pointer_state = ucv_is_truish(uc_fn_arg(2)) ? LV_INDEV_STATE_PRESSED
++						    : LV_INDEV_STATE_RELEASED;
++
++	lv_indev_read(pointer);
++
++	return ucv_boolean_new(true);
+ }
+ 
+ /**
+@@ -250,12 +324,13 @@
+ static uc_value_t *
+ uc_lv_touch_drop(uc_vm_t *vm, size_t nargs)
+ {
+-	if (!indev)
+-		return ucv_boolean_new(false);
++	if (indev)
++		lv_indev_wait_release(indev);
+ 
+-	lv_indev_wait_release(indev);
++	if (pointer)
++		lv_indev_wait_release(pointer);
+ 
+-	return ucv_boolean_new(true);
++	return ucv_boolean_new(indev != NULL || pointer != NULL);
+ }
+ 
+ static uint8_t *
+@@ -868,6 +943,7 @@
+ 	{ "touch_swap_axes",	uc_lv_touch_swap_axes },
+ 	{ "touch_point",	uc_lv_touch_point },
+ 	{ "touch_drop",		uc_lv_touch_drop },
++	{ "pointer_send",	uc_lv_pointer_send },
+ 	{ "gesture_dir",	uc_lv_gesture_dir },
+ 	{ "screen",		uc_lv_screen },
+ 	{ "screen_create",	uc_lv_screen_create },

@@ -93,6 +93,14 @@ OBJS  = httpd.o cgi.o tomato.o version.o misc.o dhcp.o upgrade.o \
 # TOMATO64 WiFi helper library
 OBJS += wlhelper.o
 
+# TOMATO64 JSON API
+OBJS += api.o
+
+# Front-panel screen, from the web UI (BE14000 only - the one board with one)
+ifeq ($(PLATFORM_BE14000),y)
+OBJS += panel.o
+endif
+
 #ifeq ($(TCONFIG_USB),y)
 OBJS += usb.o
 OBJS += wwan.o

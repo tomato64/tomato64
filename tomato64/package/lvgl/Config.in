@@ -1,0 +1,13 @@
+config BR2_PACKAGE_LVGL
+	bool "lvgl"
+	select BR2_PACKAGE_LIBDRM
+	help
+	  Light and Versatile Graphics Library, built for a Linux DRM
+	  display as a static library staged for other packages to link
+	  against. Carries the widgets, the DRM backend and the evdev
+	  input.
+
+	  Nothing is installed on the target: the library exists so
+	  ucode-mod-lvgl can link it into lv.so.
+
+	  https://lvgl.io/

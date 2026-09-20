@@ -10919,6 +10919,12 @@ static void sysinit(void)
 #endif /* TOMATO64_MT6000 || TOMATO64_BE14000 */
 		nvram_set("fs_expanded", "1");
 	}
+
+#ifdef TOMATO64_BE14000
+	/* The front panel, once the filesystem work is done rather than beside
+	   the driver loads in set_devs_be14000. */
+	eval("panel_start");
+#endif /* TOMATO64_BE14000 */
 #endif /* TOMATO64 */
 
 #ifndef TOMATO64

@@ -1,0 +1,109 @@
+From: Tomato64 <tomato64@tomato64.org>
+Subject: [PATCH] clk: mediatek: mt7988: register the clock drivers a level earlier
+
+drivers/pwm is linked ahead of drivers/clk in drivers/Makefile, and the
+MT7988 clock drivers and pwm-mediatek all register at device_initcall, so
+the PWM driver probes first, finds infracfg absent and returns
+-EPROBE_DEFER. A deferred probe is not retried until
+deferred_probe_initcall() runs at the end of init, and pwm-backlight
+defers behind it, so on the GL-BE14000 the panel backlight - lit by the
+bootloader, showing its logo - goes dark for seconds until the very end of
+kernel init.
+
+Measured on that board with initcall_debug:
+
+  [ 5.094611] probe of 10048000.pwm returned 517 after 132 usecs
+  [ 5.347630] probe of backlight returned 517 after 44 usecs
+  [ 5.645966] probe of 10001000.clock-controller returned 0 after 1171 usecs
+  [12.882104] probe of 10048000.pwm returned 0 after 249 usecs
+  [15.321734] probe of backlight returned 0 after 133 usecs
+
+All ten of the PWM's clocks come from infracfg alone. Registering the three
+clock drivers at subsys_initcall puts them ahead of every device_initcall
+consumer, so the PWM binds on its first attempt. They keep their link order
+- apmixed, then topckgen, then infracfg - so a parent is registered before
+the children that name it.
+
+Signed-off-by: Tomato64 <tomato64@tomato64.org>
+---
+--- a/drivers/clk/mediatek/clk-mt7988-apmixed.c
++++ b/drivers/clk/mediatek/clk-mt7988-apmixed.c
+@@ -110,7 +110,19 @@
+ 		.of_match_table = of_match_clk_mt7988_apmixed,
+ 	},
+ };
+-builtin_platform_driver(clk_mt7988_apmixed_drv);
++/*
++ * subsys_initcall, not the device_initcall the driver macro gives: drivers/pwm
++ * is linked ahead of drivers/clk, so at the same level pwm-mediatek probes
++ * first, finds no clocks and defers - and a deferred probe is not retried
++ * until deferred_probe_initcall() at the end of init, taking pwm-backlight
++ * with it and leaving a bootloader-lit panel dark for seconds. A level earlier
++ * lets both bind on their first try.
++ */
++static int __init clk_mt7988_apmixed_init(void)
++{
++	return platform_driver_register(&clk_mt7988_apmixed_drv);
++}
++subsys_initcall(clk_mt7988_apmixed_init);
+ 
+ MODULE_DESCRIPTION("MediaTek MT7988 apmixedsys clocks driver");
+ MODULE_LICENSE("GPL");
+--- a/drivers/clk/mediatek/clk-mt7988-topckgen.c
++++ b/drivers/clk/mediatek/clk-mt7988-topckgen.c
+@@ -321,7 +321,25 @@
+ 		.of_match_table = of_match_clk_mt7988_topckgen,
+ 	},
+ };
+-module_platform_driver(clk_mt7988_topckgen_drv);
++/*
++ * subsys_initcall, not the device_initcall the driver macro gives: drivers/pwm
++ * is linked ahead of drivers/clk, so at the same level pwm-mediatek probes
++ * first, finds no clocks and defers - and a deferred probe is not retried
++ * until deferred_probe_initcall() at the end of init, taking pwm-backlight
++ * with it and leaving a bootloader-lit panel dark for seconds. A level earlier
++ * lets both bind on their first try.
++ */
++static int __init clk_mt7988_topckgen_init(void)
++{
++	return platform_driver_register(&clk_mt7988_topckgen_drv);
++}
++subsys_initcall(clk_mt7988_topckgen_init);
++
++static void __exit clk_mt7988_topckgen_exit(void)
++{
++	platform_driver_unregister(&clk_mt7988_topckgen_drv);
++}
++module_exit(clk_mt7988_topckgen_exit);
+ 
+ MODULE_DESCRIPTION("MediaTek MT7988 top clock generators driver");
+ MODULE_LICENSE("GPL");
+--- a/drivers/clk/mediatek/clk-mt7988-infracfg.c
++++ b/drivers/clk/mediatek/clk-mt7988-infracfg.c
+@@ -292,7 +292,25 @@
+ 	.probe = mtk_clk_simple_probe,
+ 	.remove = mtk_clk_simple_remove,
+ };
+-module_platform_driver(clk_mt7988_infracfg_drv);
++/*
++ * subsys_initcall, not the device_initcall the driver macro gives: drivers/pwm
++ * is linked ahead of drivers/clk, so at the same level pwm-mediatek probes
++ * first, finds no clocks and defers - and a deferred probe is not retried
++ * until deferred_probe_initcall() at the end of init, taking pwm-backlight
++ * with it and leaving a bootloader-lit panel dark for seconds. A level earlier
++ * lets both bind on their first try.
++ */
++static int __init clk_mt7988_infracfg_init(void)
++{
++	return platform_driver_register(&clk_mt7988_infracfg_drv);
++}
++subsys_initcall(clk_mt7988_infracfg_init);
++
++static void __exit clk_mt7988_infracfg_exit(void)
++{
++	platform_driver_unregister(&clk_mt7988_infracfg_drv);
++}
++module_exit(clk_mt7988_infracfg_exit);
+ 
+ MODULE_DESCRIPTION("MediaTek MT7988 infracfg clocks driver");
+ MODULE_LICENSE("GPL");

@@ -1,0 +1,16 @@
+config BR2_PACKAGE_UCODE_MOD_LVGL
+	bool "ucode-mod-lvgl"
+	select BR2_PACKAGE_LVGL
+	select BR2_PACKAGE_UCODE
+	select BR2_PACKAGE_LIBUBOX
+	select BR2_PACKAGE_LIBDRM
+	help
+	  LVGL bound to ucode, so the front-panel UI can be written in
+	  ucode rather than in C. Builds one file, lv.so, which ucode
+	  loads as the module lv.
+
+	  Carries the widgets, the DRM display and the evdev pointer,
+	  and no fonts or artwork: those are loaded at run time from
+	  files the application ships.
+
+	  https://github.com/blogic/ucode-mod-lvgl

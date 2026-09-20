@@ -1,0 +1,17 @@
+config BR2_PACKAGE_GLINET_PANEL_UI
+	bool "glinet-panel-ui"
+	select BR2_PACKAGE_UCODE_MOD_LVGL
+	select BR2_PACKAGE_LIBUCI
+	help
+	  The front-panel interface for the GL.iNet BE10000 and BE14000:
+	  a 320x240 DRM display with a capacitive touchscreen, written in
+	  ucode against ucode-mod-lvgl.
+
+	  An idle clock, then pages the user swipes between: traffic,
+	  wireless, the networks and their switches, the radios, QR codes
+	  to join them, the clients, the interfaces, the ports, the
+	  system gauges, brightness and reboot.
+
+	  Start it with /usr/bin/panel_ui.
+
+	  https://github.com/blogic/glinet-panel-ui

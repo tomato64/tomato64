@@ -65,6 +65,16 @@ modprobe mt7925u 2>/dev/null || true
 # bind to its DT node without an explicit load.
 modprobe cst353x 2>/dev/null || logger -t set_devs_be14000 "WARNING: cst353x failed to load"
 
+# Front-panel LCD (sitronix ST7789P3 behind panel-mipi-dbi on spi1). A module
+# rather than built-in on purpose: the driver request_firmware()s its init
+# sequence from /lib/firmware during probe, so it cannot run until the rootfs
+# is mounted. Built in, the probe happens during initcalls, blocks 60s in the
+# firmware loader fallback, and then fails - no /dev/dri/card0.
+modprobe panel-mipi-dbi 2>/dev/null || logger -t set_devs_be14000 "WARNING: panel-mipi-dbi failed to load"
+
+# The boot splash is not started here. rc calls panel_start once the noisy
+# part of the boot is past; see that script for why.
+
 for i in eth0 eth1 eth2; do
 	if ! wait_for_interface "$i"; then
 		logger -t set_devs_be14000 "ERROR: $i did not appear after 10 seconds"

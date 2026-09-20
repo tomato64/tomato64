@@ -198,6 +198,10 @@ static const char *http_status_desc(int status)
 		return "Not Found";
 	case 501:
 		return "Not Implemented";
+#ifdef TOMATO64
+	case 503:
+		return "Service Unavailable";
+#endif /* TOMATO64 */
 	}
 	return "Unknown";
 }

@@ -2241,6 +2241,26 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_BCM53XX
 	{ "vlan1ports",			"1 2 3 4 9*"			},
 #endif /* TOMATO64_BCM53XX */
+#ifdef TOMATO64_BE14000
+	/* Front panel. The UI reads these instead of the UCI file it uses
+	   upstream: /etc is a tmpfs here, so a config file would have to be
+	   seeded every boot and would still be invisible to the web GUI. Each
+	   one is panel_<option>, where <option> is the name the UI's pages ask
+	   for. */
+	{ "panel_pages",		"menu traffic weather wifi wifitoggles radio qrcodes clients interfaces ports vpn system brightness reboot" },
+	{ "panel_auto_lock",		"5"				},	/* minutes of no touch before the clock, 1-30, or 0 for never */
+	{ "panel_idle_mode",		"on"				},	/* on leaves the clock lit, blank turns the backlight off */
+	{ "panel_brightness",		"100"				},	/* 10-100; the brightness page writes it back */
+	{ "panel_background",		"7"				},	/* 1-8 gradients, 0 for black */
+	{ "panel_list_opacity",		"85"				},	/* 0-100, how solid a list card is */
+	{ "panel_clock_24h",		"1"				},
+	{ "panel_temp_unit",		"c"				},	/* c or f, for the SoC temperature and the weather */
+	{ "panel_scroll",		"1"				},	/* 1 the page follows the finger, 0 it changes in one step */
+	{ "panel_test_pages",		"0"				},
+	{ "panel_pin",			""				},	/* six digits to lock the panel, empty for none */
+	{ "panel_latitude",		""				},	/* both needed, or the weather page is left out */
+	{ "panel_longitude",		""				},
+#endif /* TOMATO64_BE14000 */
 #ifdef TOMATO64_WIFI
 	{"wifi_sta_list",		""				},
 	{"wifi_phy_count",		"0"				},	/* Detected PHY count (cleared on boot) */

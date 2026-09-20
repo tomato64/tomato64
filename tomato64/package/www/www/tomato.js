@@ -2754,6 +2754,9 @@ function navi() {
 /* TOMATO64-BE14000-NO-BEGIN */
 			['LEDs',			'leds.asp'],
 /* TOMATO64-BE14000-NO-END */
+/* TOMATO64-BE14000-BEGIN */
+			['Screen',			'screen.asp'],
+/* TOMATO64-BE14000-END */
 /* TOMATO64-FAN-BEGIN */
 			['Fans',			'fans.asp'],
 /* TOMATO64-FAN-END */

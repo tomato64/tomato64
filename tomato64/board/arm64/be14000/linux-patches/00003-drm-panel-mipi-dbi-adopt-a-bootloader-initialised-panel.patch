@@ -1,0 +1,236 @@
+From: John Crispin <john@phrozen.org>
+Subject: [PATCH] drm/panel-mipi-dbi: adopt a bootloader initialised panel
+
+panel-mipi-dbi resets the controller and replays the init sequence on
+every pipe enable, which throws away whatever the bootloader put on
+screen. mipi_dbi_display_is_on() exists to avoid exactly that, but it
+reads MIPI_DCS_GET_POWER_MODE back from the panel, so it is useless on a
+write-only one: mipi_dbi_command_read() returns -EACCES without touching
+SPI and the check is always false.
+
+Add a bootloader-initialized property. When it is set, the first enable
+skips the hardware reset, the soft reset and the init sequence, and only
+flushes. The flag is cleared afterwards, so a later enable from suspend
+or DPMS off still initialises for real. The firmware blob becomes
+optional in that case, since nothing would replay it.
+
+Skipping the reset is not enough on its own. drm_client_setup() creates
+an fbdev emulation that modesets as soon as it is registered, and
+mipi_dbi_enable_flush() then paints the whole framebuffer, which is zero
+filled at that point, so the panel goes black regardless of what the
+enable path skipped. Leave the client out when the panel is adopted, so
+the first modeset comes from userspace with a real frame to show.
+
+mipi_dbi_poweron_conditional_reset() enables the regulators before it
+resets, and mipi_dbi_pipe_disable() disables them on teardown, so the
+adopt path takes them itself.
+
+Taken from John Crispin's mainline BE14000 port, where it is
+target/linux/mediatek/patches-6.18/753-drm-panel-mipi-dbi-adopt-a-
+bootloader-initialised-panel.patch, and rebased onto 6.12: the driver is
+unchanged between the two, so only the context offsets differ.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+
+Tomato64 addition: the adopt path also replays the memory access control and
+pixel format commands from the init sequence. Without them the first frame
+lands in the bootloader's orientation and pixel format - on the GL-BE14000
+that is sideways and smeared. Neither command clears the screen, so the
+bootloader image survives until the frame is flushed over it.
+---
+--- a/drivers/gpu/drm/tiny/panel-mipi-dbi.c
++++ b/drivers/gpu/drm/tiny/panel-mipi-dbi.c
+@@ -115,6 +115,7 @@
+ struct panel_mipi_dbi_commands {
+ 	const u8 *buf;
+ 	size_t len;
++	bool adopt;
+ };
+ 
+ static struct panel_mipi_dbi_commands *
+@@ -231,11 +232,45 @@
+ 	}
+ }
+ 
++/*
++ * The commands that describe how the host talks to the panel, rather than how
++ * the panel is brought up: memory access control, which is the orientation and
++ * the colour order, and the interface pixel format.
++ *
++ * An adopted panel keeps whatever the bootloader chose for these, and that need
++ * not be what this driver is about to send it - on the GL-BE14000 the
++ * bootloader leaves it portrait, so the first frame lands sideways and, with a
++ * different pixel format, smeared. Replaying these two is enough to agree on
++ * the format without touching anything that would clear the screen.
++ */
++static void panel_mipi_dbi_commands_replay_format(struct mipi_dbi *dbi,
++						  struct panel_mipi_dbi_commands *commands)
++{
++	unsigned int i = 0;
++
++	if (!commands)
++		return;
++
++	while (i < commands->len) {
++		u8 command = commands->buf[i++];
++		u8 num_parameters = commands->buf[i++];
++		const u8 *parameters = &commands->buf[i];
++
++		if (num_parameters &&
++		    (command == MIPI_DCS_SET_ADDRESS_MODE ||
++		     command == MIPI_DCS_SET_PIXEL_FORMAT))
++			mipi_dbi_command_stackbuf(dbi, command, parameters, num_parameters);
++
++		i += num_parameters;
++	}
++}
++
+ static void panel_mipi_dbi_enable(struct drm_simple_display_pipe *pipe,
+ 				  struct drm_crtc_state *crtc_state,
+ 				  struct drm_plane_state *plane_state)
+ {
+ 	struct mipi_dbi_dev *dbidev = drm_to_mipi_dbi_dev(pipe->crtc.dev);
++	struct panel_mipi_dbi_commands *commands;
+ 	struct mipi_dbi *dbi = &dbidev->dbi;
+ 	int ret, idx;
+ 
+@@ -244,11 +279,79 @@
+ 
+ 	drm_dbg(pipe->crtc.dev, "\n");
+ 
++	commands = dbidev->driver_private;
++
++	/*
++	 * The bootloader left the panel running and said so in DT, so resetting
++	 * it here would only throw away what is already on screen. One shot:
++	 * a later enable, after suspend or DPMS off, has to initialise for real.
++	 * mipi_dbi_display_is_on() cannot answer this because the panel is
++	 * write-only.
++	 */
++	if (commands && commands->adopt) {
++		commands->adopt = false;
++
++		/*
++		 * Take the regulators the reset path would have taken, or
++		 * mipi_dbi_pipe_disable() drops references we never held.
++		 */
++		if (dbidev->regulator) {
++			ret = regulator_enable(dbidev->regulator);
++			if (ret)
++				goto out_exit;
++		}
++		if (dbidev->io_regulator) {
++			ret = regulator_enable(dbidev->io_regulator);
++			if (ret)
++				goto out_exit;
++		}
++
++		/*
++		 * Blank across the change. MADCTL re-maps memory that already
++		 * has the bootloader's image in it, so the panel would show it
++		 * re-oriented for as long as the first frame takes to write -
++		 * about 24ms at 320x240 and 52MHz. A blank instant reads
++		 * better than a scrambled one.
++		 */
++		mipi_dbi_command(dbi, MIPI_DCS_SET_DISPLAY_OFF);
++
++		/*
++		 * Display off takes effect at the panel's next refresh, not at
++		 * the command, so without this the re-mapped image is still on
++		 * screen when MADCTL lands and shows for a frame. One frame at
++		 * 60Hz is 17ms; 25 covers a slower panel.
++		 */
++		msleep(25);
++
++		panel_mipi_dbi_commands_replay_format(dbi, commands);
++
++		mipi_dbi_enable_flush(dbidev, crtc_state, plane_state);
++
++		/*
++		 * The frame written above is whatever userspace had ready at
++		 * the moment of the modeset, and that is not necessarily a
++		 * whole picture: a client rendering directly into a pair of
++		 * buffers, as LVGL does, fills the rest in over the next few
++		 * flips. Those land in the panel's memory whether it is showing
++		 * them or not, so staying blank a little longer turns a picture
++		 * that assembles itself in pieces into one that simply appears.
++		 *
++		 * 150ms still let a little of it show on the GL-BE14000, whose
++		 * splash is a full screen image; 300 covers it. The screen is
++		 * blank either way, so the only cost of being generous here is
++		 * that the first frame arrives later.
++		 */
++		msleep(300);
++
++		mipi_dbi_command(dbi, MIPI_DCS_SET_DISPLAY_ON);
++		goto out_exit;
++	}
++
+ 	ret = mipi_dbi_poweron_conditional_reset(dbidev);
+ 	if (ret < 0)
+ 		goto out_exit;
+ 	if (!ret)
+-		panel_mipi_dbi_commands_execute(dbi, dbidev->driver_private);
++		panel_mipi_dbi_commands_execute(dbi, commands);
+ 
+ 	mipi_dbi_enable_flush(dbidev, crtc_state, plane_state);
+ out_exit:
+@@ -318,8 +421,10 @@
+ 	struct device *dev = &spi->dev;
+ 	struct drm_display_mode mode;
+ 	struct mipi_dbi_dev *dbidev;
++	struct panel_mipi_dbi_commands *commands;
+ 	struct drm_device *drm;
+ 	struct mipi_dbi *dbi;
++	bool adopt;
+ 	struct gpio_desc *dc;
+ 	unsigned int bpp;
+ 	size_t buf_size;
+@@ -367,9 +472,21 @@
+ 	if (device_property_present(dev, "write-only"))
+ 		dbi->read_commands = NULL;
+ 
+-	dbidev->driver_private = panel_mipi_dbi_commands_from_fw(dev);
+-	if (IS_ERR(dbidev->driver_private))
+-		return PTR_ERR(dbidev->driver_private);
++	adopt = device_property_present(dev, "bootloader-initialized");
++
++	commands = panel_mipi_dbi_commands_from_fw(dev);
++	if (IS_ERR(commands)) {
++		/* the bootloader ran the sequence, so we do not need a copy */
++		if (!adopt)
++			return PTR_ERR(commands);
++
++		commands = devm_kzalloc(dev, sizeof(*commands), GFP_KERNEL);
++		if (!commands)
++			return -ENOMEM;
++	}
++
++	commands->adopt = adopt;
++	dbidev->driver_private = commands;
+ 
+ 	ret = panel_mipi_dbi_get_format(dev, formats, &bpp);
+ 	if (ret)
+@@ -390,10 +507,18 @@
+ 
+ 	spi_set_drvdata(spi, drm);
+ 
+-	if (bpp == 16)
+-		drm_client_setup_with_fourcc(drm, DRM_FORMAT_RGB565);
+-	else
+-		drm_client_setup_with_fourcc(drm, DRM_FORMAT_RGB888);
++	/*
++	 * An fbdev client modesets as soon as it is set up, flushing a zeroed
++	 * framebuffer over whatever the bootloader drew. Leave it out entirely
++	 * and let the first modeset come from userspace, which has a real frame
++	 * to show.
++	 */
++	if (!adopt) {
++		if (bpp == 16)
++			drm_client_setup_with_fourcc(drm, DRM_FORMAT_RGB565);
++		else
++			drm_client_setup_with_fourcc(drm, DRM_FORMAT_RGB888);
++	}
+ 
+ 	return 0;
+ }
