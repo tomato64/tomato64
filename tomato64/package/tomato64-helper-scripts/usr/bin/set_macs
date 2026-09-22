@@ -13,9 +13,14 @@ if [ "$(NG set_macs)" == "0" ]; then
 		fi
 	done
 
+	wanif=eth0
+	if grep -qs 'glinet,gl-be14000' /proc/device-tree/compatible; then
+		wanif=eth1
+	fi
+
 	for i in wan_hwaddr wan_mac;
 	do
-		NS ${i}=`ifconfig eth0 | grep -o -E ..:..:..:..:..:..`
+		NS ${i}=`ifconfig ${wanif} | grep -o -E ..:..:..:..:..:..`
 	done
 
 	NS set_macs=1
