@@ -2056,6 +2056,7 @@ int ntpd_synced_main(int argc, char *argv[])
 	int initial_sync = 0;
 	int became_ready = 0;
 	int lock;
+	int fd;
 
 	if (argc == 2) {
 		if (!strcmp(argv[1], "step")) {
@@ -2085,6 +2086,9 @@ int ntpd_synced_main(int argc, char *argv[])
 
 	if (became_ready) {
 		logmsg(LOG_INFO, "initial clock synchronized");
+
+		/* serialize against dhcp6c_state_main(), which restarts the same services */
+		fd = file_lock("ntpd_dhcp6c_restart");
 
 		stop_httpd();
 		start_httpd();
@@ -2120,6 +2124,8 @@ int ntpd_synced_main(int argc, char *argv[])
 			restart_firewall();
 		}
 #endif /* TOMATO64 */
+
+		file_unlock(fd);
 	}
 
 	snprintf(message, sizeof(message), "Server: %s (%s)\n"

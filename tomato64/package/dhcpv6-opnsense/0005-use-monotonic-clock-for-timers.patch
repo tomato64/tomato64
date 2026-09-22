@@ -1,0 +1,116 @@
+From: Tomato64 <noreply@tomato64>
+Subject: [PATCH] measure timer deadlines against the monotonic clock
+
+dhcp6_set_timer() stores every deadline as an absolute gettimeofday()
+value, and dhcp6_check_timer() compares them against the wall clock. On a
+router with no battery-backed clock this is unsafe: the system boots in
+1970 and steps decades forward at its first NTP sync, which happens at
+roughly the same moment the WAN comes up and the DHCPv6 lease is granted
+(neither can happen before the link is up).
+
+Any deadline armed before that step is then far in the past, so the whole
+timer list fires at once - retransmit, T1 renew, T2 rebind, and the valid
+lifetime of the delegated prefix. The last of those runs siteprefix_timo(),
+which removes the prefix from the LAN interface as though the lease had
+expired. IPv6 on the LAN stays down until the client acquires a new prefix,
+which takes minutes once the Solicit retransmit backoff is involved.
+
+Measure the deadlines with CLOCK_MONOTONIC, which no clock step can move,
+and keep gettimeofday() as the fallback where it is unavailable. The
+elapsed-time option in client6_send() is an interval as well and moves with
+it. Absolute timestamps such as the lease updatetime are left alone.
+
+diff --git a/dhcp6c.c b/dhcp6c.c
+index 458ea45..a08ab69 100644
+--- a/dhcp6c.c
++++ b/dhcp6c.c
+@@ -1113,13 +1113,13 @@ client6_send(struct dhcp6_event *ev)
+ 
+ 	/* elapsed time */
+ 	if (ev->timeouts == 0) {
+-		gettimeofday(&ev->tv_start, NULL);
++		gettimeofdaymonotonic(&ev->tv_start);
+ 		optinfo.elapsed_time = 0;
+ 	} else {
+ 		struct timeval now, tv_diff;
+ 		long et;
+ 
+-		gettimeofday(&now, NULL);
++		gettimeofdaymonotonic(&now);
+ 		tv_sub(&now, &ev->tv_start, &tv_diff);
+ 
+ 		/*
+diff --git a/timer.c b/timer.c
+index 16ec448..bceb992 100644
+--- a/timer.c
++++ b/timer.c
+@@ -57,6 +57,30 @@ static struct timeval tm_max = {0x7fffffff, 0x7fffffff};
+ static void timeval_add(struct timeval *, struct timeval *,
+ 			     struct timeval *);
+ 
++/*
++ * Timer deadlines are intervals, so they must not be measured against the
++ * wall clock. An appliance without a battery-backed clock boots in 1970 and
++ * steps years forward on its first NTP sync, which makes every outstanding
++ * deadline look long expired: retransmits fire at once, and a delegated
++ * prefix is torn down as if its valid lifetime had run out. Use the
++ * monotonic clock, falling back to gettimeofday() only where it is missing.
++ */
++int
++gettimeofdaymonotonic(struct timeval *tv)
++{
++	struct timespec ts;
++
++	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
++		if (tv) {
++			tv->tv_sec = ts.tv_sec;
++			tv->tv_usec = ts.tv_nsec / 1000;
++		}
++		return (0);
++	}
++
++	return (gettimeofday(tv, NULL));
++}
++
+ void
+ dhcp6_timer_init(void)
+ {
+@@ -103,7 +127,7 @@ dhcp6_set_timer(struct timeval *tm, struct dhcp6_timer *timer)
+ 	struct timeval now;
+ 
+ 	/* reset the timer */
+-	gettimeofday(&now, NULL);
++	gettimeofdaymonotonic(&now);
+ 
+ 	timeval_add(&now, tm, &timer->tm);
+ 
+@@ -126,7 +150,7 @@ dhcp6_check_timer(void)
+ 	struct timeval now;
+ 	struct dhcp6_timer *tm, *tm_next;
+ 
+-	gettimeofday(&now, NULL);
++	gettimeofdaymonotonic(&now);
+ 
+ 	tm_sentinel = tm_max;
+ 	for (tm = LIST_FIRST(&timer_head); tm; tm = tm_next) {
+@@ -158,7 +182,7 @@ dhcp6_timer_rest(struct dhcp6_timer *timer)
+ 	struct timeval now;
+ 	static struct timeval returnval; /* XXX */
+ 
+-	gettimeofday(&now, NULL);
++	gettimeofdaymonotonic(&now);
+ 	if (TIMEVAL_LEQ(timer->tm, now)) {
+ 		d_printf(LOG_DEBUG, FNAME,
+ 		    "a timer must be expired, but not yet");
+diff --git a/timer.h b/timer.h
+index 977cb35..dbba063 100644
+--- a/timer.h
++++ b/timer.h
+@@ -59,6 +59,7 @@ void dhcp6_set_timer(struct timeval *, struct dhcp6_timer *);
+ void dhcp6_remove_timer(struct dhcp6_timer **);
+ struct timeval *dhcp6_check_timer(void);
+ struct timeval *dhcp6_timer_rest(struct dhcp6_timer *);
++int gettimeofdaymonotonic(struct timeval *);
+ 
+ void timeval_sub(struct timeval *, struct timeval *, struct timeval *);
+ 

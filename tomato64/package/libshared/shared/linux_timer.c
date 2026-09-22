@@ -55,6 +55,11 @@
  */
 #undef TIMER_PROFILE
 
+#ifdef TOMATO64
+/* hide these so they don't override musl's clock_gettime()/timer_*() for every program linking libshared */
+#define TIMER_LOCAL	__attribute__((visibility("hidden")))
+#endif /* TOMATO64 */
+
 /*
 timer_cancel( ) - cancel a timer
 timer_connect( ) - connect a user routine to the timer signal
@@ -191,7 +196,11 @@ void init_event_queue(int n)
 	signal(SIGALRM, alarm_handler);
 }
 
+#ifndef TOMATO64
 int clock_gettime(
+#else
+TIMER_LOCAL int clock_gettime(
+#endif /* TOMATO64 */
 	clockid_t         clock_id, /* clock ID (always CLOCK_REALTIME) */
 	struct timespec * tp        /* where to store current time */
 )
@@ -207,7 +216,11 @@ int clock_gettime(
 }
 
 
+#ifndef TOMATO64
 int timer_create(
+#else
+TIMER_LOCAL int timer_create(
+#endif /* TOMATO64 */
 	clockid_t         clock_id, /* clock ID (always CLOCK_REALTIME) */
 	struct sigevent * evp,      /* user event handler */
 	timer_t *         pTimer    /* ptr to return value */
@@ -245,7 +258,11 @@ int timer_create(
 	return 0;
 }
 
+#ifndef TOMATO64
 int timer_delete(
+#else
+TIMER_LOCAL int timer_delete(
+#endif /* TOMATO64 */
 	timer_t timerid /* timer ID */
 )
 {
@@ -300,7 +317,11 @@ int timer_change_settime
 	return 1;
 }
 
+#ifndef TOMATO64
 int timer_settime
+#else
+TIMER_LOCAL int timer_settime
+#endif /* TOMATO64 */
 (
 	timer_t                   timerid, /* timer ID */
 	int                       flags,   /* absolute or relative */

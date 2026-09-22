@@ -1,0 +1,33 @@
+From: Tomato64 <noreply@tomato64>
+Subject: [PATCH] do not re-add an existing IA_NA address on renewal
+
+update_address() calls na_ifaddrconf(IFADDRCONF_ADD) whenever the lease
+has a non-zero valid lifetime, including for an address that is merely
+being renewed and is therefore already configured on the interface.
+
+On Linux ifaddrconf() performs the add with ioctl(SIOCSIFADDR), which
+fails with EEXIST in that case. The failure is not logged - only the
+remove path reports errors - but update_address() still returns early on
+it, so the code below never runs and the address timer keeps the deadline
+computed at first acquisition. A renewed address then expires on the
+original schedule and addr_timo() removes it, even though the server
+renewed it. The ioctl also carries no lifetimes on Linux, so the re-add
+could not refresh them even if it succeeded.
+
+Configure the address only when it is first created, which is what the
+prefix path in prefixconf.c already does with its spcreate check, and let
+a renewal fall through to the timer update.
+
+diff --git a/addrconf.c b/addrconf.c
+index 13ad88b..5978fea 100644
+--- a/addrconf.c
++++ b/addrconf.c
+@@ -170,7 +170,7 @@ update_address(struct ia *ia, struct dhcp6_statefuladdr *addr,
+ 	    ", vltime=%" PRIu32, sacreate ? "create" : "update",
+ 	    in6addr2str(&addr->addr, 0), addr->pltime, addr->vltime);
+ 
+-	if (sa->addr.vltime != 0) {
++	if (sacreate && sa->addr.vltime != 0) {
+ 		if (na_ifaddrconf(IFADDRCONF_ADD, sa) < 0) {
+ 			/* XXX no reporting here either */
+ 			return (-1);

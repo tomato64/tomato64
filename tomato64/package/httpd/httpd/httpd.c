@@ -1407,6 +1407,8 @@ static void add_listen_socket(const char *addr, int server_port, int do_ipv6, in
 #define HTTPD_FAMILY AF_INET
 #endif
 
+	memset(&sai_stor, 0, sizeof(sai_stor));
+
 	if (listeners.count >= HTTP_MAX_LISTENERS) {
 		logmsg(LOG_ERR, "number of listeners exceeded the max allowed (%d)", HTTP_MAX_LISTENERS);
 		return;
@@ -1437,6 +1439,12 @@ static void add_listen_socket(const char *addr, int server_port, int do_ipv6, in
 		sai->sin6_scope_id = scope_id;
 
 		setsockopt(listenfd, IPPROTO_IPV6, IPV6_V6ONLY, &int_1, sizeof(int_1));
+#ifdef TOMATO64
+#ifdef IPV6_FREEBIND
+		/* allow binding a LAN address that is still tentative (DAD) right after a prefix change */
+		setsockopt(listenfd, IPPROTO_IPV6, IPV6_FREEBIND, &int_1, sizeof(int_1));
+#endif /* IPV6_FREEBIND */
+#endif /* TOMATO64 */
 	} else
 #endif /* TCONFIG_IPV6 */
 	{

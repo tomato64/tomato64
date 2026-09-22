@@ -1,0 +1,101 @@
+From: Tomato64 <noreply@tomato64>
+Subject: [PATCH] measure remaining lease lifetime against the monotonic clock
+
+The previous change moved the timer deadlines onto the monotonic clock,
+but the lease timestamps were left on the wall clock, and they are used
+the same way: update_address() and update_prefix() record time(NULL), and
+duration() later subtracts it from time(NULL) to find how much of the
+preferred lifetime is left.
+
+That subtraction is still wrong across a clock step. On a router with no
+battery-backed clock the first NTP sync moves the clock forward by
+decades, so "passed" becomes larger than any lifetime, pltime clamps to
+zero, and dhcp6c_ia.c derives t1 = duration / 2 and t2 = duration * 4 / 5
+from it. Both become zero and the client renews immediately, restarting
+every service that depends on the lease along the way.
+
+Record and compare the timestamps with the same monotonic clock the timers
+now use. Nothing prints these values or persists them across a restart;
+they exist only to be subtracted from one another.
+
+diff --git a/addrconf.c b/addrconf.c
+index 5978fea..cf938ac 100644
+--- a/addrconf.c
++++ b/addrconf.c
+@@ -159,7 +159,7 @@ update_address(struct ia *ia, struct dhcp6_statefuladdr *addr,
+ 	}
+ 
+ 	/* update the timestamp of update */
+-	sa->updatetime = time(NULL);
++	sa->updatetime = monotonic_sec();
+ 
+ 	/* update the address */
+ 	sa->addr.pltime = addr->pltime;
+@@ -264,7 +264,7 @@ duration_addr(struct iactl *iac)
+ 	time_t now;
+ 
+ 	/* Determine the smallest period until pltime expires. */
+-	now = time(NULL);
++	now = monotonic_sec();
+ 
+ 	TAILQ_FOREACH(sa, &iac_na->statefuladdr_head, link) {
+ 		passed = now > sa->updatetime ?
+diff --git a/prefixconf.c b/prefixconf.c
+index 62b3ce1..ef49252 100644
+--- a/prefixconf.c
++++ b/prefixconf.c
+@@ -212,7 +212,7 @@ update_prefix(struct ia *ia, struct dhcp6_prefix *pinfo,
+ 	}
+ 
+ 	/* update the timestamp of update */
+-	sp->updatetime = time(NULL);
++	sp->updatetime = monotonic_sec();
+ 
+ 	/* update the prefix according to pinfo */
+ 	sp->prefix.pltime = pinfo->pltime;
+@@ -345,7 +345,7 @@ duration(struct iactl *iac)
+ 	time_t now;
+ 
+ 	/* Determine the smallest period until pltime expires. */
+-	now = time(NULL);
++	now = monotonic_sec();
+ 
+ 	TAILQ_FOREACH(sp, &iac_pd->siteprefix_head, link) {
+ 		passed = now > sp->updatetime ?
+diff --git a/timer.c b/timer.c
+index bceb992..53e4242 100644
+--- a/timer.c
++++ b/timer.c
+@@ -81,6 +81,20 @@ gettimeofdaymonotonic(struct timeval *tv)
+ 	return (gettimeofday(tv, NULL));
+ }
+ 
++/*
++ * The same clock in whole seconds, for the lease timestamps that are only
++ * ever subtracted from one another to find how much of a lifetime is left.
++ */
++time_t
++monotonic_sec(void)
++{
++	struct timeval tv;
++
++	gettimeofdaymonotonic(&tv);
++
++	return ((time_t)tv.tv_sec);
++}
++
+ void
+ dhcp6_timer_init(void)
+ {
+diff --git a/timer.h b/timer.h
+index dbba063..5c9a150 100644
+--- a/timer.h
++++ b/timer.h
+@@ -60,6 +60,7 @@ void dhcp6_remove_timer(struct dhcp6_timer **);
+ struct timeval *dhcp6_check_timer(void);
+ struct timeval *dhcp6_timer_rest(struct dhcp6_timer *);
+ int gettimeofdaymonotonic(struct timeval *);
++time_t monotonic_sec(void);
+ 
+ void timeval_sub(struct timeval *, struct timeval *, struct timeval *);
+ 

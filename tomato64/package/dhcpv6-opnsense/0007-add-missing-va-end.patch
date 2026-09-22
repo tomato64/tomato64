@@ -1,0 +1,19 @@
+From: Tomato64 <noreply@tomato64>
+Subject: [PATCH] terminate the variadic argument list in d_printf()
+
+d_printf() calls va_start() without a matching va_end(). The pairing is
+required by the C standard, and on the ABIs where va_end() is not a no-op
+this leaves the argument list unterminated on every log line.
+
+diff --git a/common.c b/common.c
+index 018ec86..055bd0a 100644
+--- a/common.c
++++ b/common.c
+@@ -3373,6 +3373,7 @@ d_printf(int level, const char *fname, const char *fmt, ...)
+ 
+ 	va_start(ap, fmt);
+ 	vsnprintf(logbuf, sizeof(logbuf), fmt, ap);
++	va_end(ap);
+ 
+ 	if (*fname == '\0')
+ 		printfname = 0;

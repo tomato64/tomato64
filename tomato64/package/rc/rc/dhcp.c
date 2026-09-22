@@ -793,6 +793,7 @@ int dhcp6c_state_main(int argc, char **argv)
 	const char *prefix;
 	const char *lanif;
 	char *reason;
+	int lock;
 
 	if (!wait_action_idle(10))
 		return 1;
@@ -816,6 +817,8 @@ int dhcp6c_state_main(int argc, char **argv)
 			nvram_set("ipv6_prefix", prefix);
 
 		/* (re)start dnsmasq, httpd and upnp */
+		/* serialize against ntpd_synced_main(), which restarts the same services */
+		lock = file_lock("ntpd_dhcp6c_restart");
 		set_host_domain_name();
 		stop_dnsmasq();
 		start_dnsmasq();
@@ -824,6 +827,7 @@ int dhcp6c_state_main(int argc, char **argv)
 		stop_upnp();
 		start_upnp();
 		start_arpbind(); /* refresh static IPv6 neighbor bindings with the new prefix */
+		file_unlock(lock);
 	}
 
 	/* check DNS - change/new ? */
