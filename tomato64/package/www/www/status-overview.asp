@@ -121,6 +121,13 @@ function visibility() {
 }
 visibility();
 
+/* TOMATO64-BEGIN */
+/* wl_fface() is the bare phy number for every iface on Tomato64, so build a per-iface section id */
+function wl_sid(uidx) {
+	return wl_unit(uidx)+((wl_sunit(uidx) > 0) ? '.'+wl_sunit(uidx) : '');
+}
+/* TOMATO64-END */
+
 function wlenable(uidx, n) {
 	E('b_wl'+uidx+'_enable').disabled = 1;
 	E('b_wl'+uidx+'_disable').disabled = 1;
@@ -542,7 +549,12 @@ function show() {
 		else {
 				/* do not display any virtual interface linked to the chip/frequency that is disabled */
 				if (!wlstats[uidx].radio) /* disabled? */
+/* TOMATO64-REMOVE-BEGIN */
 					elem.display('wl'+wl_fface(uidx)+'-title', 'sesdiv_wl_'+wl_fface(uidx), wlstats[uidx].radio);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+					elem.display('wl'+wl_sid(uidx)+'-title', 'sesdiv_wl_'+wl_sid(uidx), wlstats[uidx].radio);
+/* TOMATO64-END */
 		}
 		c('ifstatus'+uidx, wlstats[uidx].ifstatus || '');
 	}
@@ -567,7 +579,12 @@ function init() {
 		toggleVisibility(cprefix, 'lan');
 
 	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
+/* TOMATO64-REMOVE-BEGIN */
 		u = wl_fface(uidx);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		u = wl_sid(uidx);
+/* TOMATO64-END */
 		if (((c = cookie.get(cprefix+'_wl_'+u+'_vis')) != null) && (c != '1'))
 			toggleVisibility(cprefix, 'wl_'+u);
 	}
@@ -827,13 +844,26 @@ function init() {
 <script>
 	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 		u = wl_fface(uidx);
+/* TOMATO64-REMOVE-BEGIN */
 		W('<div class="section-title" id="wl'+u+'-title">Wireless');
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		var sid = wl_sid(uidx);
+		W('<div class="section-title" id="wl'+sid+'-title">Wireless');
+/* TOMATO64-END */
 		if (wl_ifaces.length > 0)
 			W(' '+wl_display_ifname(uidx));
 
+/* TOMATO64-REMOVE-BEGIN */
 		W(' <small><i><a href="javascript:toggleVisibility(cprefix,\'wl_'+u+'\');" id="toggleLink-wl_'+u+'" class="hide"><span id="sesdiv_wl_'+u+'_showhide">(Hide)<\/span><\/a><\/i><\/small>');
 		W('<\/div>');
 		W('<div class="section" id="sesdiv_wl_'+u+'">');
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		W(' <small><i><a href="javascript:toggleVisibility(cprefix,\'wl_'+sid+'\');" id="toggleLink-wl_'+sid+'" class="hide"><span id="sesdiv_wl_'+sid+'_showhide">(Hide)<\/span><\/a><\/i><\/small>');
+		W('<\/div>');
+		W('<div class="section" id="sesdiv_wl_'+sid+'">');
+/* TOMATO64-END */
 		var sec = auth[nvram['wl'+u+'_security_mode']]+'';
 		if (sec.indexOf('WPA') != -1)
 			sec += ' + '+enc[nvram['wl'+u+'_crypto']];
