@@ -901,7 +901,7 @@ function init() {
 /* RTNPLUS-END */
 /* BCM53XX-NO-BEGIN */
 			{ title: 'Channel Width', rid: 'nbw'+uidx, text: wl_info[uidx][3], ignore: (wl_sunit(uidx) >= 0) },
-			{ title: 'QR code', rid: 'qr-code'+uidx, text: '<a href="tools-qr.asp?wl='+wl_ifaces[uidx][0]+'"><span class="qriconsvg">&nbsp;<\/span><\/a>' },
+			{ title: 'QR code', rid: 'qr-code'+uidx, text: '<a href="tools-qr.asp?wl='+wl_ifaces[uidx][0]+'"><span class="qriconsvg">&nbsp;<\/span><\/a>', ignore: (wl_ifaces[uidx][8] != 'ap') },
 /* BCM53XX-NO-END */
 /* BCM53XX-BEGIN */
 			{ title: 'Channel Width', rid: 'nbw'+uidx, text: wlstats[uidx].nbw, ignore: ((!nphy) || (wl_sunit(uidx) >= 0)) },

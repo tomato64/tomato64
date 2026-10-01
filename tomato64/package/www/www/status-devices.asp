@@ -406,7 +406,13 @@ dg.populate = function() {
 			    '<a href="javascript:addbwlimit('+i+')" title="BW Limiter">[BWL]<\/a> '+
 			    '<a href="javascript:addRestrict('+i+')" title="Access Restriction">[AR]<\/a>';
 
+/* TOMATO64-REMOVE-BEGIN */
 			if (e.rssi != '')
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			/* not for the router's own uplink: the far end is an AP or a mesh peer, not one of our clients */
+			if (e.rssi != '' && e.mode != 'wet' && e.mode != 'sta' && e.mode != 'psta' && e.mode != 'mesh')
+/* TOMATO64-END */
 				b += ' <a href="javascript:addWF('+i+')" title="Wireless Filter">[WLF]<\/a>';
 
 			b += '<\/small>';
@@ -463,9 +469,11 @@ dg.populate = function() {
 			e.media = (e.freq == '5 GHz' ? 1 : 2);
 /* TOMATO64-BEGIN */
 			if (e.freq == '6 GHz') {
-				f = '<span class="wl60svg"'+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' alt="" title="'+e.freq+'>&nbsp;<\/span">';
+				f = '<span class="wl60svg" '+((e.mode == 'wet' || e.mode == 'sta' || e.mode == 'psta' || e.mode == 'mesh' || (e.mode == 'wds' && e.proto == 'disabled')) ? 'style="filter:invert(1)"' : '')+' title="'+e.freq+'">&nbsp;<\/span>';
 				e.media = 0;
 			}
+			else if (e.mode == 'mesh') /* a mesh peer is an uplink too, draw it like the upstream AP of a client */
+				f = '<span class="wl'+(e.freq == '5 GHz' ? '50' : '24')+'svg" style="filter:invert(1)" title="'+e.freq+'">&nbsp;<\/span>';
 /* TOMATO64-END */
 		}
 		else if (e.ifname != '' && mode != 'wet') {
@@ -883,6 +891,9 @@ function init() {
 	<li>Clicking on the MAC address will lookup the manufacturer by looking at the first half of the MAC address, this is purely informational.</li>
 	<li>When present, pressing an ON/OFF icon will send a Wake-up On Line datagram to the device, if the device supports that it will become active.</li>
 	<li>Clicking on the remaining lease time lets you terminate that lease, and if it is wireless connected it will also de-authenticate it. Use with care.</li>
+<!-- TOMATO64-BEGIN -->
+	<li>A wireless icon drawn inverted marks a device the router itself is connected to: the upstream access point of a Client or Wireless Ethernet Bridge interface, or a peer of an 802.11s Mesh Point.</li>
+<!-- TOMATO64-END -->
 </ul>
 <!-- DISCOVERY-BEGIN -->
 <b>Network Discovery</b>

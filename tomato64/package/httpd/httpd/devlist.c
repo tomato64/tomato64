@@ -196,6 +196,10 @@ static int print_station(const char *ifname, int phy,
 {
 	char *comma = (char *)user_data;
 
+	/* a mesh peer that is merely heard, not linked, is not a connected device */
+	if (station->mesh_plink[0] && (strcmp(station->mesh_plink, "ESTAB") != 0))
+		return 0; /* Continue iteration */
+
 	/* Output format: ['ifname','MAC',signal,tx_rate,rx_rate,connected_time,phy] */
 	web_printf("%c['%s','%s',%d,%d,%d,%d,%d]",
 	           *comma,
@@ -211,12 +215,16 @@ static int print_station(const char *ifname, int phy,
 	return 0; /* Continue iteration */
 }
 
-/* Callback for get_wl_clients_openwrt - processes each AP interface */
+/* Callback for get_wl_clients_openwrt - processes each interface */
 static int get_wl_clients_callback(int phy, int iface, const char *ifname, void *user_data)
 {
 	char *comma = (char *)user_data;
 
-	/* Iterate through all connected stations on this interface */
+	/*
+	 * Iterate through all connected stations on this interface. As with
+	 * WLC_GET_ASSOCLIST, on a client or bridge interface that is the upstream
+	 * AP, which is how the router's own uplink gets its row in the list.
+	 */
 	wlhelper_foreach_station(ifname, phy, print_station, comma);
 
 	return 0; /* Continue iteration */
@@ -224,8 +232,8 @@ static int get_wl_clients_callback(int phy, int iface, const char *ifname, void 
 
 static void get_wl_clients_openwrt(char *comma)
 {
-	/* Iterate through all enabled AP interfaces */
-	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
+	/* Iterate through all enabled interfaces, whatever their mode */
+	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED,
 	                            get_wl_clients_callback,
 	                            comma);
 }

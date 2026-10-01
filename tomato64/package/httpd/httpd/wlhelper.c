@@ -188,6 +188,25 @@ const char* wlhelper_get_iface_mode(int phy, int iface)
 }
 
 /*
+ * Name an interface mode the way the web UI expects it
+ */
+const char *wlhelper_get_iface_wmode(int phy, int iface)
+{
+	const char *mode = wlhelper_get_iface_mode(phy, iface);
+
+	if (mode) {
+		if (strcmp(mode, "sta") == 0)
+			return "sta";
+		if (strcmp(mode, "bridge") == 0)
+			return "wet";
+		if (strcmp(mode, "mesh") == 0)
+			return "mesh";
+	}
+
+	return "ap";
+}
+
+/*
  * Get number of interfaces for a given PHY
  */
 int wlhelper_get_iface_count(int phy)
@@ -305,7 +324,8 @@ int wlhelper_iface_exists(const char *ifname)
  */
 int wlhelper_get_channel_stats(const char *ifname, int *channel, int *mhz,
                                  int *nbw, int *noise, float *rate,
-                                 int *center, char *proto, size_t proto_size)
+                                 int *center, char *proto, size_t proto_size,
+                                 int *signal)
 {
 	char cmd[CMD_BUFFER_SIZE];
 	char line[LINE_BUFFER_SIZE];
@@ -325,6 +345,8 @@ int wlhelper_get_channel_stats(const char *ifname, int *channel, int *mhz,
 		*center = 0;
 	if (proto && proto_size)
 		proto[0] = '\0';
+	if (signal)
+		*signal = 0;
 
 	/* Execute iwinfo info command */
 	snprintf(cmd, sizeof(cmd), "iwinfo %s info 2>/dev/null", ifname);
@@ -334,14 +356,16 @@ int wlhelper_get_channel_stats(const char *ifname, int *channel, int *mhz,
 
 	/* Parse output line by line */
 	while (fgets(line, sizeof(line), fp) != NULL) {
-		/* Parse Master line for channel, mhz, and nbw */
+		/* Parse Mode line for channel, mhz, and nbw */
 		/* Format: "Mode: Master  Channel: 1 (2.412 GHz)  HT Mode: HE40" */
-		/* Note: Must check for "Master" first to avoid collision with "Center Channel" line */
-		if (!found_master && strstr(line, "Master") != NULL) {
+		/* The mode is "Client" or "Mesh Point" on an uplink, and a client that is */
+		/* not associated prints "Channel: unknown (unknown)", leaving the zeros */
+		/* Note: Must check for "Mode:" first to avoid collision with "Center Channel" line */
+		if (!found_master && strstr(line, "Mode:") != NULL) {
 			char *channel_ptr = strstr(line, "Channel:");
 			char *ht_mode_ptr = strstr(line, "HT Mode:");
 
-			/* Ensure this is the Master line, not "Center Channel" line */
+			/* Ensure this is the Mode line, not "Center Channel" line */
 			/* Parse channel and frequency */
 			if (channel_ptr && strstr(line, "Center Channel") == NULL) {
 				char freq_str[32];
@@ -411,6 +435,12 @@ int wlhelper_get_channel_stats(const char *ifname, int *channel, int *mhz,
 		/* Parse Noise line (format: "Signal: ... Noise: -92 dBm" or "Signal: unknown  Noise: -92 dBm") */
 		if (!found_noise && strstr(line, "Noise:") != NULL) {
 			char *noise_ptr = strstr(line, "Noise:");
+			char *signal_ptr = strstr(line, "Signal:");
+
+			/* "Signal: unknown" fails the conversion and keeps the 0 */
+			if (signal && signal_ptr)
+				sscanf(signal_ptr, "Signal: %d", signal);
+
 			if (noise_ptr) {
 				char noise_str[32];
 				/* Skip past "Noise:" and extract the value */
@@ -515,6 +545,12 @@ int wlhelper_foreach_station(const char *ifname, int phy,
 
 		if (!has_station)
 			continue;
+
+		/* Look for "mesh plink:" line - only on a mesh point, so not counted */
+		if (strstr(line, "mesh plink:") != NULL) {
+			sscanf(strstr(line, "mesh plink:"), "mesh plink: %15s", current_station.mesh_plink);
+			continue;
+		}
 
 		/* Look for "signal:" line - use label-first approach */
 		if (field_index == 1 && strstr(line, "signal:") != NULL) {

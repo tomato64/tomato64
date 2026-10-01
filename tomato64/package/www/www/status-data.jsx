@@ -259,7 +259,9 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 /* BCM53XX-NO-BEGIN */
-				wlstats[uidx].ifstatus = wlstats[uidx].ifstatus+' (LAN' + wl_info[uidx][4].charAt(2)+')';
+				/* a plain client interface is not attached to any bridge */
+				if (wl_info[uidx][4])
+					wlstats[uidx].ifstatus = wlstats[uidx].ifstatus+' (LAN' + wl_info[uidx][4].charAt(2)+')';
 /* BCM53XX-NO-END */
 /* BCM53XX-BEGIN */
 		for (i = 0; i < xifs[0].length ; ++i) {

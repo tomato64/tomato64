@@ -60,6 +60,10 @@
 
 var cprefix = 'tools_qr';
 var tabs = []
+/* BCM53XX-NO-BEGIN */
+/* wl_ifaces index of each tab: only access points get one, so the two no longer line up */
+var tabUidx = [];
+/* BCM53XX-NO-END */
 /* BCM53XX-BEGIN */
 var authMap = {'disabled':'nopass','wep':'WEP','wpa_personal':'WPA','wpa_enterprise':'WPA','wpa2_personal':'WPA','wpa2_enterprise':'WPA','wpaX_personal':'WPA','wpaX_enterprise':'WPA'};
 /* BCM53XX-END */
@@ -91,8 +95,13 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 	var displayName = getNvramWifiParameter(tabName, 'ssid')+' - '+wl_display_ifname(uidx);
 /* BCM53XX-END */
 /* BCM53XX-NO-BEGIN */
+	/* a client, bridge or mesh interface has no network of its own to hand out */
+	if (wl_ifaces[uidx][8] != 'ap')
+		continue;
+
 	var tabName = wl_ifaces[uidx][0];
 	var displayName = wl_ifaces[uidx][4]+' - '+wl_display_ifname(uidx);
+	tabUidx.push(uidx);
 /* BCM53XX-NO-END */
 
 	tabs.push([tabName, displayName]);
@@ -110,10 +119,10 @@ function tabSelect(name) {
 			var pw = (enc == 'WEP') ? getNvramWifiParameter(name, 'passphrase') : getNvramWifiParameter(name, 'wpa_psk');
 /* BCM53XX-END */
 /* BCM53XX-NO-BEGIN */
-			var ssid = wl_ifaces[i][4];
-			var enc = authMap[wl_info[i][1]];
-			var hidden = (wl_info[i][5] == '0' ) ? 'true' : 'false';
-			var pw = wl_info[i][6] ;
+			var ssid = wl_ifaces[tabUidx[i]][4];
+			var enc = authMap[wl_info[tabUidx[i]][1]];
+			var hidden = (wl_info[tabUidx[i]][5] == '0' ) ? 'true' : 'false';
+			var pw = wl_info[tabUidx[i]][6] ;
 /* BCM53XX-NO-END */
 
 			E('wifi-network-ssid').innerHTML = ssid.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
@@ -148,7 +157,7 @@ function init() {
 	var openedTab = cookie.get('qr-tab') || 'wl0';
 /* BCM53XX-END */
 /* BCM53XX-NO-BEGIN */
-	var openedTab = cookie.get('qr-tab') || wl_ifaces[0][0];
+	var openedTab = cookie.get('qr-tab') || (tabs.length ? tabs[0][0] : '');
 /* BCM53XX-NO-END */
 
 	if (tabSelectParamter.length > 0 && tabSelectParamter.includes('wl'))

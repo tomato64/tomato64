@@ -944,7 +944,7 @@ static void wlscan_note_refused(struct wlscan_ctx *ctx, const char *ifname)
 	const char *band;
 	char entry[8];
 
-	if (wlhelper_get_channel_stats(ifname, &channel, &mhz, &nbw, &noise, &rate, NULL, NULL, 0) != 0)
+	if (wlhelper_get_channel_stats(ifname, &channel, &mhz, &nbw, &noise, &rate, NULL, NULL, 0, NULL) != 0)
 		return;
 
 	if (mhz >= 2400 && mhz < 2500)
@@ -1204,8 +1204,8 @@ static void print_wlnoise(void)
 {
 	int first_entry = 0;
 
-	/* Iterate through all enabled AP interfaces */
-	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
+	/* Iterate through all enabled interfaces, whatever their mode */
+	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED,
 	                            print_wlnoise_callback,
 	                            &first_entry);
 }
@@ -1412,15 +1412,25 @@ static void wlstats_own_security(int phy, int iface, char *sec, size_t sec_size,
 static int print_wlstats_callback(int phy, int iface, const char *ifname, void *user_data)
 {
 	int *first_entry = (int *)user_data;
-	int channel, mhz, nbw, noise, center;
+	int channel, mhz, nbw, noise, center, rssi;
+	int radio, client;
 	float rate;
 	char proto[8];
 	char sec[32], cipher[16];
+	const char *wmode = wlhelper_get_iface_wmode(phy, iface);
 
-	/* Get channel statistics */
-	if (wlhelper_get_channel_stats(ifname, &channel, &mhz, &nbw, &noise, &rate,
-	                               &center, proto, sizeof(proto)) != 0)
-		return 0; /* Skip this interface, continue iteration */
+	/*
+	 * Get channel statistics. This array is read by index alongside
+	 * wl_ifaces, wl_bands, wlnoise and wl_info, so an interface that cannot
+	 * be queried still gets an entry: the outputs are zeroed on failure.
+	 */
+	radio = (wlhelper_get_channel_stats(ifname, &channel, &mhz, &nbw, &noise, &rate,
+	                                    &center, proto, sizeof(proto), &rssi) == 0);
+
+	/* as wl_client(): the router is the station here, rssi is its upstream AP */
+	client = ((strcmp(wmode, "sta") == 0) || (strcmp(wmode, "wet") == 0));
+	if (!client)
+		rssi = 0;
 
 	wlstats_own_security(phy, iface, sec, sizeof(sec), cipher, sizeof(cipher));
 
@@ -1429,13 +1439,13 @@ static int print_wlstats_callback(int phy, int iface, const char *ifname, void *
 		web_puts(",");
 
 	/*
-	 * Output format: { radio: 1, client: 0, channel: X, mhz: Y, rate: Z, nbw: N, rssi: 0, noise: M, intf: 0}
+	 * Output format: { radio: R, client: C, channel: X, mhz: Y, rate: Z, nbw: N, rssi: S, noise: M, intf: 0}
 	 * The trailing fields are Tomato64 additions for the wireless survey and
 	 * are keyed by name, so they do not disturb the existing readers.
 	 */
-	web_printf("{ radio: 1, client: 0, channel: %d, mhz: %d, rate: %.1f, nbw: %d, rssi: 0, noise: %d, intf: 0"
+	web_printf("{ radio: %d, client: %d, channel: %d, mhz: %d, rate: %.1f, nbw: %d, rssi: %d, noise: %d, intf: 0"
 	           ", center: %d, proto: '%s', security: '%s', cipher: '%s'}",
-	           channel, mhz, rate, nbw, noise, center, proto, sec, cipher);
+	           radio, client, channel, mhz, rate, nbw, rssi, noise, center, proto, sec, cipher);
 
 	*first_entry = 1;
 	return 0; /* Continue iteration */
@@ -1445,8 +1455,8 @@ static void print_wlstats(void)
 {
 	int first_entry = 0;
 
-	/* Iterate through all enabled AP interfaces */
-	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
+	/* Iterate through all enabled interfaces, whatever their mode */
+	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED,
 	                            print_wlstats_callback,
 	                            &first_entry);
 }
@@ -1757,10 +1767,7 @@ static int print_wlbands_callback(int phy, int iface, const char *ifname, void *
 	 * multi-radio parts every logical phy reports the same real wiphy (e.g.
 	 * phy0), which would collapse the radios onto a single band. */
 	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%d_band", phy);
-	band = nvram_get(nvram_key);
-
-	if (!band)
-		return 0; /* Skip this interface, continue iteration */
+	band = nvram_safe_get(nvram_key);
 
 	/* Output band value */
 	if (*first_entry)
@@ -1772,6 +1779,8 @@ static int print_wlbands_callback(int phy, int iface, const char *ifname, void *
 		web_printf("['1']");
 	else if (strcmp(band, "6g") == 0)
 		web_printf("['3']");
+	else
+		web_printf("[]"); /* unknown, but keep the index in step with wl_ifaces */
 
 	*first_entry = 1;
 	return 0; /* Continue iteration */
@@ -1781,8 +1790,8 @@ static void print_wlbands(void)
 {
 	int first_entry = 0;
 
-	/* Iterate through all enabled AP interfaces */
-	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
+	/* Iterate through all enabled interfaces, whatever their mode */
+	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED,
 	                            print_wlbands_callback,
 	                            &first_entry);
 }
@@ -1795,8 +1804,20 @@ static int print_wlinfo_callback(int phy, int iface, const char *ifname, void *u
 	int *first_entry = (int *)user_data;
 	char nvram_key[64];
 	const char *encryption;
+	const char *wmode, *wmode_name;
 	char mode_upper[16];
 	int broadcast;
+
+	/* Name the mode as the Wireless Mode row of the overview page shows it */
+	wmode = wlhelper_get_iface_wmode(phy, iface);
+	if (strcmp(wmode, "sta") == 0)
+		wmode_name = "Wireless Client";
+	else if (strcmp(wmode, "wet") == 0)
+		wmode_name = "Wireless Ethernet Bridge";
+	else if (strcmp(wmode, "mesh") == 0)
+		wmode_name = "802.11s Mesh Point";
+	else
+		wmode_name = "Access Point";
 
 	/* Get encryption setting and convert to display format */
 	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%diface%d_encryption", phy, iface);
@@ -1849,9 +1870,9 @@ static int print_wlinfo_callback(int phy, int iface, const char *ifname, void *u
 	if (*first_entry)
 		web_puts(",");
 
-	/* Output format: ['Access Point','encryption','MODE','width MHz','network','broadcast','key'] */
-	web_printf("['Access Point','%s','%s','%s MHz','%s','%d','%s']",
-	           encryption, mode_upper, width, network, broadcast, key);
+	/* Output format: ['wireless mode','encryption','MODE','width MHz','network','broadcast','key'] */
+	web_printf("['%s','%s','%s','%s MHz','%s','%d','%s']",
+	           wmode_name, encryption, mode_upper, width, network, broadcast, key);
 
 	free(key);
 
@@ -1863,8 +1884,8 @@ static void print_wlinfo(void)
 {
 	int first_entry = 0;
 
-	/* Iterate through all enabled AP interfaces */
-	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
+	/* Iterate through all enabled interfaces, whatever their mode */
+	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED,
 	                            print_wlinfo_callback,
 	                            &first_entry);
 }
@@ -1953,15 +1974,18 @@ static int print_wif_callback(int phy, int iface, const char *ifname, void *user
 	int *first_entry = (int *)user_data;
 	char mac[18];
 	char nvram_key[64];
-	int subunit;
+	int subunit, up;
 
-	/* Check if interface exists */
-	if (!wlhelper_iface_exists(ifname))
-		return 0; /* Skip this interface, continue iteration */
-
-	/* Get MAC address */
-	if (wlhelper_get_mac_address(ifname, mac, sizeof(mac)) != 0)
-		return 0; /* Skip this interface, continue iteration */
+	/*
+	 * An interface that is configured but has no netdev is reported as down
+	 * rather than left out: wl_bands, wlnoise, wlstats and wl_info are read
+	 * with the same index, and none of them can tell it is missing.
+	 */
+	up = wlhelper_iface_exists(ifname);
+	if (!up || (wlhelper_get_mac_address(ifname, mac, sizeof(mac)) != 0)) {
+		up = 0;
+		mac[0] = '\0';
+	}
 
 	/* Get ESSID from nvram */
 	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%diface%d_essid", phy, iface);
@@ -1977,8 +2001,9 @@ static int print_wif_callback(int phy, int iface, const char *ifname, void *user
 		web_puts(",");
 
 	/* Output format: ['ifname','phy_str',phy_num,subunit,'essid','hwaddr',up,max_vifs,'mode','bssid'] */
-	web_printf("['%s','%d',%d,%d,'%s','%s',1,16,'ap','%s']",
-	           ifname, phy, phy, subunit, essid, mac, mac);
+	web_printf("['%s','%d',%d,%d,'%s','%s',%d,16,'%s','%s']",
+	           ifname, phy, phy, subunit, essid, mac, up,
+	           wlhelper_get_iface_wmode(phy, iface), mac);
 
 	free(essid);
 
@@ -1990,8 +2015,8 @@ static void print_wif(void)
 {
 	int first_entry = 0;
 
-	/* Iterate through all enabled AP interfaces */
-	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
+	/* Iterate through all enabled interfaces, whatever their mode */
+	wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED,
 	                            print_wif_callback,
 	                            &first_entry);
 }

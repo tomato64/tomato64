@@ -264,7 +264,7 @@ function isOurs(bssid) {
 		return false;
 
 	for (var i = 0; i < wl_ifaces.length; ++i)
-		if (wl_ifaces[i][9] === bssid)
+		if ((wl_ifaces[i][8] == 'ap') && (wl_ifaces[i][9] === bssid))
 			return true;
 
 	return false;
@@ -286,7 +286,8 @@ function wlRadioSlot(band) {
 
 	for (var i = 0; i < wl_ifaces.length; ++i) {
 		var st = wlstats[i];
-		if (!st || (wlBandOfMhz(st.mhz) != band))
+		/* wl_ifaces also lists client, bridge and mesh interfaces, which have no BSS of their own */
+		if (!st || (wl_ifaces[i][8] != 'ap') || (wlBandOfMhz(st.mhz) != band))
 			continue;
 
 		r.ifname.value = wl_ifaces[i][0];
@@ -1268,7 +1269,7 @@ function drawFT(show) {
 		for (var n = 0; n < wl_ifaces.length; ++n) {
 			var st = wlstats[n];
 			var bssid = wl_ifaces[n][9];
-			if (!st || !bssid || ownBSSID(bssid))
+			if (!st || !bssid || (wl_ifaces[n][8] != 'ap') || ownBSSID(bssid))
 				continue;
 
 			/*

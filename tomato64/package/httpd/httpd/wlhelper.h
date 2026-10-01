@@ -128,6 +128,8 @@ int wlhelper_iface_exists(const char *ifname);
  * Get channel statistics from iwinfo
  *
  * Parses iwinfo info output to extract channel, mhz, nbw, noise, and rate.
+ * Works for any interface mode. An interface that is up but not (yet)
+ * associated reports "Channel: unknown" and yields zeros, not an error.
  *
  * @param ifname: Interface name
  * @param channel: Output for channel number
@@ -138,11 +140,14 @@ int wlhelper_iface_exists(const char *ifname);
  * @param center: Output for the centre channel, 0 when not reported; may be NULL
  * @param proto: Output for the operating generation ("11ax", ...); may be NULL
  * @param proto_size: Size of the proto buffer
+ * @param signal: Output for the signal in dBm, 0 if unknown; may be NULL. Only
+ *                meaningful on a client interface, where it is the upstream AP
  * @return: 0 on success, -1 on error
  */
 int wlhelper_get_channel_stats(const char *ifname, int *channel, int *mhz,
                                  int *nbw, int *noise, float *rate,
-                                 int *center, char *proto, size_t proto_size);
+                                 int *center, char *proto, size_t proto_size,
+                                 int *signal);
 
 /*
  * Station (client) information structure
@@ -153,6 +158,7 @@ struct wlhelper_station_info {
 	int tx_bitrate;         /* TX bitrate in kbit/s (multiplied by 1000) */
 	int rx_bitrate;         /* RX bitrate in kbit/s (multiplied by 1000) */
 	int connected_time;     /* Connected time in seconds */
+	char mesh_plink[16];    /* 802.11s peer link state ("ESTAB", ...), empty off-mesh */
 };
 
 /*
@@ -172,7 +178,8 @@ typedef int (*wlhelper_station_callback)(const char *ifname, int phy,
  * Iterate through all connected stations on an interface
  *
  * Parses output from 'iw <ifname> station dump' and calls the callback
- * for each connected station.
+ * for each connected station. On an AP these are its clients, on a client
+ * interface the one upstream AP, and on a mesh point its peers.
  *
  * @param ifname: Interface name
  * @param phy: PHY index (passed to callback)
@@ -191,6 +198,20 @@ int wlhelper_foreach_station(const char *ifname, int phy,
 #define WLHELPER_FILTER_ENABLED  (1 << 0)  /* Only enabled interfaces */
 #define WLHELPER_FILTER_AP_MODE  (1 << 1)  /* Only AP mode interfaces */
 #define WLHELPER_FILTER_STA_MODE (1 << 2)  /* Only STA mode interfaces */
+
+/*
+ * Name an interface mode the way the web UI expects it
+ *
+ * The pages inherited from Tomato key off the Broadcom mode names, so the
+ * nvram wifi_phy{phy}iface{iface}_mode value is translated: "bridge" becomes
+ * "wet" (wireless ethernet bridge), "ap", "sta" and "mesh" are kept, and
+ * anything unset reads as "ap".
+ *
+ * @param phy: PHY index
+ * @param iface: Interface index
+ * @return: "ap", "sta", "wet" or "mesh"
+ */
+const char *wlhelper_get_iface_wmode(int phy, int iface);
 
 /*
  * Callback function type for iterating through interfaces
