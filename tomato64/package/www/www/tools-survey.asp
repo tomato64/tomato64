@@ -22,6 +22,7 @@
 /* BCM53XX-NO-BEGIN */
 //	<% wlifaces(); %>
 //	<% wlstats(); %>
+//	<% wlbands(); %>
 /* BCM53XX-NO-END */
 
 
@@ -249,6 +250,20 @@ function wlBandOfMhz(mhz) {
 	return '5';
 }
 
+/*
+ * Band of the interface at this wl_ifaces index. A client that is not
+ * associated reports no frequency, so fall back on the configured band.
+ */
+function wlBandOfIface(i) {
+	var st = wlstats[i];
+	if (st && Number(st.mhz))
+		return wlBandOfMhz(st.mhz);
+
+	var b = ((typeof wl_bands !== 'undefined') && wl_bands[i]) ? wl_bands[i][0] : '';
+
+	return (b == '2') ? '2.4' : (b == '1') ? '5' : (b == '3') ? '6' : '';
+}
+
 /* True once this BSSID is already in wlscandata, ours or a neighbour's */
 function ownBSSID(bssid) {
 	for (var i = 0; i < wlscandata.length; ++i)
@@ -286,9 +301,22 @@ function wlRadioSlot(band) {
 
 	for (var i = 0; i < wl_ifaces.length; ++i) {
 		var st = wlstats[i];
-		/* wl_ifaces also lists client, bridge and mesh interfaces, which have no BSS of their own */
-		if (!st || (wl_ifaces[i][8] != 'ap') || (wlBandOfMhz(st.mhz) != band))
+		if (!st || (wlBandOfIface(i) != band))
 			continue;
+
+		/*
+		 * wl_ifaces also lists client, bridge and mesh interfaces. They have
+		 * no BSS of their own, but the radio can still survey its band.
+		 */
+		if (wl_ifaces[i][8] != 'ap') {
+			if (r.radio.value != '1') {
+				r.ifname.value = wl_ifaces[i][0];
+				r.radio.value = '1';
+				r.mode.value = wl_ifaces[i][8];
+				r.noise = (st.noise != null && st.noise > -99) ? st.noise : null;
+			}
+			continue;
+		}
 
 		r.ifname.value = wl_ifaces[i][0];
 		r.radio.value = '1';
