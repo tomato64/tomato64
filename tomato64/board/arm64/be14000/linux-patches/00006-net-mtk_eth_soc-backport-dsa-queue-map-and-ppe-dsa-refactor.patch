@@ -1,0 +1,525 @@
+Subject: [PATCH] net: ethernet: mtk_eth_soc: backport per-conduit DSA queue
+ map and PPE DSA refactor
+
+Backport of Daniel Golle's pending "MxL862xx PPE offload" series from
+OpenWrt main (target/linux/generic/pending-6.18/795-01 .. 795-07, 795-09)
+to the 6.12 kernel used for the GL-BE14000:
+
+  795-01 mtk_ppe_offload: use rhashtable_lookup_fast
+  795-02 mtk_ppe: set tport_idx on netsys_v3 for QoS (Bo-Cun Chen)
+  795-03 mtk_ppe_offload: set output device before VLAN/PPPoE push
+  795-04 mtk_eth_soc: per-SoC QDMA TX queue count with register paging
+  795-05 mtk_eth_soc: add per-conduit DSA user-port queue map
+  795-06 mtk_eth_soc: use DSA queue map in TX paths
+  795-07 mtk_ppe_offload: use DSA queue map in flow offload path
+  795-09 mtk_ppe: push_vid out-parameter for mtk_flow_get_dsa_port() and
+         ingress-side DSA user port -> conduit substitution
+
+The BE14000 has two DSA switches on one MT7988 (built-in MT7530 on gmac0,
+YT9224 on gmac1). Both number their user ports from 0, so with the old
+"queue = dp->index + 3" rule the SFP+ port (YT9224 port 0) and lan5
+(MT7530 port 0) share QDMA queue 3 and overwrite each other's rate
+shaping. The queue map gives every user port its own queue.
+
+Differences from the originals:
+  - 795-08 (tag_mxl862xx_8021q) and the DSA_TAG_PROTO_MXL862_8021Q case
+    of 795-09 are dropped; 6.12 has no MxL862xx tagger.
+  - mtk_hw_dump() (OpenWrt debug code) converted from MTK_QDMA_NUM_QUEUES
+    to soc->num_tx_queues.
+  - mtk_add_mac() gains the loop variable the 6.18 function already had.
+
+Drop this patch when the kernel base carries the series.
+---
+--- a/drivers/net/ethernet/mediatek/mtk_eth_soc.c
++++ b/drivers/net/ethernet/mediatek/mtk_eth_soc.c
+@@ -902,7 +902,8 @@
+ 		}
+ 	}
+ 
+-	ofs = MTK_QTX_OFFSET * idx;
++	mtk_w32(eth, idx / MTK_QTX_PER_PAGE, soc->reg_map->qdma.page);
++	ofs = MTK_QTX_OFFSET * (idx % MTK_QTX_PER_PAGE);
+ 	mtk_w32(eth, val, soc->reg_map->qdma.qtx_sch + ofs);
+ }
+ 
+@@ -2933,7 +2934,11 @@
+ 			soc->reg_map->qdma.crx_ptr);
+ 		mtk_w32(eth, ring->last_free_ptr, soc->reg_map->qdma.drx_ptr);
+ 
+-		for (i = 0, ofs = 0; i < MTK_QDMA_NUM_QUEUES; i++) {
++		for (i = 0; i < soc->num_tx_queues; i++) {
++			mtk_w32(eth, i / MTK_QTX_PER_PAGE,
++				soc->reg_map->qdma.page);
++			ofs = MTK_QTX_OFFSET * (i % MTK_QTX_PER_PAGE);
++
+ 			val = (QDMA_RES_THRES << 8) | QDMA_RES_THRES;
+ 			mtk_w32(eth, val, soc->reg_map->qdma.qtx_cfg + ofs);
+ 
+@@ -2951,7 +2956,6 @@
+ 			if (mtk_is_netsys_v1(eth))
+ 				val |= MTK_QTX_SCH_LEAKY_BUCKET_EN;
+ 			mtk_w32(eth, val, soc->reg_map->qdma.qtx_sch + ofs);
+-			ofs += MTK_QTX_OFFSET;
+ 		}
+ 		val = MTK_QDMA_TX_SCH_MAX_WFQ | (MTK_QDMA_TX_SCH_MAX_WFQ << 16);
+ 		mtk_w32(eth, val, soc->reg_map->qdma.tx_sch_rate);
+@@ -3531,7 +3535,7 @@
+ 	int i, j, txqs = 1;
+ 
+ 	if (MTK_HAS_CAPS(eth->soc->caps, MTK_QDMA))
+-		txqs = MTK_QDMA_NUM_QUEUES;
++		txqs = soc->num_tx_queues;
+ 
+ 	for (i = 0; i < MTK_MAX_DEVS; i++) {
+ 		if (!eth->netdev[i])
+@@ -3755,6 +3759,48 @@
+ #endif
+ }
+ 
++/*
++ * Recompute the per-conduit DSA user-port queue map.  Each conduit's mac
++ * gets a queue base (queues 0..MTK_MAX_DEVS-1 are reserved for non-DSA
++ * egress via GDM{1,2,3}), followed by a contiguous rank for every user
++ * port of the DSA switch attached to that conduit.  dsa_port_rank[]
++ * translates dp->index (which may be non-contiguous and may collide
++ * across switches) into that rank.
++ *
++ * Call this on DSA topology changes.  Idempotent.
++ */
++static void mtk_update_dsa_queue_map(struct mtk_eth *eth)
++{
++	struct net_device *conduit;
++	struct dsa_switch *ds;
++	struct mtk_mac *mac;
++	struct dsa_port *dp;
++	u8 base = MTK_MAX_DEVS;
++	u8 rank;
++	int i;
++
++	for (i = 0; i < MTK_MAX_DEVS; i++) {
++		conduit = eth->netdev[i];
++		if (!conduit)
++			continue;
++
++		mac = netdev_priv(conduit);
++		mac->dsa_queue_base = base;
++
++		if (!netdev_uses_dsa(conduit))
++			continue;
++
++		ds = conduit->dsa_ptr->ds;
++		rank = 0;
++		dsa_switch_for_each_user_port(dp, ds) {
++			if (dp->index < MTK_DSA_USER_PORT_MAX)
++				mac->dsa_port_rank[dp->index] = rank;
++			rank++;
++		}
++		base += rank;
++	}
++}
++
+ static int mtk_device_event(struct notifier_block *n, unsigned long event, void *ptr)
+ {
+ 	struct mtk_mac *mac = container_of(n, struct mtk_mac, device_notifier);
+@@ -3764,6 +3810,7 @@
+ 	struct net_device *ldev;
+ 	struct list_head *iter;
+ 	struct dsa_port *dp;
++	unsigned int queue;
+ 
+ 	if (event != NETDEV_CHANGE)
+ 		return NOTIFY_DONE;
+@@ -3779,6 +3826,8 @@
+ 	if (!dsa_user_dev_check(dev))
+ 		return NOTIFY_DONE;
+ 
++	mtk_update_dsa_queue_map(eth);
++
+ 	if (__ethtool_get_link_ksettings(dev, &s))
+ 		return NOTIFY_DONE;
+ 
+@@ -3786,13 +3835,17 @@
+ 		return NOTIFY_DONE;
+ 
+ 	dp = dsa_port_from_netdev(dev);
+-	if (dp->index >= MTK_QDMA_NUM_QUEUES)
++	if (dp->index >= MTK_DSA_USER_PORT_MAX)
++		return NOTIFY_DONE;
++
++	queue = mac->dsa_queue_base + mac->dsa_port_rank[dp->index];
++	if (queue >= eth->soc->num_tx_queues)
+ 		return NOTIFY_DONE;
+ 
+ 	if (mac->speed > 0 && mac->speed <= s.base.speed)
+ 		s.base.speed = 0;
+ 
+-	mtk_set_queue_speed(eth, dp->index + 3, s.base.speed);
++	mtk_set_queue_speed(eth, queue, s.base.speed);
+ 
+ 	return NOTIFY_DONE;
+ }
+@@ -4176,7 +4229,7 @@
+ 	mtk_hw_dump_reg(eth, "FE", 0x1400, 0x300);
+ 	mtk_hw_dump_reg(eth, "ADMA", reg_map->pdma.rx_ptr, 0x300);
+ 	if (MTK_HAS_CAPS(eth->soc->caps, MTK_QDMA)) {
+-		for (id = 0; id < MTK_QDMA_NUM_QUEUES / 16; id++) {
++		for (id = 0; id < eth->soc->num_tx_queues / MTK_QTX_PER_PAGE; id++) {
+ 			mtk_w32(eth, id, reg_map->qdma.page);
+ 			pr_info("\nQDMA PAGE:%x ", mtk_r32(eth, reg_map->qdma.page));
+ 			mtk_hw_dump_reg(eth, "QDMA", reg_map->qdma.qtx_cfg, 0x100);
+@@ -5088,12 +5141,17 @@
+ 			    struct net_device *sb_dev)
+ {
+ 	struct mtk_mac *mac = netdev_priv(dev);
++	unsigned int dp_idx;
+ 	unsigned int queue = 0;
+ 
+-	if (netdev_uses_dsa(dev))
+-		queue = skb_get_queue_mapping(skb) + 3;
+-	else
++	if (netdev_uses_dsa(dev)) {
++		dp_idx = skb_get_queue_mapping(skb);
++		if (dp_idx < MTK_DSA_USER_PORT_MAX)
++			queue = mac->dsa_queue_base +
++				mac->dsa_port_rank[dp_idx];
++	} else {
+ 		queue = mac->id;
++	}
+ 
+ 	if (queue >= dev->num_tx_queues)
+ 		queue = 0;
+@@ -5164,7 +5222,7 @@
+ 	phy_interface_t phy_mode;
+ 	struct phylink *phylink;
+ 	struct mtk_mac *mac;
+-	int id, err;
++	int id, err, i;
+ 	int txqs = 1;
+ 	u32 val;
+ 
+@@ -5185,7 +5243,7 @@
+ 	}
+ 
+ 	if (MTK_HAS_CAPS(eth->soc->caps, MTK_QDMA))
+-		txqs = MTK_QDMA_NUM_QUEUES;
++		txqs = eth->soc->num_tx_queues;
+ 
+ 	eth->netdev[id] = alloc_etherdev_mqs(sizeof(*mac), txqs, 1);
+ 	if (!eth->netdev[id]) {
+@@ -5239,6 +5297,16 @@
+ 		}
+ 	}
+ 
++	/*
++	 * Initialize the DSA user-port queue map to an identity mapping
++	 * starting at MTK_MAX_DEVS, so that a mac without any DSA switch
++	 * attached keeps the historic "queue = dp->index + 3" layout.
++	 * mtk_update_dsa_queue_map() rewrites this once DSA state is up.
++	 */
++	mac->dsa_queue_base = MTK_MAX_DEVS;
++	for (i = 0; i < MTK_DSA_USER_PORT_MAX; i++)
++		mac->dsa_port_rank[i] = i;
++
+ 	memset(mac->hwlro_ip, 0, sizeof(mac->hwlro_ip));
+ 	mac->hwlro_ip_cnt = 0;
+ 
+@@ -5810,6 +5878,7 @@
+ 	.required_clks = MT7623_CLKS_BITMAP,
+ 	.required_pctl = true,
+ 	.version = 1,
++	.num_tx_queues = 16,
+ 	.tx = {
+ 		DESC_SIZE(struct mtk_tx_dma),
+ 		.dma_max_len = MTK_TX_DMA_BUF_LEN,
+@@ -5837,6 +5906,7 @@
+ 	.offload_version = 1,
+ 	.ppe_num = 1,
+ 	.hash_offset = 2,
++	.num_tx_queues = 16,
+ 	.foe_entry_size = MTK_FOE_ENTRY_V1_SIZE,
+ 	.tx = {
+ 		DESC_SIZE(struct mtk_tx_dma),
+@@ -5867,6 +5937,7 @@
+ 	.ppe_num = 1,
+ 	.hash_offset = 2,
+ 	.has_accounting = true,
++	.num_tx_queues = 16,
+ 	.foe_entry_size = MTK_FOE_ENTRY_V1_SIZE,
+ 	.tx = {
+ 		DESC_SIZE(struct mtk_tx_dma),
+@@ -5895,6 +5966,7 @@
+ 	.offload_version = 1,
+ 	.ppe_num = 1,
+ 	.hash_offset = 2,
++	.num_tx_queues = 16,
+ 	.foe_entry_size = MTK_FOE_ENTRY_V1_SIZE,
+ 	.disable_pll_modes = true,
+ 	.tx = {
+@@ -5923,6 +5995,7 @@
+ 	.required_pctl = false,
+ 	.has_accounting = true,
+ 	.version = 1,
++	.num_tx_queues = 16,
+ 	.tx = {
+ 		DESC_SIZE(struct mtk_tx_dma),
+ 		.dma_max_len = MTK_TX_DMA_BUF_LEN,
+@@ -5952,6 +6025,7 @@
+ 	.ppe_num = 2,
+ 	.hash_offset = 4,
+ 	.has_accounting = true,
++	.num_tx_queues = 16,
+ 	.foe_entry_size = MTK_FOE_ENTRY_V2_SIZE,
+ 	.tx = {
+ 		DESC_SIZE(struct mtk_tx_dma_v2),
+@@ -5982,6 +6056,7 @@
+ 	.ppe_num = 2,
+ 	.hash_offset = 4,
+ 	.has_accounting = true,
++	.num_tx_queues = 16,
+ 	.foe_entry_size = MTK_FOE_ENTRY_V2_SIZE,
+ 	.tx = {
+ 		DESC_SIZE(struct mtk_tx_dma_v2),
+@@ -6042,6 +6117,7 @@
+ 	.ppe_num = 3,
+ 	.hash_offset = 4,
+ 	.has_accounting = true,
++	.num_tx_queues = 32,
+ 	.foe_entry_size = MTK_FOE_ENTRY_V3_SIZE,
+ 	.tx = {
+ 		DESC_SIZE(struct mtk_tx_dma_v2),
+--- a/drivers/net/ethernet/mediatek/mtk_eth_soc.h
++++ b/drivers/net/ethernet/mediatek/mtk_eth_soc.h
+@@ -26,7 +26,15 @@
+ #define MTK_MAX_DSA_PORTS	7
+ #define MTK_DSA_PORT_MASK	GENMASK(2, 0)
+ 
+-#define MTK_QDMA_NUM_QUEUES	16
++/*
++ * Upper bound on dp->index across all DSA switches we support attaching
++ * to an MT7988 / MT7986 / MT7622 / MT7621 conduit.  Sized to cover the
++ * 16-port MaxLinear MxL862xx with room to spare; increase when a larger
++ * switch needs per-port queue mapping.
++ */
++#define MTK_DSA_USER_PORT_MAX	32
++
++#define MTK_QTX_PER_PAGE	16
+ #define MTK_QDMA_PAGE_SIZE	2048
+ #define MTK_MAX_RX_LENGTH	1536
+ #define MTK_MAX_RX_LENGTH_2K	2048
+@@ -1290,6 +1298,7 @@
+ 	u8		hash_offset;
+ 	u8		version;
+ 	u8		ppe_num;
++	u16		num_tx_queues;
+ 	u16		foe_entry_size;
+ 	netdev_features_t hw_features;
+ 	bool		has_accounting;
+@@ -1456,6 +1465,8 @@
+ 	int				hwlro_ip_cnt;
+ 	unsigned int			syscfg0;
+ 	struct notifier_block		device_notifier;
++	u8				dsa_queue_base;
++	u8				dsa_port_rank[MTK_DSA_USER_PORT_MAX];
+ };
+ 
+ /* the struct describing the SoC. these are declared in the soc_xyz.c files */
+--- a/drivers/net/ethernet/mediatek/mtk_ppe.c
++++ b/drivers/net/ethernet/mediatek/mtk_ppe.c
+@@ -479,6 +479,7 @@
+ 			    unsigned int queue)
+ {
+ 	u32 *ib2 = mtk_foe_entry_ib2(eth, entry);
++	struct mtk_foe_mac_info *l2;
+ 
+ 	if (mtk_is_netsys_v2_or_greater(eth)) {
+ 		*ib2 &= ~MTK_FOE_IB2_QID_V2;
+@@ -490,6 +491,12 @@
+ 		*ib2 |= MTK_FOE_IB2_PSE_QOS;
+ 	}
+ 
++	if (mtk_is_netsys_v3_or_greater(eth)) {
++		l2 = mtk_foe_entry_l2(eth, entry);
++		l2->tport &= ~MTK_FOE_TPORT_IDX;
++		l2->tport |= FIELD_PREP(MTK_FOE_TPORT_IDX, 1);
++	}
++
+ 	return 0;
+ }
+ 
+--- a/drivers/net/ethernet/mediatek/mtk_ppe.h
++++ b/drivers/net/ethernet/mediatek/mtk_ppe.h
+@@ -96,6 +96,8 @@
+ #define MTK_FOE_WINFO_AMSDU_HF		BIT(23)
+ #define MTK_FOE_WINFO_AMSDU_EN		BIT(24)
+ 
++#define MTK_FOE_TPORT_IDX		GENMASK(3, 0)
++
+ enum {
+ 	MTK_FOE_STATE_INVALID,
+ 	MTK_FOE_STATE_UNBIND,
+@@ -124,6 +126,8 @@
+ 	/* netsys_v3 */
+ 	u32 w3info;
+ 	u32 amsdu;
++	u16 tinfo;
++	u16 tport;
+ };
+ 
+ /* software-only entry type */
+--- a/drivers/net/ethernet/mediatek/mtk_ppe_offload.c
++++ b/drivers/net/ethernet/mediatek/mtk_ppe_offload.c
+@@ -166,8 +166,20 @@
+ 	return 0;
+ }
+ 
++/*
++ * Inspect *dev as a DSA user netdev.  On success, substitute *dev with
++ * the conduit netdev, return the DSA user port's dp->index, and in
++ * *push_vid hand back either 0 (native MTK tag; the PPE injects its
++ * magic etype later via mtk_foe_entry_set_dsa()) or the outer 802.1Q
++ * VID the PPE should push on the egressing frame (taggers that use an
++ * outer VLAN-shaped tag).
++ *
++ * push_vid may be NULL for callers that only want the idev->conduit
++ * substitution (e.g. ingress-side ppe_idx selection, where no VID
++ * is to be pushed on the flow entry).
++ */
+ static int
+-mtk_flow_get_dsa_port(struct net_device **dev)
++mtk_flow_get_dsa_port(struct net_device **dev, u16 *push_vid)
+ {
+ #if IS_ENABLED(CONFIG_NET_DSA)
+ 	struct dsa_port *dp;
+@@ -176,8 +188,14 @@
+ 	if (IS_ERR(dp))
+ 		return -ENODEV;
+ 
+-	if (dp->cpu_dp->tag_ops->proto != DSA_TAG_PROTO_MTK)
++	switch (dp->cpu_dp->tag_ops->proto) {
++	case DSA_TAG_PROTO_MTK:
++		if (push_vid)
++			*push_vid = 0;
++		break;
++	default:
+ 		return -ENODEV;
++	}
+ 
+ 	*dev = dsa_port_to_conduit(dp);
+ 
+@@ -193,7 +211,9 @@
+ 			   int *wed_index)
+ {
+ 	struct mtk_wdma_info info = {};
++	struct mtk_mac *mac;
+ 	int pse_port, dsa_port, queue;
++	u16 push_vid = 0;
+ 
+ 	if (mtk_flow_get_wdma_info(dev, dest_mac, &info) == 0) {
+ 		mtk_foe_entry_set_wdma(eth, foe, info.wdma_idx, info.queue,
+@@ -219,7 +239,7 @@
+ 		goto out;
+ 	}
+ 
+-	dsa_port = mtk_flow_get_dsa_port(&dev);
++	dsa_port = mtk_flow_get_dsa_port(&dev, &push_vid);
+ 
+ 	if (dev == eth->netdev[0])
+ 		pse_port = PSE_GDM1_PORT;
+@@ -231,8 +251,15 @@
+ 		return -EOPNOTSUPP;
+ 
+ 	if (dsa_port >= 0) {
+-		mtk_foe_entry_set_dsa(eth, foe, dsa_port);
+-		queue = 3 + dsa_port;
++		if (push_vid)
++			mtk_foe_entry_set_vlan(eth, foe, push_vid);
++		else
++			mtk_foe_entry_set_dsa(eth, foe, dsa_port);
++	}
++
++	if (dsa_port >= 0 && dsa_port < MTK_DSA_USER_PORT_MAX) {
++		mac = netdev_priv(dev);
++		queue = mac->dsa_queue_base + mac->dsa_port_rank[dsa_port];
+ 	} else {
+ 		queue = pse_port - 1;
+ 	}
+@@ -280,7 +307,8 @@
+ 	int err = 0;
+ 	int i;
+ 
+-	if (rhashtable_lookup(&eth->flow_table, &f->cookie, mtk_flow_ht_params))
++	if (rhashtable_lookup_fast(&eth->flow_table, &f->cookie,
++				   mtk_flow_ht_params))
+ 		return -EEXIST;
+ 
+ 	if (flow_rule_match_key(rule, FLOW_DISSECTOR_KEY_META)) {
+@@ -289,6 +317,17 @@
+ 		flow_rule_match_meta(rule, &match);
+ 		if (mtk_is_netsys_v2_or_greater(eth)) {
+ 			idev = __dev_get_by_index(&init_net, match.key->ingress_ifindex);
++			/*
++			 * If idev is a DSA user netdev, substitute it with
++			 * its conduit so the valid-idev check below passes
++			 * and ppe_index picks up the conduit's PPE engine.
++			 * Without this, upstream flows from a DSA user port
++			 * (e.g. YT9224 lanN) install on ppe[0] while the
++			 * conduit's GDMA routes ingress through its own
++			 * ppe[mac->ppe_idx]; the lookup misses and the
++			 * flow never binds in HW.
++			 */
++			mtk_flow_get_dsa_port(&idev, NULL);
+ 			if (mtk_flow_is_valid_idev(eth, idev)) {
+ 				struct mtk_mac *mac = netdev_priv(idev);
+ 
+@@ -471,6 +510,14 @@
+ 			return err;
+ 	}
+ 
++	err = mtk_flow_set_output_device(eth, &foe, odev, data.eth.h_dest,
++					 &wed_index);
++	if (err)
++		return err;
++
++	if (wed_index >= 0 && (err = mtk_wed_flow_add(wed_index)) < 0)
++		return err;
++
+ 	if (offload_type == MTK_PPE_PKT_TYPE_BRIDGE)
+ 		foe.bridge.vlan = data.vlan_in;
+ 
+@@ -480,14 +527,6 @@
+ 	if (data.pppoe.num == 1)
+ 		mtk_foe_entry_set_pppoe(eth, &foe, data.pppoe.sid);
+ 
+-	err = mtk_flow_set_output_device(eth, &foe, odev, data.eth.h_dest,
+-					 &wed_index);
+-	if (err)
+-		return err;
+-
+-	if (wed_index >= 0 && (err = mtk_wed_flow_add(wed_index)) < 0)
+-		return err;
+-
+ 	entry = kzalloc(sizeof(*entry), GFP_KERNEL);
+ 	if (!entry)
+ 		return -ENOMEM;
+@@ -522,8 +561,8 @@
+ {
+ 	struct mtk_flow_entry *entry;
+ 
+-	entry = rhashtable_lookup(&eth->flow_table, &f->cookie,
+-				  mtk_flow_ht_params);
++	entry = rhashtable_lookup_fast(&eth->flow_table, &f->cookie,
++				       mtk_flow_ht_params);
+ 	if (!entry)
+ 		return -ENOENT;
+ 
+@@ -544,8 +583,8 @@
+ 	u64 packets, bytes;
+ 	int idle;
+ 
+-	entry = rhashtable_lookup(&eth->flow_table, &f->cookie,
+-				  mtk_flow_ht_params);
++	entry = rhashtable_lookup_fast(&eth->flow_table, &f->cookie,
++				       mtk_flow_ht_params);
+ 	if (!entry)
+ 		return -ENOENT;
+ 

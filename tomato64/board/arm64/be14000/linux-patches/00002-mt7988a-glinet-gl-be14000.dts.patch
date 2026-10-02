@@ -26,7 +26,7 @@ new file mode 100644
 index 000000000..2b35cc33c
 --- /dev/null
 +++ b/arch/arm64/boot/dts/mediatek/mt7988a-glinet-gl-be14000.dts
-@@ -0,0 +1,949 @@
+@@ -0,0 +1,950 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/*
 + * Copyright (C) 2021 MediaTek Inc.
@@ -873,6 +873,7 @@ index 000000000..2b35cc33c
 +		port@8 {
 +			reg = <8>;
 +			ethernet = <&gmac1>;
++			dsa-tag-protocol = "yt922x_4b";
 +			phy-mode = "usxgmii";
 +
 +				fixed-link {
