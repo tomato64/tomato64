@@ -574,7 +574,6 @@ bindUsbserialGeneric() {
 	# generic driver correctly. If usbserial is a module, reload it with
 	# the legacy vendor/product parameters.
 	grep -q '^usbserial ' /proc/modules 2>/dev/null && USBSERIAL_MODULE=1
-	modprobe -r option 2>/dev/null
 
 	if [ "$USBSERIAL_MODULE" -eq 1 ]; then
 		modprobe -r usbserial 2>/dev/null
@@ -610,14 +609,6 @@ searchDiag() {
 	case "$MTYPE" in
 		non-hilink|huawei-non-hilink|hw-ether)
 			isDiag # --> TTYS
-
-			# Prefer the dedicated modem serial driver before falling back to
-			# the generic usbserial driver.
-			if [ -z "$TTYS" ]; then
-				modprobe option 2>/dev/null
-				sleep 1
-				isDiag # --> TTYS
-			fi
 
 			if [ -z "$TTYS" ]; then
 				if [ -n "$VENDOR" ] && [ -n "$PRODUCT" ]; then
