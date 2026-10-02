@@ -446,8 +446,11 @@ static int api_wireless_iface(int phy, int iface, const char *ifname, void *user
 		j_str("bssid", mac);
 
 	proto[0] = '\0';
+	/* No signal: that one reports the upstream AP's, which only means
+	   something on a client interface, and this walks the APs. */
 	if (wlhelper_get_channel_stats(ifname, &channel, &mhz, &nbw, &noise,
-	                               &rate, &center, proto, sizeof(proto)) == 0) {
+	                               &rate, &center, proto, sizeof(proto),
+	                               NULL) == 0) {
 		j_num("channel", channel);
 		j_num("mhz", mhz);
 		j_num("width", nbw);
