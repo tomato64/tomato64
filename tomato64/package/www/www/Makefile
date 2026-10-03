@@ -812,6 +812,21 @@ else
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-WIFI-BEGIN/,/TOMATO64-WIFI-END/d"
 endif
 
+# Bridge offloading (bridger): only where the package is built (PLATFORM_HAS_BRIDGER).
+ifeq ($(PLATFORM_HAS_BRIDGER),y)
+else
+	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/TOMATO64-BRIDGER-BEGIN/,/TOMATO64-BRIDGER-END/d"
+endif
+
+# Wireless Ethernet Dispatch: only on MediaTek SoCs with the WED block and a WiFi
+# driver that uses it (PLATFORM_HAS_WED). The MT7987 (GL-MT3600BE) has a WED
+# block, but neither the kernel's mtk_wed nor mt76 supports it there yet, so it
+# is left out.
+ifeq ($(PLATFORM_HAS_WED),y)
+else
+	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/TOMATO64-WED-BEGIN/,/TOMATO64-WED-END/d"
+endif
+
 # Fans page: only on devices that have a controllable fan (PLATFORM_HAS_FAN).
 ifeq ($(PLATFORM_HAS_FAN),y)
 else
@@ -986,6 +1001,8 @@ endif
 		-e "/TOMATO64-WIFI-BEGIN/d"	-e "/TOMATO64-WIFI-END/d" \
 		-e "/TOMATO64-WLTEMP-BEGIN/d"	-e "/TOMATO64-WLTEMP-END/d" \
 		-e "/TOMATO64-FAN-BEGIN/d"	-e "/TOMATO64-FAN-END/d" \
+		-e "/TOMATO64-WED-BEGIN/d"		-e "/TOMATO64-WED-END/d" \
+		-e "/TOMATO64-BRIDGER-BEGIN/d"	-e "/TOMATO64-BRIDGER-END/d" \
 		-e "/TOMATO64-BE14000-NO-BEGIN/d"	-e "/TOMATO64-BE14000-NO-END/d" \
 		-e "/TOMATO64-BE14000-BEGIN/d"		-e "/TOMATO64-BE14000-END/d" \
 		-e "/BCM53XX-BEGIN/d"		-e "/BCM53XX-END/d" \

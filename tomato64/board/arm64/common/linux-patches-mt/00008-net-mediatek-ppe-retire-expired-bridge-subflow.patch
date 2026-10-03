@@ -1,0 +1,29 @@
+From: JiaY-shi <shi05275@163.com>
+Subject: [PATCH] net: mediatek: retire only the expired bridge subflow
+
+When a hardware subflow expires or its slot is reused, the bridge stats
+walk must remove that subflow, not the parent L2 flow. Clearing the parent
+removes it from the bridge lookup table and frees all its subflows,
+including the next node saved by the ongoing safe iteration.
+
+Clear cur after transferring its accounting to the parent. This retains
+the bridge rule and the remaining subflows until tc removes the rule.
+
+Signed-off-by: JiaY-shi <shi05275@163.com>
+
+From github.com/JiaY-shi/openwrt, branch flint4-support,
+target/linux/mediatek/patches-6.18/967-44-net-mediatek-ppe-retire-expired-bridge-subflow.patch.
+Same one-line change; only the hunk offset is regenerated for 6.12.94. The
+GL-BE14000 carries its own copy in board/arm64/be14000/linux-patches.
+---
+--- a/drivers/net/ethernet/mediatek/mtk_ppe.c
++++ b/drivers/net/ethernet/mediatek/mtk_ppe.c
+@@ -618,7 +618,7 @@
+ 		if (!mtk_flow_entry_update(ppe, cur, packets, bytes)) {
+ 			entry->prev_packets += cur->prev_packets;
+ 			entry->prev_bytes += cur->prev_bytes;
+-			__mtk_foe_entry_clear(ppe, entry, false);
++			__mtk_foe_entry_clear(ppe, cur, false);
+ 			continue;
+ 		}
+ 

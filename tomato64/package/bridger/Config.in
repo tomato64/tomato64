@@ -1,0 +1,17 @@
+config BR2_PACKAGE_BRIDGER
+	bool "bridger"
+	depends on BR2_TOOLCHAIN_HAS_SYNC_4 # libbpf
+	depends on BR2_USE_WCHAR # libbpf -> elfutils
+	depends on !BR2_STATIC_LIBS # libbpf -> elfutils
+	depends on BR2_TOOLCHAIN_HAS_THREADS # libbpf -> elfutils
+	select BR2_PACKAGE_LIBBPF
+	select BR2_PACKAGE_LIBUBOX
+	select BR2_PACKAGE_LIBNL_TINY
+	help
+	  Bridge forwarding accelerator. A daemon plus an eBPF tc
+	  classifier that takes established flows between members of
+	  a bridge out of the kernel bridge path, and installs them
+	  in hardware where the ethernet driver supports it (the
+	  MediaTek PPE, and WED for WiFi).
+
+	  https://github.com/nbd168/bridger

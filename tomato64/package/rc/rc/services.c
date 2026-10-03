@@ -2535,6 +2535,9 @@ void start_services(void)
 #ifdef TOMATO64_HAS_FAN
 	start_fan();
 #endif /* TOMATO64_HAS_FAN */
+#ifdef TOMATO64_HAS_BRIDGER
+	start_bridger();
+#endif /* TOMATO64_HAS_BRIDGER */
 #endif
 	if (once) {
 		once = 0;
@@ -2712,6 +2715,9 @@ void stop_services(void)
 #ifdef TOMATO64_HAS_FAN
 	stop_fan();
 #endif /* TOMATO64_HAS_FAN */
+#ifdef TOMATO64_HAS_BRIDGER
+	stop_bridger();
+#endif /* TOMATO64_HAS_BRIDGER */
 #endif
 }
 

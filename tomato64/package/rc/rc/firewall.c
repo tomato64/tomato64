@@ -2463,6 +2463,11 @@ int start_firewall(void)
 	/* The following run_*_firewall_script() scripts handle their own locking */
 	simple_unlock("firewall");
 
+#ifdef TOMATO64_HAS_BRIDGER
+	/* advanced-firewall.asp saves with firewall-restart; pick up bridger_enable */
+	start_bridger();
+#endif /* TOMATO64_HAS_BRIDGER */
+
 #ifdef TOMATO64
 	/* rules exist now, so saved quota usage can be pushed back into them */
 	start_quotas();

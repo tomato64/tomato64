@@ -322,6 +322,11 @@ extern void stop_cpufreq(void);
 extern void start_fan(void);
 extern void stop_fan(void);
 #endif /* TOMATO64_HAS_FAN */
+#ifdef TOMATO64_HAS_BRIDGER
+/* bridger.c */
+extern void start_bridger(void);
+extern void stop_bridger(void);
+#endif /* TOMATO64_HAS_BRIDGER */
 #endif
 #ifdef TCONFIG_ZEBRA
 extern void start_zebra(void);

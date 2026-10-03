@@ -1,0 +1,34 @@
+Subject: [PATCH] ubus: keep off the bridge device when built without ubus
+
+bridger's local-tx handling attaches the classifier to the bridge device
+itself, at clsact egress. That hook runs before the device's root qdisc, so
+a flow leaving the bridge towards a LAN client is redirected straight to the
+member port and never passes through the qdisc.
+
+Tomato64 shapes download traffic exactly there: the Bandwidth Limiter and
+the quota "limit speed" feature both put an HTB tree on br0..brN. Measured
+on a GL-BE14000 with a 10 Mbit tbf on br0: with local-tx active the shaper
+saw 0 packets and the traffic went out unshaped; with this change it counted
+every packet and held the rate at 10 Mbit.
+
+Upstream exposes this as the bridge_local_tx option, default on, but it can
+only be changed over ubus, and Tomato64 builds bridger without ubus (ubusd
+only runs while WiFi is up). So make the no-ubus build behave as
+bridge_local_tx=0: report the bridge device as blacklisted, which keeps the
+classifier off it. Bridge member ports are unaffected, so flows between LAN
+devices (including LAN <-> WiFi and the hardware path) work as before.
+---
+diff --git a/ubus.h b/ubus.h
+index 8c28b24..6a7d6cd 100644
+--- a/ubus.h
++++ b/ubus.h
+@@ -20,7 +20,8 @@ static inline void bridger_ubus_stop(void)
+ }
+ static inline bool bridger_ubus_dev_blacklisted(struct device *dev)
+ {
+-	return false;
++	/* bridge_local_tx = 0: leave the bridge device itself alone */
++	return dev->br != NULL;
+ }
+ static inline bool bridger_ubus_dev_name_blacklisted(struct device *dev)
+ {

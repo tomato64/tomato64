@@ -2010,6 +2010,7 @@ static const nvset_t nvset_list[] = {
 
 	{"flow_offloading",		V_RANGE(0, 2)			},
 	{"wed_offloading",		V_RANGE(0, 1)			},
+	{"bridger_enable",		V_01				},
 	{"packet_steering",		V_RANGE(0, 2)			},
 	{"steering_flows",		V_NONE				},
 	{"steering_flows_custom",	V_RANGE(0, 99999)		},

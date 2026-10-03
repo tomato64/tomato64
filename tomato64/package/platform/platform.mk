@@ -26,6 +26,14 @@ ifeq ($(BR2_PACKAGE_PLATFORM_HAS_FAN),y)
 export PLATFORM_HAS_FAN=y
 endif
 
+ifeq ($(BR2_PACKAGE_PLATFORM_HAS_BRIDGER),y)
+export PLATFORM_HAS_BRIDGER=y
+endif
+
+ifeq ($(BR2_PACKAGE_PLATFORM_HAS_WED),y)
+export PLATFORM_HAS_WED=y
+endif
+
 ifeq ($(BR2_PACKAGE_PLATFORM_MT6000),y)
 export PLATFORM_MT6000=y
 endif

@@ -2365,6 +2365,7 @@ struct nvram_tuple router_defaults[] = {
 	{ "ctf_disable",		"1"				},
 	{ "flow_offloading",		"0"				},
 	{ "wed_offloading",		"0"				},
+	{ "bridger_enable",		"0"				},	/* bridge forwarding accelerator (bridger): 0 = off, 1 = on */
 #if defined(TOMATO64_X86_64) || defined(TOMATO64_ARMSR)
 	{ "packet_steering",		"0"				},	/* x86_64 + armsr (VM): off, follows OpenWrt */
 #else

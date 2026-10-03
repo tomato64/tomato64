@@ -26,7 +26,7 @@
 //	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,fw_strict_input,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_quickleave,multicast_custom,lan_ifname,udpxy_enable,udpxy_lan,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole,tcp_clamp_disable"); %>
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,fw_strict_input,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_quickleave,multicast_custom,lan_ifname,udpxy_enable,udpxy_lan,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole,tcp_clamp_disable,flow_offloading,wed_offloading,packet_steering,steering_flows,steering_flows_custom"); %>
+//	<% nvram("block_wan,block_wan_limit,block_wan_limit_icmp,nf_loopback,fw_strict_input,ne_syncookies,DSCP_fix_enable,multicast_pass,multicast_lan,multicast_quickleave,multicast_custom,lan_ifname,udpxy_enable,udpxy_lan,udpxy_stats,udpxy_clients,udpxy_port,udpxy_wanface,ne_snat,emf_enable,force_igmpv2,wan_dhcp_pass,fw_blackhole,tcp_clamp_disable,flow_offloading,wed_offloading,bridger_enable,packet_steering,steering_flows,steering_flows_custom"); %>
 /* TOMATO64-END */
 
 var cprefix = 'advanced_firewall';
@@ -99,13 +99,21 @@ function verifyFields(focused, quiet) {
 	E('_f_udpxy_wanface').disabled = !enable_udpxy;
 
 /* TOMATO64-WIFI-BEGIN */
+/* TOMATO64-WED-BEGIN */
 	var hw_offload = (E('_flow_offloading').value == 2);
+/* TOMATO64-BRIDGER-BEGIN */
+	/* WED is also what puts bridger's LAN <-> WiFi flows in hardware, and it does not
+	 * depend on routed flow offloading, so either one is enough to make it useful.
+	 */
+	if (E('_bridger_enable').value == 1)
+		hw_offload = true;
+/* TOMATO64-BRIDGER-END */
 
-	E('_wed_offloading').readonly = !hw_offload;
+	/* always shown; grayed out and forced off unless one of them is on */
+	E('_wed_offloading').disabled = !hw_offload;
 	if (!hw_offload)
 		E('_wed_offloading').value = 0;
-
-	PR(E('_wed_offloading')).style.display = hw_offload ? '' : 'none';
+/* TOMATO64-WED-END */
 
 	var steering_on = E('_packet_steering').value != 0;
 	var steering_custom = E('_steering_flows').value == 'custom';
@@ -178,7 +186,11 @@ function save() {
 		return;
 	}
 /* BCM53XX-END */
-/* TOMATO64-WIFI-BEGIN */
+/* TOMATO64-WED-BEGIN */
+	/* a disabled field is left out of the submit, which would leave a stale 1 in
+	 * nvram while the page shows Disabled - so enable it for the submit
+	 */
+	fom.wed_offloading.disabled = 0;
 	if (fom.wed_offloading.value != nvram.wed_offloading) {
 		if (confirm("Your settings will be saved. A reboot is required for them to take effect. Reboot now? (Cancel: reboot later)")) {
 			fom._reboot.value = 1;
@@ -189,11 +201,13 @@ function save() {
 		}
 	}
 	else {
-/* TOMATO64-WIFI-END */
+/* TOMATO64-WED-END */
 	form.submit(fom, 1);
-/* TOMATO64-WIFI-BEGIN */
+/* TOMATO64-WED-BEGIN */
 	}
-/* TOMATO64-WIFI-END */
+	/* the submit has read the form by now; gray the field out again */
+	verifyFields(null, 1);
+/* TOMATO64-WED-END */
 }
 
 function init() {
@@ -280,8 +294,17 @@ for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'Flow offloading type', name: 'flow_offloading', type: 'select', options: [[0,'None'],[1,'Software flow offloading'],[2,'Hardware flow offloading']], value: fixInt(nvram.flow_offloading, 0, 2, 0) },
-			{ title: 'Wireless Ethernet Dispatch (WED)', name: 'wed_offloading', type: 'select', options: [[0,'Disabled'],[1,'Enabled']], value: fixInt(nvram.wed_offloading, 0, 1, 0), suffix: ' &nbsp;<small>requires Hardware flow offloading<\/small>' }
+			{ title: 'Flow offloading type', name: 'flow_offloading', type: 'select', options: [[0,'None'],[1,'Software flow offloading'],[2,'Hardware flow offloading']], value: fixInt(nvram.flow_offloading, 0, 2, 0) }
+/* TOMATO64-BRIDGER-BEGIN */
+			, { title: 'Bridge offloading (bridger)', name: 'bridger_enable', type: 'select', options: [[0,'Disabled'],[1,'Enabled']], value: fixInt(nvram.bridger_enable, 0, 1, 0), suffix: ' &nbsp;<small>accelerates traffic between devices on the same LAN bridge, including LAN to WiFi<\/small>' }
+/* TOMATO64-BRIDGER-END */
+/* TOMATO64-WED-BEGIN */
+			, { title: 'Wireless Ethernet Dispatch (WED)', name: 'wed_offloading', type: 'select', options: [[0,'Disabled'],[1,'Enabled']], value: fixInt(nvram.wed_offloading, 0, 1, 0), suffix: ' &nbsp;<small>requires Hardware flow offloading'
+/* TOMATO64-BRIDGER-BEGIN */
+				+ ' or Bridge offloading'
+/* TOMATO64-BRIDGER-END */
+				+ '<\/small>' }
+/* TOMATO64-WED-END */
 		]);
 	</script>
 </div>

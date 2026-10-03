@@ -76,6 +76,10 @@ ifeq ($(PLATFORM_HAS_FAN),y)
 ALL_CPPFLAGS += -DTOMATO64_HAS_FAN
 endif
 
+ifeq ($(PLATFORM_HAS_BRIDGER),y)
+ALL_CPPFLAGS += -DTOMATO64_HAS_BRIDGER
+endif
+
 ALL_CFLAGS = -fPIC
 ALL_CFLAGS += $(CFLAGS)
 
@@ -95,6 +99,7 @@ OBJS := rc.o init.o interface.o network.o wan.o services.o dhcp.o \
 
 OBJS += wifi.o
 OBJS += quotas.o
+OBJS += bridger.o
 
 # mtd.o buttons.o wnas.o bcmutils.o
 
