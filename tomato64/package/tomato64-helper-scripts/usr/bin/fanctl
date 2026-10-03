@@ -38,6 +38,7 @@ THERMAL=/sys/class/thermal
 HWMON=/sys/class/hwmon
 DEFAULTS=/tmp/fanctl.defaults
 MANUAL=/tmp/fanctl.manual
+ENGAGED=/tmp/fanctl.engaged
 
 # Read a sysfs attribute, printing '-' when it is missing or unreadable.
 rd() {
@@ -308,6 +309,7 @@ pwm_for() {
 # Remember what the firmware had every pwm channel doing at boot, before
 # anything here writes to it. Two consumers: leaving manual mode restores these
 # values, and assert_curve() reads the automatic mode number back out of it.
+# Device-tree fans are put back by cooling level instead; see mark_engaged().
 # Taken once per boot and kept for the life of the boot (/tmp is tmpfs), so it
 # always describes the firmware's own state rather than something we set.
 #
@@ -333,12 +335,6 @@ save_manual() {
 				[ -w "$_h/pwm$_i" ] && echo "${_h##*/} $_i $(rd $_h/pwm${_i}_enable) $(rd $_h/pwm$_i)"
 				_i=$((_i + 1))
 			done
-		done
-
-		# device-tree fans are put back by cooling level, not duty
-		for _c in $(fan_cdevs); do
-			[ -w "$THERMAL/cooling_device$_c/cur_state" ] && \
-				echo "cdev$_c 0 - $(rd $THERMAL/cooling_device$_c/cur_state)"
 		done
 	} > "$MANUAL.new"
 
@@ -366,13 +362,48 @@ restore_channel() {
 	return 0
 }
 
+# Note where every device-tree fan stood at the moment manual mode took it
+# over. That is the state the thermal core still believes in when the governor
+# is handed back, so it is the one to restore - not the boot-time value in
+# $MANUAL, which is only right if the temperature never moved since boot. The
+# file doubles as the "manual mode is engaged" marker: it exists from the first
+# manual pass until restore_manual() has undone it.
+mark_engaged() {
+	[ -f "$ENGAGED" ] && return 0
+
+	{
+		echo "engaged 0 - -"
+		for _c in $(fan_cdevs); do
+			[ -w "$THERMAL/cooling_device$_c/cur_state" ] && \
+				echo "cdev$_c 0 - $(rd $THERMAL/cooling_device$_c/cur_state)"
+		done
+	} > "$ENGAGED"
+
+	return 0
+}
+
+# Undo manual mode. A no-op unless manual mode was actually engaged: with the
+# governor in charge all along there is nothing to put back, and writing the
+# boot-time snapshot regardless used to switch a running fan off - the core
+# still held its old target, saw nothing to change, and left the fan stopped
+# until the next trip was crossed.
 restore_manual() {
-	[ -f "$MANUAL" ] || return 0
+	[ -f "$ENGAGED" ] || return 0
+
+	if [ -f "$MANUAL" ]; then
+		while read -r _h _i _en _pw; do
+			[ -n "$_pw" ] || continue
+			case "$_h" in cdev[0-9]*) continue ;; esac
+			restore_one "$_h" "$_i" "$_en" "$_pw"
+		done < "$MANUAL"
+	fi
 
 	while read -r _h _i _en _pw; do
-		[ -n "$_pw" ] || continue
+		case "$_h" in cdev[0-9]*) ;; *) continue ;; esac
 		restore_one "$_h" "$_i" "$_en" "$_pw"
-	done < "$MANUAL"
+	done < "$ENGAGED"
+
+	rm -f "$ENGAGED"
 }
 
 restore_one() {
@@ -583,6 +614,7 @@ apply() {
 
 	if [ "$_mode" = "1" ]; then
 		save_manual
+		mark_engaged
 
 		# A governor drives every cooling device bound to its zone, so the zone
 		# can only be released when no channel is left on automatic - there is
