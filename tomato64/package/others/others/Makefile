@@ -1,5 +1,7 @@
 INSTALLDIR=$(TARGET_DIR)
 
+unexport GIT_DIR
+
 # Seven-character commit ID embedded in MOTD during image creation.
 # It may be overridden by the build environment, e.g. GIT_HASH=1234567.
 GIT_HASH ?= $(shell hash=$$(git -C "$(CURDIR)" rev-parse --verify HEAD 2>/dev/null); \

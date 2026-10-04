@@ -49,7 +49,7 @@ do
 
 				if [ ! -z "${phy}" ];
 				then
-					band="$(NG wifi_${phy}_band)"
+					band="$(NG wifi_phy${i}_band)"
 
 					if [ "$band" == "2g" ];
 					then
