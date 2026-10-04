@@ -278,14 +278,74 @@ static void api_system(void)
 	j_close();
 }
 
+static int api_netdev_sysfs(const char *device, const char *attr, char *out, size_t len)
+{
+	char path[128];
+	FILE *f;
+	size_t n;
+
+	snprintf(path, sizeof(path), "/sys/class/net/%s/%s", device, attr);
+
+	if ((f = fopen(path, "r")) == NULL)
+		return 0;
+
+	if (fgets(out, len, f) == NULL) {
+		fclose(f);
+		return 0;
+	}
+
+	fclose(f);
+
+	n = strlen(out);
+
+	while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r' || out[n - 1] == ' '))
+		out[--n] = '\0';
+
+	return (n > 0);
+}
+
+/*
+ * Every LAN bridge, not only the first. Tomato64 carries up to BRIDGE_COUNT of
+ * them - br0 under the plain lan_ keys, the rest under lan1_ and up - and the
+ * web interface lists them all, so a panel that showed one was showing a
+ * fraction of the router.
+ *
+ * "up" is administrative, not carrier: a bridge with no member port yet reads
+ * "unknown" in sysfs, but it holds an address and the router answers on it,
+ * which is what someone reading the list wants to know.
+ */
 static void api_lan(void)
 {
-	j_open("lan");
-	j_nv("ifname", "lan_ifname");
-	j_nv("ipaddr", "lan_ipaddr");
-	j_nv("netmask", "lan_netmask");
-	j_list("ports", nvram_safe_get("lan_ifnames"));
-	j_close();
+	char key[32], state[32];
+	const char *ifname;
+	unsigned int i;
+
+	j_arr("lan");
+
+	for (i = 0; i < BRIDGE_COUNT; i++) {
+		get_bridge_nvram_key(i, "ifname", key, sizeof(key));
+		ifname = nvram_safe_get(key);
+
+		if (*ifname == '\0')
+			continue;
+
+		j_elem();
+		j_num("index", i);
+		j_str("ifname", ifname);
+
+		get_bridge_nvram_key(i, "ipaddr", key, sizeof(key));
+		j_nv("ipaddr", key);
+		get_bridge_nvram_key(i, "netmask", key, sizeof(key));
+		j_nv("netmask", key);
+		get_bridge_nvram_key(i, "ifnames", key, sizeof(key));
+		j_list("ports", nvram_safe_get(key));
+
+		j_bool("up", api_netdev_sysfs(ifname, "operstate", state, sizeof(state)) &&
+		             strcmp(state, "down") != 0);
+		j_elem_end();
+	}
+
+	j_arr_end();
 }
 
 /*
@@ -487,31 +547,6 @@ static int api_port_index(const char *device)
 	return *p ? atoi(p) : -1;
 }
 
-static int api_port_sysfs(const char *device, const char *attr, char *out, size_t len)
-{
-	char path[128];
-	FILE *f;
-	size_t n;
-
-	snprintf(path, sizeof(path), "/sys/class/net/%s/%s", device, attr);
-
-	if ((f = fopen(path, "r")) == NULL)
-		return 0;
-
-	if (fgets(out, len, f) == NULL) {
-		fclose(f);
-		return 0;
-	}
-
-	fclose(f);
-
-	n = strlen(out);
-
-	while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r' || out[n - 1] == ' '))
-		out[--n] = '\0';
-
-	return (n > 0);
-}
 
 /*
  * The chassis ports: the WAN and the LAN bridge's members, in ethN order,
@@ -527,8 +562,8 @@ static void api_ports(void)
 {
 	char devices[16][IFNAMSIZ];
 	char wan[IFNAMSIZ], buf[64], key[16];
-	const char *lan;
 	char lanbuf[256], *tok, *save;
+	unsigned int bridge;
 	int count = 0, lanports = 0, i, j;
 
 	strlcpy(wan, get_wanface("wan"), sizeof(wan));
@@ -536,20 +571,27 @@ static void api_ports(void)
 	if (wan[0] != '\0')
 		strlcpy(devices[count++], wan, IFNAMSIZ);
 
-	lan = nvram_safe_get("lan_ifnames");
-	strlcpy(lanbuf, lan, sizeof(lanbuf));
+	/* Across every bridge: a socket assigned to br1 is still a socket on the
+	   front of the case, and listing only br0's would lose it. */
+	for (bridge = 0; bridge < BRIDGE_COUNT; bridge++) {
+		char key[32];
 
-	for (tok = strtok_r(lanbuf, " ", &save); tok != NULL && count < (int)(sizeof(devices) / IFNAMSIZ);
-	     tok = strtok_r(NULL, " ", &save)) {
-		if (strncmp(tok, "eth", 3) != 0)
-			continue;
+		get_bridge_nvram_key(bridge, "ifnames", key, sizeof(key));
+		strlcpy(lanbuf, nvram_safe_get(key), sizeof(lanbuf));
 
-		for (i = 0; i < count; i++)
-			if (strcmp(devices[i], tok) == 0)
-				break;
+		for (tok = strtok_r(lanbuf, " ", &save);
+		     tok != NULL && count < (int)(sizeof(devices) / IFNAMSIZ);
+		     tok = strtok_r(NULL, " ", &save)) {
+			if (strncmp(tok, "eth", 3) != 0)
+				continue;
 
-		if (i == count)
-			strlcpy(devices[count++], tok, IFNAMSIZ);
+			for (i = 0; i < count; i++)
+				if (strcmp(devices[i], tok) == 0)
+					break;
+
+			if (i == count)
+				strlcpy(devices[count++], tok, IFNAMSIZ);
+		}
 	}
 
 	/* ethN order, so the list reads across the chassis. */
@@ -575,7 +617,7 @@ static void api_ports(void)
 
 		/* Lowercased rather than strcasestr(), which needs _GNU_SOURCE
 		   and is not defined for this build. */
-		if (api_port_sysfs(device, "of_node/label", buf, sizeof(buf))) {
+		if (api_netdev_sysfs(device, "of_node/label", buf, sizeof(buf))) {
 			char *c;
 
 			for (c = buf; *c; c++)
@@ -601,14 +643,14 @@ static void api_ports(void)
 		j_num("port", num);
 		j_str("name", name);
 		j_str("role", is_wan ? "wan" : (is_sfp ? "sfp" : "lan"));
-		j_bool("up", api_port_sysfs(device, "carrier", buf, sizeof(buf)) && buf[0] == '1');
+		j_bool("up", api_netdev_sysfs(device, "carrier", buf, sizeof(buf)) && buf[0] == '1');
 
-		if (api_port_sysfs(device, "speed", buf, sizeof(buf)) && atoi(buf) > 0)
+		if (api_netdev_sysfs(device, "speed", buf, sizeof(buf)) && atoi(buf) > 0)
 			j_num("speed", atoi(buf));
 		else
 			j_null("speed");
 
-		if (api_port_sysfs(device, "duplex", buf, sizeof(buf)))
+		if (api_netdev_sysfs(device, "duplex", buf, sizeof(buf)))
 			j_str("duplex", buf);
 		else
 			j_null("duplex");
