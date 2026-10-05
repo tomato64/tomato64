@@ -71,6 +71,14 @@ while IFS='|' read -r lphy phy_key ridx phy_bands path; do
 	# web UI must query iwinfo against this name, not phy<logical-index>.
 	echo "'${device}_phyname': '${phy_key}',"
 
+	# mt76 radios honour the mt76 vendor_vht_2g module parameter (2.4 GHz VHT)
+	drv=$(readlink "/sys/class/ieee80211/${phy_key}/device/driver/module" 2>/dev/null)
+	case "${drv##*/}" in
+		mt7*)
+			echo "'${device}_mt76': '1',"
+		;;
+	esac
+
 	json_select wlan
 	json_select "${phy_key}"
 	json_select info

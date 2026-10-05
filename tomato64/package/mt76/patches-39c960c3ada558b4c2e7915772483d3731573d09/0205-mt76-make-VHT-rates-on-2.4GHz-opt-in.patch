@@ -1,0 +1,62 @@
+From: lancethepants <lancethepants@gmail.com>
+Subject: [PATCH] mt76: make VHT rates on 2.4GHz opt-in
+
+Gate the vendor 256-QAM / VHT-on-2.4GHz support behind a module
+parameter so it can be switched from the Tomato64 web UI. With the
+parameter off, the 2.4GHz band is registered exactly as before:
+no VHT capabilities and vendor_qam256_supported cleared, so mac80211
+does not attempt VHT in STA mode either.
+
+  modprobe mt76 vendor_vht_2g=1
+
+---
+diff --git a/mac80211.c b/mac80211.c
+index 60fae5d..0260a7d 100644
+--- a/mac80211.c
++++ b/mac80211.c
+@@ -6,6 +6,20 @@
+ #include <linux/of.h>
+ #include "mt76.h"
+ 
++static bool vendor_vht_2g;
++module_param(vendor_vht_2g, bool, 0444);
++MODULE_PARM_DESC(vendor_vht_2g,
++		 "Allow non-standard VHT (256-QAM) rates on 2.4 GHz (default: off)");
++
++/* drivers flag vendor_qam256_supported on capable chips; the module
++ * parameter decides whether it is actually used
++ */
++static bool mt76_vht_2g(struct mt76_phy *phy)
++{
++	return vendor_vht_2g &&
++	       phy->sband_2g.sband.vht_cap.vendor_qam256_supported;
++}
++
+ #define CHAN2G(_idx, _freq) {			\
+ 	.band = NL80211_BAND_2GHZ,		\
+ 	.center_freq = (_freq),			\
+@@ -293,7 +307,8 @@ static void mt76_init_stream_cap(struct mt76_phy *phy,
+ void mt76_set_stream_caps(struct mt76_phy *phy, bool vht)
+ {
+ 	if (phy->cap.has_2ghz)
+-		mt76_init_stream_cap(phy, &phy->sband_2g.sband, vht);
++		mt76_init_stream_cap(phy, &phy->sband_2g.sband,
++				     vht && mt76_vht_2g(phy));
+ 	if (phy->cap.has_5ghz)
+ 		mt76_init_stream_cap(phy, &phy->sband_5g.sband, vht);
+ 	if (phy->cap.has_6ghz)
+@@ -364,7 +379,13 @@ mt76_init_sband_2g(struct mt76_phy *phy, struct ieee80211_rate *rates,
+ {
+ 	phy->hw->wiphy->bands[NL80211_BAND_2GHZ] = &phy->sband_2g.sband;
+ 
+-	vht = vht && phy->sband_2g.sband.vht_cap.vendor_qam256_supported;
++	vht = vht && mt76_vht_2g(phy);
++
++	/* mac80211 keys STA-mode VHT off this flag even without
++	 * vht_supported, so clear it when the feature is off
++	 */
++	if (!vht)
++		phy->sband_2g.sband.vht_cap.vendor_qam256_supported = false;
+ 
+ 	return mt76_init_sband(phy, &phy->sband_2g, mt76_channels_2ghz,
+ 			       ARRAY_SIZE(mt76_channels_2ghz), rates,

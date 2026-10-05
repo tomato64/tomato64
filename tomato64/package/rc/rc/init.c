@@ -10888,6 +10888,15 @@ static void sysinit(void)
 	eval("mount", "-a");
 #endif /* TOMATO64_X86_64 */
 
+#ifdef TOMATO64_WIFI
+	/* mt76 reads vendor_vht_2g once, when the radios register, so load the
+	 * core module with it before set_devs_* modprobes any mt76 driver.
+	 * Fails silently on targets without mt76.
+	 */
+	if (nvram_get_int("wifi_vht_2g"))
+		eval("modprobe", "-q", "mt76", "vendor_vht_2g=1");
+#endif /* TOMATO64_WIFI */
+
 #ifdef TOMATO64_MT6000
 	eval("set_devs_mt6000");
 #endif /* TOMATO64_MT6000 */

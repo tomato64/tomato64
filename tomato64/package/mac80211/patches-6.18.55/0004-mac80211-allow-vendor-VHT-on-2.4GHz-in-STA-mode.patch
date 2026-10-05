@@ -1,0 +1,25 @@
+From: lancethepants <lancethepants@gmail.com>
+Subject: [PATCH] mac80211: allow vendor VHT on 2.4GHz in STA mode
+
+0003 (vendor QAM-256 on 2.4GHz) predates the 6.9 conn-mode rework.
+ieee80211_determine_ap_chan() now marks VHT unusable on 2.4GHz
+unconditionally, so a client with HE disabled (or an HE-less AP)
+dropped to HT even when both sides support vendor 256-QAM.
+
+Only do that when the band lacks vendor_qam256_supported. The AP's VHT
+operation on 2.4GHz uses the HT channel width, which
+ieee80211_chandef_vht_oper() accepts as is.
+
+---
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -282,7 +282,8 @@
+ 			return IEEE80211_CONN_MODE_HT;
+ 		}
+ 		no_vht = true;
+-	} else if (sband->band == NL80211_BAND_2GHZ) {
++	} else if (sband->band == NL80211_BAND_2GHZ &&
++		   !sband->vht_cap.vendor_qam256_supported) {
+ 		no_vht = true;
+ 	} else if (!ieee80211_chandef_vht_oper(&sdata->local->hw,
+ 					       vht_cap_info,

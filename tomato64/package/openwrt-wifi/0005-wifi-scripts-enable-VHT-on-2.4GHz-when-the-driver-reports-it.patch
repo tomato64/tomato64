@@ -1,0 +1,81 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Mon, 10 Nov 2026 19:30:00 -0700
+Subject: [PATCH] wifi-scripts: enable VHT on 2.4GHz when the driver reports it
+
+hostapd.uc only writes ieee80211ac/vht_capab for hw_mode a, so on
+2.4GHz hostapd never sends VHT elements or accepts a station's VHT
+capabilities, even when the driver registers VHT on the band (mt76
+vendor_vht_2g=1, non-standard 256-QAM).
+
+Enable it on 2.4GHz when the band reports VHT caps. Keep the HT channel
+layout there: vht_oper_chwidth/seg0 stay at their defaults (use HT).
+
+Also set vendor_vht=1 on every BSS of such a radio. Broadcom-based
+clients (Pixel 7) only signal 2.4GHz VHT through the vendor VHT IE;
+without it hostapd ignores their VHT capabilities.
+
+---
+diff --git a/package/network/config/wifi-scripts/files-ucode/usr/share/ucode/wifi/hostapd.uc b/package/network/config/wifi-scripts/files-ucode/usr/share/ucode/wifi/hostapd.uc
+index 2742552..155fcd4 100644
+--- a/package/network/config/wifi-scripts/files-ucode/usr/share/ucode/wifi/hostapd.uc
++++ b/package/network/config/wifi-scripts/files-ucode/usr/share/ucode/wifi/hostapd.uc
+@@ -313,14 +313,20 @@ function device_htmode_append(config) {
+ 		append_vars(config, [ 'op_class' ]);
+ 	}
+ 
+-	if (config.ieee80211ac && config.hw_mode == 'a') {
++	/* 2.4 GHz VHT (vendor 256-QAM): the kernel only reports VHT caps on
++	 * this band when the driver enabled it (mt76 vendor_vht_2g=1)
++	 */
++	let vht_2g = config.band == '2g' && phy_capabilities.vht_capa;
++
++	if (config.ieee80211ac && (config.hw_mode == 'a' || vht_2g)) {
+ 		/* VHT capab */
+ 		if (config.vht_oper_chwidth < 2) {
+ 			config.vht160 = 0;
+ 			config.short_gi_160 = 0;
+ 		}
+ 
+-		set_default(config, 'tx_queue_data2_burst', '2.0');
++		if (config.hw_mode == 'a')
++			set_default(config, 'tx_queue_data2_burst', '2.0');
+ 
+ 		let vht_capab = phy_capabilities.vht_capa;
+ 		
+@@ -384,10 +390,18 @@ function device_htmode_append(config) {
+ 		if (vht_link_adapt >= 0x8000000 && config.vht_link_adapt > 2)
+ 			config.vht_capab += '[VHT-LINK-ADAPT-2]';
+ 
+-		append_vars(config, [
+-			'ieee80211ac', 'vht_oper_chwidth', 'vht_oper_centr_freq_seg0_idx',
+-			'vht_capab'
+-		]);
++		/* 2.4 GHz keeps the HT channel layout: leave vht_oper_* at their
++		 * defaults (use HT), the seg0 computed above is for 5 GHz
++		 */
++		if (vht_2g) {
++			append_vars(config, [ 'ieee80211ac', 'vht_capab' ]);
++			/* per-BSS vendor VHT IE, see setup_interface() */
++			config.vendor_vht_2g = true;
++		} else
++			append_vars(config, [
++				'ieee80211ac', 'vht_oper_chwidth', 'vht_oper_centr_freq_seg0_idx',
++				'vht_capab'
++			]);
+ 	}
+ 
+ 	/* 802.11ax */
+@@ -555,6 +569,12 @@ function setup_interface(interface, data, config, vlans, stas, phy_features, fix
+ 
+ 	config.idx = iface_idx++;
+ 	ap.generate(interface, data, config, vlans, stas, phy_features);
++
++	/* Broadcom-based clients (e.g. Pixel) only use 2.4 GHz VHT through
++	 * the vendor VHT IE; standard VHT clients are unaffected
++	 */
++	if (data.config.vendor_vht_2g)
++		append('vendor_vht', 1);
+ }
+ 
+ export function setup(data) {

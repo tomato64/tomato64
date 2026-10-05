@@ -2372,6 +2372,7 @@ struct nvram_tuple router_defaults[] = {
 #endif /* TOMATO64_BE14000 */
 	WIFI_DEF_PHY_IFACES(2)
 #endif
+	{"wifi_vht_2g",			"0"			},	/* mt76: non-standard VHT (256-QAM) rates on 2.4 GHz; module param, needs reboot */
 #endif /* TOMATO64_WIFI */
 
 	{ "ctf_disable",		"1"				},

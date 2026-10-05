@@ -1,0 +1,37 @@
+From: lancethepants <lancethepants@gmail.com>
+Subject: [PATCH] mt76: connac: set VHT phy mode on 2.4GHz
+
+With vendor 256-QAM (0204/0205) a 2.4GHz station can be VHT, and the
+rate control TLV then carries MODE_VHT and a VHT MCS set, but the phy
+mode never included AC on 2.4GHz. On mt7986 the firmware answered the
+mismatch by sending to the station at 6 Mbit/s OFDM.
+
+Set PHY_MODE_AC / PHY_TYPE_BIT_VHT on 2.4GHz when VHT is supported.
+Without vendor_vht_2g nothing on 2.4GHz has vht_supported, so this is a
+no-op there.
+
+---
+--- a/mt76_connac_mcu.c
++++ b/mt76_connac_mcu.c
+@@ -820,6 +820,10 @@
+ 		if (ht_cap->ht_supported)
+ 			mode |= PHY_TYPE_BIT_HT;
+ 
++		/* vendor 256-QAM: VHT on 2.4 GHz */
++		if (vht_cap->vht_supported)
++			mode |= PHY_TYPE_BIT_VHT;
++
+ 		if (he_cap && he_cap->has_he)
+ 			mode |= PHY_TYPE_BIT_HE;
+ 
+@@ -1353,6 +1357,10 @@
+ 		if (ht_cap->ht_supported)
+ 			mode |= PHY_MODE_GN;
+ 
++		/* vendor 256-QAM: VHT on 2.4 GHz */
++		if (vht_cap->vht_supported)
++			mode |= PHY_MODE_AC;
++
+ 		if (he_cap && he_cap->has_he)
+ 			mode |= PHY_MODE_AX_24G;
+ 	} else if (band == NL80211_BAND_5GHZ) {

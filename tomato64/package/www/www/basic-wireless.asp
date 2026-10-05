@@ -18,7 +18,7 @@
 
 <script>
 
-//	<% nvram("wifi_sta_list,wan_sta,wifi,lan_ifname,t_model_name,os_version"); %>
+//	<% nvram("wifi_sta_list,wan_sta,wifi,wifi_vht_2g,lan_ifname,t_model_name,os_version"); %>
 //	<% wireless(); %>
 
 var cprefix = 'basic_wireless';
@@ -500,6 +500,22 @@ function verifyFields(focused, quiet) {
 			PR(b).style.display = '';
 		}
 
+		// 2.4 GHz VHT: mt76 radios only, and hostapd only sends VHT IEs in AX/BE mode
+		b = E('_f_wifi_'+t+'_vht2g');
+		if ((wireless['phy'+i+'_mt76'] == 1) && (E('_wifi_'+t+'_band').value == '2g') &&
+		    ((E('_wifi_'+t+'_mode').value == 'ax') || (E('_wifi_'+t+'_mode').value == 'be'))) {
+			b.disabled = 0;
+			PR(b).style.display = '';
+		} else {
+			b.disabled = 1;
+			PR(b).style.display = 'none';
+		}
+		/* one module-wide switch: keep every radio's copy in step */
+		if (focused && (focused.id == '_f_wifi_'+t+'_vht2g')) {
+			for (var k = 0; k < devices.length; ++k)
+				E('_f_wifi_'+devices[k][0]+'_vht2g').checked = focused.checked;
+		}
+
 		// hide width when enabling legacy mode for 2G devices
 		b = E('_wifi_'+t+'_width');
 		if ((E('_wifi_'+t+'_band').value == '2g') && (E('_wifi_'+t+'_mode').value == 'legacy')) {
@@ -856,6 +872,14 @@ function save(nomsg) {
 	if (!nomsg) show(); /* update '_service' field first */
 	var fom = E('t_fom');
 	var sta_list = "";
+	/* wifi_vht_2g: shown per 2.4 GHz radio but global; untouched if no radio shows it */
+	var vht2g = (nvram['wifi_vht_2g'] == 1) ? 1 : 0;
+	for (var i = 0; i < devices.length; i++) {
+		var c = E('_f_wifi_'+devices[i][0]+'_vht2g');
+		if (!c.disabled)
+			vht2g = c.checked ? 1 : 0;
+	}
+	E('wifi_vht_2g').value = vht2g;
 	for (var i = 0; i < devices.length; i++) {
 		t = devices[i][0];
 		E('wifi_'+t+'_brates').value = E('_f_wifi_'+t+'_brates').checked ? 1 : "";
@@ -946,7 +970,13 @@ function save(nomsg) {
 	} else {
 		fom._service.value = 'wifi-reload';
 	}
-	form.submit(fom, 1);
+	if (vht2g != ((nvram['wifi_vht_2g'] == 1) ? 1 : 0) &&
+	    confirm("Your settings will be saved. A reboot is required for the 256-QAM (VHT) setting to take effect. Reboot now? (Cancel: reboot later)")) {
+		fom._reboot.value = 1;
+		form.submit(fom, 0);
+	}
+	else
+		form.submit(fom, 1);
 	changed = 0;
 }
 
@@ -1126,6 +1156,8 @@ for (i = 0; i < devices.length; ++i) {
 <input type="hidden" name="_nextpage" value="basic-wireless.asp">
 <input type="hidden" name="_service" value="">
 <input type="hidden" name="_nofootermsg">
+<input type="hidden" name="_reboot" value="0">
+<input type="hidden" name="wifi_vht_2g" id="wifi_vht_2g">
 <input type="hidden" name="wifi_sta_list" id="wifi_sta_list">
 <input type="hidden" name="wan_sta" id="wan_sta">
 <input type="hidden" name="wan2_sta" id="wan2_sta">
@@ -1180,6 +1212,8 @@ for (i = 0; i < devices.length; ++i) {
 		{ title: 'Width', name: 'wifi_'+t+'_width', type: 'select',
 			value: nvram['wifi_'+t+'_width'], options: [], prefix: '<span id="__wifi_'+t+'_width">', suffix: '<\/span>'},
 		{ title: 'Allow legacy 802.11b rates', name: 'f_wifi_'+t+'_brates', type: 'checkbox', value: nvram['wifi_'+t+'_brates'] == 1 },
+		{ title: 'Allow 256-QAM (VHT) rates', name: 'f_wifi_'+t+'_vht2g', type: 'checkbox', value: nvram['wifi_vht_2g'] == 1,
+			suffix: ' &nbsp;<small>non-standard, AX/BE mode only; applies to all 2.4 GHz radios; reboot required (experimental)<\/small>' },
 		{ title: 'Maximum transmit power', name: 'wifi_'+t+'_power', type: 'select',
 			value: nvram['wifi_'+t+'_power'], options: [], prefix: '<span id="__wifi_'+t+'_power">', suffix: '<\/span>' },
 		{ title: 'Country code', name: 'wifi_'+t+'_country', type: 'select',
@@ -1394,6 +1428,7 @@ for (var i = 0; i < devices.length; i++) {
 			<li><b>Channel</b> - Specifies the wireless channel. “auto” defaults to the lowest available channel.</li>
 			<li><b>Width</b> - The width is the range of frequencies i.e. how broad the signal is for transferring data.</li>
 			<li><b>Allow legacy 802.11b rates</b> - Enable compatibility for very old devices running up to 11 Mbps. Can reduce network efficiency and lower throughput for all devices.</li>
+			<li><b>Allow 256-QAM (VHT) rates</b> - MediaTek (mt76) 2.4 GHz radios in AX/BE mode only. Offers non-standard 802.11ac rates (256-QAM, MCS 8/9) to Wi-Fi 5 clients that support them on 2.4 GHz. Width stays at 20/40 MHz. Wi-Fi 6/7 clients are unaffected. Some older clients may misbehave; disable it if 2.4 GHz devices have trouble connecting. Applies to all 2.4 GHz radios and takes effect after a reboot. (Experimental)</li>
 			<li><b>Maximum transmit power</b> - The highest radio signal strength the Wi-Fi interface can use to transmit.</li>
 			<li><b>Country code</b> - Specifies the Country Code/Regulatory Domain (e.g. US, EU) for the Wi-Fi radio. Affects available channels and transmit powers to comply with local regulations.</li>
 		</ul>

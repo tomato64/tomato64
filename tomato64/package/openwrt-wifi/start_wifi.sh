@@ -480,7 +480,7 @@ do
 		NG wifi_phy${i}iface${j}_custom | while IFS= read -r line; do
 			case "$line" in
 				''|'#'*) ;;
-				'hostapd:'*) uci add_list "wireless.phy${i}iface${j}.hostapd_options=${line#hostapd:}" ;;
+				'hostapd:'*) uci add_list "wireless.phy${i}iface${j}.hostapd_bss_options=${line#hostapd:}" ;;
 				'wpa:'*) uci add_list "wireless.phy${i}iface${j}.wpa_supplicant_options=${line#wpa:}" ;;
 				*) uci set "wireless.phy${i}iface${j}.${line}" ;;
 			esac

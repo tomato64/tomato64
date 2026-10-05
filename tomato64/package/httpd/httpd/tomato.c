@@ -1987,6 +1987,7 @@ static const nvset_t nvset_list[] = {
 	{"wifi_sta_list",		V_NONE				},	/* Wireless Station Mode */
 	{"wifi_phy_count",		V_RANGE(0, 10)			},	/* Number of WiFi PHYs detected (set by wlconfig) */
 	{"wifi_phy_count_expected",	V_RANGE(0, 10)			},	/* Expected WiFi PHYs for this device (constant) */
+	{"wifi_vht_2g",			V_01				},	/* mt76: VHT (256-QAM) rates on 2.4 GHz, needs reboot */
 #ifdef TOMATO64_BE14000
 	{"panel_pages",			V_LENGTH(0, 256)		},	/* Front panel: page names, in swipe order */
 	{"panel_auto_lock",		V_RANGE(0, 30)			},	/* minutes; 0 never goes idle */
