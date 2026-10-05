@@ -1,0 +1,41 @@
+From: JiaY-shi <shi05275@163.com>
+Subject: [PATCH] net: dsa: yt922x: accept auxiliary VID 0 FDB notifications
+
+A filtered bridge replays VLAN-unaware local FDB notifications as well as
+its per-VLAN entries. VID 0 cannot be a data lookup key on filtered ports.
+Accept these auxiliary adds and deletes without programming hardware, so
+DSA can balance its CPU address cache without spurious -95/-2 errors.
+
+Signed-off-by: JiaY-shi <shi05275@163.com>
+
+
+From github.com/JiaY-shi/openwrt, branch flint4-support (cf069fb174),
+target/linux/mediatek/patches-6.18/967-51-net-dsa-yt922x-ignore-auxiliary-vid0-fdb.patch.
+Hunks regenerated against GL's 6.12 YT922x driver.
+---
+--- a/drivers/net/dsa/yt921x.c
++++ b/drivers/net/dsa/yt921x.c
+@@ -4465,6 +4465,14 @@
+ 
+ 	if (!is_valid_ether_addr(addr) || db.type != DSA_DB_BRIDGE)
+ 		return -EOPNOTSUPP;
++	/* The bridge also replays its VLAN-unaware local FDB entries while
++	 * filtering is enabled. No data frame can use hardware VID 0: access
++	 * traffic uses its PVID, and tagged traffic uses its customer VID.
++	 * Accept the auxiliary notification so DSA can balance its CPU cache,
++	 * but only program the subsequent per-VLAN entries into hardware.
++	 */
++	if (!vid && br_vlan_enabled(db.bridge.dev))
++		return 0;
+ 	hwvid = br_vlan_enabled(db.bridge.dev) ? vid : YT922X_BRIDGE_VID;
+ 	alias = br_vlan_enabled(db.bridge.dev) ? 0 : vid;
+ 	yt922x_fdb_key(addr, hwvid, entry);
+@@ -4529,6 +4537,8 @@
+ 	if (vid >= VLAN_VID_MASK || db.type != DSA_DB_BRIDGE ||
+ 	    !is_valid_ether_addr(addr))
+ 		return -EOPNOTSUPP;
++	if (!vid && br_vlan_enabled(db.bridge.dev))
++		return 0;
+ 	if (!br_vlan_enabled(db.bridge.dev) && vid > YT922X_BRIDGE_VID)
+ 		return -EOPNOTSUPP;
+ 	hwvid = br_vlan_enabled(db.bridge.dev) ? vid : YT922X_BRIDGE_VID;

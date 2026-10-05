@@ -1,0 +1,93 @@
+Subject: [PATCH] net: dsa: mt7530: keep ports with VLAN subinterfaces out of
+ the hardware bridge
+
+Tomato64 does not use a VLAN-aware bridge. A tagged VLAN on a port is an
+802.1Q subinterface (ethX.VID) that is a member of another bridge, while
+the port itself may be an untagged member of the LAN bridge.
+
+A VLAN-unaware hardware bridge is transparent to VLAN tags (the driver
+sets MT7530_VLAN_TRANSPARENT on such ports), so the switch forwards
+tagged frames between its bridged ports without the kernel's VLAN device
+seeing them. Measured on the MT7988 built-in switch of a GL-BE14000, with
+one port untagged in br0 and also carrying VLAN 2 for another bridge: a
+host on a different, plain br0 port got ARP replies from the VLAN 2 host
+by tagging its own frames, and 40 tagged broadcasts sent into the plain
+port all left the VLAN port (switch MIB counters), none of them sent by
+software.
+
+Refuse the hardware bridge for a port that has VLAN subinterfaces. DSA
+then bridges that port in software and the remaining ports keep hardware
+forwarding. Unlike on the YT9224 this can be done per port: a standalone
+mt7530 port forwards only to the CPU port and uses FID_STANDALONE, so its
+lookups never hit addresses learned on the bridged ports.
+
+Tomato64 creates VLAN devices before building bridges (start_vlan() then
+start_lan()) and removes them after, so the check at join time suffices.
+VLAN-aware bridges are not affected.
+
+The module parameter hw_bridge_vlan_ports lifts the restriction for
+testing (/sys/module/mt7530/parameters/hw_bridge_vlan_ports); it applies
+the next time a port joins a bridge.
+
+Tomato64-specific.
+---
+--- a/drivers/net/dsa/mt7530.c
++++ b/drivers/net/dsa/mt7530.c
+@@ -5,6 +5,7 @@
+  */
+ #include <linux/etherdevice.h>
+ #include <linux/if_bridge.h>
++#include <linux/if_vlan.h>
+ #include <linux/iopoll.h>
+ #include <linux/mdio.h>
+ #include <linux/mfd/syscon.h>
+@@ -1390,6 +1391,32 @@
+ 	return 0;
+ }
+ 
++/* Tomato64 puts a tagged VLAN on a port as an 802.1Q subinterface (ethX.VID)
++ * that is a member of another bridge, while the port itself may be an untagged
++ * member of the LAN bridge. A VLAN-unaware hardware bridge is transparent to
++ * VLAN tags: the switch floods such a port's tagged broadcasts to the other
++ * bridged ports and forwards tagged frames between them by MAC address, so a
++ * host on any bridged port can reach a VLAN carried on another port just by
++ * tagging its own frames. The kernel's VLAN device never sees that traffic.
++ *
++ * Keep a port that carries VLAN subinterfaces out of the hardware bridge. DSA
++ * then bridges that one port in software. The other ports keep hardware
++ * forwarding: a standalone port only talks to the CPU port and uses its own
++ * FID (FID_STANDALONE), so its lookups never hit addresses learned on the
++ * bridged ports.
++ *
++ * Tomato64 creates the subinterfaces before it builds bridges and removes
++ * them after, so checking at join time is enough. A VLAN-aware bridge is left
++ * alone: there the switch enforces VLAN membership itself.
++ *
++ * /sys/module/mt7530/parameters/hw_bridge_vlan_ports = Y lifts this for
++ * testing; it takes effect the next time a port joins a bridge.
++ */
++static bool mt7530_hw_bridge_vlan_ports;
++module_param_named(hw_bridge_vlan_ports, mt7530_hw_bridge_vlan_ports, bool, 0644);
++MODULE_PARM_DESC(hw_bridge_vlan_ports,
++		 "Allow hardware bridging on ports that carry VLAN subinterfaces");
++
+ static int
+ mt7530_port_bridge_join(struct dsa_switch *ds, int port,
+ 			struct dsa_bridge bridge, bool *tx_fwd_offload,
+@@ -1397,6 +1424,16 @@
+ {
+ 	struct mt7530_priv *priv = ds->priv;
+ 
++	if (!mt7530_hw_bridge_vlan_ports && !br_vlan_enabled(bridge.dev) &&
++	    vlan_uses_dev(dsa_to_port(ds, port)->user)) {
++		dev_info(priv->dev,
++			 "port %d carries VLAN subinterfaces, bridging it in software\n",
++			 port);
++		NL_SET_ERR_MSG_MOD(extack,
++				   "Port carries VLAN subinterfaces");
++		return -EOPNOTSUPP;
++	}
++
+ 	mutex_lock(&priv->reg_mutex);
+ 
+ 	mt7530_update_port_member(priv, port, bridge.dev, true);

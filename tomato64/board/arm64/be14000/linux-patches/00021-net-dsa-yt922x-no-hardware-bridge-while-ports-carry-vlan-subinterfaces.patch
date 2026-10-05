@@ -1,0 +1,104 @@
+Subject: [PATCH] net: dsa: yt922x: no hardware bridge while ports carry VLAN
+ subinterfaces
+
+Tomato64 does not use a VLAN-aware bridge. A tagged VLAN on a port is an
+802.1Q subinterface (ethX.VID) that is a member of another bridge, while
+the port itself may be an untagged member of br0.
+
+The YT9224 hardware bridge is VLAN-unaware: the switch's VLAN ingress and
+egress filters are off and forwarding is decided by the port isolation
+matrix alone. On a port that also carries tagged VLANs the switch would
+flood the VLAN's broadcasts to every other hardware-bridged port and
+accept tagged frames injected from them, without the software bridge that
+owns the VLAN seeing any of it.
+
+Refuse the hardware bridge for every port while any port of the switch
+has a VLAN subinterface. DSA then bridges all of them in software, as it
+did before hardware bridging was added.
+
+It must be all ports or none. A first version declined only the port
+that carries the VLAN. That leaves a software-bridged port next to
+hardware-bridged ports in the same bridge, which does not work: the chip
+looks up the destination of that port's frames in the table it learned on
+the hardware ports, finds a port the isolation matrix forbids, and drops
+the frame instead of trapping it to the CPU. Measured on a GL-BE14000:
+RxDiscard counting up on the port, and a host whose MAC the chip had
+learned on a hardware-bridged port unreachable from it, while a host the
+chip had not learned stayed reachable.
+
+Tomato64 creates all VLAN devices before building bridges (start_vlan()
+then start_lan()) and removes them after, so every port gets the same
+answer when it joins.
+
+The module parameter hw_bridge_vlan_ports lifts the restriction for
+testing (/sys/module/yt921x/parameters/hw_bridge_vlan_ports); it applies
+the next time ports join a bridge.
+
+Tomato64-specific; not from JiaY-shi's tree.
+---
+--- a/drivers/net/dsa/yt921x.c
++++ b/drivers/net/dsa/yt921x.c
+@@ -5210,6 +5210,47 @@
+ 	return ret;
+ }
+ 
++/* Tomato64 puts tagged VLANs on a port as 802.1Q subinterfaces (ethX.VID) that
++ * are members of other bridges, instead of using one VLAN-aware bridge. The
++ * hardware bridge below is VLAN-unaware: its VLAN filters are off, so on a
++ * port that also carries tagged VLANs it would flood the VLAN's broadcasts to
++ * every other hardware-bridged port and accept tagged frames injected from
++ * them, behind the back of the software bridge that owns the VLAN.
++ *
++ * So do not use the hardware bridge at all while any port of the switch
++ * carries a VLAN subinterface; every port is then bridged in software, exactly
++ * as before hardware bridging existed.
++ *
++ * It has to be all ports or none. Declining only the port with the VLAN leaves
++ * it software-bridged next to hardware-bridged ports of the same bridge, and
++ * that does not work: the chip still looks up the destination of that port's
++ * frames in the table it learned on the hardware ports, finds a port the
++ * isolation matrix forbids, and drops the frame instead of trapping it to the
++ * CPU (seen on a GL-BE14000 as RxDiscard on the port and as hosts behind a
++ * hardware-bridged port being unreachable from it).
++ *
++ * Tomato64 creates all VLAN subinterfaces before it builds bridges and
++ * removes them after, so every port sees the same answer when it joins.
++ *
++ * /sys/module/yt921x/parameters/hw_bridge_vlan_ports = Y lifts this for
++ * testing; it takes effect the next time ports join a bridge.
++ */
++static bool yt922x_hw_bridge_vlan_ports;
++module_param_named(hw_bridge_vlan_ports, yt922x_hw_bridge_vlan_ports, bool, 0644);
++MODULE_PARM_DESC(hw_bridge_vlan_ports,
++		 "Allow YT9224 hardware bridging while its ports carry VLAN subinterfaces");
++
++static bool yt922x_has_vlan_subinterfaces(struct dsa_switch *ds)
++{
++	struct dsa_port *dp;
++
++	dsa_switch_for_each_user_port(dp, ds)
++		if (dp->user && vlan_uses_dev(dp->user))
++			return true;
++
++	return false;
++}
++
+ static int
+ yt922x_dsa_port_bridge_join(struct dsa_switch *ds, int port,
+ 			    struct dsa_bridge bridge, bool *tx_fwd_offload,
+@@ -5243,6 +5284,15 @@
+ 		return -EOPNOTSUPP;
+ 	}
+ 
++	if (!yt922x_hw_bridge_vlan_ports && yt922x_has_vlan_subinterfaces(ds)) {
++		dev_info(to_device(priv),
++			 "a port carries VLAN subinterfaces, bridging port %d in software\n",
++			 port);
++		NL_SET_ERR_MSG_MOD(extack,
++				   "YT9224 ports carry VLAN subinterfaces");
++		return -EOPNOTSUPP;
++	}
++
+ 	mutex_lock(&priv->reg_lock);
+ 	if (priv->yt922x_bridge_broken) {
+ 		ret = -EIO;
