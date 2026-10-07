@@ -2592,20 +2592,20 @@ function myName() {
 
 function navi() {
 	var menu = [
-		['Status', 			'status', 0, [
+		['<span class="arrow">›</span> Status', 			'status', 0, [
 			['Overview',			'overview.asp'],
 			['Device List',			'devices.asp'],
 			['Web Usage',			'webmon.asp'],
 			['Logs',			'log.asp'],
 		]],
-		['Bandwidth', 			'bwm', 0, [
+		['<span class="arrow">›</span> Bandwidth', 			'bwm', 0, [
 			['Real-Time',			'realtime.asp'],
 			['Last 24 Hours',		'24.asp'],
 			['Daily',			'daily.asp'],
 			['Weekly',			'weekly.asp'],
 			['Monthly',			'monthly.asp'],
 		]],
-		['IP Traffic',			'ipt', 0, [
+		['<span class="arrow">›</span> IP Traffic',			'ipt', 0, [
 			['Real-Time',			'realtime.asp'],
 			['Last 24 Hours',		'24.asp'],
 			['View Graphs',			'graphs.asp'],
@@ -2613,7 +2613,7 @@ function navi() {
 			['Daily',			'daily.asp'],
 			['Monthly',			'monthly.asp'],
 		]],
-		['Tools', 			'tools', 0, [
+		['<span class="arrow">›</span> Tools', 			'tools', 0, [
 			['Ping',			'ping.asp'],
 			['Traceroute',			'trace.asp'],
 			['System Commands',		'shell.asp'],
@@ -2629,7 +2629,7 @@ function navi() {
 			['Wake on LAN',			'wol.asp'],
 		]],
 		null,
-		['Basic', 			'basic', 0, [
+		['<span class="arrow">›</span> Basic', 			'basic', 0, [
 			['Network',			'network.asp'],
 /* TOMATO64-WIFI-BEGIN */
 			['Wireless',			'wireless.asp'],
@@ -2645,7 +2645,7 @@ function navi() {
 			['Wireless Filter',		'wfilter.asp'],
 /* BCM53XX-END */
 		]],
-		['Advanced', 			'advanced', 0, [
+		['<span class="arrow">›</span> Advanced', 			'advanced', 0, [
 			['Conntrack/Netfilter',		'ctnf.asp'],
 			['DHCP/DNS/TFTP',		'dhcpdns.asp'],
 			['Firewall',			'firewall.asp'],
@@ -2668,7 +2668,7 @@ function navi() {
 			['Wireless',			'wireless.asp'],
 /* BCM53XX-END */
 		]],
-		['Port Forwarding', 		'forward', 0, [
+		['<span class="arrow">›</span> Port Forwarding', 		'forward', 0, [
 			['Basic',			'basic.asp'],
 /* IPV6-BEGIN */
 			['Basic IPv6',			'basic-ipv6.asp'],
@@ -2677,7 +2677,7 @@ function navi() {
 			['Triggered',			'triggered.asp'],
 			['UPnP IGD & PCP',		'upnp.asp'],
 		]],
-		['QoS',				'qos', 0, [
+		['<span class="arrow">›</span> QoS',				'qos', 0, [
 			['Basic Settings',		'settings.asp'],
 			['Classification',		'classify.asp'],
 			['View Graphs',			'graphs.asp'],
@@ -2685,12 +2685,12 @@ function navi() {
 			['Transfer Rates',		'ctrate.asp'],
 		]],
 /* QUOTAS-BEGIN */
-		['Quotas',			'quota', 0, [
+		['<span class="arrow">›</span> Quotas',			'quota', 0, [
 			['Settings',			'settings.asp'],
 			['Usage',			'usage.asp'],
 		]],
 /* QUOTAS-END */
-		['Misc',			'misc', 0, [
+		['<span class="arrow">›</span> Misc',			'misc', 0, [
 			['Access Restriction',		'restrict.asp'],
 			['Bandwidth Limiter',		'bwlimit.asp'],
 /* NOCAT-BEGIN */
@@ -2699,13 +2699,13 @@ function navi() {
 		]],
 /* NGINX-BEGIN */
 		null,
-		['Web Server',			'web', 0, [
+		['<span class="arrow">›</span> Web Server',			'web', 0, [
 			['Nginx & PHP',			'nginx.asp'],
 			['MySQL Server',		'mysql.asp'],
 		]],
 /* NGINX-END */
 /* USB-BEGIN */
-		['USB and NAS',			'nas', 0, [
+		['<span class="arrow">›</span> USB and NAS',			'nas', 0, [
 			['USB Support',			'usb.asp'],
 /* FTP-BEGIN */
 			['FTP Server',			'ftp.asp'],
@@ -2725,7 +2725,7 @@ function navi() {
 		]],
 /* USB-END */
 /* VPN-BEGIN */
-		['VPN',					'vpn', 0, [
+		['<span class="arrow">›</span> VPN',					'vpn', 0, [
 /* OPENVPN-BEGIN */
 			['OpenVPN Server',		'server.asp'],
 			['OpenVPN Client',		'client.asp'],
@@ -2744,7 +2744,7 @@ function navi() {
 		]],
 /* VPN-END */
 		null,
-		['Administration',		'admin', 0, [
+		['<span class="arrow">›</span> Administration',		'admin', 0, [
 			['Admin Access',		'access.asp'],
 			['TomatoAnon',			'tomatoanon.asp'],
 			['Bandwidth Monitoring',	'bwm.asp'],
@@ -2874,6 +2874,8 @@ function navi() {
 	}
 	W(buf.join(''));
 
+	for (var i=0;i<menu.length;i++){var e=E('menu_'+i);if(e&&e.style.display==='block'){var a=e.previousElementSibling;if(a)a.classList.add('open');}}
+
 	if (base.length) {
 		if ((base == 'qos') && (name == 'detailed.asp')) name = 'view.asp';
 		cookie.set('menu_'+base, name);
@@ -2883,7 +2885,9 @@ function navi() {
 function toggleMenu(id) {
 	var submenu = E('menu_'+id);
 	if (submenu) {
-		submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+		var open = submenu.style.display !== 'block';
+		submenu.style.display = open ? 'block' : 'none';
+		var a = submenu.previousElementSibling; if (a) a.classList.toggle('open', open);
 
 		var links = submenu.getElementsByTagName('a');
 		for (var k = 0; k < links.length; k++) {
