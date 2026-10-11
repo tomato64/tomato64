@@ -1,0 +1,25 @@
+xhci: plat: mark Northstar's xHCI as having broken streams
+
+Northstar's xHCI advertises a small primary stream array (MaxPSASize 1,
+hcc params 0x02501164), so the UAS driver claims USB 3 disks. Allocating
+the streams then fails, the configure endpoint command is rejected with
+a Parameter Error, and the disk is left without a driver:
+
+  xhci-hcd 18023000.usb: ERROR: unexpected command completion code 0x11.
+  uas 3-1:1.0: probe with driver uas failed with error -12
+
+Set XHCI_BROKEN_STREAMS alongside the fake doorbell quirk for BCM4708
+family hosts. The host then doesn't offer streams, UAS steps aside, and
+usb-storage drives the disk at SuperSpeed: on a Netgear R7000 a USB 3 SSD
+reads at about 149 MiB/s, against about 32 MiB/s at high speed.
+--- a/drivers/usb/host/xhci-plat.c
++++ b/drivers/usb/host/xhci-plat.c
+@@ -83,7 +83,7 @@
+ 	xhci->quirks |= priv->quirks;
+ 
+ 	if (node && of_machine_is_compatible("brcm,bcm4708"))
+-		xhci->quirks |= XHCI_FAKE_DOORBELL;
++		xhci->quirks |= XHCI_FAKE_DOORBELL | XHCI_BROKEN_STREAMS;
+ }
+ 
+ /* called during probe() after chip reset completes */

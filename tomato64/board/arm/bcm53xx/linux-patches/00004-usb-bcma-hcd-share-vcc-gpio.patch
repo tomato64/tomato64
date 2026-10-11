@@ -1,0 +1,36 @@
+usb: host: bcma: request the VCC GPIO non-exclusively
+
+The Netgear R7000 powers both of its USB ports from one GPIO, so its DTS
+gives the USB 2.0 and the USB 3.0 core the same vcc-gpio
+(<&chipcommon 0>). bcma-hcd requests it exclusively, so whichever core
+probes second fails:
+
+  bcma_hcd bcma0:12: error -EBUSY: error obtaining VCC GPIO
+  bcma_hcd bcma0:12: probe with driver bcma_hcd failed with error -16
+
+The USB 3.0 core loses, its xHCI device is never created, and USB 3
+devices fall back to the USB 2.0 controller. FreshTomato has USB 3 on
+the same hardware.
+
+Request the GPIO with GPIOD_FLAGS_BIT_NONEXCLUSIVE so both cores can
+hold it. Both drive it the same way (high at probe, low at shutdown and
+suspend), so sharing it changes nothing else.
+--- a/drivers/usb/host/bcma-hcd.c
++++ b/drivers/usb/host/bcma-hcd.c
+@@ -406,8 +406,15 @@
+ 		return -ENOMEM;
+ 	usb_dev->core = core;
+ 
++	/*
++	 * Boards such as the Netgear R7000 power both the USB 2.0 and the
++	 * USB 3.0 port from one GPIO and list it as vcc-gpio on both cores.
++	 * Request it non-exclusively, or whichever core probes second fails
++	 * with -EBUSY and its controller never comes up.
++	 */
+ 	usb_dev->gpio_desc = devm_gpiod_get_optional(&core->dev, "vcc",
+-						     GPIOD_OUT_HIGH);
++						     GPIOD_OUT_HIGH |
++						     GPIOD_FLAGS_BIT_NONEXCLUSIVE);
+ 	if (IS_ERR(usb_dev->gpio_desc))
+ 		return dev_err_probe(&core->dev, PTR_ERR(usb_dev->gpio_desc),
+ 				     "error obtaining VCC GPIO");
