@@ -3,6 +3,7 @@
 set -e
 
 . /usr/sbin/nvram_ops
+. /usr/sbin/net_utils
 
 if [ "$(NG set_macs)" == "0" ]; then
 
@@ -28,4 +29,12 @@ fi
 
 if [ "$(NG et0macaddr)" == "" ]; then
 	NS et0macaddr=`ifconfig eth1 | grep -o -E ..:..:..:..:..:..`
+fi
+
+if grep -qs 'brcm,bcm4708' /proc/device-tree/compatible; then
+	for n in 2 3 4; do
+		if [ -z "$(NG wan${n}_mac)" ]; then
+			NS "wan${n}_mac=$(macaddr_add "$(NG et0macaddr)" $((15 + n)))"
+		fi
+	done
 fi

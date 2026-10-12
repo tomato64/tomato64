@@ -16,11 +16,11 @@ set -x
 #   eth0 (gmac0, CPU port)   -> switch0  (basemac+10)
 #   eth1 (gmac1, unused)     -> gmac1    (basemac+11)
 #   eth2 (gmac2, unused)     -> gmac2    (basemac+12)
-#   wan                      -> eth0     (basemac)
-#   lan1                     -> eth1     (basemac+1)
-#   lan2                     -> eth2     (basemac+2)
-#   lan3                     -> eth3     (basemac+3)
-#   lan4                     -> eth4     (basemac+4)
+#   wan                      -> eth0     (basemac+16)
+#   lan1                     -> eth1     (basemac+48)
+#   lan2                     -> eth2     (basemac+49)
+#   lan3                     -> eth3     (basemac+50)
+#   lan4                     -> eth4     (basemac+51)
 
 # Wait for the CPU port
 if ! wait_for_interface eth0; then
@@ -51,11 +51,11 @@ gmac1mac=$(macaddr_add "$basemac" 11)
 gmac2mac=$(macaddr_add "$basemac" 12)
 
 # Compute MACs for DSA ports
-wanmac="$basemac"
-lan1mac=$(macaddr_add "$basemac" 1)
-lan2mac=$(macaddr_add "$basemac" 2)
-lan3mac=$(macaddr_add "$basemac" 3)
-lan4mac=$(macaddr_add "$basemac" 4)
+wanmac=$(macaddr_add "$basemac" 16)
+lan1mac=$(macaddr_add "$basemac" 48)
+lan2mac=$(macaddr_add "$basemac" 49)
+lan3mac=$(macaddr_add "$basemac" 50)
+lan4mac=$(macaddr_add "$basemac" 51)
 
 # Reassign GMAC MACs to unique values (must happen every boot)
 ip link set dev eth0 address "$switch0mac"
@@ -85,7 +85,9 @@ if [ "$(NG set_macs)" != "1" ]; then
 	for i in wan_hwaddr wan_mac; do
 		NS "${i}=$wanmac"
 	done
-	NS "lan_hwaddr=$lan1mac"
 
 	NS set_macs=1
 fi
+
+NS "et0macaddr=$basemac"
+NS "lan_hwaddr=$basemac"

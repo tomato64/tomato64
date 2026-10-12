@@ -1724,7 +1724,11 @@ void start_lan(void)
 						}
 
 						/* Increment MAC address by 32 + bridge number */
+#ifdef TOMATO64_BCM53XX
+						int increment = (br == 0) ? 0 : 32 + br;
+#else
 						int increment = 32 + br;
+#endif /* TOMATO64_BCM53XX */
 						int j;
 						while (increment-- > 0) {
 							for (j = 5; j >= 3; --j) {
