@@ -201,10 +201,15 @@ function upgrade() {
 	// module scope above so the firmware-hint text can share it)
 	for (var bcmModel in bcm53xxDevices) {
 		var slug = bcm53xxDevices[bcmModel];
+		var esc = function(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
+		var short = slug.replace(/^[^-]+-/, '');
+		var re = esc(slug);
+		if (short.length >= 4)
+			re += '|\\b' + esc(short) + '\\b';
 		devices[bcmModel] = {
-			regex: new RegExp(slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
+			regex: new RegExp(re, 'i'),
 			name: bcmModel,
-			message: slug
+			message: slug + (short.length >= 4 ? '" or "' + short : '')
 		};
 	}
 
