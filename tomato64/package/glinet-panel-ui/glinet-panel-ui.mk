@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-GLINET_PANEL_UI_VERSION = 9bb35403c491c846763c2d89d30014f5eba1397c
+GLINET_PANEL_UI_VERSION = 5c15f7b7d86f5cfa370b4acc38063122648a2032
 GLINET_PANEL_UI_SITE = https://github.com/tomato64/glinet-panel-ui.git
 GLINET_PANEL_UI_SITE_METHOD = git
 GLINET_PANEL_UI_LICENSE = GPL-2.0, OFL-1.1 (fonts)

@@ -79,6 +79,9 @@
 #ifdef TOMATO64
 #include <limits.h>
 #endif /* TOMATO64 */
+#ifdef TOMATO64_BE14000
+#include <sys/un.h>
+#endif /* TOMATO64_BE14000 */
 
 #include <wlutils.h>
 #include "tomato.h"
@@ -1482,6 +1485,53 @@ static void add_listen_socket(const char *addr, int server_port, int do_ipv6, in
 	}
 }
 
+#ifdef TOMATO64_BE14000
+#define HTTPD_PANEL_SOCK	"/var/run/httpd.sock"
+
+/*
+ * The front panel reads the JSON API through this, whatever the LAN
+ * listeners are set to: plain HTTP even when they are HTTPS-only, no port to
+ * collide with, and nothing on the network. Requests still need the admin
+ * credentials.
+ */
+static void add_listen_unix(const char *path)
+{
+	struct sockaddr_un sau = { .sun_family = AF_UNIX };
+	int listenfd;
+
+	if (listeners.count >= HTTP_MAX_LISTENERS) {
+		logmsg(LOG_ERR, "number of listeners exceeded the max allowed (%d)", HTTP_MAX_LISTENERS);
+		return;
+	}
+
+	strlcpy(sau.sun_path, path, sizeof(sau.sun_path));
+	unlink(path); /* left behind by the previous httpd */
+
+	if ((listenfd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+		logmsg(LOG_ERR, "create listening socket: %m");
+		return;
+	}
+	fcntl(listenfd, F_SETFD, FD_CLOEXEC);
+
+	if ((bind(listenfd, (struct sockaddr *)&sau, sizeof(sau)) < 0) ||
+	    (chmod(path, 0600) < 0) ||
+	    (listen(listenfd, MAX_CONN_ACCEPT) < 0)) {
+		logmsg(LOG_ERR, "listen: %s: %m", path);
+		close(listenfd);
+		return;
+	}
+
+	logmsg(LOG_DEBUG, "*** %s: added listener [%d] for %s", __FUNCTION__, listenfd, path);
+
+	listeners.listener[listeners.count].listenfd = listenfd;
+	listeners.listener[listeners.count++].ssl = 0;
+	FD_SET(listenfd, &listeners.lfdset);
+
+	if (maxfd < listenfd)
+		maxfd = listenfd;
+}
+#endif /* TOMATO64_BE14000 */
+
 static void listen_wan(char* wan, wanface_list_t wanXfaces, int wanport)
 {
 	int i;
@@ -1621,6 +1671,10 @@ static void setup_listeners(int do_ipv6)
 	}
 #endif /* TCONFIG_IPV6 */
 
+#ifdef TOMATO64_BE14000
+	if (!do_ipv6)
+		add_listen_unix(HTTPD_PANEL_SOCK);
+#endif /* TOMATO64_BE14000 */
 }
 
 static void close_listen_sockets(void)
@@ -1768,6 +1822,16 @@ int main(int argc, char **argv)
 				webcgi_init(NULL);
 
 				clientsai = sai;
+#ifdef TOMATO64_BE14000
+				/* The rest of httpd only knows IP clients: a local one is 127.0.0.1. */
+				if (sai.ss_family == AF_UNIX) {
+					struct sockaddr_in *lo = (struct sockaddr_in *)&clientsai;
+
+					memset(&clientsai, 0, sizeof(clientsai));
+					lo->sin_family = AF_INET;
+					lo->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+				}
+#endif /* TOMATO64_BE14000 */
 				if (!check_wlaccess())
 					exit(0);
 
