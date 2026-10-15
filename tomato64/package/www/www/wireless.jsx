@@ -43,6 +43,14 @@ function wl_ifidxx(ifname) {
 	return -1;
 }
 
+/* TOMATO64-BEGIN */
+/* Logical phy (radio) a row reports on. An MLO access point has a row per link,
+   all with the same ifname and unit, each on the radio of that link. */
+function wl_radio(uidx) {
+	return (wl_ifaces[uidx].length > 10) ? wl_ifaces[uidx][10] : wl_ifaces[uidx][2];
+}
+/* TOMATO64-END */
+
 /* BCM53XX-BEGIN */
 function wl_display_ifname(uidx) {
 	return wl_ifaces[uidx][0]+(wl_sunit(uidx) < 0 ?

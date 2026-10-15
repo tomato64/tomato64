@@ -217,7 +217,8 @@ void asp_nvram(int argc, char **argv)
 				"_ieee80211k", "_rrm_neighbor_report", "_rrm_beacon_report",
 				"_time_advertisement", "_time_zone",
 				"_wnm_sleep_mode", "_wnm_sleep_mode_no_keys",
-				"_bss_transition", "_proxy_arp"
+				"_bss_transition", "_proxy_arp",
+				"_mlo", "_mlo_links"
 			};
 			unsigned int phy, ifc, s;
 			for (phy = 0; phy < WIFI_PHY_COUNT; phy++) {

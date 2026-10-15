@@ -213,22 +213,54 @@ int wlhelper_foreach_station(const char *ifname, int phy,
  */
 const char *wlhelper_get_iface_wmode(int phy, int iface);
 
+/* An MLD has at most one link per radio; 802.11be allows 15 */
+#define WLHELPER_MLO_MAX_LINKS 4
+
+/*
+ * One link of a Wi-Fi 7 MLO access point, from 'iw dev <ifname> info'
+ */
+struct wlhelper_mlo_link {
+	int id;                 /* MLO link id, which is the radio index on the wiphy */
+	char addr[18];          /* the link's own address, the BSSID clients see on that band */
+	int mhz;                /* 0 while the link is not beaconing (DFS CAC, NO-IR, ...) */
+	int channel;
+	int width;              /* MHz */
+	int center;             /* centre channel, 0 if unknown */
+};
+
+/*
+ * One row of the per-interface status tables
+ *
+ * The pages read wl_ifaces, wl_bands, wlnoise, wlstats, wl_info and wldev by
+ * a shared index, one row per interface. An MLO access point is a single
+ * interface whose links run on several radios at once, so it gets one row per
+ * link: each reports its own band, channel, noise and clients, while the
+ * settings (SSID, security, ...) all come from the one interface.
+ */
+struct wlhelper_wif {
+	int phy;                /* logical phy owning the wifi_phy{phy}iface{iface}_* settings */
+	int iface;
+	int radio;              /* logical phy this row reports on: phy, or an MLO link's radio */
+	int link;               /* index into mlo below, -1 on an ordinary interface */
+	const char *ifname;
+	struct wlhelper_mlo_link mlo;   /* valid when link >= 0 */
+};
+
 /*
  * Callback function type for iterating through interfaces
  *
- * @param phy: PHY index (0, 1, 2, ...)
- * @param iface: Interface index (0, 1, 2, ...)
- * @param ifname: Interface name (e.g., "phy0-ap0")
+ * @param w: The interface, or one link of an MLO interface
  * @param user_data: User-provided data pointer
  * @return: 0 to continue iteration, non-zero to stop
  */
-typedef int (*wlhelper_iface_callback)(int phy, int iface, const char *ifname, void *user_data);
+typedef int (*wlhelper_iface_callback)(const struct wlhelper_wif *w, void *user_data);
 
 /*
  * Iterate through WiFi interfaces with optional filtering
  *
  * This function eliminates the need for duplicate PHY/interface iteration
- * loops by providing a single callback-based iterator with filtering.
+ * loops by providing a single callback-based iterator with filtering. An
+ * MLO access point is visited once per link (see struct wlhelper_wif).
  *
  * Example usage:
  *   wlhelper_foreach_interface(WLHELPER_FILTER_ENABLED | WLHELPER_FILTER_AP_MODE,
@@ -240,6 +272,38 @@ typedef int (*wlhelper_iface_callback)(int phy, int iface, const char *ifname, v
  * @return: Number of interfaces processed (callback called), or -1 on error
  */
 int wlhelper_foreach_interface(int filter_flags, wlhelper_iface_callback callback, void *user_data);
+
+/*
+ * Wi-Fi 7 MLO helpers (wlmlo.c)
+ *
+ * The wlhelper_wif_* calls take a row from wlhelper_foreach_interface() and
+ * answer for that row's radio: on an ordinary interface they are the plain
+ * wlhelper_* calls on its ifname, on an MLO link they read that link only.
+ */
+
+/*
+ * List the links of an MLO access point
+ *
+ * @return: Number of links stored, 0 if this is not an MLO interface (or it
+ *          is not up as one, e.g. after start_wifi.sh fell back to one radio)
+ */
+int wlhelper_mlo_links(int phy, int iface, const char *ifname,
+                       struct wlhelper_mlo_link *links, int max);
+
+/*
+ * Logical phy (radio) an MLO link runs on, or -1 if it cannot be told
+ */
+int wlhelper_mlo_link_radio(int phy, int link_id);
+
+int wlhelper_wif_channel_stats(const struct wlhelper_wif *w, int *channel, int *mhz,
+                               int *nbw, int *noise, float *rate,
+                               int *center, char *proto, size_t proto_size,
+                               int *signal);
+int wlhelper_wif_noise(const struct wlhelper_wif *w);
+int wlhelper_wif_bssid(const struct wlhelper_wif *w, char *mac, size_t mac_size);
+int wlhelper_wif_foreach_station(const struct wlhelper_wif *w,
+                                 wlhelper_station_callback callback,
+                                 void *user_data);
 
 /*
  * Maximum length of an SSID as reported by iwinfo (32 octets + NUL)

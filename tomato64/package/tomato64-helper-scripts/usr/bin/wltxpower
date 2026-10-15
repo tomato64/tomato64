@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# wltxpower <lphy> - transmit power choices for one logical phy, in the format
+# of 'iwinfo <dev> txpowerlist', for the Basic -> Wireless page.
+#
+# iwinfo cannot be used: it reads the limit for whatever channel the wiphy's
+# first interface is on, so on a single-wiphy multi-radio part every radio got
+# the same list, and an MLO interface (one netdev on several channels) gets
+# none at all. This reads the regulatory limit of the radio's own channel, or
+# with channel auto the highest limit in its band.
+
+. /usr/sbin/nvram_ops
+
+lphy="$1"
+[ -n "$lphy" ] || exit 1
+
+wiphy=$(awk -F'|' -v i="$lphy" '$1==i{print $2}' /tmp/.lphy_map 2>/dev/null)
+[ -n "$wiphy" ] || wiphy="phy${lphy}"
+
+band=$(NG wifi_phy${lphy}_band)
+channel=$(NG wifi_phy${lphy}_channel)
+
+iw phy "$wiphy" channels 2>/dev/null | awk -v band="$band" -v channel="$channel" '
+	function in_band(f) {
+		if (band == "2g") return (f >= 2400 && f < 2500)
+		if (band == "5g") return (f >= 4900 && f < 5925)
+		if (band == "6g") return (f >= 5925 && f < 7200)
+		return 1
+	}
+	/^[ \t]*\* [0-9]+ MHz/ {
+		f = $2 + 0
+		ch = $4; gsub(/[\[\]]/, "", ch)
+		ok = in_band(f) && ($0 !~ /disabled/)
+		next
+	}
+	ok && /Maximum TX power:/ {
+		p = int($4 + 0)
+		if (ch == channel) chmax = p
+		if (p > bandmax) bandmax = p
+		ok = 0
+	}
+	END {
+		max = (chmax != "") ? chmax : bandmax
+		for (d = 0; d <= max; d++)
+			printf(" %3d dBm (%4d mW)\n", d, int(exp(d / 10 * log(10)) + 0.5))
+	}'

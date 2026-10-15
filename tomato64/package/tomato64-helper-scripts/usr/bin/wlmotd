@@ -49,23 +49,33 @@ do
 
 				if [ ! -z "${phy}" ];
 				then
-					band="$(NG wifi_phy${i}_band)"
-
-					if [ "$band" == "2g" ];
-					then
-						radio="2.4GHz"
-					fi
-					if [ "$band" == "5g" ];
-					then
-						radio="5GHz"
-					fi
-					if [ "$band" == "6g" ];
-					then
-						radio="6GHz"
-					fi
-
 					ifname=$(print_ifname ${i} ${j})
-					wifi_motd=" $wifi_motd $(print_ifname $i $j) : "$radio" @ $(NG "wifi_phy${i}iface${j}_essid") @ channel: $(NG "wifi_phy${i}_channel") @ $(cat /sys/class/net/$ifname/address)\n"
+
+					# An MLO access point is one interface on several radios: a line per link
+					radios="${i}"
+					if [ "$(NG wifi_phy${i}iface${j}_mlo)" = "1" ] && iw dev "$ifname" info 2>/dev/null | grep -q "MLD with links"; then
+						radios="${i} $(NG wifi_phy${i}iface${j}_mlo_links)"
+					fi
+
+					for r in $radios;
+					do
+						band="$(NG wifi_phy${r}_band)"
+
+						if [ "$band" == "2g" ];
+						then
+							radio="2.4GHz"
+						fi
+						if [ "$band" == "5g" ];
+						then
+							radio="5GHz"
+						fi
+						if [ "$band" == "6g" ];
+						then
+							radio="6GHz"
+						fi
+
+						wifi_motd=" $wifi_motd $(print_ifname $i $j) : "$radio" @ $(NG "wifi_phy${i}iface${j}_essid") @ channel: $(NG "wifi_phy${r}_channel") @ $(cat /sys/class/net/$ifname/address)\n"
+					done
                                 fi
 
 			fi

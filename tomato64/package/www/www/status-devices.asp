@@ -137,10 +137,20 @@ dg.populate = function() {
 		e.ifname = a[0];
 		e.unit = a[6] * 1;
 		e.rssi = a[2];
+/* TOMATO64-BEGIN */
+		/* the radio of the link the client is on: an MLO access point is one ifname on several bands */
+		e.radio = (a.length > 7) ? a[7] * 1 : e.unit;
+/* TOMATO64-END */
 
 		for (j = wl_info.length -1 ; j >= 0; --j) {
 			is_wds = (e.ip == '-' && ((nvram['wl'+wl_info[j][5]+'_mode'] == 'wds') || (nvram['wl'+wl_info[j][5]+'_mode'] == 'ap' && nvram['wl'+wl_info[j][5]+'_wds_enable'] == 1)));
+/* TOMATO64-REMOVE-BEGIN */
 			if ((wl_info[j][0] == e.ifname) || (is_wds)) {
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+			if (((wl_info[j][0] == e.ifname) && (wl_radio(wl_info[j][5]) == e.radio)) || (is_wds)) {
+				e.uidx = wl_info[j][5];
+/* TOMATO64-END */
 				e.freq = wl_info[j][1];
 				e.ssid = wl_info[j][2];
 				e.mode = (is_wds ? 'wds' : wl_info[j][3]);
@@ -314,7 +324,13 @@ dg.populate = function() {
 	for (i = list.length - 1; i >= 0; --i) {
 		e = list[i];
 
+/* TOMATO64-REMOVE-BEGIN */
 		var ifidx = wl_uidx(e.unit);
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+		/* the noise of the band the client is on, not the first band of its unit */
+		var ifidx = (e.uidx !== undefined) ? e.uidx : wl_uidx(e.unit);
+/* TOMATO64-END */
 		if ((e.rssi !== '') && (ifidx >= 0) && (wlnoise[ifidx] < 0)) {
 			if (e.rssi >= -50)
 				e.qual = 100;

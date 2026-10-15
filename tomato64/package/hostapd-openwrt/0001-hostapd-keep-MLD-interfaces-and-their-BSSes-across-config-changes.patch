@@ -1,0 +1,224 @@
+From 4c6992b13bfab5105ea1f91f57e5c23601cae1c3 Mon Sep 17 00:00:00 2001
+From: Felix Fietkau <nbd@nbd.name>
+Date: Fri, 4 Sep 2026 20:34:16 +0200
+Subject: [PATCH] hostapd: keep MLD interfaces and their BSSes across config changes
+
+A config change below MLD level destroyed and recreated MLD netdevs and BSSes
+that could have been kept. This restarted the PHY and dropped all connected
+stations. Three separate issues caused this:
+
+1. mld_find_matching_config() compared the whole vif config, so a change to an
+   SSID created a new MLD. mld_set_config() then reloaded every interface
+   without it, bss_check_mld() found no registry entry, iface_check_mld()
+   spliced all MLD BSSes out of the config, and the interface was removed when
+   no BSS was left. Replace it with mld_config_matches(), which compares only
+   the fields that define the netdev: name, wiphy, radio mask and address.
+   All other fields are BSS level and reach hostapd through the per PHY config
+   file. The radio mask is compared instead of the radio list, so a new order
+   of the device list keeps the MLD. mld_rename_bss() has no callers left and
+   is removed.
+
+2. bss_find_existing() accepted a hash match between MLD BSSes with different
+   names, which happens when the BSS set shifts and BSSes share the same
+   settings. Step 4 of iface_reload_config() then renamed one MLD netdev onto
+   the name of another one, which fails with EEXIST. An MLD BSS is identified
+   by its netdev name, so skip old MLD BSSes with a different name. The search
+   continues, and an old BSS with the correct name is kept.
+
+3. Step 2 preserved and renamed the first BSS even when the first BSS changes
+   between plain BSS and MLD link. This cannot work, because
+   hostapd_bss_setup_multi_link() only runs when a BSS is allocated. A rename
+   of an MLD link also renames the netdev that the other radios share. Delete
+   and recreate the first BSS instead. If no other BSS is kept, keep the old
+   first BSS until the first new BSS exists, so that the PHY always has a BSS.
+   Its address stays reserved until the delete. Delete it right after that,
+   because its netdev and /var/run/hostapd/<name> keep its name, and a later
+   new BSS can use that name. If another BSS is kept, delete the old first BSS
+   in step 3 as before, since a kept BSS can be renamed onto its name.
+   bss_remove() holds the delete sequence for both paths.
+
+Tested on an AP MLD with 7 BSSes, going from 1 to 7 configured BSSes. The
+messages "Skip MLD interface", "Remove interface", "Restart interface for phy"
+and "Renaming device ... failed: Object exists" no longer appear, and a
+4-address backhaul station stays associated across the change.
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+Backported from OpenWrt main: https://github.com/openwrt/openwrt/commit/4c6992b13bfab5105ea1f91f57e5c23601cae1c3
+Not in 25.12 as of v25.12.6. The hunk adding bss_remove() was placed by hand
+because of context drift; the rest applies as in upstream. Drop this patch
+once the hostapd files are synced from a release that carries the commit.
+---
+--- a/package/network/services/hostapd/files/hostapd.uc
++++ b/package/network/services/hostapd/files/hostapd.uc
+@@ -486,6 +486,12 @@
+ 		if (!prev_hash[i] || hash != prev_hash[i])
+ 			continue;
+ 
++		// An MLD BSS is identified by its netdev name, which is shared with
++		// all radios that contribute a link. A rename onto the name of
++		// another MLD fails with EEXIST.
++		if (config.mld_ap && prev_config.bss[i].ifname != config.ifname)
++			continue;
++
+ 		prev_hash[i] = null;
+ 		return i;
+ 	}
+@@ -515,6 +521,14 @@
+ 	return if_bss[ifname];
+ }
+ 
++function bss_remove(name, bss, config)
++{
++	hostapd.printf(`Remove bss '${config.ifname}' on phy '${name}'`);
++	bss.delete();
++	if (!config.mld_ap)
++		wdev_remove(config.ifname);
++}
++
+ function iface_reload_config(name, phydev, config, old_config)
+ {
+ 	let phy = phydev.name;
+@@ -605,8 +619,21 @@
+ 		return false;
+ 	}
+ 
++	// A BSS cannot change between plain and MLD link in place, because
++	// hostapd_bss_setup_multi_link() only runs when a BSS is allocated. A
++	// rename to an MLD name fails as well, since bss_check_mld() already
++	// created that netdev, and a rename of an MLD link renames the netdev of
++	// all radios. Delete and recreate the first BSS instead. If no other BSS
++	// is kept, keep the old one until the first new BSS exists, so that the
++	// PHY never runs without a BSS, but no longer: its netdev and its
++	// control socket keep its name, which a later new BSS can reuse.
++	let deferred_bss, deferred_cfg;
++	const first_bss_converts =
++		(config.bss[0].mld_ap || old_config.bss[0].mld_ap) &&
++		old_config.bss[0].ifname != config.bss[0].ifname;
++
+ 	// Step 2: if none were found, rename and preserve the first one
+-	if (length(bss_list) == 0) {
++	if (length(bss_list) == 0 && !first_bss_converts) {
+ 		// can't change the bssid of the first bss
+ 		if (config.bss[0].bssid != old_config.bss[0].bssid) {
+ 			if (!config.bss[0].default_macaddr) {
+@@ -636,11 +663,17 @@
+ 		if (!prev_bss)
+ 			return false;
+ 
+-		let ifname = old_config.bss[i].ifname;
+-		hostapd.printf(`Remove bss '${ifname}' on phy '${name}'`);
+-		prev_bss.delete();
+-		if (!old_config.bss[i].mld_ap)
+-			wdev_remove(ifname);
++		if (!i && !length(bss_list)) {
++			deferred_bss = prev_bss;
++			deferred_cfg = old_config.bss[0];
++			// The address is still in use until the deferred delete, but it
++			// must not be assigned to any of the new BSSes.
++			if (deferred_cfg.bssid)
++				macaddr_list[deferred_cfg.bssid] = -1;
++			continue;
++		}
++
++		bss_remove(name, prev_bss, old_config.bss[i]);
+ 	}
+ 
+ 	// Step 4: rename preserved interfaces, use temporary name on duplicates
+@@ -725,6 +758,11 @@
+ 			hostapd.printf(`Failed to add new bss ${ifname} on phy ${name}`);
+ 			return false;
+ 		}
++
++		if (deferred_bss) {
++			bss_remove(name, deferred_bss, deferred_cfg);
++			deferred_bss = null;
++		}
+ 	}
+ 
+ 	// Step 8: update interface bss order
+@@ -998,13 +1036,14 @@
+ 	}
+ }
+ 
+-function mld_rename_bss(data, name)
++function mld_radio_mask(radios)
+ {
+-	if (data.ifname == name)
+-		return true;
++	let radio_mask = 0;
++	for (let r in radios)
++		if (r != null)
++			radio_mask |= 1 << r;
+ 
+-	// TODO: handle rename gracefully
+-	return false;
++	return radio_mask;
+ }
+ 
+ function mld_add_bss(name, data, phy_list, i)
+@@ -1036,20 +1075,30 @@
+ 		data.default_macaddr = true;
+ 	}
+ 
+-	let radio_mask = 0;
+-	for (let r in config.radios)
+-		if (r != null)
+-			radio_mask |= 1 << r;
+-
+-	data.radio_mask = radio_mask;
++	data.radio_mask = mld_radio_mask(config.radios);
+ 	data.ifname = name;
+ }
+ 
+-function mld_find_matching_config(list, config)
++// An MLD netdev is defined by its name, wiphy, radio mask and address, i.e. the
++// config fields used by mld_add_bss(). The caller looks up the previous entry by
++// name. All remaining fields are BSS level and reach hostapd through the per PHY
++// config file, so a change to them must not destroy the netdev and all BSSes
++// attached to it.
++function mld_config_matches(data, config)
+ {
+-	for (let name, data in list)
+-		if (is_equal(data.config, config))
+-			return name;
++	if (!data.ifname || !data.config)
++		return false;
++
++	if (data.config.phy != config.phy)
++		return false;
++
++	if (data.radio_mask != mld_radio_mask(config.radios))
++		return false;
++
++	if (config.macaddr)
++		return data.macaddr == config.macaddr;
++
++	return !!data.default_macaddr;
+ }
+ 
+ function mld_reload_interface(name)
+@@ -1073,16 +1122,14 @@
+ 
+ 	hostapd.printf(`Set MLD config: ${keys(config)}`);
+ 
+-	// find renamed/new interfaces
++	// find kept/new interfaces
+ 	for (let name, data in config) {
+-		let prev = mld_find_matching_config(prev_mld, data);
+-		if (prev) {
+-			let data = prev_mld[prev];
+-			if (mld_rename_bss(data, name)) {
+-				new_mld[name] = data;
+-				delete prev_mld[prev];
+-				continue;
+-			}
++		let prev = prev_mld[name];
++		if (prev && mld_config_matches(prev, data)) {
++			prev.config = data;
++			new_mld[name] = prev;
++			delete prev_mld[name];
++			continue;
+ 		}
+ 
+ 		new_mld[name] = {

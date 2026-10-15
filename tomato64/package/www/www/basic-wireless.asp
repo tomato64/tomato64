@@ -108,6 +108,33 @@ var changed = 0;
 
 function show() {}
 
+var bandNames = { '2g': '2.4 GHz', '5g': '5 GHz', '6g': '6 GHz' };
+
+/* Wi-Fi 7 MLO: the other logical phys that are radios of the same wiphy as phy i */
+function mloSiblings(i) {
+	var s = [];
+	for (var k = 0; k < phy_count; ++k)
+		if (k != i && wireless['phy'+k+'_phyname'] == wireless['phy'+i+'_phyname'])
+			s.push(k);
+	return s;
+}
+
+/* Interfaces on other phys that carry an MLO link on phy i */
+function mloLinkedFrom(i) {
+	var r = [];
+	for (var p = 0; p < phy_count; ++p) {
+		if (p == i)
+			continue;
+		for (var j = 0; j < nvram['wifi_phy'+p+'_ifaces']; ++j) {
+			var t = 'phy'+p+'iface'+j;
+			if (nvram['wifi_'+t+'_enable'] == 1 && nvram['wifi_'+t+'_mode'] == 'ap' && nvram['wifi_'+t+'_mlo'] == 1 &&
+			    nvram['wifi_'+t+'_mlo_links'].split(' ').indexOf(''+i) >= 0)
+				r.push('phy'+p+' interface '+j+' ('+escapeHTML(nvram['wifi_'+t+'_essid'])+')');
+		}
+	}
+	return r;
+}
+
 function displayCountry(device) {
 	var country = '';
 	var countrylist = [];
@@ -202,7 +229,8 @@ function refreshPower(device) {
 		cmdresult = 'ERROR: ' + x;
 		displayPower(device);
 	}
-	var c = 'iwinfo '+wireless['phy'+device+'_phyname']+' txpowerlist';
+	/* iwinfo would read whichever channel the wiphy is on, not this radio's */
+	var c = 'wltxpower '+device;
 	cmd.post('shell.cgi', 'action=execute&command=' + escapeCGI(c.replace(/\r/g, '')));
 }
 
@@ -586,6 +614,15 @@ function verifyFields(focused, quiet) {
 			_roamShow('_f_wifi_'+t+'_bss_transition', ap_only);
 			_roamShow('_f_wifi_'+t+'_proxy_arp', ap_only);
 
+			// MLO: AP only, links shown only while MLO is checked
+			var mlo_el = E('_f_wifi_'+t+'_mlo');
+			if (mlo_el) {
+				_roamShow('_f_wifi_'+t+'_mlo', ap_only);
+				var mlo_sib = mloSiblings(i);
+				for (var m = 0; m < mlo_sib.length; ++m)
+					_roamShow('_f_wifi_'+t+'_mlo_link'+mlo_sib[m], ap_only && mlo_el.checked);
+			}
+
 			// Rebuild encryption dropdown: mesh restricts to SAE or open only
 			var enc_sel = E('_wifi_'+t+'_encryption');
 			var current_enc = enc_sel.value;
@@ -680,10 +717,37 @@ function verifyFields(focused, quiet) {
 				} else {
 					ferror.clear(E('_wifi_'+t+'_key'));
 				}
+
+				var mlo_el = E('_f_wifi_'+t+'_mlo');
+				ferror.clear(mlo_el);
+				ferror.clear(E('_wifi_'+t+'_encryption'));
+				if (mlo_el && !mlo_el.disabled && mlo_el.checked) {
+					var mlo_phys = [i];
+					var mlo_sib = mloSiblings(i);
+					for (var m = 0; m < mlo_sib.length; ++m)
+						if (E('_f_wifi_'+t+'_mlo_link'+mlo_sib[m]).checked)
+							mlo_phys.push(mlo_sib[m]);
+
+					var mlo_enc = E('_wifi_'+t+'_encryption').value;
+					var mlo_not_be = mlo_phys.filter(function(p) { return E('_wifi_phy'+p+'_mode').value != 'be'; });
+
+					if (mlo_phys.length < 2) {
+						ferror.set(mlo_el, 'Select at least one other radio to link with MLO', quiet || !ok);
+						ok = 0;
+					} else if (mlo_not_be.length > 0) {
+						ferror.set(mlo_el, 'MLO requires mode BE on every linked radio (check phy'+mlo_not_be.join(', phy')+')', quiet || !ok);
+						ok = 0;
+					} else if (mlo_enc != 'sae' && mlo_enc != 'owe') {
+						ferror.set(E('_wifi_'+t+'_encryption'), 'MLO requires WPA3-SAE or OWE encryption', quiet || !ok);
+						ok = 0;
+					}
+				}
 			} else {
 				ferror.clear(E('_wifi_'+t+'_essid'));
 				ferror.clear(E('_wifi_'+t+'_bssid'));
 				ferror.clear(E('_wifi_'+t+'_key'));
+				ferror.clear(E('_f_wifi_'+t+'_mlo'));
+				ferror.clear(E('_wifi_'+t+'_encryption'));
 			}
 		}
 	}
@@ -815,6 +879,17 @@ function save(nomsg) {
 			E('wifi_'+t+'_wnm_sleep_mode_no_keys').value = E('_f_wifi_'+t+'_wnm_sleep_mode_no_keys').checked ? 1 : 0;
 			E('wifi_'+t+'_bss_transition').value = E('_f_wifi_'+t+'_bss_transition').checked ? 1 : 0;
 			E('wifi_'+t+'_proxy_arp').value = E('_f_wifi_'+t+'_proxy_arp').checked ? 1 : 0;
+
+			var mlo_el = E('_f_wifi_'+t+'_mlo');
+			var mlo_links = [];
+			if (mlo_el) {
+				var mlo_sib = mloSiblings(i);
+				for (var m = 0; m < mlo_sib.length; ++m)
+					if (E('_f_wifi_'+t+'_mlo_link'+mlo_sib[m]).checked)
+						mlo_links.push(mlo_sib[m]);
+			}
+			E('wifi_'+t+'_mlo').value = (mlo_el && !mlo_el.disabled && mlo_el.checked) ? 1 : 0;
+			E('wifi_'+t+'_mlo_links').value = mlo_links.join(' ');
 
 			/* r0kh/r1kh: convert newline-separated textarea back to '>'-separated */
 			var r0kh_el = E('_wifi_'+t+'_r0kh');
@@ -1108,7 +1183,8 @@ for (i = 0; i < devices.length; ++i) {
 		{ title: 'Maximum transmit power', name: 'wifi_'+t+'_power', type: 'select',
 			value: nvram['wifi_'+t+'_power'], options: [], prefix: '<span id="__wifi_'+t+'_power">', suffix: '<\/span>' },
 		{ title: 'Country code', name: 'wifi_'+t+'_country', type: 'select',
-			value: nvram['wifi_'+t+'_country'], options: [], prefix: '<span id="__wifi_'+t+'_country">', suffix: '<\/span>' }
+			value: nvram['wifi_'+t+'_country'], options: [], prefix: '<span id="__wifi_'+t+'_country">', suffix: '<\/span>' },
+		{ title: 'MLO links from', text: mloLinkedFrom(i).join('<br>'), ignore: mloLinkedFrom(i).length == 0 }
 	]);
 	W('<\/div>');
 
@@ -1171,6 +1247,8 @@ for (var i = 0; i < devices.length; i++) {
 		W('<input type="hidden" id="wifi_'+t+'_wnm_sleep_mode_no_keys" name="wifi_'+t+'_wnm_sleep_mode_no_keys">');
 		W('<input type="hidden" id="wifi_'+t+'_bss_transition" name="wifi_'+t+'_bss_transition">');
 		W('<input type="hidden" id="wifi_'+t+'_proxy_arp" name="wifi_'+t+'_proxy_arp">');
+		W('<input type="hidden" id="wifi_'+t+'_mlo" name="wifi_'+t+'_mlo">');
+		W('<input type="hidden" id="wifi_'+t+'_mlo_links" name="wifi_'+t+'_mlo_links">');
 
 		W('<ul class="tabs">');
 		for (var k = 0; k < interfaceSections.length; k++) {
@@ -1179,6 +1257,19 @@ for (var i = 0; i < devices.length; i++) {
 		}
 		W('<\/ul><div class="tabs-bottom"><\/div>');
 		W('<div id="'+t+'-general">');
+
+		var mlo_rows = [];
+		var mlo_sib = mloSiblings(i);
+		if (mlo_sib.length > 0) {
+			var mlo_cur = nvram['wifi_'+t+'_mlo_links'].split(' ');
+			mlo_rows.push({ title: 'Multi-Link (MLO)', name: 'f_wifi_'+t+'_mlo', type: 'checkbox', value: nvram['wifi_'+t+'_mlo'] == 1,
+				suffix: '&nbsp; <small>Wi-Fi 7: one network across several radios<\/small>' });
+			for (var m = 0; m < mlo_sib.length; ++m) {
+				var k = mlo_sib[m];
+				mlo_rows.push({ title: 'Link phy'+k, indent: 2, name: 'f_wifi_'+t+'_mlo_link'+k, type: 'checkbox', value: mlo_cur.indexOf(''+k) >= 0,
+					suffix: '&nbsp; <small>'+(bandNames[nvram['wifi_phy'+k+'_band']] || '')+'<\/small>' });
+			}
+		}
 
 		createFieldTable('', [
 			{ title: 'Enable', name: 'f_wifi_'+t+'_enable', type: 'checkbox', value: nvram['wifi_'+t+'_enable'] == 1 },
@@ -1189,7 +1280,7 @@ for (var i = 0; i < devices.length; i++) {
 			{ title: 'Hide ESSID', name: 'f_wifi_'+t+'_hidden', type: 'checkbox', value: nvram['wifi_'+t+'_hidden'] == 1 },
 			{ title: 'WMM Mode', name: 'f_wifi_'+t+'_wmm', type: 'checkbox', value: nvram['wifi_'+t+'_wmm'] == 1 },
 			{ title: 'U-APSD', indent: 2, name: 'f_wifi_'+t+'_uapsd', type: 'checkbox', value: nvram['wifi_'+t+'_uapsd'] == 1, suffix: '&nbsp; <small>Unscheduled Automatic Power Save Delivery<\/small><\/div>' }
-		]);
+		].concat(mlo_rows));
 		W('<\/div>');
 
 		W('<div id="'+t+'-security">');
@@ -1331,6 +1422,7 @@ for (var i = 0; i < devices.length; i++) {
 			<li><b>Hide ESSID</b> - Disables the broadcasting of beacon frames if checked and hides the ESSID.</li>
 			<li><b>WMM Mode</b> - Enables WMM. Where Wi-Fi Multimedia (WMM) Mode QoS is disabled, clients may be limited to 802.11a/802.11g rates. Required for 802.11n/802.11ac/802.11ax.</li>
 			<li><b>U-APSD</b> - Allows wireless devices to save battery by sleeping longer and waking only when data is ready to transmit.</li>
+			<li><b>Multi-Link (MLO)</b> - Wi-Fi 7 only, shown on devices whose radios share one wiphy. Broadcasts this access point on the selected radios as a single network; Wi-Fi 7 clients connect over several bands at once, older clients join one band as usual. All settings come from this interface. Every linked radio must use mode BE, and encryption must be WPA3-SAE or OWE.</li>
 		</ul>
 		<li><b>Wireless Security</b></li>
 		<ul>

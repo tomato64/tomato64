@@ -99,6 +99,10 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 	if (wl_ifaces[uidx][8] != 'ap')
 		continue;
 
+	/* an MLO access point has a row per link, but it is one network */
+	if ((wl_ifaces[uidx].length > 10) && (wl_ifaces[uidx][10] != wl_ifaces[uidx][2]))
+		continue;
+
 	var tabName = wl_ifaces[uidx][0];
 	var displayName = wl_ifaces[uidx][4]+' - '+wl_display_ifname(uidx);
 	tabUidx.push(uidx);

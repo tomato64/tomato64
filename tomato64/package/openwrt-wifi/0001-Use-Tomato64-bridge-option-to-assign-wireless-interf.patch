@@ -17,7 +17,7 @@ diff --git a/package/network/config/wifi-scripts/files/lib/netifd/wireless-devic
 index 768a421480..aceac809ad 100644
 --- a/package/network/config/wifi-scripts/files/lib/netifd/wireless-device.uc
 +++ b/package/network/config/wifi-scripts/files/lib/netifd/wireless-device.uc
-@@ -79,6 +79,16 @@ function handle_link(dev, data, up)
+@@ -79,6 +79,19 @@ function handle_link(dev, data, up)
  			link_ext: true,
  			up,
  		});
@@ -25,10 +25,13 @@ index 768a421480..aceac809ad 100644
 +//	Tomato64: handle direct bridge assignment via 'bridge' UCI option.
 +//	Mirrors what netifd.interface_handle_link does for 'option network',
 +//	but uses the bridge name directly since we bypass netifd network lookup.
++//	An MLO netdev is shared by the links on every radio, so one radio going
++//	down must not unbridge it; the kernel drops it from the bridge when
++//	hostapd deletes the netdev after its last link.
 +	if (data.bridge) {
 +		if (up)
 +			system(`ip link set "${dev}" master "${data.bridge}"`);
-+		else
++		else if (!config.mlo)
 +			system(`ip link set "${dev}" nomaster`);
 +	}
  }

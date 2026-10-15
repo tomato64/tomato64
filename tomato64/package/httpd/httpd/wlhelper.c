@@ -673,13 +673,29 @@ int wlhelper_foreach_interface(int filter_flags, wlhelper_iface_callback callbac
 			/* Get interface name */
 			wlhelper_get_ifname(phy, iface, ifname, sizeof(ifname));
 
-			/* Call callback */
-			if (callback(phy, iface, ifname, user_data) != 0) {
-				/* Callback requested stop */
-				return processed_count;
-			}
+			struct wlhelper_wif w = { .phy = phy, .iface = iface, .radio = phy,
+			                          .link = -1, .ifname = ifname };
+			struct wlhelper_mlo_link links[WLHELPER_MLO_MAX_LINKS];
+			int nlinks = wlhelper_mlo_links(phy, iface, ifname, links, WLHELPER_MLO_MAX_LINKS);
 
-			processed_count++;
+			/* An ordinary interface is one row, an MLO access point one per link */
+			for (int l = 0; l < (nlinks ? nlinks : 1); l++) {
+				if (nlinks) {
+					w.link = l;
+					w.mlo = links[l];
+					w.radio = wlhelper_mlo_link_radio(phy, links[l].id);
+					if (w.radio < 0)
+						w.radio = phy;
+				}
+
+				/* Call callback */
+				if (callback(&w, user_data) != 0) {
+					/* Callback requested stop */
+					return processed_count;
+				}
+
+				processed_count++;
+			}
 		}
 	}
 

@@ -423,7 +423,9 @@ const aspapi_t aspapi[] = {
 	{"wifi_phy" #p "iface" #i "_wnm_sleep_mode",		V_01			}, /* 802.11v WNM sleep */ \
 	{"wifi_phy" #p "iface" #i "_wnm_sleep_mode_no_keys",	V_01			}, \
 	{"wifi_phy" #p "iface" #i "_bss_transition",		V_01			}, /* 802.11v BSS transition */ \
-	{"wifi_phy" #p "iface" #i "_proxy_arp",			V_01			}, /* 802.11v ProxyARP */
+	{"wifi_phy" #p "iface" #i "_proxy_arp",			V_01			}, /* 802.11v ProxyARP */ \
+	{"wifi_phy" #p "iface" #i "_mlo",			V_01			}, /* Wi-Fi 7 Multi-Link Operation */ \
+	{"wifi_phy" #p "iface" #i "_mlo_links",			V_TEXT(0, 16)		}, /* other logical phys this MLD spans */
 
 /* All 16 ifaces for a given phy */
 #define WIFI_PHY_IFACES(p) \

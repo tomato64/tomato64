@@ -189,19 +189,25 @@ static int get_wl_clients(int idx, int unit, int subunit, void *param)
 #ifdef TOMATO64
 /* bcm53xx runs mac80211 alongside wl, so both emitters are built there and share the caller's comma */
 
+struct wl_clients_ctx {
+	char *comma;
+	int radio;	/* logical phy the station's link runs on */
+};
+
 /* Callback function for wlhelper_foreach_station */
 static int print_station(const char *ifname, int phy,
                           const struct wlhelper_station_info *station,
                           void *user_data)
 {
-	char *comma = (char *)user_data;
+	struct wl_clients_ctx *ctx = (struct wl_clients_ctx *)user_data;
+	char *comma = ctx->comma;
 
 	/* a mesh peer that is merely heard, not linked, is not a connected device */
 	if (station->mesh_plink[0] && (strcmp(station->mesh_plink, "ESTAB") != 0))
 		return 0; /* Continue iteration */
 
-	/* Output format: ['ifname','MAC',signal,tx_rate,rx_rate,connected_time,phy] */
-	web_printf("%c['%s','%s',%d,%d,%d,%d,%d]",
+	/* Output format: ['ifname','MAC',signal,tx_rate,rx_rate,connected_time,phy,radio] */
+	web_printf("%c['%s','%s',%d,%d,%d,%d,%d,%d]",
 	           *comma,
 	           ifname,
 	           station->mac,
@@ -209,23 +215,24 @@ static int print_station(const char *ifname, int phy,
 	           station->tx_bitrate,
 	           station->rx_bitrate,
 	           station->connected_time,
-	           phy);
+	           phy,
+	           ctx->radio);
 
 	*comma = ',';
 	return 0; /* Continue iteration */
 }
 
 /* Callback for get_wl_clients_openwrt - processes each interface */
-static int get_wl_clients_callback(int phy, int iface, const char *ifname, void *user_data)
+static int get_wl_clients_callback(const struct wlhelper_wif *w, void *user_data)
 {
-	char *comma = (char *)user_data;
+	struct wl_clients_ctx ctx = { .comma = (char *)user_data, .radio = w->radio };
 
 	/*
 	 * Iterate through all connected stations on this interface. As with
 	 * WLC_GET_ASSOCLIST, on a client or bridge interface that is the upstream
 	 * AP, which is how the router's own uplink gets its row in the list.
 	 */
-	wlhelper_foreach_station(ifname, phy, print_station, comma);
+	wlhelper_wif_foreach_station(w, print_station, &ctx);
 
 	return 0; /* Continue iteration */
 }

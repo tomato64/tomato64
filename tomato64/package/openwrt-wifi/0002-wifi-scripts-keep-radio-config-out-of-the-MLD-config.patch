@@ -1,0 +1,41 @@
+From e18424ddd83310fb66def0d3fa68aff7332a039c Mon Sep 17 00:00:00 2001
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 30 Jul 2026 10:12:06 +0200
+Subject: [PATCH] wifi-scripts: keep radio config out of the MLD configuration
+
+wpad decides whether to keep or tear down an MLD interface by comparing the
+whole configuration object, which embedded the full device configuration of
+every participating radio. Any radio level change, such as a channel or
+txpower update, therefore destroyed and recreated the station MLD and
+dropped the backhaul link. Neither hostapd nor wpa_supplicant reads
+radio_config; it is only used locally to resolve the phy.
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+Backported from OpenWrt main: https://github.com/openwrt/openwrt/commit/e18424ddd83310fb66def0d3fa68aff7332a039c
+On 25.12 a txpower or channel change on one radio of an AP MLD left only that
+radio's link up: hostapd recreated the MLD, spliced the MLD BSS out of the
+other radios, and netifd never reconfigured them because their config was
+unchanged.
+---
+ .../network/config/wifi-scripts/files/lib/netifd/wireless.uc  | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/package/network/config/wifi-scripts/files/lib/netifd/wireless.uc b/package/network/config/wifi-scripts/files/lib/netifd/wireless.uc
+index d26e4efbcd..17327213b8 100644
+--- a/package/network/config/wifi-scripts/files/lib/netifd/wireless.uc
++++ b/package/network/config/wifi-scripts/files/lib/netifd/wireless.uc
+@@ -29,7 +29,9 @@ function wpad_update_mlo(service, mode)
+ 		if (!data.phy)
+ 			continue;
+ 
+-		config[ifname] = data;
++		let entry = { ...data };
++		delete entry.radio_config;
++		config[ifname] = entry;
+ 	}
+ 
+ 	ubus.call({
+-- 
+2.47.3
+

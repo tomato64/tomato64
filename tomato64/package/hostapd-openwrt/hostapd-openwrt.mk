@@ -25,6 +25,11 @@ HOSTAPD_OPENWRT_INCLUDES = -I$(STAGING_DIR)/usr/include/libnl-tiny -DCONFIG_LIBN
 
 define HOSTAPD_OPENWRT_PATCHES
 	cp -fpR $(BR2_EXTERNAL_TOMATO64_PATH)/package/hostapd-openwrt/src/. $(@D)
+	# hostapd.uc is OpenWrt's copy, kept pristine in files/. Stage it at its
+	# OpenWrt path so the *.patch files in this directory, which are OpenWrt
+	# commits not yet in our release, apply to it like any other patch.
+	$(INSTALL) -D -m 0644 $(BR2_EXTERNAL_TOMATO64_PATH)/package/hostapd-openwrt/files/hostapd.uc \
+		$(@D)/package/network/services/hostapd/files/hostapd.uc
 endef
 HOSTAPD_OPENWRT_PRE_PATCH_HOOKS += HOSTAPD_OPENWRT_PATCHES
 
@@ -131,7 +136,7 @@ define HOSTAPD_OPENWRT_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 0755 $(@D)/hostapd/hostapd_cli $(TARGET_DIR)/usr/sbin/
 
 	$(INSTALL) -d $(TARGET_DIR)/usr/share/hostap/
-	$(INSTALL) -m 0644 $(BR2_EXTERNAL_TOMATO64_PATH)/package/hostapd-openwrt/files/hostapd.uc $(TARGET_DIR)/usr/share/hostap/
+	$(INSTALL) -m 0644 $(@D)/package/network/services/hostapd/files/hostapd.uc $(TARGET_DIR)/usr/share/hostap/
 	$(INSTALL) -m 0644 $(BR2_EXTERNAL_TOMATO64_PATH)/package/hostapd-openwrt/files/wpa_supplicant.uc $(TARGET_DIR)/usr/share/hostap/
 
 endef

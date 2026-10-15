@@ -477,8 +477,10 @@ static int station_count_cb(const char *ifname, int phy,
 	return 0;
 }
 
-static int api_wireless_iface(int phy, int iface, const char *ifname, void *user_data)
+static int api_wireless_iface(const struct wlhelper_wif *w, void *user_data)
 {
+	int phy = w->phy, iface = w->iface;
+	const char *ifname = w->ifname;
 	char key[64], mac[24], proto[16];
 	int channel = 0, mhz = 0, nbw = 0, noise = 0, center = 0;
 	int stations = 0;
@@ -490,6 +492,10 @@ static int api_wireless_iface(int phy, int iface, const char *ifname, void *user
 	j_num("phy", phy);
 	j_num("iface", iface);
 	j_str("ifname", ifname);
+	/* The radio this entry reports on: an MLO access point has one entry per link */
+	j_num("radio", w->radio);
+	if (w->link >= 0)
+		j_num("link", w->mlo.id);
 
 	snprintf(key, sizeof(key), "wifi_phy%diface%d_essid", phy, iface);
 	j_nv("essid", key);
@@ -499,16 +505,16 @@ static int api_wireless_iface(int phy, int iface, const char *ifname, void *user
 	j_nv("network", key);
 	snprintf(key, sizeof(key), "wifi_phy%diface%d_hidden", phy, iface);
 	j_bool("hidden", nvram_get_int(key));
-	snprintf(key, sizeof(key), "wifi_phy%d_band", phy);
+	snprintf(key, sizeof(key), "wifi_phy%d_band", w->radio);
 	j_nv("band", key);
 
-	if (wlhelper_get_mac_address(ifname, mac, sizeof(mac)) == 0)
+	if (wlhelper_wif_bssid(w, mac, sizeof(mac)) == 0)
 		j_str("bssid", mac);
 
 	proto[0] = '\0';
 	/* No signal: that one reports the upstream AP's, which only means
 	   something on a client interface, and this walks the APs. */
-	if (wlhelper_get_channel_stats(ifname, &channel, &mhz, &nbw, &noise,
+	if (wlhelper_wif_channel_stats(w, &channel, &mhz, &nbw, &noise,
 	                               &rate, &center, proto, sizeof(proto),
 	                               NULL) == 0) {
 		j_num("channel", channel);
@@ -518,7 +524,7 @@ static int api_wireless_iface(int phy, int iface, const char *ifname, void *user
 		j_str("proto", proto);
 	}
 
-	wlhelper_foreach_station(ifname, phy, station_count_cb, &stations);
+	wlhelper_wif_foreach_station(w, station_count_cb, &stations);
 	j_num("stations", stations);
 
 	j_elem_end();

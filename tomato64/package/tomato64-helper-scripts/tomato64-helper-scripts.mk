@@ -70,6 +70,7 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlconfig			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wlmotd			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wl_bridge_isolate		$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/wltxpower			$(TARGET_DIR)/usr/bin
 
 	# WiFi shell scripts - Following 6 scripts converted to C in httpd (wlhelper.c + devlist.c)
 	# Kept in repository for reference and historical purposes only

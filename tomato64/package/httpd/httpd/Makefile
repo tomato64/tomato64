@@ -91,7 +91,7 @@ OBJS  = httpd.o cgi.o tomato.o version.o misc.o dhcp.o upgrade.o \
 	iptraffic.o #blackhole.o
 
 # TOMATO64 WiFi helper library
-OBJS += wlhelper.o
+OBJS += wlhelper.o wlmlo.o
 
 # TOMATO64 JSON API
 OBJS += api.o

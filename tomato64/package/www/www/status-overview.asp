@@ -124,7 +124,8 @@ visibility();
 /* TOMATO64-BEGIN */
 /* wl_fface() is the bare phy number for every iface on Tomato64, so build a per-iface section id */
 function wl_sid(uidx) {
-	return wl_unit(uidx)+((wl_sunit(uidx) > 0) ? '.'+wl_sunit(uidx) : '');
+	/* each link of an MLO access point is its own section, named after the link's radio */
+	return wl_unit(uidx)+((wl_sunit(uidx) > 0) ? '.'+wl_sunit(uidx) : '')+((wl_radio(uidx) != wl_unit(uidx)) ? 'r'+wl_radio(uidx) : '');
 }
 /* TOMATO64-END */
 

@@ -1183,13 +1183,13 @@ static int print_wlnoise(int idx, int unit, int subunit, void *param)
 }
 #else /* TOMATO64 && !TOMATO64_BCM53XX */
 /* Callback for print_wlnoise */
-static int print_wlnoise_callback(int phy, int iface, const char *ifname, void *user_data)
+static int print_wlnoise_callback(const struct wlhelper_wif *w, void *user_data)
 {
 	int *first_entry = (int *)user_data;
 	int noise;
 
 	/* Get noise level */
-	noise = wlhelper_get_noise_level(ifname);
+	noise = wlhelper_wif_noise(w);
 
 	/* Output noise level with comma separator */
 	if (*first_entry)
@@ -1409,7 +1409,7 @@ static void wlstats_own_security(int phy, int iface, char *sec, size_t sec_size,
 }
 
 /* Callback for print_wlstats */
-static int print_wlstats_callback(int phy, int iface, const char *ifname, void *user_data)
+static int print_wlstats_callback(const struct wlhelper_wif *w, void *user_data)
 {
 	int *first_entry = (int *)user_data;
 	int channel, mhz, nbw, noise, center, rssi;
@@ -1417,14 +1417,14 @@ static int print_wlstats_callback(int phy, int iface, const char *ifname, void *
 	float rate;
 	char proto[8];
 	char sec[32], cipher[16];
-	const char *wmode = wlhelper_get_iface_wmode(phy, iface);
+	const char *wmode = wlhelper_get_iface_wmode(w->phy, w->iface);
 
 	/*
 	 * Get channel statistics. This array is read by index alongside
 	 * wl_ifaces, wl_bands, wlnoise and wl_info, so an interface that cannot
 	 * be queried still gets an entry: the outputs are zeroed on failure.
 	 */
-	radio = (wlhelper_get_channel_stats(ifname, &channel, &mhz, &nbw, &noise, &rate,
+	radio = (wlhelper_wif_channel_stats(w, &channel, &mhz, &nbw, &noise, &rate,
 	                                    &center, proto, sizeof(proto), &rssi) == 0);
 
 	/* as wl_client(): the router is the station here, rssi is its upstream AP */
@@ -1432,7 +1432,7 @@ static int print_wlstats_callback(int phy, int iface, const char *ifname, void *
 	if (!client)
 		rssi = 0;
 
-	wlstats_own_security(phy, iface, sec, sizeof(sec), cipher, sizeof(cipher));
+	wlstats_own_security(w->phy, w->iface, sec, sizeof(sec), cipher, sizeof(cipher));
 
 	/* Print comma separator for all entries after the first */
 	if (*first_entry)
@@ -1756,7 +1756,7 @@ static int print_wlbands(int idx, int unit, int subunit, void *param)
 }
 #else /* TOMATO64 && !TOMATO64_BCM53XX */
 /* Callback for print_wlbands */
-static int print_wlbands_callback(int phy, int iface, const char *ifname, void *user_data)
+static int print_wlbands_callback(const struct wlhelper_wif *w, void *user_data)
 {
 	int *first_entry = (int *)user_data;
 	char nvram_key[64];
@@ -1765,8 +1765,9 @@ static int print_wlbands_callback(int phy, int iface, const char *ifname, void *
 	/* Band is keyed by the logical phy index, matching the nvram wifi_phy<N>_band
 	 * variables. Don't derive it from iwinfo's "PHY name:" — on single-wiphy
 	 * multi-radio parts every logical phy reports the same real wiphy (e.g.
-	 * phy0), which would collapse the radios onto a single band. */
-	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%d_band", phy);
+	 * phy0), which would collapse the radios onto a single band. An MLO link
+	 * reports the band of the radio it runs on. */
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%d_band", w->radio);
 	band = nvram_safe_get(nvram_key);
 
 	/* Output band value */
@@ -1799,8 +1800,9 @@ static void print_wlbands(void)
 
 #ifdef TOMATO64
 /* Callback for print_wlinfo */
-static int print_wlinfo_callback(int phy, int iface, const char *ifname, void *user_data)
+static int print_wlinfo_callback(const struct wlhelper_wif *w, void *user_data)
 {
+	int phy = w->phy, iface = w->iface;
 	int *first_entry = (int *)user_data;
 	char nvram_key[64];
 	const char *encryption;
@@ -1840,8 +1842,8 @@ static int print_wlinfo_callback(int phy, int iface, const char *ifname, void *u
 	else
 		encryption = enc;
 
-	/* Get PHY mode and convert to uppercase */
-	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%d_mode", phy);
+	/* Get PHY mode and convert to uppercase, of the radio an MLO link runs on */
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%d_mode", w->radio);
 	const char *phy_mode = nvram_safe_get(nvram_key);
 	strncpy(mode_upper, phy_mode, sizeof(mode_upper) - 1);
 	mode_upper[sizeof(mode_upper) - 1] = '\0';
@@ -1849,7 +1851,7 @@ static int print_wlinfo_callback(int phy, int iface, const char *ifname, void *u
 		*p = toupper(*p);
 
 	/* Get channel width */
-	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%d_width", phy);
+	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%d_width", w->radio);
 	const char *width = nvram_safe_get(nvram_key);
 
 	/* Get network */
@@ -1969,10 +1971,12 @@ static int print_wif(int idx, int unit, int subunit, void *param)
 }
 #else /* TOMATO64 && !TOMATO64_BCM53XX */
 /* Callback for print_wif */
-static int print_wif_callback(int phy, int iface, const char *ifname, void *user_data)
+static int print_wif_callback(const struct wlhelper_wif *w, void *user_data)
 {
+	int phy = w->phy, iface = w->iface;
+	const char *ifname = w->ifname;
 	int *first_entry = (int *)user_data;
-	char mac[18];
+	char mac[18], bssid[18];
 	char nvram_key[64];
 	int subunit, up;
 
@@ -1987,6 +1991,10 @@ static int print_wif_callback(int phy, int iface, const char *ifname, void *user
 		mac[0] = '\0';
 	}
 
+	/* An MLO link has its own BSSID on its band; the netdev carries the MLD address */
+	if (!up || (wlhelper_wif_bssid(w, bssid, sizeof(bssid)) != 0))
+		snprintf(bssid, sizeof(bssid), "%s", mac);
+
 	/* Get ESSID from nvram */
 	snprintf(nvram_key, sizeof(nvram_key), "wifi_phy%diface%d_essid", phy, iface);
 	char *essid = utf8_to_js_string(nvram_safe_get(nvram_key));
@@ -2000,10 +2008,14 @@ static int print_wif_callback(int phy, int iface, const char *ifname, void *user
 	if (*first_entry)
 		web_puts(",");
 
-	/* Output format: ['ifname','phy_str',phy_num,subunit,'essid','hwaddr',up,max_vifs,'mode','bssid'] */
-	web_printf("['%s','%d',%d,%d,'%s','%s',%d,16,'%s','%s']",
+	/*
+	 * Output format: ['ifname','phy_str',phy_num,subunit,'essid','hwaddr',up,max_vifs,'mode','bssid',radio]
+	 * radio is a Tomato64 addition: the logical phy the row reports on, which
+	 * differs from phy_num on the links of an MLO access point.
+	 */
+	web_printf("['%s','%d',%d,%d,'%s','%s',%d,16,'%s','%s',%d]",
 	           ifname, phy, phy, subunit, essid, mac, up,
-	           wlhelper_get_iface_wmode(phy, iface), mac);
+	           wlhelper_get_iface_wmode(phy, iface), bssid, w->radio);
 
 	free(essid);
 

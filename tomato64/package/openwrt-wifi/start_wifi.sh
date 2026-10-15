@@ -208,6 +208,48 @@ print_ifname_mesh() {
 	client_ifaces=$(echo "$client_ifaces" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 }
 
+print_mlo() {
+	# Wi-Fi 7 Multi-Link: one AP MLD spanning radios of a single wiphy. OpenWrt
+	# models it as one wifi-iface listing several devices with mlo=1; hostapd then
+	# creates a single netdev (named after this iface) with one link per radio.
+	# Only logical phys that are radios of the same multi-radio wiphy as phy${1}
+	# can be links, and hostapd refuses an MLD BSS on a radio that is not in
+	# 802.11be mode, which would take down that radio's other interfaces too.
+	local wiphy devices l
+
+	wiphy=$(awk -F'|' -v i="${1}" '$1==i && $3!="-"{print $2}' /tmp/.lphy_map)
+	if [ -z "$wiphy" ]; then
+		logger -p user.warning "phy${1}iface${2}: MLO requires a multi-radio WiFi device, starting as a single-link AP"
+		return
+	fi
+	if [ "$(NG wifi_phy${1}_mode)" != "be" ]; then
+		logger -p user.warning "phy${1}iface${2}: MLO requires phy${1} in BE mode, starting as a single-link AP"
+		return
+	fi
+
+	devices="radio${1}"
+	for l in $(NG wifi_phy${1}iface${2}_mlo_links); do
+		[ "$l" = "${1}" ] && continue
+		if ! awk -F'|' -v i="$l" -v p="$wiphy" '$1==i && $2==p && $3!="-"{f=1} END{exit !f}' /tmp/.lphy_map; then
+			logger -p user.warning "phy${1}iface${2}: phy${l} is not a radio of ${wiphy}, dropping it from MLO"
+			continue
+		fi
+		if [ "$(NG wifi_phy${l}_mode)" != "be" ]; then
+			logger -p user.warning "phy${1}iface${2}: phy${l} is not in BE mode, dropping it from MLO"
+			continue
+		fi
+		devices="${devices} radio${l}"
+	done
+
+	if [ "$devices" = "radio${1}" ]; then
+		logger -p user.warning "phy${1}iface${2}: MLO needs at least one other radio, starting as a single-link AP"
+		return
+	fi
+
+	uci set "wireless.phy${1}iface${2}.device=${devices}"
+	uci set "wireless.phy${1}iface${2}.mlo=1"
+}
+
 print_mac_filter() {
 
 	if [ ! -z "$(NG wifi_phy${1}iface${2}_macfilter)" ] && [ ! -z "$(NG wifi_phy${1}iface${2}_maclist)" ];
@@ -309,6 +351,7 @@ do
 			uci set "wireless.phy${i}iface${j}.ssid=$(NG wifi_phy${i}iface${j}_essid)"
 			uci set "wireless.phy${i}iface${j}.ocv=0"
 			print_ifname ${i} ${j}
+			[ "$(NG wifi_phy${i}iface${j}_mlo)" = "1" ] && print_mlo ${i} ${j}
 
 		elif [ "$iface_mode" == "sta" ] || [ "$iface_mode" == "bridge" ]; then
 			start_wpa_supplicant=1
@@ -447,6 +490,16 @@ do
 done
 uci commit wireless
 
+# Which interfaces are an AP MLD, and on which radios. hostapd on 25.12 cannot
+# turn a running interface into an AP MLD on a reload: the MLD netdev cannot be
+# created while the plain interface of the same name still exists, and the
+# radio is left with no AP at all. Any change here takes a full restart.
+mlo_layout=$(uci -q show wireless | sed -n "s/^wireless\.\([^.]*\)\.mlo='1'$/\1/p" | while read -r s; do
+	echo "${s} $(uci -q get wireless.${s}.ifname) $(uci -q get wireless.${s}.device)"
+done)
+mlo_layout_prev=$(cat /tmp/.wifi_mlo_layout 2>/dev/null)
+echo "$mlo_layout" > /tmp/.wifi_mlo_layout
+
 # For reload mode, verify all required daemons are running
 if [ "$MODE" = "reload" ]; then
 	# If no interfaces are enabled, stop all WiFi services
@@ -482,6 +535,11 @@ if [ "$MODE" = "reload" ]; then
 			logger -p user.warning "wpa_supplicant required but not running, performing full restart instead of reload"
 			MODE="start"
 		fi
+	fi
+
+	if [ "$MODE" = "reload" ] && [ "$mlo_layout" != "$mlo_layout_prev" ]; then
+		logger -p user.info "WiFi MLO layout changed, performing full restart instead of reload"
+		MODE="start"
 	fi
 
 	# If still in reload mode, all required daemons are running

@@ -425,7 +425,9 @@ struct nvram_tuple bsd_defaults[] = {
 	{"wifi_phy" #p "iface" #i "_wnm_sleep_mode",		"0"	}, \
 	{"wifi_phy" #p "iface" #i "_wnm_sleep_mode_no_keys",	"0"	}, \
 	{"wifi_phy" #p "iface" #i "_bss_transition",		"0"	}, \
-	{"wifi_phy" #p "iface" #i "_proxy_arp",			"0"	},
+	{"wifi_phy" #p "iface" #i "_proxy_arp",			"0"	}, \
+	{"wifi_phy" #p "iface" #i "_mlo",			"0"	}, \
+	{"wifi_phy" #p "iface" #i "_mlo_links",			""	},
 
 /* All 16 ifaces for a given phy (all generic/disabled) */
 #define WIFI_DEF_PHY_IFACES(p) \
@@ -2341,6 +2343,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy0iface0_wnm_sleep_mode_no_keys",	"0"		},
 	{"wifi_phy0iface0_bss_transition",		"0"		},
 	{"wifi_phy0iface0_proxy_arp",			"0"		},
+	{"wifi_phy0iface0_mlo",				"0"		},
+	{"wifi_phy0iface0_mlo_links",			""		},
 
 	/* phy0 ifaces 1-15: generic disabled defaults */
 	WIFI_DEF_PHY0_IFACES_1_15
