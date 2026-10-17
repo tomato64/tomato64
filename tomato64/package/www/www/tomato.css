@@ -2182,3 +2182,12 @@ div[id$="_maclist"] .co1 {
 	width: 30%;
 }
 /* TOMATO64-END */
+
+.indent1 .arrow {
+	display: inline-block;
+	transition: transform .25s ease;
+}
+
+.indent1.open .arrow {
+	transform: rotate(90deg);
+}
