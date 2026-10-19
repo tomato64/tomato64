@@ -351,7 +351,7 @@ function earlyInit() {
 	document.addEventListener('mouseup', pressEnd, false);
 
 	if (((c = cookie.get(cprefix + '_zoom')) == null) || (c < 1) || (c > 3))
-		c = 2;
+		c = 1;
 
 	E('_screen_zoom').value = c;
 	setZoom(c);
