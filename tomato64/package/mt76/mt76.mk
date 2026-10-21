@@ -4,10 +4,9 @@
 #
 ################################################################################
 
+MT76_VERSION = 39c960c3ada558b4c2e7915772483d3731573d09
 ifeq ($(BR2_PACKAGE_PLATFORM_BE14000),y)
 MT76_VERSION = 59676919ea408b0b13a9d23f2e2e1a1ab407fba1
-else
-MT76_VERSION = 39c960c3ada558b4c2e7915772483d3731573d09
 endif
 MT76_SITE = $(call github,openwrt,mt76,$(MT76_VERSION))
 MT76_LICENSE = GPL-2.0
