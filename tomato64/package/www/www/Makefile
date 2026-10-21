@@ -797,6 +797,7 @@ else
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-X86_64-BEGIN/,/TOMATO64-X86_64-END/d"
 	sed -i $(INSTALLDIR)/www/admin-upgrade.asp -e "/TOMATO64-X86_64-BEGIN/,/TOMATO64-X86_64-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/TOMATO64-X86_64-BEGIN/,/TOMATO64-X86_64-END/d"
+	sed -i $(INSTALLDIR)/www/at.css -e "/TOMATO64-X86_64-BEGIN/,/TOMATO64-X86_64-END/d"
 endif
 
 ifeq ($(PLATFORM_ARM64),y)
