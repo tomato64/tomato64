@@ -4,11 +4,7 @@
 #
 ################################################################################
 
-ifeq ($(BR2_PACKAGE_PLATFORM_BE14000),y)
-MAC80211_VERSION = 6.18.39
-else
-MAC80211_VERSION = 6.18.26
-endif
+MAC80211_VERSION = 6.18.55
 MAC80211_SOURCE = backports-$(MAC80211_VERSION).tar.zst
 MAC80211_SITE = https://github.com/openwrt/backports/releases/download/backports-v$(MAC80211_VERSION)
 MAC80211_LICENSE = GPL-3.0
@@ -162,6 +158,15 @@ define MAC80211_APPLY_VERSIONED_PATCHES
 	$(APPLY_PATCHES) $(@D) $(MAC80211_PKGDIR)/patches-$(MAC80211_VERSION) \*.patch
 endef
 MAC80211_POST_PATCH_HOOKS += MAC80211_APPLY_VERSIONED_PATCHES
+
+# GL-BE14000: mac80211 APIs its newer mt76 pin needs, from GL.iNet's
+# gl-openwrt (not in vanilla OpenWrt 25.12). Applied on top of the common patch.
+ifeq ($(BR2_PACKAGE_PLATFORM_BE14000),y)
+define MAC80211_APPLY_BE14000_PATCHES
+	$(APPLY_PATCHES) $(@D) $(MAC80211_PKGDIR)/patches-be14000 \*.patch
+endef
+MAC80211_POST_PATCH_HOOKS += MAC80211_APPLY_BE14000_PATCHES
+endif
 
 # Publish our symbols for anything built afterwards (mt76) - see external.mk.
 define MAC80211_COLLECT_SYMVERS

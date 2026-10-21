@@ -1,6 +1,6 @@
-From 947de8f9b4b5afa6e468d43dad3def8f65622430 Mon Sep 17 00:00:00 2001
+From d256d35e71f7aab50f5480b2b1d9e9d122b95502 Mon Sep 17 00:00:00 2001
 From: lancethepants <lancethepants@gmail.com>
-Date: Fri, 15 May 2026 09:54:04 -0600
+Date: Tue, 20 Oct 2026 12:38:26 -0600
 Subject: [PATCH] mac80211
 
 ---
@@ -89,9 +89,9 @@ Subject: [PATCH] mac80211
  .../net/wireless/ath/ath9k/htc_drv_debug.c    |   2 +
  drivers/net/wireless/ath/ath9k/htc_drv_init.c |   7 +-
  drivers/net/wireless/ath/ath9k/hw-ops.h       |   6 +
- drivers/net/wireless/ath/ath9k/hw.c           | 191 ++--
- drivers/net/wireless/ath/ath9k/hw.h           |  15 +-
- drivers/net/wireless/ath/ath9k/init.c         | 168 +++-
+ drivers/net/wireless/ath/ath9k/hw.c           | 161 +++-
+ drivers/net/wireless/ath/ath9k/hw.h           |  12 +
+ drivers/net/wireless/ath/ath9k/init.c         | 171 +++-
  drivers/net/wireless/ath/ath9k/mac.c          |   9 +-
  drivers/net/wireless/ath/ath9k/main.c         |  12 +
  drivers/net/wireless/ath/ath9k/pci.c          |   1 +
@@ -154,11 +154,13 @@ Subject: [PATCH] mac80211
  .../net/wireless/ralink/rt2x00/rt2x00eeprom.c | 221 +++++
  .../net/wireless/ralink/rt2x00/rt2x00leds.c   |   3 +
  .../net/wireless/ralink/rt2x00/rt2x00queue.h  |  20 +
+ drivers/net/wireless/realtek/rtw88/tx.c       |   9 +-
+ drivers/net/wireless/realtek/rtw88/tx.h       |   3 +-
  drivers/net/wireless/realtek/rtw88/usb.c      |   4 +
  drivers/net/wireless/virtual/mac80211_hwsim.c |  14 +
  include/linux/ath5k_platform.h                |  30 +
- include/linux/ieee80211-eht.h                 |   1 +
- include/linux/ieee80211.h                     |  17 +
+ include/linux/ieee80211-eht.h                 |  11 +
+ include/linux/ieee80211.h                     |   6 +
  include/linux/mhi.h                           | 812 ------------------
  include/net/cfg80211.h                        |   4 +
  include/net/mac80211.h                        |  34 +-
@@ -194,14 +196,14 @@ Subject: [PATCH] mac80211
  net/mac80211/util.c                           |  17 +
  net/wireless/ap.c                             |   6 +-
  net/wireless/chan.c                           |  49 ++
- net/wireless/core.c                           |  35 +-
+ net/wireless/core.c                           |  27 +-
  net/wireless/core.h                           |   2 +
  net/wireless/mlme.c                           |   7 +-
  net/wireless/reg.c                            |   3 +
  net/wireless/sysfs.c                          |  27 +-
  net/wireless/trace.h                          |   4 +
  net/wireless/util.c                           |   3 +
- 197 files changed, 5157 insertions(+), 2216 deletions(-)
+ 199 files changed, 5137 insertions(+), 2209 deletions(-)
  create mode 100644 compat_version
  create mode 100644 drivers/net/wireless/ath/ath12k/thermal.c
  create mode 100644 drivers/net/wireless/ath/ath12k/thermal.h
@@ -209,7 +211,6 @@ Subject: [PATCH] mac80211
  create mode 100644 drivers/net/wireless/ath/ath9k/hsr.h
  create mode 100644 drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
  create mode 100644 include/linux/ath5k_platform.h
- create mode 100644 include/linux/ieee80211-eht.h
  delete mode 100644 include/linux/mhi.h
 
 diff --git a/Kconfig.sources b/Kconfig.sources
@@ -623,11 +624,11 @@ index d4f3340..651ab63 100644
  }
 diff --git a/compat_version b/compat_version
 new file mode 100644
-index 0000000..41ee722
+index 0000000..d135650
 --- /dev/null
 +++ b/compat_version
 @@ -0,0 +1 @@
-+compat-wireless-6.18.26-1-v25.12.4
++compat-wireless-6.18.55-1-v25.12.6
 diff --git a/drivers/bus/mhi/host/trace.h b/drivers/bus/mhi/host/trace.h
 index 3e0c417..059ed3c 100644
 --- a/drivers/bus/mhi/host/trace.h
@@ -1099,10 +1100,10 @@ index 220fc68..f0b6f7d 100644
  	},
  
 diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 3b276eb..f595b9a 100644
+index ce30632..3494f06 100644
 --- a/drivers/net/wireless/ath/ath10k/snoc.c
 +++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -1630,10 +1630,10 @@ static int ath10k_fw_init(struct ath10k *ar)
+@@ -1635,10 +1635,10 @@ static int ath10k_fw_init(struct ath10k *ar)
  
  	ar_snoc->fw.dev = &pdev->dev;
  
@@ -1389,7 +1390,7 @@ index 8f288ec..78d9822 100644
  ath11k-$(CONFIG_PM) += wow.o
  ath11k-$(CONFIG_DEV_COREDUMP) += coredump.o
 diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 0fd6950..a97d8b8 100644
+index a513596..6e707db 100644
 --- a/drivers/net/wireless/ath/ath11k/ahb.c
 +++ b/drivers/net/wireless/ath/ath11k/ahb.c
 @@ -37,6 +37,9 @@ static const struct of_device_id ath11k_ahb_of_match[] = {
@@ -1501,7 +1502,7 @@ index 0fd6950..a97d8b8 100644
  static int ath11k_core_get_rproc(struct ath11k_base *ab)
  {
  	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-@@ -1020,10 +1060,10 @@ static int ath11k_ahb_fw_resources_init(struct ath11k_base *ab)
+@@ -1021,10 +1061,10 @@ static int ath11k_ahb_fw_resources_init(struct ath11k_base *ab)
  
  	ab_ahb->fw.dev = &pdev->dev;
  
@@ -1515,7 +1516,7 @@ index 0fd6950..a97d8b8 100644
  		goto err_unregister;
  	}
  
-@@ -1071,6 +1111,27 @@ err_unregister:
+@@ -1072,6 +1112,27 @@ err_unregister:
  	return ret;
  }
  
@@ -1543,7 +1544,7 @@ index 0fd6950..a97d8b8 100644
  static int ath11k_ahb_fw_resource_deinit(struct ath11k_base *ab)
  {
  	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-@@ -1112,7 +1173,7 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
+@@ -1113,7 +1174,7 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
  	const struct ath11k_hif_ops *hif_ops;
  	const struct ath11k_pci_ops *pci_ops;
  	enum ath11k_hw_rev hw_rev;
@@ -1552,7 +1553,7 @@ index 0fd6950..a97d8b8 100644
  
  	hw_rev = (uintptr_t)device_get_match_data(&pdev->dev);
  
-@@ -1127,11 +1188,16 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
+@@ -1128,11 +1189,16 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
  		hif_ops = &ath11k_ahb_hif_ops_wcn6750;
  		pci_ops = &ath11k_ahb_pci_ops_wcn6750;
  		break;
@@ -1569,7 +1570,7 @@ index 0fd6950..a97d8b8 100644
  	ret = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
  	if (ret) {
  		dev_err(&pdev->dev, "failed to set 32-bit consistent dma\n");
-@@ -1148,6 +1214,7 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
+@@ -1149,6 +1215,7 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
  	ab->hif.ops = hif_ops;
  	ab->pdev = pdev;
  	ab->hw_rev = hw_rev;
@@ -1755,7 +1756,7 @@ index 1961178..f892731 100644
  	struct ath11k_ext_irq_grp ext_irq_grp[ATH11K_EXT_IRQ_GRP_NUM_MAX];
  	struct ath11k_targ_cap target_caps;
 diff --git a/drivers/net/wireless/ath/ath11k/hal.c b/drivers/net/wireless/ath/ath11k/hal.c
-index 0c797b8..09bc387 100644
+index 8330c9e..5f815e9 100644
 --- a/drivers/net/wireless/ath/ath11k/hal.c
 +++ b/drivers/net/wireless/ath/ath11k/hal.c
 @@ -1274,20 +1274,16 @@ static int ath11k_hal_srng_create_config(struct ath11k_base *ab)
@@ -2025,10 +2026,10 @@ index 52d9f4c..af04f9e 100644
  static inline const char *ath11k_bd_ie_type_str(enum ath11k_bd_ie_type type)
  {
 diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index f6b6e17..628a8a9 100644
+index 1fb0064..8a7d8be 100644
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -8330,6 +8330,23 @@ static void ath11k_mac_op_flush(struct ieee80211_hw *hw, struct ieee80211_vif *v
+@@ -8353,6 +8353,23 @@ static void ath11k_mac_op_flush(struct ieee80211_hw *hw, struct ieee80211_vif *v
  	ath11k_mac_flush_tx_complete(ar);
  }
  
@@ -2052,7 +2053,7 @@ index f6b6e17..628a8a9 100644
  static bool
  ath11k_mac_has_single_legacy_rate(struct ath11k *ar,
  				  enum nl80211_band band,
-@@ -9920,6 +9937,7 @@ static const struct ieee80211_ops ath11k_ops = {
+@@ -9937,6 +9954,7 @@ static const struct ieee80211_ops ath11k_ops = {
  	.set_bitrate_mask		= ath11k_mac_op_set_bitrate_mask,
  	.get_survey			= ath11k_mac_op_get_survey,
  	.flush				= ath11k_mac_op_flush,
@@ -2061,7 +2062,7 @@ index f6b6e17..628a8a9 100644
  	CFG80211_TESTMODE_CMD(ath11k_tm_cmd)
  
 diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
-index d2c44f7..c783bdc 100644
+index 5c08cd7..b3aa1dc 100644
 --- a/drivers/net/wireless/ath/ath11k/mhi.c
 +++ b/drivers/net/wireless/ath/ath11k/mhi.c
 @@ -235,6 +235,34 @@ static void ath11k_mhi_op_runtime_put(struct mhi_controller *mhi_cntrl)
@@ -2108,9 +2109,9 @@ index d2c44f7..c783bdc 100644
  	default:
  		return "UNKNOWN";
  	}
-@@ -285,6 +315,9 @@ static void ath11k_mhi_op_status_cb(struct mhi_controller *mhi_cntrl,
- 		if (!(test_bit(ATH11K_FLAG_UNREGISTERING, &ab->dev_flags)))
+@@ -287,6 +317,9 @@ static void ath11k_mhi_op_status_cb(struct mhi_controller *mhi_cntrl,
  			queue_work(ab->workqueue_aux, &ab->reset_work);
+ 		spin_unlock_bh(&ab->base_lock);
  
 +		break;
 +	case MHI_CB_EE_SBL_MODE:
@@ -2118,7 +2119,7 @@ index d2c44f7..c783bdc 100644
  		break;
  	default:
  		break;
-@@ -293,22 +326,6 @@ static void ath11k_mhi_op_status_cb(struct mhi_controller *mhi_cntrl,
+@@ -295,22 +328,6 @@ static void ath11k_mhi_op_status_cb(struct mhi_controller *mhi_cntrl,
  	ab_pci->mhi_pre_cb = cb;
  }
  
@@ -2156,10 +2157,10 @@ index 5c5c2b0..2aaf280 100644
  void ath11k_mhi_stop(struct ath11k_pci *ar_pci, bool is_suspend);
  int ath11k_mhi_register(struct ath11k_pci *ar_pci);
 diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index 7114eca..4a4469e 100644
+index a163168..b4b26f9 100644
 --- a/drivers/net/wireless/ath/ath11k/pci.c
 +++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -394,13 +394,22 @@ static void ath11k_pci_sw_reset(struct ath11k_base *ab, bool power_on)
+@@ -398,13 +398,22 @@ static void ath11k_pci_sw_reset(struct ath11k_base *ab, bool power_on)
  static void ath11k_pci_init_qmi_ce_config(struct ath11k_base *ab)
  {
  	struct ath11k_qmi_ce_cfg *cfg = &ab->qmi.ce_cfg;
@@ -2204,7 +2205,7 @@ index fc6e7da..ac1e156 100644
  
  int ath11k_pcic_init_msi_config(struct ath11k_base *ab)
 diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
-index aea56c3..f2aa36d 100644
+index f23d75c..3bd674c 100644
 --- a/drivers/net/wireless/ath/ath11k/qmi.c
 +++ b/drivers/net/wireless/ath/ath11k/qmi.c
 @@ -2039,9 +2039,10 @@ static int ath11k_qmi_alloc_target_mem_chunk(struct ath11k_base *ab)
@@ -2792,10 +2793,10 @@ index 7e7b25d..ae4860d 100644
  			      ETH_ALEN);
  		       __entry->peer_ps_state = peer_ps_state;
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 110035d..5b1cf79 100644
+index 3305ec6..1c02618 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -2688,7 +2688,7 @@ int ath11k_wmi_send_wmm_update_cmd_tlv(struct ath11k *ar, u32 vdev_id,
+@@ -2697,7 +2697,7 @@ int ath11k_wmi_send_wmm_update_cmd_tlv(struct ath11k *ar, u32 vdev_id,
  			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
  
  	cmd->vdev_id = vdev_id;
@@ -2845,10 +2846,10 @@ index 57f7589..1d13fb8 100644
  	struct ath12k_ce_ring *dest_ring;
  	struct ath12k_ce_ring *status_ring;
 diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-index cc352ee..56043fe 100644
+index a02db6f..a8c3a33 100644
 --- a/drivers/net/wireless/ath/ath12k/core.c
 +++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -857,11 +857,22 @@ static int ath12k_core_pdev_create(struct ath12k_base *ab)
+@@ -832,11 +832,22 @@ static int ath12k_core_pdev_create(struct ath12k_base *ab)
  		return ret;
  	}
  
@@ -2871,7 +2872,7 @@ index cc352ee..56043fe 100644
  	ath12k_dp_pdev_free(ab);
  }
  
-@@ -1350,6 +1361,7 @@ static int ath12k_core_reconfigure_on_crash(struct ath12k_base *ab)
+@@ -1325,6 +1336,7 @@ static int ath12k_core_reconfigure_on_crash(struct ath12k_base *ab)
  	int ret, total_vdev;
  
  	mutex_lock(&ab->core_lock);
@@ -2879,7 +2880,7 @@ index cc352ee..56043fe 100644
  	ath12k_dp_pdev_free(ab);
  	ath12k_ce_cleanup_pipes(ab);
  	ath12k_wmi_detach(ab);
-@@ -1491,6 +1503,7 @@ static void ath12k_core_pre_reconfigure_recovery(struct ath12k_base *ab)
+@@ -1466,6 +1478,7 @@ static void ath12k_core_pre_reconfigure_recovery(struct ath12k_base *ab)
  			complete(&ar->vdev_delete_done);
  			complete(&ar->bss_survey_done);
  			complete_all(&ar->regd_update_completed);
@@ -2888,7 +2889,7 @@ index cc352ee..56043fe 100644
  			wake_up(&ar->dp.tx_empty_waitq);
  			idr_for_each(&ar->txmgmt_idr,
 diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index e199b95..a9dca83 100644
+index 1ffc3c6..8b44d3d 100644
 --- a/drivers/net/wireless/ath/ath12k/core.h
 +++ b/drivers/net/wireless/ath/ath12k/core.h
 @@ -34,6 +34,7 @@
@@ -2909,10 +2910,10 @@ index e199b95..a9dca83 100644
  
  struct ath12k_hw {
 diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index c5d078a..889895d 100644
+index 0892f6a..d420f85 100644
 --- a/drivers/net/wireless/ath/ath12k/mac.c
 +++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -7727,9 +7727,7 @@ static void ath12k_mac_setup_ht_vht_cap(struct ath12k *ar,
+@@ -7731,9 +7731,7 @@ static void ath12k_mac_setup_ht_vht_cap(struct ath12k *ar,
  						    rate_cap_rx_chainmask);
  	}
  
@@ -2923,7 +2924,7 @@ index c5d078a..889895d 100644
  		band = &ar->mac.sbands[NL80211_BAND_5GHZ];
  		ht_cap = cap->band[NL80211_BAND_5GHZ].ht_cap_info;
  		if (ht_cap_info)
-@@ -14063,6 +14061,10 @@ static void ath12k_mac_setup(struct ath12k *ar)
+@@ -14132,6 +14130,10 @@ static void ath12k_mac_setup(struct ath12k *ar)
  	init_completion(&ar->mlo_setup_done);
  	init_completion(&ar->completed_11d_scan);
  	init_completion(&ar->regd_update_completed);
@@ -2935,10 +2936,10 @@ index c5d078a..889895d 100644
  	INIT_DELAYED_WORK(&ar->scan.timeout, ath12k_scan_timeout_work);
  	wiphy_work_init(&ar->scan.vdev_clean_wk, ath12k_scan_vdev_clean_work);
 diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
-index 8a8a57a..ad71493 100644
+index 6f2c528..39bbd3a 100644
 --- a/drivers/net/wireless/ath/ath12k/pci.c
 +++ b/drivers/net/wireless/ath/ath12k/pci.c
-@@ -297,6 +297,9 @@ static void ath12k_pci_enable_ltssm(struct ath12k_base *ab)
+@@ -301,6 +301,9 @@ static void ath12k_pci_enable_ltssm(struct ath12k_base *ab)
  	u32 val;
  	int i;
  
@@ -2948,7 +2949,7 @@ index 8a8a57a..ad71493 100644
  	val = ath12k_pci_read32(ab, PCIE_PCIE_PARF_LTSSM);
  
  	/* PCIE link seems very unstable after the Hot Reset*/
-@@ -445,9 +448,9 @@ static void ath12k_pci_sync_ce_irqs(struct ath12k_base *ab)
+@@ -449,9 +452,9 @@ static void ath12k_pci_sync_ce_irqs(struct ath12k_base *ab)
  	}
  }
  
@@ -2960,7 +2961,7 @@ index 8a8a57a..ad71493 100644
  	int irq_idx = ATH12K_PCI_IRQ_CE0_OFFSET + ce_pipe->pipe_num;
  
  	ath12k_ce_per_engine_service(ce_pipe->ab, ce_pipe->pipe_num);
-@@ -469,7 +472,7 @@ static irqreturn_t ath12k_pci_ce_interrupt_handler(int irq, void *arg)
+@@ -473,7 +476,7 @@ static irqreturn_t ath12k_pci_ce_interrupt_handler(int irq, void *arg)
  
  	disable_irq_nosync(ab->irq_num[irq_idx]);
  
@@ -2969,7 +2970,7 @@ index 8a8a57a..ad71493 100644
  
  	return IRQ_HANDLED;
  }
-@@ -699,7 +702,7 @@ static int ath12k_pci_config_irq(struct ath12k_base *ab)
+@@ -703,7 +706,7 @@ static int ath12k_pci_config_irq(struct ath12k_base *ab)
  
  		irq_idx = ATH12K_PCI_IRQ_CE0_OFFSET + i;
  
@@ -2978,7 +2979,7 @@ index 8a8a57a..ad71493 100644
  
  		ret = request_irq(irq, ath12k_pci_ce_interrupt_handler,
  				  ab_pci->irq_flags, irq_name[irq_idx],
-@@ -982,7 +985,7 @@ static void ath12k_pci_aspm_restore(struct ath12k_pci *ab_pci)
+@@ -986,7 +989,7 @@ static void ath12k_pci_aspm_restore(struct ath12k_pci *ab_pci)
  						   PCI_EXP_LNKCTL_ASPMC);
  }
  
@@ -2987,7 +2988,7 @@ index 8a8a57a..ad71493 100644
  {
  	int i;
  
-@@ -992,7 +995,7 @@ static void ath12k_pci_cancel_workqueue(struct ath12k_base *ab)
+@@ -996,7 +999,7 @@ static void ath12k_pci_cancel_workqueue(struct ath12k_base *ab)
  		if (ath12k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
  			continue;
  
@@ -2996,7 +2997,7 @@ index 8a8a57a..ad71493 100644
  	}
  }
  
-@@ -1000,7 +1003,7 @@ static void ath12k_pci_ce_irq_disable_sync(struct ath12k_base *ab)
+@@ -1004,7 +1007,7 @@ static void ath12k_pci_ce_irq_disable_sync(struct ath12k_base *ab)
  {
  	ath12k_pci_ce_irqs_disable(ab);
  	ath12k_pci_sync_ce_irqs(ab);
@@ -3242,7 +3243,7 @@ index 8f3aef2..4b9e79c 100644
  		memcpy(__get_dynamic_array(data), data, len);
  	),
 diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index e2b0e62..28d86af 100644
+index 494477c..714068b 100644
 --- a/drivers/net/wireless/ath/ath12k/wmi.c
 +++ b/drivers/net/wireless/ath/ath12k/wmi.c
 @@ -2900,6 +2900,9 @@ int ath12k_wmi_send_scan_chan_list_cmd(struct ath12k *ar,
@@ -3255,7 +3256,7 @@ index e2b0e62..28d86af 100644
  		num_send_chans = min(arg->nallchans, max_chan_limit);
  
  		arg->nallchans -= num_send_chans;
-@@ -6673,31 +6676,6 @@ static int ath12k_pull_peer_assoc_conf_ev(struct ath12k_base *ab, struct sk_buff
+@@ -6675,31 +6678,6 @@ static int ath12k_pull_peer_assoc_conf_ev(struct ath12k_base *ab, struct sk_buff
  	return 0;
  }
  
@@ -3287,7 +3288,7 @@ index e2b0e62..28d86af 100644
  static void ath12k_wmi_op_ep_tx_credits(struct ath12k_base *ab)
  {
  	/* try to send pending beacons first. they take priority */
-@@ -8712,25 +8690,45 @@ static void
+@@ -8714,25 +8692,45 @@ static void
  ath12k_wmi_pdev_temperature_event(struct ath12k_base *ab,
  				  struct sk_buff *skb)
  {
@@ -3365,7 +3366,7 @@ index 308a429..0e6d184 100644
  
  	/* Antenna Control */
 diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index a9cb132..1e76790 100644
+index 49df4a1..e0173ff 100644
 --- a/drivers/net/wireless/ath/ath5k/base.c
 +++ b/drivers/net/wireless/ath/ath5k/base.c
 @@ -465,6 +465,9 @@ ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef)
@@ -3378,7 +3379,7 @@ index a9cb132..1e76790 100644
  	/*
  	 * To switch channels clear any pending DMA operations;
  	 * wait long enough for the RX fifo to drain, reset the
-@@ -2009,7 +2012,7 @@ ath5k_beacon_send(struct ath5k_hw *ah)
+@@ -2010,7 +2013,7 @@ ath5k_beacon_send(struct ath5k_hw *ah)
  	}
  
  	if ((ah->opmode == NL80211_IFTYPE_AP && ah->num_ap_vifs +
@@ -3387,7 +3388,7 @@ index a9cb132..1e76790 100644
  			ah->opmode == NL80211_IFTYPE_MESH_POINT) {
  		u64 tsf = ath5k_hw_get_tsf64(ah);
  		u32 tsftu = TSF_TO_TU(tsf);
-@@ -2095,7 +2098,7 @@ ath5k_beacon_update_timers(struct ath5k_hw *ah, u64 bc_tsf)
+@@ -2096,7 +2099,7 @@ ath5k_beacon_update_timers(struct ath5k_hw *ah, u64 bc_tsf)
  
  	intval = ah->bintval & AR5K_BEACON_PERIOD;
  	if (ah->opmode == NL80211_IFTYPE_AP && ah->num_ap_vifs
@@ -3396,7 +3397,7 @@ index a9cb132..1e76790 100644
  		intval /= ATH_BCBUF;	/* staggered multi-bss beacons */
  		if (intval < 15)
  			ATH5K_WARN(ah, "intval %u is too low, min 15\n",
-@@ -2561,6 +2564,7 @@ static const struct ieee80211_iface_limit if_limits[] = {
+@@ -2562,6 +2565,7 @@ static const struct ieee80211_iface_limit if_limits[] = {
  				 BIT(NL80211_IFTYPE_MESH_POINT) |
  #endif
  				 BIT(NL80211_IFTYPE_AP) },
@@ -5068,18 +5069,9 @@ index 174d716..605abe1 100644
  
  static inline void ath9k_hw_set_bt_ant_diversity(struct ath_hw *ah, bool enable)
 diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8e439f2..944578c 100644
+index 7b93a54..c04adac 100644
 --- a/drivers/net/wireless/ath/ath9k/hw.c
 +++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -21,7 +21,7 @@
- #include <linux/time.h>
- #include <linux/bitops.h>
- #include <linux/etherdevice.h>
--#include <linux/gpio.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/unaligned.h>
- 
- #include "hw.h"
 @@ -248,6 +248,19 @@ void ath9k_hw_get_channel_centers(struct ath_hw *ah,
  		centers->synth_center + (extoff * HT40_CHANNEL_CENTER_SHIFT);
  }
@@ -5185,20 +5177,20 @@ index 8e439f2..944578c 100644
 +
 +	ath_dbg(ath9k_hw_common(ah), RESET,
 +		"reset MAC via external reset\n");
-+
+ 
+-		REG_WRITE(ah, AR_RTC_RESET(ah), 1);
 +	err = ah->external_reset();
 +	if (err) {
 +		ath_err(ath9k_hw_common(ah),
 +			"External reset failed, err=%d\n", err);
 +		return false;
-+	}
+ 	}
  
--		REG_WRITE(ah, AR_RTC_RESET(ah), 1);
 +	if (AR_SREV_9550(ah)) {
 +		REG_WRITE(ah, AR_RTC_RESET(ah), 0);
 +		udelay(10);
- 	}
- 
++	}
++
 +	REG_WRITE(ah, AR_RTC_RESET(ah), 1);
 +	udelay(10);
 +
@@ -5340,72 +5332,7 @@ index 8e439f2..944578c 100644
  }
  
  int ath9k_hw_fill_cap_info(struct ath_hw *ah)
-@@ -2719,19 +2786,25 @@ static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah, u32 gpio, u32 type)
- static void ath9k_hw_gpio_cfg_soc(struct ath_hw *ah, u32 gpio, bool out,
- 				  const char *label)
- {
-+	enum gpiod_flags flags = out ? GPIOD_OUT_LOW : GPIOD_IN;
-+	struct gpio_desc *gpiod;
- 	int err;
- 
--	if (ah->caps.gpio_requested & BIT(gpio))
-+	if (ah->gpiods[gpio])
- 		return;
- 
--	err = devm_gpio_request_one(ah->dev, gpio, out ? GPIOF_OUT_INIT_LOW : GPIOF_IN, label);
--	if (err) {
-+	/* Obtains a system specific GPIO descriptor from another GPIO controller */
-+	gpiod = gpiod_get_index(NULL, "ath9k", gpio, flags);
-+
-+	if (IS_ERR(gpiod)) {
-+		err = PTR_ERR(gpiod);
- 		ath_err(ath9k_hw_common(ah), "request GPIO%d failed:%d\n",
- 			gpio, err);
- 		return;
- 	}
- 
--	ah->caps.gpio_requested |= BIT(gpio);
-+	gpiod_set_consumer_name(gpiod, label);
-+	ah->gpiods[gpio] = gpiod;
- }
- 
- static void ath9k_hw_gpio_cfg_wmac(struct ath_hw *ah, u32 gpio, bool out,
-@@ -2793,8 +2866,10 @@ void ath9k_hw_gpio_free(struct ath_hw *ah, u32 gpio)
- 
- 	WARN_ON(gpio >= ah->caps.num_gpio_pins);
- 
--	if (ah->caps.gpio_requested & BIT(gpio))
--		ah->caps.gpio_requested &= ~BIT(gpio);
-+	if (ah->gpiods[gpio]) {
-+		gpiod_put(ah->gpiods[gpio]);
-+		ah->gpiods[gpio] = NULL;
-+	}
- }
- EXPORT_SYMBOL(ath9k_hw_gpio_free);
- 
-@@ -2822,8 +2897,8 @@ u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
- 			val = REG_READ(ah, AR_GPIO_IN(ah)) & BIT(gpio);
- 		else
- 			val = MS_REG_READ(AR, gpio);
--	} else if (BIT(gpio) & ah->caps.gpio_requested) {
--		val = gpio_get_value(gpio) & BIT(gpio);
-+	} else if (ah->gpiods[gpio]) {
-+		val = gpiod_get_value(ah->gpiods[gpio]);
- 	} else {
- 		WARN_ON(1);
- 	}
-@@ -2846,8 +2921,8 @@ void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val)
- 			AR7010_GPIO_OUT : AR_GPIO_IN_OUT(ah);
- 
- 		REG_RMW(ah, out_addr, val << gpio, BIT(gpio));
--	} else if (BIT(gpio) & ah->caps.gpio_requested) {
--		gpio_set_value(gpio, val);
-+	} else if (ah->gpiods[gpio]) {
-+		gpiod_set_value(ah->gpiods[gpio], val);
- 	} else {
- 		WARN_ON(1);
- 	}
-@@ -2946,7 +3021,8 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
+@@ -2957,7 +3024,8 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
  {
  	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
  	struct ieee80211_channel *channel;
@@ -5415,7 +5342,7 @@ index 8e439f2..944578c 100644
  	u16 ctl = NO_CTL;
  
  	if (!chan)
-@@ -2958,9 +3034,18 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
+@@ -2969,9 +3037,18 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
  	channel = chan->chan;
  	chan_pwr = min_t(int, channel->max_power * 2, MAX_COMBINED_POWER);
  	new_pwr = min_t(int, chan_pwr, reg->power_limit);
@@ -5436,18 +5363,10 @@ index 8e439f2..944578c 100644
  
  void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
 diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 9287bf6..4ad3bb7 100644
+index 0e463ff..4ad3bb7 100644
 --- a/drivers/net/wireless/ath/ath9k/hw.h
 +++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -19,6 +19,7 @@
- 
- #include <linux/if_ether.h>
- #include <linux/delay.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/io.h>
- #include <linux/firmware.h>
- 
-@@ -36,6 +37,7 @@
+@@ -37,6 +37,7 @@
  
  #define ATHEROS_VENDOR_ID	0x168c
  
@@ -5455,14 +5374,6 @@ index 9287bf6..4ad3bb7 100644
  #define AR5416_DEVID_PCI	0x0023
  #define AR5416_DEVID_PCIE	0x0024
  #define AR9160_DEVID_PCI	0x0027
-@@ -302,7 +304,6 @@ struct ath9k_hw_capabilities {
- 	u8 max_rxchains;
- 	u8 num_gpio_pins;
- 	u32 gpio_mask;
--	u32 gpio_requested;
- 	u8 rx_hp_qdepth;
- 	u8 rx_lp_qdepth;
- 	u8 rx_status_len;
 @@ -521,6 +522,12 @@ enum {
  	ATH9K_RESET_COLD,
  };
@@ -5492,15 +5403,7 @@ index 9287bf6..4ad3bb7 100644
  	void (*spectral_scan_config)(struct ath_hw *ah,
  				     struct ath_spec_scan *param);
  	void (*spectral_scan_trigger)(struct ath_hw *ah);
-@@ -783,6 +792,7 @@ struct ath_hw {
- 	struct ath9k_hw_capabilities caps;
- 	struct ath9k_channel channels[ATH9K_NUM_CHANNELS];
- 	struct ath9k_channel *curchan;
-+	struct gpio_desc *gpiods[32];
- 
- 	union {
- 		struct ar5416_eeprom_def def;
-@@ -809,6 +819,8 @@ struct ath_hw {
+@@ -810,6 +819,8 @@ struct ath_hw {
  	u32 ah_flags;
  	s16 nf_override;
  
@@ -5509,7 +5412,7 @@ index 9287bf6..4ad3bb7 100644
  	bool reset_power_on;
  	bool htc_reset_init;
  
-@@ -1078,6 +1090,7 @@ void ath9k_hw_check_nav(struct ath_hw *ah);
+@@ -1079,6 +1090,7 @@ void ath9k_hw_check_nav(struct ath_hw *ah);
  bool ath9k_hw_check_alive(struct ath_hw *ah);
  
  bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode);
@@ -5518,7 +5421,7 @@ index 9287bf6..4ad3bb7 100644
  /* Generic hw timer primitives */
  struct ath_gen_timer *ath_gen_timer_alloc(struct ath_hw *ah,
 diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index a172284..cd0d1bf 100644
+index a172284..91cef7e 100644
 --- a/drivers/net/wireless/ath/ath9k/init.c
 +++ b/drivers/net/wireless/ath/ath9k/init.c
 @@ -28,6 +28,11 @@
@@ -5632,7 +5535,7 @@ index a172284..cd0d1bf 100644
  	int ret;
  
  	if (!of_device_is_available(np))
-@@ -633,6 +714,43 @@ static int ath9k_of_init(struct ath_softc *sc)
+@@ -633,6 +714,46 @@ static int ath9k_of_init(struct ath_softc *sc)
  
  	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
  
@@ -5645,11 +5548,13 @@ index a172284..cd0d1bf 100644
 +#ifdef CONFIG_ATH79
 +	if (ah->hw_version.devid == AR5416_AR9100_DEVID) {
 +		ah->external_reset = ar913x_wmac_reset;
++		ah->external_reset();
 +	} else if (ah->hw_version.devid == AR9300_DEVID_AR9330) {
 +		ah->get_mac_revision = ar9330_get_soc_revision;
 +		u32 t = ath79_reset_rr(AR933X_RESET_REG_BOOTSTRAP);
 +		ah->is_clk_25mhz = !(t & AR933X_BOOTSTRAP_REF_CLK_40);
 +		ah->external_reset = ar933x_wmac_reset;
++		ah->external_reset();
 +	} else if (ah->hw_version.devid == AR9300_DEVID_AR9340) {
 +		ah->get_mac_revision = ath79_get_soc_revision;
 +		u32 t = ath79_reset_rr(AR934X_RESET_REG_BOOTSTRAP);
@@ -5666,6 +5571,7 @@ index a172284..cd0d1bf 100644
 +		u32 t = ath79_reset_rr(QCA955X_RESET_REG_BOOTSTRAP);
 +		ah->is_clk_25mhz = !(t & QCA955X_BOOTSTRAP_REF_CLK_40);
 +		ah->external_reset = qca955x_wmac_reset;
++		ah->external_reset();
 +	} else if (ah->hw_version.devid == AR9300_DEVID_QCA956X) {
 +		ah->get_mac_revision = ath79_get_soc_revision;
 +		u32 t = ath79_reset_rr(QCA956X_RESET_REG_BOOTSTRAP);
@@ -5676,7 +5582,7 @@ index a172284..cd0d1bf 100644
  	if (of_property_read_bool(np, "qca,no-eeprom")) {
  		/* ath9k-eeprom-<bus>-<id>.bin */
  		scnprintf(eeprom_name, sizeof(eeprom_name),
-@@ -651,6 +769,17 @@ static int ath9k_of_init(struct ath_softc *sc)
+@@ -651,6 +772,17 @@ static int ath9k_of_init(struct ath_softc *sc)
  	if (ret == -EPROBE_DEFER)
  		return ret;
  
@@ -5694,7 +5600,7 @@ index a172284..cd0d1bf 100644
  	return 0;
  }
  
-@@ -691,6 +820,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+@@ -691,6 +823,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
  	if (!ath9k_is_chanctx_enabled())
  		sc->cur_chan->hw_queue_base = 0;
  
@@ -5702,7 +5608,7 @@ index a172284..cd0d1bf 100644
  	common->ops = &ah->reg_ops;
  	common->bus_ops = bus_ops;
  	common->ps_ops = &ath9k_ps_ops;
-@@ -824,7 +954,8 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
+@@ -824,7 +957,8 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
  	if (ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
  		ath9k_init_band_txpower(sc, NL80211_BAND_5GHZ);
  
@@ -5712,7 +5618,7 @@ index a172284..cd0d1bf 100644
  }
  
  static const struct ieee80211_iface_limit if_limits[] = {
-@@ -836,6 +967,7 @@ static const struct ieee80211_iface_limit if_limits[] = {
+@@ -836,6 +970,7 @@ static const struct ieee80211_iface_limit if_limits[] = {
  				 BIT(NL80211_IFTYPE_AP) },
  	{ .max = 1,	.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
  				 BIT(NL80211_IFTYPE_P2P_GO) },
@@ -5720,7 +5626,7 @@ index a172284..cd0d1bf 100644
  };
  
  #ifdef CPTCFG_ATH9K_CHANNEL_CONTEXT
-@@ -916,6 +1048,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+@@ -916,6 +1051,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
  	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
  	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
  	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
@@ -5728,7 +5634,7 @@ index a172284..cd0d1bf 100644
  
  	if (ath9k_ps_enable)
  		ieee80211_hw_set(hw, SUPPORTS_PS);
-@@ -928,9 +1061,6 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+@@ -928,9 +1064,6 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
  				IEEE80211_RADIOTAP_MCS_HAVE_STBC;
  	}
  
@@ -5738,7 +5644,7 @@ index a172284..cd0d1bf 100644
  	hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR |
  			       NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
  			       NL80211_FEATURE_P2P_GO_CTWIN;
-@@ -1003,6 +1133,18 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+@@ -1003,6 +1136,18 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
  	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CAN_REPLACE_PTK0);
  }
  
@@ -5757,7 +5663,7 @@ index a172284..cd0d1bf 100644
  int ath9k_init_device(u16 devid, struct ath_softc *sc,
  		    const struct ath_bus_ops *bus_ops)
  {
-@@ -1043,13 +1185,15 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+@@ -1043,13 +1188,15 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
  
  #ifdef CPTCFG_MAC80211_LEDS
  	/* must be initialized before ieee80211_register_hw */
@@ -5774,7 +5680,7 @@ index a172284..cd0d1bf 100644
  	/* Register with mac80211 */
  	error = ieee80211_register_hw(hw);
  	if (error)
-@@ -1133,25 +1277,25 @@ static int __init ath9k_init(void)
+@@ -1133,25 +1280,25 @@ static int __init ath9k_init(void)
  {
  	int error;
  
@@ -6689,10 +6595,10 @@ index a86ad74..195ceee 100644
  
  config BRCMSMAC
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-index 09689dd..f23927e 100644
+index d7686a9..de9d4b2 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -298,7 +298,7 @@ void brcmf_rx_event(struct device *dev, struct sk_buff *rxp);
+@@ -304,7 +304,7 @@ void brcmf_rx_event(struct device *dev, struct sk_buff *rxp);
  
  int brcmf_alloc(struct device *dev, struct brcmf_mp_device *settings);
  /* Indication from bus module regarding presence/insertion of dongle. */
@@ -6702,7 +6608,7 @@ index 09689dd..f23927e 100644
  void brcmf_detach(struct device *dev);
  void brcmf_free(struct device *dev);
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index bb96b87..6112650 100644
+index 1fc9ecd..5eca978 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
 @@ -9,6 +9,7 @@
@@ -6989,10 +6895,10 @@ index 1b7c001..207af43 100644
  	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_SCAN_CHANNEL_TIME,
  				    BRCMF_DEFAULT_SCAN_CHANNEL_TIME);
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 862a033..3a5a4de 100644
+index 048b5d5..cdcd01c 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1327,7 +1327,7 @@ int brcmf_alloc(struct device *dev, struct brcmf_mp_device *settings)
+@@ -1358,7 +1358,7 @@ int brcmf_alloc(struct device *dev, struct brcmf_mp_device *settings)
  	return 0;
  }
  
@@ -7001,7 +6907,7 @@ index 862a033..3a5a4de 100644
  {
  	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
  	struct brcmf_pub *drvr = bus_if->drvr;
-@@ -1370,10 +1370,13 @@ int brcmf_attach(struct device *dev)
+@@ -1401,10 +1401,13 @@ int brcmf_attach(struct device *dev)
  
  	brcmf_fwvid_get_cfg80211_ops(drvr);
  
@@ -7161,10 +7067,10 @@ index e1752a5..20e5bde 100644
  		afx_hdl = &p2p->afx_hdl;
  		afx_hdl->peer_listen_chan = le32_to_cpu(af_params->channel);
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 84e4a1a..aefd54d 100644
+index 025b80a..6c64e38 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -2214,7 +2214,7 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+@@ -2218,7 +2218,7 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
  
  	init_waitqueue_head(&devinfo->mbdata_resp_wait);
  
@@ -7174,7 +7080,7 @@ index 84e4a1a..aefd54d 100644
  		goto fail;
  
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 4e6ed02..cc98baf 100644
+index 5beceea..80bcbb4 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
 @@ -35,9 +35,12 @@
@@ -7253,7 +7159,7 @@ index 4e6ed02..cc98baf 100644
  
  	return intstatus;
  }
-@@ -2580,6 +2596,182 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+@@ -2582,6 +2598,182 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
  	return ret;
  }
  
@@ -7436,7 +7342,7 @@ index 4e6ed02..cc98baf 100644
  static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
  {
  	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
-@@ -2651,8 +2843,11 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+@@ -2653,8 +2845,11 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
  
  	/* Handle host mailbox indication */
  	if (intstatus & I_HMB_HOST_INT) {
@@ -7449,7 +7355,7 @@ index 4e6ed02..cc98baf 100644
  	}
  
  	sdio_release_host(bus->sdiodev->func1);
-@@ -2697,7 +2892,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+@@ -2699,7 +2894,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
  	brcmf_sdio_clrintr(bus);
  
  	if (bus->ctrl_frame_stat && (bus->clkstate == CLK_AVAIL) &&
@@ -7458,7 +7364,7 @@ index 4e6ed02..cc98baf 100644
  		sdio_claim_host(bus->sdiodev->func1);
  		if (bus->ctrl_frame_stat) {
  			err = brcmf_sdio_tx_ctrlframe(bus,  bus->ctrl_frame_buf,
-@@ -3568,6 +3763,10 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
+@@ -3570,6 +3765,10 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
  	if (err < 0)
  		goto done;
  
@@ -7469,7 +7375,7 @@ index 4e6ed02..cc98baf 100644
  	bus->tx_hdrlen = SDPCM_HWHDR_LEN + SDPCM_SWHDR_LEN;
  	if (sdiodev->sg_support) {
  		bus->txglom = false;
-@@ -4218,7 +4417,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+@@ -4220,7 +4419,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
  	u8 saveclk, bpreq;
  	u8 devctl;
  
@@ -7478,7 +7384,7 @@ index 4e6ed02..cc98baf 100644
  
  	if (err)
  		goto fail;
-@@ -4396,12 +4595,25 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+@@ -4398,12 +4597,25 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
  	}
  
  	/* Attach to the common layer, reserve hdr space */
@@ -7505,7 +7411,7 @@ index 4e6ed02..cc98baf 100644
  	/* ready */
  	return;
  
-@@ -4649,3 +4861,40 @@ int brcmf_sdio_sleep(struct brcmf_sdio *bus, bool sleep)
+@@ -4658,3 +4870,40 @@ int brcmf_sdio_sleep(struct brcmf_sdio *bus, bool sleep)
  
  	return ret;
  }
@@ -7547,7 +7453,7 @@ index 4e6ed02..cc98baf 100644
 +	return err;
 +}
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index 80180d5..ed35b56 100644
+index b93d153..ef42172 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
 @@ -165,6 +165,35 @@ struct brcmf_sdreg {
@@ -7595,7 +7501,7 @@ index 80180d5..ed35b56 100644
  };
  
  /* sdio core registers */
-@@ -367,4 +398,83 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled);
+@@ -368,4 +399,83 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled);
  int brcmf_sdio_sleep(struct brcmf_sdio *bus, bool sleep);
  void brcmf_sdio_trigger_dpc(struct brcmf_sdio *bus);
  
@@ -7708,7 +7614,7 @@ index 23cd5e2..9965617 100644
  	),
  	TP_printk("%s: %s", __get_str(func), __get_str(msg))
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index f0129d1..5bedc8f 100644
+index b6b5f13..7af3bdf 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
 @@ -1208,7 +1208,7 @@ static void brcmf_usb_probe_phase2(struct device *dev, int ret,
@@ -7720,7 +7626,7 @@ index f0129d1..5bedc8f 100644
  	if (ret)
  		goto error;
  
-@@ -1288,7 +1288,7 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo,
+@@ -1289,7 +1289,7 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo,
  		ret = brcmf_alloc(devinfo->dev, devinfo->settings);
  		if (ret)
  			goto fail;
@@ -7729,7 +7635,7 @@ index f0129d1..5bedc8f 100644
  		if (ret)
  			goto fail;
  		/* we are done */
-@@ -1585,7 +1585,11 @@ static int brcmf_usb_reset_device(struct device *dev, void *notused)
+@@ -1588,7 +1588,11 @@ static int brcmf_usb_reset_device(struct device *dev, void *notused)
  
  void brcmf_usb_exit(void)
  {
@@ -9546,7 +9452,7 @@ index 45775ec..e14bc9e 100644
  	rt2x00mmio_register_write(rt2x00dev, TX_BASE_PTR4, 0);
  	rt2x00mmio_register_write(rt2x00dev, TX_MAX_CNT4, 0);
 diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800pci.c b/drivers/net/wireless/ralink/rt2x00/rt2800pci.c
-index c891043..c1002bc 100644
+index 2bea315..5cb3e3e 100644
 --- a/drivers/net/wireless/ralink/rt2x00/rt2800pci.c
 +++ b/drivers/net/wireless/ralink/rt2x00/rt2800pci.c
 @@ -278,6 +278,9 @@ static int rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
@@ -9763,7 +9669,7 @@ index 28e3d4e..b491b7f 100644
 + 
  #endif /* RT2X00_H */
 diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-index e7eaa22..686ce71 100644
+index 90ed03a..76dbef7 100644
 --- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
 +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
 @@ -1007,6 +1007,14 @@ static int rt2x00lib_probe_hw_modes(struct rt2x00_dev *rt2x00dev,
@@ -10062,11 +9968,52 @@ index 23739dd..fe9102e 100644
  /**
   * enum skb_frame_desc_flags: Flags for &struct skb_frame_desc
   *
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+index e73c06b..b46f4fc 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.c
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -196,7 +196,7 @@ void rtw_tx_report_purge_timer(struct timer_list *t)
+ void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn)
+ {
+ 	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
+-	unsigned long timeout = RTW_TX_PROBE_TIMEOUT;
++	unsigned long timeout;
+ 	unsigned long flags;
+ 	u8 *drv_data;
+ 
+@@ -208,9 +208,10 @@ void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn)
+ 	__skb_queue_tail(&tx_report->queue, skb);
+ 	spin_unlock_irqrestore(&tx_report->q_lock, flags);
+ 
+-	if (rtwdev->chip->id == RTW_CHIP_TYPE_8723D &&
+-	    rtwdev->hci.type == RTW_HCI_TYPE_USB)
+-		timeout = msecs_to_jiffies(2500);
++	if (rtwdev->hci.type == RTW_HCI_TYPE_PCIE)
++		timeout = RTW_TX_PROBE_TIMEOUT_SHORT;
++	else
++		timeout = RTW_TX_PROBE_TIMEOUT_LONG;
+ 
+ 	mod_timer(&tx_report->purge_timer, jiffies + timeout);
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
+index d34cdec..168f48e 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.h
++++ b/drivers/net/wireless/realtek/rtw88/tx.h
+@@ -7,7 +7,8 @@
+ 
+ #define RTK_TX_MAX_AGG_NUM_MASK		0x1f
+ 
+-#define RTW_TX_PROBE_TIMEOUT		msecs_to_jiffies(500)
++#define RTW_TX_PROBE_TIMEOUT_SHORT	msecs_to_jiffies(500)
++#define RTW_TX_PROBE_TIMEOUT_LONG	msecs_to_jiffies(2500)
+ 
+ struct rtw_tx_desc {
+ 	__le32 w0;
 diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index 6e841a1..a4d7e35 100644
+index c7f723c..6dffcfc 100644
 --- a/drivers/net/wireless/realtek/rtw88/usb.c
 +++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -965,7 +965,11 @@ static int rtw_usb_init_rx(struct rtw_dev *rtwdev)
+@@ -974,7 +974,11 @@ static int rtw_usb_init_rx(struct rtw_dev *rtwdev)
  	struct sk_buff *rx_skb;
  	int i;
  
@@ -10079,10 +10026,10 @@ index 6e841a1..a4d7e35 100644
  		rtw_err(rtwdev, "failed to create RX work queue\n");
  		return -ENOMEM;
 diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
-index 2c601ec..3210b24 100644
+index 1832ef9..d9cd2f0 100644
 --- a/drivers/net/wireless/virtual/mac80211_hwsim.c
 +++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
-@@ -6926,6 +6926,7 @@ static void hwsim_virtio_rx_done(struct virtqueue *vq)
+@@ -6937,6 +6937,7 @@ static void hwsim_virtio_rx_done(struct virtqueue *vq)
  
  static int init_vqs(struct virtio_device *vdev)
  {
@@ -10090,7 +10037,7 @@ index 2c601ec..3210b24 100644
  	struct virtqueue_info vqs_info[HWSIM_NUM_VQS] = {
  		[HWSIM_VQ_TX] = { "tx", hwsim_virtio_tx_done },
  		[HWSIM_VQ_RX] = { "rx", hwsim_virtio_rx_done },
-@@ -6933,6 +6934,19 @@ static int init_vqs(struct virtio_device *vdev)
+@@ -6944,6 +6945,19 @@ static int init_vqs(struct virtio_device *vdev)
  
  	return virtio_find_vqs(vdev, HWSIM_NUM_VQS,
  			       hwsim_vqs, vqs_info, NULL);
@@ -10147,32 +10094,12 @@ index 0000000..ec85224
 +
 +#endif /* _LINUX_ATH5K_PLATFORM_H */
 diff --git a/include/linux/ieee80211-eht.h b/include/linux/ieee80211-eht.h
-new file mode 100644
-index 0000000..0f54351
---- /dev/null
+index d386a6c..7d0a3d4 100644
+--- a/include/linux/ieee80211-eht.h
 +++ b/include/linux/ieee80211-eht.h
-@@ -0,0 +1 @@
-+#include <linux/ieee80211.h>
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 1f46790..e751152 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1612,6 +1612,12 @@ struct ieee80211_mgmt {
- 					u8 action_code;
- 					u8 variable[];
- 				} __packed epcs;
-+				struct {
-+					u8 action_code;
-+					u8 dialog_token;
-+					u8 control;
-+					u8 variable[];
-+				} __packed eml_omn;
- 			} u;
- 		} __packed action;
- 		DECLARE_FLEX_ARRAY(u8, body); /* Generic frame body */
-@@ -5462,6 +5468,17 @@ struct ieee80211_mle_tdls_common_info {
+@@ -558,6 +558,17 @@ struct ieee80211_mle_tdls_common_info {
  
- /* no fixed fields in PRIO_ACCESS */
+ #define IEEE80211_MLC_PRIO_ACCESS_PRES_AP_MLD_MAC_ADDR	0x0010
  
 +#define IEEE80211_EML_CTRL_EMLSR_MODE		BIT(0)
 +#define IEEE80211_EML_CTRL_EMLMR_MODE		BIT(1)
@@ -10185,9 +10112,26 @@ index 1f46790..e751152 100644
 +#define IEEE80211_EML_EMLMR_RX_MCS_MAP		0xf0
 +#define IEEE80211_EML_EMLMR_TX_MCS_MAP		0x0f
 +
+ /* no fixed fields in PRIO_ACCESS */
+ 
  /**
-  * ieee80211_mle_common_size - check multi-link element common size
-  * @data: multi-link element, must already be checked for size using
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 2cf3ae4..626371e 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1367,6 +1367,12 @@ struct ieee80211_mgmt {
+ 					u8 action_code;
+ 					u8 variable[];
+ 				} __packed epcs;
++				struct {
++					u8 action_code;
++					u8 dialog_token;
++					u8 control;
++					u8 variable[];
++				} __packed eml_omn;
+ 			} u;
+ 		} __packed action;
+ 		DECLARE_FLEX_ARRAY(u8, body); /* Generic frame body */
 diff --git a/include/linux/mhi.h b/include/linux/mhi.h
 deleted file mode 100644
 index dd372b0..0000000
@@ -11007,10 +10951,10 @@ index dd372b0..0000000
 -
 -#endif /* _MHI_H_ */
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 41ac0de..ada352b 100644
+index 4afcf97..2bd4739 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -187,6 +187,8 @@ enum ieee80211_channel_flags {
+@@ -189,6 +189,8 @@ enum ieee80211_channel_flags {
   * @dfs_state: current state of this channel. Only relevant if radar is required
   *	on this channel.
   * @dfs_state_entered: timestamp (jiffies) when the dfs state was entered.
@@ -11019,7 +10963,7 @@ index 41ac0de..ada352b 100644
   * @dfs_cac_ms: DFS CAC time in milliseconds, this is valid for DFS channels.
   * @psd: power spectral density (in dBm)
   */
-@@ -204,6 +206,7 @@ struct ieee80211_channel {
+@@ -206,6 +208,7 @@ struct ieee80211_channel {
  	int orig_mag, orig_mpwr;
  	enum nl80211_dfs_state dfs_state;
  	unsigned long dfs_state_entered;
@@ -11027,7 +10971,7 @@ index 41ac0de..ada352b 100644
  	unsigned int dfs_cac_ms;
  	s8 psd;
  };
-@@ -3601,6 +3604,7 @@ enum wiphy_params_flags {
+@@ -3655,6 +3658,7 @@ enum wiphy_params_flags {
  /* The per TXQ device queue limit in airtime */
  #define IEEE80211_DEFAULT_AQL_TXQ_LIMIT_L	5000
  #define IEEE80211_DEFAULT_AQL_TXQ_LIMIT_H	12000
@@ -11036,7 +10980,7 @@ index 41ac0de..ada352b 100644
  /* The per interface airtime threshold to switch to lower queue limit */
  #define IEEE80211_AQL_THRESHOLD			24000
 diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0e3d7fe..1ed2e22 100644
+index 4bf6b8c..5ff8206 100644
 --- a/include/net/mac80211.h
 +++ b/include/net/mac80211.h
 @@ -1249,8 +1249,8 @@ struct ieee80211_tx_info {
@@ -11275,7 +11219,7 @@ index df26c7b..1038c30 100644
  	 * We have different type of choice blocks.
  	 * If curr.tri equals to mod then we can select several
 diff --git a/local-symbols b/local-symbols
-index 4dd646a..07dbcbf 100644
+index d5445a7..8047888 100644
 --- a/local-symbols
 +++ b/local-symbols
 @@ -53,14 +53,6 @@ MAC80211_MESH_PS_DEBUG=
@@ -11332,7 +11276,7 @@ index 4dd646a..07dbcbf 100644
  WLAN_VENDOR_ATMEL=
  AT76C50X_USB=
  WLAN_VENDOR_BROADCOM=
-@@ -340,6 +337,7 @@ RT2X00_LIB_FIRMWARE=
+@@ -341,6 +338,7 @@ RT2X00_LIB_FIRMWARE=
  RT2X00_LIB_CRYPTO=
  RT2X00_LIB_LEDS=
  RT2X00_LIB_DEBUGFS=
@@ -11457,12 +11401,12 @@ index c61df63..0c54cdb 100644
  		return max_t(u32, duration, 4);
  	}
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index eef6cda..54a4687 100644
+index 2d54253..5e650ca 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -1883,12 +1883,6 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
- 	ieee80211_link_info_change_notify(sdata, link,
- 					  BSS_CHANGED_BEACON_ENABLED);
+@@ -1913,12 +1913,6 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
+ 	ieee80211_link_info_change_notify(sdata, link, changes);
  
 -	ieee80211_remove_link_keys(link, &keys);
 -	if (!list_empty(&keys)) {
@@ -11473,7 +11417,7 @@ index eef6cda..54a4687 100644
  	if (sdata->wdev.links[link_id].cac_started) {
  		chandef = link_conf->chanreq.oper;
  		wiphy_delayed_work_cancel(wiphy, &link->dfs_cac_timer_work);
-@@ -3127,6 +3121,8 @@ static int ieee80211_scan(struct wiphy *wiphy,
+@@ -3161,6 +3155,8 @@ static int ieee80211_scan(struct wiphy *wiphy,
  		 */
  		fallthrough;
  	case NL80211_IFTYPE_AP:
@@ -11482,7 +11426,7 @@ index eef6cda..54a4687 100644
  		/*
  		 * If the scan has been forced (and the driver supports
  		 * forcing), don't care about being beaconing already.
-@@ -3819,6 +3815,27 @@ static bool ieee80211_is_scan_ongoing(struct wiphy *wiphy,
+@@ -3856,6 +3852,27 @@ static bool ieee80211_is_scan_ongoing(struct wiphy *wiphy,
  	return false;
  }
  
@@ -11510,7 +11454,7 @@ index eef6cda..54a4687 100644
  static int ieee80211_start_radar_detection(struct wiphy *wiphy,
  					   struct net_device *dev,
  					   struct cfg80211_chan_def *chandef,
-@@ -3832,7 +3849,7 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+@@ -3869,7 +3886,7 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
  
  	lockdep_assert_wiphy(local->hw.wiphy);
  
@@ -11519,7 +11463,7 @@ index eef6cda..54a4687 100644
  		return -EBUSY;
  
  	link_data = sdata_dereference(sdata->link[link_id], sdata);
-@@ -4324,7 +4341,7 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+@@ -4361,7 +4378,7 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
  
  	lockdep_assert_wiphy(local->hw.wiphy);
  
@@ -11528,7 +11472,7 @@ index eef6cda..54a4687 100644
  		return -EBUSY;
  
  	if (sdata->wdev.links[link_id].cac_started)
-@@ -4567,7 +4584,9 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+@@ -4604,7 +4621,9 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
  	struct ieee80211_tx_info *info;
  	struct sta_info *sta;
  	struct ieee80211_chanctx_conf *chanctx_conf;
@@ -11538,7 +11482,7 @@ index eef6cda..54a4687 100644
  	int ret;
  
  	/* the lock is needed to assign the cookie later */
-@@ -4582,7 +4601,23 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+@@ -4619,7 +4638,23 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
  
  	qos = sta->sta.wme;
  
@@ -11563,7 +11507,7 @@ index eef6cda..54a4687 100644
  	if (WARN_ON(!chanctx_conf)) {
  		ret = -EINVAL;
  		goto unlock;
-@@ -4614,14 +4649,15 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+@@ -4651,14 +4686,15 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
  	nullfunc->frame_control = fc;
  	nullfunc->duration_id = 0;
  	memcpy(nullfunc->addr1, sta->sta.addr, ETH_ALEN);
@@ -11582,7 +11526,7 @@ index eef6cda..54a4687 100644
  
  	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
 diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index a6895b4..4ee2f98 100644
+index 8403b52..396991a 100644
 --- a/net/mac80211/chan.c
 +++ b/net/mac80211/chan.c
 @@ -646,10 +646,11 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
@@ -11632,7 +11576,7 @@ index a6895b4..4ee2f98 100644
  
  	return false;
 diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 1c7840b..ab543bf 100644
+index 21c7b0c..939d96f 100644
 --- a/net/mac80211/debugfs.c
 +++ b/net/mac80211/debugfs.c
 @@ -42,8 +42,9 @@ static ssize_t name## _read(struct file *file, char __user *userbuf,	\
@@ -11819,7 +11763,7 @@ index 117f58a..9a335fa 100644
  }
  
 diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 9f8d4af..095691c 100644
+index 727d260..6fd05a3 100644
 --- a/net/mac80211/debugfs_netdev.c
 +++ b/net/mac80211/debugfs_netdev.c
 @@ -221,9 +221,10 @@ static ssize_t ieee80211_if_fmt_##name(					\
@@ -12090,7 +12034,7 @@ index fd41046..75096b2 100644
 +	ieee80211_send_eml_op_mode_notif(sdata, mgmt, opt_len);
 +}
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ea10088..21e100b 100644
+index 986f6ec..38968e4 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
 @@ -111,6 +111,8 @@ ieee80211_sta_keep_active(struct sta_info *sta, u8 ac)
@@ -12115,7 +12059,7 @@ index ea10088..21e100b 100644
  	atomic_t aql_ac_pending_airtime[IEEE80211_NUM_ACS];
  
  	const struct ieee80211_ops *ops;
-@@ -2016,6 +2020,13 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata,
+@@ -2025,6 +2029,13 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata,
  			      u64 *changed);
  
  /* scan/BSS handling */
@@ -12129,7 +12073,7 @@ index ea10088..21e100b 100644
  void ieee80211_scan_work(struct wiphy *wiphy, struct wiphy_work *work);
  int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
  				const u8 *ssid, u8 ssid_len,
-@@ -2054,6 +2065,7 @@ void ieee80211_sched_scan_stopped_work(struct wiphy *wiphy,
+@@ -2063,6 +2074,7 @@ void ieee80211_sched_scan_stopped_work(struct wiphy *wiphy,
  /* off-channel/mgmt-tx */
  void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local);
  void ieee80211_offchannel_return(struct ieee80211_local *local);
@@ -12137,7 +12081,7 @@ index ea10088..21e100b 100644
  void ieee80211_roc_setup(struct ieee80211_local *local);
  void ieee80211_start_next_roc(struct ieee80211_local *local);
  void ieee80211_reconfig_roc(struct ieee80211_local *local);
-@@ -2713,6 +2725,8 @@ bool ieee80211_chandef_s1g_oper(struct ieee80211_local *local,
+@@ -2723,6 +2735,8 @@ bool ieee80211_chandef_s1g_oper(struct ieee80211_local *local,
  				struct cfg80211_chan_def *chandef);
  void ieee80211_chandef_downgrade(struct cfg80211_chan_def *chandef,
  				 struct ieee80211_conn_settings *conn);
@@ -12146,7 +12090,7 @@ index ea10088..21e100b 100644
  static inline void
  ieee80211_chanreq_downgrade(struct ieee80211_chan_req *chanreq,
  			    struct ieee80211_conn_settings *conn)
-@@ -2769,7 +2783,7 @@ void ieee80211_recalc_chanctx_min_def(struct ieee80211_local *local,
+@@ -2779,7 +2793,7 @@ void ieee80211_recalc_chanctx_min_def(struct ieee80211_local *local,
  				      struct ieee80211_chanctx *ctx,
  				      struct ieee80211_link_data *rsvd_for,
  				      bool check_reserved);
@@ -12155,7 +12099,7 @@ index ea10088..21e100b 100644
  				 struct cfg80211_scan_request *req);
  bool ieee80211_is_radio_idx_in_scan_req(struct wiphy *wiphy,
  					struct cfg80211_scan_request *scan_req,
-@@ -2823,6 +2837,11 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
+@@ -2833,6 +2847,11 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
  
  extern const struct ethtool_ops ieee80211_ethtool_ops;
  
@@ -12167,7 +12111,7 @@ index ea10088..21e100b 100644
  u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
  				       struct ieee80211_vif *vif,
  				       struct ieee80211_sta *pubsta,
-@@ -2838,6 +2857,8 @@ void ieee80211_destroy_frag_cache(struct ieee80211_fragment_cache *cache);
+@@ -2848,6 +2867,8 @@ void ieee80211_destroy_frag_cache(struct ieee80211_fragment_cache *cache);
  
  u8 ieee80211_ie_len_eht_cap(struct ieee80211_sub_if_data *sdata);
  
@@ -12177,10 +12121,10 @@ index ea10088..21e100b 100644
  ieee80211_eht_cap_ie_to_sta_eht_cap(struct ieee80211_sub_if_data *sdata,
  				    struct ieee80211_supported_band *sband,
 diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 72c1294..ba782c3 100644
+index bdbf41d..0fea388 100644
 --- a/net/mac80211/iface.c
 +++ b/net/mac80211/iface.c
-@@ -1634,7 +1634,15 @@ static void ieee80211_iface_process_skb(struct ieee80211_local *local,
+@@ -1703,7 +1703,15 @@ static void ieee80211_iface_process_skb(struct ieee80211_local *local,
  		}
  	} else if (ieee80211_is_action(mgmt->frame_control) &&
  		   mgmt->u.action.category == WLAN_CATEGORY_PROTECTED_EHT) {
@@ -12198,7 +12142,7 @@ index 72c1294..ba782c3 100644
  			case WLAN_PROTECTED_EHT_ACTION_TTLM_REQ:
  				ieee80211_process_neg_ttlm_req(sdata, mgmt,
 diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index ed1b999..7c858f1 100644
+index a108759..2b9a3bd 100644
 --- a/net/mac80211/main.c
 +++ b/net/mac80211/main.c
 @@ -984,6 +984,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
@@ -12209,7 +12153,7 @@ index ed1b999..7c858f1 100644
  	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
  		INIT_LIST_HEAD(&local->active_txqs[i]);
  		spin_lock_init(&local->active_txq_lock[i]);
-@@ -1597,24 +1598,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+@@ -1601,24 +1602,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
  
  	ieee80211_check_wbrf_support(local);
  
@@ -12235,7 +12179,7 @@ index ed1b999..7c858f1 100644
  	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
  	result = register_inetaddr_notifier(&local->ifa_notifier);
 diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index d728667..c5a44d2 100644
+index 01cfd37..46a0791 100644
 --- a/net/mac80211/offchannel.c
 +++ b/net/mac80211/offchannel.c
 @@ -168,6 +168,35 @@ void ieee80211_offchannel_return(struct ieee80211_local *local)
@@ -12274,7 +12218,7 @@ index d728667..c5a44d2 100644
  static void ieee80211_roc_notify_destroy(struct ieee80211_roc_work *roc)
  {
  	/* was never transmitted */
-@@ -566,8 +595,10 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+@@ -573,8 +602,10 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
  				    enum ieee80211_roc_type type)
  {
  	struct ieee80211_roc_work *roc, *tmp;
@@ -12285,7 +12229,7 @@ index d728667..c5a44d2 100644
  	int ret;
  
  	lockdep_assert_wiphy(local->hw.wiphy);
-@@ -579,6 +610,12 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+@@ -586,6 +617,12 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
  	if (!local->emulate_chanctx && !local->ops->remain_on_channel)
  		return -EOPNOTSUPP;
  
@@ -12298,7 +12242,7 @@ index d728667..c5a44d2 100644
  	roc = kzalloc(sizeof(*roc), GFP_KERNEL);
  	if (!roc)
  		return -ENOMEM;
-@@ -616,8 +653,7 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+@@ -623,8 +660,7 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
  	req = wiphy_dereference(local->hw.wiphy, local->scan_req);
  
  	/* if there's no need to queue, handle it immediately */
@@ -12495,10 +12439,10 @@ index f385cf6..1f78a94 100644
  
  #define EWMA_LEVEL	96	/* ewma weighting factor [/EWMA_DIV] */
 diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index e114725..ab4758e 100644
+index eb0b9ba..178ccbe 100644
 --- a/net/mac80211/rx.c
 +++ b/net/mac80211/rx.c
-@@ -3834,6 +3834,14 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+@@ -3836,6 +3836,14 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
  					      u.action.u.epcs))
  				goto invalid;
  			goto queue;
@@ -12514,7 +12458,7 @@ index e114725..ab4758e 100644
  			break;
  		}
 diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 1e06a46..dcee654 100644
+index 1101e98..3c61abb 100644
 --- a/net/mac80211/scan.c
 +++ b/net/mac80211/scan.c
 @@ -591,25 +591,72 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local,
@@ -12666,10 +12610,10 @@ index 1e06a46..dcee654 100644
  		rcu_assign_pointer(local->scan_req, req);
  		rcu_assign_pointer(local->scan_sdata, sdata);
 diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 78ab761..78193e6 100644
+index d18191e..b75afe8 100644
 --- a/net/mac80211/sta_info.c
 +++ b/net/mac80211/sta_info.c
-@@ -630,6 +630,7 @@ __sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+@@ -637,6 +637,7 @@ __sta_info_alloc(struct ieee80211_sub_if_data *sdata,
  	spin_lock_init(&sta->ps_lock);
  	INIT_WORK(&sta->drv_deliver_wk, sta_deliver_ps_frames);
  	wiphy_work_init(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
@@ -12677,7 +12621,7 @@ index 78ab761..78193e6 100644
  #ifdef CPTCFG_MAC80211_MESH
  	if (ieee80211_vif_is_mesh(&sdata->vif)) {
  		sta->mesh = kzalloc(sizeof(*sta->mesh), gfp);
-@@ -2431,13 +2432,28 @@ EXPORT_SYMBOL(ieee80211_sta_recalc_aggregates);
+@@ -2438,13 +2439,28 @@ EXPORT_SYMBOL(ieee80211_sta_recalc_aggregates);
  
  void ieee80211_sta_update_pending_airtime(struct ieee80211_local *local,
  					  struct sta_info *sta, u8 ac,
@@ -12707,7 +12651,7 @@ index 78ab761..78193e6 100644
  	if (!tx_completed) {
  		if (sta)
  			atomic_add(tx_airtime,
-@@ -2527,6 +2543,13 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u32 rate,
+@@ -2534,6 +2550,13 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u32 rate,
  
  		sband = local->hw.wiphy->bands[band];
  
@@ -12721,7 +12665,7 @@ index 78ab761..78193e6 100644
  		if (WARN_ON_ONCE(!sband->bitrates))
  			break;
  
-@@ -2957,6 +2980,29 @@ static void sta_set_link_sinfo(struct sta_info *sta,
+@@ -2964,6 +2987,29 @@ static void sta_set_link_sinfo(struct sta_info *sta,
  	}
  }
  
@@ -12751,7 +12695,7 @@ index 78ab761..78193e6 100644
  void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
  		   bool tidstats)
  {
-@@ -3182,6 +3228,8 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+@@ -3189,6 +3235,8 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
  		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
  
  	thr = sta_get_expected_throughput(sta);
@@ -12775,10 +12719,10 @@ index 012bf7f..df136cf 100644
  struct sta_info;
  
 diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 4b38aa0..ccc37c4 100644
+index 8716eda..f0acd81 100644
 --- a/net/mac80211/status.c
 +++ b/net/mac80211/status.c
-@@ -751,7 +751,7 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
+@@ -752,7 +752,7 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
  		ieee80211_sta_update_pending_airtime(local, sta,
  						     skb_get_queue_mapping(skb),
  						     tx_time_est,
@@ -12787,7 +12731,7 @@ index 4b38aa0..ccc37c4 100644
  		rcu_read_unlock();
  	}
  
-@@ -1160,10 +1160,11 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+@@ -1161,10 +1161,11 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
  		/* Do this here to avoid the expensive lookup of the sta
  		 * in ieee80211_report_used_skb().
  		 */
@@ -12860,10 +12804,10 @@ index 0bfbce1..cf4aa35 100644
  
  #undef TRACE_INCLUDE_PATH
 diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 40a5304..180519f 100644
+index 1063d71..ed40f34 100644
 --- a/net/mac80211/tx.c
 +++ b/net/mac80211/tx.c
-@@ -2558,7 +2558,7 @@ static u16 ieee80211_store_ack_skb(struct ieee80211_local *local,
+@@ -2584,7 +2584,7 @@ static u16 ieee80211_store_ack_skb(struct ieee80211_local *local,
  
  		spin_lock_irqsave(&local->ack_status_lock, flags);
  		id = idr_alloc(&local->ack_status_frames, ack_skb,
@@ -12872,7 +12816,7 @@ index 40a5304..180519f 100644
  		spin_unlock_irqrestore(&local->ack_status_lock, flags);
  
  		if (id >= 0) {
-@@ -3989,20 +3989,20 @@ begin:
+@@ -4032,20 +4032,20 @@ begin:
  encap_out:
  	info->control.vif = vif;
  
@@ -12903,7 +12847,7 @@ index 40a5304..180519f 100644
  	}
  
  	return skb;
-@@ -4054,6 +4054,7 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
+@@ -4097,6 +4097,7 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
  	struct ieee80211_txq *ret = NULL;
  	struct txq_info *txqi = NULL, *head = NULL;
  	bool found_eligible_txq = false;
@@ -12911,7 +12855,7 @@ index 40a5304..180519f 100644
  
  	spin_lock_bh(&local->active_txq_lock[ac]);
  
-@@ -4077,26 +4078,26 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
+@@ -4120,26 +4121,26 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
  	if (!head)
  		head = txqi;
  
@@ -12951,7 +12895,7 @@ index 40a5304..180519f 100644
  	if (txqi->schedule_round == local->schedule_round[ac])
  		goto out;
  
-@@ -4163,7 +4164,8 @@ bool ieee80211_txq_airtime_check(struct ieee80211_hw *hw,
+@@ -4206,7 +4207,8 @@ bool ieee80211_txq_airtime_check(struct ieee80211_hw *hw,
  		return true;
  
  	if (!txq->sta)
@@ -12961,7 +12905,7 @@ index 40a5304..180519f 100644
  
  	if (unlikely(txq->tid == IEEE80211_NUM_TIDS))
  		return true;
-@@ -4212,15 +4214,15 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
+@@ -4255,15 +4257,15 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
  
  	spin_lock_bh(&local->active_txq_lock[ac]);
  
@@ -12980,7 +12924,7 @@ index 40a5304..180519f 100644
  	list_for_each_entry_safe(iter, tmp, &local->active_txqs[ac],
  				 schedule_order) {
  		if (iter == txqi)
-@@ -4233,7 +4235,8 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
+@@ -4276,7 +4278,8 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
  		}
  		sta = container_of(iter->txq.sta, struct sta_info, sta);
  		if (ieee80211_sta_deficit(sta, ac) < 0)
@@ -12990,7 +12934,7 @@ index 40a5304..180519f 100644
  		list_move_tail(&iter->schedule_order, &local->active_txqs[ac]);
  	}
  
-@@ -4241,7 +4244,7 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
+@@ -4284,7 +4287,7 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
  	if (sta->airtime[ac].deficit >= 0)
  		goto out;
  
@@ -13000,7 +12944,7 @@ index 40a5304..180519f 100644
  	spin_unlock_bh(&local->active_txq_lock[ac]);
  
 diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index c993153..2b6f529 100644
+index 3ed47a8..dbb615c 100644
 --- a/net/mac80211/util.c
 +++ b/net/mac80211/util.c
 @@ -877,6 +877,23 @@ struct wireless_dev *ieee80211_vif_to_wdev(struct ieee80211_vif *vif)
@@ -13119,50 +13063,28 @@ index d6839e7..3433a73 100644
  				const struct cfg80211_chan_def *chandef)
  {
 diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 5d13743..a83f39a 100644
+index d170ecf..d537ba4 100644
 --- a/net/wireless/core.c
 +++ b/net/wireless/core.c
-@@ -162,11 +162,19 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
- 	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
- 		if (!wdev->netdev)
- 			continue;
-+#if LINUX_VERSION_IS_GEQ(6,15,0)
- 		wdev->netdev->netns_immutable = false;
-+#elif LINUX_VERSION_IS_GEQ(6,12,0)
-+		wdev->netdev->netns_local = false;
-+#endif
- 		err = dev_change_net_namespace(wdev->netdev, net, "wlan%d");
- 		if (err)
- 			break;
-+#if LINUX_VERSION_IS_GEQ(6,15,0)
- 		wdev->netdev->netns_immutable = true;
-+#elif LINUX_VERSION_IS_GEQ(6,12,0)
-+		wdev->netdev->netns_local = true;
-+#endif
- 	}
+@@ -158,9 +158,17 @@ static int cfg80211_switch_wdev_netns(struct wireless_dev *wdev,
+ 	if (!wdev->netdev)
+ 		return 0;
  
- 	if (err) {
-@@ -178,11 +186,19 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
- 						     list) {
- 			if (!wdev->netdev)
- 				continue;
 +#if LINUX_VERSION_IS_GEQ(6,15,0)
- 			wdev->netdev->netns_immutable = false;
+ 	wdev->netdev->netns_immutable = false;
 +#elif LINUX_VERSION_IS_GEQ(6,12,0)
-+			wdev->netdev->netns_local = false;
++	wdev->netdev->netns_local = false;
 +#endif
- 			err = dev_change_net_namespace(wdev->netdev, net,
- 							"wlan%d");
- 			WARN_ON(err);
+ 	err = dev_change_net_namespace(wdev->netdev, net, "wlan%d");
 +#if LINUX_VERSION_IS_GEQ(6,15,0)
- 			wdev->netdev->netns_immutable = true;
+ 	wdev->netdev->netns_immutable = true;
 +#elif LINUX_VERSION_IS_GEQ(6,12,0)
-+			wdev->netdev->netns_local = true;
++	wdev->netdev->netns_local = true;
 +#endif
- 		}
  
- 		return err;
-@@ -659,21 +675,6 @@ int wiphy_verify_iface_combinations(struct wiphy *wiphy,
+ 	return err;
+ }
+@@ -738,21 +746,6 @@ int wiphy_verify_iface_combinations(struct wiphy *wiphy,
  				    c->limits[j].max > 1))
  				return -EINVAL;
  
@@ -13184,7 +13106,7 @@ index 5d13743..a83f39a 100644
  			cnt += c->limits[j].max;
  			/*
  			 * Don't advertise an unsupported type
-@@ -1549,7 +1550,11 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+@@ -1650,7 +1643,11 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
  		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
  		wdev->netdev = dev;
  		/* can only change netns with wiphy */
@@ -13197,10 +13119,10 @@ index 5d13743..a83f39a 100644
  		cfg80211_init_wdev(wdev);
  		break;
 diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 0805c98..9b0f309 100644
+index 8f0a8d9..eed8195 100644
 --- a/net/wireless/core.h
 +++ b/net/wireless/core.h
-@@ -481,6 +481,8 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
+@@ -491,6 +491,8 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
  			    enum nl80211_dfs_state dfs_state);
  
  void cfg80211_dfs_channels_update_work(struct work_struct *work);
@@ -13210,10 +13132,10 @@ index 0805c98..9b0f309 100644
  void cfg80211_sched_dfs_chan_update(struct cfg80211_registered_device *rdev);
  
 diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index e3aa8a4..80313b0 100644
+index 867cd22..a137080 100644
 --- a/net/wireless/mlme.c
 +++ b/net/wireless/mlme.c
-@@ -1056,6 +1056,8 @@ void cfg80211_dfs_channels_update_work(struct work_struct *work)
+@@ -1099,6 +1099,8 @@ void cfg80211_dfs_channels_update_work(struct work_struct *work)
  			if (c->dfs_state == NL80211_DFS_UNAVAILABLE) {
  				time_dfs_update = IEEE80211_DFS_MIN_NOP_TIME_MS;
  				radar_event = NL80211_RADAR_NOP_FINISHED;
@@ -13222,7 +13144,7 @@ index e3aa8a4..80313b0 100644
  			} else {
  				if (regulatory_pre_cac_allowed(wiphy) ||
  				    cfg80211_any_wiphy_oper_chan(wiphy, c))
-@@ -1063,11 +1065,10 @@ void cfg80211_dfs_channels_update_work(struct work_struct *work)
+@@ -1106,11 +1108,10 @@ void cfg80211_dfs_channels_update_work(struct work_struct *work)
  
  				time_dfs_update = REG_PRE_CAC_EXPIRY_GRACE_MS;
  				radar_event = NL80211_RADAR_PRE_CAC_EXPIRED;
@@ -13237,10 +13159,10 @@ index e3aa8a4..80313b0 100644
  				c->dfs_state = NL80211_DFS_USABLE;
  				c->dfs_state_entered = jiffies;
 diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 030be58..0cd2909 100644
+index 1eb0df8..8882ffd 100644
 --- a/net/wireless/reg.c
 +++ b/net/wireless/reg.c
-@@ -3335,6 +3335,8 @@ void regulatory_hint_country_ie(struct wiphy *wiphy, enum nl80211_band band,
+@@ -3337,6 +3337,8 @@ void regulatory_hint_country_ie(struct wiphy *wiphy, enum nl80211_band band,
  	enum environment_cap env = ENVIRON_ANY;
  	struct regulatory_request *request = NULL, *lr;
  
@@ -13249,7 +13171,7 @@ index 030be58..0cd2909 100644
  	/* IE len must be evenly divisible by 2 */
  	if (country_ie_len & 0x01)
  		return;
-@@ -3584,6 +3586,7 @@ static bool is_wiphy_all_set_reg_flag(enum ieee80211_regulatory_flags flag)
+@@ -3586,6 +3588,7 @@ static bool is_wiphy_all_set_reg_flag(enum ieee80211_regulatory_flags flag)
  
  void regulatory_hint_disconnect(void)
  {
@@ -13303,7 +13225,7 @@ index 62f2661..4e7644f 100644
  static ssize_t name_show(struct device *dev,
  			 struct device_attribute *attr,
 diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 3ede1e2..2ec326f 100644
+index 96131aa..7711fd2 100644
 --- a/net/wireless/trace.h
 +++ b/net/wireless/trace.h
 @@ -478,7 +478,11 @@ TRACE_EVENT(rdev_add_virtual_intf,
@@ -13319,10 +13241,10 @@ index 3ede1e2..2ec326f 100644
  	),
  	TP_printk(WIPHY_PR_FMT ", virtual intf name: %s, type: %d",
 diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 81d6d27..906713f 100644
+index 0254cd5..f035fec 100644
 --- a/net/wireless/util.c
 +++ b/net/wireless/util.c
-@@ -2945,6 +2945,9 @@ bool cfg80211_radio_chandef_valid(const struct wiphy_radio *radio,
+@@ -3019,6 +3019,9 @@ bool cfg80211_radio_chandef_valid(const struct wiphy_radio *radio,
  {
  	u32 freq, width;
  
