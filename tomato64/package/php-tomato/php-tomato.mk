@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PHP_TOMATO_VERSION = 8.5.8
+PHP_TOMATO_VERSION = 8.5.12
 PHP_TOMATO_SITE = https://www.php.net/distributions
 PHP_TOMATO_SOURCE = php-$(PHP_TOMATO_VERSION).tar.xz
 PHP_TOMATO_INSTALL_STAGING = YES
@@ -77,15 +77,6 @@ PHP_TOMATO_CONFIG_SCRIPTS = php-config
 
 PHP_TOMATO_CFLAGS = $(TARGET_CFLAGS)
 PHP_TOMATO_CXXFLAGS = $(TARGET_CXXFLAGS)
-
-# The OPcache extension isn't cross-compile friendly
-# Throw some defines here to avoid patching heavily
-PHP_TOMATO_CFLAGS += \
-	-DHAVE_SHM_IPC \
-	-DHAVE_SHM_MMAP_ANON \
-	-DHAVE_SHM_MMAP_ZERO \
-	-DHAVE_SHM_MMAP_POSIX \
-	-DHAVE_SHM_MMAP_FILE
 
 # We need to force dl "detection"
 ifeq ($(BR2_STATIC_LIBS),)
