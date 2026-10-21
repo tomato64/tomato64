@@ -1,0 +1,6 @@
+# NanoPi R5S (RK3568): four Cortex-A55 cores. Keeps the NICs off CPU0,
+# same per-port layout as OpenWrt's 40-net-smp-affinity. Names are after
+# set_devs_r5s's ifrename, which matches OpenWrt's naming.
+eth0 2	# WAN (GMAC) -> CPU1
+eth1 4	# LAN1 -> CPU2
+eth2 8	# LAN2 -> CPU3

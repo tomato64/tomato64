@@ -70,10 +70,3 @@ echo "eth1 mac $(NG eth1macaddr)" >> /etc/iftab
 # Disable EEE on the 2.5GbE PCIe ports1
 ethtool --set-eee eth0 eee off 2>/dev/null || true
 ethtool --set-eee eth1 eee off 2>/dev/null || true
-
-# Pin ethernet IRQs to big A72 cores (CPUs 4-7) on RK3576.
-# For some reason the the device locks interrupts to cpu0 (a53 core)
-# and can't be changed. Hopefully this if fixed in the futture. When 
-# it is we can enable the following commands
-#set_interface_core 10 "eth0" || true
-#set_interface_core 20 "eth1" || true

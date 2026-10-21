@@ -690,7 +690,15 @@ void start_irqbalance(void)
 	if (serialize_restart("irqbalance", 1))
 		return;
 
+#ifndef TOMATO64
 	ret = eval("irqbalance", "-t", "10", "-s", "/var/run/irqbalance.pid");
+#else
+	/* Platforms that pin their NIC IRQs ban them from irqbalance via the policy script */
+	if (f_exists("/usr/libexec/platform/irq-affinity.sh"))
+		ret = eval("irqbalance", "-t", "10", "-s", "/var/run/irqbalance.pid", "-l", "/usr/libexec/platform/irq-affinity.sh");
+	else
+		ret = eval("irqbalance", "-t", "10", "-s", "/var/run/irqbalance.pid");
+#endif /* TOMATO64 */
 
 	if (ret)
 		logmsg(LOG_ERR, "starting irqbalance failed ...");

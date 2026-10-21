@@ -1,0 +1,7 @@
+# NanoPi R6S (RK3588S): CPUs 0-3 are Cortex-A55, 4-7 are Cortex-A76.
+# eth0/eth1 are RTL8125 on PCIe, eth2 is the GMAC. Same per-port layout as
+# OpenWrt's 40-net-smp-affinity; OpenWrt loads r8169 as a module, so its
+# GMAC probes first and is its eth0 (our eth2).
+eth2 10	# LAN (GMAC) -> CPU4
+eth0 20	# WAN -> CPU5
+eth1 40	# LAN -> CPU6

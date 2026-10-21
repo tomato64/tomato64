@@ -1,0 +1,59 @@
+#!/bin/sh
+
+# Pin NIC IRQs to fixed CPUs, and keep irqbalance off them.
+#
+#   irq-affinity.sh                   pin the IRQs listed in irq-affinity.map
+#   irq-affinity.sh <devpath> <irq>   irqbalance --policyscript mode
+#
+# irq-affinity.map holds one "<ifname> <hex cpu mask>" per line, e.g.
+# "eth0 10" pins every IRQ of eth0 to CPU4. It is installed per platform.
+#
+# Pin mode is run by the packet-steering wrapper (net hotplug events and
+# every start_firewall), because NIC drivers only request their IRQs when
+# the interface is opened. It only touches IRQs that already exist.
+#
+# irqbalance otherwise moves every IRQ it manages, overwriting the pinning,
+# so start_irqbalance() passes this script as --policyscript. irqbalance
+# runs it for each IRQ it discovers and leaves alone the ones it bans.
+
+MAP=/usr/libexec/platform/irq-affinity.map
+
+[ -f "$MAP" ] || exit 0
+
+# Requested IRQs of <ifname>: the MSI vectors of a PCI NIC, plus any IRQ
+# named <ifname> or <ifname>-<n> (r8169 / r8125 / stmmac naming).
+dev_irqs() {
+	local dev="$1" irq
+
+	for irq in $(ls "/sys/class/net/${dev}/device/msi_irqs" 2>/dev/null); do
+		grep -q "^ *${irq}:" /proc/interrupts && echo "$irq"
+	done
+	sed -n -E "s/^ *([0-9]+):.* ${dev}(-[0-9]+)?\$/\1/p" /proc/interrupts
+}
+
+if [ $# -ge 2 ]; then
+	# Policy mode. For PCI devices irqbalance passes the device's sysfs
+	# path, and it can see MSI vectors before the driver requests (and
+	# names) them, so match the NIC by path first and by IRQ name second.
+	devpath="$1"
+	irq="$2"
+
+	while read -r dev mask _; do
+		case "$dev" in ""|\#*) continue ;; esac
+		if [ -e "${devpath}/net/${dev}" ] || dev_irqs "$dev" | grep -qx "$irq"; then
+			echo "ban=true"
+			break
+		fi
+	done < "$MAP"
+
+	# A non-zero exit makes irqbalance discard the policy
+	exit 0
+fi
+
+while read -r dev mask _; do
+	case "$dev" in ""|\#*) continue ;; esac
+	for irq in $(dev_irqs "$dev" | sort -u); do
+		echo "$mask" > "/proc/irq/${irq}/smp_affinity" 2>/dev/null || \
+			logger -t irq-affinity "failed to set IRQ $irq ($dev) to $mask"
+	done
+done < "$MAP"

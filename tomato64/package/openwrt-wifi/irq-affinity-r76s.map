@@ -1,0 +1,6 @@
+# NanoPi R76S (RK3576): CPUs 0-3 are Cortex-A53, 4-7 are Cortex-A72.
+# Both ports are RTL8125 on PCIe. Same per-port layout as OpenWrt's
+# 40-net-smp-affinity; names are after set_devs_r76s's ifrename, which
+# swaps them relative to OpenWrt (its eth0 is our eth1).
+eth1 10	# LAN -> CPU4
+eth0 20	# WAN -> CPU5
