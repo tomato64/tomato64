@@ -1,0 +1,44 @@
+Subject: [PATCH] net: ethernet: mediatek: disable TX offload for YT922x tags
+
+The MTK hardware parser cannot handle the eight-byte YT922x CPU tag when
+calculating transport checksums or performing TCP segmentation. Packets
+with partial checksums can therefore be transmitted with invalid checksums.
+
+Mask checksum and GSO features per skb on YT922x conduits. The networking
+core then performs software segmentation and checksum completion before
+the packet reaches the DMA descriptor path. Keep the default VLAN feature
+checks and retain hardware offload for all other conduit protocols.
+
+---
+diff --git a/drivers/net/ethernet/mediatek/mtk_eth_soc.c b/drivers/net/ethernet/mediatek/mtk_eth_soc.c
+--- a/drivers/net/ethernet/mediatek/mtk_eth_soc.c
++++ b/drivers/net/ethernet/mediatek/mtk_eth_soc.c
+@@ -5122,6 +5122,20 @@
+ 	.set_eee		= mtk_set_eee,
+ };
+ 
++static netdev_features_t
++mtk_features_check(struct sk_buff *skb, struct net_device *dev,
++		   netdev_features_t features)
++{
++#if IS_ENABLED(CONFIG_NET_DSA)
++	/* The hardware parser cannot skip the YT922x eight-byte CPU tag. */
++	if (netdev_uses_dsa(dev) &&
++	    dev->dsa_ptr->tag_ops->proto == DSA_TAG_PROTO_YT922X)
++		features &= ~(NETIF_F_CSUM_MASK | NETIF_F_GSO_MASK);
++#endif
++
++	return vlan_features_check(skb, features);
++}
++
+ static const struct net_device_ops mtk_netdev_ops = {
+ 	.ndo_uninit		= mtk_uninit,
+ 	.ndo_open		= mtk_open,
+@@ -5133,6 +5147,7 @@
+ 	.ndo_change_mtu		= mtk_change_mtu,
+ 	.ndo_tx_timeout		= mtk_tx_timeout,
+ 	.ndo_get_stats64        = mtk_get_stats64,
++	.ndo_features_check	= mtk_features_check,
+ 	.ndo_fix_features	= mtk_fix_features,
+ 	.ndo_set_features	= mtk_set_features,
+ #ifdef CONFIG_NET_POLL_CONTROLLER

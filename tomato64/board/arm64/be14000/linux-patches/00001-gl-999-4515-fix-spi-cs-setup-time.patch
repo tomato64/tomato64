@@ -1,0 +1,47 @@
+Index: drivers/spi/spi-mt65xx.c
+===================================================================
+--- a/drivers/spi/spi-mt65xx.c
++++ b/drivers/spi/spi-mt65xx.c
+@@ -166,6 +166,7 @@
+ 	u32 tx_sgl_len, rx_sgl_len;
+ 	const struct mtk_spi_compatible *dev_comp;
+ 	u32 spi_clk_hz;
++	u32 cs_setup_time;
+ 	struct completion spimem_done;
+ 	bool use_spimem;
+ 	struct device *dev;
+@@ -483,6 +484,25 @@
+ 
+ 	sck_time = (div + 1) / 2;
+ 
++	if (mdata->cs_setup_time) {
++		u32 cs_time = sck_time * 2 * mdata->cs_setup_time;
++
++		if (mdata->dev_comp->enhance_timing) {
++			reg_val = readl(mdata->base + SPI_CFG0_REG);
++			cs_time = min_t(u32, cs_time, 0x10000);
++			reg_val &= ~(0xffff << SPI_ADJUST_CFG0_CS_SETUP_OFFSET);
++			reg_val |= (((cs_time - 1) & 0xffff)
++				    << SPI_ADJUST_CFG0_CS_SETUP_OFFSET);
++			writel(reg_val, mdata->base + SPI_CFG0_REG);
++		} else {
++			reg_val = readl(mdata->base + SPI_CFG0_REG);
++			cs_time = min_t(u32, cs_time, 0x100);
++			reg_val &= ~(0xff << SPI_CFG0_CS_SETUP_OFFSET);
++			reg_val |= (((cs_time - 1) & 0xff) << SPI_CFG0_CS_SETUP_OFFSET);
++			writel(reg_val, mdata->base + SPI_CFG0_REG);
++		}
++	}
++
+ 	if (mdata->dev_comp->enhance_timing) {
+ 		reg_val = readl(mdata->base + SPI_CFG2_REG);
+ 		reg_val &= ~(0xffff << SPI_CFG2_SCK_HIGH_OFFSET);
+@@ -1176,6 +1196,8 @@
+ 	/* Set device configs to default first. Calibrate it later. */
+ 	mdata->sample_sel = 0;
+ 	mdata->get_tick_dly = 2;
++	mdata->cs_setup_time = 0;
++	of_property_read_u32(dev->of_node, "cs_setup_time", &mdata->cs_setup_time);
+ 
+ 	mdata->dev_comp = device_get_match_data(dev);
+ 

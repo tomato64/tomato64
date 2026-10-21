@@ -1,0 +1,19 @@
+From: lancethepants <lancethepants@gmail.com>
+Subject: [PATCH] net: phy: motorcomm: include of.h for the YT8824 package probe
+
+OpenWrt 25.12.6 switched motorcomm.c to the device_property API and dropped
+<linux/of.h>, but GL's YT8824 support (999-4522) still reads
+"motorcomm,interface-mode" from the PHY package's device_node with
+of_property_read_string(). Restore the include.
+
+---
+--- a/drivers/net/phy/motorcomm.c
++++ b/drivers/net/phy/motorcomm.c
+@@ -11,6 +11,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/of.h>
+ #include <linux/phy.h>
+ #include <linux/property.h>
+ 
