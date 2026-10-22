@@ -6,6 +6,10 @@ set -x
 . /usr/sbin/nvram_ops
 . /usr/sbin/net_utils
 
+# Keep unbound kernel work (including the rtw88 SDIO TX worker) on the
+# Cortex-A72 cores (CPUs 4-7) instead of the A53s.
+echo f0 > /sys/devices/virtual/workqueue/cpumask 2>/dev/null || true
+
 # Load the Realtek vendor 2.5GbE driver before waiting for eth interfaces.
 modprobe r8125
 

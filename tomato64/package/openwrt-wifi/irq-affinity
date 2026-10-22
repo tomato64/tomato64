@@ -6,7 +6,9 @@
 #   irq-affinity.sh <devpath> <irq>   irqbalance --policyscript mode
 #
 # irq-affinity.map holds one "<ifname> <hex cpu mask>" per line, e.g.
-# "eth0 10" pins every IRQ of eth0 to CPU4. It is installed per platform.
+# "eth0 10" pins every IRQ of eth0 to CPU4. The name "sdio" stands for the
+# host controller IRQ of any SDIO card (e.g. SDIO WiFi). It is installed
+# per platform.
 #
 # Pin mode is run by the packet-steering wrapper (net hotplug events and
 # every start_firewall), because NIC drivers only request their IRQs when
@@ -20,10 +22,44 @@ MAP=/usr/libexec/platform/irq-affinity.map
 
 [ -f "$MAP" ] || exit 0
 
+# Host controller IRQs of SDIO cards. Every dw-mmc controller IRQ has the
+# same name and Linux IRQ numbers change between boots, so go through the
+# controller's device tree node: a GIC <type number flags> specifier maps
+# to hwirq number+32 (SPI) or number+16 (PPI).
+sdio_irqs() {
+	local card host spec type num hwirq d
+
+	for card in /sys/bus/mmc/devices/*; do
+		[ "$(cat "$card/type" 2>/dev/null)" = "SDIO" ] || continue
+		host=$(readlink -f "$card")
+		host="${host%%/mmc_host/*}"
+		spec=$(od -An -tx1 "$host/of_node/interrupts" 2>/dev/null | tr -d ' \n')
+		[ ${#spec} -ge 16 ] || continue
+		type=$((0x$(echo "$spec" | cut -c1-8)))
+		num=$((0x$(echo "$spec" | cut -c9-16)))
+		case "$type" in
+			0) hwirq=$((num + 32)) ;;
+			1) hwirq=$((num + 16)) ;;
+			*) continue ;;
+		esac
+		for d in /sys/kernel/irq/*; do
+			[ "$(cat "$d/hwirq" 2>/dev/null)" = "$hwirq" ] || continue
+			case "$(cat "$d/chip_name" 2>/dev/null)" in
+				GIC*) echo "${d##*/}" ;;
+			esac
+		done
+	done
+}
+
 # Requested IRQs of <ifname>: the MSI vectors of a PCI NIC, plus any IRQ
 # named <ifname> or <ifname>-<n> (r8169 / r8125 / stmmac naming).
 dev_irqs() {
 	local dev="$1" irq
+
+	if [ "$dev" = "sdio" ]; then
+		sdio_irqs
+		return
+	fi
 
 	for irq in $(ls "/sys/class/net/${dev}/device/msi_irqs" 2>/dev/null); do
 		grep -q "^ *${irq}:" /proc/interrupts && echo "$irq"

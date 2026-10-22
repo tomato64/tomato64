@@ -1,0 +1,88 @@
+From: lancethepants <lancethepants@gmail.com>
+Subject: [PATCH] netifd: steer packets only to the fastest cores on big.LITTLE
+
+packet-steering.uc treats every CPU alike, so on big.LITTLE SoCs it puts
+RPS and NAPI work on the little cores (on the NanoPi R76S the WAN ended up
+on CPU0, a Cortex-A53). Read cpu_capacity and only steer to the CPUs with
+the highest capacity. Systems without cpu_capacity, or with equal cores,
+are unchanged.
+---
+--- a/package/network/config/netifd/files/usr/libexec/network/packet-steering.uc
++++ b/package/network/config/netifd/files/usr/libexec/network/packet-steering.uc
+@@ -57,10 +57,12 @@
+ 
+ function cpu_mask(cpu)
+ {
+-	let mask;
+-	if (cpu < 0)
+-		mask = (1 << length(cpus)) - 1;
+-	else
++	let mask = 0;
++	if (cpu < 0) {
++		for (let c in cpus)
++			if (c.fast)
++				mask |= (1 << c.id);
++	} else
+ 		mask = (1 << int(cpu));
+ 	return sprintf("%x", mask);
+ }
+@@ -106,6 +108,7 @@
+ 	return {
+ 		id: int(match(path, /.*cpu(\d+)/)[1]),
+ 		core: int(trim(readfile(`${path}/topology/core_id`))),
++		capacity: int(trim(readfile(`${path}/cpu_capacity`) ?? "1024")),
+ 		load: 0.0,
+ 	};
+ });
+@@ -114,6 +117,15 @@
+ if (length(cpus) < 2)
+ 	exit(0);
+ 
++// On big.LITTLE SoCs only steer to the fastest cores
++let max_capacity = 0;
++for (let cpu in cpus)
++	if (cpu.capacity > max_capacity)
++		max_capacity = cpu.capacity;
++for (let cpu in cpus)
++	cpu.fast = (cpu.capacity == max_capacity);
++let fast_cpus = filter(cpus, (cpu) => cpu.fast);
++
+ function cpu_add_weight(cpu_id, weight)
+ {
+ 	let cpu = cpus[cpu_id];
+@@ -130,10 +142,11 @@
+ 	if (disable)
+ 		return 0;
+ 
+-	let sort_cpus = sort(slice(cpus), (a, b) => a.load - b.load);
++	let sort_cpus = sort(slice(fast_cpus), (a, b) => a.load - b.load);
+ 	let idx = 0;
+ 
+-	if (prev_cpu != null && sort_cpus[idx].id == prev_cpu)
++	if (prev_cpu != null && sort_cpus[idx].id == prev_cpu &&
++	    length(sort_cpus) > 1)
+ 		idx++;
+ 
+ 	let cpu = sort_cpus[idx].id;
+@@ -208,8 +221,8 @@
+ 		let cpu;
+ 
+ 		let task = dev.rx_tasks[i];
+-		if (num >= length(cpus))
+-			cpu = i % length(cpus);
++		if (num >= length(fast_cpus))
++			cpu = fast_cpus[i % length(fast_cpus)].id;
+ 		else if (task)
+ 			cpu = get_next_cpu(napi_weight);
+ 		else
+@@ -220,8 +233,8 @@
+ 		if (!rxq)
+ 			continue;
+ 
+-		if (num >= length(cpus))
+-			cpu = (i + 1) % length(cpus);
++		if (num >= length(fast_cpus))
++			cpu = fast_cpus[(i + 1) % length(fast_cpus)].id;
+ 		else if (all_cpus)
+ 			cpu = -1;
+ 		else

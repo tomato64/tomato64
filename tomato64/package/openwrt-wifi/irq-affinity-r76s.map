@@ -4,3 +4,8 @@
 # swaps them relative to OpenWrt (its eth0 is our eth1).
 eth1 10	# LAN -> CPU4
 eth0 20	# WAN -> CPU5
+# The RTL8822CS SDIO WiFi does one synchronous bus transfer at a time, so
+# its throughput depends on how fast each transfer completes. Its controller
+# IRQ goes on an A72; the rtw88 TX work follows it there, as unbound
+# workqueues are kept on CPUs 4-7 by set_devs_r76s.
+sdio 40	# SDIO WiFi -> CPU6

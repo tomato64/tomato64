@@ -25,3 +25,8 @@ if [ -e /usr/libexec/platform/packet-steering.sh ]; then
 else
 	/usr/libexec/network/packet-steering.uc $opts "$packet_steering"
 fi
+
+# Platform-specific adjustments on top of the steering above
+if [ -e /usr/libexec/platform/packet-steering-post.sh ]; then
+	/usr/libexec/platform/packet-steering-post.sh "$packet_steering"
+fi

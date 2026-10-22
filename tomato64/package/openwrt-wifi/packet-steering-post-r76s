@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# NanoPi R76S: adjust packet steering around the IRQs pinned by
+# irq-affinity-r76s.map (CPU4 LAN, CPU5 WAN, CPU6 SDIO WiFi and its rtw88
+# TX work). The generic steering only knows which cores are fast, and can
+# put RPS on CPU6, which slows the WiFi down.
+
+[ "$1" = "1" ] || exit 0
+
+set_rps() {
+	local q
+
+	for q in /sys/class/net/$1/queues/rx-*/rps_cpus; do
+		[ -e "$q" ] && echo "$2" > "$q"
+	done
+}
+
+set_rps eth0 80	# WAN RX -> CPU7
+set_rps eth1 0	# LAN RX stays on its IRQ core, CPU4
+
+# SDIO WiFi interfaces RX -> CPU7
+for n in /sys/class/net/*; do
+	case "$(readlink -f "$n/device")" in
+		*/mmc_host/*) set_rps "${n##*/}" 80 ;;
+	esac
+done
+
+exit 0

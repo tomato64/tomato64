@@ -119,6 +119,11 @@ define OPENWRT_WIFI_INSTALL_TARGET_CMDS
 		$(INSTALL) -m 0644 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/$$IRQ_MAP $(TARGET_DIR)/usr/libexec/platform/irq-affinity.map; \
 	fi
 
+	# Platform-specific adjustments run after the generic packet steering
+	if [ "$(BR2_PACKAGE_PLATFORM_R76S)" = "y" ]; then \
+		$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/packet-steering-post-r76s $(TARGET_DIR)/usr/libexec/platform/packet-steering-post.sh; \
+	fi
+
 	# OpenWrt sysupgrade framework (shared by all NAND/UBI targets). The
 	# board-agnostic core (common.sh/nand.sh/stage2/do_stage2) and the
 	# Tomato64 overrides (zz-tomato64.sh) are byte-for-byte identical across
