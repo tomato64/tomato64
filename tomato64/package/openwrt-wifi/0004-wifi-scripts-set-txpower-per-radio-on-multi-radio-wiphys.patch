@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Lance Fredrickson <lancethepants@gmail.com>
+Date: Thu, 22 Oct 2026 11:15:29 -0600
+Subject: [PATCH] wifi-scripts: set txpower per radio on multi-radio wiphys
+
+All radios of a multi-radio wiphy (mt7996) share one phy, so
+"iw phy <phy> set txpower" from each radio's setup overwrote the others
+and the last radio configured set the power for every band.
+
+Pass the radio index so each radio only sets its own power. Needs the
+mac80211 per-radio tx power patch and the iw "radio" option for
+"set txpower".
+---
+ .../wifi-scripts/files-ucode/lib/netifd/wireless/mac80211.sh    | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/package/network/config/wifi-scripts/files-ucode/lib/netifd/wireless/mac80211.sh b/package/network/config/wifi-scripts/files-ucode/lib/netifd/wireless/mac80211.sh
+index 6230f90..391adb5 100644
+--- a/package/network/config/wifi-scripts/files-ucode/lib/netifd/wireless/mac80211.sh
++++ b/package/network/config/wifi-scripts/files-ucode/lib/netifd/wireless/mac80211.sh
+@@ -101,7 +101,7 @@ function setup_phy(phy, config, data) {
+ 	log(`Configuring '${phy}' txantenna: ${config.txantenna}, rxantenna: ${config.rxantenna} distance: ${config.distance}`);
+ 	system(`iw phy ${phy} set antenna ${config.txantenna} ${config.rxantenna}`);
+ 	system(`iw phy ${phy} set distance ${config.distance}`);
+-	system(`iw phy ${phy} set txpower ${config.txpower}`);
++	system(`iw phy ${phy} set txpower ${config.txpower}${phy_suffix(config.radio, " radio ")}`);
+ 
+ 	if (config.frag)
+ 		system(`iw phy ${phy} set frag ${config.frag}`);

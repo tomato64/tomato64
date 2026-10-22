@@ -1,0 +1,32 @@
+diff --git a/phy.c b/phy.c
+index dc5e6df..566615b 100644
+--- a/phy.c
++++ b/phy.c
+@@ -710,6 +710,18 @@ static int handle_txpower(struct nl80211_state *state,
+ 	enum nl80211_tx_power_setting type;
+ 	int mbm;
+ 
++	if (argc > 2 && strcmp("radio", argv[argc - 2]) == 0) {
++		int radio_idx;
++		char *end;
++
++		radio_idx = strtoul(argv[argc - 1], &end, 10);
++		if (*end != '\0')
++			return 1;
++
++		NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RADIO_INDEX, radio_idx);
++		argc -= 2;
++	}
++
+ 	/* get the required args */
+ 	if (argc != 1 && argc != 2)
+ 		return 1;
+@@ -746,7 +758,7 @@ static int handle_txpower(struct nl80211_state *state,
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",
++COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>] [radio <radio index>]",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_txpower,
+ 	"Specify transmit power level and setting type.");
+ COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",

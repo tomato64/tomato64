@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Lance Fredrickson <lancethepants@gmail.com>
+Date: Thu, 22 Oct 2026 14:03:00 -0600
+Subject: [PATCH] wifi: mt76: mt7996: report the tx power of the requested link
+
+mt7996_get_txpower() ignored link_id and always reported the power of
+the default link's band, so on an MLD every link showed the 2.4 GHz
+radio's tx power. Look up the phy of the link that was asked for.
+---
+ mt7996/main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mt7996/main.c b/mt7996/main.c
+index 6f32824..025af5f 100644
+--- a/mt7996/main.c
++++ b/mt7996/main.c
+@@ -757,9 +757,9 @@ static int
+ mt7996_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		   unsigned int link_id, int *dbm)
+ {
+-	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
+-	struct mt7996_phy *phy = mt7996_vif_link_phy(&mvif->deflink);
+ 	struct mt7996_dev *dev = mt7996_hw_dev(hw);
++	struct mt7996_vif_link *link = mt7996_vif_link(dev, vif, link_id);
++	struct mt7996_phy *phy = link ? mt7996_vif_link_phy(link) : NULL;
+ 	struct wireless_dev *wdev;
+ 	int n_chains, delta, i;
+ 
