@@ -5,28 +5,11 @@ packet-steering.uc treats every CPU alike, so on big.LITTLE SoCs it puts
 RPS and NAPI work on the little cores (on the NanoPi R76S the WAN ended up
 on CPU0, a Cortex-A53). Read cpu_capacity and only steer to the CPUs with
 the highest capacity. Systems without cpu_capacity, or with equal cores,
-are unchanged.
+are unchanged. The "all CPUs" mode still steers to every core.
 ---
 --- a/package/network/config/netifd/files/usr/libexec/network/packet-steering.uc
 +++ b/package/network/config/netifd/files/usr/libexec/network/packet-steering.uc
-@@ -57,10 +57,12 @@
- 
- function cpu_mask(cpu)
- {
--	let mask;
--	if (cpu < 0)
--		mask = (1 << length(cpus)) - 1;
--	else
-+	let mask = 0;
-+	if (cpu < 0) {
-+		for (let c in cpus)
-+			if (c.fast)
-+				mask |= (1 << c.id);
-+	} else
- 		mask = (1 << int(cpu));
- 	return sprintf("%x", mask);
- }
-@@ -106,6 +108,7 @@
+@@ -106,6 +106,7 @@
  	return {
  		id: int(match(path, /.*cpu(\d+)/)[1]),
  		core: int(trim(readfile(`${path}/topology/core_id`))),
@@ -34,11 +17,12 @@ are unchanged.
  		load: 0.0,
  	};
  });
-@@ -114,6 +117,15 @@
+@@ -114,6 +115,16 @@
  if (length(cpus) < 2)
  	exit(0);
  
-+// On big.LITTLE SoCs only steer to the fastest cores
++// On big.LITTLE SoCs only steer to the fastest cores; the all-CPUs mode
++// still uses every core
 +let max_capacity = 0;
 +for (let cpu in cpus)
 +	if (cpu.capacity > max_capacity)
@@ -50,7 +34,7 @@ are unchanged.
  function cpu_add_weight(cpu_id, weight)
  {
  	let cpu = cpus[cpu_id];
-@@ -130,10 +142,11 @@
+@@ -130,10 +141,11 @@
  	if (disable)
  		return 0;
  
@@ -64,7 +48,7 @@ are unchanged.
  		idx++;
  
  	let cpu = sort_cpus[idx].id;
-@@ -208,8 +221,8 @@
+@@ -208,8 +220,8 @@
  		let cpu;
  
  		let task = dev.rx_tasks[i];
@@ -75,7 +59,7 @@ are unchanged.
  		else if (task)
  			cpu = get_next_cpu(napi_weight);
  		else
-@@ -220,8 +233,8 @@
+@@ -220,8 +232,8 @@
  		if (!rxq)
  			continue;
  

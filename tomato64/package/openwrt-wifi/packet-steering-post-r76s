@@ -16,7 +16,7 @@ set_rps() {
 }
 
 set_rps eth0 80	# WAN RX -> CPU7
-set_rps eth1 0	# LAN RX stays on its IRQ core, CPU4
+set_rps eth1 20	# LAN RX -> CPU5; left on its IRQ core (CPU4), a gigabit upload saturates it
 
 # SDIO WiFi interfaces RX -> CPU7
 for n in /sys/class/net/*; do
