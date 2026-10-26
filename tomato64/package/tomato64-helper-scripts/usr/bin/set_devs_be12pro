@@ -1,0 +1,105 @@
+#!/bin/sh
+
+#set -e
+#set -x
+
+. /usr/sbin/nvram_ops
+. /usr/sbin/net_utils
+
+# Tenda BE12 Pro (Mediatek mt7987a): 5 ports - an Airoha AN8855 DSA switch
+# with three 1G ports, the SoC's built-in 2.5G PHY, and an EN8811H 2.5G WAN.
+#
+# Kernel default naming (mt7987a-tenda-be12-pro.dts):
+#   eth0 = gmac0, DSA conduit (CPU port) for the AN8855
+#   eth1 = gmac1, built-in 2.5G PHY - LAN
+#   eth2 = gmac2, EN8811H 2.5G PHY  - WAN
+#   lan3, lan4, lan5 = AN8855 1G ports - LAN
+#
+# Port MACs come from the "Factory" nvmem cells in the DTS, matching the
+# vendor firmware: eth2 (WAN) = base-1, eth0/eth1 (LAN) = base-2, and the
+# DSA ports inherit eth0's. 2.4 GHz and 5 GHz are base+1 and base+3.
+#
+# Front panel, left to right: 1/2.5GE (WAN), 2/2.5GE, 3, 4, 5.
+#
+# We rename via iftab+ifrename so that, in front-panel order:
+#   eth0    = WAN  (gmac2)   port 1    WAN MAC           <- vendor WAN MAC
+#   eth1    = LAN  (gmac1)   port 2    WAN MAC - 1       <- vendor LAN MAC
+#   eth2    = LAN  (lan3)    port 3    WAN MAC + 5
+#   eth3    = LAN  (lan4)    port 4    WAN MAC + 6
+#   eth4    = LAN  (lan5)    port 5    WAN MAC + 7
+#   switch0 = CPU port (gmac0)         WAN MAC + 11
+# Every interface needs its own MAC for ifrename to tell them apart.
+
+# Load kernel modules early. These MUST NOT be fatal: a WiFi/PHY driver
+# problem must not abort this script before the ethernet/nvram setup (that
+# would take down wired connectivity too).
+
+# WAN PHY driver. MODULE_STRIPPED=y means no modalias autoload, and it has
+# to be loaded before the WAN is brought up or the PHY falls back to the
+# generic driver.
+modprobe air_en8811h 2>/dev/null || logger -t set_devs_be12pro "WARNING: air_en8811h failed to load"
+
+# WiFi: dual-band MT7992 on PCIe, handled by the mt7996e driver
+modprobe mt7996e 2>/dev/null || logger -t set_devs_be12pro "WARNING: mt7996e failed to load"
+
+# Wait for ethernet interfaces to be ready
+for p in eth0 eth1 eth2; do
+	if ! wait_for_interface "$p"; then
+		logger -t set_devs_be12pro "ERROR: $p did not appear after 10 seconds"
+	fi
+done
+
+# Wait for DSA switch port interfaces
+for p in lan3 lan4 lan5; do
+	if ! wait_for_interface "$p"; then
+		logger -t set_devs_be12pro "WARNING: $p did not appear after 10 seconds"
+	fi
+done
+
+if [ "$(NG set_macs)" != "1" ]; then
+
+	# eth2 (WAN) has the vendor WAN MAC from the Factory partition - use it as base
+	basemac=$(cat /sys/class/net/eth2/address | tr '[:lower:]' '[:upper:]')
+
+	eth0macaddr="$basemac"
+	eth1macaddr=$(macaddr_add "$basemac" -1)
+	eth2macaddr=$(macaddr_add "$basemac" 5)
+	eth3macaddr=$(macaddr_add "$basemac" 6)
+	eth4macaddr=$(macaddr_add "$basemac" 7)
+
+	NS "eth0macaddr=$eth0macaddr"
+	NS "eth1macaddr=$eth1macaddr"
+	NS "eth2macaddr=$eth2macaddr"
+	NS "eth3macaddr=$eth3macaddr"
+	NS "eth4macaddr=$eth4macaddr"
+
+	# Set WAN MAC (eth0 is WAN on Tomato64)
+	for i in wan_hwaddr wan_mac et0macaddr; do
+		NS "${i}=$eth0macaddr"
+	done
+
+	# Set LAN MAC (eth1 is the vendor LAN MAC)
+	NS "lan_hwaddr=$eth1macaddr"
+
+	NS set_macs=1
+fi
+
+switch0macaddr=$(macaddr_add "$(NG eth0macaddr)" 11)
+
+# Apply MAC addresses to current kernel-named interfaces. set_devs runs
+# before rc's start_lan(), so they are still down and can take a new MAC.
+# Kernel names are still eth0=gmac0, eth1=gmac1, eth2=gmac2.
+ip link set dev eth0 address "$switch0macaddr"
+ip link set dev eth1 address "$(NG eth1macaddr)"
+ip link set dev eth2 address "$(NG eth0macaddr)"
+ip link set dev lan3 address "$(NG eth2macaddr)"
+ip link set dev lan4 address "$(NG eth3macaddr)"
+ip link set dev lan5 address "$(NG eth4macaddr)"
+
+# Write iftab for ifrename: map MACs to desired interface names
+echo "switch0 mac $switch0macaddr" > /etc/iftab
+echo "eth0 mac $(NG eth0macaddr)" >> /etc/iftab
+echo "eth1 mac $(NG eth1macaddr)" >> /etc/iftab
+echo "eth2 mac $(NG eth2macaddr)" >> /etc/iftab
+echo "eth3 mac $(NG eth3macaddr)" >> /etc/iftab
+echo "eth4 mac $(NG eth4macaddr)" >> /etc/iftab

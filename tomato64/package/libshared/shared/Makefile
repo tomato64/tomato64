@@ -28,6 +28,10 @@ ifeq ($(PLATFORM_MT3600BE),y)
 ALL_CPPFLAGS += -DTOMATO64_MT3600BE
 endif
 
+ifeq ($(PLATFORM_BE12PRO),y)
+ALL_CPPFLAGS += -DTOMATO64_BE12PRO
+endif
+
 ifeq ($(PLATFORM_BE14000),y)
 ALL_CPPFLAGS += -DTOMATO64_BE14000
 endif
@@ -98,6 +102,14 @@ $(BUSYBOX_DIR)/util-linux/volume_id/ntfs.o \
 $(BUSYBOX_DIR)/util-linux/volume_id/exfat.o \
 $(BUSYBOX_DIR)/util-linux/volume_id/btrfs.o \
 $(BUSYBOX_DIR)/util-linux/volume_id/linux_swap.o
+
+# usb.c is USB storage support only (its declarations in shared.h are
+# TCONFIG_USB-only), and busybox's volume_id probes plus the bb_uuid.c shim
+# exist only for its label/UUID lookup - they need usb.c's xmalloc,
+# xrealloc and full_read. Boards without a USB port leave all of it out.
+ifneq ($(TCONFIG_USB),y)
+OBJS := $(filter-out usb.o bb_uuid.o $(BUSYBOX_DIR)/util-linux/volume_id/%,$(OBJS))
+endif
 
 all: libshared.so libshared.a
 

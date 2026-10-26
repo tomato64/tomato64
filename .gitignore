@@ -11,6 +11,7 @@
 .configure-legacy
 .configure-mt6000
 .configure-mt3600be
+.configure-be12pro
 .configure-be14000
 .configure-bpi-r3
 .configure-bpi-r3-mini

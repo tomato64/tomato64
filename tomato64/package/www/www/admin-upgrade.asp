@@ -67,11 +67,11 @@ var bcm53xxDevices = {
 };
 
 // Expected update-file extension for the current model:
-//   MT3600BE -> OpenWrt sysupgrade tar (-sysupgrade.bin)
+//   MT3600BE, BE12 Pro -> OpenWrt sysupgrade tar (-sysupgrade.bin)
 //   BCM53XX  -> bare Broadcom TRX (.trx)
 //   others   -> Tomato64 update archive (.tzst)
 function fwExpectedExt(model) {
-	if (model == 'GL.iNet GL-MT3600BE')
+	if (model == 'GL.iNet GL-MT3600BE' || model == 'Tenda BE12 Pro')
 		return { re: /-sysupgrade\.bin$/i, msg: '-sysupgrade.bin' };
 	if (model in bcm53xxDevices)
 		return { re: /\.trx$/i, msg: '.trx' };
@@ -159,6 +159,11 @@ function upgrade() {
 			regex: /gl-mt3600be/i,
 			name: 'GL-MT3600BE',
 			message: 'gl-mt3600be'
+		},
+		'Tenda BE12 Pro': {
+			regex: /tenda-be12-pro/i,
+			name: 'BE12 Pro',
+			message: 'tenda-be12-pro'
 		},
 		'GL.iNet GL-BE14000': {
 			regex: /be14000/i,

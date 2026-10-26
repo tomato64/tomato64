@@ -10,6 +10,9 @@ comment "Tomato64 target: mt6000"
 comment "Tomato64 target: mt3600be"
 	depends on BR2_PACKAGE_PLATFORM_MT3600BE
 
+comment "Tomato64 target: be12pro"
+	depends on BR2_PACKAGE_PLATFORM_BE12PRO
+
 comment "Tomato64 target: be14000"
 	depends on BR2_PACKAGE_PLATFORM_BE14000
 
@@ -41,6 +44,7 @@ comment "Tomato64 target: none selected"
 	depends on !BR2_PACKAGE_PLATFORM_X86_64 && \
 		   !BR2_PACKAGE_PLATFORM_MT6000 && \
 		   !BR2_PACKAGE_PLATFORM_MT3600BE && \
+		   !BR2_PACKAGE_PLATFORM_BE12PRO && \
 		   !BR2_PACKAGE_PLATFORM_BE14000 && \
 		   !BR2_PACKAGE_PLATFORM_BPIR3 && \
 		   !BR2_PACKAGE_PLATFORM_BPIR3MINI && \

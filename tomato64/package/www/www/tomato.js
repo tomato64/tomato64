@@ -3467,6 +3467,24 @@ var PortNames = {
 			/* VLAN labels same as hardware labels for this device */
 			this._vlanLabels = this._hardwareLabels;
 		}
+		else if (model === 'Tenda BE12 Pro') {
+			/* Labels as silkscreened: port 1 is the 2.5G WAN, port 2 the
+			 * SoC's 2.5G LAN, ports 3-5 the AN8855 1G LANs */
+			this._hardwareLabels = {
+				0: '1/2.5GE',
+				1: '2/2.5GE',
+				2: '3',
+				3: '4',
+				4: '5'
+			};
+			this._vlanLabels = {
+				0: '1',
+				1: '2',
+				2: '3',
+				3: '4',
+				4: '5'
+			};
+		}
 		else if (model === 'GL.iNet GL-BE14000') {
 			this._hardwareLabels = {
 				0: 'SFP+',

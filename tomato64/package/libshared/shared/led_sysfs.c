@@ -98,6 +98,18 @@ static const char * const managed_leds[] = {
 	NULL
 };
 
+#elif defined(TOMATO64_BE12PRO)
+/*
+ * Tenda BE12 Pro LEDs (no label in the DTS, so named color:function):
+ * - green:status = Status indicator (GPIO 6)
+ * - red:status   = Alarm indicator (GPIO 7)
+ */
+static const char * const managed_leds[] = {
+	"green:status",
+	"red:status",
+	NULL
+};
+
 #elif defined(TOMATO64_BPIR3)
 /*
  * Banana Pi BPI-R3 LEDs:

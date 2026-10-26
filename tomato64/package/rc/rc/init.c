@@ -10386,6 +10386,9 @@ static int init_nvram(void)
 #ifdef TOMATO64_MT3600BE
 	nvram_set("t_model_name", "GL.iNet GL-MT3600BE");
 #endif /* TOMATO64_MT3600BE */
+#ifdef TOMATO64_BE12PRO
+	nvram_set("t_model_name", "Tenda BE12 Pro");
+#endif /* TOMATO64_BE12PRO */
 #ifdef TOMATO64_BE14000
 	nvram_set("t_model_name", "GL.iNet GL-BE14000");
 #endif /* TOMATO64_BE14000 */
@@ -10898,6 +10901,9 @@ static void sysinit(void)
 #ifdef TOMATO64_MT3600BE
 	eval("set_devs_mt3600be");
 #endif /* TOMATO64_MT3600BE */
+#ifdef TOMATO64_BE12PRO
+	eval("set_devs_be12pro");
+#endif /* TOMATO64_BE12PRO */
 #ifdef TOMATO64_BE14000
 	eval("set_devs_be14000");
 #endif /* TOMATO64_BE14000 */

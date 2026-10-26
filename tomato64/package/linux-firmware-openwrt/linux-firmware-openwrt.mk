@@ -65,6 +65,20 @@ define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
 endef
 endif
 
+# Tenda BE12 Pro (mt7987a): Airoha EN8811H firmware for the 2.5G WAN PHY and
+# the MT7987 built-in 2.5G PHY firmware for the 2.5G LAN port (gmac1). Same
+# files as OpenWrt's airoha-en8811h-firmware and mt7987-2p5g-phy-firmware.
+ifeq ($(BR2_PACKAGE_PLATFORM_BE12PRO),y)
+define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
+	mkdir -p $(TARGET_DIR)/lib/firmware/airoha
+	cp $(@D)/airoha/EthMD32.dm.bin  $(TARGET_DIR)/lib/firmware/airoha
+	cp $(@D)/airoha/EthMD32.DSP.bin $(TARGET_DIR)/lib/firmware/airoha
+	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7987
+	cp $(@D)/mediatek/mt7987/i2p5ge-phy-DSPBitTb.bin $(TARGET_DIR)/lib/firmware/mediatek/mt7987
+	cp $(@D)/mediatek/mt7987/i2p5ge-phy-pmb.bin      $(TARGET_DIR)/lib/firmware/mediatek/mt7987
+endef
+endif
+
 # MediaTek MT7988 Wireless Ethernet Dispatch (WED) offload firmware for
 # GL-BE14000. Needed whenever mt7996e is loaded with wed_enable=Y (see
 # set_devs_be14000 / the wed_offloading nvram). Filenames match OpenWrt
@@ -168,10 +182,13 @@ endif
 # unconditional post-install hook because the per-platform INSTALL_TARGET_CMDS
 # above are mutually exclusive. Filename matches OpenWrt
 # package/firmware/linux-firmware/realtek.mk (rtl8852be-firmware).
+# Skipped on boards without a USB port, which don't build the driver.
+ifneq ($(BR2_PACKAGE_PLATFORM_NO_USB),y)
 define LINUX_FIRMWARE_OPENWRT_INSTALL_RTW89
 	mkdir -p $(TARGET_DIR)/lib/firmware/rtw89
 	cp $(@D)/rtw89/rtw8852b_fw-1.bin $(TARGET_DIR)/lib/firmware/rtw89
 endef
 LINUX_FIRMWARE_OPENWRT_POST_INSTALL_TARGET_HOOKS += LINUX_FIRMWARE_OPENWRT_INSTALL_RTW89
+endif
 
 $(eval $(generic-package))

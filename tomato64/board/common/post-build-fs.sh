@@ -92,22 +92,26 @@ ln -sf /tmp/var/wwwext $TARGET_DIR/www/user
 ln -sf /www/ext/proxy.pac $TARGET_DIR/www/proxy.pac
 ln -sf /www/ext/proxy.pac $TARGET_DIR/www/wpad.dat
 
-# usb_modeswitch.conf file
-USB_MODESWITCH_DIR=$BUILD_DIR/$(ls $BUILD_DIR --ignore='*data*' | grep usb_modeswitch)
-sed -e '/^\s*#.*$/d' -e '/^\s*$/d' < $USB_MODESWITCH_DIR/usb_modeswitch.conf > $TARGET_DIR/rom/etc/usb_modeswitch.conf
+# usb_modeswitch (switch4g) - not built for boards without a USB port
+if grep -q ^BR2_PACKAGE_USB_MODESWITCH_DATA=y ${BR2_CONFIG}
+then
+	# usb_modeswitch.conf file
+	USB_MODESWITCH_DIR=$BUILD_DIR/$(ls $BUILD_DIR --ignore='*data*' | grep usb_modeswitch)
+	sed -e '/^\s*#.*$/d' -e '/^\s*$/d' < $USB_MODESWITCH_DIR/usb_modeswitch.conf > $TARGET_DIR/rom/etc/usb_modeswitch.conf
 
-# usb_modeswitch device database. Buildroot installs the upstream database
-# under /usr/share, while switch4g expects it under /etc. Tomato64 exposes
-# files from /rom/etc in the runtime /etc directory.
-USB_MODESWITCH_DATA_DIR=$BUILD_DIR/$(ls $BUILD_DIR | grep '^usb_modeswitch_data-')
-rm -rf $TARGET_DIR/rom/etc/usb_modeswitch.d
-mkdir -p $TARGET_DIR/rom/etc/usb_modeswitch.d
-for D in $USB_MODESWITCH_DATA_DIR/usb_modeswitch.d/*; do
-	[ -f "$D" ] || continue
-	F=$(basename "$D")
-	sed 's/###.*//g;s/[ \t]\+/ /g;s/^[ \t]*//;s/[ \t]*$//;/^$/d' \
-		< "$D" > "$TARGET_DIR/rom/etc/usb_modeswitch.d/$F"
-done
+	# usb_modeswitch device database. Buildroot installs the upstream database
+	# under /usr/share, while switch4g expects it under /etc. Tomato64 exposes
+	# files from /rom/etc in the runtime /etc directory.
+	USB_MODESWITCH_DATA_DIR=$BUILD_DIR/$(ls $BUILD_DIR | grep '^usb_modeswitch_data-')
+	rm -rf $TARGET_DIR/rom/etc/usb_modeswitch.d
+	mkdir -p $TARGET_DIR/rom/etc/usb_modeswitch.d
+	for D in $USB_MODESWITCH_DATA_DIR/usb_modeswitch.d/*; do
+		[ -f "$D" ] || continue
+		F=$(basename "$D")
+		sed 's/###.*//g;s/[ \t]\+/ /g;s/^[ \t]*//;s/[ \t]*$//;/^$/d' \
+			< "$D" > "$TARGET_DIR/rom/etc/usb_modeswitch.d/$F"
+	done
 
-# Avoid storing the same database twice in the firmware image.
-rm -rf $TARGET_DIR/usr/share/usb_modeswitch
+	# Avoid storing the same database twice in the firmware image.
+	rm -rf $TARGET_DIR/usr/share/usb_modeswitch
+fi

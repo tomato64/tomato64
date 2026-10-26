@@ -48,6 +48,7 @@ define TOMATO64_HELPER_SCRIPTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_mt6000		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_mt3600be		$(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_be12pro		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_be14000		$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/panel_start			$(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/usr/bin/set_devs_bpir3		$(TARGET_DIR)/usr/bin

@@ -36,6 +36,9 @@ mt6000: .configure-mt6000
 mt3600be: .configure-mt3600be
 	$(BR2_BUILD)
 
+be12pro: .configure-be12pro
+	$(BR2_BUILD)
+
 be14000: .configure-be14000
 	$(BR2_BUILD)
 
@@ -80,6 +83,9 @@ mt6000-menuconfig: .configure-mt6000
 	make -C src/buildroot menuconfig
 
 mt3600be-menuconfig: .configure-mt3600be
+	make -C src/buildroot menuconfig
+
+be12pro-menuconfig: .configure-be12pro
 	make -C src/buildroot menuconfig
 
 be14000-menuconfig: .configure-be14000
@@ -130,6 +136,11 @@ distclean:
 .configure-mt3600be: .download-mediatek-kernel .patch
 	make -C src/buildroot BR2_EXTERNAL=../../tomato64 mt3600be_defconfig
 	@echo mt3600be > .target
+	@touch $@
+
+.configure-be12pro: .download-mediatek-kernel .patch
+	make -C src/buildroot BR2_EXTERNAL=../../tomato64 be12pro_defconfig
+	@echo be12pro > .target
 	@touch $@
 
 .configure-be14000: .download-mediatek-kernel .patch

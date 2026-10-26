@@ -13,6 +13,7 @@
 
 #ifdef TOMATO64
 #include <typedefs.h>
+#include <stdio.h>	/* FILE in f_write_escaped(); otherwise only pulled in by <mntent.h> under TCONFIG_USB */
 #endif /* TOMATO64 */
 #include <netinet/in.h>
 #include <stdint.h>

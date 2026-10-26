@@ -724,7 +724,7 @@ endif
 	sed -i $(INSTALLDIR)/www/tomato.css -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/nas-media.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d" || true
 	sed -i $(INSTALLDIR)/www/nas-samba.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d" || true
-	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
+	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d" || true
 	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/qos-classify.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
 	sed -i $(INSTALLDIR)/www/qos-ctrate.asp -e "/TOMATO64-REMOVE-BEGIN/,/TOMATO64-REMOVE-END/d"
@@ -763,7 +763,7 @@ else
 	sed -i $(INSTALLDIR)/www/bwm-24.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/nas-media.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d" || true
 	sed -i $(INSTALLDIR)/www/nas-samba.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d" || true
-	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
+	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d" || true
 	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-access.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-ctnf.asp -e "/TOMATO64-BEGIN/,/TOMATO64-END/d"

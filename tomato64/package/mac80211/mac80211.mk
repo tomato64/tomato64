@@ -31,6 +31,11 @@ define MAC80211_BUILD_CMDS
 		cat $(BR2_EXTERNAL_TOMATO64_PATH)/package/mac80211/config_rockchip >> $(@D)/.config; \
 	)
 
+	# No USB port: drop the RTW89 USB adapter driver (its only user here)
+	$(if $(BR2_PACKAGE_PLATFORM_NO_USB), \
+		sed -i '/^CPTCFG_RTW89/d' $(@D)/.config; \
+	)
+
 	$(TARGET_MAKE_ENV) \
 	$(MAKE) \
 	-C $(@D) \
@@ -137,6 +142,7 @@ endif
 # RTL8852BU USB adapters (RTL8832BU = USB ID 0bda:b832, handled by rtw89_8852bu).
 # Enabled in config_base, so built for every platform; autoloads via hotplug2
 # coldplug + modalias, same path as the mt76 USB (mt7921u/mt7925u) drivers.
+ifneq ($(BR2_PACKAGE_PLATFORM_NO_USB),y)
 define MAC80211_INSTALL_RTW89
 	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw89/rtw89_core.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw89/rtw89_usb.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
@@ -145,6 +151,7 @@ define MAC80211_INSTALL_RTW89
 	$(INSTALL) $(@D)/drivers/net/wireless/realtek/rtw89/rtw89_8852bu.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 endef
 MAC80211_POST_INSTALL_TARGET_HOOKS += MAC80211_INSTALL_RTW89
+endif
 
 # .ko are hand-copied (not modules_install), so strip debug info here.
 # Runs last to cover the platform-conditional module hooks above.

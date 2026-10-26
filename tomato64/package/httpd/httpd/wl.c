@@ -2267,7 +2267,7 @@ char* get_wl_tempsense(char *buf, const size_t buf_sz)
 	return buf;
 #endif
 
-#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BE14000)
+#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BE12PRO) || defined(TOMATO64_BE14000)
 	const char phy0_name[] = "mt7996_phy0.0";
 	const char phy1_name[] = "mt7996_phy0.1";
 #ifdef TOMATO64_BE14000

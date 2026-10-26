@@ -209,6 +209,7 @@ switch (nvram['t_model_name']) {
 	case 'ARM64 SystemReady':
 	case 'GL.iNet GL-MT6000':
 	case 'GL.iNet GL-MT3600BE':
+	case 'Tenda BE12 Pro':
 	case 'GL.iNet GL-BE14000':
 	case 'Banana Pi BPI-R3':
 	case 'Banana Pi BPI-R3 Mini':

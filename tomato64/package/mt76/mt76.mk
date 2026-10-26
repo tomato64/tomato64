@@ -38,18 +38,19 @@ define MT76_BUILD_CMDS
 	$(if $(BR2_PACKAGE_PLATFORM_X86_64),CONFIG_MT7915E=m) \
 	$(if $(BR2_PACKAGE_PLATFORM_MEDIATEK),CONFIG_MT798X_WMAC=y) \
 	$(if $(BR2_PACKAGE_PLATFORM_MT3600BE),CONFIG_MT7996E=m) \
+	$(if $(BR2_PACKAGE_PLATFORM_BE12PRO),CONFIG_MT7996E=m) \
 	$(if $(BR2_PACKAGE_PLATFORM_BE14000),CONFIG_MT7996E=m) \
 	$(if $(BR2_PACKAGE_PLATFORM_BPIR3),CONFIG_MT7996E=m) \
 	$(if $(BR2_PACKAGE_PLATFORM_X86_64),CONFIG_MT7996E=m) \
-	CONFIG_MT792x_LIB=m \
-	CONFIG_MT792x_USB=m \
-	CONFIG_MT7921_COMMON=m \
-	CONFIG_MT7921U=m \
-	CONFIG_MT7925_COMMON=m \
-	CONFIG_MT7925U=m \
+	$(if $(BR2_PACKAGE_PLATFORM_NO_USB),,CONFIG_MT792x_LIB=m) \
+	$(if $(BR2_PACKAGE_PLATFORM_NO_USB),,CONFIG_MT792x_USB=m) \
+	$(if $(BR2_PACKAGE_PLATFORM_NO_USB),,CONFIG_MT7921_COMMON=m) \
+	$(if $(BR2_PACKAGE_PLATFORM_NO_USB),,CONFIG_MT7921U=m) \
+	$(if $(BR2_PACKAGE_PLATFORM_NO_USB),,CONFIG_MT7925_COMMON=m) \
+	$(if $(BR2_PACKAGE_PLATFORM_NO_USB),,CONFIG_MT7925U=m) \
 	$(if $(BR2_PACKAGE_PLATFORM_X86_64),CONFIG_MT7921E=m) \
 	$(if $(BR2_PACKAGE_PLATFORM_X86_64),CONFIG_MT7925E=m) \
-	CONFIG_MT76_USB=m \
+	$(if $(BR2_PACKAGE_PLATFORM_NO_USB),,CONFIG_MT76_USB=m) \
 	M="$(@D)" \
 	NOSTDINC_FLAGS="-nostdinc -isystem $(TARGET_DIR)/include -I$(@D) -I$(STAGING_DIR)/usr/include/mac80211-backport/uapi -I$(STAGING_DIR)/usr/include/mac80211-backport -I$(STAGING_DIR)/usr/include/mac80211/uapi -I$(STAGING_DIR)/usr/include/mac80211 -include backport/autoconf.h -include backport/backport.h -DCONFIG_MAC80211_MESH $(if $(BR2_PACKAGE_PLATFORM_MEDIATEK),-DCONFIG_MT798X_WMAC)" \
 	modules
@@ -59,11 +60,17 @@ endef
 define MT76_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek
-	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7925
 
 	# Core modules
 	$(INSTALL) $(@D)/mt76-connac-lib.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 	$(INSTALL) $(@D)/mt76.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+endef
+
+# USB WiFi dongles (all platforms with a USB port)
+ifneq ($(BR2_PACKAGE_PLATFORM_NO_USB),y)
+define MT76_INSTALL_USB
+	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7925
+
 	$(INSTALL) $(@D)/mt76-usb.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 	$(INSTALL) $(@D)/mt792x-usb.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 	$(INSTALL) $(@D)/mt792x-lib.ko			$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
@@ -84,6 +91,8 @@ define MT76_INSTALL_TARGET_CMDS
 	$(INSTALL) $(@D)/firmware/mt7925/WIFI_MT7925_PATCH_MCU_1_1_hdr.bin	$(TARGET_DIR)/lib/firmware/mediatek/mt7925
 	$(INSTALL) $(@D)/firmware/mt7925/WIFI_RAM_CODE_MT7925_1_1.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7925
 endef
+MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_USB
+endif
 
 # Install MT7921e and MT7925e PCIe modules for x86_64 only
 ifeq ($(BR2_PACKAGE_PLATFORM_X86_64),y)
@@ -95,11 +104,11 @@ MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_X86_64_MODULES
 endif
 
 # mt7986a Filogic devices (MT6000 / BPI-R3 / BPI-R3 Mini): built-in mt7915e.
-# MT3600BE (MT7990) and BE14000 (MT7996) have no MT7915 and are handled by
+# MT3600BE (MT7990), BE12 Pro (MT7992) and BE14000 (MT7996) have no MT7915 and are handled by
 # their own blocks below - without excluding them here they would also pick up
 # mt7915e.ko and seven mt7986 firmware blobs they can never load.
 ifeq ($(BR2_PACKAGE_PLATFORM_MEDIATEK),y)
-ifeq ($(BR2_PACKAGE_PLATFORM_MT3600BE)$(BR2_PACKAGE_PLATFORM_BE14000),)
+ifeq ($(BR2_PACKAGE_PLATFORM_MT3600BE)$(BR2_PACKAGE_PLATFORM_BE12PRO)$(BR2_PACKAGE_PLATFORM_BE14000),)
 define MT76_INSTALL_MEDIATEK_MODULES
 	$(INSTALL) $(@D)/mt7915/mt7915e.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
 endef
@@ -133,6 +142,28 @@ define MT76_INSTALL_MT3600BE_FIRMWARE
 	$(INSTALL) $(@D)/firmware/mt7996/mt7990_wm.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
 endef
 MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_MT3600BE_FIRMWARE
+endif
+
+# Tenda BE12 Pro (mt7987a): dual-band MT7992 on PCIe, handled by the mt7996e
+# driver. Same firmware set as OpenWrt's kmod-mt7992-firmware; which eeprom
+# variant the driver asks for depends on the chip's front-end configuration.
+ifeq ($(BR2_PACKAGE_PLATFORM_BE12PRO),y)
+define MT76_INSTALL_BE12PRO_MODULES
+	$(INSTALL) $(@D)/mt7996/mt7996e.ko		$(TARGET_DIR)/lib/modules/$(LINUX_VERSION)/wifi
+endef
+MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_BE12PRO_MODULES
+
+define MT76_INSTALL_BE12PRO_FIRMWARE
+	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_dsp.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_eeprom.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_eeprom_2i5i.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_eeprom_2i5e.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_rom_patch.bin		$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_wa.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+	$(INSTALL) $(@D)/firmware/mt7996/mt7992_wm.bin			$(TARGET_DIR)/lib/firmware/mediatek/mt7996
+endef
+MT76_POST_INSTALL_TARGET_HOOKS += MT76_INSTALL_BE12PRO_FIRMWARE
 endif
 
 # GL-BE14000 (mt7988a): tri-band MT7996 on PCIe

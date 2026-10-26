@@ -365,7 +365,7 @@ struct nvram_tuple bsd_defaults[] = {
 
 #ifdef TOMATO64
 /* Default WiFi mode per device (WiFi 7 hardware defaults to "be", others to "ax") */
-#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BE14000)
+#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BE12PRO) || defined(TOMATO64_BE14000)
 #define WIFI_DEFAULT_MODE	"be"
 #else
 #define WIFI_DEFAULT_MODE	"ax"
@@ -2174,6 +2174,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_MT3600BE
 	{ "lan_ifnames",		"eth1"				},
 #endif /* TOMATO64_MT3600BE */
+#ifdef TOMATO64_BE12PRO
+	{ "lan_ifnames",		"eth1 eth2 eth3 eth4"		},
+#endif /* TOMATO64_BE12PRO */
 #ifdef TOMATO64_BE14000
 	{ "lan_ifnames",		"eth0 eth2 eth3 eth4 eth5 eth6 eth7 eth8 eth9"	},
 #endif /* TOMATO64_BE14000 */
@@ -2219,6 +2222,9 @@ struct nvram_tuple router_defaults[] = {
 #ifdef TOMATO64_MT3600BE
 	{ "vlan1ports",			"1 9*"				},
 #endif /* TOMATO64_MT3600BE */
+#ifdef TOMATO64_BE12PRO
+	{ "vlan1ports",			"1 2 3 4 9*"			},
+#endif /* TOMATO64_BE12PRO */
 #ifdef TOMATO64_BE14000
 	{ "vlan1ports",			"0 2 3 4 5 6 7 8 9 10*"		},
 #endif /* TOMATO64_BE14000 */
@@ -2272,6 +2278,8 @@ struct nvram_tuple router_defaults[] = {
 	{"wifi_phy_count_expected",	"2"				},	/* MT6000: 2.4GHz + 5GHz */
 #elif defined(TOMATO64_MT3600BE)
 	{"wifi_phy_count_expected",	"2"				},	/* MT3600BE: MT7990 2.4GHz + 5GHz */
+#elif defined(TOMATO64_BE12PRO)
+	{"wifi_phy_count_expected",	"2"				},	/* BE12 Pro: MT7992 2.4GHz + 5GHz */
 #elif defined(TOMATO64_BE14000)
 	{"wifi_phy_count_expected",	"3"				},	/* BE14000: MT7996 2.4GHz + 5GHz + 6GHz */
 #elif defined(TOMATO64_BPIR3)
@@ -2300,7 +2308,7 @@ struct nvram_tuple router_defaults[] = {
 	WIFI_DEF_PHY_BLOCK(0, "2g", "20")
 
 	/* phy0iface0: special defaults (enabled on certain devices, Tomato64 SSID set) */
-#if defined(TOMATO64_MT6000) || defined(TOMATO64_MT3600BE) || defined(TOMATO64_BE14000) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI)
+#if defined(TOMATO64_MT6000) || defined(TOMATO64_MT3600BE) || defined(TOMATO64_BE12PRO) || defined(TOMATO64_BE14000) || defined(TOMATO64_BPIR3) || defined(TOMATO64_BPIR3MINI)
 	{"wifi_phy0iface0_enable",	"1"				},
 #else
 	{"wifi_phy0iface0_enable",	"0"				},
