@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-SAMBA4_TOMATO_VERSION = 4.24.2
+SAMBA4_TOMATO_VERSION = 4.25.1
 SAMBA4_TOMATO_SITE = https://download.samba.org/pub/samba/stable
 SAMBA4_TOMATO_SOURCE = samba-$(SAMBA4_TOMATO_VERSION).tar.gz
 SAMBA4_TOMATO_INSTALL_STAGING = YES
@@ -170,6 +170,9 @@ SAMBA4_TOMATO_CONF_OPTS += --without-ad-dc --without-json
 # Tomato64 does not use ADS/LDAP functionality - force disable
 SAMBA4_TOMATO_CONF_OPTS += --without-ads --without-ldap
 SAMBA4_TOMATO_SHARED_MODULES += !idmap_ad
+
+# Tomato64 does not use systemd - force disable
+SAMBA4_TOMATO_CONF_OPTS += --without-systemd
 
 define SAMBA4_TOMATO_REMOVE_SMBTORTURE
 	rm -f $(TARGET_DIR)/usr/bin/smbtorture
