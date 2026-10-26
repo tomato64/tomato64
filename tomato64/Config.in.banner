@@ -1,0 +1,52 @@
+comment "Tomato64 target: x86_64 (UEFI, x86_64_v2)"
+	depends on BR2_PACKAGE_PLATFORM_X86_64 && BR2_x86_x86_64_v2
+
+comment "Tomato64 target: legacy (BIOS, x86_64_v1)"
+	depends on BR2_PACKAGE_PLATFORM_X86_64 && !BR2_x86_x86_64_v2
+
+comment "Tomato64 target: mt6000"
+	depends on BR2_PACKAGE_PLATFORM_MT6000
+
+comment "Tomato64 target: mt3600be"
+	depends on BR2_PACKAGE_PLATFORM_MT3600BE
+
+comment "Tomato64 target: be14000"
+	depends on BR2_PACKAGE_PLATFORM_BE14000
+
+comment "Tomato64 target: bpi-r3"
+	depends on BR2_PACKAGE_PLATFORM_BPIR3
+
+comment "Tomato64 target: bpi-r3-mini"
+	depends on BR2_PACKAGE_PLATFORM_BPIR3MINI
+
+comment "Tomato64 target: rpi4"
+	depends on BR2_PACKAGE_PLATFORM_RPI4
+
+comment "Tomato64 target: r6s"
+	depends on BR2_PACKAGE_PLATFORM_R6S
+
+comment "Tomato64 target: r76s"
+	depends on BR2_PACKAGE_PLATFORM_R76S
+
+comment "Tomato64 target: r5s"
+	depends on BR2_PACKAGE_PLATFORM_R5S
+
+comment "Tomato64 target: bcm53xx"
+	depends on BR2_PACKAGE_PLATFORM_BCM53XX
+
+comment "Tomato64 target: armsr"
+	depends on BR2_PACKAGE_PLATFORM_ARMSR
+
+comment "Tomato64 target: none selected"
+	depends on !BR2_PACKAGE_PLATFORM_X86_64 && \
+		   !BR2_PACKAGE_PLATFORM_MT6000 && \
+		   !BR2_PACKAGE_PLATFORM_MT3600BE && \
+		   !BR2_PACKAGE_PLATFORM_BE14000 && \
+		   !BR2_PACKAGE_PLATFORM_BPIR3 && \
+		   !BR2_PACKAGE_PLATFORM_BPIR3MINI && \
+		   !BR2_PACKAGE_PLATFORM_RPI4 && \
+		   !BR2_PACKAGE_PLATFORM_R6S && \
+		   !BR2_PACKAGE_PLATFORM_R76S && \
+		   !BR2_PACKAGE_PLATFORM_R5S && \
+		   !BR2_PACKAGE_PLATFORM_BCM53XX && \
+		   !BR2_PACKAGE_PLATFORM_ARMSR

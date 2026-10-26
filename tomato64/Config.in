@@ -1,3 +1,5 @@
+source "$BR2_EXTERNAL_TOMATO64_PATH/Config.in.banner"
+
 comment "Core Components"
 source "$BR2_EXTERNAL_TOMATO64_PATH/package/rc/Config.in"
 source "$BR2_EXTERNAL_TOMATO64_PATH/package/skeleton-init-rc/Config.in"

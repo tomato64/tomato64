@@ -1,0 +1,18 @@
+Subject: [PATCH] Config.in: show Tomato64 target on main menuconfig page
+
+Source the Tomato64 banner so the selected target platform is shown
+at the top of the main menuconfig page.
+
+---
+--- a/Config.in
++++ b/Config.in
+@@ -123,6 +123,9 @@
+ config BR2_NEEDS_HOST_GCC_PLUGIN_SUPPORT
+ 	bool
+ 
++# Tomato64 target banner
++source "$BR2_EXTERNAL_TOMATO64_PATH/Config.in.banner"
++
+ source "arch/Config.in"
+ 
+ source "toolchain/Config.in"
