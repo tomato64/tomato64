@@ -128,7 +128,7 @@ define OPENWRT_WIFI_INSTALL_TARGET_CMDS
 	# board-agnostic core (common.sh/nand.sh/stage2/do_stage2) and the
 	# Tomato64 overrides (zz-tomato64.sh) are byte-for-byte identical across
 	# devices; only platform.sh and the launcher differ per target.
-	if [ "$(BR2_PACKAGE_PLATFORM_MT3600BE)" = "y" -o "$(BR2_PACKAGE_PLATFORM_BCM53XX)" = "y" ]; then \
+	if [ "$(BR2_PACKAGE_PLATFORM_HAS_UBI_SYSUPGRADE)" = "y" ]; then \
 		$(INSTALL) -d $(TARGET_DIR)/lib/upgrade; \
 		$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/upgrade/common.sh	$(TARGET_DIR)/lib/upgrade/common.sh; \
 		$(INSTALL) -m 0644 $(@D)/package/base-files/files/lib/upgrade/nand.sh	$(TARGET_DIR)/lib/upgrade/nand.sh; \
@@ -137,8 +137,10 @@ define OPENWRT_WIFI_INSTALL_TARGET_CMDS
 		$(INSTALL) -m 0644 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/lib-upgrade-zz-tomato64.sh	$(TARGET_DIR)/lib/upgrade/zz-tomato64.sh; \
 		$(INSTALL) -d $(TARGET_DIR)/sbin; \
 	fi
-	# MT3600BE: filogic platform.sh (sysupgrade-tar flow) + tar-validating launcher
-	if [ "$(BR2_PACKAGE_PLATFORM_MT3600BE)" = "y" ]; then \
+	# MediaTek NAND (filogic): filogic platform.sh (sysupgrade-tar flow) +
+	# tar-validating launcher; board identity comes from
+	# /rom/etc/tomato64-sysupgrade.conf, written by the board's post-build.sh.
+	if [ "$(BR2_PACKAGE_PLATFORM_HAS_UBI_SYSUPGRADE)" = "y" -a "$(BR2_PACKAGE_PLATFORM_MEDIATEK)" = "y" ]; then \
 		$(INSTALL) -m 0644 $(@D)/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh	$(TARGET_DIR)/lib/upgrade/platform.sh; \
 		$(INSTALL) -m 0755 $(BR2_EXTERNAL_TOMATO64_PATH)/package/openwrt-wifi/tomato64-sysupgrade	$(TARGET_DIR)/sbin/tomato64-sysupgrade; \
 	fi

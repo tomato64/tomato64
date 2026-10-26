@@ -551,10 +551,11 @@ static void handle_reap(int sig)
 	raise(SIGALRM);
 }
 
-#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BCM53XX)
+#ifdef TOMATO64_HAS_UBI_SYSUPGRADE
 /* Sysupgrade re-exec hook: execve pid1 into the static stub in tmpfs to
  * drop its /romfs mmaps so nand_upgrade_prepare_ubi can free the rootfs
- * ubiblock. Triggered by SIGURG from /sbin/tomato64-sysupgrade(-bcm53xx). */
+ * ubiblock. Triggered by SIGURG from /sbin/tomato64-sysupgrade(-bcm53xx)
+ * on every HAS_UBI_SYSUPGRADE device. */
 static void handle_tomato64_reexec(int sig)
 {
 	static const char *path = "/tmp/tomato64-init-stub";
@@ -567,7 +568,7 @@ static void handle_tomato64_reexec(int sig)
 
 	execve(path, new_argv, new_envp);
 }
-#endif /* TOMATO64_MT3600BE || TOMATO64_BCM53XX */
+#endif /* TOMATO64_HAS_UBI_SYSUPGRADE */
 
 static int check_nv(const char *name, const char *value)
 {
@@ -10776,7 +10777,7 @@ static void sysinit(void)
 #else
 	eval("/etc/init.d/S10mdev", "start");
 
-#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BCM53XX)
+#ifdef TOMATO64_HAS_UBI_SYSUPGRADE
 	eval("touch", "/tmp/.preinit");
 	eval("mount_root");
 
@@ -10789,7 +10790,7 @@ static void sysinit(void)
 		eval("tar", "-xzf", "/sysupgrade.tgz", "-C", "/");
 		unlink("/sysupgrade.tgz");
 	}
-#endif /* TOMATO64_MT3600BE || TOMATO64_BCM53XX */
+#endif /* TOMATO64_HAS_UBI_SYSUPGRADE */
 #ifdef TOMATO64_BCM53XX
 	/* Fix TRX CRC - recalculate to cover only kernel partition so UBI
 	 * overlay writes don't invalidate it. Safe to run every boot since
@@ -10858,12 +10859,12 @@ static void sysinit(void)
 
 	start_hotplug2();
 
-#if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
+#ifndef TOMATO64_HAS_UBI_SYSUPGRADE
 	/* Mount filesystem rw */
 	if (!nvram_get_int("fs_mount_ro")) {
 		eval("mount", "-o", "remount,rw,noatime", "/");
 	}
-#endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
+#endif /* !TOMATO64_HAS_UBI_SYSUPGRADE */
 
 #ifdef TOMATO64_X86_64
 	if ((fp = fopen("/etc/fstab", "w"))) {
@@ -10953,12 +10954,12 @@ static void sysinit(void)
 	}
 	signal(SIGCHLD, handle_reap);
 
-#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BCM53XX)
+#ifdef TOMATO64_HAS_UBI_SYSUPGRADE
 	/* Sysupgrade re-exec hook (see handle_tomato64_reexec). SIGURG is
 	 * unused by rc and not in initsigs; SIGRTMIN would be silently
 	 * swallowed by musl (it reserves signals 32-34 internally). */
 	signal(SIGURG, handle_tomato64_reexec);
-#endif /* TOMATO64_MT3600BE || TOMATO64_BCM53XX */
+#endif /* TOMATO64_HAS_UBI_SYSUPGRADE */
 
 	/* ctf must be loaded prior to any other modules */
 	if (nvram_invmatch("ctf_disable", "1"))
@@ -11289,9 +11290,9 @@ int init_main(int argc, char *argv[])
 			 * last one as ssh telnet httpd samba etc can fail to load until start_wan_done
 			 */
 			start_wan();
-#if defined(TOMATO64_BCM53XX) || defined(TOMATO64_MT3600BE)
+#ifdef TOMATO64_HAS_UBI_SYSUPGRADE
 			eval("mount_root", "done");
-#endif /* TOMATO64_BCM53XX || TOMATO64_MT3600BE */
+#endif /* TOMATO64_HAS_UBI_SYSUPGRADE */
 
 #if !defined(TOMATO64) || defined(TOMATO64_BCM53XX)
 			if (wds_enable()) {

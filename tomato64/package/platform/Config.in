@@ -31,6 +31,11 @@ config BR2_PACKAGE_PLATFORM_HAS_BRIDGER
 config BR2_PACKAGE_PLATFORM_HAS_WED
 	bool
 
+# NAND/UBI device using the OpenWrt sysupgrade flow (stage2 -> nand_do_upgrade,
+# squashfs rootfs + UBIFS overlay, pid1 re-exec stub, /sysupgrade.tgz restore)
+config BR2_PACKAGE_PLATFORM_HAS_UBI_SYSUPGRADE
+	bool
+
 config BR2_PACKAGE_PLATFORM_ARM
 	bool
 	depends on BR2_arm
@@ -58,6 +63,7 @@ config BR2_PACKAGE_PLATFORM_MT3600BE
 	select BR2_PACKAGE_PLATFORM_HAS_POWEROFF
 	select BR2_PACKAGE_PLATFORM_HAS_WLTEMP
 	select BR2_PACKAGE_PLATFORM_HAS_FAN
+	select BR2_PACKAGE_PLATFORM_HAS_UBI_SYSUPGRADE
 
 config BR2_PACKAGE_PLATFORM_BE14000
 	bool "BE14000"
@@ -118,6 +124,7 @@ config BR2_PACKAGE_PLATFORM_BCM53XX
 	bool "BCM53XX"
 	depends on BR2_arm
 	select BR2_PACKAGE_PLATFORM_ARM
+	select BR2_PACKAGE_PLATFORM_HAS_UBI_SYSUPGRADE
 
 config BR2_PACKAGE_PLATFORM_ARMSR
 	bool "ARMSR"

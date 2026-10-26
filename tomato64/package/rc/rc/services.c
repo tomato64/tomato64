@@ -3093,7 +3093,7 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				stop_haveged();
 #endif
 				stop_jffs2();
-#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BCM53XX)
+#ifdef TOMATO64_HAS_UBI_SYSUPGRADE
 				/*
 				 * OpenWrt sysupgrade (stage2) owns the flash and reboot on these
 				 * devices; httpd never reaches finalize_upgrade(). Keep the
@@ -3106,7 +3106,7 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				remove_storage_main(1);
 				stop_usb();
 #endif /* TCONFIG_USB */
-#endif /* TOMATO64_MT3600BE || TOMATO64_BCM53XX */
+#endif /* TOMATO64_HAS_UBI_SYSUPGRADE */
 			}
 			return 1;
 		case SVCOP_UPGRADE_FINALIZE:

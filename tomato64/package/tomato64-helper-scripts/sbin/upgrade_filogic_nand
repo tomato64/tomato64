@@ -1,18 +1,27 @@
 #!/bin/sh
 #
-# GL-MT3600BE upgrade glue (installed as /sbin/upgrade on this device).
-# httpd's wi_upgrade runs:  /sbin/upgrade <fifo> <reset>
+# MediaTek NAND (filogic) upgrade glue (installed as /sbin/upgrade on these
+# devices). httpd's wi_upgrade runs:  /sbin/upgrade <fifo> <reset>
 # We drain the FIFO into tmpfs, validate, then launch the real flasher
 # detached so it reparents to init (pid 1) - otherwise stage2's
 # kill_remaining would skip httpd and leave the squashfs busy.
+#
+# Board identity (BOARD, BOARD_DIR, MODEL, IMAGE_NAME) comes from
+# /rom/etc/tomato64-sysupgrade.conf, written by the board's post-build.sh.
 
 ARCHIVE="$1"
 RESET="${2:-0}"
 IMG=/tmp/tomato64-sysupgrade.bin
-BOARD_DIR="sysupgrade-glinet_gl-mt3600be"
+BOARD_CONF=/rom/etc/tomato64-sysupgrade.conf
 
 if [ -z "$ARCHIVE" ]; then
 	echo "missing firmware argument"
+	exit 1
+fi
+
+[ -r "$BOARD_CONF" ] && . "$BOARD_CONF"
+if [ -z "$BOARD_DIR" ]; then
+	echo "error: $BOARD_CONF missing or incomplete"
 	exit 1
 fi
 
@@ -30,12 +39,26 @@ fi
 members="$(tar tf "$IMG" 2>/dev/null)"
 for need in "$BOARD_DIR/CONTROL" "$BOARD_DIR/kernel" "$BOARD_DIR/root"; do
 	if ! echo "$members" | grep -qx "$need"; then
-		echo "error: not a GL-MT3600BE sysupgrade image (missing $need)"
-		echo "upload tomato64-gl-mt3600be-sysupgrade.bin"
+		echo "error: not a $MODEL sysupgrade image (missing $need)"
+		echo "upload $IMAGE_NAME"
 		rm -f "$IMG"
 		exit 1
 	fi
 done
+
+# Devices with a raw "kernel" mtd partition (rather than a kernel UBI
+# volume) get the kernel written there by nand_do_upgrade. That write is
+# not atomic and a kernel that doesn't fit leaves the board unbootable, so
+# refuse an oversized kernel here, before anything is erased.
+kernel_mtd_size="$(awk -F'[: "]+' '$4 == "kernel" { print $2 }' /proc/mtd 2>/dev/null)"
+if [ -n "$kernel_mtd_size" ]; then
+	kernel_size="$(tar xOf "$IMG" "$BOARD_DIR/kernel" 2>/dev/null | wc -c)"
+	if [ "$kernel_size" -gt "$((0x$kernel_mtd_size))" ]; then
+		echo "error: kernel ($kernel_size bytes) does not fit the kernel partition ($((0x$kernel_mtd_size)) bytes)"
+		rm -f "$IMG"
+		exit 1
+	fi
+fi
 echo "image accepted - flash starting, router will reboot when done"
 
 # Detach so the launcher reparents to init (pid 1) - kill_remaining will

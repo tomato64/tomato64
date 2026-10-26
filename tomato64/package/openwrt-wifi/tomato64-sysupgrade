@@ -1,6 +1,7 @@
 #!/bin/sh
 #
-# tomato64-sysupgrade - GL-MT3600BE launcher for the OpenWrt sysupgrade flow.
+# tomato64-sysupgrade - MediaTek NAND (filogic) launcher for the OpenWrt
+# sysupgrade flow. Board identity comes from /rom/etc/tomato64-sysupgrade.conf.
 # Replaces procd's "ubus call system sysupgrade" + /sbin/upgraded: validates
 # the image, stages the /nvram backup, signals pid1 to drop its squashfs
 # mmaps, then exec's the unmodified OpenWrt stage2 -> nand_do_upgrade.
@@ -14,11 +15,17 @@
 IMG="$1"
 RESET="${2:-0}"
 
-BOARD="glinet,gl-mt3600be"
-BOARD_DIR="sysupgrade-glinet_gl-mt3600be"
 CONF_TGZ="/tmp/sysupgrade.tgz"
 
 log() { echo "tomato64-sysupgrade: $*" > /dev/console 2>/dev/null; echo "tomato64-sysupgrade: $*"; }
+
+# BOARD, BOARD_DIR, MODEL, IMAGE_NAME - written by the board's post-build.sh
+BOARD_CONF=/rom/etc/tomato64-sysupgrade.conf
+[ -r "$BOARD_CONF" ] && . "$BOARD_CONF"
+if [ -z "$BOARD" ] || [ -z "$BOARD_DIR" ]; then
+	log "ERROR: $BOARD_CONF missing or incomplete - aborting, system untouched"
+	exit 1
+fi
 
 # Wait for the glue to exit so we are reparented to init (pid 1) before
 # anything destructive, and so httpd can finish showing the wait page.
@@ -35,7 +42,7 @@ members="$(tar tf "$IMG" 2>/dev/null)"
 for need in "$BOARD_DIR/CONTROL" "$BOARD_DIR/kernel" "$BOARD_DIR/root"; do
 	if ! echo "$members" | grep -qx "$need"; then
 		log "ERROR: '$IMG' is not a $BOARD sysupgrade image (missing $need)"
-		log "Upload tomato64-gl-mt3600be-sysupgrade.bin - aborting, system untouched"
+		log "Upload $IMAGE_NAME - aborting, system untouched"
 		exit 1
 	fi
 done
@@ -44,7 +51,7 @@ log "validated $BOARD sysupgrade image"
 # board_name/model so OpenWrt's platform.sh case-match resolves correctly.
 mkdir -p /tmp/sysinfo
 [ -s /tmp/sysinfo/board_name ] || echo "$BOARD" > /tmp/sysinfo/board_name
-[ -s /tmp/sysinfo/model ]      || echo "GL.iNet GL-MT3600BE" > /tmp/sysinfo/model
+[ -s /tmp/sysinfo/model ]      || echo "$MODEL" > /tmp/sysinfo/model
 
 # Back up /nvram (the live overlay-merged view). Survives the ramfs pivot
 # because supivot does mount-move on /tmp. Consumed by our nand_restore_config.

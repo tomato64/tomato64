@@ -43,7 +43,7 @@ static char upgrade_file[64];
 #endif /* TOMATO64 */
 static unsigned int upgrade_reset;
 
-#if defined(TOMATO64) && !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
+#if defined(TOMATO64) && !defined(TOMATO64_HAS_UBI_SYSUPGRADE)
 #include <stdarg.h>
 
 static void upgrade_kmsg(int level, const char *fmt, ...)
@@ -62,7 +62,7 @@ static void upgrade_kmsg(int level, const char *fmt, ...)
 
 	f_write("/dev/kmsg", msg, strlen(msg), FW_APPEND, 0);
 }
-#endif /* TOMATO64 && !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
+#endif /* TOMATO64 && !TOMATO64_HAS_UBI_SYSUPGRADE */
 
 
 static int wait_upgrade_service(const char *action, int timeout)
@@ -435,13 +435,13 @@ void wi_upgrade(char *url, int len, char *boundary)
 	const char *error = "Error reading file";
 	int complete = 1;
 #ifdef TOMATO64
-#if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
+#ifndef TOMATO64_HAS_UBI_SYSUPGRADE
 	struct statvfs disk;
 	statvfs("/", &disk);
 	float f_bavail = disk.f_bavail;
 	float f_frsize = disk.f_frsize;
 	float available_space = f_bavail * f_frsize;
-#endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
+#endif /* !TOMATO64_HAS_UBI_SYSUPGRADE */
 #endif /* TOMATO64 */
 #ifndef TOMATO64
 #ifdef TCONFIG_BCMARM
@@ -451,7 +451,7 @@ void wi_upgrade(char *url, int len, char *boundary)
 #endif
 #else /* TOMATO64 */
 	/* args[2] = factory-reset flag, filled in below from _reset. Only
-	 * MT3600BE's /sbin/upgrade reads it; other devices ignore extra args
+	 * the NAND/UBI devices' /sbin/upgrade reads it; other devices ignore extra args
 	 * and rely on httpd's post-flash nvram_clear(). */
 	char *args[] = { "upgrade", fifo, "0", NULL };
 #endif /* TOMATO64 */
@@ -483,12 +483,12 @@ void wi_upgrade(char *url, int len, char *boundary)
 	}
 
 #ifdef TOMATO64
-#if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
+#ifndef TOMATO64_HAS_UBI_SYSUPGRADE
 	if ((float) len > available_space) {
 		error = "Insufficient disk space to extract update";
 		goto ERROR;
 	}
-#endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
+#endif /* !TOMATO64_HAS_UBI_SYSUPGRADE */
 #endif /* TOMATO64 */
 
 	/*
@@ -647,11 +647,11 @@ void wo_flash(char *url)
 	if (rboot) {
 		set_action(ACT_REBOOT);
 		sync();
-#if defined(TOMATO64_MT3600BE) || defined(TOMATO64_BCM53XX)
+#ifdef TOMATO64_HAS_UBI_SYSUPGRADE
 		parse_asp("/tmp/reboot.asp");
 		web_close();
 		return;
-#endif /* TOMATO64_MT3600BE || TOMATO64_BCM53XX */
+#endif /* TOMATO64_HAS_UBI_SYSUPGRADE */
 #ifdef TOMATO64_X86_64
 		if (fastreboot)
 			parse_asp("/tmp/reboot-fast.asp");
@@ -667,7 +667,7 @@ void wo_flash(char *url)
 			logmsg(LOG_WARNING, "upgrade-finalize did not complete before timeout; continuing");
 
 #ifdef TOMATO64
-#if !defined(TOMATO64_BCM53XX) && !defined(TOMATO64_MT3600BE)
+#ifndef TOMATO64_HAS_UBI_SYSUPGRADE
 		if (upgrade_reset) {
 #if defined(TOMATO64_X86_64) || defined(TOMATO64_RPI4)
 			eval("mount_nvram");
@@ -680,7 +680,7 @@ void wo_flash(char *url)
 			else
 				upgrade_kmsg(LOG_INFO, "nvram: erased at user request");
 		}
-#endif /* !TOMATO64_BCM53XX && !TOMATO64_MT3600BE */
+#endif /* !TOMATO64_HAS_UBI_SYSUPGRADE */
 
 		sync();
 		system("/bin/umount -a -d -r");

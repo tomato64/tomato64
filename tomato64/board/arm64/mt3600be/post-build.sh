@@ -29,4 +29,13 @@ set -x
 	# volume by post-image.sh / the upgrade script - it is NOT carried inside
 	# the (read-only squashfs) rootfs, so do not copy it into $TARGET_DIR/boot.
 
+	# Board identity for /sbin/upgrade and /sbin/tomato64-sysupgrade
+	mkdir -p $TARGET_DIR/rom/etc
+	cat > $TARGET_DIR/rom/etc/tomato64-sysupgrade.conf <<-EOF
+	BOARD="glinet,gl-mt3600be"
+	BOARD_DIR="sysupgrade-glinet_gl-mt3600be"
+	MODEL="GL.iNet GL-MT3600BE"
+	IMAGE_NAME="tomato64-gl-mt3600be-sysupgrade.bin"
+	EOF
+
 	$BR2_EXTERNAL_TOMATO64_PATH/board/common/post-build-fs.sh
