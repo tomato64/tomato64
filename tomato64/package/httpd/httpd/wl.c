@@ -663,8 +663,8 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 	bssi = &results->bss_info[0];
 	for (i = 0; i < results->count; ++i) {
 
-		/* check SSID len and limit to 32 */
-		if (bssi->SSID_len > 32/* || bssi->SSID_len == 0 */) {
+		/* check SSID length against the 802.11 limit */
+		if (bssi->SSID_len > MAX_SSID_LEN/* || bssi->SSID_len == 0 */) {
 			bssi = (wl_bss_info_t*)((uint8*)bssi + bssi->length); /* next one! */
 			continue;
 		}
@@ -673,7 +673,7 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 		snprintf(macstr, sizeof(macstr), "%02X:%02X:%02X:%02X:%02X:%02X", (unsigned char)bssidp[0], (unsigned char)bssidp[1], (unsigned char)bssidp[2], (unsigned char)bssidp[3], (unsigned char)bssidp[4], (unsigned char)bssidp[5]);
 
 		strlcpy(apinfos[ap_count].BSSID, macstr, sizeof(apinfos[ap_count].BSSID));
-		memset(apinfos[ap_count].SSID, 0x0, 33);
+		memset(apinfos[ap_count].SSID, 0, sizeof(apinfos[ap_count].SSID));
 		memcpy(apinfos[ap_count].SSID, bssi->SSID, bssi->SSID_len);
 		apinfos[ap_count].channel = (uint8)(bssi->chanspec & WL_CHANSPEC_CHAN_MASK);
 

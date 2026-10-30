@@ -1725,9 +1725,9 @@ int main(int argc, char **argv)
 				/* [addr:]port */
 				if ((port = strrchr(optarg, ':')) != NULL) {
 					if ((optarg[0] == '[') && (port > optarg) && (port[-1] == ']'))
-						memcpy(bind, optarg + 1, MIN(sizeof(bind), (unsigned int) (port - optarg) - 2));
+						memcpy(bind, optarg + 1, MIN(sizeof(bind) - 1, (unsigned int) (port - optarg) - 2));
 					else
-						memcpy(bind, optarg, MIN(sizeof(bind), (unsigned int) (port - optarg)));
+						memcpy(bind, optarg, MIN(sizeof(bind) - 1, (unsigned int) (port - optarg)));
 					port++;
 				}
 				else

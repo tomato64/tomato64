@@ -135,10 +135,12 @@ struct bss_ie_hdr {
 #define MAX_NUMBER_OF_APINFO	64
 #endif /* TCONFIG_BCMWL6 */
 
+#define MAX_SSID_LEN		32		/* same as DOT11_MAX_SSID_LEN */
+
 struct apinfo
 {
 	char BSSID[18];
-	char SSID[33];
+	char SSID[MAX_SSID_LEN + 1];
 	int RSSI_Quality;
 	unsigned char channel;
 	unsigned char ctl_ch;
