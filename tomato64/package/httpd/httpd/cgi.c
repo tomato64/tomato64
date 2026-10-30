@@ -25,6 +25,7 @@
  #define _GNU_SOURCE    //musl
 #endif	/* ! (__GLIBC__ || __UCLIBC__) */
 #include <search.h>
+#include <ctype.h>
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OS
@@ -44,13 +45,12 @@ static void unescape(char *s)
 
 	while ((s = strpbrk(s, "%+"))) {
 		if (*s == '%') {
-			if ((strlen(s + 1)) >= 2) {
-				sscanf(s + 1, "%02x", &c);
+			if ((strlen(s + 1) >= 2) && isxdigit((unsigned char)s[1]) && isxdigit((unsigned char)s[2]) && (sscanf(s + 1, "%02x", &c) == 1)) {
 				*s++ = (char)c;
 				strlcpy(s, s + 2, strlen(s) + 1);
 			}
 			else {
-				/* something's wrong - skip... */
+				/* malformed percent escape - discard the invalid suffix */
 				strlcpy(s, "", strlen(s) + 1);
 				logmsg(LOG_DEBUG, "*** [cgi] %s: malformed substring (skipped)!", __FUNCTION__);
 			}
