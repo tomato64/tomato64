@@ -124,6 +124,8 @@ void start_samba(int force)
 #endif
 #ifdef TOMATO64
 	char cmd[256];
+	char *s, *d;
+	FILE *pw;
 #endif /* TOMATO64 */
 
 	/* only if enabled or forced and lan_hostname is set */
@@ -398,8 +400,26 @@ void start_samba(int force)
 			smbd_user = "nas";
 
 #ifdef TOMATO64
-		snprintf(cmd, sizeof(cmd), "printf \"%s\n%s\n\" | smbpasswd -a -s %s", nvram_safe_get("smbd_passwd"), nvram_safe_get("smbd_passwd"), smbd_user);
-		system(cmd);
+		/* single-quote the user name for the shell, and feed the password on
+		 * stdin so it never passes through the shell or a printf format
+		 */
+		strlcpy(cmd, "smbpasswd -a -s '", sizeof(cmd));
+		for (s = smbd_user, d = cmd + strlen(cmd); *s && (d < cmd + sizeof(cmd) - 6); s++) {
+			if (*s == '\'') {
+				memcpy(d, "'\\''", 4);
+				d += 4;
+			}
+			else
+				*d++ = *s;
+		}
+		strlcpy(d, "'", cmd + sizeof(cmd) - d);
+
+		if ((pw = popen(cmd, "w")) != NULL) {
+			fprintf(pw, "%s\n%s\n", nvram_safe_get("smbd_passwd"), nvram_safe_get("smbd_passwd"));
+			pclose(pw);
+		}
+		else
+			logerr(__FUNCTION__, __LINE__, "smbpasswd");
 #else
 		eval("smbpasswd", smbd_user, nvram_safe_get("smbd_passwd"));
 #endif /* TOMATO64 */
