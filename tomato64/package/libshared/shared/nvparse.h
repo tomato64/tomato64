@@ -100,11 +100,15 @@ extern bool del_trf_mgmt_dwm(char *prefix, int which);
 *
 * When auth is "psk", the parameter list is:
 *
-* 	bool get_wds_wsec(int unit, int which, char *mac, char *role,
-*		char *crypto, char *auth, char *ssid, char *passphrase);
+* 	bool get_wds_wsec(int unit, int which,
+*		char *mac, size_t maclen, char *role, size_t rolelen,
+*		char *crypto, size_t cryptolen, char *auth, size_t authlen,
+*		char *ssid, size_t ssidlen, char *passphrase, size_t passphraselen);
 */
-extern bool get_wds_wsec(int unit, int which, char *mac, char *role,
-                         char *crypto, char *auth, ...);
+extern bool get_wds_wsec(int unit, int which,
+                         char *mac, size_t maclen, char *role, size_t rolelen,
+                         char *crypto, size_t cryptolen, char *auth, size_t authlen,
+                         char *ssid, size_t ssidlen, char *passphrase, size_t passphraselen);
 extern bool set_wds_wsec(int unit, int which, char *mac, char *role,
                          char *crypto, char *auth, ...);
 extern bool del_wds_wsec(int unit, int which);

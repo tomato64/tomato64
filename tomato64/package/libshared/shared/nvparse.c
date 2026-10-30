@@ -1193,55 +1193,52 @@ del_trf_mgmt_port(char *prefix, int which)
  * when auth is "psk":
  *	wl_wds<N>=mac,role,crypto,auth,ssid,passphrase
  */
-bool
-get_wds_wsec(int unit, int which, char *mac, char *role,
-             char *crypto, char *auth, ...)
+static bool
+copy_wds_field(char *dst, size_t dstlen, const char *src)
 {
-	char name[] = "wlXXXXXXX_wdsXXXXXXX", value[1000], *next;
+	if (!dst || !dstlen || !src)
+		return FALSE;
+
+	return (strlcpy(dst, src, dstlen) < dstlen);
+}
+
+bool
+get_wds_wsec(int unit, int which,
+             char *mac, size_t maclen, char *role, size_t rolelen,
+             char *crypto, size_t cryptolen, char *auth, size_t authlen,
+             char *ssid, size_t ssidlen, char *passphrase, size_t passphraselen)
+{
+	char name[] = "wlXXXXXXX_wdsXXXXXXX", value[1000], *next, *field;
 
 	snprintf(name, sizeof(name), "wl%d_wds%d", unit, which);
-	strncpy(value, nvram_safe_get(name), sizeof(value) - 1);
-	value[sizeof(value) - 1] = '\0';
+	strlcpy(value, nvram_safe_get(name), sizeof(value));
 	next = value;
 
-	/* separate mac */
-	strcpy(mac, strsep(&next, ","));
-	if (!next)
+	field = strsep(&next, ",");
+	if (!copy_wds_field(mac, maclen, field) || !next)
 		return FALSE;
 
-	/* separate role */
-	strcpy(role, strsep(&next, ","));
-	if (!next)
+	field = strsep(&next, ",");
+	if (!copy_wds_field(role, rolelen, field) || !next)
 		return FALSE;
 
-	/* separate crypto */
-	strcpy(crypto, strsep(&next, ","));
-	if (!next)
+	field = strsep(&next, ",");
+	if (!copy_wds_field(crypto, cryptolen, field) || !next)
 		return FALSE;
 
-	/* separate auth */
-	strcpy(auth, strsep(&next, ","));
-	if (!next)
+	field = strsep(&next, ",");
+	if (!copy_wds_field(auth, authlen, field) || !next)
 		return FALSE;
 
 	if (!strcmp(auth, "psk")) {
-		va_list va;
+		field = strsep(&next, ",");
+		if (!copy_wds_field(ssid, ssidlen, field) || !next)
+			return FALSE;
 
-		va_start(va, auth);
+		if (!copy_wds_field(passphrase, passphraselen, next))
+			return FALSE;
 
-		/* separate ssid */
-		strcpy(va_arg(va, char *), strsep(&next, ","));
-		if (!next)
-			goto fail;
-
-		/* separate passphrase */
-		strcpy(va_arg(va, char *), next);
-
-		va_end(va);
 		return TRUE;
-fail:
-		va_end(va);
-		return FALSE;
 	}
 
 	return FALSE;

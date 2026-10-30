@@ -524,8 +524,13 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 			char macaddr[18];
 			uint8 ea[ETHER_ADDR_LEN];
 
-			if (get_wds_wsec(unit, i, macaddr, wds_role, wds_crypto, wds_akms, wds_ssid,
-			                 wds_psk) &&
+			if (get_wds_wsec(unit, i,
+			                 macaddr, sizeof(macaddr),
+			                 wds_role, sizeof(wds_role),
+			                 wds_crypto, sizeof(wds_crypto),
+			                 wds_akms, sizeof(wds_akms),
+			                 wds_ssid, sizeof(wds_ssid),
+			                 wds_psk, sizeof(wds_psk)) &&
 			    ((ether_atoe(macaddr, ea) && !bcmp(ea, remote, ETHER_ADDR_LEN)) ||
 			     ((mac[0] == '*') && (mac[1] == '\0')))) {
 			     /* found wds settings */
@@ -539,15 +544,15 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 	/* interface unit */
 	info->unit = unit;
 	/* interface os name */
-	strcpy(info->osifname, os_name);
+	strlcpy(info->osifname, os_name, sizeof(info->osifname));
 	/* interface address */
 	memcpy(info->ea, mac, ETHER_ADDR_LEN);
 	/* ssid */
 	if (wds && wds_wsec)
-		strncpy(info->ssid, wds_ssid, MAX_SSID_LEN);
+		strlcpy(info->ssid, wds_ssid, sizeof(info->ssid));
 	else {
 		value = nvram_safe_get(strlcat_r(wl_prefix, "ssid", comb, sizeof(comb)));
-		strncpy(info->ssid, value, MAX_SSID_LEN);
+		strlcpy(info->ssid, value, sizeof(info->ssid));
 	}
 	/* auth */
 	if (nvram_match(strlcat_r(wl_prefix, "auth", comb, sizeof(comb)), "1"))
@@ -623,7 +628,7 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 
 		/* did not find WDS link configuration, use wireless' */
 		if (!wds_wsec)
-			strcpy(wds_role, "auto");
+			strlcpy(wds_role, "auto", sizeof(wds_role));
 
 		/* get right role */
 		if (!strcmp(wds_role, "sup"))
@@ -633,7 +638,7 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 		else /* if (!strcmp(wds_role, "auto")) */
 			lrole = WL_WDS_WPA_ROLE_AUTO;
 
-		strcpy(buf, "wds_wpa_role");
+		strlcpy(buf, "wds_wpa_role", sizeof(buf));
 		ptr = (unsigned char *)buf + strlen(buf) + 1;
 		bcopy(info->remote, ptr, ETHER_ADDR_LEN);
 		ptr[ETHER_ADDR_LEN] = lrole;
@@ -659,13 +664,11 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 	/* user-supplied psk passphrase */
 	if (CHECK_PSK(info->akm)) {
 		if (wds && wds_wsec) {
-			strncpy((char *)info->psk, wds_psk, MAX_USER_KEY_LEN);
-			info->psk[MAX_USER_KEY_LEN] = 0;
+			strlcpy((char *)info->psk, wds_psk, sizeof(info->psk));
 		}
 		else {
 			value = nvram_safe_get(strlcat_r(wl_prefix, "wpa_psk", comb, sizeof(comb)));
-			strncpy((char *)info->psk, value, MAX_USER_KEY_LEN);
-			info->psk[MAX_USER_KEY_LEN] = 0;
+			strlcpy((char *)info->psk, value, sizeof(info->psk));
 		}
 	}
 	/* user-supplied radius server secret */
