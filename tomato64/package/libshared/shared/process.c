@@ -25,7 +25,7 @@ static int getpsstate(int pid) {
 	char *p;
 	char *c;
 
-	sprintf(path, "/proc/%d/stat", pid);
+	snprintf(path, sizeof(path), "/proc/%d/stat", pid);
 	if ((f_read_string(path, buf, sizeof(buf)) > 4) && ((p = strrchr(buf, ')')) != NULL)) {
 		c = p + 2;
 		unsigned char state;
@@ -48,7 +48,7 @@ static char *psname_argv0(int pid, char *buffer, int maxlen)
 		return NULL;
 
 	*buffer = 0;
-	sprintf(path, "/proc/%d/cmdline", pid);
+	snprintf(path, sizeof(path), "/proc/%d/cmdline", pid);
 	if (f_read_string(path, buf, sizeof(buf)) > 0) {
 		strlcpy(buffer, buf, maxlen);
 	}
@@ -66,7 +66,7 @@ char *psname(int pid, char *buffer, int maxlen)
 		return NULL;
 
 	*buffer = 0;
-	sprintf(path, "/proc/%d/stat", pid);
+	snprintf(path, sizeof(path), "/proc/%d/stat", pid);
 	if ((f_read_string(path, buf, sizeof(buf)) > 4) && ((p = strrchr(buf, ')')) != NULL)) {
 		*p = 0;
 		if (((p = strchr(buf, '(')) != NULL) && (atoi(buf) == pid)) {
@@ -171,7 +171,7 @@ int ppid(int pid) {
 	int ppid = 0;
 
 	buf[0] = 0;
-	sprintf(path, "/proc/%d/stat", pid);
+	snprintf(path, sizeof(path), "/proc/%d/stat", pid);
 	if ((f_read_string(path, buf, sizeof(buf)) > 4))
 		sscanf(buf, "%*d %*s %*c %d", &ppid);
 

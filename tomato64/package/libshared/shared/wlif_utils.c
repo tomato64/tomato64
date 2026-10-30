@@ -204,7 +204,7 @@ get_wlmacstr_by_unit(char *unit)
 	char tmptr[] = "wlXXX.XX_hwaddr";
 	char *macaddr;
 
-	sprintf(tmptr, "wl%s_hwaddr", unit);
+	snprintf(tmptr, sizeof(tmptr), "wl%s_hwaddr", unit);
 
 	macaddr = nvram_get(tmptr);
 
@@ -246,7 +246,7 @@ get_wlname_by_mac(unsigned char *mac, char *wlname)
 	for (i = 0; i < WLIFU_MAX_NO_BRIDGE; i++) {
 #endif
 		sprintf(wlname, "wl%d", i);
-		sprintf(tmptr, "wl%d_hwaddr", i);
+		snprintf(tmptr, sizeof(tmptr), "wl%d_hwaddr", i);
 		wl_hw = nvram_get(tmptr);
 		if (wl_hw) {
 			if (!strncasecmp(wl_hw, eabuf, sizeof(eabuf)))
@@ -255,7 +255,7 @@ get_wlname_by_mac(unsigned char *mac, char *wlname)
 
 		for (j = 1; j < WL_MAXBSSCFG; j++) {
 			sprintf(wlname, "wl%d.%d", i, j);
-			sprintf(tmptr, "wl%d.%d_hwaddr", i, j);
+			snprintf(tmptr, sizeof(tmptr), "wl%d.%d_hwaddr", i, j);
 			wl_hw = nvram_get(tmptr);
 			if (wl_hw) {
 				if (!strncasecmp(wl_hw, eabuf, sizeof(eabuf)))
@@ -688,7 +688,7 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 			value = nvram_safe_get(strlcat_r(wl_prefix, "key", comb, sizeof(comb)));
 			info->wep_index = (int)strtoul(value, NULL, 0);
 			/* key */
-			sprintf(key, "key%s", nvram_safe_get(strlcat_r(wl_prefix, "key", comb, sizeof(comb))));
+			snprintf(key, sizeof(key), "key%s", nvram_safe_get(strlcat_r(wl_prefix, "key", comb, sizeof(comb))));
 			info->wep_key = nvram_safe_get(strlcat_r(wl_prefix, key, comb, sizeof(comb)));
 		}
 		/* radius server host/port */

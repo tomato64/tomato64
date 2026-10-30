@@ -285,7 +285,13 @@ int file_lock(char *tag)
 	int lockfd = -1;
 	pid_t lockpid;
 
-	sprintf(fn, "/var/lock/%s.lock", tag);
+	{
+		int n;
+
+		n = snprintf(fn, sizeof(fn), "/var/lock/%s.lock", tag);
+		if ((n < 0) || ((size_t)n >= sizeof(fn)))
+			goto lock_error;
+	}
 	if ((lockfd = open(fn, O_CREAT | O_RDWR, 0666)) < 0)
 		goto lock_error;
 

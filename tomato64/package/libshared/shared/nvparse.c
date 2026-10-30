@@ -1739,7 +1739,7 @@ convert_wsec(void)
 	int i;
 
 	for (i = 0; i < MAX_NVPARSE; i ++) {
-		sprintf(prefix, "wl%d_", i);
+		snprintf(prefix, sizeof(prefix), "wl%d_", i);
 		wep = nvram_get(strlcat_r(prefix, "wep", tmp, sizeof(tmp)));
 		if (!wep)
 			continue;

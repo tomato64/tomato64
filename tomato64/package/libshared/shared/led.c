@@ -796,7 +796,7 @@ int do_led(int which, int mode)
 		break;
 #endif /* TCONFIG_AC3200 */
 	default:
-		sprintf(s, "led_%s", led_names[which]);
+		snprintf(s, sizeof(s), "led_%s", led_names[which]);
 		if (nvget_gpio(s, &b, &n)) {
 			if ((mode != LED_PROBE) && (n)) mode = !mode;
 			ret = (n) ? b : ((b) ? -b : -99);
@@ -950,7 +950,7 @@ int do_led(int which, int mode)
 			if (mode != LED_PROBE) {
 				if (f_read_string("/proc/sys/diag", s, sizeof(s)) > 0) {
 					n = atoi(s);
-					sprintf(s, "%u", mode ? (n | b) : (n & ~b));
+					snprintf(s, sizeof(s), "%u", mode ? (n | b) : (n & ~b));
 					f_write_string("/proc/sys/diag", s, 0, 0);
 				}
 			}
@@ -1258,7 +1258,7 @@ int do_led(int which, int mode)
 		b = wrt160nv1[which];
 		break;
 	default:
-		sprintf(s, "led_%s", led_names[which]);
+		snprintf(s, sizeof(s), "led_%s", led_names[which]);
 		if (nvget_gpio(s, &b, &n)) {
 			if ((mode != LED_PROBE) && (n)) mode = !mode;
 			ret = (n) ? b : ((b) ? -b : -99);

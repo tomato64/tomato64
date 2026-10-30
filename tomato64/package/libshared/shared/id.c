@@ -378,7 +378,7 @@ int get_wndr_model(void)
 	int mtd = getMTD("board_data");
 	char devname[32];
 
-	sprintf(devname, "/dev/mtd%dro", mtd);
+	snprintf(devname, sizeof(devname), "/dev/mtd%dro", mtd);
 
 	FILE *model = fopen(devname, "rb");
 	if (model) {
@@ -551,7 +551,7 @@ static int get_model_once(void)
 				FILE *fp;
 				char s[18];
 				uint32 sig = TRX_MAGIC;
-				sprintf(s, MTD_DEV(%dro), 1);
+				snprintf(s, sizeof(s), MTD_DEV(%dro), 1);
 				if ((fp = fopen(s, "rb"))) {
 					fread(&sig, sizeof(sig), 1, fp);
 					fclose(fp);

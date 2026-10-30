@@ -303,7 +303,7 @@ static void stop_ppp(char *prefix)
 #endif
 
 	for (i = 1; i <= mwan_num; i++) {
-		sprintf(ifname, (i == 1 ? "wan" : "wan%u"), i);
+		snprintf(ifname, sizeof(ifname), (i == 1 ? "wan" : "wan%u"), i);
 		if (get_wanx_proto(ifname) == WP_L2TP) {
 			not_allwan_l2tp = 0;
 			break;
