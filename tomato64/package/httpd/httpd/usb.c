@@ -51,7 +51,7 @@ static uint64_t get_psize(char *dev)
 static int is_partition_mounted(char *dev_name, int host_num, char *dsc_name, char *pt_name, uint flags)
 {
 	char the_label[128];
-	char *type, *js;
+	char *type, *js, *js_dsc, *js_mnt_dir, *js_mnt_type, *js_mnt_opts, *js_type;
 	struct mntent *mnt;
 	struct statfs sf;
 	uint64_t size, fsize;
@@ -64,7 +64,9 @@ static int is_partition_mounted(char *dev_name, int host_num, char *dsc_name, ch
 	if (flags & EFH_PRINT) {
 		if (flags & EFH_1ST_DISC) {
 			/* [disc_name, [partitions array]],... */
-			web_printf("]],['%s',[", dsc_name);
+			js_dsc = js_string(dsc_name);
+			web_printf("]],['%s',[", js_dsc ? js_dsc : "");
+			free(js_dsc);
 		}
 		/* [partition_name, is_mounted, mount_point, type, opts, size, free],... */
 		js = js_string(the_label);
@@ -83,7 +85,13 @@ static int is_partition_mounted(char *dev_name, int host_num, char *dsc_name, ch
 				size = get_psize(dev_name);
 				fsize = 0;
 			}
-			web_printf("1,'%s','%s','%s',%llu,%llu]", mnt->mnt_dir, mnt->mnt_type, mnt->mnt_opts, size, fsize);
+			js_mnt_dir = js_string(mnt->mnt_dir);
+			js_mnt_type = js_string(mnt->mnt_type);
+			js_mnt_opts = js_string(mnt->mnt_opts);
+			web_printf("1,'%s','%s','%s',%llu,%llu]", js_mnt_dir ? js_mnt_dir : "", js_mnt_type ? js_mnt_type : "", js_mnt_opts ? js_mnt_opts : "", size, fsize);
+			free(js_mnt_dir);
+			free(js_mnt_type);
+			free(js_mnt_opts);
 		}
 	}
 	else if ((mnt = findmntents(dev_name, 1, 0, 0))) {
@@ -92,8 +100,11 @@ static int is_partition_mounted(char *dev_name, int host_num, char *dsc_name, ch
 			web_printf("2,'','swap','',%llu,0]", (uint64_t)atoi(mnt->mnt_type) * 1024);
 	}
 	else {
-		if (flags & EFH_PRINT)
-			web_printf("0,'','%s','',%llu,0]", type ? : "", get_psize(dev_name));
+		if (flags & EFH_PRINT) {
+			js_type = js_string(type ? : "");
+			web_printf("0,'','%s','',%llu,0]", js_type ? js_type : "", get_psize(dev_name));
+			free(js_type);
+		}
 	}
 
 	return is_mounted;

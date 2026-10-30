@@ -39,6 +39,7 @@ void asp_pptpd_userol(int argc, char **argv)
 	char interface[IF_SIZE + 1];
 	int ppppid, clientuptime;
 	char comma;
+	char *js_if, *js_local, *js_remote, *js_user;
 
 	web_puts("\n\npptpd_online=[");
 	comma = ' ';
@@ -46,10 +47,18 @@ void asp_pptpd_userol(int argc, char **argv)
 	fp = fopen(pptp_connected, "r");
 	if (fp) {
 		while (fgets(line, sizeof(line), fp) != NULL) {
-			if (sscanf(line, "%d %s %s %s %s %d", &ppppid, interface, clientlocalip, clientremoteip, clientusername, &clientuptime) != 6)
+			if (sscanf(line, "%d %8s %46s %46s %32s %d", &ppppid, interface, clientlocalip, clientremoteip, clientusername, &clientuptime) != 6)
 				continue;
 
-			web_printf("%c['%d', '%s', '%s', '%s', '%s', '%d']", comma, ppppid, interface, clientlocalip, clientremoteip, clientusername, clientuptime);
+			js_if = js_string(interface);
+			js_local = js_string(clientlocalip);
+			js_remote = js_string(clientremoteip);
+			js_user = js_string(clientusername);
+			web_printf("%c['%d', '%s', '%s', '%s', '%s', '%d']", comma, ppppid, js_if ? js_if : "", js_local ? js_local : "", js_remote ? js_remote : "", js_user ? js_user : "", clientuptime);
+			free(js_if);
+			free(js_local);
+			free(js_remote);
+			free(js_user);
 			comma = ',';
 		}
 		fclose(fp);

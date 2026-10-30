@@ -1520,7 +1520,7 @@ int resolve_addr(const char *ip, char *host)
 void wo_resolve(char *url)
 {
 	char host[NI_MAXHOST];
-	char *p, *ip, *js;
+	char *p, *ip, *js, *js_ip;
 	char comma;
 
 	comma = ' ';
@@ -1530,8 +1530,10 @@ void wo_resolve(char *url)
 			if (resolve_addr(ip, host) != 0)
 				continue;
 
+			js_ip = js_string(ip);
 			js = js_string(host);
-			web_printf("%c['%s','%s']", comma, ip, js);
+			web_printf("%c['%s','%s']", comma, js_ip ? js_ip : "", js ? js : "");
+			free(js_ip);
 			free(js);
 			comma = ',';
 		}

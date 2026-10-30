@@ -47,7 +47,7 @@ void asp_arplist(int argc, char **argv)
 	char s[512], ip[16], mac[18], dev[17];
 	char host[NI_MAXHOST];
 	char comma;
-	char *c;
+	char *c, *js_dev, *js_host;
 	unsigned int flags;
 
 	/*
@@ -76,7 +76,11 @@ void asp_arplist(int argc, char **argv)
 				*c = 0;
 
 			strupr(mac);
-			web_printf("%c['%s','%s','%s','%s']", comma, ip, mac, dev, host);
+			js_dev = js_string(dev);
+			js_host = js_string(host);
+			web_printf("%c['%s','%s','%s','%s']", comma, ip, mac, js_dev ? js_dev : "", js_host ? js_host : "");
+			free(js_dev);
+			free(js_host);
 			comma = ',';
 		}
 		fclose(f);
@@ -115,7 +119,7 @@ static int get_wl_clients(int idx, int unit, int subunit, void *param)
 {
 	char *comma = param;
 	unsigned int i;
-	char *p, *wlif;
+	char *p, *wlif, *js_p;
 	char buf[32], ifname[16];
 	scb_val_t rssi;
 #ifdef TCONFIG_BCMARM
@@ -170,7 +174,9 @@ static int get_wl_clients(int idx, int unit, int subunit, void *param)
 							p = ifname;
 					}
 
-					web_printf("%c['%s','%s',%d,%d,%d,%u,%d]", *comma, p, ether_etoa(rssi.ea.octet, buf), rssi.val, sti.tx_rate, sti.rx_rate, sti.in, unit);
+					js_p = js_string(p);
+					web_printf("%c['%s','%s',%d,%d,%d,%u,%d]", *comma, js_p ? js_p : "", ether_etoa(rssi.ea.octet, buf), rssi.val, sti.tx_rate, sti.rx_rate, sti.in, unit);
+					free(js_p);
 					*comma = ',';
 				}
 			}
