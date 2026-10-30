@@ -138,6 +138,10 @@ int tor_newnym(void)
 		goto out;
 
 	datadir = nvram_safe_get("tor_datadir");
+	if (strpbrk(datadir, "\r\n")) {
+		logmsg(LOG_ERR, "Tor: invalid data directory contains a line break");
+		return -1;
+	}
 	if (snprintf(cookie_path, sizeof(cookie_path), "%s/control_auth_cookie", datadir) >= (int)sizeof(cookie_path))
 		goto out;
 
