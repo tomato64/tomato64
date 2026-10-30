@@ -567,6 +567,25 @@ static int replace_in_file(const char *filename, const char *old_str, const char
 	return 0;
 }
 
+static int wg_shellsafe_ipv4_list(const char *value)
+{
+	return value && (strspn(value, "0123456789., ") == strlen(value));
+}
+
+static int wg_shellsafe_route_value(const char *value, const int domain)
+{
+	const char *allowed;
+
+	if (!value || !*value)
+		return 0;
+
+	allowed = domain ?
+	          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-*" :
+	          "0123456789./-";
+
+	return strspn(value, allowed) == strlen(value);
+}
+
 static int wg_detect_routing_mode(const int unit, const int is_default_route)
 {
 	int rgwr;
@@ -674,6 +693,10 @@ static void wg_build_firewall(const int unit)
 		}
 
 		dns = getNVRAMVar("wg%d_dns", unit);
+		if (!wg_shellsafe_ipv4_list(dns)) {
+			logmsg(LOG_WARNING, "invalid wg%d DNS list, ignoring value", unit);
+			dns = "";
+		}
 		if (getNVRAMVar("wg%d_file", unit)[0] == '\0') { /* only if no optional config file has been added */
 			/* script to add/remove fw rules for dns servers (unit, dns) */
 			fprintf(fp, "\n# DNS\n"
@@ -771,6 +794,10 @@ static void wg_build_routing(const int unit, const char *fwmark_mask, const char
 		policy = atoi(type);
 		switch (policy) {
 		case 1: /* from source */
+			if (!wg_shellsafe_route_value(value, 0)) {
+				logmsg(LOG_WARNING, "invalid wg%d source routing value '%s', skipping", unit, value);
+				continue;
+			}
 			logmsg(LOG_INFO, "type: %d - add %s (wg%d)", policy, value, unit);
 			if (strstr(value, "-")) /* range */
 				fprintf(fp, "iptables -t mangle -A PREROUTING -m iprange --src-range %s -j MARK --set-mark %s\n", value, fwmark_mask);
@@ -780,11 +807,19 @@ static void wg_build_routing(const int unit, const char *fwmark_mask, const char
 			rules_count++;
 			break;
 		case 2: /* to destination */
+			if (!wg_shellsafe_route_value(value, 0) || strchr(value, '-')) {
+				logmsg(LOG_WARNING, "invalid wg%d destination routing value '%s', skipping", unit, value);
+				continue;
+			}
 			logmsg(LOG_INFO, "type: %d - add %s (wg%d)", policy, value, unit);
 			fprintf(fp, "iptables -t mangle -A PREROUTING -d %s -j MARK --set-mark %s\n", value, fwmark_mask);
 			rules_count++;
 			break;
 		case 3: /* to domain */
+			if (!wg_shellsafe_route_value(value, 1)) {
+				logmsg(LOG_WARNING, "invalid wg%d routing domain '%s', skipping", unit, value);
+				continue;
+			}
 			logmsg(LOG_INFO, "type: %d - add %s (wg%d)", policy, value, unit);
 			add_domain(&my_domains, value);
 			restart_dnsmasq = 1;
@@ -850,13 +885,22 @@ static int wg_quick_iface(char *iface, const char *file, const int up)
 static void wg_set_port(const int unit)
 {
 	wg_script_ctx_t *ctx = &wg_script_ctx[unit];
-	char *b;
+	char *b, *end;
+	long port;
 
 	b = getNVRAMVar("wg%d_port", unit);
-	if (b[0] == '\0')
-		snprintf(ctx->port, sizeof(ctx->port), "%d", 51820 + unit);
-	else
-		snprintf(ctx->port, sizeof(ctx->port), "%s", b);
+	if (b[0] != '\0') {
+		port = strtol(b, &end, 10);
+
+		if ((*end == '\0') && (port >= 1) && (port <= 65535)) {
+			snprintf(ctx->port, sizeof(ctx->port), "%ld", port);
+			return;
+		}
+
+		logmsg(LOG_WARNING, "invalid wg%d port '%s', using default", unit, b);
+	}
+
+	snprintf(ctx->port, sizeof(ctx->port), "%d", 51820 + unit);
 }
 
 static void wg_set_fwmark(const int unit)
@@ -870,10 +914,14 @@ static void wg_set_fwmark(const int unit)
 
 	b = getNVRAMVar("wg%d_fwmark", unit);
 	/* fwmark=0 disables mark in WG */
-	if ((b[0] == '\0') || (b[0] == '0'))
+	if ((b[0] == '\0') || (strcmp(b, "0") == 0))
 		snprintf(ctx->fwmark, sizeof(ctx->fwmark), "%s", ctx->port);
-	else
+	else if ((strlen(b) == 8) && (strspn(b, "0123456789abcdefABCDEF") == 8))
 		snprintf(ctx->fwmark, sizeof(ctx->fwmark), "%s", b);
+	else {
+		logmsg(LOG_WARNING, "invalid wg%d fwmark '%s', using interface port", unit, b);
+		snprintf(ctx->fwmark, sizeof(ctx->fwmark), "%s", ctx->port);
+	}
 }
 
 static int wg_if_exist(const char *ifname)
