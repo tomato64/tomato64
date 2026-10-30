@@ -454,7 +454,7 @@ function do_pre_submit_form(fom) {
 			if (vif >= 0) {
 				for (var i = 0; i < elem.length ; ++i) {
 					if (elem[i].name.indexOf('wl'+u) == 0)
-						s += 'nvram set '+elem[i].name+'="'+elem[i].value+'"\n';
+						s += 'nvram set '+elem[i].name+'="'+elem[i].value.replace(/["\\$`]/g, '\\$&')+'"\n';
 				}
 			}
 /* REMOVE-BEGIN
