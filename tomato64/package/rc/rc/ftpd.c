@@ -24,20 +24,6 @@
 #define LOGMSG_NVDEBUG		"ftpd_debug"
 
 
-static int valid_ftp_username(const char *user)
-{
-	static const char valid[] =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
-
-	if (!user || !*user)
-		return 0;
-
-	if ((strcmp(user, "root") == 0) || (strcmp(user, "admin") == 0))
-		return 0;
-
-	return (strspn(user, valid) == strlen(user));
-}
-
 
 static char *get_full_storage_path(char *val)
 {
@@ -310,7 +296,7 @@ void start_ftpd(int force)
 			if ((!user) || (!pass))
 				continue;
 
-			if (!valid_ftp_username(user)) {
+			if (!str_isalnum_extra(user, "_-", 1, 0) || !strcmp(user, "root") || !strcmp(user, "admin")) {
 				logmsg(LOG_WARNING, "FTP: ignoring invalid user name");
 				continue;
 			}

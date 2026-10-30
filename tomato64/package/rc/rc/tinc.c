@@ -110,21 +110,6 @@ static void build_tinc_firewall(const char *port)
  * @param body  shell commands stored in NVRAM
  * @return      1 on success, 0 when the script cannot be created
  */
-static int tinc_valid_name(const char *name)
-{
-	const unsigned char *p;
-
-	if (!name || !*name)
-		return 0;
-
-	for (p = (const unsigned char *)name; *p; p++) {
-		if (!isalnum(*p) && (*p != '_'))
-			return 0;
-	}
-
-	return 1;
-}
-
 static int tinc_valid_port(const char *port)
 {
 	unsigned long value;
@@ -168,7 +153,7 @@ void start_tinc(int force)
 	if (serialize_restart("tincd", 1))
 		return;
 
-	if (!tinc_valid_name(nvram_safe_get("tinc_name"))) {
+	if (!str_isalnum_extra(nvram_safe_get("tinc_name"), "_", 1, 0)) {
 		logmsg(LOG_ERR, "Tinc: invalid local host name");
 		return;
 	}
@@ -226,7 +211,7 @@ void start_tinc(int force)
 		if (vstrsep(b, "<", &connecto, &name, &address, &port, &compression, &subnet, &rsa, &ed25519, &custom) < 9)
 			continue;
 
-		if (!tinc_valid_name(name)) {
+		if (!str_isalnum_extra(name, "_", 1, 0)) {
 			logmsg(LOG_WARNING, "Tinc: ignoring invalid host name");
 			continue;
 		}
