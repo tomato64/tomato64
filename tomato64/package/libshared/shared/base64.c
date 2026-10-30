@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 /*
 
@@ -100,12 +101,18 @@ int base64_decode(const char *in, unsigned char *out, int inlen)
 
 unsigned int base64_encoded_len(int len)
 {
-	return ((len + 2) / 3) * 4;
+	if ((len < 0) || (len > INT_MAX - 2))
+		return 0;
+
+	return ((unsigned int)(len + 2) / 3U) * 4U;
 }
 
 unsigned int base64_decoded_len(int len)
 {
-	return ((len + 3) / 4) * 3;
+	if ((len < 0) || (len > INT_MAX - 3))
+		return 0;
+
+	return ((unsigned int)(len + 3) / 4U) * 3U;
 }
 
 /*
