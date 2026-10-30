@@ -479,6 +479,7 @@ int mtd_write_main(int argc, char *argv[])
 	uint32 netgear_chk_len;
 #endif
 	uint32 crc;
+	uint32 header_len;
 	FILE *f;
 	char *buf = NULL;
 	const char *error;
@@ -570,28 +571,48 @@ int mtd_write_main(int argc, char *argv[])
 		}
 		break;
 	case 0x5E24232A: /* Netgear */
-		/* get the Netgear header length */
-		if (safe_fread(&n, 1, sizeof(n), f) != sizeof(n)) {
+		/* get the 32-bit Netgear header length */
+		if (safe_fread(&header_len, 1, sizeof(header_len), f) != sizeof(header_len)) {
 			goto ERROR;
 		}
 #ifdef TCONFIG_BLINK /* RT-N/RTAC */
-		else {
-			/* and Byte Swap, Netgear header is big endian, machine is little endian */
-			n = BCMSWAP32(n);
-			_dprintf("*** %s: read Netgear header length: 0x%x\n", __FUNCTION__, n);
-		}
+		header_len = BCMSWAP32(header_len);
+		_dprintf("*** %s: read Netgear header length: 0x%x\n", __FUNCTION__, header_len);
 
-		/* read (formatted) Netgear CHK header (now that we know how long it is) */
-		// rewind(f); /* disabled, not working for some reason? Adjust structure above to account for this */
-		if (safe_fread(&netgear_hdr, 1, n-sizeof(sig)-sizeof(n), f) != (n-sizeof(sig)-sizeof(n))) {
+		if (header_len < (sizeof(sig) + sizeof(header_len) + sizeof(netgear_hdr))) {
+			error = "Invalid Netgear header";
 			goto ERROR;
 		}
-		else
-			_dprintf("*** %s: read Netgear header, magic=0x%x, length=0x%x\n", __FUNCTION__, sig, n);
+
+		n = (size_t)header_len - sizeof(sig) - sizeof(header_len);
+
+		/* read the fixed CHK fields we use */
+		if (safe_fread(&netgear_hdr, 1, sizeof(netgear_hdr), f) != sizeof(netgear_hdr)) {
+			goto ERROR;
+		}
+
+		/* consume any variable board-id/header tail without overflowing netgear_hdr */
+		n -= sizeof(netgear_hdr);
+		while (n > 0) {
+			char discard[128];
+			size_t chunk = MIN(n, sizeof(discard));
+
+			if (safe_fread(discard, 1, chunk, f) != chunk)
+				goto ERROR;
+			n -= chunk;
+		}
+
+		_dprintf("*** %s: read Netgear header, magic=0x%x, length=0x%x\n", __FUNCTION__, sig, header_len);
 #else
+		header_len = ntohl(header_len);
+		if (header_len < (sizeof(sig) + sizeof(header_len))) {
+			error = "Invalid Netgear header";
+			goto ERROR;
+		}
+
 		/* skip the header - we can't use seek() for fifo, so read the rest of the header */
-		n = ntohl(n) - sizeof(sig) - sizeof(n);
-		if ((buf = malloc(n + 1)) == NULL) {
+		n = (size_t)header_len - sizeof(sig) - sizeof(header_len);
+		if ((n == SIZE_MAX) || ((buf = malloc(n + 1)) == NULL)) {
 			error = "Not enough memory";
 			goto ERROR;
 		}
