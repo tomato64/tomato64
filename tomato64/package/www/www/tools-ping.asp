@@ -141,7 +141,7 @@ function ping() {
 	var addr = E('_f_addr').value;
 	var count = E('_f_count').value;
 	var size = E('_f_size').value;
-	pinger.post('ping.cgi', 'addr=' + addr + '&count=' + count + '&size=' + size);
+	pinger.post('ping.cgi', 'addr='+escapeCGI(addr)+'&count='+escapeCGI(count)+'&size='+escapeCGI(size));
 
 	cookie.set('pingaddr', addr);
 	cookie.set('pingcount', count);

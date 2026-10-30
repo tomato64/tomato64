@@ -35,7 +35,7 @@ adblockg.exist = function(f, v) {
 }
 
 adblockg.dataToView = function(data) {
-	return [(data[0] != '0') ? '&#x2b50' : '',data[1],data[2]];
+	return [(data[0] != '0') ? '&#x2b50' : '', escapeHTML(''+data[1]), escapeHTML(''+data[2])];
 }
 
 adblockg.fieldValuesToData = function(row) {
@@ -45,9 +45,10 @@ adblockg.fieldValuesToData = function(row) {
 }
 
 adblockg.verifyFields = function(row, quiet) {
-	var ok = 1;
+	var f = fields.getAll(row);
 
-	return ok;
+	return v_nodelim(f[1], quiet, 'Blacklist URL', 1) &&
+	       v_nodelim(f[2], quiet, 'Description', 1);
 }
 
 function bytesToMB(b){

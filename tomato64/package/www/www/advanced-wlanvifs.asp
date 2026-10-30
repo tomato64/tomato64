@@ -178,8 +178,8 @@ wlg.dataToView = function(data) {
 	else
 		ifname = wl_display_ifname(uidx);
 
-	return ([ifname,(data[1] == 1) ? '&#x2b50' : '',
-	                 data[2] || '<small><i>(unset)<\/i><\/small>',
+	return ([escapeHTML(''+ifname),(data[1] == 1) ? '&#x2b50' : '',
+	                 data[2] ? escapeHTML(''+data[2]) : '<small><i>(unset)<\/i><\/small>',
 	                 wmo[data[3]] || '<small><i>(unset)<\/i><\/small>',
 	                 bridgeNames[data[4]],
 	                 macmode[data[5]] || macmode[nvram['wl'+data[0].toString()+'_macmode']]

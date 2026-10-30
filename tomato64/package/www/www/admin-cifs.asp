@@ -30,7 +30,7 @@ function c(id, htm) {
 }
 
 function show() {
-	elem.setInnerHTML('notice_container', '<div id="notice">'+isup.notice_cifs.replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
+	elem.setInnerHTML('notice_container', '<div id="notice">'+escapeHTML(''+isup.notice_cifs).replace(/\n/g, '<br>')+'<\/div><br style="clear:both">');
 	elem.display('notice_container', isup.notice_cifs != '');
 	c('cifs1_size', cifs1.mnt ? (scaleSize(cifs1.size)+' / '+scaleSize(cifs1.free)) : '(not mounted)');
 	c('cifs2_size', cifs2.mnt ? (scaleSize(cifs2.size)+' / '+scaleSize(cifs2.free)) : '(not mounted)');

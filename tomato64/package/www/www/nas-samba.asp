@@ -87,7 +87,7 @@ ssg.sortCompare = function(a, b) {
 }
 
 ssg.dataToView = function(data) {
-	return [data[0], data[1], data[2], ['Read Only', 'Read / Write'][data[3]], ['No', 'Yes'][data[4]]];
+	return [escapeHTML(''+data[0]), escapeHTML(''+data[1]), escapeHTML(''+data[2]), ['Read Only', 'Read / Write'][data[3]], ['No', 'Yes'][data[4]]];
 }
 
 ssg.fieldValuesToData = function(row) {

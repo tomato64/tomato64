@@ -34,13 +34,16 @@ nfsg.exist = function(f, v) {
 }
 
 nfsg.dataToView = function(data) {
-	return [data[0], data[1], data[2],data[3], data[4], data[5]];
+	return [escapeHTML(''+data[0]), escapeHTML(''+data[1]), escapeHTML(''+data[2]), escapeHTML(''+data[3]), escapeHTML(''+data[4]), escapeHTML(''+data[5])];
 }
 
 nfsg.verifyFields = function(row, quiet) {
-	var ok = 1;
+	var f = fields.getAll(row);
 
-	return ok;
+	return v_nodelim(f[0], quiet, 'Directory', 1) &&
+	       v_path(f[0], quiet, 1) &&
+	       v_nodelim(f[1], quiet, 'IP Address/Subnet', 1) &&
+	       v_nodelim(f[5], quiet, 'Other Options', 1);
 }
 
 nfsg.resetNewEditor = function() {

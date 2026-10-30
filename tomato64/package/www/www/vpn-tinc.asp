@@ -135,7 +135,7 @@ th.setup = function() {
 }
 
 th.dataToView = function(data) {
-	return [(data[0] != '0') ? '&#x2b50' : '', data[1], data[2], data[3], data[4] ,data[5]];
+	return [(data[0] != '0') ? '&#x2b50' : '', escapeHTML(''+data[1]), escapeHTML(''+data[2]), escapeHTML(''+data[3]), escapeHTML(''+data[4]), escapeHTML(''+data[5])];
 }
 
 th.fieldValuesToData = function(row) {
@@ -161,6 +161,10 @@ th.verifyFields = function(row, quiet) {
 
 	if (f[1].value == '') {
 		ferror.set(f[1], 'Host Name is required', quiet || !ok);
+		ok = 0;
+	}
+	else if (!f[1].value.match(/^[A-Za-z0-9_]+$/)) {
+		ferror.set(f[1], 'Invalid Host Name. Only A-Z, 0-9 and "_" are allowed', quiet || !ok);
 		ok = 0;
 	}
 	else
