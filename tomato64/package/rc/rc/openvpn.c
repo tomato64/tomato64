@@ -234,6 +234,34 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 	}
 }
 
+static int ovpn_has_linebreak(const char *value)
+{
+	return value && (strchr(value, '\r') || strchr(value, '\n'));
+}
+
+static int ovpn_write_quoted(FILE *fp, const char *value)
+{
+	const char *p;
+
+	if (!fp || !value || ovpn_has_linebreak(value))
+		return 0;
+
+	if (fputc('"', fp) == EOF)
+		return 0;
+
+	for (p = value; *p; ++p) {
+		if ((*p == '"') || (*p == '\\')) {
+			if (fputc('\\', fp) == EOF)
+				return 0;
+		}
+		if (fputc(*p, fp) == EOF)
+			return 0;
+	}
+
+	return (fputc('"', fp) != EOF);
+}
+
+
 void start_ovpn_client(int unit)
 {
 	FILE *fp;
@@ -455,7 +483,14 @@ void start_ovpn_client(int unit)
 			fprintf(fp, "remote-cert-tls server\n");
 
 		if ((nvi = atoi(getNVRAMVar("vpnc%d_tlsvername", unit))) > 0) {
-			fprintf(fp, "verify-x509-name \"%s\" ", getNVRAMVar("vpnc%d_cn", unit));
+			fprintf(fp, "verify-x509-name ");
+			if (!ovpn_write_quoted(fp, getNVRAMVar("vpnc%d_cn", unit))) {
+				logmsg(LOG_ERR, "invalid verify-x509-name value");
+				fclose(fp);
+				stop_ovpn_client(unit);
+				return;
+			}
+			fprintf(fp, " ");
 			if (nvi == 2)
 				fprintf(fp, "name-prefix\n");
 			else if (nvi == 3)
@@ -526,6 +561,12 @@ void start_ovpn_client(int unit)
 			}
 		}
 		if (userauth) {
+			if (ovpn_has_linebreak(getNVRAMVar("vpnc%d_username", unit)) || ovpn_has_linebreak(getNVRAMVar("vpnc%d_password", unit))) {
+				logmsg(LOG_ERR, "invalid OpenVPN username or password");
+				stop_ovpn_client(unit);
+				return;
+			}
+
 			snprintf(buffer, BUF_SIZE, OVPN_DIR"/client%d/up", unit);
 			if (!(fp = fopen(buffer, "w"))) {
 				logmsg(LOG_ERR, "failed to create %s: (%s)", buffer, strerror(errno));
