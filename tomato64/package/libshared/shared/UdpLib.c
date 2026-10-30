@@ -296,7 +296,7 @@ void DEBUGF(char * strFormat, ...)
 	va_list  lpArgv;
 
 	va_start(lpArgv, strFormat);
-	vsprintf(szTraceMsg, strFormat, lpArgv);
+	vsnprintf(szTraceMsg, sizeof(szTraceMsg), strFormat, lpArgv);
 	va_end(lpArgv);
 
 	fprintf(stdout, "UdpLib: %s", szTraceMsg);
