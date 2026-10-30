@@ -25,6 +25,30 @@
 #define NOCAT_LOCKFILE		"/tmp/var/lock/splashd.lock"
 
 
+static int nocat_valid_nvram(void)
+{
+	static const char * const vars[] = {
+		"NC_AllowedWebHosts", "NC_DocumentRoot", "NC_ExcludePorts",
+		"NC_ForcedRedirect", "NC_GatewayMode", "NC_GatewayName",
+		"NC_GatewayPort", "NC_HomePage", "NC_IdleTimeout",
+		"NC_IncludePorts", "NC_LoginTimeout", "NC_MACWhiteList",
+		"NC_MaxMissedARP", "NC_Password", "NC_PeerChecktimeout",
+		"NC_RenewTimeout", "NC_SplashURL", "NC_SplashURLTimeout",
+		"NC_Verbosity", NULL
+	};
+	const char *value;
+	int i;
+
+	for (i = 0; vars[i]; i++) {
+		value = nvram_safe_get(vars[i]);
+		if (strpbrk(value, "\r\n"))
+			return 0;
+	}
+
+	return 1;
+}
+
+
 void build_nocat_conf(void)
 {
 	FILE *fp;
@@ -32,6 +56,11 @@ void build_nocat_conf(void)
 	char *lanX_ifname;
 	char *lanX_ipaddr;
 	int i;
+
+	if (!nocat_valid_nvram()) {
+		syslog(LOG_ERR, "NoCat: invalid configuration value contains a line break");
+		return;
+	}
 
 	if (!(fp = fopen(NOCAT_CONF, "w"))) {
 		logerr(__FUNCTION__, __LINE__, NOCAT_CONF);
