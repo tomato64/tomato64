@@ -17,6 +17,30 @@
 
 #define NFS_EXPORT	"/etc/exports"
 
+/* needed by logmsg() */
+#define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
+#define LOGMSG_NVDEBUG	"nfs_debug"
+
+
+static int nfs_valid_client(const char *value)
+{
+	const unsigned char *p;
+
+	if (!value || !*value)
+		return 0;
+
+	for (p = (const unsigned char *)value; *p; p++) {
+		if (isspace(*p) || (*p == '(') || (*p == ')'))
+			return 0;
+	}
+
+	return 1;
+}
+
+static int nfs_valid_options(const char *value)
+{
+	return value && !strpbrk(value, "\r\n()");
+}
 
 void start_nfs(void)
 {
@@ -85,6 +109,16 @@ void start_nfs(void)
 		while ((p = strsep(&g, ">")) != NULL) {
 			if ((vstrsep(p, "<", &dir, &address, &access, &sync, &subtree, &other)) < 6)
 				continue;
+
+			if (!dir || !*dir || strpbrk(dir, "\r\n") ||
+			    !nfs_valid_client(address) ||
+			    (strcmp(access, "rw") && strcmp(access, "ro")) ||
+			    (strcmp(sync, "sync") && strcmp(sync, "async")) ||
+			    (strcmp(subtree, "subtree_check") && strcmp(subtree, "no_subtree_check")) ||
+			    !nfs_valid_options(other)) {
+				logmsg(LOG_WARNING, "NFS: ignoring invalid export entry");
+				continue;
+			}
 
 			fprintf(fp, "%s %s(%s,%s,%s,%s)\n", dir, address, access, sync, subtree, other);
 		}
