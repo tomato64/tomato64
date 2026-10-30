@@ -48,8 +48,8 @@ static const char *vpn_ifaces[] = { "wg0", "wg1", "wg2", "tun11", "tun12", "tun1
 /* structure for storing a dynamic array of domains */
 typedef struct {
 	char **domains;
-	int count;
-	int capacity;
+	size_t count;
+	size_t capacity;
 } domain_list_t;
 
 /* per-unit WG routing script context */
@@ -252,7 +252,7 @@ static int init_domain_list(domain_list_t *list)
 /* freeing up domain list memory */
 static void free_domain_list(domain_list_t *list)
 {
-	int i;
+	size_t i;
 
 	if (list->domains) {
 		for (i = 0; i < list->count; i++) {
@@ -272,7 +272,7 @@ static void free_domain_list(domain_list_t *list)
 static void add_domain(domain_list_t *list, const char *domain)
 {
 	char **newdomains;
-	int newcap;
+	size_t newcap, domain_len;
 
 	if (!domain || !*domain)
 		return;
@@ -283,26 +283,35 @@ static void add_domain(domain_list_t *list, const char *domain)
 
 	/* check if increase the array size is needed */
 	if (list->count >= list->capacity - 1) { /* -1 for NULL at the end */
+		if (list->capacity > ((size_t)-1 / sizeof(char *)) / 2) {
+			logmsg(LOG_ERR, "%s: domain list capacity overflow - skipping domain '%s'", __FUNCTION__, domain);
+			return;
+		}
+
 		newcap = list->capacity * 2;
-		newdomains = realloc(list->domains, newcap * sizeof(char*));
+		newdomains = realloc(list->domains, newcap * sizeof(char *));
 		if (!newdomains) {
-			logmsg(LOG_ERR, "%s: realloc failed (capacity=%d, domain='%s') - skipping domain (out of memory)", __FUNCTION__, newcap, domain);
+			logmsg(LOG_ERR, "%s: realloc failed (capacity=%zu, domain='%s') - skipping domain (out of memory)", __FUNCTION__, newcap, domain);
 			return;
 		}
 		list->domains = newdomains;
 		list->capacity = newcap;
-		logmsg(LOG_DEBUG, "%s: capacity increased to %d", __FUNCTION__, list->capacity);
+		logmsg(LOG_DEBUG, "%s: capacity increased to %zu", __FUNCTION__, list->capacity);
 	}
 
 	/* allocate memory for the new domain */
-	list->domains[list->count] = (char*)malloc((strlen(domain) + 1) * sizeof(char));
+	domain_len = strlen(domain);
+	if (domain_len == (size_t) - 1)
+		return;
+
+	list->domains[list->count] = malloc(domain_len + 1);
 	if (!list->domains[list->count]) {
 		logmsg(LOG_ERR, "%s: malloc failed for domain '%s' (out of memory) - skipping", __FUNCTION__, domain);
 		return;
 	}
 
 	/* copy domain */
-	strlcpy(list->domains[list->count], domain, strlen(domain) + 1);
+	strlcpy(list->domains[list->count], domain, domain_len + 1);
 	list->count++;
 
 	if (list->count < list->capacity)
