@@ -562,9 +562,14 @@ int mwan_route_main(int argc, char **argv)
 					mwan_pbr_update((int)i, 1);
 				}
 				else {
-					/* Withdraw routing first, then stop assigning marks. */
-					mwan_table_del(prefix);
+					/*
+					 * Stop assigning NEW connections to this WAN before
+					 * withdrawing its policy routing table. This avoids a
+					 * window where a fresh connmark can point at a table that
+					 * has already been removed.
+					 */
 					mwan_pbr_update((int)i, 0);
+					mwan_table_del(prefix);
 				}
 			}
 
