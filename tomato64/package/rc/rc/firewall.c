@@ -204,19 +204,19 @@ int ipt_addr(char *addr, int maxlen, const char *s, const char *dir, int af, int
 	int r = 0;
 
 	if ((s) && (*s) && (*dir)) {
-		if (sscanf(s, "%[0-9.]-%[0-9.]", p, p) == 2) {
+		if (sscanf(s, "%91[0-9.]-%91[0-9.]", p, p) == 2) {
 			snprintf(addr, maxlen, "-m iprange --%s-range %s", dir, s);
 			r = IPT_V4;
 		}
 #ifdef TCONFIG_IPV6
-		else if (sscanf(s, "%[0-9A-Fa-f:]-%[0-9A-Fa-f:]", p, p) == 2) {
+		else if (sscanf(s, "%91[0-9A-Fa-f:]-%91[0-9A-Fa-f:]", p, p) == 2) {
 			snprintf(addr, maxlen, "-m iprange --%s-range %s", dir, s);
 			r = IPT_V6;
 		}
 #endif
 		else {
 			snprintf(addr, maxlen, "-%c %s", dir[0], s);
-			if (sscanf(s, "%[^/]/", p)) {
+			if (sscanf(s, "%91[^/]/", p)) {
 #ifdef TCONFIG_IPV6
 				r = host_addrtypes(p, strict ? af : (IPT_V4 | IPT_V6));
 #else
