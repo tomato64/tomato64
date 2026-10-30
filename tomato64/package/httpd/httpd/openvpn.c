@@ -352,21 +352,31 @@ void wo_ovpn_genkey(char *url)
 	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, webcgi_safeget("_server", ""), sizeof(buffer));
 	serverStr = js_string(buffer); /* quicky scrub */
-	if (serverStr == NULL && ((!strncmp(modeStr, "static", 6)) || (!strcmp(modeStr, "key")))) {
+	if (serverStr == NULL) {
+#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
+		syslog(LOG_WARNING, "Unable to allocate server string in wo_vpn_genkey!");
+#endif
+		free(modeStr);
+		return;
+	}
+
+	if (((!strncmp(modeStr, "static", 6)) || (!strcmp(modeStr, "key"))) && (*serverStr == '\0')) {
 #ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 		syslog(LOG_WARNING, "No server was set to wo_vpn_genkey but it was required by mode!");
 #endif
+		free(serverStr);
+		free(modeStr);
 		return;
 	}
 	server = atoi(serverStr);
 
 	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, webcgi_safeget("_dhtype", "0"), sizeof(buffer));
-	dhtype = atoi(js_string(buffer)); /* quicky scrub */
+	dhtype = atoi(buffer);
 
 	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, webcgi_safeget("_ecdh", "0"), sizeof(buffer));
-	is_ecdh = atoi(js_string(buffer)); /* quicky scrub */
+	is_ecdh = atoi(buffer);
 
 	memset(buffer, 0, sizeof(buffer));
 
@@ -399,6 +409,9 @@ void wo_ovpn_genkey(char *url)
 		print_generated_keys_to_user("server");
 #endif /* TCONFIG_KEYGEN */
 	}
+
+	free(serverStr);
+	free(modeStr);
 #endif /* TCONFIG_OPENVPN */
 }
 
@@ -425,10 +438,14 @@ void wo_ovpn_genclientconfig(char *url)
 	u = js_string(buffer);
 
 	if ((serverStr == NULL) || (u == NULL)) {
-		syslog(LOG_WARNING, "No server '%s' for /%s", serverStr, u);
+		syslog(LOG_WARNING, "No server '%s' for /%s", serverStr ? serverStr : "", u ? u : "");
+		free(serverStr);
+		free(u);
 		return;
 	}
 	server = atoi(serverStr);
+	free(serverStr);
+	free(u);
 
 	userauth = atoi(getNVRAMVar("vpns%d_userpass", server));
 	useronly = userauth && atoi(getNVRAMVar("vpns%d_nocert", server));

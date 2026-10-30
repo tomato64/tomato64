@@ -577,6 +577,11 @@ void asp_ctrate(int argc, char **argv)
 	}
 
 	buffer = (char *)malloc(1024);
+	if (buffer == NULL) {
+		fclose(a);
+		fclose(b);
+		return;
+	}
 
 	while (!feof(a)) {
 		count = fread(buffer, 1, 1024, a);
@@ -753,6 +758,7 @@ void asp_ctrate(int argc, char **argv)
 	}
 	web_puts("];\n");
 
+	free(buffer);
 	fclose(a);
 	fclose(b);
 }
