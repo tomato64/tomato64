@@ -82,12 +82,14 @@ int is_no_partition(const char *discname)
 
 	if ((procpt = fopen("/proc/partitions", "r"))) {
 		while (fgets(line, sizeof(line), procpt)) {
-			if (sscanf(line, " %d %d %d %[^\n ]", &ma, &mi, &sz, ptname) != 4)
+			if (sscanf(line, " %d %d %d %31[^\n ]", &ma, &mi, &sz, ptname) != 4)
 				continue;
 
 			if (strstr(ptname, discname))
 				count++;
 		}
+
+		fclose(procpt);
 	}
 
 	return (count == 1);
