@@ -370,7 +370,7 @@ int wlhelper_get_channel_stats(const char *ifname, int *channel, int *mhz,
 			if (channel_ptr && strstr(line, "Center Channel") == NULL) {
 				char freq_str[32];
 				/* Extract channel number and frequency: "Channel: 1 (2.412" */
-				if (sscanf(channel_ptr, "Channel: %d %s", channel, freq_str) == 2) {
+				if (sscanf(channel_ptr, "Channel: %d %31s", channel, freq_str) == 2) {
 					/* Parse frequency like "(2.412" or "(5.180" */
 					/* Shell script does: ${mhz:1:1}${mhz:3} which extracts "2" + "412" = "2412" */
 					if (strlen(freq_str) >= 5 && freq_str[0] == '(' && freq_str[2] == '.') {
@@ -386,7 +386,7 @@ int wlhelper_get_channel_stats(const char *ifname, int *channel, int *mhz,
 			if (ht_mode_ptr) {
 				char bw_str[32];
 				/* Extract bandwidth: "HT Mode: HE40" or "HT Mode: NOHT" */
-				if (sscanf(ht_mode_ptr, "HT Mode: %s", bw_str) == 1) {
+				if (sscanf(ht_mode_ptr, "HT Mode: %31s", bw_str) == 1) {
 					/*
 					 * The prefix of the same field names the generation
 					 * the radio is actually running: EHT160, HE80, VHT80,
@@ -444,7 +444,7 @@ int wlhelper_get_channel_stats(const char *ifname, int *channel, int *mhz,
 			if (noise_ptr) {
 				char noise_str[32];
 				/* Skip past "Noise:" and extract the value */
-				if (sscanf(noise_ptr, "Noise: %s", noise_str) == 1) {
+				if (sscanf(noise_ptr, "Noise: %31s", noise_str) == 1) {
 					if (strcmp(noise_str, "unknown") == 0) {
 						*noise = -99;
 					} else {
@@ -461,7 +461,7 @@ int wlhelper_get_channel_stats(const char *ifname, int *channel, int *mhz,
 			if (rate_ptr) {
 				char rate_str[32];
 				/* Skip past "Bit Rate:" and extract the value */
-				if (sscanf(rate_ptr, "Bit Rate: %s", rate_str) == 1) {
+				if (sscanf(rate_ptr, "Bit Rate: %31s", rate_str) == 1) {
 					if (strcmp(rate_str, "unknown") == 0) {
 						*rate = 0.0;
 					} else {
@@ -558,7 +558,7 @@ int wlhelper_foreach_station(const char *ifname, int phy,
 			if (signal_ptr) {
 				char signal_str[32];
 				/* Extract signal value */
-				if (sscanf(signal_ptr, "signal: %s", signal_str) == 1) {
+				if (sscanf(signal_ptr, "signal: %31s", signal_str) == 1) {
 					current_station.signal = atoi(signal_str);
 					field_index++;
 				}
