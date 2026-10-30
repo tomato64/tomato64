@@ -58,6 +58,21 @@ static char *ip2bcast(char *ip, char *netmask, char *buf, const size_t buf_sz)
 	return buf;
 }
 
+static int valid_pptpd_secret(const char *value)
+{
+	static const char valid[] =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-";
+	size_t len;
+
+	if (!value)
+		return 0;
+
+	len = strlen(value);
+
+	return (len >= 1) && (len <= 32) && (strspn(value, valid) == len);
+}
+
+
 static void write_chap_secret(char *file)
 {
 	FILE *fp;
@@ -76,8 +91,10 @@ static void write_chap_secret(char *file)
 			if ((vstrsep(b, "<", &username, &passwd) < 2))
 				continue;
 
-			if (*username =='\0' || *passwd == '\0')
+			if (!valid_pptpd_secret(username) || !valid_pptpd_secret(passwd)) {
+				logmsg(LOG_WARNING, "PPTP: ignoring invalid CHAP user entry");
 				continue;
+			}
 
 			fprintf(fp, "%s * %s *\n", username, passwd);
 		}
