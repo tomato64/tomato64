@@ -973,12 +973,17 @@ void start_ovpn_server(int unit)
 					if (nvi > 0) {
 						chp[strcspn(chp, "<")] = '\0';
 						logmsg(LOG_DEBUG, "*** %s: CCD: Common name: %s", __FUNCTION__, chp);
-						if (!(ccd = fopen(chp, "a"))) {
-							logmsg(LOG_ERR, "failed to create %s: (%s)", chp, strerror(errno));
-							stop_ovpn_server(unit);
-							return;
+						if (strchr(chp, '/')) {
+							logmsg(LOG_ERR, "invalid CCD common name containing path separator: %s", chp);
 						}
-						chmod(chp, (S_IRUSR | S_IWUSR));
+						else {
+							if (!(ccd = fopen(chp, "a"))) {
+								logmsg(LOG_ERR, "failed to create %s: (%s)", chp, strerror(errno));
+								stop_ovpn_server(unit);
+								return;
+							}
+							chmod(chp, (S_IRUSR | S_IWUSR));
+						}
 
 						nvi -= strlen(chp) + 1;
 						chp += strlen(chp) + 1;
