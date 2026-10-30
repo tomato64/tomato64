@@ -222,7 +222,7 @@ void start_mysql(int force)
 
 	mysql_chomp_trailing_slash(pbi);
 
-	splitpath(pbi, basedir, tmp1);
+	splitpath(pbi, basedir, sizeof(basedir), tmp1, sizeof(tmp1));
 
 	/* generate download saved path based on USB partition (mysql_dlroot) and directory name (mysql_datadir) */
 	if (nvram_get_int("mysql_usb_enable")) {

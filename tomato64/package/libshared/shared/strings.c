@@ -61,7 +61,7 @@ int remove_word(char *buffer, const char *word)
 	while (*p == ' ') ++p;
 	while ((q > buffer) && (*(q - 1) == ' ')) --q;
 	if (*q != 0) *q++ = ' ';
-	strcpy(q, p);
+	memmove(q, p, strlen(p) + 1);
 
 	return 1;
 }
@@ -95,16 +95,17 @@ char *trimstr(char *str)
 	return str;
 }
 
-char * splitpath( char *str, char *pathname, char *filename)
+char *splitpath(char *str, char *pathname, size_t pathlen, char *filename, size_t filelen)
 {
 	char *rear;
 	int i, len;
 
 	len = strlen(str);
-	if (len == 0)
-	{
-		pathname[0] = '\0';
-		filename[0] = '\0';
+	if (len == 0) {
+		if (pathlen)
+			pathname[0] = '\0';
+		if (filelen)
+			filename[0] = '\0';
 		return pathname;
 	}
 
@@ -116,17 +117,15 @@ char * splitpath( char *str, char *pathname, char *filename)
 		i ++;
 		if (i >= len) break;
 	}
-	if (i == len)
-	{
-		pathname[0] = '\0';
-		strcpy(filename, str);
+	if (i == len) {
+		if (pathlen)
+			pathname[0] = '\0';
+		strlcpy(filename, str, filelen);
 	}
-	else
-	{
-		strncpy(pathname, str, len - i);
-		pathname[len - i ] = '\0';
-		strncpy(filename, str + len - i, i);
-		filename[i] = '\0';
+	else {
+		if (pathlen)
+			snprintf(pathname, pathlen, "%.*s", len - i, str);
+		strlcpy(filename, str + len - i, filelen);
 	}
 
 	return pathname;
