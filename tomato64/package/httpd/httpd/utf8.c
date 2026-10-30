@@ -193,13 +193,18 @@ static char *utf8_to_string(const char *ins, int csize, utf16_conv conv)
 	const char *t = ins;
 	uint32_t wc;
 	char *outpos, *outs = NULL;
+	size_t out_size;
 	int shorts, m;
 
 	shorts = utf8_to_utf16_size(ins);
-	if (shorts <= 0)
+	if ((shorts <= 0) || (csize <= 0))
 		return NULL;
 
-	outpos = outs = malloc((shorts + 1) * csize + 1);
+	if ((size_t)shorts > (((size_t)-1 - 1) / (size_t)csize) - 1)
+		return NULL;
+
+	out_size = ((size_t)shorts + 1) * (size_t)csize + 1;
+	outpos = outs = malloc(out_size);
 	if (!outs)
 		return NULL;
 
