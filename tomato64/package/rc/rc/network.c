@@ -2279,6 +2279,9 @@ static int check_wl_client(char *ifname, int unit, int subunit)
 	if ((mlist = malloc(mlsize)) != NULL) {
 		mlist->count = WL_MAX_ASSOC;
 		if (wl_ioctl(ifname, WLC_GET_ASSOCLIST, mlist, mlsize) == 0) {
+			if (mlist->count > WL_MAX_ASSOC)
+				mlist->count = WL_MAX_ASSOC;
+
 			for (i = 0; i < mlist->count; ++i) {
 				if (is_same_addr(&mlist->ea[i], &bi->BSSID)) {
 					associated = 1;
@@ -2292,6 +2295,9 @@ static int check_wl_client(char *ifname, int unit, int subunit)
 			mlist->count = WL_MAX_ASSOC;
 			strlcpy((char*)mlist, "autho_sta_list", mlsize);
 			if (wl_ioctl(ifname, WLC_GET_VAR, mlist, mlsize) == 0) {
+				if (mlist->count > WL_MAX_ASSOC)
+					mlist->count = WL_MAX_ASSOC;
+
 				for (i = 0; i < mlist->count; ++i) {
 					if (is_same_addr(&mlist->ea[i], &bi->BSSID)) {
 						authorized = 1;

@@ -504,6 +504,9 @@ void rast_update_sta_info(int bssidx, int vifidx)
 	if (wl_ioctl(wlif_name, WLC_GET_VAR, mac_list, mac_list_size))
 		goto exit;
 
+	if (mac_list->count > MAX_STA_COUNT)
+		mac_list->count = MAX_STA_COUNT;
+
 	for (mcnt=0; mcnt < mac_list->count; mcnt++) {
 		memcpy(&scb_val.ea, &mac_list->ea[mcnt], ETHER_ADDR_LEN);
 

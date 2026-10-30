@@ -136,6 +136,9 @@ static int get_wl_clients(int idx, int unit, int subunit, void *param)
 		while (1) {
 			mlist->count = MAX_CLIENTS_COUNT;
 			if (wl_ioctl(wlif, cmd, mlist, mac_list_size) == 0) {
+				if (mlist->count > MAX_CLIENTS_COUNT)
+					mlist->count = MAX_CLIENTS_COUNT;
+
 				for (i = 0; i < mlist->count; ++i) {
 					memcpy(&rssi.ea, &(mlist->ea[i]), sizeof(struct ether_addr));
 					rssi.val = 0;
