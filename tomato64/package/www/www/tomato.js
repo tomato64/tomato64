@@ -2685,7 +2685,7 @@ function navi() {
 			['Transfer Rates',		'ctrate.asp'],
 		]],
 /* QUOTAS-BEGIN */
-		['Quotas',			'quota', 0, [
+		['<span class="arrow">›</span> Quotas',			'quota', 0, [
 			['Settings',			'settings.asp'],
 			['Usage',			'usage.asp'],
 		]],
