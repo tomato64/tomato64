@@ -110,6 +110,35 @@ static void build_tinc_firewall(const char *port)
  * @param body  shell commands stored in NVRAM
  * @return      1 on success, 0 when the script cannot be created
  */
+static int tinc_valid_name(const char *name)
+{
+	const unsigned char *p;
+
+	if (!name || !*name)
+		return 0;
+
+	for (p = (const unsigned char *)name; *p; p++) {
+		if (!isalnum(*p) && (*p != '_'))
+			return 0;
+	}
+
+	return 1;
+}
+
+static int tinc_valid_port(const char *port)
+{
+	unsigned long value;
+	char *end;
+
+	if (!port || !*port)
+		return 1;
+
+	value = strtoul(port, &end, 10);
+
+	return (*end == '\0') && (value >= 1) && (value <= 65535);
+}
+
+
 static int write_tinc_hook(const char *path, const char *body)
 {
 	FILE *fp;
@@ -138,6 +167,11 @@ void start_tinc(int force)
 
 	if (serialize_restart("tincd", 1))
 		return;
+
+	if (!tinc_valid_name(nvram_safe_get("tinc_name"))) {
+		logmsg(LOG_ERR, "Tinc: invalid local host name");
+		return;
+	}
 
 	/* create tinc directories */
 	mkdir(TINC_DIR, 0700);
@@ -191,6 +225,16 @@ void start_tinc(int force)
 
 		if (vstrsep(b, "<", &connecto, &name, &address, &port, &compression, &subnet, &rsa, &ed25519, &custom) < 9)
 			continue;
+
+		if (!tinc_valid_name(name)) {
+			logmsg(LOG_WARNING, "Tinc: ignoring invalid host name");
+			continue;
+		}
+
+		if (!tinc_valid_port(port)) {
+			logmsg(LOG_WARNING, "Tinc: ignoring host with invalid port");
+			continue;
+		}
 
 		snprintf(buffer, sizeof(buffer), TINC_HOSTS"/%s", name);
 		if (!(hp = fopen(buffer, "w"))) {
