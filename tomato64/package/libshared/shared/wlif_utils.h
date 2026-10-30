@@ -82,7 +82,7 @@ extern int get_spoof_ifname(char *mac, char *osifname, int osifnamelen);
 extern int get_real_mac(char *mac, int maclen);
 extern int get_lan_mac(unsigned char *mac);
 extern unsigned char *get_wlmacstr_by_unit(char *unit);
-extern int get_wlname_by_mac(unsigned char *mac, char *wlname);
+extern int get_wlname_by_mac(unsigned char *mac, char *wlname, size_t wlname_len);
 extern char *get_ifname_by_wlmac(unsigned char *mac, char *name);
 extern int get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname);
 #ifdef TCONFIG_RTNPLUS

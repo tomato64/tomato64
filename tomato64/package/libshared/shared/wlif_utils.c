@@ -231,7 +231,7 @@ get_lan_mac(unsigned char *mac)
 }
 
 int
-get_wlname_by_mac(unsigned char *mac, char *wlname)
+get_wlname_by_mac(unsigned char *mac, char *wlname, size_t wlname_len)
 {
 	char eabuf[18];
 	char tmptr[] = "wlXXX.XX_hwaddr";
@@ -245,7 +245,7 @@ get_wlname_by_mac(unsigned char *mac, char *wlname)
 #else
 	for (i = 0; i < WLIFU_MAX_NO_BRIDGE; i++) {
 #endif
-		sprintf(wlname, "wl%d", i);
+		snprintf(wlname, wlname_len, "wl%d", i);
 		snprintf(tmptr, sizeof(tmptr), "wl%d_hwaddr", i);
 		wl_hw = nvram_get(tmptr);
 		if (wl_hw) {
@@ -254,7 +254,7 @@ get_wlname_by_mac(unsigned char *mac, char *wlname)
 		}
 
 		for (j = 1; j < WL_MAXBSSCFG; j++) {
-			sprintf(wlname, "wl%d.%d", i, j);
+			snprintf(wlname, wlname_len, "wl%d.%d", i, j);
 			snprintf(tmptr, sizeof(tmptr), "wl%d.%d_hwaddr", i, j);
 			wl_hw = nvram_get(tmptr);
 			if (wl_hw) {
@@ -364,7 +364,7 @@ get_ifname_by_wlmac(unsigned char *mac, char *name)
 	  */
 	if (name && !strncmp(name, "wl", 2))
 		snprintf(nv_name, sizeof(nv_name), "%s", name);
-	else if (get_wlname_by_mac(mac, nv_name))
+	else if (get_wlname_by_mac(mac, nv_name, sizeof(nv_name)))
 		return 0;
 
 	if (nvifname_to_osifname(nv_name, os_name, sizeof(os_name)) < 0)
@@ -443,7 +443,7 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 		return WLIFU_ERR_INVALID_PARAMETER;
 
 	if (nvifname_to_osifname(osifname, os_name, sizeof(os_name))) {
-		if (get_wlname_by_mac(mac, nv_name))
+		if (get_wlname_by_mac(mac, nv_name, sizeof(nv_name)))
 			return WLIFU_ERR_INVALID_PARAMETER;
 		else if (nvifname_to_osifname(nv_name, os_name, sizeof(os_name)))
 			return WLIFU_ERR_INVALID_PARAMETER;
