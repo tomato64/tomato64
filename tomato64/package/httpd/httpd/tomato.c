@@ -34,7 +34,8 @@
 #define V_LENGTH(min, max)	VT_LENGTH,	{ .i = min },		{ .i = max }
 #define V_TEXT(min, max)	VT_TEXT,	{ .i = min },		{ .i = max }
 #define V_RANGE(min, max)	VT_RANGE,	{ .l = min },		{ .l = max }
-#define V_IP			VT_IP,		{ },			{ }
+#define V_IP			VT_IP,		{ .i = 1 },		{ }
+#define V_IPOPT			VT_IP,		{ .i = 0 },		{ }
 #define	V_OCTET			VT_RANGE,	{ .l = 0 },		{ .l = 255 }
 #define V_NUM			VT_RANGE,	{ .l = 0 },		{ .l = 0x7FFFFFFF }
 #define	V_TEMP			VT_TEMP,	{ }, 			{ }
@@ -499,7 +500,7 @@ const aspapi_t aspapi[] = {
  #define OVPNC_BLOCK(i) \
 	{ "vpnc" #i "_poll",		V_RANGE(0, 30)			}, \
 	{ "vpnc" #i "_tchk",		V_01				},	/* check if tunnel is up */ \
-	{ "vpnc" #i "_tunchk",		V_TEXT(0, 15)			},	/* IP to check the tunnel */ \
+	{ "vpnc" #i "_tunchk",		V_IPOPT				},	/* IP to check the tunnel */ \
 	{ "vpnc" #i "_if",		V_TEXT(3, 3)			},	/* tap, tun */ \
 	{ "vpnc" #i "_bridge",		V_01				}, \
 	{ "vpnc" #i "_nat",		V_01				}, \
@@ -545,7 +546,7 @@ const aspapi_t aspapi[] = {
 	{ "wg" #i "_enable",		V_01				}, \
 	{ "wg" #i "_poll",		V_RANGE(0, 30)			}, \
 	{ "wg" #i "_tchk",		V_01				},	/* check if tunnel is up */ \
-	{ "wg" #i "_tunchk",		V_TEXT(0, 15)			},	/* IP to check the tunnel */ \
+	{ "wg" #i "_tunchk",		V_IPOPT				},	/* IP to check the tunnel */ \
 	{ "wg" #i "_sleep",		V_RANGE(1, 99)			},	/* delay at startup */ \
 	{ "wg" #i "_file",		V_TEXT(0, 64)			}, \
 	{ "wg" #i "_key",		V_TEXT(0, 44)			}, \
@@ -2503,9 +2504,12 @@ static int webcgi_nvram_set(const nvset_t *v, const char *name, int write)
 				ok = 0;
 			break;
 		case VT_IP:
-			if ((sscanf(p, "%3u.%3u.%3u.%3u", &u[0], &u[1], &u[2], &u[3]) != 4) ||
-			    (u[0] > 255) || (u[1] > 255) || (u[2] > 255) || (u[3] > 255))
-				ok = 0;
+			if (strlen(p) > 0 || v->va.i) {
+				char tail;
+				if ((sscanf(p, "%3u.%3u.%3u.%3u%c", &u[0], &u[1], &u[2], &u[3], &tail) != 4) ||
+				    (u[0] > 255) || (u[1] > 255) || (u[2] > 255) || (u[3] > 255))
+					ok = 0;
+			}
 			break;
 		case VT_MAC:
 			if ((sscanf(p, "%2x:%2x:%2x:%2x:%2x:%2x", &u[0], &u[1], &u[2], &u[3], &u[4], &u[5]) != 6) ||
