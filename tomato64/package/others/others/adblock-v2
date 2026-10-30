@@ -4,13 +4,14 @@
 
 . nvram_ops
 
-ver="v2.72d - 10/09" # rs232, pedro
+ver="v2.72e - 10/09" # rs232, pedro
 PID=$$
 pidfile="/var/run/adblock.pid"
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
 pre=$(date +%s)
 alias only="sed -e 's/^[ \t]*//' | grep -Ev '^($|#|!)' | sort"
 DELAY=0
+hold=30
 
 hashblack() {
 	hb="=B+ $(NG adblock_blacklist | tr '>' '\n' | grep -E ^1 | cut -d/ -f3- | sort | cut -f1 -d'<') $(NG adblock_enable) $(NG adblock_path) $(NG adblock_limit) =BC+ $(NG adblock_blacklist_custom | only ) =BCF+"
@@ -57,7 +58,6 @@ alias yget="wget --no-check-certificate -T 15 $Q -U \"$USERAGENT\" --header \"Ca
 alias domain="sed 's/[#!].*//' | grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+[a-zA-Z]{2,6}'| grep -vEi '\.gif$|\.jpe?g$|\.png$|\.jsp?$|\.css$|\.ico$|\.aspx?$|\.php$|\.cer$|\.cfm$|\.cgi$|\.x?html?$|\.py$|\.rss$|\.vb$|\.sh$|\.json$'"
 alias notin="grep -Ev '^#.*|^!.*|^::|^\s*?$|^([a-f0-9:]+:+)+[a-f0-9]+'"
 alias number="sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'"
-hold=30
 [ $(NG adblock_path | wc -c) -gt 0 ] && {
 	NG adblock_path | grep -Eq '^/jffs' && logw "Custom path is pointing to JFFS, this is not ideal. Consider using alternative storages like USB/CIFS/etc."
 	DPATH="$(NG adblock_path | sed 's/\/$//')/adblock" ; mkdir -p "$DPATH"; } || DPATH="/etc"
