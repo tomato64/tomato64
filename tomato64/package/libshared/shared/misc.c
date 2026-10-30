@@ -766,16 +766,14 @@ int wan_led_off(char *prefix) /* off WAN LED only if no other WAN active */
 							int a;		/* port number: 0/1/2/3/4 */
 							char b[16];	/* port state: DOWN/SPEED */
 							int c;		/* port vlan: 1/2/3/4/etc */
-							char d[4];
 							FILE *f = NULL;
 
-							strcpy(d, &ifr.ifr_name[4]); /* trim vlan */
-							int vlannum = atoi(d);
+							int vlannum = atoi(&ifr.ifr_name[4]); /* trim vlan */
 /* Skip  this test in T64 for now */
 #ifndef TOMATO64
 							if ((f = popen("/usr/sbin/robocfg showports", "r")) != NULL) {
 								while (fgets(tmp, sizeof(tmp), f)) {
-									if (sscanf(tmp, "Port %d: %s %*s %*s %*s vlan: %d %*s", &a, b, &c) == 3) {
+									if (sscanf(tmp, "Port %d: %15s %*s %*s %*s vlan: %d %*s", &a, b, &c) == 3) {
 										if ((strncmp(b, "DOWN", 4) == 0) && (c == vlannum)) {
 											logmsg(LOG_DEBUG, "*** %s: state = DOWN for vlan%d", __FUNCTION__, vlannum);
 											up = 0;
@@ -937,18 +935,16 @@ int check_wanup(char *prefix)
 			int a;		/* port number: 0/1/2/3/4 */
 			char b[16];	/* port state: DOWN/SPEED */
 			int c;		/* port vlan: 1/2/3/4/etc */
-			char d[4];
 			FILE *f;
 
-			strcpy(d, &ifr.ifr_name[4]); /* trim vlan */
-			int vlannum = atoi(d);
+			int vlannum = atoi(&ifr.ifr_name[4]); /* trim vlan */
 			logmsg(LOG_DEBUG, "*** %s: %s vlan num: %d", __FUNCTION__, prefix, vlannum);
 
 /* Skip  this test in T64 for now */
 #ifndef TOMATO64
 			if ((f = popen("/usr/sbin/robocfg showports", "r")) != NULL) {
 				while (fgets(tmp, sizeof(tmp), f)) {
-					if (sscanf(tmp, "Port %d: %s %*s %*s %*s vlan: %d %*s", &a, b, &c) == 3) {
+					if (sscanf(tmp, "Port %d: %15s %*s %*s %*s vlan: %d %*s", &a, b, &c) == 3) {
 						if ((strncmp(b, "DOWN", 4) == 0) && (c == vlannum)) {
 							logmsg(LOG_DEBUG, "*** %s: port state = DOWN for vlan%d", __FUNCTION__, vlannum);
 							up = 0;
