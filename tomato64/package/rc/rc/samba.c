@@ -320,8 +320,15 @@ void start_samba(int force)
 		while ((q = strsep(&p, ">")) != NULL) {
 			if (vstrsep(q, "<", &name, &path, &comment, &writeable, &hidden) < 5)
 				continue;
-			if (!path || !name)
+
+			if (!str_isalnum_extra(name, " _-$", 1, 0) ||
+			    !path || !*path || strpbrk(path, "\r\n") ||
+			    (comment && strpbrk(comment, "\r\n")) ||
+			    (strcmp(writeable, "0") && strcmp(writeable, "1")) ||
+			    (strcmp(hidden, "0") && strcmp(hidden, "1"))) {
+				logmsg(LOG_WARNING, "Samba: ignoring invalid share entry");
 				continue;
+			}
 
 			/* share name */
 			fprintf(fp, "\n[%s]\n", name);

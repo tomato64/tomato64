@@ -36,7 +36,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <syslog.h>
-#if defined(TCONFIG_TINC) || defined(TCONFIG_FTP) || defined(TCONFIG_PPTPD)
+#if defined(TCONFIG_TINC) || defined(TCONFIG_FTP) || defined(TCONFIG_PPTPD) || defined(TCONFIG_SAMBASRV)
  #include <ctype.h>
 #endif
 #include <wlioctl.h>
@@ -845,7 +845,7 @@ int get_ifname_unit(const char *ifname, int *unit, int *subunit)
 /* In the space-separated/null-terminated list(haystack), try to
  * locate the string "needle"
  */
-#if defined(TCONFIG_TINC) || defined(TCONFIG_FTP) || defined(TCONFIG_PPTPD)
+#if defined(TCONFIG_TINC) || defined(TCONFIG_FTP) || defined(TCONFIG_PPTPD) || defined(TCONFIG_SAMBASRV)
 int str_isalnum_extra(const char *str, const char *extra, size_t minlen, size_t maxlen)
 {
 	const unsigned char *p;
@@ -866,7 +866,7 @@ int str_isalnum_extra(const char *str, const char *extra, size_t minlen, size_t 
 
 	return 1;
 }
-#endif /* TCONFIG_TINC || TCONFIG_FTP || TCONFIG_PPTPD */
+#endif /* TCONFIG_TINC || TCONFIG_FTP || TCONFIG_PPTPD || TCONFIG_SAMBASRV */
 
 
 char *find_in_list(const char *haystack, const char *needle)
