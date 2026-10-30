@@ -4,7 +4,7 @@
 
 . nvram_ops
 
-ver="v2.72c - 04/23" # rs232, pedro
+ver="v2.72d - 10/09" # rs232, pedro
 PID=$$
 pidfile="/var/run/adblock.pid"
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
@@ -150,20 +150,62 @@ checkList() { # 0=fetch_local / 1=download / 2=issues / 3=duplicated
 checkRam() {
 	# 0=Not-good-skip / 1=OK-proceed / 2=NoInfo
 	urinameh=$(echo "${4}".header)
-	freeram=$(( $(grep MemFree /proc/meminfo | awk '{print $2}') * 1024 )) # in Bits
-	listSize=$( [ -s "$PREFIX/${urinameh}" ] && { grep -Evi 'Content-Length: 0$'  "$PREFIX/${urinameh}" | grep -i 'Content-Length' | awk '{print $2}' ; } ) # in Bytes
-	[ -z $listSize ] && listSize=0
+
+	# Prefer the kernel's estimate of memory available without swapping.
+	# Older FreshTomato kernels may not expose MemAvailable, so fall back
+	# to reclaimable free/cache/buffer memory while excluding Shmem.
+	availableKb=$(awk '/^MemAvailable:/ { print $2; found=1; exit } END { if (!found) print 0 }' /proc/meminfo)
+	[ "$availableKb" -gt 0 ] || availableKb=$(awk '
+		/^MemFree:/  { free=$2 }
+		/^Buffers:/  { buffers=$2 }
+		/^Cached:/   { cached=$2 }
+		/^Shmem:/    { shmem=$2 }
+		END {
+			available=free + buffers + cached - shmem
+			if (available < 0) available=0
+			print available
+		}' /proc/meminfo)
+	freeram=$(( availableKb * 1024 )) # Bytes
+
+	# Redirect chains can contain multiple Content-Length headers. Use the
+	# final numeric value only; an absent size remains non-fatal.
+	listSize=$( [ -s "$PREFIX/${urinameh}" ] && {
+		grep -i 'Content-Length:' "$PREFIX/${urinameh}" | tr -d '\r' |
+		awk '$2 ~ /^[0-9]+$/ && $2 > 0 { size=$2 } END { if (size) print size }'
+	} )
+	[ -z "$listSize" ] && listSize=0
+
 	logd "[$1] checkRam(X) - list header content assessment"
-	[ $listSize -eq 0 ] && { logd "[$1] checkRam(X0) = The list headers don't provide enough info to perform a proper check. Skipping the checkRam() and proceed"; RTN=0; } || RTN=255
+	[ "$listSize" -eq 0 ] && { logd "[$1] checkRam(X0) = The list headers don't provide enough info to perform a proper check. Skipping the checkRam() and proceed"; RTN=0; } || RTN=255
 	rtn
+
+	# Keep the existing v2 sizing policy: projected content plus 20%
+	# processing headroom must remain below adblock_limit.
+	currentSize=0
+	[ -f "$TM" ] && currentSize=$(wc -c < "$TM")
+	requiredSize=$(( currentSize + listSize ))
+	requiredSize=$(( requiredSize + requiredSize / 5 ))
+
 	logd "[$1] checkRam(Y) - listSize Vs sizeLimit"
-	[ -f $TM ] && { [ $(( ( $(echo $(wc -c < $TM)) + $listSize ) * (100 + 20) / 100 )) -lt $sizeLimit ] && RTN=255 || { loge "[$1] checkRam(Y1) = listSize Vs sizeLimit = Low confidence this list would fit within the sizeLimit. Skipping it..."; RTN=1; } ; } # 20% extra is allowed
-	rtn
-	logd "[$1] checkRam(Z) - listSize Vs free RAM"
-	[ -z ${listSize} ] && { logd "[$1] checkRam(Z1) - Header Content Lenght missing, unable to conclude negatively, proceed"; RTN=1; } || {
-		[ $(( $freeram )) -gt $(( $listSize / 100 )) ] && { logd "[$1] checkRam(Z0) = The list should fit in RAM, proceeding"; RTN=0; } || { loge "[$1] checkRam(Z1) = Low confidence this list would fit in the free RAM. Skipping it..."; RTN=1; }
-		rtn
+	[ "$requiredSize" -lt "$sizeLimit" ] && RTN=255 || {
+		loge "[$1] checkRam(Y1) = listSize Vs sizeLimit = Low confidence this list would fit within the sizeLimit. Skipping it..."
+		RTN=1
 	}
+	rtn
+
+	# The list is processed mostly as a stream, so requiring multiples of
+	# its full size would be unnecessarily restrictive. Reserve the same
+	# 20% headroom already used by the blockfile sizing policy.
+	requiredRam=$(( listSize + listSize / 5 ))
+	logd "[$1] checkRam(Z) - listSize Vs available RAM"
+	[ "$freeram" -gt "$requiredRam" ] && {
+		logd "[$1] checkRam(Z0) = The list plus 20% processing headroom should fit in available RAM, proceeding"
+		RTN=0
+	} || {
+		loge "[$1] checkRam(Z1) = Insufficient available RAM: list requires about $(echo "$requiredRam"|number) Bytes including 20% headroom; $(echo "$freeram"|number) Bytes are available. Skipping it..."
+		RTN=1
+	}
+	rtn
 }
 
 download() {
