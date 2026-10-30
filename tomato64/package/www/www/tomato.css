@@ -2177,6 +2177,15 @@ span.pptpsvg {
 	color: #323232;
 }
 
+.indent1 .arrow {
+	display: inline-block;
+	transition: transform .15s ease;
+}
+
+.indent1.open .arrow {
+	transform: rotate(90deg);
+}
+
 /* TOMATO64-BEGIN */
 div[id$="_maclist"] .co1 {
 	width: 30%;
