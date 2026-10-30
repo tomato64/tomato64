@@ -89,11 +89,13 @@ static int mysql_eval_bin_pwd(const char *dir, const char *name, char *argv[], c
 	saved_pwd = NULL;
 
 	if (old_pwd) {
-		saved_pwd = malloc(strlen(old_pwd) + 1);
+		size_t saved_pwd_len = strlen(old_pwd) + 1;
+
+		saved_pwd = malloc(saved_pwd_len);
 		if (!saved_pwd)
 			return ENOMEM;
 
-		strcpy(saved_pwd, old_pwd);
+		strlcpy(saved_pwd, old_pwd, saved_pwd_len);
 	}
 
 	if (setenv("MYSQL_PWD", password, 1) < 0) {

@@ -87,8 +87,7 @@ et_find(int s, struct ifreq *ifr)
 			continue;
 		if (!strncmp(name, "aux", 3))
 			continue;
-		strncpy(ifr->ifr_name, name, IFNAMSIZ);
-		ifr->ifr_name[IFNAMSIZ-1] = '\0';
+		strlcpy(ifr->ifr_name, name, IFNAMSIZ);
 		if (et_check(s, ifr) == 0)
 			break;
 		ifr->ifr_name[0] = '\0';
@@ -114,8 +113,7 @@ et_iovar(char *name, int cmd, void *buf, int len, bool set)
 
 	/* get interface name if need */
 	if (name) {
-		strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name)-1);
-		ifr.ifr_name[sizeof(ifr.ifr_name) - 1] = '\0';
+		strlcpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
 	}
 	else
 		et_find(s, &ifr);

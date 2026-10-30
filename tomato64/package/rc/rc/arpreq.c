@@ -132,7 +132,7 @@ int send_arpreq(void)
 	}
 
 	memset(&ifr, 0x0, sizeof(ifr));
-	strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name) - 1);
+	strlcpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
 	ioctl(sock_fd, SIOCGIFINDEX, (char*)&ifr);
 	me.sll_ifindex = ifr.ifr_ifindex;
 	ioctl(sock_fd, SIOCGIFFLAGS, (char*)&ifr);

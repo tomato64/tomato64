@@ -2406,7 +2406,7 @@ struct nvram_tuple router_defaults[] = {
 
 /* Translates from, for example, wl0_ (or wl0.1_) to wl_ */
 /* Only single digits are currently supported */
-static void fix_name(const char *name, char *fixed_name)
+static void fix_name(const char *name, char *fixed_name, size_t fixed_len)
 {
 	char *pSuffix = NULL;
 
@@ -2416,14 +2416,14 @@ static void fix_name(const char *name, char *fixed_name)
 	 */
 	pSuffix = strchr(name, '_');
 
-	if ((strncmp(name, "wl", 2) == 0) && isdigit(name[2]) && (pSuffix != NULL)) {
-		strcpy(fixed_name, "wl");
-		strcpy(&fixed_name[2], pSuffix);
+	if ((strncmp(name, "wl", 2) == 0) && isdigit((unsigned char)name[2]) && (pSuffix != NULL)) {
+		strlcpy(fixed_name, "wl", fixed_len);
+		strlcat(fixed_name, pSuffix, fixed_len);
 		return;
 	}
 
 	/* No match with above rules: default to input name */
-	strcpy(fixed_name, name);
+	strlcpy(fixed_name, name, fixed_len);
 }
 
 /*
@@ -2439,7 +2439,7 @@ char *nvram_default_get(const char *name)
 	int idx;
 	char fixed_name[NVRAM_MAX_VALUE_LEN];
 
-	fix_name(name, fixed_name);
+	fix_name(name, fixed_name, sizeof(fixed_name));
 	if (strcmp(fixed_name, "wl_bss_enabled") == 0) {
 		if (name[3] == '.' || name[4] == '.') { /* Virtual interface */
 			return "0";
