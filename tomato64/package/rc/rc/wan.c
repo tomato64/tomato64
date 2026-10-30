@@ -561,7 +561,7 @@ static int config_l2tp(void) /* shared xl2tpd.conf for all WAN */
 
 	/* LACS */
 	for (i = 1; i <= mwan_num; ++i) {
-		get_wan_prefix(i, ifname);
+		get_wan_prefix(i, ifname, sizeof(ifname));
 		if (!strcmp(prefix_nvram_get(ifname, "proto", tmp, sizeof(tmp)), "l2tp")) {
 			snprintf(ppp_optfile, sizeof(ppp_optfile), "/tmp/ppp/%s_options", ifname);
 
@@ -1017,7 +1017,7 @@ void start_wan(void)
 	}
 	else {
 		for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
-			get_wan_prefix(wan_unit, prefix);
+			get_wan_prefix(wan_unit, prefix, sizeof(prefix));
 			start_wan_if(prefix);
 			logmsg(LOG_DEBUG, "*** MultiWAN: %s: (unit: %d), prefix = %s", __FUNCTION__, wan_unit, prefix);
 		}
@@ -1223,7 +1223,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 	/*
 	 * FIX boot with only secondary etc wan active (assume current wan is primary if previous is not up)
 	 */
-	get_wan_prefix(nvram_get_int("wan_primary"), pw); /* Get current primary wan name */
+	get_wan_prefix(nvram_get_int("wan_primary"), pw, sizeof(pw)); /* Get current primary wan name */
 	if (!check_wanup(pw)) { /* If primary wan offline, set current as primary */
 		snprintf(tmp, sizeof(tmp), "%d", get_wan_unit(prefix));
 		nvram_set("wan_primary", tmp);
@@ -1456,7 +1456,7 @@ void stop_wan(void)
 	clear_resolv();
 
 	for (i = 1; i <= mwan_num; i++) {
-		get_wan_prefix(i, buf);
+		get_wan_prefix(i, buf, sizeof(buf));
 		stop_wan_if(buf);
 	}
 

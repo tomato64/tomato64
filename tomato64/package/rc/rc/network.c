@@ -1392,7 +1392,7 @@ int wl_sta_prepare(void)
 	mwan_num = mwan_active_num();
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
-		get_wan_prefix(wan_unit, wan_prefix);
+		get_wan_prefix(wan_unit, wan_prefix, sizeof(wan_prefix));
 
 		store_wan_if_to_nvram(wan_prefix); /* prepare wan setup very early now! */
 
@@ -2074,7 +2074,7 @@ void do_static_routes(int add)
 	free(buf);
 
 	for (i = 1; i <= mwan_num; i++) {
-		get_wan_prefix(i, name);
+		get_wan_prefix(i, name, sizeof(name));
 		proto = get_wanx_proto(name);
 		if ((proto != WP_PPPOE) && (proto != WP_DHCP) && (proto != WP_STATIC))
 			continue;

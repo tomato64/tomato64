@@ -275,7 +275,7 @@ static void ctnf_ipv4_local_init(struct ctnf_ipv4_local *local)
 		mwan_num = 1;
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
-		get_wan_prefix(wan_unit, prefix);
+		get_wan_prefix(wan_unit, prefix, sizeof(prefix));
 		wanfaces = *get_wanfaces(prefix);
 
 		for (face = 0; face < wanfaces.count; ++face) {

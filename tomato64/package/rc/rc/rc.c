@@ -617,7 +617,7 @@ void kill_switch(_tf_ipt_write ipt_write)
 
 				/* check all active WANs */
 				for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
-					get_wan_prefix(wan_unit, wan_prefix);
+					get_wan_prefix(wan_unit, wan_prefix, sizeof(wan_prefix));
 
 					/* skip if given WAN is disabled */
 					if (get_wanx_proto(wan_prefix) == WP_DISABLED)

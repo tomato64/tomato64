@@ -1645,7 +1645,7 @@ int qos_status(void)
 	int i;
 
 	for (i = 1; i <= MWAN_MAX; i++) {
-		get_wan_prefix(i, prefix);
+		get_wan_prefix(i, prefix, sizeof(prefix));
 		if (qos_prefix_status(prefix))
 			return 1;
 	}
@@ -1670,7 +1670,7 @@ unsigned int mwan_active_num(void)
 	unsigned int configured = mwan_configured_num();
 
 	for (i = 1; i <= configured; ++i) {
-		get_wan_prefix(i, prefix);
+		get_wan_prefix(i, prefix, sizeof(prefix));
 
 		if (get_wanx_proto(prefix) == WP_DISABLED)
 			break;

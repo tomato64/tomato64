@@ -66,7 +66,7 @@ void ipt_routerpolicy(void)
 		return;
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
-		get_wan_prefix(wan_unit, prefix);
+		get_wan_prefix(wan_unit, prefix, sizeof(prefix));
 		if (check_wanup(prefix))
 			ipt_write(":WAN_%d - [0:0]\n"
 			          "-A WAN_%d -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x%d00/0xf00\n"
@@ -138,7 +138,7 @@ void ipt_routerpolicy(void)
 			wan_unit = atoi(wanx);
 			if (wan_unit >= 1 && wan_unit <= mwan_num) {
 				/* wanup check fail, drop the rule */
-				get_wan_prefix(wan_unit, prefix);
+				get_wan_prefix(wan_unit, prefix, sizeof(prefix));
 				if (!check_wanup(prefix))
 					continue;
 

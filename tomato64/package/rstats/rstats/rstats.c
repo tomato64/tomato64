@@ -788,7 +788,7 @@ static void calc(void)
 
 			logmsg(LOG_DEBUG, "*** %s: mapped ifname %s to wan unit %d", __FUNCTION__, ifname, sp_rtd->wan_unit);
 		}
-		get_wan_prefix(sp_rtd->wan_unit, prefix); /* Note this will default to 'wan' for anything but the primary interface for wanXX */
+		get_wan_prefix(sp_rtd->wan_unit, prefix, sizeof(prefix)); /* Note this will default to 'wan' for anything but the primary interface for wanXX */
 
 		if (sp->sync) {
 			logmsg(LOG_DEBUG, "*** %s: sync %s", __FUNCTION__, ifname);

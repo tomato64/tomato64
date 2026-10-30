@@ -1340,7 +1340,7 @@ static void nat_table(void)
 #endif
 
 	for (j = 1; j <= mwan_count; j++) {
-		get_wan_prefix(j, name);
+		get_wan_prefix(j, name, sizeof(name));
 		proto = get_wanx_proto(name);
 		if ((proto != WP_PPPOE) && (proto != WP_DHCP) && (proto != WP_STATIC))
 			continue;
@@ -1517,7 +1517,7 @@ static void filter_input(void)
 	 */
 	if (nvram_invmatch("wan_dhcp_pass", "0")) {
 		for (mwan = 1; mwan <= mwan_count; mwan++) {
-			get_wan_prefix(mwan, buf);
+			get_wan_prefix(mwan, buf, sizeof(buf));
 			if (using_dhcpc(buf)) {
 				ipt_write("-A INPUT -p udp --sport 67 --dport 68 -j %s\n", chain_in_accept);
 				break;
@@ -2097,7 +2097,7 @@ int start_firewall(void)
 	memset(wanfaces, 0, sizeof(wanfaces));
 
 	for (mwan = 1; mwan <= mwan_count; mwan++) {
-		get_wan_prefix(mwan, s);
+		get_wan_prefix(mwan, s, sizeof(s));
 		wanup[mwan - 1] = check_wanup(s);
 	}
 
@@ -2223,7 +2223,7 @@ int start_firewall(void)
 	}
 
 	for (mwan = 1; mwan <= mwan_count; mwan++) {
-		get_wan_prefix(mwan, buf);
+		get_wan_prefix(mwan, buf, sizeof(buf));
 		memcpy(&wanfaces[mwan - 1], get_wanfaces(buf), sizeof(wanfaces[mwan - 1]));
 		wanface[mwan - 1] = wanfaces[mwan - 1].iface[0].name;
 	}

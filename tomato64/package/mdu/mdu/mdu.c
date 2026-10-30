@@ -2718,7 +2718,7 @@ int main(int argc, char *argv[])
 
 		for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 			memset(tmp, 0, sizeof(tmp)); /* reset */
-			get_wan_prefix(wan_unit, tmp);
+			get_wan_prefix(wan_unit, tmp, sizeof(tmp));
 			if (get_wanx_proto(tmp) != WP_DISABLED) {
 				logmsg(LOG_DEBUG, "*** %s: checking for no WAN mode - false, using default interface: %s", __FUNCTION__, ifname[0] != '\0' ? ifname : get_wanface("wan"));
 				no_wan_mode = 0;

@@ -323,7 +323,7 @@ static void pptpc_del_route(void)
 		/* or via last primary wan */
 		else {
 			num = nvram_get_int("wan_primary");
-			get_wan_prefix(num, pmw);
+			get_wan_prefix(num, pmw, sizeof(pmw));
 			wan_ipaddr = (char *)get_wanip(pmw);
 			wan_gw = wan_gateway(pmw);
 			memcpy(&wanfaces, get_wanfaces(pmw), sizeof(wanfaces));
@@ -401,7 +401,7 @@ static void pptpc_add_table(void)
 
 	/* all active WANX in PPTP table ? FIXME! check iface / ifname / gw for various WAN types */
 	for (wanid = 1; wanid <= mwan_num; ++wanid) {
-		get_wan_prefix(wanid, sPrefix);
+		get_wan_prefix(wanid, sPrefix, sizeof(sPrefix));
 		if (check_wanup(sPrefix)) {
 			proto = get_wanx_proto(sPrefix);
 			if (proto == WP_DHCP || proto == WP_LTE || proto == WP_STATIC) {
@@ -432,7 +432,7 @@ static void pptpc_add_table(void)
 	eval("ip", "route", "append", pptpc_gateway, "dev", pptpc_iface, "proto", "kernel", "scope", "link", "src", pptpc_ipaddr);
 
 	for (wanid = 1; wanid <= mwan_num; ++wanid) {
-		get_wan_prefix(wanid, sPrefix);
+		get_wan_prefix(wanid, sPrefix, sizeof(sPrefix));
 		if (check_wanup(sPrefix)) {
 			snprintf(buffer, BUF_SIZE_128, "%d", wanid);
 			eval("ip", "route", "append", pptpc_gateway, "dev", pptpc_iface, "proto", "kernel", "scope", "link", "src", pptpc_ipaddr, "table", buffer);
@@ -459,7 +459,7 @@ static void pptpc_add_table(void)
 		eval("ip", "route", "append", remote_cidr, "via", pptpc_ipaddr, "dev", pptpc_iface, "scope", "link", "table", "main");
 		/* add PPTP network to all WANX tables */
 		for (wanid = 1; wanid <= mwan_num; ++wanid) {
-			get_wan_prefix(wanid, sPrefix);
+			get_wan_prefix(wanid, sPrefix, sizeof(sPrefix));
 			if (check_wanup(sPrefix)) {
 				snprintf(buffer, BUF_SIZE_128, "%d", wanid);
 				eval("ip", "route", "append", remote_cidr, "via", pptpc_ipaddr, "dev", pptpc_iface, "scope", "link", "table", buffer);

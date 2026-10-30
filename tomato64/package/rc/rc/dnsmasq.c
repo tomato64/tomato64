@@ -251,7 +251,7 @@ static void write_wan_dns(FILE *f, const int mwan_num)
 		nv = NULL;
 
 		memset(wan_prefix, 0, sizeof(wan_prefix));
-		get_wan_prefix(wan_unit, wan_prefix);
+		get_wan_prefix(wan_unit, wan_prefix, sizeof(wan_prefix));
 
 		/* allow RFC1918 responses for server domain (fix connect PPTP/L2TP WANs) */
 		proto = get_wanx_proto(wan_prefix);
@@ -354,7 +354,7 @@ static void write_dhcp_ranges(FILE *f, int *do_dhcpd_hosts, int *do_dns_ptr, cha
 			if (!do_dns) { /* if not using dnsmasq for dns */
 				for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 					memset(wan_prefix, 0, sizeof(wan_prefix));
-					get_wan_prefix(wan_unit, wan_prefix);
+					get_wan_prefix(wan_unit, wan_prefix, sizeof(wan_prefix));
 
 					/* skip inactive WAN connections
 					 * TBD: need to check if there is no WANs active do we need skip here also?!?
@@ -444,7 +444,7 @@ static FILE *write_static_hosts(void)
 			fprintf(hf, "%s %s\n", router_ip, hostname);
 #endif
 		for (i = 1; i <= mwan_num; i++) {
-			get_wan_prefix(i, tmp);
+			get_wan_prefix(i, tmp, sizeof(tmp));
 			p = get_wanip(tmp);
 			if ((!*p) || (strcmp(p, "0.0.0.0") == 0))
 				p = "127.0.0.1";

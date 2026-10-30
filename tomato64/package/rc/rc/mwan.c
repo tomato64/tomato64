@@ -83,7 +83,7 @@ int get_sta_wan_prefix(char *sPrefix, const size_t buf_sz)
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 		memset(prefix, 0, sizeof(prefix));
-		get_wan_prefix(wan_unit, prefix);
+		get_wan_prefix(wan_unit, prefix, sizeof(prefix));
 
 		if (*wan_nvram_get(wan_unit, "sta", tmp, sizeof(tmp))) {
 			found = 1;
@@ -313,7 +313,7 @@ void mwan_state_files(void)
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 		memset(prefix, 0, sizeof(prefix));
-		get_wan_prefix(wan_unit, prefix);
+		get_wan_prefix(wan_unit, prefix, sizeof(prefix));
 
 		snprintf(tmp, sizeof(tmp), "/var/lib/misc/%s_state", prefix);
 		if ((f = fopen(tmp, "r")) == NULL) {
@@ -344,7 +344,7 @@ void mwan_status_update(void)
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 		memset(prefix, 0, sizeof(prefix));
-		get_wan_prefix(wan_unit, prefix);
+		get_wan_prefix(wan_unit, prefix, sizeof(prefix));
 		get_wan_info(prefix);
 		if (check_wanup(prefix)) {
 			if (wan_info.wan_weight > 0)
@@ -368,7 +368,7 @@ void mwan_status_update(void)
 		for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 			if (mwan_curr[wan_unit - 1] == '1') {
 				memset(prefix, 0, sizeof(prefix));
-				get_wan_prefix(wan_unit, prefix);
+				get_wan_prefix(wan_unit, prefix, sizeof(prefix));
 				get_wan_info(prefix);
 				if (wan_info.wan_weight == 0) {
 					if (mwan_last[wan_unit - 1] != '2')
@@ -416,7 +416,7 @@ void mwan_load_balance(void)
 	lb_argv[argc++] = "global";
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
-		get_wan_prefix(wan_unit, prefix);
+		get_wan_prefix(wan_unit, prefix, sizeof(prefix));
 		get_wan_info(prefix);
 		proto = get_wanx_proto(prefix);
 		get_wan_ip(proto, buf, sizeof(buf));
@@ -463,7 +463,7 @@ void mwan_load_balance(void)
 	else {
 		wan_default = 1; /* first assume that main wan is WAN0 */
 		for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
-			get_wan_prefix(wan_unit, prefix);
+			get_wan_prefix(wan_unit, prefix, sizeof(prefix));
 			get_wan_info(prefix);
 
 			if (wan_unit == 1) {
@@ -475,7 +475,7 @@ void mwan_load_balance(void)
 			}
 		}
 
-		get_wan_prefix(wan_default, prefix);
+		get_wan_prefix(wan_default, prefix, sizeof(prefix));
 		get_wan_info(prefix);
 		proto = get_wanx_proto(prefix);
 
