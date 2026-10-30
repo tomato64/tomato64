@@ -29,3 +29,4 @@ src/
 00001-openwrt-x86_64-kernel-*
 00001-openwrt-bcm53xx-kernel-*
 00001-openwrt-armsr-kernel-*
+tomato64/scripts/tests/divergence-out/

@@ -21,15 +21,16 @@
 # Env overrides:
 #   FT_ROOT   FreshTomato router/ dir
 #   T64_ROOT  Tomato64 package/ dir
-#   OUT_DIR   where .patch files and the report are written
+#   OUT_DIR   where .patch files and the report are written (git-ignored)
 #
 set -u
 
-FT_ROOT="${FT_ROOT:-$HOME/repos/freshtomato-arm/release/src-rt-6.x.4708/router}"
-T64_ROOT="${T64_ROOT:-$HOME/tomato64/tomato64/package}"
-OUT_DIR="${OUT_DIR:-$HOME/patch}"
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+FT_ROOT="${FT_ROOT:-$HOME/repos/freshtomato-arm/release/src-rt-6.x.4708/router}"
+T64_ROOT="${T64_ROOT:-$(cd "$SCRIPT_DIR/../../package" && pwd)}"
+OUT_DIR="${OUT_DIR:-$SCRIPT_DIR/divergence-out}"
+
 ANALYZER="$SCRIPT_DIR/divergence_analyze.py"
 EXCEPTIONS="${EXCEPTIONS:-$SCRIPT_DIR/exceptions.conf}"
 

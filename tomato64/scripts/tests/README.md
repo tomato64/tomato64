@@ -16,8 +16,8 @@ Defaults:
 | var        | default                                                    |
 |------------|------------------------------------------------------------|
 | `FT_ROOT`  | `~/repos/freshtomato-arm/release/src-rt-6.x.4708/router`   |
-| `T64_ROOT` | `~/tomato64/tomato64/package`                              |
-| `OUT_DIR`  | `~/patch`                                                  |
+| `T64_ROOT` | `../../package`, relative to this directory                |
+| `OUT_DIR`  | `divergence-out/` in this directory (git-ignored)          |
 
 Packages compared are listed in the `PACKAGES` array at the top of the script
 (`./divergence-check.sh -l` lists them).  Add a row to compare another one.
