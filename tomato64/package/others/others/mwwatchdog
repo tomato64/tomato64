@@ -356,11 +356,20 @@ mwwatchdogAdd() {
 	local CKTIME=$(NG mwan_cktime)
 	local MINS=$((CKTIME/60))
 
-	[ "$MINS" -gt 0 ] && { cru l | grep -q mwwatchdogJob || cru a mwwatchdogJob "*/$MINS * * * * /usr/sbin/mwwatchdog"; }
+	# remove jobs from the previous interval before installing new ones
+	mwwatchdogDel
+
+	if [ "$CKTIME" -eq 30 ]; then
+		cru a mwwatchdogJob "* * * * * /usr/sbin/mwwatchdog"
+		cru a mwwatchdogJob30 "* * * * * sleep 30; /usr/sbin/mwwatchdog"
+	elif [ "$MINS" -gt 0 ]; then
+		cru a mwwatchdogJob "*/$MINS * * * * /usr/sbin/mwwatchdog"
+	fi
 }
 
 mwwatchdogDel() {
-	cru l | grep -q mwwatchdogJob && cru d mwwatchdogJob
+	cru l | grep -q '#mwwatchdogJob#' && cru d mwwatchdogJob
+	cru l | grep -q '#mwwatchdogJob30#' && cru d mwwatchdogJob30
 }
 
 mwanJob() {
