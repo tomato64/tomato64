@@ -23,7 +23,7 @@ FILEEXISTS=""
 startAdns() {
 	local optionname option
 
-	[ -n "$FOREIGN_OPTIONS" ] & {
+	[ -n "$FOREIGN_OPTIONS" ] && {
 		$LOGS "FOREIGN_OPTIONS: $FOREIGN_OPTIONS"
 
 		for optionname in $FOREIGN_OPTIONS; do
