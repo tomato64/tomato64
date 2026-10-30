@@ -198,7 +198,7 @@ void get_wan_prefix(int iWan_unit, char *sPrefix)
 	if ((iWan_unit > 1) && (iWan_unit <= MWAN_MAX))
 		sprintf(sPrefix, "wan%d", iWan_unit);
 	else
-		strcpy(sPrefix, "wan");
+		strlcpy(sPrefix, "wan", sizeof("wan"));
 }
 
 /*
