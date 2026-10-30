@@ -270,7 +270,7 @@ function ethstates() {
 
 		for (uidx = 0; uidx <= MAX_PORT_ID; ++uidx) {
 			displayIndex = displayPortIndex(uidx);
-			code += '<td class="title indent2"><input type="text" id="ethdesc_'+displayIndex+'" maxlength="12" value="'+escapeHTML(ethDescClean(ed[displayIndex]))+'" placeholder="Click to edit" title="Click to edit" onkeydown="return ethDescKey(event, this)" onblur="saveEthDesc()" style="text-align:center;width:7em;max-width:100%;border:0;background:transparent;cursor:pointer"><\/td>';
+			code += '<td class="title indent2"><input type="text" id="ethdesc_'+displayIndex+'" maxlength="12" value="'+escapeHTML(ethDescClean(ed[displayIndex]))+'" placeholder="✏️ Edit" title="Click to edit inline" onkeydown="return ethDescKey(event, this)" onblur="saveEthDesc()" style="text-align:center;width:7em;max-width:100%;border:0;background:transparent;cursor:pointer"><\/td>';
 		}
 		code += '<td class="content"><\/td><\/tr><tr>';
 
