@@ -114,14 +114,22 @@ static int _pidof(const char *name, pid_t **pids)
 
 			if ((strncmp(altname, psname(i, buf, sizeof(buf)), 15) == 0) || (strncmp(name, psname_argv0(i, buf, sizeof(buf)), 15) == 0)) {
 				if (getpsstate(i) == 'Z') {
+					if (pids) {
+						free(*pids);
+						*pids = NULL;
+					}
 					closedir(dir);
 					return -1;
 				}
 				if (pids) {
-					if ((*pids = realloc(*pids, sizeof(pid_t) * (count + 1))) == NULL) {
+					pid_t *new_pids = realloc(*pids, sizeof(pid_t) * (count + 1));
+					if (new_pids == NULL) {
+						free(*pids);
+						*pids = NULL;
 						closedir(dir);
 						return -1;
 					}
+					*pids = new_pids;
 					(*pids)[count++] = i;
 				}
 				else {

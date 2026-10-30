@@ -1708,21 +1708,30 @@ enum flag {
 char *fd2str(int fd)
 {
 	char *buf = NULL;
-	size_t count = 0, n;
+	char *tmp;
+	size_t count = 0;
+	ssize_t n;
 
 	do {
-		buf = realloc(buf, count + 512);
+		tmp = realloc(buf, count + 512);
+		if (tmp == NULL) {
+			free(buf);
+			close(fd);
+			return NULL;
+		}
+		buf = tmp;
+
 		n = read(fd, buf + count, 512);
 		if (n < 0) {
 			free(buf);
-			buf = NULL;
+			close(fd);
+			return NULL;
 		}
-		count += n;
+		count += (size_t)n;
 	} while (n == 512);
 
 	close(fd);
-	if (buf)
-		buf[count] = '\0';
+	buf[count] = '\0';
 
 	return buf;
 }
