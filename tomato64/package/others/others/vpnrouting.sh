@@ -54,6 +54,15 @@ env_get() {
 	grep -Em1 "^$1=" $ENV_VARS | cut -d = -f2
 }
 
+valid_route_value() {
+	case "$1" in
+		1) echo "$2" | grep -Eq '^[0-9./-]+$' ;;
+		2) echo "$2" | grep -Eq '^[0-9./]+$' ;;
+		3) echo "$2" | grep -Eq '^[A-Za-z0-9._-]+$' ;;
+		*) return 1 ;;
+	esac
+}
+
 find_iface() {
 	# These FWMARKs were intentionally picked to avoid overwriting
 	# marks set by QoS. See qos.c
@@ -153,16 +162,21 @@ startRouting() {
 
 	# example of routing_val: 1<2<8.8.8.8<1>1<1<1.2.3.4<0>1<3<domain.com<0> (enabled<type<domain_or_IP<kill_switch>)
 	for i in $(echo "$(NG vpn"$NVSERV"_routing_val)" | tr ">" "\n"); do
-		VAL1=$(echo $i | cut -d "<" -f1)
-		VAL2=$(echo $i | cut -d "<" -f2)
-		VAL3=$(echo $i | cut -d "<" -f3)
+		VAL1=$(echo "$i" | cut -d "<" -f1)
+		VAL2=$(echo "$i" | cut -d "<" -f2)
+		VAL3=$(echo "$i" | cut -d "<" -f3)
 
 		# only if rule is enabled
 		[ "$VAL1" -eq 1 ] && {
+			if ! valid_route_value "$VAL2" "$VAL3"; then
+				$LOGW "invalid routing value for type $VAL2, skipping"
+				continue
+			fi
+
 			case "$VAL2" in
 				1)	# from source
 					$LOGI "type: $VAL2 - add '$VAL3'"
-					if echo $VAL3 | grep - >/dev/null; then # range
+					if echo "$VAL3" | grep -q -- "-"; then # range
 						echo "iptables -t mangle -A PREROUTING -m iprange --src-range $VAL3 -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
 					else
 						echo "iptables -t mangle -A PREROUTING -s $VAL3 -j MARK --set-mark $FWMARK/0xf00" >> $FIREWALL_ROUTING
