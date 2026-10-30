@@ -537,7 +537,37 @@ int mwan_route_main(int argc, char **argv)
 		mwan_status_update();
 
 		if (strcmp(mwan_last, mwan_curr)) {
+			char prefix[16];
+
 			logmsg(LOG_WARNING, "Multiwan status has changed, last_status=%s, now_status=%s, Update multiwan policy", mwan_last, mwan_curr);
+
+			/*
+			 * Only a transition between healthy and unhealthy needs the
+			 * per-WAN policy table and marking chain changed. Transitions
+			 * between load-balance ('2') and standby/failover ('1') keep
+			 * the WAN reachable and do not require PBR changes.
+			 */
+			for (i = 1; i <= (unsigned int)mwan_num; ++i) {
+				int was_up = (mwan_last[i - 1] != '0');
+				int now_up = (mwan_curr[i - 1] != '0');
+
+				if (was_up == now_up)
+					continue;
+
+				get_wan_prefix((int)i, prefix, sizeof(prefix));
+
+				if (now_up) {
+					/* Install routing first, then allow new marks. */
+					mwan_table_add(prefix);
+					mwan_pbr_update((int)i, 1);
+				}
+				else {
+					/* Withdraw routing first, then stop assigning marks. */
+					mwan_table_del(prefix);
+					mwan_pbr_update((int)i, 0);
+				}
+			}
+
 			mwan_load_balance();
 
 			stop_dnsmasq();

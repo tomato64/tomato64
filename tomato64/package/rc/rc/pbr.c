@@ -67,14 +67,19 @@ void ipt_routerpolicy(void)
 
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 		get_wan_prefix(wan_unit, prefix, sizeof(prefix));
+
+		/*
+		 * Keep the per-WAN chain available across health transitions.
+		 * An empty chain means "fall through to normal routing".
+		 */
+		ipt_write(":WAN_%d - [0:0]\n", wan_unit);
+
 		if (check_wanup(prefix))
-			ipt_write(":WAN_%d - [0:0]\n"
-			          "-A WAN_%d -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x%d00/0xf00\n"
+			ipt_write("-A WAN_%d -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x%d00/0xf00\n"
 			          /* Copy connection mark to packet to allow ip rule fwmark to work */
 			          "-A WAN_%d -m conntrack --ctstate NEW -j CONNMARK --restore-mark --mask 0xf00\n"
 			          "-A PREROUTING -i %s -j WAN_%d\n"
 			          "-A POSTROUTING -o %s -j WAN_%d\n",
-			          wan_unit,
 			          wan_unit, wan_unit,
 			          wan_unit,
 			          get_wanface(prefix), wan_unit,
@@ -137,11 +142,11 @@ void ipt_routerpolicy(void)
 			memset(jump, 0, sizeof(jump));
 			wan_unit = atoi(wanx);
 			if (wan_unit >= 1 && wan_unit <= mwan_num) {
-				/* wanup check fail, drop the rule */
-				get_wan_prefix(wan_unit, prefix, sizeof(prefix));
-				if (!check_wanup(prefix))
-					continue;
-
+				/*
+				 * Keep configured PBR jumps present while a WAN is down.
+				 * mwan_pbr_update() leaves its WAN_n chain empty in that
+				 * state, so matching packets simply fall through.
+				 */
 				snprintf(jump, sizeof(jump), "WAN_%d", wan_unit);
 			}
 			else
@@ -272,3 +277,37 @@ void ipt_routerpolicy(void)
 	}
 	free(nv);
 }
+
+void mwan_pbr_update(int wan_unit, int up)
+{
+	char chain[16], mark[16];
+	char *flush_argv[] = { "iptables", "-t", "mangle", "-F", chain, NULL };
+	char *mark_argv[] = { "iptables", "-t", "mangle", "-A", chain,
+	                      "-m", "conntrack", "--ctstate", "NEW",
+	                      "-j", "CONNMARK", "--set-mark", mark, NULL
+	                    };
+	char *restore_argv[] = { "iptables", "-t", "mangle", "-A", chain,
+	                         "-m", "conntrack", "--ctstate", "NEW",
+	                         "-j", "CONNMARK", "--restore-mark", "--mask", "0xf00", NULL
+	                       };
+
+	if ((wan_unit < 1) || (wan_unit > MWAN_MAX))
+		return;
+
+	snprintf(chain, sizeof(chain), "WAN_%d", wan_unit);
+	snprintf(mark, sizeof(mark), "0x%d00/0xf00", wan_unit);
+
+	simple_lock("firewall");
+
+	/*
+	 * The chain may not exist when MultiWAN/PBR is disabled. Treat that
+	 * as a no-op; a later firewall build will create the correct state.
+	 */
+	if (_eval(flush_argv, NULL, 0, NULL) == 0 && up) {
+		_eval(mark_argv, NULL, 0, NULL);
+		_eval(restore_argv, NULL, 0, NULL);
+	}
+
+	simple_unlock("firewall");
+}
+
