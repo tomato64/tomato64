@@ -73,7 +73,7 @@ extern void redirect(const char *path);
 extern int skip_header(int *len);
 
 /* cgi handling */
-extern int str_replace(char *str, char *str_src, char *str_des);
+extern int str_replace(char *str, size_t str_size, const char *str_src, const char *str_des);
 extern void webcgi_init(char *query);
 extern char *webcgi_get(const char *name);
 extern void webcgi_set(char *name, char *value);

@@ -477,7 +477,7 @@ void wo_ovpn_genclientconfig(char *url)
 	/* Proto */
 	memset(buffer, 0, sizeof(buffer));
 	strlcpy(buffer, getNVRAMVar("vpns%d_proto", server), sizeof(buffer));
-	str_replace(buffer, "-server", "-client");
+	str_replace(buffer, sizeof(buffer), "-server", "-client");
 	fprintf(fp, "proto %s\n", buffer);
 
 	/* Interface */

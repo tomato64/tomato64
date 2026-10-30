@@ -17,6 +17,10 @@
  */
 
 
+#ifndef _GNU_SOURCE
+ #define _GNU_SOURCE
+#endif
+
 #include "tomato.h"
 
 #if defined(__GLIBC__) || defined(__UCLIBC__)
@@ -60,31 +64,39 @@ static void unescape(char *s)
 	}
 }
 
-int str_replace(char* str, char* str_src, char* str_des)
+int str_replace(char *str, size_t str_size, const char *str_src, const char *str_des)
 {
-	char *ptr = NULL;
-	char buff[10240], buff2[10240];
-	int i = 0;
+	char *ptr;
+	size_t len, src_len, des_len, tail_len;
 
-	if (str != NULL)
-		strlcpy(buff2, str, sizeof(buff2));
-	else {
-		logmsg(LOG_DEBUG, "*** [cgi] %s: error - NULL string!", __FUNCTION__);
+	if (!str || !str_size || !str_src || !*str_src || !str_des)
 		return -1;
+
+	len = strnlen(str, str_size);
+	if (len == str_size)
+		return -1;
+
+	src_len = strlen(str_src);
+	des_len = strlen(str_des);
+
+	ptr = str;
+	while ((ptr = strstr(ptr, str_src)) != NULL) {
+		size_t off = (size_t)(ptr - str);
+
+		if ((des_len > src_len) &&
+		    (len > SIZE_MAX - (des_len - src_len) ||
+		     len + (des_len - src_len) >= str_size))
+			return -1;
+
+		tail_len = len - off - src_len;
+
+		if (des_len != src_len)
+			memmove(ptr + des_len, ptr + src_len, tail_len + 1);
+
+		memcpy(ptr, str_des, des_len);
+		len = len - src_len + des_len;
+		ptr += des_len;
 	}
-
-	memset(buff, 0x00, sizeof(buff));
-	while ((ptr = strstr(buff2, str_src)) != 0) {
-		if (ptr - buff2 != 0)
-			memcpy(&buff[i], buff2, ptr - buff2);
-
-		memcpy(&buff[i + ptr - buff2], str_des, strlen(str_des));
-		i += ptr - buff2 + strlen(str_des);
-		strlcpy(buff2, ptr + strlen(str_src), sizeof(buff2));
-	}
-
-	strlcat(buff, buff2, sizeof(buff));
-	strlcpy(str, buff, strlen(str) + 1);
 
 	return 0;
 }
@@ -157,7 +169,7 @@ void webcgi_init(char *query)
 	for (q = query; q < end;) {
 		value = q;
 		q += strlen(q) + 1;
-		str_replace(value, "%u", "~u");
+		str_replace(value, strlen(value) + 1, "%u", "~u");
 		unescape(value);
 		name = strsep(&value, "=");
 
