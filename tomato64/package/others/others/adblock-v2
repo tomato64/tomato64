@@ -4,7 +4,7 @@
 
 . nvram_ops
 
-ver="v2.72e - 10/09" # rs232, pedro
+ver="v2.72f - 10/09" # rs232, pedro
 PID=$$
 pidfile="/var/run/adblock.pid"
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
@@ -310,9 +310,9 @@ download() {
 		adExit 5
 	fi
 
-	# If so proceed
+	# If so proceed. Keep the currently working FINAL in place until the
+	# replacement has been fully built and staged successfully.
 	COUNT=0
-	rm -f ${FINAL}
 	for i in $(echo "$BLACKLIST" | grep -Ev '^$' | tr " " "_" | tr ">" "\n"); do
 		ENBL=$(echo "$i" | cut -d "<" -f1)
 		URL=$(echo "$i" | cut -d "<" -f2 | sed -e 's/_$//' -e 's/^[ \t]*//')
@@ -529,10 +529,18 @@ download() {
 		vi $TM -c ":1,${TRIM}d" -c ":wq"
 	}
 
-	# Cleaning after myself
-	[ $DPATH != '/etc' ] && cp -fp ${ADHEAD} ${D}
-	mv -f $TM $FINAL
-	rm -rf $PREFIX/*
+	# Publish only a complete replacement. Stage it on the destination
+	# filesystem first, then rename it into place so a failed copy/OOM does
+	# not destroy the previously working blockfile.
+	[ "$DPATH" != '/etc' ] && cp -fp "$ADHEAD" "$D"
+	if cp -fp "$TM" "$FINAL.new" && mv -f "$FINAL.new" "$FINAL"; then
+		rm -rf "$PREFIX"/*
+	else
+		rm -f "$FINAL.new"
+		loge "Unable to publish the new blockfile. Keeping the previous $FINAL in service."
+		erroradd
+		return 1
+	fi
 	# Final verification
 	[ -s "$FINAL" -a "$ENTRIES" -gt 0 ] || [ "$COUNT_CUSTOM" -ne 0 ] && {
 		logi "$FINAL is now populated with $(wc -l < $FINAL | number) lines in $(wc -c < $FINAL | number) Bytes"
