@@ -613,11 +613,11 @@ countdownDnsmasq() {
 	[ ! -z "$(ps | grep '[d]nsmasq.*async$' | awk '{print $2}')" -a "$(ps | grep '[d]nsmasq.*async$' | awk '{print $2}')" == "nobody" ] && echo 0 || echo 1 ;
 }
 
-parkBlockfile() {
-	# Runtime dnsmasq failures must not change the user's enable setting.
-	# Move the generated file out of dnsmasq's include path so the next
-	# restart can come up cleanly while preserving the file for retry/debug.
-	[ -s "$FINAL" ] && mv -f "$FINAL" "$UNLOADED"
+discardFailedBlockfile() {
+	# Runtime recovery must not leave a rejected blockfile consuming storage
+	# or place it in $UNLOADED: that file is reserved for an intentional
+	# stop/start cache and would otherwise reload a known-problematic list.
+	rm -f "$FINAL" "$FINAL.probe" "$FINAL.recovery" "$FINAL.new"
 	[ "$DPATH" != '/etc' ] && rm -f /etc/dnsmasq.adblock
 }
 
@@ -642,12 +642,10 @@ probeBlockfileOn() {
 	fi
 }
 
-parkProbedBlockfile() {
-	if [ "$DPATH" == '/etc' -a -s "$FINAL.probe" ]; then
-		mv -f "$FINAL.probe" "$UNLOADED"
-	else
-		parkBlockfile
-	fi
+discardProbedBlockfile() {
+	# probeBlockfileOff() may leave the large file as FINAL.probe on /etc,
+	# or as FINAL with only the /etc symlink removed on persistent storage.
+	discardFailedBlockfile
 }
 
 safeDnsmasqRestart() {
@@ -656,8 +654,8 @@ safeDnsmasqRestart() {
 		# Case A = $FINAL syntax issue detected
 		[ -s "$FINAL" ] && {
 			dnsmasq --test -C "$FINAL" &>/tmp/adblock.dnsmasq.test && logi "No syntax errors found in $FINAL" || {
-				loge "Syntax error found in $FINAL. Parking the generated blockfile without changing adblock_enable. More information can be found in /tmp/adblock.dnsmasq.test"
-				parkBlockfile
+				loge "Syntax error found in $FINAL. Removing the rejected generated blockfile without changing adblock_enable. More information can be found in /tmp/adblock.dnsmasq.test"
+				discardFailedBlockfile
 				dnsrestart
 				erroradd
 				return 1
@@ -698,7 +696,7 @@ safeDnsmasqRestart() {
 		else
 			loge "Dnsmasq also fails with adblock excluded and /etc/dnsmasq.conf fails dnsmasq --test. A dnsmasq configuration error (possibly Custom Configuration) is present. The adblock list will not be trimmed. Details: /tmp/adblock.dnsmasq.config.test"
 		fi
-		parkProbedBlockfile
+		discardProbedBlockfile
 		erroradd
 		return 1
 	}
@@ -707,8 +705,8 @@ safeDnsmasqRestart() {
 	# failure. Restore the exact original blockfile and require it to fail a
 	# second time before modifying user data.
 	probeBlockfileOn || {
-		loge "Dnsmasq recovered without adblock, but the original blockfile could not be restored. Parking it without changing adblock_enable."
-		parkProbedBlockfile
+		loge "Dnsmasq recovered without adblock, but the original blockfile could not be restored. Removing its recovery artifacts without changing adblock_enable."
+		discardProbedBlockfile
 		erroradd
 		return 1
 	}
@@ -748,8 +746,8 @@ safeDnsmasqRestart() {
 	done
 
 	# Case D = 10x recovery (or a trim operation itself) was not enough.
-	loge "safeDnsmasqRestart(): dnsmasq still cannot run with the recovered adblock list. Parking the generated blockfile without changing adblock_enable."
-	parkBlockfile
+	loge "safeDnsmasqRestart(): dnsmasq still cannot run with the recovered adblock list. Removing the rejected generated blockfile without changing adblock_enable."
+	discardFailedBlockfile
 	dnsrestart
 	erroradd
 	return 1
