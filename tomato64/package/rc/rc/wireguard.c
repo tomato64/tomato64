@@ -36,7 +36,10 @@
 #define WG_SCRIPT_START		0
 #define WG_SCRIPT_STOP		1
 /* uncomment to add default routing (also in patches/wireguard-tools/101-tomato-specific.patch line 412 - 414) after kernel fix */
+//#define KERNEL_WG_FIX
+#ifdef TOMATO64
 #define KERNEL_WG_FIX
+#endif /* TOMATO64 */
 
 
 /* interfaces that we want to ignore in standard PRB mode */
