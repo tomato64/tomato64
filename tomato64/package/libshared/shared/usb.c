@@ -156,13 +156,13 @@ int exec_for_host(int host, int obsolete, uint flags, host_exec func)
 		}
 		if (host >= 0 && host != host_no)
 			continue;
-		snprintf(dsname, sizeof(dsname), dp->d_name);
+		snprintf(dsname, sizeof(dsname), "%s", dp->d_name);
 		siz = strlen(dsname);
 		flags |= EFH_1ST_DISC;
 		if (!(prt_fp = fopen("/proc/partitions", "r")))
 			continue;
 		while (fgets(line, sizeof(line) - 2, prt_fp)) {
-			if (sscanf(line, " %*s %*s %*s %s", ptname) != 1)
+			if (sscanf(line, " %*s %*s %*s %31s", ptname) != 1)
 				continue;
 
 			if (!strncmp(ptname, dsname, siz)) {
