@@ -161,10 +161,37 @@ static void build_mime_types(void)
 	fclose(mimetypes_file);
 }
 
+static int nginx_valid_runtime_values(void)
+{
+	const char *user = nvram_safe_get("nginx_user");
+	const char *upload = nvram_safe_get("nginx_upload");
+	char *end;
+	long value;
+
+	if (strcmp(user, "root") && strcmp(user, "nobody"))
+		return 0;
+
+	if (strpbrk(nvram_safe_get("nginx_fqdn"), "\r\n") ||
+	    strpbrk(nvram_safe_get("nginx_docroot"), "\r\n"))
+		return 0;
+
+	value = strtol(upload, &end, 10);
+	if ((upload == end) || *end || (value < 0) || (value > 512))
+		return 0;
+
+	return 1;
+}
+
+
 static void build_nginx_conf(void)
 {
 	char *buf;	/* default param buffer */
 	int i;		/* integer cast */
+
+	if (!nginx_valid_runtime_values()) {
+		logmsg(LOG_ERR, "Nginx: invalid runtime configuration value");
+		return;
+	}
 
 	/* Starting the nginx configuration file */
 	mkdir_if_none(nginx_dir);
