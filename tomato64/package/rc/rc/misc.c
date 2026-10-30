@@ -521,8 +521,14 @@ int host_addr_info(const char *name, int af, struct sockaddr_storage *buf)
 				addrtypes |= IPT_V6;
 				break;
 		}
-		if (buf && (hints.ai_family == p->ai_family) && res->ai_addrlen)
-			memcpy(buf, res->ai_addr, res->ai_addrlen);
+		if (buf && (hints.ai_family == p->ai_family) && p->ai_addr && p->ai_addrlen) {
+			if (p->ai_addrlen > sizeof(*buf)) {
+				freeaddrinfo(res);
+				return 0;
+			}
+			memset(buf, 0, sizeof(*buf));
+			memcpy(buf, p->ai_addr, p->ai_addrlen);
+		}
 	}
 	freeaddrinfo(res);
 
