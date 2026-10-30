@@ -16,59 +16,81 @@ touch $PIDFILE
 
 OPENSSL=/usr/sbin/openssl
 
+openssl_conf_line_safe() {
+	[ "$(printf '%sX' "$1" | tr -d '\r\n')" = "${1}X" ]
+}
+
 LANCN=$(NG https_crt_cn)
 LANIP=$(NG lan_ipaddr)
 LANHOSTNAME=$(NG lan_hostname)
 ROUTERNAME=$(NG router_name)
+
+if ! openssl_conf_line_safe "$LANIP"; then
+	logger -p WARN -t gencert "invalid lan_ipaddr containing line break; using loopback"
+	LANIP="127.0.0.1"
+fi
+if ! openssl_conf_line_safe "$LANCN"; then
+	logger -p WARN -t gencert "invalid https_crt_cn containing line break; ignoring value"
+	LANCN=""
+fi
+if ! openssl_conf_line_safe "$ROUTERNAME"; then
+	logger -p WARN -t gencert "invalid router_name containing line break; ignoring value"
+	ROUTERNAME=""
+fi
+if ! openssl_conf_line_safe "$LANHOSTNAME"; then
+	logger -p WARN -t gencert "invalid lan_hostname containing line break; ignoring value"
+	LANHOSTNAME=""
+fi
+
 KEYNAME="key.pem"
 CERTNAME="cert.pem"
 OPENSSLCNF="/etc/openssl.config.$PID"
 
 cd /etc
 
-cp -L /etc/ssl/openssl.cnf $OPENSSLCNF
+cp -L /etc/ssl/openssl.cnf "$OPENSSLCNF"
 
-echo "0.commonName=CN" >> $OPENSSLCNF
-echo "0.commonName_value=$LANIP" >> $OPENSSLCNF
-echo "0.organizationName=O" >> $OPENSSLCNF
-echo "0.organizationName_value=Tomato64" >> $OPENSSLCNF
-echo "0.organizationalUnitName=OU" >> $OPENSSLCNF
-echo "0.organizationalUnitName_value=Tomato64 Team" >> $OPENSSLCNF
-echo "0.emailAddress=E" >> $OPENSSLCNF
-echo "0.emailAddress_value=root@localhost" >> $OPENSSLCNF
+echo "0.commonName=CN" >> "$OPENSSLCNF"
+echo "0.commonName_value=$LANIP" >> "$OPENSSLCNF"
+echo "0.organizationName=O" >> "$OPENSSLCNF"
+echo "0.organizationName_value=Tomato64" >> "$OPENSSLCNF"
+echo "0.organizationalUnitName=OU" >> "$OPENSSLCNF"
+echo "0.organizationalUnitName_value=Tomato64 Team" >> "$OPENSSLCNF"
+echo "0.emailAddress=E" >> "$OPENSSLCNF"
+echo "0.emailAddress_value=root@localhost" >> "$OPENSSLCNF"
 
 # Required extension
-sed -i "/\[ v3_ca \]/aextendedKeyUsage=serverAuth" $OPENSSLCNF
+sed -i "/\[ v3_ca \]/aextendedKeyUsage=serverAuth" "$OPENSSLCNF"
 
 # Start of SAN extensions
-sed -i "/\[ CA_default \]/acopy_extensions=copy" $OPENSSLCNF
-sed -i "/\[ v3_ca \]/asubjectAltName=@alt_names" $OPENSSLCNF
-sed -i "/\[ v3_ca \]/akeyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment" $OPENSSLCNF
-sed -i "/\[ v3_req \]/asubjectAltName=@alt_names" $OPENSSLCNF
-echo "[alt_names]" >> $OPENSSLCNF
+sed -i "/\[ CA_default \]/acopy_extensions=copy" "$OPENSSLCNF"
+sed -i "/\[ v3_ca \]/asubjectAltName=@alt_names" "$OPENSSLCNF"
+sed -i "/\[ v3_ca \]/akeyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment" "$OPENSSLCNF"
+sed -i "/\[ v3_req \]/asubjectAltName=@alt_names" "$OPENSSLCNF"
+echo "[alt_names]" >> "$OPENSSLCNF"
 
 I=1
 # IP
-echo "IP.$I = $LANIP" >> $OPENSSLCNF
-echo "DNS.$I = $LANIP" >> $OPENSSLCNF # For broken clients like IE
+echo "IP.$I = $LANIP" >> "$OPENSSLCNF"
+echo "DNS.$I = $LANIP" >> "$OPENSSLCNF" # For broken clients like IE
 I=$(($I + 1))
 
 # User-defined SANs (if we have any)
 [ "$LANCN" != "" ] && {
 	for CN in $LANCN; do
-		echo "DNS.$I = $CN" >> $OPENSSLCNF
+		echo "DNS.$I = $CN" >> "$OPENSSLCNF"
 		I=$(($I + 1))
 	done
 }
 
 # hostnames
 [ "$ROUTERNAME" != "" ] && {
-	echo "DNS.$I = $ROUTERNAME" >> $OPENSSLCNF
+	echo "DNS.$I = $ROUTERNAME" >> "$OPENSSLCNF"
 	I=$(($I + 1))
 }
 
 [ "$LANHOSTNAME" != "" -a "$ROUTERNAME" != "$LANHOSTNAME" ] && {
-	echo "DNS.$I = $LANHOSTNAME" >> $OPENSSLCNF
+	echo "DNS.$I = $LANHOSTNAME" >> "$OPENSSLCNF"
 	I=$(($I + 1))
 }
 
