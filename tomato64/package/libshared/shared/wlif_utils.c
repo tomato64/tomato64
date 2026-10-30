@@ -473,7 +473,7 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 	else if (osifname_to_nvifname(os_name, wl_prefix, sizeof(wl_prefix)))
 		return WLIFU_ERR_INVALID_PARAMETER;
 
-	strcat(wl_prefix, "_");
+	strlcat(wl_prefix, "_", sizeof(wl_prefix));
 	memset(info, 0, sizeof(wsec_info_t));
 
 
@@ -489,7 +489,7 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 	else if (osifname_to_nvifname(os_name, wl_prefix, sizeof(wl_prefix)))
 		return WLIFU_ERR_INVALID_PARAMETER;
 
-	strcat(wl_prefix, "_");
+	strlcat(wl_prefix, "_", sizeof(wl_prefix));
 	memset(info, 0, sizeof(wsec_info_t));
 	/* if dwds is enabled then dont configure the wds interface */
 	dwds = atoi(nvram_safe_get(strlcat_r(wl_prefix, "dwds", comb, sizeof(comb))));
@@ -506,7 +506,7 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 	else if (osifname_to_nvifname(os_name, wl_prefix, sizeof(wl_prefix)))
 		return WLIFU_ERR_INVALID_PARAMETER;
 
-	strcat(wl_prefix, "_");
+	strlcat(wl_prefix, "_", sizeof(wl_prefix));
 	memset(info, 0, sizeof(wsec_info_t));
 
 
