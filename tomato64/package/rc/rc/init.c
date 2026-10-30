@@ -703,10 +703,18 @@ static int find_dir320_mac_addr(void)
 	snprintf(s, sizeof(s), MTD_DEV(%dro), part);
 
 	if ((fp = fopen(s, "rb"))) {
-		buffer = malloc(size);
-		memset(buffer, 0, size);
-		fread(buffer, size, 1, fp);
-		if (!memcmp(buffer, "RGCFG1", 6)) {
+		if ((size <= 0) || ((buffer = malloc((size_t)size)) == NULL)) {
+			fclose(fp);
+			goto out;
+		}
+
+		if (fread(buffer, 1, (size_t)size, fp) != (size_t)size) {
+			free(buffer);
+			fclose(fp);
+			goto out;
+		}
+
+		if ((size >= 6) && !memcmp(buffer, "RGCFG1", 6)) {
 			for (i = 6; i < size - 24; i++) {
 				if (!memcmp(buffer + i, "lanmac=", 7)) {
 					memcpy(s, buffer + i + 7, 17);
