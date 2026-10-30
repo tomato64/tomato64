@@ -4,7 +4,7 @@
 
 . nvram_ops
 
-ver="v2.72b - 04/23" # rs232
+ver="v2.72c - 04/23" # rs232, pedro
 PID=$$
 pidfile="/var/run/adblock.pid"
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
@@ -551,15 +551,23 @@ countdownDnsmasq() {
 	[ ! -z "$(ps | grep '[d]nsmasq.*async$' | awk '{print $2}')" -a "$(ps | grep '[d]nsmasq.*async$' | awk '{print $2}')" == "nobody" ] && echo 0 || echo 1 ;
 }
 
+parkBlockfile() {
+	# Runtime dnsmasq failures must not change the user's enable setting.
+	# Move the generated file out of dnsmasq's include path so the next
+	# restart can come up cleanly while preserving the file for retry/debug.
+	[ -s "$FINAL" ] && mv -f "$FINAL" "$UNLOADED"
+	[ "$DPATH" != '/etc' ] && rm -f /etc/dnsmasq.adblock
+}
+
 safeDnsmasqRestart() {
 	[ "$1" -eq 0 ] && { # Run only for update
 		logi "Checking $FINAL syntax"
 		# Case A = $FINAL syntax issue detected, log and exclude adblock until next reboot
-		[ -s $FINAL ] && {
-			dnsmasq --test -C $FINAL &>/tmp/adblock.dnsmasq.test && logi "No syntax errors found in $FINAL" || {
-				NS adblock_enable=0
+		[ -s "$FINAL" ] && {
+			dnsmasq --test -C "$FINAL" &>/tmp/adblock.dnsmasq.test && logi "No syntax errors found in $FINAL" || {
+				loge "Syntax error found in $FINAL. Parking the generated blockfile without changing adblock_enable. More information can be found in /tmp/adblock.dnsmasq.test"
+				parkBlockfile
 				dnsrestart
-				loge "Syntax error found in $FINAL. Adblock has been temporarily excluded from /etc/dnsmasq.conf to prevent dnsmasq issues. More information on this error can be found in /tmp/adblock.dnsmasq.test"
 				erroradd
 				return 1
 			}
@@ -584,20 +592,17 @@ safeDnsmasqRestart() {
 			mv "$FINAL.recovery" $FINAL
 			dnsrestart
 			[ $(countdownDnsmasq) -eq 1 ] && continue || {
-				sizeLimit=$(wc -c < $FINAL)
-				NS adblock_limit=${sizeLimit}
-				NC
-				logi "safeDnsmasqRestart() successfully trimmed down $FINAL from $(echo $SIZE|number) to $(wc -l < $FINAL|number) lines. Now it should work."
+				logi "safeDnsmasqRestart() successfully trimmed down $FINAL from $(echo $SIZE|number) to $(wc -l < $FINAL|number) lines ($(wc -c < "$FINAL"|number) Bytes). Keeping configured adblock_limit=${sizeLimit}."
 				return 0
 			}
 		done
 		# Case D = Shit happens; like for Case A, log and exclude adblock as a whole
 		[ $(countdownDnsmasq) -eq 1 ] && { # this is run only if 10x trim is not good enough
-			NS adblock_enable=0
+			loge "safeDnsmasqRestart(): dnsmasq still cannot run after recovery attempts. Parking the generated blockfile without changing adblock_enable."
+			parkBlockfile
 			dnsrestart
-			loge "safeDnsmasqRestart(). Something unexpected happened. Dnsmasq cannot run with adblock enabled. Adblock has been temporarily disabled."
 			erroradd
-			return
+			return 1
 		}
 	} || logi "safeDnsmasqRestart() completed smoothly with $FINAL = $(wc -l < $FINAL|number) lines in $(wc -c < $FINAL|number) Bytes."; return
 }
