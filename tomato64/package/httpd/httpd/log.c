@@ -245,6 +245,14 @@ static void webmon_list(char *name, int webmon, unsigned int maxcount)
 				current_end = data + filesize;
 				lines_processed = 0;
 
+				if (filesize == 0) {
+					free(data);
+					data = NULL;
+					fclose(f);
+					web_puts("];\n");
+					return;
+				}
+
 				for (lineStart = data + filesize - 1; lineStart >= data; lineStart--) {
 					if ((*lineStart == '\n') || (*lineStart == '\r') || (lineStart == data)) {
 						line_start = (lineStart == data) ? data : lineStart + 1;
