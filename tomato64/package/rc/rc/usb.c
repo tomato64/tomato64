@@ -1128,7 +1128,7 @@ int mount_partition(char *dev_name, int host_num, char *dsc_name, char *pt_name,
 
 	if (*the_label != 0) {
 		for (p = the_label; *p; p++) {
-			if (!isalnum(*p) && !strchr("+-&.@", *p))
+			if (!isalnum((unsigned char)*p) && !strchr("+-&.@", *p))
 				*p = '_';
 		}
 		snprintf(mountpoint, sizeof(mountpoint), "%s/%s", MOUNT_ROOT, the_label);
