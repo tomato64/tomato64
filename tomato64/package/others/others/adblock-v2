@@ -4,7 +4,7 @@
 
 . nvram_ops
 
-ver="v2.72g - 10/09" # rs232, pedro
+ver="v2.72h - 10/09" # rs232, pedro
 PID=$$
 pidfile="/var/run/adblock.pid"
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
@@ -62,14 +62,26 @@ alias number="sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'"
 	NG adblock_path | grep -Eq '^/jffs' && logw "Custom path is pointing to JFFS, this is not ideal. Consider using alternative storages like USB/CIFS/etc."
 	DPATH="$(NG adblock_path | sed 's/\/$//')/adblock" ; mkdir -p "$DPATH"; } || DPATH="/etc"
 
-sizeLimit=$(NG adblock_limit)
-setlimit() {
-	[ $(NG adblock_limit | wc -c ) -le 1 ] && {
-		NS adblock_limit=$(echo $(($(cat /proc/meminfo | grep MemTotal | awk '{print $2}') * $([ $DPATH == '/etc' ] && echo 650 || echo 1000) / 10)))
-		NC
-		logi "The nvram adblock_limit variable is now reset to the default value of $(NG adblock_limit)"
-	}
+readlimit() {
 	sizeLimit=$(NG adblock_limit)
+
+	# Treat only a positive decimal integer as a configured byte limit.
+	# Empty, zero, malformed and out-of-range values are "not configured".
+	case "$sizeLimit" in
+		''|*[!0-9]*) sizeLimit="" ;;
+		*) [ "$sizeLimit" -gt 0 ] 2>/dev/null || sizeLimit="" ;;
+	esac
+}
+
+readlimit
+setlimit() {
+	readlimit
+	[ -z "$sizeLimit" ] && {
+		sizeLimit=$(($(awk '/^MemTotal:/ {print $2; exit}' /proc/meminfo) * $([ "$DPATH" == '/etc' ] && echo 650 || echo 1000) / 10))
+		NS adblock_limit="$sizeLimit"
+		NC
+		logi "The nvram adblock_limit variable is now reset to the default value of $sizeLimit"
+	}
 }
 
 PREFIX="/tmp/adblock" ; mkdir -p $PREFIX && cd $PREFIX
