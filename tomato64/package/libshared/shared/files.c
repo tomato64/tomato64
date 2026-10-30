@@ -20,6 +20,9 @@
 #include <bcmnvram.h>
 #include "shutils.h"
 #include "shared.h"
+#ifdef TOMATO64
+#include <limits.h>
+#endif /* TOMATO64 */
 
 
 int f_exists(const char *path) /* note: anything but a directory */
