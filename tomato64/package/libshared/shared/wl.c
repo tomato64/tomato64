@@ -82,10 +82,13 @@ int wl_probe(char *name)
 int wl_set_val(char *name, char *var, void *val, int len)
 {
 	char buf[WLC_IOCTL_SMLEN];
-	unsigned int buf_len;
+	size_t buf_len;
 
-	/* check for overflow */
-	if ((buf_len = strlen(var)) + 1 + len > sizeof(buf))
+	if (!var || !val || (len < 0))
+		return -1;
+
+	buf_len = strlen(var);
+	if ((buf_len >= sizeof(buf)) || ((size_t)len > sizeof(buf) - buf_len - 1))
 		return -1;
 	
 	strlcpy(buf, var, sizeof(buf));
@@ -104,8 +107,7 @@ int wl_get_val(char *name, char *var, void *val, int len)
 	char buf[WLC_IOCTL_SMLEN];
 	int ret;
 
-	/* check for overflow */
-	if ((strlen(var) + 1 > sizeof(buf)) || ((unsigned int) len > sizeof(buf)))
+	if (!var || !val || (len < 0) || (strlen(var) + 1 > sizeof(buf)) || ((size_t)len > sizeof(buf)))
 		return -1;
 	
 	strlcpy(buf, var, sizeof(buf));
@@ -215,18 +217,17 @@ int dhd_probe(char *name)
 int wl_iovar_getbuf(char *ifname, char *iovar, void *param, int paramlen, void *bufptr, int buflen)
 {
 	int err;
-	uint namelen;
-	int iolen;
+	size_t namelen;
 #ifdef TCONFIG_BCMARM
 	uint wlc_cmd = WLC_GET_VAR;
 #endif
 
-	namelen = strlen(iovar) + 1;	 /* length of iovar name plus null */
-	iolen = namelen + paramlen;
+	if (!iovar || !bufptr || (paramlen < 0) || (buflen < 0) || ((paramlen > 0) && !param))
+		return BCME_BADARG;
 
-	/* check for overflow */
-	if (iolen > buflen)
-		return (BCME_BUFTOOSHORT);
+	namelen = strlen(iovar) + 1;
+	if ((size_t)paramlen > (size_t)buflen || namelen > (size_t)buflen - (size_t)paramlen)
+		return BCME_BUFTOOSHORT;
 
 	memcpy(bufptr, iovar, namelen);	/* copy iovar name including null */
 	memcpy((int8*)bufptr + namelen, param, paramlen);
@@ -243,15 +244,16 @@ int wl_iovar_getbuf(char *ifname, char *iovar, void *param, int paramlen, void *
 #ifdef __CONFIG_DHDAP__
 int dhd_iovar_setbuf(char *ifname, char *iovar, void *param, int paramlen, void *bufptr, unsigned int buflen)
 {
-	uint namelen;
-	uint iolen;
+	size_t namelen, iolen;
 
-	namelen = strlen(iovar) + 1;	 /* length of iovar name plus null */
-	iolen = namelen + paramlen;
+	if (!iovar || !bufptr || (paramlen < 0) || ((paramlen > 0) && !param))
+		return BCME_BADARG;
 
-	/* check for overflow */
-	if (iolen > buflen)
-		return (BCME_BUFTOOSHORT);
+	namelen = strlen(iovar) + 1;
+	if ((size_t)paramlen > (size_t)buflen || namelen > (size_t)buflen - (size_t)paramlen)
+		return BCME_BUFTOOSHORT;
+
+	iolen = namelen + (size_t)paramlen;
 
 	memcpy(bufptr, iovar, namelen);	/* copy iovar name including null */
 	memcpy((int8*)bufptr + namelen, param, paramlen);
@@ -262,15 +264,16 @@ int dhd_iovar_setbuf(char *ifname, char *iovar, void *param, int paramlen, void 
 
 int wl_iovar_setbuf(char *ifname, char *iovar, void *param, int paramlen, void *bufptr, int buflen)
 {
-	uint namelen;
-	int iolen;
+	size_t namelen, iolen;
 
-	namelen = strlen(iovar) + 1;	 /* length of iovar name plus null */
-	iolen = namelen + paramlen;
+	if (!iovar || !bufptr || (paramlen < 0) || (buflen < 0) || ((paramlen > 0) && !param))
+		return BCME_BADARG;
 
-	/* check for overflow */
-	if (iolen > buflen)
-		return (BCME_BUFTOOSHORT);
+	namelen = strlen(iovar) + 1;
+	if ((size_t)paramlen > (size_t)buflen || namelen > (size_t)buflen - (size_t)paramlen)
+		return BCME_BUFTOOSHORT;
+
+	iolen = namelen + (size_t)paramlen;
 
 	memcpy(bufptr, iovar, namelen);	/* copy iovar name including null */
 	memcpy((int8*)bufptr + namelen, param, paramlen);
@@ -347,16 +350,28 @@ static int wl_bssiovar_mkbuf(char *iovar, int bssidx, void *param, int paramlen,
 {
 	char *prefix = "bsscfg:";
 	int8* p;
-	uint prefixlen;
-	uint namelen;
-	uint iolen;
+	size_t prefixlen;
+	size_t namelen;
+	size_t iolen;
 
-	prefixlen = strlen(prefix);	/* length of bsscfg prefix */
-	namelen = strlen(iovar) + 1;	/* length of iovar name + null */
-	iolen = prefixlen + namelen + sizeof(int) + paramlen;
+	if (!iovar || !bufptr || !plen || (paramlen < 0) || (buflen < 0) ||
+	    ((paramlen > 0) && !param))
+		return BCME_BADARG;
 
-	/* check for overflow */
-	if (buflen < 0 || iolen > (uint)buflen) {
+	prefixlen = strlen(prefix);
+	namelen = strlen(iovar) + 1;
+
+	if ((size_t)paramlen > (size_t)buflen ||
+	    sizeof(int32) > (size_t)buflen - (size_t)paramlen ||
+	    namelen > (size_t)buflen - (size_t)paramlen - sizeof(int32) ||
+	    prefixlen > (size_t)buflen - (size_t)paramlen - sizeof(int32) - namelen) {
+		*plen = 0;
+		return BCME_BUFTOOSHORT;
+	}
+
+	iolen = prefixlen + namelen + sizeof(int32) + (size_t)paramlen;
+
+	if (iolen > (size_t)buflen) {
 		*plen = 0;
 		return BCME_BUFTOOSHORT;
 	}
