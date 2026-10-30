@@ -53,6 +53,23 @@
 #define LOGMSG_NVDEBUG	"wan_debug"
 
 
+static void pppd_write_quoted(FILE *fp, const char *option, const char *value)
+{
+	const unsigned char *p;
+
+	fprintf(fp, "%s \"", option);
+	for (p = (const unsigned char *)(value ? value : ""); *p; ++p) {
+		if ((*p == '\\') || (*p == '"'))
+			fputc('\\', fp);
+
+		if ((*p == '\r') || (*p == '\n'))
+			fputc(' ', fp);
+		else
+			fputc(*p, fp);
+	}
+	fputs("\"\n", fp);
+}
+
 static int config_pppd(int wan_proto, int num, char *prefix)
 {
 	FILE *fp;
@@ -86,11 +103,11 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 #ifdef TCONFIG_USB
 	if (wan_proto != WP_PPP3G)
 #endif
-		fprintf(fp, "user \"%s\"\n"		/* Don't rely on pap/chap secrets (useless) */
-		            "password \"%s\"\n"		/* Don't rely on pap/chap secrets (useless) */
-		            "lcp-echo-adaptive\n",	/* Suppress LCP echo-requests if traffic was received */
-		            prefix_nvram_get(prefix, "ppp_username", tmp, sizeof(tmp)),
-		            prefix_nvram_get(prefix, "ppp_passwd", tmp, sizeof(tmp)));
+	{
+		pppd_write_quoted(fp, "user", prefix_nvram_get(prefix, "ppp_username", tmp, sizeof(tmp))); /* Don't rely on pap/chap secrets (useless) */
+		pppd_write_quoted(fp, "password", prefix_nvram_get(prefix, "ppp_passwd", tmp, sizeof(tmp))); /* Don't rely on pap/chap secrets (useless) */
+		fprintf(fp, "lcp-echo-adaptive\n"); /* Suppress LCP echo-requests if traffic was received */
+	}
 
 	fprintf(fp, "unit %d\n"			/* unit as WAN NUM, let's try to have persistent names */
 	            "linkname %s\n"		/* link name for WAN ID */
@@ -146,10 +163,10 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 		            prefix_nvram_get_int(prefix, "mtu", tmp, sizeof(tmp)),
 		            prefix_nvram_get_int(prefix, "mtu", tmp, sizeof(tmp)));
 		if ((p = prefix_nvram_get(prefix, "ppp_service", tmp, sizeof(tmp))) && (*p))
-			fprintf(fp, "rp_pppoe_service '%s'\n", p);
+			pppd_write_quoted(fp, "rp_pppoe_service", p);
 
 		if ((p = prefix_nvram_get(prefix, "ppp_ac", tmp, sizeof(tmp))) && (*p))
-			fprintf(fp, "rp_pppoe_ac '%s'\n", p);
+			pppd_write_quoted(fp, "rp_pppoe_ac", p);
 
 		if (prefix_nvram_match(prefix, "ppp_mlppp", "1", tmp, sizeof(tmp)))
 			fprintf(fp, "mp\n"); /* Enable multilink operation */
@@ -211,9 +228,9 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 		            ppp3g_chatfile);
 
 		if (strlen(nvram_get(strlcat_r(prefix, "_ppp_username", tmp, sizeof(tmp)))) > 0)
-			fprintf(fp, "user \"%s\"\n", nvram_get(strlcat_r(prefix, "_ppp_username", tmp, sizeof(tmp))));
+			pppd_write_quoted(fp, "user", nvram_get(strlcat_r(prefix, "_ppp_username", tmp, sizeof(tmp))));
 		if (strlen(nvram_get(strlcat_r(prefix, "_ppp_passwd", tmp, sizeof(tmp)))) > 0)
-			fprintf(fp, "password \"%s\"\n", nvram_get(strlcat_r(prefix, "_ppp_passwd", tmp, sizeof(tmp))));
+			pppd_write_quoted(fp, "password", nvram_get(strlcat_r(prefix, "_ppp_passwd", tmp, sizeof(tmp))));
 
 		/* Clear old gateway */
 		if (strlen(prefix_nvram_get(prefix, "gateway", tmp, sizeof(tmp))) > 0)
