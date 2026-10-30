@@ -99,8 +99,12 @@ static void write_basic_config(FILE *f)
 
 	/* domain from NVRAM */
 	if (((nv = nvram_get("wan_domain")) != NULL) || ((nv = nvram_get("wan_get_domain")) != NULL)) {
-		if (*nv)
-			fprintf(f, "domain=%s\n", nv);
+		if (*nv) {
+			if (strpbrk(nv, "\r\n"))
+				logmsg(LOG_WARNING, "dnsmasq: ignoring invalid domain containing a line break");
+			else
+				fprintf(f, "domain=%s\n", nv);
+		}
 	}
 
 	/* determine min-port */
