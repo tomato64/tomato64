@@ -4,7 +4,7 @@
 
 . nvram_ops
 
-ver="v2.72f - 10/09" # rs232, pedro
+ver="v2.72g - 10/09" # rs232, pedro
 PID=$$
 pidfile="/var/run/adblock.pid"
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
@@ -609,10 +609,39 @@ parkBlockfile() {
 	[ "$DPATH" != '/etc' ] && rm -f /etc/dnsmasq.adblock
 }
 
+probeBlockfileOff() {
+	# Temporarily remove only the adblock include, without changing NVRAM.
+	# External-storage installs only need the /etc symlink removed; for the
+	# /etc case the file itself is moved aside on the same filesystem.
+	if [ "$DPATH" == '/etc' ]; then
+		mv -f "$FINAL" "$FINAL.probe" || return 1
+	else
+		rm -f /etc/dnsmasq.adblock
+	fi
+}
+
+probeBlockfileOn() {
+	if [ "$DPATH" == '/etc' ]; then
+		[ -s "$FINAL.probe" ] || return 1
+		mv -f "$FINAL.probe" "$FINAL" || return 1
+	else
+		rm -f /etc/dnsmasq.adblock
+		ln -s "$FINAL" /etc/dnsmasq.adblock 2>/dev/null || return 1
+	fi
+}
+
+parkProbedBlockfile() {
+	if [ "$DPATH" == '/etc' -a -s "$FINAL.probe" ]; then
+		mv -f "$FINAL.probe" "$UNLOADED"
+	else
+		parkBlockfile
+	fi
+}
+
 safeDnsmasqRestart() {
 	[ "$1" -eq 0 ] && { # Run only for update
 		logi "Checking $FINAL syntax"
-		# Case A = $FINAL syntax issue detected, log and exclude adblock until next reboot
+		# Case A = $FINAL syntax issue detected
 		[ -s "$FINAL" ] && {
 			dnsmasq --test -C "$FINAL" &>/tmp/adblock.dnsmasq.test && logi "No syntax errors found in $FINAL" || {
 				loge "Syntax error found in $FINAL. Parking the generated blockfile without changing adblock_enable. More information can be found in /tmp/adblock.dnsmasq.test"
@@ -623,38 +652,95 @@ safeDnsmasqRestart() {
 			}
 		}
 	}
-	SIZE=$(wc -l < $FINAL)
-	TRIM=$(echo $((( $SIZE / 100 ) * $TRIMPERC ))) # 5% of the entry filesize
-	# Case B = dnsmasq restart correctly, e.g. ignore the other conditions and exit
+
+	SIZE=$(wc -l < "$FINAL")
+	TRIM=$((SIZE * TRIMPERC / 100))
+	[ "$TRIM" -lt 1 ] && TRIM=1
+
+	# Case B = dnsmasq restarts normally with the complete blockfile.
 	logi "Invoking safeDnsmasqRestart()"
 	dnsrestart
-	# Case C = dnsmasq didn't change ownership to nobody within 20 secs. Attempt a file trim:
-	[ $(countdownDnsmasq) -eq 1 ] && {
-		i=0; while [ ! -z "$(ps | grep '[d]nsmasq.*async$' | awk '{print $2}')" -a "$(ps | grep '[d]nsmasq.*async$' | awk '{print $2}')" != "nobody" -a $i -lt 10 ]; do
-			# Attempts the trim maximum 10 times (up to 50% of the file)
-			i=$((i+1))
-			SIZEE=$(wc -l < $FINAL)
-			LINES=$((SIZEE-TRIM))
-			logw "Dnsmasq cannot handle $(echo $SIZEE | number) lines, they are still too many."
-			logn "Trimming down $FINAL by $(echo $TRIMPERC)% to $(echo $LINES | number) lines"
-			mv $FINAL "$FINAL.recovery"
-			vi "$FINAL.recovery" -c ":1,${TRIM}d" -c ":wq"
-			mv "$FINAL.recovery" $FINAL
-			dnsrestart
-			[ $(countdownDnsmasq) -eq 1 ] && continue || {
-				logi "safeDnsmasqRestart() successfully trimmed down $FINAL from $(echo $SIZE|number) to $(wc -l < $FINAL|number) lines ($(wc -c < "$FINAL"|number) Bytes). Keeping configured adblock_limit=${sizeLimit}."
-				return 0
-			}
-		done
-		# Case D = Shit happens; like for Case A, log and exclude adblock as a whole
-		[ $(countdownDnsmasq) -eq 1 ] && { # this is run only if 10x trim is not good enough
-			loge "safeDnsmasqRestart(): dnsmasq still cannot run after recovery attempts. Parking the generated blockfile without changing adblock_enable."
-			parkBlockfile
-			dnsrestart
-			erroradd
-			return 1
+	[ "$(countdownDnsmasq)" -eq 0 ] && {
+		logi "safeDnsmasqRestart() completed smoothly with $FINAL = $(wc -l < "$FINAL"|number) lines in $(wc -c < "$FINAL"|number) Bytes."
+		return 0
+	}
+
+	# Do not assume every dnsmasq startup failure means that the blockfile is
+	# too large. First prove that dnsmasq can start when only adblock is
+	# excluded. If it still fails, trimming the list cannot fix that failure.
+	logo "Dnsmasq did not recover with the generated adblock list. Testing once without the adblock blockfile before attempting any trimming."
+	probeBlockfileOff || {
+		loge "Unable to temporarily exclude $FINAL for dnsmasq recovery diagnostics. Skipping destructive trimming."
+		erroradd
+		return 1
+	}
+
+	dnsrestart
+	[ "$(countdownDnsmasq)" -eq 1 ] && {
+		# The generated /etc/dnsmasq.conf now excludes adblock. Test that
+		# exact configuration to distinguish a parse/configuration failure
+		# (including possible Custom Configuration errors) from a runtime
+		# startup failure such as resource or bind problems.
+		if dnsmasq --test -C /etc/dnsmasq.conf &>/tmp/adblock.dnsmasq.config.test; then
+			loge "Dnsmasq also fails with adblock excluded, but /etc/dnsmasq.conf passes dnsmasq --test. This is a runtime/startup failure, not an adblock blockfile size failure. The list will not be trimmed."
+		else
+			loge "Dnsmasq also fails with adblock excluded and /etc/dnsmasq.conf fails dnsmasq --test. A dnsmasq configuration error (possibly Custom Configuration) is present. The adblock list will not be trimmed. Details: /tmp/adblock.dnsmasq.config.test"
+		fi
+		parkProbedBlockfile
+		erroradd
+		return 1
+	}
+
+	# A successful no-adblock restart may still have been a transient service
+	# failure. Restore the exact original blockfile and require it to fail a
+	# second time before modifying user data.
+	probeBlockfileOn || {
+		loge "Dnsmasq recovered without adblock, but the original blockfile could not be restored. Parking it without changing adblock_enable."
+		parkProbedBlockfile
+		erroradd
+		return 1
+	}
+
+	dnsrestart
+	[ "$(countdownDnsmasq)" -eq 0 ] && {
+		logo "Dnsmasq recovered with the original adblock list on retry. No blockfile trimming was necessary."
+		return 0
+	}
+
+	# Case C = dnsmasq works without adblock but repeatedly fails with the
+	# unchanged, syntax-valid blockfile. A size/resource problem is now a
+	# reasonable diagnosis, so attempt the historical 5% recovery steps.
+	logo "Dnsmasq starts without adblock but repeatedly fails with the complete blockfile. Starting ${TRIMPERC}% trim recovery (maximum 10 attempts)."
+	i=0
+	while [ "$i" -lt 10 ]; do
+		i=$((i+1))
+		SIZEE=$(wc -l < "$FINAL")
+		[ "$SIZEE" -le 1 ] && break
+		[ "$TRIM" -ge "$SIZEE" ] && TRIM=$((SIZEE-1))
+		LINES=$((SIZEE-TRIM))
+		logw "Dnsmasq still cannot handle $(echo "$SIZEE" | number) lines."
+		logn "Recovery attempt $i/10: trimming $FINAL to $(echo "$LINES" | number) lines"
+
+		mv -f "$FINAL" "$FINAL.recovery" || break
+		vi "$FINAL.recovery" -c ":1,${TRIM}d" -c ":wq"
+		mv -f "$FINAL.recovery" "$FINAL" || break
+
+		dnsrestart
+		[ "$(countdownDnsmasq)" -eq 0 ] && {
+			FINAL_LINES=$(wc -l < "$FINAL")
+			REMOVED=$((SIZE-FINAL_LINES))
+			[ "$SIZE" -gt 0 ] && REMOVED_PCT=$((REMOVED * 100 / SIZE)) || REMOVED_PCT=0
+			logo "Dnsmasq recovered after $i trim attempt(s): adblock list reduced from $(echo "$SIZE"|number) to $(echo "$FINAL_LINES"|number) lines (about ${REMOVED_PCT}% removed). Configured adblock_limit remains ${sizeLimit}."
+			return 0
 		}
-	} || logi "safeDnsmasqRestart() completed smoothly with $FINAL = $(wc -l < $FINAL|number) lines in $(wc -c < $FINAL|number) Bytes."; return
+	done
+
+	# Case D = 10x recovery (or a trim operation itself) was not enough.
+	loge "safeDnsmasqRestart(): dnsmasq still cannot run with the recovered adblock list. Parking the generated blockfile without changing adblock_enable."
+	parkBlockfile
+	dnsrestart
+	erroradd
+	return 1
 }
 
 upgrade_check() {
