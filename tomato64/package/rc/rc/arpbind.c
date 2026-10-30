@@ -113,7 +113,7 @@ void stop_arpbind(void)
 
 	if ((f = fopen("/proc/net/arp", "r")) != NULL) {
 		while (fgets(buf, sizeof(buf), f)) {
-			if (sscanf(buf, "%s %*s %*s %*s %*s %*s", ipaddr) != 1)
+			if (sscanf(buf, "%47s %*s %*s %*s %*s %*s", ipaddr) != 1)
 				continue;
 
 			if (strcmp(ipaddr, "IP") == 0)

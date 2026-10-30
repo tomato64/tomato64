@@ -34,10 +34,10 @@ int get_lanports_status(int model)
 			    (model == MODEL_RTN15U)
 #endif
 			) {
-				if ((sscanf(s, "Port 0: %s", a) == 1) ||
-				    (sscanf(s, "Port 1: %s", a) == 1) ||
-				    (sscanf(s, "Port 2: %s", a) == 1) ||
-				    (sscanf(s, "Port 3: %s", a) == 1)) {
+				if ((sscanf(s, "Port 0: %15s", a) == 1) ||
+				    (sscanf(s, "Port 1: %15s", a) == 1) ||
+				    (sscanf(s, "Port 2: %15s", a) == 1) ||
+				    (sscanf(s, "Port 3: %15s", a) == 1)) {
 					if (strncmp(a, "DOWN", 4)) {
 						r++;
 					}
@@ -51,10 +51,10 @@ int get_lanports_status(int model)
 #endif /* TCONFIG_AC5300 */
 				 (model == MODEL_WS880) ||
 			         (model == MODEL_RTN18U)) {
-				if ((sscanf(s, "Port 1: %s", a) == 1) ||
-				    (sscanf(s, "Port 2: %s", a) == 1) ||
-				    (sscanf(s, "Port 3: %s", a) == 1) ||
-				    (sscanf(s, "Port 4: %s", a) == 1)) {
+				if ((sscanf(s, "Port 1: %15s", a) == 1) ||
+				    (sscanf(s, "Port 2: %15s", a) == 1) ||
+				    (sscanf(s, "Port 3: %15s", a) == 1) ||
+				    (sscanf(s, "Port 4: %15s", a) == 1)) {
 					if (strncmp(a, "DOWN", 4)) {
 						r++;
 					}
