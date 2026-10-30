@@ -738,7 +738,7 @@ function init() {
 	<script>
 		var tftpFields = [
 			{ title: 'Enable TFTP', name: 'f_dnsmasq_tftp', type: 'checkbox', value: nvram.dnsmasq_tftp == 1 },
-				{ title: 'TFTP root path', indent: 2, name: 'dnsmasq_tftp_path', type: 'text', maxlen: 128, size: 90, placeholder: '/mnt/sda1', value: nvram.dnsmasq_tftp_path }
+				{ title: 'TFTP root path', indent: 2, name: 'dnsmasq_tftp_path', type: 'text', maxlen: 128, size: 70, placeholder: '/mnt/sda1', value: nvram.dnsmasq_tftp_path }
 		];
 
 		for (var i = 0; i <= MAX_BRIDGE_ID; ++i) {
