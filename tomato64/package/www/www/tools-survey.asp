@@ -46,9 +46,17 @@ if (nvram.web_css.match(/at-/g)) {
 var SVG_NS = 'http://www.w3.org/2000/svg';
 var observers = {};
 
+function validInterfaceName(name) {
+	return /^[A-Za-z0-9_.:-]+$/.test(String(name || ''));
+}
+
 /* BCM53XX-BEGIN */
 function internalWiFI(interface) {
 	return new Promise(function(resolve, reject) {
+		if (!validInterfaceName(interface)) {
+			reject('ERROR: invalid wireless interface name');
+			return;
+		}
 		var cmd = new XmlHttp();
 		cmd.onCompleted = function(text, xml) {
 			resolve(text);
@@ -170,6 +178,8 @@ function fetchShellScanResults() {
 	var cmds = [];
 	for (var i = 0; i < ifnames.length; i++) {
 		var ifn = ifnames[i];
+		if (!validInterfaceName(ifn))
+			continue;
 		cmds.push(runShell('/usr/sbin/wl -i '+ifn+' scan >/dev/null 2>&1; sleep 2; /usr/sbin/wl -i '+ifn+' scanresults'));
 	}
 
@@ -1038,8 +1048,8 @@ sg.populate = function(style, sshow, filter) {
 /* BCM53XX-NO-BEGIN */
 		e.band = s[9];
 /* BCM53XX-NO-END */
-		e.channel = s[10];
-		e.channel = e.channel+'<br><small>'+s[9]+' GHz<\/small><br><small>'+s[4]+' MHz<\/small>';
+		e.channel = escapeHTML(''+s[10]);
+		e.channel = e.channel+'<br><small>'+escapeHTML(''+s[9])+' GHz<\/small><br><small>'+escapeHTML(''+s[4])+' MHz<\/small>';
 		e.rssi = s[2];
 /* BCM53XX-BEGIN */
 		if (s[9] == 2.4)
@@ -1052,8 +1062,8 @@ sg.populate = function(style, sshow, filter) {
 		e.snr = (wlb.noise != null) ? (Number(e.rssi) + Math.abs(wlb.noise)) : '';
 /* BCM53XX-NO-END */
 		e.mhz = s[4];
-		e.cap = s[7]+ '<br>'+s[8];
-		e.rates =s[6].replace('11', '');
+		e.cap = escapeHTML(''+s[7])+'<br>'+escapeHTML(''+s[8]);
+		e.rates = escapeHTML((''+s[6]).replace('11', ''));
 		if (e.rssi != -999) {
 			if (e.rssi >= -50)
 				e.qual = 100;
@@ -1098,7 +1108,7 @@ sg.populate = function(style, sshow, filter) {
 			if (m <= 10)
 				seen += '<br> <b><small>NEW ('+m+'m)<\/small><\/b>';
 		}
-		mac = e.bssid;
+		mac = escapeHTML(''+e.bssid);
 		var chan = e.channel.split('<');
 		if (style == 0)
 			var density = 100;
@@ -1164,13 +1174,14 @@ sg.populate = function(style, sshow, filter) {
 			e.col = '<div><\/div>';
 		}
 /* OUI-BEGIN */
-		if (mac.match(/^(..):(..):(..)/))
-			mac = '<div style="display:none" id="gW_'+i+'">&nbsp; <img src="spin.svg" alt="" style="vertical-align:middle"><\/div><a href="javascript:searchOUI(\''+RegExp.$1+'-'+RegExp.$2+'-'+RegExp.$3+'\','+i+')" title="OUI Search">'+mac+'<\/a>';
+		var oui = e.bssid.match(/^([0-9A-Fa-f]{2}):([0-9A-Fa-f]{2}):([0-9A-Fa-f]{2})/);
+		if (oui)
+			mac = '<div style="display:none" id="gW_'+i+'">&nbsp; <img src="spin.svg" alt="" style="vertical-align:middle"><\/div><a href="javascript:searchOUI(\''+oui[1]+'-'+oui[2]+'-'+oui[3]+'\','+i+')" title="OUI Search">'+mac+'<\/a>';
 /* OUI-END */
 
-		sg.insert(-1, e, [ '<small>'+seen+'<\/small>', ''+e.col, ''+e.ssid, mac, (e.rssi < 0 ? e.rssi+'' : ''), ''+e.snr,
+		sg.insert(-1, e, [ '<small>'+seen+'<\/small>', ''+e.col, escapeHTML(''+e.ssid), mac, (e.rssi < 0 ? e.rssi+'' : ''), ''+e.snr,
 		          (e.qual < 0 ? '' : '<small>'+e.qual+'<\/small><br><img src="bar'+MIN(MAX(Math.floor(e.qual / 12), 1), 6)+'.gif" id="bar_'+i+'" alt="">'),
-		          ''+e.control+'/'+e.channel, '<small>'+e.cap, '<\/small>'+e.rates], false);
+		          escapeHTML(''+e.control)+'/'+e.channel, '<small>'+e.cap, '<\/small>'+e.rates], false);
 	}
 	drawBaseCoordinates();
 	s = '';

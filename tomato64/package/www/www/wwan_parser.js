@@ -1,3 +1,9 @@
+function wwanEscape(value) {
+	/* Some modem parsers return &gt;= as a display token. Normalize it
+	 * before HTML-escaping so it is rendered as >= without allowing markup. */
+	return escapeHTML(String(value == null ? '' : value).replace(/&gt;/g, '>'));
+}
+
 function createWWANTableItem(value, unit, bar) {
 	var retVal = '<td class="content">';
 	var calculatedMargin = 6; /* dBm */
@@ -7,7 +13,7 @@ function createWWANTableItem(value, unit, bar) {
 	else if (unit.length < 3 && unit.length > 0) /* dB */
 		calculatedMargin = 14;
 
-	retVal += '<span style="width:34px;display:inline-block">'+value+'</span><small style="margin-right:'+calculatedMargin+'px">'+unit+'</small>';
+	retVal += '<span style="width:34px;display:inline-block">'+wwanEscape(value)+'</span><small style="margin-right:'+calculatedMargin+'px">'+wwanEscape(unit)+'</small>';
 	if (bar) {
 		var altText = getAltText(bar);
 		retVal += '<img src="'+bar+'" alt="'+altText+'" title="'+altText+'"/>';
@@ -25,9 +31,9 @@ function createWWANStatusSection(wannum, wwanstatus) {
 	var wanNumStr = 'wan'+(wannum > 1 ? wannum : '');
 	var code = '<table class="fields"><tbody>';
 	code += '<tr><td class="title indent1">Modem type</td>';
-	code += '<td class="content">'+nvram[wanNumStr+'_modem_type']+'</td></tr>';
+	code += '<td class="content">'+wwanEscape(nvram[wanNumStr+'_modem_type'])+'</td></tr>';
 	code += '<tr><td class="title indent1">Current Mode</td>';
-	code += '<td class="content">'+wwan_getCurrentMode(wwanstatus)+'</td></tr>';
+	code += '<td class="content">'+wwanEscape(wwan_getCurrentMode(wwanstatus))+'</td></tr>';
 
 	var valMap = [];
 	wwan_getSignalStrengthMap(wwanstatus, valMap);
@@ -72,19 +78,19 @@ function createWWANStatusSection(wannum, wwanstatus) {
 	if (valMap['MCC']) {
 		code += '<tr><td class="title indent1">Location</td>';
 		code += '<td class="content">';
-		code += '<span class="wwan-parser">MCC:</span>'+valMap['MCC'];
-		code += '<div><span class="wwan-parser">MNC:</span>'+valMap['MNC']+'</div>';
+		code += '<span class="wwan-parser">MCC:</span>'+wwanEscape(valMap['MCC']);
+		code += '<div><span class="wwan-parser">MNC:</span>'+wwanEscape(valMap['MNC'])+'</div>';
 			if (valMap['LAC'])
-				code += '<div><span class="wwan-parser">LAC:</span>'+valMap['LAC']['HEX']+' ('+valMap['LAC']['DEC']+')</div>';
+				code += '<div><span class="wwan-parser">LAC:</span>'+wwanEscape(valMap['LAC']['HEX'])+' ('+wwanEscape(valMap['LAC']['DEC'])+')</div>';
 
 			if (valMap['CID'])
-				code += '<div><span class="wwan-parser">CID:</span>'+valMap['CID']['HEX']+' ('+valMap['CID']['DEC']+')</div>';
+				code += '<div><span class="wwan-parser">CID:</span>'+wwanEscape(valMap['CID']['HEX'])+' ('+wwanEscape(valMap['CID']['DEC'])+')</div>';
 
 			if (valMap['Cell ID'])
-				code += '<div><span class="wwan-parser">Cell ID:</span>'+valMap['Cell ID']['HEX']+' ('+valMap['Cell ID']['DEC']+')</div>';
+				code += '<div><span class="wwan-parser">Cell ID:</span>'+wwanEscape(valMap['Cell ID']['HEX'])+' ('+wwanEscape(valMap['Cell ID']['DEC'])+')</div>';
 
 			if (valMap['PCI'])
-				code += '<div><span class="wwan-parser">PCI:</span>'+valMap['PCI']['HEX']+' ('+valMap['PCI']['DEC']+')</div>';
+				code += '<div><span class="wwan-parser">PCI:</span>'+wwanEscape(valMap['PCI']['HEX'])+' ('+wwanEscape(valMap['PCI']['DEC'])+')</div>';
 
 		code += '</td></tr>';
 	}
@@ -93,7 +99,7 @@ function createWWANStatusSection(wannum, wwanstatus) {
 	if (valMap) {
 		if (valMap['OPERATOR']) {
 			code += '<tr><td class="title indent1">Current Operator</td>';
-			code += '<td class="content">'+valMap['OPERATOR']+'</td></tr>';
+			code += '<td class="content">'+wwanEscape(valMap['OPERATOR'])+'</td></tr>';
 		}
 	}
 
@@ -101,23 +107,23 @@ function createWWANStatusSection(wannum, wwanstatus) {
 	if (valMap) {
 		if (valMap['BBAND']) {
 			code += '<tr><td class="title indent1">Current Band</td>';
-			code += '<td class="content">'+valMap['BBAND']+' ('+valMap['BBAND_FREQ']+' <small>MHz</small>)</td></tr>';
+			code += '<td class="content">'+wwanEscape(valMap['BBAND'])+' ('+wwanEscape(valMap['BBAND_FREQ'])+' <small>MHz</small>)</td></tr>';
 		}
 		if (valMap['DOWN_FREQ']){
 			code += '<tr><td class="title indent1">Downlink Frequency</td>';
-			code += '<td class="content">'+valMap['DOWN_FREQ']+' <small>MHz</small></td></tr>';
+			code += '<td class="content">'+wwanEscape(valMap['DOWN_FREQ'])+' <small>MHz</small></td></tr>';
 		}
 		if (valMap['UP_FREQ']) {
 			code += '<tr><td class="title indent1">Uplink Frequency</td>';
-			code += '<td class="content">'+valMap['UP_FREQ']+' <small>MHz</small></td></tr>';
+			code += '<td class="content">'+wwanEscape(valMap['UP_FREQ'])+' <small>MHz</small></td></tr>';
 		}
 		if (valMap['DOWN_BW']) {
 			code += '<tr><td class="title indent1">Downlink Bandwidth</td>';
-			code += '<td class="content">'+valMap['DOWN_BW']+' <small>MHz</small></td></tr>';
+			code += '<td class="content">'+wwanEscape(valMap['DOWN_BW'])+' <small>MHz</small></td></tr>';
 		}
 		if (valMap['UP_BW']) {
 			code += '<tr><td class="title indent1">Uplink Bandwidth</td>';
-			code += '<td class="content">'+valMap['UP_BW']+' <small>MHz</small></td></tr>';
+			code += '<td class="content">'+wwanEscape(valMap['UP_BW'])+' <small>MHz</small></td></tr>';
 		}
 	}
 

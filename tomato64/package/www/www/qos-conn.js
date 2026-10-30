@@ -130,7 +130,7 @@ function setupQoSConnectionGrid(g) {
 			data = row.getRowData();
 			for (j = cols.length - 1; j >= 0; j--) {
 				if (data[cols[j]].indexOf(ip) != -1) {
-					data[cols[j]] = name+((ip.indexOf(':') != -1) ? '<br>' : ' ')+'<small>('+ip+')<\/small>';
+					data[cols[j]] = escapeHTML(''+name)+((ip.indexOf(':') != -1) ? '<br>' : ' ')+'<small>('+escapeHTML(''+ip)+')<\/small>';
 					row.setRowData(data);
 					if (E('_f_shortcuts').checked)
 						data[cols[j]] = data[cols[j]]+' <small class="pics"><a href="javascript:addExcludeList(\''+ip+'\')" title="Filter out this IP">[hide]<\/a><\/small>';
@@ -213,10 +213,11 @@ function refreshQoSConnections(data, cfg) {
 			ip = b[cols[j]];
 			if (cache[ip] != null) {
 				c[ip] = cache[ip];
-				b[cols[j]] = cache[ip]+((ip.indexOf(':') != -1) ? '<br>' : ' ')+'<small>('+ip+')<\/small>';
+				b[cols[j]] = escapeHTML(''+cache[ip])+((ip.indexOf(':') != -1) ? '<br>' : ' ')+'<small>('+escapeHTML(''+ip)+')<\/small>';
 				cursor = 'default';
 			}
 			else {
+				b[cols[j]] = escapeHTML(''+ip);
 				if (resolveCB) {
 					if (!q[ip]) {
 						q[ip] = 1;

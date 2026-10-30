@@ -100,6 +100,7 @@ dg.populate = function() {
 		list[i].mode = '';
 		list[i].unit = 0;
 		list[i].name = '';
+		list[i].nameHTML = 0;
 		list[i].rssi = '';
 		list[i].txrx = '';
 		list[i].lease = '';
@@ -184,7 +185,8 @@ dg.populate = function() {
 			if (nvram['wan'+k+'_pptp_dhcp'] == '1') {
 				if (gw2 && gw2 != '0.0.0.0' && gw2 != gw && ip2 && ip2 != '0.0.0.0' && ip2 != ip) {
 					e.ip = 'r:&nbsp;'+gw+'<br>l:&nbsp;'+ip;
-					e.name = 'r:&nbsp;'+gw2+(face ? '&nbsp;<small>('+face+')<\/small>' : '')+'<br>l:&nbsp;'+ip2+(face ? '&nbsp;<small>('+face+')<\/small>' : '');
+					e.name = 'r:&nbsp;'+escapeHTML(''+gw2)+(face ? '&nbsp;<small>('+escapeHTML(''+face)+')<\/small>' : '')+'<br>l:&nbsp;'+escapeHTML(''+ip2)+(face ? '&nbsp;<small>('+escapeHTML(''+face)+')<\/small>' : '');
+					e.nameHTML = 1;
 				}
 			}
 			else {
@@ -234,10 +236,14 @@ dg.populate = function() {
 				else if ((e2.unit != '') && (e.unit == ''))
 					e.unit = e2.unit;
 
-				if ((e.name != '') && (e2.name == ''))
+				if ((e.name != '') && (e2.name == '')) {
 					e2.name = e.name;
-				else if ((e2.name != '') && (e.name == ''))
+					e2.nameHTML = e.nameHTML;
+				}
+				else if ((e2.name != '') && (e.name == '')) {
 					e.name = e2.name;
+					e.nameHTML = e2.nameHTML;
+				}
 
 				if ((e.freq != '') && (e2.freq == ''))
 					e2.freq = e.freq;
@@ -389,10 +395,14 @@ dg.populate = function() {
 				else if ((e2.ifname != '') && (e.ifname == ''))
 					e.ifname = e2.ifname;
 
-				if ((e.name != '') && (e2.name == ''))
+				if ((e.name != '') && (e2.name == '')) {
 					e2.name = e.name;
-				else if ((e2.name != '') && (e.name == ''))
+					e2.nameHTML = e.nameHTML;
+				}
+				else if ((e2.name != '') && (e.name == '')) {
 					e.name = e2.name;
+					e.nameHTML = e2.nameHTML;
+				}
 
 				if ((e.bridge != '') && (e2.bridge == ''))
 					e2.bridge = e.bridge;
@@ -412,7 +422,7 @@ dg.populate = function() {
 	for (i = list.length - 1; i >= 0; --i) {
 		e = list[i];
 
-		if ((e.mac.match(/^(..):(..):(..)/)) && e.proto != 'pppoe' && e.proto != 'pptp' && e.proto != 'l2tp') {
+		if ((e.mac.match(/^([0-9A-Fa-f]{2}):([0-9A-Fa-f]{2}):([0-9A-Fa-f]{2})/)) && e.proto != 'pppoe' && e.proto != 'pptp' && e.proto != 'l2tp') {
 			b = e.mac;
 /* OUI-BEGIN */
 			b = '<a href="javascript:searchOUI(\''+RegExp.$1+'-'+RegExp.$2+'-'+RegExp.$3+'\','+i+')" title="OUI Search">'+e.mac+'<\/a><div style="display:none" id="gW_'+i+'">&nbsp; <img src="spin.svg" alt="" style="vertical-align:middle"><\/div>';
@@ -437,7 +447,7 @@ dg.populate = function() {
 			b = '&nbsp;<br>&nbsp;';
 
 		if (e.ssid != '')
-			c = '<br><small>'+e.ssid+'<\/small>';
+			c = '<br><small>'+escapeHTML(''+e.ssid)+'<\/small>';
 		else {
 			if (e.proto == 'dhcp')
 				a = 'DHCP'
@@ -507,7 +517,7 @@ dg.populate = function() {
 			}
 		}
 		if (e.rssi == 1) {
-			if (e.mac.match(/^(..):(..):(..)/))
+			if (e.mac.match(/^([0-9A-Fa-f]{2}):([0-9A-Fa-f]{2}):([0-9A-Fa-f]{2})/))
 				f = '<a href="javascript:wake('+i+')" class="status_devices"><span class="dissvg"'+c+' title="Click to wake up">&nbsp;<\/span><\/a>';
 			else
 				f = '<span class="dissvg"'+c+' title="Disconnected">&nbsp;<\/span>';
@@ -526,7 +536,7 @@ dg.populate = function() {
 			                     '<div id="media_'+i+'">'+f+'<\/div>',
 			                     b,
 			                     (e.mode === 'wds' ? '' : e.ip),
-			                     e.name,
+			                     (e.nameHTML ? e.name : escapeHTML(''+e.name)),
 			                     (e.rssi < 0 ? e.rssi+' <small>dBm<\/small>' : ''),
 			                     (e.qual < 0 ? '' : '<small>'+e.qual+'<\/small> <img src="bar'+Math.min(Math.max(Math.floor(e.qual / 12), 1), 6)+'.gif" id="bar_'+i+'" alt="">'),
 			                     e.txrx,
@@ -633,6 +643,7 @@ function get(mac, ip) {
 		mode: '',
 		unit: 0,
 		name: '',
+		nameHTML: 0,
 		rssi: '',
 		txrx: '',
 		lease: '',

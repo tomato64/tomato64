@@ -331,14 +331,14 @@ function loadData() {
 			if (h.tx_max > xx_max)
 				xx_max = h.tx_max;
 
-			t = i; /* by default, show only the IP address (or IF name) */
+			t = escapeHTML(''+i); /* by default, show only the IP address (or IF name) */
 			if ((typeof(hostnamecache) != 'undefined') && (hostnamecache[i] != null)) {
 				if (nvram['cstats_labels'] != null ) {
 					if (nvram['cstats_labels'] == '1') /* if known, show only the hostname */
-						t = hostnamecache[i];
+						t = escapeHTML(''+hostnamecache[i]);
 
 					if (nvram['cstats_labels'] == '0') /* show hostname and IP */
-						t = hostnamecache[i]+' <small>['+i+']<\/small>';
+						t = escapeHTML(''+hostnamecache[i])+' <small>['+escapeHTML(''+i)+']<\/small>';
 				}
 			}
 			/* WL label */

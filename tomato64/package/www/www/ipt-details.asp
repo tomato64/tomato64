@@ -179,10 +179,10 @@ grid.populate = function() {
 		udpconn += b[10];
 		hostslisted.push(b[0]);
 
-		var h = b[0];
+		var h = escapeHTML(''+b[0]);
 		if (E('_f_hostnames').checked) {
 			if(hostnamecache[b[0]] != null) {
-				h = hostnamecache[b[0]] + ((b[0].indexOf(':') != -1) ? '<br>' : ' ') + '<small>(' + b[0] + ')<\/small>';
+				h = escapeHTML(''+hostnamecache[b[0]]) + ((b[0].indexOf(':') != -1) ? '<br>' : ' ') + '<small>(' + escapeHTML(''+b[0]) + ')<\/small>';
 			}
 		}
 

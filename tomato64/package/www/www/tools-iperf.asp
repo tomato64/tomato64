@@ -178,16 +178,16 @@ function execute() {
 				}
 			}
 		}
-		E('test_status').innerHTML = statusText;
-		E('test_time').innerHTML = timeText;
-		E('test_xfered').innerHTML = xferedText;
-		E('test_speed').innerHTML = speedText;
+		E('test_status').textContent = statusText;
+		E('test_time').textContent = timeText;
+		E('test_xfered').textContent = xferedText;
+		E('test_speed').textContent = speedText;
 		changeTestButtonText();
 		toggleAllFields(!iperf_up);
 		spin(0);
 	}
 	cmd.onError = function(x) {
-		E('test_status').innerHTML = 'ERROR: ' + x;
+		E('test_status').textContent = 'ERROR: ' + x;
 		spin(0);
 	}
 
@@ -245,7 +245,7 @@ function runButtonClick() {
 		execute();
 	}
 	requestCommand.onError = function(x) {
-		E('test_status').innerHTML = 'ERROR: ' + x;
+		E('test_status').textContent = 'ERROR: ' + x;
 		execute();
 	}
 	if (iperf_up == 1) {
@@ -267,10 +267,10 @@ function runButtonClick() {
 		}
 		requestCommand.post('iperfrun.cgi', paramStr);
 	}
-	E('test_status').innerHTML = '';
-	E('test_xfered').innerHTML = '';
-	E('test_time').innerHTML = '';
-	E('test_speed').innerHTML = '';
+	E('test_status').textContent = '';
+	E('test_xfered').textContent = '';
+	E('test_time').textContent = '';
+	E('test_speed').textContent = '';
 }
 </script>
 </head>

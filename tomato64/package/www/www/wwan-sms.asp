@@ -57,7 +57,7 @@ smsGrid.populate = function() {
 	error_div = E('notice');
 	if (wwansms_error) {
 		error_div.style.display = 'inline-block';
-		error_div.innerHTML = '<b>Error occurred!<\/b><br><br>Error message: '+wwansms_error;
+		error_div.innerHTML = '<b>Error occurred!<\/b><br><br>Error message: '+escapeHTML(''+wwansms_error);
 	}
 	else {
 		error_div.style.display = 'none';

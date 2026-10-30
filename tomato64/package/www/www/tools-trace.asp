@@ -141,14 +141,14 @@ function trace() {
 	}
 	tracer.onError = function(x) {
 		spin(0);
-		E('trace-error').innerHTML = 'ERROR: ' + E('_f_addr').value + ' - ' + x;
+		E('trace-error').textContent = 'ERROR: ' + E('_f_addr').value + ' - ' + x;
 		E('trace-error').style.display = 'inline-block';
 	}
 
 	var addr = E('_f_addr').value;
 	var hops = E('_f_hops').value;
 	var wait = E('_f_wait').value;
-	tracer.post('trace.cgi', 'addr=' + addr + '&hops=' + hops + '&wait=' + wait);
+	tracer.post('trace.cgi', 'addr=' + escapeCGI(addr) + '&hops=' + escapeCGI(hops) + '&wait=' + escapeCGI(wait));
 
 	cookie.set('traceaddr', addr);
 	cookie.set('tracehops', hops);

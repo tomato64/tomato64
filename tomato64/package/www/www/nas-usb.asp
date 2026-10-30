@@ -64,7 +64,7 @@ function umountHost(a, host) {
 		_forceRefresh();
 	}
 
-	xob.post('usbcmd.cgi', 'remove='+host);
+	xob.post('usbcmd.cgi', 'remove='+escapeCGI(host));
 }
 
 function mountHost(a, host) {
@@ -93,7 +93,7 @@ function mountHost(a, host) {
 		_forceRefresh();
 	}
 
-	xob.post('usbcmd.cgi', 'mount='+host);
+	xob.post('usbcmd.cgi', 'mount='+escapeCGI(host));
 }
 
 var ref = new TomatoRefresh('update.cgi', 'exec=usbdevices', 5);
@@ -156,12 +156,16 @@ dg.populate = function() {
 		else {
 			if (xob)
 				s = ((e.is_mounted == 0) ? 'No' : 'Yes')+'<br><small>Please wait...<\/small>';
-			else if (e.is_mounted == 0)
-				s = 'No<br><small class="pics"><a href="javascript:mountHost(\'L'+i+'\',\''+e.host+'\')" title="Mount all Partitions of Storage Device" id="L'+i+'">[ Mount ]<\/a><\/small>';
-			else
-				s = 'Yes<br><small class="pics"><a href="javascript:umountHost(\'L'+i+'\',\''+e.host+'\')" title="Safely Remove Storage Device" id="L'+i+'">[ Unmount ]<\/a><\/small>';
+			else if (e.is_mounted == 0) {
+				var host = escapeHTML((''+e.host).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\r\n]/g, ''));
+				s = 'No<br><small class="pics"><a href="javascript:mountHost(\'L'+i+'\',\''+host+'\')" title="Mount all Partitions of Storage Device" id="L'+i+'">[ Mount ]<\/a><\/small>';
+			}
+			else {
+				var host = escapeHTML((''+e.host).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\r\n]/g, ''));
+				s = 'Yes<br><small class="pics"><a href="javascript:umountHost(\'L'+i+'\',\''+host+'\')" title="Safely Remove Storage Device" id="L'+i+'">[ Unmount ]<\/a><\/small>';
+			}
 		}
-		desc = (e.vendor+' '+e.product).trim()+(!e.serial ? '' : ' [Serial No: '+e.serial+']');
+		desc = escapeHTML((e.vendor+' '+e.product).trim())+(!e.serial ? '' : ' [Serial No: '+escapeHTML(''+e.serial)+']');
 		if (e.discs) {
 			for (j = 0; j <= e.discs.length - 1; ++j) {
 				d = e.discs[j];
@@ -169,18 +173,18 @@ dg.populate = function() {
 				for (k = 0; k <= parts.length - 1; ++k) {
 					p = parts[k];
 					if (p) {
-						desc = desc+'<small><br>Partition \''+p[0]+'\''+(p[3] != '' ? ' '+p[3] : '')+
-							((p[5] != 0) ? ' ('+doScaleSize(p[5], 0)+ 
+						desc = desc+'<small><br>Partition \''+escapeHTML(''+p[0])+'\''+(p[3] != '' ? ' '+escapeHTML(''+p[3]) : '')+
+							((p[5] != 0) ? ' ('+doScaleSize(p[5], 0)+
 							((p[1] == 1) ? ' / '+doScaleSize(p[6], 0)+' free' : '')+
 							')' : '')+' is '+
 							((p[1] != 0) ? '' : 'not ')+((p[3] == 'swap') ? 'active' : 'mounted')+
-							((p[2] != '') ? ' on '+p[2] : '');
+							((p[2] != '') ? ' on '+escapeHTML(''+p[2]) : '');
 						desc = desc+'<\/small>';
 					}
 				}
 			}
 		}
-		this.insert(-1, e, [e.type, e.host, desc, s], false);
+		this.insert(-1, e, [escapeHTML(''+e.type), escapeHTML(''+e.host), desc, s], false);
 	}
 
 	list = [];

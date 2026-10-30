@@ -64,7 +64,7 @@ function _disconnect(pid) {
 function disconnect(a, pid) {
 	if (xob) return;
 	if ((xob = new XmlHttp()) == null) {
-		_disconnect(ip);
+		_disconnect(pid);
 		return;
 	}
 	a = E(a);
@@ -188,11 +188,11 @@ dg.dataToView = function(data) {
 REMOVE-END */
 		l = dateTimeString(data[2]);
 	}
-	return [data[0],
-			data[1],
+	return [escapeHTML(''+data[0]),
+			escapeHTML(''+data[1]),
 			l,
-			data[3],
-			data[4],
+			escapeHTML(''+data[3]),
+			escapeHTML(''+data[4]),
 			data[5]];
 }
 

@@ -171,7 +171,7 @@ WMGrid.prototype.setName = function(ip, name) {
 		row = this.tb.rows[i];
 		data = row.getRowData();
 		if (data.ip == ip) {
-			data[1] = name+((ip.indexOf(':') != -1) ? '<br>' : ' ')+'<small>('+ip+')<\/small>';
+			data[1] = escapeHTML(''+name)+((ip.indexOf(':') != -1) ? '<br>' : ' ')+'<small>('+escapeHTML(''+ip)+')<\/small>';
 			row.setRowData(data);
 			row.cells[1].innerHTML = data[1];
 			row.style.cursor = 'default';
@@ -212,19 +212,22 @@ WMGrid.prototype.populateData = function(data, url) {
 /* IPV6-END */
 		if (cache[e.ip] != null) {
 			new_cache[e.ip] = cache[e.ip];
-			e.ip = cache[e.ip]+((e.ip.indexOf(':') != -1) ? '<br>' : ' ')+'<small>('+e.ip+')<\/small>';
+			e.ip = escapeHTML(''+cache[e.ip])+((e.ip.indexOf(':') != -1) ? '<br>' : ' ')+'<small>('+escapeHTML(''+e.ip)+')<\/small>';
 			cursor = 'default';
 		}
 		else
 			cursor = null;
 
 		if (url != 0) {
-			e.value = '<a href="https://'+e.value+'" class="new_window">'+(e.value.length > maxl + 3 ? e.value.substr(0, maxl)+'...' : e.value)+'<\/a>';
+			var value = e.value;
+			var label = value.length > maxl + 3 ? value.substr(0, maxl)+'...' : value;
+			e.value = '<a href="https://'+escapeHTML(value)+'" class="new_window">'+escapeHTML(label)+'<\/a>';
 		}
 		else {
 			e.value = e.value.replace(/\+/g, ' ');
 			if (e.value.length > maxl + 3)
 				e.value = e.value.substr(0, maxl)+'...';
+			e.value = escapeHTML(e.value);
 		}
 		dt.setTime(e.time * 1000);
 		var row = this.insert(-1, e, [dt.toDateString()+', '+dt.toLocaleTimeString(), e.ip, e.value], false);

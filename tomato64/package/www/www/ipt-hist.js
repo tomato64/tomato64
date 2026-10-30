@@ -136,10 +136,10 @@ function redraw() {
 				}
 			}
 
-			var h = b[1];
+			var h = escapeHTML(''+b[1]);
 			if (E('_f_hostnames').checked) {
 				if(hostnamecache[b[1]] != null) {
-					h = hostnamecache[b[1]] + ((b[1].indexOf(':') != -1) ? '<br>' : ' ') + '<small>(' + b[1] + ')<\/small>';
+					h = escapeHTML(''+hostnamecache[b[1]]) + ((b[1].indexOf(':') != -1) ? '<br>' : ' ') + '<small>(' + escapeHTML(''+b[1]) + ')<\/small>';
 				}
 			}
 			if (E('_f_shortcuts').checked) {
