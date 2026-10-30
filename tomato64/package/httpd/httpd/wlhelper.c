@@ -410,7 +410,7 @@ int wlhelper_get_channel_stats(const char *ifname, int *channel, int *mhz,
 						size_t len = strlen(bw_str);
 						if (len >= 2) {
 							/* Check if last 3 chars are digits (for 160) */
-							if (len >= 3 && isdigit(bw_str[len-3]))
+							if (len >= 3 && isdigit((unsigned char)bw_str[len-3]))
 								*nbw = atoi(&bw_str[len - 3]);
 							else
 								*nbw = atoi(&bw_str[len - 2]);
@@ -535,7 +535,7 @@ int wlhelper_foreach_station(const char *ifname, int phy,
 			if (sscanf(line, "Station %17s", mac_lower) == 1) {
 				/* Convert to uppercase */
 				for (int i = 0; mac_lower[i] && i < sizeof(current_station.mac) - 1; i++) {
-					current_station.mac[i] = toupper(mac_lower[i]);
+					current_station.mac[i] = toupper((unsigned char)mac_lower[i]);
 				}
 				current_station.mac[17] = '\0';
 				field_index++;
