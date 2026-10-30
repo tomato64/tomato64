@@ -41,6 +41,12 @@ void start_snmp(void)
 		descr = nvram_safe_get("snmp_descr");
 		ro = nvram_safe_get("snmp_ro");
 
+		if (strpbrk(location, "\r\n") || strpbrk(contact, "\r\n") || strpbrk(name, "\r\n") || strpbrk(descr, "\r\n") || strpbrk(ro, "\r\n")) {
+			syslog(LOG_ERR, "SNMP: invalid configuration value contains a line break");
+			fclose(fp);
+			return;
+		}
+
 		fprintf(fp, "agentaddress udp:%d\n"
 		            "sysLocation %s\n"
 		            "sysContact %s\n"
