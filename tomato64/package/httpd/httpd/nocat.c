@@ -35,6 +35,11 @@ void wi_uploadsplash(char *url, int len, char *boundary)
 	if (!skip_header(&len))
 		goto ERROR;
 
+	if (!boundary || !*boundary) {
+		error = "Invalid multipart boundary";
+		goto ERROR;
+	}
+
 	if ((len < 64) || (len > (NVRAM_SPACE * 2))) {
 		error = "Invalid file";
 		goto ERROR;
@@ -58,16 +63,14 @@ void wi_uploadsplash(char *url, int len, char *boundary)
 	len = 0;
 
 	/* ensure boundary trimming is safe */
-	if (boundary) {
-		blen = strlen(boundary) + 6;
-		if (n <= blen) {
-			error = "Invalid file";
-			goto ERROR;
-		}
-		n -= blen;
+	blen = strlen(boundary) + 6;
+	if (n <= blen) {
+		error = "Invalid file";
+		goto ERROR;
 	}
+	n -= blen;
 
-	syslog(LOG_INFO, "boundary %s, len %d", boundary, strlen(boundary));
+	syslog(LOG_INFO, "boundary %s, len %zu", boundary, strlen(boundary));
 
 	if ((p = nvram_get("NC_DocumentRoot")) == NULL)
 		p = "/tmp/splashd";
