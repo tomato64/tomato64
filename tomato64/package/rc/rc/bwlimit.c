@@ -288,6 +288,7 @@ void start_bwlimit(void)
 	char *dlrate, *dlceil;		/* guaranteed rate & maximum rate for download */
 	char *ulrate, *ulceil;		/* guaranteed rate & maximum rate for upload */
 	char *priority;			/* priority */
+	char priority_buf[12];
 	char *tcplimit, *udplimit;	/* tcp connection limit & udp packets per second */
 	char *description;		/* description */
 	char *enabled;
@@ -396,7 +397,8 @@ void start_bwlimit(void)
 
 		/* increment the priority number by 1 because for filters prio = 0 will make it lowest priority */
 		priority_num++;
-		sprintf(priority, "%d", priority_num);
+		snprintf(priority_buf, sizeof(priority_buf), "%d", priority_num);
+		priority = priority_buf;
 
 		address_checker(&address_type, ipaddr_old, ipaddr, sizeof(ipaddr));
 		seq = iSeq * 10;
