@@ -95,6 +95,7 @@ char *trimstr(char *str)
 	return str;
 }
 
+#ifdef TCONFIG_NGINX
 char *splitpath(char *str, char *pathname, size_t pathlen, char *filename, size_t filelen)
 {
 	char *rear;
@@ -130,6 +131,7 @@ char *splitpath(char *str, char *pathname, size_t pathlen, char *filename, size_
 
 	return pathname;
 }
+#endif /* TCONFIG_NGINX */
 
 int is_port(char *str)
 {

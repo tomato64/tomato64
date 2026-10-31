@@ -706,7 +706,9 @@ extern int is_port(char *str);
 extern char *filter_space(char *str);
 extern char* format_port(char *str);
 extern char* trimstr(char *str);
-extern char *splitpath(char *str, char *pathname, size_t pathlen, char *filename, size_t filelen);
+#ifdef TCONFIG_NGINX
+ extern char *splitpath(char *str, char *pathname, size_t pathlen, char *filename, size_t filelen);
+#endif /* TCONFIG_NGINX */
 extern int splitport(char *in_ports, char out_port[MAX_PORTS][PORT_SIZE]);
 extern int is_number(char *a);
 extern int isspacex(char c);
