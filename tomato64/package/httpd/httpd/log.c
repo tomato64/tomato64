@@ -56,14 +56,13 @@ static int readall(FILE *in, char **dataptr, size_t *sizeptr)
 		return READALL_ERROR;
 
 	while (1) {
+		if (used > ((size_t)-1 - READALL_CHUNK - 1)) {
+			free(data);
+			return READALL_TOOMUCH;
+		}
+
 		if ((used + READALL_CHUNK + 1) > size) {
 			size = used + READALL_CHUNK + 1;
-
-			/* Overflow check. Some ANSI C compilers may optimize this away, though. */
-			if (size <= used) {
-				free(data);
-				return READALL_TOOMUCH;
-			}
 
 			temp = realloc(data, size);
 			if (temp == NULL) {
