@@ -200,6 +200,14 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 
 		val = getNVRAMVar("vpnc%d_tunchk", unit);
 		ipchk = (val && *val) ? val : nvram_safe_get("wan_checker");
+		{
+			struct in_addr addr;
+
+			if (inet_pton(AF_INET, ipchk, &addr) != 1) {
+				logmsg(LOG_WARNING, "%s: invalid tunnel check address '%s', using 1.0.0.1", __FUNCTION__, ipchk ? ipchk : "");
+				ipchk = "1.0.0.1";
+			}
+		}
 
 		if ((fp = fopen(buffer, "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
