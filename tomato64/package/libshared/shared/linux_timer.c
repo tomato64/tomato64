@@ -162,14 +162,22 @@ uclock_t uclock()
 }
 
 
-void init_event_queue(int n)
+int init_event_queue(int n)
 {
 	int i;
 	struct itimerval tv;
+	size_t alloc_size;
+
+	if ((n <= 0) || ((size_t)n > ((size_t)-1 / sizeof(struct event))))
+		return -1;
+
+	alloc_size = (size_t)n * sizeof(struct event);
+	event_freelist = (struct event *) malloc(alloc_size);
+	if (!event_freelist)
+		return -1;
 
 	g_maxevents = n;
-	event_freelist = (struct event *) malloc(n * sizeof(struct event));
-	memset(event_freelist, 0, n * sizeof(struct event));
+	memset(event_freelist, 0, alloc_size);
 
 	for (i = 0; i < (n-1); i++)
 		event_freelist[i].next = &event_freelist[i+1];
@@ -194,6 +202,8 @@ void init_event_queue(int n)
 
 	g_granularity = tv.it_interval.tv_usec;
 	signal(SIGALRM, alarm_handler);
+
+	return 0;
 }
 
 #ifndef TOMATO64
@@ -776,7 +786,9 @@ void timer_cancel(timer_t timerid)
 */
 int bcm_timer_module_init(int timer_entries, bcm_timer_module_id *module_id)
 {
-	init_event_queue(timer_entries);
+	if (!module_id || (init_event_queue(timer_entries) != 0))
+		return -1;
+
 	*module_id = (bcm_timer_module_id)event_freelist;
 	return 0;
 }
