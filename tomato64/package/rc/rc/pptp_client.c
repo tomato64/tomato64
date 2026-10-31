@@ -26,6 +26,23 @@
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"pptpc_debug"
 
+static void pptpc_write_pppd_quoted(FILE *fp, const char *option, const char *value)
+{
+	const unsigned char *p;
+
+	fprintf(fp, "%s \"", option);
+	for (p = (const unsigned char *)(value ? value : ""); *p; ++p) {
+		if ((*p == '\\') || (*p == '"'))
+			fputc('\\', fp);
+
+		if ((*p == '\r') || (*p == '\n'))
+			fputc(' ', fp);
+		else
+			fputc(*p, fp);
+	}
+	fputs("\"\n", fp);
+}
+
 
 void start_pptpc(void)
 {
@@ -136,13 +153,13 @@ void start_pptpc(void)
 		if ((p = nvram_get("pptpc_username")) == NULL)
 			ok = 0;
 		else
-			fprintf(fd, "user \"%s\"\n", p);
+			pptpc_write_pppd_quoted(fd, "user", p);
 
 		/* Password */
 		if ((p = nvram_get("pptpc_passwd")) == NULL)
 			ok = 0;
 		else
-			fprintf(fd, "password \"%s\"\n", p);
+			pptpc_write_pppd_quoted(fd, "password", p);
 
 		/* Encryption */
 		/*  0 - Auto, 1 - None,  2 - Maximum (128 bit only), 3 - Required (128 or 40 bit) */
