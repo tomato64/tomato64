@@ -699,17 +699,25 @@ static auth_t auth_check(const char *authorization)
 	const char *u, *p;
 	char* pass;
 	int len;
+	size_t encoded_len;
 
 	/* basic authorization info? */
 	if ((!authorization) || (strncmp(authorization, "Basic ", 6) != 0))
 		return AUTH_NONE;
 
-	/* something's wrong */
-	if (base64_decoded_len(strlen(authorization + 6)) > sizeof(authinfo))
+	encoded_len = strlen(authorization + 6);
+
+	/*
+	 * base64_*() uses int lengths, and authinfo needs one byte left for
+	 * the terminating NUL appended below.
+	 */
+	if ((encoded_len > INT_MAX) || (base64_decoded_len((int)encoded_len) >= sizeof(authinfo)))
 		return AUTH_BAD;
 
 	/* decode it */
-	len = base64_decode(authorization + 6, (unsigned char *)authinfo, strlen(authorization) - 6);
+	len = base64_decode(authorization + 6, (unsigned char *)authinfo, (int)encoded_len);
+	if ((len < 0) || ((size_t)len >= sizeof(authinfo)))
+		return AUTH_BAD;
 	authinfo[len] = '\0';
 
 	/* split into user and password */
