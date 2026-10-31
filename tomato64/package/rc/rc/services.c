@@ -529,6 +529,10 @@ void start_stubby(void)
 		if ((port < 0) || (port > 65535))
 			continue;
 
+		/* quoted/plain YAML fields must not escape into new directives */
+		if ((*hostname && strpbrk(hostname, "\"\\\r\n")) || (*spkipin && strpbrk(spkipin, "\r\n")))
+			continue;
+
 		/* add server */
 		fprintf(fp, "  - address_data: %s\n", server);
 		if (port)
