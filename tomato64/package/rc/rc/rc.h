@@ -204,6 +204,9 @@ extern int ip6down_main(int argc, char **argv);
 extern void start_redial(char *prefix);
 extern void stop_redial(char *prefix);
 extern int redial_main(int argc, char **argv);
+extern int wanlink_main(int argc, char **argv);
+extern void start_wanlink(char *prefix);
+extern void stop_wanlink(char *prefix);
 
 /* wan.c */
 extern void start_pptp(char *prefix);

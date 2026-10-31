@@ -100,7 +100,7 @@ ALL_CFLAGS += -DDEBUG_LOGMSG
 endif
 
 OBJS := rc.o init.o interface.o network.o wan.o services.o dhcp.o \
-	firewall.o ppp.o telssh.o listen.o redial.o \
+	firewall.o ppp.o telssh.o listen.o redial.o wanlink.o \
 	led.o qos.o forward.o misc.o restrict.o \
 	gpio.o sched.o bwlimit.o arpbind.o tomatoanon.o mwan.o pbr.o \
 	dnsmasq.o format.o
@@ -237,6 +237,7 @@ endif
 	@cd $(INSTALLDIR)/sbin && ln -sf rc reboot
 	@cd $(INSTALLDIR)/sbin && ln -sf rc halt
 	@cd $(INSTALLDIR)/sbin && ln -sf rc redial
+	@cd $(INSTALLDIR)/sbin && ln -sf rc wanlink
 
 	@cd $(INSTALLDIR)/sbin && ln -sf rc mwanroute
 

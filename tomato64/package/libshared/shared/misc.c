@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <stdarg.h>
@@ -767,28 +768,13 @@ int wan_led_off(char *prefix) /* off WAN LED only if no other WAN active */
 						close(f);
 						if ((ifr.ifr_flags & IFF_UP) == 0 || (ifr.ifr_flags & IFF_RUNNING) == 0)
 							up = 0;
-						if (proto == WP_STATIC) { /* check port state for static */
+						if ((proto == WP_STATIC) || (proto == WP_DHCP)) {
+							int link = wan_phy_link(wanstr);
 
-							int a;		/* port number: 0/1/2/3/4 */
-							char b[16];	/* port state: DOWN/SPEED */
-							int c;		/* port vlan: 1/2/3/4/etc */
-							FILE *f = NULL;
-
-							int vlannum = atoi(&ifr.ifr_name[4]); /* trim vlan */
-/* Skip  this test in T64 for now */
-#ifndef TOMATO64
-							if ((f = popen("/usr/sbin/robocfg showports", "r")) != NULL) {
-								while (fgets(tmp, sizeof(tmp), f)) {
-									if (sscanf(tmp, "Port %d: %15s %*s %*s %*s vlan: %d %*s", &a, b, &c) == 3) {
-										if ((strncmp(b, "DOWN", 4) == 0) && (c == vlannum)) {
-											logmsg(LOG_DEBUG, "*** %s: state = DOWN for vlan%d", __FUNCTION__, vlannum);
-											up = 0;
-										}
-									}
-								}
-								pclose(f);
+							if (link == 0) {
+								logmsg(LOG_DEBUG, "*** %s: physical Ethernet link DOWN for %s", __FUNCTION__, wanstr);
+								up = 0;
 							}
-#endif /* TOMATO64 */
 						}
 					}
 				}
@@ -845,6 +831,134 @@ long check_wanup_time(char *prefix)
 
 	return wanuptime;
 }
+
+int get_wan_phy_port(char *prefix)
+{
+	char ifname[IFNAMSIZ], ports_var[32], ports_buf[128], router_name[64], tmp[128];
+	char *token, *last_token = NULL, *saveptr = NULL;
+	int vport = 0, vport_last = 0, i;
+#ifdef TCONFIG_BCMARM
+	/* ARM routers with WAN on Port 4 */
+	static const char *port4_routers[] = { "Netgear AC1450", "Netgear R6200v2", "Netgear R6250",
+	                                       "Netgear R6300v2", "RT-AC56U", "RT-AC56S", "RT-AC3100",
+	                                       "RT-AC88U", "DIR868L", "EA6200", "EA6350v1", "EA6350v2",
+	                                       "EA6400", "EA6500v2", "EA6700", "R7900", "R8000", NULL
+	                                     };
+#else
+	/* MIPS routers with WAN on Port 4 */
+	static const char *port4_routers[] = { "RT-N10P", "RT-N12 A1", "RT-N12 B1", "RT-N12 C1", "RT-N12 D1",
+	                                       "RT-N12 HP", "RT-N15U", "RT-N53", "RT-N53 A1",
+	                                       "Share Max N300 (F7D3301/F7D7301) v1",
+	                                       "Play Max / N600 HD (F7D4301/F7D8301) v1", "WNDR3400",
+	                                       "WNDR3400v2", "WNDR3400v3", "R6300 V1",
+	                                       "Share N300 (F7D3302/F7D7302) v1",
+	                                       "Play N600 (F7D4302/F7D8302) v1", "N600 DB Wireless N+",
+	                                       "Dir-620 C1", "E800 v1.0", "E900 v1.0", "E1200 v1.0",
+	                                       "E1200 v2.0", "E1500 v1.0", "E1550 v1.0", "E2500 v1.0",
+	                                       "E2500 v1/v2/v3", "E3200 v1.0", "E4200 v1", "WNDR3700v3",
+	                                       "WNDR4000", "WNDR4500 V1", "WNDR4500 V2", NULL
+	                                     };
+#endif
+
+	strlcpy(ifname, prefix_nvram_get(prefix, "ifname", tmp, sizeof(tmp)), sizeof(ifname));
+	if (!*ifname || (strcmp(ifname, "none") == 0))
+		return -1;
+
+	if (snprintf(ports_var, sizeof(ports_var), "%sports", ifname) >= (int)sizeof(ports_var))
+		return -1;
+
+	strlcpy(ports_buf, nvram_safe_get(ports_var), sizeof(ports_buf));
+	token = strtok_r(ports_buf, " \t", &saveptr);
+
+	if (token) {
+		while (*token && !isdigit((unsigned char)*token))
+			token++;
+		if (*token)
+			vport = atoi(token);
+		else
+			token = NULL;
+
+		last_token = token;
+		while ((token = strtok_r(NULL, " \t", &saveptr)) != NULL)
+			last_token = token;
+
+		if (last_token) {
+			while (*last_token && !isdigit((unsigned char)*last_token))
+				last_token++;
+			if (*last_token)
+				vport_last = atoi(last_token);
+		}
+	}
+
+	/*
+	 * A secondary WAN has no model-specific dedicated-port fallback.
+	 * A single vlanXports entry is therefore already an explicit mapping
+	 * (for example "1") and must not be rejected merely because there is
+	 * no CPU-port token in that NVRAM value.
+	 */
+	if (strcmp(prefix, "wan") != 0)
+		return last_token ? vport : -1;
+
+	/*
+	 * Preserve the historical primary-WAN mapping used by
+	 * asp_etherstates(): some board defaults don't expose both external
+	 * and CPU switch ports, so an absent/single-entry mapping falls back
+	 * to the model's dedicated WAN port.
+	 */
+	if (!last_token || (vport_last == vport) || (vport_last == 0)) {
+		strlcpy(router_name, nvram_safe_get("t_fix1"), sizeof(router_name));
+		for (i = 0; port4_routers[i]; i++) {
+			if (strcmp(router_name, port4_routers[i]) == 0)
+				return 4;
+		}
+		return 0;
+	}
+
+	return vport;
+}
+
+
+/*
+ * Return the physical Ethernet link state for a WAN switch port.
+ *
+ *  1 = link up
+ *  0 = link down
+ * -1 = state cannot be determined
+ *
+ * Broadcom VLAN netdevs stay IFF_RUNNING while the external switch port is
+ * unplugged, so SIOCGIFFLAGS alone cannot detect a modem/cable link loss.
+ */
+int wan_phy_link(char *prefix)
+{
+	char line[128], state[16], tmp[32];
+	int port, wan_port;
+	FILE *f;
+
+	/* Wireless-client WANs have no physical switch carrier to monitor. */
+	if (*prefix_nvram_get(prefix, "sta", tmp, sizeof(tmp)))
+		return -1;
+
+	wan_port = get_wan_phy_port(prefix);
+	if (wan_port < 0)
+		return -1;
+
+	if ((f = popen("/usr/sbin/robocfg showports 2>/dev/null", "r")) == NULL)
+		return -1;
+
+	while (fgets(line, sizeof(line), f)) {
+		if (sscanf(line, "Port %d: %15s", &port, state) != 2)
+			continue;
+		if (port != wan_port)
+			continue;
+
+		pclose(f);
+		return (strncmp(state, "DOWN", 4) == 0) ? 0 : 1;
+	}
+
+	pclose(f);
+	return -1;
+}
+
 
 int check_wanup(char *prefix)
 {
@@ -921,45 +1035,13 @@ int check_wanup(char *prefix)
 			logmsg(LOG_DEBUG, "*** %s: !IFF_UP || !IFF_RUNNING", __FUNCTION__);
 		}
 
-		if (proto == WP_STATIC) {
-			/* Ethernet WAN port state checker (static IF is always UP and RUNNING)
-			   ifr.ifr_name = vlan2, vlan3 etc
-			   nvram get vlan2ports
-			   4 5
-			   nvram get vlan3ports
-			   1 5
-			   robocfg showports
-			   Switch: enabled
-			   Port 0: 1000FD enabled stp: none vlan: 1 jumbo: off mac: 00:00:80:00:00:00
-			   Port 1:   DOWN enabled stp: none vlan: 3 jumbo: off mac: 00:00:00:00:00:00
-			   Port 2:   DOWN enabled stp: none vlan: 1 jumbo: off mac: 00:00:00:00:00:00
-			   Port 3:   DOWN enabled stp: none vlan: 1 jumbo: off mac: 00:00:00:00:00:00
-			   Port 4:  100FD enabled stp: none vlan: 2 jumbo: off mac: 00:00:00:00:00:00
-			   Port 8:   DOWN enabled stp: none vlan: 1 jumbo: off mac: 00:00:00:00:00:00
-			*/
+		if ((proto == WP_STATIC) || (proto == WP_DHCP)) {
+			int link = wan_phy_link(prefix);
 
-			int a;		/* port number: 0/1/2/3/4 */
-			char b[16];	/* port state: DOWN/SPEED */
-			int c;		/* port vlan: 1/2/3/4/etc */
-			FILE *f;
-
-			int vlannum = atoi(&ifr.ifr_name[4]); /* trim vlan */
-			logmsg(LOG_DEBUG, "*** %s: %s vlan num: %d", __FUNCTION__, prefix, vlannum);
-
-/* Skip  this test in T64 for now */
-#ifndef TOMATO64
-			if ((f = popen("/usr/sbin/robocfg showports", "r")) != NULL) {
-				while (fgets(tmp, sizeof(tmp), f)) {
-					if (sscanf(tmp, "Port %d: %15s %*s %*s %*s vlan: %d %*s", &a, b, &c) == 3) {
-						if ((strncmp(b, "DOWN", 4) == 0) && (c == vlannum)) {
-							logmsg(LOG_DEBUG, "*** %s: port state = DOWN for vlan%d", __FUNCTION__, vlannum);
-							up = 0;
-						}
-					}
-				}
-				pclose(f);
+			if (link == 0) {
+				logmsg(LOG_DEBUG, "*** %s: physical Ethernet link DOWN for %s", __FUNCTION__, prefix);
+				up = 0;
 			}
-#endif /* TOMATO64 */
 		}
 	}
 

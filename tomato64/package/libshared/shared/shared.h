@@ -214,6 +214,8 @@ extern int using_dhcpc(char *prefix);
 extern void notice_set(const char *path, const char *format, ...);
 extern int wan_led(int mode);
 extern int wan_led_off(char *prefix);
+extern int get_wan_phy_port(char *prefix);
+extern int wan_phy_link(char *prefix);
 extern int check_wanup(char *prefix);
 extern long check_wanup_time(char *prefix);
 extern const dns_list_t *get_dns(char *prefix);

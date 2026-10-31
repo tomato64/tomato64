@@ -978,6 +978,9 @@ void start_wan_if(char *prefix)
 		break;
 	}
 
+	/* Monitor physical carrier for Ethernet DHCP WANs. */
+	start_wanlink(prefix);
+
 	/* Get current WAN hardware address */
 	strlcpy(ifr.ifr_name, wan_ifname, IFNAMSIZ);
 	if (ioctl(sd, SIOCGIFHWADDR, &ifr) == 0)
@@ -1359,6 +1362,7 @@ void stop_wan_if(char *prefix)
 #endif
 
 	/* Kill any WAN client daemons or callbacks */
+	stop_wanlink(prefix);
 	stop_redial(prefix);
 	stop_l2tp(prefix); /* Special case for xl2tpd */
 	stop_ppp(prefix); /* One for all */
