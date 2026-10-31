@@ -455,6 +455,9 @@ download() {
 	logi "Whitelisting domains used in other parts of FreshTomato"
 	# System domains:
 	subsed="freshtomato.org groov.pl linksysinfo.org"
+# TOMATO64-BEGIN
+	subsed="$subsed tomato64.org"
+# TOMATO64-END
 	# TTB
 	subsed="$subsed tomatothemebase.eu"
 	for i in $(NG "ttb_url" | tr " " "\n" | domain); do subsed="$subsed ${i}"; done
