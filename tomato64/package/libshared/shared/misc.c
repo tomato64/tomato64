@@ -1356,18 +1356,29 @@ int nvram_get_file(const char *key, const char *fname, int max)
 	int n;
 	char *p;
 	unsigned char *b;
+	unsigned int decoded_max;
+	size_t input_len;
 	int r;
+
+	if (max < 0)
+		return 0;
 
 	r = 0;
 	p = nvram_safe_get(key);
-	n = strlen(p);
-	if (n <= max) {
-		if ((b = malloc(base64_decoded_len(n) + 128)) != NULL) {
-			n = base64_decode(p, b, n);
-			if (n > 0)
-				r = (f_write(fname, b, n, 0, 0644) == n);
-			free(b);
-		}
+	input_len = strlen(p);
+	if ((input_len > (size_t)max) || (input_len > INT_MAX))
+		return 0;
+
+	n = (int)input_len;
+	decoded_max = base64_decoded_len(n);
+	if ((decoded_max == 0) && (n != 0))
+		return 0;
+
+	if ((b = malloc(decoded_max ? (size_t)decoded_max : 1)) != NULL) {
+		n = base64_decode(p, b, n);
+		if ((n > 0) && ((unsigned int)n <= decoded_max))
+			r = (f_write(fname, b, n, 0, 0644) == n);
+		free(b);
 	}
 	return r;
 /*
@@ -1389,22 +1400,33 @@ int nvram_set_file(const char *key, const char *fname, int max)
 {
 	char *in;
 	char *out;
-	long len;
+	unsigned long file_len;
+	unsigned int encoded_max;
 	int n;
 	int r;
 
-	if ((len = f_size(fname)) > max)
+	if (max < 0)
 		return 0;
 
-	max = (int)len;
+	file_len = f_size(fname);
+	if ((file_len == (unsigned long)-1) || (file_len > (unsigned long)max))
+		return 0;
+
+	max = (int)file_len;
+	encoded_max = base64_encoded_len(max);
+	if ((encoded_max == 0) && (max != 0))
+		return 0;
+
 	r = 0;
 	if (f_read_alloc(fname, &in, max) == max) {
-		if ((out = malloc(base64_encoded_len(max) + 128)) != NULL) {
+		if ((out = malloc((size_t)encoded_max + 1)) != NULL) {
 			n = base64_encode((unsigned char *)in, out, max);
-			out[n] = 0;
-			nvram_set(key, out);
+			if ((n >= 0) && ((unsigned int)n <= encoded_max)) {
+				out[n] = '\0';
+				nvram_set(key, out);
+				r = 1;
+			}
 			free(out);
-			r = 1;
 		}
 		free(in);
 	}
