@@ -40,6 +40,7 @@ define RC_INSTALL_TARGET_CMDS
 	ln -sf rc $(TARGET_DIR)/sbin/fast-reboot
 	ln -sf rc $(TARGET_DIR)/sbin/halt
 	ln -sf rc $(TARGET_DIR)/sbin/redial
+	ln -sf rc $(TARGET_DIR)/sbin/wanlink
 	ln -sf rc $(TARGET_DIR)/sbin/mwanroute
 	ln -sf rc $(TARGET_DIR)/sbin/gpio
 	ln -sf rc $(TARGET_DIR)/sbin/sched

@@ -930,14 +930,22 @@ int get_wan_phy_port(char *prefix)
  */
 int wan_phy_link(char *prefix)
 {
+#ifndef TOMATO64
 	char line[128], state[16], tmp[32];
 	int port, wan_port;
 	FILE *f;
+#else
+	struct ifreq ifr;
+	char tmp[32];
+	char *ifname;
+	int s, r;
+#endif /* TOMATO64 */
 
 	/* Wireless-client WANs have no physical switch carrier to monitor. */
 	if (*prefix_nvram_get(prefix, "sta", tmp, sizeof(tmp)))
 		return -1;
 
+#ifndef TOMATO64
 	wan_port = get_wan_phy_port(prefix);
 	if (wan_port < 0)
 		return -1;
@@ -957,6 +965,26 @@ int wan_phy_link(char *prefix)
 
 	pclose(f);
 	return -1;
+#else
+	/* IFF_RUNNING tracks the WAN netdev's carrier; SIOCGIFFLAGS is lockless,
+	 * unlike sysfs carrier, which spins while RTNL is held */
+	ifname = prefix_nvram_get(prefix, "ifname", tmp, sizeof(tmp));
+	if (!*ifname || (strcmp(ifname, "none") == 0) || (strlen(ifname) >= sizeof(ifr.ifr_name)))
+		return -1;
+
+	if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+		return -1;
+
+	memset(&ifr, 0, sizeof(ifr));
+	strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+	r = ioctl(s, SIOCGIFFLAGS, &ifr);
+	close(s);
+
+	if ((r < 0) || ((ifr.ifr_flags & IFF_UP) == 0))
+		return -1;
+
+	return (ifr.ifr_flags & IFF_RUNNING) ? 1 : 0;
+#endif /* TOMATO64 */
 }
 
 
