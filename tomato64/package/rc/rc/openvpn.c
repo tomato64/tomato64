@@ -1083,8 +1083,15 @@ void start_ovpn_server(int unit)
 		}
 
 		if (atoi(getNVRAMVar("vpns%d_pdns", unit))) {
-			if (nvram_safe_get("wan_domain")[0] != '\0')
-				fprintf(fp, "push \"dhcp-option DOMAIN %s\"\n", nvram_safe_get("wan_domain"));
+			const char *wan_domain = nvram_safe_get("wan_domain");
+
+			if (wan_domain[0] != '\0') {
+				if (strpbrk(wan_domain, "\"\\\r\n")) {
+					logmsg(LOG_WARNING, "OpenVPN server %d: ignoring unsafe wan_domain", unit);
+				}
+				else
+					fprintf(fp, "push \"dhcp-option DOMAIN %s\"\n", wan_domain);
+			}
 			if ((nvram_safe_get("wan_wins")[0] != '\0' && strcmp(nvram_safe_get("wan_wins"), "0.0.0.0") != 0))
 				fprintf(fp, "push \"dhcp-option WINS %s\"\n", nvram_safe_get("wan_wins"));
 
