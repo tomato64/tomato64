@@ -479,6 +479,28 @@ static void load_new(void)
 	unlink(hgz);
 }
 
+#ifdef TOMATO64
+/*
+ * /cifs1 and /cifs2 exist in the root filesystem whether or not the share
+ * is mounted. With a writable root an unmounted one passes the writable
+ * directory test, so a new history would be written under the mount point
+ * and later saved over the real one on the share. Treat it as not ready
+ * until something is mounted there.
+ */
+static int unmounted_cifs_dir(const char *dir)
+{
+	struct stat st_dir, st_root;
+
+	if (strcmp(dir, "/cifs1") && strcmp(dir, "/cifs2"))
+		return 0;
+
+	if ((stat(dir, &st_dir) != 0) || (stat("/", &st_root) != 0))
+		return 1;
+
+	return (st_dir.st_dev == st_root.st_dev);
+}
+#endif /* TOMATO64 */
+
 static void load(int new)
 {
 	int i, n;
@@ -554,6 +576,9 @@ static void load(int new)
 						else
 							*slash = '\0';
 
+#ifdef TOMATO64
+						if (!unmounted_cifs_dir(parent))
+#endif /* TOMATO64 */
 						if (d_exists(parent) && (access(parent, W_OK) == 0)) {
 							logmsg(LOG_INFO, "History file %s does not exist; creating a new one", save_path);
 							save_utime = 0;
