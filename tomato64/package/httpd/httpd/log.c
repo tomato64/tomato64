@@ -230,8 +230,8 @@ static void webmon_list(char *name, int webmon, unsigned int maxcount)
 	char *js, *data, *line, *lineStart, *line_start, *current_end;
 	unsigned long time;
 	unsigned int lines_processed;
-	int readall_ok, length;
-	size_t filesize, pos;
+	int readall_ok;
+	size_t filesize, pos, length;
 	char comma = ' ';
 
 	web_printf("\nwm_%s = [", name);
