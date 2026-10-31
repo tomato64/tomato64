@@ -137,6 +137,43 @@ static void get_logfilename(char *lfn, size_t buf_sz)
  * Rejects shell metacharacters to prevent injection via the grep command.
  * Returns 1 if safe, 0 if not.
  */
+static char *shell_quote_arg_alloc(const char *src)
+{
+	const char *p;
+	char *dst, *q;
+	size_t len = 3; /* opening quote, closing quote, NUL */
+
+	if (!src)
+		return NULL;
+
+	for (p = src; *p; ++p) {
+		size_t add = (*p == '\'') ? 4 : 1;
+
+		if (len > (size_t)-1 - add)
+			return NULL;
+		len += add;
+	}
+
+	dst = malloc(len);
+	if (!dst)
+		return NULL;
+
+	q = dst;
+	*q++ = '\'';
+	for (p = src; *p; ++p) {
+		if (*p == '\'') {
+			memcpy(q, "'\\''", 4);
+			q += 4;
+		}
+		else
+			*q++ = *p;
+	}
+	*q++ = '\'';
+	*q = '\0';
+
+	return dst;
+}
+
 static int filter_is_safe(const char *s)
 {
 	static const char *unsafe = "<>|\"\\`$;!&(){}*?~#";
@@ -155,8 +192,9 @@ static int filter_is_safe(const char *s)
 
 void wo_viewlog(char *url)
 {
-	char lfn[256], s[256];
-	char *w;
+	char lfn[256];
+	char *qlfn = NULL, *s = NULL, *w;
+	size_t cmd_sz;
 	int logLines;
 	const char *find;
 
@@ -164,9 +202,13 @@ void wo_viewlog(char *url)
 		return;
 
 	get_logfilename(lfn, sizeof(lfn));
-
-	if ((w = webcgi_get("which")) == NULL)
+	if ((qlfn = shell_quote_arg_alloc(lfn)) == NULL)
 		return;
+
+	if ((w = webcgi_get("which")) == NULL) {
+		free(qlfn);
+		return;
+	}
 
 	/* parse and clamp logLines - compute atoi once */
 	if (strcmp(w, "all") == 0)
@@ -186,32 +228,50 @@ void wo_viewlog(char *url)
 		/* validate filter string before passing to shell.
 		 * use fgrep -F (fixed string, no regex) to prevent regex injection.
 		 */
-		if (!filter_is_safe(find))
+		if (!filter_is_safe(find)) {
+			free(qlfn);
 			return;
+		}
 
-		snprintf(s, sizeof(s), "fgrep -ih -F \"%s\" $(ls -1rv %s %s.* 2>/dev/null) 2>/dev/null | tail -n %d", find, lfn, lfn, logLines);
+		cmd_sz = (strlen(qlfn) * 2) + strlen(find) + 128;
+		s = malloc(cmd_sz);
+		if (s)
+			snprintf(s, cmd_sz, "fgrep -ih -F \"%s\" $(ls -1rv %s %s.* 2>/dev/null) 2>/dev/null | tail -n %d", find, qlfn, qlfn, logLines);
 	}
 	else {
-		snprintf(s, sizeof(s), "cat $(ls -1rv %s %s.* 2>/dev/null) | tail -n %d", lfn, lfn, logLines);
+		cmd_sz = (strlen(qlfn) * 2) + 96;
+		s = malloc(cmd_sz);
+		if (s)
+			snprintf(s, cmd_sz, "cat $(ls -1rv %s %s.* 2>/dev/null) | tail -n %d", qlfn, qlfn, logLines);
 	}
 
-	web_pipecmd(s, WOF_NONE);
+	if (s)
+		web_pipecmd(s, WOF_NONE);
+
+	free(s);
+	free(qlfn);
 }
 
 void asp_showsyslog(int argc, char **argv)
 {
-	char lfn[256], s[256];
+	char lfn[256];
+	char *qlfn = NULL, *s = NULL;
+	size_t cmd_sz;
 	int logLines = MAX_LOG_LINES;
 
 	if (!logok())
 		return;
 
 	get_logfilename(lfn, sizeof(lfn));
+	if ((qlfn = shell_quote_arg_alloc(lfn)) == NULL)
+		return;
 
 	if (argc > 1) {
 		logLines = atoi(argv[1]);
-		if (logLines <= 0)
+		if (logLines <= 0) {
+			free(qlfn);
 			return;
+		}
 		if (logLines > MAX_LOG_LINES)
 			logLines = MAX_LOG_LINES;
 	}
@@ -219,8 +279,15 @@ void asp_showsyslog(int argc, char **argv)
 	asp_time(0, 0); /* get current time and print in the first line */
 	web_puts("\n");
 
-	snprintf(s, sizeof(s), "cat $(ls -1rv %s %s.* 2>/dev/null) | tail -n %d", lfn, lfn, logLines);
-	web_pipecmd(s, WOF_NONE);
+	cmd_sz = (strlen(qlfn) * 2) + 96;
+	s = malloc(cmd_sz);
+	if (s) {
+		snprintf(s, cmd_sz, "cat $(ls -1rv %s %s.* 2>/dev/null) | tail -n %d", qlfn, qlfn, logLines);
+		web_pipecmd(s, WOF_NONE);
+	}
+
+	free(s);
+	free(qlfn);
 }
 
 static void webmon_list(char *name, int webmon, unsigned int maxcount)
