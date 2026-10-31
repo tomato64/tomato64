@@ -247,7 +247,7 @@ extern void nvram_commit_x(void);
 extern char *getNVRAMVar(const char *text, const int unit);
 extern int mtd_getinfo(const char *mtdname, int *part, int *size);
 extern int foreach_wif(int include_vifs, void *param, int (*func)(int idx, int unit, int subunit, void *param));
-extern void gen_urandom(char *buf1, unsigned char *buf2, size_t buf_sz, const unsigned int addtid);
+extern int gen_urandom(char *buf1, unsigned char *buf2, size_t buf_sz, const unsigned int addtid);
 
 /* usb.c */
 #ifdef TCONFIG_USB

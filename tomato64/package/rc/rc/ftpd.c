@@ -245,7 +245,11 @@ void start_ftpd(int force)
 
 		/* does a valid HTTPD cert exist? if not, generate one */
 		if ((!f_exists("/etc/cert.pem")) || (!f_exists("/etc/key.pem"))) {
-			gen_urandom(t, NULL, sizeof(t), 0);
+			if (!gen_urandom(t, NULL, sizeof(t), 0)) {
+				logmsg(LOG_CRIT, "unable to read /dev/urandom for certificate generation");
+				fclose(fp);
+				return;
+			}
 			nvram_set("https_crt_gen", "1");
 			nvram_set("https_crt_save", "1");
 			eval("gencert.sh", t);

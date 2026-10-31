@@ -55,8 +55,8 @@ static void start_wsdd(void)
 
 	stop_wsdd();
 
-	if (!ether_atoe(nvram_safe_get("lan_hwaddr"), ea))
-		gen_urandom(NULL, ea, ETHER_ADDR_LEN, 0);
+	if (!ether_atoe(nvram_safe_get("lan_hwaddr"), ea) && !gen_urandom(NULL, ea, ETHER_ADDR_LEN, 0))
+		memset(ea, 0, sizeof(ea));
 
 	snprintf(serial, sizeof(serial), "%02x%02x%02x%02x%02x%02x", ea[0], ea[1], ea[2], ea[3], ea[4], ea[5]);
 

@@ -31,7 +31,10 @@ void create_passwd(void)
 	char *smbd_user;
 #endif
 	strlcpy(salt, "$1$", sizeof(salt));
-	gen_urandom(NULL, buf, 6, 0);
+	if (!gen_urandom(NULL, buf, 6, 0)) {
+		logmsg(LOG_CRIT, "unable to read /dev/urandom for password salt");
+		return;
+	}
 	base64_encode(buf, salt + 3, 6);
 	salt[3 + 8] = 0;
 	p = salt;

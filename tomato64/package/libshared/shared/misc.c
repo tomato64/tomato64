@@ -1480,19 +1480,30 @@ void chld_reap(int sig)
 	while (waitpid(-1, NULL, WNOHANG) > 0) {}
 }
 
-void gen_urandom(char *buf1, unsigned char *buf2, size_t buf_sz, const unsigned int addtid)
+int gen_urandom(char *buf1, unsigned char *buf2, size_t buf_sz, const unsigned int addtid)
 {
-	unsigned long long sn = 0;
+	unsigned long long sn;
+
+	if (!buf_sz || (!buf1 && !buf2))
+		return 0;
 
 	if (buf1) {
-		f_read("/dev/urandom", &sn, sizeof(sn));
+		if (f_read("/dev/urandom", &sn, sizeof(sn)) != (int)sizeof(sn)) {
+			buf1[0] = '\0';
+			return 0;
+		}
+
 		if (addtid)
 			snprintf(buf1, buf_sz, "TID%llx", sn);
 		else
 			snprintf(buf1, buf_sz, "%llu", sn & 0x7FFFFFFFFFFFFFFFULL);
 	}
 	else {
-		memset((char *)buf2, 0, buf_sz);
-		f_read("/dev/urandom", buf2, buf_sz);
+		if ((buf_sz > INT_MAX) || (f_read("/dev/urandom", buf2, (int)buf_sz) != (int)buf_sz)) {
+			memset(buf2, 0, buf_sz);
+			return 0;
+		}
 	}
+
+	return 1;
 }

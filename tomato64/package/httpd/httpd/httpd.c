@@ -1437,7 +1437,11 @@ static void start_ssl(void)
 				logmsg(LOG_INFO, "generating SSL certificate...");
 
 				/* browsers seem to like this when the ip address moves... */
-				gen_urandom(t, NULL, sizeof(t), 0);
+				if (!gen_urandom(t, NULL, sizeof(t), 0)) {
+					logmsg(LOG_CRIT, "unable to read /dev/urandom for certificate generation");
+					file_unlock(lock);
+					return;
+				}
 				eval("gencert.sh", t);
 			}
 		}
@@ -1470,7 +1474,10 @@ static void init_id(void)
 	char s[128];
 
 	if (strncmp(nvram_safe_get("http_id"), "TID", 3) != 0) {
-		gen_urandom(s, NULL, sizeof(s), 1);
+		if (!gen_urandom(s, NULL, sizeof(s), 1)) {
+			logmsg(LOG_CRIT, "unable to initialize HTTP request token from /dev/urandom");
+			exit(1);
+		}
 		nvram_set("http_id", s);
 	}
 
