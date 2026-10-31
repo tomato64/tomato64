@@ -4,7 +4,7 @@
 
 . nvram_ops
 
-ver="v2.72i - 10/13" # rs232, pedro
+ver="v2.72j - 10/13" # rs232, pedro
 PID=$$
 pidfile="/var/run/adblock.pid"
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
@@ -531,10 +531,30 @@ download() {
 	subsed="$subsed ^localhost$" # exact hostname only; do not whitelist unrelated localhost.* domains
 	[ $LOGL -eq 7 ] && echo $subsed >/tmp/adblock.subsed
 
-	# Whitelisting phase A = Removing whitelisted domains (full match) and formatting the file for dnsmasq
-	sed -i -e "/$(echo $subsed | sed 's/ /\\|/g')/d" -e '/^$/d' -e "s/.*/local=\/&\//" $TM 2>/dev/null
+	# Whitelisting phase A = Remove normal whitelist roots and their subdomains.
+	# Treat whitelist entries as domain data, not as regular expressions.
+	# Strict (%domain) entries are intentionally handled by phases B/C below.
+	echo "$subsed" | tr " " "\n" | grep -v '^%' | domain | sort -u > "$PREFIX/adblock.white"
+	[ -s "$PREFIX/adblock.white" ] && {
+		awk 'NR == FNR { white[$0] = 1; next }
+		     {
+		       d = $0
+		       while (d != "") {
+		         if (d in white)
+		           next
+		         p = index(d, ".")
+		         if (p == 0)
+		           break
+		         d = substr(d, p + 1)
+		       }
+		       print
+		     }' "$PREFIX/adblock.white" "$TM" > "$TM1" && mv -f "$TM1" "$TM"
+	}
+	rm -f "$PREFIX/adblock.white"
+	# localhost is not a DNS domain accepted by the domain extractor above.
+	sed -i -e '/^localhost$/d' -e '/^$/d' -e "s/.*/local=\/&\//" "$TM" 2>/dev/null
 	# Whitelisting phase B = Add exceptions for whitelisted subdomains whose parent domain is blacklisted
-	whitish=$(echo $subsed | tr " " "\n" | grep -E '^[0-9a-z]|^%[0-9a-z]' | sed 's/^%//' | grep -E '^[^.]+\.([^.]+\.)+[^.]*$' | sort -u | while read k; do for p in $(w=$(echo $k | grep -Eo '\.\w.*+' | cut -c2-50) && cat $TM | grep "$w" | grep -Eo $w | sort -u ); do [ ! -z $k ] && { echo "$k";} ; done ;done)
+	whitish=$(echo $subsed | tr " " "\n" | grep -E '^[0-9a-z]|^%[0-9a-z]' | sed 's/^%//' | grep -E '^[^.]+\.([^.]+\.)+[^.]*$' | sort -u | while read k; do for p in $(w=$(echo "$k" | cut -d. -f2- | cut -c1-50) && grep -F "$w" "$TM" | grep -Fo "$w" | sort -u ); do [ ! -z "$k" ] && { echo "$k";} ; done ;done)
 	[ $LOGL -eq 7 ] && echo $whitish >/tmp/adblock.whitish
 	echo ${whitish} | grep -vq ^$ && { echo ${whitish} | tr " " "\n" | grep -v ^$ | while read l; do echo "server=/$l/#" >> $TM ; done ;}
 	# Whitelisting phase C = Handle strict whitelisted domains (don't allow any subdomain resolution)
