@@ -94,10 +94,14 @@ int _web_printf(wofilter_t wof, const char *format, ...)
 {
 	va_list args;
 	char *b, *p;
-	int size, n;
+	int n;
+	size_t size = 1024;
+	const size_t max_size = 10 * 1024;
 
-	size = 1024;
 	while (1) {
+		if (size > max_size)
+			return 0;
+
 		if ((b = malloc(size)) == NULL)
 			return 0;
 
@@ -106,7 +110,7 @@ int _web_printf(wofilter_t wof, const char *format, ...)
 		va_end(args);
 
 		if (n > -1) {
-			if (n < size) {
+			if ((size_t)n < size) {
 				switch (wof) {
 				case WOF_JAVASCRIPT:
 					p = js_string(b);
@@ -125,14 +129,18 @@ int _web_printf(wofilter_t wof, const char *format, ...)
 				free(p);
 				return 1;
 			}
-			size = n + 1;
-		}
-		else
-			size *= 2;
 
-		free(b);
-		if (size > (10 * 1024))
-			return 0;
+			free(b);
+			size = (size_t)n + 1;
+			if (size > max_size)
+				return 0;
+		}
+		else {
+			free(b);
+			if (size > max_size / 2)
+				return 0;
+			size *= 2;
+		}
 	}
 }
 
