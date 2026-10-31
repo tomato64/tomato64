@@ -106,7 +106,11 @@ static int _pidof(const char *name, pid_t **pids)
 	if ((p = strrchr(name, '/')) != NULL)
 		altname = p + 1;
 
-	if ((dir = opendir("/proc")) != NULL) {
+	dir = opendir("/proc");
+	if (dir == NULL)
+		return 0;
+
+	{
 		while ((de = readdir(dir)) != NULL) {
 			i = strtol(de->d_name, &e, 10);
 			if (*e != 0)
