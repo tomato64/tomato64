@@ -232,7 +232,7 @@ static void webmon_list(char *name, int webmon, unsigned int maxcount)
 	unsigned long time;
 	unsigned int lines_processed;
 	int readall_ok, length;
-	size_t filesize;
+	size_t filesize, pos;
 	char comma = ' ';
 
 	web_printf("\nwm_%s = [", name);
@@ -253,7 +253,10 @@ static void webmon_list(char *name, int webmon, unsigned int maxcount)
 					return;
 				}
 
-				for (lineStart = data + filesize - 1; lineStart >= data; lineStart--) {
+				for (pos = filesize; pos > 0; ) {
+					pos--;
+					lineStart = data + pos;
+
 					if ((*lineStart == '\n') || (*lineStart == '\r') || (lineStart == data)) {
 						line_start = (lineStart == data) ? data : lineStart + 1;
 						length = current_end - line_start;
