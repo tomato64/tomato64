@@ -55,7 +55,7 @@ USERAGENT="Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/109.0
 [ $LOGL -eq 7 ] && Q=" " || Q="-q"
 alias yget="wget --no-check-certificate -T 15 $Q -U \"$USERAGENT\" --header \"Cache-Control: no-cache\""
 
-alias domain="sed 's/[#!].*//' | grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+[a-zA-Z]{2,6}'| grep -vEi '\.gif$|\.jpe?g$|\.png$|\.jsp?$|\.css$|\.ico$|\.aspx?$|\.php$|\.cer$|\.cfm$|\.cgi$|\.x?html?$|\.py$|\.rss$|\.vb$|\.sh$|\.json$'"
+alias domain="sed 's/[#!].*//' | sed -E 's#(https?://[^/?[:space:]]*)[/?][^[:space:]]*#\1#g' | grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+([a-zA-Z]{2,63}|xn--[a-zA-Z0-9-]{1,59})'| grep -vEi '\.gif$|\.jpe?g$|\.png$|\.jsp?$|\.css$|\.ico$|\.aspx?$|\.php$|\.cer$|\.cfm$|\.cgi$|\.x?html?$|\.rss$|\.vb$|\.json$'"
 alias notin="grep -Ev '^#.*|^!.*|^::|^\s*?$|^([a-f0-9:]+:+)+[a-f0-9]+'"
 alias number="sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'"
 [ $(NG adblock_path | wc -c) -gt 0 ] && {
@@ -480,14 +480,14 @@ download() {
 
 	# Whitelist domains from list providers defined
 	logi "Whitelisting domains defined in Blacklist URL"
-	for i in $(echo $BLACKLIST | tr "<" "\n" | grep -E 'https?' | grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+[a-zA-Z]{2,6}\s*/\s*' | tr "/" " "); do
+	for i in $(echo $BLACKLIST | tr "<" "\n" | grep -E 'https?' | grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+([a-zA-Z]{2,63}|xn--[a-zA-Z0-9-]{1,59})\s*/\s*' | tr "/" " "); do
 		subsed="$subsed ${i}"
 	done
 
 	# Whitelist domains defined in Group-of-lists content
 	[[ -f $PREFIX/white.url ]] && {
 		logd "Whitelisting domains found in Group-of-lists URLs"
-		for i in $(grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+[a-zA-Z]{2,6}\s*/\s*' $PREFIX/white.url | tr "/" " "); do
+		for i in $(grep -Eo '((([a-zA-Z]{1,2})|([0-9]{1,2})|([a-zA-Z0-9]{1,2})|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]))\.)+([a-zA-Z]{2,63}|xn--[a-zA-Z0-9-]{1,59})\s*/\s*' $PREFIX/white.url | tr "/" " "); do
 			subsed="$subsed ${i}"
 		done
 	}
@@ -504,7 +504,7 @@ download() {
 	}
 	
 	# Remove references to localhost
-	subsed="$subsed ^localhost" # localhost to be fixed, used to be: "^address=\/localhost\/.*"
+	subsed="$subsed ^localhost$" # exact hostname only; do not whitelist unrelated localhost.* domains
 	[ $LOGL -eq 7 ] && echo $subsed >/tmp/adblock.subsed
 
 	# Whitelisting phase A = Removing whitelisted domains (full match) and formatting the file for dnsmasq
