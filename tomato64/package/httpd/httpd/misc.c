@@ -65,15 +65,28 @@ int is_ascii_alnum(unsigned char c)
 /* to javascript-safe string */
 char *js_string(const char *s)
 {
+	static const char hex[] = "0123456789abcdef";
 	unsigned char c;
 	char *buffer;
 	char *b;
+	size_t len;
 
-	if ((buffer = malloc((strlen(s) * 4) + 1)) != NULL) {
+	if (!s)
+		return NULL;
+
+	len = strlen(s);
+	if (len > ((size_t)-1 - 1) / 4)
+		return NULL;
+
+	if ((buffer = malloc((len * 4) + 1)) != NULL) {
 		b = buffer;
 		while ((c = *s++) != 0) {
-			if ((c == '"') || (c == '\'') || (c == '\\') || (!isprint(c)))
-				b += sprintf(b, "\\x%02x", c);
+			if ((c == '"') || (c == '\'') || (c == '\\') || (!isprint(c))) {
+				*b++ = '\\';
+				*b++ = 'x';
+				*b++ = hex[c >> 4];
+				*b++ = hex[c & 0x0f];
+			}
 			else
 				*b++ = c;
 		}
@@ -89,12 +102,27 @@ char *html_string(const char *s)
 	unsigned char c;
 	char *buffer;
 	char *b;
+	size_t len;
 
-	if ((buffer = malloc((strlen(s) * 6) + 1)) != NULL) {
+	if (!s)
+		return NULL;
+
+	len = strlen(s);
+	if (len > ((size_t)-1 - 1) / 6)
+		return NULL;
+
+	if ((buffer = malloc((len * 6) + 1)) != NULL) {
 		b = buffer;
 		while ((c = *s++) != 0) {
-			if ((c == '&') || (c == '<') || (c == '>') || (c == '"') || (c == '\'') || (!isprint(c)))
-				b += sprintf(b, "&#%d;", c);
+			if ((c == '&') || (c == '<') || (c == '>') || (c == '"') || (c == '\'') || (!isprint(c))) {
+				int n = snprintf(b, 7, "&#%u;", (unsigned int)c);
+
+				if ((n < 0) || (n >= 7)) {
+					free(buffer);
+					return NULL;
+				}
+				b += n;
+			}
 			else
 				*b++ = c;
 		}
