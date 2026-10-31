@@ -517,6 +517,9 @@ void rast_update_sta_info(int bssidx, int vifidx)
 
 		/* add to assoclist */
 		sta = rast_add_to_assoclist(bssidx, vifidx, &(mac_list->ea[mcnt]));
+		if (!sta)
+			continue;
+
 		sta->rssi = rssi;
 		sta->active = uptime();
 	}
