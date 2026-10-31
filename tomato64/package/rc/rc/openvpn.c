@@ -256,29 +256,6 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 	}
 }
 
-static int ovpn_write_quoted(FILE *fp, const char *value)
-{
-	const char *p;
-
-	if (!fp || !str_is_single_line(value))
-		return 0;
-
-	if (fputc('"', fp) == EOF)
-		return 0;
-
-	for (p = value; *p; ++p) {
-		if ((*p == '"') || (*p == '\\')) {
-			if (fputc('\\', fp) == EOF)
-				return 0;
-		}
-		if (fputc(*p, fp) == EOF)
-			return 0;
-	}
-
-	return (fputc('"', fp) != EOF);
-}
-
-
 void start_ovpn_client(int unit)
 {
 	FILE *fp;
@@ -501,7 +478,7 @@ void start_ovpn_client(int unit)
 
 		if ((nvi = atoi(getNVRAMVar("vpnc%d_tlsvername", unit))) > 0) {
 			fprintf(fp, "verify-x509-name ");
-			if (!ovpn_write_quoted(fp, getNVRAMVar("vpnc%d_cn", unit))) {
+			if (f_write_quoted(fp, getNVRAMVar("vpnc%d_cn", unit), FWQUOTE_REJECT_CRLF) < 0) {
 				logmsg(LOG_ERR, "invalid verify-x509-name value");
 				fclose(fp);
 				stop_ovpn_client(unit);

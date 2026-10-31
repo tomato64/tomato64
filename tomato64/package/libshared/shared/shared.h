@@ -555,6 +555,9 @@ extern int ppid(int pid);
 #define FW_CREATE		0
 #define FW_APPEND		1
 #define FW_NEWLINE		2
+
+#define FWQUOTE_REJECT_CRLF	0
+#define FWQUOTE_SPACE_CRLF	1
 #if defined(TCONFIG_NGINX) || defined(TCONFIG_BT)
 #define FWESC_JSON		1
 #define FWESC_LINE		2
@@ -567,6 +570,7 @@ extern int f_write(const char *file, const void *buffer, int len, unsigned flags
 extern int f_read_string(const char *file, char *buffer, int max); /* returns bytes read, not including term; max includes term */
 extern int f_write_string(const char *file, const char *buffer, unsigned flags, unsigned cmode);
 extern int f_write_procsysnet(const char *path, const char *value);
+extern int f_write_quoted(FILE *fp, const char *value, int crlf_mode);
 #if defined(TCONFIG_NGINX) || defined(TCONFIG_BT)
 extern int f_write_escaped(FILE *fp, int mode, const char *s1, const char *s2);
 #endif

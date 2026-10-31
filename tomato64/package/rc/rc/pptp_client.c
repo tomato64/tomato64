@@ -28,19 +28,9 @@
 
 static void pptpc_write_pppd_quoted(FILE *fp, const char *option, const char *value)
 {
-	const unsigned char *p;
-
-	fprintf(fp, "%s \"", option);
-	for (p = (const unsigned char *)(value ? value : ""); *p; ++p) {
-		if ((*p == '\\') || (*p == '"'))
-			fputc('\\', fp);
-
-		if ((*p == '\r') || (*p == '\n'))
-			fputc(' ', fp);
-		else
-			fputc(*p, fp);
-	}
-	fputs("\"\n", fp);
+	fprintf(fp, "%s ", option);
+	f_write_quoted(fp, value, FWQUOTE_SPACE_CRLF);
+	fputc('\n', fp);
 }
 
 

@@ -156,6 +156,40 @@ int f_write_procsysnet(const char *path, const char *value)
 	return f_write_string(syspath, value, 0, 0);
 }
 
+int f_write_quoted(FILE *fp, const char *value, int crlf_mode)
+{
+	const unsigned char *p;
+
+	if (!fp || ((crlf_mode != FWQUOTE_REJECT_CRLF) && (crlf_mode != FWQUOTE_SPACE_CRLF)))
+		return -1;
+
+	if (!value)
+		value = "";
+
+	/* Reject before writing anything so callers never get a partial token. */
+	if ((crlf_mode == FWQUOTE_REJECT_CRLF) && strpbrk(value, "\r\n"))
+		return -1;
+
+	if (fputc('"', fp) == EOF)
+		return -1;
+
+	for (p = (const unsigned char *)value; *p; ++p) {
+		if ((*p == '\\') || (*p == '"')) {
+			if (fputc('\\', fp) == EOF)
+				return -1;
+		}
+
+		if (((*p == '\r') || (*p == '\n')) && (crlf_mode == FWQUOTE_SPACE_CRLF)) {
+			if (fputc(' ', fp) == EOF)
+				return -1;
+		}
+		else if (fputc(*p, fp) == EOF)
+			return -1;
+	}
+
+	return (fputc('"', fp) == EOF) ? -1 : 0;
+}
+
 #if defined(TCONFIG_NGINX) || defined(TCONFIG_BT)
 int f_write_escaped(FILE *fp, int mode, const char *s1, const char *s2)
 {
