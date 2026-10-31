@@ -712,10 +712,15 @@ int mtd_write_main(int argc, char *argv[])
 
 	_dprintf("*** %s: mtd size=%6x, erasesize=%6x\n", __FUNCTION__, mi.size, mi.erasesize);
 
-	total = ROUNDUP(trx.len, mi.erasesize);
-	if (total > mi.size) {
-		error = "File is too big to fit in MTD";
-		goto ERROR;
+	{
+		uint32 rem = trx.len % mi.erasesize;
+		uint32 pad = rem ? (mi.erasesize - rem) : 0;
+
+		if ((trx.len > mi.size) || (pad > mi.size - trx.len)) {
+			error = "File is too big to fit in MTD";
+			goto ERROR;
+		}
+		total = trx.len + pad;
 	}
 
 	sysinfo(&si);
@@ -1267,7 +1272,14 @@ static int mtd_write_internal(const char *path, const char *mtd, int check_only)
 		/* See if we have enough memory to store the whole file */
 		sysinfo(&info);
 		if (info.freeram >= trx.len) {
-			erase_info.length = ROUNDUP(trx.len, mtd_info.erasesize);
+			uint32 rem = trx.len % mtd_info.erasesize;
+			uint32 pad = rem ? (mtd_info.erasesize - rem) : 0;
+
+			if (pad <= mtd_info.size - trx.len)
+				erase_info.length = trx.len + pad;
+			else
+				erase_info.length = mtd_info.erasesize;
+
 			if (!(buf = malloc(erase_info.length)))
 				erase_info.length = mtd_info.erasesize;
 		}
