@@ -133,6 +133,7 @@ void wi_restore(char *url, int len, char *boundary)
 	char *buf = NULL;
 	const char *error = "Error reading file";
 	int n, fd;
+	int written = 0;
 	static char *args[] = { "nvram", "restore", NULL, NULL };
 	char file[] = "/tmp/restoreXXXXXX";
 	char msg[64];
@@ -173,6 +174,7 @@ void wi_restore(char *url, int len, char *boundary)
 		}
 		total += n;
 	}
+	len = 0; /* the complete POST body has been consumed */
 
 	/*
 	 * write data directly using mkstemp() file descriptor.
@@ -181,13 +183,24 @@ void wi_restore(char *url, int len, char *boundary)
 	 *  - TOCTOU race window
 	 *  - file descriptor leaks
 	 */
-	if (write(fd, buf, total) != total) {
+	while (written < total) {
+		n = write(fd, buf + written, total - written);
+		if (n > 0) {
+			written += n;
+			continue;
+		}
+		if ((n < 0) && (errno == EINTR))
+			continue;
+
 		error = "Error writing temporary file";
 		goto ERROR;
 	}
 
-	/* ensure data is flushed to disk */
-	fsync(fd);
+	/* ensure data is flushed to disk before invoking nvram restore */
+	if (fsync(fd) != 0) {
+		error = "Error flushing temporary file";
+		goto ERROR;
+	}
 
 	/* close file descriptor early */
 	close(fd);
