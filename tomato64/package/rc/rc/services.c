@@ -1974,6 +1974,10 @@ void start_ntpd(void)
 	 */
 	if (ntp_updates_int >= 0) { /* -1 = never */
 		ntp_server = nvram_safe_get("ntp_server");
+		if (strpbrk(ntp_server, "\r\n")) {
+			logmsg(LOG_ERR, "ntpd: invalid line break in ntp_server, exiting");
+			return;
+		}
 		servers_len = strlen(ntp_server);
 
 		/* allocating memory dynamically both so we don't waste memory, and in case of unanticipatedly long server name in nvram */
