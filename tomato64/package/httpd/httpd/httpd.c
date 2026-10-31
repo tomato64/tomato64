@@ -1173,13 +1173,28 @@ static void handle_request(void)
 			cur = cp + strlen(cp) + 1;
 		}
 		else if (strncasecmp(cur, "Content-Length:", 15) == 0) {
+			char *end;
+			unsigned long content_length;
+
 			cp = &cur[15];
 			cp += strspn(cp, " \t");
-			cl = strtoul(cp, NULL, 0);
-			if ((cl < 0) || (cl >= INT_MAX)) {
+
+			if ((*cp < '0') || (*cp > '9')) {
 				send_error(400, NULL, NULL);
 				return;
 			}
+
+			errno = 0;
+			content_length = strtoul(cp, &end, 10);
+			while ((*end == ' ') || (*end == '\t'))
+				end++;
+
+			if ((errno == ERANGE) || (content_length > INT_MAX) || ((*end != '\0') && (*end != '\r') && (*end != '\n'))) {
+				send_error(400, NULL, NULL);
+				return;
+			}
+
+			cl = (int)content_length;
 		}
 		else if ((strncasecmp(cur, "Content-Type:", 13) == 0) && ((cp = strstr(cur, "boundary=")))) {
 			boundary = &cp[9];
