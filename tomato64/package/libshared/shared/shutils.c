@@ -510,9 +510,12 @@ int eval_cmdline(const char *cmd, const char *path, int timeout, int *ppid)
  * @param  stream  file stream
  * @return         number of items successfully read
  */
-size_t safe_fread(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+size_t safe_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	size_t ret = 0;
+
+	if (!stream || ((!ptr) && size && nmemb) || (size && (nmemb > ((size_t)-1 / size))))
+		return 0;
 
 	do {
 		clearerr(stream);
@@ -535,9 +538,12 @@ size_t safe_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	size_t ret = 0;
 
+	if (!stream || ((!ptr) && size && nmemb) || (size && (nmemb > ((size_t)-1 / size))))
+		return 0;
+
 	do {
 		clearerr(stream);
-		ret += fwrite((char *)ptr + (ret * size), size, nmemb - ret, stream);
+		ret += fwrite((const char *)ptr + (ret * size), size, nmemb - ret, stream);
 	} while (ret < nmemb && ferror(stream) && errno == EINTR);
 
 	return ret;
