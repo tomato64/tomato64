@@ -382,9 +382,12 @@ int get_wndr_model(void)
 
 	FILE *model = fopen(devname, "rb");
 	if (model) {
-		char modelstr[32];
+		char modelstr[32] = { 0 };
 
-		fread(modelstr, 1, sizeof(modelstr), model);
+		if (fread(modelstr, 1, sizeof(modelstr) - 1, model) == 0) {
+			fclose(model);
+			return MODEL_UNKNOWN;
+		}
 		nvram_set("board_id", modelstr);
 		fclose(model);
 
