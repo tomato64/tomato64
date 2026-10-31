@@ -671,12 +671,15 @@ static int invalid_mac(const char *mac)
 static int get_mac_from_mt0(unsigned long address)
 {
 	FILE *fp;
-	char m[6], s[18];
+	unsigned char m[6];
+	char s[18];
 
 	snprintf(s, sizeof(s), MTD_DEV(%dro), 0);
 	if ((fp = fopen(s, "rb"))) {
-		fseek(fp, address, SEEK_SET);
-		fread(m, sizeof(m), 1, fp);
+		if ((fseek(fp, address, SEEK_SET) != 0) || (fread(m, 1, sizeof(m), fp) != sizeof(m))) {
+			fclose(fp);
+			return -EIO;
+		}
 		fclose(fp);
 		snprintf(s, sizeof(s), "%02X:%02X:%02X:%02X:%02X:%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
 
