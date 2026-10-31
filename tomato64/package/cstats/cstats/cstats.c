@@ -483,7 +483,8 @@ static void load(int new)
 {
 	int i, n;
 	long t;
-	char hgz[256];
+	char hgz[256], parent[sizeof(save_path)];
+	char *slash;
 	unsigned char mac[6];
 
 	if (new) {
@@ -535,6 +536,30 @@ static void load(int new)
 				if ((load_history(save_path) >= 0) || (try_hardway(save_path) >= 0)) {
 					f_write_string(source_fn, save_path, 0, 0);
 					break;
+				}
+
+				/*
+				 * A missing history file at an otherwise valid writable
+				 * location is a normal first-run case. Match --new
+				 * semantics and let the first main-loop iteration create
+				 * a valid compressed history file. Existing but corrupt
+				 * files still stay on the recovery/retry path above.
+				 */
+				if (!f_exists(save_path)) {
+					strlcpy(parent, save_path, sizeof(parent));
+					slash = strrchr(parent, '/');
+					if (slash != NULL) {
+						if (slash == parent)
+							slash[1] = '\0';
+						else
+							*slash = '\0';
+
+						if (d_exists(parent) && (access(parent, W_OK) == 0)) {
+							logmsg(LOG_INFO, "History file %s does not exist; creating a new one", save_path);
+							save_utime = 0;
+							return;
+						}
+					}
 				}
 			}
 
