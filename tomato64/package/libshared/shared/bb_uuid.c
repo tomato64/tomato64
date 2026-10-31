@@ -38,7 +38,7 @@ void __attribute__((visibility("hidden")))
 format_uuid_DCE_37_chars(char *dst37, const uint8_t *buf)
 {
 	/* 37 = 16*2 hexdigits + 4 dashes + 1 NUL */
-	sprintf(dst37,
+	snprintf(dst37, 37,
 		"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
 		buf[0], buf[1], buf[2], buf[3],
 		buf[4], buf[5],
