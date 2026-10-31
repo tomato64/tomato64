@@ -24,7 +24,7 @@ void wi_uploadsplash(char *url, int len, char *boundary)
 	char tmp[255];
 	char *buf, *p;
 	const char *error;
-	int n, blen;
+	int n, blen, total;
 
 	//check_id();
 
@@ -45,12 +45,17 @@ void wi_uploadsplash(char *url, int len, char *boundary)
 		goto ERROR;
 	}
 
-	n = web_read(buf, len);
-	if (n <= 0) {
-		error = "Error reading file";
-		goto ERROR;
+	total = 0;
+	while (total < len) {
+		n = web_read(buf + total, len - total);
+		if (n <= 0) {
+			error = "Error reading file";
+			goto ERROR;
+		}
+		total += n;
 	}
-	len -= n;
+	n = total;
+	len = 0;
 
 	/* ensure boundary trimming is safe */
 	if (boundary) {

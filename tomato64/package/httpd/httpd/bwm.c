@@ -62,7 +62,7 @@ void wi_statsrestore(char *url, int len, char *boundary)
 {
 	char *buf;
 	const char *error, *what, *name, *file;
-	int n, is_bwm;
+	int n, total, is_bwm;
 	char tmp[64];
 
 	check_id(url);
@@ -87,12 +87,17 @@ void wi_statsrestore(char *url, int len, char *boundary)
 		goto exit;
 	}
 
-	n = web_read(buf, len);
-	if (n <= 0) {
-		error = "Error reading file";
-		goto exit;
+	total = 0;
+	while (total < len) {
+		n = web_read(buf + total, len - total);
+		if (n <= 0) {
+			error = "Error reading file";
+			goto exit;
+		}
+		total += n;
 	}
-	len -= n;
+	n = total;
+	len = 0;
 
 	snprintf(tmp, sizeof(tmp), "%s.new", file);
 	if (f_write(tmp, buf, n, 0, 0600) != n) {
