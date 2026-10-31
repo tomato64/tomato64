@@ -1075,6 +1075,38 @@ enum {
 	METHOD_POST
 };
 
+static int parse_http_size(const char *s, int base, size_t *value)
+{
+	char *end;
+	unsigned long v;
+
+	if (!s || !value)
+		return -1;
+
+	while (is_blank(*s))
+		s++;
+
+	if (*s == '\0' || *s == '+' || *s == '-')
+		return -1;
+
+	errno = 0;
+	v = strtoul(s, &end, base);
+	if ((errno == ERANGE) || (end == s))
+		return -1;
+
+	while (is_blank(*end))
+		end++;
+
+	if ((*end != '\0') && (*end != '\r') && (*end != '\n') && ((base != 16) || (*end != ';')))
+		return -1;
+
+	if (v > (unsigned long)((size_t)-1))
+		return -1;
+
+	*value = (size_t)v;
+	return 0;
+}
+
 static int wget(int method, const char *server, char *buf, size_t count, off_t offset)
 {
 	char url[PATH_MAX] = { 0 }, *s;
@@ -1084,7 +1116,7 @@ static int wget(int method, const char *server, char *buf, size_t count, off_t o
 	FILE *fp;
 	struct sockaddr_in sin;
 	int chunked = 0;
-	unsigned len = 0;
+	size_t len = 0;
 
 	if (server == NULL || !strcmp(server, "")) {
 		_dprintf("*** %s: wget: null server input\n", __FUNCTION__);
@@ -1163,9 +1195,10 @@ static int wget(int method, const char *server, char *buf, size_t count, off_t o
 		if (*s == '\n')
 			break;
 		if (!strncasecmp(s, "Content-Length:", 15)) {
-			for (s += 15; is_blank(*s); s++);
+			s += 15;
 			chomp(s);
-			len = atoi(s);
+			if (parse_http_size(s, 10, &len) != 0)
+				goto done;
 		}
 		else if (!strncasecmp(s, "Transfer-Encoding:", 18)) {
 			for (s += 18; is_blank(*s); s++);
@@ -1175,10 +1208,13 @@ static int wget(int method, const char *server, char *buf, size_t count, off_t o
 		}
 	}
 
-	if (chunked && fgets(line, sizeof(line), fp))
-		len = strtol(line, NULL, 16);
+	if (chunked) {
+		if (!fgets(line, sizeof(line), fp) || (parse_http_size(line, 16, &len) != 0))
+			goto done;
+	}
 
-	len = (len > count) ? count : len;
+	if (len > count)
+		len = count;
 	len = fread(buf, 1, len, fp);
 
 done:
