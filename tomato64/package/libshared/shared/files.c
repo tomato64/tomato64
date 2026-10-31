@@ -290,7 +290,8 @@ int file_lock(char *tag)
 	char fn[64];
 	struct flock lock;
 	int lockfd = -1;
-	pid_t lockpid;
+	pid_t lockpid = 0;
+	ssize_t n;
 
 	{
 		int n;
@@ -303,7 +304,12 @@ int file_lock(char *tag)
 		goto lock_error;
 
 	pid_t pid = getpid();
-	if (read(lockfd, &lockpid, sizeof(pid_t))) {
+	n = read(lockfd, &lockpid, sizeof(lockpid));
+	if (n < 0) {
+		close(lockfd);
+		goto lock_error;
+	}
+	if ((size_t)n == sizeof(lockpid)) {
 		/* check if we already hold a lock */
 		if (pid == lockpid) {
 			/* don't close the file here as that will release all locks */
@@ -320,8 +326,11 @@ int file_lock(char *tag)
 		goto lock_error;
 	}
 
-	lseek(lockfd, 0, SEEK_SET);
-	write(lockfd, &pid, sizeof(pid_t));
+	if ((lseek(lockfd, 0, SEEK_SET) < 0) || (ftruncate(lockfd, 0) < 0) || (write(lockfd, &pid, sizeof(pid)) != (ssize_t)sizeof(pid))) {
+		close(lockfd);
+		goto lock_error;
+	}
+
 	return lockfd;
 lock_error:
 	/* No proper error processing */
