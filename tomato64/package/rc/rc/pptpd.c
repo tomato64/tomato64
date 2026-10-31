@@ -180,6 +180,16 @@ static void build_pptpd_firewall(void)
 	chmod(PPTPD_FW_SCRIPT, 0744);
 }
 
+static int pptpd_write_ipv4_option(FILE *fp, const char *option, const char *value)
+{
+	struct in_addr addr;
+
+	if (!value || !*value || (inet_pton(AF_INET, value, &addr) != 1))
+		return 0;
+
+	return (fprintf(fp, "%s %s\n", option, value) > 0);
+}
+
 void start_pptpd(int force)
 {
 	FILE *fp;
@@ -245,12 +255,10 @@ void start_pptpd(int force)
 	            nvram_get_int("pptpd_mru") ? : 1400);
 
 	/* DNS Server */
-	if (nvram_invmatch("pptpd_dns1", ""))
-		count += fprintf(fp, "ms-dns %s\n", nvram_safe_get("pptpd_dns1")) > 0 ? 1 : 0;
-	if (nvram_invmatch("pptpd_dns2", ""))
-		count += fprintf(fp, "ms-dns %s\n", nvram_safe_get("pptpd_dns2")) > 0 ? 1 : 0;
-	if (count == 0 && nvram_invmatch("lan_ipaddr", ""))
-		fprintf(fp, "ms-dns %s\n", nvram_safe_get("lan_ipaddr"));
+	count += pptpd_write_ipv4_option(fp, "ms-dns", nvram_safe_get("pptpd_dns1"));
+	count += pptpd_write_ipv4_option(fp, "ms-dns", nvram_safe_get("pptpd_dns2"));
+	if (count == 0)
+		pptpd_write_ipv4_option(fp, "ms-dns", nvram_safe_get("lan_ipaddr"));
 
 	/* WINS Server */
 	if (nvram_match("wan_wins", "0.0.0.0") || (strlen(nvram_safe_get("wan_wins")) == 0)) {
@@ -259,13 +267,10 @@ void start_pptpd(int force)
 	}
 
 	if (!nowins)
-		fprintf(fp, "ms-wins %s\n", nvram_safe_get("wan_wins"));
+		pptpd_write_ipv4_option(fp, "ms-wins", nvram_safe_get("wan_wins"));
 
-	if (strlen(nvram_safe_get("pptpd_wins1")))
-		fprintf(fp, "ms-wins %s\n", nvram_safe_get("pptpd_wins1"));
-
-	if (strlen(nvram_safe_get("pptpd_wins2")))
-		fprintf(fp, "ms-wins %s\n", nvram_safe_get("pptpd_wins2"));
+	pptpd_write_ipv4_option(fp, "ms-wins", nvram_safe_get("pptpd_wins1"));
+	pptpd_write_ipv4_option(fp, "ms-wins", nvram_safe_get("pptpd_wins2"));
 
 	fprintf(fp, "minunit 10\n" /* force ppp interface starting from 10 */
 	            "%s\n\n", nvram_safe_get("pptpd_custom"));
