@@ -1746,6 +1746,12 @@ char *fd2str(int fd)
 	ssize_t n;
 
 	do {
+		if (count > ((size_t)-1 - 512)) {
+			free(buf);
+			close(fd);
+			return NULL;
+		}
+
 		tmp = realloc(buf, count + 512);
 		if (tmp == NULL) {
 			free(buf);
