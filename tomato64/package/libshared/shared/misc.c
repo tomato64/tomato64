@@ -32,6 +32,9 @@
 
 #include "shutils.h"
 #include "shared.h"
+#ifdef TOMATO64
+#include <limits.h>
+#endif /* TOMATO64 */
 
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OS
