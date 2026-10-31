@@ -507,7 +507,21 @@ static int resolve_fqdn(const char *host, ip_addr **out_addrs, size_t *out_count
 			continue;
 
 		if (*out_count == cap) {
+			if (cap > ((size_t)-1 / 2)) {
+				free(vec);
+				freeaddrinfo(res);
+				logmsg(LOG_ERR, "%s: DNS result capacity overflow", __FUNCTION__);
+				return 3;
+			}
+
 			ncap = cap ? cap * 2 : 8;
+			if (ncap > ((size_t)-1 / sizeof(*vec))) {
+				free(vec);
+				freeaddrinfo(res);
+				logmsg(LOG_ERR, "%s: DNS result allocation overflow", __FUNCTION__);
+				return 3;
+			}
+
 			ip_addr *nvec = realloc(vec, ncap * sizeof(*nvec));
 			if (!nvec) {
 				free(vec);
