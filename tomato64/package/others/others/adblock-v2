@@ -4,7 +4,7 @@
 
 . nvram_ops
 
-ver="v2.72h - 10/09" # rs232, pedro
+ver="v2.72i - 10/13" # rs232, pedro
 PID=$$
 pidfile="/var/run/adblock.pid"
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root
@@ -37,11 +37,32 @@ DNS_TIME="/tmp/dnsmasq.time"
 
 dnsrestart() { pr=$(cat /proc/uptime | cut -f1 -d' ') ; service dnsmasq restart &>/dev/null && { echo $(cat /proc/uptime | cut -f1 -d ' ' ) $pr | awk '{print $1 - $2 "s"}' > ${DNS_TIME} ; [ ${LOGL} -ge 6 -a -f ${DNS_TIME} ] && { sleep 1; logi "dnsmasq restart time = $(cat $DNS_TIME)" ;} ;} ;}
 
+adblockPidIsRunning() {
+	case "$1" in
+		''|0|*[!0-9]*) return 1 ;;
+	esac
+
+	[ "$1" != "$PID" ] || return 1
+	[ -r "/proc/$1/cmdline" ] || return 1
+
+	# Match a real argv element named adblock, not an arbitrary command line
+	# which merely contains the word (for example the calling SSH shell).
+	tr '\000' '\n' < "/proc/$1/cmdline" 2>/dev/null | grep -Eq '(^|/)adblock$'
+}
+
+stopRunningAdblock() {
+	adpid=$(cat "$pidfile" 2>/dev/null)
+	adblockPidIsRunning "$adpid" || return 0
+
+	logn "Stopping stale/running Adblock process $adpid"
+	kill -9 "$adpid" 2>/dev/null
+}
+
 ( [ -f $pidfile ] && [ $# -eq 0 -o $1 == start -o $1 == update -o $1 == delay ] ) && {
 	# If the pidfile is older than $hold min this is very likely and issue = remove it.
 	[ $((($(date +%s) - $(date -r ${pidfile} +%s))/60)) -gt $hold ] && {
-		rm -f $pidfile
-		for process in $(ps | grep [a]dblock | grep -v "status\|$PID" | awk '{print $1}'); do (kill -9 $process) &>/dev/null ; done
+		stopRunningAdblock
+		rm -f "$pidfile"
 		dnsrestart
 	}
 	logn "Adblock/DNS-filtering is already loading. Skipping call..."
@@ -786,8 +807,9 @@ EOF
 }
 
 adExit() {
+	[ "$1" -eq 1 ] && stopRunningAdblock
 	rm -rf $PREFIX/*
-	rm -f $pidfile
+	rm -f "$pidfile"
 	if [ $1 -eq 0 ]; then
 		[ $DPATH != '/etc' ] && {
 			rm -f /etc/dnsmasq.adblock
@@ -799,7 +821,6 @@ adExit() {
 		[ $DPATH != '/etc' ] && rm -f /etc/dnsmasq.adblock
 		rm -f $CHK_FILE
 		dnsrestart
-		for process in $(ps | grep [a]dblock | grep -v "status\|$PID" | awk '{print $1}'); do (kill -9 $process) &>/dev/null ; done
 	elif [ $1 -eq 4 ]; then
 		[ $DPATH != '/etc' ] && rm -rf $DPATH/*
 		rm -rf /tmp/adblock.*
