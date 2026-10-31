@@ -61,6 +61,20 @@ typedef enum ovpn_type
  * early ACCEPT rules. No -j target is used intentionally: the account match
  * updates counters and packet evaluation continues.
  */
+static int ovpn_valid_ipv4_route(const char *route)
+{
+	char network[INET_ADDRSTRLEN], netmask[INET_ADDRSTRLEN], extra;
+	struct in_addr addr;
+
+	if (!route || strpbrk(route, "\r\n"))
+		return 0;
+
+	if (sscanf(route, "%15s %15s %c", network, netmask, &extra) != 2)
+		return 0;
+
+	return (inet_pton(AF_INET, network, &addr) == 1) && (inet_pton(AF_INET, netmask, &addr) == 1);
+}
+
 static void write_ovpn_cstats_rules(FILE *fp, const char *iface, const char *dir)
 {
 	struct in_addr ipaddr, netmask, network;
@@ -1043,8 +1057,14 @@ void start_ovpn_server(int unit)
 						route = chp;
 						logmsg(LOG_DEBUG, "*** %s: CCD: Route: %s", __FUNCTION__, chp);
 						if (strlen(route) > 1) {
-							fprintf(ccd, "iroute %s\n", route);
-							fprintf(fp, "route %s\n", route);
+							if (!ovpn_valid_ipv4_route(route)) {
+								logmsg(LOG_WARNING, "OpenVPN server %d: ignoring invalid CCD route", unit);
+								route = NULL;
+							}
+							else {
+								fprintf(ccd, "iroute %s\n", route);
+								fprintf(fp, "route %s\n", route);
+							}
 						}
 
 						nvi -= strlen(chp) + 1;
