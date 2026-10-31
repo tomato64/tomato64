@@ -851,7 +851,7 @@ int get_ifname_unit(const char *ifname, int *unit, int *subunit)
 /* In the space-separated/null-terminated list(haystack), try to
  * locate the string "needle"
  */
-#if defined(TCONFIG_TINC) || defined(TCONFIG_FTP) || defined(TCONFIG_PPTPD) || defined(TCONFIG_SAMBASRV)
+#if defined(TCONFIG_TINC) || defined(TCONFIG_FTP) || defined(TCONFIG_PPTPD) || defined(TCONFIG_SAMBASRV) || defined(TCONFIG_USB)
 int str_isalnum_extra(const char *str, const char *extra, size_t minlen, size_t maxlen)
 {
 	const unsigned char *p;
@@ -872,7 +872,14 @@ int str_isalnum_extra(const char *str, const char *extra, size_t minlen, size_t 
 
 	return 1;
 }
-#endif /* TCONFIG_TINC || TCONFIG_FTP || TCONFIG_PPTPD || TCONFIG_SAMBASRV */
+#endif /* TCONFIG_TINC || TCONFIG_FTP || TCONFIG_PPTPD || TCONFIG_SAMBASRV || TCONFIG_USB */
+
+#if defined(TCONFIG_OPENVPN) || defined(TCONFIG_NOCAT)
+int str_is_single_line(const char *str)
+{
+	return str && !strpbrk(str, "\r\n");
+}
+#endif /* TCONFIG_OPENVPN || TCONFIG_NOCAT */
 
 
 char *find_in_list(const char *haystack, const char *needle)

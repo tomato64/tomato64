@@ -41,7 +41,7 @@ static int nocat_valid_nvram(void)
 
 	for (i = 0; vars[i]; i++) {
 		value = nvram_safe_get(vars[i]);
-		if (strpbrk(value, "\r\n"))
+		if (!str_is_single_line(value))
 			return 0;
 	}
 

@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 
 #include <bcmnvram.h>
+#include <shutils.h>
 
 #include "httpd.h"
 
@@ -35,17 +35,7 @@ void wo_wwansignal(char *url)
 
 static int valid_modem_device(const char *dev)
 {
-	const unsigned char *p;
-
-	if (!dev || strncmp(dev, "/dev/", 5) != 0 || dev[5] == '\0')
-		return 0;
-
-	for (p = (const unsigned char *)dev + 5; *p; ++p) {
-		if (!isalnum(*p) && (*p != '.') && (*p != '_') && (*p != '-'))
-			return 0;
-	}
-
-	return 1;
+	return dev && (strncmp(dev, "/dev/", 5) == 0) && str_isalnum_extra(dev + 5, "._-", 1, 0);
 }
 
 static char *getModemDiagPort(const char *wannum)

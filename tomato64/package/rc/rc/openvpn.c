@@ -256,16 +256,11 @@ static void ovpn_setup_watchdog(ovpn_type_t type, const int unit)
 	}
 }
 
-static int ovpn_has_linebreak(const char *value)
-{
-	return value && (strchr(value, '\r') || strchr(value, '\n'));
-}
-
 static int ovpn_write_quoted(FILE *fp, const char *value)
 {
 	const char *p;
 
-	if (!fp || !value || ovpn_has_linebreak(value))
+	if (!fp || !str_is_single_line(value))
 		return 0;
 
 	if (fputc('"', fp) == EOF)
@@ -583,7 +578,7 @@ void start_ovpn_client(int unit)
 			}
 		}
 		if (userauth) {
-			if (ovpn_has_linebreak(getNVRAMVar("vpnc%d_username", unit)) || ovpn_has_linebreak(getNVRAMVar("vpnc%d_password", unit))) {
+			if (!str_is_single_line(getNVRAMVar("vpnc%d_username", unit)) || !str_is_single_line(getNVRAMVar("vpnc%d_password", unit))) {
 				logmsg(LOG_ERR, "invalid OpenVPN username or password");
 				stop_ovpn_client(unit);
 				return;
