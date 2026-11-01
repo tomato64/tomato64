@@ -2186,6 +2186,49 @@ span.pptpsvg {
 	transform: rotate(90deg);
 }
 
+.afu-file-input {
+	border: none !important;
+	min-width: 0 !important;
+	width: 90px;
+	height: 26px;
+	overflow: hidden;
+	color: transparent;
+	font: inherit;
+	font-size: 0;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+#afu-selected-fname {
+	display: inline;
+	margin-right: 8px;
+
+}
+
+.afu-file-input::file-selector-button {
+	color: ButtonText;
+	font: inherit;
+	font-size: 13px;
+}
+
+.afu-diff {
+	color: #fff;
+	background: #000;
+	font-weight: bold;
+	animation: afu-flash 1s steps(1) infinite;
+}
+
+@keyframes afu-flash {
+	0%, 49% {
+		color: #fff;
+		background: #000;
+	}
+	50%, 100% {
+		color: #000;
+		background: #fff;
+	}
+}
+
 /* TOMATO64-BEGIN */
 div[id$="_maclist"] .co1 {
 	width: 30%;
