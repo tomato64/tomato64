@@ -37,10 +37,26 @@ var svgReady = 0;
 var ref = new TomatoRefresh('update.cgi', 'exec=qrate', 5, 'qos_graphs');
 
 ref.refresh = function(text) {
+	var qrates_in = [], qrates_out = [];
+
 	irates = [];
 	orates = [];
 	nfmarks = [];
 
+	try {
+		eval(text);
+	}
+	catch (ex) {
+		qrates_in = [];
+		qrates_out = [];
+	}
+
+	/*
+	 * asp_qrate() emits qrates_in/qrates_out using "var". During a
+	 * TomatoRefresh callback eval(), those variables are local to this
+	 * function and must be consumed after eval() while they still contain
+	 * the newly fetched sample.
+	 */
 	for (var i = 1; i < 11; i++) {
 		var isum = 0, osum = 0;
 		for (var k = 1; k <= MAXWAN_NUM; k++) {
@@ -49,13 +65,6 @@ ref.refresh = function(text) {
 		}
 		irates[i] = isum;
 		orates[i] = osum;
-	}
-	try {
-		eval(text);
-	}
-	catch (ex) {
-		irates = [];
-		orates = [];
 	}
 
 	showData();
