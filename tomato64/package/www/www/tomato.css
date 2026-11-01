@@ -2201,7 +2201,13 @@ span.pptpsvg {
 
 #afu-selected-fname {
 	display: inline;
+/* TOMATO64-REMOVE-BEGIN */
 	margin-right: 8px;
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+	margin-left: 8px;
+	vertical-align: middle;
+/* TOMATO64-END */
 
 }
 
@@ -2209,6 +2215,9 @@ span.pptpsvg {
 	color: ButtonText;
 	font: inherit;
 	font-size: 13px;
+/* TOMATO64-BEGIN */
+	margin: 0;
+/* TOMATO64-END */
 }
 
 .afu-diff {

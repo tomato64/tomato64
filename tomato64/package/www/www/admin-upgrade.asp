@@ -422,7 +422,12 @@ function earlyInit() {
 /* TOMATO64-BEGIN */
 				                       { title: '&nbsp;',text: 'Select a <a href="https://tomato64.org/files/"> valid firmware</a> to install ('+fwExpectedExt(nvram.t_model_name).msg+'):' },
 /* TOMATO64-END */
+/* TOMATO64-REMOVE-BEGIN */
 				                       { title: 'Upgrade File:',text: '<div id="afu-selected-fname"></div><input type="file" id="afu-file" name="file" class="afu-file-input" onchange="updateFilenameDiff()">' },
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+				                       { title: 'Upgrade File:',text: '<input type="file" id="afu-file" name="file" class="afu-file-input" onchange="updateFilenameDiff()"><div id="afu-selected-fname"></div>' },
+/* TOMATO64-END */
 				                       { title: '&nbsp;',text: '<input type="button" id="afu-upgrade-button" value="🛠️ Upgrade" onclick="upgrade()">' }
 				]);
 				</script>
