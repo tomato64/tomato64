@@ -61,6 +61,7 @@ typedef enum ovpn_type
  * early ACCEPT rules. No -j target is used intentionally: the account match
  * updates counters and packet evaluation continues.
  */
+#ifndef TCONFIG_OPTIMIZE_SIZE_MORE
 static int ovpn_valid_ipv4_route(const char *route)
 {
 	char network[INET_ADDRSTRLEN], netmask[INET_ADDRSTRLEN], extra;
@@ -74,6 +75,7 @@ static int ovpn_valid_ipv4_route(const char *route)
 
 	return (inet_pton(AF_INET, network, &addr) == 1) && (inet_pton(AF_INET, netmask, &addr) == 1);
 }
+#endif
 
 static void write_ovpn_cstats_rules(FILE *fp, const char *iface, const char *dir)
 {
