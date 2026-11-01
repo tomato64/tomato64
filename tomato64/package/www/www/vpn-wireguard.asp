@@ -245,18 +245,6 @@ function mapConfigToFields(event) {
 	if (config.interface.mtu)
 		E('_wg'+unit+'_mtu').value = config.interface.mtu;
 
-	if (config.interface.preup)
-		E('_wg'+unit+'_preup').value = config.interface.preup;
-
-	if (config.interface.postup)
-		E('_wg'+unit+'_postup').value = config.interface.postup;
-
-	if (config.interface.predown)
-		E('_wg'+unit+'_predown').value = config.interface.predown;
-
-	if (config.interface.postdown)
-		E('_wg'+unit+'_postdown').value = config.interface.postdown;
-
 	if (config.interface.keepalive)
 		E('_wg'+unit+'_ka').value = 25; /* default for keepalive, user may change */
 	else
@@ -325,6 +313,11 @@ function clearAllFields(unit) {
 }
 
 function validateConfig(config) {
+	if (config.has_exec_hooks) {
+		alert('This WireGuard configuration contains PreUp/PostUp/PreDown/PostDown commands. For security, executable hooks cannot be imported from a configuration file. Review and enter any required commands manually in the Scripts tab.');
+		return false;
+	}
+
 	if (!config.interface.privkey) {
 		alert('The interface requires a PrivateKey');
 		return false;
@@ -357,7 +350,8 @@ function mapConfig(contents) {
 	var unit = event.target.unit;
 	var config = {
 		'interface': {},
-		'peers': []
+		'peers': [],
+		'has_exec_hooks': false
 	}
 
 	var target;
@@ -422,28 +416,11 @@ function mapConfig(contents) {
 				target.table = value;
 				break;
 			case 'preup':
-				if (!target.preup)
-					target.preup = value;
-				else
-					target.preup = [target.preup, value].join('\n');
-				break;
 			case 'postup':
-				if (!target.postup)
-					target.postup = value;
-				else
-					target.postup = [target.postup, value].join('\n');
-				break;
 			case 'predown':
-				if (!target.predown)
-					target.predown = value;
-				else
-					target.predown = [target.predown, value].join('\n');
-				break;
 			case 'postdown':
-				if (!target.postdown)
-					target.postdown = value;
-				else
-					target.postdown = [target.postdown, value].join('\n');
+				/* wg-quick executes these values as shell commands. */
+				config.has_exec_hooks = true;
 				break;
 			case 'publickey':
 				target.pubkey = value;
@@ -2248,6 +2225,7 @@ function init() {
 			/* scripts tab start */
 			W('<div id="'+t+'-wg-scripts">');
 			W('<div class="section-title">Custom Interface Scripts<\/div>');
+			W('<div class="fields"><div class="about"><b>Security warning:<\/b> These commands are executed directly as root when the WireGuard interface changes state. Only enter commands you understand and trust; do not blindly copy PreUp/PostUp/PreDown/PostDown entries from an untrusted configuration file.<\/div><\/div>');
 			createFieldTable('', [
 				{ title: 'Pre-Up Script', name: t+'_preup', type: 'textarea', placeholder: script_warn, value: nvram[t+'_preup'] },
 				{ title: 'Post-Up Script', name: t+'_postup', type: 'textarea', placeholder: script_warn, value: nvram[t+'_postup'] },

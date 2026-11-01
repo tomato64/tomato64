@@ -857,11 +857,77 @@ static void wg_build_routing(const int unit, const char *fwmark_mask, const char
 	restart_fw = 1;
 }
 
+/*
+ * wg-quick treats these four configuration keys as shell snippets and
+ * executes them as root. External configuration files are data inputs here,
+ * so do not allow them to cross that command-execution boundary.
+ *
+ * Return 1 when an executable hook is present, 0 when none is present,
+ * and -1 when the file cannot be inspected.
+ */
+static int wg_config_has_exec_hooks(const char *file)
+{
+	FILE *fp;
+	char line[MAX_LINE];
+	char *p, *eq, *end;
+	size_t key_len;
+	static const char *hooks[] = { "PreUp", "PostUp", "PreDown", "PostDown", NULL };
+	int i;
+
+	if ((fp = fopen(file, "r")) == NULL)
+		return -1;
+
+	while (fgets(line, sizeof(line), fp) != NULL) {
+		p = line;
+		while (isspace((unsigned char)*p))
+			p++;
+
+		if ((*p == '\0') || (*p == '#'))
+			continue;
+
+		eq = strchr(p, '=');
+		if (eq == NULL)
+			continue;
+
+		end = eq;
+		while ((end > p) && isspace((unsigned char)end[-1]))
+			end--;
+
+		key_len = (size_t)(end - p);
+		for (i = 0; hooks[i] != NULL; i++) {
+			if ((strlen(hooks[i]) == key_len) && (strncasecmp(p, hooks[i], key_len) == 0)) {
+				fclose(fp);
+				return 1;
+			}
+		}
+	}
+
+	if (ferror(fp)) {
+		fclose(fp);
+		return -1;
+	}
+
+	fclose(fp);
+	return 0;
+}
+
 static int wg_quick_iface(char *iface, const char *file, const int up)
 {
+	int hook_check;
 	char buffer[BUF_SIZE_32];
 	char *up_down = (up == 1 ? "up" : "down");
 	FILE *fp;
+
+	/* Reject external configs that would make wg-quick execute shell code. */
+	hook_check = wg_config_has_exec_hooks(file);
+	if (hook_check < 0) {
+		logmsg(LOG_ERR, "unable to inspect wireguard configuration file %s!", file);
+		return -1;
+	}
+	if (hook_check > 0) {
+		logmsg(LOG_ERR, "refusing wireguard configuration file %s: executable wg-quick hooks are not allowed", file);
+		return -1;
+	}
 
 	/* copy config to wg dir with proper name */
 	snprintf(buffer, BUF_SIZE_32, WG_DIR"/%s.conf", iface);
