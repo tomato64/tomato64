@@ -82,18 +82,20 @@ lg.setup = function() {
 	for (var i = 0 ; i <= MAX_BRIDGE_ID; i++) {
 		var j = (i == 0) ? '' : i.toString();
 		if (nvram['lan'+j+'_ifname'].length > 0) {
-			if ((!fixIP(nvram['dhcpd'+j+'_startip'])) || (!fixIP(nvram['dhcpd'+j+'_endip']))) {
+			var dhcpStart = nvram['dhcpd'+j+'_startip'];
+			var dhcpEnd = nvram['dhcpd'+j+'_endip'];
+			if ((!fixIP(dhcpStart)) || (!fixIP(dhcpEnd))) {
 				if ((fixIP(nvram['lan'+j+'_ipaddr'])) && (fixIP(nvram['lan'+j+'_netmask']))) {
 					var n = getNetworkAddress(nvram['lan'+j+'_ipaddr'], nvram['lan'+j+'_netmask']);
-					/* defaults */
-					nvram['dhcpd'+j+'_startip'] = getAddress('0.0.0.2', n);
-					nvram['dhcpd'+j+'_endip'] = getAddress('0.0.0.50', n);
+					/* display defaults without changing the original NVRAM values */
+					dhcpStart = getAddress('0.0.0.2', n);
+					dhcpEnd = getAddress('0.0.0.50', n);
 				}
 			}
 			var l2Only = (nvram['lan'+j+'_ipaddr'] == '0.0.0.0');
 			lg.insertData(-1, [i.toString(), nvram['lan'+j+'_stp'], nvram['lan'+j+'_ipaddr'], l2Only ? '' : nvram['lan'+j+'_netmask'], l2Only ? 0 : ((nvram['lan'+j+'_proto'] == 'dhcp') ? 1 : 0),
-			                   l2Only ? '' : nvram['dhcpd'+j+'_startip'], l2Only ? '' : nvram['dhcpd'+j+'_endip'],
-			                   (!l2Only && (nvram['lan'+j+'_proto'] == 'dhcp')) ? (((nvram['dhcp'+j+'_lease']) * 1 == 0) ? '1440' : (nvram['dhcp'+j+'_lease']).toString()) : '']) ;
+			                   l2Only ? '' : dhcpStart, l2Only ? '' : dhcpEnd,
+			                   !l2Only ? (((nvram['dhcp'+j+'_lease']) * 1 == 0) ? '1440' : (nvram['dhcp'+j+'_lease']).toString()) : '']) ;
 			numBridges++;
 		}
 	}
@@ -1864,9 +1866,37 @@ function save() {
 		fom['lan'+j+'_ipaddr'].value = d[i][2];
 		fom['lan'+j+'_netmask'].value = d[i][3];
 		fom['lan'+j+'_proto'].value = (d[i][4] != '0') ? 'dhcp' : 'static';
-		fom['dhcp'+j+'_lease'].value = (d[i][4] != '0') ? d[i][7] : '';
-		fom['dhcpd'+j+'_startip'].value = (d[i][4] != '0') ? d[i][5] : '';
-		fom['dhcpd'+j+'_endip'].value = (d[i][4] != '0') ? d[i][6] : '';
+		if (d[i][4] != '0') {
+			fom['dhcp'+j+'_lease'].value = d[i][7];
+			fom['dhcpd'+j+'_startip'].value = d[i][5];
+			fom['dhcpd'+j+'_endip'].value = d[i][6];
+		}
+		else if ((d[i][2] != '0.0.0.0') && (nvram['lan'+j+'_ifname'] == 'br'+d[i][0])) {
+			/* Preserve stored DHCP settings, not display defaults, while DHCP is off. */
+			var lease = nvram['dhcp'+j+'_lease'];
+			if (/^[0-9]{1,5}$/.test(lease) && (Number(lease) <= 10080))
+				fom['dhcp'+j+'_lease'].value = lease;
+
+			var start = nvram['dhcpd'+j+'_startip'];
+			var end = nvram['dhcpd'+j+'_endip'];
+			var oldIP = nvram['lan'+j+'_ipaddr'];
+			var oldMask = nvram['lan'+j+'_netmask'];
+			/* Do not reuse a pool after changing the subnet or on a new bridge. */
+			if (fixIP(oldIP) && fixIP(oldMask) && fixIP(d[i][2]) &&
+			    (oldMask == d[i][3]) &&
+			    (getNetworkAddress(oldIP, oldMask) == getNetworkAddress(d[i][2], d[i][3])) &&
+			    (fixIP(start) == start) && (fixIP(end) == end) &&
+			    (getNetworkAddress(start, d[i][3]) == getNetworkAddress(d[i][2], d[i][3])) &&
+			    (getNetworkAddress(end, d[i][3]) == getNetworkAddress(d[i][2], d[i][3])) &&
+			    (start != getNetworkAddress(d[i][2], d[i][3])) &&
+			    (end != getBroadcastAddress(getNetworkAddress(d[i][2], d[i][3]), d[i][3])) &&
+			    (start != d[i][2]) && (end != d[i][2]) &&
+			    (aton(start) <= aton(end)) &&
+			    ((oldIP == d[i][2]) || (aton(d[i][2]) < aton(start)) || (aton(d[i][2]) > aton(end)))) {
+				fom['dhcpd'+j+'_startip'].value = start;
+				fom['dhcpd'+j+'_endip'].value = end;
+			}
+		}
 
 /* REMOVE-BEGIN
 alert('lan'+j+'_ifname=' + fom['lan'+j+'_ifname'].value + '\n' +
