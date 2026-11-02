@@ -164,24 +164,18 @@ void start_tinc(int force)
 
 	/* write private rsa key */
 	if (strcmp(tinc_tmp_value = nvram_safe_get("tinc_private_rsa"), "") != 0) {
-		if (!(fp = fopen(TINC_RSA_KEY, "w"))) {
+		if (f_write_string(TINC_RSA_KEY, tinc_tmp_value, FW_NEWLINE | FW_CREATE, 0600) < 0) {
 			logerr(__FUNCTION__, __LINE__, TINC_RSA_KEY);
 			return;
 		}
-		fprintf(fp, "%s\n", tinc_tmp_value);
-		fclose(fp);
-		chmod(TINC_RSA_KEY, 0600);
 	}
 
 	/* write private ed25519 key */
 	if (strcmp(tinc_tmp_value = nvram_safe_get("tinc_private_ed25519"), "") != 0) {
-		if (!(fp = fopen(TINC_PRIV_KEY, "w"))) {
+		if (f_write_string(TINC_PRIV_KEY, tinc_tmp_value, FW_NEWLINE | FW_CREATE, 0600) < 0) {
 			logerr(__FUNCTION__, __LINE__, TINC_PRIV_KEY);
 			return;
 		}
-		fprintf(fp, "%s\n", tinc_tmp_value);
-		fclose(fp);
-		chmod(TINC_PRIV_KEY, 0600);
 	}
 
 	/* create tinc.conf */

@@ -252,10 +252,7 @@ static void set_lan_hostname(const char *wan_hostname)
 		if (s && strlen(s) >= 17) {
 			snprintf(buf, sizeof(buf), "FT-%c%c%c%c%c%c%c%c%c%c%c%c", s[0], s[1], s[3], s[4], s[6], s[7], s[9], s[10], s[12], s[13], s[15], s[16]);
 
-			if ((f = fopen("/proc/sys/kernel/hostname", "w"))) {
-				fputs(buf, f);
-				fclose(f);
-			}
+			f_write_string("/proc/sys/kernel/hostname", buf, 0, 0);
 			nvram_set("lan_hostname", buf);
 		}
 	}

@@ -428,7 +428,7 @@ void start_stubby(void)
 	const static char *stubby_conf = "/etc/stubby/stubby.yml";
 	const static char *stubby_conf_alt = "/etc/stubby/stubby_alt.yml";
 	const static char *stubby_conf_custom = "/etc/stubby/stubby_custom.yml";
-	FILE *fp, *fc;
+	FILE *fp;
 	char *nv, *nvp, *b;
 	char *server, *tlsport, *hostname, *spkipin, *digest;
 	int ntp_ready, port, dnssec, ret;
@@ -456,12 +456,10 @@ void start_stubby(void)
 
 	/* custom configuration: use only this one, omit the other settings */
 	if (strlen(nvram_safe_get("stubby_custom")) > 0) {
-		if ((fc = fopen(stubby_conf_custom, "w")) == NULL) {
+		if (f_write_string(stubby_conf_custom, nvram_safe_get("stubby_custom"), FW_NEWLINE, 0644) < 0) {
 			logerr(__FUNCTION__, __LINE__, stubby_conf_custom);
 			return;
 		}
-		fprintf(fc, "%s\n", nvram_safe_get("stubby_custom"));
-		fclose(fc);
 
 		eval("stubby", "-g", "-v", nvram_safe_get("stubby_log"), "-C", (char *)stubby_conf_custom);
 		return;
@@ -2058,7 +2056,6 @@ void stop_ntpd(void)
 
 int ntpd_synced_main(int argc, char *argv[])
 {
-	FILE *file;
 	char message[300];
 	char *stratum = safe_getenv("stratum");
 	char *offset = safe_getenv("offset");
@@ -2157,12 +2154,9 @@ int ntpd_synced_main(int argc, char *argv[])
 					    discipline_jitter,
 					    freq_drift_ppm);
 
-	if (!(file = fopen("/tmp/ntpd", "w"))) {
+	if (f_write_string("/tmp/ntpd", message, 0, 0644) < 0)
 		return 1;
-	}
 
-	fprintf(file,"%s", message);
-	fclose(file);
 	return 0;
 }
 

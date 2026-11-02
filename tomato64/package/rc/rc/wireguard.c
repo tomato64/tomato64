@@ -1173,20 +1173,15 @@ static int wg_set_iface_fwmark(const int unit, char *iface)
 
 static int wg_set_iface_privkey(char *iface, const char *privkey)
 {
-	FILE *fp;
 	char buffer[BUF_SIZE];
 
 	/* write private key to file */
 	snprintf(buffer, BUF_SIZE, WG_KEYS_DIR"/%s", iface);
 
-	if (!(fp = fopen(buffer, "w"))) {
-		logmsg(LOG_ERR, "cannot open file for writing: %s (%s)", buffer, strerror(errno));
+	if (f_write_string(buffer, privkey, FW_CREATE, 0600) < 0) {
+		logmsg(LOG_ERR, "cannot write file: %s (%s)", buffer, strerror(errno));
 		return -1;
 	}
-	fprintf(fp, "%s", privkey);
-	fclose(fp);
-
-	chmod(buffer, (S_IRUSR | S_IWUSR));
 
 	/* set interface private key */
 	if (eval("wg", "set", iface, "private-key", buffer)) {
@@ -1298,18 +1293,15 @@ static void wg_iface_post_down(const int unit)
 
 static void wg_set_peer_psk(char *iface, char *pubkey, const char *presharedkey)
 {
-	FILE *fp;
 	char buffer[BUF_SIZE];
 
 	/* write preshared key to file */
 	snprintf(buffer, BUF_SIZE, WG_KEYS_DIR"/%s.psk", iface);
 
-	if (!(fp = fopen(buffer, "w"))) {
-		logmsg(LOG_ERR, "cannot open file for writing: %s (%s)", buffer, strerror(errno));
+	if (f_write_string(buffer, presharedkey, FW_CREATE, 0600) < 0) {
+		logmsg(LOG_ERR, "cannot write file: %s (%s)", buffer, strerror(errno));
 		return;
 	}
-	fprintf(fp, "%s", presharedkey);
-	fclose(fp);
 
 	if (eval("wg", "set", iface, "peer", pubkey, "preshared-key", buffer)) {
 		logmsg(LOG_WARNING, "command failed: wg set %s peer %s preshared-key xxx", iface, pubkey);
