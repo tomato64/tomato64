@@ -832,11 +832,11 @@ long check_wanup_time(char *prefix)
 	return wanuptime;
 }
 
-int get_wan_phy_port(char *prefix)
+/* The physical WAN jack must not depend on the configured WAN VLAN. */
+int get_default_wan_phy_port(void)
 {
-	char ifname[IFNAMSIZ], ports_var[32], ports_buf[128], router_name[64], tmp[128];
-	char *token, *last_token = NULL, *saveptr = NULL;
-	int vport = 0, vport_last = 0, i;
+	const char *router_name = nvram_safe_get("t_fix1");
+	int i;
 #ifdef TCONFIG_BCMARM
 	/* ARM routers with WAN on Port 4 */
 	static const char *port4_routers[] = { "Netgear AC1450", "Netgear R6200v2", "Netgear R6250",
@@ -859,6 +859,20 @@ int get_wan_phy_port(char *prefix)
 	                                       "WNDR4000", "WNDR4500 V1", "WNDR4500 V2", NULL
 	                                     };
 #endif
+
+	for (i = 0; port4_routers[i]; ++i) {
+		if (strcmp(router_name, port4_routers[i]) == 0)
+			return 4;
+	}
+
+	return 0;
+}
+
+int get_wan_phy_port(char *prefix)
+{
+	char ifname[IFNAMSIZ], ports_var[32], ports_buf[128], tmp[128];
+	char *token, *last_token = NULL, *saveptr = NULL;
+	int vport = 0, vport_last = 0;
 
 	strlcpy(ifname, prefix_nvram_get(prefix, "ifname", tmp, sizeof(tmp)), sizeof(ifname));
 	if (!*ifname || (strcmp(ifname, "none") == 0))
@@ -900,19 +914,11 @@ int get_wan_phy_port(char *prefix)
 		return last_token ? vport : -1;
 
 	/*
-	 * Preserve the historical primary-WAN mapping used by
-	 * asp_etherstates(): some board defaults don't expose both external
-	 * and CPU switch ports, so an absent/single-entry mapping falls back
-	 * to the model's dedicated WAN port.
+	 * Preserve the primary-WAN fallback for incomplete switch mappings.
+	 * This remains independent of the GUI's physical port ordering.
 	 */
-	if (!last_token || (vport_last == vport) || (vport_last == 0)) {
-		strlcpy(router_name, nvram_safe_get("t_fix1"), sizeof(router_name));
-		for (i = 0; port4_routers[i]; i++) {
-			if (strcmp(router_name, port4_routers[i]) == 0)
-				return 4;
-		}
-		return 0;
-	}
+	if (!last_token || (vport_last == vport) || (vport_last == 0))
+		return get_default_wan_phy_port();
 
 	return vport;
 }

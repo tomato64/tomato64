@@ -651,7 +651,7 @@ void asp_etherstates(int argc, char **argv)
 	char prefix[16], tmp_nv[32], wan_labels[MAX_PORT_ID + 1][64];
 	char *tmp;
 	int vport, port_num, port_count, mwan_num, wan_unit, wan_port, display_port;
-	int proto, wan_map_complete, wired_wan_count;
+	int proto, wan_map_complete;
 	int i, j;
 	static const char ports_disabled[] = "\netherstates = {port0: 'disabled'};\netherwans = null;\n";
 	/* port state storage */
@@ -664,10 +664,9 @@ void asp_etherstates(int argc, char **argv)
 	port_state_t temp;
 
 	/* initialize variables */
-	vport = get_wan_phy_port("wan");
+	vport = get_default_wan_phy_port();
 	port_count = 0;
 	wan_map_complete = 1;
-	wired_wan_count = 0;
 	memset(wan_state, 0, sizeof(wan_state));
 	memset(wan_labels, 0, sizeof(wan_labels));
 
@@ -786,13 +785,9 @@ void asp_etherstates(int argc, char **argv)
 	web_puts("};\n");
 
 	/*
-	 * Publish WAN-to-display-port metadata separately from etherstates.
-	 * The legacy etherstates ordering above must remain unchanged because
-	 * Status > Overview and Advanced > VLAN already share that ordering.
-	 *
-	 * Only publish the map when every active wired WAN can be resolved to
-	 * one of those existing display slots. Otherwise return null and let
-	 * the GUI use its historical caption heuristic.
+	 * Map wired WANs onto fixed physical display slots, independent of
+	 * WAN0 and VLAN reassignment. An empty object means no wired WAN is
+	 * active; null means an active wired WAN could not be mapped.
 	 */
 	mwan_num = nvram_get_int("mwan_num");
 	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
@@ -809,7 +804,6 @@ void asp_etherstates(int argc, char **argv)
 		if (*prefix_nvram_get(prefix, "sta", tmp_nv, sizeof(tmp_nv)))
 			continue;
 
-		wired_wan_count++;
 		wan_port = get_wan_phy_port(prefix);
 		if (wan_port < 0) {
 			wan_map_complete = 0;
@@ -840,7 +834,7 @@ void asp_etherstates(int argc, char **argv)
 		strlcat(wan_labels[display_port], line, sizeof(wan_labels[display_port]));
 	}
 
-	if ((!wan_map_complete) || (wired_wan_count == 0)) {
+	if (!wan_map_complete) {
 		web_puts("etherwans = null;\n");
 		return;
 	}
