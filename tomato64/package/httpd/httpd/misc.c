@@ -648,10 +648,12 @@ void asp_etherstates(int argc, char **argv)
 #ifndef TOMATO64
 	FILE *f;
 	char line[128], state[32], router_name[64], wan_state[16];
+	char prefix[16], tmp_nv[32], wan_labels[MAX_PORT_ID + 1][64];
 	char *tmp;
-	int vport, port_num, port_count;
+	int vport, port_num, port_count, mwan_num, wan_unit, wan_port, display_port;
+	int proto, wan_map_complete, wired_wan_count;
 	int i, j;
-	static const char ports_disabled[] = "\netherstates = {port0: 'disabled'};\n";
+	static const char ports_disabled[] = "\netherstates = {port0: 'disabled'};\netherwans = null;\n";
 	/* port state storage */
 	typedef struct {
 		int port_num;
@@ -664,7 +666,10 @@ void asp_etherstates(int argc, char **argv)
 	/* initialize variables */
 	vport = get_wan_phy_port("wan");
 	port_count = 0;
+	wan_map_complete = 1;
+	wired_wan_count = 0;
 	memset(wan_state, 0, sizeof(wan_state));
+	memset(wan_labels, 0, sizeof(wan_labels));
 
 	if (!nvram_match("lan_state", "1")) {
 		web_puts(ports_disabled);
@@ -778,6 +783,77 @@ void asp_etherstates(int argc, char **argv)
 		j++;
 	}
 
+	web_puts("};\n");
+
+	/*
+	 * Publish WAN-to-display-port metadata separately from etherstates.
+	 * The legacy etherstates ordering above must remain unchanged because
+	 * Status > Overview and Advanced > VLAN already share that ordering.
+	 *
+	 * Only publish the map when every active wired WAN can be resolved to
+	 * one of those existing display slots. Otherwise return null and let
+	 * the GUI use its historical caption heuristic.
+	 */
+	mwan_num = nvram_get_int("mwan_num");
+	if ((mwan_num < 1) || (mwan_num > MWAN_MAX))
+		mwan_num = 1;
+
+	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
+		get_wan_prefix(wan_unit, prefix, sizeof(prefix));
+		proto = get_wanx_proto(prefix);
+
+		if ((proto == WP_DISABLED) || (proto == WP_LTE) || (proto == WP_PPP3G))
+			continue;
+
+		/* A wireless-client WAN has no physical Ethernet switch port. */
+		if (*prefix_nvram_get(prefix, "sta", tmp_nv, sizeof(tmp_nv)))
+			continue;
+
+		wired_wan_count++;
+		wan_port = get_wan_phy_port(prefix);
+		if (wan_port < 0) {
+			wan_map_complete = 0;
+			break;
+		}
+
+		display_port = -1;
+		if (wan_port == vport)
+			display_port = 0;
+		else {
+			for (i = 0; i < port_count; ++i) {
+				if (ports[i].port_num == wan_port) {
+					display_port = i + 1;
+					break;
+				}
+			}
+		}
+
+		if ((display_port < 0) || (display_port > MAX_PORT_ID)) {
+			wan_map_complete = 0;
+			break;
+		}
+
+		if (wan_labels[display_port][0] != '\0')
+			strlcat(wan_labels[display_port], "/", sizeof(wan_labels[display_port]));
+
+		snprintf(line, sizeof(line), "WAN%d", wan_unit - 1);
+		strlcat(wan_labels[display_port], line, sizeof(wan_labels[display_port]));
+	}
+
+	if ((!wan_map_complete) || (wired_wan_count == 0)) {
+		web_puts("etherwans = null;\n");
+		return;
+	}
+
+	web_puts("etherwans = {");
+	j = 0;
+	for (i = 0; i <= MAX_PORT_ID; ++i) {
+		if (wan_labels[i][0] == '\0')
+			continue;
+
+		web_printf("%sport%d: '%s'", j ? "," : "", i, wan_labels[i]);
+		j++;
+	}
 	web_puts("};\n");
 #else /* TOMATO64 */
 	char path[64];

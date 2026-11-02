@@ -3220,7 +3220,8 @@ function calcWanPortCount() {
 		var u = (uidx > 1) ? uidx : '';
 		var proto = nvram['wan'+u+'_proto'];
 
-		if ((proto != 'disabled')
+		/* A missing NVRAM property must not be treated as an enabled WAN. */
+		if (proto && (proto != 'disabled')
 /* USB-BEGIN */
 		    && (proto != 'lte') && (proto != 'ppp3g')
 /* USB-END */
@@ -3235,11 +3236,44 @@ function ethDescClean(s) {
 	return (s || '').replace(/[%\r\n]/g, '').substring(0, 8);
 }
 
+function mappedWanDescription(i) {
+	var idx = parseInt(i, 10);
+	if (!isFinite(idx))
+		return null;
+
+	/* null/undefined means the backend could not provide a complete map.
+	 * An empty object is valid and means there are no active wired WANs.
+	 */
+	if ((typeof(etherwans) == 'undefined') || (etherwans === null))
+		return null;
+
+	var label = etherwans['port'+idx];
+	return (typeof(label) == 'string') ? label : '';
+}
+
 function portDescription(i) {
 	var idx = parseInt(i, 10);
 	if (!isFinite(idx))
 		return i;
 
+	var mapped = mappedWanDescription(idx);
+	if (mapped !== null) {
+		if (mapped.length)
+			return mapped;
+
+		/*
+		 * Preserve the established physical LAN numbering. The dedicated
+		 * primary Ethernet WAN occupies display slot 0 when WAN0 is wired;
+		 * secondary WANs merely replace the label of whichever LAN jack is
+		 * actually assigned to them, without renumbering the other LANs.
+		 */
+		var primary = mappedWanDescription(0) || '';
+		var primaryWired = /(^|\/)WAN0(\/|$)/.test(primary);
+
+		return 'LAN'+(primaryWired ? ((idx < 5) ? (idx - 1) : '4-7') : ((idx < 5) ? idx : '5-8'));
+	}
+
+	/* Legacy fallback for old/incomplete backend data. */
 	var wanCount = calcWanPortCount();
 
 	if (idx < wanCount)
@@ -3270,6 +3304,10 @@ function portCaption(i, shorten) {
 
 	if (!shorten)
 		return orig;
+
+	/* Multiple tagged WANs may legitimately share one physical trunk. */
+	if (orig && (String(orig).indexOf('WAN') == 0))
+		return String(orig).replace(/WAN/g, 'W');
 
 	/* Keep captions compact for small VLAN header icons:
 	 * "LAN0" -> "L0", "WAN1" -> "W1", "LAN4-7" -> "L7".
