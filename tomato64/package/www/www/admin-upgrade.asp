@@ -140,7 +140,7 @@ function updateFilenameDiff() {
 	for (i = 0; i < name.length; i++) {
 		var ch = name.charAt(i);
 		if (i >= b.length || a.charAt(i) != b.charAt(i))
-			html += '<span class="afu-diff">'+escapeText(ch)+'</span>';
+			html += '<span class="afu-diff">'+escapeText(ch)+'<\/span>';
 		else
 			html += escapeText(ch);
 	}
@@ -410,23 +410,23 @@ function earlyInit() {
 /* TOMATO64-END */
 				                       { title: 'Free RAM:',text: '<span id="afu-size"></span>' },
 				                       null,
-				                       { title: 'Erase NVRAM',text: '<input type="checkbox" id="f_reset"> <small>Restore firmware default settings as part of the upgrade</small>' },
+				                       { title: 'Erase NVRAM',text: '<input type="checkbox" id="f_reset"> <small>Restore firmware default settings as part of the upgrade<\/small>' },
 /* TOMATO64-X86_64-BEGIN */
-				                       { title: 'Fast Reboot',text: '<input type="checkbox" id="f_fastreboot"> <small>Perform a Fast Reboot after flashing (run locally the first time to ensure correct functionality)</small>' },
+				                       { title: 'Fast Reboot',text: '<input type="checkbox" id="f_fastreboot"> <small>Perform a Fast Reboot after flashing (run locally the first time to ensure correct functionality)<\/small>' },
 /* TOMATO64-X86_64-END */
 				                       null,
 /* TOMATO64-REMOVE-BEGIN */
-				                       { title: '&nbsp;',text: 'Select a <a href="https://freshtomato.org/downloads/"> valid firmware</a> to install (.trx or .bin):' },
-				                       { title: 'Current File:',text: '<span id="afu-fname" class="disabled"></span>' },
+				                       { title: '&nbsp;',text: 'Select a <a href="https://freshtomato.org/downloads/"> valid firmware<\/a> to install (.trx or .bin):' },
+				                       { title: 'Current File:',text: '<span id="afu-fname" class="disabled"><\/span>' },
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-				                       { title: '&nbsp;',text: 'Select a <a href="https://tomato64.org/files/"> valid firmware</a> to install ('+fwExpectedExt(nvram.t_model_name).msg+'):' },
+				                       { title: '&nbsp;',text: 'Select a <a href="https://tomato64.org/files/"> valid firmware<\/a> to install ('+fwExpectedExt(nvram.t_model_name).msg+'):' },
 /* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
-				                       { title: 'Upgrade File:',text: '<div id="afu-selected-fname"></div><input type="file" id="afu-file" name="file" class="afu-file-input" onchange="updateFilenameDiff()">' },
+				                       { title: 'Upgrade File:',text: '<div id="afu-selected-fname"><\/div><input type="file" id="afu-file" name="file" class="afu-file-input" onchange="updateFilenameDiff()">' },
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-				                       { title: 'Upgrade File:',text: '<input type="file" id="afu-file" name="file" class="afu-file-input" onchange="updateFilenameDiff()"><div id="afu-selected-fname"></div>' },
+				                       { title: 'Upgrade File:',text: '<input type="file" id="afu-file" name="file" class="afu-file-input" onchange="updateFilenameDiff()"><div id="afu-selected-fname"><\/div>' },
 /* TOMATO64-END */
 				                       { title: '&nbsp;',text: '<input type="button" id="afu-upgrade-button" value="🛠️ Upgrade" onclick="upgrade()">' }
 				]);
