@@ -1,6 +1,6 @@
 --- pppd/pppd/plugins/radius/config.c
 +++ pppd/pppd/plugins/radius/config.c
-@@ -379,31 +379,37 @@
+@@ -384,31 +384,37 @@
  	}
  #endif
  

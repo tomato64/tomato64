@@ -1,0 +1,44 @@
+--- pppd/pppd/sys-linux.c
++++ pppd/pppd/sys-linux.c
+@@ -108,7 +108,6 @@
+ #if !defined(__GLIBC__) || __GLIBC__ >= 2
+ #include <asm/types.h>		/* glibc 2 conflicts with linux/types.h */
+ #include <sys/syscall.h>
+-#include <sys/auxv.h>
+ #include <linux/capability.h>
+ #include <net/if.h>
+ #include <net/if_arp.h>
+@@ -2904,7 +2903,32 @@
+  */
+ int ppp_secure_exec(void)
+ {
+-    return getauxval(AT_SECURE) != 0;
++    FILE *fp;
++    unsigned long auxv[2];
++    int secure = 1;
++
++    /*
++     * Older embedded libcs (including some uClibc toolchains) provide
++     * neither <sys/auxv.h> nor getauxval().  The Linux auxiliary vector
++     * is also available via /proc/self/auxv as pairs of native words.
++     *
++     * Linux AT_SECURE is entry type 23 (AT_NULL is 0).  If the file
++     * cannot be read, fail closed rather than granting privileges.
++     */
++    fp = fopen("/proc/self/auxv", "rb");
++    if (fp == NULL)
++        return 1;
++
++    while (fread(auxv, sizeof(auxv), 1, fp) == 1) {
++        if (auxv[0] == 23UL) {
++            secure = auxv[1] != 0;
++            break;
++        }
++        if (auxv[0] == 0)
++            break;
++    }
++    fclose(fp);
++    return secure;
+ }
+ 
+ /********************************************************************

@@ -11,7 +11,7 @@
  #include <pppd/options.h>
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -153,7 +153,8 @@
+@@ -156,7 +156,8 @@
  
  #include "multilink.h"
  

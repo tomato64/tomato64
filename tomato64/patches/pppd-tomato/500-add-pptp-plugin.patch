@@ -1,6 +1,6 @@
 --- pppd/configure.ac
 +++ pppd/configure.ac
-@@ -331,6 +331,7 @@ AC_CONFIG_FILES([
+@@ -329,6 +329,7 @@ AC_CONFIG_FILES([
      pppd/plugins/pppol2tp/Makefile
      pppd/plugins/radius/Makefile
      pppd/plugins/dhcpv6relay/Makefile

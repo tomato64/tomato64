@@ -101,6 +101,11 @@ void start_pptpc(void)
 
 	/* Generate ppp options */
 	if ((fd = fopen(PPTPC_OPTIONS, "w")) != NULL) {
+		if (fchmod(fileno(fd), 0600) != 0) {
+			logerr(__FUNCTION__, __LINE__, PPTPC_OPTIONS);
+			fclose(fd);
+			return;
+		}
 		ok = 1;
 		fprintf(fd, "lock\n"
 		            "noauth\n"

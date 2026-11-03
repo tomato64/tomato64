@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PPPD_TOMATO_VERSION = 2.5.3
+PPPD_TOMATO_VERSION = 2.5.4
 PPPD_TOMATO_SITE = https://download.samba.org/pub/ppp
 PPPD_TOMATO_SOURCE = ppp-$(PPPD_TOMATO_VERSION).tar.gz
 PPPD_TOMATO_LICENSE = LGPL-2.0+, LGPL, BSD-4-Clause, BSD-3-Clause, GPL-2.0+

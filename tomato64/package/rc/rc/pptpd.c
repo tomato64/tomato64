@@ -59,7 +59,7 @@ static char *ip2bcast(char *ip, char *netmask, char *buf, const size_t buf_sz)
 }
 
 
-static void write_chap_secret(char *file)
+static int write_chap_secret(const char *file)
 {
 	FILE *fp;
 	char *nv, *nvp, *b;
@@ -67,7 +67,13 @@ static void write_chap_secret(char *file)
 
 	if ((fp = fopen(file, "w")) == NULL) {
 		logerr(__FUNCTION__, __LINE__, file);
-		return;
+		return -1;
+	}
+	/* Restrict CHAP credentials before writing them. */
+	if (fchmod(fileno(fp), 0600) != 0) {
+		logerr(__FUNCTION__, __LINE__, file);
+		fclose(fp);
+		return -1;
 	}
 
 	nv = nvp = strdup(nvram_safe_get("pptpd_users"));
@@ -87,6 +93,7 @@ static void write_chap_secret(char *file)
 		free(nv);
 	}
 	fclose(fp);
+	return 0;
 }
 
 static void build_pptpd_firewall(void)
@@ -210,6 +217,11 @@ void start_pptpd(int force)
 		logerr(__FUNCTION__, __LINE__, PPTPD_OPTIONS);
 		return;
 	}
+	if (fchmod(fileno(fp), 0600) != 0) {
+		logerr(__FUNCTION__, __LINE__, PPTPD_OPTIONS);
+		fclose(fp);
+		return;
+	}
 
 	fprintf(fp, "logfile /var/log/pptpd-pppd.log\n"
 	            "debug\n");
@@ -326,9 +338,8 @@ void start_pptpd(int force)
 	fclose(fp);
 
 	/* Extract chap-secrets from nvram */
-	write_chap_secret(PPTPD_SECRETS);
-
-	chmod(PPTPD_SECRETS, 0600);
+	if (write_chap_secret(PPTPD_SECRETS) != 0)
+		return;
 
 	build_pptpd_firewall();
 	run_pptpd_firewall_script();

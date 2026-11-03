@@ -1,0 +1,24 @@
+--- pppd/pppd/sys-linux.c
++++ pppd/pppd/sys-linux.c
+@@ -2888,12 +2888,20 @@
+     if (geteuid() == 0)
+ 	return 1;
+
++#if defined(_LINUX_CAPABILITY_VERSION_3)
+     hdr.version = _LINUX_CAPABILITY_VERSION_3;
++#elif defined(_LINUX_CAPABILITY_VERSION_1)
++    hdr.version = _LINUX_CAPABILITY_VERSION_1;
++#else
++    /* Linux 2.6.22 and earlier headers use this name for API v1. */
++    hdr.version = _LINUX_CAPABILITY_VERSION;
++#endif
+     hdr.pid = 0;
+     if (syscall(SYS_capget, &hdr, data) < 0)
+ 	return 0;
+
+-    return !!(data[CAP_TO_INDEX(CAP_NET_ADMIN)].effective & CAP_TO_MASK(CAP_NET_ADMIN));
++    /* CAP_NET_ADMIN (12) is in the first 32-bit word for both v1 and v3. */
++    return !!(data[0].effective & (1U << CAP_NET_ADMIN));
+ }
+
+ /*

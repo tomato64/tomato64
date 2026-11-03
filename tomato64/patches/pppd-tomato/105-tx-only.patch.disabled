@@ -1,6 +1,6 @@
 --- pppd/pppd/auth.c
 +++ pppd/pppd/auth.c
-@@ -1302,6 +1302,10 @@
+@@ -1312,6 +1312,10 @@
      if (idle_time_hook != 0) {
  	tlim = idle_time_hook(&idle);
      } else {
@@ -21,9 +21,9 @@
  
  
  struct option_value {
-@@ -419,6 +420,10 @@
-     { "mo-timeout", o_int, &maxoctets_timeout,
-       "Check for traffic limit every N seconds", OPT_PRIO | OPT_LLIMIT | 1 },
+@@ -432,6 +433,10 @@
+     { "nostrict-secrets-files", o_bool, &strict_secrets_files,
+       "Disabled strict read checks on secrets files.", OPT_PRIV|OPT_PRIO | 0 },
  
 +    /* add for tx_only option */
 +    { "tx_only", o_bool, &tx_only,

@@ -38,7 +38,7 @@
  }
 --- pppd/pppd/options.c
 +++ pppd/pppd/options.c
-@@ -1203,10 +1203,10 @@
+@@ -1242,10 +1242,10 @@
  {
      FILE *fp = stderr;
      if (in_phase(PHASE_INITIALIZE)) {
@@ -50,7 +50,7 @@
          fprintf(fp, "License BSD: The 3 clause BSD license <https://opensource.org/licenses/BSD-3-Clause>\n");
          fprintf(fp, "This is free software: you are free to change and redistribute it.\n");
          fprintf(fp, "There is NO WARRANTY, to the extent permitted by law.\n\n");
-@@ -1227,6 +1227,9 @@
+@@ -1266,6 +1266,9 @@
          fprintf(fp, "   mru <n>         Set MRU value to <n> for negotiation\n");
          fprintf(fp, "   show-options    Display an extended list of options\n");
          fprintf(fp, "See pppd(8) for more options.\n");
@@ -60,7 +60,7 @@
      }
  }
  
-@@ -1250,7 +1253,11 @@
+@@ -1289,7 +1292,11 @@
  showversion(char **argv)
  {
      if (in_phase(PHASE_INITIALIZE)) {
@@ -72,7 +72,7 @@
  	exit(0);
      }
      return 0;
-@@ -1326,7 +1333,11 @@
+@@ -1365,7 +1372,11 @@
      vslprintf(buf, sizeof(buf), fmt, args);
      va_end(args);
      if (in_phase(PHASE_INITIALIZE))
@@ -213,7 +213,7 @@
  }
 --- pppd/pppd/pppd.h
 +++ pppd/pppd/pppd.h
-@@ -264,8 +264,10 @@
+@@ -274,8 +274,10 @@
  /* safe strncpy */
  size_t strlcat(char *, const char *, size_t);
  
@@ -224,7 +224,7 @@
  
  /* log an informational message */
  void info(const char *, ...);
-@@ -273,6 +275,7 @@
+@@ -283,6 +285,7 @@
  /* log a notice-level message */
  void notice(const char *, ...);
  
@@ -232,7 +232,7 @@
  /* log a warning message */
  void warn(const char *, ...);
  
-@@ -281,6 +284,12 @@
+@@ -291,6 +294,12 @@
  
  /* log an error message and die(1) */
  void fatal(const char *, ...);
@@ -245,34 +245,9 @@
  
  /* Say we ran out of memory, and die */
  void novm(const char *);
---- pppd/pppd/srp-entry.c
-+++ pppd/pppd/srp-entry.c
-@@ -89,8 +89,10 @@
- static void
- usage(void)
- {
-+#ifdef NO_OPTSIZE
- 	(void) fprintf(stderr, "Usage:\n\t%s [-i index] [clientname]\n",
- 	    myname);
-+#endif
- 	exit(1);
- }
- 
-@@ -137,7 +139,11 @@
- 		tcent = &mytce;
- 	}
- 	if (tcent == NULL) {
-+#ifdef NO_OPTSIZE
- 		(void) fprintf(stderr, "SRP modulus/generator %d not found\n",
-+#else
-+		(void) printf("SRP modulus/generator %d not found\n",
-+#endif
- 		    idx);
- 		exit(1);
- 	}
 --- pppd/pppd/utils.c
 +++ pppd/pppd/utils.c
-@@ -751,6 +751,7 @@
+@@ -743,6 +743,7 @@
  /*
   * fatal - log an error message and die horribly.
   */
@@ -280,7 +255,7 @@
  void
  fatal(const char *fmt, ...)
  {
-@@ -796,6 +797,7 @@
+@@ -788,6 +789,7 @@
      logit(LOG_WARNING, fmt, pvar);
      va_end(pvar);
  }
@@ -288,7 +263,7 @@
  
  /*
   * notice - log a notice-level message.
-@@ -828,6 +830,7 @@
+@@ -820,6 +822,7 @@
  /*
   * dbglog - log a debug message.
   */
@@ -296,7 +271,7 @@
  void
  dbglog(const char *fmt, ...)
  {
-@@ -838,6 +841,7 @@
+@@ -830,6 +833,7 @@
      logit(LOG_DEBUG, fmt, pvar);
      va_end(pvar);
  }

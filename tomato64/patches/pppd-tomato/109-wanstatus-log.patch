@@ -32,7 +32,7 @@
  /*
   * These definitions relate to the measurement and logging of round-trip
   * time (RTT) of LCP echo-requests implemented in lcp_rtt_update_buffer().
-@@ -408,6 +411,7 @@
+@@ -411,6 +414,7 @@
  lcp_close(int unit, char *reason)
  {
      fsm *f = &lcp_fsm[unit];
@@ -40,7 +40,7 @@
      int oldstate;
  
      if (!in_phase(PHASE_DEAD) && !in_phase(PHASE_MASTER))
-@@ -420,6 +424,16 @@
+@@ -423,6 +427,16 @@
      oldstate = f->state;
  
      fsm_close(f, reason);
@@ -59,10 +59,10 @@
  	 * This action is not strictly according to the FSM in RFC1548,
 --- pppd/pppd/utils.c
 +++ pppd/pppd/utils.c
-@@ -1172,3 +1172,27 @@
+@@ -1163,3 +1163,27 @@
+ 	lock_file[0] = 0;
      }
  }
- 
 +/* add to wanstatus.log */
 +void saveWANStatus(char *currentstatus, int statusindex)
 +{

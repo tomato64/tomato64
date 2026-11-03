@@ -1,6 +1,6 @@
 --- pppd/pppd/lcp.c
 +++ pppd/pppd/lcp.c
-@@ -1902,12 +1902,12 @@
+@@ -1906,12 +1906,12 @@
       * the interface MTU is set to the lowest of that, the
       * MTU we want to use, and our link MRU.
       */

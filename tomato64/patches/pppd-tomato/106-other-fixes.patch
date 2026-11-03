@@ -54,7 +54,7 @@
  
      default:
  	msgf("warning: read() on stdin returned %d", status);
-@@ -1419,7 +1431,9 @@
+@@ -1421,7 +1433,9 @@
  	}
  
  	if (Verbose) {
@@ -65,7 +65,7 @@
  	       fputc( '\n', stderr );
  	   else if (c != '\r')
  	       fprintf( stderr, "%s", character(c) );
-@@ -1469,6 +1483,10 @@
+@@ -1471,6 +1485,10 @@
  	    alarm(0);
  	    alarmed = 0;
  	    free(s1);
@@ -78,7 +78,7 @@
  
 --- pppd/pppd/auth.c
 +++ pppd/pppd/auth.c
-@@ -647,6 +647,9 @@
+@@ -657,6 +657,9 @@
   */
  void start_link(int unit)
  {

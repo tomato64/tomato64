@@ -89,6 +89,11 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 		logerr(__FUNCTION__, __LINE__, ppp_optfile);
 		return -1;
 	}
+	if (fchmod(fileno(fp), 0600) != 0) {
+		logerr(__FUNCTION__, __LINE__, ppp_optfile);
+		fclose(fp);
+		return -1;
+	}
 
 #ifdef TCONFIG_USB
 	if (wan_proto != WP_PPP3G)
@@ -170,6 +175,12 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 
 		if ((cfp = fopen(ppp3g_chatfile, "w")) == NULL) {
 			logerr(__FUNCTION__, __LINE__, ppp3g_chatfile);
+			return -1;
+		}
+		if (fchmod(fileno(cfp), 0600) != 0) {
+			logerr(__FUNCTION__, __LINE__, ppp3g_chatfile);
+			fclose(cfp);
+			fclose(fp);
 			return -1;
 		}
 		fprintf(cfp, "ABORT \"NO CARRIER\"\n"

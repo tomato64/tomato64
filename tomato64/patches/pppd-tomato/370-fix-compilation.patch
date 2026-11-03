@@ -1,6 +1,6 @@
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -141,6 +141,13 @@ AC_CONFIG_FILES([
+@@ -144,6 +144,13 @@ AC_CONFIG_FILES([
  /* IFLA_PPP_DEV_FD is declared as enum when IFLA_PPP_MAX is defined */
  #define IFLA_PPP_DEV_FD 1
  #endif

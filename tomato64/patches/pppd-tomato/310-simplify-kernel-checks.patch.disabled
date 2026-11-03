@@ -1,6 +1,6 @@
 --- pppd/pppd/sys-linux.c
 +++ pppd/pppd/sys-linux.c
-@@ -225,7 +225,7 @@
+@@ -228,7 +228,7 @@
  static int restore_term        = 0;	/* 1 => we've munged the terminal */
  static struct termios inittermios;	/* Initial TTY termios */
  
@@ -9,7 +9,7 @@
  
  static char loop_name[20];
  static unsigned char inbuf[512]; /* buffer for chars read from loopback */
-@@ -242,8 +242,8 @@
+@@ -245,8 +245,8 @@
  static int	link_mtu;		/* mtu for the link (not bundle) */
  
  static struct utsname utsname;	/* for the kernel version */
@@ -19,7 +19,7 @@
  
  #define MAX_IFS		100
  
-@@ -2052,11 +2052,12 @@
+@@ -2055,11 +2055,12 @@
   *
   * path_to_procfs - find the path to the proc file system mount point
   */
@@ -34,7 +34,7 @@
      struct mntent *mntent;
      FILE *fp;
  
-@@ -2078,6 +2079,7 @@
+@@ -2081,6 +2082,7 @@
  	    fclose (fp);
  	}
      }
@@ -42,7 +42,7 @@
  
      strlcpy(proc_path + proc_path_len, tail,
  	    sizeof(proc_path) - proc_path_len);
-@@ -2865,15 +2867,19 @@
+@@ -2899,15 +2901,19 @@
      int    my_version, my_modification, my_patch;
      int osmaj, osmin, ospatch;
  
@@ -62,7 +62,7 @@
  
  	/* XXX should get from driver */
  	driver_version = 2;
-@@ -2933,6 +2939,7 @@
+@@ -2967,6 +2973,7 @@
  
      if (ok && ((ifr.ifr_hwaddr.sa_family & ~0xFF) != ARPHRD_PPP))
  	ok = 0;
@@ -70,7 +70,7 @@
  
  /*
   *  This is the PPP device. Validate the version of the driver at this
-@@ -3549,6 +3556,7 @@
+@@ -3583,6 +3590,7 @@
      }
  #endif /* TIOCGPTN */
  
@@ -78,7 +78,7 @@
      if (sfd < 0) {
  	/* the old way - scan through the pty name space */
  	for (i = 0; i < 64; ++i) {
-@@ -3573,6 +3581,7 @@
+@@ -3607,6 +3615,7 @@
  	    }
  	}
      }
