@@ -33,8 +33,8 @@ if [ "$PLATFORM_MT3600BE" == y ]; then
 fi
 
 if [ "$PLATFORM_BE12PRO" == y ]; then
-	echo "#define TOMATO_VERSION		\"$VERSION Tenda BE12 Pro AIO\"" >>	tomato_version.h
-	echo "$VERSION Tenda BE12 Pro AIO" >>						tomato_version
+	echo "#define TOMATO_VERSION		\"$VERSION BE12 Pro AIO\"" >>	tomato_version.h
+	echo "$VERSION BE12 Pro AIO" >>						tomato_version
 fi
 
 if [ "$PLATFORM_BE14000" == y ]; then
