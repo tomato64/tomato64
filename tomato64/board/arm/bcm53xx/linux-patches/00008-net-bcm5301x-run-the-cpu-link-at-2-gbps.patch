@@ -1,0 +1,175 @@
+net: bcm5301x: run the CPU <-> switch link at 2 Gbps, as the vendor driver does
+
+TEST PATCH. Matches what FreshTomato's Broadcom et/robo driver does on
+Northstar (release/src-rt-6.x.4708: shared/bcmrobo.c
+bcm_robo_enable_switch(), et/sys/etcgmac.c chipinit()):
+
+  - switch: CPU port GMII override with GMII_SPEED_UP_2G | SW_OVERRIDE |
+    TX/RX flow control | 1000 | full duplex | link up (port 5/7 register
+    0x58+port), or MII_SW_OR | GMII_SPEED_UP_2G | ... for IMP port 8
+    (register 0x0e);
+  - GMAC: core flags 0x44 (250 MHz clock) and speed 2500, kept for the
+    life of the link.
+
+Mainline gets neither:
+
+  - bgmac_miiconfig() already selects the 250 MHz clock and speed 2500,
+    but the fixed PHY that stands in for the switch reports 1000, and
+    bgmac_adjust_link() drops the MAC back to 1000 at link up ("switch0:
+    Link is Up - 1Gbps/Full"). Keep 2500 for a pseudo fixed link when
+    BGMAC_FEAT_FORCE_SPEED_2500 is set.
+
+  - the in-tree topologies give CPU port 5 no phy-mode or fixed-link, so
+    DSA skips phylink for it ("Skipping phylink registration for CPU port
+    5") and nothing writes its override register. Force it from
+    b53_setup(), and force 2000 in mac_link_up for a bcm5301x CPU port that
+    does have a fixed-link.
+
+  - b53_force_port_config() used the IMP register's bit layout for the
+    GMII ones: there bit 6 is GMII_PO_EN and the 2G bit is bit 7
+    (GMII_PO_SPEED_2000M), so it cleared the override enable it had just
+    set, and could never select 2G. Pick the 2G bit per register and set
+    the enable after clearing.
+
+Only bcm5301x is affected.
+--- a/drivers/net/dsa/b53/b53_common.c
++++ b/drivers/net/dsa/b53/b53_common.c
+@@ -1267,6 +1267,8 @@
+ }
+ EXPORT_SYMBOL(b53_setup_devlink_resources);
+ 
++static void b53_force_cpu_port_2g(struct b53_device *dev, int port);
++
+ static int b53_setup(struct dsa_switch *ds)
+ {
+ 	struct b53_device *dev = ds->priv;
+@@ -1322,10 +1324,12 @@
+ 	 * ports will be configured with .port_enable
+ 	 */
+ 	for (port = 0; port < dev->num_ports; port++) {
+-		if (dsa_is_cpu_port(ds, port))
++		if (dsa_is_cpu_port(ds, port)) {
+ 			b53_enable_cpu_port(dev, port);
+-		else
++			b53_force_cpu_port_2g(dev, port);
++		} else {
+ 			b53_disable_port(ds, port);
++		}
+ 	}
+ 
+ 	return b53_setup_devlink_resources(ds);
+@@ -1364,21 +1368,26 @@
+ 				  int speed, int duplex,
+ 				  bool tx_pause, bool rx_pause)
+ {
+-	u8 reg, val, off;
++	u8 reg, val, off, speed_2000;
+ 
+ 	/* Override the port settings */
+ 	if (port == dev->imp_port) {
+ 		off = B53_PORT_OVERRIDE_CTRL;
+ 		val = PORT_OVERRIDE_EN;
++		speed_2000 = PORT_OVERRIDE_SPEED_2000M;
+ 	} else if (is5325(dev)) {
+ 		return;
+ 	} else {
+ 		off = B53_GMII_PORT_OVERRIDE_CTRL(port);
+ 		val = GMII_PO_EN;
++		/* The GMII registers keep the 2G bit where the IMP one has
++		 * its enable bit: bit 6 here is GMII_PO_EN.
++		 */
++		speed_2000 = is5301x(dev) ? GMII_PO_SPEED_2000M :
++					    PORT_OVERRIDE_SPEED_2000M;
+ 	}
+ 
+ 	b53_read8(dev, B53_CTRL_PAGE, off, &reg);
+-	reg |= val;
+ 	if (duplex == DUPLEX_FULL)
+ 		reg |= PORT_OVERRIDE_FULL_DUPLEX;
+ 	else
+@@ -1386,11 +1395,12 @@
+ 
+ 	reg &= ~(0x3 << GMII_PO_SPEED_S);
+ 	if (is5301x(dev) || is58xx(dev))
+-		reg &= ~PORT_OVERRIDE_SPEED_2000M;
++		reg &= ~speed_2000;
++	reg |= val;
+ 
+ 	switch (speed) {
+ 	case 2000:
+-		reg |= PORT_OVERRIDE_SPEED_2000M;
++		reg |= speed_2000;
+ 		fallthrough;
+ 	case SPEED_1000:
+ 		reg |= PORT_OVERRIDE_SPEED_1000M;
+@@ -1428,6 +1438,24 @@
+ 	b53_write8(dev, B53_CTRL_PAGE, off, reg);
+ }
+ 
++/* bcm5301x can clock the link between a CPU port and its GMAC at 2 Gbps,
++ * and the vendor robo driver always does (GMII_SPEED_UP_2G on the CPU
++ * port, 2500 on the GMAC, which bgmac selects too). The in-tree
++ * topologies give port 5 no link description, so phylink never configures
++ * it: write the override here, and again from mac_link_up for a CPU port
++ * that does have a fixed-link.
++ */
++static void b53_force_cpu_port_2g(struct b53_device *dev, int port)
++{
++	if (!is5301x(dev))
++		return;
++
++	b53_force_port_config(dev, port, 2000, DUPLEX_FULL, true, true);
++	b53_force_link(dev, port, true);
++
++	dev_info(dev->dev, "CPU port %d forced to 2000 Mbps\n", port);
++}
++
+ static void b53_adjust_63xx_rgmii(struct dsa_switch *ds, int port,
+ 				  phy_interface_t interface)
+ {
+@@ -1657,9 +1685,11 @@
+ 	}
+ 
+ 	if (mode == MLO_AN_FIXED) {
+-		/* Force flow control on BCM5301x's CPU port */
+-		if (is5301x(dev) && dsa_is_cpu_port(ds, port))
++		/* Force flow control and the 2G link on BCM5301x's CPU port */
++		if (is5301x(dev) && dsa_is_cpu_port(ds, port)) {
+ 			tx_pause = rx_pause = true;
++			speed = 2000;
++		}
+ 
+ 		b53_force_port_config(dev, port, speed, duplex,
+ 				      tx_pause, rx_pause);
+--- a/drivers/net/ethernet/broadcom/bgmac.c
++++ b/drivers/net/ethernet/broadcom/bgmac.c
+@@ -1138,6 +1138,7 @@
+ 		bgmac->mac_speed = SPEED_2500;
+ 		bgmac->mac_duplex = DUPLEX_FULL;
+ 		bgmac_mac_speed(bgmac);
++		dev_info(bgmac->dev, "MAC forced to 2500 (2 Gbps line rate)\n");
+ 	} else {
+ 		u8 imode;
+ 
+@@ -1712,8 +1713,19 @@
+ 	bool update = false;
+ 
+ 	if (phy_dev->link) {
+-		if (phy_dev->speed != bgmac->mac_speed) {
+-			bgmac->mac_speed = phy_dev->speed;
++		int speed = phy_dev->speed;
++
++		/* bgmac_miiconfig() put the GMAC facing the switch on the
++		 * 250 MHz clock, a 2 Gbps line, as the vendor driver does. The
++		 * fixed PHY standing in for the switch can only say 1000, so
++		 * keep the forced speed rather than drop back to 1 Gbps.
++		 */
++		if ((bgmac->feature_flags & BGMAC_FEAT_FORCE_SPEED_2500) &&
++		    phy_is_pseudo_fixed_link(phy_dev))
++			speed = SPEED_2500;
++
++		if (speed != bgmac->mac_speed) {
++			bgmac->mac_speed = speed;
+ 			update = true;
+ 		}
+ 
