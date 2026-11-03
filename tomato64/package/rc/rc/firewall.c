@@ -966,6 +966,9 @@ static void raw_table(void)
 	if (!nvram_match("nf_pptp", "0"))
 		ipt_write("-A PREROUTING -p tcp -m tcp --dport 1723 -j CT --helper pptp\n");
 
+	/* Always attach the pptp helper to the router's own PPTP (WAN, PPTP client) */
+	ipt_write("-A OUTPUT -p tcp -m tcp --dport 1723 -j CT --helper pptp\n");
+
 	if (!nvram_match("nf_sip", "0"))
 		ipt_write("-A PREROUTING -p udp -m udp --dport 5060 -j CT --helper sip\n");
 
