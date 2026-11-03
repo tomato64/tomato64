@@ -1,0 +1,89 @@
+xl2tpd: fix the host route to the peer from 101-tomato-specific
+
+- delete the route again in destroy_tunnel(), as the original Tomato code
+  did; the call was lost when the hack was re-applied to a newer xl2tpd,
+  so the route outlived the tunnel and xl2tpd itself
+- route_add() took the first /proc/net/route entry that matched, usually
+  the default route, so a peer on a directly connected subnet got a host
+  route via the gateway; use the most specific route, as the kernel does
+- clear the whole struct rtentry, not a pointer's worth of it
+
+--- xl2tpd/call.c
++++ xl2tpd/call.c
+@@ -682,7 +682,7 @@
+         tunnels.head = st;
+         tunnels.count++;
+         /* Add route to the peer */
+-        memset(&st->rt, 0, sizeof(&st->rt));
++        memset(&st->rt, 0, sizeof(st->rt));
+         route_add(st->peer.sin_addr, &st->rt);
+         return st->self;
+     }
+--- xl2tpd/xl2tpd.c
++++ xl2tpd/xl2tpd.c
+@@ -693,6 +693,7 @@
+         close (t->pppox_fd);
+     if (t->udp_fd > -1 )
+         close (t->udp_fd);
++    route_del(&t->rt);
+     destroy_call (me);
+     free (t);
+ }
+@@ -1969,9 +1970,9 @@
+ 
+ int route_add(const struct in_addr inetaddr, struct rtentry *rt)
+ {
+-	char buf[256], dev[64];
+-	int metric, flags;
+-	u_int32_t dest, mask;
++	char buf[256], dev[64], best_dev[64] = "";
++	int metric, flags, best_flags = 0, best_len = -1;
++	u_int32_t dest, gw, mask;
+ 
+ 	FILE *f = fopen("/proc/net/route", "r");
+ 	if (f == NULL) {
+@@ -1981,13 +1982,18 @@
+ 
+ 	while (fgets(buf, sizeof(buf), f)) {
+ 		if (sscanf(buf, "%63s %x %x %X %*s %*s %d %x", dev, &dest,
+-			&sin_addr(&rt->rt_gateway).s_addr, &flags, &metric, &mask) != 6)
++			&gw, &flags, &metric, &mask) != 6)
+ 			continue;
++		/* the most specific route wins, as in the kernel's own lookup */
+ 		if ((flags & RTF_UP) == (RTF_UP) && (inetaddr.s_addr & mask) == dest &&
+-		    (dest || strncmp(dev, "ppp", 3)) /* avoid default via pppX to avoid on-demand loops*/) {
++		    (dest || strncmp(dev, "ppp", 3)) /* avoid default via pppX to avoid on-demand loops*/ &&
++		    __builtin_popcount(mask) > best_len) {
++			best_len = __builtin_popcount(mask);
++			best_flags = flags;
++			strcpy(best_dev, dev);
++			sin_addr(&rt->rt_gateway).s_addr = gw;
+ 			rt->rt_metric = metric + 1;
+ 			rt->rt_gateway.sa_family = AF_INET;
+-			break;
+ 		}
+ 	}
+ 
+@@ -2001,7 +2007,7 @@
+ 
+ 	/* check for existing route to this host, 
+ 	add if missing based on the existing routes */
+-	if (flags & RTF_HOST) {
++	if (best_flags & RTF_HOST) {
+ 		/* l2tp_log (LOG_ERR, "route_add: not adding existing route"); */
+ 		return -1;
+ 	}
+@@ -2013,11 +2019,11 @@
+ 	rt->rt_genmask.sa_family = AF_INET;
+ 
+ 	rt->rt_flags = RTF_UP | RTF_HOST;
+-	if (flags & RTF_GATEWAY)
++	if (best_flags & RTF_GATEWAY)
+ 		rt->rt_flags |= RTF_GATEWAY;
+ 
+ 	rt->rt_metric++;
+-	rt->rt_dev = strdup(dev);
++	rt->rt_dev = strdup(best_dev);
+ 
+ 	if (!rt->rt_dev) {
+ 		l2tp_log (LOG_ERR, "route_add: no memory");
