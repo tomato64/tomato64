@@ -1348,20 +1348,21 @@ void dbg(const char * format, ...)
 	int nfd;
 	va_list args;
 
-	if (((nfd = open("/dev/console", O_WRONLY | O_NONBLOCK)) > 0) && (f = fdopen(nfd, "w"))) {
-		va_start(args, format);
-		vfprintf(f, format, args);
-		va_end(args);
-		fclose(f);
-	}
-	else {
-		va_start(args, format);
-		vfprintf(stderr, format, args);
-		va_end(args);
+	nfd = open("/dev/console", O_WRONLY | O_NONBLOCK);
+	if (nfd >= 0) {
+		if ((f = fdopen(nfd, "w")) != NULL) {
+			va_start(args, format);
+			vfprintf(f, format, args);
+			va_end(args);
+			fclose(f);
+			return;
+		}
+		close(nfd);
 	}
 
-	if (nfd != -1)
-		close(nfd);
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
 }
 
 void cprintf(const char *format, ...)
