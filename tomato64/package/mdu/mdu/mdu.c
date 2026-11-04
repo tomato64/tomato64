@@ -60,7 +60,6 @@
 #define M_SAME_RECORD		"Record already up-to-date."
 #define M_DOWN			"Server temporarily down or under maintenance."
 
-#define MDU_ROUTE_FN		"/tmp/mdu-route"
 
 #ifdef USE_LIBCURL
  FILE *curl_dfile = NULL;
@@ -222,56 +221,112 @@ static int mdu_eval(const char *cmd, const char *path)
 	return r;
 }
 
-static void route_adddel(const char *ip, unsigned int add)
+/*
+ * This is a per-request route lease, not a global route template. The
+ * delete command must use the gateway and interface captured at add time.
+ */
+typedef struct {
+	char delete_cmd[256];
+	int installed;
+} mdu_route_t;
+
+/* Reject existing host routes, including routes with a different metric. */
+static int mdu_route_conflict(const char *ip)
 {
-	char cmd[256];
-	char buf[64];
-	char buf2[128];
-	char *p;
+	char path[] = "/tmp/mdu-hostroute.XXXXXX";
+	char cmd[128];
+	FILE *fp;
+	int fd, ret, c;
 
-	if (!mdu_mwan_route_enabled()) /* only for MultiWAN */
-		return;
-
-	if (mdu_addr_family(ip, NULL, 0) != AF_INET) /* route_adddel() is IPv4-only */
-		return;
-
-	logmsg(LOG_DEBUG, "*** IN %s: add=[%d] ip=[%s] ifname=[%s] - %s routes ...", __FUNCTION__, add, ip, ifname, (add ? "adding" : "deleting"));
-
-	strlcpy(buf, "/tmp/ppp/pppd", sizeof(buf));
-	strlcat(buf, sPrefix, sizeof(buf));
-	if (!f_exists(buf)) { /* not pppd */
-		strlcpy(buf, sPrefix, sizeof(buf));
-		strlcat(buf, "_gateway", sizeof(buf));
-		snprintf(buf2, sizeof(buf2), "via %s", nvram_safe_get(buf)); /* gateway_fragment */
+	fd = mkstemp(path);
+	if (fd < 0)
+		return -1;
+	close(fd);
+	if (snprintf(cmd, sizeof(cmd), "ip -4 route show table main exact %s/32", ip) >= (int)sizeof(cmd)) {
+		unlink(path);
+		return -1;
 	}
-	else
-		buf2[0] = '\0';
+	ret = mdu_eval(cmd, path);
+	fp = (ret == 0) ? fopen(path, "r") : NULL;
+	if (!fp) {
+		unlink(path);
+		return -1;
+	}
+	c = fgetc(fp);
+	if (ferror(fp))
+		ret = -1;
+	fclose(fp);
+	unlink(path);
+	if (ret != 0)
+		return -1;
+	return c != EOF;
+}
 
-	strlcpy(cmd, "ip route show default", sizeof(cmd));
-	memset(buf, 0, sizeof(buf)); /* reset */
-	if ((mdu_eval(cmd, MDU_ROUTE_FN) == 0) && (f_read_string(MDU_ROUTE_FN, buf, sizeof(buf)) > 2)) { /* default_route_fragment */
-		if ((p = strpbrk(buf, "\r\n")) != NULL)
-			*p = '\0';
+/* Returns 1 if pinned, 0 if not required, -1 if routing failed. */
+static int mdu_route_add(const char *ip, mdu_route_t *route)
+{
+	char add_cmd[256], args[160], key[32], ppp_file[64];
+	const char *gateway;
+	struct in_addr addr;
+	int n;
 
-		if (strncmp(buf, "default ", 8) == 0)
-			memmove(buf, buf + 8, strlen(buf + 8) + 1);
+	memset(route, 0, sizeof(*route));
+	if (!mdu_mwan_route_enabled() || mdu_addr_family(ip, NULL, 0) != AF_INET)
+		return 0;
 
-		if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s %s", (add ? "add" : "del"), ip, buf) >= sizeof(cmd)) {
-			logmsg(LOG_ERR, "%s: route cmd truncated", __FUNCTION__);
-			return;
+	n = snprintf(ppp_file, sizeof(ppp_file), "/tmp/ppp/pppd%s", sPrefix);
+	if ((n < 0) || ((size_t)n >= sizeof(ppp_file)))
+		return -1;
+	if (f_exists(ppp_file) || !sPrefix[0]) {
+		n = snprintf(args, sizeof(args), "dev %s metric 50000", ifname);
+	}
+	else {
+		n = snprintf(key, sizeof(key), "%s_gateway_get", sPrefix);
+		if ((n < 0) || ((size_t)n >= sizeof(key)))
+			return -1;
+		gateway = nvram_safe_get(key);
+		if ((inet_pton(AF_INET, gateway, &addr) != 1) || (addr.s_addr == INADDR_ANY)) {
+			n = snprintf(key, sizeof(key), "%s_gateway", sPrefix);
+			if ((n < 0) || ((size_t)n >= sizeof(key)))
+				return -1;
+			gateway = nvram_safe_get(key);
 		}
-
-		logmsg(LOG_DEBUG, "*** %s: cmd=%s", __FUNCTION__, cmd);
-		mdu_eval(cmd, NULL);
+		if ((inet_pton(AF_INET, gateway, &addr) == 1) && (addr.s_addr != INADDR_ANY))
+			n = snprintf(args, sizeof(args), "via %s dev %s metric 50000", gateway, ifname);
+		else if (get_wanx_proto(sPrefix) == WP_LTE)
+			n = snprintf(args, sizeof(args), "dev %s metric 50000", ifname);
+		else {
+			logmsg(LOG_ERR, "%s: no usable gateway for %s on %s", __FUNCTION__, sPrefix, ifname);
+			return -1;
+		}
 	}
+	if ((n < 0) || ((size_t)n >= sizeof(args)))
+		return -1;
 
-	if ((size_t)snprintf(cmd, sizeof(cmd), "ip route %s %s dev %s %s metric 50000", (add ? "add" : "del"), ip, ifname, buf2) >= sizeof(cmd)) {
-		logmsg(LOG_ERR, "%s: route cmd truncated", __FUNCTION__);
-		return;
+	n = snprintf(add_cmd, sizeof(add_cmd), "ip -4 route add %s/32 %s", ip, args);
+	if ((n < 0) || ((size_t)n >= sizeof(add_cmd)))
+		return -1;
+	n = snprintf(route->delete_cmd, sizeof(route->delete_cmd), "ip -4 route del %s/32 %s", ip, args);
+	if ((n < 0) || ((size_t)n >= sizeof(route->delete_cmd)))
+		return -1;
+
+	/* A route from another service is never our property. */
+	if (mdu_route_conflict(ip) != 0) {
+		logmsg(LOG_WARNING, "%s: conflicting/unknown host route to %s", __FUNCTION__, ip);
+		return -1;
 	}
+	if (mdu_eval(add_cmd, NULL) != 0)
+		return -1;
+	route->installed = 1;
+	return 1;
+}
 
-	logmsg(LOG_DEBUG, "*** %s: cmd=%s", __FUNCTION__, cmd);
-	mdu_eval(cmd, NULL);
+static void mdu_route_del(mdu_route_t *route)
+{
+	if (route->installed) {
+		mdu_eval(route->delete_cmd, NULL);
+		route->installed = 0;
+	}
 }
 
 static int check_stop(void)
@@ -923,6 +978,8 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	char ip[INET6_ADDRSTRLEN];
 	char resolve_buf[512];
 	CURLcode r;
+	mdu_route_t ddns_route;
+	int route_status;
 	int trys;
 	int stop = 0;
 	long code = -1;
@@ -1021,23 +1078,24 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 		curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 1L);
 	}
 
-	/* add route */
-	if (ip[0] != '\0')
-		route_adddel(ip, 1);
-
-	for (trys = 4; trys > 0; --trys) {
-		errbuf[0] = '\0';
-		r = curl_easy_perform(curl_handle);
-		stop = check_stop();
-		if ((r != CURLE_COULDNT_CONNECT) || (stop))
-			break;
-
-		sleep(2);
+	/* Never silently use a different WAN if host-route setup fails. */
+	route_status = (ip[0] != '\0') ? mdu_route_add(ip, &ddns_route) : 0;
+	if (route_status < 0) {
+		r = CURLE_COULDNT_CONNECT;
+		snprintf(errbuf, sizeof(errbuf), "cannot pin DDNS request to selected WAN");
 	}
-
-	/* del route */
-	if (ip[0] != '\0')
-		route_adddel(ip, 0);
+	else {
+		for (trys = 4; trys > 0; --trys) {
+			errbuf[0] = '\0';
+			r = curl_easy_perform(curl_handle);
+			stop = check_stop();
+			if ((r != CURLE_COULDNT_CONNECT) || stop)
+				break;
+			sleep(2);
+		}
+	}
+	if (route_status > 0)
+		mdu_route_del(&ddns_route);
 
 	curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &code);
 
@@ -1095,6 +1153,8 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 	char cport[12], clen[32], buf[20];
 	unsigned int trys;
 	int sockfd = -1;
+	mdu_route_t ddns_route;
+	int route_status;
 	int stop = 0;
 
 	httpv = (strncmp(host, "updates.opendns.com", 19) == 0 || strncmp(host, "api.cloudflare.com", 18) == 0) ? "HTTP/1.1" : "HTTP/1.0";
@@ -1270,24 +1330,28 @@ static long _http_req(const unsigned int ssl, int static_host, const char *host,
 			c_ip = inet_ntop(rp->ai_family, &(((struct sockaddr_in *)rp->ai_addr)->sin_addr),
 			                 addrstr, sizeof(addrstr));
 #endif
-			if (c_ip)
-				route_adddel(c_ip, 1);
+			route_status = c_ip ? mdu_route_add(c_ip, &ddns_route) : 0;
+			if (route_status < 0) {
+				close(sockfd);
+				sockfd = -1;
+				continue;
+			}
 
 			logmsg(LOG_DEBUG, "*** %s: [%s][%s] - connecting ...", __FUNCTION__, c_ip ? c_ip : "unknown", cport);
 
 			if (mdu_connect_timeout(sockfd, rp->ai_addr, rp->ai_addrlen, 10) == 0) {
 				logmsg(LOG_DEBUG, "*** %s: connected!", __FUNCTION__);
 				/* del route */
-				if (c_ip)
-					route_adddel(c_ip, 0);
+				if (route_status > 0)
+					mdu_route_del(&ddns_route);
 
 				freeaddrinfo(result);
 				goto connected;
 			}
 
 			/* del route */
-			if (c_ip)
-				route_adddel(c_ip, 0);
+			if (route_status > 0)
+				mdu_route_del(&ddns_route);
 
 			close(sockfd);
 			sockfd = -1;
