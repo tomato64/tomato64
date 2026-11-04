@@ -489,12 +489,17 @@ int mtd_write_main(int argc, char *argv[])
 	uint32 ofs;
 	int c;
 	int web = 0;
+	int check_only = 0;
+	int crc_ok = 0;
 	char *iname = NULL;
 	char *dev = NULL;
 	int model;
 
-	while ((c = getopt(argc, argv, "i:d:w")) != -1) {
+	while ((c = getopt(argc, argv, "ci:d:w")) != -1) {
 		switch (c) {
+		case 'c':
+			check_only = 1;
+			break;
 		case 'i':
 			iname = optarg;
 			break;
@@ -508,14 +513,16 @@ int mtd_write_main(int argc, char *argv[])
 	}
 
 	if ((iname == NULL) || (dev == NULL)) {
-		usage_exit(argv[0], "-i file -d part");
+		usage_exit(argv[0], "[-c] -i file -d part");
 	}
 
-	if (!wait_action_idle(10)) {
-		printf("System is busy\n");
-		return 1;
+	if (!check_only) {
+		if (!wait_action_idle(10)) {
+			printf("System is busy\n");
+			return 1;
+		}
+		set_action(ACT_WEB_UPGRADE);
 	}
-	set_action(ACT_WEB_UPGRADE);
 
 	if ((f = fopen(iname, "r")) == NULL) {
 		error = "Error opening input file";
@@ -724,7 +731,11 @@ int mtd_write_main(int argc, char *argv[])
 	}
 
 	sysinfo(&si);
-	if ((si.freeram * si.mem_unit) > (total + (256 * 1024))) {
+	if (check_only) {
+		/* Avoid duplicating the staged image in RAM while validating it. */
+		ei.length = mi.erasesize;
+	}
+	else if ((si.freeram * si.mem_unit) > (total + (256 * 1024))) {
 		ei.length = total;
 	}
 	else {
@@ -739,8 +750,8 @@ int mtd_write_main(int argc, char *argv[])
 	}
 
 #ifdef DEBUG_SIMULATE
-	FILE *of;
-	if ((of = fopen("/mnt/out.bin", "w")) == NULL) {
+	FILE *of = NULL;
+	if (!check_only && (of = fopen("/mnt/out.bin", "w")) == NULL) {
 		error = "Error creating test file";
 		goto ERROR;
 	}
@@ -776,9 +787,10 @@ int mtd_write_main(int argc, char *argv[])
 				error = "Image is corrupt";
 				break;
 			}
+			crc_ok = 1;
 		}
 
-		if (!web) {
+		if (!check_only && !web) {
 			printf("Writing %x-%x\r", ei.start, (ei.start + ei.length) - 1);
 		}
 
@@ -786,31 +798,39 @@ int mtd_write_main(int argc, char *argv[])
 
 		n += ofs;
 
-		_dprintf(" erase start=%x len=%x\n", ei.start, ei.length);
-		_dprintf(" write %x\n", n);
+		if (!check_only) {
+			_dprintf(" erase start=%x len=%x\n", ei.start, ei.length);
+			_dprintf(" write %x\n", n);
 
 #ifdef DEBUG_SIMULATE
-		if (fwrite(buf, 1, n, of) != n) {
-			fclose(of);
-			error = "Error writing to test file";
-			break;
-		}
+			if (fwrite(buf, 1, n, of) != n) {
+				error = "Error writing to test file";
+				break;
+			}
 #else
-		ioctl(mf, MEMUNLOCK, &ei);
-		if (ioctl(mf, MEMERASE, &ei) != 0
+			ioctl(mf, MEMUNLOCK, &ei);
+			if (ioctl(mf, MEMERASE, &ei) != 0
 #ifdef TCONFIG_BLINK /* RT-N/RTAC */
-		    && model != MODEL_WNR3500LV2
+			    && model != MODEL_WNR3500LV2
 #endif
-		) {
-			error = "Error erasing MTD block";
-			break;
-		}
-		if (write(mf, buf, n) != (int) n) {
-			error = "Error writing to MTD device";
-			break;
-		}
+			) {
+				error = "Error erasing MTD block";
+				break;
+			}
+			if (write(mf, buf, n) != (int) n) {
+				error = "Error writing to MTD device";
+				break;
+			}
 #endif /* DEBUG_SIMULATE */
+		}
 		ofs = 0;
+	}
+
+	if (error)
+		goto ERROR;
+	if (!crc_ok) {
+		error = "Image CRC was not fully validated";
+		goto ERROR;
 	}
 
 	/* Netgear WNR3500L: write fake len and checksum at the end of mtd */
@@ -818,7 +838,8 @@ int mtd_write_main(int argc, char *argv[])
 	char *tmp;
 	char imageInfo[8];
 
-	switch (model) {
+	if (!check_only) {
+		switch (model) {
 	case MODEL_WNR3500L:
 	case MODEL_WNR2000v2:
 #ifdef TCONFIG_BLINK /* RT-N/RTAC */
@@ -912,18 +933,22 @@ ERROR2:
 		/* ignore crc write errors */
 		error = NULL;
 		break;
+		}
 	}
 
 #ifdef DEBUG_SIMULATE
-	fclose(of);
+	if (of)
+		fclose(of);
 #endif
 
 ERROR:
 	if (buf)
 		free(buf);
 	if (mf >= 0) {
-		/* dummy read to ensure chip(s) are out of lock/suspend state */
-		read(mf, &n, sizeof(n));
+		if (!check_only) {
+			/* dummy read to ensure chip(s) are out of lock/suspend state */
+			read(mf, &n, sizeof(n));
+		}
 		close(mf);
 	}
 	if (f)
@@ -932,11 +957,12 @@ ERROR:
 	crc_done();
 
 #ifdef DEBUG_SIMULATE
-	set_action(ACT_IDLE);
+	if (!check_only)
+		set_action(ACT_IDLE);
 #endif
 
-	printf("%s\n",  error ? error : "Image successfully flashed");
-	_dprintf("*** %s: %s\n", __FUNCTION__, error ? error : "image successfully flashed");
+	printf("%s\n", error ? error : (check_only ? "Image successfully verified" : "Image successfully flashed"));
+	_dprintf("*** %s: %s\n", __FUNCTION__, error ? error : (check_only ? "image successfully verified" : "image successfully flashed"));
 
 	return (error ? 1 : 0);
 }
