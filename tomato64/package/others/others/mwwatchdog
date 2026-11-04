@@ -116,8 +116,49 @@ ifconfigChk() {
 	[ "$ret_ifchk" -eq 0 ] && ret_ifchk=0 || ret_ifchk=1
 }
 
+# Only IPv4 host routes are pinned by mwwatchdog in MultiWAN mode.
+# FreshTomato currently configures IPv6 routing for WAN0 only (rc/wan.c).
+isIPv4() {
+	printf '%s\n' "$1" | awk -F. '
+		NF != 4 { exit 1 }
+		{
+			for (i = 1; i <= 4; i++)
+				if ($i !~ /^[0-9]+$/ || $i > 255) exit 1
+		}
+	'
+}
+
+# Keep add/del symmetrical and avoid shell-splitting an "ip route show" result.
+temporaryRoute() {
+	local action="$1" ip="$2" iface="$3" gateway="$4"
+
+	if [ -n "$gateway" ]; then
+		ip -4 route "$action" "$ip/32" via "$gateway" dev "$iface" metric 50000 proto 99
+	else
+		ip -4 route "$action" "$ip/32" dev "$iface" metric 50000 proto 99
+	fi
+}
+
+cleanupTemporaryRoutes() {
+	local ip
+	for ip in $ROUTED_IPS; do
+		temporaryRoute del "$ip" "$ROUTE_IFACE" "$ROUTE_GATEWAY" >/dev/null 2>&1 ||
+			$LOGW "Cannot delete temporary route for $ip on $ROUTE_IFACE"
+	done
+	ROUTED_IPS=""
+}
+
+unknownProbe() {
+	printf '%s\\n' "$(date +%s)" > "$UNKNOWN_FILE"
+	$LOGW "WAN $PREFIX not tested: $1; preserving previous state"
+}
+
 mwwatchdogRun() {
+	local ROUTED_IPS ROUTE_IFACE ROUTE_GATEWAY CHECK_IPLIST IP IPV4_READY
+
 	for PREFIX in $MWANTABLE; do
+		CHECK_IPLIST="$IPLIST"
+		ROUTED_IPS=""
 		IFACE=$(NG "$PREFIX"_iface)
 		ISPPPD=$([ -f /tmp/ppp/pppd$PREFIX ] && echo 1 || echo 0)
 		WEIGHT=$(NG "$PREFIX"_weight)
@@ -128,6 +169,7 @@ mwwatchdogRun() {
 		PREFIX_MWAN=$PREFIX
 		PREFIX_LOG="WAN$(echo "$PREFIX"0 | cut -c 4- | tr '234' '123' | cut -c 1)"
 		STATE_FILE="/var/lib/misc/${PREFIX}_state"
+		UNKNOWN_FILE="/var/run/mwwatchdog_${PREFIX}.unknown"
 		local ret_ifchk
 
 		[ "$(NG "$PREFIX"_ck_pause)" -eq 1 ] && {
@@ -165,24 +207,63 @@ mwwatchdogRun() {
 
 			[ "$ISPPPD" -eq 1 ] && SOURCE_ADDR=$(NG "$PREFIX"_ppp_get_ip)
 
-			[ "$MWAN" -gt 1 ] && {
-				DEFAULT_ROUTE_FRAGMENT=$(ip route | grep default | cut -d' ' -f2-)
-				GATEWAY_FRAGMENT="via $(NG "$PREFIX"_gateway)"
-				[ "$ISPPPD" -eq 1 ] && GATEWAY_FRAGMENT=""
+			if [ "$MWAN" -gt 1 ]; then
+				ROUTE_IFACE="$IFACE"
+				ROUTE_GATEWAY=""
+				IPV4_READY=1
+				CHECK_IPLIST=""
+				if [ "$ISPPPD" -eq 0 ]; then
+					ROUTE_GATEWAY=$(NG "$PREFIX"_gateway_get)
+					isIPv4 "$ROUTE_GATEWAY" && [ "$ROUTE_GATEWAY" != "0.0.0.0" ] ||
+						ROUTE_GATEWAY=$(NG "$PREFIX"_gateway)
+					if ! isIPv4 "$ROUTE_GATEWAY" || [ "$ROUTE_GATEWAY" = "0.0.0.0" ]; then
+						if [ "$PROTO" = "lte" ]; then
+							ROUTE_GATEWAY=""
+						else
+							# IPv6 tests may still work even without an IPv4 gateway.
+							IPV4_READY=0
+						fi
+					fi
+				fi
 
-				# add routes (see rc/mwan.c for mwwatchdog proto)
+				trap 'cleanupTemporaryRoutes' EXIT
+				trap 'exit 1' INT TERM HUP
 				for IP in $IPLIST; do
-					[ -n "$DEFAULT_ROUTE_FRAGMENT" ] && {
-						ROUTE_EXEC="ip route add $IP $DEFAULT_ROUTE_FRAGMENT proto mwwatchdog"
-						$LOGD $ROUTE_EXEC
-						$ROUTE_EXEC &>/dev/null
-					}
-					ROUTE_EXEC="ip route add $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000 proto mwwatchdog"
-					$LOGD $ROUTE_EXEC
-					$ROUTE_EXEC &>/dev/null
+					if isIPv4 "$IP"; then
+						[ "$IPV4_READY" -eq 1 ] || continue
+						# Existing /32s (including ones with a different metric)
+						# must not be replaced or mistaken for our routes.
+						if [ -n "$(ip -4 route show table main exact "$IP/32" 2>/dev/null)" ]; then
+							$LOGW "Existing route for $IP; target skipped"
+							continue
+						fi
+						if temporaryRoute add "$IP" "$ROUTE_IFACE" "$ROUTE_GATEWAY" >/dev/null 2>&1; then
+							ROUTED_IPS="$ROUTED_IPS $IP"
+							CHECK_IPLIST="$CHECK_IPLIST $IP"
+						else
+							$LOGW "Cannot pin $IP to $IFACE; target skipped"
+						fi
+					elif echo "$IP" | grep -q ':'; then
+						# FreshTomato native IPv6 is tied to WAN0; retain its
+						# IPv6 checks without inventing a gateway or IPv4 route.
+						if [ "$PREFIX" = "wan" ] &&
+						   ip -6 route get "$IP" oif "$IFACE" >/dev/null 2>&1; then
+							CHECK_IPLIST="$CHECK_IPLIST $IP"
+						else
+							$LOGW "No IPv6 route to $IP via $IFACE; target skipped"
+						fi
+					else
+						$LOGW "Invalid check target $IP; skipping"
+					fi
 				done
-			}
 
+				if [ -z "$CHECK_IPLIST" ]; then
+					unknownProbe "no routable probe targets ($IFACE)"
+					cleanupTemporaryRoutes
+					trap - EXIT INT TERM HUP
+					continue
+				fi
+			fi
 			$LOGD "start test for: $IFACE ..."
 			case "$METHOD" in
 				1) ckping ;;
@@ -192,19 +273,11 @@ mwwatchdogRun() {
 # BBT-END
 			esac
 
-			[ "$MWAN" -gt 1 ] && {
-				# remove routes (see rc/mwan.c for mwwatchdog proto)
-				for IP in $IPLIST; do
-					[ -n "$DEFAULT_ROUTE_FRAGMENT" ] && {
-						ROUTE_EXEC="ip route del $IP $DEFAULT_ROUTE_FRAGMENT proto mwwatchdog"
-						$LOGD $ROUTE_EXEC
-						$ROUTE_EXEC &>/dev/null
-					}
-					ROUTE_EXEC="ip route del $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000 proto mwwatchdog"
-					$LOGD $ROUTE_EXEC
-					$ROUTE_EXEC &>/dev/null
-				done
-			}
+			if [ "$MWAN" -gt 1 ]; then
+				cleanupTemporaryRoutes
+				trap - EXIT INT TERM HUP
+			fi
+			rm -f "$UNKNOWN_FILE"
 
 			# handle WAN down
 			if [ "$RESULT" -eq 0 ]; then
@@ -256,7 +329,7 @@ cktracert() {
 	# double the value for connections other than LTE and PPP3G
 	[ "$PROTO" != "lte" -a "$PROTO" != "ppp3g" ] && RXBYTES_MIN_DIFF=$((RXBYTES_MIN_DIFF*2))
 
-	for IP in $IPLIST; do
+	for IP in $CHECK_IPLIST; do
 		# fallback to 0 on read failure + debug log
 		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null || echo 0)
 		RXBYTES1=${RXBYTES1:-0}
@@ -304,7 +377,7 @@ cktracert() {
 ckping() {
 	local IP PING_CMD i=0
 
-	for IP in $IPLIST; do
+	for IP in $CHECK_IPLIST; do
 		i=$((i+1))
 		# select ping command based on address family
 # IPV6-BEGIN
@@ -329,7 +402,7 @@ ckping() {
 ckcurl() {
 	local IP target i=0
 
-	for IP in $IPLIST; do
+	for IP in $CHECK_IPLIST; do
 		i=$((i+1))
 		# build target URL: IPv4 gets http:// prefix, IPv6 gets brackets per RFC 2732
 # IPV6-BEGIN
