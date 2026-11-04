@@ -68,6 +68,10 @@ do
 					none)
 						encryption="none (Open Network)"
 						;;
+					*)
+						# never inherit the previous interface's value
+						encryption="unknown"
+						;;
 				esac
 
 				mode=$(echo "$(NG "wifi_phy${i}_mode")" | tr '[:lower:]' '[:upper:]')
