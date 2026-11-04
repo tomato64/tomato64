@@ -2551,16 +2551,45 @@ static int webcgi_nvram_set(const nvset_t *v, const char *name, int write)
 
 static int nv_wl_find(int idx, int unit, int subunit, void *param)
 {
+	static const char *const secret_fields[] = {
+		"wpa_psk", "passphrase", "key1", "key2", "key3", "key4"
+	};
 	nv_list_t *p = param;
+	const char *security = webcgi_get(wl_nvname("security_mode", unit, subunit));
+	int open_network = (security && strcmp(security, "disabled") == 0);
+	const char *name;
+	int ok, i;
 
-	int ok = webcgi_nvram_set(p->v, wl_nvname(p->v->name + 3, unit, subunit), p->write);
+	/*
+	 * The security mode is in the same POST as the credentials. For an
+	 * open network, ignore even stale posted credentials and clear them
+	 * below when processing wl_security_mode. Keep PSK validation intact
+	 * for every other security mode.
+	 */
+	if (open_network) {
+		for (i = 0; i < (int)(sizeof(secret_fields) / sizeof(secret_fields[0])); ++i) {
+			if (strcmp(p->v->name + 3, secret_fields[i]) == 0)
+				return 0;
+		}
+	}
 
+	name = wl_nvname(p->v->name + 3, unit, subunit);
+	ok = webcgi_nvram_set(p->v, name, p->write);
 	if (ok < 0)
 		return 1;
-	else {
-		p->dirty |= ok;
-		return 0;
+
+	if (p->write && open_network && strcmp(p->v->name, "wl_security_mode") == 0) {
+		for (i = 0; i < (int)(sizeof(secret_fields) / sizeof(secret_fields[0])); ++i) {
+			const char *key = wl_nvname(secret_fields[i], unit, subunit);
+			if (*nvram_safe_get(key)) {
+				nvram_set(key, "");
+				ok = 1;
+			}
+		}
 	}
+
+	p->dirty |= ok;
+	return 0;
 }
 
 #if defined(TCONFIG_BCMARM) || defined(CONFIG_BCMWL6)

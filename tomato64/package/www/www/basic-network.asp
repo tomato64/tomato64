@@ -1674,6 +1674,13 @@ function save() {
 			sm2 = E('_wl'+u+'_security_mode').value;
 			wradio = E('_f_wl'+u+'_radio').checked;
 
+			/* Do not retain hidden WPA or WEP credentials for an open network. */
+			if (sm2 == 'disabled') {
+				var secrets = ['wpa_psk', 'passphrase', 'key1', 'key2', 'key3', 'key4'];
+				for (var k = 0; k < secrets.length; ++k)
+					E('_wl'+u+'_'+secrets[k]).value = '';
+			}
+
 			E('_wl'+u+'_nband').value = selectedBand(uidx);
 
 			if (wmode == 'apwds')
