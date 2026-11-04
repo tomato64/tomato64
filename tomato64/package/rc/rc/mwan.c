@@ -521,8 +521,9 @@ int mwan_route_main(int argc, char **argv)
 		fclose(fp);
 	}
 
-	/* add special type of proto for mwwatchdog to easily recognize it in 'ip route show table main' (OpenVPN/wireguard PBR) */
+	/* Name temporary routes so OpenVPN/WireGuard PBR can exclude them. */
 	if ((fp = fopen("/etc/iproute2/rt_protos", "w")) != NULL) {
+		fprintf(fp, "98    mdu\n");
 		fprintf(fp, "99    mwwatchdog\n");
 		fclose(fp);
 	}

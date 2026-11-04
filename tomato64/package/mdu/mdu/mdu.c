@@ -278,7 +278,7 @@ static int mdu_route_add(const char *ip, mdu_route_t *route)
 	if ((n < 0) || ((size_t)n >= sizeof(ppp_file)))
 		return -1;
 	if (f_exists(ppp_file) || !sPrefix[0]) {
-		n = snprintf(args, sizeof(args), "dev %s metric 50000", ifname);
+		n = snprintf(args, sizeof(args), "dev %s metric 50000 proto 98", ifname);
 	}
 	else {
 		n = snprintf(key, sizeof(key), "%s_gateway_get", sPrefix);
@@ -292,9 +292,9 @@ static int mdu_route_add(const char *ip, mdu_route_t *route)
 			gateway = nvram_safe_get(key);
 		}
 		if ((inet_pton(AF_INET, gateway, &addr) == 1) && (addr.s_addr != INADDR_ANY))
-			n = snprintf(args, sizeof(args), "via %s dev %s metric 50000", gateway, ifname);
+			n = snprintf(args, sizeof(args), "via %s dev %s metric 50000 proto 98", gateway, ifname);
 		else if (get_wanx_proto(sPrefix) == WP_LTE)
-			n = snprintf(args, sizeof(args), "dev %s metric 50000", ifname);
+			n = snprintf(args, sizeof(args), "dev %s metric 50000 proto 98", ifname);
 		else {
 			logmsg(LOG_ERR, "%s: no usable gateway for %s on %s", __FUNCTION__, sPrefix, ifname);
 			return -1;

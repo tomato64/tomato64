@@ -122,13 +122,13 @@ startRouting() {
 
 	# strict - copy routes from main routing table only for this interface
 	[ "$VPN_REDIR" -eq 3 ] && \
-		ip route show table main dev $IFACE | while read ROUTE; do
+		ip route show table main dev $IFACE | grep -Ev 'proto (mdu|mwwatchdog|98|99)([[:space:]]|$)' | while read ROUTE; do
 			ip route add table $FWMARK $ROUTE dev $IFACE
 		done
 
 	# standard - copy routes from main routing table (exclude vpns and all unneeded routes)
 	[ "$VPN_REDIR" -eq 2 ] && \
-		ip route show table main | grep -Ev 'wg0|wg1|wg2|tun11|tun12|tun13|^default |^0.0.0.0/1 |^128.0.0.0/1 |proto mwwatchdog' | while read ROUTE; do
+		ip route show table main | grep -Ev 'wg0|wg1|wg2|tun11|tun12|tun13|^default |^0.0.0.0/1 |^128.0.0.0/1 |proto (mdu|mwwatchdog|98|99)([[:space:]]|$)' | while read ROUTE; do
 			ip route add table $FWMARK $ROUTE
 		done
 

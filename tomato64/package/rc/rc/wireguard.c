@@ -1546,9 +1546,37 @@ static void wg_process_routes(const int unit, FILE *fp, const char *iface, int s
 		cb(unit, iface, route);
 }
 
+/*
+ * Temporary host routes are not part of the VPN policy snapshot.
+ * Match both symbolic and numeric protocol values: rt_protos might not
+ * have been initialized when "ip route show" runs.
+ */
+static int wg_is_temporary_route(const char *route)
+{
+	const char *p = route;
+
+	while ((p = strstr(p, "proto ")) != NULL) {
+		const char *value = p + 6;
+		size_t len = strcspn(value, " \t");
+
+		if (((len == 3) && (strncmp(value, "mdu", len) == 0)) ||
+		    ((len == 2) && (strncmp(value, "98", len) == 0)) ||
+		    ((len == 10) && (strncmp(value, "mwwatchdog", len) == 0)) ||
+		    ((len == 2) && (strncmp(value, "99", len) == 0)))
+			return 1;
+
+		p = value + len;
+	}
+
+	return 0;
+}
+
 static void wg_add_strict_route(const int unit, const char *iface, const char *route)
 {
 	wg_script_ctx_t *ctx = &wg_script_ctx[unit];
+
+	if (wg_is_temporary_route(route))
+		return;
 
 	/*
 	 * Do NOT append "dev iface" here.
@@ -1563,7 +1591,7 @@ static void wg_add_policy_route(const int unit, const char *iface, const char *r
 	unsigned int i, n_ifaces;
 
 	/* skip default and other unneeded routes */
-	if ((strncmp(route, "default ", 8) == 0) || (strncmp(route, "0.0.0.0/1 ", 10) == 0) || (strncmp(route, "128.0.0.0/1 ", 12) == 0) || (strstr(route, "proto mwwatchdog")))
+	if ((strncmp(route, "default ", 8) == 0) || (strncmp(route, "0.0.0.0/1 ", 10) == 0) || (strncmp(route, "128.0.0.0/1 ", 12) == 0) || wg_is_temporary_route(route))
 		return;
 
 	/* skip vpn ifaces */
