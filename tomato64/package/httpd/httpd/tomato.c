@@ -12,6 +12,7 @@
 #include "tomato.h"
 #ifdef TOMATO64
 #include "api.h"
+#include "storage.h"
 #ifdef TOMATO64_BE14000
 #include "panel.h"
 #endif /* TOMATO64_BE14000 */
@@ -225,6 +226,7 @@ const aspapi_t aspapi[] = {
 #endif
 #ifdef TOMATO64
 	{ "cpufreq",			asp_cpufreq			},
+	{ "storage",			asp_storage			},
 #endif
 	{ NULL,				NULL				}
 };

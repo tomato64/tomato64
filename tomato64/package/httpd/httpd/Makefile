@@ -104,6 +104,9 @@ OBJS += wlhelper.o wlmlo.o
 # TOMATO64 JSON API
 OBJS += api.o
 
+# TOMATO64 Admin > Storage health (eMMC / NAND / UBI / SMART)
+OBJS += storage.o
+
 # Front-panel screen, from the web UI (BE14000 only - the one board with one)
 ifeq ($(PLATFORM_BE14000),y)
 OBJS += panel.o

@@ -2760,6 +2760,7 @@ function navi() {
 /* TOMATO64-FAN-BEGIN */
 			['Fans',			'fans.asp'],
 /* TOMATO64-FAN-END */
+			['Storage',			'storage.asp'],
 /* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
 			['Buttons/LED',			'buttons.asp'],
