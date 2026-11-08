@@ -281,7 +281,7 @@ void get_cpuinfo(char *system_type, const size_t buf_system_type_sz, char *cpucl
 	FILE *f;
 	char buffer[8];
 	int temp;
-	const char cmd[] = "sensors -A cpu_thermal-virtual-0 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/\xc2\xb0C//'";
+	const char cmd[] = "sensors -A cpu_thermal-virtual-0 | grep 'temp1' | awk '{print $2}' | sed 's/+//; s/°C//'";
 	if ((f = popen(cmd, "r"))) {
 		if (fgets(buffer, sizeof(buffer), f) != NULL) {
 			buffer[strcspn(buffer, "\n")] = 0;
