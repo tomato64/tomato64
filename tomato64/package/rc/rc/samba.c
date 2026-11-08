@@ -269,7 +269,7 @@ void start_samba(int force)
 		break;
 	case 1:
 		fprintf(fp, " max protocol = SMB2\n");
-		fprintf(fp, " min protocol = SMB2\n");
+		fprintf(fp, " min protocol = SMB2_02\n");
 		break;
 	case 2:
 		fprintf(fp, " max protocol = SMB2\n");
@@ -277,11 +277,11 @@ void start_samba(int force)
 		break;
 	case 3:
 		fprintf(fp, " max protocol = SMB3\n");
-		fprintf(fp, " min protocol = SMB3\n");
+		fprintf(fp, " min protocol = SMB3_00\n");
 		break;
 	case 4:
 		fprintf(fp, " max protocol = SMB3\n");
-		fprintf(fp, " min protocol = SMB2\n");
+		fprintf(fp, " min protocol = SMB2_02\n");
 		break;
 	case 5:
 		fprintf(fp, " max protocol = SMB3\n");
