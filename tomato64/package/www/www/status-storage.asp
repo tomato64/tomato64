@@ -10,16 +10,18 @@
 <head>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
-<title>[<% ident(); %>] Admin: Storage</title>
+<title>[<% ident(); %>] Status: Storage</title>
 <link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="tomato.js?rel=<% version(); %>"></script>
 
 <style>
-.st-ok { color: #2a9d2a; font-weight: bold; }
-.st-warn { color: #d98a00; font-weight: bold; }
-.st-bad { color: #d62020; font-weight: bold; }
-.st-na { color: #888; }
+.st-dot { display: inline-block; width: 0.75em; height: 0.75em; margin-right: 0.4em; vertical-align: -0.05em;
+	border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.45); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+	background-image: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 60%); }
+.st-ok .st-dot { background-color: #2ecc40; }
+.st-warn .st-dot { background-color: #ffc107; }
+.st-bad .st-dot { background-color: #e53935; }
 table.st-grid { width: 100%; }
 table.st-grid td { padding: 2px 6px; }
 table.st-grid td.num { text-align: right; }
@@ -35,7 +37,7 @@ table.st-grid tr.total td { font-weight: bold; }
    string; numbers are parsed here. */
 <% storage(); %>
 
-var cprefix = 'admin_storage';
+var cprefix = 'status_storage';
 
 var LVL_NA = 0, LVL_OK = 1, LVL_WARN = 2, LVL_BAD = 3;
 var lvlClass = ['st-na', 'st-ok', 'st-warn', 'st-bad'];
@@ -48,7 +50,8 @@ function num(v) {
 }
 
 function lvlSpan(lvl, text) {
-	return '<span class="' + lvlClass[lvl] + '">' + (text || lvlText[lvl]) + '<\/span>';
+	return '<span class="' + lvlClass[lvl] + '">' + (lvl != LVL_NA ? '<span class="st-dot"><\/span>' : '') +
+		(text || lvlText[lvl]) + '<\/span>';
 }
 
 /* Disks are sold in decimal units, flash chips in binary ones. */
@@ -99,7 +102,7 @@ function emmcLife(v) {
 	if (n >= 0x0b)
 		return { lvl: LVL_BAD, text: 'Rated life exceeded' };
 
-	return { lvl: (n >= 8) ? LVL_WARN : LVL_OK, text: ((n - 1) * 10) + '% - ' + (n * 10) + '% used' };
+	return { lvl: (n >= 8) ? LVL_WARN : LVL_OK, text: ((n - 1) * 10) + '% - ' + (n * 10) + '%' };
 }
 
 /* PRE_EOL_INFO: how much of the spare block pool is gone. */
