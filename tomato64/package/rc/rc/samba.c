@@ -261,9 +261,11 @@ void start_samba(int force)
 		fprintf(fp, " min protocol = SMB2\n");
 #else /* TOMATO64 */
 	/* 0 - smb1, 1 - smb2, 2 - smb1+smb2, 3 - smb3, 4 - smb2+smb3, 5 - smb1+smb2+smb3 */
+	/* Samba >= 4.11 defaults min protocol to SMB2_02, so any choice offering SMB1 must lower it explicitly */
 	switch (nvram_get_int("smbd_protocol")) {
 	case 0:
 		fprintf(fp, " max protocol = NT1\n");
+		fprintf(fp, " min protocol = NT1\n");
 		break;
 	case 1:
 		fprintf(fp, " max protocol = SMB2\n");
@@ -271,6 +273,7 @@ void start_samba(int force)
 		break;
 	case 2:
 		fprintf(fp, " max protocol = SMB2\n");
+		fprintf(fp, " min protocol = NT1\n");
 		break;
 	case 3:
 		fprintf(fp, " max protocol = SMB3\n");
@@ -281,6 +284,9 @@ void start_samba(int force)
 		fprintf(fp, " min protocol = SMB2\n");
 		break;
 	case 5:
+		fprintf(fp, " max protocol = SMB3\n");
+		fprintf(fp, " min protocol = NT1\n");
+		break;
 	default:
 		fprintf(fp, " max protocol = SMB3\n");
 		break;
