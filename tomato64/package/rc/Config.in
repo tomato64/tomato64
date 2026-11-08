@@ -67,6 +67,7 @@ menuconfig BR2_PACKAGE_RC
 	select BR2_PACKAGE_TAR
 	select BR2_PACKAGE_UTIL_LINUX_BINARIES				# need flock for devices using wifi
 	select BR2_PACKAGE_UTIL_LINUX_PARTX
+	select BR2_PACKAGE_UTIL_LINUX_MOUNT				# same mount/umount (and mount.<type> helpers) on every target
 	select BR2_PACKAGE_WIRELESS_REGDB_OPENWRT			if !BR2_PACKAGE_PLATFORM_RPI4
 	select BR2_PACKAGE_WIRELESS_REGDB				if BR2_PACKAGE_PLATFORM_RPI4
 	select BR2_PACKAGE_WIRELESS_TOOLS
