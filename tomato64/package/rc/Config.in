@@ -164,6 +164,7 @@ config BR2_PACKAGE_RC_BT
 config BR2_PACKAGE_RC_CIFS
 	bool "Enable CIFS"
 	default y
+	select BR2_PACKAGE_CIFS_UTILS
 
 config BR2_PACKAGE_RC_DDNS
 	bool "Enable DDNS"

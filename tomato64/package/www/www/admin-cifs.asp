@@ -136,7 +136,12 @@ function init() {
 			{ title: 'Domain', indent: 2, name: 'f_cifs1_dom', type: 'text', maxlen: 32, size: 34, value: a[4] },
 			{ title: 'Execute When Mounted', indent: 2, name: 'f_cifs1_exec', type: 'text', maxlen: 64, size: 34, value: a[5] },
 			{ title: 'Security', indent: 2, name: 'f_cifs1_sec', type: 'select',
+/* TOMATO64-REMOVE-BEGIN */
 				options: [['','Default (NTLM)'],['ntlmi','NTLM and packet signing'],['ntlmv2','NTLMv2'],['ntlmv2i','NTLMv2 and packet signing'],['nontlm','No NTLM'],['lanman','LANMAN'],['none','None']],
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+				options: [['','Default (NTLMSSP)'],['ntlmsspi','NTLMSSP and packet signing'],['ntlmv2','NTLMv2'],['ntlmv2i','NTLMv2 and packet signing'],['nontlm','No NTLM'],['none','None']],
+/* TOMATO64-END */
 				value: a[7] },
 			{ title: 'Total / Free Size', indent: 2, rid: 'cifs1_size', text: cifs1.mnt ? (scaleSize(cifs1.size)+' / '+scaleSize(cifs1.free)) : '(not mounted)' },
 			null,
@@ -149,7 +154,12 @@ function init() {
 			{ title: 'Domain', indent: 2, name: 'f_cifs2_dom', type: 'text', maxlen: 32, size: 34, value: b[4] },
 			{ title: 'Execute When Mounted', indent: 2, name: 'f_cifs2_exec', type: 'text', maxlen: 64, size: 34, value: b[5] },
 			{ title: 'Security', indent: 2, name: 'f_cifs2_sec', type: 'select',
+/* TOMATO64-REMOVE-BEGIN */
 				options: [['','Default (NTLM)'],['ntlmi','NTLM and packet signing'],['ntlmv2','NTLMv2'],['ntlmv2i','NTLMv2 and packet signing'],['nontlm','No NTLM'],['lanman','LANMAN'],['none','None']],
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+				options: [['','Default (NTLMSSP)'],['ntlmsspi','NTLMSSP and packet signing'],['ntlmv2','NTLMv2'],['ntlmv2i','NTLMv2 and packet signing'],['nontlm','No NTLM'],['none','None']],
+/* TOMATO64-END */
 				value: b[7] },
 			{ title: 'Total / Free Size', indent: 2, rid: 'cifs2_size', text: cifs2.mnt ? (scaleSize(cifs2.size)+' / '+scaleSize(cifs2.free)) : '(not mounted)' }
 		]);

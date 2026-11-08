@@ -88,19 +88,24 @@ int mount_cifs_main(int argc, char *argv[])
 					if (*custom)
 						j += snprintf(opt + j, sizeof(opt) - j, "<%s", custom);
 #else
-					j = snprintf(opt, sizeof(opt), "vers=1.0");
+					/* No vers=: let the kernel negotiate SMB2/3 first; SMB1 is tried as a fallback below */
+					/* Password goes through $PASSWD (not argv); with no credentials at all, mount as guest so mount.cifs doesn't prompt */
+					j = snprintf(opt, sizeof(opt), "%s", (*user || *pass) ? "" : "guest");
 					if (*user)
-						j += snprintf(opt + j, sizeof(opt) - j, ",user=%s", user);
-					if (*pass)
-						j += snprintf(opt + j, sizeof(opt) - j, ",pass=%s", pass);
+						j += snprintf(opt + j, sizeof(opt) - j, "%suser=%s", (j ? "," : ""), user);
 					if (*dom)
-						j += snprintf(opt + j, sizeof(opt) - j, ",dom=%s", dom);
+						j += snprintf(opt + j, sizeof(opt) - j, "%sdom=%s", (j ? "," : ""), dom);
 					if (*servern)
-						j += snprintf(opt + j, sizeof(opt) - j, ",servern=%s", servern);
+						j += snprintf(opt + j, sizeof(opt) - j, "%sservern=%s", (j ? "," : ""), servern);
+					/* Saved settings from before the 6.x kernel: ntlmi/lanman are no longer accepted and fail the mount */
+					if (strcmp(sec, "ntlmi") == 0)
+						sec = "ntlmsspi";
+					else if (strcmp(sec, "lanman") == 0)
+						sec = "";
 					if (*sec)
-						j += snprintf(opt + j, sizeof(opt) - j, ",sec=%s", sec);
+						j += snprintf(opt + j, sizeof(opt) - j, "%ssec=%s", (j ? "," : ""), sec);
 					if (*custom)
-						j += snprintf(opt + j, sizeof(opt) - j, ",%s", custom);
+						j += snprintf(opt + j, sizeof(opt) - j, "%s%s", (j ? "," : ""), custom);
 #endif /* TOMATO64 */
 
 					snprintf(mpath, sizeof(mpath), "/cifs%d", i);
@@ -109,7 +114,22 @@ int mount_cifs_main(int argc, char *argv[])
 					if (mount("-", mpath, "cifs", (MS_NOATIME | MS_NODIRATIME), opt) != 0)
 						continue;
 #else
-					if (mount(unc, mpath, "cifs", (MS_NOATIME | MS_NODIRATIME), opt) != 0)
+					/* mount.cifs (cifs-utils) resolves the server name and adds ip=; the kernel only takes an IP literal */
+					if (*user || *pass)
+						setenv("PASSWD", pass, 1);
+					if (*opt)
+						j = eval("mount.cifs", unc, mpath, "-o", opt);
+					else
+						j = eval("mount.cifs", unc, mpath);
+					/* The kernel can't offer SMB1 alongside SMB2/3, so fall back to vers=1.0 for old servers (unless custom options pick a version) */
+					if ((j != 0) && (!strstr(custom, "vers="))) {
+						char opt1[sizeof(opt) + 16];
+
+						snprintf(opt1, sizeof(opt1), "%s%svers=1.0", opt, (*opt ? "," : ""));
+						j = eval("mount.cifs", unc, mpath, "-o", opt1);
+					}
+					unsetenv("PASSWD");
+					if (j != 0)
 						continue;
 #endif /* TOMATO64 */
 
@@ -146,6 +166,10 @@ int mount_cifs_main(int argc, char *argv[])
 #if defined(TCONFIG_BLINK) || defined(CONFIG_BCMWL6)
 				    && sf.f_type != 0x71736873
 #endif
+#ifdef TOMATO64
+				    /* root isn't squashfs here, so require an actual CIFS mount: SMB1 or SMB2/3 statfs magic */
+				    && ((sf.f_type == 0xff534d42) || (sf.f_type == 0xfe534d42))
+#endif /* TOMATO64 */
 				)) {
 					/* is mounted */
 					run_userfile(mpath, ".autostop", mpath, 5);
