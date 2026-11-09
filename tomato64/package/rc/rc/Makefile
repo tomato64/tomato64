@@ -84,6 +84,10 @@ ifeq ($(PLATFORM_HAS_BRIDGER),y)
 ALL_CPPFLAGS += -DTOMATO64_HAS_BRIDGER
 endif
 
+ifeq ($(PLATFORM_HAS_MT7996APP),y)
+ALL_CPPFLAGS += -DTOMATO64_HAS_MT7996APP
+endif
+
 ifeq ($(PLATFORM_HAS_UBI_SYSUPGRADE),y)
 ALL_CPPFLAGS += -DTOMATO64_HAS_UBI_SYSUPGRADE
 endif
@@ -108,6 +112,7 @@ OBJS := rc.o init.o interface.o network.o wan.o services.o dhcp.o \
 OBJS += wifi.o
 OBJS += quotas.o
 OBJS += bridger.o
+OBJS += mt7996app.o
 
 # mtd.o buttons.o wnas.o bcmutils.o
 

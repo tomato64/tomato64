@@ -2622,6 +2622,9 @@ function navi() {
 			['System Commands',		'shell.asp'],
 /* TOMATO64-WIFI-BEGIN */
 			['Wireless Survey',		'survey.asp'],
+/* TOMATO64-MT7996APP-BEGIN */
+			['Wireless Monitor',		'wmonitor.asp'],
+/* TOMATO64-MT7996APP-END */
 /* QRCODE-BEGIN */
 			['WiFi QR Codes',		'qr.asp'],
 /* QRCODE-END */

@@ -1,0 +1,17 @@
+config BR2_PACKAGE_MT7996APP
+	bool "mt7996app"
+	depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+	depends on BR2_TOOLCHAIN_HAS_THREADS # iw-openwrt
+	select BR2_PACKAGE_HOST_RUSTC
+	select BR2_PACKAGE_IW_OPENWRT
+	help
+	  Live dashboard daemon for MediaTek mt7996e (Wi-Fi 7) access
+	  points. Shows per-link MLO station statistics, airtime,
+	  traffic history, mt76 debugfs counters and a channel /
+	  puncturing planner.
+
+	  Reads iw, nl80211, hostapd_cli and
+	  /sys/kernel/debug/ieee80211. Serves its own web UI with no
+	  authentication on 127.0.0.1:8996 by default.
+
+	  https://github.com/rmandrad/mt7996app

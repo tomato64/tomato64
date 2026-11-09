@@ -22,6 +22,10 @@ ifeq ($(PLATFORM_HAS_FAN),y)
 ALL_CPPFLAGS += -DTOMATO64_HAS_FAN
 endif
 
+ifeq ($(PLATFORM_HAS_MT7996APP),y)
+ALL_CPPFLAGS += -DTOMATO64_HAS_MT7996APP
+endif
+
 ifeq ($(PLATFORM_HAS_UBI_SYSUPGRADE),y)
 ALL_CPPFLAGS += -DTOMATO64_HAS_UBI_SYSUPGRADE
 endif
@@ -110,6 +114,11 @@ OBJS += storage.o
 # Front-panel screen, from the web UI (BE14000 only - the one board with one)
 ifeq ($(PLATFORM_BE14000),y)
 OBJS += panel.o
+endif
+
+# Tools > Wireless Monitor: proxy to the mt7996app dashboard
+ifeq ($(PLATFORM_HAS_MT7996APP),y)
+OBJS += mt7996app.o
 endif
 
 #ifeq ($(TCONFIG_USB),y)

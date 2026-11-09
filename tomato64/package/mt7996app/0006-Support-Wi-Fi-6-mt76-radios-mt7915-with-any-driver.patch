@@ -1,0 +1,199 @@
+From 0647a2fd75b988cf38aac30c30c6cb407fcccb6e Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Tue, 10 Nov 2026 14:46:30 -0700
+Subject: [PATCH] Support Wi-Fi 6 mt76 radios (mt7915) with --any-driver
+
+The dashboard works on other mt76 chips: iw, nl80211, the survey and
+hostapd are driver-neutral, and mt7915 has the same debugfs files with
+a tx_stats header the parser already accepts. Tested on a GL-MT6000
+(MT7986, mt7915 driver as mt798x-wmac, with guest, IoT and mesh
+interfaces next to the main APs):
+
+- Puncturing advice was given for any 80+ MHz channel, but preamble
+  puncturing of the BSS is a Wi-Fi 7 (EHT) feature. Read ieee80211be
+  from hostapd status and give no puncturing advice on a BSS that is
+  not EHT (unknown, without hostapd status: as before).
+- Kernel log lines of the mt7915 driver (mt7915e, or mt798x-wmac on the
+  MT7981/MT7986 built-in radios) were not followed.
+- The Links column of a client without per-link data was empty ('-');
+  show the band of its interface when that is unambiguous.
+- Every interface got its own plan, so a radio with guest/IoT/mesh BSSes
+  was planned several times, and a mesh point reporting 20 MHz next to
+  40 MHz APs got contradictory advice. Plan each radio (or MLO link)
+  once, from the AP interface with the most clients.
+- 2.4 GHz channel advice is only computed for 20 MHz; say so in a plan
+  note instead of showing an empty candidate list.
+---
+ src/collector.rs  |  3 +++
+ src/events.rs     |  5 ++++-
+ src/hostapd.rs    |  5 +++--
+ src/model.rs      |  2 ++
+ src/planner.rs    | 36 ++++++++++++++++++++++++++++++++++--
+ static/index.html |  8 +++++++-
+ 6 files changed, 53 insertions(+), 6 deletions(-)
+
+diff --git a/src/collector.rs b/src/collector.rs
+index 1da6161..b352ebe 100644
+--- a/src/collector.rs
++++ b/src/collector.rs
+@@ -300,6 +300,9 @@ impl Collector {
+         }
+ 
+         let mut radios = radios(inner, &ifaces, &survey, now);
++        for r in &mut radios {
++            r.eht = hostapd.get(&r.iface).and_then(|m| m.get("ieee80211be")).map(|v| v == "1");
++        }
+         aggregate(inner, &radios, &sta_list, now);
+ 
+         // SNR = signal - noise floor of the link the signal was measured on
+diff --git a/src/events.rs b/src/events.rs
+index 82fa881..a4974b2 100644
+--- a/src/events.rs
++++ b/src/events.rs
+@@ -72,7 +72,7 @@ pub fn classify_kmsg(rec: &str) -> Option<(&'static str, &'static str, String)>
+     let m = msg.to_lowercase();
+     let kind = if m.contains("radar") || m.contains("dfs") || m.contains(" cac") || m.contains("cac ") {
+         "dfs"
+-    } else if m.contains("mt7996") || m.contains("mt76") {
++    } else if m.contains("mt7996") || m.contains("mt7915") || m.contains("mt798") || m.contains("mt76") {
+         if m.contains("firmware") || m.contains("fw ") || m.contains("crash") || m.contains("timeout")
+             || m.contains("recover") || m.contains("coredump") || m.contains("ser ")
+         {
+@@ -135,6 +135,9 @@ mod tests {
+         let (lvl, kind, _) = c("3,101,5001,-;mt7996e 0000:01:00.0: Message 00020016 (seq 5) timeout").unwrap();
+         assert_eq!((lvl, kind), ("error", "firmware"));
+         assert_eq!(c("4,102,5002,-;mt7996e 0000:01:00.0: SER recovery state: 0x1").unwrap().1, "firmware");
++        assert_eq!(c("3,103,5003,-;mt7915e 0000:01:00.0: Message 00000010 (seq 3) timeout").unwrap().1, "firmware");
++        // MT7981/MT7986 built-in radios (mt7915 driver) log as mt798x-wmac
++        assert_eq!(c("3,104,5004,-;mt798x-wmac 18000000.wifi: Message 00000010 (seq 3) timeout").unwrap().1, "firmware");
+         assert_eq!(c("6,103,5003,-;cfg80211: Loading compiled-in X.509 certificates").map(|x| x.1), None);
+         assert_eq!(c("6,104,5004,-;usb 1-1: new device").map(|x| x.1), None);
+         assert!(c("garbage").is_none());
+diff --git a/src/hostapd.rs b/src/hostapd.rs
+index f39ef8b..a60748b 100644
+--- a/src/hostapd.rs
++++ b/src/hostapd.rs
+@@ -8,9 +8,10 @@ pub struct HostapdCfg {
+     pub ctrl: Option<String>,
+ }
+ 
+-const KEYS: [&str; 5] = ["state", "freq", "channel", "cac_time_seconds", "cac_time_left_seconds"];
++/// DFS state, plus `ieee80211be` (whether the BSS runs Wi-Fi 7, for puncturing advice)
++const KEYS: [&str; 6] = ["state", "freq", "channel", "cac_time_seconds", "cac_time_left_seconds", "ieee80211be"];
+ 
+-/// Keep only the DFS-relevant `key=value` lines of `hostapd_cli status`.
++/// Keep only the `key=value` lines of `hostapd_cli status` listed in KEYS.
+ pub fn parse_status(text: &str) -> BTreeMap<String, String> {
+     text.lines()
+         .filter_map(|l| l.split_once('='))
+diff --git a/src/model.rs b/src/model.rs
+index 8546726..62acec0 100644
+--- a/src/model.rs
++++ b/src/model.rs
+@@ -230,6 +230,8 @@ pub struct Radio {
+     /// stations on an MLD interface whose link iw does not report
+     pub stations_unlinked: usize,
+     pub history_key: Option<String>,
++    /// hostapd runs this BSS as Wi-Fi 7 (EHT); `None` = unknown (no hostapd status)
++    pub eht: Option<bool>,
+ }
+ 
+ #[derive(Serialize, Clone, Default, Debug)]
+diff --git a/src/planner.rs b/src/planner.rs
+index 8ce1f5f..7e8264e 100644
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -357,7 +357,15 @@ pub fn build_plan(inp: &PlanInput) -> Plan {
+             }
+         }
+     }
+-    for r in inp.radios {
++    // Several interfaces (guest, IoT, mesh) on one radio (or MLO link) share its channel: plan it
++    // once, from an AP interface with the most clients (a mesh point may report a narrower width).
++    let mut order: Vec<&Radio> = inp.radios.iter().collect();
++    order.sort_by_key(|r| (r.kind.as_deref() != Some("AP"), std::cmp::Reverse(r.stations)));
++    let mut planned: HashSet<(String, Option<u32>)> = HashSet::new();
++    let mut picked: Vec<&Radio> = order.into_iter().filter(|r| r.phy.as_ref().is_none_or(|p| planned.insert((p.clone(), r.link)))).collect();
++    // keep the radios' own order in the output
++    picked.sort_by_key(|r| inp.radios.iter().position(|x| std::ptr::eq(x, *r)));
++    for r in picked {
+         let (Some(freq), Some(width)) = (r.freq, r.width) else { continue };
+         let band = r.band.unwrap_or("5G");
+         let window = if band == "2.4G" { 15.0 } else { 10.0 };
+@@ -376,7 +384,9 @@ pub fn build_plan(inp: &PlanInput) -> Plan {
+             ((bs.iter().map(|b| b.load + survey_busy(survey, b.freq)).sum::<f64>()) * 100.0).round() / 100.0
+         };
+         let current_score = score_of(&bins);
++        // preamble puncturing of the whole BSS is a Wi-Fi 7 (EHT) feature
+         let (puncture, puncture_note) = match r.center1 {
++            Some(_) if r.eht == Some(false) => (None, None),
+             Some(c1) => recommend_puncture(width, c1, freq, &bins),
+             None => (None, None),
+         };
+@@ -436,7 +446,9 @@ pub fn build_plan(inp: &PlanInput) -> Plan {
+             ));
+         }
+         cands.truncate(6);
+-        if cands.is_empty() && chans.is_empty() {
++        if band == "2.4G" && width > 20 {
++            plan.notes.push(format!("{}: channel advice on 2.4 GHz is only given for 20 MHz channels (1, 6, 11)", r.iface));
++        } else if cands.is_empty() && chans.is_empty() {
+             plan.notes.push(format!("{}: channel list of {} unavailable, only puncturing is evaluated", r.iface, r.phy.as_deref().unwrap_or("?")));
+         }
+         plan.links.push(LinkPlan {
+@@ -549,6 +561,26 @@ mod tests {
+         assert_eq!(l.clear_mhz, 40);
+         let pr = l.puncture.as_ref().unwrap();
+         assert_eq!((pr.bitmap, pr.bitmap_hex.as_str(), pr.clear_before_mhz, pr.clear_after_mhz, pr.gain_mhz), (0x8, "0x8", 40, 60, 20));
++
++        // the same channel on a Wi-Fi 6 BSS: no puncturing advice
++        let radios = [Radio { eht: Some(false), ..radio() }];
++        let p = build_plan(&PlanInput { now: 130.0, radios: &radios, scan: Some(&scan), survey: &survey, visited: &vis, phy_chans: &chans });
++        assert!(p.links[0].puncture.is_none() && p.links[0].puncture_note.is_none());
++    }
++
++    #[test]
++    fn one_plan_per_radio_channel() {
++        let chans = HashMap::from([("phy0".to_string(), chans_5g())]);
++        let (survey, vis) = (HashMap::new(), HashMap::new());
++        let ap = |iface: &str, phy: &str, stations: usize| Radio { iface: iface.into(), phy: Some(phy.into()), kind: Some("AP".into()), stations, ..radio() };
++        let radios = [
++            Radio { iface: "mesh".into(), kind: Some("mesh point".into()), width: Some(20), center1: Some(5180), ..radio() },
++            ap("guest", "phy0", 0),
++            ap("wlan0", "phy0", 4),
++            ap("other", "phy1", 0),
++        ];
++        let p = build_plan(&PlanInput { now: 1.0, radios: &radios, scan: None, survey: &survey, visited: &vis, phy_chans: &chans });
++        assert_eq!(p.links.iter().map(|l| (l.iface.as_str(), l.width)).collect::<Vec<_>>(), vec![("wlan0", 80), ("other", 80)]);
+     }
+ 
+     fn sv(freq: u32, active: u64, in_use: bool) -> SurveyChan {
+diff --git a/static/index.html b/static/index.html
+index 74ab913..242b216 100644
+--- a/static/index.html
++++ b/static/index.html
+@@ -247,6 +247,12 @@ function linkCard(s, l) {
+     <canvas data-h="${esc(k + ":tx")}" data-c="--${bandCls(l.band)}"></canvas></div>`;
+ }
+ 
++// a client without per-link data on a non-MLD interface uses that interface's only band
++function staBand(st, s) {
++  const bands = [...new Set(st.radios.filter(r => r.iface === s.iface).map(r => r.band).filter(Boolean))];
++  return bands.length === 1 ? `<span class="band ${bandCls(bands[0])}">${esc(bands[0])}</span>` : "–";
++}
++
+ function renderStas(st) {
+   let h = `<tr><th>Station</th><th>Iface</th><th class="num">Signal</th><th class="num">SNR</th><th class="num">TX Mb/s</th>
+     <th class="num">RX Mb/s</th><th class="num">Retry %</th><th>TX rate</th><th>Links</th></tr>`;
+@@ -257,7 +263,7 @@ function renderStas(st) {
+       <td class="num ${sigCls(s.signal)}">${fmt(s.signal, 0)}</td><td class="num">${fmt(s.snr, 0)}</td>
+       <td class="num">${fmt(s.mbps_tx, 1)}</td><td class="num">${fmt(s.mbps_rx, 1)}</td>
+       <td class="num">${fmt(s.retry_pct, 1)}</td><td>${rateStr(s.tx_rate)}</td>
+-      <td>${s.links.map(l => `<span class="band ${bandCls(l.band)}">${esc(l.band || l.id)}</span>`).join(" ") || "–"}</td></tr>`;
++      <td>${s.links.map(l => `<span class="band ${bandCls(l.band)}">${esc(l.band || l.id)}</span>`).join(" ") || staBand(st, s)}</td></tr>`;
+     if (exp) {
+       h += `<tr class="detail"><td colspan="9">
+         <div class="muted">connected ${fmt(s.connected_s, 0, " s")} · inactive ${fmt(s.inactive_ms, 0, " ms")}
+-- 
+2.47.3
+

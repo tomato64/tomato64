@@ -1,0 +1,550 @@
+From dff92c1c72f5ffbc91010635567f1e5e61b61df6 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Mon, 9 Nov 2026 20:04:15 -0700
+Subject: [PATCH] Planner: only compare channels that were scanned recently
+
+A candidate with no neighbours in the scan cache scored 0.0, the best
+possible score, even when nobody had looked at that channel: no data
+looked like a quiet channel. On a router next to an AP on channel 36
+the planner recommended moving to 36, and once a scan showed it busy,
+the next never-visited block.
+
+Even after a scan, the kernel keeps scan results for only about 30 s,
+except for the BSSes heard on the operating channel, which it keeps
+refreshing. Read as is, the current channel always had neighbours and
+every other channel was empty, so the 2.4 GHz advice flipped between 6
+and 11 each time it was followed. The survey cannot tell how recent a
+visit is: mt76 overwrites a channel's active time with the dwell of the
+last visit, so it does not grow, and its age is unknown.
+
+Keep a memory of the scan cache: every BSS from 'scan dump' is kept for
+15 minutes from when it was last heard. Follow 'iw event' for finished
+scans (whoever started them: hostapd ACS, a site survey, 'iw scan') to
+know which frequencies were visited and when; a channel in use always
+counts as visited. A candidate is compared only if all its subchannels
+were visited within the same 15 minutes. Otherwise it is marked
+scanned=false, sorted last, shown with a '?' score and a 'not scanned in
+the last 15 min' reason, and never recommended; a plan note says how
+many candidates were skipped. Without survey data for the interface
+this cannot be told and nothing changes. The demo source reports a scan
+of every channel on each sample.
+---
+ README.md         |   8 ++
+ src/collector.rs  |  17 ++++-
+ src/iwparse.rs    |  20 +++++
+ src/model.rs      |  10 +++
+ src/planner.rs    | 186 +++++++++++++++++++++++++++++++++++++++++++++-
+ src/sources.rs    |  54 ++++++++++++++
+ static/index.html |   2 +-
+ 7 files changed, 290 insertions(+), 7 deletions(-)
+
+diff --git a/README.md b/README.md
+index e804b9a..11c322f 100644
+--- a/README.md
++++ b/README.md
+@@ -413,6 +413,14 @@ it with `hostapd_cli help` before enabling control, and test on a lab AP first.
+ - Channel candidates are the aligned blocks of the same width in the same band, from the phy's channel list (disabled
+   channels excluded; DFS channels get a penalty because they need a channel-availability check). A switch is only
+   recommended if it beats the current channel by a margin.
++- A candidate is only compared if a scan covered all its subchannels in the last 15 minutes. The daemon follows
++  `iw event` for finished scans (hostapd ACS, a site survey, `iw scan`), so it knows which channels were looked at;
++  others are shown as **not scanned** and never recommended, since no neighbours there means nobody looked, not
++  that the channel is quiet. Without survey data for the interface this cannot be told and every candidate counts
++  as scanned.
++- The kernel drops scan results after about 30 s but keeps refreshing the BSSes on the operating channel, so read
++  as is the current channel always looks busier than the others (and the advice flips back and forth). The daemon
++  keeps every BSS it has seen for 15 minutes instead. Run a scan, and the advice is good for the next 15 minutes.
+ - Neighbours are counted on their **primary** channel only (scan results don't tell their width cheaply), and the AP
+   does not scan on its own: the data is as old as the kernel's scan cache. The panel shows its age; use the
+   "Trigger scan" button (control) or `hostapd` ACS to refresh it.
+diff --git a/src/collector.rs b/src/collector.rs
+index 70e3b39..1da6161 100644
+--- a/src/collector.rs
++++ b/src/collector.rs
+@@ -5,7 +5,7 @@ use crate::control::{Action, Control};
+ use crate::events::EventLog;
+ use crate::iwparse::band_of;
+ use crate::model::*;
+-use crate::planner::{build_plan, Plan, PlanInput};
++use crate::planner::{build_plan, Plan, PlanInput, ScanMemory};
+ use crate::steering::{SteerAdvice, SteerCfg, SteerCtl};
+ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
+ use std::panic::{catch_unwind, AssertUnwindSafe};
+@@ -99,6 +99,7 @@ struct Inner {
+     prev: HashMap<String, (f64, Ctr)>,
+     prev_survey: HashMap<String, SurveyChan>,
+     scan: Option<ScanData>,
++    scan_mem: ScanMemory,
+     phy_chans: HashMap<String, Vec<ChanInfo>>,
+     survey: HashMap<String, Vec<SurveyChan>>,
+     plan: Option<Plan>,
+@@ -254,7 +255,8 @@ impl Collector {
+     }
+ 
+     fn process(&self, inner: &mut Inner, raw: Raw, now: f64) -> (State, Vec<(&'static str, Action)>, Vec<String>) {
+-        let Raw { scan, phy_chans, hostapd, ifaces, stations: mut sta_list, survey, hw, errors } = raw;
++        let Raw { scan, phy_chans, hostapd, ifaces, stations: mut sta_list, survey, hw, errors, scan_visits } = raw;
++        let fresh_scan = scan.is_some();
+         if let Some(s) = scan {
+             inner.scan = Some(s);
+         }
+@@ -262,6 +264,7 @@ impl Collector {
+             inner.phy_chans = p;
+         }
+         inner.survey = survey.clone();
++        inner.scan_mem.update(now, inner.scan.as_ref().filter(|_| fresh_scan), &survey, &scan_visits);
+ 
+         let mut link_info: HashMap<(String, u32), IfLink> = HashMap::new();
+         for i in &ifaces {
+@@ -342,7 +345,15 @@ impl Collector {
+         // planner (advisory, cheap, but not needed on every sample)
+         if now - inner.last_plan >= PLAN_EVERY_SECS {
+             inner.last_plan = now;
+-            let p = build_plan(&PlanInput { now, radios: &radios, scan: inner.scan.as_ref(), survey: &inner.survey, phy_chans: &inner.phy_chans });
++            let scan = inner.scan_mem.scan(now);
++            let p = build_plan(&PlanInput {
++                now,
++                radios: &radios,
++                scan: scan.as_ref(),
++                survey: &inner.survey,
++                visited: &inner.scan_mem.visited,
++                phy_chans: &inner.phy_chans,
++            });
+             inner.plan = Some(p);
+         }
+ 
+diff --git a/src/iwparse.rs b/src/iwparse.rs
+index 88a10c8..81bdd70 100644
+--- a/src/iwparse.rs
++++ b/src/iwparse.rs
+@@ -273,6 +273,15 @@ pub fn parse_survey(text: &str) -> Vec<SurveyChan> {
+     out
+ }
+ 
++/// `iw event` line of a finished scan:
++/// `phy0-ap0 (phy #0): scan finished: 2412 2462, ""` -> (iface, freqs).
++/// `None` for other events and for a scan that did not report its frequencies.
++pub fn parse_scan_finished(line: &str) -> Option<(String, Vec<u32>)> {
++    let c = re!(r"^(\S+) \(phy #\d+\): scan finished:([\d ]*)").captures(line.trim_start())?;
++    let freqs: Vec<u32> = c[2].split_whitespace().filter_map(|f| f.parse().ok()).collect();
++    (!freqs.is_empty()).then(|| (c[1].to_string(), freqs))
++}
++
+ /// Parse `iw phy X info` into the list of channels (all bands).
+ pub fn parse_phy_channels(text: &str) -> Vec<ChanInfo> {
+     let mut out = vec![];
+@@ -440,4 +449,15 @@ mod tests {
+         assert_eq!((b[0].freq, b[0].signal, b[0].ssid.as_str(), b[0].seen_ms), (5500, -63.0, "neighbor", Some(120)));
+         assert_eq!((b[1].bssid.as_str(), b[1].freq), ("aa:bb:cc:dd:ee:02", 2437));
+     }
++
++    #[test]
++    fn scan_finished_events() {
++        assert_eq!(
++            parse_scan_finished("phy0-ap0 (phy #0): scan finished: 2412 2462, \"\""),
++            Some(("phy0-ap0".to_string(), vec![2412, 2462]))
++        );
++        assert_eq!(parse_scan_finished("phy0-ap0 (phy #0): scan started"), None);
++        assert_eq!(parse_scan_finished("wlan1 (phy #1): scan aborted: 5180"), None);
++        assert_eq!(parse_scan_finished("wlan1 (phy #1): scan finished:, \"\""), None);
++    }
+ }
+diff --git a/src/model.rs b/src/model.rs
+index f36a99c..8546726 100644
+--- a/src/model.rs
++++ b/src/model.rs
+@@ -191,6 +191,16 @@ pub struct Raw {
+     pub survey: HashMap<String, Vec<SurveyChan>>,
+     pub hw: Vec<Hw>,
+     pub errors: Vec<String>,
++    /// scans that finished since the last sample (`iw event`)
++    pub scan_visits: Vec<ScanVisit>,
++}
++
++/// A scan finished on `iface` and covered `freqs` (from `iw event`).
++#[derive(Clone, Debug, PartialEq)]
++pub struct ScanVisit {
++    pub iface: String,
++    pub freqs: Vec<u32>,
++    pub ts: f64,
+ }
+ 
+ pub trait Source: Send {
+diff --git a/src/planner.rs b/src/planner.rs
+index 09cbe3c..8ce1f5f 100644
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -10,6 +10,16 @@
+ //!   around the primary 20 MHz that contains no busy bin.
+ //! * With puncturing, all non-busy bins stay usable, if the pattern is one the
+ //!   kernel accepts (tables ported from net/wireless/chan.c).
++//! * A candidate block is only as good as the data on it. A channel the radio
++//!   has not visited recently has no neighbours in the scan cache simply
++//!   because nobody looked, so it is marked unscanned and never recommended.
++//!   "Visited" means it is in use, or a scan that covered it finished within
++//!   MAX_SCAN_AGE (see `ScanMemory`); without any survey data for the
++//!   interface this cannot be told and every block counts as scanned.
++//! * The kernel drops scan results after about 30 s, but keeps refreshing the
++//!   BSSes heard on the operating channel. Read as is, the current channel
++//!   always looks crowded and every other one empty. `ScanMemory` keeps what
++//!   was seen for MAX_SCAN_AGE so all channels are compared on the same terms.
+ use crate::model::*;
+ use serde::Serialize;
+ use std::collections::{HashMap, HashSet};
+@@ -19,6 +29,7 @@ const MIN_PUNCT_GAIN_MHZ: i32 = 20;
+ const SWITCH_MARGIN: f64 = 0.75;
+ const DFS_PENALTY: f64 = 0.75;
+ const MAX_SCAN_AGE_MS: u64 = 15 * 60 * 1000;
++const MAX_SCAN_AGE_S: f64 = (MAX_SCAN_AGE_MS / 1000) as f64;
+ 
+ // net/wireless/chan.c: puncturing_values_{80,160,320}mhz (bit i = i-th 20 MHz
+ // bin counted from the lowest frequency of the block).
+@@ -96,6 +107,9 @@ pub struct Candidate {
+     pub dfs: bool,
+     pub neighbors: usize,
+     pub current: bool,
++    /// false: some bin of the block was never visited, so `score` is not
++    /// evidence of a quiet channel
++    pub scanned: bool,
+     pub reason: String,
+ }
+ 
+@@ -130,6 +144,8 @@ pub struct PlanInput<'a> {
+     pub radios: &'a [Radio],
+     pub scan: Option<&'a ScanData>,
+     pub survey: &'a HashMap<String, Vec<SurveyChan>>,
++    /// iface -> freq -> when the radio was last seen visiting it (`ScanMemory`)
++    pub visited: &'a HashMap<String, HashMap<u32, f64>>,
+     pub phy_chans: &'a HashMap<String, Vec<ChanInfo>>,
+ }
+ 
+@@ -246,6 +262,81 @@ fn bin_info(freq: u32, primary: bool, window: f64, bss: &[&Bss]) -> BinInfo {
+     }
+ }
+ 
++/// Whether the radio is on `freq` or visited it within MAX_SCAN_AGE.
++/// `None`: the interface has no survey data, so this cannot be told.
++fn visited(survey: &[SurveyChan], seen: Option<&HashMap<u32, f64>>, now: f64, freq: u32) -> Option<bool> {
++    if survey.is_empty() {
++        return None;
++    }
++    if survey.iter().any(|c| c.freq == freq && c.in_use) {
++        return Some(true);
++    }
++    Some(seen.and_then(|m| m.get(&freq)).is_some_and(|t| now - t <= MAX_SCAN_AGE_S))
++}
++
++/// What the planner has seen, kept longer than the kernel keeps it.
++///
++/// * BSSes: every `scan dump` is merged in by BSSID with the time it was last
++///   heard, and kept for MAX_SCAN_AGE.
++/// * Visits: a channel counts as visited while it is in use, and when a scan
++///   that covered it finishes (`iw event`). The survey cannot tell this:
++///   mt76 overwrites a channel's active time with the last dwell (so it does
++///   not grow), and on start it is of unknown age.
++#[derive(Default)]
++pub struct ScanMemory {
++    bss: HashMap<(String, String), (Bss, f64)>,
++    last_ts: Option<f64>,
++    pub visited: HashMap<String, HashMap<u32, f64>>,
++}
++
++impl ScanMemory {
++    pub fn update(&mut self, now: f64, scan: Option<&ScanData>, survey: &HashMap<String, Vec<SurveyChan>>, visits: &[ScanVisit]) {
++        if let Some(s) = scan {
++            self.last_ts = Some(self.last_ts.map_or(s.ts, |t| t.max(s.ts)));
++            for (iface, list) in &s.per_iface {
++                for b in list {
++                    let heard = now - b.seen_ms.unwrap_or(0) as f64 / 1000.0;
++                    let e = self.bss.entry((iface.clone(), b.bssid.clone())).or_insert((b.clone(), heard));
++                    if heard >= e.1 {
++                        *e = (b.clone(), heard);
++                    }
++                }
++            }
++        }
++        self.bss.retain(|_, (_, t)| now - *t <= MAX_SCAN_AGE_S);
++
++        for v in visits {
++            let m = self.visited.entry(v.iface.clone()).or_default();
++            for f in &v.freqs {
++                m.insert(*f, v.ts);
++            }
++        }
++        for (iface, chans) in survey {
++            for c in chans.iter().filter(|c| c.in_use) {
++                self.visited.entry(iface.clone()).or_default().insert(c.freq, now);
++            }
++        }
++        for m in self.visited.values_mut() {
++            m.retain(|_, t| now - *t <= MAX_SCAN_AGE_S);
++        }
++    }
++
++    /// The remembered BSSes as a scan cache, `seen_ms` relative to `now`.
++    pub fn scan(&self, now: f64) -> Option<ScanData> {
++        let ts = self.last_ts?;
++        let mut per_iface: HashMap<String, Vec<Bss>> = HashMap::new();
++        for ((iface, _), (b, t)) in &self.bss {
++            let mut b = b.clone();
++            b.seen_ms = Some(((now - t).max(0.0) * 1000.0) as u64);
++            per_iface.entry(iface.clone()).or_default().push(b);
++        }
++        for v in per_iface.values_mut() {
++            v.sort_by(|a, b| a.freq.cmp(&b.freq).then(a.bssid.cmp(&b.bssid)));
++        }
++        Some(ScanData { ts, per_iface })
++    }
++}
++
+ fn survey_busy(survey: &[SurveyChan], freq: u32) -> f64 {
+     survey
+         .iter()
+@@ -305,6 +396,8 @@ pub fn build_plan(inp: &PlanInput) -> Plan {
+             if b.dfs && !is_cur {
+                 score += DFS_PENALTY;
+             }
++            let seen = inp.visited.get(&r.iface);
++            let scanned = is_cur || b.bins.iter().all(|f| visited(survey, seen, inp.now, *f) != Some(false));
+             let nb: usize = infos.iter().map(|i| i.neighbors).sum();
+             let strongest = infos.iter().filter_map(|i| i.strongest).fold(None, |m: Option<f64>, s| Some(m.map_or(s, |x| x.max(s))));
+             let mut reason = format!("{nb} neighbor BSS");
+@@ -314,6 +407,9 @@ pub fn build_plan(inp: &PlanInput) -> Plan {
+             if b.dfs {
+                 reason += ", DFS (channel availability check required)";
+             }
++            if !scanned {
++                reason = "not scanned in the last 15 min: neighbours unknown".into();
++            }
+             cands.push(Candidate {
+                 freq: primary,
+                 channel: chans.iter().find(|c| c.freq == primary).map(|c| c.channel),
+@@ -323,11 +419,22 @@ pub fn build_plan(inp: &PlanInput) -> Plan {
+                 dfs: b.dfs,
+                 neighbors: nb,
+                 current: is_cur,
++                scanned,
+                 reason,
+             });
+         }
+-        cands.sort_by(|a, b| a.score.total_cmp(&b.score).then(a.freq.cmp(&b.freq)));
+-        let recommend = cands.first().filter(|c| !c.current && c.score + SWITCH_MARGIN < current_score).cloned();
++        // unscanned blocks last: their score of ~0 only means "no data"
++        cands.sort_by(|a, b| b.scanned.cmp(&a.scanned).then(a.score.total_cmp(&b.score)).then(a.freq.cmp(&b.freq)));
++        let recommend = cands.first().filter(|c| c.scanned && !c.current && c.score + SWITCH_MARGIN < current_score).cloned();
++        let unscanned = cands.iter().filter(|c| !c.scanned).count();
++        if unscanned > 0 {
++            plan.notes.push(format!(
++                "{}{}: {unscanned} of {} candidate channels were not scanned in the last 15 min and are not considered; scan to compare them",
++                r.iface,
++                r.link.map(|l| format!(" link {l}")).unwrap_or_default(),
++                cands.len()
++            ));
++        }
+         cands.truncate(6);
+         if cands.is_empty() && chans.is_empty() {
+             plan.notes.push(format!("{}: channel list of {} unavailable, only puncturing is evaluated", r.iface, r.phy.as_deref().unwrap_or("?")));
+@@ -433,8 +540,9 @@ mod tests {
+         };
+         let chans = HashMap::from([("phy0".to_string(), chans_5g())]);
+         let survey = HashMap::new();
++        let vis = HashMap::new();
+         let radios = [radio()];
+-        let p = build_plan(&PlanInput { now: 130.0, radios: &radios, scan: Some(&scan), survey: &survey, phy_chans: &chans });
++        let p = build_plan(&PlanInput { now: 130.0, radios: &radios, scan: Some(&scan), survey: &survey, visited: &vis, phy_chans: &chans });
+         let l = &p.links[0];
+         assert_eq!(p.scan_age_s, Some(30.0));
+         assert_eq!(l.bins.iter().map(|b| b.busy).collect::<Vec<_>>(), vec![false, false, false, true]); // own BSS ignored
+@@ -442,4 +550,76 @@ mod tests {
+         let pr = l.puncture.as_ref().unwrap();
+         assert_eq!((pr.bitmap, pr.bitmap_hex.as_str(), pr.clear_before_mhz, pr.clear_after_mhz, pr.gain_mhz), (0x8, "0x8", 40, 60, 20));
+     }
++
++    fn sv(freq: u32, active: u64, in_use: bool) -> SurveyChan {
++        SurveyChan { freq, in_use, active_ms: Some(active), busy_ms: Some(0), ..Default::default() }
++    }
++
++    #[test]
++    fn unscanned_channels_are_not_recommended() {
++        // on 36-48 with a strong neighbour on 36; 52-64 never visited, 100-112
++        // visited and quiet
++        let scan = ScanData { ts: 100.0, per_iface: HashMap::from([("wlan0".to_string(), vec![bss("aa:aa:aa:aa:aa:01", 5180, -40.0)])]) };
++        let chans = HashMap::from([("phy0".to_string(), chans_5g())]);
++        let radios = [radio()];
++        // the current block is also busy (survey), so a quiet DFS block beats
++        // it despite the DFS penalty
++        let mut sur: Vec<SurveyChan> =
++            (0..4u32).map(|i| SurveyChan { busy_ms: Some(800), ..sv(5180 + 20 * i, 1000, i == 0) }).collect();
++        sur.extend((0..4u32).map(|i| sv(5260 + 20 * i, 0, false)));
++        let survey = HashMap::from([("wlan0".to_string(), sur.clone())]);
++        // 36-48 visited just now, 52-64 only 20 min ago (too old)
++        let mut vis = HashMap::from([("wlan0".to_string(), (0..4u32).map(|i| (5180 + 20 * i, 120.0)).collect::<HashMap<u32, f64>>())]);
++        vis.get_mut("wlan0").unwrap().extend((0..4u32).map(|i| (5260 + 20 * i, 130.0 - 1200.0)));
++        let p = build_plan(&PlanInput { now: 130.0, radios: &radios, scan: Some(&scan), survey: &survey, visited: &vis, phy_chans: &chans });
++        let l = &p.links[0];
++        assert!(l.recommend.is_none(), "{:?}", l.recommend);
++        let c52 = l.candidates.iter().find(|c| c.center1 == 5290).unwrap();
++        assert!(!c52.scanned);
++        assert!(l.candidates.iter().find(|c| c.current).unwrap().scanned);
++        assert!(p.notes.iter().any(|n| n.contains("not scanned in the last 15 min")));
++
++        // once 100-112 has been visited (and is quiet) it may be recommended
++        sur.extend((0..4u32).map(|i| sv(5500 + 20 * i, 60, false)));
++        let survey = HashMap::from([("wlan0".to_string(), sur)]);
++        vis.get_mut("wlan0").unwrap().extend((0..4u32).map(|i| (5500 + 20 * i, 125.0)));
++        let p = build_plan(&PlanInput { now: 130.0, radios: &radios, scan: Some(&scan), survey: &survey, visited: &vis, phy_chans: &chans });
++        assert_eq!(p.links[0].recommend.as_ref().map(|c| c.center1), Some(5530));
++
++        // no survey at all: cannot tell, old behaviour
++        let p = build_plan(&PlanInput { now: 130.0, radios: &radios, scan: Some(&scan), survey: &HashMap::new(), visited: &HashMap::new(), phy_chans: &chans });
++        assert!(p.links[0].candidates.iter().all(|c| c.scanned));
++    }
++
++    #[test]
++    fn scan_memory_outlives_the_kernel_cache() {
++        let mut m = ScanMemory::default();
++        let survey = HashMap::from([(
++            "w".to_string(),
++            vec![
++                SurveyChan { freq: 2412, active_ms: Some(114), ..Default::default() },
++                SurveyChan { freq: 2437, in_use: true, active_ms: Some(9000), ..Default::default() },
++            ],
++        )]);
++        let visit = |freqs: Vec<u32>, ts: f64| vec![ScanVisit { iface: "w".into(), freqs, ts }];
++
++        // survey active time alone (unknown age) is not a visit; in use is
++        let scan = ScanData { ts: 1000.0, per_iface: HashMap::from([("w".to_string(), vec![bss("aa:00:00:00:00:01", 2412, -60.0)])]) };
++        m.update(1000.0, Some(&scan), &survey, &[]);
++        assert!(m.visited["w"].contains_key(&2437));
++        assert!(!m.visited["w"].contains_key(&2412));
++
++        // a finished scan covers exactly its frequencies; the kernel then forgets the BSS
++        m.update(1010.0, None, &survey, &visit(vec![2412, 2462], 1009.0));
++        assert_eq!((m.visited["w"][&2412], m.visited["w"][&2462]), (1009.0, 1009.0));
++        let s = m.scan(1300.0).unwrap();
++        assert_eq!(s.per_iface["w"].len(), 1);
++        assert_eq!(s.per_iface["w"][0].seen_ms, Some(301_000)); // heard 1 s before t=1000
++
++        // after MAX_SCAN_AGE both the BSS and the visit are gone
++        m.update(1000.0 + MAX_SCAN_AGE_S + 20.0, None, &survey, &[]);
++        assert!(m.scan(2000.0).unwrap().per_iface.is_empty());
++        assert!(!m.visited["w"].contains_key(&2412));
++        assert!(m.visited["w"].contains_key(&2437)); // in use: always fresh
++    }
+ }
+diff --git a/src/sources.rs b/src/sources.rs
+index 0b0ac08..fd88745 100644
+--- a/src/sources.rs
++++ b/src/sources.rs
+@@ -3,6 +3,10 @@ use crate::debugfs;
+ use crate::iwparse;
+ use crate::model::*;
+ use std::collections::HashMap;
++use std::io::{BufRead, BufReader};
++use std::os::unix::process::CommandExt;
++use std::process::{Command, Stdio};
++use std::sync::{Arc, Mutex};
+ use crate::hostapd::{self, HostapdCfg};
+ use crate::nl80211::{Nl, NlStation};
+ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+@@ -20,6 +24,42 @@ pub struct RealSource {
+     nl: Option<Nl>,
+     last_scan: Option<Instant>,
+     last_phy: Option<Instant>,
++    visits: Option<Arc<Mutex<Vec<ScanVisit>>>>,
++}
++
++/// Follow `iw event` for finished scans (whoever started them: hostapd ACS, a
++/// site survey, `iw scan`), so the planner knows which channels were looked at
++/// and when. Restarted if iw exits; iw dies with this thread.
++fn watch_scans(iw: String, out: Arc<Mutex<Vec<ScanVisit>>>) {
++    std::thread::spawn(move || loop {
++        let mut cmd = Command::new(&iw);
++        cmd.arg("event").stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::null());
++        // SAFETY: prctl is async-signal-safe and touches no memory of ours.
++        unsafe {
++            cmd.pre_exec(|| {
++                libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM);
++                Ok(())
++            });
++        }
++        if let Ok(mut child) = cmd.spawn() {
++            if let Some(o) = child.stdout.take() {
++                for line in BufReader::new(o).lines().map_while(Result::ok) {
++                    if let Some((iface, freqs)) = iwparse::parse_scan_finished(&line) {
++                        let ts = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).unwrap_or(0.0);
++                        let mut v = out.lock().unwrap_or_else(|e| e.into_inner());
++                        v.push(ScanVisit { iface, freqs, ts });
++                        let n = v.len();
++                        if n > 64 {
++                            v.drain(..n - 64);
++                        }
++                    }
++                }
++            }
++            let _ = child.kill();
++            let _ = child.wait();
++        }
++        std::thread::sleep(Duration::from_secs(10));
++    });
+ }
+ 
+ /// Fold the kernel's per-link statistics into a station parsed from `iw`.
+@@ -60,6 +100,7 @@ impl RealSource {
+             nl: None,
+             last_scan: None,
+             last_phy: None,
++            visits: None,
+         }
+     }
+ 
+@@ -100,6 +141,12 @@ impl Source for RealSource {
+ 
+     fn raw(&mut self) -> Raw {
+         let mut raw = Raw::default();
++        let visits = self.visits.get_or_insert_with(|| {
++            let v = Arc::new(Mutex::new(Vec::new()));
++            watch_scans(self.iw.clone(), v.clone());
++            v
++        });
++        raw.scan_visits = std::mem::take(&mut *visits.lock().unwrap_or_else(|e| e.into_inner()));
+         let mut phys = debugfs::find_phys();
+         match self.run(&["dev"]) {
+             Ok(t) => raw.ifaces = iwparse::parse_iw_dev(&t),
+@@ -461,6 +508,7 @@ impl Source for DemoSource {
+         for i in 0..59 {
+             chans.push(ChanInfo { freq: 5955 + 20 * i, channel: 1 + 4 * i, disabled: false, radar: false });
+         }
++        let survey_freqs: Vec<u32> = chans.iter().map(|c| c.freq).collect();
+         Raw {
+             scan: Some(ScanData { ts: now_s - 3.0, per_iface: HashMap::from([("wlan0".to_string(), neighbours)]) }),
+             phy_chans: Some(HashMap::from([("phy0".to_string(), chans)])),
+@@ -470,6 +518,12 @@ impl Source for DemoSource {
+             survey: HashMap::from([("wlan0".to_string(), survey)]),
+             hw: vec![hw],
+             errors: vec![],
++            // the demo AP "scans" everything all the time
++            scan_visits: vec![ScanVisit {
++                iface: "wlan0".into(),
++                freqs: survey_freqs,
++                ts: now_s,
++            }],
+         }
+     }
+ }
+diff --git a/static/index.html b/static/index.html
+index db96b55..57f5a1b 100644
+--- a/static/index.html
++++ b/static/index.html
+@@ -789,7 +789,7 @@ function renderPlan(st) {
+     } else h += `<p class="muted">Current channel is among the best for this width.</p>`;
+     const pk = esc(l.iface + ":" + (l.link ?? ""));
+     if (l.candidates.length) h += `<details data-k="${pk}"${planOpen.has(l.iface + ":" + (l.link ?? "")) ? " open" : ""}><summary class="muted">candidates</summary><table><tr><th>ch</th><th class="num">score</th><th>notes</th></tr>` +
+-      l.candidates.map(c => `<tr><td>${esc(c.channel ?? c.freq)}${c.current ? " (now)" : ""}</td><td class="num">${fmt(c.score, 2)}</td><td>${esc(c.reason)}</td></tr>`).join("") + `</table></details>`;
++      l.candidates.map(c => `<tr><td>${esc(c.channel ?? c.freq)}${c.current ? " (now)" : ""}</td><td class="num">${c.scanned === false ? "?" : fmt(c.score, 2)}</td><td>${esc(c.reason)}</td></tr>`).join("") + `</table></details>`;
+     h += "</div>";
+   }
+   $("plan").innerHTML = h + "</div>";
+-- 
+2.47.3
+

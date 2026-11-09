@@ -1,0 +1,41 @@
+From a8ba4f5cafcb95a285b1712dd06d6b88103ab5ca Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Mon, 9 Nov 2026 12:55:48 -0700
+Subject: [PATCH] UI: keep the planner's candidates list open across refreshes
+
+---
+ static/index.html | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/static/index.html b/static/index.html
+index 9c190b8..db96b55 100644
+--- a/static/index.html
++++ b/static/index.html
+@@ -157,6 +157,7 @@ const fmt = (v, d = 1, u = "") => v == null ? "–" : (+v).toFixed(d).replace(/\
+ const bandCls = b => b === "2.4G" ? "b24" : b === "5G" ? "b5" : "b6";
+ const sigCls = s => s == null ? "" : s >= -60 ? "sig-good" : s >= -72 ? "sig-mid" : "sig-bad";
+ const open = new Set();   // expanded station MACs
++const planOpen = new Set();   // planner links whose "candidates" list is expanded
+ let hist = {};
+ 
+ function rateStr(r) {
+@@ -786,11 +787,15 @@ function renderPlan(st) {
+       h += `<p><b>Move to ch ${esc(c.channel)} (${c.freq} MHz)</b>: interference ${fmt(c.score, 2)} vs ${fmt(l.current_score, 2)} now — ${esc(c.reason)}
+         ${btn("Apply channel", a, "Switches channel with hostapd chan_switch; clients may briefly disconnect.", "warn")}</p>`;
+     } else h += `<p class="muted">Current channel is among the best for this width.</p>`;
+-    if (l.candidates.length) h += `<details><summary class="muted">candidates</summary><table><tr><th>ch</th><th class="num">score</th><th>notes</th></tr>` +
++    const pk = esc(l.iface + ":" + (l.link ?? ""));
++    if (l.candidates.length) h += `<details data-k="${pk}"${planOpen.has(l.iface + ":" + (l.link ?? "")) ? " open" : ""}><summary class="muted">candidates</summary><table><tr><th>ch</th><th class="num">score</th><th>notes</th></tr>` +
+       l.candidates.map(c => `<tr><td>${esc(c.channel ?? c.freq)}${c.current ? " (now)" : ""}</td><td class="num">${fmt(c.score, 2)}</td><td>${esc(c.reason)}</td></tr>`).join("") + `</table></details>`;
+     h += "</div>";
+   }
+   $("plan").innerHTML = h + "</div>";
++  // the panel is rebuilt on every poll: remember which lists are open
++  for (const d of $("plan").querySelectorAll("details[data-k]"))
++    d.ontoggle = () => d.open ? planOpen.add(d.dataset.k) : planOpen.delete(d.dataset.k);
+ }
+ 
+ // ------------------------------------------------------------- airtime ----
+-- 
+2.47.3
+

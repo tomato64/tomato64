@@ -193,6 +193,9 @@ enum svc_op_id {
 #ifdef TOMATO64_HAS_FAN
 	SVCOP_FAN,
 #endif /* TOMATO64_HAS_FAN */
+#ifdef TOMATO64_HAS_MT7996APP
+	SVCOP_MT7996APP,
+#endif /* TOMATO64_HAS_MT7996APP */
 #endif /* TOMATO64 */
 	SVCOP_MAX
 };
@@ -394,6 +397,9 @@ static const struct svc_entry svc_table[] = {
 #ifdef TCONFIG_SDHC
 	{ "mmc",		SVCF_LIST | SVCF_NO_STATUS,					P_NONE,			0,	SVCOP_MMC		},
 #endif
+#ifdef TOMATO64_HAS_MT7996APP
+	{ "mt7996app",		SVCF_LIST,							P_SELF,			0,	SVCOP_MT7996APP		},
+#endif /* TOMATO64_HAS_MT7996APP */
 #ifdef TCONFIG_NGINX
 	{ "mysql",		SVCF_LIST,							P_MYSQLD,		1,	SVCOP_MYSQL		},
 	{ "mysqld",		0,								P_MYSQLD,		1,	SVCOP_MYSQL		},
@@ -583,6 +589,9 @@ static const struct svc_op svc_ops[] = {
 #ifdef TOMATO64_HAS_FAN
 	SVC_OP(stop_fan, start_fan),
 #endif /* TOMATO64_HAS_FAN */
+#ifdef TOMATO64_HAS_MT7996APP
+	SVC_OP(stop_mt7996app, start_mt7996app),
+#endif /* TOMATO64_HAS_MT7996APP */
 #endif /* TOMATO64 */
 };
 

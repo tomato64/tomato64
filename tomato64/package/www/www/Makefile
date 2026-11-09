@@ -819,6 +819,13 @@ else
 	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/TOMATO64-BRIDGER-BEGIN/,/TOMATO64-BRIDGER-END/d"
 endif
 
+# Tools > Wireless Monitor (mt7996app): only where the package is built (PLATFORM_HAS_MT7996APP).
+ifeq ($(PLATFORM_HAS_MT7996APP),y)
+else
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/TOMATO64-MT7996APP-BEGIN/,/TOMATO64-MT7996APP-END/d"
+	rm -f $(INSTALLDIR)/www/tools-wmonitor.asp
+endif
+
 # Wireless Ethernet Dispatch: only on MediaTek SoCs with the WED block and a WiFi
 # driver that uses it (PLATFORM_HAS_WED). The MT7987 (GL-MT3600BE) has a WED
 # block, but neither the kernel's mtk_wed nor mt76 supports it there yet, so it
@@ -1004,6 +1011,7 @@ endif
 		-e "/TOMATO64-FAN-BEGIN/d"	-e "/TOMATO64-FAN-END/d" \
 		-e "/TOMATO64-WED-BEGIN/d"		-e "/TOMATO64-WED-END/d" \
 		-e "/TOMATO64-BRIDGER-BEGIN/d"	-e "/TOMATO64-BRIDGER-END/d" \
+		-e "/TOMATO64-MT7996APP-BEGIN/d"	-e "/TOMATO64-MT7996APP-END/d" \
 		-e "/TOMATO64-BE14000-NO-BEGIN/d"	-e "/TOMATO64-BE14000-NO-END/d" \
 		-e "/TOMATO64-BE14000-BEGIN/d"		-e "/TOMATO64-BE14000-END/d" \
 		-e "/BCM53XX-BEGIN/d"		-e "/BCM53XX-END/d" \

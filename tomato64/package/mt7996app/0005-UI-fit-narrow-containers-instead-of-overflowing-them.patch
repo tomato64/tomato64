@@ -1,0 +1,64 @@
+From 5e39338c1735ed8012e6cc85763ffe81bf2de4b4 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Mon, 9 Nov 2026 20:10:35 -0700
+Subject: [PATCH] UI: fit narrow containers instead of overflowing them
+
+Embedded in a page with a fixed-width content column (about 740 px),
+the dashboard grew wider than its container: grid items default to
+min-width: auto, so a wide child (a table, a long rate string) widened
+its card and then the page, which also defeats the .scroll wrappers of
+the tables. Let grid items and cards shrink (min-width: 0), keep the
+grid column minimums within the container (min(340px, 100%)), let long
+values in key/value lists wrap, and give the planner's candidates
+table the same scroll wrapper as the other tables.
+---
+ static/index.html | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/static/index.html b/static/index.html
+index 57f5a1b..74ab913 100644
+--- a/static/index.html
++++ b/static/index.html
+@@ -31,7 +31,10 @@ header h1 { font-size: 16px; margin: 0; }
+ main { padding: 16px; max-width: 1200px; margin: 0 auto; display: grid; gap: 16px; }
+ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 8px; }
+ .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+-.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
++.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); }
++/* grid items default to min-width: auto and grow to fit wide content (a table, a long rate string), which pushes
++   the whole page wider and defeats .scroll; let them shrink so wide content scrolls inside its card instead */
++main > *, .pane > *, .grid > *, .links > *, .card { min-width: 0; }
+ .radio canvas.chart { margin-top: 2px; }
+ .radio .legend { margin: 10px 0 0; }
+ .radio .top { display: flex; justify-content: space-between; align-items: baseline; }
+@@ -39,6 +42,7 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: v
+ .band.b24 { color: var(--b24); } .band.b5 { color: var(--b5); } .band.b6 { color: var(--b6); }
+ .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin-top: 6px; font-size: 13px; }
+ .kv span:nth-child(odd) { color: var(--muted); }
++.kv span { overflow-wrap: anywhere; }
+ .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+ .bar > i { display: block; height: 100%; background: var(--accent); }
+ .bar.stack { display: flex; margin-top: 4px; } .bar.stack > i { flex: none; }
+@@ -55,7 +59,7 @@ tr.detail > td { background: var(--bg); white-space: normal; }
+ .pill.mlo { background: var(--b6); }
+ .sig-good { color: var(--ok); } .sig-mid { color: var(--warn); } .sig-bad { color: var(--bad); }
+ canvas { width: 100%; height: 70px; display: block; }
+-.links { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
++.links { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); }
+ .err { color: var(--bad); margin: 0 0 4px; }
+ pre { margin: 0; white-space: pre-wrap; font-size: 12px; }
+ .hist { display: flex; align-items: flex-end; gap: 2px; height: 40px; }
+@@ -788,8 +792,8 @@ function renderPlan(st) {
+         ${btn("Apply channel", a, "Switches channel with hostapd chan_switch; clients may briefly disconnect.", "warn")}</p>`;
+     } else h += `<p class="muted">Current channel is among the best for this width.</p>`;
+     const pk = esc(l.iface + ":" + (l.link ?? ""));
+-    if (l.candidates.length) h += `<details data-k="${pk}"${planOpen.has(l.iface + ":" + (l.link ?? "")) ? " open" : ""}><summary class="muted">candidates</summary><table><tr><th>ch</th><th class="num">score</th><th>notes</th></tr>` +
+-      l.candidates.map(c => `<tr><td>${esc(c.channel ?? c.freq)}${c.current ? " (now)" : ""}</td><td class="num">${c.scanned === false ? "?" : fmt(c.score, 2)}</td><td>${esc(c.reason)}</td></tr>`).join("") + `</table></details>`;
++    if (l.candidates.length) h += `<details data-k="${pk}"${planOpen.has(l.iface + ":" + (l.link ?? "")) ? " open" : ""}><summary class="muted">candidates</summary><div class="scroll"><table><tr><th>ch</th><th class="num">score</th><th>notes</th></tr>` +
++      l.candidates.map(c => `<tr><td>${esc(c.channel ?? c.freq)}${c.current ? " (now)" : ""}</td><td class="num">${c.scanned === false ? "?" : fmt(c.score, 2)}</td><td>${esc(c.reason)}</td></tr>`).join("") + `</table></div></details>`;
+     h += "</div>";
+   }
+   $("plan").innerHTML = h + "</div>";
+-- 
+2.47.3
+

@@ -331,6 +331,11 @@ extern void stop_fan(void);
 extern void start_bridger(void);
 extern void stop_bridger(void);
 #endif /* TOMATO64_HAS_BRIDGER */
+#ifdef TOMATO64_HAS_MT7996APP
+/* mt7996app.c */
+extern void start_mt7996app(void);
+extern void stop_mt7996app(void);
+#endif /* TOMATO64_HAS_MT7996APP */
 #endif
 #ifdef TCONFIG_ZEBRA
 extern void start_zebra(void);

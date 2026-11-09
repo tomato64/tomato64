@@ -1,0 +1,152 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Lance Fredrickson <lancethepants@gmail.com>
+Date: Mon, 9 Nov 2026 10:36:12 -0700
+Subject: [PATCH 1/2] Listen on a unix socket with --listen unix:PATH
+
+Lets the dashboard sit behind a reverse proxy (e.g. a router's own web
+server) without opening a TCP port. A stale socket left by an unclean
+exit is removed before binding.
+---
+ README.md     |  2 +-
+ src/main.rs   | 26 ++++++++++++++++++++++----
+ src/server.rs | 32 ++++++++++++++++++++++++++++----
+ 3 files changed, 51 insertions(+), 9 deletions(-)
+
+diff --git a/README.md b/README.md
+index 26aca52..e804b9a 100644
+--- a/README.md
++++ b/README.md
+@@ -337,7 +337,7 @@ Only listen on `0.0.0.0` / a LAN address on a trusted management network or behi
+ ## Options
+ 
+ ```
+---listen ADDR:PORT  web server address, e.g. 0.0.0.0:8080, 192.168.1.1:8996, [::1]:8996, :8080
++--listen ADDR:PORT  web server address, e.g. 0.0.0.0:8080, 192.168.1.1:8996, [::1]:8996, :8080, unix:/run/mt7996app.sock
+ --bind ADDR       listen address only (default 127.0.0.1)
+ --port N          listen port only (default 8996)
+ --interval SECS   poll interval (default 2, minimum 0.2)
+diff --git a/src/main.rs b/src/main.rs
+index fdf5f3f..6759568 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -27,7 +27,8 @@ mt7996app - MLO-aware live dashboard for mt7996 (Wi-Fi 7) access points
+ USAGE: mt7996app [OPTIONS]
+ 
+   --listen ADDR:PORT  where the web server listens, e.g. 0.0.0.0:8080,
+-                    192.168.1.1:8996, [::1]:8996 or just :8080 (keeps the bind address)
++                    192.168.1.1:8996, [::1]:8996 or just :8080 (keeps the bind address),
++                    or unix:/PATH for a unix socket (e.g. behind a reverse proxy)
+   --bind ADDR       listen address only (default 127.0.0.1; the UI has no auth)
+   --port N          listen port only (default 8996)
+   --interval SECS   poll interval (default 2)
+@@ -63,6 +64,7 @@ ENVIRONMENT (overridden by command-line options):
+ 
+ struct Args {
+     bind: String,
++    unix: Option<String>,
+     port: u16,
+     interval: f64,
+     demo: bool,
+@@ -100,9 +102,25 @@ fn parse_listen(s: &str, default_bind: &str) -> Result<(String, u16), String> {
+     Ok((host.to_string(), port))
+ }
+ 
++/// `--listen` / `MT7996APP_LISTEN`: `unix:PATH` selects a unix socket, anything else
++/// goes through `parse_listen`.
++fn set_listen(a: &mut Args, s: &str) -> Result<(), String> {
++    if let Some(path) = s.strip_prefix("unix:") {
++        if path.is_empty() {
++            return Err("unix: needs a socket path".into());
++        }
++        a.unix = Some(path.to_string());
++    } else {
++        (a.bind, a.port) = parse_listen(s, &a.bind)?;
++        a.unix = None;
++    }
++    Ok(())
++}
++
+ fn parse_args() -> Result<Args, String> {
+     let mut a = Args {
+         bind: "127.0.0.1".into(),
++        unix: None,
+         port: 8996,
+         interval: 2.0,
+         demo: false,
+@@ -125,7 +143,7 @@ fn parse_args() -> Result<Args, String> {
+     };
+     // Environment first, so command-line options override it.
+     if let Ok(v) = std::env::var("MT7996APP_LISTEN") {
+-        (a.bind, a.port) = parse_listen(&v, &a.bind)?;
++        set_listen(&mut a, &v)?;
+     }
+     if let Ok(v) = std::env::var("MT7996APP_BIND") {
+         a.bind = v;
+@@ -137,7 +155,7 @@ fn parse_args() -> Result<Args, String> {
+     while let Some(arg) = it.next() {
+         let mut val = |name: &str| it.next().ok_or_else(|| format!("{name} needs a value"));
+         match arg.as_str() {
+-            "--listen" => (a.bind, a.port) = parse_listen(&val("--listen")?, &a.bind)?,
++            "--listen" => set_listen(&mut a, &val("--listen")?)?,
+             "--bind" => a.bind = val("--bind")?,
+             "--port" => a.port = val("--port")?.parse().map_err(|_| "bad --port")?,
+             "--interval" => {
+@@ -382,7 +400,7 @@ fn main() {
+         history_persist(&col, &log, path, a.history_save);
+     }
+     col.start();
+-    if let Err(e) = server::serve(col, log, &a.bind, a.port, a.demo) {
++    if let Err(e) = server::serve(col, log, &a.bind, a.port, a.unix.as_deref(), a.demo) {
+         eprintln!("mt7996app: {e}");
+         std::process::exit(1);
+     }
+diff --git a/src/server.rs b/src/server.rs
+index 4c1a301..8b781d4 100644
+--- a/src/server.rs
++++ b/src/server.rs
+@@ -9,6 +9,7 @@
+ use crate::collector::Collector;
+ use crate::control::{token_ok, Action};
+ use std::io::Read;
++use std::os::unix::fs::FileTypeExt;
+ use std::sync::Arc;
+ use std::time::Duration;
+ use tiny_http::{Header, Response, Server};
+@@ -71,10 +72,33 @@ fn handle_control(mut req: tiny_http::Request, col: &Collector) {
+     }
+ }
+ 
+-pub fn serve(col: Arc<Collector>, log: Arc<crate::events::EventLog>, bind: &str, port: u16, demo: bool) -> Result<(), String> {
+-    let server = Server::http((bind, port)).map_err(|e| format!("cannot listen on {bind}:{port}: {e}"))?;
+-    let host = if bind.contains(':') { format!("[{bind}]") } else { bind.to_string() };
+-    eprintln!("mt7996app {} listening on http://{host}:{port}/{}", env!("CARGO_PKG_VERSION"), if demo { "  (demo data)" } else { "" });
++pub fn serve(
++    col: Arc<Collector>,
++    log: Arc<crate::events::EventLog>,
++    bind: &str,
++    port: u16,
++    unix: Option<&str>,
++    demo: bool,
++) -> Result<(), String> {
++    let demo_note = if demo { "  (demo data)" } else { "" };
++    let server = match unix {
++        Some(path) => {
++            // A socket left behind by an unclean exit would make bind() fail.
++            let p = std::path::Path::new(path);
++            if std::fs::symlink_metadata(p).map(|m| m.file_type().is_socket()).unwrap_or(false) {
++                let _ = std::fs::remove_file(p);
++            }
++            let server = Server::http_unix(p).map_err(|e| format!("cannot listen on unix:{path}: {e}"))?;
++            eprintln!("mt7996app {} listening on unix:{path}{demo_note}", env!("CARGO_PKG_VERSION"));
++            server
++        }
++        None => {
++            let server = Server::http((bind, port)).map_err(|e| format!("cannot listen on {bind}:{port}: {e}"))?;
++            let host = if bind.contains(':') { format!("[{bind}]") } else { bind.to_string() };
++            eprintln!("mt7996app {} listening on http://{host}:{port}/{demo_note}", env!("CARGO_PKG_VERSION"));
++            server
++        }
++    };
+     if col.ctl.cfg.enabled {
+         eprintln!(
+             "control actions ENABLED{}{}{}",

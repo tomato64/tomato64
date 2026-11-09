@@ -1,0 +1,67 @@
+From de23baf1653d8c2b1097daafb387480da8f29678 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Tue, 10 Nov 2026 17:49:41 -0700
+Subject: [PATCH] Retry the channel list of a phy that had none
+
+Channel lists ('iw phy X info') are read on the first sample and then
+every 10 minutes. Started at boot, the daemon read them before the
+radios were up: on a GL-MT6000 the 5 GHz phy came back with no channels
+and the planner had no candidates ('channel list of phy1 unavailable')
+for the next 10 minutes. Read them again after 30 s while any phy has
+no channel list.
+---
+ src/sources.rs | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/sources.rs b/src/sources.rs
+index fd88745..8cbe50c 100644
+--- a/src/sources.rs
++++ b/src/sources.rs
+@@ -13,6 +13,8 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+ 
+ const SCAN_DUMP_EVERY: Duration = Duration::from_secs(15);
+ const PHY_INFO_EVERY: Duration = Duration::from_secs(600);
++/// retry for a phy whose channel list came back empty (e.g. read before the radio was up at boot)
++const PHY_INFO_RETRY: Duration = Duration::from_secs(30);
+ 
+ pub struct RealSource {
+     pub iw: String,
+@@ -24,6 +26,8 @@ pub struct RealSource {
+     nl: Option<Nl>,
+     last_scan: Option<Instant>,
+     last_phy: Option<Instant>,
++    /// phys whose last `iw phy info` gave a channel list
++    phys_with_chans: std::collections::HashSet<String>,
+     visits: Option<Arc<Mutex<Vec<ScanVisit>>>>,
+ }
+ 
+@@ -100,6 +104,7 @@ impl RealSource {
+             nl: None,
+             last_scan: None,
+             last_phy: None,
++            phys_with_chans: Default::default(),
+             visits: None,
+         }
+     }
+@@ -232,7 +237,9 @@ impl Source for RealSource {
+             }
+         }
+         // channel lists (regulatory flags, DFS) change rarely
+-        if self.last_phy.is_none_or(|t| t.elapsed() >= PHY_INFO_EVERY) {
++        // (a phy that had none, e.g. read before the radio was up, is retried sooner)
++        let missing = phys.iter().any(|p| !self.phys_with_chans.contains(p));
++        if self.last_phy.is_none_or(|t| t.elapsed() >= PHY_INFO_EVERY || (missing && t.elapsed() >= PHY_INFO_RETRY)) {
+             self.last_phy = Some(Instant::now());
+             let mut m = HashMap::new();
+             for p in &phys {
+@@ -240,6 +247,7 @@ impl Source for RealSource {
+                     m.insert(p.clone(), iwparse::parse_phy_channels(&t));
+                 }
+             }
++            self.phys_with_chans = m.iter().filter(|(_, c)| !c.is_empty()).map(|(p, _)| p.clone()).collect();
+             raw.phy_chans = Some(m);
+         }
+         raw.hw = phys.iter().map(|p| debugfs::read_hw(p, &self.debugfs_root)).collect();
+-- 
+2.47.3
+

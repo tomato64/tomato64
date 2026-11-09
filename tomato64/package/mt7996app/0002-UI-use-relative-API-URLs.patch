@@ -1,0 +1,63 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Lance Fredrickson <lancethepants@gmail.com>
+Date: Mon, 9 Nov 2026 10:36:12 -0700
+Subject: [PATCH 2/2] UI: use relative API URLs
+
+So the dashboard also works when served under a path prefix by a
+reverse proxy (e.g. /mt7996app/index.html -> /mt7996app/api/state).
+---
+ static/index.html | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/static/index.html b/static/index.html
+index d840a78..9c190b8 100644
+--- a/static/index.html
++++ b/static/index.html
+@@ -343,7 +343,7 @@ async function fetchTier(name, force) {
+   const d = tierData[name] || (tierData[name] = {data: {}, at: 0});
+   if (!force && Date.now() - d.at < TIER[name].every) return;
+   d.at = Date.now();
+-  try { d.data = await (await fetch("/api/history?tier=" + name, {cache: "no-store"})).json(); } catch (e) {}
++  try { d.data = await (await fetch("api/history?tier=" + name, {cache: "no-store"})).json(); } catch (e) {}
+ }
+ 
+ /** Points of one series for a range served from `tier`: that tier, then the next finer one for the newest slots. */
+@@ -745,7 +745,7 @@ function token() {
+ }
+ async function control(action, confirmText) {
+   if (!confirm((confirmText || "Run this action?") + "\n\n" + JSON.stringify(action) + (ctlInfo.dry_run ? "\n\n(dry-run: nothing will be changed)" : ""))) return;
+-  const r = await fetch("/api/control", {method: "POST", headers: {"X-Token": token(), "Content-Type": "application/json"}, body: JSON.stringify(action)});
++  const r = await fetch("api/control", {method: "POST", headers: {"X-Token": token(), "Content-Type": "application/json"}, body: JSON.stringify(action)});
+   const j = await r.json().catch(() => ({ok: false, error: "bad response"}));
+   if (r.status === 401) { try { sessionStorage.removeItem("mt7996tok"); } catch (e) {} }
+   toast(j.ok ? (j.output || "ok") : "failed: " + j.error, !j.ok);
+@@ -822,7 +822,7 @@ function renderSteer(st) {
+ // -------------------------------------------------------------- events ----
+ let events = [], lastEv = 0;
+ async function pollEvents() {
+-  const j = await (await fetch("/api/events?since=" + lastEv, {cache: "no-store"})).json();
++  const j = await (await fetch("api/events?since=" + lastEv, {cache: "no-store"})).json();
+   if (j.length) { lastEv = j[j.length - 1].id; events = events.concat(j).slice(-300); }
+   $("events").innerHTML = events.slice().reverse().map(e => `<div><span class="t">${new Date(e.ts * 1000).toLocaleTimeString()}</span>
+     <span class="k">${esc(e.kind)}</span><span class="${esc(e.level)}">${esc(e.msg)}</span></div>`).join("") || '<span class="muted">no events yet</span>';
+@@ -837,9 +837,9 @@ function renderCtl(st) {
+ async function tick() {
+   let next = 2000;
+   try {
+-    const st = await (await fetch("/api/state", {cache: "no-store"})).json();
++    const st = await (await fetch("api/state", {cache: "no-store"})).json();
+     next = Math.max(500, (st.interval || 2) * 1000);
+-    hist = await (await fetch("/api/history", {cache: "no-store"})).json();
++    hist = await (await fetch("api/history", {cache: "no-store"})).json();
+     lastSt = st; srvNow = st.ts || srvNow; pollSec = st.interval || 2;
+     $("host").textContent = st.host;
+     $("demo").hidden = !st.demo;
+@@ -861,7 +861,7 @@ $("stas").addEventListener("click", ev => {
+   const mac = tr.dataset.mac;
+   open.has(mac) ? open.delete(mac) : open.add(mac);
+   // re-render immediately from the last fetch
+-  fetch("/api/state").then(r => r.json()).then(st => { renderStas(st); drawSparks(); });
++  fetch("api/state").then(r => r.json()).then(st => { renderStas(st); drawSparks(); });
+ });
+ addEventListener("resize", () => { drawSparks(); views.forEach(v => v.redraw()); });
+ let startTab = "live";

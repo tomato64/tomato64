@@ -2548,6 +2548,9 @@ void start_services(void)
 #ifdef TOMATO64_HAS_BRIDGER
 	start_bridger();
 #endif /* TOMATO64_HAS_BRIDGER */
+#ifdef TOMATO64_HAS_MT7996APP
+	start_mt7996app();
+#endif /* TOMATO64_HAS_MT7996APP */
 #endif
 	if (once) {
 		once = 0;
@@ -2728,6 +2731,9 @@ void stop_services(void)
 #ifdef TOMATO64_HAS_BRIDGER
 	stop_bridger();
 #endif /* TOMATO64_HAS_BRIDGER */
+#ifdef TOMATO64_HAS_MT7996APP
+	stop_mt7996app();
+#endif /* TOMATO64_HAS_MT7996APP */
 #endif
 }
 

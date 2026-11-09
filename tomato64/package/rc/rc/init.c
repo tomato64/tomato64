@@ -10712,6 +10712,8 @@ static void sysinit(void)
 	mknod("/dev/pts/1", S_IRWXU|S_IFCHR, makedev(136, 1));
 	mount("devpts", "/dev/pts", "devpts", MS_MGC_VAL, NULL);
 #ifdef TOMATO64
+	/* mac80211/mt76 counters for mt7996app; fails harmlessly without CONFIG_DEBUG_FS */
+	mount("debugfs", "/sys/kernel/debug", "debugfs", 0, NULL);
 	symlink("/proc/self/fd", "/dev/fd");
 	symlink("/proc/self/fd/0", "/dev/stdin");
 	symlink("/proc/self/fd/1", "/dev/stdout");
