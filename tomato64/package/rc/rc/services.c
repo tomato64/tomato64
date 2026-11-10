@@ -3039,6 +3039,10 @@ static int svc_exec_simple(const struct svc_entry *svc, const char *service, int
 				if (nvram_get_int("webmon_bkp"))
 					xstart("/usr/sbin/webmon_bkp", "hourly"); /* make a copy before upgrade */
 
+#ifdef TOMATO64
+				run_nvscript("script_shut", "upgrade", 10);
+#endif /* TOMATO64 */
+
 				stop_sched();
 				stop_cron();
 #ifdef TCONFIG_NGINX

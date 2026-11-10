@@ -11197,7 +11197,14 @@ int init_main(int argc, char *argv[])
 			if (nvram_get_int("webmon_bkp"))
 				xstart("/usr/sbin/webmon_bkp", "hourly"); /* make a copy before halt/reboot router */
 
+#ifndef TOMATO64
 			run_nvscript("script_shut", NULL, 10);
+#else
+			/* pass the reason as $1; "upgrade" is passed from upgrade-start */
+			run_nvscript("script_shut", (state == SIGTERM) ? "reboot" :
+			                            (state == SIGQUIT) ? "halt" :
+			                            (state == SIGINT) ? "stop" : "restart", 10);
+#endif /* TOMATO64 */
 
 			stop_services();
 			stop_wan();

@@ -112,6 +112,9 @@ function earlyInit() {
 <div class="section">
 	<ul>
 		<li>For <b>MultiWAN Up</b>, the active WAN number is passed as <b>$1</b>.</li>
+<!-- TOMATO64-BEGIN -->
+		<li><b>Halt</b> runs on reboot, halt and before a firmware upgrade starts. The reason is passed as <b>$1</b>: <i>reboot</i>, <i>halt</i> or <i>upgrade</i>. It is given 10 seconds before the shutdown continues.</li>
+<!-- TOMATO64-END -->
 	</ul>
 </div>
 
