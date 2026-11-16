@@ -1274,21 +1274,16 @@ static int mtd_write_internal(const char *path, const char *mtd, int check_only)
 
 #ifdef CONFIG_FAILSAFE_UPGRADE
 	int model = get_model();
+	const char *next_bootpartition = NULL;
 
 	if (model == MODEL_EA6700 || model == MODEL_EA6400 || model == MODEL_EA6350v1 || model == MODEL_EA6350v2) {
 		if (nvram_match("bootpartition", "1")) {
 			mtd = "linux";
-			if (!check_only) {
-				nvram_set("bootpartition", "0");
-				nvram_commit();
-			}
+			next_bootpartition = "0";
 		}
 		else {
 			mtd = "linux2";
-			if (!check_only) {
-				nvram_set("bootpartition", "1");
-				nvram_commit();
-			}
+			next_bootpartition = "1";
 		}
 	}
 #endif
@@ -1404,6 +1399,16 @@ static int mtd_write_internal(const char *path, const char *mtd, int check_only)
 		fprintf(stderr, "%s: CRC was not fully validated\n", path);
 		goto fail;
 	}
+
+#ifdef CONFIG_FAILSAFE_UPGRADE
+	/* Switch boot partitions only after the inactive image is fully written. */
+	if (!check_only && next_bootpartition) {
+		if (nvram_set("bootpartition", next_bootpartition) != 0 || nvram_commit() != 0) {
+			fprintf(stderr, "Failed to commit bootpartition=%s to NVRAM\n", next_bootpartition);
+			goto fail;
+		}
+	}
+#endif
 
 #ifdef PLC
 	if (!check_only) {
