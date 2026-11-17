@@ -859,6 +859,9 @@ int get_default_wan_phy_port(void)
 	 * return the default physical WAN port (0), even on port-4 routers.
 	 *
 	 * Confirmed by the current initialization code:
+	 * - E1200 v1/v2 are identified as MODEL_E1500/MODEL_E900 and both
+	 *   store boot_hw_model ("E1200") in t_fix1. A single table entry
+	 *   covers both hardware revisions (issue #71).
 	 * - "E2500 v1.0" does not match MODEL_E2500, which assigns
 	 *   name = "E2500 v1/v2/v3". The matching entry is also present,
 	 *   making "E2500 v1.0" redundant for this code path.
@@ -873,9 +876,8 @@ int get_default_wan_phy_port(void)
 	 * Needs router-specific verification before changing the table:
 	 * - "E1500 v1.0", "E1550 v1.0": likewise use boot_hw_model for
 	 *   'name', so the suffix may only be part of t_model_name.
-	 * - "E800 v1.0", "E1200 v1.0", "E1200 v2.0": no dedicated
-	 *   MODEL_E800/MODEL_E1200 initialization cases were found in the
-	 *   reviewed rc/init.c. Check model aliases/detection and CFE data.
+	 * - "E800 v1.0": no dedicated MODEL_E800 initialization case exists.
+	 *   Check the MODEL_E900 alias, CFE values and physical mapping.
 	 *
 	 * Do not rename or remove entries based only on this source review:
 	 * actual hardware revisions, bootloader values and switch-port wiring
@@ -891,7 +893,7 @@ int get_default_wan_phy_port(void)
 	 *
 	 * Compare the values with rc/init.c and the physical port layout,
 	 * then update the table in a separate, hardware-validated fix.
-	 * This note is informational; existing behavior is unchanged.
+	 * Other unverified entries are intentionally left unchanged.
 	 */
 	/* MIPS routers with WAN on Port 4 */
 	static const char *port4_routers[] = { "RT-N10P", "RT-N12 A1", "RT-N12 B1", "RT-N12 C1", "RT-N12 D1",
@@ -901,8 +903,8 @@ int get_default_wan_phy_port(void)
 	                                       "WNDR3400v2", "WNDR3400v3", "R6300 V1",
 	                                       "Share N300 (F7D3302/F7D7302) v1",
 	                                       "Play N600 (F7D4302/F7D8302) v1", "N600 DB Wireless N+",
-	                                       "Dir-620 C1", "E800 v1.0", "E900 v1.0", "E1200 v1.0",
-	                                       "E1200 v2.0", "E1500 v1.0", "E1550 v1.0", "E2500 v1.0",
+	                                       "Dir-620 C1", "E800 v1.0", "E900 v1.0", "E1200",
+	                                       "E1500 v1.0", "E1550 v1.0", "E2500 v1.0",
 	                                       "E2500 v1/v2/v3", "E3200 v1.0", "E4200 v1", "WNDR3700v3",
 	                                       "WNDR4000", "WNDR4500 V1", "WNDR4500 V2", NULL
 	                                     };
