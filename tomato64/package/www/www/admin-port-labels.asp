@@ -10,10 +10,10 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Advanced: Port Labels</title>
-<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
+<link rel="stylesheet" type="text/css" href="tomato.css?r=@GIT_HASH@">
 <% css(); %>
 <script src="isup.jsx?_http_id=<% nv(http_id); %>"></script>
-<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="tomato.js?r=@GIT_HASH@"></script>
 
 <script>
 //	<% nvram("t_model_name,nics,port0_label,port1_label,port2_label,port3_label,port4_label,port5_label,port6_label,port7_label,port8_label,port9_label"); %>

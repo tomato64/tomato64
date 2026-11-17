@@ -19,7 +19,7 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Bandwidth Quotas</title>
-<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
+<link rel="stylesheet" type="text/css" href="tomato.css?r=@GIT_HASH@">
 <% css(); %>
 <style>
 /* Column widths for the quota list. Every cell is rendered text - editing
@@ -32,7 +32,7 @@
 #quota-grid .co6 { width: 12%; }			/* When Exceeded */
 #quota-grid .co7 { width: 14%; }			/* Description */
 </style>
-<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="tomato.js?r=@GIT_HASH@"></script>
 
 <script>
 
