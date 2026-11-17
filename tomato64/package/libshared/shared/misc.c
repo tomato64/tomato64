@@ -845,7 +845,8 @@ int get_default_wan_phy_port(void)
 	static const char *port4_routers[] = { "AC1450", "R6200v2", "R6250",
 	                                       "R6300v2", "RT-AC56U", "RT-AC56S", "RT-AC3100",
 	                                       "RT-AC88U", "DIR868L", "EA6200", "EA6350v1", "EA6350v2",
-	                                       "EA6400", "EA6500v2", "EA6700", "R7900", "R8000", NULL
+	                                       "EA6400", "EA6500v2", "EA6700", "R7900", "R8000",
+	                                       "WZR-1750DHP", NULL
 	                                     };
 #else
 	/*
