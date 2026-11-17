@@ -673,7 +673,12 @@ void wo_flash(char *url)
 		sleep(2);
 
 		if (!finalize_upgrade())
+#if !defined(TOMATO64) || defined(TOMATO64_HAS_UBI_SYSUPGRADE)
 			logmsg(LOG_WARNING, "upgrade-finalize did not complete before timeout; continuing");
+#else
+			/* upgrade-finalize stops syslogd; log to the kernel ring buffer instead */
+			upgrade_kmsg(LOG_WARNING, "upgrade: upgrade-finalize did not complete before timeout; continuing");
+#endif /* !TOMATO64 || TOMATO64_HAS_UBI_SYSUPGRADE */
 
 #ifdef TOMATO64
 #ifndef TOMATO64_HAS_UBI_SYSUPGRADE
