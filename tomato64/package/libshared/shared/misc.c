@@ -698,13 +698,13 @@ int wan_led(int mode) /* mode: 0 - OFF, 1 - ON */
 	    (model == MODEL_WRT310Nv1) ||
 	    (model == MODEL_WRT160Nv1) ||
 	    (model == MODEL_WNR3500L) ||
+	    (model == MODEL_WNR3500LV2) ||
 	    (model == MODEL_WRT160Nv3) ||
 	    (model == MODEL_WRT320N) ||
 	    (model == MODEL_WRT610Nv2) ||
 	    (model == MODEL_E4200)
 #ifdef TCONFIG_BCMWL6
-	    || (model == MODEL_WNR3500LV2) ||
-	    (model == MODEL_WNDR4000) ||
+	    || (model == MODEL_WNDR4000) ||
 	    (model == MODEL_WNDR3400) ||
 	    (model == MODEL_F9K1102) ||
 	    (model == MODEL_E900) ||
