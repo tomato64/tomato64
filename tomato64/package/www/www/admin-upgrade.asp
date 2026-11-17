@@ -14,7 +14,7 @@
 <title>[<% ident(); %>] Admin: Upgrade</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script src="tomato.js"></script>
+<script src="tomato.js?r=@GIT_HASH@"></script>
 
 <script>
 
@@ -423,10 +423,10 @@ function earlyInit() {
 				                       { title: '&nbsp;',text: 'Select a <a href="https://tomato64.org/files/"> valid firmware<\/a> to install ('+fwExpectedExt(nvram.t_model_name).msg+'):' },
 /* TOMATO64-END */
 /* TOMATO64-REMOVE-BEGIN */
-				                       { title: 'Upgrade File:',text: '<div id="afu-selected-fname"><\/div><input type="file" id="afu-file" name="file" class="afu-file-input" onchange="updateFilenameDiff()">' },
+				                       { title: 'Upgrade File:',text: '<div id="afu-selected-fname"><\/div>'+filePicker('afu-file', 'file', '', 'updateFilenameDiff()') },
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
-				                       { title: 'Upgrade File:',text: '<input type="file" id="afu-file" name="file" class="afu-file-input" onchange="updateFilenameDiff()"><div id="afu-selected-fname"><\/div>' },
+				                       { title: 'Upgrade File:',text: filePicker('afu-file', 'file', '', 'updateFilenameDiff()')+'<div id="afu-selected-fname"><\/div>' },
 /* TOMATO64-END */
 				                       { title: '&nbsp;',text: '<input type="button" id="afu-upgrade-button" value="🛠️ Upgrade" onclick="upgrade()">' }
 				]);

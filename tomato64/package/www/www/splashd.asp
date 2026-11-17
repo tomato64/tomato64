@@ -177,7 +177,7 @@ function init() {
 <div class="section" id="upload-section">
 	<form id="upload-form" method="post" action="uploadsplash.cgi?_http_id=<% nv(http_id); %>" enctype="multipart/form-data">
 		<div>
-			<input type="file" id="upload-name" name="upload_name">
+			<script>document.write(filePicker('upload-name', 'upload_name'));</script>
 			<input type="button" name="f_upload_button" id="upload-button" value="Upload" onclick="uploadButton()">
 		</div>
 	</form>

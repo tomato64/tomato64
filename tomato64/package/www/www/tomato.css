@@ -1192,8 +1192,9 @@ img[id^="barnoise_"] {
 	white-space: nowrap;
 }
 
-.import-file {
-	width: 80%;
+.file-picker-name {
+	margin: 0 8px;
+	word-wrap: break-word;
 }
 
 #qos-cl-grid .x2c {
@@ -2190,37 +2191,19 @@ span.pptpsvg {
 	transform: rotate(90deg);
 }
 
-.afu-file-input {
-	border: none !important;
-	min-width: 0 !important;
-	width: 90px;
-	height: 26px;
-	overflow: hidden;
-	color: transparent;
-	font: inherit;
-	font-size: 0;
-	display: inline-block;
-	vertical-align: middle;
-}
-
 #afu-selected-fname {
 	display: inline;
+/* TOMATO64-BEGIN */
+	vertical-align: middle;
+/* TOMATO64-END */
+}
+
+#afu-selected-fname:not(:empty) {
 /* TOMATO64-REMOVE-BEGIN */
 	margin-right: 8px;
 /* TOMATO64-REMOVE-END */
 /* TOMATO64-BEGIN */
 	margin-left: 8px;
-	vertical-align: middle;
-/* TOMATO64-END */
-
-}
-
-.afu-file-input::file-selector-button {
-	color: ButtonText;
-	font: inherit;
-	font-size: 13px;
-/* TOMATO64-BEGIN */
-	margin: 0;
 /* TOMATO64-END */
 }
 

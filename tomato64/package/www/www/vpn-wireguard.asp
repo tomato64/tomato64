@@ -2156,7 +2156,7 @@ function init() {
 				{ title: 'Router &rarr; Peer Keepalive', name: t+'_ka', type: 'text', maxlen: 2, size: 4, suffix: '&nbsp;<small>0=disable, 10-99s range, 25 is a common setting<\/small>', value: nvram[t+'_ka'] },
 				{ title: 'Redirect Internet traffic', name: t+'_rgwr', type: 'select', options: [[1,'All'],[2,'Routing Policy'],[3,'Routing Policy (strict)']], value: nvram[t+'_rgwr'] },
 					{ title: 'Priority', indent: 2, name: t+'_prio', type: 'text', maxlen: 5, size: 5, placeholder: (100 + i), suffix: '&nbsp;<small>(1 - 32766) lower number = higher priority<\/small>', value: nvram[t+'_prio'] },
-					{ title: 'Import Config from File', indent: 2, custom: '<input type="file" class="import-file" id="'+t+'_config_file" accept=".conf" name="Browse File"><input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')">' },
+					{ title: 'Import Config from File', indent: 2, custom: filePicker(t+'_config_file', 'Browse File', '.conf')+'<input type="button" id="'+t+'_config_import" value="Import" onclick="loadConfig('+i+')">' },
 				{ title: '', custom: '<div>Note: before importing the configuration, set the correct "Type of VPN" above.<\/div>' }
 			]);
 			W('<br><\/div>');

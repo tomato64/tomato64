@@ -124,7 +124,7 @@ function init() {
 	<form id="restore-form" method="post" action="restore.cgi" enctype="multipart/form-data">
 		<div>
 			Select the configuration file to restore:<br><br>
-			<input type="file" id="restore-name" name="filename"> 
+			<script>document.write(filePicker('restore-name', 'filename'));</script>
 			<input type="button" name="f_restore_button" id="restore-button" value="Restore" onclick="restoreButton()">
 		</div>
 	</form>

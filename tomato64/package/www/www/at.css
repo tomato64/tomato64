@@ -788,7 +788,8 @@ table.fields tr td {
 	width: 140px;
 }
 
-.fields input[type="button"]:first-child {
+.fields input[type="button"]:first-child,
+.fields input.file-picker-button {
 	margin-left: 0px;
 }
 

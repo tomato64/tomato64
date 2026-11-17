@@ -2323,6 +2323,13 @@ function E(e) {
 	return (typeof(e) == 'string') ? document.getElementById(e) : e;
 }
 
+function filePicker(id, name, accept, change) {
+	var update = change || "E('"+id+"-name').textContent = fixFile(this.value) || 'No file chosen'";
+	return '<input type="file" id="'+id+'" name="'+name+'" style="display:none"'+(accept ? ' accept="'+accept+'"' : '')+' onchange="'+update+'">'+
+		'<input type="button" class="file-picker-button" value="Choose File" onclick="E(\''+id+'\').click()">'+
+		(change ? '' : '<span class="file-picker-name" id="'+id+'-name">No file chosen</span>');
+}
+
 function PR(e) {
 	return elem.parentElem(e, 'TR');
 }

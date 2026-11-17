@@ -106,7 +106,7 @@ statsAdminSetup('rstats', 'bwm', 'Bandwidth Monitoring');
 <div class="section" id="restore-section">
 	<form id="restore-form" method="post" action="restorestats.cgi?_http_id=<% nv(http_id); %>&_what=bwm" enctype="multipart/form-data">
 		<div>
-			<input type="file" id="restore-name" name="restore-name">
+			<script>document.write(filePicker('restore-name', 'restore-name'));</script>
 			<input type="button" name="f_restore_button" id="restore-button" value="Restore" onclick="restoreButton()">
 		</div>
 	</form>
