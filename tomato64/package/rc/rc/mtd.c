@@ -999,11 +999,12 @@ int mtd_open(const char *mtd, int flags)
 {
 	FILE *fp;
 	char dev[PATH_MAX];
+	char name[128];
 	int i;
 
 	if ((fp = fopen("/proc/mtd", "r"))) {
 		while (fgets(dev, sizeof(dev), fp)) {
-			if (sscanf(dev, "mtd%d:", &i) && strstr(dev, mtd)) {
+			if (sscanf(dev, "mtd%d: %*x %*x \"%127[^\"]\"", &i, name) == 2 && strcmp(name, mtd) == 0) {
 				snprintf(dev, sizeof(dev), "/dev/mtd%d", i);
 				fclose(fp);
 				return open(dev, flags);
