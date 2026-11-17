@@ -392,7 +392,7 @@ void wo_flash(char *url)
 	 * networking/storage kept alive for the upload response.
 	 */
 	if (!finalize_upgrade())
-		logmsg(LOG_WARNING, "upgrade-finalize did not complete before timeout; continuing");
+		dbg("upgrade: upgrade-finalize did not complete before timeout; continuing\n");
 
 #ifdef TCONFIG_BCMARM
 	/*
@@ -414,7 +414,7 @@ void wo_flash(char *url)
 	unlink("/tmp/.mtd-write");
 	status = _eval(args, ">/tmp/.mtd-write", 0, NULL);
 	if (status != 0)
-		fprintf(stderr, "Firmware upgrade operation failed (status %d)\n", status);
+		dbg("upgrade: firmware writer failed (status %d); rebooting\n", status);
 
 	unlink(upgrade_file);
 	upgrade_file[0] = '\0';
