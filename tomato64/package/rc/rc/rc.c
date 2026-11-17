@@ -1053,16 +1053,28 @@ int main(int argc, char **argv)
 			return EINVAL;
 		}
 	}
-	/* mtd-write2 [-c] [path] [device] */
+	/* mtd-write2 [-c|-e] [path] [device] */
 	else if (!strcmp(base, "mtd-write2")) {
 		if ((argc >= 2) && (strcmp(argv[1], "-c") == 0)) {
 			if (argc >= 4)
 				return mtd_check_image(argv[2], argv[3]);
 		}
+		else if ((argc >= 2) && (strcmp(argv[1], "-e") == 0)) {
+			if (argc >= 4) {
+				int ret = mtd_write(argv[2], argv[3]);
+
+				if (ret == 0) {
+					ret = mtd_erase("nvram");
+					if (ret != 0)
+						fprintf(stderr, "mtd-write2: firmware flashed, but NVRAM erase failed (%d)\n", ret);
+				}
+				return ret;
+			}
+		}
 		else if (argc >= 3)
 			return mtd_write(argv[1], argv[2]);
 
-		fprintf(stderr, "usage: mtd-write2 [-c] [path] [device]\n");
+		fprintf(stderr, "usage: mtd-write2 [-c|-e] [path] [device]\n");
 		return EINVAL;
 	}
 #endif
