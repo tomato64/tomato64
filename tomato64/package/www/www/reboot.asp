@@ -38,12 +38,12 @@ function showManualHelp() {
 	if (isReset) {
 		link.href = 'http://192.168.1.1/about.asp';
 		link.textContent = 'Open router at 192.168.1.1';
-		document.getElementById('msg2').textContent = 'Automatic detection is not available or the router has not responded yet. &nbsp;';
+		document.getElementById('msg2').textContent = 'Automatic detection is not available or the router has not responded yet.';
 	}
 	else {
 		link.href = window.location.protocol+'//'+window.location.host+'/about.asp';
 		link.textContent = 'Try opening the router web interface';
-		document.getElementById('msg2').textContent = 'The router web server has not been confirmed online. &nbsp;';
+		document.getElementById('msg2').textContent = 'The router web server has not been confirmed online.';
 	}
 	document.getElementById('manual').style.display = 'block';
 	document.getElementById('rboot').style.height = '160px';
@@ -92,7 +92,7 @@ function pollRouter() {
 				e.value = 'Continue';
 				e.disabled = false;
 				e.style.cursor = 'pointer';
-				document.getElementById('msg2').textContent = 'The router web server is responding again. &nbsp;';
+				document.getElementById('msg2').textContent = 'The router web server is responding again.';
 				document.getElementById('manual').style.display = 'none';
 				return;
 			}
@@ -155,7 +155,7 @@ function init() {
 		document.getElementById('rboot').style.height = '140px';
 	}
 
-	document.getElementById('msg2').textContent = 'Please wait while the router reboots'+msg2+'... &nbsp;';
+	document.getElementById('msg2').textContent = 'Please wait while the router reboots'+msg2+'...';
 
 	startedAt = new Date().getTime();
 	tick();

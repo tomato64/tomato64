@@ -264,6 +264,10 @@ input[type="number"] {
 	font-size: 11px;
 }
 
+#msg2 {
+	margin-right: 10px;
+}
+
 ul.tabs,
 #tabs {
 	padding: 0;
