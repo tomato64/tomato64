@@ -47,8 +47,8 @@ install:
 			-e "/^<!--$$/,/^-->$$/! { s,^\s\+, , }" $$F > $(INSTALLDIR)/www/$$F; \
 	done
 
-# Replace the build-time placeholder after about.asp has been copied/squashed.
-	sed -i $(INSTALLDIR)/www/about.asp -e "s,@GIT_HASH@,$(GIT_HASH),g"
+# Replace the build-time placeholder in all ASP pages after squashing.
+	sed -i $(INSTALLDIR)/www/*.asp -e "s,@GIT_HASH@,$(GIT_HASH),g"
 
 # Remove legacy ARM-only themes from MIPS images
 ifneq ($(TCONFIG_BCMARM),y)

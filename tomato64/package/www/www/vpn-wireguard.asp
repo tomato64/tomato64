@@ -12,14 +12,14 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Wireguard</title>
-<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
+<link rel="stylesheet" type="text/css" href="tomato.css?r=@GIT_HASH@">
 <% css(); %>
 <script src="isup.jsx?_http_id=<% nv(http_id); %>"></script>
-<script src="tomato.js?rel=<% version(); %>"></script>
-<script src="wireguard.js?rel=<% version(); %>"></script>
-<script src="interfaces.js?rel=<% version(); %>"></script>
-<script src="qrcode.js?rel=<% version(); %>"></script>
-<script src="html5-qrcode.js?rel=<% version(); %>"></script>
+<script src="tomato.js?r=@GIT_HASH@"></script>
+<script src="wireguard.js?r=@GIT_HASH@"></script>
+<script src="interfaces.js?r=@GIT_HASH@"></script>
+<script src="qrcode.js?r=@GIT_HASH@"></script>
+<script src="html5-qrcode.js?r=@GIT_HASH@"></script>
 
 <script>
 

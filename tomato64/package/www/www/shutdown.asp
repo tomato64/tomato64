@@ -12,7 +12,7 @@ No part of this file may be used without permission.
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Shutting down...</title>
 /* TOMATO64-REMOVE-BEGIN */
-<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
+<link rel="stylesheet" type="text/css" href="tomato.css?r=@GIT_HASH@">
 <% css(); %>
 <script src="tomato.js"></script>
 /* TOMATO64-REMOVE-END */

@@ -16,18 +16,18 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] IP Traffic: Daily History</title>
-<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
+<link rel="stylesheet" type="text/css" href="tomato.css?r=@GIT_HASH@">
 <% css(); %>
-<script src="tomato.js?rel=<% version(); %>"></script>
-<script src="bwm-hist.js?rel=<% version(); %>"></script>
-<script src="interfaces.js?rel=<% version(); %>"></script>
+<script src="tomato.js?r=@GIT_HASH@"></script>
+<script src="bwm-hist.js?r=@GIT_HASH@"></script>
+<script src="interfaces.js?r=@GIT_HASH@"></script>
 
 <script>
 //	<% jsdefaults(); %>
 //	<% devlist(); %>
 </script>
 
-<script src="bwm-common.js?rel=<% version(); %>"></script>
+<script src="bwm-common.js?r=@GIT_HASH@"></script>
 
 <script>
 var cprefix = 'ipt_daily';
@@ -47,7 +47,7 @@ var iptHistory = daily_history;
 var iptHistoryDaily = 1;
 var iptFilterIp = '<% cgi_get("ipt_filterip"); %>';
 </script>
-<script src="ipt-hist.js?rel=<% version(); %>"></script>
+<script src="ipt-hist.js?r=@GIT_HASH@"></script>
 </head>
 
 <body onload="init()">

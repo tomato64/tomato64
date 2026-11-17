@@ -12,15 +12,15 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Advanced: VLAN</title>
-<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
+<link rel="stylesheet" type="text/css" href="tomato.css?r=@GIT_HASH@">
 <% css(); %>
 <script src="isup.jsx?_http_id=<% nv(http_id); %>"></script>
-<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="tomato.js?r=@GIT_HASH@"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
-<script src="interfaces.js?rel=<% version(); %>"></script>
+<script src="interfaces.js?r=@GIT_HASH@"></script>
 /* TOMATO64-SKIP-BEGIN */
-<script src="ethernet-icon.js?rel=<% version(); %>"></script>
-<script src="vpn.js?rel=<% version(); %>"></script>
+<script src="ethernet-icon.js?r=@GIT_HASH@"></script>
+<script src="vpn.js?r=@GIT_HASH@"></script>
 /* TOMATO64-SKIP-END */
 
 <script>

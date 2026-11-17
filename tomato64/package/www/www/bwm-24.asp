@@ -12,18 +12,18 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Bandwidth: Last 24 Hours</title>
-<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
+<link rel="stylesheet" type="text/css" href="tomato.css?r=@GIT_HASH@">
 <% css(); %>
-<script src="tomato.js?rel=<% version(); %>"></script>
+<script src="tomato.js?r=@GIT_HASH@"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
-<script src="bwm-hist.js?rel=<% version(); %>"></script>
-<script src="interfaces.js?rel=<% version(); %>"></script>
+<script src="bwm-hist.js?r=@GIT_HASH@"></script>
+<script src="interfaces.js?r=@GIT_HASH@"></script>
 
 <script>
 //	<% nvram("wan_ifname,wan_iface,lan_ifname,wan_proto,web_svg,web_css,rstats_enable,wl_nband"); %>
 </script>
 
-<script src="bwm-common.js?rel=<% version(); %>"></script>
+<script src="bwm-common.js?r=@GIT_HASH@"></script>
 
 <script>
 var cprefix = 'bw_24';

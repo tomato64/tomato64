@@ -12,13 +12,13 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Basic: Network</title>
-<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
+<link rel="stylesheet" type="text/css" href="tomato.css?r=@GIT_HASH@">
 <% css(); %>
-<script src="tomato.js?rel=<% version(); %>"></script>
-<script src="md5.js?rel=<% version(); %>"></script>
+<script src="tomato.js?r=@GIT_HASH@"></script>
+<script src="md5.js?r=@GIT_HASH@"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
-<script src="interfaces.js?rel=<% version(); %>"></script>
-<script src="wireless.js?rel=<% version(); %>"></script>
+<script src="interfaces.js?r=@GIT_HASH@"></script>
+<script src="wireless.js?r=@GIT_HASH@"></script>
 <script>
 /* BCM53XX-NO-BEGIN */
 /* Tomato64 doesn't handle wifi on this page */

@@ -16,12 +16,12 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Status: Overview</title>
-<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
+<link rel="stylesheet" type="text/css" href="tomato.css?r=@GIT_HASH@">
 <% css(); %>
-<script src="tomato.js?rel=<% version(); %>"></script>
-<script src="interfaces.js?rel=<% version(); %>"></script>
+<script src="tomato.js?r=@GIT_HASH@"></script>
+<script src="interfaces.js?r=@GIT_HASH@"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
-<script src="ethernet-icon.js?rel=<% version(); %>"></script>
+<script src="ethernet-icon.js?r=@GIT_HASH@"></script>
 <!-- BCMARM-BEGIN -->
 <script>
 var lastjiffiestotal = 0, lastjiffiesidle = 0, lastjiffiesusage = 100;
@@ -29,7 +29,7 @@ var lastjiffiestotal = 0, lastjiffiesidle = 0, lastjiffiesusage = 100;
 <!-- BCMARM-END -->
 <script src="status-data.jsx?_http_id=<% nv(http_id); %>"></script>
 <!-- USB-BEGIN -->
-<script src="wwan_parser.js?rel=<% version(); %>"></script>
+<script src="wwan_parser.js?r=@GIT_HASH@"></script>
 <!-- USB-END -->
 
 <script>
