@@ -130,10 +130,7 @@ white="\033[1;37m"
 grey="\033[0;5;238m"
 green="\033[48;2;32m"
 yellow="\033[48;2;33m"
-latest=0
 itest=0
-current=$(echo $ver | cut -c-6)
-UURL="https://bitbucket.org/rs232-/freshtomato-arm/downloads/adblock.rs232"
 extra="$(NG adblock_path | sed 's/\/$//')/adblock.extra" ; [ -s "$extra" ] && { [ $(ls -l $extra | cut -c4,7,10) != "xxx" ] && { chmod +x $extra ;} ; . "$extra"; }
 
 checkList() { # 0=fetch_local / 1=download / 2=issues / 3=duplicated
@@ -797,35 +794,6 @@ safeDnsmasqRestart() {
 	return 1
 }
 
-upgrade_check() {
-	latest=$(yget -q -O - "$UURL" | grep -E '^ver=' | cut -c6-11)
-	echo "$latest"
-}
-
-upgrade() {
-	latest=$(upgrade_check)
-	[[ "$latest" != "$current" ]] && {
-		logo "New version detected. Upgrading..."
-		cat <<EOF > /tmp/upgrade_dblck.sh
-#!/bin/sh
-export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
-USERAGENT="Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/109.0"
-alias yget="wget --no-check-certificate -T 15 -q -U \"$USERAGENT\" --header \"Cache-Control: no-cache\""
-adblock stop
-mount | grep -q /usr/sbin/adblock && umount /usr/sbin/adblock
-[ -s "/tmp/new_adblock" ] && rm -f "/tmp/new_adblock" &>/dev/null
-yget "$UURL" -O- | tr -d "\r" > /tmp/new_adblock
-chmod +x /tmp/new_adblock
-mount --bind /tmp/new_adblock /usr/sbin/adblock
-echo "Upgrade completed. Now restarting from scratch..."
-adblock clear
-adblock update
-EOF
-		chmod +x /tmp/upgrade_dblck.sh
-		exec /tmp/upgrade_dblck.sh
-	}
-}
-
 adExit() {
 	[ "$1" -eq 1 ] && stopRunningAdblock
 	rm -rf $PREFIX/*
@@ -1011,7 +979,6 @@ elif [ "$1" == "help" ]; then
   │     ${white}start${black}  Same as no parameter: will load        │
   │      ${white}stop${black}  Will unload the script                 │
   │    ${white}update${black}  Update lists while script is running   │
-  │   ${white}upgrade${black}  Upgrades the script to latest version  │
   │                                                   │
   │      ${white}test  example.com${black} Verify domain resolution   │
   │                                                   │  
@@ -1027,18 +994,8 @@ elif [ "$1" == "help" ]; then
   "
 	exit
 elif [ "$1" == "upgrade" ]; then
-	[ $# -eq 2 ] && { [ $2 == "silent" ] && {
-		upgrade
-		logi "Silent upgrade running..."
-		exit
-	}; }
-	latest=$(upgrade_check)
-	[[ "$latest" != "$current" ]] && {
-		echo -e "Current script version: ${yellow}$current${black} / Latest version: ${green}$latest${black}"
-		read -n1 -p ""$'Do you want to perform an upgrade?\ny/n\n' -s ans
-		[ $ans == "y" ] && upgrade || exit
-	} || echo -e "Already on the latest version = ${white}$latest${black}"
-	exit
+	echo "Feature Deprecated, reference Issue #347"
+	exit 0
 elif [ "$1" == "trace" ]; then
 	[ $(ls -1t /tmp/adblock.debug.output.* 2>/dev/null | wc -l ) -gt 0 ] && {
 		echo $(ls -1t /tmp/adblock.debug.output.* | head -n 1)
