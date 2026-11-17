@@ -134,6 +134,7 @@ void ipt_routerpolicy(void)
 			if (*active != '1')
 				continue;
 
+			memset(msrt, 0, sizeof(msrt));
 			if (atoi(srt_type) == 1)
 				snprintf(msrt, sizeof(msrt), "-s %s", srt_addr);
 			else if (atoi(srt_type) == 2)
