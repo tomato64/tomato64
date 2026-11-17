@@ -1649,6 +1649,12 @@ static void filter_forward(void)
 		ip6t_write("-A FORWARD -m rt --rt-type 0 -j DROP\n");
 #endif
 
+	/* Prevent LAN clients from bypassing local DNS via DoT or DoQ */
+	if (nvram_get_int("dns_priv_override")) {
+		ip46t_write(ipv6_enabled, "-A FORWARD -i br+ -p tcp --dport 853 -j REJECT\n");
+		ip46t_write(ipv6_enabled, "-A FORWARD -i br+ -p udp --dport 853 -j REJECT\n");
+	}
+
 	if (nvram_match("cstats_enable", "1"))
 		ipt_account();
 

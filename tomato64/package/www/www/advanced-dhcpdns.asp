@@ -315,8 +315,9 @@ function finishSave(fom, retries) {
 		addService(fom, 'dnsmasq-restart'); /* start dnsmasq if safe mode is set */
 	}
 
-	if (fom.dns_intcpt.value != nvram.dns_intcpt) {
+	if ((fom.dns_intcpt.value != nvram.dns_intcpt) || (fom.dns_priv_override.value != nvram.dns_priv_override)) {
 		nvram.dns_intcpt = fom.dns_intcpt.value;
+		nvram.dns_priv_override = fom.dns_priv_override.value;
 		addService(fom, 'firewall-restart'); /* special case: restart FW */
 	}
 
@@ -716,7 +717,7 @@ function init() {
 			{ title: 'Mute dhcpv6 logging', name: 'f_dnsmasq_q6', type: 'checkbox', value: (nvram.dnsmasq_q & 2) },
 			{ title: 'Mute RA logging', name: 'f_dnsmasq_qr', type: 'checkbox', value: (nvram.dnsmasq_q & 4) },
 /* IPV6-END */
-			{ title: 'Prevent client auto DoH', name: 'f_dns_priv_override', type: 'checkbox', value: nvram.dns_priv_override == 1 },
+			{ title: 'Prevent client auto DoH /<br> block DoT and DoQ', name: 'f_dns_priv_override', type: 'checkbox', value: nvram.dns_priv_override == 1 },
 			{ title: 'Enable DNS Rebind protection', name: 'f_dns_norebind', type: 'checkbox', suffix: ' <small>note: disabled when \'Resolve .onion using Tor\' is checked<\/small>', value: nvram.dns_norebind == 1 },
 			{ title: 'Forward local domain queries to upstream DNS', name: 'f_dns_fwd_local', type: 'checkbox', value: nvram.dns_fwd_local == 1 }
 /* MDNS-BEGIN */
@@ -803,7 +804,7 @@ function init() {
 		<li><b>Fast RA mode</b> - Forces dnsmasq to be always in frequent RA mode. (Recommendation: enable also "Mute RA logging" option)</li>
 		<li><b>IPv6 DNS Server</b> - Send DHCPv6 option6 dns-server (RDNSS). (Default (empty) will use the global address of the router if SLAAC and/or DHCPv6 is enabled!)</li>
 <!-- IPV6-END -->
-		<li><b>Prevent client auto DoH</b> - Some clients like Firefox or Windows' Discovery of Designated Resolver support can automatically switch to DNS over HTTPS, bypassing your preferred DNS servers. This option may prevent that.</li>
+		<li><b>Prevent client auto DoH / block DoT and DoQ</b> - Some clients like Firefox or Windows' Discovery of Designated Resolver support can automatically switch to DNS over HTTPS, bypassing your preferred DNS servers. This option may prevent that. It also rejects forwarded DNS over TLS (TCP/853) and DNS over QUIC (UDP/853) from LAN clients, for IPv4 and IPv6.</li>
 		<li><b>Enable DNS Rebind protection</b> - Enabling this will protect your LAN against DNS rebind attacks, however it will prevent upstream DNS servers from resolving queries to any non-routable IP (for example, 192.168.1.1).</li>
 <!-- MDNS-BEGIN -->
 		<li><b>Enable multicast DNS (Avahi mDNS)</b> - You will probably also want to add some <a href="advanced-access.asp">LAN access rules</a> (by default all communication between bridges is blocked) and/or use <a href="admin-scripts.asp">Firewall script</a> to add your own rules, ie. (br0 = private network, br1 = IOT): <i>iptables -I FORWARD -i br0 -o br+ -j ACCEPT</i> and <i>iptables -I INPUT -i br1 -p udp --dport 5353 -j ACCEPT</i>. Alternative config file is available (/etc/avahi/avahi-daemon_alt.conf).</li>
