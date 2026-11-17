@@ -18,7 +18,7 @@
 
 <script>
 
-//	<% nvram("log_file"); %>
+//	<% nvram("log_file,tm_tz"); %>
 
 var cprefix = 'status_log';
 
@@ -69,6 +69,25 @@ logHeaderGrid.setup = function() {
 
 var logGrid = new TomatoGrid();
 
+/* POSIX TZ offsets have the opposite sign to UTC offsets. */
+function findUnsyncedLines(lines) {
+	var marked = {};
+	var zone = (nvram.tm_tz || '').match(/^(?:<[^>]+>|[A-Za-z]+)([+-]?\d+(?::\d+)?)/);
+	var west = zone && zone[1].charAt(0) != '-' && /[1-9]/.test(zone[1]);
+	var firstDate = west ? /^Dec\s+31\s/ : /^Jan\s+1\s/;
+	for (var i = 0; i < lines.length; ++i) {
+		if (!/\binitial clock synchronized\s*$/.test(lines[i])) continue;
+		var start = Math.max(0, i - 300);
+		for (var j = i - 1; j >= start; --j) {
+			if (/\binitial clock synchronized\s*$/.test(lines[j])) { start = j + 1; break; }
+		}
+		for (var j = start; j < i && !firstDate.test(lines[j]); ++j) {}
+		for (; j < i && /^(?:Dec\s+31|Jan\s+[12])\s/.test(lines[j]); ++j)
+			marked[j] = true;
+	}
+	return marked;
+}
+
 logGrid.setup = function() {
 	this.init('log-table', '', 4001);
 	this.canSort = false;
@@ -84,18 +103,19 @@ logGrid.populate = function() {
 	if (messages != null) {
 		var messagesToAdd = messages.concat();
 		time = messagesToAdd.shift(); /* always present in response */
-
-		if (entriesMode != 0)
-			messagesToAdd = messagesToAdd.slice(-1 * entriesMode - 1);
+		var unsynced = findUnsyncedLines(messagesToAdd);
+		var start = entriesMode != 0 ? Math.max(0, messagesToAdd.length - entriesMode - 1) : 0;
 
 		var count = 0;
-		for (var index = 0; index < messagesToAdd.length; ++index) {
+		for (var index = start; index < messagesToAdd.length; ++index) {
 			if (messagesToAdd[index]) {
 				var logLineMap = getLogLineParsedMap(messagesToAdd[index]);
 				if ((currentFilterValue == 0) || (E('maxlevel').checked ? (currentFilterValue >= logLineMap[LINE_PARSE_MAP_LEVEL_ATTR_POS][1]) : (currentFilterValue == logLineMap[LINE_PARSE_MAP_LEVEL_ATTR_POS][1]))) {
 						if (!searchGroups.length || containsSearch(logLineMap)) {
 							var row = createHighlightedRow(logLineMap);
-							this.insert(-1, row, row, true);
+							var rowElement = this.insert(-1, row, row, true);
+							if (unsynced[index])
+								rowElement.className += ' pre-ntp';
 							count++;
 					}
 				}
@@ -152,7 +172,7 @@ function copyRowContent(el) {
 	}
 }
 
-var logLineRegex = new RegExp(/(\w+\s+\d+\s\d+\:\d+\:\d+)\s\S+\s(\w+).(\w+)\s(\S+)\s(.*)/mi);
+var logLineRegex = new RegExp(/(\w+\s+\d+\s\d+\:\d+\:\d+)(?:\s+(\d{4}))?\s+\S+\s(\w+).(\w+)\s(\S+)\s(.*)/mi);
 var errRegex = new RegExp(/^(.*?)err.*/i);
 var infRegex = new RegExp(/^(.*?)inf.*/i);
 var noticeRegex = new RegExp(/^(.*?)notic.*/i);
@@ -264,11 +284,11 @@ function getLogLineParsedMap(logLine) {
 	var matchedArray = logLine.match(logLineRegex);
 	if (matchedArray != null) {
 		returnedArray[LINE_PARSE_MAP_DATE_POS] = matchedArray[1];
-		returnedArray[LINE_PARSE_MAP_FACILITY_POS] = matchedArray[2];
-		returnedArray[LINE_PARSE_MAP_LEVEL_POS] = matchedArray[3];
+		returnedArray[LINE_PARSE_MAP_FACILITY_POS] = matchedArray[3];
+		returnedArray[LINE_PARSE_MAP_LEVEL_POS] = matchedArray[4];
 		returnedArray[LINE_PARSE_MAP_LEVEL_ATTR_POS] = getLevelColor(returnedArray[LINE_PARSE_MAP_LEVEL_POS]);
-		returnedArray[LINE_PARSE_MAP_LEVEL_PROCESS_POS] = matchedArray[4].slice(0, -1);
-		returnedArray[LINE_PARSE_MAP_LEVEL_MESSAGE_POS] = matchedArray[5];
+		returnedArray[LINE_PARSE_MAP_LEVEL_PROCESS_POS] = matchedArray[5].slice(0, -1);
+		returnedArray[LINE_PARSE_MAP_LEVEL_MESSAGE_POS] = matchedArray[6];
 	}
 	return returnedArray;
 }

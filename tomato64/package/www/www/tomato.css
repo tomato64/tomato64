@@ -435,6 +435,14 @@ table.fields {
 	background: #f7e0e0;
 }
 
+#log-table .odd.pre-ntp {
+	background: rgba(255, 0, 0, 0.06);
+}
+
+#log-table .pre-ntp:hover {
+	background: #f7e0e0;
+}
+
 .tomato-grid input {
 	margin: 0;
 	padding: 0;

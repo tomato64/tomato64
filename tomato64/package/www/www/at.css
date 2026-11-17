@@ -478,6 +478,10 @@ table.tomato-grid tr.odd {
 	background-color: var(--tomato-panel-background);
 }
 
+#log-table tr.odd.pre-ntp td {
+	background-image: linear-gradient(rgba(255, 0, 0, 0.06), rgba(255, 0, 0, 0.06));
+}
+
 table.bwmg tr td,
 table.tomato-grid tr td {
 	font-size: inherit !important;
