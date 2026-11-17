@@ -1,0 +1,42 @@
+From a5554ff1e7df4e5edc3a392f785d5d1e8b629e79 Mon Sep 17 00:00:00 2001
+From: lancethepants <lancethepants@gmail.com>
+Date: Tue, 17 Nov 2026 10:35:16 -0700
+Subject: [PATCH] package/docker-engine: don't require nftables
+
+Docker 29 keeps iptables as its default firewall backend. The nftables
+backend is only used when firewall-backend=nftables is set in
+daemon.json, and without the libnftables build tag (which Buildroot
+does not set) it execs the nft tool instead of linking libnftables.
+
+Tomato64 manages its firewall with iptables, so drop the nftables
+dependency to keep nft and libnftables out of the image.
+---
+ package/docker-engine/Config.in        | 1 -
+ package/docker-engine/docker-engine.mk | 2 +-
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/package/docker-engine/Config.in b/package/docker-engine/Config.in
+index 4a72f64e..37d7f792 100644
+--- a/package/docker-engine/Config.in
++++ b/package/docker-engine/Config.in
+@@ -12,7 +12,6 @@ config BR2_PACKAGE_DOCKER_ENGINE
+ 	select BR2_PACKAGE_HOST_GO
+ 	select BR2_PACKAGE_IPTABLES # runtime dependency
+ 	select BR2_PACKAGE_LIBSECCOMP
+-	select BR2_PACKAGE_NFTABLES
+ 	help
+ 	  Docker is a platform to build, ship,
+ 	  and run applications as lightweight containers.
+diff --git a/package/docker-engine/docker-engine.mk b/package/docker-engine/docker-engine.mk
+index a8fa8080..8af76330 100644
+--- a/package/docker-engine/docker-engine.mk
++++ b/package/docker-engine/docker-engine.mk
+@@ -10,7 +10,7 @@ DOCKER_ENGINE_SITE = $(call github,moby,moby,docker-v$(DOCKER_ENGINE_VERSION))
+ DOCKER_ENGINE_LICENSE = Apache-2.0
+ DOCKER_ENGINE_LICENSE_FILES = LICENSE
+ 
+-DOCKER_ENGINE_DEPENDENCIES = host-pkgconf libseccomp nftables
++DOCKER_ENGINE_DEPENDENCIES = host-pkgconf libseccomp
+ DOCKER_ENGINE_GOMOD = github.com/moby/moby/v2
+ 
+ DOCKER_ENGINE_CPE_ID_VENDOR = mobyproject

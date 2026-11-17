@@ -12,7 +12,7 @@ bl2.img. Add a NEEDS_UBOOT_MKIMAGE config option similar to NEEDS_DTC.
  2 files changed, 11 insertions(+)
 
 diff --git a/boot/arm-trusted-firmware/Config.in b/boot/arm-trusted-firmware/Config.in
-index 70fdec5c2a..5449372b18 100644
+index 70fdec5..5449372 100644
 --- a/boot/arm-trusted-firmware/Config.in
 +++ b/boot/arm-trusted-firmware/Config.in
 @@ -273,6 +273,13 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_DTC
@@ -30,10 +30,10 @@ index 70fdec5c2a..5449372b18 100644
  	bool "Needs arm-none-eabi toolchain"
  	depends on BR2_aarch64
 diff --git a/boot/arm-trusted-firmware/arm-trusted-firmware.mk b/boot/arm-trusted-firmware/arm-trusted-firmware.mk
-index b81ce0d827..bacfc5a7e2 100644
+index 2aaa7e3..9b11904 100644
 --- a/boot/arm-trusted-firmware/arm-trusted-firmware.mk
 +++ b/boot/arm-trusted-firmware/arm-trusted-firmware.mk
-@@ -33,6 +33,10 @@ ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_DTC),y)
+@@ -37,6 +37,10 @@ ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_DTC),y)
  ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-dtc
  endif
  
