@@ -352,6 +352,11 @@ extern void stop_udpxy(void);
 extern void start_httpd(void);
 extern void stop_httpd(void);
 extern void dns_to_resolv(void);
+/* Effective encrypted DNS backend; NVRAM is not modified. */
+#define DNS_BACKEND_NONE 0
+#define DNS_BACKEND_DNSCRYPT 1
+#define DNS_BACKEND_STUBBY 2
+extern int dns_backend_active(void);
 #ifdef TCONFIG_STUBBY
 extern void start_stubby(void);
 extern void stop_stubby(void);

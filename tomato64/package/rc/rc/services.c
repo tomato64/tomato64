@@ -344,6 +344,20 @@ void restart_firewall(void)
 	start_firewall();
 }
 
+/* Prefer DNSCrypt if both backend flags are set; do not change NVRAM. */
+int dns_backend_active(void)
+{
+#ifdef TCONFIG_DNSCRYPT
+	if (nvram_get_int("dnscrypt_proxy"))
+		return DNS_BACKEND_DNSCRYPT;
+#endif
+#ifdef TCONFIG_STUBBY
+	if (nvram_get_int("stubby_proxy"))
+		return DNS_BACKEND_STUBBY;
+#endif
+	return DNS_BACKEND_NONE;
+}
+
 #ifdef TCONFIG_DNSCRYPT
 static void start_dnscrypt_instance(const char *dnscrypt_local, const char *dnscrypt_resolv)
 {
@@ -394,7 +408,7 @@ void start_dnscrypt(void)
 	char dnscrypt_local[30];
 	const char *resolv;
 
-	if (!nvram_get_int("dnscrypt_proxy"))
+	if (dns_backend_active() != DNS_BACKEND_DNSCRYPT)
 		return;
 
 	if (serialize_restart("dnscrypt-proxy", 1))
@@ -439,7 +453,7 @@ void start_stubby(void)
 #endif
 	} addr;
 
-	if (!nvram_get_int("stubby_proxy"))
+	if (dns_backend_active() != DNS_BACKEND_STUBBY)
 		return;
 
 	if (serialize_restart("stubby", 1))

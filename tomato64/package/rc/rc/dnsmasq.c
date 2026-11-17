@@ -161,7 +161,7 @@ static void write_basic_config(FILE *f)
 
 	/* DNSCrypt/Stubby */
 #ifdef TCONFIG_DNSCRYPT
-	if (nvram_get_int("dnscrypt_proxy")) {
+	if (dns_backend_active() == DNS_BACKEND_DNSCRYPT) {
 		fprintf(f, "server=127.0.0.1#%s\n", nvram_safe_get("dnscrypt_port"));
 		if (nvram_match("dnscrypt_priority", "1"))
 			fprintf(f, "strict-order\n");
@@ -171,7 +171,7 @@ static void write_basic_config(FILE *f)
 	}
 #endif
 #ifdef TCONFIG_STUBBY
-	if (nvram_get_int("stubby_proxy")) {
+	if (dns_backend_active() == DNS_BACKEND_STUBBY) {
 		fprintf(f, "server=127.0.0.1#%s\n", nvram_safe_get("stubby_port"));
 		if (nvram_match("stubby_priority", "1"))
 			fprintf(f, "strict-order\n");
@@ -201,7 +201,7 @@ static void write_basic_config(FILE *f)
 #if defined(TCONFIG_DNSSEC) || defined(TCONFIG_STUBBY)
 	if (nvram_get_int("dnssec_enable")) {
 #ifdef TCONFIG_STUBBY
-		if ((!nvram_get_int("stubby_proxy")) || (nvram_match("dnssec_method", "0"))) {
+		if ((dns_backend_active() != DNS_BACKEND_STUBBY) || (nvram_match("dnssec_method", "0"))) {
 #endif
 #ifdef TCONFIG_DNSSEC
 			fprintf(f, "conf-file=%s\n"
