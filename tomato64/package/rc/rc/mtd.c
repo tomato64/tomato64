@@ -523,6 +523,15 @@ int mtd_write_main(int argc, char *argv[])
 		usage_exit(argv[0], "[-c|-e] -i file -d part");
 	}
 
+#ifdef TCONFIG_EA6500V1
+	/* Only slot 1 is supported by the EA6500 v1 firmware. */
+	if (get_model() != MODEL_EA6500V1 ||
+	    !nvram_match("bootpartition", "0") || strcmp(dev, "linux")) {
+		fprintf(stderr, "EA6500v1: upgrade requires bootpartition=0 and linux MTD\n");
+		return 1;
+	}
+#endif
+
 	if (!check_only) {
 		if (!wait_action_idle(10)) {
 			printf("System is busy\n");
@@ -541,6 +550,13 @@ int mtd_write_main(int argc, char *argv[])
 	if (safe_fread(&sig, 1, sizeof(sig), f) != sizeof(sig)) {
 		goto ERROR;
 	}
+
+#ifdef TCONFIG_EA6500V1
+	if (sig != TRX_MAGIC) {
+		error = "EA6500v1 requires a plain TRX image";
+		goto ERROR;
+	}
+#endif
 
 	switch (sig) {
 	case 0x47343557: /* W54G	G, GL */
@@ -679,6 +695,13 @@ int mtd_write_main(int argc, char *argv[])
 		goto ERROR;
 	}
 
+#ifdef TCONFIG_EA6500V1
+	if (trx.flag_version & TRX_NO_HEADER) {
+		error = "EA6500v1 requires a TRX header";
+		goto ERROR;
+	}
+#endif
+
 	model = get_model();
 
 	switch (model) {
@@ -723,6 +746,14 @@ int mtd_write_main(int argc, char *argv[])
 		error = "Error obtaining MTD information";
 		goto ERROR;
 	}
+
+#ifdef TCONFIG_EA6500V1
+	if (mi.type != MTD_NANDFLASH || mi.size != 0x02000000 ||
+	    mi.erasesize != 0x00020000) {
+		error = "EA6500v1: unexpected NAND slot geometry";
+		goto ERROR;
+	}
+#endif
 
 	_dprintf("*** %s: mtd size=%6x, erasesize=%6x\n", __FUNCTION__, mi.size, mi.erasesize);
 
@@ -784,6 +815,13 @@ int mtd_write_main(int argc, char *argv[])
 			error = "Error reading file";
 			break;
 		}
+#ifdef TCONFIG_EA6500V1
+		if (ei.start == 0 &&
+		    (n < 3 || memcmp(buf + ofs, "\x1f\x8b\x08", 3))) {
+			error = "EA6500v1 requires a gzip kernel";
+			break;
+		}
+#endif
 		trx.len -= (n + ofs);
 
 		crc = crc_calc(crc, buf + ofs, n);
