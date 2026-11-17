@@ -492,6 +492,9 @@ int mtd_write_main(int argc, char *argv[])
 	int check_only = 0;
 	int erase_nvram = 0;
 	int crc_ok = 0;
+#ifndef DEBUG_SIMULATE
+	int flash_started = 0;
+#endif
 	char *iname = NULL;
 	char *dev = NULL;
 	int model;
@@ -812,6 +815,8 @@ int mtd_write_main(int argc, char *argv[])
 				break;
 			}
 #else
+			/* Treat an attempted erase as destructive, even if it reports failure. */
+			flash_started = 1;
 			ioctl(mf, MEMUNLOCK, &ei);
 			if (ioctl(mf, MEMERASE, &ei) != 0
 #ifdef TCONFIG_BLINK /* RT-N/RTAC */
@@ -971,6 +976,10 @@ ERROR:
 
 #ifdef DEBUG_SIMULATE
 	if (!check_only)
+		set_action(ACT_IDLE);
+#else
+	/* No flash write was attempted: release the lock on an early error. */
+	if (!check_only && error && !flash_started)
 		set_action(ACT_IDLE);
 #endif
 
