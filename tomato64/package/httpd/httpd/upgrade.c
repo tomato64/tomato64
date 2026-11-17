@@ -370,7 +370,7 @@ void wo_flash(char *url)
 #ifdef TCONFIG_BCMARM
 	char *args[] = { "mtd-write2", upgrade_file, "linux", NULL, NULL };
 #else
-	char *args[] = { "mtd-write", "-w", "-i", upgrade_file, "-d", "linux", NULL };
+	char *args[] = { "mtd-write", "-w", "-i", upgrade_file, "-d", "linux", NULL, NULL };
 #endif
 
 	if (!rboot || !upgrade_file[0]) {
@@ -404,6 +404,10 @@ void wo_flash(char *url)
 		args[2] = args[1];
 		args[1] = "-e";
 	}
+#else
+	/* Keep firmware flashing and NVRAM erase in the same MIPS writer process. */
+	if (upgrade_reset)
+		args[6] = "-e";
 #endif
 
 	sync();
@@ -411,13 +415,6 @@ void wo_flash(char *url)
 	status = _eval(args, ">/tmp/.mtd-write", 0, NULL);
 	if (status != 0)
 		fprintf(stderr, "Firmware upgrade operation failed (status %d)\n", status);
-
-#ifndef TCONFIG_BCMARM
-	if ((status == 0) && upgrade_reset) {
-		set_action(ACT_IDLE);
-		eval("mtd-erase", "-d", "nvram");
-	}
-#endif
 
 	unlink(upgrade_file);
 	upgrade_file[0] = '\0';

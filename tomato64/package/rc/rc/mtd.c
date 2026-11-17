@@ -490,15 +490,19 @@ int mtd_write_main(int argc, char *argv[])
 	int c;
 	int web = 0;
 	int check_only = 0;
+	int erase_nvram = 0;
 	int crc_ok = 0;
 	char *iname = NULL;
 	char *dev = NULL;
 	int model;
 
-	while ((c = getopt(argc, argv, "ci:d:w")) != -1) {
+	while ((c = getopt(argc, argv, "cei:d:w")) != -1) {
 		switch (c) {
 		case 'c':
 			check_only = 1;
+			break;
+		case 'e':
+			erase_nvram = 1;
 			break;
 		case 'i':
 			iname = optarg;
@@ -512,8 +516,8 @@ int mtd_write_main(int argc, char *argv[])
 		}
 	}
 
-	if ((iname == NULL) || (dev == NULL)) {
-		usage_exit(argv[0], "[-c] -i file -d part");
+	if ((iname == NULL) || (dev == NULL) || (check_only && erase_nvram)) {
+		usage_exit(argv[0], "[-c|-e] -i file -d part");
 	}
 
 	if (!check_only) {
@@ -955,6 +959,15 @@ ERROR:
 		fclose(f);
 
 	crc_done();
+
+#ifndef DEBUG_SIMULATE
+	if (!check_only && erase_nvram && !error) {
+		/* mtd_erase() requires an idle action and runs in this process. */
+		set_action(ACT_IDLE);
+		if (mtd_erase("nvram") != 0)
+			error = "Firmware flashed, but NVRAM erase failed";
+	}
+#endif
 
 #ifdef DEBUG_SIMULATE
 	if (!check_only)
