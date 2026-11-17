@@ -698,7 +698,9 @@ int wan_led(int mode) /* mode: 0 - OFF, 1 - ON */
 	    (model == MODEL_WRT310Nv1) ||
 	    (model == MODEL_WRT160Nv1) ||
 	    (model == MODEL_WNR3500L) ||
+#ifdef TCONFIG_RTNPLUS
 	    (model == MODEL_WNR3500LV2) ||
+#endif /* TCONFIG_RTNPLUS */
 	    (model == MODEL_WRT160Nv3) ||
 	    (model == MODEL_WRT320N) ||
 	    (model == MODEL_WRT610Nv2) ||
