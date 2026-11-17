@@ -848,6 +848,51 @@ int get_default_wan_phy_port(void)
 	                                       "EA6400", "EA6500v2", "EA6700", "R7900", "R8000", NULL
 	                                     };
 #else
+	/*
+	 * MIPS port-4 model names: known and suspected t_fix1 mismatches.
+	 *
+	 * get_default_wan_phy_port() compares each entry below literally with
+	 * nvram_safe_get("t_fix1"). In rc/init.c, t_fix1 is assigned from 'name';
+	 * the manufacturer and 'ver' are added separately to t_model_name.
+	 * A model name shown in the GUI is therefore not necessarily the
+	 * string stored in t_fix1. An unsuccessful match makes this function
+	 * return the default physical WAN port (0), even on port-4 routers.
+	 *
+	 * Confirmed by the current initialization code:
+	 * - "E2500 v1.0" does not match MODEL_E2500, which assigns
+	 *   name = "E2500 v1/v2/v3". The matching entry is also present,
+	 *   making "E2500 v1.0" redundant for this code path.
+	 *
+	 * Mismatches with the usual stock CFE identifiers:
+	 * - "E900 v1.0" and "E3200 v1.0": their MODEL_* cases read 'name'
+	 *   from boot_hw_model and 'ver' from boot_hw_ver independently.
+	 *   If boot_hw_model is "E900" or "E3200", respectively, and
+	 *   boot_hw_ver is "1.0", t_fix1 has no version suffix and these
+	 *   table entries cannot match. Verify the actual NVRAM values.
+	 *
+	 * Needs router-specific verification before changing the table:
+	 * - "E1500 v1.0", "E1550 v1.0": likewise use boot_hw_model for
+	 *   'name', so the suffix may only be part of t_model_name.
+	 * - "E800 v1.0", "E1200 v1.0", "E1200 v2.0": no dedicated
+	 *   MODEL_E800/MODEL_E1200 initialization cases were found in the
+	 *   reviewed rc/init.c. Check model aliases/detection and CFE data.
+	 *
+	 * Do not rename or remove entries based only on this source review:
+	 * actual hardware revisions, bootloader values and switch-port wiring
+	 * must be confirmed first. When a port-order issue is reported, collect
+	 * the following on the affected router:
+	 *
+	 *   nvram get t_fix1
+	 *   nvram get boot_hw_model
+	 *   nvram get boot_hw_ver
+	 *   nvram get vlan1ports
+	 *   nvram get vlan2ports
+	 *   robocfg show
+	 *
+	 * Compare the values with rc/init.c and the physical port layout,
+	 * then update the table in a separate, hardware-validated fix.
+	 * This note is informational; existing behavior is unchanged.
+	 */
 	/* MIPS routers with WAN on Port 4 */
 	static const char *port4_routers[] = { "RT-N10P", "RT-N12 A1", "RT-N12 B1", "RT-N12 C1", "RT-N12 D1",
 	                                       "RT-N12 HP", "RT-N15U", "RT-N53", "RT-N53 A1",
