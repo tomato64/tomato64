@@ -1076,6 +1076,7 @@ static void handle_request(void)
 #ifdef TTYD_PROXY
 	char *upgrade_header = NULL, *connection_header = NULL;
 	char *ws_key_header = NULL;
+	char *host_header = NULL, *origin_header = NULL;
 #endif
 
 	logmsg(LOG_DEBUG, "*** %s: IN ***", __FUNCTION__);
@@ -1236,6 +1237,20 @@ static void handle_request(void)
 			cur = ws_key_header + strlen(ws_key_header) + 1;
 			logmsg(LOG_DEBUG, "*** %s: WebSocket-Key: '%s'", __FUNCTION__, ws_key_header);
 		}
+		else if (strncasecmp(cur, "Host:", 5) == 0) {
+			cp = &cur[5];
+			cp += strspn(cp, " \t");
+			host_header = cp;
+			STRIP_TRAILING_WS(cp);
+			cur = host_header + strlen(host_header) + 1;
+		}
+		else if (strncasecmp(cur, "Origin:", 7) == 0) {
+			cp = &cur[7];
+			cp += strspn(cp, " \t");
+			origin_header = cp;
+			STRIP_TRAILING_WS(cp);
+			cur = origin_header + strlen(origin_header) + 1;
+		}
 #endif /* TTYD_PROXY */
 	}
 
@@ -1263,6 +1278,17 @@ static void handle_request(void)
 				return;
 			}
 
+			/* Reject handshakes started by a foreign site (CSWSH) */
+			if (!ttyd_origin_ok(origin_header, host_header)) {
+				send_error(403, NULL, "Cross-origin WebSocket not allowed");
+				return;
+			}
+
+			if (!ws_key_header || !*ws_key_header) {
+				send_error(400, NULL, "Missing Sec-WebSocket-Key");
+				return;
+			}
+
 			/* Handle WebSocket upgrade */
 			if (ttyd_handle_websocket_upgrade(path, ws_key_header) < 0) {
 				send_error(500, NULL, "WebSocket upgrade failed");
@@ -1277,37 +1303,31 @@ static void handle_request(void)
 
 	/* Handle regular HTTP requests to console paths (NOT WebSocket upgrades) */
 	/* This only runs if we didn't return above from WebSocket handling */
-	{
+	if (ttyd_is_console_path(file)) {
 		char *response = NULL;
 		size_t response_len = 0;
-		int result = ttyd_handle_http_request(file, &response, &response_len);
 
-		if (result == 1) {
-			/* Console path was handled - check auth and send response */
-			auth_t console_auth = auth_check(authorization);
-			if (console_auth != AUTH_OK) {
-				free(response);
-				auth_fail(cl);
-				return;
-			}
+		/* Authenticate before touching ttyd */
+		if (auth_check(authorization) != AUTH_OK) {
+			auth_fail(cl);
+			return;
+		}
 
-			if (!check_wlaccess()) {
-				free(response);
-				send_error(403, NULL, "Access denied");
-				return;
-			}
+		if (!check_wlaccess()) {
+			send_error(403, NULL, "Access denied");
+			return;
+		}
 
+		if (ttyd_handle_http_request(file, &response, &response_len) == 1) {
 			web_write(response, response_len);
 			free(response);
-			return;
 		}
-		else if (result == -1) {
-			/* Error handling console request */
+		else {
 			send_error(502, NULL, "Failed to connect to terminal service");
-			return;
 		}
-		/* result == 0: not a console path, fall through to regular HTTP handling */
+		return;
 	}
+	/* not a console path, fall through to regular HTTP handling */
 #endif /* TTYD_PROXY */
 	auth = auth_check(authorization);
 
