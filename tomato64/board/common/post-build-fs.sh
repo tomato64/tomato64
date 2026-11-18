@@ -22,6 +22,11 @@ $TARGET_DIR/tmp/home/root \
 $TARGET_DIR/tmp/mnt \
 $TARGET_DIR/tmp/var
 
+# Keep the /run symlink below from dangling, so a later single-package
+# reinstall that writes into /run (e.g. nfs-utils' statedir /run/nfs) still
+# works. /tmp is a tmpfs at runtime, so this never shows on the device.
+mkdir -p $TARGET_DIR/tmp/var/run
+
 # Create symbolic links to the tmp tmpfs.
 ln -sf tmp/etc $TARGET_DIR/etc
 ln -sf tmp/home $TARGET_DIR/home
