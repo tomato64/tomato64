@@ -169,7 +169,17 @@ void stop_nfs(void)
 	if ((pidof("mountd") > 0) || (pidof("nfsd") > 0) || (pidof("statd") > 0)) {
 		eval("/usr/sbin/exportfs", "-ua");
 		killall_tk_period_wait("mountd", 50);
+#ifndef TOMATO64
 		killall("nfsd", SIGKILL);
+#else
+		/*
+		 * nfsd threads are kernel threads that ignore signals on current
+		 * kernels, so SIGKILL leaves them running and the next start_nfs()
+		 * sees pidof("nfsd") and refuses to start. Ask the kernel to stop
+		 * them instead (writes 0 to /proc/fs/nfsd/threads).
+		 */
+		eval("/usr/sbin/nfsd", "0");
+#endif /* TOMATO64 */
 		killall_tk_period_wait("statd", 50);
 
 		syslog(LOG_INFO, "NFS Server is stopped");
