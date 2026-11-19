@@ -1,3 +1,2 @@
-# From https://build.openvpn.net/downloads/releases/
-# (matches OpenWrt feeds/packages kernel/ovpn-dco PKG_HASH)
-sha256  912ca70c1a240fc4e4f7f6dd80c054b64b6c52497562a8bbc741a618571563ea  ovpn-backports-7.0.0.2026032400.tar.gz
+# Locally computed after download from https://build.openvpn.net/downloads/releases/
+sha256  81443f40d1d825e7d2bcb08b34f4f3269d288e4558f04543e4a56f7f697c7c4d  ovpn-backports-7.2.0.2026082800.tar.gz
