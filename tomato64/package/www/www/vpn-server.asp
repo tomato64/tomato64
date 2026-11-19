@@ -670,8 +670,7 @@ function verifyFields(focused, quiet) {
 		elem.display(PR('_'+t+'_ncp_ciphers'), auth == 'tls');
 		elem.display(PR('_'+t+'_cipher'), auth == 'secret');
 /* TOMATO64-BEGIN */
-		var proto = E('_'+t+'_proto').value;
-		var dco_vis = iface == 'tun' && auth == 'tls' && proto.indexOf('udp') >= 0;
+		var dco_vis = iface == 'tun' && auth == 'tls';
 		elem.display(PR('_f_'+t+'_dco'), dco_vis);
 /* TOMATO64-END */
 /* KEYGEN-BEGIN */
