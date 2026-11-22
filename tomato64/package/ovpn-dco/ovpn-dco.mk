@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-OVPN_DCO_VERSION = 7.2.0.2026082800
+OVPN_DCO_VERSION = 7.3.0.2026100801
 OVPN_DCO_SITE = https://build.openvpn.net/downloads/releases
 OVPN_DCO_SOURCE = ovpn-backports-$(OVPN_DCO_VERSION).tar.gz
 OVPN_DCO_LICENSE = GPL-2.0-only
