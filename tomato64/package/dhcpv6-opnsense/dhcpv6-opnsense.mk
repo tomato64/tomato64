@@ -7,7 +7,7 @@
 #
 ################################################################################
 
-DHCPV6_OPNSENSE_VERSION = 60c87d02c41dbfbef8552a10bb2020db29da8d04
+DHCPV6_OPNSENSE_VERSION = 76e55bf8dbce3046c6895fe2045f3cccde55c95e
 DHCPV6_OPNSENSE_SITE = $(call github,opnsense,dhcp6c,$(DHCPV6_OPNSENSE_VERSION))
 DHCPV6_OPNSENSE_LICENSE = BSD-3-Clause
 DHCPV6_OPNSENSE_DEPENDENCIES = libnvram
