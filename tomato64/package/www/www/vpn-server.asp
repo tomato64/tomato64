@@ -985,7 +985,12 @@ function init() {
 				{ title: 'Enable on Start', name: 'f_'+t+'_eas', type: 'checkbox', value: nvram.vpns_eas.indexOf(''+(i + 1)) >= 0 },
 				{ title: 'Interface Type', name: t+'_if', type: 'select', options: [['tap','TAP'],['tun','TUN']], value: nvram[t+'_if'] },
 					{ title: 'Bridge TAP with', indent: 2, name: t+'_br', type: 'select', options: brOptions, value: nvram[t+'_br'], suffix: ' <small>* default<\/small>' },
+/* TOMATO64-REMOVE-BEGIN */
 				{ title: 'Protocol', name: t+'_proto', type: 'select', options: [['udp','UDP'],['tcp-server','TCP'],['udp4','UDP4'],['tcp4-server','TCP4'],['udp6','UDP6'],['tcp6-server','TCP6']], value: nvram[t+'_proto'] },
+/* TOMATO64-REMOVE-END */
+/* TOMATO64-BEGIN */
+				{ title: 'Protocol', name: t+'_proto', type: 'select', options: [['udp','UDP (IPv4 + IPv6)'],['tcp-server','TCP (IPv4 + IPv6)'],['udp4','UDP (IPv4 only)'],['tcp4-server','TCP (IPv4 only)'],['udp6','UDP (IPv6 only)'],['tcp6-server','TCP (IPv6 only)']], value: nvram[t+'_proto'] },
+/* TOMATO64-END */
 				{ title: 'Port', name: t+'_port', type: 'text', maxlen: 5, size: 10, value: nvram[t+'_port'] },
 				{ title: 'Firewall', name: t+'_firewall', type: 'select', options: [['auto','Automatic'],['external','External Only'],['custom','Custom']], value: nvram[t+'_firewall'] },
 				{ title: 'Authorization Mode', name: t+'_crypt', type: 'select', options: [['tls','TLS'],['secret','Static Key'],['custom','Custom']], value: nvram[t+'_crypt'],

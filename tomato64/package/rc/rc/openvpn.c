@@ -905,7 +905,27 @@ void start_ovpn_server(int unit)
 	mwan_num = mwan_active_num(); /* check active WANs num */
 
 	snprintf(buffer, BUF_SIZE, "vpns%d_proto", unit);
+#ifndef TOMATO64
 	fprintf(fp, "proto %s\n", nvram_safe_get(buffer)); /* full dual-stack functionality starting with OpenVPN 2.4.0 */
+#else
+	{
+		/* UDP/TCP listen on IPv4 and IPv6, UDP6/TCP6 on IPv6 only */
+		const char *proto = nvram_safe_get(buffer);
+		int v6 = 0;
+#ifdef TCONFIG_IPV6
+		v6 = ipv6_enabled();
+#endif
+		if (v6 && !strcmp(proto, "udp"))
+			fprintf(fp, "proto udp6\n");
+		else if (v6 && !strcmp(proto, "tcp-server"))
+			fprintf(fp, "proto tcp6-server\n");
+		else
+			fprintf(fp, "proto %s\n", proto);
+
+		if (!strcmp(proto, "udp6") || !strcmp(proto, "tcp6-server"))
+			fprintf(fp, "bind ipv6only\n");
+	}
+#endif /* TOMATO64 */
 
 	if (nvram_contains_word(buffer, "udp") && mwan_num > 1) /* udp/udp4/udp6 - only if multiwan */
 		fprintf(fp, "multihome\n");
