@@ -592,7 +592,7 @@ function init() {
 					{ name: t+'_cn', type: 'text', maxlen: 255, size: 54, value: nvram[t+'_cn'], prefix: '<span id="client_'+t+'_cn">&nbsp;:&nbsp;', suffix: '<\/span>'} ] },
 /* TOMATO64-BEGIN */
 				{ title: 'Data Channel Offload (DCO)', name: 'f_'+t+'_dco', type: 'checkbox', value: nvram[t+'_dco'] != 0,
-					suffix: ' <small>requires TUN, UDP, and AEAD ciphers<\/small>' },
+					suffix: ' <small>requires TUN and AEAD ciphers<\/small>' },
 /* TOMATO64-END */
 				{ title: 'Custom Configuration', name: t+'_custom', type: 'textarea', value: nvram[t+'_custom'] }
 			]);

@@ -1038,7 +1038,7 @@ function init() {
 				{ title: '', suffix: '<div class="tomato-grid" id="table_'+t+'_users"><\/div>' },
 /* TOMATO64-BEGIN */
 				{ title: 'Data Channel Offload (DCO)', name: 'f_'+t+'_dco', type: 'checkbox', value: nvram[t+'_dco'] != 0,
-					suffix: ' <small>requires TUN, UDP, and AEAD ciphers<\/small>' },
+					suffix: ' <small>requires TUN and AEAD ciphers<\/small>' },
 /* TOMATO64-END */
 				{ title: 'Custom Configuration', name: t+'_custom', type: 'textarea', value: nvram[t+'_custom'] }
 			);
