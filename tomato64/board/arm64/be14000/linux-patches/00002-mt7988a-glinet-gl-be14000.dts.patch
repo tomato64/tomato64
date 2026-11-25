@@ -26,7 +26,7 @@ new file mode 100644
 index 000000000..2b35cc33c
 --- /dev/null
 +++ b/arch/arm64/boot/dts/mediatek/mt7988a-glinet-gl-be14000.dts
-@@ -0,0 +1,950 @@
+@@ -0,0 +1,954 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/*
 + * Copyright (C) 2021 MediaTek Inc.
@@ -892,8 +892,12 @@ index 000000000..2b35cc33c
 +		reset-assert-us = <100000>;
 +		reset-deassert-us = <300000>;
 +		reset-gpios = <&pio 1 GPIO_ACTIVE_LOW>;
-+		interrupt-parent = <&pio>;
-+		interrupts = <2 IRQ_TYPE_LEVEL_LOW>;
++		/*
++		 * RTL8261C/D (patches 00025-00028). GL's interrupt (pio 2,
++		 * level low) is left out, as in OpenWrt main's DTS: the
++		 * generic C45 driver never used it, and the RTL8261 driver
++		 * would, so the line has never been exercised. Polled.
++		 */
 +	};
 +};
 +

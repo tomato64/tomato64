@@ -5,6 +5,11 @@
 ################################################################################
 
 LINUX_FIRMWARE_OPENWRT_VERSION = 20260221
+# BE14000 only: rtl_nic/rtl8261c.bin (WAN PHY) is not in 20260221; 20260810 has it. Its
+# mt7988_wo_{0,1}.bin are byte-identical to 20260221, so WED is unchanged.
+ifeq ($(BR2_PACKAGE_PLATFORM_BE14000),y)
+LINUX_FIRMWARE_OPENWRT_VERSION = 20260810
+endif
 LINUX_FIRMWARE_OPENWRT_SOURCE = linux-firmware-$(LINUX_FIRMWARE_OPENWRT_VERSION).tar.xz
 LINUX_FIRMWARE_OPENWRT_SITE = $(BR2_KERNEL_MIRROR)/linux/kernel/firmware
 
@@ -84,11 +89,17 @@ endif
 # set_devs_be14000 / the wed_offloading nvram). Filenames match OpenWrt
 # package/firmware/linux-firmware/mediatek.mk (mt7988-wo-firmware), which is
 # in GL's DEVICE_PACKAGES for this board.
+# Also the RTL8261C 10G WAN PHY firmware: the realtek PHY driver (kernel
+# patches 00025-00028) loads it in config_init and fails the WAN attach
+# without it. Matches OpenWrt main's rtl8261c-firmware (realtek.mk), which
+# is in its glinet_gl-be14000 DEVICE_PACKAGES.
 ifeq ($(BR2_PACKAGE_PLATFORM_BE14000),y)
 define LINUX_FIRMWARE_OPENWRT_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/lib/firmware/mediatek/mt7988
 	cp $(@D)/mediatek/mt7988/mt7988_wo_0.bin $(TARGET_DIR)/lib/firmware/mediatek/mt7988
 	cp $(@D)/mediatek/mt7988/mt7988_wo_1.bin $(TARGET_DIR)/lib/firmware/mediatek/mt7988
+	mkdir -p $(TARGET_DIR)/lib/firmware/rtl_nic
+	cp $(@D)/rtl_nic/rtl8261c.bin $(TARGET_DIR)/lib/firmware/rtl_nic
 endef
 endif
 
